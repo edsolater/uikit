@@ -1,13 +1,19 @@
 {
-  "name": "uikit",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@edsolater/uikit",
+  "version": "0.0.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "release": "rm -rf ./dist && tsc && npm version patch && npm publish"
   },
+  "author": "edsolater <edsolater@qq.com>",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "files": [
+    "dist/**/*"
+  ],
   "dependencies": {
     "@edsolater/fnkit": "^1.0.3",
     "next": "11.1.0",
