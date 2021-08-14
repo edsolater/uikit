@@ -1,4 +1,5 @@
+const withTM = require('next-transpile-modules')(['@edsolater/fnkit'])
 /** @type {import('next').NextConfig} */
-module.exports = {
-  reactStrictMode: true,
-}
+module.exports = withTM({
+  reactStrictMode: true
+})

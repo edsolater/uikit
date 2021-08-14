@@ -1,7 +1,7 @@
 {
   "files.exclude": {
-    "**/dist": true,
     "**/.next": true,
-    "**/node_modules": true
+    // "**/dist": true,
+    // "**/node_modules": true
   }
 }
