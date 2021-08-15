@@ -11,22 +11,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "dist",
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": [
-    "next-env.d.ts",
-    "components/**/*.ts",
-    "components/**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "components/**/*.ts", "components/**/*.tsx"],
+  "exclude": ["node_modules"]
 }

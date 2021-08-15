@@ -20,8 +20,9 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
-    "@edsolater/fnkit": "^1.0.15",
+    "@edsolater/fnkit": "^1.0.17",
     "@types/react": "17.0.17",
+    "next-transpile-modules": "^8.0.0",
     "prettier": "^2.3.2",
     "typescript": "4.3.5"
   }
