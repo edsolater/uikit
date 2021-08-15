@@ -1,7 +1,9 @@
 import { changeCase } from '@edsolater/fnkit'
 
-import style from './TestBox.module.css'
-
 export default function TestBox() {
-  return <div className={style.TestBox}>{changeCase('hello-world', { to: 'PascalCase' })}</div>
+  return (
+    <div className='w-[300px] h-[300px] bg-blue-500'>
+      {changeCase('hello-world', { to: 'PascalCase' })}
+    </div>
+  )
 }
