@@ -20,7 +20,7 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
-    "@edsolater/fnkit": "^1.0.17",
+    "@edsolater/fnkit": "^1.0.19",
     "@types/react": "17.0.17",
     "autoprefixer": "^10.3.1",
     "next-transpile-modules": "^8.0.0",
