@@ -1,6 +1,11 @@
 import type { NextPage } from 'next'
-import TestBox from '../components/testBox'
+import Link from 'next/link'
+import Div from '../components/Div'
 
-const Home: NextPage = () => <TestBox />
+const Home: NextPage = () => (
+  <Div className='w-screen h-screen grid place-items-center'>
+    <Link href='/examples'>see all base component's example</Link>
+  </Div>
+)
 
 export default Home
