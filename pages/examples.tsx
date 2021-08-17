@@ -1,11 +1,10 @@
-import type { NextPage } from 'next'
-import Button from '../components/Button'
+import React from 'react'
+import ButtonExample from '../components/ButtonExample'
 
-const Examples: NextPage = () => (
-  <div>
-    sdf
-    <Button />
-  </div>
-)
-
-export default Examples
+export default function PageExamples() {
+  return (
+    <div>
+      <ButtonExample />
+    </div>
+  )
+}

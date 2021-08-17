@@ -25,9 +25,9 @@ export default function Button({
       className={[
         'appearance-none border-none cursor-pointer select-none w-max',
         {
-          small: 'py-1 px-2 text-sm rounded',
-          medium: 'py-1.5 px-3 text-base rounded-md',
-          large: 'py-2 px-4 text-lg rounded-lg'
+          small: 'py-0 px-2 text-sm rounded',
+          medium: 'py-1 px-3 text-base rounded-md',
+          large: 'py-1.5 px-6 text-lg rounded-lg'
         }[size],
         {
           outline: 'relative bg-transparent bg-gray-100 ',
