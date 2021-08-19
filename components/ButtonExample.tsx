@@ -13,11 +13,27 @@ export default function ButtonExample() {
       </ExampleGroup>
 
       <ExampleGroup caption='different button size'>
-        <Button type='fill' size='large'>
+        <Button /* type='fill' */ size='large'>Large</Button>
+        <Button /* type='fill' */>medium</Button>
+        <Button /* type='fill' */ size='small'>small</Button>
+      </ExampleGroup>
+
+      <ExampleGroup caption='different button size'>
+        <Button type='outline' size='large'>
           Large
         </Button>
-        <Button type='fill'>medium</Button>
-        <Button type='fill' size='small'>
+        <Button type='outline'>medium</Button>
+        <Button type='outline' size='small'>
+          small
+        </Button>
+      </ExampleGroup>
+
+      <ExampleGroup caption='different button size'>
+        <Button type='text' size='large'>
+          Large
+        </Button>
+        <Button type='text'>medium</Button>
+        <Button type='text' size='small'>
           small
         </Button>
       </ExampleGroup>

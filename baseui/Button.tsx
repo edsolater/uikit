@@ -23,16 +23,16 @@ export default function Button({
     <Div
       as='button'
       className={[
-        'appearance-none border-none cursor-pointer select-none w-max',
+        'appearance-none cursor-pointer select-none w-max',
         {
           small: 'py-0 px-2 text-sm rounded',
-          medium: 'py-1 px-3 text-base rounded-md',
-          large: 'py-1.5 px-6 text-lg rounded-lg'
+          medium: 'py-1.5 px-4 text-base rounded-md',
+          large: 'py-3 px-6 text-lg rounded-lg'
         }[size],
         {
-          outline: 'relative bg-transparent bg-gray-100 ',
-          fill: 'relative bg-gray-400 text-white hover:before:brightness-125 active:before:brightness-90',
-          text: 'text-gray-500 bg-transparent'
+          outline: `relative bg-transparent ring-inset  ${size === 'large' ? 'ring-2' : size === 'small' ? 'ring-1' : 'ring-2'} ring-opacity-80 ring-fill-dark`,
+          fill: 'relative bg-fill-dark text-text-light hover:before:brightness-125 active:before:brightness-90',
+          text: 'text-text-dark bg-transparent'
         }[type]
       ]}
       {...restProps}
