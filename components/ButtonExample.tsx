@@ -6,19 +6,17 @@ import ExampleGroup from './ExampleGroup'
 export default function ButtonExample() {
   return (
     <ExampleCard title='Button' category='uikit'>
-      <ExampleGroup caption='different button type'>
-        <Button type='fill'>fill</Button>
-        <Button type='outline'>border</Button>
-        <Button type='text'>text</Button>
+      <ExampleGroup caption='basic example'>
+        <Button>Tap</Button>
       </ExampleGroup>
 
-      <ExampleGroup caption='different button size'>
+      <ExampleGroup caption='type: fill(default)'>
         <Button /* type='fill' */ size='large'>Large</Button>
         <Button /* type='fill' */ /* size='medium' */>medium</Button>
         <Button /* type='fill' */ size='small'>small</Button>
       </ExampleGroup>
 
-      <ExampleGroup caption='different button size'>
+      <ExampleGroup caption='type: outline'>
         <Button type='outline' size='large'>
           Large
         </Button>
@@ -28,7 +26,7 @@ export default function ButtonExample() {
         </Button>
       </ExampleGroup>
 
-      <ExampleGroup caption='different button size'>
+      <ExampleGroup caption='type: outline'>
         <Button type='text' size='large'>
           Large
         </Button>

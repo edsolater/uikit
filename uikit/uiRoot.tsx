@@ -24,7 +24,7 @@ export default function UIRoot<TagName extends keyof TagMap = 'div'>(props: UIRo
         {
           className: props._className,
           domRef: props._domRef,
-          style: props.style,
+          style: props._style,
           htmlProps: props._htmlProps
         },
         props

@@ -35,7 +35,7 @@ const Div = <TagName extends keyof TagMap = 'div'>(props: DivProps<TagName>) => 
       ...props.htmlProps,
       className: classname(props.className),
       ref: mergeRefs(...[props.domRef, divRef].flat(Infinity)),
-      style: mergeObjects([props.style].flat())
+      style: mergeObjects(...[props.style].flat())
     },
     props.children
   )

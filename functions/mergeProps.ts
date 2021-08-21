@@ -41,10 +41,11 @@ export default function mergeProps<P extends AnyProp | undefined>(
       key,
       [
         ['domRef', () => (v1 && v2 ? mergeRefs(v1 as any, v2 as any) : v1 ?? v2)],
-        [
-          (key) => isOneOf(key, ['className', 'css']) && isExist(v1) && isExist(v2),
-          () => [v1, v2].flat()
-        ],
+        ['className', () => [v1, v2].flat()],
+        ['style', () => {
+          console.log('v1, v2: ', v1, v2)
+          return [v1, v2].flat()
+        }],
         [() => isFunction(v1) && isFunction(v2), () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],
         [() => isObject(v1) && isObject(v2), () => mergeProps(v1 as AnyObj, v2 as AnyObj)],
         [() => isArray(v1) && isArray(v2), () => (v1 as any[]).concat(v2)]
