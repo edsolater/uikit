@@ -3,7 +3,7 @@ import { useRef } from 'react'
 import classname, { ClassName } from '../functions/classname'
 import mergeRefs from '../functions/mergeRefs'
 import { mergeObjects } from '@edsolater/fnkit/src/object'
-import { MayArray } from '../typings/tools'
+import { MayDeepArray } from '../typings/tools'
 
 export interface TagMap {
   div: HTMLDivElement
@@ -18,9 +18,9 @@ export interface TagMap {
 
 export interface DivProps<TagName extends keyof TagMap = 'div'> {
   as?: TagName
-  domRef?: MayArray<RefObject<HTMLElement>>
-  className?: MayArray<ClassName>
-  style?: MayArray<CSSProperties>
+  domRef?: MayDeepArray<RefObject<HTMLElement>>
+  className?: MayDeepArray<ClassName>
+  style?: MayDeepArray<CSSProperties>
   htmlProps?: JSX.IntrinsicElements[TagName]
   children?: ReactNode
 }
@@ -34,7 +34,7 @@ const Div = <TagName extends keyof TagMap = 'div'>(props: DivProps<TagName>) => 
     {
       ...props.htmlProps,
       className: classname(props.className),
-      ref: mergeRefs(...[props.domRef, divRef].flat()),
+      ref: mergeRefs(...[props.domRef, divRef].flat(Infinity)),
       style: mergeObjects([props.style].flat())
     },
     props.children
