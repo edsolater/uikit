@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
-import Link from '../baseui/Link'
-import Div from '../baseui/Div'
+import Link from '../uikit/Link'
+import Div from '../uikit/Div'
 
 const Home: NextPage = () => (
   <Div className='w-screen h-screen grid place-items-center'>

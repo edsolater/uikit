@@ -1,4 +1,4 @@
-import { StatePairArray } from 'baseUI/types/react'
+import { StatePairArray } from 'uikit/types/react'
 import { isFunction } from '@edsolater/fnkit/src/judgers'
 
 // TODO: too rude

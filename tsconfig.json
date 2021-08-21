@@ -11,15 +11,15 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "outDir": "dist",
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
-    ],
-    "outDir": "dist",
-    "declaration": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmit": true
+    ]
   },
   "exclude": [
     "node_modules",
@@ -27,8 +27,11 @@
     ".next"
   ],
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
+    "uikit/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "pages/**/*.{ts,tsx}",
+    "functions/**/*.{ts,tsx}",
+    "style/**/*.{ts,tsx}",
+    "typings/**/*.{ts,tsx}"
   ]
 }

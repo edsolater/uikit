@@ -1,5 +1,5 @@
 import React from 'react'
-import BaseUIDiv from './BaseUIDiv'
+import UIRoot from './uiRoot'
 import { DivProps } from './Div'
 
 export interface RowProps extends DivProps {
@@ -13,17 +13,21 @@ export interface RowProps extends DivProps {
   noStratch?: boolean
 }
 
-
 /**
- * @BaseUIComponent
+ * @uikitComponent
  *
  * 将子元素显示在一行，相当于flexbox
  */
 const Row = ({ gapSize = 'medium', noStratch, ...restProps }: RowProps) => {
   return (
-    <BaseUIDiv
+    <UIRoot
+      _className={[
+        'Row',
+        'flex',
+        { small: 'gap-1', medium: 'gap-2', large: 'gap-4' }[gapSize],
+        noStratch && 'items-center'
+      ]}
       {...restProps}
-      _className={['flex', { small: 'gap-1', medium: 'gap-2', large: 'gap-4' }[gapSize], noStratch && 'items-center']}
     />
   )
 }

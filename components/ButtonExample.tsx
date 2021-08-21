@@ -1,11 +1,11 @@
 import React from 'react'
-import Button from '../baseui/Button'
+import Button from '../uikit/Button'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
 
 export default function ButtonExample() {
   return (
-    <ExampleCard title='Button' category='baseUI'>
+    <ExampleCard title='Button' category='uikit'>
       <ExampleGroup caption='different button type'>
         <Button type='fill'>fill</Button>
         <Button type='outline'>border</Button>
@@ -14,7 +14,7 @@ export default function ButtonExample() {
 
       <ExampleGroup caption='different button size'>
         <Button /* type='fill' */ size='large'>Large</Button>
-        <Button /* type='fill' */>medium</Button>
+        <Button /* type='fill' */ /* size='medium' */>medium</Button>
         <Button /* type='fill' */ size='small'>small</Button>
       </ExampleGroup>
 
@@ -22,7 +22,7 @@ export default function ButtonExample() {
         <Button type='outline' size='large'>
           Large
         </Button>
-        <Button type='outline'>medium</Button>
+        <Button type='outline' /* size='medium' */>medium</Button>
         <Button type='outline' size='small'>
           small
         </Button>
@@ -32,7 +32,7 @@ export default function ButtonExample() {
         <Button type='text' size='large'>
           Large
         </Button>
-        <Button type='text'>medium</Button>
+        <Button type='text' /* size='medium' */>medium</Button>
         <Button type='text' size='small'>
           small
         </Button>

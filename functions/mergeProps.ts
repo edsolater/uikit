@@ -37,7 +37,7 @@ export default function mergeProps<P extends AnyProp | undefined>(
   if (trimedProps.length === 0) return {}
   if (trimedProps.length === 1) return trimedProps[0]
   return _mergeObjects(trimedProps, (key, v1, v2) =>
-    parallelSwitch<string, any, any>(
+    parallelSwitch<string, any>(
       key,
       [
         ['domRef', () => (v1 && v2 ? mergeRefs(v1 as any, v2 as any) : v1 ?? v2)],

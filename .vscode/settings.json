@@ -3,5 +3,11 @@
     "**/.next": true,
     "**/dist": true,
     "**/node_modules": true
+  },
+  "css.validate": false,
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": true,
+    "strings": true
   }
 }
