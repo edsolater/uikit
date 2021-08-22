@@ -1,6 +1,5 @@
-import React from 'react'
-import UIRoot from './uiRoot'
-import { DivProps } from './Div'
+import UIRoot from './UIRoot'
+import type  { DivProps } from './Div'
 
 export interface RowProps extends DivProps {
   /**

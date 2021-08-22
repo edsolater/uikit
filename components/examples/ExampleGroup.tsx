@@ -1,8 +1,7 @@
-import React from 'react'
-import UIRoot from '../uikit/uiRoot'
-import Caption from '../uikit/Caption'
-import { DivProps } from '../uikit/Div'
-import Row from '../uikit/Row'
+import type { DivProps } from '../../uikit/Div'
+import UIRoot from '../../uikit/UIRoot'
+import Caption from '../../uikit/Caption'
+import Row from '../../uikit/Row'
 
 interface ExampleGroupProps extends DivProps {
   caption?: string

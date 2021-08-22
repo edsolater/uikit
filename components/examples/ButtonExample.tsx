@@ -1,5 +1,4 @@
-import React from 'react'
-import Button from '../uikit/Button'
+import Button from '../../uikit/Button'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
 

@@ -1,6 +1,6 @@
-import React, { FC } from 'react'
-import { DivProps } from './Div'
-import UIRoot from './uiRoot'
+import type { FC } from 'react'
+import type { DivProps } from './Div'
+import UIRoot from './UIRoot'
 
 export interface CaptionProps extends DivProps {
   /**

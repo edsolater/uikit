@@ -1,9 +1,11 @@
-import { createElement, CSSProperties, ReactNode, RefObject } from 'react'
+import type { ClassName } from '../functions/classname'
+import type { MayDeepArray } from '../typings/tools'
+import type { CSSProperties, ReactNode, RefObject } from 'react'
+import { createElement } from 'react'
 import { useRef } from 'react'
-import classname, { ClassName } from '../functions/classname'
+import classname from '../functions/classname'
 import mergeRefs from '../functions/mergeRefs'
 import { mergeObjects } from '@edsolater/fnkit/src/object'
-import { MayDeepArray } from '../typings/tools'
 
 export interface TagMap {
   div: HTMLDivElement

@@ -1,6 +1,6 @@
-import { CSSProperties } from 'react'
-import { DivProps } from './Div'
-import UIRoot from './uiRoot'
+import type { CSSProperties } from 'react'
+import type { DivProps } from './Div'
+import UIRoot from './UIRoot'
 
 export interface CardProps extends DivProps {
   bg: CSSProperties['background']

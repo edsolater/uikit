@@ -1,5 +1,5 @@
 import _Link from 'next/link'
-import { FC } from 'react'
+import type { FC } from 'react'
 
 const Link: FC<{ as?: 'a'; to?: string; isActive?: boolean; className?: string }> = ({
   className,

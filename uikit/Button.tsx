@@ -1,5 +1,5 @@
 import type { DivProps } from './Div'
-import UIRoot from './uiRoot'
+import UIRoot from './UIRoot'
 
 export interface ButtonProps extends DivProps<'button'> {
   /**

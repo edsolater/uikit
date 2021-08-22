@@ -1,6 +1,5 @@
-import React from 'react'
-import UIRoot from '../uikit/uiRoot'
-import { DivProps } from '../uikit/Div'
+import type { DivProps } from '../../uikit/Div'
+import UIRoot from '../../uikit/UIRoot'
 
 interface ExampleCardProps extends DivProps {
   category?: 'hooks' | 'uikit' | 'templateComponent'

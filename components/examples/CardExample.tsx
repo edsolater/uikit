@@ -1,4 +1,4 @@
-import Card from '../uikit/Card'
+import Card from '../../uikit/Card'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
 
