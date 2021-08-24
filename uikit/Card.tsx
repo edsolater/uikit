@@ -10,5 +10,5 @@ export interface CardProps extends DivProps {
  * @BaseUIComponent
  */
 export default function Card({ bg, ...restProps }: CardProps) {
-  return <UIRoot _className='Card rounded-md py-4 px-8' _style={{ background: bg }} {...restProps} />
+  return <UIRoot _className='Card  rounded-md py-4 px-8' _style={{ background: bg }} {...restProps} />
 }
