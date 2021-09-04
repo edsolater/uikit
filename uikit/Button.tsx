@@ -1,9 +1,15 @@
-import type { ButtonSkinProps } from './ButtonSkin'
+import type { UseButtonClassName } from './hooks/useButtonClassName'
 import type { DivProps } from './Div'
 import UIRoot from './UIRoot'
-import ButtonSkin from './ButtonSkin'
+import useButtonClassName from './hooks/useButtonClassName'
 
-export interface ButtonProps extends DivProps<'button'>, ButtonSkinProps {}
-export default function Button({ as = ButtonSkin, ...restProps }: ButtonProps) {
-  return <UIRoot {...restProps} as={as}></UIRoot>
+export interface ButtonProps extends DivProps<'button'>, UseButtonClassName {}
+
+export default function Button(props: ButtonProps) {
+  const defaultClassName = useButtonClassName(props)
+  return (
+    <UIRoot {...props} className={[Button.name, defaultClassName, props.className]}>
+      {props.children ?? '🤨'}
+    </UIRoot>
+  )
 }
