@@ -12,19 +12,25 @@ type TransitionPhase = 'enter' | 'leave' | 'showing' | 'hidden'
 export interface TransitionProps extends DivProps {
   show: boolean
   effect?: 'fade-in/fade-out' //TODO more!!
-  children?: ReactNode | ((state: { phase: TransitionPhase; duringTransition: boolean }) => ReactNode)
+  children?:
+    | ReactNode
+    | ((state: { phase: TransitionPhase; duringTransition: boolean }) => ReactNode)
+}
+
+const fadeInPack = {
+  enter: 'transition-opacity ease-linear duration-300',
+  enterFrom: 'opacity-0',
+  enterTo: 'opacity-100',
+  leave: 'transition-opacity ease-linear duration-300',
+  leaveFrom: 'opacity-100',
+  leaveTo: 'opacity-0'
 }
 //应该也有个useTransition的hooks
 /** @headless it will render a <Fragment /> */
 export default function Transition({ show, children }: TransitionProps) {
   const [duringTransition, inTransitionController] = useToggle()
 
-  const enter = 'transition-opacity ease-linear duration-300'
-  const enterFrom = 'opacity-0'
-  const enterTo = 'opacity-100'
-  const leave = 'transition-opacity ease-linear duration-300'
-  const leaveFrom = 'opacity-100'
-  const leaveTo = 'opacity-0'
+  const transitionEffect = fadeInPack
 
   const [inDomTree, inDomController] = useToggle(show) // this will equal to show, when it's not transition.
   const [currentClassName, setcurrentClassName] = usePromisedState<string>()
@@ -50,10 +56,10 @@ export default function Transition({ show, children }: TransitionProps) {
       if (inDomTree) return
       inDomController.on()
       inTransitionController.on()
-      setcurrentClassName(`${enter} ${enterFrom}`).then(() => {
+      setcurrentClassName(`${transitionEffect.enter} ${transitionEffect.enterFrom}`).then(() => {
         // use timeout to force React commit setcurrentClassName. or it will automatic batching the change. which leads no transition
         setTimeout(() => {
-          setcurrentClassName(`${enter} ${enterTo}`)
+          setcurrentClassName(`${transitionEffect.enter} ${transitionEffect.enterTo}`)
           ref.current?.addEventListener('transitionend', () => inTransitionController.off(), {
             once: true
           })
@@ -63,11 +69,11 @@ export default function Transition({ show, children }: TransitionProps) {
       if (!inDomTree) return
       inTransitionController.on()
       setcurrentClassName(
-        `${leave} ${leaveFrom} ` /* ending space for different from `${enter} ${enterTo}` */
+        `${transitionEffect.leave} ${transitionEffect.leaveFrom} ` /* ending space for different from `${enter} ${enterTo}` */
       ).then(() => {
         // use timeout to force React commit setcurrentClassName. or it will automatic batching the change. which leads no transition
         setTimeout(() => {
-          setcurrentClassName(`${leave} ${leaveTo} `)
+          setcurrentClassName(`${transitionEffect.leave} ${transitionEffect.leaveTo} `)
           ref.current?.addEventListener('transitionend', inTransitionController.off, { once: true })
           ref.current?.addEventListener('transitionend', inDomController.off, { once: true })
         }, 0)
