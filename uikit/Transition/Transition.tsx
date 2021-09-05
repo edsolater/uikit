@@ -1,5 +1,5 @@
 // @see https://headlessui.dev/react/transition
-import type { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import type { DivProps } from '../Div'
 import { useEffect, useRef, useState } from 'react'
 import Div from '../Div'
@@ -18,36 +18,33 @@ export interface TransitionProps extends DivProps {
     | ((state: { phase: TransitionPhase; duringTransition: boolean }) => ReactNode)
 }
 
-
 //应该也有个useTransition的hooks
 /** @headless it will render a <Fragment /> */
-export default function Transition({ show, children }: TransitionProps) {
+export default function Transition({
+  show,
+  children,
+  effect = 'fade-in/fade-out'
+}: TransitionProps) {
   const [duringTransition, inTransitionController] = useToggle()
-
-  const transitionEffect = fadeInTransitionEffect
-
+  const transitionEffect = { 'fade-in/fade-out': fadeInTransitionEffect }[effect] // TODO currently, there is no type.
   const [inDomTree, inDomController] = useToggle(show) // this will equal to show, when it's not transition.
   const [currentClassName, setcurrentClassName] = usePromisedState<string>()
-
-  const [phase, setPhase] = useState<TransitionPhase>(show ? 'showing' : 'hidden')
   const ref = useRef<HTMLDivElement>()
+  const currentPhase: TransitionPhase =
+    show && !duringTransition
+      ? 'showing'
+      : show && duringTransition
+      ? 'enter'
+      : !show && duringTransition
+      ? 'leave'
+      : 'hidden'
 
   useEffect(() => {
-    const currentPhase: TransitionPhase =
-      show && !duringTransition
-        ? 'showing'
-        : show && duringTransition
-        ? 'enter'
-        : !show && duringTransition
-        ? 'leave'
-        : 'hidden'
     if (ref.current) ref.current.dataset['phase'] = currentPhase
-    setPhase(currentPhase)
-  }, [show, duringTransition])
+  }, [currentPhase])
 
   useEffect(() => {
-    if (show) {
-      if (inDomTree) return
+    if (show && !inDomTree) {
       inDomController.on()
       inTransitionController.on()
       setcurrentClassName(`${transitionEffect.enter} ${transitionEffect.enterFrom}`).then(() => {
@@ -59,8 +56,11 @@ export default function Transition({ show, children }: TransitionProps) {
           })
         }, 0)
       })
-    } else {
-      if (!inDomTree) return
+    }
+  }, [show])
+
+  useEffect(() => {
+    if (!show && inDomTree) {
       inTransitionController.on()
       setcurrentClassName(
         `${transitionEffect.leave} ${transitionEffect.leaveFrom} ` /* ending space for different from `${enter} ${enterTo}` */
@@ -78,7 +78,7 @@ export default function Transition({ show, children }: TransitionProps) {
   // TODO: should affact it's child
   return inDomTree ? (
     <Div domRef={ref} className={currentClassName ?? ''}>
-      {shrinkToValue(children, [{ phase, duringTransition }])}
+      {shrinkToValue(children, [{ phase: currentPhase, duringTransition }])}
     </Div>
   ) : null
 }
