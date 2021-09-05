@@ -1,5 +1,5 @@
 import UIRoot from './UIRoot'
-import type  { DivProps } from './Div'
+import type { DivProps } from './Div'
 
 export interface RowProps extends DivProps {
   /**
@@ -7,9 +7,6 @@ export interface RowProps extends DivProps {
    * "横"盒子空隙的大小
    */
   gapSize?: 'small' | 'medium' | 'large'
-
-  /**@cssProps */
-  noStratch?: boolean
 }
 
 /**
@@ -17,14 +14,14 @@ export interface RowProps extends DivProps {
  *
  * 将子元素显示在一行，相当于flexbox
  */
-const Row = ({ gapSize = 'medium', noStratch, ...restProps }: RowProps) => {
+const Row = ({ gapSize = 'medium', ...restProps }: RowProps) => {
   return (
     <UIRoot
       _className={[
         'Row',
         'flex',
         { small: 'gap-1', medium: 'gap-2', large: 'gap-4' }[gapSize],
-        noStratch && 'items-center'
+        'items-center'
       ]}
       {...restProps}
     />

@@ -1,4 +1,4 @@
-import useTailwindClass from '../../hooks/useTailwindClass'
+import useTailwindClass from '../useTailwindClass'
 
 export interface UseButtonClassName {
   /**

@@ -3,6 +3,7 @@ import UIRoot from '../../uikit/UIRoot'
 
 interface ExampleCardProps extends DivProps {
   category?: 'hooks' | 'uikit' | 'templateComponent'
+  subCategory?: 'headless'
   title?: string
 }
 export default function ExampleCard(props: ExampleCardProps) {

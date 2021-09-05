@@ -12,7 +12,7 @@ export interface CardProps extends DivProps {
 export default function Card({ bgimgSrc, ...restProps }: CardProps) {
   return (
     <UIRoot
-      _className='Card  rounded-md py-4 px-8'
+      _className='Card rounded-md py-4 px-8'
       _style={{ background: bgimgSrc }}
       {...restProps}
     />

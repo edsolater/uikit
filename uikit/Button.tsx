@@ -1,15 +1,23 @@
-import type { UseButtonClassName } from './classNameHooks/useButtonClassName'
+import type { UseButtonClassName } from '../hooks/classNameHooks/useButtonClassName'
 import type { DivProps } from './Div'
 import UIRoot from './UIRoot'
-import useButtonClassName from './classNameHooks/useButtonClassName'
+import useButtonClassName from '../hooks/classNameHooks/useButtonClassName'
+import { useClickableElementRef } from '../hooks/useClickableElement'
 
-export interface ButtonProps extends DivProps<'button'>, UseButtonClassName {}
+export interface ButtonProps extends DivProps<'button'>, UseButtonClassName {
+  onClick?: () => void
+}
 
-export default function Button(props: ButtonProps) {
-  const defaultClassName = useButtonClassName(props)
+export default function Button({ onClick, ...restProps }: ButtonProps) {
+  const defaultClassName = useButtonClassName(restProps)
+  const ref = useClickableElementRef({ onClick })
   return (
-    <UIRoot {...props} _className={[Button.name, defaultClassName, props.className]}>
-      {props.children ?? '🤨'}
+    <UIRoot
+      {...restProps}
+      _className={[Button.name, defaultClassName, restProps.className]}
+      _domRef={ref}
+    >
+      {restProps.children ?? '🤨'}
     </UIRoot>
   )
 }
