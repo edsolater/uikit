@@ -1,6 +1,7 @@
 import useToggle from '../../hooks/useToggle'
 import Button from '../../uikit/Button'
 import Card from '../../uikit/Card'
+import Div from '../../uikit/Div'
 import Transition from '../../uikit/Transition'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
@@ -15,7 +16,12 @@ const TransitionExample = () => {
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
       <ExampleGroup caption='basic example'>
         <Transition show={isShow}>
-          <Card className='w-[200px] h-[300px] ' bgimgSrc='linear-gradient(dodgerblue,skyblue)' />
+          {({ phase, duringTransition }) => (
+            <Card className='w-[200px] h-[300px] ' bgimgSrc='linear-gradient(dodgerblue,skyblue)'>
+              <Div>phase: {phase}</Div>
+              <Div>inTransition: {String(duringTransition)} </Div>
+            </Card>
+          )}
         </Transition>
       </ExampleGroup>
     </ExampleCard>
