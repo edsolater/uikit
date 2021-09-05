@@ -1,11 +1,12 @@
 // @see https://headlessui.dev/react/transition
-import { isExist } from '@edsolater/fnkit/src/judgers'
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react'
+import { Dispatch, useEffect, useRef, useState } from 'react'
 import { CSSProperties, ReactNode, useLayoutEffect } from 'react'
 import { Div } from '.'
+import { classname } from '../functions'
 import useToggle from '../hooks/useToggle'
 import type { DivProps } from './Div'
 import UIRoot from './UIRoot'
+import usePromisedState from '../hooks/usePromisedState'
 
 export interface TransitionProps extends DivProps {
   show: boolean
@@ -26,9 +27,7 @@ export default function Transition({ show, children }: TransitionProps) {
   const leaveTo = 'opacity-0'
 
   const [isInDomTree, isInDomTreeController] = useToggle(show)
-  const [currentClassName, setcurrentClassName] = useStateWithCallback(
-    show ? `${enter} ${enterFrom} ` : `${leave} ${leaveTo} ` // will break if it is '' . strange!
-  )
+  const [currentClassName, setcurrentClassName] = usePromisedState<string>()
   const [phase, setPhase] = useState<'enter' | 'leave'>('enter')
   const ref = useRef<HTMLDivElement>()
 
@@ -50,8 +49,9 @@ export default function Transition({ show, children }: TransitionProps) {
     if (isInDomTree === true) {
       console.log(1)
       setcurrentClassName(`${enter} ${enterFrom}`).then(() => {
-        console.log(2, currentClassName)
-        setcurrentClassName(`${enter} ${enterTo}`)
+        setTimeout(() => {
+          setcurrentClassName(`${enter} ${enterTo}`)
+        }, 0) // use timeout to let react commit setcurrentClassName. or it will automatic batching the change. which leads no transition
       })
     }
     return () => {
@@ -61,25 +61,8 @@ export default function Transition({ show, children }: TransitionProps) {
 
   // TODO: should affact it's child
   return isInDomTree ? (
-    <Div domRef={ref} className={currentClassName}>
+    <Div domRef={ref} className={currentClassName ?? ''}>
       {children}
     </Div>
   ) : null
-}
-
-function useStateWithCallback<S = undefined>(
-  initialState?: S | (() => S)
-): [S, (value: SetStateAction<S>) => Promise<S>] {
-  const [state, setState] = useState(initialState)
-  const promiseResolve = useRef<(value: S) => void>()
-  useEffect(() => {
-    if (isExist(state) && isExist(promiseResolve.current)) promiseResolve.current(state)
-  }, [state])
-  const setStateWithCallback = (value: SetStateAction<S>) => {
-    return new Promise<S>((resolve, reject) => {
-      setState(value)
-      promiseResolve.current = resolve
-    })
-  }
-  return [state, setStateWithCallback]
 }
