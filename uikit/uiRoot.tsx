@@ -3,7 +3,8 @@ import { mergeProps } from '../functions'
 import Div from './Div'
 
 /**
- * 基础组件专用版<Div>，其  _props 会自动 merge
+ * 基础组件专用版<Div>，其  _props 会自动 merge.
+ * 只有当直接调用<UIRoot>时，才可以使用 `_` 开头的属性
  */
 export interface UIRootProps<TagName extends keyof TagMap = 'div'> extends DivProps<TagName> {
   _domRef?: DivProps<TagName>['domRef']

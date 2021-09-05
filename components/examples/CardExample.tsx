@@ -8,7 +8,7 @@ import ExampleGroup from './ExampleGroup'
 const CardExample = () => (
   <ExampleCard title='Card' category='uikit'>
     <ExampleGroup caption='basic example'>
-      <Card className='w-[200px] h-[300px]' bg='linear-gradient(dodgerblue, skyblue)' />
+      <Card className='w-[200px] h-[300px] ' bgimgSrc='linear-gradient(dodgerblue,skyblue)' />
     </ExampleGroup>
   </ExampleCard>
 )
