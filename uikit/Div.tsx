@@ -1,6 +1,7 @@
 import type { ClassName } from '../functions/classname'
 import type { MayDeepArray } from '../typings/tools'
 import type { CSSProperties, ReactNode, RefObject } from 'react'
+import { twMerge } from 'tailwind-merge'
 import { createElement } from 'react'
 import { useRef } from 'react'
 import classname from '../functions/classname'
@@ -39,7 +40,7 @@ const Div = <TagName extends keyof TagMap = 'div'>(props: DivProps<TagName>) => 
         props.as ?? 'div',
         {
           ...props.htmlProps,
-          className: classname(props.className),
+          className: twMerge(classname(props.className)),
           ref: mergeRefs(...[props.domRef, divRef].flat(Infinity)),
           style: mergeObjects(...[props.style].flat())
         },
