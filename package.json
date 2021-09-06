@@ -6,7 +6,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "release": "rm -rf ./dist && tsc && npm version patch && npm publish"
+    "release": "rm -rf ./dist && tsc && npm version patch && npm publish",
+    "analyze": "cross-env ANALYZE=true next build"
   },
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
@@ -23,8 +24,11 @@
   },
   "devDependencies": {
     "@edsolater/fnkit": "^1.0.19",
+    "@next/bundle-analyzer": "^11.1.2",
     "@types/react": "17.0.17",
     "autoprefixer": "^10.3.1",
+    "cross-env": "^7.0.3",
+    "next-build-id": "^3.0.0",
     "next-transpile-modules": "^8.0.0",
     "postcss": "^8.3.6",
     "prettier": "^2.3.2",
