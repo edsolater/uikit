@@ -5,13 +5,13 @@ import Div from '../Div'
 import useToggle from '../../hooks/useToggle'
 import usePromisedState from '../../hooks/usePromisedState'
 import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
-import { fadeInTransitionEffect } from './transitionEffect'
+import { fadeInTransitionEffect, TransitionEffectLabel, transitionEffectLabels } from './transitionEffect'
 
-type TransitionPhase = 'enter' | 'leave' | 'showing' | 'hidden'
+export type TransitionPhase = 'enter' | 'leave' | 'showing' | 'hidden';
 
 export interface TransitionProps extends DivProps {
   show: boolean
-  effect?: 'fade-in/fade-out' //TODO more!!
+  effect?: TransitionEffectLabel
   children?:
     | ReactNode
     | ((state: { phase: TransitionPhase; duringTransition: boolean }) => ReactNode)
@@ -22,7 +22,7 @@ export interface TransitionProps extends DivProps {
 export default function Transition({
   show,
   children,
-  effect = 'fade-in/fade-out'
+  effect = transitionEffectLabels[0]
 }: TransitionProps) {
   const [duringTransition, inTransitionController] = useToggle()
   const transitionEffect = { 'fade-in/fade-out': fadeInTransitionEffect }[effect] // TODO currently, there is no type.

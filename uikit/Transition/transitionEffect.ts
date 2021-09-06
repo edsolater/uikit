@@ -1,4 +1,4 @@
-type TransitionEffectClasses = {
+export type TransitionEffectClasses = {
   enter: string
   enterFrom: string
   enterTo: string
@@ -6,7 +6,13 @@ type TransitionEffectClasses = {
   leaveFrom: string
   leaveTo: string
 }
-function transitionEffectHelper(input: Partial<TransitionEffectClasses>): TransitionEffectClasses {
+
+export type TransitionEffectLabel = 'fade-in/fade-out'
+
+/** helper for establish a transition effect */
+export function transitionEffectHelper(
+  input: Partial<TransitionEffectClasses>
+): TransitionEffectClasses {
   return { enter: '', enterFrom: '', enterTo: '', leave: '', leaveFrom: '', leaveTo: '', ...input }
 }
 
@@ -18,3 +24,8 @@ export const fadeInTransitionEffect = transitionEffectHelper({
   leaveFrom: 'opacity-100',
   leaveTo: 'opacity-0'
 })
+export const transitionEffects: Record<TransitionEffectLabel, TransitionEffectClasses> = {
+  'fade-in/fade-out': fadeInTransitionEffect
+}
+
+export const transitionEffectLabels = Object.keys(transitionEffects) as TransitionEffectLabel[]
