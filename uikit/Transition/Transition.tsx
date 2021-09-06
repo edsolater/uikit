@@ -1,7 +1,6 @@
-// @see https://headlessui.dev/react/transition
-import { ReactNode, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import type { DivProps } from '../Div'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import Div from '../Div'
 import useToggle from '../../hooks/useToggle'
 import usePromisedState from '../../hooks/usePromisedState'
@@ -75,7 +74,6 @@ export default function Transition({
     }
   }, [show])
 
-  // TODO: should affact it's child
   return inDomTree ? (
     <Div domRef={ref} className={currentClassName ?? ''}>
       {shrinkToValue(children, [{ phase: currentPhase, duringTransition }])}
