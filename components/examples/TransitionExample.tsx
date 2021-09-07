@@ -15,10 +15,11 @@ const TransitionExample = () => {
     <ExampleCard title='Transition' category='uikit' subCategory='headless'>
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
       <ExampleGroup caption='basic example'>
-        <Transition show={isShow}>
+        <Transition show={isShow} effect={['fade-in/fade-out', 'from-left']}>
           {({ phase, duringTransition }) => (
             <Card className='w-[200px] h-[300px] ' bgimgSrc='linear-gradient(dodgerblue,skyblue)'>
-              <Div>phase: {phase}</Div> {/* TODO: 展示变量字段是个常见需求， 应该提取一个专门的组件，或建造一个快捷方式 */}
+              <Div>phase: {phase}</Div>{' '}
+              {/* TODO: 展示变量字段是个常见需求， 应该提取一个专门的组件，或建造一个快捷方式 */}
               <Div>inTransition: {String(duringTransition)} </Div>
             </Card>
           )}

@@ -7,7 +7,7 @@ export type TransitionEffectClasses = {
   leaveTo: string
 }
 
-export type TransitionEffectLabel = 'fade-in/fade-out'
+export type TransitionEffectLabel = 'fade-in/fade-out' | 'from-left'
 
 /** helper for establish a transition effect */
 export function transitionEffectHelper(
@@ -16,16 +16,23 @@ export function transitionEffectHelper(
   return { enter: '', enterFrom: '', enterTo: '', leave: '', leaveFrom: '', leaveTo: '', ...input }
 }
 
-export const fadeInTransitionEffect = transitionEffectHelper({
-  enter: 'transition-opacity ease-linear duration-300',
-  enterFrom: 'opacity-0',
-  enterTo: 'opacity-100',
-  leave: 'transition-opacity ease-linear duration-300',
-  leaveFrom: 'opacity-100',
-  leaveTo: 'opacity-0'
-})
 export const transitionEffects: Record<TransitionEffectLabel, TransitionEffectClasses> = {
-  'fade-in/fade-out': fadeInTransitionEffect
+  'fade-in/fade-out': transitionEffectHelper({
+    enter: 'transition-opacity text-text-light ease-linear duration-300',
+    enterFrom: 'opacity-0',
+    enterTo: 'opacity-100',
+    leave: 'transition-opacity text-text-light ease-linear duration-300',
+    leaveFrom: 'opacity-100',
+    leaveTo: 'opacity-0'
+  }),
+  'from-left': transitionEffectHelper({
+    enter: 'transition-opacity duration-[2000ms]',
+    enterFrom: 'opacity-0',
+    enterTo: 'opacity-100',
+    leave: 'transition-opacity ease-linear duration-[2000ms]',
+    leaveFrom: 'opacity-100',
+    leaveTo: 'opacity-0'
+  })
 }
 
 export const transitionEffectLabels = Object.keys(transitionEffects) as TransitionEffectLabel[]
