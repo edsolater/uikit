@@ -1,13 +1,12 @@
-import { AnyFn, AnyObj } from '../typings/constants'
+import { AnyFn, AnyObj } from '../../typings/constants'
 import flatMayArray from '@edsolater/fnkit/src/array/flatMayArray'
-import { isExist, isOneOf } from '@edsolater/fnkit/src/judgers'
 import isArray from '@edsolater/fnkit/src/judgers/isArray'
 import isFunction from '@edsolater/fnkit/src/judgers/isFunction'
 import isObject from '@edsolater/fnkit/src/judgers/isObject'
 import notNullish from '@edsolater/fnkit/src/judgers/notNullish'
 import parallelSwitch from '@edsolater/fnkit/src/magic/parallelSwitch'
 import _mergeObjects from '@edsolater/fnkit/src/_mergeObjects'
-import mergeFunction from './mergeFunction'
+import mergeFunction from '../mergeFunction'
 import mergeRefs from './mergeRefs'
 
 /**prop may very deep like children */

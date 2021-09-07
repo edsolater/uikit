@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import type { DivProps } from '../Div'
+import type { TransitionEffectLabel } from './transitionEffect'
+import type { MayArray } from '../../typings/tools'
 import { useEffect, useRef } from 'react'
 import Div from '../Div'
 import useToggle from '../../hooks/useToggle'
 import usePromisedState from '../../hooks/usePromisedState'
 import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
-import { TransitionEffectLabel, transitionEffects } from './transitionEffect'
-import { transitionEffectLabels } from './transitionEffect'
-import type { MayArray, Valueof } from '../../typings/tools'
+import { transitionEffectLabels, transitionEffects } from './transitionEffect'
+import { pickValues } from '../../functions/pickValues'
 
 export type TransitionPhase = 'enter' | 'leave' | 'showing' | 'hidden'
 
@@ -19,10 +20,6 @@ export interface TransitionProps extends DivProps {
     | ((state: { phase: TransitionPhase; duringTransition: boolean }) => ReactNode)
 }
 
-function pickValues<T extends Record<string, any>>(obj: T, keys: MayArray<keyof T>): Valueof<T>[] {
-  // @ts-expect-error don't know why it's error, but it should be true
-  return [keys].flat().map((k) => obj[k])
-}
 //应该也有个useTransition的hooks
 /** @headless it will render a <Fragment /> */
 export default function Transition({

@@ -1,13 +1,13 @@
-import type { ClassName } from '../functions/classname'
 import type { MayDeepArray } from '../typings/tools'
 import type { CSSProperties, ReactNode, RefObject } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { createElement } from 'react'
 import { useRef } from 'react'
-import classname from '../functions/classname'
-import mergeRefs from '../functions/mergeRefs'
+import mergeRefs from '../functions/react/mergeRefs'
 import { mergeObjects, omit } from '@edsolater/fnkit/src/object'
 import { isString, isUndefined } from '@edsolater/fnkit/src/judgers'
+import { classname } from '../functions'
+import { ClassName } from '../functions/react/classname'
 
 export interface TagMap {
   div: HTMLDivElement

@@ -1,5 +1,5 @@
 import React, { isValidElement, ReactElement, ReactNode } from 'react'
-import { MayArray } from '../typings/tools'
+import { MayArray } from '../../typings/tools'
 import { isArray } from '@edsolater/fnkit/src/judgers'
 
 /**

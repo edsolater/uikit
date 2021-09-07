@@ -1,4 +1,4 @@
-import { MayDeepArray } from '../typings/tools'
+import type { MayDeepArray } from '../../typings/tools'
 import isObjectLike from '@edsolater/fnkit/src/judgers/isObjectOrArray'
 import isExist from '@edsolater/fnkit/src/judgers/isExist'
 import flatMayArray from '@edsolater/fnkit/src/array/flatMayArray'
