@@ -15,7 +15,7 @@ const TransitionExample = () => {
     <ExampleCard title='Transition' category='uikit' subCategory='headless'>
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
       <ExampleGroup caption='basic example'>
-        <Transition show={isShow} effect={['fade-in/fade-out', 'from-left']}>
+        <Transition show={isShow} effect={['fade-in/fade-out', 'zoom-from-left', 'boom']}>
           {({ phase, inTransition }) => (
             <Card className='w-[200px] h-[300px] ' bgimgSrc='linear-gradient(dodgerblue,skyblue)'>
               <Div>phase: {phase}</Div>{' '}
