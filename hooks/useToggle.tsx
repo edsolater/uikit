@@ -46,7 +46,7 @@ export default function useToggle(
     }),
     [bFlag]
   )
-  return [bFlag.value(), controller]
+  return [bFlag.value, controller]
 }
 
 /**

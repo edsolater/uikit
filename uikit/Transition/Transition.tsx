@@ -39,7 +39,7 @@ export default function Transition({ show, children, effect = transitionEffectLa
   }, [currentPhase])
 
   useEffect(() => {
-    if (show && !inDomTree.value()) {
+    if (show && !inDomTree.value) {
       inDomTree.on()
       inTransition.on()
       setcurrentClassName(enterFromClassName).then(() => {
@@ -55,7 +55,7 @@ export default function Transition({ show, children, effect = transitionEffectLa
   }, [show])
 
   useEffect(() => {
-    if (!show && inDomTree.value()) {
+    if (!show && inDomTree.value) {
       inTransition.on()
       setcurrentClassName(leaveFromClassName).then(() => {
         // use timeout to force React commit setcurrentClassName. or it will automatic batching the change. which leads no transition
@@ -68,8 +68,8 @@ export default function Transition({ show, children, effect = transitionEffectLa
     }
   }, [show])
 
-  return inDomTree.value() ? (
-    <Div domRef={ref} className={inTransition.value() ? currentClassName ?? '' : undefined}>
+  return inDomTree.value ? (
+    <Div domRef={ref} className={inTransition.value ? currentClassName ?? '' : undefined}>
       {shrinkToValue(children, [{ phase: currentPhase, inTransition: inTransition }])}
     </Div>
   ) : null
