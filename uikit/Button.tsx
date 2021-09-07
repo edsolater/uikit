@@ -29,8 +29,8 @@ export const buttonBaseStyle = ({
     {
       outline: `relative ring-inset ${
         size === 'large' ? 'ring-2' : size === 'small' ? 'ring-1' : 'ring-2'
-      } ring-opacity-80 ring-fill-dark`,
-      fill: 'relative bg-fill-dark text-text-light hover:brightness-125 active:brightness-90',
+      } ring-opacity-80 ring-block-dark`,
+      fill: 'relative bg-block-dark text-text-light hover:brightness-125 active:brightness-90',
       text: 'text-text-dark bg-transparent'
     }[type]
   ].join(' ')

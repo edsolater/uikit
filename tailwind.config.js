@@ -7,8 +7,8 @@ const config = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {
-      'fill-dark': colors.gray[600],
-      'fill-light': colors.white,
+      'block-dark': colors.gray[600],
+      'block-light': colors.white,
       'text-light': colors.gray[100],
       'text-dark': colors.coolGray[700]
     }
