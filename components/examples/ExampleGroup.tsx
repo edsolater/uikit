@@ -8,7 +8,7 @@ interface ExampleGroupProps extends DivProps {
 }
 export default function ExampleGroup({ caption, children, ...rest }: ExampleGroupProps) {
   return (
-    <UIRoot {...rest} _className={`${ExampleGroup.name}`}>
+    <UIRoot {...rest} _className={`${ExampleGroup.name}`} style={{gridTemplateColumns:''}}>
       {caption && <Caption className='my-4 text-xl font-bold'>{caption}</Caption>}
       <Row>{children}</Row>
     </UIRoot>
