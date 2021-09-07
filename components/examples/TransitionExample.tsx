@@ -16,11 +16,11 @@ const TransitionExample = () => {
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
       <ExampleGroup caption='basic example'>
         <Transition show={isShow} effect={['fade-in/fade-out', 'from-left']}>
-          {({ phase, duringTransition }) => (
+          {({ phase, inTransition }) => (
             <Card className='w-[200px] h-[300px] ' bgimgSrc='linear-gradient(dodgerblue,skyblue)'>
               <Div>phase: {phase}</Div>{' '}
               {/* TODO: 展示变量字段是个常见需求， 应该提取一个专门的组件，或建造一个快捷方式 */}
-              <Div>inTransition: {String(duringTransition)} </Div>
+              <Div>inTransition: {String(inTransition)} </Div>
             </Card>
           )}
         </Transition>
