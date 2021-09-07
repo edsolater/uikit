@@ -8,11 +8,11 @@ export interface ButtonProps extends DivProps<'button'>, BaseStyle<ButtonBaseSty
   onClick?: () => void
 }
 
-export default function Button({ onClick, ...restProps }: ButtonProps) {
-  const baseStyleClassName = restProps.baseStyle === 'none' ? '' : buttonBaseStyle(restProps.baseStyle)
+export default function Button({ onClick, baseStyle, ...restProps }: ButtonProps) {
+  const baseStyleClasses = buttonBaseStyle(baseStyle)
   const ref = useClickableElementRef({ onClick })
   return (
-    <UIRoot {...restProps} _className={[Button.name, baseStyleClassName]} _domRef={ref}>
+    <UIRoot {...restProps} _className={baseStyleClasses} _domRef={ref}>
       {restProps.children ?? '🤨'}
     </UIRoot>
   )

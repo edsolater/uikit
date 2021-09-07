@@ -10,7 +10,7 @@ export default function ExampleGroup({ caption, children, ...rest }: ExampleGrou
   return (
     <UIRoot {...rest} _className={`${ExampleGroup.name}`}>
       {caption && <Caption className='my-4 text-xl font-bold'>{caption}</Caption>}
-      <Row noStratch>{children}</Row>
+      <Row>{children}</Row>
     </UIRoot>
   )
 }

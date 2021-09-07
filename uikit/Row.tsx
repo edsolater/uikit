@@ -1,30 +1,17 @@
-import UIRoot from './UIRoot'
 import type { DivProps } from './Div'
+import type { BaseStyle } from './interface'
+import { rowBaseStyle, RowBaseStyleProps } from './RowBaseStyle'
+import UIRoot from './UIRoot'
 
-export interface RowProps extends DivProps {
-  /**
-   * @cssProps
-   * "横"盒子空隙的大小
-   */
-  gapSize?: 'small' | 'medium' | 'large'
-}
+export interface RowProps extends DivProps, BaseStyle<RowBaseStyleProps> {}
 
 /**
  * @uikitComponent
  *
  * 将子元素显示在一行，相当于flexbox
  */
-const Row = ({ gapSize = 'medium', ...restProps }: RowProps) => {
-  return (
-    <UIRoot
-      _className={[
-        'Row',
-        'flex',
-        { small: 'gap-1', medium: 'gap-2', large: 'gap-4' }[gapSize],
-        'items-center'
-      ]}
-      {...restProps}
-    />
-  )
+const Row = ({ baseStyle, ...restProps }: RowProps) => {
+  const baseStyleClasses = rowBaseStyle(baseStyle)
+  return <UIRoot _className={baseStyleClasses} {...restProps} />
 }
 export default Row
