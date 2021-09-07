@@ -1,12 +1,8 @@
-import { CSSObject } from '@emotion/react'
-
-export type StyleNames<T extends string[]> = { [name in T[number]]: CSSObject }
-
 export type MayArray<T> = T | Array<T>
 
 export type MayDeepArray<T> = T | Array<MayDeepArray<T>>
 
-export type MayFunction<T> = T | (() => T)
+export type MayFunction<T, Params extends any[] = any[]> = T | ((...params: Params) => T)
 
 /**
  * 能有enum提示，同时，传入其他string也不报错
@@ -81,11 +77,7 @@ export type NotUndefinedValue<O> = {
  * @example
  * ExtractProperty<{ key: 'hello' }, 'key'> // "hello"
  */
-export type ExtractProperty<
-  O,
-  P extends keyof any,
-  Fallback extends keyof any = any
-> = O extends {
+export type ExtractProperty<O, P extends keyof any, Fallback extends keyof any = any> = O extends {
   [Key in P]: infer K
 }
   ? K extends any
@@ -108,21 +100,20 @@ export type ArrayItem<A> = A extends readonly (infer T)[] ? T : any
  * PascalCaseFromKebabCase<'hello-world-hi-I-am'> // 'HelloWroldHiIAm'
  * PascalCaseFromKebabCase<'hello-world-hi-I-am-Ed'> // 'HelloWroldHiIAmEd'
  */
-export type PascalCaseFromKebabCase<
-  S extends string
-> = S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}-${infer p7}`
-  ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}${Capitalize<p7>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}`
-  ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}`
-  ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}`
-  ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}`
-  ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}`
-  : S extends `${infer p1}-${infer p2}`
-  ? `${Capitalize<p1>}${Capitalize<p2>}`
-  : S
+export type PascalCaseFromKebabCase<S extends string> =
+  S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}-${infer p7}`
+    ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}${Capitalize<p7>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}`
+    ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}`
+    ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}`
+    ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}`
+    ? `${Capitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}`
+    : S extends `${infer p1}-${infer p2}`
+    ? `${Capitalize<p1>}${Capitalize<p2>}`
+    : S
 
 /**
  * @example
@@ -150,21 +141,20 @@ export type PascalCase<S extends string> = PascalCaseFromKebabCase<Capitalize<S>
  * PascalCaseFromKebabCase<'hello-world-hi-I-am'> // 'helloWroldHiIAm'
  * PascalCaseFromKebabCase<'hello-world-hi-I-am-Ed'> // 'helloWroldHiIAmEd'
  */
-export type CamelCaseFromKebabCase<
-  S extends string
-> = S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}-${infer p7}`
-  ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}${Capitalize<p7>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}`
-  ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}`
-  ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}`
-  ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}`
-  ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}`
-  : S extends `${infer p1}-${infer p2}`
-  ? `${Uncapitalize<p1>}${Capitalize<p2>}`
-  : S
+export type CamelCaseFromKebabCase<S extends string> =
+  S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}-${infer p7}`
+    ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}${Capitalize<p7>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}`
+    ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}${Capitalize<p6>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}`
+    ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}${Capitalize<p5>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}`
+    ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}${Capitalize<p4>}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}`
+    ? `${Uncapitalize<p1>}${Capitalize<p2>}${Capitalize<p3>}`
+    : S extends `${infer p1}-${infer p2}`
+    ? `${Uncapitalize<p1>}${Capitalize<p2>}`
+    : S
 
 /**
  * @example
@@ -187,21 +177,20 @@ export type CamelCase<S extends string> = CamelCaseFromKebabCase<Uncapitalize<S>
 /**
  * !!! only support kebab-case => snake_case yet!!!
  */
-export type SnakeCase<
-  S extends string
-> = S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}-${infer p7}`
-  ? `${p1}_${p2}_${p3}_${p4}_${p5}_${p6}_${p7}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}`
-  ? `${p1}_${p2}_${p3}_${p4}_${p5}_${p6}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}`
-  ? `${p1}_${p2}_${p3}_${p4}_${p5}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}`
-  ? `${p1}_${p2}_${p3}_${p4}`
-  : S extends `${infer p1}-${infer p2}-${infer p3}`
-  ? `${p1}_${p2}_${p3}`
-  : S extends `${infer p1}-${infer p2}`
-  ? `${p1}_${p2}`
-  : S
+export type SnakeCase<S extends string> =
+  S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}-${infer p7}`
+    ? `${p1}_${p2}_${p3}_${p4}_${p5}_${p6}_${p7}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}-${infer p6}`
+    ? `${p1}_${p2}_${p3}_${p4}_${p5}_${p6}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}-${infer p5}`
+    ? `${p1}_${p2}_${p3}_${p4}_${p5}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}-${infer p4}`
+    ? `${p1}_${p2}_${p3}_${p4}`
+    : S extends `${infer p1}-${infer p2}-${infer p3}`
+    ? `${p1}_${p2}_${p3}`
+    : S extends `${infer p1}-${infer p2}`
+    ? `${p1}_${p2}`
+    : S
 //#endregion
 
 //#region ------------------- keyof / valueof -------------------

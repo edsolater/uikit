@@ -1,4 +1,4 @@
-import Button from '../../uikit/Button'
+import Button, { buttonBaseStyle } from '../../uikit/Button'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
 
@@ -6,33 +6,25 @@ export default function ButtonExample() {
   return (
     <ExampleCard title='Button' category='uikit'>
       <ExampleGroup caption='basic example'>
-        <Button>Tap</Button>
+        <Button className={buttonBaseStyle()}>Tap</Button>
       </ExampleGroup>
 
       <ExampleGroup caption='type: fill(default)'>
-        <Button /* type='fill' */ size='large'>Large</Button>
-        <Button /* type='fill' */ /* size='medium' */>medium</Button>
-        <Button /* type='fill' */ size='small'>small</Button>
+        <Button className={buttonBaseStyle({ size: 'large' })}>Large</Button>
+        <Button className={buttonBaseStyle()}>medium</Button>
+        <Button className={buttonBaseStyle({ size: 'small' })}>small</Button>
       </ExampleGroup>
 
       <ExampleGroup caption='type: outline'>
-        <Button type='outline' size='large'>
-          Large
-        </Button>
-        <Button type='outline' /* size='medium' */>medium</Button>
-        <Button type='outline' size='small'>
-          small
-        </Button>
+        <Button className={buttonBaseStyle({ size: 'large', type: 'outline' })}>Large</Button>
+        <Button className={buttonBaseStyle({ size: 'medium', type: 'outline' })}>medium</Button>
+        <Button className={buttonBaseStyle({ size: 'small', type: 'outline' })}>small</Button>
       </ExampleGroup>
 
       <ExampleGroup caption='type: outline'>
-        <Button type='text' size='large'>
-          Large
-        </Button>
-        <Button type='text' /* size='medium' */>medium</Button>
-        <Button type='text' size='small'>
-          small
-        </Button>
+        <Button className={buttonBaseStyle({ size: 'large', type: 'text' })}>Large</Button>
+        <Button className={buttonBaseStyle({ size: 'medium', type: 'text' })}>medium</Button>
+        <Button className={buttonBaseStyle({ size: 'small', type: 'text' })}>small</Button>
       </ExampleGroup>
     </ExampleCard>
   )

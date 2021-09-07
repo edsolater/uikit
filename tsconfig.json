@@ -30,6 +30,7 @@
     "uikit/**/*.{ts,tsx}",
     "components/**/*.{ts,tsx}",
     "pages/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
     "functions/**/*.{ts,tsx}",
     "style/**/*.{ts,tsx}",
     "typings/**/*.{ts,tsx}"
