@@ -3,7 +3,7 @@ const colors = require('tailwindcss/colors')
 /**@type {import("tailwindcss/tailwind-config").TailwindConfig} */
 const config = {
   mode: 'jit',
-  purge: ['./{hooks,uikit,components,pages}/**/*.{js,ts,jsx,tsx}'],
+  purge: ['./{hooks,uikit,components,pages,styles}/**/*.{js,ts,jsx,tsx}'],
   darkMode: false, // or 'media' or 'class'
   theme: {
     colors: {
