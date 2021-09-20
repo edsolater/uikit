@@ -9,8 +9,9 @@ const config = {
     colors: {
       'block-light': colors.white,
       'block-semi-light': colors.gray[100],
-      'block-semi-dark': colors.gray[400],
-      'block-dark': colors.gray[600],
+      'block-semi-dark': '#515254d6',
+      'block-dark': '#444c',
+      'bg-dark': '#252627',
       'text-light': colors.gray[100],
       'text-dark': colors.coolGray[700]
     }
