@@ -19,13 +19,14 @@
     "next": "11.1.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
-    "tailwindcss": "^2.2.7",
-    "tailwind-merge": "^0.6.0"
+    "tailwind-merge": "^0.6.0",
+    "tailwindcss": "^2.2.7"
   },
   "devDependencies": {
     "@edsolater/fnkit": "^1.0.19",
     "@next/bundle-analyzer": "^11.1.2",
     "@types/react": "17.0.17",
+    "@types/tailwindcss": "^2.2.1",
     "autoprefixer": "^10.3.1",
     "cross-env": "^7.0.3",
     "next-build-id": "^3.0.0",

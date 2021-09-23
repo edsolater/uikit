@@ -15,13 +15,23 @@ export default function FlowBlocksExample() {
     <ExampleCard title='FlowBlocksExample' category='misc' className='bg-block-dark'>
       <ExampleGroup caption='basic example'>
         {/* TODO: <BlockGen> 阵列器 */}
-        <GradientGrid>
+        {/* <GradientGrid>
           <Div className='grid w-full gap-3' style={[genGridTemplate({ itemMinWidth: '10em' })]}>
             {Array.from({ length: 20 }, (_, idx) => (
               <Card key={idx} className='bg-block-semi-dark w-full rounded' style={{ aspectRatio: '1 / 1' }} />
             ))}
           </Div>
-        </GradientGrid>
+        </GradientGrid> */}
+        <Div className='grid w-full gap-3' style={[genGridTemplate({ itemMinWidth: '10em' })]}>
+          {Array.from({ length: 20 }, (_, idx) => (
+            <Card
+              boundingBoxCSS
+              key={idx}
+              className='bg-block-semi-dark w-full rounded-lg  hover:ring-block-light ring-transparent win10-light-spot ring-8 ring-inset hover:ring-opacity-60'
+              style={{ aspectRatio: '1 / 1' }}
+            />
+          ))}
+        </Div>
       </ExampleGroup>
     </ExampleCard>
   )
