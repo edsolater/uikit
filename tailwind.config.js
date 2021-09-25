@@ -10,11 +10,16 @@ const config = {
   theme: {
     colors: {
       'transparent': '#fff0',
+      // 👇 card color
       'block-light': colors.white,
       'block-semi-light': colors.gray[100],
       'block-semi-dark': '#515254d6',
       'block-dark': '#444c',
       'bg-dark': '#252627',
+      
+      // 👇 colorful
+      'block-primary': colors.yellow[500],
+      
 
       'text-light': colors.gray[100],
       'text-dark': colors.coolGray[700]
@@ -31,8 +36,8 @@ const config = {
             position: 'relative',
             '&::before': {
               // '--tw-ring-color': 'rgba(255, 255, 255,80)',
-              '--spot-x':'calc(calc(var(--pointer-x, 0)* 1px) - calc(var(--left, 0) * 1px))',
-              '--spot-y':'calc(calc(var(--pointer-y, 0)* 1px) - calc(var(--top, 0) * 1px))',
+              '--spot-x': 'calc(calc(var(--pointer-x, 0)* 1px) - calc(var(--left, 0) * 1px))',
+              '--spot-y': 'calc(calc(var(--pointer-y, 0)* 1px) - calc(var(--top, 0) * 1px))',
               content: "''",
               position: 'absolute',
               top: '0',
@@ -47,6 +52,15 @@ const config = {
         },
         ['hover', 'active']
       )
+    }),
+    plugin(({ addUtilities }) => {
+      addUtilities({
+        '.no-native-scrollbar': {
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
+        }
+      })
     })
   ]
 }

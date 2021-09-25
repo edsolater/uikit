@@ -25,7 +25,7 @@ export interface DivProps<TagName extends keyof TagMap = 'div'> {
 
   domRef?: MayDeepArray<RefObject<HTMLElement | undefined> | undefined>
   className?: MayDeepArray<ClassName | undefined>
-  style?: MayDeepArray<CSSProperties | undefined>
+  style?: MayDeepArray<(CSSProperties & { [variable: `--${string}`]: string|number }) | undefined>
   htmlProps?: JSX.IntrinsicElements[TagName]
   children?: ReactNode
 

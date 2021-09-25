@@ -81,7 +81,7 @@ function _range<T extends any = number>({
   return arr
 }
 
-console.log(range(2))
-console.log(range(10, (n) => n * 2))
-console.log(range({ length: 2 }))
-console.log(range({ start: 2, end: 3 }))
+// console.log(range(2))
+// console.log(range(10, (n) => n * 2))
+// console.log(range({ length: 2 }))
+// console.log(range({ start: 2, end: 3 }))
