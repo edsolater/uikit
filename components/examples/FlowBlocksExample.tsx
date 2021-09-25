@@ -12,7 +12,7 @@ export default function FlowBlocksExample() {
   }, [])
 
   return (
-    <ExampleCard title='FlowBlocksExample' category='misc' className='bg-block-dark'>
+    <ExampleCard title='FlowBlocksExample' category='misc'>
       <ExampleGroup caption='basic example'>
         <Div className='grid w-full gap-3' style={[genGridTemplate({ itemMinWidth: '10em' })]}>
           {range(20, (idx) => (

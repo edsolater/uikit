@@ -1,6 +1,5 @@
 import type { FC } from 'react'
-import type { DivProps } from './Div'
-import UIRoot from './UIRoot'
+import Div, { DivProps } from './Div'
 
 export interface CaptionProps extends DivProps {
   /**
@@ -11,16 +10,17 @@ export interface CaptionProps extends DivProps {
   align?: 'left' | 'center' | 'right'
 }
 
-const Caption: FC<CaptionProps> = ({ align = 'left', ...restProps }) => (
-  <UIRoot
+const Caption: FC<CaptionProps> = ({ align = 'left', className, ...restProps }) => (
+  <Div
     {...restProps}
-    _className={
+    className={[
       {
         left: 'text-left',
         center: 'text-center',
         right: 'text-right'
-      }[align]
-    }
+      }[align],
+      className
+    ]}
   />
 )
 

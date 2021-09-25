@@ -23,9 +23,9 @@ export interface TagMap {
 export interface DivProps<TagName extends keyof TagMap = 'div'> {
   as?: TagName | ((...params: any[]) => ReactNode) // assume a function return ReactNode is a Component
 
-  domRef?: MayDeepArray<RefObject<HTMLElement>>
-  className?: MayDeepArray<ClassName>
-  style?: MayDeepArray<CSSProperties>
+  domRef?: MayDeepArray<RefObject<HTMLElement | undefined> | undefined>
+  className?: MayDeepArray<ClassName | undefined>
+  style?: MayDeepArray<CSSProperties | undefined>
   htmlProps?: JSX.IntrinsicElements[TagName]
   children?: ReactNode
 
@@ -39,7 +39,7 @@ const Div = <TagName extends keyof TagMap = 'div'>(props: DivProps<TagName>) => 
   const divRef = useRef<TagMap[TagName]>(null)
 
   useEffect(() => {
-    if (props.boundingBoxCSS) {
+    if (props.boundingBoxCSS && divRef.current) {
       const rect = divRef.current.getBoundingClientRect()
       divRef.current.style.setProperty('--left', String(rect.left))
       divRef.current.style.setProperty('--right', String(rect.right))

@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { DivProps } from './Div'
-import UIRoot from './UIRoot'
+import Div, { DivProps } from './Div'
 
 export interface CardProps extends DivProps {
   bgimgSrc?: CSSProperties['backgroundImage']
@@ -9,12 +8,12 @@ export interface CardProps extends DivProps {
 /**
  * @BaseUIComponent
  */
-export default function Card({ bgimgSrc, ...restProps }: CardProps) {
+export default function Card({ bgimgSrc, className, style, ...restProps }: CardProps) {
   return (
-    <UIRoot
-      _className='Card rounded-md py-4 px-8'
-      _style={{ background: bgimgSrc }}
+    <Div
       {...restProps}
+      className={['Card rounded-md py-4 px-8', className]}
+      style={[{ background: bgimgSrc }, style]}
     />
   )
 }

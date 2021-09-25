@@ -1,19 +1,21 @@
-import type { DivProps } from './Div'
-import UIRoot from './UIRoot'
+import type { ButtonBaseStyleProps } from './ButtonBaseStyle'
+import type { BaseStyle } from './interface'
+
 import { useClickableElementRef } from '../hooks/useClickableElement'
-import { ButtonBaseStyleProps, buttonBaseStyle } from './ButtonBaseStyle'
-import { BaseStyle } from './interface'
+import { buttonBaseStyle } from './ButtonBaseStyle'
+import type { DivProps } from './Div'
+import { Div } from '.'
 
 export interface ButtonProps extends DivProps<'button'>, BaseStyle<ButtonBaseStyleProps> {
   onClick?: () => void
 }
 
-export default function Button({ onClick, baseStyle, ...restProps }: ButtonProps) {
+export default function Button({ onClick, baseStyle, className, domRef, ...restProps }: ButtonProps) {
   const baseStyleClasses = buttonBaseStyle(baseStyle)
   const ref = useClickableElementRef({ onClick })
   return (
-    <UIRoot {...restProps} _className={baseStyleClasses} _domRef={ref}>
+    <Div {...restProps} className={['Card', baseStyleClasses, className]} domRef={[ref, domRef]}>
       {restProps.children ?? '🤨'}
-    </UIRoot>
+    </Div>
   )
 }
