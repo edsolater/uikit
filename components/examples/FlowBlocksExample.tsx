@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
+import range from '../../functions/fnkit/range'
 import { genGridTemplate } from '../../styles/styleSnippets'
 import Card from '../../uikit/Card'
 import Div from '../../uikit/Div'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
-import GradientGrid from '../../uikit/BgLightEffect'
 
 export default function FlowBlocksExample() {
   useEffect(() => {
@@ -14,16 +14,8 @@ export default function FlowBlocksExample() {
   return (
     <ExampleCard title='FlowBlocksExample' category='misc' className='bg-block-dark'>
       <ExampleGroup caption='basic example'>
-        {/* TODO: <BlockGen> 阵列器 */}
-        {/* <GradientGrid>
-          <Div className='grid w-full gap-3' style={[genGridTemplate({ itemMinWidth: '10em' })]}>
-            {Array.from({ length: 20 }, (_, idx) => (
-              <Card key={idx} className='bg-block-semi-dark w-full rounded' style={{ aspectRatio: '1 / 1' }} />
-            ))}
-          </Div>
-        </GradientGrid> */}
         <Div className='grid w-full gap-3' style={[genGridTemplate({ itemMinWidth: '10em' })]}>
-          {Array.from({ length: 20 }, (_, idx) => (
+          {range(20, (idx) => (
             <Card
               boundingBoxCSS
               key={idx}

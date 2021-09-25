@@ -21,18 +21,12 @@
       "esnext"
     ]
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".next"
-  ],
   "include": [
-    "uikit/**/*.{ts,tsx}",
-    "components/**/*.{ts,tsx}",
-    "pages/**/*.{ts,tsx}",
-    "hooks/**/*.{ts,tsx}",
-    "functions/**/*.{ts,tsx}",
-    "style/**/*.{ts,tsx}",
-    "typings/**/*.{ts,tsx}"
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }
