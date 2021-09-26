@@ -39,7 +39,7 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
         isScrollThumbPressed.current = false
       },
       move: ({ currentDeltaInPx }) => {
-        const avaliableScroll = Number(scrollSlotRef.current?.style.getPropertyValue('--total-scroll') || '0')
+        const avaliableScroll = Number(getCssVariable(scrollSlotRef.current, 'totalScroll') || '0')
         setCssVarible(
           scrollOuterContainerRef.current,
           'scrollTop',
