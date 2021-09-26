@@ -21,7 +21,7 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
         if (!scrollOuterContainerRef.current || !scrollInnerContentRef.current) return
         const contentEl = ev.target as HTMLDivElement
         const avaliableScroll = Number(getCssVariable(scrollInnerContentRef.current, 'totalScroll') || '0')
-        scrollOuterContainerRef.current.style.setProperty('--scroll-top', String(contentEl.scrollTop / avaliableScroll))
+        setCssVarible(scrollInnerContentRef.current, 'scrollTop', contentEl.scrollTop / avaliableScroll)
       },
       { passive: true }
     )
