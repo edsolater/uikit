@@ -11,7 +11,10 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
   const scrollThumbRef = useRef<HTMLDivElement>()
 
   const isScrollThumbPressed = useRef(false)
-
+  const totalScrollOfInnerContent = useRef(0)
+  const totalScrollOfScrollSlot = useRef(0)
+  const scrollTop = useRef(0)
+  
   // add innerContent listener
   useEffect(() => {
     if (!scrollInnerContentRef.current) return
@@ -21,7 +24,9 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
         if (!scrollOuterContainerRef.current || !scrollInnerContentRef.current) return
         const contentEl = ev.target as HTMLDivElement
         const avaliableScroll = Number(getCssVariable(scrollInnerContentRef.current, 'totalScroll') || '0')
-        setCssVarible(scrollInnerContentRef.current, 'scrollTop', contentEl.scrollTop / avaliableScroll)
+        const currentScrollTop = contentEl.scrollTop / avaliableScroll
+        setCssVarible(scrollInnerContentRef.current, 'scrollTop', currentScrollTop)
+        scrollTop.current = currentScrollTop
       },
       { passive: true }
     )
@@ -40,11 +45,11 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
       },
       move: ({ currentDeltaInPx }) => {
         const avaliableScroll = Number(getCssVariable(scrollSlotRef.current, 'totalScroll') || '0')
-        setCssVarible(
-          scrollOuterContainerRef.current,
-          'scrollTop',
-          (prev) => Number(prev) + currentDeltaInPx.dy / avaliableScroll
-        )
+        setCssVarible(scrollOuterContainerRef.current, 'scrollTop', (prev) => {
+          const currentScrollTop = Number(prev) + currentDeltaInPx.dy / avaliableScroll
+          scrollTop.current = currentScrollTop
+          return currentScrollTop
+        })
       }
     })
     return () => cancelPointerMove(eventId)
@@ -53,21 +58,17 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
   // add --total-scroll as soon as innerContent is available
   useEffect(() => {
     if (!scrollInnerContentRef.current) return
-    setCssVarible(
-      scrollInnerContentRef.current,
-      'totalScroll',
-      String(scrollInnerContentRef.current.scrollHeight - scrollInnerContentRef.current.clientHeight)
-    )
+    const totalScroll = scrollInnerContentRef.current.scrollHeight - scrollInnerContentRef.current.clientHeight
+    setCssVarible(scrollInnerContentRef.current, 'totalScroll', String(totalScroll))
+    totalScrollOfInnerContent.current = totalScroll
   }, [])
 
   // add --total-scroll as soon as scrollbar is available
   useEffect(() => {
     if (!scrollSlotRef.current || !scrollThumbRef.current) return
-    setCssVarible(
-      scrollSlotRef.current,
-      'totalScroll',
-      String(scrollSlotRef.current.clientHeight - scrollThumbRef.current.clientHeight)
-    )
+    const totalScroll = scrollSlotRef.current.clientHeight - scrollThumbRef.current.clientHeight
+    setCssVarible(scrollSlotRef.current, 'totalScroll', String(totalScroll))
+    totalScrollOfScrollSlot.current = totalScroll
   }, [])
 
   return (
