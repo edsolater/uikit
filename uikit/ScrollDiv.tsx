@@ -1,4 +1,7 @@
 import { ReactNode, useEffect, useRef } from 'react'
+import { getCssVariable, setCssVarible } from '../functions/dom/cssVariable'
+import { setDataSet } from '../functions/dom/dataset'
+import { attachPointerMove, cancelPointerMove } from '../functions/dom/pointerMove'
 import Div from './Div'
 
 export default function ScrollDiv({ children }: { children?: ReactNode }) {
@@ -6,6 +9,8 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
   const scrollOuterContainerRef = useRef<HTMLDivElement>()
   const scrollSlotRef = useRef<HTMLDivElement>()
   const scrollThumbRef = useRef<HTMLDivElement>()
+
+  const isScrollThumbPressed = useRef(false)
 
   // add innerContent listener
   useEffect(() => {
@@ -15,18 +20,42 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
       (ev) => {
         if (!scrollOuterContainerRef.current || !scrollInnerContentRef.current) return
         const contentEl = ev.target as HTMLDivElement
-        const avaliableScroll = Number(scrollInnerContentRef.current.style.getPropertyValue('--total-scroll') || '0')
+        const avaliableScroll = Number(getCssVariable(scrollInnerContentRef.current, 'totalScroll') || '0')
         scrollOuterContainerRef.current.style.setProperty('--scroll-top', String(contentEl.scrollTop / avaliableScroll))
       },
       { passive: true }
     )
   }, [])
 
+  // add scroll thumb listener ------
+  useEffect(() => {
+    const eventId = attachPointerMove(scrollThumbRef.current, {
+      start() {
+        setDataSet(scrollThumbRef.current, 'isScrollThumbPressed', true)
+        isScrollThumbPressed.current = true
+      },
+      end() {
+        setDataSet(scrollThumbRef.current, 'isScrollThumbPressed', false)
+        isScrollThumbPressed.current = false
+      },
+      move: ({ currentDeltaInPx }) => {
+        const avaliableScroll = Number(scrollSlotRef.current?.style.getPropertyValue('--total-scroll') || '0')
+        setCssVarible(
+          scrollOuterContainerRef.current,
+          'scrollTop',
+          (prev) => Number(prev) + currentDeltaInPx.dy / avaliableScroll
+        )
+      }
+    })
+    return () => cancelPointerMove(eventId)
+  }, [])
+
   // add --total-scroll as soon as innerContent is available
   useEffect(() => {
     if (!scrollInnerContentRef.current) return
-    scrollInnerContentRef.current.style.setProperty(
-      '--total-scroll',
+    setCssVarible(
+      scrollInnerContentRef.current,
+      'totalScroll',
       String(scrollInnerContentRef.current.scrollHeight - scrollInnerContentRef.current.clientHeight)
     )
   }, [])
@@ -34,8 +63,9 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
   // add --total-scroll as soon as scrollbar is available
   useEffect(() => {
     if (!scrollSlotRef.current || !scrollThumbRef.current) return
-    scrollSlotRef.current.style.setProperty(
-      '--total-scroll',
+    setCssVarible(
+      scrollSlotRef.current,
+      'totalScroll',
       String(scrollSlotRef.current.clientHeight - scrollThumbRef.current.clientHeight)
     )
   }, [])
@@ -50,7 +80,7 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
           className={['ScrollDiv-scrollbar-thumb absolute right-0 h-8 bg-block-primary w-4']}
           domRef={scrollThumbRef}
           style={{
-            top: 'calc(var(--scroll-top, 0) * var(--total-scroll, 0) * 1px)'
+            top: 'clamp(0px, var(--scroll-top, 0) * var(--total-scroll, 0) * 1px, var(--total-scroll, 0) * 1px)'
           }}
         />
       </Div>

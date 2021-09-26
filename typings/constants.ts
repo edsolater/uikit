@@ -9,6 +9,8 @@ import { PropsWithChildren } from 'react'
 export type Primitive = boolean | number | string
 export type NoNullablePrimitive = NonNullable<Primitive>
 export type ObjectNotArray = { [key: string]: any }
+export type Stringish = Primitive | Nullish | { toString(): any }
+export type Nullish = undefined | null
 /**
  * 任何函数
  */
@@ -21,9 +23,9 @@ export type NotFunctionValue = Exclude<any, AnyFn>
  * 移动距离
  */
 export type Delta2dTranslate = {
-  // 水平移动距离
+  // distance in x (px)
   dx: number
-  // 竖直移动距离
+  // distance in y (px)
   dy: number
 }
 
