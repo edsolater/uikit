@@ -8,7 +8,7 @@ export interface UseHoverOptions {
   disable?: boolean
   onHoverStart?: (ev: { el: EventTarget; nativeEvent: PointerEvent }) => void
   onHoverEnd?: (ev: { el: EventTarget; nativeEvent: PointerEvent }) => void
-  onHover?: (ev: { el: EventTarget; nativeEvent: PointerEvent; now: 'start' | 'end' }) => void
+  onHover?: (ev: { el: EventTarget; nativeEvent: PointerEvent; is: 'start' | 'end' }) => void
 }
 
 export function useHover(
@@ -16,7 +16,7 @@ export function useHover(
   { disable, onHoverStart, onHoverEnd, onHover }: UseHoverOptions = {}
 ) {
   if (!ref) return
-  const [isHover, { on: turnonHover, off: turnoffHover }] = useToggle(false)
+  const [isHovered, { on: turnonHover, off: turnoffHover }] = useToggle(false)
 
   useEffect(() => {
     if (disable) return
@@ -25,7 +25,7 @@ export function useHover(
       onHover?.({
         el: ev.target!,
         nativeEvent: ev!,
-        now: 'start'
+        is: 'start'
       })
       onHoverStart?.({
         el: ev.target!,
@@ -37,7 +37,7 @@ export function useHover(
       onHover?.({
         el: ev.target!,
         nativeEvent: ev!,
-        now: 'end'
+        is: 'end'
       })
       onHoverEnd?.({
         el: ev.target!,
@@ -54,5 +54,5 @@ export function useHover(
     }
   }, [disable, onHoverStart, onHoverEnd, onHover])
 
-  return isHover
+  return isHovered
 }

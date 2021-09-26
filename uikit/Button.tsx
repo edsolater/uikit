@@ -1,20 +1,19 @@
-import type { ButtonBaseStyleProps } from './ButtonBaseStyle'
-import type { BaseStyle } from './interface'
+import type { ButtonFlavorProps } from './ButtonFlavor'
 
 import { useClickableElementRef } from '../hooks/useClickableElement'
-import { buttonBaseStyle } from './ButtonBaseStyle'
+import { buttonFlavor } from './ButtonFlavor'
 import type { DivProps } from './Div'
 import { Div } from '.'
 
-export interface ButtonProps extends DivProps<'button'>, BaseStyle<ButtonBaseStyleProps> {
+export interface ButtonProps extends DivProps<'button'>, ButtonFlavorProps {
   onClick?: () => void
 }
 
-export default function Button({ onClick, baseStyle, className, domRef, ...restProps }: ButtonProps) {
-  const baseStyleClasses = buttonBaseStyle(baseStyle)
+export default function Button({ domRef, onClick, flavor, noDefaultFlavor, className, ...restProps }: ButtonProps) {
   const ref = useClickableElementRef({ onClick })
+  const baseFlavor = buttonFlavor(flavor)
   return (
-    <Div {...restProps} className={['Card', baseStyleClasses, className]} domRef={[ref, domRef]}>
+    <Div {...restProps} className={['Button', !noDefaultFlavor && baseFlavor, className]} domRef={[ref, domRef]}>
       {restProps.children ?? '🤨'}
     </Div>
   )

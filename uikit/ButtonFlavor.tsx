@@ -1,19 +1,20 @@
-export type ButtonBaseStyleProps = {
-  /**
-   * @default 'fill'
-   */
-  type?: 'fill' | 'outline' | 'text'
-  /**
-   * @default 'medium'
-   */
-  size?: 'small' | 'medium' | 'large'
+export interface ButtonFlavorProps {
+  noDefaultFlavor?: boolean
+  flavor?: {
+    /**
+     * @default 'fill'
+     */
+    type?: 'fill' | 'outline' | 'text'
+    /**
+     * @default 'medium'
+     */
+    size?: 'small' | 'medium' | 'large'
+  }
 }
 
-export const buttonBaseStyle = (styleProps: ButtonBaseStyleProps | 'none' = {}) => {
-  if (styleProps === 'none') return ''
-  const { size = 'medium', type = 'fill' } = styleProps
+export const buttonFlavor = (flavorOptions: ButtonFlavorProps['flavor']) => {
+  const { size = 'medium', type = 'fill' } = flavorOptions ?? {}
   return [
-    'Button',
     'appearance-none cursor-pointer select-none w-max',
     {
       small: 'py-0 px-2 text-sm rounded',

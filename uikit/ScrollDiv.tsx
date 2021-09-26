@@ -1,30 +1,64 @@
 import { ReactNode, useEffect, useRef } from 'react'
 import { getCssVariable, setCssVarible } from '../functions/dom/cssVariable'
 import { setDataSet } from '../functions/dom/dataset'
-import { attachPointerMove, cancelPointerMove } from '../functions/dom/pointerMove'
+import { attachPointerMove, cancelPointerMove } from '../functions/dom/gesture/pointerMove'
 import { useHover } from '../hooks/useHover'
-import Div from './Div'
-import {} from '@edsolater/fnkit'
+import Div, { DivProps } from './Div'
+import { scrollDivFlavor, ScrollDivFlavorProps } from './ScrollDivFlavor'
+import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
+import useBFlag from '../hooks/useBFlag'
+import { useActive } from '../hooks/useActive'
+
+interface ScrollDivProps extends DivProps, ScrollDivFlavorProps {
+  children?: ReactNode
+  className?: string
+  slotClassName?: string
+  thumbClassName?: string
+}
 
 // for high response of interaction, don't use React state
-export default function ScrollDiv({ children }: { children?: ReactNode }) {
+export default function ScrollDiv({
+  children,
+  className,
+  slotClassName,
+  thumbClassName,
+  thumbFlavor: thumbFlavorOptions,
+  noDefaultThumbFlavor,
+  slotFlavor: slotFlavorOptions,
+  noDefaultSlotFlavor
+}: ScrollDivProps) {
   const scrollOuterContainerRef = useRef<HTMLDivElement>()
   const scrollInnerContentRef = useRef<HTMLDivElement>()
   const scrollSlotRef = useRef<HTMLDivElement>()
   const scrollThumbRef = useRef<HTMLDivElement>()
 
-  const isScrollThumbPressed = useRef(false)
-  const isScrollContainerHover = useRef(false)
+  const isScrollThumbActive = useBFlag(false)
+  const isScrollThumbHovered = useBFlag(false)
+  const isScrollContainerHovered = useBFlag(false)
+  const isScrollSlotHovered = useBFlag(false)
+
   const totalScrollOfInnerContent = useRef(0)
   const totalScrollOfScrollSlot = useRef(0)
   const scrollTop = useRef(0)
 
   useHover(scrollOuterContainerRef, {
-    onHoverStart: () => {
-      isScrollContainerHover.current = true
-    },
-    onHoverEnd: () => {
-      isScrollContainerHover.current = false
+    onHover({ is }) {
+      isScrollContainerHovered.set(is === 'start')
+    }
+  })
+  useHover(scrollThumbRef, {
+    onHover({ is }) {
+      isScrollThumbHovered.set(is === 'start')
+    }
+  })
+  useHover(scrollSlotRef, {
+    onHover({ is }) {
+      isScrollSlotHovered.set(is === 'start')
+    }
+  })
+  useActive(scrollThumbRef, {
+    onActive({ is }) {
+      isScrollThumbActive.set(is === 'start')
     }
   })
   // add innerContent listener
@@ -33,7 +67,7 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
     scrollInnerContentRef.current.addEventListener(
       'scroll',
       (ev) => {
-        if (isScrollThumbPressed.current) return 
+        if (isScrollThumbActive.isOn()) return
         if (!scrollOuterContainerRef.current || !scrollInnerContentRef.current) return
         const contentEl = ev.target as HTMLDivElement
         const avaliableScroll = Number(getCssVariable(scrollInnerContentRef.current, 'totalScroll') || '0')
@@ -55,12 +89,12 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
   useEffect(() => {
     const eventId = attachPointerMove(scrollThumbRef.current, {
       start() {
-        setDataSet(scrollThumbRef.current, 'isScrollThumbPressed', true)
-        isScrollThumbPressed.current = true
+        setDataSet(scrollThumbRef.current, 'isScrollThumbActive', true)
+        isScrollThumbActive.on()
       },
       end() {
-        setDataSet(scrollThumbRef.current, 'isScrollThumbPressed', false)
-        isScrollThumbPressed.current = false
+        setDataSet(scrollThumbRef.current, 'isScrollThumbActive', false)
+        isScrollThumbActive.off()
       },
       move: ({ currentDeltaInPx }) => {
         const avaliableScroll = Number(getCssVariable(scrollSlotRef.current, 'totalScroll') || '0')
@@ -91,14 +125,39 @@ export default function ScrollDiv({ children }: { children?: ReactNode }) {
     totalScrollOfScrollSlot.current = totalScroll
   }, [])
 
+  const { slot, thumb } = scrollDivFlavor(thumbFlavorOptions, slotFlavorOptions)
   return (
-    <Div domRef={scrollOuterContainerRef} className={['ScrollDiv w-full h-80 relative']}>
+    <Div domRef={scrollOuterContainerRef} className={['ScrollDiv w-full h-80 relative', className]}>
       <Div
-        className={['ScrollDiv-scrollbar-slot absolute right-0 top-0 bottom-0 bg-block-semi-dark w-4']}
+        className={[
+          'ScrollDiv-scrollbar-slot absolute right-0 top-0 bottom-0',
+          !noDefaultSlotFlavor &&
+            shrinkToValue(slot, [
+              {
+                isContainerHovered: isScrollContainerHovered.value,
+                isSlotHovered: isScrollSlotHovered.value,
+                isThumbHovered: isScrollThumbHovered.value,
+                isThumbActive: isScrollThumbActive.value
+              }
+            ]),
+          slotClassName
+        ]}
         domRef={scrollSlotRef}
       >
         <Div
-          className={['ScrollDiv-scrollbar-thumb absolute right-0 h-8 bg-block-primary w-4']}
+          className={[
+            'ScrollDiv-scrollbar-thumb absolute right-0 w-full',
+            !noDefaultThumbFlavor &&
+              shrinkToValue(thumb, [
+                {
+                  isContainerHovered: isScrollContainerHovered.value,
+                  isSlotHovered: isScrollSlotHovered.value,
+                  isThumbHovered: isScrollThumbHovered.value,
+                  isThumbActive: isScrollThumbActive.value
+                }
+              ]),
+            thumbClassName
+          ]}
           domRef={scrollThumbRef}
           style={{
             top: 'clamp(0px, var(--scroll-top, 0) * var(--total-scroll, 0) * 1px, var(--total-scroll, 0) * 1px)'

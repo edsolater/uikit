@@ -1,4 +1,4 @@
-import { AnyFn, Delta2dTranslate, SpeedVector } from '../../typings/constants'
+import { AnyFn, Delta2dTranslate, SpeedVector } from '../../../typings/constants'
 
 let eventId = 1
 const eventIdMap = new Map<number, { el: Element; eventName: string; fn: AnyFn }>()

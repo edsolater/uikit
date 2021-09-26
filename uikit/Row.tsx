@@ -1,17 +1,16 @@
 import { Div } from '.'
 import type { DivProps } from './Div'
-import type { BaseStyle } from './interface'
-import { rowBaseStyle, RowBaseStyleProps } from './RowBaseStyle'
+import { rowFlavor, RowFlavorProps } from './RowBaseStyle'
 
-export interface RowProps extends DivProps, BaseStyle<RowBaseStyleProps> {}
+export interface RowProps extends DivProps, RowFlavorProps {}
 
 /**
  * @uikitComponent
  *
  * 将子元素显示在一行，相当于flexbox
  */
-const Row = ({ baseStyle, className, ...restProps }: RowProps) => {
-  const baseStyleClasses = rowBaseStyle(baseStyle)
-  return <Div {...restProps} className={[baseStyleClasses, className]} />
+const Row = ({ flavor, noDefaultFlavor, className, ...restProps }: RowProps) => {
+  const baseFlavor = rowFlavor(flavor)
+  return <Div {...restProps} className={['Row', !noDefaultFlavor && baseFlavor, className]} />
 }
 export default Row

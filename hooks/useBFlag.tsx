@@ -14,11 +14,14 @@ export default function useBFlag(
     options?.onChange?.(isOn)
   }, [isOn])
 
-  return {
+  const flag = {
     value: isOn,
+    isOff: () => !isOn,
+    isOn: () => isOn,
     on: () => setIsOn(true),
     off: () => setIsOn(false),
     toggle: () => setIsOn((b) => !b),
     set: setIsOn
   }
+  return flag
 }
