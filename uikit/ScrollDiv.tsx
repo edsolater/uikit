@@ -4,10 +4,49 @@ import { setDataSet } from '../functions/dom/dataset'
 import { attachPointerMove, cancelPointerMove } from '../functions/dom/gesture/pointerMove'
 import { useHover } from '../hooks/useHover'
 import Div, { DivProps } from './Div'
-import { scrollDivTint, ScrollDivTintProps } from './ScrollDivTint'
 import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
 import useBFlag from '../hooks/useBFlag'
 import { useActive } from '../hooks/useActive'
+
+type ScrollDivTintProps = {
+  noDefaultThumbTint?: boolean
+  thumbTint?: {}
+
+  noDefaultSlotTint?: boolean
+  slotTint?: {}
+}
+
+type ScrollDivReturnedTintBlock = {
+  slot:
+    | string
+    | ((status: {
+        isThumbHovered: boolean
+        isThumbActive: boolean
+        isSlotHovered: boolean
+        isContainerHovered: boolean
+      }) => string)
+  thumb:
+    | string
+    | ((status: {
+        isThumbHovered: boolean
+        isThumbActive: boolean
+        isSlotHovered: boolean
+        isContainerHovered: boolean
+      }) => string)
+}
+
+const scrollDivTint = (
+  thumbTintOptions: ScrollDivTintProps['thumbTint'] = {},
+  slotTintOptions: ScrollDivTintProps['slotTint'] = {}
+): ScrollDivReturnedTintBlock => {
+  return {
+    'slot': ({ isSlotHovered }) => `transition ${isSlotHovered ? 'w-4' : 'w-2'}`,
+    'thumb': ({ isContainerHovered }) =>
+      `h-8 transition active:bg-opacity-100 hover:bg-opacity-80  ${
+        isContainerHovered ? 'bg-opacity-60' : 'bg-opacity-20'
+      } bg-block-primary`
+  }
+}
 
 interface ScrollDivProps extends DivProps, ScrollDivTintProps {
   children?: ReactNode
@@ -15,7 +54,6 @@ interface ScrollDivProps extends DivProps, ScrollDivTintProps {
   slotClassName?: string
   thumbClassName?: string
 }
-
 // for high response of interaction, don't use React state
 export default function ScrollDiv({
   children,
