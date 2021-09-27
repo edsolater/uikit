@@ -4,12 +4,12 @@ import { setDataSet } from '../functions/dom/dataset'
 import { attachPointerMove, cancelPointerMove } from '../functions/dom/gesture/pointerMove'
 import { useHover } from '../hooks/useHover'
 import Div, { DivProps } from './Div'
-import { scrollDivFlavor, ScrollDivFlavorProps } from './ScrollDivFlavor'
+import { scrollDivTint, ScrollDivTintProps } from './ScrollDivTint'
 import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
 import useBFlag from '../hooks/useBFlag'
 import { useActive } from '../hooks/useActive'
 
-interface ScrollDivProps extends DivProps, ScrollDivFlavorProps {
+interface ScrollDivProps extends DivProps, ScrollDivTintProps {
   children?: ReactNode
   className?: string
   slotClassName?: string
@@ -22,10 +22,10 @@ export default function ScrollDiv({
   className,
   slotClassName,
   thumbClassName,
-  thumbFlavor: thumbFlavorOptions,
-  noDefaultThumbFlavor,
-  slotFlavor: slotFlavorOptions,
-  noDefaultSlotFlavor
+  thumbTint: thumbTintOptions,
+  noDefaultThumbTint,
+  slotTint: slotTintOptions,
+  noDefaultSlotTint
 }: ScrollDivProps) {
   const scrollOuterContainerRef = useRef<HTMLDivElement>()
   const scrollInnerContentRef = useRef<HTMLDivElement>()
@@ -125,13 +125,13 @@ export default function ScrollDiv({
     totalScrollOfScrollSlot.current = totalScroll
   }, [])
 
-  const { slot, thumb } = scrollDivFlavor(thumbFlavorOptions, slotFlavorOptions)
+  const { slot, thumb } = scrollDivTint(thumbTintOptions, slotTintOptions)
   return (
     <Div domRef={scrollOuterContainerRef} className={['ScrollDiv w-full h-80 relative', className]}>
       <Div
         className={[
           'ScrollDiv-scrollbar-slot absolute right-0 top-0 bottom-0',
-          !noDefaultSlotFlavor &&
+          !noDefaultSlotTint &&
             shrinkToValue(slot, [
               {
                 isContainerHovered: isScrollContainerHovered.value,
@@ -147,7 +147,7 @@ export default function ScrollDiv({
         <Div
           className={[
             'ScrollDiv-scrollbar-thumb absolute right-0 w-full',
-            !noDefaultThumbFlavor &&
+            !noDefaultThumbTint &&
               shrinkToValue(thumb, [
                 {
                   isContainerHovered: isScrollContainerHovered.value,

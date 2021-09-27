@@ -1,5 +1,5 @@
 import Button from '../../uikit/Button'
-import { buttonFlavor } from '../../uikit/ButtonFlavor'
+import { buttonTint } from '../../uikit/ButtonTint'
 import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
 
@@ -11,25 +11,25 @@ export default function ButtonExample() {
       </ExampleGroup>
 
       <ExampleGroup caption='type: fill(default)'>
-        <Button flavor={{ size: 'large' }}>Large</Button>
+        <Button tint={{ size: 'large' }}>Large</Button>
         <Button>medium</Button>
-        <Button flavor={{ size: 'small' }}>small</Button>
+        <Button tint={{ size: 'small' }}>small</Button>
       </ExampleGroup>
 
       <ExampleGroup caption='type: outline'>
-        <Button flavor={{ size: 'large', type: 'outline' }}>Large</Button>
-        <Button flavor={{ size: 'medium', type: 'outline' }}>medium</Button>
-        <Button flavor={{ size: 'small', type: 'outline' }}>small</Button>
+        <Button tint={{ size: 'large', type: 'outline' }}>Large</Button>
+        <Button tint={{ size: 'medium', type: 'outline' }}>medium</Button>
+        <Button tint={{ size: 'small', type: 'outline' }}>small</Button>
       </ExampleGroup>
 
       <ExampleGroup caption='type: text'>
-        <Button flavor={{ size: 'large', type: 'text' }}>Large</Button>
-        <Button flavor={{ size: 'medium', type: 'text' }}>medium</Button>
-        <Button flavor={{ size: 'small', type: 'text' }}>small</Button>
+        <Button tint={{ size: 'large', type: 'text' }}>Large</Button>
+        <Button tint={{ size: 'medium', type: 'text' }}>medium</Button>
+        <Button tint={{ size: 'small', type: 'text' }}>small</Button>
       </ExampleGroup>
 
       <ExampleGroup caption='headless type'>
-        <Button noDefaultFlavor className={buttonFlavor({ size: 'large', type: 'outline' })}>
+        <Button noDefaultTint className={buttonTint({ size: 'large', type: 'outline' })}>
           Large
         </Button>
       </ExampleGroup>

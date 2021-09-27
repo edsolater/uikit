@@ -1,6 +1,6 @@
-export interface ButtonFlavorProps {
-  noDefaultFlavor?: boolean
-  flavor?: {
+export interface ButtonTintProps {
+  noDefaultTint?: boolean
+  tint?: {
     /**
      * @default 'fill'
      */
@@ -12,8 +12,8 @@ export interface ButtonFlavorProps {
   }
 }
 
-export const buttonFlavor = (flavorOptions: ButtonFlavorProps['flavor']) => {
-  const { size = 'medium', type = 'fill' } = flavorOptions ?? {}
+export const buttonTint = (tintOptions: ButtonTintProps['tint']) => {
+  const { size = 'medium', type = 'fill' } = tintOptions ?? {}
   return [
     'appearance-none cursor-pointer select-none w-max',
     {

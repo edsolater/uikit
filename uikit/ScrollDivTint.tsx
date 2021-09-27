@@ -1,11 +1,11 @@
-export type ScrollDivFlavorProps = {
-  noDefaultThumbFlavor?: boolean
-  thumbFlavor?: {}
+export type ScrollDivTintProps = {
+  noDefaultThumbTint?: boolean
+  thumbTint?: {}
 
-  noDefaultSlotFlavor?: boolean
-  slotFlavor?: {}
+  noDefaultSlotTint?: boolean
+  slotTint?: {}
 }
-export type ScrollDivReturnedFlavorBlock = {
+export type ScrollDivReturnedTintBlock = {
   slot:
     | string
     | ((status: {
@@ -24,10 +24,10 @@ export type ScrollDivReturnedFlavorBlock = {
       }) => string)
 }
 
-export const scrollDivFlavor = (
-  thumbFlavorOptions: ScrollDivFlavorProps['thumbFlavor'] = {},
-  slotFlavorOptions: ScrollDivFlavorProps['slotFlavor'] = {}
-): ScrollDivReturnedFlavorBlock => {
+export const scrollDivTint = (
+  thumbTintOptions: ScrollDivTintProps['thumbTint'] = {},
+  slotTintOptions: ScrollDivTintProps['slotTint'] = {}
+): ScrollDivReturnedTintBlock => {
   return {
     'slot': ({ isSlotHovered }) => `transition ${isSlotHovered ? 'w-4' : 'w-2'}`,
     'thumb': ({ isContainerHovered }) =>
