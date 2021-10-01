@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import { getCssVariable, setCssVarible } from '../functions/dom/cssVariable'
 import { setDataSet } from '../functions/dom/dataset'
 import { attachPointerMove, cancelPointerMove } from '../functions/dom/gesture/pointerMove'
@@ -76,22 +76,31 @@ export default function ScrollDiv({
   const isTrackHovered = useBFlag(false)
 
   // css variable: --content-avaliable-scroll-height to element: OuterConent (>1 px number. e.g 3000px )
-  const contentAvaliableScrollHeight = useRef(0)
+  const [contentAvaliableScrollHeight, setContentAvaliableScrollHeight] = useState<number>(0)
 
   // css variable: --track-avaliable-scroll-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link contentClientHeight})
-  const trackHeight = useRef(0)
+  const [trackHeight, setTrackHeight] = useState<number>(0)
 
   // css variable: --content-client-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link totalScrollOfScrollTrack})
-  const contentClientHeight = useRef(0)
+  const [contentClientHeight, setContentClientHeight] = useState<number>(0)
 
   // css variable: --scroll-top to element: OuterConent (0 ~ 1 number)
   const scrollTop = useRef(0)
 
-  useHover(outerContainerRef, {
-    onHover({ is }) {
-      isContainerHovered.set(is === 'start')
-    }
-  })
+  const thumbHeight = (contentClientHeight / contentAvaliableScrollHeight) * trackHeight
+  console.log('trackHeight: ', trackHeight)
+  console.log('thumbHeight: ', thumbHeight)
+  const thumbAvaliableScrollHeight = trackHeight - thumbHeight
+
+  // tool function shortcut
+  const getCurrentScrollTop = () => scrollTop.current
+
+  const getAvailableScrollHeight = () =>
+    useHover(outerContainerRef, {
+      onHover({ is }) {
+        isContainerHovered.set(is === 'start')
+      }
+    })
   useHover(thumbRef, {
     onHover({ is }) {
       isThumbHovered.set(is === 'start')
@@ -119,7 +128,6 @@ export default function ScrollDiv({
         const avaliableScroll = Number(
           getCssVariable(outerContainerRef.current, 'content-avaliable-scroll-height') || '0'
         )
-        console.log('avaliable: ', avaliableScroll)
         const currentScrollTop = contentEl.scrollTop / avaliableScroll
         setCssVarible(outerContainerRef.current, 'scroll-top', currentScrollTop)
         scrollTop.current = currentScrollTop
@@ -129,12 +137,13 @@ export default function ScrollDiv({
   }, [])
 
   function scrollCotentWithScrollTop() {
+    if (!contentAvaliableScrollHeight || !scrollTop.current) return
     contentRef.current?.scrollTo({
-      top: Math.min(1, Math.max(0, scrollTop.current)) * contentAvaliableScrollHeight.current
+      top: Math.min(1, Math.max(0, scrollTop.current)) * contentAvaliableScrollHeight
     })
   }
 
-  // add scroll thumb listener ------
+  // add scroll thumb listener
   useEffect(() => {
     const eventId = attachPointerMove(thumbRef.current, {
       start() {
@@ -146,9 +155,9 @@ export default function ScrollDiv({
         isThumbActive.off()
       },
       move: ({ currentDeltaInPx }) => {
-        const avaliableScroll = Number(getCssVariable(thumbRef.current, 'avaliable-scroll-height') || '0')
+        if (!thumbAvaliableScrollHeight) return 
         setCssVarible(outerContainerRef.current, 'scroll-top', (prev) => {
-          const currentScrollTop = Number(prev) + currentDeltaInPx.dy / avaliableScroll
+          const currentScrollTop = Number(prev) + currentDeltaInPx.dy / thumbAvaliableScrollHeight
           scrollTop.current = currentScrollTop
           scrollCotentWithScrollTop()
           return currentScrollTop
@@ -156,22 +165,22 @@ export default function ScrollDiv({
       }
     })
     return () => cancelPointerMove(eventId)
-  }, [])
+  }, [thumbAvaliableScrollHeight])
 
   // add --total-scroll as soon as innerContent is available
   useEffect(() => {
     if (!contentRef.current) return
     const totalScroll = contentRef.current.scrollHeight - contentRef.current.clientHeight
     setCssVarible(outerContainerRef.current, 'content-avaliable-scroll-height', String(totalScroll))
-    contentAvaliableScrollHeight.current = totalScroll
+    setContentAvaliableScrollHeight(totalScroll)
   }, [])
 
   // add --track-height as soon as scrollbar is available
   useEffect(() => {
     if (!trackRef.current || !thumbRef.current) return
-    const totalScroll = trackRef.current.clientHeight
-    setCssVarible(outerContainerRef.current, 'track-height', String(totalScroll))
-    trackHeight.current = totalScroll
+    const trackHeight = trackRef.current.clientHeight
+    setCssVarible(outerContainerRef.current, 'track-height', String(trackHeight))
+    setTrackHeight(trackHeight)
   }, [])
 
   // add --content-client-height as soon as innerContent is available
@@ -179,7 +188,7 @@ export default function ScrollDiv({
     if (!contentRef.current) return
     const clientHeight = contentRef.current.clientHeight
     setCssVarible(outerContainerRef.current, 'content-client-height', String(clientHeight))
-    contentClientHeight.current = clientHeight
+    setContentClientHeight(clientHeight)
   }, [])
 
   const { track, thumb } = scrollDivTint(thumbTint, trackTint)
@@ -217,11 +226,8 @@ export default function ScrollDiv({
           ]}
           domRef={thumbRef}
           style={{
-            ['--thumb-height']:
-              'calc((var(--content-client-height, 0) / var(--content-avaliable-scroll-height, 0)) * var(--track-height) )',
-            ['--available-scroll-height']: 'calc((var(--track-height, 0)) - var(--thumb-height, 0))',
-            height: 'calc(var(--thumb-height) * 1px)',
-            top: 'clamp(0px, var(--scroll-top, 0) * var(--available-scroll-height) * 1px, var(--available-scroll-height) * 1px)'
+            height: thumbHeight,
+            top: `clamp(0px, var(--scroll-top, 0) * ${thumbAvaliableScrollHeight} * 1px, ${thumbAvaliableScrollHeight} * 1px)`
           }}
         />
       </Div>
