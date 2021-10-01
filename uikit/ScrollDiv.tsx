@@ -60,12 +60,12 @@ export default function ScrollDiv({
   className,
   slotClassName,
   thumbClassName,
-  thumbTint: thumbTintOptions,
+  thumbTint,
   noDefaultThumbTint,
-  slotTint: slotTintOptions,
+  slotTint,
   noDefaultSlotTint
 }: ScrollDivProps) {
-  const scrollOuterContainerRef = useRef<HTMLDivElement>()
+  const outerContainerRef = useRef<HTMLDivElement>()
   const scrollInnerContentRef = useRef<HTMLDivElement>()
   const scrollSlotRef = useRef<HTMLDivElement>()
   const scrollThumbRef = useRef<HTMLDivElement>()
@@ -75,11 +75,19 @@ export default function ScrollDiv({
   const isScrollContainerHovered = useBFlag(false)
   const isScrollSlotHovered = useBFlag(false)
 
+  // css variable: --content-scroll-height to element: OuterConent (>1 px number. e.g 3000px )
   const totalScrollOfInnerContent = useRef(0)
+
+  // css variable: --slot-scroll-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link contentClientHeight})
   const totalScrollOfScrollSlot = useRef(0)
+
+  // css variable: --content-client-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link totalScrollOfScrollSlot})
+  const contentClientHeight = useRef(0)
+
+  // css variable: --scroll-top to element: OuterConent (0 ~ 1 number)
   const scrollTop = useRef(0)
 
-  useHover(scrollOuterContainerRef, {
+  useHover(outerContainerRef, {
     onHover({ is }) {
       isScrollContainerHovered.set(is === 'start')
     }
@@ -106,11 +114,11 @@ export default function ScrollDiv({
       'scroll',
       (ev) => {
         if (isScrollThumbActive.isOn()) return
-        if (!scrollOuterContainerRef.current || !scrollInnerContentRef.current) return
+        if (!outerContainerRef.current || !scrollInnerContentRef.current) return
         const contentEl = ev.target as HTMLDivElement
-        const avaliableScroll = Number(getCssVariable(scrollInnerContentRef.current, 'totalScroll') || '0')
+        const avaliableScroll = Number(getCssVariable(outerContainerRef.current, 'content-scroll-height') || '0')
         const currentScrollTop = contentEl.scrollTop / avaliableScroll
-        setCssVarible(scrollOuterContainerRef.current, 'scrollTop', currentScrollTop)
+        setCssVarible(outerContainerRef.current, 'scroll-top', currentScrollTop)
         scrollTop.current = currentScrollTop
       },
       { passive: true }
@@ -135,8 +143,8 @@ export default function ScrollDiv({
         isScrollThumbActive.off()
       },
       move: ({ currentDeltaInPx }) => {
-        const avaliableScroll = Number(getCssVariable(scrollSlotRef.current, 'totalScroll') || '0')
-        setCssVarible(scrollOuterContainerRef.current, 'scrollTop', (prev) => {
+        const avaliableScroll = Number(getCssVariable(outerContainerRef.current, 'slot-scroll-height') || '0')
+        setCssVarible(outerContainerRef.current, 'scroll-top', (prev) => {
           const currentScrollTop = Number(prev) + currentDeltaInPx.dy / avaliableScroll
           scrollTop.current = currentScrollTop
           scrollCotentWithScrollTop()
@@ -151,7 +159,7 @@ export default function ScrollDiv({
   useEffect(() => {
     if (!scrollInnerContentRef.current) return
     const totalScroll = scrollInnerContentRef.current.scrollHeight - scrollInnerContentRef.current.clientHeight
-    setCssVarible(scrollInnerContentRef.current, 'totalScroll', String(totalScroll))
+    setCssVarible(outerContainerRef.current, 'content-scroll-height', String(totalScroll))
     totalScrollOfInnerContent.current = totalScroll
   }, [])
 
@@ -159,13 +167,21 @@ export default function ScrollDiv({
   useEffect(() => {
     if (!scrollSlotRef.current || !scrollThumbRef.current) return
     const totalScroll = scrollSlotRef.current.clientHeight - scrollThumbRef.current.clientHeight
-    setCssVarible(scrollSlotRef.current, 'totalScroll', String(totalScroll))
+    setCssVarible(outerContainerRef.current, 'slot-scroll-height', String(totalScroll))
     totalScrollOfScrollSlot.current = totalScroll
   }, [])
 
-  const { slot, thumb } = scrollDivTint(thumbTintOptions, slotTintOptions)
+  // add --client-height as soon as innerContent is available
+  useEffect(() => {
+    if (!scrollInnerContentRef.current) return
+    const clientHeight = scrollInnerContentRef.current.clientHeight
+    setCssVarible(outerContainerRef.current, 'content-client-height', String(clientHeight))
+    contentClientHeight.current = clientHeight
+  }, [])
+
+  const { slot, thumb } = scrollDivTint(thumbTint, slotTint)
   return (
-    <Div domRef={scrollOuterContainerRef} className={['ScrollDiv w-full h-80 relative', className]}>
+    <Div domRef={outerContainerRef} className={['ScrollDiv w-full h-80 relative', className]}>
       <Div
         className={[
           'ScrollDiv-scrollbar-slot absolute right-0 top-0 bottom-0',
@@ -198,7 +214,9 @@ export default function ScrollDiv({
           ]}
           domRef={scrollThumbRef}
           style={{
-            top: 'clamp(0px, var(--scroll-top, 0) * var(--total-scroll, 0) * 1px, var(--total-scroll, 0) * 1px)'
+            height:
+              'calc(var(--content-client-height, 0) / var(--content-scroll-height, 0) * var(--slot-scroll-height) *1px)',
+            top: 'clamp(0px, var(--scroll-top, 0) * var(--slot-scroll-height, 0) * 1px, var(--slot-scroll-height, 0) * 1px)'
           }}
         />
       </Div>

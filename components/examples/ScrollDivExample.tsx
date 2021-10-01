@@ -9,7 +9,7 @@ export default function ScrollDivExample() {
     <ExampleCard title='ScrollDivExample' category='uikit'>
       <ExampleGroup caption='basic example'>
         <ScrollDiv>
-          {range(20, (idx) => (
+          {range(10, (idx) => (
             <Card
               boundingBoxCSS
               key={idx}
