@@ -12,17 +12,17 @@ type ScrollDivTintProps = {
   noDefaultThumbTint?: boolean
   thumbTint?: {}
 
-  noDefaultSlotTint?: boolean
-  slotTint?: {}
+  noDefaultTrackTint?: boolean
+  trackTint?: {}
 }
 
 type ScrollDivReturnedTintBlock = {
-  slot:
+  track:
     | string
     | ((status: {
         isThumbHovered: boolean
         isThumbActive: boolean
-        isSlotHovered: boolean
+        isTrackHovered: boolean
         isContainerHovered: boolean
       }) => string)
   thumb:
@@ -30,17 +30,17 @@ type ScrollDivReturnedTintBlock = {
     | ((status: {
         isThumbHovered: boolean
         isThumbActive: boolean
-        isSlotHovered: boolean
+        isTrackHovered: boolean
         isContainerHovered: boolean
       }) => string)
 }
 
 const scrollDivTint = (
   thumbTintOptions: ScrollDivTintProps['thumbTint'] = {},
-  slotTintOptions: ScrollDivTintProps['slotTint'] = {}
+  trackTintOptions: ScrollDivTintProps['trackTint'] = {}
 ): ScrollDivReturnedTintBlock => {
   return {
-    'slot': ({ isSlotHovered }) => `transition ${isSlotHovered ? 'w-4' : 'w-2'}`,
+    'track': ({ isTrackHovered }) => `transition ${isTrackHovered ? 'w-4' : 'w-2'}`,
     'thumb': ({ isContainerHovered }) =>
       `h-8 transition active:bg-opacity-100 hover:bg-opacity-80  ${
         isContainerHovered ? 'bg-opacity-60' : 'bg-opacity-20'
@@ -51,37 +51,37 @@ const scrollDivTint = (
 interface ScrollDivProps extends DivProps, ScrollDivTintProps {
   children?: ReactNode
   className?: string
-  slotClassName?: string
+  trackClassName?: string
   thumbClassName?: string
 }
 // for high response of interaction, don't use React state
 export default function ScrollDiv({
   children,
   className,
-  slotClassName,
+  trackClassName,
   thumbClassName,
   thumbTint,
   noDefaultThumbTint,
-  slotTint,
-  noDefaultSlotTint
+  trackTint,
+  noDefaultTrackTint
 }: ScrollDivProps) {
   const outerContainerRef = useRef<HTMLDivElement>()
   const scrollInnerContentRef = useRef<HTMLDivElement>()
-  const scrollSlotRef = useRef<HTMLDivElement>()
+  const scrollTrackRef = useRef<HTMLDivElement>()
   const scrollThumbRef = useRef<HTMLDivElement>()
 
   const isScrollThumbActive = useBFlag(false)
   const isScrollThumbHovered = useBFlag(false)
   const isScrollContainerHovered = useBFlag(false)
-  const isScrollSlotHovered = useBFlag(false)
+  const isScrollTrackHovered = useBFlag(false)
 
   // css variable: --content-scroll-height to element: OuterConent (>1 px number. e.g 3000px )
   const totalScrollOfInnerContent = useRef(0)
 
-  // css variable: --slot-scroll-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link contentClientHeight})
-  const totalScrollOfScrollSlot = useRef(0)
+  // css variable: --track-scroll-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link contentClientHeight})
+  const totalScrollOfScrollTrack = useRef(0)
 
-  // css variable: --content-client-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link totalScrollOfScrollSlot})
+  // css variable: --content-client-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link totalScrollOfScrollTrack})
   const contentClientHeight = useRef(0)
 
   // css variable: --scroll-top to element: OuterConent (0 ~ 1 number)
@@ -97,9 +97,9 @@ export default function ScrollDiv({
       isScrollThumbHovered.set(is === 'start')
     }
   })
-  useHover(scrollSlotRef, {
+  useHover(scrollTrackRef, {
     onHover({ is }) {
-      isScrollSlotHovered.set(is === 'start')
+      isScrollTrackHovered.set(is === 'start')
     }
   })
   useActive(scrollThumbRef, {
@@ -143,7 +143,7 @@ export default function ScrollDiv({
         isScrollThumbActive.off()
       },
       move: ({ currentDeltaInPx }) => {
-        const avaliableScroll = Number(getCssVariable(outerContainerRef.current, 'slot-scroll-height') || '0')
+        const avaliableScroll = Number(getCssVariable(outerContainerRef.current, 'track-scroll-height') || '0')
         setCssVarible(outerContainerRef.current, 'scroll-top', (prev) => {
           const currentScrollTop = Number(prev) + currentDeltaInPx.dy / avaliableScroll
           scrollTop.current = currentScrollTop
@@ -165,10 +165,10 @@ export default function ScrollDiv({
 
   // add --total-scroll as soon as scrollbar is available
   useEffect(() => {
-    if (!scrollSlotRef.current || !scrollThumbRef.current) return
-    const totalScroll = scrollSlotRef.current.clientHeight - scrollThumbRef.current.clientHeight
-    setCssVarible(outerContainerRef.current, 'slot-scroll-height', String(totalScroll))
-    totalScrollOfScrollSlot.current = totalScroll
+    if (!scrollTrackRef.current || !scrollThumbRef.current) return
+    const totalScroll = scrollTrackRef.current.clientHeight - scrollThumbRef.current.clientHeight
+    setCssVarible(outerContainerRef.current, 'track-scroll-height', String(totalScroll))
+    totalScrollOfScrollTrack.current = totalScroll
   }, [])
 
   // add --client-height as soon as innerContent is available
@@ -179,24 +179,24 @@ export default function ScrollDiv({
     contentClientHeight.current = clientHeight
   }, [])
 
-  const { slot, thumb } = scrollDivTint(thumbTint, slotTint)
+  const { track, thumb } = scrollDivTint(thumbTint, trackTint)
   return (
     <Div domRef={outerContainerRef} className={['ScrollDiv w-full h-80 relative', className]}>
       <Div
         className={[
-          'ScrollDiv-scrollbar-slot absolute right-0 top-0 bottom-0',
-          !noDefaultSlotTint &&
-            shrinkToValue(slot, [
+          'ScrollDiv-scrollbar-track absolute right-0 top-0 bottom-0',
+          !noDefaultTrackTint &&
+            shrinkToValue(track, [
               {
                 isContainerHovered: isScrollContainerHovered.value,
-                isSlotHovered: isScrollSlotHovered.value,
+                isTrackHovered: isScrollTrackHovered.value,
                 isThumbHovered: isScrollThumbHovered.value,
                 isThumbActive: isScrollThumbActive.value
               }
             ]),
-          slotClassName
+          trackClassName
         ]}
-        domRef={scrollSlotRef}
+        domRef={scrollTrackRef}
       >
         <Div
           className={[
@@ -205,7 +205,7 @@ export default function ScrollDiv({
               shrinkToValue(thumb, [
                 {
                   isContainerHovered: isScrollContainerHovered.value,
-                  isSlotHovered: isScrollSlotHovered.value,
+                  isTrackHovered: isScrollTrackHovered.value,
                   isThumbHovered: isScrollThumbHovered.value,
                   isThumbActive: isScrollThumbActive.value
                 }
@@ -215,8 +215,8 @@ export default function ScrollDiv({
           domRef={scrollThumbRef}
           style={{
             height:
-              'calc(var(--content-client-height, 0) / var(--content-scroll-height, 0) * var(--slot-scroll-height) *1px)',
-            top: 'clamp(0px, var(--scroll-top, 0) * var(--slot-scroll-height, 0) * 1px, var(--slot-scroll-height, 0) * 1px)'
+              'calc(var(--content-client-height, 0) / var(--content-scroll-height, 0) * var(--track-scroll-height) *1px)',
+            top: 'clamp(0px, var(--scroll-top, 0) * var(--track-scroll-height, 0) * 1px, var(--track-scroll-height, 0) * 1px)'
           }}
         />
       </Div>
