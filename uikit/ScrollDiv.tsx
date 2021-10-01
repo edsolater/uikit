@@ -66,20 +66,20 @@ export default function ScrollDiv({
   noDefaultTrackTint
 }: ScrollDivProps) {
   const outerContainerRef = useRef<HTMLDivElement>()
-  const scrollInnerContentRef = useRef<HTMLDivElement>()
-  const scrollTrackRef = useRef<HTMLDivElement>()
-  const scrollThumbRef = useRef<HTMLDivElement>()
+  const innerContentRef = useRef<HTMLDivElement>()
+  const trackRef = useRef<HTMLDivElement>()
+  const thumbRef = useRef<HTMLDivElement>()
 
-  const isScrollThumbActive = useBFlag(false)
-  const isScrollThumbHovered = useBFlag(false)
-  const isScrollContainerHovered = useBFlag(false)
-  const isScrollTrackHovered = useBFlag(false)
+  const isThumbActive = useBFlag(false)
+  const isThumbHovered = useBFlag(false)
+  const isContainerHovered = useBFlag(false)
+  const isTrackHovered = useBFlag(false)
 
   // css variable: --content-scroll-height to element: OuterConent (>1 px number. e.g 3000px )
-  const totalScrollOfInnerContent = useRef(0)
+  const innerContentScrollHeight = useRef(0)
 
   // css variable: --track-scroll-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link contentClientHeight})
-  const totalScrollOfScrollTrack = useRef(0)
+  const trackHeight = useRef(0)
 
   // css variable: --content-client-height to element: OuterConent (>1 px number. e.g 200px) (the value is same as {@link totalScrollOfScrollTrack})
   const contentClientHeight = useRef(0)
@@ -89,32 +89,32 @@ export default function ScrollDiv({
 
   useHover(outerContainerRef, {
     onHover({ is }) {
-      isScrollContainerHovered.set(is === 'start')
+      isContainerHovered.set(is === 'start')
     }
   })
-  useHover(scrollThumbRef, {
+  useHover(thumbRef, {
     onHover({ is }) {
-      isScrollThumbHovered.set(is === 'start')
+      isThumbHovered.set(is === 'start')
     }
   })
-  useHover(scrollTrackRef, {
+  useHover(trackRef, {
     onHover({ is }) {
-      isScrollTrackHovered.set(is === 'start')
+      isTrackHovered.set(is === 'start')
     }
   })
-  useActive(scrollThumbRef, {
+  useActive(thumbRef, {
     onActive({ is }) {
-      isScrollThumbActive.set(is === 'start')
+      isThumbActive.set(is === 'start')
     }
   })
   // add innerContent listener
   useEffect(() => {
-    if (!scrollInnerContentRef.current) return
-    scrollInnerContentRef.current.addEventListener(
+    if (!innerContentRef.current) return
+    innerContentRef.current.addEventListener(
       'scroll',
       (ev) => {
-        if (isScrollThumbActive.isOn()) return
-        if (!outerContainerRef.current || !scrollInnerContentRef.current) return
+        if (isThumbActive.isOn()) return
+        if (!outerContainerRef.current || !innerContentRef.current) return
         const contentEl = ev.target as HTMLDivElement
         const avaliableScroll = Number(getCssVariable(outerContainerRef.current, 'content-scroll-height') || '0')
         const currentScrollTop = contentEl.scrollTop / avaliableScroll
@@ -126,21 +126,21 @@ export default function ScrollDiv({
   }, [])
 
   function scrollCotentWithScrollTop() {
-    scrollInnerContentRef.current?.scrollTo({
-      top: Math.min(1, Math.max(0, scrollTop.current)) * totalScrollOfInnerContent.current
+    innerContentRef.current?.scrollTo({
+      top: Math.min(1, Math.max(0, scrollTop.current)) * innerContentScrollHeight.current
     })
   }
 
   // add scroll thumb listener ------
   useEffect(() => {
-    const eventId = attachPointerMove(scrollThumbRef.current, {
+    const eventId = attachPointerMove(thumbRef.current, {
       start() {
-        setDataSet(scrollThumbRef.current, 'isScrollThumbActive', true)
-        isScrollThumbActive.on()
+        setDataSet(thumbRef.current, 'isScrollThumbActive', true)
+        isThumbActive.on()
       },
       end() {
-        setDataSet(scrollThumbRef.current, 'isScrollThumbActive', false)
-        isScrollThumbActive.off()
+        setDataSet(thumbRef.current, 'isScrollThumbActive', false)
+        isThumbActive.off()
       },
       move: ({ currentDeltaInPx }) => {
         const avaliableScroll = Number(getCssVariable(outerContainerRef.current, 'track-scroll-height') || '0')
@@ -157,24 +157,24 @@ export default function ScrollDiv({
 
   // add --total-scroll as soon as innerContent is available
   useEffect(() => {
-    if (!scrollInnerContentRef.current) return
-    const totalScroll = scrollInnerContentRef.current.scrollHeight - scrollInnerContentRef.current.clientHeight
+    if (!innerContentRef.current) return
+    const totalScroll = innerContentRef.current.scrollHeight - innerContentRef.current.clientHeight
     setCssVarible(outerContainerRef.current, 'content-scroll-height', String(totalScroll))
-    totalScrollOfInnerContent.current = totalScroll
+    innerContentScrollHeight.current = totalScroll
   }, [])
 
   // add --total-scroll as soon as scrollbar is available
   useEffect(() => {
-    if (!scrollTrackRef.current || !scrollThumbRef.current) return
-    const totalScroll = scrollTrackRef.current.clientHeight - scrollThumbRef.current.clientHeight
+    if (!trackRef.current || !thumbRef.current) return
+    const totalScroll = trackRef.current.clientHeight - thumbRef.current.clientHeight
     setCssVarible(outerContainerRef.current, 'track-scroll-height', String(totalScroll))
-    totalScrollOfScrollTrack.current = totalScroll
+    trackHeight.current = totalScroll
   }, [])
 
   // add --client-height as soon as innerContent is available
   useEffect(() => {
-    if (!scrollInnerContentRef.current) return
-    const clientHeight = scrollInnerContentRef.current.clientHeight
+    if (!innerContentRef.current) return
+    const clientHeight = innerContentRef.current.clientHeight
     setCssVarible(outerContainerRef.current, 'content-client-height', String(clientHeight))
     contentClientHeight.current = clientHeight
   }, [])
@@ -188,15 +188,15 @@ export default function ScrollDiv({
           !noDefaultTrackTint &&
             shrinkToValue(track, [
               {
-                isContainerHovered: isScrollContainerHovered.value,
-                isTrackHovered: isScrollTrackHovered.value,
-                isThumbHovered: isScrollThumbHovered.value,
-                isThumbActive: isScrollThumbActive.value
+                isContainerHovered: isContainerHovered.value,
+                isTrackHovered: isTrackHovered.value,
+                isThumbHovered: isThumbHovered.value,
+                isThumbActive: isThumbActive.value
               }
             ]),
           trackClassName
         ]}
-        domRef={scrollTrackRef}
+        domRef={trackRef}
       >
         <Div
           className={[
@@ -204,25 +204,25 @@ export default function ScrollDiv({
             !noDefaultThumbTint &&
               shrinkToValue(thumb, [
                 {
-                  isContainerHovered: isScrollContainerHovered.value,
-                  isTrackHovered: isScrollTrackHovered.value,
-                  isThumbHovered: isScrollThumbHovered.value,
-                  isThumbActive: isScrollThumbActive.value
+                  isContainerHovered: isContainerHovered.value,
+                  isTrackHovered: isTrackHovered.value,
+                  isThumbHovered: isThumbHovered.value,
+                  isThumbActive: isThumbActive.value
                 }
               ]),
             thumbClassName
           ]}
-          domRef={scrollThumbRef}
+          domRef={thumbRef}
           style={{
             height:
-              'calc(var(--content-client-height, 0) / var(--content-scroll-height, 0) * var(--track-scroll-height) *1px)',
+              'calc(var(--content-client-height, 0) / var(--content-scroll-height, 0) * var(--track-scroll-height) * 1px)',
             top: 'clamp(0px, var(--scroll-top, 0) * var(--track-scroll-height, 0) * 1px, var(--track-scroll-height, 0) * 1px)'
           }}
         />
       </Div>
       <Div
         className={['ScrollDiv-inner-content w-full h-full overflow-auto no-native-scrollbar']}
-        domRef={scrollInnerContentRef}
+        domRef={innerContentRef}
       >
         {children}
       </Div>
