@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react'
+import { ReactNode, RefObject, useEffect, useRef, useState } from 'react'
 import { getCssVariable, setCssVarible } from '../functions/dom/cssVariable'
 import { setDataSet } from '../functions/dom/dataset'
 import { attachPointerMove, cancelPointerMove } from '../functions/dom/gesture/pointerMove'
@@ -51,6 +51,7 @@ const scrollDivTint = (
 interface ScrollDivProps extends DivProps, ScrollDivTintProps {
   children?: ReactNode
   className?: string
+  componentRef?: RefObject<any>
   trackClassName?: string
   thumbClassName?: string
 }
@@ -88,19 +89,14 @@ export default function ScrollDiv({
   const scrollTop = useRef(0)
 
   const thumbHeight = (contentClientHeight / contentAvaliableScrollHeight) * trackHeight
-  console.log('trackHeight: ', trackHeight)
-  console.log('thumbHeight: ', thumbHeight)
+
   const thumbAvaliableScrollHeight = trackHeight - thumbHeight
 
-  // tool function shortcut
-  const getCurrentScrollTop = () => scrollTop.current
-
-  const getAvailableScrollHeight = () =>
-    useHover(outerContainerRef, {
-      onHover({ is }) {
-        isContainerHovered.set(is === 'start')
-      }
-    })
+  useHover(outerContainerRef, {
+    onHover({ is }) {
+      isContainerHovered.set(is === 'start')
+    }
+  })
   useHover(thumbRef, {
     onHover({ is }) {
       isThumbHovered.set(is === 'start')
@@ -155,7 +151,7 @@ export default function ScrollDiv({
         isThumbActive.off()
       },
       move: ({ currentDeltaInPx }) => {
-        if (!thumbAvaliableScrollHeight) return 
+        if (!thumbAvaliableScrollHeight) return
         setCssVarible(outerContainerRef.current, 'scroll-top', (prev) => {
           const currentScrollTop = Number(prev) + currentDeltaInPx.dy / thumbAvaliableScrollHeight
           scrollTop.current = currentScrollTop
