@@ -23,12 +23,12 @@ export default function ScrollDivExample() {
             />
           ))}
         </Div>
-        <ScrollDiv className='h-80 w-full'>
+        <ScrollDiv className='h-80 w-44'>
           {range(10, (idx) => (
             <Card
               boundingBoxCSS
               key={idx}
-              className='bg-block-semi-dark w-44 m-4 rounded-lg  hover:ring-block-light ring-transparent win10-light-spot ring-8 ring-inset hover:ring-opacity-60'
+              className='bg-block-semi-dark w-64 m-4 rounded-lg  hover:ring-block-light ring-transparent win10-light-spot ring-8 ring-inset hover:ring-opacity-60'
               style={{ aspectRatio: '1 / 1' }}
             />
           ))}
