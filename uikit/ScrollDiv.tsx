@@ -189,10 +189,11 @@ export default function ScrollDiv({
 
   const { track, thumb } = scrollDivTint(thumbTint, trackTint)
   return (
-    <Div domRef={outerContainerRef} className={['ScrollDiv w-full h-80 relative', className]}>
+    <Div nodeName='ScrollDiv' domRef={outerContainerRef} className={['relative', className]}>
       <Div
+        nodeName='ScrollDiv--track'
         className={[
-          'ScrollDiv-scrollbar-track absolute right-0 top-0 bottom-0',
+          'absolute right-0 top-0 bottom-0',
           !noDefaultTrackTint &&
             shrinkToValue(track, [
               {
@@ -207,8 +208,9 @@ export default function ScrollDiv({
         domRef={trackRef}
       >
         <Div
+          nodeName='ScrollDiv--thumb'
           className={[
-            'ScrollDiv-scrollbar-thumb absolute right-0 w-full',
+            'absolute right-0 w-full',
             !noDefaultThumbTint &&
               shrinkToValue(thumb, [
                 {
@@ -227,7 +229,11 @@ export default function ScrollDiv({
           }}
         />
       </Div>
-      <Div className={['ScrollDiv-inner-content w-full h-full overflow-auto no-native-scrollbar']} domRef={contentRef}>
+      <Div
+        nodeName='ScrollDiv--content'
+        className={['ScrollDiv-inner-content w-full h-full overflow-auto no-native-scrollbar']}
+        domRef={contentRef}
+      >
         {children}
       </Div>
     </Div>
