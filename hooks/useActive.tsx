@@ -1,4 +1,5 @@
 import { RefObject, useEffect } from 'react'
+
 import { Nullish } from '../typings/constants'
 import useBFlag from './useBFlag'
 
@@ -11,7 +12,7 @@ export interface UseActiveOptions {
   onActive?: (ev: { el: EventTarget; nativeEvent: PointerEvent; is: 'start' | 'end' }) => void
 }
 
-export function useActive(
+export default function useActive(
   ref: RefObject<HTMLElement | Nullish> | Nullish,
   { disable, onActiveStart, onActiveEnd, onActive }: UseActiveOptions = {}
 ) {

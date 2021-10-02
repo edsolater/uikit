@@ -16,10 +16,9 @@ const config = {
       'block-semi-dark': '#515254d6',
       'block-dark': '#444c',
       'bg-dark': '#252627',
-      
+
       // 👇 colorful
-      'block-primary': colors.yellow[500],
-      
+      'block-color-primary': colors.yellow[500],
 
       'text-light': colors.gray[100],
       'text-dark': colors.coolGray[700]

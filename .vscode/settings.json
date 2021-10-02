@@ -1,4 +1,5 @@
 {
+  "editor.formatOnSave": true,
   "files.exclude": {
     "**/.next": true,
     "**/dist": true,
@@ -10,4 +11,7 @@
     "comments": true,
     "strings": true
   },
+  "importSorter.generalConfiguration.sortOnBeforeSave": true,
+  "importSorter.importStringConfiguration.quoteMark": "single",
+  "importSorter.importStringConfiguration.hasSemicolon": false
 }

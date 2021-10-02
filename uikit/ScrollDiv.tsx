@@ -1,11 +1,14 @@
 import { ReactNode, RefObject, useEffect, useRef, useState } from 'react'
+
+import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
+
+import addEventListener from '../functions/dom/addEventListener'
 import { setCssVarible } from '../functions/dom/cssVariable'
 import { attachPointerMove, cancelPointerMove } from '../functions/dom/gesture/pointerMove'
-import { useHover } from '../hooks/useHover'
-import Div, { DivProps } from './Div'
-import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
 import useBFlag from '../hooks/useBFlag'
-import addEventListener from '../functions/dom/addEventListener'
+import useHover from '../hooks/useHover'
+import useOverflowDetecter from '../hooks/useOverflowDetecter'
+import Div, { DivProps } from './Div'
 
 type ScrollDivTintProps = {
   noDefaultThumbTint?: boolean
@@ -27,9 +30,9 @@ const scrollDivTint = (
   return {
     'track': () => ``,
     'thumb': ({ isContainerHovered, direction }) =>
-      `transition active:bg-opacity-100 rounded-full hover:bg-opacity-80 ${direction === 'y' ? 'w-2 hover:w-4' : 'h-2 hover:h-4'}  ${
-        isContainerHovered ? 'bg-opacity-60' : 'bg-opacity-10'
-      } bg-block-primary`
+      `transition active:bg-opacity-100 rounded-full hover:bg-opacity-80 ${
+        direction === 'y' ? 'w-1 hover:w-3' : 'h-1 hover:h-3'
+      }  ${isContainerHovered ? 'bg-opacity-60' : 'bg-opacity-10'} bg-block-semi-light`
   }
 }
 
@@ -53,6 +56,8 @@ export default function ScrollDiv({
 }: ScrollDivProps) {
   const outerContainerRef = useRef<HTMLDivElement>()
   const contentRef = useRef<HTMLDivElement>()
+  const { xOverflowed, yOverflowed } = useOverflowDetecter(contentRef)
+
   const xTrackRef = useRef<HTMLDivElement>()
   const xThumbRef = useRef<HTMLDivElement>()
   const yTrackRef = useRef<HTMLDivElement>()
@@ -214,6 +219,7 @@ export default function ScrollDiv({
         nodeName='ScrollDiv__y-track'
         className={[
           'absolute right-0 top-0 bottom-0',
+          !yOverflowed && 'invisible',
           !noDefaultTrackTint &&
             shrinkToValue(track, [{ isContainerHovered: isContainerHovered.value, direction: 'y' }]),
           trackClassName
@@ -239,6 +245,7 @@ export default function ScrollDiv({
         nodeName='ScrollDiv__x-track'
         className={[
           'absolute left-0 right-0 bottom-0',
+          !xOverflowed && 'invisible',
           !noDefaultTrackTint &&
             shrinkToValue(track, [{ isContainerHovered: isContainerHovered.value, direction: 'x' }]),
           trackClassName

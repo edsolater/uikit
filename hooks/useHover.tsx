@@ -1,6 +1,7 @@
-import useToggle from './useToggle'
 import { RefObject, useEffect } from 'react'
+
 import { Nullish } from '../typings/constants'
+import useToggle from './useToggle'
 
 //#region ------------------- hook: useHover() -------------------
 
@@ -11,7 +12,7 @@ export interface UseHoverOptions {
   onHover?: (ev: { el: EventTarget; nativeEvent: PointerEvent; is: 'start' | 'end' }) => void
 }
 
-export function useHover(
+export default function useHover(
   ref: RefObject<HTMLElement | Nullish> | Nullish,
   { disable, onHoverStart, onHoverEnd, onHover }: UseHoverOptions = {}
 ) {
