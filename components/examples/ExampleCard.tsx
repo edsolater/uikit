@@ -10,11 +10,11 @@ export default function ExampleCard(props: ExampleCardProps) {
     <Card
       {...props}
       className={[
-        'grid relative gap-8 shadow-xl bg-block-dark w-[clamp(400px,80vw,1200px)] my-8 mx-auto rounded-2xl p-4',
+        'grid relative gap-8 shadow-xl bg-block-dark w-[clamp(400px,80vw,1200px)] my-12 mx-auto rounded-2xl p-4',
         props.className
       ]}
     >
-      <h1>{props.title}</h1>
+      <h1 className='text-3xl text-center font-bold my-4'>{props.title}</h1>
       {props.children}
     </Card>
   )
