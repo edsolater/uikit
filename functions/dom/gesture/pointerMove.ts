@@ -10,7 +10,9 @@ const eventIdMap = new Map<number, { el: Element; eventName: string; fn: AnyFn }
 export function attachPointerMove(
   el: HTMLElement | undefined | null,
   eventListeners: {
+    /**  PointerDown */
     start?: (ev: { ev: PointerEvent; evStart: PointerEvent; evs: PointerEvent[] }) => void
+    /**  PointerDown + PointerMove */
     move?: (ev: {
       ev: PointerEvent
       evStart: PointerEvent
@@ -18,6 +20,7 @@ export function attachPointerMove(
       currentDeltaInPx: Delta2dTranslate
       totalDeltaInPx: Delta2dTranslate
     }) => void
+    /**  PointerUp */
     end?: (ev: {
       ev: PointerEvent
       evStart: PointerEvent

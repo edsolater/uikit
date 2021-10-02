@@ -7,6 +7,7 @@ import Div, { DivProps } from './Div'
 import shrinkToValue from '@edsolater/fnkit/src/magic/shrinkToValue'
 import useBFlag from '../hooks/useBFlag'
 import { useActive } from '../hooks/useActive'
+import addEventListener from '../functions/dom/addEventListener'
 
 type ScrollDivTintProps = {
   noDefaultThumbTint?: boolean
@@ -40,9 +41,9 @@ const scrollDivTint = (
   trackTintOptions: ScrollDivTintProps['trackTint'] = {}
 ): ScrollDivReturnedTintBlock => {
   return {
-    'track': ({ isTrackHovered }) => `transition ${isTrackHovered ? 'w-4' : 'w-2'}`,
+    'track': () => ``,
     'thumb': ({ isContainerHovered }) =>
-      `h-8 transition active:bg-opacity-100 hover:bg-opacity-80  ${
+      `transition active:bg-opacity-100 hover:bg-opacity-80 w-2 hover:w-4 ${
         isContainerHovered ? 'bg-opacity-60' : 'bg-opacity-20'
       } bg-block-primary`
   }
@@ -115,7 +116,9 @@ export default function ScrollDiv({
   // add innerContent listener
   useEffect(() => {
     if (!contentRef.current) return
-    contentRef.current.addEventListener(
+    // TODO: abstract to attachScroll()
+    const controller = addEventListener(
+      contentRef.current,
       'scroll',
       (ev) => {
         if (isThumbActive.isOn()) return
@@ -130,6 +133,7 @@ export default function ScrollDiv({
       },
       { passive: true }
     )
+    return () => controller.stopListening()
   }, [])
 
   function scrollCotentWithScrollTop() {
@@ -160,7 +164,7 @@ export default function ScrollDiv({
         })
       }
     })
-    return () => cancelPointerMove(eventId)
+    return () => cancelPointerMove(eventId) // TODO: use controller like 👆(above code)
   }, [thumbAvaliableScrollHeight])
 
   // add --total-scroll as soon as innerContent is available
