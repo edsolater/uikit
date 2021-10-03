@@ -1,5 +1,8 @@
-import isHTMLElement from '../domHelpers/isHTMLElement'
+// TODO: should abstract attachScroll
+
 import { RefObject, useEffect, useRef, useState } from 'react'
+
+import isHTMLElement from '../domHelpers/isHTMLElement'
 import useResizeObserver from './useResizeObserver'
 
 interface UseScrollListenerOptions {
