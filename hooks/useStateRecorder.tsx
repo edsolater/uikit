@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 // TODO: there should be an export/import button in UI, so that user can export config and paste it to another client.
 export default function useStateRecorder<T>(stateKey: string, state: T) {
   useEffect(() => {
-    window.localStorage.setItem(stateKey, JSON.stringify(state))
+    globalThis.localStorage?.setItem(stateKey, JSON.stringify(state))
   }, [state])
 }
 
