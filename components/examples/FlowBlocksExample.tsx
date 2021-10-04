@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import range from '../../functions/fnkit/range'
+import { useWindowFeaturePointerVariable } from '../../hooks/useWindowFeaturePointerVariable'
 import { genGridTemplate } from '../../styles/styleSnippets'
 import Card from '../../uikit/Card'
 import Div from '../../uikit/Div'
@@ -7,9 +7,7 @@ import ExampleCard from './ExampleCard'
 import ExampleGroup from './ExampleGroup'
 
 export default function FlowBlocksExample() {
-  useEffect(() => {
-    attachPointerMoveCSSVariable()
-  }, [])
+  useWindowFeaturePointerVariable()
 
   return (
     <ExampleCard title='FlowBlocksExample' category='misc'>
@@ -26,15 +24,5 @@ export default function FlowBlocksExample() {
         </Div>
       </ExampleGroup>
     </ExampleCard>
-  )
-}
-function attachPointerMoveCSSVariable() {
-  document.addEventListener(
-    'pointermove',
-    (ev) => {
-      document.documentElement.style.setProperty('--pointer-x', String(ev.pageX))
-      document.documentElement.style.setProperty('--pointer-y', String(ev.pageY))
-    },
-    { passive: true }
   )
 }

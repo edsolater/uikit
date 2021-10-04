@@ -1,5 +1,6 @@
-import useToggle from './useToggle'
 import { RefObject, useEffect } from 'react'
+
+import useToggle from './useToggle'
 
 export interface UseClickOptions {
   disable?: boolean
@@ -8,7 +9,7 @@ export interface UseClickOptions {
   onActiveEnd?: (ev: { el: EventTarget; nativeEvent: PointerEvent }) => void
 }
 
-export function useClick(
+export default function useClick(
   ref: RefObject<HTMLElement>,
   { disable, onClick, onActiveStart, onActiveEnd }: UseClickOptions = {}
 ) {

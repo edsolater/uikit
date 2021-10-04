@@ -1,7 +1,8 @@
 import { RefObject, useEffect, useRef } from 'react'
-import { useClick, UseClickOptions } from './useClick'
-import { useHover, UseHoverOptions } from './useHover'
+
 import addTabIndex from '../domHelpers/addTabIndex'
+import useClick, { UseClickOptions } from './useClick'
+import useHover, { UseHoverOptions } from './useHover'
 
 /**
  *  a merge of {@link useClick} and {@link useHover}, and some tailwindcss class
