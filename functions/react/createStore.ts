@@ -94,9 +94,9 @@ const getSetters = <S extends StoreTemplate>(
 // TODO: remove setter, store, action . it's tedious
 export default function createStore<T extends StoreTemplate>(
   options: {
-    initStoreObject?: T
     /** easier debug rerender */
-    ProviderName?: string
+    key?: string
+    initStoreObject?: T
     /** invoke once, useEffect for `<Provider/>` */
     initEffect?(storeInfos: T & Setters<T>): void
   } = {}
@@ -111,14 +111,14 @@ export default function createStore<T extends StoreTemplate>(
   const Context = createContext({
     store: new Proxy(options.initStoreObject ?? {}, {
       get() {
-        throw new Error(`no target ${options.ProviderName}Provider above`)
+        throw new Error(`no target ${options.key}Provider above`)
       }
     }),
     setters: new Proxy(
       {},
       {
         get() {
-          throw new Error(`no target ${options.ProviderName}Provider above`)
+          throw new Error(`no target ${options.key}Provider above`)
         }
       }
     ) as any
@@ -128,7 +128,7 @@ export default function createStore<T extends StoreTemplate>(
     const setters = useMemo(() => getSetters<T>(options.initStoreObject ?? {}, setEntireStore), [])
     const contextValue = useMemo(() => ({ store, setters }), [store])
 
-    const merged = Object.assign(setters, store) as T & Setters<T>
+    const merged = Object.assign(setters, store) as T & Setters<T> // can't use object desctruction
 
     useEffect(() => {
       options.initEffect?.(merged)
@@ -136,7 +136,7 @@ export default function createStore<T extends StoreTemplate>(
 
     return React.createElement(Context.Provider, { value: contextValue }, children)
   }
-  Provider.displayName = `${options.ProviderName}`
+  Provider.displayName = `${options.key}`
 
   return {
     Provider,
