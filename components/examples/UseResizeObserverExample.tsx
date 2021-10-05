@@ -9,7 +9,7 @@ export default function UseResizeObserverExample() {
   const ref = useRef<HTMLDivElement>()
 
   useResizeObserver(ref, ({ target }) => {
-    console.log('client width: ', target.clientWidth)
+    // console.log('client width: ', target.clientWidth)
   })
 
   return (

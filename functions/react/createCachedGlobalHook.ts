@@ -11,14 +11,14 @@ export default function createCachedGlobalHook<T extends (...any: any[]) => any>
   const defaultHook = () => {
     throw new Error(msgForNotWrappedInRoot)
   }
-  const GlobalContext = createContext((defaultHook as unknown) as T)
+  const GlobalContext = createContext(defaultHook as unknown as T)
 
   const cachedHook = cache(hook)
 
-  /** @Registor no need props!!  */
-  const Registor = ({ children }: { children: ReactNode }) => {
+  /** @Provider no need props!!  */
+  const Provider = ({ children }: { children: ReactNode }) => {
     return React.createElement(GlobalContext.Provider, { value: cachedHook }, children)
   }
 
-  return { hook: cachedHook, Registor }
+  return { hook: cachedHook, Provider }
 }
