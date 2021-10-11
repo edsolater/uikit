@@ -9,9 +9,9 @@ import { useState } from 'react'
  *    return (
  *      <>
  *        <input onChange={(e) => setSearchText(e.target.value)}/>
- *          {filteredData.map(item, key)=> (
+ *          {filteredData.map((item, key)=> (
  *              <div>item.text<div>
- *          )}
+ *          ))}
  *      </>
  *    )
  * }
