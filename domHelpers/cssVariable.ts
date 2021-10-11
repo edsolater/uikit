@@ -1,5 +1,4 @@
-import fall from '../fall'
-
+import { fall } from '@edsolater/fnkit/src/magic'
 type GlobalCssVariable = '--side-menu-width' | '--topbar-height'
 
 export const registCSSVariable = (cssvariableName: GlobalCssVariable, value: string | number) =>

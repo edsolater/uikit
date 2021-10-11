@@ -23,10 +23,10 @@ export interface TagMap {
 export interface DivProps<TagName extends keyof TagMap = 'div'> {
   as?: TagName | ((...params: any[]) => ReactNode) // assume a function return ReactNode is a Component
   // just a label, it will merge to className
-  nodeName?:string
+  nodeName?: string
   domRef?: MayDeepArray<RefObject<HTMLElement | undefined> | undefined>
   className?: MayDeepArray<ClassName | undefined>
-  style?: MayDeepArray<(CSSProperties & { [variable: `--${string}`]: string|number }) | undefined>
+  style?: MayDeepArray<(CSSProperties & { [variable: `--${string}`]: string | number }) | undefined>
   htmlProps?: JSX.IntrinsicElements[TagName]
   children?: ReactNode
 
@@ -59,7 +59,7 @@ const Div = <TagName extends keyof TagMap = 'div'>(props: DivProps<TagName>) => 
           ...props.htmlProps,
           className: twMerge(props.nodeName, classname(props.className)),
           ref: mergeRefs(...[props.domRef, divRef].flat(Infinity)),
-          style: mergeObjects(...[props.style].flat()),
+          style: mergeObjects(...[props.style].flat())
         },
         props.children
       )

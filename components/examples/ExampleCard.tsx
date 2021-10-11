@@ -1,7 +1,7 @@
 import Card, { CardProps } from '../../uikit/Card'
 
 interface ExampleCardProps extends CardProps {
-  category?: 'hooks' | 'uikit' | 'templateComponent' | 'misc'
+  category?: 'hooks' | 'uikit' | 'templateComponent' | 'misc' | 'componentFactory'
   subCategory?: 'headless'
   title?: string
 }

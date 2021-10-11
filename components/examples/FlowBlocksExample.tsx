@@ -1,6 +1,6 @@
 import range from '../../functions/fnkit/range'
 import { useWindowFeaturePointerVariable } from '../../hooks/useWindowFeaturePointerVariable'
-import { genGridTemplate } from '../../styles/styleSnippets'
+import { genGridTemplate } from '../../styles/snippets'
 import Card from '../../uikit/Card'
 import Div from '../../uikit/Div'
 import ExampleCard from './ExampleCard'

@@ -4,11 +4,11 @@ import { useEffect, useRef } from 'react'
 /**
  * similiar to React.useEffect, but can record dependence list
  */
-export function useRecordedEffect<T extends any[]>(
-  effectFn: (curr: T, prev: T | [undefined]) => ((...params: any) => void) | void,
+export default function useStateDiffEffect<T extends any[]>(
   dependenceList: T,
+  callback: (curr: T, prev: T | [undefined]) => (() => void) | void,
   options?: {
-    /**useful when item of dependenceList is  */
+    /**useful when item of dependenceList contain object */
     shallowShallow?: boolean
   }
 ) {
@@ -16,9 +16,8 @@ export function useRecordedEffect<T extends any[]>(
   const cleanupFn = useRef<(() => void) | void>()
   useEffect(() => {
     const compareFunction = options?.shallowShallow ? areShallowShallowEqual : areShallowEqual
-    if (prevValue.current.length && compareFunction(prevValue.current, dependenceList))
-      return cleanupFn.current
-    const returnedFn = effectFn(dependenceList, prevValue.current)
+    if (prevValue.current.length && compareFunction(prevValue.current, dependenceList)) return cleanupFn.current
+    const returnedFn = callback(dependenceList, prevValue.current)
     prevValue.current = dependenceList
     cleanupFn.current = returnedFn
     return returnedFn

@@ -4,7 +4,7 @@ import type { TransitionEffectLabel } from './transitionEffect'
 import type { MayArray } from '../../typings/tools'
 import { useEffect, useRef } from 'react'
 import Div from '../Div'
-import usePromisedState from '../../hooks/usePromisedState'
+import useThenableState from '../../hooks/useThenableState'
 import { transitionEffectLabels, transitionEffects } from './transitionEffect'
 import { pickValues } from '../../functions/pickValues'
 import useBFlag from '../../hooks/useBFlag'
@@ -28,7 +28,7 @@ export default function Transition({ show, children, effect = transitionEffectLa
   const leaveToClassName = transitionEffect.map((ef) => `${ef.leave} ${ef.leaveTo}`).join('  ')
   const inDomTree = useBFlag(show) // this will equal to show, when it's not transition.
   const inTransition = useBFlag()
-  const [currentClassName, setcurrentClassName] = usePromisedState<string>()
+  const [currentClassName, setcurrentClassName] = useThenableState<string>()
   const ref = useRef<HTMLDivElement>()
   // shortcut
   const currentPhase: TransitionPhase =

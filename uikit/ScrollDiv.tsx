@@ -236,7 +236,7 @@ export default function ScrollDiv({
           ]}
           domRef={yThumbRef}
           style={{
-            height: yThumbHeight,
+            height: yThumbHeight ?? 0,
             top: `clamp(0px, var(--scroll-top, 0) * ${yThumbAvaliableScrollHeight} * 1px, ${yThumbAvaliableScrollHeight} * 1px)`
           }}
         />
@@ -262,7 +262,7 @@ export default function ScrollDiv({
           ]}
           domRef={xThumbRef}
           style={{
-            width: xThumbWidth,
+            width: xThumbWidth ?? 0,
             left: `clamp(0px, var(--scroll-left, 0) * ${xThumbAvaliableScrollWidth} * 1px, ${xThumbAvaliableScrollWidth} * 1px)`
           }}
         />
