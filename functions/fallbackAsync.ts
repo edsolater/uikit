@@ -13,9 +13,9 @@ type MayPromise<T> = T | Promise<T>
  *
  * fallbackAsync(
  *   Promise.reject(1),
- *   async (err) => await Promise.reject('hello'),
- *   (err) => Promise.resolve('world')
- * ).then(console.log) // => 'world'
+ *   (err) => Promise.reject('hello'),
+ *   (err) => Promise.resolve(err + ' world')
+ * ).then(console.log) // => 'hello world'
  *
  */
 export default async function fallbackAsync<V extends any, E extends any>(
@@ -23,12 +23,8 @@ export default async function fallbackAsync<V extends any, E extends any>(
 ): Promise<V | E> {
   return new Promise(async (resolve) => {
     await candidates.reduce(
-      (acc, i) =>
-        acc.then(
-          async (val) => resolve(await shrinkToValue(i, [val])),
-          async (err) => resolve(await shrinkToValue(i, [err]))
-        ),
-      Promise.resolve()
+      (acc, i) => acc.catch(async (err) => resolve(await shrinkToValue(i, [err]))) as any,
+      Promise.reject()
     )
   })
 }
