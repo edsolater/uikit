@@ -6,16 +6,16 @@ type MayPromise<T> = T | Promise<T>
 /**
  * switch **promise error** to a **promise fallback value**
  * @example
- * fallbackAsync(
+ * asyncCatch(
  *   () => Math.random() > 0.5
  * ).then(console.log) // => true | undefined
  *
- * fallbackAsync(
+ * asyncCatch(
  *   Promise.reject('hello'),
  *   Promise.resolve('world')
  * ).then(console.log) // => 'world'
  *
- * fallbackAsync(
+ * asyncCatch(
  *   Promise.reject(1),
  *   (err) => Promise.reject('hello'),
  *   (err) => Promise.resolve(err + ' world')
@@ -23,11 +23,11 @@ type MayPromise<T> = T | Promise<T>
  *
  */
 // useful undefind default fallback
-export default async function fallbackAsync<V>(candidate: MayFunction<MayPromise<V>>): Promise<V | undefined>
-export default async function fallbackAsync<V extends any, E extends any>(
+export default async function asyncCatch<V>(candidate: MayFunction<MayPromise<V>>): Promise<V | undefined>
+export default async function asyncCatch<V extends any, E extends any>(
   ...candidates: [MayFunction<MayPromise<V>>, ...MayFunction<MayPromise<E>, [err: unknown]>[]]
 ): Promise<V | E>
-export default async function fallbackAsync<V extends any, E extends any>(
+export default async function asyncCatch<V extends any, E extends any>(
   ...candidates: [MayFunction<MayPromise<V>>, ...MayFunction<MayPromise<E>, [err: unknown]>[]]
 ): Promise<V | E> {
   return new Promise(async (resolve) => {
