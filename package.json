@@ -6,6 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "type-check": "tsc --noEmit",
     "release": "rm -rf ./dist && tsc && npm version patch && npm publish",
     "analyze": "cross-env ANALYZE=true next build"
   },
@@ -16,23 +17,28 @@
     "dist/**/*"
   ],
   "dependencies": {
-    "next": "11.1.0",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
+    "@edsolater/fnkit": "^0.0.5",
+    "@emotion/css": "^11.9.0",
+    "@vanilla-extract/babel-plugin": "^1.1.7",
+    "@vanilla-extract/css": "^1.7.2",
+    "@vanilla-extract/next-plugin": "^2.0.2",
+    "next": "^12.1.6",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
     "tailwind-merge": "^0.6.0",
-    "tailwindcss": "^2.2.7"
+    "tailwindcss": "^2.2.19"
   },
   "devDependencies": {
-    "@edsolater/fnkit": "^1.0.19",
-    "@next/bundle-analyzer": "^11.1.2",
-    "@types/react": "17.0.17",
-    "@types/tailwindcss": "^2.2.1",
-    "autoprefixer": "^10.3.1",
+    "@babel/core": "^7.18.2",
+    "@next/bundle-analyzer": "^12.1.6",
+    "@types/react": "^18.0.12",
+    "@types/tailwindcss": "^3.0.10",
+    "autoprefixer": "^10.4.7",
     "cross-env": "^7.0.3",
     "next-build-id": "^3.0.0",
-    "next-transpile-modules": "^8.0.0",
-    "postcss": "^8.3.6",
-    "prettier": "^2.3.2",
-    "typescript": "^4.4.3"
+    "next-transpile-modules": "^9.0.0",
+    "postcss": "^8.4.14",
+    "prettier": "^2.6.2",
+    "typescript": "^4.7.3"
   }
 }

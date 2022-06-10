@@ -1,5 +1,4 @@
 const nextBuildId = require('next-build-id')
-const withTM = require('next-transpile-modules')(['@edsolater/fnkit'])
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true'
@@ -11,4 +10,4 @@ const nextConfig = {
   generateBuildId: () => nextBuildId({ dir: __dirname })
 }
 
-module.exports = withBundleAnalyzer(withTM(nextConfig))
+module.exports = withBundleAnalyzer(nextConfig)
