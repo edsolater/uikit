@@ -103,7 +103,7 @@ function useToggleByBase<S extends boolean>(
   }
 ): UseSignal<S, ToggleController> {
   const opts = { delay: 800, ...options }
-  const { state: delayActionId, setState: setDelayActionId } = useSignal<number>(0)
+  const { state: delayActionId, setState: setDelayActionId } = useSignal<number | NodeJS.Timeout>(0)
   const setIsOn = (dispatch: any) => {
     base.setState(dispatch)
   }

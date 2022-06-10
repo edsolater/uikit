@@ -4,8 +4,8 @@ const plugin = require('tailwindcss/plugin')
 /**@type {import("tailwindcss/tailwind-config").TailwindConfig} */
 const config = {
   mode: 'jit',
-  purge: ['./{hooks,uikit,components,pages,styles}/**/*.{js,ts,jsx,tsx}'],
-  darkMode: false, // or 'media' or 'class'
+  content: ['./src/{hooks,uikit,components,pages,styles}/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'media', // or 'media' or 'class'
 
   theme: {
     colors: {
@@ -20,8 +20,8 @@ const config = {
       // 👇 colorful
       'block-color-primary': colors.yellow[500],
 
-      'text-light': colors.gray[100],
-      'text-dark': colors.coolGray[700]
+      'text-light': colors.zinc[100],
+      'text-dark': colors.gray[700]
     }
   },
   variants: {
