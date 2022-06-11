@@ -72,6 +72,7 @@ export default function Button({ validators, ...otherButtonProps }: ButtonProps)
       className_='Button'
       htmlProps_={{ type: 'button' }}
       icss_={[
+        { transition:'300ms' },// make it's change smooth
         { border: 'none' }, // initialize
         { color: variant === 'solid' ? 'white' : themeColor }, // light mode
         { display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }, // center the items
@@ -117,8 +118,3 @@ export default function Button({ validators, ...otherButtonProps }: ButtonProps)
     </Div>
   )
 }
-
-// atom jssasf s
-const outline = (option?: { inset?: boolean; width?: number }): ICSS => ({
-  outline: `${option?.inset ? 'inset ' : ''}${option?.width ?? 2}px solid`
-})
