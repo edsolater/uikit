@@ -1,4 +1,4 @@
-import { addDefault } from '@edsolater/fnkit'
+import { addDefault } from '@edsolater/fnkit/dist-old'
 import { AnyFn } from '../../typings/constants'
 
 let eventId = 1

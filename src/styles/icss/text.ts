@@ -1,4 +1,4 @@
-import { isObject, isString, isUndefined } from '@edsolater/fnkit'
+import { isObject, isString, isUndefined } from '@edsolater/fnkit/dist-old'
 import { cssColors } from '../cssValues'
 import { ICSSObject, ICSS } from '../parseCSS'
 

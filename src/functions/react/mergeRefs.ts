@@ -1,6 +1,6 @@
 import { MutableRefObject, RefCallback, RefObject } from 'react'
 
-import { isArray, isFunction, isNullish } from '@edsolater/fnkit'
+import { isArray, isFunction, isNullish } from '@edsolater/fnkit/dist-old'
 
 import createCallbackRef from './createCallbackRef'
 

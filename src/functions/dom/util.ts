@@ -1,4 +1,4 @@
-import { shrinkToValue } from '@edsolater/fnkit'
+import { shrinkToValue } from '@edsolater/fnkit/dist-old'
 
 /**
  *

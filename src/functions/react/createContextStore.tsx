@@ -1,5 +1,5 @@
-import { assert, map, pick, shrinkToValue, toPascalCase } from '@edsolater/fnkit'
-import { toCamelCase } from '@edsolater/fnkit'
+import { assert, map, pick, shrinkToValue, toPascalCase } from '@edsolater/fnkit/dist-old'
+import { toCamelCase } from '@edsolater/fnkit/dist-old'
 import React, {
   createContext,
   ReactElement,

@@ -9,7 +9,7 @@ import {
   isArray,
   mapEntry,
   isFunction
-} from '@edsolater/fnkit'
+} from '@edsolater/fnkit/dist-old'
 import { css, CSSObject } from '@emotion/css'
 
 // nterface MayArrayValueCSSObject {

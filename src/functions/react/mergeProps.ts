@@ -1,4 +1,4 @@
-import { flap, isArray, isFunction, isObject, notNullish, parallelSwitch, mergeObjectsWithConfigs } from '@edsolater/fnkit'
+import { flap, isArray, isFunction, isObject, notNullish, parallelSwitch, mergeObjectsWithConfigs } from '@edsolater/fnkit/dist-old'
 import { AnyFn, AnyObj } from '../../typings/constants'
 import mergeFunction from '../mergeFunction'
 import mergeRefs from './mergeRefs'

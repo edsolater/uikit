@@ -1,4 +1,4 @@
-import { AnyFn, flap, MayFn, shakeNil, shrinkToValue } from '@edsolater/fnkit'
+import { AnyFn, flap, MayFn, shakeNil, shrinkToValue } from '@edsolater/fnkit/dist-old'
 import React, { isValidElement, ReactElement, ReactNode } from 'react'
 import { GetComponentProps } from '../../typings/tools'
 import { mergeProps } from './mergeProps'

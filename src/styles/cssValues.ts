@@ -1,4 +1,4 @@
-import { isString } from '@edsolater/fnkit'
+import { isString } from '@edsolater/fnkit/dist-old'
 import { CSSColorString } from './type'
 export const tailwindColors = {
   slate50: '#f8fafc',

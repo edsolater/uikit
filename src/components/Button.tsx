@@ -1,4 +1,4 @@
-import { isArray, MayArray, shrinkToValue } from '@edsolater/fnkit'
+import { isArray, MayArray, shrinkToValue } from '@edsolater/fnkit/dist-old'
 import { useRef } from 'react'
 import { cssTransitionTimeFnOutCubic } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
@@ -6,8 +6,7 @@ import { ICSS } from '../styles/parseCSS'
 import { CSSColorString } from '../styles/type'
 import { BooleanLike } from '../typings/constants'
 import { MayFunction } from '../typings/tools'
-import { Div } from './'
-import { DivProps } from './Div'
+import { Div, DivProps } from './Div'
 
 export interface ButtonProps extends DivProps<'button'> {
   /**

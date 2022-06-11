@@ -1,14 +1,14 @@
 import { createElement, MutableRefObject, ReactHTML, ReactNode, useRef } from 'react'
 
-import { flapDeep, isString, isUndefined, MayEnum, merge, omit, shakeNil } from '@edsolater/fnkit'
+import { flapDeep, isString, isUndefined, MayEnum, merge, omit, shakeNil } from '@edsolater/fnkit/dist-old'
 
+import { weakCacheInvoke } from '../../functions/dom/weakCacheInvoke'
+import { mergeProps } from '../../functions/react'
 import classname, { ClassName } from '../../functions/react/classname'
 import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { ICSS, parseCSS } from '../../styles/parseCSS'
-import type { MayDeepArray } from '../../typings/tools'
-import { weakCacheInvoke } from '../../functions/dom/weakCacheInvoke'
 import { CSSStyle } from '../../styles/type'
-import { mergeProps } from '../../functions/react'
+import { MayDeepArray } from '../../typings/tools'
 import { DivDataTag, toDataset } from './tag'
 
 export interface HTMLTagMap {
@@ -56,7 +56,7 @@ type _DivProps<TagName extends keyof HTMLTagMap = 'div'> = {
 export type DerivativeDivProps<TagName extends keyof HTMLTagMap = 'div'> = DivProps<TagName> & _DivProps<TagName>
 
 // TODO: as为组件时 的智能推断还不够好
-const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName>) => {
+export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName>) => {
   const isHTMLTag = isString(props.as) || isUndefined(props.as)
   const divRef = useRef<HTMLTagMap[TagName]>(null)
 
@@ -76,8 +76,7 @@ const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> 
             .filter(Boolean)
             .join(' '),
           ref: (el) =>
-            el &&
-            weakCacheInvoke(el, () => loadRef(mergeRefs(...flapDeep([props.domRef_, props.domRef, divRef])), el)),
+            el && weakCacheInvoke(el, () => loadRef(mergeRefs(...flapDeep([props.domRef_, props.domRef, divRef])), el)),
           style: props.style || props.style_ ? merge(...flapDeep(shakeNil([props.style_, props.style]))) : undefined,
           onClick:
             props.onClick || props.onClick_
@@ -97,4 +96,3 @@ const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> 
         props.children ?? props.children_
       )
 }
-export default Div

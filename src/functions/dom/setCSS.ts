@@ -1,5 +1,5 @@
-import { isNumber, isObject, map, MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { toKebabCase } from '@edsolater/fnkit'
+import { isNumber, isObject, map, MayFn, shrinkToValue } from '@edsolater/fnkit/dist-old'
+import { toKebabCase } from '@edsolater/fnkit/dist-old'
 import { CSSProperties } from 'react'
 import { Nullish, Stringish } from '../../typings/constants'
 

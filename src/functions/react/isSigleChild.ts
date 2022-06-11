@@ -1,5 +1,5 @@
 import { isValidElement, ReactElement, ReactNode } from 'react'
-import { isArray } from '@edsolater/fnkit'
+import { isArray } from '@edsolater/fnkit/dist-old'
 
 export default function isSigleChild(
   child: ReactNode,

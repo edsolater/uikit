@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react'
-import { toKebabCase } from '@edsolater/fnkit'
+import { toKebabCase } from '@edsolater/fnkit/dist-old'
 
 function _createElementByString<T extends HTMLElement = HTMLDivElement>(innerHTMLStr: string): T {
   const tempNode = document.createElement('div')
