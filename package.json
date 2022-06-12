@@ -1,15 +1,13 @@
 {
   "name": "@edsolater/uikit",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
   "scripts": {
-    "dev": "next dev -p 1235",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
     "type-check": "tsc --noEmit",
     "release": "rm -rf ./dist && tsc && npm version patch && npm publish",
     "analyze": "cross-env ANALYZE=true next build",
-    "storybook": "start-storybook -p 6006"
+    "storybook": "start-storybook -p 6006",
+    "build": "tsup"
   },
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
@@ -21,7 +19,16 @@
     "react": "^18.1.0",
     "react-dom": "^18.1.0"
   },
+  "peerDependencies": {
+    "@edsolater/fnkit": "*",
+    "@edsolater/hookit": "*",
+    "@edsolater/xstore": "*",
+    "@emotion/css": ">=11.9.0",
+    "react": ">18.0.0",
+    "react-dom": ">18.0.0"
+  },
   "devDependencies": {
+    "tsup": "^6.1.2",
     "@babel/core": "^7.18.2",
     "@next/bundle-analyzer": "^12.1.6",
     "@storybook/addon-actions": "^6.5.8",
