@@ -7,5 +7,6 @@ export default defineConfig({
   dts: true,
   format: ['esm', 'cjs'],
   target: 'es2020',
-  splitting: true
+  splitting: true,
+  inject: ['./src/react-import.js']
 })
