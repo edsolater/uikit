@@ -1,4 +1,4 @@
-import { isObject, shrinkToValue } from '@edsolater/fnkit/dist-old'
+import { isObject, shrinkToValue } from '@edsolater/fnkit'
 
 type MayFunction<T, Params extends any[] = []> = T | ((...params: Params) => T)
 

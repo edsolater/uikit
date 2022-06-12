@@ -1,4 +1,4 @@
-import { AnyObj } from '@edsolater/fnkit/dist-old'
+import { AnyObj } from '@edsolater/fnkit'
 
 const weakRecordedRefs = new WeakSet<AnyObj>()
 export function weakCacheInvoke<T extends AnyObj>(weakKey: T, weakInvokeCallback: (el: T) => void) {

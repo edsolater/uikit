@@ -1,4 +1,4 @@
-import { isArray, MayArray, shrinkToValue } from '@edsolater/fnkit/dist-old'
+import { isArray, MayArray, shrinkToValue } from '@edsolater/fnkit'
 import { useRef } from 'react'
 import { cssTransitionTimeFnOutCubic } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'

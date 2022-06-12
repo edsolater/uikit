@@ -1,6 +1,6 @@
 import { createElement, MutableRefObject, ReactHTML, ReactNode, useRef } from 'react'
 
-import { flapDeep, isString, isUndefined, MayEnum, merge, omit, shakeNil } from '@edsolater/fnkit/dist-old'
+import { flapDeep, isString, isUndefined, MayEnum, merge, omit, shakeNil } from '@edsolater/fnkit'
 
 import { weakCacheInvoke } from '../../functions/dom/weakCacheInvoke'
 import { mergeProps } from '../../functions/react'

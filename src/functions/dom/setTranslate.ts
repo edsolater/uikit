@@ -1,4 +1,4 @@
-import { Delta2dTranslate } from '@edsolater/fnkit/dist-old'
+import { Delta2dTranslate } from '@edsolater/fnkit'
 import { setCSSVariable } from './setCSS'
 
 export default function setTranslate(el: HTMLElement, translateOptions: Partial<Delta2dTranslate>) {

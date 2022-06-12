@@ -1,4 +1,4 @@
-import { isExist } from '@edsolater/fnkit/dist-old'
+import { isExist } from '@edsolater/fnkit'
 import type { MayArray, Valueof } from '../typings/tools'
 
 /**

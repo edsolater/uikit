@@ -1,4 +1,4 @@
-import { flap } from '@edsolater/fnkit/dist-old'
+import { flap } from '@edsolater/fnkit'
 import React, { ReactElement, ReactNode } from 'react'
 
 type ReactComponent = (...params) => ReactElement | null

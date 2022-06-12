@@ -1,4 +1,4 @@
-import { debounce, OffsetDepth, parseNumberOrPercent } from '@edsolater/fnkit/dist-old'
+import { debounce, OffsetDepth, parseNumberOrPercent } from '@edsolater/fnkit'
 import { addEventListener, EventListenerController } from '../addEventListener'
 
 const SCROLL_STOP_DELAY = 100 // when it is not scroll in 100ms, assumed it to stop scroll

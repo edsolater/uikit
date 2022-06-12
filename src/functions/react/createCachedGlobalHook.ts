@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
 import { createContext } from 'react'
-import { cache } from '@edsolater/fnkit/dist-old'
+import { cache } from '@edsolater/fnkit'
 
 export default function createCachedGlobalHook<T extends (...any: any[]) => any>(
   hook: T,

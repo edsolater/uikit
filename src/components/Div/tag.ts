@@ -1,4 +1,4 @@
-import { flapDeep, isArray, isString, MayDeepArray, shakeNil, toKebabCase, uncapitalize } from '@edsolater/fnkit/dist-old'
+import { flapDeep, isArray, isString, MayDeepArray, shakeNil, toKebabCase, uncapitalize } from '@edsolater/fnkit'
 
 export type DivDataTag = {
   key: string

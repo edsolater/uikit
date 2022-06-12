@@ -1,4 +1,4 @@
-import { isObject, isString, isUndefined } from '@edsolater/fnkit/dist-old'
+import { isObject, isString, isUndefined } from '@edsolater/fnkit'
 import { createICSS, ICSS, ICSSObject } from '../parseCSS'
 
 type ICSSRowPresetAlign = `align-${'baseline' | 'normal' | 'stretch' | 'center' | 'end' | 'start'}`
