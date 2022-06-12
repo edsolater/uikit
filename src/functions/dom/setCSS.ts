@@ -1,7 +1,5 @@
-import { isNumber, isObject, map, MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { toKebabCase } from '@edsolater/fnkit'
+import { toKebabCase, isNumber, isObject, MayFn, shrinkToValue, Nullish } from '@edsolater/fnkit'
 import { CSSProperties } from 'react'
-import { Nullish, Stringish } from '../../typings/constants'
 
 /**
  * side-effect
@@ -71,7 +69,7 @@ export function getInlineCSS<K extends keyof CSSProperties>(
 export function setCSSVariable(
   el: HTMLElement | Nullish,
   variableName: `--${string}` | undefined,
-  value: Stringish | ((prev: string) => Stringish)
+  value: string | number | ((prev: string) => string | number)
 ): void {
   if (el && variableName) {
     el.style.setProperty(variableName, String(shrinkToValue(value, [el.style.getPropertyValue(variableName)])))

@@ -1,5 +1,3 @@
-import { Stringish } from "../../typings/constants";
-
 /**
  *
  * @param el
@@ -8,7 +6,11 @@ import { Stringish } from "../../typings/constants";
  * @example
  * setDateSet(document.getElementById('he'), 'isActive', true)
  */
-export function setDataSet(el: HTMLElement | undefined | null, propertyName: string | undefined, value: Stringish): void {
+export function setDataSet(
+  el: HTMLElement | undefined | null,
+  propertyName: string | undefined,
+  value: string | number
+): void {
   if (el && propertyName) {
     el.dataset[propertyName] = String(value)
   }

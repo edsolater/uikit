@@ -1,5 +1,14 @@
-import { flap, isArray, isFunction, isObject, notNullish, parallelSwitch, mergeObjectsWithConfigs } from '@edsolater/fnkit'
-import { AnyFn, AnyObj } from '../../typings/constants'
+import {
+  flap,
+  isArray,
+  isFunction,
+  isObject,
+  parallelSwitch,
+  mergeObjectsWithConfigs,
+  shakeNil,
+  AnyFn,
+  AnyObj
+} from '@edsolater/fnkit'
 import mergeFunction from '../mergeFunction'
 import mergeRefs from './mergeRefs'
 
@@ -18,7 +27,7 @@ export function mergeProps<P1 = AnyProp, P2 = AnyProp, P3 = AnyProp, P4 = AnyPro
 ): Exclude<P1 & P2 & P3 & P4 & P5, undefined>
 export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Exclude<P, undefined>
 export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Exclude<P, undefined> {
-  const trimedProps = flap(propsObjs).filter(notNullish)
+  const trimedProps = shakeNil(flap(propsObjs))
   // @ts-ignore
   if (trimedProps.length === 0) return {}
   // @ts-ignore

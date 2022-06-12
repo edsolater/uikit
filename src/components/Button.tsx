@@ -1,12 +1,15 @@
 import { isArray, MayArray, shrinkToValue } from '@edsolater/fnkit'
 import { useRef } from 'react'
+import { mergeProps } from '../functions/react'
+import { useUikitTheme } from '../hooks/useUikitTheme'
+
 import { cssTransitionTimeFnOutCubic } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString } from '../styles/type'
-import { BooleanLike } from '../typings/constants'
 import { MayFunction } from '../typings/tools'
 import { Div, DivProps } from './Div'
 
+type BooleanLike = unknown
 export interface ButtonProps extends DivProps<'button'> {
   /**
    * @default 'solid'
@@ -40,7 +43,12 @@ export interface ButtonProps extends DivProps<'button'> {
 /**
  * feat: build-in click ui effect
  */
-export default function Button({ validators, ...otherButtonProps }: ButtonProps) {
+export default function Button(props: ButtonProps) {
+  /* ---------------------------------- props --------------------------------- */
+  const themeProps = useUikitTheme('Button')
+  const { validators, ...otherButtonProps } = mergeProps(themeProps, props)
+
+  /* ------------------------------- validation ------------------------------- */
   const failedValidator = (isArray(validators) ? validators.length > 0 : validators)
     ? [validators!].flat().find(({ should }) => !shrinkToValue(should))
     : undefined
@@ -51,6 +59,7 @@ export default function Button({ validators, ...otherButtonProps }: ButtonProps)
   const isActive = failedValidator?.forceActive || (!failedValidator && !mergedProps.disabled)
   const disable = !isActive
 
+  /* ------------------------------ detail props ------------------------------ */
   const {
     variant = 'solid',
     size = 'md',
@@ -71,7 +80,7 @@ export default function Button({ validators, ...otherButtonProps }: ButtonProps)
       className_='Button'
       htmlProps_={{ type: 'button' }}
       icss_={[
-        { transition:'300ms' },// make it's change smooth
+        { transition: `200ms ${cssTransitionTimeFnOutCubic}` }, // make it's change smooth
         { border: 'none' }, // initialize
         { color: variant === 'solid' ? 'white' : themeColor }, // light mode
         { display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }, // center the items
@@ -91,7 +100,6 @@ export default function Button({ validators, ...otherButtonProps }: ButtonProps)
         },
         variant === 'solid' && {
           backgroundColor: themeColor,
-          transition: `transform 100ms ${cssTransitionTimeFnOutCubic}`,
           ':hover': {
             filter: 'brightness(95%)'
           },
@@ -102,7 +110,7 @@ export default function Button({ validators, ...otherButtonProps }: ButtonProps)
         },
         variant === 'outline' && {
           background: cssColors.transparent,
-          outline: `${size === 'lg' ? '2px' : size === 'sm' ? '1px' : '2px'} solid ${cssColors.buttonPrimaryColor}`,
+          outline: `${size === 'lg' ? '2px' : size === 'sm' ? '1px' : '2px'} solid ${themeColor}`,
           outlineOffset: `-${size === 'lg' ? '2px' : size === 'sm' ? '1px' : '2px'}`
         },
         variant === 'text' && {

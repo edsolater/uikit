@@ -15,7 +15,7 @@ const uikitThemeAtom = createXStore<UIKitThemeProps>({
 /**
  * React hooks
  */
-export function useUikitTheme(kitName: SKeyof<UIKitThemeProps>) {
+export function useUikitTheme<T extends SKeyof<UIKitThemeProps>>(kitName: T): UIKitThemeProps[T] | undefined {
   return useXStore(uikitThemeAtom)[kitName]
 }
 

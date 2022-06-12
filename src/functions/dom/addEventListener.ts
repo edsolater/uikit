@@ -1,5 +1,5 @@
 import { addDefault } from '@edsolater/fnkit'
-import { AnyFn } from '../../typings/constants'
+import { AnyFn } from '@edsolater/fnkit'
 
 let eventId = 1
 
