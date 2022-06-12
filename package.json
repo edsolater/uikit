@@ -1,6 +1,6 @@
 {
   "name": "@edsolater/uikit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./dist/index.js",
   "scripts": {
     "type-check": "tsc --noEmit",
@@ -9,6 +9,9 @@
     "storybook": "start-storybook -p 6006",
     "build": "tsup"
   },
+  "files": [
+    "dist"
+  ],
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
   "dependencies": {
