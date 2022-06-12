@@ -43,7 +43,7 @@ export interface ButtonProps extends DivProps<'button'> {
 /**
  * feat: build-in click ui effect
  */
-export default function Button(props: ButtonProps) {
+export function Button(props: ButtonProps) {
   /* ---------------------------------- props --------------------------------- */
   const themeProps = useUikitTheme('Button')
   const { validators, ...otherButtonProps } = mergeProps(themeProps, props)
