@@ -1,12 +1,12 @@
 import React from 'react'
 import { ComponentStory, ComponentMeta } from '@storybook/react'
 
-import { Button } from './Button'
-import { Transition } from './Transition'
-import { Div } from './Div'
+import { Button } from '../components/Button'
+import { Transition } from '../components/Transition'
+import { Div } from '../components/Div'
 import { useToggle } from '@edsolater/hookit'
-import Card from './Card'
-import { transitionPresetFadeInOut } from './Transition/effects'
+import Card from '../components/Card'
+import { transitionPresetFadeInOut } from '../components/Transition/effects'
 
 const storySettings = {
   component: Transition,
@@ -21,7 +21,13 @@ const Template: ComponentStory<typeof Transition> = (props) => {
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
       <Transition show={isShow} {...props}>
         {({ phase }) => (
-          <Card className='w-[200px] h-[300px] translate-x-0 ' bgimgSrc='linear-gradient(dodgerblue,skyblue)'>
+          <Card
+            icss={{
+              width: 200,
+              height: 300
+            }}
+            bgimgSrc='linear-gradient(dodgerblue,skyblue)'
+          >
             <Div>phase: {phase}</Div>
           </Card>
         )}

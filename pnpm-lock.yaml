@@ -1,8 +1,5 @@
 lockfileVersion: 5.4
 
-overrides:
-  '@edsolater/fnkit': ^0.0.5
-
 specifiers:
   '@babel/core': ^7.18.2
   '@edsolater/fnkit': ^0.0.5
@@ -1560,6 +1557,10 @@ packages:
     engines: {node: '>=10.0.0'}
     dev: true
 
+  /@edsolater/fnkit/0.0.4:
+    resolution: {integrity: sha512-3cpnBPQ/8H4DCzfAhNuSGpWr0pxkpIw0n9AeUJL8HsFgxKviFLGRRbDlEDlBCyrRi/o7Zp283yYKDc5aGUul0A==}
+    dev: false
+
   /@edsolater/fnkit/0.0.5:
     resolution: {integrity: sha512-T900jYYRaYEhUaZhtLgfrTCfTdDOcMh79Al5UXhCXMuhEVtGkn8MSs3rhMIpwRUVbrJWm9O3kgnXgm1wWHOgxQ==}
     dev: false
@@ -1567,7 +1568,7 @@ packages:
   /@edsolater/hookit/0.0.1:
     resolution: {integrity: sha512-WA2zlZMJP5yPVJ8gcyEaMosnVSW6yTU0KNmPjR6+Cngkll4LaYV5lWmVePII08Aaqnth5Oi8Z4nRZrwAj/Bh8w==}
     dependencies:
-      '@edsolater/fnkit': 0.0.5
+      '@edsolater/fnkit': 0.0.4
       react: 18.1.0
     dev: false
 
