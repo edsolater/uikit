@@ -5,7 +5,7 @@ import { addEventListener } from '../../functions/dom/addEventListener'
 import { mergeProps } from '../../functions/react'
 import { ICSSObject } from '../../styles'
 import { MayArray, MayFunction } from '../../typings/tools'
-import AddProps from '../AddProps'
+import { AddProps } from '../AddProps'
 import { DivProps } from '../Div'
 
 const TransitionPhaseProcessIn = 'during-process'

@@ -9,7 +9,7 @@ export interface CardProps extends DivProps {
 /**
  * @BaseUIComponent
  */
-export default function Card({ noDefaultStyle, bgimgSrc, ...restProps }: CardProps) {
+export function Card({ noDefaultStyle, bgimgSrc, ...restProps }: CardProps) {
   return (
     <Div
       {...restProps}
