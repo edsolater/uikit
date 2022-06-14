@@ -1,11 +1,8 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 
-import { useToggle } from '@edsolater/hookit'
-import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Collapse, CollapseBody, CollapseFace } from '../components/Collapse'
 import { Div } from '../components/Div'
-import { Transition } from '../components/Transition'
 import { icssRow, cssColors, cssShadow } from '../styles'
 
 const storySettings = {
@@ -13,7 +10,7 @@ const storySettings = {
   argTypes: {}
 } as ComponentMeta<typeof Collapse>
 
-const Template: ComponentStory<typeof Transition> = (props) => {
+const Template: ComponentStory<typeof Collapse> = (props) => {
   return (
     <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <Collapse>

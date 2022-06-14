@@ -7,6 +7,7 @@ export type AddPropsProps<T> = { children?: ReactNode; key?: string | number } &
 /**
  * @BaseUIComponent
  * it will merge props
+ * !!! child must extends `<Div>`
  */
 export function AddProps<T = DivProps>({ key, children, ...restProps }: AddPropsProps<T>) {
   return <Fragment key={key}>{addPropsToReactNode(children, restProps)}</Fragment>

@@ -1,11 +1,10 @@
-import React from 'react'
-import { ComponentStory, ComponentMeta } from '@storybook/react'
+import { ComponentMeta, ComponentStory } from '@storybook/react'
 
-import { Button } from '../components/Button'
-import { Transition } from '../components/Transition'
-import { Div } from '../components/Div'
 import { useToggle } from '@edsolater/hookit'
+import { Button } from '../components/Button'
 import { Card } from '../components/Card'
+import { Div } from '../components/Div'
+import { Transition } from '../components/Transition'
 import { transitionPresetFadeInOut } from '../components/Transition/effects'
 
 const storySettings = {
