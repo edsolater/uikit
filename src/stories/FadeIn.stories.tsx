@@ -10,9 +10,9 @@ import { transitionPresetFadeInOut } from '../components/Transition/effects'
 import { FadeIn } from '../components/FadeIn'
 
 const storySettings = {
-  component: Transition,
+  component: FadeIn,
   argTypes: {}
-} as ComponentMeta<typeof Button>
+} as ComponentMeta<typeof FadeIn>
 
 const Template: ComponentStory<typeof Transition> = (props) => {
   const [isShow, { toggle }] = useToggle()
