@@ -1,7 +1,9 @@
+import { assert } from '@edsolater/fnkit'
 import { Fragment, useEffect, useRef } from 'react'
 import { attachPointerMove } from '../functions/dom/gesture/pointerMove'
 import { setInlineStyle } from '../functions/dom/setCSS'
 import { mapElementChildren } from '../functions/react'
+import useResizeObserver from '../hooks/useResizeObserver.temp'
 import { AddProps } from './AddProps'
 import Col from './Col'
 import { DivProps, Div } from './Div'
@@ -13,15 +15,20 @@ export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivPro
 export default function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   const refs = useRef<{ line: HTMLElement; prevWindowItem: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
 
-  useEffect(() => {
+  const getFlexibleIndex = () => {
     const flexibleViewIndex = refs.current
       .map(({ prevWindowItem }) => prevWindowItem)
       .findIndex((i) => hasTag(i, flexibleView))
     const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : refs.current.length - 1 // last one is flexible in default
+    return flexibleViewIndexWithDefault
+  }
 
+  //#region ------------------- feature move line -------------------
+  useEffect(() => {
+    const flexibleViewIndex = getFlexibleIndex()
     // regist move line handler
     refs.current.forEach(({ prevWindowItem, line, nextWindowItem }, idx) => {
-      if (flexibleViewIndex >= 0 && idx >= flexibleViewIndex) {
+      if (idx >= flexibleViewIndex) {
         if (!nextWindowItem) return
         let initWidth = nextWindowItem.clientWidth
         let initHeight = nextWindowItem.clientHeight
@@ -57,27 +64,48 @@ export default function SplitView({ lineProps, dir = 'row', ...props }: RowSplit
       }
     })
 
-    // set init size (besides flexible)
+    //TODO: fix container's width/height  /or should?🤔, not you shouldn't, just fixed height in example
+    // TODO: expand line hoverable area
+    // TODO: extract main feature to hook, for easier managements
+  }, [])
+  //#endregion
+
+  //#region ------------------- feature: auto resize base on wrapper's content React -------------------
+  const wrapperRef = useRef<HTMLElement>(null)
+  const wrapperInitHeight = useRef(0)
+  const wrapperInitWidth = useRef(0)
+
+  // load init size of wrapper
+  useEffect(() => {
+    assert(wrapperRef.current, `SplitView's is not loaded succefully`)
+    wrapperInitWidth.current = wrapperRef.current.clientWidth
+    wrapperInitHeight.current = wrapperRef.current.clientHeight
+  }, [])
+
+  // resize views base on wrapper's size, to ensure proportion stable(eaqual between )
+  useResizeObserver(wrapperRef, (entry, prevEntry) => {
+    if (!refs.current.length) return // wrapper is not load yet
+    const flexibleViewIndex = getFlexibleIndex()
+    const prevWidth = prevEntry?.contentRect.width ?? wrapperInitWidth.current
+    const prevHeight = prevEntry?.contentRect.height ?? wrapperInitHeight.current
+    assert(prevWidth != null, `init width not detected`)
+    assert(prevHeight != null, `init height not detected`)
+    const widthDeltaPercent = entry.contentRect.width / prevWidth
+    const heightDeltaPercent = entry.contentRect.height / prevHeight
     const allViews = refs.current.map((i) => i.prevWindowItem)
     allViews.forEach((view, idx) => {
-      if (idx !== flexibleViewIndexWithDefault) {
-        setInlineStyle(view, 'flex', 'none')
+      if (idx !== flexibleViewIndex) {
         dir === 'row'
-          ? setInlineStyle(view, 'width', view.clientWidth)
-          : setInlineStyle(view, 'height', view.clientHeight)
+          ? setInlineStyle(view, 'width', (w) => (w ? Number.parseFloat(w) : view.clientWidth) * widthDeltaPercent)
+          : setInlineStyle(view, 'height', (h) => (h ? Number.parseInt(h) : view.clientHeight) * heightDeltaPercent)
       }
     })
-
-    //TODO: fix container's width/height  /or should?🤔, not you shouldn't, just fixed height in example
-
-    //TODO: when outter container size changed, should reset view's size
-
-    // TODO: expand line hoverable area
-  }, [])
+  })
+  //#endregion
 
   const Wrapper = dir === 'row' ? Row : Col
   return (
-    <Wrapper {...props} icss={[{ height: '100%', width: '100%' }, props.icss]}>
+    <Wrapper {...props} icss={[{ height: '100%', width: '100%' }, props.icss]} domRef={[wrapperRef, props.domRef]}>
       {mapElementChildren(props.children, (childNode, idx) => (
         <Fragment key={idx}>
           {/*  Window  */}

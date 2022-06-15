@@ -15,7 +15,7 @@
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
   "dependencies": {
-    "@edsolater/fnkit": "^0.0.5",
+    "@edsolater/fnkit": "^0.0.5", 
     "@edsolater/hookit": "^0.0.1",
     "@edsolater/xstore": "^0.0.2",
     "@emotion/css": "^11.9.0",

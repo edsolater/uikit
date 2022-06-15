@@ -31,16 +31,16 @@ export function setInlineStyle(el: HTMLElement | Nullish, ...params) {
   const styleObject = isObject(params[0]) ? params[0] : { [params[0]]: params[1] }
   Object.entries(styleObject).forEach(([variableName, value]) => {
     if (el && variableName) {
-      el.style.setProperty(
-        toKebabCase(variableName),
-        String(
-          shrinkToValue(isNumber(value) ? `${value}px` : value, [el.style.getPropertyValue(toKebabCase(variableName))])
-        )
-      )
+      const stylePropertyName = toKebabCase(variableName)
+      const styleValue = toPx(shrinkToValue(value, [el.style.getPropertyValue(toKebabCase(variableName))]))
+      el.style.setProperty(stylePropertyName, styleValue)
     }
   })
 }
 
+function toPx(v: any) {
+  return isNumber(v) ? `${v}px` : v
+}
 /**
  *
  * @param el target html element

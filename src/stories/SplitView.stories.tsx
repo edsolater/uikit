@@ -12,7 +12,7 @@ const storySettings = {
 
 const Template: ComponentStory<typeof SplitView> = (props) => {
   return (
-    <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', height: 600 }}>
+    <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', height: 600, resize:'both', overflow:'hidden' }}>
       <SplitView {...props}></SplitView>
     </Div>
   )
