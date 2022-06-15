@@ -2,10 +2,11 @@ lockfileVersion: 5.4
 
 specifiers:
   '@babel/core': ^7.18.2
-  '@edsolater/fnkit': '>0.0.3'
-  '@edsolater/hookit': ^0.0.1
+  '@edsolater/fnkit': ^0.0.5
+  '@edsolater/hookit': ^0.0.2
   '@edsolater/xstore': ^0.0.2
   '@emotion/css': ^11.9.0
+  '@headlessui/react': ^1.6.4
   '@next/bundle-analyzer': ^12.1.6
   '@storybook/addon-actions': ^6.5.8
   '@storybook/addon-essentials': ^6.5.8
@@ -25,9 +26,10 @@ specifiers:
 
 dependencies:
   '@edsolater/fnkit': 0.0.5
-  '@edsolater/hookit': 0.0.1
+  '@edsolater/hookit': 0.0.2
   '@edsolater/xstore': 0.0.2
   '@emotion/css': 11.9.0_@babel+core@7.18.2
+  '@headlessui/react': 1.6.4_ef5jwxihqo6n7gxfmzogljlgcm
   react: 18.1.0
   react-dom: 18.1.0_react@18.1.0
 
@@ -1567,8 +1569,8 @@ packages:
     resolution: {integrity: sha512-T900jYYRaYEhUaZhtLgfrTCfTdDOcMh79Al5UXhCXMuhEVtGkn8MSs3rhMIpwRUVbrJWm9O3kgnXgm1wWHOgxQ==}
     dev: false
 
-  /@edsolater/hookit/0.0.1:
-    resolution: {integrity: sha512-WA2zlZMJP5yPVJ8gcyEaMosnVSW6yTU0KNmPjR6+Cngkll4LaYV5lWmVePII08Aaqnth5Oi8Z4nRZrwAj/Bh8w==}
+  /@edsolater/hookit/0.0.2:
+    resolution: {integrity: sha512-dTcjq+0nH+T4vE5YiSIRmYmmHfa1aLbgPPSN6k2SbByrgC6GagdkZUmePkeZiduW53ID1+ci1oNBr9hrJXsI9g==}
     dependencies:
       '@edsolater/fnkit': 0.0.4
       react: 18.1.0
@@ -1664,6 +1666,17 @@ packages:
   /@gar/promisify/1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
+
+  /@headlessui/react/1.6.4_ef5jwxihqo6n7gxfmzogljlgcm:
+    resolution: {integrity: sha512-0yqz1scwbFtwljmbbKjXsSGl5ABEYNICVHZnMCWo0UtOZodo2Tpu94uOVgCRjRZ77l2WcTi2S0uidINDvG7lsA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: ^16 || ^17 || ^18
+      react-dom: ^16 || ^17 || ^18
+    dependencies:
+      react: 18.1.0
+      react-dom: 18.1.0_react@18.1.0
+    dev: false
 
   /@istanbuljs/load-nyc-config/1.1.0:
     resolution: {integrity: sha512-VjeHSlIzpv/NyD3N0YuHfXOPDIixcA1q2ZV98wsMqcYlPmv2n3Yb2lYP9XMElnaFVXg5A7YLTeLu6V84uQDjmQ==}
