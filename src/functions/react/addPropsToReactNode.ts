@@ -4,8 +4,5 @@ import { mapElementChildren } from './mapReactElementChildren'
 import { mergeProps } from './mergeProps'
 
 export function addPropsToReactNode(node: ReactNode, props: any) {
-  return mapElementChildren(node, (child) => {
-    console.log('child: ', child)
-    return cloneElement(child, mergeProps(props, child.props))
-  })
+  return mapElementChildren(node, (child) => cloneElement(child, mergeProps(props, child.props)))
 }

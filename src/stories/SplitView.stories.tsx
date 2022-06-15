@@ -12,8 +12,8 @@ const storySettings = {
 
 const Template: ComponentStory<typeof SplitView> = (props) => {
   return (
-    <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <SplitView icss={{ width: '100%' }} {...props}></SplitView>
+    <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', height: 600 }}>
+      <SplitView {...props}></SplitView>
     </Div>
   )
 }
@@ -23,7 +23,7 @@ const ExampleContentCard1 = ({ text, ...divProps }: { text: string } & DivProps)
     noDefaultStyle
     {...divProps}
     icss={[
-      { padding: '16px 32px', width: 300, height: 500 },
+      { padding: '16px 32px' },
       { display: 'grid', placeContent: 'center' },
       { background: cssColors.cardBg2, boxShadow: cssShadow.xl },
       divProps.icss
@@ -50,7 +50,7 @@ const ExampleContentCard2 = ({ text, ...divProps }: { text: string } & DivProps)
 export default storySettings
 export const XRow = Template.bind({})
 XRow.args = {
-  dir: 'x',
+  dir: 'row',
   children: (
     <>
       <ExampleContentCard1 text='A' />
@@ -60,16 +60,16 @@ XRow.args = {
 }
 export const XRow3slot = Template.bind({})
 XRow3slot.args = {
-  dir: 'x',
+  dir: 'row',
   children: [
     <ExampleContentCard1 text='A' />,
-    <ExampleContentCard2 tag={SplitView.takeSlipRestSpace} text='hello world' />,
+    <ExampleContentCard2 tag={SplitView.flexibleView} text='hello world' />,
     <ExampleContentCard2 text='third' />
   ]
 }
 export const YCol = Template.bind({})
 YCol.args = {
-  dir: 'y',
+  dir: 'col',
   children: (
     <>
       <ExampleContentCard1 text='A' />
@@ -79,10 +79,10 @@ YCol.args = {
 }
 export const YCol3slot = Template.bind({})
 YCol3slot.args = {
-  dir: 'y',
+  dir: 'col',
   children: [
     <ExampleContentCard1 text='A' />,
-    <ExampleContentCard2 tag={SplitView.takeSlipRestSpace} text='hello world' />,
+    <ExampleContentCard2 tag={SplitView.flexibleView} text='hello world' />,
     <ExampleContentCard2 text='third' />
   ]
 }

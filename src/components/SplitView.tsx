@@ -8,19 +8,20 @@ import { DivProps, Div } from './Div'
 import { createDataTag, hasTag } from './Div/tag'
 import Row, { RowProps } from './Row'
 
-export type RowSplitProps = RowProps & { dir?: 'x' | 'y'; lineProps?: DivProps }
+export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 
-export default function SplitView({ lineProps, dir = 'x', ...props }: RowSplitProps) {
+export default function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   const refs = useRef<{ line: HTMLElement; prevWindowItem: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
 
-  // regist move line handler
   useEffect(() => {
-    console.log('refs.current: ', refs.current)
-    const takeRestSpaceWindowItemIndex = refs.current
+    const flexibleViewIndex = refs.current
       .map(({ prevWindowItem }) => prevWindowItem)
-      .findIndex((i) => hasTag(i, takeSlipRestSpace))
+      .findIndex((i) => hasTag(i, flexibleView))
+    const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : refs.current.length - 1 // last one is flexible in default
+
+    // regist move line handler
     refs.current.forEach(({ prevWindowItem, line, nextWindowItem }, idx) => {
-      if (takeRestSpaceWindowItemIndex >= 0 && idx >= takeRestSpaceWindowItemIndex) {
+      if (flexibleViewIndex >= 0 && idx >= flexibleViewIndex) {
         if (!nextWindowItem) return
         let initWidth = nextWindowItem.clientWidth
         let initHeight = nextWindowItem.clientHeight
@@ -31,7 +32,7 @@ export default function SplitView({ lineProps, dir = 'x', ...props }: RowSplitPr
               initHeight = nextWindowItem.clientHeight
             } else {
               setInlineStyle(nextWindowItem, 'flex', 'none')
-              dir === 'x'
+              dir === 'row'
                 ? setInlineStyle(nextWindowItem, 'width', initWidth - totalDelta.dx)
                 : setInlineStyle(nextWindowItem, 'height', initHeight - totalDelta.dy)
             }
@@ -47,7 +48,7 @@ export default function SplitView({ lineProps, dir = 'x', ...props }: RowSplitPr
               initHeight = prevWindowItem.clientHeight
             } else {
               setInlineStyle(prevWindowItem, 'flex', 'none')
-              dir === 'x'
+              dir === 'row'
                 ? setInlineStyle(prevWindowItem, 'width', initWidth + totalDelta.dx)
                 : setInlineStyle(prevWindowItem, 'height', initHeight + totalDelta.dy)
             }
@@ -55,17 +56,33 @@ export default function SplitView({ lineProps, dir = 'x', ...props }: RowSplitPr
         })
       }
     })
+
+    // set init size (besides flexible)
+    const allViews = refs.current.map((i) => i.prevWindowItem)
+    allViews.forEach((view, idx) => {
+      if (idx !== flexibleViewIndexWithDefault) {
+        setInlineStyle(view, 'flex', 'none')
+        dir === 'row'
+          ? setInlineStyle(view, 'width', view.clientWidth)
+          : setInlineStyle(view, 'height', view.clientHeight)
+      }
+    })
+
+    //TODO: fix container's width/height  /or should?🤔, not you shouldn't, just fixed height in example
+
+    //TODO: when outter container size changed, should reset view's size
+
+    // TODO: expand line hoverable area
   }, [])
 
-  const Wrapper = dir === 'x' ? Row : Col
+  const Wrapper = dir === 'row' ? Row : Col
   return (
-    <Wrapper {...props}>
+    <Wrapper {...props} icss={[{ height: '100%', width: '100%' }, props.icss]}>
       {mapElementChildren(props.children, (childNode, idx) => (
         <Fragment key={idx}>
           {/*  Window  */}
           <AddProps
             domRef={(el) => {
-              console.log('el: ', el)
               // update to prevGroup
               if (idx >= 1) {
                 refs.current[idx - 1] = { ...refs.current[idx - 1], nextWindowItem: el }
@@ -91,7 +108,7 @@ export default function SplitView({ lineProps, dir = 'x', ...props }: RowSplitPr
                 ':hover': { backgroundColor: 'dodgerblue' },
                 transition: '75ms'
               },
-              dir === 'x' ? { width: 4, cursor: 'e-resize' } : { height: 4, cursor: 'n-resize' }
+              dir === 'row' ? { width: 4, cursor: 'e-resize' } : { height: 4, cursor: 'n-resize' }
             ]}
             {...lineProps}
           ></Div>
@@ -101,5 +118,5 @@ export default function SplitView({ lineProps, dir = 'x', ...props }: RowSplitPr
   )
 }
 
-const takeSlipRestSpace = createDataTag({ key: 'RowSplit', value: 'container-flexible' })
-SplitView.takeSlipRestSpace = takeSlipRestSpace
+const flexibleView = createDataTag({ key: 'RowSplit', value: 'container-flexible' })
+SplitView.flexibleView = flexibleView
