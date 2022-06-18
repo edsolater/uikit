@@ -1,25 +1,15 @@
-import {
-  CSSProperties,
-  FC,
-  Fragment,
-  ReactNode,
-  RefObject,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from 'react'
-import { createPortal } from 'react-dom'
+import { ReactNode, RefObject, useImperativeHandle, useRef, useState } from 'react'
 
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useCallbackRef, useIsomorphicLayoutEffect } from '@edsolater/hookit'
-import { inClient } from '../../functions/isSSR'
+import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
 import { pickChildByType } from '../../functions/react'
-import { Div, DivProps } from '../Div'
+import { AddProps } from '../AddProps'
+import { Div } from '../Div'
+import { Portal } from '../Portal'
+import { SubComponentProps, SubComponentRoot } from '../SubComponent'
+import { Transition } from '../Transition'
 import { PopupLocationInfo, usePopoverLocation } from './useLocationCalculator'
 import { PopoverTiggerBy, PopoverTriggerControls, usePopoverTrigger } from './usePopoverTrigger'
-import { Transition } from '../Transition'
-import { AddProps } from '../AddProps'
 
 export type PopoverPlacement =
   | 'left'
@@ -69,29 +59,6 @@ const popupTransformOrigins = {
   bottom: 'top',
   'bottom-left': 'top left',
   'bottom-right': 'top right'
-}
-
-const PopoverStackPortal = ({ children }) => {
-  const [mounted, setMounted] = useState(false)
-
-  // create stack element if not exist
-  useIsomorphicLayoutEffect(() => {
-    const alreadyExistPopoverStack = Boolean(document.getElementById(POPOVER_STACK_ID))
-    if (alreadyExistPopoverStack) return
-    const popoverHTMLElement = document.createElement('div')
-    popoverHTMLElement.id = POPOVER_STACK_ID
-    document.body.appendChild(popoverHTMLElement)
-  }, [])
-
-  // createProtal after mounted
-  useEffect(() => {
-    setMounted(true)
-    return () => setMounted(false)
-  }, [])
-
-  return mounted && inClient && document.getElementById(POPOVER_STACK_ID)
-    ? createPortal(children, document.getElementById(POPOVER_STACK_ID)!)
-    : null
 }
 
 export type PopoverHandles = {
@@ -151,7 +118,7 @@ export function Popover({
   return (
     <>
       <AddProps domRef={buttonRef}>{popoverButton}</AddProps>
-      <PopoverStackPortal>
+      <Portal id={POPOVER_STACK_ID}>
         <Div className_={Popover.name}>
           <Transition
             show={forceOpen || isPanelShowed}
@@ -172,23 +139,13 @@ export function Popover({
               }
               domRef={panelRef}
             >
-              {String(isPanelShowed)}
               {popoverPanel}
             </Div>
           </Transition>
         </Div>
-      </PopoverStackPortal>
+      </Portal>
     </>
   )
-}
-
-type SubComponentProps = {
-  childIsRoot?: boolean
-} & DivProps
-
-function SubComponentRoot({ childIsRoot, ...divProps }: SubComponentProps) {
-  const Root = (childIsRoot ? AddProps : Div) as FC<DivProps>
-  return <Root {...divProps} />
 }
 
 export type PopoverButtonProps = {
