@@ -61,7 +61,7 @@ export interface TransitionProps extends Omit<DivProps, 'children'> {
 type TransitionApplyPropsTimeName = 'enterFrom' | 'enterTo' | 'leaveFrom' | 'leaveTo'
 
 //应该也有个useTransition的hooks
-/** @headless it will render a <Fragment /> */
+/** @headless it will render a <Fragment />, just add props in specific time */
 export function Transition({
   cssTransitionDurationMs = 600,
   cssTransitionTimingFunction,

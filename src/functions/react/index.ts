@@ -20,5 +20,5 @@ export * from './mergeRefs'
 export * from './changeReactChildren'
 export * from './pickChild'
 
-export * from './addPropsToReactNode'
+export * from './addPropsToReactElement'
 export * from './mapReactElementChildren'
