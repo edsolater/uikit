@@ -167,7 +167,7 @@ export function Input(props: InputProps) {
           htmlProps: {
             id,
             type,
-            value: isOutsideValueLocked ? innerValue ?? value : value ?? innerValue,
+            value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
             placeholder: placeholder ? String(placeholder) : undefined,
             disabled,
             onChange: (ev) => {
@@ -217,6 +217,7 @@ export function Input(props: InputProps) {
   )
 }
 
+// TODO: has value jump
 function AutoWidenInput({
   inputBodyProps
 }: {
@@ -229,12 +230,13 @@ function AutoWidenInput({
   const inputElement = useRef<HTMLInputElement>()
 
   const recalcWrapperSize = () => {
-    const inputBody = inputElement.current
-    if (!inputBody) return
-    inputBody.style.width = '0px' // to get true scrollWidth without space
-    inputBody.style.width = `${Math.max(inputBody.scrollWidth, minWith)}px`
+    setTimeout(() => {
+      const inputBody = inputElement.current
+      if (!inputBody) return
+      inputBody.style.width = '0px' // to get true scrollWidth without space
+      inputBody.style.width = `${Math.max(inputBody.scrollWidth, minWith)}px`
+    }, 0)
   }
-
   return (
     <Div<'input'>
       as='input'
