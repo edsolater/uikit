@@ -1,5 +1,6 @@
 import { useToggle } from '@edsolater/hookit'
 import { ComponentMeta, ComponentStory } from '@storybook/react'
+import { AddProps } from '../components/AddProps'
 
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
@@ -14,12 +15,12 @@ const storySettings = {
 } as ComponentMeta<typeof Dialog>
 
 const Template: ComponentStory<typeof Dialog> = (args) => {
-  const [isShow, { toggle }] = useToggle()
+  const [isShow, { toggle, off }] = useToggle()
 
   return (
     <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
-      <Dialog {...args} />
+      <Dialog {...args} open={isShow} onClose={off} />
     </Div>
   )
 }
@@ -35,7 +36,7 @@ Primary.args = {
       }}
       bgimgSrc='linear-gradient(dodgerblue,skyblue)'
     >
-      <Div>hello {'<Dialog>'}</Div>
+      {<Div>hello {'<Dialog>'}</Div>}
     </Card>
   )
 }

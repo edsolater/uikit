@@ -215,7 +215,7 @@ export function Transition({
   const contentNode = shrinkToValue(children, [{ phase: currentPhase }])
   const isInnerShow = currentPhase === 'during-process' || currentPhase === 'shown' || targetPhase === 'shown'
   return isInnerShow ? (
-    <AddProps domRef={contentDivRef} {...orginalDivProps} {...transitionPhaseProps[propsName]}>
+    <AddProps {...mergeProps({ domRef: contentDivRef }, orginalDivProps, transitionPhaseProps[propsName])}>
       {contentNode}
     </AddProps>
   ) : null

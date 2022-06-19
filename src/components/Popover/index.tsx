@@ -44,7 +44,7 @@ export interface PopoverProps {
   children?: ReactNode
 }
 
-export const POPOVER_STACK_ID = 'popover-stack'
+const POPOVER_STACK_ID = 'popover-stack'
 
 const popupTransformOrigins = {
   top: 'bottom',
@@ -118,7 +118,16 @@ export function Popover({
   return (
     <>
       <AddProps domRef={buttonRef}>{popoverButton}</AddProps>
-      <Portal id={POPOVER_STACK_ID}>
+      <Portal
+        id={POPOVER_STACK_ID}
+        zIndex={1030}
+        icss={{
+          pointerEvents: 'none',
+          '*': {
+            pointerEvents: 'initial'
+          }
+        }}
+      >
         <Div className_={Popover.name}>
           <Transition
             show={forceOpen || isPanelShowed}
@@ -133,7 +142,7 @@ export function Popover({
             }}
           >
             <Div
-              icss={{ position: 'absolute', zIndex: '1030', transformOrigin: popupTransformOrigins[placement] }}
+              icss={{ position: 'absolute', zIndex: 1030, transformOrigin: popupTransformOrigins[placement] }}
               style={
                 locationInfo ? { left: locationInfo.panelLeft, top: locationInfo.panelTop } : { visibility: 'hidden' }
               }
