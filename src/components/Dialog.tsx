@@ -31,6 +31,7 @@ export type DialogComponentHandler = {
 }
 
 // TODO: there should be a way use uncontroled `<Dialog>`
+// TODO: composiable `useComponentHandler<Handler>(key)`
 export function Dialog({
   open,
   componentRef,
