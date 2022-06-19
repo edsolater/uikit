@@ -1,5 +1,4 @@
 :root {
-  background: #252627;
   color: rgb(235, 235, 235); /* TODO: maybe, it's better to use tailwindcss variant 'dark:' */
 }
 a {

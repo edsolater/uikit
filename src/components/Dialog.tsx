@@ -32,6 +32,7 @@ export type DialogComponentHandler = {
 
 // TODO: there should be a way use uncontroled `<Dialog>`
 // TODO: composiable `useComponentHandler<Handler>(key)`
+// TODO: keyboard navigation/shortcut
 export function Dialog({
   open,
   componentRef,
