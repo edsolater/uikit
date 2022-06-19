@@ -35,8 +35,8 @@ const Template: ComponentStory<typeof Transition> = (props) => {
 }
 
 export default storySettings
-export const Primary = Template.bind({})
-Primary.args = {
+export const Basic = Template.bind({})
+Basic.args = {
   presets: [transitionPresetFadeInOut],
   onBeforeEnter: () => {
     console.log('on before enter')

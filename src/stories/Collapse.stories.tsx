@@ -55,5 +55,5 @@ const Template: ComponentStory<typeof Collapse> = (props) => {
 
 export default storySettings
 
-export const Primary = Template.bind({})
-Primary.args = {}
+export const Basic = Template.bind({})
+Basic.args = {}

@@ -33,5 +33,5 @@ const Template: ComponentStory<typeof FadeIn> = (props) => {
 
 export default storySettings
 
-export const Primary = Template.bind({})
-Primary.args = {}
+export const Basic = Template.bind({})
+Basic.args = {}
