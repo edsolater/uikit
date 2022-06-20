@@ -1,6 +1,6 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useToggle } from '@edsolater/hookit'
-import { ReactNode, RefObject, useImperativeHandle } from 'react'
+import { useKeyboardShortcurt, useRecordedEffect, useToggle } from '@edsolater/hookit'
+import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
 import { DivProps } from '../../dist'
 import { useTwoStateSyncer } from '../hooks/use2StateSyncer.temp'
 import { Div } from './Div'
@@ -32,7 +32,6 @@ export type DialogComponentHandler = {
 
 // TODO: there should be a way use uncontroled `<Dialog>`
 // TODO: composiable `useComponentHandler<Handler>(key)`
-// TODO: keyboard navigation/shortcut
 export function Dialog({
   open,
   componentRef,
@@ -61,6 +60,20 @@ export function Dialog({
     open: turnOnInnerOpen,
     close: turnOffInnerOpen
   }))
+
+  // bind keyboar shortcut
+  const { abortKeyboard } = useKeyboardShortcurt(document.documentElement, {
+    'Escape': turnOffInnerOpen
+  })
+  useRecordedEffect(
+    ([prevInnerOpen]) => {
+      const userTryToClose = prevInnerOpen == true && innerOpen == false
+      if (userTryToClose) {
+        abortKeyboard()
+      }
+    },
+    [innerOpen]
+  )
 
   return (
     <Portal
