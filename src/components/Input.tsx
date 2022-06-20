@@ -25,7 +25,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
 
   disabled?: boolean
   /**
-   * !!! try not to use it, use more intuitive `props:disabled`
+   * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
    * it makes input refuse user to edit,
    *
    * different from disabled,
