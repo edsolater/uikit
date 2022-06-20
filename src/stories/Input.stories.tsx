@@ -12,7 +12,7 @@ const storySettings = {
 
 const Template: ComponentStory<typeof Input> = (args) => (
   <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-    <Input {...args} icss={[args.icss, {alignSelf:'center',}]} isAtuoGrow pattern={/^\d*$/} />
+    <Input {...args} icss={[args.icss, {alignSelf:'center',}]} isFluid pattern={/^\d*$/} />
   </Div>
 )
 

@@ -1,7 +1,7 @@
 import { MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useToggle } from '@edsolater/hookit'
-import { HTMLInputTypeAttribute, ReactNode, RefObject, useState, useRef, useEffect, useImperativeHandle } from 'react'
-import { DivProps, Div } from './Div'
+import { HTMLInputTypeAttribute, ReactNode, RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { Div, DivProps } from './Div'
 
 export interface InputHandler {
   focus(): void
@@ -21,7 +21,6 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   defaultValue?: string
   /** when change, affact to ui*/
   value?: string
-
   placeholder?: string
 
   disabled?: boolean
@@ -39,6 +38,8 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   validators?: MayArray<{
     /** expression must return true to pass this validator */
     should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputHandler }]>
+    /** by default, any input should be accepted */
+    ignoreThisInput?: boolean
     /**  items are button's setting which will apply when corresponding validator has failed */
     validProps?: Omit<InputProps, 'validators' | 'disabled'>
     invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
@@ -49,7 +50,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   /**
    * remove `min-width:10em`
    * input will auto widen depends on content Text */
-  isAtuoGrow?: boolean
+  isFluid?: boolean
 
   /** Optional. usually, it is an <Input>'s icon */
   prefix?: MayFn<ReactNode, [text: string | undefined]>
@@ -83,21 +84,20 @@ export function Input(props: InputProps) {
     ariaRequired,
     ariaLabelText,
 
-    pattern,
-
+    value,
+    defaultValue,
     placeholder,
 
     disabled,
+    pattern,
     validators,
 
-    defaultValue,
-    value,
     prefix,
     suffix,
     componentRef,
     inputDomRef,
     inputClassName,
-    isAtuoGrow,
+    isFluid,
     onDangerousValueChange,
     onUserInput,
     onEnter,
@@ -160,56 +160,55 @@ export function Input(props: InputProps) {
 
       {/* input-wrapperbox is for style input inner body easier */}
       <AutoWidenInput
-        inputBodyProps={{
-          isAtuoGrow,
-          domRef: [inputRef, inputDomRef],
-          className: inputClassName,
-          htmlProps: {
-            id,
-            type,
-            value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
-            placeholder: placeholder ? String(placeholder) : undefined,
-            disabled,
-            onChange: (ev) => {
-              const inputText = ev.target.value
+        isFluid={isFluid}
+        domRef={[inputRef, inputDomRef]}
+        className={inputClassName}
+        htmlProps={{
+          id,
+          type,
+          value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
+          placeholder: placeholder ? String(placeholder) : undefined,
+          disabled,
+          onChange: (ev) => {
+            const inputText = ev.target.value
 
-              // refuse unallowed input
-              if (pattern && !pattern.test(inputText)) return
+            // refuse unallowed input
+            if (pattern && !pattern.test(inputText)) return
 
-              // update validator infos
-              if (validators) {
-                // all validators must be true
-                for (const validator of [validators].flat()) {
-                  const passed = Boolean(
-                    shrinkToValue(validator.should, [inputText, { el: inputRef.current!, control: inputControls }])
-                  )
-                  if (passed) {
-                    setFallbackProps(validator.validProps ?? {})
-                    validator.onValid?.(inputText, { el: inputRef.current!, control: inputControls })
-                  }
-                  if (!passed) {
-                    setFallbackProps(validator.invalidProps ?? {})
-                    validator.onInvalid?.(inputText, { el: inputRef.current!, control: inputControls })
-                  }
+            // update validator infos
+            if (validators) {
+              // all validators must be true
+              for (const validator of [validators].flat()) {
+                const passed = Boolean(
+                  shrinkToValue(validator.should, [inputText, { el: inputRef.current!, control: inputControls }])
+                )
+                if (passed) {
+                  setFallbackProps(validator.validProps ?? {})
+                  validator.onValid?.(inputText, { el: inputRef.current!, control: inputControls })
                 }
+                if (!passed) {
+                  setFallbackProps(validator.invalidProps ?? {})
+                  validator.onInvalid?.(inputText, { el: inputRef.current!, control: inputControls })
+                }
+                if (!passed && validator.ignoreThisInput) return // break if any validator failed
               }
+            }
 
-              setInnerValue(inputText)
-              onUserInput?.(ev.target.value, inputRef.current!)
-              lockOutsideValue()
-            },
-            onBlur: () => {
-              unlockOutsideValue()
-              onBlur?.(innerValue, { el: inputRef.current!, control: inputControls })
-            },
-            onKeyDown: (ev) => {
-              if (ev.key === 'Enter') {
-                onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputControls })
-              }
-            },
-            'aria-label': ariaLabelText,
-            'aria-required': ariaRequired
-          }
+            setInnerValue(inputText)
+            onUserInput?.(ev.target.value, inputRef.current!)
+            lockOutsideValue()
+          },
+          onBlur: () => {
+            unlockOutsideValue()
+            onBlur?.(innerValue, { el: inputRef.current!, control: inputControls })
+          },
+          onKeyDown: (ev) => {
+            if (ev.key === 'Enter') {
+              onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputControls })
+            }
+          },
+          'aria-label': ariaLabelText,
+          'aria-required': ariaRequired
         }}
       />
       {suffix && <Div className='flex-initial ml-2'>{shrinkToValue(suffix, [innerValue])}</Div>}
@@ -217,12 +216,7 @@ export function Input(props: InputProps) {
   )
 }
 
-// TODO: has value jump
-function AutoWidenInput({
-  inputBodyProps
-}: {
-  inputBodyProps: DivProps<'input'> & Pick<InputProps, 'isAtuoGrow' | 'value'>
-}) {
+function AutoWidenInput(inputBodyProps: DivProps<'input'> & Pick<InputProps, 'isFluid' | 'value'>) {
   // css flexible
   const cssInputPadding = 8 // (px)
   const minWith = 2 * cssInputPadding + 16
@@ -247,7 +241,7 @@ function AutoWidenInput({
         onChange: recalcWrapperSize
       }}
       icss_={[
-        { flex: 1, background: 'transparent', minWidth: inputBodyProps.isAtuoGrow ? undefined : '14em' },
+        { flex: 1, background: 'transparent', minWidth: inputBodyProps.isFluid ? undefined : '14em' },
         /* initialize */
         { border: 'none', padding: cssInputPadding }
       ]}
