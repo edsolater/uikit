@@ -1,6 +1,13 @@
 import { MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useToggle } from '@edsolater/hookit'
-import { HTMLInputTypeAttribute, ReactNode, RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import {
+  HTMLInputTypeAttribute,
+  ReactNode,
+  RefObject, useEffect,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react'
 import { Div, DivProps } from './Div'
 
 export interface InputHandler {
@@ -224,12 +231,10 @@ function AutoWidenInput(inputBodyProps: DivProps<'input'> & Pick<InputProps, 'is
   const inputElement = useRef<HTMLInputElement>()
 
   const recalcWrapperSize = () => {
-    setTimeout(() => {
-      const inputBody = inputElement.current
-      if (!inputBody) return
-      inputBody.style.width = '0px' // to get true scrollWidth without space
-      inputBody.style.width = `${Math.max(inputBody.scrollWidth, minWith)}px`
-    }, 0)
+    const inputBody = inputElement.current
+    if (!inputBody) return
+    inputBody.style.width = '0px' // to get true scrollWidth without space
+    inputBody.style.width = `${Math.max(inputBody.scrollWidth, minWith)}px`
   }
   return (
     <Div<'input'>
