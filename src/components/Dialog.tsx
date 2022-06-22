@@ -3,6 +3,7 @@ import { useKeyboardShortcurt, useRecordedEffect, useToggle } from '@edsolater/h
 import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
 import { DivProps } from '../../dist'
 import { useTwoStateSyncer } from '../hooks/use2StateSyncer.temp'
+import { useComponentHandler, useComponentHandlerRegister } from '../hooks/useComponentHandler'
 import { Div } from './Div'
 import { Portal } from './Portal'
 import { Transition } from './Transition'
@@ -10,8 +11,11 @@ import { Transition } from './Transition'
 const DIALOG_STACK_ID = 'dialog-stack'
 
 export interface DialogProps extends Omit<DivProps, 'children'> {
-  open: boolean
   componentRef?: RefObject<any>
+  /** can access dialog's handler by useComponentHandler(dialogId) */
+  componentId?: string | number
+
+  open: boolean
   /** this is the className of modal card */
   children?: MayFn<ReactNode, [{ close: () => void }]>
   transitionSpeed?: 'fast' | 'normal'
@@ -33,8 +37,9 @@ export type DialogComponentHandler = {
 // TODO: there should be a way use uncontroled `<Dialog>`
 // TODO: composiable `useComponentHandler<Handler>(key)`
 export function Dialog({
-  open,
+  componentId,
   componentRef,
+  open,
   children,
   transitionSpeed = 'normal',
   maskNoBlur,
@@ -55,11 +60,14 @@ export function Dialog({
   })
 
   // load componnent handler
-  useImperativeHandle<any, DialogComponentHandler>(componentRef, () => ({
-    isOpen: innerOpen,
-    open: turnOnInnerOpen,
-    close: turnOffInnerOpen
-  }))
+  useComponentHandlerRegister<DialogComponentHandler>(
+    { componentId, componentRef },
+    {
+      isOpen: innerOpen,
+      open: turnOnInnerOpen,
+      close: turnOffInnerOpen
+    }
+  )
 
   // bind keyboar shortcut
   const { abortKeyboard } = useKeyboardShortcurt(document.documentElement, {
