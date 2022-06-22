@@ -1,10 +1,8 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useKeyboardShortcurt, useRecordedEffect, useToggle } from '@edsolater/hookit'
-import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
-import { DivProps } from '../../dist'
-import { useTwoStateSyncer } from '../hooks/use2StateSyncer.temp'
-import { useComponentHandler, useComponentHandlerRegister } from '../hooks/useComponentHandler'
-import { Div } from './Div'
+import { useKeyboardShortcurt, useRecordedEffect, useToggle,use2StateSyncer } from '@edsolater/hookit'
+import { ReactNode, RefObject } from 'react'
+import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
+import { Div, DivProps } from './Div'
 import { Portal } from './Portal'
 import { Transition } from './Transition'
 
@@ -51,7 +49,7 @@ export function Dialog({
   const transitionDuration = transitionSpeed === 'fast' ? 100 : 200
   const [innerOpen, { set: setInnerOpen, on: turnOnInnerOpen, off: turnOffInnerOpen }] = useToggle(open) // for outer may have open or may not
 
-  useTwoStateSyncer({
+  use2StateSyncer({
     state1: open,
     state2: innerOpen,
     onState1Changed: (open) => {
