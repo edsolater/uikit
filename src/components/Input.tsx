@@ -1,13 +1,7 @@
 import { MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useToggle } from '@edsolater/hookit'
-import {
-  HTMLInputTypeAttribute,
-  ReactNode,
-  RefObject, useEffect,
-  useImperativeHandle,
-  useRef,
-  useState
-} from 'react'
+import { HTMLInputTypeAttribute, ReactNode, RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { addEventListener } from '../functions/dom/addEventListener'
 import { Div, DivProps } from './Div'
 
 export interface InputHandler {
@@ -170,41 +164,40 @@ export function Input(props: InputProps) {
         isFluid={isFluid}
         domRef={[inputRef, inputDomRef]}
         className={inputClassName}
+        onChange={(text) => {
+          // refuse unallowed input
+          if (pattern && !pattern.test(text)) return
+
+          console.log('text: ', text)
+          // update validator infos
+          if (validators) {
+            // all validators must be true
+            for (const validator of [validators].flat()) {
+              const passed = Boolean(
+                shrinkToValue(validator.should, [text, { el: inputRef.current!, control: inputControls }])
+              )
+              if (passed) {
+                setFallbackProps(validator.validProps ?? {})
+                validator.onValid?.(text, { el: inputRef.current!, control: inputControls })
+              }
+              if (!passed) {
+                setFallbackProps(validator.invalidProps ?? {})
+                validator.onInvalid?.(text, { el: inputRef.current!, control: inputControls })
+              }
+              if (!passed && validator.ignoreThisInput) return // break if any validator failed
+            }
+          }
+          setInnerValue(text)
+          onUserInput?.(text, inputRef.current!)
+          lockOutsideValue()
+        }}
         htmlProps={{
           id,
           type,
           value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
           placeholder: placeholder ? String(placeholder) : undefined,
           disabled,
-          onChange: (ev) => {
-            const inputText = ev.target.value
 
-            // refuse unallowed input
-            if (pattern && !pattern.test(inputText)) return
-
-            // update validator infos
-            if (validators) {
-              // all validators must be true
-              for (const validator of [validators].flat()) {
-                const passed = Boolean(
-                  shrinkToValue(validator.should, [inputText, { el: inputRef.current!, control: inputControls }])
-                )
-                if (passed) {
-                  setFallbackProps(validator.validProps ?? {})
-                  validator.onValid?.(inputText, { el: inputRef.current!, control: inputControls })
-                }
-                if (!passed) {
-                  setFallbackProps(validator.invalidProps ?? {})
-                  validator.onInvalid?.(inputText, { el: inputRef.current!, control: inputControls })
-                }
-                if (!passed && validator.ignoreThisInput) return // break if any validator failed
-              }
-            }
-
-            setInnerValue(inputText)
-            onUserInput?.(ev.target.value, inputRef.current!)
-            lockOutsideValue()
-          },
           onBlur: () => {
             unlockOutsideValue()
             onBlur?.(innerValue, { el: inputRef.current!, control: inputControls })
@@ -223,7 +216,11 @@ export function Input(props: InputProps) {
   )
 }
 
-function AutoWidenInput(inputBodyProps: DivProps<'input'> & Pick<InputProps, 'isFluid' | 'value'>) {
+function AutoWidenInput({
+  onChange,
+  ...inputBodyProps
+}: DivProps<'input'> &
+  Pick<InputProps, 'isFluid' | 'value'> & { /* actually, it is input */ onChange(t: string): void }) {
   // css flexible
   const cssInputPadding = 8 // (px)
   const minWith = 2 * cssInputPadding + 16
@@ -236,6 +233,39 @@ function AutoWidenInput(inputBodyProps: DivProps<'input'> & Pick<InputProps, 'is
     inputBody.style.width = '0px' // to get true scrollWidth without space
     inputBody.style.width = `${Math.max(inputBody.scrollWidth, minWith)}px`
   }
+
+  useEffect(() => {
+    addEventListener(
+      inputElement.current,
+      'input',
+      ({ el, ev }) => {
+        const inputText = el?.value || ''
+        console.log('inputText: ', inputText)
+        ev.preventDefault()
+        onChange(inputText)
+      },
+      { capture: true, passive: false }
+    )
+
+    addEventListener(
+      inputElement.current,
+      'keydown',
+      ({ el, ev }) => {
+        console.log('el.sercionStart: ', el?.selectionStart) // get know cursor's position, so can predicate the whole input text
+        const key = ev.key
+        console.log('key: ', key)
+        const isOneWord = /^.{1}$/.test(key)
+        const notDecimal = !/^[0-9,\.]$/.test(key)
+        console.log('notDecimal: ', notDecimal)
+        console.log('isOneWord: ', isOneWord)
+        if (notDecimal) {
+          ev.preventDefault() // so can prevent change value in DOM
+        }
+      },
+      { capture: true, passive: false }
+    )
+  }, [])
+
   return (
     <Div<'input'>
       as='input'
