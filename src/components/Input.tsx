@@ -1,8 +1,19 @@
-import { MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useToggle } from '@edsolater/hookit'
-import { HTMLInputTypeAttribute, ReactNode, RefObject, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { isInt, MayArray, MayFn, numberishAtom, shrinkToValue } from '@edsolater/fnkit'
+import { useEvent, useToggle } from '@edsolater/hookit'
+import {
+  HTMLInputTypeAttribute,
+  ReactNode,
+  RefObject,
+  startTransition,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react'
 import { addEventListener } from '../functions/dom/addEventListener'
+import mergeFunction from '../functions/mergeFunction'
 import { Div, DivProps } from './Div'
+import { splice } from '../functions/splice.temp'
 
 export interface InputHandler {
   focus(): void
@@ -35,7 +46,9 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
    * */
   disableUserInput?: boolean
   pattern?: RegExp // with force pattern, you only can input pattern allowed string
-  /** must all condition passed (one by one) */
+  /** must all condition passed (one by one)
+   * !!! validator may be very complicated, and invalid input will not block user's input action.
+   */
   validators?: MayArray<{
     /** expression must return true to pass this validator */
     should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputHandler }]>
@@ -71,6 +84,12 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   onClick?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
+}
+
+type CheckInputUtils = {
+  key: string
+  selectionStart?: number
+  selectionEnd?: number
 }
 
 export function Input(props: InputProps) {
@@ -134,6 +153,19 @@ export function Input(props: InputProps) {
 
   useImperativeHandle(componentRef, () => inputControls)
 
+  // this relay on keyboard down, not prefect with copyboard paste
+  const predictNextSentence = useEvent((utils: CheckInputUtils): string => {
+    const isOneWord = /^.{1}$/.test(utils.key)
+    const prev = innerValue ?? ''
+    if (!isOneWord) return prev // if not one word , it is control key
+    const selectionStart = utils.selectionStart
+    const selectionEnd = utils.selectionEnd
+    const next = isInt(selectionStart)
+      ? splice([...prev], selectionStart, (selectionEnd ?? selectionStart) - selectionStart, utils.key).join('')
+      : prev
+    return next
+  })
+
   return (
     <Div
       {...restProps}
@@ -164,11 +196,8 @@ export function Input(props: InputProps) {
         isFluid={isFluid}
         domRef={[inputRef, inputDomRef]}
         className={inputClassName}
+        checkUserTypeIsValid={(utils: CheckInputUtils) => (pattern ? pattern.test(predictNextSentence(utils)) : true)}
         onChange={(text) => {
-          // refuse unallowed input
-          if (pattern && !pattern.test(text)) return
-
-          console.log('text: ', text)
           // update validator infos
           if (validators) {
             // all validators must be true
@@ -184,12 +213,13 @@ export function Input(props: InputProps) {
                 setFallbackProps(validator.invalidProps ?? {})
                 validator.onInvalid?.(text, { el: inputRef.current!, control: inputControls })
               }
-              if (!passed && validator.ignoreThisInput) return // break if any validator failed
             }
           }
           setInnerValue(text)
-          onUserInput?.(text, inputRef.current!)
           lockOutsideValue()
+          startTransition(() => {
+            onUserInput?.(text, inputRef.current!)
+          })
         }}
         htmlProps={{
           id,
@@ -217,10 +247,14 @@ export function Input(props: InputProps) {
 }
 
 function AutoWidenInput({
+  checkUserTypeIsValid,
   onChange,
   ...inputBodyProps
 }: DivProps<'input'> &
-  Pick<InputProps, 'isFluid' | 'value'> & { /* actually, it is input */ onChange(t: string): void }) {
+  Pick<InputProps, 'isFluid' | 'value'> & {
+    onChange(t: string): void
+    checkUserTypeIsValid?: (utils: { key: string; selectionStart?: number; selectionEnd?: number }) => boolean
+  }) {
   // css flexible
   const cssInputPadding = 8 // (px)
   const minWith = 2 * cssInputPadding + 16
@@ -237,32 +271,20 @@ function AutoWidenInput({
   useEffect(() => {
     addEventListener(
       inputElement.current,
-      'input',
-      ({ el, ev }) => {
-        const inputText = el?.value || ''
-        console.log('inputText: ', inputText)
-        ev.preventDefault()
-        onChange(inputText)
-      },
-      { capture: true, passive: false }
-    )
-
-    addEventListener(
-      inputElement.current,
       'keydown',
       ({ el, ev }) => {
-        console.log('el.sercionStart: ', el?.selectionStart) // get know cursor's position, so can predicate the whole input text
         const key = ev.key
-        console.log('key: ', key)
-        const isOneWord = /^.{1}$/.test(key)
-        const notDecimal = !/^[0-9,\.]$/.test(key)
-        console.log('notDecimal: ', notDecimal)
-        console.log('isOneWord: ', isOneWord)
-        if (notDecimal) {
-          ev.preventDefault() // so can prevent change value in DOM
+        const isValid =
+          checkUserTypeIsValid?.({
+            key: key,
+            selectionStart: el?.selectionStart ?? undefined,
+            selectionEnd: el?.selectionEnd ?? undefined
+          }) ?? true
+        if (!isValid) {
+          ev.preventDefault() 
         }
       },
-      { capture: true, passive: false }
+      { passive: false } // so can prevent change value in DOM
     )
   }, [])
 
@@ -273,7 +295,9 @@ function AutoWidenInput({
       domRef_={inputElement}
       htmlProps_={{
         autoComplete: 'off',
-        onChange: recalcWrapperSize
+        onChange: mergeFunction(recalcWrapperSize, (ev) => {
+          onChange(ev.target?.value || '')
+        })
       }}
       icss_={[
         { flex: 1, background: 'transparent', minWidth: inputBodyProps.isFluid ? undefined : '14em' },
@@ -286,3 +310,5 @@ function AutoWidenInput({
     />
   )
 }
+
+
