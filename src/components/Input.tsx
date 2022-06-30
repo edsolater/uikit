@@ -258,7 +258,8 @@ function AutoWidenInput({
         const notDecimal = !/^[0-9,\.]$/.test(key)
         console.log('notDecimal: ', notDecimal)
         console.log('isOneWord: ', isOneWord)
-        if (notDecimal) {
+        const isControlKey = ev.ctrlKey || ev.altKey
+        if (notDecimal && !isControlKey) {
           ev.preventDefault() // so can prevent change value in DOM
         }
       },
