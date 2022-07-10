@@ -14,6 +14,8 @@ import { addEventListener } from '../functions/dom/addEventListener'
 import mergeFunction from '../functions/mergeFunction'
 import { Div, DivProps } from './Div'
 import { splice } from '../functions/splice.temp'
+import { SubComponentRoot } from './SubComponent'
+import useLocalStorageItem from '../hooks/useStorage.temp'
 
 export interface InputHandler {
   focus(): void
@@ -24,7 +26,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   id?: string // for accessibility
 
   type?: HTMLInputTypeAttribute // current support type in this app
-
+  inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
   ariaRequired?: boolean // for readability
   /** only for aria */
   ariaLabelText?: string
@@ -100,7 +102,7 @@ export function Input(props: InputProps) {
     id,
 
     type,
-
+    inputMode,
     ariaRequired,
     ariaLabelText,
 
@@ -224,6 +226,7 @@ export function Input(props: InputProps) {
         htmlProps={{
           id,
           type,
+          inputMode,
           value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
           placeholder: placeholder ? String(placeholder) : undefined,
           disabled,
@@ -310,4 +313,9 @@ function AutoWidenInput({
       }}
     />
   )
+}
+
+// TODO: useInputCheckerRef
+export function FormFieldBaseItem({ children, ...divProps }: { children?: ReactNode } & DivProps) {
+  return <SubComponentRoot {...divProps}>{children}</SubComponentRoot>
 }
