@@ -1,5 +1,5 @@
 import { shrinkToValue } from '@edsolater/fnkit'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useRef, useState } from 'react'
 
 type Signal<T> = {
@@ -35,35 +35,61 @@ type Signal<T> = {
  *   )
  * }
  */
-export function useSignalState<T = undefined>(): [
-  state: T | undefined,
-  setState: React.Dispatch<React.SetStateAction<T | undefined>>,
-  signal: Signal<T>
-]
-export function useSignalState<U = unknown, T = undefined>(
+export function useSignalState<T, U = unknown>(
   defaultValue: T | (() => T),
   options?: {
-    plugin?: ((signal: Signal<T>) => U)[]
+    plugin?: ((payload: { newState: T; prevState: T; mutableSignal: Signal<T>; preventSetState: () => void }) => {
+      handledState: T /* piplined state */
+      additionalSignalMethods?: U
+    })[]
   }
-): [state: T, setState: React.Dispatch<React.SetStateAction<T>>, signal: Signal<T> & U]
-export function useSignalState<T = undefined>(defaultValue?: T | (() => T)) {
+): [state: T, setState: React.Dispatch<React.SetStateAction<T>>, signal: Signal<T> & U] {
   const [state, _setState] = useState(defaultValue)
   const ref = useRef(state)
+  const signal = useMemo(
+    () =>
+      Object.assign(() => ref.current, {
+        setState,
+        get state() {
+          return ref.current
+        }
+      }),
+    []
+  )
   const setState = useCallback(
     (stateDispatch) => {
       const pevValue = ref.current
       const newValue = shrinkToValue(stateDispatch, [pevValue])
-      ref.current = newValue
-      _setState(newValue)
+
+      //#region ------------------- pip through  plugins  -------------------
+      let isValid = true
+      const parsedValue =
+        options?.plugin?.reduce(
+          (acc, item) => {
+            const pipedValue = item({
+              newState: acc.handledState,
+              prevState: pevValue,
+              mutableSignal: acc.additionalSignalMethods,
+              preventSetState: () => {
+                isValid = false
+              }
+            })
+            return {
+              handledState: pipedValue.handledState,
+              additionalSignalMethods: Object.assign(acc.additionalSignalMethods, pipedValue.additionalSignalMethods)
+            }
+          },
+          { handledState: newValue, additionalSignalMethods: signal }
+        ).handledState ?? newValue
+      //#endregion
+
+      if (isValid) {
+        ref.current = parsedValue
+        _setState(parsedValue)
+      }
     },
     [_setState]
   )
-  const signal = () => ref.current
-  signal.setState = setState
-  Object.defineProperty(signal, 'state', {
-    get() {
-      return ref.current
-    }
-  })
-  return [state, setState, signal]
+
+  return [state, setState, signal as any]
 }
