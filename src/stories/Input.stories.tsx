@@ -13,8 +13,8 @@ const storySettings = {
 } as ComponentMeta<typeof Input>
 
 const Template: ComponentStory<typeof Input> = (args) => {
-  const [inputValue, setInputValue, signal] = useSignalState<string | undefined>(undefined, {
-    plugin: [({ newState }) => ({ handledState: newState, additionalSignalMethods: { hello: () => 3 } })]
+  const [inputValue, setInputValue, signal] = useSignalState(undefined as string | undefined, {
+    plugin: [({ newState }) => ({ overwritedState: newState, additionalSignalMethods: { hello: () => 3 } })]
   })
   return (
     <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

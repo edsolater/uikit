@@ -8,6 +8,19 @@ type Signal<T> = {
   state: T | undefined
 }
 
+type SignalPluginFn<T, U> = (payload: {
+  newState: T
+  prevState: T
+  mutableSignal: Signal<T>
+  preventSetState: () => void
+}) => {
+  /* usually don't need this  */
+  overwritedState?: T /* piplined state */
+  additionalSignalMethods?: U
+  /** only for complicated twin plugin, (maybe useless) */
+  infoForNextPlugin?: unknown
+} | void
+
 /**
  * export state and state and signal in order
  *
@@ -35,15 +48,16 @@ type Signal<T> = {
  *   )
  * }
  */
-export function useSignalState<T, U = unknown>(
+export function useSignalState<T, U>(
   defaultValue: T | (() => T),
   options?: {
-    plugin?: ((payload: { newState: T; prevState: T; mutableSignal: Signal<T>; preventSetState: () => void }) => {
-      handledState: T /* piplined state */
-      additionalSignalMethods?: U
-    })[]
+    plugin?: SignalPluginFn<T, U>[]
   }
-): [state: T, setState: React.Dispatch<React.SetStateAction<T>>, signal: Signal<T> & U] {
+): [
+  state: T,
+  setState: React.Dispatch<React.SetStateAction<T>>,
+  signal: any extends U ? Signal<T> : U /* just want to merge additionalSignalMethods */
+] {
   const [state, _setState] = useState(defaultValue)
   const ref = useRef(state)
   const signal = useMemo(
@@ -67,7 +81,7 @@ export function useSignalState<T, U = unknown>(
         options?.plugin?.reduce(
           (acc, item) => {
             const pipedValue = item({
-              newState: acc.handledState,
+              newState: acc.overwritedState,
               prevState: pevValue,
               mutableSignal: acc.additionalSignalMethods,
               preventSetState: () => {
@@ -75,12 +89,13 @@ export function useSignalState<T, U = unknown>(
               }
             })
             return {
-              handledState: pipedValue.handledState,
-              additionalSignalMethods: Object.assign(acc.additionalSignalMethods, pipedValue.additionalSignalMethods)
+              infoForNextPlugin: pipedValue?.infoForNextPlugin,
+              overwritedState: pipedValue?.overwritedState ?? acc.overwritedState,
+              additionalSignalMethods: Object.assign(acc.additionalSignalMethods, pipedValue?.additionalSignalMethods)
             }
           },
-          { handledState: newValue, additionalSignalMethods: signal }
-        ).handledState ?? newValue
+          { overwritedState: newValue, additionalSignalMethods: signal }
+        ).overwritedState ?? newValue
       //#endregion
 
       if (isValid) {
