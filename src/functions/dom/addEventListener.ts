@@ -50,7 +50,6 @@ export function addEventListener<
 function cleanEventListener(id: number | undefined | null) {
   if (!id || !eventIdMap.has(id)) return
   const { el, eventName, cb } = eventIdMap.get(id)!
-  console.log('444: ', 444, el, eventName, cb)
   el?.removeEventListener(eventName, cb)
   eventIdMap.delete(id)
 }

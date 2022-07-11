@@ -5,17 +5,13 @@ import { MayFunction } from '../typings/tools'
 const localStorageCache: Map<string, any> = new Map()
 const sessionStorageCache: Map<string, any> = new Map()
 
-type SetStorageItemEvent = Event & {
+type StorageItemInfo = {
   key: string
-  value: string
-  json(): any
+  stringValue: string
+  value: any
 }
 
-/**
- * safely use browser's API: localStorage. but it is auto json like jFetch and have cache also
- * auto JSON.parsed
- * @todo it can use both localStorage and indexedDB with same API
- */
+type SetStorageItemEvent = Event & StorageItemInfo
 export function getLocalItem<T = any>(key: string): T | undefined {
   if (localStorageCache.has(key)) return localStorageCache.get(key)
   const value = globalThis.localStorage?.getItem(key)
@@ -37,17 +33,18 @@ export function setLocalItem<T = any>(key: string, value: MayFunction<T, [oldVal
   // customized setStorageItem event
   const event = Object.assign(new Event('setLocalStorageItem') as any, {
     key,
-    value: stringifiedValue,
-    json: () => targetValue
+    stringValue: stringifiedValue,
+    value: targetValue
   }) as SetStorageItemEvent
   window.document.dispatchEvent(event)
 
   localStorageCache.set(key, targetValue)
 }
 
-export function onLocalItemChanged(cb: (event: SetStorageItemEvent) => void): EventListenerController {
+export function onLocalItemChanged(cb: (info: StorageItemInfo & { ev: Event }) => void): EventListenerController {
   return addEventListener(document, 'setLocalStorageItem', ({ ev }) => {
-    cb(ev as SetStorageItemEvent)
+    const { key, value, stringValue } = ev as SetStorageItemEvent
+    cb({ key, value, stringValue, ev })
   })
 }
 
@@ -84,8 +81,9 @@ export function setSessionItem<T = any>(key: string, value: MayFunction<T, [oldV
   sessionStorageCache.set(key, targetValue)
 }
 
-export function onSessionItemChanged(cb: (event: SetStorageItemEvent) => void): EventListenerController {
+export function onSessionItemChanged(cb: (info: StorageItemInfo & { ev: Event }) => void): EventListenerController {
   return addEventListener(document, 'setSessionStorageItem', ({ ev }) => {
-    cb(ev as SetStorageItemEvent)
+    const { key, value, stringValue } = ev as SetStorageItemEvent
+    cb({ key, value, stringValue, ev })
   })
 }

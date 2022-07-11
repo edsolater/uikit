@@ -2,7 +2,6 @@ import { ComponentMeta, ComponentStory } from '@storybook/react'
 
 import { Div } from '../components/Div'
 import { Input } from '../components/Input'
-import { useSignalState } from '../hooks/useSignalState.temp'
 import useLocalStorageItem from '../hooks/useStorage.temp'
 
 const storySettings = {
@@ -13,9 +12,7 @@ const storySettings = {
 } as ComponentMeta<typeof Input>
 
 const Template: ComponentStory<typeof Input> = (args) => {
-  const [inputValue, setInputValue, signal] = useSignalState(undefined as string | undefined, {
-    plugin: [({ newState }) => ({ overwritedState: newState, additionalSignalMethods: { hello: () => 3 } })]
-  })
+  const [inputValue, setInputValue] = useLocalStorageItem<string | undefined>('xxx', '')
   return (
     <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <Input

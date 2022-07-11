@@ -1,27 +1,30 @@
 import { MayFn } from '@edsolater/fnkit'
-import { useCallback, useLayoutEffect, useState } from 'react'
 import { getLocalItem, onLocalItemChanged, setLocalItem } from './jStorage'
+import { PluginFn, useSignalState } from './useSignalState.temp'
 
 export default function useLocalStorageItem<T>(
-  key: string
+  key: string,
+  defaultValue?: T
 ): [state: T | undefined, setState: (dispatcher: MayFn<T, [old: T | undefined]>) => void] {
-  const [storedValue, setValue] = useState<T>()
+  const [storedValue, setValue] = useSignalState(defaultValue, {
+    plugin: [createLocalStorageItemPluginFn(key)]
+  })
 
-  // get from localhost
-  useLayoutEffect(() => {
-    const storedValue = getLocalItem(key)
-    if (storedValue) setValue(storedValue)
-    const eventController = onLocalItemChanged((ev) => {
-      setValue(ev.json())
-    })
-    return eventController.abort
-  }, [])
-
-  // wrapped setState (will set Localhost)
-  const setStoredValue = useCallback((dispatch: MayFn<T, [old: T | undefined]>) => {
-    setValue(dispatch)
-    if (dispatch) setLocalItem(key, dispatch)
-  }, [])
-
-  return [storedValue, setStoredValue]
+  return [storedValue, setValue]
 }
+
+export const createLocalStorageItemPluginFn: <T, U>(key: string) => PluginFn<T, U> =
+  (key: string) =>
+  ({ value, onInit, inInit }) => {
+    onInit(({ getValue, setValue }) => {
+      const storedValue = getLocalItem(key)
+      if (storedValue !== undefined) setValue(storedValue)
+      const eventController = onLocalItemChanged(({ key: eventKey, value: eventValue }) => {
+        if (eventKey === key && eventValue !== getValue()) {
+          setValue(eventValue)
+        }
+      })
+      return eventController.abort
+    })
+    if (!inInit) setLocalItem(key, value)
+  }
