@@ -15,7 +15,7 @@ export default function useLocalStorageItem<T>(
 
 export const createLocalStorageItemSignalPlugin: <T, U>(key: string) => SignalPluginFn<T, U> =
   (key: string) =>
-  ({ value, onInit, inInit }) => {
+  ({ onInit, onUpdate }) => {
     onInit(({ getValue, setValue }) => {
       const storedValue = getLocalItem(key)
       if (storedValue !== undefined) setValue(storedValue)
@@ -26,5 +26,8 @@ export const createLocalStorageItemSignalPlugin: <T, U>(key: string) => SignalPl
       })
       return eventController.abort
     })
-    if (!inInit) setLocalItem(key, value)
+
+    onUpdate(({ getValue }) => {
+      setLocalItem(key, getValue())
+    })
   }

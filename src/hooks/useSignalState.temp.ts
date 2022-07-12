@@ -11,20 +11,28 @@ type Signal<T> = {
 
 type CleanUpFn = () => any
 
-type PluginInitFn<T> = (tools: {
+type SetNewValue<T> = (dispatchAction: T | ((prev: T | undefined) => T)) => void
+type GetNewValue<T> = () => T
+
+type PluginFn<T> = (tools: {
+  inInit: boolean
   /** pass not variable for through variable may can not get newest value  */
-  getValue: () => T
-  setValue: (dispatchAction: T | ((prev: T | undefined) => T)) => void
+  getValue: GetNewValue<T>
+  // TODO get prev value
+  setValue: SetNewValue<T>
 }) => CleanUpFn | void
 
 export type SignalPluginFn<T, U> = (payload: {
   value: T
   prevValue: T | undefined
   /** true infirst render */
-  onInit: (fn: PluginInitFn<T>) => void
+  onInit: (fn: PluginFn<T>) => void
+  onUpdate: (fn: PluginFn<T>) => void
+  onRender: (fn: PluginFn<T>) => void
   inInit: boolean
+  getValue: GetNewValue<T>
   // will not pass through plugins
-  setState: React.Dispatch<React.SetStateAction<T>>
+  setValue: SetNewValue<T>
   signal: Signal<T>
   preventSetState: () => void
 }) => {
@@ -87,9 +95,20 @@ export function useSignalState<T, U>(
     []
   )
 
-  const pluginCleanUpFns = useRef<CleanUpFn[]>([])
+  const pluginCleanUpFns = useRef<{ initCleanUp: CleanUpFn[]; updateCleanUp: CleanUpFn[]; renderCleanUp: CleanUpFn[] }>(
+    {
+      /** init */
+      initCleanUp: [],
+      /** not init */
+      updateCleanUp: [],
+      /** both init and update  */
+      renderCleanUp: []
+    }
+  )
 
   const inputNewValueRef = useRef<any>() // ref to avoid closure trap
+  const getNewValue: GetNewValue<T> = () => inputNewValueRef.current
+  const setNewValue: SetNewValue<T> = (dispatch) => _setState(shrinkToValue(dispatch, [stateRef.current]))
 
   const setState = useCallback((stateDispatch, inInit = false) => {
     const pevValue = stateRef.current
@@ -99,22 +118,52 @@ export function useSignalState<T, U>(
     //#region ------------------- pip through plugins -------------------
     let isValid = true
 
+    // invoke prev update cleanup functions
+    if (!inInit) {
+      pluginCleanUpFns.current.updateCleanUp.forEach((cleanUpFn) => cleanUpFn())
+      pluginCleanUpFns.current.updateCleanUp = []
+    }
+
+    // invoke prev render cleanup functions
+    pluginCleanUpFns.current.renderCleanUp.forEach((cleanUpFn) => cleanUpFn())
+    pluginCleanUpFns.current.renderCleanUp = []
+
     const pluginResult = options?.plugin?.reduce(
       (acc, item) => {
         const pipedValue = item({
           value: acc.overwritedState,
           prevValue: pevValue,
+          getValue: getNewValue,
+          setValue: setNewValue,
           onInit: (initFn) => {
             if (inInit) {
               const mayCleanFn = initFn({
-                getValue: () => inputNewValueRef.current,
-                setValue: (dispatch) => _setState(shrinkToValue(dispatch, [stateRef.current]))
+                inInit,
+                getValue: getNewValue,
+                setValue: setNewValue
               })
-              if (mayCleanFn) pluginCleanUpFns.current.push(mayCleanFn)
+              if (mayCleanFn) pluginCleanUpFns.current.initCleanUp.push(mayCleanFn)
             }
           },
+          onUpdate: (initFn) => {
+            if (!inInit) {
+              const mayCleanFn = initFn({
+                inInit,
+                getValue: getNewValue,
+                setValue: setNewValue
+              })
+              if (mayCleanFn) pluginCleanUpFns.current.updateCleanUp.push(mayCleanFn)
+            }
+          },
+          onRender: (initFn) => {
+            const mayCleanFn = initFn({
+              inInit,
+              getValue: getNewValue,
+              setValue: setNewValue
+            })
+            if (mayCleanFn) pluginCleanUpFns.current.renderCleanUp.push(mayCleanFn)
+          },
           inInit,
-          setState: _setState,
           signal: acc.additionalSignalMethods,
           preventSetState: () => {
             isValid = false
@@ -150,7 +199,7 @@ export function useSignalState<T, U>(
   })
 
   // finally invoke all cleanup fn
-  useEffect(() => () => pluginCleanUpFns.current.forEach((cleanUpFn) => cleanUpFn()), [])
+  useEffect(() => () => pluginCleanUpFns.current.initCleanUp.forEach((cleanUpFn) => cleanUpFn()), [])
 
   const wrappedSetState = useCallback((dispatch) => setState(dispatch), [])
   return [state, wrappedSetState, signal as any]
