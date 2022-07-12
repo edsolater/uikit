@@ -17,7 +17,7 @@ type PluginInitFn<T> = (tools: {
   setValue: (dispatchAction: T | ((prev: T | undefined) => T)) => void
 }) => CleanUpFn | void
 
-export type PluginFn<T, U> = (payload: {
+export type SignalPluginFn<T, U> = (payload: {
   value: T
   prevValue: T | undefined
   /** true infirst render */
@@ -64,7 +64,7 @@ export type PluginFn<T, U> = (payload: {
 export function useSignalState<T, U>(
   defaultValue: T | (() => T),
   options?: {
-    plugin?: PluginFn<T, U>[]
+    plugin?: SignalPluginFn<T, U>[]
   }
 ): [
   state: T,

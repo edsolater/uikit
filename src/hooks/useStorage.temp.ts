@@ -1,19 +1,19 @@
 import { MayFn } from '@edsolater/fnkit'
 import { getLocalItem, onLocalItemChanged, setLocalItem } from './jStorage'
-import { PluginFn, useSignalState } from './useSignalState.temp'
+import { SignalPluginFn, useSignalState } from './useSignalState.temp'
 
 export default function useLocalStorageItem<T>(
   key: string,
   defaultValue?: T
 ): [state: T | undefined, setState: (dispatcher: MayFn<T, [old: T | undefined]>) => void] {
   const [storedValue, setValue] = useSignalState(defaultValue, {
-    plugin: [createLocalStorageItemPluginFn(key)]
+    plugin: [createLocalStorageItemSignalPlugin(key)]
   })
 
   return [storedValue, setValue]
 }
 
-export const createLocalStorageItemPluginFn: <T, U>(key: string) => PluginFn<T, U> =
+export const createLocalStorageItemSignalPlugin: <T, U>(key: string) => SignalPluginFn<T, U> =
   (key: string) =>
   ({ value, onInit, inInit }) => {
     onInit(({ getValue, setValue }) => {
