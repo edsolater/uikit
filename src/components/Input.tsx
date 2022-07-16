@@ -162,9 +162,10 @@ export function Input(props: InputProps) {
     if (!isOneWord) return prev // if not one word , it is control key
     const selectionStart = utils.selectionStart
     const selectionEnd = utils.selectionEnd
-    const next = isInt(selectionStart)
-      ? splice([...prev], selectionStart, (selectionEnd ?? selectionStart) - selectionStart, utils.key).join('')
-      : prev
+    const next =
+      isInt(selectionStart) && selectionEnd && selectionStart
+        ? splice([...prev], selectionStart, (selectionEnd ?? selectionStart) - selectionStart, utils.key).join('')
+        : prev
     return next
   })
 
