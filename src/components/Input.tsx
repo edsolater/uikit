@@ -86,6 +86,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   onClick?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
+  onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
 }
 
 type CheckInputUtils = {
@@ -126,6 +127,7 @@ export function Input(props: InputProps) {
     onEnter,
     onBlur,
     onClick,
+    onFocus,
     ...restProps
   } = { ...props, ...fallbackProps }
 
@@ -225,26 +227,33 @@ export function Input(props: InputProps) {
             onUserInput?.(text, inputRef.current!)
           })
         }}
-        htmlProps={[inputHTMLProps, {
-          id,
-          type,
-          inputMode,
-          value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
-          placeholder: placeholder ? String(placeholder) : undefined,
-          disabled,
+        htmlProps={[
+          inputHTMLProps,
+          {
+            id,
+            type,
+            inputMode,
+            value: isOutsideValueLocked ? innerValue ?? value ?? '' : value ?? innerValue ?? '',
+            placeholder: placeholder ? String(placeholder) : undefined,
+            disabled,
 
-          onBlur: () => {
-            unlockOutsideValue()
-            onBlur?.(innerValue, { el: inputRef.current!, control: inputControls })
-          },
-          onKeyDown: (ev) => {
-            if (ev.key === 'Enter') {
-              onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputControls })
-            }
-          },
-          'aria-label': ariaLabelText,
-          'aria-required': ariaRequired
-        }]}
+            onBlur: () => {
+              unlockOutsideValue()
+              onBlur?.(innerValue, { el: inputRef.current!, control: inputControls })
+            },
+            onFocus: () => {
+              lockOutsideValue()
+              onFocus?.(innerValue, { el: inputRef.current!, control: inputControls })
+            },
+            onKeyDown: (ev) => {
+              if (ev.key === 'Enter') {
+                onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputControls })
+              }
+            },
+            'aria-label': ariaLabelText,
+            'aria-required': ariaRequired
+          }
+        ]}
       />
       {suffix && <Div className='flex-initial ml-2'>{shrinkToValue(suffix, [innerValue])}</Div>}
     </Div>
