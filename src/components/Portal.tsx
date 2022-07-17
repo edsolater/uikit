@@ -1,9 +1,9 @@
 import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
-import { ReactNode, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { DivProps } from '../../dist'
 import { inClient } from '../functions/isSSR'
 import { AddProps } from './AddProps'
+import { DivProps } from './Div'
 
 type PortalProps = {
   id: string

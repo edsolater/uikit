@@ -1,4 +1,5 @@
-import { type SKeyof } from '@edsolater/fnkit'
+import React from 'react'
+import { SKeyof } from '@edsolater/fnkit'
 import { createXStore, useXStore } from '@edsolater/xstore'
 import { ButtonProps } from '../components/Button'
 import { DivProps } from '../components/Div'
@@ -15,8 +16,6 @@ const uikitThemeAtom = createXStore<UIKitThemeProps>({
 /**
  * React hooks
  */
-export function useUikitTheme<T extends SKeyof<UIKitThemeProps>>(kitName: T): UIKitThemeProps[T] | undefined {
+export function useUikitTheme<T extends keyof UIKitThemeProps>(kitName: T): UIKitThemeProps[T] | undefined {
   return useXStore(uikitThemeAtom)[kitName]
 }
-
-export const setUIKitTheme = uikitThemeAtom.set
