@@ -3,7 +3,7 @@ import { useRecordedEffect } from '@edsolater/hookit'
 import { CSSProperties, Fragment, ReactNode, RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { mergeRefs } from '../functions/react'
 
-import Col from './Col'
+import { Col } from './Col'
 
 function useInfiniteScrollDirector(
   ref: RefObject<HTMLElement | null | undefined>,

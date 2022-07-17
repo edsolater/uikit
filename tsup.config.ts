@@ -5,7 +5,7 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   dts: true,
-  format: ['esm', 'cjs'],
+  format: 'esm',
   target: 'es2020',
   splitting: true,
   inject: ['./src/react-import.js']

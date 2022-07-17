@@ -7,7 +7,7 @@ export interface RowProps extends DivProps {}
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export default function Row({ ...divProps }: RowProps) {
+export function Row({ ...divProps }: RowProps) {
   return <Div {...divProps} icss_={icssRow()} className_='Row' />
 }
 

@@ -1,8 +1,8 @@
 {
   "name": "@edsolater/uikit",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "type": "module",
   "scripts": {
     "type-check": "tsc --noEmit",
     "release": "rm -rf ./dist && tsc && npm version patch && npm publish",
@@ -16,7 +16,7 @@
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
   "dependencies": {
-    "@edsolater/fnkit": "^0.0.5",
+    "@edsolater/fnkit": "^0.1.6",
     "@edsolater/hookit": "^0.1.2",
     "@edsolater/xstore": "^0.0.2",
     "@emotion/css": "^11.9.0",

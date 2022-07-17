@@ -40,7 +40,7 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
   onClick?: MayDeepArray<(payload: { event: React.MouseEvent<HTMLElement, MouseEvent>; el: HTMLElement }) => void>
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
-  htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName]>
+  htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
 
   children?: ReactNode
 }

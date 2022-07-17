@@ -8,6 +8,6 @@ export const cssColBase = () => createICSS({ display: 'flex', flexDirection: 'co
 /**
  * flex box
  */
-export default function Col({ ...divProps }: ColProps) {
+export function Col({ ...divProps }: ColProps) {
   return <Div {...divProps} icss_={cssColBase()} className_='Col' />
 }

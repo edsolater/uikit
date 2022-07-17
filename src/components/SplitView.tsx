@@ -5,10 +5,10 @@ import { attachPointerMove } from '../functions/dom/gesture/pointerMove'
 import { setInlineStyle } from '../functions/dom/setCSS'
 import { mapElementChildren } from '../functions/react'
 import { AddProps } from './AddProps'
-import Col from './Col'
+import { Col } from './Col'
 import { Div, DivProps } from './Div'
 import { createDataTag, hasTag } from './Div/tag'
-import Row, { RowProps } from './Row'
+import { RowProps, Row } from './Row'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 

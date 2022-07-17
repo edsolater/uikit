@@ -1,4 +1,4 @@
-import { isInt, MayArray, MayFn, numberishAtom, shrinkToValue } from '@edsolater/fnkit'
+import { isInt, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useEvent, useToggle } from '@edsolater/hookit'
 import {
   HTMLInputTypeAttribute,
@@ -12,10 +12,9 @@ import {
 } from 'react'
 import { addEventListener } from '../functions/dom/addEventListener'
 import mergeFunction from '../functions/mergeFunction'
-import { Div, DivProps } from './Div'
 import { splice } from '../functions/splice.temp'
+import { Div, DivProps } from './Div'
 import { SubComponentRoot } from './SubComponent'
-import useLocalStorageItem from '../hooks/useStorage.temp'
 
 export interface InputHandler {
   focus(): void
@@ -76,6 +75,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   componentRef?: RefObject<any>
   inputDomRef?: DivProps<'input'>['domRef']
   inputClassName?: DivProps<'input'>['className']
+  inputHTMLProps?: DivProps<'input'>['htmlProps']
   /**
    * this callback may be invoked every time value change regardless it is change by user input or js code
    * as a controlled formkit, U should avoid using it if U can
@@ -119,6 +119,7 @@ export function Input(props: InputProps) {
     componentRef,
     inputDomRef,
     inputClassName,
+    inputHTMLProps,
     isFluid,
     onDangerousValueChange,
     onUserInput,
@@ -224,7 +225,7 @@ export function Input(props: InputProps) {
             onUserInput?.(text, inputRef.current!)
           })
         }}
-        htmlProps={{
+        htmlProps={[inputHTMLProps, {
           id,
           type,
           inputMode,
@@ -243,7 +244,7 @@ export function Input(props: InputProps) {
           },
           'aria-label': ariaLabelText,
           'aria-required': ariaRequired
-        }}
+        }]}
       />
       {suffix && <Div className='flex-initial ml-2'>{shrinkToValue(suffix, [innerValue])}</Div>}
     </Div>
