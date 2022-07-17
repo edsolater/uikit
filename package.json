@@ -1,7 +1,8 @@
 {
   "name": "@edsolater/uikit",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "scripts": {
     "type-check": "tsc --noEmit",
     "release": "rm -rf ./dist && tsc && npm version patch && npm publish",

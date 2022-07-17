@@ -44,7 +44,7 @@ function getRegexp(decimalCount: number) {
 }
 
 /** let <Input> be a independent  component, it for consistency, as <Button> and <Icon> and <Link> etc is independent */
-export default function DecimalInput({
+export  function DecimalInput({
   defaultValue,
   value,
   decimalCount = 3,
