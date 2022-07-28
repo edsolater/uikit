@@ -1,5 +1,5 @@
 import { flap, shrinkToValue } from '@edsolater/fnkit'
-import { useRecordedEffect } from '@edsolater/hookit'
+import { useCallbackRef, useRecordedEffect } from '@edsolater/hookit'
 import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { addEventListener } from '../../functions/dom/addEventListener'
 import { mergeProps } from '../../functions/react'
@@ -8,6 +8,7 @@ import { MayArray, MayFunction } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 import { DivProps } from '../Div'
 
+export * from './effects'
 const TransitionPhaseProcessIn = 'during-process'
 const TransitionPhaseShowing = 'shown' /* UI visiable and stable(not in transition) */
 const TransitionPhaseHidden = 'hidden' /* UI invisiable */
@@ -89,7 +90,7 @@ export function Transition({
 
   ...orginalDivProps
 }: TransitionProps) {
-  const contentDivRef = useRef<HTMLDivElement>()
+  const contentDivRef = useCallbackRef<HTMLElement>()
   const transitionPhaseProps = useMemo(() => {
     const baseTransitionICSS = {
       transition: `${cssTransitionDurationMs}ms`,
@@ -142,7 +143,7 @@ export function Transition({
         contentDivRef.current.dataset['to'] = ''
       }
     }
-  }, [targetPhase])
+  }, [contentDivRef])
 
   // this will let transition start
   useEffect(() => {
@@ -151,26 +152,37 @@ export function Transition({
 
   // make inTransition during state sync with UI event
   useEffect(() => {
-    const { abort: stopEndListener } = addEventListener(contentDivRef.current, 'transitionend', () => {
-      setCurrentPhase(targetPhaseRef.current)
-    })
-    const { abort: stopStartListener } = addEventListener(contentDivRef.current, 'transitionstart', () => {
-      setCurrentPhase('during-process')
-    })
-    return () => {
-      stopEndListener()
-      stopStartListener()
-    }
-  }, [currentPhase, targetPhase])
+    console.log('currentDivRef: ', contentDivRef.current)
+    contentDivRef.onChange(
+      (dom) => {
+        console.log('dom: ', dom, contentDivRef.current)
+        const { abort: abortEndListener } = addEventListener(dom, 'transitionend', () => {
+          console.log('trans_end', dom) // FIXME: why invoke 8 times ?!!
+          setCurrentPhase(targetPhaseRef.current)
+        })
+        const { abort: abortStartListener } = addEventListener(dom, 'transitionstart', () => {
+          console.log('trans_start', dom) // FIXME: why invoke 8 times ?!!
+          setCurrentPhase('during-process')
+        })
+      },
+      { hasInit: true }
+    )
+    // return () => {
+    //   abortEndListener()
+    //   abortStartListener()
+    // }
+  }, [contentDivRef])
 
   // invoke callbacks
   useRecordedEffect(
-    ([prevCurrentPhase, prevTargetPhase]) => {
+    ([prevCurrentPhase]) => {
       if (currentPhase === 'shown' && targetPhase === 'shown') {
+        console.log('currentPhase, targetPhase 0: ', currentPhase, targetPhase)
         onAfterEnter?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
       if (currentPhase === 'hidden' && targetPhase === 'hidden') {
+        console.log('currentPhase, targetPhase 1: ', currentPhase, targetPhase)
         onAfterLeave?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
@@ -178,6 +190,7 @@ export function Transition({
         (currentPhase === 'hidden' || (currentPhase === 'during-process' && prevCurrentPhase === 'during-process')) &&
         targetPhase === 'shown'
       ) {
+        console.log('currentPhase, targetPhase 2: ', currentPhase, targetPhase)
         onBeforeEnter?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
@@ -185,6 +198,7 @@ export function Transition({
         (currentPhase === 'shown' || (currentPhase === 'during-process' && prevCurrentPhase === 'during-process')) &&
         targetPhase === 'hidden'
       ) {
+        console.log('currentPhase, targetPhase 3: ', currentPhase, targetPhase)
         onBeforeLeave?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
     },

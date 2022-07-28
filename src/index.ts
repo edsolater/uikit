@@ -10,3 +10,5 @@ export * from './components/Input'
 export * from './components/Row'
 export * from './components/Col'
 export * from './components/DecimalInput'
+
+export * from './styles'

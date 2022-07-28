@@ -1,5 +1,5 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useKeyboardShortcurt, useRecordedEffect, useToggle,use2StateSyncer } from '@edsolater/hookit'
+import { useKeyboardShortcut, useRecordedEffect, useToggle, use2StateSyncer } from '@edsolater/hookit'
 import { ReactNode, RefObject } from 'react'
 import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
 import { Div, DivProps } from './Div'
@@ -68,7 +68,7 @@ export function Dialog({
   )
 
   // bind keyboar shortcut
-  const { abortKeyboard } = useKeyboardShortcurt(document.documentElement, {
+  const { abortKeyboard } = useKeyboardShortcut(document.documentElement, {
     'Escape': turnOffInnerOpen
   })
   useRecordedEffect(
