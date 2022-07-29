@@ -152,16 +152,16 @@ export function Transition({
 
   // make inTransition during state sync with UI event
   useEffect(() => {
-    console.log('currentDivRef: ', contentDivRef.current)
     contentDivRef.onChange(
       (dom) => {
-        console.log('dom: ', dom, contentDivRef.current)
-        const { abort: abortEndListener } = addEventListener(dom, 'transitionend', () => {
-          console.log('trans_end', dom) // FIXME: why invoke 8 times ?!!
+        addEventListener(dom, 'transitionend', ({ ev }) => {
+          if (ev.target !== dom) return // not event fired by bubbled
+          console.log('trans_end', dom)
           setCurrentPhase(targetPhaseRef.current)
         })
-        const { abort: abortStartListener } = addEventListener(dom, 'transitionstart', () => {
-          console.log('trans_start', dom) // FIXME: why invoke 8 times ?!!
+        addEventListener(dom, 'transitionstart', ({ ev }) => {
+          if (ev.target !== dom) return // not event fired by bubbled
+          console.log('trans_start', dom)
           setCurrentPhase('during-process')
         })
       },
