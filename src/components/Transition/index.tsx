@@ -1,5 +1,5 @@
 import { flap, shrinkToValue } from '@edsolater/fnkit'
-import { useCallbackRef, useRecordedEffect } from '@edsolater/hookit'
+import { useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '@edsolater/hookit'
 import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { onEvent } from '../../functions/dom/addEventListener'
 import { mergeProps } from '../../functions/react'
@@ -71,7 +71,7 @@ export function Transition({
   cssTransitionTimingFunction,
 
   show,
-  appear,
+  appear = true,
   children,
 
   fromProps,
@@ -128,55 +128,44 @@ export function Transition({
     } as Record<TransitionApplyPropsTimeName, DivProps>
   }, [enterFromProps, enterToProps, duringEnterProps, leaveFromProps, leaveToProps, duringLeaveProps])
 
-  const [propsName, setPropsName] = useState<TransitionApplyPropsTimeName>(show && !appear ? 'enterTo' : 'enterFrom')
-  const [currentPhase, setCurrentPhase] = useState<TransitionPhase>(show && !appear ? 'shown' : 'hidden')
-  const [targetPhase, setTargetPhase] = useState<TransitionTargetPhase>(show ? 'shown' : 'hidden')
-
-  const currentPhaseRef = useRef(currentPhase)
-  currentPhaseRef.current = currentPhase
-
-  const targetPhaseRef = useRef(targetPhase)
-  targetPhaseRef.current = targetPhase
+  const [currentPhase, setCurrentPhase, currentPhaseSignal] = useSignalState<TransitionPhase>(
+    show && !appear ? 'shown' : 'hidden'
+  )
+  const targetPhase: TransitionTargetPhase = show ? 'shown' : 'hidden'
+  const targetPhaseSignal = useEvent(() => targetPhase)
+  const isInnerShow = currentPhase === 'during-process' || currentPhase === 'shown' || targetPhase === 'shown'
+  const propsName = useMemo<TransitionApplyPropsTimeName>(
+    () =>
+      targetPhase === 'shown'
+        ? currentPhase === 'hidden'
+          ? 'enterFrom'
+          : 'enterTo'
+        : currentPhase === 'shown'
+        ? 'leaveFrom'
+        : 'leaveTo',
+    [currentPhase, targetPhase]
+  )
 
   // set data-** to element for semantic
   useEffect(() => {
     if (contentDivRef.current) {
-      if (targetPhaseRef.current !== currentPhaseRef.current) {
-        contentDivRef.current.dataset['to'] = targetPhase
+      if (targetPhaseSignal() !== currentPhaseSignal()) {
+        contentDivRef.current.dataset['to'] = targetPhaseSignal()
       } else {
         contentDivRef.current.dataset['to'] = ''
       }
     }
   }, [contentDivRef])
 
-  // this will let transition start
-  useEffect(() => {
-    setTargetPhase(show ? 'shown' : 'hidden')
-  }, [show])
-
   // make inTransition during state sync with UI event
   useEffect(() => {
     contentDivRef.onChange(
       (dom) => {
-        onEvent(
-          dom,
-          'transitionend',
-          () => setCurrentPhase(targetPhaseRef.current),
-          { targetSelf: true } // not event fired by bubbled
-        )
-        onEvent(
-          dom,
-          'transitionstart',
-          () => setCurrentPhase('during-process'),
-          { targetSelf: true } // not event fired by bubbled
-        )
+        onEvent(dom, 'transitionend', () => setCurrentPhase(targetPhaseSignal()), { targetSelf: true }) // not event fired by bubbled
+        onEvent(dom, 'transitionstart', () => setCurrentPhase('during-process'), { targetSelf: true }) // not event fired by bubbled
       },
       { hasInit: true }
     )
-    // return () => {
-    //   abortEndListener()
-    //   abortStartListener()
-    // }
   }, [contentDivRef])
 
   // invoke callbacks
@@ -207,32 +196,9 @@ export function Transition({
     [currentPhase, targetPhase]
   )
 
-  // set props
-  useEffect(() => {
-    if (currentPhase === 'hidden' && targetPhase === 'shown') {
-      setPropsName('enterFrom')
-      setTimeout(() => {
-        setPropsName('enterTo')
-      })
-    }
-    if (currentPhase === 'during-process' && targetPhase === 'shown') {
-      setPropsName('enterTo')
-    }
-    if (currentPhase === 'shown' && targetPhase === 'hidden') {
-      setPropsName('leaveFrom')
-      setTimeout(() => {
-        setPropsName('leaveTo')
-      })
-    }
-    if (currentPhase === 'during-process' && targetPhase === 'hidden') {
-      setPropsName('leaveTo')
-    }
-  }, [currentPhase, targetPhase])
-  const contentNode = shrinkToValue(children, [{ phase: currentPhase }])
-  const isInnerShow = currentPhase === 'during-process' || currentPhase === 'shown' || targetPhase === 'shown'
   return isInnerShow ? (
     <AddProps {...mergeProps({ domRef: contentDivRef }, orginalDivProps, transitionPhaseProps[propsName])}>
-      {contentNode}
+      {shrinkToValue(children, [{ phase: currentPhase }])}
     </AddProps>
   ) : null
 }
