@@ -62,6 +62,7 @@ export interface TransitionProps extends Omit<DivProps, 'children'> {
   children?: ReactNode | ((state: { phase: TransitionPhase }) => ReactNode)
 }
 type TransitionApplyPropsTimeName = 'enterFrom' | 'enterTo' | 'leaveFrom' | 'leaveTo'
+type TransitionTargetPhase = typeof TransitionPhaseShowing | typeof TransitionPhaseHidden
 
 //应该也有个useTransition的hooks
 /** @headless it will render a <Fragment />, just add props in specific time */
@@ -127,11 +128,9 @@ export function Transition({
     } as Record<TransitionApplyPropsTimeName, DivProps>
   }, [enterFromProps, enterToProps, duringEnterProps, leaveFromProps, leaveToProps, duringLeaveProps])
 
-  const [currentPhase, setCurrentPhase] = useState<'during-process' | 'shown' | 'hidden'>(
-    show && !appear ? 'shown' : 'hidden'
-  )
-  const [targetPhase, setTargetPhase] = useState<'shown' | 'hidden'>(show ? 'shown' : 'hidden')
-  const [propsName, setPropsName] = useState<TransitionApplyPropsTimeName>('enterFrom')
+  const [propsName, setPropsName] = useState<TransitionApplyPropsTimeName>(show && !appear ? 'enterTo' : 'enterFrom')
+  const [currentPhase, setCurrentPhase] = useState<TransitionPhase>(show && !appear ? 'shown' : 'hidden')
+  const [targetPhase, setTargetPhase] = useState<TransitionTargetPhase>(show ? 'shown' : 'hidden')
 
   const currentPhaseRef = useRef(currentPhase)
   currentPhaseRef.current = currentPhase
@@ -184,12 +183,10 @@ export function Transition({
   useRecordedEffect(
     ([prevCurrentPhase]) => {
       if (currentPhase === 'shown' && targetPhase === 'shown') {
-        console.log('currentPhase, targetPhase 0: ', currentPhase, targetPhase, contentDivRef.current)
         onAfterEnter?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
       if (currentPhase === 'hidden' && targetPhase === 'hidden') {
-        console.log('currentPhase, targetPhase 1: ', currentPhase, targetPhase, contentDivRef.current)
         onAfterLeave?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
@@ -197,7 +194,6 @@ export function Transition({
         (currentPhase === 'hidden' || (currentPhase === 'during-process' && prevCurrentPhase === 'during-process')) &&
         targetPhase === 'shown'
       ) {
-        console.log('currentPhase, targetPhase 2: ', currentPhase, targetPhase, contentDivRef.current)
         onBeforeEnter?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
@@ -205,7 +201,6 @@ export function Transition({
         (currentPhase === 'shown' || (currentPhase === 'during-process' && prevCurrentPhase === 'during-process')) &&
         targetPhase === 'hidden'
       ) {
-        console.log('currentPhase, targetPhase 3: ', currentPhase, targetPhase, contentDivRef.current)
         onBeforeLeave?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
     },

@@ -3,12 +3,12 @@ import { composifyICSS } from '../../styles'
 import { TransitionProps } from '.'
 
 /** Transition Preset */
-export const opacityInOut = (options?: { min?: number }) =>
+export const opacityInOut = ({ min = 0 }: { min?: number } = {}) =>
   ({
-    enterFromProps: { icss: { opacity: options?.min ?? 0 } },
+    enterFromProps: { icss: { opacity: min } },
     enterToProps: { icss: { opacity: 1 } },
     leaveFromProps: { icss: { opacity: 1 } },
-    leaveToProps: { icss: { opacity: options?.min ?? 0 } }
+    leaveToProps: { icss: { opacity: min } }
   } as TransitionProps)
 
 /** Transition Preset */
