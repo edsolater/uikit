@@ -10,7 +10,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { addEventListener } from '../functions/dom/addEventListener'
+import { onEvent } from '../functions/dom/addEventListener'
 import mergeFunction from '../functions/mergeFunction'
 import { splice } from '../functions/splice.temp'
 import { Div, DivProps } from './Div'
@@ -283,7 +283,7 @@ function AutoWidenInput({
   }
 
   useEffect(() => {
-    addEventListener(
+    onEvent(
       inputElement.current,
       'keydown',
       ({ el, ev }) => {

@@ -1,5 +1,5 @@
 import { isString, shrinkToValue } from '@edsolater/fnkit'
-import { addEventListener, EventListenerController } from '../functions/dom/addEventListener'
+import { onEvent, EventListenerController } from '../functions/dom/addEventListener'
 import { MayFunction } from '../typings/tools'
 
 const localStorageCache: Map<string, any> = new Map()
@@ -42,7 +42,7 @@ export function setLocalItem<T = any>(key: string, value: MayFunction<T, [oldVal
 }
 
 export function onLocalItemChanged(cb: (info: StorageItemInfo & { ev: Event }) => void): EventListenerController {
-  return addEventListener(document, 'setLocalStorageItem', ({ ev }) => {
+  return onEvent(document, 'setLocalStorageItem', ({ ev }) => {
     const { key, value, stringValue } = ev as SetStorageItemEvent
     cb({ key, value, stringValue, ev })
   })
@@ -82,7 +82,7 @@ export function setSessionItem<T = any>(key: string, value: MayFunction<T, [oldV
 }
 
 export function onSessionItemChanged(cb: (info: StorageItemInfo & { ev: Event }) => void): EventListenerController {
-  return addEventListener(document, 'setSessionStorageItem', ({ ev }) => {
+  return onEvent(document, 'setSessionStorageItem', ({ ev }) => {
     const { key, value, stringValue } = ev as SetStorageItemEvent
     cb({ key, value, stringValue, ev })
   })

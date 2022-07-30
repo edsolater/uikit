@@ -8,6 +8,11 @@ export interface EventListenerController {
   abort(): void
 }
 
+export type OnEventOption = {
+  /** avoid bubble */
+  targetSelf?: boolean
+} & AddEventListenerOptions
+
 //IDEA: maybe I should use weakMap here
 // TODO: why not use native abort controller
 const eventIdMap = new Map<
@@ -16,7 +21,7 @@ const eventIdMap = new Map<
 >()
 
 // Todo: prettier type
-export function addEventListener<
+export function onEvent<
   El extends HTMLElement | Document | Window | undefined | null,
   K extends MayEnum<keyof HTMLElementEventMap>
 >(
@@ -28,9 +33,9 @@ export function addEventListener<
     eventListenerController: EventListenerController
   }) => void,
   /** default is `{ passive: true }` */
-  options?: AddEventListenerOptions
+  options?: OnEventOption
 ): EventListenerController {
-  const defaultedOptions = addDefault(options ?? {}, { passive: true })
+  const { targetSelf, ...defaultedOptions } = addDefault(options ?? {}, { passive: true })
 
   const targetEventId = eventId++
   const controller = {
@@ -39,8 +44,9 @@ export function addEventListener<
       cleanEventListener(targetEventId)
     }
   }
-  const newEventCallback = (ev) => {
-    fn({ el, ev, eventListenerController: controller })
+  const newEventCallback = (ev: Event) => {
+    if (targetSelf && ev.target !== el) return
+    fn({ el, ev: ev as any, eventListenerController: controller })
   }
   el?.addEventListener(eventName as unknown as string, newEventCallback, defaultedOptions)
   eventIdMap.set(targetEventId, { el, eventName: eventName as unknown as string, cb: newEventCallback })
