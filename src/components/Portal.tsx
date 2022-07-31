@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { inClient } from '../functions/isSSR'
 import { AddProps } from './AddProps'
-import { DivProps } from './Div'
+import { DivProps } from './Div/Div'
 
 type PortalProps = {
   id: string

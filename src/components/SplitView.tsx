@@ -6,7 +6,7 @@ import { setInlineStyle } from '../functions/dom/setCSS'
 import { mapElementChildren } from '../functions/react'
 import { AddProps } from './AddProps'
 import { Col } from './Col/Col'
-import { Div, DivProps } from './Div'
+import { Div, DivProps } from './Div/Div'
 import { createDataTag, hasTag } from './Div/tag'
 import { RowProps, Row } from './Row/Row'
 

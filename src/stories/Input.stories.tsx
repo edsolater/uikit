@@ -1,6 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 
-import { Div } from '../components/Div'
+import { Div } from '../components/Div/Div'
 import { Input } from '../components/Input'
 import useLocalStorageItem from '../hooks/useStorage.temp'
 

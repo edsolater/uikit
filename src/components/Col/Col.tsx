@@ -1,4 +1,4 @@
-import { Div, DivProps } from '../Div'
+import { Div, DivProps } from '../Div/Div'
 import { cssCol } from './cssCol'
 
 export interface ColProps extends DivProps {}

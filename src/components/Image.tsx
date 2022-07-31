@@ -1,6 +1,6 @@
 import { shakeFalsy } from '@edsolater/fnkit'
 import React, { useEffect, useRef, useState } from 'react'
-import { DivProps, Div } from './Div'
+import { DivProps, Div } from './Div/Div'
 
 /**
  * usually in the leading part of an list-item

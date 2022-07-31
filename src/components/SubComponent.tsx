@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { AddProps } from './AddProps'
-import { Div, DivProps } from './Div'
+import { Div, DivProps } from './Div/Div'
 
 export type SubComponentProps = {
   childIsRoot?: boolean

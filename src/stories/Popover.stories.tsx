@@ -2,7 +2,7 @@ import { ComponentMeta, ComponentStory } from '@storybook/react'
 import { Button } from '../components/Button'
 
 import { Card } from '../components/Card'
-import { Popover, PopoverButton, PopoverPanel } from '../components/Popover'
+import { Popover, PopoverButton, PopoverPanel } from '../components/Popover/Popover'
 
 const storySettings = {
   component: Popover,

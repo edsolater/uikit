@@ -1,5 +1,5 @@
 import { CSSProperties } from 'react'
-import { Div, DivProps } from './Div'
+import { Div, DivProps } from './Div/Div'
 
 export interface CardProps extends DivProps {
   noDefaultStyle?: boolean

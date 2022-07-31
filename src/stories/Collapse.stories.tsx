@@ -2,7 +2,7 @@ import { ComponentMeta, ComponentStory } from '@storybook/react'
 
 import { Card } from '../components/Card'
 import { Collapse, CollapseBody, CollapseFace } from '../components/Collapse'
-import { Div } from '../components/Div'
+import { Div } from '../components/Div/Div'
 import { icssRow, cssColors, cssShadow } from '../styles'
 
 const storySettings = {

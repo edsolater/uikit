@@ -6,7 +6,7 @@ import { mergeProps } from '../../functions/react'
 import { ICSSObject } from '../../styles'
 import { MayArray, MayFunction } from '../../typings/tools'
 import { AddProps } from '../AddProps'
-import { DivProps } from '../Div'
+import { DivProps } from '../Div/Div'
 
 export * from './effects'
 const TransitionPhaseProcessIn = 'during-process'
@@ -71,7 +71,7 @@ export function Transition({
   cssTransitionTimingFunction,
 
   show,
-  appear = true,
+  appear,
   children,
 
   fromProps,

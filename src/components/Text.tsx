@@ -1,4 +1,4 @@
-import { Div, DivProps } from './Div'
+import { Div, DivProps } from './Div/Div'
 
 // text is not like 
 export interface TextProps extends DivProps {}

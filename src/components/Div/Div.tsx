@@ -26,6 +26,8 @@ export interface HTMLTagMap {
 
 /** richer than ReactNode */
 export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
+  /**it will not render anything, just tired of writing jsx's if  */
+  if?: boolean
   as?: MayEnum<keyof ReactHTML> | ((...params: any[]) => ReactNode) // assume a function return ReactNode is a Component
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
   domRef?: MayDeepArray<
@@ -60,6 +62,8 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   const isHTMLTag = isString(props.as) || isUndefined(props.as)
   const divRef = useRef<HTMLTagMap[TagName]>(null)
 
+  if (props.if === false) return null
+  
   return isHTMLTag
     ? createElement(
         // @ts-expect-error assume a function return ReactNode is a Component

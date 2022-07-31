@@ -7,7 +7,7 @@ import { cssTransitionTimeFnOutCubic } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString } from '../styles/type'
 import { MayFunction } from '../typings/tools'
-import { Div, DivProps } from './Div'
+import { Div, DivProps } from './Div/Div'
 
 type BooleanLike = unknown
 export interface ButtonProps extends DivProps<'button'> {

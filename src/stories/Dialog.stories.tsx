@@ -5,7 +5,7 @@ import { AddProps } from '../components/AddProps'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Dialog } from '../components/Dialog'
-import { Div } from '../components/Div'
+import { Div } from '../components/Div/Div'
 
 const storySettings = {
   component: Dialog,
