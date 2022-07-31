@@ -7,7 +7,7 @@ import { AddProps } from '../AddProps'
 import { Div } from '../Div'
 import { Portal } from '../Portal'
 import { SubComponentProps, SubComponentRoot } from '../SubComponent'
-import { Transition } from '../Transition'
+import { Transition } from '../Transition/Transition'
 import { PopupLocationInfo, usePopoverLocation } from './useLocationCalculator'
 import { PopoverTiggerBy, PopoverTriggerControls, usePopoverTrigger } from './usePopoverTrigger'
 

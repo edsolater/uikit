@@ -4,7 +4,7 @@ import { ReactNode, RefObject } from 'react'
 import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
 import { Div, DivProps } from './Div'
 import { Portal } from './Portal'
-import { Transition } from './Transition'
+import { Transition } from './Transition/Transition'
 
 const DIALOG_STACK_ID = 'dialog-stack'
 

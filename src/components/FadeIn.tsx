@@ -2,7 +2,7 @@ import { ReactNode, useRef } from 'react'
 
 import { cssTransitionTimeFnOutQuadratic } from '../styles'
 import { Div } from './Div'
-import { TransitionProps, Transition } from './Transition'
+import { TransitionProps, Transition } from './Transition/Transition'
 import { opacityInOut } from './Transition/effects'
 
 export function FadeIn({

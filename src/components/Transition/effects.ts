@@ -1,6 +1,6 @@
 import { mergeProps } from '../../functions/react'
 import { composifyICSS } from '../../styles'
-import { TransitionProps } from '.'
+import { TransitionProps } from './Transition'
 
 /** Transition Preset */
 export const opacityInOut = ({ min = 0 }: { min?: number } = {}) =>
