@@ -39,7 +39,13 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
    */
   tag?: MayDeepArray<DivDataTag>
   className?: MayDeepArray<ClassName | undefined>
-  onClick?: MayDeepArray<(payload: { event: React.MouseEvent<HTMLElement, MouseEvent>; el: HTMLElement }) => void>
+  onClick?: MayDeepArray<
+    (payload: {
+      event: React.MouseEvent<HTMLElement, MouseEvent>
+      ev: React.MouseEvent<HTMLElement, MouseEvent>
+      el: HTMLElement
+    }) => void
+  >
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
   htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
@@ -63,7 +69,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   const divRef = useRef<HTMLTagMap[TagName]>(null)
 
   if (props.if === false) return null
-  
+
   return isHTMLTag
     ? createElement(
         // @ts-expect-error assume a function return ReactNode is a Component
@@ -86,7 +92,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
             props.onClick || props.onClick_
               ? (ev) =>
                   flapDeep([props.onClick_, props.onClick]).map((onClick) =>
-                    onClick?.({ event: ev, el: ev.currentTarget })
+                    onClick?.({ event: ev, ev, el: ev.currentTarget })
                   )
               : undefined,
           ...toDataset(props.tag, props.tag_)
