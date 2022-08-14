@@ -38,11 +38,12 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
   tag?: MayDeepArray<DivDataTag>
   className?: MayDeepArray<ClassName | undefined>
   onClick?: MayDeepArray<
-    (payload: {
-      event: React.MouseEvent<HTMLElement, MouseEvent>
-      ev: React.MouseEvent<HTMLElement, MouseEvent>
-      el: HTMLElement
-    }) => void
+    | ((payload: {
+        event: React.MouseEvent<HTMLElement, MouseEvent>
+        ev: React.MouseEvent<HTMLElement, MouseEvent>
+        el: HTMLElement
+      }) => void)
+    | undefined
   >
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
