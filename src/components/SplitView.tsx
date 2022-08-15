@@ -13,12 +13,14 @@ import { RowProps, Row } from './Row/Row'
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 
 export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
-  const refs = useRef<{ line: HTMLElement; prevWindowItem: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
+  // leftView and line and rightView
+  const refs = useRef<{ line: HTMLElement; prevWindowItem?: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
 
   const getFlexibleIndex = () => {
+    console.log('refs.current: ', refs.current)
     const flexibleViewIndex = refs.current
       .map(({ prevWindowItem }) => prevWindowItem)
-      .findIndex((i) => hasTag(i, flexibleView))
+      .findIndex((i) => i && hasTag(i, flexibleView))
     const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : refs.current.length - 1 // last one is flexible in default
     return flexibleViewIndexWithDefault
   }
@@ -46,6 +48,7 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
           }
         })
       } else {
+        if (!prevWindowItem) return
         let initWidth = prevWindowItem.clientWidth
         let initHeight = prevWindowItem.clientHeight
         attachPointerMove(line, {
@@ -94,7 +97,7 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
     const heightDeltaPercent = entry.contentRect.height / prevHeight
     const allViews = refs.current.map((i) => i.prevWindowItem)
     allViews.forEach((view, idx) => {
-      if (idx !== flexibleViewIndex) {
+      if (view && idx !== flexibleViewIndex) {
         dir === 'row'
           ? setInlineStyle(view, 'width', (w) => (w ? Number.parseFloat(w) : view.clientWidth) * widthDeltaPercent)
           : setInlineStyle(view, 'height', (h) => (h ? Number.parseInt(h) : view.clientHeight) * heightDeltaPercent)
@@ -108,7 +111,7 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
     <Wrapper {...props} icss={[{ height: '100%', width: '100%' }, props.icss]} domRef={[wrapperRef, props.domRef]}>
       {mapElementChildren(props.children, (childNode, idx) => (
         <Fragment key={idx}>
-          {/*  Window  */}
+          {/*  View  */}
           <AddProps
             domRef={(el) => {
               // update to prevGroup
@@ -122,7 +125,8 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
           >
             {childNode}
           </AddProps>
-          {/* line */}
+
+          {/* Line */}
           <Div
             domRef_={(el) => (refs.current[idx] = { ...refs.current[idx], line: el })}
             icss_={[
