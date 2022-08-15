@@ -12,7 +12,7 @@ import { RowProps, Row } from './Row/Row'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 
-export default function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
+export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   const refs = useRef<{ line: HTMLElement; prevWindowItem: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
 
   const getFlexibleIndex = () => {
