@@ -1,8 +1,9 @@
 import { assert } from '@edsolater/fnkit'
-import { useResizeObserver } from '@edsolater/hookit'
+import { useEvent, useResizeObserver } from '@edsolater/hookit'
 import { Fragment, useEffect, useRef } from 'react'
 import { attachPointerMove } from '../functions/dom/gesture/pointerMove'
 import { setInlineStyle } from '../functions/dom/setCSS'
+import { assertFunctionNotInvokeTooFrequently } from '../functions/fnkit/assertFunctionNotInvokeTooFrequently'
 import { mapElementChildren } from '../functions/react'
 import { AddProps } from './AddProps'
 import { Col } from './Col/Col'
@@ -11,7 +12,9 @@ import { createDataTag, hasTag } from './Div/tag'
 import { RowProps, Row } from './Row/Row'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
-
+/**
+ * ! should out-most Wrapper not depends on inner box's size
+ */
 export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   // leftView and line and rightView
   const refs = useRef<{ line: HTMLElement; prevWindowItem?: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
@@ -80,35 +83,45 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
 
   // load init size of wrapper
   useEffect(() => {
-    assert(wrapperRef.current, `SplitView's is not loaded succefully`)
+    assert(wrapperRef.current, `SplitView loading failed`)
     wrapperInitWidth.current = wrapperRef.current.clientWidth
     wrapperInitHeight.current = wrapperRef.current.clientHeight
   }, [])
 
+  const handleWrapperResize = useEvent(
+    (entry: ResizeObserverEntry, prevEntry: ResizeObserverEntry | undefined): void => {
+      if (!refs.current.length) return // wrapper is not load yet
+      assertFunctionNotInvokeTooFrequently("<SplitView>'s resizeObserver")
+
+      const flexibleViewIndex = getFlexibleIndex()
+      const prevWidth = prevEntry?.contentRect.width ?? wrapperInitWidth.current
+      const prevHeight = prevEntry?.contentRect.height ?? wrapperInitHeight.current
+      assert(prevWidth != null, `init width not detected`)
+      assert(prevHeight != null, `init height not detected`)
+      const widthDeltaPercent = entry.contentRect.width / prevWidth
+      const heightDeltaPercent = entry.contentRect.height / prevHeight
+      const allViews = refs.current.map((i) => i.prevWindowItem)
+      allViews.forEach((view, idx) => {
+        if (view && idx !== flexibleViewIndex) {
+          dir === 'row'
+            ? setInlineStyle(view, 'width', (w) => (w ? Number.parseFloat(w) : view.clientWidth) * widthDeltaPercent)
+            : setInlineStyle(view, 'height', (h) => (h ? Number.parseInt(h) : view.clientHeight) * heightDeltaPercent)
+        }
+      })
+    }
+  )
+
   // resize views base on wrapper's size, to ensure proportion stable(eaqual between )
-  useResizeObserver(wrapperRef, (entry, prevEntry) => {
-    if (!refs.current.length) return // wrapper is not load yet
-    const flexibleViewIndex = getFlexibleIndex()
-    const prevWidth = prevEntry?.contentRect.width ?? wrapperInitWidth.current
-    const prevHeight = prevEntry?.contentRect.height ?? wrapperInitHeight.current
-    assert(prevWidth != null, `init width not detected`)
-    assert(prevHeight != null, `init height not detected`)
-    const widthDeltaPercent = entry.contentRect.width / prevWidth
-    const heightDeltaPercent = entry.contentRect.height / prevHeight
-    const allViews = refs.current.map((i) => i.prevWindowItem)
-    allViews.forEach((view, idx) => {
-      if (view && idx !== flexibleViewIndex) {
-        dir === 'row'
-          ? setInlineStyle(view, 'width', (w) => (w ? Number.parseFloat(w) : view.clientWidth) * widthDeltaPercent)
-          : setInlineStyle(view, 'height', (h) => (h ? Number.parseInt(h) : view.clientHeight) * heightDeltaPercent)
-      }
-    })
-  })
+  useResizeObserver(wrapperRef, handleWrapperResize)
   //#endregion
 
   const Wrapper = dir === 'row' ? Row : Col
   return (
-    <Wrapper {...props} icss={[{ height: '100%', width: '100%' }, props.icss]} domRef={[wrapperRef, props.domRef]}>
+    <Wrapper
+      {...props}
+      icss={[{ height: '100%', width: '100%', contain: 'size' }, props.icss]}
+      domRef={[wrapperRef, props.domRef]}
+    >
       {mapElementChildren(props.children, (childNode, idx) => (
         <Fragment key={idx}>
           {/*  View  */}
