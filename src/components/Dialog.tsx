@@ -93,6 +93,7 @@ export function Dialog({
           pointerEvents: 'initial'
         }
       }}
+      onClick={({ ev }) => ev.stopPropagation()}
     >
       <Transition
         show={innerOpen}
