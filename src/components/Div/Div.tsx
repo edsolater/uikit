@@ -26,8 +26,6 @@ export interface HTMLTagMap {
 
 /** richer than ReactNode */
 export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
-  /**it will not render anything, just tired of writing jsx's if  */
-  if?: boolean
   as?: MayEnum<keyof ReactHTML> | ((...params: any[]) => ReactNode) // assume a function return ReactNode is a Component
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
   domRef?: MayDeepArray<
@@ -40,11 +38,12 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
   tag?: MayDeepArray<DivDataTag>
   className?: MayDeepArray<ClassName | undefined>
   onClick?: MayDeepArray<
-    (payload: {
-      event: React.MouseEvent<HTMLElement, MouseEvent>
-      ev: React.MouseEvent<HTMLElement, MouseEvent>
-      el: HTMLElement
-    }) => void
+    | ((payload: {
+        event: React.MouseEvent<HTMLElement, MouseEvent>
+        ev: React.MouseEvent<HTMLElement, MouseEvent>
+        el: HTMLElement
+      }) => void)
+    | undefined
   >
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
@@ -67,8 +66,6 @@ export type DerivativeDivProps<TagName extends keyof HTMLTagMap = 'div'> = DivPr
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName>) => {
   const isHTMLTag = isString(props.as) || isUndefined(props.as)
   const divRef = useRef<HTMLTagMap[TagName]>(null)
-
-  if (props.if === false) return null
 
   return isHTMLTag
     ? createElement(
