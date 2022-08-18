@@ -12,25 +12,10 @@ export function toDataset(...tags: MayDeepArray<DivDataTag | undefined>[]): Reco
   )
 }
 
-export function createDataTag(pair: [key: string, value?: boolean | number | string]): DivDataTag
-export function createDataTag(key: string, value?: boolean | number | string): DivDataTag
-export function createDataTag(config: { key: string; value?: boolean | number | string }): DivDataTag
-export function createDataTag(...params) {
-  if (isString(params[0])) {
-    return {
-      key: uncapitalize(params[0]),
-      value: toString(params[1] ?? true)
-    }
-  } else if (isArray(params[0])) {
-    return {
-      key: uncapitalize(params[0][0]),
-      value: toString(params[0][1] ?? true)
-    }
-  } else {
-    return {
-      key: uncapitalize(params[0].key),
-      value: toString(params[0].value ?? true)
-    }
+export function createDataTag(config: { key: string; value: boolean | number | string }): DivDataTag {
+  return {
+    key: uncapitalize(config.key),
+    value: toString(config.value ?? true)
   }
 }
 

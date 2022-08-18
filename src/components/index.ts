@@ -2,6 +2,7 @@ export * from './Div/Div'
 export * from './SubComponent'
 
 export * from './AddProps'
+export * from './ExpandClickableArea' // add a <Div> wrapper
 export * from './FadeIn'
 export * from './Transition/Transition'
 

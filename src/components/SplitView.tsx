@@ -1,7 +1,6 @@
 import { assert } from '@edsolater/fnkit'
-import { useEvent, useResizeObserver } from '@edsolater/hookit'
+import { useEvent, useResizeObserver, attachPointerMove } from '@edsolater/hookit'
 import { Fragment, useEffect, useRef } from 'react'
-import { attachPointerMove } from '../functions/dom/gesture/pointerMove'
 import { setInlineStyle } from '../functions/dom/setCSS'
 import { assertFunctionNotInvokeTooFrequently } from '../functions/fnkit/assertFunctionNotInvokeTooFrequently'
 import { mapElementChildren } from '../functions/react'
@@ -9,6 +8,7 @@ import { AddProps } from './AddProps'
 import { Col } from './Col/Col'
 import { Div, DivProps } from './Div/Div'
 import { createDataTag, hasTag } from './Div/tag'
+import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps, Row } from './Row/Row'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
@@ -20,10 +20,9 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   const refs = useRef<{ line: HTMLElement; prevWindowItem?: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
 
   const getFlexibleIndex = () => {
-    console.log('refs.current: ', refs.current)
     const flexibleViewIndex = refs.current
       .map(({ prevWindowItem }) => prevWindowItem)
-      .findIndex((i) => i && hasTag(i, flexibleView))
+      .findIndex((i) => i && hasTag(i, flexiableViewTag))
     const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : refs.current.length - 1 // last one is flexible in default
     return flexibleViewIndexWithDefault
   }
@@ -81,12 +80,14 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   const wrapperInitHeight = useRef(0)
   const wrapperInitWidth = useRef(0)
 
-  // load init size of wrapper
-  useEffect(() => {
+  const loadInitSizeOfWrapper = () => {
     assert(wrapperRef.current, `SplitView loading failed`)
     wrapperInitWidth.current = wrapperRef.current.clientWidth
     wrapperInitHeight.current = wrapperRef.current.clientHeight
-  }, [])
+  }
+
+  useEffect(loadInitSizeOfWrapper, [])
+  // load init size of wrapper
 
   const handleWrapperResize = useEvent(
     (entry: ResizeObserverEntry, prevEntry: ResizeObserverEntry | undefined): void => {
@@ -115,12 +116,15 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   useResizeObserver(wrapperRef, handleWrapperResize)
   //#endregion
 
-  const Wrapper = dir === 'row' ? Row : Col
   return (
-    <Wrapper
+    <Div
       {...props}
-      icss={[{ height: '100%', width: '100%', contain: 'size' }, props.icss]}
-      domRef={[wrapperRef, props.domRef]}
+      icss_={[
+        { display: 'flex', flexDirection: dir === 'row' ? undefined : 'column' },
+        { height: '100%', width: '100%', contain: 'size' },
+        props.icss
+      ]}
+      domRef_={[wrapperRef, props.domRef]}
     >
       {mapElementChildren(props.children, (childNode, idx) => (
         <Fragment key={idx}>
@@ -140,28 +144,40 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
           </AddProps>
 
           {/* Line */}
-          <Div
-            domRef_={(el) => (refs.current[idx] = { ...refs.current[idx], line: el })}
-            icss_={[
+          <ExpandClickableArea
+            {...lineProps}
+            dir='x'
+            icss={[
               {
                 ':last-child': {
                   display: 'none'
                 }, // TODO: should not render this DOM
-
                 flex: 'none',
-                backgroundColor: '#ec123c91',
-                ':hover': { backgroundColor: 'dodgerblue' },
-                transition: '75ms'
-              },
-              dir === 'row' ? { width: 4, cursor: 'e-resize' } : { height: 4, cursor: 'n-resize' }
+                cursor: dir === 'row' ? 'e-resize' : 'n-resize'
+              }
             ]}
-            {...lineProps}
-          ></Div>
+            domRef={[(el) => (refs.current[idx] = { ...refs.current[idx], line: el }), lineProps?.domRef]}
+          >
+            <Div
+              icss_={[
+                {
+                  backgroundColor: '#80808033',
+                  ':hover': { backgroundColor: 'dodgerblue' }, // FIXME should have hover group
+                  transition: '75ms'
+                },
+                dir === 'row' ? { width: 2, height: '100%' } : { height: 2, width: '100%' }
+              ]}
+            ></Div>
+          </ExpandClickableArea>
         </Fragment>
       ))}
-    </Wrapper>
+    </Div>
   )
 }
 
-const flexibleView = createDataTag({ key: 'RowSplit', value: 'container-flexible' })
-SplitView.flexibleView = flexibleView
+const flexiableViewTag = createDataTag({ key: 'RowSplit', value: 'container-flexible' })
+const hiddenViewTag = createDataTag({ key: 'RowSplit', value: 'container-hidden' })
+SplitView.tag = {
+  flexiable: flexiableViewTag,
+  hidden: hiddenViewTag
+}
