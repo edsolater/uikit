@@ -154,15 +154,17 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
                 }, // TODO: should not render this DOM
                 flex: 'none',
                 cursor: dir === 'row' ? 'e-resize' : 'n-resize'
-              }
+              },
+              lineProps?.icss
             ]}
+            className={['hover-group',lineProps?.className]}
             domRef={[(el) => (refs.current[idx] = { ...refs.current[idx], line: el }), lineProps?.domRef]}
           >
             <Div
               icss_={[
                 {
                   backgroundColor: '#80808033',
-                  ':hover': { backgroundColor: 'dodgerblue' }, // FIXME should have hover group
+                  '.hover-group:hover &': { backgroundColor: 'dodgerblue' }, // FIXME should have hover group
                   transition: '75ms'
                 },
                 dir === 'row' ? { width: 2, height: '100%' } : { height: 2, width: '100%' }
