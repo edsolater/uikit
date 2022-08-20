@@ -9,7 +9,7 @@ import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { ICSS, parseCSS } from '../../styles/parseCSS'
 import { CSSStyle } from '../../styles/type'
 import { MayDeepArray } from '../../typings/tools'
-import { createDataTag, DivDataTag, htmlHasTag, propsHasTag, toDataset } from './tag'
+import { createDataTag, DivDataTag, htmlHasTag, hasTag, toDataset } from './tag'
 
 export interface HTMLTagMap {
   div: HTMLDivElement
@@ -68,12 +68,12 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   const divRef = useRef<HTMLTagMap[TagName]>(null)
 
   // tag
-  const hasNoRenderTag = propsHasTag(props.tag, noRenderTag) || propsHasTag(props.tag_, noRenderTag)
+  const hasNoRenderTag = hasTag(props.tag, noRenderTag) || hasTag(props.tag_, noRenderTag)
 
   // TODO-improve DOM Cache
   if (hasNoRenderTag) return null
 
-  const hasOffscreenTag = propsHasTag(props.tag, offscreenTag) || propsHasTag(props.tag_, offscreenTag)
+  const hasOffscreenTag = hasTag(props.tag, offscreenTag) || hasTag(props.tag_, offscreenTag)
   return isHTMLTag
     ? createElement(
         // @ts-expect-error assume a function return ReactNode is a Component

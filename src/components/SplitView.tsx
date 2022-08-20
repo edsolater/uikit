@@ -126,53 +126,56 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
       ]}
       domRef_={[wrapperRef, divProps.domRef]}
     >
-      {mapElementChildren(divProps.children, (childNode, idx) => (
-        <Fragment key={idx}>
-          {/*  View  */}
-          <AddProps
-            domRef={(el) => {
-              // update to prevGroup
-              if (idx >= 1) {
-                refs.current[idx - 1] = { ...refs.current[idx - 1], nextWindowItem: el }
-              }
-              // update to currGroup
-              refs.current[idx] = { ...refs.current[idx], prevWindowItem: el }
-            }}
-            icss={{ flex: 1, willChange: 'width, height', transition: '75m' }}
-          >
-            {childNode}
-          </AddProps>
+      {mapElementChildren(divProps.children, (childNode, idx) => {
+        console.log('childNode: ', childNode)
+        return (
+          <Fragment key={idx}>
+            {/*  View  */}
+            <AddProps
+              domRef={(el) => {
+                // update to prevGroup
+                if (idx >= 1) {
+                  refs.current[idx - 1] = { ...refs.current[idx - 1], nextWindowItem: el }
+                }
+                // update to currGroup
+                refs.current[idx] = { ...refs.current[idx], prevWindowItem: el }
+              }}
+              icss={{ flex: 1, willChange: 'width, height', transition: '75m' }}
+            >
+              {childNode}
+            </AddProps>
 
-          {/* Line */}
-          <ExpandClickableArea
-            {...lineProps}
-            dir='x'
-            icss={[
-              {
-                ':last-child': {
-                  display: 'none'
-                }, // TODO: should not render this DOM
-                flex: 'none',
-                cursor: dir === 'row' ? 'e-resize' : 'n-resize'
-              },
-              lineProps?.icss
-            ]}
-            className={['hover-group', lineProps?.className]}
-            domRef={[(el) => (refs.current[idx] = { ...refs.current[idx], line: el }), lineProps?.domRef]}
-          >
-            <Div
-              icss_={[
+            {/* Line */}
+            <ExpandClickableArea
+              {...lineProps}
+              dir='x'
+              icss={[
                 {
-                  backgroundColor: '#80808033',
-                  '.hover-group:hover &': { backgroundColor: 'dodgerblue' }, // FIXME should have hover group
-                  transition: '75ms'
+                  ':last-child': {
+                    display: 'none'
+                  }, // TODO: should not render this DOM
+                  flex: 'none',
+                  cursor: dir === 'row' ? 'e-resize' : 'n-resize'
                 },
-                dir === 'row' ? { width: 2, height: '100%' } : { height: 2, width: '100%' }
+                lineProps?.icss
               ]}
-            ></Div>
-          </ExpandClickableArea>
-        </Fragment>
-      ))}
+              className={['hover-group', lineProps?.className]}
+              domRef={[(el) => (refs.current[idx] = { ...refs.current[idx], line: el }), lineProps?.domRef]}
+            >
+              <Div
+                icss_={[
+                  {
+                    backgroundColor: '#80808033',
+                    '.hover-group:hover &': { backgroundColor: 'dodgerblue' }, // FIXME should have hover group
+                    transition: '75ms'
+                  },
+                  dir === 'row' ? { width: 2, height: '100%' } : { height: 2, width: '100%' }
+                ]}
+              ></Div>
+            </ExpandClickableArea>
+          </Fragment>
+        )
+      })}
     </Div>
   )
 }

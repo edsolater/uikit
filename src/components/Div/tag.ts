@@ -28,7 +28,7 @@ export function htmlHasTag(el: HTMLElement, tag: DivDataTag): boolean {
   return tag.value ? el.dataset[tag.key] === tag.value : Boolean(el.dataset[tag.key])
 }
 
-export function propsHasTag(tag: DivProps['tag'], divDataTag: DivDataTag) {
+export function hasTag(tag: DivProps['tag'], divDataTag: DivDataTag) {
   if (!tag) return false
   return flapDeep(tag).some(({ key, value }) => divDataTag.value === value && divDataTag.key === key)
 }
