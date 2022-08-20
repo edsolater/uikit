@@ -7,7 +7,7 @@ import { mapElementChildren } from '../functions/react'
 import { AddProps } from './AddProps'
 import { Col } from './Col/Col'
 import { Div, DivProps } from './Div/Div'
-import { createDataTag, hasTag } from './Div/tag'
+import { createDataTag, htmlHasTag } from './Div/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps, Row } from './Row/Row'
 
@@ -15,14 +15,14 @@ export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivPro
 /**
  * ! should out-most Wrapper not depends on inner box's size
  */
-export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
+export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps) {
   // leftView and line and rightView
   const refs = useRef<{ line: HTMLElement; prevWindowItem?: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
 
   const getFlexibleIndex = () => {
     const flexibleViewIndex = refs.current
       .map(({ prevWindowItem }) => prevWindowItem)
-      .findIndex((i) => i && hasTag(i, flexiableViewTag))
+      .findIndex((i) => i && htmlHasTag(i, flexiableViewTag))
     const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : refs.current.length - 1 // last one is flexible in default
     return flexibleViewIndexWithDefault
   }
@@ -118,15 +118,15 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
 
   return (
     <Div
-      {...props}
+      {...divProps}
       icss_={[
         { display: 'flex', flexDirection: dir === 'row' ? undefined : 'column' },
         { height: '100%', width: '100%', contain: 'size' },
-        props.icss
+        divProps.icss
       ]}
-      domRef_={[wrapperRef, props.domRef]}
+      domRef_={[wrapperRef, divProps.domRef]}
     >
-      {mapElementChildren(props.children, (childNode, idx) => (
+      {mapElementChildren(divProps.children, (childNode, idx) => (
         <Fragment key={idx}>
           {/*  View  */}
           <AddProps
@@ -157,7 +157,7 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
               },
               lineProps?.icss
             ]}
-            className={['hover-group',lineProps?.className]}
+            className={['hover-group', lineProps?.className]}
             domRef={[(el) => (refs.current[idx] = { ...refs.current[idx], line: el }), lineProps?.domRef]}
           >
             <Div
@@ -177,8 +177,8 @@ export function SplitView({ lineProps, dir = 'row', ...props }: RowSplitProps) {
   )
 }
 
-const flexiableViewTag = createDataTag({ key: 'RowSplit', value: 'container-flexible' })
-const hiddenViewTag = createDataTag({ key: 'RowSplit', value: 'container-hidden' })
+const flexiableViewTag = createDataTag({ key: 'SplitView', value: 'view-flexible' })
+const hiddenViewTag = createDataTag({ key: 'SplitView', value: 'view-hidden' })
 SplitView.tag = {
   flexiable: flexiableViewTag,
   hidden: hiddenViewTag

@@ -1,4 +1,5 @@
-import { flapDeep, isArray, isString, MayDeepArray, shakeNil, toKebabCase, uncapitalize } from '@edsolater/fnkit'
+import { flap, flapDeep, isArray, isString, MayDeepArray, shakeNil, toKebabCase, uncapitalize } from '@edsolater/fnkit'
+import { DivProps } from './Div'
 
 export type DivDataTag = {
   key: string
@@ -23,6 +24,11 @@ function toString(v?: unknown | undefined): string | undefined {
   return v == null ? undefined : String(v)
 }
 
-export function hasTag(el: HTMLElement, tag: DivDataTag): boolean {
+export function htmlHasTag(el: HTMLElement, tag: DivDataTag): boolean {
   return tag.value ? el.dataset[tag.key] === tag.value : Boolean(el.dataset[tag.key])
+}
+
+export function propsHasTag(tag: DivProps['tag'], divDataTag: DivDataTag) {
+  if (!tag) return false
+  return flapDeep(tag).some(({ key, value }) => divDataTag.value === value && divDataTag.key === key)
 }

@@ -9,7 +9,7 @@ import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { ICSS, parseCSS } from '../../styles/parseCSS'
 import { CSSStyle } from '../../styles/type'
 import { MayDeepArray } from '../../typings/tools'
-import { DivDataTag, toDataset } from './tag'
+import { createDataTag, DivDataTag, htmlHasTag, propsHasTag, toDataset } from './tag'
 
 export interface HTMLTagMap {
   div: HTMLDivElement
@@ -67,6 +67,13 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   const isHTMLTag = isString(props.as) || isUndefined(props.as)
   const divRef = useRef<HTMLTagMap[TagName]>(null)
 
+  // tag
+  const hasNoRenderTag = propsHasTag(props.tag, noRenderTag) || propsHasTag(props.tag_, noRenderTag)
+
+  // TODO-improve DOM Cache
+  if (hasNoRenderTag) return null
+
+  const hasOffscreenTag = propsHasTag(props.tag, offscreenTag) || propsHasTag(props.tag_, offscreenTag)
   return isHTMLTag
     ? createElement(
         // @ts-expect-error assume a function return ReactNode is a Component
@@ -78,7 +85,8 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
             classname(props.className_),
             classname(props.className),
             parseCSS(props.icss_),
-            parseCSS(props.icss)
+            parseCSS(props.icss),
+            hasOffscreenTag && { position: 'absolute', top: -9999, left: -9999,  pointerEvents: 'none', visibility:'hidden'}
           ]
             .filter(Boolean)
             .join(' '),
@@ -102,4 +110,11 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
         omit(props, ['as', 'as_']),
         props.children ?? props.children_
       )
+}
+
+const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
+const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
+Div.tag = {
+  noRender: noRenderTag,
+  offscreen: offscreenTag
 }
