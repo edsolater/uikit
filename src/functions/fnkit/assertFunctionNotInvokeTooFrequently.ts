@@ -1,5 +1,5 @@
 const invokeTimeRecord = new Map<string, { timestampCount: number; lastTimestamp: number }>()
-const maxInvokeCountInSameTimestamp = 3
+const maxInvokeCountInSameTimestamp = 5
 /**
  *
  * @param key for record
@@ -12,7 +12,7 @@ export function assertFunctionNotInvokeTooFrequently(key: string) {
     return invokeTimeRecord.get(key)!
   })()
   const now = Date.now()
-  record.timestampCount = Math.abs(record.lastTimestamp - now) < 1000 ? record.timestampCount + 1 : 0
+  record.timestampCount = Math.abs(record.lastTimestamp - now) < 10 ? record.timestampCount + 1 : 0
   record.lastTimestamp = now
   if (record.timestampCount > maxInvokeCountInSameTimestamp) {
     throw new Error(

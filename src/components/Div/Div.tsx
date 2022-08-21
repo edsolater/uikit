@@ -35,7 +35,7 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
    * a special props, it won't render anything for `<div>`'s DOM, just a label for {@link pickChildByTag}\
    * give a tag, means it's special in it's context
    */
-  tag?: MayDeepArray<DivDataTag>
+  tag?: MayDeepArray<DivDataTag | undefined>
   className?: MayDeepArray<ClassName | undefined>
   onClick?: MayDeepArray<
     | ((payload: {
@@ -86,7 +86,13 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
             classname(props.className),
             parseCSS(props.icss_),
             parseCSS(props.icss),
-            hasOffscreenTag && { position: 'absolute', top: -9999, left: -9999,  pointerEvents: 'none', visibility:'hidden'}
+            hasOffscreenTag && {
+              position: 'absolute',
+              top: -9999,
+              left: -9999,
+              pointerEvents: 'none',
+              visibility: 'hidden'
+            }
           ]
             .filter(Boolean)
             .join(' '),

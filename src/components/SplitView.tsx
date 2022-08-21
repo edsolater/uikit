@@ -1,42 +1,43 @@
-import { assert } from '@edsolater/fnkit'
-import { useEvent, useResizeObserver, attachPointerMove } from '@edsolater/hookit'
+import { AnyFn, assert } from '@edsolater/fnkit'
+import { attachPointerMove, useEvent, useResizeObserver, useSignalState } from '@edsolater/hookit'
 import { Fragment, useEffect, useRef } from 'react'
 import { setInlineStyle } from '../functions/dom/setCSS'
 import { assertFunctionNotInvokeTooFrequently } from '../functions/fnkit/assertFunctionNotInvokeTooFrequently'
 import { mapElementChildren } from '../functions/react'
-import { AddProps } from './AddProps'
-import { Col } from './Col/Col'
 import { Div, DivProps } from './Div/Div'
 import { createDataTag, htmlHasTag } from './Div/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
-import { RowProps, Row } from './Row/Row'
+import { RowProps } from './Row/Row'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 /**
  * ! should out-most Wrapper not depends on inner box's size
+ * it won't consider closed view, for it's too complicated
  */
 export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps) {
   // leftView and line and rightView
   const refs = useRef<{ line: HTMLElement; prevWindowItem?: HTMLElement; nextWindowItem?: HTMLElement }[]>([])
+  const [childrenLength, setChildrenLength, getChildrenLength] = useSignalState(0)
 
   const getFlexibleIndex = () => {
     const flexibleViewIndex = refs.current
       .map(({ prevWindowItem }) => prevWindowItem)
       .findIndex((i) => i && htmlHasTag(i, flexiableViewTag))
-    const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : refs.current.length - 1 // last one is flexible in default
+    const flexibleViewIndexWithDefault = flexibleViewIndex >= 0 ? flexibleViewIndex : 0 // last one is flexible in default
     return flexibleViewIndexWithDefault
   }
 
   //#region ------------------- feature move line -------------------
   useEffect(() => {
     const flexibleViewIndex = getFlexibleIndex()
+    const cleanFns = [] as AnyFn[]
     // regist move line handler
     refs.current.forEach(({ prevWindowItem, line, nextWindowItem }, idx) => {
       if (idx >= flexibleViewIndex) {
         if (!nextWindowItem) return
         let initWidth = nextWindowItem.clientWidth
         let initHeight = nextWindowItem.clientHeight
-        attachPointerMove(line, {
+        const { cancel } = attachPointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = nextWindowItem.clientWidth
@@ -49,11 +50,12 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             }
           }
         })
+        cleanFns.push(cancel)
       } else {
         if (!prevWindowItem) return
         let initWidth = prevWindowItem.clientWidth
         let initHeight = prevWindowItem.clientHeight
-        attachPointerMove(line, {
+        const { cancel } = attachPointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = prevWindowItem.clientWidth
@@ -66,13 +68,15 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             }
           }
         })
+        cleanFns.push(cancel)
       }
     })
+    return () => cleanFns.forEach((fn) => fn())
 
     //TODO: fix container's width/height  /or should?🤔, not you shouldn't, just fixed height in example
     // TODO: expand line hoverable area
     // TODO: extract main feature to hook, for easier managements
-  }, [])
+  }, [childrenLength])
   //#endregion
 
   //#region ------------------- feature: auto resize base on wrapper's content React -------------------
@@ -126,12 +130,14 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
       ]}
       domRef_={[wrapperRef, divProps.domRef]}
     >
-      {mapElementChildren(divProps.children, (childNode, idx) => {
-        console.log('childNode: ', childNode)
+      {mapElementChildren(divProps.children, (childNode, idx, children) => {
+        if (children.length !== getChildrenLength()) {
+          setChildrenLength(children.length)
+        }
         return (
           <Fragment key={idx}>
             {/*  View  */}
-            <AddProps
+            <Div
               domRef={(el) => {
                 // update to prevGroup
                 if (idx >= 1) {
@@ -140,39 +146,51 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
                 // update to currGroup
                 refs.current[idx] = { ...refs.current[idx], prevWindowItem: el }
               }}
-              icss={{ flex: 1, willChange: 'width, height', transition: '75m' }}
+              icss={{
+                flexGrow: 1,
+                willChange: 'width, height',
+                transition: '75m',
+                ':empty': { display: 'none' }
+              }}
             >
               {childNode}
-            </AddProps>
+            </Div>
 
             {/* Line */}
-            <ExpandClickableArea
-              {...lineProps}
-              dir='x'
-              icss={[
-                {
-                  ':last-child': {
-                    display: 'none'
-                  }, // TODO: should not render this DOM
-                  flex: 'none',
-                  cursor: dir === 'row' ? 'e-resize' : 'n-resize'
-                },
-                lineProps?.icss
-              ]}
-              className={['hover-group', lineProps?.className]}
-              domRef={[(el) => (refs.current[idx] = { ...refs.current[idx], line: el }), lineProps?.domRef]}
-            >
-              <Div
-                icss_={[
+            {idx !== children.length - 1 && (
+              <ExpandClickableArea
+                {...lineProps}
+                dir='x'
+                icss={[
                   {
-                    backgroundColor: '#80808033',
-                    '.hover-group:hover &': { backgroundColor: 'dodgerblue' }, // FIXME should have hover group
-                    transition: '75ms'
+                    ':last-child': {
+                      display: 'none'
+                    },
+                    flex: 'none',
+                    cursor: dir === 'row' ? 'e-resize' : 'n-resize'
                   },
-                  dir === 'row' ? { width: 2, height: '100%' } : { height: 2, width: '100%' }
+                  lineProps?.icss
                 ]}
-              ></Div>
-            </ExpandClickableArea>
+                className={['hover-group', lineProps?.className]}
+                domRef={[
+                  (el) => {
+                    return (refs.current[idx] = { ...refs.current[idx], line: el })
+                  },
+                  lineProps?.domRef
+                ]}
+              >
+                <Div
+                  icss_={[
+                    {
+                      backgroundColor: '#80808033',
+                      '.hover-group:hover &': { backgroundColor: 'dodgerblue' },
+                      transition: '75ms'
+                    },
+                    dir === 'row' ? { width: 2, height: '100%' } : { height: 2, width: '100%' }
+                  ]}
+                ></Div>
+              </ExpandClickableArea>
+            )}
           </Fragment>
         )
       })}
@@ -180,9 +198,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
   )
 }
 
-const flexiableViewTag = createDataTag({ key: 'SplitView', value: 'view-flexible' })
-const hiddenViewTag = createDataTag({ key: 'SplitView', value: 'view-hidden' })
+const flexiableViewTag = createDataTag({ key: 'split-view', value: 'view-flexible' })
 SplitView.tag = {
-  flexiable: flexiableViewTag,
-  hidden: hiddenViewTag
+  flexiable: flexiableViewTag
 }
