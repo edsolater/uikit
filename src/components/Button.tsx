@@ -1,15 +1,20 @@
-import { isArray, MayArray, shrinkToValue } from '@edsolater/fnkit'
-import { useRef } from 'react'
+import { addDefault, isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
 import { mergeProps } from '../functions/react'
 import { useUikitTheme } from '../hooks/useUikitTheme'
-
-import { cssTransitionTimeFnOutCubic } from '../styles'
+import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
-import { CSSColorString } from '../styles/type'
+import { CSSColorString, CSSStyle } from '../styles/type'
 import { MayFunction } from '../typings/tools'
 import { Div, DivProps } from './Div/Div'
 
 type BooleanLike = unknown
+
+export interface ButtonHandle {
+  click?: () => void
+  focus?: () => void
+}
+
 export interface ButtonProps extends DivProps<'button'> {
   /**
    * @default 'solid'
@@ -18,14 +23,20 @@ export interface ButtonProps extends DivProps<'button'> {
   /**
    * @default 'md'
    */
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
 
   /**
+   * !only for app's uikit <Button>
    * button's mean  color (apply to all variant of button)
    * default {@link cssColors.buttonPrimaryColor } when in darkMode
    */
-  themeColor?: CSSColorString
-  onClick?: () => void
+  theme?: {
+    mainColor?: MayFn<CSSColorString, [props: Readonly<Omit<ButtonProps, 'theme'>>]>
+    mainTextColor?: MayFn<CSSColorString, [props: Readonly<Omit<ButtonProps, 'theme'>>]>
+    contentGap?: MayFn<CSSStyle['gap'], [props: Readonly<Omit<ButtonProps, 'theme'>>]>
+    disableOpacity?: MayFn<CSSStyle['opacity'], [props: Readonly<Omit<ButtonProps, 'theme'>>]>
+    cssProps?: MayFn<ICSS, [props: Readonly<Omit<ButtonProps, 'theme'>>]>
+  }
 
   /** a short cut for validator */
   disabled?: boolean
@@ -38,6 +49,11 @@ export interface ButtonProps extends DivProps<'button'> {
     /**  items are button's setting which will apply when corresponding validator has failed */
     fallbackProps?: Omit<ButtonProps, 'validators' | 'disabled'>
   }>
+  /** normally, it's an icon  */
+  prefix?: ReactNode
+  /** normally, it's an icon  */
+  suffix?: ReactNode
+  componentRef?: RefObject<any>
 }
 
 /**
@@ -63,15 +79,59 @@ export function Button(props: ButtonProps) {
   const {
     variant = 'solid',
     size = 'md',
-    themeColor = cssColors.buttonPrimaryColor,
+    theme,
+    prefix,
+    suffix,
+    componentRef,
+    children,
     onClick: originalOnClick,
     ...restProps
   } = mergedProps
 
+  const {
+    mainColor = cssColors.buttonPrimaryColor,
+    mainTextColor = variant === 'solid' ? 'white' : shrinkToValue(mainColor, [mergedProps]),
+    contentGap = 4,
+    disableOpacity = 0.3,
+    cssProps
+  } = theme ?? {}
   // @ts-expect-error error for not match the count of originalOnClick, but don't need to care about it
   const onClick = (...args) => !disable && originalOnClick?.(...args)
   const ref = useRef<HTMLButtonElement>(null)
 
+  useImperativeHandle<any, ButtonHandle>(componentRef, () => ({
+    click: () => {
+      ref.current?.click()
+    },
+    focus: () => {
+      ref.current?.focus()
+    }
+  }))
+
+  const cssPadding = {
+    lg: '14px 24px',
+    md: '10px 16px',
+    sm: '8px 16px',
+    xs: '2px 6px'
+  }[size]
+  const cssFontSize = {
+    lg: 16,
+    md: 16,
+    sm: 14,
+    xs: 12
+  }[size]
+  const cssBorderRadius = {
+    lg: 12,
+    md: 8,
+    sm: 8,
+    xs: 4
+  }[size]
+  const cssOutlineWidth = {
+    lg: 2,
+    md: 2,
+    sm: 1,
+    xs: 0.5
+  }[size]
   return (
     <Div<'button'>
       {...restProps}
@@ -82,24 +142,30 @@ export function Button(props: ButtonProps) {
       icss_={[
         { transition: `200ms ${cssTransitionTimeFnOutCubic}` }, // make it's change smooth
         { border: 'none' }, // initialize
-        { color: variant === 'solid' ? 'white' : themeColor }, // light mode
-        { display: 'flex', gap: 4, alignItems: 'center', justifyContent: 'center' }, // center the items
+        { color: shrinkToValue(mainTextColor, [mergedProps]) }, // light mode
+        {
+          display: 'inline-flex',
+          gap: shrinkToValue(contentGap, [mergedProps]),
+          alignItems: 'center',
+          justifyContent: 'center'
+        }, // center the items
         {
           cursor: 'pointer',
           userSelect: 'none',
           width: 'max-content'
         },
         disable && {
-          opacity: 0.3,
+          opacity: shrinkToValue(disableOpacity, [mergedProps]),
           cursor: 'not-allowed'
         },
         {
-          padding: size === 'sm' ? '0 8px' : size === 'lg' ? '12px 24px' : '6px 16px',
-          fontSize: size === 'sm' ? 14 : size === 'lg' ? 18 : 16,
-          borderRadius: size === 'sm' ? 4 : size === 'lg' ? 8 : 6
+          padding: cssPadding,
+          fontSize: cssFontSize,
+          borderRadius: cssBorderRadius,
+          fontWeight: 500
         },
         variant === 'solid' && {
-          backgroundColor: themeColor,
+          backgroundColor: shrinkToValue(mainColor, [mergedProps]),
           ':hover': {
             filter: 'brightness(95%)'
           },
@@ -110,18 +176,21 @@ export function Button(props: ButtonProps) {
         },
         variant === 'outline' && {
           background: cssColors.transparent,
-          outline: `${size === 'lg' ? '2px' : size === 'sm' ? '1px' : '2px'} solid ${themeColor}`,
-          outlineOffset: `-${size === 'lg' ? '2px' : size === 'sm' ? '1px' : '2px'}`
+          outline: `${cssOutlineWidth} solid ${mainColor}`,
+          outlineOffset: `-${cssOutlineWidth}`
         },
         variant === 'text' && {
           ':hover': {
-            backgroundColor: opacityCSSColor(themeColor, 0.15)
+            backgroundColor: opacityCSSColor(shrinkToValue(mainColor, [mergedProps]), 0.15)
           }
-        }
+        },
+        shrinkToValue(cssProps, [mergedProps])
       ]}
       domRef_={ref}
     >
-      {otherButtonProps.children ?? 'BUTTON'}
+      {prefix}
+      {children}
+      {suffix}
     </Div>
   )
 }
