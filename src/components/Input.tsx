@@ -13,7 +13,8 @@ import {
 import { onEvent } from '../functions/dom/addEventListener'
 import mergeFunction from '../functions/mergeFunction'
 import { splice } from '../functions/splice.temp'
-import { Div, DivProps } from './Div/Div'
+import { Div } from './Div/Div'
+import { DivProps } from './Div/type'
 import { SubComponentRoot } from './SubComponent'
 
 export interface InputHandler {

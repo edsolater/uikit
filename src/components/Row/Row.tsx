@@ -1,5 +1,6 @@
 import { ICSS } from '../../styles/parseCSS'
-import { Div, DivProps } from '../Div/Div'
+import { Div } from '../Div/Div'
+import { DivProps } from "../Div/type"
 import { cssRow } from './cssRow'
 
 export interface RowProps extends DivProps {}

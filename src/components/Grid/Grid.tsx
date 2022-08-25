@@ -1,4 +1,5 @@
-import { Div, DivProps } from '../Div/Div'
+import { Div } from '../Div/Div'
+import { DivProps } from "../Div/type"
 import { cssGrid } from './cssGrid'
 
 export interface GridProps extends DivProps {}

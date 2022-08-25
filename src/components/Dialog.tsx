@@ -2,7 +2,8 @@ import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useKeyboardShortcut, useRecordedEffect, useToggle, use2StateSyncer } from '@edsolater/hookit'
 import { ReactNode, RefObject } from 'react'
 import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
-import { Div, DivProps } from './Div/Div'
+import { Div } from './Div/Div'
+import { DivProps } from "./Div/type"
 import { Portal } from './Portal'
 import { Transition } from './Transition/Transition'
 

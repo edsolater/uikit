@@ -1,66 +1,16 @@
-import { createElement, MutableRefObject, ReactHTML, ReactNode, useRef } from 'react'
+import { createElement, useRef } from 'react'
 
-import { flapDeep, isString, isUndefined, MayEnum, merge, omit, shakeNil } from '@edsolater/fnkit'
+import { flapDeep, isString, isUndefined, merge, omit, shakeNil } from '@edsolater/fnkit'
 
+import { useHover } from '@edsolater/hookit'
 import { weakCacheInvoke } from '../../functions/dom/weakCacheInvoke'
 import { mergeProps } from '../../functions/react'
-import classname, { ClassName } from '../../functions/react/classname'
+import classname from '../../functions/react/classname'
 import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
-import { ICSS, parseCSS } from '../../styles/parseCSS'
-import { CSSStyle } from '../../styles/type'
-import { MayDeepArray } from '../../typings/tools'
-import { createDataTag, DivDataTag, htmlHasTag, hasTag, toDataset } from './tag'
-
-export interface HTMLTagMap {
-  div: HTMLDivElement
-  main: HTMLDivElement
-  button: HTMLButtonElement
-  img: HTMLImageElement
-  input: HTMLInputElement
-  textarea: HTMLTextAreaElement
-  video: HTMLVideoElement
-  audio: HTMLAudioElement
-  a: HTMLAnchorElement
-  p: HTMLParagraphElement
-}
-
-/** richer than ReactNode */
-export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> {
-  as?: MayEnum<keyof ReactHTML> | ((...params: any[]) => ReactNode) // assume a function return ReactNode is a Component
-  /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
-  domRef?: MayDeepArray<
-    MutableRefObject<HTMLElement | null | undefined> | ((el: HTMLElement) => void) | null | undefined
-  >
-  /**
-   * a special props, it won't render anything for `<div>`'s DOM, just a label for {@link pickChildByTag}\
-   * give a tag, means it's special in it's context
-   */
-  tag?: MayDeepArray<DivDataTag | undefined>
-  className?: MayDeepArray<ClassName | undefined>
-  onClick?: MayDeepArray<
-    | ((payload: {
-        event: React.MouseEvent<HTMLElement, MouseEvent>
-        ev: React.MouseEvent<HTMLElement, MouseEvent>
-        el: HTMLElement
-      }) => void)
-    | undefined
-  >
-  icss?: ICSS
-  style?: MayDeepArray<CSSStyle | undefined>
-  htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
-
-  children?: ReactNode
-}
-
-// _DivProps is for merge easily
-/** can only use these **special props** directly on <Div> / <Div>'s derect derivative, so it will not export*/
-type _DivProps<TagName extends keyof HTMLTagMap = 'div'> = {
-  /** _DivProps is weaker(can be covered) than DivProps */
-  [newProp in keyof DivProps<TagName> as `${newProp}_`]: DivProps<TagName>[newProp]
-}
-
-/** only assign to  <Div>'s derect derivative compontents */
-export type DerivativeDivProps<TagName extends keyof HTMLTagMap = 'div'> = DivProps<TagName> & _DivProps<TagName>
+import { parseCSS } from '../../styles/parseCSS'
+import { createDataTag, hasTag, toDataset } from './tag'
+import { DivProps, HTMLTagMap, _DivProps } from './type'
+export * from './type'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName>) => {
@@ -74,6 +24,12 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   if (hasNoRenderTag) return null
 
   const hasOffscreenTag = hasTag(props.tag, offscreenTag) || hasTag(props.tag_, offscreenTag)
+
+  // gesture handler (stable props)
+  if ('onHover' in props || 'onHoverStart' in props || 'onHoverEnd' in props || 'triggerDelay' in props) {
+    useHover(divRef, props)
+  }
+
   return isHTMLTag
     ? createElement(
         // @ts-expect-error assume a function return ReactNode is a Component

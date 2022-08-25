@@ -1,7 +1,8 @@
 import { ReactNode, useRef } from 'react'
 
 import { CSSStyle, cssTransitionTimeFnOutQuadratic } from '../styles'
-import { Div, DivProps } from './Div/Div'
+import { Div } from './Div/Div'
+import { DivProps } from "./Div/type"
 import { TransitionProps, Transition } from './Transition/Transition'
 import { opacityInOut } from './Transition/effects'
 import { useInitFlagDetector } from '@edsolater/hookit'

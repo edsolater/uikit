@@ -1,5 +1,6 @@
 import { AddProps } from './AddProps'
-import { Div, DivProps } from './Div/Div'
+import { Div } from './Div/Div'
+import { DivProps } from "./Div/type";
 
 /**
  * only block element \

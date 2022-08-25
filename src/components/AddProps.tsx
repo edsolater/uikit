@@ -1,6 +1,6 @@
 import { Fragment, ReactNode } from 'react'
 import { addPropsToReactElement } from '../functions/react'
-import { DivProps } from './Div/Div'
+import { DivProps } from "./Div/type";
 
 export type AddPropsProps<T> = { children?: ReactNode; key?: string | number } & Omit<T, 'children' | 'key'>
 

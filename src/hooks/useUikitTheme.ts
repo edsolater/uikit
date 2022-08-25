@@ -2,7 +2,7 @@ import React from 'react'
 import { SKeyof } from '@edsolater/fnkit'
 import { createXStore, useXStore } from '@edsolater/xstore'
 import { ButtonProps } from '../components/Button'
-import { DivProps } from '../components/Div/Div'
+import { DivProps } from "../components/Div/type"
 
 type UIKitThemeProps = {
   Div: DivProps

@@ -1,5 +1,5 @@
 import { flapDeep, MayDeepArray, shakeFalsy, shakeNil, toKebabCase, uncapitalize } from '@edsolater/fnkit'
-import { DivProps } from './Div'
+import { DivProps } from "./type"
 
 export type DivDataTag = {
   key: string

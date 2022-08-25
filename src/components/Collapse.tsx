@@ -4,7 +4,8 @@ import { ReactNode, useMemo, useRef } from 'react'
 import { pickChildByType } from '../functions/react'
 import { icssClickable } from '../styles'
 import { AddProps } from './AddProps'
-import { Div, DivProps } from './Div/Div'
+import { Div } from './Div/Div'
+import { DivProps } from "./Div/type"
 import { FadeIn } from './FadeIn'
 
 type CollapseController = {
