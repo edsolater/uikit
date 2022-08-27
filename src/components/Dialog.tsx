@@ -54,7 +54,6 @@ export function Dialog({
     state1: open,
     state2: innerOpen,
     onState1Changed: (open) => {
-      console.log('open: ', open)
       setInnerOpen(Boolean(open))
     }
   })
