@@ -3,7 +3,7 @@ import { useKeyboardShortcut, useRecordedEffect, useToggle, use2StateSyncer } fr
 import { ReactNode, RefObject } from 'react'
 import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
 import { Div } from './Div/Div'
-import { DivProps } from "./Div/type"
+import { DivProps } from './Div/type'
 import { Portal } from './Portal'
 import { Transition } from './Transition/Transition'
 
@@ -47,13 +47,14 @@ export function Dialog({
   onClose,
   ...divProps
 }: DialogProps) {
-  const transitionDuration = transitionSpeed === 'fast' ? 100 : 200
+  const transitionDuration = transitionSpeed === 'fast' ? 200 : 300
   const [innerOpen, { set: setInnerOpen, on: turnOnInnerOpen, off: turnOffInnerOpen }] = useToggle(open) // for outer may have open or may not
 
   use2StateSyncer({
     state1: open,
     state2: innerOpen,
     onState1Changed: (open) => {
+      console.log('open: ', open)
       setInnerOpen(Boolean(open))
     }
   })
@@ -81,7 +82,6 @@ export function Dialog({
     },
     [innerOpen]
   )
-
   return (
     <Portal
       id={DIALOG_STACK_ID}
@@ -100,7 +100,7 @@ export function Dialog({
         show={innerOpen}
         fromProps={{ icss: { opacity: 0 } }}
         toProps={{ icss: { opacity: 1 } }}
-        cssTransitionDurationMs={30}
+        cssTransitionDurationMs={75}
         onBeforeLeave={onCloseImmediately}
         onAfterLeave={onClose}
         icss={{ transitionDelay: innerOpen ? `${transitionDuration}ms` : '', position: 'fixed', inset: 0 }}

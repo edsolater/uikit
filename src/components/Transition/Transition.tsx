@@ -1,12 +1,12 @@
 import { flap, shrinkToValue } from '@edsolater/fnkit'
-import { useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '@edsolater/hookit'
+import { addEventListener, useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '@edsolater/hookit'
 import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { onEvent } from '../../functions/dom/addEventListener'
 import { mergeProps } from '../../functions/react'
 import { ICSSObject } from '../../styles'
 import { MayArray, MayFunction } from '../../typings/tools'
 import { AddProps } from '../AddProps'
-import { DivProps } from "../Div/type"
+import { DivProps } from '../Div/type'
 
 export * from './effects'
 const TransitionPhaseProcessIn = 'during-process'
@@ -94,7 +94,7 @@ export function Transition({
 
   ...orginalDivProps
 }: TransitionProps) {
-  const contentDivRef = useCallbackRef<HTMLElement>()
+  const contentDivRef = useCallbackRef<HTMLElement | undefined>()
   const transitionPhaseProps = useMemo(() => {
     const baseTransitionICSS = {
       transition: `${cssTransitionDurationMs}ms`,
@@ -105,25 +105,25 @@ export function Transition({
         flap(presets).map((i) => shrinkToValue(i)?.enterFromProps),
         duringEnterProps,
         enterFromProps,
-        { icss: baseTransitionICSS } as DivProps
+        { style: baseTransitionICSS } as DivProps
       ),
       enterTo: mergeProps(
         flap(presets).map((i) => shrinkToValue(i)?.enterToProps),
         duringEnterProps,
         enterToProps,
-        { icss: baseTransitionICSS } as DivProps
+        { style: baseTransitionICSS } as DivProps
       ),
       leaveFrom: mergeProps(
         flap(presets).map((i) => shrinkToValue(i)?.leaveFromProps),
         duringLeaveProps,
         leaveFromProps,
-        { icss: baseTransitionICSS } as DivProps
+        { style: baseTransitionICSS } as DivProps
       ),
       leaveTo: mergeProps(
         flap(presets).map((i) => shrinkToValue(i)?.leaveToProps),
         duringLeaveProps,
         leaveToProps,
-        { icss: baseTransitionICSS } as DivProps
+        { style: baseTransitionICSS } as DivProps
       )
     } as Record<TransitionApplyPropsTimeName, DivProps>
   }, [enterFromProps, enterToProps, duringEnterProps, leaveFromProps, leaveToProps, duringLeaveProps])
@@ -158,24 +158,36 @@ export function Transition({
   }, [contentDivRef])
 
   // make inTransition during state sync with UI event
+  // const hasSetOnChangeCallback = useRef(false)
   useEffect(() => {
+    // if (hasSetOnChangeCallback.current) return
     contentDivRef.onChange(
       (dom) => {
-        onEvent(dom, 'transitionend', () => setCurrentPhase(targetPhaseSignal()), { targetSelf: true }) // not event fired by bubbled
-        onEvent(dom, 'transitionstart', () => setCurrentPhase('during-process'), { targetSelf: true }) // not event fired by bubbled
+        addEventListener(dom, 'transitionend', () => setCurrentPhase(targetPhaseSignal()), {
+          onlyTargetIsSelf: true /* TODO - add feature: attach max one time  */
+        }) // not event fired by bubbled
       },
       { hasInit: true }
     )
+    // hasSetOnChangeCallback.current = true
   }, [contentDivRef])
+
+  useEffect(() => {
+    if (targetPhase !== currentPhase && currentPhase !== 'during-process') {
+      setCurrentPhase('during-process')
+    }
+  }, [targetPhase])
 
   // invoke callbacks
   useRecordedEffect(
     ([prevCurrentPhase]) => {
       if (currentPhase === 'shown' && targetPhase === 'shown') {
+        contentDivRef.current?.clientHeight // force GPU render frame
         onAfterEnter?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
       if (currentPhase === 'hidden' && targetPhase === 'hidden') {
+        contentDivRef.current?.clientHeight // force GPU render frame
         onAfterLeave?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
@@ -183,6 +195,7 @@ export function Transition({
         (currentPhase === 'hidden' || (currentPhase === 'during-process' && prevCurrentPhase === 'during-process')) &&
         targetPhase === 'shown'
       ) {
+        contentDivRef.current?.clientHeight // force GPU render frame
         onBeforeEnter?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
 
@@ -190,6 +203,7 @@ export function Transition({
         (currentPhase === 'shown' || (currentPhase === 'during-process' && prevCurrentPhase === 'during-process')) &&
         targetPhase === 'hidden'
       ) {
+        contentDivRef.current?.clientHeight // force GPU render frame
         onBeforeLeave?.({ from: currentPhase, to: targetPhase, contentDivRef })
       }
     },
