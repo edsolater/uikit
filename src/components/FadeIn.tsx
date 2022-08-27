@@ -2,10 +2,11 @@ import { ReactNode, useRef } from 'react'
 
 import { CSSStyle, cssTransitionTimeFnOutQuadratic } from '../styles'
 import { Div } from './Div/Div'
-import { DivProps } from "./Div/type"
+import { DivProps } from './Div/type'
 import { TransitionProps, Transition } from './Transition/Transition'
 import { opacityInOut } from './Transition/effects'
 import { useInitFlagDetector } from '@edsolater/hookit'
+import { inClient } from '../functions/isSSR'
 
 type FadeInProps = {
   heightOrWidth?: 'height' | 'width'
@@ -42,8 +43,6 @@ export function FadeIn({
   onAfterLeave
 }: FadeInProps) {
   const init = useInitFlagDetector()
-
-  const contentCachedTrueHeightOrWidth = useRef<number>()
   const innerChildren = useRef<ReactNode>(children)
   if (children) innerChildren.current = children // cache for close transition
 
@@ -53,6 +52,7 @@ export function FadeIn({
     baseTransitionStyle,
     show && !appear ? undefined : { position: 'absolute', opacity: '0' }
   ] as DivProps['style'])
+  const handleFadeInCSS = useFadeInPaddingEffect({ heightOrWidth })
   return (
     <Transition
       show={Boolean(show)}
@@ -62,46 +62,48 @@ export function FadeIn({
       presets={transitionPresets}
       style={innerStyle.current}
       onBeforeEnter={({ contentDivRef: contentRef, from }) => {
-        contentRef.current?.style.removeProperty('position')
-        contentRef.current?.style.removeProperty('opacity')
+        if (!contentRef.current) return
+
+        contentRef.current.style.removeProperty('position')
+        contentRef.current.style.removeProperty('opacity')
         if (ignoreEnterTransition) return
         if (from === 'during-process') {
-          contentRef.current?.style.setProperty(heightOrWidth, `${contentCachedTrueHeightOrWidth.current}px`)
+          handleFadeInCSS.toOriginal(contentRef.current)
         } else {
-          contentRef.current?.style.setProperty('transition-property', 'none') // if element self has width(224px for example), it will have no effect to set width 0 then set with 224px
-          contentCachedTrueHeightOrWidth.current =
-            contentRef.current?.[heightOrWidth === 'height' ? 'clientHeight' : 'clientWidth']
-          // TODO: should also transition margin-inline and padding-inline
-          contentRef.current?.style.setProperty(heightOrWidth, '0')
-          contentRef.current?.clientHeight // force GPU to reflow this frame
-          contentRef.current?.style.removeProperty('transition-property')
-          contentRef.current?.style.setProperty(heightOrWidth, `${contentCachedTrueHeightOrWidth.current}px`)
+          contentRef.current.style.setProperty('transition-property', 'none') // if element self has width(224px for example), it will have no effect to set width 0 then set with 224px
+          handleFadeInCSS.toZero(contentRef.current, { recordValue: true })
+          contentRef.current.clientHeight // force GPU to reflow this frame
+          contentRef.current.style.removeProperty('transition-property')
+          handleFadeInCSS.toOriginal(contentRef.current)
         }
       }}
       onAfterEnter={({ contentDivRef: contentRef }) => {
+        if (!contentRef.current) return
+
         if (init && !haveInitTransition) {
-          contentRef.current?.style.removeProperty('position')
-          contentRef.current?.style.removeProperty('opacity')
+          contentRef.current.style.removeProperty('position')
+          contentRef.current.style.removeProperty('opacity')
         }
-        contentRef.current?.style.removeProperty(heightOrWidth)
+        handleFadeInCSS.clearProperty(contentRef.current)
         onAfterEnter?.()
       }}
       onBeforeLeave={({ contentDivRef: contentRef, from }) => {
+        if (!contentRef.current) return
+
         if (ignoreLeaveTransition) return
         if (from === 'during-process') {
-          contentRef.current?.style.setProperty(heightOrWidth, '0')
+          handleFadeInCSS.toZero(contentRef.current)
         } else {
-          contentCachedTrueHeightOrWidth.current =
-            contentRef.current?.[heightOrWidth === 'height' ? 'clientHeight' : 'clientWidth']
-          contentRef.current?.style.setProperty(heightOrWidth, `${contentCachedTrueHeightOrWidth.current}px`)
-          contentRef.current?.clientHeight
-          contentRef.current?.style.setProperty(heightOrWidth, '0')
+          handleFadeInCSS.toOriginal(contentRef.current, { recordValue: true })
+          contentRef.current.clientHeight
+          handleFadeInCSS.toZero(contentRef.current)
         }
       }}
       onAfterLeave={({ contentDivRef: contentRef }) => {
-        contentRef.current?.style.removeProperty(heightOrWidth)
-        contentRef.current?.style.setProperty('position', 'absolute')
-        contentRef.current?.style.setProperty('opacity', '0')
+        if (!contentRef.current) return
+        handleFadeInCSS.clearProperty(contentRef.current)
+        contentRef.current.style.setProperty('position', 'absolute')
+        contentRef.current.style.setProperty('opacity', '0')
         innerStyle.current = [baseTransitionStyle, { position: 'absolute', opacity: '0' }] as DivProps['style']
         onAfterLeave?.()
       }}
@@ -109,4 +111,33 @@ export function FadeIn({
       {hasWrapper ? <Div {...propsOfWrapper}>{innerChildren.current}</Div> : innerChildren.current}
     </Transition>
   )
+}
+function useFadeInPaddingEffect({ heightOrWidth }: { heightOrWidth: 'height' | 'width' }) {
+  const contentCachedTrueHeightOrWidth = useRef<number>()
+  const contentCachedTruePadding = useRef<string>()
+  return {
+    toZero: (el: HTMLElement, options?: { recordValue?: boolean }) => {
+      if (options?.recordValue) {
+        contentCachedTrueHeightOrWidth.current = el[heightOrWidth === 'height' ? 'clientHeight' : 'clientWidth'] // cache for from 'during-process' fade in can't get true height
+        // cache for from 'during-process' fade in can't get true padding
+        contentCachedTruePadding.current = getComputedStyle(el).padding
+      }
+      el.style.setProperty(heightOrWidth, '0')
+      el.style.setProperty('padding', '0')
+    },
+    toOriginal: (el: HTMLElement, options?: { recordValue?: boolean }) => {
+      if (options?.recordValue) {
+        contentCachedTrueHeightOrWidth.current = el[heightOrWidth === 'height' ? 'clientHeight' : 'clientWidth'] // cache for from 'during-process' fade in can't get true height
+        // cache for from 'during-process' fade in can't get true padding
+        contentCachedTruePadding.current = getComputedStyle(el).padding
+      }
+      contentCachedTrueHeightOrWidth.current &&
+        el.style.setProperty(heightOrWidth, `${contentCachedTrueHeightOrWidth.current}px`)
+      contentCachedTruePadding.current && el.style.setProperty('padding', contentCachedTruePadding.current)
+    },
+    clearProperty: (el: HTMLElement) => {
+      el.style.removeProperty(heightOrWidth)
+      el.style.removeProperty('padding')
+    }
+  }
 }

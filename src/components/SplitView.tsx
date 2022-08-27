@@ -5,7 +5,7 @@ import { setInlineStyle } from '../functions/dom/setCSS'
 import { assertFunctionNotInvokeTooFrequently } from '../functions/fnkit/assertFunctionNotInvokeTooFrequently'
 import { mapElementChildren } from '../functions/react'
 import { Div } from './Div/Div'
-import { DivProps } from "./Div/type"
+import { DivProps } from './Div/type'
 import { createDataTag, htmlHasTag } from './Div/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps } from './Row/Row'
@@ -38,7 +38,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
         if (!nextWindowItem) return
         let initWidth = nextWindowItem.clientWidth
         let initHeight = nextWindowItem.clientHeight
-        const { cancel } = attachPointerMove(line, {
+        const { detatch } = attachPointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = nextWindowItem.clientWidth
@@ -51,12 +51,12 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             }
           }
         })
-        cleanFns.push(cancel)
+        cleanFns.push(detatch)
       } else {
         if (!prevWindowItem) return
         let initWidth = prevWindowItem.clientWidth
         let initHeight = prevWindowItem.clientHeight
-        const { cancel } = attachPointerMove(line, {
+        const { detatch } = attachPointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = prevWindowItem.clientWidth
@@ -69,7 +69,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             }
           }
         })
-        cleanFns.push(cancel)
+        cleanFns.push(detatch)
       }
     })
     return () => cleanFns.forEach((fn) => fn())
