@@ -1,91 +1,87 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useKeyboardShortcut, useRecordedEffect, useToggle, use2StateSyncer } from '@edsolater/hookit'
-import { ReactNode, RefObject } from 'react'
+import { ReactNode, RefObject, useEffect, useRef, useState } from 'react'
 import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
+import { ICSS } from '../styles'
 import { Div } from './Div/Div'
 import { DivProps } from './Div/type'
 import { Portal } from './Portal'
 import { Transition } from './Transition/Transition'
 
-const DIALOG_STACK_ID = 'dialog-stack'
+export const DRAWER_STACK_ID = 'drawer-stack'
 
-export interface DialogProps extends Omit<DivProps, 'children'> {
-  componentRef?: RefObject<any>
-  /** can access dialog's handler by useComponentHandler(dialogId) */
-  componentId?: string | number
+const placementClasses = {
+  'from-left': {
+    absolutePostion: { left: 0, top: 0, bottom: 0 },
+    translateFadeOut: { transform: 'translateX(-100%)' }
+  },
+  'from-bottom': {
+    absolutePostion: { left: 0, right: 0, bottom: 0 },
+    translateFadeOut: { transform: 'translateY(100%)' }
+  },
+  'from-right': {
+    absolutePostion: { right: 0, top: 0, bottom: 0 },
+    translateFadeOut: { transform: 'translateX(100%)' }
+  },
+  'from-top': {
+    absolutePostion: { left: 0, right: 0, top: 0 },
+    translateFadeOut: { transform: 'translateY(-100%)' }
+  }
+}
 
-  open: boolean
-  /** this is the className of modal card */
+export interface DrawerProps extends Omit<DivProps, 'children'> {
   children?: MayFn<ReactNode, [{ close(): void; open(): void }]>
+  open: boolean
+  placement?: 'from-left' | 'from-bottom' | 'from-top' | 'from-right'
   transitionSpeed?: 'fast' | 'normal'
   // if content is scrollable, PLEASE open it!!!, for blur will make scroll super fuzzy
   maskNoBlur?: boolean
-
   canClosedByMask?: boolean
+  onOpen?: () => void
   /** fired before close transform effect is end */
-  onCloseImmediately?(): void
+  onCloseImmediately?: () => void
   onClose?(): void
 }
 
-export type DialogComponentHandler = {
-  isOpen: boolean
-  open(): void
-  close(): void
-}
-
-// TODO: there should be a way use uncontroled `<Dialog>`
-// TODO: composiable `useComponentHandler<Handler>(key)`
-export function Dialog({
-  componentId,
-  componentRef,
-  open,
+export function Drawer({
+  className,
+  style,
   children,
+  open,
+  placement = 'from-left',
   transitionSpeed = 'normal',
   maskNoBlur,
   canClosedByMask = true,
+  onOpen,
   onCloseImmediately,
   onClose,
   ...divProps
-}: DialogProps) {
+}: DrawerProps) {
   const transitionDuration = transitionSpeed === 'fast' ? 200 : 300
-  const [innerOpen, { set: setInnerOpen, on: turnOnInnerOpen, off: turnOffInnerOpen }] = useToggle(open) // for outer may have open or may not
+
+  // for onCloseTransitionEnd
+  // during leave transition, open is still true, but innerOpen is false, so transaction will happen without props:open has change (if open is false, React may destory this component immediately)
+  const [innerOpen, setInnerOpen] = useState(open)
+
+  useEffect(() => {
+    if (open) onOpen?.()
+  }, [open])
+
+  const openDrawer = () => setInnerOpen(true)
+  const closeDrawer = () => setInnerOpen(false)
 
   use2StateSyncer({
     state1: open,
     state2: innerOpen,
     onState1Changed: (open) => {
-      setInnerOpen(Boolean(open))
+      open ? openDrawer() : closeDrawer()
     }
   })
-
-  // load componnent handler
-  useComponentHandlerRegister<DialogComponentHandler>(
-    { componentId, componentRef },
-    {
-      isOpen: innerOpen,
-      open: turnOnInnerOpen,
-      close: turnOffInnerOpen
-    }
-  )
-
-  // bind keyboar shortcut
-  const { abortKeyboard } = useKeyboardShortcut(document.documentElement, {
-    'Escape': turnOffInnerOpen
-  })
-  useRecordedEffect(
-    ([prevInnerOpen]) => {
-      const userTryToClose = prevInnerOpen == true && innerOpen == false
-      if (userTryToClose) {
-        abortKeyboard()
-      }
-    },
-    [innerOpen]
-  )
 
   return (
     <Portal
-      id={DIALOG_STACK_ID}
-      zIndex={1000}
+      id={DRAWER_STACK_ID}
+      zIndex={1010}
       icss={{
         position: 'fixed',
         inset: 0,
@@ -106,21 +102,21 @@ export function Dialog({
         icss={{ transitionDelay: innerOpen ? `${transitionDuration}ms` : '', position: 'fixed', inset: 0 }}
       >
         <Div
-          className={'Dialog-mask'}
+          className={'Drawer-mask'}
           icss={{
             background: '#0000005c',
             backdropFilter: maskNoBlur ? undefined : 'blur(10px)',
             pointerEvents: canClosedByMask ? undefined : 'none'
           }}
-          onClick={turnOffInnerOpen}
+          onClick={closeDrawer}
         />
       </Transition>
 
       <Transition
-        className={'Dialog-content'}
+        className={'Drawer-content'}
         show={innerOpen}
-        fromProps={{ icss: { opacity: 0, transform: 'scale(0.95)' } }}
-        toProps={{ icss: { opacity: 1, transform: 'scale(1)' } }}
+        fromProps={{ icss: placementClasses[placement].translateFadeOut }}
+        toProps={{}}
         cssTransitionDurationMs={transitionDuration}
       >
         <Div
@@ -129,15 +125,13 @@ export function Dialog({
             {
               position: 'fixed',
               inset: 0,
-              display: 'grid',
-              placeContent: 'center',
               pointerEvents: 'none',
               '*': { pointerEvents: 'initial' }
             },
             divProps.icss
           ]}
         >
-          {shrinkToValue(children, [{ close: turnOffInnerOpen, open: turnOnInnerOpen }])}
+          {shrinkToValue(children, [{ close: closeDrawer, open: openDrawer }])}
         </Div>
       </Transition>
     </Portal>
