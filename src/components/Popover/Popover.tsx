@@ -11,6 +11,9 @@ import { Transition } from '../Transition/Transition'
 import { PopupLocationInfo, usePopoverLocation } from './useLocationCalculator'
 import { PopoverTiggerBy, PopoverTriggerControls, usePopoverTrigger } from './usePopoverTrigger'
 
+export * from './useLocationCalculator'
+export * from './usePopoverTrigger'
+
 export type PopoverPlacement =
   | 'left'
   | 'left-top'
@@ -30,8 +33,13 @@ export interface PopoverProps {
   /** after delay time, `<Popover>` will be trigger */
   triggerDelay?: number
   closeDelay?: number
+
+  /** for direct child */
+  className?: string
   /** usually it's for debug */
   forceOpen?: boolean
+  /** only affact init render */
+  defaultOpen?: boolean
   canOpen?: boolean
   componentRef?: RefObject<any>
   placement?: PopoverPlacement
@@ -66,6 +74,7 @@ export type PopoverHandles = {
 } & PopoverTriggerControls
 
 export function Popover({
+  className,
   children,
   forceOpen,
   placement = 'top',
@@ -73,6 +82,7 @@ export function Popover({
   triggerDelay,
   closeDelay,
   canOpen = true,
+  defaultOpen,
   componentRef,
   cornerOffset,
   popoverGap,
@@ -84,6 +94,7 @@ export function Popover({
 
   const { isPanelShowed, controls } = usePopoverTrigger(buttonRef, panelRef, {
     disabled: !canOpen,
+    defaultOpen,
     triggerDelay,
     closeDelay,
     triggerBy
@@ -122,13 +133,12 @@ export function Popover({
         id={POPOVER_STACK_ID}
         zIndex={1030}
         icss={{
-          pointerEvents: 'none',
           '*': {
             pointerEvents: 'initial'
           }
         }}
       >
-        <Div className_={Popover.name}>
+        <Div className_={[Popover.name, className]}>
           <Transition
             show={forceOpen || isPanelShowed}
             fromProps={{ icss: { opacity: 0, transform: 'scale(0.5)' } }}
