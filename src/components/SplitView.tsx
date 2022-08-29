@@ -38,7 +38,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
         if (!nextWindowItem) return
         let initWidth = nextWindowItem.clientWidth
         let initHeight = nextWindowItem.clientHeight
-        const { detatch } = attachPointerMove(line, {
+        const { cancel } = attachPointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = nextWindowItem.clientWidth
@@ -51,12 +51,12 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             }
           }
         })
-        cleanFns.push(detatch)
+        cleanFns.push(cancel)
       } else {
         if (!prevWindowItem) return
         let initWidth = prevWindowItem.clientWidth
         let initHeight = prevWindowItem.clientHeight
-        const { detatch } = attachPointerMove(line, {
+        const { cancel } = attachPointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = prevWindowItem.clientWidth
@@ -69,7 +69,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             }
           }
         })
-        cleanFns.push(detatch)
+        cleanFns.push(cancel)
       }
     })
     return () => cleanFns.forEach((fn) => fn())
