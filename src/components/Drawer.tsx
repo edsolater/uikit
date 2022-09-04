@@ -104,7 +104,7 @@ export function Drawer({
         <Div
           className={'Drawer-mask'}
           icss={{
-            background: '#0000005c',
+            background: '#0000001c',
             backdropFilter: maskNoBlur ? undefined : 'blur(10px)',
             pointerEvents: canClosedByMask ? undefined : 'none'
           }}
