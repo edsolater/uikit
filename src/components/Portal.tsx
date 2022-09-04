@@ -42,16 +42,16 @@ export function Portal({ id: portalId, zIndex, ...divProps }: PortalProps) {
 }
 
 let inserted = false
+
 function insertPointerNone() {
   if (!inClient) return
   if (inserted) return
   inserted = true
   const styleEl = document.createElement('style')
-  console.log('insert')
 
   // Append <style> element to <head>
   document.head.appendChild(styleEl)
 
-  styleEl.sheet?.insertRule(`.self-pointer-events-none {pointer-events:none}`)
-  styleEl.sheet?.insertRule(`.self-pointer-events-none * {pointer-events:initial}`)
+  styleEl.sheet?.insertRule(`:where(.self-pointer-events-none) {pointer-events:none}`)
+  styleEl.sheet?.insertRule(`:where(.self-pointer-events-none) * {pointer-events:unset}`) // :where() always has 0 specificity -- MDN
 }

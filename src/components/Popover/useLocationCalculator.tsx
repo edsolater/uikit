@@ -131,12 +131,10 @@ export function usePopoverLocation(
 ): { locationInfo: PopupLocationInfo | undefined; updateLocation: () => void } {
   const [panelCoordinates, setPanelCoordinates] = useState<PopupLocationInfo>()
 
-  console.log('panelRef.current: 112', panelRef.current)
   const update = useCallback(() => {
     // must in some computer
     if (!globalThis.document) return
     if (!buttonRef.current || !panelRef.current) return
-    console.log('panelRef.current: ', panelRef.current)
     setPanelCoordinates(
       calcPopupPanelLocation({
         buttonElement: buttonRef.current,
