@@ -44,7 +44,9 @@ const compositeMap = {
 
 export function composifyICSS(icss: ICSS): ICSS {
   if (isArray(icss)) return icss.map(composifyICSS)
-  return isObject(icss) && !isFunction(icss) ? map(icss, (v, k) => compositeMap[k]?.toCompositeValue(v) ?? v) : icss
+  return isObject(icss) && !isFunction(icss)
+    ? map(icss, (v, k) => compositeMap[k as string]?.toCompositeValue(v) ?? v)
+    : icss
 }
 
 const a: CSSObject | ((preResult: CSSObject) => CSSObject) = { a: 's' }

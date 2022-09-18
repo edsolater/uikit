@@ -6,7 +6,7 @@ import { pickChildByType } from '../../functions/react'
 import { AddProps } from '../AddProps'
 import { Div } from '../Div/Div'
 import { Portal } from '../Portal'
-import { SubComponentProps, SubComponentRoot } from '../SubComponent'
+import { SubComponentProps, SubComponent } from '../SubComponent'
 import { Transition } from '../Transition/Transition'
 import { PopupLocationInfo, usePopoverLocation } from './useLocationCalculator'
 import { PopoverTiggerBy, PopoverTriggerControls, usePopoverTrigger } from './usePopoverTrigger'
@@ -173,7 +173,7 @@ export type PopoverButtonProps = {
 
 export function PopoverButton({ $isRenderByMain, ...subcomponentProps }: PopoverButtonProps) {
   if (!$isRenderByMain) return null
-  return <SubComponentRoot {...subcomponentProps} className={[PopoverButton.name, subcomponentProps.className]} />
+  return <SubComponent {...subcomponentProps} className={[PopoverButton.name, subcomponentProps.className]} />
 }
 
 export type PopoverPanelProps = {
@@ -194,7 +194,7 @@ export type PopoverPanelProps = {
 
 export function PopoverPanel({ $isRenderByMain, children, ...subcomponentProps }: PopoverPanelProps) {
   if (!$isRenderByMain) return null
-  return <SubComponentRoot {...subcomponentProps}>{children as ReactNode /* fake */}</SubComponentRoot>
+  return <SubComponent {...subcomponentProps}>{children as ReactNode /* fake */}</SubComponent>
 }
 
 Popover.Panel = PopoverPanel

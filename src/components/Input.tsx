@@ -15,7 +15,7 @@ import mergeFunction from '../functions/mergeFunction'
 import { splice } from '../functions/splice.temp'
 import { Div } from './Div/Div'
 import { DivProps } from './Div/type'
-import { SubComponentRoot } from './SubComponent'
+import { SubComponent } from './SubComponent'
 
 export interface InputHandler {
   focus(): void
@@ -329,5 +329,5 @@ function AutoWidenInput({
 
 // TODO: useInputCheckerRef
 export function FormFieldBaseItem({ children, ...divProps }: { children?: ReactNode } & DivProps) {
-  return <SubComponentRoot {...divProps}>{children}</SubComponentRoot>
+  return <SubComponent {...divProps}>{children}</SubComponent>
 }

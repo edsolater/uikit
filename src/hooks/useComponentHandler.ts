@@ -13,7 +13,7 @@ export function useComponentHandler<Handler>(id: string | number) {
 }
 
 /** uikit direct user regist the handler */
-export function useComponentHandlerRegister<Handler>(
+export function useComponentHandlerRegister<Handler extends object>(
   label: { componentId?: string | number; componentRef: RefObject<any> | undefined },
   inputHandler: MayFn<Handler>
 ) {

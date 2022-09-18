@@ -36,6 +36,7 @@ export function changeReactChildren<T extends AnyFn>(oldChildren: ReactNode, mer
 
     return React.cloneElement(
       child,
+      //@ts-expect-error ignore
       mergeProps(child.props, shrinkToValue(matchedConfig.props, [child.props, child, index]))
     )
   })

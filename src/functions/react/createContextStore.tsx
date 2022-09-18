@@ -282,7 +282,7 @@ function createContextStoreCore<T extends StoreTemplate, SubHookName extends str
       useStoreSetters: () => useContext(SettersContext),
       getStoreState: () => currentStoreState
     },
-    ...map(options?.subHooks ?? {}, (value, subHookName) => () => useContext(SubHooksContexts[subHookName]))
+    ...map(options?.subHooks ?? {}, (value, subHookName) => () => useContext(SubHooksContexts[subHookName as any]))
   } as any
 }
 
@@ -327,7 +327,7 @@ export const createContextStore = <T extends StoreTemplate>(
   const { ContextProvider, useStore, useStoreSetters, useStoreValues, getStoreState, ...subHooks } =
     createContextStoreCore(initStoreObject, {
       ...options,
-      subHooks: map(initStoreObject, (defaultValue, stateName) => [stateName])
+      subHooks: map(initStoreObject, (defaultValue, stateName) => [stateName as any])
     })
 
   const useSubHooks = ((stateName: keyof T) => {

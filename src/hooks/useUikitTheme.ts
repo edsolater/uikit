@@ -1,6 +1,4 @@
-import React from 'react'
-import { SKeyof } from '@edsolater/fnkit'
-import { createXStore, useXStore } from '@edsolater/xstore'
+import { createXAtom, useXStore } from '@edsolater/xstore'
 import { ButtonProps } from '../components/Button'
 import { DivProps } from "../components/Div/type"
 
@@ -9,7 +7,7 @@ type UIKitThemeProps = {
   Button: ButtonProps
 }
 
-const uikitThemeAtom = createXStore<UIKitThemeProps>({
+const uikitThemeAtom = createXAtom<UIKitThemeProps>({
   name: 'uikitTheme'
 })
 

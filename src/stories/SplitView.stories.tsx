@@ -1,10 +1,11 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
+import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
 import { Div } from '../components/Div/Div'
 import { DivProps } from "../components/Div/type"
-import SplitView from '../components/SplitView'
-import { cssColors, cssShadow, icssRow } from '../styles'
+import {SplitView} from '../components/SplitView'
+import { cssColors, cssShadow } from '../styles'
 
 const storySettings = {
   component: SplitView,
@@ -40,7 +41,7 @@ const ExampleContentCard2 = ({ text, ...divProps }: { text: string } & DivProps)
     {...divProps}
     icss={[
       { padding: '16px 32px' },
-      icssRow({ justify: 'space-between', items: 'center', gap: 32 }),
+      cssRow({ justifyContent: 'space-between', alignItems: 'center', gap: 32 }),
       { background: cssColors.cardBgDark, boxShadow: cssShadow.xl },
       divProps.icss
     ]}
@@ -64,7 +65,7 @@ XRow3slot.args = {
   dir: 'row',
   children: [
     <ExampleContentCard1 text='A' />,
-    <ExampleContentCard2 tag={SplitView.flexibleView} text='hello world' />,
+    <ExampleContentCard2 tag={SplitView.tag.flexiable} text='hello world' />,
     <ExampleContentCard2 text='third' />
   ]
 }
@@ -83,7 +84,7 @@ YCol3slot.args = {
   dir: 'col',
   children: [
     <ExampleContentCard1 text='A' />,
-    <ExampleContentCard2 tag={SplitView.flexibleView} text='hello world' />,
+    <ExampleContentCard2 tag={SplitView.tag.flexiable} text='hello world' />,
     <ExampleContentCard2 text='third' />
   ]
 }

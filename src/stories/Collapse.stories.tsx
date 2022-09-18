@@ -1,9 +1,10 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
+import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
 import { Collapse, CollapseBody, CollapseFace } from '../components/Collapse'
 import { Div } from '../components/Div/Div'
-import { icssRow, cssColors, cssShadow } from '../styles'
+import { cssColors, cssShadow } from '../styles'
 
 const storySettings = {
   component: Collapse,
@@ -18,7 +19,7 @@ const Template: ComponentStory<typeof Collapse> = (props) => {
           {(open) => (
             <Card
               icss={[
-                icssRow({ justify: 'space-between', items: 'center', gap: 32 }),
+                cssRow({ justifyContent: 'space-between', alignItems: 'center', gap: 32 }),
                 { background: cssColors.cardBgDark, boxShadow: cssShadow.xl }
               ]}
             >
@@ -30,7 +31,7 @@ const Template: ComponentStory<typeof Collapse> = (props) => {
         <CollapseBody>
           <Card
             icss={[
-              { display: 'flex', flexDirection: 'column', alignItems:'center', gap: 32 },
+              { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32 },
               { background: cssColors.cardBgDark, boxShadow: cssShadow.xl }
             ]}
           >
