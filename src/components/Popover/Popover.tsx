@@ -10,6 +10,7 @@ import { SubComponentProps, SubComponent } from '../SubComponent'
 import { Transition } from '../Transition/Transition'
 import { PopupLocationInfo, usePopoverLocation } from './useLocationCalculator'
 import { PopoverTiggerBy, PopoverTriggerControls, usePopoverTrigger } from './usePopoverTrigger'
+import React from 'react'
 
 export * from './useLocationCalculator'
 export * from './usePopoverTrigger'

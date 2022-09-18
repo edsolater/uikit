@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { AddProps } from './AddProps'
 import { Div } from './Div/Div'
 import { DivProps } from './Div/type'
 

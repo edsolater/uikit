@@ -1,5 +1,6 @@
 import { isNumberish, Numberish, toString } from '@edsolater/fnkit'
 import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
+import React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Input, InputProps } from './Input'
 

@@ -1,5 +1,6 @@
 import { shrinkToValue } from '@edsolater/fnkit'
 import { useClickOutside, useIsomorphicLayoutEffect, useToggle } from '@edsolater/hookit'
+import React from 'react'
 import { ReactNode, useMemo, useRef } from 'react'
 import { pickChildByType } from '../functions/react'
 import { icssClickable } from '../styles'

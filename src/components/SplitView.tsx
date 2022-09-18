@@ -9,6 +9,7 @@ import { DivProps } from './Div/type'
 import { createDataTag, htmlHasTag } from './Div/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps } from './Row/Row'
+import React from 'react'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 /**

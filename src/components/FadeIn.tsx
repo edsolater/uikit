@@ -7,6 +7,7 @@ import { TransitionProps, Transition } from './Transition/Transition'
 import { opacityInOut } from './Transition/effects'
 import { useInitFlagDetector } from '@edsolater/hookit'
 import { inClient } from '../functions/isSSR'
+import React from 'react'
 
 type FadeInProps = {
   heightOrWidth?: 'height' | 'width'

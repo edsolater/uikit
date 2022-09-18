@@ -1,3 +1,4 @@
+import React from 'react'
 import { CSSProperties } from 'react'
 import { Div } from './Div/Div'
 import { DivProps } from "./Div/type"

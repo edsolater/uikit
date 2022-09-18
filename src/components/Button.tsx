@@ -1,4 +1,5 @@
 import { addDefault, isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import React from 'react'
 import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
 import { mergeProps } from '../functions/react'
 import { useUikitTheme } from '../hooks/useUikitTheme'

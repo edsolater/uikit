@@ -1,5 +1,6 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useKeyboardShortcut, useRecordedEffect, useToggle, use2StateSyncer } from '@edsolater/hookit'
+import React from 'react'
 import { ReactNode, RefObject, useEffect, useRef, useState } from 'react'
 import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
 import { ICSS } from '../styles'

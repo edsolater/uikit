@@ -1,3 +1,4 @@
+import React from 'react'
 import { ICSS } from '../../styles/parseCSS'
 import { Div } from '../Div/Div'
 import { DivProps } from "../Div/type"

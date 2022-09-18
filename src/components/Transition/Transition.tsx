@@ -1,5 +1,6 @@
 import { flap, shrinkToValue } from '@edsolater/fnkit'
 import { addEventListener, useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '@edsolater/hookit'
+import React from 'react'
 import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { onEvent } from '../../functions/dom/addEventListener'
 import { mergeProps } from '../../functions/react'
