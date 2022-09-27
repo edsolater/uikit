@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "outDir": "dist",
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
