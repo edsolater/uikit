@@ -16,11 +16,11 @@
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
   "dependencies": {
-    "@edsolater/fnkit": "^0.1.7",
-    "@edsolater/hookit": "^0.1.6",
-    "@edsolater/xstore": "^0.1.8",
+    "@edsolater/fnkit": "^0.1.8",
+    "@edsolater/hookit": "^0.1.10",
+    "@edsolater/xstore": "^0.1.9",
     "@emotion/css": "^11.10.0",
-    "@headlessui/react": "^1.7.2",
+    "@headlessui/react": "^1.7.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -29,12 +29,13 @@
     "@edsolater/hookit": "*",
     "@edsolater/xstore": "*",
     "@emotion/css": ">=11.9.0",
+    "@babel/core": ">7.0.0",
     "react": ">18.0.0",
     "react-dom": ">18.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.19.1",
-    "@next/bundle-analyzer": "^12.3.0",
+    "@babel/core": "^7.19.3",
+    "@next/bundle-analyzer": "^12.3.1",
     "@storybook/addon-actions": "^6.5.12",
     "@storybook/addon-essentials": "^6.5.12",
     "@storybook/addon-interactions": "^6.5.12",
@@ -42,12 +43,12 @@
     "@storybook/manager-webpack5": "^6.5.12",
     "@storybook/node-logger": "^6.5.12",
     "@storybook/react": "^6.5.12",
-    "@types/node": "^18.7.18",
-    "@types/react": "^18.0.20",
+    "@types/node": "^18.8.2",
+    "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "prettier": "^2.7.1",
     "storybook": "^6.5.12",
-    "tsup": "^6.1.3",
-    "typescript": "^4.8.3"
+    "tsup": "^6.2.3",
+    "typescript": "^4.8.4"
   }
 }
