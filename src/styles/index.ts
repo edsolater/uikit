@@ -1,5 +1,5 @@
 export * from './cssValues'
 export * from './parseCSS'
 export * from './type'
-
+export * from './globalStyle'
 export * from './icss'

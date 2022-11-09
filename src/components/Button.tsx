@@ -8,7 +8,7 @@ import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString, CSSStyle } from '../styles/type'
 import { MayFunction } from '../typings/tools'
 import { Div } from './Div/Div'
-import { DivProps } from "./Div/type"
+import { DivProps } from './Div/type'
 
 type BooleanLike = unknown
 
@@ -139,7 +139,7 @@ export function Button(props: ButtonProps) {
       {...restProps}
       as='button'
       onClick={onClick}
-      className_='Button'
+      className_={Button.name}
       htmlProps_={{ type: 'button' }}
       icss_={[
         { transition: `200ms ${cssTransitionTimeFnOutCubic}` }, // make it's change smooth
