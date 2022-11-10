@@ -7,7 +7,6 @@ export interface ColProps extends DivProps {}
 
 /**
  * flex box
- * @deprecated just use `<Div>`
  */
 export function Col({ ...divProps }: ColProps) {
   return <Div {...divProps} icss_={cssCol()} className_='Col' />

@@ -83,8 +83,8 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
    * as a controlled formkit, U should avoid using it if U can
    * it may be confusing with onUserInput sometimes
    */
-  onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void
-  onUserInput?: (text: string | undefined, el: HTMLInputElement) => void
+  onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void// TODO: should be onInput (by(property):'any')
+  onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
   onClick?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
