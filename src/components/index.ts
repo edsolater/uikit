@@ -9,6 +9,7 @@ export * from './Transition/Transition'
 export * from './Col/Col'
 export * from './Grid/Grid'
 export * from './Row/Row'
+export * from './Group'
 
 export * from './Portal'
 export * from './Collapse'

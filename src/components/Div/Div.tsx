@@ -76,7 +76,10 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
 
 const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
+
 Div.tag = {
   noRender: noRenderTag,
   offscreen: offscreenTag
 }
+
+function useDivId(divProps) {}
