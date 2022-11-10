@@ -14,34 +14,36 @@ export * from './type'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName>) => {
+  const mergedProps = mergeShallowProps(props)
   const isHTMLTag = isString(props.as) || isUndefined(props.as)
   const divRef = useRef<HTMLTagMap[TagName]>(null)
 
   // tag
-  const hasNoRenderTag = hasTag(props.tag, noRenderTag) || hasTag(props.tag_, noRenderTag)
-
+  const hasNoRenderTag = hasTag(mergedProps.tag, noRenderTag)
   // TODO-improve DOM Cache
   if (hasNoRenderTag) return null
 
-  const hasOffscreenTag = hasTag(props.tag, offscreenTag) || hasTag(props.tag_, offscreenTag)
+  const hasOffscreenTag = hasTag(mergedProps.tag, offscreenTag)
 
-  // gesture handler (stable props)
-  if ('onHover' in props || 'onHoverStart' in props || 'onHoverEnd' in props || 'triggerDelay' in props) {
-    useHover(divRef, props)
+  // gesture handler (stable mergedProps)
+  if (
+    'onHover' in mergedProps ||
+    'onHoverStart' in mergedProps ||
+    'onHoverEnd' in mergedProps ||
+    'triggerDelay' in mergedProps
+  ) {
+    useHover(divRef, mergedProps)
   }
 
   return isHTMLTag
     ? createElement(
         // @ts-expect-error assume a function return ReactNode is a Component
-        props.as ?? props.as_ ?? 'div',
+        mergedProps.as ?? 'div',
         {
-          ...((props.htmlProps || props.htmlProps_) &&
-            mergeProps(...shakeNil(flapDeep([props.htmlProps_, props.htmlProps])))),
+          ...(mergedProps.htmlProps && mergeProps(...shakeNil(flapDeep(mergedProps.htmlProps)))),
           className: [
-            classname(props.className_),
-            classname(props.className),
-            parseCSS(props.icss_),
-            parseCSS(props.icss),
+            classname(mergedProps.className),
+            parseCSS(mergedProps.icss),
             hasOffscreenTag && {
               position: 'absolute',
               top: -9999,
@@ -53,24 +55,21 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
             .filter(Boolean)
             .join(' '),
           ref: (el) =>
-            el && weakCacheInvoke(el, () => loadRef(mergeRefs(...flapDeep([props.domRef_, props.domRef, divRef])), el)),
-          style: props.style || props.style_ ? merge(...flapDeep(shakeNil([props.style_, props.style]))) : undefined,
-          onClick:
-            props.onClick || props.onClick_
-              ? (ev) =>
-                  flapDeep([props.onClick_, props.onClick]).map((onClick) =>
-                    onClick?.({ event: ev, ev, el: ev.currentTarget })
-                  )
-              : undefined,
-          ...toDataset(props.tag, props.tag_)
+            el && weakCacheInvoke(el, () => loadRef(mergeRefs(...flapDeep([mergedProps.domRef, divRef])), el)),
+          style: mergedProps.style ? merge(...flapDeep(shakeNil(mergedProps.style))) : undefined,
+          onClick: mergedProps.onClick
+            ? (ev) =>
+                flapDeep([mergedProps.onClick]).map((onClick) => onClick?.({ event: ev, ev, el: ev.currentTarget }))
+            : undefined,
+          ...toDataset(mergedProps.tag)
         },
-        props.children ?? (props.children_ as any)
+        mergedProps.children
       )
     : createElement(
         // @ts-expect-error assume a function return ReactNode is a Component
-        props.as ?? props.as_,
-        omit(props, ['as', 'as_']),
-        props.children ?? props.children_
+        mergedProps.as,
+        omit(mergedProps, ['as']),
+        mergedProps.children
       )
 }
 
@@ -82,4 +81,23 @@ Div.tag = {
   offscreen: offscreenTag
 }
 
-function useDivId(divProps) {}
+function handleDivId(divProps) {}
+
+export function mergeShallowProps<TagName extends keyof HTMLTagMap = 'div'>(
+  props: DivProps<TagName> & _DivProps<TagName>
+): DivProps<TagName> {
+  const merged = shakeNil({
+    ...props,
+    children: props.children ?? props.children_,
+    as: props.as ?? props.as_,
+
+    classname: [props.className_, props.className],
+    onClick: [props.onClick_, props.onClick],
+    domRef: [props.domRef_, props.domRef],
+    tag: [props.tag_, props.tag],
+    style: [props.style_, props.style],
+    icss: [props.icss_, props.icss],
+    htmlProps: [props.htmlProps_, props.htmlProps]
+  }) as DivProps<TagName>
+  return merged
+}
