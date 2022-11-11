@@ -18,6 +18,7 @@ specifiers:
   '@types/node': ^18.8.2
   '@types/react': ^18.0.21
   '@types/react-dom': ^18.0.6
+  immer: ^9.0.16
   prettier: ^2.7.1
   react: ^18.2.0
   react-dom: ^18.2.0
@@ -31,6 +32,7 @@ dependencies:
   '@edsolater/xstore': 0.1.9_uxnqcxesrjoamjfqilozrtnchy
   '@emotion/css': 11.10.0_@babel+core@7.19.3
   '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
+  immer: 9.0.16
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
 
@@ -7319,6 +7321,10 @@ packages:
     resolution: {integrity: sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==}
     engines: {node: '>= 4'}
     dev: true
+
+  /immer/9.0.16:
+    resolution: {integrity: sha512-qenGE7CstVm1NrHQbMh8YaSzTZTFNP3zPqr3YU0S0UY441j4bJTg4A2Hh5KAhwgaiU6ZZ1Ar6y/2f4TblnMReQ==}
+    dev: false
 
   /import-fresh/3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}

@@ -6,7 +6,7 @@ import { assertFunctionNotInvokeTooFrequently } from '../functions/fnkit/assertF
 import { mapElementChildren } from '../functions/react'
 import { Div } from './Div/Div'
 import { DivProps } from './Div/type'
-import { createDataTag, htmlHasTag } from './Div/tag'
+import { createDataTag, htmlHasTag } from './Div/utils/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps } from './Row/Row'
 import React from 'react'
