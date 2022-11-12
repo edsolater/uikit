@@ -1,6 +1,7 @@
 import { createDataTag, hasTag } from './tag'
 import { DivProps, HTMLTagMap } from '../type'
 import { produce } from 'immer'
+import { pipeHandle } from '@edsolater/fnkit'
 
 export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
@@ -36,32 +37,7 @@ export function handleDivTag<TagName extends keyof HTMLTagMap = 'div'>(
     return divProps
   }
 
-  return handleAValue(divProps, processNoRender, processOffscreen)
+  return pipeHandle(divProps, processNoRender, processOffscreen)
 }
 
 // TODO: move to fnkit
-function handleAValue<T, U>(v: T, fn1: (v: T) => U): U
-function handleAValue<T, U, W>(v: T, fn1: (v: T) => U, fn2: (v: U) => W): W
-function handleAValue<T, U, W, V>(v: T, fn1: (v: T) => U, fn2: (v: U) => W, fn3: (v: W) => V): V
-function handleAValue<T, U, W, V, X>(v: T, fn1: (v: T) => U, fn2: (v: U) => W, fn3: (v: W) => V, fn4: (v: V) => X): X
-function handleAValue<T, U, W, V, X, Y>(
-  v: T,
-  fn1: (v: T) => U,
-  fn2: (v: U) => W,
-  fn3: (v: W) => V,
-  fn4: (v: V) => X,
-  fn5: (v: X) => Y
-): Y
-function handleAValue<T, U, W, V, X, Y, Z>(
-  v: T,
-  fn1: (v: T) => U,
-  fn2: (v: U) => W,
-  fn3: (v: W) => V,
-  fn4: (v: V) => X,
-  fn5: (v: X) => Y,
-  fn6: (v: Y) => Z
-): Z
-function handleAValue<T>(v: T, ...fn: ((v: T) => T)[]): T
-function handleAValue<T>(v: T, ...fn: ((v: T) => T)[]): T {
-  return fn.reduce((value, fn) => fn(value), v)
-}

@@ -8,7 +8,6 @@ export function mergeShallowProps<TagName extends keyof HTMLTagMap = 'div'>(
     ...props,
     children: props.children ?? props.children_,
     as: props.as ?? props.as_,
-    refId: props.refId ?? props.refId_,
 
     classname: [props.className_, props.className],
     onClick: [props.onClick_, props.onClick],

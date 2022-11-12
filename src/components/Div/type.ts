@@ -28,7 +28,6 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   domRef?: MayDeepArray<
     MutableRefObject<HTMLElement | null | undefined> | ((el: HTMLElement) => void) | null | undefined
   >
-  refId?: string
   /**
    * a special props, it won't render anything for `<div>`'s DOM, just a label for {@link pickChildByTag}\
    * give a tag, means it's special in it's context
