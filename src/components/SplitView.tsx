@@ -8,7 +8,7 @@ import { Div } from './Div/Div'
 import { DivProps } from './Div/type'
 import { createDataTag, htmlHasTag } from './Div/utils/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
-import { RowProps } from './Row/Row'
+import { RowProps } from './Row'
 import React from 'react'
 
 export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }

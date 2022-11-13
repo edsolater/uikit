@@ -4,7 +4,7 @@ import React from 'react'
 import { CSSProperties, Fragment, ReactNode, RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { mergeRefs } from '../functions/react'
 
-import { Col } from './Col/Col'
+import { Col } from './Col'
 
 function useInfiniteScrollDirector(
   ref: RefObject<HTMLElement | null | undefined>,

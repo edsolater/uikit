@@ -1,7 +1,7 @@
 import { Div } from './Div/Div'
-import { DivProps } from './Div/type'
+import { DerivativeDivProps } from './Div/type'
 
-export interface GroupProps extends DivProps {
+export interface GroupProps extends DerivativeDivProps {
   name: string // for debug and css
 }
 

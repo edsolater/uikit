@@ -15,7 +15,17 @@ export function mergeShallowProps<TagName extends keyof HTMLTagMap = 'div'>(
     tag: [props.tag_, props.tag],
     style: [props.style_, props.style],
     icss: [props.icss_, props.icss],
-    htmlProps: [props.htmlProps_, props.htmlProps]
+    htmlProps: [props.htmlProps_, props.htmlProps],
+
+    children_: undefined,
+    as_: undefined,
+    classname_: undefined,
+    onClick_: undefined,
+    domRef_: undefined,
+    tag_: undefined,
+    style_: undefined,
+    icss_: undefined,
+    htmlProps_: undefined
   }) as DivProps<TagName>
   return merged
 }
