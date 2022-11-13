@@ -1,6 +1,6 @@
 {
   "name": "@edsolater/uikit",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "scripts": {
@@ -16,7 +16,7 @@
   "author": "edsolater <edsolater@qq.com>",
   "license": "MIT",
   "dependencies": {
-    "@edsolater/fnkit": "^0.1.8",
+    "@edsolater/fnkit": "^0.1.10",
     "@edsolater/hookit": "^0.1.10",
     "@edsolater/xstore": "^0.1.9",
     "@emotion/css": "^11.10.0",

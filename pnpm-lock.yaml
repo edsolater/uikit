@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@babel/core': ^7.19.3
-  '@edsolater/fnkit': ^0.1.8
+  '@edsolater/fnkit': ^0.1.10
   '@edsolater/hookit': ^0.1.10
   '@edsolater/xstore': ^0.1.9
   '@emotion/css': ^11.10.0
@@ -27,9 +27,9 @@ specifiers:
   typescript: ^4.8.4
 
 dependencies:
-  '@edsolater/fnkit': 0.1.8
-  '@edsolater/hookit': 0.1.10_uxnqcxesrjoamjfqilozrtnchy
-  '@edsolater/xstore': 0.1.9_uxnqcxesrjoamjfqilozrtnchy
+  '@edsolater/fnkit': 0.1.10
+  '@edsolater/hookit': 0.1.10_ntb6fqh42gqqrxtm7j3ckupuz4
+  '@edsolater/xstore': 0.1.9_ntb6fqh42gqqrxtm7j3ckupuz4
   '@emotion/css': 11.10.0_@babel+core@7.19.3
   '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
   immer: 9.0.16
@@ -1573,27 +1573,27 @@ packages:
     engines: {node: '>=10.0.0'}
     dev: true
 
-  /@edsolater/fnkit/0.1.8:
-    resolution: {integrity: sha512-1BT8AtVQyWOvoRqdpHVXZEC9Ae2uB7hqxQYLMMLZ+uRFeNdgFG59xjPXYqyQURkS+SqQxoDj1AqR4M6lYz/xJw==}
+  /@edsolater/fnkit/0.1.10:
+    resolution: {integrity: sha512-VFzjuwNU78//YJMAqqITeSiYgYC4SYKycIlAXjg8Ius13BvtBCwwB6AM+joYRTHZSDutuVmOav4F+TMHpRxDxw==}
     dev: false
 
-  /@edsolater/hookit/0.1.10_uxnqcxesrjoamjfqilozrtnchy:
+  /@edsolater/hookit/0.1.10_ntb6fqh42gqqrxtm7j3ckupuz4:
     resolution: {integrity: sha512-qbsR8PJgFLJ6gPPVd7jciD2lExAvofn2Ifmoglks1FB1mzr95oi3EcGPXubSgNDdCcR9AGCiBKTx80W0Fki+VA==}
     peerDependencies:
       '@edsolater/fnkit': '>=0.0.4'
       react: '>=18.0.0'
     dependencies:
-      '@edsolater/fnkit': 0.1.8
+      '@edsolater/fnkit': 0.1.10
       react: 18.2.0
     dev: false
 
-  /@edsolater/xstore/0.1.9_uxnqcxesrjoamjfqilozrtnchy:
+  /@edsolater/xstore/0.1.9_ntb6fqh42gqqrxtm7j3ckupuz4:
     resolution: {integrity: sha512-tCiIejuEclFuFRDYVpSQWrAYtgNAyuuEZDpeIzQdUvcuqJfDgSyRAOvwrXUCzb5wopMhHGvPWsz6LnL6Imm51A==}
     peerDependencies:
       '@edsolater/fnkit': '>=0.0.5'
       react: '>=18.0.0'
     dependencies:
-      '@edsolater/fnkit': 0.1.8
+      '@edsolater/fnkit': 0.1.10
       react: 18.2.0
     dev: false
 
