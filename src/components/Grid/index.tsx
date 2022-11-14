@@ -1,12 +1,10 @@
 import { Div } from '../Div/Div'
-import { DerivativeDivProps } from '../Div/type'
+import { uikit } from '../utils'
 import { cssGrid } from './cssGrid'
 
-export interface GridProps extends DerivativeDivProps {}
+export interface GridProps {}
 
-export function Grid({ ...divProps }: GridProps) {
-  return <Div {...divProps} icss_={[cssGrid(), divProps.icss_]} className_={['Grid', divProps.className_]} />
-}
+export const Grid = uikit<GridProps>('Grid', (props) => <Div icss={cssGrid()}>{props.children}</Div>)
 
 export * from './cssGrid'
 

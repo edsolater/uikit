@@ -2,7 +2,7 @@ import { Fragment, ReactNode } from 'react'
 import { addPropsToReactElement } from '../functions/react'
 import { Div } from './Div/Div'
 import { DerivativeDivProps } from './Div/type'
-import { mergeShallowProps } from './Div/utils/mergeShallowProps'
+import { mergeShallowProps as collapseShallowProps } from './Div/utils/mergeShallowProps'
 
 export type AddPropsProps<T> = { children?: ReactNode; key?: string | number } & Omit<T, 'children' | 'key'>
 
@@ -18,6 +18,6 @@ export function AddProps<T = DerivativeDivProps>({ key, children, ...restProps }
       {children}
     </Div>
   ) : (
-    <Fragment key={key}>{addPropsToReactElement(children, mergeShallowProps(restProps) as any)}</Fragment>
+    <Fragment key={key}>{addPropsToReactElement(children, collapseShallowProps(restProps) as any)}</Fragment>
   )
 }

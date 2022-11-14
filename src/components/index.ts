@@ -1,17 +1,11 @@
 export * from './Div'
-/** they have _divProps */
-export * from './SubComponent'
-/** they have _divProps */
-export * from './Grid'
-/** they have _divProps */
-export * from './Col'
-/** they have _divProps */
-export * from './Row'
-/** they have _divProps */
-export * from './Group'
-/** they have _divProps */
 export * from './AddProps'
 
+export * from './SubComponent'
+export * from './Grid'
+export * from './Col'
+export * from './Row'
+export * from './Group'
 
 export * from './ExpandClickableArea' // add a <Div> wrapper
 export * from './FadeIn'
@@ -32,3 +26,6 @@ export * from './Card'
 export * from './Button'
 export * from './Image'
 export * from './Text'
+
+// special
+export * from './utils'

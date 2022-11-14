@@ -41,11 +41,11 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['style', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['icss', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['tag', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
-        ['domRef_', () => (v1 && v2 ? mergeRefs(v1 as any, v2 as any) : v1 ?? v2)],
-        ['className_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
-        ['style_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
-        ['icss_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
-        ['tag_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
+        ['domRef_', () => (v1 && v2 ? mergeRefs(v1 as any, v2 as any) : v1 ?? v2)], // TODO: too Div
+        ['className_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)], // TODO: too Div
+        ['style_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)], // TODO: too Div
+        ['icss_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)], // TODO: too Div
+        ['tag_', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)], // TODO: too Div
         ['children', () => v2 ?? v1],
         [() => isFunction(v1) && isFunction(v2), () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],
         [() => isObject(v1) && isObject(v2), () => mergeProps(v1 as AnyObj, v2 as AnyObj)],

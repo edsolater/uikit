@@ -1,13 +1,12 @@
 import { Div } from './Div/Div'
-import { DerivativeDivProps } from './Div/type'
+import { uikit } from './utils'
 
-export interface GroupProps extends DerivativeDivProps {
+export interface GroupProps {
   name: string // for debug and css
 }
+
 
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export function Group({ name, ...divProps }: GroupProps) {
-  return <Div {...divProps} className_={['Group', name]} />
-}
+export const Group = uikit<GroupProps>('Group', ({ children, name }) => <Div>{children}</Div>)

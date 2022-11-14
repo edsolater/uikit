@@ -9,9 +9,8 @@ import { DivProps } from './Div/type'
 import { createDataTag, htmlHasTag } from './Div/utils/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps } from './Row'
-import React from 'react'
 
-export type RowSplitProps = RowProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
+export type RowSplitProps = RowProps & DivProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 /**
  * ! should out-most Wrapper not depends on inner box's size
  * it won't consider closed view, for it's too complicated

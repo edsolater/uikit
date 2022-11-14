@@ -1,16 +1,14 @@
 import { ICSS } from '../../styles/parseCSS'
 import { Div } from '../Div/Div'
-import { DivProps, DerivativeDivProps } from '../Div/type'
+import { uikit } from '../utils'
 import { cssRow } from './cssRow'
 
-export interface RowProps extends DerivativeDivProps {}
+export interface RowProps {}
 
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export function Row({ ...divProps }: RowProps) {
-  return <Div {...divProps} icss_={[cssRow(), divProps.icss_]} className_={['Row', divProps.className_]} />
-}
+export const Row = uikit<RowProps>('Row', ({ children }) => <Div icss={cssRow()}>{children}</Div>)
 
 export const flexChildGrow: ICSS = {
   '& > * ': {
@@ -19,3 +17,4 @@ export const flexChildGrow: ICSS = {
 }
 
 export * from './cssRow'
+
