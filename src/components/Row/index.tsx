@@ -8,7 +8,7 @@ export interface RowProps {}
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export const Row = uikit<RowProps>('Row', ({ children }) => <Div icss={cssRow()}>{children}</Div>)
+export const Row = uikit<RowProps>('Row', (KitRoot, { children }) => <KitRoot icss={cssRow()}>{children}</KitRoot>)
 
 export const flexChildGrow: ICSS = {
   '& > * ': {
@@ -17,4 +17,3 @@ export const flexChildGrow: ICSS = {
 }
 
 export * from './cssRow'
-

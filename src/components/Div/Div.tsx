@@ -36,7 +36,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
         mergedProps.as ?? 'div',
         {
           ...(mergedProps.htmlProps && mergeProps(...flapDeep(mergedProps.htmlProps))),
-          className: [classname(mergedProps.className), parseCSS(mergedProps.icss)].filter(Boolean).join(' '),
+          className: shakeNil([classname(mergedProps.className), parseCSS(mergedProps.icss)]).join(' '),
           ref: (el) => el && invokeOnce(el, () => loadRef(mergeRefs(...flapDeep([mergedProps.domRef, divRef])), el)),
           style: mergedProps.style ? merge(...flapDeep(shakeNil(mergedProps.style))) : undefined,
           onClick: mergedProps.onClick
