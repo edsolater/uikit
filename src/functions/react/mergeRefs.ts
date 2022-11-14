@@ -1,6 +1,6 @@
 import { MutableRefObject, RefCallback, RefObject } from 'react'
 
-import { isArray, isFunction, isNullish } from '@edsolater/fnkit'
+import { isArray, isFunction, isNullish, shakeNil } from '@edsolater/fnkit'
 
 import createCallbackRef from './createCallbackRef'
 
@@ -21,6 +21,6 @@ export function loadRef(ref: RefCallback<any> | MutableRefObject<any> | null, el
 
 export default function mergeRefs<T = any>(...refs: any[]): RefObject<T> {
   return createCallbackRef((el) => {
-    refs.filter(Boolean).forEach((ref) => loadRef(ref!, el))
+    shakeNil(refs).forEach((ref) => loadRef(ref!, el))
   })
 }

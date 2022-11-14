@@ -3,7 +3,7 @@ import { createElement, useRef } from 'react'
 import { flapDeep, isString, isUndefined, merge, omit, shakeNil } from '@edsolater/fnkit'
 
 import { useHover } from '@edsolater/hookit'
-import { weakCacheInvoke } from '../../functions/dom/weakCacheInvoke'
+import { weakCacheInvoke as invokeOnce } from '../../functions/dom/weakCacheInvoke'
 import { mergeProps } from '../../functions/react'
 import classname from '../../functions/react/classname'
 import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
@@ -35,10 +35,9 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
         // @ts-expect-error assume a function return ReactNode is a Component
         mergedProps.as ?? 'div',
         {
-          ...(mergedProps.htmlProps && mergeProps(...shakeNil(flapDeep(mergedProps.htmlProps)))),
+          ...(mergedProps.htmlProps && mergeProps(...flapDeep(mergedProps.htmlProps))),
           className: [classname(mergedProps.className), parseCSS(mergedProps.icss)].filter(Boolean).join(' '),
-          ref: (el) =>
-            el && weakCacheInvoke(el, () => loadRef(mergeRefs(...flapDeep([mergedProps.domRef, divRef])), el)),
+          ref: (el) => el && invokeOnce(el, () => loadRef(mergeRefs(...flapDeep([mergedProps.domRef, divRef])), el)),
           style: mergedProps.style ? merge(...flapDeep(shakeNil(mergedProps.style))) : undefined,
           onClick: mergedProps.onClick
             ? (ev) =>
