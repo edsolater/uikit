@@ -1,21 +1,21 @@
-import { isString } from '@edsolater/fnkit'
-import { FC, ReactNode } from 'react'
+import { isString, overwriteFunctionName } from '@edsolater/fnkit'
+import { ReactNode } from 'react'
 import { mergeProps } from '../../functions/react'
 import { Div, DivProps } from '../Div'
 
-export function uikit<InnerProps>(
+type Component<Props> = (props: Props) => JSX.Element
+
+type UIKitRoot = (uikitProps?: DivProps) => JSX.Element
+
+export function uikit<T>(
   options: { name: string } | string,
-  ComponentConstructFn: (
-    KitRoot: (uikitProps?: DivProps) => JSX.Element,
-    props: InnerProps & { children?: ReactNode }
-  ) => JSX.Element
-): FC<InnerProps & { children?: ReactNode } & DivProps> {
-  const uikitFC: FC<InnerProps & DivProps> = (props) => {
-    const KitRoot = generateUIKitRoot(props)
-    return ComponentConstructFn(KitRoot, props) ?? null
-  }
+  ComponentConstructerFn: (KitRoot: UIKitRoot) => Component<T & { children?: ReactNode }>
+): Component<T & { children?: ReactNode } & DivProps> {
   const displayName = isString(options) ? options : options.name
-  uikitFC.displayName = displayName
+  const uikitFC = overwriteFunctionName((props) => {
+    const KitRoot = generateUIKitRoot(props)
+    return ComponentConstructerFn(KitRoot)(props) ?? null
+  }, displayName)
   return uikitFC
 }
 

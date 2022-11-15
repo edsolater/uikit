@@ -7,4 +7,4 @@ export interface GroupProps {
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export const Group = uikit<GroupProps>('Group', (KitRoot, { children, name }) => <KitRoot>{children}</KitRoot>)
+export const Group = uikit<GroupProps>('Group', (KitRoot) => ({ children, name }) => <KitRoot>{children}</KitRoot>)
