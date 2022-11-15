@@ -6,16 +6,16 @@ export function mergeShallowProps<TagName extends keyof HTMLTagMap = 'div'>(
 ): DivProps<TagName> {
   const merged = shakeNil({
     ...props,
-    children: props.children ?? props.mergeProps?.children,
-    as: props.as ?? props.mergeProps?.as,
+    children: props.children ?? props.shallowDivProps?.children,
+    as: props.as ?? props.shallowDivProps?.as,
 
-    classname: [props.mergeProps?.className, props.className],
-    onClick: [props.mergeProps?.onClick, props.onClick],
-    domRef: [props.mergeProps?.domRef, props.domRef],
-    tag: [props.mergeProps?.tag, props.tag],
-    style: [props.mergeProps?.style, props.style],
-    icss: [props.mergeProps?.icss, props.icss],
-    htmlProps: [props.mergeProps?.htmlProps, props.htmlProps],
+    classname: [props.shallowDivProps?.className, props.className],
+    onClick: [props.shallowDivProps?.onClick, props.onClick],
+    domRef: [props.shallowDivProps?.domRef, props.domRef],
+    tag: [props.shallowDivProps?.tag, props.tag],
+    style: [props.shallowDivProps?.style, props.style],
+    icss: [props.shallowDivProps?.icss, props.icss],
+    htmlProps: [props.shallowDivProps?.htmlProps, props.htmlProps],
 
     toMerge: undefined
   }) as DivProps<TagName>

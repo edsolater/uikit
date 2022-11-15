@@ -59,7 +59,7 @@ export type _DivProps<TagName extends keyof HTMLTagMap = 'div'> = {
   [newProp in keyof DivBaseProps<TagName> as `${newProp}_`]: DivBaseProps<TagName>[newProp]
 }
 export type ShallowDivProps<TagName extends keyof HTMLTagMap = 'div'> = {
-  mergeProps?: DivBaseProps<TagName>
+  shallowDivProps?: DivBaseProps<TagName>
 }
 /** only assign to  <Div>'s derect derivative compontents */
 

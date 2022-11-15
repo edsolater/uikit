@@ -45,7 +45,7 @@ export function Image({
   return (
     <Div<'img'>
       as='img'
-      mergeProps={divProps}
+      shallowDivProps={divProps}
       domRef={ref}
       htmlProps={{ src: srcSet[currentUsedSrcIndex], alt: alertText }}
       icss={{ visibility: currentUsedSrcIndex >= srcSet.length ? 'hidden' : undefined }}

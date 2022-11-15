@@ -66,7 +66,7 @@ export function Collapse({
   useClickOutside(collapseRef, { disable: !closeByOutsideClick, onClickOutSide: off })
 
   return (
-    <Div mergeProps={divProps} domRef={collapseRef} className='Collapse' icss={{ display: 'flex', flexDirection: 'column' }}>
+    <Div shallowDivProps={divProps} domRef={collapseRef} className='Collapse' icss={{ display: 'flex', flexDirection: 'column' }}>
       <AddProps<CollapseFaceProps> onClick={toggle} icss={icssClickable} $open={innerOpen} $controller={controller}>
         {pickChildByType(children, CollapseFace)}
       </AddProps>
@@ -87,7 +87,7 @@ type CollapseFaceProps = Omit<DivProps, 'children'> & {
 
 export function CollapseFace(props: CollapseFaceProps) {
   return (
-    <Div className='CollapseFace' mergeProps={omit(props as Omit<CollapseFaceProps, 'children'>, 'children')}>
+    <Div className='CollapseFace' shallowDivProps={omit(props as Omit<CollapseFaceProps, 'children'>, 'children')}>
       {shrinkToValue(props.children, [Boolean(props.$open), props.$controller!])}
     </Div>
   )
@@ -100,7 +100,7 @@ type CollapseBodyProps = DivProps & {
 
 export function CollapseBody(props: CollapseBodyProps) {
   return (
-    <Div className='CollapseBody' mergeProps={omit(props as Omit<CollapseBodyProps, 'children'>, 'children')}>
+    <Div className='CollapseBody' shallowDivProps={omit(props as Omit<CollapseBodyProps, 'children'>, 'children')}>
       {shrinkToValue(props.children, [Boolean(props.$open), props.$controller!])}
     </Div>
   )

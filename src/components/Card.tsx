@@ -14,7 +14,7 @@ export interface CardProps extends DivProps {
 export function Card({ noDefaultStyle, bgimgSrc, ...restProps }: CardProps) {
   return (
     <Div
-      mergeProps={restProps}
+      shallowDivProps={restProps}
       className='Card'
       icss={
         !noDefaultStyle && {

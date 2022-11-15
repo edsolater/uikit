@@ -176,7 +176,7 @@ export function Input(props: InputProps) {
 
   return (
     <Div
-       mergeProps={restProps}
+       shallowDivProps={restProps}
       className='Input'
       onClick={() => {
         if (disabled || !inputRef.current) return
@@ -308,7 +308,7 @@ function AutoWidenInput({
   return (
     <Div<'input'>
       as='input'
-      mergeProps={inputBodyProps}
+      shallowDivProps={inputBodyProps}
       domRef={inputElement}
       htmlProps={{
         autoComplete: 'off',

@@ -123,7 +123,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
 
   return (
     <Div
-      mergeProps={divProps}
+      shallowDivProps={divProps}
       icss={[
         { display: 'flex', flexDirection: dir === 'row' ? undefined : 'column' },
         { height: '100%', width: '100%', contain: 'size' },
