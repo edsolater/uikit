@@ -1,5 +1,5 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
-import { ReactNode } from 'react'
+import { ReactNode, RefObject, useRef } from 'react'
 import { mergeProps } from '../../functions/react'
 import { Div, DivProps } from '../Div'
 
@@ -13,15 +13,16 @@ export function componentkit<T>(
 ): Component<T & { children?: ReactNode } & DivProps> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {
-    const KitRoot = generateComponentRoot(props)
-    return ComponentConstructerFn(KitRoot)(props) ?? null
+    const refedProps = useRef(props)
+    const KitRoot = useRef(generateComponentRoot(refedProps))
+    return ComponentConstructerFn(KitRoot.current)(props) ?? null
   }, displayName)
   return componentkitFC
 }
 
-function generateComponentRoot(props: DivProps) {
+function generateComponentRoot(props: RefObject<DivProps>) {
   const ComponentRoot = (componentkitProps?: DivProps) => (
-    <Div {...mergeProps(props, componentkitProps)}>{componentkitProps?.children}</Div>
+    <Div {...mergeProps(props.current, componentkitProps)}>{componentkitProps?.children}</Div>
   )
   return ComponentRoot
 }

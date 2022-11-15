@@ -9,4 +9,3 @@ export interface ColProps {}
 export const Col = uikit<ColProps>('Col', (KitRoot) => ({ children }) => <KitRoot icss={cssCol()}>{children}</KitRoot>)
 
 export * from './cssCol'
-
