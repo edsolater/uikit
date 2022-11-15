@@ -53,7 +53,11 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> extends DivB
 // _DivProps is for merge easily
 /** can only use these **special props** directly on <Div> / <Div>'s derect derivative, so it will not export*/
 export type _DivProps<TagName extends keyof HTMLTagMap = 'div'> = {
+  /** @deprecated */
   [newProp in keyof DivBaseProps<TagName> as `${newProp}_`]: DivBaseProps<TagName>[newProp]
+}
+export type ShallowDivProps<TagName extends keyof HTMLTagMap = 'div'> = {
+  mergeProps?: DivBaseProps<TagName>
 }
 /** only assign to  <Div>'s derect derivative compontents */
 

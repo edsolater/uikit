@@ -139,7 +139,7 @@ export function Popover({
           }
         }}
       >
-        <Div className_={[Popover.name, className]}>
+        <Div className={[Popover.name, className]}>
           <Transition
             show={forceOpen || isPanelShowed}
             fromProps={{ icss: { opacity: 0, transform: 'scale(0.5)' } }}

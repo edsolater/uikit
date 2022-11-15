@@ -1,31 +1,23 @@
 import { shakeNil } from '@edsolater/fnkit'
-import { DivProps, HTMLTagMap, _DivProps } from '../type'
+import { DivProps, HTMLTagMap, ShallowDivProps, _DivProps } from '../type'
 
 export function mergeShallowProps<TagName extends keyof HTMLTagMap = 'div'>(
-  props: DivProps<TagName> & _DivProps<TagName>
+  props: DivProps<TagName> & _DivProps<TagName> & ShallowDivProps<TagName>
 ): DivProps<TagName> {
   const merged = shakeNil({
     ...props,
-    children: props.children ?? props.children_,
-    as: props.as ?? props.as_,
+    children: props.children ?? props.mergeProps?.children,
+    as: props.as ?? props.mergeProps?.as,
 
-    classname: [props.className_, props.className],
-    onClick: [props.onClick_, props.onClick],
-    domRef: [props.domRef_, props.domRef],
-    tag: [props.tag_, props.tag],
-    style: [props.style_, props.style],
-    icss: [props.icss_, props.icss],
-    htmlProps: [props.htmlProps_, props.htmlProps],
+    classname: [props.mergeProps?.className, props.className],
+    onClick: [props.mergeProps?.onClick, props.onClick],
+    domRef: [props.mergeProps?.domRef, props.domRef],
+    tag: [props.mergeProps?.tag, props.tag],
+    style: [props.mergeProps?.style, props.style],
+    icss: [props.mergeProps?.icss, props.icss],
+    htmlProps: [props.mergeProps?.htmlProps, props.htmlProps],
 
-    children_: undefined,
-    as_: undefined,
-    classname_: undefined,
-    onClick_: undefined,
-    domRef_: undefined,
-    tag_: undefined,
-    style_: undefined,
-    icss_: undefined,
-    htmlProps_: undefined
+    toMerge: undefined
   }) as DivProps<TagName>
   return merged
 }

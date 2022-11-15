@@ -136,12 +136,12 @@ export function Button(props: ButtonProps) {
   }[size]
   return (
     <Div<'button'>
-      {...restProps}
+      mergeProps={restProps}
       as='button'
       onClick={onClick}
-      className_={Button.name}
-      htmlProps_={{ type: 'button' }}
-      icss_={[
+      className={Button.name}
+      htmlProps={{ type: 'button' }}
+      icss={[
         { transition: `200ms ${cssTransitionTimeFnOutCubic}` }, // make it's change smooth
         { border: 'none' }, // initialize
         { color: shrinkToValue(mainTextColor, [mergedProps]) }, // light mode
@@ -188,7 +188,7 @@ export function Button(props: ButtonProps) {
         },
         shrinkToValue(cssProps, [mergedProps])
       ]}
-      domRef_={ref}
+      domRef={ref}
     >
       {prefix}
       {children}

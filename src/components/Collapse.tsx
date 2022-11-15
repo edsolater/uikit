@@ -1,12 +1,11 @@
-import { shrinkToValue } from '@edsolater/fnkit'
+import { omit, shrinkToValue } from '@edsolater/fnkit'
 import { useClickOutside, useIsomorphicLayoutEffect, useToggle } from '@edsolater/hookit'
-import React from 'react'
 import { ReactNode, useMemo, useRef } from 'react'
 import { pickChildByType } from '../functions/react'
 import { icssClickable } from '../styles'
 import { AddProps } from './AddProps'
 import { Div } from './Div/Div'
-import { DivProps } from "./Div/type"
+import { DivProps } from './Div/type'
 import { FadeIn } from './FadeIn'
 
 type CollapseController = {
@@ -67,7 +66,7 @@ export function Collapse({
   useClickOutside(collapseRef, { disable: !closeByOutsideClick, onClickOutSide: off })
 
   return (
-    <Div {...divProps} domRef_={collapseRef} className_='Collapse' icss_={{ display: 'flex', flexDirection: 'column' }}>
+    <Div mergeProps={divProps} domRef={collapseRef} className='Collapse' icss={{ display: 'flex', flexDirection: 'column' }}>
       <AddProps<CollapseFaceProps> onClick={toggle} icss={icssClickable} $open={innerOpen} $controller={controller}>
         {pickChildByType(children, CollapseFace)}
       </AddProps>
@@ -88,7 +87,7 @@ type CollapseFaceProps = Omit<DivProps, 'children'> & {
 
 export function CollapseFace(props: CollapseFaceProps) {
   return (
-    <Div className_='CollapseFace' {...props}>
+    <Div className='CollapseFace' mergeProps={omit(props as Omit<CollapseFaceProps, 'children'>, 'children')}>
       {shrinkToValue(props.children, [Boolean(props.$open), props.$controller!])}
     </Div>
   )
@@ -101,7 +100,7 @@ type CollapseBodyProps = DivProps & {
 
 export function CollapseBody(props: CollapseBodyProps) {
   return (
-    <Div className_='CollapseBody' {...props}>
+    <Div className='CollapseBody' mergeProps={omit(props as Omit<CollapseBodyProps, 'children'>, 'children')}>
       {shrinkToValue(props.children, [Boolean(props.$open), props.$controller!])}
     </Div>
   )

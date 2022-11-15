@@ -8,13 +8,13 @@ import { mergeProps } from '../../functions/react'
 import classname from '../../functions/react/classname'
 import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { parseCSS } from '../../styles/parseCSS'
-import { DivProps, HTMLTagMap, _DivProps } from './type'
+import { DivProps, HTMLTagMap, ShallowDivProps, _DivProps } from './type'
 import { handleDivTag } from './utils/handleDivTag'
 import { mergeShallowProps } from './utils/mergeShallowProps'
 import { toDataset } from './utils/tag'
 
 // TODO: as为组件时 的智能推断还不够好
-export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName>) => {
+export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName> & ShallowDivProps<TagName>) => {
   const mergedProps = handleDivTag(mergeShallowProps(props))
   if (!mergedProps) return null
   const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)

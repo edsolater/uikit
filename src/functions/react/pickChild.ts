@@ -29,5 +29,5 @@ export function pickChildByTag<T extends AnyFn>(
 }
 
 function nodeHaveTag(child: ReactNode, targetTag: string): boolean {
-  return isValidElement(child) && (shakeNil(flap(child.props.tag, child.props.tag_)) as string[]).includes(targetTag)
+  return isValidElement(child) && (shakeNil(flap(child.props.tag)) as string[]).includes(targetTag)
 }

@@ -45,10 +45,10 @@ export function Image({
   return (
     <Div<'img'>
       as='img'
-      {...divProps}
-      domRef_={ref}
-      htmlProps_={{ src: srcSet[currentUsedSrcIndex], alt: alertText }}
-      icss_={{ visibility: currentUsedSrcIndex >= srcSet.length ? 'hidden' : undefined }}
+      mergeProps={divProps}
+      domRef={ref}
+      htmlProps={{ src: srcSet[currentUsedSrcIndex], alt: alertText }}
+      icss={{ visibility: currentUsedSrcIndex >= srcSet.length ? 'hidden' : undefined }}
     />
   )
 }

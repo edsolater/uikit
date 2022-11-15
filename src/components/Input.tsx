@@ -176,14 +176,14 @@ export function Input(props: InputProps) {
 
   return (
     <Div
-      {...restProps}
-      className_='Input'
+       mergeProps={restProps}
+      className='Input'
       onClick={() => {
         if (disabled || !inputRef.current) return
         inputRef.current.focus()
         onClick?.(innerValue, { el: inputRef.current, control: inputControls })
       }}
-      icss_={[
+      icss={[
         { display: 'flex' },
         /* initialize */
         {
@@ -308,20 +308,20 @@ function AutoWidenInput({
   return (
     <Div<'input'>
       as='input'
-      {...inputBodyProps}
-      domRef_={inputElement}
-      htmlProps_={{
+      mergeProps={inputBodyProps}
+      domRef={inputElement}
+      htmlProps={{
         autoComplete: 'off',
         onChange: mergeFunction(recalcWrapperSize, (ev) => {
           onChange(ev.target?.value || '')
         })
       }}
-      icss_={[
+      icss={[
         { flex: 1, background: 'transparent', minWidth: inputBodyProps.isFluid ? undefined : '14em' },
         /* initialize */
         { border: 'none', padding: cssInputPadding }
       ]}
-      style_={{
+      style={{
         width: `${minWith}px`
       }}
     />

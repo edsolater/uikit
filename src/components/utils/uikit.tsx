@@ -1,7 +1,7 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
 import { ReactNode, RefObject, useRef } from 'react'
 import { mergeProps } from '../../functions/react'
-import { Div, DivProps } from '../Div'
+import { Div, DivProps, ShallowDivProps } from '../Div'
 
 type Component<Props> = (props: Props) => JSX.Element
 
@@ -10,7 +10,7 @@ type UIKitRoot = (uikitProps?: DivProps) => JSX.Element
 export function uikit<T>(
   options: { name: string } | string,
   ComponentConstructerFn: (KitRoot: UIKitRoot) => Component<T & { children?: ReactNode }>
-): Component<T & { children?: ReactNode } & DivProps> {
+): Component<T & { children?: ReactNode } & DivProps & ShallowDivProps> {
   const displayName = isString(options) ? options : options.name
   const uikitFC = overwriteFunctionName((props) => {
     const refedProps = useRef(props)
@@ -20,7 +20,7 @@ export function uikit<T>(
   return uikitFC
 }
 
-function generateUIKitRoot(props: RefObject<DivProps>) {
+function generateUIKitRoot(props: RefObject<DivProps & ShallowDivProps>) {
   const KitRoot = (uikitProps?: DivProps) => (
     <Div {...mergeProps(props.current, uikitProps)}>{uikitProps?.children}</Div>
   )

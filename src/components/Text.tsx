@@ -1,10 +1,5 @@
-import React from 'react'
-import { Div } from './Div/Div'
-import { DivProps } from './Div/type'
+import { uikit } from './utils'
 
-// text is not like
-export interface TextProps extends DivProps {}
+export interface TextProps {}
 
-export function Text({ ...restProps }: TextProps) {
-  return <Div className_='Text' {...restProps} />
-}
+export const Text = uikit<TextProps>('Text', (KitRoot) => ({ children }) => <KitRoot>{children}</KitRoot>)

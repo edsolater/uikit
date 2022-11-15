@@ -123,13 +123,13 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
 
   return (
     <Div
-      {...divProps}
-      icss_={[
+      mergeProps={divProps}
+      icss={[
         { display: 'flex', flexDirection: dir === 'row' ? undefined : 'column' },
         { height: '100%', width: '100%', contain: 'size' },
         divProps.icss
       ]}
-      domRef_={[wrapperRef, divProps.domRef]}
+      domRef={[wrapperRef, divProps.domRef]}
     >
       {mapElementChildren(divProps.children, (childNode, idx, children) => {
         if (children.length !== getChildrenLength()) {
@@ -181,7 +181,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
                 ]}
               >
                 <Div
-                  icss_={[
+                  icss={[
                     {
                       backgroundColor: '#80808033',
                       '.hover-group:hover &': { backgroundColor: 'dodgerblue' },
