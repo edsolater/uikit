@@ -1,4 +1,4 @@
-import { MayArray, MayEnum } from '@edsolater/fnkit'
+import { MayEnum } from '@edsolater/fnkit'
 import { UseHoverOptions } from '@edsolater/hookit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
 import { ClassName } from '../../functions/react/classname'
