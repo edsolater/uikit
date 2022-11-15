@@ -1,9 +1,9 @@
-import { Fragment, ReactNode } from 'react'
+import { Fragment } from 'react'
 import { addPropsToReactElement } from '../functions/react'
-import { DerivativeDivProps } from './Div/type'
+import { DerivativeDivProps, DivProps } from './Div/type'
 import { mergeShallowProps as collapseShallowProps } from './Div/utils/mergeShallowProps'
 
-export type AddPropsProps<T> = { children?: ReactNode; key?: string | number } & Omit<T, 'children' | 'key'>
+export type AddPropsProps<T> = { children?: DivProps['children']; key?: string | number } & Omit<T, 'children' | 'key'>
 
 /**
  * @BaseUIComponent

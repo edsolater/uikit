@@ -1,4 +1,4 @@
-import { MayEnum } from '@edsolater/fnkit'
+import { MayArray, MayEnum } from '@edsolater/fnkit'
 import { UseHoverOptions } from '@edsolater/hookit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
 import { ClassName } from '../../functions/react/classname'
@@ -45,8 +45,10 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
   htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
-  children?: ReactNode
+  children?: DivChildNode
 }
+
+export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
 
 export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> extends DivBaseProps<TagName>, UseHoverOptions {}
 

@@ -1,9 +1,11 @@
-import { flap, shakeNil } from '@edsolater/fnkit'
-import React, { isValidElement, ReactElement, ReactNode } from 'react'
+import { flap } from '@edsolater/fnkit'
+import React, { isValidElement, ReactElement } from 'react'
+import { DivProps } from '../../components'
+
 export function mapElementChildren(
-  children: ReactNode,
-  mapper: (child: ReactElement, idx: number, children: readonly ReactNode[]) => ReactNode
-): ReactNode[] {
+  children: DivProps['children'],
+  mapper: (child: ReactElement, idx: number, children: readonly DivProps['children'][]) => DivProps['children']
+): DivProps['children'][] {
   if (isFragnmentNode(children)) {
     return flap(React.cloneElement(children, { children: mapElementChildren(children.props.children, mapper) }))
   } else if (!children) {
@@ -15,6 +17,6 @@ export function mapElementChildren(
   }
 }
 
-export function isFragnmentNode(node: ReactNode): node is ReactElement {
+export function isFragnmentNode(node: DivProps['children']): node is ReactElement {
   return isValidElement(node) && node.type === React.Fragment
 }

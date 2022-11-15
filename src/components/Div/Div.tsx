@@ -12,6 +12,7 @@ import { DivProps, HTMLTagMap, ShallowDivProps, _DivProps } from './type'
 import { handleDivTag } from './utils/handleDivTag'
 import { mergeShallowProps } from './utils/mergeShallowProps'
 import { toDataset } from './utils/tag'
+import { parseDivChildren } from './utils/parseDivChildren'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName> & _DivProps<TagName> & ShallowDivProps<TagName>) => {
@@ -45,12 +46,12 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
             : undefined,
           ...toDataset(mergedProps.tag)
         },
-        mergedProps.children
+        parseDivChildren(mergedProps.children)
       )
     : createElement(
         // @ts-expect-error assume a function return ReactNode is a Component
         mergedProps.as,
         omit(mergedProps, ['as']),
-        mergedProps.children
+        parseDivChildren(mergedProps.children)
       )
 }

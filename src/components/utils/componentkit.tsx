@@ -1,5 +1,5 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
-import { ReactNode, RefObject, useRef } from 'react'
+import { RefObject, useRef } from 'react'
 import { mergeProps } from '../../functions/react'
 import { Div, DivProps, ShallowDivProps } from '../Div'
 
@@ -9,8 +9,8 @@ type ComponentRoot = (componentkitProps?: DivProps) => JSX.Element
 
 export function componentkit<T>(
   options: { name: string } | string,
-  ComponentConstructerFn: (ComponentRoot: ComponentRoot) => Component<T>
-): Component<T & { children?: ReactNode } & DivProps & ShallowDivProps> {
+  ComponentConstructerFn: (ComponentRoot: ComponentRoot) => Component<T & Pick<DivProps, 'children'>>
+): Component<T & DivProps & ShallowDivProps> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {
     const refedProps = useRef(props)
