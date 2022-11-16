@@ -5,4 +5,4 @@ export interface TextProps {
   children?: DivChildNode
 }
 
-export const Text = uikit<TextProps>('Text', (KitRoot) => ({ children }) => <KitRoot>{children}</KitRoot>)
+export const Text = uikit<TextProps>('Text', (KitRoot) => (props) => <KitRoot>{props.children}</KitRoot>)
