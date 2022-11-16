@@ -3,8 +3,8 @@ import { useHover } from '@edsolater/hookit'
 import { DivProps, HTMLTagMap } from '../type'
 import produce from 'immer'
 
-export function handlerDivHover<TagName extends keyof HTMLTagMap = 'div'>(
-  divProps: DivProps<TagName> | undefined
+export function handleDivHover<TagName extends keyof HTMLTagMap = 'div'>(
+  divProps?: DivProps<TagName> | undefined
 ): Omit<DivProps<TagName>, 'onHover' | 'onHoverStart' | 'onHoverEnd' | 'triggerDelay'> | undefined {
   if (!divProps) return
 

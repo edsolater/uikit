@@ -1,6 +1,6 @@
 import { createElement } from 'react'
 
-import { flapDeep, isString, isUndefined, merge, omit, shakeFalsy, shakeNil } from '@edsolater/fnkit'
+import { flapDeep, isString, isUndefined, merge, omit, pipeHandlers, shakeFalsy, shakeNil } from '@edsolater/fnkit'
 
 import { weakCacheInvoke as invokeOnce } from '../../functions/dom/weakCacheInvoke'
 import { mergeProps } from '../../functions/react'
@@ -11,12 +11,12 @@ import { DivProps, HTMLTagMap } from './type'
 import { handleDivTag } from './utils/handleDivTag'
 import { collapseShallowProps } from './utils/collapseShallowProps'
 import { toDataset } from './utils/tag'
-import { parseDivChildren } from './utils/parseDivChildren'
-import { handlerDivHover } from './utils/handlerDivHover'
+import { handleDivChildren } from './utils/handleDivChildren'
+import { handleDivHover } from './utils/handleDivHover'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
-  const mergedProps = handlerDivHover(handleDivTag(collapseShallowProps(props)))
+  const mergedProps = pipeHandlers(props, collapseShallowProps, handleDivChildren, handleDivTag, handleDivHover)
   if (!mergedProps) return null
   const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)
   return isHTMLTag
@@ -36,12 +36,12 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
             : undefined,
           ...toDataset(mergedProps.tag)
         },
-        parseDivChildren(mergedProps.children)
+        mergedProps.children
       )
     : createElement(
         // @ts-expect-error assume a function return ReactNode is a Component
         mergedProps.as,
         omit(mergedProps, ['as']),
-        parseDivChildren(mergedProps.children)
+        mergedProps.children
       )
 }

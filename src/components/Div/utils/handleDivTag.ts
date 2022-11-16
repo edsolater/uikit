@@ -7,8 +7,10 @@ export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
 
 export function handleDivTag<TagName extends keyof HTMLTagMap = 'div'>(
-  divProps: DivProps<TagName>
+  divProps?: DivProps<TagName>
 ): DivProps<TagName> | undefined {
+  if (!divProps) return
+
   const processNoRender = (divProps: DivProps<TagName> | undefined) => {
     if (!divProps) return
     const hasNoRenderTag = hasTag(divProps.tag, noRenderTag)
