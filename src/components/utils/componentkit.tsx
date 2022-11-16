@@ -9,7 +9,7 @@ type ComponentRoot = (componentkitProps?: DivProps) => JSX.Element
 
 export function componentkit<T>(
   options: { name: string } | string,
-  ComponentConstructerFn: (ComponentRoot: ComponentRoot) => Component<T & Pick<DivProps, 'children'>>
+  ComponentConstructerFn: (ComponentRoot: ComponentRoot) => Component<T>
 ): Component<T & DivProps & ShallowDivProps> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {

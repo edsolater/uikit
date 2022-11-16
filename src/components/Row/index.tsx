@@ -1,8 +1,11 @@
 import { ICSS } from '../../styles/parseCSS'
+import { DivChildNode } from '../Div'
 import { uikit } from '../utils'
 import { cssRow } from './cssRow'
 
-export interface RowProps {}
+export interface RowProps {
+  children?: DivChildNode
+}
 
 /**
  * flex box (default has alignItems:center justifyContent:space-between)

@@ -1,7 +1,10 @@
+import { DivChildNode } from '../Div'
 import { uikit } from '../utils'
 import { cssCol } from './cssCol'
 
-export interface ColProps {}
+export interface ColProps {
+  children?: DivChildNode
+}
 
 /**
  * flex box

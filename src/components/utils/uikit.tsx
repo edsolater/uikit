@@ -9,7 +9,7 @@ type UIKitRoot = (uikitProps?: DivProps) => JSX.Element
 
 export function uikit<T>(
   options: { name: string } | string,
-  ComponentConstructerFn: (KitRoot: UIKitRoot) => Component<T & Pick<DivProps, 'children'>>
+  ComponentConstructerFn: (KitRoot: UIKitRoot) => Component<T>
 ): Component<T & DivProps & ShallowDivProps> {
   const displayName = isString(options) ? options : options.name
   const uikitFC = overwriteFunctionName((props) => {
