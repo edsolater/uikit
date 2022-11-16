@@ -1,9 +1,9 @@
-import { Cover, isObject } from '@edsolater/fnkit'
-import { ReactNode } from 'react'
-import { DivProps } from '../type'
+import { Cover, isArray, isObject } from '@edsolater/fnkit'
+import { isValidElement, ReactNode } from 'react'
+import { DivChildNode, DivProps } from '../type'
 
-function parseDivChildren(children: DivProps['children']): ReactNode {
-  if (isObject(children) && Object.getOwnPropertySymbols(children).includes(Symbol.toPrimitive)) return String(children)
+function parseDivChildren(children?: DivChildNode): ReactNode {
+  if (isObject(children) && !isArray(children) && !isValidElement(children)) return String(children)
   return children as ReactNode
 }
 

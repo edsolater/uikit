@@ -21,7 +21,6 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)
   return isHTMLTag
     ? createElement(
-        // @ts-expect-error assume a function return ReactNode is a Component
         mergedProps.as ?? 'div',
         {
           ...(mergedProps.htmlProps && mergeProps(...flapDeep(mergedProps.htmlProps))),
@@ -39,7 +38,6 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
         mergedProps.children
       )
     : createElement(
-        // @ts-expect-error assume a function return ReactNode is a Component
         mergedProps.as,
         omit(mergedProps, ['as']),
         mergedProps.children

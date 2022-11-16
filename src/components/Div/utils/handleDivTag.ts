@@ -6,19 +6,17 @@ import { pipeHandlers } from '@edsolater/fnkit'
 export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
 
-export function handleDivTag<TagName extends keyof HTMLTagMap = 'div'>(
-  divProps?: DivProps<TagName>
-): DivProps<TagName> | undefined {
+export function handleDivTag<P extends Partial<DivProps<any>>>(divProps?: P): Omit<P, 'tag'> | undefined {
   if (!divProps) return
 
-  const processNoRender = (divProps: DivProps<TagName> | undefined) => {
+  const processNoRender = (divProps: P | undefined) => {
     if (!divProps) return
     const hasNoRenderTag = hasTag(divProps.tag, noRenderTag)
     if (hasNoRenderTag) return undefined
     return divProps
   }
 
-  const processOffscreen = (divProps: DivProps<TagName> | undefined) => {
+  const processOffscreen = (divProps: P | undefined) => {
     if (!divProps) return
     const hasOffscreenTag = hasTag(divProps.tag, offscreenTag)
     if (hasOffscreenTag) {

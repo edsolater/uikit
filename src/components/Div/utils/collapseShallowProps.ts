@@ -1,8 +1,6 @@
 import { DivProps, HTMLTagMap } from '../type'
 
-export function collapseShallowProps<TagName extends keyof HTMLTagMap = 'div'>(
-  props: DivProps<TagName>
-): Omit<DivProps<TagName>, 'shallowDivProps'> {
+export function collapseShallowProps<P extends Partial<DivProps<any>>>(props: P): Omit<P, 'shallowDivProps'> {
   return {
     ...props.shallowDivProps,
     ...props,

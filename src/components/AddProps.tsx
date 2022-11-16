@@ -3,7 +3,7 @@ import { addPropsToReactElement } from '../functions/react'
 import { DivProps } from './Div/type'
 import { collapseShallowProps } from './Div/utils/collapseShallowProps'
 
-type AddPropsProps = Omit<DivProps, 'children'> & { children?: any }
+type AddPropsProps = Omit<Partial<DivProps>, 'children'> & { children?: any }
 
 /**
  * @BaseUIComponent
@@ -11,5 +11,6 @@ type AddPropsProps = Omit<DivProps, 'children'> & { children?: any }
  * !!! child must extends `<Div>`
  */
 export function AddProps<T extends AddPropsProps = AddPropsProps>({ children, ...restProps }: T) {
+  //@ts-expect-error
   return <Fragment>{addPropsToReactElement(children, collapseShallowProps(restProps))}</Fragment>
 }
