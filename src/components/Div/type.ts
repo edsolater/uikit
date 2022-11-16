@@ -50,17 +50,10 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
 
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
 
-export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> extends DivBaseProps<TagName>, UseHoverOptions {}
+export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> extends DivBaseProps<TagName>, UseHoverOptions {
+  shallowDivProps?: DivProps<TagName>
+}
 
-// _DivProps is for merge easily
-/** can only use these **special props** directly on <Div> / <Div>'s derect derivative, so it will not export*/
-export type _DivProps<TagName extends keyof HTMLTagMap = 'div'> = {
-  /** @deprecated */
-  [newProp in keyof DivBaseProps<TagName> as `${newProp}_`]: DivBaseProps<TagName>[newProp]
-}
-export type ShallowDivProps<TagName extends keyof HTMLTagMap = 'div'> = {
-  shallowDivProps?: DivBaseProps<TagName>
-}
 /** only assign to  <Div>'s derect derivative compontents */
 
-export type DerivativeDivProps<TagName extends keyof HTMLTagMap = 'div'> = DivProps<TagName> & _DivProps<TagName>
+export type DerivativeDivProps<TagName extends keyof HTMLTagMap = 'div'> = DivProps<TagName>

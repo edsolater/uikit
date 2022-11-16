@@ -1,15 +1,15 @@
 import { Fragment } from 'react'
 import { addPropsToReactElement } from '../functions/react'
-import { DerivativeDivProps, DivProps, ShallowDivProps } from './Div/type'
-import { mergeShallowProps as collapseShallowProps } from './Div/utils/mergeShallowProps'
+import { DivProps } from './Div/type'
+import { collapseShallowProps } from './Div/utils/collapseShallowProps'
 
-export type AddPropsProps<T> = { children?: DivProps['children'] } & Omit<T, 'children'>
+type AddPropsProps = Omit<DivProps, 'children'> & { children?: any }
 
 /**
  * @BaseUIComponent
  * it will merge props
  * !!! child must extends `<Div>`
  */
-export function AddProps<T = DerivativeDivProps & ShallowDivProps>({ children, ...restProps }: AddPropsProps<T>) {
-  return <Fragment>{addPropsToReactElement(children, collapseShallowProps(restProps) as any)}</Fragment>
+export function AddProps<T extends AddPropsProps = AddPropsProps>({ children, ...restProps }: T) {
+  return <Fragment>{addPropsToReactElement(children, collapseShallowProps(restProps))}</Fragment>
 }

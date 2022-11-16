@@ -1,7 +1,7 @@
 import { Div } from './Div/Div'
-import { DerivativeDivProps } from './Div/type'
+import { DivProps } from './Div/type'
 
-export interface SubComponentProps extends DerivativeDivProps {
+export interface SubComponentProps extends DivProps {
   childIsRoot?: boolean
 }
 
