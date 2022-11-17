@@ -14,15 +14,15 @@ export function uikit<T>(
   const displayName = isString(options) ? options : options.name
   const uikitFC = overwriteFunctionName((props) => {
     const refedProps = useRef(props)
-    const KitRoot = useRef(generateUIKitRoot(refedProps))
+    const KitRoot = useRef(generateUIKitRoot(refedProps, displayName))
     return ComponentConstructerFn(KitRoot.current)(props) ?? null
   }, displayName)
   return uikitFC
 }
 
-function generateUIKitRoot(props: RefObject<DivProps>) {
+function generateUIKitRoot(props: RefObject<DivProps>, displayName: string) {
   const KitRoot = (uikitProps?: DivProps) => (
-    <Div {...mergeProps(props.current, uikitProps)}>{uikitProps?.children}</Div>
+    <Div {...mergeProps(props.current, uikitProps, { className: displayName })}>{uikitProps?.children}</Div>
   )
   return KitRoot
 }
