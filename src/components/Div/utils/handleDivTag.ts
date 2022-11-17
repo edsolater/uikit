@@ -1,7 +1,7 @@
 import { createDataTag, hasTag } from './tag'
 import { DivProps, HTMLTagMap } from '../type'
 import { produce } from 'immer'
-import { pipeHandlers } from '@edsolater/fnkit'
+import { AnyFn, pipeHandlers } from '@edsolater/fnkit'
 
 export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
@@ -39,5 +39,3 @@ export function handleDivTag<P extends Partial<DivProps<any>>>(divProps?: P): Om
 
   return pipeHandlers(divProps, processNoRender, processOffscreen)
 }
-
-// TODO: move to fnkit

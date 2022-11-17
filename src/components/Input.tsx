@@ -83,7 +83,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
    * as a controlled formkit, U should avoid using it if U can
    * it may be confusing with onUserInput sometimes
    */
-  onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void// TODO: should be onInput (by(property):'any')
+  onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'any')
   onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
   onClick?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
@@ -176,7 +176,7 @@ export function Input(props: InputProps) {
 
   return (
     <Div
-       shallowDivProps={restProps}
+      shadowProps={restProps}
       className='Input'
       onClick={() => {
         if (disabled || !inputRef.current) return
@@ -308,7 +308,7 @@ function AutoWidenInput({
   return (
     <Div<'input'>
       as='input'
-      shallowDivProps={inputBodyProps}
+      shadowProps={inputBodyProps}
       domRef={inputElement}
       htmlProps={{
         autoComplete: 'off',

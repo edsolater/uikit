@@ -136,7 +136,7 @@ export function Button(props: ButtonProps) {
   }[size]
   return (
     <Div<'button'>
-      shallowDivProps={restProps}
+      shadowProps={restProps}
       as='button'
       onClick={onClick}
       className={Button.name}

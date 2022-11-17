@@ -51,7 +51,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
 
 export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> extends DivBaseProps<TagName>, UseHoverOptions {
-  shallowDivProps?: DivProps<TagName>
+  shadowProps?: DivProps<TagName>
 }
 
 /** only assign to  <Div>'s derect derivative compontents */

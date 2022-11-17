@@ -1,19 +1,19 @@
-import { DivProps, HTMLTagMap } from '../type'
+import { DivProps } from '../type'
 
-export function collapseShallowProps<P extends Partial<DivProps<any>>>(props: P): Omit<P, 'shallowDivProps'> {
+export function collapseShallowProps<P extends Partial<DivProps<any>>>(props: P): Omit<P, 'shadowProps'> {
   return {
-    ...props.shallowDivProps,
+    ...props.shadowProps,
     ...props,
 
-    children: props.children ?? props.shallowDivProps?.children,
-    as: props.as ?? props.shallowDivProps?.as,
+    children: props.children ?? props.shadowProps?.children,
+    as: props.as ?? props.shadowProps?.as,
 
-    className: [props.shallowDivProps?.className, props.className],
-    onClick: [props.shallowDivProps?.onClick, props.onClick],
-    domRef: [props.shallowDivProps?.domRef, props.domRef],
-    tag: [props.shallowDivProps?.tag, props.tag],
-    style: [props.shallowDivProps?.style, props.style],
-    icss: [props.shallowDivProps?.icss, props.icss],
-    htmlProps: [props.shallowDivProps?.htmlProps, props.htmlProps]
+    className: [props.shadowProps?.className, props.className],
+    onClick: [props.shadowProps?.onClick, props.onClick],
+    domRef: [props.shadowProps?.domRef, props.domRef],
+    tag: [props.shadowProps?.tag, props.tag],
+    style: [props.shadowProps?.style, props.style],
+    icss: [props.shadowProps?.icss, props.icss],
+    htmlProps: [props.shadowProps?.htmlProps, props.htmlProps]
   }
 }
