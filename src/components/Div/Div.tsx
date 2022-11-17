@@ -9,14 +9,14 @@ import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { parseCSS } from '../../styles/parseCSS'
 import { DivProps, HTMLTagMap } from './type'
 import { handleDivTag } from './utils/handleDivTag'
-import { collapseShallowProps } from './utils/collapseShallowProps'
+import { handleDivShallowProps } from './utils/handleDivShallowProps'
 import { toDataset } from './utils/tag'
 import { handleDivChildren } from './utils/handleDivChildren'
-import { handleDivHover } from './utils/handleDivHover'
+import { handleDivPlugins } from './plugins/handleDivPlugins'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
-  const mergedProps = pipeHandlers(props, collapseShallowProps, handleDivChildren, handleDivTag, handleDivHover)
+  const mergedProps = pipeHandlers(props, handleDivShallowProps, handleDivPlugins, handleDivChildren, handleDivTag)
   if (!mergedProps) return null
   const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)
   return isHTMLTag
@@ -37,9 +37,5 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
         },
         mergedProps.children
       )
-    : createElement(
-        mergedProps.as,
-        omit(mergedProps, ['as']),
-        mergedProps.children
-      )
+    : createElement(mergedProps.as, omit(mergedProps, ['as']), mergedProps.children)
 }

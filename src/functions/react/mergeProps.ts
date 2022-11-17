@@ -41,6 +41,7 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['style', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['icss', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['tag', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
+        ['plugins', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['children', () => v2 ?? v1],
         [() => isFunction(v1) && isFunction(v2), () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],
         [() => isObject(v1) && isObject(v2), () => mergeProps(v1 as AnyObj, v2 as AnyObj)],

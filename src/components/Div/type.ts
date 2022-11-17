@@ -5,6 +5,7 @@ import { ClassName } from '../../functions/react/classname'
 import { ICSS } from '../../styles/parseCSS'
 import { CSSStyle } from '../../styles/type'
 import { MayDeepArray } from '../../typings/tools'
+import { AbilityPlugin, WithPlugins } from './plugins/type'
 import { DivDataTag } from './utils/tag'
 
 export interface HTMLTagMap {
@@ -50,10 +51,11 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
 
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
 
-export interface DivProps<TagName extends keyof HTMLTagMap = 'div'> extends DivBaseProps<TagName>, UseHoverOptions {
+export type WithShallowProps<TagName extends keyof HTMLTagMap = 'div'> = {
   shadowProps?: DivProps<TagName>
 }
 
-/** only assign to  <Div>'s derect derivative compontents */
-
-export type DerivativeDivProps<TagName extends keyof HTMLTagMap = 'div'> = DivProps<TagName>
+export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>
+  extends DivBaseProps<TagName>,
+    WithShallowProps<TagName>,
+    WithPlugins<TagName> {}
