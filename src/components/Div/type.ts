@@ -35,6 +35,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
    */
   tag?: MayDeepArray<DivDataTag | undefined>
   className?: MayDeepArray<ClassName | undefined>
+  /** @deprecated use plugin-click instead */
   onClick?: MayDeepArray<
     | ((payload: {
         event: React.MouseEvent<HTMLElement, MouseEvent>
