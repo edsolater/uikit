@@ -7,6 +7,11 @@ export * from './Col'
 export * from './Row'
 export * from './Group'
 
+//#region ------------------- addProps -------------------
+// Flow Control
+export * from './For'
+//#endregion
+
 export * from './ExpandClickableArea' // add a <Div> wrapper
 export * from './FadeIn'
 export * from './Transition/Transition'

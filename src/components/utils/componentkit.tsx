@@ -5,12 +5,13 @@ import { Div, DivProps } from '../Div'
 
 type Component<Props> = (props: Props) => JSX.Element
 
-type ComponentRoot = (componentkitProps?: DivProps) => JSX.Element
+type ComponentRootProps = DivProps
+type ComponentRoot = (componentkitProps?: ComponentRootProps) => JSX.Element
 
 export function componentkit<T>(
   options: { name: string } | string,
   ComponentConstructerFn: (ComponentRoot: ComponentRoot) => Component<T>
-): Component<T & DivProps> {
+): Component<T & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {
     const refedProps = useRef(props)
@@ -21,7 +22,7 @@ export function componentkit<T>(
 }
 
 function generateComponentRoot(props: RefObject<DivProps>) {
-  const ComponentRoot = (componentkitProps?: DivProps) => (
+  const ComponentRoot = (componentkitProps?: ComponentRootProps) => (
     <Div {...mergeProps(props.current, componentkitProps)}>{componentkitProps?.children}</Div>
   )
   return ComponentRoot
