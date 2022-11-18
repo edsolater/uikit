@@ -3,7 +3,9 @@
   "version": "0.1.13",
   "exports": {
     ".": "./dist/index.js",
-    "./plugins": "./dist/plugins.js"
+    "./plugins": "./dist/components/Div/plugins/pluginsIndex.js",
+    "./components": "./dist/components/index.js",
+    "./hooks": "./dist/hooks/index.js"
   },
   "type": "module",
   "typesVersions": {
@@ -12,7 +14,13 @@
         "./dist/index.d.ts"
       ],
       "plugins": [
-        "./dist/plugins.d.ts"
+        "./dist/components/Div/plugins/pluginsIndex.d.ts"
+      ],
+      "components": [
+        "./dist/components/index.d.ts"
+      ],
+      "hooks": [
+        "./dist/hooks/index.d.ts"
       ]
     }
   },

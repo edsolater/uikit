@@ -1,6 +1,6 @@
 import { isString, shrinkToValue } from '@edsolater/fnkit'
-import { onEvent, EventListenerController } from '../functions/dom/addEventListener'
-import { MayFunction } from '../typings/tools'
+import { onEvent, EventListenerController } from './addEventListener'
+import { MayFunction } from '../../typings/tools'
 
 const localStorageCache: Map<string, any> = new Map()
 const sessionStorageCache: Map<string, any> = new Map()
