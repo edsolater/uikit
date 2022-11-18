@@ -1,8 +1,21 @@
 {
   "name": "@edsolater/uikit",
   "version": "0.1.13",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "exports": {
+    ".": "./dist/index.js",
+    "./plugins": "./dist/plugins.js"
+  },
+  "type": "module",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "./dist/index.d.ts"
+      ],
+      "plugins": [
+        "./dist/plugins.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "type-check": "tsc --noEmit",
     "release": "rm -rf ./dist && tsc && npm version patch && npm publish",
