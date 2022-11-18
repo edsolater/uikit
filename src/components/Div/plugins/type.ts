@@ -1,7 +1,8 @@
+import { MayArray } from '@edsolater/fnkit'
 import { DivProps, HTMLTagMap } from '../type'
 
 export type WithPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
-  plugins?: Array<AbilityPlugin<TagName>>
+  plugins?: MayArray<AbilityPlugin<TagName>>
 }
 
 export type AbilityPlugin<TagName extends keyof HTMLTagMap = 'div'> = {

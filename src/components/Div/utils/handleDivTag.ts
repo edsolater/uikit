@@ -1,7 +1,7 @@
-import { createDataTag, hasTag } from './tag'
-import { DivProps, HTMLTagMap } from '../type'
+import { pipeHandlers } from '@edsolater/fnkit'
 import { produce } from 'immer'
-import { AnyFn, pipeHandlers } from '@edsolater/fnkit'
+import { DivProps } from '../type'
+import { createDataTag, hasTag } from './tag'
 
 export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })

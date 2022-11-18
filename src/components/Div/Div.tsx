@@ -2,17 +2,17 @@ import { createElement } from 'react'
 
 import { flapDeep, isString, isUndefined, merge, omit, pipeHandlers, shakeFalsy, shakeNil } from '@edsolater/fnkit'
 
-import { weakCacheInvoke as invokeOnce } from '../../functions/dom/weakCacheInvoke'
+import { invokeOnce } from '../../functions/dom/invokeOnce'
 import { mergeProps } from '../../functions/react'
 import classname from '../../functions/react/classname'
 import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { parseCSS } from '../../styles/parseCSS'
-import { DivProps, HTMLTagMap } from './type'
-import { handleDivTag } from './utils/handleDivTag'
-import { handleDivShallowProps } from './utils/handleDivShallowProps'
-import { toDataset } from './utils/tag'
-import { handleDivChildren } from './utils/handleDivChildren'
 import { handleDivPlugins } from './plugins/handleDivPlugins'
+import { DivProps, HTMLTagMap } from './type'
+import { handleDivChildren } from './utils/handleDivChildren'
+import { handleDivShallowProps } from './utils/handleDivShallowProps'
+import { handleDivTag } from './utils/handleDivTag'
+import { toDataset } from './utils/tag'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
