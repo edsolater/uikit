@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { handleHover, HandleHoverOptions } from '../functions/dom/gesture/hover'
+import { handleHover, HandleHoverOptions } from '../functions/dom/gesture/handleHover'
 import { getElementsFromRefs } from '../functions/getElementsFromRefs'
 import { HTMLElementRefs } from '../utils/react/getElementsFromRefs'
 import { useToggle } from './useToggle'

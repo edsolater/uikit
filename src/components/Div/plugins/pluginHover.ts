@@ -1,5 +1,5 @@
 import { isObject } from '@edsolater/fnkit'
-import { handleHover, HandleHoverOptions } from '../../../functions/dom/gesture/hover'
+import { handleHover, HandleHoverOptions } from '../../../functions/dom/gesture/handleHover'
 import { createCallbackRef } from '../../../hooks/useCallbackRef'
 import { AbilityPlugin } from './type'
 

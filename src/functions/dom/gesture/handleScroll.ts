@@ -2,7 +2,7 @@ import { debounce, OffsetDepth, parseNumberOrPercent } from '@edsolater/fnkit'
 import { onEvent, EventListenerController } from '../addEventListener'
 
 const SCROLL_STOP_DELAY = 100 // when it is not scroll in 100ms, assumed it to stop scroll
-export interface ScrollDetectorOptions {
+export interface HandleScrollOptions {
   /**
    * default `25%` height of clientHeight
    */
@@ -21,7 +21,7 @@ export interface ScrollDetectorOptions {
 
 const weakScrollControllerMap = new WeakMap<HTMLElement, EventListenerController[]>()
 
-export function attachScroll(el: HTMLElement, options: ScrollDetectorOptions) {
+export function handleScroll(el: HTMLElement, options: HandleScrollOptions) {
   // nearly only invoke once
   let prevScrollTop: number
   const debouncedOnStopScroll = options.onScrollStop && debounce(options.onScrollStop, { delay: SCROLL_STOP_DELAY })

@@ -1,5 +1,5 @@
 import { inServer } from '../isSSR'
-import { attachScroll } from './gesture/scroll'
+import { handleScroll } from './gesture/handleScroll'
 
 export function scrollIntoView(el: HTMLElement, options?: ScrollIntoViewOptions) {
   const defaultedOptions = Object.assign({ behavior: 'smooth' } as ScrollIntoViewOptions, options)
@@ -9,7 +9,7 @@ export function scrollIntoView(el: HTMLElement, options?: ScrollIntoViewOptions)
       resolve()
       return
     }
-    attachScroll(el.parentElement ?? window.document.documentElement, {
+    handleScroll(el.parentElement ?? window.document.documentElement, {
       onScrollStop: () => resolve(),
       autoRemoveListener: true
     })
