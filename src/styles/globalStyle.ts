@@ -15,6 +15,7 @@ export function injectGlobalResetStyle() {
     }
     * {
       box-sizing: border-box;
+      cursor: default;
     }
 
     a {
@@ -54,10 +55,6 @@ export function injectGlobalResetStyle() {
       }
     }
     
-    /* let all element use default cursor by default  */
-    * {
-      cursor: inherit;
-    }
     button,
     a {
       cursor: pointer;
