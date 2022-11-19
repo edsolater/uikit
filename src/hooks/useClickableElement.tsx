@@ -1,14 +1,15 @@
 import { RefObject, useEffect, useRef } from 'react'
 
-import { addTabIndex } from '../utils/dom/addTabIndex'
-import { useClick, UseClickOptions } from './useClick'
-import { useHover } from './useHover'
+import { HandleClickOptions } from '../functions/dom/gesture/click'
 import { HandleHoverOptions } from "../functions/dom/gesture/hover"
+import { addTabIndex } from '../utils/dom/addTabIndex'
+import { useClick } from './useClick'
+import { useHover } from './useHover'
 
 /**
  *  a merge of {@link useClick} and {@link useHover}, and some tailwindcss class
  */
-export function useClickableElement(ref: RefObject<HTMLElement>, options?: UseClickOptions & HandleHoverOptions) {
+export function useClickableElement(ref: RefObject<HTMLElement>, options?: HandleClickOptions & HandleHoverOptions) {
   useClick(ref, options)
   useHover(ref, options)
   useEffect(() => {
@@ -27,7 +28,7 @@ export function useClickableElement(ref: RefObject<HTMLElement>, options?: UseCl
 }
 
 export function useClickableElementRef<RefType extends HTMLElement = HTMLElement>(
-  options?: UseClickOptions & HandleHoverOptions
+  options?: HandleClickOptions & HandleHoverOptions
 ) {
   const ref = useRef<RefType>(null)
   useClickableElement(ref, options)

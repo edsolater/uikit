@@ -1,14 +1,13 @@
 import { isObject } from '@edsolater/fnkit'
-import { UseHoverOptions } from '@edsolater/hookit'
-import { handleHover } from '../../../functions/dom/gesture/hover'
+import { handleHover, HandleHoverOptions } from '../../../functions/dom/gesture/hover'
 import { createCallbackRef } from '../../../hooks/useCallbackRef'
 import { AbilityPlugin } from './type'
 
 export const hover: {
-  (options: UseHoverOptions): AbilityPlugin
-  (onHoverCallback: UseHoverOptions['onHover'], options?: UseHoverOptions): AbilityPlugin
+  (options: HandleHoverOptions): AbilityPlugin
+  (onHoverCallback: HandleHoverOptions['onHover'], options?: HandleHoverOptions): AbilityPlugin
 } = (...args) => {
-  const options: UseHoverOptions = isObject(args[0]) ? args[0] : { ...args[1], onHover: args[0] }
+  const options: HandleHoverOptions = isObject(args[0]) ? args[0] : { ...args[1], onHover: args[0] }
   const divRef = createCallbackRef<HTMLElement>((el) => {
     handleHover(el, options)
   })
