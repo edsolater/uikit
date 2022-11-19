@@ -1,60 +1,19 @@
 import { useEffect } from 'react'
+import { getElementsFromRefs } from '../functions/getElementsFromRefs'
 
-import { getHTMLElementsFromRefs, HTMLElementRefs } from '../utils/react/getElementsFromRefs'
+import { HTMLElementRefs } from '../utils/react/getElementsFromRefs'
 import { useToggle } from './useToggle'
+import { HandleHoverOptions, handleHover } from '../functions/dom/gesture/hover'
 
 //#region ------------------- hook: useHover() -------------------
 
-export interface UseHoverOptions {
-  triggerDelay?: number
-  disable?: boolean
-  onHoverStart?: (info: { ev: PointerEvent }) => void
-  onHoverEnd?: (info: { ev: PointerEvent }) => void
-  onHover?: (info: { ev: PointerEvent; is: 'start' | 'end' }) => void
-}
-
-export function useHover(
-  ref: HTMLElementRefs,
-  { disable, onHoverStart: onHoverEnter, onHoverEnd: onHoverLeave, onHover, triggerDelay }: UseHoverOptions = {}
-) {
+export function useHover(ref: HTMLElementRefs, options?: HandleHoverOptions) {
   const [isHover, { on: turnonHover, off: turnoffHover }] = useToggle(false)
-
   useEffect(() => {
-    if (disable) return
-    let hoverDelayTimerId
-    const hoverStartHandler = (ev: PointerEvent) => {
-      if (disable) return
-      if (triggerDelay) {
-        hoverDelayTimerId = setTimeout(() => {
-          hoverDelayTimerId = undefined
-          turnonHover()
-          onHover?.({ ev, is: 'start' })
-          onHoverEnter?.({ ev })
-        }, triggerDelay)
-      } else {
-        turnonHover()
-        onHover?.({ is: 'start', ev })
-        onHoverEnter?.({ ev })
-      }
-    }
-    const hoverEndHandler = (ev: PointerEvent) => {
-      if (disable) return
-      turnoffHover()
-      onHover?.({ ev, is: 'end' })
-      onHoverLeave?.({ ev })
-      clearTimeout(hoverDelayTimerId)
-      hoverDelayTimerId = undefined
-    }
-    const els = getHTMLElementsFromRefs(ref)
-    els.forEach((el) => el.addEventListener('pointerenter', hoverStartHandler))
-    els.forEach((el) => el.addEventListener('pointerleave', hoverEndHandler))
-    els.forEach((el) => el.addEventListener('pointercancel', hoverEndHandler))
-    return () => {
-      els.forEach((el) => el.removeEventListener('pointerenter', hoverStartHandler))
-      els.forEach((el) => el.removeEventListener('pointerleave', hoverEndHandler))
-      els.forEach((el) => el.removeEventListener('pointercancel', hoverEndHandler))
-    }
-  }, [disable, onHoverEnter, onHoverLeave, onHover])
-
+    if (!options) return
+    const controls = handleHover(getElementsFromRefs(ref), options)
+    controls.onStateChange((ishover) => (ishover ? turnonHover() : turnoffHover()))
+    return controls.cancel
+  }, [options?.disable, options?.onHoverEnter, options?.onHoverLeave, options?.onHover])
   return isHover
 }

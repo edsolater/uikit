@@ -28,7 +28,6 @@ export default function useAsyncValue<V, F = never>(
   const asyncSetterNumber = useRef(0)
   useRecordedEffect(
     ([prevAsyncGetValue]) => {
-      console.log('2: ', prevAsyncGetValue === asyncGetValue)
       ;(async () => {
         // update async setter number
         const actionNumber = asyncSetterNumber.current

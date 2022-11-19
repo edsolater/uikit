@@ -1,4 +1,4 @@
-import { flap, isObject, MayArray, shakeNil } from  '@edsolater/fnkit'
+import { flap, isObject, MayArray, shakeNil } from '@edsolater/fnkit'
 import { RefObject } from 'react'
 
 export type HTMLElementRefs = MayArray<RefObject<HTMLElement | undefined | null> | HTMLElement | undefined | null>
