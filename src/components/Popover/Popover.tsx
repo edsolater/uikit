@@ -37,7 +37,7 @@ export interface PopoverProps {
 
   /** for direct child */
   className?: string
-  /** usually it's for debug */
+  /** usually it's for debug, stay open */
   forceOpen?: boolean
   /** only affact init render */
   defaultOpen?: boolean
@@ -93,7 +93,7 @@ export function Popover({
   const buttonRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const { isPanelShowed, controls } = usePopoverTrigger(buttonRef, panelRef, {
+  const { isTriggled, controls } = usePopoverTrigger(buttonRef, panelRef, {
     disabled: !canOpen,
     defaultOpen,
     triggerDelay,
@@ -108,9 +108,9 @@ export function Popover({
     viewportBoundaryInset
   })
 
-  useImperativeHandle<any, PopoverHandles>(componentRef, () => ({ ...controls, isPanelShowed }))
+  useImperativeHandle<any, PopoverHandles>(componentRef, () => ({ ...controls, isPanelShowed: isTriggled }))
 
-  useIsomorphicLayoutEffect(updateLocation, [isPanelShowed, isPanelMounted])
+  useIsomorphicLayoutEffect(updateLocation, [isTriggled, isPanelMounted])
 
   const popoverButton = pickChildByType(children, PopoverButton, {
     $isRenderByMain: true
@@ -120,7 +120,7 @@ export function Popover({
     $controls: controls,
     $buttonRef: buttonRef,
     $placement: placement,
-    $isPanelShowed: isPanelShowed,
+    $isPanelShowed: isTriggled,
 
     children: shrinkToValue(oldProps.children, [
       { close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }
@@ -141,7 +141,7 @@ export function Popover({
       >
         <Div className={[Popover.name, className]}>
           <Transition
-            show={forceOpen || isPanelShowed}
+            show={forceOpen || isTriggled}
             fromProps={{ icss: { opacity: 0, transform: 'scale(0.5)' } }}
             toProps={{ icss: { opacity: 1, transform: 'scale(1)' } }}
             cssTransitionDurationMs={150}

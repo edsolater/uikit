@@ -1,6 +1,6 @@
 import { MayArray } from '@edsolater/fnkit'
-import { useClick, useClickOutside, useHover, useToggleRef } from '@edsolater/hookit'
 import { RefObject, useState } from 'react'
+import { useClick, useClickOutside, useHover, useToggleRef } from '../../hooks'
 
 export type PopoverTriggerControls = {
   on(): void
@@ -21,17 +21,18 @@ export function usePopoverTrigger(
     /** @default click */
     triggerBy?: PopoverTiggerBy
   }
-): { isPanelShowed: boolean; controls: { off(): void; on(): void; toggle(): void } } {
+): { isTriggled: boolean; controls: { off(): void; on(): void; toggle(): void } } {
   const { closeDelay = 600, triggerBy = 'click', triggerDelay, disabled } = options ?? {}
 
   // TODO: useToggleRef should be toggleWrapper(useSignalState())
-  const [isPanelShowed, setisPanelShowed] = useState(Boolean(options?.defaultOpen))
+  const [isTriggled, setIsTriggled] = useState(Boolean(options?.defaultOpen))
   const [isPanelShowedRef, { toggle, on, delayOff, off }] = useToggleRef(Boolean(options?.defaultOpen), {
     delay: closeDelay,
     onChange: (isOn) => {
-      setisPanelShowed(isOn)
+      setIsTriggled(isOn)
     }
   })
+
   useClick(buttonRef, {
     disable: Boolean(disabled || !triggerBy.includes('click') || isPanelShowedRef.current),
     onClick: () => {
@@ -40,16 +41,17 @@ export function usePopoverTrigger(
       }
     }
   })
+
   useHover(buttonRef, {
     disable: disabled || !triggerBy.includes('hover'),
     triggerDelay,
-    onHoverStart: on,
-    onHoverEnd: () => delayOff()
+    onHoverEnter: on,
+    onHoverLeave: delayOff
   })
   useHover(panelRef, {
     disable: disabled || !triggerBy.includes('hover'),
-    onHoverStart: on,
-    onHoverEnd: () => delayOff()
+    onHoverEnter: on,
+    onHoverLeave: delayOff
   })
   // // TODO: popover content may not focusable, so can't set onBlur
   // NOTE: foce can confilt with useClickOutside
@@ -60,8 +62,8 @@ export function usePopoverTrigger(
   // })
 
   useClickOutside(panelRef, {
-    disable: disabled || !isPanelShowed,
+    disable: disabled || !isTriggled,
     onClickOutSide: off
   })
-  return { isPanelShowed, controls: { off, on, toggle } }
+  return { isTriggled, controls: { off, on, toggle } }
 }
