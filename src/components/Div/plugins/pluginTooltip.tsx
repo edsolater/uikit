@@ -1,18 +1,15 @@
 import { isString } from '@edsolater/fnkit'
-import { createNormalPlugin } from './createPlugin'
+import { Tooltip } from '../../Tooltip'
+import { DivChildNode } from '../type'
+import { createWrapperPlugin } from './createPlugin'
 
 export type TooltipPluginOptions = {
-  content: string
+  content: DivChildNode
 }
-/** used in user's use action */
-export const tooltip = createNormalPlugin(
+
+export const tooltip = createWrapperPlugin(
   (...args: [TooltipPluginOptions] | [content: TooltipPluginOptions['content'], options?: TooltipPluginOptions]) => {
     const options = (isString(args[0]) ? { ...args[1], content: args[0] } : args[0]) as TooltipPluginOptions
-
-    return {
-      htmlProps: {
-        title: String(options.content)
-      }
-    }
+    return (node) => <Tooltip renderButton={() => node} renderTooltipContent={options.content} />
   }
 )
