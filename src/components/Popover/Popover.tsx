@@ -127,7 +127,11 @@ export function Popover({
 
   useImperativeHandle<any, PopoverHandles>(componentRef, () => ({ ...controls, isPanelShowed: isTriggled }))
 
-  useIsomorphicLayoutEffect(updateLocation, [isTriggled, isPanelMounted])
+  useIsomorphicLayoutEffect(() => {
+    if (isPanelMounted) {
+      updateLocation()
+    }
+  }, [isTriggled, isPanelMounted])
 
   const popoverButton = renderButton ? (
     <PopoverButton $isRenderByMain>{shrinkToValue(renderButton)}</PopoverButton>

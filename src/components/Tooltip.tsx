@@ -12,6 +12,7 @@ export const Tooltip = uikit('Tooltip', (KitRoot) => (props: TooltipProps) => (
   <KitRoot>
     <Popover
       triggerBy='hover'
+      placement='top'
       {...props}
       renderPanel={
         <Div
