@@ -6,11 +6,11 @@ import { pickChildByType } from '../../functions/react'
 import { AddProps } from '../AddProps'
 import { Div } from '../Div/Div'
 import { Portal } from '../Portal'
-import { SubComponentProps, SubComponent } from '../SubComponent'
+import { SubComponent, SubComponentProps } from '../SubComponent'
 import { Transition } from '../Transition/Transition'
 import { PopupLocationInfo, usePopoverLocation } from './useLocationCalculator'
 import { PopoverTiggerBy, PopoverTriggerControls, usePopoverTrigger } from './usePopoverTrigger'
-import React from 'react'
+import { DivChildNode } from '../Div'
 
 export * from './useLocationCalculator'
 export * from './usePopoverTrigger'
@@ -51,6 +51,20 @@ export interface PopoverProps {
   /** to leave some space when touch the viewport boundary */
   viewportBoundaryInset?: number
   children?: ReactNode
+
+  renderButton?: MayFn<DivChildNode>
+  renderPanel?: MayFn<
+    DivChildNode,
+    [
+      payload: {
+        locationInfo?: PopupLocationInfo
+        close(): void
+        buttonRef?: RefObject<HTMLDivElement>
+        selfRef?: RefObject<HTMLDivElement>
+        placement?: PopoverPlacement
+      }
+    ]
+  >
 }
 
 const POPOVER_STACK_ID = 'popover-stack'
@@ -87,7 +101,10 @@ export function Popover({
   componentRef,
   cornerOffset,
   popoverGap,
-  viewportBoundaryInset
+  viewportBoundaryInset,
+
+  renderButton,
+  renderPanel
 }: PopoverProps) {
   const [isPanelMounted, setIsPanelMounted] = useState(false)
   const buttonRef = useRef<HTMLDivElement>(null)
@@ -112,20 +129,26 @@ export function Popover({
 
   useIsomorphicLayoutEffect(updateLocation, [isTriggled, isPanelMounted])
 
-  const popoverButton = pickChildByType(children, PopoverButton, {
-    $isRenderByMain: true
-  })
-  const popoverPanel = pickChildByType(children, PopoverPanel, (oldProps) => ({
-    $isRenderByMain: true,
-    $controls: controls,
-    $buttonRef: buttonRef,
-    $placement: placement,
-    $isPanelShowed: isTriggled,
+  const popoverButton = renderButton ? (
+    <PopoverButton $isRenderByMain>{shrinkToValue(renderButton)}</PopoverButton>
+  ) : (
+    pickChildByType(children, PopoverButton, {
+      $isRenderByMain: true
+    })
+  )
 
-    children: shrinkToValue(oldProps.children, [
-      { close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }
-    ])
-  }))
+  const popoverPanel = renderPanel ? (
+    <PopoverPanel $isRenderByMain>
+      {shrinkToValue(renderPanel, [{ close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }])}
+    </PopoverPanel>
+  ) : (
+    pickChildByType(children, PopoverPanel, (oldProps) => ({
+      $isRenderByMain: true,
+      children: shrinkToValue(oldProps.children, [
+        { close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }
+      ])
+    }))
+  )
 
   return (
     <>
@@ -179,8 +202,9 @@ export function PopoverButton({ $isRenderByMain, ...subcomponentProps }: Popover
 
 export type PopoverPanelProps = {
   $isRenderByMain?: boolean
+
   children?: MayFn<
-    ReactNode,
+    DivChildNode,
     [
       payload: {
         locationInfo?: PopupLocationInfo

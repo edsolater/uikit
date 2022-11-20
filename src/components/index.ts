@@ -21,6 +21,7 @@ export * from './Collapse'
 export * from './Dialog'
 export * from './Drawer'
 export * from './Popover/Popover'
+export * from './Tooltip'
 export * from './List'
 export * from './SplitView'
 
