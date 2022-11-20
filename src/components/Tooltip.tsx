@@ -4,7 +4,6 @@ import { uikit } from './utils'
 
 export type TooltipProps = {
   name?: string
-  renderButton?: DivChildNode
   renderTooltipContent?: DivChildNode
 } & Omit<PopoverProps, 'renderButton' | 'renderPanel'>
 

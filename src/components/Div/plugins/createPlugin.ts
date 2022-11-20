@@ -1,10 +1,21 @@
-import { DivProps } from '../type';
-import { AbilityPlugin } from './type';
+import { ReactElement } from 'react'
+import { DivProps } from '../type'
+import { AbilityNormalPlugins, AbilityPlugin, AbilityWrapperPlugins } from './type'
 
-export function createPlugin<T extends any[]>(
-  createrFn: (...pluginOptions: T) => DivProps | undefined,
+export function createNormalPlugin<T extends any[]>(
+  createrFn: (...pluginCustomizedOptions: T) => DivProps | undefined,
   options?: {
-    pluginName: string;
-  }): (...pluginOptions: T) => AbilityPlugin {
-  return (...args) => ({ additionalProps: createrFn(...args) ?? {} });
+    pluginName?: string
+  }
+): (...pluginCustomizedOptions: T) => AbilityNormalPlugins {
+  return (...args) => ({ isOutsideWrapperNode: false, additionalProps: createrFn(...args) ?? {} })
+}
+
+export function createWrapperPlugin<T extends any[]>(
+  createrFn: (...pluginCustomizedOptions: T) => (node: ReactElement) => ReactElement,
+  options?: {
+    pluginName?: string
+  }
+): (...pluginCustomizedOptions: T) => AbilityWrapperPlugins {
+  return (...args) => ({ isOutsideWrapperNode: true, getWrappedNode: createrFn(...args) })
 }
