@@ -5,9 +5,10 @@ import { uikit } from './utils'
 export type TooltipProps = {
   name?: string
   renderTooltipContent?: DivChildNode
-} & Omit<PopoverProps, 'renderPanel'>
+  children?: TooltipProps['renderTooltipContent']
+} & Omit<PopoverProps, 'renderPanel' | 'children'>
 
-export const Tooltip = uikit('Tooltip', (KitRoot) => (props: TooltipProps) => (
+export const Tooltip = uikit('Tooltip', (KitRoot) => ({ children, renderTooltipContent, ...props }: TooltipProps) => (
   <KitRoot>
     <Popover
       triggerBy='hover'
@@ -22,7 +23,7 @@ export const Tooltip = uikit('Tooltip', (KitRoot) => (props: TooltipProps) => (
             padding: 8
           }}
         >
-          {props.renderTooltipContent}
+          {renderTooltipContent ?? children}
         </Div>
       }
     />

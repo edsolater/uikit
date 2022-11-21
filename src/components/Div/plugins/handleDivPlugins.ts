@@ -16,7 +16,7 @@ export const handleDivWrapperPlugins =
     return (wrapperPlugins ?? []).reduce((prevNode, { getWrappedNode }) => getWrappedNode(prevNode), node)
   }
 
-export function splitPlugins<P extends Partial<DivProps<any>>>(
+export function splitPropPlugins<P extends Partial<DivProps<any>>>(
   props: P
 ): {
   props: Omit<P, 'plugins'>

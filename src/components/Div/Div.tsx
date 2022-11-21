@@ -5,7 +5,7 @@ import { mergeProps } from '../../functions/react'
 import classname from '../../functions/react/classname'
 import mergeRefs, { loadRef } from '../../functions/react/mergeRefs'
 import { parseCSS } from '../../styles/parseCSS'
-import { handleDivNormalPlugins, handleDivWrapperPlugins, splitPlugins } from './plugins/handleDivPlugins'
+import { handleDivNormalPlugins, handleDivWrapperPlugins, splitPropPlugins } from './plugins/handleDivPlugins'
 import { DivProps, HTMLTagMap } from './type'
 import { handleDivChildren } from './utils/handleDivChildren'
 import { handleDivShallowProps } from './utils/handleDivShallowProps'
@@ -14,7 +14,7 @@ import { toDataset } from './utils/tag'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
-  const { props: parsedProps, normalPlugins, wrapperPlugins } = splitPlugins(props)
+  const { props: parsedProps, normalPlugins, wrapperPlugins } = splitPropPlugins(props)
 
   const mergedProps = pipe(
     parsedProps,

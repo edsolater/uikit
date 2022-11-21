@@ -50,9 +50,9 @@ export interface PopoverProps {
   popoverGap?: number
   /** to leave some space when touch the viewport boundary */
   viewportBoundaryInset?: number
-  children?: ReactNode
 
   renderButton?: MayFn<DivChildNode>
+  children?: PopoverProps['renderButton']
   renderPanel?: MayFn<
     DivChildNode,
     [
@@ -133,30 +133,11 @@ export function Popover({
     }
   }, [isTriggled, isPanelMounted])
 
-  const popoverButton = renderButton ? (
-    <PopoverButton $isRenderByMain>{shrinkToValue(renderButton)}</PopoverButton>
-  ) : (
-    pickChildByType(children, PopoverButton, {
-      $isRenderByMain: true
-    })
-  )
-
-  const popoverPanel = renderPanel ? (
-    <PopoverPanel $isRenderByMain>
-      {shrinkToValue(renderPanel, [{ close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }])}
-    </PopoverPanel>
-  ) : (
-    pickChildByType(children, PopoverPanel, (oldProps) => ({
-      $isRenderByMain: true,
-      children: shrinkToValue(oldProps.children, [
-        { close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }
-      ])
-    }))
-  )
-
   return (
     <>
-      <AddProps domRef={buttonRef}>{popoverButton}</AddProps>
+      <AddProps domRef={buttonRef}>
+        <PopoverButton>{shrinkToValue(renderButton)}</PopoverButton>
+      </AddProps>
       <Portal
         id={POPOVER_STACK_ID}
         zIndex={1030}
@@ -186,7 +167,11 @@ export function Popover({
               }
               domRef={panelRef}
             >
-              {popoverPanel}
+              <PopoverPanel>
+                {shrinkToValue(renderPanel ?? children, [
+                  { close: controls.off, locationInfo, placement, buttonRef, selfRef: panelRef }
+                ])}
+              </PopoverPanel>
             </Div>
           </Transition>
         </Div>
@@ -195,18 +180,13 @@ export function Popover({
   )
 }
 
-export type PopoverButtonProps = {
-  $isRenderByMain?: boolean
-} & SubComponentProps
+export type PopoverButtonProps = {} & SubComponentProps
 
-export function PopoverButton({ $isRenderByMain, ...subcomponentProps }: PopoverButtonProps) {
-  if (!$isRenderByMain) return null
-  return <SubComponent {...subcomponentProps} className={[PopoverButton.name, subcomponentProps.className]} />
+export function PopoverButton(props: PopoverButtonProps) {
+  return <SubComponent {...props} className={[PopoverButton.name, props.className]} />
 }
 
 export type PopoverPanelProps = {
-  $isRenderByMain?: boolean
-
   children?: MayFn<
     DivChildNode,
     [
@@ -221,10 +201,6 @@ export type PopoverPanelProps = {
   >
 } & Omit<SubComponentProps, 'children'>
 
-export function PopoverPanel({ $isRenderByMain, children, ...subcomponentProps }: PopoverPanelProps) {
-  if (!$isRenderByMain) return null
+export function PopoverPanel({ children, ...subcomponentProps }: PopoverPanelProps) {
   return <SubComponent {...subcomponentProps}>{children as ReactNode /* fake */}</SubComponent>
 }
-
-Popover.Panel = PopoverPanel
-Popover.Button = PopoverButton
