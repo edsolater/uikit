@@ -1,4 +1,3 @@
-import { addDefault } from '@edsolater/fnkit'
 import { ICSSObject } from '../styles'
 import { Div } from './Div'
 import { uikit } from './utils'
@@ -11,24 +10,21 @@ export interface IconProps {
   src?: string
 }
 
-export const Icon = uikit('Icon', (KitRoot) => (rawProps: IconProps) => {
-  const props = addDefault(rawProps, { size: 'md', cssColor: 'currentcolor' })
-
-  const sizePx =
-    props.size === 'xs' ? 12 : props.size === 'sm' ? 16 : props.size === 'smi' ? 20 : props.size === 'md' ? 24 : 32
+export const Icon = uikit('Icon', (KitRoot) => ({ cssColor = 'currentcolor', size = 'md', src }: IconProps) => {
+  const sizePx = size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'smi' ? 20 : size === 'md' ? 24 : 32
 
   return (
     <KitRoot>
       <Div
         icss={{
-          position:'relative',
-          '::before':{
-            content:"''",
-            position:'absolute',
-            inset:0,
-            backgroundColor: props.cssColor,
-            mask: `url(${props.src})`,
-            maskSize: 'cover',
+          position: 'relative',
+          '::before': {
+            content: "''",
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: cssColor,
+            mask: `url(${src})`,
+            maskSize: 'cover'
           },
           width: sizePx,
           height: sizePx
