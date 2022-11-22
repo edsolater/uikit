@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { HTMLElements } from '../../../utils/dom/getHTMLElementsFromEls'
 import { getHTMLElementsFromRefs } from '../../../utils/react/getElementsFromRefs'
 import { createObserveValue } from '../../utils'

@@ -1,6 +1,6 @@
-import { addEventListener, EventListenerController } from '../../utils/dom/addEventListener'
+import { addEventListener, EventListenerController } from '../../../utils/dom/addEventListener'
 import { mapKey, shakeFalsy, toLowerCase, unified } from '@edsolater/fnkit'
-import { addTabIndex } from '../../utils/dom/addTabIndex'
+import { addTabIndex } from '../../../utils/dom/addTabIndex'
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
@@ -73,12 +73,12 @@ type KeyNamesNavigation =
   | 'ArrowLeft'
   | 'ArrowRight'
   | 'ArrowDown'
-type KeyboardShortcutSetting = {
+export type KeyboardShortcut = {
   [key in `${`${AuxiliaryKeyName} + ` | ''}${ContentKeyName}`]?: () => void
 }
-export function bindKeyboardShortcut(
+export function handleKeyboardShortcut(
   el: HTMLElement,
-  keyboardShortcutSetting: KeyboardShortcutSetting
+  keyboardShortcutSetting: KeyboardShortcut
 ): EventListenerController {
   const formatedKeyboardShortcutSetting = mapKey(keyboardShortcutSetting, (key) =>
     formatKeyboardSettingString(String(key))

@@ -1,3 +1,4 @@
-export * from './pluginClick'
-export * from './pluginHover'
-export * from './pluginKit'
+export * from './click'
+export * from './hover'
+export * from './keyboardShortcut'
+export * from './kit'

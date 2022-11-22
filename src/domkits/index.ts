@@ -3,4 +3,4 @@ export * from './useIntersectionObserver'
 export * from './useScrollDetectorRef'
 export * from './useScroll'
 
-export * from './keyboard'
+export * from '../plugins/keyboardShortcutt'
