@@ -1,7 +1,7 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
 import { RefObject, useRef } from 'react'
 import { mergeProps } from '../../functions/react'
-import { Div, DivProps } from '../Div'
+import { Div, DivProps } from '../../Div'
 
 type Component<Props> = (props: Props) => JSX.Element
 

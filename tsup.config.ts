@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: [
     'src/index.ts',
-    'src/components/Div/plugins/index.ts',
+    'src/plugins/index.ts',
     'src/components/index.ts',
     'src/hooks/index.ts'
   ],

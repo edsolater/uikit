@@ -14,8 +14,8 @@ import {
 import { onEvent } from '../functions/dom/addEventListener'
 import mergeFunction from '../functions/mergeFunction'
 import { splice } from '../functions/splice.temp'
-import { Div } from './Div/Div'
-import { DivProps } from './Div/type'
+import { Div } from '../Div/Div'
+import { DivProps } from '../Div/type'
 import { SubComponent } from './SubComponent'
 
 export interface InputHandler {

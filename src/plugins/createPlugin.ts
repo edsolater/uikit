@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import { DivProps } from '../type'
+import { DivProps } from '../Div/type'
 import { AbilityNormalPlugins, AbilityPlugin, AbilityWrapperPlugins } from './type'
 
 export function createNormalPlugin<T extends any[]>(

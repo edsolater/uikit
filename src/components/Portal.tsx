@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { inClient } from '../functions/isSSR'
 import { AddProps } from './AddProps'
-import { DivProps } from './Div/type'
+import { DivProps } from '../Div/type'
 
 type PortalProps = {
   id: string

@@ -1,5 +1,5 @@
 import { ICSSObject } from '../styles'
-import { Div } from './Div'
+import { Div } from '../Div'
 import { uikit } from './utils'
 
 export interface IconProps {

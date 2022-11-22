@@ -1,5 +1,5 @@
-import { Div } from './Div/Div'
-import { DivProps } from './Div/type'
+import { Div } from '../Div/Div'
+import { DivProps } from '../Div/type'
 
 export interface SubComponentProps extends DivProps {
   childIsRoot?: boolean

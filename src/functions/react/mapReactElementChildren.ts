@@ -1,6 +1,6 @@
 import { flap } from '@edsolater/fnkit'
 import React, { isValidElement, ReactElement } from 'react'
-import { DivProps } from '../../components'
+import { DivProps } from '../../Div'
 
 export function mapElementChildren(
   children: DivProps['children'],

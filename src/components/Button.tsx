@@ -7,8 +7,8 @@ import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString, CSSStyle } from '../styles/type'
 import { MayFunction } from '../typings/tools'
-import { Div } from './Div/Div'
-import { DivProps } from './Div/type'
+import { Div } from '../Div/Div'
+import { DivProps } from '../Div/type'
 
 type BooleanLike = unknown
 

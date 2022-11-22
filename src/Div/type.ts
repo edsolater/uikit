@@ -1,11 +1,11 @@
 import { MayEnum } from '@edsolater/fnkit'
 import { UseHoverOptions } from '@edsolater/hookit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
-import { ClassName } from '../../functions/react/classname'
-import { ICSS } from '../../styles/parseCSS'
-import { CSSStyle } from '../../styles/type'
-import { MayDeepArray } from '../../typings/tools'
-import { AbilityPlugin, WithPlugins } from './plugins/type'
+import { ClassName } from '../functions/react/classname'
+import { ICSS } from '../styles/parseCSS'
+import { CSSStyle } from '../styles/type'
+import { MayDeepArray } from '../typings/tools'
+import { AbilityPlugin, WithPlugins } from '../plugins/type'
 import { DivDataTag } from './utils/tag'
 
 export interface HTMLTagMap {

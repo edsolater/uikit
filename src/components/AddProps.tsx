@@ -1,7 +1,7 @@
 import { Fragment } from 'react'
 import { addPropsToReactElement } from '../functions/react'
-import { DivProps } from './Div/type'
-import { handleDivShallowProps } from './Div/utils/handleDivShallowProps'
+import { DivProps } from '../Div/type'
+import { handleDivShallowProps } from '../Div/utils/handleDivShallowProps'
 
 type AddPropsProps = Omit<Partial<DivProps>, 'children'> & { children?: any }
 

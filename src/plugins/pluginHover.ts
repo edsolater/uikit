@@ -1,6 +1,6 @@
 import { isObject } from '@edsolater/fnkit'
-import { handleHover, HandleHoverOptions } from '../../../functions/dom/gesture/handleHover'
-import { createCallbackRef } from '../../../hooks/useCallbackRef'
+import { handleHover, HandleHoverOptions } from '../functions/dom/gesture/handleHover'
+import { createCallbackRef } from '../hooks/useCallbackRef'
 import { createNormalPlugin } from './createPlugin'
 
 export const hover = createNormalPlugin(

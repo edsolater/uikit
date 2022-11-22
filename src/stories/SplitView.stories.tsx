@@ -2,8 +2,8 @@ import { ComponentMeta, ComponentStory } from '@storybook/react'
 import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
-import { Div } from '../components/Div/Div'
-import { DivProps } from "../components/Div/type"
+import { Div } from '../Div/Div'
+import { DivProps } from "../Div/type"
 import {SplitView} from '../components/SplitView'
 import { cssColors, cssShadow } from '../styles'
 

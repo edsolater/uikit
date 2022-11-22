@@ -1,4 +1,3 @@
-export * from './Div'
 export * from './AddProps'
 
 export * from './SubComponent'

@@ -1,5 +1,4 @@
-import { createICSS, ICSS, ICSSObject } from '../../styles';
-
+import { ICSS, ICSSObject } from '../../styles'
 
 // export const cssCol = () => createICSS({ display: 'flex', flexDirection: 'column' });
 
@@ -14,7 +13,7 @@ type CSSColOptions = {
 export function cssCol(options?: CSSColOptions): ICSS {
   return {
     display: 'flex',
-    flexDirection:'column',
+    flexDirection: 'column',
     gap: options?.gap,
     justifyContent: options?.justify,
     justifyItems: options?.justifyItems,

@@ -1,4 +1,4 @@
-import { DivChildNode } from './Div'
+import { DivChildNode } from '../Div'
 import { uikit } from './utils'
 
 export interface GroupProps {

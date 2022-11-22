@@ -1,4 +1,4 @@
-import { mergeProps } from '../../../functions/react'
+import { mergeProps } from '../../functions/react'
 import { DivProps } from '../type'
 
 export function handleDivShallowProps<P extends Partial<DivProps<any>>>(props: P): Omit<P, 'shadowProps'> {

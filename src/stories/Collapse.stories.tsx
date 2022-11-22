@@ -3,7 +3,7 @@ import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
 import { Collapse, CollapseBody, CollapseFace } from '../components/Collapse'
-import { Div } from '../components/Div/Div'
+import { Div } from '../Div/Div'
 import { cssColors, cssShadow } from '../styles'
 
 const storySettings = {

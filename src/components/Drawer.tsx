@@ -1,8 +1,8 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { use2StateSyncer } from '@edsolater/hookit'
 import { ReactNode, useEffect, useState } from 'react'
-import { Div } from './Div/Div'
-import { DivProps } from './Div/type'
+import { Div } from '../Div/Div'
+import { DivProps } from '../Div/type'
 import { Portal } from './Portal'
 import { Transition } from './Transition/Transition'
 

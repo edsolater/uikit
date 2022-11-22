@@ -1,5 +1,5 @@
 import { ICSS } from '../../styles/parseCSS'
-import { DivChildNode } from '../Div'
+import { DivChildNode } from '../../Div'
 import { uikit } from '../utils'
 import { cssRow } from './cssRow'
 

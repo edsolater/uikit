@@ -1,5 +1,5 @@
 import { addPropsToReactElement } from '../functions/react'
-import { DivChildNode } from './Div/type'
+import { DivChildNode } from '../Div/type'
 import { uikit } from './utils'
 
 export interface ForProps<T extends any> {

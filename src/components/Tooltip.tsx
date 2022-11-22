@@ -1,4 +1,4 @@
-import { Div, DivChildNode } from './Div'
+import { Div, DivChildNode } from '../Div'
 import { Popover, PopoverProps } from './Popover/Popover'
 import { uikit } from './utils'
 

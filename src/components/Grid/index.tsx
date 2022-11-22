@@ -1,4 +1,4 @@
-import { DivChildNode } from '../Div'
+import { DivChildNode } from '../../Div'
 import { uikit } from '../utils'
 import { cssGrid } from './cssGrid'
 

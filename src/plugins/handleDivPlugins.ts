@@ -1,7 +1,7 @@
 import { flap, groupBy, omit } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
-import { mergeProps } from '../../../functions/react'
-import { DivProps } from '../type'
+import { mergeProps } from '../functions/react'
+import { DivProps } from '../Div/type'
 import { AbilityNormalPlugins, AbilityWrapperPlugins } from './type'
 
 export const handleDivNormalPlugins =

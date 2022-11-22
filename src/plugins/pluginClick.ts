@@ -1,7 +1,7 @@
 import { isObject } from '@edsolater/fnkit'
-import { handleClick, HandleClickOptions } from '../../../functions/dom/gesture/handleClick'
-import { createCallbackRef } from '../../../hooks/useCallbackRef'
-import { createICSS } from '../../../styles'
+import { handleClick, HandleClickOptions } from '../functions/dom/gesture/handleClick'
+import { createCallbackRef } from '../hooks/useCallbackRef'
+import { createICSS } from '../styles'
 import { createNormalPlugin } from './createPlugin'
 
 export type ClickPluginOptions = HandleClickOptions & {

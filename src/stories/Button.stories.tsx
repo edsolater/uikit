@@ -1,7 +1,7 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 
 import { Button } from '../components/Button'
-import { Div } from '../components/Div/Div'
+import { Div } from '../Div/Div'
 
 const storySettings = {
   component: Button,
