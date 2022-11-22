@@ -1,6 +1,6 @@
-import { cssSelectedStateColor, cssColors, cssSize } from "../cssValues"
-import { ICSSObject, createICSS } from "../parseCSS"
-import { CSSStyle } from "../type"
+import { cssSelectedStateColor, cssColors, cssSize } from '../cssValues'
+import { ICSSObject, createICSS } from '../parseCSS'
+import { CSSStyle } from '../type'
 
 export const icssGridTemplate = ({ itemMinWidth = '0' }: { itemMinWidth: string }) => ({
   gridTemplateColumns: `repeat(auto-fit, minmax(${itemMinWidth}, 1fr))`

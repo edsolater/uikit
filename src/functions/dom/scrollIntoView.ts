@@ -15,4 +15,3 @@ export function scrollIntoView(el: HTMLElement, options?: ScrollIntoViewOptions)
     })
   })
 }
-

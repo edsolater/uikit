@@ -6,10 +6,7 @@ export interface UseClickOutsideOptions {
   onClickOutSide?: () => void
 }
 
-export function useClickOutside(
-  ref: HTMLElementRefs,
-  { disable, onClickOutSide }: UseClickOutsideOptions = {}
-) {
+export function useClickOutside(ref: HTMLElementRefs, { disable, onClickOutSide }: UseClickOutsideOptions = {}) {
   useEffect(() => {
     if (disable) return
     const handleClickOutside = (ev: Event) => {

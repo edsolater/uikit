@@ -19,7 +19,6 @@ export const icssMargin = (options: {
     marginRight: options.mr
   })
 
-
 export const icssSpaceY = (value: ICSSObject['marginBottom']) =>
   createICSS({
     '& > *:not(:last-child)': {

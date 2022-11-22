@@ -27,7 +27,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   if (!mergedProps) return null
 
   const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)
-  
+
   const node = isHTMLTag
     ? createElement(
         mergedProps.as ?? 'div',

@@ -1,4 +1,4 @@
-import { flap,  isObjectLike, isTruthy, MayDeepArray } from  '@edsolater/fnkit'
+import { flap, isObjectLike, isTruthy, MayDeepArray } from '@edsolater/fnkit'
 
 export type ClassName = any | { [classname: string]: boolean }
 // <Div> 专用

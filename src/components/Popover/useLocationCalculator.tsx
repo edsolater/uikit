@@ -144,7 +144,6 @@ export function usePopoverLocation(
     )
   }, [])
 
-
   useEffect(() => {
     if (!buttonRef) return
     if (!panelRef) return

@@ -1,4 +1,4 @@
-import { isObject } from  '@edsolater/fnkit'
+import { isObject } from '@edsolater/fnkit'
 import { RefObject } from 'react'
 
 export function isRefObject(obj: any): obj is RefObject<any> {

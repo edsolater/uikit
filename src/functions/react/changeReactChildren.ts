@@ -22,10 +22,13 @@ export function changeReactChildren<T extends AnyFn, F extends AnyFn, W extends 
   oldChildren: ReactNode,
   mergeConfig: [ConfigItem<T>, ConfigItem<F>, ConfigItem<W>, ConfigItem<U>]
 )
-export function changeReactChildren<T extends AnyFn, F extends AnyFn, W extends AnyFn, U extends AnyFn, V extends AnyFn>(
-  oldChildren: ReactNode,
-  mergeConfig: [ConfigItem<T>, ConfigItem<F>, ConfigItem<W>, ConfigItem<U>, ConfigItem<V>]
-)
+export function changeReactChildren<
+  T extends AnyFn,
+  F extends AnyFn,
+  W extends AnyFn,
+  U extends AnyFn,
+  V extends AnyFn
+>(oldChildren: ReactNode, mergeConfig: [ConfigItem<T>, ConfigItem<F>, ConfigItem<W>, ConfigItem<U>, ConfigItem<V>])
 export function changeReactChildren(oldChildren: ReactNode, mergeConfig: ConfigItem<any>[])
 export function changeReactChildren<T extends AnyFn>(oldChildren: ReactNode, mergeConfig: MayArray<ConfigItem<T>>) {
   return React.Children.map(oldChildren, (child, index) => {

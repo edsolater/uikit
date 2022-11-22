@@ -1,14 +1,6 @@
 import { assert, map, pick, shrinkToValue, toPascalCase } from '@edsolater/fnkit'
 import { toCamelCase } from '@edsolater/fnkit'
-import React, {
-  createContext,
-  ReactElement,
-  ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState
-} from 'react'
+import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
 
 type MayStateFn<T> = T | ((prev: T) => T)
 type StoreTemplate = { [key: string]: any }
@@ -301,7 +293,7 @@ export const createContextStore = <T extends StoreTemplate>(
   /**
    * It should be add to component tree root(no need any props)
    */
-  ContextProvider: (props: { children?: React.ReactNode })=> JSX.Element
+  ContextProvider: (props: { children?: React.ReactNode }) => JSX.Element
 
   getStoreState(): T
 

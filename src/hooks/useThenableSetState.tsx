@@ -1,7 +1,6 @@
 import { isExist } from '@edsolater/fnkit'
 import { SetStateAction, useEffect, useRef, useState } from 'react'
 
-
 /**
  * !! haven't tested
  * just like React build-in `useState()`, but with callback support

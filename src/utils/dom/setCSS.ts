@@ -1,4 +1,4 @@
-import { isNumber, isObject,  MayFn, shrinkToValue, toKebabCase, Nullish } from '@edsolater/fnkit'
+import { isNumber, isObject, MayFn, shrinkToValue, toKebabCase, Nullish } from '@edsolater/fnkit'
 import { CSSProperties } from 'react'
 
 /**

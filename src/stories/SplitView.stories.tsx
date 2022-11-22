@@ -3,8 +3,8 @@ import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
 import { Div } from '../Div/Div'
-import { DivProps } from "../Div/type"
-import {SplitView} from '../components/SplitView'
+import { DivProps } from '../Div/type'
+import { SplitView } from '../components/SplitView'
 import { cssColors, cssShadow } from '../styles'
 
 const storySettings = {
@@ -14,7 +14,17 @@ const storySettings = {
 
 const Template: ComponentStory<typeof SplitView> = (props) => {
   return (
-    <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', height: 600, resize:'both', overflow:'hidden' }}>
+    <Div
+      icss={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        width: '100%',
+        height: 600,
+        resize: 'both',
+        overflow: 'hidden'
+      }}
+    >
       <SplitView {...props}></SplitView>
     </Div>
   )

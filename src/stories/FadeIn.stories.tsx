@@ -14,7 +14,7 @@ const storySettings = {
 const Template: ComponentStory<typeof FadeIn> = (props) => {
   const [isShow, { toggle }] = useToggle()
   return (
-    <Div icss={{display:'flex', flexDirection:'column', gap: '16px'}}>
+    <Div icss={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <Button onClick={toggle}> isShow: {String(isShow)} </Button>
       <FadeIn show={isShow}>
         <Card

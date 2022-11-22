@@ -1,10 +1,7 @@
 import { isValidElement, ReactElement, ReactNode } from 'react'
-import { isArray } from  '@edsolater/fnkit'
+import { isArray } from '@edsolater/fnkit'
 
-export default function isSigleChild(
-  child: ReactNode,
-  componentName: string
-): asserts child is ReactElement {
+export default function isSigleChild(child: ReactNode, componentName: string): asserts child is ReactElement {
   if (isArray(child)) {
     throw new Error(`<${componentName}> can't accept an array of child`)
   }

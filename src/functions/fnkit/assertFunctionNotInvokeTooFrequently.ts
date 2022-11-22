@@ -15,8 +15,6 @@ export function assertFunctionNotInvokeTooFrequently(key: string) {
   record.timestampCount = Math.abs(record.lastTimestamp - now) < 10 ? record.timestampCount + 1 : 0
   record.lastTimestamp = now
   if (record.timestampCount > maxInvokeCountInSameTimestamp) {
-    throw new Error(
-      `Function[${key}] invoke too frequently, (max ${maxInvokeCountInSameTimestamp} times each second)`
-    )
+    throw new Error(`Function[${key}] invoke too frequently, (max ${maxInvokeCountInSameTimestamp} times each second)`)
   }
 }

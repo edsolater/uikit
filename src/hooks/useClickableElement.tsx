@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useRef } from 'react'
 
 import { HandleClickOptions } from '../functions/dom/gesture/handleClick'
-import { HandleHoverOptions } from "../functions/dom/gesture/handleHover"
+import { HandleHoverOptions } from '../functions/dom/gesture/handleHover'
 import { addTabIndex } from '../utils/dom/addTabIndex'
 import { useClick } from './useClick'
 import { useHover } from './useHover'

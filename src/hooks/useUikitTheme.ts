@@ -1,6 +1,6 @@
 import { createXAtom, useXStore } from '@edsolater/xstore'
 import { ButtonProps } from '../components/Button'
-import { DivProps } from "../Div/type"
+import { DivProps } from '../Div/type'
 
 type UIKitThemeProps = {
   Div: DivProps
