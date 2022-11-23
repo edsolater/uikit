@@ -1,4 +1,4 @@
-import { MayEnum } from '@edsolater/fnkit'
+import { MayArray, MayEnum } from '@edsolater/fnkit'
 import { UseHoverOptions } from '@edsolater/hookit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
 import { ClassName } from '../functions/react/classname'
@@ -35,7 +35,6 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
    */
   tag?: MayDeepArray<DivDataTag | undefined>
   className?: MayDeepArray<ClassName | undefined>
-  /** @deprecated use plugin-click instead */
   onClick?: MayDeepArray<
     | ((payload: {
         event: React.MouseEvent<HTMLElement, MouseEvent>
@@ -43,6 +42,9 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
         el: HTMLElement
       }) => void)
     | undefined
+  >
+  propHook?: MayDeepArray<
+    (props: Omit<DivBaseProps<TagName>, 'propHook'>) => Omit<DivBaseProps<TagName>, 'propHook'> | undefined
   >
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>

@@ -9,8 +9,8 @@ import {
   AnyFn,
   AnyObj
 } from '@edsolater/fnkit'
-import mergeFunction from '../mergeFunction'
-import mergeRefs from './mergeRefs'
+import mergeFunction from '../../functions/mergeFunction'
+import mergeRefs from '../../functions/react/mergeRefs'
 
 /**prop may very deep like children */
 export type AnyProp = { [props: string]: any }
@@ -41,6 +41,7 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['style', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['icss', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['tag', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
+        ['propHook', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['plugins', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['children', () => v2 ?? v1],
         [() => isFunction(v1) && isFunction(v2), () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],

@@ -13,7 +13,7 @@ export type AuxiliaryKeyName =
   | 'ctrl + alt'
   | 'ctrl + shift'
   | 'alt + shift'
-  | 'ctrl + alt + shift'
+  | 'ctrl + shift + alt'
 type KeyNamesActionKey = `F${number}` | 'Backspace' | 'Enter' | 'Escape' | 'Delete' | 'Insert'
 type KeyNamesNormalContent =
   | '`'

@@ -1,4 +1,4 @@
-import { AnyProp, mergeProps } from './mergeProps'
+import { AnyProp, mergeProps } from '../../Div/utils/mergeProps'
 
 // NOTE: seems not necessary. But, it can improve code's readability
 export default function addDefaultProps<T extends AnyProp>(props: T, defaultProps: Partial<T>): T {

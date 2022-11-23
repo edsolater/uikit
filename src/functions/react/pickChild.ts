@@ -2,7 +2,7 @@ import { AnyFn, flap, MayFn, shakeNil, shrinkToValue } from '@edsolater/fnkit'
 import React, { isValidElement, ReactElement } from 'react'
 import { DivProps } from '../../Div'
 import { GetComponentProps } from '../../typings/tools'
-import { mergeProps } from './mergeProps'
+import { mergeProps } from '../../Div/utils/mergeProps'
 
 /** actually use Array.prototype.find()  */
 export function pickChildByType<T extends AnyFn>(

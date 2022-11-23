@@ -11,6 +11,7 @@ import { handleDivChildren } from './utils/handleDivChildren'
 import { handleDivShallowProps } from './utils/handleDivShallowProps'
 import { handleDivTag } from './utils/handleDivTag'
 import { toDataset } from './utils/tag'
+import { handleDivPropHook } from './utils/handleDivPropHook'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
@@ -21,11 +22,13 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
     handleDivShallowProps,
     handleDivNormalPlugins(normalPlugins),
     handleDivChildren,
-    handleDivTag
+    handleDivTag,
+    handleDivPropHook
   )
 
   if (!mergedProps) return null
 
+  
   const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)
 
   const node = isHTMLTag
