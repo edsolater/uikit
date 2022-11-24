@@ -5,6 +5,7 @@ export * from './Grid'
 export * from './Col'
 export * from './Row'
 export * from './Group'
+export * from './AppRoot'
 
 //#region ------------------- addProps -------------------
 // Flow Control

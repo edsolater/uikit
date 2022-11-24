@@ -7,11 +7,3 @@ export interface GroupProps {
 }
 export const Group = uikit('Group', (KitRoot) => (props: GroupProps) => <KitRoot>{props.children}</KitRoot>)
 
-export interface FuckProps<T extends string> {
-  name: T
-  children?: DivChildNode
-}
-
-export const Fuck = uikit('Fuck', (KitRoot) => <T extends string>({ children }: FuckProps<T>) => (
-  <KitRoot>{children}</KitRoot>
-))
