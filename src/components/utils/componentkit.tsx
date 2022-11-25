@@ -1,7 +1,6 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
-import { RefObject, useRef } from 'react'
-import { mergeProps } from '../../functions/react'
 import { Div, DivProps } from '../../Div'
+import { mergeProps } from '../../functions/react'
 
 type Component<Props> = (props: Props) => JSX.Element
 
@@ -14,16 +13,15 @@ export function componentkit<T>(
 ): Component<T & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {
-    const refedProps = useRef(props)
-    const KitRoot = useRef(generateComponentRoot(refedProps))
-    return ComponentConstructerFn(KitRoot.current)(props) ?? null
+    const KitRoot = generateComponentRoot(props)
+    return ComponentConstructerFn(KitRoot)(props) ?? null
   }, displayName)
   return componentkitFC
 }
 
-function generateComponentRoot(props: RefObject<DivProps>) {
+function generateComponentRoot(props: DivProps) {
   const ComponentRoot = (componentkitProps?: ComponentRootProps) => (
-    <Div {...mergeProps(props.current, componentkitProps)}>{componentkitProps?.children}</Div>
+    <Div {...mergeProps(props, componentkitProps)}>{componentkitProps?.children}</Div> //every time merge props will get a different result
   )
   return ComponentRoot
 }

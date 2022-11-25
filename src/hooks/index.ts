@@ -36,6 +36,7 @@ export * from './use2StateSyncer'
 export * from './useInitFlagDetector'
 export * from './useDebugRenderByProps'
 export * from './useConsoleLog'
+export * from './useGlobalState'
 
 // for ui
 export * from './useComponentHandler'
