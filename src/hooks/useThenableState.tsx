@@ -11,12 +11,12 @@ import { useEffect, useRef, useState } from 'react'
  *   // do when setState() succeed
  * })
  */
-export default function useThenableState<S = undefined>(): [
+export function useThenableState<S = undefined>(): [
   S | undefined,
   (value: SetStateAction<S | undefined>) => Promise<S | undefined>
 ]
-export default function useThenableState<S>(initialState: S | (() => S)): [S, (value: SetStateAction<S>) => Promise<S>]
-export default function useThenableState(initialState?: any) {
+export function useThenableState<S>(initialState: S | (() => S)): [S, (value: SetStateAction<S>) => Promise<S>]
+export function useThenableState(initialState?: any) {
   const [state, setState] = useState(initialState)
   const promiseResolve = useRef<any>()
   useEffect(() => {

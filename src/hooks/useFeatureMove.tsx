@@ -73,7 +73,7 @@ export interface FeatureMoveOptions {
  *   }
  * })
  */
-export default function useFeatureMove(
+export function useFeatureMove(
   component: RefObject<HTMLElement>,
   {
     disable = false,

@@ -3,7 +3,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
  * it too widely use that there should be a hook
  * @param enums
  */
-export default function useEnums<T extends string[]>(
+export function useEnums<T extends string[]>(
   ...initEnums: T
 ): [
   T[number],

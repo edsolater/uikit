@@ -12,7 +12,7 @@ type CallbackRefOptions<T> = {
 /**
  * @return proxied { current: xxx }
  */
-export default function useCallbackRef<T = unknown>(
+export function useCallbackRef<T = unknown>(
   options?: CallbackRefOptions<T>
 ): MutableRefObject<T> & {
   onChange: (cb: (v: T, prev: T | undefined) => void, options?: { hasInit?: boolean }) => void

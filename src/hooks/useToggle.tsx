@@ -1,6 +1,6 @@
 import { MayFn } from '@edsolater/fnkit'
 import { Dispatch, RefObject, SetStateAction, useCallback, useMemo } from 'react'
-import useCallbackRef from './useCallbackRef'
+import { useCallbackRef } from './useCallbackRef'
 import { UseSignal, useSignal } from './useSignal'
 
 export interface ToggleSyncFunction {

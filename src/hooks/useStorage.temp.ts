@@ -2,7 +2,7 @@ import { MayFn } from '@edsolater/fnkit'
 import { getLocalItem, onLocalItemChanged, setLocalItem } from '../functions/dom/jStorage'
 import { SignalPluginFn, useSignalState } from './useSignalState'
 
-export default function useLocalStorageItem<T>(
+export function useLocalStorageItem<T>(
   key: string,
   defaultValue?: T
 ): [state: T | undefined, setState: (dispatcher: MayFn<T, [old: T | undefined]>) => void] {

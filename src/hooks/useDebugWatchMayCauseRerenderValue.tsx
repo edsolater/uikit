@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 
 /**just for debug. may not use this  */
-export default function useDebugWatchMayCauseRerenderValue<T>(
+export function useDebugWatchMayCauseRerenderValue<T>(
   watchedValue: T,
   valueIsDifferent?: (prev: T, next: T) => void
 ) {

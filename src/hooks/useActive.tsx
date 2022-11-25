@@ -1,7 +1,7 @@
 import { RefObject, useEffect } from 'react'
 
 import { Nullish } from '@edsolater/fnkit'
-import useBFlag from './useBFlag'
+import { useBFlag } from './useBFlag'
 
 //#region ------------------- hook: useActive() -------------------
 
@@ -12,7 +12,7 @@ export interface UseActiveOptions {
   onActive?: (ev: { el: EventTarget; nativeEvent: PointerEvent; is: 'start' | 'end' }) => void
 }
 
-export default function useActive(
+export function useActive(
   ref: RefObject<HTMLElement | Nullish> | Nullish,
   { disable, onActiveStart, onActiveEnd, onActive }: UseActiveOptions = {}
 ) {

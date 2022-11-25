@@ -2,7 +2,7 @@ import { ComponentMeta, ComponentStory } from '@storybook/react'
 
 import { Div } from '../Div/Div'
 import { Input } from '../components/Input'
-import useLocalStorageItem from '../hooks/useStorage.temp'
+import { useLocalStorageItem } from '../hooks/useStorage.temp'
 
 const storySettings = {
   component: Input,

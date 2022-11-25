@@ -53,7 +53,7 @@ export type SignalPluginFn<T, U> = (payload: {
  * if prefer merged fn version, please use {@link useSignal} instead
  *
  * @example
- * export default function LoginCard() {
+ * export function LoginCard() {
  *   const [foo, setFoo, fooSignal] = useSignalState(0)
  *   useEffect(() => {
  *     const timoutId = setInterval(() => {

@@ -1,6 +1,6 @@
 import { RefObject, useEffect, useState } from 'react'
 
-export default function useOverflowDetecter(domRef: RefObject<HTMLElement | undefined>): {
+export function useOverflowDetecter(domRef: RefObject<HTMLElement | undefined>): {
   xOverflowed: boolean
   yOverflowed: boolean
 } {

@@ -1,6 +1,6 @@
 import { AnyObj, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { Dispatch, SetStateAction, useRef, useCallback, useState, useEffect } from 'react'
-import useCallbackRef from './useCallbackRef'
+import { useCallbackRef } from './useCallbackRef'
 import { useRecordedEffect } from './useRecordedEffect'
 
 export type UseSignal<S, AdditionalMethods extends AnyObj = AnyObj> = {

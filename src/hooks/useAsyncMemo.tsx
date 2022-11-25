@@ -1,19 +1,19 @@
 import { MayPromise, shrinkToValue, MayFn } from '@edsolater/fnkit'
 import { useRef, useState } from 'react'
 
-import useAsyncEffect from './useAsyncEffect'
+import { useAsyncEffect } from './useAsyncEffect'
 
-export default function useAsyncMemo<V, F = never>(
+export function useAsyncMemo<V, F = never>(
   asyncGetValue: MayFn<MayPromise<V>>,
   dependencies?: any[],
   fallbackValue?: undefined
 ): V | undefined
-export default function useAsyncMemo<V, F = never>(
+export function useAsyncMemo<V, F = never>(
   asyncGetValue: MayFn<MayPromise<V>>,
   dependencies: any[],
   fallbackValue: MayFn<F>
 ): V | F
-export default function useAsyncMemo<V, F = never>(
+export function useAsyncMemo<V, F = never>(
   asyncGetValue: MayFn<MayPromise<V>>,
   dependencies?: any[],
   fallbackValue?: MayFn<F>

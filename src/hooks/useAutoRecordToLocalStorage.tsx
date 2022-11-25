@@ -4,7 +4,7 @@ import { getLocalStorageItem, setLocalStorageItem } from '../utils'
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect'
 
 // TODO: there should be an export/import button in UI, so that user can export config and paste it to another client.
-export default function useAutoRecordToLocalStorage<T>(key: string, state: T) {
+export function useAutoRecordToLocalStorage<T>(key: string, state: T) {
   useEffect(() => {
     setLocalStorageItem(key, state)
   }, [state])

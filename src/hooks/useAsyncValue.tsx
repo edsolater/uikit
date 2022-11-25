@@ -14,12 +14,12 @@ import { useRecordedEffect } from './useRecordedEffect'
  * const value = useAsynceValue(async () => await Promise.resolve(3), 5)
  * return <div>{value}</div> //it will render 5 first, then will render 3.
  */
-export default function useAsyncValue<V, F = never>(
+export function useAsyncValue<V, F = never>(
   asyncGetValue: MayFn<MayPromise<V>>,
   fallbackValue?: undefined
 ): V | undefined
-export default function useAsyncValue<V, F = never>(asyncGetValue: MayFn<MayPromise<V>>, fallbackValue: MayFn<F>): V | F
-export default function useAsyncValue<V, F = never>(
+export function useAsyncValue<V, F = never>(asyncGetValue: MayFn<MayPromise<V>>, fallbackValue: MayFn<F>): V | F
+export function useAsyncValue<V, F = never>(
   asyncGetValue: MayFn<MayPromise<V>>,
   fallbackValue?: MayFn<F>
 ): V | F | undefined {

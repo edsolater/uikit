@@ -1,7 +1,7 @@
 import { MayPromise, shrinkToValue, MayFn } from '@edsolater/fnkit'
 import { useEffect, useRef } from 'react'
 
-import useThenableSetState from './useThenableSetState'
+import { useThenableSetState } from './useThenableSetState'
 
 type AsyncDispatch<Value> = MayFn<MayPromise<Value>, [Value]>
 
@@ -18,15 +18,15 @@ type AsyncDispatch<Value> = MayFn<MayPromise<Value>, [Value]>
  *   }, 1000)
  * }, [])
  */
-export default function useAsyncState<V>(
+export function useAsyncState<V>(
   asyncGetValue: MayFn<MayPromise<V>, [undefined]>
 ): [asyncState: V | undefined, setAsyncState: (asyncDispatch: AsyncDispatch<V>) => Promise<V>]
-export default function useAsyncState<V, F>(
+export function useAsyncState<V, F>(
   asyncGetValue: MayFn<MayPromise<V>, [defaultValue: F]>,
   defaultValue: MayFn<F>
 ): [asyncState: V | F, setAsyncState: (asyncDispatch: AsyncDispatch<V>) => Promise<V>]
 
-export default function useAsyncState(
+export function useAsyncState(
   asyncGetValue: MayFn<MayPromise<unknown>, [defaultValue: unknown]>,
   defaultValue?: MayFn<unknown>
 ): [asyncState: unknown, setAsyncState: (asyncDispatch: AsyncDispatch<unknown>) => Promise<unknown>] {

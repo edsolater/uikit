@@ -3,9 +3,9 @@ import { useLayoutEffect, useState } from 'react'
 /**
  * @see https://usehooks.com/useMedia/
  */
-export default function useMedia<T>(queries: string[] | string, values: T[], defaultValue: T): T
-export default function useMedia<T>(queries: string[] | string, values: T[], defaultValue?: undefined): T | undefined
-export default function useMedia<T>(queries: string[] | string, values: T[], defaultValue?: T) {
+export function useMedia<T>(queries: string[] | string, values: T[], defaultValue: T): T
+export function useMedia<T>(queries: string[] | string, values: T[], defaultValue?: undefined): T | undefined
+export function useMedia<T>(queries: string[] | string, values: T[], defaultValue?: T) {
   const [value, setValue] = useState(defaultValue)
   useLayoutEffect(() => {
     const mediaQueryLists = [queries]
