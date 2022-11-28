@@ -7,11 +7,7 @@ export interface AppRootProps {
   children?: DivChildNode
 }
 
-export const AppRoot = uikit('Screen', (KitRoot) => ({ children }: AppRootProps) => {
+export const AppRoot = uikit('Screen', ({ children }: AppRootProps) => {
   useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
-  return (
-    <KitRoot use='AddProps'>
-      {children}
-    </KitRoot>
-  )
+  return children
 })

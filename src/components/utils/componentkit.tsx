@@ -1,4 +1,5 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
+import { useMemo } from 'react'
 import { Div, DivProps } from '../../Div'
 import { mergeProps } from '../../functions/react'
 
@@ -13,7 +14,7 @@ export function componentkit<T>(
 ): Component<T & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {
-    const KitRoot = generateComponentRoot(props)
+    const KitRoot = useMemo(() => generateComponentRoot(props), [props])
     return ComponentConstructerFn(KitRoot)(props) ?? null
   }, displayName)
   return componentkitFC

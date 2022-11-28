@@ -1,4 +1,4 @@
-import { DivChildNode } from '../../Div'
+import { Div, DivChildNode } from '../../Div'
 import { uikit } from '../utils'
 import { cssCol } from './cssCol'
 
@@ -9,6 +9,6 @@ export interface ColProps {
 /**
  * flex box
  */
-export const Col = uikit<ColProps>('Col', (KitRoot) => ({ children }) => <KitRoot icss={cssCol()}>{children}</KitRoot>)
+export const Col = uikit<ColProps>('Col', ({ children }) => <Div icss={cssCol()}>{children}</Div>)
 
 export * from './cssCol'

@@ -8,24 +8,22 @@ export type TooltipProps = {
   children?: TooltipProps['renderTooltipContent']
 } & Omit<PopoverProps, 'renderPanel' | 'children'>
 
-export const Tooltip = uikit('Tooltip', (KitRoot) => ({ children, renderTooltipContent, ...props }: TooltipProps) => (
-  <KitRoot>
-    <Popover
-      triggerBy='hover'
-      placement='top'
-      {...props}
-      renderPanel={
-        <Div
-          icss={{
-            background: 'white',
-            borderRadius: 8,
-            boxShadow: '0px 4px 8px #0000004f',
-            padding: 8
-          }}
-        >
-          {renderTooltipContent ?? children}
-        </Div>
-      }
-    />
-  </KitRoot>
+export const Tooltip = uikit('Tooltip', ({ children, renderTooltipContent, ...props }: TooltipProps) => (
+  <Popover
+    triggerBy='hover'
+    placement='top'
+    {...props}
+    renderPanel={
+      <Div
+        icss={{
+          background: 'white',
+          borderRadius: 8,
+          boxShadow: '0px 4px 8px #0000004f',
+          padding: 8
+        }}
+      >
+        {renderTooltipContent ?? children}
+      </Div>
+    }
+  />
 ))

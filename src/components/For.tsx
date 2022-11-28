@@ -8,12 +8,10 @@ export interface ForProps<T extends any> {
   children?: (item: T, idx: number) => JSX.Element
 }
 
-export const For = uikit('For', (KitRoot) => <T extends any>(props: ForProps<T>) => (
-  <KitRoot use='AddProps'>
-    {props.each.map((item, idx) =>
-      props.getKey
-        ? addPropsToReactElement(props.children?.(item, idx), { key: props.getKey(item, idx) })
-        : props.children?.(item, idx)
-    )}
-  </KitRoot>
-))
+export const For = uikit('For', <T extends any>(props: ForProps<T>) =>
+  props.each.map((item, idx) =>
+    props.getKey
+      ? addPropsToReactElement(props.children?.(item, idx), { key: props.getKey(item, idx) })
+      : props.children?.(item, idx)
+  )
+)

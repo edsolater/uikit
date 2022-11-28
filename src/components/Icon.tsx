@@ -1,3 +1,4 @@
+import { Div } from '../Div'
 import { ICSSObject } from '../styles'
 import { uikit } from './utils'
 
@@ -9,10 +10,10 @@ export interface IconProps {
   src?: string
 }
 
-export const Icon = uikit('Icon', (KitRoot) => ({ cssColor = 'currentcolor', size = 'md', src }: IconProps) => {
+export const Icon = uikit('Icon',({ cssColor = 'currentcolor', size = 'md', src }: IconProps) => {
   const sizePx = size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'smi' ? 20 : size === 'md' ? 24 : 32
   return (
-    <KitRoot
+    <Div
       icss={{
         position: 'relative',
         '::before': {
@@ -26,6 +27,6 @@ export const Icon = uikit('Icon', (KitRoot) => ({ cssColor = 'currentcolor', siz
         width: sizePx,
         height: sizePx
       }}
-    ></KitRoot>
+    ></Div>
   )
 })
