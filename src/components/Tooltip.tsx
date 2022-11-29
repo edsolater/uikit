@@ -1,6 +1,6 @@
 import { Div, DivChildNode } from '../Div'
 import { Popover, PopoverProps } from './Popover/Popover'
-import { uikit } from './utils'
+import { createUikit } from './utils'
 
 export type TooltipProps = {
   name?: string
@@ -8,7 +8,7 @@ export type TooltipProps = {
   children?: TooltipProps['renderTooltipContent']
 } & Omit<PopoverProps, 'renderPanel' | 'children'>
 
-export const Tooltip = uikit('Tooltip', ({ children, renderTooltipContent, ...props }: TooltipProps) => (
+export const Tooltip = createUikit('Tooltip', ({ children, renderTooltipContent, ...props }: TooltipProps) => (
   <Popover
     triggerBy='hover'
     placement='top'

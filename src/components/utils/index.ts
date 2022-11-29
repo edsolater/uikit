@@ -1,2 +1,3 @@
-export * from './uikit'
-export * from './componentkit'
+export * from './createUikit'
+export * from './createComponentKit'
+export * from './createRenamedKit'

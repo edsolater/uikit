@@ -16,6 +16,7 @@ type AddPropsProps = Omit<Partial<DivProps>, 'children'> & { children?: any }
  * !!! child must extends `<Div>`
  */
 export function AddProps<T extends AddPropsProps = AddPropsProps>({ children, ...restProps }: T) {
+  // DEBUG: it shouldn't merge
   const { props: parsedProps, normalPlugins } = splitPropPlugins(restProps)
   const mergedProps = pipe(
     parsedProps,
