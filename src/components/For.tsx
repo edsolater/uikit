@@ -1,6 +1,5 @@
 import { addPropsToReactElement } from '../functions/react'
-import { DivChildNode } from '../Div/type'
-import { createUikit } from './utils'
+import { uikit } from './utils'
 
 export interface ForProps<T extends any> {
   each: T[]
@@ -8,7 +7,7 @@ export interface ForProps<T extends any> {
   children?: (item: T, idx: number) => JSX.Element
 }
 
-export const For = createUikit('For', <T extends any>(props: ForProps<T>) =>
+export const For = uikit('For', <T extends any>(props: ForProps<T>) =>
   props.each.map((item, idx) =>
     props.getKey
       ? addPropsToReactElement(props.children?.(item, idx), { key: props.getKey(item, idx) })

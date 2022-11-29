@@ -15,7 +15,7 @@ type ReactComponent<Props> = (props: Props) => JSX.Element
  *   icss: { display: 'grid', gridTemplateColumns: '300px 1fr' }
  * })
  */
-export function createRenamedKit<C extends Component<any>>(
+export function renamedKit<C extends Component<any>>(
   options: { name: string } | string,
   FC: C,
   defaultProps?: Partial<GetComponentProps<C>>

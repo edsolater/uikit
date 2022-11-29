@@ -1,6 +1,6 @@
 import { ICSS } from '../../styles/parseCSS'
 import { Div, DivChildNode } from '../../Div'
-import { createUikit } from '../utils'
+import { uikit } from '../utils'
 import { cssRow } from './cssRow'
 
 export interface RowProps {
@@ -10,7 +10,7 @@ export interface RowProps {
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export const Row = createUikit<RowProps>('Row', ({ children }) => <Div icss={cssRow()}>{children}</Div>)
+export const Row = uikit('Row', ({ children }: RowProps) => <Div icss={cssRow()}>{children}</Div>)
 
 export const flexChildGrow: ICSS = {
   '& > * ': {

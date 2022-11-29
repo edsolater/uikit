@@ -1,17 +1,16 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
-import { DivChildNode, DivProps } from '../../Div'
+import { DivProps } from '../../Div'
 import { mergeProps } from '../../functions/react'
 import { AddProps } from '../AddProps'
 
-type Component<Props> = (props: Props) => DivChildNode
-type GetComponentProps<C extends Component<any>> = C extends Component<infer P> ? P : never
+type Component<Props> = (props: Props) => JSX.Element
 type ReactComponent<Props> = (props: Props) => JSX.Element
 
-export function createComponentKit<C extends Component<any>>(
+export function componentKit<T>(
   options: { name: string } | string,
-  FC: C,
-  defaultDivProps?: Omit<DivProps & GetComponentProps<C>, 'children'>
-): ReactComponent<GetComponentProps<C> & Omit<DivProps, 'children'>> {
+  FC: Component<T>,
+  defaultDivProps?: Omit<DivProps, 'children'>
+): ReactComponent<T & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
   const componentkitFC = overwriteFunctionName((props) => {
     const merged = mergeProps(defaultDivProps ?? {}, props, { className: displayName })

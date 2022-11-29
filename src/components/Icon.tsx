@@ -1,6 +1,6 @@
 import { Div } from '../Div'
 import { ICSSObject } from '../styles'
-import { createUikit } from './utils'
+import { uikit } from './utils'
 
 export interface IconProps {
   /** @default 'currentColor' */
@@ -10,7 +10,7 @@ export interface IconProps {
   src?: string
 }
 
-export const Icon = createUikit('Icon',({ cssColor = 'currentcolor', size = 'md', src }: IconProps) => {
+export const Icon = uikit('Icon',({ cssColor = 'currentcolor', size = 'md', src }: IconProps) => {
   const sizePx = size === 'xs' ? 12 : size === 'sm' ? 16 : size === 'smi' ? 20 : size === 'md' ? 24 : 32
   return (
     <Div
