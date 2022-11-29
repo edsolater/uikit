@@ -8,14 +8,13 @@ type ReactComponent<Props> = (props: Props) => JSX.Element
 
 export function uikit<T>(
   options: { name: string } | string,
-  ComponentConstructerFn: Component<T>
+  FC: Component<T>,
+  defaultDivProps?: Omit<DivProps, 'children'>
 ): ReactComponent<T & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
-  const uikitFC = overwriteFunctionName(
-    (props) => (
-      <AddProps {...mergeProps(props, { className: displayName })}>{ComponentConstructerFn(props) ?? null}</AddProps>
-    ),
-    displayName
-  )
+  const uikitFC = overwriteFunctionName((props) => {
+    const merged = mergeProps(defaultDivProps, props, { className: displayName })
+    return <AddProps {...merged}>{FC(props)}</AddProps>
+  }, displayName)
   return uikitFC
 }
