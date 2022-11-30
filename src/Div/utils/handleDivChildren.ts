@@ -2,7 +2,7 @@ import { Cover, isArray, isObject } from '@edsolater/fnkit'
 import { isValidElement, ReactNode } from 'react'
 import { DivChildNode, DivProps } from '../type'
 
-function parseDivChildren(children?: DivChildNode): ReactNode {
+export function parseDivChildren(children?: DivChildNode): ReactNode {
   if (isObject(children) && !isArray(children) && !isValidElement(children)) return String(children)
   return children as ReactNode
 }

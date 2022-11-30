@@ -20,3 +20,4 @@ export * from './pickChild'
 
 export * from './addPropsToReactElement'
 export * from './mapReactElementChildren'
+export * from './createComponentContext'

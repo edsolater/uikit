@@ -10,5 +10,9 @@ export interface AppRootProps {
 
 export const AppRoot = uikit('AppRoot', ({ children, rootId }: AppRootProps) => {
   useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
-  return <Div htmlProps={{ id: rootId }}>{children}</Div>
+  return (
+    <Div htmlProps={{ id: rootId }} icss={{ height: '100%' }}>
+      {children}
+    </Div>
+  )
 })
