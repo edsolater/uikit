@@ -9,6 +9,7 @@ import {
   AnyFn,
   AnyObj
 } from '@edsolater/fnkit'
+import { isValidElement } from 'react'
 import mergeFunction from '../../functions/mergeFunction'
 import mergeRefs from '../../functions/react/mergeRefs'
 
@@ -27,15 +28,18 @@ export function mergeProps<P1 = AnyProp, P2 = AnyProp, P3 = AnyProp, P4 = AnyPro
 ): Exclude<P1 & P2 & P3 & P4 & P5, undefined>
 export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Exclude<P, undefined>
 export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Exclude<P, undefined> {
+  // @ts-ignore
+  if (propsObjs.length <= 1) return propsObjs[0] ?? {}
   const trimedProps = shakeNil(flap(propsObjs))
   // @ts-ignore
-  if (trimedProps.length === 0) return {}
-  // @ts-ignore
-  if (trimedProps.length === 1) return trimedProps[0]
-  const mergedResult = mergeObjectsWithConfigs(trimedProps, ({ key, valueA: v1, valueB: v2 }) =>
-    parallelSwitch<string, any>(
+  if (trimedProps.length <= 1) return trimedProps[0] ?? {}
+
+  const mergedResult = mergeObjectsWithConfigs(trimedProps, ({ key, valueA: v1, valueB: v2 }) => {
+    if (isValidElement(v1) || isValidElement(v2)) return v2 ?? v1 // if v1 or v2 are react node, it will be a disaster to merge two object. so return as quick as possiable
+    return parallelSwitch<string, any>(
       key,
       [
+        // special div props
         ['domRef', () => (v1 && v2 ? mergeRefs(v1 as any, v2 as any) : v1 ?? v2)],
         ['className', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['style', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
@@ -43,14 +47,18 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['tag', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['propHook', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['plugins', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
+        ['htmlProps', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
+        ['shadowProps', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['children', () => v2 ?? v1],
+
+        // normal props
         [() => isFunction(v1) && isFunction(v2), () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],
-        [() => isObject(v1) && isObject(v2), () => mergeProps(v1 as AnyObj, v2 as AnyObj)],
-        [() => isArray(v1) && isArray(v2), () => (v1 as any[]).concat(v2)]
+        [() => isArray(v1) && isArray(v2), () => (v1 as any[]).concat(v2)],
+        [() => isObject(v1) && isObject(v2), () => mergeProps(v1, v2)] // if v1 and v2 are react node, it will be a disaster
       ],
       v2 ?? v1
     )
-  )
+  })
   // @ts-ignore
   return mergedResult
 }

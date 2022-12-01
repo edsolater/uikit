@@ -1,17 +1,15 @@
 import { flapDeep, isString, isUndefined, merge, omit, pipe, shakeFalsy, shakeNil } from '@edsolater/fnkit'
-import { createElement, ReactNode } from 'react'
+import { createElement } from 'react'
 import { invokeOnce } from '../functions/dom/invokeOnce'
-import { mergeProps } from '../functions/react'
 import classname from '../functions/react/classname'
 import mergeRefs, { loadRef } from '../functions/react/mergeRefs'
-import { parseCSS } from '../styles/parseCSS'
 import { handleDivNormalPlugins, handleDivWrapperPlugins, splitPropPlugins } from '../plugins/handleDivPlugins'
+import { parseCSS } from '../styles/parseCSS'
 import { DivProps, HTMLTagMap } from './type'
 import { handleDivChildren } from './utils/handleDivChildren'
+import { handleDivPropHook } from './utils/handleDivPropHook'
 import { handleDivShallowProps } from './utils/handleDivShallowProps'
 import { handleDivTag } from './utils/handleDivTag'
-import { toDataset } from './utils/tag'
-import { handleDivPropHook } from './utils/handleDivPropHook'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
@@ -34,7 +32,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
     ? createElement(
         (mergedProps.as ?? 'div') as string,
         {
-          ...(mergedProps.htmlProps && mergeProps(...flapDeep(mergedProps.htmlProps))),
+          ...(mergedProps.htmlProps && Object.assign({}, ...flapDeep(mergedProps.htmlProps))),
           className:
             shakeFalsy([classname(mergedProps.className), parseCSS(mergedProps.icss)]).join(' ') ||
             undefined /* don't render if empty string */,
