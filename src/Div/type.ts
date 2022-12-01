@@ -23,7 +23,7 @@ export interface HTMLTagMap {
 /** richer than ReactNode */
 
 interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
-  as?: MayEnum<keyof ReactHTML> | ((...params: any[]) => ReactNode) // assume a function return ReactNode is a Component
+  as?: MayEnum<keyof ReactHTML> | ((...params: any[]) => JSX.Element) // assume a function return ReactNode is a Component
 
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
   domRef?: MayDeepArray<

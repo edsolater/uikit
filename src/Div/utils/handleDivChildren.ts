@@ -9,7 +9,7 @@ export function parseDivChildren(children?: DivChildNode): ReactNode {
 
 export function handleDivChildren<P extends Partial<DivProps<any>>>(
   divProps?: P
-): Cover<P, { children?: ReactNode }> | undefined {
+): (Omit<P, 'childrend'> & { children?: ReactNode }) | undefined {
   if (!divProps) return
-  return { ...divProps, children: parseDivChildren(divProps.children) } as Cover<P, { children?: ReactNode }>
+  return { ...divProps, children: parseDivChildren(divProps.children) } as (Omit<P, 'childrend'> & { children?: ReactNode })
 }

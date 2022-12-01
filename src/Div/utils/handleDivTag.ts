@@ -1,7 +1,7 @@
 import { pipeHandlers } from '@edsolater/fnkit'
 import { produce } from 'immer'
 import { DivProps } from '../type'
-import { createDataTag, hasTag } from './tag'
+import { createDataTag, hasTag, toDataset } from './tag'
 
 export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
@@ -37,5 +37,14 @@ export function handleDivTag<P extends Partial<DivProps<any>>>(divProps?: P): Om
     return divProps
   }
 
-  return pipeHandlers(divProps, processNoRender, processOffscreen)
+  const processDataSet = (divProps: P | undefined) => {
+    const tag = divProps?.tag
+    if (!tag) return divProps
+    return produce(divProps, (p) => {
+      // @ts-ignore no need check
+      p.htmlProps = [p.htmlProps, toDataset(tag)]
+    })
+  }
+
+  return pipeHandlers(divProps, processDataSet, processNoRender, processOffscreen)
 }

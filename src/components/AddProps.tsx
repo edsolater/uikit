@@ -25,6 +25,6 @@ export function AddProps<T extends AddPropsProps = AddPropsProps>({ children, ..
     handleDivChildren,
     handleDivTag,
     handleDivPropHook
-  )
+  ) as any // TODO: fix it 
   return <Fragment>{addPropsToReactElement(children, mergedProps)}</Fragment> // TODO: maybe it's good to merge logic into `<Div>`
 }

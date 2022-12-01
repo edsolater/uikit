@@ -5,4 +5,6 @@ export interface TextProps {
   children?: DivChildNode
 }
 
-export const Text = uikit('Text', (props: TextProps) => props.children)
+export const Text = uikit('Text', ({ children }: TextProps) => {
+  return <Div>{children}</Div>
+})

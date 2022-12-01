@@ -1,5 +1,5 @@
 import { flapDeep, isString, isUndefined, merge, omit, pipe, shakeFalsy, shakeNil } from '@edsolater/fnkit'
-import { createElement } from 'react'
+import { createElement, ReactNode } from 'react'
 import { invokeOnce } from '../functions/dom/invokeOnce'
 import { mergeProps } from '../functions/react'
 import classname from '../functions/react/classname'
@@ -32,7 +32,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
 
   const node = isHTMLTag
     ? createElement(
-        mergedProps.as ?? 'div',
+        (mergedProps.as ?? 'div') as string,
         {
           ...(mergedProps.htmlProps && mergeProps(...flapDeep(mergedProps.htmlProps))),
           className:
@@ -43,12 +43,15 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
           onClick: mergedProps.onClick
             ? (ev) =>
                 flapDeep([mergedProps.onClick]).map((onClick) => onClick?.({ event: ev, ev, el: ev.currentTarget }))
-            : undefined,
-          ...toDataset(mergedProps.tag)
-        },
+            : undefined
+        } as any,
         mergedProps.children
       )
-    : createElement(mergedProps.as, omit(mergedProps, ['as']), mergedProps.children)
+    : createElement(
+        mergedProps.as as (...params: any[]) => JSX.Element,
+        omit(mergedProps, ['as']),
+        mergedProps.children
+      )
 
   return handleDivWrapperPlugins(node)(wrapperPlugins)
 }

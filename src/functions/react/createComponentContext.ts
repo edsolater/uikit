@@ -1,7 +1,7 @@
 import { assert } from '@edsolater/fnkit'
 import React, { createContext, FC, useContext } from 'react'
-import { DivChildNode } from '../Div'
-import { parseDivChildren } from '../Div/utils/handleDivChildren'
+import { DivChildNode } from '../../Div'
+import { parseDivChildren } from '../../Div/utils/handleDivChildren'
 
 export function createComponentContext<Props extends { children?: DivChildNode }>(
   defaultProps?: Props
