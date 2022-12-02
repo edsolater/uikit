@@ -12,12 +12,14 @@ export function injectGlobalResetStyle() {
     }
     :root {
       font-size: 16px;
+      font-family: system-ui;
     }
+
+
     * {
       box-sizing: border-box;
       cursor: default;
     }
-
     a {
       color: inherit;
       text-decoration: none;

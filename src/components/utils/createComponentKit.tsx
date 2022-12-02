@@ -1,9 +1,9 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
-import { DivProps } from '../../Div'
+import { DivChildNode, DivProps } from '../../Div'
 import { mergeProps } from '../../functions/react'
 import { AddProps } from '../AddProps'
 
-type Component<Props> = (props: Props) => JSX.Element
+type Component<Props> = (props: Props) => DivChildNode
 type ReactComponent<Props> = (props: Props) => JSX.Element
 
 export function componentKit<T>(
