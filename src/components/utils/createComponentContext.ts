@@ -2,10 +2,11 @@ import { assert } from '@edsolater/fnkit'
 import React, { createContext, FC, useContext } from 'react'
 import { DivChildNode } from '../../Div'
 import { parseDivChildren } from '../../Div/utils/handleDivChildren'
+import { ReactComponent } from '../../typings/tools'
 
 export function createComponentContext<Props extends Record<keyof any, any>>(
   defaultProps?: Props
-): [component: FC<Props & { children: DivChildNode }>, hook: () => Props & { children?: DivChildNode }] {
+): [component: ReactComponent<Props & { children: DivChildNode }>, hook: () => Props & { children?: DivChildNode }] {
   const context = createContext<(Props & { children?: DivChildNode }) | undefined>(defaultProps)
   const hook = () => {
     const contextProp = useContext(context)

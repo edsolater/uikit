@@ -1,6 +1,6 @@
 import { AnyFn, flap, MayFn, shakeNil, shrinkToValue } from '@edsolater/fnkit'
 import React, { isValidElement, ReactElement, ReactNode } from 'react'
-import { GetComponentProps } from '../types/tools'
+import { GetComponentProps } from '../typings/tools'
 import { mergeProps } from './mergeProps'
 
 /** actually use Array.prototype.find()  */

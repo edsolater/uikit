@@ -1,10 +1,9 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
-import { DivChildNode, DivProps } from '../../Div'
+import { DivProps } from '../../Div'
 import { mergeProps } from '../../functions/react'
+import { Component, ReactComponent } from '../../typings/tools'
 
-type Component<Props> = (props: Props) => DivChildNode
 type GetComponentProps<C extends Component<any>> = C extends Component<infer P> ? P : never
-type ReactComponent<Props> = (props: Props) => JSX.Element
 
 /**
  * @example

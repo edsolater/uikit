@@ -1,3 +1,5 @@
+import { DivChildNode } from "../Div"
+
 export type MayArray<T> = T | Array<T>
 
 export type MayDeepArray<T> = T | Array<MayDeepArray<T>>
@@ -11,7 +13,6 @@ export type MayFunction<T, Params extends any[] = any[]> = T | ((...params: Para
  */
 export type MayEnum<T> = T | (string & {})
 
-export type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>[0]
 /**
  * type I = GetRequired<{ foo: number, bar?: string }> // expected to be { foo: number }
  */
@@ -202,3 +203,7 @@ export type SKeyof<O> = O extends { [s in infer T]: any } ? T : any
  */
 export type SValueof<O> = O extends { [s: string]: infer T } ? T : any
 //#endregion
+
+export type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>[0]
+export type Component<Props> = (props: Props) => DivChildNode
+export type ReactComponent<Props> = (props: Props) => JSX.Element
