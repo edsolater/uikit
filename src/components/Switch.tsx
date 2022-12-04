@@ -11,21 +11,19 @@ export interface SwitchProps {
 
 export const Switch = uikit('Switch', ({ checked, disable, onToggle }: SwitchProps) => {
   const thumbOuterWidth = 24
-  const checkedThumbColor = 'white'
-  const trackBorderColor = 'gray'
-  const uncheckedThumbColor = trackBorderColor
-
   const trackWidth = 2 * thumbOuterWidth
+
+  const checkedThumbColor = 'white'
+  const trackBorderColor = '#74796e'
+  const uncheckedThumbColor = '#74796e'
   const checkedTrackBg = 'dodgerblue'
   const uncheckedTrackBg = 'transparent'
   const trackBorderWidth = '2px'
 
   return (
     <Div
-      plugins={click({
-        onClick() {
-          onToggle?.(!checked)
-        }
+      plugins={click(() => {
+        onToggle?.(!checked)
       })}
       icss={{
         width: trackWidth,
@@ -37,19 +35,14 @@ export const Switch = uikit('Switch', ({ checked, disable, onToggle }: SwitchPro
     >
       <Div
         icss={[
-          checked
-            ? {
-                width: thumbOuterWidth,
-                height: thumbOuterWidth,
-                backgroundColor: checkedThumbColor,
-                borderRadius: '100vw'
-              }
-            : {
-                width: thumbOuterWidth,
-                height: thumbOuterWidth,
-                backgroundColor: checkedThumbColor,
-                borderRadius: '100vw'
-              },
+          {
+            translate: checked ? '100%' : undefined,
+            scale: checked ? 1 : 0.8,
+            width: thumbOuterWidth,
+            height: thumbOuterWidth,
+            backgroundColor: checked ? checkedThumbColor : uncheckedThumbColor,
+            borderRadius: '100vw'
+          },
           { transition: '300ms' }
         ]}
       />
