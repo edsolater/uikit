@@ -1,6 +1,6 @@
 {
   "name": "@edsolater/uikit",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "exports": {
     ".": "./dist/index.js",
     "./plugins": "./dist/plugins/index.js",
@@ -52,7 +52,6 @@
     "@edsolater/hookit": "*",
     "@edsolater/xstore": "*",
     "@emotion/css": ">=11.9.0",
-    "immer": "^9.0.16",
     "react": ">18.0.0",
     "react-dom": ">18.0.0"
   },
