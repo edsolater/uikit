@@ -15,9 +15,7 @@ export function createComponentContext<Props extends Record<keyof any, any>>(
   component: ReactComponent<Props & { children?: DivChildNode }>,
   hook: () => ComponentContextValue<Props & { children?: DivChildNode }>,
   propertyHooks: {
-    [key in keyof Props as `use${Capitalize<key & string>}`]: ComponentContextValue<
-      React.Dispatch<React.SetStateAction<Props[key]>>
-    >
+    [key in keyof Props as `use${Capitalize<key & string>}`]: () => ComponentContextValue<Props[key]>
   }
 ] {
   const context = createContext<ComponentContextValue<Props & { children?: DivChildNode }>>({

@@ -6,15 +6,13 @@ import { AbilityNormalPlugins, AbilityWrapperPlugins } from './type'
 
 export const handleDivNormalPlugins =
   (normalPlugins: AbilityNormalPlugins[]) =>
-  <P extends Partial<DivProps<any>>>(props: P): P => {
-    return (normalPlugins ?? []).reduce((acc, plugin) => mergeProps(acc, plugin.additionalProps), props)
-  }
+  <P extends Partial<DivProps<any>>>(props: P): P =>
+    (normalPlugins ?? []).reduce((acc, plugin) => mergeProps(acc, plugin.additionalProps()), props)
 
 export const handleDivWrapperPlugins =
   (node: ReactElement) =>
-  (wrapperPlugins: AbilityWrapperPlugins[]): ReactElement => {
-    return (wrapperPlugins ?? []).reduce((prevNode, { getWrappedNode }) => getWrappedNode(prevNode), node)
-  }
+  (wrapperPlugins: AbilityWrapperPlugins[]): ReactElement =>
+    (wrapperPlugins ?? []).reduce((prevNode, { getWrappedNode }) => getWrappedNode(prevNode), node)
 
 export function splitPropPlugins<P extends Partial<DivProps<any>>>(
   props: P

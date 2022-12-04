@@ -27,6 +27,7 @@ export * from './SplitView'
 
 export * from './DecimalInput'
 export * from './Input'
+export * from './Switch'
 
 export * from './Card'
 export * from './Button'

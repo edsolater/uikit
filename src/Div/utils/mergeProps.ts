@@ -1,13 +1,12 @@
 import {
+  AnyFn,
   flap,
   isArray,
   isFunction,
   isObject,
-  parallelSwitch,
   mergeObjectsWithConfigs,
-  shakeNil,
-  AnyFn,
-  AnyObj
+  parallelSwitch,
+  shakeNil
 } from '@edsolater/fnkit'
 import { isValidElement } from 'react'
 import mergeFunction from '../../functions/mergeFunction'
@@ -49,6 +48,7 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['plugins', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['htmlProps', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['shadowProps', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
+        ['onClick', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['children', () => v2 ?? v1],
 
         // normal props

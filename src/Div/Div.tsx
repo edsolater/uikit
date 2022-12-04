@@ -14,7 +14,6 @@ import { handleDivTag } from './utils/handleDivTag'
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
   const { props: parsedProps, normalPlugins, wrapperPlugins } = splitPropPlugins(props)
-
   const mergedProps = pipe(
     parsedProps,
     handleDivShallowProps,

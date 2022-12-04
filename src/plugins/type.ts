@@ -8,7 +8,7 @@ export type WithPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
 
 export type AbilityNormalPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
   isOutsideWrapperNode: false
-  additionalProps: Partial<Omit<DivProps<TagName>, 'plugins' | 'shadowProps'>>
+  additionalProps: () => Partial<Omit<DivProps<TagName>, 'plugins' | 'shadowProps'>>
 }
 
 export type AbilityWrapperPlugins = {
