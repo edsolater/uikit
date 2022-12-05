@@ -10,8 +10,8 @@ export interface SwitchProps {
 }
 
 export const Switch = uikit('Switch', ({ checked, disable, onToggle }: SwitchProps) => {
-  const thumbOuterWidth = 24
-  const trackWidth = 2 * thumbOuterWidth
+  const thumbOuterWidth = '24px'
+  const trackWidth = `calc(2 * ${thumbOuterWidth})`
 
   const checkedThumbColor = 'white'
   const trackBorderColor = '#74796e'
@@ -36,8 +36,8 @@ export const Switch = uikit('Switch', ({ checked, disable, onToggle }: SwitchPro
       <Div
         icss={[
           {
-            translate: checked ? '100%' : undefined,
-            scale: checked ? 1 : 0.8,
+            translate: checked ? `calc(100% - 2 * ${trackBorderWidth})` : undefined,
+            scale: checked ? '.8' : '.6',
             width: thumbOuterWidth,
             height: thumbOuterWidth,
             backgroundColor: checked ? checkedThumbColor : uncheckedThumbColor,
