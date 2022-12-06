@@ -10,6 +10,7 @@ export * from './AppRoot'
 //#region ------------------- addProps -------------------
 // Flow Control
 export * from './For'
+export * from './Motion'
 //#endregion
 
 export * from './ExpandClickableArea' // add a <Div> wrapper

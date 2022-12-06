@@ -50,17 +50,21 @@ export const Switch = uikit('Switch', ({ checked, disable, onToggle }: SwitchPro
   )
 })
 
-export const UncontrolledSwitch = uikit('UncontrolledSwitch', ({ defaultCheck }: { defaultCheck?: boolean }) => {
-  const [isChecked, setIsChecked] = useState(defaultCheck)
-  return (
-    <Switch
-      checked={isChecked}
-      onToggle={(toStatus) => {
-        setIsChecked(toStatus)
-      }}
-    />
-  )
-})
+export const UncontrolledSwitch = uikit(
+  'UncontrolledSwitch',
+  ({ defaultCheck, onToggle }: { defaultCheck?: boolean; onToggle?: (toStatus: boolean) => void }) => {
+    const [isChecked, setIsChecked] = useState(defaultCheck)
+    return (
+      <Switch
+        checked={isChecked}
+        onToggle={(toStatus) => {
+          setIsChecked(toStatus)
+          onToggle?.(toStatus)
+        }}
+      />
+    )
+  }
+)
 
 // export const SwitchUncontrolWrapper =uikit('SwitchUncontrolWrapper', ()=>{
 //   // TODO: createWrapper

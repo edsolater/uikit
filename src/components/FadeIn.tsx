@@ -1,13 +1,11 @@
 import { ReactNode, useRef } from 'react'
 
-import { CSSStyle, cssTransitionTimeFnOutQuadratic } from '../styles'
+import { useInitFlagDetector } from '@edsolater/hookit'
 import { Div } from '../Div/Div'
 import { DivProps } from '../Div/type'
-import { TransitionProps, Transition } from './Transition/Transition'
+import { CSSStyle, cssTransitionTimeFnOutQuadratic } from '../styles'
 import { opacityInOut } from './Transition/effects'
-import { useInitFlagDetector } from '@edsolater/hookit'
-import { inClient } from '../functions/isSSR'
-import React from 'react'
+import { Transition, TransitionProps } from './Transition/Transition'
 
 type FadeInProps = {
   heightOrWidth?: 'height' | 'width'
@@ -27,6 +25,7 @@ type FadeInProps = {
 
 const baseTransitionStyle = { overflow: 'hidden' } as CSSStyle
 
+/** @deprecated just use `<Div>`'s prop motion */
 /** trans width/height from zero to auto */
 export function FadeIn({
   children,
@@ -113,6 +112,7 @@ export function FadeIn({
     </Transition>
   )
 }
+
 function useFadeInPaddingEffect({ heightOrWidth }: { heightOrWidth: 'height' | 'width' }) {
   const contentCachedTrueHeightOrWidth = useRef<number>()
   const contentCachedTruePadding = useRef<string>()

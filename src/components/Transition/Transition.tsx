@@ -17,10 +17,14 @@ export type TransitionPhase =
   | typeof TransitionPhaseShowing
   | typeof TransitionPhaseHidden
 
+  /**
+   * it is used for open close 
+   */
 export interface TransitionProps extends Omit<DivProps, 'children'> {
   cssTransitionDurationMs?: number
   cssTransitionTimingFunction?: ICSSObject['transitionTimingFunction']
 
+  // detect transition should be turn on
   show?: boolean
   /** will trigger props:onBeforeEnter() if init props:show  */
   appear?: boolean
