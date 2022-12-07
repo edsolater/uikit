@@ -37,6 +37,7 @@ export * from './useInitFlagDetector'
 export * from './useDebugRenderByProps'
 export * from './useConsoleLog'
 export * from './useGlobalState'
+export * from './useInvokeOnce' // invoke fn once
 
 // for ui
 export * from './useComponentHandler'

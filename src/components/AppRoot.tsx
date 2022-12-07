@@ -1,6 +1,6 @@
-import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
 import { Div, DivChildNode } from '../Div'
 import { injectGlobalResetStyle } from '../styles'
+import { useInvokeOnce } from '../hooks'
 import { uikit } from './utils'
 
 export interface AppRootProps {
@@ -9,7 +9,7 @@ export interface AppRootProps {
 }
 
 export const AppRoot = uikit('AppRoot', ({ children, rootId }: AppRootProps) => {
-  useIsomorphicLayoutEffect(injectGlobalResetStyle, [])
+  useInvokeOnce(injectGlobalResetStyle)
   return (
     <Div htmlProps={{ id: rootId }} icss={{ height: '100%' }}>
       {children}
