@@ -33,7 +33,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
    * a special props, it won't render anything for `<div>`'s DOM, just a label for {@link pickChildByTag}\
    * give a tag, means it's special in it's context
    */
-  tag?: MayDeepArray<DivDataTag | undefined>
+  tag?: MayDeepArray<DivDataTag | undefined> // !!!TODO: it's better to be a plugin
   className?: MayDeepArray<ClassName | undefined>
   onClick?: MayDeepArray<
     | ((payload: {
@@ -45,7 +45,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   >
   propHook?: MayDeepArray<
     (props: Omit<DivBaseProps<TagName>, 'propHook'>) => Omit<DivBaseProps<TagName>, 'propHook'> | undefined
-  >
+  > // !!!TODO: it's better to be a plugin
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
   htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
@@ -55,7 +55,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
 
 export type WithShallowProps<TagName extends keyof HTMLTagMap = 'div'> = {
-  shadowProps?: MayDeepArray<DivProps<TagName>>
+  shadowProps?: MayDeepArray<DivProps<TagName>> // !!!TODO: it's better to be a plugin
 }
 
 export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>
