@@ -13,9 +13,16 @@ import { handleDivTag } from './utils/handleDivTag'
 
 // TODO: as为组件时 的智能推断还不够好
 export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<TagName>) => {
-  const { props: parsedProps, normalPlugins, wrapperPlugins } = splitPropPlugins(props)
+  const { props: propsWithoutPlugins, normalPlugins, wrapperPlugins } = splitPropPlugins(props)
+
+  // handle Kit() - like plugins
+  if (wrapperPlugins?.length)
+    return handleDivWrapperPlugins(
+      createElement(Div, handleDivNormalPlugins(normalPlugins)(propsWithoutPlugins) as DivProps<any>)
+    )(wrapperPlugins)
+
   const mergedProps = pipe(
-    parsedProps,
+    propsWithoutPlugins,
     handleDivShallowProps,
     handleDivNormalPlugins(normalPlugins),
     handleDivChildren,
@@ -50,5 +57,5 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
         mergedProps.children
       )
 
-  return handleDivWrapperPlugins(node)(wrapperPlugins)
+  return node
 }
