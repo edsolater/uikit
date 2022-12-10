@@ -1,72 +1,93 @@
+import { mergeFunction } from '@edsolater/fnkit'
 import { useState } from 'react'
-import { Div } from '../Div'
+import { Div, DivChildNode, DivProps } from '../Div'
 import { click } from '../plugins'
+import { mergeProps } from '../utils'
 import { uikit } from './utils'
 
-export interface SwitchProps {
-  disable?: boolean
+export interface SwitchCoreProps {
   checked?: boolean
   onToggle?: (toStatus: boolean) => void
+  renderThumbIcon?: DivChildNode
+  trackProps?: DivProps
+  thumbProps?: DivProps
 }
 
-export const Switch = uikit('Switch', ({ checked, disable, onToggle }: SwitchProps) => {
-  const thumbOuterWidth = '24px'
-  const trackWidth = `calc(2 * ${thumbOuterWidth})`
+export type SwitchProps = SwitchCoreProps & FeatureDefaultCheck
 
-  const checkedThumbColor = 'white'
-  const trackBorderColor = '#74796e'
-  const uncheckedThumbColor = '#74796e'
-  const checkedTrackBg = 'dodgerblue'
-  const uncheckedTrackBg = 'transparent'
-  const trackBorderWidth = '2px'
-
+export const Switch = uikit('Switch', (rawProps: SwitchProps) => {
+  const p1 = useFeatureDefaultCheck(rawProps)
+  const p = useFeatureBasicStyle(p1)
+  const { checked, onToggle, renderThumbIcon, trackProps, thumbProps } = p
   return (
     <Div
+      className='Switch-track'
+      shadowProps={trackProps}
       plugins={click(() => {
         onToggle?.(!checked)
       })}
-      icss={{
-        width: trackWidth,
-        backgroundColor: checked ? checkedTrackBg : uncheckedTrackBg,
-        border: `${trackBorderWidth} solid ${trackBorderColor}`,
-        borderRadius: '100vw',
-        transition: '300ms'
-      }}
     >
-      <Div
-        icss={[
-          {
-            translate: checked ? `calc(100% - 2 * ${trackBorderWidth})` : undefined,
-            scale: checked ? '.8' : '.6',
-            width: thumbOuterWidth,
-            height: thumbOuterWidth,
-            backgroundColor: checked ? checkedThumbColor : uncheckedThumbColor,
-            borderRadius: '100vw'
-          },
-          { transition: '300ms' }
-        ]}
-      />
+      <Div className='Switch-thumb' shadowProps={thumbProps}>
+        {renderThumbIcon}
+      </Div>
     </Div>
   )
 })
 
-export const UncontrolledSwitch = uikit(
-  'UncontrolledSwitch',
-  ({ defaultCheck, onToggle }: { defaultCheck?: boolean; onToggle?: (toStatus: boolean) => void }) => {
-    const [isChecked, setIsChecked] = useState(defaultCheck)
-    return (
-      <Switch
-        checked={isChecked}
-        onToggle={(toStatus) => {
-          setIsChecked(toStatus)
-          onToggle?.(toStatus)
-        }}
-      />
-    )
+type FeatureDefaultCheck = {
+  defaultCheck?: boolean
+}
+const useFeatureDefaultCheck = <T extends FeatureDefaultCheck & SwitchCoreProps>(
+  props: T
+): Omit<T, keyof FeatureDefaultCheck> => {
+  const [isChecked, setIsChecked] = useState(props.defaultCheck)
+  return {
+    ...props,
+    checked: isChecked,
+    onToggle: mergeFunction(props.onToggle, (toStatus) => {
+      setIsChecked(toStatus)
+    })
   }
-)
+}
 
-// export const SwitchUncontrolWrapper =uikit('SwitchUncontrolWrapper', ()=>{
-//   // TODO: createWrapper
-//   return
-// })
+type FeatureBasicStyle = {}
+
+const useFeatureBasicStyle = <T extends FeatureBasicStyle & SwitchCoreProps>(
+  props: T
+): Omit<T, keyof FeatureBasicStyle> => {
+  const innerStyle = {
+    thumbOuterWidth: 24,
+    trackWidth: 2 * 24,
+    checkedThumbColor: 'white',
+    trackBorderColor: '#74796e',
+    uncheckedThumbColor: '#74796e',
+    checkedTrackBg: 'dodgerblue',
+    uncheckedTrackBg: 'transparent',
+    trackBorderWidth: 2
+  }
+
+  return mergeProps(props, {
+    trackProps: {
+      icss:{
+        width: innerStyle.trackWidth,
+        backgroundColor: props.checked ? innerStyle.checkedTrackBg : innerStyle.uncheckedTrackBg,
+        border: `${innerStyle.trackBorderWidth}px solid ${innerStyle.trackBorderColor}`,
+        borderRadius: '100vw',
+        transition: '300ms'
+      }
+    },
+    thumbProps: {
+      icss: [
+        {
+          translate: props.checked ? `calc(100% - ${2 * innerStyle.trackBorderWidth}px)` : undefined,
+          scale: props.checked ? '.8' : '.6',
+          width: innerStyle.thumbOuterWidth,
+          height: innerStyle.thumbOuterWidth,
+          backgroundColor: props.checked ? innerStyle.checkedThumbColor : innerStyle.uncheckedThumbColor,
+          borderRadius: '100vw'
+        },
+        { transition: '300ms' }
+      ]
+    }
+  } as SwitchCoreProps)
+}
