@@ -51,7 +51,7 @@ export const Motion = uikit(
       if (fromRectSize.current && toRect && hasSizeChanged(fromRectSize.current, toRect)) {
         animationControl = squareRef.current.animate(
           [
-            { width: fromRectSize.current?.width + 'px', height: fromRectSize.current?.width + 'px' },
+            { width: fromRectSize.current?.width + 'px', height: fromRectSize.current?.height + 'px' },
             { width: toRect.width + 'px', height: toRect.height + 'px', offset: 1 }
           ],
           animateOptions // iteration 1 can use to moke transition
