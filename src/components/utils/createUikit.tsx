@@ -7,7 +7,7 @@ import { AddProps } from '../AddProps'
 export function uikit<T>(
   options: { name: string } | string,
   FC: Component<T>,
-  defaultDivProps?: Omit<DivProps, 'children'>
+  defaultDivProps?: Omit<T & DivProps, 'children'>
 ): ReactComponent<T & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
   const uikitFC = overwriteFunctionName((props) => {
