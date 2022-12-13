@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { Motion, MotionProps } from '../../components'
 import { Div, DivProps } from '../../Div'
 import { useDOM } from '../../hooks'
@@ -7,16 +7,18 @@ import { createPropPlugin } from '../createPlugin'
 import { WrappedBy } from '../misc/WrappedBy'
 
 export const withFloatBg = createPropPlugin(
-  (oldProps) => (options?: { floatBgProps?: DivProps; MotionProps?: MotionProps }) => {
+  (oldProps) => (options?: { floatBgProps?: DivProps; MotionProps?: MotionProps; defaultActiveItemIndex?: number }) => {
     const [dom, setDOM] = useDOM()
     const [activeTab, setActiveTab] = useDOM()
 
-    useEffect(() => {
-      const subscriptions = getSiblings(dom).map((el) =>
+    useLayoutEffect(() => {
+      const siblings = getSiblings(dom)
+      const subscriptions = siblings.map((el) =>
         addEventListener(el, 'click', ({ el }) => {
           setActiveTab(el)
         })
       )
+      if (options?.defaultActiveItemIndex) siblings.at(options.defaultActiveItemIndex)?.click()
       return () => subscriptions.forEach((subscription) => subscription.cancel())
     }, [dom])
 
