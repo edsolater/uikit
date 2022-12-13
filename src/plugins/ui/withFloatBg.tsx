@@ -3,10 +3,10 @@ import { Motion, MotionProps } from '../../components'
 import { Div, DivProps } from '../../Div'
 import { useDOM } from '../../hooks'
 import { addEventListener, getSiblings } from '../../utils'
-import { createNormalPlugin } from '../createPlugin'
+import { createPropPlugin } from '../createPlugin'
 import { WrappedBy } from '../misc/WrappedBy'
 
-export const withFloatBg = createNormalPlugin(
+export const withFloatBg = createPropPlugin(
   (oldProps) => (options?: { floatBgProps?: DivProps; MotionProps?: MotionProps }) => {
     const [dom, setDOM] = useDOM()
     const [activeTab, setActiveTab] = useDOM()

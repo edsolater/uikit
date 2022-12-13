@@ -3,7 +3,7 @@
 import { WeakerMap } from '@edsolater/fnkit'
 import { useEffect, useRef } from 'react'
 import { HTMLElements } from '../../utils/dom/getHTMLElementsFromEls'
-import { createNormalPlugin } from '../createPlugin'
+import { createPropPlugin } from '../createPlugin'
 
 const nodeStore = new WeakerMap<string, { el: HTMLElement; parent: HTMLElements }>()
 export function usePluginTag(
@@ -18,7 +18,7 @@ export function usePluginTag(
   const { sameContextAs } = options ?? {}
   return []
 }
-export const tag = createNormalPlugin(() => (tagName: string) => {
+export const tag = createPropPlugin(() => (tagName: string) => {
   const divRef = useRef<HTMLElement>()
   useEffect(() => {}, [divRef])
   return { domRef: divRef }
