@@ -7,6 +7,6 @@ export type WithPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
 }
 
 export type AbilityPlugin<TagName extends keyof HTMLTagMap = 'div'> = {
-  additionalProps?: (props: DivProps) => Partial<Omit<DivProps<TagName>, 'plugins' | 'shadowProps'>>
-  getWrappedNode?: (node: ReactElement) => ReactElement
+  getAdditionalProps?: (props: DivProps) => Partial<Omit<DivProps<TagName>, 'plugins' | 'shadowProps'>> // change inner props
+  getWrappedNode?: (node: ReactElement) => ReactElement // change outter wrapper element 
 }

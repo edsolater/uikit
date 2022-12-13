@@ -3,7 +3,7 @@ import { createElement } from 'react'
 import { invokeOnce } from '../functions/dom/invokeOnce'
 import classname from '../functions/react/classname'
 import mergeRefs, { loadRef } from '../functions/react/mergeRefs'
-import { handleDivNormalPlugins, handleDivWrapperPlugins, splitPropPlugins } from '../plugins/handleDivPlugins'
+import { handleDivPropPlugins, handleDivWrapperPlugins, splitPropPlugins } from '../plugins/handleDivPlugins'
 import { parseCSS } from '../styles/parseCSS'
 import { DivProps, HTMLTagMap } from './type'
 import { handleDivChildren } from './utils/handleDivChildren'
@@ -17,13 +17,13 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   // handle Kit() - like plugins
   if (wrappersNodeFuncs?.length)
     return handleDivWrapperPlugins(
-      createElement(Div, handleDivNormalPlugins(getAdditionalPropsFuncs)(propsWithoutPlugins) as DivProps<any>)
+      createElement(Div, handleDivPropPlugins(getAdditionalPropsFuncs)(propsWithoutPlugins) as DivProps<any>)
     )(wrappersNodeFuncs)
 
   const mergedProps = pipe(
     propsWithoutPlugins,
     handleDivShallowProps,
-    handleDivNormalPlugins(getAdditionalPropsFuncs),
+    handleDivPropPlugins(getAdditionalPropsFuncs),
     handleDivChildren,
     handleDivTag
   )

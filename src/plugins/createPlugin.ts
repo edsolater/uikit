@@ -8,7 +8,7 @@ export function createPropPlugin<T extends any[]>(
     pluginName?: string
   }
 ): (...pluginCustomizedOptions: T) => AbilityPlugin {
-  return (...args) => ({ additionalProps: (props) => createrFn(props)(...args) })
+  return (...args) => ({ getAdditionalProps: (props) => createrFn(props)(...args) })
 }
 
 export function createWrapperPlugin<T extends any[]>(
@@ -17,5 +17,10 @@ export function createWrapperPlugin<T extends any[]>(
     pluginName?: string
   }
 ): (...pluginCustomizedOptions: T) => AbilityPlugin {
+  // return (...args) => ({
+  //   additionalProps: (props) => ({
+  //     children: createrFn(props.children as ReactElement /* can attach plugin,must be ReactElement */)(...args)
+  //   })
+  // })
   return (...args) => ({ getWrappedNode: (node) => createrFn(node)(...args) })
 }
