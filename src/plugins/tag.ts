@@ -18,7 +18,7 @@ export function usePluginTag(
   const { sameContextAs } = options ?? {}
   return []
 }
-export const tag = createNormalPlugin((tagName: string) => {
+export const tag = createNormalPlugin(() => (tagName: string) => {
   const divRef = useRef<HTMLElement>()
   useEffect(() => {}, [divRef])
   return { domRef: divRef }

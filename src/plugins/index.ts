@@ -6,3 +6,7 @@ export * from './WrappedBy'
 
 // util creator
 export * from './createPlugin'
+
+
+// UI plugins
+export * from './withFloatBg'

@@ -7,7 +7,7 @@ import { AbilityNormalPlugins, AbilityWrapperPlugins } from './type'
 export const handleDivNormalPlugins =
   (normalPlugins: AbilityNormalPlugins[]) =>
   <P extends Partial<DivProps<any>>>(props: P): P =>
-    (normalPlugins ?? []).reduce((acc, plugin) => mergeProps(acc, plugin.additionalProps()), props)
+    (normalPlugins ?? []).reduce((acc, plugin) => mergeProps(acc, plugin.additionalProps(acc)), props)
 
 export const handleDivWrapperPlugins =
   (node: ReactElement) =>
