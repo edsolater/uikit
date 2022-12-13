@@ -1,7 +1,7 @@
 import { isObject } from '@edsolater/fnkit'
 import { useEffect, useRef } from 'react'
-import { handleHover, HandleHoverOptions } from '../functions/dom/gesture/handleHover'
-import { createNormalPlugin } from './createPlugin'
+import { handleHover, HandleHoverOptions } from '../../functions/dom/gesture/handleHover'
+import { createNormalPlugin } from '../createPlugin'
 
 export const hover = createNormalPlugin(
   () =>

@@ -2,8 +2,8 @@
 
 import { WeakerMap } from '@edsolater/fnkit'
 import { useEffect, useRef } from 'react'
-import { HTMLElements } from '../utils/dom/getHTMLElementsFromEls'
-import { createNormalPlugin } from './createPlugin'
+import { HTMLElements } from '../../utils/dom/getHTMLElementsFromEls'
+import { createNormalPlugin } from '../createPlugin'
 
 const nodeStore = new WeakerMap<string, { el: HTMLElement; parent: HTMLElements }>()
 export function usePluginTag(

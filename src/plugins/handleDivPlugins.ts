@@ -1,33 +1,40 @@
-import { flap, groupBy, omit } from '@edsolater/fnkit'
+import { flap, omit } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
-import { mergeProps } from '../functions/react'
 import { DivProps } from '../Div/type'
-import { AbilityNormalPlugins, AbilityWrapperPlugins } from './type'
+import { mergeProps } from '../functions/react'
+import { AbilityPlugin } from './type'
 
 export const handleDivNormalPlugins =
-  (normalPlugins: AbilityNormalPlugins[]) =>
+  (plugins: NonNullable<AbilityPlugin['additionalProps']>[]) =>
   <P extends Partial<DivProps<any>>>(props: P): P =>
-    (normalPlugins ?? []).reduce((acc, plugin) => mergeProps(acc, plugin.additionalProps(acc)), props)
+    (plugins ?? []).reduce((acc, additionalProps) => mergeProps(acc, additionalProps(acc)), props)
 
 export const handleDivWrapperPlugins =
   (node: ReactElement) =>
-  (wrapperPlugins: AbilityWrapperPlugins[]): ReactElement =>
-    (wrapperPlugins ?? []).reduce((prevNode, { getWrappedNode }) => getWrappedNode(prevNode), node)
+  (plugins: NonNullable<AbilityPlugin['getWrappedNode']>[]): ReactElement =>
+    (plugins ?? []).reduce((prevNode, getWrappedNode) => getWrappedNode(prevNode), node)
 
 export function splitPropPlugins<P extends Partial<DivProps<any>>>(
   props: P
 ): {
-  props: Omit<P, 'plugins'>
-  normalPlugins: AbilityNormalPlugins[]
-  wrapperPlugins: AbilityWrapperPlugins[]
+  parsedProps: Omit<P, 'plugins'>
+  getAdditionalPropsFuncs: NonNullable<AbilityPlugin['additionalProps']>[]
+  wrappersNodeFuncs: NonNullable<AbilityPlugin['getWrappedNode']>[]
 } {
-  if (!props.plugins) return { props: props, normalPlugins: [], wrapperPlugins: [] }
-  const { false: normalPlugin, true: outsideWrapperPlugin } = groupBy(flap(props.plugins), (p) =>
-    String(p.isOutsideWrapperNode)
+  if (!props.plugins) return { parsedProps: props, getAdditionalPropsFuncs: [], wrappersNodeFuncs: [] }
+  const { additionalProps, wrappers } = flap(props.plugins).reduce(
+    (acc, { additionalProps, getWrappedNode }) => ({
+      additionalProps: additionalProps ? [...acc.additionalProps, additionalProps] : acc.additionalProps,
+      wrappers: getWrappedNode ? [...acc.wrappers, getWrappedNode] : acc.wrappers
+    }),
+    {
+      additionalProps: [] as NonNullable<AbilityPlugin['additionalProps']>[],
+      wrappers: [] as NonNullable<AbilityPlugin['getWrappedNode']>[]
+    }
   )
   return {
-    props: omit(props, 'plugins'),
-    normalPlugins: normalPlugin as AbilityNormalPlugins[],
-    wrapperPlugins: outsideWrapperPlugin as AbilityWrapperPlugins[]
+    parsedProps: omit(props, 'plugins'),
+    getAdditionalPropsFuncs: additionalProps,
+    wrappersNodeFuncs: wrappers
   }
 }

@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { Motion, MotionProps } from '../components'
-import { Div, DivProps } from '../Div'
-import { useDOM } from '../hooks'
-import { addEventListener, getSiblings } from '../utils'
-import { createNormalPlugin } from './createPlugin'
-import { WrappedBy } from './WrappedBy'
+import { Motion, MotionProps } from '../../components'
+import { Div, DivProps } from '../../Div'
+import { useDOM } from '../../hooks'
+import { addEventListener, getSiblings } from '../../utils'
+import { createNormalPlugin } from '../createPlugin'
+import { WrappedBy } from '../misc/WrappedBy'
 
 export const withFloatBg = createNormalPlugin(
   (oldProps) => (options?: { floatBgProps?: DivProps; MotionProps?: MotionProps }) => {

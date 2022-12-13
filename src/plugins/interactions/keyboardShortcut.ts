@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { handleKeyboardShortcut, KeyboardShortcut } from '../functions/dom/gesture/handleKeyboardShortcut'
-import { createNormalPlugin } from './createPlugin'
+import { handleKeyboardShortcut, KeyboardShortcut } from '../../functions/dom/gesture/handleKeyboardShortcut'
+import { createNormalPlugin } from '../createPlugin'
 
 export const keyboardShortcut = createNormalPlugin(
   () =>

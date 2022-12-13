@@ -1,5 +1,5 @@
 import { ReactElement } from 'react'
-import { createWrapperPlugin } from './createPlugin'
+import { createWrapperPlugin } from '../createPlugin'
 
 export type KitPluginOptions = {}
 
