@@ -39,6 +39,7 @@ export const withFloatBg = createPropPlugin((oldProps) => (options?: WithFloatBg
             top: activeTab?.offsetTop,
             left: activeTab?.offsetLeft,
             position: 'absolute',
+            zIndex: '-1',
             background: '#d1d3d6'
           }}
           className='Tabs-active-bg-panel'
