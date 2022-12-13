@@ -7,7 +7,6 @@ import { handleDivNormalPlugins, handleDivWrapperPlugins, splitPropPlugins } fro
 import { parseCSS } from '../styles/parseCSS'
 import { DivProps, HTMLTagMap } from './type'
 import { handleDivChildren } from './utils/handleDivChildren'
-import { handleDivPropHook } from './utils/handleDivPropHook'
 import { handleDivShallowProps } from './utils/handleDivShallowProps'
 import { handleDivTag } from './utils/handleDivTag'
 
@@ -27,7 +26,6 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
     handleDivNormalPlugins(normalPlugins),
     handleDivChildren,
     handleDivTag,
-    handleDivPropHook
   )
 
   if (!mergedProps) return null

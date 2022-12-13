@@ -19,6 +19,7 @@ export { default as mergeRefs } from './mergeRefs'
 export * from './mergeRefs'
 export * from './changeReactChildren'
 export * from './pickChild'
+export * from './getSiblings'
 
 export * from './addPropsToReactNode'
 export * from './mapReactElementChildren'

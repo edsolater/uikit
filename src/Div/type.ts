@@ -43,9 +43,6 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
       }) => void)
     | undefined
   >
-  propHook?: MayDeepArray<
-    (props: Omit<DivBaseProps<TagName>, 'propHook'>) => Omit<DivBaseProps<TagName>, 'propHook'> | undefined
-  > // !!!TODO: it's better to be a plugin
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
   htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>

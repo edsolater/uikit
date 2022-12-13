@@ -9,69 +9,68 @@ export type ClickPluginOptions = HandleClickOptions & {
 }
 /** used in user's use action */
 export const click = createNormalPlugin(
-  (...args: [ClickPluginOptions] | [onClick: HandleClickOptions['onClick'], options?: ClickPluginOptions]) =>
-    () => {
-      const options = (isObject(args[0]) ? args[0] : { ...args[1], onClick: args[0] }) as ClickPluginOptions
+  (...args: [ClickPluginOptions] | [onClick: HandleClickOptions['onClick'], options?: ClickPluginOptions]) => {
+    const options = (isObject(args[0]) ? args[0] : { ...args[1], onClick: args[0] }) as ClickPluginOptions
 
-      const divRef = useRef<HTMLElement>()
+    const divRef = useRef<HTMLElement>()
 
-      useEffect(() => {
-        const subscription = handleClick(divRef.current, options)
-        return subscription.cancel
-      }, [divRef, ...Object.values(options)])
+    useEffect(() => {
+      const subscription = handleClick(divRef.current, options)
+      return subscription.cancel
+    }, [divRef, ...Object.values(options)])
 
-      const icss = createICSS([
-        {
-          cursor: 'pointer',
-          '*': {
-            cursor: 'inherit'
-          }
-        },
-        options.applyCSSTo === 'element-after'
-          ? {
-              position: 'relative',
-              '::after': {
-                content: "''",
-                position: 'absolute',
-                inset: 0,
-                ':hover': {
-                  background: '#00000008',
-                  filter: 'brightness(0.8)'
-                },
-                ':active': {
-                  background: '#0000001c',
-                  filter: 'brightness(0.6)'
-                }
-              }
-            }
-          : options.applyCSSTo === 'element-before'
-          ? {
-              position: 'relative',
-              '::before': {
-                content: "''",
-                position: 'absolute',
-                inset: 0,
-                ':hover': {
-                  background: '#00000008',
-                  filter: 'brightness(0.8)'
-                },
-                ':active': {
-                  background: '#0000001c',
-                  filter: 'brightness(0.6)'
-                }
-              }
-            }
-          : {
+    const icss = createICSS([
+      {
+        cursor: 'pointer',
+        '*': {
+          cursor: 'inherit'
+        }
+      },
+      options.applyCSSTo === 'element-after'
+        ? {
+            position: 'relative',
+            '::after': {
+              content: "''",
+              position: 'absolute',
+              inset: 0,
               ':hover': {
-                backgroundImage: 'linear-gradiant(#00000008, #00000008)',
+                background: '#00000008',
                 filter: 'brightness(0.8)'
               },
               ':active': {
-                backgroundImage: 'linear-gradiant(#0000001c, #0000001c)',
+                background: '#0000001c',
                 filter: 'brightness(0.6)'
               }
             }
-      ])
-      return { domRef: divRef, icss }
-    }
+          }
+        : options.applyCSSTo === 'element-before'
+        ? {
+            position: 'relative',
+            '::before': {
+              content: "''",
+              position: 'absolute',
+              inset: 0,
+              ':hover': {
+                background: '#00000008',
+                filter: 'brightness(0.8)'
+              },
+              ':active': {
+                background: '#0000001c',
+                filter: 'brightness(0.6)'
+              }
+            }
+          }
+        : {
+            ':hover': {
+              backgroundImage: 'linear-gradiant(#00000008, #00000008)',
+              filter: 'brightness(0.8)'
+            },
+            ':active': {
+              backgroundImage: 'linear-gradiant(#0000001c, #0000001c)',
+              filter: 'brightness(0.6)'
+            }
+          }
+    ])
+    return { domRef: divRef, icss }
+  }
 )
