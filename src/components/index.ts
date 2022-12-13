@@ -25,6 +25,7 @@ export * from './Popover/Popover'
 export * from './Tooltip'
 export * from './List'
 export * from './SplitView'
+export * from './Tabs'
 
 export * from './DecimalInput'
 export * from './Input'
