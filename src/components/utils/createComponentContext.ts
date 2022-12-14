@@ -15,7 +15,11 @@ export function createComponentContext<Props extends Record<keyof any, any>>(
   component: ReactComponent<Props & { children?: DivChildNode }>,
   hook: () => ComponentContextValue<Props & { children?: DivChildNode }>,
   propertyHooks: {
-    [key in keyof Props as `use${Capitalize<key & string>}`]: () => ComponentContextValue<Props[key]>
+    [key in keyof Props as `use${Capitalize<key & string>}`]: () => Props[key]
+  } & {
+    [key in keyof Props as `use${Capitalize<key & string>}Setter`]: () => React.Dispatch<
+      React.SetStateAction<Props[key]>
+    >
   }
 ] {
   const context = createContext<ComponentContextValue<Props & { children?: DivChildNode }>>({
@@ -35,16 +39,20 @@ export function createComponentContext<Props extends Record<keyof any, any>>(
     {},
     {
       get(target, p) {
-        const propertyName = pipe(String(p), (s) => s.match(/use(?<property>.*)/)?.groups?.property ?? '', uncapitalize)
+        const isSetter = String(p).endsWith('Setter')
+        const propertyName = pipe(
+          String(p),
+          (s) => s.match(/^use(?<property>.*?)(?:Setter)?$/)?.groups?.property ?? '',
+          uncapitalize
+        )
         return overwriteFunctionName(() => {
           const { value: contextValue, set: contextSet } = useContext(context)
           assert(contextValue, 'lack of Provider')
           assert(contextSet, 'lack of Provider')
-          return {
-            value: contextValue[propertyName],
-            //@ts-ignore
-            set: (dispatcher) => contextSet((s) => ({ [propertyName]: shrinkToValue(dispatcher, [s]) }))
-          }
+          return isSetter
+            ? // @ts-ignore
+              (dispatcher) => contextSet((s) => ({ [propertyName]: shrinkToValue(dispatcher, [s]) }))
+            : contextValue[propertyName]
         }, String(p))
       }
     }
