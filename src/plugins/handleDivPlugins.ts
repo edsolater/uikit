@@ -1,4 +1,4 @@
-import { flap, omit } from '@edsolater/fnkit'
+import { flapDeep, omit } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
 import { mergeProps } from '../functions/react'
@@ -22,7 +22,7 @@ export function splitPropPlugins<P extends Partial<DivProps<any>>>(
   wrappersNodeFuncs: NonNullable<AbilityPlugin['getWrappedNode']>[]
 } {
   if (!props.plugins) return { parsedProps: props, getAdditionalPropsFuncs: [], wrappersNodeFuncs: [] }
-  const { additionalProps, wrappers } = flap(props.plugins).reduce(
+  const { additionalProps, wrappers } = flapDeep(props.plugins).reduce(
     (acc, { getAdditionalProps, getWrappedNode }) => ({
       additionalProps: getAdditionalProps ? [...acc.additionalProps, getAdditionalProps] : acc.additionalProps,
       wrappers: getWrappedNode ? [...acc.wrappers, getWrappedNode] : acc.wrappers
