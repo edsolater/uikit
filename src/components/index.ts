@@ -1,9 +1,11 @@
 export * from './AddProps'
 
+
 export * from './SubComponent'
 export * from './Grid'
 export * from './Col'
 export * from './Row'
+export * from './Box'
 export * from './Group'
 export * from './AppRoot'
 
