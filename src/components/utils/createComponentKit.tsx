@@ -23,7 +23,7 @@ export function componentKit<T>(
   defaultDivProps?: Omit<T & DivProps, 'children'>
 ): ReactComponent<
   T & {
-    componentPlugin?: MayArray<componentPlugin<T>>
+    componentPlugin?: MayArray<componentPlugin<T>> // TODO: should use same name as <Div>'s plugins, for easier to remember
     shadowProps?: T & DivProps // component must merged before `<Div>`
   } & Omit<DivProps, 'children' | 'shadowProps'>
 > {
