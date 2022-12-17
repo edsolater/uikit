@@ -8,8 +8,10 @@ export function parseDivChildrenToReactNode(children?: DivChildNode): ReactNode 
 }
 
 export function handleDivChildren<P extends Partial<DivProps<any>>>(
-  divProps?: P
+  props?: P
 ): (Omit<P, 'children'> & { children?: ReactNode }) | undefined {
-  if (!divProps) return
-  return { ...divProps, children: parseDivChildrenToReactNode(divProps.children) } as (Omit<P, 'children'> & { children?: ReactNode })
+  if (!props?.children) return props as Omit<P, 'children'>
+  return { ...props, children: parseDivChildrenToReactNode(props.children) } as Omit<P, 'children'> & {
+    children?: ReactNode
+  }
 }

@@ -22,5 +22,27 @@ export function createWrapperPlugin<T extends any[]>(
   //     children: createrFn(props.children as ReactElement /* can attach plugin,must be ReactElement */)(...args)
   //   })
   // })
-  return (...args) => ({ getWrappedNode: (node) => createrFn(node)(...args) })
+  return (...args) => ({
+    getAdditionalProps: () => ({ dangerousRenderWrapperNode: (node) => createrFn(node)(...args) })
+  })
 }
+
+// export function createPlugin<P extends DivProps, T extends any[]>(
+//   createrFn: (utils: {
+//     props: P
+//     node: ReactElement
+//   }) => (...pluginCustomizedOptions: T) => { props: Partial<Omit<P, 'plugins' | 'shadowProps'>>; node: ReactElement },
+//   options?: {
+//     pluginName?: string
+//   }
+// ): (...pluginCustomizedOptions: T) => AbilityPlugin {
+//   // return (...args) => ({
+//   //   additionalProps: (props) => ({
+//   //     children: createrFn(props.children as ReactElement /* can attach plugin,must be ReactElement */)(...args)
+//   //   })
+//   // })
+//   return (...pluginCustomizedOptions) => ({
+//     getAdditionalProps: (props: any) => createrFn(props)(...pluginCustomizedOptions),
+//     getWrappedNode: (node) => createrFn(node)(...pluginCustomizedOptions)
+//   })
+// }

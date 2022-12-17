@@ -1,7 +1,7 @@
 import { MayEnum } from '@edsolater/fnkit'
 import { MutableRefObject, ReactElement, ReactHTML, ReactNode } from 'react'
 import { ClassName } from '../functions/react/classname'
-import { WithPlugins } from '../plugins/type'
+import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
 import { MayDeepArray } from '../typings/tools'
@@ -49,7 +49,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   /**
    * change outter wrapper element   
    */ 
-  dangerousRenderWrapperNode?: MayDeepArray<(node: ReactElement) => ReactElement> // TODO
+  dangerousRenderWrapperNode?: MayDeepArray<WrapperNodeFn>
 }
 
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
