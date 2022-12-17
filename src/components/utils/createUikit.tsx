@@ -21,12 +21,17 @@ export function uikit<T>(
   options: { name: string } | string,
   FC: Component<T>,
   defaultDivProps?: Omit<T & DivProps, 'children'>
-): ReactComponent<T & { uikitPlugin?: MayArray<UikitPlugin<T>> } & Omit<DivProps, 'children'>> {
+): ReactComponent<
+  T & {
+    uikitPlugin?: MayArray<UikitPlugin<T>>
+    shadowProps?: T & DivProps // component must merged before `<Div>`
+  } & Omit<DivProps, 'children' | 'shadowProps'>
+> {
   const displayName = isString(options) ? options : options.name
-  const uikitFC = overwriteFunctionName(({ componentPlugin, ...divProps }) => {
+  const uikitFC = overwriteFunctionName(({ componentPlugin, shadowProps, ...divProps }) => {
     const merged = flap(componentPlugin as MayArray<UikitPlugin<T>>).reduce(
       (acc, additionalProps) => mergeProps(acc, additionalProps(acc)),
-      mergeProps(defaultDivProps ?? {}, divProps, {
+      mergeProps(defaultDivProps ?? {}, divProps, shadowProps, {
         className: displayName
       })
     )

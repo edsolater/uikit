@@ -21,12 +21,17 @@ export function componentKit<T>(
   options: { name: string } | string,
   FC: Component<T>,
   defaultDivProps?: Omit<T & DivProps, 'children'>
-): ReactComponent<T & { componentPlugin?: MayArray<componentPlugin<T>> } & Omit<DivProps, 'children'>> {
+): ReactComponent<
+  T & {
+    componentPlugin?: MayArray<componentPlugin<T>>
+    shadowProps?: T & DivProps // component must merged before `<Div>`
+  } & Omit<DivProps, 'children' | 'shadowProps'>
+> {
   const displayName = isString(options) ? options : options.name
-  const componentkitFC = overwriteFunctionName(({ componentPlugin, ...divProps }) => {
+  const componentkitFC = overwriteFunctionName(({ componentPlugin, shadowProps, ...divProps }) => {
     const merged = flap(componentPlugin as MayArray<componentPlugin<T>>).reduce(
       (acc, additionalProps) => mergeProps(acc, additionalProps(acc)),
-      mergeProps(defaultDivProps ?? {}, divProps, {
+      mergeProps(defaultDivProps ?? {}, divProps, shadowProps, {
         className: displayName
       })
     )
