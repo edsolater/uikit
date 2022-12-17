@@ -1,11 +1,10 @@
-import { MayArray, MayEnum } from '@edsolater/fnkit'
-import { UseHoverOptions } from '@edsolater/hookit'
-import { MutableRefObject, ReactHTML, ReactNode } from 'react'
+import { MayEnum } from '@edsolater/fnkit'
+import { MutableRefObject, ReactElement, ReactHTML, ReactNode } from 'react'
 import { ClassName } from '../functions/react/classname'
+import { WithPlugins } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
 import { MayDeepArray } from '../typings/tools'
-import { AbilityPlugin, WithPlugins } from '../plugins/type'
 import { DivDataTag } from './utils/tag'
 
 export interface HTMLTagMap {
@@ -23,7 +22,7 @@ export interface HTMLTagMap {
 /** richer than ReactNode */
 
 interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
-  as?: MayEnum<keyof ReactHTML> | ((...params: any[]) => JSX.Element) // assume a function return ReactNode is a Component
+  as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
 
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
   domRef?: MayDeepArray<
@@ -47,6 +46,10 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   style?: MayDeepArray<CSSStyle | undefined>
   htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
   children?: DivChildNode
+  /**
+   * change outter wrapper element   
+   */ 
+  dangerousRenderWrapperNode?: MayDeepArray<(node: ReactElement) => ReactElement> // TODO
 }
 
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]

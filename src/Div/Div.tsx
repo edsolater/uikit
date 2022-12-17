@@ -1,4 +1,4 @@
-import { flapDeep, isString, isUndefined, merge, omit, pipe, shakeFalsy, shakeNil } from '@edsolater/fnkit'
+import { flapDeep, merge, pipe, shakeFalsy, shakeNil } from '@edsolater/fnkit'
 import { createElement } from 'react'
 import { invokeOnce } from '../functions/dom/invokeOnce'
 import classname from '../functions/react/classname'
@@ -29,31 +29,23 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   )
 
   if (!mergedProps) return null
+  return createElement(mergedProps.as ?? 'div', parseDivPropsToCoreProps(mergedProps), mergedProps.children)
+}
 
-  const isHTMLTag = isString(mergedProps.as) || isUndefined(mergedProps.as)
-
-  const node = isHTMLTag
-    ? createElement(
-        (mergedProps.as ?? 'div') as string,
-        {
-          ...(mergedProps.htmlProps && Object.assign({}, ...flapDeep(mergedProps.htmlProps))),
-          className:
-            shakeFalsy([classname(mergedProps.className), parseCSS(mergedProps.icss)]).join(' ') ||
-            undefined /* don't render if empty string */,
-          ref: (el) => el && invokeOnce(el, () => loadRef(mergeRefs(...flapDeep(mergedProps.domRef)), el)),
-          style: mergedProps.style ? merge(...flapDeep(shakeNil(mergedProps.style))) : undefined,
-          onClick: mergedProps.onClick
-            ? (ev) =>
-                flapDeep([mergedProps.onClick]).map((onClick) => onClick?.({ event: ev, ev, el: ev.currentTarget }))
-            : undefined
-        } as any,
-        mergedProps.children
-      )
-    : createElement(
-        mergedProps.as as (...params: any[]) => JSX.Element,
-        omit(mergedProps, ['as']),
-        mergedProps.children
-      )
-
-  return node
+function parseDivPropsToCoreProps(
+  divProps: Omit<DivProps<any>, 'plugins' | 'tag' | 'shadowProps' | 'children'> & {
+    children?: React.ReactNode
+  }
+) {
+  return {
+    ...(divProps.htmlProps && Object.assign({}, ...flapDeep(divProps.htmlProps))),
+    className:
+      shakeFalsy([classname(divProps.className), parseCSS(divProps.icss)]).join(' ') ||
+      undefined /* don't render if empty string */,
+    ref: (el) => el && invokeOnce(el, () => loadRef(mergeRefs(...flapDeep(divProps.domRef)), el)),
+    style: divProps.style ? merge(...flapDeep(shakeNil(divProps.style))) : undefined,
+    onClick: divProps.onClick
+      ? (ev) => flapDeep([divProps.onClick]).map((onClick) => onClick?.({ event: ev, ev, el: ev.currentTarget }))
+      : undefined
+  }
 }
