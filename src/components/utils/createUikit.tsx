@@ -1,18 +1,36 @@
-import { isString, overwriteFunctionName } from '@edsolater/fnkit'
+import { flap, isString, MayArray, overwriteFunctionName } from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
 import { mergeProps } from '../../functions/react'
 import { Component, ReactComponent } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 
+type UikitPlugin<P> = (props: P) => Partial<P>
+
+export function createUikitPlugin<P extends DivProps, T extends any[]>(
+  createrFn: (props: P) => (...pluginCustomizedOptions: T) => Partial<P>, // return a function , in this function can exist hooks
+  options?: {
+    /* NOTE  add more */
+  }
+): (...pluginCustomizedOptions: T) => UikitPlugin<P> {
+  return (...pluginOptions) =>
+    (props) =>
+      createrFn(props)(...pluginOptions)
+}
+
 export function uikit<T>(
   options: { name: string } | string,
   FC: Component<T>,
   defaultDivProps?: Omit<T & DivProps, 'children'>
-): ReactComponent<T & Omit<DivProps, 'children'>> {
+): ReactComponent<T & { uikitPlugin?: MayArray<UikitPlugin<T>> } & Omit<DivProps, 'children'>> {
   const displayName = isString(options) ? options : options.name
-  const uikitFC = overwriteFunctionName((props) => {
-    const merged = mergeProps(defaultDivProps, props, { className: displayName })
-    return <AddProps {...merged}>{FC(props)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
+  const uikitFC = overwriteFunctionName(({ componentPlugin, ...divProps }) => {
+    const merged = flap(componentPlugin as MayArray<UikitPlugin<T>>).reduce(
+      (acc, additionalProps) => mergeProps(acc, additionalProps(acc)),
+      mergeProps(defaultDivProps ?? {}, divProps, {
+        className: displayName
+      })
+    )
+    return <AddProps {...divProps}>{FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, displayName)
   return uikitFC
 }

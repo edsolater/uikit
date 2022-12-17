@@ -1,5 +1,5 @@
 import { useToggle } from '../../hooks'
-import { createComponentPropsPlugin } from '../utils'
+import { createComponentPlugin } from '../utils'
 import { AccordionProps } from './Accordion'
 
 type UnhandleOpenOptions = {
@@ -8,7 +8,7 @@ type UnhandleOpenOptions = {
 /**
  * plugin for {@link Accordion}
  */
-export const canUnhandleOpen = createComponentPropsPlugin(
+export const canUnhandleOpen = createComponentPlugin(
   (oldProps: AccordionProps) => (options?: UnhandleOpenOptions) => {
     const [innerOpen, { toggle, off, on, set }] = useToggle(options?.defaultOpen ?? oldProps.open)
     return {
