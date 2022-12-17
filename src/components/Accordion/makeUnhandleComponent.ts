@@ -8,7 +8,7 @@ type UnhandleOpenOptions = {
 /**
  * plugin for {@link Accordion}
  */
-export const canUnhandleOpen = createComponentPlugin(
+export const makeUnhandleComponent = createComponentPlugin(
   (oldProps: AccordionProps) => (options?: UnhandleOpenOptions) => {
     const [innerOpen, { toggle, off, on, set }] = useToggle(options?.defaultOpen ?? oldProps.open)
     return {
