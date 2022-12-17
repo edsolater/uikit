@@ -7,12 +7,12 @@ import { AbilityPlugin } from './type'
 export const handleDivPropPlugins =
   (plugins: NonNullable<AbilityPlugin['getAdditionalProps']>[]) =>
   <P extends Partial<DivProps<any>>>(props: P): P =>
-    (plugins ?? []).reduce((acc, additionalProps) => mergeProps(acc, additionalProps(acc)), props)
+    plugins.reduce((acc, additionalProps) => mergeProps(acc, additionalProps(acc)), props)
 
 export const handleDivWrapperPlugins =
   (node: ReactElement) =>
   (plugins: NonNullable<AbilityPlugin['getWrappedNode']>[]): ReactElement =>
-    (plugins ?? []).reduce((prevNode, getWrappedNode) => getWrappedNode(prevNode), node)
+    plugins.reduce((prevNode, getWrappedNode) => getWrappedNode(prevNode), node)
 
 export function splitPropPlugins<P extends Partial<DivProps<any>>>(
   props: P

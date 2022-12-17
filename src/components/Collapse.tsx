@@ -27,7 +27,7 @@ interface CollapseProps extends DivProps {
 }
 
 /**
- * default **uncontrolled** kit
+ * @deprecated use `<Accordion>` instead
  */
 export function Collapse({
   children,

@@ -21,6 +21,7 @@ export * from './Transition/Transition'
 
 export * from './Portal'
 export * from './Collapse'
+export * from './Accordion'
 export * from './Dialog'
 export * from './Drawer'
 export * from './Popover/Popover'
