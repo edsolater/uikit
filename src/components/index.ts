@@ -38,6 +38,7 @@ export * from './Card'
 export * from './Button'
 export * from './Image'
 export * from './Text'
+export * from './Link'
 export * from './Icon'
 
 // special
