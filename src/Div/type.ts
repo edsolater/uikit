@@ -5,7 +5,7 @@ import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
 import { MayDeepArray } from '../typings/tools'
-import { DivDataTag } from './utils/tag'
+import { DivDataTag } from './handles/tag'
 
 export interface HTMLTagMap {
   div: HTMLDivElement

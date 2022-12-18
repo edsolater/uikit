@@ -1,7 +1,7 @@
 import { assert, overwriteFunctionName, pipe, shrinkToValue, uncapitalize } from '@edsolater/fnkit'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { DivChildNode } from '../../Div'
-import { parseDivChildrenToReactNode } from '../../Div/utils/handleDivChildren'
+import { parseDivChildrenToReactNode } from '../../Div/handles/handleDivChildren'
 import { ReactComponent } from '../../typings/tools'
 
 type ComponentContextValue<Props extends Record<keyof any, any>> = {
