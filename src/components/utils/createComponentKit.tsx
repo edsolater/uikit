@@ -1,21 +1,11 @@
-import { flap, isString, MayArray, overwriteFunctionName } from '@edsolater/fnkit'
+import { flap, isString, MayArray, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
+import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../functions/react'
+import { handleDivPlugins } from '../../plugins/handleDivPlugins'
+import { AbilityPlugin } from '../../plugins/type'
 import { Component, ReactComponent } from '../../typings/tools'
 import { AddProps } from '../AddProps'
-
-type componentPlugin<P> = (props: P) => Partial<P>
-
-export function createComponentPlugin<P extends DivProps, T extends any[]>(
-  createrFn: (props: P) => (...pluginCustomizedOptions: T) => Partial<P>, // return a function , in this function can exist hooks
-  options?: {
-    /* NOTE  add more */
-  }
-): (...pluginCustomizedOptions: T) => componentPlugin<P> {
-  return (...pluginOptions) =>
-    (props) =>
-      createrFn(props)(...pluginOptions)
-}
 
 export function componentKit<T>(
   options: { name: string } | string,
@@ -23,19 +13,18 @@ export function componentKit<T>(
   defaultDivProps?: Omit<T & DivProps, 'children'>
 ): ReactComponent<
   T & {
-    componentPlugin?: MayArray<componentPlugin<T>> // TODO: should use same name as <Div>'s plugins, for easier to remember
+    plugins?: MayDeepArray<AbilityPlugin<T & DivProps>> // TODO: should use same name as <Div>'s plugins, for easier to remember
     shadowProps?: T & DivProps // component must merged before `<Div>`
   } & Omit<DivProps, 'children' | 'shadowProps'>
 > {
   const displayName = isString(options) ? options : options.name
-  const componentkitFC = overwriteFunctionName(({ componentPlugin, shadowProps, ...divProps }) => {
-    const merged = flap(componentPlugin as MayArray<componentPlugin<T>>).reduce(
-      (acc, additionalProps) => mergeProps(acc, additionalProps(acc)),
-      mergeProps(defaultDivProps ?? {}, divProps, shadowProps, {
-        className: displayName
-      })
+  const componentKitFC = overwriteFunctionName((divProps) => {
+    const merged = pipe(
+      mergeProps(defaultDivProps ?? {}, divProps, { className: displayName }),
+      handleDivShadowProps,
+      handleDivPlugins
     )
-    return <AddProps {...divProps}>{FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
+    return <AddProps {...merged}>{merged && FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, displayName)
-  return componentkitFC
+  return componentKitFC
 }

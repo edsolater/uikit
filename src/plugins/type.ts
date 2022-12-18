@@ -1,13 +1,13 @@
-import { MayArray, MayDeepArray } from '@edsolater/fnkit'
+import { MayDeepArray } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps, HTMLTagMap } from '../Div/type'
 
 export type WithPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
-  plugins?: MayDeepArray<AbilityPlugin<TagName>>
+  plugins?: MayDeepArray<AbilityPlugin<DivProps<TagName>>>
 }
 
 export type WrapperNodeFn = (node: ReactElement) => ReactElement // change outter wrapper element
 
-export type AbilityPlugin<TagName extends keyof HTMLTagMap = 'div'> = {
-  getAdditionalProps?: (props: DivProps) => Partial<Omit<DivProps<TagName>, 'plugins' | 'shadowProps'>> // change inner props
+export type AbilityPlugin<P extends DivProps<any> = DivProps> = {
+  getAdditionalProps?: (props: DivProps) => Partial<Omit<P, 'plugins' | 'shadowProps'>> // change inner props
 }
