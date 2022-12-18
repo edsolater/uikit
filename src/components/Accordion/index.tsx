@@ -3,4 +3,4 @@ export * from './AccordionButton'
 export * from './AccordionPanel'
 
 //------------------- plugin -------------------
-export * from './makeUnhandleComponent'
+export * from './makeOpenAutoHandled'
