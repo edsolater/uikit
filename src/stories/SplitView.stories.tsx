@@ -1,5 +1,4 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
-import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
 import { Div } from '../Div/Div'
@@ -51,7 +50,7 @@ const ExampleContentCard2 = ({ text, ...divProps }: { text: string } & DivProps)
     {...divProps}
     icss={[
       { padding: '16px 32px' },
-      cssRow({ justifyContent: 'space-between', alignItems: 'center', gap: 32 }),
+      { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 32 },
       { background: cssColors.cardBgDark, boxShadow: cssShadow.xl },
       divProps.icss
     ]}

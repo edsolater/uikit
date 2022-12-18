@@ -1,5 +1,4 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
-import { cssRow } from '../components'
 
 import { Card } from '../components/Card'
 import { Collapse, CollapseBody, CollapseFace } from '../components/Collapse'
@@ -19,7 +18,7 @@ const Template: ComponentStory<typeof Collapse> = (props) => {
           {(open) => (
             <Card
               icss={[
-                cssRow({ justifyContent: 'space-between', alignItems: 'center', gap: 32 }),
+                { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 32 },
                 { background: cssColors.cardBgDark, boxShadow: cssShadow.xl }
               ]}
             >

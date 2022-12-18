@@ -18,6 +18,7 @@ export interface HTMLTagMap {
   audio: HTMLAudioElement
   a: HTMLAnchorElement
   p: HTMLParagraphElement
+  iframe: HTMLIFrameElement
 }
 /** richer than ReactNode */
 
