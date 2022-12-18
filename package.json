@@ -5,7 +5,8 @@
     ".": "./dist/index.js",
     "./plugins": "./dist/plugins/index.js",
     "./components": "./dist/components/index.js",
-    "./hooks": "./dist/hooks/index.js"
+    "./hooks": "./dist/hooks/index.js",
+    "./jFetch": "./dist/utils/jFetch/index.js"
   },
   "type": "module",
   "typesVersions": {
@@ -21,6 +22,9 @@
       ],
       "hooks": [
         "./dist/hooks/index.d.ts"
+      ],
+      "jFetch": [
+        "./dist/utils/jFetch/index.d.ts"
       ]
     }
   },
