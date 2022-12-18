@@ -13,7 +13,7 @@ export function componentKit<T>(
   defaultDivProps?: Omit<T & DivProps, 'children'>
 ): ReactComponent<
   T & {
-    plugins?: MayDeepArray<AbilityPlugin<T & DivProps>> // TODO: should use same name as <Div>'s plugins, for easier to remember
+    plugin?: MayDeepArray<AbilityPlugin<T & DivProps>>
     shadowProps?: T & DivProps // component must merged before `<Div>`
   } & Omit<DivProps, 'children' | 'shadowProps'>
 > {

@@ -24,7 +24,7 @@ export const Tabs = componentKit(
     const [activeTab, setActiveTab] = useState(defaultTab)
     return (
       <Row
-        plugins={withFloatBg({ ...withFloatBgOptions, defaultActiveItemIndex: defaultTab && tabs.indexOf(defaultTab) })}
+        plugin={withFloatBg({ ...withFloatBgOptions, defaultActiveItemIndex: defaultTab && tabs.indexOf(defaultTab) })}
       >
         <For each={tabs} getKey={pickProperty('value')}>
           {(tab) => (

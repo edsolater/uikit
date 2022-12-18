@@ -3,7 +3,7 @@ import { DivProps } from '../Div/type'
 import { AbilityPlugin } from './type'
 
 export function createPropPlugin<P extends DivProps, T extends any[]>(
-  createrFn: (props: P) => (...pluginCustomizedOptions: T) => Partial<Omit<P, 'plugins' | 'shadowProps'>>, // return a function , in this function can exist hooks
+  createrFn: (props: P) => (...pluginCustomizedOptions: T) => Partial<Omit<P, 'plugin' | 'shadowProps'>>, // return a function , in this function can exist hooks
   options?: {
     pluginName?: string
   }
@@ -31,7 +31,7 @@ export function createWrapperPlugin<T extends any[]>(
 //   createrFn: (utils: {
 //     props: P
 //     node: ReactElement
-//   }) => (...pluginCustomizedOptions: T) => { props: Partial<Omit<P, 'plugins' | 'shadowProps'>>; node: ReactElement },
+//   }) => (...pluginCustomizedOptions: T) => { props: Partial<Omit<P, 'plugin' | 'shadowProps'>>; node: ReactElement },
 //   options?: {
 //     pluginName?: string
 //   }

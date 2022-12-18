@@ -31,7 +31,7 @@ export type SignalPluginFn<T, U> = (payload: {
   onRender: (fn: PluginFn<T>) => void
   inInit: boolean
   getValue: GetNewValue<T>
-  // will not pass through plugins
+  // will not pass through plugin
   setValue: SetNewValue<T>
   signal: Signal<T>
   preventSetState: () => void
@@ -115,7 +115,7 @@ export function useSignalState<T, U>(
     const newValue = shrinkToValue(stateDispatch, [pevValue])
     inputNewValueRef.current = newValue
 
-    //#region ------------------- pip through plugins -------------------
+    //#region ------------------- pip through plugin -------------------
     let isValid = true
 
     // invoke prev update cleanup functions

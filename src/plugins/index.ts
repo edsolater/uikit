@@ -8,5 +8,5 @@ export * from './misc/WrappedBy'
 export * from './createPlugin'
 
 
-// UI plugins
+// UI plugin
 export * from './ui/withFloatBg'

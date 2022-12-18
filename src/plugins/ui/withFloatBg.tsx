@@ -43,7 +43,7 @@ export const withFloatBg = createPropPlugin((oldProps) => (options?: WithFloatBg
             background: '#d1d3d6'
           }}
           className='Tabs-active-bg-panel'
-          plugins={WrappedBy(Motion, options?.MotionProps)}
+          plugin={WrappedBy(Motion, options?.MotionProps)}
         ></Div>
         {oldProps.children}
       </>

@@ -15,7 +15,7 @@ export const Div = <TagName extends keyof HTMLTagMap = 'div'>(props: DivProps<Ta
   return mergedProps.dangerousRenderWrapperNode
     ? handleDivWrapperPlugins({
         innerNode: createElement(Div, omit(mergedProps, 'dangerousRenderWrapperNode')),
-        plugins: flapDeep(mergedProps.dangerousRenderWrapperNode)
+        plugin: flapDeep(mergedProps.dangerousRenderWrapperNode)
       })
     : createElement(mergedProps.as ?? 'div', parseDivPropsToCoreProps(mergedProps), mergedProps.children)
 }

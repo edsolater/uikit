@@ -23,7 +23,7 @@ export const Switch = uikit('Switch', (rawProps: SwitchProps) => {
     <Div
       className='Switch-track'
       shadowProps={trackProps}
-      plugins={click(() => {
+      plugin={click(() => {
         onToggle?.(!checked)
       })}
     >

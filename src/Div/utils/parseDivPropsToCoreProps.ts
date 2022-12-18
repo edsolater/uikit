@@ -6,7 +6,7 @@ import { parseCSS } from '../../styles/parseCSS';
 import { DivProps } from '../type';
 
 export function parseDivPropsToCoreProps(
-  divProps: Omit<DivProps<any>, 'plugins' | 'tag' | 'shadowProps' | 'children'> & {
+  divProps: Omit<DivProps<any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {
     children?: React.ReactNode;
   }) {
   return {
