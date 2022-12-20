@@ -1,8 +1,8 @@
-import { flapDeep } from '@edsolater/fnkit'
+import { flapDeep, MayDeepArray } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
 import { mergeProps } from '../Div/utils/mergeProps'
-import { PluginAtoms, PluginFunction } from './type'
+import { PluginAtoms, PluginFunction, WrapperNodeFn } from './type'
 
 export function createPropPluginFn<P, T extends any[]>(
   createrFn: (
@@ -26,15 +26,24 @@ export function createWrapperPluginFn<T extends any[]>(
   })
 }
 
-
-export function handlePropPlugin<T extends DivProps>(
-  plugins: PluginAtoms<T> | undefined,
-  props: T,
-) {
-  return plugins
-    ? flapDeep(plugins).reduce(
+export function dealWithPropPlugin<T extends DivProps>(utils: {
+  plugins: PluginAtoms<DivProps<any>> | undefined
+  props: T
+}): T {
+  return utils.plugins
+    ? flapDeep(utils.plugins).reduce(
         (acc, abilityPlugin) => mergeProps(acc, abilityPlugin.getAdditionalProps?.(acc)),
-        props
+        utils.props
       )
-    : props
+    : utils.props
+}
+
+export function dealWithDangerousWrapperPlugins(utils: {
+  innerNode: ReactElement
+  dangerousRenderWrapperPlugin: MayDeepArray<WrapperNodeFn>
+}): ReactElement {
+  return flapDeep(utils.dangerousRenderWrapperPlugin).reduce(
+    (prevNode, getWrappedNode) => getWrappedNode(prevNode),
+    utils.innerNode
+  )
 }

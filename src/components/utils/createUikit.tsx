@@ -2,7 +2,7 @@ import { isString, MayArray, MayDeepArray, MayFn, overwriteFunctionName, pipe } 
 import { DivProps } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../functions/react'
-import { handlePropPlugin } from '../../plugins'
+import { dealWithPropPlugin } from '../../plugins'
 import { handleDivPlugins } from '../../plugins/handleDivPlugins'
 import { PluginAtom } from '../../plugins/type'
 import { Component, ReactComponent } from '../../typings/tools'
@@ -25,7 +25,7 @@ export function uikit<T>(
   const uikitFC = overwriteFunctionName((props) => {
     const merged = pipe(
       props,
-      (props) => handlePropPlugin(options?.propsPlugin, props),
+      (props) => dealWithPropPlugin({ plugins: options?.propsPlugin, props }),
       (props) => mergeProps(options?.defaultDivProps ?? {}, props, { className: displayName }),
       handleDivShadowProps,
       handleDivPlugins
