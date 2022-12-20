@@ -3,7 +3,7 @@ import { DivProps } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../functions/react'
 import { handleDivPlugins } from '../../plugins/handleDivPlugins'
-import { AbilityPlugin } from '../../plugins/type'
+import { PluginAtom } from '../../plugins/type'
 import { Component, ReactComponent } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 
@@ -13,7 +13,7 @@ export function componentKit<T>(
   defaultDivProps?: Omit<T & DivProps, 'children'>
 ): ReactComponent<
   T & {
-    plugin?: MayDeepArray<AbilityPlugin<T & DivProps>>
+    plugin?: MayDeepArray<PluginAtom<T & DivProps>>
     shadowProps?: T & DivProps // component must merged before `<Div>`
   } & Omit<DivProps, 'children' | 'shadowProps'>
 > {

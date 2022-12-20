@@ -1,12 +1,12 @@
 import { mergeFunction } from '@edsolater/fnkit'
 import { useState } from 'react'
-import { createPropPlugin } from '../../../plugins'
+import { createPropPluginFn } from '../../../plugins'
 import { SwitchCoreProps } from '../index'
 
 export type FeatureDefaultCheck = {
   defaultCheck?: boolean
 }
-export const letDefaultCheck = createPropPlugin<SwitchCoreProps, [option?: FeatureDefaultCheck]>(
+export const letDefaultCheck = createPropPluginFn<SwitchCoreProps, [option?: FeatureDefaultCheck]>(
   (props) => (options) => {
     const [isChecked, setIsChecked] = useState(options?.defaultCheck)
     return {

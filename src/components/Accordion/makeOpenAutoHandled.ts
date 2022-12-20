@@ -1,5 +1,5 @@
 import { useToggle } from '../../hooks'
-import { createPropPlugin } from '../../plugins'
+import { createPropPluginFn } from '../../plugins'
 import { AccordionProps } from './Accordion'
 
 export type AutoHandleOpenPluginOptions = {
@@ -8,7 +8,7 @@ export type AutoHandleOpenPluginOptions = {
 /**
  * plugin for {@link Accordion}
  */
-export const makeOpenAutoHandled = createPropPlugin(
+export const makeOpenAutoHandled = createPropPluginFn(
   (oldProps: AccordionProps) => (options?: AutoHandleOpenPluginOptions) => {
     const [innerOpen, { toggle, off, on, set }] = useToggle(options?.defaultOpen ?? oldProps.open)
     return {

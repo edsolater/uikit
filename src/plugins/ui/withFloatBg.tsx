@@ -3,7 +3,7 @@ import { Motion, MotionProps } from '../../components'
 import { Div, DivProps } from '../../Div'
 import { useDOM } from '../../hooks'
 import { addEventListener, getSiblings } from '../../utils'
-import { createPropPlugin } from '../createPlugin'
+import { createPropPluginFn } from '../createPlugin'
 import { WrappedBy } from '../misc/WrappedBy'
 
 export type WithFloatBgOptions = {
@@ -12,7 +12,7 @@ export type WithFloatBgOptions = {
   defaultActiveItemIndex?: number
 }
 
-export const withFloatBg = createPropPlugin((oldProps) => (options?: WithFloatBgOptions) => {
+export const withFloatBg = createPropPluginFn((oldProps) => (options?: WithFloatBgOptions) => {
   const [dom, setDOM] = useDOM()
   const [activeTab, setActiveTab] = useDOM()
 

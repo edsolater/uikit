@@ -1,11 +1,11 @@
 import { mergeProps } from '../../../Div/utils/mergeProps'
-import { createPropPlugin } from '../../../plugins'
+import { createPropPluginFn } from '../../../plugins'
 import { SwitchCoreProps } from '../index'
 
 type FeatureBasicStyle = {}
 
 
-export const letSwitchBasicStyle = createPropPlugin<SwitchCoreProps, [option?: FeatureBasicStyle]>(
+export const letSwitchBasicStyle = createPropPluginFn<SwitchCoreProps, [option?: FeatureBasicStyle]>(
   (props) => (options) => {
     const innerStyle = {
       thumbOuterWidth: 24,
