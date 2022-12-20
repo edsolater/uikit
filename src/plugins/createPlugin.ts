@@ -2,8 +2,10 @@ import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
 import { AbilityPlugin } from './type'
 
-export function createPropPlugin<P extends DivProps, T extends any[]>(
-  createrFn: (props: P) => (...pluginCustomizedOptions: T) => Partial<Omit<P, 'plugin' | 'shadowProps'>>, // return a function , in this function can exist hooks
+export function createPropPlugin<P, T extends any[]>(
+  createrFn: (
+    props: P & DivProps
+  ) => (...pluginCustomizedOptions: T) => Partial<Omit<P & DivProps, 'plugin' | 'shadowProps'>>, // return a function , in this function can exist hooks
   options?: {
     pluginName?: string
   }
