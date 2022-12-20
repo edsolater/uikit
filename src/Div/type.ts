@@ -56,7 +56,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
 export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
 
 export type WithShallowProps<TagName extends keyof HTMLTagMap = 'div'> = {
-  shadowProps?: MayDeepArray<DivProps<TagName>>
+  shadowProps?: MayDeepArray<Partial<DivProps<TagName>>>
 }
 
 export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>

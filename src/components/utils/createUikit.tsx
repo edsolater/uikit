@@ -1,4 +1,4 @@
-import { isString, MayArray, MayDeepArray, MayFn, overwriteFunctionName, pipe } from '@edsolater/fnkit'
+import { isString, MayArray, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../functions/react'
@@ -18,7 +18,7 @@ export function uikit<T>(
 ): ReactComponent<
   T & {
     plugin?: MayDeepArray<PluginAtom<T & DivProps>>
-    shadowProps?: T & DivProps // component must merged before `<Div>`
+    shadowProps?: Partial<T & DivProps> // component must merged before `<Div>`
   } & Omit<DivProps, 'children' | 'shadowProps'>
 > {
   const displayName = isString(displayOptions) ? displayOptions : displayOptions.name
