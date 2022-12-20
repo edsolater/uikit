@@ -1,8 +1,8 @@
-import { flap, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { flapDeep } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
 import { mergeProps } from '../Div/utils/mergeProps'
-import { PluginAtom, PluginFunction, PluginAtoms } from './type'
+import { PluginAtoms, PluginFunction } from './type'
 
 export function createPropPluginFn<P, T extends any[]>(
   createrFn: (
@@ -32,7 +32,7 @@ export function handlePropPlugin<T extends DivProps>(
   props: T,
 ) {
   return plugins
-    ? flap(plugins).reduce(
+    ? flapDeep(plugins).reduce(
         (acc, abilityPlugin) => mergeProps(acc, abilityPlugin.getAdditionalProps?.(acc)),
         props
       )
