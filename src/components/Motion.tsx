@@ -84,10 +84,12 @@ export const Motion = uikit(
     return <AddProps domRef={squareRef}>{children}</AddProps>
   },
   {
-    animateOptions: {
-      duration: 300,
-      iterations: 1,
-      easing: 'ease'
+    defaultDivProps: {
+      animateOptions: {
+        duration: 300,
+        iterations: 1,
+        easing: 'ease'
+      }
     }
   }
 )

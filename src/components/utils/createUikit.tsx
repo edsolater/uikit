@@ -1,7 +1,17 @@
-import { flap, isString, MayArray, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
+import {
+  flap,
+  isString,
+  MayArray,
+  MayDeepArray,
+  MayFn,
+  overwriteFunctionName,
+  pipe,
+  shrinkToValue
+} from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../functions/react'
+import { handlePropPlugin } from '../../plugins'
 import { handleDivPlugins } from '../../plugins/handleDivPlugins'
 import { AbilityPlugin } from '../../plugins/type'
 import { Component, ReactComponent } from '../../typings/tools'
@@ -12,7 +22,7 @@ export function uikit<T>(
   FC: Component<T>,
   options?: {
     defaultDivProps?: Omit<T & DivProps, 'children'>
-    propsPlugin?: MayArray<AbilityPlugin<T & DivProps>>
+    propsPlugin?: MayArray<MayFn<AbilityPlugin<T & DivProps>, [props: T & DivProps]>>
   }
 ): ReactComponent<
   T & {
@@ -24,11 +34,7 @@ export function uikit<T>(
   const uikitFC = overwriteFunctionName((divProps) => {
     const merged = pipe(
       divProps,
-      (props) =>
-        flap(options?.propsPlugin ?? []).reduce(
-          (acc, { getAdditionalProps }) => mergeProps(acc, getAdditionalProps?.(acc)),
-          props
-        ),
+      (props) => handlePropPlugin(props, options?.propsPlugin),
       (props) => mergeProps(options?.defaultDivProps ?? {}, props, { className: displayName }),
       handleDivShadowProps,
       handleDivPlugins
