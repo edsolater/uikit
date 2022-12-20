@@ -43,6 +43,7 @@
   "dependencies": {
     "@edsolater/fnkit": "^0.1.10",
     "@edsolater/hookit": "^0.1.11",
+    "@edsolater/uikit": "^0.1.14",
     "@edsolater/xstore": "^0.1.9",
     "@emotion/css": "^11.10.5",
     "@headlessui/react": "^1.7.4",
@@ -60,9 +61,6 @@
     "react-dom": ">18.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "@types/react": "^18.0.25",
-    "@types/react-dom": "^18.0.9",
     "@babel/core": "^7.20.2",
     "@next/bundle-analyzer": "^13.0.3",
     "@storybook/addon-actions": "^6.5.13",
@@ -72,6 +70,9 @@
     "@storybook/manager-webpack5": "^6.5.13",
     "@storybook/node-logger": "^6.5.13",
     "@storybook/react": "^6.5.13",
+    "@types/node": "^18.11.9",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.9",
     "prettier": "^2.7.1",
     "storybook": "^6.5.13",
     "tsup": "^6.4.0",
