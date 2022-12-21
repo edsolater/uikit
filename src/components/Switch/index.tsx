@@ -1,4 +1,6 @@
-import { Div, DivChildNode, DivProps } from '../../Div'
+import { MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { ReactNode } from 'react'
+import { Div, DivProps } from '../../Div'
 import { click } from '../../plugins'
 import { uikit } from '../utils'
 import { letSwitchBasicStyle } from './plugins/letBasicStyle'
@@ -7,26 +9,28 @@ import { FeatureDefaultCheck, letDefaultCheck } from './plugins/letDefaultCheck'
 export interface SwitchCoreProps {
   checked?: boolean
   onToggle?: (toStatus: boolean) => void
-  renderThumbIcon?: DivChildNode
-  trackProps?: DivProps
-  thumbProps?: DivProps
+  renderThumbIcon?: MayFn<ReactNode>
+  anatomy?: { // uikit/componentKit's prop:anatomy --- sub components props
+    track?: DivProps
+    thumb?: DivProps
+  }
 }
 
 export type SwitchProps = SwitchCoreProps & FeatureDefaultCheck
 
 export const Switch = uikit(
   'Switch',
-  ({ checked, onToggle, renderThumbIcon, trackProps, thumbProps }: SwitchProps) => {
+  ({ checked, onToggle, renderThumbIcon, anatomy }: SwitchProps) => {
     return (
       <Div
         className='Switch-track'
-        shadowProps={trackProps}
+        shadowProps={anatomy?.track}
         plugin={click(() => {
           onToggle?.(!checked)
         })}
       >
-        <Div className='Switch-thumb' shadowProps={thumbProps}>
-          {renderThumbIcon}
+        <Div className='Switch-thumb' shadowProps={anatomy?.thumb}>
+          {shrinkToValue(renderThumbIcon)}
         </Div>
       </Div>
     )
