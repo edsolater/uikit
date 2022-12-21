@@ -3,26 +3,32 @@ import { ReactNode } from 'react'
 import { Div, DivProps } from '../../Div'
 import { click } from '../../plugins'
 import { uikit } from '../utils'
-import { letSwitchBasicStyle } from './plugins/letBasicStyle'
+import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
 import { FeatureDefaultCheck, letDefaultCheck } from './plugins/letDefaultCheck'
 
 export interface SwitchCoreProps {
   checked?: boolean
   onToggle?: (toStatus: boolean) => void
+
   renderThumbIcon?: MayFn<ReactNode>
-  anatomy?: { // uikit/componentKit's prop:anatomy --- sub components props
+  
+  // uikit/componentKit's prop:anatomy --- sub components props
+  anatomy?: {
     track?: DivProps
     thumb?: DivProps
   }
+  // uikit/componentKit's prop:cssVariables --- this kit's cssVariables
+  cssVariables?: SwitchVariables
 }
 
 export type SwitchProps = SwitchCoreProps & FeatureDefaultCheck
 
 export const Switch = uikit(
   'Switch',
-  ({ checked, onToggle, renderThumbIcon, anatomy }: SwitchProps) => {
+  ({ checked, onToggle, renderThumbIcon, anatomy, cssVariables }: SwitchProps) => {
     return (
       <Div
+        icss={cssVariables}
         className='Switch-track'
         shadowProps={anatomy?.track}
         plugin={click(() => {
@@ -35,5 +41,5 @@ export const Switch = uikit(
       </Div>
     )
   },
-  { propsPlugin: [letDefaultCheck(), letSwitchBasicStyle()] }
+  { propsPlugin: [letDefaultCheck(), letSwitchStyle()] }
 )
