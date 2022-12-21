@@ -1,8 +1,8 @@
 import { ReactElement } from 'react'
-import { createWrapperPluginFn } from '../createPlugin'
+import { createDangerousRenderWrapperNodeFn } from '../createPlugin'
 
 export type KitPluginOptions = {}
 
-export const Kit = createWrapperPluginFn(
+export const Kit = createDangerousRenderWrapperNodeFn(
   (node) => (wrapperCreator: (self: ReactElement, options?: KitPluginOptions) => ReactElement) => wrapperCreator(node)
 )
