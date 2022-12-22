@@ -17,7 +17,7 @@ export interface SwitchCoreProps {
     thumb?: DivProps
   }
   // enrich DivProps's icss
-  icss?: ICSS<SwitchVariables> // TODO: <-- this is wired
+  icss?: ICSS<SwitchVariables> // TODO: <-- this is weird
 }
 
 export type SwitchProps = SwitchCoreProps & FeatureDefaultCheck
