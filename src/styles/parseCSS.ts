@@ -17,9 +17,10 @@ import { css, CSSObject } from '@emotion/css'
 //   [key: keyof CSSObject]: MayArray<CSSObject[typeof key]>
 // }
 // actually, CSSObject === MayArrayValueCSSObject
-export type ICSSObject = CSSObject
-export type ICSS = MayDeepArray<
-  ICSSObject | boolean | string | number | null | undefined | ((preResult: ICSSObject) => ICSSObject)
+export type ICSSObject<V = unknown>  = CSSObject & V
+
+export type ICSS<V = unknown> = MayDeepArray<
+  ICSSObject<V> | boolean | string | number | null | undefined | ((preResult: ICSSObject<V>) => ICSSObject<V>)
 >
 export function parseCSS(cssProp: ICSS) {
   const cssObjList = filter(flapDeep(cssProp), isObject)
