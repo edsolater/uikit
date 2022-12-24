@@ -2,7 +2,7 @@ import { useClickOutside } from '@edsolater/hookit'
 import { useMemo, useRef } from 'react'
 import { Div } from '../../Div/Div'
 import { DivProps } from '../../Div/type'
-import { componentKit } from '../utils'
+import { createKit } from '../utils'
 import { AccordionContextProvider } from './AccordionContext'
 import { AccordionController } from './type'
 
@@ -20,7 +20,7 @@ export interface AccordionProps extends DivProps {
  * default **uncontrolled** kit
  */
 
-export const Accordion = componentKit('Accordion', (props: AccordionProps) => {
+export const Accordion = createKit('Accordion', (props: AccordionProps) => {
   const { children, open, direction = 'downwards', onOpen, onClose, onToggle, closeByOutsideClick, ...divProps } = props
   const accordionRef = useRef<HTMLDivElement>(null)
 

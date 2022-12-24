@@ -1,5 +1,5 @@
 import { Div, DivChildNode } from '../Div'
-import { uikit } from './utils'
+import { createKit } from './utils'
 
 export interface BoxProps {
   name?: string // for debug and DOM class
@@ -9,4 +9,4 @@ export interface BoxProps {
 /**
  * element's container
  */
-export const Box = uikit('Box', (props: BoxProps) => <Div>{props.children}</Div>)
+export const Box = createKit('Box', (props: BoxProps) => <Div>{props.children}</Div>)

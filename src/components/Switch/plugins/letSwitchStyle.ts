@@ -1,7 +1,7 @@
 import { addDefault } from '@edsolater/fnkit'
 import { DivProps } from '../../../Div'
 import { mergeProps } from '../../../Div/utils/mergeProps'
-import { createPropPluginFn } from '../../../plugins'
+import { createPlugx } from '../../../plugins'
 import { SwitchCoreProps } from '../index'
 
 export type SwitchVariables = {
@@ -19,10 +19,11 @@ export type LetSwitchStyleOptions = {
   variables?: SwitchVariables
 }
 
-export const letSwitchStyle = createPropPluginFn<SwitchCoreProps, [option?: LetSwitchStyleOptions]>(
-  (props) => (options) =>
-    mergeProps(props, {
-      icss: addDefault(options?.variables ?? {}, {
+export const letSwitchStyle = createPlugx<LetSwitchStyleOptions & SwitchCoreProps>((props) =>
+  {
+    console.log('props: ', props)
+    return mergeProps(props, {
+      icss: addDefault(props?.variables ?? {}, {
         '--thumb-outer-width': '24px',
         '--track-width': '48px',
         '--checked-thumb-color': 'white',
@@ -57,4 +58,5 @@ export const letSwitchStyle = createPropPluginFn<SwitchCoreProps, [option?: LetS
         }
       }
     } as SwitchCoreProps & DivProps)
+  }
 )

@@ -1,10 +1,10 @@
 import { Div, DivChildNode } from '../Div'
-import { uikit } from './utils'
+import { createKit } from './utils'
 
 export interface TextProps {
   children?: DivChildNode
 }
 
-export const Text = uikit('Text', ({ children }: TextProps) => {
+export const Text = createKit('Text', ({ children }: TextProps) => {
   return <Div>{children}</Div>
 })

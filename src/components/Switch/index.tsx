@@ -2,7 +2,7 @@ import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode } from 'react'
 import { Div, DivProps } from '../../Div'
 import { click } from '../../plugins'
-import { uikit } from '../utils'
+import { createKit } from '../utils'
 import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
 import { FeatureDefaultCheck, letDefaultCheck } from './plugins/letDefaultCheck'
 import { ICSS } from '../../styles'
@@ -31,7 +31,7 @@ export interface SwitchCoreProps {
 
 export type SwitchProps = SwitchCoreProps & FeatureDefaultCheck
 
-export const Switch = uikit(
+export const Switch = createKit(
   'Switch',
   ({ checked, onToggle, render, anatomy }: SwitchProps) => {
     const status = {
@@ -41,9 +41,9 @@ export const Switch = uikit(
       <Div
         className='Switch-track'
         shadowProps={shrinkToValue(anatomy?.track, [status])}
-        plugin={click(() => {
+        onClick={() => {
           onToggle?.(!status.checked)
-        })}
+        }}
       >
         <Div className='Switch-thumb' shadowProps={shrinkToValue(anatomy?.thumb, [status])}>
           {shrinkToValue(render?.thumbIcon, [status])}
@@ -51,5 +51,5 @@ export const Switch = uikit(
       </Div>
     )
   },
-  { propsPlugin: [letDefaultCheck(), letSwitchStyle()] }
+  { plugin: [letDefaultCheck, letSwitchStyle] }
 )

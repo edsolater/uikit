@@ -22,7 +22,7 @@ export interface HTMLTagMap {
 }
 /** richer than ReactNode */
 
-interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
+interface DivBaseProps<TagName extends keyof HTMLTagMap = any> {
   as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
 
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
@@ -45,21 +45,21 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   >
   icss?: ICSS
   style?: MayDeepArray<CSSStyle | undefined>
-  htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName] | undefined>
+  htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName extends {} ? TagName : any] | undefined>
   children?: DivChildNode
   /**
-   * change outter wrapper element   
-   */ 
+   * change outter wrapper element
+   */
   dangerousRenderWrapperNode?: MayDeepArray<WrapperNodeFn>
 }
 
-export type DivChildNode = ReactNode | { [Symbol.toPrimitive]: () => string } | DivChildNode[]
+export type DivChildNode = ReactNode
 
-export type WithShallowProps<TagName extends keyof HTMLTagMap = 'div'> = {
+export type WithShallowProps<TagName extends keyof HTMLTagMap = any> = {
   shadowProps?: MayDeepArray<Partial<DivProps<TagName>>>
 }
 
-export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>
+export interface DivProps<TagName extends keyof HTMLTagMap = any>
   extends DivBaseProps<TagName>,
     WithShallowProps<TagName>,
     WithPlugins<TagName> {}

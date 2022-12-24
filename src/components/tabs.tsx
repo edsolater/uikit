@@ -4,7 +4,7 @@ import { DivChildNode, DivProps, Div } from '../Div'
 import { WithFloatBgOptions, withFloatBg } from '../plugins'
 import { For } from './For'
 import { Row } from './Row'
-import { componentKit } from './utils'
+import { createKit } from './utils'
 
 export type TabItem<T extends string> = {
   value: T
@@ -18,13 +18,16 @@ export type TabsProps<T extends string> = {
   withFloatBgOptions?: WithFloatBgOptions
 }
 
-export const Tabs = componentKit(
+export const Tabs = createKit(
   'Tabs',
   <T extends string>({ tabs, defaultTab, labelBoxProps, withFloatBgOptions }: TabsProps<T>) => {
     const [activeTab, setActiveTab] = useState(defaultTab)
     return (
       <Row
-        plugin={withFloatBg({ ...withFloatBgOptions, defaultActiveItemIndex: defaultTab && tabs.indexOf(defaultTab) })}
+        plugin={withFloatBg.add({
+          ...withFloatBgOptions,
+          defaultActiveItemIndex: defaultTab && tabs.indexOf(defaultTab)
+        })}
       >
         <For each={tabs} getKey={pickProperty('value')}>
           {(tab) => (

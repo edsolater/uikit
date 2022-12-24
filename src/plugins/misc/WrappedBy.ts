@@ -1,10 +1,7 @@
 import { createElement } from 'react'
+import { DivProps } from '../../Div'
 import { Component } from '../../typings/tools'
-import { createDangerousRenderWrapperNodeFn } from '../createPlugin'
+import { createDangerousRenderWrapperNodePlugx } from '../createPlugin'
 
 /** render self node as first child of Wrapper */
-export const WrappedBy = createDangerousRenderWrapperNodeFn(
-  (node) =>
-    <T>(ComponentConstructor: Component<T>, props?: T) =>
-      createElement(ComponentConstructor as any, props ?? {}, node)
-)
+export const WrappedBy = createDangerousRenderWrapperNodePlugx<DivProps>

@@ -1,5 +1,4 @@
-export * from './createUikit'
-export * from './createComponentKit'
+export * from './createKit'
 export * from './createRenamedKit'
 export * from './createComponentContext'
 export * from './addDefaultProps'

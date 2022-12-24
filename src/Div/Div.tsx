@@ -1,16 +1,22 @@
 import { flapDeep, omit, pipe } from '@edsolater/fnkit'
 import { createElement, ReactElement } from 'react'
-import { handleDivPlugins } from '../plugins/handleDivPlugins'
+import { handleDivPlugin } from '../plugins/handleDivPlugins'
 import { handleDivChildren } from './handles/handleDivChildren'
 import { handleDivShadowProps } from './handles/handleDivShallowProps'
 import { handleDivTag } from './handles/handleDivTag'
 import { DivProps, HTMLTagMap } from './type'
 import { parseDivPropsToCoreProps } from './utils/parseDivPropsToCoreProps'
 
-export const Div = <TagName extends keyof HTMLTagMap = 'div'>(rawProps: DivProps<TagName>) => {
-  const props = pipe(rawProps, handleDivShadowProps, handleDivPlugins, handleDivChildren, handleDivTag)
-  if (!props) return null 
-  
+export const Div = <TagName extends keyof HTMLTagMap = any>(rawProps: DivProps<TagName>) => {
+  const props = pipe(
+    rawProps as DivProps<TagName> | undefined,
+    handleDivShadowProps,
+    handleDivPlugin,
+    handleDivChildren,
+    handleDivTag
+  )
+  if (!props) return null
+
   // handle have return null
   return props.dangerousRenderWrapperNode ? dealWithDangerousWrapperPlugins(props) : dealWithDivProps(props)
 }

@@ -3,7 +3,7 @@ import { Motion, MotionProps } from '../../components'
 import { Div, DivProps } from '../../Div'
 import { useDOM } from '../../hooks'
 import { addEventListener, getSiblings } from '../../utils'
-import { createPropPluginFn } from '../createPlugin'
+import { createPlugx } from '../createPlugin'
 import { WrappedBy } from '../misc/WrappedBy'
 
 export type WithFloatBgOptions = {
@@ -12,7 +12,8 @@ export type WithFloatBgOptions = {
   defaultActiveItemIndex?: number
 }
 
-export const withFloatBg = createPropPluginFn((oldProps) => (options?: WithFloatBgOptions) => {
+
+export const withFloatBg = createPlugx<WithFloatBgOptions>((props) => {
   const [dom, setDOM] = useDOM()
   const [activeTab, setActiveTab] = useDOM()
 
@@ -23,7 +24,7 @@ export const withFloatBg = createPropPluginFn((oldProps) => (options?: WithFloat
         setActiveTab(el)
       })
     )
-    if (options?.defaultActiveItemIndex) siblings.at(options.defaultActiveItemIndex)?.click()
+    if (props?.defaultActiveItemIndex) siblings.at(props.defaultActiveItemIndex)?.click()
     return () => subscriptions.forEach((subscription) => subscription.cancel())
   }, [dom])
 
@@ -31,7 +32,7 @@ export const withFloatBg = createPropPluginFn((oldProps) => (options?: WithFloat
     children: (
       <>
         <Div
-          shadowProps={options?.floatBgProps}
+          shadowProps={props?.floatBgProps}
           domRef={setDOM}
           icss={{
             width: activeTab?.offsetWidth,
@@ -43,9 +44,11 @@ export const withFloatBg = createPropPluginFn((oldProps) => (options?: WithFloat
             background: '#d1d3d6'
           }}
           className='Tabs-active-bg-panel'
-          plugin={WrappedBy(Motion, options?.MotionProps)}
+          plugin={WrappedBy((node) => (
+            <Motion {...props.MotionProps}>{node}</Motion>
+          ))}
         ></Div>
-        {oldProps.children}
+        {props.children}
       </>
     )
   }

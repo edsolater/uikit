@@ -1,6 +1,6 @@
 import { Div, DivChildNode } from '../Div'
 import { ICSS } from '../styles/parseCSS'
-import { uikit } from './utils'
+import { createKit } from './utils'
 
 export interface RowProps {
   children?: DivChildNode
@@ -22,7 +22,7 @@ export interface RowProps {
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export const Row = uikit('Row', ({ children, itemFlexGrow, gap, wrap, spaceBetween }: RowProps) => (
+export const Row = createKit('Row', ({ children, itemFlexGrow, gap, wrap, spaceBetween }: RowProps) => (
   <Div
     icss={[
       {

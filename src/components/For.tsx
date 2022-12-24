@@ -1,5 +1,5 @@
 import { addPropsToReactElement } from '../functions/react'
-import { uikit } from './utils'
+import { createKit } from './utils'
 
 export interface ForProps<T extends any> {
   each: T[]
@@ -7,7 +7,7 @@ export interface ForProps<T extends any> {
   children?: (item: T, idx: number) => JSX.Element
 }
 
-export const For = uikit('For', <T extends any>(props: ForProps<T>) =>
+export const For = createKit('For', <T extends any>(props: ForProps<T>) =>
   props.each.map((item, idx) =>
     props.getKey
       ? addPropsToReactElement(props.children?.(item, idx), { key: props.getKey(item, idx) })

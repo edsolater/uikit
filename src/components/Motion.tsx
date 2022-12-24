@@ -1,14 +1,14 @@
 import { useLayoutEffect, useRef } from 'react'
 import { DivChildNode } from '../Div/type'
 import { AddProps } from './AddProps'
-import { uikit } from './utils'
+import { createKit } from './utils'
 
 export interface MotionProps {
   children?: DivChildNode
   animateOptions?: KeyframeEffectOptions
 }
 
-export const Motion = uikit(
+export const Motion = createKit(
   'Motion',
   ({ children, animateOptions = { duration: 300, iterations: 1, easing: 'ease' } }: MotionProps) => {
     const squareRef = useRef<HTMLElement>()
@@ -84,7 +84,7 @@ export const Motion = uikit(
     return <AddProps domRef={squareRef}>{children}</AddProps>
   },
   {
-    defaultDivProps: {
+    defaultProps: {
       animateOptions: {
         duration: 300,
         iterations: 1,

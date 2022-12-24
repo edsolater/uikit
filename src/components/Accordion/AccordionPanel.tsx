@@ -3,11 +3,11 @@ import { ReactNode } from 'react'
 import { Div } from '../../Div'
 import { DivProps } from '../../Div/type'
 import { FadeIn } from '../FadeIn'
-import { componentKit } from '../utils'
+import { createKit } from '../utils'
 import { useAccordionContextProps } from './AccordionContext'
 import { AccordionController } from './type'
 
-export const AccordionPanel = componentKit('AccordionPanel', ({ children }: AccordionPanelProps) => {
+export const AccordionPanel = createKit('AccordionPanel', ({ children }: AccordionPanelProps) => {
   const { controller, ...contextProps } = useAccordionContextProps()
   assert(controller, 'lack of accordion controller')
   return (

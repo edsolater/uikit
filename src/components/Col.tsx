@@ -1,5 +1,5 @@
 import { Div, DivChildNode } from '../Div'
-import { uikit } from './utils'
+import { createKit } from './utils'
 
 export interface ColProps {
   children?: DivChildNode
@@ -12,7 +12,7 @@ export interface ColProps {
 /**
  * flex box
  */
-export const Col = uikit('Col', ({ wrap, children, gap }: ColProps) => (
+export const Col = createKit('Col', ({ wrap, children, gap }: ColProps) => (
   <Div
     icss={{
       display: 'flex',
