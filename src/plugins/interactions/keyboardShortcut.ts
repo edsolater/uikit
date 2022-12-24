@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { handleKeyboardShortcut, KeyboardShortcut } from '../../functions/dom/gesture/handleKeyboardShortcut'
-import { createPlugx } from '../createPlugin'
+import { createPlugin } from '../createPlugin'
 
-export const keyboardShortcut = createPlugx<{
+export const keyboardShortcut = createPlugin<{
   keyboardShortcutSetting: KeyboardShortcut
   options?: {
     /** this still not prevent **all** brower shortcut (like build-in ctrl T ) */

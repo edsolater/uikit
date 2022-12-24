@@ -1,6 +1,6 @@
 import { ReactElement } from 'react'
-import { createDangerousRenderWrapperNodePlugx } from '../createPlugin'
+import { createDangerousRenderWrapperNodePlugin } from '../createPlugin'
 
 export type KitPluginOptions = {}
 
-export const Kit = createDangerousRenderWrapperNodePlugx
+export const Kit = createDangerousRenderWrapperNodePlugin

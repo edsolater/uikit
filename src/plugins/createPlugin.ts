@@ -1,46 +1,43 @@
-import { flapDeep, flatMap, MayArray, MayDeepArray } from '@edsolater/fnkit'
+import { flapDeep, MayDeepArray } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
 import { mergeProps } from '../utils'
-import { Plugx } from './type'
+import { Plugin } from './type'
 
-export function createDangerousRenderWrapperNodePlugx<T>(
+export function createDangerousRenderWrapperNodePlugin<T>(
   createrFn: (node: ReactElement, props: T & DivProps) => ReactElement,
   options?: {
     pluginName?: string
   }
-): Plugx<T> {
-  return {
-    add: (additionalProps) =>
-      createDangerousRenderWrapperNodePlugx(
-        (node, props) => createrFn(node, mergeProps(additionalProps, props)),
-        options
-      ),
-
-    getProps: (props) => ({ dangerousRenderWrapperNode: (node) => createrFn(node, props) })
+): Plugin<T> {
+  function pluginMiddleware(addtionalProps) {
+    return createDangerousRenderWrapperNodePlugin(
+      (node, props) => createrFn(node, mergeProps(addtionalProps, props)),
+      options
+    )
   }
+  pluginMiddleware.getProps = (props) => ({ dangerousRenderWrapperNode: (node) => createrFn(node, props) })
+  return pluginMiddleware
 }
 
-export function createPlugx<T>(
+export function createPlugin<T>(
   createrFn: (props: T & DivProps) => Partial<Omit<T & DivProps, 'plugin' | 'shadowProps'>>, // return a function , in this function can exist hooks
   options?: {
     pluginName?: string
   }
-): Plugx<T> {
-  return {
-    add: (additionalProps) => createPlugx((props) => createrFn(mergeProps(additionalProps, props)), options),
-    getProps: (props) => createrFn(props)
+): Plugin<T> {
+  function pluginMiddleware(addtionalProps) {
+    return createPlugin((props) => createrFn(mergeProps(addtionalProps, props)), options)
   }
+  pluginMiddleware.getProps = (props) => createrFn(props)
+  return pluginMiddleware
 }
 
 export function parsePropPluginToProps<T>(utils: {
-  plugin: MayDeepArray<Plugx<T>> | undefined
+  plugin: MayDeepArray<Plugin<T>> | undefined
   props: T & DivProps
 }): T & DivProps {
   return utils.plugin
-    ? flapDeep(utils.plugin).reduce(
-        (acc, abilityPlugin) => mergeProps(acc, abilityPlugin.getProps?.(acc)),
-        utils.props
-      )
+    ? flapDeep(utils.plugin).reduce((acc, abilityPlugin) => mergeProps(acc, abilityPlugin.getProps?.(acc)), utils.props)
     : utils.props
 }

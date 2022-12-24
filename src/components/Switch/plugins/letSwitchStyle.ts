@@ -1,7 +1,7 @@
 import { addDefault } from '@edsolater/fnkit'
 import { DivProps } from '../../../Div'
 import { mergeProps } from '../../../Div/utils/mergeProps'
-import { createPlugx } from '../../../plugins'
+import { createPlugin } from '../../../plugins'
 import { SwitchCoreProps } from '../index'
 
 export type SwitchVariables = {
@@ -19,7 +19,7 @@ export type LetSwitchStyleOptions = {
   variables?: SwitchVariables
 }
 
-export const letSwitchStyle = createPlugx<LetSwitchStyleOptions & SwitchCoreProps>((props) =>
+export const letSwitchStyle = createPlugin<LetSwitchStyleOptions & SwitchCoreProps>((props) =>
   {
     console.log('props: ', props)
     return mergeProps(props, {

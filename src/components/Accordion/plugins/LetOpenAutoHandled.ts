@@ -1,5 +1,5 @@
 import { useToggle } from '../../../hooks'
-import { createPlugx } from '../../../plugins'
+import { createPlugin } from '../../../plugins'
 import { AccordionProps } from '../Accordion'
 
 export type LetAutoHandleOpenOptions = {
@@ -8,7 +8,7 @@ export type LetAutoHandleOpenOptions = {
 /**
  * plugin for {@link Accordion}
  */
-export const letOpenAutoHandled = createPlugx<AccordionProps & LetAutoHandleOpenOptions>((props) => {
+export const letOpenAutoHandled = createPlugin<AccordionProps & LetAutoHandleOpenOptions>((props) => {
   const [innerOpen, { toggle, off, on, set }] = useToggle(props?.defaultOpen ?? props.open)
   return {
     onClose: off,

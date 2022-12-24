@@ -2,13 +2,13 @@ import { isObject } from '@edsolater/fnkit'
 import { useEffect, useRef } from 'react'
 import { handleClick, HandleClickOptions } from '../../functions/dom/gesture/handleClick'
 import { createICSS } from '../../styles'
-import { createPlugx } from '../createPlugin'
+import { createPlugin } from '../createPlugin'
 
 export type ClickPluginOptions = HandleClickOptions & {
   applyCSSTo?: 'element-self' | 'element-before' | 'element-after'
 }
 /** used in user's use action */
-export const click = createPlugx((arg: ClickPluginOptions) => {
+export const click = createPlugin((arg: ClickPluginOptions) => {
   const options = arg
 
   const divRef = useRef<HTMLElement>()

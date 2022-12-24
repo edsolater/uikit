@@ -24,7 +24,7 @@ export const Tabs = createKit(
     const [activeTab, setActiveTab] = useState(defaultTab)
     return (
       <Row
-        plugin={withFloatBg.add({
+        plugin={withFloatBg({
           ...withFloatBgOptions,
           defaultActiveItemIndex: defaultTab && tabs.indexOf(defaultTab)
         })}
