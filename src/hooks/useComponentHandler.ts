@@ -14,11 +14,11 @@ export function useComponentHandler<Handler>(id: string | number) {
 
 /** uikit direct user regist the handler */
 export function useComponentHandlerRegister<Handler extends object>(
-  label: { componentId?: string | number; componentRef: RefObject<any> | undefined },
+  label: { componentId?: string | number; controller: RefObject<any> | undefined },
   inputHandler: MayFn<Handler>
 ) {
   if (label.componentId != null) {
     componentHandlerStore.set(String(label.componentId), shrinkToValue(inputHandler))
   }
-  useImperativeHandle<any, Handler>(label.componentRef, () => shrinkToValue(inputHandler))
+  useImperativeHandle<any, Handler>(label.controller, () => shrinkToValue(inputHandler))
 }

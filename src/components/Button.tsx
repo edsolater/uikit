@@ -55,7 +55,7 @@ export interface ButtonProps extends DivProps<'button'> {
   prefix?: ReactNode
   /** normally, it's an icon  */
   suffix?: ReactNode
-  componentRef?: RefObject<any>
+  controller?: RefObject<any>
 }
 
 /**
@@ -84,7 +84,7 @@ export function Button(props: ButtonProps) {
     theme,
     prefix,
     suffix,
-    componentRef,
+    controller,
     children,
     onClick: originalOnClick,
     ...restProps
@@ -101,7 +101,7 @@ export function Button(props: ButtonProps) {
   const onClick = (...args) => !disable && originalOnClick?.(...args)
   const ref = useRef<HTMLButtonElement>(null)
 
-  useImperativeHandle<any, ButtonHandle>(componentRef, () => ({
+  useImperativeHandle<any, ButtonHandle>(controller, () => ({
     click: () => {
       ref.current?.click()
     },

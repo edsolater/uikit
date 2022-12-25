@@ -1,27 +1,32 @@
 import { RefObject, useImperativeHandle } from 'react'
 import { WeakerMap } from '@edsolater/fnkit'
+import { ControllerRef } from '../typings/tools'
 
 type ComponentHandler = Record<string, any>
 
 type ComponentId = string
 
-const componentRefStore = new WeakerMap<ComponentId, RefObject<unknown>>()
+const controllerStore = new WeakerMap<ComponentId, ControllerRef<unknown>>()
 
 export type GlobalComponentIdProps<Handler extends ComponentHandler> = {
   componentId?: string
-  componentRef?: RefObject<Handler>
+  controller?: RefObject<Handler>
 }
 
 /** used in component register */
-export function useComponentRefRegister(componentId: string, ref: RefObject<any>, handler: Record<string, any>) {
+export function useControllerRegister(
+  componentId: string | undefined,
+  ref: ControllerRef<any>,
+  handler: Record<string, any>
+) {
   useImperativeHandle(ref, () => handler)
-  componentRefStore.set(componentId, ref)
+  if (componentId) controllerStore.set(componentId, ref)
 }
 
 /** used in component applier */
-export function useComponentRefById<Handler extends ComponentHandler = Record<string, unknown>>(
+export function useControllerById<Handler extends ComponentHandler = Record<string, unknown>>(
   id?: ComponentId | undefined
 ) {
   if (!id) return
-  return componentRefStore.get(id) as RefObject<Handler>
+  return controllerStore.get(id) as ControllerRef<Handler>
 }

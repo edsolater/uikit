@@ -13,4 +13,5 @@ export type PluginCreateFn<T> = (props: T) => Partial<Omit<DivProps, 'plugin' | 
 export type Plugin<T> = {
   (additionalProps: Partial<T & DivProps>): Plugin<T>
   getProps?: (props: T & DivProps) => Partial<Omit<DivProps, 'plugin' | 'shadowProps'>>
+  priority?: number // NOTE -1:  it should be calculated after final prop has determine
 }

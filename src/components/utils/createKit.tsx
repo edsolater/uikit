@@ -1,4 +1,4 @@
-import { isString, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
+import { flapDeep, isString, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../functions/react'
@@ -41,7 +41,8 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
     const merged = pipe(
       props,
       // build-time
-      (props) => parsePropPluginToProps({ plugin: options?.plugin as MayDeepArray<Plugin<any>>, props }),
+      (props) =>
+        parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }),
       (props) => mergeProps(options?.defaultProps ?? {}, props, { className: displayName }),
       // run-time
       handleDivShadowProps,
@@ -72,4 +73,12 @@ export function createKitWithAutoPluginProp<T, F extends MayDeepArray<Plugin<any
     Omit<GetPluginProps<FR>, GetPluginProps<F> | keyof T>
 ) => JSX.Element {
   return createKit(displayOptions, FC, options)
+}
+
+function sortPlugin(deepPluginList: MayDeepArray<Plugin<any>>) {
+  const plugins = flapDeep(deepPluginList)
+  if (plugins.length <= 1) return plugins
+  if (plugins.every((p) => !p.priority)) return plugins
+
+  return [...plugins].sort(({ priority: priorityA }, { priority: priorityB }) => (priorityB ?? 0) - (priorityA ?? 0))
 }

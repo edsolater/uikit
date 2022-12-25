@@ -74,7 +74,7 @@ export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
   /** Optional. usually, it is an <Input>'s unit or feature icon */
   suffix?: MayFn<ReactNode, [text: string | undefined]>
 
-  componentRef?: RefObject<any>
+  controller?: RefObject<any>
   inputDomRef?: DivProps<'input'>['domRef']
   inputClassName?: DivProps<'input'>['className']
   inputHTMLProps?: DivProps<'input'>['htmlProps']
@@ -119,7 +119,7 @@ export function Input(props: InputProps) {
 
     prefix,
     suffix,
-    componentRef,
+    controller,
     inputDomRef,
     inputClassName,
     inputHTMLProps,
@@ -158,7 +158,7 @@ export function Input(props: InputProps) {
     }
   }
 
-  useImperativeHandle(componentRef, () => inputControls)
+  useImperativeHandle(controller, () => inputControls)
 
   // this relay on keyboard down, not prefect with copyboard paste
   const predictNextSentence = useEvent((utils: CheckInputUtils): string => {

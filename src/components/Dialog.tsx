@@ -10,7 +10,7 @@ import { Transition } from './Transition/Transition'
 const DIALOG_STACK_ID = 'dialog-stack'
 
 export interface DialogProps extends Omit<DivProps, 'children'> {
-  componentRef?: RefObject<any>
+  controller?: RefObject<any>
   /** can access dialog's handler by useComponentHandler(dialogId) */
   componentId?: string | number
 
@@ -37,7 +37,7 @@ export type DialogComponentHandler = {
 // TODO: composiable `useComponentHandler<Handler>(key)`
 export function Dialog({
   componentId,
-  componentRef,
+  controller,
   open,
   children,
   transitionSpeed = 'normal',
@@ -60,7 +60,7 @@ export function Dialog({
 
   // load componnent handler
   useComponentHandlerRegister<DialogComponentHandler>(
-    { componentId, componentRef },
+    { componentId, controller },
     {
       isOpen: innerOpen,
       open: turnOnInnerOpen,

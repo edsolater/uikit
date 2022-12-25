@@ -1,3 +1,4 @@
+import { RefObject } from "react"
 import { DivChildNode } from "../Div"
 
 export type MayArray<T> = T | Array<T>
@@ -207,3 +208,4 @@ export type SValueof<O> = O extends { [s: string]: infer T } ? T : any
 export type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>[0]
 export type Component<Props> = (props: Props) => DivChildNode
 export type ReactComponent<Props> = (props: Props) => JSX.Element
+export type ControllerRef<T> = RefObject<any> | ((controller: T) => void)

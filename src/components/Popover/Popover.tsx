@@ -42,7 +42,7 @@ export interface PopoverProps {
   /** only affact init render */
   defaultOpen?: boolean
   canOpen?: boolean
-  componentRef?: RefObject<any>
+  controller?: RefObject<any>
   placement?: PopoverPlacement
   /** for corner placement like 'top-left' 'top-right etc. */
   cornerOffset?: number
@@ -98,7 +98,7 @@ export function Popover({
   closeDelay,
   canOpen = true,
   defaultOpen,
-  componentRef,
+  controller,
   cornerOffset,
   popoverGap,
   viewportBoundaryInset,
@@ -125,7 +125,7 @@ export function Popover({
     viewportBoundaryInset
   })
 
-  useImperativeHandle<any, PopoverHandles>(componentRef, () => ({ ...controls, isPanelShowed: isTriggled }))
+  useImperativeHandle<any, PopoverHandles>(controller, () => ({ ...controls, isPanelShowed: isTriggled }))
 
   useIsomorphicLayoutEffect(() => {
     if (isPanelMounted) {

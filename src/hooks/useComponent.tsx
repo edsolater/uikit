@@ -26,7 +26,7 @@ export function useComponent<Handler extends ComponentHandler>(componentId: Comp
 }
 
 /**  react useRef-like {@link getComponentHandler} */
-export function useComponentRef<Handler extends ComponentHandler>(componentId: ComponentId) {
+export function useController<Handler extends ComponentHandler>(componentId: ComponentId) {
   const handler = useRef<Handler | undefined>(getComponentHandler(componentId) as Handler)
 
   instanceCollection.on('set', (id, newWeakRef) => {

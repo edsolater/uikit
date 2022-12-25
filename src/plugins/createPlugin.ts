@@ -1,4 +1,4 @@
-import { flapDeep, MayDeepArray } from '@edsolater/fnkit'
+import { flapDeep, MayDeepArray, overwriteFunctionName } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
 import { mergeProps } from '../utils'
@@ -7,7 +7,7 @@ import { Plugin } from './type'
 export function createDangerousRenderWrapperNodePlugin<T>(
   createrFn: (node: ReactElement, props: T & DivProps) => ReactElement,
   options?: {
-    pluginName?: string
+    name?: string
   }
 ): Plugin<T> {
   function pluginMiddleware(addtionalProps) {
@@ -23,13 +23,16 @@ export function createDangerousRenderWrapperNodePlugin<T>(
 export function createPlugin<T>(
   createrFn: (props: T & DivProps) => Partial<Omit<T & DivProps, 'plugin' | 'shadowProps'>>, // return a function , in this function can exist hooks
   options?: {
-    pluginName?: string
+    priority?: number // NOTE -1:  it should be render after final prop has determine
+    name?: string
   }
 ): Plugin<T> {
   function pluginMiddleware(addtionalProps) {
     return createPlugin((props) => createrFn(mergeProps(addtionalProps, props)), options)
   }
   pluginMiddleware.getProps = (props) => createrFn(props)
+  pluginMiddleware.priority = options?.priority
+
   return pluginMiddleware
 }
 
