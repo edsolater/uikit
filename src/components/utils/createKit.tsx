@@ -29,14 +29,13 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
     defaultProps?: Omit<T & GetPluginProps<F> & DivProps, 'children'>
     plugin?: F
   }
-): <FR extends MayDeepArray<Plugin<any>>>(
-  props: T &
+): ReactComponent<
+  T &
     Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: FR
+      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
       shadowProps?: Partial<T & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'> &
-    Omit<GetPluginProps<FR>, GetPluginProps<F> | keyof T>
-) => JSX.Element {
+    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
+> {
   const displayName = isString(displayOptions) ? displayOptions : displayOptions.name
   const uikitFC = overwriteFunctionName((props) => {
     const merged = pipe(
@@ -57,20 +56,20 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
  * generic type will lose auto type intelligence with plugin.
  * this function's core is **same with createKit**
  */
-export function createKitWithGenericType<T, F extends MayDeepArray<Partial<Plugin<any>>>>(
+export function createKitWithAutoPluginProp<T, F extends MayDeepArray<Plugin<any>>>(
   displayOptions: { name: string } | string,
   FC: Component<T>,
   options?: {
     defaultProps?: Omit<T & GetPluginProps<F> & DivProps, 'children'>
     plugin?: F
   }
-): ReactComponent<
-  T &
+): <FR extends MayDeepArray<Plugin<any>>>(
+  props: T &
     Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
+      plugin?: FR
       shadowProps?: Partial<T & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
-> {
-  // @ts-expect-error this type must be overwrite
+    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'> &
+    Omit<GetPluginProps<FR>, GetPluginProps<F> | keyof T>
+) => JSX.Element {
   return createKit(displayOptions, FC, options)
 }

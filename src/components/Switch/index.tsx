@@ -49,5 +49,3 @@ export const Switch = createKit(
   },
   { plugin: [letDefaultCheck, letSwitchStyle] }
 )
-
-const a = <Switch></Switch>
