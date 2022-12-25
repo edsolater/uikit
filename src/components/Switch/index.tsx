@@ -1,11 +1,10 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode } from 'react'
 import { Div, DivProps } from '../../Div'
-import { click } from '../../plugins'
-import { createKit } from '../utils'
-import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
-import { FeatureDefaultCheck, letDefaultCheck } from './plugins/letDefaultCheck'
 import { ICSS } from '../../styles'
+import { createKit } from '../utils'
+import { letDefaultCheck } from './plugins/letDefaultCheck'
+import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
 
 export type SwitchStatus = {
   checked: boolean
@@ -15,7 +14,6 @@ export interface SwitchCoreProps {
   // -------- core --------
   checked?: boolean
   onToggle?: (toStatus: boolean) => void
-
   // -------- sub --------
   render?: {
     thumbIcon?: MayFn<ReactNode, [utils: SwitchStatus]>
@@ -29,11 +27,9 @@ export interface SwitchCoreProps {
   icss?: ICSS<SwitchVariables>
 }
 
-export type SwitchProps = SwitchCoreProps
-
 export const Switch = createKit(
   'Switch',
-  ({ checked, onToggle, render, anatomy }: SwitchProps) => {
+  ({ checked, onToggle, render, anatomy }: SwitchCoreProps) => {
     const status = {
       checked: Boolean(checked)
     }
@@ -53,3 +49,5 @@ export const Switch = createKit(
   },
   { plugin: [letDefaultCheck, letSwitchStyle] }
 )
+
+const a = <Switch></Switch>
