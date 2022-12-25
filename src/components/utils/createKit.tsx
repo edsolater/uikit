@@ -7,86 +7,30 @@ import { Plugin } from '../../plugins/type'
 import { Component, ReactComponent } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 
-export function createKit<T, Px1>(
+type GetPluginProps<T> = T extends Plugin<infer Px1>
+  ? Px1
+  : T extends Plugin<infer Px1>[]
+  ? Px1
+  : T extends (Plugin<infer Px1> | Plugin<infer Px2>)[]
+  ? Px1 & Px2
+  : T extends (Plugin<infer Px1> | Plugin<infer Px2> | Plugin<infer Px3>)[]
+  ? Px1 & Px2 & Px3
+  : T extends (Plugin<infer Px1> | Plugin<infer Px2> | Plugin<infer Px3> | Plugin<infer Px4>)[]
+  ? Px1 & Px2 & Px3 & Px4
+  : T extends (Plugin<infer Px1> | Plugin<infer Px2> | Plugin<infer Px3> | Plugin<infer Px4> | Plugin<infer Px5>)[]
+  ? Px1 & Px2 & Px3 & Px4 & Px5
+  : unknown
+
+export function createKit<T, F extends MayDeepArray<Partial<Plugin<any>>>>(
   displayOptions: { name: string } | string,
   FC: Component<T>,
   options?: {
-    defaultProps?: Omit<T & Px1 & DivProps, 'children'>
-    plugin?: [Plugin<Px1>]
+    defaultProps?: Omit<T & GetPluginProps<F> & DivProps, 'children'>
+    plugin?: F
   }
 ): ReactComponent<
   T &
-    Omit<Px1, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
-      shadowProps?: Partial<Px1 & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
->
-export function createKit<T, Px1, Px2>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & Px1 & Px2 & DivProps, 'children'>
-    plugin?: [Plugin<Px1>, Plugin<Px2>]
-  }
-): ReactComponent<
-  T &
-    Omit<Px1 & Px2, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
-      shadowProps?: Partial<T & Px1 & Px2 & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
->
-export function createKit<T, Px1, Px2, Px3>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & Px1 & Px2 & Px3 & DivProps, 'children'>
-    plugin?: [Plugin<Px1>, Plugin<Px2>, Plugin<Px3>]
-  }
-): ReactComponent<
-  T &
-    Omit<Px1 & Px2 & Px3, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
-      shadowProps?: Partial<T & Px1 & Px2 & Px3 & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
->
-export function createKit<T, Px1, Px2, Px3, Px4>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & Px1 & Px2 & Px3 & Px4 & DivProps, 'children'>
-    plugin?: [Plugin<Px1>, Plugin<Px2>, Plugin<Px3>, Plugin<Px4>]
-  }
-): ReactComponent<
-  T &
-    Omit<Px1 & Px2 & Px3 & Px4, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
-      shadowProps?: Partial<T & Px1 & Px2 & Px3 & Px4 & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
->
-export function createKit<T, Px1, Px2, Px3, Px4, Px5>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & Px1 & Px2 & Px3 & Px4 & Px5 & DivProps, 'children'>
-    plugin?: [Plugin<Px1>, Plugin<Px2>, Plugin<Px3>, Plugin<Px4>, Plugin<Px5>]
-  }
-): ReactComponent<
-  T &
-    Omit<Px1 & Px2 & Px3 & Px4 & Px5, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
-      shadowProps?: Partial<T & Px1 & Px2 & Px3 & Px4 & Px5 & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
->
-export function createKit<T, F>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & F & DivProps, 'children'>
-    plugin?: Plugin<F>[]
-  }
-): ReactComponent<
-  T &
-    Omit<F, keyof T> & {
+    Omit<GetPluginProps<F>, keyof T> & {
       plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
       shadowProps?: Partial<T & DivProps> // component must merged before `<Div>`
     } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
@@ -95,7 +39,7 @@ export function createKit<T, F>(
   const uikitFC = overwriteFunctionName((props) => {
     const merged = pipe(
       props,
-      (props) => parsePropPluginToProps({ plugin: options?.plugin, props }),
+      (props) => parsePropPluginToProps({ plugin: options?.plugin as MayDeepArray<Plugin<any>>, props }),
       (props) => mergeProps(options?.defaultProps ?? {}, props, { className: displayName }),
       handleDivShadowProps
     )

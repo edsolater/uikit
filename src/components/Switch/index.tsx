@@ -29,7 +29,7 @@ export interface SwitchCoreProps {
   icss?: ICSS<SwitchVariables>
 }
 
-export type SwitchProps = SwitchCoreProps & FeatureDefaultCheck
+export type SwitchProps = SwitchCoreProps
 
 export const Switch = createKit(
   'Switch',

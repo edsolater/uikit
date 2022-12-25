@@ -11,7 +11,6 @@ export const letDefaultCheck = createPlugin<SwitchCoreProps & FeatureDefaultChec
   return {
     checked: isChecked,
     onToggle: mergeFunction(props.onToggle, (toStatus) => {
-      console.log('33: ', 33) // why log twice?
       setIsChecked(toStatus)
     })
   }
