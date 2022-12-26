@@ -1,7 +1,7 @@
 import { flapDeep, merge, shakeFalsy, shakeNil } from '@edsolater/fnkit';
-import { invokeOnce } from '../../functions/dom/invokeOnce';
-import classname from '../../functions/react/classname';
-import mergeRefs, { loadRef } from '../../functions/react/mergeRefs';
+import { invokeOnce } from '../../utils/dom/invokeOnce';
+import classname from '../../utils/functions/react/classname';
+import mergeRefs, { loadRef } from '../../utils/functions/react/mergeRefs';
 import { parseCSS } from '../../styles/parseCSS';
 import { DivProps } from '../type';
 

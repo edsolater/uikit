@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { SwitchController, SwitchCoreProps } from '..'
-import { handleKeyboardShortcut } from '../../../functions/dom/gesture/handleKeyboardShortcut'
+import { handleKeyboardShortcut } from '../../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../../../plugins'
 
 export type LetHandleSwitchKeyboardShortcut = {}
@@ -16,7 +16,7 @@ export const letHandleSwitchKeyboardShortcut = createPlugin<SwitchCoreProps>(() 
         switchController.current?.toggle()
       }
     })
-    return subscription.cancel
+    return subscription.abort
   }, [])
   return { domRef: divRef, controller: switchController }
 })

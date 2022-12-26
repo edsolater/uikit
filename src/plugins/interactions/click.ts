@@ -1,6 +1,6 @@
 import { isObject } from '@edsolater/fnkit'
 import { useEffect, useRef } from 'react'
-import { handleClick, HandleClickOptions } from '../../functions/dom/gesture/handleClick'
+import { handleClick, HandleClickOptions } from '../../utils/dom/gesture/handleClick'
 import { createICSS } from '../../styles'
 import { createPlugin } from '../createPlugin'
 

@@ -2,7 +2,7 @@ import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
 import React from 'react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { inClient } from '../functions/isSSR'
+import { inClient } from '../utils/functions/isSSR'
 import { AddProps } from './AddProps'
 import { DivProps } from '../Div/type'
 

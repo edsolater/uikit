@@ -2,7 +2,7 @@ import { ReactNode, RefObject, useImperativeHandle, useRef, useState } from 'rea
 
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
-import { pickChildByType } from '../../functions/react'
+import { pickChildByType } from '../../utils/functions/react'
 import { AddProps } from '../AddProps'
 import { Div } from '../../Div/Div'
 import { Portal } from '../Portal'

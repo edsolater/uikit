@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { handleKeyboardShortcut, KeyboardShortcut } from '../../functions/dom/gesture/handleKeyboardShortcut'
+import { handleKeyboardShortcut, KeyboardShortcut } from '../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../createPlugin'
 
 export const keyboardShortcut = createPlugin<{
@@ -15,7 +15,7 @@ export const keyboardShortcut = createPlugin<{
     if (!divRef.current) return
     // TODO make handleKeyboardShortcut use getHTMLElementsFromRefs to get Elements
     const subscription = handleKeyboardShortcut(divRef.current, keyboardShortcutSetting)
-    return subscription.cancel
+    return subscription.abort
   }, [divRef, ...Object.values(keyboardShortcutSetting)])
   return { domRef: divRef }
 })

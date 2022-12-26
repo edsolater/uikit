@@ -1,5 +1,5 @@
 import { DivProps } from '../Div/type'
-import { addPropsToReactElement } from '../functions/react'
+import { addPropsToReactElement } from '../utils/functions/react'
 
 type AddPropsProps = Omit<Partial<DivProps>, 'children'> & { children?: any }
 

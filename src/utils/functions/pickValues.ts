@@ -1,5 +1,5 @@
 import { isExist } from '@edsolater/fnkit'
-import type { MayArray, Valueof } from '../typings/tools'
+import type { MayArray, Valueof } from '../../typings/tools'
 
 /**
  *

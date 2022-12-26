@@ -1,6 +1,6 @@
 import { RefObject, useEffect } from 'react'
-import { handleClick, HandleClickOptions } from '../functions/dom/gesture/handleClick'
-import { getElementsFromRefs } from '../functions/getElementsFromRefs'
+import { handleClick, HandleClickOptions } from '../utils/dom/gesture/handleClick'
+import { getElementsFromRefs } from '../utils/functions/getElementsFromRefs'
 import { useToggle } from './useToggle'
 
 export function useClick(ref: RefObject<HTMLElement | undefined | null>, options?: HandleClickOptions) {

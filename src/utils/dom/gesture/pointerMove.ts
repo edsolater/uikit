@@ -1,4 +1,4 @@
-import { addEventListener, EventListenerController } from '../addEventListener'
+import { onEvent, EventListenerController } from '../addEventListener'
 
 type DeltaTranslate2D = {
   dx: number
@@ -44,7 +44,7 @@ export type AttachPointerMoveOptions<El extends Element> = {
  * @param el target element
  * @param options
  */
-export function attachPointerMove<El extends Element>(el: El, options: AttachPointerMoveOptions<El>) {
+export function attachPointerMove<El extends HTMLElement>(el: El, options: AttachPointerMoveOptions<El>) {
   const eventsQueue: { ev: PointerEvent; type: 'pointerDown' | 'pointerMove' | 'pointerUp' }[] = []
   let pointDownController: EventListenerController | null = null
   let pointMoveController: EventListenerController | null = null
@@ -54,11 +54,11 @@ export function attachPointerMove<El extends Element>(el: El, options: AttachPoi
     if (!eventsQueue.length) {
       eventsQueue.push({ ev, type: 'pointerDown' })
       options.start?.({ el: ev.target as El, ev, pointEvents: eventsQueue.map(({ ev }) => ev) })
-      pointMoveController = addEventListener(el, 'pointermove', ({ ev }) => pointerMove(ev), {
+      pointMoveController = onEvent(el, 'pointermove', ({ ev }) => pointerMove(ev), {
         passive: true,
         onlyTargetIsSelf: true
       })
-      pointUpController = addEventListener(el, 'pointerup', ({ ev }) => pointerUp(ev), {
+      pointUpController = onEvent(el, 'pointerup', ({ ev }) => pointerUp(ev), {
         passive: true,
         once: true,
         onlyTargetIsSelf: true
@@ -113,17 +113,17 @@ export function attachPointerMove<El extends Element>(el: El, options: AttachPoi
         totalDelta: { dx: totalDeltaX, dy: totalDeltaY }
       })
       eventsQueue.splice(0, eventsQueue.length)
-      pointMoveController?.cancel()
+      pointMoveController?.abort()
     }
   }
 
-  pointDownController = addEventListener(el, 'pointerdown', ({ ev }) => pointerDown(ev), { onlyTargetIsSelf: true })
+  pointDownController = onEvent(el, 'pointerdown', ({ ev }) => pointerDown(ev), { onlyTargetIsSelf: true })
   return {
     pointDownController,
     pointMoveController,
     pointUpController,
     cancel() {
-      pointDownController?.cancel()
+      pointDownController?.abort()
     }
   }
 }

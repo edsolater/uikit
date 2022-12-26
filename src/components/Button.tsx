@@ -1,7 +1,7 @@
 import { addDefault, isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import React from 'react'
 import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
-import { mergeProps } from '../functions/react'
+import { mergeProps } from '../utils/functions/react'
 import { useUikitTheme } from '../hooks/useUikitTheme'
 import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'

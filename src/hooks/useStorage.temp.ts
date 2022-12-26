@@ -1,5 +1,5 @@
 import { MayFn } from '@edsolater/fnkit'
-import { getLocalItem, onLocalItemChanged, setLocalItem } from '../functions/dom/jStorage'
+import { getLocalItem, onLocalItemChanged, setLocalItem } from '../utils/dom/jStorage'
 import { SignalPluginFn, useSignalState } from './useSignalState'
 
 export function useLocalStorageItem<T>(

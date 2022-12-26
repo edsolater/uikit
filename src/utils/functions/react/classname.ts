@@ -1,4 +1,4 @@
-import type { MayDeepArray } from '../../typings/tools'
+import type { MayDeepArray } from '../../../typings/tools'
 import { flap, isObjectLike, isTruthy } from '@edsolater/fnkit'
 
 export type ClassName = any | { [classname: string]: boolean }

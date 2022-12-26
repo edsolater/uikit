@@ -1,7 +1,7 @@
 import { flapDeep, isString, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
-import { mergeProps } from '../../functions/react'
+import { mergeProps } from '../../utils/functions/react'
 import { parsePropPluginToProps } from '../../plugins'
 import { handleDivPlugin } from '../../plugins/handleDivPlugins'
 import { Plugin } from '../../plugins/type'

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { handleHover, HandleHoverOptions } from '../functions/dom/gesture/handleHover'
-import { getElementsFromRefs } from '../functions/getElementsFromRefs'
+import { handleHover, HandleHoverOptions } from '../utils/dom/gesture/handleHover'
+import { getElementsFromRefs } from '../utils/functions/getElementsFromRefs'
 import { HTMLElementRefs } from '../utils/react/getElementsFromRefs'
 import { useToggle } from './useToggle'
 

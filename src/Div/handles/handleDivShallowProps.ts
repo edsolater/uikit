@@ -1,5 +1,5 @@
 import { flapDeep } from '@edsolater/fnkit'
-import { mergeProps } from '../../functions/react'
+import { mergeProps } from '../../utils/functions/react'
 import { DivProps } from '../type'
 
 export function handleDivShadowProps<P extends Partial<DivProps<any>>>(props?: P): Omit<P, 'shadowProps'> | undefined {

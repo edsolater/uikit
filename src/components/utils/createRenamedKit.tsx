@@ -1,6 +1,6 @@
 import { isString, overwriteFunctionName } from '@edsolater/fnkit'
 import { DivProps } from '../../Div'
-import { mergeProps } from '../../functions/react'
+import { mergeProps } from '../../utils/functions/react'
 import { Component, ReactComponent } from '../../typings/tools'
 
 type GetComponentProps<C extends Component<any>> = C extends Component<infer P> ? P : never

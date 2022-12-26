@@ -1,4 +1,4 @@
-import { addPropsToReactElement } from '../functions/react'
+import { addPropsToReactElement } from '../utils/functions/react'
 import { createKit } from './utils'
 
 export interface ForProps<T extends any> {

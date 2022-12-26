@@ -1,6 +1,6 @@
-import { HTMLElements } from '../../../utils/dom/getHTMLElementsFromEls'
-import { getHTMLElementsFromRefs } from '../../../utils/react/getElementsFromRefs'
-import { createObserveValue } from '../../utils'
+import { HTMLElements } from '../getHTMLElementsFromEls'
+import { getHTMLElementsFromRefs } from '../../react/getElementsFromRefs'
+import { createObserveValue } from '../../functions/utils'
 
 export interface HandleClickOptions {
   disable?: boolean

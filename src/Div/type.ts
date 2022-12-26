@@ -1,6 +1,6 @@
 import { MayEnum } from '@edsolater/fnkit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
-import { ClassName } from '../functions/react/classname'
+import { ClassName } from '../utils/functions/react/classname'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'

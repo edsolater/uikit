@@ -1,5 +1,5 @@
 import { debounce, OffsetDepth, parseNumberOrPercent } from '@edsolater/fnkit'
-import { addEventListener, EventListenerController } from '../addEventListener'
+import { onEvent, EventListenerController } from '../addEventListener'
 
 const SCROLL_STOP_DELAY = 100 // when it is not scroll in 100ms, assumed it to stop scroll
 export interface ScrollDetectorOptions {
@@ -26,7 +26,7 @@ export function attachScroll(el: HTMLElement, options: ScrollDetectorOptions) {
   let prevScrollTop: number
   const debouncedOnStopScroll = options.onScrollStop && debounce(options.onScrollStop, { delay: SCROLL_STOP_DELAY })
 
-  const controller = addEventListener(el, 'scroll', () => {
+  const controller = onEvent(el, 'scroll', () => {
     const { scrollTop, scrollHeight, clientHeight } = el
     const { nearlyMargin = '25%', onNearlyScrollBottom, onNearlyScrollTop, onScroll } = options
     onScroll?.({ el })
@@ -49,7 +49,7 @@ export function attachScroll(el: HTMLElement, options: ScrollDetectorOptions) {
     prevScrollTop = scrollTop
     debouncedOnStopScroll?.({ el }).then((args) => {
       if (options.autoRemoveListener) {
-        controller?.cancel()
+        controller?.abort()
         weakScrollControllerMap.set(el, deleteItem(weakScrollControllerMap.get(el) ?? [], controller))
       }
       return args

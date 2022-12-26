@@ -1,6 +1,6 @@
-import { addEventListener, EventListenerController } from '../../../utils/dom/addEventListener'
+import { onEvent, EventListenerController } from '../addEventListener'
 import { mapKey, shakeFalsy, toLowerCase, unified } from '@edsolater/fnkit'
-import { addTabIndex } from '../../../utils/dom/addTabIndex'
+import { addTabIndex } from '../addTabIndex'
 
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
@@ -84,7 +84,7 @@ export function handleKeyboardShortcut(
     formatKeyboardSettingString(String(key))
   )
   addTabIndex(el) // keydown must have fousable element
-  return addEventListener(
+  return onEvent(
     el,
     'keydown',
     ({ ev }) => {

@@ -55,7 +55,6 @@ export const Switch = createKit(
         if (to !== Boolean(checked)) onToggle?.(to)
       }
     }
-    console.log('5: ', 5)
 
     if (controller) useControllerRegister(componentId, controller, innerController)
 
