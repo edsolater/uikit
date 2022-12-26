@@ -1,6 +1,6 @@
 import { AnyFn, flap, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import React, { isValidElement, ReactElement, ReactNode } from 'react'
-import { mergeProps } from './mergeProps'
+import { mergeProps } from '../../Div/utils/mergeProps'
 
 type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>[0]
 
@@ -40,8 +40,7 @@ export function changeReactChildren<T extends AnyFn>(oldChildren: ReactNode, mer
 
     return React.cloneElement(
       child,
-      // @ts-ignore
-      mergeProps(child.props, shrinkToValue(matchedConfig.props, [child.props, child, index]))
+      mergeProps(child.props, shrinkToValue(matchedConfig.props, [child.props, child, index] as any))
     )
   })
 }

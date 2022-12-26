@@ -1,7 +1,7 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { cloneElement, isValidElement } from 'react'
 import { ReactNode } from 'react'
-import { mergeProps } from './mergeProps'
+import { mergeProps } from '../Div/utils/mergeProps'
 
 export function addPropsToReactElement<AvailableProps = { [key: string]: any }>(
   element: any,

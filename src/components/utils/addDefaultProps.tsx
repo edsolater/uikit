@@ -1,12 +1,12 @@
 import { overwriteFunctionName } from '@edsolater/fnkit'
+import { mergeProps } from '../../Div/utils/mergeProps'
 import { Component } from '../../typings/tools'
-import { mergeProps } from '../../utils'
 
 export function addDefaultProps<T>(Component: Component<T>, defaultProps: Partial<T>) {
   return overwriteFunctionName(
-    //@ts-ignore
+    //@ts-expect-error
     (props) => <Component {...mergeProps(defaultProps, props)} />,
-    //@ts-ignore
+    //@ts-expect-error
     Component.displayName ?? Component.name
   )
 }

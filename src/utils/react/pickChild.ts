@@ -1,6 +1,6 @@
 import { AnyFn, flap, MayFn, shakeNil, shrinkToValue } from '@edsolater/fnkit'
 import React, { isValidElement, ReactElement, ReactNode } from 'react'
-import { mergeProps } from './mergeProps'
+import { mergeProps } from '../../Div/utils/mergeProps'
 
 type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>[0]
 /** actually use Array.prototype.find()  */
