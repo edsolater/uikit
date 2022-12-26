@@ -1,15 +1,19 @@
-import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { ReactNode, RefObject } from 'react'
+import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { ReactNode } from 'react'
 import { Div, DivProps } from '../../Div'
 import { useControllerRegister } from '../../hooks'
 import { ICSS } from '../../styles'
 import { ControllerRef } from '../../typings/tools'
 import { createKit } from '../utils'
 import { letDefaultCheck } from './plugins/letDefaultCheck'
+import { letHandleSwitchKeyboardShortcut } from './plugins/letHandleSwitchKeyboardShortcut'
 import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
 
 export type SwitchController = {
   checked: boolean
+  turnOn(): void
+  turnOff(): void
+  toggle(): void
   setChecked(to: boolean): void
 }
 
@@ -18,7 +22,7 @@ export interface SwitchCoreProps {
   checked?: boolean
   onToggle?: (toStatus: boolean) => void
   // -------- selfComponent --------
-  controller?: ControllerRef<SwitchController>
+  controller?: MayDeepArray<ControllerRef<SwitchController>>
   componentId?: string
   // -------- sub --------
   render?: {
@@ -38,12 +42,23 @@ export const Switch = createKit(
   ({ checked, onToggle, render, anatomy, controller, componentId }: SwitchCoreProps) => {
     const innerController: SwitchController = {
       checked: Boolean(checked),
+      turnOn() {
+        innerController.setChecked(true)
+      },
+      turnOff() {
+        innerController.setChecked(false)
+      },
+      toggle() {
+        checked ? innerController.turnOff() : innerController.turnOn()
+      },
       setChecked(to) {
         if (to !== Boolean(checked)) onToggle?.(to)
       }
     }
+    console.log('5: ', 5)
+
     if (controller) useControllerRegister(componentId, controller, innerController)
-    
+
     return (
       <Div
         className='Switch-track'
@@ -58,5 +73,5 @@ export const Switch = createKit(
       </Div>
     )
   },
-  { plugin: [letSwitchStyle, letDefaultCheck] }
+  { plugin: [letSwitchStyle, letDefaultCheck, letHandleSwitchKeyboardShortcut] }
 )

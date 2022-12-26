@@ -1,7 +1,7 @@
 import { flapDeep, MayDeepArray, overwriteFunctionName } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps } from '../Div/type'
-import { mergeProps } from '../utils'
+import { mergeProps } from '../Div/utils/mergeProps'
 import { Plugin } from './type'
 
 export function createDangerousRenderWrapperNodePlugin<T>(

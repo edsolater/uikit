@@ -1,5 +1,5 @@
 import { RefObject, useImperativeHandle } from 'react'
-import { WeakerMap } from '@edsolater/fnkit'
+import { flapDeep, MayDeepArray, WeakerMap } from '@edsolater/fnkit'
 import { ControllerRef } from '../typings/tools'
 
 type ComponentHandler = Record<string, any>
@@ -16,11 +16,13 @@ export type GlobalComponentIdProps<Handler extends ComponentHandler> = {
 /** used in component register */
 export function useControllerRegister(
   componentId: string | undefined,
-  ref: ControllerRef<any>,
+  refs: MayDeepArray<ControllerRef<any>>,
   handler: Record<string, any>
 ) {
-  useImperativeHandle(ref, () => handler)
-  if (componentId) controllerStore.set(componentId, ref)
+  flapDeep(refs).map(ref=>{
+    useImperativeHandle(ref, () => handler)
+    if (componentId) controllerStore.set(componentId, ref)
+  })
 }
 
 /** used in component applier */

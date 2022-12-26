@@ -3,10 +3,10 @@ import { useState } from 'react'
 import { createPlugin} from '../../../plugins'
 import { SwitchCoreProps } from '../index'
 
-export type FeatureDefaultCheck = {
+export type LetDefaultCheck = {
   defaultCheck?: boolean
 }
-export const letDefaultCheck = createPlugin<SwitchCoreProps & FeatureDefaultCheck>((props) => {
+export const letDefaultCheck = createPlugin<SwitchCoreProps & LetDefaultCheck>((props) => {
   const [isChecked, setIsChecked] = useState(props?.defaultCheck)
   return {
     checked: isChecked,

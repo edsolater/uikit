@@ -29,12 +29,11 @@ export function addEventListener<El extends Element | undefined | null, K extend
   options?: EventListenerOptions
 ): EventListenerController {
   const defaultedOptions = { passive: true, ...options }
-
   const targetEventId = eventId++
   const controller = {
     eventId: targetEventId,
     cancel() {
-      removeEventListener(targetEventId)
+      removeEventListener(targetEventId, options)
     }
   }
   const newEventCallback = (ev: Event) => {
@@ -47,9 +46,11 @@ export function addEventListener<El extends Element | undefined | null, K extend
   return controller
 }
 
-function removeEventListener(id: number | undefined | null) {
+function removeEventListener(id: number | undefined | null, options?: EventListenerOptions) {
+  console.log('id: ', id)
   if (!id || !eventIdMap.has(id)) return
   const { el, eventName, cb } = eventIdMap.get(id)!
-  el?.removeEventListener(eventName, cb)
+  console.log('cb ', el)
+  el?.removeEventListener(eventName, cb, { capture: Boolean(options?.capture) })
   eventIdMap.delete(id)
 }
