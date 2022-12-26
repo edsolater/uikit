@@ -9,8 +9,8 @@ import {
   shakeNil
 } from '@edsolater/fnkit'
 import { isValidElement } from 'react'
-import mergeFunction from '../../utils/functions/mergeFunction'
-import mergeRefs from '../../utils/functions/react/mergeRefs'
+import { mergeFunction } from '../../utils/mergeFunction'
+import { mergeRefs } from '../../utils/react'
 
 /**prop may very deep like children */
 export type AnyProp = { [props: string]: any }

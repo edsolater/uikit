@@ -1,11 +1,11 @@
 import { flap, shrinkToValue } from '@edsolater/fnkit'
 import { addEventListener, useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '@edsolater/hookit'
 import { ReactNode, RefObject, useEffect, useMemo } from 'react'
-import { mergeProps } from '../../utils/functions/react'
 import { ICSSObject } from '../../styles'
 import { MayArray, MayFunction } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 import { DivProps } from '../../Div/type'
+import { mergeProps } from '../../Div/utils/mergeProps'
 
 export * from './effects'
 const TransitionPhaseProcessIn = 'during-process'

@@ -13,9 +13,10 @@ export const keyboardShortcut = createPlugin<{
   const divRef = useRef<HTMLElement>()
   useEffect(() => {
     if (!divRef.current) return
+    if (!keyboardShortcutSetting) return
     // TODO make handleKeyboardShortcut use getHTMLElementsFromRefs to get Elements
     const subscription = handleKeyboardShortcut(divRef.current, keyboardShortcutSetting)
     return subscription.abort
-  }, [divRef, ...Object.values(keyboardShortcutSetting)])
+  }, [divRef, ...(keyboardShortcutSetting ? Object.values(keyboardShortcutSetting) : [])])
   return { domRef: divRef }
 })

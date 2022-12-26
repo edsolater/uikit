@@ -1,6 +1,6 @@
 import { HTMLElements } from '../getHTMLElementsFromEls'
-import { getHTMLElementsFromRefs } from '../../react/getElementsFromRefs'
-import { createObserveValue } from '../../functions/utils'
+import { getElementsFromRefs } from '../../react/getElementsFromRefs'
+import { createObserveValue } from '../../fnkit/createObserveValue';
 
 export interface HandleClickOptions {
   disable?: boolean
@@ -80,7 +80,7 @@ export function handleClick(
   isActive.onChange((active) => handleLongClick(active))
 
   const attachListener = () => {
-    const els = getHTMLElementsFromRefs(targets)
+    const els = getElementsFromRefs(targets)
     els.forEach((el) => el.addEventListener('pointerdown', handlePointerDown))
     els.forEach((el) => el.addEventListener('pointerup', handlePointerUp))
     els.forEach((el) => el.addEventListener('pointercancel', handlePointerUp))
@@ -89,7 +89,7 @@ export function handleClick(
   attachListener()
 
   const cancelListener = () => {
-    const els = getHTMLElementsFromRefs(targets)
+    const els = getElementsFromRefs(targets)
     els.forEach((el) => el.removeEventListener('pointerdown', handlePointerDown))
     els.forEach((el) => el.removeEventListener('pointerup', handlePointerUp))
     els.forEach((el) => el.removeEventListener('pointercancel', handlePointerUp))

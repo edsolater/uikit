@@ -1,6 +1,6 @@
 import { HTMLElements } from '../getHTMLElementsFromEls'
-import { getHTMLElementsFromRefs } from '../../react/getElementsFromRefs'
-import { createObserveValue } from '../../functions/utils/createObserveValue'
+import { getElementsFromRefs } from '../../react/getElementsFromRefs'
+import { createObserveValue } from '../../fnkit/createObserveValue'
 
 export interface HandleHoverOptions {
   triggerDelay?: number
@@ -46,14 +46,14 @@ export function handleHover(
   }
 
   const attachListener = () => {
-    const els = getHTMLElementsFromRefs(targets)
+    const els = getElementsFromRefs(targets)
     els.forEach((el) => el.addEventListener('pointerenter', hoverStartHandler))
     els.forEach((el) => el.addEventListener('pointerleave', hoverEndHandler))
     els.forEach((el) => el.addEventListener('pointercancel', hoverEndHandler))
   }
 
   const cancelListener = () => {
-    const els = getHTMLElementsFromRefs(targets)
+    const els = getElementsFromRefs(targets)
     els.forEach((el) => el.removeEventListener('pointerenter', hoverStartHandler))
     els.forEach((el) => el.removeEventListener('pointerleave', hoverEndHandler))
     els.forEach((el) => el.removeEventListener('pointercancel', hoverEndHandler))

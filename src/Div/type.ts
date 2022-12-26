@@ -1,10 +1,10 @@
 import { MayEnum } from '@edsolater/fnkit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
-import { ClassName } from '../utils/functions/react/classname'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
 import { MayDeepArray } from '../typings/tools'
+import { ClassName } from '../utils/react'
 import { DivDataTag } from './handles/tag'
 
 export interface HTMLTagMap {

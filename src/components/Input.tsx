@@ -1,4 +1,4 @@
-import { isInt, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { isInt, MayArray, MayFn, mergeFunction, shrinkToValue } from '@edsolater/fnkit'
 import { useEvent, useToggle } from '@edsolater/hookit'
 import {
   HTMLInputTypeAttribute,
@@ -13,8 +13,7 @@ import {
 import { Div } from '../Div/Div'
 import { DivProps } from '../Div/type'
 import { onEvent } from '../utils'
-import mergeFunction from '../utils/functions/mergeFunction'
-import { splice } from '../utils/functions/splice.temp'
+import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
 
 export interface InputHandler {

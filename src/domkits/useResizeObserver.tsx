@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { ElementRefs, getElementsFromRefs } from '../utils/react/getElementsFromRefs'
 
-import { ElementRefs, getElementsFromRefs } from '../utils/functions/getElementsFromRefs'
 
 /** for build-in ResizeObserverEntry need narrows down target manually which is tedious */
 interface GenericResizeObserverEntry<El extends HTMLElement> extends ResizeObserverEntry {

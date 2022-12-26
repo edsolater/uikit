@@ -1,4 +1,4 @@
-import { inServer } from '../functions/isSSR'
+import { inServer } from '../isSSR'
 import { handleScroll } from './gesture/handleScroll'
 
 export function scrollIntoView(el: HTMLElement, options?: ScrollIntoViewOptions) {

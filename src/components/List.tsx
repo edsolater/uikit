@@ -2,7 +2,7 @@ import { hasProperty } from '@edsolater/fnkit'
 import { useRecordedEffect } from '@edsolater/hookit'
 import React from 'react'
 import { CSSProperties, Fragment, ReactNode, RefObject, useCallback, useEffect, useRef, useState } from 'react'
-import { mergeRefs } from '../utils/functions/react'
+import { mergeRefs } from '../utils/react'
 
 import { Col } from './Col'
 

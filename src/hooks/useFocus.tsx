@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { HTMLElementRefs, getHTMLElementsFromRefs } from '../utils/react/getElementsFromRefs'
+import { ElementRefs, getElementsFromRefs } from '../utils/react/getElementsFromRefs'
 
 import { useToggle } from './useToggle'
 
@@ -9,13 +9,13 @@ export interface UseFocusOptions {
   onBlur?: (info: { ev: FocusEvent }) => void
 }
 
-export function useFocus(refs: HTMLElementRefs, { disable, onFocus, onBlur }: UseFocusOptions = {}) {
+export function useFocus(refs: ElementRefs, { disable, onFocus, onBlur }: UseFocusOptions = {}) {
   const [isActive, { on: turnOnActive, off: turnOffActive }] = useToggle(false)
 
   const elsFocusStates = useRef(new Map<HTMLElement, boolean>())
   useEffect(() => {
     if (disable) return
-    const targetEls = getHTMLElementsFromRefs(refs)
+    const targetEls = getElementsFromRefs(refs)
     const handelFocus = (ev: FocusEvent) => {
       const haveAnyFocus = targetEls.map((el) => elsFocusStates.current.get(el)).some((isFocus) => isFocus)
       elsFocusStates.current.set(ev.target as HTMLElement, true)

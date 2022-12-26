@@ -1,14 +1,13 @@
-import { addDefault, isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
-import React from 'react'
+import { isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
-import { mergeProps } from '../utils/functions/react'
+import { Div } from '../Div/Div'
+import { DivProps } from '../Div/type'
+import { mergeProps } from '../Div/utils/mergeProps'
 import { useUikitTheme } from '../hooks/useUikitTheme'
 import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString, CSSStyle } from '../styles/type'
 import { MayFunction } from '../typings/tools'
-import { Div } from '../Div/Div'
-import { DivProps } from '../Div/type'
 
 type BooleanLike = unknown
 

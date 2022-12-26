@@ -1,9 +1,9 @@
 import { flapDeep, merge, shakeFalsy, shakeNil } from '@edsolater/fnkit';
 import { invokeOnce } from '../../utils/dom/invokeOnce';
-import classname from '../../utils/functions/react/classname';
-import mergeRefs, { loadRef } from '../../utils/functions/react/mergeRefs';
 import { parseCSS } from '../../styles/parseCSS';
 import { DivProps } from '../type';
+import classname from '../../utils/react/classname';
+import { loadRef, mergeRefs } from '../../utils/react';
 
 export function parseDivPropsToCoreProps(
   divProps: Omit<DivProps<any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {

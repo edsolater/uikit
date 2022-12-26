@@ -1,4 +1,4 @@
-import { mergeProps } from '../../utils/functions/react'
+import { mergeProps } from '../../Div/utils/mergeProps'
 import { composifyICSS } from '../../styles'
 import { TransitionProps } from './Transition'
 
