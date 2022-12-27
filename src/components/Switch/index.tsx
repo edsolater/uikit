@@ -1,7 +1,7 @@
 import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { Div, DivProps } from '../../Div'
-import { useControllerRegister, useRecordedEffect, useUpdate } from '../../hooks'
+import { useControllerRegister, useRecordedEffect } from '../../hooks'
 import { ICSS } from '../../styles'
 import { ControllerRef } from '../../typings/tools'
 import { createKit } from '../utils'
@@ -19,6 +19,7 @@ export type SwitchController = {
 
 export interface SwitchCoreProps {
   // -------- core --------
+  $disableUserInput?: boolean
   defaultChecked?: boolean
   onToggle?: (toStatus: boolean) => void
   // -------- selfComponent --------
@@ -39,8 +40,12 @@ export interface SwitchCoreProps {
 
 export const Switch = createKit(
   'Switch',
-  ({ defaultChecked, onToggle, render, anatomy, controller, componentId }: SwitchCoreProps) => {
-    const [checked, setChecked] = useState(Boolean(defaultChecked))
+  ({ $disableUserInput, defaultChecked, onToggle, render, anatomy, controller, componentId }: SwitchCoreProps) => {
+    const [checked, _setChecked] = useState(Boolean(defaultChecked))
+    function setChecked(dispatch: React.SetStateAction<boolean>) {
+      if (!$disableUserInput) _setChecked(dispatch)
+    }
+
     const innerController: SwitchController = {
       checked,
       turnOn() {
