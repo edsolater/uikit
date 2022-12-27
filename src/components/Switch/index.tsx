@@ -19,16 +19,14 @@ export type SwitchController = {
 
 export interface SwitchCoreProps {
   // -------- core --------
-  $disableUserInput?: boolean
+  _lockSelf?: boolean
   defaultChecked?: boolean
   onToggle?: (toStatus: boolean) => void
   // -------- selfComponent --------
   controller?: MayDeepArray<ControllerRef<SwitchController>>
   componentId?: string
   // -------- sub --------
-  render?: {
-    thumbIcon?: MayFn<ReactNode, [utils: SwitchController]>
-  }
+  renderThumbIcon?: MayFn<ReactNode, [utils: SwitchController]>
   anatomy?: {
     track?: MayFn<DivProps, [utils: SwitchController]>
     thumb?: MayFn<DivProps, [utils: SwitchController]>
@@ -40,10 +38,10 @@ export interface SwitchCoreProps {
 
 export const Switch = createKit(
   'Switch',
-  ({ $disableUserInput, defaultChecked, onToggle, render, anatomy, controller, componentId }: SwitchCoreProps) => {
+  ({ _lockSelf, defaultChecked, onToggle, renderThumbIcon, anatomy, controller, componentId }: SwitchCoreProps) => {
     const [checked, _setChecked] = useState(Boolean(defaultChecked))
     function setChecked(dispatch: React.SetStateAction<boolean>) {
-      if (!$disableUserInput) _setChecked(dispatch)
+      if (!_lockSelf) _setChecked(dispatch)
     }
 
     const innerController: SwitchController = {
@@ -78,7 +76,7 @@ export const Switch = createKit(
         onClick={innerController.toggle}
       >
         <Div className='Switch-thumb' shadowProps={shrinkToValue(anatomy?.thumb, [innerController])}>
-          {shrinkToValue(render?.thumbIcon, [innerController])}
+          {shrinkToValue(renderThumbIcon, [innerController])}
         </Div>
       </Div>
     )

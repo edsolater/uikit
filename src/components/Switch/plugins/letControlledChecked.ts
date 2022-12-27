@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { createPlugin } from '../../../plugins'
 import { SwitchController, SwitchCoreProps } from '../index'
 
@@ -12,7 +12,7 @@ export const letControlledChecked = createPlugin<SwitchCoreProps & LetControlled
   }, [checked])
   return {
     defaultChecked: checked,
-    $disableUserInput: checked != null,
+    _lockSelf: checked != null,
     controller: switchController
   }
 })
