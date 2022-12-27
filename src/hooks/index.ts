@@ -39,6 +39,7 @@ export * from './useConsoleLog'
 export * from './useGlobalState'
 export * from './useInvokeOnce' // invoke fn once
 export * from './useDOM' // HTMLElement is just a variable , not ref. but it use useState, so will cause re-render
+export * from './useUpdate' // avoide twice useEffect
 
 // for ui
 export * from './useComponentHandler'

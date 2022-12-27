@@ -1,11 +1,11 @@
 import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { ReactNode } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { Div, DivProps } from '../../Div'
-import { useControllerRegister } from '../../hooks'
+import { useControllerRegister, useRecordedEffect, useUpdate } from '../../hooks'
 import { ICSS } from '../../styles'
 import { ControllerRef } from '../../typings/tools'
 import { createKit } from '../utils'
-import { letDefaultCheck } from './plugins/letDefaultCheck'
+import { letControlledChecked } from './plugins/letControlledChecked'
 import { letHandleSwitchKeyboardShortcut } from './plugins/letHandleSwitchKeyboardShortcut'
 import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
 
@@ -19,7 +19,7 @@ export type SwitchController = {
 
 export interface SwitchCoreProps {
   // -------- core --------
-  checked?: boolean
+  defaultChecked?: boolean
   onToggle?: (toStatus: boolean) => void
   // -------- selfComponent --------
   controller?: MayDeepArray<ControllerRef<SwitchController>>
@@ -39,22 +39,30 @@ export interface SwitchCoreProps {
 
 export const Switch = createKit(
   'Switch',
-  ({ checked, onToggle, render, anatomy, controller, componentId }: SwitchCoreProps) => {
+  ({ defaultChecked, onToggle, render, anatomy, controller, componentId }: SwitchCoreProps) => {
+    const [checked, setChecked] = useState(Boolean(defaultChecked))
     const innerController: SwitchController = {
-      checked: Boolean(checked),
+      checked,
       turnOn() {
-        innerController.setChecked(true)
+        setChecked(true)
       },
       turnOff() {
-        innerController.setChecked(false)
+        setChecked(false)
       },
       toggle() {
-        checked ? innerController.turnOff() : innerController.turnOn()
+        setChecked((t) => !t)
       },
       setChecked(to) {
-        if (to !== Boolean(checked)) onToggle?.(to)
+        setChecked(to)
       }
     }
+
+    useRecordedEffect(
+      ([prevChecked]) => {
+        if (prevChecked != null && prevChecked != checked) onToggle?.(checked)
+      },
+      [checked]
+    )
 
     if (controller) useControllerRegister(componentId, controller, innerController)
 
@@ -62,9 +70,7 @@ export const Switch = createKit(
       <Div
         className='Switch-track'
         shadowProps={shrinkToValue(anatomy?.track, [innerController])}
-        onClick={() => {
-          onToggle?.(!innerController.checked)
-        }}
+        onClick={innerController.toggle}
       >
         <Div className='Switch-thumb' shadowProps={shrinkToValue(anatomy?.thumb, [innerController])}>
           {shrinkToValue(render?.thumbIcon, [innerController])}
@@ -72,5 +78,5 @@ export const Switch = createKit(
       </Div>
     )
   },
-  { plugin: [letSwitchStyle, letDefaultCheck, letHandleSwitchKeyboardShortcut] }
+  { plugin: [letSwitchStyle, letControlledChecked, letHandleSwitchKeyboardShortcut] }
 )

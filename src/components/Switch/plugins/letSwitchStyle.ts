@@ -20,8 +20,8 @@ export type LetSwitchStyleOptions = {
 }
 
 export const letSwitchStyle = createPlugin<LetSwitchStyleOptions & SwitchCoreProps>(
-  (props) =>
-    mergeProps(props, {
+  (props) => {
+    return mergeProps(props, {
       icss: addDefault(props?.variables ?? {}, {
         '--thumb-outer-width': '24px',
         '--track-width': '48px',
@@ -33,29 +33,32 @@ export const letSwitchStyle = createPlugin<LetSwitchStyleOptions & SwitchCorePro
         '--track-border-width': '2px'
       }),
       anatomy: {
-        track: {
+        track: ({ checked }) => ({
           icss: {
             width: 'var(--track-width)',
-            backgroundColor: props.checked ? 'var(--checked-track-bg)' : 'var(--unchecked-track-bg)',
+            backgroundColor: checked ? 'var(--checked-track-bg)' : 'var(--unchecked-track-bg)',
             border: `var(--track-border-width) solid var(--track-border-color)`,
             borderRadius: '100vw',
-            transition: '300ms'
+            transition: '300ms',
+            cursor: 'pointer'
           }
-        },
-        thumb: {
+        }),
+        thumb: ({ checked }) => ({
           icss: [
             {
-              translate: props.checked ? `calc(100% - 2 * var(--track-border-width))` : undefined,
-              scale: props.checked ? '.8' : '.6',
+              translate: checked ? `calc(100% - 2 * var(--track-border-width))` : undefined,
+              scale: checked ? '.8' : '.6',
               width: 'var(--thumb-outer-width)',
               height: 'var(--thumb-outer-width)',
-              backgroundColor: props.checked ? 'var(--checked-thumb-color)' : 'var(--unchecked-thumb-color)',
-              borderRadius: '100vw'
+              backgroundColor: checked ? 'var(--checked-thumb-color)' : 'var(--unchecked-thumb-color)',
+              borderRadius: '100vw',
+              cursor: 'pointer'
             },
             { transition: '300ms' }
           ]
-        }
+        })
       }
-    } as SwitchCoreProps & DivProps),
+    } as SwitchCoreProps & DivProps)
+  },
   { priority: -1 }
 )
