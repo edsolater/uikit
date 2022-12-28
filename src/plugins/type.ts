@@ -3,7 +3,7 @@ import { ReactElement } from 'react'
 import { DivProps, HTMLTagMap } from '../Div/type'
 
 export type WithPlugins<TagName extends keyof HTMLTagMap = any> = {
-  plugin?: MayDeepArray<Plugin<DivProps>>
+  plugin?: MayDeepArray<Plugin<any>>
 }
 
 export type WrapperNodeFn = (node: ReactElement) => ReactElement // change outter wrapper element

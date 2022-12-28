@@ -20,45 +20,43 @@ export type LetSwitchStyleOptions = {
 }
 
 export const letSwitchStyle = createPlugin<LetSwitchStyleOptions & SwitchCoreProps>(
-  (props) => {
-    return mergeProps(props, {
-      icss: addDefault(props?.variables ?? {}, {
-        '--thumb-outer-width': '24px',
-        '--track-width': '48px',
-        '--checked-thumb-color': 'white',
-        '--track-border-color': '#74796e',
-        '--unchecked-thumb-color': '#74796e',
-        '--checked-track-bg': 'dodgerblue',
-        '--unchecked-track-bg': 'transparent',
-        '--track-border-width': '2px'
+  (props) => ({
+    icss: addDefault(props?.variables ?? {}, {
+      '--thumb-outer-width': '24px',
+      '--track-width': '48px',
+      '--checked-thumb-color': 'white',
+      '--track-border-color': '#74796e',
+      '--unchecked-thumb-color': '#74796e',
+      '--checked-track-bg': 'dodgerblue',
+      '--unchecked-track-bg': 'transparent',
+      '--track-border-width': '2px'
+    }),
+    anatomy: {
+      track: ({ checked }) => ({
+        icss: {
+          width: 'var(--track-width)',
+          backgroundColor: checked ? 'var(--checked-track-bg)' : 'var(--unchecked-track-bg)',
+          border: `var(--track-border-width) solid var(--track-border-color)`,
+          borderRadius: '100vw',
+          transition: '300ms',
+          cursor: 'pointer'
+        }
       }),
-      anatomy: {
-        track: ({ checked }) => ({
-          icss: {
-            width: 'var(--track-width)',
-            backgroundColor: checked ? 'var(--checked-track-bg)' : 'var(--unchecked-track-bg)',
-            border: `var(--track-border-width) solid var(--track-border-color)`,
+      thumb: ({ checked }) => ({
+        icss: [
+          {
+            translate: checked ? `calc(100% - 2 * var(--track-border-width))` : undefined,
+            scale: checked ? '.8' : '.6',
+            width: 'var(--thumb-outer-width)',
+            height: 'var(--thumb-outer-width)',
+            backgroundColor: checked ? 'var(--checked-thumb-color)' : 'var(--unchecked-thumb-color)',
             borderRadius: '100vw',
-            transition: '300ms',
             cursor: 'pointer'
-          }
-        }),
-        thumb: ({ checked }) => ({
-          icss: [
-            {
-              translate: checked ? `calc(100% - 2 * var(--track-border-width))` : undefined,
-              scale: checked ? '.8' : '.6',
-              width: 'var(--thumb-outer-width)',
-              height: 'var(--thumb-outer-width)',
-              backgroundColor: checked ? 'var(--checked-thumb-color)' : 'var(--unchecked-thumb-color)',
-              borderRadius: '100vw',
-              cursor: 'pointer'
-            },
-            { transition: '300ms' }
-          ]
-        })
-      }
-    } as SwitchCoreProps & DivProps)
-  },
+          },
+          { transition: '300ms' }
+        ]
+      })
+    }
+  }),
   { priority: -1 }
 )

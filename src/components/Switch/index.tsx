@@ -7,7 +7,7 @@ import { ControllerRef } from '../../typings/tools'
 import { createKit } from '../utils'
 import { letControlledChecked } from './plugins/letControlledChecked'
 import { letHandleSwitchKeyboardShortcut } from './plugins/letHandleSwitchKeyboardShortcut'
-import { letSwitchStyle, SwitchVariables } from './plugins/letSwitchStyle'
+import { letSwitchStyle, LetSwitchStyleOptions, SwitchVariables } from './plugins/letSwitchStyle'
 
 export type SwitchController = {
   checked: boolean
@@ -31,14 +31,13 @@ export interface SwitchCoreProps {
     track?: MayFn<DivProps, [utils: SwitchController]>
     thumb?: MayFn<DivProps, [utils: SwitchController]>
   }
-
-  // -------- enrich DivProps's icss --------
-  icss?: ICSS<SwitchVariables>
 }
+
+export type SwitchProps = SwitchCoreProps & LetSwitchStyleOptions // can & plugin
 
 export const Switch = createKit(
   'Switch',
-  ({ _lockSelf, defaultChecked, onToggle, renderThumbIcon, anatomy, controller, componentId }: SwitchCoreProps) => {
+  ({ _lockSelf, defaultChecked, onToggle, renderThumbIcon, anatomy, controller, componentId }: SwitchProps) => {
     const [checked, _setChecked] = useState(Boolean(defaultChecked))
     function setChecked(dispatch: React.SetStateAction<boolean>) {
       if (!_lockSelf) _setChecked(dispatch)

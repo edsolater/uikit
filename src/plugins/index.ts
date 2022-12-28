@@ -9,4 +9,4 @@ export * from './createPlugin'
 
 
 // UI plugin
-export * from './ui/withFloatBg'
+export * from './ui/letAddFloatBg'
