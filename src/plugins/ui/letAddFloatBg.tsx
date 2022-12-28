@@ -24,22 +24,23 @@ export const letAddFloatBg = createPlugin<LetAddFloatBgOptions>(
     ...props
   }) => {
     const [dom, setDOM] = useDOM()
-    const [activeTab, setActiveTab] = useDOM()
+    const [activeTabDOM, setActiveTabDOM] = useDOM()
     const siblings = useMemo(() => getSiblings(dom), [dom])
 
     useLayoutEffect(() => {
       const subscriptions = siblings.map((el) =>
         onEvent(el, 'click', ({ el }) => {
-          if (!_lockSelf) setActiveTab(el)
+          if (!_lockSelf) setActiveTabDOM(el)
         })
       )
       return () => subscriptions.forEach((subscription) => subscription.abort())
     }, [siblings])
 
     useLayoutEffect(() => {
-      if (defaultActiveItemIndex != null) siblings.at(defaultActiveItemIndex)?.click()
-      if (activeItemIndex != null && siblings[activeItemIndex]) setActiveTab(siblings[activeItemIndex])
-    }, [siblings, activeItemIndex])
+      console.log('activeItemIndex: ', activeItemIndex)
+      if (defaultActiveItemIndex != null) setActiveTabDOM(siblings.at(defaultActiveItemIndex))
+      if (activeItemIndex != null && siblings[activeItemIndex]) setActiveTabDOM(siblings[activeItemIndex])
+    }, [siblings, activeItemIndex, defaultActiveItemIndex])
 
     return {
       children: (
@@ -48,10 +49,10 @@ export const letAddFloatBg = createPlugin<LetAddFloatBgOptions>(
             shadowProps={floatBgProps}
             domRef={setDOM}
             icss={{
-              width: activeTab?.offsetWidth,
-              height: activeTab?.offsetHeight,
-              top: activeTab?.offsetTop,
-              left: activeTab?.offsetLeft,
+              width: activeTabDOM?.offsetWidth,
+              height: activeTabDOM?.offsetHeight,
+              top: activeTabDOM?.offsetTop,
+              left: activeTabDOM?.offsetLeft,
               position: 'absolute',
               zIndex: '-1',
               background: '#d1d3d6'
