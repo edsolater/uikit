@@ -1,8 +1,8 @@
 import { addDefault } from '@edsolater/fnkit'
-import { TabsCoreProps } from '..'
+import { MenuCoreProps } from '..'
 import { createPlugin } from '../../../plugins'
 
-export type TabsVariables = {
+export type MenuVariables = {
   '--container-bg'?: string
   '--float-bg'?: string
   '--float-bg-2'?: string
@@ -10,11 +10,11 @@ export type TabsVariables = {
   '--inner-radius'?: string
 }
 
-export type LetTabsStyleOptions = {
-  variables?: TabsVariables
+export type LetMenuStyleOptions = {
+  variables?: MenuVariables
 }
 
-export const letTabsStyle = createPlugin<LetTabsStyleOptions & TabsCoreProps<any>>(
+export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuCoreProps<any>>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
       '--container-bg': '#eaf0ef80',
@@ -36,7 +36,7 @@ export const letTabsStyle = createPlugin<LetTabsStyleOptions & TabsCoreProps<any
           borderRadius: 'var(--inner-radius)'
         }
       },
-      letAddFloatBgOptions: ({ activeTabIndex }) => ({
+      letAddFloatBgOptions: ({ activeMenuIndex }) => ({
         floatBgProps: {
           icss: {
             background: 'var(--float-bg)',

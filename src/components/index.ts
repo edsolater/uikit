@@ -29,6 +29,7 @@ export * from './Tooltip'
 export * from './List'
 export * from './SplitView'
 export * from './Tabs'
+export * from './Menu'
 
 export * from './DecimalInput'
 export * from './Input'

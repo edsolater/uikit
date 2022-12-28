@@ -24,7 +24,7 @@ export type TabsController<T> = {
 export type TabsCoreProps<T> = {
   tabs: T[]
   defaultTab?: T
-  onChangeTab?: (tab: T) => void
+  onChange?: (tab: T) => void
   getKey: (tab: T) => string | number
 
   // -------- selfComponent --------
@@ -47,7 +47,7 @@ export const Tabs = createKit(
   <T extends any>({
     tabs,
     defaultTab,
-    onChangeTab,
+    onChange,
     getKey,
     controller,
     componentId,
@@ -85,7 +85,7 @@ export const Tabs = createKit(
 
     useRecordedEffect(
       ([prevActiveTab]) => {
-        if (activeTab && activeTab != prevActiveTab) onChangeTab?.(activeTab)
+        if (activeTab && activeTab != prevActiveTab) onChange?.(activeTab)
       },
       [activeTab]
     )
