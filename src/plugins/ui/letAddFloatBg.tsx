@@ -37,7 +37,6 @@ export const letAddFloatBg = createPlugin<LetAddFloatBgOptions>(
     }, [siblings])
 
     useLayoutEffect(() => {
-      console.log('activeItemIndex: ', activeItemIndex)
       if (defaultActiveItemIndex != null) setActiveTabDOM(siblings.at(defaultActiveItemIndex))
       if (activeItemIndex != null && siblings[activeItemIndex]) setActiveTabDOM(siblings[activeItemIndex])
     }, [siblings, activeItemIndex, defaultActiveItemIndex])

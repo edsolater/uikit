@@ -4,9 +4,12 @@ import { Div, DivProps } from '../../Div'
 import { useControllerRegister, useEvent, useRecordedEffect } from '../../hooks'
 import { letAddFloatBg, LetAddFloatBgOptions } from '../../plugins'
 import { ControllerRef } from '../../typings/tools'
+import { AddProps } from '../AddProps'
+import { Button } from '../Button'
 import { Col } from '../Col'
 import { For } from '../For'
-import { Row, RowProps } from '../Row'
+import { Popover } from '../Popover/Popover'
+import { RowProps } from '../Row'
 import { createKit } from '../utils'
 import { letHandleMenuKeyboardShortcut } from './plugins/letHandleMenuKeyboardShortcut'
 import { letMenuStyle } from './plugins/letMenuStyle'
@@ -36,12 +39,12 @@ export type MenuCoreProps<T> = {
   renderLabel?: MayFn<ReactNode, [utils: { menu: T } & MenuController<T>]>
   anatomy?: {
     container?: MayFn<RowProps, [utils: MenuController<T>]>
-    labelBox?: MayFn<DivProps, [utils: MenuController<T>]>
+    menuItemBox?: MayFn<DivProps, [utils: MenuController<T>]>
     letAddFloatBgOptions?: MayFn<LetAddFloatBgOptions, [utils: MenuController<T>]>
   }
 }
 
-export type MenuProps<T> = MenuCoreProps<T> // can & plugin
+export type MenuProps<T> = MenuCoreProps<T> & DivProps // can & plugin
 
 export const Menu = createKit(
   'Menu',
@@ -53,7 +56,8 @@ export const Menu = createKit(
     controller,
     componentId,
     renderLabel,
-    anatomy
+    anatomy,
+    ...divProps
   }: MenuProps<T>) => {
     const [activeMenu, setActiveMenu] = useState(defaultMenuItem)
     const getCurrent = useEvent(() => activeMenu && menuItems.indexOf(activeMenu))
@@ -93,29 +97,40 @@ export const Menu = createKit(
 
     if (controller) useControllerRegister(componentId, controller, innerController)
     return (
-      <Col
-        plugin={letAddFloatBg({
-          ...shrinkToValue(anatomy?.letAddFloatBgOptions, [innerController]),
-          activeItemIndex: getCurrent()
-        })}
-        shadowProps={shrinkToValue(anatomy?.container, [innerController])}
-      >
-        <For each={menuItems} getKey={getKey}>
-          {(menu) => (
-            <Div
-              shadowProps={shrinkToValue(anatomy?.labelBox, [innerController])}
-              onClick={() => {
-                setActiveMenu(menu)
-              }}
+      <Popover
+        placement='bottom'
+        renderButton={
+          <AddProps {...divProps}>
+            <Button icss={{ width: '120px' }}>Open</Button>
+          </AddProps>
+        }
+        renderPanel={
+          <AddProps {...divProps}>
+            <Col
+              plugin={letAddFloatBg({
+                ...shrinkToValue(anatomy?.letAddFloatBgOptions, [innerController]),
+                activeItemIndex: getCurrent()
+              })}
+              icss={{ width: '120px', background: '#999', padding: '48px', boxShadow: '#9a9a9a33 2px 4px 8px' }}
+              shadowProps={shrinkToValue(anatomy?.container, [innerController])}
             >
-              {shrinkToValue(renderLabel, [{ menu, ...innerController }]) ?? String(menu)}
-            </Div>
-          )}
-        </For>
-      </Col>
+              <For each={menuItems} getKey={getKey}>
+                {(menu) => (
+                  <Div
+                    shadowProps={shrinkToValue(anatomy?.menuItemBox, [innerController])}
+                    onClick={() => {
+                      setActiveMenu(menu)
+                    }}
+                  >
+                    {shrinkToValue(renderLabel, [{ menu, ...innerController }]) ?? String(menu)}
+                  </Div>
+                )}
+              </For>
+            </Col>
+          </AddProps>
+        }
+      />
     )
   },
-  {
-    plugin: [letMenuStyle, letHandleMenuKeyboardShortcut]
-  }
+  { plugin: [letMenuStyle, letHandleMenuKeyboardShortcut] }
 )

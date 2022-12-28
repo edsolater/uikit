@@ -133,9 +133,9 @@ export function Popover({
   }, [isTriggled, isPanelMounted])
 
   return (
-    <>
+    <Div>
       <AddProps domRef={buttonRef}>
-        <PopoverButton>{shrinkToValue(renderButton)}</PopoverButton>
+        <AddProps>{shrinkToValue(renderButton)}</AddProps>
       </AddProps>
       <Portal
         id={POPOVER_STACK_ID}
@@ -175,7 +175,7 @@ export function Popover({
           </Transition>
         </Div>
       </Portal>
-    </>
+    </Div>
   )
 }
 

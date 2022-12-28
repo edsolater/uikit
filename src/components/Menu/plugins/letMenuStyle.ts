@@ -17,7 +17,7 @@ export type LetMenuStyleOptions = {
 export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuCoreProps<any>>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
-      '--container-bg': '#eaf0ef80',
+      '--container-bg': '#eee',
       '--float-bg': '#afbaba',
       '--outer-radius': '8px',
       '--inner-radius': '4px'
@@ -30,7 +30,7 @@ export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuCoreProps<any
           background: 'var(--container-bg)'
         }
       },
-      labelBox: {
+      menuItemBox: {
         icss: {
           padding: '4px 8px',
           borderRadius: 'var(--inner-radius)'
