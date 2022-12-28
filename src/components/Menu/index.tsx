@@ -38,7 +38,8 @@ export type MenuCoreProps<T> = {
   // -------- sub --------
   renderLabel?: MayFn<ReactNode, [utils: { menu: T } & MenuController<T>]>
   anatomy?: {
-    container?: MayFn<RowProps, [utils: MenuController<T>]>
+    panel?: MayFn<RowProps, [utils: MenuController<T>]>
+    menuTrigger?: MayFn<DivProps, [utils: MenuController<T>]>
     menuItemBox?: MayFn<DivProps, [utils: MenuController<T>]>
     letAddFloatBgOptions?: MayFn<LetAddFloatBgOptions, [utils: MenuController<T>]>
   }
@@ -101,7 +102,7 @@ export const Menu = createKit(
         placement='bottom'
         renderButton={
           <AddProps {...divProps}>
-            <Button icss={{ width: '120px' }}>Open</Button>
+            <Div shadowProps={shrinkToValue(anatomy?.menuTrigger, [innerController])}>Open</Div>
           </AddProps>
         }
         renderPanel={
@@ -112,7 +113,7 @@ export const Menu = createKit(
                 activeItemIndex: getCurrent()
               })}
               icss={{ width: '120px', background: '#999', padding: '48px', boxShadow: '#9a9a9a33 2px 4px 8px' }}
-              shadowProps={shrinkToValue(anatomy?.container, [innerController])}
+              shadowProps={shrinkToValue(anatomy?.panel, [innerController])}
             >
               <For each={menuItems} getKey={getKey}>
                 {(menu) => (

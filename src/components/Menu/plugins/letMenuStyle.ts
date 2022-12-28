@@ -3,7 +3,7 @@ import { MenuCoreProps } from '..'
 import { createPlugin } from '../../../plugins'
 
 export type MenuVariables = {
-  '--container-bg'?: string
+  '--menu-bg'?: string
   '--float-bg'?: string
   '--float-bg-2'?: string
   '--outer-radius'?: string
@@ -17,17 +17,24 @@ export type LetMenuStyleOptions = {
 export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuCoreProps<any>>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
-      '--container-bg': '#eee',
+      '--menu-bg': '#eee',
       '--float-bg': '#afbaba',
       '--outer-radius': '8px',
       '--inner-radius': '4px'
     }),
     anatomy: {
-      container: {
+      menuTrigger: {
+        icss: {
+          padding: '8px 32px',
+          borderRadius: 'var(--outer-radius)',
+          background: 'var(--menu-bg)'
+        }
+      },
+      panel: {
         icss: {
           padding: '4px 8px',
           borderRadius: 'var(--outer-radius)',
-          background: 'var(--container-bg)'
+          background: 'var(--menu-bg)'
         }
       },
       menuItemBox: {
