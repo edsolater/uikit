@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { MenuCoreProps } from '..'
+import { MenuController, MenuProps } from '..'
 import { handleKeyboardShortcut } from '../../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../../../plugins'
-import { MenuController } from '../hooks/useMenuControllerRegister'
 
 export type LetHandleMenuKeyboardShortcut = {}
 
-export const letHandleMenuKeyboardShortcut = createPlugin<MenuCoreProps<unknown>>(() => {
+export const letHandleMenuKeyboardShortcut = createPlugin<MenuProps<unknown>>(() => {
   const divRef = useRef<HTMLElement>()
   const menuController = useRef<MenuController<unknown>>()
   useEffect(() => {

@@ -1,49 +1,49 @@
 import { addDefault } from '@edsolater/fnkit'
-import { MenuProps } from '..'
+import { DrawerProps } from '..'
 import { createPlugin } from '../../../plugins'
 
-export type MenuVariables = {
-  '--menu-bg'?: string
+export type DrawerVariables = {
+  '--drawer-bg'?: string
   '--float-bg'?: string
   '--float-bg-2'?: string
   '--outer-radius'?: string
   '--inner-radius'?: string
 }
 
-export type LetMenuStyleOptions = {
-  variables?: MenuVariables
+export type LetDrawerStyleOptions = {
+  variables?: DrawerVariables
 }
 
-export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuProps<any>>(
+export const letDrawerStyle = createPlugin<LetDrawerStyleOptions & DrawerProps<any>>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
-      '--menu-bg': '#eee',
+      '--drawer-bg': '#eee',
       '--float-bg': '#afbaba',
       '--outer-radius': '8px',
       '--inner-radius': '4px'
     }),
     anatomy: {
-      menuTrigger: {
+      drawerTrigger: {
         icss: {
           padding: '8px 32px',
           borderRadius: 'var(--outer-radius)',
-          background: 'var(--menu-bg)'
+          background: 'var(--drawer-bg)'
         }
       },
       panel: {
         icss: {
           padding: '4px 8px',
           borderRadius: 'var(--outer-radius)',
-          background: 'var(--menu-bg)'
+          background: 'var(--drawer-bg)'
         }
       },
-      menuItemBox: {
+      drawerItemBox: {
         icss: {
           padding: '4px 8px',
           borderRadius: 'var(--inner-radius)'
         }
       },
-      letAddFloatBgOptions: ({ activeMenuIndex }) => ({
+      letAddFloatBgOptions: ({ activeDrawerIndex }) => ({
         floatBgProps: {
           icss: {
             background: 'var(--float-bg)',

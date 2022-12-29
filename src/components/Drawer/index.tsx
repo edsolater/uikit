@@ -1,34 +1,21 @@
-import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { use2StateSyncer } from '@edsolater/hookit'
+import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode, useEffect, useState } from 'react'
-import { Div } from '../Div/Div'
-import { DivProps } from '../Div/type'
-import { Portal } from './Portal'
-import { Transition } from './Transition/Transition'
+import { Div, DivProps } from '../../Div'
+import { mergeProps } from '../../Div/utils/mergeProps'
+import { useControllerRegister } from '../../hooks'
+import { use2StateSyncer } from '../../hooks/use2StateSyncer'
+import { ControllerRef } from '../../typings/tools'
+import { Portal } from '../Portal'
+import { Transition } from '../Transition/Transition'
 
-export const DRAWER_STACK_ID = 'drawer-stack'
-
-const placementClasses = {
-  'from-left': {
-    absolutePostion: { left: 0, top: 0, bottom: 0 },
-    translateFadeOut: { transform: 'translateX(-100%)' }
-  },
-  'from-bottom': {
-    absolutePostion: { left: 0, right: 0, bottom: 0 },
-    translateFadeOut: { transform: 'translateY(100%)' }
-  },
-  'from-right': {
-    absolutePostion: { right: 0, top: 0, bottom: 0 },
-    translateFadeOut: { transform: 'translateX(100%)' }
-  },
-  'from-top': {
-    absolutePostion: { left: 0, right: 0, top: 0 },
-    translateFadeOut: { transform: 'translateY(-100%)' }
-  }
+export type DrawerController = {
+  isOpen: boolean
+  open(): void
+  close(): void
 }
 
 export interface DrawerProps extends Omit<DivProps, 'children'> {
-  children?: MayFn<ReactNode, [{ close(): void; open(): void }]>
+  children?: MayFn<ReactNode, [utils: DrawerController]>
   open: boolean
   placement?: 'from-left' | 'from-bottom' | 'from-top' | 'from-right'
   transitionSpeed?: 'fast' | 'normal'
@@ -39,11 +26,18 @@ export interface DrawerProps extends Omit<DivProps, 'children'> {
   /** fired before close transform effect is end */
   onCloseImmediately?: () => void
   onClose?(): void
+
+  // -------- selfComponent --------
+  controller?: MayDeepArray<ControllerRef<DrawerController>>
+  componentId?: string
+
+  // -------- sub --------
+  anatomy?: {
+    panel?: MayFn<DivProps, [utils: DrawerController]>
+  }
 }
 
 export function Drawer({
-  className,
-  style,
   children,
   open,
   placement = 'from-left',
@@ -53,6 +47,9 @@ export function Drawer({
   onOpen,
   onCloseImmediately,
   onClose,
+  controller,
+  componentId,
+  anatomy,
   ...divProps
 }: DrawerProps) {
   const transitionDuration = transitionSpeed === 'fast' ? 200 : 300
@@ -65,14 +62,23 @@ export function Drawer({
     if (open) onOpen?.()
   }, [open])
 
-  const openDrawer = () => setInnerOpen(true)
-  const closeDrawer = () => setInnerOpen(false)
+  const innerController: DrawerController = {
+    isOpen: innerOpen,
+    open() {
+      setInnerOpen(true)
+    },
+    close() {
+      setInnerOpen(false)
+    }
+  }
+
+  if (controller) useControllerRegister(componentId, controller, innerController)
 
   use2StateSyncer({
     state1: open,
     state2: innerOpen,
     onState1Changed: (open) => {
-      open ? openDrawer() : closeDrawer()
+      open ? innerController.open() : innerController.close()
     }
   })
 
@@ -106,7 +112,7 @@ export function Drawer({
             backdropFilter: maskNoBlur ? undefined : 'blur(10px)',
             pointerEvents: canClosedByMask ? undefined : 'none'
           }}
-          onClick={closeDrawer}
+          onClick={innerController.close}
         />
       </Transition>
 
@@ -118,20 +124,38 @@ export function Drawer({
         cssTransitionDurationMs={transitionDuration}
       >
         <Div
-          {...divProps}
-          icss={[
-            {
-              position: 'fixed',
-              inset: 0,
-              pointerEvents: 'none',
-              '*': { pointerEvents: 'initial' }
-            },
-            divProps.icss
-          ]}
+          shadowProps={mergeProps(divProps, shrinkToValue(anatomy?.panel, [innerController]))}
+          icss={{
+            position: 'fixed',
+            inset: 0,
+            pointerEvents: 'none',
+            '*': { pointerEvents: 'initial' }
+          }}
         >
-          {shrinkToValue(children, [{ close: closeDrawer, open: openDrawer }])}
+          {shrinkToValue(children, [innerController])}
         </Div>
       </Transition>
     </Portal>
   )
+}
+
+export const DRAWER_STACK_ID = 'drawer-stack'
+
+const placementClasses = {
+  'from-left': {
+    absolutePostion: { left: 0, top: 0, bottom: 0 },
+    translateFadeOut: { transform: 'translateX(-100%)' }
+  },
+  'from-bottom': {
+    absolutePostion: { left: 0, right: 0, bottom: 0 },
+    translateFadeOut: { transform: 'translateY(100%)' }
+  },
+  'from-right': {
+    absolutePostion: { right: 0, top: 0, bottom: 0 },
+    translateFadeOut: { transform: 'translateX(100%)' }
+  },
+  'from-top': {
+    absolutePostion: { left: 0, right: 0, top: 0 },
+    translateFadeOut: { transform: 'translateY(-100%)' }
+  }
 }
