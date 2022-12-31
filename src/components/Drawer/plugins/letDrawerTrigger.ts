@@ -3,9 +3,9 @@ import { DrawerController, DrawerProps } from '../Drawer'
 import { handleKeyboardShortcut } from '../../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../../../plugins'
 
-export type LetHandleDrawerKeyboardShortcut = {}
+export type LetDrawerTrigger = {}
 
-export const letHandleDrawerKeyboardShortcut = createPlugin<DrawerProps>(() => {
+export const letDrawerTrigger = createPlugin<DrawerProps>(() => {
   const divRef = useRef<HTMLElement>()
   const drawerController = useRef<DrawerController>()
   useEffect(() => {

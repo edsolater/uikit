@@ -1,5 +1,5 @@
 import { addDefault } from '@edsolater/fnkit'
-import { DrawerProps } from '..'
+import { DrawerProps } from '../Drawer'
 import { createPlugin } from '../../../plugins'
 
 export type DrawerVariables = {
