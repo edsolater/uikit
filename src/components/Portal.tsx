@@ -53,5 +53,5 @@ function insertPointerNone() {
   document.head.appendChild(styleEl)
 
   styleEl.sheet?.insertRule(`:where(.self-pointer-events-none) {pointer-events:none}`)
-  styleEl.sheet?.insertRule(`:where(.self-pointer-events-none) * {pointer-events:unset}`) // :where() always has 0 specificity -- MDN
+  styleEl.sheet?.insertRule(`:where(.self-pointer-events-none) * {pointer-events:initial}`) // :where() always has 0 specificity -- MDN
 }
