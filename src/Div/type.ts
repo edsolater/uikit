@@ -37,16 +37,13 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Re
    */
   tag?: MayDeepArray<DivDataTag | undefined> // !!!TODO: it's better to be a plugin
   className?: MayDeepArray<ClassName | undefined>
-  onClick?: MayDeepArray<
-    | ((
-        payload: {
-          event: React.MouseEvent<HTMLElement, MouseEvent>
-          ev: React.MouseEvent<HTMLElement, MouseEvent>
-          el: HTMLElement
-        } & Status
-      ) => void)
-    | undefined
-  >
+  onClick?: (
+    utils: {
+      event: React.MouseEvent<HTMLElement, MouseEvent>
+      ev: React.MouseEvent<HTMLElement, MouseEvent>
+      el: HTMLElement
+    } & Status
+  ) => void
   icss?: ICSS<Status>
   style?: MayDeepArray<MayFn<CSSStyle, [status: Status]> | undefined>
   htmlProps?: MayDeepArray<

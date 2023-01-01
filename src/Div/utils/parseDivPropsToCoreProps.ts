@@ -1,9 +1,9 @@
 import { flapDeep, isObject, merge, shakeFalsy, shakeNil, shrinkToValue } from '@edsolater/fnkit'
-import { invokeOnce } from '../../utils/dom/invokeOnce'
 import { parseCSS } from '../../styles/parseCSS'
-import { DivProps } from '../type'
+import { invokeOnce } from '../../utils/dom/invokeOnce'
+import { loadRef, mergeRefs } from '../../utils/react'
 import classname from '../../utils/react/classname'
-import { loadRef, mergeRefs, shrinkMayRef } from '../../utils/react'
+import { DivProps } from '../type'
 
 export function parseDivPropsToCoreProps(
   divProps: Omit<DivProps<any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {
@@ -22,10 +22,7 @@ export function parseDivPropsToCoreProps(
       ? merge(...shakeNil(flapDeep(divProps.style)).map((i) => shrinkToValue(i, [statusObject])))
       : undefined,
     onClick: divProps.onClick
-      ? (ev) =>
-          flapDeep([divProps.onClick]).map((onClick) =>
-            onClick?.({ event: ev, ev, el: ev.currentTarget, ...statusObject })
-          )
+      ? (ev) => divProps.onClick?.({ event: ev, ev, el: ev.currentTarget, ...statusObject })
       : undefined
   }
 }

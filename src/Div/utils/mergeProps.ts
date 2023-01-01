@@ -44,12 +44,10 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['style', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['icss', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['tag', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
-        ['propHook', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['htmlProps', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['shadowProps', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['plugin', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['dangerousRenderWrapperNode', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
-        ['onClick', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['controller', () => (v1 && v2 ? [v1, v2].flat() : v1 ?? v2)],
         ['children', () => v2 ?? v1],
 
