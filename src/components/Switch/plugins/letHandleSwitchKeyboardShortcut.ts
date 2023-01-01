@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { SwitchController, SwitchCoreProps } from '..'
+import { SwitchController, SwitchProps } from '..'
 import { handleKeyboardShortcut } from '../../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../../../plugins'
 
 export type LetHandleSwitchKeyboardShortcut = {}
 
-export const letHandleSwitchKeyboardShortcut = createPlugin<SwitchCoreProps>(() => {
+export const letHandleSwitchKeyboardShortcut = createPlugin<SwitchProps>(() => {
   const divRef = useRef<HTMLElement>()
   const switchController = useRef<SwitchController>()
   useEffect(() => {

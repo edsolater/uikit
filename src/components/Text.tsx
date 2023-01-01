@@ -1,9 +1,8 @@
-import { Div, DivChildNode } from '../Div'
+import { Div, DivChildNode, DivProps } from '../Div'
 import { createKit } from './utils'
 
-export interface TextProps {
+export interface TextProps extends DivProps {
   inline?: boolean
-  children?: DivChildNode
 }
 
 export const Text = createKit('Text', ({ children, inline }: TextProps) => {

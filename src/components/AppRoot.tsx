@@ -1,11 +1,10 @@
-import { Div, DivChildNode } from '../Div'
+import { Div, DivChildNode, DivProps } from '../Div'
 import { injectGlobalResetStyle } from '../styles'
 import { useInvokeOnce } from '../hooks'
 import { createKit } from './utils'
 
-export interface AppRootProps {
+export interface AppRootProps extends DivProps {
   rootId?: string
-  children?: DivChildNode
 }
 
 export const AppRoot = createKit('AppRoot', ({ children, rootId }: AppRootProps) => {

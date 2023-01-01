@@ -1,9 +1,8 @@
-import { Div, DivChildNode } from '../Div'
+import { Div, DivChildNode, DivProps } from '../Div'
 import { createKit } from './utils'
 
-export interface BoxProps {
+export interface BoxProps extends DivProps {
   name?: string // for debug and DOM class
-  children?: DivChildNode
 }
 
 /**

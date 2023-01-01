@@ -21,7 +21,7 @@ export type TabsController<T> = {
   toTab(tab: T): void
 }
 
-export type TabsCoreProps<T> = {
+export interface TabsProps<T> extends DivProps {
   tabs: T[]
   defaultTab?: T
   onChange?: (tab: T) => void
@@ -39,8 +39,6 @@ export type TabsCoreProps<T> = {
     letAddFloatBgOptions?: MayFn<LetAddFloatBgOptions, [utils: TabsController<T>]>
   }
 }
-
-export type TabsProps<T> = TabsCoreProps<T> // can & plugin
 
 export const Tabs = createKit(
   'Tabs',

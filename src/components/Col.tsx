@@ -1,8 +1,7 @@
-import { Div, DivChildNode } from '../Div'
+import { Div, DivChildNode, DivProps } from '../Div'
 import { createKit } from './utils'
 
-export interface ColProps {
-  children?: DivChildNode
+export interface ColProps extends DivProps {
   wrap?: boolean
   name?: string // same as `<Group>`'s grid
   /**@default 'md' */

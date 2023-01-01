@@ -22,19 +22,19 @@ type GetPluginProps<T> = T extends Plugin<infer Px1>
   ? Px1 & Px2 & Px3 & Px4 & Px5
   : unknown
 
-export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
+export function createKit<T extends Omit<DivProps<any>, 'children'>, F extends MayDeepArray<Plugin<any>>>(
   displayOptions: { name: string } | string,
   FC: Component<T>,
   options?: {
-    defaultProps?: Omit<T & GetPluginProps<F> & DivProps, 'children'>
+    defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
     plugin?: F
   }
 ): ReactComponent<
   T &
     Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T & DivProps>>>
-      shadowProps?: Partial<T & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
+      plugin?: MayDeepArray<Partial<Plugin<T>>>
+      shadowProps?: Partial<T> // component must merged before `<Div>`
+    } & Omit<T, 'children' | 'shadowProps' | 'plugin'>
 > {
   const displayName = isString(displayOptions) ? displayOptions : displayOptions.name
   const uikitFC = overwriteFunctionName((props) => {
@@ -57,19 +57,19 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
  * generic type will lose auto type intelligence with plugin.
  * this function's core is **same with createKit**
  */
-export function createKitWithAutoPluginProp<T, F extends MayDeepArray<Plugin<any>>>(
+export function createKitWithAutoPluginProp<T extends Omit<DivProps<any>, 'children'>, F extends MayDeepArray<Plugin<any>>>(
   displayOptions: { name: string } | string,
   FC: Component<T>,
   options?: {
-    defaultProps?: Omit<T & GetPluginProps<F> & DivProps, 'children'>
+    defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
     plugin?: F
   }
 ): <FR extends MayDeepArray<Plugin<any>>>(
   props: T &
     Omit<GetPluginProps<F>, keyof T> & {
       plugin?: FR
-      shadowProps?: Partial<T & DivProps> // component must merged before `<Div>`
-    } & Omit<DivProps, 'children' | 'shadowProps' | 'plugin'> &
+      shadowProps?: Partial<T> // component must merged before `<Div>`
+    } & Omit<T, 'children' | 'shadowProps' | 'plugin'> &
     Omit<GetPluginProps<FR>, GetPluginProps<F> | keyof T>
 ) => JSX.Element {
   return createKit(displayOptions, FC, options)

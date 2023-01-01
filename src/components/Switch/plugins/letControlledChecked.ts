@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef } from 'react'
 import { createPlugin } from '../../../plugins'
-import { SwitchController, SwitchCoreProps } from '../index'
+import { SwitchController, SwitchProps } from '../index'
 
 export type LetControlledChecked = {
   checked?: boolean
 }
-export const letControlledChecked = createPlugin<SwitchCoreProps & LetControlledChecked>(({ checked }) => {
+export const letControlledChecked = createPlugin<SwitchProps & LetControlledChecked>(({ checked }) => {
   const switchController = useRef<SwitchController>()
   useLayoutEffect(() => {
     if (checked != null) switchController.current?.setChecked(checked)

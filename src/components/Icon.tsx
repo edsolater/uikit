@@ -1,8 +1,8 @@
-import { Div } from '../Div'
+import { Div, DivProps } from '../Div'
 import { ICSSObject } from '../styles'
 import { createKit } from './utils'
 
-export interface IconProps {
+export interface IconProps extends DivProps {
   /** @default 'currentColor' */
   cssColor?: ICSSObject['color']
   /** sx: 12px; sm: 16px; smi: 20px; md: 24px; lg: 32px (default: md) */

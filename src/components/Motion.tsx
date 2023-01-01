@@ -1,10 +1,9 @@
 import { useLayoutEffect, useRef } from 'react'
-import { DivChildNode } from '../Div/type'
+import { DivChildNode, DivProps } from '../Div/type'
 import { AddProps } from './AddProps'
 import { createKit } from './utils'
 
-export interface MotionProps {
-  children?: DivChildNode
+export interface MotionProps extends DivProps {
   animateOptions?: KeyframeEffectOptions
 }
 

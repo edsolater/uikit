@@ -1,5 +1,5 @@
 import { addDefault } from '@edsolater/fnkit'
-import { TabsCoreProps } from '..'
+import { TabsProps } from '..'
 import { createPlugin } from '../../../plugins'
 
 export type TabsVariables = {
@@ -14,7 +14,7 @@ export type LetTabsStyleOptions = {
   variables?: TabsVariables
 }
 
-export const letTabsStyle = createPlugin<LetTabsStyleOptions & TabsCoreProps<any>>(
+export const letTabsStyle = createPlugin<LetTabsStyleOptions & TabsProps<any>>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
       '--container-bg': '#eaf0ef80',

@@ -17,7 +17,7 @@ export type SwitchController = {
   setChecked(to: boolean): void
 }
 
-export interface SwitchCoreProps {
+export interface SwitchProps extends DivProps, LetSwitchStyleOptions {
   // -------- core --------
   _lockSelf?: boolean
   defaultChecked?: boolean
@@ -32,8 +32,6 @@ export interface SwitchCoreProps {
     thumb?: MayFn<DivProps, [utils: SwitchController]>
   }
 }
-
-export type SwitchProps = SwitchCoreProps & LetSwitchStyleOptions // can & plugin
 
 export const Switch = createKit(
   'Switch',

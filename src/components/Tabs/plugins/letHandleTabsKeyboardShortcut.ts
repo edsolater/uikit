@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
-import { TabsController, TabsCoreProps } from '..'
+import { TabsController, TabsProps } from '..'
 import { handleKeyboardShortcut } from '../../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../../../plugins'
 
 export type LetHandleTabsKeyboardShortcut = {}
 
-export const letHandleTabsKeyboardShortcut = createPlugin<TabsCoreProps<unknown>>(() => {
+export const letHandleTabsKeyboardShortcut = createPlugin<TabsProps<unknown>>(() => {
   const divRef = useRef<HTMLElement>()
   const tabsController = useRef<TabsController<unknown>>()
   useEffect(() => {

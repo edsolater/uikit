@@ -2,7 +2,7 @@ import { addDefault } from '@edsolater/fnkit'
 import { DivProps } from '../../../Div'
 import { mergeProps } from '../../../Div/utils/mergeProps'
 import { createPlugin } from '../../../plugins'
-import { SwitchCoreProps } from '../index'
+import { SwitchProps } from '../index'
 
 export type SwitchVariables = {
   '--thumb-outer-width'?: string
@@ -19,7 +19,7 @@ export type LetSwitchStyleOptions = {
   variables?: SwitchVariables
 }
 
-export const letSwitchStyle = createPlugin<LetSwitchStyleOptions & SwitchCoreProps>(
+export const letSwitchStyle = createPlugin<LetSwitchStyleOptions & SwitchProps>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
       '--thumb-outer-width': '24px',

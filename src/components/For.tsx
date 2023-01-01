@@ -1,7 +1,8 @@
+import { DivProps } from '../Div'
 import { addPropsToReactElement } from '../utils/react/addPropsToReactElement'
 import { createKit } from './utils'
 
-export interface ForProps<T extends any> {
+export interface ForProps<T extends any> extends Omit<DivProps, 'children'> {
   each: T[]
   getKey?: (item: T, idx: number) => string | number
   children?: (item: T, idx: number) => JSX.Element

@@ -1,11 +1,10 @@
 import { isValidElement } from 'react'
-import { Div, DivChildNode } from '../Div'
+import { Div, DivChildNode, DivProps } from '../Div'
 import { AddProps } from './AddProps'
 import { createKit } from './utils'
 
-export interface DivIfNeededProps {
+export interface DivIfNeededProps extends DivProps {
   name?: string // for debug and DOM class
-  children?: DivChildNode
 }
 
 /**
