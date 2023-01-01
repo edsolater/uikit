@@ -21,8 +21,6 @@ export function parseDivPropsToCoreProps(
     style: divProps.style
       ? merge(...shakeNil(flapDeep(divProps.style)).map((i) => shrinkToValue(i, [statusObject])))
       : undefined,
-    onClick: divProps.onClick
-      ? (ev) => divProps.onClick?.({ event: ev, ev, el: ev.currentTarget, ...statusObject })
-      : undefined
+    onClick: divProps.onClick ? (ev) => divProps.onClick?.({ ev, el: ev.currentTarget, ...statusObject }) : undefined
   }
 }

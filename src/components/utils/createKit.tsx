@@ -1,5 +1,5 @@
 import { flapDeep, isString, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
-import { DivProps } from '../../Div'
+import { DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../Div/utils/mergeProps'
 import { parsePropPluginToProps } from '../../plugins'
@@ -22,7 +22,23 @@ type GetPluginProps<T> = T extends Plugin<infer Px1>
   ? Px1 & Px2 & Px3 & Px4 & Px5
   : unknown
 
-export function createKit<T extends Omit<DivProps<any>, 'children'>, F extends MayDeepArray<Plugin<any>>>(
+export type KitProp<
+  Props,
+  TagName extends keyof HTMLTagMap = any,
+  Status extends Record<string, any> | unknown = unknown,
+  Plugins extends MayDeepArray<Plugin<any>> = Plugin<unknown>
+> = Props &
+  Omit<DivProps<TagName, Status>, keyof Props | 'plugin' | 'shadowProps'> &
+  Omit<GetPluginProps<Plugins>, keyof Props | 'plugin' | 'shadowProps'> &
+  Omit<
+    {
+      plugin?: MayDeepArray<Plugin<any/* too difficult to type */>>
+      shadowProps?: MayDeepArray<Partial<Props>> // component must merged before `<Div>`
+    },
+    keyof Props
+  >
+
+export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
   displayOptions: { name: string } | string,
   FC: Component<T>,
   options?: {
@@ -32,8 +48,8 @@ export function createKit<T extends Omit<DivProps<any>, 'children'>, F extends M
 ): ReactComponent<
   T &
     Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: MayDeepArray<Partial<Plugin<T>>>
-      shadowProps?: Partial<T> // component must merged before `<Div>`
+      plugin?: MayDeepArray<Plugin<any/* too difficult to type */>>
+      shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
     } & Omit<T, 'children' | 'shadowProps' | 'plugin'>
 > {
   const displayName = isString(displayOptions) ? displayOptions : displayOptions.name
@@ -57,7 +73,7 @@ export function createKit<T extends Omit<DivProps<any>, 'children'>, F extends M
  * generic type will lose auto type intelligence with plugin.
  * this function's core is **same with createKit**
  */
-export function createKitWithAutoPluginProp<T extends Omit<DivProps<any>, 'children'>, F extends MayDeepArray<Plugin<any>>>(
+export function createKitWithAutoPluginProp<T, F extends MayDeepArray<Plugin<any>>>(
   displayOptions: { name: string } | string,
   FC: Component<T>,
   options?: {
@@ -68,7 +84,7 @@ export function createKitWithAutoPluginProp<T extends Omit<DivProps<any>, 'child
   props: T &
     Omit<GetPluginProps<F>, keyof T> & {
       plugin?: FR
-      shadowProps?: Partial<T> // component must merged before `<Div>`
+      shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
     } & Omit<T, 'children' | 'shadowProps' | 'plugin'> &
     Omit<GetPluginProps<FR>, GetPluginProps<F> | keyof T>
 ) => JSX.Element {

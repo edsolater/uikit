@@ -1,12 +1,12 @@
 import { Div, DivChildNode, DivProps } from '../Div'
-import { createKit } from './utils'
+import { createKit, KitProp } from './utils'
 
-export interface ColProps extends DivProps {
+export type ColProps = KitProp<{
   wrap?: boolean
   name?: string // same as `<Group>`'s grid
   /**@default 'md' */
   gap?: 'sm' /* 4px */ | 'md' /* 8px */ | 'lg' /* 16px */ | 'xl' /* 32px */
-}
+}>
 
 /**
  * flex box

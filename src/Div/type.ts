@@ -39,9 +39,8 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Re
   className?: MayDeepArray<ClassName | undefined>
   onClick?: (
     utils: {
-      event: React.MouseEvent<HTMLElement, MouseEvent>
       ev: React.MouseEvent<HTMLElement, MouseEvent>
-      el: HTMLElement
+      el: HTMLTagMap[TagName]
     } & Status
   ) => void
   icss?: ICSS<Status>
@@ -60,11 +59,13 @@ export type Status = Record<string, any>
 export type DivChildNode = ReactNode
 
 export type WithShallowProps<TagName extends keyof HTMLTagMap = any> = {
-  shadowProps?: MayDeepArray<Partial<DivProps<TagName>>>
+  shadowProps?: MayDeepArray<DivProps<TagName>>
 }
 
-export interface DivProps<TagName extends keyof HTMLTagMap = any>
-  extends DivBaseProps<TagName>,
+export interface DivProps<
+  TagName extends keyof HTMLTagMap = any,
+  Status extends Record<string, any> | unknown = unknown
+> extends DivBaseProps<TagName, Status>,
     WithShallowProps<TagName>,
     WithPlugins<TagName> {}
 

@@ -15,79 +15,82 @@ import { DivProps } from '../Div/type'
 import { onEvent } from '../utils'
 import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
+import { createKit, KitProp } from './utils'
 
 export interface InputHandler {
   focus(): void
   clearInput(): void
 }
+export type InputProps = KitProp<
+  {
+    id?: string // for accessibility
 
-export interface InputProps extends Omit<DivProps, 'onClick' | 'children'> {
-  id?: string // for accessibility
+    type?: HTMLInputTypeAttribute // current support type in this app
+    inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
+    ariaRequired?: boolean // for readability
+    /** only for aria */
+    ariaLabelText?: string
 
-  type?: HTMLInputTypeAttribute // current support type in this app
-  inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
-  ariaRequired?: boolean // for readability
-  /** only for aria */
-  ariaLabelText?: string
+    /** only after `<Input>` created */
+    defaultValue?: string
+    /** when change, affact to ui*/
+    value?: string
+    placeholder?: string
 
-  /** only after `<Input>` created */
-  defaultValue?: string
-  /** when change, affact to ui*/
-  value?: string
-  placeholder?: string
+    disabled?: boolean
+    /**
+     * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
+     * it makes input refuse user to edit,
+     *
+     * different from disabled,
+     * user will believe everything is ok (input's style is as good as normal),
+     * but actually can't input
+     * */
+    disableUserInput?: boolean
+    pattern?: RegExp // with force pattern, you only can input pattern allowed string
+    /** must all condition passed (one by one)
+     * !!! validator may be very complicated, and invalid input will not block user's input action.
+     */
+    validators?: MayArray<{
+      /** expression must return true to pass this validator */
+      should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputHandler }]>
+      /** by default, any input should be accepted */
+      ignoreThisInput?: boolean
+      /**  items are button's setting which will apply when corresponding validator has failed */
+      validProps?: Omit<InputProps, 'validators' | 'disabled'>
+      invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
+      onValid?: (text: string, payload: { el: HTMLInputElement; control: InputHandler }) => void
+      onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputHandler }) => void
+    }>
 
-  disabled?: boolean
-  /**
-   * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
-   * it makes input refuse user to edit,
-   *
-   * different from disabled,
-   * user will believe everything is ok (input's style is as good as normal),
-   * but actually can't input
-   * */
-  disableUserInput?: boolean
-  pattern?: RegExp // with force pattern, you only can input pattern allowed string
-  /** must all condition passed (one by one)
-   * !!! validator may be very complicated, and invalid input will not block user's input action.
-   */
-  validators?: MayArray<{
-    /** expression must return true to pass this validator */
-    should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputHandler }]>
-    /** by default, any input should be accepted */
-    ignoreThisInput?: boolean
-    /**  items are button's setting which will apply when corresponding validator has failed */
-    validProps?: Omit<InputProps, 'validators' | 'disabled'>
-    invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
-    onValid?: (text: string, payload: { el: HTMLInputElement; control: InputHandler }) => void
-    onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputHandler }) => void
-  }>
+    /**
+     * remove `min-width:10em`
+     * input will auto widen depends on content Text */
+    isFluid?: boolean
 
-  /**
-   * remove `min-width:10em`
-   * input will auto widen depends on content Text */
-  isFluid?: boolean
+    /** Optional. usually, it is an <Input>'s icon */
+    prefix?: MayFn<ReactNode, [text: string | undefined]>
+    /** Optional. usually, it is an <Input>'s unit or feature icon */
+    suffix?: MayFn<ReactNode, [text: string | undefined]>
 
-  /** Optional. usually, it is an <Input>'s icon */
-  prefix?: MayFn<ReactNode, [text: string | undefined]>
-  /** Optional. usually, it is an <Input>'s unit or feature icon */
-  suffix?: MayFn<ReactNode, [text: string | undefined]>
-
-  controller?: RefObject<any>
-  inputDomRef?: DivProps<'input'>['domRef']
-  inputClassName?: DivProps<'input'>['className']
-  inputHTMLProps?: DivProps<'input'>['htmlProps']
-  /**
-   * this callback may be invoked every time value change regardless it is change by user input or js code
-   * as a controlled formkit, U should avoid using it if U can
-   * it may be confusing with onUserInput sometimes
-   */
-  onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'any')
-  onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
-  onClick?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
-  onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
-  onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
-  onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
-}
+    controller?: RefObject<any>
+    inputDomRef?: DivProps<'input'>['domRef']
+    inputClassName?: DivProps<'input'>['className']
+    inputHTMLProps?: DivProps<'input'>['htmlProps']
+    /**
+     * this callback may be invoked every time value change regardless it is change by user input or js code
+     * as a controlled formkit, U should avoid using it if U can
+     * it may be confusing with onUserInput sometimes
+     */
+    onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'any')
+    onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
+    onClick?: ((utils: { text?: string; control: InputHandler }) => void) & DivProps<'input'>['onClick']
+    onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
+    onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
+    onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
+  },
+  'input'
+>
 
 type CheckInputUtils = {
   key: string
@@ -95,7 +98,7 @@ type CheckInputUtils = {
   selectionEnd?: number
 }
 
-export function Input(props: InputProps) {
+export const Input = createKit('Input', (props: InputProps) => {
   // props set by validators
   const [fallbackProps, setFallbackProps] = useState<Omit<InputProps, 'validators' | 'disabled'>>()
 
@@ -176,10 +179,10 @@ export function Input(props: InputProps) {
     <Div
       shadowProps={restProps}
       className='Input'
-      onClick={() => {
+      onClick={(utils) => {
         if (disabled || !inputRef.current) return
         inputRef.current.focus()
-        onClick?.(innerValue, { el: inputRef.current, control: inputControls })
+        onClick?.({ text: innerValue, control: inputControls, ...utils })
       }}
       icss={[
         { display: 'flex' },
@@ -258,7 +261,7 @@ export function Input(props: InputProps) {
       {suffix && <Div className='flex-initial ml-2'>{shrinkToValue(suffix, [innerValue])}</Div>}
     </Div>
   )
-}
+})
 
 function AutoWidenInput({
   checkUserTypeIsValid,
