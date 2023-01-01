@@ -89,7 +89,8 @@ export type InputProps = KitProp<
     onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
     onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
   },
-  'input'
+  'input',
+  InputHandler
 >
 
 type CheckInputUtils = {

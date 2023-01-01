@@ -25,7 +25,7 @@ type GetPluginProps<T> = T extends Plugin<infer Px1>
 export type KitProp<
   Props,
   TagName extends keyof HTMLTagMap = any,
-  Status extends Record<string, any> | unknown = unknown,
+  Status extends Record<string, any> = any ,
   Plugins extends MayDeepArray<Plugin<any>> = Plugin<unknown>
 > = Props &
   Omit<DivProps<TagName, Status>, keyof Props | 'plugin' | 'shadowProps'> &

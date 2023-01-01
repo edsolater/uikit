@@ -21,7 +21,7 @@ import { Status } from '../Div'
 export type ICSSObject = CSSObject 
 
 
-export type ICSS<Status extends Record<string, any> | unknown = unknown> = MayDeepArray<
+export type ICSS<Status extends Record<string, any> = any > = MayDeepArray<
   ICSSObject | boolean | string | number | null | undefined | ((status: Status) => ICSSObject)
 >
 export function parseCSS(cssProp: ICSS, status: Status | unknown) {
