@@ -1,4 +1,4 @@
-import { MayEnum } from '@edsolater/fnkit'
+import { MayEnum, MayFn } from '@edsolater/fnkit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
@@ -22,8 +22,10 @@ export interface HTMLTagMap {
 }
 /** richer than ReactNode */
 
-interface DivBaseProps<TagName extends keyof HTMLTagMap = any> {
+interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Record<string, any> | unknown = unknown> {
   as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
+
+  _statusObj?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
 
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
   domRef?: MayDeepArray<
@@ -36,16 +38,20 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any> {
   tag?: MayDeepArray<DivDataTag | undefined> // !!!TODO: it's better to be a plugin
   className?: MayDeepArray<ClassName | undefined>
   onClick?: MayDeepArray<
-    | ((payload: {
-        event: React.MouseEvent<HTMLElement, MouseEvent>
-        ev: React.MouseEvent<HTMLElement, MouseEvent>
-        el: HTMLElement
-      }) => void)
+    | ((
+        payload: {
+          event: React.MouseEvent<HTMLElement, MouseEvent>
+          ev: React.MouseEvent<HTMLElement, MouseEvent>
+          el: HTMLElement
+        } & Status
+      ) => void)
     | undefined
   >
-  icss?: ICSS
-  style?: MayDeepArray<CSSStyle | undefined>
-  htmlProps?: MayDeepArray<JSX.IntrinsicElements[TagName extends {} ? TagName : any] | undefined>
+  icss?: ICSS<Status>
+  style?: MayDeepArray<MayFn<CSSStyle, [status: Status]> | undefined>
+  htmlProps?: MayDeepArray<
+    MayFn<JSX.IntrinsicElements[TagName extends {} ? TagName : any], [status: Status]> | undefined
+  >
   children?: DivChildNode
   /**
    * change outter wrapper element
@@ -53,6 +59,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any> {
   dangerousRenderWrapperNode?: MayDeepArray<WrapperNodeFn>
 }
 
+export type Status = Record<string, any>
 export type DivChildNode = ReactNode
 
 export type WithShallowProps<TagName extends keyof HTMLTagMap = any> = {
@@ -63,3 +70,6 @@ export interface DivProps<TagName extends keyof HTMLTagMap = any>
   extends DivBaseProps<TagName>,
     WithShallowProps<TagName>,
     WithPlugins<TagName> {}
+
+type C = { hello: 's' } & unknown
+type D = keyof C

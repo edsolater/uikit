@@ -12,20 +12,22 @@ import {
   map
 } from '@edsolater/fnkit'
 import { css, CSSObject } from '@emotion/css'
+import { Status } from '../Div'
 
 // nterface MayArrayValueCSSObject {
 //   [key: keyof CSSObject]: MayArray<CSSObject[typeof key]>
 // }
 // actually, CSSObject === MayArrayValueCSSObject
-export type ICSSObject<V = unknown>  = CSSObject & V
+export type ICSSObject = CSSObject 
 
-export type ICSS<V = unknown> = MayDeepArray<
-  ICSSObject<V> | boolean | string | number | null | undefined | ((preResult: ICSSObject<V>) => ICSSObject<V>)
+
+export type ICSS<Status extends Record<string, any> | unknown = unknown> = MayDeepArray<
+  ICSSObject | boolean | string | number | null | undefined | ((status: Status) => ICSSObject)
 >
-export function parseCSS(cssProp: ICSS) {
+export function parseCSS(cssProp: ICSS, status: Status | unknown) {
   const cssObjList = filter(flapDeep(cssProp), isObject)
   if (!cssObjList.length) return ''
-  const mergedCSSObj = cssObjList.reduce((acc: CSSObject, cur) => mergeICSS(acc, shrinkToValue(cur, [acc])), {})
+  const mergedCSSObj = cssObjList.reduce((acc: CSSObject, cur) => mergeICSS(acc, shrinkToValue(cur, [status])), {})
   return css(mergedCSSObj)
 }
 
