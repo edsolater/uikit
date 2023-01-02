@@ -17,10 +17,17 @@ import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
 import { createKit, KitProp } from './utils'
 
-export interface InputHandler {
+export interface InputStatus {
+  text: string | undefined
+}
+
+export interface InputMethods {
   focus(): void
   clearInput(): void
 }
+
+export type InputControls = InputStatus & InputMethods
+
 export type InputProps = KitProp<
   {
     id?: string // for accessibility
@@ -53,14 +60,14 @@ export type InputProps = KitProp<
      */
     validators?: MayArray<{
       /** expression must return true to pass this validator */
-      should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputHandler }]>
+      should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputControls }]>
       /** by default, any input should be accepted */
       ignoreThisInput?: boolean
       /**  items are button's setting which will apply when corresponding validator has failed */
       validProps?: Omit<InputProps, 'validators' | 'disabled'>
       invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
-      onValid?: (text: string, payload: { el: HTMLInputElement; control: InputHandler }) => void
-      onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputHandler }) => void
+      onValid?: (text: string, payload: { el: HTMLInputElement; control: InputControls }) => void
+      onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputControls }) => void
     }>
 
     /**
@@ -84,13 +91,13 @@ export type InputProps = KitProp<
      */
     onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'any')
     onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
-    onClick?: ((utils: { text?: string; control: InputHandler }) => void) & DivProps<'input'>['onClick']
-    onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
-    onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
-    onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputHandler }) => void
+    onClick?: ((utils: { text?: string; control: InputControls }) => void) & DivProps<'input'>['onClick']
+    onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputControls }) => void
+    onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputControls }) => void
+    onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputControls }) => void
   },
   'input',
-  InputHandler
+  InputStatus
 >
 
 type CheckInputUtils = {
@@ -151,7 +158,10 @@ export const Input = createKit('Input', (props: InputProps) => {
   // if user is inputing or just input, no need to update upon out-side value
   const [isOutsideValueLocked, { on: lockOutsideValue, off: unlockOutsideValue }] = useToggle()
 
-  const inputControls: InputHandler = {
+  const inputStatus: InputStatus = {
+    text: innerValue
+  }
+  const inputMethods: InputMethods = {
     focus() {
       inputRef?.current?.focus()
     },
@@ -159,6 +169,7 @@ export const Input = createKit('Input', (props: InputProps) => {
       setInnerValue('')
     }
   }
+  const inputControls: InputControls = { ...inputStatus, ...inputMethods }
 
   useImperativeHandle(controller, () => inputControls)
 
