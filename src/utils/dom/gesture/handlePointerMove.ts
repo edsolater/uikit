@@ -9,13 +9,13 @@ type SpeedVector = {
   y: number
 }
 
-export type AttachPointerMovePointDownFn<El extends Element> = (utilities: {
+export type HandlePointerMovePointDownFn<El extends Element> = (utilities: {
   el: El
   ev: PointerEvent
   pointEvents: PointerEvent[]
 }) => void
 
-export type AttachPointerMovePointMoveFn<El extends Element> = (utilities: {
+export type HandlePointerMovePointMoveFn<El extends Element> = (utilities: {
   el: El
   ev: PointerEvent
   pointEvents: PointerEvent[]
@@ -24,7 +24,7 @@ export type AttachPointerMovePointMoveFn<El extends Element> = (utilities: {
   isFirstEvent: boolean
 }) => void
 
-export type AttachPointerMovePointUpFn<El extends Element> = (utilities: {
+export type HandlePointerMovePointUpFn<El extends Element> = (utilities: {
   el: El
   ev: PointerEvent
   pointEvents: PointerEvent[]
@@ -33,10 +33,10 @@ export type AttachPointerMovePointUpFn<El extends Element> = (utilities: {
   currentSpeed: SpeedVector
 }) => void
 
-export type AttachPointerMoveOptions<El extends Element> = {
-  start?: AttachPointerMovePointDownFn<El>
-  move?: AttachPointerMovePointMoveFn<El>
-  end?: AttachPointerMovePointUpFn<El>
+export type HandlePointerMoveOptions<El extends Element> = {
+  start?: HandlePointerMovePointDownFn<El>
+  move?: HandlePointerMovePointMoveFn<El>
+  end?: HandlePointerMovePointUpFn<El>
 }
 
 /**
@@ -44,7 +44,7 @@ export type AttachPointerMoveOptions<El extends Element> = {
  * @param el target element
  * @param options
  */
-export function attachPointerMove<El extends HTMLElement>(el: El, options: AttachPointerMoveOptions<El>) {
+export function handlePointerMove<El extends HTMLElement>(el: El, options: HandlePointerMoveOptions<El>) {
   const eventsQueue: { ev: PointerEvent; type: 'pointerDown' | 'pointerMove' | 'pointerUp' }[] = []
   let pointDownController: EventListenerController | null = null
   let pointMoveController: EventListenerController | null = null

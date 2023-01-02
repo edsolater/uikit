@@ -1,7 +1,7 @@
 import { calcHypotenuse, staySameSign } from '@edsolater/fnkit'
 import { Delta2dTranslate, SpeedVector, Vector, Direction } from '@edsolater/fnkit' // these type should not in fnkit
 import { RefObject, useEffect } from 'react'
-import { attachPointerMove } from '../utils/dom/gesture/pointerMove'
+import { handlePointerMove } from '../utils/dom/gesture/handlePointerMove'
 import { setTranslate } from '../utils/dom/setTranslate'
 import { useToggle } from './useToggle'
 
@@ -96,7 +96,7 @@ export function useFeatureMove(
     const offsetRect =
       // todo: 不更新的话，一滚动就没了
       moveBoundary === 'offsetParent' ? el.offsetParent?.getBoundingClientRect() : undefined
-    attachPointerMove(el, {
+    handlePointerMove(el, {
       start() {
         onMoveStart?.({ el })
         setIsMoving()

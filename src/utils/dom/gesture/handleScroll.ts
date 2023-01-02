@@ -2,6 +2,7 @@ import { debounce, OffsetDepth, parseNumberOrPercent } from '@edsolater/fnkit'
 import { onEvent, EventListenerController } from '../addEventListener'
 
 const SCROLL_STOP_DELAY = 100 // when it is not scroll in 100ms, assumed it to stop scroll
+const defaultNearlyMargin = '25%'
 export interface HandleScrollOptions {
   /**
    * default `25%` height of clientHeight
@@ -9,7 +10,7 @@ export interface HandleScrollOptions {
   nearlyMargin?: OffsetDepth
   onNearlyScrollTop?: (param: { el: HTMLElement }) => void
   onNearlyScrollBottom?: (param: { el: HTMLElement }) => void
-  onScroll?: (param: { el: HTMLElement }) => void
+  onScroll?: (param: { el: HTMLElement; deltaY: number; deltaX: number }) => void
   /**
    * it's impossible to be very correct,
    */
@@ -24,12 +25,13 @@ const weakScrollControllerMap = new WeakMap<HTMLElement, EventListenerController
 export function handleScroll(el: HTMLElement, options: HandleScrollOptions) {
   // nearly only invoke once
   let prevScrollTop: number
+  const { nearlyMargin = defaultNearlyMargin, onNearlyScrollBottom, onNearlyScrollTop, onScroll } = options
   const debouncedOnStopScroll = options.onScrollStop && debounce(options.onScrollStop, { delay: SCROLL_STOP_DELAY })
 
   const controller = onEvent(el, 'scroll', () => {
     const { scrollTop, scrollHeight, clientHeight } = el
-    const { nearlyMargin = '25%', onNearlyScrollBottom, onNearlyScrollTop, onScroll } = options
-    onScroll?.({ el })
+    // invoke scroll
+    onScroll?.({ el, deltaY: scrollTop, deltaX: screenLeft })
 
     const parsedNearlyMargin = parseNumberOrPercent(nearlyMargin, clientHeight)
 

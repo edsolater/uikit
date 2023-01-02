@@ -1,6 +1,6 @@
 export * from './addEventListener'
 export * from './addTabIndex'
-export * from './gesture/pointerMove'
+export * from './gesture/handlePointerMove'
 export * from './gesture/scroll'
 export * from './isHTMLElement'
 export * from './requestClientCallback'
