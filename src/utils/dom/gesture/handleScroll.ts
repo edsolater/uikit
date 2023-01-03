@@ -10,7 +10,7 @@ export interface HandleScrollOptions {
   nearlyMargin?: OffsetDepth
   onNearlyScrollTop?: (param: { el: HTMLElement }) => void
   onNearlyScrollBottom?: (param: { el: HTMLElement }) => void
-  onScroll?: (param: { el: HTMLElement; deltaY: number; deltaX: number }) => void
+  onScroll?: (param: { el: HTMLElement; deltaY: number; deltaX: number; speedX: number; speedY: number }) => void
   /**
    * it's impossible to be very correct,
    */
@@ -25,13 +25,26 @@ const weakScrollControllerMap = new WeakMap<HTMLElement, EventListenerController
 export function handleScroll(el: HTMLElement, options: HandleScrollOptions) {
   // nearly only invoke once
   let prevScrollTop: number
+  let prevScrollLeft: number
+  let prevPerformanceTime = window.performance.now() // it not use new Date, but use web API: Performance
   const { nearlyMargin = defaultNearlyMargin, onNearlyScrollBottom, onNearlyScrollTop, onScroll } = options
   const debouncedOnStopScroll = options.onScrollStop && debounce(options.onScrollStop, { delay: SCROLL_STOP_DELAY })
 
   const controller = onEvent(el, 'scroll', () => {
-    const { scrollTop, scrollHeight, clientHeight } = el
+    const { scrollTop, scrollHeight, clientHeight, scrollLeft } = el
+    const currentPerformanceTime = window.performance.now()
+    const deltaTime = currentPerformanceTime - prevPerformanceTime
+    const deltaY = scrollTop - prevScrollTop
+    const deltaX = scrollLeft - prevScrollLeft
+    prevPerformanceTime = currentPerformanceTime
     // invoke scroll
-    onScroll?.({ el, deltaY: scrollTop, deltaX: screenLeft })
+    onScroll?.({
+      el,
+      deltaY: scrollTop,
+      deltaX: scrollLeft,
+      speedY: deltaY / deltaTime,
+      speedX: deltaX / deltaTime
+    })
 
     const parsedNearlyMargin = parseNumberOrPercent(nearlyMargin, clientHeight)
 
@@ -49,6 +62,7 @@ export function handleScroll(el: HTMLElement, options: HandleScrollOptions) {
       onNearlyScrollTop?.({ el })
     }
     prevScrollTop = scrollTop
+    prevScrollLeft = scrollLeft
     debouncedOnStopScroll?.({ el }).then((args) => {
       if (options.autoRemoveListener) {
         controller?.abort()

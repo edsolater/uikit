@@ -19,14 +19,17 @@ export const scrollDetecter = Object.assign(
     const self = useRef<HTMLElement>()
     useEffect(() => {
       if (!self.current) return
-      handleScroll(self.current, {
-        onScroll({ deltaY, el , deltaX}) {
+      const subscription = handleScroll(self.current, {
+        onScroll({ deltaY, el, deltaX, speedX, speedY }) {
           const to = detectTargetDOM ?? el
           setCSSVariable(to, scrollDetecterCSSVariableNames['--dy'], deltaY)
           setCSSVariable(to, scrollDetecterCSSVariableNames['--dx'], deltaX)
+          setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-x'], speedX)
+          setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-y'], speedY)
         }
       })
-    }, [self])
+      return subscription.abort
+    }, [self, detectTargetDOM])
     return { domRef: self }
   }),
   { cssVariable: scrollDetecterCSSVariableNames }
