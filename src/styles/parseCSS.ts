@@ -1,27 +1,25 @@
-import { MayDeepArray } from '../typings/tools'
 import {
   filter,
-  isObject,
-  shrinkToValue,
   flapDeep,
-  mergeObjectsWithConfigs,
-  isString,
   isArray,
-  mapEntry,
   isFunction,
-  map
+  isObject,
+  isString,
+  map,
+  mergeObjectsWithConfigs,
+  shrinkToValue
 } from '@edsolater/fnkit'
 import { css, CSSObject } from '@emotion/css'
 import { Status } from '../Div'
+import { MayDeepArray } from '../typings/tools'
 
 // nterface MayArrayValueCSSObject {
 //   [key: keyof CSSObject]: MayArray<CSSObject[typeof key]>
 // }
 // actually, CSSObject === MayArrayValueCSSObject
-export type ICSSObject = CSSObject 
+export type ICSSObject = CSSObject
 
-
-export type ICSS<Status extends Record<string, any> = any > = MayDeepArray<
+export type ICSS<Status extends Record<string, any> = any> = MayDeepArray<
   ICSSObject | boolean | string | number | null | undefined | ((status: Status) => ICSSObject)
 >
 export function parseCSS(cssProp: ICSS, status: Status | unknown) {

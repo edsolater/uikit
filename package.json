@@ -1,6 +1,7 @@
 {
   "name": "@edsolater/uikit",
   "version": "0.1.14",
+  "sideEffects": false,
   "exports": {
     ".": "./dist/index.js",
     "./plugins": "./dist/plugins/index.js",
