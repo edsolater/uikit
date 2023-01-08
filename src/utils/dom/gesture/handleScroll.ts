@@ -1,4 +1,4 @@
-import { debounce, OffsetDepth, parseNumberOrPercent } from '@edsolater/fnkit'
+import { debounce, OffsetDepth, parseNumberOrPercent, createCoordinatePointsChart } from '@edsolater/fnkit'
 import { onEvent, EventListenerController } from '../addEventListener'
 
 const SCROLL_STOP_DELAY = 100 // when it is not scroll in 100ms, assumed it to stop scroll
@@ -10,7 +10,15 @@ export interface HandleScrollOptions {
   nearlyMargin?: OffsetDepth
   onNearlyScrollTop?: (param: { el: HTMLElement }) => void
   onNearlyScrollBottom?: (param: { el: HTMLElement }) => void
-  onScroll?: (param: { el: HTMLElement; deltaY: number; deltaX: number; speedX: number; speedY: number }) => void
+  onScroll?: (param: {
+    el: HTMLElement
+    deltaY: number
+    deltaX: number
+    speedX: number
+    speedY: number
+    deltaYIn(ms: number): number
+    speedYIn(ms: number): number
+  }) => void
   /**
    * it's impossible to be very correct,
    */
@@ -30,9 +38,14 @@ export function handleScroll(el: HTMLElement, options: HandleScrollOptions) {
   const { nearlyMargin = defaultNearlyMargin, onNearlyScrollBottom, onNearlyScrollTop, onScroll } = options
   const debouncedOnStopScroll = options.onScrollStop && debounce(options.onScrollStop, { delay: SCROLL_STOP_DELAY })
 
+  const coordinatePointsChart = createCoordinatePointsChart()
+  const coordinatePointsChartX = createCoordinatePointsChart()
+
   const controller = onEvent(el, 'scroll', () => {
     const { scrollTop, scrollHeight, clientHeight, scrollLeft } = el
     const currentPerformanceTime = window.performance.now()
+    coordinatePointsChart.addPoint({ x: currentPerformanceTime, y: scrollTop })
+    coordinatePointsChartX.addPoint({ x: currentPerformanceTime, y: scrollLeft })
     const deltaTime = currentPerformanceTime - prevPerformanceTime
     const deltaY = scrollTop - prevScrollTop
     const deltaX = scrollLeft - prevScrollLeft
@@ -40,10 +53,16 @@ export function handleScroll(el: HTMLElement, options: HandleScrollOptions) {
     // invoke scroll
     onScroll?.({
       el,
-      deltaY: scrollTop,
-      deltaX: scrollLeft,
+      deltaY: deltaY,
+      deltaX: deltaX,
       speedY: deltaY / deltaTime,
-      speedX: deltaX / deltaTime
+      speedX: deltaX / deltaTime,
+      deltaYIn(ms) {
+        return scrollTop - coordinatePointsChart.getY(currentPerformanceTime - ms)
+      },
+      speedYIn(ms) {
+        return (scrollTop - coordinatePointsChart.getY(currentPerformanceTime - ms)) / ms
+      }
     })
 
     const parsedNearlyMargin = parseNumberOrPercent(nearlyMargin, clientHeight)

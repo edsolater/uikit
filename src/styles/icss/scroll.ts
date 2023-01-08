@@ -35,6 +35,22 @@ export const icssScrollOverflow = (cssOptions?: { haveX?: boolean; cssValue?: IC
   } as ICSSObject
 }
 
+export const icssFloatScrollbar:ICSSObject= {
+  overflow:'overlay',
+  '::-webkit-scrollbar': {
+    backgroundColor: 'transparent',
+    width: 7
+  },
+  '::-webkit-scrollbar-thumb': {
+    backgroundColor: '#46464647',
+    borderRadius: 8,
+    transition: '500ms'
+  },
+  ':hover::-webkit-scrollbar-thumb': {
+    backgroundColor: '#464646b8',
+  },
+}
+
 export const icssScrollSmooth: ICSSObject = {
   scrollBehavior: 'smooth'
 }
