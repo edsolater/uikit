@@ -32,8 +32,8 @@ export const scrollDetecter = Object.assign(
           setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-y'], speedY)
           setCSSVariable(to, scrollDetecterCSSVariableNames['--dy-in-100ms'], deltaYIn(100))
           setCSSVariable(to, scrollDetecterCSSVariableNames['--dy-in-500ms'], deltaYIn(500))
-          setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-y-in-100ms'], Math.round(speedYIn(100)))
-          setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-y-in-500ms'], (speedYIn(500)))
+          setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-y-in-100ms'], speedYIn(100))
+          setCSSVariable(to, scrollDetecterCSSVariableNames['--speed-y-in-500ms'], speedYIn(500))
         }
       })
       return subscription.abort
