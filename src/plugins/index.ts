@@ -5,6 +5,8 @@ export * from './interactions/scrollDetecter'
 
 // keyboard plugin
 export * from './keyboardShortcut/core'
+export * from './keyboardShortcut/globalFocusSelf'
+export * from './keyboardShortcut/autoFocus'
 
 // UI plugin
 export * from './ui/letAddFloatBg'
