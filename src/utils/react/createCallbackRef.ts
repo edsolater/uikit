@@ -1,6 +1,6 @@
 import { createRef } from 'react'
 
-export default function createCallbackRef<T = unknown>(callback: (current: T) => void) {
+export function createCallbackRef<T = unknown>(callback: (current: T) => void) {
   const originalRef = createRef<T>()
   const proxied = new Proxy(originalRef, {
     set(target, p, value) {

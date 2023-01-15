@@ -2,7 +2,7 @@ import { MutableRefObject, RefCallback, RefObject } from 'react'
 
 import { isArray, isFunction, isNullish } from '@edsolater/fnkit'
 
-import createCallbackRef from './createCallbackRef'
+import { createCallbackRef } from './createCallbackRef'
 
 export function loadRef(ref: RefCallback<any> | MutableRefObject<any> | null, el: any) {
   if (isNullish(ref)) return
