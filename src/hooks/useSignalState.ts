@@ -69,7 +69,7 @@ export type SignalPluginFn<T, U> = (payload: {
  *   )
  * }
  */
-export function useSignalState<T, U>(
+export function useSignalState<T, U = never>(
   defaultValue: T | (() => T),
   options?: {
     plugin?: SignalPluginFn<T, U>[]

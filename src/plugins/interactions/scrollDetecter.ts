@@ -42,3 +42,12 @@ export const scrollDetecter = Object.assign(
   }),
   { cssVariable: scrollDetecterCSSVariableNames }
 )
+
+// TODO
+// type scrollDetecterStatus = {
+  
+// }
+
+// export function useScrollDetector(id: string){
+//   return scrollDetecterStatus
+// }
