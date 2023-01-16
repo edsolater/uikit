@@ -1,5 +1,4 @@
 export * from './AddProps'
-export * from './DivIfNeeded'
 
 export * from './SubComponent'
 export * from './Grid'
