@@ -4,20 +4,20 @@ import { useRef, useState } from 'react'
 import { useAsyncEffect } from './useAsyncEffect'
 
 export function useAsyncMemo<V, F = never>(
-  asyncGetValue: MayFn<MayPromise<V>>,
+  asyncGetValue: MayFn<V>,
   dependencies?: any[],
   fallbackValue?: undefined
-): V | undefined
+): Awaited<V> | undefined
 export function useAsyncMemo<V, F = never>(
-  asyncGetValue: MayFn<MayPromise<V>>,
+  asyncGetValue: MayFn<V>,
   dependencies: any[],
   fallbackValue: MayFn<F>
-): V | F
+): Awaited<V> | F
 export function useAsyncMemo<V, F = never>(
-  asyncGetValue: MayFn<MayPromise<V>>,
+  asyncGetValue: MayFn<V>,
   dependencies?: any[],
   fallbackValue?: MayFn<F>
-): V | F | undefined {
+): Awaited<V> | F | undefined {
   const [valueState, setValueState] = useState(fallbackValue)
   const activeAsyncSetterNumber = useRef(0)
   const asyncSetterNumber = useRef(0)

@@ -52,11 +52,11 @@ export function injectGlobalResetStyle() {
         height: 7px;
       }
       ::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.1);
         border-radius: 8px;
       }
       :hover::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: rgba(0, 0, 0, 0.4);
       }
 
     }
