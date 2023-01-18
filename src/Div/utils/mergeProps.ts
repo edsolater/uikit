@@ -52,9 +52,9 @@ export function mergeProps<P extends AnyProp | undefined>(...propsObjs: P[]): Ex
         ['children', () => v2 ?? v1],
 
         // normal props
-        [() => isFunction(v1) && isFunction(v2), () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],
-        [() => isArray(v1) && isArray(v2), () => (v1 as any[]).concat(v2)],
-        [() => isObject(v1) && isObject(v2), () => mergeProps(v1, v2)] // if v1 and v2 are react node, it will be a disaster
+        [() => isFunction(v1) && isFunction(v2) && v1 !== v2, () => mergeFunction(v1 as AnyFn, v2 as AnyFn)],
+        [() => isArray(v1) && isArray(v2) && v1 !== v2, () => (v1 as any[]).concat(v2)],
+        [() => isObject(v1) && isObject(v2) && v1 !== v2, () => mergeProps(v1, v2)] // if v1 and v2 are react node, it will be a disaster
       ],
       v2 ?? v1
     )

@@ -5,8 +5,10 @@ import { mergeProps } from '../../Div/utils/mergeProps'
 
 export function addPropsToReactElement<AvailableProps = { [key: string]: any }>(
   element: any,
-  props?: MayFn<Partial<AvailableProps> & { key?: number | string }, [oldprops: Partial<AvailableProps>]>
+  props?: MayFn<Partial<AvailableProps> & { key?: number | string }, [oldprops: Partial<AvailableProps>]>,
+  options?: {}
 ): ReactNode {
   if (!isValidElement(element)) return element
-  return element ? cloneElement(element, mergeProps(element.props, shrinkToValue(props, [element.props as any]))) : null
+  const newProps = mergeProps(element.props, shrinkToValue(props, [element.props as any]))
+  return cloneElement(element, newProps)
 }

@@ -25,14 +25,14 @@ type GetPluginProps<T> = T extends Plugin<infer Px1>
 export type KitProp<
   Props,
   TagName extends keyof HTMLTagMap = any,
-  Status extends Record<string, any> = any ,
+  Status extends Record<string, any> = any,
   Plugins extends MayDeepArray<Plugin<any>> = Plugin<unknown>
 > = Props &
   Omit<DivProps<TagName, Status>, keyof Props | 'plugin' | 'shadowProps'> &
   Omit<GetPluginProps<Plugins>, keyof Props | 'plugin' | 'shadowProps'> &
   Omit<
     {
-      plugin?: MayDeepArray<Plugin<any/* too difficult to type */>>
+      plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
       shadowProps?: MayDeepArray<Partial<Props>> // component must merged before `<Div>`
     },
     keyof Props
@@ -48,7 +48,7 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
 ): ReactComponent<
   T &
     Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: MayDeepArray<Plugin<any/* too difficult to type */>>
+      plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
       shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
     } & Omit<T, 'children' | 'shadowProps' | 'plugin'>
 > {
@@ -67,28 +67,6 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
     return <AddProps {...merged}>{merged && FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, displayName)
   return uikitFC
-}
-
-/**
- * generic type will lose auto type intelligence with plugin.
- * this function's core is **same with createKit**
- */
-export function createKitWithAutoPluginProp<T, F extends MayDeepArray<Plugin<any>>>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
-    plugin?: F
-  }
-): <FR extends MayDeepArray<Plugin<any>>>(
-  props: T &
-    Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: FR
-      shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
-    } & Omit<T, 'children' | 'shadowProps' | 'plugin'> &
-    Omit<GetPluginProps<FR>, GetPluginProps<F> | keyof T>
-) => JSX.Element {
-  return createKit(displayOptions, FC, options)
 }
 
 function sortPlugin(deepPluginList: MayDeepArray<Plugin<any>>) {
