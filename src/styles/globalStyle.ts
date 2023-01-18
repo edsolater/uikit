@@ -45,16 +45,20 @@ export function injectGlobalResetStyle() {
       -moz-appearance: textfield;
     }
 
-    @media (min-width: 1000px) {
+    @media (min-width: 1000px) { /* not mobile */
       ::-webkit-scrollbar {
         background-color: transparent;
         width: 7px;
         height: 7px;
       }
       ::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(0, 0, 0, 0);
         border-radius: 8px;
       }
+      :hover::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+      }
+
     }
     
     button,

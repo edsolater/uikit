@@ -50,7 +50,8 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
     Omit<GetPluginProps<F>, keyof T> & {
       plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
       shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
-    } & Omit<T, 'children' | 'shadowProps' | 'plugin'>
+    } & Omit<T, 'children' | 'shadowProps' | 'plugin'> &
+    Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
 > {
   const displayName = isString(displayOptions) ? displayOptions : displayOptions.name
   const uikitFC = overwriteFunctionName((props) => {
