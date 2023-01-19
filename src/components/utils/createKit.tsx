@@ -1,4 +1,5 @@
 import { flapDeep, isString, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
+import React from 'react'
 import { DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../Div/utils/mergeProps'
@@ -38,13 +39,19 @@ export type KitProp<
     keyof Props
   >
 
+export type CreateKitOptions<T, F extends MayDeepArray<Plugin<any>>> = {
+  name: string
+  /**
+   * if true, use React memo
+   */
+  memo?: boolean
+  defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
+  plugin?: F
+}
+
 export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
-  displayOptions: { name: string } | string,
-  FC: Component<T>,
-  options?: {
-    defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
-    plugin?: F
-  }
+  rawOptions: CreateKitOptions<T, F> | string,
+  FC: Component<T>
 ): ReactComponent<
   T &
     Omit<GetPluginProps<F>, keyof T> & {
@@ -53,21 +60,21 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
     } & Omit<T, 'children' | 'shadowProps' | 'plugin'> &
     Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
 > {
-  const displayName = isString(displayOptions) ? displayOptions : displayOptions.name
+  const options = isString(rawOptions) ? { name: rawOptions } : rawOptions
   const uikitFC = overwriteFunctionName((props) => {
     const merged = pipe(
       props,
       // build-time
       (props) =>
         parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }),
-      (props) => mergeProps(options?.defaultProps ?? {}, props, { className: displayName }),
+      (props) => mergeProps(options?.defaultProps ?? {}, props, { className: options.name }),
       // run-time
       handleDivShadowProps,
       handleDivPlugin
     )
     return <AddProps {...merged}>{merged && FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
-  }, displayName)
-  return uikitFC
+  }, options.name)
+  return (options.memo ? React.memo(uikitFC) : uikitFC) as (props) => JSX.Element
 }
 
 function sortPlugin(deepPluginList: MayDeepArray<Plugin<any>>) {

@@ -39,7 +39,7 @@ export interface DrawerProps extends Omit<DivProps, 'children'>, LetDrawerStyleO
 }
 
 export const Drawer = createKit(
-  'Drawer',
+  { name: 'Drawer', plugin: [letDrawerStyle] },
   ({
     children,
     open = false,
@@ -134,8 +134,7 @@ export const Drawer = createKit(
         </Transition>
       </Portal>
     )
-  },
-  { plugin: [letDrawerStyle] }
+  }
 )
 
 export const DRAWER_STACK_ID = 'drawer-stack'

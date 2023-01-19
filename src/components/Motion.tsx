@@ -8,7 +8,16 @@ export interface MotionProps extends DivProps {
 }
 
 export const Motion = createKit(
-  'Motion',
+  {
+    name: 'Motion',
+    defaultProps: {
+      animateOptions: {
+        duration: 300,
+        iterations: 1,
+        easing: 'ease'
+      }
+    }
+  },
   ({ children, animateOptions = { duration: 300, iterations: 1, easing: 'ease' } }: MotionProps) => {
     const squareRef = useRef<HTMLElement>()
     const fromRectPositon = useRef<DOMRect>()
@@ -81,15 +90,6 @@ export const Motion = createKit(
     }, [])
 
     return <AddProps domRef={squareRef}>{children}</AddProps>
-  },
-  {
-    defaultProps: {
-      animateOptions: {
-        duration: 300,
-        iterations: 1,
-        easing: 'ease'
-      }
-    }
   }
 )
 

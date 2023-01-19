@@ -45,7 +45,7 @@ export interface MenuProps<T> extends DivProps {
 }
 
 export const Menu = createKit(
-  'Menu',
+  { name: 'Menu', plugin: [letMenuStyle, letHandleMenuKeyboardShortcut] },
   <T extends any>({
     menuItems,
     defaultMenuItem,
@@ -129,6 +129,5 @@ export const Menu = createKit(
         }
       />
     )
-  },
-  { plugin: [letMenuStyle, letHandleMenuKeyboardShortcut] }
+  }
 )

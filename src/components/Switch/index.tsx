@@ -34,7 +34,7 @@ export interface SwitchProps extends DivProps, LetSwitchStyleOptions {
 }
 
 export const Switch = createKit(
-  'Switch',
+  { name: 'Switch', plugin: [letSwitchStyle, letControlledChecked, letHandleSwitchKeyboardShortcut] },
   ({ _lockSelf, defaultChecked, onToggle, renderThumbIcon, anatomy, controller, componentId }: SwitchProps) => {
     const [checked, _setChecked] = useState(Boolean(defaultChecked))
     function setChecked(dispatch: React.SetStateAction<boolean>) {
@@ -77,6 +77,5 @@ export const Switch = createKit(
         </Div>
       </Div>
     )
-  },
-  { plugin: [letSwitchStyle, letControlledChecked, letHandleSwitchKeyboardShortcut] }
+  }
 )

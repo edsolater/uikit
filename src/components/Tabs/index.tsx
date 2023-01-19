@@ -25,7 +25,7 @@ export interface TabsProps<T> extends DivProps {
   tabs: T[]
   defaultTab?: T
   onChange?: (tab: T) => void
-  getKey: (tab: T) => string | number
+  getKey?: (tab: T) => string | number
 
   // -------- selfComponent --------
   controller?: MayDeepArray<ControllerRef<TabsController<T>>>
@@ -41,7 +41,7 @@ export interface TabsProps<T> extends DivProps {
 }
 
 export const Tabs = createKit(
-  'Tabs',
+  { name: 'Tabs', plugin: [letTabsStyle, letHandleTabsKeyboardShortcut] },
   <T extends any>({
     tabs,
     defaultTab,
@@ -111,8 +111,5 @@ export const Tabs = createKit(
         </For>
       </Row>
     )
-  },
-  {
-    plugin: [letTabsStyle, letHandleTabsKeyboardShortcut]
   }
 )
