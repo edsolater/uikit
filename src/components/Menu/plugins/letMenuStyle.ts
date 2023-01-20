@@ -14,7 +14,7 @@ export type LetMenuStyleOptions = {
   variables?: MenuVariables
 }
 
-export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuProps<any>>(
+export const letMenuStyle = createPlugin<LetMenuStyleOptions & MenuProps<unknown>>(
   (props) => ({
     icss: addDefault(props?.variables ?? {}, {
       '--menu-bg': '#eee',

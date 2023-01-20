@@ -39,26 +39,25 @@ export type KitProp<
     keyof Props
   >
 
-export type CreateKitOptions<T, F extends MayDeepArray<Plugin<any>>> = {
+export type CreateKitOptions<T> = {
   name: string
   /**
    * if true, use React memo
    */
   reactMemo?: boolean
-  defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
-  plugin?: F
+  defaultProps?: Omit<T, 'children'>
+  plugin?: MayDeepArray<Plugin<any>>
 }
 
-export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
-  rawOptions: CreateKitOptions<T, F> | string,
+export function createKit<T>(
+  rawOptions: CreateKitOptions<T> | string,
   FC: Component<T>
 ): ReactComponent<
-  T &
-    Omit<GetPluginProps<F>, keyof T> & {
-      plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
-      shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
-    } & Omit<T, 'children' | 'shadowProps' | 'plugin'> &
-    Omit<DivProps, 'children' | 'shadowProps' | 'plugin'>
+  {
+    plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
+    shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
+  } & Omit<T, 'shadowProps' | 'plugin'> &
+    Omit<DivProps, keyof T | 'shadowProps' | 'plugin'>
 > {
   const options = isString(rawOptions) ? { name: rawOptions } : rawOptions
   const uikitFC = overwriteFunctionName((props) => {
