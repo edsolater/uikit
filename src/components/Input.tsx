@@ -1,5 +1,5 @@
 import { isInt, MayArray, MayFn, mergeFunction, shrinkToValue } from '@edsolater/fnkit'
-import { useEvent, useToggle } from '@edsolater/hookit'
+import { useEvent, useToggle }from '../hooks'
 import {
   HTMLInputTypeAttribute,
   ReactNode,

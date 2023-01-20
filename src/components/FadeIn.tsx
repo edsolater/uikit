@@ -1,6 +1,6 @@
 import { ReactNode, useRef } from 'react'
 
-import { useInitFlagDetector } from '@edsolater/hookit'
+import { useInitFlagDetector }from '../hooks'
 import { DivProps } from '../Div/type'
 import { CSSStyle, cssTransitionTimeFnOutQuadratic } from '../styles'
 import { opacityInOut } from './Transition/effects'

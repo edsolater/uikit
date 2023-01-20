@@ -1,4 +1,4 @@
-import { useRecordedEffect } from '@edsolater/hookit'
+import { useRecordedEffect }from '../hooks'
 
 /**
  * @todo  move to hookit

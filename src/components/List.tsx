@@ -1,5 +1,5 @@
 import { hasProperty } from '@edsolater/fnkit'
-import { useRecordedEffect } from '@edsolater/hookit'
+import { useRecordedEffect }from '../hooks'
 import React from 'react'
 import { CSSProperties, Fragment, ReactNode, RefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { mergeRefs } from '../utils/react'

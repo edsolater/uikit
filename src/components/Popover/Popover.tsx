@@ -1,7 +1,7 @@
 import { ReactNode, RefObject, useImperativeHandle, useRef, useState } from 'react'
 
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
+import { useIsomorphicLayoutEffect }from '../../hooks'
 import { AddProps } from '../AddProps'
 import { Div } from '../../Div/Div'
 import { Portal } from '../Portal'

@@ -1,4 +1,4 @@
-import { useToggle } from '@edsolater/hookit'
+import { useToggle }from '../hooks'
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 import { AddProps } from '../components/AddProps'
 

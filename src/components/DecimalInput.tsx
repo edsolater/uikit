@@ -1,7 +1,6 @@
 import { isNumberish, Numberish, toString } from '@edsolater/fnkit'
-import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
-import React from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { useIsomorphicLayoutEffect } from '../hooks'
 import { Input, InputProps } from './Input'
 
 export interface DecimalInputProps extends Omit<InputProps, 'value' | 'defaultValue' | 'onUserInput'> {

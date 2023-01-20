@@ -1,9 +1,10 @@
 import { MayFn, shrinkToValue } from '@edsolater/fnkit'
-import { useKeyboardShortcut, useRecordedEffect, useToggle, use2StateSyncer } from '@edsolater/hookit'
-import { ReactNode, RefObject } from 'react'
-import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
+import { ReactNode, RefObject, useEffect } from 'react'
 import { Div } from '../Div/Div'
 import { DivProps } from '../Div/type'
+import { use2StateSyncer, useToggle } from '../hooks'
+import { useComponentHandlerRegister } from '../hooks/useComponentHandler'
+import { handleKeyboardShortcut } from '../utils/dom/gesture/handleKeyboardShortcut'
 import { Portal } from './Portal'
 import { Transition } from './Transition/Transition'
 
@@ -69,18 +70,12 @@ export function Dialog({
   )
 
   // bind keyboar shortcut
-  const { abortKeyboard } = useKeyboardShortcut(document.documentElement, {
-    'Escape': turnOffInnerOpen
-  })
-  useRecordedEffect(
-    ([prevInnerOpen]) => {
-      const userTryToClose = prevInnerOpen == true && innerOpen == false
-      if (userTryToClose) {
-        abortKeyboard()
-      }
-    },
-    [innerOpen]
-  )
+  useEffect(() => {
+    const subscription = handleKeyboardShortcut(document.documentElement, {
+      'Escape': turnOffInnerOpen
+    })
+    return subscription.abort
+  }, [])
 
   return (
     <Portal

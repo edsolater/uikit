@@ -1,4 +1,4 @@
-import { createXAtom, useXStore } from '@edsolater/xstore'
+import { createXAtom, useXAtom } from '@edsolater/xstore'
 import { ButtonProps } from '../components/Button'
 import { DivProps } from '../Div/type'
 
@@ -15,5 +15,5 @@ const uikitThemeAtom = createXAtom<UIKitThemeProps>({
  * React hooks
  */
 export function useUikitTheme<T extends keyof UIKitThemeProps>(kitName: T): UIKitThemeProps[T] | undefined {
-  return useXStore(uikitThemeAtom)[kitName]
+  return useXAtom(uikitThemeAtom)[kitName]
 }

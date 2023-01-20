@@ -1,11 +1,12 @@
 import { flap, shrinkToValue } from '@edsolater/fnkit'
-import { addEventListener, useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '@edsolater/hookit'
 import { ReactNode, RefObject, useEffect, useMemo } from 'react'
-import { ICSSObject } from '../../styles'
-import { MayArray, MayFunction } from '../../typings/tools'
-import { AddProps } from '../AddProps'
 import { DivProps } from '../../Div/type'
 import { mergeProps } from '../../Div/utils/mergeProps'
+import { useCallbackRef, useEvent, useRecordedEffect, useSignalState } from '../../hooks'
+import { ICSSObject } from '../../styles'
+import { MayArray, MayFunction } from '../../typings/tools'
+import { onEvent } from '../../utils'
+import { AddProps } from '../AddProps'
 
 export * from './effects'
 const TransitionPhaseProcessIn = 'during-process'
@@ -166,7 +167,7 @@ export function Transition({
     // if (hasSetOnChangeCallback.current) return
     contentDivRef.onChange(
       (dom) => {
-        addEventListener(dom, 'transitionend', () => setCurrentPhase(targetPhaseSignal()), {
+        onEvent(dom, 'transitionend', () => setCurrentPhase(targetPhaseSignal()), {
           onlyTargetIsSelf: true /* TODO - add feature: attach max one time  */
         }) // not event fired by bubbled
       },

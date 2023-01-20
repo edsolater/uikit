@@ -1,6 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react'
 
-import { useToggle } from '@edsolater/hookit'
+import { useToggle }from '../hooks'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { Div } from '../Div/Div'

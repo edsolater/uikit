@@ -1,4 +1,4 @@
-import { useClickOutside } from '@edsolater/hookit'
+import { useClickOutside }from '../../hooks'
 import { useMemo, useRef } from 'react'
 import { Div } from '../../Div/Div'
 import { DivProps } from '../../Div/type'

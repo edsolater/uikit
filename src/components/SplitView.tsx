@@ -1,5 +1,4 @@
 import { AnyFn, assert } from '@edsolater/fnkit'
-import { attachPointerMove, useEvent, useResizeObserver, useSignalState } from '@edsolater/hookit'
 import { Fragment, useEffect, useRef } from 'react'
 import { setInlineStyle } from '../utils/dom/setCSS'
 import { assertFunctionNotInvokeTooFrequently } from '../utils/fnkit/assertFunctionNotInvokeTooFrequently'
@@ -9,6 +8,10 @@ import { DivProps } from '../Div/type'
 import { createDataTag, htmlHasTag } from '../Div/handles/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps } from './Row'
+import { useSignalState } from '../hooks/useSignalState'
+import { useResizeObserver } from '../domkits'
+import { useEvent } from '../hooks'
+import { handlePointerMove } from '../utils'
 
 export type RowSplitProps = RowProps & DivProps & { dir?: 'row' | 'col'; lineProps?: DivProps }
 /**
@@ -38,7 +41,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
         if (!nextWindowItem) return
         let initWidth = nextWindowItem.clientWidth
         let initHeight = nextWindowItem.clientHeight
-        const { cancel } = attachPointerMove(line, {
+        const { cancel } = handlePointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = nextWindowItem.clientWidth
@@ -56,7 +59,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
         if (!prevWindowItem) return
         let initWidth = prevWindowItem.clientWidth
         let initHeight = prevWindowItem.clientHeight
-        const { cancel } = attachPointerMove(line, {
+        const { cancel } = handlePointerMove(line, {
           move: ({ totalDelta, isFirstEvent }) => {
             if (isFirstEvent) {
               initWidth = prevWindowItem.clientWidth

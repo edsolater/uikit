@@ -1,4 +1,4 @@
-import { useIsomorphicLayoutEffect } from '@edsolater/hookit'
+import { useIsomorphicLayoutEffect }from '../hooks'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { DivProps } from '../Div/type'
