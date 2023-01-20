@@ -44,7 +44,7 @@ export type CreateKitOptions<T, F extends MayDeepArray<Plugin<any>>> = {
   /**
    * if true, use React memo
    */
-  memo?: boolean
+  reactMemo?: boolean
   defaultProps?: Omit<T & GetPluginProps<F>, 'children'>
   plugin?: F
 }
@@ -74,7 +74,7 @@ export function createKit<T, F extends MayDeepArray<Plugin<any>>>(
     )
     return <AddProps {...merged}>{merged && FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, options.name)
-  return (options.memo ? React.memo(uikitFC) : uikitFC) as (props) => JSX.Element
+  return (options.reactMemo ? React.memo(uikitFC) : uikitFC) as (props) => JSX.Element
 }
 
 function sortPlugin(deepPluginList: MayDeepArray<Plugin<any>>) {
