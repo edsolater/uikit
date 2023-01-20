@@ -1,8 +1,9 @@
+import { ReactNode } from 'react'
 import { Div, DivChildNode, DivProps } from '../Div'
 import { ICSS } from '../styles/parseCSS'
 import { createKit } from './utils'
 
-export interface RowProps extends DivProps{
+export interface RowProps extends DivProps {
   children?: DivChildNode
   /** CSS */
   wrap?: boolean
@@ -13,8 +14,7 @@ export interface RowProps extends DivProps{
   /** CSS */
   itemFlexGrow?: boolean
 
-  /** CSS */
-  spaceBetween?: boolean
+  renderSpaceEl?: ReactNode // TODO <=: imply this
 
   name?: string // same as `<Group>`'s grid
 }
@@ -22,12 +22,11 @@ export interface RowProps extends DivProps{
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export const Row = createKit('Row', ({ children, itemFlexGrow, gap, wrap, spaceBetween }: RowProps) => (
+export const Row = createKit('Row', ({ children, itemFlexGrow, gap, wrap }: RowProps) => (
   <Div
     icss={[
       {
         display: 'flex',
-        justifyContent: spaceBetween ? 'space-between' : undefined,
         gap: gap === 'xl' ? 32 : gap === 'lg' ? 16 : gap === 'sm' ? 4 : 8,
         flexWrap: wrap ? 'wrap' : undefined,
         alignItems: 'center'
