@@ -69,7 +69,7 @@ export default async function jFetch<Shape = any>(
   try {
     const rawJson = tryCatch(
       () => JSON.parse(renamedText || '{}'),
-      () => tryCatch(() => new Function('return ' + renamedText)(), undefined)
+      () => tryCatch(() => new Function('return ' + renamedText)())
     )
     const formattedData = await asyncReduce(
       shakeNil(options?.middlewares?.map((m) => m.parseResponseJson) ?? []),
