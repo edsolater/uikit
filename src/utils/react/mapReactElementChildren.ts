@@ -4,7 +4,7 @@ import { DivProps } from '../../Div'
 
 export function mapElementChildren(
   children: DivProps['children'],
-  mapper: (child: ReactElement, idx: number, children: readonly DivProps['children'][]) => DivProps['children']
+  mapper: (child: ReactElement, idx: number, totalCount: number) => DivProps['children']
 ): DivProps['children'][] {
   if (isFragnmentNode(children)) {
     return flap(React.cloneElement(children, { children: mapElementChildren(children.props.children, mapper) }))
@@ -12,7 +12,7 @@ export function mapElementChildren(
     return []
   } else {
     return (React.Children.map(children, (child) => child) ?? []).map((child, idx, children) =>
-      isValidElement(child) ? mapper(child, idx, children) : child
+      isValidElement(child) ? mapper(child, idx, React.Children.count(children)) : child
     )
   }
 }

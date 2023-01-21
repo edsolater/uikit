@@ -134,9 +134,9 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
       ]}
       domRef={[wrapperRef, divProps.domRef]}
     >
-      {mapElementChildren(divProps.children, (childNode, idx, children) => {
-        if (children.length !== getChildrenLength()) {
-          setChildrenLength(children.length)
+      {mapElementChildren(divProps.children, (childNode, idx, totalCount) => {
+        if (totalCount !== getChildrenLength()) {
+          setChildrenLength(totalCount)
         }
         return (
           <Fragment key={idx}>
@@ -161,7 +161,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
             </Div>
 
             {/* Line */}
-            {idx !== children.length - 1 && (
+            {idx !== totalCount - 1 && (
               <ExpandClickableArea
                 {...lineProps}
                 dir='x'
