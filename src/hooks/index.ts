@@ -42,7 +42,6 @@ export * from './useDOM' // HTMLElement is just a variable , not ref. but it use
 export * from './useUpdate' // avoide twice useEffect
 export * from './useIterable' // make iterable or asyncIterable be normal array
 
-
 // for ui
 export * from './useComponentHandler'
 export * from './useGlobalComponentId'

@@ -12,7 +12,10 @@ export function useIterable<T>(iterable: MayPromise<AsyncIterable<T> | Iterable<
   useEffect(() => {
     let aborted = false
     ;(async () => {
-      items.current = []
+      if (items.current.length) {
+        items.current = []
+        forceUpdate()
+      }
       for await (const item of await iterable) {
         tempGroup.current.push(item)
         if (aborted) return
