@@ -1,4 +1,3 @@
-import { ReactNode } from 'react'
 import { Div, DivChildNode, DivProps } from '../Div'
 import { ICSS } from '../styles/parseCSS'
 import { createKit } from './utils'
@@ -13,8 +12,6 @@ export interface RowProps extends DivProps {
 
   /** CSS */
   itemFlexGrow?: boolean
-
-  renderSpaceEl?: ReactNode // TODO <=: imply this
 
   name?: string // same as `<Group>`'s grid
 }
