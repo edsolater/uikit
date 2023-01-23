@@ -1,4 +1,4 @@
-import { MayPromise, shrinkToValue, MayFn } from '@edsolater/fnkit'
+import { MayPromise, shrinkToValue, MayFn, DeMayFn } from '@edsolater/fnkit'
 import { useRef, useState } from 'react'
 import { useRecordedEffect } from './useRecordedEffect'
 
@@ -15,14 +15,14 @@ import { useRecordedEffect } from './useRecordedEffect'
  * return <div>{value}</div> //it will render 5 first, then will render 3.
  */
 export function useAsyncValue<V, F = never>(
-  asyncGetValue: MayFn<MayPromise<V>>,
+  asyncGetValue: V,
   fallbackValue?: undefined
-): V | undefined
-export function useAsyncValue<V, F = never>(asyncGetValue: MayFn<MayPromise<V>>, fallbackValue: MayFn<F>): V | F
+): Awaited<DeMayFn<V>> | undefined
+export function useAsyncValue<V, F = never>(asyncGetValue: V, fallbackValue: MayFn<F>): Awaited<DeMayFn<V>> | F
 export function useAsyncValue<V, F = never>(
-  asyncGetValue: MayFn<MayPromise<V>>,
+  asyncGetValue: V,
   fallbackValue?: MayFn<F>
-): V | F | undefined {
+): Awaited<DeMayFn<V>> | F | undefined {
   const [valueState, setValueState] = useState(fallbackValue)
   const activeAsyncSetterNumber = useRef(0)
   const asyncSetterNumber = useRef(0)
@@ -37,7 +37,7 @@ export function useAsyncValue<V, F = never>(
         const syncValue = await shrinkToValue(asyncGetValue)
 
         if (actionNumber == activeAsyncSetterNumber.current) {
-          //@ts-expect-error force
+          //@ts-ignore
           return setValueState(syncValue)
         } else {
           // it means: there should be a newer setAsyncState
