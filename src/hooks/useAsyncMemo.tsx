@@ -36,6 +36,6 @@ export function useAsyncMemo<V, F = never>(
       // it means: there should be a newer setAsyncState
       return undefined
     }
-  }, dependencies ?? [])
+  }, dependencies)
   return valueState
 }
