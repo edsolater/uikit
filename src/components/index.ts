@@ -1,4 +1,5 @@
 export * from './AddProps'
+export * from './Async'
 
 export * from './SubComponent'
 export * from './Grid'
