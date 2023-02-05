@@ -49,6 +49,12 @@ export type CreateKitOptions<T> = {
   plugin?: MayDeepArray<Plugin<any>>
 }
 
+/**
+ * **NOTE: outside props will add to componet's root node**
+ * @param rawOptions component option
+ * @param FC component code defin
+ * @returns Component
+ */
 export function createKit<T>(
   rawOptions: CreateKitOptions<T> | string,
   FC: Component<T>
