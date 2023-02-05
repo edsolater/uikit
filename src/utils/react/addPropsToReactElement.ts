@@ -9,6 +9,6 @@ export function addPropsToReactElement<AvailableProps = { [key: string]: any }>(
   options?: {}
 ): ReactNode {
   if (!isValidElement(element)) return element
-  const newProps = mergeProps(element.props, shrinkToValue(props, [element.props as any]))
+  const newProps = mergeProps(shrinkToValue(props, [element.props as any]), element.props)
   return cloneElement(element, newProps as any)
 }
