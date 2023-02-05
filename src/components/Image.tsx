@@ -48,7 +48,7 @@ export function Image({
       shadowProps={divProps}
       domRef={ref}
       htmlProps={{ src: srcSet[currentUsedSrcIndex], alt: alertText }}
-      icss={{display:'block',  visibility: currentUsedSrcIndex >= srcSet.length ? 'hidden' : undefined }}
+      icss={{ display: 'block', visibility: currentUsedSrcIndex >= srcSet.length ? 'hidden' : undefined }}
     />
   )
 }
