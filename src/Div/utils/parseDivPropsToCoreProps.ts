@@ -3,11 +3,11 @@ import { parseCSS } from '../../styles/parseCSS'
 import { invokeOnce } from '../../utils/dom/invokeOnce'
 import { loadRef, mergeRefs } from '../../utils/react'
 import classname from '../../utils/react/classname'
-import { DivProps } from '../type'
+import { DivChildNode, DivProps } from '../type'
 
 export function parseDivPropsToCoreProps(
   divProps: Omit<DivProps<any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {
-    children?: React.ReactNode
+    children?: DivChildNode
   }
 ) {
   const statusObject = isObject(divProps._statusObj) ? divProps._statusObj : undefined

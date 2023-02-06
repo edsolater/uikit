@@ -1,4 +1,4 @@
-import { MayEnum, MayFn } from '@edsolater/fnkit'
+import { MayEnum, MayFn, MayPromise } from '@edsolater/fnkit'
 import { MutableRefObject, ReactHTML, ReactNode } from 'react'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
@@ -22,7 +22,7 @@ export interface HTMLTagMap {
 }
 /** richer than ReactNode */
 
-interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Record<string, any> = any > {
+interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Record<string, any> = any> {
   as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
 
   _statusObj?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
@@ -56,16 +56,14 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Re
 }
 
 export type Status = Record<string, any>
-export type DivChildNode = ReactNode
+export type DivChildNode = MayPromise<ReactNode> | Iterable<DivChildNode>
 
 export type WithShallowProps<TagName extends keyof HTMLTagMap = any> = {
   shadowProps?: MayDeepArray<DivProps<TagName>>
 }
 
-export interface DivProps<
-  TagName extends keyof HTMLTagMap = any,
-  Status extends Record<string, any> = any 
-> extends DivBaseProps<TagName, Status>,
+export interface DivProps<TagName extends keyof HTMLTagMap = any, Status extends Record<string, any> = any>
+  extends DivBaseProps<TagName, Status>,
     WithShallowProps<TagName>,
     WithPlugins<TagName> {}
 
