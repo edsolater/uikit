@@ -66,6 +66,3 @@ export interface DivProps<TagName extends keyof HTMLTagMap = any, Status extends
   extends DivBaseProps<TagName, Status>,
     WithShallowProps<TagName>,
     WithPlugins<TagName> {}
-
-type C = { hello: 's' } & unknown
-type D = keyof C
