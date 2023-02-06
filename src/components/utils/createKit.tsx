@@ -4,7 +4,7 @@ import { DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../Div/utils/mergeProps'
 import { parsePropPluginToProps } from '../../plugins'
-import { handleDivPlugin } from '../../plugins/handleDivPlugins'
+import { handleDivPlugin, handlePromiseProps } from '../../plugins/handleDivPlugins'
 import { Plugin } from '../../plugins/type'
 import { Component, ReactComponent } from '../../typings/tools'
 import { AddProps } from '../AddProps'
@@ -69,13 +69,12 @@ export function createKit<T>(
   const uikitFC = overwriteFunctionName((props) => {
     const merged = pipe(
       props,
-      // build-time
       (props) =>
-        parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }),
-      (props) => mergeProps(options?.defaultProps ?? {}, props, { className: options.name }),
-      // run-time
-      handleDivShadowProps,
-      handleDivPlugin
+      parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }), // defined-time
+      (props) => mergeProps(options?.defaultProps ?? {}, props, { className: options.name }), // defined-time
+      handlePromiseProps, // outside-props-run-time
+      handleDivShadowProps, // outside-props-run-time
+      handleDivPlugin // outside-props-run-time
     )
     return <AddProps {...merged}>{merged && FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, options.name)
