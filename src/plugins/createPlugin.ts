@@ -5,7 +5,7 @@ import { mergeProps } from '../Div/utils/mergeProps'
 import { Plugin } from './type'
 
 export function createDangerousRenderWrapperNodePlugin<T>(
-  createrFn: (node: ReactElement, props: T & DivProps) => ReactElement,
+  createrFn: (insideNode: ReactElement, outsideProps: T & DivProps) => ReactElement,
   options?: {
     name?: string
   }

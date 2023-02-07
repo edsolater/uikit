@@ -4,9 +4,16 @@ import { DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../Div/utils/mergeProps'
 import { parsePropPluginToProps } from '../../plugins'
-import { handleDivPlugin, handlePromiseProps } from '../../plugins/handleDivPlugins'
+import { handleDivPlugin, handlePivPromiseProps } from '../../plugins/handleDivPlugins'
 import { Plugin } from '../../plugins/type'
-import { Component, ReactComponent } from '../../typings/tools'
+import {
+  Component,
+  PivifyProps,
+  PromisePropsConfig,
+  ReactComponent,
+  ValidProps,
+  ValidStatus
+} from '../../typings/tools'
 import { AddProps } from '../AddProps'
 
 type GetPluginProps<T> = T extends Plugin<infer Px1>
@@ -55,24 +62,26 @@ export type CreateKitOptions<T> = {
  * @param FC component code defin
  * @returns Component
  */
-export function createKit<T>(
-  rawOptions: CreateKitOptions<T> | string,
-  FC: Component<T>
+export function createKit<Props extends ValidProps, Status extends ValidStatus = {}>(
+  rawOptions: CreateKitOptions<Props> | string,
+  FC: Component<Props>
 ): ReactComponent<
   {
     plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
-    shadowProps?: MayDeepArray<Partial<T>> // component must merged before `<Div>`
-  } & Omit<T, 'shadowProps' | 'plugin'> &
-    Omit<DivProps, keyof T | 'shadowProps' | 'plugin'>
+    shadowProps?: MayDeepArray<Partial<Props>> // component must merged before `<Div>`
+  } & Omit<PivifyProps<Props, Status>, 'shadowProps' | 'plugin'> & {
+      _promisePropsConfig?: PromisePropsConfig<Props>
+      _status?: ValidStatus
+    }
 > {
   const options = isString(rawOptions) ? { name: rawOptions } : rawOptions
   const uikitFC = overwriteFunctionName((props) => {
     const merged = pipe(
       props,
       (props) =>
-      parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }), // defined-time
+        parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }), // defined-time
       (props) => mergeProps(options?.defaultProps ?? {}, props, { className: options.name }), // defined-time
-      handlePromiseProps, // outside-props-run-time
+      (props) => handlePivPromiseProps(props, props['_status'], props['_promisePropsConfig']), // outside-props-run-time
       handleDivShadowProps, // outside-props-run-time
       handleDivPlugin // outside-props-run-time
     )

@@ -19,7 +19,7 @@ export interface RowProps extends DivProps {
 /**
  * flex box (default has alignItems:center justifyContent:space-between)
  */
-export const Row = createKit('Row', ({ children, itemFlexGrow, gap, wrap }: RowProps) => (
+export const Row = createKit<RowProps>('Row', ({ children, itemFlexGrow, gap, wrap }) => (
   <Div
     icss={[
       {
@@ -40,3 +40,4 @@ export const flexChildGrow: ICSS = {
     flexGrow: 1
   }
 }
+

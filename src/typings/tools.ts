@@ -1,5 +1,6 @@
-import { RefObject } from "react"
-import { DivChildNode } from "../Div"
+import { AnyFn } from '@edsolater/fnkit'
+import { RefObject } from 'react'
+import { DivChildNode } from '../Div'
 
 export type MayArray<T> = T | Array<T>
 
@@ -209,3 +210,28 @@ export type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>
 export type Component<Props> = (props: Props) => DivChildNode
 export type ReactComponent<Props> = (props: Props) => JSX.Element
 export type ControllerRef<T> = RefObject<any> | ((controller: T) => void)
+
+export type ValidProps = Record<string, Exclude<any, Promise<any>>>
+export type ValidStatus = object
+
+type InjectStatusToFirstParam<T, Status extends ValidStatus = {}> = T extends (
+  ...args: [infer F, ...infer Rest]
+) => infer R
+  ? T extends () => infer R
+    ? (status: Status) => R
+    : (...args: [utils: F extends Record<keyof any, any> ? F & Status : F, ...args: Rest]) => R
+  : T
+
+export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}> = {
+  [K in keyof P]: K extends 'children' | `_${string}` // 'children' and props start with '_' will be ignored
+    ? P[K]
+    : K extends `on${string}` | `render${string}` | `get${string}` // function must start with 'on'
+    ? InjectStatusToFirstParam<P[K], Status>
+    : P[K] | Promise<P[K]> | ((status: Status) => Promise<P[K]>) | ((status: Status) => P[K])
+}
+
+export type PromisePropsConfig<Props extends ValidProps> = {
+  [K in keyof Props as `${K & string}MayPromise`]?: boolean
+} & {
+  [K in keyof Props as `${K & string}PromiseFallback`]?: Props[K]
+}

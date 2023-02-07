@@ -8,10 +8,10 @@ export interface ForProps<T extends any> extends Omit<DivProps, 'children'> {
   each: T[] | undefined
   getKey?: (item: T, idx: number) => string | number | undefined
   children?: (item: T, idx: number) => JSX.Element
-  renderGap?: MayFn<ReactNode, [utils: { left: T; right: T; idx: number; totalCount: number }]>
+  renderGap?: MayFn<ReactNode, [utils: { left: T; right: T; idx: number; totalCount: number }]> // FIXME
   renderGapWithBothEnds?: MayFn<
     ReactNode,
-    [utils: { left: T | undefined; right: T | undefined; idx: number; totalCount: number }]
+    [utils: { left: T | undefined; right: T | undefined; idx: number; totalCount: number }] // FIXME
   >
 }
 
