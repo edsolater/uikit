@@ -9,7 +9,7 @@ import { createDataTag, htmlHasTag } from '../Div/handles/tag'
 import { ExpandClickableArea } from './ExpandClickableArea'
 import { RowProps } from './Row'
 import { useSignalState } from '../hooks/useSignalState'
-import { useResizeObserver } from '../domkits'
+import { useResizeObserver } from '../hooks/dom'
 import { useEvent } from '../hooks'
 import { handlePointerMove } from '../utils'
 

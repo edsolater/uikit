@@ -1,16 +1,19 @@
-import { flapDeep, MayPromise, omit, pipe } from '@edsolater/fnkit'
+import { flapDeep, omit, pipe } from '@edsolater/fnkit'
 import { createElement, ReactElement } from 'react'
 import { handleDivPlugin } from '../plugins/handleDivPlugins'
+import { ValidStatus } from '../typings/tools'
 import { handleDivChildren } from './handles/handleDivChildren'
 import { handleDivShadowProps } from './handles/handleDivShallowProps'
 import { handleDivTag } from './handles/handleDivTag'
-import { DivChildNode, DivProps, HTMLTagMap } from './type'
 import { useDivChildren } from './hooks/useDivChildren'
+import { DivChildNode, DivProps, HTMLTagMap, Status } from './type'
 import { parseDivPropsToCoreProps } from './utils/parseDivPropsToCoreProps'
 
-export const Div = <TagName extends keyof HTMLTagMap = any>(rawProps: DivProps<TagName>) => {
+export const Div = <Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'>(
+  rawProps: DivProps<Status, TagName>
+) => {
   const props = pipe(
-    rawProps as DivProps<TagName> | undefined,
+    rawProps as Partial<DivProps>,
     handleDivShadowProps,
     handleDivPlugin,
     handleDivChildren,
@@ -25,15 +28,15 @@ export const Div = <TagName extends keyof HTMLTagMap = any>(rawProps: DivProps<T
 }
 
 function useNormalDivPropsWithChildren(
-  props: Omit<DivProps<any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & { children?: DivChildNode }
+  props: Omit<DivProps<ValidStatus, keyof HTMLTagMap>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & { children?: DivChildNode }
 ) {
   const children = useDivChildren(props.children)
   return createElement(props.as ?? 'div', parseDivPropsToCoreProps(props), children)
 }
 
-function useDangerousWrapperPluginsWithChildren(props: DivProps<any>): ReactElement {
+function useDangerousWrapperPluginsWithChildren(props: DivProps): ReactElement {
   return flapDeep(props.dangerousRenderWrapperNode).reduce(
     (prevNode, getWrappedNode) => (getWrappedNode ? getWrappedNode(prevNode) : prevNode),
-    createElement(Div, omit(props, 'dangerousRenderWrapperNode')) as ReactElement
+    createElement(Div, omit(props, 'dangerousRenderWrapperNode') as any) as ReactElement
   )
 }

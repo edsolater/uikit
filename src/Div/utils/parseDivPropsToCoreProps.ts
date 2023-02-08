@@ -6,11 +6,11 @@ import classname from '../../utils/react/classname'
 import { DivChildNode, DivProps } from '../type'
 
 export function parseDivPropsToCoreProps(
-  divProps: Omit<DivProps<any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {
+  divProps: Omit<DivProps<{}, any>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {
     children?: DivChildNode
   }
 ) {
-  const statusObject = isObject(divProps._statusObj) ? divProps._statusObj : undefined
+  const statusObject = isObject(divProps._status) ? divProps._status : {}
   return {
     ...(divProps.htmlProps &&
       Object.assign({}, ...shakeNil(flapDeep(divProps.htmlProps)).map((i) => shrinkToValue(i, [statusObject])))),

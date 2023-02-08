@@ -21,7 +21,7 @@ export function Image({
    *  for readability
    */
   alt?: string
-} & DivProps<'img'>) {
+} & DivProps<{}, 'img'>) {
   const ref = useRef<HTMLImageElement>(null)
   const srcSet = shakeFalsy([src, fallbackSrc].flat())
   const srcFingerprint = srcSet.join(' ')
@@ -43,7 +43,7 @@ export function Image({
     )
   }, [])
   return (
-    <Div<'img'>
+    <Div<{}, 'img'>
       as='img'
       shadowProps={divProps}
       domRef={ref}

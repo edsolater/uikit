@@ -3,7 +3,7 @@ import { MutableRefObject, ReactHTML, ReactNode } from 'react'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
-import { MayDeepArray } from '../typings/tools'
+import { MayDeepArray, ValidStatus } from '../typings/tools'
 import { ClassName } from '../utils/react'
 import { DivDataTag } from './handles/tag'
 
@@ -22,10 +22,10 @@ export interface HTMLTagMap {
 }
 /** richer than ReactNode */
 
-interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Record<string, any> = any> {
+interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> {
   as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
 
-  _statusObj?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
+  _status?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
 
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
   domRef?: MayDeepArray<
@@ -40,7 +40,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Re
   onClick?: (
     utils: {
       ev: React.MouseEvent<HTMLElement, MouseEvent>
-      el: HTMLTagMap[TagName]
+      el: HTMLElement
     } & Status
   ) => void
   icss?: ICSS<Status>
@@ -58,11 +58,13 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = any, Status extends Re
 export type Status = Record<string, any>
 export type DivChildNode = MayPromise<ReactNode> | Iterable<DivChildNode>
 
-export type WithShallowProps<TagName extends keyof HTMLTagMap = any> = {
-  shadowProps?: MayDeepArray<DivProps<TagName>>
+export type WithShallowProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> = {
+  shadowProps?: MayDeepArray<DivProps<Status, TagName>>
 }
 
-export interface DivProps<TagName extends keyof HTMLTagMap = any, Status extends Record<string, any> = any>
-  extends DivBaseProps<TagName, Status>,
-    WithShallowProps<TagName>,
-    WithPlugins<TagName> {}
+export interface DivProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'>
+  extends DivBaseProps<Status, TagName>,
+    WithShallowProps<Status, TagName>,
+    WithPlugins<Status, TagName> {}
+
+    

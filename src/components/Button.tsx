@@ -1,4 +1,4 @@
-import { isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { isArray, MayArray, MayFn, shrinkToValue, UndefinedKeys } from '@edsolater/fnkit'
 import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
 import { Div } from '../Div/Div'
 import { DivProps } from '../Div/type'
@@ -16,7 +16,7 @@ export interface ButtonHandle {
   focus?: () => void
 }
 
-export interface ButtonProps extends DivProps<'button'> {
+export interface ButtonProps extends DivProps<never, 'button'> {
   /**
    * @default 'solid'
    */
@@ -134,7 +134,7 @@ export function Button(props: ButtonProps) {
     xs: 0.5
   }[size]
   return (
-    <Div<'button'>
+    <Div<never, 'button'>
       shadowProps={restProps}
       as='button'
       onClick={onClick}

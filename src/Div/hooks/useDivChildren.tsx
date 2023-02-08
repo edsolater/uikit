@@ -8,6 +8,11 @@ export function useDivChildren(children: DivChildNode): ReactNode {
   )
   useLayoutEffect(() => {
     setCachedChildren(containOnlyReactNode(children) ? children : replacePromiseWithUndefined(children))
+
+    // clean so old children will be GC
+    return () => {
+      setCachedChildren(undefined)
+    }
   }, [children])
   recursivelyExtractChildren(children, setCachedChildren)
   return cachedChildren

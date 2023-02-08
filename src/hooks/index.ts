@@ -1,3 +1,5 @@
+export * from './dom' // browser features
+
 export * from './useActive'
 
 export * from './useAsyncEffect'

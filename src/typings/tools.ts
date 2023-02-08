@@ -214,7 +214,20 @@ export type ControllerRef<T> = RefObject<any> | ((controller: T) => void)
 export type ValidProps = Record<string, Exclude<any, Promise<any>>>
 export type ValidStatus = object
 
+export type ValidPromisePropsConfig<Props extends ValidProps> = {
+  [K in keyof Props as `${K & string}MayPromise`]?: boolean
+} & {
+  [K in keyof Props as `${K & string}PromiseFallback`]?: Props[K]
+}
+
 type InjectStatusToFirstParam<T, Status extends ValidStatus = {}> = T extends (
+  ...args: [infer F, ...infer Rest]
+) => infer R
+  ? T extends () => infer R
+    ? (status: Status) => R
+    : (...args: [utils: F extends Record<keyof any, any> ? F & Status : F, ...args: Rest]) => R
+  : T
+type DeInjectStatusToFirstParam<T, Status extends ValidStatus = {}> = T extends (
   ...args: [infer F, ...infer Rest]
 ) => infer R
   ? T extends () => infer R
@@ -230,8 +243,13 @@ export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}> =
     : P[K] | Promise<P[K]> | ((status: Status) => Promise<P[K]>) | ((status: Status) => P[K])
 }
 
-export type PromisePropsConfig<Props extends ValidProps> = {
-  [K in keyof Props as `${K & string}MayPromise`]?: boolean
-} & {
-  [K in keyof Props as `${K & string}PromiseFallback`]?: Props[K]
+
+export type DePivifyProps<Status extends ValidStatus, P extends PivifyProps<ValidProps>> = {
+  [K in keyof P]: K extends 'children' | `_${string}` // 'children' and props start with '_' will be ignored
+    ? P[K]
+    : K extends `on${string}` | `render${string}` | `get${string}` // function must start with 'on'
+    ? DeInjectStatusToFirstParam<P[K], Status>
+    : P[K] extends AnyFn
+    ? Awaited<ReturnType<P[K]>>
+    : P[K]
 }

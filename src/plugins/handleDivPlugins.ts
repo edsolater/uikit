@@ -1,10 +1,10 @@
 import { AnyFn, isObject, isPromise, map, omit, shrinkToValue } from '@edsolater/fnkit'
 import { useEffect, useRef, useState } from 'react'
 import { DivProps } from '../Div/type'
-import { PromisePropsConfig, ValidProps, ValidStatus } from '../typings/tools'
+import { ValidPromisePropsConfig, ValidProps, ValidStatus } from '../typings/tools'
 import { parsePropPluginToProps } from './createPlugin'
 
-export function handleDivPlugin<P extends Partial<DivProps>>(props?: P) {
+export function handleDivPlugin<P extends Partial<DivProps>>(props: P) {
   if (!props?.plugin) return props
   return omit(parsePropPluginToProps({ plugin: props.plugin, props }), 'plugin')
 }
@@ -15,7 +15,7 @@ export function handleDivPlugin<P extends Partial<DivProps>>(props?: P) {
 export function handlePivPromiseProps(
   props: ValidProps,
   status: ValidStatus | undefined,
-  promisePropsConfig: PromisePropsConfig<ValidProps> | undefined
+  promisePropsConfig: ValidPromisePropsConfig<ValidProps> | undefined
 ) {
   // for friendlier error
   // TODO: imply this
@@ -39,7 +39,7 @@ export function handlePivPromiseProps(
 function getDivPromisePropsKey(
   props: ValidProps,
   status: ValidStatus | undefined,
-  promisePropsConfig: PromisePropsConfig<ValidProps> | undefined
+  promisePropsConfig: ValidPromisePropsConfig<ValidProps> | undefined
 ): string[] {
   const promisePropsKey = Object.entries(props)
     .filter(([key, value]) => {
@@ -70,7 +70,7 @@ function isInnerKey(key: any, value: any) {
 function getInitProps(
   props: ValidProps,
   status: ValidStatus | undefined,
-  promisePropsConfig: PromisePropsConfig<ValidProps> | undefined
+  promisePropsConfig: ValidPromisePropsConfig<ValidProps> | undefined
 ): ValidProps {
   const initProps = map(props, (value, key) => {
     if (isChildren(key, value) || isInnerKey(key, value)) return value

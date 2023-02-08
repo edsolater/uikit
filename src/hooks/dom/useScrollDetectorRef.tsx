@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { attachScroll, ScrollDetectorOptions } from '../utils/dom/gesture/scroll'
+import { attachScroll, ScrollDetectorOptions } from '../../utils/dom/gesture/scroll'
 
 interface UseScrollDetectorRefOptions extends ScrollDetectorOptions {
   disabled?: boolean // unlike props:lock, it will not recode any callback. (mute totally)

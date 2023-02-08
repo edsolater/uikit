@@ -9,10 +9,11 @@ import { Plugin } from '../../plugins/type'
 import {
   Component,
   PivifyProps,
-  PromisePropsConfig,
+  ValidPromisePropsConfig,
   ReactComponent,
   ValidProps,
-  ValidStatus
+  ValidStatus,
+  DePivifyProps
 } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 
@@ -32,11 +33,11 @@ type GetPluginProps<T> = T extends Plugin<infer Px1>
 
 export type KitProp<
   Props,
-  TagName extends keyof HTMLTagMap = any,
   Status extends Record<string, any> = any,
+  TagName extends keyof HTMLTagMap = any,
   Plugins extends MayDeepArray<Plugin<any>> = Plugin<unknown>
 > = Props &
-  Omit<DivProps<TagName, Status>, keyof Props | 'plugin' | 'shadowProps'> &
+  Omit<DivProps<Status, TagName>, keyof Props | 'plugin' | 'shadowProps'> &
   Omit<GetPluginProps<Plugins>, keyof Props | 'plugin' | 'shadowProps'> &
   Omit<
     {
@@ -61,6 +62,7 @@ export type CreateKitOptions<T> = {
  * @param rawOptions component option
  * @param FC component code defin
  * @returns Component
+ * @deprecated use {@link useKitProps}
  */
 export function createKit<Props extends ValidProps, Status extends ValidStatus = {}>(
   rawOptions: CreateKitOptions<Props> | string,
@@ -70,13 +72,13 @@ export function createKit<Props extends ValidProps, Status extends ValidStatus =
     plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
     shadowProps?: MayDeepArray<Partial<Props>> // component must merged before `<Div>`
   } & Omit<PivifyProps<Props, Status>, 'shadowProps' | 'plugin'> & {
-      _promisePropsConfig?: PromisePropsConfig<Props>
+      _promisePropsConfig?: ValidPromisePropsConfig<Props>
       _status?: ValidStatus
     }
 > {
   const options = isString(rawOptions) ? { name: rawOptions } : rawOptions
   const uikitFC = overwriteFunctionName((props) => {
-    const merged = pipe(
+    const mergedProps = pipe(
       props,
       (props) =>
         parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }), // defined-time
@@ -85,9 +87,25 @@ export function createKit<Props extends ValidProps, Status extends ValidStatus =
       handleDivShadowProps, // outside-props-run-time
       handleDivPlugin // outside-props-run-time
     )
-    return <AddProps {...merged}>{merged && FC(merged)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
+    return <AddProps {...mergedProps}>{mergedProps && FC(mergedProps)}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, options.name)
   return (options.reactMemo ? React.memo(uikitFC) : uikitFC) as (props) => JSX.Element
+}
+
+export function useKitProps<Props extends ValidProps, Status extends ValidStatus = {}>(
+  props: Props,
+  options?: CreateKitOptions<Props>
+): [componentProps: DePivifyProps<Status, Props>, divProps: DivProps<Status>] {
+  const mergedProps = pipe(
+    props,
+    (props) =>
+      parsePropPluginToProps({ plugin: options?.plugin ? sortPlugin(options.plugin) : options?.plugin, props }), // defined-time
+    (props) => mergeProps(options?.defaultProps ?? {}, props, { className: options?.name }), // defined-time
+    (props) => handlePivPromiseProps(props, props['_status'], props['_promisePropsConfig']), // outside-props-run-time
+    handleDivShadowProps, // outside-props-run-time
+    handleDivPlugin // outside-props-run-time
+  ) as Omit<Props, 'shadowProps' | 'plugin'>
+  return [mergedProps as DePivifyProps<Status, Props> /* <-- FIX THIS TYPE */, mergedProps]
 }
 
 function sortPlugin(deepPluginList: MayDeepArray<Plugin<any>>) {

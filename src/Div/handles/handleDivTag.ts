@@ -6,7 +6,7 @@ import { createDataTag, hasTag, toDataset } from './tag'
 export const noRenderTag = createDataTag({ key: 'Div', value: 'no-render' })
 export const offscreenTag = createDataTag({ key: 'Div', value: 'offscreen' })
 
-export function handleDivTag<P extends Partial<DivProps<any>>>(props?: P): Omit<P, 'tag'> | undefined {
+export function handleDivTag<P extends Partial<DivProps<never, any>>>(props?: P): Omit<P, 'tag'> | undefined {
   if (!props?.tag) return props
 
   const processNoRender = (divProps: P | undefined) => {

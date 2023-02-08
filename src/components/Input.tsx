@@ -1,5 +1,5 @@
 import { isInt, MayArray, MayFn, mergeFunction, shrinkToValue } from '@edsolater/fnkit'
-import { useEvent, useToggle }from '../hooks'
+import { useEvent, useToggle } from '../hooks'
 import {
   HTMLInputTypeAttribute,
   ReactNode,
@@ -17,7 +17,7 @@ import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
 import { createKit, KitProp } from './utils'
 
-export interface InputStatus {
+export interface InputVars {
   text: string | undefined
 }
 
@@ -26,7 +26,7 @@ export interface InputMethods {
   clearInput(): void
 }
 
-export type InputControls = InputStatus & InputMethods
+export type InputStatus = InputVars & InputMethods
 
 export type InputProps = KitProp<
   {
@@ -60,14 +60,14 @@ export type InputProps = KitProp<
      */
     validators?: MayArray<{
       /** expression must return true to pass this validator */
-      should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputControls }]>
+      should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputStatus }]>
       /** by default, any input should be accepted */
       ignoreThisInput?: boolean
       /**  items are button's setting which will apply when corresponding validator has failed */
       validProps?: Omit<InputProps, 'validators' | 'disabled'>
       invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
-      onValid?: (text: string, payload: { el: HTMLInputElement; control: InputControls }) => void
-      onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputControls }) => void
+      onValid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
+      onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
     }>
 
     /**
@@ -81,9 +81,9 @@ export type InputProps = KitProp<
     suffix?: MayFn<ReactNode, [text: string | undefined]>
 
     controller?: RefObject<any>
-    inputDomRef?: DivProps<'input'>['domRef']
-    inputClassName?: DivProps<'input'>['className']
-    inputHTMLProps?: DivProps<'input'>['htmlProps']
+    inputDomRef?: DivProps<{}, 'input'>['domRef']
+    inputClassName?: DivProps<{}, 'input'>['className']
+    inputHTMLProps?: DivProps<{}, 'input'>['htmlProps']
     /**
      * this callback may be invoked every time value change regardless it is change by user input or js code
      * as a controlled formkit, U should avoid using it if U can
@@ -91,13 +91,13 @@ export type InputProps = KitProp<
      */
     onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'any')
     onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
-    onClick?: ((utils: { text?: string; control: InputControls }) => void) & DivProps<'input'>['onClick']
-    onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputControls }) => void
-    onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputControls }) => void
-    onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputControls }) => void
+    // onClick?: ((utils: { text?: string; control: InputControls }) => void) & DivProps<{}, 'input'>['onClick']
+    onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputStatus }) => void
+    onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputStatus }) => void
+    onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputStatus }) => void
   },
-  'input',
-  InputStatus
+  InputStatus,
+  'input'
 >
 
 type CheckInputUtils = {
@@ -158,7 +158,7 @@ export const Input = createKit('Input', (props: InputProps) => {
   // if user is inputing or just input, no need to update upon out-side value
   const [isOutsideValueLocked, { on: lockOutsideValue, off: unlockOutsideValue }] = useToggle()
 
-  const inputStatus: InputStatus = {
+  const inputVars: InputVars = {
     text: innerValue
   }
   const inputMethods: InputMethods = {
@@ -169,9 +169,9 @@ export const Input = createKit('Input', (props: InputProps) => {
       setInnerValue('')
     }
   }
-  const inputControls: InputControls = { ...inputStatus, ...inputMethods }
+  const inputStatus: InputStatus = { ...inputVars, ...inputMethods }
 
-  useImperativeHandle(controller, () => inputControls)
+  useImperativeHandle(controller, () => inputStatus)
 
   // this relay on keyboard down, not prefect with copyboard paste
   const predictNextSentence = useEvent((utils: CheckInputUtils): string => {
@@ -188,13 +188,14 @@ export const Input = createKit('Input', (props: InputProps) => {
   })
 
   return (
-    <Div
-      shadowProps={restProps}
+    <Div<InputStatus>
       className='Input'
+      _status={inputStatus}
+      shadowProps={restProps as any} // <-- FIX THIS TYPE DECLARE
       onClick={(utils) => {
         if (disabled || !inputRef.current) return
         inputRef.current.focus()
-        onClick?.({ text: innerValue, control: inputControls, ...utils })
+        onClick?.(utils)
       }}
       icss={[
         { display: 'flex' },
@@ -224,15 +225,15 @@ export const Input = createKit('Input', (props: InputProps) => {
             // all validators must be true
             for (const validator of [validators].flat()) {
               const passed = Boolean(
-                shrinkToValue(validator.should, [text, { el: inputRef.current!, control: inputControls }])
+                shrinkToValue(validator.should, [text, { el: inputRef.current!, control: inputStatus }])
               )
               if (passed) {
                 setFallbackProps(validator.validProps ?? {})
-                validator.onValid?.(text, { el: inputRef.current!, control: inputControls })
+                validator.onValid?.(text, { el: inputRef.current!, control: inputStatus })
               }
               if (!passed) {
                 setFallbackProps(validator.invalidProps ?? {})
-                validator.onInvalid?.(text, { el: inputRef.current!, control: inputControls })
+                validator.onInvalid?.(text, { el: inputRef.current!, control: inputStatus })
               }
             }
           }
@@ -254,15 +255,15 @@ export const Input = createKit('Input', (props: InputProps) => {
 
             onBlur: () => {
               unlockOutsideValue()
-              onBlur?.(innerValue, { el: inputRef.current!, control: inputControls })
+              onBlur?.(innerValue, { el: inputRef.current!, control: inputStatus })
             },
             onFocus: () => {
               lockOutsideValue()
-              onFocus?.(innerValue, { el: inputRef.current!, control: inputControls })
+              onFocus?.(innerValue, { el: inputRef.current!, control: inputStatus })
             },
             onKeyDown: (ev) => {
               if (ev.key === 'Enter') {
-                onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputControls })
+                onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputStatus })
               }
             },
             'aria-label': ariaLabelText,
@@ -279,7 +280,7 @@ function AutoWidenInput({
   checkUserTypeIsValid,
   onChange,
   ...inputBodyProps
-}: DivProps<'input'> &
+}: DivProps<{}, 'input'> &
   Pick<InputProps, 'isFluid' | 'value'> & {
     onChange(t: string): void
     checkUserTypeIsValid?: (utils: { key: string; selectionStart?: number; selectionEnd?: number }) => boolean
@@ -319,7 +320,7 @@ function AutoWidenInput({
   }, [])
 
   return (
-    <Div<'input'>
+    <Div<{}, 'input'>
       as='input'
       shadowProps={inputBodyProps}
       domRef={inputElement}
