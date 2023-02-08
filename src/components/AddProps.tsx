@@ -3,7 +3,7 @@ import { Div } from '../Div'
 import { DivProps } from '../Div/type'
 import { addPropsToReactElement } from '../utils/react/addPropsToReactElement'
 
-type AddPropsProps = Omit<Partial<DivProps>, 'children'> & { children?: any }
+type AddPropsProps = Omit<Partial<DivProps<any>>, 'children'> & { children?: any }
 
 /**
  * @BaseUIComponent

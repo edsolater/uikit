@@ -2,7 +2,7 @@ import { Div, DivChildNode, DivProps } from '../Div'
 import { ICSS } from '../styles/parseCSS'
 import { createKit } from './utils'
 
-export interface RowProps extends DivProps {
+export interface RowProps {
   children?: DivChildNode
   /** CSS */
   wrap?: boolean

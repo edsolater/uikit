@@ -34,7 +34,7 @@ export interface TabsProps<T> extends DivProps {
   // -------- sub --------
   renderLabel?: MayFn<ReactNode, [utils: { tab: T } & TabsController<T>]>
   anatomy?: {
-    container?: MayFn<RowProps, [utils: TabsController<T>]>
+    container?: MayFn<RowProps & DivProps, [utils: TabsController<T>]>
     labelBox?: MayFn<DivProps, [utils: TabsController<T>]>
     letAddFloatBgOptions?: MayFn<LetAddFloatBgOptions, [utils: TabsController<T>]>
   }

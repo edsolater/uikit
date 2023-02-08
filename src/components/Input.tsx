@@ -1,5 +1,4 @@
 import { isInt, MayArray, MayFn, mergeFunction, shrinkToValue } from '@edsolater/fnkit'
-import { useEvent, useToggle } from '../hooks'
 import {
   HTMLInputTypeAttribute,
   ReactNode,
@@ -12,93 +11,85 @@ import {
 } from 'react'
 import { Div } from '../Div/Div'
 import { DivProps } from '../Div/type'
+import { useEvent, useSignalState, useToggle } from '../hooks'
 import { onEvent } from '../utils'
 import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
-import { createKit, KitProp } from './utils'
+import { createKit } from './utils'
 
-export interface InputVars {
+export interface InputStatus {
   text: string | undefined
-}
-
-export interface InputMethods {
+  el: HTMLInputElement | undefined
   focus(): void
   clearInput(): void
 }
 
-export type InputStatus = InputVars & InputMethods
+export type InputProps = {
+  id?: string // for accessibility
 
-export type InputProps = KitProp<
-  {
-    id?: string // for accessibility
+  type?: HTMLInputTypeAttribute // current support type in this app
+  inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
+  ariaRequired?: boolean // for readability
+  /** only for aria */
+  ariaLabelText?: string
 
-    type?: HTMLInputTypeAttribute // current support type in this app
-    inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
-    ariaRequired?: boolean // for readability
-    /** only for aria */
-    ariaLabelText?: string
+  /** only after `<Input>` created */
+  defaultValue?: string
+  /** when change, affact to ui*/
+  value?: string
+  placeholder?: string
 
-    /** only after `<Input>` created */
-    defaultValue?: string
-    /** when change, affact to ui*/
-    value?: string
-    placeholder?: string
+  disabled?: boolean
+  /**
+   * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
+   * it makes input refuse user to edit,
+   *
+   * different from disabled,
+   * user will believe everything is ok (input's style is as good as normal),
+   * but actually can't input
+   * */
+  disableUserInput?: boolean
+  pattern?: RegExp // with force pattern, you only can input pattern allowed string
+  /** must all condition passed (one by one)
+   * !!! validator may be very complicated, and invalid input will not block user's input action.
+   */
+  validators?: MayArray<{
+    /** expression must return true to pass this validator */
+    should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputStatus }]>
+    /** by default, any input should be accepted */
+    ignoreThisInput?: boolean
+    /**  items are button's setting which will apply when corresponding validator has failed */
+    validProps?: Omit<InputProps, 'validators' | 'disabled'>
+    invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
+    onValid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
+    onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
+  }>
 
-    disabled?: boolean
-    /**
-     * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
-     * it makes input refuse user to edit,
-     *
-     * different from disabled,
-     * user will believe everything is ok (input's style is as good as normal),
-     * but actually can't input
-     * */
-    disableUserInput?: boolean
-    pattern?: RegExp // with force pattern, you only can input pattern allowed string
-    /** must all condition passed (one by one)
-     * !!! validator may be very complicated, and invalid input will not block user's input action.
-     */
-    validators?: MayArray<{
-      /** expression must return true to pass this validator */
-      should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputStatus }]>
-      /** by default, any input should be accepted */
-      ignoreThisInput?: boolean
-      /**  items are button's setting which will apply when corresponding validator has failed */
-      validProps?: Omit<InputProps, 'validators' | 'disabled'>
-      invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
-      onValid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
-      onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
-    }>
+  /**
+   * remove `min-width:10em`
+   * input will auto widen depends on content Text */
+  isFluid?: boolean
 
-    /**
-     * remove `min-width:10em`
-     * input will auto widen depends on content Text */
-    isFluid?: boolean
+  /** Optional. usually, it is an <Input>'s icon */
+  prefix?: MayFn<ReactNode, [text: string | undefined]>
+  /** Optional. usually, it is an <Input>'s unit or feature icon */
+  suffix?: MayFn<ReactNode, [text: string | undefined]>
 
-    /** Optional. usually, it is an <Input>'s icon */
-    prefix?: MayFn<ReactNode, [text: string | undefined]>
-    /** Optional. usually, it is an <Input>'s unit or feature icon */
-    suffix?: MayFn<ReactNode, [text: string | undefined]>
-
-    controller?: RefObject<any>
-    inputDomRef?: DivProps<{}, 'input'>['domRef']
-    inputClassName?: DivProps<{}, 'input'>['className']
-    inputHTMLProps?: DivProps<{}, 'input'>['htmlProps']
-    /**
-     * this callback may be invoked every time value change regardless it is change by user input or js code
-     * as a controlled formkit, U should avoid using it if U can
-     * it may be confusing with onUserInput sometimes
-     */
-    onDangerousValueChange?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'any')
-    onUserInput?: (text: string | undefined, el: HTMLInputElement) => void // TODO: should be onInput (by(property):'user')
-    // onClick?: ((utils: { text?: string; control: InputControls }) => void) & DivProps<{}, 'input'>['onClick']
-    onEnter?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputStatus }) => void
-    onBlur?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputStatus }) => void
-    onFocus?: (text: string | undefined, payload: { el: HTMLInputElement; control: InputStatus }) => void
-  },
-  InputStatus,
-  'input'
->
+  inputDomRef?: DivProps<{}, 'input'>['domRef']
+  inputClassName?: DivProps<{}, 'input'>['className']
+  inputHTMLProps?: DivProps<{}, 'input'>['htmlProps']
+  /**
+   * this callback may be invoked every time value change regardless it is change by user input or js code
+   * as a controlled formkit, U should avoid using it if U can
+   * it may be confusing with onUserInput sometimes
+   */
+  onDangerousValueChange?: (utils: InputStatus) => void // TODO: should be onInput (by(property):'any')
+  onUserInput?: (utils: InputStatus) => void // TODO: should be onInput (by(property):'user')
+  onClick?: (utils: InputStatus) => void
+  onEnter?: (utils: InputStatus) => void
+  onBlur?: (utils: InputStatus) => void
+  onFocus?: (utils: InputStatus) => void
+}
 
 type CheckInputUtils = {
   key: string
@@ -106,7 +97,7 @@ type CheckInputUtils = {
   selectionEnd?: number
 }
 
-export const Input = createKit('Input', (props: InputProps) => {
+export const Input = createKit<InputProps, InputStatus>('Input', (props, { setStatus }) => {
   // props set by validators
   const [fallbackProps, setFallbackProps] = useState<Omit<InputProps, 'validators' | 'disabled'>>()
 
@@ -128,7 +119,6 @@ export const Input = createKit('Input', (props: InputProps) => {
 
     prefix,
     suffix,
-    controller,
     inputDomRef,
     inputClassName,
     inputHTMLProps,
@@ -145,23 +135,15 @@ export const Input = createKit('Input', (props: InputProps) => {
   const inputRef = useRef<HTMLInputElement>()
 
   // only useable for uncontrolled formkit
-  const [innerValue, setInnerValue] = useState(defaultValue ?? value)
-  useEffect(() => {
-    setInnerValue(value)
-  }, [value])
+  const [innerValue, setInnerValue, innerValueSignal] = useSignalState(defaultValue ?? value)
+  const inputStatus: InputStatus = {
+    get text() {
+      return innerValueSignal()
+    },
+    get el() {
+      return inputRef.current
+    },
 
-  useEffect(() => {
-    if (!inputRef.current) return
-    onDangerousValueChange?.(innerValue, inputRef.current)
-  }, [innerValue])
-
-  // if user is inputing or just input, no need to update upon out-side value
-  const [isOutsideValueLocked, { on: lockOutsideValue, off: unlockOutsideValue }] = useToggle()
-
-  const inputVars: InputVars = {
-    text: innerValue
-  }
-  const inputMethods: InputMethods = {
     focus() {
       inputRef?.current?.focus()
     },
@@ -169,9 +151,20 @@ export const Input = createKit('Input', (props: InputProps) => {
       setInnerValue('')
     }
   }
-  const inputStatus: InputStatus = { ...inputVars, ...inputMethods }
 
-  useImperativeHandle(controller, () => inputStatus)
+  setStatus(inputStatus)
+
+  useEffect(() => {
+    setInnerValue(value)
+  }, [value])
+
+  useEffect(() => {
+    if (!inputRef.current) return
+    onDangerousValueChange?.(inputStatus)
+  }, [innerValue])
+
+  // if user is inputing or just input, no need to update upon out-side value
+  const [isOutsideValueLocked, { on: lockOutsideValue, off: unlockOutsideValue }] = useToggle()
 
   // this relay on keyboard down, not prefect with copyboard paste
   const predictNextSentence = useEvent((utils: CheckInputUtils): string => {
@@ -240,7 +233,7 @@ export const Input = createKit('Input', (props: InputProps) => {
           setInnerValue(text)
           lockOutsideValue()
           startTransition(() => {
-            onUserInput?.(text, inputRef.current!)
+            onUserInput?.(inputStatus)
           })
         }}
         htmlProps={[
@@ -255,15 +248,15 @@ export const Input = createKit('Input', (props: InputProps) => {
 
             onBlur: () => {
               unlockOutsideValue()
-              onBlur?.(innerValue, { el: inputRef.current!, control: inputStatus })
+              onBlur?.(inputStatus)
             },
             onFocus: () => {
               lockOutsideValue()
-              onFocus?.(innerValue, { el: inputRef.current!, control: inputStatus })
+              onFocus?.(inputStatus)
             },
             onKeyDown: (ev) => {
               if (ev.key === 'Enter') {
-                onEnter?.((ev.target as HTMLInputElement).value, { el: inputRef.current!, control: inputStatus })
+                onEnter?.(inputStatus)
               }
             },
             'aria-label': ariaLabelText,

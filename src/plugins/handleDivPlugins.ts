@@ -12,7 +12,7 @@ export function handleDivPlugin<P extends Partial<DivProps>>(props: P) {
 /**
  * **inner use react hook**
  */
-export function handlePivPromiseProps(
+export function handleDivPromiseProps(
   props: ValidProps,
   status: ValidStatus | undefined,
   promisePropsConfig: ValidPromisePropsConfig<ValidProps> | undefined
@@ -73,8 +73,7 @@ function getInitProps(
   promisePropsConfig: ValidPromisePropsConfig<ValidProps> | undefined
 ): ValidProps {
   const initProps = map(props, (value, key) => {
-    if (isChildren(key, value) || isInnerKey(key, value)) return value
-    if (isFunctionKey(key, value)) return injectStatusToFirstParam(value, status)
+    if (isChildren(key, value) || isInnerKey(key, value) || isFunctionKey(key, value)) return value
     const configMayPromise = promisePropsConfig?.[key + 'MayPromise']
     const configPromiseFallback = promisePropsConfig?.[key + 'PromiseFallback']
     const valueIsPromise = isPromise(value)
@@ -85,10 +84,3 @@ function getInitProps(
   return initProps
 }
 
-function injectStatusToFirstParam(fn: AnyFn, status: ValidStatus | undefined) {
-  return (...innerParams) => {
-    if (innerParams.length === 0) return fn(status)
-    if (isObject(innerParams[0])) return fn({ ...innerParams[0], status }, ...innerParams.slice(1))
-    return fn(status, ...innerParams)
-  }
-}

@@ -37,7 +37,7 @@ export interface MenuProps<T> extends DivProps {
   // -------- sub --------
   renderLabel?: MayFn<ReactNode, [utils: { menu: T } & MenuController<T>]>
   anatomy?: {
-    panel?: MayFn<ColProps, [utils: MenuController<T>]>
+    panel?: MayFn<ColProps & DivProps, [utils: MenuController<T>]>
     menuTrigger?: MayFn<DivProps, [utils: MenuController<T>]>
     menuItemBox?: MayFn<DivProps, [utils: MenuController<T>]>
     letAddFloatBgOptions?: MayFn<LetAddFloatBgOptions, [utils: MenuController<T>]>

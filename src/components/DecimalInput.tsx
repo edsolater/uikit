@@ -93,15 +93,15 @@ export function DecimalInput({
       pattern={new RegExp(canNegative ? regexps.canNegativeRegexpString : regexps.decimalRegexpString)} // TODO: pattern should also accept function, so it can accept: (v, oldV)=> v.length < oldV.length
       value={innerValue ? toString(innerValue) : ''}
       defaultValue={defaultValue ? toString(defaultValue) : undefined}
-      onUserInput={(v) => {
+      onUserInput={({text:v}) => {
         if (isNumberish(v)) {
           setInnerValue(v)
           restProps.onUserInput?.(v, { canSafelyCovertToNumber: canSafelyCovertToNumber(v) })
         }
       }}
-      onDangerousValueChange={(inputContect, el) => {
-        restProps.onDangerousValueChange?.(inputContect, el)
-        const isValid = el.checkValidity()
+      onDangerousValueChange={(utils) => {
+        restProps.onDangerousValueChange?.(utils)
+        const isValid = utils.el?.checkValidity()
         if (isValid) onValid?.()
         if (!isValid) onInvalid?.()
       }}
