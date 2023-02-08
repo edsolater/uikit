@@ -1,11 +1,14 @@
-import { isIterable, isPromise } from '@edsolater/fnkit'
-import { ReactNode, useState } from 'react'
+import { isArray, isIterable, isPromise } from '@edsolater/fnkit'
+import { ReactNode, useLayoutEffect, useState } from 'react'
 import { DivChildNode } from '../type'
 
 export function useDivChildren(children: DivChildNode): ReactNode {
-  const [cachedChildren, setCachedChildren] = useState<ReactNode>(
+  const [cachedChildren, setCachedChildren] = useState<ReactNode>(() =>
     containOnlyReactNode(children) ? children : replacePromiseWithUndefined(children)
   )
+  useLayoutEffect(() => {
+    setCachedChildren(containOnlyReactNode(children) ? children : replacePromiseWithUndefined(children))
+  }, [children])
   recursivelyExtractChildren(children, setCachedChildren)
   return cachedChildren
 }
@@ -18,7 +21,7 @@ function recursivelyExtractChildren(
     children.then(setCachedChildren)
   }
   if (isIterable(children)) {
-    const childrenArray = [...children]
+    const childrenArray = isArray(children) ? children : [...children]
     childrenArray.forEach((child) => recursivelyExtractChildren(child, setCachedChildren))
   }
 }
@@ -31,6 +34,9 @@ function containOnlyReactNode(children: DivChildNode): children is ReactNode {
   }
 }
 
+/**
+ * @todo should use _promiseConfig, not undefined
+ */
 function replacePromiseWithUndefined(children: DivChildNode): ReactNode {
   if (isIterable(children)) {
     return [...children].map(replacePromiseWithUndefined)
