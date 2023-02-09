@@ -15,7 +15,7 @@ import { useEvent, useSignalState, useToggle } from '../hooks'
 import { onEvent } from '../utils'
 import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
-import { createKit } from './utils'
+import { createKit, KitProps } from './utils'
 
 export interface InputStatus {
   text: string | undefined
@@ -24,7 +24,7 @@ export interface InputStatus {
   clearInput(): void
 }
 
-export type InputProps = {
+export type InputRawProps = {
   id?: string // for accessibility
 
   type?: HTMLInputTypeAttribute // current support type in this app
@@ -59,8 +59,8 @@ export type InputProps = {
     /** by default, any input should be accepted */
     ignoreThisInput?: boolean
     /**  items are button's setting which will apply when corresponding validator has failed */
-    validProps?: Omit<InputProps, 'validators' | 'disabled'>
-    invalidProps?: Omit<InputProps, 'validators' | 'disabled'>
+    validProps?: Omit<InputRawProps, 'validators' | 'disabled'>
+    invalidProps?: Omit<InputRawProps, 'validators' | 'disabled'>
     onValid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
     onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
   }>
@@ -91,15 +91,17 @@ export type InputProps = {
   onFocus?: (utils: InputStatus) => void
 }
 
+export type InputProps = KitProps<InputRawProps, InputStatus, 'input'>
+
 type CheckInputUtils = {
   key: string
   selectionStart?: number
   selectionEnd?: number
 }
 
-export const Input = createKit<InputProps, InputStatus>('Input', (props, { setStatus }) => {
+export const Input = createKit<InputRawProps, InputStatus>('Input', (props, { setStatus }) => {
   // props set by validators
-  const [fallbackProps, setFallbackProps] = useState<Omit<InputProps, 'validators' | 'disabled'>>()
+  const [fallbackProps, setFallbackProps] = useState<Omit<InputRawProps, 'validators' | 'disabled'>>()
 
   const {
     id,
@@ -274,7 +276,7 @@ function AutoWidenInput({
   onChange,
   ...inputBodyProps
 }: DivProps<{}, 'input'> &
-  Pick<InputProps, 'isFluid' | 'value'> & {
+  Pick<InputRawProps, 'isFluid' | 'value'> & {
     onChange(t: string): void
     checkUserTypeIsValid?: (utils: { key: string; selectionStart?: number; selectionEnd?: number }) => boolean
   }) {

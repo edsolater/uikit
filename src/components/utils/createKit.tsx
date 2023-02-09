@@ -8,13 +8,8 @@ import { parsePropPluginToProps } from '../../plugins'
 import { handleDivPlugin, handleDivPromiseProps } from '../../plugins/handleDivPlugins'
 import { Plugin } from '../../plugins/type'
 import {
-  Component,
-  PivifyProps,
-  ValidPromisePropsConfig,
-  ReactComponent,
-  ValidProps,
-  ValidStatus,
-  DePivifyProps
+  PivifyProps, ReactComponent, ValidPromisePropsConfig, ValidProps,
+  ValidStatus
 } from '../../typings/tools'
 import { AddProps } from '../AddProps'
 
@@ -104,7 +99,7 @@ type WithDivChildren<
 export function useKitProps<Props extends ValidProps, Status extends ValidStatus = {}>(
   props: Props,
   options?: CreateKitOptions<Props, Status>
-): [componentProps: WithDivChildren<DePivifyProps<Status, Props>, Status, 'div'>, divProps: DivProps<Status>] {
+): [componentProps: WithDivChildren<Props, Status, 'div'>, divProps: DivProps<Status>] {
   const mergedProps = pipe(
     props,
     (props) =>

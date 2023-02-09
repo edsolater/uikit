@@ -242,15 +242,3 @@ export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}> =
     ? P[K]
     : P[K] | Promise<P[K]> | ((status: Status) => Promise<P[K]>) | ((status: Status) => P[K])
 }
-
-export type DePivifyProps<Status extends ValidStatus, P extends PivifyProps<ValidProps>> = {
-  [K in keyof P]: K extends 'children' | `_${string}` // 'children' and props start with '_' will be ignored
-    ? P[K]
-    : K extends `on${string}` | `render${string}` | `get${string}` // function must start with 'on'
-    ? P[K]
-    : P[K] extends AnyFn
-    ? Awaited<ReturnType<P[K]>>
-    : P[K]
-}
-
-type A = 'children' extends 'a' | 'children' ? true : false
