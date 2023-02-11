@@ -1,6 +1,6 @@
 import { AnyFn } from '@edsolater/fnkit'
 import { RefObject } from 'react'
-import { DivChildNode } from '../Div'
+import { DivChildNode, DivProps } from '../Div'
 
 export type MayArray<T> = T | Array<T>
 
@@ -236,9 +236,18 @@ type DeInjectStatusToFirstParam<T, Status extends ValidStatus = {}> = T extends 
   : T
 
 export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}> = {
-  [K in keyof P]: K extends 'children' | `_${string}` // 'children' and props start with '_' will be ignored
+  [K in keyof P]: K extends keyof DivProps
+    ? P[K]
+    : K extends 'children' | `_${string}` // 'children' and props start with '_' will be ignored
     ? P[K]
     : K extends `on${string}` | `render${string}` | `get${string}` // function must start with 'on'
     ? P[K]
-    : P[K] | Promise<P[K]> | ((status: Status) => Promise<P[K]>) | ((status: Status) => P[K])
+    : PivifyOneProps<P[K], Status>
 }
+export type PivifyOneProps<T, Status extends ValidStatus> =
+  | T
+  | Promise<T>
+  | ((status: Status) => Promise<T>)
+  | ((status: Status) => T)
+
+export type DepivifyOneProps<T> = T extends PivifyOneProps<infer R, ValidStatus> ? R : T

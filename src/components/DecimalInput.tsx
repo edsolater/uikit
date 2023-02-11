@@ -1,9 +1,11 @@
 import { isNumberish, Numberish, toString } from '@edsolater/fnkit'
 import { useEffect, useRef, useState } from 'react'
 import { useIsomorphicLayoutEffect } from '../hooks'
-import { Input, InputProps } from './Input'
+import { PivifyProps } from '../typings/tools'
+import { Input, InputProps, InputRawProps } from './Input'
+import { createKit } from './utils'
 
-export interface DecimalInputProps extends Omit<InputProps, 'value' | 'defaultValue' | 'onUserInput'> {
+export interface DecimalInputRawProps extends Omit<InputRawProps, 'value' | 'defaultValue' | 'onUserInput'> {
   /**
    * only if type is decimal
    * @default  3
@@ -34,6 +36,7 @@ export interface DecimalInputProps extends Omit<InputProps, 'value' | 'defaultVa
     payload: { canSafelyCovertToNumber: boolean }
   ) => void
 }
+export type DecimalInputProps = PivifyProps<DecimalInputRawProps>
 
 function getRegexp(decimalCount: number) {
   const canNegativeRegexpString = `^[0-9-]*[.,]?[0-9]{0,${decimalCount}}$`
@@ -44,70 +47,63 @@ function getRegexp(decimalCount: number) {
 }
 
 /** let <Input> be a independent  component, it for consistency, as <Button> and <Icon> and <Link> etc is independent */
-export function DecimalInput({
-  defaultValue,
-  value,
-  decimalCount = 3,
-  minN = 0,
-  maxN,
-  onInvalid,
-  canNegative,
-  onValid,
-  ...restProps
-}: DecimalInputProps) {
-  const [innerValue, setInnerValue] = useState(defaultValue)
-  useIsomorphicLayoutEffect(() => {
-    setInnerValue(value)
-  }, [value])
-  const regexps = getRegexp(decimalCount)
-  const inputDomRef = useRef<HTMLInputElement>()
+export const DecimalInput = createKit<DecimalInputRawProps>(
+  'DecimalInput',
+  ({ defaultValue, value, decimalCount = 3, minN = 0, maxN, onInvalid, canNegative, onValid, ...restProps }) => {
+    const [innerValue, setInnerValue] = useState(defaultValue)
+    useIsomorphicLayoutEffect(() => {
+      setInnerValue(value)
+    }, [value])
+    const regexps = getRegexp(decimalCount)
+    const inputDomRef = useRef<HTMLInputElement>()
 
-  useEffect(() => {
-    const letterRegex = canNegative ? regexps.canNegativeLetter : regexps.decimalLetter
-    inputDomRef.current?.addEventListener(
-      'keydown',
-      (ev) => {
-        const key = ev.key
-        const isPureDecimal = key.length > 1 /* is control KEY like ArrowLeft */ || letterRegex.test(key)
-        const isControlKey = ev.ctrlKey || ev.altKey
-        if (!isPureDecimal && !isControlKey) {
-          ev.preventDefault()
-        }
-      },
-      { capture: true, passive: false }
+    useEffect(() => {
+      const letterRegex = canNegative ? regexps.canNegativeLetter : regexps.decimalLetter
+      inputDomRef.current?.addEventListener(
+        'keydown',
+        (ev) => {
+          const key = ev.key
+          const isPureDecimal = key.length > 1 /* is control KEY like ArrowLeft */ || letterRegex.test(key)
+          const isControlKey = ev.ctrlKey || ev.altKey
+          if (!isPureDecimal && !isControlKey) {
+            ev.preventDefault()
+          }
+        },
+        { capture: true, passive: false }
+      )
+    }, [])
+
+    return (
+      <Input
+        type='number'
+        inputHTMLProps={{
+          pattern: canNegative ? regexps.canNegativeRegexpString : regexps.decimalRegexpString,
+          inputMode: 'decimal',
+          min: String(minN),
+          max: maxN ? String(maxN) : undefined,
+          step: String(1 / 10 ** decimalCount)
+        }}
+        {...restProps}
+        domRef={[inputDomRef, restProps.inputDomRef]}
+        pattern={new RegExp(canNegative ? regexps.canNegativeRegexpString : regexps.decimalRegexpString)} // TODO: pattern should also accept function, so it can accept: (v, oldV)=> v.length < oldV.length
+        value={innerValue ? toString(innerValue) : ''}
+        defaultValue={defaultValue ? toString(defaultValue) : undefined}
+        onUserInput={({ text: v }) => {
+          if (isNumberish(v)) {
+            setInnerValue(v)
+            restProps.onUserInput?.(v, { canSafelyCovertToNumber: canSafelyCovertToNumber(v) })
+          }
+        }}
+        onDangerousValueChange={(utils) => {
+          restProps.onDangerousValueChange?.(utils)
+          const isValid = utils.el?.checkValidity()
+          if (isValid) onValid?.()
+          if (!isValid) onInvalid?.()
+        }}
+      />
     )
-  }, [])
-
-  return (
-    <Input
-      type='number'
-      inputHTMLProps={{
-        pattern: canNegative ? regexps.canNegativeRegexpString : regexps.decimalRegexpString,
-        inputMode: 'decimal',
-        min: String(minN),
-        max: maxN ? String(maxN) : undefined,
-        step: String(1 / 10 ** decimalCount)
-      }}
-      {...restProps}
-      domRef={[inputDomRef, restProps.inputDomRef]}
-      pattern={new RegExp(canNegative ? regexps.canNegativeRegexpString : regexps.decimalRegexpString)} // TODO: pattern should also accept function, so it can accept: (v, oldV)=> v.length < oldV.length
-      value={innerValue ? toString(innerValue) : ''}
-      defaultValue={defaultValue ? toString(defaultValue) : undefined}
-      onUserInput={({text:v}) => {
-        if (isNumberish(v)) {
-          setInnerValue(v)
-          restProps.onUserInput?.(v, { canSafelyCovertToNumber: canSafelyCovertToNumber(v) })
-        }
-      }}
-      onDangerousValueChange={(utils) => {
-        restProps.onDangerousValueChange?.(utils)
-        const isValid = utils.el?.checkValidity()
-        if (isValid) onValid?.()
-        if (!isValid) onInvalid?.()
-      }}
-    />
-  )
-}
+  }
+)
 
 function canSafelyCovertToNumber(v: string): boolean {
   return Number(v) < Number.MAX_SAFE_INTEGER && Number(v) > Number.MIN_SAFE_INTEGER
