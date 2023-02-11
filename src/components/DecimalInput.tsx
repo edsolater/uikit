@@ -1,43 +1,45 @@
 import { isNumberish, Numberish, toString } from '@edsolater/fnkit'
 import { useEffect, useRef, useState } from 'react'
 import { useIsomorphicLayoutEffect } from '../hooks'
-import { PivifyProps } from '../typings/tools'
-import { Input, InputProps, InputRawProps } from './Input'
-import { createKit } from './utils'
+import { ExtendsProps, PivifyProps } from '../typings/tools'
+import { Input, InputProps } from './Input'
+import { createKit, KitProps } from './utils'
+export type DecimalInputProps = KitProps<
+  ExtendsProps<
+    PivifyProps<{
+      /**
+       * only if type is decimal
+       * @default  3
+       */
+      decimalCount?: number
+      // TODO: onlyInt?: boolean
+      // TODO: mustAboveZero?: boolean
+      /**
+       * only if type is decimal
+       * @default  0
+       */
+      minN?: number | string
+      maxN?: number | string
 
-export interface DecimalInputRawProps extends Omit<InputRawProps, 'value' | 'defaultValue' | 'onUserInput'> {
-  /**
-   * only if type is decimal
-   * @default  3
-   */
-  decimalCount?: number
-  // TODO: onlyInt?: boolean
-  // TODO: mustAboveZero?: boolean
-  /**
-   * only if type is decimal
-   * @default  0
-   */
-  minN?: number | string
-  maxN?: number | string
+      /** it will auto-valid each time when user input.
+       * html will invoke this
+       */
+      onInvalid?: () => void
 
-  /** it will auto-valid each time when user input.
-   * html will invoke this
-   */
-  onInvalid?: () => void
-
-  /** this  */
-  onValid?: () => void
-  /** default: false */
-  canNegative?: boolean
-  value?: Numberish
-  defaultValue?: Numberish
-  onUserInput?: (
-    n: number | /* if value is too big */ string | undefined,
-    payload: { canSafelyCovertToNumber: boolean }
-  ) => void
-}
-export type DecimalInputProps = PivifyProps<DecimalInputRawProps>
-
+      /** this  */
+      onValid?: () => void
+      /** default: false */
+      canNegative?: boolean
+      value?: Numberish
+      defaultValue?: Numberish
+      onUserInput?: (
+        n: number | /* if value is too big */ string | undefined,
+        payload: { canSafelyCovertToNumber: boolean }
+      ) => void
+    }>,
+    InputProps
+  >
+>
 function getRegexp(decimalCount: number) {
   const canNegativeRegexpString = `^[0-9-]*[.,]?[0-9]{0,${decimalCount}}$`
   const decimalRegexpString = `^[0-9]*[.,]?[0-9]{0,${decimalCount}}$`
@@ -47,7 +49,7 @@ function getRegexp(decimalCount: number) {
 }
 
 /** let <Input> be a independent  component, it for consistency, as <Button> and <Icon> and <Link> etc is independent */
-export const DecimalInput = createKit<DecimalInputRawProps>(
+export const DecimalInput = createKit<DecimalInputProps>(
   'DecimalInput',
   ({ defaultValue, value, decimalCount = 3, minN = 0, maxN, onInvalid, canNegative, onValid, ...restProps }) => {
     const [innerValue, setInnerValue] = useState(defaultValue)

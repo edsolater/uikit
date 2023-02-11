@@ -1,4 +1,4 @@
-import { flapDeep, isString, MayDeepArray, overwriteFunctionName, pipe } from '@edsolater/fnkit'
+import { flapDeep, isString, MayDeepArray, Numberish, overwriteFunctionName, pipe } from '@edsolater/fnkit'
 import React, { RefObject, useImperativeHandle, useRef } from 'react'
 import { DivChildNode, DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
@@ -8,7 +8,11 @@ import { parsePropPluginToProps } from '../../plugins'
 import { handleDivPlugin, handleDivPromiseProps } from '../../plugins/handleDivPlugins'
 import { Plugin } from '../../plugins/type'
 import {
-  PivifyProps, ReactComponent, ValidPromisePropsConfig, ValidProps,
+  DepivifyProps,
+  PivifyProps,
+  ReactComponent,
+  ValidPromisePropsConfig,
+  ValidProps,
   ValidStatus
 } from '../../typings/tools'
 import { AddProps } from '../AddProps'
@@ -27,26 +31,31 @@ type GetPluginProps<T> = T extends Plugin<infer Px1>
   ? Px1 & Px2 & Px3 & Px4 & Px5
   : unknown
 
+/**
+ * - auto add `plugin` `shadowProps` `_promisePropsConfig` `controller` props
+ * - auto add Div's props
+ * - auto pick plugin prop if specified plugin
+ */
 export type KitProps<
-  Props extends ValidProps,
+  PivifiedProps extends PivifyProps<ValidProps>,
   Status extends ValidStatus = {},
   TagName extends keyof HTMLTagMap = 'div',
   Plugins extends MayDeepArray<Plugin<any>> = Plugin<unknown>
-> = Omit<PivifyProps<Props, Status>, 'plugin' | 'shadowProps'> &
-  Omit<DivProps<Status, TagName>, keyof Props | 'plugin' | 'shadowProps'> &
-  Omit<GetPluginProps<Plugins>, keyof Props | 'plugin' | 'shadowProps'> &
+> = PivifiedProps &
+  Omit<DivProps<Status, TagName>, keyof PivifiedProps | 'plugin' | 'shadowProps'> &
+  Omit<GetPluginProps<Plugins>, keyof PivifiedProps | 'plugin' | 'shadowProps'> &
   Omit<
     {
       plugin?: MayDeepArray<Plugin<any /* too difficult to type */>>
-      shadowProps?: MayDeepArray<Partial<Props>> // component must merged before `<Div>`
-      _promisePropsConfig?: ValidPromisePropsConfig<Props>
+      shadowProps?: MayDeepArray<Partial<PivifiedProps>> // component must merged before `<Div>`
+      _promisePropsConfig?: ValidPromisePropsConfig<PivifiedProps>
       // _status?: ValidStatus
 
       // -------- additional --------
       // auto inject status to it
       controller?: RefObject<Status>
     },
-    keyof Props
+    keyof PivifiedProps
   >
 
 export type CreateKitOptions<T, Status extends ValidStatus = {}> = {
@@ -67,14 +76,14 @@ export type CreateKitOptions<T, Status extends ValidStatus = {}> = {
  * @returns Component
  */
 export function createKit<
-  Props extends ValidProps,
+  PivifiedProps extends PivifyProps<ValidProps>,
   Status extends ValidStatus = {},
   TagName extends keyof HTMLTagMap = 'div',
   Plugins extends MayDeepArray<Plugin<any>> = Plugin<any>
 >(
-  rawOptions: CreateKitOptions<Props, Status> | string,
-  FC: (props: WithDivChildren<Props, Status, TagName>, utils: { setStatus: (inject: Status) => void }) => DivChildNode
-): ReactComponent<KitProps<Props, Status, TagName, Plugins>> {
+  rawOptions: CreateKitOptions<DepivifyProps<PivifiedProps>, Status> | string,
+  FC: (props: DepivifyProps<PivifiedProps>, utils: { setStatus: (inject: Status) => void }) => DivChildNode
+): ReactComponent<KitProps<PivifiedProps, Status, TagName, Plugins>> {
   const options = isString(rawOptions) ? { name: rawOptions } : rawOptions
 
   const uikitFC = overwriteFunctionName((props) => {
@@ -83,7 +92,7 @@ export function createKit<
       statusRef.current = inject
     })
     props['controller'] && useImperativeHandle(props['controller'], () => statusRef.current)
-    const [componentProps, divProps] = useKitProps<Props, Status>(props)
+    const [componentProps, divProps] = useKitProps<PivifiedProps, Status>(props)
     return <AddProps {...divProps}>{FC(componentProps, { setStatus })}</AddProps> // use `FC(props)` not `<FC {...props}>` because `FC(props)` won't create a new component in React's view, but `<FC {...props}>` will
   }, options.name)
 

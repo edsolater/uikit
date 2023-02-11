@@ -1,4 +1,4 @@
-import { AnyFn } from '@edsolater/fnkit'
+import { AnyFn, DeMayFn } from '@edsolater/fnkit'
 import { RefObject } from 'react'
 import { DivChildNode, DivProps } from '../Div'
 
@@ -235,14 +235,30 @@ type DeInjectStatusToFirstParam<T, Status extends ValidStatus = {}> = T extends 
     : (...args: [utils: F extends Record<keyof any, any> ? F & Status : F, ...args: Rest]) => R
   : T
 
+/**
+ * make props can have function / async function / promise (except special named props)
+ */
 export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}> = {
-  [K in keyof P]: K extends keyof DivProps
-    ? P[K]
-    : K extends 'children' | `_${string}` // 'children' and props start with '_' will be ignored
-    ? P[K]
-    : K extends `on${string}` | `render${string}` | `get${string}` // function must start with 'on'
+  [K in keyof P]: K extends
+    | keyof DivProps
+    | `${string}${Capitalize<keyof DivProps>}`
+    | `_${string}`
+    | `on${string}` // function must start with 'on'
+    | `render${string}`
+    | `get${string}`
     ? P[K]
     : PivifyOneProps<P[K], Status>
+}
+export type DepivifyProps<P> = {
+  [K in keyof P]: K extends
+    | keyof DivProps
+    | `${string}${Capitalize<keyof DivProps>}`
+    | `_${string}`
+    | `on${string}` // function must start with 'on'
+    | `render${string}`
+    | `get${string}`
+    ? P[K]
+    : DepivifyOneProps<P[K]>
 }
 export type PivifyOneProps<T, Status extends ValidStatus> =
   | T
@@ -250,4 +266,19 @@ export type PivifyOneProps<T, Status extends ValidStatus> =
   | ((status: Status) => Promise<T>)
   | ((status: Status) => T)
 
-export type DepivifyOneProps<T> = T extends PivifyOneProps<infer R, ValidStatus> ? R : T
+export type DepivifyOneProps<T> = Awaited<DeMayFn<T>>
+
+/**
+ * auto omit P2's same name props
+ */
+export type ExtendsProps<
+  P1 extends ValidProps,
+  P2 extends ValidProps = {},
+  P3 extends ValidProps = {},
+  P4 extends ValidProps = {},
+  P5 extends ValidProps = {}
+> = P1 &
+  Omit<P2, keyof P1> &
+  Omit<P3, keyof P1 | keyof P2> &
+  Omit<P4, keyof P1 | keyof P2 | keyof P3> &
+  Omit<P5, keyof P1 | keyof P2 | keyof P3 | keyof P4>

@@ -12,6 +12,7 @@ import {
 import { Div } from '../Div/Div'
 import { DivProps } from '../Div/type'
 import { useEvent, useSignalState, useToggle } from '../hooks'
+import { DepivifyProps, PivifyProps } from '../typings/tools'
 import { onEvent } from '../utils'
 import { splice } from '../utils/fnkit/splice.temp'
 import { SubComponent } from './SubComponent'
@@ -24,74 +25,79 @@ export interface InputStatus {
   clearInput(): void
 }
 
-export type InputRawProps = {
-  id?: string // for accessibility
+export type InputProps = KitProps<
+  PivifyProps<
+    {
+      id?: string // for accessibility
 
-  type?: HTMLInputTypeAttribute // current support type in this app
-  inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
-  ariaRequired?: boolean // for readability
-  /** only for aria */
-  ariaLabelText?: string
+      type?: HTMLInputTypeAttribute // current support type in this app
+      inputMode?: 'none' | 'text' /* default */ | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
+      ariaRequired?: boolean // for readability
+      /** only for aria */
+      ariaLabelText?: string
 
-  /** only after `<Input>` created */
-  defaultValue?: string
-  /** when change, affact to ui*/
-  value?: string
-  placeholder?: string
+      /** only after `<Input>` created */
+      defaultValue?: string
+      /** when change, affact to ui*/
+      value?: string
+      placeholder?: string
 
-  disabled?: boolean
-  /**
-   * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
-   * it makes input refuse user to edit,
-   *
-   * different from disabled,
-   * user will believe everything is ok (input's style is as good as normal),
-   * but actually can't input
-   * */
-  disableUserInput?: boolean
-  pattern?: RegExp // with force pattern, you only can input pattern allowed string
-  /** must all condition passed (one by one)
-   * !!! validator may be very complicated, and invalid input will not block user's input action.
-   */
-  validators?: MayArray<{
-    /** expression must return true to pass this validator */
-    should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputStatus }]>
-    /** by default, any input should be accepted */
-    ignoreThisInput?: boolean
-    /**  items are button's setting which will apply when corresponding validator has failed */
-    validProps?: Omit<InputRawProps, 'validators' | 'disabled'>
-    invalidProps?: Omit<InputRawProps, 'validators' | 'disabled'>
-    onValid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
-    onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
-  }>
+      disabled?: boolean
+      /**
+       * !!! try not to use this **wired** prop, use more intuitive `props:disabled`
+       * it makes input refuse user to edit,
+       *
+       * different from disabled,
+       * user will believe everything is ok (input's style is as good as normal),
+       * but actually can't input
+       * */
+      disableUserInput?: boolean
+      pattern?: RegExp // with force pattern, you only can input pattern allowed string
+      /** must all condition passed (one by one)
+       * !!! validator may be very complicated, and invalid input will not block user's input action.
+       */
+      validators?: MayArray<{
+        /** expression must return true to pass this validator */
+        should: MayFn<boolean, [text: string, payload: { el: HTMLInputElement; control: InputStatus }]>
+        /** by default, any input should be accepted */
+        ignoreThisInput?: boolean
+        /**  items are button's setting which will apply when corresponding validator has failed */
+        validProps?: Omit<DepivifyProps<InputProps>, 'validators' | 'disabled'>
+        invalidProps?: Omit<DepivifyProps<InputProps>, 'validators' | 'disabled'>
+        onValid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
+        onInvalid?: (text: string, payload: { el: HTMLInputElement; control: InputStatus }) => void
+      }>
 
-  /**
-   * remove `min-width:10em`
-   * input will auto widen depends on content Text */
-  isFluid?: boolean
+      /**
+       * remove `min-width:10em`
+       * input will auto widen depends on content Text */
+      isFluid?: boolean
 
-  /** Optional. usually, it is an <Input>'s icon */
-  prefix?: MayFn<ReactNode, [text: string | undefined]>
-  /** Optional. usually, it is an <Input>'s unit or feature icon */
-  suffix?: MayFn<ReactNode, [text: string | undefined]>
+      /** Optional. usually, it is an <Input>'s icon */
+      prefix?: MayFn<ReactNode, [text: string | undefined]>
+      /** Optional. usually, it is an <Input>'s unit or feature icon */
+      suffix?: MayFn<ReactNode, [text: string | undefined]>
 
-  inputDomRef?: DivProps<{}, 'input'>['domRef']
-  inputClassName?: DivProps<{}, 'input'>['className']
-  inputHTMLProps?: DivProps<{}, 'input'>['htmlProps']
-  /**
-   * this callback may be invoked every time value change regardless it is change by user input or js code
-   * as a controlled formkit, U should avoid using it if U can
-   * it may be confusing with onUserInput sometimes
-   */
-  onDangerousValueChange?: (utils: InputStatus) => void // TODO: should be onInput (by(property):'any')
-  onUserInput?: (utils: InputStatus) => void // TODO: should be onInput (by(property):'user')
-  onClick?: (utils: InputStatus) => void
-  onEnter?: (utils: InputStatus) => void
-  onBlur?: (utils: InputStatus) => void
-  onFocus?: (utils: InputStatus) => void
-}
-
-export type InputProps = KitProps<InputRawProps, InputStatus, 'input'>
+      inputDomRef?: DivProps<{}, 'input'>['domRef']
+      inputClassName?: DivProps<{}, 'input'>['className']
+      inputHTMLProps?: DivProps<{}, 'input'>['htmlProps']
+      /**
+       * this callback may be invoked every time value change regardless it is change by user input or js code
+       * as a controlled formkit, U should avoid using it if U can
+       * it may be confusing with onUserInput sometimes
+       */
+      onDangerousValueChange?: (utils: InputStatus) => void // TODO: should be onInput (by(property):'any')
+      onUserInput?: (utils: InputStatus) => void // TODO: should be onInput (by(property):'user')
+      onClick?: (utils: InputStatus) => void
+      onEnter?: (utils: InputStatus) => void
+      onBlur?: (utils: InputStatus) => void
+      onFocus?: (utils: InputStatus) => void
+    },
+    InputStatus
+  >,
+  InputStatus,
+  'input'
+>
 
 type CheckInputUtils = {
   key: string
@@ -99,9 +105,9 @@ type CheckInputUtils = {
   selectionEnd?: number
 }
 
-export const Input = createKit<InputRawProps, InputStatus>('Input', (props, { setStatus }) => {
+export const Input = createKit<InputProps>('Input', (props, { setStatus }) => {
   // props set by validators
-  const [fallbackProps, setFallbackProps] = useState<Omit<InputRawProps, 'validators' | 'disabled'>>()
+  const [fallbackProps, setFallbackProps] = useState<Omit<DepivifyProps<InputProps>, 'validators' | 'disabled'>>()
 
   const {
     id,
@@ -276,7 +282,7 @@ function AutoWidenInput({
   onChange,
   ...inputBodyProps
 }: DivProps<{}, 'input'> &
-  Pick<InputRawProps, 'isFluid' | 'value'> & {
+  Pick<InputProps, 'isFluid' | 'value'> & {
     onChange(t: string): void
     checkUserTypeIsValid?: (utils: { key: string; selectionStart?: number; selectionEnd?: number }) => boolean
   }) {
