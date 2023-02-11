@@ -98,6 +98,7 @@ export type InputProps = KitProps<
   InputStatus,
   'input'
 >
+type C = InputProps['onClick']
 
 type CheckInputUtils = {
   key: string

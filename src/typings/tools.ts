@@ -1,4 +1,4 @@
-import { AnyFn, DeMayFn } from '@edsolater/fnkit'
+import { AnyFn, DeMayFn, NoNullablePrimitive } from '@edsolater/fnkit'
 import { RefObject } from 'react'
 import { DivChildNode, DivProps } from '../Div'
 
@@ -235,6 +235,7 @@ type DeInjectStatusToFirstParam<T, Status extends ValidStatus = {}> = T extends 
     : (...args: [utils: F extends Record<keyof any, any> ? F & Status : F, ...args: Rest]) => R
   : T
 
+export type AddDefaultType<T, U extends T> = T extends any | undefined ? U : T
 /**
  * make props can have function / async function / promise (except special named props)
  */

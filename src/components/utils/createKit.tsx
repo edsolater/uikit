@@ -1,4 +1,4 @@
-import { flapDeep, isString, MayDeepArray, Numberish, overwriteFunctionName, pipe } from '@edsolater/fnkit'
+import { flapDeep, isString, MayArray, MayDeepArray, Numberish, overwriteFunctionName, pipe } from '@edsolater/fnkit'
 import React, { RefObject, useImperativeHandle, useRef } from 'react'
 import { DivChildNode, DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
@@ -8,7 +8,9 @@ import { parsePropPluginToProps } from '../../plugins'
 import { handleDivPlugin, handleDivPromiseProps } from '../../plugins/handleDivPlugins'
 import { Plugin } from '../../plugins/type'
 import {
+  AddDefaultType,
   DepivifyProps,
+  ExtendsProps,
   PivifyProps,
   ReactComponent,
   ValidPromisePropsConfig,
@@ -58,6 +60,21 @@ export type KitProps<
     keyof PivifiedProps
   >
 
+/** just a shortcut of KitProps */
+export type CreateKitProps<
+  O extends {
+    rawProps: ValidProps
+    extendsProp?: PivifyProps<ValidProps>
+    status?: ValidStatus
+    htmlPropsTagName?: keyof HTMLTagMap
+    plugin?: MayDeepArray<Plugin<any>>
+  }
+> = KitProps<
+  ExtendsProps<PivifyProps<O['rawProps']>, NonNullable<O['extendsProp']>>,
+  NonNullable<O['status']>,
+  NonNullable<O['htmlPropsTagName']>,
+  NonNullable<O['plugin']>
+>
 export type CreateKitOptions<T, Status extends ValidStatus = {}> = {
   name: string
   /**

@@ -1,45 +1,42 @@
 import { isNumberish, Numberish, toString } from '@edsolater/fnkit'
 import { useEffect, useRef, useState } from 'react'
 import { useIsomorphicLayoutEffect } from '../hooks'
-import { ExtendsProps, PivifyProps } from '../typings/tools'
 import { Input, InputProps } from './Input'
-import { createKit, KitProps } from './utils'
-export type DecimalInputProps = KitProps<
-  ExtendsProps<
-    PivifyProps<{
-      /**
-       * only if type is decimal
-       * @default  3
-       */
-      decimalCount?: number
-      // TODO: onlyInt?: boolean
-      // TODO: mustAboveZero?: boolean
-      /**
-       * only if type is decimal
-       * @default  0
-       */
-      minN?: number | string
-      maxN?: number | string
+import { createKit, CreateKitProps } from './utils'
+export type DecimalInputProps = CreateKitProps<{
+  rawProps: {
+    /**
+     * only if type is decimal
+     * @default  3
+     */
+    decimalCount?: number
+    // TODO: onlyInt?: boolean
+    // TODO: mustAboveZero?: boolean
+    /**
+     * only if type is decimal
+     * @default  0
+     */
+    minN?: number | string
+    maxN?: number | string
 
-      /** it will auto-valid each time when user input.
-       * html will invoke this
-       */
-      onInvalid?: () => void
+    /** it will auto-valid each time when user input.
+     * html will invoke this
+     */
+    onInvalid?: () => void
 
-      /** this  */
-      onValid?: () => void
-      /** default: false */
-      canNegative?: boolean
-      value?: Numberish
-      defaultValue?: Numberish
-      onUserInput?: (
-        n: number | /* if value is too big */ string | undefined,
-        payload: { canSafelyCovertToNumber: boolean }
-      ) => void
-    }>,
-    InputProps
-  >
->
+    /** this  */
+    onValid?: () => void
+    /** default: false */
+    canNegative?: boolean
+    value?: Numberish
+    defaultValue?: Numberish
+    onUserInput?: (
+      n: number | /* if value is too big */ string | undefined,
+      payload: { canSafelyCovertToNumber: boolean }
+    ) => void
+  }
+  extendsProp: InputProps
+}>
 function getRegexp(decimalCount: number) {
   const canNegativeRegexpString = `^[0-9-]*[.,]?[0-9]{0,${decimalCount}}$`
   const decimalRegexpString = `^[0-9]*[.,]?[0-9]{0,${decimalCount}}$`
