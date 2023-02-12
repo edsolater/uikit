@@ -1,4 +1,4 @@
-import { AnyFn, DeMayFn, NoNullablePrimitive } from '@edsolater/fnkit'
+import { AnyFn, DeMayFn, MayFn, MayPromise, NoNullablePrimitive } from '@edsolater/fnkit'
 import { RefObject } from 'react'
 import { DivChildNode, DivProps } from '../Div'
 
@@ -239,35 +239,27 @@ export type AddDefaultType<T, U extends T> = T extends any | undefined ? U : T
 /**
  * make props can have function / async function / promise (except special named props)
  */
-export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}> = {
-  [K in keyof P]: K extends
-    | keyof DivProps
-    | `${string}${Capitalize<keyof DivProps>}`
-    | `_${string}`
-    | `on${string}` // function must start with 'on'
-    | `render${string}`
-    | `get${string}`
-    ? P[K]
-    : PivifyOneProps<P[K], Status>
+export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}, UnchangeProps extends keyof any = never> = {
+  [K in keyof P]: K extends UnchangePropsName | UnchangeProps ? P[K] : PivifyOneProps<P[K], Status>
 }
-export type DepivifyProps<P> = {
-  [K in keyof P]: K extends
-    | keyof DivProps
-    | `${string}${Capitalize<keyof DivProps>}`
-    | `_${string}`
-    | `on${string}` // function must start with 'on'
-    | `render${string}`
-    | `get${string}`
-    ? P[K]
-    : DepivifyOneProps<P[K]>
-}
-export type PivifyOneProps<T, Status extends ValidStatus> =
-  | T
-  | Promise<T>
-  | ((status: Status) => Promise<T>)
-  | ((status: Status) => T)
 
-export type DepivifyOneProps<T> = Awaited<DeMayFn<T>>
+type UnchangePropsName =
+  | keyof DivProps
+  | `${string}${Capitalize<keyof DivProps>}`
+  | `_${string}`
+  | `on${string}` // function must start with 'on'
+  | `render${string}`
+  | `get${string}`
+
+export type DepivifyProps<P> = {
+  [K in keyof P]: K extends UnchangePropsName ? P[K] : DepivifyOneProps<P[K]>
+}
+
+export type PivifyOneProps<T, Status extends ValidStatus> =
+  | MayPromise<MayFn<T>>
+  | ((status: Status) => MayPromise<MayFn<T>>)
+
+export type DepivifyOneProps<T> = DeMayFn<Awaited<DeMayFn<T>>>
 
 /**
  * auto omit P2's same name props

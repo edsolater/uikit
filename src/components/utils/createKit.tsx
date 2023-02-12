@@ -62,15 +62,20 @@ export type KitProps<
 
 /** just a shortcut of KitProps */
 export type CreateKitProps<
+  P extends ValidProps,
   O extends {
-    rawProps: ValidProps
     extendsProp?: PivifyProps<ValidProps>
     status?: ValidStatus
     htmlPropsTagName?: keyof HTMLTagMap
     plugin?: MayDeepArray<Plugin<any>>
-  }
+    /** props that should not accept promise or function */
+    stableProps?: keyof P
+  } = {}
 > = KitProps<
-  ExtendsProps<PivifyProps<O['rawProps']>, NonNullable<O['extendsProp']>>,
+  ExtendsProps<
+    PivifyProps<P, NonNullable<O['status']>, O['stableProps'] extends {} ? NonNullable<O['stableProps']> : never>,
+    NonNullable<O['extendsProp']>
+  >,
   NonNullable<O['status']>,
   NonNullable<O['htmlPropsTagName']>,
   NonNullable<O['plugin']>
@@ -86,6 +91,7 @@ export type CreateKitOptions<T, Status extends ValidStatus = {}> = {
   plugin?: MayDeepArray<Plugin<any>>
 }
 
+type GetStatusFromPivifiedProps<T> = T extends PivifyProps<any, infer S> ? S : never
 /**
  * **NOTE: outside props will add to componet's root node**
  * @param rawOptions component option

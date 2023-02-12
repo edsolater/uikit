@@ -7,38 +7,44 @@ import { use2StateSyncer } from '../../hooks/use2StateSyncer'
 import { ControllerRef } from '../../typings/tools'
 import { Portal } from '../Portal'
 import { Transition } from '../Transition/Transition'
-import { createKit } from '../utils'
-import { letDrawerStyle, LetDrawerStyleOptions } from './plugins/letDrawerStyle'
+import { createKit, CreateKitProps } from '../utils'
+import { letDrawerStyle, LetDrawerStylePlugin } from './plugins/letDrawerStyle'
 
-export type DrawerController = {
+export type DrawerStatus = {
   isOpen: boolean
   open(): void
   close(): void
 } & Required<Pick<DrawerProps, 'placement' | 'transitionSpeed'>>
 
-export interface DrawerProps extends Omit<DivProps, 'children'>, LetDrawerStyleOptions {
-  children?: MayFn<ReactNode, [utils: DrawerController]>
-  open?: boolean
-  placement?: 'from-left' | 'from-bottom' | 'from-top' | 'from-right'
-  transitionSpeed?: 'fast' | 'normal'
+export type DrawerProps = CreateKitProps<
+  {
+    children?: MayFn<ReactNode, [utils: DrawerStatus]>
+    open?: boolean
+    placement?: 'from-left' | 'from-bottom' | 'from-top' | 'from-right'
+    transitionSpeed?: 'fast' | 'normal'
 
-  onOpen?: (utils: DrawerController) => void
-  /** fired before close transform effect is end */
-  onCloseImmediately?: (utils: DrawerController) => void
-  onClose?(utils: DrawerController): void
+    onOpen?: (utils: DrawerStatus) => void
+    /** fired before close transform effect is end */
+    onCloseImmediately?: (utils: DrawerStatus) => void
+    onClose?(utils: DrawerStatus): void
 
-  // -------- selfComponent --------
-  controller?: MayDeepArray<ControllerRef<DrawerController>>
-  componentId?: string
+    // -------- selfComponent --------
+    controller?: MayDeepArray<ControllerRef<DrawerStatus>>
+    componentId?: string
 
-  // -------- sub --------
-  anatomy?: {
-    mask?: MayFn<DivProps, [utils: DrawerController]>
-    panel?: MayFn<DivProps, [utils: DrawerController]>
+    // -------- sub --------
+    anatomy?: {
+      mask?: MayFn<DivProps, [utils: DrawerStatus]>
+      panel?: MayFn<DivProps, [utils: DrawerStatus]>
+    }
+  },
+  {
+    plugin: LetDrawerStylePlugin
+    stableProps: 'placement' | 'transitionSpeed'
   }
-}
+>
 
-export const Drawer = createKit(
+export const Drawer = createKit<DrawerProps>(
   { name: 'Drawer', plugin: [letDrawerStyle] },
   ({
     children,
@@ -52,14 +58,14 @@ export const Drawer = createKit(
     componentId,
     anatomy,
     ...divProps
-  }: DrawerProps) => {
+  }) => {
     const transitionDuration = transitionSpeed === 'fast' ? 200 : 300
 
     // for onCloseTransitionEnd
     // during leave transition, open is still true, but innerOpen is false, so transaction will happen without props:open has change (if open is false, React may destory this component immediately)
     const [innerOpen, setInnerOpen] = useState(open)
 
-    const innerController: DrawerController = {
+    const innerController: DrawerStatus = {
       isOpen: innerOpen,
       open() {
         setInnerOpen(true)
@@ -84,7 +90,6 @@ export const Drawer = createKit(
         open ? innerController.open() : innerController.close()
       }
     })
-
     return (
       <Portal
         id={DRAWER_STACK_ID}

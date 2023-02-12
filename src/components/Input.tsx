@@ -1,12 +1,8 @@
 import { isInt, MayArray, MayFn, mergeFunction, shrinkToValue } from '@edsolater/fnkit'
 import {
   HTMLInputTypeAttribute,
-  ReactNode,
-  RefObject,
-  startTransition,
-  useEffect,
-  useImperativeHandle,
-  useRef,
+  ReactNode, startTransition,
+  useEffect, useRef,
   useState
 } from 'react'
 import { Div } from '../Div/Div'

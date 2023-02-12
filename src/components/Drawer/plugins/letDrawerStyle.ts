@@ -1,6 +1,7 @@
 import { addDefault } from '@edsolater/fnkit'
 import { DrawerProps } from '../Drawer'
 import { createPlugin } from '../../../plugins'
+import { Plugin } from '../../../plugins/type'
 
 export type DrawerVariables = {
   '--drawer-bg'?: string
@@ -14,6 +15,8 @@ export type LetDrawerStyleOptions = {
   maskNoBlur?: boolean
   canClosedByMask?: boolean
 }
+
+export type LetDrawerStylePlugin = Plugin<LetDrawerStyleOptions>
 
 export const letDrawerStyle = createPlugin<DrawerProps>(
   ({ variables, maskNoBlur, canClosedByMask = true }) => ({
@@ -41,7 +44,7 @@ export const letDrawerStyle = createPlugin<DrawerProps>(
           height: {
             'from-top': 'min(200px, 50dvh)',
             'from-bottom': 'min(200px, 50dvh)'
-          }[placement],
+          }[placement]
         }
       }),
       mask: ({ placement }) => ({

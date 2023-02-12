@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useIsomorphicLayoutEffect } from '../hooks'
 import { Input, InputProps } from './Input'
 import { createKit, CreateKitProps } from './utils'
-export type DecimalInputProps = CreateKitProps<{
-  rawProps: {
+export type DecimalInputProps = CreateKitProps<
+  {
     /**
      * only if type is decimal
      * @default  3
@@ -34,9 +34,11 @@ export type DecimalInputProps = CreateKitProps<{
       n: number | /* if value is too big */ string | undefined,
       payload: { canSafelyCovertToNumber: boolean }
     ) => void
+  },
+  {
+    extendsProp: InputProps
   }
-  extendsProp: InputProps
-}>
+>
 function getRegexp(decimalCount: number) {
   const canNegativeRegexpString = `^[0-9-]*[.,]?[0-9]{0,${decimalCount}}$`
   const decimalRegexpString = `^[0-9]*[.,]?[0-9]{0,${decimalCount}}$`
