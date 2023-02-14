@@ -1,9 +1,8 @@
 import { MayDeepArray } from '@edsolater/fnkit'
 import { ReactElement } from 'react'
 import { DivProps, HTMLTagMap } from '../Div/type'
-import { ValidStatus } from '../typings/tools'
 
-export type WithPlugins<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> = {
+export type WithPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
   plugin?: MayDeepArray<Plugin<any>>
 }
 

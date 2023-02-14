@@ -209,7 +209,7 @@ export type SValueof<O> = O extends { [s: string]: infer T } ? T : any
 export type GetComponentProps<T extends (...args: any[]) => any> = Parameters<T>[0]
 export type Component<Props> = (props: Props) => DivChildNode
 export type ReactComponent<Props> = (props: Props) => JSX.Element
-export type ControllerRef<T> = RefObject<any> | ((controller: T) => void)
+export type StatusRef<T> = RefObject<any> | ((controller: T) => void)
 
 export type ValidProps = Record<string, Exclude<any, Promise<any>>>
 export type ValidStatus = object
@@ -239,7 +239,11 @@ export type AddDefaultType<T, U extends T> = T extends any | undefined ? U : T
 /**
  * make props can have function / async function / promise (except special named props)
  */
-export type PivifyProps<P extends ValidProps, Status extends ValidStatus = {}, UnchangeProps extends keyof any = never> = {
+export type PivifyProps<
+  P extends ValidProps,
+  Status extends ValidStatus = {},
+  UnchangeProps extends keyof any = never
+> = {
   [K in keyof P]: K extends UnchangePropsName | UnchangeProps ? P[K] : PivifyOneProps<P[K], Status>
 }
 
@@ -275,3 +279,5 @@ export type ExtendsProps<
   Omit<P3, keyof P1 | keyof P2> &
   Omit<P4, keyof P1 | keyof P2 | keyof P3> &
   Omit<P5, keyof P1 | keyof P2 | keyof P3 | keyof P4>
+
+export type RequiredKey<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>

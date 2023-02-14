@@ -20,5 +20,5 @@ export const letDrawerTrigger = createPlugin<DrawerProps>(() => {
     })
     return subscription.abort
   }, [])
-  return { domRef: divRef, controller: drawerController }
+  return { domRef: divRef, statusRef: drawerController }
 })

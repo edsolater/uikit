@@ -20,5 +20,5 @@ export const letHandleDrawerKeyboardShortcut = createPlugin<DrawerProps>(() => {
     })
     return subscription.abort
   }, [])
-  return { domRef: divRef, controller: drawerController }
+  return { domRef: divRef, statusRef: drawerController }
 })

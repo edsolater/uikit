@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { MenuController, MenuProps } from '..'
+import { MenuStatus, MenuProps } from '..'
 import { handleKeyboardShortcut } from '../../../utils/dom/gesture/handleKeyboardShortcut'
 import { createPlugin } from '../../../plugins'
 
@@ -7,7 +7,7 @@ export type LetHandleMenuKeyboardShortcut = {}
 
 export const letHandleMenuKeyboardShortcut = createPlugin<MenuProps<unknown>>(() => {
   const divRef = useRef<HTMLElement>()
-  const menuController = useRef<MenuController<unknown>>()
+  const menuController = useRef<MenuStatus<unknown>>()
   useEffect(() => {
     if (!divRef.current) return
     const subscription = handleKeyboardShortcut(divRef.current, {
@@ -20,5 +20,5 @@ export const letHandleMenuKeyboardShortcut = createPlugin<MenuProps<unknown>>(()
     })
     return subscription.abort
   }, [])
-  return { domRef: divRef, controller: menuController }
+  return { domRef: divRef, status: menuController }
 })

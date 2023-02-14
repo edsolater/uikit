@@ -2,13 +2,14 @@ import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode, useEffect, useState } from 'react'
 import { Div, DivProps } from '../../Div'
 import { mergeProps } from '../../Div/utils/mergeProps'
-import { useControllerRegister } from '../../hooks'
+import { useStatusRef } from '../../hooks'
 import { use2StateSyncer } from '../../hooks/use2StateSyncer'
-import { ControllerRef } from '../../typings/tools'
+import { Plugin } from '../../plugins/type'
+import { ExtendsProps, StatusRef } from '../../typings/tools'
 import { Portal } from '../Portal'
 import { Transition } from '../Transition/Transition'
-import { createKit, CreateKitProps } from '../utils'
-import { letDrawerStyle, LetDrawerStylePlugin } from './plugins/letDrawerStyle'
+import { useKitProps } from '../utils'
+import { letDrawerStyle, LetDrawerStyleOptions } from './plugins/letDrawerStyle'
 
 export type DrawerStatus = {
   isOpen: boolean
@@ -16,131 +17,122 @@ export type DrawerStatus = {
   close(): void
 } & Required<Pick<DrawerProps, 'placement' | 'transitionSpeed'>>
 
-export type DrawerProps = CreateKitProps<
-  {
-    children?: MayFn<ReactNode, [utils: DrawerStatus]>
-    open?: boolean
-    placement?: 'from-left' | 'from-bottom' | 'from-top' | 'from-right'
-    transitionSpeed?: 'fast' | 'normal'
+export type DrawerProps = ExtendsProps<{
+  children?: MayFn<ReactNode, [utils: DrawerStatus]>
+  open?: boolean
+  placement?: 'from-left' | 'from-bottom' | 'from-top' | 'from-right'
+  transitionSpeed?: 'fast' | 'normal'
 
-    onOpen?: (utils: DrawerStatus) => void
-    /** fired before close transform effect is end */
-    onCloseImmediately?: (utils: DrawerStatus) => void
-    onClose?(utils: DrawerStatus): void
+  onOpen?: (utils: DrawerStatus) => void
+  /** fired before close transform effect is end */
+  onCloseImmediately?: (utils: DrawerStatus) => void
+  onClose?(utils: DrawerStatus): void
 
-    // -------- selfComponent --------
-    controller?: MayDeepArray<ControllerRef<DrawerStatus>>
-    componentId?: string
+  // -------- common --------
+  shadowProps?: MayDeepArray<Partial<DrawerProps>>
+  plugin?: MayDeepArray<Plugin<DivProps>>
 
-    // -------- sub --------
-    anatomy?: {
-      mask?: MayFn<DivProps, [utils: DrawerStatus]>
-      panel?: MayFn<DivProps, [utils: DrawerStatus]>
-    }
-  },
-  {
-    plugin: LetDrawerStylePlugin
-    stableProps: 'placement' | 'transitionSpeed'
+  // -------- selfComponent --------
+  statusRef?: MayDeepArray<StatusRef<DrawerStatus>>
+  componentId?: string
+
+  // -------- sub --------
+  anatomy?: {
+    mask?: MayFn<DivProps, [utils: DrawerStatus]>
+    panel?: MayFn<DivProps, [utils: DrawerStatus]>
   }
->
+} , DivProps , LetDrawerStyleOptions>
 
-export const Drawer = createKit<DrawerProps>(
-  { name: 'Drawer', plugin: [letDrawerStyle] },
-  ({
-    children,
-    open = false,
-    placement = 'from-left',
-    transitionSpeed = 'normal',
-    onOpen,
-    onCloseImmediately,
-    onClose,
-    controller,
-    componentId,
-    anatomy,
-    ...divProps
-  }) => {
-    const transitionDuration = transitionSpeed === 'fast' ? 200 : 300
+export const Drawer = (inputProps: DrawerProps) => {
+  const [props, divProps] = useKitProps(inputProps, {
+    plugin: letDrawerStyle,
+    defaultProps: {
+      placement: 'from-left',
+      transitionSpeed: 'normal'
+    } satisfies DrawerProps
+  })
 
-    // for onCloseTransitionEnd
-    // during leave transition, open is still true, but innerOpen is false, so transaction will happen without props:open has change (if open is false, React may destory this component immediately)
-    const [innerOpen, setInnerOpen] = useState(open)
+  const transitionDuration = props.transitionSpeed === 'fast' ? 200 : 300
 
-    const innerController: DrawerStatus = {
-      isOpen: innerOpen,
-      open() {
-        setInnerOpen(true)
-      },
-      close() {
-        setInnerOpen(false)
-      },
-      placement,
-      transitionSpeed
+  // for onCloseTransitionEnd
+  // during leave transition, open is still true, but innerOpen is false, so transaction will happen without props:open has change (if open is false, React may destory this component immediately)
+  const [innerOpen, setInnerOpen] = useState(Boolean(props.open))
+
+  const drawerStatus: DrawerStatus = {
+    isOpen: innerOpen,
+    open() {
+      setInnerOpen(true)
+    },
+    close() {
+      setInnerOpen(false)
+    },
+    placement: props.placement,
+    transitionSpeed: props.transitionSpeed
+  }
+
+  useEffect(() => {
+    if (props.open) props.onOpen?.(drawerStatus)
+  }, [props.open])
+
+  if (props.statusRef) useStatusRef(props.componentId, props.statusRef, drawerStatus)
+
+  use2StateSyncer({
+    state1: props.open,
+    state2: innerOpen,
+    onState1Changed: (open) => {
+      open ? drawerStatus.open() : drawerStatus.close()
     }
-
-    useEffect(() => {
-      if (open) onOpen?.(innerController)
-    }, [open])
-
-    if (controller) useControllerRegister(componentId, controller, innerController)
-
-    use2StateSyncer({
-      state1: open,
-      state2: innerOpen,
-      onState1Changed: (open) => {
-        open ? innerController.open() : innerController.close()
-      }
-    })
-    return (
-      <Portal
-        id={DRAWER_STACK_ID}
-        zIndex={1010}
-        icss={{
-          position: 'fixed',
-          inset: 0,
-          pointerEvents: 'none',
-          '& > *': {
-            pointerEvents: 'initial'
-          }
-        }}
-        onClick={({ ev }) => ev.stopPropagation()}
+  })
+  return (
+    <Portal
+      id={DRAWER_STACK_ID}
+      zIndex={1010}
+      icss={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        '& > *': {
+          pointerEvents: 'initial'
+        }
+      }}
+      onClick={({ ev }) => ev.stopPropagation()}
+    >
+      <Transition
+        show={innerOpen}
+        fromProps={{ icss: { opacity: 0 } }}
+        toProps={{ icss: { opacity: 1 } }}
+        cssTransitionDurationMs={75}
+        onBeforeLeave={() => props.onCloseImmediately?.(drawerStatus)}
+        onAfterLeave={() =>props. onClose?.(drawerStatus)}
+        icss={{ transitionDelay: innerOpen ? `${transitionDuration}ms` : '', position: 'fixed', inset: 0 }}
       >
-        <Transition
-          show={innerOpen}
-          fromProps={{ icss: { opacity: 0 } }}
-          toProps={{ icss: { opacity: 1 } }}
-          cssTransitionDurationMs={75}
-          onBeforeLeave={() => onCloseImmediately?.(innerController)}
-          onAfterLeave={() => onClose?.(innerController)}
-          icss={{ transitionDelay: innerOpen ? `${transitionDuration}ms` : '', position: 'fixed', inset: 0 }}
-        >
-          <Div
-            className='Drawer-mask'
-            shadowProps={shrinkToValue(anatomy?.mask, [innerController])}
-            onClick={innerController.close}
-          />
-        </Transition>
+        <Div
+          className='Drawer-mask'
+          shadowProps={shrinkToValue(props.anatomy?.mask, [drawerStatus])}
+          onClick={drawerStatus.close}
+        />
+      </Transition>
 
-        <Transition
-          className='Drawer-content'
-          show={innerOpen}
-          fromProps={{ icss: placementClasses[placement].translateFadeOut }}
-          toProps={{}}
-          cssTransitionDurationMs={transitionDuration}
+      <Transition
+        className='Drawer-content'
+        show={innerOpen}
+        fromProps={{ icss: placementClasses[props.placement].translateFadeOut }}
+        toProps={{}}
+        cssTransitionDurationMs={transitionDuration}
+      >
+        <Div
+          shadowProps={mergeProps(divProps, shrinkToValue(props.anatomy?.panel, [drawerStatus]))}
+          icss={{
+            position: 'fixed',
+            inset: 0
+          }}
         >
-          <Div
-            shadowProps={mergeProps(divProps, shrinkToValue(anatomy?.panel, [innerController]))}
-            icss={{
-              position: 'fixed',
-              inset: 0
-            }}
-          >
-            {shrinkToValue(children, [innerController])}
-          </Div>
-        </Transition>
-      </Portal>
-    )
-  }
-)
+          {shrinkToValue(props.children, [drawerStatus])}
+        </Div>
+      </Transition>
+    </Portal>
+  )
+}
 
 export const DRAWER_STACK_ID = 'drawer-stack'
 

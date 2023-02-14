@@ -1,12 +1,11 @@
-import { useClickOutside }from '../../hooks'
 import { useMemo, useRef } from 'react'
 import { Div } from '../../Div/Div'
-import { DivProps } from '../../Div/type'
-import { createKit } from '../utils'
+import { useClickOutside } from '../../hooks'
+import { KitProps, useKitProps } from '../utils'
 import { AccordionContextProvider } from './AccordionContext'
 import { AccordionController } from './type'
 
-export interface AccordionProps extends DivProps {
+export type AccordionProps = KitProps<{
   /** it's change will cause ui change */
   open?: boolean
   /** (maybe not have to this, cause writing of accordionFace and accordionBody can express this ) */
@@ -15,13 +14,15 @@ export interface AccordionProps extends DivProps {
   onClose?(): void
   onToggle?(): void
   closeByOutsideClick?: boolean
-}
+}>
 /**
  * default **uncontrolled** kit
  */
 
-export const Accordion = createKit('Accordion', (props: AccordionProps) => {
-  const { children, open, direction = 'downwards', onOpen, onClose, onToggle, closeByOutsideClick, ...divProps } = props
+export const Accordion = (inputProps: AccordionProps) => {
+  const [{ children, open, direction = 'downwards', onOpen, onClose, onToggle, closeByOutsideClick }, divProps] =
+    useKitProps(inputProps)
+
   const accordionRef = useRef<HTMLDivElement>(null)
 
   const on = () => onOpen?.()
@@ -47,9 +48,9 @@ export const Accordion = createKit('Accordion', (props: AccordionProps) => {
 
   return (
     <Div shadowProps={divProps} domRef={accordionRef} icss={{ display: 'flex', flexDirection: 'column' }}>
-      <AccordionContextProvider {...props} controller={controller}>
+      <AccordionContextProvider {...inputProps} controller={controller}>
         {children}
       </AccordionContextProvider>
     </Div>
   )
-})
+}

@@ -8,6 +8,7 @@ import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString, CSSStyle } from '../styles/type'
 import { MayFunction } from '../typings/tools'
+import { KitProps, useKitProps } from './utils'
 
 type BooleanLike = unknown
 
@@ -16,7 +17,7 @@ export interface ButtonHandle {
   focus?: () => void
 }
 
-export interface ButtonProps extends DivProps<never, 'button'> {
+export type ButtonProps = KitProps<{
   /**
    * @default 'solid'
    */
@@ -55,15 +56,15 @@ export interface ButtonProps extends DivProps<never, 'button'> {
   /** normally, it's an icon  */
   suffix?: ReactNode
   controller?: RefObject<any>
-}
+}>
 
 /**
  * feat: build-in click ui effect
  */
-export function Button(props: ButtonProps) {
+export function Button(inputProps: ButtonProps) {
   /* ---------------------------------- props --------------------------------- */
   const themeProps = useUikitTheme('Button')
-  const { validators, ...otherButtonProps } = mergeProps(themeProps, props)
+  const { validators, ...otherButtonProps } = mergeProps(themeProps, inputProps)
 
   /* ------------------------------- validation ------------------------------- */
   const failedValidator = (isArray(validators) ? validators.length > 0 : validators)
@@ -77,17 +78,10 @@ export function Button(props: ButtonProps) {
   const disable = !isActive
 
   /* ------------------------------ detail props ------------------------------ */
-  const {
-    variant = 'solid',
-    size = 'md',
-    theme,
-    prefix,
-    suffix,
-    controller,
-    children,
-    onClick: originalOnClick,
-    ...restProps
-  } = mergedProps
+  const [
+    { variant = 'solid', size = 'md', theme, prefix, suffix, controller, children, onClick: originalOnClick },
+    divProps
+  ] = useKitProps(mergedProps)
 
   const {
     mainColor = cssColors.buttonPrimaryColor,
@@ -134,8 +128,8 @@ export function Button(props: ButtonProps) {
     xs: 0.5
   }[size]
   return (
-    <Div<never, 'button'>
-      shadowProps={restProps}
+    <Div<'button'>
+      shadowProps={divProps as DivProps<'button'>}
       as='button'
       onClick={onClick}
       className={Button.name}

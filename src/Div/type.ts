@@ -22,7 +22,7 @@ export interface HTMLTagMap {
 }
 /** richer than ReactNode */
 
-interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> {
+interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
 
   _status?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
@@ -58,13 +58,11 @@ interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HT
 export type Status = Record<string, any>
 export type DivChildNode = MayPromise<ReactNode> | Iterable<DivChildNode>
 
-export type WithShallowProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> = {
-  shadowProps?: MayDeepArray<DivProps<Status, TagName>>
+export type WithShallowProps<TagName extends keyof HTMLTagMap = 'div'> = {
+  shadowProps?: MayDeepArray<DivProps<TagName>>
 }
 
-export interface DivProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'>
-  extends DivBaseProps<Status, TagName>,
-    WithShallowProps<Status, TagName>,
-    WithPlugins<Status, TagName> {}
-
-    
+export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>
+  extends DivBaseProps<TagName>,
+    WithShallowProps<TagName>,
+    WithPlugins<TagName> {}

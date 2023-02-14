@@ -1,9 +1,9 @@
 import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode, useState } from 'react'
 import { Div, DivProps } from '../../Div'
-import { useControllerRegister, useRecordedEffect } from '../../hooks'
+import { useStatusRef, useRecordedEffect } from '../../hooks'
 import { ICSS } from '../../styles'
-import { ControllerRef } from '../../typings/tools'
+import { StatusRef } from '../../typings/tools'
 import { createKit } from '../utils'
 import { letControlledChecked } from './plugins/letControlledChecked'
 import { letHandleSwitchKeyboardShortcut } from './plugins/letHandleSwitchKeyboardShortcut'
@@ -23,7 +23,7 @@ export interface SwitchProps extends DivProps, LetSwitchStyleOptions {
   defaultChecked?: boolean
   onToggle?: (toStatus: boolean) => void
   // -------- selfComponent --------
-  controller?: MayDeepArray<ControllerRef<SwitchController>>
+  controller?: MayDeepArray<StatusRef<SwitchController>>
   componentId?: string
   // -------- sub --------
   renderThumbIcon?: MayFn<ReactNode, [utils: SwitchController]>
@@ -64,7 +64,7 @@ export const Switch = createKit(
       [checked]
     )
 
-    if (controller) useControllerRegister(componentId, controller, innerController)
+    if (controller) useStatusRef(componentId, controller, innerController)
 
     return (
       <Div

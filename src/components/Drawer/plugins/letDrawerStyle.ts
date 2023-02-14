@@ -18,6 +18,7 @@ export type LetDrawerStyleOptions = {
 
 export type LetDrawerStylePlugin = Plugin<LetDrawerStyleOptions>
 
+// build-in plugin
 export const letDrawerStyle = createPlugin<DrawerProps>(
   ({ variables, maskNoBlur, canClosedByMask = true }) => ({
     icss: addDefault(variables ?? {}, {

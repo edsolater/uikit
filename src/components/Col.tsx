@@ -1,7 +1,7 @@
-import { Div, DivChildNode, DivProps } from '../Div'
-import { createKit, CreateKitProps, KitProps } from './utils'
+import { Div } from '../Div'
+import { KitProps, useKitProps } from './utils'
 
-export type ColProps = CreateKitProps<{
+export type ColProps = KitProps<{
   wrap?: boolean
   name?: string // same as `<Group>`'s grid
   /**@default 'md' */
@@ -11,15 +11,19 @@ export type ColProps = CreateKitProps<{
 /**
  * flex box
  */
-export const Col = createKit<ColProps>('Col', ({ wrap, children, gap }) => (
-  <Div
-    icss={{
-      display: 'flex',
-      flexDirection: 'column',
-      flexWrap: wrap ? 'wrap' : undefined,
-      gap: gap === 'xl' ? 32 : gap === 'lg' ? 16 : gap === 'sm' ? 4 : 8
-    }}
-  >
-    {children}
-  </Div>
-))
+export const Col = (props: ColProps) => {
+  const [{ wrap, gap, children }, divProps] = useKitProps(props)
+  return (
+    <Div
+      shadowProps={divProps}
+      icss={{
+        display: 'flex',
+        flexDirection: 'column',
+        flexWrap: wrap ? 'wrap' : undefined,
+        gap: gap === 'xl' ? 32 : gap === 'lg' ? 16 : gap === 'sm' ? 4 : 8
+      }}
+    >
+      {children}
+    </Div>
+  )
+}

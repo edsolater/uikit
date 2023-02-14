@@ -1,9 +1,9 @@
 import { MayDeepArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
 import { ReactNode, useState } from 'react'
 import { Div, DivProps } from '../../Div'
-import { useControllerRegister, useEvent, useRecordedEffect } from '../../hooks'
+import { useStatusRef, useEvent, useRecordedEffect } from '../../hooks'
 import { letAddFloatBg, LetAddFloatBgOptions } from '../../plugins'
-import { ControllerRef } from '../../typings/tools'
+import { StatusRef } from '../../typings/tools'
 import { For } from '../For'
 import { Row, RowProps } from '../Row'
 import { createKit } from '../utils'
@@ -28,7 +28,7 @@ export interface TabsProps<T> extends DivProps {
   getKey?: (tab: T) => string | number
 
   // -------- selfComponent --------
-  controller?: MayDeepArray<ControllerRef<TabsController<T>>>
+  controller?: MayDeepArray<StatusRef<TabsController<T>>>
   componentId?: string
 
   // -------- sub --------
@@ -88,7 +88,7 @@ export const Tabs = createKit(
       [activeTab]
     )
 
-    if (controller) useControllerRegister(componentId, controller, innerController)
+    if (controller) useStatusRef(componentId, controller, innerController)
     return (
       <Row
         plugin={letAddFloatBg({

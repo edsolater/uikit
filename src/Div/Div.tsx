@@ -9,9 +9,7 @@ import { useDivChildren } from './hooks/useDivChildren'
 import { DivChildNode, DivProps, HTMLTagMap, Status } from './type'
 import { parseDivPropsToCoreProps } from './utils/parseDivPropsToCoreProps'
 
-export const Div = <Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'>(
-  rawProps: DivProps<Status, TagName>
-) => {
+export const Div = <TagName extends keyof HTMLTagMap = 'div'>(rawProps: DivProps<TagName>) => {
   const props = pipe(
     rawProps as Partial<DivProps>,
     handleDivShadowProps,
@@ -28,7 +26,9 @@ export const Div = <Status extends ValidStatus = {}, TagName extends keyof HTMLT
 }
 
 function useNormalDivPropsWithChildren(
-  props: Omit<DivProps<ValidStatus, keyof HTMLTagMap>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & { children?: DivChildNode }
+  props: Omit<DivProps< keyof HTMLTagMap>, 'plugin' | 'tag' | 'shadowProps' | 'children'> & {
+    children?: DivChildNode
+  }
 ) {
   const children = useDivChildren(props.children)
   return createElement(props.as ?? 'div', parseDivPropsToCoreProps(props), children)

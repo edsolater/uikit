@@ -1,12 +1,12 @@
 import { RefObject, useImperativeHandle } from 'react'
 import { flapDeep, MayDeepArray, WeakerMap } from '@edsolater/fnkit'
-import { ControllerRef } from '../typings/tools'
+import { StatusRef } from '../typings/tools'
 
 type ComponentHandler = Record<string, any>
 
 type ComponentId = string
 
-const controllerStore = new WeakerMap<ComponentId, ControllerRef<unknown>>()
+const controllerStore = new WeakerMap<ComponentId, StatusRef<unknown>>()
 
 export type GlobalComponentIdProps<Handler extends ComponentHandler> = {
   componentId?: string
@@ -14,9 +14,9 @@ export type GlobalComponentIdProps<Handler extends ComponentHandler> = {
 }
 
 /** used in component register */
-export function useControllerRegister(
+export function useStatusRef(
   componentId: string | undefined,
-  refs: MayDeepArray<ControllerRef<any>>,
+  refs: MayDeepArray<StatusRef<any>>,
   handler: Record<string, any>
 ) {
   flapDeep(refs).map(ref=>{
@@ -30,5 +30,5 @@ export function useControllerById<Handler extends ComponentHandler = Record<stri
   id?: ComponentId | undefined
 ) {
   if (!id) return
-  return controllerStore.get(id) as ControllerRef<Handler>
+  return controllerStore.get(id) as StatusRef<Handler>
 }
