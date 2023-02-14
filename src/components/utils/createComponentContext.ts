@@ -1,7 +1,7 @@
 import { assert, overwriteFunctionName, pipe, shrinkToValue, uncapitalize } from '@edsolater/fnkit'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { DivChildNode } from '../../Div'
-import { parseDivChildrenToReactNode } from '../../Div/handles/handleDivChildren'
+import { parseDivChildrenToJSXElement } from '../../Div/handles/handleDivChildren'
 import { ReactComponent } from '../../typings/tools'
 
 type ComponentContextValue<Props extends Record<keyof any, any>> = {
@@ -79,7 +79,7 @@ export function createComponentContext<Props extends Record<keyof any, any>>(
     return React.createElement(
       context.Provider,
       { value: { value: store, set: setStore } },
-      parseDivChildrenToReactNode(props.children)
+      parseDivChildrenToJSXElement(props.children)
     )
   }
   return [Provider, [readHook, setHook], propertyHooks as any]

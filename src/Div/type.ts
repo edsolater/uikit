@@ -47,7 +47,7 @@ interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HT
   htmlProps?: MayDeepArray<
     MayFn<JSX.IntrinsicElements[TagName extends {} ? TagName : any], [status: Status]> | undefined
   >
-  children?: DivChildNode
+  children?: DivChildNode<Status>
   /**
    * change outter wrapper element
    */

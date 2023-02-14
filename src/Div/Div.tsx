@@ -16,7 +16,7 @@ export const Div = <Status extends ValidStatus = {}, TagName extends keyof HTMLT
     rawProps as Partial<DivProps>,
     handleDivShadowProps,
     handleDivPlugin,
-    handleDivChildren,
+    (p) => handleDivChildren(p, rawProps._status),
     handleDivTag
   )
   if (!props) return null // just for type, logicly it will never happen
@@ -33,7 +33,7 @@ function useNormalDivPropsWithChildren(
   }
 ) {
   const children = useDivChildren(props.children)
-  return <div onClick={(ev)=>{}} {...parseDivPropsToCoreProps(props)}>{{children:3}}</div>
+  return <div {...parseDivPropsToCoreProps(props)}>{children}</div>
 }
 
 function useDangerousWrapperPluginsWithChildren(props: DivProps) {
@@ -42,4 +42,3 @@ function useDangerousWrapperPluginsWithChildren(props: DivProps) {
     createComponent(Div, omit(props, 'dangerousRenderWrapperNode'))
   )
 }
-
