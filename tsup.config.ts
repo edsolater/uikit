@@ -15,5 +15,4 @@ export default defineConfig({
   format: 'esm',
   target: 'es2020',
   splitting: true,
-  inject: ['./src/react-import.js']
 })

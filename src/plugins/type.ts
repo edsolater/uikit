@@ -1,5 +1,5 @@
 import { MayDeepArray } from '@edsolater/fnkit'
-import { ReactElement } from 'react'
+import { JSXElement } from 'solid-js'
 import { DivProps, HTMLTagMap } from '../Div/type'
 import { ValidStatus } from '../typings/tools'
 
@@ -7,7 +7,7 @@ export type WithPlugins<Status extends ValidStatus = {}, TagName extends keyof H
   plugin?: MayDeepArray<Plugin<any>>
 }
 
-export type WrapperNodeFn = (node: ReactElement) => ReactElement // change outter wrapper element
+export type WrapperNodeFn = (node: JSXElement) => JSXElement // change outter wrapper element
 
 export type PluginCreateFn<T> = (props: T) => Partial<Omit<DivProps, 'plugin' | 'shadowProps'>>
 

@@ -1,5 +1,5 @@
-import { MayEnum, MayFn, MayPromise } from '@edsolater/fnkit'
-import { MutableRefObject, ReactHTML, ReactNode } from 'react'
+import { MayEnum, MayFn } from '@edsolater/fnkit'
+import { JSXElement } from 'solid-js'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
@@ -23,26 +23,25 @@ export interface HTMLTagMap {
 /** richer than ReactNode */
 
 interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> {
-  as?: MayEnum<keyof ReactHTML> // assume a function return ReactNode is a Component
+  as?: MayEnum<keyof JSX.IntrinsicElements> // assume a function return ReactNode is a Component
 
   _status?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
 
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
-  domRef?: MayDeepArray<
-    MutableRefObject<HTMLElement | null | undefined> | ((el: HTMLElement) => void) | null | undefined
-  >
+  domRef?: MayDeepArray<((el: HTMLElement) => void) | null | undefined>
   /**
    * a special props, it won't render anything for `<div>`'s DOM, just a label for {@link pickChildByTag}\
    * give a tag, means it's special in it's context
    */
   tag?: MayDeepArray<DivDataTag | undefined> // !!!TODO: it's better to be a plugin
   className?: MayDeepArray<ClassName | undefined>
-  onClick?: (
-    utils: {
-      ev: React.MouseEvent<HTMLElement, MouseEvent>
-      el: HTMLElement
-    } & Status
-  ) => void
+  onClick?: (utils: {
+    ev: MouseEvent & {
+      currentTarget: HTMLElement
+      target: Element
+    }
+    el: HTMLElement
+  }) => void
   icss?: ICSS<Status>
   style?: MayDeepArray<MayFn<CSSStyle, [status: Status]> | undefined>
   htmlProps?: MayDeepArray<
@@ -56,7 +55,7 @@ interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HT
 }
 
 export type Status = Record<string, any>
-export type DivChildNode = MayPromise<ReactNode> | Iterable<DivChildNode>
+export type DivChildNode<Status extends ValidStatus = {}> = JSXElement | ((status: Status) => JSXElement)
 
 export type WithShallowProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> = {
   shadowProps?: MayDeepArray<DivProps<Status, TagName>>
@@ -66,5 +65,3 @@ export interface DivProps<Status extends ValidStatus = {}, TagName extends keyof
   extends DivBaseProps<Status, TagName>,
     WithShallowProps<Status, TagName>,
     WithPlugins<Status, TagName> {}
-
-    
