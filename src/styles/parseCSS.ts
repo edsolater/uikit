@@ -6,12 +6,11 @@ import {
   isObject,
   isString,
   map,
+  MayArray,
   mergeObjectsWithConfigs,
   shrinkToValue
 } from '@edsolater/fnkit'
 import { css, CSSObject } from '@emotion/css'
-import { Status } from '../Div'
-import { MayDeepArray } from '../typings/tools'
 
 // nterface MayArrayValueCSSObject {
 //   [key: keyof CSSObject]: MayArray<CSSObject[typeof key]>
@@ -19,19 +18,17 @@ import { MayDeepArray } from '../typings/tools'
 // actually, CSSObject === MayArrayValueCSSObject
 export type ICSSObject = CSSObject
 
-export type ICSS<Status extends Record<string, any> = any> = MayDeepArray<
-  ICSSObject | boolean | string | number | null | undefined | ((status: Status) => ICSSObject)
->
-export function parseCSS(cssProp: ICSS, status: Status | unknown) {
+export type ICSS = MayArray<ICSSObject | boolean | string | number | null | undefined | (() => ICSSObject)>
+export function parseCSS(cssProp: ICSS) {
   const cssObjList = filter(flapDeep(cssProp), isObject)
   if (!cssObjList.length) return ''
-  const mergedCSSObj = cssObjList.reduce((acc: CSSObject, cur) => mergeICSS(acc, shrinkToValue(cur, [status])), {})
+  const mergedCSSObj = cssObjList.reduce((acc: CSSObject, cur) => mergeICSS(acc, shrinkToValue(cur)), {})
   return css(mergedCSSObj)
 }
 
 /** for typescript type */
 export function createICSS(...icsses: ICSS[]): ICSS {
-  return icsses.length <= 1 ? icsses[0] : icsses
+  return icsses.length <= 1 ? icsses[0] : icsses.flat()
 }
 
 const compositeMap = {
@@ -44,10 +41,14 @@ const compositeMap = {
 }
 
 export function composifyICSS(icss: ICSS): ICSS {
-  if (isArray(icss)) return icss.map(composifyICSS)
+  if (isArray(icss)) return icss.map(composifyICSS) as ICSS
   return isObject(icss) && !isFunction(icss)
     ? map(icss, (v, k) => compositeMap[k as string]?.toCompositeValue(v) ?? v)
     : icss
+}
+
+export function composeICSS(...icsses: ICSS[]): ICSS {
+  return icsses.length <= 1 ? icsses[0] : icsses.flat()
 }
 
 const a: CSSObject | ((preResult: CSSObject) => CSSObject) = { a: 's' }

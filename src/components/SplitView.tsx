@@ -175,7 +175,7 @@ export function SplitView({ lineProps, dir = 'row', ...divProps }: RowSplitProps
                   },
                   lineProps?.icss
                 ]}
-                className={['hover-group', lineProps?.className]}
+                class={['hover-group', lineProps?.class]}
                 domRef={[
                   (el) => {
                     return (refs.current[idx] = { ...refs.current[idx], line: el })

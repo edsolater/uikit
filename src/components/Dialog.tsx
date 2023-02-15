@@ -101,7 +101,7 @@ export function Dialog({
         icss={{ transitionDelay: innerOpen ? `${transitionDuration}ms` : '', position: 'fixed', inset: 0 }}
       >
         <Div
-          className={'Dialog-mask'}
+          class={'Dialog-mask'}
           icss={{
             background: '#0000001c',
             backdropFilter: maskNoBlur ? undefined : 'blur(10px)',
@@ -112,7 +112,7 @@ export function Dialog({
       </Transition>
 
       <Transition
-        className={'Dialog-content'}
+        class={'Dialog-content'}
         show={innerOpen}
         fromProps={{ icss: { opacity: 0, transform: 'scale(0.95)' } }}
         toProps={{ icss: { opacity: 1, transform: 'scale(1)' } }}

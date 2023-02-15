@@ -56,7 +56,7 @@ export const letAddFloatBg = createPlugin<LetAddFloatBgOptions>(
               zIndex: '-1',
               background: '#d1d3d6'
             }}
-            className='Tabs-active-bg-panel'
+            class='Tabs-active-bg-panel'
             plugin={WrappedBy((node) => (
               <Motion {...MotionProps}>{node}</Motion>
             ))}

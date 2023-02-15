@@ -8,15 +8,16 @@ import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
 import { cssColors, opacityCSSColor } from '../styles/cssValues'
 import { CSSColorString, CSSStyle } from '../styles/type'
 import { MayFunction } from '../typings/tools'
+import { CreateKitProps } from './utils'
 
 type BooleanLike = unknown
 
-export interface ButtonHandle {
+export interface ButtonController {
   click?: () => void
   focus?: () => void
 }
 
-export interface ButtonProps extends DivProps<never, 'button'> {
+export type ButtonProps = CreateKitProps<{
   /**
    * @default 'solid'
    */
@@ -55,7 +56,7 @@ export interface ButtonProps extends DivProps<never, 'button'> {
   /** normally, it's an icon  */
   suffix?: ReactNode
   controller?: RefObject<any>
-}
+}>
 
 /**
  * feat: build-in click ui effect
@@ -100,7 +101,7 @@ export function Button(props: ButtonProps) {
   const onClick = (...args) => !disable && originalOnClick?.(...args)
   const ref = useRef<HTMLButtonElement>(null)
 
-  useImperativeHandle<any, ButtonHandle>(controller, () => ({
+  useImperativeHandle<any, ButtonController>(controller, () => ({
     click: () => {
       ref.current?.click()
     },
@@ -138,7 +139,7 @@ export function Button(props: ButtonProps) {
       shadowProps={restProps}
       as='button'
       onClick={onClick}
-      className={Button.name}
+      class={Button.name}
       htmlProps={{ type: 'button' }}
       icss={[
         { transition: `200ms ${cssTransitionTimeFnOutCubic}` }, // make it's change smooth

@@ -146,7 +146,7 @@ export function Popover({
           }
         }}
       >
-        <Div className={[Popover.name, className]}>
+        <Div class={[Popover.name, className]}>
           <Transition
             show={forceOpen || isTriggled}
             fromProps={{ icss: { opacity: 0, transform: 'scale(0.5)' } }}
@@ -182,7 +182,7 @@ export function Popover({
 export type PopoverButtonProps = {} & SubComponentProps
 
 export function PopoverButton(props: PopoverButtonProps) {
-  return <SubComponent {...props} className={[PopoverButton.name, props.className]} />
+  return <SubComponent {...props} class={[PopoverButton.name, props.class]} />
 }
 
 export type PopoverPanelProps = {

@@ -109,14 +109,14 @@ export const Drawer = createKit(
           icss={{ transitionDelay: innerOpen ? `${transitionDuration}ms` : '', position: 'fixed', inset: 0 }}
         >
           <Div
-            className='Drawer-mask'
+            class='Drawer-mask'
             shadowProps={shrinkToValue(anatomy?.mask, [innerController])}
             onClick={innerController.close}
           />
         </Transition>
 
         <Transition
-          className='Drawer-content'
+          class='Drawer-content'
           show={innerOpen}
           fromProps={{ icss: placementClasses[placement].translateFadeOut }}
           toProps={{}}

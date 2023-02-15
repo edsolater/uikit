@@ -1,5 +1,6 @@
-import { pipeHandlers } from '@edsolater/fnkit'
+import { pipe } from '@edsolater/fnkit'
 import { produce } from 'immer'
+import { composeICSS } from '../../styles'
 import { DivProps } from '../type'
 import { createDataTag, hasTag, toDataset } from './tag'
 
@@ -22,16 +23,13 @@ export function handleDivTag<P extends Partial<DivProps>>(props?: P): Omit<P, 't
     if (hasOffscreenTag) {
       return produce(divProps, (p) => {
         // @ts-ignore no need check
-        p.icss = [
-          p.icss,
-          {
-            position: 'absolute',
-            top: -9999,
-            left: -9999,
-            pointerEvents: 'none',
-            visibility: 'hidden'
-          }
-        ]
+        p.icss = composeICSS(p.icss, {
+          position: 'absolute',
+          top: -9999,
+          left: -9999,
+          pointerEvents: 'none',
+          visibility: 'hidden'
+        })
       })
     }
     return divProps
@@ -46,5 +44,5 @@ export function handleDivTag<P extends Partial<DivProps>>(props?: P): Omit<P, 't
     })
   }
 
-  return pipeHandlers(props, processDataSet, processNoRender, processOffscreen)
+  return pipe(props, processDataSet, processNoRender, processOffscreen)
 }

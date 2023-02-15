@@ -1,10 +1,9 @@
-import { MayDeepArray } from '@edsolater/fnkit'
+import { MayArray } from '@edsolater/fnkit'
 import { JSXElement } from 'solid-js'
 import { DivProps, HTMLTagMap } from '../Div/type'
-import { ValidStatus } from '../typings/tools'
 
-export type WithPlugins<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> = {
-  plugin?: MayDeepArray<Plugin<any>>
+export type WithPlugins<TagName extends keyof HTMLTagMap = 'div'> = {
+  plugin?: MayArray<Plugin<any>>
 }
 
 export type WrapperNodeFn = (node: JSXElement) => JSXElement // change outter wrapper element

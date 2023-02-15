@@ -68,11 +68,11 @@ export const Switch = createKit(
 
     return (
       <Div
-        className='Switch-track'
+        class='Switch-track'
         shadowProps={shrinkToValue(anatomy?.track, [innerController])}
         onClick={innerController.toggle}
       >
-        <Div className='Switch-thumb' shadowProps={shrinkToValue(anatomy?.thumb, [innerController])}>
+        <Div class='Switch-thumb' shadowProps={shrinkToValue(anatomy?.thumb, [innerController])}>
           {shrinkToValue(renderThumbIcon, [innerController])}
         </Div>
       </Div>

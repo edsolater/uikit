@@ -1,9 +1,9 @@
-import { MayEnum, MayFn } from '@edsolater/fnkit'
+import { MayArray, MayEnum } from '@edsolater/fnkit'
 import { JSXElement } from 'solid-js'
 import { WithPlugins, WrapperNodeFn } from '../plugins/type'
 import { ICSS } from '../styles/parseCSS'
 import { CSSStyle } from '../styles/type'
-import { MayDeepArray, ValidStatus } from '../typings/tools'
+import { ValidStatus } from '../typings/tools'
 import { ClassName } from '../utils/react'
 import { DivDataTag } from './handles/tag'
 
@@ -22,19 +22,17 @@ export interface HTMLTagMap {
 }
 /** richer than ReactNode */
 
-interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> {
+interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   as?: MayEnum<keyof JSX.IntrinsicElements> // assume a function return ReactNode is a Component
 
-  _status?: Status // wall provide additional info for `onClick` `icss` `onClick` `htmlProps`
-
   /** it can hold some small logic scripts. only trigger once, if you need update frequently, please use `domRef`*/
-  domRef?: MayDeepArray<((el: HTMLElement) => void) | null | undefined>
+  domRef?: MayArray<((el: HTMLElement) => void) | null | undefined>
   /**
    * a special props, it won't render anything for `<div>`'s DOM, just a label for {@link pickChildByTag}\
    * give a tag, means it's special in it's context
    */
-  tag?: MayDeepArray<DivDataTag | undefined> // !!!TODO: it's better to be a plugin
-  className?: MayDeepArray<ClassName | undefined>
+  tag?: MayArray<DivDataTag | undefined> // !!!TODO: it's better to be a plugin
+  class?: MayArray<ClassName | undefined>
   onClick?: (utils: {
     ev: MouseEvent & {
       currentTarget: HTMLElement
@@ -42,26 +40,24 @@ interface DivBaseProps<Status extends ValidStatus = {}, TagName extends keyof HT
     }
     el: HTMLElement
   }) => void
-  icss?: ICSS<Status>
-  style?: MayDeepArray<MayFn<CSSStyle, [status: Status]> | undefined>
-  htmlProps?: MayDeepArray<
-    MayFn<JSX.IntrinsicElements[TagName extends {} ? TagName : any], [status: Status]> | undefined
-  >
+  icss?: ICSS
+  style?: MayArray<CSSStyle | undefined>
+  htmlProps?: MayArray<JSX.IntrinsicElements[TagName extends {} ? TagName : any] | undefined>
   children?: DivChildNode<Status>
   /**
    * change outter wrapper element
    */
-  dangerousRenderWrapperNode?: MayDeepArray<WrapperNodeFn>
+  dangerousRenderWrapperNode?: MayArray<WrapperNodeFn>
 }
 
 export type Status = Record<string, any>
 export type DivChildNode<Status extends ValidStatus = {}> = JSXElement | ((status: Status) => JSXElement)
 
-export type WithShallowProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'> = {
-  shadowProps?: MayDeepArray<DivProps<Status, TagName>>
+export type WithShallowProps<TagName extends keyof HTMLTagMap = 'div'> = {
+  shadowProps?: MayArray<DivProps<TagName>>
 }
 
-export interface DivProps<Status extends ValidStatus = {}, TagName extends keyof HTMLTagMap = 'div'>
-  extends DivBaseProps<Status, TagName>,
-    WithShallowProps<Status, TagName>,
-    WithPlugins<Status, TagName> {}
+export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>
+  extends DivBaseProps<TagName>,
+    WithShallowProps<TagName>,
+    WithPlugins<TagName> {}

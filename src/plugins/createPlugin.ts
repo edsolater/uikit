@@ -1,11 +1,11 @@
-import { flapDeep, MayDeepArray, overwriteFunctionName } from '@edsolater/fnkit'
-import { ReactElement } from 'react'
+import { flapDeep, MayDeepArray } from '@edsolater/fnkit'
+import { JSXElement } from 'solid-js'
 import { DivProps } from '../Div/type'
 import { mergeProps } from '../Div/utils/mergeProps'
 import { Plugin } from './type'
 
 export function createDangerousRenderWrapperNodePlugin<T>(
-  createrFn: (insideNode: ReactElement, outsideProps: T & DivProps) => ReactElement,
+  createrFn: (insideNode: JSXElement, outsideProps: T & DivProps) => JSXElement,
   options?: {
     name?: string
   }

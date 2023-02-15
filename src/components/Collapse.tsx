@@ -69,7 +69,7 @@ export function Collapse({
     <Div
       shadowProps={divProps}
       domRef={collapseRef}
-      className='Collapse'
+      class='Collapse'
       icss={{ display: 'flex', flexDirection: 'column' }}
     >
       <AddProps<CollapseFaceProps> onClick={toggle} icss={icssClickable} $open={innerOpen} $controller={controller}>
@@ -92,7 +92,7 @@ type CollapseFaceProps = Omit<DivProps, 'children'> & {
 
 export function CollapseFace(props: CollapseFaceProps) {
   return (
-    <Div className='CollapseFace' shadowProps={omit(props, 'children')}>
+    <Div class='CollapseFace' shadowProps={omit(props, 'children')}>
       {shrinkToValue(props.children, [Boolean(props.$open), props.$controller!])}
     </Div>
   )
@@ -105,7 +105,7 @@ type CollapseBodyProps = DivProps & {
 
 export function CollapseBody(props: CollapseBodyProps) {
   return (
-    <Div className='CollapseBody' shadowProps={omit(props, 'children')}>
+    <Div class='CollapseBody' shadowProps={omit(props, 'children')}>
       {shrinkToValue(props.children, [Boolean(props.$open), props.$controller!])}
     </Div>
   )

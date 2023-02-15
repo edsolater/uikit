@@ -15,7 +15,7 @@ export function Card({ noDefaultStyle, bgimgSrc, ...restProps }: CardProps) {
   return (
     <Div
       shadowProps={restProps}
-      className='Card'
+      class='Card'
       icss={
         !noDefaultStyle && {
           borderRadius: '6px',

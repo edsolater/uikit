@@ -191,7 +191,7 @@ export const Input = createKit<InputProps>('Input', (props, { setStatus }) => {
 
   return (
     <Div<InputStatus>
-      className='Input'
+      class='Input'
       _status={inputStatus}
       shadowProps={restProps as any} // <-- FIX THIS TYPE DECLARE
       onClick={(utils) => {
@@ -213,7 +213,7 @@ export const Input = createKit<InputProps>('Input', (props, { setStatus }) => {
         }
       ]}
     >
-      {prefix && <Div className='flex-initial'>{shrinkToValue(prefix, [innerValue])}</Div>}
+      {prefix && <Div class='flex-initial'>{shrinkToValue(prefix, [innerValue])}</Div>}
 
       {/* input-wrapperbox is for style input inner body easier */}
       <AutoWidenInput
@@ -273,7 +273,7 @@ export const Input = createKit<InputProps>('Input', (props, { setStatus }) => {
           }
         ]}
       />
-      {suffix && <Div className='flex-initial ml-2'>{shrinkToValue(suffix, [innerValue])}</Div>}
+      {suffix && <Div class='flex-initial ml-2'>{shrinkToValue(suffix, [innerValue])}</Div>}
     </Div>
   )
 })
