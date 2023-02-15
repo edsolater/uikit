@@ -43,7 +43,7 @@ interface DivBaseProps<TagName extends keyof HTMLTagMap = 'div'> {
   icss?: ICSS
   style?: MayArray<CSSStyle | undefined>
   htmlProps?: MayArray<JSX.IntrinsicElements[TagName extends {} ? TagName : any] | undefined>
-  children?: DivChildNode<Status>
+  children?: JSXElement
   /**
    * change outter wrapper element
    */
@@ -61,3 +61,5 @@ export interface DivProps<TagName extends keyof HTMLTagMap = 'div'>
   extends DivBaseProps<TagName>,
     WithShallowProps<TagName>,
     WithPlugins<TagName> {}
+
+export type Ref<T> = (el: T) => void

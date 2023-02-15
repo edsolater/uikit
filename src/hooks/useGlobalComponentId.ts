@@ -10,7 +10,7 @@ const controllerStore = new WeakerMap<ComponentId, ControllerRef<unknown>>()
 
 export type GlobalComponentIdProps<Handler extends ComponentHandler> = {
   componentId?: string
-  controller?: RefObject<Handler>
+  status?: Ref<Handler>
 }
 
 /** used in component register */

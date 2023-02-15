@@ -41,7 +41,7 @@ export interface PopoverProps {
   /** only affact init render */
   defaultOpen?: boolean
   canOpen?: boolean
-  controller?: RefObject<any>
+  status?: Ref<any>
   placement?: PopoverPlacement
   /** for corner placement like 'top-left' 'top-right etc. */
   cornerOffset?: number

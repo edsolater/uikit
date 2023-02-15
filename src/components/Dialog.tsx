@@ -11,7 +11,7 @@ import { Transition } from './Transition/Transition'
 const DIALOG_STACK_ID = 'dialog-stack'
 
 export interface DialogProps extends Omit<DivProps, 'children'> {
-  controller?: RefObject<any>
+  status?: Ref<any>
   /** can access dialog's handler by useComponentHandler(dialogId) */
   componentId?: string | number
 

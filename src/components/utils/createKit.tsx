@@ -1,5 +1,6 @@
 import { flapDeep, MayDeepArray, pipe } from '@edsolater/fnkit'
 import { RefObject } from 'react'
+import { Ref } from 'solid-js'
 import { DivProps, HTMLTagMap } from '../../Div'
 import { handleDivShadowProps } from '../../Div/handles/handleDivShallowProps'
 import { mergeProps } from '../../Div/utils/mergeProps'
@@ -44,7 +45,7 @@ export type KitProps<
 
       // -------- additional --------
       // auto inject status to it
-      controller?: RefObject<Status>
+      statusRef?: Ref<Status>
     },
     keyof Props
   >

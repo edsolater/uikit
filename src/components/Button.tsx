@@ -1,7 +1,7 @@
-import { isArray, MayArray, MayFn, shrinkToValue, UndefinedKeys } from '@edsolater/fnkit'
-import { ReactNode, RefObject, useImperativeHandle, useRef } from 'react'
+import { isArray, MayArray, MayFn, shrinkToValue } from '@edsolater/fnkit'
+import { useImperativeHandle, useRef } from 'react'
+import { JSXElement, Ref } from 'solid-js'
 import { Div } from '../Div/Div'
-import { DivProps } from '../Div/type'
 import { mergeProps } from '../Div/utils/mergeProps'
 import { useUikitTheme } from '../hooks/useUikitTheme'
 import { cssTransitionTimeFnOutCubic, ICSS } from '../styles'
@@ -12,7 +12,7 @@ import { CreateKitProps } from './utils'
 
 type BooleanLike = unknown
 
-export interface ButtonController {
+export interface ButtonStatus {
   click?: () => void
   focus?: () => void
 }
@@ -52,10 +52,11 @@ export type ButtonProps = CreateKitProps<{
     fallbackProps?: Omit<ButtonProps, 'validators' | 'disabled'>
   }>
   /** normally, it's an icon  */
-  prefix?: ReactNode
+  prefix?: MayFn<JSXElement, [utils: ButtonStatus]>
   /** normally, it's an icon  */
-  suffix?: ReactNode
-  controller?: RefObject<any>
+  suffix?: MayFn<JSXElement, [utils: ButtonStatus]>
+  statusRef?: Ref<any>
+  clildren?: MayFn<JSXElement, [utils: ButtonStatus]>
 }>
 
 /**
@@ -84,7 +85,7 @@ export function Button(props: ButtonProps) {
     theme,
     prefix,
     suffix,
-    controller,
+    statusRef,
     children,
     onClick: originalOnClick,
     ...restProps
@@ -101,14 +102,16 @@ export function Button(props: ButtonProps) {
   const onClick = (...args) => !disable && originalOnClick?.(...args)
   const ref = useRef<HTMLButtonElement>(null)
 
-  useImperativeHandle<any, ButtonController>(controller, () => ({
+  const innerStatus = {
     click: () => {
       ref.current?.click()
     },
     focus: () => {
       ref.current?.focus()
     }
-  }))
+  }
+
+  useImperativeHandle<any, ButtonStatus>(statusRef, () => innerStatus)
 
   const cssPadding = {
     lg: '14px 24px',
@@ -135,7 +138,7 @@ export function Button(props: ButtonProps) {
     xs: 0.5
   }[size]
   return (
-    <Div<never, 'button'>
+    <Div<'button'>
       shadowProps={restProps}
       as='button'
       onClick={onClick}
@@ -190,9 +193,9 @@ export function Button(props: ButtonProps) {
       ]}
       domRef={ref}
     >
-      {prefix}
+      {shrinkToValue(prefix, [innerStatus])}
       {children}
-      {suffix}
+      {shrinkToValue(suffix, [innerStatus])}
     </Div>
   )
 }
