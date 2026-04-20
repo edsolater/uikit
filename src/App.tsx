@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Button } from './components'
-import { useTitle } from './hooks'
+import { Button } from './components/Button'
+import { useTitle } from './hooks/useTitle'
 import './App.css'
 
 function App() {

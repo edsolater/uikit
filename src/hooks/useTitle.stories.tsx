@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
-import { Button } from '../components'
+import { Button } from '../components/Button'
 import { useTitle } from './useTitle'
 
 function UseTitlePreview() {

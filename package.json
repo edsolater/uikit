@@ -6,6 +6,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist"
   ],
@@ -13,12 +16,11 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./style.css": "./dist/style.css"
+    }
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --outDir dist --rootDir src --noEmit false && vite build",
+    "build": "vite build && tsc -p tsconfig.build.json",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -35,6 +37,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "storybook": "^10.3.5",
     "typescript": "~6.0.2",
-    "vite": "^8.0.4"
+    "vite": "^8.0.4",
+    "vite-plugin-lib-inject-css": "^2.2.2"
   }
 }
