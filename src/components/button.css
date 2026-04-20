@@ -1,0 +1,51 @@
+.rk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 132px;
+  height: 44px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.rk-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.rk-button:focus-visible {
+  outline: 2px solid rgba(196, 93, 47, 0.22);
+  outline-offset: 3px;
+}
+
+.rk-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.rk-button--solid {
+  color: var(--accent-contrast);
+  background: linear-gradient(135deg, #cc6c40, #b84c1f);
+  box-shadow: 0 12px 24px rgba(184, 76, 31, 0.24);
+}
+
+.rk-button--solid:hover:not(:disabled) {
+  box-shadow: 0 16px 28px rgba(184, 76, 31, 0.3);
+}
+
+.rk-button--ghost {
+  color: var(--text-strong);
+  background: rgba(255, 255, 255, 0.42);
+  border-color: var(--border);
+}
+
+.rk-button--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.72);
+}
