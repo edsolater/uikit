@@ -2,13 +2,18 @@
  * 这个文件只定义唯一真实 DOM 出口 Piv，负责创建和绑定原生元素。
  * 它不负责业务语义、主题系统、结构包装或组件控制器抽象。
  */
+import { isFunction, wrapArr, type AnyFn, type MayArray } from '@edsolater/fnkit'
 import { createEffect, onCleanup, type Accessor, type JSX } from 'solid-js'
-import { type createPivElement, type PivElement, type PivSupportedElementTag, type PivTag, domMap } from './PivSupporteElements'
-import { resolveClassValue, type ClassValue } from './className'
+import {
+  domMap,
+  type createPivElement,
+  type PivElement,
+  type PivSupportedElementTag,
+  type PivTag,
+} from './PivSupporteElements'
+import { resolveClassName, type ClassName } from './className'
 
-
-
-export type DomRef<T extends Element> = (element: T) => void | VoidFunction
+export type RefFunction<T extends Element> = (element?: T) => void 
 
 export type PivDomProps = Record<string, unknown | Accessor<unknown>>
 
@@ -19,10 +24,10 @@ export type PivEvents = Record<
 
 export type PivProps<Tag extends PivTag = 'div'> = {
   as: Tag
-  class?: ClassValue
+  class?: ClassName
   props?: PivDomProps
   events?: PivEvents
-  ref?: MayArray<DomRef<PivElement<Tag>>>
+  ref?: MayArray<RefFunction<PivElement<Tag>> | undefined>
   children?: JSX.Element
 }
 
@@ -133,19 +138,12 @@ function setDomProp(element: HTMLElement, key: string, value: unknown) {
 /**
  * ref 是命令式增强入口，允许单个 ref 或一组 ref，并统一回收清理函数。
  */
-function bindRefs<T extends Element>(element: T, refList: MayArray<DomRef<T>> | undefined) {
-  if (!refList) {
-    return
-  }
+function bindRefs<T extends Element>(element: T, refList: PivDomProps['ref']) {
+  if (!refList) return
 
-  const refs = Array.isArray(refList) ? refList : [refList]
-  const cleanups = refs
-    .map((ref) => ref(element))
-    .filter((cleanup): cleanup is VoidFunction => typeof cleanup === 'function')
-
-  if (cleanups.length === 0) {
-    return
-  }
+  const refs = wrapArr(refList).filter(isFunction) as RefFunction<T>[]
+  const cleanups = refs.map((ref) => ref(element)).filter(isFunction) as unknown as AnyFn[]
+  if (cleanups.length === 0) return
 
   onCleanup(() => {
     for (const cleanup of cleanups) {
@@ -196,9 +194,9 @@ export function bindPivElement<Tag extends PivTag>(element: PivElement<Tag>, inp
  */
 export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivProps<Tag>): JSX.Element {
   const creator = domMap[inputProps.as] as unknown as createPivElement<Tag>
-  const parsedProps = { 
+  const parsedProps = {
     ...inputProps,
-    class: inputProps != null ? resolveClassValue(inputProps.class ?? '') : undefined,
+    class: inputProps != null ? resolveClassName(inputProps.class ?? '') : undefined,
     ref: (element: PivElement<Tag>) => bindPivElement(element, inputProps),
   }
 
