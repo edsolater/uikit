@@ -1,6 +1,6 @@
-# React Kit
+# Solid Kit
 
-一个轻量的 React 19 基础库骨架，保留三件事：
+一个轻量的 SolidJS 基础库骨架，保留三件事：
 
 - 基础组件
 - 基础 hooks
@@ -50,7 +50,7 @@ import { Button } from '@edsolater/react-kit'
 ## Publish
 
 - 包名已经固定为 `@edsolater/react-kit`
-- `react` 和 `react-dom` 作为 `peerDependencies` 交给消费方提供，避免业务项目打进两份 React
+- `solid-js` 作为 `peerDependencies` 交给消费方提供，避免业务项目打进重复运行时
 - 发布前执行一次 `bun run build`
 - 发布时使用 `npm publish` 或 `bun publish` 即可
 

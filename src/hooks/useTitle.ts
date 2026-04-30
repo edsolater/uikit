@@ -1,21 +1,25 @@
-import { useEffect, useSyncExternalStore } from 'react'
+// 这个文件只负责同步 document.title，并把浏览器当前标题作为 Solid accessor 暴露。
+import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js'
 
-export function useTitle(nextTitle?: string) {
-  const getSnapshot = () => {
-    if (typeof document === 'undefined') {
-      return nextTitle ?? ''
-    }
+type TitleInput = string | Accessor<string> | undefined
 
-    return document.title
-  }
+function readTitleInput(nextTitle: TitleInput) {
+  // 调用方传入 accessor 时，这里负责建立 Solid 依赖关系。
+  return typeof nextTitle === 'function' ? nextTitle() : nextTitle
+}
 
-  const subscribe = (onStoreChange: () => void) => {
-    if (typeof document === 'undefined') {
-      return () => {}
-    }
+function readBrowserTitle(nextTitle: TitleInput) {
+  // 服务端没有浏览器标题设施，只能返回调用方此刻给出的标题语义。
+  return typeof document === 'undefined' ? readTitleInput(nextTitle) ?? '' : document.title
+}
 
+export function useTitle(nextTitle?: TitleInput) {
+  // 这份 signal 只镜像浏览器当前标题，不在 hook 内维护第二套标题真相。
+  const [currentTitle, setCurrentTitle] = createSignal(readBrowserTitle(nextTitle))
+
+  if (typeof document !== 'undefined') {
     const observer = new MutationObserver(() => {
-      onStoreChange()
+      setCurrentTitle(document.title)
     })
 
     observer.observe(document.head, {
@@ -24,21 +28,22 @@ export function useTitle(nextTitle?: string) {
       characterData: true,
     })
 
-    return () => observer.disconnect()
+    onCleanup(() => observer.disconnect())
   }
 
-  useEffect(() => {
-    if (
-      typeof document === 'undefined' ||
-      typeof nextTitle !== 'string' ||
-      nextTitle.length === 0 ||
-      document.title === nextTitle
-    ) {
+  createEffect(() => {
+    const title = readTitleInput(nextTitle)
+
+    if (typeof document === 'undefined' || typeof title !== 'string' || title.length === 0) {
       return
     }
 
-    document.title = nextTitle
-  }, [nextTitle])
+    if (document.title !== title) {
+      document.title = title
+    }
 
-  return useSyncExternalStore(subscribe, getSnapshot, () => nextTitle ?? '')
+    setCurrentTitle(document.title)
+  })
+
+  return currentTitle
 }

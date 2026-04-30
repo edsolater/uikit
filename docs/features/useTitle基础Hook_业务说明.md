@@ -11,7 +11,7 @@
 ## 业务目标
 
 - `useTitle` 是这个项目当前最基础的浏览器标题同步 hook。
-- 它负责把 React 调用方与 `document.title` 这项浏览器设施连起来。
+- 它负责把 SolidJS 调用方与 `document.title` 这项浏览器设施连起来。
 - 它的目标不是管理页面路由，也不是管理整套 SEO 元信息，而是只处理“当前标题是什么”。
 
 ## 主体边界
@@ -42,9 +42,9 @@ flowchart LR
 
 ## 稳定协议
 
-- 当前 `useTitle` 接收一个可选的 `nextTitle`。
-- 当 `nextTitle` 是非空字符串且与当前浏览器标题不同，hook 会写入 `document.title`。
-- hook 会返回当前浏览器标题字符串。
+- 当前 `useTitle` 接收一个可选的 `nextTitle`，可以是字符串，也可以是 SolidJS accessor。
+- 当 `nextTitle` 解析后是非空字符串且与当前浏览器标题不同，hook 会写入 `document.title`。
+- hook 会返回当前浏览器标题 accessor。
 - 当前实现会订阅浏览器标题变化，因此返回值不仅跟随 hook 自己写入，也会跟随外部对标题的直接修改更新。
 - 当前实现把 `document.title` 当作唯一真实来源，不再在 hook 内部维护第二套标题真相。
 

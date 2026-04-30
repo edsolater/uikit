@@ -9,7 +9,8 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js"
   },
-  "include": ["src", ".storybook/**/*.ts"]
+  "include": ["src", ".storybook/**/*.ts", ".storybook/**/*.tsx"]
 }

@@ -1,7 +1,7 @@
-import type { StorybookConfig } from '@storybook/react-vite'
+import type { StorybookConfig } from 'storybook-solidjs-vite'
 
 const config: StorybookConfig = {
-  framework: '@storybook/react-vite',
+  framework: 'storybook-solidjs-vite',
   stories: ['../src/**/*.stories.@(ts|tsx)'],
   addons: [],
 }

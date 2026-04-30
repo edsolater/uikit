@@ -1,17 +1,17 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
-import { useState } from 'react'
+import type { Meta, StoryObj } from 'storybook-solidjs-vite'
+import { createSignal } from 'solid-js'
 import { Button } from '../components/Button'
 import { useTitle } from './useTitle'
 
 function UseTitlePreview() {
-  const samples = ['Storybook Title', 'Hook State Title', 'React Kit Preview']
-  const [index, setIndex] = useState(0)
-  const title = useTitle(samples[index])
+  const samples = ['Storybook Title', 'Hook State Title', 'Solid Kit Preview']
+  const [index, setIndex] = createSignal(0)
+  const title = useTitle(() => samples[index()])
 
   return (
-    <div style={{ display: 'grid', gap: 16, maxWidth: 320 }}>
-      <strong>{title}</strong>
-      <Button variant="ghost" onClick={() => setIndex((index + 1) % samples.length)}>
+    <div style={{ display: 'grid', gap: '16px', 'max-width': '320px' }}>
+      <strong>{title()}</strong>
+      <Button variant="ghost" onClick={() => setIndex((index() + 1) % samples.length)}>
         Switch title
       </Button>
     </div>
