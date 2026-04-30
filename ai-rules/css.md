@@ -1,156 +1,263 @@
-# 样式规则
+# CSS 契约
 
 ## 用途
 
-这个文件定义 CSS 怎么写，以及哪些样式应该沉淀成基础单元。
+这个文件定义 CSS 怎么按结构、variant、state 和属性顺序书写。
+它不重新定义 HTML 命名边界；HTML 命名以 `class-name.md` 为准。
 
-它不重新定义 class name 命名边界。这里关注的是样式树、响应式、基础样式和业务覆盖之间的职责分工。
+核心目标是让 CSS 阅读顺序贴近 DOM 结构：先看到主体是谁，再看到它的分类和状态，最后进入子节点环境。
 
-## 核心规则
+## 四个概念
 
-默认按现代 CSS 心智写代码。
+```txt
+class 定身份。
+data-variant 定分类。
+data-state 定状态。
+CSS nesting 定环境。
+```
 
-优先使用：
-
-- CSS nesting
-- flex 和 grid
-- `%`
-- `fr`
-- `minmax()`
-- `clamp()`
-- `dvh`、`dvw`
-- `@container`
-
-不要因为旧习惯，把样式写成平铺大串选择器、文件尾部媒体查询堆，或者一遇到尺寸变化就先补断点。
-
-响应式默认优先写成“随空间连续变化的表达式”，而不是“到某个宽度突然换一套写法”的断点补丁。
-
-连续表达式指的是让浏览器根据当前空间自动算出中间值，例如：
-
-- 用 `clamp(320px, 40dvw, 720px)` 表达最小值、理想值、最大值
-- 用 `minmax(260px, 1fr)` 表达网格列的收缩和伸展
-- 用 `width: min(100%, 960px)` 表达容器上限
-- 用 `grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))` 让列数随空间自然变化
-
-这类写法不会在 `768px`、`1024px` 之类断点处突然断裂。只有当布局语义本身必须变，例如从横向工具栏变成纵向抽屉，才进入条件查询。
-
-优先顺序：
-
-1. 先用 `clamp()`、`min()`、`max()`、`minmax()`、`%`、`fr`、`dvw`、`dvh` 和 flex / grid 的自然伸缩解决。
-2. 如果变化取决于组件自身容器，而不是整个视口，用 `@container`。
-3. 只有布局语义真的发生阶段切换，并且容器查询也不是合适表达时，才使用 `@media`。
-
-## 嵌套规则
-
-样式结构存在父子上下文时，沿着这棵树写。
-
-推荐：
+CSS 里对应成：
 
 ```css
-.app.shell {
-  padding: 24px;
+.subject {
+  &[data-variant="kind"] {
+  }
 
-  .app-panel {
-    .header {
-      .tab.nav {
-      }
+  &[data-state="state"] {
+  }
+
+  .child {
+  }
+}
+```
+
+## 结构顺序
+
+同一个节点内部按这个顺序写：
+
+```txt
+主体基础
+主体 variant
+主体 state
+子元素
+子元素 variant
+子元素 state
+```
+
+示例：
+
+```css
+.tabs {
+  /* tabs 基础 */
+
+  &[data-variant="line"] {
+    /* tabs 分类 */
+  }
+
+  &[data-state="loading"] {
+    /* tabs 状态 */
+  }
+
+  .item {
+    /* item 基础 */
+
+    &[data-variant="primary"] {
+      /* item 分类 */
+    }
+
+    &[data-state="active"] {
+      /* item 状态 */
     }
   }
 }
 ```
 
-不推荐把同一棵树拆成多个平行块：
+不要已经进入子元素后，又回头补主体的 variant 或 state。
 
-```css
-.app.shell {
-}
+## nesting
 
-.app-panel {
-}
-
-.header {
-}
-```
-
-嵌套不是为了炫语法，而是让 CSS 阅读顺序和 HTML 结构对齐。
-
-默认不要额外写 `>`。只有必须排除更深层后代时，才用直属子选择器。
-
-## 阅读顺序
-
-同一层的规则先写完整，再进入下一层。
-
-一个节点内部的推荐顺序：
-
-1. 当前层基础属性
-2. 当前层条件补充，例如 `@container`、`@media`、`@supports`
-3. 当前层伪类、伪元素、状态，例如 `&:hover`、`&::before`、`&.--active`
-4. 子节点规则
+CSS nesting 表达“这个东西处在哪个环境里”。
 
 推荐：
 
 ```css
-.chart.container {
-  position: relative;
-
-  @container (width < 480px) {
+.tabs {
+  .list {
+    .item {
+    }
   }
 
-  &.--active {
-  }
-
-  .canvas {
+  .panel {
   }
 }
 ```
 
-不要已经进入子节点后，又回头补当前层状态或条件。
+不推荐：
 
-## 响应式规则
+```css
+.tabs {
+}
 
-响应式优先顺着布局自然流动，不先写 `@media` 再用一堆断点修补。
+.tabs-list {
+}
 
-优先方案包括：
+.tabs-item {
+}
 
-- `grid-template-columns: repeat(auto-fit, minmax(...))`
-- `flex-wrap`
-- `clamp(16px, 2dvw, 32px)`
-- `width: min(100%, 1200px)`
-- `%`
-- `fr`
-- `dvh`、`dvw`
+.tabs-panel {
+}
+```
 
-`@media` 是后备方案。它适合布局语义真正发生阶段切换的场景，不适合当作默认修补工具。
+环境已经存在于结构里，不要再编码进每一个 class 名。
 
-不要把“某个宽度下有点挤”直接翻译成 `@media (max-width: ...)`。先看这个挤压能不能通过 `minmax()`、`clamp()`、`auto-fit`、`flex-wrap` 或容器宽度百分比自然释放。
+默认不写 `>`。只有必须排除更深后代时，才使用直属子选择器。
 
-如果需要条件查询，优先问这个变化是否属于组件容器本身。属于容器就优先用 `@container`，不要直接把问题推给视口断点。
+## variant
 
-媒体查询如果必须使用，应嵌套在实际变化的节点里，而不是统一堆到文件尾部。
+variant 样式只挂在当前主体的 `data-variant` 上。
 
-## 固定单位
+推荐：
 
-不是所有尺寸都应该变成比例。
+```css
+.button {
+  &[data-variant="solid"] {
+  }
 
-以下小而稳定的视觉细节继续使用 `px` 往往更合适：
+  &[data-variant="ghost"] {
+  }
+}
+```
 
-- 边框粗细
-- 小图标尺寸
-- 小圆角
-- 阴影细节
-- 很小的内边距
+不推荐：
 
-如果一个值是稳定视觉细节，不要为了“响应式”硬改成百分比。
+```css
+.button.solid {
+}
 
-## 基础样式
+.solid-button {
+}
+```
 
-先分清基础层和业务层。
+variant 是分类，不是新身份。
 
-基础层回答：这个元素默认是什么。
+## state
 
-业务层回答：这次页面里它具体怎么摆、怎么强调、怎么修饰。
+state 样式只挂在当前主体的 `data-state` 上。
 
-基础 CSS 应当沉淀那些跨业务仍然成立的最低限度结构身份，例如：
+推荐：
+
+```css
+.item {
+  &[data-state="active"] {
+  }
+
+  &[data-state="inactive"] {
+  }
+}
+```
+
+不推荐：
+
+```css
+.item.active {
+}
+
+.item.--active {
+}
+
+.active-item {
+}
+```
+
+state 是现状，不是 class。
+
+伪类仍然保留给浏览器交互态，例如 `:hover`、`:focus-visible`、`:active`。当状态来自组件数据、业务流程或持久选择结果时，使用 `data-state`。
+
+## 条件查询
+
+条件查询就近放在实际变化的节点里。
+
+优先顺序：
+
+1. 先用 `clamp()`、`min()`、`max()`、`minmax()`、`%`、`fr`、`dvw`、`dvh`、flex 和 grid 的自然伸缩解决。
+2. 如果变化取决于组件容器，用 `@container`。
+3. 只有布局语义真的随视口阶段切换时，才用 `@media`。
+
+推荐：
+
+```css
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 2dvw, 16px);
+
+  @container (width < 360px) {
+    align-items: stretch;
+  }
+}
+```
+
+不要把所有 `@media` 堆到文件尾部，也不要把可以连续变化的问题写成断点跳变。
+
+## CSS 属性顺序
+
+同一个规则块内，属性按语义从外到内、从结构到表现排列：
+
+```txt
+位置
+布局
+尺寸
+盒子
+文字
+外观
+交互
+动画
+```
+
+示例：
+
+```css
+.item {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  font: inherit;
+  color: var(--text-2);
+
+  background: transparent;
+  opacity: 1;
+
+  cursor: pointer;
+
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+
+  &[data-state="active"] {
+    color: var(--text-1);
+    border-color: currentColor;
+  }
+}
+```
+
+属性顺序服务阅读，不服务机械排序。遇到强相关属性时，允许就近放在一起，例如 `border` 和 `border-radius`。
+
+## 基础样式与业务样式
+
+基础样式回答“这个稳定单元默认是什么”。
+业务样式回答“它在当前页面里具体怎么摆、怎么强调、怎么修饰”。
+
+适合沉淀到基础样式的身份：
 
 - `card`
 - `panel`
@@ -160,88 +267,40 @@
 - `field`
 - `status`
 
-基础层应尽量保持：
+业务专属颜色、具体间距、当前页面密度、某个图表高度、某个布局的强调方式，不要反向塞回基础样式。
 
-- 顶级单选择器
-- 低权重
-- 可覆盖
-- 不依赖业务嵌套上下文也能成立
-- 不承载页面皮肤
+## 固定单位
 
-## 业务样式
+不是所有尺寸都要响应式。
 
-业务样式保留当前页面专属内容。
+这些稳定视觉细节可以继续使用 `px`：
 
-例如：
+- 边框粗细
+- 小图标尺寸
+- 小圆角
+- 阴影细节
+- 很小的内边距
 
-- 页面专属颜色
-- 当前业务强调色
-- 具体 padding
-- 具体 gap
-- 某个图表到底多高
-- 当前页面里的密度和分栏
-
-这些描述的是“这次怎么表现”，不是基础单元永远是什么。不要反向塞回基础层。
-
-## 组件归属
-
-样式归属看它定义谁的视觉身份，不看它当前渲染在哪里。
-
-如果一个下层节点已经能被自然想象成独立东西，它的样式应跟着自己的组件文件走。
-
-例如：
-
-- tooltip 的定位、卡片外观、文字层级，属于 `PointTooltip.css`
-- chart 容器、canvas 背景和 hover 遮罩，属于 `Chart.css`
-
-父容器只保留“这个组件在当前容器里如何摆放”的关系，不吸收下层组件自己的皮肤。
-
-## 抽取规则
-
-遇到一个样式块，按顺序问：
-
-1. 它是在定义稳定渲染单元，还是当前页面临时摆法
-2. 去掉业务名词后，它是否仍然成立
-3. 拿掉这段样式后，用户是否还看得出它是什么
-4. 它描述的是结构本体，还是业务参数
-5. 别的页面出现同类单元时，是否也需要类似基础识别感
-
-偏向稳定单元本体，就抽到基础 CSS。
-
-偏向当前业务数值、颜色和强调方式，就留在业务 CSS。
-
-抽取时默认只改变文件落点和职责归属，不顺手发明 `base-`、`ui-`、`surface-`、`data-` 这类前缀。
-
-## 属性选择
-
-选 CSS 属性时，优先用最直接表达语义的属性。
-
-- 布局分配优先想 flex / grid
-- 尺寸弹性优先想 `minmax()` / `clamp()` / `%`
-- 视口尺寸优先想 `dvh` / `dvw`
-- 状态样式优先挂在状态类上
-
-不要为了兼容旧写法退回更啰嗦的表达。
+如果一个值是稳定视觉细节，不要为了“响应式”硬改成比例单位。
 
 ## 禁止写法
 
-禁止把下面这些当成默认写法：
-
+- 用 `.button.primary` 表达 variant
+- 用 `.button.--active` 表达 state
+- 用 `.active-button` 表达 state
+- 用 `.tabs-item` 重复父层环境
+- 进入子元素后又回头补主体 state
 - 一遇到响应式就先写 `@media`
-- 在文件尾部堆一棵和主体重复的媒体查询树
-- 把可以用 `clamp()`、`minmax()`、`auto-fit`、`flex-wrap` 表达的问题写成断点跳变
-- 把明显属于下层组件的皮肤写进父容器 CSS
-- 把页面专属颜色、尺寸和强调塞进基础单元
-- 抽取基础样式时顺手发明抽象前缀
-- 只有 TSX 拆成组件后，才承认它是样式组件
+- 把所有条件查询堆到文件尾部
+- 把下层独立组件的样式写进父容器 CSS
+- 把业务专属参数沉淀进基础样式
 
 ## 检查清单
 
-- CSS 是否沿结构上下文嵌套
-- 同一层的条件、状态和子节点顺序是否清楚
-- 响应式是否先尝试 `clamp()`、`minmax()`、`%`、`fr`、`dvw/dvh`、flex / grid 自然伸缩
-- 必须条件查询时，是否先看了 `@container`
-- 媒体查询是否落在真正变化的节点里
-- 基础 CSS 是否只定义稳定结构身份
-- 业务 CSS 是否只补当前页面参数和视觉修饰
-- 下层独立组件的样式是否归属到自己的 CSS 文件
+- CSS 是否沿 DOM 结构 nesting
+- 当前主体是否先写基础，再写 variant，再写 state
+- 子元素是否只写自己的身份、variant 和 state
+- 分类是否统一使用 `[data-variant="..."]`
+- 状态是否统一使用 `[data-state="..."]`
+- 属性是否大致按位置、布局、尺寸、盒子、文字、外观、交互、动画排列
+- 响应式是否先尝试连续表达和容器查询
