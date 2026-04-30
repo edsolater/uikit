@@ -29,16 +29,29 @@ src/
 ## Scripts
 
 ```bash
-npm run dev
-npm run build
-npm run storybook
-npm run build-storybook
+bun run dev
+bun run build
+bun run storybook
+bun run build-storybook
+```
+
+这个仓库既支持本地开发，也支持作为外部依赖被别的项目安装后直接使用：
+
+```tsx
+import { Button } from '@edsolater/react-kit'
 ```
 
 ## Build
 
 - `vite build` 用于打组件库 ES module
-- `tsc -p tsconfig.lib.json` 只生成类型声明
+- `tsc -p tsconfig.build.json` 只生成类型声明
 - `dist/style.css` 是组件样式输出
+
+## Publish
+
+- 包名已经固定为 `@edsolater/react-kit`
+- `react` 和 `react-dom` 作为 `peerDependencies` 交给消费方提供，避免业务项目打进两份 React
+- 发布前执行一次 `bun run build`
+- 发布时使用 `npm publish` 或 `bun publish` 即可
 
 如果后面要继续补组件，按现在的目录直接往 `src/components` 和 `src/hooks` 里加即可，不需要再加额外框架层。
