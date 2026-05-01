@@ -1,41 +1,129 @@
-import { type Accessor, createEffect, onCleanup } from 'solid-js'
+/**
+ * 这个文件只负责把 Piv 声明的静态事件表绑定到真实 DOM。
+ * 它不负责响应式替换 listener，也不解释业务状态何时应该更换事件语义。
+ */
+import { arrify, toArray, type MayArray } from '@edsolater/fnkit'
+import { onCleanup } from 'solid-js'
 
+type EventKey = keyof GlobalEventHandlersEventMap
 
-export type Events = Record<
-  string,
-  EventListenerOrEventListenerObject | Accessor<EventListenerOrEventListenerObject | undefined>
+type CleanupCallback = () => void
+
+type ListenerCallback<K extends EventKey> = (event: GlobalEventHandlersEventMap[K]) => void | CleanupCallback
+
+interface BaseListenerDiscriptor<K extends EventKey> {
+  once?: boolean
+  capture?: boolean
+  passive?: boolean
+  callback: ListenerCallback<K>
+  // 如果指定了 cleanup，则忽略 callback 返回的 cleanup，改为在事件解绑时调用这个 cleanup。
+  cleanup?: () => void
+}
+
+interface ListenerDiscriptor<K extends EventKey> extends BaseListenerDiscriptor<K> {
+  // 事件名，允许不带 on 前缀，直接写 click 而不是 onClick。
+  event: K
+}
+
+type ListenerDiscriptPair<K extends EventKey> = [
+  event: K,
+  baseDiscriptor: MayArray<BaseListenerDiscriptor<K> | ListenerDiscriptor<K>>,
+]
+
+type ListenerDiscriptMap<K extends EventKey> = Partial<
+  Record<K, MayArray<BaseListenerDiscriptor<K> | ListenerDiscriptor<K>>>
 >
 
-export function parseEvent(element: Element, events: Events) {
-  for (const [eventName, callback] of Object.entries(events ?? {})) {
-    let previousHandler: EventListenerOrEventListenerObject | undefined
+// 综合上述三种事件描述方式，允许直接传函数，也允许传入包含选项的对象。
+export type EventListeners<K extends EventKey = EventKey> = MayArray<
+  ListenerDiscriptor<K> | ListenerDiscriptPair<K> | ListenerDiscriptMap<K>
+>
 
-    createEffect(() => {
-      const nextHandler = readEventHandler(callback)
-      if (previousHandler) element.removeEventListener(eventName, previousHandler)
-      if (nextHandler) element.addEventListener(eventName, nextHandler)
-      previousHandler = nextHandler
-    })
-    onCleanup(() => {
-      if (previousHandler) element.removeEventListener(eventName, previousHandler)
-    })
-  }
+/**
+ * 把 `on` 支持的多种声明形状压平成统一的 descriptor 列表。
+ * 这个函数只负责把输入改写成 `event + callback + options` 的固定结构，
+ * 不在这里触碰 DOM，也不处理 cleanup 的执行时机。
+ *
+ * 当前支持的输入形式：
+ * - 单个 descriptor：`{ event: 'click', callback: handleClick }`
+ * - 事件-描述对：`['click', { callback: handleClick }]`
+ * - 事件映射：`{ click: { callback: handleClick } }`
+ * - 上述任意形式的数组，以及单个事件下的多个 descriptor。
+ */
+function toListenerDiscriptor<K extends EventKey>(
+  eventListeners: EventListeners<K>,
+): ListenerDiscriptor<K>[] {
+  return toArray(eventListeners).flatMap((listener) => {
+    if (Array.isArray(listener)) {
+      const [event, baseDiscriptor] = listener
+      return toArray(baseDiscriptor).map((discriptor) => ({
+        event,
+        ...discriptor,
+      }))
+    }
+
+    if ('event' in listener) {
+      return [listener]
+    }
+
+    return (Object.entries(listener) as [K, ListenerDiscriptMap<K>[K]][]).flatMap(
+      ([event, baseDiscriptor]) => {
+        if (!baseDiscriptor) {
+          return []
+        }
+        return toArray(baseDiscriptor).map((discriptor) => ({
+          event,
+          ...discriptor,
+        }))
+      },
+    )
+  })
 }
 
 /**
- * 事件既允许直接给 listener，也允许给返回 listener 的 accessor。
- * 这里用函数参数个数区分两种写法，满足当前最小核心用法。
+ * 把 `on` 的声明整体挂到目标 DOM 上。
+ * 这个函数只做两件事：先规范化输入，再逐条注册；
+ * 具体某个 listener 如何绑定和回收，交给下游的单条注册函数处理。
  */
-export function readEventHandler(
-  value: EventListenerOrEventListenerObject | Accessor<EventListenerOrEventListenerObject | undefined>,
-): EventListenerOrEventListenerObject | undefined {
-  if (typeof value !== 'function') {
-    return value
+export function parseEventListeners(element: Element, eventListeners: EventListeners<EventKey>) {
+  const listenerDiscriptors = toListenerDiscriptor(eventListeners)
+  for (const discriptor of listenerDiscriptors) {
+    registerAEventListener(element, discriptor)
+  }
+}
+
+
+/**
+ * 注册单条已经规范化完成的事件 descriptor。
+ * 这里默认认为事件名、callback 和选项都已经确定，
+ * 因而只负责三件事：绑定 DOM listener、收集 callback 返回的 cleanup、
+ * 并在 owner 销毁时优先执行显式 cleanup，否则执行回收下来的 cleanup 列表。
+ */
+function registerAEventListener<K extends EventKey>(element: Element, discriptor: ListenerDiscriptor<K>) {
+  const options = {
+    once: discriptor.once,
+    capture: discriptor.capture,
+    passive: discriptor.passive,
+  }
+  const cleanups: CleanupCallback[] = []
+  const listener = (event: Event) => {
+    const cleanup = discriptor.callback(event as GlobalEventHandlersEventMap[K])
+    if (discriptor.cleanup || !cleanup) {
+      return
+    }
+    cleanups.push(cleanup)
   }
 
-  if (value.length > 0) {
-    return value as EventListener
-  }
+  element.addEventListener(discriptor.event, listener as EventListener, options)
 
-  return (value as Accessor<EventListenerOrEventListenerObject | undefined>)()
+  onCleanup(() => {
+    element.removeEventListener(discriptor.event, listener as EventListener, options)
+    if (discriptor.cleanup) {
+      discriptor.cleanup()
+      return
+    }
+    for (const cleanup of cleanups) {
+      cleanup()
+    }
+  })
 }

@@ -15,12 +15,11 @@ import {
 import { fromProps2Ref } from './pivHelpers/ref'
 import type { PivPlugin } from './pivHelpers/pivPlugin'
 import type { PivChild } from './pivHelpers/pivChild'
-import type { Events } from './pivHelpers/events'
+import type { EventListeners } from './pivHelpers/events'
 
 export type RefFunction<T extends Element> = (element?: T) => void
 
 export type PivDomProps = Record<string, unknown | Accessor<unknown>>
-
 
 export type PivProps<Tag extends PivTag = 'div'> = {
   as?: Tag
@@ -35,7 +34,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * 事件， dom:onXXX
    */
-  events?: Events
+  on?: EventListeners
   plugins?: MayArray<PivPlugin>
   ref?: MayArray<RefFunction<PivElement<Tag>> | undefined>
   children?: PivChild

@@ -2,7 +2,7 @@ import { isFunction, wrapArr, type AnyFn } from '@edsolater/fnkit'
 import { onCleanup } from 'solid-js'
 import { type PivDomProps, type PivProps, type RefFunction } from '../Piv'
 import { type PivElement, type PivTag } from './domMap'
-import { parseEvent } from './events'
+import { parseEventListeners } from './events'
 import { parseDomProps } from './parseDomProps'
 
 /**
@@ -32,8 +32,8 @@ export function fromProps2Ref<Tag extends PivTag>(
     parseDomProps<Tag>(element, inputProps.domProps)
   }
 
-  if (inputProps.events) {
-    parseEvent(element, inputProps.events)
+  if (inputProps.on) {
+    parseEventListeners(element, inputProps.on)
   }
 
   bindNormalRefs(element, inputProps.ref)
