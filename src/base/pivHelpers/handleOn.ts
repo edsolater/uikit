@@ -2,8 +2,9 @@
  * 这个文件只负责把 Piv 声明的静态事件表绑定到真实 DOM。
  * 它不负责响应式替换 listener，也不解释业务状态何时应该更换事件语义。
  */
-import { arrify, toArray, type MayArray } from '@edsolater/fnkit'
+import { toArray, type MayArray } from '@edsolater/fnkit'
 import { onCleanup } from 'solid-js'
+import type { PropValueWrapper } from '../type'
 
 type EventKey = keyof GlobalEventHandlersEventMap
 
@@ -35,7 +36,12 @@ type ListenerDiscriptMap<K extends EventKey> = Partial<
 >
 
 // 综合上述三种事件描述方式，允许直接传函数，也允许传入包含选项的对象。
-export type EventListener<K extends EventKey = EventKey> = ListenerDiscriptor<K> | ListenerDiscriptPair<K> | ListenerDiscriptMap<K>
+type EventListener<K extends EventKey = EventKey> =
+  | ListenerDiscriptor<K>
+  | ListenerDiscriptPair<K>
+  | ListenerDiscriptMap<K>
+
+export type EventListeners<K extends EventKey = EventKey> = PropValueWrapper<EventListener<K>>
 
 /**
  * 把 `on` 支持的多种声明形状压平成统一的 descriptor 列表。
@@ -48,15 +54,14 @@ export type EventListener<K extends EventKey = EventKey> = ListenerDiscriptor<K>
  * - 事件映射：`{ click: { callback: handleClick } }`
  * - 上述任意形式的数组，以及单个事件下的多个 descriptor。
  */
-function toListenerDiscriptor<K extends EventKey>(
-  eventListeners: MayArray<EventListener<K>>,
-): ListenerDiscriptor<K>[] {
-  return toArray(eventListeners).flatMap((listener) => {
+function toListenerDiscriptor<K extends EventKey>(eventListeners: EventListeners): ListenerDiscriptor<K>[] {
+  const eventListenerList = toArray(eventListeners).filter(Boolean) as EventListener<K>[]
+  return eventListenerList.flatMap((listener) => {
     if (Array.isArray(listener)) {
-      const [event, baseDiscriptor] = listener
-      return toArray(baseDiscriptor).map((discriptor) => ({
+      const [event, baseDiscriptors] = listener
+      return toArray(baseDiscriptors).map((baseDiscriptor) => ({
         event,
-        ...discriptor,
+        ...baseDiscriptor,
       }))
     }
 
@@ -64,17 +69,15 @@ function toListenerDiscriptor<K extends EventKey>(
       return [listener]
     }
 
-    return (Object.entries(listener) as [K, ListenerDiscriptMap<K>[K]][]).flatMap(
-      ([event, baseDiscriptor]) => {
-        if (!baseDiscriptor) {
-          return []
-        }
-        return toArray(baseDiscriptor).map((discriptor) => ({
-          event,
-          ...discriptor,
-        }))
-      },
-    )
+    return (Object.entries(listener) as [K, ListenerDiscriptMap<K>[K]][]).flatMap(([event, baseDiscriptor]) => {
+      if (!baseDiscriptor) {
+        return []
+      }
+      return toArray(baseDiscriptor).map((baseDiscriptor) => ({
+        event,
+        ...baseDiscriptor,
+      }))
+    })
   })
 }
 
@@ -83,13 +86,12 @@ function toListenerDiscriptor<K extends EventKey>(
  * 这个函数只做两件事：先规范化输入，再逐条注册；
  * 具体某个 listener 如何绑定和回收，交给下游的单条注册函数处理。
  */
-export function parseEventListeners(element: HTMLElement, eventListeners: MayArray<EventListener>) {
+export function consumeEventListeners(element: HTMLElement, eventListeners: EventListeners) {
   const listenerDiscriptors = toListenerDiscriptor(eventListeners)
   for (const discriptor of listenerDiscriptors) {
     registerAEventListener(element, discriptor)
   }
 }
-
 
 /**
  * 注册单条已经规范化完成的事件 descriptor。

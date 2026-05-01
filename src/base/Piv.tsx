@@ -4,20 +4,19 @@
  */
 import { type MayArray } from '@edsolater/fnkit'
 import { type JSX } from 'solid-js'
-import { classname, type ClassName } from './pivHelpers/className'
+import { classname, type ClassName, type PivClassNameProp } from './pivHelpers/className'
 import {
   domMap,
   type ParsedPivProps,
   type PivSupportedElementTag,
   type PivTag,
-  type PivTargetHTMLElement,
+  type PivHTMLElement,
 } from './pivHelpers/domMap'
-import { parseHTMLProps, type HTMLProps } from './pivHelpers/handleHTMLProps'
-import { parseEventListeners, type EventListener } from './pivHelpers/handleOn'
+import { consumeHTMLProps, type HTMLPropsList } from './pivHelpers/handleHTMLProps'
+import { consumeEventListeners, type EventListeners } from './pivHelpers/handleOn'
 import { consumePivPlugins, mergeShadowPropsToPivProps, type PivPlugin } from './pivHelpers/handlePivPlugin'
-import { parseNormalRefs, type RefFunction } from './pivHelpers/ref'
-
-
+import { parseNormalRefs, type PivRef } from './pivHelpers/ref'
+import type { AccessablePropValueWrapper, PropValueWrapper } from './type'
 
 // TODO: 必须支持所有的可设置assessor，不然更新的，细粒度就不够细了
 export type PivProps<Tag extends PivTag = 'div'> = {
@@ -34,22 +33,22 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * CSS 共同项， dom:class
    */
-  class?: MayArray<ClassName>
+  class?: PivClassNameProp
 
   /**
    * attrs 或 props，自动判断
    */
-  htmlProps?: MayArray<HTMLProps>
+  htmlProps?: HTMLPropsList
 
   /**
    * 事件，dom:onXXX
    */
-  on?: MayArray<EventListener>
+  on?: EventListeners
 
   /**
    * ref 是逃生出口，因为可以拿到DOM， 其他props本质上就是它的一个快捷方式罢了。（除了as以及plugin的返回值）
    */
-  ref?: MayArray<RefFunction<PivTargetHTMLElement<Tag>> | undefined>
+  ref?: PivRef<Tag>
 
   /* 可以结构化穿透 */
   children?: JSX.Element
@@ -64,17 +63,17 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivP
   const parsedProps: ParsedPivProps<Tag> = {
     class: inputProps.class != null ? classname(inputProps.class) : undefined,
 
-    richRef: (element: PivTargetHTMLElement<Tag>) => {
+    richRef: (element: PivHTMLElement<Tag>) => {
       // 因为plugins是唯一可以更改prompt的，虽然优先级最低，所以它需要在其他props前处理。
       const shadowPropsList = consumePivPlugins(element, inputProps.plugins)
       const parsedPivProps: PivProps<Tag> = mergeShadowPropsToPivProps(shadowPropsList, inputProps)
 
       if (parsedPivProps.htmlProps) {
-        parseHTMLProps<Tag>(element, parsedPivProps.htmlProps)
+        consumeHTMLProps<Tag>(element, parsedPivProps.htmlProps)
       }
 
       if (parsedPivProps.on) {
-        parseEventListeners(element, parsedPivProps.on)
+        consumeEventListeners(element, parsedPivProps.on)
       }
 
       if (parsedPivProps.ref) {

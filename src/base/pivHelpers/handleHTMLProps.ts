@@ -1,11 +1,17 @@
-import { shrinkFn, toArray, type MayArray } from '@edsolater/fnkit'
+import { mergeObjectsWithConfigs, shrinkFn, toArray } from '@edsolater/fnkit'
 import { createEffect, type Accessor } from 'solid-js'
-import type { PivTag, PivTargetHTMLElement } from './domMap'
+import type { Accessable, PropValueWrapper } from '../type'
+import type { PivHTMLElement, PivTag } from './domMap'
 
-export type HTMLProps = Record<string, unknown | Accessor<unknown>>
+type Value<V> = Accessable<V | undefined>
 
-export function parseHTMLProps<Tag extends PivTag>(element: PivTargetHTMLElement<Tag>, htmlPropsList: MayArray<HTMLProps>) {
-  const htmlProps: HTMLProps = mergeHTMLProps(htmlPropsList)
+type PureHTMLProps = Record<string, Value<unknown>>
+
+export type HTMLPropsList = PropValueWrapper<PureHTMLProps>
+
+export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag>, htmlPropsList: HTMLPropsList) {
+  const htmlProps = mergeHTMLProps(htmlPropsList)
+  if (!htmlProps) return
   for (const [key, value] of Object.entries(htmlProps)) {
     createEffect(() => {
       setSingleDomProp(element, key, readDomValue(value))
@@ -16,12 +22,20 @@ export function parseHTMLProps<Tag extends PivTag>(element: PivTargetHTMLElement
 /**
  * 合并多个HTMLProps
  */
-function mergeHTMLProps(htmlPropsList: MayArray<HTMLProps>): HTMLProps {
-  const mergedHTMLProps: HTMLProps = {}
-  for (const htmlProps of toArray(htmlPropsList)) {
-    Object.assign(mergedHTMLProps, htmlProps)
+function mergeHTMLProps(htmlPropsList: HTMLPropsList): PureHTMLProps | undefined {
+  const pureHTMLPropsList = toArray(htmlPropsList)
+  if (pureHTMLPropsList.length <= 1) return pureHTMLPropsList[0]
+
+  let HTMLPropsBucket: PureHTMLProps = {}
+  for (const htmlProps of pureHTMLPropsList) {
+    if (!htmlProps) continue
+    HTMLPropsBucket = mergeObjectsWithConfigs([HTMLPropsBucket, htmlProps], ({ valueA, valueB }) => {
+      if (valueA === undefined) return valueB
+      if (valueB === undefined) return valueA
+      return [valueA, valueB].flat()
+    })
   }
-  return mergedHTMLProps
+  return HTMLPropsBucket
 }
 /**
  * Piv 的普通 props 默认允许 accessor，读取时直接还原当前值。
@@ -33,6 +47,7 @@ function readDomValue(value: unknown | Accessor<unknown>): unknown {
 
 /**
  * 按 key 语义决定写 attribute 还是 property，不把 DOM 写入逻辑散落到组件主体里。
+ * TODO： 这里的自动识别机制有问题，比如说布尔值，比如说value属性， 需要特殊处理，这里应学学React
  */
 function setSingleDomProp(element: HTMLElement, key: string, value: unknown) {
   if (key === 'style') {
