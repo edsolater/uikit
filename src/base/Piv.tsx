@@ -4,9 +4,10 @@
  */
 import { type MayArray } from '@edsolater/fnkit'
 import { type JSX } from 'solid-js'
-import { classname, type ClassName, type PivClassNameProp } from './pivHelpers/className'
+import { consumeClassName, type PivClassNameProp } from './pivHelpers/className'
 import {
   domMap,
+  type CreatePivElement,
   type ParsedPivProps,
   type PivSupportedElementTag,
   type PivTag,
@@ -43,7 +44,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * attrs 或 props，自动判断
    */
-  htmlProps?: HTMLPropsList
+  htmlProps?: HTMLPropsList<Tag>
 
   /**
    * 事件，dom:onXXX
@@ -64,14 +65,16 @@ export type PivProps<Tag extends PivTag = 'div'> = {
  * 它的props都是元能力props
  */
 export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivProps<Tag>): JSX.Element {
-  const creator = domMap[inputProps.as ?? 'div']
+  const creator = domMap[inputProps.as ?? 'div'] as CreatePivElement<Tag>
   const parsedProps: ParsedPivProps<Tag> = {
-    class: inputProps.class != null ? classname(inputProps.class) : undefined,
-
     richRef: (element: PivHTMLElement<Tag>) => {
       // 因为plugins是唯一可以更改prompt的，虽然优先级最低，所以它需要在其他props前处理。
       const shadowPropsList = consumePivPlugins(element, inputProps.plugins)
       const parsedPivProps: PivProps<Tag> = mergeShadowPropsToPivProps(shadowPropsList, inputProps)
+
+      if (parsedPivProps.class) {
+        consumeClassName(element, parsedPivProps.class)
+      }
 
       if (parsedPivProps.htmlProps) {
         consumeHTMLProps<Tag>(element, parsedPivProps.htmlProps)
