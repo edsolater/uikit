@@ -35,9 +35,7 @@ type ListenerDiscriptMap<K extends EventKey> = Partial<
 >
 
 // 综合上述三种事件描述方式，允许直接传函数，也允许传入包含选项的对象。
-export type EventListeners<K extends EventKey = EventKey> = MayArray<
-  ListenerDiscriptor<K> | ListenerDiscriptPair<K> | ListenerDiscriptMap<K>
->
+export type EventListener<K extends EventKey = EventKey> = ListenerDiscriptor<K> | ListenerDiscriptPair<K> | ListenerDiscriptMap<K>
 
 /**
  * 把 `on` 支持的多种声明形状压平成统一的 descriptor 列表。
@@ -51,7 +49,7 @@ export type EventListeners<K extends EventKey = EventKey> = MayArray<
  * - 上述任意形式的数组，以及单个事件下的多个 descriptor。
  */
 function toListenerDiscriptor<K extends EventKey>(
-  eventListeners: EventListeners<K>,
+  eventListeners: MayArray<EventListener<K>>,
 ): ListenerDiscriptor<K>[] {
   return toArray(eventListeners).flatMap((listener) => {
     if (Array.isArray(listener)) {
@@ -85,7 +83,7 @@ function toListenerDiscriptor<K extends EventKey>(
  * 这个函数只做两件事：先规范化输入，再逐条注册；
  * 具体某个 listener 如何绑定和回收，交给下游的单条注册函数处理。
  */
-export function parseEventListeners(element: Element, eventListeners: EventListeners<EventKey>) {
+export function parseEventListeners(element: HTMLElement, eventListeners: MayArray<EventListener>) {
   const listenerDiscriptors = toListenerDiscriptor(eventListeners)
   for (const discriptor of listenerDiscriptors) {
     registerAEventListener(element, discriptor)
@@ -99,7 +97,7 @@ export function parseEventListeners(element: Element, eventListeners: EventListe
  * 因而只负责三件事：绑定 DOM listener、收集 callback 返回的 cleanup、
  * 并在 owner 销毁时优先执行显式 cleanup，否则执行回收下来的 cleanup 列表。
  */
-function registerAEventListener<K extends EventKey>(element: Element, discriptor: ListenerDiscriptor<K>) {
+function registerAEventListener<K extends EventKey>(element: HTMLElement, discriptor: ListenerDiscriptor<K>) {
   const options = {
     once: discriptor.once,
     capture: discriptor.capture,
@@ -114,10 +112,10 @@ function registerAEventListener<K extends EventKey>(element: Element, discriptor
     cleanups.push(cleanup)
   }
 
-  element.addEventListener(discriptor.event, listener as EventListener, options)
+  element.addEventListener(discriptor.event, listener, options)
 
   onCleanup(() => {
-    element.removeEventListener(discriptor.event, listener as EventListener, options)
+    element.removeEventListener(discriptor.event, listener, options)
     if (discriptor.cleanup) {
       discriptor.cleanup()
       return

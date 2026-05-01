@@ -1,17 +1,27 @@
-import { shrinkFn } from '@edsolater/fnkit'
+import { shrinkFn, toArray, type MayArray } from '@edsolater/fnkit'
 import { createEffect, type Accessor } from 'solid-js'
-import type { PivDomProps } from '../Piv'
-import type { PivTag, PivElement } from './domMap'
+import type { PivTag, PivTargetHTMLElement } from './domMap'
 
-export function parseDomProps<Tag extends PivTag>(
-  element: PivElement<Tag>,
-  props: PivDomProps,
-) {
-  for (const [key, value] of Object.entries(props)) {
+export type HTMLProps = Record<string, unknown | Accessor<unknown>>
+
+export function parseHTMLProps<Tag extends PivTag>(element: PivTargetHTMLElement<Tag>, htmlPropsList: MayArray<HTMLProps>) {
+  const htmlProps: HTMLProps = mergeHTMLProps(htmlPropsList)
+  for (const [key, value] of Object.entries(htmlProps)) {
     createEffect(() => {
       setSingleDomProp(element, key, readDomValue(value))
     })
   }
+}
+
+/**
+ * 合并多个HTMLProps
+ */
+function mergeHTMLProps(htmlPropsList: MayArray<HTMLProps>): HTMLProps {
+  const mergedHTMLProps: HTMLProps = {}
+  for (const htmlProps of toArray(htmlPropsList)) {
+    Object.assign(mergedHTMLProps, htmlProps)
+  }
+  return mergedHTMLProps
 }
 /**
  * Piv 的普通 props 默认允许 accessor，读取时直接还原当前值。

@@ -20,7 +20,7 @@ export function Button(inputProps: ButtonProps) {
     <Piv
       as="button"
       class={classes()}
-      domProps={{
+      htmlProps={{
         type: local.type,
         ...buttonHTMLProps,
       }}

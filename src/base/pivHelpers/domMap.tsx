@@ -169,12 +169,12 @@ export const domMap = {
 } as Record<PivTag, CreatePivElement<any>>
 export type PivSupportedElementTag = keyof typeof domMap
 export type CreatePivElement<Tag extends PivTag> = (props:ParsedPivProps<Tag>) => JSX.Element
-export type PivElement<Tag extends PivTag> = HTMLElementTagNameMap[Tag]
+export type PivTargetHTMLElement<Tag extends PivTag> = HTMLElementTagNameMap[Tag]
 export type PivTag = keyof HTMLElementTagNameMap
 /** 只给 domMap */
 export type ParsedPivProps<Tag extends PivTag> =  {
   class: string | undefined
-  richRef: (element: PivElement<Tag>) => void
+  richRef: (element: PivTargetHTMLElement<Tag>) => void
   children: JSX.Element | undefined
 }
 
