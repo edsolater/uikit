@@ -1,3 +1,8 @@
+/**
+ * 这个文件定义 Piv 支持的原生 tag 到 JSX 模板的映射。
+ * 它只负责创建元素、绑定 richRef 和插入 children，不消费 class、style、HTML props、事件或 plugin。
+ * 如果要新增 Piv 支持的 tag，应在这里补充模板，并让 PivSupportedElementTag 自动收敛。
+ */
 import type { JSX } from 'solid-js/jsx-runtime'
 
 const createDivElement: CreatePivElement<'div'> = (props) => <div ref={props.richRef}>{props.children}</div>

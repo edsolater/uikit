@@ -1,32 +1,41 @@
-# Solid Kit
+# UIKit
 
-一个轻量的 SolidJS 基础库骨架，保留三件事：
+SolidJS 基础组件与 hooks 组件库。
 
-- 基础组件
-- 基础 hooks
-- 足够快的本地验证方式
+这个仓库当前重点不是做大而全的设计系统，而是沉淀一套足够直接的基础 DOM 出口、组件写法和本地验证方式。核心组件会尽量围绕 `Piv` 这一个真实 DOM 出口展开。
 
-现在已经内置：
+## 先看什么
 
-- `Button` 基础按钮组件
-- `useTitle` 基础 hook
-- `src/App.tsx` 本地 demo
-- `src/**/*.stories.tsx` Storybook stories
+如果你第一次阅读这个项目，建议按这个顺序看：
 
-## 目录
+- [File-Map.md](File-Map.md)：项目文件地图，先用它判断某类改动应该落在哪个文件。
+- [src/base/Piv.tsx](src/base/Piv.tsx)：基础 DOM 出口，理解 class、style、htmlProps、on、ref 和 plugins 的消费顺序。
+- [src/components/Button.tsx](src/components/Button.tsx)：当前最小组件示例，展示上层组件如何使用 `Piv`。
 
-```text
+更细的职责边界写在对应源码文件的文件头注释里。README 只保留项目入口信息，不展开实现细节。
+
+## 项目结构
+
+```txt
 src/
-  components/
-  hooks/
-  App.tsx
-  index.ts
-  main.tsx
+  base/          Piv 与 DOM 元能力
+  components/    对外组件
+  hooks/         对外 hooks
+  App.tsx        本地 demo
+  index.ts       发布入口
 ```
 
-组件和 hook 通过 `src/index.ts` 统一导出；demo 和 stories 也都直接靠近源码，不额外拆复杂层级。
+详细文件职责见 [File-Map.md](File-Map.md)。
 
-## Scripts
+## 技术栈
+
+- SolidJS
+- TypeScript
+- Vite
+- Storybook
+- Bun
+
+## 本地命令
 
 ```bash
 bun run dev
@@ -35,23 +44,10 @@ bun run storybook
 bun run build-storybook
 ```
 
-这个仓库既支持本地开发，也支持作为外部依赖被别的项目安装后直接使用：
+`bun run build` 会同时执行 Vite 构建和类型声明检查，是提交前最基本的验证命令。
 
-```tsx
-import { Button } from '@edsolater/react-kit'
-```
+## 发布入口
 
-## Build
+包名是 `@edsolater/uikit`。
 
-- `vite build` 用于打组件库 ES module
-- `tsc -p tsconfig.build.json` 只生成类型声明
-- `dist/style.css` 是组件样式输出
-
-## Publish
-
-- 包名已经固定为 `@edsolater/react-kit`
-- `solid-js` 作为 `peerDependencies` 交给消费方提供，避免业务项目打进重复运行时
-- 发布前执行一次 `bun run build`
-- 发布时使用 `npm publish` 或 `bun publish` 即可
-
-如果后面要继续补组件，按现在的目录直接往 `src/components` 和 `src/hooks` 里加即可，不需要再加额外框架层。
+对外导出从 [src/index.ts](src/index.ts) 进入，组件和 hooks 分别由 `src/components`、`src/hooks` 汇总导出。

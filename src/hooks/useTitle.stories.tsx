@@ -1,3 +1,7 @@
+/**
+ * useTitle 的 Storybook 示例。
+ * 这里验证浏览器标题同步行为，不扩展 hook 职责。
+ */
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
 import { createSignal } from 'solid-js'
 import { Button } from '../components/Button'

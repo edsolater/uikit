@@ -1,3 +1,8 @@
+/**
+ * 这个文件负责把 Piv 的 class 声明消费到真实 DOM classList。
+ * 它不负责创建 DOM、解析 plugin、处理 style、普通 HTML props 或事件。
+ * Piv 在 plugin 合并完成后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
+ */
 import { isObjectLike, isTruthy, shrinkFn, toArray, type Booleanable, type Stringable } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup } from 'solid-js'
 import type { Accessable, AccessablePropValueWrapper } from '../type'

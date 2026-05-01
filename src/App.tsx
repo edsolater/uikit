@@ -1,4 +1,8 @@
-// 这个文件只负责本地演示页面，不参与发布包的正式导出边界。
+/**
+ * 这个文件只负责本地演示页面。
+ * 它不参与发布包的正式导出边界，也不承载组件库 API 设计。
+ * 本地开发需要快速验证组件和 hook 时，可以在这里组合最小示例。
+ */
 import { createSignal } from 'solid-js'
 import { Button } from './components/Button'
 import { useTitle } from './hooks/useTitle'

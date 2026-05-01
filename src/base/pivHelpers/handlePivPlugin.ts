@@ -1,3 +1,8 @@
+/**
+ * 这个文件定义 Piv plugin 的展开和合并规则。
+ * plugin 可以返回低优先级 shadow props；用户直接传入的 props 始终覆盖 plugin 结果。
+ * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
+ */
 import { flapDeep, mergeMayArray, toArray } from '@edsolater/fnkit'
 import type { PivProps } from '../Piv'
 import type { PivTag } from './domMap'
@@ -10,10 +15,7 @@ export type PivPlugin<Tag extends PivTag, Payload extends any[] = [undefined]> =
 ) => void | ShadowProps<Tag>
 
 /**
- *
- * @param element
- * @param plugin
- * @param payload
+ * 按声明顺序执行 plugin，并深度展开 plugin 返回的 plugins。
  */
 export function consumePivPlugins<Tag extends PivTag>(
   element: Element,
@@ -29,7 +31,8 @@ export function consumePivPlugins<Tag extends PivTag>(
     const result = plugin(element, payload)
     if (result) {
       if (result.plugins) {
-        plugins.push(...toArray(result.plugins).toReversed()) // 插件返回的 plugins 也需要反转后加入执行队列
+        // 返回的 plugins 继续进入同一条深度展开队列，并保持声明顺序。
+        plugins.push(...toArray(result.plugins).toReversed())
       }
       delete result.plugins
       shadowProps.push(result)
@@ -39,10 +42,8 @@ export function consumePivPlugins<Tag extends PivTag>(
 }
 
 /**
- * 合并PivProps， shadowProps优先级更低
- * @param base
- * @param shadow
- * @returns
+ * 合并 plugin shadow props 和用户 props。
+ * shadow props 在前，用户 props 在后，因此用户声明天然拥有最高优先级。
  */
 export function mergeShadowPropsToPivProps<Tag extends PivTag>(
   shadows: ShadowProps<Tag>[],

@@ -1,4 +1,8 @@
-// 这个文件只负责同步 document.title，并把浏览器当前标题作为 Solid accessor 暴露。
+/**
+ * 这个文件负责同步 document.title，并把浏览器当前标题作为 Solid accessor 暴露。
+ * 它不负责路由标题规则、页面元信息管理或服务端文档头生成。
+ * 调用方传入标题语义，这里只消费并镜像浏览器当前标题状态。
+ */
 import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js'
 
 type TitleInput = string | Accessor<string> | undefined

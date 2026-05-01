@@ -1,5 +1,7 @@
 /**
- * 这个文件包含了项目中使用的基础类型定义
+ * 这个文件只放 base 层共享的基础类型工具。
+ * 它不负责 Piv 运行逻辑、DOM 写入语义或组件 props 设计。
+ * 如果某个类型只服务单一 helper，应优先就近放在对应 helper 文件里。
  */
 
 import type { MayArray } from '@edsolater/fnkit'

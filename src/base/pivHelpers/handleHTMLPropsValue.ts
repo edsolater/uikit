@@ -1,13 +1,18 @@
+/**
+ * 这个文件定义普通 HTML prop 的单字段写入规则。
+ * 上游已经完成 props 合并和响应式订阅；这里只决定 attribute、property、attr:*、prop:* 的落点。
+ * class、style 和事件不进入这个通道。
+ */
 import { shrinkFn } from '@edsolater/fnkit'
 import type { Accessor } from 'solid-js'
 
-// 不可约的 atom 类型，或者说是最终能写入 DOM 的值类型
+// 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
 type HTMLPropAtom = string | number | boolean | null | undefined | object
 export type HTMLPropValue = HTMLPropAtom | Accessor<HTMLPropAtom>
 
 /**
- * 按 key 语义决定写 attribute 还是 property，不把 DOM 写入逻辑散落到组件主体里。
- * 普通 HTML prop 已经在外层按 key 覆盖，这里只读取当前字段自己的值。
+ * 按 key 语义写入 DOM。
+ * data-* 和 aria-* 固定走 attribute；其他普通 key 才允许 property 探测。
  */
 export function setSingleDomProp(element: HTMLElement, key: string, value: HTMLPropValue) {
   const domValue = shrinkFn(value)
@@ -62,14 +67,14 @@ function setAttributeValue(element: HTMLElement, key: string, value: HTMLPropAto
 }
 
 /**
- * property 写入只处理 DOM 自身支持的属性；空值是否有效由对应 property 自己承接。
+ * property 空值语义交给 DOM 自身承接，不在这里模拟 attribute remove。
  */
 function setPropertyValue(element: HTMLElement, key: string, value: HTMLPropAtom) {
   ;(element as unknown as Record<string, HTMLPropAtom>)[key] = value
 }
 
 /**
- * style 作为特殊 DOM 能力，当前绑定独占 inline style。
+ * 兼容误入 htmlProps 的 style；正常 style 应走 Piv 的 style 专用入口。
  */
 function setStyleValue(element: HTMLElement, value: HTMLPropAtom) {
   if (typeof value === 'string') {

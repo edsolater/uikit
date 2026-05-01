@@ -1,6 +1,7 @@
 /**
- * 这个文件只定义唯一真实 DOM 出口 Piv，负责创建和绑定原生元素。
- * 它不负责业务语义、主题系统、结构包装或组件控制器抽象。
+ * 这个文件定义 Piv，项目里唯一真实 DOM 出口。
+ * 它只负责按 as 选择原生 tag，并在 ref 阶段按 plugin 合并结果消费 class、style、htmlProps、on 和 ref。
+ * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
 import { type MayArray } from '@edsolater/fnkit'
 import { type JSX } from 'solid-js'

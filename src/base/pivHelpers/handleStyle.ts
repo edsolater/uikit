@@ -1,3 +1,8 @@
+/**
+ * 这个文件负责把 Piv 的 style 声明消费到真实 DOM inline style。
+ * 它不负责 class、普通 HTML props、事件或 plugin 解析。
+ * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
+ */
 import { shrinkFn, toArray } from '@edsolater/fnkit'
 import { createRenderEffect, type Accessor, type JSX } from 'solid-js'
 import type { PropValueWrapper } from '../type'

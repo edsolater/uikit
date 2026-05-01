@@ -1,3 +1,8 @@
+/**
+ * 这个文件消费 Piv 的普通 HTML props。
+ * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
+ * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
+ */
 import { toArray } from '@edsolater/fnkit'
 import { createRenderEffect } from 'solid-js'
 import type { Accessor, JSX } from 'solid-js'
@@ -30,7 +35,7 @@ export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag
 }
 
 /**
- * 普通 HTML props 按 key 覆盖，后声明的 props 接管同名 DOM 字段。
+ * 普通 HTML props 不做数组级 fallback；同名字段由后声明者接管。
  */
 function mergeHTMLProps<Tag extends PivTag>(htmlPropsList: HTMLPropsList<Tag>): PureHTMLProps<Tag> | undefined {
   const pureHTMLPropsList = toArray(htmlPropsList)

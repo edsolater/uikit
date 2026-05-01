@@ -1,3 +1,7 @@
+/**
+ * Button 的 Storybook 示例。
+ * 这里只覆盖当前稳定公开形态，不把实验 props 写成组件契约。
+ */
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
 import { Button } from './Button'
 
