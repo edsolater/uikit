@@ -13,13 +13,14 @@ export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
 export function Button(inputProps: ButtonProps) {
   // Solid 组件只初始化一次，props 读取必须保留响应式访问路径。
   const props = mergeProps({ variant: 'solid' as const, type: 'button' as const }, inputProps)
-  const [local, buttonHTMLProps] = splitProps(props, ['variant', 'class', 'type', 'children'])
+  const [local, buttonHTMLProps] = splitProps(props, ['variant', 'class', 'type', 'style', 'children'])
   const classes = () => ['rk-button', `rk-button--${local.variant}`, local.class].filter(Boolean).join(' ')
 
   return (
     <Piv
       as="button"
       class={classes()}
+      style={local.style}
       htmlProps={{
         type: local.type,
         ...buttonHTMLProps,

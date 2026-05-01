@@ -15,8 +15,8 @@ import {
 import { consumeHTMLProps, type HTMLPropsList } from './pivHelpers/handleHTMLProps'
 import { consumeEventListeners, type EventListeners } from './pivHelpers/handleOn'
 import { consumePivPlugins, mergeShadowPropsToPivProps, type PivPlugin } from './pivHelpers/handlePivPlugin'
+import { consumeStyle, type StyleList } from './pivHelpers/handleStyle'
 import { parseNormalRefs, type PivRef } from './pivHelpers/ref'
-import type { AccessablePropValueWrapper, PropValueWrapper } from './type'
 
 // TODO: 必须支持所有的可设置assessor，不然更新的，细粒度就不够细了
 export type PivProps<Tag extends PivTag = 'div'> = {
@@ -34,6 +34,11 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    * CSS 共同项， dom:class
    */
   class?: PivClassNameProp
+
+  /**
+   * DOM style 特殊项，按 CSS 字段合并并细粒度订阅。
+   */
+  style?: StyleList
 
   /**
    * attrs 或 props，自动判断
@@ -70,6 +75,10 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivP
 
       if (parsedPivProps.htmlProps) {
         consumeHTMLProps<Tag>(element, parsedPivProps.htmlProps)
+      }
+
+      if (parsedPivProps.style) {
+        consumeStyle(element, parsedPivProps.style)
       }
 
       if (parsedPivProps.on) {
