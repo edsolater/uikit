@@ -3,14 +3,14 @@
  * 它不负责业务语义、主题系统、结构包装或组件控制器抽象。
  */
 import { isFunction, wrapArr, type AnyFn, type MayArray } from '@edsolater/fnkit'
-import { createEffect, onCleanup, type Accessor, type JSX } from 'solid-js'
+import { children, createEffect, onCleanup, type Accessor, type JSX } from 'solid-js'
 import {
   domMap,
-  type createPivElement,
+  type CreatePivElement,
   type PivElement,
   type PivSupportedElementTag,
   type PivTag,
-} from './PivSupporteElements'
+} from './domMap'
 import { resolveClassName, type ClassName } from './className'
 
 export type RefFunction<T extends Element> = (element?: T) => void 
@@ -189,16 +189,17 @@ export function bindPivElement<Tag extends PivTag>(element: PivElement<Tag>, inp
   bindRefs(element, inputProps.ref)
 }
 
+
 /**
  * Piv 选择明确模板创建 DOM，props、events、ref 仍由 Piv 自己解释。
  */
 export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivProps<Tag>): JSX.Element {
-  const creator = domMap[inputProps.as] as unknown as createPivElement<Tag>
+  const creator = domMap[inputProps.as] 
   const parsedProps = {
-    ...inputProps,
-    class: inputProps != null ? resolveClassName(inputProps.class ?? '') : undefined,
+    class: inputProps.class != null ? resolveClassName(inputProps.class) : undefined,
     ref: (element: PivElement<Tag>) => bindPivElement(element, inputProps),
+    children: inputProps.children,
   }
-
   return creator(parsedProps)
 }
+
