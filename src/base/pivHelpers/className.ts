@@ -5,7 +5,7 @@
  */
 import { isObjectLike, isTruthy, shrinkFn, toArray, type Booleanable, type Stringable } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup } from 'solid-js'
-import type { Accessable, AccessablePropValueWrapper } from '../type'
+import type { Accessable, AccessablePropValueWrapper } from './type'
 
 export type ClassName = Stringable | { [classname: string]: Accessable<Booleanable> }
 export type PivClassNameProp = AccessablePropValueWrapper<ClassName>

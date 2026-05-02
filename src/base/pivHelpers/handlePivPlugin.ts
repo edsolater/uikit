@@ -4,7 +4,7 @@
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
  */
 import { flapDeep, mergeMayArray, toArray } from '@edsolater/fnkit'
-import type { PivProps } from '../Piv'
+import type { PivProps } from './Piv'
 import type { PivTag } from './domMap'
 
 type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'children'>

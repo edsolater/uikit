@@ -2,14 +2,14 @@
 
 SolidJS 基础组件与 hooks 组件库。
 
-这个仓库当前重点不是做大而全的设计系统，而是沉淀一套足够直接的基础 DOM 出口、组件写法和本地验证方式。核心组件会尽量围绕 `Piv` 这一个真实 DOM 出口展开。
+这个仓库当前重点不是做大而全的设计系统，而是沉淀一组写组件所需的基础抽象原子、组件写法和本地验证方式。`Piv` 是当前最核心的 DOM 原子，但 `src/base` 不只等于 `Piv`。
 
 ## 先看什么
 
 如果你第一次阅读这个项目，建议按这个顺序看：
 
 - [File-Map.md](File-Map.md)：项目文件地图，先用它判断某类改动应该落在哪个文件。
-- [src/base/Piv.tsx](src/base/Piv.tsx)：基础 DOM 出口，理解 class、style、htmlProps、on、ref 和 plugins 的消费顺序。
+- [src/base/pivHelpers/Piv.tsx](src/base/pivHelpers/Piv.tsx)：当前最核心的 DOM 原子，理解 class、style、htmlProps、on、ref 和 plugins 的消费顺序。
 - [src/components/Button.tsx](src/components/Button.tsx)：当前最小组件示例，展示上层组件如何使用 `Piv`。
 
 更细的职责边界写在对应源码文件的文件头注释里。README 只保留项目入口信息，不展开实现细节。
@@ -18,7 +18,7 @@ SolidJS 基础组件与 hooks 组件库。
 
 ```txt
 src/
-  base/          Piv 与 DOM 元能力
+  base/          写组件用的基础抽象原子
   components/    对外组件
   hooks/         对外 hooks
   App.tsx        本地 demo

@@ -14,11 +14,12 @@
 
 ## src/base
 
-- `src/base/Piv.tsx`：唯一真实 DOM 出口，负责按 `as` 创建元素，并在 `ref` 阶段按 plugin 合并结果消费 `class`、`style`、`htmlProps`、`on` 和 `ref`。
-- `src/base/type.ts`：基础类型工具，只放跨 base 模块复用的简单类型。
+`src/base` 存放写组件所需的统一基础抽象原子。Piv 是当前最核心的 DOM 原子，但 base 的职责不是只容纳 Piv；后续稳定的组件构建原子也应先落在这里，再被上层 components 使用。
 
 ## src/base/pivHelpers
 
+- `src/base/pivHelpers/Piv.tsx`：当前最核心的 DOM 原子，负责按 `as` 创建元素，并在 `ref` 阶段按 plugin 合并结果消费 `class`、`style`、`htmlProps`、`on` 和 `ref`。
+- `src/base/pivHelpers/type.ts`：Piv 相关 helper 的基础类型工具，只放跨 piv helper 复用的简单类型。
 - `src/base/pivHelpers/domMap.tsx`：定义 Piv 支持的原生 tag 到 JSX 模板的映射，只负责创建元素、绑定 `richRef` 和插入 `children`。
 - `src/base/pivHelpers/handlePivPlugin.ts`：负责执行 plugin、收集 shadow props，并把 plugin props 与用户 props 按优先级合并。
 - `src/base/pivHelpers/className.ts`：负责把 Piv 的 class 声明绑定到 DOM `classList`，不处理 style、普通 HTML props 或事件。
@@ -49,7 +50,7 @@
 
 ## 修改入口
 
-- 改 Piv 元能力：先看 `src/base/Piv.tsx`，再进入对应 `src/base/pivHelpers/*` 文件。
+- 改 Piv 元能力：先看 `src/base/pivHelpers/Piv.tsx`，再进入对应 helper 文件。
 - 改 class 语义：看 `src/base/pivHelpers/className.ts`。
 - 改 style 语义：看 `src/base/pivHelpers/handleStyle.ts`。
 - 改普通 DOM props 写入：看 `src/base/pivHelpers/handleHTMLProps.ts` 和 `src/base/pivHelpers/handleHTMLPropsValue.ts`。

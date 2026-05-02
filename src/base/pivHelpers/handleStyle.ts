@@ -5,7 +5,7 @@
  */
 import { shrinkFn, toArray } from '@edsolater/fnkit'
 import { createRenderEffect, type Accessor, type JSX } from 'solid-js'
-import type { PropValueWrapper } from '../type'
+import type { PropValueWrapper } from './type'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleFieldValue<Key extends keyof JSX.CSSProperties> =

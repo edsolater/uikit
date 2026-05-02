@@ -4,8 +4,8 @@
  */
 import { isFunction, toArray, type AnyFn } from '@edsolater/fnkit'
 import { onCleanup } from 'solid-js'
-import type { PivProps } from '../Piv'
-import type { PropValueWrapper } from '../type'
+import type { PivProps } from './Piv'
+import type { PropValueWrapper } from './type'
 import type { PivHTMLElement, PivTag } from './domMap'
 
 type RefFunction<T extends Element> = (element?: T) => void

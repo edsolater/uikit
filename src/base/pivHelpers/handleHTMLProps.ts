@@ -6,7 +6,7 @@
 import { toArray } from '@edsolater/fnkit'
 import { createRenderEffect } from 'solid-js'
 import type { Accessor, JSX } from 'solid-js'
-import type { PropValueWrapper } from '../type'
+import type { PropValueWrapper } from './type'
 import type { PivHTMLElement, PivTag } from './domMap'
 import { setSingleDomProp, type HTMLPropValue } from './handleHTMLPropsValue'
 

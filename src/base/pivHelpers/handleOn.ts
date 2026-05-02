@@ -4,7 +4,7 @@
  */
 import { toArray, type MayArray } from '@edsolater/fnkit'
 import { onCleanup } from 'solid-js'
-import type { PropValueWrapper } from '../type'
+import type { PropValueWrapper } from './type'
 
 type EventKey = keyof GlobalEventHandlersEventMap
 
