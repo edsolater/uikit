@@ -9,6 +9,7 @@ SolidJS 基础组件与 hooks 组件库。
 如果你第一次阅读这个项目，建议按这个顺序看：
 
 - [File-Map.md](File-Map.md)：项目文件地图，先用它判断某类改动应该落在哪个文件。
+- [ai-rules](ai-rules)：项目写法契约，修改命名、CSS、条件判断等表达方式前先看对应规则。
 - [src/base/pivHelpers/Piv.tsx](src/base/pivHelpers/Piv.tsx)：当前最核心的 DOM 原子，理解 class、style、htmlProps、on、ref 和 plugins 的消费顺序。
 - [src/components/Button.tsx](src/components/Button.tsx)：当前最小组件示例，展示上层组件如何使用 `Piv`。
 
@@ -23,6 +24,7 @@ src/
   hooks/         对外 hooks
   App.tsx        本地 demo
   index.ts       发布入口
+ai-rules/        项目写法契约
 ```
 
 详细文件职责见 [File-Map.md](File-Map.md)。
