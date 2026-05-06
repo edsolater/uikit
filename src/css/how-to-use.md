@@ -1,6 +1,6 @@
-﻿# 如何引用 UIKit CSS
+# 如何引用 UIKit CSS
 
-`src/css` 存放可以被外部项目单独引入的原子化 CSS 文件。每个文件只负责一个稳定样式职责，例如 `reset.css` 只负责浏览器默认样式重置，`color.css` 是 color 领域入口并负责颜色变量，`color-utilities.css` 只是 color 领域里的工具文件，不是独立领域。
+`src/css` 存放可以被外部项目单独引入的原子化 CSS 文件。每个文件只负责一个稳定样式职责，例如 `reset.css` 只负责浏览器默认样式重置，`color.css` 负责颜色领域，`dimension.css` 负责尺寸领域。
 
 ## 安装包
 
@@ -10,19 +10,12 @@ bun add @edsolater/uikit
 
 ## 在应用入口引入
 
-大多数应用只需要引入 `reset.css` 和 `color.css`：
+大多数应用只需要引入 `reset.css`、`color.css` 和 `dimension.css`：
 
 ```ts
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
-```
-
-`color.css` 内部已经 `@import` 了 `color-utilities.css`，所以同时使用颜色变量和颜色函数时，不需要再手动引入 `color-utilities.css`。
-
-如果项目只想使用颜色函数，不想使用 UIKit 的默认颜色变量，才单独引入 `color-utilities.css`：
-
-```ts
-import '@edsolater/uikit/css/color-utilities.css'
+import '@edsolater/uikit/css/dimension.css'
 ```
 
 如果项目有自己的全局样式，建议先引入 UIKit 的原子 CSS，再引入项目样式：
@@ -30,19 +23,20 @@ import '@edsolater/uikit/css/color-utilities.css'
 ```ts
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
+import '@edsolater/uikit/css/dimension.css'
 import './app.css'
 ```
 
 | 需求 | 引入方式 |
 | --- | --- |
-| 使用浏览器 reset 和 UIKit 颜色 token | `reset.css` + `color.css` |
-| 只使用颜色函数 | `color-utilities.css` |
-| 使用 UIKit 颜色 token 和颜色函数 | 只引 `color.css` |
+| 使用浏览器 reset、颜色和尺寸函数 | `reset.css` + `color.css` + `dimension.css` |
+| 只使用颜色领域 | `color.css` |
+| 只使用尺寸领域 | `dimension.css` |
 | 自己写全局样式 | UIKit CSS 在前，业务 CSS 在后 |
 
 ## color.css 怎么用
 
-`color.css` 提供 `:root` 上的全局颜色变量。它是 color 领域入口，会自动引入 `color-utilities.css`，所以使用颜色 token 的项目不需要额外引入工具文件。
+`color.css` 提供颜色函数和 `:root` 上的全局颜色变量。它是 color 领域入口，不再拆出独立的 color utilities 文件。
 
 颜色不应该散落在组件和页面里成为不定的独立值。它和魔法数字一样，一旦到处手写，就会让主题、深浅模式、品牌替换和可访问性调整变得不可控。因此 `color.css` 把颜色集中定义到 `:root`，让组件只消费统一语义变量。
 
@@ -63,9 +57,9 @@ import './app.css'
 
 ```css
 .panel {
-  color: var(--color-text);
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  color: --color(text);
+  background: --color(surface);
+  border-color: --color(boundary);
 }
 ```
 
@@ -73,8 +67,8 @@ import './app.css'
 
 ```css
 .primary-button {
-  color: var(--color-on-brand);
-  background: var(--color-brand-fill);
+  color: --color(on-brand);
+  background: --color(brand-fill);
 }
 ```
 
@@ -86,13 +80,7 @@ import './app.css'
 }
 ```
 
-## color-utilities.css 怎么用
-
-如果项目只需要颜色函数、不需要 UIKit 的默认颜色 token，可以单独引入工具文件。已经引入 `color.css` 的项目不要重复引入它：
-
-```ts
-import '@edsolater/uikit/css/color-utilities.css'
-```
+## color.css 里的颜色函数
 
 `--shift()` 是底层通道编辑器，只使用 OKLCH 通道动作：
 
@@ -104,7 +92,7 @@ chroma-up / chroma-down / chroma
 
 ```css
 .button {
-  background: --shift(var(--color-brand), 'lightness-up', 10%);
+  background: --shift(var(--color-brand), lightness-up, 10%);
 }
 ```
 
@@ -124,15 +112,60 @@ chroma-up / chroma-down / chroma
 }
 ```
 
+## dimension.css 怎么用
+
+`dimension.css` 不是尺寸 token 表，而是一套尺寸数学生成器。组件和业务 CSS 应表达尺度级数，而不是散落手写像素：
+
+```css
+.button {
+  height: --size(2);
+  padding-inline: --space(5);
+  padding-block: --space(2);
+  border-radius: --radius(3);
+  border-width: --boundary(1);
+}
+```
+
+`--space()` 用于 `padding`、`margin`、`gap` 和 `inset`。`--size()` 用于控件高度、图标尺寸、触控目标和固定规格容器。`--radius()` 用于圆角。`--boundary()` 用于边框、描边、focus ring 和分割线厚度。
+
+底层函数按用途拆开：
+
+```txt
+--step()       指数尺度，用于普通 UI 尺寸
+--scale-log()  对数尺度，用于压缩数据驱动尺寸
+--limit()      通道约束，用于限制极端值
+--snap()       像素吸附，用于减少半像素模糊
+```
+
+数据驱动 UI 不应该把原始数据直接当 px 使用，应先压缩成可视范围：
+
+```css
+.heat-point {
+  inline-size: --data-size(320);
+  block-size: --data-size(320);
+}
+```
+
+业务可以覆盖根节点源值来整体调整密度：
+
+```css
+:root {
+  --space-base: 4px;
+  --space-ratio: 1.2;
+  --size-base: 20px;
+  --size-ratio: 1.16;
+}
+```
+
 ## TODO
 
-颜色已经开始去魔法数字化，尺寸和尺度也需要同样处理。后续会考虑新增 `size.css`，把间距、圆角、控件高度、字号尺度等稳定尺寸集中管理；当前这部分还没有确定规则，暂不实现。
+颜色和尺寸已经开始去魔法数字化。后续还需要继续判断字号、行高、阴影和动效时长是否应该进入独立领域；当前暂不实现。
 
 ## 构建注意事项
 
 外部项目的构建工具需要支持从依赖包中引入 CSS。Vite、现代 Rollup、Webpack 和 Rspack 项目通常可以直接处理这种写法。
 
-`color-utilities.css` 使用 CSS `@function`、`if()`、相对颜色语法、`color-mix()` 和 OKLCH。`color.css` 依赖这些函数生成颜色 token。它们都面向最新 Chrome，不面向旧浏览器兼容。
+`color.css` 使用 CSS `@function`、`if()`、相对颜色语法、`color-mix()` 和 OKLCH。`dimension.css` 使用 CSS `@function`、`pow()`、`log()` 和 `round()`。它们都面向最新 Chrome，不面向旧浏览器兼容。
 
 UIKit 发布包会把 `src/css` 原样复制到 `dist/css`，并通过 `package.json` 的 `exports` 暴露 `./css/*`。因此外部项目不应该引用 `dist` 路径，也不应该引用 UIKit 源码路径。
 
@@ -141,15 +174,16 @@ UIKit 发布包会把 `src/css` 原样复制到 `dist/css`，并通过 `package.
 ```ts
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
+import '@edsolater/uikit/css/dimension.css'
 ```
 
 不要使用：
 
 ```ts
 import '@edsolater/uikit/dist/css/reset.css'
-import '@edsolater/uikit/dist/css/color-utilities.css'
 import '@edsolater/uikit/dist/css/color.css'
+import '@edsolater/uikit/dist/css/dimension.css'
 import '@edsolater/uikit/src/css/reset.css'
-import '@edsolater/uikit/src/css/color-utilities.css'
 import '@edsolater/uikit/src/css/color.css'
+import '@edsolater/uikit/src/css/dimension.css'
 ```
