@@ -1,0 +1,287 @@
+/**
+ * 这个文件负责提供 UIKit 的颜色工具函数和基础颜色变量。
+ * 它只承载颜色推导、颜色混合、主题色板和语义色板，不承载组件尺寸、排版、布局或具体业务样式。
+ * brand 与 accent 的设计边界见 D:\mycode\ai-rules\design\color-brand-accent.md。
+ */
+
+/* --shift 负责对一个颜色执行一次颜色通道调整。 */
+@function --shift(--color <color>, --action, --amount) returns <color> {
+  /* --color 是原始颜色，可以是十六进制、oklch、rgb、命名色或 CSS 变量。 */
+  /* --action 是操作名称，支持 "lighten"、"darken"、"saturate"、"desaturate"、"rotate"。 */
+  /* --amount 是调整量；亮度和彩度通常传小数或百分比，色相旋转传角度。 */
+  result: if(
+    style(--action: 'lighten'): oklch(from var(--color) calc(l + var(--amount)) c h) ;
+      style(--action: 'darken'): oklch(from var(--color) calc(l - var(--amount)) c h) ;
+      style(--action: 'saturate'): oklch(from var(--color) l calc(c + var(--amount)) h) ;
+      style(--action: 'desaturate'): oklch(from var(--color) l calc(c - var(--amount)) h) ;
+      style(--action: 'rotate'): oklch(from var(--color) l c calc(h + var(--amount))) ; else: var(--color)
+  );
+}
+
+/* --shift2 负责把同一个颜色连续调整两次，适合一次性生成更明确的颜色变体。 */
+@function --shift2(--color <color>, --first-action, --first-amount, --second-action, --second-amount) returns <color> {
+  /* 第一次操作先得到中间色，第二次操作再基于中间色继续改变。 */
+  result: --shift(
+    --shift(var(--color), var(--first-action), var(--first-amount)),
+    var(--second-action),
+    var(--second-amount)
+  );
+}
+
+/* --shift3 负责把同一个颜色连续调整三次，适合生成复杂但仍可读的派生色。 */
+@function --shift3(
+    --color <color>,
+    --first-action,
+    --first-amount,
+    --second-action,
+    --second-amount,
+    --third-action,
+    --third-amount
+  )
+  returns <color> {
+  /* 第三次操作继续消费 --shift2 的结果，数字 3 只表达连续操作次数。 */
+  result: --shift(
+    --shift2(var(--color), var(--first-action), var(--first-amount), var(--second-action), var(--second-amount)),
+    var(--third-action),
+    var(--third-amount)
+  );
+}
+
+/* --mix2 负责按权重混合两个颜色，语义相当于调色盘里把两份颜料按比例混在一起。 */
+@function --mix2(--a <color>, --aw <number>, --b <color>, --bw <number>) returns <color> {
+  /* --a 和 --b 是参与混合的两个颜色。 */
+  /* --aw 和 --bw 是权重数字，例如 3 和 1 表示第一个颜色占三份、第二个颜色占一份。 */
+  result: color-mix(
+    in oklab,
+    var(--a) calc(var(--aw) / (var(--aw) + var(--bw)) * 100%),
+    var(--b) calc(var(--bw) / (var(--aw) + var(--bw)) * 100%)
+  );
+}
+
+/* --mix3 负责按权重混合三个颜色；当前 CSS color-mix 是两色函数，所以这里用两次混合保持比例。 */
+@function --mix3(--a <color>, --aw <number>, --b <color>, --bw <number>, --c <color>, --cw <number>) returns <color> {
+  /* 先按 --aw 和 --bw 混合前两个颜色，再把结果按总权重继续和第三个颜色混合。 */
+  result: --mix2(--mix2(var(--a), var(--aw), var(--b), var(--bw)), calc(var(--aw) + var(--bw)), var(--c), var(--cw));
+}
+
+/* --mix4 负责按权重混合四个颜色，用来表达更完整的综合色板。 */
+@function --mix4(
+    --a <color>,
+    --aw <number>,
+    --b <color>,
+    --bw <number>,
+    --c <color>,
+    --cw <number>,
+    --d <color>,
+    --dw <number>
+  )
+  returns <color> {
+  /* 先得到前三色的比例混合结果，再按前三色总权重和第四个颜色继续混合。 */
+  result: --mix2(
+    --mix3(var(--a), var(--aw), var(--b), var(--bw), var(--c), var(--cw)),
+    calc(var(--aw) + var(--bw) + var(--cw)),
+    var(--d),
+    var(--dw)
+  );
+}
+
+/* 根节点集中管理全局颜色，应用和组件都应优先消费这里的语义变量。 */
+:root {
+  /* [色彩环境] - light-dark() 必须配合 color-scheme 才会按系统浅色或深色偏好返回对应颜色。 */
+  color-scheme: light dark;
+
+  /* [主题源色] - 业务唯一推荐覆盖的主源色，用于品牌识别、主按钮、选中态和关键强调。 */
+  --color-brand: oklch(62% 0.17 255deg);
+
+  /* [主题源色] - 业务唯一推荐覆盖的第二源色，用于次要强调、标签、图表和补充状态。 */
+  --color-accent: oklch(70% 0.16 45deg);
+
+  /* [内部候选] - 底色源只服务后续智能语义色推导，组件和业务不应直接引用。 */
+  --color-base: --mix2(white, 96, var(--color-brand), 4);
+
+  /* [内部候选] - 底色一号直接由底色源压暗 2%，避免链式派生造成误差累积。 */
+  --color-base-1: --shift(var(--color-base), 'darken', 2%);
+
+  /* [内部候选] - 底色二号直接由底色源压暗 5%，只作为智能表面色的候选值。 */
+  --color-base-2: --shift(var(--color-base), 'darken', 5%);
+
+  /* [内部候选] - 底色三号直接由底色源压暗 10%，只作为智能弱边框和 hover 色的候选值。 */
+  --color-base-3: --shift(var(--color-base), 'darken', 10%);
+
+  /* [内部候选] - 墨色源只服务后续智能语义色推导，组件和业务不应直接引用。 */
+  --color-ink: --mix2(black, 90, var(--color-brand), 10);
+
+  /* [内部候选] - 墨色一号直接由墨色源提亮 7%，只作为智能表面色和正文色候选值。 */
+  --color-ink-1: --shift(var(--color-ink), 'lighten', 7%);
+
+  /* [内部候选] - 墨色二号直接由墨色源提亮 17%，只作为智能嵌套表面和边框候选值。 */
+  --color-ink-2: --shift(var(--color-ink), 'lighten', 17%);
+
+  /* [内部候选] - 墨色三号直接由墨色源提亮 31%，只作为智能弱文字和强边框候选值。 */
+  --color-ink-3: --shift(var(--color-ink), 'lighten', 31%);
+
+  /* [内部候选] - 主题一号由主题色提亮，用于后续主题填充和浅强调推导。 */
+  --color-brand-1: --shift(var(--color-brand), 'lighten', 10%);
+
+  /* [内部候选] - 主题二号由主题色提亮并降低彩度，用于后续低强调主题背景推导。 */
+  --color-brand-2: --shift2(var(--color-brand), 'lighten', 22%, 'desaturate', 5%);
+
+  /* [内部候选] - 主题三号由主题色压暗，用于后续主题按下态和弱背景文字推导。 */
+  --color-brand-3: --shift(var(--color-brand), 'darken', 10%);
+
+  /* [内部候选] - 主题四号由主题色压暗并略增彩度，用于后续高对比主题色块推导。 */
+  --color-brand-4: --shift2(var(--color-brand), 'darken', 18%, 'saturate', 3%);
+
+  /* [内部候选] - 辅助一号由辅助色提亮，用于后续辅助填充和浅强调推导。 */
+  --color-accent-1: --shift(var(--color-accent), 'lighten', 10%);
+
+  /* [内部候选] - 辅助二号由辅助色提亮并降低彩度，用于后续低强调辅助背景推导。 */
+  --color-accent-2: --shift2(var(--color-accent), 'lighten', 22%, 'desaturate', 5%);
+
+  /* [内部候选] - 辅助三号由辅助色压暗，用于后续辅助按下态和弱背景文字推导。 */
+  --color-accent-3: --shift(var(--color-accent), 'darken', 10%);
+
+  /* [内部候选] - 辅助四号由辅助色压暗并略增彩度，用于后续高对比辅助色块推导。 */
+  --color-accent-4: --shift2(var(--color-accent), 'darken', 18%, 'saturate', 3%);
+
+  /* [公开语义] - 页面背景是智能色，调用方不用判断浅色或深色模式。 */
+  --color-background: light-dark(var(--color-base-1), var(--color-ink));
+
+  /* [公开语义] - 表面色用于卡片、弹窗、输入框等浮在背景上的区域，会随系统色彩方案自动切换。 */
+  --color-surface: light-dark(var(--color-base), var(--color-ink-1));
+
+  /* [公开语义] - 二级表面色用于嵌套区域或弱背景控件，会随系统色彩方案自动切换。 */
+  --color-surface-2: light-dark(var(--color-base-2), var(--color-ink-2));
+
+  /* [公开语义] - 正文色为长时间阅读做了轻微降对比，调用方不用判断当前色彩方案。 */
+  --color-text: light-dark(var(--color-ink-1), var(--color-base-1));
+
+  /* [公开语义] - 强文本用于标题、关键数字和需要更高权重的正文。 */
+  --color-text-strong: light-dark(var(--color-ink), var(--color-base));
+
+  /* [公开语义] - 弱文本用于说明文字、表头辅助信息和占位提示。 */
+  --color-text-muted: light-dark(var(--color-ink-3), --mix2(var(--color-base), 2, var(--color-ink-3), 1));
+
+  /* [公开语义] - 反色文本用于反向场景，调用方只表达“需要反色”。 */
+  --color-text-inverse: light-dark(var(--color-base), var(--color-ink));
+
+  /* [公开语义] - 普通边框用于控件描边和分割线，会随系统色彩方案自动切换。 */
+  --color-border: light-dark(
+    --mix2(var(--color-base-3), 2, var(--color-ink-3), 1),
+    --mix2(var(--color-ink-2), 2, var(--color-base-3), 1)
+  );
+
+  /* [公开语义] - 弱边框用于不希望抢视觉注意力的分割线。 */
+  --color-border-muted: light-dark(var(--color-base-3), var(--color-ink-2));
+
+  /* [公开语义] - 主题填充色用于主按钮、选中态和关键强调，会随系统色彩方案自动切换。 */
+  --color-brand-fill: light-dark(var(--color-brand), var(--color-brand-1));
+
+  /* [公开语义] - 主题填充上的常规文字色由智能文本两端混合得到，避免直接使用绝对黑或绝对白。 */
+  --color-on-brand: light-dark(
+    --mix2(var(--color-base), 3, contrast-color(var(--color-brand-fill)), 7),
+    --mix2(var(--color-base), 8, var(--color-brand-fill), 1)
+  );
+
+  /* [高对比兜底] - 主题填充上的高对比文字色交给 contrast-color()，只用于小字或强可访问性场景。 */
+  --color-on-brand-contrast: contrast-color(var(--color-brand-fill));
+
+  /* [公开语义] - 主题弱背景用于标签、选中底色和轻量提示，会随系统色彩方案自动切换。 */
+  --color-brand-soft: light-dark(var(--color-brand-2), --mix2(var(--color-ink), 5, var(--color-brand), 1));
+
+  /* [公开语义] - 主题弱背景上的文字色使用语义正文色和主题色混合，保持品牌感但不过度硬黑硬白。 */
+  --color-on-brand-soft: light-dark(
+    --mix2(var(--color-text), 3, var(--color-brand-3), 1),
+    --mix2(var(--color-text), 3, var(--color-brand-1), 1)
+  );
+
+  /* [高对比兜底] - 主题弱背景上的高对比文字色交给 contrast-color()，只用于小字或强可访问性场景。 */
+  --color-on-brand-soft-contrast: contrast-color(var(--color-brand-soft));
+
+  /* [公开语义] - 辅助填充色用于次按钮、标签、图表和补充强调，会随系统色彩方案自动切换。 */
+  --color-accent-fill: light-dark(var(--color-accent), var(--color-accent-1));
+
+  /* [公开语义] - 辅助填充上的常规文字色由智能文本两端混合得到，避免直接使用绝对黑或绝对白。 */
+  --color-on-accent: light-dark(
+    --mix2(var(--color-base), 3, contrast-color(var(--color-accent-fill)), 7),
+    --mix2(var(--color-base), 8, var(--color-accent-fill), 1)
+  );
+
+  /* [高对比兜底] - 辅助填充上的高对比文字色交给 contrast-color()，只用于小字或强可访问性场景。 */
+  --color-on-accent-contrast: contrast-color(var(--color-accent-fill));
+
+  /* [公开语义] - 辅助弱背景用于次要标签和低强调辅助区域，会随系统色彩方案自动切换。 */
+  --color-accent-soft: light-dark(var(--color-accent-2), --mix2(var(--color-ink), 5, var(--color-accent), 1));
+
+  /* [公开语义] - 辅助弱背景上的文字色使用语义正文色和辅助色混合，保持辅助色识别但不过度硬黑硬白。 */
+  --color-on-accent-soft: light-dark(
+    --mix2(var(--color-text), 3, var(--color-accent-3), 1),
+    --mix2(var(--color-text), 3, var(--color-accent-1), 1)
+  );
+
+  /* [高对比兜底] - 辅助弱背景上的高对比文字色交给 contrast-color()，只用于小字或强可访问性场景。 */
+  --color-on-accent-soft-contrast: contrast-color(var(--color-accent-soft));
+
+  /* [公开语义] - 信息色由主题色轻微旋转和提亮得到，不引入第三个独立源色。 */
+  --color-info: --shift2(var(--color-brand), 'rotate', -14deg, 'lighten', 4%);
+
+  /* [公开语义] - 成功色由主题色旋转到绿色区域得到，不把成功绿写成新的源色。 */
+  --color-success: --shift2(var(--color-brand), 'rotate', -105deg, 'lighten', 4%);
+
+  /* [公开语义] - 警告色由辅助色旋转到黄色区域得到，不把警告黄写成新的源色。 */
+  --color-warning: --shift2(var(--color-accent), 'rotate', 34deg, 'lighten', 4%);
+
+  /* [公开语义] - 危险色由辅助色旋转到红色区域得到，不把危险红写成新的源色。 */
+  --color-danger: --shift2(var(--color-accent), 'rotate', -28deg, 'darken', 4%);
+
+  /* [公开语义] - 信息文字色是智能色，调用方不用判断浅色或深色模式。 */
+  --color-info-text: light-dark(--shift(var(--color-info), 'darken', 18%), --shift(var(--color-info), 'lighten', 18%));
+
+  /* [公开语义] - 成功文字色是智能色，调用方不用判断浅色或深色模式。 */
+  --color-success-text: light-dark(
+    --shift(var(--color-success), 'darken', 18%),
+    --shift(var(--color-success), 'lighten', 18%)
+  );
+
+  /* [公开语义] - 警告文字色是智能色，调用方不用判断浅色或深色模式。 */
+  --color-warning-text: light-dark(
+    --shift(var(--color-warning), 'darken', 22%),
+    --shift(var(--color-warning), 'lighten', 14%)
+  );
+
+  /* [公开语义] - 危险文字色是智能色，调用方不用判断浅色或深色模式。 */
+  --color-danger-text: light-dark(
+    --shift(var(--color-danger), 'darken', 18%),
+    --shift(var(--color-danger), 'lighten', 18%)
+  );
+
+  /* [公开语义] - 信息弱背景由信息色和当前智能背景混合得到。 */
+  --color-info-soft: light-dark(
+    --mix2(var(--color-background), 6, var(--color-info), 1),
+    --mix2(var(--color-background), 5, var(--color-info), 1)
+  );
+
+  /* [公开语义] - 成功弱背景由成功色和当前智能背景混合得到。 */
+  --color-success-soft: light-dark(
+    --mix2(var(--color-background), 6, var(--color-success), 1),
+    --mix2(var(--color-background), 5, var(--color-success), 1)
+  );
+
+  /* [公开语义] - 警告弱背景由警告色和当前智能背景混合得到。 */
+  --color-warning-soft: light-dark(
+    --mix2(var(--color-background), 6, var(--color-warning), 1),
+    --mix2(var(--color-background), 5, var(--color-warning), 1)
+  );
+
+  /* [公开语义] - 危险弱背景由危险色和当前智能背景混合得到。 */
+  --color-danger-soft: light-dark(
+    --mix2(var(--color-background), 6, var(--color-danger), 1),
+    --mix2(var(--color-background), 5, var(--color-danger), 1)
+  );
+
+  /* [公开语义] - 阴影色只表达投影 tint，不直接表达阴影尺寸。 */
+  --color-shadow: light-dark(oklch(from var(--color-ink) l c h / 16%), oklch(from black l c h / 44%));
+
+  /* [公开语义] - 遮罩色用于 modal 背后的页面压暗层。 */
+  --color-backdrop: light-dark(oklch(from var(--color-ink) l c h / 46%), oklch(from black l c h / 64%));
+}
