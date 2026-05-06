@@ -82,17 +82,30 @@ import './app.css'
 
 ## color.css 里的颜色函数
 
-`--shift()` 是底层通道编辑器，只使用 OKLCH 通道动作：
+`--tune()` 是底层相对通道编辑器，只使用 OKLCH 通道名和带符号 delta：
 
 ```txt
-hue-up / hue-down / hue
-lightness-up / lightness-down / lightness
-chroma-up / chroma-down / chroma
+hue
+lightness
+chroma
+opacity
 ```
 
 ```css
 .button {
-  background: --shift(var(--color-brand), lightness-up, 10%);
+  background: --tune(var(--color-brand), lightness, 10%);
+}
+
+.button.is-muted {
+  background: --tune(var(--color-brand), lightness, -8%);
+}
+```
+
+绝对设置使用 `--pin()`，不要把“设置到某个值”和“相对移动多少”混在一个函数里。连续设置两个或三个通道时，使用 `--pin2()` / `--pin3()`，它们只表示连续操作次数：
+
+```css
+.swatch {
+  background: --pin(var(--color-brand), chroma, 0);
 }
 ```
 
@@ -104,13 +117,17 @@ chroma-up / chroma-down / chroma
 }
 ```
 
-`--mix2()`、`--mix3()`、`--mix4()`、`--tint()`、`--shade()`、`--tone()`、`--dim()` 表示调色板混合能力：
+方言函数的 `amount` 都有默认档位。`--lighten(color)` 和 `--darken(color)` 默认调整 `10%`，相当于十级亮度尺度中的一档；`--saturate(color)` 和 `--desaturate(color)` 默认调整 `0.02` 彩度；`--hue-rotate(color)` 默认旋转 `36deg`。
+
+`--mix2()`、`--mix3()`、`--mix4()`、`--tint()`、`--shade()`、`--tone()`、`--dim()` 表示调色板混合能力。它们包装原生 `color-mix()`，固定使用 `oklab`，让调用处不用反复声明颜色空间：
 
 ```css
 .avatar {
   background: --mix3(#ffdbac, 3, #e0ac69, 2, #8d5524, 1);
 }
 ```
+
+`--tint(color)` 和 `--dim(color)` 默认保留 16% 原色；`--shade(color)` 和 `--tone(color)` 默认保留 72% 原色。需要更强或更弱时再显式传入 weight。
 
 ## dimension.css 怎么用
 

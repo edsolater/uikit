@@ -7,7 +7,7 @@
 /* ========== 基础工具层 ========== */
 
 /* --step 负责按指数曲线生成尺度值，是 dimension 领域的基础数学引擎。 */
-@function --step(--base: <length>, --ratio: <number>, --n: <number>) returns <length> {
+@function --step(--base <length>, --ratio <number>, --n <number>) returns <length> {
   /* --base 是第 0 级源尺寸。 */
   /* --ratio 是相邻级别的增长比例。 */
   /* --n 是尺度级数，可以是整数、负数或小数。 */
@@ -15,7 +15,7 @@
 }
 
 /* --scale-log 负责把巨大数值范围压缩成可视尺寸，适合数据驱动 UI。 */
-@function --scale-log(--base: <length>, --factor: <number>, --value: <number>) returns <length> {
+@function --scale-log(--base <length>, --factor <number>, --value <number>) returns <length> {
   /* --base 是输出尺寸的单位基准。 */
   /* --factor 是对数底数，数值越大，巨大输入被压缩得越强。 */
   /* --value 是外部输入值，常见于热度、强度、数量或速度。 */
@@ -23,14 +23,14 @@
 }
 
 /* --limit 负责把曲线结果限制在通道允许范围内，避免极端参数破坏布局。 */
-@function --limit(--value: <length>, --min: <length>, --max: <length>) returns <length> {
+@function --limit(--value <length>, --min <length>, --max <length>) returns <length> {
   /* --value 是曲线生成值。 */
   /* --min 和 --max 是该视觉通道的下限与上限。 */
   result: clamp(var(--min), var(--value), var(--max));
 }
 
 /* --snap 负责把任意尺寸吸附到指定像素网格，减少半像素和模糊边界。 */
-@function --snap(--value: <length>, --unit: <length>) returns <length> {
+@function --snap(--value <length>, --unit <length>) returns <length> {
   /* --value 是待规整尺寸。 */
   /* --unit 是吸附粒度，例如 1px 表示贴近整数像素。 */
   result: round(nearest, var(--value), var(--unit));
@@ -39,25 +39,25 @@
 /* ========== 综合翻译层 ========== */
 
 /* --space 负责生成间距，适合 padding、margin、gap 和 inset。 */
-@function --space(--n: <number>) returns <length> {
+@function --space(--n <number>) returns <length> {
   /* --n 是间距级数，组件 CSS 应表达级数，不直接手写散落像素。 */
   result: --limit(--step(var(--space-base), var(--space-ratio), var(--n)), var(--space-min), var(--space-max));
 }
 
 /* --size 负责生成物体尺寸，适合控件高度、图标、头像、触控目标和固定规格容器。 */
-@function --size(--n: <number>) returns <length> {
+@function --size(--n <number>) returns <length> {
   /* --n 是物体尺度级数，和 --space 分属不同视觉通道。 */
   result: --limit(--step(var(--size-base), var(--size-ratio), var(--n)), var(--size-min), var(--size-max));
 }
 
 /* --radius 负责生成圆角，适合按钮、输入框、卡片和浮层。 */
-@function --radius(--n: <number>) returns <length> {
+@function --radius(--n <number>) returns <length> {
   /* --n 是形体柔和度级数，调整的是圆润或硬朗气质。 */
   result: --limit(--step(var(--radius-base), var(--radius-ratio), var(--n)), var(--radius-min), var(--radius-max));
 }
 
 /* --boundary 负责生成边界厚度，适合 border、outline、focus ring 和分割线。 */
-@function --boundary(--n: <number>) returns <length> {
+@function --boundary(--n <number>) returns <length> {
   /* --n 是边界厚度级数，结果会先像素吸附再进入上下限约束。 */
   result: --limit(
     --snap(--step(var(--boundary-base), var(--boundary-ratio), var(--n)), var(--dimension-snap-unit)),
@@ -67,7 +67,7 @@
 }
 
 /* --data-size 负责把数据值压缩成尺寸，适合热度气泡、可视化点大小和强度映射。 */
-@function --data-size(--value: <number>) returns <length> {
+@function --data-size(--value <number>) returns <length> {
   /* --value 是数据输入，不应该直接拿来当 px 使用。 */
   result: --limit(
     --scale-log(var(--data-size-base), var(--data-size-log-factor), var(--value)),

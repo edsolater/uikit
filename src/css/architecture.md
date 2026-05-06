@@ -120,7 +120,7 @@ Dimension 材料包括：
 基础工具包括：
 
 ```txt
-color: --shift(), --shift2(), --shift3(), --mix2(), --mix3(), --mix4()
+color: --tune(), --tune2(), --tune3(), --pin(), --pin2(), --pin3(), --mix2(), --mix3(), --mix4()
 dimension: --step(), --scale-log(), --limit(), --snap()
 ```
 
