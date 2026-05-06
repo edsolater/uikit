@@ -1,26 +1,34 @@
 /**
- * 这个文件负责提供 UIKit 的颜色工具函数和基础颜色变量。
- * 它只承载颜色推导、颜色混合、主题色板和语义色板，不承载组件尺寸、排版、布局或具体业务样式。
+ * 这个文件负责提供 UIKit 的颜色领域能力。
+ * 这是 color 领域入口。
+ * 它承载 OKLCH 颜色函数、主题色板和语义色板，不承载组件尺寸、排版、布局或具体业务样式。
  * brand 与 accent 的设计边界见 D:\mycode\ai-rules\design\color-brand-accent.md。
  */
 
-/* --shift 负责对一个颜色执行一次颜色通道调整。 */
+/* ========== Channel API ========== */
+
+/* --shift 负责对 OKLCH 的 hue、lightness、chroma 通道执行一次调整。 */
 @function --shift(--color <color>, --action, --amount) returns <color> {
   /* --color 是原始颜色，可以是十六进制、oklch、rgb、命名色或 CSS 变量。 */
-  /* --action 是操作名称，支持 "lighten"、"darken"、"saturate"、"desaturate"、"rotate"。 */
-  /* --amount 是调整量；亮度和彩度通常传小数或百分比，色相旋转传角度。 */
+  /* --action 是通道操作，支持 hue、lightness、chroma 的相对和绝对调整。 */
+  /* --amount 是调整量；hue 使用角度，lightness 使用百分比，chroma 使用小数。 */
   result: if(
-    style(--action: 'lighten'): oklch(from var(--color) calc(l + var(--amount)) c h) ;
-      style(--action: 'darken'): oklch(from var(--color) calc(l - var(--amount)) c h) ;
-      style(--action: 'saturate'): oklch(from var(--color) l calc(c + var(--amount)) h) ;
-      style(--action: 'desaturate'): oklch(from var(--color) l calc(c - var(--amount)) h) ;
-      style(--action: 'rotate'): oklch(from var(--color) l c calc(h + var(--amount))) ; else: var(--color)
+    style(--action: 'hue-up'): oklch(from var(--color) l c calc(h + var(--amount)));
+    style(--action: 'hue-down'): oklch(from var(--color) l c calc(h - var(--amount)));
+    style(--action: 'hue'): oklch(from var(--color) l c var(--amount));
+    style(--action: 'lightness-up'): oklch(from var(--color) calc(l + var(--amount)) c h);
+    style(--action: 'lightness-down'): oklch(from var(--color) calc(l - var(--amount)) c h);
+    style(--action: 'lightness'): oklch(from var(--color) var(--amount) c h);
+    style(--action: 'chroma-up'): oklch(from var(--color) l calc(c + var(--amount)) h);
+    style(--action: 'chroma-down'): oklch(from var(--color) l calc(c - var(--amount)) h);
+    style(--action: 'chroma'): oklch(from var(--color) l var(--amount) h);
+    else: var(--color)
   );
 }
 
-/* --shift2 负责把同一个颜色连续调整两次，适合一次性生成更明确的颜色变体。 */
+/* --shift2 负责把同一个颜色连续执行两次通道调整。 */
 @function --shift2(--color <color>, --first-action, --first-amount, --second-action, --second-amount) returns <color> {
-  /* 第一次操作先得到中间色，第二次操作再基于中间色继续改变。 */
+  /* 第一次操作得到中间色，第二次操作基于中间色继续调整。 */
   result: --shift(
     --shift(var(--color), var(--first-action), var(--first-amount)),
     var(--second-action),
@@ -28,17 +36,16 @@
   );
 }
 
-/* --shift3 负责把同一个颜色连续调整三次，适合生成复杂但仍可读的派生色。 */
+/* --shift3 负责把同一个颜色连续执行三次通道调整。 */
 @function --shift3(
-    --color <color>,
-    --first-action,
-    --first-amount,
-    --second-action,
-    --second-amount,
-    --third-action,
-    --third-amount
-  )
-  returns <color> {
+  --color <color>,
+  --first-action,
+  --first-amount,
+  --second-action,
+  --second-amount,
+  --third-action,
+  --third-amount
+) returns <color> {
   /* 第三次操作继续消费 --shift2 的结果，数字 3 只表达连续操作次数。 */
   result: --shift(
     --shift2(var(--color), var(--first-action), var(--first-amount), var(--second-action), var(--second-amount)),
@@ -47,9 +54,42 @@
   );
 }
 
+/* ========== Dialect API ========== */
+
+/* --lighten 是 lightness-up 的常用方言。 */
+@function --lighten(--color <color>, --amount) returns <color> {
+  result: --shift(var(--color), 'lightness-up', var(--amount));
+}
+
+/* --darken 是 lightness-down 的常用方言。 */
+@function --darken(--color <color>, --amount) returns <color> {
+  result: --shift(var(--color), 'lightness-down', var(--amount));
+}
+
+/* --saturate 是 chroma-up 的常用方言。 */
+@function --saturate(--color <color>, --amount) returns <color> {
+  result: --shift(var(--color), 'chroma-up', var(--amount));
+}
+
+/* --desaturate 是 chroma-down 的常用方言。 */
+@function --desaturate(--color <color>, --amount) returns <color> {
+  result: --shift(var(--color), 'chroma-down', var(--amount));
+}
+
+/* --hue-rotate 是 hue-up 的常用方言。 */
+@function --hue-rotate(--color <color>, --amount) returns <color> {
+  result: --shift(var(--color), 'hue-up', var(--amount));
+}
+
+/* --grayscale 保留亮度和色相位置，直接把 chroma 归零。 */
+@function --grayscale(--color <color>) returns <color> {
+  result: --shift(var(--color), 'chroma', 0);
+}
+
+/* ========== Palette Mix API ========== */
+
 /* --mix2 负责按权重混合两个颜色，语义相当于调色盘里把两份颜料按比例混在一起。 */
 @function --mix2(--a <color>, --aw <number>, --b <color>, --bw <number>) returns <color> {
-  /* --a 和 --b 是参与混合的两个颜色。 */
   /* --aw 和 --bw 是权重数字，例如 3 和 1 表示第一个颜色占三份、第二个颜色占一份。 */
   result: color-mix(
     in oklab,
@@ -60,22 +100,21 @@
 
 /* --mix3 负责按权重混合三个颜色；当前 CSS color-mix 是两色函数，所以这里用两次混合保持比例。 */
 @function --mix3(--a <color>, --aw <number>, --b <color>, --bw <number>, --c <color>, --cw <number>) returns <color> {
-  /* 先按 --aw 和 --bw 混合前两个颜色，再把结果按总权重继续和第三个颜色混合。 */
+  /* 先混合前两个颜色，再把结果按总权重继续和第三个颜色混合。 */
   result: --mix2(--mix2(var(--a), var(--aw), var(--b), var(--bw)), calc(var(--aw) + var(--bw)), var(--c), var(--cw));
 }
 
-/* --mix4 负责按权重混合四个颜色，用来表达更完整的综合色板。 */
+/* --mix4 负责按权重混合四个颜色。 */
 @function --mix4(
-    --a <color>,
-    --aw <number>,
-    --b <color>,
-    --bw <number>,
-    --c <color>,
-    --cw <number>,
-    --d <color>,
-    --dw <number>
-  )
-  returns <color> {
+  --a <color>,
+  --aw <number>,
+  --b <color>,
+  --bw <number>,
+  --c <color>,
+  --cw <number>,
+  --d <color>,
+  --dw <number>
+) returns <color> {
   /* 先得到前三色的比例混合结果，再按前三色总权重和第四个颜色继续混合。 */
   result: --mix2(
     --mix3(var(--a), var(--aw), var(--b), var(--bw), var(--c), var(--cw)),
@@ -83,6 +122,30 @@
     var(--d),
     var(--dw)
   );
+}
+
+/* --tint 负责把颜色混白，生成更轻的染白色。 */
+@function --tint(--color <color>, --weight <number>) returns <color> {
+  /* --weight 表示原色占比，16 表示 16% 原色加 84% white。 */
+  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), white calc((100 - var(--weight)) * 1%));
+}
+
+/* --shade 负责把颜色混黑，生成更沉的加黑色。 */
+@function --shade(--color <color>, --weight <number>) returns <color> {
+  /* --weight 表示原色占比，72 表示 72% 原色加 28% black。 */
+  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), black calc((100 - var(--weight)) * 1%));
+}
+
+/* --tone 负责把颜色混入中性灰，让颜色更稳、更低情绪。 */
+@function --tone(--color <color>, --weight <number>) returns <color> {
+  /* --weight 表示原色占比，72 表示 72% 原色加 28% neutral gray。 */
+  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), oklch(60% 0 0deg) calc((100 - var(--weight)) * 1%));
+}
+
+/* --dim 负责把颜色混透明，生成弱提示底色。 */
+@function --dim(--color <color>, --weight <number>) returns <color> {
+  /* --weight 表示原色占比，16 表示 16% 原色加 84% transparent。 */
+  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), transparent calc((100 - var(--weight)) * 1%));
 }
 
 /* 根节点集中管理全局颜色，应用和组件都应优先消费这里的语义变量。 */
@@ -93,56 +156,56 @@
   /* [主题源色] - 业务唯一推荐覆盖的主源色，用于品牌识别、主按钮、选中态和关键强调。 */
   --color-brand: oklch(62% 0.17 255deg);
 
-  /* [主题源色] - 业务唯一推荐覆盖的第二源色，用于次要强调、标签、图表和补充状态。 */
-  --color-accent: oklch(70% 0.16 45deg);
+  /* [主题源色] - 默认由 brand 派生；业务有独立辅助强调色时可以覆盖。 */
+  --color-accent: --shift3(var(--color-brand), 'hue-up', 150deg, 'lightness-up', 8%, 'chroma-down', 0.01);
 
   /* [内部候选] - 底色源只服务后续智能语义色推导，组件和业务不应直接引用。 */
   --color-base: --mix2(white, 96, var(--color-brand), 4);
 
   /* [内部候选] - 底色一号直接由底色源压暗 2%，避免链式派生造成误差累积。 */
-  --color-base-1: --shift(var(--color-base), 'darken', 2%);
+  --color-base-1: --darken(var(--color-base), 2%);
 
   /* [内部候选] - 底色二号直接由底色源压暗 5%，只作为智能表面色的候选值。 */
-  --color-base-2: --shift(var(--color-base), 'darken', 5%);
+  --color-base-2: --darken(var(--color-base), 5%);
 
   /* [内部候选] - 底色三号直接由底色源压暗 10%，只作为智能弱边框和 hover 色的候选值。 */
-  --color-base-3: --shift(var(--color-base), 'darken', 10%);
+  --color-base-3: --darken(var(--color-base), 10%);
 
   /* [内部候选] - 墨色源只服务后续智能语义色推导，组件和业务不应直接引用。 */
   --color-ink: --mix2(black, 90, var(--color-brand), 10);
 
   /* [内部候选] - 墨色一号直接由墨色源提亮 7%，只作为智能表面色和正文色候选值。 */
-  --color-ink-1: --shift(var(--color-ink), 'lighten', 7%);
+  --color-ink-1: --lighten(var(--color-ink), 7%);
 
   /* [内部候选] - 墨色二号直接由墨色源提亮 17%，只作为智能嵌套表面和边框候选值。 */
-  --color-ink-2: --shift(var(--color-ink), 'lighten', 17%);
+  --color-ink-2: --lighten(var(--color-ink), 17%);
 
   /* [内部候选] - 墨色三号直接由墨色源提亮 31%，只作为智能弱文字和强边框候选值。 */
-  --color-ink-3: --shift(var(--color-ink), 'lighten', 31%);
+  --color-ink-3: --lighten(var(--color-ink), 31%);
 
   /* [内部候选] - 主题一号由主题色提亮，用于后续主题填充和浅强调推导。 */
-  --color-brand-1: --shift(var(--color-brand), 'lighten', 10%);
+  --color-brand-1: --lighten(var(--color-brand), 10%);
 
   /* [内部候选] - 主题二号由主题色提亮并降低彩度，用于后续低强调主题背景推导。 */
-  --color-brand-2: --shift2(var(--color-brand), 'lighten', 22%, 'desaturate', 5%);
+  --color-brand-2: --shift2(var(--color-brand), 'lightness-up', 22%, 'chroma-down', 0.05);
 
   /* [内部候选] - 主题三号由主题色压暗，用于后续主题按下态和弱背景文字推导。 */
-  --color-brand-3: --shift(var(--color-brand), 'darken', 10%);
+  --color-brand-3: --darken(var(--color-brand), 10%);
 
   /* [内部候选] - 主题四号由主题色压暗并略增彩度，用于后续高对比主题色块推导。 */
-  --color-brand-4: --shift2(var(--color-brand), 'darken', 18%, 'saturate', 3%);
+  --color-brand-4: --shift2(var(--color-brand), 'lightness-down', 18%, 'chroma-up', 0.03);
 
   /* [内部候选] - 辅助一号由辅助色提亮，用于后续辅助填充和浅强调推导。 */
-  --color-accent-1: --shift(var(--color-accent), 'lighten', 10%);
+  --color-accent-1: --lighten(var(--color-accent), 10%);
 
   /* [内部候选] - 辅助二号由辅助色提亮并降低彩度，用于后续低强调辅助背景推导。 */
-  --color-accent-2: --shift2(var(--color-accent), 'lighten', 22%, 'desaturate', 5%);
+  --color-accent-2: --shift2(var(--color-accent), 'lightness-up', 22%, 'chroma-down', 0.05);
 
   /* [内部候选] - 辅助三号由辅助色压暗，用于后续辅助按下态和弱背景文字推导。 */
-  --color-accent-3: --shift(var(--color-accent), 'darken', 10%);
+  --color-accent-3: --darken(var(--color-accent), 10%);
 
   /* [内部候选] - 辅助四号由辅助色压暗并略增彩度，用于后续高对比辅助色块推导。 */
-  --color-accent-4: --shift2(var(--color-accent), 'darken', 18%, 'saturate', 3%);
+  --color-accent-4: --shift2(var(--color-accent), 'lightness-down', 18%, 'chroma-up', 0.03);
 
   /* [公开语义] - 页面背景是智能色，调用方不用判断浅色或深色模式。 */
   --color-background: light-dark(var(--color-base-1), var(--color-ink));
@@ -223,37 +286,28 @@
   --color-on-accent-soft-contrast: contrast-color(var(--color-accent-soft));
 
   /* [公开语义] - 信息色由主题色轻微旋转和提亮得到，不引入第三个独立源色。 */
-  --color-info: --shift2(var(--color-brand), 'rotate', -14deg, 'lighten', 4%);
+  --color-info: --shift2(var(--color-brand), 'hue-down', 14deg, 'lightness-up', 4%);
 
   /* [公开语义] - 成功色由主题色旋转到绿色区域得到，不把成功绿写成新的源色。 */
-  --color-success: --shift2(var(--color-brand), 'rotate', -105deg, 'lighten', 4%);
+  --color-success: --shift2(var(--color-brand), 'hue-down', 105deg, 'lightness-up', 4%);
 
   /* [公开语义] - 警告色由辅助色旋转到黄色区域得到，不把警告黄写成新的源色。 */
-  --color-warning: --shift2(var(--color-accent), 'rotate', 34deg, 'lighten', 4%);
+  --color-warning: --shift2(var(--color-accent), 'hue-up', 34deg, 'lightness-up', 4%);
 
   /* [公开语义] - 危险色由辅助色旋转到红色区域得到，不把危险红写成新的源色。 */
-  --color-danger: --shift2(var(--color-accent), 'rotate', -28deg, 'darken', 4%);
+  --color-danger: --shift2(var(--color-accent), 'hue-down', 28deg, 'lightness-down', 4%);
 
   /* [公开语义] - 信息文字色是智能色，调用方不用判断浅色或深色模式。 */
-  --color-info-text: light-dark(--shift(var(--color-info), 'darken', 18%), --shift(var(--color-info), 'lighten', 18%));
+  --color-info-text: light-dark(--darken(var(--color-info), 18%), --lighten(var(--color-info), 18%));
 
   /* [公开语义] - 成功文字色是智能色，调用方不用判断浅色或深色模式。 */
-  --color-success-text: light-dark(
-    --shift(var(--color-success), 'darken', 18%),
-    --shift(var(--color-success), 'lighten', 18%)
-  );
+  --color-success-text: light-dark(--darken(var(--color-success), 18%), --lighten(var(--color-success), 18%));
 
   /* [公开语义] - 警告文字色是智能色，调用方不用判断浅色或深色模式。 */
-  --color-warning-text: light-dark(
-    --shift(var(--color-warning), 'darken', 22%),
-    --shift(var(--color-warning), 'lighten', 14%)
-  );
+  --color-warning-text: light-dark(--darken(var(--color-warning), 22%), --lighten(var(--color-warning), 14%));
 
   /* [公开语义] - 危险文字色是智能色，调用方不用判断浅色或深色模式。 */
-  --color-danger-text: light-dark(
-    --shift(var(--color-danger), 'darken', 18%),
-    --shift(var(--color-danger), 'lighten', 18%)
-  );
+  --color-danger-text: light-dark(--darken(var(--color-danger), 18%), --lighten(var(--color-danger), 18%));
 
   /* [公开语义] - 信息弱背景由信息色和当前智能背景混合得到。 */
   --color-info-soft: light-dark(
