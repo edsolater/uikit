@@ -17,7 +17,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./css/*": "./dist/css/*"
   },
   "publishConfig": {
     "access": "public"

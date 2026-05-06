@@ -1,0 +1,190 @@
+/**
+ * 这个文件负责提供只面向现代 Chrome 的应用级浏览器重置规则。
+ * 它只处理浏览器默认 UI、排版基线、控件继承和媒体元素默认行为，不承载组件主题、品牌色或具体页面布局。
+ */
+
+/* 根节点负责定义整份应用继承下去的浏览器级基线。 */
+:root {
+  /* 让浏览器按浅色或深色环境绘制原生控件、滚动条和表单内部 UI。 */
+  color-scheme: light dark;
+
+  /* 使用系统 UI 字体，让应用默认文字贴近当前操作系统。 */
+  font-family: system-ui, sans-serif;
+
+  /* 给普通文本一个可读的默认行高，避免浏览器默认值在不同字体下显得拥挤。 */
+  line-height: 1.5;
+
+  /* 禁止浏览器伪造粗体或斜体，避免字体缺字重时出现不可控的合成字形。 */
+  font-synthesis: none;
+
+  /* 让 Chrome 优先使用更适合阅读的文本渲染策略。 */
+  text-rendering: optimizeLegibility;
+
+  /* 平滑 WebKit/Blink 的字体边缘，让浅色和深色背景下的系统字体更稳定。 */
+  -webkit-font-smoothing: antialiased;
+
+  /* 给 Firefox 兼容字段留同样语义；现代 Chrome 会忽略它。 */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* 允许尺寸动画从具体数值过渡到 auto、min-content 等关键字。 */
+  interpolate-size: allow-keywords;
+
+  /* 预留滚动条槽位，避免页面从不可滚动变成可滚动时内容横向跳动。 */
+  scrollbar-gutter: stable;
+}
+
+/* 现代 Chrome 支持中日韩文字和拉丁、数字之间的自动间距时，启用混排优化。 */
+@supports (text-autospace: ideograph-alpha ideograph-numeric) {
+  :root {
+    /* 在中文、日文、韩文与英文或数字相邻时自动补出更自然的视觉间距。 */
+    text-autospace: ideograph-alpha ideograph-numeric;
+  }
+}
+
+/* 这个属性仍处在较新的实现阶段，所以只在浏览器明确支持时使用。 */
+@supports (text-spacing-trim: trim-start) {
+  :root {
+    /* 收紧行首全角开标点的内部空白，让中文标点在行首更贴近排版习惯。 */
+    text-spacing-trim: trim-start;
+  }
+}
+
+/* 所有元素统一使用 border-box，避免 padding 和 border 把盒子撑出声明尺寸。 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 清掉浏览器默认外边距，让页面和组件的间距都由应用自己声明。 */
+* {
+  margin: 0;
+}
+
+/* html 只承载文档级尺寸和移动端文本缩放基线，不假设具体设备最小宽度。 */
+html {
+  /* 让根节点至少覆盖视口高度，给 body 的 100svb 提供稳定继承基础。 */
+  min-block-size: 100%;
+
+  /* 禁止移动端浏览器在旋转或字号策略下自动放大文字。 */
+  text-size-adjust: 100%;
+
+  /* Chrome 仍需要这个前缀字段覆盖移动端 WebKit/Blink 行为。 */
+  -webkit-text-size-adjust: 100%;
+
+  /* 移除移动端点击元素时的默认高亮色，交互反馈交给组件样式处理。 */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* body 负责页面画布的最小占位和系统颜色默认值。 */
+body {
+  /* svb 是 small viewport block，能避开移动端地址栏伸缩导致的 100vh 抖动。 */
+  min-block-size: 100svb;
+
+  /* CanvasText 是 CSS 系统颜色关键字，跟随 color-scheme 和用户系统主题变化。 */
+  color: CanvasText;
+
+  /* Canvas 是 CSS 系统颜色关键字，表示当前系统画布背景色。 */
+  background: Canvas;
+}
+
+/* 常见文本节点默认允许长词换行，避免内容撑破容器。 */
+:where(h1, h2, h3, h4, h5, h6, p, li, figcaption) {
+  overflow-wrap: break-word;
+}
+
+/* 标题默认按视觉平衡换行，减少单词或短语孤零零落在末行。 */
+:where(h1, h2, h3, h4, h5, h6) {
+  /* 标题行高比正文更紧，避免大字号标题上下留白过重。 */
+  line-height: 1.1;
+
+  /* 让 Chrome 为短文本标题寻找更均衡的换行点。 */
+  text-wrap: balance;
+}
+
+/* 正文类文本默认使用更漂亮的换行策略，优先减少孤词。 */
+:where(p, li, figcaption) {
+  text-wrap: pretty;
+}
+
+/* text-box 支持时，修掉文字自身带来的上下半行距，让紧凑 UI 更容易对齐。 */
+@supports (text-box: trim-both cap alphabetic) {
+  :where(h1, h2, h3, h4, h5, h6, button, label) {
+    /* 以大写字母高度和 alphabetic 基线裁剪文字盒上下空白。 */
+    text-box: trim-both cap alphabetic;
+  }
+}
+
+/* 列表只移除浏览器默认缩进，不移除 marker，语义和可读性由调用方决定。 */
+:where(ul, ol) {
+  padding: 0;
+}
+
+/* 链接默认继承上下文样式，避免裸链接蓝色和下划线污染应用 UI。 */
+:where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 表单控件继承上下文文字样式，避免原生控件和应用字体脱节。 */
+:where(button, input, textarea, select) {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  word-spacing: inherit;
+}
+
+/* 可点击按钮类控件去掉浏览器外观，保留按钮语义和默认鼠标手势。 */
+:where(button, [type='button'], [type='reset'], [type='submit']) {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* 禁用态控件统一展示不可点击鼠标手势。 */
+:where(button, input, textarea, select):disabled {
+  cursor: not-allowed;
+}
+
+/* 文本域默认只允许纵向拖拽，避免横向拖拽破坏布局宽度。 */
+:where(textarea) {
+  resize: vertical;
+}
+
+/* Chrome 支持内容尺寸字段时，让文本域高度可随内容增长。 */
+@supports (field-sizing: content) {
+  :where(textarea) {
+    field-sizing: content;
+  }
+}
+
+/* 媒体元素默认变成块级元素，去掉 inline 元素基线下方的空隙。 */
+:where(img, picture, svg, video, canvas) {
+  display: block;
+
+  /* 使用逻辑宽度限制媒体不超过容器，在横排和竖排书写模式下语义一致。 */
+  max-inline-size: 100%;
+}
+
+/* 有固有比例的媒体默认按宽度等比缩放高度。 */
+:where(img, svg, video, canvas) {
+  block-size: auto;
+}
+
+/* 表格默认合并边框，避免浏览器默认间距影响应用表格布局。 */
+:where(table) {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* 键盘焦点必须保留可见轮廓，只把它统一成当前文字色。 */
+:where(:focus-visible) {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* hidden 是明确的隐藏语义，应压过普通展示规则。 */
+:where([hidden]) {
+  display: none !important;
+}
