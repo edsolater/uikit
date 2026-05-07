@@ -33,6 +33,11 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   plugins?: MayArray<PivPlugin<Tag>>
 
   /**
+   * plugin 的语义化 alias，用来表达稳定能力或性质。
+   */
+  trait?: MayArray<PivPlugin<Tag>>
+
+  /**
    * CSS 共同项， dom:class
    */
   class?: PivClassNameProp
@@ -70,7 +75,7 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivP
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
       // 因为plugins是唯一可以更改prompt的，虽然优先级最低，所以它需要在其他props前处理。
-      const shadowPropsList = consumePivPlugins(element, inputProps.plugins)
+      const shadowPropsList = consumePivPlugins(element, mergeTraitAndPlugins(inputProps.trait, inputProps.plugins))
       const parsedPivProps: PivProps<Tag> = mergeShadowPropsToPivProps(shadowPropsList, inputProps)
 
       if (parsedPivProps.class) {
@@ -97,4 +102,17 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivP
     children: inputProps.children,
   }
   return creator(parsedProps)
+}
+
+function mergeTraitAndPlugins<Tag extends PivTag>(
+  trait: PivProps<Tag>['trait'],
+  plugins: PivProps<Tag>['plugins'],
+): PivProps<Tag>['plugins'] {
+  return [trait, plugins].flatMap((pluginSource) => {
+    if (!pluginSource) {
+      return []
+    }
+
+    return Array.isArray(pluginSource) ? pluginSource : [pluginSource]
+  })
 }

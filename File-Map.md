@@ -29,6 +29,12 @@
 - `src/base/pivHelpers/handleOn.ts`：负责把 Piv 的静态事件声明绑定到 DOM，并在清理时解绑。
 - `src/base/pivHelpers/ref.ts`：负责消费用户传入的 ref，并统一执行 ref 返回的清理函数。
 
+## src/base/traits
+
+- `src/base/traits/index.ts`：基础 trait 出口，汇总可直接传给 Piv `trait` prop 的语义插件。
+- `src/base/traits/tabular-num.ts`：等宽数字 trait，给动态数字自动补充 `trait:tabular-num` class 并引入对应 CSS。
+- `src/base/traits/tabular-num.css`：等宽数字 trait 的样式落点，负责 `font-variant-numeric: tabular-nums`。
+
 ## src/components
 
 - `src/components/index.ts`：components 目录导出入口，汇总 Button 和必要的基础组件出口。

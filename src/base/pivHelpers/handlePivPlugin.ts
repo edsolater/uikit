@@ -7,7 +7,7 @@ import { flapDeep, mergeMayArray, toArray } from '@edsolater/fnkit'
 import type { PivProps } from './Piv'
 import type { PivTag } from './domMap'
 
-type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'children'>
+type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'children' | 'trait'>
 
 export type PivPlugin<Tag extends PivTag, Payload extends any[] = [undefined]> = (
   element: Element,
