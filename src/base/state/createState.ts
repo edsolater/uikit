@@ -20,23 +20,11 @@ export type CreateStateOptions = {
   mode?: StateMode
 }
 
-export type SignalStateSetter<T> = Setter<T>
+export type SignalStateSetter<T> = (newValue: T | ((prev: T) => T)) => void
 export type StoreStateSetter<Root extends object> = {
   (value: Root | ((previous: Root) => Root)): void
   <Value>(selector: (state: StoreState<Root>) => State<Value>, value: Value | ((previous: Value) => Value)): void
 }
-
-type WidenValue<T> = T extends string
-  ? string
-  : T extends number
-    ? number
-    : T extends boolean
-      ? boolean
-      : T extends bigint
-        ? bigint
-        : T extends symbol
-          ? symbol
-          : T
 
 export function createState<T = undefined>(): [SignalState<T | undefined>, SignalStateSetter<T | undefined>]
 export function createState<T extends object>(
@@ -46,7 +34,7 @@ export function createState<T extends object>(
 export function createState<T>(
   initialValue: T,
   options?: CreateStateOptions & { mode?: 'signal' },
-): [SignalState<WidenValue<T>>, SignalStateSetter<WidenValue<T>>]
+): [SignalState<T>, SignalStateSetter<T>]
 export function createState<T>(initialValue?: T, options: CreateStateOptions = {}): unknown {
   const mode = options.mode ?? 'signal'
 
