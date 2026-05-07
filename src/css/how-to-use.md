@@ -1,6 +1,6 @@
 # 如何引用 UIKit CSS
 
-`src/css` 存放可以被外部项目单独引入的原子化 CSS 文件。每个文件只负责一个稳定样式职责，例如 `reset.css` 只负责浏览器默认样式重置，`color.css` 负责颜色领域，`dimension.css` 负责尺寸领域。
+`src/css` 存放可以被外部项目单独引入的原子化 CSS 文件。每个文件只负责一个稳定样式职责，例如 `reset.css` 只负责浏览器默认样式重置，`control.css` 负责浏览器内置控件外观，`color.css` 负责颜色领域，`dimension.css` 负责尺寸领域。
 
 ## 安装包
 
@@ -10,12 +10,13 @@ bun add @edsolater/uikit
 
 ## 在应用入口引入
 
-大多数应用只需要引入 `reset.css`、`color.css` 和 `dimension.css`：
+大多数应用只需要引入 `reset.css`、`color.css`、`dimension.css` 和 `control.css`：
 
 ```ts
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
+import '@edsolater/uikit/css/control.css'
 ```
 
 如果项目有自己的全局样式，建议先引入 UIKit 的原子 CSS，再引入项目样式：
@@ -24,15 +25,31 @@ import '@edsolater/uikit/css/dimension.css'
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
+import '@edsolater/uikit/css/control.css'
 import './app.css'
 ```
 
 | 需求 | 引入方式 |
 | --- | --- |
-| 使用浏览器 reset、颜色和尺寸函数 | `reset.css` + `color.css` + `dimension.css` |
+| 使用浏览器 reset、颜色函数、尺寸函数和内置控件外观 | `reset.css` + `color.css` + `dimension.css` + `control.css` |
+| 只清洗浏览器内置控件外观 | `control.css` |
 | 只使用颜色领域 | `color.css` |
 | 只使用尺寸领域 | `dimension.css` |
 | 自己写全局样式 | UIKit CSS 在前，业务 CSS 在后 |
+
+## control.css 怎么用
+
+`control.css` 只处理浏览器内置控件的默认外观，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它不是组件主题，也不接入 `color.css` 的品牌色推导。和 `color.css` 一起使用时，如果希望控件固定使用这层的科技蓝默认值，就把 `control.css` 放在 `color.css` 后面引入。
+
+控件强调色集中在根节点的 `--color-accent`，默认是固定科技蓝。业务项目如果希望控件使用自己的强调色，可以在业务 CSS 里覆盖：
+
+```css
+:root {
+  --color-accent: oklch(70% 0.16 210deg);
+}
+```
+
+`control.css` 会用 `--color-accent` 派生控件边框、底色、hover 和 focus ring。其中控件边界默认由 10% 强调色和中性灰混合，避免 Chrome 原生输入框、选择器和按钮的系统外观过重。
 
 ## color.css 怎么用
 
@@ -192,6 +209,7 @@ UIKit 发布包会把 `src/css` 原样复制到 `dist/css`，并通过 `package.
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
+import '@edsolater/uikit/css/control.css'
 ```
 
 不要使用：
@@ -200,7 +218,9 @@ import '@edsolater/uikit/css/dimension.css'
 import '@edsolater/uikit/dist/css/reset.css'
 import '@edsolater/uikit/dist/css/color.css'
 import '@edsolater/uikit/dist/css/dimension.css'
+import '@edsolater/uikit/dist/css/control.css'
 import '@edsolater/uikit/src/css/reset.css'
 import '@edsolater/uikit/src/css/color.css'
 import '@edsolater/uikit/src/css/dimension.css'
+import '@edsolater/uikit/src/css/control.css'
 ```
