@@ -4,5 +4,6 @@
  */
 export * from './components'
 export * from './hooks'
-export * from './base/pivHelpers/Piv'
+export * from './base/BasicComponent'
 export * from './base/traits'
+export * from './base/state'

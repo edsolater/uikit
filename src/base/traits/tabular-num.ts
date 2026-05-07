@@ -15,8 +15,8 @@
  * </Piv>
  * ```
  */
-import type { PivPlugin } from '../pivHelpers/handlePivPlugin'
-import type { PivTag } from '../pivHelpers/domMap'
+import type { PivPlugin } from '../BasicComponent/handlePivPlugin'
+import type { PivTag } from '../BasicComponent/domMap'
 import './tabular-num.css'
 
 export const tabularNum: PivPlugin<PivTag> = () => ({

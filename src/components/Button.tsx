@@ -5,7 +5,7 @@
  */
 import { mergeProps, splitProps, type JSX } from 'solid-js'
 import './button.css'
-import { Piv } from '../base/pivHelpers/Piv'
+import { Piv } from '../base/BasicComponent/Piv'
 
 export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   class?: string
