@@ -112,7 +112,6 @@ function mergeTraitAndPlugins<Tag extends PivTag>(
     if (!pluginSource) {
       return []
     }
-
     return Array.isArray(pluginSource) ? pluginSource : [pluginSource]
   })
 }
