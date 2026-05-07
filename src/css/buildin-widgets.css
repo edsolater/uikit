@@ -5,23 +5,23 @@
 
 /* 根节点只提供内置控件需要继承的强调色和由它派生的轻量材料。 */
 :root {
-  /* [控件源色] - 固定科技蓝默认值；业务需要不同控件强调色时可以覆盖这个变量。 */
+  /* [小空间源色] - 固定科技蓝默认值；业务需要不同控件强调色时可以覆盖这个变量。 */
   --color-accent: oklch(66% 0.19 248deg);
 
-  /* [控件材料] - 控件边界色由 10% 强调色和中性灰混合，避免原生控件边框显得脏或过重。 */
-  --control-border: color-mix(in oklab, var(--color-accent) 10%, gray);
+  /* [小空间材料] - 控件边界色由 10% 强调色和中性灰混合，避免原生控件边框显得脏或过重。 */
+  --widget-border: color-mix(in oklab, var(--color-accent) 10%, gray);
 
-  /* [控件材料] - 控件底色在系统画布上混入少量强调色，让输入框和选择器保持清爽而不刺眼。 */
-  --control-surface: color-mix(in oklab, Canvas 96%, var(--color-accent) 4%);
+  /* [小空间材料] - 控件底色在系统画布上混入少量强调色，让输入框和选择器保持清爽而不刺眼。 */
+  --widget-surface: color-mix(in oklab, Canvas 96%, var(--color-accent) 4%);
 
-  /* [控件材料] - 控件悬停底色略微提高强调色占比，让 hover 反馈存在但不抢注意力。 */
-  --control-surface-hover: color-mix(in oklab, Canvas 92%, var(--color-accent) 8%);
+  /* [小空间材料] - 控件悬停底色略微提高强调色占比，让 hover 反馈存在但不抢注意力。 */
+  --widget-surface-hover: color-mix(in oklab, Canvas 92%, var(--color-accent) 8%);
 
-  /* [控件材料] - 控件焦点色直接使用强调色，保证键盘和表单操作反馈清晰。 */
-  --control-focus: var(--color-accent);
+  /* [小空间材料] - 控件焦点色直接使用强调色，保证键盘和表单操作反馈清晰。 */
+  --widget-focus: var(--color-accent);
 }
 
-/* 表单控件统一继承应用文字，并把复选框、单选框、进度条等原生强调色对齐到控件强调色。 */
+/* widget 控件统一继承应用文字，并把复选框、单选框、进度条等原生强调色对齐到控件强调色。 */
 :where(button, input, textarea, select, progress, meter) {
   font: inherit;
   color: inherit;
@@ -47,11 +47,11 @@
   select
 ) {
   min-height: 2.25em;
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--widget-border);
   border-radius: 0.5em;
   padding: 0.5em 0.75em;
   color: CanvasText;
-  background: var(--control-surface);
+  background: var(--widget-surface);
   caret-color: var(--color-accent);
 }
 
@@ -73,7 +73,7 @@
   textarea,
   select
 ):where(:hover) {
-  background: var(--control-surface-hover);
+  background: var(--widget-surface-hover);
 }
 
 /* 聚焦态使用轻量 outline，不改变控件尺寸，避免细小表单元素在交互时抖动。 */
@@ -94,8 +94,8 @@
   textarea,
   select
 ):where(:focus-visible) {
-  border-color: var(--control-focus);
-  outline: 2px solid color-mix(in oklab, var(--control-focus) 32%, transparent);
+  border-color: var(--widget-focus);
+  outline: 2px solid color-mix(in oklab, var(--widget-focus) 32%, transparent);
   outline-offset: 2px;
 }
 
@@ -112,22 +112,22 @@
 
 /* 按钮保持最小控件外观，只给默认按钮一个清爽边界和底色，不把它变成组件按钮。 */
 :where(button, input[type='button'], input[type='reset'], input[type='submit']) {
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--widget-border);
   border-radius: 0.5em;
   padding: 0.5em 0.875em;
   color: CanvasText;
-  background: var(--control-surface);
+  background: var(--widget-surface);
   cursor: pointer;
 }
 
 /* 按钮 hover 只提高底色的强调色比例，避免默认按钮看起来像强 CTA。 */
 :where(button, input[type='button'], input[type='reset'], input[type='submit']):where(:hover) {
-  background: var(--control-surface-hover);
+  background: var(--widget-surface-hover);
 }
 
 /* 按钮键盘焦点使用和输入框一致的焦点环，保持控件层交互反馈统一。 */
 :where(button, input[type='button'], input[type='reset'], input[type='submit']):where(:focus-visible) {
-  outline: 2px solid color-mix(in oklab, var(--control-focus) 32%, transparent);
+  outline: 2px solid color-mix(in oklab, var(--widget-focus) 32%, transparent);
   outline-offset: 2px;
 }
 
@@ -147,10 +147,10 @@
 :where(input[type='color']) {
   width: 2.5em;
   height: 2.25em;
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--widget-border);
   border-radius: 0.5em;
   padding: 0.125em;
-  background: var(--control-surface);
+  background: var(--widget-surface);
 }
 
 /* Chrome 支持可自定义 select 时，启用 base-select，让下拉面板也能被同一套控件材料管理。 */
@@ -162,9 +162,9 @@
 
   /* select 的下拉面板使用和输入框一致的清爽底色与边界。 */
   :where(select)::picker(select) {
-    border: 1px solid var(--control-border);
+    border: 1px solid var(--widget-border);
     border-radius: 0.5em;
-    background: var(--control-surface);
+    background: var(--widget-surface);
   }
 
   /* option 保留原生选择语义，只补充最小内边距，让选项不贴边。 */
@@ -180,11 +180,11 @@
 
 /* dialog 是浏览器内置弹层控件，这里只清洗默认边框和底色，不承担 modal 组件布局。 */
 :where(dialog) {
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--widget-border);
   border-radius: 0.75em;
   padding: 1em;
   color: CanvasText;
-  background: var(--control-surface);
+  background: var(--widget-surface);
 }
 
 /* dialog 背景遮罩用强调色混入透明黑，避免纯黑遮罩过重。 */

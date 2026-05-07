@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 这个文件负责提供 UIKit 的颜色领域能力。
  * 这是 color 领域入口。
  * 它承载 OKLCH 颜色函数、主题色板和语义色板，不承载组件尺寸、排版、布局或具体业务样式。
@@ -7,11 +7,12 @@
 
 /* ========== Channel API ========== */
 
-/* --tune 负责对 OKLCH 的 hue、lightness、chroma、opacity 通道执行一次相对调整。 */
-@function --tune(--color <color>, --channel, --delta) returns <color> {
-  /* --color 是原始颜色，可以是十六进制、oklch、rgb、命名色或 CSS 变量。 */
-  /* --channel 是被调整的通道，支持 hue、lightness、chroma、opacity。 */
-  /* --delta 是带符号变化量；正数增加，负数减少，调试时只需要改一个数字。 */
+/*
+ * --tune：相对调色工具，基于 OKLCH 相对颜色语法和 alpha 通道计算。
+ * 参数：(<color>, hue|lightness|chroma|opacity, signed delta)。
+ * 示例：--tune(var(--color-brand), lightness, 8%)。
+ */
+@function --tune(--color <color>, --channel <custom-ident>, --delta) returns <color> {
   result: if(
     style(--channel: hue): oklch(from var(--color) l c calc(h + var(--delta)));
     style(--channel: lightness): oklch(from var(--color) calc(l + var(--delta)) c h);
@@ -21,9 +22,12 @@
   );
 }
 
-/* --pin 负责对 OKLCH 的 hue、lightness、chroma、opacity 通道执行一次绝对设置。 */
-@function --pin(--color <color>, --channel, --value) returns <color> {
-  /* --value 是目标通道值，不表达变化量；需要相对调整时使用 --tune。 */
+/*
+ * --pin：绝对定色工具，基于 OKLCH 相对颜色语法直接固定指定通道。
+ * 参数：(<color>, hue|lightness|chroma|opacity, target value)。
+ * 示例：--pin(var(--color-brand), chroma, 0)。
+ */
+@function --pin(--color <color>, --channel <custom-ident>, --value) returns <color> {
   result: if(
     style(--channel: hue): oklch(from var(--color) l c var(--value));
     style(--channel: lightness): oklch(from var(--color) var(--value) c h);
@@ -33,9 +37,12 @@
   );
 }
 
-/* --pin2 负责把同一个颜色连续执行两次通道绝对设置。 */
-@function --pin2(--color <color>, --first-channel, --first-value, --second-channel, --second-value) returns <color> {
-  /* 第二次设置基于第一次设置后的颜色，数字 2 只表达连续操作次数。 */
+/*
+ * --pin2：连续两次绝对定色，基于 --pin 串联执行。
+ * 参数：(<color>, channel, value, channel, value)。
+ * 示例：--pin2(var(--color-brand), chroma, 0, opacity, 80%)。
+ */
+@function --pin2(--color <color>, --first-channel <custom-ident>, --first-value, --second-channel <custom-ident>, --second-value) returns <color> {
   result: --pin(
     --pin(var(--color), var(--first-channel), var(--first-value)),
     var(--second-channel),
@@ -43,17 +50,20 @@
   );
 }
 
-/* --pin3 负责把同一个颜色连续执行三次通道绝对设置。 */
+/*
+ * --pin3：连续三次绝对定色，基于 --pin2 和 --pin 串联执行。
+ * 参数：(<color>, channel, value, channel, value, channel, value)。
+ * 示例：--pin3(var(--color-brand), hue, 240deg, chroma, 0.12, opacity, 90%)。
+ */
 @function --pin3(
   --color <color>,
-  --first-channel,
+  --first-channel <custom-ident>,
   --first-value,
-  --second-channel,
+  --second-channel <custom-ident>,
   --second-value,
-  --third-channel,
+  --third-channel <custom-ident>,
   --third-value
 ) returns <color> {
-  /* 第三次设置继续消费 --pin2 的结果，数字 3 只表达连续操作次数。 */
   result: --pin(
     --pin2(var(--color), var(--first-channel), var(--first-value), var(--second-channel), var(--second-value)),
     var(--third-channel),
@@ -61,9 +71,12 @@
   );
 }
 
-/* --tune2 负责把同一个颜色连续执行两次通道调整。 */
-@function --tune2(--color <color>, --first-channel, --first-delta, --second-channel, --second-delta) returns <color> {
-  /* 第一次操作得到中间色，第二次操作基于中间色继续调整。 */
+/*
+ * --tune2：连续两次相对调色，基于 --tune 串联执行。
+ * 参数：(<color>, channel, signed delta, channel, signed delta)。
+ * 示例：--tune2(var(--color-brand), lightness, 8%, chroma, -0.02)。
+ */
+@function --tune2(--color <color>, --first-channel <custom-ident>, --first-delta, --second-channel <custom-ident>, --second-delta) returns <color> {
   result: --tune(
     --tune(var(--color), var(--first-channel), var(--first-delta)),
     var(--second-channel),
@@ -71,17 +84,20 @@
   );
 }
 
-/* --tune3 负责把同一个颜色连续执行三次通道调整。 */
+/*
+ * --tune3：连续三次相对调色，基于 --tune2 和 --tune 串联执行。
+ * 参数：(<color>, channel, signed delta, channel, signed delta, channel, signed delta)。
+ * 示例：--tune3(var(--color-brand), hue, 150deg, lightness, 8%, chroma, -0.01)。
+ */
 @function --tune3(
   --color <color>,
-  --first-channel,
+  --first-channel <custom-ident>,
   --first-delta,
-  --second-channel,
+  --second-channel <custom-ident>,
   --second-delta,
-  --third-channel,
+  --third-channel <custom-ident>,
   --third-delta
 ) returns <color> {
-  /* 第三次操作继续消费 --tune2 的结果，数字 3 只表达连续操作次数。 */
   result: --tune(
     --tune2(var(--color), var(--first-channel), var(--first-delta), var(--second-channel), var(--second-delta)),
     var(--third-channel),
@@ -91,41 +107,68 @@
 
 /* ========== Dialect API ========== */
 
-/* --lighten 是 lightness 正向调整的常用方言；默认 10% 表示十级亮度尺度中的一档。 */
+/*
+ * --lighten：提亮方言工具，基于 --tune 的 lightness 正向 delta。
+ * 参数：(<color>, amount? <percentage>)，默认 10%。
+ * 示例：--lighten(var(--color-brand), 8%)。
+ */
 @function --lighten(--color <color>, --amount <percentage>: 10%) returns <color> {
   result: --tune(var(--color), lightness, var(--amount));
 }
 
-/* --darken 是 lightness 负向调整的常用方言；默认 10% 表示十级亮度尺度中的一档。 */
+/*
+ * --darken：压暗方言工具，基于 --tune 的 lightness 负向 delta。
+ * 参数：(<color>, amount? <percentage>)，默认 10%。
+ * 示例：--darken(var(--color-brand), 8%)。
+ */
 @function --darken(--color <color>, --amount <percentage>: 10%) returns <color> {
   result: --tune(var(--color), lightness, calc(var(--amount) * -1));
 }
 
-/* --saturate 是 chroma 正向调整的常用方言；默认 0.02 表示 UIKit 色彩彩度尺度中的一档。 */
+/*
+ * --saturate：增彩方言工具，基于 --tune 的 chroma 正向 delta。
+ * 参数：(<color>, amount? <number>)，默认 0.02。
+ * 示例：--saturate(var(--color-brand), 0.02)。
+ */
 @function --saturate(--color <color>, --amount <number>: 0.02) returns <color> {
   result: --tune(var(--color), chroma, var(--amount));
 }
 
-/* --desaturate 是 chroma 负向调整的常用方言；默认 0.02 表示 UIKit 色彩彩度尺度中的一档。 */
+/*
+ * --desaturate：降彩方言工具，基于 --tune 的 chroma 负向 delta。
+ * 参数：(<color>, amount? <number>)，默认 0.02。
+ * 示例：--desaturate(var(--color-brand), 0.02)。
+ */
 @function --desaturate(--color <color>, --amount <number>: 0.02) returns <color> {
   result: --tune(var(--color), chroma, calc(var(--amount) * -1));
 }
 
-/* --hue-rotate 是 hue 相对旋转的常用方言；默认 30deg 表示 12 级色相环中的一档。 */
+/*
+ * --hue-rotate：色相旋转方言工具，基于 --tune 的 hue signed delta。
+ * 参数：(<color>, amount? <angle>)，默认 30deg。
+ * 示例：--hue-rotate(var(--color-brand), 30deg)。
+ */
 @function --hue-rotate(--color <color>, --amount <angle>: 30deg) returns <color> {
   result: --tune(var(--color), hue, var(--amount));
 }
 
-/* --grayscale 保留亮度和色相位置，直接把 chroma 归零。 */
+/*
+ * --grayscale：灰度方言工具，基于 --pin 把 chroma 固定为 0。
+ * 参数：(<color>)。
+ * 示例：--grayscale(var(--color-brand))。
+ */
 @function --grayscale(--color <color>) returns <color> {
   result: --pin(var(--color), chroma, 0);
 }
 
 /* ========== Palette Mix API ========== */
 
-/* --mix2 负责按权重混合两个颜色，并固定使用 oklab，避免调用处反复声明颜色空间。 */
+/*
+ * --mix2：双色比例混合工具，基于原生 color-mix(in oklab, ...) 隐藏颜色空间和百分比归一化。
+ * 参数：(<color>, weight <number>, <color>, weight <number>)。
+ * 示例：--mix2(white, 9, var(--color-brand), 1)。
+ */
 @function --mix2(--first-color <color>, --first-weight <number>, --second-color <color>, --second-weight <number>) returns <color> {
-  /* weight 是比例数字，例如 3 和 1 表示第一个颜色占三份、第二个颜色占一份。 */
   result: color-mix(
     in oklab,
     var(--first-color) calc(var(--first-weight) / (var(--first-weight) + var(--second-weight)) * 100%),
@@ -133,7 +176,11 @@
   );
 }
 
-/* --mix3 负责按权重混合三个颜色，直接使用原生多色 color-mix，不再递归调用 --mix2。 */
+/*
+ * --mix3：三色比例混合工具，基于原生 color-mix(in oklab, ...) 隐藏颜色空间和百分比归一化。
+ * 参数：三组 (<color>, weight <number>)。
+ * 示例：--mix3(#ffdbac, 3, #e0ac69, 2, #8d5524, 1)。
+ */
 @function --mix3(
   --first-color <color>,
   --first-weight <number>,
@@ -142,7 +189,6 @@
   --third-color <color>,
   --third-weight <number>
 ) returns <color> {
-  /* 原生 color-mix 会归一化百分比，这里只把比例数字翻译成百分比。 */
   result: color-mix(
     in oklab,
     var(--first-color) calc(var(--first-weight) / (var(--first-weight) + var(--second-weight) + var(--third-weight)) * 100%),
@@ -151,7 +197,11 @@
   );
 }
 
-/* --mix4 负责按权重混合四个颜色，继续只隐藏 oklab 和比例换算。 */
+/*
+ * --mix4：四色比例混合工具，基于原生 color-mix(in oklab, ...) 隐藏颜色空间和百分比归一化。
+ * 参数：四组 (<color>, weight <number>)。
+ * 示例：--mix4(red, 1, yellow, 1, blue, 1, white, 1)。
+ */
 @function --mix4(
   --first-color <color>,
   --first-weight <number>,
@@ -162,7 +212,6 @@
   --fourth-color <color>,
   --fourth-weight <number>
 ) returns <color> {
-  /* 四色混合直接交给原生 color-mix，避免递归混合造成阅读和推导噪音。 */
   result: color-mix(
     in oklab,
     var(--first-color) calc(var(--first-weight) / (var(--first-weight) + var(--second-weight) + var(--third-weight) + var(--fourth-weight)) * 100%),
@@ -172,76 +221,45 @@
   );
 }
 
-/* --tint 负责把颜色混白，生成更轻的染白色。 */
+/*
+ * --tint：染白混合工具，基于 color-mix(in oklab, color, white)。
+ * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 16。
+ * 示例：--tint(var(--color-brand), 16)。
+ */
 @function --tint(--color <color>, --weight <number>: 16) returns <color> {
-  /* --weight 表示原色占比；默认 16 表示 16% 原色加 84% white。 */
   result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), white calc((100 - var(--weight)) * 1%));
 }
 
-/* --shade 负责把颜色混黑，生成更沉的加黑色。 */
+/*
+ * --shade：加黑混合工具，基于 color-mix(in oklab, color, black)。
+ * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 72。
+ * 示例：--shade(var(--color-brand), 72)。
+ */
 @function --shade(--color <color>, --weight <number>: 72) returns <color> {
-  /* --weight 表示原色占比；默认 72 表示 72% 原色加 28% black。 */
   result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), black calc((100 - var(--weight)) * 1%));
 }
 
-/* --tone 负责把颜色混入中性灰，让颜色更稳、更低情绪。 */
+/*
+ * --tone：中性灰混合工具，基于 color-mix(in oklab, color, neutral gray)。
+ * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 72。
+ * 示例：--tone(var(--color-brand), 72)。
+ */
 @function --tone(--color <color>, --weight <number>: 72) returns <color> {
-  /* --weight 表示原色占比；默认 72 表示 72% 原色加 28% neutral gray。 */
   result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), oklch(60% 0 0deg) calc((100 - var(--weight)) * 1%));
 }
 
-/* --dim 负责把颜色混透明，生成弱提示底色。 */
+/*
+ * --dim：透明弱化混合工具，基于 color-mix(in oklab, color, transparent)。
+ * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 16。
+ * 示例：--dim(var(--color-brand), 16)。
+ */
 @function --dim(--color <color>, --weight <number>: 16) returns <color> {
-  /* --weight 表示原色占比；默认 16 表示 16% 原色加 84% transparent。 */
   result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), transparent calc((100 - var(--weight)) * 1%));
-}
-
-/* ========== 综合翻译层 ========== */
-
-/* --color 负责把颜色角色翻译成组件 CSS 可直接消费的颜色值，隐藏 var、light-dark 和派生细节。 */
-@function --color(--role) returns <color> {
-  /* --role 是颜色语义角色，组件 CSS 应优先通过它表达“要什么颜色”。 */
-  result: if(
-    style(--role: brand): var(--color-brand);
-    style(--role: accent): var(--color-accent);
-    style(--role: background): var(--color-background);
-    style(--role: surface): var(--color-surface);
-    style(--role: surface-2): var(--color-surface-2);
-    style(--role: text): var(--color-text);
-    style(--role: text-strong): var(--color-text-strong);
-    style(--role: text-muted): var(--color-text-muted);
-    style(--role: text-inverse): var(--color-text-inverse);
-    style(--role: boundary): var(--color-border);
-    style(--role: boundary-muted): var(--color-border-muted);
-    style(--role: brand-fill): var(--color-brand-fill);
-    style(--role: on-brand): var(--color-on-brand);
-    style(--role: brand-soft): var(--color-brand-soft);
-    style(--role: on-brand-soft): var(--color-on-brand-soft);
-    style(--role: accent-fill): var(--color-accent-fill);
-    style(--role: on-accent): var(--color-on-accent);
-    style(--role: accent-soft): var(--color-accent-soft);
-    style(--role: on-accent-soft): var(--color-on-accent-soft);
-    style(--role: info): var(--color-info);
-    style(--role: success): var(--color-success);
-    style(--role: warning): var(--color-warning);
-    style(--role: danger): var(--color-danger);
-    style(--role: info-text): var(--color-info-text);
-    style(--role: success-text): var(--color-success-text);
-    style(--role: warning-text): var(--color-warning-text);
-    style(--role: danger-text): var(--color-danger-text);
-    style(--role: info-soft): var(--color-info-soft);
-    style(--role: success-soft): var(--color-success-soft);
-    style(--role: warning-soft): var(--color-warning-soft);
-    style(--role: danger-soft): var(--color-danger-soft);
-    style(--role: shadow): var(--color-shadow);
-    style(--role: backdrop): var(--color-backdrop);
-    else: currentColor
-  );
 }
 
 /* ========== 源参数与衍生材料层 ========== */
 
-/* 根节点集中管理颜色源参数与衍生材料；组件应消费 --color(role)，不直接消费这些材料。 */
+/* 根节点集中管理颜色源参数与衍生材料；组件和业务应直接通过 var(--color-*) 消费公开语义变量。 */
 :root {
   /* [色彩环境] - light-dark() 必须配合 color-scheme 才会按系统浅色或深色偏好返回对应颜色。 */
   color-scheme: light dark;
