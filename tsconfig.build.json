@@ -1,9 +1,13 @@
+// 发布构建只负责生成类型声明产物。
+// 编辑器跳转能否从 dist 回到 src，取决于这里是否同时产出 declaration map。
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
     "declaration": true,
+    // 让编辑器从 .d.ts 继续追到源码，而不是停在声明文件。
+    "declarationMap": true,
     "emitDeclarationOnly": true,
     "noEmit": false
   },
