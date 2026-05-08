@@ -10,7 +10,7 @@ import { createStore, type SetStoreFunction } from 'solid-js/store'
 
 export type SignalState<T> = Accessor<T>
 export type StoreState<T> = Accessor<T> & {
-  readonly [Key in keyof T]: State<T[Key]>
+  readonly [Key in keyof T]: StoreState<T[Key]>
 }
 export type State<T> = StoreState<T> | SignalState<T>
 
