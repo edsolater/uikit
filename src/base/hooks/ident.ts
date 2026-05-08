@@ -1,5 +1,6 @@
 import { createMemo, type Accessor } from 'solid-js'
 import { createState } from './state'
+import { createMatcher, type MatcherOperator } from './matcher'
 import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
 
 /**
@@ -18,7 +19,7 @@ import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
  * 它接近 CSS `<custom-ident>` 的心智模型：
  * 当前值不是业务模式，不是用户选择动作，而是一个当前落位的标识符。
  */
-export interface IdentOperator<Ident extends Primitive> {
+export interface IdentOperator<Ident extends Primitive> extends MatcherOperator<Ident> {
   /**
    * 初始 ident。
    *
@@ -33,26 +34,6 @@ export interface IdentOperator<Ident extends Primitive> {
    * 因此这里公开 set，而不强调“去往既有落位”的语义。
    */
   set: (ident: Ident) => void
-
-  /**
-   * 创建一个响应式 accessor，用于判断当前 ident 是否等于目标 ident。
-   */
-  match: (ident: Ident) => Accessor<boolean>
-
-  /**
-   * 立即判断当前 ident 是否等于目标 ident。
-   */
-  is: (ident: Ident) => boolean
-
-  /**
-   * 创建一个响应式 accessor，用于判断当前 ident 是否不等于目标 ident。
-   */
-  notMatch: (ident: Ident) => Accessor<boolean>
-
-  /**
-   * 立即判断当前 ident 是否不等于目标 ident。
-   */
-  isNot: (ident: Ident) => boolean
 
   /**
    * 恢复到 initialIdent。
@@ -151,7 +132,9 @@ export type CreateIdentOptions<T extends PresentIdentValue> = {
  * size()
  * sizeIdentifier.set('lg')
  * sizeIdentifier.match('lg')()
+ * sizeIdentifier.match((value) => value === 'lg')()
  * sizeIdentifier.notMatch('sm')()
+ * sizeIdentifier.notMatch((value) => value === 'sm')()
  * sizeIdentifier.is('md')
  * sizeIdentifier.isNot('sm')
  * sizeIdentifier.reset()
@@ -178,21 +161,7 @@ export function createIdent<T extends PresentIdentValue>(
     set(nextIdent)
   }
 
-  const is = (targetIdent: T | undefined) => {
-    return ident() === targetIdent
-  }
-
-  const isNot = (targetIdent: T | undefined) => {
-    return ident() !== targetIdent
-  }
-
-  const match = (targetIdent: T | undefined) => {
-    return createMemo(() => is(targetIdent))
-  }
-
-  const notMatch = (targetIdent: T | undefined) => {
-    return createMemo(() => isNot(targetIdent))
-  }
+  const matcher = createMatcher(ident)
 
   const reset = () => {
     setIdent(initialIdent)
@@ -202,10 +171,7 @@ export function createIdent<T extends PresentIdentValue>(
     initialIdent,
     set,
     to,
-    match,
-    is,
-    notMatch,
-    isNot,
+    ...matcher,
     reset,
   } as IdentOperator<T | undefined> & { to: (ident: T | undefined) => void }
 

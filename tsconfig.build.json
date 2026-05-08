@@ -13,6 +13,8 @@
   },
   "include": [
     "src/index.ts",
+    "src/base/hooks/**/*.ts",
+    "src/base/hooks/**/*.tsx",
     "src/components/**/*.ts",
     "src/components/**/*.tsx",
     "src/hooks/**/*.ts",
