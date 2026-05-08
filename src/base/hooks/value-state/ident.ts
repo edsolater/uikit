@@ -1,5 +1,5 @@
 import { createMemo, type Accessor } from 'solid-js'
-import { createState } from '../lv0-state'
+import { createState } from '../base-state'
 import { createMatcher, type MatcherOperator } from './matcher'
 import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
 
