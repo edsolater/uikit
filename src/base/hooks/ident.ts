@@ -27,7 +27,10 @@ export interface IdentOperator<Ident extends Primitive> {
   initialIdent: Ident
 
   /**
-   * 设置当前 ident。
+   * 直接设置当前 ident。
+   *
+   * 当没有提供候选 ident 列表时，调用方只知道“设置成某个值”，
+   * 因此这里公开 set，而不强调“去往既有落位”的语义。
    */
   set: (ident: Ident) => void
 
@@ -58,6 +61,14 @@ export interface IdentOperator<Ident extends Primitive> {
 }
 
 export interface CycleIdentOperator<Ident extends PresentPrimitive> extends IdentOperator<Ident> {
+  /**
+   * 切换到指定 ident。
+   *
+   * 开启 cycle 后，调用方面对的是一组既有候选值，
+   * 因此类型层面优先公开 to，而不再公开 set。
+   */
+  to: (ident: Ident) => void
+
   /**
    * 可循环切换的 ident 列表。
    */
@@ -152,15 +163,19 @@ export function createIdent<T extends PresentIdentValue>(
   options: {
     idents: readonly [T, ...T[]]
   } & CreateIdentOptions<T>,
-): [ident: Accessor<T>, identifier: CycleIdentOperator<T>]
+): [ident: Accessor<T>, identifier: Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>]
 export function createIdent<T extends PresentIdentValue>(
   initialIdent?: T,
   options?: CreateIdentOptions<T>,
-): [ident: Accessor<T | undefined>, identifier: IdentOperator<T | undefined> | CycleIdentOperator<T>] {
+): [ident: Accessor<T | undefined>, identifier: IdentOperator<T | undefined> | (Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>)] {
   const [ident, setIdent] = createState<T | undefined>(initialIdent)
 
   const set = (nextIdent: T | undefined) => {
     setIdent(nextIdent)
+  }
+
+  const to = (nextIdent: T | undefined) => {
+    set(nextIdent)
   }
 
   const is = (targetIdent: T | undefined) => {
@@ -183,15 +198,16 @@ export function createIdent<T extends PresentIdentValue>(
     setIdent(initialIdent)
   }
 
-  const identifier: IdentOperator<T | undefined> = {
+  const identifier = {
     initialIdent,
     set,
+    to,
     match,
     is,
     notMatch,
     isNot,
     reset,
-  }
+  } as IdentOperator<T | undefined> & { to: (ident: T | undefined) => void }
 
   const idents = options?.idents
 
@@ -267,6 +283,6 @@ export function createIdent<T extends PresentIdentValue>(
       isLast,
       matchFirst,
       matchLast,
-    },
+    } as Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>,
   ]
 }
