@@ -1,5 +1,5 @@
 /**
- * 组件库上下文，提供组件拿到上级组件给出的context的能力。
+ * 组件库上下文，提供组件拿到上级组件【可指定】给出的context的payloads之能力。
  * 组件库里有些能力需要通过context在组件树里传递， 这个文件提供了一个通用的KitContext来满足这个需求。
  */
 import type { AnyRecord } from '@edsolater/fnkit'
