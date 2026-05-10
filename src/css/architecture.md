@@ -34,6 +34,8 @@ UIKit CSS 不再把 `--color(text)`、`--space(5)` 这类 `@function` 翻译层�
 
 `buildin-widgets.css` 负责浏览器内置 widget 控件的轻量外观清洗。这里的 widget 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它默认提供固定科技蓝 `--color-accent`，业务可以覆盖。
 
+`atom-utilities.css` 负责少量直接挂在 DOM 上的原子 utility class。它只收纳效果非常单一、语义非常稳定、但又不值得上升成组件样式或主题 token 的小能力，不承担页面布局组合或视觉主题。
+
 `color.css` 负责颜色领域。它保留 `--tune()`、`--pin()`、`--mix2()`、`--tint()` 等调色工具，但公开消费入口是 `var(--color-*)`。
 
 `dimension.css` 负责尺寸领域。它保留 `--step()`、`--shift-step()`、`--stick-step()` 等数学工具，但公开消费入口是 `var(--space-*)`、`var(--size-*)`、`var(--radius-*)`、`var(--boundary-*)`。

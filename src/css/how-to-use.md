@@ -8,6 +8,7 @@
 | `color.css` | 颜色源参数、语义颜色变量和调色工具 |
 | `dimension.css` | 尺寸曲线参数、公开尺寸变量和数学工具 |
 | `buildin-widgets.css` | 浏览器内置 widget 控件的轻量外观清洗 |
+| `atom-utilities.css` | 少量直接挂在 DOM 上的原子 utility class |
 
 ## 安装包
 
@@ -24,6 +25,7 @@ import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
 import '@edsolater/uikit/css/buildin-widgets.css'
+import '@edsolater/uikit/css/atom-utilities.css'
 import './app.css'
 ```
 
@@ -137,6 +139,20 @@ import './app.css'
 }
 ```
 
+## atom-utilities.css 怎么用
+
+`atom-utilities.css` 只提供少量直接挂在 DOM 上的小能力类。它适合那些语义非常稳定、效果非常单一、但又不值得上升成组件样式或主题 token 的能力。
+
+例如 `backdrop-root` 用来给 `backdrop-filter` 建立明确的裁切边界：
+
+```html
+<div class="backdrop-root">
+  <div class="glass-panel"></div>
+</div>
+```
+
+它只负责 backdrop 的边界，不负责圆角、背景、阴影或模糊强度；这些视觉表达仍应由组件样式自己声明。
+
 ## 构建注意事项
 
 UIKit 发布包会把 `src/css` 原样复制到 `dist/css`，并通过 `package.json` 的 `exports` 暴露 `./css/*`。外部项目不要引用 `dist` 路径，也不要引用 UIKit 源码路径。
@@ -148,6 +164,7 @@ import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
 import '@edsolater/uikit/css/buildin-widgets.css'
+import '@edsolater/uikit/css/atom-utilities.css'
 ```
 
 不要使用：
@@ -157,8 +174,10 @@ import '@edsolater/uikit/dist/css/reset.css'
 import '@edsolater/uikit/dist/css/color.css'
 import '@edsolater/uikit/dist/css/dimension.css'
 import '@edsolater/uikit/dist/css/buildin-widgets.css'
+import '@edsolater/uikit/dist/css/atom-utilities.css'
 import '@edsolater/uikit/src/css/reset.css'
 import '@edsolater/uikit/src/css/color.css'
 import '@edsolater/uikit/src/css/dimension.css'
 import '@edsolater/uikit/src/css/buildin-widgets.css'
+import '@edsolater/uikit/src/css/atom-utilities.css'
 ```
