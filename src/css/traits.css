@@ -24,7 +24,8 @@
  */
 
 @layer traits {
-  /* 【Trait 功能类】
+  /*
+   【Trait 功能类】
    * trait:backdrop-root：
    * 给元素建立明确的 backdrop 裁切边界。
    * 它适合由 trait 或组件内部能力自动附加到带有 backdrop-filter 的容器上，
@@ -34,5 +35,47 @@
    */
   .trait\:backdrop-root {
     clip-path: inset(0);
+  }
+
+  /*
+   【Trait 功能类】
+   * trait:scroll-area：
+   * 给元素建立稳定的滚动容器行为和滚动条表现。
+   * 它适合附加到内容可能溢出、需要容器内滚动且希望滚动条视觉保持克制一致的区域上。
+   * 它负责滚动行为、滚动边界和滚动条外观，不负责内容尺寸、布局分区或容器视觉主题。
+   */
+  .trait\:scroll-area {
+    overflow: auto;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+
+    @supports (overflow: overlay) {
+      overflow: overlay;
+    }
+
+    &::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border: 3px solid transparent;
+      border-radius: 999px;
+      background: rgb(255 255 255 / 0.22);
+      background-clip: content-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgb(255 255 255 / 0.34);
+      background-clip: content-box;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background: transparent;
+    }
   }
 }
