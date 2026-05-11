@@ -51,7 +51,7 @@
       - `index.ts`：`components` 目录导出入口。
     - `css`
       - `architecture.md`：CSS 结构说明。
-      - `buildin-widgets.css`：内建部件样式。
+      - `controls.css`：内建控件样式。
       - `color.css`：颜色变量与颜色相关样式。
       - `dimension.css`：尺寸变量与尺寸相关样式。
       - `how-to-use.md`：CSS 使用说明。

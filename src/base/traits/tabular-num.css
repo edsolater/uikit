@@ -2,4 +2,8 @@
  * 让数字使用等宽数字字形。
  * 适合计时器、计数器、价格、百分比、比分和实时数据；数字变化时每一位宽度稳定，文本不会因为 1 和 8 这类数字宽度不同而左右跳动。
  */
-.trait\:tabular-num { font-variant-numeric: tabular-nums; }
+@layer traits {
+  .trait\:tabular-num {
+    font-variant-numeric: tabular-nums;
+  }
+}

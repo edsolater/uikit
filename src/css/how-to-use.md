@@ -4,11 +4,12 @@
 
 | 文件 | 职责 |
 | --- | --- |
+| `all-base.css` | 基础 CSS 的整包入口，统一管理 layer 顺序 |
 | `reset.css` | 浏览器默认样式重置 |
 | `color.css` | 颜色源参数、语义颜色变量和调色工具 |
 | `dimension.css` | 尺寸曲线参数、公开尺寸变量和数学工具 |
-| `buildin-widgets.css` | 浏览器内置 widget 控件的轻量外观清洗 |
-| `atom-utilities.css` | 少量直接挂在 DOM 上的原子 utility class |
+| `controls.css` | 浏览器内置 controls 的轻量外观清洗 |
+| `traits.css` | trait plugin 自动附加到 DOM 上的功能类 |
 
 ## 安装包
 
@@ -18,18 +19,41 @@ bun add @edsolater/uikit
 
 ## 在应用入口引入
 
+如果你想一次引入 UIKit 的基础 CSS，推荐直接使用：
+
+```ts
+import '@edsolater/uikit/css/all-base.css'
+import './app.css'
+```
+
+`all-base.css` 会统一引入 `reset`、`style-token`、`controls` 和 `traits` 这几个领域，并用 `@layer` 固定它们的顺序。
+
+如果你需要只挑部分碎片文件，再按下面的顺序单独引入：
+
 推荐顺序：
 
 ```ts
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
-import '@edsolater/uikit/css/buildin-widgets.css'
-import '@edsolater/uikit/css/atom-utilities.css'
+import '@edsolater/uikit/css/controls.css'
+import '@edsolater/uikit/css/traits.css'
 import './app.css'
 ```
 
 业务 CSS 放在最后，这样可以通过 cascade 覆盖 UIKit 的源参数和公开变量。
+
+## all-base.css 怎么用
+
+`all-base.css` 是 UIKit 基础 CSS 的整包入口。它适合不想逐个维护碎片 CSS 导入顺序的项目。
+
+它内部声明的 layer 顺序是：
+
+```css
+@layer reset, style-token, controls, traits;
+```
+
+这样即使后续每个领域继续拆分文件，外部项目也只需要稳定引入一个入口。
 
 ## 消费规则
 
@@ -119,9 +143,9 @@ import './app.css'
 }
 ```
 
-## buildin-widgets.css 怎么用
+## controls.css 怎么用
 
-`buildin-widgets.css` 只处理浏览器内置 widget 控件的默认外观。这里的 widget 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它不是组件主题。
+`controls.css` 只处理浏览器内置 controls 的默认外观。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它不是组件主题。
 
 它默认提供固定科技蓝：
 
@@ -131,7 +155,7 @@ import './app.css'
 }
 ```
 
-业务如果需要自己的 widget 强调色，可以在业务 CSS 里覆盖：
+业务如果需要自己的 controls 强调色，可以在业务 CSS 里覆盖：
 
 ```css
 :root {
@@ -139,14 +163,36 @@ import './app.css'
 }
 ```
 
-## atom-utilities.css 怎么用
+## traits.css 怎么用
 
-`atom-utilities.css` 只提供少量直接挂在 DOM 上的小能力类。它适合那些语义非常稳定、效果非常单一、但又不值得上升成组件样式或主题 token 的能力。
+`traits.css` 只提供少量由 trait plugin 自动附加到 DOM 上的功能类。它适合那些语义非常稳定、效果非常单一、但又不值得上升成组件身份或主题 token 的正交小能力。
 
-例如 `backdrop-root` 用来给 `backdrop-filter` 建立明确的裁切边界：
+组件层的典型写法是：
+
+```tsx
+<Piv class="card" trait={clickable} />
+```
+
+trait plugin 会把这类能力落成真实 DOM class，例如 `trait:clickable`。
+
+业务层真正消费的通常是：
+
+```tsx
+<Card>xxx</Card>
+```
+
+如果某个组件明确决定开放受控 trait 扩展，外界才会写：
+
+```tsx
+<Card trait={special}>xxx</Card>
+```
+
+即使这种例外成立，外界表达的也仍然是 trait，而不是手写 `trait:special`。
+
+例如 `trait:backdrop-root` 用来给 `backdrop-filter` 建立明确的裁切边界：
 
 ```html
-<div class="backdrop-root">
+<div class="trait:backdrop-root">
   <div class="glass-panel"></div>
 </div>
 ```
@@ -160,11 +206,17 @@ UIKit 发布包会把 `src/css` 原样复制到 `dist/css`，并通过 `package.
 推荐：
 
 ```ts
+import '@edsolater/uikit/css/all-base.css'
+```
+
+或者按需单独引入：
+
+```ts
 import '@edsolater/uikit/css/reset.css'
 import '@edsolater/uikit/css/color.css'
 import '@edsolater/uikit/css/dimension.css'
-import '@edsolater/uikit/css/buildin-widgets.css'
-import '@edsolater/uikit/css/atom-utilities.css'
+import '@edsolater/uikit/css/controls.css'
+import '@edsolater/uikit/css/traits.css'
 ```
 
 不要使用：
@@ -173,11 +225,11 @@ import '@edsolater/uikit/css/atom-utilities.css'
 import '@edsolater/uikit/dist/css/reset.css'
 import '@edsolater/uikit/dist/css/color.css'
 import '@edsolater/uikit/dist/css/dimension.css'
-import '@edsolater/uikit/dist/css/buildin-widgets.css'
-import '@edsolater/uikit/dist/css/atom-utilities.css'
+import '@edsolater/uikit/dist/css/controls.css'
+import '@edsolater/uikit/dist/css/traits.css'
 import '@edsolater/uikit/src/css/reset.css'
 import '@edsolater/uikit/src/css/color.css'
 import '@edsolater/uikit/src/css/dimension.css'
-import '@edsolater/uikit/src/css/buildin-widgets.css'
-import '@edsolater/uikit/src/css/atom-utilities.css'
+import '@edsolater/uikit/src/css/controls.css'
+import '@edsolater/uikit/src/css/traits.css'
 ```

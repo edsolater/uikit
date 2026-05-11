@@ -3,7 +3,6 @@
  * 这是 dimension 领域入口。
  * 它承载尺寸曲线参数、基础数学工具和可直接 var() 消费的公开尺寸变量，不承载颜色、排版字体、布局组合或具体组件样式。
  */
-
 /* ========== 基础工具层 ========== */
 
 /*
@@ -22,11 +21,9 @@
  */
 @function --step-base(--namespace <custom-ident>) returns <length> {
   result: if(
-    style(--namespace: space): var(--space-base);
-    style(--namespace: size): var(--size-base);
-    style(--namespace: radius): var(--radius-base);
-    style(--namespace: boundary): var(--boundary-base);
-    else: var(--space-base)
+    style(--namespace: space): var(--space-base) ; style(--namespace: size): var(--size-base) ;
+      style(--namespace: radius): var(--radius-base) ; style(--namespace: boundary): var(--boundary-base) ;
+      else: var(--space-base)
   );
 }
 
@@ -37,11 +34,9 @@
  */
 @function --step-ratio(--namespace <custom-ident>) returns <number> {
   result: if(
-    style(--namespace: space): var(--space-ratio);
-    style(--namespace: size): var(--size-ratio);
-    style(--namespace: radius): var(--radius-ratio);
-    style(--namespace: boundary): var(--boundary-ratio);
-    else: var(--space-ratio)
+    style(--namespace: space): var(--space-ratio) ; style(--namespace: size): var(--size-ratio) ;
+      style(--namespace: radius): var(--radius-ratio) ; style(--namespace: boundary): var(--boundary-ratio) ;
+      else: var(--space-ratio)
   );
 }
 
@@ -55,11 +50,8 @@
     --step-base(var(--namespace)),
     --step-ratio(var(--namespace)),
     calc(
-      round(
-        nearest,
-        log(calc(var(--value) / --step-base(var(--namespace))), --step-ratio(var(--namespace))),
-        1
-      ) + var(--delta)
+      round(nearest, log(calc(var(--value) / --step-base(var(--namespace))), --step-ratio(var(--namespace))), 1) +
+        var(--delta)
     )
   );
 }
@@ -79,159 +71,180 @@
 
 /* ========== 源参数与衍生材料层 ========== */
 
-/* 根节点集中管理尺寸源参数、曲线参数、约束参数和公开尺寸变量；组件和业务直接消费公开变量。 */
-:root {
-  /* [空间曲线] - 空白关系的基础单位，--space-0 由这个值生成。 */
-  --space-base: 4px;
+@layer style-token {
+  /* 根节点集中管理尺寸源参数、曲线参数、约束参数和公开尺寸变量；组件和业务直接消费公开变量。 */
+  :root {
+    /* [空间曲线] - 空白关系的基础单位，--space-0 由这个值生成。 */
+    --space-base: 4px;
 
-  /* [空间曲线] - 空白关系的增长比例，决定界面紧凑或松弛。 */
-  --space-ratio: 1.25;
+    /* [空间曲线] - 空白关系的增长比例，决定界面紧凑或松弛。 */
+    --space-ratio: 1.25;
 
-  /* [空间约束] - 空白通道的最小值，避免负级数或业务覆盖导致空间过窄。 */
-  --space-min: 2px;
+    /* [空间约束] - 空白通道的最小值，避免负级数或业务覆盖导致空间过窄。 */
+    --space-min: 2px;
 
-  /* [空间约束] - 空白通道的最大值，避免高阶空间破坏布局节奏。 */
-  --space-max: 96px;
+    /* [空间约束] - 空白通道的最大值，避免高阶空间破坏布局节奏。 */
+    --space-max: 96px;
 
-  /* [物体曲线] - 控件、图标、头像和面板等物体尺寸的基础单位。 */
-  --size-base: 20px;
+    /* [物体曲线] - 控件、图标、头像和面板等物体尺寸的基础单位。 */
+    --size-base: 20px;
 
-  /* [物体曲线] - 物体尺寸的增长比例，决定控件体系偏轻巧还是偏舒展。 */
-  --size-ratio: 1.18;
+    /* [物体曲线] - 物体尺寸的增长比例，决定控件体系偏轻巧还是偏舒展。 */
+    --size-ratio: 1.18;
 
-  /* [物体约束] - 物体尺寸的最小值，用于保护可点击性和可见性。 */
-  --size-min: 12px;
+    /* [物体约束] - 物体尺寸的最小值，用于保护可点击性和可见性。 */
+    --size-min: 12px;
 
-  /* [物体约束] - 物体尺寸的最大值，用于保护布局稳定。 */
-  --size-max: 240px;
+    /* [物体约束] - 物体尺寸的最大值，用于保护布局稳定。 */
+    --size-max: 240px;
 
-  /* [形体曲线] - 圆角柔和度的基础单位。 */
-  --radius-base: 2px;
+    /* [形体曲线] - 圆角柔和度的基础单位。 */
+    --radius-base: 2px;
 
-  /* [形体曲线] - 圆角增长比例，决定界面偏硬朗还是偏圆润。 */
-  --radius-ratio: 1.45;
+    /* [形体曲线] - 圆角增长比例，决定界面偏硬朗还是偏圆润。 */
+    --radius-ratio: 1.45;
 
-  /* [形体约束] - 圆角最小值，允许硬朗界面收敛到直角。 */
-  --radius-min: 0px;
+    /* [形体约束] - 圆角最小值，允许硬朗界面收敛到直角。 */
+    --radius-min: 0px;
 
-  /* [形体约束] - 圆角最大值，避免高阶圆角吞掉组件形体。 */
-  --radius-max: 32px;
+    /* [形体约束] - 圆角最大值，避免高阶圆角吞掉组件形体。 */
+    --radius-max: 32px;
 
-  /* [边界曲线] - 分割线、描边和 focus ring 的基础厚度。 */
-  --boundary-base: 1px;
+    /* [边界曲线] - 分割线、描边和 focus ring 的基础厚度。 */
+    --boundary-base: 1px;
 
-  /* [边界曲线] - 边界厚度增长比例，决定边界表达偏轻还是偏重。 */
-  --boundary-ratio: 1.5;
+    /* [边界曲线] - 边界厚度增长比例，决定边界表达偏轻还是偏重。 */
+    --boundary-ratio: 1.5;
 
-  /* [边界约束] - 边界厚度最小值，默认保护 1px 可见边界。 */
-  --boundary-min: 1px;
+    /* [边界约束] - 边界厚度最小值，默认保护 1px 可见边界。 */
+    --boundary-min: 1px;
 
-  /* [边界约束] - 边界厚度最大值，避免描边变成块面。 */
-  --boundary-max: 8px;
+    /* [边界约束] - 边界厚度最大值，避免描边变成块面。 */
+    --boundary-max: 8px;
 
-  /* [规整参数] - dimension 默认像素吸附单位。 */
-  --dimension-snap-unit: 1px;
+    /* [规整参数] - dimension 默认像素吸附单位。 */
+    --dimension-snap-unit: 1px;
 
+    /* [公开尺寸] - 空白零级由空间曲线生成，用于最小 padding、gap 或 margin。 */
+    --space-0: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 0), var(--space-max));
 
-  /* [公开尺寸] - 空白零级由空间曲线生成，用于最小 padding、gap 或 margin。 */
-  --space-0: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 0), var(--space-max));
+    /* [公开尺寸] - 空白一级由空间曲线生成，用于紧凑元素内部留白。 */
+    --space-1: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 1), var(--space-max));
 
-  /* [公开尺寸] - 空白一级由空间曲线生成，用于紧凑元素内部留白。 */
-  --space-1: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 1), var(--space-max));
+    /* [公开尺寸] - 空白二级由空间曲线生成，用于常规小间距。 */
+    --space-2: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 2), var(--space-max));
 
-  /* [公开尺寸] - 空白二级由空间曲线生成，用于常规小间距。 */
-  --space-2: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 2), var(--space-max));
+    /* [公开尺寸] - 空白三级由空间曲线生成，用于控件内部常规留白。 */
+    --space-3: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 3), var(--space-max));
 
-  /* [公开尺寸] - 空白三级由空间曲线生成，用于控件内部常规留白。 */
-  --space-3: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 3), var(--space-max));
+    /* [公开尺寸] - 空白四级由空间曲线生成，用于常规组件间距。 */
+    --space-4: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 4), var(--space-max));
 
-  /* [公开尺寸] - 空白四级由空间曲线生成，用于常规组件间距。 */
-  --space-4: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 4), var(--space-max));
+    /* [公开尺寸] - 空白五级由空间曲线生成，用于较宽松组件间距。 */
+    --space-5: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 5), var(--space-max));
 
-  /* [公开尺寸] - 空白五级由空间曲线生成，用于较宽松组件间距。 */
-  --space-5: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 5), var(--space-max));
+    /* [公开尺寸] - 空白六级由空间曲线生成，用于区块内部留白。 */
+    --space-6: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 6), var(--space-max));
 
-  /* [公开尺寸] - 空白六级由空间曲线生成，用于区块内部留白。 */
-  --space-6: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 6), var(--space-max));
+    /* [公开尺寸] - 空白七级由空间曲线生成，用于较大区块间距。 */
+    --space-7: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 7), var(--space-max));
 
-  /* [公开尺寸] - 空白七级由空间曲线生成，用于较大区块间距。 */
-  --space-7: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 7), var(--space-max));
+    /* [公开尺寸] - 空白八级由空间曲线生成，用于页面级间距。 */
+    --space-8: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 8), var(--space-max));
 
-  /* [公开尺寸] - 空白八级由空间曲线生成，用于页面级间距。 */
-  --space-8: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 8), var(--space-max));
+    /* [公开尺寸] - 空白九级由空间曲线生成，用于大面积分区。 */
+    --space-9: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 9), var(--space-max));
 
-  /* [公开尺寸] - 空白九级由空间曲线生成，用于大面积分区。 */
-  --space-9: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 9), var(--space-max));
+    /* [公开尺寸] - 空白十级由空间曲线生成，用于极宽松页面节奏。 */
+    --space-10: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 10), var(--space-max));
 
-  /* [公开尺寸] - 空白十级由空间曲线生成，用于极宽松页面节奏。 */
-  --space-10: clamp(var(--space-min), --step(var(--space-base), var(--space-ratio), 10), var(--space-max));
+    /* [公开尺寸] - 物体零级由物体曲线生成，用于很小的内联控件或装饰物。 */
+    --size-0: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 0), var(--size-max));
 
-  /* [公开尺寸] - 物体零级由物体曲线生成，用于很小的内联控件或装饰物。 */
-  --size-0: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 0), var(--size-max));
+    /* [公开尺寸] - 物体一级由物体曲线生成，用于小图标和紧凑控件。 */
+    --size-1: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 1), var(--size-max));
 
-  /* [公开尺寸] - 物体一级由物体曲线生成，用于小图标和紧凑控件。 */
-  --size-1: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 1), var(--size-max));
+    /* [公开尺寸] - 物体二级由物体曲线生成，用于常规小控件。 */
+    --size-2: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 2), var(--size-max));
 
-  /* [公开尺寸] - 物体二级由物体曲线生成，用于常规小控件。 */
-  --size-2: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 2), var(--size-max));
+    /* [公开尺寸] - 物体三级由物体曲线生成，用于默认表单控件高度。 */
+    --size-3: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 3), var(--size-max));
 
-  /* [公开尺寸] - 物体三级由物体曲线生成，用于默认表单控件高度。 */
-  --size-3: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 3), var(--size-max));
+    /* [公开尺寸] - 物体四级由物体曲线生成，用于默认按钮和列表项高度。 */
+    --size-4: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 4), var(--size-max));
 
-  /* [公开尺寸] - 物体四级由物体曲线生成，用于默认按钮和列表项高度。 */
-  --size-4: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 4), var(--size-max));
+    /* [公开尺寸] - 物体五级由物体曲线生成，用于较大的控件和头像。 */
+    --size-5: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 5), var(--size-max));
 
-  /* [公开尺寸] - 物体五级由物体曲线生成，用于较大的控件和头像。 */
-  --size-5: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 5), var(--size-max));
+    /* [公开尺寸] - 物体六级由物体曲线生成，用于工具栏控件或中等面板单元。 */
+    --size-6: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 6), var(--size-max));
 
-  /* [公开尺寸] - 物体六级由物体曲线生成，用于工具栏控件或中等面板单元。 */
-  --size-6: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 6), var(--size-max));
+    /* [公开尺寸] - 物体七级由物体曲线生成，用于大按钮、头像和固定规格容器。 */
+    --size-7: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 7), var(--size-max));
 
-  /* [公开尺寸] - 物体七级由物体曲线生成，用于大按钮、头像和固定规格容器。 */
-  --size-7: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 7), var(--size-max));
+    /* [公开尺寸] - 物体八级由物体曲线生成，用于强调控件或大号媒体占位。 */
+    --size-8: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 8), var(--size-max));
 
-  /* [公开尺寸] - 物体八级由物体曲线生成，用于强调控件或大号媒体占位。 */
-  --size-8: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 8), var(--size-max));
+    /* [公开尺寸] - 物体九级由物体曲线生成，用于大规格组件外壳。 */
+    --size-9: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 9), var(--size-max));
 
-  /* [公开尺寸] - 物体九级由物体曲线生成，用于大规格组件外壳。 */
-  --size-9: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 9), var(--size-max));
+    /* [公开尺寸] - 物体十级由物体曲线生成，用于页面级固定规格元素。 */
+    --size-10: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 10), var(--size-max));
 
-  /* [公开尺寸] - 物体十级由物体曲线生成，用于页面级固定规格元素。 */
-  --size-10: clamp(var(--size-min), --step(var(--size-base), var(--size-ratio), 10), var(--size-max));
+    /* [公开尺寸] - 圆角零级由形体曲线生成，用于直角或极硬朗界面。 */
+    --radius-0: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 0), var(--radius-max));
 
-  /* [公开尺寸] - 圆角零级由形体曲线生成，用于直角或极硬朗界面。 */
-  --radius-0: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 0), var(--radius-max));
+    /* [公开尺寸] - 圆角一级由形体曲线生成，用于轻微柔化边角。 */
+    --radius-1: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 1), var(--radius-max));
 
-  /* [公开尺寸] - 圆角一级由形体曲线生成，用于轻微柔化边角。 */
-  --radius-1: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 1), var(--radius-max));
+    /* [公开尺寸] - 圆角二级由形体曲线生成，用于紧凑控件。 */
+    --radius-2: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 2), var(--radius-max));
 
-  /* [公开尺寸] - 圆角二级由形体曲线生成，用于紧凑控件。 */
-  --radius-2: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 2), var(--radius-max));
+    /* [公开尺寸] - 圆角三级由形体曲线生成，用于默认按钮和输入框。 */
+    --radius-3: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 3), var(--radius-max));
 
-  /* [公开尺寸] - 圆角三级由形体曲线生成，用于默认按钮和输入框。 */
-  --radius-3: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 3), var(--radius-max));
+    /* [公开尺寸] - 圆角四级由形体曲线生成，用于卡片和浮层。 */
+    --radius-4: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 4), var(--radius-max));
 
-  /* [公开尺寸] - 圆角四级由形体曲线生成，用于卡片和浮层。 */
-  --radius-4: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 4), var(--radius-max));
+    /* [公开尺寸] - 圆角五级由形体曲线生成，用于更柔和的面板。 */
+    --radius-5: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 5), var(--radius-max));
 
-  /* [公开尺寸] - 圆角五级由形体曲线生成，用于更柔和的面板。 */
-  --radius-5: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 5), var(--radius-max));
+    /* [公开尺寸] - 圆角六级由形体曲线生成，用于大面积容器。 */
+    --radius-6: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 6), var(--radius-max));
 
-  /* [公开尺寸] - 圆角六级由形体曲线生成，用于大面积容器。 */
-  --radius-6: clamp(var(--radius-min), --step(var(--radius-base), var(--radius-ratio), 6), var(--radius-max));
+    /* [公开尺寸] - 边界零级由边界曲线生成，用于最轻描边。 */
+    --boundary-0: clamp(
+      var(--boundary-min),
+      --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 0), var(--dimension-snap-unit)),
+      var(--boundary-max)
+    );
 
-  /* [公开尺寸] - 边界零级由边界曲线生成，用于最轻描边。 */
-  --boundary-0: clamp(var(--boundary-min), --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 0), var(--dimension-snap-unit)), var(--boundary-max));
+    /* [公开尺寸] - 边界一级由边界曲线生成，用于默认边框和分割线。 */
+    --boundary-1: clamp(
+      var(--boundary-min),
+      --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 1), var(--dimension-snap-unit)),
+      var(--boundary-max)
+    );
 
-  /* [公开尺寸] - 边界一级由边界曲线生成，用于默认边框和分割线。 */
-  --boundary-1: clamp(var(--boundary-min), --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 1), var(--dimension-snap-unit)), var(--boundary-max));
+    /* [公开尺寸] - 边界二级由边界曲线生成，用于普通 focus ring。 */
+    --boundary-2: clamp(
+      var(--boundary-min),
+      --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 2), var(--dimension-snap-unit)),
+      var(--boundary-max)
+    );
 
-  /* [公开尺寸] - 边界二级由边界曲线生成，用于普通 focus ring。 */
-  --boundary-2: clamp(var(--boundary-min), --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 2), var(--dimension-snap-unit)), var(--boundary-max));
+    /* [公开尺寸] - 边界三级由边界曲线生成，用于强描边。 */
+    --boundary-3: clamp(
+      var(--boundary-min),
+      --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 3), var(--dimension-snap-unit)),
+      var(--boundary-max)
+    );
 
-  /* [公开尺寸] - 边界三级由边界曲线生成，用于强描边。 */
-  --boundary-3: clamp(var(--boundary-min), --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 3), var(--dimension-snap-unit)), var(--boundary-max));
-
-  /* [公开尺寸] - 边界四级由边界曲线生成，用于高强调轮廓。 */
-  --boundary-4: clamp(var(--boundary-min), --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 4), var(--dimension-snap-unit)), var(--boundary-max));
+    /* [公开尺寸] - 边界四级由边界曲线生成，用于高强调轮廓。 */
+    --boundary-4: clamp(
+      var(--boundary-min),
+      --stick-step(--step(var(--boundary-base), var(--boundary-ratio), 4), var(--dimension-snap-unit)),
+      var(--boundary-max)
+    );
+  }
 }

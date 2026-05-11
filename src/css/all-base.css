@@ -1,0 +1,13 @@
+/**
+ * 这个文件负责提供 UIKit 基础 CSS 的整包入口。
+ * 外部项目如果不想逐个引入 reset、style token、controls 和 traits 文件，可以直接引入这个文件。
+ * 它只负责声明各个领域的 layer 顺序并汇总入口，不承载新的样式定义。
+ */
+
+@layer reset, style-token, controls, traits;
+
+@import './reset.css';
+@import './color.css';
+@import './dimension.css';
+@import './controls.css';
+@import './traits.css';

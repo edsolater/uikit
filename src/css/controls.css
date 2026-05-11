@@ -1,0 +1,201 @@
+/**
+ * 这个文件负责提供浏览器内置控件的轻量外观清洗。
+ * 它不承载组件主题，也不承载品牌色系统；这里只把 Chrome 默认控件调成更干净统一的应用控件。
+ */
+
+@layer controls {
+  /* 根节点只提供内置控件需要继承的强调色和由它派生的轻量材料。 */
+  :root {
+    /* [小空间源色] - 固定科技蓝默认值；业务需要不同控件强调色时可以覆盖这个变量。 */
+    --color-accent: oklch(66% 0.19 248deg);
+
+    /* [小空间材料] - 控件边界色由 10% 强调色和中性灰混合，避免原生控件边框显得脏或过重。 */
+    --widget-border: color-mix(in oklab, var(--color-accent) 10%, gray);
+
+    /* [小空间材料] - 控件底色在系统画布上混入少量强调色，让输入框和选择器保持清爽而不刺眼。 */
+    --widget-surface: color-mix(in oklab, Canvas 96%, var(--color-accent) 4%);
+
+    /* [小空间材料] - 控件悬停底色略微提高强调色占比，让 hover 反馈存在但不抢注意力。 */
+    --widget-surface-hover: color-mix(in oklab, Canvas 92%, var(--color-accent) 8%);
+
+    /* [小空间材料] - 控件焦点色直接使用强调色，保证键盘和表单操作反馈清晰。 */
+    --widget-focus: var(--color-accent);
+  }
+
+  /* controls 控件统一继承应用文字，并把复选框、单选框、进度条等原生强调色对齐到控件强调色。 */
+  :where(button, input, textarea, select, progress, meter) {
+    font: inherit;
+    color: inherit;
+    accent-color: var(--color-accent);
+  }
+
+  /* 文本类输入控件使用同一套轻量盒子外观，替换 Chrome 默认的系统输入框质感。 */
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='search'],
+    input[type='email'],
+    input[type='url'],
+    input[type='tel'],
+    input[type='password'],
+    input[type='number'],
+    input[type='date'],
+    input[type='time'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='week'],
+    textarea,
+    select
+  ) {
+    min-height: 2.25em;
+    border: 1px solid var(--widget-border);
+    border-radius: 0.5em;
+    padding: 0.5em 0.75em;
+    color: CanvasText;
+    background: var(--widget-surface);
+    caret-color: var(--color-accent);
+  }
+
+  /* 文本类输入控件 hover 时只轻微改变底色，保持最小清新的反馈。 */
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='search'],
+    input[type='email'],
+    input[type='url'],
+    input[type='tel'],
+    input[type='password'],
+    input[type='number'],
+    input[type='date'],
+    input[type='time'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='week'],
+    textarea,
+    select
+  ):where(:hover) {
+    background: var(--widget-surface-hover);
+  }
+
+  /* 聚焦态使用轻量 outline，不改变控件尺寸，避免细小表单元素在交互时抖动。 */
+  :where(
+    input:not([type]),
+    input[type='text'],
+    input[type='search'],
+    input[type='email'],
+    input[type='url'],
+    input[type='tel'],
+    input[type='password'],
+    input[type='number'],
+    input[type='date'],
+    input[type='time'],
+    input[type='datetime-local'],
+    input[type='month'],
+    input[type='week'],
+    textarea,
+    select
+  ):where(:focus-visible) {
+    border-color: var(--widget-focus);
+    outline: 2px solid color-mix(in oklab, var(--widget-focus) 32%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* placeholder 默认弱化为当前文字色的半透明版本，避免出现 Chrome 默认灰色和控件色不协调。 */
+  :where(input, textarea)::placeholder {
+    color: color-mix(in oklab, currentColor 48%, transparent);
+  }
+
+  /* 搜索框移除 Chrome 的内置装饰按钮，让搜索输入和普通文本输入保持一致。 */
+  :where(input[type='search'])::-webkit-search-decoration,
+  :where(input[type='search'])::-webkit-search-cancel-button {
+    appearance: none;
+  }
+
+  /* 按钮保持最小控件外观，只给默认按钮一个清爽边界和底色，不把它变成组件按钮。 */
+  :where(button, input[type='button'], input[type='reset'], input[type='submit']) {
+    border: 1px solid var(--widget-border);
+    border-radius: 0.5em;
+    padding: 0.5em 0.875em;
+    color: CanvasText;
+    background: var(--widget-surface);
+    cursor: pointer;
+  }
+
+  /* 按钮 hover 只提高底色的强调色比例，避免默认按钮看起来像强 CTA。 */
+  :where(button, input[type='button'], input[type='reset'], input[type='submit']):where(:hover) {
+    background: var(--widget-surface-hover);
+  }
+
+  /* 按钮键盘焦点使用和输入框一致的焦点环，保持控件层交互反馈统一。 */
+  :where(button, input[type='button'], input[type='reset'], input[type='submit']):where(:focus-visible) {
+    outline: 2px solid color-mix(in oklab, var(--widget-focus) 32%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* 复选框和单选框保留原生控件形态，只统一尺寸和强调色，不重造交互。 */
+  :where(input[type='checkbox'], input[type='radio']) {
+    width: 1em;
+    height: 1em;
+    margin: 0;
+  }
+
+  /* range 控件统一强调色，并保留 Chrome 的原生滑动行为。 */
+  :where(input[type='range']) {
+    accent-color: var(--color-accent);
+  }
+
+  /* color 输入框移除多余内边距和厚重边框，让色块更像应用内控件。 */
+  :where(input[type='color']) {
+    width: 2.5em;
+    height: 2.25em;
+    border: 1px solid var(--widget-border);
+    border-radius: 0.5em;
+    padding: 0.125em;
+    background: var(--widget-surface);
+  }
+
+  /* Chrome 支持可自定义 select 时，启用 base-select，让下拉面板也能被同一套控件材料管理。 */
+  @supports (appearance: base-select) {
+    :where(select),
+    :where(select)::picker(select) {
+      appearance: base-select;
+    }
+
+    /* select 的下拉面板使用和输入框一致的清爽底色与边界。 */
+    :where(select)::picker(select) {
+      border: 1px solid var(--widget-border);
+      border-radius: 0.5em;
+      background: var(--widget-surface);
+    }
+
+    /* option 保留原生选择语义，只补充最小内边距，让选项不贴边。 */
+    :where(option) {
+      padding: 0.5em 0.75em;
+    }
+
+    /* 当前选中项使用少量强调色铺底，不使用厚重高亮。 */
+    :where(option:checked) {
+      background: color-mix(in oklab, var(--color-accent) 16%, transparent);
+    }
+  }
+
+  /* dialog 是浏览器内置弹层控件，这里只清洗默认边框和底色，不承担 modal 组件布局。 */
+  :where(dialog) {
+    border: 1px solid var(--widget-border);
+    border-radius: 0.75em;
+    padding: 1em;
+    color: CanvasText;
+    background: var(--widget-surface);
+  }
+
+  /* dialog 背景遮罩用强调色混入透明黑，避免纯黑遮罩过重。 */
+  :where(dialog)::backdrop {
+    background: color-mix(in oklab, var(--color-accent) 10%, rgb(0 0 0 / 48%));
+  }
+
+  /* 禁用态统一降透明并移除点击手势，让所有内置控件的不可用状态一致。 */
+  :where(button, input, textarea, select):disabled {
+    opacity: 0.56;
+    cursor: not-allowed;
+  }
+}

@@ -1,0 +1,38 @@
+/**
+ * 这个文件负责提供 trait 驱动的功能类。
+ * 这里的 class 不是业务层手写 utility，也不是页面作者自己拼出来的样式 token。
+ * 它们是组件层通过 trait plugin 自动附加到真实 DOM 上的正交功能类。
+ * 它不承载颜色体系、尺寸体系、排版体系，也不承载页面布局组合。
+ *
+ * 这层的判断标准是：
+ * - class 名表达稳定能力，不表达业务身份。
+ * - 一个 class 只回答一个明确功能。
+ * - 业务使用者优先消费组件语义，不直接消费这些 class。
+ *
+ * 典型路径：
+ * - 组件层写 `<Piv class="card" trait={clickable} />`
+ * - trait plugin 自动补上 `trait:clickable`
+ * - 业务层真正使用的是 `<Card>xxx</Card>`
+ *
+ * 允许的例外：
+ * - 如果某个组件明确决定开放受控 trait 扩展，外界才可以写 `<Card trait={special}>`
+ * - 即使如此，外界表达的仍然是 trait，而不是手写 `trait:special`
+ *
+ * 禁止的写法：
+ * - 业务层手写 `<Card class="trait:clickable">`
+ * - 把这里当成 Tailwind 式 utility 仓库不断追加视觉属性类
+ */
+
+@layer traits {
+  /* 【Trait 功能类】
+   * trait:backdrop-root：
+   * 给元素建立明确的 backdrop 裁切边界。
+   * 它适合由 trait 或组件内部能力自动附加到带有 backdrop-filter 的容器上，
+   * 避免背景采样或模糊扩散超出当前盒子的可见区域。
+   *
+   * 这个类只解决 backdrop 的边界问题，不负责圆角、阴影、背景色或模糊强度。
+   */
+  .trait\:backdrop-root {
+    clip-path: inset(0);
+  }
+}
