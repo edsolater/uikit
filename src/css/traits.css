@@ -25,7 +25,7 @@
 
 @layer traits {
   /*
-   【Trait 功能类】
+   *【Trait 功能类】
    * trait:backdrop-root：
    * 给元素建立明确的 backdrop 裁切边界。
    * 它适合由 trait 或组件内部能力自动附加到带有 backdrop-filter 的容器上，
@@ -38,7 +38,7 @@
   }
 
   /*
-   【Trait 功能类】
+   *【Trait 功能类】
    * trait:scroll-area：
    * 给元素建立稳定的滚动容器行为和滚动条表现。
    * 它适合附加到内容可能溢出、需要容器内滚动且希望滚动条视觉保持克制一致的区域上。
@@ -77,5 +77,18 @@
     &::-webkit-scrollbar-corner {
       background: transparent;
     }
+  }
+
+  /*
+   * 【Trait 功能类】
+   * trait:self-host-scroll-behavior：
+   * 给元素建立自己管理滚动的能力。
+   * 浏览器默认会试图在内容增加时保持所观察的位置不变，这在某些情况下会导致滚动事件被子元素捕获并干扰父元素的滚动行为。
+   * 如：虚拟列表、聊天窗口
+   * 
+   * MDN: https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor
+   */
+  .trait\:self-host-scroll-behavior {
+    overflow-anchor: none;
   }
 }
