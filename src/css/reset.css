@@ -289,10 +289,13 @@
 
   @supports selector(::-webkit-scrollbar-thumb:hover) {
     * {
-      &::-webkit-scrollbar {
+      scrollbar-width: revert; /* 让 Chrome 回退到默认滚动条宽度，配合下面的 hover 效果。 */
+      &::-webkit-scrollbar-thumb {
         opacity: 0.8;
-        transition: opacity 0.2s ease;
+        width: 5px;
+        transition: opacity 0.2s ease, width 0.2s ease;
         &:hover {
+          width: 10px;
           opacity: 1;
         }
       }
