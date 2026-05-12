@@ -24,14 +24,11 @@
     /* 平滑 WebKit/Blink 的字体边缘，让浅色和深色背景下的系统字体更稳定。 */
     -webkit-font-smoothing: antialiased;
 
-    /* 给 Firefox 兼容字段留同样语义；现代 Chrome 会忽略它。 */
-    -moz-osx-font-smoothing: grayscale;
-
     /* 允许尺寸动画从具体数值过渡到 auto、min-content 等关键字。 */
     interpolate-size: allow-keywords;
 
-    /* 预留滚动条槽位，避免页面从不可滚动变成可滚动时内容横向跳动。 */
-    scrollbar-gutter: stable;
+    /* 允许 display 和 overlay 属性在过渡中离散切换，避免用display: none, 在没有过渡完成的情况下，组件立刻消失。这个属性使display:none延后后消失 */
+    transition-behavior: allow-discrete;
   }
 
   /* 现代 Chrome 支持中日韩文字和拉丁、数字之间的自动间距时，启用混排优化。 */
@@ -188,5 +185,108 @@
   /* hidden 是明确的隐藏语义，应压过普通展示规则。 */
   :where([hidden]) {
     display: none !important;
+  }
+
+  /* ========== popover ============ */
+
+  /* Popover 组件的样式重置和过渡效果定义。 */
+  :root {
+    --popover-transition-duration: 160ms;
+    --popover-scale-start: 0.96;
+    --popover-translate-y-start: 6px;
+  }
+
+  [popover] {
+    opacity: 0;
+    transform: translateY(var(--popover-translate-y-start)) scale(var(--popover-scale-start));
+    overscroll-behavior: contain; /* 阻止滚动链 */
+    transition:
+      opacity var(--popover-transition-duration) ease,
+      transform var(--popover-transition-duration) ease,
+      display var(--popover-transition-duration) ease allow-discrete,
+      overlay var(--popover-transition-duration) ease allow-discrete;
+
+    &:popover-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+
+      @starting-style {
+        opacity: 0;
+        transform: translateY(var(--popover-translate-y-start)) scale(var(--popover-scale-start));
+      }
+    }
+  }
+
+  /* ========== dialog ========= */
+  :root {
+    --dialog-transition-duration: 180ms;
+    --dialog-transition-easing: cubic-bezier(0.2, 0, 0, 1);
+    --dialog-scale-start: 0.96;
+    --dialog-translate-y-start: 12px;
+    --dialog-backdrop-bg: rgb(0 0 0 / 0.42);
+  }
+
+  dialog {
+    padding: 0;
+    border: 0;
+
+    opacity: 0;
+    transform: translateY(var(--dialog-translate-y-start)) scale(var(--dialog-scale-start));
+    overscroll-behavior: contain; /* 阻止滚动链 */
+
+    transition:
+      opacity var(--dialog-transition-duration) var(--dialog-transition-easing),
+      transform var(--dialog-transition-duration) var(--dialog-transition-easing),
+      display var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete,
+      overlay var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete;
+
+    &[open] {
+      opacity: 1;
+      transform: none;
+
+      @starting-style {
+        opacity: 0;
+        transform: translateY(var(--dialog-translate-y-start)) scale(var(--dialog-scale-start));
+      }
+    }
+
+    &::backdrop {
+      background: rgb(0 0 0 / 0);
+
+      transition:
+        background var(--dialog-transition-duration) var(--dialog-transition-easing),
+        display var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete,
+        overlay var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete;
+    }
+
+    &[open]::backdrop {
+      background: var(--dialog-backdrop-bg);
+
+      @starting-style {
+        background: rgb(0 0 0 / 0);
+      }
+    }
+  }
+
+  /* ============== scrollbar ============== */
+  textarea,
+  pre {
+    overscroll-behavior: contain;
+  }
+
+  :root {
+    --scrollbar-thumb-color: light-dark(rgb(0 0 0 / 0.24), rgb(255 255 255 / 0.22));
+    --scrollbar-thumb-hover-color: light-dark(rgb(0 0 0 / 0.36), rgb(255 255 255 / 0.34));
+    --scrollbar-track-color: transparent;
+
+    /* 预留滚动条槽位，避免页面从不可滚动变成可滚动时内容横向跳动。 */
+    scrollbar-gutter: stable;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover-color);
+    }
   }
 }
