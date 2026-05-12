@@ -275,18 +275,27 @@
   }
 
   :root {
-    --scrollbar-thumb-color: light-dark(rgb(0 0 0 / 0.24), rgb(255 255 255 / 0.22));
-    --scrollbar-thumb-hover-color: light-dark(rgb(0 0 0 / 0.36), rgb(255 255 255 / 0.34));
+    --scrollbar-thumb-color: light-dark(rgb(0 0 0 / 0.36), rgb(255 255 255 / 0.34));
     --scrollbar-track-color: transparent;
 
     /* 预留滚动条槽位，避免页面从不可滚动变成可滚动时内容横向跳动。 */
     scrollbar-gutter: stable;
   }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
-    &::-webkit-scrollbar-thumb:hover {
-      background-color: var(--scrollbar-thumb-hover-color);
+  }
+
+  @supports selector(::-webkit-scrollbar-thumb:hover) {
+    * {
+      &::-webkit-scrollbar {
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+        &:hover {
+          opacity: 1;
+        }
+      }
     }
   }
 }
