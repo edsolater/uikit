@@ -1,15 +1,56 @@
-# File Map
+# Architecture
 
-这个文件是项目结构地图，用来帮助维护者快速判断“我该去哪个文件改”。它只记录目录和文件职责，不替代源码里的文件头注释。
+## Purpose
+
+- 这个文件是当前仓库的结构与边界入口。
+- 它负责帮助维护者和 AI 快速理解“这个项目分成哪些层、每层负责什么、应该去哪里改”。
+- 它不替代源码文件头注释。
+- 它不承载通用代码规范、CSS 规范、命名规范或注释规范。
+
+## Capability Model
+
+- 当前仓库是 SolidJS UIKit 项目。
+- 当前仓库的目标是沉淀基础 DOM 原子、基础组件、基础 hook 和本地验证方式。
+- 当前仓库不是大而全的设计系统。
+- 当前仓库优先提供稳定、直接、边界清楚的基础能力。
+- 当前仓库默认只考虑最新浏览器和现代 CSS 能力。
+
+## Layering
+
+- `src/base`：基础抽象原子层。
+  - 负责底层 DOM、状态原子、局部组件能力和 trait。
+  - 这一层提供可复用能力，不直接承载业务级组件语义。
+- `src/components`：对外组件层。
+  - 负责基础组件主体与组件级本地 demo / story。
+  - 这一层向调用方暴露稳定组件入口。
+- `src/hooks`：对外 hook 层。
+  - 负责浏览器协作类或通用调用方能力。
+  - 这一层向调用方暴露稳定 hook 入口。
+- `src/App.tsx`：本地 demo 装配层。
+  - 只负责把各主体旁边的 `.demo.tsx` 组合成首页。
+  - 不应把具体 demo 实现长期堆在 `App.tsx` 里。
+- `src/index.ts`：发布入口层。
+  - 负责统一对外导出。
+  - 不承载 demo、story 或本地验证逻辑。
+
+## Runtime Flow
+
+- 本地开发入口从 `src/main.tsx` 进入。
+- `src/main.tsx` 只负责挂载 `src/App.tsx`。
+- `src/App.tsx` 只负责组合各主体就近定义的 demo。
+- 组件和 hook 的正式发布入口始终从 `src/index.ts` 收口。
+- `src/components/index.ts` 和 `src/hooks/index.ts` 负责各自目录的对外汇总导出。
+
+## File Map
 
 - 根目录
   - `Agents.md`：agent 入口与仓库级协作约束。
-  - `File-Map.md`：项目结构地图。
+  - `Architecture.md`：项目架构、模块边界、目录职责与调用链路。
   - `README.md`：项目入口说明。
   - `package.json`：包信息、依赖和本地命令。
   - `src`
     - `App.css`：本地 demo 样式。
-    - `App.tsx`：本地 demo 页面。
+    - `App.tsx`：本地 demo 页面装配入口。
     - `base`
       - `BasicComponent`
         - `className.ts`：把 class 声明绑定到 DOM `classList`。
@@ -84,3 +125,25 @@
   - `tsconfig.build.json`：发布类型声明构建配置。
   - `tsconfig.json`：本地开发与 Storybook 类型检查配置。
   - `vite.config.ts`：组件库构建配置。
+
+## Module Boundaries
+
+- `src/base` 不应反向依赖 `src/components` 或 `src/hooks` 的业务主体。
+- `src/components` 的 demo、story 和局部能力应尽量就近放在组件目录内。
+- `src/hooks` 的 demo、story 和主体实现应尽量就近放在 hook 目录内。
+- `src/App.tsx` 只装配 demo，不定义 demo 主体。
+- `src/index.ts` 只处理对外导出，不夹带本地验证代码。
+- `types` 目录只承载没有明确单一主体归属的全局类型补丁。
+
+## Do Not Do
+
+- 不要把组件 demo 长期堆在 `App.tsx`。
+- 不要把 story、demo 和正式发布入口混成同一职责文件。
+- 不要把 `src/base` 当成业务级组件目录使用。
+- 不要把结构文档退化成单纯的目录清单，而忽略层次和边界。
+
+## Agent Notes
+
+- AI 先读 `Agents.md`，再读本文件理解当前仓库结构。
+- 需要判断“文件该落在哪一层、应该改谁、不该跨哪条边界”时，优先参考本文件。
+- 发现本文件缺少结构信息时，应补结构、边界和调用链，而不是只补文件名索引。

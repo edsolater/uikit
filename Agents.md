@@ -11,7 +11,7 @@
 
 - 先读 `D:\mycode\ai-rules\README.md`。
 - 写代码、改代码、重构、命名、写注释、写 CSS、写组件或类型时，再读 `D:\mycode\ai-rules\code\_MAP.md` 对应主题文件。
-- 查当前仓库结构时读 `File-Map.md`。
+- 查当前仓库结构、模块边界和调用链时读 `Architecture.md`。
 - 写功能说明或修改计划时读 `docs/how-to-write-feature.md` 和 `docs/how-to-write-plan.md`。
 
 ## 当前项目边界
@@ -25,4 +25,4 @@
 
 - 发现缺失的通用代码规则时，优先补到 `D:\mycode\ai-rules\code` 对应规则文件。
 - 只有当前仓库独有、且不适合迁移到通用规则项目的入口信息，才允许写进本文件。
-- 本文件应保持轻量；新增内容前先判断是否应该放进 `ai-rules` 或 `File-Map.md`。
+- 本文件应保持轻量；新增内容前先判断是否应该放进 `ai-rules` 或 `Architecture.md`。
