@@ -15,8 +15,8 @@
 
 ## 当前确认值
 
-- `Button` 的代码主体落在 `src/components/Button.tsx`。
-- `Button` 的样式落点在 `src/components/button.css`。
+- `Button` 的代码主体落在 `src/components/Button/Button.tsx`。
+- `Button` 的样式落点在 `src/components/Button/button.css`。
 - `src/components/index.ts` 负责对外导出这个组件。
 - 当前阶段只需要 `solid` 和 `ghost` 两个展示变体。
 

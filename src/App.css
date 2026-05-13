@@ -79,6 +79,18 @@
   gap: 12px;
 }
 
+.demo-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.popover-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
 .title-card {
   display: flex;
   justify-content: space-between;
@@ -111,6 +123,11 @@
 
   .title-card {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .popover-row {
+    align-items: stretch;
     flex-direction: column;
   }
 }

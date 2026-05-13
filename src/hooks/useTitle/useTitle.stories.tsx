@@ -4,7 +4,7 @@
  */
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
 import { createSignal } from 'solid-js'
-import { Button } from '../components/Button'
+import { Button } from '../../components/Button'
 import { useTitle } from './useTitle'
 
 function UseTitlePreview() {

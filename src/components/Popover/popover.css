@@ -1,0 +1,154 @@
+.Popover {
+  display: inline-flex;
+
+  > ._trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid color-mix(in oklab, var(--accent) 18%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--surface) 90%, white);
+    color: var(--text-strong);
+    box-shadow: 0 10px 24px rgba(31, 26, 23, 0.08);
+    cursor: pointer;
+    transition:
+      transform 160ms ease,
+      border-color 160ms ease,
+      background-color 160ms ease,
+      box-shadow 160ms ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in oklab, var(--accent) 36%, var(--border));
+      box-shadow: 0 14px 28px rgba(31, 26, 23, 0.14);
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in oklab, var(--accent) 30%, transparent);
+      outline-offset: 3px;
+    }
+  }
+
+  &.state\:open {
+    > ._trigger {
+      border-color: color-mix(in oklab, var(--accent) 48%, var(--border));
+      background: color-mix(in oklab, var(--surface) 78%, var(--bg-accent));
+      box-shadow: 0 16px 32px rgba(31, 26, 23, 0.16);
+    }
+  }
+
+  > ._surface {
+    margin: 0;
+    padding: 16px 18px;
+    border: 1px solid rgba(255, 248, 239, 0.14);
+    border-radius: 22px;
+    background:
+      radial-gradient(circle at top left, rgba(255, 174, 125, 0.18), transparent 34%),
+      linear-gradient(145deg, rgba(23, 28, 37, 0.98), rgba(16, 20, 29, 0.96));
+    color: #f8f4ee;
+    box-shadow: 0 24px 54px rgba(16, 20, 29, 0.32);
+    min-width: 240px;
+    max-width: min(340px, calc(100vw - 24px));
+    overflow: visible;
+    position-try: flip-block, flip-inline, flip-start;
+    position-visibility: anchor-visible no-overflow;
+    opacity: 0;
+    transform: scale(0.96);
+    transform-origin: center top;
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease,
+      overlay 180ms ease allow-discrete,
+      display 180ms ease allow-discrete;
+
+    &:popover-open {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(255, 248, 239, 0.14);
+      background: rgba(24, 29, 38, 0.98);
+      border-shape:
+        polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)
+        polygon(50% 14%, 86% 50%, 50% 86%, 14% 50%);
+      box-shadow: 0 10px 24px rgba(16, 20, 29, 0.18);
+    }
+
+    > ._header {
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 216, 187, 0.84);
+    }
+
+    > ._body {
+      display: grid;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.55;
+      color: rgba(248, 244, 238, 0.92);
+    }
+  }
+
+  &.placement\:bottom {
+    > ._surface {
+      position-area: bottom;
+      margin-top: 14px;
+      transform-origin: center top;
+
+      &::before {
+        top: -10px;
+        left: calc(50% - 9px);
+      }
+    }
+  }
+
+  &.placement\:top {
+    > ._surface {
+      position-area: top;
+      margin-bottom: 14px;
+      transform-origin: center bottom;
+
+      &::before {
+        bottom: -10px;
+        left: calc(50% - 9px);
+      }
+    }
+  }
+
+  &.placement\:right {
+    > ._surface {
+      position-area: right;
+      margin-left: 14px;
+      transform-origin: left center;
+
+      &::before {
+        top: calc(50% - 9px);
+        left: -10px;
+      }
+    }
+  }
+
+  &.placement\:left {
+    > ._surface {
+      position-area: left;
+      margin-right: 14px;
+      transform-origin: right center;
+
+      &::before {
+        top: calc(50% - 9px);
+        right: -10px;
+      }
+    }
+  }
+}

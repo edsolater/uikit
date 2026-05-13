@@ -15,7 +15,7 @@
 
 ## 当前确认值
 
-- `useTitle` 的代码主体落在 `src/hooks/useTitle.ts`。
+- `useTitle` 的代码主体落在 `src/hooks/useTitle/useTitle.ts`。
 - `src/hooks/index.ts` 负责对外导出这个 hook。
 - 当前阶段只处理 `document.title` 同步，不扩展到其他文档元信息。
 

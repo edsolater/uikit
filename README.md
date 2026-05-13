@@ -11,7 +11,7 @@ SolidJS 基础组件与 hooks 组件库。
 - [File-Map.md](File-Map.md)：项目文件地图，先用它判断某类改动应该落在哪个文件。
 - [../ai-rules/README.md](../ai-rules/README.md)：AI 写法约束入口，先读它来理解规则体系，再按它引导进入具体规则文件。
 - [src/base/pivHelpers/Piv.tsx](src/base/BasicComponent/Piv.tsx)：当前最核心的 DOM 原子，理解 class、style、htmlProps、on、ref 和 plugins 的消费顺序。
-- [src/components/Button.tsx](src/components/Button.tsx)：当前最小组件示例，展示上层组件如何使用 `Piv`。
+- [src/components/Button/Button.tsx](src/components/Button/Button.tsx)：当前最小组件示例，展示上层组件如何使用 `Piv`。
 
 更细的职责边界写在对应源码文件的文件头注释里。README 只保留项目入口信息，不展开实现细节。
 

@@ -45,9 +45,20 @@
         - `tabular-num.css`：等宽数字 trait 样式。
         - `tabular-num.ts`：等宽数字 trait。
     - `components`
-      - `button.css`：Button 样式。
-      - `Button.stories.tsx`：Button 的 Storybook 示例。
-      - `Button.tsx`：基础按钮组件。
+      - `Button`
+        - `Button.demo.tsx`：Button 的本地 HTML demo。
+        - `index.ts`：`Button` 目录导出入口。
+        - `Button.stories.tsx`：Button 的 Storybook 示例。
+        - `Button.tsx`：基础按钮组件。
+        - `button.css`：Button 样式。
+      - `Popover`
+        - `hooks`
+          - `createPopoverController.ts`：Popover 本地控制能力，管理原生 popover 生命周期与打开状态镜像。
+        - `Popover.demo.tsx`：Popover 的本地 HTML demo。
+        - `index.ts`：`Popover` 目录导出入口。
+        - `Popover.stories.tsx`：Popover 的 Storybook 示例。
+        - `Popover.tsx`：基础 Popover 组件，封装触发器、原生 popover 容器与 anchor positioning 结构。
+        - `popover.css`：Popover 样式，包含原生定位与 border-shape 箭头样式。
       - `index.ts`：`components` 目录导出入口。
     - `css`
       - `architecture.md`：CSS 结构说明。
@@ -59,12 +70,16 @@
       - `todo.md`：CSS 待办记录。
     - `hooks`
       - `index.ts`：对外 hooks 目录导出入口。
-      - `useTitle.stories.tsx`：`useTitle` 的 Storybook 示例。
-      - `useTitle.ts`：浏览器标题 hook。
+      - `useTitle`
+        - `index.ts`：`useTitle` 目录导出入口。
+        - `useTitle.demo.tsx`：`useTitle` 的本地 HTML demo。
+        - `useTitle.stories.tsx`：`useTitle` 的 Storybook 示例。
+        - `useTitle.ts`：浏览器标题 hook。
     - `index.css`：全局样式入口。
     - `index.ts`：包发布入口。
     - `main.tsx`：本地 demo 挂载入口。
     - `types`
+      - `htmlPopover.d.ts`：Popover API 与相关 HTML 属性的 JSX 类型补丁。
       - `htmlElementViewTransition.d.ts`：`HTMLElement.startViewTransition()` 的全局类型补丁。
   - `tsconfig.build.json`：发布类型声明构建配置。
   - `tsconfig.json`：本地开发与 Storybook 类型检查配置。
