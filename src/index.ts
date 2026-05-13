@@ -7,7 +7,4 @@ import './types/htmlPopover'
 
 export * from './components'
 export * from './hooks'
-export * from './base/BasicComponent'
-export * from './base/traits'
-export * from './base/hooks'
-export * from './base/component'
+export * from './base'

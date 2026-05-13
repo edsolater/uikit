@@ -8,7 +8,7 @@ import type { PivProps } from './Piv'
 import type { PropValueWrapper } from './type'
 import type { PivHTMLElement, PivTag } from './domMap'
 
-type RefFunction<T extends Element> = (element?: T) => void
+type RefFunction<T extends Element> = (element: T) => void
 
 export type PivRef<Tag extends PivTag = 'div'> = PropValueWrapper<RefFunction<PivHTMLElement<Tag>>>
 /**

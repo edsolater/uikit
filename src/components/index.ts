@@ -4,4 +4,3 @@
  */
 export * from './Button'
 export * from './Popover'
-export * from '../base/BasicComponent/Piv'

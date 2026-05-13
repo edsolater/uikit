@@ -4,6 +4,7 @@
  */
 import { Show, mergeProps, onMount, type JSX } from 'solid-js'
 import { Piv } from '../../base/BasicComponent/Piv'
+import { $ } from '../../base/hooks/base-state'
 import { createPopoverController, type PopoverToggleEvent } from './hooks/createPopoverController'
 import './popover.css'
 
@@ -27,12 +28,18 @@ export type PopoverProps = {
   defaultOpen?: boolean
   triggerProps?: Omit<
     JSX.ButtonHTMLAttributes<HTMLButtonElement>,
-    'children' | 'class' | 'style' | 'type' | 'id' | 'aria-controls' | 'aria-expanded' | 'aria-haspopup' | 'popovertarget' | 'popovertargetaction'
+    | 'children'
+    | 'class'
+    | 'style'
+    | 'type'
+    | 'id'
+    | 'aria-controls'
+    | 'aria-expanded'
+    | 'aria-haspopup'
+    | 'popovertarget'
+    | 'popovertargetaction'
   >
-  surfaceProps?: Omit<
-    JSX.HTMLAttributes<HTMLDivElement>,
-    'children' | 'class' | 'style' | 'id' | 'popover'
-  >
+  surfaceProps?: Omit<JSX.HTMLAttributes<HTMLDivElement>, 'children' | 'class' | 'style' | 'id' | 'popover'>
   onToggle?: (open: boolean, event: PopoverToggleEvent) => void
   onBeforeToggle?: (open: boolean, event: PopoverToggleEvent) => void
 }
@@ -63,12 +70,12 @@ export function Popover(inputProps: PopoverProps) {
   })
 
   const rootClassName = () =>
-    joinClassName('Popover', `placement:${props.placement}`, controller.isOpen() && 'state:open', props.class)
+    joinClassName('Popover', `placement:${props.placement}`, $(controller.isOpen) && 'state:open', props.class)
   const triggerClassName = () => joinClassName('_trigger', props.triggerClass)
   const surfaceClassName = () => joinClassName('_surface', props.surfaceClass)
 
   return (
-    <Piv as="div" class={rootClassName()} style={props.style}>
+    <Piv class={rootClassName()} style={props.style}>
       <Piv
         as="button"
         class={triggerClassName()}
@@ -79,7 +86,7 @@ export function Popover(inputProps: PopoverProps) {
           id: controller.triggerId,
           'aria-haspopup': 'dialog',
           'aria-controls': controller.popoverId,
-          'aria-expanded': controller.isOpen() ? 'true' : 'false',
+          'aria-expanded': $(controller.isOpen) ? 'true' : 'false',
           popovertarget: controller.popoverId,
           popovertargetaction: props.triggerAction,
           ...props.triggerProps,
@@ -89,7 +96,6 @@ export function Popover(inputProps: PopoverProps) {
       </Piv>
 
       <Piv
-        as="div"
         class={surfaceClassName()}
         style={props.surfaceStyle}
         ref={controller.setPopoverElement}

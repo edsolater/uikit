@@ -2,7 +2,8 @@
  * 这个文件负责 Popover 的本地控制能力。
  * 它只管理 popover 元素引用、打开状态镜像和原生 toggle 生命周期，不负责组件结构或视觉样式。
  */
-import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js'
+import { createEffect, onCleanup } from 'solid-js'
+import { $, createDomRef, createToggle, type State } from '../../../base/hooks'
 
 export type PopoverToggleState = 'open' | 'closed'
 
@@ -19,7 +20,7 @@ type CreatePopoverControllerOptions = {
 export type PopoverController = {
   popoverId: string
   triggerId: string
-  isOpen: Accessor<boolean>
+  isOpen: State<boolean>
   setPopoverElement: (element: HTMLDivElement) => void
   setTriggerElement: (element: HTMLButtonElement) => void
   showPopover: () => void
@@ -46,18 +47,27 @@ export function createPopoverController(
   options: CreatePopoverControllerOptions = {},
 ): PopoverController {
   const { popoverId, triggerId } = createPopoverIdentity()
-  const [isOpen, setIsOpen] = createSignal(false)
-  const [popoverElement, setPopoverElement] = createSignal<HTMLDivElement>()
-  const [triggerElement, setTriggerElement] = createSignal<HTMLButtonElement>()
+  const [isOpen, isOpenControl] = createToggle(false)
+  const [popoverElement, setPopoverElement] = createDomRef<HTMLDivElement>()
+  const [triggerElement, setTriggerElement] = createDomRef<HTMLButtonElement>()
+
+  function syncOpenState(nextOpen: boolean) {
+    if (nextOpen) {
+      isOpenControl.turnOn()
+      return
+    }
+
+    isOpenControl.turnOff()
+  }
 
   createEffect(() => {
-    const element = popoverElement()
+    const element = $(popoverElement)
 
     if (!element) {
       return
     }
 
-    setIsOpen(readPopoverOpenState(element))
+    syncOpenState(readPopoverOpenState(element))
 
     const handleToggle = (event: Event) => {
       const toggleEvent = event as PopoverToggleEvent
@@ -65,7 +75,7 @@ export function createPopoverController(
         ? toggleEvent.newState === 'open'
         : readPopoverOpenState(element)
 
-      setIsOpen(nextOpen)
+      syncOpenState(nextOpen)
       options.onToggle?.(nextOpen, toggleEvent)
     }
 
@@ -86,26 +96,26 @@ export function createPopoverController(
   })
 
   function showPopover() {
-    const element = popoverElement()
+    const element = $(popoverElement)
 
     if (!element) {
       return
     }
 
     element.showPopover?.()
-    setIsOpen(true)
+    isOpenControl.turnOn()
   }
 
   function hidePopover() {
-    const element = popoverElement()
+    const element = $(popoverElement)
 
     if (!element) {
       return
     }
 
     element.hidePopover?.()
-    setIsOpen(false)
-    triggerElement()?.focus()
+    isOpenControl.turnOff()
+    $(triggerElement)?.focus()
   }
 
   function togglePopover(force?: boolean) {
@@ -119,14 +129,14 @@ export function createPopoverController(
       return
     }
 
-    const element = popoverElement()
+    const element = $(popoverElement)
 
     if (!element) {
       return
     }
 
     element.togglePopover?.()
-    setIsOpen(readPopoverOpenState(element))
+    syncOpenState(readPopoverOpenState(element))
   }
 
   return {

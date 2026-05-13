@@ -13,9 +13,13 @@ import { setSingleDomProp, type HTMLPropValue } from './handleHTMLPropsValue'
 type ReservedHTMLPropKey = 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
 type KnownHTMLPropValue<Value> = Value | Accessor<Value | null | undefined> | null | undefined
+type PatchedIntrinsicHTMLPropValue<Tag extends PivTag, Key extends KnownHTMLPropKey<Tag>> =
+  Key extends 'popover'
+    ? JSX.IntrinsicElements[Tag][Key] | 'hint'
+    : JSX.IntrinsicElements[Tag][Key]
 
 type PureHTMLProps<Tag extends PivTag = 'div'> = {
-  [Key in KnownHTMLPropKey<Tag>]?: KnownHTMLPropValue<JSX.IntrinsicElements[Tag][Key]>
+  [Key in KnownHTMLPropKey<Tag>]?: KnownHTMLPropValue<PatchedIntrinsicHTMLPropValue<Tag, Key>>
 } & {
   [key: `attr:${string}`]: HTMLPropValue | undefined
   [key: `prop:${string}`]: HTMLPropValue | undefined
