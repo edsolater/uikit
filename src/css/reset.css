@@ -29,30 +29,23 @@
 
     /* 允许 display 和 overlay 属性在过渡中离散切换，避免用display: none, 在没有过渡完成的情况下，组件立刻消失。这个属性使display:none延后后消失 */
     transition-behavior: allow-discrete;
+
+    /* 现代 Chrome 支持中日韩文字和拉丁、数字之间的自动间距时，启用混排优化。 */
+    text-autospace: ideograph-alpha ideograph-numeric;
+
+    /* 收紧行首全角开标点的内部空白，让中文标点在行首更贴近排版习惯。 */
+    text-spacing-trim: trim-start;
   }
 
-  /* 基础过度. TODO：待确认 */
-  * {
-    /* 所有颜色改变都有基本过渡效果 */
-    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
-    transition-duration: 0.1s;
+  /* 基础过渡只覆盖不改变文档流的状态反馈，布局和尺寸动画由具体组件自己声明。 */
+  *,
+  *::before,
+  *::after {
+    transition-property:
+      color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, transform,
+      translate, scale, rotate;
+    transition-duration: 120ms;
     transition-timing-function: ease;
-  }
-
-  /* 现代 Chrome 支持中日韩文字和拉丁、数字之间的自动间距时，启用混排优化。 */
-  @supports (text-autospace: ideograph-alpha ideograph-numeric) {
-    :root {
-      /* 在中文、日文、韩文与英文或数字相邻时自动补出更自然的视觉间距。 */
-      text-autospace: ideograph-alpha ideograph-numeric;
-    }
-  }
-
-  /* 这个属性仍处在较新的实现阶段，所以只在浏览器明确支持时使用。 */
-  @supports (text-spacing-trim: trim-start) {
-    :root {
-      /* 收紧行首全角开标点的内部空白，让中文标点在行首更贴近排版习惯。 */
-      text-spacing-trim: trim-start;
-    }
   }
 
   /* 所有元素统一使用 border-box，避免 padding 和 border 把盒子撑出声明尺寸。 */
@@ -156,13 +149,8 @@
   /* 文本域默认只允许纵向拖拽，避免横向拖拽破坏布局宽度。 */
   :where(textarea) {
     resize: vertical;
-  }
-
-  /* Chrome 支持内容尺寸字段时，让文本域高度可随内容增长。 */
-  @supports (field-sizing: content) {
-    :where(textarea) {
-      field-sizing: content;
-    }
+    /* Chrome 支持内容尺寸字段时，让文本域高度可随内容增长。 */
+    field-sizing: content;
   }
 
   /* 媒体元素默认变成块级元素，去掉 inline 元素基线下方的空隙。 */
