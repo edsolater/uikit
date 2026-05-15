@@ -5,12 +5,14 @@
  */
 import { ButtonDemo } from './components/Button/Button.demo'
 import { PopoverDemo } from './components/Popover/Popover.demo'
+import { ColorDashboardDemo } from './css/ColorDashboardDemo'
 import { UseTitleDemo } from './hooks/useTitle/useTitle.demo'
 import './ExampleDashboard.css'
 
 function App() {
   return (
     <main class="demo-shell">
+      <ColorDashboardDemo />
       <ButtonDemo />
       <PopoverDemo />
       <UseTitleDemo />
