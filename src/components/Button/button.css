@@ -1,51 +1,56 @@
-.rk-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 132px;
-  height: 44px;
-  padding: 0 18px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  cursor: pointer;
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    border-color 160ms ease,
-    background-color 160ms ease;
-}
+/* 组件库的根层，负责提供所有组件共享的基础样式和设计规范。用 @layer 是为了方便用户覆盖 */
+@layer uikit {
+  /* 组件的基础样式。应该足够通用，这个最基本的 Button 样式 */
+  .Button {
+    /* 可业务定制的尺寸、颜色， 应该抽象成 CSS 变量 */
 
-.rk-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
+    /* 只用default， big，small应该自动自己生长出来 */
+    --Button-w: --size(8);
+    --Button-h: --size(4);
+    --Button-padding-x: --space(4);
+    --Button-padding-y: --space(1);
+    --Button-content-gap: --space(2);
+    --Button-bg: var(--color-brand);
+    --Button-fg: --foreground-on(var(--Button-bg));
+    --Button-border-color: var(--color-border);
+    --Button-disable-opacity: 0.52;
 
-.rk-button:focus-visible {
-  outline: 2px solid rgba(196, 93, 47, 0.22);
-  outline-offset: 3px;
-}
+    display: inline-flex;
+    color: var(--Button-fg);
+    align-items: center;
+    gap: var(--Button-content-gap);
+    min-width: var(--Button-w);
+    min-height: var(--Button-h);
+    padding: var(--Button-padding-y) var(--Button-padding-x);
+    border: 0.1em solid var(--Button-border-color);
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 160ms;
+    background: var(--Button-bg);
 
-.rk-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.52;
-}
+    &:disabled {
+      cursor: not-allowed;
+      opacity: var(--Button-disable-opacity);
+    }
+    &:focus-visible {
+      outline: 0.1em solid --dim(var(--Button-border-color), 32);
+      outline-offset: 3px;
+    }
 
-.rk-button--solid {
-  color: var(--accent-contrast);
-  background: linear-gradient(135deg, #cc6c40, #b84c1f);
-  box-shadow: 0 12px 24px rgba(184, 76, 31, 0.24);
-}
+    &.variant-solid {
+      /* 就是默认的variant，不需要任何额外规则 */
+      --Button-bg: var(--color-brand);
+      --Button-fg: --foreground-on(var(--Button-bg));
+    }
 
-.rk-button--solid:hover:not(:disabled) {
-  box-shadow: 0 16px 28px rgba(184, 76, 31, 0.3);
-}
-
-.rk-button--ghost {
-  color: var(--text-strong);
-  background: rgba(255, 255, 255, 0.42);
-  border-color: var(--border);
-}
-
-.rk-button--ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.72);
+    &.variant-ghost {
+      color: var(--color-text-strong);
+      background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+      border-color: var(--color-border);
+      &:hover:not(:disabled) {
+        background: color-mix(in oklab, var(--color-surface-soft) 92%, transparent);
+      }
+    }
+  }
 }

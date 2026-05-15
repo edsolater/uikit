@@ -64,11 +64,11 @@ traits
 
 ```css
 var(--color-text)
-var(--color-background)
+var(--color-bg)
 var(--color-surface)
 var(--color-border)
-var(--color-brand-fill)
-var(--color-on-brand)
+var(--color-brand)
+--foreground-on(var(--color-brand))
 
 var(--space-4)
 var(--size-3)

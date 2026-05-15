@@ -90,8 +90,8 @@ import './app.css'
 
 ```css
 .primary-button {
-  color: var(--color-on-brand);
-  background: var(--color-brand-fill);
+  color: --foreground-on(var(--color-brand));
+  background: var(--color-brand);
 }
 
 .card {
@@ -105,8 +105,8 @@ import './app.css'
 
 ```css
 :root {
-  --color-brand: oklch(62% 0.17 255deg);
-  --color-accent: oklch(70% 0.16 45deg);
+  --color-brand-source: oklch(62% 0.17 255deg);
+  --color-accent-source: oklch(70% 0.16 45deg);
 }
 ```
 

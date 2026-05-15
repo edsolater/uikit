@@ -11,20 +11,9 @@ import './App.css'
 function App() {
   return (
     <main class="demo-shell">
-      <section class="hero">
-        <span class="eyebrow">SolidJS / Component Kit</span>
-        <h1>轻量、直接、只做基础能力。</h1>
-        <p class="hero-copy">
-          这里保留一个最小 demo 首页，但具体例子都应就近落在各自主体目录。真正对外导出的入口在
-          <code>src/index.ts</code>。
-        </p>
-      </section>
-
-      <section class="panel-grid">
-        <ButtonDemo />
-        <PopoverDemo />
-        <UseTitleDemo />
-      </section>
+      <ButtonDemo />
+      <PopoverDemo />
+      <UseTitleDemo />
     </main>
   )
 }
