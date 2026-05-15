@@ -63,6 +63,7 @@ export type TableProps<Row extends TableDataRow = TableDataRow> = {
  * ```
  */
 export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
+  
   // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
   const columnKeys = derive(props.data, (data) => (props.keys ? $(props.keys) : pickTableColumnKeys(data)))
 

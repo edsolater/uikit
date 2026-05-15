@@ -1,6 +1,6 @@
 /**
  * 这个文件只负责 ColorDashboard 的颜色列表展示。
- * 它负责扫描当前页面的颜色 token，并在环境颜色变化时重新读取结果。
+ * 它负责扫描当前页面的颜色 CSS 变量名，并整理成颜色 token 表格行。
  */
 import { createEffect } from 'solid-js'
 import { Piv, Table } from '../../components'
@@ -19,40 +19,40 @@ function hasNestedCssRules(rule: CSSRule): rule is CSSRule & { cssRules: CSSRule
 }
 
 /**
- * 递归扫描样式规则，找出 :root 上声明的 --color-* token。
+ * 递归扫描样式规则，找出 :root 上声明的 --color-* 变量名。
  */
-function collectColorTokenNamesFromRules(cssRules: CSSRuleList, tokens: Set<string>) {
+function collectColorVariableNamesFromStylesheetRules(cssRules: CSSRuleList, cssVariableNames: Set<string>) {
   for (const rule of Array.from(cssRules)) {
     if (rule instanceof CSSStyleRule && rule.selectorText === ':root') {
       for (const name of Array.from(rule.style)) {
         if (name.startsWith('--color-')) {
-          tokens.add(name)
+          cssVariableNames.add(name)
         }
       }
       continue
     }
 
     if (hasNestedCssRules(rule)) {
-      collectColorTokenNamesFromRules(rule.cssRules, tokens)
+      collectColorVariableNamesFromStylesheetRules(rule.cssRules, cssVariableNames)
     }
   }
 }
 
 /**
- * 从当前页面已加载的 stylesheet 中直接提取 color token 列表。
+ * 从当前页面已加载的 stylesheet 中直接提取 color CSS 变量名列表。
  */
-function extractColorTokenFromCurrentStylesheet() {
-  const tokens = new Set<string>()
+function extractColorVariableNamesFromCurrentStylesheet() {
+  const cssVariableNames = new Set<string>()
 
   for (const styleSheet of Array.from(document.styleSheets)) {
     try {
-      collectColorTokenNamesFromRules(styleSheet.cssRules, tokens)
+      collectColorVariableNamesFromStylesheetRules(styleSheet.cssRules, cssVariableNames)
     } catch {
       continue
     }
   }
 
-  return Array.from(tokens).sort((left, right) => left.localeCompare(right))
+  return Array.from(cssVariableNames).sort((left, right) => left.localeCompare(right))
 }
 
 /**
@@ -79,25 +79,25 @@ function formatColorText(color: string) {
 }
 
 export function ColorTokenTable() {
-  const [colorTokens, setColorTokens] = createState<string[]>([])
+  const [colorVariableNames, setColorVariableNames] = createState<string[]>([])
 
-  const tableData = derive(colorTokens, (s) =>
-    s.map((cssVariableName) => ({
+  const colorTokenRows = derive(colorVariableNames, (v) =>
+    v.map((cssVariableName) => ({
       name: cssVariableName,
       value: formatColorText(readTokenRawValue(cssVariableName)),
       preview: `var(${cssVariableName}, transparent)`,
     })),
   )
 
-  const refreshTokens = () => {
-    setColorTokens(extractColorTokenFromCurrentStylesheet())
+  const refreshColorVariableNames = () => {
+    setColorVariableNames(extractColorVariableNamesFromCurrentStylesheet())
   }
 
-  createEffect(refreshTokens)
+  createEffect(refreshColorVariableNames)
 
   return (
     <Table
-      data={tableData}
+      data={colorTokenRows}
       keys={['name', 'preview']}
       renderParts={{
         tableCell: {
