@@ -1,4 +1,4 @@
-import { createState, type State } from '@edsolater/uikit'
+import { createState, type State } from '../base-state'
 
 /**
  * CounterControl

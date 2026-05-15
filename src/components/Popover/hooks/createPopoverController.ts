@@ -3,7 +3,7 @@
  * 它只管理 popover 元素引用、打开状态镜像和原生 toggle 生命周期，不负责组件结构或视觉样式。
  */
 import { createEffect, onCleanup } from 'solid-js'
-import { $, createDomRef, createToggle, type State } from '../../../base/hooks'
+import { type State, $, createDomRef, createToggle } from '../../../hooks'
 
 export type PopoverToggleState = 'open' | 'closed'
 
@@ -43,9 +43,7 @@ function readPopoverOpenState(element?: HTMLDivElement) {
   return element?.matches(':popover-open') ?? false
 }
 
-export function createPopoverController(
-  options: CreatePopoverControllerOptions = {},
-): PopoverController {
+export function createPopoverController(options: CreatePopoverControllerOptions = {}): PopoverController {
   const { popoverId, triggerId } = createPopoverIdentity()
   const [isOpen, isOpenControl] = createToggle(false)
   const [popoverElement, setPopoverElement] = createDomRef<HTMLDivElement>()
@@ -71,9 +69,7 @@ export function createPopoverController(
 
     const handleToggle = (event: Event) => {
       const toggleEvent = event as PopoverToggleEvent
-      const nextOpen = toggleEvent.newState
-        ? toggleEvent.newState === 'open'
-        : readPopoverOpenState(element)
+      const nextOpen = toggleEvent.newState ? toggleEvent.newState === 'open' : readPopoverOpenState(element)
 
       syncOpenState(nextOpen)
       options.onToggle?.(nextOpen, toggleEvent)

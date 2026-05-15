@@ -6,7 +6,7 @@
 import { ButtonDemo } from './components/Button/Button.demo'
 import { PopoverDemo } from './components/Popover/Popover.demo'
 import { UseTitleDemo } from './hooks/useTitle/useTitle.demo'
-import './App.css'
+import './ExampleDashboard.css'
 
 function App() {
   return (

@@ -3,9 +3,9 @@
  * 它基于 Solid 的 mapArray 维护子树复用，只负责列表结构，不解包 item 内部字段。
  */
 import { createEffect, mapArray, type Accessor, type JSX } from 'solid-js'
-import { createState } from '../hooks'
-import { Piv } from '../..'
 import { createDomRef } from '../hooks/domRef'
+import { createState } from '../hooks/base-state'
+import { Piv } from './BasicPiv'
 
 export type Read<T> = Accessor<T>
 

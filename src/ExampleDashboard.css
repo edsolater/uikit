@@ -1,3 +1,5 @@
+@import './css/all-base.css';
+
 .demo-shell {
   margin: 0 --space(8);
   display: grid;

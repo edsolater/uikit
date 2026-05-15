@@ -3,10 +3,10 @@
  * 它负责触发器、原生 popover 容器和 anchor positioning 结构，不负责菜单协议、表单校验或业务弹层编排。
  */
 import { Show, mergeProps, onMount, type JSX } from 'solid-js'
-import { Piv } from '../../base/BasicComponent/Piv'
-import { $ } from '../../base/hooks/base-state'
+import { Piv } from '../BasicPiv/Piv'
 import { createPopoverController, type PopoverToggleEvent } from './hooks/createPopoverController'
 import './popover.css'
+import { $ } from '../../hooks/base-state'
 
 export type PopoverPlacement = 'top' | 'right' | 'bottom' | 'left'
 export type PopoverMode = 'auto' | 'hint' | 'manual'

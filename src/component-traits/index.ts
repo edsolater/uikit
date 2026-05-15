@@ -1,0 +1,1 @@
+export * from './tabular-num' // 代表功能插件

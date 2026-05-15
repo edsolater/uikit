@@ -1,4 +1,4 @@
-import { createState, type State } from '@edsolater/uikit'
+import { createState } from '../base-state'
 import type { Accessor } from 'solid-js/types/server/reactive.js'
 
 /**
