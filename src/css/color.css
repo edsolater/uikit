@@ -7,316 +7,177 @@
 /* ========== Channel API ========== */
 
 /*
- * --tune：相对调色工具，基于 OKLCH 相对颜色语法和 alpha 通道计算。
+ * ！！！内部组合用color基础工具函数，
+ * 外部使用--color-adjust和方言工具函数
+
+
  * 参数：(<color>, hue|lightness|chroma|opacity, signed delta)。
  * delta 的单位跟随通道：hue 用 <angle>，lightness / opacity 用 <percentage>，chroma 用 <number>。
- * 示例：--tune(var(--color-brand), lightness, 8%)。
+ * 示例：--shift(var(--color-brand), lightness, 8%)。
  */
-@function --tune(--color <color>, --channel <custom-ident>, --delta) returns <color> {
+@function --shift-color-channel(
+    --color <color>,
+    --channel
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+      ),
+    --value type(<angle> | <percentage> | <number>)
+  )
+  returns <color> {
   result: if(
-    style(--channel: hue): oklch(from var(--color) l c calc(h + (var(--delta) / 1deg))) ;
-      style(--channel: lightness): oklch(from var(--color) calc(l + (var(--delta) / 100%)) c h) ;
-      style(--channel: chroma): oklch(from var(--color) l calc(c + var(--delta)) h) ;
-      style(--channel: opacity): oklch(from var(--color) l c h / calc(alpha + (var(--delta) / 100%))) ;
-      else: var(--color)
+    style(--channel: delta-hue): oklch(from var(--color) l c calc(h + (var(--value) / 1deg)) / alpha) ;
+      style(--channel: delta-lightness): oklch(from var(--color) calc(l + (var(--value) / 100%)) c h / alpha) ;
+      style(--channel: delta-chroma): oklch(from var(--color) l calc(c + var(--value)) h / alpha) ;
+      style(--channel: delta-opacity): oklch(from var(--color) l c h / calc(alpha + (var(--value) / 100%))) ;
+      style(--channel: set-hue): oklch(from var(--color) l c calc(var(--value) / 1deg) / alpha) ;
+      style(--channel: set-lightness): oklch(from var(--color) calc(var(--value) / 100%) c h / alpha) ;
+      style(--channel: set-chroma): oklch(from var(--color) l var(--value) h / alpha) ;
+      style(--channel: set-opacity): oklch(from var(--color) l c h / calc(var(--value) / 100%)) ; else: var(--color)
   );
 }
 
-/*
- * --pin：绝对定色工具，基于 OKLCH 相对颜色语法直接固定指定通道。
- * 参数：(<color>, hue|lightness|chroma|opacity, target value)。
- * value 的单位跟随通道：hue 用 <angle>，lightness / opacity 用 <percentage>，chroma 用 <number>。
- * 示例：--pin(var(--color-brand), chroma, 0)。
- */
-@function --pin(--color <color>, --channel <custom-ident>, --value) returns <color> {
-  result: if(
-    style(--channel: hue): oklch(from var(--color) l c var(--value)) ;
-      style(--channel: lightness): oklch(from var(--color) var(--value) c h) ;
-      style(--channel: chroma): oklch(from var(--color) l var(--value) h) ;
-      style(--channel: opacity): oklch(from var(--color) l c h / var(--value)) ; else: var(--color)
-  );
-}
-
-/*
- * --pin2：连续两次绝对定色，基于 --pin 串联执行。
- * 参数：(<color>, channel, value, channel, value)。
- * 示例：--pin2(var(--color-brand), chroma, 0, opacity, 80%)。
- */
-@function --pin2(
+@function --color-adjust(
     --color <color>,
-    --first-channel <custom-ident>,
-    --first-value,
-    --second-channel <custom-ident>,
-    --second-value
+    --channel1
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+      ),
+    --value1 type(<angle> | <percentage> | <number>),
+    --channel2
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+          | none
+      ): none,
+    --value2 type(<angle> | <percentage> | <number>): 0,
+
+    --channel3
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+          | none
+      ): none,
+    --value3 type(<angle> | <percentage> | <number>): 0,
+
+    --channel4
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+          | none
+      ): none,
+    --value4 type(<angle> | <percentage> | <number>): 0
   )
   returns <color> {
-  result: --pin(
-    --pin(var(--color), var(--first-channel), var(--first-value)),
-    var(--second-channel),
-    var(--second-value)
+  --new-color-1: --shift-color-channel(var(--color), var(--channel1), var(--value1));
+  --new-color-2: if(
+    style(--channel2: none): var(--new-color-1) ;
+      else: --shift-color-channel(var(--new-color-1), var(--channel2), var(--value2))
   );
+  --new-color-3: if(
+    style(--channel3: none): var(--new-color-2) ;
+      else: --shift-color-channel(var(--new-color-2), var(--channel3), var(--value3))
+  );
+  --new-color-4: if(
+    style(--channel4: none): var(--new-color-3) ;
+      else: --shift-color-channel(var(--new-color-3), var(--channel4), var(--value4))
+  );
+  result: var(--new-color-4);
 }
 
-/*
- * --pin3：连续三次绝对定色，基于 --pin2 和 --pin 串联执行。
- * 参数：(<color>, channel, value, channel, value, channel, value)。
- * 示例：--pin3(var(--color-brand), hue, 240deg, chroma, 0.12, opacity, 90%)。
- */
-@function --pin3(
-    --color <color>,
-    --first-channel <custom-ident>,
-    --first-value,
-    --second-channel <custom-ident>,
-    --second-value,
-    --third-channel <custom-ident>,
-    --third-value
-  )
-  returns <color> {
-  result: --pin(
-    --pin2(var(--color), var(--first-channel), var(--first-value), var(--second-channel), var(--second-value)),
-    var(--third-channel),
-    var(--third-value)
-  );
-}
+/* ========== 颜色方言函数 ========== */
 
 /*
- * --tune2：连续两次相对调色，基于 --tune 串联执行。
- * 参数：(<color>, channel, signed delta, channel, signed delta)。
- * 每个 delta 的单位都跟随各自 channel。
- * 示例：--tune2(var(--color-brand), lightness, 8%, chroma, -0.02)。
- */
-@function --tune2(
-    --color <color>,
-    --first-channel <custom-ident>,
-    --first-delta,
-    --second-channel <custom-ident>,
-    --second-delta
-  )
-  returns <color> {
-  result: --tune(
-    --tune(var(--color), var(--first-channel), var(--first-delta)),
-    var(--second-channel),
-    var(--second-delta)
-  );
-}
-
-/*
- * --tune3：连续三次相对调色，基于 --tune2 和 --tune 串联执行。
- * 参数：(<color>, channel, signed delta, channel, signed delta, channel, signed delta)。
- * 每个 delta 的单位都跟随各自 channel。
- * 示例：--tune3(var(--color-brand), hue, 150deg, lightness, 8%, chroma, -0.01)。
- */
-@function --tune3(
-    --color <color>,
-    --first-channel <custom-ident>,
-    --first-delta,
-    --second-channel <custom-ident>,
-    --second-delta,
-    --third-channel <custom-ident>,
-    --third-delta
-  )
-  returns <color> {
-  result: --tune(
-    --tune2(var(--color), var(--first-channel), var(--first-delta), var(--second-channel), var(--second-delta)),
-    var(--third-channel),
-    var(--third-delta)
-  );
-}
-
-/* ========== Dialect API ========== */
-
-/*
- * --lighten：提亮方言工具，基于 --tune 的 lightness 正向 delta。
+ * --lighten：提亮方言工具
  * 参数：(<color>, amount? <percentage>)，默认 10%。
  * 示例：--lighten(var(--color-brand), 8%)。
  */
 @function --lighten(--color <color>, --amount <percentage>: 10%) returns <color> {
-  result: --tune(var(--color), lightness, var(--amount));
+  result: --color-adjust(var(--color), delta-lightness, var(--amount));
 }
 
 /*
- * --darken：压暗方言工具，基于 --tune 的 lightness 负向 delta。
+ * --darken：压暗方言工具
  * 参数：(<color>, amount? <percentage>)，默认 10%。
  * 示例：--darken(var(--color-brand), 8%)。
  */
 @function --darken(--color <color>, --amount <percentage>: 10%) returns <color> {
-  result: --tune(var(--color), lightness, calc(var(--amount) * -1));
+  result: --color-adjust(var(--color), delta-lightness, calc(var(--amount) * -1));
 }
 
 /*
- * --saturate：增彩方言工具，基于 --tune 的 chroma 正向 delta。
+ * --saturate：增彩方言工具
  * 参数：(<color>, amount? <number>)，默认 0.02。
  * 示例：--saturate(var(--color-brand), 0.02)。
  */
 @function --saturate(--color <color>, --amount <number>: 0.02) returns <color> {
-  result: --tune(var(--color), chroma, var(--amount));
+  result: --color-adjust(var(--color), delta-chroma, var(--amount));
 }
 
 /*
- * --desaturate：降彩方言工具，基于 --tune 的 chroma 负向 delta。
+ * --desaturate：降彩方言工具
  * 参数：(<color>, amount? <number>)，默认 0.02。
  * 示例：--desaturate(var(--color-brand), 0.02)。
  */
 @function --desaturate(--color <color>, --amount <number>: 0.02) returns <color> {
-  result: --tune(var(--color), chroma, calc(var(--amount) * -1));
+  result: --color-adjust(var(--color), delta-chroma, calc(var(--amount) * -1));
 }
 
 /*
- * --hue-rotate：色相旋转方言工具，基于 --tune 的 hue signed delta。
+ * --hue-rotate：色相旋转方言工具
  * 参数：(<color>, amount? <angle>)，默认 30deg。
  * 示例：--hue-rotate(var(--color-brand), 30deg)。
  */
 @function --hue-rotate(--color <color>, --amount <angle>: 30deg) returns <color> {
-  result: --tune(var(--color), hue, var(--amount));
+  result: --color-adjust(var(--color), delta-hue, var(--amount));
 }
 
 /*
- * --grayscale：灰度方言工具，基于 --pin 把 chroma 固定为 0。
+ * --grayscale：灰度方言工具
  * 参数：(<color>)。
  * 示例：--grayscale(var(--color-brand))。
  */
 @function --grayscale(--color <color>) returns <color> {
-  result: --pin(var(--color), chroma, 0);
+  result: --color-adjust(var(--color), set-chroma, 0);
 }
 
-/*
- * --foreground-on：根据背景色推导可读前景色。
- * 参数：(<color>)。
- * 示例：color: --foreground-on(var(--color-brand))。
- */
-@function --foreground-on(--color <color>) returns <color> {
-  result: --mix2(contrast-color(var(--color)), 8, var(--color), 2);
+/* 透明化 */
+@function --opacify(--color <color>, --amount <percentage>: 10%) returns <color> {
+  result: --color-adjust(var(--color), delta-opacity, var(--amount));
 }
 
-/*
- * --surface-from：根据强调色生成贴近当前页面背景的弱表面色。
- * 参数：(<color>, weight? <number>)，weight 是强调色百分比，默认 16。
- * 示例：background: --surface-from(var(--color-brand))。
- */
-@function --surface-from(--color <color>, --weight <number>: 16) returns <color> {
-  result: color-mix(in oklab, var(--color-bg) calc((100 - var(--weight)) * 1%), var(--color) calc(var(--weight) * 1%));
-}
-
-/* ========== Palette Mix API ========== */
+/* ============= mix 创造工具 ============ */
 
 /*
- * --mix2：双色比例混合工具，基于原生 color-mix(in oklab, ...) 隐藏颜色空间和百分比归一化。
- * 参数：(<color>, weight <number>, <color>, weight <number>)。
- * 示例：--mix2(white, 9, var(--color-brand), 1)。
+ * --color-mix：多颜色因素合成工具。
+ * 它负责用多个颜色 token 的权重创建一个新的复合语义色，不负责单源颜色派生。
+ * 单源颜色派生统一使用 --color-adjust 和对应方言函数，不使用 tint / shade / tone / dim 这类传统颜料语境。
+ *
+ * 参数：
+ *   color1 / color2 必填，color3 / color4 可选。
+ *   weight 使用 <number>，内部自动归一化为 color-mix() 需要的百分比。
+ *
+ * 约定：
+ *   最多 4 色。超过 4 色不提供入口，避免混色语义变脏。
+ *   内部固定使用 oklab，调用方不用在业务层思考颜色空间。
  */
-@function --mix2(--first-color <color>, --first-weight <number>, --second-color <color>, --second-weight <number>)
-  returns <color> {
-  result: color-mix(
-    in oklab,
-    var(--first-color) calc(var(--first-weight) / (var(--first-weight) + var(--second-weight)) * 100%),
-    var(--second-color) calc(var(--second-weight) / (var(--first-weight) + var(--second-weight)) * 100%)
-  );
-}
 
-/*
- * --mix3：三色比例混合工具，基于原生 color-mix(in oklab, ...) 隐藏颜色空间和百分比归一化。
- * 参数：三组 (<color>, weight <number>)。
- * 示例：--mix3(#ffdbac, 3, #e0ac69, 2, #8d5524, 1)。
- */
-@function --mix3(
-    --first-color <color>,
-    --first-weight <number>,
-    --second-color <color>,
-    --second-weight <number>,
-    --third-color <color>,
-    --third-weight <number>
+@function --color-mix(
+    --color1 <color>,
+    --weight1 <number>,
+    --color2 <color>,
+    --weight2 <number>,
+    --color3 <color>: transparent,
+    --weight3 <number>: 0,
+    --color4 <color>: transparent,
+    --weight4 <number>: 0
   )
   returns <color> {
+  --total-weight: calc(var(--weight1) + var(--weight2) + var(--weight3) + var(--weight4));
+
   result: color-mix(
     in oklab,
-    var(--first-color)
-      calc(var(--first-weight) / (var(--first-weight) + var(--second-weight) + var(--third-weight)) * 100%),
-    var(--second-color)
-      calc(var(--second-weight) / (var(--first-weight) + var(--second-weight) + var(--third-weight)) * 100%),
-    var(--third-color)
-      calc(var(--third-weight) / (var(--first-weight) + var(--second-weight) + var(--third-weight)) * 100%)
+    var(--color1) calc(var(--weight1) / var(--total-weight) * 100%),
+    var(--color2) calc(var(--weight2) / var(--total-weight) * 100%),
+    var(--color3) calc(var(--weight3) / var(--total-weight) * 100%),
+    var(--color4) calc(var(--weight4) / var(--total-weight) * 100%)
   );
-}
-
-/*
- * --mix4：四色比例混合工具，基于原生 color-mix(in oklab, ...) 隐藏颜色空间和百分比归一化。
- * 参数：四组 (<color>, weight <number>)。
- * 示例：--mix4(red, 1, yellow, 1, blue, 1, white, 1)。
- */
-@function --mix4(
-    --first-color <color>,
-    --first-weight <number>,
-    --second-color <color>,
-    --second-weight <number>,
-    --third-color <color>,
-    --third-weight <number>,
-    --fourth-color <color>,
-    --fourth-weight <number>
-  )
-  returns <color> {
-  result: color-mix(
-    in oklab,
-    var(--first-color)
-      calc(
-        var(--first-weight) /
-          (var(--first-weight) + var(--second-weight) + var(--third-weight) + var(--fourth-weight)) * 100%
-      ),
-    var(--second-color)
-      calc(
-        var(--second-weight) /
-          (var(--first-weight) + var(--second-weight) + var(--third-weight) + var(--fourth-weight)) * 100%
-      ),
-    var(--third-color)
-      calc(
-        var(--third-weight) /
-          (var(--first-weight) + var(--second-weight) + var(--third-weight) + var(--fourth-weight)) * 100%
-      ),
-    var(--fourth-color)
-      calc(
-        var(--fourth-weight) /
-          (var(--first-weight) + var(--second-weight) + var(--third-weight) + var(--fourth-weight)) * 100%
-      )
-  );
-}
-
-/*
- * --tint：染白混合工具，基于 color-mix(in oklab, color, white)。
- * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 16。
- * 示例：--tint(var(--color-brand), 16)。
- */
-@function --tint(--color <color>, --weight <number>: 16) returns <color> {
-  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), white calc((100 - var(--weight)) * 1%));
-}
-
-/*
- * --shade：加黑混合工具，基于 color-mix(in oklab, color, black)。
- * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 72。
- * 示例：--shade(var(--color-brand), 72)。
- */
-@function --shade(--color <color>, --weight <number>: 72) returns <color> {
-  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), black calc((100 - var(--weight)) * 1%));
-}
-
-/*
- * --tone：中性灰混合工具，基于 color-mix(in oklab, color, neutral gray)。
- * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 72。
- * 示例：--tone(var(--color-brand), 72)。
- */
-@function --tone(--color <color>, --weight <number>: 72) returns <color> {
-  result: color-mix(
-    in oklab,
-    var(--color) calc(var(--weight) * 1%),
-    oklch(60% 0 0deg) calc((100 - var(--weight)) * 1%)
-  );
-}
-
-/*
- * --dim：透明弱化混合工具，基于 color-mix(in oklab, color, transparent)。
- * 参数：(<color>, weight? <number>)，weight 是原色百分比，默认 16。
- * 示例：--dim(var(--color-brand), 16)。
- */
-@function --dim(--color <color>, --weight <number>: 16) returns <color> {
-  result: color-mix(in oklab, var(--color) calc(var(--weight) * 1%), transparent calc((100 - var(--weight)) * 1%));
 }
 
 /* ========== 源参数与衍生材料层 ========== */
@@ -336,7 +197,7 @@
     --color-accent-source: --tune3(var(--color-brand-source), hue, 150deg, lightness, 8%, chroma, -0.01);
 
     /* [衍生材料] - 浅色背景源只服务公开语义推导，组件和业务不应直接引用。 */
-    --color-light-bg: --mix2(white, 96, var(--color-brand-source), 4);
+    --color-light-bg: --mix2(white, 96, var(--color-brand-source), 4); 
 
     /* [衍生材料] - 浅色表面用于推导卡片与输入类公开语义。 */
     --color-light-surface: --darken(var(--color-light-bg), 2%);
@@ -422,4 +283,25 @@
     /* [公开语义材料] - 遮罩色用于 modal 背后的页面压暗层。 */
     --color-backdrop: light-dark(oklch(from var(--color-dark-bg) l c h / 46%), oklch(from black l c h / 64%));
   }
+}
+
+
+/* ========== 好用的颜色工具 ============= */
+
+/*
+ * --foreground-on：根据背景色推导可读前景色。
+ * 参数：(<color>)。
+ * 示例：color: --foreground-on(var(--color-brand))。
+ */
+@function --foreground-on(--color <color>) returns <color> {
+  result: --color-mix(contrast-color(var(--color)), 8, var(--color), 2);
+}
+
+/*
+ * --surface-from：根据强调色生成贴近当前页面背景的弱表面色。
+ * 参数：(<color>, weight? <number>)，weight 是强调色权重，默认 16。
+ * 示例：background: --surface-from(var(--color-brand))。
+ */
+@function --surface-from(--color <color>, --weight <number>: 16) returns <color> {
+  result: --color-mix(var(--color-bg), calc(100 - var(--weight)), var(--color), var(--weight));
 }

@@ -110,11 +110,11 @@ import './app.css'
 }
 ```
 
-`--tune()`、`--pin()`、`--mix2()`、`--mix3()`、`--mix4()`、`--tint()`、`--shade()`、`--tone()`、`--dim()` 仍然是颜色工具函数。它们适合在 `color.css` 内部或需要生成新变量时使用，不作为组件公开消费的默认写法。
+`--shift-color-channel()`、`--color-adjust()`、`--color-mix()` 仍然是颜色工具函数。`--color-adjust()` 负责单源颜色派生，`--color-mix()` 负责多颜色因素合成。它们适合在 `color.css` 内部或需要生成新变量时使用，不作为组件公开消费的默认写法。
 
 ```css
 :root {
-  --color-product-soft: --tint(var(--color-brand), 18);
+  --color-product-soft: --color-mix(var(--color-brand), 18, var(--color-surface), 82);
 }
 ```
 
