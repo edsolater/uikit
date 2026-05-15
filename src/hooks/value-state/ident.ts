@@ -1,6 +1,6 @@
 import { createMemo, type Accessor } from 'solid-js'
 import { createState } from '../base-state'
-import { createMatcher, type MatcherOperator } from './matcher'
+import { createValueWatcher, type MatcherOperator } from './matcher'
 import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
 
 /**
@@ -161,7 +161,7 @@ export function createIdent<T extends PresentIdentValue>(
     set(nextIdent)
   }
 
-  const matcher = createMatcher(ident)
+  const matcher = createValueWatcher(ident)
 
   const reset = () => {
     setIdent(initialIdent)

@@ -33,6 +33,12 @@ const createH6Element: CreatePivElement<'h6'> = (props) => <h6 ref={props.richRe
 const createNavElement: CreatePivElement<'nav'> = (props) => <nav ref={props.richRef}>{props.children}</nav>
 const createUlElement: CreatePivElement<'ul'> = (props) => <ul ref={props.richRef}>{props.children}</ul>
 const createLiElement: CreatePivElement<'li'> = (props) => <li ref={props.richRef}>{props.children}</li>
+const createTableElement: CreatePivElement<'table'> = (props) => <table ref={props.richRef}>{props.children}</table>
+const createTheadElement: CreatePivElement<'thead'> = (props) => <thead ref={props.richRef}>{props.children}</thead>
+const createTbodyElement: CreatePivElement<'tbody'> = (props) => <tbody ref={props.richRef}>{props.children}</tbody>
+const createTrElement: CreatePivElement<'tr'> = (props) => <tr ref={props.richRef}>{props.children}</tr>
+const createThElement: CreatePivElement<'th'> = (props) => <th ref={props.richRef}>{props.children}</th>
+const createTdElement: CreatePivElement<'td'> = (props) => <td ref={props.richRef}>{props.children}</td>
 const createImgElement: CreatePivElement<'img'> = (props) => <img ref={props.richRef} />
 const createAElement: CreatePivElement<'a'> = (props) => <a ref={props.richRef}>{props.children}</a>
 const createIframeElement: CreatePivElement<'iframe'> = (props) => <iframe ref={props.richRef} />
@@ -68,6 +74,12 @@ export const domMap = {
   nav: createNavElement,
   ul: createUlElement,
   li: createLiElement,
+  table: createTableElement,
+  thead: createTheadElement,
+  tbody: createTbodyElement,
+  tr: createTrElement,
+  th: createThElement,
+  td: createTdElement,
   img: createImgElement,
   a: createAElement,
   iframe: createIframeElement,

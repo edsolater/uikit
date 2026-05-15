@@ -61,12 +61,14 @@ export interface MatcherOperator<Value> {
 }
 
 /**
- * 为现有 accessor 创建匹配器。
+ * 创建的目标值的匹配器。
  *
  * 该能力只包装读取，不接管状态写入。
  */
-export function createMatcher<Value>(source: Accessor<Value>): MatcherOperator<Value> {
-  const isPredicate = (targetValueOrPredicate: Value | MatcherPredicate<Value>): targetValueOrPredicate is MatcherPredicate<Value> => {
+export function createValueWatcher<Value>(source: Accessor<Value>): MatcherOperator<Value> {
+  const isPredicate = (
+    targetValueOrPredicate: Value | MatcherPredicate<Value>,
+  ): targetValueOrPredicate is MatcherPredicate<Value> => {
     return typeof targetValueOrPredicate === 'function'
   }
 
@@ -98,4 +100,14 @@ export function createMatcher<Value>(source: Accessor<Value>): MatcherOperator<V
     is,
     isNot,
   }
+}
+
+/**
+ * 专用于检测目标是否符合条件
+ * @param source
+ * @returns
+ */
+export function createMatcher<Value>(source: Accessor<Value>, matchFunction: (value: Value) => boolean): Accessor<boolean> {
+  const exist = createValueWatcher(source).match(matchFunction)
+  return exist
 }
