@@ -1,12 +1,9 @@
-@import './css/all-base.css';
-
 .demo-shell {
   margin: 0 --space(8);
   display: grid;
   gap: --space(8);
   padding: 64px 0 96px;
 }
-
 
 .panel {
   display: grid;
@@ -68,4 +65,3 @@
   font-size: 18px;
   color: var(--text-strong);
 }
-

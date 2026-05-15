@@ -83,7 +83,7 @@
     color: CanvasText;
 
     /* Canvas 是 CSS 系统颜色关键字，表示当前系统画布背景色。 */
-    background: Canvas;
+    background-color: Canvas;
   }
 
   /* 常见文本节点默认允许长词换行，避免内容撑破容器。 */
