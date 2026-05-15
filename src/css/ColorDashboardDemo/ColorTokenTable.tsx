@@ -4,7 +4,7 @@
  */
 import { createEffect } from 'solid-js'
 import { Piv, Table } from '../../components'
-import { $, createState } from '../../hooks'
+import { createState, derive } from '../../hooks'
 
 const colorNumberFormatter = new Intl.NumberFormat('en-US', {
   maximumSignificantDigits: 3,
@@ -41,7 +41,7 @@ function collectColorTokenNamesFromRules(cssRules: CSSRuleList, tokens: Set<stri
 /**
  * 从当前页面已加载的 stylesheet 中直接提取 color token 列表。
  */
-function readColorTokenNames() {
+function extractColorTokenFromCurrentStylesheet() {
   const tokens = new Set<string>()
 
   for (const styleSheet of Array.from(document.styleSheets)) {
@@ -81,24 +81,23 @@ function formatColorText(color: string) {
 export function ColorTokenTable() {
   const [colorTokens, setColorTokens] = createState<string[]>([])
 
-  const tableData = () =>
-    $(colorTokens).map((cssVariableName) => ({
+  const tableData = derive(colorTokens, (s) =>
+    s.map((cssVariableName) => ({
       name: cssVariableName,
       value: formatColorText(readTokenRawValue(cssVariableName)),
       preview: `var(${cssVariableName}, transparent)`,
-    }))
+    })),
+  )
 
   const refreshTokens = () => {
-    setColorTokens(readColorTokenNames())
+    setColorTokens(extractColorTokenFromCurrentStylesheet())
   }
 
-  createEffect(() => {
-    refreshTokens()
-  })
+  createEffect(refreshTokens)
 
   return (
     <Table
-      data={tableData()}
+      data={tableData}
       keys={['name', 'preview']}
       renderParts={{
         tableCell: {

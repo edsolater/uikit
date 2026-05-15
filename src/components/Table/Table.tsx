@@ -8,6 +8,7 @@ import { For } from 'solid-js'
 import { type Stringable } from '@edsolater/fnkit'
 import { Piv } from '../BasicPiv'
 import { toJSX, type JSXable } from '../../component-utils/toJSX'
+import { $, derive, type MayState } from '../../hooks'
 
 type TableDataRow = Record<string, Stringable>
 
@@ -15,11 +16,11 @@ type TableDataRow = Record<string, Stringable>
  * Table 的输入数据与渲染部件配置。
  */
 export type TableProps<Row extends TableDataRow = TableDataRow> = {
-  /** 同构对象队列；第一行对象的 key 决定默认列顺序。 */
-  data: Row[]
+  /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */
+  data: MayState<Row[]>
 
-  /** 参与显示的对象 key；未提供时使用第一行对象的全部 key。 */
-  keys?: (keyof Row)[]
+  /** 参与显示的对象 key；未提供时使用第一行对象的全部 key，允许接收动态派生值。 */
+  keys?: MayState<(keyof Row)[]>
 
   /** 纯内容渲染器集合，不改变 Table 对语义表格结构的控制权。 */
   renderParts?: {
@@ -39,6 +40,7 @@ export type TableProps<Row extends TableDataRow = TableDataRow> = {
  * Table 是 UIKit 里“对象队列 -> 语义化表格结构”的基础组件节点。
  * 它接收同构对象数组，把对象 key 当作列来源，把每个对象当作一行。
  * `keys` 只裁剪和排序列；`renderParts` 只改写表头或单元格内容，不接管 table 结构。
+ * `data` 和 `keys` 可以是普通值，也可以是继续传递的动态值，Table 会在最终渲染位置消费当前值。
  *
  * @example
  * ```tsx
@@ -62,22 +64,22 @@ export type TableProps<Row extends TableDataRow = TableDataRow> = {
  */
 export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-  const columnKeys = () => props.keys ?? pickTableColumnKeys(props.data)
+  const columnKeys = derive(props.data, (data) => (props.keys ? $(props.keys) : pickTableColumnKeys(data)))
 
   return (
     <Piv as="table">
       <Piv as="thead">
         <Piv as="tr">
-          <For each={columnKeys()}>
+          <For each={$(columnKeys)}>
             {(columnKey) => <Piv as="th">{toJSX(props.renderParts?.tableHead?.[columnKey]?.(columnKey) ?? columnKey)}</Piv>}
           </For>
         </Piv>
       </Piv>
       <Piv as="tbody">
-        <For each={props.data}>
+        <For each={$(props.data)}>
           {(row) => (
             <Piv as="tr">
-              <For each={columnKeys()}>
+              <For each={$(columnKeys)}>
                 {(columnKey) => (
                   <Piv as="td">
                     {toJSX(props.renderParts?.tableCell?.[columnKey]?.(row[columnKey], columnKey) ?? row[columnKey])}
