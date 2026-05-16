@@ -2,7 +2,7 @@
  * 这个文件只负责 ColorDashboard 的颜色列表展示。
  * 它负责扫描当前页面的颜色 CSS 变量名，并整理成颜色 token 表格行。
  */
-import { createEffect } from 'solid-js'
+import { onMount } from 'solid-js'
 import { Piv, Table } from '../../components'
 import { createState, derive } from '../../hooks'
 
@@ -12,6 +12,25 @@ const colorNumberFormatter = new Intl.NumberFormat('en-US', {
 })
 
 /**
+ * 判断当前规则是否直接承载了一组样式声明。
+ */
+function hasStyleDeclaration(rule: CSSRule): rule is CSSRule & { style: CSSStyleDeclaration } {
+  return 'style' in rule
+}
+
+/**
+ * 从一组样式声明里提取 --color-* 变量名。
+ */
+function collectColorVariableNamesFromStyleDeclaration(style: CSSStyleDeclaration, cssVariableNames: Set<string>) {
+  for (let propertyIndex = 0; propertyIndex < style.length; propertyIndex += 1) {
+    const name = style.item(propertyIndex)
+    if (isCSSVariable(name)) {
+      cssVariableNames.add(name)
+    }
+  }
+}
+
+/**
  * 判断当前规则是否还能继续向下读取子规则。
  */
 function hasNestedCssRules(rule: CSSRule): rule is CSSRule & { cssRules: CSSRuleList } {
@@ -19,23 +38,26 @@ function hasNestedCssRules(rule: CSSRule): rule is CSSRule & { cssRules: CSSRule
 }
 
 /**
- * 递归扫描样式规则，找出 :root 上声明的 --color-* 变量名。
+ * 递归扫描样式规则，找出任意规则里声明的 --color-* 变量名。
  */
 function collectColorVariableNamesFromStylesheetRules(cssRules: CSSRuleList, cssVariableNames: Set<string>) {
   for (const rule of Array.from(cssRules)) {
-    if (rule instanceof CSSStyleRule && rule.selectorText === ':root') {
-      for (const name of Array.from(rule.style)) {
-        if (name.startsWith('--color-')) {
-          cssVariableNames.add(name)
-        }
+    try {
+      if (hasStyleDeclaration(rule)) {
+        collectColorVariableNamesFromStyleDeclaration(rule.style, cssVariableNames)
       }
-      continue
-    }
 
-    if (hasNestedCssRules(rule)) {
-      collectColorVariableNamesFromStylesheetRules(rule.cssRules, cssVariableNames)
+      if (hasNestedCssRules(rule)) {
+        collectColorVariableNamesFromStylesheetRules(rule.cssRules, cssVariableNames)
+      }
+    } catch (error) {
+      console.log('Skip CSS rule while collecting color variables:', rule, error)
     }
   }
+}
+
+function isCSSVariable(name: string) {
+  return name.startsWith('--color-')
 }
 
 /**
@@ -81,8 +103,8 @@ function formatColorText(color: string) {
 export function ColorTokenTable() {
   const [colorVariableNames, setColorVariableNames] = createState<string[]>([])
 
-  const colorTokenRows = derive(colorVariableNames, (v) =>
-    v.map((cssVariableName) => ({
+  const colorTokenRows = derive(colorVariableNames, (cssVariableNames) =>
+    cssVariableNames.map((cssVariableName) => ({
       name: cssVariableName,
       value: formatColorText(readTokenRawValue(cssVariableName)),
       preview: `var(${cssVariableName}, transparent)`,
@@ -93,7 +115,7 @@ export function ColorTokenTable() {
     setColorVariableNames(extractColorVariableNamesFromCurrentStylesheet())
   }
 
-  createEffect(refreshColorVariableNames)
+  onMount(refreshColorVariableNames)
 
   return (
     <Table
