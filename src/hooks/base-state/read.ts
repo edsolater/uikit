@@ -6,7 +6,7 @@
  *
  * 它不负责创建状态、修改状态，也不负责描述 store 字段访问能力。
  */
-import type { Accessor } from 'solid-js'
+import { createMemo, type Accessor } from 'solid-js'
 import type { State } from './createState'
 import type { MayFn } from '@edsolater/fnkit'
 import { shrinkFn } from '@edsolater/fnkit'
@@ -100,7 +100,7 @@ export function $<T>(state: MayState<T> | undefined, defaultValue?: MayFn<MaySta
  * 从 MayState 派生新的 Accessor。
  *
  * `derive()` 不会在调用时把 source 解包成固定值，而是返回一个新的 Accessor。
- * 每次读取派生 Accessor 时，都会重新读取 source 的当前值，再通过 fn 计算结果。
+ * 只有 source 的当前值变化时，派生 Accessor 才会重新通过 fn 计算结果。
  *
  * 适用于需要继续向下传递动态值的场景，例如派生 class、style、props、
  * disabled、aria 属性或中间计算结果。
@@ -130,5 +130,5 @@ export function $<T>(state: MayState<T> | undefined, defaultValue?: MayFn<MaySta
  * ```
  */
 export function derive<T, U>(source: MayState<T>, fn: (value: T) => U): Accessor<U> {
-  return () => fn($(source))
+  return createMemo(() => fn($(source)))
 }

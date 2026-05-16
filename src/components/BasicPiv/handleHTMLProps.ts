@@ -32,10 +32,18 @@ export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag
   const htmlProps = mergeHTMLProps(htmlPropsList)
   if (!htmlProps) return
   for (const [key, value] of Object.entries(htmlProps)) {
+    if (isEventPropKey(key)) {
+      continue
+    }
+
     createRenderEffect(() => {
       setSingleDomProp(element, key, value)
     })
   }
+}
+
+function isEventPropKey(key: string) {
+  return key.startsWith('on:') || (key.startsWith('on') && key.length > 2)
 }
 
 /**
