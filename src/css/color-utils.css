@@ -1,0 +1,248 @@
+
+/*
+ * ！【内部方法】组合用color基础工具函数，
+ * 外部使用--color-adjust和方言工具函数
+ * 参数：(<color>, hue|lightness|chroma|opacity, signed delta)。
+ * delta 的单位跟随通道：hue 用 <angle>，lightness / opacity 用 <percentage>，chroma 用 <number>。
+ * 示例：--shift(var(--color-brand), lightness, 8%)。
+ */
+@function --shift-color-channel(
+    --color <color>,
+    --channel
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+      ),
+    --value type(<angle> | <percentage> | <number>)
+  )
+  returns <color> {
+  result: if(
+    style(--channel: delta-hue): oklch(from var(--color) l c calc(h + (var(--value) / 1deg)) / alpha) ;
+      style(--channel: delta-lightness): oklch(from var(--color) calc(l + (var(--value) / 100%)) c h / alpha) ;
+      style(--channel: delta-chroma): oklch(from var(--color) l calc(c + var(--value)) h / alpha) ;
+      style(--channel: delta-opacity): oklch(from var(--color) l c h / calc(alpha + (var(--value) / 100%))) ;
+      style(--channel: set-hue): oklch(from var(--color) l c calc(var(--value) / 1deg) / alpha) ;
+      style(--channel: set-lightness): oklch(from var(--color) calc(var(--value) / 100%) c h / alpha) ;
+      style(--channel: set-chroma): oklch(from var(--color) l var(--value) h / alpha) ;
+      style(--channel: set-opacity): oklch(from var(--color) l c h / calc(var(--value) / 100%)) ; else: var(--color)
+  );
+}
+
+@function --color-adjust(
+    --color <color>,
+    --channel1
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+      ),
+    --value1 type(<angle> | <percentage> | <number>),
+    --channel2
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+          | none
+      ): none,
+    --value2 type(<angle> | <percentage> | <number>): 0,
+
+    --channel3
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+          | none
+      ): none,
+    --value3 type(<angle> | <percentage> | <number>): 0,
+
+    --channel4
+      type(
+        delta-hue | delta-lightness | delta-chroma | delta-opacity | set-hue | set-lightness | set-chroma | set-opacity
+          | none
+      ): none,
+    --value4 type(<angle> | <percentage> | <number>): 0
+  )
+  returns <color> {
+  --lightness-1: if(
+    style(--channel1: delta-lightness): calc(l + (var(--value1) / 100%)) ;
+      style(--channel1: set-lightness): calc(var(--value1) / 100%) ; else: l
+  );
+  --lightness-2: if(
+    style(--channel2: delta-lightness): calc(var(--lightness-1) + (var(--value2) / 100%)) ;
+      style(--channel2: set-lightness): calc(var(--value2) / 100%) ; else: var(--lightness-1)
+  );
+  --lightness-3: if(
+    style(--channel3: delta-lightness): calc(var(--lightness-2) + (var(--value3) / 100%)) ;
+      style(--channel3: set-lightness): calc(var(--value3) / 100%) ; else: var(--lightness-2)
+  );
+  --lightness-4: if(
+    style(--channel4: delta-lightness): calc(var(--lightness-3) + (var(--value4) / 100%)) ;
+      style(--channel4: set-lightness): calc(var(--value4) / 100%) ; else: var(--lightness-3)
+  );
+
+  --chroma-1: if(
+    style(--channel1: delta-chroma): calc(c + var(--value1)) ;
+      style(--channel1: set-chroma): var(--value1) ; else: c
+  );
+  --chroma-2: if(
+    style(--channel2: delta-chroma): calc(var(--chroma-1) + var(--value2)) ;
+      style(--channel2: set-chroma): var(--value2) ; else: var(--chroma-1)
+  );
+  --chroma-3: if(
+    style(--channel3: delta-chroma): calc(var(--chroma-2) + var(--value3)) ;
+      style(--channel3: set-chroma): var(--value3) ; else: var(--chroma-2)
+  );
+  --chroma-4: if(
+    style(--channel4: delta-chroma): calc(var(--chroma-3) + var(--value4)) ;
+      style(--channel4: set-chroma): var(--value4) ; else: var(--chroma-3)
+  );
+
+  --hue-1: if(
+    style(--channel1: delta-hue): calc(h + (var(--value1) / 1deg)) ;
+      style(--channel1: set-hue): calc(var(--value1) / 1deg) ; else: h
+  );
+  --hue-2: if(
+    style(--channel2: delta-hue): calc(var(--hue-1) + (var(--value2) / 1deg)) ;
+      style(--channel2: set-hue): calc(var(--value2) / 1deg) ; else: var(--hue-1)
+  );
+  --hue-3: if(
+    style(--channel3: delta-hue): calc(var(--hue-2) + (var(--value3) / 1deg)) ;
+      style(--channel3: set-hue): calc(var(--value3) / 1deg) ; else: var(--hue-2)
+  );
+  --hue-4: if(
+    style(--channel4: delta-hue): calc(var(--hue-3) + (var(--value4) / 1deg)) ;
+      style(--channel4: set-hue): calc(var(--value4) / 1deg) ; else: var(--hue-3)
+  );
+
+  --opacity-1: if(
+    style(--channel1: delta-opacity): calc(alpha + (var(--value1) / 100%)) ;
+      style(--channel1: set-opacity): calc(var(--value1) / 100%) ; else: alpha
+  );
+  --opacity-2: if(
+    style(--channel2: delta-opacity): calc(var(--opacity-1) + (var(--value2) / 100%)) ;
+      style(--channel2: set-opacity): calc(var(--value2) / 100%) ; else: var(--opacity-1)
+  );
+  --opacity-3: if(
+    style(--channel3: delta-opacity): calc(var(--opacity-2) + (var(--value3) / 100%)) ;
+      style(--channel3: set-opacity): calc(var(--value3) / 100%) ; else: var(--opacity-2)
+  );
+  --opacity-4: if(
+    style(--channel4: delta-opacity): calc(var(--opacity-3) + (var(--value4) / 100%)) ;
+      style(--channel4: set-opacity): calc(var(--value4) / 100%) ; else: var(--opacity-3)
+  );
+
+  result: oklch(from var(--color) var(--lightness-4) var(--chroma-4) var(--hue-4) / var(--opacity-4));
+}
+
+/* ========== 颜色方言函数 ========== */
+
+/*
+ * --lighten：提亮方言工具
+ * 参数：(<color>, amount? <percentage>)，默认 10%。
+ * 示例：--lighten(var(--color-brand), 8%)。
+ */
+@function --lighten(--color <color>, --amount <percentage>: 10%) returns <color> {
+  result: --color-adjust(var(--color), delta-lightness, var(--amount));
+}
+
+/*
+ * --darken：压暗方言工具
+ * 参数：(<color>, amount? <percentage>)，默认 10%。
+ * 示例：--darken(var(--color-brand), 8%)。
+ */
+@function --darken(--color <color>, --amount <percentage>: 10%) returns <color> {
+  result: --color-adjust(var(--color), delta-lightness, calc(var(--amount) * -1));
+}
+
+/*
+ * --saturate：增彩方言工具
+ * 参数：(<color>, amount? <number>)，默认 0.02。
+ * 示例：--saturate(var(--color-brand), 0.02)。
+ */
+@function --saturate(--color <color>, --amount <number>: 0.02) returns <color> {
+  result: --color-adjust(var(--color), delta-chroma, var(--amount));
+}
+
+/*
+ * --desaturate：降彩方言工具
+ * 参数：(<color>, amount? <number>)，默认 0.02。
+ * 示例：--desaturate(var(--color-brand), 0.02)。
+ */
+@function --desaturate(--color <color>, --amount <number>: 0.02) returns <color> {
+  result: --color-adjust(var(--color), delta-chroma, calc(var(--amount) * -1));
+}
+
+/*
+ * --hue-rotate：色相旋转方言工具
+ * 参数：(<color>, amount? <angle>)，默认 30deg。
+ * 示例：--hue-rotate(var(--color-brand), 30deg)。
+ */
+@function --hue-rotate(--color <color>, --amount <angle>: 30deg) returns <color> {
+  result: --color-adjust(var(--color), delta-hue, var(--amount));
+}
+
+/*
+ * --grayscale：灰度方言工具
+ * 参数：(<color>)。
+ * 示例：--grayscale(var(--color-brand))。
+ */
+@function --grayscale(--color <color>) returns <color> {
+  result: --color-adjust(var(--color), set-chroma, 0);
+}
+
+/* 透明化 */
+@function --opacify(--color <color>, --amount <percentage>: 10%) returns <color> {
+  result: --color-adjust(var(--color), delta-opacity, var(--amount));
+}
+
+/* ============= mix 创造工具 ============ */
+
+/*
+ * --color-mix：多颜色因素合成工具。
+ * 它负责用多个颜色 token 的权重创建一个新的复合语义色，不负责单源颜色派生。
+ * 单源颜色派生统一使用 --color-adjust 和对应方言函数，不使用 tint / shade / tone / dim 这类传统颜料语境。
+ *
+ * 参数：
+ *   color1 / color2 必填，color3 / color4 可选；省略时用 none 表达不存在。
+ *   weight 使用 <number>，内部自动归一化为 color-mix() 需要的百分比。
+ *
+ * 约定：
+ *   最多 4 色。超过 4 色不提供入口，避免混色语义变脏。
+ *   内部固定使用 oklab，调用方不用在业务层思考颜色空间。
+ */
+@function --color-mix(
+    --color1 <color>,
+    --weight1 <number>,
+    --color2 <color>,
+    --weight2 <number>,
+    --color3 type(<color> | none): none,
+    --weight3 <number>: 0,
+    --color4 type(<color> | none): none,
+    --weight4 <number>: 0
+  )
+  returns <color> {
+  --weight12: calc(var(--weight1) + var(--weight2));
+
+  --mix12: color-mix(
+    in oklab,
+    var(--color1) calc(var(--weight1) / var(--weight12) * 100%),
+    var(--color2) calc(var(--weight2) / var(--weight12) * 100%)
+  );
+
+  --weight123: calc(var(--weight12) + var(--weight3));
+  --mix123: if(
+    style(--color3: none): var(--mix12) ;
+      else:
+        color-mix(
+          in oklab,
+          var(--mix12) calc(var(--weight12) / var(--weight123) * 100%),
+          var(--color3) calc(var(--weight3) / var(--weight123) * 100%)
+        )
+  );
+
+  --weight1234: calc(var(--weight123) + var(--weight4));
+  --mix1234: if(
+    style(--color4: none): var(--mix123) ;
+      else:
+        color-mix(
+          in oklab,
+          var(--mix123) calc(var(--weight123) / var(--weight1234) * 100%),
+          var(--color4) calc(var(--weight4) / var(--weight1234) * 100%)
+        )
+  );
+
+  result: var(--mix1234);
+}

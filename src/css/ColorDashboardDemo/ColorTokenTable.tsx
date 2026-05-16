@@ -126,7 +126,7 @@ export function ColorTokenTable() {
           preview: (value) => (
             <Piv
               style={{
-                background: `linear-gradient(${String(value)}, ${String(value)}), conic-gradient(#d8dbe1 25%, #ffffff 0 50%, #d8dbe1 0 75%, #ffffff 0)`,
+                'background-image': `linear-gradient(${String(value)}, ${String(value)}), conic-gradient(#d8dbe1 25%, #ffffff 0 50%, #d8dbe1 0 75%, #ffffff 0)`,
                 'background-size': '100% 100%, 16px 16px',
                 'min-inline-size': '120px',
                 'block-size': '32px',

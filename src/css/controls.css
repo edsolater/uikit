@@ -6,9 +6,6 @@
 @layer controls {
   /* 根节点只提供内置控件需要继承的强调色和由它派生的轻量材料。 */
   :root {
-    /* [小空间源色] - 固定科技蓝默认值；业务需要不同控件强调色时可以覆盖这个变量。 */
-    --color-accent: oklch(66% 0.19 248deg);
-
     /* [小空间材料] - 控件边界色由 10% 强调色和中性灰混合，避免原生控件边框显得脏或过重。 */
     --widget-border: color-mix(in oklab, var(--color-accent) 10%, gray);
 
