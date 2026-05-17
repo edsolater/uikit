@@ -1,0 +1,138 @@
+﻿/**
+ * 这个文件负责提供 UIKit 的颜色领域能力。
+ * 这是 color 领域入口。
+ * 它承载 OKLCH 颜色函数、主题色板和语义色板，不承载组件尺寸、排版、布局或具体业务样式。
+ * brand 与 accent 的设计边界见 D:\mycode\ai-rules\design\color-brand-accent.md。
+ */
+
+@import './color-utils.css';
+@import './dimension-utils.css';
+
+/* ========== 好用的颜色工具 ============= */
+
+/*
+ * --foreground-on：根据背景色推导可读前景色。
+ * 参数：(<color>)。
+ * 示例：color: --foreground-on(var(--color-brand))。
+ */
+@function --foreground-on(--color <color>) returns <color> {
+  result: --color-mix(contrast-color(var(--color)), 8, var(--color), 2);
+}
+
+/*
+ * --surface-from：根据强调色生成贴近当前页面背景的弱表面色。
+ * 参数：(<color>, weight? <number>)，weight 是强调色权重，默认 16。
+ * 示例：background: --surface-from(var(--color-brand))。
+ */
+@function --surface-from(--color <color>, --weight <number>: 16) returns <color> {
+  result: --color-mix(var(--color-bg), calc(100 - var(--weight)), var(--color), var(--weight));
+}
+
+@layer style-tokens {
+  /* 根节点集中管理颜色源参数与衍生材料；组件和业务应直接通过 var(--color-*) 消费公开语义变量。 */
+  :root {
+    /*  --------------------------------------------------------------
+     * 颜色系统设计参数
+     * 这些参数直接决定了颜色系统的视觉特征，如明度范围、彩度范围、对比度和主题色调等。
+     * 设计师调整这些参数可以快速迭代出不同风格的颜色系统，开发者无需修改代码。
+     * ----------------------------------------------------------------
+    */
+    /* ======================= 可覆盖的基础app品牌色 ======================= */
+    --base-brand: oklch(62% 0.17 255deg);
+    --base-accent: --color-adjust(var(--dye-brand), delta-hue, 150deg, delta-lightness, 8%, delta-chroma, -0.01);
+
+    /* ======================= 固色, 方便组合 ======================= */
+    --dye-blackwhite: light-dark(white, black); /* 尖酸刻薄的决定黑白 */
+    --dye-blackwhite-1: light-dark(--color-mix(white, 16, black, 1), --color-mix(black, 4, white, 1));
+    --dye-blackwhite-2: light-dark(--color-mix(white, 8, black, 1), --color-mix(black, 8, white, 1));
+    --dye-blackwhite-3: light-dark(--color-mix(white, 4, black, 1), --color-mix(black, 16, white, 1));
+    --dye-blackwhite-gray: light-dark(--color-mix(white, 1, black, 1), --color-mix(black, 1, white, 1));
+    --dye-brand: light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
+    --dye-accent: light-dark(var(--base-dye-accent), --lighten(var(--base-dye-accent), 10%));
+
+    /* ======================= 组件使用的颜色 ======================= */
+    --color-surface: --color-mix(var(--dye-blackwhite-1), 5, blue, 0.04);
+    --color-bg: light-dark(--mix2(white, 96, var(--dye-brand), 4), --mix2(black, 90, var(--color-brand), 10));
+    --color-surface: light-dark(--darken(var(--color-light-bg), 2%), --lighten(var(--color-dark-bg), 7%));
+    --color-text: light-dark(var(--color-dark-surface), --darken(var(--color-light-bg), 2%));
+    --color-border: light-dark(
+      --mix2(var(--color-light-line), 2, var(--color-dark-line), 1),
+      --mix2(var(--color-dark-surface-soft), 2, var(--color-light-line), 1)
+    );
+    --color-info: --tune2(var(--color-brand), hue, -14deg, lightness, 4%);
+    --color-success: --tune2(var(--color-brand), hue, -105deg, lightness, 4%);
+    --color-warning: --tune2(var(--color-accent), hue, 34deg, lightness, 4%);
+    --color-danger: --tune2(var(--color-accent), hue, -28deg, lightness, -4%);
+    --color-shadow: light-dark(oklch(from var(--color-dark-bg) l c h / 16%), oklch(from black l c h / 44%));
+    --color-backdrop: light-dark(oklch(from var(--color-dark-bg) l c h / 46%), oklch(from black l c h / 64%));
+
+    /* ------------------------------------------------------------------
+     * 尺寸系统设计参数
+     * 这些参数直接决定了界面布局和控件尺寸的视觉特征，如空隙量、物体尺寸、圆角柔和度和边界厚度等。
+     * 设计师调整这些参数可以快速迭代出不同风格的界面，开发者无需修改代码。
+     * ----------------------------------------------------------------
+     */
+    /* ======================= 尺寸基础 ======================= */
+    /* 空隙量。 用于 padding margin gap 等， 表达空间 */
+    --space-base: 4px;
+    --space-ratio: 1.25;
+
+    /* 物体尺寸。width height 等，表达物体大小 */
+    --size-base: 20px;
+    --size-ratio: 1.18;
+
+    /* 圆角柔和度。 属于border */
+    --radius-base: 2px;
+    --radius-ratio: 1.45;
+
+    /* 边界厚度。 border、描边和 focus ring 的基础厚度 */
+    --boundary-base: 1px;
+    --boundary-ratio: 1.5;
+
+    /* ====================== 尺寸派生 ======================
+    * 这些变量由设计参数通过指数函数生成，组件和业务直接消费这些变量，由于尺寸天然跟数字绑定在一起，所以这里可以出现魔法数字 
+    */
+    --space-1: --space(1);
+    --space-2: --space(2);
+    --space-3: --space(3);
+    --space-4: --space(4);
+    --space-5: --space(5);
+    --space-6: --space(6);
+    --space-7: --space(7);
+    --space-8: --space(8);
+    --size-1: --size(1);
+    --size-2: --size(2);
+    --size-3: --size(3);
+    --size-4: --size(4);
+    --size-5: --size(5);
+    --size-6: --size(6);
+    --size-7: --size(7);
+    --size-8: --size(8);
+    --radius-1: --radius(1);
+    --radius-2: --radius(2);
+    --radius-3: --radius(3);
+    --radius-4: --radius(4);
+    --boundary-1: --border(1);
+    --boundary-2: --border(2);
+    --boundary-3: --border(3);
+    --boundary-4: --border(4);
+
+    --font-size-sm: 12px;
+    --font-size-default: 14px;
+    --font-size-md: var(--font-size-default);
+    --font-size-lg: 16px;
+    --font-size-xl: 20px;
+
+    --font-weight-thin: 300;
+    --font-weight-default: 400;
+    --font-weight-regular: var(--font-weight-default);
+    --font-weight-semibold: 500;
+    --font-weight-bold: 700;
+
+    --filter-blur-1: blur(4px);
+    --filter-blur-2: blur(8px);
+    --filter-blur-3: blur(12px);
+
+    --shadow: 0 1px 2px var(--color-shadow), 0 2px 4px var(--color-shadow), 0 4px 8px var(--color-shadow);
+  }
+}

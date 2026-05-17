@@ -42,38 +42,3 @@
 @function --radius(--n <number>) returns <length> {
   result: calc(var(--radius-base) * pow(var(--radius-ratio), var(--n)));
 }
-
-/* ========== 公开变量说明 ========== */
-
-/* 公开尺寸入口不使用 @function 包装；组件和业务直接消费 var(--space-*)、var(--size-*)、var(--radius-*) 和 var(--boundary-*)。 */
-
-/* ========== 源参数与衍生材料层 ========== */
-
-@layer dimension {
-  /* 根节点集中管理尺寸源参数、曲线参数、约束参数和公开尺寸变量；组件和业务直接消费公开变量。 */
-  :root {
-    /* [空间曲线] - 空白关系的基础单位，--space-0 由这个值生成。 */
-    --space-base: 4px;
-
-    /* [空间曲线] - 空白关系的增长速度，决定界面紧凑或松弛。 */
-    --space-ratio: 1.25;
-
-    /* [物体曲线] - 控件、图标、头像和面板等物体尺寸的基础单位。 */
-    --size-base: 20px;
-
-    /* [物体曲线] - 物体尺寸的增长比例，决定控件体系偏轻巧还是偏舒展。 */
-    --size-ratio: 1.18;
-
-    /* [形体曲线] - 圆角柔和度的基础单位。 */
-    --radius-base: 2px;
-
-    /* [形体曲线] - 圆角增长比例，决定界面偏硬朗还是偏圆润。 */
-    --radius-ratio: 1.45;
-
-    /* [边界曲线] - 分割线、描边和 focus ring 的基础厚度。 */
-    --boundary-base: 1px;
-
-    /* [边界曲线] - 边界厚度增长比例，决定边界表达偏轻还是偏重。 */
-    --boundary-ratio: 1.5;
-  }
-}
