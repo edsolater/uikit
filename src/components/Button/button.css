@@ -4,16 +4,16 @@
   .Button {
     /* 可业务定制的尺寸、颜色， 应该抽象成 CSS 变量 */
 
-    /* 只用default， big，small应该自动自己生长出来 */
-    --Button-w: --size(8);
-    --Button-h: --size(4);
-    --Button-padding-x: --space(4);
-    --Button-padding-y: --space(1);
-    --Button-content-gap: --space(2);
+    /* 只用default， big，small等的UI变体，应该自动自己生长出来 */
+    --Button-w: var(--size-8);
+    --Button-h: var(--size-4);
+    --Button-padding-x: var(--space-4);
+    --Button-padding-y: var(--space-1);
+    --Button-content-gap: var(--space-2);
     --Button-bg: var(--color-brand);
     --Button-fg: --foreground-on(var(--Button-bg));
     --Button-border-color: var(--color-border);
-    --Button-disable-opacity: 0.52;
+    --Button-disable-opacity: var(--opacity-muted);
 
     display: inline-flex;
     color: var(--Button-fg);
@@ -38,13 +38,13 @@
       outline-offset: 3px;
     }
 
-    &.variant-solid {
+    &.variant\:solid {
       /* 就是默认的variant，不需要任何额外规则 */
       --Button-bg: var(--color-brand);
       --Button-fg: --foreground-on(var(--Button-bg));
     }
 
-    &.variant-ghost {
+    &.variant\:ghost {
       color: var(--color-text-strong);
       background: color-mix(in oklab, var(--color-surface) 88%, transparent);
       border-color: var(--color-border);

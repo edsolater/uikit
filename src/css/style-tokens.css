@@ -1,8 +1,7 @@
-﻿/**
+﻿/*
  * 这个文件负责提供 UIKit 的颜色领域能力。
- * 这是 color 领域入口。
- * 它承载 OKLCH 颜色函数、主题色板和语义色板，不承载组件尺寸、排版、布局或具体业务样式。
- * brand 与 accent 的设计边界见 D:\mycode\ai-rules\design\color-brand-accent.md。
+ * 尺度需要管理的是 style-token 只要是他写的魔法数字或单位数字的，不管是什么，只要不是离散值，都应该是style-token。
+ * 最重要的尺度，color |尺寸
  */
 
 @import './color-utils.css';
@@ -28,6 +27,7 @@
   result: --color-mix(var(--color-bg), calc(100 - var(--weight)), var(--color), var(--weight));
 }
 
+/* 尺度需要管理的是 style-token 只要是他写的魔法数字或单位数字的，不管是什么，只要不是离散值，都应该是style-token */
 @layer style-tokens {
   /* 根节点集中管理颜色源参数与衍生材料；组件和业务应直接通过 var(--color-*) 消费公开语义变量。 */
   :root {
@@ -100,6 +100,7 @@
     --space-6: --space(6);
     --space-7: --space(7);
     --space-8: --space(8);
+
     --size-1: --size(1);
     --size-2: --size(2);
     --size-3: --size(3);
@@ -108,10 +109,12 @@
     --size-6: --size(6);
     --size-7: --size(7);
     --size-8: --size(8);
+
     --radius-1: --radius(1);
     --radius-2: --radius(2);
     --radius-3: --radius(3);
     --radius-4: --radius(4);
+
     --boundary-1: --border(1);
     --boundary-2: --border(2);
     --boundary-3: --border(3);
@@ -133,6 +136,11 @@
     --filter-blur-2: blur(8px);
     --filter-blur-3: blur(12px);
 
+    --opacity-half: 0.5;
+    --opaciry-muted: 0.72;
+
     --shadow: 0 1px 2px var(--color-shadow), 0 2px 4px var(--color-shadow), 0 4px 8px var(--color-shadow);
+
+
   }
 }
