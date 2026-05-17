@@ -14,7 +14,7 @@ export function ButtonDemo() {
       <p>只保留常用按钮能力，样式足够清晰，不做额外抽象。</p>
       <div class="button-row">
         <Button>Primary action</Button>
-        <Button variant="ghost">Secondary action</Button>
+        <Button variant="ghost" >Secondary action</Button>
         <Button disabled>Disabled</Button>
       </div>
     </article>
