@@ -5,18 +5,15 @@
  */
 import { shrinkFn, toArray, type MayArray } from '@edsolater/fnkit'
 import { createRenderEffect, type Accessor, type JSX } from 'solid-js'
+import type { MayState } from '../../hooks'
 
 type StyleValueAtom = string | number | null | undefined
-type StyleFieldValue<Key extends keyof JSX.CSSProperties> =
-  | JSX.CSSProperties[Key]
-  | null
-  | Accessor<JSX.CSSProperties[Key] | null | undefined>
 type StyleRecord = {
-  [Key in keyof JSX.CSSProperties]?: StyleFieldValue<Key>
+  [Key in keyof JSX.CSSProperties]?: MayState<JSX.CSSProperties[Key] | null | undefined>
 }
 type ParsedStyleRecord = Record<string, StyleValueAtom | Accessor<StyleValueAtom>>
 
-export type StyleValue =  StyleRecord  | undefined
+export type StyleValue = StyleRecord | undefined
 
 /**
  * style 是 DOM 自带的特殊能力，按 CSS 字段合并和订阅，不混进普通 htmlProps。

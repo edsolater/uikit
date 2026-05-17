@@ -28,7 +28,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   as?: Tag
 
   /**
-   * 语义明确，就是合并外来的props的，
+   * 语义明确，就是合并祖父（父组件的父组件）传来的props的，
    * 实现上就是plugins的能力利用
    */
   shadowProps?: MayArray<ShadowProps<Tag>>
