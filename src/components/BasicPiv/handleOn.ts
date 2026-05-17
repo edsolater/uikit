@@ -4,7 +4,6 @@
  */
 import { toArray, type MayArray } from '@edsolater/fnkit'
 import { onCleanup } from 'solid-js'
-import type { PropValueWrapper } from './type'
 
 type EventKey = keyof GlobalEventHandlersEventMap
 
@@ -41,7 +40,7 @@ type EventListener<K extends EventKey = EventKey> =
   | ListenerDiscriptPair<K>
   | ListenerDiscriptMap<K>
 
-export type EventListeners<K extends EventKey = EventKey> = PropValueWrapper<EventListener<K>>
+export type EventListeners<K extends EventKey = EventKey> = MayArray<EventListener<K>  | undefined>
 
 /**
  * 只做声明形状归一，不触碰 DOM，也不处理 cleanup。

@@ -3,30 +3,29 @@
  * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
-import { toArray } from '@edsolater/fnkit'
+import { toArray, type MayArray } from '@edsolater/fnkit'
+import type { JSX } from 'solid-js'
 import { createRenderEffect } from 'solid-js'
-import type { Accessor, JSX } from 'solid-js'
-import type { PropValueWrapper } from './type'
+import { $, type MayState } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
-import { setSingleDomProp, type HTMLPropValue } from './handleHTMLPropsValue'
+import { setSingleDomProp, type HTMLPropAtom } from './handleHTMLPropsValue'
 
 type ReservedHTMLPropKey = 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
-type KnownHTMLPropValue<Value> = Value | Accessor<Value | null | undefined> | null | undefined
-type PatchedIntrinsicHTMLPropValue<Tag extends PivTag, Key extends KnownHTMLPropKey<Tag>> =
-  Key extends 'popover'
-    ? JSX.IntrinsicElements[Tag][Key] | 'hint'
-    : JSX.IntrinsicElements[Tag][Key]
+type KnownHTMLPropAtom<Value> = Value | null | undefined
+type PatchedIntrinsicHTMLPropValue<Tag extends PivTag, Key extends KnownHTMLPropKey<Tag>> = Key extends 'popover'
+  ? JSX.IntrinsicElements[Tag][Key] | 'hint'
+  : JSX.IntrinsicElements[Tag][Key]
 
 type PureHTMLProps<Tag extends PivTag = 'div'> = {
-  [Key in KnownHTMLPropKey<Tag>]?: KnownHTMLPropValue<PatchedIntrinsicHTMLPropValue<Tag, Key>>
+  [Key in KnownHTMLPropKey<Tag>]?: MayState<KnownHTMLPropAtom<PatchedIntrinsicHTMLPropValue<Tag, Key>>>
 } & {
-  [key: `attr:${string}`]: HTMLPropValue | undefined
-  [key: `prop:${string}`]: HTMLPropValue | undefined
-  [key: string]: HTMLPropValue | undefined
+  [key: `attr:${string}`]: MayState<HTMLPropAtom> | undefined
+  [key: `prop:${string}`]: MayState<HTMLPropAtom> | undefined
+  [key: string]: MayState<HTMLPropAtom> | undefined
 }
 
-export type HTMLPropsList<Tag extends PivTag = 'div'> = PropValueWrapper<PureHTMLProps<Tag>>
+export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArray<PureHTMLProps<Tag> | undefined>
 
 export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag>, htmlPropsList: HTMLPropsList<Tag>) {
   const htmlProps = mergeHTMLProps(htmlPropsList)
@@ -37,7 +36,9 @@ export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag
     }
 
     createRenderEffect(() => {
-      setSingleDomProp(element, key, value)
+      const atom = $(value) as HTMLPropAtom
+      if (atom === undefined) return
+      setSingleDomProp(element, key, atom)
     })
   }
 }

@@ -4,19 +4,19 @@
  * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
 import { type MayArray } from '@edsolater/fnkit'
-import { type JSX } from 'solid-js'
+import { type JSX, type JSXElement } from 'solid-js'
 import { consumeClassName, type PivClassNameProp } from './className'
 import {
   domMap,
   type CreatePivElement,
   type ParsedPivProps,
+  type PivHTMLElement,
   type PivSupportedElementTag,
   type PivTag,
-  type PivHTMLElement,
 } from './domMap'
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
 import { consumeEventListeners, type EventListeners } from './handleOn'
-import { consumePivPlugins, mergeShadowPropsToPivProps, type PivPlugin } from './handlePivPlugin'
+import { consumePivPlugins, type PivPlugin, type ShadowProps } from './handlePivPlugin'
 import { consumeStyle, type StyleList } from './handleStyle'
 import { parseNormalRefs, type PivRef } from './ref'
 
@@ -26,6 +26,12 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    * 代表这个Piv的身份模板， 默认为div
    */
   as?: Tag
+
+  /**
+   * 语义明确，就是合并外来的props的，
+   * 实现上就是plugins的能力利用
+   */
+  shadowProps?: MayArray<ShadowProps<Tag>>
 
   /**
    * 特殊prop：定义时插件， 其返回值（返回undefined时忽略）能合并入其下方的其他props
@@ -63,55 +69,56 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   ref?: PivRef<Tag>
 
   /* 可以结构化穿透 */
-  children?: JSX.Element
+  children?: JSXElement
 }
 
 /**
  * Piv 是一切组件的基石
  * 它的props都是元能力props
  */
-export function Piv<Tag extends PivSupportedElementTag = 'div'>(inputProps: PivProps<Tag>): JSX.Element {
-  const creator = domMap[inputProps.as ?? 'div'] as CreatePivElement<Tag>
+export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<Tag>): JSX.Element {
+  // --------------------- 处理 as，默认 div ---------------------
+  const jsxCreator = domMap[props.as ?? 'div'] as CreatePivElement<Tag>
+
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
-      // 因为plugins是唯一可以更改prompt的，虽然优先级最低，所以它需要在其他props前处理。
-      const shadowPropsList = consumePivPlugins(element, mergeTraitAndPlugins(inputProps.trait, inputProps.plugins))
-      const parsedPivProps: PivProps<Tag> = mergeShadowPropsToPivProps(shadowPropsList, inputProps)
+      
+      // --------------------- 处理 plugin 并返回的shadow props，输入的shadowProps 和 用户props ---------------------
+      const pluginConsumedProps: PivProps<Tag> = consumePivPlugins(element, props)
 
-      if (parsedPivProps.class) {
-        consumeClassName(element, parsedPivProps.class)
+      if (pluginConsumedProps.class) {
+        consumeClassName(element, pluginConsumedProps.class)
       }
 
-      if (parsedPivProps.htmlProps) {
-        consumeHTMLProps<Tag>(element, parsedPivProps.htmlProps)
+      if (pluginConsumedProps.style) {
+        consumeStyle(element, pluginConsumedProps.style)
       }
 
-      if (parsedPivProps.style) {
-        consumeStyle(element, parsedPivProps.style)
+      if (pluginConsumedProps.on) {
+        consumeEventListeners(element, pluginConsumedProps.on)
       }
 
-      if (parsedPivProps.on) {
-        consumeEventListeners(element, parsedPivProps.on)
+      if (pluginConsumedProps.htmlProps) {
+        // 如果props中设定了 class style 就剔除 htmlProps 里重复的部分
+        if (pluginConsumedProps.style) {
+          // @ts-ignore
+          delete pluginConsumedProps.htmlProps.style
+        }
+
+        if (pluginConsumedProps.class) {
+          // @ts-ignore
+          delete pluginConsumedProps.htmlProps.class
+        }
+
+        consumeHTMLProps<Tag>(element, pluginConsumedProps.htmlProps)
       }
 
-      if (parsedPivProps.ref) {
-        parseNormalRefs(element, parsedPivProps.ref)
+      if (pluginConsumedProps.ref) {
+        parseNormalRefs(element, pluginConsumedProps.ref)
       }
     },
 
-    children: inputProps.children,
+    children: props.children,
   }
-  return creator(parsedProps)
-}
-
-function mergeTraitAndPlugins<Tag extends PivTag>(
-  trait: PivProps<Tag>['trait'],
-  plugins: PivProps<Tag>['plugins'],
-): PivProps<Tag>['plugins'] {
-  return [trait, plugins].flatMap((pluginSource) => {
-    if (!pluginSource) {
-      return []
-    }
-    return Array.isArray(pluginSource) ? pluginSource : [pluginSource]
-  })
+  return jsxCreator(parsedProps)
 }

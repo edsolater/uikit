@@ -5,32 +5,27 @@
  */
 import { mergeProps, splitProps, type JSX } from 'solid-js'
 import './button.css'
-import { Piv } from '../BasicPiv/Piv'
+import { Piv, type PivProps } from '../BasicPiv/Piv'
+import type { MayState } from '../../hooks'
 
-export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
-  class?: string
-  type?: JSX.ButtonHTMLAttributes<HTMLButtonElement>['type']
-  variant?: 'solid' | 'ghost'
-  children?: JSX.Element
+export interface ButtonProps extends PivProps<'button'> {
+  type?: MayState<JSX.ButtonHTMLAttributes<HTMLButtonElement>['type']>
+  variant?: MayState<'solid' | 'outline' | 'ghost'>
 }
 
 export function Button(inputProps: ButtonProps) {
   // Solid 组件只初始化一次，props 读取必须保留响应式访问路径。
   const props = mergeProps({ variant: 'solid' as const, type: 'button' as const }, inputProps)
-  const [local, buttonHTMLProps] = splitProps(props, ['variant', 'class', 'type', 'style', 'children'])
-  const classes = () => ["Button", `variant-${local.variant}`, local.class].filter(Boolean).join(' ')
-
   return (
     <Piv
       as="button"
-      class={classes()}
-      style={local.style}
+      shadowProps={props}
+      class={['Button', `variant-${props.variant}`, props.class]}
       htmlProps={{
-        type: local.type,
-        ...buttonHTMLProps,
+        type: props.type,
       }}
     >
-      {local.children}
+      {props.children}
     </Piv>
   )
 }

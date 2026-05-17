@@ -3,48 +3,44 @@
  * 上游已经完成 props 合并和响应式订阅；这里只决定 attribute、property、attr:*、prop:* 的落点。
  * class、style 和事件不进入这个通道。
  */
-import { shrinkFn } from '@edsolater/fnkit'
-import type { Accessor } from 'solid-js'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
-type HTMLPropAtom = string | number | boolean | null | undefined | object
-export type HTMLPropValue = HTMLPropAtom | Accessor<HTMLPropAtom>
+export type HTMLPropAtom = string | number | boolean | null | undefined | object
 
 /**
  * 按 key 语义写入 DOM。
  * data-* 和 aria-* 固定走 attribute；其他普通 key 才允许 property 探测。
  */
-export function setSingleDomProp(element: HTMLElement, key: string, value: HTMLPropValue) {
-  const domValue = shrinkFn(value)
+export function setSingleDomProp(element: HTMLElement, key: string, value: HTMLPropAtom) {
 
   if (key === 'style') {
-    setStyleValue(element, domValue)
+    setStyleValue(element, value)
     return
   }
 
   if (key.startsWith('attr:')) {
     const attributeName = key.slice(5)
-    setAttributeValue(element, attributeName, domValue)
+    setAttributeValue(element, attributeName, value)
     return
   }
 
   if (key.startsWith('prop:')) {
     const propertyName = key.slice(5)
-    setPropertyValue(element, propertyName, domValue)
+    setPropertyValue(element, propertyName, value)
     return
   }
 
   if (isAttributeOnlyKey(key)) {
-    setAttributeValue(element, key, domValue)
+    setAttributeValue(element, key, value)
     return
   }
 
   if (key in element) {
-    setPropertyValue(element, key, domValue)
+    setPropertyValue(element, key, value)
     return
   }
 
-  setAttributeValue(element, key, domValue)
+  setAttributeValue(element, key, value)
 }
 
 /**

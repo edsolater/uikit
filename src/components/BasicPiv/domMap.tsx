@@ -4,6 +4,8 @@
  * 如果要新增 Piv 支持的 tag，应在这里补充模板，并让 PivSupportedElementTag 自动收敛。
  */
 import type { JSX } from 'solid-js/jsx-runtime'
+import type { JSXable } from '../../component-utils/toJSX'
+import type { JSXElement } from 'solid-js'
 
 const createDivElement: CreatePivElement<'div'> = (props) => <div ref={props.richRef}>{props.children}</div>
 const createSpanElement: CreatePivElement<'span'> = (props) => <span ref={props.richRef}>{props.children}</span>
@@ -94,5 +96,5 @@ export type PivTag = keyof HTMLElementTagNameMap & keyof JSX.IntrinsicElements
 /** 只给 domMap */
 export type ParsedPivProps<Tag extends PivTag> = {
   richRef: (element: PivHTMLElement<Tag>) => void
-  children: JSX.Element | undefined
+  children: JSXElement
 }
