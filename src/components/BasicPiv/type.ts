@@ -13,5 +13,4 @@ export type Accessable<T> = T | Accessor<T>/**
  * 可订阅、可重叠。
  */
 export type AccessablePropValueWrapper<T> = MayArray<Accessable<T | undefined>>
-export type PropValueWrapper<T> = MayArray<T | undefined>
 

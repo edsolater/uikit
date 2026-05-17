@@ -10,6 +10,7 @@ import './button.css'
 
 export interface ButtonProps extends PivProps<'button'> {
   variant?: MayState<'solid' | 'outline' | 'ghost'>
+  disabled?: MayState<boolean>
 }
 
 export function Button(inputProps: ButtonProps) {
@@ -20,7 +21,7 @@ export function Button(inputProps: ButtonProps) {
       as="button"
       shadowProps={props}
       class={['Button', derive(props.variant, (v) => `variant:${v}`)]}
-      htmlProps={{ type: 'button' }}
+      htmlProps={{ type: 'button', disabled: props.disabled }}
     >
       {props.children}
     </Piv>

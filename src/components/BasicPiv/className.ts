@@ -3,17 +3,25 @@
  * 它不负责创建 DOM、解析 plugin、处理 style、普通 HTML props 或事件。
  * Piv 在 plugin 合并完成后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
  */
-import { isObjectLike, isTruthy, shrinkFn, toArray, type Booleanable, type Stringable } from '@edsolater/fnkit'
+import {
+  isObjectLike,
+  isTruthy,
+  shrinkFn,
+  toArray,
+  type Booleanable,
+  type MayArray,
+  type Stringable,
+} from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup } from 'solid-js'
-import type { Accessable, AccessablePropValueWrapper } from './type'
+import type { MayState } from '../../hooks'
 
-export type ClassName = Stringable | { [classname: string]: Accessable<Booleanable> }
-export type PivClassNameProp = AccessablePropValueWrapper<ClassName>
+export type ClassNameAtom = MayState<Stringable> | { [classname: string]: MayState<Booleanable> }
+export type ClassNameList = MayArray<ClassNameAtom | undefined>
 
 /**
  * class 是 Piv 的 DOM 消费能力，必须经过 plugin 合并后再绑定到真实节点。
  */
-export function consumeClassName(element: Element, classNameList: PivClassNameProp) {
+export function consumeClassName(element: Element, classNameList: ClassNameList) {
   const tokenCounts = new Map<string, number>()
 
   for (const classNameSource of toArray(classNameList).filter(isTruthy)) {
@@ -30,7 +38,7 @@ export function consumeClassName(element: Element, classNameList: PivClassNamePr
 /**
  * class 字符串按空白拆成 token；对象形式按条件决定 token 是否存在。
  */
-function resolveClassTokens(className: ClassName | undefined): string[] {
+function resolveClassTokens(className: ClassNameAtom | undefined): string[] {
   if (!className) {
     return []
   }

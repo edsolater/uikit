@@ -3,7 +3,7 @@
  * 它不负责 class、普通 HTML props、事件或 plugin 解析。
  * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
  */
-import { shrinkFn, toArray,type MayArray } from '@edsolater/fnkit'
+import { shrinkFn, toArray, type MayArray } from '@edsolater/fnkit'
 import { createRenderEffect, type Accessor, type JSX } from 'solid-js'
 
 type StyleValueAtom = string | number | null | undefined
@@ -16,13 +16,12 @@ type StyleRecord = {
 }
 type ParsedStyleRecord = Record<string, StyleValueAtom | Accessor<StyleValueAtom>>
 
-export type StyleValue = string | StyleRecord | null | undefined
-export type StyleList = MayArray<StyleValue>
+export type StyleValue =  StyleRecord  | undefined
 
 /**
  * style 是 DOM 自带的特殊能力，按 CSS 字段合并和订阅，不混进普通 htmlProps。
  */
-export function consumeStyle(element: HTMLElement, styleList: StyleList) {
+export function consumeStyle(element: HTMLElement, styleList: MayArray<StyleValue>) {
   const styles = toArray(styleList)
   const styleRecord = mergeStyleRecords(styles)
 

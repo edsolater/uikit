@@ -5,7 +5,7 @@
  */
 import { type MayArray } from '@edsolater/fnkit'
 import { type JSX, type JSXElement } from 'solid-js'
-import { consumeClassName, type PivClassNameProp } from './className'
+import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,
   type CreatePivElement,
@@ -17,7 +17,7 @@ import {
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
 import { consumeEventListeners, type EventListeners } from './handleOn'
 import { consumePivPlugins, type PivPlugin, type ShadowProps } from './handlePivPlugin'
-import { consumeStyle, type StyleList } from './handleStyle'
+import { consumeStyle, type StyleValue } from './handleStyle'
 import { parseNormalRefs, type PivRef } from './ref'
 
 // TODO: 必须支持所有的可设置assessor，不然更新的，细粒度就不够细了
@@ -46,12 +46,12 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * CSS 共同项， dom:class
    */
-  class?: PivClassNameProp
+  class?: ClassNameList
 
   /**
    * DOM style 特殊项，按 CSS 字段合并并细粒度订阅。
    */
-  style?: StyleList
+  style?: MayArray<StyleValue>
 
   /**
    * attrs 或 props，自动判断
