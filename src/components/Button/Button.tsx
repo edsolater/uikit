@@ -5,7 +5,7 @@
  */
 import { createRenderEffect } from 'solid-js'
 import { addDefaultProps } from '../../component-utils/defaultProps'
-import { createStatusManager, type StatusProps } from '../../component-utils/status'
+import { useStatus, type StatusProps } from '../../component-utils/status'
 import { useVariant, type VariantProps } from '../../component-utils/variant'
 import { type MayState } from '../../hooks'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
@@ -39,7 +39,7 @@ export function Button(rawProps: ButtonProps) {
   const props = addDefaultProps(rawProps, { variant: 'solid' })
 
   const variable = useVariant(props.variant)
-  const status = createStatusManager<'invalid'>(props.status) //！它应该由信息自发产生，而不是外部指定， 会冲突的
+  const status = useStatus<'invalid'>(props.status) //！它应该由信息自发产生，而不是外部指定， 会冲突的
 
   const validity = createButtonValidity({
     disabled: props.disabled,
