@@ -4,6 +4,7 @@
  * 本地开发需要快速验证组件和 hook 时，可以在这里组合最小示例。
  */
 import { ButtonDemo } from './components/Button/Button.demo'
+import { PivStructureDemo } from './components/BasicPiv/PivStructure.demo'
 import { PopoverDemo } from './components/Popover/Popover.demo'
 import { ColorDashboardDemo } from './css/ColorDashboardDemo'
 import { UseTitleDemo } from './hooks/useTitle/useTitle.demo'
@@ -13,6 +14,7 @@ function App() {
   return (
     <main class="demo-shell">
       <ColorDashboardDemo />
+      <PivStructureDemo />
       <ButtonDemo />
       <PopoverDemo />
       <UseTitleDemo />
