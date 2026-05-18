@@ -1,5 +1,6 @@
-import { createSignal, type Accessor, type Setter } from 'solid-js'
-import { createStore, type SetStoreFunction } from 'solid-js/store'
+import { createEffect, createSignal, type Accessor } from 'solid-js'
+import { createStore, reconcile, type SetStoreFunction } from 'solid-js/store'
+import { $ } from './read'
 
 /**
  * State 状态创建入口。
@@ -15,36 +16,91 @@ export type StoreState<T> = SignalState<T> & {
 export type State<T> = StoreState<T> | SignalState<T>
 
 export type StateMode = 'signal' | 'store'
+
 export type CreateStateOptions = {
   /** 决定底层使用 signal 还是 store；不传时默认使用 signal。 */
   mode?: StateMode
+
+  /** 是否保持和响应式初始值来源同步；默认为 true */
+  syncWithInitial?: boolean
 }
 
+// signal 模式的 setter 直接暴露 createSignal 的 setValue
 export type SignalStateSetter<T> = (newValue: T | ((prev: T) => T)) => void
+
+// store 模式的 setter 需要包装一层实现路径选择。
 export type StoreStateSetter<Root extends object> = {
   (value: Root | ((previous: Root) => Root)): void
   <Key extends keyof Root>(key: Key, value: Root[Key] | ((previous: Root[Key]) => Root[Key])): void
   <Value>(selector: (state: StoreState<Root>) => State<Value>, value: Value | ((previous: Value) => Value)): void
 }
 
+/**
+ * 判断值是否是 Solid 的 Accessor（signal 读取器）。
+ *
+ * 该函数用于可读性
+ * @param value 输入
+ */
+function isAccessor<T>(value: unknown): value is Accessor<T> {
+  return typeof value === 'function'
+}
+
+/**
+ * 创建状态。
+ *
+ * 根据 options.mode 决定创建 signal 还是 store。
+ * - signal 模式适合简单状态，性能开销小，API 简单。
+ * - store 模式适合复杂对象状态，支持字段访问和部分更新，但性能开销较大。
+ *
+ * 初始值可以是普通值，也可以是响应式来源（signal/store）。如果是响应式来源，默认保持和上游同步。
+ *
+ * @example
+ * ```ts
+ * const [count, setCount] = createState(0)
+ *
+ * const [user, setUser] = createState({ name: 'Eds', age: 30 }, { mode: 'store' })
+ * setUser('name', 'Edsger')
+ * setUser((state) => state.age, (age) => age + 1)
+ * ```
+ */
 export function createState<T = undefined>(): [SignalState<T | undefined>, SignalStateSetter<T | undefined>]
 export function createState<T extends object>(
-  initialValue: T,
+  initialValue: T | State<T>,
   options: CreateStateOptions & { mode: 'store' },
 ): [StoreState<T>, StoreStateSetter<T>]
 export function createState<T>(
-  initialValue: T,
+  initialValue: T | State<T>,
   options?: CreateStateOptions & { mode?: 'signal' },
 ): [SignalState<T>, SignalStateSetter<T>]
-export function createState<T>(initialValue?: T, options: CreateStateOptions = {}): unknown {
+export function createState<T>(initialValue?: T | State<T>, options: CreateStateOptions = {}): unknown {
   const mode = options.mode ?? 'signal'
+  const syncWithInitial = options.syncWithInitial ?? true
 
   if (mode === 'signal') {
-    const [value, setValue] = createSignal(initialValue)
+    const [value, setValue] = createSignal($(initialValue))
+
+    // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
+    if (isAccessor(initialValue) && syncWithInitial) {
+      createEffect(() => {
+        setValue(() => $(initialValue as Accessor<T>))
+      })
+    }
+
     return [value as State<T>, setValue]
   } else if (mode === 'store') {
-    assertObjectValue(initialValue)
-    const [store, setStore] = createStore(initialValue)
+    const resolvedInitialValue = $(initialValue)
+
+    assertObjectValue(resolvedInitialValue)
+
+    const [store, setStore] = createStore(resolvedInitialValue)
+
+    // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
+    if (isAccessor(initialValue) && syncWithInitial) {
+      createEffect(() => {
+        setStore(reconcile($(initialValue as Accessor<T & object>)))
+      })
+    }
+
     const storeState = createStoreState(() => store)
     return [storeState as State<T>, createStoreStateSetter(setStore)]
   } else {

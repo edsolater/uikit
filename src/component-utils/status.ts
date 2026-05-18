@@ -1,5 +1,4 @@
 import { isArray, isString } from '@edsolater/fnkit'
-import { createEffect, createMemo } from 'solid-js'
 import type { ClassNameList } from '../components/BasicPiv/className'
 import { type MayState, $, createState, derive } from '../hooks'
 
@@ -21,10 +20,9 @@ function splitStatusTokens(statusLongString: string): string[] {
 export function createStatusManager<S extends string>(propsStatus?: StatusProps<S> | undefined): StatusController<S>
 export function createStatusManager<S extends string>(propsStatus?: StatusProps<any> | undefined): StatusController<S>
 export function createStatusManager<S extends string>(propsStatus?: StatusProps<any> | undefined): StatusController<S> {
-  const inputStatusRecord = createMemo<Record<S, MayState<boolean>>>(() => {
-    const innerStatus = $(propsStatus)
+  const inputStatusRecord = derive(propsStatus, (innerStatus) => {
     if (!innerStatus) {
-      return {} as Record<S, MayState<boolean>>
+      return {}
     }
     if (isString(innerStatus)) {
       const statusTokens = splitStatusTokens(innerStatus)
@@ -34,17 +32,9 @@ export function createStatusManager<S extends string>(propsStatus?: StatusProps<
       return innerStatus.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, MayState<boolean>>)
     }
     return innerStatus
-  })
+  }) satisfies MayState<Record<S, MayState<boolean>>>
 
-  // TODO: 应该可以直接接受默认值而不用createMemo包裹
-  const [statusRecord, setStatusRecord] = createState(inputStatusRecord(), { mode: 'store' })
-
-  createEffect(() => {
-    const newStatusRecord = inputStatusRecord()
-    for (const key in newStatusRecord) {
-      setStatusRecord(key as S, newStatusRecord[key as S])
-    }
-  })
+  const [statusRecord, setStatusRecord] = createState(inputStatusRecord, { mode: 'store' })
 
   const statusController = {
     set(status: S, value: MayState<boolean>) {
