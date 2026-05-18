@@ -195,6 +195,7 @@
   [popover] {
     opacity: 0;
     transform: translateY(var(--popover-translate-y-start)) scale(var(--popover-scale-start));
+    transform-origin: var(--popover-transform-origin, top center);
     overscroll-behavior: contain; /* 阻止滚动链 */
     transition:
       opacity var(--popover-transition-duration) ease,

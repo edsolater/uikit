@@ -10,7 +10,7 @@
     --Button-padding-x: var(--space-4);
     --Button-padding-y: var(--space-1);
     --Button-content-gap: var(--space-2);
-    --Button-bg: var(--color-brand);
+    --Button-bg: var(--dye-brand);
     --Button-fg: --foreground-on(var(--Button-bg));
     --Button-border-color: var(--color-border);
     --Button-disable-opacity: var(--opacity-muted);
@@ -33,7 +33,7 @@
       cursor: not-allowed;
       opacity: var(--Button-disable-opacity);
     }
-    
+
     &:focus-visible {
       outline: 0.1em solid --dim(var(--Button-border-color), 32);
       outline-offset: 3px;
@@ -41,13 +41,12 @@
 
     &.variant\:solid {
       /* 就是默认的variant，不需要任何额外规则 */
-      --Button-bg: var(--color-brand);
-      --Button-fg: --foreground-on(var(--Button-bg));
     }
 
     &.variant\:ghost {
       color: var(--color-text-strong);
-      background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+      --Button-bg: --color-mix(var(--dye-brand), 3, transparent, 2);
+      font-weight: initial;
       border-color: var(--color-border);
       &:hover:not(:disabled) {
         background: color-mix(in oklab, var(--color-surface-soft) 92%, transparent);

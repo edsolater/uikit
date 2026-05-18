@@ -39,7 +39,7 @@
     */
     /* ======================= 可覆盖的基础app品牌色 ======================= */
     --base-brand: oklch(62% 0.17 255deg);
-    --base-accent: --color-adjust(var(--dye-brand), delta-hue, 150deg, delta-lightness, 8%, delta-chroma, -0.01);
+    --base-accent: --color-adjust(var(--base-brand), delta-hue, 150deg, delta-lightness, 8%, delta-chroma, -0.01);
 
     /* ======================= 固色, 方便组合 ======================= */
     --dye-blackwhite: light-dark(white, black); /* 尖酸刻薄的决定黑白 */
@@ -48,7 +48,7 @@
     --dye-blackwhite-3: light-dark(--color-mix(white, 4, black, 1), --color-mix(black, 16, white, 1));
     --dye-blackwhite-gray: light-dark(--color-mix(white, 1, black, 1), --color-mix(black, 1, white, 1));
     --dye-brand: light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
-    --dye-accent: light-dark(var(--base-dye-accent), --lighten(var(--base-dye-accent), 10%));
+    --dye-accent: light-dark(var(--base-accent), --lighten(var(--base-accent), 10%));
 
     /* ======================= 组件使用的颜色 ======================= */
     --color-surface: --color-mix(var(--dye-blackwhite-1), 5, blue, 0.04);
