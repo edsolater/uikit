@@ -4,16 +4,17 @@
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
  */
 import { flapDeep, mergeMayArray, toArray, mayMap } from '@edsolater/fnkit'
-import type { PivProps } from './Piv'
-import type { PivHTMLElement, PivTag } from './domMap'
+import type { PivProps } from '../Piv'
+import type { PivHTMLElement, PivTag } from '../domMap'
+import { runPlugin, type PivPlugin } from './runPlugin'
 
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'if' | 'children'>
+
 export type ComsumedShadowProps<Tag extends PivTag> = Omit<
   PivProps<Tag>,
   'as' | 'if' | 'children' | 'plugins' | 'trait' | 'shadowProps'
 >
 
-export type PivPlugin<Tag extends PivTag> = (element: PivHTMLElement<Tag>) => undefined | ShadowProps<Tag>
 
 
 /**
@@ -29,7 +30,7 @@ export function consumePivPlugins<Tag extends PivTag>(
   while (pluginsQueue.length > 0) {
     const plugin = pluginsQueue.pop()
     if (!plugin) continue
-    const result = plugin(element)
+    const result = runPlugin(plugin, element)
     if (result) {
       const newDeepQueueFromResult = getPluginFromShadowProps(result)
       pluginsQueue.push(...newDeepQueueFromResult)

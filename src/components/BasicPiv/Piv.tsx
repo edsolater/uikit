@@ -22,12 +22,13 @@ import {
   type EventListenerPair,
   type EventListeners,
 } from './on/handleOn'
-import { consumePivPlugins, type PivPlugin, type ShadowProps } from './handlePivPlugin'
+import { consumePivPlugins, type ShadowProps } from './plugin/handlePivPlugin'
+import { type PivPlugin } from './plugin/runPlugin'
 import { consumeEventListeners } from './on/registerEventListeners'
 import { consumeStyle, type StyleValue } from './handleStyle'
 import { parseNormalRefs, type PivRef } from './ref'
 
-// TODO: 必须支持所有的可设置assessor，不然更新的，细粒度就不够细了
+
 export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * 代表这个Piv的身份模板， 默认为div
