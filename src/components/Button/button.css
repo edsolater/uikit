@@ -33,6 +33,7 @@
       cursor: not-allowed;
       opacity: var(--Button-disable-opacity);
     }
+    
     &:focus-visible {
       outline: 0.1em solid --dim(var(--Button-border-color), 32);
       outline-offset: 3px;

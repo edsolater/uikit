@@ -1,4 +1,6 @@
 import { createMemo, type Accessor } from 'solid-js'
+import { $, type MayState } from '../base-state'
+import { isFunction } from '@edsolater/fnkit'
 
 /**
  * 匹配器负责围绕现有 accessor 提供匹配与判断能力。
@@ -7,7 +9,7 @@ import { createMemo, type Accessor } from 'solid-js'
  * 只负责把“当前值如何被匹配”收口成可复用的小语法。
  */
 
-type MatcherPredicate<Value> = (value: Value) => boolean
+type MatcherPredicate<Value> = (value: Value) => MayState<boolean>
 
 export interface MatcherOperator<Value> {
   /**
@@ -65,25 +67,25 @@ export interface MatcherOperator<Value> {
  *
  * 该能力只包装读取，不接管状态写入。
  */
-export function createValueWatcher<Value>(source: Accessor<Value>): MatcherOperator<Value> {
+export function createMatcher<Value>(source: MayState<Value>): MatcherOperator<Value> {
   const isPredicate = (
     targetValueOrPredicate: Value | MatcherPredicate<Value>,
   ): targetValueOrPredicate is MatcherPredicate<Value> => {
-    return typeof targetValueOrPredicate === 'function'
+    return isFunction(targetValueOrPredicate)
   }
 
-  const is = (targetValue: Value) => {
-    return Object.is(source(), targetValue)
+  const is = (targetValue: MayState<Value>) => {
+    return Object.is($(source), $(targetValue))
   }
 
-  const isNot = (targetValue: Value) => {
+  const isNot = (targetValue: MayState<Value>) => {
     return !is(targetValue)
   }
 
   const match = (targetValueOrPredicate: Value | MatcherPredicate<Value>) => {
     return createMemo(() => {
       if (isPredicate(targetValueOrPredicate)) {
-        return targetValueOrPredicate(source())
+        return $(targetValueOrPredicate($(source)))
       }
 
       return is(targetValueOrPredicate)
@@ -107,7 +109,6 @@ export function createValueWatcher<Value>(source: Accessor<Value>): MatcherOpera
  * @param source
  * @returns
  */
-export function createMatcher<Value>(source: Accessor<Value>, matchFunction: (value: Value) => boolean): Accessor<boolean> {
-  const exist = createValueWatcher(source).match(matchFunction)
-  return exist
+export function createMatch<Value>(source: MayState<Value>, matchFunction: (value: Value) => boolean): Accessor<boolean> {
+  return createMatcher(source).match(matchFunction)
 }

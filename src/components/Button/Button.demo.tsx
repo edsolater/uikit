@@ -15,7 +15,7 @@ export function ButtonDemo() {
       <div class="button-row">
         <Button>Primary action</Button>
         <Button variant="ghost" >Secondary action</Button>
-        <Button disabled>Disabled</Button>
+        <Button status="disabled">Disabled</Button>
       </div>
     </article>
   )

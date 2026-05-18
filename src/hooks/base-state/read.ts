@@ -9,7 +9,7 @@
 import { createMemo, type Accessor } from 'solid-js'
 import type { State } from './createState'
 import type { MayFn } from '@edsolater/fnkit'
-import { shrinkFn } from '@edsolater/fnkit'
+import { shrinkFn, isUndefined, isExist } from '@edsolater/fnkit'
 
 /**
  * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
@@ -92,7 +92,7 @@ export function $<T>(state: MayState<T>): T
 export function $<T>(state: MayState<T> | undefined): T | undefined
 export function $<T>(state: MayState<T> | undefined, defaultValue: MayFn<MayState<T>>): T
 export function $<T>(state: MayState<T> | undefined, defaultValue?: MayFn<MayState<T>>): T {
-  const newState = state ?? shrinkFn(defaultValue)
+  const newState = isExist(state) ? state : isExist(defaultValue) ? shrinkFn(defaultValue) : undefined
   return shrinkFn(newState) as T
 }
 
@@ -129,6 +129,6 @@ export function $<T>(state: MayState<T> | undefined, defaultValue?: MayFn<MaySta
  * element.className = $(className) // 最终消费当前值
  * ```
  */
-export function derive<T, U>(source: MayState<T>, fn: (value: T) => U): Accessor<U> {
-  return createMemo(() => fn($(source)))
+export function derive<T, U>(source: MayState<T>, fn: (value: T) => MayState<U>): Accessor<U> {
+  return createMemo(() => $(fn($(source))))
 }
