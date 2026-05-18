@@ -5,7 +5,7 @@
  */
 import { createRenderEffect } from 'solid-js'
 import { addDefaultProps } from '../../component-utils/defaultProps'
-import { useStatus, type StatusProps } from '../../component-utils/status'
+import { createStatusManager, type StatusProps } from '../../component-utils/status'
 import { useVariant, type VariantProps } from '../../component-utils/variant'
 import { type MayState } from '../../hooks'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
@@ -35,27 +35,29 @@ export interface ButtonProps extends PivProps<'button'> {
   validIf?: ButtonValidIf
 }
 
-export function Button(props: ButtonProps) {
-  // Solid 组件只初始化一次，props 读取必须保留响应式访问路径。
-  const mergedProps = addDefaultProps(props, { variant: 'solid' })
-  const variable = useVariant(mergedProps.variant)
-  const status = useStatus<'invalid'>(mergedProps.status) //！它应该由信息自发产生，而不是外部指定， 会冲突的
+export function Button(rawProps: ButtonProps) {
+  const props = addDefaultProps(rawProps, { variant: 'solid' })
+
+  const variable = useVariant(props.variant)
+  const status = createStatusManager<'invalid'>(props.status) //！它应该由信息自发产生，而不是外部指定， 会冲突的
+
   const validity = createButtonValidity({
-    disabled: mergedProps.disabled,
-    enabled: mergedProps.enabled,
-    validIf: mergedProps.validIf,
+    disabled: props.disabled,
+    enabled: props.enabled,
+    validIf: props.validIf,
   })
+
   createRenderEffect(() => {
     status.set('invalid', validity.isDisabled())
   })
   return (
     <Piv
       as="button"
-      shadowProps={mergedProps}
+      shadowProps={props}
       class={['Button', variable.class, status.class]}
       htmlProps={{ type: 'button', disabled: validity.isDisabled }}
     >
-      {mergedProps.children}
+      {props.children}
     </Piv>
   )
 }

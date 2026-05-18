@@ -18,9 +18,9 @@ function splitStatusTokens(statusLongString: string): string[] {
 /**
  * Status管理器只有在重型组件或者需要状态管理的组件上才会使用。
  */
-export function useStatus<S extends string>(propsStatus?: StatusProps<S> | undefined): StatusController<S>
-export function useStatus<S extends string>(propsStatus?: StatusProps<any> | undefined): StatusController<S>
-export function useStatus<S extends string>(propsStatus?: StatusProps<any> | undefined): StatusController<S> {
+export function createStatusManager<S extends string>(propsStatus?: StatusProps<S> | undefined): StatusController<S>
+export function createStatusManager<S extends string>(propsStatus?: StatusProps<any> | undefined): StatusController<S>
+export function createStatusManager<S extends string>(propsStatus?: StatusProps<any> | undefined): StatusController<S> {
   const inputStatusRecord = createMemo<Record<S, MayState<boolean>>>(() => {
     const innerStatus = $(propsStatus)
     if (!innerStatus) {
