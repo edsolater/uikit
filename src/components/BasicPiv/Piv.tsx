@@ -15,8 +15,14 @@ import {
   type PivTag,
 } from './domMap'
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
-import { consumeEventListeners, type EventListeners } from './handleOn'
+import {
+  mergeEventListenerAliases,
+  type EventListenerInput,
+  type EventListenerPair,
+  type EventListeners,
+} from './on/handleOn'
 import { consumePivPlugins, type PivPlugin, type ShadowProps } from './handlePivPlugin'
+import { consumeEventListeners } from './on/registerEventListeners'
 import { consumeStyle, type StyleValue } from './handleStyle'
 import { parseNormalRefs, type PivRef } from './ref'
 
@@ -64,6 +70,11 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   on?: EventListeners
 
   /**
+   * click 事件的快捷入口；会在内部平移成 on 里的 click 声明，再和 on 合并。
+   */
+  onClick?: EventListenerInput<'click'>
+
+  /**
    * ref 是逃生出口，因为可以拿到DOM， 其他props本质上就是它的一个快捷方式罢了。（除了as以及plugin的返回值）
    */
   ref?: PivRef<Tag>
@@ -82,7 +93,6 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
 
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
-      
       // --------------------- 处理 plugin 并返回的shadow props，输入的shadowProps 和 用户props ---------------------
       const pluginConsumedProps: PivProps<Tag> = consumePivPlugins(element, props)
 
@@ -94,8 +104,12 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
         consumeStyle(element, pluginConsumedProps.style)
       }
 
-      if (pluginConsumedProps.on) {
-        consumeEventListeners(element, pluginConsumedProps.on)
+      if (pluginConsumedProps.on || pluginConsumedProps.onClick) {
+        const mergedEventListeners = mergeEventListenerAliases(pluginConsumedProps.on, [
+          'click',
+          pluginConsumedProps.onClick,
+        ])
+        consumeEventListeners(element, mergedEventListeners)
       }
 
       if (pluginConsumedProps.htmlProps) {

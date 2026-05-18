@@ -22,11 +22,6 @@ export function Button(inputProps: ButtonProps) {
       shadowProps={props}
       class={['Button', derive(props.variant, (v) => `variant:${v}`)]}
       htmlProps={{ type: 'button', disabled: props.disabled }}
-      on={{
-        click: (ev) => {
-          console.log('Button clicked', ev)
-        }
-      }}
     >
       {props.children}
     </Piv>

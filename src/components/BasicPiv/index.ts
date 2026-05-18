@@ -1,3 +1,3 @@
 export * from './Piv'
-export { createEventListenerDiscriptor } from './handleOn'
+export { createEventListenerDiscriptor } from './on/handleOn'
 export * from './type'
