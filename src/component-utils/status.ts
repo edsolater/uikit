@@ -2,10 +2,10 @@ import { createMemo } from "solid-js"
 import { isString, isArray } from "@edsolater/fnkit"
 import { type MayState, $, derive } from "../hooks"
 
-export type MayStatus<S extends string> = MayState<S | S[] | Record<S, MayState<boolean>>>
+export type StatusProps<S extends string> = MayState<S | S[] | Record<S, MayState<boolean>>>
 
-export function useStatusMatcher<S extends string>(
-  propsStatus: MayStatus<S> | undefined,
+export function useStatus<S extends string>(
+  propsStatus: StatusProps<S> | undefined,
 ): { has: (status: S) => MayState<boolean> } {
   const statusRecord = createMemo<Record<S, MayState<boolean>>>(() => {
     const innerStatus = $(propsStatus)

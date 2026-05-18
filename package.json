@@ -38,7 +38,6 @@
     "solid-js": "^1.9.12"
   },
   "devDependencies": {
-    "@edsolater/fnkit": "link:@edsolater/fnkit",
     "@types/node": "^24.12.2",
     "solid-js": "^1.9.12",
     "storybook": "^10.3.5",
