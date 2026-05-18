@@ -4,19 +4,19 @@
  * Piv 在 plugin 合并完成后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
  */
 import {
-  isObjectLike,
+  isObject,
+  isArray,
   isTruthy,
-  shrinkFn,
-  toArray,
   type Booleanable,
   type MayArray,
   type Stringable,
+  toArray,
 } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup } from 'solid-js'
-import type { MayState } from '../../hooks'
+import { $, type MayState } from '../../hooks'
 
-export type ClassNameAtom = MayState<Stringable> | { [classname: string]: MayState<Booleanable> }
-export type ClassNameList = MayArray<ClassNameAtom | undefined>
+export type ClassNameAtom = Stringable | MayArray<Stringable> | { [classname: string]: MayState<Booleanable> }
+export type ClassNameList = MayState<MayArray<MayState<ClassNameAtom> | undefined>>
 
 /**
  * class 是 Piv 的 DOM 消费能力，必须经过 plugin 合并后再绑定到真实节点。
@@ -24,32 +24,37 @@ export type ClassNameList = MayArray<ClassNameAtom | undefined>
 export function consumeClassName(element: Element, classNameList: ClassNameList) {
   const tokenCounts = new Map<string, number>()
 
-  for (const classNameSource of toArray(classNameList).filter(isTruthy)) {
-    createRenderEffect(() => {
-      const tokens = resolveClassTokens(shrinkFn(classNameSource))
-      addClassTokens(element, tokenCounts, tokens)
-      onCleanup(() => {
-        removeClassTokens(element, tokenCounts, tokens)
+  createRenderEffect(() => {
+    const lists = toArray($(classNameList)).filter(isTruthy)
+
+    for (const atom of lists) {
+      createRenderEffect(() => {
+        const tokens = resolveClassTokens($(atom))
+        addClassTokens(element, tokenCounts, tokens)
+        onCleanup(() => {
+          removeClassTokens(element, tokenCounts, tokens)
+        })
       })
-    })
-  }
+    }
+  })
 }
 
 /**
  * class 字符串按空白拆成 token；对象形式按条件决定 token 是否存在。
  */
-function resolveClassTokens(className: ClassNameAtom | undefined): string[] {
-  if (!className) {
+function resolveClassTokens(classAtom: ClassNameAtom | undefined): string[] {
+
+  if (!classAtom) {
     return []
   }
 
-  if (!isObjectLike(className)) {
-    return splitClassTokens(String(className))
+  if (isObject(classAtom) && !isArray(classAtom)) {
+    return Object.entries(classAtom).flatMap(([classString, condition]) =>
+      $(condition) ? splitClassTokens(classString) : [],
+    )
   }
 
-  return Object.entries(className).flatMap(([classString, condition]) =>
-    shrinkFn(condition) ? splitClassTokens(classString) : [],
-  )
+  return toArray(classAtom).flatMap((item) => splitClassTokens(String(item)))
 }
 
 /**

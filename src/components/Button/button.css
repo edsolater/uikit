@@ -31,7 +31,6 @@
 
     &:disabled {
       cursor: not-allowed;
-      opacity: var(--Button-disable-opacity);
     }
 
     &:focus-visible {
@@ -51,6 +50,10 @@
       &:hover:not(:disabled) {
         background: color-mix(in oklab, var(--color-surface-soft) 92%, transparent);
       }
+    }
+
+    &.status\:invalid {
+      opacity: var(--Button-disable-opacity);
     }
   }
 }
