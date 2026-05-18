@@ -4,7 +4,7 @@
  * 这里用可运行示例展示 insertBefore、appendChild、wrapOutside 和 element 参数的使用边界。
  */
 import { Piv } from './Piv'
-import { createPivPlugin } from './plugin/runPlugin'
+import { createPivPlugin } from './plugin/helpers'
 
 const beforeLabelPlugin = createPivPlugin(({ insertBefore }) => {
   insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)

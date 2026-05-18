@@ -19,14 +19,6 @@ import { insert } from 'solid-js/web'
 export type PivPlugin<Tag extends PivTag> = (context: PivPluginContext<Tag>) => undefined | ShadowProps<Tag>
 
 /**
- * 创建 Piv plugin。
- * 这个函数本身不包运行逻辑，只用于让插件作者在定义处获得稳定的类型边界。
- */
-export function createPivPlugin<Tag extends PivTag>(fn: PivPlugin<Tag>): PivPlugin<Tag> {
-  return fn
-}
-
-/**
  * 运行单个 plugin。
  * 这里负责把当前 DOM 和结构工具传给 plugin，并把 plugin 返回的 shadow props 原样交给上层合并。
  */
