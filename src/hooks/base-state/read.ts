@@ -132,3 +132,10 @@ export function $<T>(state: MayState<T> | undefined, defaultValue?: MayFn<MaySta
 export function derive<T, U>(source: MayState<T>, fn: (value: T) => MayState<U>): Accessor<U> {
   return createMemo(() => $(fn($(source))))
 }
+
+/**
+ * 快速工具， 反转boolen
+ * TODO: 可以考虑放到 fnkit 里，
+ * 此函数是为了考虑可读性，因为如果只是符号（=>），比如各种箭头、感叹号这种，可读性不佳。
+ */
+export const flip = (value: boolean): boolean => !value

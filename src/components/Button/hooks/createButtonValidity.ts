@@ -5,20 +5,21 @@
  */
 import { toArray, type MayArray } from '@edsolater/fnkit'
 import { createMemo, type Accessor } from 'solid-js'
-import { $, type MayState } from '../../../hooks'
+import { $, derive, type MayState } from '../../../hooks'
+import { flip } from '../../../hooks/base-state/read'
 
-export type ButtonValidationRule = {
+export type ValidationRule = {
   /**
    * 验证条件；返回 true 时通过。
    */
   should: MayState<boolean>
 }
 
-export type ButtonValidationInput = MayState<boolean | ButtonValidationRule | undefined>
+export type ValidationInput = MayState<boolean | ValidationRule | undefined>
 
-export type ButtonValidIf = MayState<MayArray<ButtonValidationInput> | undefined>
+export type ValidIf = MayState<MayArray<ValidationInput> | undefined>
 
-export type ButtonValidityOptions = {
+export type ValidityOptions = {
   /**
    * 快捷禁用入口；true 时按钮不可用。
    */
@@ -32,26 +33,20 @@ export type ButtonValidityOptions = {
   /**
    * 更强的验证入口；所有条件都通过时按钮才可用。
    */
-  validIf?: ButtonValidIf
-
-  /**
-   * 兼容 Button 既有 status disabled 入口。
-   */
-  statusDisabled?: MayState<boolean>
+  validIf?: ValidIf
 }
 
-export type ButtonValidity = {
+export type Validity = {
   isValid: Accessor<boolean>
   isEnabled: Accessor<boolean>
   isDisabled: Accessor<boolean>
 }
 
-export function createButtonValidity(options: ButtonValidityOptions): ButtonValidity {
-  const isValid = createMemo(() => toArray($(options.validIf)).every(isValidationPassed))
+export function createValiditor(options: ValidityOptions): Validity {
+  const isValid = derive(options.validIf, (validIf) => toArray(validIf).every(isValidationPassed))
 
   const isEnabled = createMemo(() => {
     if (!isValid()) return false
-    if ($(options.statusDisabled)) return false
     if (options.enabled !== undefined) return $(options.enabled) === true
     if ($(options.disabled)) return false
     return true
@@ -60,11 +55,11 @@ export function createButtonValidity(options: ButtonValidityOptions): ButtonVali
   return {
     isValid,
     isEnabled,
-    isDisabled: createMemo(() => !isEnabled()),
+    isDisabled: derive(isEnabled, flip),
   }
 }
 
-function isValidationPassed(input: ButtonValidationInput): boolean {
+function isValidationPassed(input: ValidationInput): boolean {
   const validation = $(input)
   if (validation === undefined) return true
   if (typeof validation === 'boolean') return validation
