@@ -1,1 +1,1 @@
-export * from './tabular-num' // 代表功能插件
+export * from './traits/tabular-num' // 代表功能插件
