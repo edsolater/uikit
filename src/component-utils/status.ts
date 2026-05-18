@@ -42,14 +42,13 @@ export function useStatus<S extends string>(propsStatus?: StatusProps<any> | und
   createEffect(() => {
     const newStatusRecord = inputStatusRecord()
     for (const key in newStatusRecord) {
-      // TODO: 这里的 setStatusRecord 应该能支持直接指定key
-      setStatusRecord((s) => s[key as S], newStatusRecord[key as S])
+      setStatusRecord(key as S, newStatusRecord[key as S])
     }
   })
 
   const statusController = {
     set(status: S, value: MayState<boolean>) {
-      setStatusRecord((s) => s[status], value)
+      setStatusRecord(status, value)
     },
     has(status: S) {
       return derive($(statusRecord)[status], (v) => v === true)

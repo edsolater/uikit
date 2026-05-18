@@ -23,6 +23,7 @@ export type CreateStateOptions = {
 export type SignalStateSetter<T> = (newValue: T | ((prev: T) => T)) => void
 export type StoreStateSetter<Root extends object> = {
   (value: Root | ((previous: Root) => Root)): void
+  <Key extends keyof Root>(key: Key, value: Root[Key] | ((previous: Root[Key]) => Root[Key])): void
   <Value>(selector: (state: StoreState<Root>) => State<Value>, value: Value | ((previous: Value) => Value)): void
 }
 
@@ -83,11 +84,21 @@ function createStoreState<T>(storeGetter: () => T): State<T> {
  * 调用方只描述要写入的 state 字段，具体路径转换留在这里完成。
  */
 function createStoreStateSetter<Root extends object>(setStore: SetStoreFunction<Root>): StoreStateSetter<Root> {
-  return ((...args: [Root | ((previous: Root) => Root)] | [(state: StoreState<Root>) => State<unknown>, unknown]) => {
+  return ((
+    ...args:
+      | [Root | ((previous: Root) => Root)]
+      | [keyof Root, unknown]
+      | [(state: StoreState<Root>) => State<unknown>, unknown]
+  ) => {
     const [selectorOrValue, value] = args
 
     if (args.length === 1) {
       setStore(selectorOrValue as Root)
+      return
+    }
+
+    if (typeof selectorOrValue !== 'function') {
+      ;(setStore as (...args: unknown[]) => void)(selectorOrValue, value)
       return
     }
 
