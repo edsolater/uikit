@@ -4,7 +4,8 @@
  * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
 import { type MayArray } from '@edsolater/fnkit'
-import { type JSX, type JSXElement } from 'solid-js'
+import { Show, type JSX, type JSXElement } from 'solid-js'
+import { $, type MayState } from '../../hooks'
 import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,
@@ -30,8 +31,15 @@ import { parseNormalRefs, type PivRef } from './ref'
 export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * 代表这个Piv的身份模板， 默认为div
+   * （元能力，只可用显式定义，不可被plugin系自动修改）
    */
   as?: Tag
+
+  /**
+   * false 时 Piv 自身和 children 都不进入 DOM。
+   * （元能力，只可用显式定义，不可被plugin系自动修改）
+   */
+  if?: MayState<boolean>
 
   /**
    * 语义明确，就是合并祖父（父组件的父组件）传来的props的，
@@ -134,5 +142,10 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
 
     children: props.children,
   }
-  return jsxCreator(parsedProps)
+
+  if (props.if !== undefined) {
+    return <Show when={$(props.if)}>{jsxCreator(parsedProps)}</Show>
+  } else {
+    return jsxCreator(parsedProps)
+  }
 }

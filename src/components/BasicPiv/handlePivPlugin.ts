@@ -7,10 +7,10 @@ import { flapDeep, mergeMayArray, toArray, mayMap } from '@edsolater/fnkit'
 import type { PivProps } from './Piv'
 import type { PivHTMLElement, PivTag } from './domMap'
 
-export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'children'>
+export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'if' | 'children'>
 export type ComsumedShadowProps<Tag extends PivTag> = Omit<
   PivProps<Tag>,
-  'as' | 'children' | 'plugins' | 'trait' | 'shadowProps'
+  'as' | 'if' | 'children' | 'plugins' | 'trait' | 'shadowProps'
 >
 
 export type PivPlugin<Tag extends PivTag> = (element: PivHTMLElement<Tag>) => undefined | ShadowProps<Tag>
@@ -63,7 +63,7 @@ function mergeConsumedShadowProps<Tag extends PivTag>(
 ): ComsumedShadowProps<Tag> {
   return shadowPropsList.toReversed().reduce((collectProps, singleProps) => {
     for (const key of Object.keys(singleProps) as (keyof PivProps<Tag>)[]) {
-      if (key === 'as' || key === 'children' || key === 'plugins' || key === 'trait' || key === 'shadowProps') continue
+      if (key === 'as' || key === 'if' || key === 'children' || key === 'plugins' || key === 'trait' || key === 'shadowProps') continue
       const newValue = mergeMayArray(collectProps[key], singleProps[key])
       // @ts-ignore
       collectProps[key] = newValue
