@@ -1,10 +1,13 @@
+import { createPivPlugin } from '../components'
 import { type MayState, derive } from '../hooks'
+import { addDefaultProps } from './defaultProps'
 
-export type VariantInput<Variants extends string> = MayState<Variants>
+type Variant = string
+export type VariantInput<V extends Variant> = MayState<V>
 
 /**
  * 用于定义props
- * Variant 意为风格变种，区别在表达信息的 维度/层次 不同 
+ * Variant 意为风格变种，区别在表达信息的 维度/层次 不同
  *
  * 示例：
  * ```ts
@@ -12,9 +15,23 @@ export type VariantInput<Variants extends string> = MayState<Variants>
  *   // ...
  * }
  */
-export type VariantProps<Variants extends string> = {
-  variant?: VariantInput<Variants>
+export type VariantProps<V extends Variant = Variant> = {
+  variant?: VariantInput<V>
 }
-export function useVariant<V extends string>(variantsProp: VariantInput<V>) {
-  return { class: derive(variantsProp, (v) => `variant:${v}`) }
+
+/**
+ * 推荐使用 plugin 而不是业务的hooks
+ * @param variantsProp 
+ * @returns 
+ */
+export function useVariant<V extends Variant>(variantsProp: VariantInput<V>) {
+  return { class: variantsProp }
+}
+
+/** 创建一个可拔插的 底层Piv的一个插件Plugin */
+export function variantParser<V extends Variant>(props: VariantProps<V>, defaultVariant?: VariantInput<V>) {
+  const variant = derive(props.variant, (v) => v ?? defaultVariant)
+  return createPivPlugin(() => ({
+    class: variant,
+  }))
 }

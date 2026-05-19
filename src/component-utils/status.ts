@@ -1,10 +1,10 @@
 import { isArray, isString } from '@edsolater/fnkit'
 import type { ClassNameList } from '../components/BasicPiv/className'
 import { type MayState, $, createState, derive } from '../hooks'
+import { createPivPlugin, createPluginHookCreator } from '../components'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
 export type StatusInput<S extends string> = MayState<S | S[] | Record<S, MayState<boolean>>>
-
 
 /**
  * Status 是一个轻量级的状态管理工具，适用于组件内部或组件之间需要共享状态的场景。
@@ -27,7 +27,7 @@ export type StatusInput<S extends string> = MayState<S | S[] | Record<S, MayStat
  *    </div>
  *  )}
  * ```
- * 
+ *
  * AI 规则：
  * - 不要把状态输入限制为特定的字符串或枚举；它应该是一个灵活的输入，可以是字符串、字符串数组或状态记录对象。
  * - 不要在组件外部直接操作状态记录对象；应该通过 `set` 方法来修改状态，以保持响应性。
@@ -78,12 +78,17 @@ export function useStatus<S extends string>(propsStatus?: StatusInput<any> | und
     },
     class: derive(
       statusRecord,
-      (record) =>
-        Object.keys(record)
-          .filter((key) => $(statusRecord[key as S]) === true)
-          .map((v) => `status:${v}`) as S[],
+      (record) => Object.keys(record).filter((key) => $(statusRecord[key as S]) === true),
     ),
   }
 
   return statusController
+}
+
+export const createStatusPlugin = <T extends string>() => {
+  const status = useStatus<T>()
+  const statusPlugin = createPivPlugin(() => ({
+    class: status.class,
+  }))
+  return [statusPlugin, status] as const
 }

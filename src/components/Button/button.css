@@ -38,11 +38,13 @@
       outline-offset: 3px;
     }
 
-    &.variant\:solid {
+    /* variant */
+    &.solid {
       /* 就是默认的variant，不需要任何额外规则 */
     }
 
-    &.variant\:ghost {
+    /* variant */
+    &.ghost {
       color: var(--color-text-strong);
       --Button-bg: --color-mix(var(--dye-brand), 3, transparent, 2);
       font-weight: initial;
@@ -52,7 +54,8 @@
       }
     }
 
-    &.status\:invalid {
+    /* status */
+    &.invalid {
       opacity: var(--Button-disable-opacity);
     }
   }

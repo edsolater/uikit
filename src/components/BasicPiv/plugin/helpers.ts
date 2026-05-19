@@ -16,7 +16,7 @@ export function createPivPlugin<Tag extends PivTag>(fn: PivPlugin<Tag>): PivPlug
  * 创建 Piv plugin hook 工厂。
  * 这个函数固定“配置生成 hook，hook 返回状态和 plugin”的形状，不参与状态创建或 plugin 运行。
  *
- * @example 
+ * @example
  * // ---------- 定义在普通代码中 ----------
  * const createMiniMapPlugin = createPluginHookCreator<{ initZoom: number }, { zoom: number }>((options) => {
  *   const [zoom, setZoom] = createSignal(options.initZoom)
@@ -35,8 +35,8 @@ export function createPivPlugin<Tag extends PivTag>(fn: PivPlugin<Tag>): PivPlug
  *   return <Piv plugins={miniMapPlugin}>...</Piv>
  * }
  */
-export function createPluginHookCreator<HookOptions extends AnyRecord, State extends AnyRecord, Tag extends PivTag = PivTag>(
-  runInComponent: (hookOptions: HookOptions) => [state: State, plugin: PivPlugin<Tag>],
-): (hookOptions: HookOptions) => [state: State, plugin: PivPlugin<Tag>] {
+export function createPluginHookCreator<HookOptions extends AnyRecord, State extends AnyRecord>(
+  runInComponent: (hookOptions: HookOptions) => [plugin: PivPlugin<PivTag>, state: State],
+): (hookOptions: HookOptions) => [plugin: PivPlugin<PivTag>, state: State] {
   return runInComponent
 }

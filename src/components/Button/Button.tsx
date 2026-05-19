@@ -5,8 +5,8 @@
  */
 import { createRenderEffect } from 'solid-js'
 import { addDefaultProps } from '../../component-utils/defaultProps'
-import { useStatus, type StatusProps } from '../../component-utils/status'
-import { useVariant, type VariantProps } from '../../component-utils/variant'
+import { createStatusPlugin, useStatus, type StatusProps } from '../../component-utils/status'
+import { useVariant, variantParser, type VariantProps } from '../../component-utils/variant'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
 import { createValiditor, type ValidityOptions } from './hooks/createButtonValidity'
@@ -14,14 +14,11 @@ import { createValiditor, type ValidityOptions } from './hooks/createButtonValid
 // 这种写法是为了让文本更像排比插件，更具可读性。
 export interface ButtonProps extends PivProps<'button'> {}
 export interface ButtonProps extends ValidityOptions {}
-export interface ButtonProps extends VariantProps<'solid' | 'outline' | 'ghost'> {}
+export interface ButtonProps extends VariantProps<'outline' | 'ghost'> {}
 export interface ButtonProps extends StatusProps<never> {}
 
-export function Button(rawProps: ButtonProps) {
-  const props = addDefaultProps(rawProps, { variant: 'solid' })
-
-  const variable = useVariant(props.variant)
-  const status = useStatus<'invalid'>(props.status) //！它应该由信息自发产生，而不是外部指定， 会冲突的
+export function Button(props: ButtonProps) {
+  const [statusParser, status] = createStatusPlugin<'invalid'>()
 
   const validity = createValiditor({
     disabled: props.disabled,
@@ -32,15 +29,16 @@ export function Button(rawProps: ButtonProps) {
   createRenderEffect(() => {
     status.set('invalid', validity.isDisabled())
   })
+
   return (
     <Piv
       as="button"
       shadowProps={props}
-      class={['Button', variable.class, status.class]}
+      plugins={[variantParser(props), statusParser]}
+      class={['Button', status.class]}
       htmlProps={{ type: 'button', disabled: validity.isDisabled }}
     >
       {props.children}
     </Piv>
   )
 }
-/*  */
