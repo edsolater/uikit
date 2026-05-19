@@ -91,8 +91,20 @@ export const domMap = {
 } satisfies Partial<Record<PivTag, CreatePivElement<any>>>
 export type PivSupportedElementTag = keyof typeof domMap
 export type CreatePivElement<Tag extends PivTag> = (props: ParsedPivProps<Tag>) => JSX.Element
+
+/** hover 的展开链被“命名中间层”截住了。
+现在 TS 看到的不是“一条必须立刻摊开的交集表达式”，而是：
+
+PivPlugin<PivTag>
+PivTag
+keyof PivTagMap
+对编辑器来说，PivTagMap 已经是一个命名好的类型节点了，很多时候它就会停在这里，而不是继续把 PivTagMap 背后的所有 key 全部列出来。
+
+所以有效的根因不是“TS 不展开了”，而是“TS 展开到一个更适合停下来的命名边界了”。 */
+type JSXTag = Extract<keyof JSX.IntrinsicElements, keyof HTMLElementTagNameMap>
+
+export type PivTag = JSXTag
 export type PivHTMLElement<Tag extends PivTag> = HTMLElementTagNameMap[Tag]
-export type PivTag = keyof HTMLElementTagNameMap & keyof JSX.IntrinsicElements
 /** 只给 domMap */
 export type ParsedPivProps<Tag extends PivTag> = {
   richRef: (element: PivHTMLElement<Tag>) => void

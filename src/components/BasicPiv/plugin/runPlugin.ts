@@ -36,7 +36,7 @@ export function runPlugin<Tag extends PivTag>(
  * 工具内部负责把 JSX 挂到 Piv DOM 周围的端点，并在 Piv 清理时移除对应挂载范围。
  * 这些工具属于结构增强能力：可以挂载辅助结构，但不应用来重定义组件主体是什么。
  */
-export type PivPluginContext<Tag extends PivTag> = {
+export interface PivPluginContext<Tag extends PivTag> {
   /**
    * 当前 Piv DOM。
    * 插件需要读取 DOM 信息或组合更底层端点 API 时使用它。
