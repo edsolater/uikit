@@ -16,7 +16,7 @@ import { insert } from 'solid-js/web'
  * 参数是当前 plugin 的运行上下文，包含当前 Piv DOM 和结构插线能力。
  * 返回值只用于补充 shadow props，不用于描述结构插入。
  */
-export type PivPlugin<Tag extends PivTag> = (context: PivPluginContext<Tag>) => undefined | ShadowProps<Tag>
+export type PivPlugin<Tag extends PivTag = PivTag> = (context: PivPluginContext<Tag>) => undefined | ShadowProps<Tag>
 
 /**
  * 运行单个 plugin。

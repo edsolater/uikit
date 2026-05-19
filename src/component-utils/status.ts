@@ -1,7 +1,9 @@
 import { isArray, isString } from '@edsolater/fnkit'
+import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
 import { type MayState, $, createState, derive } from '../hooks'
-import { createPivPlugin, createPluginHookCreator } from '../components'
+import { createEffect } from 'solid-js'
+import type { PluginManager } from './type'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
 export type StatusInput<S extends string> = MayState<S | S[] | Record<S, MayState<boolean>>>
@@ -38,11 +40,13 @@ export type StatusProps<S extends string> = {
   status?: StatusInput<S>
 }
 
-export type StatusController<S extends string> = {
-  set(status: S, value: MayState<boolean>): void
-  has(status: S): MayState<boolean>
-  class: ClassNameList
+export type StatusManager<S extends string> = {
+  setStatus(status: S, value: MayState<boolean>): void
+  hasStatus(status: S): MayState<boolean>
+  /** 业务层无需关心，{@link createStatusManager} 会自动使用的 */
+  _class: ClassNameList
 }
+
 function splitStatusTokens(statusLongString: string): string[] {
   return statusLongString.split(/\s+/).filter(Boolean)
 }
@@ -50,9 +54,9 @@ function splitStatusTokens(statusLongString: string): string[] {
 /**
  * Status管理器只有在重型组件或者需要状态管理的组件上才会使用。
  */
-export function useStatus<S extends string>(propsStatus?: StatusInput<S> | undefined): StatusController<S>
-export function useStatus<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusController<S>
-export function useStatus<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusController<S> {
+function createStatusStateParser<S extends string>(propsStatus?: StatusInput<S> | undefined): StatusManager<S>
+function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusManager<S>
+function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusManager<S> {
   const inputStatusRecord = derive(propsStatus, (innerStatus) => {
     if (!innerStatus) {
       return {}
@@ -70,25 +74,22 @@ export function useStatus<S extends string>(propsStatus?: StatusInput<any> | und
   const [statusRecord, setStatusRecord] = createState(inputStatusRecord, { mode: 'store' })
 
   const statusController = {
-    set(status: S, value: MayState<boolean>) {
+    setStatus(status: S, value: MayState<boolean>) {
       setStatusRecord(status, value)
     },
-    has(status: S) {
+    hasStatus(status: S) {
       return derive($(statusRecord)[status], (v) => v === true)
     },
-    class: derive(
-      statusRecord,
-      (record) => Object.keys(record).filter((key) => $(statusRecord[key as S]) === true),
-    ),
+    _class: derive(statusRecord, (record) => Object.keys(record).filter((key) => $(statusRecord[key as S]) === true)),
   }
 
   return statusController
 }
 
-export const createStatusPlugin = <T extends string>() => {
-  const status = useStatus<T>()
+export function createStatusManager<T extends string>() {
+  const statusManager = createStatusStateParser<T>()
   const statusPlugin = createPivPlugin(() => ({
-    class: status.class,
+    class: statusManager._class,
   }))
-  return [statusPlugin, status] as const
+  return { controller: statusManager, plugin: statusPlugin } satisfies PluginManager
 }

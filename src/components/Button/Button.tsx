@@ -4,9 +4,8 @@
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
 import { createRenderEffect } from 'solid-js'
-import { addDefaultProps } from '../../component-utils/defaultProps'
-import { createStatusPlugin, useStatus, type StatusProps } from '../../component-utils/status'
-import { useVariant, variantParser, type VariantProps } from '../../component-utils/variant'
+import { createStatusManager, type StatusProps } from '../../component-utils/status'
+import { createVariantManager, type VariantProps } from '../../component-utils/variant'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
 import { createValiditor, type ValidityOptions } from './hooks/createButtonValidity'
@@ -18,7 +17,8 @@ export interface ButtonProps extends VariantProps<'outline' | 'ghost'> {}
 export interface ButtonProps extends StatusProps<never> {}
 
 export function Button(props: ButtonProps) {
-  const [statusParser, status] = createStatusPlugin<'invalid'>()
+  const status = createStatusManager<'invalid'>()
+  const variant = createVariantManager(props)
 
   const validity = createValiditor({
     disabled: props.disabled,
@@ -27,15 +27,15 @@ export function Button(props: ButtonProps) {
   })
 
   createRenderEffect(() => {
-    status.set('invalid', validity.isDisabled())
+    status.controller.setStatus('invalid', validity.isDisabled())
   })
 
   return (
     <Piv
       as="button"
       shadowProps={props}
-      plugins={[variantParser(props), statusParser]}
-      class={['Button', status.class]}
+      class="Button"
+      plugins={[variant.plugin, status.plugin]}
       htmlProps={{ type: 'button', disabled: validity.isDisabled }}
     >
       {props.children}
