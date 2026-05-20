@@ -6,7 +6,7 @@
 import { toArray, type MayArray } from '@edsolater/fnkit'
 import { createMemo, type Accessor } from 'solid-js'
 import { $, derive, type MayState } from '../../../hooks'
-import { flip } from '../../../hooks/base-state/read'
+import { flip } from '../../../hooks/base-state/readState'
 
 export type ValidationRule = {
   /**

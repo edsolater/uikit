@@ -1,6 +1,7 @@
-import { createEffect, createSignal, type Accessor } from 'solid-js'
-import { createStore, reconcile, type SetStoreFunction } from 'solid-js/store'
-import { $ } from './read'
+import { createEffect, on, type Accessor } from 'solid-js'
+import { createSignalState, type SignalState, type SignalStateSetter } from './createSignalState'
+import { createStoreState, type StoreState, type StoreStateSetter } from './createStoreState'
+import { $ } from './readState'
 
 /**
  * State 状态创建入口。
@@ -8,11 +9,6 @@ import { $ } from './read'
  * 该文件是业务代码接触 Solid 原生状态 API 的边界，
  * 只负责把 signal/store 包装成只读 State 和唯一 setter。
  */
-
-export type SignalState<T> = Accessor<T>
-export type StoreState<T> = SignalState<T> & {
-  readonly [Key in keyof T]: StoreState<T[Key]>
-}
 export type State<T> = StoreState<T> | SignalState<T>
 
 export type StateMode = 'signal' | 'store'
@@ -22,17 +18,7 @@ export type CreateStateOptions = {
   mode?: StateMode
 
   /** 是否保持和响应式初始值来源同步；默认为 true */
-  syncWithInitial?: boolean
-}
-
-// signal 模式的 setter 直接暴露 createSignal 的 setValue
-export type SignalStateSetter<T> = (newValue: T | ((prev: T) => T)) => void
-
-// store 模式的 setter 需要包装一层实现路径选择。
-export type StoreStateSetter<Root extends object> = {
-  (value: Root | ((previous: Root) => Root)): void
-  <Key extends keyof Root>(key: Key, value: Root[Key] | ((previous: Root[Key]) => Root[Key])): void
-  <Value>(selector: (state: StoreState<Root>) => State<Value>, value: Value | ((previous: Value) => Value)): void
+  followInitial?: boolean
 }
 
 /**
@@ -41,7 +27,7 @@ export type StoreStateSetter<Root extends object> = {
  * 该函数用于可读性
  * @param value 输入
  */
-function isAccessor<T>(value: unknown): value is Accessor<T> {
+export function isAccessor<T>(value: unknown): value is Accessor<T> {
   return typeof value === 'function'
 }
 
@@ -74,151 +60,35 @@ export function createState<T>(
 ): [SignalState<T>, SignalStateSetter<T>]
 export function createState<T>(initialValue?: T | State<T>, options: CreateStateOptions = {}): unknown {
   const mode = options.mode ?? 'signal'
-  const syncWithInitial = options.syncWithInitial ?? true
 
-  if (mode === 'signal') {
-    const [value, setValue] = createSignal($(initialValue))
+  const resolvedInitialValue = $(initialValue) as T | undefined
 
-    // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
-    if (isAccessor(initialValue) && syncWithInitial) {
-      createEffect(() => {
-        setValue(() => $(initialValue as Accessor<T>))
-      })
+  const [pureState, pureSetState] = (() => {
+    if (mode === 'signal') {
+      return createSignalState(resolvedInitialValue)
+    } else if (mode === 'store') {
+      type O = T extends object ? T : never
+      return createStoreState<O>(resolvedInitialValue as O | undefined)
+    } else {
+      throw new Error(`Unsupported state mode: ${mode}`)
     }
+  })() as [State<T>, SignalStateSetter<T> | StoreStateSetter<T>]
 
-    
+  const followInitial = options.followInitial ?? true
 
-    return [value as State<T>, setValue]
-  } else if (mode === 'store') {
-    const resolvedInitialValue = $(initialValue)
-
-    assertObjectValue(resolvedInitialValue)
-
-    const [store, setStore] = createStore(resolvedInitialValue)
-
-    // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
-    if (isAccessor(initialValue) && syncWithInitial) {
-      createEffect(() => {
-        setStore(reconcile($(initialValue as Accessor<T & object>)))
-      })
-    }
-
-    const storeState = createStoreState(() => store)
-    return [storeState as State<T>, createStoreStateSetter(setStore)]
-  } else {
-    throw new Error(`Unsupported state mode: ${mode}`)
+  // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
+  if (isAccessor(initialValue) && followInitial) {
+    // 成用 Solid 的 on，并打开 defer。这样第一次不会触发，后续 source 变化才会进入回调。
+    createEffect(
+      on(
+        initialValue as Accessor<T>,
+        (value) => {
+          pureSetState(() => value)
+        },
+        { defer: true },
+      ),
+    )
   }
-}
 
-/**
- * 把读取函数包装成支持字段访问的只读 State。
- *
- * Proxy 只负责读取路径，不提供任何写入方法。
- */
-function createStoreState<T>(storeGetter: () => T): State<T> {
-  const state = (() => storeGetter()) as State<T>
-
-  return new Proxy(state, {
-    // 是为store准备的
-    get(target, key, receiver) {
-      if (typeof key === 'symbol') {
-        return Reflect.get(target, key, receiver)
-      }
-
-      return createStoreState(() => {
-        const value = storeGetter() as Record<PropertyKey, unknown>
-        return value[key]
-      })
-    },
-    apply() {
-      return storeGetter()
-    },
-  })
-}
-
-/**
- * 创建 store state 的写入口。
- *
- * 调用方只描述要写入的 state 字段，具体路径转换留在这里完成。
- */
-function createStoreStateSetter<Root extends object>(setStore: SetStoreFunction<Root>): StoreStateSetter<Root> {
-  return ((
-    ...args:
-      | [Root | ((previous: Root) => Root)]
-      | [keyof Root, unknown]
-      | [(state: StoreState<Root>) => State<unknown>, unknown]
-  ) => {
-    const [selectorOrValue, value] = args
-
-    if (args.length === 1) {
-      setStore(selectorOrValue as Root)
-      return
-    }
-
-    if (typeof selectorOrValue !== 'function') {
-      ;(setStore as (...args: unknown[]) => void)(selectorOrValue, value)
-      return
-    }
-
-    const selector = selectorOrValue as (state: StoreState<Root>) => State<unknown>
-    const path = collectStoreStatePath(selector)
-
-    if (path.length === 0) {
-      setStore(value as Root)
-      return
-    }
-
-    ;(setStore as (...args: unknown[]) => void)(...path, value)
-  }) as StoreStateSetter<Root>
-}
-
-/**
- * 从 selector 中收集 store 字段路径。
- *
- * 这个 proxy 不读取真实状态，只记录调用方选择了哪条写入路径。
- */
-function collectStoreStatePath<Root extends object, Value>(
-  selector: (state: StoreState<Root>) => State<Value>,
-): PropertyKey[] {
-  const path: PropertyKey[] = []
-  const pathState = createPathState(path)
-
-  selector(pathState as StoreState<Root>)
-
-  return path
-}
-
-/**
- * 创建只记录属性访问路径的 State。
- *
- * 该对象只服务 store setter 的 selector，不进入真实渲染读取路径。
- */
-function createPathState(path: PropertyKey[]): State<unknown> {
-  const state = (() => undefined) as State<unknown>
-
-  return new Proxy(state, {
-    get(target, key, receiver) {
-      if (typeof key === 'symbol') {
-        return Reflect.get(target, key, receiver)
-      }
-
-      path.push(key)
-
-      return createPathState(path)
-    },
-    apply() {
-      return undefined
-    },
-  })
-}
-
-/**
- * store 模式要求初始值具备对象形状。
- *
- * 这是显式模式的调用约定，失败说明调用方选错了底层状态能力。
- */
-function assertObjectValue(value: unknown): asserts value is object {
-  if (typeof value !== 'object' || value === null) {
-    throw new Error('store 模式的初始值必须是对象。')
-  }
+  return [pureState, pureSetState]
 }
