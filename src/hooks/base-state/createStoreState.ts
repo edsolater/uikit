@@ -1,5 +1,7 @@
+import { isAnyKey, isFunction, isObjectLiteral } from '@edsolater/fnkit'
 import { createEffect, on, type Accessor } from 'solid-js'
 import { createStore as createSolidjsStore, type SetStoreFunction } from 'solid-js/store'
+import { $, type MayState } from './readState'
 import { isState, toState, type State } from './state'
 
 export type StoreState<T> = State<T> & {
@@ -8,12 +10,15 @@ export type StoreState<T> = State<T> & {
 // store 模式的 setter 需要包装一层实现路径选择。
 
 export type StoreStateSetter<Root> = {
-  (value: Root | ((previous: Root) => Root)): void
-  <Key extends keyof Root>(key: Key, value: Root[Key] | ((previous: Root[Key]) => Root[Key])): void
-  <Value>(selector: (state: StoreState<Root>) => State<Value>, value: Value | ((previous: Value) => Value)): void
+  (setter: BasicStateSetter<Root>, options?: StoreStateSetterOptions): void
+  <Key extends keyof Root>(key: Key, setter: BasicStateSetter<Root[Key]>): void
+  <Value>(selector: (state: StoreState<Root>) => State<Value>, setter: BasicStateSetter<Value>): void
 }
 
-
+type BasicStateSetter<V> = MayState<V> | ((previous: V) => MayState<V>)
+type StoreStateSetterOptions = {
+  mergeMode?: 'replace' | /* default */ 'shallow-merge'
+}
 
 /**
  * store 模式的 createState 实现。
@@ -33,7 +38,6 @@ export function createStoreState<T>(
   const storeState = createStoreStateAccessor(() => store as T)
   const setStoreState = createStoreStateSetter(setStore)
 
-  
   // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
   if (isState(initialValue) && options.autoPipState) {
     // 成用 Solid 的 on，并打开 defer。这样第一次不会触发，后续 source 变化才会进入回调。
@@ -69,7 +73,7 @@ export function createStoreStateAccessor<T>(readCurrentValue: () => T): StoreSta
         const value = target() as Record<PropertyKey, unknown>
         return value[key]
       })
-    }
+    },
   }) as StoreState<T>
 }
 /**
@@ -78,43 +82,79 @@ export function createStoreStateAccessor<T>(readCurrentValue: () => T): StoreSta
  * 调用方只描述要写入的 state 字段，具体路径转换留在这里完成。
  */
 export function createStoreStateSetter<Root>(setStore: SetStoreFunction<Root>): StoreStateSetter<Root> {
-  return ((
-    ...args:
-      | [Root | ((previous: Root) => Root)]
-      | [keyof Root, unknown]
-      | [(state: StoreState<Root>) => State<unknown>, unknown]
-  ) => {
-    const [selectorOrValue, value] = args
+  return ((...args: unknown[]) => {
+    // StoreStateSetter 有三个重载：
+    // 1. setState(setter, options?)：直接传入一个 setter，更新整个 state。
+    // 2. setState(key, setter)：传入一个字段和对应的 setter，更新单个字段。
+    // 3. setState(selector, setter)：传入一个 selector 选择要更新的字段，和对应的 setter，支持嵌套字段。
 
-    if (args.length === 1) {
-      setStore(selectorOrValue as Root)
+    // 情况：[setter: StoreStateSetterValueFunction<Root>, options?: StoreStateSetterOptions]
+    if (args.length === 1 || isStateSetterOptions(args[1])) {
+      const setter = args[0] as BasicStateSetter<Root>
+      const options = args[1] as StoreStateSetterOptions | undefined
+
+      setStore((previous) => {
+        const nextValue = resolveBasicStateSetter(setter, previous)
+        if (options?.mergeMode === 'replace') {
+          return nextValue
+        }
+        if (!isObjectLiteral(previous) || !isObjectLiteral(nextValue)) {
+          return nextValue
+        }
+        return { ...previous, ...nextValue } as Root
+      })
       return
     }
 
-    if (typeof selectorOrValue !== 'function') {
-      ;(setStore as (...args: unknown[]) => void)(selectorOrValue, value)
+    // 情况：[key:Key, setter: StoreStateSetterValueFunction<Value>]
+    if (isAnyKey(args[0])) {
+      // @ts-ignore
+      setStore(args[0], (previous: unknown) =>
+        resolveBasicStateSetter(args[1], previous),
+      )
       return
     }
 
-    const selector = selectorOrValue as (state: StoreState<Root>) => State<unknown>
+
+    // 情况：[selector: (state: StoreState<Root>) => State<Value>, setter: StoreStateSetterValueFunction<Value>]
+    const selector = args[0] as (state: StoreState<Root>) => State<unknown>
     const path = collectStoreStatePath(selector)
 
     if (path.length === 0) {
-      setStore(value as Root)
+      setStore((previous) => resolveBasicStateSetter(args[1] as BasicStateSetter<Root>, previous))
       return
     }
 
-    ;(setStore as (...args: unknown[]) => void)(...path, value)
-  }) as StoreStateSetter<Root>
+    ;(setStore as (...args: unknown[]) => void)(...path, (previous: unknown) =>
+      resolveBasicStateSetter(args[1] as BasicStateSetter<unknown>, previous),
+    )
+  }) satisfies StoreStateSetter<Root>
 }
+
+/**
+ * 统一处理 store setter 的值。
+ * @example
+ * resolveBasicStateSetter((prev) => prev + 1, 41) //=> 42
+ * resolveBasicStateSetter(State) //=> State
+ */
+function resolveBasicStateSetter<V>(setter: BasicStateSetter<V>, previous: V): V {
+  if (isFunction(setter) && !isState(setter)) {
+    return $((setter as (previous: V) => MayState<V>)(previous)) as V
+  }
+
+  return $(setter) as V
+}
+
+function isStateSetterOptions(value: unknown): value is StoreStateSetterOptions {
+  return isObjectLiteral(value) && ('mergeMode' in value || Object.keys(value).length === 0)
+}
+
 /**
  * 从 selector 中收集 store 字段路径。
  *
  * 这个 proxy 不读取真实状态，只记录调用方选择了哪条写入路径。
  */
-function collectStoreStatePath<Root, Value>(
-  selector: (state: StoreState<Root>) => State<Value>,
-): PropertyKey[] {
+function collectStoreStatePath<Root, Value>(selector: (state: StoreState<Root>) => State<Value>): PropertyKey[] {
   const path: PropertyKey[] = []
   const pathState = createPathState(path)
 
