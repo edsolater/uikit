@@ -27,9 +27,11 @@ export function Button(props: ButtonProps) {
   })
 
   createRenderEffect(() => {
-    status.controller.setStatus('invalid', validity.isDisabled())
+    // 🤔 至少就是把 state 与 setState 连接，那好像也不一定需要createEffect, 所以这个原生能力要支持在createState里面.
+    // 但是这似乎不应该叫setState， 你看pipState怎么样？
+    status.controller.setStatus('invalid', validity.isDisabled)
   })
-
+ 
   return (
     <Piv
       as="button"

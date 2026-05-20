@@ -73,7 +73,7 @@ function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any
 
   const [statusRecord, setStatusRecord] = createState(inputStatusRecord, { mode: 'store' })
 
-  const statusController = {
+  const statusController: StatusManager<S> = {
     setStatus(status: S, value: MayState<boolean>) {
       setStatusRecord(status, value)
     },

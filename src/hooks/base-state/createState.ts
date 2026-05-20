@@ -86,6 +86,8 @@ export function createState<T>(initialValue?: T | State<T>, options: CreateState
       })
     }
 
+    
+
     return [value as State<T>, setValue]
   } else if (mode === 'store') {
     const resolvedInitialValue = $(initialValue)
