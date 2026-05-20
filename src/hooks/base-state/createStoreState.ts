@@ -1,8 +1,8 @@
+import { createEffect, on, type Accessor } from 'solid-js'
 import { createStore as createSolidjsStore, type SetStoreFunction } from 'solid-js/store'
-import { type State } from './createState'
-import type { Accessor } from 'solid-js'
+import { isState, toState, type State } from './state'
 
-export type StoreState<T> = Accessor<T> & {
+export type StoreState<T> = State<T> & {
   readonly [Key in keyof T]: StoreState<T[Key]>
 }
 // store 模式的 setter 需要包装一层实现路径选择。
@@ -22,14 +22,33 @@ export type StoreStateSetter<Root> = {
  */
 export function createStoreState<T>(
   initialValue: T | undefined,
+  options: { autoPipState: boolean },
 ): [StoreState<T>, StoreStateSetter<T>] {
   assertObjectValue(initialValue)
-  type StoreRoot = T & object
-  const [store, setStore] = createSolidjsStore<StoreRoot>(initialValue as StoreRoot)
+
+  // @ts-expect-error 因为 store 模式要求初始值具备对象形状，所以这里直接断言成 T
+  // 反正此前已有类型assert，如果类型不对就会直接报错，所以我们这里不用对类型那么苛刻。
+  const [store, setStore] = createSolidjsStore<T>(initialValue)
 
   const storeState = createStoreStateAccessor(() => store as T)
+  const setStoreState = createStoreStateSetter(setStore)
 
-  return [storeState, createStoreStateSetter(setStore) as StoreStateSetter<T>]
+  
+  // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
+  if (isState(initialValue) && options.autoPipState) {
+    // 成用 Solid 的 on，并打开 defer。这样第一次不会触发，后续 source 变化才会进入回调。
+    createEffect(
+      on(
+        initialValue as Accessor<T>,
+        (value) => {
+          setStoreState(() => value)
+        },
+        { defer: true },
+      ),
+    )
+  }
+
+  return [storeState, setStoreState]
 }
 
 /**
@@ -37,25 +56,21 @@ export function createStoreState<T>(
  *
  * Proxy 只负责读取路径，不提供任何写入方法。
  */
-export function createStoreStateAccessor<T>(storeGetter: () => T): StoreState<T> {
-  const state = (() => storeGetter()) as StoreState<T>
+export function createStoreStateAccessor<T>(readCurrentValue: () => T): StoreState<T> {
+  const state = readCurrentValue
 
-  return new Proxy(state, {
+  return new Proxy(toState(state), {
     // 是为store准备的
     get(target, key, receiver) {
       if (typeof key === 'symbol') {
         return Reflect.get(target, key, receiver)
       }
-
       return createStoreStateAccessor(() => {
-        const value = storeGetter() as Record<PropertyKey, unknown>
+        const value = target() as Record<PropertyKey, unknown>
         return value[key]
       })
-    },
-    apply() {
-      return storeGetter()
-    },
-  })
+    }
+  }) as StoreState<T>
 }
 /**
  * 创建 store state 的写入口。

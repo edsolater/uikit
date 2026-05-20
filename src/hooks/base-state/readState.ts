@@ -6,10 +6,9 @@
  *
  * 它不负责创建状态、修改状态，也不负责描述 store 字段访问能力。
  */
-import { createMemo, type Accessor } from 'solid-js'
-import type { State } from './createState'
 import type { MayFn } from '@edsolater/fnkit'
-import { shrinkFn, isUndefined, isExist } from '@edsolater/fnkit'
+import { isExist, isFunction, shrinkFn } from '@edsolater/fnkit'
+import { isState, type State } from './state'
 
 /**
  * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
@@ -92,50 +91,32 @@ export function $<T>(state: MayState<T>): T
 export function $<T>(state: MayState<T> | undefined): T | undefined
 export function $<T>(state: MayState<T> | undefined, defaultValue: MayFn<MayState<T>>): T
 export function $<T>(state: MayState<T> | undefined, defaultValue?: MayFn<MayState<T>>): T {
-  const newState = isExist(state) ? state : isExist(defaultValue) ? shrinkFn(defaultValue) : undefined
-  return shrinkFn(newState) as T
+  const newState = isExist(state)
+    ? state
+    : isExist(defaultValue)
+      ? readMayFunctionMayStateCore(defaultValue)
+      : undefined
+  return readMayStateCore(newState) as T
 }
 
 /**
- * 从 MayState 派生新的 Accessor。
- *
- * `derive()` 不会在调用时把 source 解包成固定值，而是返回一个新的 Accessor。
- * 只有 source 的当前值变化时，派生 Accessor 才会重新通过 fn 计算结果。
- *
- * 适用于需要继续向下传递动态值的场景，例如派生 class、style、props、
- * disabled、aria 属性或中间计算结果。
- *
- * 使用规则：
- * - 继续传递动态值时，使用 `derive(source, fn)`。
- * - 最终消费当前值时，使用 `$()`。
- * - 不要先 `$(source)` 再把结果传给下游；这会丢失响应性。
- *
- * AI rules：
- * - 如果需要从 `MayState<T>` 计算出新的动态值，优先使用 `derive(source, fn)`。
- * - 不要手写 `() => fn($(source))`，除非当前文件确实不能引用 `derive()`。
- * - 不要把 `const value = $(source)` 当成中间状态继续传递给组件、hook、状态逻辑或 DOM 绑定。
- * - 如果没有检索到 `derive()` 的实现，也应先在当前工具库中查找它，而不是退回到裸 accessor 写法。
- *
- * @example
- * ```ts
- * const active = () => true
- * const width = () => 120
- *
- * const className = derive(active, v => v ? 'active' : 'inactive')
- * const widthPx = derive(width, n => `${n}px`)
- *
- * Button({ className, width: widthPx }) // 继续传递动态值
- *
- * element.className = $(className) // 最终消费当前值
- * ```
+ * 只应该由 {@link $} 调用，外部不应该直接使用。
  */
-export function derive<T, U>(source: MayState<T>, fn: (value: T) => MayState<U>): Accessor<U> {
-  return createMemo(() => $(fn($(source))))
+function readMayStateCore<T>(mayState: MayState<T>): T {
+  return shrinkFn(mayState) as T
 }
 
 /**
- * 快速工具， 反转boolen
- * TODO: 可以考虑放到 fnkit 里，
- * 此函数是为了考虑可读性，因为如果只是符号（=>），比如各种箭头、感叹号这种，可读性不佳。
+ * 只应该由 {@link $} 调用，外部不应该直接使用。
  */
-export const flip = (value: boolean): boolean => !value
+function readMayFunctionMayStateCore<T>(mayFunctionMayState: MayFn<MayState<T>>): MayState<T> {
+  if (isFunction(mayFunctionMayState)) {
+    if (isState(mayFunctionMayState)) {
+      return mayFunctionMayState as State<T>
+    } else {
+      return mayFunctionMayState() as State<T>
+    }
+  } else {
+    return mayFunctionMayState as MayState<T>
+  }
+}

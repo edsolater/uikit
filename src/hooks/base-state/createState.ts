@@ -2,14 +2,8 @@ import { createEffect, on, type Accessor } from 'solid-js'
 import { createSignalState, type SignalState, type SignalStateSetter } from './createSignalState'
 import { createStoreState, type StoreState, type StoreStateSetter } from './createStoreState'
 import { $ } from './readState'
+import type { State } from './state'
 
-/**
- * State 状态创建入口。
- *
- * 该文件是业务代码接触 Solid 原生状态 API 的边界，
- * 只负责把 signal/store 包装成只读 State 和唯一 setter。
- */
-export type State<T> = StoreState<T> | SignalState<T>
 
 export type StateMode = 'signal' | 'store'
 
@@ -18,7 +12,7 @@ export type CreateStateOptions = {
   mode?: StateMode
 
   /** 是否保持和响应式初始值来源同步；默认为 true */
-  followInitial?: boolean
+  autoPipState?: boolean
 }
 
 /**
@@ -60,35 +54,21 @@ export function createState<T>(
 ): [SignalState<T>, SignalStateSetter<T>]
 export function createState<T>(initialValue?: T | State<T>, options: CreateStateOptions = {}): unknown {
   const mode = options.mode ?? 'signal'
+  const autoPipState = options.autoPipState ?? true
 
-  const resolvedInitialValue = $(initialValue) as T | undefined
+  const resolvedInitialValue = $(initialValue) 
 
-  const [pureState, pureSetState] = (() => {
+  const [state, setState] = (() => {
     if (mode === 'signal') {
-      return createSignalState(resolvedInitialValue)
+      return createSignalState(resolvedInitialValue, { autoPipState })
     } else if (mode === 'store') {
       type O = T extends object ? T : never
-      return createStoreState<O>(resolvedInitialValue as O | undefined)
+      return createStoreState<O>(resolvedInitialValue as O | undefined, { autoPipState })
     } else {
       throw new Error(`Unsupported state mode: ${mode}`)
     }
   })() as [State<T>, SignalStateSetter<T> | StoreStateSetter<T>]
 
-  const followInitial = options.followInitial ?? true
 
-  // 如果初始值是响应式来源，则保持和上游同步；如果是普通值，则只在创建时读取一次。
-  if (isAccessor(initialValue) && followInitial) {
-    // 成用 Solid 的 on，并打开 defer。这样第一次不会触发，后续 source 变化才会进入回调。
-    createEffect(
-      on(
-        initialValue as Accessor<T>,
-        (value) => {
-          pureSetState(() => value)
-        },
-        { defer: true },
-      ),
-    )
-  }
-
-  return [pureState, pureSetState]
+  return [state, setState]
 }

@@ -5,10 +5,9 @@
  */
 
 export { createState } from './createState'
-export type {
-  CreateStateOptions,
-  State,
-  StateMode,
-} from './createState'
-export { $, derive } from './readState'
+export type { CreateStateOptions, StateMode } from './createState'
+export { createDerived, derive, flip } from './deriveState'
+export { $ } from './readState'
 export type { MayState } from './readState'
+export { isState, toState, type State } from './state'
+
