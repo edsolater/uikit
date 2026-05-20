@@ -1,6 +1,26 @@
+/**
+ * State 派生入口。
+ *
+ * 这个文件处在 base-state 的来源变换阶段，
+ * 只负责从既有值来源派生新的 State。
+ *
+ * 它负责：
+ * - 把 MayState 变换成新的 State。
+ * - 提供 derive 与 createDerived 这两个派生入口。
+ *
+ * 它不负责：
+ * - 创建 signal/store 容器。
+ * - 管理 set 输入协议。
+ * - 管理活水源连接、替换或断开。
+ *
+ * 相邻分工：
+ * - state.ts 负责 State 协议。
+ * - read.ts 负责最终读取。
+ * - 未来的 set.ts 负责写入与接管。
+ */
 import { createMemo } from 'solid-js'
 import type { State } from './state'
-import { type MayState, $ } from './readState'
+import { type MayState, $ } from './read'
 import { toState } from './state'
 
 /**

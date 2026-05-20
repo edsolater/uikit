@@ -1,8 +1,29 @@
+/**
+ * base-state 对外创建入口。
+ *
+ * 这个文件处在 base-state 的模式分发阶段，
+ * 只负责把外部输入分发到 signal 或 store 容器实现，并维持统一的创建入口。
+ *
+ * 它负责：
+ * - 暴露 createState 统一 API。
+ * - 定义 signal/store 两种模式的对外返回类型。
+ * - 根据 mode 选择底层容器实现。
+ *
+ * 它不负责：
+ * - 实现 signal 容器内部写入细节。
+ * - 实现 store 容器内部路径写入细节。
+ * - 定义 State 协议和活水源连接细节。
+ *
+ * 相邻分工：
+ * - createSignalState.ts 负责整体状态容器。
+ * - createStoreState.ts 负责对象细节容器。
+ * - state/ 目录负责 State 协议、读取与派生。
+ */
 import { createEffect, on, type Accessor } from 'solid-js'
 import { createSignalState, type SignalState, type SignalStateSetter } from './createSignalState'
 import { createStoreState, type StoreState, type StoreStateSetter } from './createStoreState'
-import { $ } from './readState'
-import type { State } from './state'
+import { $ } from './state/read'
+import type { State } from './state/state'
 
 
 export type StateMode = 'signal' | 'store'

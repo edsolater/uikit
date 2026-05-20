@@ -1,3 +1,24 @@
+/**
+ * State 协议定义与身份标记入口。
+ *
+ * 这个文件处在 base-state 的协议定义阶段，
+ * 只负责定义什么是 State，以及怎样把一个可调用读取器登记成受管控的 State。
+ *
+ * 它负责：
+ * - 定义 State<T> 协议。
+ * - 提供 toState 与 isState。
+ * - 维护 State 的最小身份标记。
+ *
+ * 它不负责：
+ * - 读取 MayState 的当前值。
+ * - 创建 signal/store 容器。
+ * - 处理 set 输入、连接、替换或断开。
+ *
+ * 相邻分工：
+ * - read.ts 负责值读取边界。
+ * - derive.ts 负责派生新的 State。
+ * - 未来的 set.ts 负责写入输入协议。
+ */
 import type { Accessor } from 'solid-js'
 import { isFunction, isObject } from '@edsolater/fnkit'
 

@@ -1,8 +1,31 @@
+/**
+ * StoreState 容器实现。
+ *
+ * 这个文件处在 base-state 的底层容器阶段，
+ * 只负责把对象细节状态落到 Solid store，并暴露当前这版的 store 读写入口。
+ *
+ * 它负责：
+ * - 创建 store 容器。
+ * - 把 store 读取器包装成支持字段访问的 State。
+ * - 承接 store 模式当前这一版的字段写入路径转换。
+ * - 承接 store 模式当前这一版的初始来源跟随。
+ *
+ * 它不负责：
+ * - 解释 signal 的整体状态语义。
+ * - 定义 State 与 MayState 的协议边界。
+ * - 决定 createState 应该选 signal 还是 store。
+ * - 承担未来统一的活水源连接总控。
+ *
+ * 相邻分工：
+ * - createState.ts 负责模式选择。
+ * - state/state.ts 负责 State 协议。
+ * - state/read.ts 负责 MayState 读取。
+ */
 import { isAnyKey, isFunction, isObjectLiteral } from '@edsolater/fnkit'
 import { createEffect, on, type Accessor } from 'solid-js'
 import { createStore as createSolidjsStore, type SetStoreFunction } from 'solid-js/store'
-import { $, type MayState } from './readState'
-import { isState, toState, type State } from './state'
+import { $, type MayState } from './state/read'
+import { isState, toState, type State } from './state/state'
 
 export type StoreState<T> = State<T> & {
   readonly [Key in keyof T]: StoreState<T[Key]>

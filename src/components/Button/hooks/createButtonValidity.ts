@@ -5,7 +5,7 @@
  */
 import { toArray, type MayArray } from '@edsolater/fnkit'
 import { $, derive, type MayState, type State } from '../../../hooks'
-import { createDerived, flip } from '../../../hooks/base-state/deriveState'
+import { createDerived, flip } from '../../../hooks/base-state/state/derive'
 
 export type ValidationRule = {
   /**

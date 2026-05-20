@@ -1,10 +1,18 @@
 /**
  * State 读取入口。
  *
- * 该文件定义状态消费边界：
- * `MayState` 表示可以被继续传递的值来源，`$` 表示最终消费时的解包动作。
+ * 这个文件处在 base-state 的最终消费阶段，
+ * 只负责定义状态读取边界：`MayState` 表示可以继续传递的值来源，`$` 表示最终消费时的解包动作。
  *
- * 它不负责创建状态、修改状态，也不负责描述 store 字段访问能力。
+ * 它负责：
+ * - 定义 MayState<T>。
+ * - 在最终消费点把值来源读取成当前值。
+ *
+ * 它不负责：
+ * - 创建状态。
+ * - 修改状态。
+ * - 描述 store 字段访问能力。
+ * - 管理活水源连接关系。
  */
 import type { MayFn } from '@edsolater/fnkit'
 import { isExist, isFunction, shrinkFn } from '@edsolater/fnkit'
