@@ -4,30 +4,30 @@
  * 它不负责 Button DOM、样式、点击行为或失败后的 props 改写。
  */
 import { toArray, type MayArray } from '@edsolater/fnkit'
-import { $, derive, type MayState, type State } from '../../../hooks'
-import { createDerived, flip } from '../../../hooks/base-state/state/derive'
+import { val, type Source, type ReadableState, type State, state, createState } from '../../../hooks'
+
 
 export type ValidationRule = {
   /**
    * 验证条件；返回 true 时通过。
    */
-  should: MayState<boolean>
+  should: Source<boolean>
 }
 
-export type ValidationInput = MayState<boolean | ValidationRule | undefined>
+export type ValidationInput = Source<boolean | ValidationRule | undefined>
 
-export type ValidIf = MayState<MayArray<ValidationInput> | undefined>
+export type ValidIf = Source<MayArray<ValidationInput> | undefined>
 
 export type ValidityOptions = {
   /**
    * 快捷禁用入口；true 时按钮不可用。
    */
-  disabled?: MayState<boolean>
+  disabled?: Source<boolean>
 
   /**
    * 显式可用入口；传入时必须为 true 才允许按钮可用。
    */
-  enabled?: MayState<boolean>
+  enabled?: Source<boolean>
 
   /**
    * 更强的验证入口；所有条件都通过时按钮才可用。
@@ -36,31 +36,32 @@ export type ValidityOptions = {
 }
 
 export type Validity = {
-  isValid: State<boolean>
+  isValid: ReadableState<boolean>
   isEnabled: State<boolean>
-  isDisabled: State<boolean>
+  isDisabled: ReadableState<boolean>
 }
 
 export function createValiditor(options: ValidityOptions): Validity {
-  const isValid = derive(options.validIf, (validIf) => toArray(validIf).every(isValidationPassed))
 
-  const isEnabled = createDerived(() => {
-    if (!isValid()) return false
-    if (options.enabled !== undefined) return $(options.enabled) === true
-    if ($(options.disabled)) return false
+  const isValid = state(options.validIf).map((validIf) => toArray(validIf).every(v => isValidationPassed(v)))
+
+  const isEnabled = createState(() => {
+    if (!val(isValid)) return false
+    if (options.enabled !== undefined) return val(options.enabled) === true
+    if (val(options.disabled)) return false
     return true
   })
 
   return {
     isValid,
     isEnabled,
-    isDisabled: derive(isEnabled, flip),
+    isDisabled: isEnabled.map(v => !v),
   }
 }
 
 function isValidationPassed(input: ValidationInput): boolean {
-  const validation = $(input)
+  const validation = val(input)
   if (validation === undefined) return true
   if (typeof validation === 'boolean') return validation
-  return $(validation.should) === true
+  return val(validation.should) === true
 }

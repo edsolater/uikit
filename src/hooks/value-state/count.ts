@@ -1,4 +1,4 @@
-import { createState, type State } from '../base-state'
+import { createState, type State, val } from '../createState'
 
 /**
  * CounterControl
@@ -93,34 +93,34 @@ function toInteger(value: number): number {
 export function createCounter(initialCount = 0): [count: State<number>, counter: CounterControl] {
   const normalizedInitialCount = toInteger(initialCount)
 
-  const [count, setCount] = createState(normalizedInitialCount)
+  const count = createState(normalizedInitialCount)
 
   const set = (nextCount: number) => {
-    setCount(toInteger(nextCount))
+    count.set(toInteger(nextCount))
   }
 
   const increase = (delta = 1) => {
-    setCount((currentCount) => {
+    count.set((currentCount: number) => {
       return toInteger(currentCount + delta)
     })
   }
 
   const decrease = (delta = 1) => {
-    setCount((currentCount) => {
+    count.set((currentCount: number) => {
       return toInteger(currentCount - delta)
     })
   }
 
   const is = (targetCount: number) => {
-    return count() === toInteger(targetCount)
+    return val(count) === toInteger(targetCount)
   }
 
   const isNot = (targetCount: number) => {
-    return count() !== toInteger(targetCount)
+    return val(count) !== toInteger(targetCount)
   }
 
   const reset = () => {
-    setCount(normalizedInitialCount)
+    count.set(normalizedInitialCount)
   }
 
   return [

@@ -15,7 +15,9 @@ function UseTitlePreview() {
   return (
     <div style={{ display: 'grid', gap: '16px', 'max-width': '320px' }}>
       <strong>{title()}</strong>
-      <Button variant="ghost" onClick={() => setIndex((index() + 1) % samples.length)}>
+      <Button variant="ghost" onClick={() => {
+        setIndex((index() + 1) % samples.length)
+      }}>
         Switch title
       </Button>
     </div>

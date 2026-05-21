@@ -1,5 +1,5 @@
-import { createState } from '../base-state'
-import type { Accessor } from 'solid-js/types/server/reactive.js'
+import { createState } from '../createState'
+import type { State } from '../createState'
 
 /**
  * ToggleControl
@@ -43,7 +43,7 @@ export interface ToggleControl {
   reset: () => void
 }
 
-export type Toggle = Accessor<boolean>
+export type Toggle = State<boolean>
 
 /**
  * 创建一个 boolean 二态开关状态。
@@ -61,23 +61,23 @@ export type Toggle = Accessor<boolean>
  * visibleToggle.toggle()
  * visibleToggle.reset()
  */
-export function createToggle(initialValue: boolean = false): [toggle: Accessor<boolean>, toggleControl: ToggleControl] {
-  const [toggle, setToggle] = createState(initialValue)
+export function createToggle(initialValue: boolean = false): [toggle: State<boolean>, toggleControl: ToggleControl] {
+  const toggle = createState(initialValue)
 
   const turnOn = () => {
-    setToggle(true)
+    toggle.set(true)
   }
 
   const turnOff = () => {
-    setToggle(false)
+    toggle.set(false)
   }
 
   const toggleValue = () => {
-    setToggle((currentValue) => !currentValue)
+    toggle.set((currentValue: boolean) => !currentValue)
   }
 
   const reset = () => {
-    setToggle(initialValue)
+    toggle.set(initialValue)
   }
 
   return [

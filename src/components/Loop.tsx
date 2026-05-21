@@ -4,7 +4,7 @@
  */
 import { createEffect, mapArray, type Accessor, type JSX } from 'solid-js'
 import { createDomRef } from '../hooks/domRef'
-import { createState } from '../hooks/base-state'
+import { createState, val } from '../hooks/createState'
 import { Piv } from './BasicPiv'
 
 export type Read<T> = Accessor<T>
@@ -17,17 +17,17 @@ export type EachProps<T> = {
 
 export function Each<T>(props: EachProps<T>) {
   const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()
-  const [innerState, setInnerState] = createState<T[]>([], { mode: 'store' })
+  const innerState = createState<T[]>([])
 
   createEffect(() => {
-    loopContainer()?.startViewTransition?.(() => {
+    val(loopContainer)?.startViewTransition?.(() => {
       // 这里才会有viewTransition的动画，所以即使是外部来的，那也要在这里进行设置。setState一定得由它来进行设置。
-      setInnerState(props.each())
+      innerState.set(props.each())
     })
   })
 
   const mapped = mapArray(
-    innerState,
+    () => val(innerState),
     props.children,
     props.fallback === undefined
       ? undefined

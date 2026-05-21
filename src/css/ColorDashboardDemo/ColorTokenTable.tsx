@@ -4,7 +4,7 @@
  */
 import { onMount } from 'solid-js'
 import { Piv, Table } from '../../components'
-import { createState, derive } from '../../hooks'
+import { createState } from '../../hooks'
 
 const colorNumberFormatter = new Intl.NumberFormat('en-US', {
   maximumSignificantDigits: 3,
@@ -101,9 +101,9 @@ function formatColorText(color: string) {
 }
 
 export function ColorTokenTable() {
-  const [colorVariableNames, setColorVariableNames] = createState<string[]>([])
+  const colorVariableNames = createState<string[]>([])
 
-  const colorTokenRows = derive(colorVariableNames, (cssVariableNames) =>
+  const colorTokenRows = colorVariableNames.map((cssVariableNames: string[]) =>
     cssVariableNames.map((cssVariableName) => ({
       name: cssVariableName,
       value: formatColorText(readTokenRawValue(cssVariableName)),
@@ -112,7 +112,7 @@ export function ColorTokenTable() {
   )
 
   const refreshColorVariableNames = () => {
-    setColorVariableNames(extractColorVariableNamesFromCurrentStylesheet())
+    colorVariableNames.set(extractColorVariableNamesFromCurrentStylesheet())
   }
 
   onMount(refreshColorVariableNames)

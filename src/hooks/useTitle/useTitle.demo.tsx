@@ -22,7 +22,9 @@ export function UseTitleDemo() {
         <strong>{currentTitle()}</strong>
         <Button
           variant="ghost"
-          onClick={() => setTitleIndex((titleIndex() + 1) % titles.length)}
+          onClick={() => {
+            setTitleIndex((titleIndex() + 1) % titles.length)
+          }}
         >
           Switch title
         </Button>

@@ -6,7 +6,7 @@ import { Show, mergeProps, onMount, type JSX } from 'solid-js'
 import { Piv } from '../BasicPiv/Piv'
 import { createPopoverController, type PopoverToggleEvent } from './hooks/createPopoverController'
 import './popover.css'
-import { $ } from '../../hooks/base-state'
+import { val } from '../../hooks/createState'
 
 export type PopoverPlacement = 'top' | 'right' | 'bottom' | 'left'
 export type PopoverMode = 'auto' | 'hint' | 'manual'
@@ -70,7 +70,7 @@ export function Popover(inputProps: PopoverProps) {
   })
 
   const rootClassName = () =>
-    joinClassName('Popover', `placement:${props.placement}`, $(controller.isOpen) && 'state:open', props.class)
+    joinClassName('Popover', `placement:${props.placement}`, val(controller.isOpen) && 'state:open', props.class)
   const triggerClassName = () => joinClassName('_trigger', props.triggerClass)
   const surfaceClassName = () => joinClassName('_surface', props.surfaceClass)
 
@@ -86,7 +86,7 @@ export function Popover(inputProps: PopoverProps) {
           id: controller.triggerId,
           'aria-haspopup': 'dialog',
           'aria-controls': controller.popoverId,
-          'aria-expanded': $(controller.isOpen) ? 'true' : 'false',
+          'aria-expanded': val(controller.isOpen) ? 'true' : 'false',
           popovertarget: controller.popoverId,
           popovertargetaction: props.triggerAction,
           ...props.triggerProps,

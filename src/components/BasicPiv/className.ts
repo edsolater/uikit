@@ -13,10 +13,10 @@ import {
   toArray,
 } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup } from 'solid-js'
-import { $, type MayState } from '../../hooks'
+import { val, type Source } from '../../hooks'
 
-export type ClassNameAtom = Stringable | MayArray<Stringable> | { [classname: string]: MayState<Booleanable> }
-export type ClassNameList = MayState<MayArray<MayState<ClassNameAtom> | undefined>>
+export type ClassNameAtom = Stringable | MayArray<Stringable> | { [classname: string]: Source<Booleanable> }
+export type ClassNameList = Source<MayArray<Source<ClassNameAtom> | undefined>>
 
 /**
  * class 是 Piv 的 DOM 消费能力，必须经过 plugin 合并后再绑定到真实节点。
@@ -25,11 +25,11 @@ export function consumeClassName(element: Element, classNameList: ClassNameList)
   const tokenCounts = new Map<string, number>()
 
   createRenderEffect(() => {
-    const lists = toArray($(classNameList)).filter(isTruthy)
+    const lists = toArray(val(classNameList)).filter(isTruthy)
 
     for (const atom of lists) {
       createRenderEffect(() => {
-        const tokens = resolveClassTokens($(atom))
+        const tokens = resolveClassTokens(val(atom))
         addClassTokens(element, tokenCounts, tokens)
         onCleanup(() => {
           removeClassTokens(element, tokenCounts, tokens)
@@ -50,7 +50,7 @@ function resolveClassTokens(classAtom: ClassNameAtom | undefined): string[] {
 
   if (isObject(classAtom) && !isArray(classAtom)) {
     return Object.entries(classAtom).flatMap(([classString, condition]) =>
-      $(condition) ? splitClassTokens(classString) : [],
+      val(condition) ? splitClassTokens(classString) : [],
     )
   }
 

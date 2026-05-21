@@ -1,5 +1,5 @@
 import { createMemo, type Accessor } from 'solid-js'
-import { $, type MayState } from '../base-state'
+import { val, type Source } from '../createState'
 import { isFunction } from '@edsolater/fnkit'
 
 /**
@@ -9,7 +9,7 @@ import { isFunction } from '@edsolater/fnkit'
  * 只负责把“当前值如何被匹配”收口成可复用的小语法。
  */
 
-type MatcherPredicate<Value> = (value: Value) => MayState<boolean>
+type MatcherPredicate<Value> = (value: Value) => Source<boolean>
 
 export interface MatcherOperator<Value> {
   /**
@@ -67,25 +67,25 @@ export interface MatcherOperator<Value> {
  *
  * 该能力只包装读取，不接管状态写入。
  */
-export function createMatcher<Value>(source: MayState<Value>): MatcherOperator<Value> {
+export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Value> {
   const isPredicate = (
     targetValueOrPredicate: Value | MatcherPredicate<Value>,
   ): targetValueOrPredicate is MatcherPredicate<Value> => {
     return isFunction(targetValueOrPredicate)
   }
 
-  const is = (targetValue: MayState<Value>) => {
-    return Object.is($(source), $(targetValue))
+  const is = (targetValue: Source<Value>) => {
+    return Object.is(val(source), val(targetValue))
   }
 
-  const isNot = (targetValue: MayState<Value>) => {
+  const isNot = (targetValue: Source<Value>) => {
     return !is(targetValue)
   }
 
   const match = (targetValueOrPredicate: Value | MatcherPredicate<Value>) => {
     return createMemo(() => {
       if (isPredicate(targetValueOrPredicate)) {
-        return $(targetValueOrPredicate($(source)))
+        return val(targetValueOrPredicate(val(source)))
       }
 
       return is(targetValueOrPredicate)
@@ -109,6 +109,6 @@ export function createMatcher<Value>(source: MayState<Value>): MatcherOperator<V
  * @param source
  * @returns
  */
-export function createMatch<Value>(source: MayState<Value>, matchFunction: (value: Value) => boolean): Accessor<boolean> {
+export function createMatch<Value>(source: Source<Value>, matchFunction: (value: Value) => boolean): Accessor<boolean> {
   return createMatcher(source).match(matchFunction)
 }

@@ -6,7 +6,7 @@
 import { toArray, type MayArray } from '@edsolater/fnkit'
 import type { JSX } from 'solid-js'
 import { createRenderEffect } from 'solid-js'
-import { $, type MayState } from '../../hooks'
+import { val, type Source } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
 import { setSingleDomProp, type HTMLPropAtom } from './handleHTMLPropsValue'
 
@@ -18,11 +18,11 @@ type PatchedIntrinsicHTMLPropValue<Tag extends PivTag, Key extends KnownHTMLProp
   : JSX.IntrinsicElements[Tag][Key]
 
 type PureHTMLProps<Tag extends PivTag = 'div'> = {
-  [Key in KnownHTMLPropKey<Tag>]?: MayState<KnownHTMLPropAtom<PatchedIntrinsicHTMLPropValue<Tag, Key>>>
+  [Key in KnownHTMLPropKey<Tag>]?: Source<KnownHTMLPropAtom<PatchedIntrinsicHTMLPropValue<Tag, Key>>>
 } & {
-  [key: `attr:${string}`]: MayState<HTMLPropAtom> | undefined
-  [key: `prop:${string}`]: MayState<HTMLPropAtom> | undefined
-  [key: string]: MayState<HTMLPropAtom> | undefined
+  [key: `attr:${string}`]: Source<HTMLPropAtom> | undefined
+  [key: `prop:${string}`]: Source<HTMLPropAtom> | undefined
+  [key: string]: Source<HTMLPropAtom> | undefined
 }
 
 export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArray<PureHTMLProps<Tag> | undefined>
@@ -36,7 +36,7 @@ export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag
     }
 
     createRenderEffect(() => {
-      const atom = $(value) as HTMLPropAtom
+      const atom = val(value) as HTMLPropAtom
       if (atom === undefined) return
       setSingleDomProp(element, key, atom)
     })

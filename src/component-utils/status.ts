@@ -1,12 +1,11 @@
 import { isArray, isString } from '@edsolater/fnkit'
 import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
-import { type MayState, $, createState, derive } from '../hooks'
-import { createEffect } from 'solid-js'
+import { type Source, val, createState, state } from '../hooks'
 import type { PluginManager } from './type'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
-export type StatusInput<S extends string> = MayState<S | S[] | Record<S, MayState<boolean>>>
+export type StatusInput<S extends string> = Source<S | S[] | Record<S, Source<boolean>>>
 
 /**
  * Status 是一个轻量级的状态管理工具，适用于组件内部或组件之间需要共享状态的场景。
@@ -33,7 +32,7 @@ export type StatusInput<S extends string> = MayState<S | S[] | Record<S, MayStat
  * AI 规则：
  * - 不要把状态输入限制为特定的字符串或枚举；它应该是一个灵活的输入，可以是字符串、字符串数组或状态记录对象。
  * - 不要在组件外部直接操作状态记录对象；应该通过 `set` 方法来修改状态，以保持响应性。
- * - 不要把状态查询方法 `has` 的返回值直接当成布尔值使用；它是一个动态值，应该在需要时用 `$()` 读取当前值。
+ * - 不要把状态查询方法 `has` 的返回值直接当成布尔值使用；它是一个动态值，应该在需要时用 `val()` 读取当前值。
  * - 不要把 `class` 直接当成静态字符串使用；它是一个动态生成的 className 列表，应该在 JSX 模板中直接使用，而不是提前读取成字符串。
  */
 export type StatusProps<S extends string> = {
@@ -41,8 +40,8 @@ export type StatusProps<S extends string> = {
 }
 
 export type StatusManager<S extends string> = {
-  setStatus(status: S, value: MayState<boolean>): void
-  hasStatus(status: S): MayState<boolean>
+  setStatus(status: S, value: Source<boolean>): void
+  hasStatus(status: S): Source<boolean>
   /** 业务层无需关心，{@link createStatusManager} 会自动使用的 */
   _class: ClassNameList
 }
@@ -57,30 +56,32 @@ function splitStatusTokens(statusLongString: string): string[] {
 function createStatusStateParser<S extends string>(propsStatus?: StatusInput<S> | undefined): StatusManager<S>
 function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusManager<S>
 function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusManager<S> {
-  const inputStatusRecord = derive(propsStatus, (innerStatus) => {
+  const inputStatusRecord = state(propsStatus).map((innerStatus) => {
     if (!innerStatus) {
       return {}
     }
     if (isString(innerStatus)) {
       const statusTokens = splitStatusTokens(innerStatus)
-      return statusTokens.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, MayState<boolean>>)
+      return statusTokens.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, Source<boolean>>)
     }
     if (isArray(innerStatus)) {
-      return innerStatus.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, MayState<boolean>>)
+      return innerStatus.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, Source<boolean>>)
     }
     return innerStatus
-  }) satisfies MayState<Record<S, MayState<boolean>>>
+  }) satisfies Source<Record<S, Source<boolean>>>
 
-  const [statusRecord, setStatusRecord] = createState(inputStatusRecord, { mode: 'store' })
+  const statusRecord = createState<Record<S, Source<boolean>>>(() => ({} as Record<S, Source<boolean>>)).follow(
+    inputStatusRecord,
+  )
 
   const statusController: StatusManager<S> = {
-    setStatus(status: S, value: MayState<boolean>) {
-      setStatusRecord(status, value)
+    setStatus(status: S, value: Source<boolean>) {
+      statusRecord.set((record) => ({ ...record, [status]: value }))
     },
     hasStatus(status: S) {
-      return derive($(statusRecord)[status], (v) => v === true)
+      return statusRecord.map((record) => val(record[status]) === true)
     },
-    _class: derive(statusRecord, (record) => Object.keys(record).filter((key) => $(statusRecord[key as S]) === true)),
+    _class: statusRecord.map((record) => Object.keys(record).filter((key) => val(record[key as S]) === true)),
   }
 
   return statusController

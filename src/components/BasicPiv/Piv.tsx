@@ -5,7 +5,7 @@
  */
 import { type MayArray } from '@edsolater/fnkit'
 import { Show, type JSX, type JSXElement } from 'solid-js'
-import { $, type MayState } from '../../hooks'
+import { val, type Source } from '../../hooks'
 import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,
@@ -40,7 +40,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    * false 时 Piv 自身和 children 都不进入 DOM。
    * （元能力，只可用显式定义，不可被plugin系自动修改）
    */
-  if?: MayState<boolean>
+  if?: Source<boolean>
 
   /**
    * 语义明确，就是合并祖父（父组件的父组件）传来的props的，
@@ -145,7 +145,7 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
   }
 
   if (props.if !== undefined) {
-    return <Show when={$(props.if)}>{jsxCreator(parsedProps)}</Show>
+    return <Show when={val(props.if)}>{jsxCreator(parsedProps)}</Show>
   } else {
     return jsxCreator(parsedProps)
   }

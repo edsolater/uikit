@@ -3,7 +3,7 @@
  * 它只管理 popover 元素引用、打开状态镜像和原生 toggle 生命周期，不负责组件结构或视觉样式。
  */
 import { createEffect, onCleanup } from 'solid-js'
-import { type State, $, createDomRef, createToggle } from '../../../hooks'
+import { val, type State, createDomRef, createToggle } from '../../../hooks'
 
 export type PopoverToggleState = 'open' | 'closed'
 
@@ -59,7 +59,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
   }
 
   createEffect(() => {
-    const element = $(popoverElement)
+    const element = val(popoverElement)
 
     if (!element) {
       return
@@ -92,7 +92,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
   })
 
   function showPopover() {
-    const element = $(popoverElement)
+    const element = val(popoverElement)
 
     if (!element) {
       return
@@ -103,7 +103,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
   }
 
   function hidePopover() {
-    const element = $(popoverElement)
+    const element = val(popoverElement)
 
     if (!element) {
       return
@@ -111,7 +111,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
 
     element.hidePopover?.()
     isOpenControl.turnOff()
-    $(triggerElement)?.focus()
+    val(triggerElement)?.focus()
   }
 
   function togglePopover(force?: boolean) {
@@ -125,7 +125,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
       return
     }
 
-    const element = $(popoverElement)
+    const element = val(popoverElement)
 
     if (!element) {
       return

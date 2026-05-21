@@ -72,7 +72,7 @@
         - `base-state`
           - `createState.ts`：状态创建边界，统一 signal/store 封装。
           - `index.ts`：`base-state` 目录导出入口。
-          - `read.ts`：状态读取语义，定义 `MayState` 和 `$()`。
+          - `read.ts`：状态读取语义，定义 `Source` 和 `val()`。
         - `domRef.ts`：DOM ref 状态原子与 ref 写入口。
         - `index.ts`：`base/hooks` 目录导出入口。
         - `value-state`

@@ -3,7 +3,7 @@
  * 它负责 color-scheme 的领域状态和写入 document 根节点，不负责颜色列表读取。
  */
 import { For, createEffect, onCleanup } from 'solid-js'
-import { $, createState } from '../../hooks'
+import { val, createState } from '../../hooks'
 
 type ColorSchemeMode = 'light' | 'dark' | 'light dark'
 
@@ -15,10 +15,10 @@ function applyGlobalColorScheme(mode: ColorSchemeMode) {
 }
 
 export function ColorSchemeControl() {
-  const [colorScheme, setColorScheme] = createState<ColorSchemeMode>('light')
+  const colorScheme = createState<ColorSchemeMode>('light')
 
   createEffect(() => {
-    applyGlobalColorScheme($(colorScheme))
+    applyGlobalColorScheme(val(colorScheme))
   })
 
   onCleanup(() => {
@@ -34,8 +34,8 @@ export function ColorSchemeControl() {
             <input
               type="radio"
               name="color-scheme-mode"
-              checked={$(colorScheme) === mode}
-              onChange={() => setColorScheme(mode)}
+              checked={val(colorScheme) === mode}
+              onChange={() => colorScheme.set(mode)}
             />
             {mode}
           </label>

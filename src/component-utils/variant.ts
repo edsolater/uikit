@@ -1,9 +1,9 @@
 import { createPivPlugin } from '../components'
-import { type MayState, derive } from '../hooks'
+import { type Source, state } from '../hooks'
 import type { PluginManager } from './type'
 
 type Variant = string
-export type VariantInput<V extends Variant> = MayState<V>
+export type VariantInput<V extends Variant> = Source<V>
 
 /**
  * 用于定义props
@@ -24,7 +24,7 @@ export function createVariantManager<V extends Variant>(
   props: VariantProps<V>,
   options?: { defaultVariant?: VariantInput<V> },
 ) {
-  const variant = derive(props.variant, (v) => v ?? options?.defaultVariant)
+  const variant = state(props.variant).map((v) => v ?? options?.defaultVariant)
   const variantPlugin = createPivPlugin(() => ({
     class: variant,
   }))

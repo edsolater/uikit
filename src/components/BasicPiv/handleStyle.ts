@@ -5,11 +5,11 @@
  */
 import { shrinkFn, toArray, type MayArray } from '@edsolater/fnkit'
 import { createRenderEffect, type Accessor, type JSX } from 'solid-js'
-import type { MayState } from '../../hooks'
+import type { Source } from '../../hooks'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleRecord = {
-  [Key in keyof JSX.CSSProperties]?: MayState<JSX.CSSProperties[Key] | null | undefined>
+  [Key in keyof JSX.CSSProperties]?: Source<JSX.CSSProperties[Key] | null | undefined>
 }
 type ParsedStyleRecord = Record<string, StyleValueAtom | Accessor<StyleValueAtom>>
 

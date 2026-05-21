@@ -31,7 +31,8 @@
     "build": "vite build && tsc -p tsconfig.build.json",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
     "@edsolater/fnkit": "link:@edsolater/fnkit",

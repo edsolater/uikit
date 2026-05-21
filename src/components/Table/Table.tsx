@@ -4,11 +4,11 @@
  * 它不负责排序、筛选、分页、虚拟滚动或业务数据解释，也不让业务组件手写表格 DOM 结构。
  * 调用方只提供已经整理好的同构数据；需要局部改写表头或单元格内容时，通过 renderParts 提供纯渲染器。
  */
-import { For } from 'solid-js'
 import { type Stringable } from '@edsolater/fnkit'
-import { Piv } from '../BasicPiv'
+import { For } from 'solid-js'
 import { toJSX, type JSXable } from '../../component-utils/toJSX'
-import { $, derive, type MayState } from '../../hooks'
+import { state, val, type Source } from '../../hooks'
+import { Piv } from '../BasicPiv'
 
 type TableDataRow = Record<string, Stringable>
 
@@ -17,10 +17,10 @@ type TableDataRow = Record<string, Stringable>
  */
 export type TableProps<Row extends TableDataRow = TableDataRow> = {
   /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */
-  data: MayState<Row[]>
+  data: Source<Row[]>
 
   /** 参与显示的对象 key；未提供时使用第一行对象的全部 key，允许接收动态派生值。 */
-  keys?: MayState<(keyof Row)[]>
+  keys?: Source<(keyof Row)[]>
 
   /** 纯内容渲染器集合，不改变 Table 对语义表格结构的控制权。 */
   renderParts?: {
@@ -65,22 +65,22 @@ export type TableProps<Row extends TableDataRow = TableDataRow> = {
 export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   
   // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-  const columnKeys = derive(props.data, (data) => (props.keys ? $(props.keys) : pickTableColumnKeys(data)))
+  const columnKeys = state(props.data).map((data) => (props.keys ? val(props.keys) : pickTableColumnKeys(data)))
 
   return (
     <Piv as="table">
       <Piv as="thead">
         <Piv as="tr">
-          <For each={$(columnKeys)}>
+          <For each={val(columnKeys)}>
             {(columnKey) => <Piv as="th">{toJSX(props.renderParts?.tableHead?.[columnKey]?.(columnKey) ?? columnKey)}</Piv>}
           </For>
         </Piv>
       </Piv>
       <Piv as="tbody">
-        <For each={$(props.data)}>
+        <For each={val(props.data)}>
           {(row) => (
             <Piv as="tr">
-              <For each={$(columnKeys)}>
+              <For each={val(columnKeys)}>
                 {(columnKey) => (
                   <Piv as="td">
                     {toJSX(props.renderParts?.tableCell?.[columnKey]?.(row[columnKey], columnKey) ?? row[columnKey])}
