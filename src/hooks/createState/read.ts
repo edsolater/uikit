@@ -75,7 +75,7 @@ export type MayState<T> = T | State<T>
  *
  * @example 组件中使用
  * ```ts
- * const visible = () => true
+ * const visible = state(true)
  * const label = 'Submit'
  *
  * val(visible) // true
@@ -114,15 +114,15 @@ export function val<T>(mayState: MayState<T> | undefined, defaultValue?: MayFn<M
     : isExist(defaultValue)
       ? readMayFunctionMayStateCore(defaultValue)
       : undefined
-  return readMayStateCore(newMayState)
+  return readMayState(newMayState)
 }
 
 /**
  * 只应该由 {@link val} 调用，外部不应该直接使用。
  */
-function readMayStateCore<T>(mayState: MayState<T>): T
-function readMayStateCore<T>(mayState: MayState<T> | undefined): T | undefined
-function readMayStateCore<T>(mayState: MayState<T> | undefined): T | undefined {
+function readMayState<T>(mayState: MayState<T>): T
+function readMayState<T>(mayState: MayState<T> | undefined): T | undefined
+function readMayState<T>(mayState: MayState<T> | undefined): T | undefined {
   return isState(mayState) ? mayState.read() : (mayState as T | undefined)
 }
 
