@@ -45,9 +45,25 @@ function isAccessor<T>(value: unknown): value is Accessor<T> {
   return isFunction(value) && value.length === 0
 }
 
-export function createState<T = unknown>(initialValue: T): State<T> {
+/**
+ * 创建一个新的 state。
+ *
+ * 比 {@link state} 更强调操作行为，常用于组件的构建
+ * @param initialValue 初始值
+ * @returns 新创建的 state
+ * @example
+ * ```ts
+ * function Component() {
+ *   const count = createState(0) // count 是一个 State<number>
+ *   return <div>{val(count)}</div>
+ * }
+ * ```
+ */
+export function createState<T = unknown>(): State<T | undefined>
+export function createState<T = unknown>(initialValue: T): State<T>
+export function createState<T = unknown>(initialValue?: T): State<any> {
   const [solidjsAccessor, solidjsSetSignal] = createSignal(initialValue)
-  const thisState: State<T> = {
+  const thisState: State = {
     read() {
       return solidjsAccessor()
     },
@@ -89,7 +105,9 @@ function followState<T, U>(thisState: State<T>, anotherState: State<U>, transfor
   })
 }
 
-/**  * 方便快速把一个值包装成 state，如果已经是 state 就直接返回。
+/**
+ * 【工具函数】
+ * 方便快速把一个值包装成 state，如果已经是 state 就直接返回。
  * 这个函数的设计初衷是为了在业务代码中快速把一个普通值提升成响应式 state，或者在不确定是否已经是 state 的情况下安全地使用它。
  * @example
  * ```ts
