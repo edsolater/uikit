@@ -4,7 +4,7 @@
  */
 import { Show, mergeProps, onMount, type JSX } from 'solid-js'
 import { Piv } from '../BasicPiv/Piv'
-import { createPopoverController, type PopoverToggleEvent } from './hooks/createPopoverController'
+import { createPopoverController, type PopoverToggleEvent } from './createPopoverController'
 import './popover.css'
 import { val } from '../../hooks/createState'
 

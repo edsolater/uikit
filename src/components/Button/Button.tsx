@@ -7,7 +7,7 @@ import { createStatusManager, type StatusProps } from '../../component-utils/sta
 import { createVariantManager, type VariantProps } from '../../component-utils/variant'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
-import { createValiditor, type ValidityOptions } from './hooks/createButtonValidity'
+import { createValiditor, type ValidityOptions } from './createButtonValidity'
 
 // 这种写法是为了让文本更像排比插件，更具可读性。
 export interface ButtonProps extends PivProps<'button'> {}

@@ -1,7 +1,7 @@
 import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
-import { createComputed, createEffect, createSignal, on, type Accessor } from 'solid-js'
-import { val, type Source } from './read'
+import { createEffect, createSignal, on, type Accessor } from 'solid-js'
 import { createReactiveRunner } from './createReactiveRunner'
+import { val, type Source } from './read'
 
 export const readableStateBrand = Symbol('ReadableState')
 export const stateBrand = Symbol('State')
@@ -57,7 +57,7 @@ function isAccessor(value: unknown): value is Accessor<any> {
 }
 
 /**
- * 创建一个新的 state。
+ * 创建一个代表状态的，可以读，可以follow的 state。
  *
  * 比 {@link state} 更强调操作行为，常用于组件的构建
  * @param initialValue 初始值

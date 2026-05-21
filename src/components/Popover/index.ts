@@ -1,3 +1,3 @@
 export * from './Popover'
-export * from './hooks/createPopoverController'
+export * from './createPopoverController'
 

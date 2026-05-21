@@ -3,9 +3,8 @@
  * 它负责把 disabled、enabled、status disabled 和 validIf 合并成最终禁用状态。
  * 它不负责 Button DOM、样式、点击行为或失败后的 props 改写。
  */
-import { toArray, type MayArray, isObject } from '@edsolater/fnkit'
-import { val, type Source, type ReadableState, type State, state, createState } from '../../../hooks'
-import { createEffect } from 'solid-js'
+import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
+import { createState, state, val, type Source, type State } from '../../hooks'
 
 export type ValidationRule = {
   /**
