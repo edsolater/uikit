@@ -1,0 +1,42 @@
+@layer uikit {
+  .Input {
+    --Input-h: var(--size-4);
+    --Input-padding-x: var(--space-3);
+    --Input-border-color: var(--color-border);
+    --Input-bg: var(--color-surface);
+    --Input-fg: var(--color-text-strong);
+
+    width: 100%;
+    min-height: var(--Input-h);
+    padding-inline: var(--Input-padding-x);
+    border: 1px solid var(--Input-border-color);
+    border-radius: var(--radius-3);
+    color: var(--Input-fg);
+    background: var(--Input-bg);
+    transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+
+    &:focus-visible {
+      outline: none;
+      border-color: --dim(var(--Input-border-color), 20);
+      box-shadow: 0 0 0 0.2em color-mix(in oklab, var(--color-accent) 24%, transparent);
+    }
+
+    &::placeholder {
+      color: color-mix(in oklab, currentColor 48%, transparent);
+    }
+
+    &.outline {
+      /* 默认形态，不加额外规则 */
+    }
+
+    &.ghost {
+      --Input-bg: color-mix(in oklab, var(--color-surface-soft) 90%, transparent);
+      --Input-border-color: color-mix(in oklab, var(--color-border) 72%, transparent);
+    }
+
+    &.invalid {
+      --Input-border-color: var(--color-danger, #d92d20);
+      box-shadow: 0 0 0 0.2em color-mix(in oklab, var(--color-danger, #d92d20) 18%, transparent);
+    }
+  }
+}

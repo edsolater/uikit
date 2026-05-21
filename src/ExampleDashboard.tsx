@@ -5,6 +5,7 @@
  */
 import { ButtonDemo } from './components/Button/Button.demo'
 import { PivStructureDemo } from './components/BasicPiv/PivStructure.demo'
+import { InputDemo } from './components/Input/Input.demo'
 import { PopoverDemo } from './components/Popover/Popover.demo'
 import { ColorDashboardDemo } from './css/ColorDashboardDemo'
 import { UseTitleDemo } from './hooks/useTitle/useTitle.demo'
@@ -13,9 +14,10 @@ import './ExampleDashboard.css'
 function App() {
   return (
     <main class="demo-shell">
+      <ButtonDemo />
+      <InputDemo />
       <ColorDashboardDemo />
       <PivStructureDemo />
-      <ButtonDemo />
       <PopoverDemo />
       <UseTitleDemo />
     </main>

@@ -39,6 +39,11 @@
   gap: var(--space-3);
 }
 
+.input-row {
+  display: grid;
+  gap: var(--space-3);
+}
+
 .demo-stack {
   display: grid;
   gap: var(--space-4);
