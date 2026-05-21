@@ -3,9 +3,9 @@
  * 它负责把 disabled、enabled、status disabled 和 validIf 合并成最终禁用状态。
  * 它不负责 Button DOM、样式、点击行为或失败后的 props 改写。
  */
-import { toArray, type MayArray } from '@edsolater/fnkit'
+import { toArray, type MayArray, isObject } from '@edsolater/fnkit'
 import { val, type Source, type ReadableState, type State, state, createState } from '../../../hooks'
-
+import { createEffect } from 'solid-js'
 
 export type ValidationRule = {
   /**
@@ -36,17 +36,14 @@ export type ValidityOptions = {
 }
 
 export type Validity = {
-  isValid: ReadableState<boolean>
-  isEnabled: State<boolean>
-  isDisabled: ReadableState<boolean>
+  isValid: State<boolean>
 }
 
 export function createValiditor(options: ValidityOptions): Validity {
+  const allRulesPassed = state(options.validIf).map((validIf) => toArray(validIf).every((v) => isValidationPassed(v)))
 
-  const isValid = state(options.validIf).map((validIf) => toArray(validIf).every(v => isValidationPassed(v)))
-
-  const isEnabled = createState(() => {
-    if (!val(isValid)) return false
+  const isValid = createState(() => {
+    if (!val(allRulesPassed)) return false
     if (options.enabled !== undefined) return val(options.enabled) === true
     if (val(options.disabled)) return false
     return true
@@ -54,14 +51,23 @@ export function createValiditor(options: ValidityOptions): Validity {
 
   return {
     isValid,
-    isEnabled,
-    isDisabled: isEnabled.map(v => !v),
   }
 }
 
+/**
+ * 判断单条验证输入是否通过。
+ *
+ * - 如果输入是布尔值，直接判断真值。
+ * - 如果输入是对象，读取其 `should` 字段并判断真值。
+ * - 其他情况视为不通过。
+ *
+ * 该函数用于 `createValiditor` 内部处理 `validIf` 条件。
+ */
 function isValidationPassed(input: ValidationInput): boolean {
-  const validation = val(input)
-  if (validation === undefined) return true
-  if (typeof validation === 'boolean') return validation
-  return val(validation.should) === true
+  const validationInput = val(input)
+  if (isObject(validationInput)) {
+    const rule = validationInput
+    return val(rule.should) === true
+  }
+  return Boolean(validationInput)
 }

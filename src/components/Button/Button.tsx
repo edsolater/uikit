@@ -3,7 +3,6 @@
  * 它负责按钮默认 type、variant class 和基础样式入口，不负责主题系统、表单编排或路由行为。
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
-import { createRenderEffect } from 'solid-js'
 import { createStatusManager, type StatusProps } from '../../component-utils/status'
 import { createVariantManager, type VariantProps } from '../../component-utils/variant'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
@@ -19,26 +18,19 @@ export interface ButtonProps extends StatusProps<never> {}
 export function Button(props: ButtonProps) {
   const status = createStatusManager<'invalid'>()
   const variant = createVariantManager(props)
+  const validity = createValiditor(props)
 
-  const validity = createValiditor({
-    disabled: props.disabled,
-    enabled: props.enabled,
-    validIf: props.validIf,
-  })
+  const isDisabled = validity.isValid.map((v) => !v)
 
-  createRenderEffect(() => {
-    // 🤔 至少就是把 state 与 setState 连接，那好像也不一定需要createEffect, 所以这个原生能力要支持在createState里面.
-    // 但是这似乎不应该叫setState， 你看pipState怎么样？
-    status.controller.setStatus('invalid', validity.isDisabled)
-  })
- 
+  status.actions.setStatus('invalid', isDisabled)
+
   return (
     <Piv
       as="button"
       shadowProps={props}
       class="Button"
       plugins={[variant.plugin, status.plugin]}
-      htmlProps={{ type: 'button', disabled: validity.isDisabled }}
+      htmlProps={{ type: 'button', disabled: isDisabled }}
     >
       {props.children}
     </Piv>

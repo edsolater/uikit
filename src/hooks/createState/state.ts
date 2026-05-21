@@ -1,9 +1,10 @@
-import { createEffect, createMemo, createSignal, on, type Accessor } from 'solid-js'
 import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
-import type { Source } from './read'
+import { createComputed, createEffect, createSignal, on, type Accessor } from 'solid-js'
+import { val, type Source } from './read'
+import { createReactiveRunner } from './createReactiveRunner'
 
-export const readableStateSymbol = Symbol('ReadableState')
-export const stateSymbol = Symbol('State')
+export const readableStateBrand = Symbol('ReadableState')
+export const stateBrand = Symbol('State')
 
 export interface ReadableState<T = any> {
   /**
@@ -14,25 +15,21 @@ export interface ReadableState<T = any> {
   read(): T
 
   /** 确定物种是个 readable state，isReadableState 使用 */
-  [readableStateSymbol]: true
+  [readableStateBrand]: true
 
   /* 创建一个新的派生 readable state */
-  map<U>(toNew: (value: T) => U): ReadableState<U>
+  map<U>(toNew: (value: T) => U | ReadableState<U>): ReadableState<U>
 }
 
 export interface State<T = any> extends ReadableState<T> {
   /** 确定物种是个state，isState 使用 */
-  [stateSymbol]: true
+  [stateBrand]: true
 
   /** 新JS语法， 销毁时自动调用 */
   [Symbol.dispose](): void
 
   /* 虽然返回自身，但实际上只是改变这个state的值，这个state因为它是对象还是这个state */
   set(newValue: T | ((prev: T) => T)): State<T>
-
-  /* 订阅另一个可订阅的 state，会直接createEffect响应式订阅 */
-  follow(source: ReadableState<T>): State<T>
-  follow<U>(source: ReadableState<U>, transform: (value: U) => T): State<T>
 }
 
 /**
@@ -43,7 +40,7 @@ const registeredStateSet = new WeakSet<State>()
 export function isReadableState(value: unknown): value is ReadableState {
   return (
     registeredStateSet.has(value as any) ||
-    (isObject(value) && ((value as any)?.[readableStateSymbol] === true || (value as any)?.[stateSymbol] === true))
+    (isObject(value) && ((value as any)?.[readableStateBrand] === true || (value as any)?.[stateBrand] === true))
   )
 }
 
@@ -52,10 +49,10 @@ export function isReadableState(value: unknown): value is ReadableState {
  * 在管理用的 createState中使用
  */
 export function isState(value: unknown): value is State {
-  return registeredStateSet.has(value as any) || (isObject(value) && (value as any)?.[stateSymbol] === true)
+  return registeredStateSet.has(value as any) || (isObject(value) && (value as any)?.[stateBrand] === true)
 }
 
-function isAccessor<T>(value: unknown): value is Accessor<T> {
+function isAccessor(value: unknown): value is Accessor<any> {
   return isFunction(value) && value.length === 0
 }
 
@@ -76,13 +73,13 @@ function isAccessor<T>(value: unknown): value is Accessor<T> {
 export function createState<T = unknown>(): State<T | undefined>
 export function createState<T = unknown>(initialValue: MayFn<T>): State<T>
 export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
-  const [solidjsAccessor, solidjsSetSignal] = createSignal(shrinkFn(initialValue))
+  const [solidjsAccessor, solidjsSetSignal] = createSignal(shrinkFn(initialValue)) // 这里不应该使用跟随，不然的话语义就不对了
   const thisState: State = {
     read() {
       return solidjsAccessor()
     },
-    [readableStateSymbol]: true,
-    [stateSymbol]: true,
+    [readableStateBrand]: true,
+    [stateBrand]: true,
     [Symbol.dispose]() {
       // 这里不需要做任何事情，因为我们没有在外部注册这个 state，也没有暴露任何取消订阅的接口。
       // 只要这个 state 没有被外部引用了，它就会被垃圾回收掉，Solid 的 createEffect 也会自动清理对它的订阅。
@@ -94,11 +91,6 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
     map(toNew) {
       return mapState(thisState, toNew)
     },
-    //@ts-expect-error 此处TS自动推断类型有问题，实际上是支持两种重载的。
-    follow(source, transform) {
-      followState(thisState, source, transform ?? ((x) => x as any))
-      return thisState
-    },
   }
 
   // 注册这个 state，以便于未来的管控
@@ -107,17 +99,42 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
   return thisState
 }
 
-function mapState<T, U>(source: ReadableState<T>, toNew: (value: T) => U): ReadableState<U> {
-  const mappedState = state(createMemo(() => toNew(source.read())))
-  return mappedState
+/**
+ * 虽然实际上它创建了一个新的state，
+ * 但是我觉得在语义上它应该是个read-only statem,
+ * 不然的话，它的返回结构不太符合业务直觉。
+ *
+ * @param source 需要订阅的一个源
+ * @param toNew
+ * @returns
+ */
+function mapState<T, U>(source: Source<T>, toNew: (value: T) => Source<U>): ReadableState<U> {
+  const mappedState = createState()
+  createReactiveRunner(() => {
+    const sourceValue = val(source)
+    const newValue = val(toNew(sourceValue))
+    mappedState.set(newValue)
+  })
+  return mappedState as State<U>
 }
 
-function followState<T, U>(thisState: State<T>, source: ReadableState<U>, transform: (value: U) => T): void {
-  createEffect(() => {
-    const value = source.read()
-    const newValue = transform(value)
+/**
+ * 数据源A **跟随** 数据源B的变化
+ * @param thisState 数据源A
+ * @param followTarget 数据源B
+ * @param transform 经过转换默认直接输出
+ * @return 函数：取消跟随
+ */
+export function followState<T, U>(
+  thisState: State<T>,
+  followTarget: ReadableState<U>,
+  transform: (value: U) => T = (v) => v as unknown as T,
+): () => void {
+  const { dispose: unfollow } = createReactiveRunner(() => {
+    const newValue = transform(val(followTarget))
     thisState.set(newValue)
   })
+  return unfollow
 }
 
 /**
@@ -138,7 +155,9 @@ export function state<T>(sourceOrValue: T): State<T>
 export function state<T>(sourceOrValue: T): any {
   if (isState(sourceOrValue)) return sourceOrValue
   if (isReadableState(sourceOrValue)) {
-    return createState(sourceOrValue.read()).follow(sourceOrValue)
+    const newState = createState()
+    followState(newState, sourceOrValue)
+    return newState
   }
   if (isAccessor(sourceOrValue)) {
     const initialValue = sourceOrValue()

@@ -3,6 +3,7 @@ import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
 import { type Source, val, createState, state } from '../hooks'
 import type { PluginManager } from './type'
+import { createEffect } from 'solid-js'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
 export type StatusInput<S extends string> = Source<S | S[] | Record<S, Source<boolean>>>
@@ -39,58 +40,53 @@ export type StatusProps<S extends string> = {
   status?: StatusInput<S>
 }
 
-export type StatusManager<S extends string> = {
+/** 管理状态 */
+export type StatusRecord<S extends string> = Record<S, Source<boolean>>
+
+export type StatusRecordManager<S extends string> = {
   setStatus(status: S, value: Source<boolean>): void
   hasStatus(status: S): Source<boolean>
   /** 业务层无需关心，{@link createStatusManager} 会自动使用的 */
   _class: ClassNameList
 }
 
+/** 将长字符串状态拆分为单个状态标记 */
 function splitStatusTokens(statusLongString: string): string[] {
   return statusLongString.split(/\s+/).filter(Boolean)
 }
 
+function toClassTokens<S extends string>(from: StatusRecord<S>): S[] {
+  const classTokens: S[] = []
+  for (const key in from) {
+    if (val(from[key])) {
+      classTokens.push(key)
+    }
+  }
+  return classTokens
+}
 /**
  * Status管理器只有在重型组件或者需要状态管理的组件上才会使用。
  */
-function createStatusStateParser<S extends string>(propsStatus?: StatusInput<S> | undefined): StatusManager<S>
-function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusManager<S>
-function createStatusStateParser<S extends string>(propsStatus?: StatusInput<any> | undefined): StatusManager<S> {
-  const inputStatusRecord = state(propsStatus).map((innerStatus) => {
-    if (!innerStatus) {
-      return {}
-    }
-    if (isString(innerStatus)) {
-      const statusTokens = splitStatusTokens(innerStatus)
-      return statusTokens.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, Source<boolean>>)
-    }
-    if (isArray(innerStatus)) {
-      return innerStatus.reduce((acc, status) => ({ ...acc, [status]: true }), {} as Record<S, Source<boolean>>)
-    }
-    return innerStatus
-  }) satisfies Source<Record<S, Source<boolean>>>
+function createStatusRecordManager<S extends string>(initialStatus?: StatusInput<S>): StatusRecordManager<S> {
+  const statusRecord = createState<StatusRecord<S>>({} as StatusRecord<S>)
 
-  const statusRecord = createState<Record<S, Source<boolean>>>(() => ({} as Record<S, Source<boolean>>)).follow(
-    inputStatusRecord,
-  )
-
-  const statusController: StatusManager<S> = {
+  const statusRecordManager: StatusRecordManager<S> = {
     setStatus(status: S, value: Source<boolean>) {
       statusRecord.set((record) => ({ ...record, [status]: value }))
     },
     hasStatus(status: S) {
-      return statusRecord.map((record) => val(record[status]) === true)
+      return val(statusRecord)[status] === true
     },
-    _class: statusRecord.map((record) => Object.keys(record).filter((key) => val(record[key as S]) === true)),
+    _class: statusRecord.map((record) => toClassTokens(record)),
   }
 
-  return statusController
+  return statusRecordManager
 }
 
-export function createStatusManager<T extends string>() {
-  const statusManager = createStatusStateParser<T>()
+export function createStatusManager<T extends string>(initialStatus?: StatusInput<T>) {
+  const { setStatus, hasStatus, _class } = createStatusRecordManager<T>(initialStatus)
   const statusPlugin = createPivPlugin(() => ({
-    class: statusManager._class,
+    class: _class,
   }))
-  return { controller: statusManager, plugin: statusPlugin } satisfies PluginManager
+  return { actions: { setStatus, hasStatus }, plugin: statusPlugin, devClass: _class } satisfies PluginManager
 }
