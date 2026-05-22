@@ -7,7 +7,7 @@
 import { type Stringable } from '@edsolater/fnkit'
 import { For } from 'solid-js'
 import { toJSX, type JSXable } from '../../component-utils/toJSX'
-import { state, val, type Source } from '../../hooks'
+import { readableState, val, type Source } from '../../hooks'
 import { Piv } from '../BasicPiv'
 
 type TableDataRow = Record<string, Stringable>
@@ -65,7 +65,7 @@ export type TableProps<Row extends TableDataRow = TableDataRow> = {
 export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   
   // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-  const columnKeys = state(props.data).map((data) => (props.keys ? val(props.keys) : pickTableColumnKeys(data)))
+  const columnKeys = readableState(props.data).map((data) => (props.keys ? val(props.keys) : pickTableColumnKeys(data)))
 
   return (
     <Piv as="table">

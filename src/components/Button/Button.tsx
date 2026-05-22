@@ -4,7 +4,8 @@
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
 import { createStatusManager } from '../../component-utils/status'
-import { state, val, type Source } from '../../hooks'
+import { readableState, type Source } from '../../hooks'
+import { derive } from '../../hooks/createState/compose'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
 import { createDescriptionManager, type ButtonLabelProps } from './createButtonLabelManager'
@@ -40,9 +41,9 @@ export function Button(props: ButtonProps) {
   // 信息是否符合规则， 会内部更改status
   const validator = createValidator({ props })
 
-  const isLoading = state(props.loading).map(Boolean)
+  const isLoading = readableState(props.loading).map(Boolean)
   const isDisabled = validator.isValid.map((valid) => !valid)
-  const isIdle = state(() => val(validator.isValid) && !val(isLoading))
+  const isIdle = derive([validator.isValid, isLoading],(isValid, isLoading) => isValid && !isLoading)
   status.setStatus('idle', isIdle)
   status.setStatus('loading', isLoading)
   status.setStatus('disabled', isDisabled)

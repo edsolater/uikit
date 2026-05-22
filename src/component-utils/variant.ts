@@ -1,5 +1,5 @@
 import { createPivPlugin } from '../components'
-import { type Source, state } from '../hooks'
+import { readableState, type Source } from '../hooks'
 import type { PluginManager } from './type'
 
 type Variant = string
@@ -24,7 +24,7 @@ export function createVariantManager<V extends Variant>(
   props: VariantProps<V>,
   options?: { defaultVariant?: VariantInput<V> },
 ) {
-  const variant = state(props.variant).map((v) => v ?? options?.defaultVariant)
+  const variant = readableState(props.variant).map((v) => v ?? options?.defaultVariant)
   const variantPlugin = createPivPlugin(() => ({
     class: variant,
   }))

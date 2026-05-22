@@ -16,7 +16,7 @@
  */
 import type { MayFn } from '@edsolater/fnkit'
 import { isExist, isFunction } from '@edsolater/fnkit'
-import { isReadableState, type ReadableState } from './state'
+import { isReadableState, isState, state, type ReadableState } from './state'
 
 /**
  * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
@@ -130,3 +130,24 @@ function readMayFunctionSourceCore<T>(mayFunctionSource: MayFn<Source<T>>): Sour
     return mayFunctionSource as Source<T>
   }
 }
+
+/**
+ * 【工具函数】Source => ReadableState
+ *
+ * 因为 {@link readableState} 更不可主动改变，所以它比 {@link state} 更轻量
+ * 。 */
+export function readableState<T, U extends T = T>(sourceOrValue: Source<T>, mapFn?: (value: T) => U): ReadableState<U> {
+  if (isReadableState(sourceOrValue) || isState(sourceOrValue)) {
+    if (mapFn) {
+      return sourceOrValue.map(mapFn as any)
+    } else {
+      //@ts-ignore
+      return sourceOrValue
+    }
+  }
+
+  const baseState = state(sourceOrValue as T)
+  //@ts-ignore
+  return mapFn ? baseState.map(mapFn) : baseState
+}
+

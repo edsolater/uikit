@@ -1,9 +1,7 @@
-import { isArray, isString } from '@edsolater/fnkit'
 import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
-import { type Source, val, createState, state } from '../hooks'
+import { createState, type Source, val } from '../hooks'
 import type { PluginManager } from './type'
-import { createEffect } from 'solid-js'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
 export type StatusInput<S extends string> = Source<S | S[] | Record<S, Source<boolean>>>

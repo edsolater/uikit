@@ -69,6 +69,9 @@ function isAccessor(value: unknown): value is Accessor<any> {
  *   return <div>{val(count)}</div>
  * }
  * ```
+ * 
+ * @todo
+ * 🤔 是不是搞成proxy效果更好，虽然看起来规模很小，还说其实并不重要？
  */
 export function createState<T = unknown>(): State<T | undefined>
 export function createState<T = unknown>(initialValue: MayFn<T>): State<T>
@@ -140,7 +143,10 @@ export function followState<T, U>(
 /**
  * 【工具函数】
  * 方便快速把一个值包装成 state，如果已经是 state 就直接返回。
+ * 
  * 这个函数的设计初衷是为了在业务代码中快速把一个普通值提升成响应式 state，或者在不确定是否已经是 state 的情况下安全地使用它。
+ * 
+ * 由于 `state` 在心理的负担其实比较重，所以我们尽量应该使用 `readableState()`
  * @example
  * ```ts
  * const count = state(0) // count 是一个 State<number>
@@ -177,3 +183,4 @@ export function state<T>(sourceOrValue: T): any {
   // 其他普通值，直接包装成 state
   return createState(sourceOrValue)
 }
+ 

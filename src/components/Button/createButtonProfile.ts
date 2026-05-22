@@ -3,8 +3,8 @@
  * 它负责管理 tone、intent、scale、type 这些不随运行状态改变的 Button 身份信息。
  * 当前实现会产出 class 和原生 type，但这些只是 profile 的底层消费方式。
  */
+import { readableState, type Source } from '../../hooks'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
-import { state, type Source } from '../../hooks'
 
 export type ButtonTone = 'bare' | 'subtle' | 'normal' | 'solid'
 export type ButtonIntent = 'neutral' | 'accent' | 'danger'
@@ -42,10 +42,10 @@ export type ButtonProfileProps = {
 }
 
 export function createUIKitProfile(props: ButtonProfileProps) {
-  const tone = state(props.tone).map((tone) => tone ?? 'normal')
-  const intent = state(props.intent).map((intent) => intent ?? 'neutral')
-  const scale = state(props.scale).map((scale) => scale ?? 'normal')
-  const nativeType = state(props.type).map((type) => {
+  const tone = readableState(props.tone).map((tone) => tone ?? 'normal')
+  const intent = readableState(props.intent).map((intent) => intent ?? 'neutral')
+  const scale = readableState(props.scale).map((scale) => scale ?? 'normal')
+  const nativeType = readableState(props.type).map((type) => {
     return type === undefined || type === 'auto' ? null : type
   })
 

@@ -4,7 +4,7 @@
  * 它不负责 Input DOM、样式或值同步策略。
  */
 import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
-import { createState, state, val, type Source, type State } from '../../hooks'
+import { createState, readableState, val, type Source, type State } from '../../hooks'
 
 export type ValidationRule = {
   /**
@@ -34,7 +34,7 @@ export type Validity = {
 }
 
 export function createValiditor(options: ValidityOptions): Validity {
-  const allRulesPassed = state(options.validIf).map((validIf) => toArray(validIf).every((v) => isValidationPassed(v)))
+  const allRulesPassed = readableState(options.validIf).map((validIf) => toArray(validIf).every((v) => isValidationPassed(v)))
 
   const isValid = createState(() => {
     if (!val(allRulesPassed)) return false
