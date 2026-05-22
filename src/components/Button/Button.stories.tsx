@@ -15,12 +15,28 @@ const meta: Meta<typeof Button> = {
 
 export default meta
 
-export const Solid: StoryObj<typeof meta> = {}
+export const Normal: StoryObj<typeof meta> = {}
 
-export const Ghost: StoryObj<typeof meta> = {
+export const Solid: StoryObj<typeof meta> = {
   args: {
-    variant: 'ghost',
-    children: 'Ghost button',
+    tone: 'solid',
+    intent: 'accent',
+    children: 'Save',
+  },
+}
+
+export const Subtle: StoryObj<typeof meta> = {
+  args: {
+    tone: 'subtle',
+    children: 'Cancel',
+  },
+}
+
+export const BareDanger: StoryObj<typeof meta> = {
+  args: {
+    tone: 'bare',
+    intent: 'danger',
+    children: 'Remove',
   },
 }
 

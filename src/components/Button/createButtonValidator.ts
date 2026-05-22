@@ -1,10 +1,12 @@
 /**
  * 这个文件定义 Button 可用性判断能力。
- * 它负责把 disabled、enabled、status disabled 和 validIf 合并成最终禁用状态。
+ * 它负责把 disabled、enabled 和 validIf 合并成最终有效性状态。
  * 它不负责 Button DOM、样式、点击行为或失败后的 props 改写。
  */
 import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
-import { createState, state, val, type Source, type State } from '../../hooks'
+import { createPivPlugin } from '../BasicPiv/plugin/helpers'
+import type { PivPlugin } from '../BasicPiv/plugin/runPlugin'
+import { createState, val, type Source, type State } from '../../hooks'
 
 export type ValidationRule = {
   /**
@@ -17,9 +19,9 @@ export type ValidationInput = Source<boolean | ValidationRule | undefined>
 
 export type ValidIf = Source<MayArray<ValidationInput> | undefined>
 
-export type ValidityOptions = {
+export type ButtonValidityOptions = {
   /**
-   * 快捷禁用入口；true 时按钮不可用。
+   * 动作当前不可触发。
    */
   disabled?: Source<boolean>
 
@@ -34,39 +36,35 @@ export type ValidityOptions = {
   validIf?: ValidIf
 }
 
-export type Validity = {
+export type ButtonValidity = {
   isValid: State<boolean>
+  plugin: PivPlugin<'button'>
 }
 
-export function createValiditor(options: ValidityOptions): Validity {
-  const allRulesPassed = state(options.validIf).map((validIf) => toArray(validIf).every((v) => isValidationPassed(v)))
-
+export function createValidator(options: ButtonValidityOptions): ButtonValidity {
+  const allRulesPassed = createState(() => toArray(val(options.validIf)).every((input) => isValidationPassed(input)))
   const isValid = createState(() => {
     if (!val(allRulesPassed)) return false
     if (options.enabled !== undefined) return val(options.enabled) === true
     if (val(options.disabled)) return false
     return true
   })
+  const validityPlugin = createPivPlugin<'button'>(() => ({
+    htmlProps: {
+      disabled: isValid.map((valid) => !valid),
+    },
+  }))
 
   return {
     isValid,
+    plugin: validityPlugin,
   }
 }
 
-/**
- * 判断单条验证输入是否通过。
- *
- * - 如果输入是布尔值，直接判断真值。
- * - 如果输入是对象，读取其 `should` 字段并判断真值。
- * - 其他情况视为不通过。
- *
- * 该函数用于 `createValiditor` 内部处理 `validIf` 条件。
- */
 function isValidationPassed(input: ValidationInput): boolean {
   const validationInput = val(input)
   if (isObject(validationInput)) {
-    const rule = validationInput
-    return val(rule.should) === true
+    return val(validationInput.should) === true
   }
   return Boolean(validationInput)
 }

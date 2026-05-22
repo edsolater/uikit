@@ -2,14 +2,14 @@
  * useTitle 的本地 demo。
  * 它只服务本地 HTML 验证，不参与 hooks 正式导出。
  */
-import { createSignal } from 'solid-js'
 import { Button } from '../../components/Button'
+import { createState, val } from '../createState'
 import { useTitle } from './useTitle'
 
 export function UseTitleDemo() {
   const titles = ['Solid Kit Demo', 'Button Preview', 'Hook Preview']
-  const [titleIndex, setTitleIndex] = createSignal(0)
-  const currentTitle = useTitle(() => titles[titleIndex()])
+  const titleIndex = createState(0)
+  const currentTitle = useTitle(() => titles[val(titleIndex)])
 
   return (
     <article class="panel">
@@ -21,9 +21,9 @@ export function UseTitleDemo() {
       <div class="title-card">
         <strong>{currentTitle()}</strong>
         <Button
-          variant="ghost"
+          tone="subtle"
           onClick={() => {
-            setTitleIndex((titleIndex() + 1) % titles.length)
+            titleIndex.set((index) => (index + 1) % titles.length)
           }}
         >
           Switch title

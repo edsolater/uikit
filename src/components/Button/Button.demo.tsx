@@ -11,11 +11,15 @@ export function ButtonDemo() {
         <span>Component</span>
         <h2>Button</h2>
       </div>
-      <p>只保留常用按钮能力，样式足够清晰，不做额外抽象。</p>
+      <p>按钮只表达动作声量、动作性质和交互尺度，不承载导航语义。</p>
       <div class="button-row">
-        <Button>Primary action</Button>
-        <Button variant="ghost">Secondary action</Button>
-        <Button disabled>Disabled</Button>
+        <Button intent="accent" tone="solid">保存</Button>
+        <Button tone="normal">导出</Button>
+        <Button tone="subtle">取消</Button>
+        <Button tone="bare">跳过</Button>
+        <Button intent="danger" tone="bare">移除</Button>
+        <Button loading>保存中</Button>
+        <Button disabled>不可用</Button>
       </div>
     </article>
   )
