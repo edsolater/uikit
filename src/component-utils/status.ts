@@ -84,9 +84,12 @@ function createStatusRecordManager<S extends string>(initialStatus?: StatusInput
 }
 
 export function createStatusManager<T extends string>(initialStatus?: StatusInput<T>) {
-  const { setStatus, hasStatus, _class } = createStatusRecordManager<T>(initialStatus)
+  const statusManager = createStatusRecordManager<T>(initialStatus)
   const statusPlugin = createPivPlugin(() => ({
-    class: _class,
+    class: statusManager._class,
   }))
-  return { actions: { setStatus, hasStatus }, plugin: statusPlugin, devClass: _class } satisfies PluginManager
+  return {
+    plugin: statusPlugin,
+    ...statusManager,
+  } satisfies PluginManager & StatusRecordManager<T>
 }

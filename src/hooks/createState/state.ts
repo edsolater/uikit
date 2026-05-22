@@ -1,6 +1,6 @@
 import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
 import { createEffect, createSignal, on, type Accessor } from 'solid-js'
-import { createReactiveRunner } from './createReactiveRunner'
+import { createReactionFn } from './createReactiveRunner'
 import { val, type Source } from './read'
 
 export const readableStateBrand = Symbol('ReadableState')
@@ -110,7 +110,7 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
  */
 function mapState<T, U>(source: Source<T>, toNew: (value: T) => Source<U>): ReadableState<U> {
   const mappedState = createState()
-  createReactiveRunner(() => {
+  createReactionFn(() => {
     const sourceValue = val(source)
     const newValue = val(toNew(sourceValue))
     mappedState.set(newValue)
@@ -130,7 +130,7 @@ export function followState<T, U>(
   followTarget: ReadableState<U>,
   transform: (value: U) => T = (v) => v as unknown as T,
 ): () => void {
-  const { dispose: unfollow } = createReactiveRunner(() => {
+  const { dispose: unfollow } = createReactionFn(() => {
     const newValue = transform(val(followTarget))
     thisState.set(newValue)
   })

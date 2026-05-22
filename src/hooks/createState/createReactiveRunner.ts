@@ -31,7 +31,7 @@ export interface ReactiveRunner<T = void> {
  * - 依赖变化后重新运行 action
  * - dispose 后停止后续运行
  */
-export function createReactiveRunner<T>(action: () => T): ReactiveRunner<T> {
+export function createReactionFn<T>(action: () => T): ReactiveRunner<T> {
   let result!: T
   let disposed = false
 

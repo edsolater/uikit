@@ -7,6 +7,7 @@ import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 import type { PivPlugin } from '../BasicPiv/plugin/runPlugin'
 import { createState, val, type Source, type State } from '../../hooks'
+import type { StatusRecordManager } from '../../component-utils/status'
 
 export type ValidationRule = {
   /**
@@ -19,7 +20,7 @@ export type ValidationInput = Source<boolean | ValidationRule | undefined>
 
 export type ValidIf = Source<MayArray<ValidationInput> | undefined>
 
-export type ButtonValidityOptions = {
+export type ComponentProps = {
   /**
    * 动作当前不可触发。
    */
@@ -41,14 +42,18 @@ export type ButtonValidity = {
   plugin: PivPlugin<'button'>
 }
 
-export function createValidator(options: ButtonValidityOptions): ButtonValidity {
-  const allRulesPassed = createState(() => toArray(val(options.validIf)).every((input) => isValidationPassed(input)))
+export function createValidator(options: {
+  props: ComponentProps
+}): ButtonValidity {
+  const { props } = options
+  const allRulesPassed = createState(() => toArray(val(props.validIf)).every((input) => isValidationPassed(input)))
   const isValid = createState(() => {
     if (!val(allRulesPassed)) return false
-    if (options.enabled !== undefined) return val(options.enabled) === true
-    if (val(options.disabled)) return false
+    if (props.enabled !== undefined) return val(props.enabled) === true
+    if (val(props.disabled)) return false
     return true
   })
+  
   const validityPlugin = createPivPlugin<'button'>(() => ({
     htmlProps: {
       disabled: isValid.map((valid) => !valid),

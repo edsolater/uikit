@@ -9,7 +9,7 @@ import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
 import { createDescriptionManager, type ButtonLabelProps } from './createButtonLabelManager'
 import { createUIKitProfile, type ButtonProfileProps } from './createButtonProfile'
-import { createValidator, type ButtonValidityOptions } from './createButtonValidator'
+import { createValidator, type ComponentProps } from './createValidator'
 
 export type ButtonStatus = 'idle' | 'loading' | 'disabled' | 'hover' | 'active' | 'focus-visible'
 export type ButtonBusinessStatus = 'idle' | 'loading' | 'disabled'
@@ -26,7 +26,7 @@ export type ButtonStatusProps = {
 // 这种写法是为了让 props 声明更像排比插件，更具可读性。
 export interface ButtonProps extends PivProps<'button'> {}
 export interface ButtonProps extends ButtonProfileProps {}
-export interface ButtonProps extends ButtonValidityOptions {}
+export interface ButtonProps extends ComponentProps {}
 export interface ButtonProps extends ButtonStatusProps {}
 export interface ButtonProps extends ButtonLabelProps {}
 
@@ -34,16 +34,18 @@ export function Button(props: ButtonProps) {
   const profile = createUIKitProfile(props)
   const label = createDescriptionManager(props)
 
-  const validator = createValidator(props)
+  // status 驱动，由信息本身决定
   const status = createStatusManager<ButtonBusinessStatus>()
 
-  // status 驱动
-  const isLoading = state(() => val(props.loading) === true)
+  // 信息是否符合规则， 会内部更改status
+  const validator = createValidator({ props })
+
+  const isLoading = state(props.loading).map(Boolean)
   const isDisabled = validator.isValid.map((valid) => !valid)
   const isIdle = state(() => val(validator.isValid) && !val(isLoading))
-  status.actions.setStatus('idle', isIdle)
-  status.actions.setStatus('loading', isLoading)
-  status.actions.setStatus('disabled', isDisabled)
+  status.setStatus('idle', isIdle)
+  status.setStatus('loading', isLoading)
+  status.setStatus('disabled', isDisabled)
 
   return (
     <Piv

@@ -7,4 +7,4 @@ export type {
   ButtonType,
 } from './createButtonProfile'
 export type { ButtonLabelProps } from './createButtonLabelManager'
-export type { ButtonValidityOptions } from './createButtonValidator'
+export type { ComponentProps } from './createValidator'
