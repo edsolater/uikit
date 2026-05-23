@@ -23,14 +23,30 @@
  * 参数：(<color>, weight? <number>)，weight 是强调色权重，默认 16。
  * 示例：background: --surface-from(var(--color-brand))。
  */
-@function --surface-from(--color <color>, --weight <number>: 16) returns <color> {
-  result: --color-mix(var(--color-bg), calc(100 - var(--weight)), var(--color), var(--weight));
+
+@function --fluid(--from <length-percentage>, --to <length-percentage>, --progress <number>: var(--fluid-progress))
+  returns <length-percentage> {
+  result: calc(var(--from) + (var(--to) - var(--from)) * var(--progress));
 }
 
 /* 尺度需要管理的是 style-token 只要是他写的魔法数字或单位数字的，不管是什么，只要不是离散值，都应该是style-token */
 @layer style-tokens {
   /* 根节点集中管理颜色源参数与衍生材料；组件和业务应直接通过 var(--color-*) 消费公开语义变量。 */
   :root {
+    /*  --------------------------------------------------------------
+     *  全局CSS变量，写业务样式时，好用的工具
+     * ----------------------------------------------------------------
+
+    /* 视口宽度进度：小屏 -> 大屏， 配套使用 @function --fluid() 能快速打渐进式断点 */
+    --fluid-progress: progress(100vw, 360px, 1440px);
+    /* --fluid-progress: progress(100cqi, 280px, 720px); 必须在具体的container内部写这段代码 */
+
+    /* 是否偏好减少动画：不能直接变成变量，只能在 media 里改 */
+    --env-motion-scale: 1;
+    @media (prefers-reduced-motion: reduce) {
+      --env-motion-scale: 0;
+    }
+
     /*  --------------------------------------------------------------
      * 颜色系统设计参数
      * 这些参数直接决定了颜色系统的视觉特征，如明度范围、彩度范围、对比度和主题色调等。
@@ -72,6 +88,26 @@
      * 设计师调整这些参数可以快速迭代出不同风格的界面，开发者无需修改代码。
      * ----------------------------------------------------------------
      */
+
+    /* ====================== 总旋钮 （TODO：需要实际接入）=======================
+     * 这些参数控制整个尺寸系统的整体特征，如密度、圆角强度、阴影强度、边框强度和交互动效强度等。
+     * 设计师调整这些参数可以快速迭代出不同风格的界面，开发者无需修改代码。
+     */
+    /* 全局密度：默认 1。你以后可以改成 compact / relaxed 对应不同值 */
+    --sys-density: 1;
+
+    /* 全局圆角强度 */
+    --sys-radius-scale: 1;
+
+    /* 全局阴影强度 */
+    --sys-shadow-scale: 1;
+
+    /* 全局边框/分割线强度 */
+    --sys-line-scale: 1;
+
+    /* 全局交互动效强度 */
+    --sys-motion-scale: var(--env-motion-scale);
+
     /* ======================= 尺寸基础 ======================= */
     /* 空隙量。 用于 padding margin gap 等， 表达空间 */
     --space-base: 4px;
@@ -141,6 +177,12 @@
 
     --shadow: 0 1px 2px var(--color-shadow), 0 2px 4px var(--color-shadow), 0 4px 8px var(--color-shadow);
 
+    /* ============= 动画token ============== */
+    --motion-duration-fast: calc(120ms * var(--sys-motion-scale));
+    --motion-duration-normal: calc(180ms * var(--sys-motion-scale));
+    --motion-duration-slow: calc(260ms * var(--sys-motion-scale));
 
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   }
 }
