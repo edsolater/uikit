@@ -1,7 +1,7 @@
 import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
 import { createEffect, createSignal, on, type Accessor } from 'solid-js'
 import { createReactionFn } from './createReactiveRunner'
-import { val, type Source } from './read'
+import { val } from './read'
 
 export const readableStateBrand = Symbol('ReadableState')
 export const stateBrand = Symbol('State')
@@ -52,10 +52,6 @@ export function isState(value: unknown): value is State {
   return registeredStateSet.has(value as any) || (isObject(value) && (value as any)?.[stateBrand] === true)
 }
 
-function isAccessor(value: unknown): value is Accessor<any> {
-  return isFunction(value) && value.length === 0
-}
-
 /**
  * 创建一个代表状态的，可以读，可以follow的 state。
  *
@@ -69,7 +65,7 @@ function isAccessor(value: unknown): value is Accessor<any> {
  *   return <div>{val(count)}</div>
  * }
  * ```
- * 
+ *
  * @todo
  * 🤔 是不是搞成proxy效果更好，虽然看起来规模很小，还说其实并不重要？
  */
@@ -92,7 +88,13 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
       return thisState
     },
     map(toNew) {
-      return mapState(thisState, toNew)
+      const mappedState = createState()
+      createReactionFn(() => {
+        const sourceValue = val(thisState)
+        const newValue = val(toNew(sourceValue))
+        mappedState.set(newValue)
+      })
+      return mappedState as State<any>
     },
   }
 
@@ -101,86 +103,3 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
 
   return thisState
 }
-
-/**
- * 虽然实际上它创建了一个新的state，
- * 但是我觉得在语义上它应该是个read-only statem,
- * 不然的话，它的返回结构不太符合业务直觉。
- *
- * @param source 需要订阅的一个源
- * @param toNew
- * @returns
- */
-function mapState<T, U>(source: Source<T>, toNew: (value: T) => Source<U>): ReadableState<U> {
-  const mappedState = createState()
-  createReactionFn(() => {
-    const sourceValue = val(source)
-    const newValue = val(toNew(sourceValue))
-    mappedState.set(newValue)
-  })
-  return mappedState as State<U>
-}
-
-/**
- * 数据源A **跟随** 数据源B的变化
- * @param thisState 数据源A
- * @param followTarget 数据源B
- * @param transform 经过转换默认直接输出
- * @return 函数：取消跟随
- */
-export function followState<T, U>(
-  thisState: State<T>,
-  followTarget: ReadableState<U>,
-  transform: (value: U) => T = (v) => v as unknown as T,
-): () => void {
-  const { dispose: unfollow } = createReactionFn(() => {
-    const newValue = transform(val(followTarget))
-    thisState.set(newValue)
-  })
-  return unfollow
-}
-
-/**
- * 【工具函数】
- * 方便快速把一个值包装成 state，如果已经是 state 就直接返回。
- * 
- * 这个函数的设计初衷是为了在业务代码中快速把一个普通值提升成响应式 state，或者在不确定是否已经是 state 的情况下安全地使用它。
- * 
- * 由于 `state` 在心理的负担其实比较重，所以我们尽量应该使用 `readableState()`
- * @example
- * ```ts
- * const count = state(0) // count 是一个 State<number>
- * const doubleCount = count.map(x => x * 2) // doubleCount 是一个 ReadableState<number>，它会自动跟随 count 的变化
- * ```
- */
-export function state<T>(sourceOrValue: Accessor<T>): State<T>
-export function state<T>(sourceOrValue: State<T>): State<T>
-export function state<T>(sourceOrValue: ReadableState<T>): State<T>
-export function state<T>(sourceOrValue: Source<T>): State<T>
-export function state<T>(sourceOrValue: T): State<T>
-export function state<T>(sourceOrValue: T): any {
-  if (isState(sourceOrValue)) return sourceOrValue
-  if (isReadableState(sourceOrValue)) {
-    const newState = createState()
-    followState(newState, sourceOrValue)
-    return newState
-  }
-  if (isAccessor(sourceOrValue)) {
-    const initialValue = sourceOrValue()
-    const newState = createState(initialValue)
-    createEffect(
-      on(
-        sourceOrValue,
-        (value) => {
-          newState.set(() => value)
-        },
-        { defer: true },
-      ),
-    )
-    return newState
-  }
-
-  // 其他普通值，直接包装成 state
-  return createState(sourceOrValue)
-}
- 

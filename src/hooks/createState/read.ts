@@ -15,8 +15,8 @@
  * - 管理活水源连接关系。
  */
 import type { MayFn } from '@edsolater/fnkit'
-import { isExist, isFunction, shrinkFn } from '@edsolater/fnkit'
-import { isReadableState, isState, state, type ReadableState } from './state'
+import { isExist, shrinkFn } from '@edsolater/fnkit'
+import { createState, isReadableState, isState, type ReadableState } from './state'
 
 /**
  * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
@@ -99,11 +99,7 @@ export function val<T>(source: Source<T>): T
 export function val<T>(source: Source<T> | undefined): T | undefined
 export function val<T>(source: Source<T> | undefined, defaultValue: MayFn<Source<T>>): T
 export function val<T>(source: Source<T> | undefined, defaultValue?: MayFn<Source<T>>) {
-  const nextSource = isExist(source)
-    ? source
-    : isExist(defaultValue)
-      ? val(shrinkFn(defaultValue))
-      : undefined
+  const nextSource = isExist(source) ? source : isExist(defaultValue) ? val(shrinkFn(defaultValue)) : undefined
   return readSource(nextSource)
 }
 
@@ -116,13 +112,27 @@ function readSource<T>(source: Source<T> | undefined): T | undefined {
   return isReadableState(source) ? source.read() : (source as T | undefined)
 }
 
-
 /**
- * 【工具函数】Source => ReadableState
+ * 【工具函数:转换包装器】Source => ReadableState
  *
- * 因为 {@link readableState} 更不可主动改变，所以它比 {@link state} 更轻量
- * 。 */
-export function readableState<T, U extends T = T>(sourceOrValue: Source<T>, mapFn?: (value: T) => U): ReadableState<U> {
+ *
+ * 因为 {@link toReadableState} 更不可主动改变，所以它比 {@link createState} 更轻量
+ * 
+ * 
+ * - {@link toReadableState} 是一个明确的转换操作，所以它第二个参数是一个可选的mapper;
+ * - {@link createState} 是名词做动词的操作，第二个也是mapper， 但语义是创建一个新的状态，保持和输入同步；如果输入是个函数，则它是一个惰性初始值函数。
+ *
+ * @params mapFn 可选的映射函数，用于在转换过程中对值进行变换；如果提供了 mapFn，toReadableState 会先把 source 读取成当前值，再传给 mapFn 进行转换，最后把转换结果包装成 ReadableState 返回。
+ *
+ * @example
+ * ```ts
+ * const readable = toReadableState(source)
+ * ```
+ */
+export function toReadableState<T, U extends T = T>(
+  sourceOrValue: Source<T>,
+  mapFn?: (value: T) => U,
+): ReadableState<U> {
   if (isReadableState(sourceOrValue) || isState(sourceOrValue)) {
     if (mapFn) {
       return sourceOrValue.map(mapFn as any)
@@ -132,7 +142,7 @@ export function readableState<T, U extends T = T>(sourceOrValue: Source<T>, mapF
     }
   }
 
-  const baseState = state(sourceOrValue as T)
+  const baseState = createState(sourceOrValue as T)
   //@ts-ignore
   return mapFn ? baseState.map(mapFn) : baseState
 }

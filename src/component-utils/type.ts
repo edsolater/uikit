@@ -12,7 +12,7 @@ export interface PluginManager {
   details?: AnyRecord
 
   /** 使用时必须对Piv注入plugin */
-  plugin: PivPlugin
+  plugin: PivPlugin<any>
 
   /** 其他任意内容，供外部使用 */
   [specialInfoNamespace: string]: any

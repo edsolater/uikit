@@ -3,7 +3,8 @@
  * 它负责管理 tone、intent、scale、type 这些不随运行状态改变的 Button 身份信息。
  * 当前实现会产出 class 和原生 type，但这些只是 profile 的底层消费方式。
  */
-import { readableState, type Source } from '../../hooks'
+import type { PluginManager } from '../../component-utils/type'
+import { mapSource, toReadableState, type Source } from '../../hooks'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 
 export type ButtonTone = 'bare' | 'subtle' | 'normal' | 'solid'
@@ -38,7 +39,7 @@ export type ButtonProfileProps = {
    *
    * auto 表示交给原生 button 按所在环境选择默认行为。
    */
-  type?: Source<ButtonType>
+  domType?: Source<ButtonType>
 
   /**
    * 所承载信息的简介，代表了这个组件所承载的信息的架构在思维导图中的描述
@@ -47,33 +48,29 @@ export type ButtonProfileProps = {
 }
 
 export function createUIKitProfile(props: ButtonProfileProps) {
-  const tone = readableState(props.tone).map((tone) => tone ?? 'normal')
-  const intent = readableState(props.intent).map((intent) => intent ?? 'neutral')
-  const scale = readableState(props.scale).map((scale) => scale ?? 'normal')
-  const nativeType = readableState(props.type).map((type) => {
-    return type === undefined || type === 'auto' ? null : type
-  })
 
-  const profilePlugin = createPivPlugin<'button'>(() => ({
+  const details = {
+    tone: props.tone,
+    intent: props.intent,
+    scale: props.scale,
+    domType: props.domType,
+    label: props.label,
+  }
+
+  const plugin = createPivPlugin<'button'>(() => ({
     class: [
-      tone.map((tone) => `tone:${tone}`),
-      intent.map((intent) => `intent:${intent}`),
-      scale.map((scale) => `scale:${scale}`),
+      mapSource(props.tone, (tone) => `tone:${tone}`),
+      mapSource(props.intent, (intent) => `intent:${intent}`),
+      mapSource(props.scale, (scale) => `scale:${scale}`),
     ],
     htmlProps: {
-      'attr:type': nativeType,
+      'attr:type': props.domType,
       'aria-label': props.label,
     },
   }))
 
   return {
-    details: {
-      tone,
-      intent,
-      scale,
-      nativeType,
-      label: props.label,
-    },
-    plugin: profilePlugin,
-  }
+    details,
+    plugin,
+  } satisfies PluginManager
 }

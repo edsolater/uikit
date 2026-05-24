@@ -1,6 +1,6 @@
 import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
-import { createState, readableState, type Source, val } from '../hooks'
+import { createState, toReadableState, type Source, val } from '../hooks'
 import type { PluginManager } from './type'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
@@ -101,7 +101,7 @@ function toStatusRecord<S extends string>(
  * Status管理器只有在重型组件或者需要状态管理的组件上才会使用。
  */
 function createStatusRecordManager<S extends string>(initialStatus?: StatusInput<S>): StatusRecordManager<S> {
-  const injectedStatusRecord = val(readableState(initialStatus, toStatusRecord))
+  const injectedStatusRecord = val(toReadableState(initialStatus, toStatusRecord))
   const localStatusRecord = createState<StatusRecord<S>>({} as StatusRecord<S>)
   const statusRecord = localStatusRecord.map((localRecord) => ({
     ...injectedStatusRecord,
