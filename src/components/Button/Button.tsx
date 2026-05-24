@@ -1,59 +1,51 @@
 /**
  * 这个文件定义基础按钮组件 Button。
- * 它负责按钮动作语义、声量 class、交互尺度和基础样式入口，不负责主题系统、表单编排或路由行为。
+ * 它负责按钮动作语义、声量 class、交互尺度、状态表达和基础样式入口，不负责主题系统、表单编排、状态判断、状态来源组装或路由行为。
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
-import { createStatusManager } from '../../component-utils/status'
-import { readableState, type Source } from '../../hooks'
+import { createStatusManager, type StatusProps } from '../../component-utils/status'
 import { derive } from '../../hooks/createState/compose'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
+import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 import './button.css'
-import { createDescriptionManager, type ButtonLabelProps } from './createButtonLabelManager'
 import { createUIKitProfile, type ButtonProfileProps } from './createButtonProfile'
-import { createValidator, type ComponentProps } from './createValidator'
 
 export type ButtonStatus = 'idle' | 'loading' | 'disabled' | 'hover' | 'active' | 'focus-visible'
 export type ButtonBusinessStatus = 'idle' | 'loading' | 'disabled'
 // 交互状态由 CSS 伪类驱动，不进入 createStatusManager 的业务状态记录。
 export type ButtonInteractionStatus = 'hover' | 'active' | 'focus-visible'
 
-export type ButtonStatusProps = {
-  /**
-   * 动作已经触发，正在执行。
-   */
-  loading?: Source<boolean>
-}
-
 // 这种写法是为了让 props 声明更像排比插件，更具可读性。
 export interface ButtonProps extends PivProps<'button'> {}
 export interface ButtonProps extends ButtonProfileProps {}
-export interface ButtonProps extends ComponentProps {}
-export interface ButtonProps extends ButtonStatusProps {}
-export interface ButtonProps extends ButtonLabelProps {}
+export interface ButtonProps extends StatusProps<ButtonBusinessStatus> {}
 
 export function Button(props: ButtonProps) {
+  // UIKit 都适用的标识，标识能够标识出它是一个怎样的存在的组件
   const profile = createUIKitProfile(props)
-  const label = createDescriptionManager(props)
 
-  // status 驱动，由信息本身决定
-  const status = createStatusManager<ButtonBusinessStatus>()
+  // status 只是汇合和表达状态，不负责判断状态为什么成立。
+  const status = createStatusManager<ButtonBusinessStatus>(props.status)
 
-  // 信息是否符合规则， 会内部更改status
-  const validator = createValidator({ props })
+  const isLoading = status.hasStatus('loading')
+  const isDisabled = status.hasStatus('disabled')
+  const isIdle = derive([isLoading, isDisabled], (loading, disabled) => !loading && !disabled)
 
-  const isLoading = readableState(props.loading).map(Boolean)
-  const isDisabled = validator.isValid.map((valid) => !valid)
-  const isIdle = derive([validator.isValid, isLoading],(isValid, isLoading) => isValid && !isLoading)
   status.setStatus('idle', isIdle)
-  status.setStatus('loading', isLoading)
-  status.setStatus('disabled', isDisabled)
+
+  const behaviorPlugin = createPivPlugin<'button'>(() => ({
+    htmlProps: {
+      disabled: isDisabled,
+      'aria-busy': isLoading,
+    },
+  }))
 
   return (
     <Piv
       as="button"
       shadowProps={props}
       class="Button"
-      plugins={[profile.plugin, validator.plugin, label.plugin, status.plugin]}
+      plugins={[profile.plugin, status.plugin, behaviorPlugin]}
     >
       {props.children}
     </Piv>

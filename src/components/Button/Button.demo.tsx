@@ -18,8 +18,8 @@ export function ButtonDemo() {
         <Button tone="subtle">取消</Button>
         <Button tone="bare">跳过</Button>
         <Button intent="danger" tone="bare">移除</Button>
-        <Button loading>保存中</Button>
-        <Button disabled>不可用</Button>
+        <Button status="loading">保存中</Button>
+        <Button status="disabled">不可用</Button>
       </div>
     </article>
   )

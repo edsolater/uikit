@@ -15,7 +15,7 @@
  * - 管理活水源连接关系。
  */
 import type { MayFn } from '@edsolater/fnkit'
-import { isExist, isFunction } from '@edsolater/fnkit'
+import { isExist, isFunction, shrinkFn } from '@edsolater/fnkit'
 import { isReadableState, isState, state, type ReadableState } from './state'
 
 /**
@@ -102,7 +102,7 @@ export function val<T>(source: Source<T> | undefined, defaultValue?: MayFn<Sourc
   const nextSource = isExist(source)
     ? source
     : isExist(defaultValue)
-      ? readMayFunctionSourceCore(defaultValue)
+      ? val(shrinkFn(defaultValue))
       : undefined
   return readSource(nextSource)
 }
@@ -116,20 +116,6 @@ function readSource<T>(source: Source<T> | undefined): T | undefined {
   return isReadableState(source) ? source.read() : (source as T | undefined)
 }
 
-/**
- * 只应该由 {@link val} 调用，外部不应该直接使用。
- */
-function readMayFunctionSourceCore<T>(mayFunctionSource: MayFn<Source<T>>): Source<T> {
-  if (isFunction(mayFunctionSource)) {
-    if (isReadableState(mayFunctionSource)) {
-      return mayFunctionSource as ReadableState<T>
-    } else {
-      return mayFunctionSource() as Source<T>
-    }
-  } else {
-    return mayFunctionSource as Source<T>
-  }
-}
 
 /**
  * 【工具函数】Source => ReadableState
@@ -150,4 +136,3 @@ export function readableState<T, U extends T = T>(sourceOrValue: Source<T>, mapF
   //@ts-ignore
   return mapFn ? baseState.map(mapFn) : baseState
 }
-

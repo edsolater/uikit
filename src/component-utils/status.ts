@@ -1,6 +1,6 @@
 import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
-import { createState, type Source, val } from '../hooks'
+import { createState, readableState, type Source, val } from '../hooks'
 import type { PluginManager } from './type'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
@@ -62,18 +62,58 @@ function toClassTokens<S extends string>(from: StatusRecord<S>): S[] {
   }
   return classTokens
 }
+
+/**
+ * 各种模式的碎片输入-> 状态对象 StatusRecord。
+ * 
+ * @example
+ * toStatusRecord('active disabled') // { active: true, disabled: true }
+ * toStatusRecord(['active', 'disabled']) // { active: true, disabled: true }
+ * toStatusRecord({ active: true, disabled: false }) // { active: true, disabled: false }
+ */
+function toStatusRecord<S extends string>(
+  statusInput: S | S[] | Record<S, Source<boolean>> | undefined,
+): StatusRecord<S> {
+  if (statusInput === undefined) {
+    return {} as StatusRecord<S>
+  }
+
+  if (typeof statusInput === 'string') {
+    const statusRecord = {} as StatusRecord<S>
+    for (const statusToken of splitStatusTokens(statusInput)) {
+      statusRecord[statusToken as S] = true
+    }
+    return statusRecord
+  }
+
+  if (Array.isArray(statusInput)) {
+    const statusRecord = {} as StatusRecord<S>
+    for (const statusToken of statusInput) {
+      statusRecord[statusToken] = true
+    }
+    return statusRecord
+  }
+
+  return statusInput
+}
+
 /**
  * Status管理器只有在重型组件或者需要状态管理的组件上才会使用。
  */
 function createStatusRecordManager<S extends string>(initialStatus?: StatusInput<S>): StatusRecordManager<S> {
-  const statusRecord = createState<StatusRecord<S>>({} as StatusRecord<S>)
+  const injectedStatusRecord = val(readableState(initialStatus, toStatusRecord))
+  const localStatusRecord = createState<StatusRecord<S>>({} as StatusRecord<S>)
+  const statusRecord = localStatusRecord.map((localRecord) => ({
+    ...injectedStatusRecord,
+    ...localRecord,
+  }))
 
   const statusRecordManager: StatusRecordManager<S> = {
     setStatus(status: S, value: Source<boolean>) {
-      statusRecord.set((record) => ({ ...record, [status]: value }))
+      localStatusRecord.set((record) => ({ ...record, [status]: value }))
     },
     hasStatus(status: S) {
-      return val(statusRecord)[status] === true
+      return statusRecord.map((record) => Boolean(val(record[status])))
     },
     _class: statusRecord.map((record) => toClassTokens(record)),
   }

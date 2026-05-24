@@ -1,305 +1,123 @@
-## 外界编排，Button 只显示
+## Button 状态边界待收口
 
-结论：`is loading`、`is idle`、`is pending`、`is disabled` 这类状态，**不应该由 Button 自己编排业务流程**。Button 应该只接收状态，然后把状态翻译成 DOM、样式和可访问性。
+结论先写清楚：`Button` 可以保留自己的 `status manager`，但这个 `status manager` 是被动状态层，不是主动判断层。
 
 ```txt
-外部 feature / action / form
-负责：什么时候 loading、什么时候 idle、什么时候 success/error
-
 Button
-负责：根据 loading/disabled 等状态正确显示、正确阻止交互、正确表达语义
+负责：接收状态、注册状态、输出状态对应的 DOM / class / a11y 表达
+
+外部设施
+负责：判断为什么进入 loading / disabled / 其他业务状态
 ```
 
 ---
 
-## Button 自己可以管什么？
+## 当前共识
 
-Button 可以管的是 **局部交互态**：
-
-```txt
-hover
-active
-focus-visible
-pressed visual feedback
-```
-
-这些是按钮作为控件天然拥有的交互状态。
-
-但这些不是业务状态。
+- `status manager` 可以留在 `Button` 本体里。
+- `status manager` 的职责是状态挂载点、状态汇合点、状态输出点。
+- `status manager` 不负责判断状态是否成立。
+- `validator`、`credibility`、`query database` 属于外部判断设施。
+- 外部判断设施当前可以暂时 colocate 在 `Button` 文件夹里。
+- colocate 只是目录策略，不代表这些设施属于 `Button` 本体。
 
 ---
 
-## Button 不应该管什么？
+## 当前口径的问题
 
-Button 不应该自己决定：
+- 旧 todo 把 `Button` 写成“只显示”，容易让人误读成 `Button` 内部不该有状态层。
+- 旧 todo 没有把“被动状态层”和“主动判断层”拆开。
+- 旧实现里 `validator` 被 `Button` 直接装配，边界上看起来像是 `Button` 的内建能力。
 
-```txt
-请求是否正在提交
-表单是否校验通过
-保存是否完成
-是否进入 success
-是否跳转
-是否关闭 dialog
-是否弹 toast
-```
+---
 
-这些属于外部流程。
-
-否则 Button 会变成：
+## 新口径
 
 ```txt
-Button = 控件 + 请求管理器 + 表单控制器 + 状态机
+Button 可以有 status manager。
+status manager 只负责承载状态，不负责裁决状态。
+validator / credibility / query database 只负责产出状态，不属于 Button 本体。
 ```
 
-职责会炸。
+更细一点：
+
+```txt
+Button 内部交互态：hover / active / focus-visible
+Button 外部业务态：loading / disabled / 以后其他业务状态
+Button status manager：统一接住这些状态，再翻译成表现
+```
 
 ---
 
 ## 推荐心智模型
 
-### Button 接收两类状态
-
-```ts
-type ButtonProps = {
-  loading?: boolean
-  disabled?: boolean
-  pressed?: boolean
-  selected?: boolean
-  children?: JSX.Element
-}
-```
-
-但它只负责显示：
-
-```tsx
-<Button loading={saveTask.pending()}>
-  Save
-</Button>
-```
-
-外部负责状态来源：
-
-```tsx
-const saveTask = createTask(async () => {
-  await save()
-})
-```
-
-Button 不知道 `save()` 是什么，也不应该知道。
-
----
-
-## `loading` 应该怎么表现？
-
-Button 可以做这些事：
-
-```tsx
-<button
-  disabled={props.disabled || props.loading}
-  aria-busy={props.loading || undefined}
-  data-loading={props.loading || undefined}
->
-  {props.loading && <Spinner />}
-  <span>{props.children}</span>
-</button>
-```
-
-重点：
-
 ```txt
-loading 是输入，不是 Button 内部推导出来的业务结论。
-```
-
-Button 可以根据 `loading` 自动：
-
-* 显示 spinner；
-* 禁用点击；
-* 设置 `aria-busy`;
-* 设置 `data-loading`;
-* 调整视觉样式；
-* 保持按钮宽度，避免文字跳动。
-
-但它不应该自己启动 loading。
-
----
-
-## `idle` 是否需要传给 Button？
-
-通常不需要。
-
-因为 `idle` 是默认态。你不用写：
-
-```tsx
-<Button idle>
-  Save
-</Button>
-```
-
-更合理是：
-
-```tsx
-<Button loading={pending}>
-  Save
-</Button>
-```
-
-也就是说：
-
-```txt
-idle = 没有特殊状态
-loading = 显式异常态/过程态
-```
-
-除非你在做完整状态机展示，否则 Button 不需要 `state="idle"`。
-
----
-
-## 推荐状态接口
-
-### 第一版：简单布尔
-
-最实用：
-
-```ts
-type ButtonProps = {
-  loading?: boolean
-  disabled?: boolean
-}
-```
-
-使用：
-
-```tsx
-<Button loading={isSaving()}>
-  Save
-</Button>
-```
-
-这是 80% 场景的最佳方案。
-
----
-
-### 第二版：受控状态枚举
-
-如果你确实有多个明确阶段：
-
-```ts
-type ButtonStatus =
-  | 'idle'
-  | 'loading'
-  | 'success'
-  | 'error'
-
-type ButtonProps = {
-  status?: ButtonStatus
-}
-```
-
-使用：
-
-```tsx
-<Button status={saveStatus()}>
-  Save
-</Button>
-```
-
-但我不建议第一版就这样做。
-
-因为很多按钮并不需要 `success/error`。过早引入枚举，会让 Button 被业务流程污染。
-
----
-
-## 更适合你的设计系统规则
-
-我建议这样定：
-
-```txt
-Button 不拥有业务状态。
-Button 只接收外部状态，并将其映射为 DOM 语义、可访问性和视觉表现。
-```
-
-更细：
-
-```txt
-loading / disabled / pressed / selected 可以作为 Button 的显示输入。
-idle 不需要显式表达，它是默认状态。
-success / error 谨慎进入 Button，优先由外部反馈组件承担，例如 Toast、Message、FieldError。
-```
-
----
-
-## `command` 场景下也是一样
-
-比如：
-
-```html
-<button commandfor="app-actions" command="--save" data-loading="true">
-  Save
-</button>
-```
-
-`--save` 只是发出意图。
-
-真正的 loading 状态应该由外部控制器管理：
-
-```ts
-let saving = false
-
-appActions.addEventListener('command', async event => {
-  if ((event as CommandEvent).command !== '--save') return
-  if (saving) return
-
-  saving = true
-  button.dataset.loading = 'true'
-  button.disabled = true
-
-  try {
-    await save()
-  } finally {
-    saving = false
-    button.dataset.loading = 'false'
-    button.disabled = false
-  }
-})
-```
-
-Button 不编排保存流程，只接收结果。
-
----
-
-## 最终答案
-
-你的 Button 应该是：
-
-```txt
-intent emitter + visual receiver
+Button = action control + passive status receiver
 ```
 
 不是：
 
 ```txt
-workflow owner
+Button = validator + workflow owner + state judge
 ```
 
-最好的边界是：
+也就是说：
 
-```txt
-外部：决定 loading / idle / success / error
-Button：展示 loading / disabled / pressed / selected
-```
-
-所以：
-
-```tsx
-<Button loading={save.pending()} disabled={!form.valid()}>
-  Save
-</Button>
-```
-
-这就是最干净的结构。
-
+- Button 不是流程编排者。
+- Button 不是判断器。
+- Button 是状态表达器。
 
 ---
 
-# Button 不应该有validator
+## 状态来源怎么分
+
+### 交互状态
+
+- `hover`
+- `active`
+- `focus-visible`
+
+这些状态来自控件本身的交互反馈，属于 `Button` 天然可感知的状态。
+
+### 业务状态
+
+- `loading`
+- `disabled`
+- 未来如果有别的业务状态，也应该先由外部设施产出，再注入 `Button`
+
+这些状态不是 `Button` 自己判断出来的结论。
+
+### 默认态
+
+- `idle` 可以作为概念默认态保留。
+- `idle` 表示当前没有特殊业务状态。
+- `idle` 不一定需要作为显式 props 或显式注入状态存在。
+
+---
+
+## 下一步要改什么
+
+- 在 `spec` 里明确 `status manager` 是被动状态层。
+- 在 `spec` 里明确 `validator / credibility / query database` 是外部判断设施。
+- 让 `Button` 的 API 口径支持“外部注入状态”，而不是“内部判断状态”。
+- 已决定收口为单一 `status` 注入入口，不再同时保留 `loading` / `disabled` 便捷 props。
+
+---
+
+## 暂时不做的事
+
+- 暂时不在 todo 里展开具体实现代码。
+- 暂时不决定 `credibility` / `query database` 的最终目录落点。
+- 暂时不把 `success` / `error` 一类流程态并入 `Button` 核心状态集。
+
+---
+
+## 定稿句
+
+```txt
+Button 可以有自己的 status manager。
+但 Button 不应该有自己的 validator。
+status manager 是被动状态层。
+validator / credibility / query database 是外部判断设施。
+```
 

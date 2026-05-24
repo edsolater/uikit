@@ -42,7 +42,7 @@ export const BareDanger: StoryObj<typeof meta> = {
 
 export const Disabled: StoryObj<typeof meta> = {
   args: {
-    disabled: true,
+    status: 'disabled',
     children: 'Disabled button',
   },
 }

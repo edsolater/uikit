@@ -20,7 +20,7 @@ export type ValidationInput = Source<boolean | ValidationRule | undefined>
 
 export type ValidIf = Source<MayArray<ValidationInput> | undefined>
 
-export type ComponentProps = {
+export type ValidatorProps = {
   /**
    * 动作当前不可触发。
    */
@@ -43,7 +43,7 @@ export type ButtonValidity = {
 }
 
 export function createValidator(options: {
-  props: ComponentProps
+  props: ValidatorProps
 }): ButtonValidity {
   const { props } = options
   const allRulesPassed = createState(() => toArray(val(props.validIf)).every((input) => isValidationPassed(input)))

@@ -39,6 +39,11 @@ export type ButtonProfileProps = {
    * auto 表示交给原生 button 按所在环境选择默认行为。
    */
   type?: Source<ButtonType>
+
+  /**
+   * 所承载信息的简介，代表了这个组件所承载的信息的架构在思维导图中的描述
+   */
+  label?: Source<string | undefined>
 }
 
 export function createUIKitProfile(props: ButtonProfileProps) {
@@ -57,6 +62,7 @@ export function createUIKitProfile(props: ButtonProfileProps) {
     ],
     htmlProps: {
       'attr:type': nativeType,
+      'aria-label': props.label,
     },
   }))
 
@@ -66,6 +72,7 @@ export function createUIKitProfile(props: ButtonProfileProps) {
       intent,
       scale,
       nativeType,
+      label: props.label,
     },
     plugin: profilePlugin,
   }

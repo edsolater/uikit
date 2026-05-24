@@ -21,7 +21,7 @@ export function Input(props: InputProps) {
 
   const isInvalid = validity.isValid.map((v) => !v)
 
-  status.controllers.setStatus('invalid', isInvalid)
+  status.setStatus('invalid', isInvalid)
 
   return (
     <Piv

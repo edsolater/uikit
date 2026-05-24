@@ -28,9 +28,14 @@ action  = 动作本身
 tone    = 动作发声力度
 intent  = 动作性质
 scale   = 动作交互尺度
-status  = 当前状态
+status  = 当前状态表达
 content = 动作内容表达
 ```
+
+- `status` 是 `Button` 的状态表达维度，不等于状态判断来源。
+- `Button` 内部可以保留 `status manager`。
+- `status manager` 只负责接收状态、注册状态、输出状态表达。
+- `status manager` 不负责判断状态为什么成立。
 
 ## Button 与 Link 边界
 
@@ -192,20 +197,26 @@ const defaultScale = 'normal'
 - `large` 适合 `empty state`、`onboarding`、`landing section`、主行动区和关键流程入口。
 - `large` 表示动作需要更大命中面积和更高可见性。
 
-## Status 状态 （业务 + 交互）
+## Status 状态
 
-- `status` 表示 `Button` 当前状态。
-- `status` 包括业务状态。
-- `status` 包括交互状态。
+- `status` 表示 `Button` 当前的状态表达。
+- `status` 包括业务状态表达。
+- `status` 包括交互状态表达。
+- `Button` 可以用内部 `status manager` 统一管理这些状态表达。
+- `status manager` 是被动状态层，不负责主动判断。
+- 外部设施可以向 `Button` 注入业务状态。
+- `Button` 再把这些状态翻译成 DOM 语义、可访问性语义和视觉表现。
 
 ### 业务状态
 
-- `idle` 表示动作可正常触发。
+- `idle` 表示概念上的默认态。
 - `loading` 表示动作已触发，正在执行。
 - `disabled` 表示动作当前不可触发。
-- 用于外部输入的 API 可以保留 `disabled?: boolean`。
-- 用于外部输入的 API 可以保留 `loading?: boolean`。
+- 业务状态的判断来源在 `Button` 外部。
+- 用于外部输入的 API 统一收口为 `status` 注入入口。
+- `loading` 和 `disabled` 是外部可注入的业务状态值，不再单独提升成并列便捷 props。
 - `disabled` 和 `loading` 在概念上归入 `status`。
+- `idle` 可以保留在概念模型里，但不要求必须作为显式输入存在。
 
 ```ts
 type ButtonBusinessStatus =
@@ -214,12 +225,17 @@ type ButtonBusinessStatus =
   | 'disabled'
 ```
 
+- `validator`、`credibility`、`query database` 这类设施可以产出业务状态。
+- 这些设施不属于 `Button` 本体。
+- 即使它们暂时与 `Button` colocate，也不改变它们的外部设施身份。
+
 ### 交互状态
 
 - `hover` 由浏览器交互状态驱动。
 - `active` 由浏览器交互状态驱动。
 - `focus-visible` 由浏览器交互状态驱动。
 - 交互状态不需要暴露为 props。
+- 交互状态可以进入 `status manager` 的统一表达，但不需要外部判断设施参与。
 
 ## Content
 
@@ -351,10 +367,11 @@ interface ButtonProps {
   type?: ButtonType
 
   /**
-   * 业务状态。
+   * 外部注入的状态集合。
+   *
+   * 它是状态输入，不是状态判断入口。
    */
-  disabled?: boolean
-  loading?: boolean
+  status?: ButtonBusinessStatus | ButtonBusinessStatus[]
 
   /**
    * 内容摘要。
@@ -384,6 +401,8 @@ const defaultButtonProps = {
 ## 每一个领域问题， 应该有一个可复用（但也可不复用）的 primitive 处理
 - `tone` 领域问题由  `createToneManager` 处理。
 - `intent` 领域问题由 `createIntentManager` 处理。
+- `status` 领域问题由 `createStatusManager` 处理。
+- `createStatusManager` 负责状态承载与状态输出，不负责状态判断。
 等，我就不赘述了
 
 不要怕麻烦，因为用优雅的排比， 并领域清晰， 所以阅读起来心智负担其实不大
@@ -397,6 +416,9 @@ const defaultButtonProps = {
 - 不提供 `target?: string`。
 - 不提供 `icon?: JSX.Element`。
 - 不提供 `trailingIcon?: JSX.Element`。
+- 不提供 `enabled?: boolean` 作为 `Button` 本体的判断式 API。
+- 不提供 `validIf?: ...` 作为 `Button` 本体的判断式 API。
+- 不提供 `validator?: ...` 作为 `Button` 本体内建能力。
 
 | API | 删除原因 |
 | --- | --- |
@@ -407,6 +429,9 @@ const defaultButtonProps = {
 | `target` | 属于 `Link`，不属于 `Button`。 |
 | `icon` | 属于 `content`，不应作为一级特权 props。 |
 | `trailingIcon` | 属于 `content`，不应作为一级特权 props。 |
+| `enabled` | 它是判断语义，不是 `Button` 本体应承担的显示语义。 |
+| `validIf` | 它会把外部判断设施直接并入 `Button` 本体。 |
+| `validator` | `Button` 可以接收状态，但不应内建判断器。 |
 
 ## 最终结构
 
@@ -427,12 +452,14 @@ Button
 │  ├─ normal
 │  └─ large
 ├─ status
-│  ├─ idle
-│  ├─ loading
-│  ├─ disabled
-│  ├─ hover
-│  ├─ active
-│  └─ focus-visible
+│  ├─ business input
+│  │  ├─ idle
+│  │  ├─ loading
+│  │  └─ disabled
+│  └─ interaction feedback
+│     ├─ hover
+│     ├─ active
+│     └─ focus-visible
 └─ content
    ├─ children
    └─ label
@@ -444,10 +471,12 @@ Button
 - `tone` 决定它用多大声说话。
 - `intent` 决定它说的事情是什么性质。
 - `scale` 决定它在当前空间里占多大交互尺度。
-- `status` 决定它现在能不能被操作。
+- `status` 表达它现在处于什么状态，以及能不能被操作。
+- `status manager` 负责承载状态，不负责判断状态。
 - `content` 决定它向用户表达什么。
 - 默认 `Button` 是 `normal tone + neutral intent + normal scale + auto type`。
 - 默认 `Button` 是正常声量、普通性质、默认尺度、自动类型。
 - 默认 `Button` 不是强噪声入口。
 - 默认 `Button` 是舒适、清晰、可增强、可减弱的动作承载器。
+- `validator`、`credibility`、`query database` 属于外部判断设施，不属于 `Button` 本体。
 - DOM 里不要自动添加默认值，就如CSS， 默认值可以手动指定，但是有client端默认值。
