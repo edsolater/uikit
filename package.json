@@ -32,6 +32,7 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "test": "vitest run",
     "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -45,7 +46,8 @@
     "storybook-solidjs-vite": "^10.0.12",
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
+    "vite-plugin-lib-inject-css": "^2.2.2",
     "vite-plugin-solid": "^2.11.8",
-    "vite-plugin-lib-inject-css": "^2.2.2"
+    "vitest": "^4.0.15"
   }
 }
