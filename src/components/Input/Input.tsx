@@ -3,7 +3,7 @@
  * 它负责 input 本体、默认 type、variant class 和 invalid 状态入口。
  * 它不负责 label、hint、error 文案编排，也不负责表单提交协议。
  */
-import { createStatusManager, type StatusProps } from '../../component-utils/status'
+import { createStatusRecordManager, type StatusProps } from '../../component-utils/status'
 import { createVariantManager, type VariantProps } from '../../component-utils/variant'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './input.css'
@@ -15,8 +15,8 @@ export interface InputProps extends VariantProps<'outline' | 'ghost'> {}
 export interface InputProps extends StatusProps<never> {}
 
 export function Input(props: InputProps) {
-  const status = createStatusManager<'invalid'>()
-  const variant = createVariantManager(props, { defaultVariant: 'outline' })
+  const [status, statusPlugin] = createStatusRecordManager<'invalid'>()
+  const [variant, variantPlugin] = createVariantManager(props, { defaultVariant: 'outline' })
   const validity = createValiditor(props)
 
   const isInvalid = validity.isValid.map((v) => !v)
@@ -28,7 +28,7 @@ export function Input(props: InputProps) {
       as="input"
       shadowProps={props}
       class="Input"
-      plugins={[variant.plugin, status.plugin]}
+      plugins={[variantPlugin, statusPlugin]}
       htmlProps={{ type: 'text' }}
     />
   )

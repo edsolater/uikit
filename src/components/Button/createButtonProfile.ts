@@ -69,8 +69,5 @@ export function createUIKitProfile(props: ButtonProfileProps) {
     },
   }))
 
-  return {
-    details,
-    plugin,
-  } satisfies PluginManager
+  return [details, plugin] satisfies PluginManager
 }

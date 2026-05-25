@@ -1,10 +1,10 @@
-import { createPivPlugin } from '../components'
+import { createPivPlugin, type PivPlugin } from '../components'
 import type { ClassNameList } from '../components/BasicPiv/className'
 import { createState, toReadableState, type Source, val } from '../hooks'
 import type { PluginManager } from './type'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
-export type StatusInput<S extends string> = Source<S | S[] | Record<S, Source<boolean>>>
+export type StatusInput<S extends string> = Source<S | S[] | Record<S, Source<boolean>> | undefined>
 
 /**
  * Status 是一个轻量级的状态管理工具，适用于组件内部或组件之间需要共享状态的场景。
@@ -44,7 +44,7 @@ export type StatusRecord<S extends string> = Record<S, Source<boolean>>
 export type StatusRecordManager<S extends string> = {
   setStatus(status: S, value: Source<boolean>): void
   hasStatus(status: S): Source<boolean>
-  /** 业务层无需关心，{@link createStatusManager} 会自动使用的 */
+  /** 业务层无需关心，{@link createStatusRecordManager} 会自动使用的 */
   _class: ClassNameList
 }
 
@@ -65,7 +65,7 @@ function toClassTokens<S extends string>(from: StatusRecord<S>): S[] {
 
 /**
  * 各种模式的碎片输入-> 状态对象 StatusRecord。
- * 
+ *
  * @example
  * toStatusRecord('active disabled') // { active: true, disabled: true }
  * toStatusRecord(['active', 'disabled']) // { active: true, disabled: true }
@@ -100,7 +100,7 @@ function toStatusRecord<S extends string>(
 /**
  * Status管理器只有在重型组件或者需要状态管理的组件上才会使用。
  */
-function createStatusRecordManager<S extends string>(initialStatus?: StatusInput<S>): StatusRecordManager<S> {
+export function createStatusRecordManager<S extends string>(initialStatus?: StatusInput<S>) {
   const injectedStatusRecord = val(toReadableState(initialStatus, toStatusRecord))
   const localStatusRecord = createState<StatusRecord<S>>({} as StatusRecord<S>)
   const statusRecord = localStatusRecord.map((localRecord) => ({
@@ -118,16 +118,9 @@ function createStatusRecordManager<S extends string>(initialStatus?: StatusInput
     _class: statusRecord.map((record) => toClassTokens(record)),
   }
 
-  return statusRecordManager
-}
-
-export function createStatusManager<T extends string>(initialStatus?: StatusInput<T>) {
-  const statusManager = createStatusRecordManager<T>(initialStatus)
-  const statusPlugin = createPivPlugin(() => ({
-    class: statusManager._class,
+  const plugin = createPivPlugin(() => ({
+    class: statusRecordManager._class,
   }))
-  return {
-    plugin: statusPlugin,
-    ...statusManager,
-  } satisfies PluginManager & StatusRecordManager<T>
+
+  return [statusRecordManager, plugin] satisfies PluginManager
 }

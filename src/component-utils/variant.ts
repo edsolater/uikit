@@ -28,5 +28,5 @@ export function createVariantManager<V extends Variant>(
   const variantPlugin = createPivPlugin(() => ({
     class: variant,
   }))
-  return { details: { variant }, plugin: variantPlugin } satisfies PluginManager
+  return [ { variant }, variantPlugin ] satisfies PluginManager
 }
