@@ -4,10 +4,9 @@
  * 它不负责 Button DOM、样式、点击行为或失败后的 props 改写。
  */
 import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
+import { createState, val, type Source, type State } from '../../hooks'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 import type { PivPlugin } from '../BasicPiv/plugin/runPlugin'
-import { createState, val, type Source, type State } from '../../hooks'
-import type { StatusRecordManager } from '../../component-utils/status'
 
 export type ValidationRule = {
   /**
