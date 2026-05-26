@@ -1,5 +1,5 @@
 import type { PivTag } from '../domMap'
-import type { PivPlugin } from './runPlugin'
+import type { PivPlugin, PivPluginFunction } from './runPlugin'
 import type { AnyRecord } from '@edsolater/fnkit'
 
 /**
@@ -8,7 +8,7 @@ import type { AnyRecord } from '@edsolater/fnkit'
  * (虽然是任意还是都可以，但是通过此函数创建的话，它就有创建时的类型了)
  * 这个函数本身不包运行逻辑，只用于让插件作者在定义处获得稳定的类型边界。
  */
-export function createPivPlugin<Tag extends PivTag>(fn: PivPlugin<Tag>): PivPlugin<Tag> {
+export function createPivPlugin<Tag extends PivTag>(fn: PivPluginFunction<Tag>): PivPluginFunction<Tag> {
   return fn
 }
 

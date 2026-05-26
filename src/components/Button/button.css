@@ -50,14 +50,18 @@
       opacity: 0.56;
     }
 
-    &.tone\:subtle {
+    &.tone\:plain {
+      --Button-bg: transparent;
+      --Button-border: transparent;
+    }
+
+    &.tone\:soft {
       --Button-bg: color-mix(in oklab, var(--Button-accent) 7%, transparent);
       --Button-border: color-mix(in oklab, var(--Button-accent) 18%, transparent);
     }
 
     &.tone\:normal {
-      --Button-bg: color-mix(in oklab, var(--Button-accent) 12%, transparent);
-      --Button-border: color-mix(in oklab, var(--Button-accent) 22%, transparent);
+      /* 默认 */
     }
 
     &.tone\:solid {
@@ -68,6 +72,10 @@
 
     &.intent\:accent {
       --Button-accent: var(--dye-accent);
+    }
+
+    &.intent\:neutral {
+      /* 默认 */
     }
 
     &.intent\:danger {
@@ -82,7 +90,11 @@
       font-size: 0.875rem;
     }
 
-    &.scale\:large {
+    &.scale\:normal {
+      /* 默认 */
+    }
+
+    &.scale\:loose {
       --Button-min-height: 2.75rem;
       --Button-padding-x: 1.125rem;
       --Button-gap: 0.625rem;

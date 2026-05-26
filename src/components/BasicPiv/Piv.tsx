@@ -28,7 +28,6 @@ import { consumeEventListeners } from './on/registerEventListeners'
 import { consumeStyle, type StyleValue } from './handleStyle'
 import { parseNormalRefs, type PivRef } from './ref'
 
-
 export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * 代表这个Piv的身份模板， 默认为div
@@ -76,7 +75,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * 事件，dom:onXXX
    */
-  on?: EventListeners
+  on?: EventListeners 
 
   /**
    * click 事件的快捷入口；会在内部平移成 on 里的 click 声明，再和 on 合并。

@@ -15,9 +15,9 @@ export function ButtonDemo() {
       <div class="button-row">
         <Button intent="accent" tone="solid">保存</Button>
         <Button tone="normal">导出</Button>
-        <Button tone="subtle">取消</Button>
-        <Button tone="bare">跳过</Button>
-        <Button intent="danger" tone="bare">移除</Button>
+        <Button tone="soft">取消</Button>
+        <Button tone="plain">跳过</Button>
+        <Button tone="solid" intent="danger" >移除</Button>
         <Button status="loading">保存中</Button>
         <Button status="disabled">不可用</Button>
       </div>

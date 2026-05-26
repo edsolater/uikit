@@ -16,7 +16,13 @@ import { insert } from 'solid-js/web'
  * 参数是当前 plugin 的运行上下文，包含当前 Piv DOM 和结构插线能力。
  * 返回值只用于补充 shadow props，不用于描述结构插入。
  */
-export type PivPlugin<Tag extends PivTag = PivTag> = (context: PivPluginContext<Tag>) => undefined | ShadowProps<Tag>
+export type PivPluginFunction<Tag extends PivTag = PivTag> = (
+  payload: PivPluginPayload<Tag>,
+) => undefined | ShadowProps<Tag>
+
+export type PivPlugin<Tag extends PivTag = PivTag> =
+  | PivPluginFunction<Tag>
+  | { plugin: PivPluginFunction<Tag> }
 
 /**
  * 运行单个 plugin。
@@ -26,7 +32,11 @@ export function runPlugin<Tag extends PivTag>(
   plugin: PivPlugin<Tag>,
   element: PivHTMLElement<Tag>,
 ): ShadowProps<Tag> | undefined {
-  return plugin(createPivPluginContext(element))
+  if (typeof plugin === 'function') {
+    return plugin(createPivPluginContext(element))
+  } else {
+    return plugin.plugin(createPivPluginContext(element))
+  }
 }
 
 /**
@@ -36,7 +46,7 @@ export function runPlugin<Tag extends PivTag>(
  * 工具内部负责把 JSX 挂到 Piv DOM 周围的端点，并在 Piv 清理时移除对应挂载范围。
  * 这些工具属于结构增强能力：可以挂载辅助结构，但不应用来重定义组件主体是什么。
  */
-export interface PivPluginContext<Tag extends PivTag> {
+export interface PivPluginPayload<Tag extends PivTag> {
   /**
    * 当前 Piv DOM。
    * 插件需要读取 DOM 信息或组合更底层端点 API 时使用它。
@@ -73,7 +83,7 @@ export interface PivPluginContext<Tag extends PivTag> {
  * 创建当前 plugin 的运行上下文。
  * 上下文绑定到一个具体 Piv DOM，因此所有结构插线都围绕这个 DOM 的当前位置执行。
  */
-function createPivPluginContext<Tag extends PivTag>(element: PivHTMLElement<Tag>): PivPluginContext<Tag> {
+function createPivPluginContext<Tag extends PivTag>(element: PivHTMLElement<Tag>): PivPluginPayload<Tag> {
   // 多次 after() 应按调用顺序继续向后追加，而不是每次都插到 Piv 紧后方倒序堆叠。
   let afterTail: Node = element
   let isMounted = false
