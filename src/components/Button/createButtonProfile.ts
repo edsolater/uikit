@@ -7,12 +7,11 @@ import { createStatusRecord, type StatusInput } from '../../component-utils/stat
 import { mapSource, val, type Source } from '../../hooks'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 
-interface ProfileProps {
+export interface ProfileProps {
   tone?: Source<any>
   intent?: Source<any>
   scale?: Source<any>
-  domType?: Source<any>
-  label?: Source<any>
+  name?: Source<any>
   status?: StatusInput<any>
 }
 
@@ -24,8 +23,7 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
     tone: props.tone as P['tone'],
     intent: props.intent as P['intent'],
     scale: props.scale as P['scale'],
-    domType: props.domType as P['domType'],
-    label: props.label as P['label'],
+    name: props.name as P['name'],
     status: statusRecord,
   } as const
 
@@ -37,8 +35,7 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
       statusRecord.map((record) => toClassTokens(record)),
     ],
     htmlProps: {
-      'attr:type': props.domType,
-      'aria-label': props.label,
+      'aria-label': props.name,
       disabled: statusRecord.map((record) => record['disabled']),
       'aria-busy': statusRecord.map((record) => record['loading']),
     },
