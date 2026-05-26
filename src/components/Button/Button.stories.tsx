@@ -27,14 +27,14 @@ export const Solid: StoryObj<typeof meta> = {
 
 export const Subtle: StoryObj<typeof meta> = {
   args: {
-    tone: 'subtle',
+    tone: 'soft',
     children: 'Cancel',
   },
 }
 
 export const BareDanger: StoryObj<typeof meta> = {
   args: {
-    tone: 'bare',
+    tone: 'plain',
     intent: 'danger',
     children: 'Remove',
   },

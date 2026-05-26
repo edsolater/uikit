@@ -10,7 +10,7 @@ import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 export interface ProfileProps {
   tone?: Source<any>
   intent?: Source<any>
-  scale?: Source<any>
+  spacing?: Source<any>
   name?: Source<any>
   status?: StatusInput<any>
 }
@@ -22,7 +22,7 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
   const details = {
     tone: props.tone as P['tone'],
     intent: props.intent as P['intent'],
-    scale: props.scale as P['scale'],
+    spacing: props.spacing as P['spacing'],
     name: props.name as P['name'],
     status: statusRecord,
   } as const
@@ -31,7 +31,7 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
     class: [
       mapSource(props.tone, (tone) => `tone:${tone}`),
       mapSource(props.intent, (intent) => `intent:${intent}`),
-      mapSource(props.scale, (scale) => `scale:${scale}`),
+      mapSource(props.spacing, (spacing) => `scale:${spacing}`),
       statusRecord.map((record) => toClassTokens(record)),
     ],
     htmlProps: {
