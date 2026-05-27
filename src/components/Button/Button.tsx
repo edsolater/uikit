@@ -31,20 +31,20 @@ interface ButtonProfileProps extends ProfileProps {
 
   /**
    * 动作性质。（会改变CSS 颜色）
-   *
-   * 默认是 neutral。
    */
-  intent?: Source<'neutral' | 'accent' | 'danger' | undefined>
+  intent?: Source<'accent' | 'danger' | undefined>
 
   /**
    * 交互尺度。（按钮给人的可交互区域的感觉）
-   *
-   * 默认是 normal。
+   * - compact：紧凑，适用于工具栏或空间受限的场景。
+   * - loose：宽松，适用于需要强调的场景或触控设备。
+   * - undefined：默认尺度，适用于大多数场景。
    */
-  spacing?: Source<'compact' | 'normal' | 'loose' | undefined>
+  spacing?: Source<'compact' | 'loose' | undefined>
 
   /**
    * 自身的表述， 类似于 JS 对象字面量里的key
+   * TODO：这个属性的正好可以用于做界面的数据化时 的 key。
    */
   name?: Source<string | undefined>
 
