@@ -1,0 +1,31 @@
+import { createStatusRecord } from '../component-utils/status'
+import { createPivPlugin } from '../components/BasicPiv'
+import { interactivable } from './interactivable'
+
+/**
+ * [Plugin]
+ * 可 click，并提供 focus 与 tab 键盘导航的能力
+ *
+ * 基于 {@link interactivable}
+ */
+
+export function clickable(options?: { componentName?: string }) {
+  // 用于管理Button的组件的内部交互状态
+  const [interactionStatus, interactionStatusActions] = createStatusRecord<'focus'>()
+  const interactionStatusFocus = interactivable(options)
+  const plugin = createPivPlugin(() => ({
+    class: clickable.name,
+    plugins: [interactionStatusFocus.plugin],
+    on: {
+      focusin: () => interactionStatusActions.setStatus('focus', true),
+      focusout: () => interactionStatusActions.setStatus('focus', false),
+      keyup: ({ event, element }) => {
+        if (options?.componentName === 'Button') return undefined // 原生用内置button的本来就有点支持了，我们就没有必要多此一举了
+        if (event.key === 'Enter' || event.key === ' ') {
+          element.click() // 让键盘事件也能触发点击行为，提升键盘操作的体验
+        }
+      },
+    },
+  }))
+  return { details: interactionStatus, plugin }
+}

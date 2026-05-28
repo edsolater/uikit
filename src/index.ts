@@ -11,5 +11,7 @@ import './css/all-base.css'
 export * from './components'
 export * from './hooks'
 export * from './component-traits'
+export * from './component-plugins'
+export * from './component-utils'
 
 

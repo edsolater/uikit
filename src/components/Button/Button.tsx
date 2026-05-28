@@ -3,9 +3,9 @@
  * 它负责按钮动作语义、声量 class、交互尺度、状态表达和基础样式入口，不负责主题系统、表单编排、状态判断、状态来源组装或路由行为。
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
-import { createStatusRecord, type StatusInput } from '../../component-utils/status'
+import { interactivable, clickable } from '../../component-plugins'
+import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
-import { createPivPlugin } from '../BasicPiv'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
 import { createUIKitProfile, type ProfileProps } from './createButtonProfile'
@@ -67,50 +67,10 @@ export function Button(props: ButtonProps) {
       as="button"
       shadowProps={props}
       class="Button"
-      plugins={[uikitProfilePlugin, clickablePlugin({ componentName: 'Button' }), focusablePlugin()]}
+      plugins={[uikitProfilePlugin, clickable({ componentName: 'Button' }), interactivable()]}
       htmlProps={{ type: 'button' }}
     >
       {props.children}
     </Piv>
   )
-}
-
-/** 基于 {@link focusablePlugin} */
-export function clickablePlugin(options?: { componentName?: string }) {
-  // 用于管理Button的组件的内部交互状态
-  const [interactionStatus, interactionStatusActions] = createStatusRecord<'hover' | 'active'>()
-  const interactionStatusFocus = focusablePlugin(options)
-  const plugin = createPivPlugin(() => ({
-    class: 'clickable',
-    plugins: [interactionStatusFocus.plugin],
-    on: {
-      pointerover: () => interactionStatusActions.setStatus('hover', true),
-      pointerdown: () => interactionStatusActions.setStatus('active', true),
-      pointerleave: () => interactionStatusActions.setStatus('hover', false),
-      pointerup: () => interactionStatusActions.setStatus('active', false),
-      keyup: ({ event, element }) => {
-        if (options?.componentName === 'Button') return undefined // 原生用内置button的本来就有点支持了，我们就没有必要多此一举了
-        if (event.key === 'Enter' || event.key === ' ') {
-          element.click() // 让键盘事件也能触发点击行为，提升键盘操作的体验
-        }
-      },
-    },
-  }))
-  return { details: interactionStatus, plugin }
-}
-
-export function focusablePlugin(options?: { componentName?: string }) {
-  // 用于管理Button的组件的内部交互状态
-  const [interactionStatus, interactionStatusActions] = createStatusRecord<'focus'>()
-  const plugin = createPivPlugin(() => ({
-    class: 'focusable',
-    htmlProps: {
-      tabIndex: 0,
-    },
-    on: {
-      focusin: () => interactionStatusActions.setStatus('focus', true),
-      focusout: () => interactionStatusActions.setStatus('focus', false),
-    },
-  }))
-  return { details: interactionStatus, plugin }
 }
