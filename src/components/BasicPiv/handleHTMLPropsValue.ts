@@ -4,43 +4,54 @@
  * class、style 和事件不进入这个通道。
  */
 
+import { isArray } from '@edsolater/fnkit'
+
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
-export type HTMLPropAtom = string | number | boolean | null | undefined | object
+export type HTMLPropvalue = string | number | boolean | null | undefined | object
+export type HTMLPropAtom = HTMLPropvalue | HTMLPropvalue[]
 
 /**
  * 按 key 语义写入 DOM。
  * data-* 和 aria-* 固定走 attribute；其他普通 key 才允许 property 探测。
  */
-export function setSingleDomProp(element: HTMLElement, key: string, value: HTMLPropAtom) {
-
-  if (key === 'style') {
-    setStyleValue(element, value)
-    return
-  }
-
+export function setSingleDomProp(element: HTMLElement, key: string, atom: HTMLPropAtom) {
   if (key.startsWith('attr:')) {
     const attributeName = key.slice(5)
+    const value = isArray(atom) ? atom.at(-1)! : atom
     setAttributeValue(element, attributeName, value)
     return
   }
 
   if (key.startsWith('prop:')) {
     const propertyName = key.slice(5)
+    const value = isArray(atom) ? atom.at(-1)! : atom
     setPropertyValue(element, propertyName, value)
     return
   }
 
-  if (isAttributeOnlyKey(key)) {
+  if (isAttributeOnlyKey(key)) { // data- 和 aria- 固定走 attribute，且是可以合并的字符串
+    const value = isArray(atom) ? atom.join(' ') : atom
     setAttributeValue(element, key, value)
     return
   }
 
   if (key in element) {
+    const value = isArray(atom) ? atom.at(-1)! : atom
     setPropertyValue(element, key, value)
     return
   }
 
+  const value = isArray(atom) ? atom.at(-1)! : atom
   setAttributeValue(element, key, value)
+}
+
+function  fromAtomToValue(atom: HTMLPropAtom, options:{
+  justLastOne?: boolean // 直接取最后一个，适用于不支持数组合并的属性
+}): HTMLPropvalue {
+  
+  if (options.justLastOne) {
+    return isArray(atom) ? atom.at(-1)! : atom
+  }
 }
 
 /**

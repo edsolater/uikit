@@ -6,7 +6,7 @@ import { interactivable } from './interactivable'
  * [Plugin]
  * 可 click，并提供 focus 与 tab 键盘导航的能力
  *
- * 基于 {@link interactivable}
+ * 自动 {@link interactivable}
  */
 
 export function clickable(options?: { componentName?: string }) {
@@ -14,7 +14,6 @@ export function clickable(options?: { componentName?: string }) {
   const [interactionStatus, interactionStatusActions] = createStatusRecord<'focus'>()
   const interactionStatusFocus = interactivable(options)
   const plugin = createPivPlugin(() => ({
-    class: clickable.name,
     plugins: [interactionStatusFocus.plugin],
     on: {
       focusin: () => interactionStatusActions.setStatus('focus', true),
@@ -26,6 +25,9 @@ export function clickable(options?: { componentName?: string }) {
         }
       },
     },
+    htmlProps:{
+      'data-plugin': clickable.name,
+    }
   }))
   return { details: interactionStatus, plugin }
 }

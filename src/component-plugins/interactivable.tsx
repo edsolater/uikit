@@ -12,9 +12,9 @@ export function interactivable(options?: { componentName?: string }) {
   // 用于管理Button的组件的内部交互状态
   const [interactionStatus, interactionStatusActions] = createStatusRecord<'hover' | 'active'>()
   const plugin = createPivPlugin(() => ({
-    class: interactivable.name,
     htmlProps: {
       tabIndex: 0,
+      'data-plugin': interactivable.name,
     },
     on: {
       pointerover: () => interactionStatusActions.setStatus('hover', true),

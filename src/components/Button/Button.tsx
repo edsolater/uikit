@@ -67,7 +67,7 @@ export function Button(props: ButtonProps) {
       as="button"
       shadowProps={props}
       class="Button"
-      plugins={[uikitProfilePlugin, clickable({ componentName: 'Button' }), interactivable()]}
+      plugins={[uikitProfilePlugin, clickable({ componentName: 'Button' })]}
       htmlProps={{ type: 'button' }}
     >
       {props.children}

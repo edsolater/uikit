@@ -29,9 +29,9 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
 
   const plugin = createPivPlugin(() => ({
     class: [
-      mapSource(props.tone, (tone) => `tone:${tone}`),
-      mapSource(props.intent, (intent) => `intent:${intent}`),
-      mapSource(props.spacing, (spacing) => `scale:${spacing}`),
+      mapSource(props.tone, (tone) => tone && `tone:${tone}`),
+      mapSource(props.intent, (intent) => intent && `intent:${intent}`),
+      mapSource(props.spacing, (spacing) => spacing && `scale:${spacing}`),
       statusRecord.map((record) => toClassTokens(record)),
     ],
     htmlProps: {
