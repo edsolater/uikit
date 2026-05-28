@@ -4,11 +4,13 @@
  * class、style 和事件不进入这个通道。
  */
 
-import { isArray } from '@edsolater/fnkit'
+import { isArray, isString, type MayArray } from '@edsolater/fnkit'
+import { createComputed, createSignal } from 'solid-js'
+import { val, type Source } from '../../hooks'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
-export type HTMLPropvalue = string | number | boolean | null | undefined | object
-export type HTMLPropAtom = HTMLPropvalue | HTMLPropvalue[]
+export type HTMLPropValue = string | number | boolean | null | undefined | object
+export type HTMLPropAtom = Source<MayArray<Source<HTMLPropValue>>>
 
 /**
  * 按 key 语义写入 DOM。
@@ -17,41 +19,79 @@ export type HTMLPropAtom = HTMLPropvalue | HTMLPropvalue[]
 export function setSingleDomProp(element: HTMLElement, key: string, atom: HTMLPropAtom) {
   if (key.startsWith('attr:')) {
     const attributeName = key.slice(5)
-    const value = isArray(atom) ? atom.at(-1)! : atom
-    setAttributeValue(element, attributeName, value)
+    handleHTMLSetAction(atom, {
+      runEffect: (v) => {
+        setAttributeValue(element, attributeName, v)
+      },
+    })
     return
   }
 
   if (key.startsWith('prop:')) {
     const propertyName = key.slice(5)
-    const value = isArray(atom) ? atom.at(-1)! : atom
-    setPropertyValue(element, propertyName, value)
+    handleHTMLSetAction(atom, {
+      runEffect: (v) => {
+        setPropertyValue(element, propertyName, v)
+      },
+    })
     return
   }
 
-  if (isAttributeOnlyKey(key)) { // data- 和 aria- 固定走 attribute，且是可以合并的字符串
-    const value = isArray(atom) ? atom.join(' ') : atom
-    setAttributeValue(element, key, value)
+  if (isAttributeOnlyKey(key)) {
+    // data- 和 aria- 固定走 attribute，且是可以合并的字符串
+    handleHTMLSetAction(atom, {
+      runEffect: (v) => {
+        setAttributeValue(element, key, v)
+      },
+    })
     return
   }
 
   if (key in element) {
-    const value = isArray(atom) ? atom.at(-1)! : atom
-    setPropertyValue(element, key, value)
+    handleHTMLSetAction(atom, {
+      runEffect: (v) => {
+        setPropertyValue(element, key, v)
+      },
+    })
     return
   }
 
-  const value = isArray(atom) ? atom.at(-1)! : atom
-  setAttributeValue(element, key, value)
+  handleHTMLSetAction(atom, {
+    runEffect: (v) => {
+      setAttributeValue(element, key, v)
+    },
+  })
 }
 
-function  fromAtomToValue(atom: HTMLPropAtom, options:{
-  justLastOne?: boolean // 直接取最后一个，适用于不支持数组合并的属性
-}): HTMLPropvalue {
-  
-  if (options.justLastOne) {
-    return isArray(atom) ? atom.at(-1)! : atom
-  }
+function handleHTMLSetAction(
+  atom: HTMLPropAtom,
+  options: {
+    runEffect: (val: HTMLPropValue) => void // 解析出 value 后的操作
+  },
+): void {
+  createComputed(() => {
+    const values = val(atom)
+    if (!isArray(values)) {
+      options.runEffect(val(values))
+    } else {
+      const [mergedValue, setMergedValue] = createSignal<HTMLPropValue>()
+      for (const htmlValue of values) {
+        createComputed(() => {
+          const v = val(htmlValue)
+          setMergedValue(s=>{
+            if (isString(v) && isString(s)) {
+              return s ? `${s} ${v}` : v
+            }
+            return v
+          })
+        })
+      }
+
+      createComputed(() => {
+        options.runEffect(mergedValue())
+      })
+    }
+  })
 }
 
 /**

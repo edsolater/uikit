@@ -24,8 +24,12 @@ export interface ReactiveRunner<T = void> {
 }
 
 /**
- * 创建一个可释放的响应式 runner。
- *
+ * 创建一个可手动释放的响应式 runner。
+ * 只有：
+ * - 脱离当前 owner 也能独立活着
+ * - 或 显式拿到 dispose / getResult
+ * 那它才有存在价值
+ * ---
  * - 创建时同步运行一次
  * - action 中同步读取到的响应式值会成为依赖
  * - 依赖变化后重新运行 action

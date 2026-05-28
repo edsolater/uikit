@@ -34,16 +34,12 @@ export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArray<HTMLPropsRecord
 export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag>, htmlPropsList: HTMLPropsList<Tag>) {
   const htmlPropRecord = merglyParseHTMLPropsLists(htmlPropsList)
   if (!htmlPropRecord) return
-  for (const [key, value] of Object.entries(htmlPropRecord)) {
+  for (const [key, atom] of Object.entries(htmlPropRecord)) {
     if (isEventPropKey(key)) {
       continue
     }
 
-    createRenderEffect(() => {
-      const atom = val(value) as HTMLPropAtom
-      if (atom === undefined) return
-      setSingleDomProp(element, key, atom)
-    })
+    setSingleDomProp(element, key, atom)
   }
 }
 

@@ -1,4 +1,4 @@
-import { createReactionFn } from './createReactiveRunner'
+import { createComputed } from 'solid-js'
 import { val, type Source } from './read'
 import { createState, type ReadableState } from './state'
 
@@ -20,7 +20,7 @@ export function derive<T, U, W, X, Y, Z, R>(
 export function derive<T, R>(sources: Source<T>[], combiner: (...args: T[]) => R): ReadableState<R>
 export function derive<R>(sources: Source<any>[], combiner: (...args: any[]) => R): any {
   const newState = createState()
-  createReactionFn(() => {
+  createComputed(() => {
     const vals = sources.map((source) => val(source))
     newState.set(combiner(...vals))
   })

@@ -117,8 +117,8 @@ function readSource<T>(source: Source<T> | undefined): T | undefined {
  *
  *
  * 因为 {@link toReadableState} 更不可主动改变，所以它比 {@link createState} 更轻量
- * 
- * 
+ *
+ *
  * - {@link toReadableState} 是一个明确的转换操作，所以它第二个参数是一个可选的mapper;
  * - {@link createState} 是名词做动词的操作，第二个也是mapper， 但语义是创建一个新的状态，保持和输入同步；如果输入是个函数，则它是一个惰性初始值函数。
  *
