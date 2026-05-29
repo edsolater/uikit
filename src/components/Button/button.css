@@ -50,58 +50,58 @@
       opacity: 0.56;
     }
 
-    &.tone\:plain {
+    &[data-tone='plain'] {
       --Button-bg: transparent;
       --Button-border: transparent;
     }
 
-    &.tone\:soft {
+    &[data-tone='soft'] {
       --Button-bg: color-mix(in oklab, var(--Button-accent) 7%, transparent);
       --Button-border: color-mix(in oklab, var(--Button-accent) 18%, transparent);
     }
 
-    &.tone\:normal {
+    &[data-tone='normal'] {
       /* 默认 */
     }
 
-    &.tone\:solid {
+    &[data-tone='solid'] {
       --Button-bg: var(--Button-accent);
       --Button-fg: --foreground-on(var(--Button-bg));
       --Button-border: var(--Button-bg);
     }
 
-    &.intent\:accent {
+    &[data-intent='accent'] {
       --Button-accent: var(--dye-accent);
     }
 
-    &.intent\:neutral {
+    &[data-intent='neutral'] {
       /* 默认 */
     }
 
-    &.intent\:danger {
+    &[data-intent='danger'] {
       --Button-accent: var(--Button-danger);
       --Button-focus: var(--Button-danger);
     }
 
-    &.scale\:compact {
+    &[data-spacing='compact'] {
       --Button-min-height: 1.875rem;
       --Button-padding-x: 0.625rem;
       --Button-gap: 0.375rem;
       font-size: 0.875rem;
     }
 
-    &.scale\:normal {
+    &[data-spacing='normal'] {
       /* 默认 */
     }
 
-    &.scale\:loose {
+    &[data-spacing='loose'] {
       --Button-min-height: 2.75rem;
       --Button-padding-x: 1.125rem;
       --Button-gap: 0.625rem;
       font-size: 1rem;
     }
 
-    &.loading {
+    &[data-status~='loading'] {
       cursor: progress;
     }
   }

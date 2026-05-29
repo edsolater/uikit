@@ -1,10 +1,10 @@
 /**
  * 这个文件定义 Button 固有画像能力。
  * 它负责管理 tone、intent、scale、type 这些不随运行状态改变的 Button 身份信息。
- * 当前实现会产出 class 和原生 type，但这些只是 profile 的底层消费方式。
+ * 当前实现会产出 data-* attribute 和原生状态 attribute，但这些只是 profile 的底层消费方式。
  */
 import { createStatusRecord, type StatusInput } from '../../component-utils/status'
-import { mapSource, val, type Source } from '../../hooks'
+import { val, type Source } from '../../hooks'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 
 export interface ProfileProps {
@@ -28,16 +28,15 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
   } as const
 
   const plugin = createPivPlugin(() => ({
-    class: [
-      mapSource(props.tone, (tone) => tone && `tone:${tone}`),
-      mapSource(props.intent, (intent) => intent && `intent:${intent}`),
-      mapSource(props.spacing, (spacing) => spacing && `scale:${spacing}`),
-      statusRecord.map((record) => toClassTokens(record)),
-    ],
     htmlProps: {
-      'aria-label': props.name,
       disabled: statusRecord.map((record) => record['disabled']),
       'aria-busy': statusRecord.map((record) => record['loading']),
+
+      'aria-label': props.name,
+      'data-tone': props.tone,
+      'data-intent': props.intent,
+      'data-spacing': props.spacing,
+      'data-status': statusRecord.map((record) => toStatusAttributeValue(record)),
     },
   }))
 
@@ -45,16 +44,17 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
 }
 
 /**
- * css class 生成工具，把状态对象转换成 class 列表。
+ * 把状态对象转换成 data-status 需要的 token 字符串。
  * @param from {disable:ture, hidden:false}
- * @returns ['disable']
+ * @returns 'disable loading'
  */
-function toClassTokens<S extends string>(from: Record<S, Source<boolean>>): S[] {
-  const classTokens: S[] = []
+function toStatusAttributeValue<S extends string>(from: Record<S, Source<boolean>>): string | undefined {
+  const statusTokens: S[] = []
   for (const key in from) {
     if (val(from[key])) {
-      classTokens.push(key)
+      statusTokens.push(key)
     }
   }
-  return classTokens
+
+  return statusTokens.length > 0 ? statusTokens.join(' ') : undefined
 }
