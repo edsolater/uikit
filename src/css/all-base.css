@@ -4,9 +4,9 @@
  * 它只负责声明各个领域的 layer 顺序并汇总入口，不承载新的样式定义。
  */
 
-@layer reset, style-tokens, controls, traits, uikit;
+@layer reset, theme, controls, traits, uikit;
 
 @import './reset.css';
-@import './style-tokens.css';
+@import './theme.css';
 @import './controls.css';
 @import './traits.css';

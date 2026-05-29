@@ -5,7 +5,8 @@
     --Button-ink: CanvasText;
     --Button-bg: transparent;
     --Button-fg: var(--Button-ink);
-    --Button-border: transparent;
+    --Button-border-color: transparent;
+    --Button-border-shadow: inset 0 0 0 1px var(--Button-border-color);
     --Button-focus: var(--Button-accent);
     --Button-min-height: 2.25rem;
     --Button-padding-x: 0.875rem;
@@ -16,7 +17,8 @@
     justify-content: center;
     gap: var(--Button-gap);
     min-height: var(--Button-min-height);
-    border: 1px solid var(--Button-border);
+    border: none;
+    box-shadow: var(--Button-border-shadow);
     border-radius: var(--control-radius, 0.625rem);
     padding: 0 var(--Button-padding-x);
     color: var(--Button-fg);
@@ -28,7 +30,7 @@
     user-select: none;
     transition:
       background-color 120ms ease,
-      border-color 120ms ease,
+      box-shadow 120ms ease,
       color 120ms ease,
       opacity 120ms ease;
 
@@ -52,12 +54,12 @@
 
     &[data-tone='plain'] {
       --Button-bg: transparent;
-      --Button-border: transparent;
+      --Button-border-color: transparent;
     }
 
     &[data-tone='soft'] {
       --Button-bg: color-mix(in oklab, var(--Button-accent) 7%, transparent);
-      --Button-border: color-mix(in oklab, var(--Button-accent) 18%, transparent);
+      --Button-border-color: color-mix(in oklab, var(--Button-accent) 18%, transparent);
     }
 
     &[data-tone='normal'] {
@@ -67,7 +69,7 @@
     &[data-tone='solid'] {
       --Button-bg: var(--Button-accent);
       --Button-fg: --foreground-on(var(--Button-bg));
-      --Button-border: var(--Button-bg);
+      --Button-border-color: var(--Button-bg);
     }
 
     &[data-intent='accent'] {
