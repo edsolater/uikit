@@ -17,6 +17,7 @@ color 负责组件可用语义
 层级后缀：low / high
 状态后缀：hover / active / disabled / focus
 状态绝对色域：base-status-good / base-status-bad / base-status-warn / base-status-info
+主题命名：data-theme 表示解析后的当前主题，data-theme-mode 表示用户模式，--theme 表示 CSS 内部消费的 light | dark 标记
 ```
 
 ## 分层
@@ -27,10 +28,8 @@ color 负责组件可用语义
 
 ```css
 --base-brand: oklch(58% 0.2 260);
+
 --base-status-good: oklch(62% 0.16 145);
---base-status-bad: oklch(58% 0.2 28);
---base-status-warn: oklch(72% 0.17 78);
---base-status-info: oklch(62% 0.16 235);
 ```
 
 原则：
@@ -39,6 +38,27 @@ color 负责组件可用语义
 base 不给组件直接使用
 base 主要用于生成 dye
 base-status 是状态绝对色域，不从 brand 派生
+主题分支仍然落在原来的 dye 层入口，只是从原生 light-dark() 换成 --light-dark()
+```
+
+主题入口：
+
+```css
+:root {
+  --theme: light;
+}
+
+:root[data-theme='dark'] {
+  --theme: dark;
+}
+```
+
+主题分支函数：
+
+```css
+@function --light-dark(--light <color>, --dark <color>) returns <color> {
+  result: if(style(--theme: dark): var(--dark) ; else: var(--light));
+}
 ```
 
 ### `--dye-*`
@@ -90,9 +110,7 @@ neutral 承担程度语义
 ### `brand`
 
 ```css
---base-brand: oklch(58% 0.2 260);
-
---dye-brand: light-dark(
+--dye-brand: --light-dark(
   var(--base-brand),
   --lighten(var(--base-brand), 12%)
 );
@@ -103,7 +121,7 @@ neutral 承担程度语义
 ```txt
 brand 是品牌身份色元
 brand 也是 action / accent 的上游基础色元
-light-dark 主要集中在 dye-brand 这里处理
+light / dark 主要集中在 dye-brand 这里处理，只是判断入口从原生 light-dark() 换成了 --light-dark()
 ```
 
 ### `action`
@@ -165,8 +183,8 @@ accent 应该和 action 拉开一点色相
 ### `ink / paper`
 
 ```css
---dye-ink: light-dark(black, white);
---dye-paper: light-dark(white, black);
+--dye-ink: --light-dark(black, white);
+--dye-paper: --light-dark(white, black);
 ```
 
 理解：
@@ -230,7 +248,7 @@ line 的默认、弱、强边界压强
 --base-status-info: oklch(62% 0.16 235);
 
 --dye-good: --color-mix(
-  light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)),
+  --light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)),
   94,
   var(--dye-brand-breath),
   6
@@ -245,6 +263,7 @@ bad 不能因为品牌是绿色就变成绿色系错误
 good / bad / warn / info 可以接受少量品牌气息调和
 品牌气息只负责融入系统氛围，不改写状态色相本体
 base-status 只负责绝对语义锚点
+状态色和品牌色一样，在原来的 dye 层入口里通过 --light-dark() 读取当前主题
 dye-status 负责主题调和
 color-status 负责组件可用语义
 ```

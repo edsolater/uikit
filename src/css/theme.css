@@ -1,4 +1,4 @@
-/*
+﻿/*
  * 这个文件负责提供 UIKit 的主题 token。
  *
  * 职责：
@@ -64,6 +64,12 @@
      */
     --env-motion-scale: 1;
 
+    /*
+     * 当前主题模式。
+     * 主题切换控件通过 data-theme 写入 light / dark，CSS 只消费这个统一入口。
+     */
+    --theme: light;
+
     @media (prefers-reduced-motion: reduce) {
       --env-motion-scale: 0;
     }
@@ -97,10 +103,10 @@
 
     /*
      * brand dye：品牌身份色元。
-     * brand 也是 action / accent 的上游基础色元。
-     * light-dark 主要集中在这里处理。
+      * brand 也是 action / accent 的上游基础色元。
+      * light / dark 的分支仍然集中在这里处理，只是从原生 light-dark() 换成 --light-dark()。
      */
-    --dye-brand: light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
+        --dye-brand: --light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
 
     /*
      * action dye：动作色元。
@@ -145,8 +151,8 @@
      * ink 是最锐利的墨色极点，paper 是最锐利的纸色极点。
      * 二者不直接给组件使用，只参与组合。
      */
-    --dye-ink: light-dark(black, white);
-    --dye-paper: light-dark(white, black);
+    --dye-ink: --light-dark(black, white);
+    --dye-paper: --light-dark(white, black);
 
     /*
      * brand breath：品牌气味。
@@ -174,13 +180,13 @@
 
     /*
      * status dye：状态色元。
-     * 状态色先有稳定语义 seed，再做 light-dark 适配和少量品牌气息调和。
+      * 状态色先有稳定语义 seed，再做 --light-dark() 适配和少量品牌气息调和。
      * 它不从 brand 主派生，避免品牌色相反向污染成功、错误、警告等通用语义。
      */
-    --dye-good: --color-mix(light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)), 94, var(--dye-brand-breath), 6);
-    --dye-bad: --color-mix(light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)), 94, var(--dye-brand-breath), 6);
-    --dye-warn: --color-mix(light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)), 94, var(--dye-brand-breath), 6);
-    --dye-info: --color-mix(light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)), 94, var(--dye-brand-breath), 6);
+        --dye-good: --color-mix(--light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)), 94, var(--dye-brand-breath), 6);
+        --dye-bad: --color-mix(--light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)), 94, var(--dye-brand-breath), 6);
+        --dye-warn: --color-mix(--light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)), 94, var(--dye-brand-breath), 6);
+        --dye-info: --color-mix(--light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)), 94, var(--dye-brand-breath), 6);
 
     /*
      * color 层：组件可用基础语义层。
@@ -395,5 +401,9 @@
 
     --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  :root[data-theme='dark'] {
+    --theme: dark;
   }
 }

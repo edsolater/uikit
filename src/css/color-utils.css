@@ -27,6 +27,16 @@
   );
 }
 
+/*
+ * --light-dark：根据当前主题在两种颜色之间切换。
+ * 参数：(<color>, <color>)。
+ * 约定：由 theme.css 在根节点维护 --theme: light | dark。
+ * 示例：--light-dark(white, black)。
+ */
+@function --light-dark(--light <color>, --dark <color>) returns <color> {
+  result: if(style(--theme: dark): var(--dark) ; else: var(--light));
+}
+
 @function --color-adjust(
     --color <color>,
     --channel1
@@ -135,7 +145,7 @@
  * 示例：--lighten(var(--color-brand), 8%)。
  */
 @function --lighten(--color <color>, --amount <percentage>: 10%) returns <color> {
-  result: --color-adjust(var(--color), delta-lightness, var(--amount));
+  result: oklch(from var(--color) calc(l + (var(--amount) / 100%)) c h / alpha);
 }
 
 /*
@@ -144,7 +154,7 @@
  * 示例：--darken(var(--color-brand), 8%)。
  */
 @function --darken(--color <color>, --amount <percentage>: 10%) returns <color> {
-  result: --color-adjust(var(--color), delta-lightness, calc(var(--amount) * -1));
+  result: oklch(from var(--color) calc(l - (var(--amount) / 100%)) c h / alpha);
 }
 
 /*
@@ -153,7 +163,7 @@
  * 示例：--saturate(var(--color-brand), 0.02)。
  */
 @function --saturate(--color <color>, --amount <number>: 0.02) returns <color> {
-  result: --color-adjust(var(--color), delta-chroma, var(--amount));
+  result: oklch(from var(--color) l calc(c + var(--amount)) h / alpha);
 }
 
 /*
@@ -162,7 +172,7 @@
  * 示例：--desaturate(var(--color-brand), 0.02)。
  */
 @function --desaturate(--color <color>, --amount <number>: 0.02) returns <color> {
-  result: --color-adjust(var(--color), delta-chroma, calc(var(--amount) * -1));
+  result: oklch(from var(--color) l calc(c - var(--amount)) h / alpha);
 }
 
 /*
@@ -171,7 +181,7 @@
  * 示例：--hue-rotate(var(--color-brand), 30deg)。
  */
 @function --hue-rotate(--color <color>, --amount <angle>: 30deg) returns <color> {
-  result: --color-adjust(var(--color), delta-hue, var(--amount));
+  result: oklch(from var(--color) l c calc(h + (var(--amount) / 1deg)) / alpha);
 }
 
 /*
@@ -180,12 +190,12 @@
  * 示例：--grayscale(var(--color-brand))。
  */
 @function --grayscale(--color <color>) returns <color> {
-  result: --color-adjust(var(--color), set-chroma, 0);
+  result: oklch(from var(--color) l 0 h / alpha);
 }
 
 /* 透明化 */
 @function --opacify(--color <color>, --amount <percentage>: 10%) returns <color> {
-  result: --color-adjust(var(--color), delta-opacity, var(--amount));
+  result: oklch(from var(--color) l c h / calc(alpha + (var(--amount) / 100%)));
 }
 
 /* ============= mix 创造工具 ============ */
