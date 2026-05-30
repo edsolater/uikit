@@ -9,6 +9,8 @@
     /* 让浏览器按浅色或深色环境绘制原生控件、滚动条和表单内部 UI。 */
     color-scheme: light dark;
 
+    accent-color: var(--dye-accent, auto);
+
     /* 使用系统 UI 字体，让应用默认文字贴近当前操作系统。 */
     font-family: system-ui, sans-serif;
 

@@ -13,13 +13,14 @@ export function ButtonDemo() {
       </div>
       <p>按钮只表达动作声量、动作性质和交互尺度，不承载导航语义。</p>
       <div class="button-row">
-        <Button intent="accent" tone="solid">保存</Button>
-        <Button tone="normal">导出</Button>
-        <Button tone="soft">取消</Button>
-        <Button tone="plain">跳过</Button>
-        <Button tone="solid" intent="danger" >移除</Button>
-        <Button status="loading">保存中</Button>
-        <Button status="disabled">不可用</Button>
+        <Button intent="accent" tone="solid">Accent solid</Button>
+        <Button tone="solid">Solid</Button>
+        <Button tone="normal">Normal</Button>
+        <Button tone="soft">Soft</Button>
+        <Button tone="plain">Plain</Button>
+        <Button tone="solid" intent="danger" >Danger solid</Button>
+        <Button status="loading">Loading</Button>
+        <Button status="disabled">Disabled</Button>
       </div>
     </article>
   )

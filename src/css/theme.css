@@ -53,18 +53,82 @@
      * 设计师调整这些参数可以快速迭代出不同风格的颜色系统，开发者无需修改代码。
      * ----------------------------------------------------------------
     */
-    /* ======================= 可覆盖的基础app品牌色 ======================= */
-    --base-brand: oklch(62% 0.17 255deg);
-    --base-accent: --color-adjust(var(--base-brand), delta-hue, 150deg, delta-lightness, 8%, delta-chroma, -0.01);
+    /* =======================
+    * 👇 基础 app 品牌色 
+    ======================= */
 
-    /* ======================= 固色, 方便组合 ======================= */
-    --dye-blackwhite: light-dark(white, black); /* 尖酸刻薄的决定黑白 */
-    --dye-blackwhite-1: light-dark(--color-mix(white, 16, black, 1), --color-mix(black, 4, white, 1));
-    --dye-blackwhite-2: light-dark(--color-mix(white, 8, black, 1), --color-mix(black, 8, white, 1));
-    --dye-blackwhite-3: light-dark(--color-mix(white, 4, black, 1), --color-mix(black, 16, white, 1));
-    --dye-blackwhite-gray: light-dark(--color-mix(white, 1, black, 1), --color-mix(black, 1, white, 1));
+    /* 基础色：只作为品牌 seed，不直接给组件使用 */
+    --base-brand: oklch(58% 0.2 260);
+
+    /* ======================= 色元：由 base 派生的可用色母 ======================= */
+    /* brand dye：品牌身份色元， 也是基础色元（可以由它延申出 accent action 等实用色元） */
     --dye-brand: light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
-    --dye-accent: light-dark(var(--base-accent), --lighten(var(--base-accent), 10%));
+
+    /*
+    * action dye：动作色元。
+    * 用于派生按钮、链接、可点击入口。
+    * 默认直接继承 brand，因为主操作可以承接品牌身份。
+    */
+    --dye-action: var(--dye-brand);
+
+    /*
+    * action hover dye：动作兴趣态色元。
+    * hover 表示用户靠近，不是按下。
+    */
+    --dye-action-hover: --color-adjust(var(--dye-action), delta-lightness, 4%, delta-chroma, 0.01);
+
+    /*
+    * action active dye：动作按下态色元。
+    * active 应该比 hover 更压实。
+    */
+    --dye-action-active: --color-adjust(var(--dye-action), delta-lightness, -6%, delta-chroma, -0.01);
+
+    /*
+ * accent dye：系统强调色元。
+ * 从 brand/action 拉开一点色相，偏蓝青、略提亮，用于 selected / focus / checked。
+ */
+    --dye-accent: --color-adjust(var(--dye-brand), delta-hue, -18deg, delta-lightness, 4%, delta-chroma, 0.01);
+
+    /*
+ * accent soft dye：弱强调底色。
+ * 用于 selected item background / tag background / weak highlight。
+ */
+    --dye-accent-soft: --color-adjust(var(--dye-accent), set-opacity, 14%);
+
+    /*
+ * accent strong dye：强强调。
+ * 用于少数需要更高存在感的 active indicator。
+ */
+    --dye-accent-strong: --color-adjust(var(--dye-accent), delta-lightness, 8%, delta-chroma, 0.02);
+    
+    /* =======================
+    *  👇  固色, 方便组合 
+    ======================= */
+
+    /* 墨汁，当前模式下最锐利的前景极点。不直接使用，而是作为一个基础的智能色元，组合使用 */
+    --dye-ink: light-dark(black, white);
+    /* 纸底，当前模式下最锐利的背景极点 */
+    --dye-paper: light-dark(white, black);
+    /* 品牌气味：只取 brand hue，极低 chroma，用于给灰阶染一点系统气质 */
+    --dye-brand-breath: --color-adjust(var(--dye-brand), set-lightness, 50%, set-chroma, 0.018);
+
+    /* =======================
+    * neutral dye：由 paper / ink / brand-breath 混出的中性色阶
+    *
+    * 约定：
+    * - 数字越大，越接近 ink
+    * - 数字越小，越接近 paper
+    * - dye 层只表达色阶，不表达用途
+    ======================= */
+    --dye-neutral-0: --color-mix(var(--dye-paper), 98, var(--dye-brand-breath), 2);
+    --dye-neutral-1: --color-mix(var(--dye-paper), 94, var(--dye-ink), 2, var(--dye-brand-breath), 4);
+    --dye-neutral-2: --color-mix(var(--dye-paper), 88, var(--dye-ink), 4, var(--dye-brand-breath), 8);
+    --dye-neutral-3: --color-mix(var(--dye-paper), 80, var(--dye-ink), 8, var(--dye-brand-breath), 12);
+    --dye-neutral-4: --color-mix(var(--dye-paper), 68, var(--dye-ink), 18, var(--dye-brand-breath), 14);
+    --dye-neutral-5: --color-mix(var(--dye-paper), 52, var(--dye-ink), 34, var(--dye-brand-breath), 14);
+    --dye-neutral-6: --color-mix(var(--dye-paper), 34, var(--dye-ink), 56, var(--dye-brand-breath), 10);
+    --dye-neutral-7: --color-mix(var(--dye-paper), 18, var(--dye-ink), 76, var(--dye-brand-breath), 6);
+    --dye-neutral-8: --color-mix(var(--dye-paper), 8, var(--dye-ink), 90, var(--dye-brand-breath), 2);
 
     /* ======================= 组件使用的颜色 ======================= */
     --color-surface: --color-mix(var(--dye-blackwhite-1), 5, blue, 0.04);
