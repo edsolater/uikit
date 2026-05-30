@@ -50,6 +50,17 @@
     transition-timing-function: ease;
   }
 
+  /*
+   * 切主题时先临时关掉全局过渡。
+   * Color Dashboard 会同时更新大量 token 预览，保留这层过渡会把一次主题切换放大成整页长时间动画。
+   */
+  :root[data-theme-switching='true'],
+  :root[data-theme-switching='true'] *,
+  :root[data-theme-switching='true'] *::before,
+  :root[data-theme-switching='true'] *::after {
+    transition: none !important;
+  }
+
   /* 所有元素统一使用 border-box，避免 padding 和 border 把盒子撑出声明尺寸。 */
   *,
   *::before,

@@ -7,16 +7,40 @@ import { val, createState } from '../../hooks'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
+let themeSwitchCleanupFrame: number | null = null
+let themeSwitchCleanupPostFrame: number | null = null
+
+function markThemeSwitching(root: HTMLHtmlElement) {
+  root.dataset.themeSwitching = 'true'
+
+  if (themeSwitchCleanupFrame !== null) {
+    window.cancelAnimationFrame(themeSwitchCleanupFrame)
+  }
+
+  if (themeSwitchCleanupPostFrame !== null) {
+    window.cancelAnimationFrame(themeSwitchCleanupPostFrame)
+  }
+
+  themeSwitchCleanupFrame = window.requestAnimationFrame(() => {
+    themeSwitchCleanupPostFrame = window.requestAnimationFrame(() => {
+      root.removeAttribute('data-theme-switching')
+      themeSwitchCleanupFrame = null
+      themeSwitchCleanupPostFrame = null
+    })
+  })
+}
+
 /**
  * 把当前选中的模式写到根节点。
  * `data-theme-mode` 表示用户偏好，`data-theme` 表示解析后的实际主题。
  * CSS 内部再把 `data-theme` 映射成 `--theme: light | dark`。
  */
 function applyGlobalThemeMode(mode: ThemeMode) {
-  const root = document.documentElement
+  const root = document.documentElement as HTMLHtmlElement
   const media = window.matchMedia('(prefers-color-scheme: dark)')
   const resolvedTheme = mode === 'system' ? (media.matches ? 'dark' : 'light') : mode
 
+  markThemeSwitching(root)
   root.dataset.themeMode = mode
   root.dataset.theme = resolvedTheme
   root.style.colorScheme = mode === 'system' ? 'light dark' : resolvedTheme
@@ -40,11 +64,22 @@ export function ThemeModeControl() {
   })
 
   onCleanup(() => {
-    const root = document.documentElement
+    const root = document.documentElement as HTMLHtmlElement
+
+    if (themeSwitchCleanupFrame !== null) {
+      window.cancelAnimationFrame(themeSwitchCleanupFrame)
+      themeSwitchCleanupFrame = null
+    }
+
+    if (themeSwitchCleanupPostFrame !== null) {
+      window.cancelAnimationFrame(themeSwitchCleanupPostFrame)
+      themeSwitchCleanupPostFrame = null
+    }
 
     root.style.removeProperty('color-scheme')
     root.removeAttribute('data-theme')
     root.removeAttribute('data-theme-mode')
+    root.removeAttribute('data-theme-switching')
   })
 
   return (
