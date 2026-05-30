@@ -2,9 +2,9 @@
   .Input {
     --Input-h: var(--size-4);
     --Input-padding-x: var(--space-3);
-    --Input-border-color: var(--color-border);
-    --Input-bg: var(--color-surface);
-    --Input-fg: var(--color-text-strong);
+    --Input-border-color: var(--color-line);
+    --Input-bg: var(--color-surface-low);
+    --Input-fg: var(--color-fg-strong);
 
     width: 100%;
     min-height: var(--Input-h);
@@ -18,7 +18,7 @@
     &:focus-visible {
       outline: none;
       border-color: --dim(var(--Input-border-color), 20);
-      box-shadow: 0 0 0 0.2em color-mix(in oklab, var(--color-accent) 24%, transparent);
+      box-shadow: 0 0 0 0.2em var(--color-accent-focus);
     }
 
     &::placeholder {
@@ -30,13 +30,13 @@
     }
 
     &.ghost {
-      --Input-bg: color-mix(in oklab, var(--color-surface-soft) 90%, transparent);
-      --Input-border-color: color-mix(in oklab, var(--color-border) 72%, transparent);
+      --Input-bg: color-mix(in oklab, var(--color-surface-low) 90%, transparent);
+      --Input-border-color: color-mix(in oklab, var(--color-line) 72%, transparent);
     }
 
     &.invalid {
-      --Input-border-color: var(--color-danger, #d92d20);
-      box-shadow: 0 0 0 0.2em color-mix(in oklab, var(--color-danger, #d92d20) 18%, transparent);
+      --Input-border-color: var(--color-bad);
+      box-shadow: 0 0 0 0.2em var(--color-bad-soft);
     }
   }
 }

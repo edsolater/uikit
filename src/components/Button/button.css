@@ -1,7 +1,7 @@
 @layer uikit {
   .Button {
-    --Button-accent: var(--dye-brand);
-    --Button-danger: var(--color-danger);
+    --Button-accent: var(--color-action);
+    --Button-danger: var(--color-bad);
     --Button-ink: CanvasText;
     --Button-bg: transparent;
     --Button-fg: var(--Button-ink);
@@ -73,7 +73,7 @@
     }
 
     &[data-intent='accent'] {
-      --Button-accent: var(--dye-accent);
+      --Button-accent: var(--color-accent);
     }
 
     &[data-intent='neutral'] {

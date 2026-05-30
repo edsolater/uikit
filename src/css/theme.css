@@ -1,13 +1,21 @@
-﻿/*
- * 这个文件负责提供 UIKit 的颜色领域能力。
- * 尺度需要管理的是 style-token 只要是他写的魔法数字或单位数字的，不管是什么，只要不是离散值，都应该是style-token。
- * 最重要的尺度，color |尺寸
+/*
+ * 这个文件负责提供 UIKit 的主题 token。
+ *
+ * 职责：
+ * - 颜色：提供 base / dye / color 三层颜色系统。
+ * - 尺寸：提供空间、物体尺寸、圆角、边界、字体、滤镜、阴影和动画 token。
+ *
+ * 约定：
+ * - style-token 需要管理所有连续视觉值，包括颜色、尺寸、单位数字和魔法数字。
+ * - 组件和业务优先消费公开语义变量，例如 var(--color-*)、var(--space-*)。
  */
 
 @import './color-utils.css';
 @import './dimension-utils.css';
 
-/* ========== 好用的颜色工具 ============= */
+/* --------------------------------------------------------------------------
+ * 颜色工具
+ * ----------------------------------------------------------------------- */
 
 /*
  * --foreground-on：根据背景色推导可读前景色。
@@ -19,107 +27,141 @@
 }
 
 /*
- * --surface-from：根据强调色生成贴近当前页面背景的弱表面色。
- * 参数：(<color>, weight? <number>)，weight 是强调色权重，默认 16。
- * 示例：background: --surface-from(var(--color-brand))。
+ * --fluid：根据全局进度在两个长度之间插值。
+ * 参数：(<length-percentage>, <length-percentage>, progress? <number>)。
+ * 示例：width: --fluid(12rem, 24rem)。
  */
-
 @function --fluid(--from <length-percentage>, --to <length-percentage>, --progress <number>: var(--fluid-progress))
   returns <length-percentage> {
   result: calc(var(--from) + (var(--to) - var(--from)) * var(--progress));
 }
 
-/* 尺度需要管理的是 style-token 只要是他写的魔法数字或单位数字的，不管是什么，只要不是离散值，都应该是style-token */
 @layer theme {
-  /* 根节点集中管理颜色源参数与衍生材料；组件和业务应直接通过 var(--color-*) 消费公开语义变量。 */
+  /*
+   * 根节点集中管理主题源参数、衍生材料和公开变量。
+   * 组件和业务应优先通过 var(--color-*) 消费公开语义变量。
+   */
   :root {
-    /*  --------------------------------------------------------------
-     *  全局CSS变量，写业务样式时，好用的工具
-     * ----------------------------------------------------------------
+    /* ----------------------------------------------------------------------
+     * 全局工具变量
+     * ------------------------------------------------------------------- */
 
-    /* 视口宽度进度：小屏 -> 大屏， 配套使用 @function --fluid() 能快速打渐进式断点 */
+    /*
+     * 视口宽度进度：小屏到大屏。
+     * 配套 @function --fluid() 可以快速生成渐进式断点。
+     */
     --fluid-progress: progress(100vw, 360px, 1440px);
-    /* --fluid-progress: progress(100cqi, 280px, 720px); 必须在具体的container内部写这段代码 */
 
-    /* 是否偏好减少动画：不能直接变成变量，只能在 media 里改 */
+    /*
+     * 容器宽度进度示例：
+     * 需要在具体 container 内部声明。
+     * --fluid-progress: progress(100cqi, 280px, 720px);
+     */
+
+    /*
+     * 是否偏好减少动画。
+     * 这个值不能直接由变量得出，需要在 media 中覆盖。
+     */
     --env-motion-scale: 1;
+
     @media (prefers-reduced-motion: reduce) {
       --env-motion-scale: 0;
     }
 
-    /*  --------------------------------------------------------------
+    /* ----------------------------------------------------------------------
      * 颜色系统设计参数
-     * 这些参数直接决定了颜色系统的视觉特征，如明度范围、彩度范围、对比度和主题色调等。
-     * 设计师调整这些参数可以快速迭代出不同风格的颜色系统，开发者无需修改代码。
-     * ----------------------------------------------------------------
-    */
-    /* =======================
-    * 👇 基础 app 品牌色 
-    ======================= */
+     *
+     * 这些参数决定颜色系统的视觉特征，例如明度范围、彩度范围、对比度和主题色调。
+     * 设计师调整这些参数可以快速迭代不同风格，开发者无需修改组件代码。
+     * ------------------------------------------------------------------- */
 
-    /* 基础色：只作为品牌 seed，不直接给组件使用 */
+    /*
+     * base 层：只放可覆盖的基础 seed。
+     * base 不给组件直接使用，主要用于生成 dye。
+     */
     --base-brand: oklch(58% 0.2 260);
 
-    /* ======================= 色元：由 base 派生的可用色母 ======================= */
-    /* brand dye：品牌身份色元， 也是基础色元（可以由它延申出 accent action 等实用色元） */
+    /*
+     * status absolute base：状态绝对色域。
+     * 这些 seed 先表达跨品牌稳定的状态语义，再进入 dye 层做主题调和。
+     */
+    --base-status-good: oklch(62% 0.16 145);
+    --base-status-bad: oklch(58% 0.2 28);
+    --base-status-warn: oklch(72% 0.17 78);
+    --base-status-info: oklch(62% 0.16 235);
+
+    /*
+     * dye 层：色元层。
+     * dye 负责表达“颜色从哪里来”，不表达组件用途。
+     */
+
+    /*
+     * brand dye：品牌身份色元。
+     * brand 也是 action / accent 的上游基础色元。
+     * light-dark 主要集中在这里处理。
+     */
     --dye-brand: light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
 
     /*
-    * action dye：动作色元。
-    * 用于派生按钮、链接、可点击入口。
-    * 默认直接继承 brand，因为主操作可以承接品牌身份。
-    */
+     * action dye：动作色元。
+     * action 表示可操作入口，例如按钮、命令和可点击项。
+     * 默认继承 brand，因为主操作可以承接品牌身份。
+     */
     --dye-action: var(--dye-brand);
 
     /*
-    * action hover dye：动作兴趣态色元。
-    * hover 表示用户靠近，不是按下。
-    */
+     * action hover dye：动作兴趣态色元。
+     * hover 表示用户靠近，不是按下。
+     */
     --dye-action-hover: --color-adjust(var(--dye-action), delta-lightness, 4%, delta-chroma, 0.01);
 
     /*
-    * action active dye：动作按下态色元。
-    * active 应该比 hover 更压实。
-    */
+     * action active dye：动作按下态色元。
+     * active 应该比 hover 更压实。
+     */
     --dye-action-active: --color-adjust(var(--dye-action), delta-lightness, -6%, delta-chroma, -0.01);
 
     /*
- * accent dye：系统强调色元。
- * 从 brand/action 拉开一点色相，偏蓝青、略提亮，用于 selected / focus / checked。
- */
+     * accent dye：系统强调色元。
+     * accent 表示当前态、选中态、聚焦态和系统强调。
+     * accent 不是 action，应该和 action 拉开一点色相。
+     */
     --dye-accent: --color-adjust(var(--dye-brand), delta-hue, -18deg, delta-lightness, 4%, delta-chroma, 0.01);
 
     /*
- * accent soft dye：弱强调底色。
- * 用于 selected item background / tag background / weak highlight。
- */
+     * accent soft dye：弱强调底色。
+     * 用于 selected item background、tag background 和 weak highlight。
+     */
     --dye-accent-soft: --color-adjust(var(--dye-accent), set-opacity, 14%);
 
     /*
- * accent strong dye：强强调。
- * 用于少数需要更高存在感的 active indicator。
- */
+     * accent strong dye：强强调色元。
+     * 用于少数需要更高存在感的 active indicator。
+     */
     --dye-accent-strong: --color-adjust(var(--dye-accent), delta-lightness, 8%, delta-chroma, 0.02);
-    
-    /* =======================
-    *  👇  固色, 方便组合 
-    ======================= */
 
-    /* 墨汁，当前模式下最锐利的前景极点。不直接使用，而是作为一个基础的智能色元，组合使用 */
+    /*
+     * ink / paper：当前模式下的极性色元。
+     * ink 是最锐利的墨色极点，paper 是最锐利的纸色极点。
+     * 二者不直接给组件使用，只参与组合。
+     */
     --dye-ink: light-dark(black, white);
-    /* 纸底，当前模式下最锐利的背景极点 */
     --dye-paper: light-dark(white, black);
-    /* 品牌气味：只取 brand hue，极低 chroma，用于给灰阶染一点系统气质 */
+
+    /*
+     * brand breath：品牌气味。
+     * 只取 brand hue 和极低 chroma，用于给灰阶染一点系统气质。
+     */
     --dye-brand-breath: --color-adjust(var(--dye-brand), set-lightness, 50%, set-chroma, 0.018);
 
-    /* =======================
-    * neutral dye：由 paper / ink / brand-breath 混出的中性色阶
-    *
-    * 约定：
-    * - 数字越大，越接近 ink
-    * - 数字越小，越接近 paper
-    * - dye 层只表达色阶，不表达用途
-    ======================= */
+    /*
+     * neutral dye：由 paper / ink / brand-breath 混出的中性色阶。
+     *
+     * 约定：
+     * - 数字越小，越接近 paper。
+     * - 数字越大，越接近 ink。
+     * - dye 层只表达色阶，不表达用途。
+     */
     --dye-neutral-0: --color-mix(var(--dye-paper), 98, var(--dye-brand-breath), 2);
     --dye-neutral-1: --color-mix(var(--dye-paper), 94, var(--dye-ink), 2, var(--dye-brand-breath), 4);
     --dye-neutral-2: --color-mix(var(--dye-paper), 88, var(--dye-ink), 4, var(--dye-brand-breath), 8);
@@ -130,68 +172,168 @@
     --dye-neutral-7: --color-mix(var(--dye-paper), 18, var(--dye-ink), 76, var(--dye-brand-breath), 6);
     --dye-neutral-8: --color-mix(var(--dye-paper), 8, var(--dye-ink), 90, var(--dye-brand-breath), 2);
 
-    /* ======================= 组件使用的颜色 ======================= */
-    --color-surface: --color-mix(var(--dye-blackwhite-1), 5, blue, 0.04);
-    --color-bg: light-dark(--mix2(white, 96, var(--dye-brand), 4), --mix2(black, 90, var(--color-brand), 10));
-    --color-surface: light-dark(--darken(var(--color-light-bg), 2%), --lighten(var(--color-dark-bg), 7%));
-    --color-text: light-dark(var(--color-dark-surface), --darken(var(--color-light-bg), 2%));
-    --color-border: light-dark(
-      --mix2(var(--color-light-line), 2, var(--color-dark-line), 1),
-      --mix2(var(--color-dark-surface-soft), 2, var(--color-light-line), 1)
-    );
-    --color-info: --tune2(var(--color-brand), hue, -14deg, lightness, 4%);
-    --color-success: --tune2(var(--color-brand), hue, -105deg, lightness, 4%);
-    --color-warning: --tune2(var(--color-accent), hue, 34deg, lightness, 4%);
-    --color-danger: --tune2(var(--color-accent), hue, -28deg, lightness, -4%);
-    --color-shadow: light-dark(oklch(from var(--color-dark-bg) l c h / 16%), oklch(from black l c h / 44%));
-    --color-backdrop: light-dark(oklch(from var(--color-dark-bg) l c h / 46%), oklch(from black l c h / 64%));
+    /*
+     * status dye：状态色元。
+     * 状态色先有稳定语义 seed，再做 light-dark 适配和少量品牌气息调和。
+     * 它不从 brand 主派生，避免品牌色相反向污染成功、错误、警告等通用语义。
+     */
+    --dye-good: --color-mix(light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)), 94, var(--dye-brand-breath), 6);
+    --dye-bad: --color-mix(light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)), 94, var(--dye-brand-breath), 6);
+    --dye-warn: --color-mix(light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)), 94, var(--dye-brand-breath), 6);
+    --dye-info: --color-mix(light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)), 94, var(--dye-brand-breath), 6);
 
-    /* ------------------------------------------------------------------
+    /*
+     * color 层：组件可用基础语义层。
+     * color 负责表达“组件怎么用”，组件优先消费 color，不直接消费 dye。
+     */
+
+    /*
+     * Structure：基础视觉三轴。
+     * surface 是承载面，fg 是前景内容，line 是边界线。
+     * surface 使用 low / high 表达同类承载面的层级，不使用 soft / strong 这类语气词。
+     */
+    --color-surface: var(--dye-neutral-0);
+    --color-surface-low: var(--dye-neutral-1);
+    --color-surface-high: var(--dye-neutral-2);
+    --color-surface-overlay: --color-adjust(var(--dye-ink), set-opacity, 46%);
+    --color-surface-inverse: var(--dye-neutral-8);
+
+    /*
+     * fg / line 的 soft / strong 是信息语气。
+     * 它表达内容或边界本身的重要程度，不表达承载层级。
+     */
+    --color-fg: var(--dye-neutral-7);
+    --color-fg-soft: var(--dye-neutral-5);
+    --color-fg-strong: var(--dye-neutral-8);
+    --color-fg-disabled: var(--dye-neutral-4);
+    --color-fg-inverse: var(--dye-neutral-0);
+
+    --color-line: var(--dye-neutral-3);
+    --color-line-soft: var(--dye-neutral-2);
+    --color-line-strong: var(--dye-neutral-5);
+    --color-line-focus: var(--dye-neutral-6);
+
+    /*
+     * Brand：身份色。
+     * 只用于 logo、brand mark、品牌装饰和少量品牌区域。
+     * brand 不承担普通交互职责。
+     * soft / strong 表达品牌信息的语气强弱，不表达结构层级。
+     */
+    --color-brand: var(--dye-brand);
+    --color-brand-soft: --color-adjust(var(--dye-brand), set-opacity, 14%);
+    --color-brand-strong: --color-adjust(var(--dye-brand), delta-lightness, -6%, delta-chroma, 0.02);
+    --color-brand-fg: --foreground-on(var(--color-brand));
+    --color-brand-line: --color-adjust(var(--dye-brand), set-opacity, 44%);
+
+    /*
+     * Action：可操作入口。
+     * button、command 和 clickable item 默认从 action 取色。
+     */
+    --color-action: var(--dye-action);
+    --color-action-hover: var(--dye-action-hover);
+    --color-action-active: var(--dye-action-active);
+    --color-action-disabled: var(--dye-neutral-3);
+    --color-action-fg: --foreground-on(var(--color-action));
+    --color-action-line: --color-adjust(var(--dye-action), set-opacity, 48%);
+
+    /*
+     * Link：独立链接角色。
+     * 高频链接独立成 link，比直接复用 action 更清楚。
+     */
+    --color-link: var(--color-action);
+    --color-link-hover: var(--color-action-hover);
+    --color-link-active: var(--color-action-active);
+    --color-link-visited: --color-adjust(var(--dye-action), delta-hue, 36deg, delta-chroma, -0.02);
+
+    /*
+     * Accent：当前态、选中态、聚焦态和系统强调。
+     * soft / strong 表达强调信息的语气强弱，不表达结构层级。
+     */
+    --color-accent: var(--dye-accent);
+    --color-accent-soft: var(--dye-accent-soft);
+    --color-accent-strong: var(--dye-accent-strong);
+    --color-accent-fg: --foreground-on(var(--color-accent));
+    --color-accent-line: --color-adjust(var(--dye-accent), set-opacity, 50%);
+    --color-accent-focus: --color-adjust(var(--dye-accent), set-opacity, 42%);
+
+    /*
+     * Status：状态语义。
+     * good 表示成功、正向和完成。
+     * bad 表示错误、危险、删除和负向。
+     * warn 表示警告、风险和待确认。
+     * info 表示信息、提示和中性系统消息。
+     * soft 表示低语气状态信息，strong 暂不提供，避免为了完整性造 token。
+     */
+    --color-good: var(--dye-good);
+    --color-good-soft: --color-adjust(var(--dye-good), set-opacity, 14%);
+    --color-good-fg: --foreground-on(var(--color-good));
+    --color-good-line: --color-adjust(var(--dye-good), set-opacity, 44%);
+
+    --color-bad: var(--dye-bad);
+    --color-bad-soft: --color-adjust(var(--dye-bad), set-opacity, 14%);
+    --color-bad-fg: --foreground-on(var(--color-bad));
+    --color-bad-line: --color-adjust(var(--dye-bad), set-opacity, 44%);
+
+    --color-warn: var(--dye-warn);
+    --color-warn-soft: --color-adjust(var(--dye-warn), set-opacity, 14%);
+    --color-warn-fg: --foreground-on(var(--color-warn));
+    --color-warn-line: --color-adjust(var(--dye-warn), set-opacity, 44%);
+
+    --color-info: var(--dye-info);
+    --color-info-soft: --color-adjust(var(--dye-info), set-opacity, 14%);
+    --color-info-fg: --foreground-on(var(--color-info));
+    --color-info-line: --color-adjust(var(--dye-info), set-opacity, 44%);
+
+    /*
+     * Shadow / Backdrop：和当前模式绑定的阴影与遮罩材料。
+     */
+    --color-shadow: --color-adjust(var(--dye-ink), set-opacity, 18%);
+    --color-backdrop: --color-adjust(var(--dye-ink), set-opacity, 62%);
+
+    /* ----------------------------------------------------------------------
      * 尺寸系统设计参数
-     * 这些参数直接决定了界面布局和控件尺寸的视觉特征，如空隙量、物体尺寸、圆角柔和度和边界厚度等。
-     * 设计师调整这些参数可以快速迭代出不同风格的界面，开发者无需修改代码。
-     * ----------------------------------------------------------------
-     */
+     *
+     * 这些参数决定界面布局和控件尺寸的视觉特征，例如空隙量、物体尺寸、
+     * 圆角柔和度和边界厚度。设计师调整这些参数可以快速迭代不同风格，
+     * 开发者无需修改组件代码。
+     * ------------------------------------------------------------------- */
 
-    /* ====================== 总旋钮 （TODO：需要实际接入）=======================
-     * 这些参数控制整个尺寸系统的整体特征，如密度、圆角强度、阴影强度、边框强度和交互动效强度等。
-     * 设计师调整这些参数可以快速迭代出不同风格的界面，开发者无需修改代码。
+    /*
+     * 总旋钮。
+     * 这些参数控制整个尺寸系统的整体特征，例如密度、圆角强度、阴影强度、
+     * 边框强度和交互动效强度。
      */
-    /* 全局密度：默认 1。你以后可以改成 compact / relaxed 对应不同值 */
     --sys-density: 1;
-
-    /* 全局圆角强度 */
     --sys-radius-scale: 1;
-
-    /* 全局阴影强度 */
     --sys-shadow-scale: 1;
-
-    /* 全局边框/分割线强度 */
     --sys-line-scale: 1;
-
-    /* 全局交互动效强度 */
     --sys-motion-scale: var(--env-motion-scale);
 
-    /* ======================= 尺寸基础 ======================= */
-    /* 空隙量。 用于 padding margin gap 等， 表达空间 */
+    /*
+     * 尺寸基础。
+     * space 表达 padding、margin、gap 等空间。
+     * size 表达 width、height 等物体大小。
+     * radius 表达 border radius 的柔和度。
+     * boundary 表达 border、描边和 focus ring 的基础厚度。
+     */
     --space-base: 4px;
     --space-ratio: 1.25;
 
-    /* 物体尺寸。width height 等，表达物体大小 */
     --size-base: 20px;
     --size-ratio: 1.18;
 
-    /* 圆角柔和度。 属于border */
     --radius-base: 2px;
     --radius-ratio: 1.45;
 
-    /* 边界厚度。 border、描边和 focus ring 的基础厚度 */
     --boundary-base: 1px;
     --boundary-ratio: 1.5;
 
-    /* ====================== 尺寸派生 ======================
-    * 这些变量由设计参数通过指数函数生成，组件和业务直接消费这些变量，由于尺寸天然跟数字绑定在一起，所以这里可以出现魔法数字 
-    */
+    /*
+     * 尺寸派生。
+     * 这些变量由设计参数通过指数函数生成。
+     * 组件和业务直接消费这些变量。
+     * 尺寸天然和数字绑定，所以这里可以出现数字阶梯。
+     */
     --space-1: --space(1);
     --space-2: --space(2);
     --space-3: --space(3);
@@ -220,6 +362,9 @@
     --boundary-3: --border(3);
     --boundary-4: --border(4);
 
+    /*
+     * 字体、滤镜、透明度和阴影 token。
+     */
     --font-size-sm: 12px;
     --font-size-default: 14px;
     --font-size-md: var(--font-size-default);
@@ -237,11 +382,13 @@
     --filter-blur-3: blur(12px);
 
     --opacity-half: 0.5;
-    --opaciry-muted: 0.72;
+    --opacity-muted: 0.72;
 
     --shadow: 0 1px 2px var(--color-shadow), 0 2px 4px var(--color-shadow), 0 4px 8px var(--color-shadow);
 
-    /* ============= 动画token ============== */
+    /*
+     * 动画 token。
+     */
     --motion-duration-fast: calc(120ms * var(--sys-motion-scale));
     --motion-duration-normal: calc(180ms * var(--sys-motion-scale));
     --motion-duration-slow: calc(260ms * var(--sys-motion-scale));

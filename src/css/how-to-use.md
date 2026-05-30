@@ -63,9 +63,9 @@ import './app.css'
 
 ```css
 .panel {
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: var(--boundary-1) solid var(--color-border);
+  color: var(--color-fg);
+  background: var(--color-surface-low);
+  border: var(--boundary-1) solid var(--color-line);
   padding: var(--space-5);
   border-radius: var(--radius-4);
 }
@@ -90,14 +90,14 @@ import './app.css'
 
 ```css
 .primary-button {
-  color: --foreground-on(var(--color-brand));
-  background: var(--color-brand);
+  color: var(--color-action-fg);
+  background: var(--color-action);
 }
 
 .card {
-  color: var(--color-text);
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  color: var(--color-fg);
+  background: var(--color-surface-low);
+  border-color: var(--color-line);
 }
 ```
 
@@ -105,8 +105,7 @@ import './app.css'
 
 ```css
 :root {
-  --color-brand-source: oklch(62% 0.17 255deg);
-  --color-accent-source: oklch(70% 0.16 45deg);
+  --base-brand: oklch(62% 0.17 255deg);
 }
 ```
 
@@ -114,7 +113,7 @@ import './app.css'
 
 ```css
 :root {
-  --color-product-soft: --color-mix(var(--color-brand), 18, var(--color-surface), 82);
+  --color-product: --color-adjust(var(--color-brand), delta-hue, 18deg);
 }
 ```
 
@@ -147,19 +146,11 @@ import './app.css'
 
 `controls.css` 只处理浏览器内置 controls 的默认外观。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它不是组件主题。
 
-它默认提供固定科技蓝：
+业务如果需要调整 controls 强调色，应覆盖主题源参数或语义 token：
 
 ```css
 :root {
-  --color-accent: oklch(66% 0.19 248deg);
-}
-```
-
-业务如果需要自己的 controls 强调色，可以在业务 CSS 里覆盖：
-
-```css
-:root {
-  --color-accent: oklch(70% 0.16 210deg);
+  --base-brand: oklch(70% 0.16 210deg);
 }
 ```
 

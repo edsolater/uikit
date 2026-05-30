@@ -8,9 +8,9 @@ UIKit CSS 不再把 `--color(text)`、`--space(5)` 这类 `@function` 翻译层�
 
 ```css
 .panel {
-  color: var(--color-text);
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  color: var(--color-fg);
+  background: var(--color-surface-low);
+  border-color: var(--color-line);
   padding: var(--space-5);
   border-radius: var(--radius-4);
 }
@@ -52,7 +52,7 @@ traits
 
 `all-base.css` 负责基础 CSS 的整包入口。外部项目如果不想逐个引入多个碎片文件，可以只引入这一个文件。
 
-`controls.css` 负责浏览器内置控件的轻量外观清洗。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它默认提供固定科技蓝 `--color-accent`，业务可以覆盖。
+`controls.css` 负责浏览器内置控件的轻量外观清洗。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它默认使用主题层提供的 `--color-accent`。
 
 `traits.css` 负责 trait plugin 自动附加到 DOM 上的功能类。它只收纳效果非常单一、语义非常稳定、但又不值得上升成组件身份或主题 token 的正交小能力，不承担页面布局组合或视觉主题，也不是给业务层手写 utility class 的仓库。
 
@@ -63,10 +63,10 @@ traits
 组件 CSS 和业务 CSS 优先使用：
 
 ```css
-var(--color-text)
-var(--color-bg)
+var(--color-fg)
 var(--color-surface)
-var(--color-border)
+var(--color-surface-low)
+var(--color-line)
 var(--color-brand)
 --foreground-on(var(--color-brand))
 

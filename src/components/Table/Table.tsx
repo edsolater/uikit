@@ -46,8 +46,8 @@ export type TableProps<Row extends TableDataRow = TableDataRow> = {
  * ```tsx
  * <Table
  *   data={[
- *     { name: '--color-primary', preview: 'var(--color-primary)' },
- *     { name: '--color-surface', preview: 'var(--color-surface)' },
+ *     { name: '--color-action', preview: 'var(--color-action)' },
+ *     { name: '--color-surface-low', preview: 'var(--color-surface-low)' },
  *   ]}
  *   keys={['name', 'preview']}
  *   renderParts={{
