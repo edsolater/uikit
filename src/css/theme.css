@@ -106,7 +106,7 @@
       * brand 也是 action / accent 的上游基础色元。
       * light / dark 的分支仍然集中在这里处理，只是从原生 light-dark() 换成 --light-dark()。
      */
-        --dye-brand: --light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
+    --dye-brand: --light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
 
     /*
      * action dye：动作色元。
@@ -183,10 +183,30 @@
       * 状态色先有稳定语义 seed，再做 --light-dark() 适配和少量品牌气息调和。
      * 它不从 brand 主派生，避免品牌色相反向污染成功、错误、警告等通用语义。
      */
-        --dye-good: --color-mix(--light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)), 94, var(--dye-brand-breath), 6);
-        --dye-bad: --color-mix(--light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)), 94, var(--dye-brand-breath), 6);
-        --dye-warn: --color-mix(--light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)), 94, var(--dye-brand-breath), 6);
-        --dye-info: --color-mix(--light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)), 94, var(--dye-brand-breath), 6);
+    --dye-good: --color-mix(
+      --light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)),
+      94,
+      var(--dye-brand-breath),
+      6
+    );
+    --dye-bad: --color-mix(
+      --light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)),
+      94,
+      var(--dye-brand-breath),
+      6
+    );
+    --dye-warn: --color-mix(
+      --light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)),
+      94,
+      var(--dye-brand-breath),
+      6
+    );
+    --dye-info: --color-mix(
+      --light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)),
+      94,
+      var(--dye-brand-breath),
+      6
+    );
 
     /*
      * color 层：组件可用基础语义层。
