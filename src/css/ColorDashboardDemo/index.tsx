@@ -3,14 +3,14 @@
  * 它只负责两个子组件的组合入口，不承载 theme mode 或 color token 的领域逻辑。
  */
 import { ThemeModeControl } from './ColorSchemeControl'
-import { ColorTokenTable } from './ColorTokenTable'
+import { ColorCSSTokenTable } from './ColorCSSTokenTable'
 
 export function ColorDashboardDemo() {
   return (
     <section>
       <h2>Color Dashboard</h2>
       <ThemeModeControl />
-      <ColorTokenTable />
+      <ColorCSSTokenTable />
     </section>
   )
 }

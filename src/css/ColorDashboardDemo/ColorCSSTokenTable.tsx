@@ -100,7 +100,7 @@ function formatColorText(color: string) {
   })
 }
 
-export function ColorTokenTable() {
+export function ColorCSSTokenTable() {
   const colorVariableNames = createState<string[]>([])
 
   const colorTokenRows = colorVariableNames.map((cssVariableNames: string[]) =>
