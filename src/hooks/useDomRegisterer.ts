@@ -1,13 +1,13 @@
 /**
- * 描述全局节点应该挂到哪里。
+ * 描述全局 DOM 节点应该挂到哪里。
  * 调用方可以直接给 body / head，也可以给现成容器，或者延迟解析容器。
  */
-type DomRegisterTarget = 'head' | 'body' | ParentNode | (() => ParentNode | null | undefined)
+type DOMRegisterTarget = 'head' | 'body' | ParentNode | (() => ParentNode | null | undefined)
 
 /**
  * registry 内部保存的挂载记录。
  */
-type DomRegisterEntry = {
+type DOMRegisterEntry = {
   /** 当前被复用的真实 DOM 节点。 */
   element: HTMLElement
 
@@ -16,9 +16,9 @@ type DomRegisterEntry = {
 }
 
 /**
- * useDomRegisterer 的配置项。
+ * useDOMRegisterer 的配置项。
  */
-type UseDomRegistererOptions<TagName extends keyof HTMLElementTagNameMap> = {
+type UseDOMRegistererOptions<TagName extends keyof HTMLElementTagNameMap> = {
   /**
    * 全局节点的唯一标识。
    * 相同 id 会复用同一个 DOM 节点，并累加 consumers。
@@ -32,7 +32,7 @@ type UseDomRegistererOptions<TagName extends keyof HTMLElementTagNameMap> = {
    * 节点要插入到哪个容器。
    * 默认是 head；也可以显式指定 body、现成 ParentNode，或一个延迟解析函数。
    */
-  target?: DomRegisterTarget
+  target?: DOMRegisterTarget
 
   /**
    * 节点创建后、插入前的初始化逻辑。
@@ -42,9 +42,9 @@ type UseDomRegistererOptions<TagName extends keyof HTMLElementTagNameMap> = {
 }
 
 // 全局 DOM 挂载天然是进程级共享状态，用模块级 registry 比 Context 更直接。
-const domRegisterRegistry = new Map<string, DomRegisterEntry>()
+const domRegisterRegistry = new Map<string, DOMRegisterEntry>()
 
-function resolveDomRegisterTarget(target: DomRegisterTarget | undefined): ParentNode | null {
+function resolveDOMRegisterTarget(target: DOMRegisterTarget | undefined): ParentNode | null {
   if (typeof document === 'undefined') {
     return null
   }
@@ -65,14 +65,14 @@ function resolveDomRegisterTarget(target: DomRegisterTarget | undefined): Parent
  * 调用方自己决定什么时候 register / unregister；
  * 此 primitive 只负责按 id 复用同一个 DOM 节点，并维护消费者计数。
  */
-export function useDomRegisterer<TagName extends keyof HTMLElementTagNameMap>({
+export function useDOMRegisterer<TagName extends keyof HTMLElementTagNameMap>({
   id,
   tagName,
   target,
   setup,
-}: UseDomRegistererOptions<TagName>) {
+}: UseDOMRegistererOptions<TagName>) {
   const register = () => {
-    const existingEntry = domRegisterRegistry.get(id) as DomRegisterEntry | undefined
+    const existingEntry = domRegisterRegistry.get(id) as DOMRegisterEntry | undefined
 
     if (existingEntry !== undefined) {
       existingEntry.consumers += 1
@@ -80,7 +80,7 @@ export function useDomRegisterer<TagName extends keyof HTMLElementTagNameMap>({
       return existingEntry.element as HTMLElementTagNameMap[TagName]
     }
 
-    const mountTarget = resolveDomRegisterTarget(target)
+    const mountTarget = resolveDOMRegisterTarget(target)
 
     if (mountTarget === null) {
       return undefined

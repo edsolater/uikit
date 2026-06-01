@@ -1,11 +1,11 @@
 # 维护契约
 
 - Plan 契约在 [how-to-write-plan.md](../how-to-write-plan.md) 里单独维护。
-- Feature 业务说明在 [useTitle基础Hook_业务说明.md](../features/useTitle基础Hook_业务说明.md) 里单独维护。
+- Feature 业务说明在 [useDocumentTitle基础Hook_业务说明.md](../features/useDocumentTitle基础Hook_业务说明.md) 里单独维护。
 - 修改代码风格在 [Agents.md](../../Agents.md) 里单独维护。
-- 每次修改 useTitle 的代码落点、验证口径或边界判断后，都必须同步更新本文档。
+- 每次修改 useDocumentTitle 的代码落点、验证口径或边界判断后，都必须同步更新本文档。
 
-# useTitle 基础 Hook 修改计划
+# useDocumentTitle 基础 Hook 修改计划
 
 ## 修改目标
 
@@ -15,13 +15,13 @@
 
 ## 当前确认值
 
-- `useTitle` 的代码主体落在 `src/hooks/useTitle/useTitle.ts`。
+- `useDocumentTitle` 的代码主体落在 `src/hooks/useDocumentTitle/useDocumentTitle.ts`。
 - `src/hooks/index.ts` 负责对外导出这个 hook。
 - 当前阶段只处理 `document.title` 同步，不扩展到其他文档元信息。
 
 ## 最小验证
 
-- 确认调用方可以直接从 hook 导出入口拿到 `useTitle`。
+- 确认调用方可以直接从 hook 导出入口拿到 `useDocumentTitle`。
 - 确认传入新标题后，浏览器标题会更新。
 - 确认外部直接修改浏览器标题时，hook 返回值也会跟着更新。
 

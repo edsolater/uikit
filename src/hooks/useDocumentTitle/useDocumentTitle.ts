@@ -5,21 +5,21 @@
  */
 import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js'
 
-type TitleInput = string | Accessor<string> | undefined
+type DocumentTitleInput = string | Accessor<string> | undefined
 
-function readTitleInput(nextTitle: TitleInput) {
+function readDocumentTitleInput(nextTitle: DocumentTitleInput) {
   // 调用方传入 accessor 时，这里负责建立 Solid 依赖关系。
   return typeof nextTitle === 'function' ? nextTitle() : nextTitle
 }
 
-function readBrowserTitle(nextTitle: TitleInput) {
+function readBrowserDocumentTitle(nextTitle: DocumentTitleInput) {
   // 服务端没有浏览器标题设施，只能返回调用方此刻给出的标题语义。
-  return typeof document === 'undefined' ? readTitleInput(nextTitle) ?? '' : document.title
+  return typeof document === 'undefined' ? readDocumentTitleInput(nextTitle) ?? '' : document.title
 }
 
-export function useTitle(nextTitle?: TitleInput) {
+export function useDocumentTitle(nextTitle?: DocumentTitleInput) {
   // 这份 signal 只镜像浏览器当前标题，不在 hook 内维护第二套标题真相。
-  const [currentTitle, setCurrentTitle] = createSignal(readBrowserTitle(nextTitle))
+  const [currentTitle, setCurrentTitle] = createSignal(readBrowserDocumentTitle(nextTitle))
 
   if (typeof document !== 'undefined') {
     const observer = new MutationObserver(() => {
@@ -36,7 +36,7 @@ export function useTitle(nextTitle?: TitleInput) {
   }
 
   createEffect(() => {
-    const title = readTitleInput(nextTitle)
+    const title = readDocumentTitleInput(nextTitle)
 
     if (typeof document === 'undefined' || typeof title !== 'string' || title.length === 0) {
       return

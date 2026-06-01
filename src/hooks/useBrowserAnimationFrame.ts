@@ -2,7 +2,7 @@ import { onCleanup } from 'solid-js'
 
 type AnimationFrameCallback = () => void
 
-type UseAnimationFrameReturn = {
+type UseBrowserAnimationFrameReturn = {
   /**
    * 安排一个回调在若干帧之后执行。
    * 新请求会取消当前尚未完成的那次调度，避免重复堆积。
@@ -14,10 +14,10 @@ type UseAnimationFrameReturn = {
 }
 
 /**
- * 管理单条 animation frame 调度链。
+ * 管理单条浏览器 animation frame 调度链。
  * 适合把 requestAnimationFrame 的取消、重入覆盖、多帧等待这些胶水逻辑收口到一处。
  */
-export function useAnimationFrame(): UseAnimationFrameReturn {
+export function useBrowserAnimationFrame(): UseBrowserAnimationFrameReturn {
   let currentFrameId: number | null = null
 
   const cancel = () => {

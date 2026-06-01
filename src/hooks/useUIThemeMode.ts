@@ -3,9 +3,9 @@
  * 它只处理 light / dark / system 三态切换，不负责具体控件展示。
  */
 import { createEffect, onCleanup, onMount } from 'solid-js'
-import { createAttributeMarker } from './createAttributeMarker'
+import { createElementAttributeMarker } from './createElementAttributeMarker'
 import { createState, val } from './createState'
-import { useDomRegisterer } from './useDomRegisterer'
+import { useDOMRegisterer } from './useDOMRegisterer'
 
 export type UIThemeMode = 'light' | 'dark' | 'system'
 
@@ -43,12 +43,12 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
   const themeSwitchingMarker =
     root === undefined
       ? { mark: () => undefined, cleanup: () => undefined }
-      : createAttributeMarker({
+      : createElementAttributeMarker({
           element: root,
           attributeName: 'data-is-theme-switching',
           removeAfterFrames: 2,
         })
-  const themeSwitchingStyleRegisterer = useDomRegisterer({
+  const themeSwitchingStyleRegisterer = useDOMRegisterer({
     id: themeSwitchingStyleId,
     tagName: 'style',
     target: 'head',

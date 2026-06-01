@@ -8,7 +8,7 @@ import { PivStructureDemo } from './components/BasicPiv/PivStructure.demo'
 import { InputDemo } from './components/Input/Input.demo'
 import { PopoverDemo } from './components/Popover/Popover.demo'
 import { ColorDashboardDemo } from './css/ColorDashboardDemo'
-import { UseTitleDemo } from './hooks/useTitle/useTitle.demo'
+import { UseDocumentTitleDemo } from './hooks/useDocumentTitle/useDocumentTitle.demo'
 import './ExampleDashboard.css'
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
       <ColorDashboardDemo />
       <PivStructureDemo />
       <PopoverDemo />
-      <UseTitleDemo />
+      <UseDocumentTitleDemo />
     </main>
   )
 }

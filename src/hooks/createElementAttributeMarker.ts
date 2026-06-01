@@ -1,8 +1,8 @@
-import { useAnimationFrame } from './useAnimationFrame'
+import { useBrowserAnimationFrame } from './useBrowserAnimationFrame'
 
-type CreateAttributeMarkerOptions = {
+type CreateElementAttributeMarkerOptions = {
   /** 要被写入标记属性的目标元素。 */
-  element: HTMLElement
+  element: Element
 
   /** 要写入的属性名，例如 data-is-theme-switching。 */
   attributeName: string
@@ -20,7 +20,7 @@ type CreateAttributeMarkerOptions = {
   removeAfterFrames?: number
 }
 
-type AttributeMarker = {
+type ElementAttributeMarker = {
   /** 写入当前 marker 对应的 attribute。 */
   mark: () => void
 
@@ -29,16 +29,16 @@ type AttributeMarker = {
 }
 
 /**
- * 创建一个基于 DOM attribute 的 marker。
- * 适合表达“短暂进入某种 DOM 状态”这类语义，例如过渡保护、同步锁、busy 标记等。
+ * 创建一个基于 element attribute 的 marker。
+ * 适合表达“短暂进入某种元素状态”这类语义，例如过渡保护、同步锁、busy 标记等。
  */
-export function createAttributeMarker({
+export function createElementAttributeMarker({
   element,
   attributeName,
   attributeValue = 'true',
   removeAfterFrames,
-}: CreateAttributeMarkerOptions): AttributeMarker {
-  const animationFrame = useAnimationFrame()
+}: CreateElementAttributeMarkerOptions): ElementAttributeMarker {
+  const animationFrame = useBrowserAnimationFrame()
 
   const cleanup = () => {
     animationFrame.cancel()

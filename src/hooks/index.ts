@@ -1,17 +1,19 @@
 /**
  * hooks 对外出口。
  * 这里只汇总稳定 hook；实验性 hook 不应先进入发布入口。
- * 命名分层约定见 ./how-to-write.md。
+ * 目录入口见 ./README.md。
+ * 命名规则见 ./naming.md。
+ * 写法约定见 ./writing.md。
  */
-export * from './useTitle' // UI 级别 直接操作 document.title 的 hook
-export * from './value-state/collection' // 管理数据集合的 hook，配合 observer 模式使用
-export * from './value-state/count' // 计数器 hook
-export * from './value-state/ident' // 标识符 hook，生成唯一 ID 等
-export * from './value-state/matcher' // 匹配器 hook，管理匹配关系等
-export * from './value-state/toggle' // 布尔切换 hook
-export * from './createAttributeMarker' // 基于 DOM attribute 的 marker primitive
-export * from './createState' // 基础状态管理 hook，提供更通用的状态管理功能
-export * from './domRef' // DOM 引用 hook，方便获取和操作 DOM 元素
-export * from './useAnimationFrame' // 管理 animation frame 调度与取消的 primitive
-export * from './useDomRegisterer' // 提供全局 DOM 注册 / 卸载能力的 primitive
-export * from './useUIThemeMode' // 管理全局 light / dark / system 主题模式的 UI hook
+export * from './useDocumentTitle' // Document 领域的浏览器标题同步 hook
+export * from './value-state/collection' // ValueState 领域的数据集合管理 hook
+export * from './value-state/count' // ValueState 领域的计数状态 hook
+export * from './value-state/ident' // ValueState 领域的标识符状态 hook
+export * from './value-state/matcher' // ValueState 领域的匹配状态 hook
+export * from './value-state/toggle' // ValueState 领域的布尔切换状态 hook
+export * from './createElementAttributeMarker' // Element 领域的 attribute marker primitive
+export * from './createState' // 无领域，全领域通用的基础状态管理 hook
+export * from './domRef' // DOM 领域的元素引用 hook
+export * from './useBrowserAnimationFrame' // Browser 领域的 animation frame 调度 primitive
+export * from './useDOMRegisterer' // DOM 领域的全局节点注册 / 卸载 primitive
+export * from './useUIThemeMode' // UI 领域的全局 light / dark / system 主题模式 hook
