@@ -24,10 +24,13 @@ src/
   hooks/         对外 hooks
   App.tsx        本地 demo
   index.ts       发布入口
+demo-app/        组件库验收应用集合
 ../ai-rules/     AI 写法约束项目，入口是 ../ai-rules/README.md
 ```
 
 详细结构说明见 [Architecture.md](Architecture.md)。
+
+`demo-app` 里的内容不是正式业务项目，而是用来反向验证组件 API、token 和组合边界的小型验收场景。
 
 ## 技术栈
 

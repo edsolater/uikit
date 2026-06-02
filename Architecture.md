@@ -11,6 +11,7 @@
 
 - 当前仓库是 SolidJS UIKit 项目。
 - 当前仓库的目标是沉淀基础 DOM 原子、基础组件、基础 hook 和本地验证方式。
+- 当前仓库同时承载面向组件库验收的小型 demo-app，但 demo-app 不是正式业务项目。
 - 当前仓库不是大而全的设计系统。
 - 当前仓库优先提供稳定、直接、边界清楚的基础能力。
 - 当前仓库默认只考虑最新浏览器和现代 CSS 能力。
@@ -26,6 +27,9 @@
 - `src/hooks`：对外 hook 层。
   - 负责浏览器协作类或通用调用方能力。
   - 这一层向调用方暴露稳定 hook 入口。
+- `demo-app`：组件库验收应用层。
+  - 负责承载真实但足够小的 demo 应用，用来反向验证组件 API、token 和组合能力。
+  - 这一层不是正式业务项目，不应为了补业务而绕过或污染组件库职责。
 - `src/App.tsx`：本地 demo 装配层。
   - 只负责把各主体旁边的 `.demo.tsx` 组合成首页。
   - 不应把具体 demo 实现长期堆在 `App.tsx` 里。
@@ -38,6 +42,7 @@
 - 本地开发入口从 `src/main.tsx` 进入。
 - `src/main.tsx` 只负责挂载 `src/App.tsx`。
 - `src/App.tsx` 只负责组合各主体就近定义的 demo。
+- `demo-app` 下的各 demo 独立承载验收场景，不反向成为组件库发布入口的一部分。
 - 组件和 hook 的正式发布入口始终从 `src/index.ts` 收口。
 - `src/components/index.ts` 和 `src/hooks/index.ts` 负责各自目录的对外汇总导出。
 
@@ -47,6 +52,11 @@
   - `Agents.md`：agent 入口与仓库级协作约束。
   - `Architecture.md`：项目架构、模块边界、目录职责与调用链路。
   - `README.md`：项目入口说明。
+  - `demo-app`
+    - `README.md`：组件库验收应用集合的总目标、流程和验收方式。
+    - `todolist`
+      - `README.md`：ToDoList 验收 demo 的业务目标、模块边界与验收口径。
+      - `Architecture.md`：ToDoList 验收 demo 的抽象架构与实现顺序。
   - `package.json`：包信息、依赖和本地命令。
   - `src`
     - `App.css`：本地 demo 样式。
@@ -131,6 +141,8 @@
 - `src/base` 不应反向依赖 `src/components` 或 `src/hooks` 的业务主体。
 - `src/components` 的 demo、story 和局部能力应尽量就近放在组件目录内。
 - `src/hooks` 的 demo、story 和主体实现应尽量就近放在 hook 目录内。
+- `demo-app` 只负责验收组件库，不应演化成正式业务应用层。
+- `demo-app` 可以写布局与场景组合，但不应重写组件视觉状态样式。
 - `src/App.tsx` 只装配 demo，不定义 demo 主体。
 - `src/index.ts` 只处理对外导出，不夹带本地验证代码。
 - `types` 目录只承载没有明确单一主体归属的全局类型补丁。
@@ -139,6 +151,7 @@
 
 - 不要把组件 demo 长期堆在 `App.tsx`。
 - 不要把 story、demo 和正式发布入口混成同一职责文件。
+- 不要把 `demo-app` 当成业务需求堆叠区，或在里面绕过组件库直接手写组件视觉样式。
 - 不要把 `src/base` 当成业务级组件目录使用。
 - 不要把结构文档退化成单纯的目录清单，而忽略层次和边界。
 
