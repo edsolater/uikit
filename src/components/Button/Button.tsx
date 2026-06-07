@@ -8,7 +8,7 @@ import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
 import './button.css'
-import { createUIKitProfile, type ProfileProps } from './createButtonProfile'
+import { createKitProfile, type ProfileProps } from './createKitProfile'
 
 interface ButtonProfileProps extends ProfileProps {
   /**
@@ -59,7 +59,7 @@ export interface ButtonProps extends PivProps<'button'>, ButtonProfileProps {}
 
 export function Button(props: ButtonProps) {
   // UIKit 都适用的标识，标识能够标识出它是一个怎样的存在的组件
-  const [uikitProfileManager, uikitProfilePlugin] = createUIKitProfile(props)
+  const { details: kitProfileDetails, plugin: kitProfilePlugin } = createKitProfile(props)
 
   // TODO：对于Button特有的状态，需要直接写在Button组件内部
   return (
@@ -67,7 +67,7 @@ export function Button(props: ButtonProps) {
       as="button"
       shadowProps={props}
       class="Button"
-      plugins={[uikitProfilePlugin, clickable({ componentName: 'Button' })]}
+      plugins={[kitProfilePlugin, clickable({ componentName: 'Button' })]}
       htmlProps={{ type: 'button' }}
     >
       {props.children}

@@ -15,7 +15,10 @@ export interface ProfileProps {
   status?: StatusInput<any>
 }
 
-export function createUIKitProfile<P extends ProfileProps>(props: P) {
+/**
+ * 适用于各种 uikit， 它是身份标识
+ */
+export function createKitProfile<P extends ProfileProps>(props: P) {
   // 状态驱动。外部传入的业务态和内部派生态在 manager 内部融合。
   const [statusRecord, statusRecordActions] = createStatusRecord(props.status)
 
@@ -40,7 +43,7 @@ export function createUIKitProfile<P extends ProfileProps>(props: P) {
     },
   }))
 
-  return [details, plugin] as const
+  return {details, plugin}
 }
 
 /**

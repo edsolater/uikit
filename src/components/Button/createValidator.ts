@@ -8,16 +8,16 @@ import { createState, val, type Source, type State } from '../../hooks'
 import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 import type { PivPlugin } from '../BasicPiv/plugin/runPlugin'
 
-export type ValidationRule = {
+export type ValidatorRule = {
   /**
    * 验证条件；返回 true 时通过。
    */
   should: Source<boolean>
 }
 
-export type ValidationInput = Source<boolean | ValidationRule | undefined>
+export type ValidatorInput = Source<boolean | ValidatorRule | undefined>
 
-export type ValidIf = Source<MayArray<ValidationInput> | undefined>
+export type ValidIf = Source<MayArray<ValidatorInput> | undefined>
 
 export type ValidatorProps = {
   /**
@@ -36,14 +36,14 @@ export type ValidatorProps = {
   validIf?: ValidIf
 }
 
-export type ButtonValidity = {
-  isValid: State<boolean>
+export type ButtonValidator = {
+  details: {
+    isValid: State<boolean>
+  }
   plugin: PivPlugin<'button'>
 }
 
-export function createValidator(options: {
-  props: ValidatorProps
-}): ButtonValidity {
+export function createValidator(options: { props: ValidatorProps }): ButtonValidator {
   const { props } = options
   const allRulesPassed = createState(() => toArray(val(props.validIf)).every((input) => isValidationPassed(input)))
   const isValid = createState(() => {
@@ -52,20 +52,24 @@ export function createValidator(options: {
     if (val(props.disabled)) return false
     return true
   })
-  
-  const validityPlugin = createPivPlugin<'button'>(() => ({
+
+  const validitorPlugin = createPivPlugin<'button'>(() => ({
     htmlProps: {
       disabled: isValid.map((valid) => !valid),
     },
   }))
 
-  return {
+  const validitorState = {
     isValid,
-    plugin: validityPlugin,
+  }
+
+  return {
+    details: validitorState,
+    plugin: validitorPlugin,
   }
 }
 
-function isValidationPassed(input: ValidationInput): boolean {
+function isValidationPassed(input: ValidatorInput): boolean {
   const validationInput = val(input)
   if (isObject(validationInput)) {
     return val(validationInput.should) === true
