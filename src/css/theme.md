@@ -250,7 +250,7 @@ line 的默认、弱、强边界压强
 --dye-good: --color-mix(
   --light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)),
   94,
-  var(--dye-brand-breath),
+  var(--dye-brand-flavor),
   6
 );
 ```

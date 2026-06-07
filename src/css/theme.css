@@ -155,28 +155,28 @@
     --dye-paper: --light-dark(white, black);
 
     /*
-     * brand breath：品牌气味。
+     * brand flavor：品牌气味。
      * 只取 brand hue 和极低 chroma，用于给灰阶染一点系统气质。
      */
-    --dye-brand-breath: --color-adjust(var(--dye-brand), set-lightness, 50%, set-chroma, 0.018);
+    --dye-brand-flavor: --color-adjust(var(--dye-brand), set-lightness, 50%, set-chroma, 0.018);
 
     /*
-     * neutral dye：由 paper / ink / brand-breath 混出的中性色阶。
+     * neutral dye：由 paper / ink / brand-flavor 混出的中性色阶。
      *
      * 约定：
      * - 数字越小，越接近 paper。
      * - 数字越大，越接近 ink。
      * - dye 层只表达色阶，不表达用途。
      */
-    --dye-neutral-0: --color-mix(var(--dye-paper), 98, var(--dye-brand-breath), 2);
-    --dye-neutral-1: --color-mix(var(--dye-paper), 94, var(--dye-ink), 2, var(--dye-brand-breath), 4);
-    --dye-neutral-2: --color-mix(var(--dye-paper), 88, var(--dye-ink), 4, var(--dye-brand-breath), 8);
-    --dye-neutral-3: --color-mix(var(--dye-paper), 80, var(--dye-ink), 8, var(--dye-brand-breath), 12);
-    --dye-neutral-4: --color-mix(var(--dye-paper), 68, var(--dye-ink), 18, var(--dye-brand-breath), 14);
-    --dye-neutral-5: --color-mix(var(--dye-paper), 52, var(--dye-ink), 34, var(--dye-brand-breath), 14);
-    --dye-neutral-6: --color-mix(var(--dye-paper), 34, var(--dye-ink), 56, var(--dye-brand-breath), 10);
-    --dye-neutral-7: --color-mix(var(--dye-paper), 18, var(--dye-ink), 76, var(--dye-brand-breath), 6);
-    --dye-neutral-8: --color-mix(var(--dye-paper), 8, var(--dye-ink), 90, var(--dye-brand-breath), 2);
+    --dye-neutral-0: --color-mix(var(--dye-paper), 98, var(--dye-brand-flavor), 2);
+    --dye-neutral-1: --color-mix(var(--dye-paper), 94, var(--dye-ink), 2, var(--dye-brand-flavor), 4);
+    --dye-neutral-2: --color-mix(var(--dye-paper), 88, var(--dye-ink), 4, var(--dye-brand-flavor), 8);
+    --dye-neutral-3: --color-mix(var(--dye-paper), 80, var(--dye-ink), 8, var(--dye-brand-flavor), 12);
+    --dye-neutral-4: --color-mix(var(--dye-paper), 68, var(--dye-ink), 18, var(--dye-brand-flavor), 14);
+    --dye-neutral-5: --color-mix(var(--dye-paper), 52, var(--dye-ink), 34, var(--dye-brand-flavor), 14);
+    --dye-neutral-6: --color-mix(var(--dye-paper), 34, var(--dye-ink), 56, var(--dye-brand-flavor), 10);
+    --dye-neutral-7: --color-mix(var(--dye-paper), 18, var(--dye-ink), 76, var(--dye-brand-flavor), 6);
+    --dye-neutral-8: --color-mix(var(--dye-paper), 8, var(--dye-ink), 90, var(--dye-brand-flavor), 2);
 
     /*
      * status dye：状态色元。
@@ -186,25 +186,25 @@
     --dye-good: --color-mix(
       --light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)),
       94,
-      var(--dye-brand-breath),
+      var(--dye-brand-flavor),
       6
     );
     --dye-bad: --color-mix(
       --light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)),
       94,
-      var(--dye-brand-breath),
+      var(--dye-brand-flavor),
       6
     );
     --dye-warn: --color-mix(
       --light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)),
       94,
-      var(--dye-brand-breath),
+      var(--dye-brand-flavor),
       6
     );
     --dye-info: --color-mix(
       --light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)),
       94,
-      var(--dye-brand-breath),
+      var(--dye-brand-flavor),
       6
     );
 

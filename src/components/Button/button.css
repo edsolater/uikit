@@ -1,10 +1,9 @@
 @layer uikit {
   .Button {
     --Button-accent: var(--color-action);
-    --Button-danger: var(--color-bad);
     --Button-ink: CanvasText;
     --Button-bg: transparent;
-    --Button-fg: var(--Button-ink);
+    --Button-fg: var(--color-fg);
     --Button-border-color: transparent;
     --Button-border-shadow: inset 0 0 0 1px var(--Button-border-color);
     --Button-focus: var(--Button-accent);
@@ -33,10 +32,6 @@
       box-shadow 120ms ease,
       color 120ms ease,
       opacity 120ms ease;
-
-    &:hover:not(:disabled) {
-      --Button-bg: color-mix(in oklab, currentColor 8%, transparent);
-    }
 
     &:active:not(:disabled) {
       --Button-bg: color-mix(in oklab, currentColor 12%, transparent);
@@ -70,6 +65,9 @@
       --Button-bg: var(--Button-accent);
       --Button-fg: --foreground-on(var(--Button-bg));
       --Button-border-color: var(--Button-bg);
+      &:hover:not(:disabled) {
+        --Button-bg: --lighten(var(--Button-accent));
+      }
     }
 
     &[data-intent='accent'] {
@@ -81,8 +79,8 @@
     }
 
     &[data-intent='danger'] {
-      --Button-accent: var(--Button-danger);
-      --Button-focus: var(--Button-danger);
+      --Button-accent: var(--color-bad);
+      --Button-focus: var(--color-bad);
     }
 
     &[data-spacing='compact'] {
