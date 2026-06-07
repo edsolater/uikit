@@ -6,20 +6,21 @@
 import { isExist, mergeObjectsWithConfigs, toArray, type MayArray } from '@edsolater/fnkit'
 import type { JSX } from 'solid-js'
 import type { PivHTMLElement, PivTag } from './domMap'
-import { setSingleDomProp, type HTMLPropAtom } from './handleHTMLPropsValue'
+import { setSingleDomProp, type HTMLPropAtom, type HTMLPropPrimitive } from './handleHTMLPropsValue'
 
 /* 直接可以使用 `pivProps` ，所以应该被禁止 */
 type ReservedHTMLPropKey = 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
 
 /* 允许使用的 `HTMLprops` */
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
+type KnownHTMLPropValue<Tag extends PivTag> = JSX.IntrinsicElements[Tag][KnownHTMLPropKey<Tag>]
 
 type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
   [Key in KnownHTMLPropKey<Tag>]?: HTMLPropAtom<JSX.IntrinsicElements[Tag][Key]>
 } & {
-  [key: `attr:${string}`]: HTMLPropAtom | undefined
-  [key: `prop:${string}`]: HTMLPropAtom | undefined
-  [key: string]: HTMLPropAtom | undefined
+  [key: `attr:${string}`]: HTMLPropAtom<HTMLPropPrimitive> | undefined
+  [key: `prop:${string}`]: HTMLPropAtom<HTMLPropPrimitive> | undefined
+  [key: string]: HTMLPropAtom<unknown> | undefined
 }
 
 export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArray<HTMLPropsRecord<Tag> | undefined>
@@ -32,6 +33,7 @@ export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag
       continue
     }
 
+    // @ts-ignore
     setSingleDomProp(element, key, atom)
   }
 }

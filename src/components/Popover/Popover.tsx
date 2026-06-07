@@ -11,6 +11,7 @@ import { val } from '../../hooks/createState'
 export type PopoverPlacement = 'top' | 'right' | 'bottom' | 'left'
 export type PopoverMode = 'auto' | 'hint' | 'manual'
 export type PopoverAction = 'toggle' | 'show' | 'hide'
+type NativeHTMLPropKey = 'children' | 'class' | 'style' | 'ref' | `on${string}` | `on:${string}`
 
 export type PopoverProps = {
   class?: string
@@ -28,9 +29,7 @@ export type PopoverProps = {
   defaultOpen?: boolean
   triggerProps?: Omit<
     JSX.ButtonHTMLAttributes<HTMLButtonElement>,
-    | 'children'
-    | 'class'
-    | 'style'
+    | NativeHTMLPropKey
     | 'type'
     | 'id'
     | 'aria-controls'
@@ -39,7 +38,7 @@ export type PopoverProps = {
     | 'popovertarget'
     | 'popovertargetaction'
   >
-  surfaceProps?: Omit<JSX.HTMLAttributes<HTMLDivElement>, 'children' | 'class' | 'style' | 'id' | 'popover'>
+  surfaceProps?: Omit<JSX.HTMLAttributes<HTMLDivElement>, NativeHTMLPropKey | 'id' | 'popover'>
   onToggle?: (open: boolean, event: PopoverToggleEvent) => void
   onBeforeToggle?: (open: boolean, event: PopoverToggleEvent) => void
 }
@@ -101,7 +100,7 @@ export function Popover(inputProps: PopoverProps) {
         ref={controller.setPopoverElement}
         htmlProps={{
           id: controller.popoverId,
-          popover: props.popover,
+          popover: props.popover as any,
           ...props.surfaceProps,
         }}
       >

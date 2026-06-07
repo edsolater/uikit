@@ -9,7 +9,7 @@ import { createComputed, createSignal } from 'solid-js'
 import { val, type Source } from '../../hooks'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
-type HTMLPropPrimitive = string | number | boolean | null | undefined
+export type HTMLPropPrimitive = string | number | boolean | null | undefined
 export type HTMLPropAtomValue<Raw = HTMLPropPrimitive> = Raw | ((prev?: Raw) => Raw) | { mergable: Raw } // TODO: autoMerge显式自动合并
 export type HTMLPropAtom<Raw = HTMLPropPrimitive> = Source<MayArray<Source<HTMLPropAtomValue<Raw>>>>
 
