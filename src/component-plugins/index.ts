@@ -1,2 +1,2 @@
 export * from './clickable'
-export * from './interactivable'
+export * from './hoverable'

@@ -99,7 +99,6 @@ function handleHTMLSetAction(
 /**
  * 解析 HTMLValue (函数会自动调用)
  *
- * TODO：数组会自动合并
  *
  * ** 不能要未申明的“智能”合并，因为按规则自动合并而非覆盖，会有额外的心智负担
  */

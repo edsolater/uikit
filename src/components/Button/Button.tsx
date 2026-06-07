@@ -3,7 +3,7 @@
  * 它负责按钮动作语义、声量 class、交互尺度、状态表达和基础样式入口，不负责主题系统、表单编排、状态判断、状态来源组装或路由行为。
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
-import { interactivable, clickable } from '../../component-plugins'
+import { hoverable, clickable } from '../../component-plugins'
 import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
