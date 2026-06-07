@@ -8,7 +8,7 @@
     --Button-bg-hover: --lighten(var(--Button-bg), 5%);
     --Button-bg-focus: var(--Button-bg-accent);
     --Button-bg-accent: var(--color-action);
-    --Button-fg: var(--color-fg);
+    --Button-fg: currentColor;
     --Button-fg-hover: --lighten(var(--Button-fg), 10%);
     --Button-border: transparent;
 
@@ -60,7 +60,7 @@
     :not(&[data-tone]) {
       --Button-border: var(--theme);
       --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 4);
-      --Button-fg: --color-mix(var(--theme), 1, var(--color-fg), 1);
+      --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
     }
 
     /* 信息语气：烟隐 */
@@ -73,7 +73,7 @@
     /* 信息语气：轻柔 */
     &[data-tone='subtle'] {
       --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 2);
-      --Button-fg: --color-mix(var(--theme), 1, var(--color-fg), 1);
+      --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
     }
 
     /* 信息语气：坚实 */
