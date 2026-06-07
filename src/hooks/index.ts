@@ -17,3 +17,4 @@ export * from './domRef' // DOM 领域的元素引用 hook
 export * from './useBrowserAnimationFrame' // Browser 领域的 animation frame 调度 primitive
 export * from './useDOMRegisterer' // DOM 领域的全局节点注册 / 卸载 primitive
 export * from './useUIThemeMode' // UI 领域的全局 light / dark / system 主题模式 hook
+export * from './createStateWithPrev' // 给state增加一个prev属性， 用于获取之前的值。

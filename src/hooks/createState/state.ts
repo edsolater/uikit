@@ -1,5 +1,5 @@
 import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
-import { createEffect, createSignal, on, type Accessor } from 'solid-js'
+import { createSignal } from 'solid-js'
 import { createReactionFn } from './createReactiveRunner'
 import { val } from './read'
 
@@ -77,6 +77,7 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
     read() {
       return solidjsAccessor()
     },
+    
     [readableStateBrand]: true,
     [stateBrand]: true,
     [Symbol.dispose]() {

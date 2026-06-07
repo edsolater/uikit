@@ -8,6 +8,7 @@
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "noImplicitAny": false,
     "noEmit": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js"

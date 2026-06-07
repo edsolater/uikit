@@ -4,13 +4,14 @@
  * class、style 和事件不进入这个通道。
  */
 
-import { isArray, isString, type MayArray } from '@edsolater/fnkit'
+import { isArray, isFunction, isString, shrinkFn, type MayArray } from '@edsolater/fnkit'
 import { createComputed, createSignal } from 'solid-js'
 import { val, type Source } from '../../hooks'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
-export type HTMLPropValue = string | number | boolean | null | undefined | object
-export type HTMLPropAtom = Source<MayArray<Source<HTMLPropValue>>>
+type HTMLPropPrimitive = string | number | boolean | null | undefined | object
+export type HTMLPropValue<Raw = HTMLPropPrimitive> = Raw | ((prev?: Raw) => Raw) // TODO: prev 参数用于感知primitive，以便精细化处理， 如 自定义merge方法
+export type HTMLPropAtom<Raw = HTMLPropPrimitive> = Source<MayArray<Source<HTMLPropValue<Raw>>>>
 
 /**
  * 按 key 语义写入 DOM。
@@ -66,34 +67,49 @@ export function setSingleDomProp(element: HTMLElement, key: string, atom: HTMLPr
 function handleHTMLSetAction(
   atom: HTMLPropAtom,
   options: {
-    runEffect: (val: HTMLPropValue) => void // 解析出 value 后的操作
+    runEffect: (val: HTMLPropPrimitive) => void // 解析出 value 后的操作
   },
 ): void {
+  const [activePrimitive, setActivePrimitive] = createSignal<HTMLPropPrimitive>()
+
   createComputed(() => {
     const values = val(atom)
     if (!isArray(values)) {
-      options.runEffect(val(values))
+      const inputValue = val(values)
+      const newPrimitive = parseHTMLPropertyValue(inputValue)
+      setActivePrimitive(newPrimitive)
     } else {
-      const [mergedValue, setMergedValue] = createSignal<HTMLPropValue>()
       for (const htmlValue of values) {
         createComputed(() => {
-          const v = val(htmlValue)
-          setMergedValue(s=>{
-            if (isString(v) && isString(s)) {
-              return s ? `${s} ${v}` : v
-            }
-            return v
+          const inputValue = val(htmlValue)
+          setActivePrimitive((prevStoredValue) => {
+            const newPrimitive = parseHTMLPropertyValue(inputValue, prevStoredValue)
+            return newPrimitive
           })
         })
       }
-
-      createComputed(() => {
-        options.runEffect(mergedValue())
-      })
     }
+  })
+
+  createComputed(() => {
+    options.runEffect(activePrimitive())
   })
 }
 
+/**
+ * 解析 HTMLValue (函数会自动调用)
+ * 
+ * TODO：数组会自动合并
+ *
+ * ** 不能要未申明的“智能”合并，因为按规则自动合并而非覆盖，会有额外的心智负担
+ */
+function parseHTMLPropertyValue(newVal: HTMLPropValue, oldVal?: HTMLPropValue): HTMLPropPrimitive {
+  let newPrimitive = newVal
+  if (isFunction(newVal)) {
+    newPrimitive = shrinkFn(newVal, [oldVal])
+  }
+  return newPrimitive
+}
 /**
  * data 和 aria 是 HTML attribute 语义，不参与 DOM property 自动探测。
  */
@@ -104,7 +120,7 @@ function isAttributeOnlyKey(key: string) {
 /**
  * attribute 的空值语义是移除，false 也按没有该 attribute 处理。
  */
-function setAttributeValue(element: HTMLElement, key: string, value: HTMLPropAtom) {
+function setAttributeValue(element: HTMLElement, key: string, value: HTMLPropPrimitive) {
   if (value == null || value === false) {
     element.removeAttribute(key)
     return
@@ -116,8 +132,8 @@ function setAttributeValue(element: HTMLElement, key: string, value: HTMLPropAto
 /**
  * property 空值语义交给 DOM 自身承接，不在这里模拟 attribute remove。
  */
-function setPropertyValue(element: HTMLElement, key: string, value: HTMLPropAtom) {
-  ;(element as unknown as Record<string, HTMLPropAtom>)[key] = value
+function setPropertyValue(element: HTMLElement, key: string, value: HTMLPropPrimitive) {
+  ;(element as unknown as Record<string, HTMLPropPrimitive>)[key] = value
 }
 
 /**

@@ -3,10 +3,8 @@
  * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
-import { mergeObjects, mergeObjectsWithConfigs, toArray, type MayArray, isString, isExist } from '@edsolater/fnkit'
+import { isExist, mergeObjectsWithConfigs, toArray, type MayArray } from '@edsolater/fnkit'
 import type { JSX } from 'solid-js'
-import { createRenderEffect } from 'solid-js'
-import { val, type Source } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
 import { setSingleDomProp, type HTMLPropAtom } from './handleHTMLPropsValue'
 
@@ -15,18 +13,13 @@ type ReservedHTMLPropKey = 'class' | 'className' | 'style' | 'children' | 'ref' 
 
 /* 允许使用的 `HTMLprops` */
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
-type HTMLValue<Value> = Value | null | undefined
-
-type PatchedIntrinsicHTMLPropValue<Tag extends PivTag, Key extends KnownHTMLPropKey<Tag>> = Key extends 'popover'
-  ? JSX.IntrinsicElements[Tag][Key] | 'hint'
-  : JSX.IntrinsicElements[Tag][Key]
 
 type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
-  [Key in KnownHTMLPropKey<Tag>]?: Source<HTMLValue<PatchedIntrinsicHTMLPropValue<Tag, Key>>>
+  [Key in KnownHTMLPropKey<Tag>]?: HTMLPropAtom<JSX.IntrinsicElements[Tag][Key]>
 } & {
-  [key: `attr:${string}`]: Source<HTMLPropAtom> | undefined
-  [key: `prop:${string}`]: Source<HTMLPropAtom> | undefined
-  [key: string]: Source<HTMLPropAtom> | undefined
+  [key: `attr:${string}`]: HTMLPropAtom | undefined
+  [key: `prop:${string}`]: HTMLPropAtom | undefined
+  [key: string]: HTMLPropAtom | undefined
 }
 
 export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArray<HTMLPropsRecord<Tag> | undefined>
