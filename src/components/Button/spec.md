@@ -56,11 +56,7 @@ content = 动作内容表达
 - `tone` 回答的问题是：这个动作应该用多大力气被看见。
 
 ```ts
-type ButtonTone =
-  | 'bare'
-  | 'subtle'
-  | 'normal'
-  | 'solid'
+type ButtonTone = 'bare' | 'subtle' | 'solid'
 ```
 
 ```txt
@@ -90,18 +86,18 @@ bare → subtle → normal → solid
 - 传统 `outline` 的问题是边框存在感容易抢走文字信息。
 - `subtle` 的目标是轻轻包住动作，而不是用边框强调自己。
 
-### normal 常声量（默认）  
+###  常声量（默认）
 
-- `normal` 是默认声量。
-- `normal` 表示正常 `Button`。
-- `normal` 应明确可交互。
-- `normal` 应有稳定容器感。
-- `normal` 不应制造强噪声。
-- `normal` 向上可以增强为 `solid`。
-- `normal` 向下可以减弱为 `subtle` 或 `bare`。
+- `` 是默认声量。
+- `` 表示正常 `Button`。
+- `` 应明确可交互。
+- `` 应有稳定容器感。
+- `` 不应制造强噪声。
+- `` 向上可以增强为 `solid`。
+- `` 向下可以减弱为 `subtle` 或 `bare`。
 
 ```ts
-const defaultTone = 'normal'
+
 ```
 
 ### solid 强声量
@@ -124,10 +120,7 @@ const defaultTone = 'normal'
 - `intent` 不决定视觉声量。
 
 ```ts
-type ButtonIntent =
-  | 'neutral'
-  | 'accent'
-  | 'danger'
+type ButtonIntent = 'neutral' | 'accent' | 'danger'
 ```
 
 ### neutral 普通（默认）
@@ -164,32 +157,20 @@ const defaultIntent = 'neutral'
 <Button intent="danger" tone="solid">Delete</Button>
 ```
 
-## Scale 交互尺度 
+## Scale 交互尺度
 
 - `scale` 表示交互尺度，而非物理尺寸。
 - `scale` 由信息密度、操作频率、命中需求和所在区域共同决定。
 
 ```ts
-type ButtonScale =
-  | 'compact'
-  | 'normal'
-  | 'large'
+type ButtonScale = 'small' | 'large'
 ```
 
-### compact 紧凑尺度（交互有点难）
+### small 紧凑尺度（交互有点难）
 
-- `compact` 表示紧凑尺度。
-- `compact` 适合 `toolbar`、`sidebar`、`table row`、`popover`、`inline action`、`card corner action`。
-- `compact` 表示动作存在，但不应该膨胀空间。
-
-### normal 默认尺度
-
-- `normal` 表示默认尺度。
-- `normal` 适合 `form`、`dialog`、`panel` 和普通页面操作区。
-
-```ts
-const defaultScale = 'normal'
-```
+- `small` 表示紧凑尺度。
+- `small` 适合 `toolbar`、`sidebar`、`table row`、`popover`、`inline action`、`card corner action`。
+- `small` 表示动作存在，但不应该膨胀空间。
 
 ### large 大尺度，易操作，但需要克制
 
@@ -219,10 +200,7 @@ const defaultScale = 'normal'
 - `idle` 可以保留在概念模型里，但不要求必须作为显式输入存在。
 
 ```ts
-type ButtonBusinessStatus =
-  | 'idle'
-  | 'loading'
-  | 'disabled'
+type ButtonBusinessStatus = 'idle' | 'loading' | 'disabled'
 ```
 
 - `validator`、`credibility`、`query database` 这类设施可以产出业务状态。
@@ -293,42 +271,23 @@ label?: string
 - 本文档暂不讨论 `auto` 的具体实现方式。
 
 ```ts
-type ButtonType =
-  | 'auto'
-  | 'button'
-  | 'submit'
-  | 'reset'
+type ButtonType = 'auto' | 'button' | 'submit' | 'reset'
 ```
 
 ```ts
 const defaultType = 'auto'
 ```
 
-
 ## API 草案
 
 ```ts
-type ButtonTone =
-  | 'bare'
-  | 'subtle'
-  | 'normal'
-  | 'solid'
+type ButtonTone = 'bare' | 'subtle' | 'solid'
 
-type ButtonIntent =
-  | 'neutral'
-  | 'accent'
-  | 'danger'
+type ButtonIntent = 'neutral' | 'accent' | 'danger'
 
-type ButtonScale =
-  | 'compact'
-  | 'normal'
-  | 'large'
+type ButtonScale = 'small' | 'large'
 
-type ButtonType =
-  | 'auto'
-  | 'button'
-  | 'submit'
-  | 'reset'
+type ButtonType = 'auto' | 'button' | 'submit' | 'reset'
 
 interface ButtonProps {
   /**
@@ -353,7 +312,7 @@ interface ButtonProps {
   /**
    * 交互尺度。
    *
-   * compact: 高密度区域。
+   * small: 高密度区域。
    * normal: 默认尺度。
    * large: 主行动区 / 大入口。
    */
@@ -392,18 +351,18 @@ interface ButtonProps {
 
 ```ts
 const defaultButtonProps = {
-  tone: 'normal',
   intent: 'neutral',
-  scale: 'normal',
   type: 'auto',
 } satisfies Partial<ButtonProps>
 ```
+
 ## 每一个领域问题， 应该有一个可复用（但也可不复用）的 primitive 处理
-- `tone` 领域问题由  `createToneManager` 处理。
+
+- `tone` 领域问题由 `createToneManager` 处理。
 - `intent` 领域问题由 `createIntentManager` 处理。
 - `status` 领域问题由 `createStatusManager` 处理。
 - `createStatusManager` 负责状态承载与状态输出，不负责状态判断。
-等，我就不赘述了
+  等，我就不赘述了
 
 不要怕麻烦，因为用优雅的排比， 并领域清晰， 所以阅读起来心智负担其实不大
 
@@ -420,18 +379,18 @@ const defaultButtonProps = {
 - 不提供 `validIf?: ...` 作为 `Button` 本体的判断式 API。
 - 不提供 `validator?: ...` 作为 `Button` 本体内建能力。
 
-| API | 删除原因 |
-| --- | --- |
-| `variant` | 语义太泛，不说明变化维度。 |
-| `size` | 语义太物理，`scale` 更接近交互尺度。 |
-| `shape` | 属于全局风格，不属于单个 `Button`。 |
-| `href` | 属于 `Link`，不属于 `Button`。 |
-| `target` | 属于 `Link`，不属于 `Button`。 |
-| `icon` | 属于 `content`，不应作为一级特权 props。 |
-| `trailingIcon` | 属于 `content`，不应作为一级特权 props。 |
-| `enabled` | 它是判断语义，不是 `Button` 本体应承担的显示语义。 |
-| `validIf` | 它会把外部判断设施直接并入 `Button` 本体。 |
-| `validator` | `Button` 可以接收状态，但不应内建判断器。 |
+| API            | 删除原因                                           |
+| -------------- | -------------------------------------------------- |
+| `variant`      | 语义太泛，不说明变化维度。                         |
+| `size`         | 语义太物理，`scale` 更接近交互尺度。               |
+| `shape`        | 属于全局风格，不属于单个 `Button`。                |
+| `href`         | 属于 `Link`，不属于 `Button`。                     |
+| `target`       | 属于 `Link`，不属于 `Button`。                     |
+| `icon`         | 属于 `content`，不应作为一级特权 props。           |
+| `trailingIcon` | 属于 `content`，不应作为一级特权 props。           |
+| `enabled`      | 它是判断语义，不是 `Button` 本体应承担的显示语义。 |
+| `validIf`      | 它会把外部判断设施直接并入 `Button` 本体。         |
+| `validator`    | `Button` 可以接收状态，但不应内建判断器。          |
 
 ## 最终结构
 
@@ -448,7 +407,7 @@ Button
 │  ├─ accent
 │  └─ danger
 ├─ scale
-│  ├─ compact
+│  ├─ small
 │  ├─ normal
 │  └─ large
 ├─ status

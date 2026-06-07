@@ -18,15 +18,15 @@ interface ButtonProfileProps extends ProfileProps {
    *
    * 不用 Source<>，因为 tone 不会随状态变化而变化，直接用 string 就可以了。
    *
-   * - plain：最轻的语气，通常用于次要或辅助动作，或者当按钮需要与背景融为一体时。无边界， 无状态显示
-   * - soft：较轻的语气，通常用于次要动作。无边界，无状态显示
-   * - normal：默认值，标准语气。有边界，但用并不突兀， 可有当前状态显示。匹配 intent:accent
+   * - bare：最轻的语气，通常用于次要或辅助动作，或者当按钮需要与背景融为一体时。无边界， 无状态显示
+   * - subtle：较轻的语气，通常用于次要动作。无边界，无状态显示
+   * - undefined：默认值，标准语气。有边界，但用并不突兀， 可有当前状态显示。匹配 intent:accent
    * - solid：最强的语气，通常用于主要动作。 更强的操作，需要“打眼”。匹配 intent:accent；非常匹配 intent:danger
    */
   tone?:
-    | 'plain' // 最轻的语气
-    | 'soft' // 较轻的语气
-    | 'normal' // 默认值，标准语气
+    | 'bare' // 最轻的语气
+    | 'subtle' // 较轻的语气
+    | undefined // 默认值，标准语气
     | 'solid' // 最强的语气
 
   /**
@@ -36,11 +36,11 @@ interface ButtonProfileProps extends ProfileProps {
 
   /**
    * 交互尺度。（按钮给人的可交互区域的感觉）
-   * - compact：紧凑，适用于工具栏或空间受限的场景。
-   * - loose：宽松，适用于需要强调的场景或触控设备。
+   * - small：紧凑，适用于工具栏或空间受限的场景。
+   * - large：宽松，适用于需要强调的场景或触控设备。
    * - undefined：默认尺度，适用于大多数场景。
    */
-  spacing?: Source<'compact' | 'loose' | undefined>
+  spacing?: Source<'small' | 'large' | undefined>
 
   /**
    * 自身的表述， 类似于 JS 对象字面量里的key
