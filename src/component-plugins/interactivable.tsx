@@ -14,7 +14,7 @@ export function interactivable(options?: { componentName?: string }) {
   const plugin = createPivPlugin(() => ({
     htmlProps: {
       tabIndex: 0,
-      'data-plugin': (s) => `${s} ${interactivable.name}`,
+      'data-plugin': { mergable: interactivable.name },
     },
     on: {
       pointerover: () => interactionStatusActions.setStatus('hover', true),

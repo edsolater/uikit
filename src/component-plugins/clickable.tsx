@@ -15,8 +15,8 @@ export function clickable(options?: { componentName?: string }) {
   const interactionStatusFocus = interactivable(options)
   const plugin = createPivPlugin(() => ({
     htmlProps: {
-      tabIndex: 3,
-      'data-plugin': (s) => `${s} ${clickable.name}`,
+      tabIndex: 0,
+      'data-plugin': { mergable: clickable.name },
     },
     plugins: [interactionStatusFocus.plugin],
     on: {

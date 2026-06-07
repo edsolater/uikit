@@ -4,14 +4,14 @@
  * class、style 和事件不进入这个通道。
  */
 
-import { isArray, isFunction, isString, shrinkFn, type MayArray } from '@edsolater/fnkit'
+import { isArray, isFunction, isObject, result, type MayArray } from '@edsolater/fnkit'
 import { createComputed, createSignal } from 'solid-js'
 import { val, type Source } from '../../hooks'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
-type HTMLPropPrimitive = string | number | boolean | null | undefined | object
-export type HTMLPropValue<Raw = HTMLPropPrimitive> = Raw | ((prev?: Raw) => Raw) // TODO: prev 参数用于感知primitive，以便精细化处理， 如 自定义merge方法
-export type HTMLPropAtom<Raw = HTMLPropPrimitive> = Source<MayArray<Source<HTMLPropValue<Raw>>>>
+type HTMLPropPrimitive = string | number | boolean | null | undefined
+export type HTMLPropAtomValue<Raw = HTMLPropPrimitive> = Raw | ((prev?: Raw) => Raw) | { mergable: Raw } // TODO: autoMerge显式自动合并
+export type HTMLPropAtom<Raw = HTMLPropPrimitive> = Source<MayArray<Source<HTMLPropAtomValue<Raw>>>>
 
 /**
  * 按 key 语义写入 DOM。
@@ -98,15 +98,19 @@ function handleHTMLSetAction(
 
 /**
  * 解析 HTMLValue (函数会自动调用)
- * 
+ *
  * TODO：数组会自动合并
  *
  * ** 不能要未申明的“智能”合并，因为按规则自动合并而非覆盖，会有额外的心智负担
  */
-function parseHTMLPropertyValue(newVal: HTMLPropValue, oldVal?: HTMLPropValue): HTMLPropPrimitive {
-  let newPrimitive = newVal
-  if (isFunction(newVal)) {
-    newPrimitive = shrinkFn(newVal, [oldVal])
+function parseHTMLPropertyValue(newVal: HTMLPropAtomValue, oldPrimitive?: HTMLPropPrimitive): HTMLPropPrimitive {
+  let newPrimitive: HTMLPropPrimitive
+  if (isObject(newVal) && 'mergable' in newVal) {
+    newPrimitive = oldPrimitive ? `${oldPrimitive} ${newVal.mergable}` : newVal.mergable
+  } else if (isFunction(newVal)) {
+    newPrimitive = result(newVal, oldPrimitive)
+  } else {
+    newPrimitive = newVal
   }
   return newPrimitive
 }
