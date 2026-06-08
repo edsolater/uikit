@@ -131,14 +131,14 @@ light / dark 主要集中在 dye-brand 这里处理，只是判断入口从原�
 
 --dye-action-hover: --color-adjust(
   var(--dye-action),
-  delta-lightness, 4%,
-  delta-chroma, 0.01
+  lighter, 4%,
+  vivid, 0.01
 );
 
 --dye-action-active: --color-adjust(
   var(--dye-action),
-  delta-lightness, -6%,
-  delta-chroma, -0.01
+  darker, 6%,
+  grayish, 0.01
 );
 ```
 
@@ -155,20 +155,20 @@ active = 按下态 / 压实
 ```css
 --dye-accent: --color-adjust(
   var(--dye-brand),
-  delta-hue, -18deg,
-  delta-lightness, 4%,
-  delta-chroma, 0.01
+  hue-backward, 18deg,
+  lighter, 4%,
+  vivid, 0.01
 );
 
 --dye-accent-soft: --color-adjust(
   var(--dye-accent),
-  set-opacity, 14%
+  opacity, 14%
 );
 
 --dye-accent-strong: --color-adjust(
   var(--dye-accent),
-  delta-lightness, 8%,
-  delta-chroma, 0.02
+  lighter, 8%,
+  vivid, 0.02
 );
 ```
 

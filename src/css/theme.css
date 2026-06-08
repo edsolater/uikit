@@ -119,32 +119,32 @@
      * action hover dye：动作兴趣态色元。
      * hover 表示用户靠近，不是按下。
      */
-    --dye-action-hover: --color-adjust(var(--dye-action), delta-lightness, 4%, delta-chroma, 0.01);
+    --dye-action-hover: --color-adjust(var(--dye-action), lighter, 4%, vivid, 0.01);
 
     /*
      * action active dye：动作按下态色元。
      * active 应该比 hover 更压实。
      */
-    --dye-action-active: --color-adjust(var(--dye-action), delta-lightness, -6%, delta-chroma, -0.01);
+    --dye-action-active: --color-adjust(var(--dye-action), darker, 6%, grayish, 0.01);
 
     /*
      * accent dye：系统强调色元。
      * accent 表示当前态、选中态、聚焦态和系统强调。
      * accent 不是 action，应该和 action 拉开一点色相。
      */
-    --dye-accent: --color-adjust(var(--dye-brand), delta-hue, -18deg, delta-lightness, 4%, delta-chroma, 0.01);
+    --dye-accent: --color-adjust(var(--dye-brand), hue-backward, 18deg, lighter, 4%, vivid, 0.01);
 
     /*
      * accent soft dye：弱强调底色。
      * 用于 selected item background、tag background 和 weak highlight。
      */
-    --dye-accent-soft: --color-adjust(var(--dye-accent), set-opacity, 14%);
+    --dye-accent-soft: --color-adjust(var(--dye-accent), opacity, 14%);
 
     /*
      * accent strong dye：强强调色元。
      * 用于少数需要更高存在感的 active indicator。
      */
-    --dye-accent-strong: --color-adjust(var(--dye-accent), delta-lightness, 8%, delta-chroma, 0.02);
+    --dye-accent-strong: --color-adjust(var(--dye-accent), lighter, 8%, vivid, 0.02);
 
     /*
      * ink / paper：当前模式下的极性色元。
@@ -158,7 +158,7 @@
      * brand flavor：品牌气味。
      * 只取 brand hue 和极低 chroma，用于给灰阶染一点系统气质。
      */
-    --dye-brand-flavor: --color-adjust(var(--dye-brand), set-lightness, 50%, set-chroma, 0.018);
+    --dye-brand-flavor: --color-adjust(var(--dye-brand), lightness, 50%, chroma, 0.018);
 
     /*
      * neutral dye：由 paper / ink / brand-flavor 混出的中性色阶。
@@ -221,7 +221,7 @@
     --color-surface: var(--dye-neutral-0);
     --color-surface-low: var(--dye-neutral-1);
     --color-surface-high: var(--dye-neutral-2);
-    --color-surface-overlay: --color-adjust(var(--dye-ink), set-opacity, 46%);
+    --color-surface-overlay: --color-adjust(var(--dye-ink), opacity, 46%);
     --color-surface-inverse: var(--dye-neutral-8);
 
     /*
@@ -246,10 +246,10 @@
      * soft / strong 表达品牌信息的语气强弱，不表达结构层级。
      */
     --color-brand: var(--dye-brand);
-    --color-brand-soft: --color-adjust(var(--dye-brand), set-opacity, 14%);
-    --color-brand-strong: --color-adjust(var(--dye-brand), delta-lightness, -6%, delta-chroma, 0.02);
+    --color-brand-soft: --color-adjust(var(--dye-brand), opacity, 14%);
+    --color-brand-strong: --color-adjust(var(--dye-brand), darker, 6%, vivid, 0.02);
     --color-brand-fg: --foreground-on(var(--color-brand));
-    --color-brand-line: --color-adjust(var(--dye-brand), set-opacity, 44%);
+    --color-brand-line: --color-adjust(var(--dye-brand), opacity, 44%);
 
     /*
      * Action：可操作入口。
@@ -260,7 +260,7 @@
     --color-action-active: var(--dye-action-active);
     --color-action-disabled: var(--dye-neutral-3);
     --color-action-fg: --foreground-on(var(--color-action));
-    --color-action-line: --color-adjust(var(--dye-action), set-opacity, 48%);
+    --color-action-line: --color-adjust(var(--dye-action), opacity, 48%);
 
     /*
      * Link：独立链接角色。
@@ -269,7 +269,7 @@
     --color-link: var(--color-action);
     --color-link-hover: var(--color-action-hover);
     --color-link-active: var(--color-action-active);
-    --color-link-visited: --color-adjust(var(--dye-action), delta-hue, 36deg, delta-chroma, -0.02);
+    --color-link-visited: --color-adjust(var(--dye-action), hue-forward, 36deg, grayish, 0.02);
 
     /*
      * Accent：当前态、选中态、聚焦态和系统强调。
@@ -279,8 +279,8 @@
     --color-accent-soft: var(--dye-accent-soft);
     --color-accent-strong: var(--dye-accent-strong);
     --color-accent-fg: --foreground-on(var(--color-accent));
-    --color-accent-line: --color-adjust(var(--dye-accent), set-opacity, 50%);
-    --color-accent-focus: --color-adjust(var(--dye-accent), set-opacity, 42%);
+    --color-accent-line: --color-adjust(var(--dye-accent), opacity, 50%);
+    --color-accent-focus: --color-adjust(var(--dye-accent), opacity, 42%);
 
     /*
      * Status：状态语义。
@@ -291,30 +291,30 @@
      * soft 表示低语气状态信息，strong 暂不提供，避免为了完整性造 token。
      */
     --color-good: var(--dye-good);
-    --color-good-soft: --color-adjust(var(--dye-good), set-opacity, 14%);
+    --color-good-soft: --color-adjust(var(--dye-good), opacity, 14%);
     --color-good-fg: --foreground-on(var(--color-good));
-    --color-good-line: --color-adjust(var(--dye-good), set-opacity, 44%);
+    --color-good-line: --color-adjust(var(--dye-good), opacity, 44%);
 
     --color-bad: var(--dye-bad);
-    --color-bad-soft: --color-adjust(var(--dye-bad), set-opacity, 14%);
+    --color-bad-soft: --color-adjust(var(--dye-bad), opacity, 14%);
     --color-bad-fg: --foreground-on(var(--color-bad));
-    --color-bad-line: --color-adjust(var(--dye-bad), set-opacity, 44%);
+    --color-bad-line: --color-adjust(var(--dye-bad), opacity, 44%);
 
     --color-warn: var(--dye-warn);
-    --color-warn-soft: --color-adjust(var(--dye-warn), set-opacity, 14%);
+    --color-warn-soft: --color-adjust(var(--dye-warn), opacity, 14%);
     --color-warn-fg: --foreground-on(var(--color-warn));
-    --color-warn-line: --color-adjust(var(--dye-warn), set-opacity, 44%);
+    --color-warn-line: --color-adjust(var(--dye-warn), opacity, 44%);
 
     --color-info: var(--dye-info);
-    --color-info-soft: --color-adjust(var(--dye-info), set-opacity, 14%);
+    --color-info-soft: --color-adjust(var(--dye-info), opacity, 14%);
     --color-info-fg: --foreground-on(var(--color-info));
-    --color-info-line: --color-adjust(var(--dye-info), set-opacity, 44%);
+    --color-info-line: --color-adjust(var(--dye-info), opacity, 44%);
 
     /*
      * Shadow / Backdrop：和当前模式绑定的阴影与遮罩材料。
      */
-    --color-shadow: --color-adjust(var(--dye-ink), set-opacity, 18%);
-    --color-backdrop: --color-adjust(var(--dye-ink), set-opacity, 62%);
+    --color-shadow: --color-adjust(var(--dye-ink), opacity, 18%);
+    --color-backdrop: --color-adjust(var(--dye-ink), opacity, 62%);
 
     /* ----------------------------------------------------------------------
      * 尺寸系统设计参数

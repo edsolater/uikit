@@ -109,11 +109,11 @@ import './app.css'
 }
 ```
 
-`--shift-color-channel()`、`--color-adjust()`、`--color-mix()` 仍然是颜色工具函数。`--color-adjust()` 负责单源颜色派生，`--color-mix()` 负责多颜色因素合成。它们适合在 `color.css` 内部或需要生成新变量时使用，不作为组件公开消费的默认写法。
+`--shift-color-channel()`、`--color-adjust()`、`--color-mix()` 仍然是颜色工具函数。`--color-adjust()` 用 lighter / darker / vivid / grayish / hue-forward / hue-backward / faded / lightness / chroma / hue / opacity 这组词做单源颜色派生，`--color-mix()` 负责多颜色因素合成。它们适合在 `color.css` 内部或需要生成新变量时使用，不作为组件公开消费的默认写法。
 
 ```css
 :root {
-  --color-product: --color-adjust(var(--color-brand), delta-hue, 18deg);
+  --color-product: --color-adjust(var(--color-brand), hue-forward, 18deg);
 }
 ```
 

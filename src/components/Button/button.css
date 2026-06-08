@@ -79,6 +79,7 @@
     /* 信息语气：坚实 */
     &[data-tone='solid'] {
       --Button-bg: var(--Button-bg-accent);
+      --Button-fg: --color-mix(white, 5, var(--theme), 1);
     }
 
     /* 动作性质：推荐 */
@@ -111,6 +112,11 @@
 
     &[data-status~='loading'] {
       cursor: progress;
+      --Button-border: var(--color-line-soft);
+      --Button-bg: --fade(var(--color-surface));
+    }
+    &[data-status~='disabled'] {
+      --Button-border: var(--color-line-soft);
     }
   }
 }
