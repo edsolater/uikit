@@ -1,3 +1,7 @@
+/** 颜色工具函数，提供单源颜色派生和多颜色因素合成的能力。 */
+
+
+/* ========== 颜色调整工具函数 ========== */
 /*
  * ！【内部方法】组合用 color 基础工具函数，
  * 外部使用 --color-adjust 和方言工具函数。
@@ -213,7 +217,7 @@
   result: oklch(from var(--color) l c h / 1);
 }
 
-/* ============= mix 创造工具 ============ */
+/* ============= mix 色彩混合工具 ============ */
 
 /*
  * --color-mix：多颜色因素合成工具。
@@ -269,3 +273,26 @@
 
   result: var(--mix1234);
 }
+
+
+/*
+  * --soft-mix：柔和混色工具。
+  * 它用当前颜色和一个目标颜色做混色，权重固定为 80% / 20%，创建一个更接近当前颜色的柔和新色。
+  * 参数：(<color>, <color>)。
+  * 示例：--soft-mix(var(--color-brand), white)。
+  */
+@function --soft-mix(--color1 <color>, --color2 <color>) returns <color> {
+  result: color-mix(in oklab, var(--color1) 80%, var(--color2) 20%);
+} 
+
+/*
+  * --equal-mix：等比例混色工具。
+  * 它用当前颜色和一个目标颜色做混色，权重固定为 50% / 50%，创建一个等比例的新色。
+  * 参数：(<color>, <color>)。
+  * 示例：--equal-mix(var(--color-brand), white)。
+  */
+@function --equal-mix(--color1 <color>, --color2 <color>) returns <color> {
+  result: color-mix(in oklab, var(--color1) 50%, var(--color2) 50%);
+}
+
+
