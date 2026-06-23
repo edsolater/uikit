@@ -13,11 +13,12 @@
     --Button-border: transparent;
 
     /* 尺寸 */
-    --Button-border-radius: var(--control-radius, 0.625rem);
-    --Button-border-width: 1.5px;
-    --Button-min-height: 2.25rem;
-    --Button-padding-x: 0.875rem;
-    --Button-gap: 0.5rem;
+    --Button-border-radius: var(--control-radius, 0.625em);
+    --Button-border-width: 1px;
+    --Button-min-height: 2.25em;
+    --Button-padding-x: 0.875em;
+    --Button-padding-y: 0.5em;
+    --Button-gap: 0.5em;
 
     display: inline-flex;
     align-items: center;
@@ -27,7 +28,7 @@
     border: none;
     box-shadow: inset 0 0 0 var(--Button-border-width) var(--Button-border);
     border-radius: var(--Button-border-radius);
-    padding: 0 var(--Button-padding-x);
+    padding: var(--Button-padding-y) var(--Button-padding-x);
     color: var(--Button-fg);
     font: inherit;
     font-weight: 500;
@@ -58,7 +59,7 @@
 
     /* 默认语气 */
     :not(&[data-tone]) {
-      --Button-border: var(--theme);
+      --Button-border: --alpha(var(--theme));
       --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 4);
       --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
     }
@@ -113,7 +114,7 @@
     &[data-status~='loading'] {
       cursor: progress;
       --Button-border: var(--color-line-soft);
-      --Button-bg: --fade(var(--color-surface));
+      --Button-bg: --alpha(var(--color-surface));
     }
     &[data-status~='disabled'] {
       --Button-border: var(--color-line-soft);

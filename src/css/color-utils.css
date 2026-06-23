@@ -208,7 +208,7 @@
 
 
 /* 透明化，默认虚化一半 */
-@function --fade(--color <color>, --factor <percentage>: 50%) returns <color> {
+@function --alpha(--color <color>, --factor <percentage>: 50%) returns <color> {
   result: oklch(from var(--color) l c h / calc(alpha * (var(--factor) / 100%)));
 }
 
