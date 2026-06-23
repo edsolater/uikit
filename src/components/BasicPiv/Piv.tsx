@@ -121,7 +121,7 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
       }
 
       if (pluginConsumedProps.htmlProps) {
-        // 如果props中设定了 class style 就剔除 htmlProps 里重复的部分
+        // 如果 props 中设定了 class style，就剔除 htmlProps 里重复的部分。
         if (pluginConsumedProps.style) {
           // @ts-ignore
           delete pluginConsumedProps.htmlProps.style

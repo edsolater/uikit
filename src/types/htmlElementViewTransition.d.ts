@@ -6,7 +6,7 @@ type HTMLElementStartViewTransitionOptions = ViewTransitionUpdateCallback | Star
 
 declare global {
   interface HTMLElement {
-    startViewTransition?(options?: HTMLElementStartViewTransitionOptions): ViewTransition
+    startViewTransition(options?: HTMLElementStartViewTransitionOptions): ViewTransition
   }
 }
 

@@ -20,9 +20,11 @@ export function Each<T>(props: EachProps<T>) {
   const innerState = createState<T[]>([])
 
   createEffect(() => {
-    val(loopContainer)?.startViewTransition?.(() => {
-      // 这里才会有viewTransition的动画，所以即使是外部来的，那也要在这里进行设置。setState一定得由它来进行设置。
-      innerState.set(props.each())
+    const nextItems = props.each()
+
+    val(loopContainer)?.startViewTransition(() => {
+      // 这里才会有 viewTransition 的动画，所以外部数据也要在这里提交。
+      innerState.set(nextItems)
     })
   })
 
