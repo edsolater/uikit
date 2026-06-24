@@ -56,12 +56,12 @@ content = 动作内容表达
 - `tone` 回答的问题是：这个动作应该用多大力气被看见。
 
 ```ts
-type ButtonTone = 'bare' | 'subtle' | 'solid'
+type ButtonTone = 'bare' | 'solid'
 ```
 
 ```txt
-bare → subtle → normal → solid
-静音    轻声      常声      强声
+bare → normal → solid
+退场    常声      强声
 ```
 
 ### bare 最低声量
@@ -75,30 +75,16 @@ bare → subtle → normal → solid
 - `bare` 不是无能、苍白或弱化语义。
 - `bare` 是去容器化的动作表达。
 
-### subtle 轻声量
+### normal 常声量（默认）
 
-- `subtle` 是轻声量。
-- `subtle` 允许轻微容器。
-- `subtle` 可以使用淡底色或淡边界。
-- `subtle` 仍以文字信息为主体。
-- `subtle` 适合 `Cancel`、`Back`、`Export` 和次级动作。
-- `subtle` 替代传统 `outline`。
-- 传统 `outline` 的问题是边框存在感容易抢走文字信息。
-- `subtle` 的目标是轻轻包住动作，而不是用边框强调自己。
-
-###  常声量（默认）
-
-- `` 是默认声量。
-- `` 表示正常 `Button`。
-- `` 应明确可交互。
-- `` 应有稳定容器感。
-- `` 不应制造强噪声。
-- `` 向上可以增强为 `solid`。
-- `` 向下可以减弱为 `subtle` 或 `bare`。
-
-```ts
-
-```
+- `normal` 是默认声量。
+- `normal` 通过省略 `tone` 表达。
+- `normal` 表示正常 `Button`。
+- `normal` 应明确可交互。
+- `normal` 应有稳定容器感。
+- `normal` 不应制造强噪声。
+- `normal` 向上可以增强为 `solid`。
+- `normal` 向下可以减弱为 `bare`。
 
 ### solid 强声量
 
@@ -281,7 +267,7 @@ const defaultType = 'auto'
 ## API 草案
 
 ```ts
-type ButtonTone = 'bare' | 'subtle' | 'solid'
+type ButtonTone = 'bare' | 'solid'
 
 type ButtonIntent = 'neutral' | 'accent' | 'danger'
 
@@ -294,7 +280,6 @@ interface ButtonProps {
    * 动作发声力度。
    *
    * bare: 静音动作，无容器。
-   * subtle: 轻声动作，轻容器。
    * normal: 默认动作，正常容器。
    * solid: 强声动作，强容器。
    */
@@ -399,7 +384,6 @@ Button
 ├─ action
 ├─ tone
 │  ├─ bare
-│  ├─ subtle
 │  ├─ normal
 │  └─ solid
 ├─ intent

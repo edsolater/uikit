@@ -28,27 +28,31 @@
 flowchart LR
   Caller[调用方组件]
   Button[Button 基础组件]
-  Variant[variant 展示变体]
+  Tone[tone 动作声量]
   Native[浏览器 button 元素]
   Style[button.css 样式]
 
   Caller --> Button
-  Button --> Variant
+  Button --> Tone
   Button --> Native
   Button --> Style
 ```
 
 ## 稳定协议
 
-- 当前 `Button` 对外暴露 `variant` 字段。
-- 当前 `variant` 只承载展示语义，取值为 `solid` 或 `ghost`。
-- 除 `variant` 之外，其余能力直接沿用原生 `button` 属性透传。
+- 当前 `Button` 对外暴露 `tone` 字段。
+- 当前 `tone` 承载动作声量。
+- 当前 `tone` 只提供 `bare` 和 `solid` 两个显式值。
+- 省略 `tone` 表示默认正常声量。
+- 当前不提供 `subtle` 这类中间声量。
+- 除 Button 自身协议之外，其余能力直接沿用原生 `button` 属性透传。
 - 当前 `Button` 默认把 `type` 收口为 `button`，避免调用方在普通点击场景里被表单默认提交语义干扰。
 - 当前 `Button` 的稳定输出仍然是一个原生 `button` 元素，而不是额外包裹层。
 
 ## 当前不做什么
 
-- 当前不做 `size`、`tone`、`loading`、`iconOnly` 这类扩展协议。
+- 当前不做 `variant`、`size`、`loading`、`iconOnly` 这类扩展协议。
+- 当前不做比 `bare / 默认 / solid` 更细的动作声量层级。
 - 当前不做复合组件拆分，不额外引入 `ButtonGroup`、`ButtonProvider` 之类主体。
 - 当前不做“不同业务按钮语义”的内建映射，例如保存按钮、危险按钮、确认按钮。
 - 当前不做脱离原生 `button` 的可访问性重写。
@@ -56,5 +60,5 @@ flowchart LR
 ## 当前确认值
 
 - 当前项目已经有一个可复用的基础按钮主体，而不是继续在 demo 或 story 里散落原生按钮。
-- 当前 `variant` 只是最小展示协议，不应被误读成设计系统总入口。
+- 当前 `tone` 只是动作声量协议，不应被误读成设计系统总入口。
 - 后续若继续扩展按钮能力，也应继续以“基础按钮组件”为主体收口，而不是直接长成一组平行按钮实现。

@@ -21,7 +21,7 @@ export function UseDocumentTitleDemo() {
       <div class="title-card">
         <strong>{currentTitle()}</strong>
         <Button
-          tone="soft"
+          tone="bare"
           onClick={() => {
             titleIndex.set((index) => (index + 1) % titles.length)
           }}

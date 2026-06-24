@@ -25,10 +25,10 @@ export const Solid: StoryObj<typeof meta> = {
   },
 }
 
-export const Subtle: StoryObj<typeof meta> = {
+export const Bare: StoryObj<typeof meta> = {
   args: {
-    tone: 'subtle',
-    children: 'Cancel',
+    tone: 'bare',
+    children: 'Clear',
   },
 }
 

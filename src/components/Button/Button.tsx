@@ -3,7 +3,7 @@
  * 它负责按钮动作语义、声量 class、交互尺度、状态表达和基础样式入口，不负责主题系统、表单编排、状态判断、状态来源组装或路由行为。
  * 底层 DOM 能力统一交给 Piv，按钮文件只表达按钮这个组件主体。
  */
-import { hoverable, clickable } from '../../component-plugins'
+import { clickable } from '../../component-plugins'
 import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
@@ -12,22 +12,17 @@ import { createKitProfile, type ProfileProps } from './createKitProfile'
 
 interface ButtonProfileProps extends ProfileProps {
   /**
-   * 组件的语气
+   * 动作声量。
    *
-   * 默认是 normal。
+   * 默认是 normal，调用方不需要显式传入。
    *
    * 不用 Source<>，因为 tone 不会随状态变化而变化，直接用 string 就可以了。
    *
-   * - bare：最轻的语气，通常用于次要或辅助动作，或者当按钮需要与背景融为一体时。无边界， 无状态显示
-   * - subtle：较轻的语气，通常用于次要动作。无边界，无状态显示
-   * - undefined：默认值，标准语气。有边界，但用并不突兀， 可有当前状态显示。匹配 intent:accent
-   * - solid：最强的语气，通常用于主要动作。 更强的操作，需要“打眼”。匹配 intent:accent；非常匹配 intent:danger
+   * - bare：退场声量，无容器，适合辅助动作。
+   * - undefined：默认声量，有稳定容器感。
+   * - solid：强调声量，适合主操作或高风险确认。
    */
-  tone?:
-    | 'bare' // 最轻的语气
-    | 'subtle' // 较轻的语气
-    | undefined // 默认值，标准语气
-    | 'solid' // 最强的语气
+  tone?: 'bare' | 'solid'
 
   /**
    * 动作性质。（会改变CSS 颜色）
@@ -59,7 +54,7 @@ export interface ButtonProps extends PivProps<'button'>, ButtonProfileProps {}
 
 export function Button(props: ButtonProps) {
   // UIKit 都适用的标识，标识能够标识出它是一个怎样的存在的组件
-  const { details: kitProfileDetails, plugin: kitProfilePlugin } = createKitProfile(props)
+  const { plugin: kitProfilePlugin } = createKitProfile(props)
 
   // TODO：对于Button特有的状态，需要直接写在Button组件内部
   return (

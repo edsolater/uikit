@@ -64,20 +64,13 @@
       --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
     }
 
-    /* 信息语气：烟隐 */
+    /* 动作声量：退场 */
     &[data-tone='bare'] {
-      /* 烟隐语气，完全没有背景和边框，适合极简设计或与背景高度融合的场景。 */
       --Button-bg: transparent;
       --Button-border: transparent;
     }
 
-    /* 信息语气：轻柔 */
-    &[data-tone='subtle'] {
-      --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 2);
-      --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
-    }
-
-    /* 信息语气：坚实 */
+    /* 动作声量：强调 */
     &[data-tone='solid'] {
       --Button-bg: var(--Button-bg-accent);
       --Button-fg: --color-mix(white, 5, var(--theme), 1);

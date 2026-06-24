@@ -11,14 +11,15 @@
 
 - 先确认项目里存在一个稳定的基础按钮主体。
 - 先确认调用方不再直接依赖散落的原生按钮样式。
-- 先确认按钮展示语义只收口到最小的 `variant` 协议。
+- 先确认按钮展示语义只收口到最小的 `tone` 协议。
 
 ## 当前确认值
 
 - `Button` 的代码主体落在 `src/components/Button/Button.tsx`。
 - `Button` 的样式落点在 `src/components/Button/button.css`。
 - `src/components/index.ts` 负责对外导出这个组件。
-- 当前阶段只需要 `solid` 和 `ghost` 两个展示变体。
+- 当前阶段只需要 `bare / 默认 / solid` 三档动作声量。
+- 当前阶段不提供 `subtle` 中间声量。
 
 ## 最小验证
 

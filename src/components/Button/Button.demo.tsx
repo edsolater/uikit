@@ -18,7 +18,6 @@ export function ButtonDemo() {
           Accent solid
         </Button>
         <Button tone="solid">Solid</Button>
-        <Button tone="subtle">Subtle</Button>
         <Button tone="bare">Bare</Button>
         <Button tone="solid" intent="danger">
           Danger solid
