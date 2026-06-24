@@ -57,10 +57,9 @@
       opacity: 0.56;
     }
 
-    /* 默认语气 */
+    /* 动作声量：默认 */
     :not(&[data-tone]) {
-      --Button-border: --alpha(var(--theme));
-      --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 4);
+      --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 2);
       --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
     }
 
