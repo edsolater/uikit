@@ -1,6 +1,6 @@
 /**
  * 这个文件定义 Button 固有画像能力。
- * 它负责管理 tone、intent、scale、type 这些不随运行状态改变的 Button 身份信息。
+ * 它负责管理 tone、intent、size、name 和 status 这些 Button 身份信息。
  * 当前实现会产出 data-* attribute 和原生状态 attribute，但这些只是 profile 的底层消费方式。
  */
 import { createStatusRecord, type StatusInput } from '../../component-utils/status'
@@ -10,7 +10,7 @@ import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 export interface ProfileProps {
   tone?: Source<any>
   intent?: Source<any>
-  spacing?: Source<any>
+  size?: Source<any>
   name?: Source<any>
   status?: StatusInput<any>
 }
@@ -20,12 +20,12 @@ export interface ProfileProps {
  */
 export function createKitProfile<P extends ProfileProps>(props: P) {
   // 状态驱动。外部传入的业务态和内部派生态在 manager 内部融合。
-  const [statusRecord, statusRecordActions] = createStatusRecord(props.status)
+  const [statusRecord] = createStatusRecord(props.status)
 
   const details = {
     tone: props.tone as P['tone'],
     intent: props.intent as P['intent'],
-    spacing: props.spacing as P['spacing'],
+    size: props.size as P['size'],
     name: props.name as P['name'],
     status: statusRecord,
   } as const
@@ -38,7 +38,7 @@ export function createKitProfile<P extends ProfileProps>(props: P) {
       'aria-label': props.name,
       'data-tone': props.tone,
       'data-intent': props.intent,
-      'data-spacing': props.spacing,
+      'data-size': props.size,
       'data-status': statusRecord.map((record) => toStatusAttributeValue(record)),
     },
   }))

@@ -17,16 +17,7 @@ const meta: Meta<typeof Input> = {
 
 export default meta
 
-export const Outline: StoryObj<typeof meta> = {}
-
-export const Ghost: StoryObj<typeof meta> = {
-  args: {
-    variant: 'ghost',
-    htmlProps: {
-      placeholder: 'Ghost input',
-    },
-  },
-}
+export const Basic: StoryObj<typeof meta> = {}
 
 export const Invalid: StoryObj<typeof meta> = {
   args: {

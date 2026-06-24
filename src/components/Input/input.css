@@ -25,15 +25,6 @@
       color: color-mix(in oklab, currentColor 48%, transparent);
     }
 
-    &.outline {
-      /* 默认形态，不加额外规则 */
-    }
-
-    &.ghost {
-      --Input-bg: color-mix(in oklab, var(--color-surface-low) 90%, transparent);
-      --Input-border-color: color-mix(in oklab, var(--color-line) 72%, transparent);
-    }
-
     &.invalid {
       --Input-border-color: var(--color-bad);
       box-shadow: 0 0 0 0.2em var(--color-bad-soft);

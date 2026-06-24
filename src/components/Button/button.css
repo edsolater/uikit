@@ -88,7 +88,7 @@
     }
 
     /* 交互尺度：偏小紧凑型 */
-    &[data-spacing='small'] {
+    &[data-size='small'] {
       --Button-min-height: 1.875rem;
       --Button-padding-x: 0.625rem;
       --Button-gap: 0.375rem;
@@ -96,7 +96,7 @@
     }
 
     /* 交互尺度：偏大松散型 */
-    &[data-spacing='large'] {
+    &[data-size='large'] {
       --Button-min-height: 2.75rem;
       --Button-padding-x: 1.125rem;
       --Button-gap: 0.625rem;

@@ -1,27 +1,26 @@
 /**
  * 这个文件定义基础输入组件 Input。
- * 它负责 input 本体、默认 type、variant class 和 invalid 状态入口。
- * 它不负责 label、hint、error 文案编排，也不负责表单提交协议。
+ * Input 承载一个单行可编辑值，适合普通表单字段、筛选条件和设置项。
+ * label、说明文案、错误文案和字段布局属于更上层的 Field 组合，不塞进 Input 本体。
+ * Input 当前只有默认形态；视觉强弱不通过 variant、tone、ghost、bare 或 solid 表达。
+ *
+ * 组件选择规则见 [Input 设计规格](./spec.md)。
+ * 长期业务语义见 [Input 基础组件业务说明](../../../docs/features/Input基础组件_业务说明.md)。
  */
-import { createStatusRecord, type StatusProps } from '../../component-utils/status'
-import { createVariantManager, type VariantProps } from '../../component-utils/variant'
 import { Piv, type PivProps } from '../BasicPiv/Piv'
+import { createPivPlugin } from '../BasicPiv/plugin/helpers'
 import './input.css'
 import { createValiditor, type ValidityOptions } from './createInputValidity'
 
-export interface InputProps extends PivProps<'input'> {}
-export interface InputProps extends ValidityOptions {}
-export interface InputProps extends VariantProps<'outline' | 'ghost'> {}
-export interface InputProps extends StatusProps<never> {}
+export interface InputProps extends PivProps<'input'>, ValidityOptions {}
 
 export function Input(props: InputProps) {
-  const [status, statusActions] = createStatusRecord<'invalid'>()
-  const [variant, variantPlugin] = createVariantManager(props, { defaultVariant: 'outline' })
   const validity = createValiditor(props)
-
   const isInvalid = validity.isValid.map((v) => !v)
+  const inputStatusPlugin = createPivPlugin(() => ({
+    class: { invalid: isInvalid },
+    htmlProps: { 'aria-invalid': isInvalid },
+  }))
 
-  statusActions.setStatus('invalid', isInvalid)
-
-  return <Piv as="input" shadowProps={props} class="Input" plugins={[variantPlugin]} htmlProps={{ type: 'text' }} />
+  return <Piv as="input" shadowProps={props} class="Input" plugins={[inputStatusPlugin]} htmlProps={{ type: 'text' }} />
 }
