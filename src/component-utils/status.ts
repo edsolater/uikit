@@ -1,5 +1,5 @@
 import { createPivPlugin } from '../components'
-import type { ClassNameList } from '../components/BasicPiv/className'
+import type { ClassNameList } from '../components/Piv/className'
 import { createState, toReadableState, val, type Source } from '../hooks'
 import type { PluginManager } from './type'
 

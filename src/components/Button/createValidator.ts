@@ -5,8 +5,8 @@
  */
 import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
 import { createState, val, type Source, type State } from '../../hooks'
-import { createPivPlugin } from '../BasicPiv/plugin/helpers'
-import type { PivPlugin } from '../BasicPiv/plugin/runPlugin'
+import { createPivPlugin } from '../Piv/plugin/helpers'
+import type { PivPlugin } from '../Piv/plugin/runPlugin'
 
 export type ValidatorRule = {
   /**

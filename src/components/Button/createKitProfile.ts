@@ -5,7 +5,7 @@
  */
 import { createStatusRecord, type StatusInput } from '../../component-utils/status'
 import { val, type Source } from '../../hooks'
-import { createPivPlugin } from '../BasicPiv/plugin/helpers'
+import { createPivPlugin } from '../Piv/plugin/helpers'
 
 export interface ProfileProps {
   tone?: Source<any>

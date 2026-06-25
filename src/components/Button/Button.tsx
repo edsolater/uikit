@@ -10,8 +10,8 @@
 import { clickable } from '../../component-plugins'
 import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
-import { Piv, type PivProps } from '../BasicPiv/Piv'
-import './button.css'
+import { Piv, type PivProps } from '../Piv'
+import './Button.css'
 import { createKitProfile, type ProfileProps } from './createKitProfile'
 
 interface ButtonProfileProps extends ProfileProps {

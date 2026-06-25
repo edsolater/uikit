@@ -7,9 +7,9 @@
  * 组件选择规则见 [Input 设计规格](./spec.md)。
  * 长期业务语义见 [Input 基础组件业务说明](../../../docs/features/Input基础组件_业务说明.md)。
  */
-import { Piv, type PivProps } from '../BasicPiv/Piv'
-import { createPivPlugin } from '../BasicPiv/plugin/helpers'
-import './input.css'
+import { Piv, type PivProps } from '../Piv/Piv'
+import { createPivPlugin } from '../Piv/plugin/helpers'
+import './Input.css'
 import { createValiditor, type ValidityOptions } from './createInputValidity'
 
 export interface InputProps extends PivProps<'input'>, ValidityOptions {}

@@ -1,5 +1,5 @@
 import { createStatusRecord } from '../component-utils/status'
-import { createPivPlugin } from '../components/BasicPiv'
+import { createPivPlugin } from '../components/Piv'
 
 /**
  * [Plugin]

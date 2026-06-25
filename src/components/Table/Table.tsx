@@ -8,7 +8,7 @@ import { type Stringable } from '@edsolater/fnkit'
 import { For } from 'solid-js'
 import { toJSX, type JSXable } from '../../component-utils/toJSX'
 import { toReadableState, val, type Source } from '../../hooks'
-import { Piv } from '../BasicPiv'
+import { Piv } from '../Piv'
 
 type TableDataRow = Record<string, Stringable>
 
