@@ -209,15 +209,18 @@
     );
 
     /*
-     * color 层：组件可用基础语义层。
-     * color 负责表达“组件怎么用”，组件优先消费 color，不直接消费 dye。
+     * color 层：应用和组件可用的基础语义层。
+     * color 负责表达“界面怎么用”，应用和组件优先消费 color，不直接消费 dye。
      */
 
     /*
-     * Structure：基础视觉三轴。
-     * surface 是承载面，fg 是前景内容，line 是边界线。
+     * Structure：基础视觉语义。
+     * canvas 是页面或应用的最底层画布，用于 body 这类全局背景。
+     * surface 是组件、卡片、面板和局部区块的承载面，不负责表达整页画布。
+     * fg 是前景内容，line 是边界线。
      * surface 使用 low / high 表达同类承载面的层级，不使用 soft / strong 这类语气词。
      */
+    --color-canvas: var(--dye-neutral-0);
     --color-surface: var(--dye-neutral-0);
     --color-surface-low: var(--dye-neutral-1);
     --color-surface-high: var(--dye-neutral-2);

@@ -12,7 +12,7 @@ color 负责组件可用语义
 当前裁决：
 
 ```txt
-基础视觉三轴：surface / fg / line
+基础视觉语义：canvas / surface / fg / line
 语气后缀：soft / strong
 层级后缀：low / high
 状态后缀：hover / active / disabled / focus
@@ -224,7 +224,7 @@ neutral-0 最接近 paper
 neutral-8 最接近 ink
 数字越大，前景压强越高
 neutral 是层级材料，不是 soft 的默认底料
-neutral 不直接给组件使用，而是映射到 surface / fg / line 等 color 语义
+neutral 不直接给组件使用，而是映射到 canvas / surface / fg / line 等 color 语义
 ```
 
 neutral 主要服务结构层级：
@@ -270,7 +270,13 @@ color-status 负责组件可用语义
 
 ## `--color-*` 命名体系
 
-基础视觉三轴采用：
+基础视觉语义采用：
+
+```txt
+canvas / surface / fg / line
+```
+
+其中仍以三类 UI 材料为主体：
 
 ```txt
 surface / fg / line
@@ -285,6 +291,7 @@ bg / text / content
 原因：
 
 ```txt
+canvas 表达页面或应用的最底层画布
 surface 比 bg 更像“承载面”
 fg 比 text/content 更抽象，覆盖文字、图标、SVG、glyph
 line 覆盖 border、divider、outline、separator
@@ -295,6 +302,8 @@ line 覆盖 border、divider、outline、separator
 ### Structure
 
 ```css
+--color-canvas;
+
 --color-surface;
 --color-surface-low;
 --color-surface-high;
@@ -316,7 +325,8 @@ line 覆盖 border、divider、outline、separator
 解释：
 
 ```txt
-surface          普通承载面
+canvas           页面或应用的最底层画布 / body 背景
+surface          组件、卡片、面板和局部区块的普通承载面
 surface-low      低层级承载面 / 弱区块
 surface-high     高层级承载面 / 抬升面 / menu / popover
 surface-overlay  遮罩层
@@ -464,7 +474,7 @@ info  信息 / 提示 / 中性系统消息
 
 ```txt
 role:
-surface / fg / line / brand / action / accent / link / good / bad / warn / info
+canvas / surface / fg / line / brand / action / accent / link / good / bad / warn / info
 
 variant:
 soft / strong / low / high / overlay / inverse / hover / active / disabled / focus / fg / line
@@ -485,7 +495,7 @@ low / high 是同种类中的层级语义
 保留：
 
 ```txt
-surface / fg / line
+canvas / surface / fg / line
 soft
 low / high
 dye-neutral-数字阶梯

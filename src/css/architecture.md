@@ -64,6 +64,7 @@ traits
 
 ```css
 var(--color-fg)
+var(--color-canvas)
 var(--color-surface)
 var(--color-surface-low)
 var(--color-line)
