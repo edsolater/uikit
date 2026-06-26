@@ -43,9 +43,7 @@
   *,
   *::before,
   *::after {
-    transition-property:
-      color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, opacity, transform,
-      translate, scale, rotate;
+    transition-property: opacity, transform, translate, scale, rotate;
     transition-duration: 120ms;
     transition-timing-function: ease;
   }
@@ -302,6 +300,4 @@
       }
     }
   }
-
-
 }

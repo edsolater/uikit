@@ -4,6 +4,6 @@
  * 组件库发布入口始终是 src/index.ts。
  */
 import { render } from 'solid-js/web'
-import App from './ExampleDashboard'
+import App from './pages/ExampleDashboard'
 
 render(() => <App />, document.getElementById('root')!)
