@@ -1,0 +1,10 @@
+/*
+ * 这个文件是 UIKit 设计 token 的聚合入口。
+ * 它只负责声明各 token 领域的加载顺序，不直接定义 token。
+ */
+
+@import './color.css';
+@import './dimension.css';
+@import './typography.css';
+@import './elevation.css';
+@import './motion.css';

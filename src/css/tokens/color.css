@@ -1,21 +1,13 @@
-﻿/*
- * 这个文件负责提供 UIKit 的主题 token。
+/*
+ * 这个文件负责颜色 token。
  *
- * 职责：
- * - 颜色：提供 base / dye / color 三层颜色系统。
- * - 尺寸：提供空间、物体尺寸、圆角、边界、字体、滤镜、阴影和动画 token。
- *
- * 约定：
- * - style-token 需要管理所有连续视觉值，包括颜色、尺寸、单位数字和魔法数字。
- * - 组件和业务优先消费公开语义变量，例如 var(--color-*)、var(--space-*)。
+ * 分层：
+ * - base：可覆盖的基础 seed。
+ * - dye：色元层，表达颜色从哪里来。
+ * - color：公开语义层，表达界面如何使用颜色。
  */
 
-@import './color-utils.css';
-@import './dimension-utils.css';
-
-/* --------------------------------------------------------------------------
- * 颜色工具
- * ----------------------------------------------------------------------- */
+@import '../color-utils.css';
 
 /*
  * --foreground-on：根据背景色推导可读前景色。
@@ -26,55 +18,8 @@
   result: --color-mix(contrast-color(var(--color)), 8, var(--color), 2);
 }
 
-/*
- * --fluid：根据全局进度在两个长度之间插值。
- * 参数：(<length-percentage>, <length-percentage>, progress? <number>)。
- * 示例：width: --fluid(12rem, 24rem)。
- */
-@function --fluid(--from <length-percentage>, --to <length-percentage>, --progress <number>: var(--fluid-progress))
-  returns <length-percentage> {
-  result: calc(var(--from) + (var(--to) - var(--from)) * var(--progress));
-}
-
-@layer theme {
-  /*
-   * 根节点集中管理主题源参数、衍生材料和公开变量。
-   * 组件和业务应优先通过 var(--color-*) 消费公开语义变量。
-   */
+@layer tokens {
   :root {
-    /* ----------------------------------------------------------------------
-     * 全局工具变量
-     * ------------------------------------------------------------------- */
-
-    /*
-     * 视口宽度进度：小屏到大屏。
-     * 配套 @function --fluid() 可以快速生成渐进式断点。
-     */
-    --fluid-progress: progress(100vw, 360px, 1440px);
-
-    /*
-     * 容器宽度进度示例：
-     * 需要在具体 container 内部声明。
-     * --fluid-progress: progress(100cqi, 280px, 720px);
-     */
-
-    /*
-     * 是否偏好减少动画。
-     * 这个值不能直接由变量得出，需要在 media 中覆盖。
-     */
-    --env-motion-scale: 1;
-
-    @media (prefers-reduced-motion: reduce) {
-      --env-motion-scale: 0;
-    }
-
-    /* ----------------------------------------------------------------------
-     * 颜色系统设计参数
-     *
-     * 这些参数决定颜色系统的视觉特征，例如明度范围、彩度范围、对比度和主题色调。
-     * 设计师调整这些参数可以快速迭代不同风格，开发者无需修改组件代码。
-     * ------------------------------------------------------------------- */
-
     /*
      * base 层：只放可覆盖的基础 seed。
      * base 不给组件直接使用，主要用于生成 dye。
@@ -98,7 +43,7 @@
     /*
      * brand dye：品牌身份色元。
      * brand 也是 action / accent 的上游基础色元。
-     * 当前只定义亮色值；暗色值以后在 :root[data-theme='dark'] 中覆盖。
+     * 当前 :root 只定义亮色值；暗色值在 :root[data-theme='dark'] 中覆盖。
      */
     --dye-brand: var(--base-brand);
 
@@ -204,17 +149,10 @@
     );
 
     /*
-     * color 层：应用和组件可用的基础语义层。
-     * color 负责表达“界面怎么用”，应用和组件优先消费 color，不直接消费 dye。
-     */
-
-    /*
      * Structure：基础视觉语义。
-     * canvas 是页面或应用的最底层画布，用于 body 这类全局背景，默认退到 surface 后面。
-     * surface 是组件、卡片、面板和局部区块的干净承载面，不负责表达整页画布。
+     * canvas 是页面或应用的最底层画布，用于 body 这类全局背景。
+     * surface 是组件、卡片、面板和局部区块的干净承载面。
      * fg 是前景内容，line 是边界线。
-     * surface 使用 low / high 表达同类承载面的层级，不使用 soft / strong 这类语气词。
-     * 当前只定义亮色逻辑：surface 比 canvas 更白，但不使用纯白。
      */
     --color-canvas: var(--dye-neutral-1);
     --color-surface: var(--dye-neutral-0);
@@ -242,7 +180,6 @@
      * Brand：身份色。
      * 只用于 logo、brand mark、品牌装饰和少量品牌区域。
      * brand 不承担普通交互职责。
-     * soft / strong 表达品牌信息的语气强弱，不表达结构层级。
      */
     --color-brand: var(--dye-brand);
     --color-brand-soft: --color-adjust(var(--dye-brand), opacity, 14%);
@@ -287,7 +224,6 @@
      * bad 表示错误、危险、删除和负向。
      * warn 表示警告、风险和待确认。
      * info 表示信息、提示和中性系统消息。
-     * soft 表示低语气状态信息，strong 暂不提供，避免为了完整性造 token。
      */
     --color-good: var(--dye-good);
     --color-good-soft: --color-adjust(var(--dye-good), opacity, 14%);
@@ -308,119 +244,6 @@
     --color-info-soft: --color-adjust(var(--dye-info), opacity, 14%);
     --color-info-fg: --foreground-on(var(--color-info));
     --color-info-line: --color-adjust(var(--dye-info), opacity, 44%);
-
-    /*
-     * Shadow / Backdrop：阴影和遮罩是物理材料，不等同于当前前景 ink。
-     * 亮色模式用低透明黑色避免灰雾。
-     */
-    --color-shadow: rgb(0 0 0 / 8%);
-    --color-backdrop: rgb(0 0 0 / 62%);
-
-    /* ----------------------------------------------------------------------
-     * 尺寸系统设计参数
-     *
-     * 这些参数决定界面布局和控件尺寸的视觉特征，例如空隙量、物体尺寸、
-     * 圆角柔和度和边界厚度。设计师调整这些参数可以快速迭代不同风格，
-     * 开发者无需修改组件代码。
-     * ------------------------------------------------------------------- */
-
-    /*
-     * 总旋钮。
-     * 这些参数控制整个尺寸系统的整体特征，例如密度、圆角强度、阴影强度、
-     * 边框强度和交互动效强度。
-     */
-    --sys-density: 1;
-    --sys-radius-scale: 1;
-    --sys-shadow-scale: 1;
-    --sys-line-scale: 1;
-    --sys-motion-scale: var(--env-motion-scale);
-
-    /*
-     * 尺寸基础。
-     * space 表达 padding、margin、gap 等空间。
-     * size 表达 width、height 等物体大小。
-     * radius 表达 border radius 的柔和度。
-     * boundary 表达 border、描边和 focus ring 的基础厚度。
-     */
-    --space-base: 4px;
-    --space-ratio: 1.25;
-
-    --size-base: 20px;
-    --size-ratio: 1.18;
-
-    --radius-base: 2px;
-    --radius-ratio: 1.45;
-
-    --boundary-base: 1px;
-    --boundary-ratio: 1.5;
-
-    /*
-     * 尺寸派生。
-     * 这些变量由设计参数通过指数函数生成。
-     * 组件和业务直接消费这些变量。
-     * 尺寸天然和数字绑定，所以这里可以出现数字阶梯。
-     */
-    --space-1: --space(1);
-    --space-2: --space(2);
-    --space-3: --space(3);
-    --space-4: --space(4);
-    --space-5: --space(5);
-    --space-6: --space(6);
-    --space-7: --space(7);
-    --space-8: --space(8);
-
-    --size-1: --size(1);
-    --size-2: --size(2);
-    --size-3: --size(3);
-    --size-4: --size(4);
-    --size-5: --size(5);
-    --size-6: --size(6);
-    --size-7: --size(7);
-    --size-8: --size(8);
-
-    --radius-1: --radius(1);
-    --radius-2: --radius(2);
-    --radius-3: --radius(3);
-    --radius-4: --radius(4);
-
-    --boundary-1: --border(1);
-    --boundary-2: --border(2);
-    --boundary-3: --border(3);
-    --boundary-4: --border(4);
-
-    /*
-     * 字体、滤镜、透明度和阴影 token。
-     */
-    --font-size-sm: 12px;
-    --font-size-default: 14px;
-    --font-size-md: var(--font-size-default);
-    --font-size-lg: 16px;
-    --font-size-xl: 20px;
-
-    --font-weight-thin: 300;
-    --font-weight-default: 400;
-    --font-weight-regular: var(--font-weight-default);
-    --font-weight-semibold: 500;
-    --font-weight-bold: 700;
-
-    --filter-blur-1: blur(4px);
-    --filter-blur-2: blur(8px);
-    --filter-blur-3: blur(12px);
-
-    --opacity-half: 0.5;
-    --opacity-muted: 0.72;
-
-    --shadow: 0 1px 2px var(--color-shadow), 0 8px 20px var(--color-shadow);
-
-    /*
-     * 动画 token。
-     */
-    --motion-duration-fast: calc(120ms * var(--sys-motion-scale));
-    --motion-duration-normal: calc(180ms * var(--sys-motion-scale));
-    --motion-duration-slow: calc(260ms * var(--sys-motion-scale));
-
-    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-    --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
   }
 
   :root[data-theme='dark'] {
@@ -516,9 +339,5 @@
     --color-info-soft: oklch(72% 0.14 235 / 20%);
     --color-info-fg: var(--dye-neutral-8);
     --color-info-line: oklch(72% 0.14 235 / 52%);
-
-    --color-shadow: rgb(0 0 0 / 38%);
-    --color-backdrop: rgb(0 0 0 / 72%);
-    --shadow: 0 1px 2px rgb(0 0 0 / 46%), 0 12px 28px var(--color-shadow);
   }
 }

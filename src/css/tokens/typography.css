@@ -1,0 +1,20 @@
+/*
+ * 这个文件负责字体 token。
+ * 它只定义字体尺寸和字重这类可复用排版参数，不处理具体文本组件样式。
+ */
+
+@layer tokens {
+  :root {
+    --font-size-sm: 12px;
+    --font-size-default: 14px;
+    --font-size-md: var(--font-size-default);
+    --font-size-lg: 16px;
+    --font-size-xl: 20px;
+
+    --font-weight-thin: 300;
+    --font-weight-default: 400;
+    --font-weight-regular: var(--font-weight-default);
+    --font-weight-semibold: 500;
+    --font-weight-bold: 700;
+  }
+}

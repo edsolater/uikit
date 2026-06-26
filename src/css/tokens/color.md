@@ -17,7 +17,7 @@ color 负责组件可用语义
 层级后缀：low / high
 状态后缀：hover / active / disabled / focus
 状态绝对色域：base-status-good / base-status-bad / base-status-warn / base-status-info
-主题命名：data-theme 表示解析后的当前主题，CSS 直接用选择器覆盖对应主题 token
+主题命名：data-theme 表示解析后的当前主题，CSS 直接用选择器覆盖对应主题分支的 token
 ```
 
 ## 分层

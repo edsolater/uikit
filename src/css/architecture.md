@@ -34,8 +34,8 @@ UIKit CSS 不再把 `--color(text)`、`--space(5)` 这类 `@function` 翻译层�
 reset
   浏览器重置和排版基线。
 
-style-token
-  颜色和尺寸的函数、源参数与公开变量。
+tokens
+  颜色、尺寸、字体、层级和动效的函数、源参数与公开变量。
 
 controls
   浏览器内置控件的轻量外观清洗。
@@ -52,11 +52,11 @@ traits
 
 `all-base.css` 负责基础 CSS 的整包入口。外部项目如果不想逐个引入多个碎片文件，可以只引入这一个文件。
 
-`controls.css` 负责浏览器内置控件的轻量外观清洗。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它默认使用主题层提供的 `--color-accent`。
+`controls.css` 负责浏览器内置控件的轻量外观清洗。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它默认使用 tokens 层提供的 `--color-accent`。
 
-`traits.css` 负责 trait plugin 自动附加到 DOM 上的功能类。它只收纳效果非常单一、语义非常稳定、但又不值得上升成组件身份或主题 token 的正交小能力，不承担页面布局组合或视觉主题，也不是给业务层手写 utility class 的仓库。
+`traits.css` 负责 trait plugin 自动附加到 DOM 上的功能类。它只收纳效果非常单一、语义非常稳定、但又不值得上升成组件身份或 design token 的正交小能力，不承担页面布局组合或视觉主题，也不是给业务层手写 utility class 的仓库。
 
-`color.css` 和 `dimension.css` 共同构成 `style-token` 层。它们保留颜色和尺寸函数，但公开消费入口仍然是 `var(--color-*)`、`var(--space-*)`、`var(--size-*)`、`var(--radius-*)`、`var(--boundary-*)`。
+`tokens/index.css` 是设计 token 的聚合入口。`tokens/color.css`、`tokens/dimension.css`、`tokens/typography.css`、`tokens/elevation.css` 和 `tokens/motion.css` 分别维护自己的 token 领域。公开消费入口仍然是标准 CSS 变量，例如 `var(--color-*)`、`var(--space-*)`、`var(--size-*)`、`var(--radius-*)`、`var(--boundary-*)`、`var(--shadow-*)` 和 `var(--motion-*)`。
 
 ## 公开消费规则
 
@@ -75,6 +75,8 @@ var(--space-4)
 var(--size-3)
 var(--radius-4)
 var(--boundary-1)
+var(--shadow-card)
+var(--motion-duration-normal)
 ```
 
 不要把公开样式写成：

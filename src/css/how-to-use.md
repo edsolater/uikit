@@ -6,8 +6,12 @@
 | --- | --- |
 | `all-base.css` | 基础 CSS 的整包入口，统一管理 layer 顺序 |
 | `reset.css` | 浏览器默认样式重置 |
-| `color.css` | 颜色源参数、语义颜色变量和调色工具 |
-| `dimension.css` | 尺寸曲线参数、公开尺寸变量和数学工具 |
+| `tokens/index.css` | 设计 token 的聚合入口 |
+| `tokens/color.css` | 颜色源参数、语义颜色变量和调色工具 |
+| `tokens/dimension.css` | 尺寸曲线参数、公开尺寸变量和数学工具 |
+| `tokens/typography.css` | 字号和字重 token |
+| `tokens/elevation.css` | 阴影、遮罩和层级材料 token |
+| `tokens/motion.css` | 动效时长、缓动和动效缩放 token |
 | `controls.css` | 浏览器内置 controls 的轻量外观清洗 |
 | `traits.css` | trait plugin 自动附加到 DOM 上的功能类 |
 
@@ -26,7 +30,7 @@ import '@edsolater/uikit/css/all-base.css'
 import './app.css'
 ```
 
-`all-base.css` 会统一引入 `reset`、`style-token`、`controls` 和 `traits` 这几个领域，并用 `@layer` 固定它们的顺序。
+`all-base.css` 会统一引入 `reset`、`tokens`、`controls` 和 `traits` 这几个领域，并用 `@layer` 固定它们的顺序。
 
 如果你需要只挑部分碎片文件，再按下面的顺序单独引入：
 
@@ -34,8 +38,7 @@ import './app.css'
 
 ```ts
 import '@edsolater/uikit/css/reset.css'
-import '@edsolater/uikit/css/color.css'
-import '@edsolater/uikit/css/dimension.css'
+import '@edsolater/uikit/css/tokens/index.css'
 import '@edsolater/uikit/css/controls.css'
 import '@edsolater/uikit/css/traits.css'
 import './app.css'
@@ -50,7 +53,7 @@ import './app.css'
 它内部声明的 layer 顺序是：
 
 ```css
-@layer reset, style-token, controls, traits;
+@layer reset, tokens, controls, traits, uikit;
 ```
 
 这样即使后续每个领域继续拆分文件，外部项目也只需要稳定引入一个入口。
@@ -82,9 +85,9 @@ import './app.css'
 }
 ```
 
-## color.css 怎么用
+## tokens/color.css 怎么用
 
-`color.css` 把颜色集中定义到 `:root`，组件和业务直接消费 `var(--color-*)`。
+`tokens/color.css` 把颜色集中定义到 `:root`，组件和业务直接消费 `var(--color-*)`。
 
 常用公开变量：
 
@@ -109,7 +112,7 @@ import './app.css'
 }
 ```
 
-`--shift-color-channel()`、`--color-adjust()`、`--color-mix()` 仍然是颜色工具函数。`--color-adjust()` 用 lighter / darker / vivid / grayish / hue-forward / hue-backward / faded / lightness / chroma / hue / opacity 这组词做单源颜色派生，`--color-mix()` 负责多颜色因素合成。它们适合在 `color.css` 内部或需要生成新变量时使用，不作为组件公开消费的默认写法。
+`--shift-color-channel()`、`--color-adjust()`、`--color-mix()` 仍然是颜色工具函数。`--color-adjust()` 用 lighter / darker / vivid / grayish / hue-forward / hue-backward / faded / lightness / chroma / hue / opacity 这组词做单源颜色派生，`--color-mix()` 负责多颜色因素合成。它们适合在 `tokens/color.css` 内部或需要生成新变量时使用，不作为组件公开消费的默认写法。
 
 ```css
 :root {
@@ -117,9 +120,9 @@ import './app.css'
 }
 ```
 
-## dimension.css 怎么用
+## tokens/dimension.css 怎么用
 
-`dimension.css` 把尺寸曲线生成结果落到 `:root` 的公开变量上，组件和业务直接消费 `var(--space-*)`、`var(--size-*)`、`var(--radius-*)`、`var(--boundary-*)`。
+`tokens/dimension.css` 把尺寸曲线生成结果落到 `:root` 的公开变量上，组件和业务直接消费 `var(--space-*)`、`var(--size-*)`、`var(--radius-*)`、`var(--boundary-*)`。
 
 ```css
 .button {
@@ -146,7 +149,7 @@ import './app.css'
 
 `controls.css` 只处理浏览器内置 controls 的默认外观。这里的 controls 表示小空间里的内置交互单元，例如 `button`、`input`、`textarea`、`select`、`progress`、`meter` 和 `dialog`。它不是组件主题。
 
-业务如果需要调整 controls 强调色，应覆盖主题源参数或语义 token：
+业务如果需要调整 controls 强调色，应覆盖颜色源参数或语义 token：
 
 ```css
 :root {
@@ -156,7 +159,7 @@ import './app.css'
 
 ## traits.css 怎么用
 
-`traits.css` 只提供少量由 trait plugin 自动附加到 DOM 上的功能类。它适合那些语义非常稳定、效果非常单一、但又不值得上升成组件身份或主题 token 的正交小能力。
+`traits.css` 只提供少量由 trait plugin 自动附加到 DOM 上的功能类。它适合那些语义非常稳定、效果非常单一、但又不值得上升成组件身份或 design token 的正交小能力。
 
 组件层的典型写法是：
 
@@ -204,8 +207,7 @@ import '@edsolater/uikit/css/all-base.css'
 
 ```ts
 import '@edsolater/uikit/css/reset.css'
-import '@edsolater/uikit/css/color.css'
-import '@edsolater/uikit/css/dimension.css'
+import '@edsolater/uikit/css/tokens/index.css'
 import '@edsolater/uikit/css/controls.css'
 import '@edsolater/uikit/css/traits.css'
 ```
@@ -214,13 +216,11 @@ import '@edsolater/uikit/css/traits.css'
 
 ```ts
 import '@edsolater/uikit/dist/css/reset.css'
-import '@edsolater/uikit/dist/css/color.css'
-import '@edsolater/uikit/dist/css/dimension.css'
+import '@edsolater/uikit/dist/css/tokens/index.css'
 import '@edsolater/uikit/dist/css/controls.css'
 import '@edsolater/uikit/dist/css/traits.css'
 import '@edsolater/uikit/src/css/reset.css'
-import '@edsolater/uikit/src/css/color.css'
-import '@edsolater/uikit/src/css/dimension.css'
+import '@edsolater/uikit/src/css/tokens/index.css'
 import '@edsolater/uikit/src/css/controls.css'
 import '@edsolater/uikit/src/css/traits.css'
 ```

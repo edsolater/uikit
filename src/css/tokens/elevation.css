@@ -1,0 +1,71 @@
+/*
+ * 这个文件负责层级材料 token。
+ * elevation 不是颜色语义，它通过 shadow、backdrop 和 filter 这类材料表达层级关系。
+ */
+
+@layer tokens {
+  :root {
+    /*
+     * 阴影强度旋钮。
+     * 当前先保留系统入口，后续 shadow ramp 可以再接入更精细的强度计算。
+     */
+    --sys-shadow-scale: 1;
+
+    /*
+     * Shadow / Backdrop：阴影和遮罩是物理材料，不等同于当前前景 ink。
+     * 亮色模式用低透明黑色避免灰雾。
+     */
+    --color-shadow: rgb(0 0 0 / 8%);
+    --color-backdrop: rgb(0 0 0 / 62%);
+
+    /*
+     * shadow ramp：0 到 8 表达同一条层级楼梯。
+     * 数字越大，距离底面越远，阴影越柔、更扩散。
+     */
+    --shadow-0: none;
+    --shadow-1: 0 1px 2px var(--color-shadow);
+    --shadow-2: 0 1px 2px var(--color-shadow), 0 8px 20px var(--color-shadow);
+    --shadow-3: 0 2px 4px var(--color-shadow), 0 12px 28px var(--color-shadow);
+    --shadow-4: 0 3px 6px var(--color-shadow), 0 16px 36px var(--color-shadow);
+    --shadow-5: 0 4px 8px var(--color-shadow), 0 20px 44px var(--color-shadow);
+    --shadow-6: 0 6px 12px var(--color-shadow), 0 28px 56px var(--color-shadow);
+    --shadow-7: 0 8px 16px var(--color-shadow), 0 36px 72px var(--color-shadow);
+    --shadow-8: 0 12px 24px var(--color-shadow), 0 48px 96px var(--color-shadow);
+
+    /*
+     * 语义阴影。
+     * 组件优先消费语义 token；只有底层材料系统才直接维护数字 ramp。
+     */
+    --shadow-card: var(--shadow-2);
+    --shadow-card-raised: var(--shadow-3);
+    --shadow-popover: var(--shadow-5);
+    --shadow-dialog: var(--shadow-8);
+
+    /*
+     * 默认阴影用于当前尚未细分的组件。
+     * 新组件应优先选择更具体的语义 token。
+     */
+    --shadow: var(--shadow-card);
+
+    --filter-blur-1: blur(4px);
+    --filter-blur-2: blur(8px);
+    --filter-blur-3: blur(12px);
+
+    --opacity-half: 0.5;
+    --opacity-muted: 0.72;
+  }
+
+  :root[data-theme='dark'] {
+    --color-shadow: rgb(0 0 0 / 38%);
+    --color-backdrop: rgb(0 0 0 / 72%);
+
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 46%);
+    --shadow-2: 0 1px 2px rgb(0 0 0 / 46%), 0 12px 28px var(--color-shadow);
+    --shadow-3: 0 2px 4px rgb(0 0 0 / 50%), 0 16px 36px var(--color-shadow);
+    --shadow-4: 0 3px 6px rgb(0 0 0 / 52%), 0 20px 44px var(--color-shadow);
+    --shadow-5: 0 4px 8px rgb(0 0 0 / 54%), 0 24px 56px var(--color-shadow);
+    --shadow-6: 0 6px 12px rgb(0 0 0 / 56%), 0 32px 68px var(--color-shadow);
+    --shadow-7: 0 8px 16px rgb(0 0 0 / 58%), 0 40px 84px var(--color-shadow);
+    --shadow-8: 0 12px 24px rgb(0 0 0 / 60%), 0 52px 108px var(--color-shadow);
+  }
+}

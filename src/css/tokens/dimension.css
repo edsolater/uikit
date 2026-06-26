@@ -1,0 +1,88 @@
+/*
+ * 这个文件负责尺寸 token。
+ * space 表达间距，size 表达物体尺寸，radius 表达圆角，boundary 表达边界厚度。
+ */
+
+@import '../dimension-utils.css';
+
+/*
+ * --fluid：根据全局进度在两个长度之间插值。
+ * 参数：(<length-percentage>, <length-percentage>, progress? <number>)。
+ * 示例：width: --fluid(12rem, 24rem)。
+ */
+@function --fluid(--from <length-percentage>, --to <length-percentage>, --progress <number>: var(--fluid-progress))
+  returns <length-percentage> {
+  result: calc(var(--from) + (var(--to) - var(--from)) * var(--progress));
+}
+
+@layer tokens {
+  :root {
+    /*
+     * 视口宽度进度：小屏到大屏。
+     * 配套 @function --fluid() 可以快速生成渐进式断点。
+     */
+    --fluid-progress: progress(100vw, 360px, 1440px);
+
+    /*
+     * 容器宽度进度示例：
+     * 需要在具体 container 内部声明。
+     * --fluid-progress: progress(100cqi, 280px, 720px);
+     */
+
+    /*
+     * 总旋钮。
+     * 这些参数控制尺寸系统的整体特征，例如密度、圆角强度和边框强度。
+     */
+    --sys-density: 1;
+    --sys-radius-scale: 1;
+    --sys-line-scale: 1;
+
+    /*
+     * 尺寸基础。
+     * 这些基础值通过工具函数生成公开阶梯。
+     */
+    --space-base: 4px;
+    --space-ratio: 1.25;
+
+    --size-base: 20px;
+    --size-ratio: 1.18;
+
+    --radius-base: 2px;
+    --radius-ratio: 1.45;
+
+    --boundary-base: 1px;
+    --boundary-ratio: 1.5;
+
+    /*
+     * 尺寸派生。
+     * 组件和业务直接消费这些变量。
+     */
+    --space-1: --space(1);
+    --space-2: --space(2);
+    --space-3: --space(3);
+    --space-4: --space(4);
+    --space-5: --space(5);
+    --space-6: --space(6);
+    --space-7: --space(7);
+    --space-8: --space(8);
+
+    --size-1: --size(1);
+    --size-2: --size(2);
+    --size-3: --size(3);
+    --size-4: --size(4);
+    --size-5: --size(5);
+    --size-6: --size(6);
+    --size-7: --size(7);
+    --size-8: --size(8);
+
+    --radius-1: --radius(1);
+    --radius-2: --radius(2);
+    --radius-3: --radius(3);
+    --radius-4: --radius(4);
+
+    --boundary-1: --border(1);
+    --boundary-2: --border(2);
+    --boundary-3: --border(3);
+    --boundary-4: --border(4);
+  }
+}

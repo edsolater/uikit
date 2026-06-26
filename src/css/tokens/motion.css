@@ -1,0 +1,27 @@
+/*
+ * 这个文件负责动效 token。
+ * motion 只表达时间、缓动和系统级动效缩放，不处理具体组件动画。
+ */
+
+@layer tokens {
+  :root {
+    /*
+     * 是否偏好减少动画。
+     * 这个值不能直接由变量得出，需要在 media 中覆盖。
+     */
+    --env-motion-scale: 1;
+
+    @media (prefers-reduced-motion: reduce) {
+      --env-motion-scale: 0;
+    }
+
+    --sys-motion-scale: var(--env-motion-scale);
+
+    --motion-duration-fast: calc(120ms * var(--sys-motion-scale));
+    --motion-duration-normal: calc(180ms * var(--sys-motion-scale));
+    --motion-duration-slow: calc(260ms * var(--sys-motion-scale));
+
+    --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
