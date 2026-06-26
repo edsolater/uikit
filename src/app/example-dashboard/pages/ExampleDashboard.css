@@ -9,10 +9,9 @@
   display: grid;
   gap: var(--space-6);
   padding: var(--space-7);
-  border: var(--boundary-1) solid var(--color-line);
+  border: var(--boundary-1) solid var(--color-line-soft);
   border-radius: var(--radius-4);
-  background: var(--color-surface-low);
-  backdrop-filter: var(--filter-blur-3);
+  background: var(--color-surface);
   box-shadow: var(--shadow);
 }
 

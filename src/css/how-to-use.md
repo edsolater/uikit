@@ -64,8 +64,8 @@ import './app.css'
 ```css
 .panel {
   color: var(--color-fg);
-  background: var(--color-surface-low);
-  border: var(--boundary-1) solid var(--color-line);
+  background: var(--color-surface);
+  border: var(--boundary-1) solid var(--color-line-soft);
   padding: var(--space-5);
   border-radius: var(--radius-4);
 }
@@ -96,8 +96,8 @@ import './app.css'
 
 .card {
   color: var(--color-fg);
-  background: var(--color-surface-low);
-  border-color: var(--color-line);
+  background: var(--color-surface);
+  border-color: var(--color-line-soft);
 }
 ```
 

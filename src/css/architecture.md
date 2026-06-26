@@ -9,8 +9,8 @@ UIKit CSS 不再把 `--color(text)`、`--space(5)` 这类 `@function` 翻译层�
 ```css
 .panel {
   color: var(--color-fg);
-  background: var(--color-surface-low);
-  border-color: var(--color-line);
+  background: var(--color-surface);
+  border-color: var(--color-line-soft);
   padding: var(--space-5);
   border-radius: var(--radius-4);
 }

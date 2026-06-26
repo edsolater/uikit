@@ -64,12 +64,6 @@
      */
     --env-motion-scale: 1;
 
-    /*
-     * 当前主题模式。
-     * 主题切换控件通过 data-theme 写入 light / dark，CSS 只消费这个统一入口。
-     */
-    --theme: light;
-
     @media (prefers-reduced-motion: reduce) {
       --env-motion-scale: 0;
     }
@@ -103,10 +97,10 @@
 
     /*
      * brand dye：品牌身份色元。
-      * brand 也是 action / accent 的上游基础色元。
-      * light / dark 的分支仍然集中在这里处理，只是从原生 light-dark() 换成 --light-dark()。
+     * brand 也是 action / accent 的上游基础色元。
+     * 当前只定义亮色值；暗色值以后在 :root[data-theme='dark'] 中覆盖。
      */
-    --dye-brand: --light-dark(var(--base-brand), --lighten(var(--base-brand), 12%));
+    --dye-brand: var(--base-brand);
 
     /*
      * action dye：动作色元。
@@ -147,62 +141,63 @@
     --dye-accent-strong: --color-adjust(var(--dye-accent), lighter, 8%, vivid, 0.02);
 
     /*
-     * ink / paper：当前模式下的极性色元。
+     * ink / paper：亮色模式下的极性色元。
      * ink 是最锐利的墨色极点，paper 是最锐利的纸色极点。
      * 二者不直接给组件使用，只参与组合。
      */
-    --dye-ink: --light-dark(black, white);
-    --dye-paper: --light-dark(white, black);
+    --dye-ink: black;
+    --dye-paper: white;
 
     /*
      * brand flavor：品牌气味。
-     * 只取 brand hue 和极低 chroma，用于给灰阶染一点系统气质。
+     * 只取 brand hue 和极低 chroma，用于给状态色染一点系统气质。
      */
     --dye-brand-flavor: --color-adjust(var(--dye-brand), lightness, 50%, chroma, 0.018);
 
     /*
-     * neutral dye：由 paper / ink / brand-flavor 混出的中性色阶。
+     * neutral dye：亮色模式的中性色阶。
      *
      * 约定：
-     * - 数字越小，越接近 paper。
-     * - 数字越大，越接近 ink。
-     * - dye 层只表达色阶，不表达用途。
+     * - 数字越小，越接近纸面，但不使用纯白。
+     * - 数字越大，越接近墨色。
+     * - 低阶 neutral 要保留干净白面，同时给 app canvas 留出灰底空间。
+     * - dye 层只表达色阶，不表达组件用途。
      */
-    --dye-neutral-0: --color-mix(var(--dye-paper), 98, var(--dye-brand-flavor), 2);
-    --dye-neutral-1: --color-mix(var(--dye-paper), 94, var(--dye-ink), 2, var(--dye-brand-flavor), 4);
-    --dye-neutral-2: --color-mix(var(--dye-paper), 88, var(--dye-ink), 4, var(--dye-brand-flavor), 8);
-    --dye-neutral-3: --color-mix(var(--dye-paper), 80, var(--dye-ink), 8, var(--dye-brand-flavor), 12);
-    --dye-neutral-4: --color-mix(var(--dye-paper), 68, var(--dye-ink), 18, var(--dye-brand-flavor), 14);
-    --dye-neutral-5: --color-mix(var(--dye-paper), 52, var(--dye-ink), 34, var(--dye-brand-flavor), 14);
-    --dye-neutral-6: --color-mix(var(--dye-paper), 34, var(--dye-ink), 56, var(--dye-brand-flavor), 10);
-    --dye-neutral-7: --color-mix(var(--dye-paper), 18, var(--dye-ink), 76, var(--dye-brand-flavor), 6);
-    --dye-neutral-8: --color-mix(var(--dye-paper), 8, var(--dye-ink), 90, var(--dye-brand-flavor), 2);
+    --dye-neutral-0: oklch(98% 0.003 260);
+    --dye-neutral-1: oklch(94.5% 0.006 260);
+    --dye-neutral-2: oklch(90% 0.008 260);
+    --dye-neutral-3: oklch(84% 0.008 260);
+    --dye-neutral-4: oklch(72% 0.008 260);
+    --dye-neutral-5: oklch(58% 0.007 260);
+    --dye-neutral-6: oklch(42% 0.006 260);
+    --dye-neutral-7: oklch(26% 0.005 260);
+    --dye-neutral-8: oklch(15% 0.004 260);
 
     /*
      * status dye：状态色元。
-      * 状态色先有稳定语义 seed，再做 --light-dark() 适配和少量品牌气息调和。
+     * 状态色先有稳定语义 seed，再做少量品牌气息调和。
      * 它不从 brand 主派生，避免品牌色相反向污染成功、错误、警告等通用语义。
      */
     --dye-good: --color-mix(
-      --light-dark(var(--base-status-good), --lighten(var(--base-status-good), 10%)),
+      var(--base-status-good),
       94,
       var(--dye-brand-flavor),
       6
     );
     --dye-bad: --color-mix(
-      --light-dark(var(--base-status-bad), --lighten(var(--base-status-bad), 10%)),
+      var(--base-status-bad),
       94,
       var(--dye-brand-flavor),
       6
     );
     --dye-warn: --color-mix(
-      --light-dark(var(--base-status-warn), --lighten(var(--base-status-warn), 6%)),
+      var(--base-status-warn),
       94,
       var(--dye-brand-flavor),
       6
     );
     --dye-info: --color-mix(
-      --light-dark(var(--base-status-info), --lighten(var(--base-status-info), 10%)),
+      var(--base-status-info),
       94,
       var(--dye-brand-flavor),
       6
@@ -215,16 +210,17 @@
 
     /*
      * Structure：基础视觉语义。
-     * canvas 是页面或应用的最底层画布，用于 body 这类全局背景。
-     * surface 是组件、卡片、面板和局部区块的承载面，不负责表达整页画布。
+     * canvas 是页面或应用的最底层画布，用于 body 这类全局背景，默认退到 surface 后面。
+     * surface 是组件、卡片、面板和局部区块的干净承载面，不负责表达整页画布。
      * fg 是前景内容，line 是边界线。
      * surface 使用 low / high 表达同类承载面的层级，不使用 soft / strong 这类语气词。
+     * 当前只定义亮色逻辑：surface 比 canvas 更白，但不使用纯白。
      */
-    --color-canvas: var(--dye-neutral-0);
+    --color-canvas: var(--dye-neutral-1);
     --color-surface: var(--dye-neutral-0);
     --color-surface-low: var(--dye-neutral-1);
-    --color-surface-high: var(--dye-neutral-2);
-    --color-surface-overlay: --color-adjust(var(--dye-ink), opacity, 46%);
+    --color-surface-high: var(--dye-neutral-0);
+    --color-surface-overlay: rgb(0 0 0 / 46%);
     --color-surface-inverse: var(--dye-neutral-8);
 
     /*
@@ -314,10 +310,11 @@
     --color-info-line: --color-adjust(var(--dye-info), opacity, 44%);
 
     /*
-     * Shadow / Backdrop：和当前模式绑定的阴影与遮罩材料。
+     * Shadow / Backdrop：阴影和遮罩是物理材料，不等同于当前前景 ink。
+     * 亮色模式用低透明黑色避免灰雾。
      */
-    --color-shadow: --color-adjust(var(--dye-ink), opacity, 18%);
-    --color-backdrop: --color-adjust(var(--dye-ink), opacity, 62%);
+    --color-shadow: rgb(0 0 0 / 8%);
+    --color-backdrop: rgb(0 0 0 / 62%);
 
     /* ----------------------------------------------------------------------
      * 尺寸系统设计参数
@@ -413,7 +410,7 @@
     --opacity-half: 0.5;
     --opacity-muted: 0.72;
 
-    --shadow: 0 1px 2px var(--color-shadow), 0 2px 4px var(--color-shadow), 0 4px 8px var(--color-shadow);
+    --shadow: 0 1px 2px var(--color-shadow), 0 8px 20px var(--color-shadow);
 
     /*
      * 动画 token。
@@ -427,6 +424,101 @@
   }
 
   :root[data-theme='dark'] {
-    --theme: dark;
+    /*
+     * 暗色模式使用独立中性色阶。
+     * 这里不反转亮色曲线，而是先保证 app canvas、surface 和文字压强成立。
+     */
+    --dye-ink: white;
+    --dye-paper: black;
+
+    --dye-brand: oklch(70% 0.18 260);
+    --dye-action: var(--dye-brand);
+    --dye-action-hover: oklch(75% 0.19 260);
+    --dye-action-active: oklch(64% 0.16 260);
+    --dye-accent: oklch(74% 0.18 242);
+    --dye-accent-soft: oklch(74% 0.18 242 / 20%);
+    --dye-accent-strong: oklch(80% 0.2 242);
+
+    --dye-neutral-0: oklch(13% 0.01 260);
+    --dye-neutral-1: oklch(17% 0.012 260);
+    --dye-neutral-2: oklch(22% 0.014 260);
+    --dye-neutral-3: oklch(31% 0.014 260);
+    --dye-neutral-4: oklch(45% 0.012 260);
+    --dye-neutral-5: oklch(61% 0.01 260);
+    --dye-neutral-6: oklch(75% 0.008 260);
+    --dye-neutral-7: oklch(87% 0.006 260);
+    --dye-neutral-8: oklch(96% 0.004 260);
+
+    --dye-good: oklch(72% 0.14 145);
+    --dye-bad: oklch(70% 0.18 28);
+    --dye-warn: oklch(78% 0.15 78);
+    --dye-info: oklch(72% 0.14 235);
+
+    --color-canvas: var(--dye-neutral-0);
+    --color-surface: var(--dye-neutral-1);
+    --color-surface-low: var(--dye-neutral-0);
+    --color-surface-high: var(--dye-neutral-2);
+    --color-surface-overlay: rgb(0 0 0 / 66%);
+    --color-surface-inverse: var(--dye-neutral-8);
+
+    --color-fg: var(--dye-neutral-7);
+    --color-fg-soft: var(--dye-neutral-5);
+    --color-fg-strong: var(--dye-neutral-8);
+    --color-fg-disabled: var(--dye-neutral-4);
+    --color-fg-inverse: var(--dye-neutral-0);
+
+    --color-line: var(--dye-neutral-3);
+    --color-line-soft: var(--dye-neutral-2);
+    --color-line-strong: var(--dye-neutral-5);
+    --color-line-focus: var(--dye-neutral-6);
+
+    --color-brand: var(--dye-brand);
+    --color-brand-soft: oklch(70% 0.18 260 / 20%);
+    --color-brand-strong: oklch(78% 0.2 260);
+    --color-brand-fg: var(--dye-neutral-8);
+    --color-brand-line: oklch(70% 0.18 260 / 52%);
+
+    --color-action: var(--dye-action);
+    --color-action-hover: var(--dye-action-hover);
+    --color-action-active: var(--dye-action-active);
+    --color-action-disabled: var(--dye-neutral-3);
+    --color-action-fg: var(--dye-neutral-8);
+    --color-action-line: oklch(70% 0.18 260 / 52%);
+
+    --color-link: var(--color-action);
+    --color-link-hover: var(--color-action-hover);
+    --color-link-active: var(--color-action-active);
+    --color-link-visited: oklch(72% 0.16 286);
+
+    --color-accent: var(--dye-accent);
+    --color-accent-soft: var(--dye-accent-soft);
+    --color-accent-strong: var(--dye-accent-strong);
+    --color-accent-fg: var(--dye-neutral-8);
+    --color-accent-line: oklch(74% 0.18 242 / 54%);
+    --color-accent-focus: oklch(74% 0.18 242 / 46%);
+
+    --color-good: var(--dye-good);
+    --color-good-soft: oklch(72% 0.14 145 / 20%);
+    --color-good-fg: var(--dye-neutral-8);
+    --color-good-line: oklch(72% 0.14 145 / 52%);
+
+    --color-bad: var(--dye-bad);
+    --color-bad-soft: oklch(70% 0.18 28 / 20%);
+    --color-bad-fg: var(--dye-neutral-8);
+    --color-bad-line: oklch(70% 0.18 28 / 52%);
+
+    --color-warn: var(--dye-warn);
+    --color-warn-soft: oklch(78% 0.15 78 / 20%);
+    --color-warn-fg: var(--dye-neutral-0);
+    --color-warn-line: oklch(78% 0.15 78 / 52%);
+
+    --color-info: var(--dye-info);
+    --color-info-soft: oklch(72% 0.14 235 / 20%);
+    --color-info-fg: var(--dye-neutral-8);
+    --color-info-line: oklch(72% 0.14 235 / 52%);
+
+    --color-shadow: rgb(0 0 0 / 38%);
+    --color-backdrop: rgb(0 0 0 / 72%);
+    --shadow: 0 1px 2px rgb(0 0 0 / 46%), 0 12px 28px var(--color-shadow);
   }
 }

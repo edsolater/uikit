@@ -31,16 +31,6 @@
   );
 }
 
-/*
- * --light-dark：根据当前主题在两种颜色之间切换。
- * 参数：(<color>, <color>)。
- * 约定：由 theme.css 在根节点维护 --theme: light | dark。
- * 示例：--light-dark(white, black)。
- */
-@function --light-dark(--light <color>, --dark <color>) returns <color> {
-  result: if(style(--theme: dark): var(--dark) ; else: var(--light));
-}
-
 @function --color-adjust(
     --color <color>,
     --channel1

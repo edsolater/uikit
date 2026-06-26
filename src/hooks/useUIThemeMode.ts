@@ -26,7 +26,7 @@ function resolveUIThemeMode(mode: UIThemeMode, media: MediaQueryList) {
 /**
  * 把当前选中的模式写到根节点。
  * hook 内保留三态模式：light / dark / system。
- * DOM 只写解析后的 `data-theme`，CSS 再把它映射成 `--theme: light | dark`。
+ * DOM 只写解析后的 `data-theme`，CSS 通过选择器覆盖对应主题 token。
  */
 function applyGlobalUIThemeMode(mode: UIThemeMode, root: HTMLHtmlElement, markThemeSwitching: () => void) {
   const media = window.matchMedia('(prefers-color-scheme: dark)')

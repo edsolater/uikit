@@ -85,6 +85,21 @@ function readTokenRawValue(token: string) {
 }
 
 /**
+ * 把 CSS 变量解析成浏览器最终能绘制的颜色。
+ * preview 只关心“当前主题下能不能画出来”，原始声明继续交给 value 列展示。
+ */
+function readTokenResolvedColorValue(token: string) {
+  const element = document.createElement('div')
+  element.style.setProperty('background-color', `var(${token}, transparent)`)
+  document.body.append(element)
+
+  const resolvedValue = getComputedStyle(element).backgroundColor
+  element.remove()
+
+  return resolvedValue || 'transparent'
+}
+
+/**
  * 压缩颜色表达里的数字精度，避免展示层被长小数淹没。
  */
 function formatColorText(color: string) {
@@ -107,7 +122,7 @@ export function ColorCSSTokenTable() {
     cssVariableNames.map((cssVariableName) => ({
       name: cssVariableName,
       value: formatColorText(readTokenRawValue(cssVariableName)),
-      preview: `var(${cssVariableName}, transparent)`,
+      preview: readTokenResolvedColorValue(cssVariableName),
     })),
   )
 
@@ -120,7 +135,7 @@ export function ColorCSSTokenTable() {
   return (
     <Table
       data={colorTokenRows}
-      keys={['name', 'preview']}
+      keys={['name', 'value', 'preview']}
       renderParts={{
         tableCell: {
           preview: (value) => (
