@@ -1,23 +1,34 @@
 .demo-shell {
-  margin: 0 var(--space-8);
+  min-block-size: 100svb;
+  margin: 0;
   display: grid;
-  gap: var(--space-8);
-  padding: 64px 0 96px;
+  gap: var(--space-7);
+  padding: 64px clamp(var(--space-5), 5vw, 80px) 96px;
+  /* 背景层是页面的底色，不跟随卡片滚动；卡片通过半透明材质吃到这层色温。 */
+  background:
+    radial-gradient(circle at 14% -6%, oklch(74% 0.16 255 / 18%), transparent 38%),
+    radial-gradient(circle at 88% 8%, oklch(78% 0.12 315 / 12%), transparent 34%),
+    linear-gradient(180deg, oklch(97.5% 0.014 272), oklch(94.5% 0.018 258));
+  background-attachment: fixed;
 }
 
 .panel {
   display: grid;
-  gap: var(--space-6);
-  padding: var(--space-7);
-  border: var(--boundary-1) solid var(--color-line-soft);
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 46%, transparent);
   border-radius: var(--radius-4);
-  background: var(--color-surface);
-  box-shadow: var(--shadow);
+  /* Surface 是承载内容的半透明材质，不是另一块实心灰色面板。 */
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 58%), rgb(255 255 255 / 42%)),
+    color-mix(in oklab, var(--color-surface) 32%, transparent);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(40px) saturate(1.2);
 }
 
 .panel-head {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .panel-head span {
@@ -30,6 +41,16 @@
 
 .panel-head h2 {
   margin: 0;
+  font-size: 28px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+}
+
+.panel > p {
+  max-inline-size: 68ch;
+  color: var(--color-fg-soft);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .button-row {
@@ -41,6 +62,57 @@
 .input-row {
   display: grid;
   gap: var(--space-3);
+}
+
+.setting-list {
+  display: grid;
+}
+
+.setting-row {
+  min-block-size: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+  border-block-start: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 40%, transparent);
+}
+
+.setting-row:first-child {
+  border-block-start: 0;
+}
+
+.setting-copy,
+.field-copy {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.setting-copy strong,
+.field-copy label {
+  color: var(--color-fg-strong);
+  font-weight: var(--font-weight-semibold);
+}
+
+.setting-copy span,
+.field-copy span {
+  color: var(--color-fg-soft);
+  font-size: var(--font-size-sm);
+}
+
+.field-row {
+  align-items: stretch;
+  grid-template-columns: 1fr;
+}
+
+.field-row {
+  display: grid;
+}
+
+.field-error {
+  color: var(--color-bad);
+  font-size: var(--font-size-sm);
 }
 
 .demo-stack {
@@ -147,4 +219,24 @@
 .structure-note {
   color: #555555;
   font-size: var(--font-size-sm);
+}
+
+@media (max-width: 640px) {
+  .demo-shell {
+    padding: var(--space-6) var(--space-4) var(--space-7);
+  }
+
+  .panel {
+    padding: var(--space-5);
+  }
+
+  .setting-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .button-row {
+    gap: var(--space-2);
+  }
 }

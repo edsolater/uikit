@@ -31,7 +31,7 @@
      * 这些 seed 先表达跨品牌稳定的状态语义，再进入 dye 层做主题调和。
      */
     --base-status-good: oklch(62% 0.16 145);
-    --base-status-bad: oklch(58% 0.2 28);
+    --base-status-bad: #c42b1c;
     --base-status-warn: oklch(72% 0.17 78);
     --base-status-info: oklch(62% 0.16 235);
 
@@ -172,23 +172,23 @@
     --color-fg-disabled: var(--dye-neutral-4);
     --color-fg-inverse: var(--dye-neutral-0);
 
-    --color-line: var(--dye-neutral-3);
-    --color-line-soft: var(--dye-neutral-2);
-    --color-line-strong: var(--dye-neutral-5);
-    --color-line-focus: var(--dye-neutral-6);
+    --color-line: oklch(42% 0.006 260 / 18%);
+    --color-line-soft: oklch(42% 0.006 260 / 9%);
+    --color-line-strong: oklch(42% 0.006 260 / 28%);
+    --color-line-focus: oklch(42% 0.006 260 / 42%);
 
     /*
      * Control：中性可操作控件。
      * 用于默认按钮、工具按钮和命令入口；它不承担品牌身份，也不表达表单输入的可编辑区域。
      */
-    --color-control: var(--dye-neutral-0);
-    --color-control-hover: var(--dye-neutral-1);
-    --color-control-active: var(--dye-neutral-2);
-    --color-control-disabled: var(--dye-neutral-2);
+    --color-control: color-mix(in oklab, var(--color-fg-strong) 6%, var(--color-surface) 72%);
+    --color-control-hover: color-mix(in oklab, var(--color-fg-strong) 9%, var(--color-surface) 72%);
+    --color-control-active: color-mix(in oklab, var(--color-fg-strong) 13%, var(--color-surface) 72%);
+    --color-control-disabled: color-mix(in oklab, var(--color-fg-strong) 5%, transparent);
     --color-control-fg: var(--color-fg-strong);
     --color-control-fg-disabled: var(--color-fg-disabled);
-    --color-control-line: var(--color-line);
-    --color-control-line-hover: var(--color-line-strong);
+    --color-control-line: oklch(42% 0.006 260 / 20%);
+    --color-control-line-hover: oklch(42% 0.006 260 / 28%);
     --color-control-line-focus: var(--color-accent-focus);
 
     /*
@@ -228,7 +228,7 @@
     --color-action-hover: var(--dye-action-hover);
     --color-action-active: var(--dye-action-active);
     --color-action-disabled: var(--dye-neutral-3);
-    --color-action-fg: --foreground-on(var(--color-action));
+    --color-action-fg: var(--dye-paper);
     --color-action-line: --color-adjust(var(--dye-action), opacity, 48%);
 
     /*
@@ -247,7 +247,7 @@
     --color-accent: var(--dye-accent);
     --color-accent-soft: var(--dye-accent-soft);
     --color-accent-strong: var(--dye-accent-strong);
-    --color-accent-fg: --foreground-on(var(--color-accent));
+    --color-accent-fg: var(--dye-paper);
     --color-accent-line: --color-adjust(var(--dye-accent), opacity, 50%);
     --color-accent-focus: --color-adjust(var(--dye-accent), opacity, 42%);
 
@@ -265,7 +265,7 @@
 
     --color-bad: var(--dye-bad);
     --color-bad-soft: --color-adjust(var(--dye-bad), opacity, 14%);
-    --color-bad-fg: --foreground-on(var(--color-bad));
+    --color-bad-fg: var(--dye-paper);
     --color-bad-line: --color-adjust(var(--dye-bad), opacity, 44%);
 
     --color-warn: var(--dye-warn);
