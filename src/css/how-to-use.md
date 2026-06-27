@@ -92,6 +92,12 @@ import './app.css'
 常用公开变量：
 
 ```css
+.button {
+  color: var(--color-control-fg);
+  background: var(--color-control);
+  border-color: var(--color-control-line);
+}
+
 .primary-button {
   color: var(--color-action-fg);
   background: var(--color-action);
@@ -101,6 +107,12 @@ import './app.css'
   color: var(--color-fg);
   background: var(--color-surface);
   border-color: var(--color-line-soft);
+}
+
+.input {
+  color: var(--color-field-fg);
+  background: var(--color-field);
+  border-color: var(--color-field-line);
 }
 ```
 

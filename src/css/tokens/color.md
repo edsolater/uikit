@@ -125,13 +125,13 @@ brand 也是 action / accent 的上游基础色元
 
 --dye-action-hover: --color-adjust(
   var(--dye-action),
-  lighter, 4%,
+  darker, 4%,
   vivid, 0.01
 );
 
 --dye-action-active: --color-adjust(
   var(--dye-action),
-  darker, 6%,
+  darker, 8%,
   grayish, 0.01
 );
 ```
@@ -142,6 +142,7 @@ brand 也是 action / accent 的上游基础色元
 action = 可操作入口
 hover = 兴趣态 / 靠近
 active = 按下态 / 压实
+亮色 action 从 rest 到 hover 到 active 逐步变深，避免主按钮 hover 变飘
 ```
 
 ### `accent`
@@ -315,6 +316,30 @@ line 覆盖 border、divider、outline、separator
 --color-line-soft;
 --color-line-strong;
 --color-line-focus;
+
+--color-control;
+--color-control-hover;
+--color-control-active;
+--color-control-disabled;
+--color-control-fg;
+--color-control-fg-disabled;
+--color-control-line;
+--color-control-line-hover;
+--color-control-line-focus;
+
+--color-field;
+--color-field-hover;
+--color-field-focus;
+--color-field-disabled;
+--color-field-fg;
+--color-field-fg-disabled;
+--color-field-placeholder;
+--color-field-line;
+--color-field-line-hover;
+--color-field-line-focus;
+--color-field-focus-ring;
+--color-field-line-invalid;
+--color-field-focus-ring-invalid;
 ```
 
 解释：
@@ -337,6 +362,23 @@ line             默认边界
 line-soft        弱边界 / 低语气边界
 line-strong      强边界 / 高语气边界
 line-focus       中性 focus ring
+
+control          中性可操作控件的默认承载面
+control-hover    中性控件兴趣态承载面
+control-active   中性控件按下态承载面
+control-disabled 中性控件禁用承载面
+control-fg       中性控件前景
+control-line     中性控件边界
+
+field            可编辑值承载面
+field-hover      字段兴趣态承载面
+field-focus      字段聚焦承载面
+field-disabled   字段禁用承载面
+field-fg         字段输入内容前景
+field-placeholder 字段占位前景
+field-line       字段默认边界
+field-line-focus 字段聚焦边界
+field-focus-ring 字段聚焦外环
 ```
 
 `surface-low/high` 表达同类承载面的层级。不要把承载层级命名成 `surface-soft` 或 `surface-strong`。
@@ -354,12 +396,80 @@ surface-high 比 surface 再亮一层，用于菜单、浮层和更高承载面
 
 暗色卡片不靠白色光晕表达层级。卡片和 app 底色的分离先靠 surface 明度，再靠线和黑色阴影补充。
 
+### Control
+
+```css
+--color-control;
+--color-control-hover;
+--color-control-active;
+--color-control-disabled;
+
+--color-control-fg;
+--color-control-fg-disabled;
+
+--color-control-line;
+--color-control-line-hover;
+--color-control-line-focus;
+```
+
+理解：
+
+```txt
+control 是中性可操作控件，不是品牌色入口
+默认 Button、工具按钮和普通命令入口优先消费 control
+control-hover / control-active 表达交互压强
+control-line-focus 表达键盘焦点外环
+主操作或推荐路径不要通过 control 染色，而是通过 action / accent 显式升级
+```
+
+### Field
+
+```css
+--color-field;
+--color-field-hover;
+--color-field-focus;
+--color-field-disabled;
+
+--color-field-fg;
+--color-field-fg-disabled;
+--color-field-placeholder;
+
+--color-field-line;
+--color-field-line-hover;
+--color-field-line-focus;
+--color-field-focus-ring;
+--color-field-line-invalid;
+--color-field-focus-ring-invalid;
+```
+
+理解：
+
+```txt
+field 是可编辑值承载面，不等同于普通 surface 或 control
+Input、textarea、select 这类字段本体优先消费 field
+字段名、说明、错误文案和布局属于上层 Field 组合，不塞进 field token
+invalid 是字段值状态，使用 bad 语义映射成 field-line-invalid 和 field-focus-ring-invalid
+```
+
 ### Shadow / Backdrop
 
 ```css
 --color-shadow;
 --color-backdrop;
 --shadow;
+--shadow-0;
+--shadow-1;
+--shadow-2;
+--shadow-3;
+--shadow-4;
+--shadow-5;
+--shadow-6;
+--shadow-7;
+--shadow-8;
+--shadow-card;
+--shadow-card-raised;
+--shadow-popover;
+--shadow-dialog;
 ```
 
 理解：
@@ -369,6 +479,8 @@ shadow 和 backdrop 是物理材料，不是 fg 或 ink 的语义延伸
 亮色 shadow 必须轻，避免在白面周围形成灰雾
 暗色 shadow 可以更重，但仍使用黑色投影，不使用白色光晕
 backdrop 是遮罩材料，用于 dialog、popover 背景压暗和模态层
+shadow-0 到 shadow-8 是层级 ramp
+组件优先消费 shadow-card、shadow-popover、shadow-dialog 这类语义 token
 ```
 
 ### Brand
@@ -500,9 +612,10 @@ info  信息 / 提示 / 中性系统消息
 ```txt
 role:
 canvas / surface / fg / line / brand / action / accent / link / good / bad / warn / info
+control / field
 
 variant:
-soft / strong / low / high / overlay / inverse / hover / active / disabled / focus / fg / line
+soft / strong / low / high / overlay / inverse / hover / active / disabled / focus / fg / line / placeholder
 ```
 
 关键统一点：
@@ -521,6 +634,7 @@ low / high 是同种类中的层级语义
 
 ```txt
 canvas / surface / fg / line
+control / field
 soft
 low / high
 dye-neutral-数字阶梯

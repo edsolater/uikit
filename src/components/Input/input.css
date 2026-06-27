@@ -2,9 +2,15 @@
   .Input {
     --Input-h: var(--size-4);
     --Input-padding-x: var(--space-3);
-    --Input-border-color: var(--color-line);
-    --Input-bg: var(--color-surface-low);
-    --Input-fg: var(--color-fg-strong);
+    --Input-bg: var(--color-field);
+    --Input-bg-hover: var(--color-field-hover);
+    --Input-bg-focus: var(--color-field-focus);
+    --Input-fg: var(--color-field-fg);
+    --Input-placeholder: var(--color-field-placeholder);
+    --Input-border-color: var(--color-field-line);
+    --Input-border-color-hover: var(--color-field-line-hover);
+    --Input-border-color-focus: var(--color-field-line-focus);
+    --Input-focus-ring: var(--color-field-focus-ring);
 
     width: 100%;
     min-height: var(--Input-h);
@@ -13,21 +19,45 @@
     border-radius: var(--radius-3);
     color: var(--Input-fg);
     background: var(--Input-bg);
-    transition: border-color 160ms, box-shadow 160ms, background-color 160ms;
+    transition:
+      border-color var(--motion-duration-fast) var(--motion-ease-standard),
+      box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
+      background-color var(--motion-duration-fast) var(--motion-ease-standard),
+      color var(--motion-duration-fast) var(--motion-ease-standard);
+
+    &:hover:not(:disabled) {
+      border-color: var(--Input-border-color-hover);
+      background: var(--Input-bg-hover);
+    }
 
     &:focus-visible {
       outline: none;
-      border-color: --dim(var(--Input-border-color), 20);
-      box-shadow: 0 0 0 0.2em var(--color-accent-focus);
+      border-color: var(--Input-border-color-focus);
+      background: var(--Input-bg-focus);
+      box-shadow: 0 0 0 0.2em var(--Input-focus-ring);
     }
 
     &::placeholder {
-      color: color-mix(in oklab, currentColor 48%, transparent);
+      color: var(--Input-placeholder);
+    }
+
+    &:disabled {
+      --Input-bg: var(--color-field-disabled);
+      --Input-bg-hover: var(--Input-bg);
+      --Input-bg-focus: var(--Input-bg);
+      --Input-fg: var(--color-field-fg-disabled);
+      --Input-placeholder: var(--color-field-fg-disabled);
+      --Input-border-color: var(--color-line-soft);
+      --Input-border-color-hover: var(--Input-border-color);
+      --Input-border-color-focus: var(--Input-border-color);
+      cursor: not-allowed;
     }
 
     &.invalid {
-      --Input-border-color: var(--color-bad);
-      box-shadow: 0 0 0 0.2em var(--color-bad-soft);
+      --Input-border-color: var(--color-field-line-invalid);
+      --Input-border-color-hover: var(--color-field-line-invalid);
+      --Input-border-color-focus: var(--color-field-line-invalid);
+      --Input-focus-ring: var(--color-field-focus-ring-invalid);
     }
   }
 }

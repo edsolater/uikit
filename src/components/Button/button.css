@@ -1,18 +1,26 @@
 @layer uikit {
   .Button {
-    /* 主题色 */
-    --theme: var(--color-brand);
+    /*
+     * Button 只把全局 control / action / status token 映射到组件槽位。
+     * 默认按钮是中性控件；品牌色和强调色只在 solid / intent 中出现。
+     */
+    --Button-bg: var(--color-control);
+    --Button-bg-hover: var(--color-control-hover);
+    --Button-bg-active: var(--color-control-active);
+    --Button-fg: var(--color-control-fg);
+    --Button-fg-hover: var(--Button-fg);
+    --Button-fg-active: var(--Button-fg);
+    --Button-border: var(--color-control-line);
+    --Button-border-hover: var(--color-control-line-hover);
+    --Button-border-active: var(--Button-border-hover);
+    --Button-focus-ring: var(--color-control-line-focus);
 
-    /* 颜色 */
-    --Button-bg: transparent;
-    --Button-bg-hover: --lighten(var(--Button-bg), 5%);
-    --Button-bg-focus: var(--Button-bg-accent);
-    --Button-bg-accent: var(--color-action);
-    --Button-fg: currentColor;
-    --Button-fg-hover: --lighten(var(--Button-fg), 10%);
-    --Button-border: transparent;
+    --Button-solid-bg: var(--color-action);
+    --Button-solid-bg-hover: var(--color-action-hover);
+    --Button-solid-bg-active: var(--color-action-active);
+    --Button-solid-fg: var(--color-action-fg);
+    --Button-solid-border: transparent;
 
-    /* 尺寸 */
     --Button-border-radius: var(--control-radius, 0.625em);
     --Button-border-width: 1px;
     --Button-min-height: 2.25em;
@@ -37,54 +45,78 @@
     cursor: pointer;
     user-select: none;
     transition:
-      background-color 120ms ease,
+      background-color var(--motion-duration-fast) var(--motion-ease-standard),
       box-shadow 120ms ease,
-      color 120ms ease,
-      opacity 120ms ease;
+      border-color var(--motion-duration-fast) var(--motion-ease-standard),
+      color var(--motion-duration-fast) var(--motion-ease-standard),
+      opacity var(--motion-duration-fast) var(--motion-ease-standard);
 
     &:hover:not(:disabled) {
       background-color: var(--Button-bg-hover);
       color: var(--Button-fg-hover);
+      --Button-border: var(--Button-border-hover);
+    }
+
+    &:active:not(:disabled) {
+      background-color: var(--Button-bg-active);
+      color: var(--Button-fg-active);
+      --Button-border: var(--Button-border-active);
     }
 
     &:focus-visible {
-      outline: 2px solid color-mix(in oklab, var(--Button-bg-focus) 42%, transparent);
+      outline: 2px solid var(--Button-focus-ring);
       outline-offset: 2px;
     }
 
     &:disabled {
+      --Button-bg: var(--color-control-disabled);
+      --Button-bg-hover: var(--Button-bg);
+      --Button-bg-active: var(--Button-bg);
+      --Button-fg: var(--color-control-fg-disabled);
+      --Button-border: var(--color-line-soft);
       cursor: not-allowed;
-      opacity: 0.56;
     }
 
-    /* 动作声量：默认 */
-    :not(&[data-tone]) {
-      --Button-bg: --color-mix(var(--theme), 1, var(--color-surface), 2);
-      --Button-fg: --color-mix(var(--theme), 1, currentColor, 1);
-    }
-
-    /* 动作声量：退场 */
+    /* 动作声量：退场。 */
     &[data-tone='bare'] {
       --Button-bg: transparent;
+      --Button-bg-hover: var(--color-control-hover);
+      --Button-bg-active: var(--color-control-active);
       --Button-border: transparent;
+      --Button-border-hover: transparent;
+      --Button-border-active: transparent;
     }
 
-    /* 动作声量：强调 */
+    /* 动作声量：强调。 */
     &[data-tone='solid'] {
-      --Button-bg: var(--Button-bg-accent);
-      --Button-fg: --color-mix(white, 5, var(--theme), 1);
+      --Button-bg: var(--Button-solid-bg);
+      --Button-bg-hover: var(--Button-solid-bg-hover);
+      --Button-bg-active: var(--Button-solid-bg-active);
+      --Button-fg: var(--Button-solid-fg);
+      --Button-fg-hover: var(--Button-fg);
+      --Button-fg-active: var(--Button-fg);
+      --Button-border: var(--Button-solid-border);
+      --Button-border-hover: var(--Button-solid-border);
+      --Button-border-active: var(--Button-solid-border);
+      --Button-focus-ring: var(--color-action-line);
     }
 
-    /* 动作性质：推荐 */
+    /* 动作性质：推荐。 */
     &[data-intent='accent'] {
-      --Button-bg: var(--Button-bg-accent);
-      --Button-border: var(--Button-bg-accent);
+      --Button-solid-bg: var(--color-accent);
+      --Button-solid-bg-hover: color-mix(in oklab, var(--color-accent) 88%, var(--color-fg-strong));
+      --Button-solid-bg-active: color-mix(in oklab, var(--color-accent) 78%, var(--color-fg-strong));
+      --Button-solid-fg: var(--color-accent-fg);
+      --Button-focus-ring: var(--color-accent-focus);
     }
 
-    /* 动作性质：危险 */
+    /* 动作性质：危险。 */
     &[data-intent='danger'] {
-      --Button-bg-accent: var(--color-bad);
-      --Button-bg-focus: var(--color-bad);
+      --Button-solid-bg: var(--color-bad);
+      --Button-solid-bg-hover: color-mix(in oklab, var(--color-bad) 88%, var(--color-fg-strong));
+      --Button-solid-bg-active: color-mix(in oklab, var(--color-bad) 78%, var(--color-fg-strong));
+      --Button-solid-fg: var(--color-bad-fg);
+      --Button-focus-ring: var(--color-bad-line);
     }
 
     /* 交互尺度：偏小紧凑型 */
@@ -105,10 +137,12 @@
 
     &[data-status~='loading'] {
       cursor: progress;
-      --Button-border: var(--color-line-soft);
-      --Button-bg: --alpha(var(--color-surface));
     }
     &[data-status~='disabled'] {
+      --Button-bg: var(--color-control-disabled);
+      --Button-bg-hover: var(--Button-bg);
+      --Button-bg-active: var(--Button-bg);
+      --Button-fg: var(--color-control-fg-disabled);
       --Button-border: var(--color-line-soft);
     }
   }

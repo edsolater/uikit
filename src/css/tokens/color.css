@@ -57,14 +57,15 @@
     /*
      * action hover dye：动作兴趣态色元。
      * hover 表示用户靠近，不是按下。
+     * 亮色模式下主操作遵循 Fluent 式压实路径：rest -> hover -> active 逐步变深。
      */
-    --dye-action-hover: --color-adjust(var(--dye-action), lighter, 4%, vivid, 0.01);
+    --dye-action-hover: --color-adjust(var(--dye-action), darker, 4%, vivid, 0.01);
 
     /*
      * action active dye：动作按下态色元。
      * active 应该比 hover 更压实。
      */
-    --dye-action-active: --color-adjust(var(--dye-action), darker, 6%, grayish, 0.01);
+    --dye-action-active: --color-adjust(var(--dye-action), darker, 8%, grayish, 0.01);
 
     /*
      * accent dye：系统强调色元。
@@ -175,6 +176,38 @@
     --color-line-soft: var(--dye-neutral-2);
     --color-line-strong: var(--dye-neutral-5);
     --color-line-focus: var(--dye-neutral-6);
+
+    /*
+     * Control：中性可操作控件。
+     * 用于默认按钮、工具按钮和命令入口；它不承担品牌身份，也不表达表单输入的可编辑区域。
+     */
+    --color-control: var(--dye-neutral-0);
+    --color-control-hover: var(--dye-neutral-1);
+    --color-control-active: var(--dye-neutral-2);
+    --color-control-disabled: var(--dye-neutral-2);
+    --color-control-fg: var(--color-fg-strong);
+    --color-control-fg-disabled: var(--color-fg-disabled);
+    --color-control-line: var(--color-line);
+    --color-control-line-hover: var(--color-line-strong);
+    --color-control-line-focus: var(--color-accent-focus);
+
+    /*
+     * Field：可编辑值承载面。
+     * 用于 input、textarea 和 select 这类字段本体；字段名、说明和错误文案属于上层 Field 组合。
+     */
+    --color-field: var(--dye-neutral-1);
+    --color-field-hover: var(--dye-neutral-0);
+    --color-field-focus: var(--dye-neutral-0);
+    --color-field-disabled: var(--dye-neutral-2);
+    --color-field-fg: var(--color-fg-strong);
+    --color-field-fg-disabled: var(--color-fg-disabled);
+    --color-field-placeholder: var(--color-fg-soft);
+    --color-field-line: var(--color-line);
+    --color-field-line-hover: var(--color-line-strong);
+    --color-field-line-focus: var(--color-accent);
+    --color-field-focus-ring: var(--color-accent-focus);
+    --color-field-line-invalid: var(--color-bad);
+    --color-field-focus-ring-invalid: var(--color-bad-soft);
 
     /*
      * Brand：身份色。
@@ -294,6 +327,30 @@
     --color-line-soft: var(--dye-neutral-2);
     --color-line-strong: var(--dye-neutral-5);
     --color-line-focus: var(--dye-neutral-6);
+
+    --color-control: var(--dye-neutral-1);
+    --color-control-hover: var(--dye-neutral-2);
+    --color-control-active: var(--dye-neutral-3);
+    --color-control-disabled: var(--dye-neutral-2);
+    --color-control-fg: var(--color-fg-strong);
+    --color-control-fg-disabled: var(--color-fg-disabled);
+    --color-control-line: var(--color-line);
+    --color-control-line-hover: var(--color-line-strong);
+    --color-control-line-focus: var(--color-accent-focus);
+
+    --color-field: var(--dye-neutral-0);
+    --color-field-hover: var(--dye-neutral-1);
+    --color-field-focus: var(--dye-neutral-0);
+    --color-field-disabled: var(--dye-neutral-1);
+    --color-field-fg: var(--color-fg-strong);
+    --color-field-fg-disabled: var(--color-fg-disabled);
+    --color-field-placeholder: var(--color-fg-soft);
+    --color-field-line: var(--color-line);
+    --color-field-line-hover: var(--color-line-strong);
+    --color-field-line-focus: var(--color-accent);
+    --color-field-focus-ring: var(--color-accent-focus);
+    --color-field-line-invalid: var(--color-bad);
+    --color-field-focus-ring-invalid: var(--color-bad-soft);
 
     --color-brand: var(--dye-brand);
     --color-brand-soft: oklch(70% 0.18 260 / 20%);
