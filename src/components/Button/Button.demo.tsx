@@ -11,56 +11,74 @@ export function ButtonDemo() {
         <span>Component</span>
         <h2>Button</h2>
       </div>
-      <p>按钮只表达动作声量、动作性质和交互尺度，不承载导航语义。</p>
-      <div class="setting-list">
-        <div class="setting-row">
-          <div class="setting-copy">
-            <strong>推荐动作</strong>
-            <span>用于当前路径里最应该被看见的动作。</span>
-          </div>
-          <Button intent="accent" tone="solid">
-            Accent solid
-          </Button>
+      <p>按钮只表达动作声量、动作性质和交互尺寸，不承载导航语义。</p>
+
+      <div class="button-demo-grid">
+        <div class="button-demo-head">类型</div>
+        <div class="button-demo-head">默认</div>
+        <div class="button-demo-head">悬停</div>
+        <div class="button-demo-head">按下</div>
+        <div class="button-demo-head">流程</div>
+
+        <div class="button-demo-label">普通</div>
+        <div><Button>Default</Button></div>
+        <div class="button-demo-state-hover"><Button>Default</Button></div>
+        <div class="button-demo-state-active"><Button>Default</Button></div>
+        <div class="button-row">
+          <Button status="loading">Loading</Button>
+          <Button status="disabled">Disabled</Button>
         </div>
-        <div class="setting-row">
-          <div class="setting-copy">
-            <strong>普通动作</strong>
-            <span>默认按钮保持中性，不主动染品牌色。</span>
-          </div>
-          <Button>Default</Button>
+
+        <div class="button-demo-label">主操作</div>
+        <div><Button tone="solid">Solid</Button></div>
+        <div class="button-demo-state-hover"><Button tone="solid">Solid</Button></div>
+        <div class="button-demo-state-active"><Button tone="solid">Solid</Button></div>
+        <div class="button-row">
+          <Button tone="solid" status="loading">Loading</Button>
+          <Button tone="solid" status="disabled">Disabled</Button>
         </div>
-        <div class="setting-row">
-          <div class="setting-copy">
-            <strong>主操作</strong>
-            <span>明确需要更高权重时才使用 solid 声量。</span>
-          </div>
-          <Button tone="solid">Solid</Button>
+
+        <div class="button-demo-label">推荐</div>
+        <div><Button intent="accent" tone="solid">Accent</Button></div>
+        <div class="button-demo-state-hover"><Button intent="accent" tone="solid">Accent</Button></div>
+        <div class="button-demo-state-active"><Button intent="accent" tone="solid">Accent</Button></div>
+        <div class="button-row">
+          <Button intent="accent" tone="solid" status="loading">Loading</Button>
+          <Button intent="accent" tone="solid" status="disabled">Disabled</Button>
         </div>
-        <div class="setting-row">
-          <div class="setting-copy">
-            <strong>退场动作</strong>
-            <span>低权重命令保留可点击性，但降低视觉存在感。</span>
-          </div>
-          <Button tone="bare">Bare</Button>
+
+        <div class="button-demo-label">危险</div>
+        <div><Button intent="danger" tone="solid">Danger</Button></div>
+        <div class="button-demo-state-hover"><Button intent="danger" tone="solid">Danger</Button></div>
+        <div class="button-demo-state-active"><Button intent="danger" tone="solid">Danger</Button></div>
+        <div class="button-row">
+          <Button intent="danger" tone="solid" status="loading">Loading</Button>
+          <Button intent="danger" tone="solid" status="disabled">Disabled</Button>
         </div>
-        <div class="setting-row">
-          <div class="setting-copy">
-            <strong>危险动作</strong>
-            <span>破坏性命令需要明确的状态色和边界。</span>
-          </div>
-          <Button tone="solid" intent="danger">
-            Danger solid
-          </Button>
+
+        <div class="button-demo-label">退场</div>
+        <div><Button tone="bare">Bare</Button></div>
+        <div class="button-demo-state-hover"><Button tone="bare">Bare</Button></div>
+        <div class="button-demo-state-active"><Button tone="bare">Bare</Button></div>
+        <div class="button-row">
+          <Button tone="bare" status="loading">Loading</Button>
+          <Button tone="bare" status="disabled">Disabled</Button>
         </div>
-        <div class="setting-row">
-          <div class="setting-copy">
-            <strong>流程状态</strong>
-            <span>loading 和 disabled 是外部流程注入的动作状态。</span>
-          </div>
-          <div class="button-row">
-            <Button status="loading">Loading</Button>
-            <Button status="disabled">Disabled</Button>
-          </div>
+      </div>
+
+      <div class="button-size-stack">
+        <div class="button-demo-label">尺寸</div>
+        <div class="button-row">
+          <Button size="small">Small</Button>
+          <Button>Medium</Button>
+          <Button size="large">Large</Button>
+          <Button size="xlarge">XLarge</Button>
+        </div>
+        <div class="button-row">
+          <Button size="small" tone="solid">Small</Button>
+          <Button tone="solid">Medium</Button>
+          <Button size="large" tone="solid">Large</Button>
+          <Button size="xlarge" tone="solid">XLarge</Button>
         </div>
       </div>
     </article>

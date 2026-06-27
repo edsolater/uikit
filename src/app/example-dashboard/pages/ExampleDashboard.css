@@ -56,6 +56,45 @@
 .button-row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.button-demo-grid {
+  display: grid;
+  grid-template-columns: max-content repeat(4, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  align-items: center;
+}
+
+.button-demo-grid > div {
+  min-inline-size: 0;
+}
+
+.button-demo-head,
+.button-demo-label {
+  color: var(--color-fg-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.button-demo-state-hover .Button {
+  --Button-border: var(--Button-border-hover);
+  --Button-shadow: var(--Button-shadow-hover);
+  background-color: var(--Button-bg-hover);
+  color: var(--Button-fg-hover);
+}
+
+.button-demo-state-active .Button {
+  --Button-border: var(--Button-border-active);
+  --Button-shadow: var(--Button-shadow-active);
+  background-color: var(--Button-bg-active);
+  color: var(--Button-fg-active);
+  transform: translateY(var(--Button-active-offset));
+}
+
+.button-size-stack {
+  display: grid;
   gap: var(--space-3);
 }
 

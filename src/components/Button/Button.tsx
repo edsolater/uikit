@@ -11,7 +11,7 @@ import { clickable } from '../../component-plugins'
 import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
 import { Piv, type PivProps } from '../Piv'
-import './Button.css'
+import './button.css'
 import { createKitProfile, type ProfileProps } from './createKitProfile'
 
 interface ButtonProfileProps extends ProfileProps {
@@ -46,7 +46,7 @@ interface ButtonProfileProps extends ProfileProps {
    * - large：宽松，适用于需要强调的场景或触控设备。
    * - undefined：默认尺度，适用于大多数场景。
    */
-  size?: Source<'small' | 'large' | undefined>
+  size?: Source<'small' | 'large' | 'xlarge' | undefined>
 
   /**
    * 动作名。

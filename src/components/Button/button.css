@@ -1,52 +1,42 @@
 @layer uikit {
   .Button {
     /*
-     * Button 只把全局 control / action / status token 映射到组件槽位。
-     * 默认按钮是中性控件；品牌色和强调色只在 solid / intent 中出现。
+     * Button 只维护组件槽位。
+     * 扁平 selector 保证 tone / intent / status 的覆盖顺序可控。
      */
-    --Button-bg: color-mix(in oklab, var(--color-control) 78%, var(--color-accent-soft));
+    --Button-bg: color-mix(in oklab, var(--color-control) 82%, var(--color-accent-soft));
     --Button-bg-hover: color-mix(in oklab, var(--color-control-hover) 72%, var(--color-accent-soft));
-    --Button-bg-active: color-mix(in oklab, var(--color-control-active) 70%, var(--color-accent-soft));
-    --Button-fg: var(--color-control-fg);
-    --Button-fg-hover: var(--Button-fg);
-    --Button-fg-active: var(--Button-fg);
+    --Button-bg-active: color-mix(in oklab, var(--color-control-active) 62%, var(--color-accent-soft));
+    --Button-fg: var(--color-fg);
+    --Button-fg-hover: var(--color-fg-strong);
+    --Button-fg-active: var(--color-fg-strong);
     --Button-border: transparent;
     --Button-border-hover: transparent;
     --Button-border-active: transparent;
     --Button-focus-ring: var(--color-control-line-focus);
     --Button-shadow: var(--shadow-1);
     --Button-shadow-hover: var(--shadow-2);
-    --Button-shadow-active: none;
+    --Button-shadow-active: var(--shadow-0);
 
-    --Button-solid-bg: var(--color-action);
-    --Button-solid-bg-hover: var(--color-action-hover);
-    --Button-solid-bg-active: var(--color-action-active);
-    --Button-solid-fg: var(--color-action-fg);
-    --Button-solid-border: transparent;
-    --Button-solid-shadow: var(--shadow-2);
-    --Button-solid-shadow-hover: var(--shadow-3);
-    --Button-solid-shadow-active: var(--shadow-0);
-
-    --Button-border-radius: var(--control-radius, calc(var(--radius-4) * 1.5));
     --Button-border-width: var(--boundary-1);
     --Button-min-height: var(--size-5);
-    --Button-padding-x: var(--space-8);
+    --Button-padding-x: var(--space-6);
     --Button-padding-y: var(--space-3);
     --Button-gap: var(--space-3);
     --Button-font-size: var(--font-size-lg);
-    --Button-font-weight: var(--font-weight-semibold);
     --Button-active-offset: var(--boundary-1);
     --Button-focus-width: var(--boundary-2);
     --Button-focus-offset: var(--boundary-2);
 
     display: inline-flex;
     align-items: center;
+    align-self: center;
     justify-content: center;
     gap: var(--Button-gap);
     min-height: var(--Button-min-height);
     border: var(--Button-border-width) solid var(--Button-border);
     box-shadow: var(--Button-shadow);
-    border-radius: 999px; /* 顶级 squircle 形状 */
+    border-radius: 999px;
     corner-shape: squircle;
     padding: var(--Button-padding-y) var(--Button-padding-x);
     color: var(--Button-fg);
@@ -64,113 +54,122 @@
       border-color var(--motion-duration-fast) var(--motion-ease-standard),
       color var(--motion-duration-fast) var(--motion-ease-standard),
       opacity var(--motion-duration-fast) var(--motion-ease-standard);
+  }
 
-    &:hover:not(:disabled) {
-      background-color: var(--Button-bg-hover);
-      color: var(--Button-fg-hover);
-      --Button-border: var(--Button-border-hover);
-      --Button-shadow: var(--Button-shadow-hover);
-    }
+  .Button:hover:not(:disabled) {
+    background-color: var(--Button-bg-hover);
+    color: var(--Button-fg-hover);
+    --Button-border: var(--Button-border-hover);
+    --Button-shadow: var(--Button-shadow-hover);
+  }
 
-    &:active:not(:disabled) {
-      background-color: var(--Button-bg-active);
-      color: var(--Button-fg-active);
-      --Button-border: var(--Button-border-active);
-      --Button-shadow: var(--Button-shadow-active);
-      transform: translateY(var(--Button-active-offset));
-    }
+  .Button:active:not(:disabled) {
+    background-color: var(--Button-bg-active);
+    color: var(--Button-fg-active);
+    --Button-border: var(--Button-border-active);
+    --Button-shadow: var(--Button-shadow-active);
+    transform: translateY(var(--Button-active-offset));
+  }
 
-    &:focus-visible {
-      outline: var(--Button-focus-width) solid var(--Button-focus-ring);
-      outline-offset: var(--Button-focus-offset);
-    }
+  .Button:focus-visible {
+    outline: var(--Button-focus-width) solid var(--Button-focus-ring);
+    outline-offset: var(--Button-focus-offset);
+  }
 
-    &:disabled {
-      --Button-bg: var(--color-control-disabled);
-      --Button-bg-hover: var(--Button-bg);
-      --Button-bg-active: var(--Button-bg);
-      --Button-fg: var(--color-control-fg-disabled);
-      --Button-border: transparent;
-      --Button-shadow: none;
-      cursor: not-allowed;
-    }
+  /* 动作声量：退场。 */
+  .Button[data-tone='bare'] {
+    --Button-bg: transparent;
+    --Button-bg-hover: color-mix(in oklab, var(--color-control) 88%, var(--color-accent-soft));
+    --Button-bg-active: color-mix(in oklab, var(--color-control-hover) 82%, var(--color-accent-soft));
+    --Button-fg: var(--color-fg);
+    --Button-fg-hover: var(--color-fg-strong);
+    --Button-fg-active: var(--color-fg-strong);
+    --Button-border: transparent;
+    --Button-border-hover: transparent;
+    --Button-border-active: transparent;
+    --Button-shadow: none;
+    --Button-shadow-hover: none;
+    --Button-shadow-active: none;
+  }
 
-    /* 动作声量：退场。 */
-    &[data-tone='bare'] {
-      --Button-bg: transparent;
-      --Button-bg-hover: var(--color-control-hover);
-      --Button-bg-active: var(--color-control-active);
-      --Button-border: transparent;
-      --Button-border-hover: transparent;
-      --Button-border-active: transparent;
-      --Button-shadow: none;
-      --Button-shadow-hover: none;
-      --Button-shadow-active: none;
-    }
+  /* 动作声量：强调。 */
+  .Button[data-tone='solid'] {
+    --Button-bg: var(--color-action);
+    --Button-bg-hover: var(--color-action-hover);
+    --Button-bg-active: var(--color-action-active);
+    --Button-fg: color-mix(in oklab, var(--color-action-fg) 90%, var(--Button-bg));
+    --Button-fg-hover: var(--color-action-fg);
+    --Button-fg-active: var(--color-action-fg);
+    --Button-border: transparent;
+    --Button-border-hover: transparent;
+    --Button-border-active: transparent;
+    --Button-focus-ring: var(--color-action-line);
+    --Button-shadow: var(--shadow-2);
+    --Button-shadow-hover: var(--shadow-3);
+    --Button-shadow-active: var(--shadow-0);
+  }
 
-    /* 动作声量：强调。 */
-    &[data-tone='solid'] {
-      --Button-bg: var(--Button-solid-bg);
-      --Button-bg-hover: var(--Button-solid-bg-hover);
-      --Button-bg-active: var(--Button-solid-bg-active);
-      --Button-fg: var(--Button-solid-fg);
-      --Button-fg-hover: var(--Button-fg);
-      --Button-fg-active: var(--Button-fg);
-      --Button-border: var(--Button-solid-border);
-      --Button-border-hover: var(--Button-solid-border);
-      --Button-border-active: var(--Button-solid-border);
-      --Button-focus-ring: var(--color-action-line);
-      --Button-shadow: var(--Button-solid-shadow);
-      --Button-shadow-hover: var(--Button-solid-shadow-hover);
-      --Button-shadow-active: var(--Button-solid-shadow-active);
-    }
+  /* 动作性质：推荐。 */
+  .Button[data-tone='solid'][data-intent='accent'] {
+    --Button-bg: var(--color-accent);
+    --Button-bg-hover: color-mix(in oklab, var(--color-accent) 88%, var(--color-fg-strong));
+    --Button-bg-active: color-mix(in oklab, var(--color-accent) 78%, var(--color-fg-strong));
+    --Button-focus-ring: var(--color-accent-focus);
+  }
 
-    /* 动作性质：推荐。 */
-    &[data-intent='accent'] {
-      --Button-solid-bg: var(--color-accent);
-      --Button-solid-bg-hover: color-mix(in oklab, var(--color-accent) 88%, var(--color-fg-strong));
-      --Button-solid-bg-active: color-mix(in oklab, var(--color-accent) 78%, var(--color-fg-strong));
-      --Button-solid-fg: var(--color-accent-fg);
-      --Button-focus-ring: var(--color-accent-focus);
-    }
+  /* 动作性质：危险。 */
+  .Button[data-tone='solid'][data-intent='danger'] {
+    --Button-bg: var(--color-bad);
+    --Button-bg-hover: color-mix(in oklab, var(--color-bad) 88%, var(--color-fg-strong));
+    --Button-bg-active: color-mix(in oklab, var(--color-bad) 78%, var(--color-fg-strong));
+    --Button-focus-ring: var(--color-bad-line);
+  }
 
-    /* 动作性质：危险。 */
-    &[data-intent='danger'] {
-      --Button-solid-bg: var(--color-bad);
-      --Button-solid-bg-hover: color-mix(in oklab, var(--color-bad) 88%, var(--color-fg-strong));
-      --Button-solid-bg-active: color-mix(in oklab, var(--color-bad) 78%, var(--color-fg-strong));
-      --Button-solid-fg: var(--color-bad-fg);
-      --Button-focus-ring: var(--color-bad-line);
-    }
+  /* 交互尺寸：偏小紧凑型。 */
+  .Button[data-size='small'] {
+    --Button-min-height: var(--size-3);
+    --Button-padding-x: var(--space-4);
+    --Button-padding-y: var(--space-2);
+    --Button-gap: var(--space-2);
+    --Button-font-size: var(--font-size-md);
+  }
 
-    /* 交互尺度：偏小紧凑型 */
-    &[data-size='small'] {
-      --Button-min-height: var(--size-5);
-      --Button-padding-x: var(--space-6);
-      --Button-padding-y: var(--space-2);
-      --Button-gap: var(--space-2);
-      --Button-font-size: var(--font-size-md);
-    }
+  /* 交互尺寸：偏大松散型。 */
+  .Button[data-size='large'] {
+    --Button-min-height: var(--size-7);
+    --Button-padding-x: var(--space-7);
+    --Button-padding-y: var(--space-3);
+    --Button-gap: var(--space-4);
+    --Button-font-size: var(--font-size-xl);
+  }
 
-    /* 交互尺度：偏大松散型 */
-    &[data-size='large'] {
-      --Button-min-height: var(--size-7);
-      --Button-padding-x: calc(var(--space-8));
-      --Button-padding-y: var(--space-3);
-      --Button-gap: var(--space-4);
-      --Button-font-size: var(--font-size-lg);
-    }
+  /* 交互尺寸：极大主入口型。 */
+  .Button[data-size='xlarge'] {
+    --Button-min-height: var(--size-8);
+    --Button-padding-x: var(--space-8);
+    --Button-padding-y: var(--space-4);
+    --Button-gap: var(--space-5);
+    --Button-font-size: var(--font-size-2xl);
+  }
 
-    &[data-status~='loading'] {
-      cursor: progress;
-    }
-    &[data-status~='disabled'] {
-      --Button-bg: var(--color-control-disabled);
-      --Button-bg-hover: var(--Button-bg);
-      --Button-bg-active: var(--Button-bg);
-      --Button-fg: var(--color-control-fg-disabled);
-      --Button-border: transparent;
-      --Button-shadow: none;
-    }
+  .Button[data-status~='loading'] {
+    cursor: progress;
+  }
+
+  .Button:disabled,
+  .Button[data-status~='disabled'],
+  .Button[data-tone]:disabled,
+  .Button[data-tone][data-status~='disabled'],
+  .Button[data-intent]:disabled,
+  .Button[data-intent][data-status~='disabled'],
+  .Button[data-tone][data-intent]:disabled,
+  .Button[data-tone][data-intent][data-status~='disabled'] {
+    --Button-bg: var(--color-control-disabled);
+    --Button-bg-hover: var(--Button-bg);
+    --Button-bg-active: var(--Button-bg);
+    --Button-fg: var(--color-control-fg-disabled);
+    --Button-border: transparent;
+    --Button-shadow: none;
+    cursor: not-allowed;
   }
 }

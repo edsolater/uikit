@@ -10,6 +10,7 @@
     --font-size-md: var(--font-size-default);
     --font-size-lg: 16px;
     --font-size-xl: 20px;
+    --font-size-2xl: 24px;
 
     --font-weight-thin: 300;
     --font-weight-default: 400;

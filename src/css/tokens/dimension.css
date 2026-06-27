@@ -57,32 +57,32 @@
      * 尺寸派生。
      * 组件和业务直接消费这些变量。
      */
-    --space-1: --space(1);
-    --space-2: --space(2);
-    --space-3: --space(3);
-    --space-4: --space(4);
-    --space-5: --space(5);
-    --space-6: --space(6);
-    --space-7: --space(7);
-    --space-8: --space(8);
+    --space-1: 2px;
+    --space-2: 4px;
+    --space-3: 8px;
+    --space-4: 12px;
+    --space-5: 16px;
+    --space-6: 24px;
+    --space-7: 32px;
+    --space-8: 48px;
 
-    --size-1: --size(1);
-    --size-2: --size(2);
-    --size-3: --size(3);
-    --size-4: --size(4);
-    --size-5: --size(5);
-    --size-6: --size(6);
-    --size-7: --size(7);
-    --size-8: --size(8);
+    --size-1: 24px;
+    --size-2: 28px;
+    --size-3: 32px;
+    --size-4: 40px;
+    --size-5: 48px;
+    --size-6: 56px;
+    --size-7: 64px;
+    --size-8: 80px;
 
-    --radius-1: --radius(1);
-    --radius-2: --radius(2);
-    --radius-3: --radius(3);
-    --radius-4: --radius(4);
+    --radius-1: 2px;
+    --radius-2: 4px;
+    --radius-3: 8px;
+    --radius-4: 12px;
 
-    --boundary-1: --border(1);
-    --boundary-2: --border(2);
-    --boundary-3: --border(3);
-    --boundary-4: --border(4);
+    --boundary-1: 1px;
+    --boundary-2: 2px;
+    --boundary-3: 4px;
+    --boundary-4: 8px;
   }
 }

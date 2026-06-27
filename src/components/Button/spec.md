@@ -70,7 +70,7 @@ status  = 外部注入的动作状态
 ```ts
 type ButtonTone = 'bare' | 'solid'
 type ButtonIntent = 'accent' | 'danger'
-type ButtonSize = 'small' | 'large'
+type ButtonSize = 'small' | 'large' | 'xlarge'
 type ButtonStatus = 'loading' | 'disabled'
 
 interface ButtonProps extends PivProps<'button'> {
