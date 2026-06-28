@@ -178,38 +178,6 @@
     --color-line-focus: oklch(42% 0.006 260 / 42%);
 
     /*
-     * Control：中性可操作控件。
-     * 用于默认按钮、工具按钮和命令入口；它不承担品牌身份，也不表达表单输入的可编辑区域。
-     */
-    --color-control: color-mix(in oklab, var(--color-fg-strong) 6%, var(--color-surface) 72%);
-    --color-control-hover: color-mix(in oklab, var(--color-fg-strong) 9%, var(--color-surface) 72%);
-    --color-control-active: color-mix(in oklab, var(--color-fg-strong) 13%, var(--color-surface) 72%);
-    --color-control-disabled: color-mix(in oklab, var(--color-fg-strong) 5%, transparent);
-    --color-control-fg: var(--color-fg-strong);
-    --color-control-fg-disabled: var(--color-fg-disabled);
-    --color-control-line: oklch(42% 0.006 260 / 20%);
-    --color-control-line-hover: oklch(42% 0.006 260 / 28%);
-    --color-control-line-focus: var(--color-accent-focus);
-
-    /*
-     * Field：可编辑值承载面。
-     * 用于 input、textarea 和 select 这类字段本体；字段名、说明和错误文案属于上层 Field 组合。
-     */
-    --color-field: var(--dye-neutral-1);
-    --color-field-hover: var(--dye-neutral-0);
-    --color-field-focus: var(--dye-neutral-0);
-    --color-field-disabled: var(--dye-neutral-2);
-    --color-field-fg: var(--color-fg-strong);
-    --color-field-fg-disabled: var(--color-fg-disabled);
-    --color-field-placeholder: var(--color-fg-soft);
-    --color-field-line: var(--color-line);
-    --color-field-line-hover: var(--color-line-strong);
-    --color-field-line-focus: var(--color-accent);
-    --color-field-focus-ring: var(--color-accent-focus);
-    --color-field-line-invalid: var(--color-bad);
-    --color-field-focus-ring-invalid: var(--color-bad-soft);
-
-    /*
      * Brand：身份色。
      * 只用于 logo、brand mark、品牌装饰和少量品牌区域。
      * brand 不承担普通交互职责。
@@ -327,30 +295,6 @@
     --color-line-soft: var(--dye-neutral-2);
     --color-line-strong: var(--dye-neutral-5);
     --color-line-focus: var(--dye-neutral-6);
-
-    --color-control: var(--dye-neutral-1);
-    --color-control-hover: var(--dye-neutral-2);
-    --color-control-active: var(--dye-neutral-3);
-    --color-control-disabled: var(--dye-neutral-2);
-    --color-control-fg: var(--color-fg-strong);
-    --color-control-fg-disabled: var(--color-fg-disabled);
-    --color-control-line: var(--color-line);
-    --color-control-line-hover: var(--color-line-strong);
-    --color-control-line-focus: var(--color-accent-focus);
-
-    --color-field: var(--dye-neutral-0);
-    --color-field-hover: var(--dye-neutral-1);
-    --color-field-focus: var(--dye-neutral-0);
-    --color-field-disabled: var(--dye-neutral-1);
-    --color-field-fg: var(--color-fg-strong);
-    --color-field-fg-disabled: var(--color-fg-disabled);
-    --color-field-placeholder: var(--color-fg-soft);
-    --color-field-line: var(--color-line);
-    --color-field-line-hover: var(--color-line-strong);
-    --color-field-line-focus: var(--color-accent);
-    --color-field-focus-ring: var(--color-accent-focus);
-    --color-field-line-invalid: var(--color-bad);
-    --color-field-focus-ring-invalid: var(--color-bad-soft);
 
     --color-brand: var(--dye-brand);
     --color-brand-soft: oklch(70% 0.18 260 / 20%);

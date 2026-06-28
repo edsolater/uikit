@@ -2,15 +2,17 @@
   .Input {
     --Input-h: var(--size-4);
     --Input-padding-x: var(--space-3);
-    --Input-bg: var(--color-field);
-    --Input-bg-hover: var(--color-field-hover);
-    --Input-bg-focus: var(--color-field-focus);
-    --Input-fg: var(--color-field-fg);
-    --Input-placeholder: var(--color-field-placeholder);
-    --Input-border-color: var(--color-field-line);
-    --Input-border-color-hover: var(--color-field-line-hover);
-    --Input-border-color-focus: var(--color-field-line-focus);
-    --Input-focus-ring: var(--color-field-focus-ring);
+    --Input-bg: var(--color-surface-low);
+    --Input-bg-hover: var(--color-surface);
+    --Input-bg-focus: var(--color-surface);
+    --Input-bg-disabled: color-mix(in oklab, var(--color-fg-strong) 5%, transparent);
+    --Input-fg: var(--color-fg-strong);
+    --Input-fg-disabled: var(--color-fg-disabled);
+    --Input-placeholder: var(--color-fg-soft);
+    --Input-border-color: var(--color-line);
+    --Input-border-color-hover: var(--color-line-strong);
+    --Input-border-color-focus: var(--color-accent);
+    --Input-focus-ring: var(--color-accent-focus);
 
     width: 100%;
     min-height: var(--Input-h);
@@ -42,11 +44,11 @@
     }
 
     &:disabled {
-      --Input-bg: var(--color-field-disabled);
+      --Input-bg: var(--Input-bg-disabled);
       --Input-bg-hover: var(--Input-bg);
       --Input-bg-focus: var(--Input-bg);
-      --Input-fg: var(--color-field-fg-disabled);
-      --Input-placeholder: var(--color-field-fg-disabled);
+      --Input-fg: var(--Input-fg-disabled);
+      --Input-placeholder: var(--Input-fg-disabled);
       --Input-border-color: var(--color-line-soft);
       --Input-border-color-hover: var(--Input-border-color);
       --Input-border-color-focus: var(--Input-border-color);
@@ -54,10 +56,10 @@
     }
 
     &.invalid {
-      --Input-border-color: var(--color-field-line-invalid);
-      --Input-border-color-hover: var(--color-field-line-invalid);
-      --Input-border-color-focus: var(--color-field-line-invalid);
-      --Input-focus-ring: var(--color-field-focus-ring-invalid);
+      --Input-border-color: var(--color-bad);
+      --Input-border-color-hover: var(--color-bad);
+      --Input-border-color-focus: var(--color-bad);
+      --Input-focus-ring: var(--color-bad-soft);
     }
   }
 }

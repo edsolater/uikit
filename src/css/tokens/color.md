@@ -317,29 +317,6 @@ line 覆盖 border、divider、outline、separator
 --color-line-strong;
 --color-line-focus;
 
---color-control;
---color-control-hover;
---color-control-active;
---color-control-disabled;
---color-control-fg;
---color-control-fg-disabled;
---color-control-line;
---color-control-line-hover;
---color-control-line-focus;
-
---color-field;
---color-field-hover;
---color-field-focus;
---color-field-disabled;
---color-field-fg;
---color-field-fg-disabled;
---color-field-placeholder;
---color-field-line;
---color-field-line-hover;
---color-field-line-focus;
---color-field-focus-ring;
---color-field-line-invalid;
---color-field-focus-ring-invalid;
 ```
 
 解释：
@@ -395,61 +372,6 @@ surface-high 比 surface 再亮一层，用于菜单、浮层和更高承载面
 ```
 
 暗色卡片不靠白色光晕表达层级。卡片和 app 底色的分离先靠 surface 明度，再靠线和黑色阴影补充。
-
-### Control
-
-```css
---color-control;
---color-control-hover;
---color-control-active;
---color-control-disabled;
-
---color-control-fg;
---color-control-fg-disabled;
-
---color-control-line;
---color-control-line-hover;
---color-control-line-focus;
-```
-
-理解：
-
-```txt
-control 是中性可操作控件，不是品牌色入口
-默认 Button、工具按钮和普通命令入口优先消费 control
-control-hover / control-active 表达交互压强
-control-line-focus 表达键盘焦点外环
-主操作或推荐路径不要通过 control 染色，而是通过 action / accent 显式升级
-```
-
-### Field
-
-```css
---color-field;
---color-field-hover;
---color-field-focus;
---color-field-disabled;
-
---color-field-fg;
---color-field-fg-disabled;
---color-field-placeholder;
-
---color-field-line;
---color-field-line-hover;
---color-field-line-focus;
---color-field-focus-ring;
---color-field-line-invalid;
---color-field-focus-ring-invalid;
-```
-
-理解：
-
-```txt
-field 是可编辑值承载面，不等同于普通 surface 或 control
-Input、textarea、select 这类字段本体优先消费 field
-字段名、说明、错误文案和布局属于上层 Field 组合，不塞进 field token
-invalid 是字段值状态，使用 bad 语义映射成 field-line-invalid 和 field-focus-ring-invalid
-```
 
 ### Shadow / Backdrop
 
@@ -612,7 +534,6 @@ info  信息 / 提示 / 中性系统消息
 ```txt
 role:
 canvas / surface / fg / line / brand / action / accent / link / good / bad / warn / info
-control / field
 
 variant:
 soft / strong / low / high / overlay / inverse / hover / active / disabled / focus / fg / line / placeholder
@@ -634,7 +555,6 @@ low / high 是同种类中的层级语义
 
 ```txt
 canvas / surface / fg / line
-control / field
 soft
 low / high
 dye-neutral-数字阶梯

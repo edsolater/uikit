@@ -93,9 +93,9 @@ import './app.css'
 
 ```css
 .button {
-  color: var(--color-control-fg);
-  background: var(--color-control);
-  border-color: var(--color-control-line);
+  color: var(--color-fg);
+  background: color-mix(in oklab, var(--color-fg-strong) 6%, var(--color-surface) 72%);
+  border-color: var(--color-line);
 }
 
 .primary-button {
@@ -110,9 +110,9 @@ import './app.css'
 }
 
 .input {
-  color: var(--color-field-fg);
-  background: var(--color-field);
-  border-color: var(--color-field-line);
+  color: var(--color-fg-strong);
+  background: var(--color-surface-low);
+  border-color: var(--color-line);
 }
 ```
 
