@@ -1,7 +1,7 @@
 {
   "name": "@edsolater/uikit",
   "private": false,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "SolidJS 基础组件与 hooks 组件库",
   "main": "./dist/index.js",
@@ -24,22 +24,26 @@
     "./css/*": "./dist/css/*"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "latest"
   },
   "scripts": {
     "dev": "vite",
+    "link:local": "bun link --no-save @edsolater/fnkit",
     "build": "vite build && tsc -p tsconfig.build.json",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
   },
   "peerDependencies": {
-    "@edsolater/fnkit": "link:@edsolater/fnkit",
+    "@edsolater/fnkit": "^0.2.14",
     "solid-js": "^1.9.12"
   },
   "devDependencies": {
+    "@edsolater/fnkit": "^0.2.14",
     "@types/node": "^24.12.2",
     "solid-js": "^1.9.12",
     "storybook": "^10.3.5",
