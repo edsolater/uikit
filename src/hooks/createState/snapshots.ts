@@ -1,11 +1,11 @@
 /**
  * State 快照工具。
  *
- * 这个文件只负责把包含 `ReadableState` 的树形输入读取成当前快照。
+ * 这个文件只负责把包含 `StateView` 的树形输入读取成当前快照。
  * 它处理对象、数组和 tuple 的递归解包，但不负责 `Source` 的最终消费边界。
  */
 import { isObjectLiteral } from '@edsolater/fnkit'
-import { isReadableState, type ReadableState } from './state'
+import { isStateView, type StateView } from './state'
 
 type SnapshotLeaf =
   | string
@@ -28,7 +28,7 @@ type SnapshotLeaf =
  * 深度解包树形值来源后的快照类型。
  */
 export type Snapshot<T> =
-  T extends ReadableState<infer Value>
+  T extends StateView<infer Value>
     ? Snapshot<Value>
     : T extends SnapshotLeaf
       ? T
@@ -54,7 +54,7 @@ export function snapshot<T>(tree: T | undefined): Snapshot<T> | undefined {
 function readSnapshot<T>(input: T): Snapshot<T>
 function readSnapshot<T>(input: T | undefined): Snapshot<T> | undefined
 function readSnapshot<T>(input: T | undefined): Snapshot<T> | undefined {
-  if (isReadableState(input)) {
+  if (isStateView(input)) {
     return readSnapshot(input.read()) as Snapshot<T>
   }
 

@@ -3,10 +3,10 @@ import { createSignal } from 'solid-js'
 import { createReactionFn } from './createReactiveRunner'
 import { val } from './read'
 
-export const readableStateBrand = Symbol('ReadableState')
+export const stateViewBrand = Symbol('StateView')
 export const stateBrand = Symbol('State')
 
-export interface ReadableState<T = any> {
+export interface StateView<T = any> {
   /**
    * 唯一的读取自身当前值的入口
    * 写业务时，不直接使用这个方法，因为会产生主语错误，尽量使用 {@link state} 来快将任何值包装成state
@@ -14,14 +14,14 @@ export interface ReadableState<T = any> {
    */
   read(): T
 
-  /** 确定物种是个 readable state，isReadableState 使用 */
-  [readableStateBrand]: true
+  /** 确定物种是个 readable state，isStateView 使用 */
+  [stateViewBrand]: true
 
   /* 创建一个新的派生 readable state */
-  map<U>(toNew: (value: T) => U | ReadableState<U>): ReadableState<U>
+  map<U>(toNew: (value: T) => U | StateView<U>): StateView<U>
 }
 
-export interface State<T = any> extends ReadableState<T> {
+export interface State<T = any> extends StateView<T> {
   /** 确定物种是个state，isState 使用 */
   [stateBrand]: true
 
@@ -37,10 +37,10 @@ export interface State<T = any> extends ReadableState<T> {
  */
 const registeredStateSet = new WeakSet<State>()
 
-export function isReadableState(value: unknown): value is ReadableState {
+export function isStateView(value: unknown): value is StateView {
   return (
     registeredStateSet.has(value as any) ||
-    (isObject(value) && ((value as any)?.[readableStateBrand] === true || (value as any)?.[stateBrand] === true))
+    (isObject(value) && ((value as any)?.[stateViewBrand] === true || (value as any)?.[stateBrand] === true))
   )
 }
 
@@ -78,7 +78,7 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
       return solidjsAccessor()
     },
     
-    [readableStateBrand]: true,
+    [stateViewBrand]: true,
     [stateBrand]: true,
     [Symbol.dispose]() {
       // 这里不需要做任何事情，因为我们没有在外部注册这个 state，也没有暴露任何取消订阅的接口。

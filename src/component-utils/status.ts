@@ -1,6 +1,6 @@
 import { createPivPlugin } from '../components'
 import type { ClassNameList } from '../components/Piv/className'
-import { createState, toReadableState, val, type Source } from '../hooks'
+import { createState, toStateView, val, type Source } from '../hooks'
 import type { PluginManager } from './type'
 
 /* 它可以是一个巨长的字符串，然后我们会自动以空格分割 */
@@ -95,7 +95,7 @@ function toStatusRecord<S extends string>(
 export function createStatusRecord<InternalStatus extends string>(
   initialStatus?: StatusInput<InternalStatus>,
 ) {
-  const injectedStatusRecord = val(toReadableState(initialStatus, toStatusRecord)) as Partial<
+  const injectedStatusRecord = val(toStateView(initialStatus, toStatusRecord)) as Partial<
     StatusRecord<InternalStatus>
   >
   const localStatusRecord = createState<Partial<StatusRecord<InternalStatus>>>({})

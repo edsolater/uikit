@@ -1,6 +1,6 @@
 import { createReactionFn } from './createReactiveRunner'
 import { type Source, val } from './read'
-import { type ReadableState, createState, type State } from './state'
+import { type StateView, createState, type State } from './state'
 
 /**
  * 虽然实际上它创建了一个新的state，
@@ -11,7 +11,7 @@ import { type ReadableState, createState, type State } from './state'
  * @param toNew
  * @returns
  */
-export function mapSource<T, U>(source: Source<T>, toNew: (value: T) => Source<U>): ReadableState<U> {
+export function mapSource<T, U>(source: Source<T>, toNew: (value: T) => Source<U>): StateView<U> {
   const mappedState = createState()
   createReactionFn(() => {
     const sourceValue = val(source)
@@ -31,7 +31,7 @@ export function mapSource<T, U>(source: Source<T>, toNew: (value: T) => Source<U
 
 export function followState<T, U>(
   thisState: State<T>,
-  followTarget: ReadableState<U>,
+  followTarget: StateView<U>,
   transform: (value: U) => T = (v) => v as unknown as T,
 ): () => void {
   const { dispose: unfollow } = createReactionFn(() => {
