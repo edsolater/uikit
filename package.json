@@ -45,6 +45,7 @@
   "devDependencies": {
     "@edsolater/fnkit": "^0.2.14",
     "@types/node": "^24.12.2",
+    "jsdom": "^29.1.1",
     "solid-js": "^1.9.12",
     "storybook": "^10.3.5",
     "storybook-solidjs-vite": "^10.0.12",

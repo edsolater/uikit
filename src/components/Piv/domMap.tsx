@@ -5,52 +5,52 @@
  */
 import type { JSX } from 'solid-js/jsx-runtime'
 import type { JSXable } from '../../component-utils/toJSX'
-import type { JSXElement } from 'solid-js'
+import type { Accessor, JSXElement } from 'solid-js'
 
-const createDivElement: CreatePivElement<'div'> = (props) => <div ref={props.richRef}>{props.children}</div>
-const createSpanElement: CreatePivElement<'span'> = (props) => <span ref={props.richRef}>{props.children}</span>
-const createPElement: CreatePivElement<'p'> = (props) => <p ref={props.richRef}>{props.children}</p>
-const createButtonElement: CreatePivElement<'button'> = (props) => <button ref={props.richRef}>{props.children}</button>
+const createDivElement: CreatePivElement<'div'> = (props) => <div ref={props.richRef}>{props.children()}</div>
+const createSpanElement: CreatePivElement<'span'> = (props) => <span ref={props.richRef}>{props.children()}</span>
+const createPElement: CreatePivElement<'p'> = (props) => <p ref={props.richRef}>{props.children()}</p>
+const createButtonElement: CreatePivElement<'button'> = (props) => <button ref={props.richRef}>{props.children()}</button>
 const createInputElement: CreatePivElement<'input'> = (props) => <input ref={props.richRef} />
 const createTextareaElement: CreatePivElement<'textarea'> = (props) => <textarea ref={props.richRef} />
-const createSelectElement: CreatePivElement<'select'> = (props) => <select ref={props.richRef}>{props.children}</select>
-const createFormElement: CreatePivElement<'form'> = (props) => <form ref={props.richRef}>{props.children}</form>
+const createSelectElement: CreatePivElement<'select'> = (props) => <select ref={props.richRef}>{props.children()}</select>
+const createFormElement: CreatePivElement<'form'> = (props) => <form ref={props.richRef}>{props.children()}</form>
 const createSectionElement: CreatePivElement<'section'> = (props) => (
-  <section ref={props.richRef}>{props.children}</section>
+  <section ref={props.richRef}>{props.children()}</section>
 )
 const createArticleElement: CreatePivElement<'article'> = (props) => (
-  <article ref={props.richRef}>{props.children}</article>
+  <article ref={props.richRef}>{props.children()}</article>
 )
-const createHeaderElement: CreatePivElement<'header'> = (props) => <header ref={props.richRef}>{props.children}</header>
-const createFooterElement: CreatePivElement<'footer'> = (props) => <footer ref={props.richRef}>{props.children}</footer>
-const createMainElement: CreatePivElement<'main'> = (props) => <main ref={props.richRef}>{props.children}</main>
-const createAsideElement: CreatePivElement<'aside'> = (props) => <aside ref={props.richRef}>{props.children}</aside>
-const createLabelElement: CreatePivElement<'label'> = (props) => <label ref={props.richRef}>{props.children}</label>
-const createH1Element: CreatePivElement<'h1'> = (props) => <h1 ref={props.richRef}>{props.children}</h1>
-const createH2Element: CreatePivElement<'h2'> = (props) => <h2 ref={props.richRef}>{props.children}</h2>
-const createH3Element: CreatePivElement<'h3'> = (props) => <h3 ref={props.richRef}>{props.children}</h3>
-const createH4Element: CreatePivElement<'h4'> = (props) => <h4 ref={props.richRef}>{props.children}</h4>
-const createH5Element: CreatePivElement<'h5'> = (props) => <h5 ref={props.richRef}>{props.children}</h5>
-const createH6Element: CreatePivElement<'h6'> = (props) => <h6 ref={props.richRef}>{props.children}</h6>
-const createNavElement: CreatePivElement<'nav'> = (props) => <nav ref={props.richRef}>{props.children}</nav>
-const createUlElement: CreatePivElement<'ul'> = (props) => <ul ref={props.richRef}>{props.children}</ul>
-const createLiElement: CreatePivElement<'li'> = (props) => <li ref={props.richRef}>{props.children}</li>
-const createTableElement: CreatePivElement<'table'> = (props) => <table ref={props.richRef}>{props.children}</table>
-const createTheadElement: CreatePivElement<'thead'> = (props) => <thead ref={props.richRef}>{props.children}</thead>
-const createTbodyElement: CreatePivElement<'tbody'> = (props) => <tbody ref={props.richRef}>{props.children}</tbody>
-const createTrElement: CreatePivElement<'tr'> = (props) => <tr ref={props.richRef}>{props.children}</tr>
-const createThElement: CreatePivElement<'th'> = (props) => <th ref={props.richRef}>{props.children}</th>
-const createTdElement: CreatePivElement<'td'> = (props) => <td ref={props.richRef}>{props.children}</td>
+const createHeaderElement: CreatePivElement<'header'> = (props) => <header ref={props.richRef}>{props.children()}</header>
+const createFooterElement: CreatePivElement<'footer'> = (props) => <footer ref={props.richRef}>{props.children()}</footer>
+const createMainElement: CreatePivElement<'main'> = (props) => <main ref={props.richRef}>{props.children()}</main>
+const createAsideElement: CreatePivElement<'aside'> = (props) => <aside ref={props.richRef}>{props.children()}</aside>
+const createLabelElement: CreatePivElement<'label'> = (props) => <label ref={props.richRef}>{props.children()}</label>
+const createH1Element: CreatePivElement<'h1'> = (props) => <h1 ref={props.richRef}>{props.children()}</h1>
+const createH2Element: CreatePivElement<'h2'> = (props) => <h2 ref={props.richRef}>{props.children()}</h2>
+const createH3Element: CreatePivElement<'h3'> = (props) => <h3 ref={props.richRef}>{props.children()}</h3>
+const createH4Element: CreatePivElement<'h4'> = (props) => <h4 ref={props.richRef}>{props.children()}</h4>
+const createH5Element: CreatePivElement<'h5'> = (props) => <h5 ref={props.richRef}>{props.children()}</h5>
+const createH6Element: CreatePivElement<'h6'> = (props) => <h6 ref={props.richRef}>{props.children()}</h6>
+const createNavElement: CreatePivElement<'nav'> = (props) => <nav ref={props.richRef}>{props.children()}</nav>
+const createUlElement: CreatePivElement<'ul'> = (props) => <ul ref={props.richRef}>{props.children()}</ul>
+const createLiElement: CreatePivElement<'li'> = (props) => <li ref={props.richRef}>{props.children()}</li>
+const createTableElement: CreatePivElement<'table'> = (props) => <table ref={props.richRef}>{props.children()}</table>
+const createTheadElement: CreatePivElement<'thead'> = (props) => <thead ref={props.richRef}>{props.children()}</thead>
+const createTbodyElement: CreatePivElement<'tbody'> = (props) => <tbody ref={props.richRef}>{props.children()}</tbody>
+const createTrElement: CreatePivElement<'tr'> = (props) => <tr ref={props.richRef}>{props.children()}</tr>
+const createThElement: CreatePivElement<'th'> = (props) => <th ref={props.richRef}>{props.children()}</th>
+const createTdElement: CreatePivElement<'td'> = (props) => <td ref={props.richRef}>{props.children()}</td>
 const createImgElement: CreatePivElement<'img'> = (props) => <img ref={props.richRef} />
-const createAElement: CreatePivElement<'a'> = (props) => <a ref={props.richRef}>{props.children}</a>
+const createAElement: CreatePivElement<'a'> = (props) => <a ref={props.richRef}>{props.children()}</a>
 const createIframeElement: CreatePivElement<'iframe'> = (props) => <iframe ref={props.richRef} />
 const createSummaryElement: CreatePivElement<'summary'> = (props) => (
-  <summary ref={props.richRef}>{props.children}</summary>
+  <summary ref={props.richRef}>{props.children()}</summary>
 )
 const createDetailsElement: CreatePivElement<'details'> = (props) => (
-  <details ref={props.richRef}>{props.children}</details>
+  <details ref={props.richRef}>{props.children()}</details>
 )
-const createDialogElement: CreatePivElement<'dialog'> = (props) => <dialog ref={props.richRef}>{props.children}</dialog>
+const createDialogElement: CreatePivElement<'dialog'> = (props) => <dialog ref={props.richRef}>{props.children()}</dialog>
 export const domMap = {
   div: createDivElement,
   span: createSpanElement,
@@ -108,5 +108,6 @@ export type PivHTMLElement<Tag extends PivTag> = HTMLElementTagNameMap[Tag]
 /** 只给 domMap */
 export type ParsedPivProps<Tag extends PivTag> = {
   richRef: (element: PivHTMLElement<Tag>) => void
-  children: JSXElement
+  /** Piv 已规范化的 children 来源；domMap 只负责在真实元素中读取，不得把它固化为快照。 */
+  children: Accessor<JSXElement>
 }

@@ -4,7 +4,7 @@
  * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
 import { type MayArray } from '@edsolater/fnkit'
-import { Show, type JSX, type JSXElement } from 'solid-js'
+import { children, Show, type JSX, type JSXElement } from 'solid-js'
 import { val, type Source } from '../../hooks'
 import { consumeClassName, type ClassNameList } from './className'
 import {
@@ -98,6 +98,11 @@ export type PivProps<Tag extends PivTag = 'div'> = {
 export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<Tag>): JSX.Element {
   // --------------------- 处理 as，默认 div ---------------------
   const jsxCreator = domMap[props.as ?? 'div'] as CreatePivElement<Tag>
+  /**
+   * Piv 会把 children 再传给 domMap，因此这里保留可重复读取的响应式来源，
+   * 避免中间对象把动态文本或动态结构固化成首次渲染快照。
+   */
+  const resolvedChildren = children(() => props.children)
 
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
@@ -140,7 +145,7 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
       }
     },
 
-    children: props.children,
+    children: resolvedChildren,
   }
 
   if (props.if !== undefined) {
