@@ -59,12 +59,12 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   class?: ClassNameList
 
   /**
-   * DOM style 特殊项，按 CSS 字段合并并细粒度订阅。
+   * DOM style 特殊项。支持普通 style、列表或整体 Source，并按 CSS 字段细粒度订阅。
    */
   style?: StyleList
 
   /**
-   * 普通原生 HTML 字段，以及 attr: / prop: 显式落点。
+   * 普通原生 HTML 字段，以及 attr: / prop: 显式落点；记录整体和单字段都可以使用 Source。
    * class、style、事件、children 和 ref 使用各自的专用入口，不进入这里。
    */
   htmlProps?: HTMLPropsList<Tag>
@@ -79,8 +79,8 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    */
   ref?: PivRef<Tag>
 
-  /* 可以结构化穿透 */
-  children?: JSXElement
+  /** 子内容既可以是普通 JSX，也可以是整体可替换的 StateView。 */
+  children?: Source<JSXElement>
 }
 
 /**
@@ -94,7 +94,7 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivPro
    * Piv 会把 children 再传给 domMap，因此这里保留可重复读取的响应式来源，
    * 避免中间对象把动态文本或动态结构固化成首次渲染快照。
    */
-  const resolvedChildren = children(() => rawProps.children)
+  const resolvedChildren = children(() => val(rawProps.children))
 
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {

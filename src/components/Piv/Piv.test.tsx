@@ -8,6 +8,22 @@ import { Piv } from './Piv'
 import { createPivPlugin } from './plugin/helpers'
 
 describe('Piv children', () => {
+  test('StateView 可以作为 children 直接传入并持续更新', () => {
+    const host = document.createElement('div')
+    const content = createState('修改前')
+    const dispose = render(() => <Piv>{content}</Piv>, host)
+    const element = host.firstElementChild!
+
+    expect(element.textContent).toBe('修改前')
+
+    content.set('修改后')
+
+    expect(host.firstElementChild).toBe(element)
+    expect(element.textContent).toBe('修改后')
+
+    dispose()
+  })
+
   test('动态文本来源更新后同步更新同一个 DOM 的文本', () => {
     const host = document.createElement('div')
     let setValue!: (value: number) => void
@@ -48,6 +64,32 @@ describe('Piv children', () => {
 })
 
 describe('Piv Source 属性', () => {
+  test('class、style 和 htmlProps 都可以直接接收整体 StateView', () => {
+    const host = document.createElement('div')
+    const className = createState('before')
+    const style = createState({ color: 'red' })
+    const htmlProps = createState({ 'data-value': 'before' })
+    const dispose = render(
+      () => <Piv class={className} style={style} htmlProps={htmlProps} />,
+      host,
+    )
+    const element = host.firstElementChild as HTMLElement
+
+    expect(element.className).toBe('before')
+    expect(element.style.color).toBe('red')
+    expect(element.getAttribute('data-value')).toBe('before')
+
+    className.set('after')
+    style.set({ color: 'blue' })
+    htmlProps.set({ 'data-value': 'after' })
+
+    expect(element.className).toBe('after')
+    expect(element.style.color).toBe('blue')
+    expect(element.getAttribute('data-value')).toBe('after')
+
+    dispose()
+  })
+
   test('UIKit StateView 会同步更新 class 和 data attribute', () => {
     const host = document.createElement('div')
     const className = createState('before')
