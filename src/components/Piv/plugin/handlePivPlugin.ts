@@ -23,6 +23,7 @@ export type ComsumedShadowProps<Tag extends PivTag> = Omit<
 export function consumePivPlugins<Tag extends PivTag>(
   element: PivHTMLElement<Tag>,
   props: ShadowProps<Tag>,
+  excludedDirectPropKeys: ReadonlySet<keyof ComsumedShadowProps<Tag>> = new Set(),
 ): ComsumedShadowProps<Tag> {
   let shadowProps: ComsumedShadowProps<Tag>[] = [props] // 越排名后期的plugin越先被解析 // 纳入这一队列的props全都认为不需要进一步解析了
   let pluginsQueue: PivPlugin<Tag>[] = getPluginFromShadowProps(props)
@@ -38,7 +39,7 @@ export function consumePivPlugins<Tag extends PivTag>(
     }
   }
 
-  return mergeConsumedShadowProps(shadowProps)
+  return mergeConsumedShadowProps(shadowProps, props, excludedDirectPropKeys)
 }
 
 /**
@@ -61,10 +62,13 @@ function getPluginFromShadowProps<Tag extends PivTag>(props: ShadowProps<Tag>): 
  */
 function mergeConsumedShadowProps<Tag extends PivTag>(
   shadowPropsList: ComsumedShadowProps<Tag>[],
+  directProps: ShadowProps<Tag>,
+  excludedDirectPropKeys: ReadonlySet<keyof ComsumedShadowProps<Tag>>,
 ): ComsumedShadowProps<Tag> {
   return shadowPropsList.toReversed().reduce((collectProps, singleProps) => {
     for (const key of Object.keys(singleProps) as (keyof PivProps<Tag>)[]) {
       if (key === 'as' || key === 'if' || key === 'children' || key === 'plugins' || key === 'trait' || key === 'shadowProps') continue
+      if (singleProps === directProps && excludedDirectPropKeys.has(key)) continue
       const newValue = mergeMayArray(collectProps[key], singleProps[key])
       // @ts-ignore
       collectProps[key] = newValue

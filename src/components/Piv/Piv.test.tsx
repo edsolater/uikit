@@ -68,4 +68,30 @@ describe('Piv Source 属性', () => {
 
     dispose()
   })
+
+  test('Solid 动态 class 更新后移除旧 token 并写入新 token', () => {
+    const host = document.createElement('div')
+    let setValue!: (value: number) => void
+
+    function DynamicClass() {
+      const [value, updateValue] = createSignal(2)
+      setValue = updateValue
+      return <Piv class={`Tile value-${value()}`} />
+    }
+
+    const dispose = render(() => <DynamicClass />, host)
+    const element = host.firstElementChild!
+
+    expect(element.classList.contains('Tile')).toBe(true)
+    expect(element.classList.contains('value-2')).toBe(true)
+
+    setValue(4)
+
+    expect(host.firstElementChild).toBe(element)
+    expect(element.classList.contains('Tile')).toBe(true)
+    expect(element.classList.contains('value-2')).toBe(false)
+    expect(element.classList.contains('value-4')).toBe(true)
+
+    dispose()
+  })
 })

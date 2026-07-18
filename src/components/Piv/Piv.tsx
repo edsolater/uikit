@@ -107,11 +107,9 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
       // --------------------- 处理 plugin 并返回的shadow props，输入的shadowProps 和 用户props ---------------------
-      const pluginConsumedProps: PivProps<Tag> = consumePivPlugins(element, props)
+      const pluginConsumedProps: PivProps<Tag> = consumePivPlugins(element, props, new Set(['class']))
 
-      if (pluginConsumedProps.class) {
-        consumeClassName(element, pluginConsumedProps.class)
-      }
+      consumeClassName(element, () => [pluginConsumedProps.class, val(props.class)])
 
       if (pluginConsumedProps.style) {
         consumeStyle(element, pluginConsumedProps.style)

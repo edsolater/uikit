@@ -21,11 +21,14 @@ export type ClassNameList = Source<MayArray<Source<ClassNameAtom> | undefined>>
 /**
  * class 是 Piv 的 DOM 消费能力，必须经过 plugin 合并后再绑定到真实节点。
  */
-export function consumeClassName(element: Element, classNameList: ClassNameList) {
+export function consumeClassName(
+  element: Element,
+  readClassNameLists: () => (ClassNameList | undefined)[],
+) {
   const tokenCounts = new Map<string, number>()
 
   createRenderEffect(() => {
-    const lists = toArray(val(classNameList)).filter(isTruthy)
+    const lists = readClassNameLists().flatMap((classNameList) => toArray(val(classNameList))).filter(isTruthy)
 
     for (const atom of lists) {
       createRenderEffect(() => {
