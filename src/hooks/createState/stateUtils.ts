@@ -1,6 +1,6 @@
 import { createReactionFn } from './createReactiveRunner'
 import { type Source, val } from './read'
-import { type StateView, createState, type State } from './state'
+import { type State, type StateView, isStateView } from './state'
 
 /**
  * 虽然实际上它创建了一个新的state，
@@ -8,17 +8,25 @@ import { type StateView, createState, type State } from './state'
  * 不然的话，它的返回结构不太符合业务直觉。
  *
  * @param source 需要订阅的一个源
- * @param toNew
+ * @param mapper
  * @returns
  */
-export function mapSource<T, U>(source: Source<T>, toNew: (value: T) => Source<U>): StateView<U> {
-  const mappedState = createState()
-  createReactionFn(() => {
-    const sourceValue = val(source)
-    const newValue = val(toNew(sourceValue))
-    mappedState.set(newValue)
-  })
-  return mappedState as State<U>
+export function mapSource<T, U>(source: Source<T>, mapper: (value: T) => Source<U>): Source<U> {
+  if (isStateView(source)) {
+    return source.map((value) => mapper(value))
+  }
+  return mapper(source)
+}
+
+/**
+ * 比 {@link mapSource} 更简单的派生状态创建函数。
+ */
+
+export function derive<T, U>(source: Source<T>): Source<T>
+export function derive<T, U>(source: Source<T>, mapper: (value: T) => Source<U>): Source<U>
+export function derive<T, U>(source: Source<T>, mapper?: (value: T) => Source<U>): Source<any> {
+  if (!mapper) return source
+  return mapSource(source, (value) => mapper(value))
 }
 
 /**
