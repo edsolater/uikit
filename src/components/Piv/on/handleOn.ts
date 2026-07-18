@@ -2,7 +2,7 @@
  * 这个文件定义 Piv 的 on 声明协议，并把 descriptor、pair、record 归一成统一事件声明。
  * 它只负责声明形状和复杂 on 输入管理，不负责真实 DOM listener 注册。
  */
-import { isArray, isFunction, isString, mergeMayArray, toArray, type MayArray } from '@edsolater/fnkit'
+import { isArray, isFunction, isString, toArray, type MayArray } from '@edsolater/fnkit'
 import type { ListenerDiscriptor, EventCallback, EventKey } from './registerEventListeners'
 
 interface EventListenerDiscriptor<K extends EventKey = EventKey> extends ListenerDiscriptor<K> {
@@ -107,29 +107,4 @@ export function toListenerDiscriptorPairs(eventListeners: EventListeners): Event
     }
   }) as EventListenerDiscriptorPair[]
   return eventListenerPairs
-}
-
-/**
- * 把一组事件别名统一装载进原始 on 声明。
- * 第一个参数是已有的 `props.on`，后面是不定个标准 pair；这样 `onClick`、`onHover` 一类快捷入口都能复用同一个装载器。
- * 原始 on 可以是 `undefined`；如果某个别名 pair 的第二项是 `undefined`，这里会直接忽略它。
- */
-export function mergeEventListenerAliases(
-  eventListeners: EventListeners | undefined,
-  ...eventListenerAliases: (EventListenerPair<any> | undefined)[]
-): EventListeners {
-  const normalizedEventListenerAliases = eventListenerAliases.filter(
-    (eventListenerAlias): eventListenerAlias is EventListenerPair =>
-      eventListenerAlias !== undefined && eventListenerAlias[1] !== undefined,
-  )
-
-  if (normalizedEventListenerAliases.length === 0) {
-    return eventListeners
-  }
-
-  if (!eventListeners) {
-    return normalizedEventListenerAliases as EventListeners
-  }
-
-  return mergeMayArray(eventListeners, normalizedEventListenerAliases as EventListeners) as EventListeners
 }

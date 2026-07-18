@@ -1,6 +1,6 @@
 /**
  * 这个文件定义 Piv，项目里唯一真实 DOM 出口。
- * 它只负责按 as 选择原生 tag，并在 ref 阶段按 plugin 合并结果消费 class、style、htmlProps、on 和 ref。
+ * 它只负责按 as 选择原生 tag，并在 ref 阶段整合 plugin props，再连接 class、style、htmlProps、on 和 ref 消费者。
  * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
 import { type MayArray } from '@edsolater/fnkit'
@@ -16,16 +16,11 @@ import {
   type PivTag,
 } from './domMap'
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
-import {
-  mergeEventListenerAliases,
-  type EventListenerInput,
-  type EventListenerPair,
-  type EventListeners,
-} from './on/handleOn'
-import { consumePivPlugins, type ShadowProps } from './plugin/handlePivPlugin'
+import { type EventListeners } from './on/handleOn'
+import { mergePivProps, type ShadowProps } from './plugin/handlePivPlugin'
 import { type PivPlugin } from './plugin/runPlugin'
 import { consumeEventListeners } from './on/registerEventListeners'
-import { consumeStyle, type StyleValue } from './handleStyle'
+import { consumeStyle, type StyleList } from './handleStyle'
 import { parseNormalRefs, type PivRef } from './ref'
 
 export type PivProps<Tag extends PivTag = 'div'> = {
@@ -42,13 +37,14 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   if?: Source<boolean>
 
   /**
-   * 语义明确，就是合并祖父（父组件的父组件）传来的props的，
-   * 实现上就是plugins的能力利用
+   * 上层组件转交给当前 Piv 的低优先级 props。
+   * 它沿用 plugin props 整合规则，当前 Piv 的直接 props 始终拥有更高优先级。
    */
   shadowProps?: MayArray<ShadowProps<Tag>>
 
   /**
-   * 特殊prop：定义时插件， 其返回值（返回undefined时忽略）能合并入其下方的其他props
+   * Piv 的底层扩展入口。plugin 可以使用当前 DOM，并返回一层低优先级 props。
+   * 返回 undefined 表示这个 plugin 只执行结构能力，不补充 props。
    */
   plugins?: MayArray<PivPlugin<Tag>>
 
@@ -58,17 +54,18 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   trait?: MayArray<PivPlugin<Tag>>
 
   /**
-   * CSS 共同项， dom:class
+   * class 声明。支持字符串、列表、条件对象和 Source，并与各 plugin 来源共同合并。
    */
   class?: ClassNameList
 
   /**
    * DOM style 特殊项，按 CSS 字段合并并细粒度订阅。
    */
-  style?: MayArray<StyleValue>
+  style?: StyleList
 
   /**
-   * attrs 或 props，自动判断
+   * 普通原生 HTML 字段，以及 attr: / prop: 显式落点。
+   * class、style、事件、children 和 ref 使用各自的专用入口，不进入这里。
    */
   htmlProps?: HTMLPropsList<Tag>
 
@@ -78,12 +75,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   on?: EventListeners 
 
   /**
-   * click 事件的快捷入口；会在内部平移成 on 里的 click 声明，再和 on 合并。
-   */
-  onClick?: EventListenerInput<'click'>
-
-  /**
-   * ref 是逃生出口，因为可以拿到DOM， 其他props本质上就是它的一个快捷方式罢了。（除了as以及plugin的返回值）
+   * 获取真实 DOM 的命令式逃生口；声明式需求应优先使用 class、style、htmlProps 或 on。
    */
   ref?: PivRef<Tag>
 
@@ -95,59 +87,41 @@ export type PivProps<Tag extends PivTag = 'div'> = {
  * Piv 是一切组件的基石
  * 它的props都是元能力props
  */
-export function Piv<Tag extends PivSupportedElementTag = 'div'>(props: PivProps<Tag>): JSX.Element {
+export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivProps<Tag>): JSX.Element {
   // --------------------- 处理 as，默认 div ---------------------
-  const jsxCreator = domMap[props.as ?? 'div'] as CreatePivElement<Tag>
+  const jsxCreator = domMap[rawProps.as ?? 'div'] as CreatePivElement<Tag>
   /**
    * Piv 会把 children 再传给 domMap，因此这里保留可重复读取的响应式来源，
    * 避免中间对象把动态文本或动态结构固化成首次渲染快照。
    */
-  const resolvedChildren = children(() => props.children)
+  const resolvedChildren = children(() => rawProps.children)
 
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
-      // --------------------- 处理 plugin 并返回的shadow props，输入的shadowProps 和 用户props ---------------------
-      const pluginConsumedProps: PivProps<Tag> = consumePivPlugins(element, props, new Set(['class']))
+      const props = mergePivProps(element, rawProps)
 
-      consumeClassName(element, () => [pluginConsumedProps.class, val(props.class)])
+      consumeClassName(element, () => props.class)
 
-      if (pluginConsumedProps.style) {
-        consumeStyle(element, pluginConsumedProps.style)
+      consumeStyle(element, () => props.style)
+
+      const on = props.on
+      if (on) {
+        consumeEventListeners(element, on)
       }
 
-      if (pluginConsumedProps.on || pluginConsumedProps.onClick) {
-        const mergedEventListeners = mergeEventListenerAliases(pluginConsumedProps.on, [
-          'click',
-          pluginConsumedProps.onClick,
-        ])
-        consumeEventListeners(element, mergedEventListeners)
-      }
+      consumeHTMLProps<Tag>(element, () => props.htmlProps)
 
-      if (pluginConsumedProps.htmlProps) {
-        // 如果 props 中设定了 class style，就剔除 htmlProps 里重复的部分。
-        if (pluginConsumedProps.style) {
-          // @ts-ignore
-          delete pluginConsumedProps.htmlProps.style
-        }
-
-        if (pluginConsumedProps.class) {
-          // @ts-ignore
-          delete pluginConsumedProps.htmlProps.class
-        }
-
-        consumeHTMLProps<Tag>(element, pluginConsumedProps.htmlProps)
-      }
-
-      if (pluginConsumedProps.ref) {
-        parseNormalRefs(element, pluginConsumedProps.ref)
+      const ref = props.ref
+      if (ref) {
+        parseNormalRefs(element, ref)
       }
     },
 
     children: resolvedChildren,
   }
 
-  if (props.if !== undefined) {
-    return <Show when={val(props.if)}>{jsxCreator(parsedProps)}</Show>
+  if (rawProps.if !== undefined) {
+    return <Show when={val(rawProps.if)}>{jsxCreator(parsedProps)}</Show>
   } else {
     return jsxCreator(parsedProps)
   }

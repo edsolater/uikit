@@ -1,7 +1,7 @@
 /**
  * 这个文件负责把 Piv 的 class 声明消费到真实 DOM classList。
  * 它不负责创建 DOM、解析 plugin、处理 style、普通 HTML props 或事件。
- * Piv 在 plugin 合并完成后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
+ * Piv 完成 props 整合后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
  */
 import {
   isObject,
@@ -15,20 +15,23 @@ import {
 import { createRenderEffect, onCleanup } from 'solid-js'
 import { val, type Source } from '../../hooks'
 
+/** 一条 class 声明，可以是 token、token 列表或按 Source 条件启用的 token 对象。 */
 export type ClassNameAtom = Stringable | MayArray<Stringable> | { [classname: string]: Source<Booleanable> }
+
+/** 一份完整 class 声明；外层 Source 可以整体替换其中的 token 或 token 列表。 */
 export type ClassNameList = Source<MayArray<Source<ClassNameAtom> | undefined>>
 
 /**
- * class 是 Piv 的 DOM 消费能力，必须经过 plugin 合并后再绑定到真实节点。
+ * 消费整合后的 class 声明，并响应式维护真实 DOM classList。
  */
 export function consumeClassName(
   element: Element,
-  readClassNameLists: () => (ClassNameList | undefined)[],
+  readClassNameList: () => ClassNameList | undefined,
 ) {
   const tokenCounts = new Map<string, number>()
 
   createRenderEffect(() => {
-    const lists = readClassNameLists().flatMap((classNameList) => toArray(val(classNameList))).filter(isTruthy)
+    const lists = toArray(val(readClassNameList())).filter(isTruthy)
 
     for (const atom of lists) {
       createRenderEffect(() => {

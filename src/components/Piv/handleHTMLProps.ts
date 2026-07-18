@@ -3,17 +3,20 @@
  * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
-import { isExist, mergeObjectsWithConfigs, toArray, type MayArray } from '@edsolater/fnkit'
-import type { JSX } from 'solid-js'
+import { isTruthy, toArray, type MayArray } from '@edsolater/fnkit'
+import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
+import { val, type Source } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
-import { setSingleDomProp, type HTMLPropAtom, type HTMLPropPrimitive } from './handleHTMLPropsValue'
+import {
+  setSingleDomProp,
+  type HTMLPropAtom,
+  type HTMLPropPrimitive,
+} from './handleHTMLPropsValue'
 
-/* 直接可以使用 `pivProps` ，所以应该被禁止 */
+/** 已有专用 Piv prop 的字段禁止从 htmlProps 重复进入 DOM。 */
 type ReservedHTMLPropKey = 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
 
-/* 允许使用的 `HTMLprops` */
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
-type KnownHTMLPropValue<Tag extends PivTag> = JSX.IntrinsicElements[Tag][KnownHTMLPropKey<Tag>]
 
 type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
   [Key in KnownHTMLPropKey<Tag>]?: HTMLPropAtom<JSX.IntrinsicElements[Tag][Key]>
@@ -23,37 +26,65 @@ type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
   [key: string]: HTMLPropAtom<unknown> | undefined
 }
 
-export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArray<HTMLPropsRecord<Tag> | undefined>
+/** 一份完整 HTML props 声明；外层 Source 可以整体替换记录或记录列表。 */
+export type HTMLPropsList<Tag extends PivTag = 'div'> = Source<
+  MayArray<Source<HTMLPropsRecord<Tag>> | undefined>
+>
 
-export function consumeHTMLProps<Tag extends PivTag>(element: PivHTMLElement<Tag>, htmlPropsList: HTMLPropsList<Tag>) {
-  const htmlPropRecord = merglyParseHTMLPropsLists(htmlPropsList)
-  if (!htmlPropRecord) return
-  for (const [key, atom] of Object.entries(htmlPropRecord)) {
-    if (isEventPropKey(key)) {
-      continue
+/**
+ * 消费整合后的普通 HTML props，选择同名字段的最终值并维护 DOM 清理。
+ */
+export function consumeHTMLProps<Tag extends PivTag>(
+  element: PivHTMLElement<Tag>,
+  readHTMLPropsList: () => HTMLPropsList<Tag> | undefined,
+) {
+  createRenderEffect(() => {
+    const htmlPropsList = toArray(val(readHTMLPropsList()))
+      .map((htmlProps) => val(htmlProps))
+      .filter(isTruthy)
+    const htmlPropEntries = readActiveHTMLPropEntries(htmlPropsList)
+    const restoreDOMProps: (() => void)[] = []
+
+    for (const [key, atom] of htmlPropEntries) {
+      if (isReservedHTMLPropKey(key)) continue
+      restoreDOMProps.push(setSingleDomProp(element, key, atom))
     }
 
-    // @ts-ignore
-    setSingleDomProp(element, key, atom)
-  }
+    onCleanup(() => {
+      for (const restoreDOMProp of restoreDOMProps) {
+        restoreDOMProp()
+      }
+    })
+  })
 }
 
-function isEventPropKey(key: string) {
-  return key.startsWith('on:') || (key.startsWith('on') && key.length > 2)
+function isReservedHTMLPropKey(key: string) {
+  return key === 'class'
+    || key === 'className'
+    || key === 'style'
+    || key === 'children'
+    || key === 'ref'
+    || key.startsWith('on:')
+    || (key.startsWith('on') && key.length > 2)
 }
 
 /**
- * 普通 HTML props 不做数组级 fallback；同名字段由后声明者接管。
+ * 从高优先级记录开始寻找每个字段的有效声明，被覆盖的字段值不会被读取或订阅。
  */
-function merglyParseHTMLPropsLists<Tag extends PivTag>(
-  htmlPropsList: HTMLPropsList<Tag>,
-): HTMLPropsRecord<Tag> | undefined {
-  const pureHTMLPropsList = toArray(htmlPropsList)
-  if (pureHTMLPropsList.length <= 1) return pureHTMLPropsList[0]
-  return mergeObjectsWithConfigs(pureHTMLPropsList, ({ key, valueA, valueB }) => {
-    if (isExist(valueA) && isExist(valueB)) {
-      return [valueA, valueB].flat()
+function readActiveHTMLPropEntries<Tag extends PivTag>(
+  htmlPropsList: HTMLPropsRecord<Tag>[],
+): [key: string, atom: HTMLPropAtom][] {
+  const keys = new Set(htmlPropsList.flatMap((htmlProps) => Object.keys(htmlProps)))
+  const entries: [key: string, atom: HTMLPropAtom][] = []
+
+  for (const key of keys) {
+    for (let index = htmlPropsList.length - 1; index >= 0; index--) {
+      const atom = htmlPropsList[index][key]
+      if (atom === undefined) continue
+      entries.push([key, atom as HTMLPropAtom])
+      break
     }
-    return valueB ?? valueA
-  })
+  }
+
+  return entries
 }

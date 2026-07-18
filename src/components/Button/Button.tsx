@@ -11,10 +11,14 @@ import { clickable } from '../../component-plugins'
 import { type StatusInput } from '../../component-utils/status'
 import { type Source } from '../../hooks'
 import { Piv, type PivProps } from '../Piv'
+import type { EventListenerInput } from '../Piv/on/handleOn'
 import './button.css'
 import { createKitProfile, type ProfileProps } from './createKitProfile'
 
 interface ButtonProfileProps extends ProfileProps {
+  /** 用户执行这个按钮动作时触发。Button 在内部把它翻译成 Piv 的 click 事件声明。 */
+  onClick?: EventListenerInput<'click'>
+
   /**
    * 动作声量，用来判断这个动作应该以多大权重进入界面。
    *
@@ -82,6 +86,7 @@ export function Button(props: ButtonProps) {
       class="Button"
       plugins={[kitProfilePlugin, clickable({ componentName: 'Button' })]}
       htmlProps={{ type: 'button' }}
+      on={{ click: props.onClick }}
     >
       {props.children}
     </Piv>

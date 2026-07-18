@@ -3,47 +3,68 @@
  * 它不负责 class、普通 HTML props、事件或 plugin 解析。
  * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
  */
-import { shrinkFn, toArray, type MayArray } from '@edsolater/fnkit'
-import { createRenderEffect, type Accessor, type JSX } from 'solid-js'
-import type { Source } from '../../hooks'
+import { isTruthy, toArray, type MayArray } from '@edsolater/fnkit'
+import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
+import { val, type Source } from '../../hooks'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleRecord = {
   [Key in keyof JSX.CSSProperties]?: Source<JSX.CSSProperties[Key] | null | undefined>
 }
-type ParsedStyleRecord = Record<string, StyleValueAtom | Accessor<StyleValueAtom>>
+type StyleAtom = string | StyleRecord
+type ParsedStyleRecord = Record<string, Source<StyleValueAtom>>
 
-export type StyleValue = StyleRecord | undefined
+/** 一份完整 style 声明；外层 Source 可以整体替换 style 对象或对象列表。 */
+export type StyleList = Source<MayArray<Source<StyleAtom> | undefined>>
 
 /**
- * style 是 DOM 自带的特殊能力，按 CSS 字段合并和订阅，不混进普通 htmlProps。
+ * 消费整合后的 style 声明，按 CSS 字段选择最终值并维护 DOM inline style。
  */
-export function consumeStyle(element: HTMLElement, styleList: MayArray<StyleValue>) {
-  const styles = toArray(styleList)
-  const styleRecord = mergeStyleRecords(styles)
+export function consumeStyle(
+  element: HTMLElement,
+  readStyleList: () => StyleList | undefined,
+) {
+  createRenderEffect(() => {
+    const styles = toArray(val(readStyleList()))
+      .map((style) => val(style))
+      .filter(isTruthy)
+    const styleRecord = mergeStyleRecords(styles)
 
-  for (const [key, value] of Object.entries(styleRecord)) {
-    createRenderEffect(() => {
-      setStyleProperty(element, key, shrinkFn(value as StyleValueAtom | Accessor<StyleValueAtom>))
-    })
-  }
+    for (const [key, value] of Object.entries(styleRecord)) {
+      createRenderEffect(() => {
+        setStyleProperty(element, key, val(value))
+        onCleanup(() => {
+          element.style.removeProperty(key)
+        })
+      })
+    }
+  })
 }
 
 /**
  * 所有 style 来源先归一成对象字段，再按字段合并，后声明字段覆盖前声明字段。
  */
-function mergeStyleRecords(styles: StyleValue[]): ParsedStyleRecord {
+function mergeStyleRecords(styles: StyleAtom[]): ParsedStyleRecord {
+  const styleRecords = styles.map((style) => parseStyleRecord(style))
+  const styleKeys = new Set(styleRecords.flatMap((styleRecord) => Object.keys(styleRecord)))
   const styleRecord: ParsedStyleRecord = {}
-  for (const style of styles) {
-    Object.assign(styleRecord, parseStyleRecord(style))
+
+  for (const key of styleKeys) {
+    for (let index = styleRecords.length - 1; index >= 0; index--) {
+      const value = styleRecords[index][key]
+      if (value === undefined) continue
+      styleRecord[key] = value
+      break
+    }
   }
+
   return styleRecord
 }
 
 /**
  * 字符串 style 交给浏览器 CSSStyleDeclaration 解析，再转回字段对象。
  */
-function parseStyleRecord(style: StyleValue): ParsedStyleRecord {
+function parseStyleRecord(style: StyleAtom): ParsedStyleRecord {
   if (!style) {
     return {}
   }

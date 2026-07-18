@@ -3,30 +3,25 @@
  * plugin 可以返回低优先级 shadow props；用户直接传入的 props 始终覆盖 plugin 结果。
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
  */
-import { flapDeep, mergeMayArray, toArray, mayMap } from '@edsolater/fnkit'
+import { mergeMayArray, toArray, mayMap } from '@edsolater/fnkit'
+import { val } from '../../../hooks'
 import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import { runPlugin, type PivPlugin } from './runPlugin'
 
+/** plugin 系统允许补充的 props；不包含决定 DOM 身份和子结构的 as、if、children。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'if' | 'children'>
 
-export type ComsumedShadowProps<Tag extends PivTag> = Omit<
-  PivProps<Tag>,
-  'as' | 'if' | 'children' | 'plugins' | 'trait' | 'shadowProps'
->
-
-
-
 /**
- * 按声明顺序执行 plugin，并深度展开 plugin 返回的 plugins。
+ * 把直接 props、shadowProps、trait 和 plugin 返回值整合成 Piv 最终消费的 props。
+ * 每个字段使用惰性 getter，只有 class、style、htmlProps 等终端真正读取时才合并并建立响应式依赖。
  */
-export function consumePivPlugins<Tag extends PivTag>(
+export function mergePivProps<Tag extends PivTag>(
   element: PivHTMLElement<Tag>,
-  props: ShadowProps<Tag>,
-  excludedDirectPropKeys: ReadonlySet<keyof ComsumedShadowProps<Tag>> = new Set(),
-): ComsumedShadowProps<Tag> {
-  let shadowProps: ComsumedShadowProps<Tag>[] = [props] // 越排名后期的plugin越先被解析 // 纳入这一队列的props全都认为不需要进一步解析了
-  let pluginsQueue: PivPlugin<Tag>[] = getPluginFromShadowProps(props)
+  rawProps: ShadowProps<Tag>,
+): ShadowProps<Tag> {
+  const rawPropsList: ShadowProps<Tag>[] = [rawProps]
+  let pluginsQueue: PivPlugin<Tag>[] = getPluginFromShadowProps(rawProps)
 
   while (pluginsQueue.length > 0) {
     const plugin = pluginsQueue.pop()
@@ -35,18 +30,14 @@ export function consumePivPlugins<Tag extends PivTag>(
     if (result) {
       const newDeepQueueFromResult = getPluginFromShadowProps(result)
       pluginsQueue.push(...newDeepQueueFromResult)
-      shadowProps.push(result)
+      rawPropsList.push(result)
     }
   }
 
-  return mergeConsumedShadowProps(shadowProps, props, excludedDirectPropKeys)
+  return createMergedProps(rawPropsList)
 }
 
-/**
- *
- * @param props 可能含有plugins shadowProps traits 的props
- * @returns
- */
+/** 把一份 raw props 携带的 trait、shadowProps 和 plugins 归一成待执行 plugin 队列。 */
 function getPluginFromShadowProps<Tag extends PivTag>(props: ShadowProps<Tag>): PivPlugin<Tag>[] {
   return toArray(
     props.trait,
@@ -56,23 +47,38 @@ function getPluginFromShadowProps<Tag extends PivTag>(props: ShadowProps<Tag>): 
 }
 
 /**
- * 合并一系列 plugin 产出的 shadow props 和用户 props。
- * @param shadowPropsList 一系列 可能含有plugins shadowProps traits 的props
- * @returns  合并后的单一shadowprops
+ * 为整合后的 props 创建字段 getter。
+ * rawPropsList 内部顺序服务 plugin 执行，读取时反转为低优先级到高优先级。
  */
-function mergeConsumedShadowProps<Tag extends PivTag>(
-  shadowPropsList: ComsumedShadowProps<Tag>[],
-  directProps: ShadowProps<Tag>,
-  excludedDirectPropKeys: ReadonlySet<keyof ComsumedShadowProps<Tag>>,
-): ComsumedShadowProps<Tag> {
-  return shadowPropsList.toReversed().reduce((collectProps, singleProps) => {
-    for (const key of Object.keys(singleProps) as (keyof PivProps<Tag>)[]) {
-      if (key === 'as' || key === 'if' || key === 'children' || key === 'plugins' || key === 'trait' || key === 'shadowProps') continue
-      if (singleProps === directProps && excludedDirectPropKeys.has(key)) continue
-      const newValue = mergeMayArray(collectProps[key], singleProps[key])
-      // @ts-ignore
-      collectProps[key] = newValue
-    }
-    return collectProps
-  }, {} as ComsumedShadowProps<Tag>)
+function createMergedProps<Tag extends PivTag>(rawPropsList: ShadowProps<Tag>[]): ShadowProps<Tag> {
+  const props = {} as ShadowProps<Tag>
+  const propKeys = new Set(rawPropsList.flatMap((rawProps) => Object.keys(rawProps)))
+
+  for (const key of propKeys as Set<keyof ShadowProps<Tag>>) {
+    Object.defineProperty(props, key, {
+      enumerable: true,
+      get: () => mergePivPropValue(rawPropsList, key),
+    })
+  }
+
+  return props
+}
+
+/** 读取并合并一个字段；val 只解包 StateView，事件回调等普通函数会保持原值。 */
+function mergePivPropValue<Tag extends PivTag, Key extends keyof ShadowProps<Tag>>(
+  rawPropsList: ShadowProps<Tag>[],
+  key: Key,
+): ShadowProps<Tag>[Key] {
+  let mergedValue: ShadowProps<Tag>[Key] = undefined
+
+  for (const rawProps of rawPropsList.toReversed()) {
+    const rawValue = rawProps[key]
+    if (rawValue === undefined) continue
+    const value = val(rawValue) as ShadowProps<Tag>[Key]
+    mergedValue = mergedValue === undefined
+      ? value
+      : mergeMayArray(mergedValue, value) as ShadowProps<Tag>[Key]
+  }
+
+  return mergedValue
 }
