@@ -14,7 +14,7 @@ import {
 } from './handleHTMLPropsValue'
 
 /** 已有专用 Piv prop 的字段禁止从 htmlProps 重复进入 DOM。 */
-type ReservedHTMLPropKey = 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
+type ReservedHTMLPropKey = 'id' | 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
 
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
 
@@ -59,7 +59,8 @@ export function consumeHTMLProps<Tag extends PivTag>(
 }
 
 function isReservedHTMLPropKey(key: string) {
-  return key === 'class'
+  return key === 'id'
+    || key === 'class'
     || key === 'className'
     || key === 'style'
     || key === 'children'

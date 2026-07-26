@@ -53,7 +53,7 @@ export interface CycleIdentOperator<Ident extends PresentPrimitive> extends Iden
   /**
    * 可循环切换的 ident 列表。
    */
-  idents: readonly [Ident, ...Ident[]]
+  idents: [Ident, ...Ident[]]
 
   /**
    * 循环切换到下一个 ident。
@@ -116,7 +116,7 @@ export type CreateIdentOptions<T extends PresentIdentValue> = {
    *
    * 只要显式给出这组离散值，第二返回值就升级为可循环切换的 ident 操作器。
    */
-  idents?: readonly [T, ...T[]]
+  idents?: [T, ...T[]]
 }
 
 /**
@@ -144,7 +144,7 @@ export function createIdent<T extends PresentIdentValue>(initialIdent: T): [iden
 export function createIdent<T extends PresentIdentValue>(
   initialIdent: T,
   options: {
-    idents: readonly [T, ...T[]]
+    idents: [T, ...T[]]
   } & CreateIdentOptions<T>,
 ): [ident: State<T>, identifier: Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>]
 export function createIdent<T extends PresentIdentValue>(

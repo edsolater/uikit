@@ -99,6 +99,6 @@ export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
  * 从第一行对象读取列 key。
  * Table 只把对象字段当作列来源，不在这里引入独立列配置系统。
  */
-function pickTableColumnKeys<Row extends TableDataRow>(data: readonly Row[]) {
+function pickTableColumnKeys<Row extends TableDataRow>(data: Row[]) {
   return Object.keys(data[0] ?? {}) as Array<keyof Row & string>
 }

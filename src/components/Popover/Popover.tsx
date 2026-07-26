@@ -77,12 +77,12 @@ export function Popover(inputProps: PopoverProps) {
     <Piv class={rootClassName()} style={props.style}>
       <Piv
         as="button"
+        id={controller.triggerId}
         class={triggerClassName()}
         style={props.triggerStyle}
         ref={controller.setTriggerElement}
         htmlProps={{
           type: 'button',
-          id: controller.triggerId,
           'aria-haspopup': 'dialog',
           'aria-controls': controller.popoverId,
           'aria-expanded': val(controller.isOpen) ? 'true' : 'false',
@@ -95,11 +95,11 @@ export function Popover(inputProps: PopoverProps) {
       </Piv>
 
       <Piv
+        id={controller.popoverId}
         class={surfaceClassName()}
         style={props.surfaceStyle}
         ref={controller.setPopoverElement}
         htmlProps={{
-          id: controller.popoverId,
           popover: props.popover as any,
           ...props.surfaceProps,
         }}

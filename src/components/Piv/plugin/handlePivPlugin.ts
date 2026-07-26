@@ -9,7 +9,7 @@ import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import { runPlugin, type PivPlugin } from './runPlugin'
 
-/** plugin 系统允许补充的 props；不包含决定 DOM 身份和子结构的 as、if、children。 */
+/** plugin 系统允许补充的 props；不包含决定 DOM 结构的 as、if、children。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'if' | 'children'>
 
 /**

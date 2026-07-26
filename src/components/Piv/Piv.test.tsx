@@ -64,6 +64,51 @@ describe('Piv children', () => {
 })
 
 describe('Piv Source 属性', () => {
+  test('id 接收单个 StateView 并持续更新真实 DOM 身份', () => {
+    const host = document.createElement('div')
+    const id = createState<string | undefined>('before')
+    const dispose = render(() => <Piv id={id} />, host)
+    const element = host.firstElementChild as HTMLElement
+
+    expect(element.id).toBe('before')
+
+    id.set('after')
+    expect(element.id).toBe('after')
+
+    id.set(undefined)
+    expect(element.hasAttribute('id')).toBe(false)
+
+    dispose()
+  })
+
+  test('id 可由 shadowProps 或 plugin 提供，多个来源沿用普通数组合并', () => {
+    const host = document.createElement('div')
+    const plugin = createPivPlugin(() => ({ id: 'from-plugin' }))
+    const dispose = render(
+      () => (
+        <>
+          <Piv plugins={plugin} />
+          <Piv shadowProps={{ id: 'from-shadow-props' }} />
+          <Piv
+            id="from-direct"
+            shadowProps={{ id: 'from-shadow-props' }}
+            plugins={plugin}
+          />
+          <Piv id={['first', 'second']} />
+        </>
+      ),
+      host,
+    )
+    const [pluginElement, shadowElement, directElement, arrayElement] = [...host.children] as HTMLElement[]
+
+    expect(pluginElement.id).toBe('from-plugin')
+    expect(shadowElement.id).toBe('from-shadow-props')
+    expect(directElement.id).toBe('from-shadow-props,from-plugin,from-direct')
+    expect(arrayElement.id).toBe('first,second')
+
+    dispose()
+  })
+
   test('class、style 和 htmlProps 都可以直接接收整体 StateView', () => {
     const host = document.createElement('div')
     const className = createState('before')

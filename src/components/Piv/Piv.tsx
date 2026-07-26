@@ -16,6 +16,7 @@ import {
   type PivTag,
 } from './domMap'
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
+import { consumeId } from './id'
 import { type EventListeners } from './on/handleOn'
 import { mergePivProps, type ShadowProps } from './plugin/handlePivPlugin'
 import { type PivPlugin } from './plugin/runPlugin'
@@ -35,6 +36,12 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    * （元能力，只可用显式定义，不可被plugin系自动修改）
    */
   if?: Source<boolean>
+
+  /**
+   * 真实 DOM 的全局身份。
+   * 可以是响应值或列表，并沿用 Piv 的普通 props 合并规则。
+   */
+  id?: Source<MayArray<string> | undefined>
 
   /**
    * 上层组件转交给当前 Piv 的低优先级 props。
@@ -99,6 +106,8 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivPro
   const parsedProps: ParsedPivProps<Tag> = {
     richRef: (element: PivHTMLElement<Tag>) => {
       const props = mergePivProps(element, rawProps)
+
+      consumeId(element, () => props.id)
 
       consumeClassName(element, () => props.class)
 
