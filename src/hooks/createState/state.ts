@@ -1,7 +1,12 @@
 import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
 import { createSignal } from 'solid-js'
 import { createReactionFn } from './createReactiveRunner'
-import { val } from './read'
+import {
+  isPromiseLike,
+  toStateViewFromPromiseLike,
+  type PromiseLikeStateViewOptions,
+} from './promise-like'
+import { val, type Source } from './read'
 
 export const stateViewBrand = Symbol('StateView')
 export const stateBrand = Symbol('State')
@@ -103,4 +108,63 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
   registeredStateSet.add(thisState)
 
   return thisState
+}
+
+/**
+ * 【工具函数：转换包装器】将可转换的数据格式统一转换成 StateView。
+ *
+ * 这是 StateView 转换能力的统一入口。当前支持普通值、StateView 与 PromiseLike；
+ * 以后新增可转换的数据格式时，也应在这里识别并分派到对应领域的转换函数。
+ *
+ * PromiseLike 的具体转换由 {@link toStateViewFromPromiseLike} 负责，
+ * 本函数只负责选择转换方式，并提供可选的映射能力。
+ *
+ * PromiseLike 未提供 defaultValue 时转换为 `StateView<V | undefined>`；
+ * 提供 defaultValue 后，pending 使用该值；rejected 可通过 errorValue 与 onRejected 分别定义状态值和事件。
+ *
+ * 第二个参数可以是 Source 的映射函数，也可以是 PromiseLike 的转换选项。
+ *
+ * @example
+ * ```ts
+ * const readable = toStateView(source)
+ * ```
+ */
+export function toStateView<V>(sourceOrValue: StateView<V>): StateView<V>
+export function toStateView<R, D, E>(
+  sourceOrValue: PromiseLike<R>,
+  options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
+): StateView<Awaited<R> | D | E>
+export function toStateView<R, D>(
+  sourceOrValue: PromiseLike<R>,
+  options: PromiseLikeStateViewOptions<D>,
+): StateView<Awaited<R> | D>
+export function toStateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R> | undefined>
+export function toStateView<R, U>(
+  sourceOrValue: PromiseLike<R>,
+  mapFn: (value: Awaited<R> | undefined) => U | StateView<U>,
+): StateView<U>
+export function toStateView<V>(sourceOrValue: Source<V>): StateView<V>
+export function toStateView<V, U>(
+  sourceOrValue: Source<V>,
+  mapFn: (value: V) => U | StateView<U>,
+): StateView<U>
+export function toStateView<V, U, D>(
+  sourceOrValue: Source<V> | PromiseLike<V>,
+  mapFnOrOptions?: ((value: V) => U | StateView<U>) | PromiseLikeStateViewOptions<D, unknown>,
+): StateView<any> {
+  if (isPromiseLike(sourceOrValue)) {
+    if (isFunction(mapFnOrOptions)) {
+      return toStateViewFromPromiseLike(sourceOrValue).map(mapFnOrOptions as any)
+    }
+    return mapFnOrOptions
+      ? toStateViewFromPromiseLike(sourceOrValue, mapFnOrOptions)
+      : toStateViewFromPromiseLike(sourceOrValue)
+  }
+
+  if (isStateView(sourceOrValue)) {
+    return isFunction(mapFnOrOptions) ? sourceOrValue.map(mapFnOrOptions as any) : sourceOrValue
+  }
+
+  const stateView = createState(sourceOrValue)
+  return isFunction(mapFnOrOptions) ? stateView.map(mapFnOrOptions as any) : stateView
 }

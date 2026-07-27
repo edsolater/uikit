@@ -7,26 +7,29 @@
  * 它负责：
  * - 定义 Source<T>。
  * - 在最终消费点把值来源读取成当前值。
+ * - 为可转换的 PromiseLike 请求并读取稳定的 StateView。
  *
  * 它不负责：
- * - 创建状态。
- * - 修改状态。
+ * - 定义 PromiseLike 与 StateView 的身份映射。
+ * - 主动创建或修改业务 State。
  * - 描述 store 字段访问能力。
  * - 管理活水源连接关系。
  */
 import type { MayFn } from '@edsolater/fnkit'
 import { isExist, shrinkFn } from '@edsolater/fnkit'
-import { createState, isStateView, isState, type StateView } from './state'
+import { isPromiseLike } from './promise-like'
+import { isStateView, toStateView, type StateView } from './state'
 
 /**
  * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
  *
- * `Source<T>` 允许调用方同时传入动态状态读取器或已经固定的普通值。
+ * `Source<T>` 允许调用方传入可以稳定转换成 `StateView<T>` 的对象，或已经固定的普通值。
  * 接收方不需要关心上游是动态值还是静态值，只需要在最终消费点用 `val()` 读取当前值。
  *
  * 使用规则：
  * - 需要继续向下传递值来源时，优先保留为 `Source<T>`。
  * - 只有在 JSX 模板、DOM 副作用、事件计算、调用纯函数等最终消费点，才读取当前值。
+ * - 普通 PromiseLike 只能作为 `Source<T | undefined>`；需要稳定默认值时，应先通过 `toStateView()` 转换。
  *
  * AI 规则：
  * - 不要把 `Source<T>` 简化成 `T` 后再继续传递；这会丢失动态性。
@@ -48,14 +51,23 @@ import { createState, isStateView, isState, type StateView } from './state'
  * }
  * ```
  */
-export type Source<T> = T | StateView<T>
+export type StateViewable<V> =
+  | StateView<V>
+  | (undefined extends V ? PromiseLike<V> : never)
+
+/**
+ * 一个当前值为 V，或能够稳定转换成 StateView<V> 的值来源。
+ */
+export type Source<V> = V | StateViewable<V>
 
 /**
  *
  * 【表目的（使用名词动词化），工具函数】读取 source 当前值。
  *
  * `val()` 会把 `Source<T>` 读取成当前值：
- * 如果传入的是动态状态读取器，则继续读取；如果传入的是普通值，则直接返回。
+ * 如果传入的是动态状态读取器，则继续读取；如果传入的是 PromiseLike，则读取其 StateView；
+ * 如果传入的是普通值，则直接返回。
+ * PromiseLike 在 pending 或 rejected 时读取为 undefined，fulfilled 后写入 StateView 并触发响应式消费者更新。
  *
  * 它不负责深层 snapshot；如果确实需要把对象树里的 readable state 一起解包，调用方应显式使用 `snapshot()`。
  *
@@ -69,6 +81,7 @@ export type Source<T> = T | StateView<T>
  *
  * AI 规则：
  * - 不要把 `val()` 当成通用“规范化”步骤放在函数开头。
+ * - 不要在响应式计算中现场创建新的 PromiseLike 再交给 `val()`；新的实例会建立新的 StateView。
  * - 不要写 `const value = val(source)` 后再把 `value` 传给组件、hook、状态逻辑或 DOM 绑定；这会把动态输入变成一次性快照。
  * - 如果代码意图是“从动态值保持动态性地推导出另一个值”，应继续保留为 `StateView` 或 `Source`，不要提前 `val()`。
  * - 如果没有检索到 `val()` 的实现，应先在当前工具库中查找它，而不是退回到裸 accessor、重复实现或提前解包。
@@ -95,10 +108,11 @@ export type Source<T> = T | StateView<T>
  * ```
  *
  */
-export function val<T>(source: Source<T>): T
-export function val<T>(source: Source<T> | undefined): T | undefined
-export function val<T>(source: Source<T> | undefined, defaultValue: MayFn<Source<T>>): T
-export function val<T>(source: Source<T> | undefined, defaultValue?: MayFn<Source<T>>) {
+export function val<V>(source: PromiseLike<V>): Awaited<V> | undefined
+export function val<V>(source: Source<V>): V
+export function val<V>(source: Source<V> | undefined): V | undefined
+export function val<V>(source: Source<V> | undefined, defaultValue: MayFn<Source<V>>): V
+export function val<V>(source: Source<V> | undefined, defaultValue?: MayFn<Source<V>>) {
   const nextSource = isExist(source) ? source : isExist(defaultValue) ? val(shrinkFn(defaultValue)) : undefined
   return readSource(nextSource)
 }
@@ -106,43 +120,15 @@ export function val<T>(source: Source<T> | undefined, defaultValue?: MayFn<Sourc
 /**
  * 只应该由 {@link val} 调用，外部不应该直接使用。
  */
-function readSource<T>(source: Source<T>): T
-function readSource<T>(source: Source<T> | undefined): T | undefined
-function readSource<T>(source: Source<T> | undefined): T | undefined {
-  return isStateView(source) ? source.read() : (source as T | undefined)
-}
-
-/**
- * 【工具函数:转换包装器】Source => StateView
- *
- *
- * 因为 {@link toStateView} 更不可主动改变，所以它比 {@link createState} 更轻量
- *
- *
- * - {@link toStateView} 是一个明确的转换操作，所以它第二个参数是一个可选的mapper;
- * - {@link createState} 是名词做动词的操作，第二个也是mapper， 但语义是创建一个新的状态，保持和输入同步；如果输入是个函数，则它是一个惰性初始值函数。
- *
- * @params mapFn 可选的映射函数，用于在转换过程中对值进行变换；如果提供了 mapFn，toStateView 会先把 source 读取成当前值，再传给 mapFn 进行转换，最后把转换结果包装成 StateView 返回。
- *
- * @example
- * ```ts
- * const readable = toStateView(source)
- * ```
- */
-export function toStateView<T, U extends T = T>(
-  sourceOrValue: Source<T>,
-  mapFn?: (value: T) => U,
-): StateView<U> {
-  if (isStateView(sourceOrValue) || isState(sourceOrValue)) {
-    if (mapFn) {
-      return sourceOrValue.map(mapFn as any)
-    } else {
-      //@ts-ignore
-      return sourceOrValue
-    }
+function readSource<V>(source: Source<V>): V
+function readSource<V>(source: Source<V> | undefined): V | undefined
+function readSource<V>(source: Source<V> | undefined): V | undefined {
+  if (isStateView(source)) {
+    return source.read()
   }
-
-  const baseState = createState(sourceOrValue as T)
-  //@ts-ignore
-  return mapFn ? baseState.map(mapFn) : baseState
+  if (isPromiseLike(source)) {
+    // 这里把转换结果作为 val() 的临时读取媒介使用；toStateView() 本身不限定 StateView 的生命周期。
+    return toStateView(source).read() as V | undefined
+  }
+  return source as V | undefined
 }

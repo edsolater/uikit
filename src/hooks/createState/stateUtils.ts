@@ -1,32 +1,37 @@
 import { createReactionFn } from './createReactiveRunner'
 import { type Source, val } from './read'
-import { type State, type StateView, isStateView } from './state'
+import { type State, type StateView, toStateView } from './state'
 
 /**
- * 虽然实际上它创建了一个新的state，
- * 但是我觉得在语义上它应该是个read-only statem,
- * 不然的话，它的返回结构不太符合业务直觉。
+ * 把一个 Source 映射成新的 StateView。
  *
- * @param source 需要订阅的一个源
- * @param mapper
- * @returns
+ * PromiseLike Source 在完成前会把 undefined 交给 mapper；其他 Source 也统一通过 StateView 建立持续映射。
+ * 这个函数只公开映射结果，不公开内部写入口。
+ *
+ * 直接依赖 `toStateView()` 统一普通值、StateView 与 PromiseLike，不自行管理 StateView 身份映射。
  */
-export function mapSource<T, U>(source: Source<T>, mapper: (value: T) => Source<U>): Source<U> {
-  if (isStateView(source)) {
-    return source.map((value) => mapper(value))
-  }
-  return mapper(source)
+export function mapSource<T, U>(
+  source: Source<T>,
+  mapper: (value: T) => U | StateView<U>,
+): StateView<U> {
+  return toStateView(source).map(mapper)
 }
 
 /**
  * 比 {@link mapSource} 更简单的派生状态创建函数。
  */
 
-export function derive<T, U>(source: Source<T>): Source<T>
-export function derive<T, U>(source: Source<T>, mapper: (value: T) => Source<U>): Source<U>
-export function derive<T, U>(source: Source<T>, mapper?: (value: T) => Source<U>): Source<any> {
+export function derive<T>(source: Source<T>): Source<T>
+export function derive<T, U>(
+  source: Source<T>,
+  mapper: (value: T) => U | StateView<U>,
+): StateView<U>
+export function derive<T, U>(
+  source: Source<T>,
+  mapper?: (value: T) => U | StateView<U>,
+): Source<T> | StateView<U> {
   if (!mapper) return source
-  return mapSource(source, (value) => mapper(value))
+  return mapSource(source, mapper)
 }
 
 /**
