@@ -5,7 +5,8 @@
  * 它不限定 StateView 的使用周期，也不负责最终读取。
  */
 import { hasProperty, isFunction } from '@edsolater/fnkit'
-import { createState, type StateView } from './state'
+import { createState } from './state'
+import type { StateView } from './state-view'
 
 /**
  * 无转换配置时，PromiseLike 与 StateView 的身份映射。
@@ -40,7 +41,7 @@ export function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
  *
  * 未提供配置时，pending 与 rejected 阶段使用 undefined，并按 PromiseLike 身份复用 StateView。
  * 提供配置时，pending 使用 defaultValue；rejected 优先使用 errorValue，并调用 onRejected。
- * 提供配置的转换，其生命周期由调用方持有的 StateView 决定。
+ * 提供配置的转换由调用方持有其 StateView。
  *
  * 直接依赖 UIKit 的 `createState()` 承载 Solid signal，并使用原生 Promise 统一展开 thenable。
  */

@@ -1,6 +1,7 @@
 import { createReactionFn } from './createReactiveRunner'
-import { type Source, val } from './read'
-import { type State, type StateView, toStateView } from './state'
+import { val } from './read'
+import { type State } from './state'
+import { toStateView, type Source, type StateView } from './state-view'
 
 /**
  * 把一个 Source 映射成新的 StateView。

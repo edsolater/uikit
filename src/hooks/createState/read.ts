@@ -5,8 +5,7 @@
  * 只负责定义状态读取边界：`Source` 表示可以继续传递的值来源，`val()` 表示最终消费时的解包动作。
  *
  * 它负责：
- * - 定义 Source<T>。
- * - 在最终消费点把值来源读取成当前值。
+ * - 在最终消费点读取 Source<T> 的当前值。
  * - 为可转换的 PromiseLike 请求并读取稳定的 StateView。
  *
  * 它不负责：
@@ -18,47 +17,7 @@
 import type { MayFn } from '@edsolater/fnkit'
 import { isExist, shrinkFn } from '@edsolater/fnkit'
 import { isPromiseLike } from './promise-like'
-import { isStateView, toStateView, type StateView } from './state'
-
-/**
- * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
- *
- * `Source<T>` 允许调用方传入可以稳定转换成 `StateView<T>` 的对象，或已经固定的普通值。
- * 接收方不需要关心上游是动态值还是静态值，只需要在最终消费点用 `val()` 读取当前值。
- *
- * 使用规则：
- * - 需要继续向下传递值来源时，优先保留为 `Source<T>`。
- * - 只有在 JSX 模板、DOM 副作用、事件计算、调用纯函数等最终消费点，才读取当前值。
- * - 普通 PromiseLike 只能作为 `Source<T | undefined>`；需要稳定默认值时，应先通过 `toStateView()` 转换。
- *
- * AI 规则：
- * - 不要把 `Source<T>` 简化成 `T` 后再继续传递；这会丢失动态性。
- * - 不要在 props、options、hook 中间层里提前写 `const value = val(source)`。
- * - 如果目标仍然是传给下游组件、hook、状态逻辑或 DOM 绑定，应继续传 `Source<T>`。
- * - 如果没有检索到相关工具实现，应先在当前工具库中查找 `val()` 与 `Source`，不要退回到裸函数或一次性快照写法。
- *
- * @example
- * ```ts
- * type ButtonProps = {
- *   disabled?: Source<boolean>
- *   className?: Source<string>
- * }
- *
- * function Button(props: ButtonProps) {
- *   const className = state(props.disabled ?? false)
- *
- *   return <button disabled={val(props.disabled ?? false)} class={val(className)} />
- * }
- * ```
- */
-export type StateViewable<V> =
-  | StateView<V>
-  | (undefined extends V ? PromiseLike<V> : never)
-
-/**
- * 一个当前值为 V，或能够稳定转换成 StateView<V> 的值来源。
- */
-export type Source<V> = V | StateViewable<V>
+import { isStateViewable, toStateView, type Source } from './state-view'
 
 /**
  *
@@ -67,7 +26,8 @@ export type Source<V> = V | StateViewable<V>
  * `val()` 会把 `Source<T>` 读取成当前值：
  * 如果传入的是动态状态读取器，则继续读取；如果传入的是 PromiseLike，则读取其 StateView；
  * 如果传入的是普通值，则直接返回。
- * PromiseLike 在 pending 或 rejected 时读取为 undefined，fulfilled 后写入 StateView 并触发响应式消费者更新。
+ * PromiseLike 未提供 defaultValue 时，pending 或 rejected 读取为 undefined；
+ * 提供 defaultValue 时，这两个阶段读取该默认值。fulfilled 后写入 StateView 并触发响应式消费者更新。
  *
  * 它不负责深层 snapshot；如果确实需要把对象树里的 readable state 一起解包，调用方应显式使用 `snapshot()`。
  *
@@ -77,7 +37,9 @@ export type Source<V> = V | StateViewable<V>
  * 使用规则：
  * - 最终消费当前值时，使用 `val()`。
  * - 继续向下传递动态输入时，保留 `Source<T>`，不要提前解包。
- * - 第二个参数 `getDefaultValue` 只在当前值为 `null` 或 `undefined` 时执行，用于提供惰性默认值。
+ * - 普通 Source 的第二个参数只在 source 为 `null` 或 `undefined` 时执行，用于提供惰性默认值。
+ * - PromiseLike 的第二个参数是 pending 与 rejected 阶段直接使用的 defaultValue。
+ * - PromiseLike 需要 errorValue 或 onRejected 时，先显式调用 `toStateView()`，再交给 `val()` 读取。
  *
  * AI 规则：
  * - 不要把 `val()` 当成通用“规范化”步骤放在函数开头。
@@ -108,27 +70,26 @@ export type Source<V> = V | StateViewable<V>
  * ```
  *
  */
+export function val<V, D>(source: PromiseLike<V>, defaultValue: D): Awaited<V> | D
 export function val<V>(source: PromiseLike<V>): Awaited<V> | undefined
 export function val<V>(source: Source<V>): V
 export function val<V>(source: Source<V> | undefined): V | undefined
 export function val<V>(source: Source<V> | undefined, defaultValue: MayFn<Source<V>>): V
-export function val<V>(source: Source<V> | undefined, defaultValue?: MayFn<Source<V>>) {
-  const nextSource = isExist(source) ? source : isExist(defaultValue) ? val(shrinkFn(defaultValue)) : undefined
-  return readSource(nextSource)
-}
+export function val(source: any, defaultValue?: any) {
+  if (!isExist(source)) {
+    return isExist(defaultValue) ? val(shrinkFn(defaultValue)) : undefined
+  }
 
-/**
- * 只应该由 {@link val} 调用，外部不应该直接使用。
- */
-function readSource<V>(source: Source<V>): V
-function readSource<V>(source: Source<V> | undefined): V | undefined
-function readSource<V>(source: Source<V> | undefined): V | undefined {
-  if (isStateView(source)) {
-    return source.read()
-  }
   if (isPromiseLike(source)) {
-    // 这里把转换结果作为 val() 的临时读取媒介使用；toStateView() 本身不限定 StateView 的生命周期。
-    return toStateView(source).read() as V | undefined
+    return arguments.length > 1
+      ? toStateView(source, { defaultValue }).read()
+      : toStateView(source).read()
   }
-  return source as V | undefined
+
+  if (isStateViewable(source)) {
+    // val() 在最终消费点临时使用转换结果；转换关系本身由对应领域稳定缓存。
+    return toStateView(source).read()
+  }
+
+  return source
 }

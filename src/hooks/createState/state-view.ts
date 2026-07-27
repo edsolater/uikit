@@ -1,0 +1,140 @@
+/**
+ * StateView 领域。
+ *
+ * 本文件定义可读取、可映射的状态视图、能够稳定转换成该视图的 Source 关系，
+ * 以及 StateView 对外暴露的统一转换能力。
+ */
+import { isFunction, isObject } from '@edsolater/fnkit'
+import {
+  isPromiseLike,
+  toStateViewFromPromiseLike,
+  type PromiseLikeStateViewOptions,
+} from './promise-like'
+import { createState } from './state'
+
+export const stateViewBrand = Symbol('StateView')
+
+export interface StateView<T = any> {
+  /**
+   * 唯一的读取自身当前值的入口
+   * 写业务时，不直接使用这个方法，因为会产生主语错误，尽量使用 val() 读取。
+   */
+  read(): T
+
+  /** 确定对象是 StateView，供 isStateView() 使用。 */
+  [stateViewBrand]: true
+
+  /** 创建一个新的派生 StateView。 */
+  map<U>(toNew: (value: T) => U | StateView<U>): StateView<U>
+}
+
+export type ToStateViewOptions<V, U> = {
+  /** 转换完成后继续映射 StateView 的当前值。 */
+  map: (value: V) => U | StateView<U>
+}
+
+/**
+ * 可以稳定转换成 StateView<V> 的对象。
+ *
+ * 普通 PromiseLike 只有在 V 包含 undefined 时才满足该关系；
+ * 如需排除 undefined，应在 toStateView() 或 val() 转换时提供 defaultValue。
+ */
+export type StateViewable<V> =
+  | StateView<V>
+  | (undefined extends V ? PromiseLike<V> : never)
+
+/**
+ * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
+ *
+ * `Source<V>` 表示一个当前值为 V，或能够稳定转换成 `StateView<V>` 的对象。
+ * 普通 PromiseLike 只能作为 `Source<V | undefined>`；
+ * 如需排除 undefined，应在最终转换或读取时提供 defaultValue。
+ *
+ * 需要继续向下传递时保留 Source；只有在最终消费点才通过 val() 读取当前值。
+ */
+export type Source<V> = V | StateViewable<V>
+
+/**
+ * 判断未知值是否为 StateView。
+ */
+export function isStateView(value: unknown): value is StateView {
+  return isObject(value) && (value as any)[stateViewBrand] === true
+}
+
+/**
+ * 判断未知值是否能够稳定转换为 StateView。
+ */
+export function isStateViewable(value: unknown): value is StateViewable<unknown> {
+  return isStateView(value) || isPromiseLike(value)
+}
+
+/**
+ * 将可转换的数据格式统一转换成 StateView。
+ *
+ * 当前支持普通值、StateView 与 PromiseLike；以后新增可转换的数据格式时，
+ * 也应在这里识别并分派到对应领域的转换函数。
+ *
+ * PromiseLike 未提供配置时转换为 `StateView<V | undefined>`。
+ * 提供配置后，pending 使用 defaultValue；rejected 可通过 errorValue 与 onRejected 定义状态值和事件。
+ *
+ * 第二个参数统一表示转换 options；直接传入函数是 `{ map: fn }` 的简写。
+ */
+export function toStateView<V>(sourceOrValue: StateView<V>): StateView<V>
+export function toStateView<R, D, E, U>(
+  sourceOrValue: PromiseLike<R>,
+  options: PromiseLikeStateViewOptions<D, E>
+    & { errorValue: E }
+    & ToStateViewOptions<Awaited<R> | D | E, U>,
+): StateView<U>
+export function toStateView<R, D, U>(
+  sourceOrValue: PromiseLike<R>,
+  options: PromiseLikeStateViewOptions<D>
+    & ToStateViewOptions<Awaited<R> | D, U>,
+): StateView<U>
+export function toStateView<R, U>(
+  sourceOrValue: PromiseLike<R>,
+  options: ToStateViewOptions<Awaited<R> | undefined, U>,
+): StateView<U>
+export function toStateView<R, D, E>(
+  sourceOrValue: PromiseLike<R>,
+  options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
+): StateView<Awaited<R> | D | E>
+export function toStateView<R, D>(
+  sourceOrValue: PromiseLike<R>,
+  options: PromiseLikeStateViewOptions<D>,
+): StateView<Awaited<R> | D>
+export function toStateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R> | undefined>
+export function toStateView<R, U>(
+  sourceOrValue: PromiseLike<R>,
+  map: (value: Awaited<R> | undefined) => U | StateView<U>,
+): StateView<U>
+export function toStateView<V>(sourceOrValue: Source<V>): StateView<V>
+export function toStateView<V, U>(
+  sourceOrValue: Source<V>,
+  options: ToStateViewOptions<V, U>,
+): StateView<U>
+export function toStateView<V, U>(
+  sourceOrValue: Source<V>,
+  map: (value: V) => U | StateView<U>,
+): StateView<U>
+export function toStateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
+  const options = isFunction(optionsOrMap) ? { map: optionsOrMap } : optionsOrMap
+
+  if (isPromiseLike(sourceOrValue)) {
+    let stateView: StateView
+    if (!options || !('defaultValue' in options)) {
+      stateView = toStateViewFromPromiseLike(sourceOrValue)
+    } else if (!('errorValue' in options) && !options.onRejected) {
+      stateView = toStateViewFromPromiseLike(sourceOrValue).map(
+        (value) => value === undefined ? options.defaultValue : value,
+      )
+    } else {
+      stateView = toStateViewFromPromiseLike(sourceOrValue, options)
+    }
+
+    return options?.map ? stateView.map(options.map) : stateView
+  }
+
+  const stateView = isStateView(sourceOrValue) ? sourceOrValue : createState(sourceOrValue)
+  return options?.map ? stateView.map(options.map) : stateView
+}

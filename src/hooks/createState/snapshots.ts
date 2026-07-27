@@ -5,7 +5,7 @@
  * 它处理对象、数组和 tuple 的递归解包，但不负责 `Source` 的最终消费边界。
  */
 import { isObjectLiteral } from '@edsolater/fnkit'
-import { isStateView, type StateView } from './state'
+import { isStateView, type StateView } from './state-view'
 
 type SnapshotLeaf =
   | string

@@ -4,7 +4,7 @@
  */
 import { expect, expectTypeOf, test } from 'vitest'
 import { toStateViewFromPromiseLike } from './promise-like'
-import type { StateView } from './state'
+import type { StateView } from './state-view'
 
 interface Deferred<V> {
   promise: Promise<V>
