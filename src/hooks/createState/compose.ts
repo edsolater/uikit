@@ -1,7 +1,8 @@
 import { createComputed } from 'solid-js'
 import { val } from './read'
+import type { Source } from './source'
 import { createState } from './state'
-import type { Source, StateView } from './state-view'
+import type { StateView } from './state-view'
 
 /** 【工具函数】派生出一个新的state,逻辑上，返回的是stateView */
 export function derive<T, R>(sources: [Source<T>], combiner: (a: T) => R): StateView<R>

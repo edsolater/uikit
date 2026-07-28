@@ -3,9 +3,9 @@
  * 它不负责 class、普通 HTML props、事件或 plugin 解析。
  * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
  */
-import { isTruthy, toArray, type MayArray } from '@edsolater/fnkit'
+import { isTruthy, toArray } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
-import { val, type Source } from '../../hooks'
+import { val, type MayArraySource, type Source } from '../../hooks'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleRecord = {
@@ -15,7 +15,7 @@ type StyleAtom = string | StyleRecord
 type ParsedStyleRecord = Record<string, Source<StyleValueAtom>>
 
 /** 一份完整 style 声明；外层 Source 可以整体替换 style 对象或对象列表。 */
-export type StyleList = Source<MayArray<Source<StyleAtom> | undefined>>
+export type StyleList = MayArraySource<StyleAtom>
 
 /**
  * 消费整合后的 style 声明，按 CSS 字段选择最终值并维护 DOM inline style。

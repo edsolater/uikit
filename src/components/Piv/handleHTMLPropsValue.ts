@@ -4,9 +4,9 @@
  * class、style 和事件不进入这个通道。
  */
 
-import { isArray, isFunction, isObject, result, type MayArray } from '@edsolater/fnkit'
+import { isArray, isFunction, isObject, result } from '@edsolater/fnkit'
 import { createRenderEffect } from 'solid-js'
-import { val, type Source } from '../../hooks'
+import { val, type MayArraySource } from '../../hooks'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
 export type HTMLPropPrimitive = string | number | boolean | null | undefined
@@ -18,7 +18,7 @@ export type HTMLPropPrimitive = string | number | boolean | null | undefined
 export type HTMLPropAtomValue<Raw = HTMLPropPrimitive> = Raw | ((prev?: Raw) => Raw) | { mergable: Raw }
 
 /** 一个 HTML 字段的完整动态声明，支持整体 Source、值列表及列表内的单项 Source。 */
-export type HTMLPropAtom<Raw = HTMLPropPrimitive> = Source<MayArray<Source<HTMLPropAtomValue<Raw>>>>
+export type HTMLPropAtom<Raw = HTMLPropPrimitive> = MayArraySource<HTMLPropAtomValue<Raw>>
 
 /**
  * 按 key 语义写入 DOM。

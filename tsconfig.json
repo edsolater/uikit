@@ -9,6 +9,8 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noImplicitAny": false,
+    // Source 依赖 undefined 与普通值严格区分，才能保证 PromiseLike 只属于允许 pending 的 Source。
+    "strictNullChecks": true,
     "noEmit": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js"

@@ -3,11 +3,18 @@
  * 它覆盖 PromiseLike 的自动 StateView 转换，不承担手动 PromiseLike 转换配置。
  */
 import { toObjectProxy } from '@edsolater/fnkit'
+import type { MayArray } from '@edsolater/fnkit'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createReactionFn } from './createReactiveRunner'
 import { val } from './read'
 import { createState } from './state'
-import { toStateView, type Source, type StateView } from './state-view'
+import {
+  toStateView,
+  type MayArraySource,
+  type Source,
+  type StateView,
+  type Val,
+} from './state-view'
 
 interface Deferred<V> {
   promise: Promise<V>
@@ -28,10 +35,56 @@ function createDeferred<V>(): Deferred<V> {
   return { promise, resolve, reject }
 }
 
+test('Source 接受普通值，val 保留值本身', () => {
+  const numberArray: Source<number[]> = [1, 2]
+  const objectArray: Source<{ id: string }[]> = [{ id: 'first' }]
+  const object: Source<{ id: string }> = { id: 'first' }
+
+  expectTypeOf(val(numberArray)).toEqualTypeOf<number[]>()
+  expectTypeOf(val(objectArray)).toEqualTypeOf<{ id: string }[]>()
+  expectTypeOf(val(object)).toEqualTypeOf<{ id: string }>()
+  expect(val(numberArray)).toEqual([1, 2])
+  expect(val(objectArray)).toEqual([{ id: 'first' }])
+  expect(val(object)).toEqual({ id: 'first' })
+})
+
+test('Val 递归解除 StateView 与 PromiseLike 包装', () => {
+  expectTypeOf<Val<StateView<StateView<number>>>>().toEqualTypeOf<number>()
+  expectTypeOf<Val<StateView<Promise<number>>>>().toEqualTypeOf<number | undefined>()
+  expectTypeOf<Val<Promise<StateView<number>>>>().toEqualTypeOf<number | undefined>()
+})
+
+test('MayArraySource 自身包含外层 Source', () => {
+  expectTypeOf<MayArraySource<number>>().toEqualTypeOf<
+    Source<MayArray<Source<number> | undefined>>
+  >()
+})
+
+test('val 在 UIKit 读取边界递归解除内部包装', () => {
+  const value = createState(1)
+  const nestedSource = createState(value)
+  const observedValues: number[] = []
+  const runner = createReactionFn(() => {
+    const currentValue = val(nestedSource)
+    observedValues.push(currentValue)
+    return currentValue
+  })
+
+  expectTypeOf(val(nestedSource)).toEqualTypeOf<number>()
+  expect(runner.getResult()).toBe(1)
+  expect(observedValues).toEqual([1])
+
+  value.set(2)
+
+  expect(runner.getResult()).toBe(2)
+  expect(observedValues).toEqual([1, 2])
+  runner.dispose()
+})
+
 test('Source 接受 PromiseLike，val 在完成前返回 undefined', () => {
   const source: Source<number | undefined> = Promise.resolve(8)
 
-  expectTypeOf(val(1)).toEqualTypeOf<number>()
+  expectTypeOf(val(1)).toEqualTypeOf<1>()
   expectTypeOf(val(createState(1))).toEqualTypeOf<number>()
   expectTypeOf(val(source)).toEqualTypeOf<number | undefined>()
   expectTypeOf<Promise<number>>().not.toMatchTypeOf<Source<number>>()
@@ -98,6 +151,38 @@ test('val 在 PromiseLike rejected 时继续读取 defaultValue', async () => {
   await Promise.resolve()
 
   expect(runner.getResult()).toBe(0)
+  runner.dispose()
+})
+
+test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
+  const deferred = createDeferred<Source<number>>()
+  const objectProxy = toObjectProxy(
+    deferred.promise.then((value) => ({ value })),
+  ).value
+  const sourceFromProxy: Source<number | undefined> = objectProxy
+  const source = createState(2)
+  const observedValues: number[] = []
+  const runner = createReactionFn(() => {
+    const value = val(objectProxy, 0)
+    observedValues.push(value)
+    return value
+  })
+
+  expect(sourceFromProxy).toBe(objectProxy)
+  expectTypeOf(val(objectProxy, 0)).toEqualTypeOf<number>()
+  expect(observedValues).toEqual([0])
+
+  deferred.resolve(source)
+  await objectProxy
+  await Promise.resolve()
+
+  expect(runner.getResult()).toBe(2)
+  expect(observedValues).toEqual([0, 2])
+
+  source.set(4)
+
+  expect(runner.getResult()).toBe(4)
+  expect(observedValues).toEqual([0, 2, 4])
   runner.dispose()
 })
 

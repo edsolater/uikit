@@ -3,9 +3,9 @@
  * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
-import { isTruthy, toArray, type MayArray } from '@edsolater/fnkit'
+import { isTruthy, toArray } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
-import { val, type Source } from '../../hooks'
+import { val, type MayArraySource } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
 import {
   setSingleDomProp,
@@ -27,9 +27,7 @@ type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
 }
 
 /** 一份完整 HTML props 声明；外层 Source 可以整体替换记录或记录列表。 */
-export type HTMLPropsList<Tag extends PivTag = 'div'> = Source<
-  MayArray<Source<HTMLPropsRecord<Tag>> | undefined>
->
+export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArraySource<HTMLPropsRecord<Tag>>
 
 /**
  * 消费整合后的普通 HTML props，选择同名字段的最终值并维护 DOM 清理。

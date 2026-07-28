@@ -3,8 +3,8 @@
  * 它负责把 disabled、enabled 和 validIf 合并成最终有效性状态。
  * 它不负责 Button DOM、样式、点击行为或失败后的 props 改写。
  */
-import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
-import { createState, val, type Source, type State } from '../../hooks'
+import { isObject, toArray } from '@edsolater/fnkit'
+import { createState, val, type MayArraySource, type Source, type State } from '../../hooks'
 import { createPivPlugin } from '../Piv/plugin/helpers'
 import type { PivPlugin } from '../Piv/plugin/runPlugin'
 
@@ -17,7 +17,7 @@ export type ValidatorRule = {
 
 export type ValidatorInput = Source<boolean | ValidatorRule | undefined>
 
-export type ValidIf = Source<MayArray<ValidatorInput> | undefined>
+export type ValidIf = MayArraySource<boolean | ValidatorRule>
 
 export type ValidatorProps = {
   /**

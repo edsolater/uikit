@@ -1,8 +1,7 @@
 /**
  * StateView 领域。
  *
- * 本文件定义可读取、可映射的状态视图、能够稳定转换成该视图的 Source 关系，
- * 以及 StateView 对外暴露的统一转换能力。
+ * 本文件定义可读取、可映射的状态视图，以及 StateView 对外暴露的统一转换能力。
  */
 import { isFunction, isObject } from '@edsolater/fnkit'
 import {
@@ -10,6 +9,7 @@ import {
   toStateViewFromPromiseLike,
   type PromiseLikeStateViewOptions,
 } from './promise-like'
+import type { Source } from './source'
 import { createState } from './state'
 
 export const stateViewBrand = Symbol('StateView')
@@ -34,27 +34,6 @@ export type ToStateViewOptions<V, U> = {
 }
 
 /**
- * 可以稳定转换成 StateView<V> 的对象。
- *
- * 普通 PromiseLike 只有在 V 包含 undefined 时才满足该关系；
- * 如需排除 undefined，应在 toStateView() 或 val() 转换时提供 defaultValue。
- */
-export type StateViewable<V> =
-  | StateView<V>
-  | (undefined extends V ? PromiseLike<V> : never)
-
-/**
- * 可以被组件 props、hook 参数或能力 options 继续传递的值来源。
- *
- * `Source<V>` 表示一个当前值为 V，或能够稳定转换成 `StateView<V>` 的对象。
- * 普通 PromiseLike 只能作为 `Source<V | undefined>`；
- * 如需排除 undefined，应在最终转换或读取时提供 defaultValue。
- *
- * 需要继续向下传递时保留 Source；只有在最终消费点才通过 val() 读取当前值。
- */
-export type Source<V> = V | StateViewable<V>
-
-/**
  * 判断未知值是否为 StateView。
  */
 export function isStateView(value: unknown): value is StateView {
@@ -64,10 +43,6 @@ export function isStateView(value: unknown): value is StateView {
 /**
  * 判断未知值是否能够稳定转换为 StateView。
  */
-export function isStateViewable(value: unknown): value is StateViewable<unknown> {
-  return isStateView(value) || isPromiseLike(value)
-}
-
 /**
  * 将可转换的数据格式统一转换成 StateView。
  *

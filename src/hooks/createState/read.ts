@@ -14,10 +14,17 @@
  * - 描述 store 字段访问能力。
  * - 管理活水源连接关系。
  */
-import type { MayFn } from '@edsolater/fnkit'
-import { isExist, shrinkFn } from '@edsolater/fnkit'
-import { isPromiseLike } from './promise-like'
-import { isStateViewable, toStateView, type Source } from './state-view'
+import { isExist, shrinkFn, type Primitive } from '@edsolater/fnkit'
+import { isStateViewable, type Source } from './source'
+import { toStateView, type StateView } from './state-view'
+
+/** 解除 PromiseLike 与 StateView 包装后得到的最终读取值。 */
+export type Val<S> =
+  S extends PromiseLike<infer InnerS>
+    ? Val<Awaited<InnerS>> | undefined
+    : S extends StateView<infer InnerS>
+      ? Val<InnerS>
+      : S
 
 /**
  *
@@ -70,25 +77,32 @@ import { isStateViewable, toStateView, type Source } from './state-view'
  * ```
  *
  */
-export function val<V, D>(source: PromiseLike<V>, defaultValue: D): Awaited<V> | D
-export function val<V>(source: PromiseLike<V>): Awaited<V> | undefined
+type DefaultVal<S> =
+  S extends (...args: never[]) => infer ResultV
+    ? Val<ResultV>
+    : Val<S>
+
+export function val<S extends Primitive>(source: S): S
+export function val<R>(source: PromiseLike<R>): Val<PromiseLike<R>>
+export function val<V>(source: StateView<V>): Val<StateView<V>>
+/**
+ * 这是常用 Source<V> 正向契约的便捷重载，不代表 Source 可以被可靠反推。
+ * 极少数完全不透明的泛型 S 可能无法得到完美推断，但不应因此把复杂度扩散到所有业务类型。
+ */
 export function val<V>(source: Source<V>): V
-export function val<V>(source: Source<V> | undefined): V | undefined
-export function val<V>(source: Source<V> | undefined, defaultValue: MayFn<Source<V>>): V
+export function val<S>(source: S): Val<S>
+export function val<S, DefaultValue>(
+  source: S,
+  defaultValue: DefaultValue,
+): Exclude<Val<S>, null | undefined> | DefaultVal<DefaultValue>
 export function val(source: any, defaultValue?: any) {
   if (!isExist(source)) {
     return isExist(defaultValue) ? val(shrinkFn(defaultValue)) : undefined
   }
 
-  if (isPromiseLike(source)) {
-    return arguments.length > 1
-      ? toStateView(source, { defaultValue }).read()
-      : toStateView(source).read()
-  }
-
   if (isStateViewable(source)) {
-    // val() 在最终消费点临时使用转换结果；转换关系本身由对应领域稳定缓存。
-    return toStateView(source).read()
+    const value = toStateView(source as any).read()
+    return arguments.length > 1 ? val(value, defaultValue) : val(value)
   }
 
   return source

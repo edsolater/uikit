@@ -3,8 +3,8 @@
  * 它负责把 invalid 和 validIf 合并成最终 isValid 状态。
  * 它不负责 Input DOM、样式或值同步策略。
  */
-import { isObject, toArray, type MayArray } from '@edsolater/fnkit'
-import { createState, toStateView, val, type Source, type State } from '../../hooks'
+import { isObject, toArray } from '@edsolater/fnkit'
+import { createState, toStateView, val, type MayArraySource, type Source, type State } from '../../hooks'
 
 export type ValidationRule = {
   /**
@@ -15,7 +15,7 @@ export type ValidationRule = {
 
 export type ValidationInput = Source<boolean | ValidationRule | undefined>
 
-export type ValidIf = Source<MayArray<ValidationInput> | undefined>
+export type ValidIf = MayArraySource<boolean | ValidationRule>
 
 export type ValidityOptions = {
   /**

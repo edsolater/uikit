@@ -1,7 +1,8 @@
 import { createReactionFn } from './createReactiveRunner'
-import { val } from './read'
+import { val, type Val } from './read'
+import type { Source } from './source'
 import { type State } from './state'
-import { toStateView, type Source, type StateView } from './state-view'
+import { toStateView, type StateView } from './state-view'
 
 /**
  * 把一个 Source 映射成新的 StateView。
@@ -46,7 +47,7 @@ export function derive<T, U>(
 export function followState<T, U>(
   thisState: State<T>,
   followTarget: StateView<U>,
-  transform: (value: U) => T = (v) => v as unknown as T,
+  transform: (value: Val<U>) => T = (v) => v as unknown as T,
 ): () => void {
   const { dispose: unfollow } = createReactionFn(() => {
     const newValue = transform(val(followTarget))

@@ -23,16 +23,10 @@ export interface State<T = any> extends StateView<T> {
 }
 
 /**
- * 方便以后统一管控
- */
-const registeredStateSet = new WeakSet<State>()
-
-/**
  * 判断一个值是否是我们创造的 state。
- * 在管理用的 createState中使用
  */
 export function isState(value: unknown): value is State {
-  return registeredStateSet.has(value as any) || (isObject(value) && (value as any)?.[stateBrand] === true)
+  return isObject(value) && (value as any)?.[stateBrand] === true
 }
 
 /**
@@ -80,9 +74,5 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
       return mappedState as State<any>
     },
   }
-
-  // 注册这个 state，以便于未来的管控
-  registeredStateSet.add(thisState)
-
   return thisState
 }
