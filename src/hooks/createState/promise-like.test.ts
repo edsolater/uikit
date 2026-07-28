@@ -1,6 +1,6 @@
 /**
- * 本文件验证 PromiseLike 转换产生的 StateView 身份与结算行为。
- * 它不测试 val 的最终读取规则。
+ * 本文件验证 PromiseLike 转换产生的 StateView 结算行为。
+ * StateView 身份复用由 state-view.test.ts 验证。
  */
 import { expect, expectTypeOf, test } from 'vitest'
 import { toStateViewFromPromiseLike } from './promise-like'
@@ -25,10 +25,10 @@ function createDeferred<V>(): Deferred<V> {
   return { promise, resolve, reject }
 }
 
-test('同一个 PromiseLike 始终转换为同一个 StateView', () => {
+test('PromiseLike 转换器不管理 StateView 身份', () => {
   const promise = Promise.resolve(8)
 
-  expect(toStateViewFromPromiseLike(promise)).toBe(toStateViewFromPromiseLike(promise))
+  expect(toStateViewFromPromiseLike(promise)).not.toBe(toStateViewFromPromiseLike(promise))
 })
 
 test('StateView 从 undefined 更新为 PromiseLike 的完成值', async () => {

@@ -1,20 +1,14 @@
 /**
- * 本文件验证 Source 与 val 的最终读取协议。
- * 它覆盖 PromiseLike 的自动 StateView 转换，不承担手动 PromiseLike 转换配置。
+ * 本文件验证 Val 与 val 的最终读取协议。
+ * 它不承担 Source 输入类型和 toStateView 转换 options 的测试。
  */
 import { toObjectProxy } from '@edsolater/fnkit'
-import type { MayArray } from '@edsolater/fnkit'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createReactionFn } from './createReactiveRunner'
-import { val } from './read'
+import { val, type Val } from './read'
+import type { Source } from './source'
 import { createState } from './state'
-import {
-  toStateView,
-  type MayArraySource,
-  type Source,
-  type StateView,
-  type Val,
-} from './state-view'
+import type { StateView } from './state-view'
 
 interface Deferred<V> {
   promise: Promise<V>
@@ -35,10 +29,10 @@ function createDeferred<V>(): Deferred<V> {
   return { promise, resolve, reject }
 }
 
-test('Source 接受普通值，val 保留值本身', () => {
-  const numberArray: Source<number[]> = [1, 2]
-  const objectArray: Source<{ id: string }[]> = [{ id: 'first' }]
-  const object: Source<{ id: string }> = { id: 'first' }
+test('val 保留普通值本身', () => {
+  const numberArray = [1, 2]
+  const objectArray = [{ id: 'first' }]
+  const object = { id: 'first' }
 
   expectTypeOf(val(numberArray)).toEqualTypeOf<number[]>()
   expectTypeOf(val(objectArray)).toEqualTypeOf<{ id: string }[]>()
@@ -52,12 +46,6 @@ test('Val 递归解除 StateView 与 PromiseLike 包装', () => {
   expectTypeOf<Val<StateView<StateView<number>>>>().toEqualTypeOf<number>()
   expectTypeOf<Val<StateView<Promise<number>>>>().toEqualTypeOf<number | undefined>()
   expectTypeOf<Val<Promise<StateView<number>>>>().toEqualTypeOf<number | undefined>()
-})
-
-test('MayArraySource 自身包含外层 Source', () => {
-  expectTypeOf<MayArraySource<number>>().toEqualTypeOf<
-    Source<MayArray<Source<number> | undefined>>
-  >()
 })
 
 test('val 在 UIKit 读取边界递归解除内部包装', () => {
@@ -81,14 +69,12 @@ test('val 在 UIKit 读取边界递归解除内部包装', () => {
   runner.dispose()
 })
 
-test('Source 接受 PromiseLike，val 在完成前返回 undefined', () => {
-  const source: Source<number | undefined> = Promise.resolve(8)
+test('val 在 PromiseLike 完成前返回 undefined', () => {
+  const source = Promise.resolve(8)
 
   expectTypeOf(val(1)).toEqualTypeOf<1>()
   expectTypeOf(val(createState(1))).toEqualTypeOf<number>()
   expectTypeOf(val(source)).toEqualTypeOf<number | undefined>()
-  expectTypeOf<Promise<number>>().not.toMatchTypeOf<Source<number>>()
-  expectTypeOf<Promise<number>>().toMatchTypeOf<Source<number | undefined>>()
   expect(val(source)).toBeUndefined()
 })
 
@@ -183,115 +169,6 @@ test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
 
   expect(runner.getResult()).toBe(4)
   expect(observedValues).toEqual([0, 2, 4])
-  runner.dispose()
-})
-
-test('toStateView 复用 PromiseLike 自动对应的 StateView', async () => {
-  const deferred = createDeferred<number>()
-  const stateView = toStateView(deferred.promise)
-
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number | undefined>>()
-  expect(stateView.read()).toBeUndefined()
-
-  deferred.resolve(8)
-  await deferred.promise
-  await Promise.resolve()
-
-  expect(stateView.read()).toBe(8)
-})
-
-test('toStateView 的函数参数等价于 options.map', () => {
-  const source = createState(2)
-  const map = (value: number) => value * 2
-  const fromFunction = toStateView(source, map)
-  const fromOptions = toStateView(source, { map })
-
-  expectTypeOf(fromFunction).toEqualTypeOf<StateView<number>>()
-  expectTypeOf(fromOptions).toEqualTypeOf<StateView<number>>()
-  expect(fromFunction.read()).toBe(4)
-  expect(fromOptions.read()).toBe(4)
-
-  source.set(3)
-
-  expect(fromFunction.read()).toBe(6)
-  expect(fromOptions.read()).toBe(6)
-})
-
-test('toStateView 使用 defaultValue 后仍在 fulfilled 时响应式更新', async () => {
-  const deferred = createDeferred<number>()
-  const stateView = toStateView(deferred.promise, { defaultValue: 0 })
-  const observedValues: number[] = []
-  const runner = createReactionFn(() => {
-    const value = val(stateView)
-    observedValues.push(value)
-    return value
-  })
-
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number>>()
-  expect(observedValues).toEqual([0])
-
-  deferred.resolve(8)
-  await deferred.promise
-  await Promise.resolve()
-
-  expect(runner.getResult()).toBe(8)
-  expect(observedValues).toEqual([0, 8])
-  runner.dispose()
-})
-
-test('toStateView 在 PromiseLike 转换后应用 options.map', async () => {
-  const deferred = createDeferred<number>()
-  const stateView = toStateView(deferred.promise, {
-    defaultValue: 0,
-    map: (value) => `value:${value}`,
-  })
-  const observedValues: string[] = []
-  const runner = createReactionFn(() => {
-    const value = val(stateView)
-    observedValues.push(value)
-    return value
-  })
-
-  expectTypeOf(stateView).toEqualTypeOf<StateView<string>>()
-  expect(observedValues).toEqual(['value:0'])
-
-  deferred.resolve(8)
-  await deferred.promise
-  await Promise.resolve()
-
-  expect(runner.getResult()).toBe('value:8')
-  expect(observedValues).toEqual(['value:0', 'value:8'])
-  runner.dispose()
-})
-
-test('toStateView 使用 errorValue 与 onRejected 定义 rejected 路径', async () => {
-  const deferred = createDeferred<number>()
-  const error = new Error('load failed')
-  let rejectedReason: unknown
-  const stateView = toStateView(deferred.promise, {
-    defaultValue: 0,
-    errorValue: 'failed',
-    onRejected(reason) {
-      rejectedReason = reason
-    },
-  })
-  const observedValues: (number | string)[] = []
-  const runner = createReactionFn(() => {
-    const value = val(stateView)
-    observedValues.push(value)
-    return value
-  })
-
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number | string>>()
-  expect(observedValues).toEqual([0])
-
-  deferred.reject(error)
-  await deferred.promise.catch(() => undefined)
-  await Promise.resolve()
-
-  expect(runner.getResult()).toBe('failed')
-  expect(observedValues).toEqual([0, 'failed'])
-  expect(rejectedReason).toBe(error)
   runner.dispose()
 })
 

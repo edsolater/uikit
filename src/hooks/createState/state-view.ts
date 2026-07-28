@@ -28,6 +28,14 @@ export interface StateView<T = any> {
   map<U>(toNew: (value: T) => U | StateView<U>): StateView<U>
 }
 
+/**
+ * 可转换来源与默认 StateView 的身份映射。
+ *
+ * WeakMap 不会保活来源；只要调用方仍能再次传入同一个来源，val() 与 toStateView() 就会复用同一个 StateView。
+ * 来源不再可达后，映射及其 StateView 可以一同被垃圾回收。
+ */
+const stateViewCache = new WeakMap<PromiseLike<unknown>, StateView<unknown>>()
+
 export type ToStateViewOptions<V, U> = {
   /** 转换完成后继续映射 StateView 的当前值。 */
   map: (value: V) => U | StateView<U>
@@ -40,9 +48,6 @@ export function isStateView(value: unknown): value is StateView {
   return isObject(value) && (value as any)[stateViewBrand] === true
 }
 
-/**
- * 判断未知值是否能够稳定转换为 StateView。
- */
 /**
  * 将可转换的数据格式统一转换成 StateView。
  *
@@ -98,7 +103,13 @@ export function toStateView(sourceOrValue: any, optionsOrMap?: any): StateView<a
   if (isPromiseLike(sourceOrValue)) {
     let stateView: StateView
     if (!options || !('defaultValue' in options)) {
-      stateView = toStateViewFromPromiseLike(sourceOrValue)
+      const cachedStateView = stateViewCache.get(sourceOrValue)
+      if (cachedStateView) {
+        stateView = cachedStateView
+      } else {
+        stateView = toStateViewFromPromiseLike(sourceOrValue)
+        stateViewCache.set(sourceOrValue, stateView)
+      }
     } else if (!('errorValue' in options) && !options.onRejected) {
       stateView = toStateViewFromPromiseLike(sourceOrValue).map(
         (value) => value === undefined ? options.defaultValue : value,
