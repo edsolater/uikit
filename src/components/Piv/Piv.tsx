@@ -3,7 +3,7 @@
  * 它只负责按 as 选择原生 tag，并在 ref 阶段整合 plugin props，再连接 class、style、htmlProps、on 和 ref 消费者。
  * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
-import { type MayArray } from '@edsolater/fnkit'
+import { type MayArray, type ID } from '@edsolater/fnkit'
 import { children, Show, type JSX, type JSXElement } from 'solid-js'
 import { val, type Source } from '../../hooks'
 import { consumeClassName, type ClassNameList } from './className'
@@ -41,7 +41,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    * 真实 DOM 的全局身份。
    * 可以是响应值或列表，并沿用 Piv 的普通 props 合并规则。
    */
-  id?: Source<MayArray<string> | undefined>
+  id?: Source<MayArray<ID> | undefined>
 
   /**
    * 上层组件转交给当前 Piv 的低优先级 props。
@@ -79,7 +79,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
   /**
    * 事件，dom:onXXX
    */
-  on?: EventListeners 
+  on?: EventListeners
 
   /**
    * 获取真实 DOM 的命令式逃生口；声明式需求应优先使用 class、style、htmlProps 或 on。
