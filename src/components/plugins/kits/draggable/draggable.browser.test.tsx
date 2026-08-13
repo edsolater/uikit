@@ -45,7 +45,10 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     const sourceIdentity = source
     source.style.right = '7px'
+    source.style.display = 'grid'
     source.style.marginRight = '13px'
+    source.style.minInlineSize = '20px'
+    source.style.maxInlineSize = '240px'
     source.style.backgroundPositionX = '25%'
     const originalRect = source.getBoundingClientRect()
     const originalLayoutSize = {
@@ -62,6 +65,11 @@ describe('draggable', () => {
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.matches(':popover-open')).toBe(true)
     expect(getComputedStyle(source).position).toBe('fixed')
+    expect(source.style.right).toBe('auto')
+    expect(source.style.display).toBe('grid')
+    expect(source.style.marginRight).toBe('13px')
+    expect(source.style.minInlineSize).toBe('20px')
+    expect(source.style.maxInlineSize).toBe('240px')
     expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
     expect(document.querySelectorAll('[data-testid="source"]')).toHaveLength(1)
     expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
@@ -110,9 +118,49 @@ describe('draggable', () => {
     expect(source.matches(':popover-open')).toBe(false)
     expect(source.style.position).toBe('')
     expect(source.style.right).toBe('7px')
+    expect(source.style.display).toBe('grid')
     expect(source.style.marginRight).toBe('13px')
+    expect(source.style.minInlineSize).toBe('20px')
+    expect(source.style.maxInlineSize).toBe('240px')
     expect(source.style.backgroundPositionX).toBe('25%')
     expect(val(controller.dragging)).toBe(false)
+  })
+
+  test('进入 Top Layer 后不覆盖 UIKit 组件自己的视觉样式', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+
+    dispose = render(() => (
+      <>
+        <style>{`
+          @layer uikit {
+            .visual-draggable {
+              display: grid;
+              border: 3px solid rgb(12 34 56);
+              padding: 17px;
+              color: rgb(21 43 65);
+              background: rgb(98 76 54);
+            }
+          }
+        `}</style>
+        <Piv
+          class="visual-draggable"
+          plugin={draggable({ payload: 'save', activationDistance: 0 })}
+          htmlProps={{ 'data-testid': 'source' }}
+        >
+          保存
+        </Piv>
+      </>
+    ), host)
+
+    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const originalStyle = readVisualStyle(source)
+    stubPointerCapture(source)
+    source.dispatchEvent(pointerEvent('pointerdown', 15, 20, 30))
+
+    expect(source.matches(':popover-open')).toBe(true)
+    expect(readVisualStyle(source)).toEqual(originalStyle)
+
+    window.dispatchEvent(pointerEvent('pointerup', 15, 20, 30))
   })
 
   test('默认在移动超过激活距离后才开始拖动', () => {
@@ -265,7 +313,7 @@ describe('draggable', () => {
     })
 
     expect(() => pointerDrag.start(pointerEvent('pointerdown', 13, 10, 10)))
-      .toThrowError('Draggable 来源元素不能同时承担 Popover')
+      .toThrowError('Top Layer 元素不能同时承担 Popover')
     expect(source.getAttribute('popover')).toBe('manual')
     expect(document.querySelector('.drag-placeholder')).toBeNull()
   })
@@ -277,6 +325,17 @@ function stubPointerCapture(element: HTMLElement): void {
     hasPointerCapture: vi.fn(() => true),
     releasePointerCapture: vi.fn(),
   })
+}
+
+function readVisualStyle(element: HTMLElement) {
+  const style = getComputedStyle(element)
+  return {
+    display: style.display,
+    border: style.border,
+    padding: style.padding,
+    backgroundColor: style.backgroundColor,
+    color: style.color,
+  }
 }
 
 function pointerEvent(

@@ -11,7 +11,7 @@ import {
   type InternalDrag,
   type InternalDropMatch,
 } from '../dragAndDrop'
-import { enterDragTopLayer, type DragTopLayer } from './dragTopLayer'
+import { enterDragPresentation, type DragPresentation } from './dragPresentation'
 
 export interface PointerDragOptions {
   source: HTMLElement
@@ -40,7 +40,7 @@ interface PointerInteraction {
 
 interface ActiveDrag {
   drag: InternalDrag
-  topLayer: DragTopLayer
+  presentation: DragPresentation
   translation: DragPoint
 }
 
@@ -128,9 +128,9 @@ class PointerDragSession implements PointerDrag {
   }
 
   private activate(interaction: PointerInteraction, point: DragPoint): void {
-    let topLayer: DragTopLayer
+    let presentation: DragPresentation
     try {
-      topLayer = enterDragTopLayer(this.options.source)
+      presentation = enterDragPresentation(this.options.source)
     } catch (error) {
       this.clear()
       throw error
@@ -138,7 +138,7 @@ class PointerDragSession implements PointerDrag {
 
     interaction.active = {
       drag: createInternalDrag(this.options.source, this.options.payload),
-      topLayer,
+      presentation,
       translation: { x: 0, y: 0 },
     }
     this.options.onDraggingChange(true)
@@ -202,7 +202,7 @@ class PointerDragSession implements PointerDrag {
     interaction.events.abort()
 
     interaction.dropMatch?.target.leave()
-    interaction.active?.topLayer.leave()
+    interaction.active?.presentation.leave()
     this.options.source.style.removeProperty('--drag-x')
     this.options.source.style.removeProperty('--drag-y')
 

@@ -1,18 +1,29 @@
-[data-plugin~='draggable'] {
-  touch-action: none;
-
-  &[data-dragging='true'] {
-    translate: var(--drag-x) var(--drag-y);
-    pointer-events: none;
-    box-shadow: var(--drag-shadow, 0 18px 42px rgb(0 0 0 / 28%));
-    transition: none;
-    will-change: translate;
+@layer reset {
+  :where([data-plugin~='draggable'][popover]) {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
   }
 }
 
-.drag-placeholder {
-  box-sizing: border-box;
-  pointer-events: none;
-  border: 2px dashed var(--color-line);
-  background: color-mix(in oklab, var(--color-surface-low) 72%, transparent);
+@layer uikit {
+  [data-plugin~='draggable'] {
+    touch-action: none;
+
+    &[data-dragging='true'] {
+      translate: var(--drag-x) var(--drag-y);
+      pointer-events: none;
+      box-shadow: var(--drag-shadow, 0 18px 42px rgb(0 0 0 / 28%));
+      transition: none;
+      will-change: translate;
+    }
+  }
+
+  .drag-placeholder {
+    box-sizing: border-box;
+    pointer-events: none;
+    border: 2px dashed var(--color-line);
+    background: color-mix(in oklab, var(--color-surface-low) 72%, transparent);
+  }
 }

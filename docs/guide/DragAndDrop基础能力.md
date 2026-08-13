@@ -135,7 +135,7 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 ## 领域边界
 
 - `scope` 只拥有范围身份、能力匹配、嵌套关系和越界判断，不拥有拖动事件、`payload` 或放下结果。
-- `draggable` 只拥有 Pointer 拖动会话、原始 source 的临时 Top Layer 呈现、位移、原位置 Placeholder、拖动状态和 `payload`，不拥有接收端。
+- `draggable` 只拥有 Pointer 拖动会话、位移、原位置 Placeholder、拖动状态和 `payload`，并在拖动期间使用独立的 Top Layer 能力；它不拥有 Top Layer 协议或接收端。
 - `droppable` 只拥有接收端的 DOM 能力、悬停与接受状态、放下读取和回调，不拥有拖动端。
 - Drag and Drop 的共同协议只连接 `draggable` 与 `droppable`，不能长成替二者提供 `source()`、`target()` 的总对象。
 - 拖拽排序是以后可能建立的独立能力。`before`、`after`、重排规则和集合写入不进入基础 Drag and Drop。
