@@ -23,7 +23,7 @@ export interface DroppableOptions {
   dropEffect?: DataTransfer['dropEffect']
   /** 判断当前内部材料或外部 DataTransfer 是否可以放下。 */
   accepts?: (context: DropContext) => boolean
-  /** 只在 Scope 与 accepts 均通过后调用。 */
+  /** 只在目标启用，并且 Scope 与 accepts 均通过后调用。 */
   onDrop?: (context: DropContext) => void
 }
 

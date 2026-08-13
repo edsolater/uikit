@@ -82,16 +82,6 @@ export const draggable = createPlugin<DraggableOptions, DraggableController, Piv
             passive: false,
             callback: ({ event }) => pointerDrag.start(event),
           },
-          pointermove: {
-            passive: false,
-            callback: ({ event }) => pointerDrag.move(event),
-          },
-          pointerup: {
-            passive: false,
-            callback: ({ event }) => pointerDrag.finish(event),
-          },
-          pointercancel: ({ event }) => pointerDrag.cancel(event),
-          lostpointercapture: ({ event }) => pointerDrag.cancel(event),
         },
       }
     },

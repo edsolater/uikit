@@ -31,6 +31,8 @@ export interface PointerDrag {
 interface PointerInteraction {
   pointerId: number
   origin: DragPoint
+  /** 本次交互独占的全局事件生命周期。 */
+  events: AbortController
   /** undefined 表示已经按下，但尚未越过激活距离。 */
   drag: InternalDrag | undefined
   preview: DragPreview | undefined
@@ -55,16 +57,18 @@ class PointerDragSession implements PointerDrag {
     this.clear()
     event.stopPropagation()
     this.options.source.setPointerCapture(event.pointerId)
-    this.interaction = {
+    const interaction: PointerInteraction = {
       pointerId: event.pointerId,
       origin: pointOf(event),
+      events: this.listenToPointer(),
       drag: undefined,
       preview: undefined,
       dropMatch: undefined,
     }
+    this.interaction = interaction
 
     if (this.options.activationDistance === 0) {
-      this.activate(this.interaction, this.interaction.origin)
+      this.activate(interaction, interaction.origin)
       event.preventDefault()
     }
   }
@@ -142,10 +146,32 @@ class PointerDragSession implements PointerDrag {
     return this.interaction?.pointerId === event.pointerId ? this.interaction : undefined
   }
 
+  /**
+   * 拖拽激活后源元素会被隐藏，因此后续事件由页面接管。
+   * Pointer Capture 仍保留浏览器语义，但不再是会话能够结束的唯一保障。
+   */
+  private listenToPointer(): AbortController {
+    const ownerWindow = this.options.source.ownerDocument.defaultView
+    if (!ownerWindow) throw new Error('Draggable source must belong to a Window')
+
+    const events = new ownerWindow.AbortController()
+    const listenerOptions = {
+      capture: true,
+      passive: false,
+      signal: events.signal,
+    } satisfies AddEventListenerOptions
+
+    ownerWindow.addEventListener('pointermove', this.move, listenerOptions)
+    ownerWindow.addEventListener('pointerup', this.finish, listenerOptions)
+    ownerWindow.addEventListener('pointercancel', this.cancel, listenerOptions)
+    return events
+  }
+
   private clear(): void {
     const interaction = this.interaction
     if (!interaction) return
     this.interaction = undefined
+    interaction.events.abort()
 
     interaction.dropMatch?.target.leave()
     interaction.preview?.remove()

@@ -42,9 +42,22 @@
 }
 
 .drag-drop-demo-target {
+  align-content: center;
+  gap: var(--space-2);
   border: 2px dashed var(--color-line);
   background: color-mix(in oklab, var(--color-surface-low) 80%, transparent);
   color: var(--color-fg-soft);
+}
+
+.drag-drop-demo-target-label {
+  color: inherit;
+}
+
+.drag-drop-demo-target-result {
+  max-inline-size: 100%;
+  color: var(--color-fg-soft);
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
 }
 
 .drag-drop-demo-target[data-drop-hovering='true'] {
@@ -56,6 +69,18 @@
   border-color: var(--color-good);
   background: color-mix(in oklab, var(--color-good) 10%, var(--color-surface));
   color: var(--color-fg-strong);
+}
+
+.drag-drop-demo-target[data-drop-received='true'] {
+  border-style: solid;
+  border-color: var(--color-good);
+  background: color-mix(in oklab, var(--color-good) 12%, var(--color-surface));
+  color: var(--color-fg-strong);
+}
+
+.drag-drop-demo-target[data-drop-received='true'] .drag-drop-demo-target-result {
+  color: var(--color-good);
+  font-weight: var(--font-weight-semibold);
 }
 
 .drag-drop-demo-result {

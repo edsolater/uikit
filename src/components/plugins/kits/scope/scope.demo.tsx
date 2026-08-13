@@ -8,7 +8,7 @@ import { droppable } from '../droppable'
 import { scope } from './scope'
 
 export function ScopeDemo() {
-  const [result, setResult] = createSignal('尝试同范围与跨范围拖动')
+  const [results, setResults] = createSignal<Record<string, string>>({})
 
   const renderScope = (name: string) => (
     <Piv
@@ -24,11 +24,18 @@ export function ScopeDemo() {
       </Piv>
       <Piv
         plugin={droppable({
-          onDrop: ({ payload }) => setResult(`${name} 接收到 ${String(payload)}`),
+          onDrop: ({ payload }) => setResults((current) => ({
+            ...current,
+            [name]: `${name} 接收到 ${String(payload)}`,
+          })),
         })}
         class="drag-drop-demo-target"
+        htmlProps={results()[name] ? { 'data-drop-received': 'true' } : {}}
       >
-        放入 Scope {name}
+        <span class="drag-drop-demo-target-label">放入 Scope {name}</span>
+        <output class="drag-drop-demo-target-result" aria-live="polite">
+          {results()[name] ?? '等待同范围材料'}
+        </output>
       </Piv>
     </Piv>
   )
@@ -45,8 +52,6 @@ export function ScopeDemo() {
         {renderScope('A')}
         {renderScope('B')}
       </div>
-
-      <p class="drag-drop-demo-result">{result()}</p>
     </article>
   )
 }

@@ -44,10 +44,10 @@ describe('draggable', () => {
     expect(getComputedStyle(preview).boxShadow).not.toBe('none')
     expect(val(controller.dragging)).toBe(true)
 
-    source.dispatchEvent(pointerEvent('pointermove', 7, 52, 74))
+    window.dispatchEvent(pointerEvent('pointermove', 7, 52, 74))
     expect(preview.style.transform).toBe('translate3d(32px, 44px, 0px)')
 
-    source.dispatchEvent(pointerEvent('pointerup', 7, 52, 74))
+    window.dispatchEvent(pointerEvent('pointerup', 7, 52, 74))
     expect(document.querySelector('.drag-preview')).toBeNull()
     expect(source.hasAttribute('data-dragging')).toBe(false)
     expect(val(controller.dragging)).toBe(false)
@@ -66,10 +66,10 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
-    source.dispatchEvent(pointerEvent('pointermove', 8, 3, 4))
+    window.dispatchEvent(pointerEvent('pointermove', 8, 3, 4))
     expect(document.querySelector('.drag-preview')).toBeNull()
 
-    source.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
+    window.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
     expect(document.querySelector('.drag-preview')).not.toBeNull()
   })
 })

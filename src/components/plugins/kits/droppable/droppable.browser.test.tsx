@@ -2,6 +2,7 @@ import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { Piv } from '../../../Piv'
 import { draggable } from '../draggable'
+import { DroppableDemo } from './droppable.demo'
 import { droppable } from './droppable'
 
 let dispose: (() => void) | undefined
@@ -14,6 +15,27 @@ afterEach(() => {
 })
 
 describe('droppable', () => {
+  test('Demo 在接收框内持续显示成功结果', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+
+    dispose = render(() => <DroppableDemo />, host)
+
+    const source = document.querySelector<HTMLElement>('.drag-drop-demo-card')!
+    const target = document.querySelector<HTMLElement>('.drag-drop-demo-target')!
+    const result = target.querySelector<HTMLOutputElement>('.drag-drop-demo-target-result')!
+    stubPointerCapture(source)
+    vi.spyOn(document, 'elementsFromPoint').mockReturnValue([target])
+
+    expect(result.textContent).toBe('等待放下')
+    source.dispatchEvent(pointerEvent('pointerdown', 6, 10, 10))
+    window.dispatchEvent(pointerEvent('pointermove', 6, 30, 30))
+    window.dispatchEvent(pointerEvent('pointerup', 6, 30, 30))
+
+    expect(result.parentElement).toBe(target)
+    expect(result.textContent).toBe('已接收：{"widget":"weather"}')
+    expect(target.getAttribute('data-drop-received')).toBe('true')
+  })
+
   test('接收内部 Pointer payload 与系统外部文件', () => {
     const payload = { widget: 'weather' }
     let receivedPayload: unknown
@@ -51,9 +73,9 @@ describe('droppable', () => {
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([payloadTarget])
 
     source.dispatchEvent(pointerEvent('pointerdown', 7, 10, 10))
-    source.dispatchEvent(pointerEvent('pointermove', 7, 30, 30))
+    window.dispatchEvent(pointerEvent('pointermove', 7, 30, 30))
     expect(payloadTarget.getAttribute('data-drop-acceptable')).toBe('true')
-    source.dispatchEvent(pointerEvent('pointerup', 7, 30, 30))
+    window.dispatchEvent(pointerEvent('pointerup', 7, 30, 30))
     expect(receivedPayload).toBe(payload)
     expect(payloadTarget.getAttribute('data-drop-hovering')).not.toBe('true')
 

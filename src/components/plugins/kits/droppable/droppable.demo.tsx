@@ -9,8 +9,8 @@ import { draggable } from '../draggable'
 import { droppable } from './droppable'
 
 export function DroppableDemo() {
-  const [payloadResult, setPayloadResult] = createSignal('尚未接收 UIKit payload')
-  const [fileResult, setFileResult] = createSignal('可以从桌面或文件管理器拖入文件')
+  const [payloadResult, setPayloadResult] = createSignal<string>()
+  const [fileResult, setFileResult] = createSignal<string>()
 
   return (
     <article class="panel">
@@ -34,10 +34,13 @@ export function DroppableDemo() {
               onDrop: ({ payload }) => setPayloadResult(JSON.stringify(payload)),
             })}
             class="drag-drop-demo-target"
+            htmlProps={payloadResult() ? { 'data-drop-received': 'true' } : {}}
           >
-            接收 UIKit payload
+            <span class="drag-drop-demo-target-label">接收 UIKit payload</span>
+            <output class="drag-drop-demo-target-result" aria-live="polite">
+              {payloadResult() ? `已接收：${payloadResult()}` : '等待放下'}
+            </output>
           </Piv>
-          <p class="drag-drop-demo-result">{payloadResult()}</p>
         </div>
 
         <div class="drag-drop-demo-stack">
@@ -52,10 +55,13 @@ export function DroppableDemo() {
               },
             })}
             class="drag-drop-demo-target"
+            htmlProps={fileResult() ? { 'data-drop-received': 'true' } : {}}
           >
-            把系统文件拖到这里
+            <span class="drag-drop-demo-target-label">把系统文件拖到这里</span>
+            <output class="drag-drop-demo-target-result" aria-live="polite">
+              {fileResult() ? `已接收：${fileResult()}` : '可以从桌面或文件管理器拖入文件'}
+            </output>
           </Piv>
-          <p class="drag-drop-demo-result">{fileResult()}</p>
         </div>
       </div>
     </article>
