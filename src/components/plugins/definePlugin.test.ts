@@ -1,15 +1,17 @@
 import { describe, expect, test } from 'vitest'
-import { consumePlugin } from './consumePlugin'
-import { createPlugin } from './definePlugin'
+import { createPlugin, createPluginInstanceSymbol } from './definePlugin'
 
 describe('Plugin 定义', () => {
-  test('Plugin 本体和传入 options 后的返回值都能被 Consumer 消费', () => {
+  test('Plugin 本体和传入 options 后的返回值都保留实例协议', () => {
     const samplePlugin = createPlugin<{ label: string }, { label: string }>((options) => ({
       plugin: () => undefined,
       controller: { label: options?.label ?? 'default' },
     }))
 
-    expect(consumePlugin(samplePlugin).controller.label).toBe('default')
-    expect(consumePlugin(samplePlugin({ label: 'configured' })).controller.label).toBe('configured')
+    const defaultInstance = samplePlugin[createPluginInstanceSymbol]()
+    const configuredInstance = samplePlugin({ label: 'configured' })[createPluginInstanceSymbol]()
+
+    expect(defaultInstance.controller.label).toBe('default')
+    expect(configuredInstance.controller.label).toBe('configured')
   })
 })

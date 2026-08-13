@@ -10,8 +10,10 @@ import type { PivHTMLElement, PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
 import { onCleanup, onMount, type JSXElement } from 'solid-js'
 import { insert } from 'solid-js/web'
-import { consumePlugin } from '../../plugins/consumePlugin'
-import type { Plugin } from '../../plugins/definePlugin'
+import {
+  createPluginInstanceSymbol,
+  type Plugin,
+} from '../../plugins/definePlugin'
 
 /**
  * Piv plugin 是 Piv 的高权限增强入口。
@@ -35,8 +37,8 @@ export function runPlugin<Tag extends PivTag>(
   plugin: PivPlugin<Tag>,
   element: PivHTMLElement<Tag>,
 ): ShadowProps<Tag> | undefined {
-  const pluginInstance = consumePlugin<Tag>(plugin)
-  if (pluginInstance) {
+  if (isDefinedPlugin(plugin)) {
+    const pluginInstance = plugin[createPluginInstanceSymbol]()
     return pluginInstance.plugin(createPivPluginContext(element))
   }
   if (typeof plugin === 'function') {
@@ -44,6 +46,13 @@ export function runPlugin<Tag extends PivTag>(
   } else {
     return plugin.plugin(createPivPluginContext(element))
   }
+}
+
+/** Piv 只在消费入口识别由 Plugin 领域定义的高层 Plugin。 */
+function isDefinedPlugin<Tag extends PivTag>(
+  plugin: PivPlugin<Tag>,
+): plugin is Plugin<any, object, Tag> {
+  return typeof plugin === 'function' && createPluginInstanceSymbol in plugin
 }
 
 /**

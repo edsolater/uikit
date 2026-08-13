@@ -1,6 +1,5 @@
 export { createPlugin } from './definePlugin'
 export type { Plugin, PluginInstance } from './definePlugin'
-export * from './consumePlugin'
 export * from './usePlugin'
 export * from './kits/clickable'
 export * from './kits/hoverable'

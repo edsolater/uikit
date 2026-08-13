@@ -1,11 +1,13 @@
 /**
  * Plugin 定义协议。
  * 本文件只负责描述和创建可配置的 Plugin，不负责消费或运行 Plugin。
+ * Plugin 怎样依托真实 DOM 被消费，见
+ * {@link import('../Piv/plugin/runPlugin').runPlugin | Piv 的 runPlugin}。
  */
 import type { PivTag } from '../Piv/domMap'
 import type { PivPluginFunction } from '../Piv/plugin/runPlugin'
 
-/** 仅供 Plugin Consumer 识别并实例化 Plugin，不从领域入口公开。 */
+/** 仅供 usePlugin 与 Piv 识别并实例化 Plugin，不从领域入口公开。 */
 export const createPluginInstanceSymbol = Symbol('createPluginInstance')
 
 export interface PluginInstance<Controller extends object, Tag extends PivTag> {
@@ -14,7 +16,7 @@ export interface PluginInstance<Controller extends object, Tag extends PivTag> {
 }
 
 /**
- * Plugin 本身可以直接交给 Consumer，也可以先传入 options 得到一份配置后的 Plugin。
+ * Plugin 本身可以直接交给 Piv，也可以先传入 options 得到一份配置后的 Plugin。
  */
 export interface Plugin<Options = undefined, Controller extends object = object, Tag extends PivTag = PivTag> {
   (options?: Options): Plugin<Options, Controller, Tag>
@@ -22,7 +24,7 @@ export interface Plugin<Options = undefined, Controller extends object = object,
 }
 
 /**
- * 定义一个 Plugin。createInstance 只有在 Plugin 被 Consumer 消费时才会执行。
+ * 定义一个 Plugin。createInstance 只在 usePlugin 显式实例化或 Piv 消费时执行。
  */
 export function createPlugin<Options = undefined, Controller extends object = object, Tag extends PivTag = PivTag>(
   createInstance: (options: Options | undefined) => PluginInstance<Controller, Tag>,
