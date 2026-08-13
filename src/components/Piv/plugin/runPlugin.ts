@@ -10,6 +10,8 @@ import type { PivHTMLElement, PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
 import { onCleanup, onMount, type JSXElement } from 'solid-js'
 import { insert } from 'solid-js/web'
+import { consumePlugin } from '../../plugins/consumePlugin'
+import type { Plugin } from '../../plugins/definePlugin'
 
 /**
  * Piv plugin 是 Piv 的高权限增强入口。
@@ -22,6 +24,7 @@ export type PivPluginFunction<Tag extends PivTag = PivTag> = (
 
 export type PivPlugin<Tag extends PivTag = PivTag> =
   | PivPluginFunction<Tag>
+  | Plugin<any, object, Tag>
   | { plugin: PivPluginFunction<Tag> }
 
 /**
@@ -32,8 +35,12 @@ export function runPlugin<Tag extends PivTag>(
   plugin: PivPlugin<Tag>,
   element: PivHTMLElement<Tag>,
 ): ShadowProps<Tag> | undefined {
+  const pluginInstance = consumePlugin<Tag>(plugin)
+  if (pluginInstance) {
+    return pluginInstance.plugin(createPivPluginContext(element))
+  }
   if (typeof plugin === 'function') {
-    return plugin(createPivPluginContext(element))
+    return (plugin as PivPluginFunction<Tag>)(createPivPluginContext(element))
   } else {
     return plugin.plugin(createPivPluginContext(element))
   }

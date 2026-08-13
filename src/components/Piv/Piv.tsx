@@ -53,6 +53,9 @@ export type PivProps<Tag extends PivTag = 'div'> = {
    * Piv 的底层扩展入口。plugin 可以使用当前 DOM，并返回一层低优先级 props。
    * 返回 undefined 表示这个 plugin 只执行结构能力，不补充 props。
    */
+  plugin?: MayArray<PivPlugin<Tag>>
+
+  /** 多个底层扩展能力的兼容入口；单个能力优先使用 plugin。 */
   plugins?: MayArray<PivPlugin<Tag>>
 
   /**

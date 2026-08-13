@@ -37,11 +37,12 @@ export function mergePivProps<Tag extends PivTag>(
   return createMergedProps(rawPropsList)
 }
 
-/** 把一份 raw props 携带的 trait、shadowProps 和 plugins 归一成待执行 plugin 队列。 */
+/** 把一份 raw props 携带的 trait、shadowProps、plugin 和 plugins 归一成待执行 plugin 队列。 */
 function getPluginFromShadowProps<Tag extends PivTag>(props: ShadowProps<Tag>): PivPlugin<Tag>[] {
   return toArray(
     props.trait,
     mayMap(props.shadowProps, (shadow) => () => shadow),
+    props.plugin,
     props.plugins,
   )
 }
@@ -69,16 +70,16 @@ function mergePivPropValue<Tag extends PivTag, Key extends keyof ShadowProps<Tag
   rawPropsList: ShadowProps<Tag>[],
   key: Key,
 ): ShadowProps<Tag>[Key] {
-  let mergedValue: ShadowProps<Tag>[Key] = undefined
+  let mergedValue: unknown = undefined
 
   for (const rawProps of rawPropsList.toReversed()) {
     const rawValue = rawProps[key]
     if (rawValue === undefined) continue
-    const value = val(rawValue) as ShadowProps<Tag>[Key]
+    const value: unknown = val(rawValue)
     mergedValue = mergedValue === undefined
       ? value
-      : mergeMayArray(mergedValue, value) as ShadowProps<Tag>[Key]
+      : mergeMayArray(mergedValue, value)
   }
 
-  return mergedValue
+  return mergedValue as ShadowProps<Tag>[Key]
 }
