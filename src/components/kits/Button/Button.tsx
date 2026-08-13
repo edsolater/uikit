@@ -5,7 +5,7 @@
  * Button 只把动作内容、动作声量、动作性质、按钮尺寸和外部状态翻译成原生 button。
  *
  * 组件选择规则见 [Button 设计规格](./spec.md)。
- * 长期业务语义见 [Button 基础组件业务说明](../../../docs/features/Button基础组件_业务说明.md)。
+ * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
 import { clickable } from '../../plugins'
 import { type StatusInput } from '../../utils/status'

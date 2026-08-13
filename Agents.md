@@ -12,7 +12,7 @@
 - 先读 [AI Rules README](D:/mycode/ai-rules/README.md)。
 - 写代码、改代码、重构、命名、写注释、写 CSS、写组件或类型时，再从 [代码规则](D:/mycode/ai-rules/code/README.md) 进入对应主题。
 - 查当前仓库结构、模块边界和调用链时读 [Architecture.md](Architecture.md)。
-- 写功能说明或修改计划时读 [功能说明写法](docs/how-to-write-feature.md) 和 [修改计划写法](docs/how-to-write-plan.md)。
+- 写 Guide 或 Plan 时读 [Guide 写法](docs/how-to-write-guide.md) 和 [Plan 写法](docs/how-to-write-plan.md)。
 
 ## 当前项目边界
 

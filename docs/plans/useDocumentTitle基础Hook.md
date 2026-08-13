@@ -1,11 +1,11 @@
 # 维护契约
 
 - Plan 契约在 [how-to-write-plan.md](../how-to-write-plan.md) 里单独维护。
-- Feature 业务说明在 [useDocumentTitle基础Hook_业务说明.md](../features/useDocumentTitle基础Hook_业务说明.md) 里单独维护。
+- Guide 在 [useDocumentTitle基础Hook.md](../guide/useDocumentTitle基础Hook.md) 里单独维护。
 - 修改代码风格在 [Agents.md](../../Agents.md) 里单独维护。
 - 每次修改 useDocumentTitle 的代码落点、验证口径或边界判断后，都必须同步更新本文档。
 
-# useDocumentTitle 基础 Hook 修改计划
+# useDocumentTitle 基础 Hook
 
 ## 修改目标
 

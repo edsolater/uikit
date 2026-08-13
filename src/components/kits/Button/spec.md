@@ -5,7 +5,7 @@
 - 本文档是 AI 在其他项目里判断是否使用 `Button` 的入口。
 - 本文档只写调用方可执行的选择规则和 API 口径。
 - 内部实现、状态管理器、样式 token 和 DOM 细节不放在本文档主线。
-- 长期业务说明见 [Button 基础组件业务说明](../../../../docs/features/Button%E5%9F%BA%E7%A1%80%E7%BB%84%E4%BB%B6_%E4%B8%9A%E5%8A%A1%E8%AF%B4%E6%98%8E.md)。
+- 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
 
 ## 核心判断
 

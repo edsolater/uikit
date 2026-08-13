@@ -1,12 +1,12 @@
 # 维护契约
 
-- Feature 契约在 [how-to-write-feature.md](../how-to-write-feature.md) 里单独维护。
+- Guide 契约在 [how-to-write-guide.md](../how-to-write-guide.md) 里单独维护。
 - Plan 契约在 [how-to-write-plan.md](../how-to-write-plan.md) 里单独维护。
 - 修改代码风格在 [Agents.md](../../Agents.md) 里单独维护。
-- Button 基础组件的修改计划在 [Button基础组件_修改计划.md](../plans/Button基础组件_修改计划.md) 里单独维护。
+- Button 基础组件的 Plan 在 [Button基础组件.md](../plans/Button基础组件.md) 里单独维护。
 - 每次修改 Button 的对外语义、边界或展示协议后，都必须同步更新本文档。
 
-# Button 基础组件业务说明
+# Button 基础组件
 
 ## 业务目标
 

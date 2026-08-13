@@ -5,7 +5,7 @@
  * Input 当前只有默认形态；视觉强弱不通过 variant、tone、ghost、bare 或 solid 表达。
  *
  * 组件选择规则见 [Input 设计规格](./spec.md)。
- * 长期业务语义见 [Input 基础组件业务说明](../../../docs/features/Input基础组件_业务说明.md)。
+ * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
 import { createPivPlugin } from '../../Piv/plugin/helpers'

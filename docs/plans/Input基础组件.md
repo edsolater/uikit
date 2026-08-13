@@ -1,11 +1,11 @@
 # 维护契约
 
 - Plan 契约在 [how-to-write-plan.md](../how-to-write-plan.md) 里单独维护。
-- Feature 业务说明在 [Input基础组件_业务说明.md](../features/Input基础组件_业务说明.md) 里单独维护。
+- Guide 在 [Input基础组件.md](../guide/Input基础组件.md) 里单独维护。
 - 修改代码风格在 [Agents.md](../../Agents.md) 里单独维护。
 - 每次修改 Input 的代码落点、验证口径或边界判断后，都必须同步更新本文档。
 
-# Input 基础组件修改计划
+# Input 基础组件
 
 ## 修改目标
 
