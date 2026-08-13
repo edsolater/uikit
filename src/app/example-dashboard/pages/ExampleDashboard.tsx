@@ -7,6 +7,9 @@ import { ButtonDemo } from '../../../components/kits/Button/Button.demo'
 import { InputDemo } from '../../../components/kits/Input/Input.demo'
 import { PivStructureDemo } from '../../../components/Piv/PivStructure.demo'
 import { PopoverDemo } from '../../../components/kits/Popover/Popover.demo'
+import { DraggableDemo } from '../../../components/plugins/kits/draggable/draggable.demo'
+import { DroppableDemo } from '../../../components/plugins/kits/droppable/droppable.demo'
+import { ScopeDemo } from '../../../components/plugins/kits/scope/scope.demo'
 import { ColorDashboardDemo } from '../../../css/ColorDashboardDemo'
 import { UseDocumentTitleDemo } from '../../../hooks/useDocumentTitle/useDocumentTitle.demo'
 import './ExampleDashboard.css'
@@ -18,6 +21,9 @@ function App() {
       <InputDemo />
       <ColorDashboardDemo />
       <PivStructureDemo />
+      <DraggableDemo />
+      <DroppableDemo />
+      <ScopeDemo />
       <PopoverDemo />
       <UseDocumentTitleDemo />
     </main>

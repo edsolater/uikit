@@ -24,6 +24,8 @@ const [plugin, controller] = usePlugin(hoverable)
 - `utils/` 只分组 Plugins 领域内部的辅助代码，不形成新的领域入口。
 - `index.ts` 是 Plugins 领域的公开入口，只导出定义、显式实例化能力和具体 Plugin。
 
+当前具体 Plugin 包括 `clickable`、`hoverable`、`scope`、`draggable` 与 `droppable`。`dragAndDrop` 是供 Scope 识别 Draggable/Droppable 协作的能力身份，不是第四个 Plugin。页面内拖动由 Pointer Events 与 transform 预览完成；原生 DragEvent 只服务系统外部材料进入 droppable。
+
 ## 为什么没有 Consume
 
 Plugin 领域只有 Define，没有独立的 Consume。消费必须拿到 Piv 创建的真实 DOM、Piv plugin 上下文和 shadow props 合并流程；这些条件全部由 Piv 提供。离开 Piv，Consume 无法说明自己消费到哪里，也无法产生完整结果，因此不能成为 Plugins 领域中的文件或公开接口。

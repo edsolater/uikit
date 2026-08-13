@@ -1,0 +1,16 @@
+[data-plugin~='draggable'] {
+  touch-action: none;
+
+  &[data-dragging='true'] {
+    visibility: hidden;
+  }
+}
+
+.drag-preview {
+  z-index: var(--drag-preview-z-index, 2147483647);
+  pointer-events: none;
+  box-shadow: var(--drag-preview-shadow, 0 18px 42px rgb(0 0 0 / 28%));
+  opacity: 1;
+  cursor: grabbing;
+  will-change: transform;
+}

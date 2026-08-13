@@ -1,0 +1,79 @@
+.drag-drop-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.drag-drop-demo-stack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.drag-drop-demo-card,
+.drag-drop-demo-target {
+  min-block-size: 108px;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  border-radius: var(--radius-4);
+  text-align: center;
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-standard),
+    background-color var(--motion-duration-fast) var(--motion-ease-standard),
+    opacity var(--motion-duration-fast) var(--motion-ease-standard),
+    transform var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.drag-drop-demo-card {
+  cursor: grab;
+  border: var(--boundary-1) solid color-mix(in oklab, var(--color-accent) 45%, var(--color-line));
+  background: color-mix(in oklab, var(--color-accent) 12%, var(--color-surface));
+  color: var(--color-fg-strong);
+  font-weight: var(--font-weight-semibold);
+  user-select: none;
+}
+
+.drag-drop-demo-card:active {
+  cursor: grabbing;
+}
+
+.drag-drop-demo-card[data-dragging='true'] {
+  opacity: 1;
+}
+
+.drag-drop-demo-target {
+  border: 2px dashed var(--color-line);
+  background: color-mix(in oklab, var(--color-surface-low) 80%, transparent);
+  color: var(--color-fg-soft);
+}
+
+.drag-drop-demo-target[data-drop-hovering='true'] {
+  border-color: var(--color-bad);
+  background: color-mix(in oklab, var(--color-bad) 8%, var(--color-surface));
+}
+
+.drag-drop-demo-target[data-drop-acceptable='true'] {
+  border-color: var(--color-good);
+  background: color-mix(in oklab, var(--color-good) 10%, var(--color-surface));
+  color: var(--color-fg-strong);
+}
+
+.drag-drop-demo-result {
+  min-block-size: 24px;
+  margin: 0;
+  color: var(--color-fg-soft);
+  font-size: var(--font-size-sm);
+}
+
+.scope-demo-boundary {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--boundary-1) solid var(--color-line);
+  border-radius: var(--radius-4);
+  background: color-mix(in oklab, var(--color-surface) 72%, transparent);
+}
+
+.scope-demo-boundary > strong {
+  color: var(--color-fg-strong);
+}
