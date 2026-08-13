@@ -1,7 +1,7 @@
 /**
  * Draggable Plugin：把 Piv 接入页面内 Pointer 拖动。
  *
- * 【职责边界】公开启停与拖动状态；指针事务、视觉副本和 Droppable 命中由内部设施完成。
+ * 【职责边界】公开启停与拖动状态；指针事务、来源元素位移和 Droppable 命中由内部设施完成。
  */
 import { onCleanup } from 'solid-js'
 import { createToggle, type State } from '../../../../hooks'

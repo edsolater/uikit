@@ -1,7 +1,7 @@
 /**
  * 页面内 Pointer 拖动事务。
  *
- * 【职责边界】持有从按下到放下或取消的一次指针交互，驱动视觉副本并取得
+ * 【职责边界】持有从按下到放下或取消的一次指针交互，移动来源元素并取得
  * Droppable 命中；系统外部材料由 Droppable 的原生事件入口接收。
  */
 import {
@@ -11,7 +11,7 @@ import {
   type InternalDrag,
   type InternalDropMatch,
 } from '../dragAndDrop'
-import { createDragPreview, type DragPreview } from './dragPreview'
+import { enterDragTopLayer, type DragTopLayer } from './dragTopLayer'
 
 export interface PointerDragOptions {
   source: HTMLElement
@@ -23,8 +23,8 @@ export interface PointerDragOptions {
 
 export interface PointerDrag {
   start(event: PointerEvent): void
-  move(event: PointerEvent): void
-  finish(event: PointerEvent): void
+  moving(event: PointerEvent): void
+  end(event: PointerEvent): void
   cancel(event?: PointerEvent): void
 }
 
@@ -34,9 +34,14 @@ interface PointerInteraction {
   /** 本次交互独占的全局事件生命周期。 */
   events: AbortController
   /** undefined 表示已经按下，但尚未越过激活距离。 */
-  drag: InternalDrag | undefined
-  preview: DragPreview | undefined
+  active: ActiveDrag | undefined
   dropMatch: InternalDropMatch | undefined
+}
+
+interface ActiveDrag {
+  drag: InternalDrag
+  topLayer: DragTopLayer
+  translation: DragPoint
 }
 
 const interactiveSelector = 'button, input, select, textarea, a, [contenteditable="true"]'
@@ -55,14 +60,14 @@ class PointerDragSession implements PointerDrag {
     if (!this.canStart(event)) return
 
     this.clear()
+    assertSourceTranslateAvailable(this.options.source)
     event.stopPropagation()
     this.options.source.setPointerCapture(event.pointerId)
     const interaction: PointerInteraction = {
       pointerId: event.pointerId,
       origin: pointOf(event),
       events: this.listenToPointer(),
-      drag: undefined,
-      preview: undefined,
+      active: undefined,
       dropMatch: undefined,
     }
     this.interaction = interaction
@@ -73,42 +78,42 @@ class PointerDragSession implements PointerDrag {
     }
   }
 
-  move = (event: PointerEvent): void => {
+  moving = (event: PointerEvent): void => {
     const interaction = this.match(event)
     if (!interaction) return
 
     const point = pointOf(event)
-    if (!interaction.drag) {
+    if (!interaction.active) {
       if (distance(interaction.origin, point) < this.options.activationDistance) return
       this.activate(interaction, point)
     } else {
-      interaction.preview?.move(point)
+      this.moveSource(interaction, point)
     }
 
     event.preventDefault()
     this.updateDropTarget(interaction, event)
   }
 
-  finish = (event: PointerEvent): void => {
+  end = (event: PointerEvent): void => {
     const interaction = this.match(event)
     if (!interaction) return
 
-    const drag = interaction.drag
-    if (!drag) {
+    const active = interaction.active
+    if (!active) {
       this.clear()
       return
     }
 
     event.preventDefault()
-    interaction.preview?.move(pointOf(event))
+    this.moveSource(interaction, pointOf(event))
     this.updateDropTarget(interaction, event)
     const acceptedTarget = interaction.dropMatch?.acceptable
       ? interaction.dropMatch.target
       : undefined
 
-    // 先释放预览、悬停和指针捕获；onDrop 随后可以立即修改或移除相关 DOM。
+    // 先恢复 source 并释放 Placeholder、悬停和 Pointer Capture；onDrop 随后可以立即改动 DOM。
     this.clear()
-    acceptedTarget?.drop(drag, event)
+    acceptedTarget?.drop(active.drag, event)
   }
 
   cancel = (event?: PointerEvent): void => {
@@ -123,15 +128,37 @@ class PointerDragSession implements PointerDrag {
   }
 
   private activate(interaction: PointerInteraction, point: DragPoint): void {
-    interaction.drag = createInternalDrag(this.options.source, this.options.payload)
-    interaction.preview = createDragPreview(this.options.source, interaction.origin)
-    this.options.source.setAttribute('data-dragging', 'true')
+    let topLayer: DragTopLayer
+    try {
+      topLayer = enterDragTopLayer(this.options.source)
+    } catch (error) {
+      this.clear()
+      throw error
+    }
+
+    interaction.active = {
+      drag: createInternalDrag(this.options.source, this.options.payload),
+      topLayer,
+      translation: { x: 0, y: 0 },
+    }
     this.options.onDraggingChange(true)
-    interaction.preview.move(point)
+    this.moveSource(interaction, point)
+  }
+
+  private moveSource(interaction: PointerInteraction, point: DragPoint): void {
+    const active = interaction.active
+    if (!active) return
+
+    active.translation = {
+      x: point.x - interaction.origin.x,
+      y: point.y - interaction.origin.y,
+    }
+    this.options.source.style.setProperty('--drag-x', `${active.translation.x}px`)
+    this.options.source.style.setProperty('--drag-y', `${active.translation.y}px`)
   }
 
   private updateDropTarget(interaction: PointerInteraction, event: PointerEvent): void {
-    const drag = interaction.drag
+    const drag = interaction.active?.drag
     if (!drag) return
 
     const nextMatch = findInternalDropTarget(drag, event)
@@ -147,12 +174,12 @@ class PointerDragSession implements PointerDrag {
   }
 
   /**
-   * 拖拽激活后源元素会被隐藏，因此后续事件由页面接管。
-   * Pointer Capture 仍保留浏览器语义，但不再是会话能够结束的唯一保障。
+   * 一次拖动离开单个元素的事件边界，因此后续事件由所属页面统一接管。
+   * Pointer Capture 保留浏览器语义，Window 监听负责会话生命周期。
    */
   private listenToPointer(): AbortController {
     const ownerWindow = this.options.source.ownerDocument.defaultView
-    if (!ownerWindow) throw new Error('Draggable source must belong to a Window')
+    if (!ownerWindow) throw new Error('Draggable 来源元素必须属于浏览器窗口')
 
     const events = new ownerWindow.AbortController()
     const listenerOptions = {
@@ -161,9 +188,10 @@ class PointerDragSession implements PointerDrag {
       signal: events.signal,
     } satisfies AddEventListenerOptions
 
-    ownerWindow.addEventListener('pointermove', this.move, listenerOptions)
-    ownerWindow.addEventListener('pointerup', this.finish, listenerOptions)
+    ownerWindow.addEventListener('pointermove', this.moving, listenerOptions)
+    ownerWindow.addEventListener('pointerup', this.end, listenerOptions)
     ownerWindow.addEventListener('pointercancel', this.cancel, listenerOptions)
+    this.options.source.addEventListener('lostpointercapture', this.cancel, listenerOptions)
     return events
   }
 
@@ -174,13 +202,14 @@ class PointerDragSession implements PointerDrag {
     interaction.events.abort()
 
     interaction.dropMatch?.target.leave()
-    interaction.preview?.remove()
-    this.options.source.removeAttribute('data-dragging')
-    this.options.onDraggingChange(false)
+    interaction.active?.topLayer.leave()
+    this.options.source.style.removeProperty('--drag-x')
+    this.options.source.style.removeProperty('--drag-y')
 
     if (this.options.source.hasPointerCapture(interaction.pointerId)) {
       this.options.source.releasePointerCapture(interaction.pointerId)
     }
+    if (interaction.active) this.options.onDraggingChange(false)
   }
 }
 
@@ -198,4 +227,13 @@ function isInteractiveDescendant(event: PointerEvent, source: HTMLElement): bool
     if (eventTarget instanceof HTMLElement && eventTarget.matches(interactiveSelector)) return true
   }
   return false
+}
+
+function assertSourceTranslateAvailable(source: HTMLElement): void {
+  const ownerWindow = source.ownerDocument.defaultView
+  if (!ownerWindow) throw new Error('Draggable 来源元素必须属于浏览器窗口')
+
+  if (ownerWindow.getComputedStyle(source).translate !== 'none') {
+    throw new Error('Draggable 来源元素不能预先占用 CSS translate')
+  }
 }

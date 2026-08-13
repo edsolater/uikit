@@ -58,7 +58,12 @@ export function findInternalDropTarget(
 ): InternalDropMatch | undefined {
   const visited = new Set<HTMLElement>()
 
-  for (const hitElement of document.elementsFromPoint(event.clientX, event.clientY)) {
+  for (const hitElement of drag.source.ownerDocument.elementsFromPoint(
+    event.clientX,
+    event.clientY,
+  )) {
+    if (isWithinSource(hitElement, drag.source)) continue
+
     for (
       let element: Element | null = hitElement;
       element;
@@ -78,6 +83,13 @@ export function findInternalDropTarget(
   }
 
   return undefined
+}
+
+function isWithinSource(element: Element, source: HTMLElement): boolean {
+  for (let current: Element | null = element; current; current = getComposedParent(current)) {
+    if (current === source) return true
+  }
+  return false
 }
 
 export function isWithinDropScope(

@@ -15,6 +15,46 @@ afterEach(() => {
 })
 
 describe('droppable', () => {
+  test('移动原始 source 后通过真实浏览器几何命中 Droppable', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+    let receivedPayload: unknown
+
+    dispose = render(() => (
+      <div style={{ display: 'grid', gap: '32px', padding: '20px' }}>
+        <Piv
+          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+          style={{ width: '120px', height: '60px' }}
+          htmlProps={{ 'data-testid': 'source' }}
+        >
+          Weather
+        </Piv>
+        <Piv
+          plugin={droppable({ onDrop: ({ payload }) => { receivedPayload = payload } })}
+          style={{ width: '120px', height: '60px' }}
+          htmlProps={{ 'data-testid': 'target' }}
+        />
+      </div>
+    ), host)
+
+    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const target = document.querySelector<HTMLElement>('[data-testid="target"]')!
+    const sourceRect = source.getBoundingClientRect()
+    const targetRect = target.getBoundingClientRect()
+    const sourcePoint = centerOf(sourceRect)
+    const targetPoint = centerOf(targetRect)
+    stubPointerCapture(source)
+
+    source.dispatchEvent(pointerEvent('pointerdown', 5, sourcePoint.x, sourcePoint.y))
+    window.dispatchEvent(pointerEvent('pointermove', 5, targetPoint.x, targetPoint.y))
+
+    expect(getComputedStyle(source).translate).not.toBe('none')
+    expect(document.elementsFromPoint(targetPoint.x, targetPoint.y)).toContain(target)
+    expect(target.getAttribute('data-drop-acceptable')).toBe('true')
+
+    window.dispatchEvent(pointerEvent('pointerup', 5, targetPoint.x, targetPoint.y))
+    expect(receivedPayload).toBe('weather')
+  })
+
   test('Demo 在接收框内持续显示成功结果', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
@@ -94,6 +134,47 @@ describe('droppable', () => {
     expect(receivedFiles.map((file) => file.name)).toEqual(['hello.txt'])
     expect(receivedItems.map((item) => item.kind)).toEqual(['file'])
   })
+
+  test('onDrop 同步卸载 source 时已经完成 Drag 清理', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+    let disposeTree!: () => void
+    let cleanedBeforeDrop = false
+
+    disposeTree = render(() => (
+      <>
+        <Piv
+          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+          htmlProps={{ 'data-testid': 'source' }}
+        />
+        <Piv
+          plugin={droppable({
+            accepts: ({ kind }) => kind === 'internal',
+            onDrop: (context) => {
+              if (context.kind !== 'internal') return
+              const { source } = context
+              cleanedBeforeDrop = !source.hasAttribute('data-dragging')
+                && getComputedStyle(source).translate === 'none'
+                && document.querySelector('.drag-placeholder') === null
+              disposeTree()
+            },
+          })}
+          htmlProps={{ 'data-testid': 'target' }}
+        />
+      </>
+    ), host)
+    dispose = disposeTree
+
+    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const target = document.querySelector<HTMLElement>('[data-testid="target"]')!
+    stubPointerCapture(source)
+    vi.spyOn(document, 'elementsFromPoint').mockReturnValue([target])
+
+    source.dispatchEvent(pointerEvent('pointerdown', 13, 10, 10))
+    window.dispatchEvent(pointerEvent('pointerup', 13, 30, 30))
+
+    expect(cleanedBeforeDrop).toBe(true)
+    expect(host.childElementCount).toBe(0)
+  })
 })
 
 function stubPointerCapture(element: HTMLElement): void {
@@ -120,4 +201,11 @@ function pointerEvent(
     clientX,
     clientY,
   })
+}
+
+function centerOf(rect: DOMRect): { x: number; y: number } {
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  }
 }
