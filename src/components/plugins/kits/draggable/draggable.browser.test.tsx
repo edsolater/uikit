@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 describe('draggable', () => {
-  test('移动原始 source，并只在原位置创建空几何 Placeholder', () => {
+  test('在 Top Layer 基础位置上移动原始 source', () => {
     let controller!: DraggableController
     const host = document.body.appendChild(document.createElement('div'))
 
@@ -32,7 +32,6 @@ describe('draggable', () => {
           style={{
             width: '160px',
             height: '80px',
-            'border-radius': '12px 16px 20px 24px',
             transform: 'rotate(1deg)',
           }}
           htmlProps={{ 'data-testid': 'source' }}
@@ -44,32 +43,17 @@ describe('draggable', () => {
 
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     const sourceIdentity = source
-    source.style.right = '7px'
-    source.style.display = 'grid'
-    source.style.marginRight = '13px'
-    source.style.minInlineSize = '20px'
-    source.style.maxInlineSize = '240px'
-    source.style.backgroundPositionX = '25%'
     const originalRect = source.getBoundingClientRect()
-    const originalLayoutSize = {
-      width: source.offsetWidth,
-      height: source.offsetHeight,
-    }
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 7, 20, 30))
 
-    const placeholder = document.querySelector<HTMLElement>('.drag-placeholder')!
+    const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
     const sourceRect = source.getBoundingClientRect()
     expect(source.draggable).toBe(false)
     expect(source.getAttribute('data-dragging')).toBe('true')
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.matches(':popover-open')).toBe(true)
-    expect(getComputedStyle(source).position).toBe('fixed')
-    expect(source.style.right).toBe('auto')
-    expect(source.style.display).toBe('grid')
-    expect(source.style.marginRight).toBe('13px')
-    expect(source.style.minInlineSize).toBe('20px')
-    expect(source.style.maxInlineSize).toBe('240px')
+    expect(source.getAttribute('data-top-layer')).toBe('true')
     expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
     expect(document.querySelectorAll('[data-testid="source"]')).toHaveLength(1)
     expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
@@ -79,27 +63,11 @@ describe('draggable', () => {
     expect(getComputedStyle(source).visibility).not.toBe('hidden')
     expect(getComputedStyle(source).pointerEvents).toBe('none')
     expect(getComputedStyle(source).boxShadow).not.toBe('none')
-    expect(placeholder.parentElement).toBe(source.parentElement)
-    expect(placeholder.nextElementSibling).toBe(source)
-    expect(getComputedStyle(placeholder).position).not.toBe('fixed')
-    expect(placeholder.childElementCount).toBe(0)
-    expect(placeholder.textContent).toBe('')
+    expect(anchor.nextElementSibling).toBe(source)
     expect(Math.abs(sourceRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.width - originalRect.width)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.height - originalRect.height)).toBeLessThan(0.1)
-    expect(Math.abs(placeholder.getBoundingClientRect().width - originalLayoutSize.width))
-      .toBeLessThan(0.1)
-    expect(Math.abs(placeholder.getBoundingClientRect().height - originalLayoutSize.height))
-      .toBeLessThan(0.1)
-    const anchorName = placeholder.style.getPropertyValue('anchor-name')
-    expect(anchorName).toMatch(/^--uikit-drag-placeholder-/)
-    expect(source.style.inlineSize).toBe(`anchor-size(${anchorName} self-inline)`)
-    expect(source.style.blockSize).toBe(`anchor-size(${anchorName} self-block)`)
-    expect(placeholder.style.borderTopLeftRadius).toBe('12px')
-    expect(placeholder.style.borderTopRightRadius).toBe('16px')
-    expect(placeholder.style.borderBottomRightRadius).toBe('20px')
-    expect(placeholder.style.borderBottomLeftRadius).toBe('24px')
     expect(val(controller.dragging)).toBe(true)
 
     window.dispatchEvent(pointerEvent('pointermove', 7, 52, 74))
@@ -109,58 +77,15 @@ describe('draggable', () => {
     expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
 
     window.dispatchEvent(pointerEvent('pointerup', 7, 52, 74))
-    expect(document.querySelector('.drag-placeholder')).toBeNull()
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
     expect(source.style.getPropertyValue('--drag-x')).toBe('')
     expect(source.style.getPropertyValue('--drag-y')).toBe('')
     expect(getComputedStyle(source).translate).toBe('none')
     expect(source.hasAttribute('data-dragging')).toBe(false)
     expect(source.hasAttribute('popover')).toBe(false)
+    expect(source.hasAttribute('data-top-layer')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
-    expect(source.style.position).toBe('')
-    expect(source.style.right).toBe('7px')
-    expect(source.style.display).toBe('grid')
-    expect(source.style.marginRight).toBe('13px')
-    expect(source.style.minInlineSize).toBe('20px')
-    expect(source.style.maxInlineSize).toBe('240px')
-    expect(source.style.backgroundPositionX).toBe('25%')
     expect(val(controller.dragging)).toBe(false)
-  })
-
-  test('进入 Top Layer 后不覆盖 UIKit 组件自己的视觉样式', () => {
-    const host = document.body.appendChild(document.createElement('div'))
-
-    dispose = render(() => (
-      <>
-        <style>{`
-          @layer uikit {
-            .visual-draggable {
-              display: grid;
-              border: 3px solid rgb(12 34 56);
-              padding: 17px;
-              color: rgb(21 43 65);
-              background: rgb(98 76 54);
-            }
-          }
-        `}</style>
-        <Piv
-          class="visual-draggable"
-          plugin={draggable({ payload: 'save', activationDistance: 0 })}
-          htmlProps={{ 'data-testid': 'source' }}
-        >
-          保存
-        </Piv>
-      </>
-    ), host)
-
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
-    const originalStyle = readVisualStyle(source)
-    stubPointerCapture(source)
-    source.dispatchEvent(pointerEvent('pointerdown', 15, 20, 30))
-
-    expect(source.matches(':popover-open')).toBe(true)
-    expect(readVisualStyle(source)).toEqual(originalStyle)
-
-    window.dispatchEvent(pointerEvent('pointerup', 15, 20, 30))
   })
 
   test('默认在移动超过激活距离后才开始拖动', () => {
@@ -177,52 +102,10 @@ describe('draggable', () => {
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
     window.dispatchEvent(pointerEvent('pointermove', 8, 3, 4))
-    expect(document.querySelector('.drag-placeholder')).toBeNull()
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
 
     window.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
-    expect(document.querySelector('.drag-placeholder')).not.toBeNull()
-  })
-
-  test('通过 Placeholder anchor-size 保留 Grid stretch 得到的外框', () => {
-    const host = document.body.appendChild(document.createElement('div'))
-
-    dispose = render(() => (
-      <div
-        style={{
-          display: 'grid',
-          'grid-template-columns': 'minmax(0, 1fr)',
-          'grid-auto-rows': '96px',
-          width: '640px',
-        }}
-      >
-        <Piv
-          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
-          htmlProps={{ 'data-testid': 'grid-source' }}
-        >
-          Weather
-        </Piv>
-      </div>
-    ), host)
-
-    const source = document.querySelector<HTMLElement>('[data-testid="grid-source"]')!
-    const originalRect = source.getBoundingClientRect()
-    stubPointerCapture(source)
-    source.dispatchEvent(pointerEvent('pointerdown', 14, 20, 30))
-
-    const draggedRect = source.getBoundingClientRect()
-    const placeholder = document.querySelector<HTMLElement>('.drag-placeholder')!
-    expect(source.matches(':popover-open')).toBe(true)
-    expect(source.style.inlineSize).toContain('anchor-size(')
-    expect(Math.abs(draggedRect.left - originalRect.left)).toBeLessThan(0.1)
-    expect(Math.abs(draggedRect.top - originalRect.top)).toBeLessThan(0.1)
-    expect(Math.abs(draggedRect.width - originalRect.width)).toBeLessThan(0.1)
-    expect(Math.abs(draggedRect.height - originalRect.height)).toBeLessThan(0.1)
-    expect(Math.abs(placeholder.getBoundingClientRect().width - originalRect.width))
-      .toBeLessThan(0.1)
-    expect(Math.abs(placeholder.getBoundingClientRect().height - originalRect.height))
-      .toBeLessThan(0.1)
-
-    window.dispatchEvent(pointerEvent('pointerup', 14, 20, 30))
+    expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
   })
 
   test('pointercancel 与 lostpointercapture 都会恢复 source', () => {
@@ -243,43 +126,12 @@ describe('draggable', () => {
 
     window.dispatchEvent(pointerEvent('pointercancel', 9, 30, 40))
     expect(getComputedStyle(source).translate).toBe('none')
-    expect(document.querySelector('.drag-placeholder')).toBeNull()
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
 
     source.dispatchEvent(pointerEvent('pointerdown', 10, 10, 10))
     source.dispatchEvent(pointerEvent('lostpointercapture', 10, 10, 10))
     expect(getComputedStyle(source).translate).toBe('none')
-    expect(document.querySelector('.drag-placeholder')).toBeNull()
-  })
-
-  test('滚动时 Placeholder 跟随原布局，Top Layer source 留在视口坐标', () => {
-    const scroller = document.body.appendChild(document.createElement('div'))
-    scroller.style.blockSize = '80px'
-    scroller.style.overflow = 'auto'
-
-    dispose = render(() => (
-      <div style={{ height: '300px', 'padding-top': '120px' }}>
-        <Piv
-          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
-          style={{ width: '120px', height: '40px' }}
-          htmlProps={{ 'data-testid': 'source' }}
-        />
-      </div>
-    ), scroller)
-
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
-    stubPointerCapture(source)
-    source.dispatchEvent(pointerEvent('pointerdown', 11, 10, 10))
-    window.dispatchEvent(pointerEvent('pointermove', 11, 30, 40))
-
-    const placeholder = document.querySelector<HTMLElement>('.drag-placeholder')!
-    const sourceTop = source.getBoundingClientRect().top
-    const placeholderTop = placeholder.getBoundingClientRect().top
-
-    scroller.scrollTop = 40
-    scroller.dispatchEvent(new Event('scroll'))
-
-    expect(Math.abs(source.getBoundingClientRect().top - sourceTop)).toBeLessThan(0.1)
-    expect(Math.abs(placeholder.getBoundingClientRect().top - (placeholderTop - 40))).toBeLessThan(0.1)
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
   })
 
   test('source 已占用 individual translate 时拒绝开始拖动', () => {
@@ -297,7 +149,7 @@ describe('draggable', () => {
     expect(() => pointerDrag.start(pointerEvent('pointerdown', 12, 10, 10)))
       .toThrowError('Draggable 来源元素不能预先占用 CSS translate')
     expect(source.hasAttribute('data-dragging')).toBe(false)
-    expect(document.querySelector('.drag-placeholder')).toBeNull()
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
   })
 
   test('source 已承担 Popover 时拒绝占用它的 Top Layer 状态', () => {
@@ -315,7 +167,7 @@ describe('draggable', () => {
     expect(() => pointerDrag.start(pointerEvent('pointerdown', 13, 10, 10)))
       .toThrowError('Top Layer 元素不能同时承担 Popover')
     expect(source.getAttribute('popover')).toBe('manual')
-    expect(document.querySelector('.drag-placeholder')).toBeNull()
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
   })
 })
 
@@ -325,17 +177,6 @@ function stubPointerCapture(element: HTMLElement): void {
     hasPointerCapture: vi.fn(() => true),
     releasePointerCapture: vi.fn(),
   })
-}
-
-function readVisualStyle(element: HTMLElement) {
-  const style = getComputedStyle(element)
-  return {
-    display: style.display,
-    border: style.border,
-    padding: style.padding,
-    backgroundColor: style.backgroundColor,
-    color: style.color,
-  }
 }
 
 function pointerEvent(

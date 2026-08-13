@@ -11,7 +11,7 @@ import {
   type InternalDrag,
   type InternalDropMatch,
 } from '../dragAndDrop'
-import { enterDragPresentation, type DragPresentation } from './dragPresentation'
+import { enterTopLayer, type TopLayerEntry } from '../topLayer'
 
 export interface PointerDragOptions {
   source: HTMLElement
@@ -40,7 +40,7 @@ interface PointerInteraction {
 
 interface ActiveDrag {
   drag: InternalDrag
-  presentation: DragPresentation
+  topLayer: TopLayerEntry
   translation: DragPoint
 }
 
@@ -111,7 +111,8 @@ class PointerDragSession implements PointerDrag {
       ? interaction.dropMatch.target
       : undefined
 
-    // 先恢复 source 并释放 Placeholder、悬停和 Pointer Capture；onDrop 随后可以立即改动 DOM。
+    // 先恢复 source 并释放 Top Layer Anchor、悬停和 Pointer Capture；
+    // onDrop 随后可以立即改动 DOM。
     this.clear()
     acceptedTarget?.drop(active.drag, event)
   }
@@ -128,9 +129,9 @@ class PointerDragSession implements PointerDrag {
   }
 
   private activate(interaction: PointerInteraction, point: DragPoint): void {
-    let presentation: DragPresentation
+    let topLayer: TopLayerEntry
     try {
-      presentation = enterDragPresentation(this.options.source)
+      topLayer = enterTopLayer(this.options.source)
     } catch (error) {
       this.clear()
       throw error
@@ -138,7 +139,7 @@ class PointerDragSession implements PointerDrag {
 
     interaction.active = {
       drag: createInternalDrag(this.options.source, this.options.payload),
-      presentation,
+      topLayer,
       translation: { x: 0, y: 0 },
     }
     this.options.onDraggingChange(true)
@@ -202,7 +203,7 @@ class PointerDragSession implements PointerDrag {
     interaction.events.abort()
 
     interaction.dropMatch?.target.leave()
-    interaction.active?.presentation.leave()
+    interaction.active?.topLayer.leave()
     this.options.source.style.removeProperty('--drag-x')
     this.options.source.style.removeProperty('--drag-y')
 

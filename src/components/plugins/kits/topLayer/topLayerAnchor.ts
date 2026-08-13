@@ -1,10 +1,11 @@
 /**
- * Drag 原位置的空几何标记。
+ * Top Layer 提升前留在原布局中的几何 Anchor。
  *
- * 它在 source 进入 Top Layer 后接替原来的布局槽位，不复制组件内容、身份或状态。
+ * 原元素进入 Top Layer 后不再占据普通布局槽位；Anchor 接替该槽位，并把
+ * 布局计算得到的 border-box 尺寸提供给提升后的原元素。
  */
-export interface DragPlaceholder {
-  anchorName: string
+export interface TopLayerAnchor {
+  name: string
   remove(): void
 }
 
@@ -30,34 +31,34 @@ const layoutProperties = [
   'grid-row-end',
 ] as const
 
-export function createDragPlaceholder(source: HTMLElement): DragPlaceholder {
+export function createTopLayerAnchor(source: HTMLElement): TopLayerAnchor {
   const ownerDocument = source.ownerDocument
   const ownerWindow = ownerDocument.defaultView
-  if (!ownerWindow) throw new Error('Draggable 来源元素必须属于浏览器窗口')
+  if (!ownerWindow) throw new Error('Top Layer 元素必须属于浏览器窗口')
 
   const sourceStyle = ownerWindow.getComputedStyle(source)
   const sourceSize = readBorderBoxSize(source, sourceStyle)
-  const placeholder = ownerDocument.createElement('div')
-  const anchorName = `--uikit-drag-placeholder-${++anchorSequence}`
+  const anchor = ownerDocument.createElement('div')
+  const name = `--uikit-top-layer-anchor-${++anchorSequence}`
 
-  placeholder.className = 'drag-placeholder'
-  placeholder.setAttribute('aria-hidden', 'true')
-  placeholder.inert = true
-  placeholder.style.setProperty('anchor-name', anchorName)
-  copyComputedProperties(sourceStyle, placeholder.style, layoutProperties)
-  placeholder.style.boxSizing = 'border-box'
-  placeholder.style.inlineSize = `${sourceSize.inline}px`
-  placeholder.style.blockSize = `${sourceSize.block}px`
-  placeholder.style.borderTopLeftRadius = sourceStyle.borderTopLeftRadius
-  placeholder.style.borderTopRightRadius = sourceStyle.borderTopRightRadius
-  placeholder.style.borderBottomRightRadius = sourceStyle.borderBottomRightRadius
-  placeholder.style.borderBottomLeftRadius = sourceStyle.borderBottomLeftRadius
-  source.before(placeholder)
+  anchor.className = 'top-layer-anchor'
+  anchor.setAttribute('aria-hidden', 'true')
+  anchor.inert = true
+  anchor.style.setProperty('anchor-name', name)
+  copyComputedProperties(sourceStyle, anchor.style, layoutProperties)
+  anchor.style.boxSizing = 'border-box'
+  anchor.style.inlineSize = `${sourceSize.inline}px`
+  anchor.style.blockSize = `${sourceSize.block}px`
+  anchor.style.borderTopLeftRadius = sourceStyle.borderTopLeftRadius
+  anchor.style.borderTopRightRadius = sourceStyle.borderTopRightRadius
+  anchor.style.borderBottomRightRadius = sourceStyle.borderBottomRightRadius
+  anchor.style.borderBottomLeftRadius = sourceStyle.borderBottomLeftRadius
+  source.before(anchor)
 
   return {
-    anchorName,
+    name,
     remove() {
-      placeholder.remove()
+      anchor.remove()
     },
   }
 }

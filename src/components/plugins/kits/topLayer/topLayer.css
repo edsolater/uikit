@@ -1,0 +1,19 @@
+@layer reset {
+  :where([data-top-layer='true'][popover]) {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+  }
+}
+
+@layer uikit {
+  [data-top-layer='true'] {
+    box-shadow: var(--top-layer-shadow, 0 18px 42px rgb(0 0 0 / 28%));
+  }
+
+  .top-layer-anchor {
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+}

@@ -154,7 +154,7 @@ describe('droppable', () => {
               const { source } = context
               cleanedBeforeDrop = !source.hasAttribute('data-dragging')
                 && getComputedStyle(source).translate === 'none'
-                && document.querySelector('.drag-placeholder') === null
+                && document.querySelector('.top-layer-anchor') === null
               disposeTree()
             },
           })}
