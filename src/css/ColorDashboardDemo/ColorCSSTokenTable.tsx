@@ -3,7 +3,7 @@
  * 它负责扫描当前页面的颜色 CSS 变量名，并整理成颜色 token 表格行。
  */
 import { onMount } from 'solid-js'
-import { Piv, Table } from '../../components'
+import { Piv, Table } from '../../components/kits'
 import { createState } from '../../hooks'
 
 const colorNumberFormatter = new Intl.NumberFormat('en-US', {

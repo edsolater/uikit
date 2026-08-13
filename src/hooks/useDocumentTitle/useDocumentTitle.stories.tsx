@@ -3,7 +3,7 @@
  * 这里验证浏览器标题同步行为，不扩展 hook 职责。
  */
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
-import { Button } from '../../components/Button'
+import { Button } from '../../components/kits/Button'
 import { createState, val } from '../createState'
 import { useDocumentTitle } from './useDocumentTitle'
 

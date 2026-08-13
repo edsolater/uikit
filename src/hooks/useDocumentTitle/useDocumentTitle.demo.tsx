@@ -2,7 +2,7 @@
  * useDocumentTitle 的本地 demo。
  * 它只服务本地 HTML 验证，不参与 hooks 正式导出。
  */
-import { Button } from '../../components/Button'
+import { Button } from '../../components/kits/Button'
 import { createState, val } from '../createState'
 import { useDocumentTitle } from './useDocumentTitle'
 

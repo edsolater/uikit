@@ -15,7 +15,7 @@
 - `Button` 的核心不是“可点击外观”，而是“动作信息”。
 - `Button` 把动作内容、动作声量、动作性质、按钮尺寸和外部状态收成一个原生 `button`。
 - `Button` 的顶层 API 优先表达界面语义；原生表单语义通过 `htmlProps` 明确进入。
-- AI 选择组件时应先读 [Button 设计规格](../../src/components/Button/spec.md)。
+- AI 选择组件时应先读 [Button 设计规格](../../src/components/kits/Button/spec.md)。
 
 ## 使用判断
 

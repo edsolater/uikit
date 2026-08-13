@@ -1,1 +1,0 @@
-export * from './traits/tabular-num' // 代表功能插件
