@@ -4,7 +4,7 @@
  */
 import { type MayArray, type ID } from '@edsolater/fnkit'
 import { createRenderEffect } from 'solid-js'
-import { val, type Source } from '../../../hooks'
+import { val, type Source } from '../../hooks'
 
 /** 响应式维护 Piv 根 DOM 的唯一 id；空值表示当前没有 id。 */
 export function consumeId(element: HTMLElement, readId: () => Source<MayArray<ID> | undefined> | undefined) {

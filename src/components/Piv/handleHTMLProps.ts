@@ -5,7 +5,7 @@
  */
 import { isTruthy, toArray } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
-import { val, type MayArraySource } from '../../../hooks'
+import { val, type MayArraySource } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
 import {
   setSingleDomProp,

@@ -5,7 +5,7 @@
  */
 import { type MayArray, type ID } from '@edsolater/fnkit'
 import { children, Show, type JSX, type JSXElement } from 'solid-js'
-import { val, type Source } from '../../../hooks'
+import { val, type Source } from '../../hooks'
 import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,

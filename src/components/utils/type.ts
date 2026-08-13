@@ -1,5 +1,5 @@
 import type { AnyRecord } from '@edsolater/fnkit'
-import type { PivPlugin } from '../kits/Piv'
+import type { PivPlugin } from '../Piv'
 
 export type ValidProps = Record<string, any>
 

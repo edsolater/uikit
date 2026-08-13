@@ -3,7 +3,7 @@
 import { createSignal } from 'solid-js'
 import { render } from 'solid-js/web'
 import { describe, expect, test } from 'vitest'
-import { createState } from '../../../hooks/createState'
+import { createState } from '../../hooks/createState'
 import { Piv } from './Piv'
 import { createPivPlugin } from './plugin/helpers'
 

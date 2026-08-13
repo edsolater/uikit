@@ -1,4 +1,4 @@
-import { createPivPlugin } from '../kits/Piv'
+import { createPivPlugin } from '../Piv'
 import { toStateView, type Source } from '../../hooks'
 import type { PluginManager } from './type'
 

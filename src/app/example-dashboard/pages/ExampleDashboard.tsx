@@ -5,7 +5,7 @@
  */
 import { ButtonDemo } from '../../../components/kits/Button/Button.demo'
 import { InputDemo } from '../../../components/kits/Input/Input.demo'
-import { PivStructureDemo } from '../../../components/kits/Piv/PivStructure.demo'
+import { PivStructureDemo } from '../../../components/Piv/PivStructure.demo'
 import { PopoverDemo } from '../../../components/kits/Popover/Popover.demo'
 import { ColorDashboardDemo } from '../../../css/ColorDashboardDemo'
 import { UseDocumentTitleDemo } from '../../../hooks/useDocumentTitle/useDocumentTitle.demo'

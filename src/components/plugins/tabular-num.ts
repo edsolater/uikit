@@ -18,8 +18,8 @@
  * trait plugin 负责把语义能力翻译成真实 DOM class。
  * ```
  */
-import type { PivTag } from '../kits/Piv/domMap'
-import type { PivPlugin } from '../kits/Piv'
+import type { PivTag } from '../Piv/domMap'
+import type { PivPlugin } from '../Piv'
 import './tabular-num.css'
 
 export const tabularNum: PivPlugin<PivTag> = () => ({

@@ -5,7 +5,7 @@
 import { createEffect, mapArray, type Accessor, type JSX } from 'solid-js'
 import { createDomRef } from '../../hooks/domRef'
 import { createState, val } from '../../hooks/createState'
-import { Piv } from './Piv'
+import { Piv } from '../Piv'
 
 export type Read<T> = Accessor<T>
 

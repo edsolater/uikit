@@ -1,5 +1,5 @@
 import { createStatusRecord } from '../utils/status'
-import { createPivPlugin } from '../kits/Piv'
+import { createPivPlugin } from '../Piv'
 import { hoverable } from './hoverable'
 
 /**

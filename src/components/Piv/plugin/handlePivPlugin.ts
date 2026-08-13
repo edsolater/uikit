@@ -4,7 +4,7 @@
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
  */
 import { mergeMayArray, toArray, mayMap } from '@edsolater/fnkit'
-import { val } from '../../../../hooks'
+import { val } from '../../../hooks'
 import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import { runPlugin, type PivPlugin } from './runPlugin'

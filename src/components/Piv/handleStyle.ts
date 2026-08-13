@@ -5,7 +5,7 @@
  */
 import { isTruthy, toArray } from '@edsolater/fnkit'
 import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
-import { val, type MayArraySource, type Source } from '../../../hooks'
+import { val, type MayArraySource, type Source } from '../../hooks'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleRecord = {

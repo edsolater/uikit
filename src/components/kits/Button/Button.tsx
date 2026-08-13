@@ -10,8 +10,8 @@
 import { clickable } from '../../plugins'
 import { type StatusInput } from '../../utils/status'
 import { type Source } from '../../../hooks'
-import { Piv, type PivProps } from '../Piv'
-import type { EventListenerInput } from '../Piv/on/handleOn'
+import { Piv, type PivProps } from '../../Piv'
+import type { EventListenerInput } from '../../Piv/on/handleOn'
 import './Button.css'
 import { createKitProfile, type ProfileProps } from './createKitProfile'
 
