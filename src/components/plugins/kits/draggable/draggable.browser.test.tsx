@@ -47,13 +47,12 @@ describe('draggable', () => {
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 7, 20, 30))
 
-    const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
     const sourceRect = source.getBoundingClientRect()
     expect(source.draggable).toBe(false)
     expect(source.getAttribute('data-dragging')).toBe('true')
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.matches(':popover-open')).toBe(true)
-    expect(source.getAttribute('data-top-layer')).toBe('true')
+    expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
     expect(document.querySelectorAll('[data-testid="source"]')).toHaveLength(1)
     expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
@@ -63,7 +62,6 @@ describe('draggable', () => {
     expect(getComputedStyle(source).visibility).not.toBe('hidden')
     expect(getComputedStyle(source).pointerEvents).toBe('none')
     expect(getComputedStyle(source).boxShadow).not.toBe('none')
-    expect(anchor.nextElementSibling).toBe(source)
     expect(Math.abs(sourceRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.width - originalRect.width)).toBeLessThan(0.1)
@@ -77,13 +75,12 @@ describe('draggable', () => {
     expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
 
     window.dispatchEvent(pointerEvent('pointerup', 7, 52, 74))
-    expect(document.querySelector('.top-layer-anchor')).toBeNull()
     expect(source.style.getPropertyValue('--drag-x')).toBe('')
     expect(source.style.getPropertyValue('--drag-y')).toBe('')
     expect(getComputedStyle(source).translate).toBe('none')
     expect(source.hasAttribute('data-dragging')).toBe(false)
     expect(source.hasAttribute('popover')).toBe(false)
-    expect(source.hasAttribute('data-top-layer')).toBe(false)
+    expect(source.classList.contains('top-layer')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
     expect(val(controller.dragging)).toBe(false)
   })
@@ -102,10 +99,12 @@ describe('draggable', () => {
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
     window.dispatchEvent(pointerEvent('pointermove', 8, 3, 4))
-    expect(document.querySelector('.top-layer-anchor')).toBeNull()
+    expect(source.getAttribute('data-dragging')).not.toBe('true')
+    expect(source.classList.contains('top-layer')).toBe(false)
 
     window.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
-    expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
+    expect(source.getAttribute('data-dragging')).toBe('true')
+    expect(source.classList.contains('top-layer')).toBe(true)
   })
 
   test('pointercancel 与 lostpointercapture 都会恢复 source', () => {
@@ -126,12 +125,12 @@ describe('draggable', () => {
 
     window.dispatchEvent(pointerEvent('pointercancel', 9, 30, 40))
     expect(getComputedStyle(source).translate).toBe('none')
-    expect(document.querySelector('.top-layer-anchor')).toBeNull()
+    expect(source.classList.contains('top-layer')).toBe(false)
 
     source.dispatchEvent(pointerEvent('pointerdown', 10, 10, 10))
     source.dispatchEvent(pointerEvent('lostpointercapture', 10, 10, 10))
     expect(getComputedStyle(source).translate).toBe('none')
-    expect(document.querySelector('.top-layer-anchor')).toBeNull()
+    expect(source.classList.contains('top-layer')).toBe(false)
   })
 
   test('source 已占用 individual translate 时拒绝开始拖动', () => {
@@ -149,7 +148,7 @@ describe('draggable', () => {
     expect(() => pointerDrag.start(pointerEvent('pointerdown', 12, 10, 10)))
       .toThrowError('Draggable 来源元素不能预先占用 CSS translate')
     expect(source.hasAttribute('data-dragging')).toBe(false)
-    expect(document.querySelector('.top-layer-anchor')).toBeNull()
+    expect(source.classList.contains('top-layer')).toBe(false)
   })
 
   test('source 已承担 Popover 时拒绝占用它的 Top Layer 状态', () => {
@@ -167,7 +166,7 @@ describe('draggable', () => {
     expect(() => pointerDrag.start(pointerEvent('pointerdown', 13, 10, 10)))
       .toThrowError('Top Layer 元素不能同时承担 Popover')
     expect(source.getAttribute('popover')).toBe('manual')
-    expect(document.querySelector('.top-layer-anchor')).toBeNull()
+    expect(source.classList.contains('top-layer')).toBe(false)
   })
 })
 

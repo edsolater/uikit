@@ -154,7 +154,8 @@ describe('droppable', () => {
               const { source } = context
               cleanedBeforeDrop = !source.hasAttribute('data-dragging')
                 && getComputedStyle(source).translate === 'none'
-                && document.querySelector('.top-layer-anchor') === null
+                && !source.classList.contains('top-layer')
+                && !source.matches(':popover-open')
               disposeTree()
             },
           })}

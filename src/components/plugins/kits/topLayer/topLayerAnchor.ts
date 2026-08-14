@@ -1,8 +1,8 @@
 /**
- * Top Layer 提升前留在原布局中的几何 Anchor。
+ * Top Layer 提升前留在原布局中的影子，同时也是尺寸 Anchor。
  *
- * 原元素进入 Top Layer 后不再占据普通布局槽位；Anchor 接替该槽位，并把
- * 布局计算得到的 border-box 尺寸提供给提升后的原元素。
+ * 原元素进入 Top Layer 后不再占据普通布局槽位；影子接替该槽位，并通过
+ * CSS Anchor Positioning 把布局计算得到的 border-box 尺寸提供给原元素。
  */
 export interface TopLayerAnchor {
   name: string
@@ -31,6 +31,19 @@ const layoutProperties = [
   'grid-row-end',
 ] as const
 
+/** 影子直接继承原元素算出的轮廓，不为 Top Layer 另造固定形状。 */
+const shapeProperties = [
+  'border-top-left-radius',
+  'border-top-right-radius',
+  'border-bottom-right-radius',
+  'border-bottom-left-radius',
+  'corner-top-left-shape',
+  'corner-top-right-shape',
+  'corner-bottom-right-shape',
+  'corner-bottom-left-shape',
+  'border-shape',
+] as const
+
 export function createTopLayerAnchor(source: HTMLElement): TopLayerAnchor {
   const ownerDocument = source.ownerDocument
   const ownerWindow = ownerDocument.defaultView
@@ -49,10 +62,7 @@ export function createTopLayerAnchor(source: HTMLElement): TopLayerAnchor {
   anchor.style.boxSizing = 'border-box'
   anchor.style.inlineSize = `${sourceSize.inline}px`
   anchor.style.blockSize = `${sourceSize.block}px`
-  anchor.style.borderTopLeftRadius = sourceStyle.borderTopLeftRadius
-  anchor.style.borderTopRightRadius = sourceStyle.borderTopRightRadius
-  anchor.style.borderBottomRightRadius = sourceStyle.borderBottomRightRadius
-  anchor.style.borderBottomLeftRadius = sourceStyle.borderBottomLeftRadius
+  copyComputedProperties(sourceStyle, anchor.style, shapeProperties)
   source.before(anchor)
 
   return {

@@ -1,5 +1,5 @@
 /**
- * Top Layer Plugin：保持原有几何，把一个 Piv 的原始 DOM 提升到浏览器 Top Layer。
+ * Top Layer：保持原有几何，把一个原始 DOM 提升到浏览器 Top Layer。
  *
  * 【职责边界】拥有一次提升的 Anchor、基础位置、尺寸、提升视觉和完整恢复；
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
@@ -8,17 +8,23 @@ import { onCleanup, onMount } from 'solid-js'
 import { createToggle, type State } from '../../../../hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
+import { registerCSS } from '../../utils/cssRegisterer'
 import { createTopLayerAnchor } from './topLayerAnchor'
-import './topLayer.css'
+import topLayerCSS from './topLayer.css?raw'
 
-export interface TopLayerEntry {
-  leave(): void
-}
+const topLayerClass = 'top-layer'
+const topLayerCSSPath = 'components/plugins/kits/topLayer/topLayer.css'
 
 export interface TopLayerController {
   /** 当前元素是否已经进入 Top Layer。 */
   active: State<boolean>
+  /** 进入 Top Layer；重复调用不会创建第二次提升事务。 */
   enter(): void
+  /** 退出 Top Layer 并恢复原状态；尚未进入时调用没有副作用。 */
+  leave(): void
+}
+
+interface TopLayerSession {
   leave(): void
 }
 
@@ -41,12 +47,34 @@ const topLayerGeometryProperties = [
 ] as const
 
 /**
- * 提升现有元素，并交回本次提升事务的退出入口。
+ * 为现有元素创建一个独立的 Top Layer 控制器。
  *
- * Anchor 留在原布局中提供尺寸；原元素保持提升瞬间的视口位置。调用方只需
- * 决定为何提升，以及是否在这个基础位置上继续施加业务位移。
+ * 控制器创建时不改变元素；调用 enter() 才开始完整提升事务。Drag 等原子
+ * 能力直接使用此入口，Plugin 只在它外面增加 Piv 生命周期包装。
  */
-export function enterTopLayer(element: HTMLElement): TopLayerEntry {
+export function createTopLayerController(element: HTMLElement): TopLayerController {
+  registerCSS(element.ownerDocument, topLayerCSSPath, topLayerCSS)
+
+  const [active, activeControl] = createToggle(false)
+  let session: TopLayerSession | undefined
+
+  return {
+    active,
+    enter() {
+      if (session) return
+      session = startTopLayerSession(element)
+      activeControl.turnOn()
+    },
+    leave() {
+      session?.leave()
+      session = undefined
+      activeControl.turnOff()
+    },
+  }
+}
+
+/** 开始一次不可重入的提升事务；公开调用统一经过 TopLayerController。 */
+function startTopLayerSession(element: HTMLElement): TopLayerSession {
   if (element.hasAttribute('popover')) {
     throw new Error('Top Layer 元素不能同时承担 Popover')
   }
@@ -61,14 +89,14 @@ export function enterTopLayer(element: HTMLElement): TopLayerEntry {
 
   applyTopLayerGeometry(element.style, originalRect, anchor.name)
   element.setAttribute('popover', 'manual')
-  element.setAttribute('data-top-layer', 'true')
+  element.classList.add(topLayerClass)
 
   try {
     element.showPopover()
     alignRenderedBox(element, originalRect)
   } catch (error) {
     element.removeAttribute('popover')
-    element.removeAttribute('data-top-layer')
+    element.classList.remove(topLayerClass)
     restoreInlineDeclarations(element.style, previousDeclarations)
     anchor.remove()
     throw error
@@ -82,7 +110,7 @@ export function enterTopLayer(element: HTMLElement): TopLayerEntry {
       active = false
       if (element.matches(':popover-open')) element.hidePopover()
       element.removeAttribute('popover')
-      element.removeAttribute('data-top-layer')
+      element.classList.remove(topLayerClass)
       restoreInlineDeclarations(element.style, previousDeclarations)
       anchor.remove()
     },
@@ -135,41 +163,37 @@ function restoreInlineDeclarations(
 
 export const topLayer = createPlugin<undefined, TopLayerController, PivTag>(() => {
   const [active, activeControl] = createToggle(false)
-  let element: HTMLElement | undefined
-  let entry: TopLayerEntry | undefined
-  let mounted = false
+  let elementController: TopLayerController | undefined
   let requested = true
 
+  // Plugin Controller 是纯控制器的生命周期适配层。它只记住挂载前的调用意图，
+  // 元素可用后，所有实际提升操作都转发给 createTopLayerController() 的结果。
   const controller: TopLayerController = {
     active,
     enter() {
       requested = true
-      if (!mounted || !element || entry) return
-      entry = enterTopLayer(element)
+      if (!elementController) return
+      elementController.enter()
       activeControl.turnOn()
     },
     leave() {
       requested = false
-      entry?.leave()
-      entry = undefined
+      elementController?.leave()
       activeControl.turnOff()
     },
   }
 
   return {
     controller,
-    plugin: ({ element: currentElement }) => {
-      element = currentElement
+    plugin: ({ element }) => {
       onMount(() => {
-        mounted = true
+        elementController = createTopLayerController(element)
         if (requested) controller.enter()
       })
 
       onCleanup(() => {
-        entry?.leave()
-        entry = undefined
-        element = undefined
-        mounted = false
+        elementController?.leave()
+        elementController = undefined
         activeControl.turnOff()
       })
 

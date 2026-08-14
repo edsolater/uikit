@@ -1,2 +1,2 @@
-export { enterTopLayer, topLayer } from './topLayer'
-export type { TopLayerController, TopLayerEntry } from './topLayer'
+export { createTopLayerController, topLayer } from './topLayer'
+export type { TopLayerController } from './topLayer'

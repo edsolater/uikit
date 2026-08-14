@@ -20,7 +20,7 @@ Drag and Drop 是 `draggable` 与 `droppable` 发生的一次协作，不是包�
 
 - 页面内部拖动使用 Pointer Events 与 Pointer Capture，不设置原生 `draggable`，也不使用 `DataTransfer.setDragImage()`。
 - 指针越过激活距离后，来源 DOM 的渲染 box 通过 Popover API 进入浏览器 Top Layer，再使用 individual `translate` 跟随指针；DOM 所属关系、组件状态和事件不迁移。
-- Top Layer 提升 source 时，在原父级创建空几何 Anchor 接替布局槽位；Anchor 留在普通页面层，并通过 CSS Anchor Positioning 把 Grid/Flex 已经算好的 border-box 尺寸提供给 source。
+- Top Layer 提升 source 时，在原父级自动留下原位影子；影子本身就是 Anchor，接替布局槽位，并通过 CSS Anchor Positioning 把 Grid/Flex 已经算好的 border-box 尺寸提供给 source。
 - Top Layer source 使用 `anchor-size()`读取 Anchor 尺寸，并以激活瞬间的视口坐标作为基础位置；`draggable` 只在此基础上追加 individual `translate`。
 - Pointer 命中通过来源元素所属文档的 `elementsFromPoint()` 找到 droppable，并排除 source 的 composed 子树；Scope 与 `accepts()` 共同决定能否放下。
 - 只有系统文件等从浏览器窗口外进入的材料继续使用原生 `DragEvent` 与 `DataTransfer`。
@@ -135,7 +135,7 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 ## 领域边界
 
 - `scope` 只拥有范围身份、能力匹配、嵌套关系和越界判断，不拥有拖动事件、`payload` 或放下结果。
-- `draggable` 只拥有 Pointer 拖动会话、位移、拖动状态、Anchor 的拖动原位轮廓和 `payload`；它不拥有 Top Layer 的 Anchor、几何、阴影、恢复协议或接收端。
+- `draggable` 只拥有 Pointer 拖动会话、位移、拖动状态和 `payload`；它不拥有也不认识 Top Layer 的影子 Anchor、几何、视觉、恢复协议或接收端。
 - `droppable` 只拥有接收端的 DOM 能力、悬停与接受状态、放下读取和回调，不拥有拖动端。
 - Drag and Drop 的共同协议只连接 `draggable` 与 `droppable`，不能长成替二者提供 `source()`、`target()` 的总对象。
 - 拖拽排序是以后可能建立的独立能力。`before`、`after`、重排规则和集合写入不进入基础 Drag and Drop。
@@ -150,7 +150,7 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 
 ## 本地 Demo
 
-- [Draggable Demo](../../src/components/plugins/kits/draggable/draggable.demo.tsx)：独立查看原始 source 跟手移动、提升阴影与 Anchor 原位轮廓。
+- [Draggable Demo](../../src/components/plugins/kits/draggable/draggable.demo.tsx)：独立查看原始 source 跟手移动，以及 Top Layer 自动留下的原位影子 Anchor。
 - [Droppable Demo](../../src/components/plugins/kits/droppable/droppable.demo.tsx)：接收内部 Pointer payload，也接收系统外部文件。
 - [Scope Demo](../../src/components/plugins/kits/scope/scope.demo.tsx)：验证同一 Scope 内允许、跨 Scope 拒绝。
 

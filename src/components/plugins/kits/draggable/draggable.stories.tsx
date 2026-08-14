@@ -8,4 +8,4 @@ const meta: Meta<typeof DraggableDemo> = {
 
 export default meta
 
-export const SourceAndAnchor: StoryObj<typeof meta> = {}
+export const SourceInTopLayer: StoryObj<typeof meta> = {}

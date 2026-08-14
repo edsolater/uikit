@@ -9,9 +9,4 @@
       will-change: translate;
     }
   }
-
-  .top-layer-anchor:has(+ [data-plugin~='draggable'][data-dragging='true']) {
-    border: 2px dashed var(--color-line);
-    background: color-mix(in oklab, var(--color-surface-low) 72%, transparent);
-  }
 }

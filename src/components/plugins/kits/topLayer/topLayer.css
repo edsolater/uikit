@@ -1,5 +1,5 @@
 @layer reset {
-  :where([data-top-layer='true'][popover]) {
+  :where(.top-layer) {
     border: 0;
     padding: 0;
     background: transparent;
@@ -8,12 +8,12 @@
 }
 
 @layer uikit {
-  [data-top-layer='true'] {
+  .top-layer {
     box-shadow: var(--top-layer-shadow, 0 18px 42px rgb(0 0 0 / 28%));
   }
 
   .top-layer-anchor {
-    box-sizing: border-box;
     pointer-events: none;
+    border: 2px dashed var(--color-line);
   }
 }

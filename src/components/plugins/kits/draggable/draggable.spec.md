@@ -13,7 +13,7 @@ const [plugin, controller] = usePlugin(draggable, { payload: weather })
 
 开始拖动后，`draggable` 使用独立 `topLayer` 领域的命令式入口。Top Layer 建立原布局 Anchor，并维护来源 DOM 提升前的基础位置、border-box 尺寸和提升阴影；`draggable` 只在这个基础位置上使用 individual `translate` 跟随指针。source 的 DOM 父子关系、组件身份、Plugin、Controller 和状态都不迁移。
 
-Top Layer Anchor 参与原布局并接替 source 的尺寸、外边距、Flex/Grid 位置和圆角，只表达原位置，不复制 children、DOM 身份或状态。它以会话内唯一的 `anchor-name` 暴露布局后的 border box，提升后的 source 使用 `anchor-size()`取得尺寸，不在 JavaScript 中复制 `width` 或 `height`。Drag 只为这个 Anchor 增加原位虚线轮廓，不创建或维护 Anchor 的几何。
+Top Layer 自动留下原位影子，这个影子同时就是 Anchor。它参与原布局并接替 source 的尺寸、外边距、Flex/Grid 位置和圆角，以唯一 `anchor-name` 暴露布局后的 border box；提升后的 source 使用 `anchor-size()`取得尺寸。影子的 DOM、几何、视觉和生命周期全部由 Top Layer 管理，Drag 不认识其内部结构。
 
 source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-index` 跨 stacking context 比较层级。`anchor-size()`只负责尺寸，不使用 `anchor()`持续绑定位置，因此滚动原容器时 Anchor 随布局移动，source 仍留在指针所在的视口坐标。一次会话按照 `start → moving → end / cancel` 推进。
 
@@ -33,18 +33,18 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 ## Demo
 
-[draggable.demo.tsx](draggable.demo.tsx) 验收原始 source 的跟手位移与 Top Layer Anchor 原位轮廓。与接收端的组合及系统文件拖入见 [Droppable Demo](../droppable/droppable.demo.tsx)。
+[draggable.demo.tsx](draggable.demo.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [Droppable Demo](../droppable/droppable.demo.tsx)。
 
 [draggable.stories.tsx](draggable.stories.tsx) 提供同一场景的独立 Storybook 入口。
 
 ## 边界
 
 - 不以原生 `draggable`、`dragstart`、`DataTransfer.setDragImage()` 或浏览器 ghost image 发起拖动；`dragstart` 监听只负责取消图片、链接等后代可能触发的原生 ghost drag。
-- 不复制来源组件；Top Layer Anchor 只表达原位置，不携带内容和状态。
+- 不创建或管理原位影子；影子 Anchor 是 Top Layer 提升事务的一部分。
 - 不把 source 搬到 `body` 或 Portal；Popover API 只把原 source 的渲染 box 提升到 Top Layer，从而越过祖先 `overflow` 和 stacking context。
 - 不读取或维护 source 的基础位置、尺寸与提升阴影；这些由 Top Layer 提升事务负责。
 - source 自身已经承担 Popover 时不开始拖动；第一版不让两个能力共享同一个 Popover 状态。
 - 不判断放下后的业务结果。
 - 不拥有 Scope。
-- 不拥有 Top Layer 的 Anchor、进入、退出和恢复协议，只决定本次 Drag 何时使用它。
+- 不拥有 Top Layer 的影子 Anchor、进入、退出和恢复协议，只决定本次 Drag 何时使用它。
 - 不实现排序插入位、before/after indicator 或集合写入；Top Layer Anchor 只表示提升前的原位置。

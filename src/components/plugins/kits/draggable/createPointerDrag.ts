@@ -11,7 +11,7 @@ import {
   type InternalDrag,
   type InternalDropMatch,
 } from '../dragAndDrop'
-import { enterTopLayer, type TopLayerEntry } from '../topLayer'
+import { createTopLayerController, type TopLayerController } from '../topLayer'
 
 export interface PointerDragOptions {
   source: HTMLElement
@@ -40,7 +40,7 @@ interface PointerInteraction {
 
 interface ActiveDrag {
   drag: InternalDrag
-  topLayer: TopLayerEntry
+  topLayer: TopLayerController
   translation: DragPoint
 }
 
@@ -111,7 +111,7 @@ class PointerDragSession implements PointerDrag {
       ? interaction.dropMatch.target
       : undefined
 
-    // 先恢复 source 并释放 Top Layer Anchor、悬停和 Pointer Capture；
+    // 先恢复 source 并结束 Top Layer、悬停和 Pointer Capture；
     // onDrop 随后可以立即改动 DOM。
     this.clear()
     acceptedTarget?.drop(active.drag, event)
@@ -129,9 +129,9 @@ class PointerDragSession implements PointerDrag {
   }
 
   private activate(interaction: PointerInteraction, point: DragPoint): void {
-    let topLayer: TopLayerEntry
+    const topLayer = createTopLayerController(this.options.source)
     try {
-      topLayer = enterTopLayer(this.options.source)
+      topLayer.enter()
     } catch (error) {
       this.clear()
       throw error
