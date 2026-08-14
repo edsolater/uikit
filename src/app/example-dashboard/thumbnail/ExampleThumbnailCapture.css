@@ -1,0 +1,29 @@
+.example-thumbnail-capture-stage {
+  inline-size: 800px;
+  block-size: 450px;
+  overflow: hidden;
+  padding: 32px;
+  background:
+    radial-gradient(circle at 12% 0%, oklch(74% 0.16 255 / 22%), transparent 46%),
+    radial-gradient(circle at 92% 12%, oklch(78% 0.12 315 / 16%), transparent 42%),
+    oklch(95.5% 0.018 262);
+}
+
+.example-thumbnail-capture-stage > :is(.panel, section) {
+  min-block-size: 100%;
+  align-content: start;
+  padding: 28px;
+}
+
+.example-thumbnail-capture-stage > section {
+  display: grid;
+  gap: var(--space-4);
+  overflow: hidden;
+  border-radius: var(--radius-4);
+  background: var(--color-surface);
+}
+
+.example-thumbnail-capture-stage > .panel > :is(.panel-head, p),
+.example-thumbnail-capture-stage > section > h2 {
+  display: none;
+}

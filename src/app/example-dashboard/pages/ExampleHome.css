@@ -1,0 +1,137 @@
+/*
+ * Example Home 的全部视觉入口。
+ * 条目、路由、缩略图和类别色来自 ExampleDashboard.tsx；这里仅负责排布与呈现。
+ */
+
+.example-home {
+  inline-size: min(100%, 1600px);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-8);
+}
+
+.example-home-head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.example-home-kicker {
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.example-home-head h1 {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.example-list {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.example-link {
+  position: relative;
+  min-inline-size: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  display: grid;
+  align-content: end;
+  border: var(--boundary-1) solid var(--color-line-soft);
+  border-radius: var(--radius-4);
+  background: var(--color-surface);
+  color: var(--color-fg-strong);
+  text-decoration: none;
+}
+
+.example-link-thumbnail {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  mask-image: linear-gradient(to bottom, black 0 42%, transparent 80% 100%);
+  /* background-image: linear-gradient(to bottom, black 0 42%, transparent 94%); */
+}
+
+.example-link-ribbon {
+  position: absolute;
+  z-index: 2;
+  border-top-right-radius: var(--radius-2);
+  border-bottom-right-radius: var(--radius-2);
+  inset-block-start: 0; 
+  inset-inline-start: 0;
+  padding: 5px 12px;
+  background: var(--example-category-color);
+  color: var(--color-fg-strong);
+  color: white;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.example-link-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-1);
+  padding: 48px var(--space-4) var(--space-4);
+  text-align: end;
+}
+
+.example-link :is(h2, p) {
+  margin: 0;
+  color: inherit;
+}
+
+.example-link h2 {
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  line-height: 1.15;
+  margin-block-end: 4px;
+}
+
+.example-link p {
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0.72;
+}
+
+.example-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1100px) {
+  .example-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .example-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  .example-link {
+    aspect-ratio: 1.25;
+  }
+
+  .example-link-ribbon {
+    inset-block-start: var(--space-2);
+    padding-inline: 10px;
+    font-size: 10px;
+  }
+
+  .example-link-copy {
+    padding: 40px var(--space-3) var(--space-3);
+  }
+}

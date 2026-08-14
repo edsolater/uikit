@@ -37,6 +37,7 @@
     "test": "bun run test:unit && bun run test:browser",
     "test:unit": "vitest run",
     "test:browser": "vitest run --config vitest.browser.config.ts",
+    "generate:example-thumbnails": "vitest run --config vitest.thumbnail.config.ts",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },

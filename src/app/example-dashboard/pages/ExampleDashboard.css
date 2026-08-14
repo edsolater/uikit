@@ -2,8 +2,9 @@
   min-block-size: 100svb;
   margin: 0;
   display: grid;
+  align-content: start;
   gap: var(--space-7);
-  padding: 64px clamp(var(--space-5), 5vw, 80px) 96px;
+  padding: 24px clamp(var(--space-5), 5vw, 80px) 96px;
   /* 背景层是页面的底色，不跟随卡片滚动；卡片通过半透明材质吃到这层色温。 */
   background:
     radial-gradient(circle at 14% -6%, oklch(74% 0.16 255 / 18%), transparent 38%),
@@ -159,27 +160,15 @@
   gap: var(--space-4);
 }
 
-.example-index,
-.example-detail {
+.example-detail,
+.example-missing {
   inline-size: min(100%, 1120px);
   margin-inline: auto;
   display: grid;
+}
+
+.example-detail {
   gap: var(--space-5);
-}
-
-.example-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-4);
-}
-
-.example-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.example-link:hover {
-  border-color: var(--color-accent);
 }
 
 .example-back {

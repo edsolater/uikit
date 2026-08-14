@@ -1,5 +1,5 @@
 /**
- * Example 浏览入口：索引只负责发现，URL 选中具体条目后才渲染详情。
+ * Example 浏览入口：主页只负责发现，URL 选中具体条目后才渲染详情。
  * Example 内容继续留在各自领域旁边，本文件只拥有目录和浏览历史。
  */
 import { createSignal, For, onCleanup, onMount, type Component } from 'solid-js'
@@ -13,25 +13,41 @@ import { ScopeExample } from '../../../components/plugins/kits/scope/scope.examp
 import { ColorDashboardExample } from '../../../css/ColorDashboardExample'
 import { UseDocumentTitleExample } from '../../../hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleDashboard.css'
+import './ExampleHome.css'
 
 interface ExampleEntry {
   id: string
   title: string
-  category: string
+  category: ExampleCategory
   summary: string
+  thumbnail: string
   content: Component
 }
 
+interface ExampleCategory {
+  label: string
+  color: string
+}
+
+/** 类别的识别色属于 Example Home 条目信息；CSS 只消费颜色，不推断业务类别。 */
+const exampleCategories = {
+  component: { label: 'Component', color: 'oklch(75% 0.07 110 / .9)' },
+  plugin: { label: 'Plugin', color: 'oklch(75% 0.07 100 / .9)' },
+  piv: { label: 'Piv', color: 'oklch(75% 0.07 55 / .9)' },
+  css: { label: 'CSS', color: 'oklch(75% 0.07 330 / .9)' },
+  hook: { label: 'Hook', color: 'oklch(75% 0.07 85 / .9)' },
+} satisfies Record<string, ExampleCategory>
+
 const exampleEntries: ExampleEntry[] = [
-  { id: 'button', title: 'Button', category: 'Component', summary: '动作声量、性质、状态与尺寸。', content: ButtonExample },
-  { id: 'input', title: 'Input', category: 'Component', summary: '单行输入值与校验状态。', content: InputExample },
-  { id: 'popover', title: 'Popover', category: 'Component', summary: '原生 Popover、Anchor Positioning 与边框形状。', content: PopoverExample },
-  { id: 'piv-structure', title: 'Piv Structure', category: 'Piv', summary: 'Plugin 对原始 DOM 结构的组合方式。', content: PivStructureExample },
-  { id: 'draggable', title: 'Draggable', category: 'Plugin', summary: '原始元素进入 Top Layer 后跟随指针。', content: DraggableExample },
-  { id: 'droppable', title: 'Droppable', category: 'Plugin', summary: '接收内部 payload 与系统外部文件。', content: DroppableExample },
-  { id: 'scope', title: 'Scope', category: 'Plugin', summary: '限制能力不能越过的组合边界。', content: ScopeExample },
-  { id: 'color', title: 'Color', category: 'CSS', summary: '主题模式与颜色 token。', content: ColorDashboardExample },
-  { id: 'use-document-title', title: 'useDocumentTitle', category: 'Hook', summary: '同步浏览器标题并读取当前结果。', content: UseDocumentTitleExample },
+  { id: 'button', title: 'Button', category: exampleCategories.component, summary: '动作声量、性质、状态与尺寸。', thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href, content: ButtonExample },
+  { id: 'input', title: 'Input', category: exampleCategories.component, summary: '单行输入值与校验状态。', thumbnail: new URL('../thumbnails/input.webp', import.meta.url).href, content: InputExample },
+  { id: 'popover', title: 'Popover', category: exampleCategories.component, summary: '原生浮层、锚点定位与边框形状。', thumbnail: new URL('../thumbnails/popover.webp', import.meta.url).href, content: PopoverExample },
+  { id: 'draggable', title: 'Draggable', category: exampleCategories.plugin, summary: 'Top Layer 提升、Anchor 与指针拖动。', thumbnail: new URL('../thumbnails/draggable.webp', import.meta.url).href, content: DraggableExample },
+  { id: 'droppable', title: 'Droppable', category: exampleCategories.plugin, summary: '内部 payload 与系统文件接收。', thumbnail: new URL('../thumbnails/droppable.webp', import.meta.url).href, content: DroppableExample },
+  { id: 'scope', title: 'Scope', category: exampleCategories.plugin, summary: '能力组合的作用域边界。', thumbnail: new URL('../thumbnails/scope.webp', import.meta.url).href, content: ScopeExample },
+  { id: 'piv-structure', title: 'Piv Structure', category: exampleCategories.piv, summary: 'Plugin 对原始 DOM 结构的组合。', thumbnail: new URL('../thumbnails/piv-structure.webp', import.meta.url).href, content: PivStructureExample },
+  { id: 'color', title: 'Color', category: exampleCategories.css, summary: '主题模式与颜色 token。', thumbnail: new URL('../thumbnails/color.webp', import.meta.url).href, content: ColorDashboardExample },
+  { id: 'use-document-title', title: 'useDocumentTitle', category: exampleCategories.hook, summary: '浏览器标题的同步与读取。', thumbnail: new URL('../thumbnails/use-document-title.webp', import.meta.url).href, content: UseDocumentTitleExample },
 ]
 
 export default function ExampleDashboard() {
@@ -56,7 +72,7 @@ export default function ExampleDashboard() {
     <main class="example-shell">
       {(() => {
         const id = readExampleId(pathname())
-        if (!id) return <ExampleIndex onNavigate={navigate} />
+        if (!id) return <ExampleHome onNavigate={navigate} />
 
         const example = exampleEntries.find(entry => entry.id === id)
         return example
@@ -67,25 +83,37 @@ export default function ExampleDashboard() {
   )
 }
 
-function ExampleIndex(props: { onNavigate: (event: MouseEvent) => void }) {
+function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
   return (
-    <section class="example-index">
-      <header class="panel">
-        <div class="panel-head">
-          <span>UIKit</span>
-          <h1>Examples</h1>
-        </div>
-        <p>选择一个 Example 后进入独立详情；URL 可以直接保存、刷新和分享。</p>
+    <section class="example-home">
+      <header class="example-home-head">
+        <span class="example-home-kicker">UIKit</span>
+        <h1>Examples</h1>
       </header>
 
-      <nav class="example-list" aria-label="Example 索引">
+      <nav class="example-list" aria-label="Examples">
         <For each={exampleEntries}>{entry => (
-          <a class="panel example-link" href={`/examples/${entry.id}`} onClick={props.onNavigate}>
-            <div class="panel-head">
-              <span>{entry.category}</span>
+          <a
+            class="example-link"
+            data-thumbnail
+            href={`/examples/${entry.id}`}
+            onClick={props.onNavigate}
+            style={{ '--example-category-color': entry.category.color }}
+          >
+            <img
+              class="example-link-thumbnail"
+              src={entry.thumbnail}
+              alt=""
+              width="800"
+              height="450"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="example-link-ribbon">{entry.category.label}</span>
+            <div class="example-link-copy">
               <h2>{entry.title}</h2>
+              <p>{entry.summary}</p>
             </div>
-            <p>{entry.summary}</p>
           </a>
         )}</For>
       </nav>
@@ -109,14 +137,14 @@ function ExampleDetail(props: {
 
 function ExampleMissing(props: { id: string; onNavigate: (event: MouseEvent) => void }) {
   return (
-    <section class="example-index">
+    <section class="example-missing">
       <article class="panel">
         <div class="panel-head">
           <span>Not Found</span>
           <h1>没有这个 Example</h1>
         </div>
         <p>URL 中的 Example 标识“{props.id}”不存在。</p>
-        <a class="example-back" href="/examples" onClick={props.onNavigate}>返回索引</a>
+        <a class="example-back" href="/examples" onClick={props.onNavigate}>返回主页</a>
       </article>
     </section>
   )

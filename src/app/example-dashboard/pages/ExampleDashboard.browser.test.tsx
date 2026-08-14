@@ -13,13 +13,29 @@ afterEach(() => {
 })
 
 describe('ExampleDashboard', () => {
-  test('索引不预选详情，选择条目后写入可直达 URL', () => {
+  test('主页不预选详情，选择条目后写入可直达 URL', () => {
     window.history.replaceState(null, '', '/examples')
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
 
-    expect(document.querySelector('.example-index h1')?.textContent).toBe('Examples')
+    expect(document.querySelector('.example-home h1')?.textContent).toBe('Examples')
     expect(document.querySelectorAll('.example-link')).toHaveLength(9)
+    expect(document.querySelectorAll('.example-link h2')).toHaveLength(9)
+    expect(document.querySelectorAll('.example-link p')).toHaveLength(9)
+    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(9)
+    expect(document.querySelectorAll('.example-link[data-thumbnail]')).toHaveLength(9)
+    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(9)
+
+    const thumbnail = document.querySelector<HTMLElement>('.example-link-thumbnail')!
+    const copy = document.querySelector<HTMLElement>('.example-link-copy')!
+    const ribbons = [...document.querySelectorAll<HTMLElement>('.example-link-ribbon')]
+    expect(getComputedStyle(thumbnail).maskImage).toContain('linear-gradient')
+    expect(getComputedStyle(copy).backgroundImage).toBe('none')
+    expect(new Set(ribbons.map(ribbon => getComputedStyle(ribbon).backgroundColor)).size).toBe(5)
+
+    expect(document.querySelector('.example-home-head p')).toBeNull()
+    expect(document.querySelector('.example-category-nav')).toBeNull()
+    expect(document.querySelector('.example-link-action')).toBeNull()
     expect(document.querySelector('.example-detail')).toBeNull()
 
     document.querySelector<HTMLAnchorElement>('a[href="/examples/button"]')!.click()
