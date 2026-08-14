@@ -48,7 +48,7 @@ describe('draggable', () => {
 
     const sourceRect = source.getBoundingClientRect()
     expect(source.draggable).toBe(false)
-    expect(source.getAttribute('data-dragging')).toBe('true')
+    expect(source.getAttribute('data-is-dragging')).toBe('true')
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
@@ -60,6 +60,7 @@ describe('draggable', () => {
     expect(source.style.transform).toBe('rotate(1deg)')
     expect(getComputedStyle(source).visibility).not.toBe('hidden')
     expect(getComputedStyle(source).pointerEvents).toBe('none')
+    expect(getComputedStyle(source).transitionProperty).toBe('none')
     expect(getComputedStyle(source).boxShadow).not.toBe('none')
     expect(Math.abs(sourceRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.top - originalRect.top)).toBeLessThan(0.1)
@@ -77,7 +78,7 @@ describe('draggable', () => {
     expect(source.style.getPropertyValue('--drag-x')).toBe('')
     expect(source.style.getPropertyValue('--drag-y')).toBe('')
     expect(getComputedStyle(source).translate).toBe('none')
-    expect(source.hasAttribute('data-dragging')).toBe(false)
+    expect(source.hasAttribute('data-is-dragging')).toBe(false)
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
@@ -97,7 +98,7 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
-    expect(source.getAttribute('data-dragging')).toBe('true')
+    expect(source.getAttribute('data-is-dragging')).toBe('true')
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
     expect(source.style.getPropertyValue('--drag-y')).toBe('0px')
@@ -117,11 +118,11 @@ describe('draggable', () => {
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
     window.dispatchEvent(pointerEvent('pointermove', 8, 3, 4))
-    expect(source.getAttribute('data-dragging')).not.toBe('true')
+    expect(source.getAttribute('data-is-dragging')).not.toBe('true')
     expect(source.classList.contains('top-layer')).toBe(false)
 
     window.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
-    expect(source.getAttribute('data-dragging')).toBe('true')
+    expect(source.getAttribute('data-is-dragging')).toBe('true')
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(source.style.getPropertyValue('--drag-x')).toBe('6px')
     expect(source.style.getPropertyValue('--drag-y')).toBe('4px')
@@ -193,7 +194,7 @@ describe('draggable', () => {
 
     expect(() => pointerDrag.start(pointerEvent('pointerdown', 12, 10, 10)))
       .toThrowError('Draggable 来源元素不能预先占用 CSS translate')
-    expect(source.hasAttribute('data-dragging')).toBe(false)
+    expect(source.hasAttribute('data-is-dragging')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
   })
 

@@ -9,7 +9,7 @@
 
 @layer uikit {
   .top-layer {
-    box-shadow: var(--top-layer-shadow, 0 18px 42px rgb(0 0 0 / 28%));
+    box-shadow: var(--top-layer-shadow, 0 16px 32px rgb(0 0 0 / 18%));
   }
 
   .top-layer-anchor {

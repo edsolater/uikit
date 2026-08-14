@@ -37,7 +37,7 @@
   cursor: grabbing;
 }
 
-.drag-drop-example-card[data-dragging='true'] {
+.drag-drop-example-card[data-is-dragging='true'] {
   opacity: 1;
 }
 
