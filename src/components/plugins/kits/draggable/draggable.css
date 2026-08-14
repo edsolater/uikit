@@ -3,7 +3,7 @@
     touch-action: none;
   }
 
-  [data-is-dragging] {
+  [data-interacting='true'] {
     translate: var(--drag-x) var(--drag-y);
     pointer-events: none;
     /* 临时拖动状态必须覆盖业务过渡，指针位置不能被插值。 */

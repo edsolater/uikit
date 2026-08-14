@@ -75,7 +75,7 @@ export const draggable = createPlugin<DraggableOptions, DraggableController, Piv
         htmlProps: {
           draggable: false,
           'data-plugin': { mergable: 'draggable' },
-          'data-is-dragging': dragging,
+          'data-interacting': dragging,
         },
         on: {
           dragstart: {

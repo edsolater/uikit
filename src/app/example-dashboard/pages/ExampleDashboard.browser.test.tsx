@@ -1,5 +1,6 @@
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
+import '../../../css/all-base.css'
 import ExampleDashboard from './ExampleDashboard'
 
 const runnerPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
@@ -56,5 +57,33 @@ describe('ExampleDashboard', () => {
     window.dispatchEvent(new PopStateEvent('popstate'))
 
     expect(document.querySelector('.example-detail h2')?.textContent).toBe('Scope + Drag and Drop')
+  })
+
+  test('交互期间停用 Panel 模糊，并在结束后恢复过渡', () => {
+    window.history.replaceState(null, '', '/examples/draggable')
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <ExampleDashboard />, host)
+
+    const shell = document.querySelector<HTMLElement>('.example-shell')!
+    const panel = document.querySelector<HTMLElement>('.panel')!
+    const interacting = panel.appendChild(document.createElement('span'))
+    interacting.hidden = true
+
+    expect(getComputedStyle(panel).backdropFilter).toContain('blur(40px)')
+    expect(Number.parseFloat(getComputedStyle(panel).transitionDuration)).toBeGreaterThan(0)
+
+    interacting.dataset.interacting = 'true'
+    expect(getComputedStyle(panel).backdropFilter).toBe('none')
+    expect(getComputedStyle(panel).transitionDuration).toBe('0s')
+
+    interacting.removeAttribute('data-interacting')
+    expect(Number.parseFloat(getComputedStyle(panel).transitionDuration)).toBeGreaterThan(0)
+
+    shell.dataset.interacting = 'true'
+    expect(getComputedStyle(panel).backdropFilter).toBe('none')
+    expect(getComputedStyle(panel).transitionDuration).toBe('0s')
+
+    shell.removeAttribute('data-interacting')
+    expect(Number.parseFloat(getComputedStyle(panel).transitionDuration)).toBeGreaterThan(0)
   })
 })

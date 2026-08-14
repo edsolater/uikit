@@ -24,6 +24,15 @@
     linear-gradient(180deg, rgb(255 255 255 / 58%), rgb(255 255 255 / 42%)),
     color-mix(in oklab, var(--color-surface) 32%, transparent);
   box-shadow: var(--shadow-card);
+  backdrop-filter: blur(40px) saturate(1.2);
+  transition: backdrop-filter var(--motion-duration-fast) var(--motion-ease-standard);
+
+  [data-interacting='true'] &,
+  &:has([data-interacting='true']) {
+    /* 交互期间停止大面积模糊；结束后再缓动恢复材质。 */
+    backdrop-filter: none;
+    transition-duration: 0s;
+  }
 }
 
 .panel-head {

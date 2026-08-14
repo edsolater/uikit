@@ -152,7 +152,7 @@ describe('droppable', () => {
             onDrop: (context) => {
               if (context.kind !== 'internal') return
               const { source } = context
-              cleanedBeforeDrop = !source.hasAttribute('data-is-dragging')
+              cleanedBeforeDrop = !source.hasAttribute('data-interacting')
                 && getComputedStyle(source).translate === 'none'
                 && !source.classList.contains('top-layer')
                 && !source.matches(':popover-open')
