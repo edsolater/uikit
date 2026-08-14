@@ -25,7 +25,7 @@ controller.leave()
 
 1. 在任何写操作前记录元素的视口位置和需要恢复的 inline 几何声明。
 2. 在原父级中插入同父相邻的原位影子，接替原布局槽位。
-3. 影子同时就是 Anchor：它保留布局得到的尺寸、外边距、Flex/Grid 位置以及原元素算出的圆角与边框形状，并通过唯一 `anchor-name` 暴露 border box。
+3. 影子同时就是 Anchor：它以原元素的自然尺寸参与布局，继续接受 Flex/Grid 分配的伸缩空间，并保留外边距、位置、圆角与边框形状；最终 border box 通过唯一 `anchor-name` 暴露。
 4. 原元素以 `anchor-size()`取得影子 Anchor 的尺寸，以提升瞬间的视口位置作为基础位置。
 5. 原元素绑定 `top-layer` class，通过 Popover API 进入 Top Layer，并获得默认提升阴影。
 

@@ -1,5 +1,5 @@
 /**
- * Piv structure plugin 的本地 demo。
+ * Piv structure plugin 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  * 这里用可运行示例展示 insertBefore、appendChild、wrapOutside 和 element 参数的使用边界。
  */
@@ -26,7 +26,7 @@ const selfMeasurePlugin = createPivPlugin(({ element, insertAfter }) => {
   )
 })
 
-export function PivStructureDemo() {
+export function PivStructureExample() {
   return (
     <article class="panel">
       <div class="panel-head">
@@ -34,7 +34,7 @@ export function PivStructureDemo() {
         <h2>Structure plugin</h2>
       </div>
 
-      <div class="demo-stack">
+      <div class="example-stack">
         <Piv class="structure-case" plugins={beforeLabelPlugin}>
           before 用于在主体前方挂辅助标记。
         </Piv>

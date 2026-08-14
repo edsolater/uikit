@@ -23,7 +23,6 @@ describe('draggable', () => {
     dispose = render(() => {
       const [plugin, currentController] = usePlugin(draggable, {
         payload: 'weather',
-        activationDistance: 0,
       })
       controller = currentController
       return (
@@ -85,12 +84,31 @@ describe('draggable', () => {
     expect(val(controller.dragging)).toBe(false)
   })
 
-  test('默认在移动超过激活距离后才开始拖动', () => {
+  test('默认在按下时立即开始拖动', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => (
       <Piv
         plugin={draggable({ payload: 'weather' })}
+        htmlProps={{ 'data-testid': 'source' }}
+      />
+    ), host)
+
+    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    stubPointerCapture(source)
+    source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
+    expect(source.getAttribute('data-dragging')).toBe('true')
+    expect(source.classList.contains('top-layer')).toBe(true)
+    expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
+    expect(source.style.getPropertyValue('--drag-y')).toBe('0px')
+  })
+
+  test('显式激活距离默认承接按下后的累计位移', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+
+    dispose = render(() => (
+      <Piv
+        plugin={draggable({ payload: 'weather', activationDistance: 6 })}
         htmlProps={{ 'data-testid': 'source' }}
       />
     ), host)
@@ -105,6 +123,33 @@ describe('draggable', () => {
     window.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
     expect(source.getAttribute('data-dragging')).toBe('true')
     expect(source.classList.contains('top-layer')).toBe(true)
+    expect(source.style.getPropertyValue('--drag-x')).toBe('6px')
+    expect(source.style.getPropertyValue('--drag-y')).toBe('4px')
+  })
+
+  test('可以消费激活距离后再开始移动 source', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+
+    dispose = render(() => (
+      <Piv
+        plugin={draggable({
+          payload: 'weather',
+          activationDistance: 6,
+          activationJump: false,
+        })}
+        htmlProps={{ 'data-testid': 'source' }}
+      />
+    ), host)
+
+    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    stubPointerCapture(source)
+    source.dispatchEvent(pointerEvent('pointerdown', 18, 0, 0))
+    window.dispatchEvent(pointerEvent('pointermove', 18, 8, 0))
+    expect(source.style.getPropertyValue('--drag-x')).toBe('2px')
+    expect(source.style.getPropertyValue('--drag-y')).toBe('0px')
+
+    window.dispatchEvent(pointerEvent('pointermove', 18, 10, 0))
+    expect(source.style.getPropertyValue('--drag-x')).toBe('4px')
   })
 
   test('pointercancel 与 lostpointercapture 都会恢复 source', () => {
@@ -141,6 +186,7 @@ describe('draggable', () => {
       source,
       payload: 'weather',
       activationDistance: 0,
+      activationJump: true,
       enabled: () => true,
       onDraggingChange: () => undefined,
     })
@@ -159,6 +205,7 @@ describe('draggable', () => {
       source,
       payload: 'weather',
       activationDistance: 0,
+      activationJump: true,
       enabled: () => true,
       onDraggingChange: () => undefined,
     })

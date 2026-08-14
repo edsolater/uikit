@@ -17,6 +17,7 @@ export interface PointerDragOptions {
   source: HTMLElement
   payload: unknown
   activationDistance: number
+  activationJump: boolean
   enabled(): boolean
   onDraggingChange(dragging: boolean): void
 }
@@ -41,6 +42,7 @@ interface PointerInteraction {
 interface ActiveDrag {
   drag: InternalDrag
   topLayer: TopLayerController
+  compensation: DragPoint
   translation: DragPoint
 }
 
@@ -140,6 +142,13 @@ class PointerDragSession implements PointerDrag {
     interaction.active = {
       drag: createInternalDrag(this.options.source, this.options.payload),
       topLayer,
+      compensation: this.options.activationJump
+        ? { x: 0, y: 0 }
+        : activationCompensation(
+            interaction.origin,
+            point,
+            this.options.activationDistance,
+          ),
       translation: { x: 0, y: 0 },
     }
     this.options.onDraggingChange(true)
@@ -151,8 +160,8 @@ class PointerDragSession implements PointerDrag {
     if (!active) return
 
     active.translation = {
-      x: point.x - interaction.origin.x,
-      y: point.y - interaction.origin.y,
+      x: point.x - interaction.origin.x - active.compensation.x,
+      y: point.y - interaction.origin.y - active.compensation.y,
     }
     this.options.source.style.setProperty('--drag-x', `${active.translation.x}px`)
     this.options.source.style.setProperty('--drag-y', `${active.translation.y}px`)
@@ -220,6 +229,26 @@ function pointOf(event: PointerEvent): DragPoint {
 
 function distance(origin: DragPoint, point: DragPoint): number {
   return Math.hypot(point.x - origin.x, point.y - origin.y)
+}
+
+/** 把识别 Drag 所消耗的距离从后续位移中准确扣除，不受 Pointer Event 采样间隔影响。 */
+function activationCompensation(
+  origin: DragPoint,
+  point: DragPoint,
+  activationDistance: number,
+): DragPoint {
+  const movement = {
+    x: point.x - origin.x,
+    y: point.y - origin.y,
+  }
+  const movementDistance = Math.hypot(movement.x, movement.y)
+  if (movementDistance === 0 || activationDistance === 0) return { x: 0, y: 0 }
+
+  const ratio = activationDistance / movementDistance
+  return {
+    x: movement.x * ratio,
+    y: movement.y * ratio,
+  }
 }
 
 function isInteractiveDescendant(event: PointerEvent, source: HTMLElement): boolean {

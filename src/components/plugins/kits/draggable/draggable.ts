@@ -14,8 +14,10 @@ export interface DraggableOptions {
   /** 当前拖动携带的数据包。 */
   payload: unknown
   disabled?: boolean
-  /** 指针移动多少 CSS px 后开始拖动，默认 6。 */
+  /** 指针移动多少 CSS px 后开始拖动，默认 0。 */
   activationDistance?: number
+  /** 激活时是否立即承接阈值前累计的位移，默认 true。 */
+  activationJump?: boolean
 }
 
 export interface DraggableController {
@@ -28,7 +30,8 @@ export interface DraggableController {
   disable(): void
 }
 
-const defaultActivationDistance = 6
+const defaultActivationDistance = 0
+const defaultActivationJump = true
 
 export const draggable = createPlugin<DraggableOptions, DraggableController, PivTag>((options) => {
   const [enabled, enabledControl] = createToggle(!(options?.disabled ?? false))
@@ -55,6 +58,7 @@ export const draggable = createPlugin<DraggableOptions, DraggableController, Piv
           0,
           options?.activationDistance ?? defaultActivationDistance,
         ),
+        activationJump: options?.activationJump ?? defaultActivationJump,
         enabled: enabled.read,
         onDraggingChange(dragging) {
           if (dragging) draggingControl.turnOn()

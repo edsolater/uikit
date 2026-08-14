@@ -1,11 +1,11 @@
 /**
- * 这个文件负责 ColorDashboard 的 demo 装配。
+ * 这个文件负责 ColorDashboard Example 的装配。
  * 它只负责两个子组件的组合入口，不承载 theme mode 或 color token 的领域逻辑。
  */
 import { ThemeModeControl } from './ColorSchemeControl'
 import { ColorCSSTokenTable } from './ColorCSSTokenTable'
 
-export function ColorDashboardDemo() {
+export function ColorDashboardExample() {
   return (
     <section>
       <h2>Color Dashboard</h2>

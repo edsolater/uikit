@@ -1,10 +1,10 @@
 /**
- * Popover 的本地 demo。
+ * Popover 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
 import { Popover } from './Popover'
 
-export function PopoverDemo() {
+export function PopoverExample() {
   return (
     <article class="panel">
       <div class="panel-head">

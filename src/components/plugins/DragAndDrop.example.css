@@ -1,16 +1,16 @@
-.drag-drop-demo-grid {
+.drag-drop-example-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-4);
 }
 
-.drag-drop-demo-stack {
+.drag-drop-example-stack {
   display: grid;
   gap: var(--space-3);
 }
 
-.drag-drop-demo-card,
-.drag-drop-demo-target {
+.drag-drop-example-card,
+.drag-drop-example-target {
   min-block-size: 108px;
   display: grid;
   place-items: center;
@@ -24,7 +24,7 @@
     transform var(--motion-duration-fast) var(--motion-ease-standard);
 }
 
-.drag-drop-demo-card {
+.drag-drop-example-card {
   cursor: grab;
   border: var(--boundary-1) solid color-mix(in oklab, var(--color-accent) 45%, var(--color-line));
   background: color-mix(in oklab, var(--color-accent) 12%, var(--color-surface));
@@ -33,15 +33,15 @@
   user-select: none;
 }
 
-.drag-drop-demo-card:active {
+.drag-drop-example-card:active {
   cursor: grabbing;
 }
 
-.drag-drop-demo-card[data-dragging='true'] {
+.drag-drop-example-card[data-dragging='true'] {
   opacity: 1;
 }
 
-.drag-drop-demo-target {
+.drag-drop-example-target {
   align-content: center;
   gap: var(--space-2);
   border: 2px dashed var(--color-line);
@@ -49,48 +49,48 @@
   color: var(--color-fg-soft);
 }
 
-.drag-drop-demo-target-label {
+.drag-drop-example-target-label {
   color: inherit;
 }
 
-.drag-drop-demo-target-result {
+.drag-drop-example-target-result {
   max-inline-size: 100%;
   color: var(--color-fg-soft);
   font-size: var(--font-size-sm);
   overflow-wrap: anywhere;
 }
 
-.drag-drop-demo-target[data-drop-hovering='true'] {
+.drag-drop-example-target[data-drop-hovering='true'] {
   border-color: var(--color-bad);
   background: color-mix(in oklab, var(--color-bad) 8%, var(--color-surface));
 }
 
-.drag-drop-demo-target[data-drop-acceptable='true'] {
+.drag-drop-example-target[data-drop-acceptable='true'] {
   border-color: var(--color-good);
   background: color-mix(in oklab, var(--color-good) 10%, var(--color-surface));
   color: var(--color-fg-strong);
 }
 
-.drag-drop-demo-target[data-drop-received='true'] {
+.drag-drop-example-target[data-drop-received='true'] {
   border-style: solid;
   border-color: var(--color-good);
   background: color-mix(in oklab, var(--color-good) 12%, var(--color-surface));
   color: var(--color-fg-strong);
 }
 
-.drag-drop-demo-target[data-drop-received='true'] .drag-drop-demo-target-result {
+.drag-drop-example-target[data-drop-received='true'] .drag-drop-example-target-result {
   color: var(--color-good);
   font-weight: var(--font-weight-semibold);
 }
 
-.drag-drop-demo-result {
+.drag-drop-example-result {
   min-block-size: 24px;
   margin: 0;
   color: var(--color-fg-soft);
   font-size: var(--font-size-sm);
 }
 
-.scope-demo-boundary {
+.scope-example-boundary {
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -99,6 +99,6 @@
   background: color-mix(in oklab, var(--color-surface) 72%, transparent);
 }
 
-.scope-demo-boundary > strong {
+.scope-example-boundary > strong {
   color: var(--color-fg-strong);
 }

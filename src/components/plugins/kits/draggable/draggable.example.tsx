@@ -1,9 +1,9 @@
-/** Draggable 的本地 Demo：验证原始元素移动不依赖 Droppable。 */
+/** Draggable Example：验证原始元素移动不依赖 Droppable。 */
 import { Piv } from '../../../Piv'
-import '../../DragAndDrop.demo.css'
+import '../../DragAndDrop.example.css'
 import { draggable } from './draggable'
 
-export function DraggableDemo() {
+export function DraggableExample() {
   return (
     <article class="panel">
       <div class="panel-head">
@@ -14,7 +14,7 @@ export function DraggableDemo() {
 
       <Piv
         plugin={draggable({ payload: 'Weather payload' })}
-        class="drag-drop-demo-card"
+        class="drag-drop-example-card"
       >
         拖动 Weather
       </Piv>

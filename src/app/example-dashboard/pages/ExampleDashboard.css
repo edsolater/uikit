@@ -1,4 +1,4 @@
-.demo-shell {
+.example-shell {
   min-block-size: 100svb;
   margin: 0;
   display: grid;
@@ -39,7 +39,7 @@
   color: var(--color-accent);
 }
 
-.panel-head h2 {
+.panel-head :is(h1, h2) {
   margin: 0;
   font-size: 28px;
   font-weight: var(--font-weight-semibold);
@@ -60,32 +60,32 @@
   gap: var(--space-3);
 }
 
-.button-demo-grid {
+.button-example-grid {
   display: grid;
   grid-template-columns: max-content repeat(4, minmax(0, 1fr));
   gap: var(--space-3) var(--space-4);
   align-items: center;
 }
 
-.button-demo-grid > div {
+.button-example-grid > div {
   min-inline-size: 0;
 }
 
-.button-demo-head,
-.button-demo-label {
+.button-example-head,
+.button-example-label {
   color: var(--color-fg-soft);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
 }
 
-.button-demo-state-hover .Button {
+.button-example-state-hover .Button {
   --Button-border: var(--Button-border-hover);
   --Button-shadow: var(--Button-shadow-hover);
   background-color: var(--Button-bg-hover);
   color: var(--Button-fg-hover);
 }
 
-.button-demo-state-active .Button {
+.button-example-state-active .Button {
   --Button-border: var(--Button-border-active);
   --Button-shadow: var(--Button-shadow-active);
   background-color: var(--Button-bg-active);
@@ -154,9 +154,37 @@
   font-size: var(--font-size-sm);
 }
 
-.demo-stack {
+.example-stack {
   display: grid;
   gap: var(--space-4);
+}
+
+.example-index,
+.example-detail {
+  inline-size: min(100%, 1120px);
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-5);
+}
+
+.example-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.example-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.example-link:hover {
+  border-color: var(--color-accent);
+}
+
+.example-back {
+  inline-size: fit-content;
+  color: var(--color-accent);
 }
 
 .popover-row {
@@ -261,7 +289,7 @@
 }
 
 @media (max-width: 640px) {
-  .demo-shell {
+  .example-shell {
     padding: var(--space-6) var(--space-4) var(--space-7);
   }
 

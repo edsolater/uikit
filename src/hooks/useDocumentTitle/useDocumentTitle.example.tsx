@@ -1,13 +1,13 @@
 /**
- * useDocumentTitle 的本地 demo。
+ * useDocumentTitle 的本地 Example。
  * 它只服务本地 HTML 验证，不参与 hooks 正式导出。
  */
 import { Button } from '../../components/kits/Button'
 import { createState, val } from '../createState'
 import { useDocumentTitle } from './useDocumentTitle'
 
-export function UseDocumentTitleDemo() {
-  const titles = ['Solid Kit Demo', 'Button Preview', 'Hook Preview']
+export function UseDocumentTitleExample() {
+  const titles = ['UIKit Examples', 'Button Preview', 'Hook Preview']
   const titleIndex = createState(0)
   const currentTitle = useDocumentTitle(() => titles[val(titleIndex)])
 

@@ -13,7 +13,7 @@ const [plugin, controller] = usePlugin(draggable, { payload: weather })
 
 开始拖动后，`draggable` 使用独立 `topLayer` 领域的命令式入口。Top Layer 建立原布局 Anchor，并维护来源 DOM 提升前的基础位置、border-box 尺寸和提升阴影；`draggable` 只在这个基础位置上使用 individual `translate` 跟随指针。source 的 DOM 父子关系、组件身份、Plugin、Controller 和状态都不迁移。
 
-Top Layer 自动留下原位影子，这个影子同时就是 Anchor。它参与原布局并接替 source 的尺寸、外边距、Flex/Grid 位置和圆角，以唯一 `anchor-name` 暴露布局后的 border box；提升后的 source 使用 `anchor-size()`取得尺寸。影子的 DOM、几何、视觉和生命周期全部由 Top Layer 管理，Drag 不认识其内部结构。
+Top Layer 自动留下原位影子，这个影子同时就是 Anchor。它使用 source 的自然尺寸参与原布局，继续接受 Flex/Grid 的 grow、shrink 与 stretch，并以唯一 `anchor-name` 暴露当前 border box；提升后的 source 使用 `anchor-size()`取得尺寸。影子的 DOM、几何、视觉和生命周期全部由 Top Layer 管理，Drag 不认识其内部结构。
 
 source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-index` 跨 stacking context 比较层级。`anchor-size()`只负责尺寸，不使用 `anchor()`持续绑定位置，因此滚动原容器时 Anchor 随布局移动，source 仍留在指针所在的视口坐标。一次会话按照 `start → moving → end / cancel` 推进。
 
@@ -23,7 +23,20 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 - `payload`：当前页面内携带的数据包。
 - `disabled`：初始是否禁止拖动。
-- `activationDistance`：指针移动多少 CSS px 后开始拖动，默认 6；用于区分点击和拖动。
+- `activationDistance`：指针移动多少 CSS px 后开始拖动，默认 0；元素同时承担点击时，由业务按实际操作精度设置。
+- `activationJump`：激活时是否承接按下后累计的完整位移，默认 `true`。设为 `false` 时，`activationDistance` 只用于识别 Drag，source 从越过阈值后的剩余位移开始移动。
+
+```tsx
+<Piv
+  plugin={draggable({
+    payload: weather,
+    activationDistance: 6,
+    activationJump: false,
+  })}
+>
+  Weather
+</Piv>
+```
 
 ## Controller
 
@@ -31,9 +44,9 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 - `dragging`：当前元素是否已越过激活距离并进入拖动阶段。
 - `enable()`、`disable()`：控制后续是否允许拖动；拖动中 disable 会立即取消。
 
-## Demo
+## Example
 
-[draggable.demo.tsx](draggable.demo.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [Droppable Demo](../droppable/droppable.demo.tsx)。
+[draggable.example.tsx](draggable.example.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [Droppable Example](../droppable/droppable.example.tsx)。
 
 [draggable.stories.tsx](draggable.stories.tsx) 提供同一场景的独立 Storybook 入口。
 

@@ -172,6 +172,66 @@ describe('topLayer', () => {
     controller.leave()
   })
 
+  test('Anchor 不把 Grid stretch 的结果固化成下一轮轨道输入', () => {
+    const detail = document.body.appendChild(document.createElement('div'))
+    detail.style.display = 'grid'
+    detail.style.width = '640px'
+    detail.style.height = '560px'
+    detail.appendChild(document.createElement('div')).textContent = '返回'
+
+    const panel = detail.appendChild(document.createElement('div'))
+    panel.style.display = 'grid'
+    panel.style.gap = '16px'
+    panel.style.padding = '24px'
+    panel.appendChild(document.createElement('div')).textContent = 'Draggable'
+    panel.appendChild(document.createElement('p')).textContent = '拖动原始元素'
+
+    const source = panel.appendChild(document.createElement('div'))
+    source.textContent = 'Weather'
+    source.style.minHeight = '108px'
+
+    const originalPanelRect = panel.getBoundingClientRect()
+    const originalSourceRect = source.getBoundingClientRect()
+    const controller = createTopLayerController(source)
+    controller.enter()
+    const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
+    const elevatedPanelRect = panel.getBoundingClientRect()
+    const anchorRect = anchor.getBoundingClientRect()
+
+    expect(Math.abs(elevatedPanelRect.top - originalPanelRect.top)).toBeLessThan(0.1)
+    expect(Math.abs(elevatedPanelRect.height - originalPanelRect.height)).toBeLessThan(0.1)
+    expect(Math.abs(anchorRect.top - originalSourceRect.top)).toBeLessThan(0.1)
+    expect(Math.abs(anchorRect.height - originalSourceRect.height)).toBeLessThan(0.1)
+
+    controller.leave()
+  })
+
+  test('Anchor 继续按照原 flex 参数分配主轴空间', () => {
+    const flex = document.body.appendChild(document.createElement('div'))
+    flex.style.display = 'flex'
+    flex.style.width = '600px'
+    const source = flex.appendChild(document.createElement('div'))
+    const peer = flex.appendChild(document.createElement('div'))
+    source.textContent = 'Weather'
+    peer.textContent = 'Calendar'
+    source.style.flex = '1'
+    peer.style.flex = '1'
+
+    const originalSourceRect = source.getBoundingClientRect()
+    const originalPeerRect = peer.getBoundingClientRect()
+    const controller = createTopLayerController(source)
+    controller.enter()
+    const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
+    const anchorRect = anchor.getBoundingClientRect()
+    const currentPeerRect = peer.getBoundingClientRect()
+
+    expect(Math.abs(anchorRect.width - originalSourceRect.width)).toBeLessThan(0.1)
+    expect(Math.abs(currentPeerRect.left - originalPeerRect.left)).toBeLessThan(0.1)
+    expect(Math.abs(currentPeerRect.width - originalPeerRect.width)).toBeLessThan(0.1)
+
+    controller.leave()
+  })
+
   test('滚动时 Anchor 跟随原布局，提升元素留在视口坐标', () => {
     const scroller = document.body.appendChild(document.createElement('div'))
     scroller.style.blockSize = '80px'

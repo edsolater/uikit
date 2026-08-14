@@ -2,7 +2,7 @@ import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { Piv } from '../../../Piv'
 import { draggable } from '../draggable'
-import { DroppableDemo } from './droppable.demo'
+import { DroppableExample } from './droppable.example'
 import { droppable } from './droppable'
 
 let dispose: (() => void) | undefined
@@ -55,14 +55,14 @@ describe('droppable', () => {
     expect(receivedPayload).toBe('weather')
   })
 
-  test('Demo 在接收框内持续显示成功结果', () => {
+  test('Example 在接收框内持续显示成功结果', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => <DroppableDemo />, host)
+    dispose = render(() => <DroppableExample />, host)
 
-    const source = document.querySelector<HTMLElement>('.drag-drop-demo-card')!
-    const target = document.querySelector<HTMLElement>('.drag-drop-demo-target')!
-    const result = target.querySelector<HTMLOutputElement>('.drag-drop-demo-target-result')!
+    const source = document.querySelector<HTMLElement>('.drag-drop-example-card')!
+    const target = document.querySelector<HTMLElement>('.drag-drop-example-target')!
+    const result = target.querySelector<HTMLOutputElement>('.drag-drop-example-target-result')!
     stubPointerCapture(source)
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([target])
 

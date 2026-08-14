@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
-import { ScopeDemo } from './scope.demo'
+import { ScopeExample } from './scope.example'
 
-const meta: Meta<typeof ScopeDemo> = {
+const meta: Meta<typeof ScopeExample> = {
   title: 'Plugins/Scope',
-  component: ScopeDemo,
+  component: ScopeExample,
 }
 
 export default meta

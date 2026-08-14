@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
-import { DroppableDemo } from './droppable.demo'
+import { DroppableExample } from './droppable.example'
 
-const meta: Meta<typeof DroppableDemo> = {
+const meta: Meta<typeof DroppableExample> = {
   title: 'Plugins/Droppable',
-  component: DroppableDemo,
+  component: DroppableExample,
 }
 
 export default meta

@@ -19,8 +19,9 @@ Drag and Drop 是 `draggable` 与 `droppable` 发生的一次协作，不是包�
 ## 技术路线
 
 - 页面内部拖动使用 Pointer Events 与 Pointer Capture，不设置原生 `draggable`，也不使用 `DataTransfer.setDragImage()`。
-- 指针越过激活距离后，来源 DOM 的渲染 box 通过 Popover API 进入浏览器 Top Layer，再使用 individual `translate` 跟随指针；DOM 所属关系、组件状态和事件不迁移。
-- Top Layer 提升 source 时，在原父级自动留下原位影子；影子本身就是 Anchor，接替布局槽位，并通过 CSS Anchor Positioning 把 Grid/Flex 已经算好的 border-box 尺寸提供给 source。
+- `activationDistance` 默认是 0；需要在同一元素上区分点击与拖动时，业务可以设置识别距离，并通过 `activationJump` 决定激活时是否承接阈值前累计的位移。
+- 指针进入拖动后，来源 DOM 的渲染 box 通过 Popover API 进入浏览器 Top Layer，再使用 individual `translate` 跟随指针；DOM 所属关系、组件状态和事件不迁移。
+- Top Layer 提升 source 时，在原父级自动留下原位影子；影子本身就是 Anchor，以自然尺寸继续参与 Grid/Flex 伸缩，再通过 CSS Anchor Positioning 把最终 border-box 尺寸提供给 source。
 - Top Layer source 使用 `anchor-size()`读取 Anchor 尺寸，并以激活瞬间的视口坐标作为基础位置；`draggable` 只在此基础上追加 individual `translate`。
 - Pointer 命中通过来源元素所属文档的 `elementsFromPoint()` 找到 droppable，并排除 source 的 composed 子树；Scope 与 `accepts()` 共同决定能否放下。
 - 只有系统文件等从浏览器窗口外进入的材料继续使用原生 `DragEvent` 与 `DataTransfer`。
@@ -148,13 +149,13 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 - 当前文档不设计拖拽排序、目标插入位或 Widget 重排策略；Top Layer Anchor 只表示提升前的原位置，不表示排序位置。
 - 当前文档不建立 `DragAndDrop` Manager、`source()`、`target()` 或业务专用 Scope Plugin。
 
-## 本地 Demo
+## 本地 Example
 
-- [Draggable Demo](../../src/components/plugins/kits/draggable/draggable.demo.tsx)：独立查看原始 source 跟手移动，以及 Top Layer 自动留下的原位影子 Anchor。
-- [Droppable Demo](../../src/components/plugins/kits/droppable/droppable.demo.tsx)：接收内部 Pointer payload，也接收系统外部文件。
-- [Scope Demo](../../src/components/plugins/kits/scope/scope.demo.tsx)：验证同一 Scope 内允许、跨 Scope 拒绝。
+- [Draggable Example](../../src/components/plugins/kits/draggable/draggable.example.tsx)：独立查看原始 source 跟手移动，以及 Top Layer 自动留下的原位影子 Anchor。
+- [Droppable Example](../../src/components/plugins/kits/droppable/droppable.example.tsx)：接收内部 Pointer payload，也接收系统外部文件。
+- [Scope Example](../../src/components/plugins/kits/scope/scope.example.tsx)：验证同一 Scope 内允许、跨 Scope 拒绝。
 
-运行 `bun run dev` 后，可在本地 Example Dashboard 中依次查看三个 Demo。
+运行 `bun run dev` 后，先从 Example 索引选择条目，再进入对应详情。
 
 ## 实现不得破坏的不变量
 

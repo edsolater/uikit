@@ -24,6 +24,7 @@
   ],
   "exclude": [
     "src/**/*.demo.tsx",
+    "src/**/*.example.tsx",
     "src/**/*.stories.tsx",
     "src/App.tsx",
     "src/main.tsx"

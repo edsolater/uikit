@@ -11,7 +11,7 @@
 
 - 当前仓库是 SolidJS UIKit 项目。
 - 当前仓库的目标是沉淀基础 DOM 原子、基础组件、基础 hook 和本地验证方式。
-- 当前仓库同时承载面向组件库验收的小型 demo-app，但 demo-app 不是正式业务项目。
+- 当前仓库同时承载面向组件库验收的 Example 浏览应用，但它不是正式业务项目。
 - 当前仓库不是大而全的设计系统。
 - 当前仓库优先提供稳定、直接、边界清楚的基础能力。
 - 当前仓库默认只考虑最新浏览器和现代 CSS 能力。
@@ -22,27 +22,27 @@
   - 负责底层 DOM、状态原子、局部组件能力和 trait。
   - 这一层提供可复用能力，不直接承载业务级组件语义。
 - `src/components`：对外组件层。
-  - 负责基础组件主体与组件级本地 demo / story。
+  - 负责基础组件主体与组件级 Example / Story。
   - 这一层向调用方暴露稳定组件入口。
 - `src/hooks`：对外 hook 层。
   - 负责浏览器协作类或通用调用方能力。
   - 这一层向调用方暴露稳定 hook 入口。
-- `demo-app`：组件库验收应用层。
-  - 负责承载真实但足够小的 demo 应用，用来反向验证组件 API、token 和组合能力。
+- `src/app/example-dashboard`：组件库 Example 浏览层。
+  - 负责提供 Example 索引、URL 详情导航和本地挂载，用来反向验证组件 API、token 和组合能力。
   - 这一层不是正式业务项目，不应为了补业务而绕过或污染组件库职责。
-- `src/App.tsx`：本地 demo 装配层。
-  - 只负责把各主体旁边的 `.demo.tsx` 组合成首页。
-  - 不应把具体 demo 实现长期堆在 `App.tsx` 里。
+- `src/app/example-dashboard/pages/ExampleDashboard.tsx`：Example 浏览框架。
+  - 索引只列出可浏览 Example；URL 选中具体条目后才渲染详情。
+  - 具体 Example 继续由各主体旁边的 `.example.tsx` 承载。
 - `src/index.ts`：发布入口层。
   - 负责统一对外导出。
   - 不承载 demo、story 或本地验证逻辑。
 
 ## Runtime Flow
 
-- 本地开发入口从 `src/main.tsx` 进入。
-- `src/main.tsx` 只负责挂载 `src/App.tsx`。
-- `src/App.tsx` 只负责组合各主体就近定义的 demo。
-- `demo-app` 下的各 demo 独立承载验收场景，不反向成为组件库发布入口的一部分。
+- 本地开发入口从 `src/app/example-dashboard/index.tsx` 进入。
+- `index.tsx` 只负责挂载 `pages/ExampleDashboard.tsx`。
+- `/examples` 显示索引；`/examples/<id>` 显示具体详情，并支持直接访问、刷新和浏览历史。
+- 各主体旁边的 `.example.tsx` 独立承载验收场景，不反向成为组件库发布入口的一部分。
 - 组件和 hook 的正式发布入口始终从 `src/index.ts` 收口。
 - `src/components/index.ts` 和 `src/hooks/index.ts` 负责各自目录的对外汇总导出。
 
@@ -52,15 +52,13 @@
   - `Agents.md`：agent 入口与仓库级协作约束。
   - `Architecture.md`：项目架构、模块边界、目录职责与调用链路。
   - `README.md`：项目入口说明。
-  - `demo-app`
-    - `README.md`：组件库验收应用集合的总目标、流程和验收方式。
-    - `todolist`
-      - `README.md`：ToDoList 验收 demo 的业务目标、模块边界与验收口径。
-      - `Architecture.md`：ToDoList 验收 demo 的抽象架构与实现顺序。
   - `package.json`：包信息、依赖和本地命令。
   - `src`
-    - `App.css`：本地 demo 样式。
-    - `App.tsx`：本地 demo 页面装配入口。
+    - `app`
+      - `example-dashboard`
+        - `index.tsx`：Example 浏览应用挂载入口。
+        - `pages/ExampleDashboard.tsx`：索引、URL 详情导航与 Example 注册表。
+        - `pages/ExampleDashboard.css`：Example 浏览框架与条目共享样式。
     - `base`
       - `BasicComponent`
         - `className.ts`：把 class 声明绑定到 DOM `classList`。
@@ -97,7 +95,7 @@
         - `tabular-num.ts`：等宽数字 trait。
     - `components`
       - `Button`
-        - `Button.demo.tsx`：Button 的本地 HTML demo。
+        - `Button.example.tsx`：Button 的可浏览 Example。
         - `index.ts`：`Button` 目录导出入口。
         - `Button.stories.tsx`：Button 的 Storybook 示例。
         - `Button.tsx`：基础按钮组件。
@@ -105,7 +103,7 @@
       - `Popover`
         - `hooks`
           - `createPopoverController.ts`：Popover 本地控制能力，管理原生 popover 生命周期与打开状态镜像。
-        - `Popover.demo.tsx`：Popover 的本地 HTML demo。
+        - `Popover.example.tsx`：Popover 的可浏览 Example。
         - `index.ts`：`Popover` 目录导出入口。
         - `Popover.stories.tsx`：Popover 的 Storybook 示例。
         - `Popover.tsx`：基础 Popover 组件，封装触发器、原生 popover 容器与 anchor positioning 结构。
@@ -123,12 +121,11 @@
       - `index.ts`：对外 hooks 目录导出入口。
       - `useTitle`
         - `index.ts`：`useTitle` 目录导出入口。
-        - `useTitle.demo.tsx`：`useTitle` 的本地 HTML demo。
+        - `useDocumentTitle.example.tsx`：`useDocumentTitle` 的可浏览 Example。
         - `useTitle.stories.tsx`：`useTitle` 的 Storybook 示例。
         - `useTitle.ts`：浏览器标题 hook。
     - `index.css`：全局样式入口。
     - `index.ts`：包发布入口。
-    - `main.tsx`：本地 demo 挂载入口。
     - `types`
       - `htmlPopover.d.ts`：Popover API 与相关 HTML 属性的 JSX 类型补丁。
       - `htmlElementViewTransition.d.ts`：`HTMLElement.startViewTransition()` 的全局类型补丁。
@@ -139,19 +136,18 @@
 ## Module Boundaries
 
 - `src/base` 不应反向依赖 `src/components` 或 `src/hooks` 的业务主体。
-- `src/components` 的 demo、story 和局部能力应尽量就近放在组件目录内。
-- `src/hooks` 的 demo、story 和主体实现应尽量就近放在 hook 目录内。
-- `demo-app` 只负责验收组件库，不应演化成正式业务应用层。
-- `demo-app` 可以写布局与场景组合，但不应重写组件视觉状态样式。
-- `src/App.tsx` 只装配 demo，不定义 demo 主体。
+- `src/components` 的 Example、Story 和局部能力应尽量就近放在组件目录内。
+- `src/hooks` 的 Example、Story 和主体实现应尽量就近放在 hook 目录内。
+- `.example.tsx` 表示进入 Example 索引并拥有独立详情 URL 的可浏览条目；`.demo.tsx` 只保留给不进入该浏览框架的局部演示。
+- `src/app/example-dashboard` 只负责发现和打开 Example，不应演化成正式业务应用层，也不定义具体 Example 内容。
 - `src/index.ts` 只处理对外导出，不夹带本地验证代码。
 - `types` 目录只承载没有明确单一主体归属的全局类型补丁。
 
 ## Do Not Do
 
-- 不要把组件 demo 长期堆在 `App.tsx`。
-- 不要把 story、demo 和正式发布入口混成同一职责文件。
-- 不要把 `demo-app` 当成业务需求堆叠区，或在里面绕过组件库直接手写组件视觉样式。
+- 不要把具体 Example 长期堆在 `ExampleDashboard.tsx`。
+- 不要把 Story、Example 和正式发布入口混成同一职责文件。
+- 不要把 Example 浏览应用当成业务需求堆叠区，或在里面绕过组件库直接手写组件视觉样式。
 - 不要把 `src/base` 当成业务级组件目录使用。
 - 不要把结构文档退化成单纯的目录清单，而忽略层次和边界。
 

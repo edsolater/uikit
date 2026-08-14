@@ -26,9 +26,9 @@
 - `acceptable`：当前拖动是否同时通过 Scope 与 `accepts()`。
 - `enable()`、`disable()`：控制接收能力。
 
-## Demo
+## Example
 
-[droppable.demo.tsx](droppable.demo.tsx) 同时演示内部 Pointer payload 与系统外部文件。独立 draggable 见 [Draggable Demo](../draggable/draggable.demo.tsx)。
+[droppable.example.tsx](droppable.example.tsx) 同时演示内部 Pointer payload 与系统外部文件。独立 draggable 见 [Draggable Example](../draggable/draggable.example.tsx)。
 
 [droppable.stories.tsx](droppable.stories.tsx) 提供同一组合的独立 Storybook 入口。
 

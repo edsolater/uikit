@@ -1,10 +1,10 @@
 /**
- * Input 的本地 demo。
+ * Input 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
 import { Input } from './Input'
 
-export function InputDemo() {
+export function InputExample() {
   return (
     <article class="panel">
       <div class="panel-head">

@@ -21,9 +21,9 @@
 - `capabilities`：选择性 Scope 显式声明的能力。
 - `includes()`：判断当前 Scope 是否命中一个能力。
 
-## Demo
+## Example
 
-[scope.demo.tsx](scope.demo.tsx) 建立两个 Drag and Drop Scope：范围内允许放下，跨范围拒绝。
+[scope.example.tsx](scope.example.tsx) 建立两个 Drag and Drop Scope：范围内允许放下，跨范围拒绝。
 
 [scope.stories.tsx](scope.stories.tsx) 提供同一范围协作的独立 Storybook 入口。
 
