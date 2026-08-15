@@ -2,6 +2,7 @@
 import { createSignal } from 'solid-js'
 import { Piv } from '../../../Piv'
 import { Card } from '../../../kits/Card'
+import { Article } from '../../../kits/Article'
 import '../../DragAndDrop.example.css'
 import { dragAndDrop } from '../dragAndDrop'
 import { draggable } from '../draggable'
@@ -42,7 +43,7 @@ export function ScopeExample() {
   )
 
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>Plugin</span>
         <h2>Scope + Drag and Drop</h2>
@@ -53,6 +54,6 @@ export function ScopeExample() {
         {renderScope('A')}
         {renderScope('B')}
       </div>
-    </Card>
+    </Article>
   )
 }

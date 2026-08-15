@@ -21,12 +21,12 @@ describe('ExampleDashboard', () => {
     dispose = render(() => <ExampleDashboard />, host)
 
     expect(document.querySelector('.example-home h1')?.textContent).toBe('Examples')
-    expect(document.querySelectorAll('.example-link')).toHaveLength(10)
-    expect(document.querySelectorAll('.example-link h2')).toHaveLength(10)
-    expect(document.querySelectorAll('.example-link p')).toHaveLength(10)
-    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(10)
-    expect(document.querySelectorAll('.example-link[data-thumbnail]')).toHaveLength(10)
-    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(10)
+    expect(document.querySelectorAll('.example-link')).toHaveLength(11)
+    expect(document.querySelectorAll('.example-link h2')).toHaveLength(11)
+    expect(document.querySelectorAll('.example-link p')).toHaveLength(11)
+    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(11)
+    expect(document.querySelectorAll('.example-link[data-thumbnail]')).toHaveLength(11)
+    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(11)
 
     const thumbnail = document.querySelector<HTMLElement>('.example-link-thumbnail')!
     const copy = document.querySelector<HTMLElement>('.example-link-copy')!
@@ -39,6 +39,7 @@ describe('ExampleDashboard', () => {
     expect(document.querySelector('.example-category-nav')).toBeNull()
     expect(document.querySelector('.example-link-action')).toBeNull()
     expect(document.querySelector('.example-detail')).toBeNull()
+    expect(document.querySelector('.example-home article')).toBeNull()
 
     document.querySelector<HTMLAnchorElement>('a[href="/examples/card"]')!.click()
 
@@ -61,6 +62,16 @@ describe('ExampleDashboard', () => {
     )
   })
 
+  test('Article 由 Card 透明承载，并保留唯一的 article 节点', () => {
+    window.history.replaceState(null, '', '/examples/article')
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <ExampleDashboard />, host)
+
+    const article = document.querySelector<HTMLElement>('.Card.example-card')!
+    expect(article.tagName).toBe('ARTICLE')
+    expect(article.querySelector('h2')?.textContent).toBe('Article')
+    expect(document.querySelectorAll('.example-detail article')).toHaveLength(1)
+  })
   test('详情 URL 可以直接打开并跟随浏览历史变化', () => {
     window.history.replaceState(null, '', '/examples/droppable')
     const host = document.body.appendChild(document.createElement('div'))

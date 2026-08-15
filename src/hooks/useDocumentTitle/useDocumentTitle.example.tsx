@@ -4,6 +4,7 @@
  */
 import { Button } from '../../components/kits/Button'
 import { Card } from '../../components/kits/Card'
+import { Article } from '../../components/kits/Article'
 import { createState, val } from '../createState'
 import { useDocumentTitle } from './useDocumentTitle'
 
@@ -13,7 +14,7 @@ export function UseDocumentTitleExample() {
   const currentTitle = useDocumentTitle(() => titles[val(titleIndex)])
 
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>Hook</span>
         <h2>useDocumentTitle</h2>
@@ -30,6 +31,6 @@ export function UseDocumentTitleExample() {
           Switch title
         </Button>
       </div>
-    </Card>
+    </Article>
   )
 }

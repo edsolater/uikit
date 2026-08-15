@@ -1,0 +1,26 @@
+.article-example-contract {
+  min-block-size: 220px;
+  display: grid;
+  align-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: var(--boundary-1) solid var(--color-line-soft);
+  border-radius: var(--radius-3);
+  background: var(--color-surface-low);
+}
+
+.article-example-contract span {
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.article-example-contract code {
+  color: var(--color-fg-strong);
+  font-size: var(--font-size-lg);
+}
+
+.article-example-contract strong {
+  color: var(--color-fg-soft);
+  font-weight: var(--font-weight-normal);
+}

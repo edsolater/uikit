@@ -4,10 +4,11 @@
  */
 import { Input } from './Input'
 import { Card } from '../Card'
+import { Article } from '../Article'
 
 export function InputExample() {
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>Component</span>
         <h2>Input</h2>
@@ -30,6 +31,6 @@ export function InputExample() {
           <p class="field-error">请输入合法值。</p>
         </div>
       </div>
-    </Card>
+    </Article>
   )
 }

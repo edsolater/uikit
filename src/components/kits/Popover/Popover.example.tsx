@@ -4,10 +4,11 @@
  */
 import { Popover } from './Popover'
 import { Card } from '../Card'
+import { Article } from '../Article'
 
 export function PopoverExample() {
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>Component</span>
         <h2>Popover</h2>
@@ -30,6 +31,6 @@ export function PopoverExample() {
           <p>这个例子用于确认横向锚定也能正常工作。</p>
         </Popover>
       </div>
-    </Card>
+    </Article>
   )
 }

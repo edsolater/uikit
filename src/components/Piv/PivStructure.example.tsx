@@ -5,6 +5,7 @@
  */
 import { Piv } from './Piv'
 import { Card } from '../kits/Card'
+import { Article } from '../kits/Article'
 import { createPivPlugin } from './plugin/helpers'
 
 const beforeLabelPlugin = createPivPlugin(({ insertBefore }) => {
@@ -29,7 +30,7 @@ const selfMeasurePlugin = createPivPlugin(({ element, insertAfter }) => {
 
 export function PivStructureExample() {
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>BasicPiv</span>
         <h2>Structure plugin</h2>
@@ -53,6 +54,6 @@ export function PivStructureExample() {
           element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
         </Piv>
       </div>
-    </Card>
+    </Article>
   )
 }

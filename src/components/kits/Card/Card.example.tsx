@@ -1,10 +1,11 @@
 /** Card 的本地 Example：验证独立信息单元的默认形态、声量和尺寸。 */
 import { Card } from './Card'
+import { Article } from '../Article'
 import './Card.example.css'
 
 export function CardExample() {
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>Component</span>
         <h2>Card</h2>
@@ -37,6 +38,6 @@ export function CardExample() {
           <span>稳定对比的实体卡片</span>
         </Card>
       </div>
-    </Card>
+    </Article>
   )
 }

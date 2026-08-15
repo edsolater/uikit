@@ -4,10 +4,11 @@
  */
 import { Button } from './Button'
 import { Card } from '../Card'
+import { Article } from '../Article'
 
 export function ButtonExample() {
   return (
-    <Card as="article" class="example-card">
+    <Article as={Card} class="example-card">
       <div class="example-card-head">
         <span>Component</span>
         <h2>Button</h2>
@@ -82,6 +83,6 @@ export function ButtonExample() {
           <Button size="xlarge" tone="solid">XLarge</Button>
         </div>
       </div>
-    </Card>
+    </Article>
   )
 }

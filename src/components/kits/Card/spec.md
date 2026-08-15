@@ -47,14 +47,15 @@ Card = 一个独立信息单元 + tone + size
 <Card>普通信息单元</Card>
 ```
 
-### 选择原生语义
+### 与正文语义组合
+
+当 Card 表现的是一篇可独立理解的正文时，让 Article 成为调用主体，Card 只提供视觉形式：
 
 ```tsx
-<Card as="article">可独立分发的内容</Card>
-<Card as="section" htmlProps={{ 'aria-labelledby': 'settings-title' }}>
-  <h2 id="settings-title">账户设置</h2>
-</Card>
+<Article as={Card}>可独立理解的正文</Article>
 ```
+
+普通 Card 不需要为了补充弱结构信息而指定 `as="section"`。只有原生语义本身能够显著帮助阅读时，才把它提升成明确的语义组件。
 
 ### 选择视觉声量
 
@@ -95,7 +96,7 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'> extends PivProps
 
 | 属性 | Card 中的含义 |
 | --- | --- |
-| `as` | 选择根原生元素，默认是 `div`。 |
+| `as` | 选择根原生元素，默认是 `div`；独立正文优先写成 `Article as={Card}`。 |
 | `children` | 提供属于同一个信息单元的完整内容。 |
 | `id` | 设置根元素原生 id。 |
 | `if` | 为 `false` 时 Card 与 children 都不进入 DOM。 |

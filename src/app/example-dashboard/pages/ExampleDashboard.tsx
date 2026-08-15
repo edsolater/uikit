@@ -6,6 +6,7 @@ import { createSignal, For, onCleanup, onMount, type Component } from 'solid-js'
 import { ButtonExample } from '../../../components/kits/Button/Button.example'
 import { Card } from '../../../components/kits/Card'
 import { CardExample } from '../../../components/kits/Card/Card.example'
+import { ArticleExample } from '../../../components/kits/Article/Article.example'
 import { InputExample } from '../../../components/kits/Input/Input.example'
 import { PopoverExample } from '../../../components/kits/Popover/Popover.example'
 import { PivStructureExample } from '../../../components/Piv/PivStructure.example'
@@ -42,6 +43,7 @@ const exampleCategories = {
 
 const exampleEntries: ExampleEntry[] = [
   { id: 'card', title: 'Card', category: exampleCategories.component, summary: '独立信息单元的声量、尺寸与主题材质。', thumbnail: new URL('../thumbnails/card.webp', import.meta.url).href, content: CardExample },
+  { id: 'article', title: 'Article', category: exampleCategories.component, summary: '独立正文语义与透明视觉载体。', thumbnail: new URL('../thumbnails/article.webp', import.meta.url).href, content: ArticleExample },
   { id: 'button', title: 'Button', category: exampleCategories.component, summary: '动作声量、性质、状态与尺寸。', thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href, content: ButtonExample },
   { id: 'input', title: 'Input', category: exampleCategories.component, summary: '单行输入值与校验状态。', thumbnail: new URL('../thumbnails/input.webp', import.meta.url).href, content: InputExample },
   { id: 'popover', title: 'Popover', category: exampleCategories.component, summary: '原生浮层、锚点定位与边框形状。', thumbnail: new URL('../thumbnails/popover.webp', import.meta.url).href, content: PopoverExample },
@@ -141,7 +143,7 @@ function ExampleDetail(props: {
 function ExampleMissing(props: { id: string; onNavigate: (event: MouseEvent) => void }) {
   return (
     <section class="example-missing">
-      <Card as="article" class="example-card">
+      <Card class="example-card">
         <div class="example-card-head">
           <span>Not Found</span>
           <h1>没有这个 Example</h1>
