@@ -1,6 +1,7 @@
 /** Scope Example：同一 Scope 内允许 Drag and Drop，跨 Scope 时拒绝。 */
 import { createSignal } from 'solid-js'
 import { Piv } from '../../../Piv'
+import { Card } from '../../../kits/Card'
 import '../../DragAndDrop.example.css'
 import { dragAndDrop } from '../dragAndDrop'
 import { draggable } from '../draggable'
@@ -41,8 +42,8 @@ export function ScopeExample() {
   )
 
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Plugin</span>
         <h2>Scope + Drag and Drop</h2>
       </div>
@@ -52,6 +53,6 @@ export function ScopeExample() {
         {renderScope('A')}
         {renderScope('B')}
       </div>
-    </article>
+    </Card>
   )
 }

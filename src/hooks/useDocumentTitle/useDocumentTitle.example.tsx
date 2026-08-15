@@ -3,6 +3,7 @@
  * 它只服务本地 HTML 验证，不参与 hooks 正式导出。
  */
 import { Button } from '../../components/kits/Button'
+import { Card } from '../../components/kits/Card'
 import { createState, val } from '../createState'
 import { useDocumentTitle } from './useDocumentTitle'
 
@@ -12,8 +13,8 @@ export function UseDocumentTitleExample() {
   const currentTitle = useDocumentTitle(() => titles[val(titleIndex)])
 
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Hook</span>
         <h2>useDocumentTitle</h2>
       </div>
@@ -29,6 +30,6 @@ export function UseDocumentTitleExample() {
           Switch title
         </Button>
       </div>
-    </article>
+    </Card>
   )
 }

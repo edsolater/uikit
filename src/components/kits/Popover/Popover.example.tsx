@@ -3,11 +3,12 @@
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
 import { Popover } from './Popover'
+import { Card } from '../Card'
 
 export function PopoverExample() {
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Component</span>
         <h2>Popover</h2>
       </div>
@@ -29,6 +30,6 @@ export function PopoverExample() {
           <p>这个例子用于确认横向锚定也能正常工作。</p>
         </Popover>
       </div>
-    </article>
+    </Card>
   )
 }

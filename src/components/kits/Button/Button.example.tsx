@@ -3,11 +3,12 @@
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
 import { Button } from './Button'
+import { Card } from '../Card'
 
 export function ButtonExample() {
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Component</span>
         <h2>Button</h2>
       </div>
@@ -81,6 +82,6 @@ export function ButtonExample() {
           <Button size="xlarge" tone="solid">XLarge</Button>
         </div>
       </div>
-    </article>
+    </Card>
   )
 }

@@ -5,6 +5,7 @@ import { afterEach, test } from 'vitest'
 import '../../../css/all-base.css'
 import '../pages/ExampleDashboard.css'
 import { ButtonExample } from '../../../components/kits/Button/Button.example'
+import { CardExample } from '../../../components/kits/Card/Card.example'
 import { InputExample } from '../../../components/kits/Input/Input.example'
 import { PopoverExample } from '../../../components/kits/Popover/Popover.example'
 import { DraggableExample } from '../../../components/plugins/kits/draggable/draggable.example'
@@ -39,6 +40,7 @@ afterEach(() => {
   document.body.replaceChildren()
 })
 
+test('生成 Card 缩略图', () => captureThumbnail('card', CardExample))
 test('生成 Button 缩略图', () => captureThumbnail('button', ButtonExample))
 test('生成 Input 缩略图', () => captureThumbnail('input', InputExample))
 test('生成 Popover 缩略图', () => captureThumbnail('popover', PopoverExample, async () => {

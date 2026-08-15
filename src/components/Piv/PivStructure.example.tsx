@@ -4,6 +4,7 @@
  * 这里用可运行示例展示 insertBefore、appendChild、wrapOutside 和 element 参数的使用边界。
  */
 import { Piv } from './Piv'
+import { Card } from '../kits/Card'
 import { createPivPlugin } from './plugin/helpers'
 
 const beforeLabelPlugin = createPivPlugin(({ insertBefore }) => {
@@ -28,8 +29,8 @@ const selfMeasurePlugin = createPivPlugin(({ element, insertAfter }) => {
 
 export function PivStructureExample() {
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>BasicPiv</span>
         <h2>Structure plugin</h2>
       </div>
@@ -52,6 +53,6 @@ export function PivStructureExample() {
           element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
         </Piv>
       </div>
-    </article>
+    </Card>
   )
 }

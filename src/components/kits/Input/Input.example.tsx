@@ -3,11 +3,12 @@
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
 import { Input } from './Input'
+import { Card } from '../Card'
 
 export function InputExample() {
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Component</span>
         <h2>Input</h2>
       </div>
@@ -29,6 +30,6 @@ export function InputExample() {
           <p class="field-error">请输入合法值。</p>
         </div>
       </div>
-    </article>
+    </Card>
   )
 }

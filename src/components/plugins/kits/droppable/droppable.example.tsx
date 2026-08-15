@@ -4,6 +4,7 @@
  */
 import { createSignal } from 'solid-js'
 import { Piv } from '../../../Piv'
+import { Card } from '../../../kits/Card'
 import '../../DragAndDrop.example.css'
 import { draggable } from '../draggable'
 import { droppable } from './droppable'
@@ -13,8 +14,8 @@ export function DroppableExample() {
   const [fileResult, setFileResult] = createSignal<string>()
 
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Plugin</span>
         <h2>Droppable</h2>
       </div>
@@ -64,6 +65,6 @@ export function DroppableExample() {
           </Piv>
         </div>
       </div>
-    </article>
+    </Card>
   )
 }

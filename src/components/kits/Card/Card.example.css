@@ -1,0 +1,14 @@
+.card-example-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+
+.card-example-item strong {
+  color: var(--color-fg-strong);
+}
+
+.card-example-item span {
+  color: var(--color-fg-soft);
+  line-height: 1.5;
+}

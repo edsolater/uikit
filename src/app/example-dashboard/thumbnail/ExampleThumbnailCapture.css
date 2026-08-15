@@ -9,7 +9,12 @@
     oklch(95.5% 0.018 262);
 }
 
-.example-thumbnail-capture-stage > :is(.panel, section) {
+.example-thumbnail-capture-stage > .example-card {
+  min-block-size: 100%;
+  align-content: start;
+}
+
+.example-thumbnail-capture-stage > section {
   min-block-size: 100%;
   align-content: start;
   padding: 28px;
@@ -23,7 +28,7 @@
   background: var(--color-surface);
 }
 
-.example-thumbnail-capture-stage > .panel > :is(.panel-head, p),
+.example-thumbnail-capture-stage > .example-card > :is(.example-card-head, p),
 .example-thumbnail-capture-stage > section > h2 {
   display: none;
 }

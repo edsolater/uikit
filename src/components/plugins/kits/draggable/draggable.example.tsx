@@ -1,12 +1,13 @@
 /** Draggable Example：验证原始元素移动不依赖 Droppable。 */
 import { Piv } from '../../../Piv'
+import { Card } from '../../../kits/Card'
 import '../../DragAndDrop.example.css'
 import { draggable } from './draggable'
 
 export function DraggableExample() {
   return (
-    <article class="panel">
-      <div class="panel-head">
+    <Card as="article" class="example-card">
+      <div class="example-card-head">
         <span>Plugin</span>
         <h2>Draggable</h2>
       </div>
@@ -18,6 +19,6 @@ export function DraggableExample() {
       >
         拖动 Weather
       </Piv>
-    </article>
+    </Card>
   )
 }

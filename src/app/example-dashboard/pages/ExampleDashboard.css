@@ -7,40 +7,18 @@
   padding: 24px clamp(var(--space-5), 5vw, 80px) 96px;
   /* 背景层是页面的底色，不跟随卡片滚动；卡片通过半透明材质吃到这层色温。 */
   background:
-    radial-gradient(circle at 14% -6%, oklch(74% 0.16 255 / 18%), transparent 38%),
-    radial-gradient(circle at 88% 8%, oklch(78% 0.12 315 / 12%), transparent 34%),
-    linear-gradient(180deg, oklch(97.5% 0.014 272), oklch(94.5% 0.018 258));
+    radial-gradient(circle at 14% -6%, color-mix(in oklab, var(--color-accent) 20%, transparent), transparent 38%),
+    radial-gradient(circle at 88% 8%, color-mix(in oklab, var(--color-brand) 14%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in oklab, var(--color-canvas) 90%, var(--color-accent-soft)), var(--color-canvas));
   background-attachment: fixed;
 }
 
-.panel {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--space-6);
-  border: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 46%, transparent);
-  border-radius: var(--radius-4);
-  /* Surface 是承载内容的半透明材质，不是另一块实心灰色面板。 */
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 58%), rgb(255 255 255 / 42%)),
-    color-mix(in oklab, var(--color-surface) 32%, transparent);
-  box-shadow: var(--shadow-card);
-  backdrop-filter: blur(40px) saturate(1.2);
-  transition: backdrop-filter var(--motion-duration-fast) var(--motion-ease-standard);
-
-  [data-interacting='true'] &,
-  &:has([data-interacting='true']) {
-    /* 交互期间停止大面积模糊；结束后再缓动恢复材质。 */
-    backdrop-filter: none;
-    transition-duration: 0s;
-  }
-}
-
-.panel-head {
+.example-card-head {
   display: grid;
   gap: var(--space-1);
 }
 
-.panel-head span {
+.example-card-head span {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.12em;
@@ -48,14 +26,14 @@
   color: var(--color-accent);
 }
 
-.panel-head :is(h1, h2) {
+.example-card-head :is(h1, h2) {
   margin: 0;
   font-size: 28px;
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
 }
 
-.panel > p {
+.example-card > p {
   max-inline-size: 68ch;
   color: var(--color-fg-soft);
   font-size: 15px;
@@ -288,10 +266,6 @@
 @media (max-width: 640px) {
   .example-shell {
     padding: var(--space-6) var(--space-4) var(--space-7);
-  }
-
-  .panel {
-    padding: var(--space-5);
   }
 
   .setting-row {
