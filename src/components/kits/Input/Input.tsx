@@ -4,7 +4,7 @@
  * label、说明文案、错误文案和字段布局属于更上层的 Field 组合，不塞进 Input 本体。
  * Input 当前只有默认形态；视觉强弱不通过 variant、tone、ghost、bare 或 solid 表达。
  *
- * 组件选择规则见 [Input 设计规格](./spec.md)。
+ * 组件选择规则见 [Input 设计规格](./Input.spec.md)。
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
 import { Piv, type PivProps } from '../../Piv/Piv'

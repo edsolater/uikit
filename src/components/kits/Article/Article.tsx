@@ -2,7 +2,7 @@
  * Article 表达可脱离当前页面结构、仍能独立理解的正文内容。
  * 它不创建视觉、不增加 DOM 层；as 只选择承载正文的表现组件，最终原生节点始终是 article。
  *
- * 组件选择与透明承载协议见 [Article 设计规格](./spec.md)。
+ * 组件选择与透明承载协议见 [Article 设计规格](./Article.spec.md)。
  */
 import { splitProps, type JSX } from 'solid-js'
 import { Piv, type PivProps } from '../../Piv'

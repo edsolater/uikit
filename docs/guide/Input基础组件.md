@@ -14,7 +14,7 @@
 - 调用方需要让用户输入或修改一个单行文本类值时，使用 `Input`。
 - `Input` 的核心不是“输入框外观”，而是“当前值可编辑”。
 - `Input` 当前只提供一个清晰、稳定、可识别的默认输入框。
-- AI 选择组件时应先读 [Input 设计规格](../../src/components/kits/Input/spec.md)。
+- AI 选择组件时应先读 [Input 设计规格](../../src/components/kits/Input/Input.spec.md)。
 
 ## 使用判断
 

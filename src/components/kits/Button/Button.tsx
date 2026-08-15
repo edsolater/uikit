@@ -4,7 +4,7 @@
  * 会改变位置的交互应使用 Link；业务流程判断、表单编排和状态来源不塞进 Button 本体。
  * Button 只把动作内容、动作声量、动作性质、按钮尺寸和外部状态翻译成原生 button。
  *
- * 组件选择规则见 [Button 设计规格](./spec.md)。
+ * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
 import { clickable } from '../../plugins'

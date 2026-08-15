@@ -2,7 +2,7 @@
  * Card 是有边界、可独立理解的信息单元。
  * 它把属于同一个对象或主题的内容、视觉声量和物理尺度翻译成完整卡片；业务流程、整卡交互、外部布局和提升状态留给对应上层能力。
  *
- * 组件选择与档位规则见 [Card 设计规格](./spec.md)。
+ * 组件选择与档位规则见 [Card 设计规格](./Card.spec.md)。
  */
 import type { Source } from '../../../hooks'
 import { Piv, type PivProps } from '../../Piv'
