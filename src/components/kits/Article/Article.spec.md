@@ -88,7 +88,7 @@ Card 的默认 tone 已经是完整可用的半透明主题卡片。Article 只�
 <Article as={Card}>正文内容</Article>
 ```
 
-不要为了表示“这是正文”附加 `tone="solid"`。tone 只在正文确实需要不同视觉声量时选择。
+不要为了表示“这是正文”附加 `solid`。tone 只在正文确实需要不同视觉声量时选择。
 
 ## CSS 变量
 

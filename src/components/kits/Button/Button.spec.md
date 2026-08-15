@@ -1,248 +1,113 @@
 # Button 设计规格
 
-## 文档定位
+## 组件定义
 
-- 本文档是 AI 在其他项目里判断是否使用 `Button` 的入口。
-- 本文档只写调用方可执行的选择规则和 API 口径。
-- 内部实现、状态管理器、样式 token 和 DOM 细节不放在本文档主线。
-- 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
-
-## 核心判断
-
-- `Button` 表达“在当前上下文执行一个命令”。
-- `Button` 不表达“去另一个位置”。
-- `Button` 不表达“编辑一个值”。
-- `Button` 不表达“展示一个状态”。
-- `Button` 不表达“切换一个持续状态”。
-- `Button` 的顶层 API 优先表达界面语义，不用原生表单语义反向命名组件字段。
+`Button` 表达“在当前上下文执行一个命令”。它不表达导航、值编辑、持续状态切换或状态展示。
 
 ```txt
-Button = action + content + tone + intent + size + status
+Button = action + content + Brand Props + Status Props
 ```
 
-```txt
-action  = 当前上下文命令
-content = 用户看到的动作内容
-tone    = 动作进入界面的视觉声量
-intent  = 动作性质
-size    = 按钮物理尺寸档位
-status  = 外部注入的动作状态
+- `children` 是用户看到的动作内容。
+- `name` 是动作名；纯图形按钮必须提供，最终映射到 `aria-label`。
+- tone、intent、size 是三个互不相关的 Brand 分组。
+- loading、disabled 是可以同时成立的 Status。
+
+## 选择规则
+
+- 保存、确认、取消、清除、删除、复制、刷新、重试、导出等当前位置命令使用 `Button`。
+- 改变 URL、路由、页面位置、外链或锚点时使用 `Link`。
+- 输入或修改值时使用 `Input` 或其他表单控件。
+- 切换持续布尔状态时使用 Switch 或 Checkbox 类组件。
+- 只展示状态、分类、标签或徽章时不使用 `Button`。
+
+## 常用写法
+
+```tsx
+<Button>关闭</Button>
+<Button accent solid>保存</Button>
+<Button bare>清空</Button>
+<Button danger bare>移除</Button>
+<Button danger solid>确认删除</Button>
+<Button loading>提交</Button>
+<Button disabled>提交</Button>
+<Button name="关闭"><CloseIcon /></Button>
 ```
 
-## AI 选择规则
+确定描述词直接形成代码的阅读轮廓。只有具体值会变化时，才使用分组字段：
 
-- 如果用户点击后执行保存、确认、取消、清除、删除、复制、刷新、重试、导出这类命令，使用 `Button`。
-- 如果用户点击后改变 URL、路由、页面位置、外链或锚点，使用 `Link`。
-- 如果用户需要输入或修改值，使用 `Input` 或后续表单控件。
-- 如果用户需要切换持续布尔状态，使用后续 Switch 或 Checkbox 类组件。
-- 如果界面只是在展示状态、分类、标签或徽章，不使用 `Button`。
-- 如果动作能被文字说明，动作内容放在 `children`。
-- 如果动作只有图标或非文本内容，必须提供 `name`。
-- 如果动作是否可用需要业务判断，外部先判断，再注入 `status`。
+```tsx
+<Button size={buttonSize} tone={buttonTone}>动态按钮</Button>
+```
 
-## 使用场景
-
-| 场景 | 推荐写法 | 判断理由 |
-| --- | --- | --- |
-| 普通关闭动作 | `<Button>关闭</Button>` | 关闭是当前上下文普通命令。 |
-| 保存当前表单 | `<Button intent="accent" tone="solid">保存</Button>` | 保存是推荐路径动作，需要更高声量。 |
-| 清空筛选条件 | `<Button tone="bare">清空</Button>` | 清空是低权重辅助动作。 |
-| 行内删除 | `<Button intent="danger" tone="bare">删除</Button>` | 删除是破坏性动作，但行内操作不应过度抢占注意力。 |
-| 删除确认 | `<Button intent="danger" tone="solid">确认删除</Button>` | 最终破坏性确认需要高声量警示。 |
-| 图标关闭按钮 | `<Button name="关闭"><CloseIcon /></Button>` | 纯图形内容需要动作名。 |
-| 加载中的提交动作 | `<Button status="loading">提交</Button>` | loading 是外部流程状态。 |
-| 不可用动作 | `<Button status="disabled">提交</Button>` | disabled 是外部判断结果。 |
-| 原生表单提交 | `<Button htmlProps={{ type: 'submit' }}>提交</Button>` | 原生按钮 type 通过 `htmlProps` 表达。 |
-
-## 禁止场景
-
-| 场景 | 应使用 | 原因 |
-| --- | --- | --- |
-| 打开详情页 | `Link` | 这是位置变化。 |
-| 跳转外链 | `Link` | 这是导航行为。 |
-| 输入项目名称 | `Input` | 这是值编辑。 |
-| 勾选是否启用 | 后续 Switch/Checkbox | 这是持续状态选择。 |
-| 展示成功状态 | 后续 Badge/Tag | 这是状态展示。 |
-| 选择下拉选项 | 后续 Select | 这是选项选择。 |
-
-## Props 口径
+## Props 契约
 
 ```ts
-type ButtonTone = 'bare' | 'solid'
-type ButtonIntent = 'accent' | 'danger'
-type ButtonSize = 'small' | 'large' | 'xlarge'
-type ButtonStatus = 'loading' | 'disabled'
-
-interface ButtonProps extends PivProps<'button'> {
-  /**
-   * 动作视觉声量。
-   *
-   * bare: 低声量，适合辅助动作。
-   * solid: 高声量，适合主动作或关键确认。
-   *
-   * 默认声量通过省略 tone 表达。
-   * 不要传 tone="normal"。
-   */
-  tone?: ButtonTone
-
-  /**
-   * 动作性质。
-   *
-   * accent: 推荐路径动作。
-   * danger: 破坏性动作。
-   *
-   * 普通动作通过省略 intent 表达。
-   * 不要传 intent="neutral"。
-   */
-  intent?: Source<ButtonIntent | undefined>
-
-  /**
-   * 按钮尺寸档位。
-   *
-   * small: 高密度区域或行内操作。
-   * large: 主行动区、大入口或需要更大命中面积的动作。
-   *
-   * 默认尺寸通过省略 size 表达。
-   * 不要传 size="normal"。
-   */
-  size?: Source<ButtonSize | undefined>
-
-  /**
-   * 动作名。
-   *
-   * name 描述“这个按钮动作是什么”。
-   * name 是界面动作名，不是原生 button name attribute。
-   * name 不替代 children，也不表示可见文案。
-   * children 只有图标或非文本内容时必须提供。
-   * 原生 button 的 name attribute 通过 htmlProps.name 传入。
-   */
+interface ButtonProps
+  extends PivProps<'button'>,
+    BrandProps<'tone', 'bare' | 'solid'>,
+    BrandProps<'intent', 'accent' | 'danger'>,
+    BrandProps<'size', 'small' | 'large' | 'xlarge'>,
+    StatusProps<'loading' | 'disabled'> {
   name?: Source<string | undefined>
-
-  /**
-   * 外部注入的动作状态。
-   *
-   * loading: 动作已触发，正在等待结果。
-   * disabled: 动作当前不可触发。
-   *
-   * 默认状态通过省略 status 表达。
-   * 不要传 status="idle"。
-   */
-  status?: StatusInput<ButtonStatus>
+  onClick?: EventListenerInput<'click'>
 }
 ```
 
-## Tone 选择
+### Brand Props
 
-- 省略 `tone` 表示默认声量。
-- `tone="bare"` 表示动作存在但退场。
-- `tone="solid"` 表示动作需要优先被看见。
-- 不提供 `tone="normal"`。
-- 不提供 `tone="subtle"`。
+| 分组 | 确定描述词 | 不定字段 | 省略时 |
+| --- | --- | --- | --- |
+| 动作声量 | `bare`、`solid` | `tone` | 默认声量 |
+| 动作性质 | `accent`、`danger` | `intent` | 普通动作 |
+| 物理尺寸 | `small`、`large`、`xlarge` | `size` | 默认尺寸 |
 
-| 动作 | tone |
-| --- | --- |
-| 页面主保存 | `solid` |
-| 弹窗主确认 | `solid` |
-| 行内更多操作 | `bare` |
-| 清空筛选 | `bare` |
-| 普通关闭 | 省略 |
-| 普通取消 | 省略 |
+- 确定描述词的值是 `Source<boolean | undefined>`，适合具体 Brand 已知、只需决定是否存在的场景。
+- 不定字段的值是对应候选的 `Source`，适合具体 Brand 会变化的场景。
+- 不定字段按“是否声明”接管整个分组；即使当前值是 `undefined`，也不会回落到同组确定描述词。
+- 同组输入冲突会给出详细警告，但不会让组件崩溃。
+- 默认值就是 `undefined`，不存在 `normal`、`neutral`、`medium` 这类默认候选。
 
-## Intent 选择
+### Status Props
 
-- 省略 `intent` 表示普通动作。
-- `intent="accent"` 表示当前流程推荐用户执行的动作。
-- `intent="danger"` 表示删除、移除、重置、撤销权限等破坏性动作。
-- `intent` 不决定动作声量。
-- 破坏性动作可以是 `bare`，也可以是 `solid`。
+- `loading` 表示动作已经触发并等待结果，同时输出 `aria-busy`。
+- `disabled` 表示动作当前不可触发，同时设置原生 `disabled`。
+- 两个状态可以同时成立，最终共同进入 `data-status`。
+- 状态字段同样接受 `Source<boolean | undefined>`。
+- 外部一旦声明某个状态字段，该字段由外部持续控制；组件内部对该状态的更改保持无效且不报错。
+- Button 接收状态，但不判断状态为什么成立。
 
-```tsx
-<Button intent="danger" tone="bare">移除</Button>
-<Button intent="danger" tone="solid">确认删除</Button>
-```
+## Brand 选择
 
-## Size 选择
+### Tone
 
-- 省略 `size` 表示默认按钮尺寸。
-- `size="small"` 用于工具栏、表格行、弹窗角落、卡片角落和高密度区域。
-- `size="large"` 用于空状态、主行动区、触控优先区域和需要更大命中面积的动作。
-- 不提供 `size="normal"`。
-- `size` 是物理尺寸档位，不是任意 CSS 尺寸值。
-- 选择 `size` 时应同时考虑紧凑/宽松、信息密度、操作频率和命中面积。
+- `bare`：动作存在但退场，适合清除、跳过、更多等低权重命令。
+- `solid`：动作需要优先被看见，适合主操作或高风险确认。
+- 省略：普通确认、关闭、返回等常规命令。
 
-## Status 选择
+### Intent
 
-- 省略 `status` 表示普通可操作状态。
-- `status="loading"` 表示动作已触发并等待结果。
-- `status="disabled"` 表示动作当前不可触发。
-- `status` 只接收外部判断结果。
-- `Button` 不负责判断状态为什么成立。
-- 不提供 `status="idle"`。
+- `accent`：当前流程推荐用户执行的动作。
+- `danger`：删除、移除、重置、撤销权限等破坏性动作。
+- intent 不决定声量；危险动作既可以是 `bare`，也可以是 `solid`。
 
-## Content 选择
+### Size
 
-- `children` 是可见动作内容。
-- 文本动作直接把文本放进 `children`。
-- 图标和文本可以一起放进 `children`。
-- 纯图标动作必须提供 `name`。
-- 不提供 `icon` prop。
-- 不提供 `trailingIcon` prop。
-- `name` 是界面动作名，不是原生表单字段名。
-- 原生 button 的 `name` attribute 通过 `htmlProps.name` 表达。
+- `small`：工具栏、表格行、弹窗角落和高密度区域。
+- `large`：空状态、主行动区、触控优先区域。
+- `xlarge`：需要更大命中面积的主入口。
+- size 是物理尺寸档位，不是任意 CSS 尺寸值。
 
-```tsx
-<Button>保存</Button>
+## 原生能力与边界
 
-<Button>
-  <SaveIcon />
-  <span>保存</span>
-</Button>
+- Button 最终只输出一个原生 `button`。
+- 默认 `type="button"`；提交和重置通过 `htmlProps` 明确传入。
+- 原生 button 的 `name` attribute 使用 `htmlProps.name`，不使用顶层 `name`。
+- 不提供 `variant`、`shape`、`href`、`target`、`icon`、`trailingIcon`、`enabled`、`validIf` 或 `validator`。
+- 图标属于 `children`；导航属于 Link；状态判断属于外部业务。
 
-<Button name="关闭">
-  <CloseIcon />
-</Button>
-```
+## 输出协议
 
-## 原生按钮能力
-
-- `Button` 底层输出原生 `button`。
-- 普通动作默认使用 `type="button"`。
-- 原生表单提交通过 `htmlProps={{ type: 'submit' }}` 表达。
-- 原生表单重置通过 `htmlProps={{ type: 'reset' }}` 表达。
-- 不提供顶层 `href`。
-- 不提供顶层 `target`。
-
-## 不提供的 API
-
-- 不提供 `variant`。
-- 不提供 `shape`。
-- 不提供 `href`。
-- 不提供 `target`。
-- 不提供 `icon`。
-- 不提供 `trailingIcon`。
-- 不提供 `enabled`。
-- 不提供 `validIf`。
-- 不提供 `validator`。
-
-| API | 删除原因 |
-| --- | --- |
-| `variant` | 语义太泛，不说明变化维度。 |
-| `shape` | 属于全局风格，不属于单个 Button。 |
-| `href` | 属于 Link，不属于 Button。 |
-| `target` | 属于 Link，不属于 Button。 |
-| `icon` | 图标属于 `children` 内容组合。 |
-| `trailingIcon` | 尾部图标属于 `children` 内容组合。 |
-| `enabled` | 这是外部判断，不是 Button 本体协议。 |
-| `validIf` | 这是外部判断条件，不是 Button 本体协议。 |
-| `validator` | Button 接收状态，不内建判断器。 |
-
-## 定稿句
-
-- `Button` 是当前上下文命令入口。
-- `children` 表达动作内容。
-- `name` 表达动作名。
-- `tone` 表达动作声量。
-- `intent` 表达动作性质。
-- `size` 表达按钮尺寸档位。
-- `status` 表达外部注入的动作状态。
-- 默认 `Button` 是普通声量、普通性质、默认尺度、可操作状态。
+- Brand 分组分别输出 `data-tone`、`data-intent`、`data-size`。
+- 当前成立的 Status 合并输出到 `data-status`，以空格分隔。
+- 这些分类概念仍然存在于类型、注释和 DOM 协议中；运行时不需要 Profile 或枚举对象维持分类。

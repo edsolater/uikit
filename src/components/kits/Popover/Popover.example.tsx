@@ -24,7 +24,7 @@ export function PopoverExample() {
         </Popover>
 
         <Popover
-          placement="right"
+          right
           trigger="Right popover"
           title="右侧定位"
         >

@@ -1,7 +1,7 @@
 .Popover {
   display: inline-flex;
 
-  > ._trigger {
+  > .trigger {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -32,15 +32,15 @@
     }
   }
 
-  &.state\:open {
-    > ._trigger {
+  &[data-status~='open'] {
+    > .trigger {
       border-color: color-mix(in oklab, var(--color-accent) 48%, var(--color-line));
       background: color-mix(in oklab, var(--color-surface-low) 78%, var(--color-accent-soft));
       box-shadow: 0 16px 32px rgba(31, 26, 23, 0.16);
     }
   }
 
-  > ._surface {
+  > .surface {
     margin: 0;
     padding: 16px 18px;
     border: 1px solid rgba(255, 248, 239, 0.14);
@@ -82,7 +82,7 @@
       box-shadow: 0 10px 24px rgba(16, 20, 29, 0.18);
     }
 
-    > ._header {
+    > .header {
       margin-bottom: 10px;
       font-size: 13px;
       font-weight: 700;
@@ -91,7 +91,7 @@
       color: rgba(255, 216, 187, 0.84);
     }
 
-    > ._body {
+    > .body {
       display: grid;
       gap: 10px;
       font-size: 14px;
@@ -100,8 +100,9 @@
     }
   }
 
-  &.placement\:bottom {
-    > ._surface {
+  &:not([data-placement]),
+  &[data-placement='bottom'] {
+    > .surface {
       position-area: bottom;
       margin-top: 14px;
       transform-origin: center top;
@@ -113,8 +114,8 @@
     }
   }
 
-  &.placement\:top {
-    > ._surface {
+  &[data-placement='top'] {
+    > .surface {
       position-area: top;
       margin-bottom: 14px;
       transform-origin: center bottom;
@@ -126,8 +127,8 @@
     }
   }
 
-  &.placement\:right {
-    > ._surface {
+  &[data-placement='right'] {
+    > .surface {
       position-area: right;
       margin-left: 14px;
       transform-origin: left center;
@@ -139,8 +140,8 @@
     }
   }
 
-  &.placement\:left {
-    > ._surface {
+  &[data-placement='left'] {
+    > .surface {
       position-area: left;
       margin-right: 14px;
       transform-origin: right center;

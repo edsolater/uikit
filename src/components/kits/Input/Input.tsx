@@ -8,19 +8,27 @@
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
-import { createPivPlugin } from '../../Piv/plugin/helpers'
+import { createStatusPropsParser } from '../utils/parseStatusProps'
 import './Input.css'
-import { createValiditor, type ValidityOptions } from './createInputValidity'
+import { createInputValidity, type InputValidityProps } from './createInputValidity'
 
-export interface InputProps extends PivProps<'input'>, ValidityOptions {}
+export interface InputProps extends PivProps<'input'>, InputValidityProps {}
+
+const parseInputStatusProps = createStatusPropsParser({
+  candidates: ['invalid'],
+  effect: ({ invalid }) => ({
+    htmlProps: {
+      'aria-invalid': invalid,
+    },
+  }),
+})
 
 export function Input(props: InputProps) {
-  const validity = createValiditor(props)
-  const isInvalid = validity.isValid.map((v) => !v)
-  const inputStatusPlugin = createPivPlugin(() => ({
-    class: { invalid: isInvalid },
-    htmlProps: { 'aria-invalid': isInvalid },
-  }))
+  const validity = createInputValidity(props)
+  const isInvalid = validity.isValid.map((isValid) => !isValid)
+  const { statusShadowProps } = parseInputStatusProps({ invalid: isInvalid })
 
-  return <Piv as="input" shadowProps={props} class="Input" plugins={[inputStatusPlugin]} htmlProps={{ type: 'text' }} />
+  return (
+    <Piv as="input" shadowProps={[props, statusShadowProps]} class="Input" htmlProps={{ type: 'text' }} />
+  )
 }

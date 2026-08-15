@@ -60,18 +60,18 @@ Card = 一个独立信息单元 + tone + size
 ### 选择视觉声量
 
 ```tsx
-<Card tone="soft">低声量辅助信息</Card>
+<Card soft>低声量辅助信息</Card>
 <Card>默认信息卡片</Card>
-<Card tone="solid">需要稳定阅读对比的信息</Card>
+<Card solid>需要稳定阅读对比的信息</Card>
 ```
 
 ### 选择物理尺度
 
 ```tsx
-<Card size="small">紧凑信息</Card>
+<Card small>紧凑信息</Card>
 <Card>默认信息</Card>
-<Card size="large">宽松信息</Card>
-<Card size="xlarge">大尺寸信息单元</Card>
+<Card large>宽松信息</Card>
+<Card xlarge>大尺寸信息单元</Card>
 ```
 
 ## Props 总览
@@ -79,18 +79,22 @@ Card = 一个独立信息单元 + tone + size
 `CardProps` 的公开调用签名等价于：
 
 ```ts
-interface CardProps<Tag extends PivSupportedElementTag = 'div'> extends PivProps<Tag> {
-  tone?: 'soft' | 'solid'
-  size?: Source<'small' | 'large' | 'xlarge' | undefined>
-}
+interface CardProps<Tag extends PivSupportedElementTag = 'div'>
+  extends PivProps<Tag>,
+    BrandProps<'tone', 'soft' | 'solid'>,
+    BrandProps<'size', 'small' | 'large' | 'xlarge'> {}
 ```
 
 ### Card 自有属性
 
 | 属性 | 类型 | 默认值 | 含义 |
 | --- | --- | --- | --- |
-| `tone` | `'soft' \| 'solid'` | `undefined` | Card 进入界面的视觉声量；省略表示默认半透明主题卡片。 |
-| `size` | `Source<'small' \| 'large' \| 'xlarge' \| undefined>` | `undefined` | Card 的内部物理容纳尺度；同时调整 padding、直属内容 gap 和圆角。 |
+| `soft`、`solid` | `Source<boolean \| undefined>` | `undefined` | 确定的视觉声量描述词。 |
+| `tone` | `Source<'soft' \| 'solid' \| undefined>` | `undefined` | 视觉声量会变化时使用的不定字段。 |
+| `small`、`large`、`xlarge` | `Source<boolean \| undefined>` | `undefined` | 确定的物理尺度描述词。 |
+| `size` | `Source<'small' \| 'large' \| 'xlarge' \| undefined>` | `undefined` | 物理尺度会变化时使用的不定字段。 |
+
+确定描述词和值字段都可以响应式变化。不定字段一旦声明便接管同组输入；同组冲突只警告，不中断运行。
 
 ### 从 Piv 继承的属性
 
@@ -119,10 +123,10 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'> extends PivProps
 | 写法 | 表现 | 适用场景 |
 | --- | --- | --- |
 | 省略 `tone` | 半透明主题背景、柔和边界、基础卡片阴影 | 普通信息卡片。 |
-| `tone="soft"` | 更透明的主题背景、更弱边界、更轻阴影 | 辅助信息、嵌套信息单元。 |
-| `tone="solid"` | 实体主题背景、完整柔和边界、基础卡片阴影 | 需要稳定文字对比的卡片。 |
+| `soft` | 更透明的主题背景、更弱边界、更轻阴影 | 辅助信息、嵌套信息单元。 |
+| `solid` | 实体主题背景、完整柔和边界、基础卡片阴影 | 需要稳定文字对比的卡片。 |
 
-- 默认 tone 通过省略表达，不提供 `tone="normal"`。
+- 默认 tone 通过省略表达，不提供 `normal`。
 - `soft` 不是 disabled，也不降低内容可读性。
 - `solid` 不表示 Card 被提升到 Top Layer。
 
@@ -132,12 +136,14 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'> extends PivProps
 
 | 写法 | Padding | Gap | Radius | 适用场景 |
 | --- | --- | --- | --- | --- |
-| `size="small"` | `--space-4` | `--space-3` | `--radius-3` | 紧凑信息单元。 |
+| `small` | `--space-4` | `--space-3` | `--radius-3` | 紧凑信息单元。 |
 | 省略 `size` | `--space-6` | `--space-5` | `--radius-4` | 普通信息单元。 |
-| `size="large"` | `--space-7` | `--space-6` | `--radius-4` | 宽松信息单元。 |
-| `size="xlarge"` | `--space-8` | `--space-7` | `--radius-4` | 内容较多的大尺寸信息单元。 |
+| `large` | `--space-7` | `--space-6` | `--radius-4` | 宽松信息单元。 |
+| `xlarge` | `--space-8` | `--space-7` | `--radius-4` | 内容较多的大尺寸信息单元。 |
 
-`size` 可以接收响应式 `Source`，适合由现有界面状态决定 Card 的内容密度。
+尺寸确定时优先写 `small`、`large` 或 `xlarge`。具体档位由现有界面状态决定时，使用 `size`；它的字段轮廓明确告诉阅读者该分类是不定的。
+
+tone 与 size 的默认解析结果都是 `undefined`，没有额外的默认候选。
 
 ## CSS 变量
 

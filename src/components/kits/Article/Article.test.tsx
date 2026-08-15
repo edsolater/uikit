@@ -32,7 +32,7 @@ describe('Article', () => {
       <Article
         as={Card}
         class="example-card"
-        size="large"
+        large
         htmlProps={{ 'data-testid': 'card-article' }}
       >
         卡片正文

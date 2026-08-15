@@ -50,7 +50,7 @@ const createMiniMapPluginHook = createPluginHookCreator((options: MiniMapPluginO
       miniMapState.setRootElement(element)
     })
 
-    return [miniMapState, miniMapPlugin] as const
+    return [miniMapState, miniMapPlugin] satisfies [typeof miniMapState, typeof miniMapPlugin]
   }
 })
 

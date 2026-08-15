@@ -4,16 +4,24 @@
  */
 import { Show, mergeProps, onMount, type JSX } from 'solid-js'
 import { Piv } from '../../Piv/Piv'
+import { createBrandPropsParser, type BrandProps } from '../utils/parseBrandProps'
+import { createStatusPropsParser } from '../utils/parseStatusProps'
 import { createPopoverController, type PopoverToggleEvent } from './createPopoverController'
 import './popover.css'
-import { val } from '../../../hooks/createState'
 
-export type PopoverPlacement = 'top' | 'right' | 'bottom' | 'left'
+/**
+ * Popover 相对触发器的位置 Brand Props。
+ *
+ * 位置确定时优先声明 top、right、bottom 或 left；只有位置会变化时才使用 placement。
+ * 省略整个分组时默认显示在 bottom。
+ */
+export type PopoverPlacementProps = BrandProps<'placement', 'top' | 'right' | 'bottom' | 'left'>
+
 export type PopoverMode = 'auto' | 'hint' | 'manual'
 export type PopoverAction = 'toggle' | 'show' | 'hide'
 type NativeHTMLPropKey = 'children' | 'class' | 'style' | 'ref' | `on${string}` | `on:${string}`
 
-export type PopoverProps = {
+export interface PopoverProps extends PopoverPlacementProps {
   class?: string
   style?: JSX.CSSProperties
   trigger: JSX.Element
@@ -23,7 +31,6 @@ export type PopoverProps = {
   triggerStyle?: JSX.CSSProperties
   surfaceClass?: string
   surfaceStyle?: JSX.CSSProperties
-  placement?: PopoverPlacement
   popover?: PopoverMode
   triggerAction?: PopoverAction
   defaultOpen?: boolean
@@ -44,74 +51,82 @@ export type PopoverProps = {
 }
 
 const defaultPopoverProps: {
-  placement: PopoverPlacement
   popover: PopoverMode
   triggerAction: PopoverAction
   defaultOpen: boolean
 } = {
-  placement: 'bottom',
   popover: 'auto',
   triggerAction: 'toggle',
   defaultOpen: false,
 }
-function joinClassName(...classNames: Array<string | false | null | undefined>) {
-  return classNames.filter(Boolean).join(' ')
-}
 
-export function Popover(inputProps: PopoverProps) {
-  const props = mergeProps(defaultPopoverProps, inputProps)
+const parsePopoverBrandProps = createBrandPropsParser([
+  { groupName: 'placement', candidates: ['top', 'right', 'bottom', 'left'] },
+])
+
+const parsePopoverStatusProps = createStatusPropsParser({
+  candidates: ['open'],
+})
+
+export function Popover(props: PopoverProps) {
+  const mergedProps = mergeProps(defaultPopoverProps, props)
+  const { brandShadowProps } = parsePopoverBrandProps(props)
   const controller = createPopoverController({
-    onToggle: props.onToggle,
-    onBeforeToggle: props.onBeforeToggle,
+    onToggle: mergedProps.onToggle,
+    onBeforeToggle: mergedProps.onBeforeToggle,
   })
+  const { statusShadowProps } = parsePopoverStatusProps({ open: controller.isOpen })
 
   onMount(() => {
-    if (props.defaultOpen) {
+    if (mergedProps.defaultOpen) {
       controller.showPopover()
     }
   })
 
-  const rootClassName = () =>
-    joinClassName('Popover', `placement:${props.placement}`, val(controller.isOpen) && 'state:open', props.class)
-  const triggerClassName = () => joinClassName('_trigger', props.triggerClass)
-  const surfaceClassName = () => joinClassName('_surface', props.surfaceClass)
-
   return (
-    <Piv class={rootClassName()} style={props.style}>
+    <Piv
+      shadowProps={[brandShadowProps, statusShadowProps]}
+      class={joinClassName('Popover', mergedProps.class)}
+      style={mergedProps.style}
+    >
       <Piv
         as="button"
         id={controller.triggerId}
-        class={triggerClassName()}
-        style={props.triggerStyle}
+        class={joinClassName('trigger', mergedProps.triggerClass)}
+        style={mergedProps.triggerStyle}
         ref={controller.setTriggerElement}
         htmlProps={{
           type: 'button',
           'aria-haspopup': 'dialog',
           'aria-controls': controller.popoverId,
-          'aria-expanded': val(controller.isOpen) ? 'true' : 'false',
+          'aria-expanded': controller.isOpen.map((isOpen) => isOpen ? 'true' : 'false'),
           popovertarget: controller.popoverId,
-          popovertargetaction: props.triggerAction,
-          ...props.triggerProps,
+          popovertargetaction: mergedProps.triggerAction,
+          ...mergedProps.triggerProps,
         }}
       >
-        {props.trigger}
+        {mergedProps.trigger}
       </Piv>
 
       <Piv
         id={controller.popoverId}
-        class={surfaceClassName()}
-        style={props.surfaceStyle}
+        class={joinClassName('surface', mergedProps.surfaceClass)}
+        style={mergedProps.surfaceStyle}
         ref={controller.setPopoverElement}
         htmlProps={{
-          popover: props.popover as any,
-          ...props.surfaceProps,
+          popover: mergedProps.popover as any,
+          ...mergedProps.surfaceProps,
         }}
       >
-        <Show when={props.title}>
-          <div class="_header">{props.title}</div>
+        <Show when={mergedProps.title}>
+          <div class="header">{mergedProps.title}</div>
         </Show>
-        <div class="_body">{props.children}</div>
+        <div class="body">{mergedProps.children}</div>
       </Piv>
     </Piv>
   )
+}
+
+function joinClassName(...classNames: Array<string | false | null | undefined>) {
+  return classNames.filter(Boolean).join(' ')
 }

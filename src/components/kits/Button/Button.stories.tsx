@@ -19,30 +19,30 @@ export const Normal: StoryObj<typeof meta> = {}
 
 export const Solid: StoryObj<typeof meta> = {
   args: {
-    tone: 'solid',
-    intent: 'accent',
+    solid: true,
+    accent: true,
     children: 'Save',
   },
 }
 
 export const Bare: StoryObj<typeof meta> = {
   args: {
-    tone: 'bare',
+    bare: true,
     children: 'Clear',
   },
 }
 
 export const BareDanger: StoryObj<typeof meta> = {
   args: {
-    tone: 'bare',
-    intent: 'danger',
+    bare: true,
+    danger: true,
     children: 'Remove',
   },
 }
 
 export const Disabled: StoryObj<typeof meta> = {
   args: {
-    status: 'disabled',
+    disabled: true,
     children: 'Disabled button',
   },
 }

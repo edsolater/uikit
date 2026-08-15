@@ -26,14 +26,14 @@ export const Bottom: StoryObj<typeof meta> = {}
 
 export const Top: StoryObj<typeof meta> = {
   args: {
-    placement: 'top',
+    top: true,
     trigger: '上方弹出',
   },
 }
 
 export const Right: StoryObj<typeof meta> = {
   args: {
-    placement: 'right',
+    right: true,
     trigger: '右侧弹出',
   },
 }

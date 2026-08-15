@@ -55,7 +55,7 @@
       cursor: not-allowed;
     }
 
-    &.invalid {
+    &[data-status~='invalid'] {
       --Input-border-color: var(--color-bad);
       --Input-border-color-hover: var(--color-bad);
       --Input-border-color-focus: var(--color-bad);

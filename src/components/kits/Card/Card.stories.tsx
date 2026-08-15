@@ -15,21 +15,21 @@ export default meta
 export const Normal: StoryObj<typeof meta> = {}
 
 export const Soft: StoryObj<typeof meta> = {
-  args: { tone: 'soft' },
+  args: { soft: true },
 }
 
 export const Solid: StoryObj<typeof meta> = {
-  args: { tone: 'solid' },
+  args: { solid: true },
 }
 
 export const Small: StoryObj<typeof meta> = {
-  args: { size: 'small' },
+  args: { small: true },
 }
 
 export const Large: StoryObj<typeof meta> = {
-  args: { size: 'large' },
+  args: { large: true },
 }
 
 export const XLarge: StoryObj<typeof meta> = {
-  args: { size: 'xlarge' },
+  args: { xlarge: true },
 }

@@ -91,7 +91,7 @@ validity status       = 当前值是否有效
 - `invalid` 表示当前值无效。
 - `validIf` 表示外部注入的有效条件。
 - `Input` 会把 `invalid` 或 `validIf` 合并成最终有效性。
-- 无效状态会输出 `invalid` class。
+- 无效状态会输出 `data-status="invalid"`。
 - 无效状态会输出 `aria-invalid`。
 - `Input` 不负责生成错误文案。
 - `Input` 不负责解释错误原因。
