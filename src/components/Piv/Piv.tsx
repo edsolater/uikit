@@ -45,7 +45,7 @@ export type PivProps<Tag extends PivTag = 'div'> = {
 
   /**
    * 上层组件转交给当前 Piv 的低优先级 props。
-   * 它沿用 plugin props 整合规则，当前 Piv 的直接 props 始终拥有更高优先级。
+   * 可以传入一份 props 或一维 props 数组，不接受嵌套数组。
    */
   shadowProps?: MayArray<ShadowProps<Tag>>
 

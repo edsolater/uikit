@@ -43,20 +43,23 @@ export type PopoverProps = {
   onBeforeToggle?: (open: boolean, event: PopoverToggleEvent) => void
 }
 
+const defaultPopoverProps: {
+  placement: PopoverPlacement
+  popover: PopoverMode
+  triggerAction: PopoverAction
+  defaultOpen: boolean
+} = {
+  placement: 'bottom',
+  popover: 'auto',
+  triggerAction: 'toggle',
+  defaultOpen: false,
+}
 function joinClassName(...classNames: Array<string | false | null | undefined>) {
   return classNames.filter(Boolean).join(' ')
 }
 
 export function Popover(inputProps: PopoverProps) {
-  const props = mergeProps(
-    {
-      placement: 'bottom' as const,
-      popover: 'auto' as const,
-      triggerAction: 'toggle' as const,
-      defaultOpen: false,
-    },
-    inputProps,
-  )
+  const props = mergeProps(defaultPopoverProps, inputProps)
   const controller = createPopoverController({
     onToggle: props.onToggle,
     onBeforeToggle: props.onBeforeToggle,

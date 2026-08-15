@@ -27,60 +27,60 @@ export function ButtonExample() {
         <div class="button-example-state-hover"><Button>Default</Button></div>
         <div class="button-example-state-active"><Button>Default</Button></div>
         <div class="button-row">
-          <Button status="loading">Loading</Button>
-          <Button status="disabled">Disabled</Button>
+          <Button loading>Loading</Button>
+          <Button disabled>Disabled</Button>
         </div>
 
         <div class="button-example-label">主操作</div>
-        <div><Button tone="solid">Solid</Button></div>
-        <div class="button-example-state-hover"><Button tone="solid">Solid</Button></div>
-        <div class="button-example-state-active"><Button tone="solid">Solid</Button></div>
+        <div><Button solid>Solid</Button></div>
+        <div class="button-example-state-hover"><Button solid>Solid</Button></div>
+        <div class="button-example-state-active"><Button solid>Solid</Button></div>
         <div class="button-row">
-          <Button tone="solid" status="loading">Loading</Button>
-          <Button tone="solid" status="disabled">Disabled</Button>
+          <Button solid loading>Loading</Button>
+          <Button solid disabled>Disabled</Button>
         </div>
 
         <div class="button-example-label">推荐</div>
-        <div><Button intent="accent" tone="solid">Accent</Button></div>
-        <div class="button-example-state-hover"><Button intent="accent" tone="solid">Accent</Button></div>
-        <div class="button-example-state-active"><Button intent="accent" tone="solid">Accent</Button></div>
+        <div><Button accent solid>Accent</Button></div>
+        <div class="button-example-state-hover"><Button accent solid>Accent</Button></div>
+        <div class="button-example-state-active"><Button accent solid>Accent</Button></div>
         <div class="button-row">
-          <Button intent="accent" tone="solid" status="loading">Loading</Button>
-          <Button intent="accent" tone="solid" status="disabled">Disabled</Button>
+          <Button accent solid loading>Loading</Button>
+          <Button accent solid disabled>Disabled</Button>
         </div>
 
         <div class="button-example-label">危险</div>
-        <div><Button intent="danger" tone="solid">Danger</Button></div>
-        <div class="button-example-state-hover"><Button intent="danger" tone="solid">Danger</Button></div>
-        <div class="button-example-state-active"><Button intent="danger" tone="solid">Danger</Button></div>
+        <div><Button danger solid>Danger</Button></div>
+        <div class="button-example-state-hover"><Button danger solid>Danger</Button></div>
+        <div class="button-example-state-active"><Button danger solid>Danger</Button></div>
         <div class="button-row">
-          <Button intent="danger" tone="solid" status="loading">Loading</Button>
-          <Button intent="danger" tone="solid" status="disabled">Disabled</Button>
+          <Button danger solid loading>Loading</Button>
+          <Button danger solid disabled>Disabled</Button>
         </div>
 
         <div class="button-example-label">退场</div>
-        <div><Button tone="bare">Bare</Button></div>
-        <div class="button-example-state-hover"><Button tone="bare">Bare</Button></div>
-        <div class="button-example-state-active"><Button tone="bare">Bare</Button></div>
+        <div><Button bare>Bare</Button></div>
+        <div class="button-example-state-hover"><Button bare>Bare</Button></div>
+        <div class="button-example-state-active"><Button bare>Bare</Button></div>
         <div class="button-row">
-          <Button tone="bare" status="loading">Loading</Button>
-          <Button tone="bare" status="disabled">Disabled</Button>
+          <Button bare loading>Loading</Button>
+          <Button bare disabled>Disabled</Button>
         </div>
       </div>
 
       <div class="button-size-stack">
         <div class="button-example-label">尺寸</div>
         <div class="button-row">
-          <Button size="small">Small</Button>
+          <Button small>Small</Button>
           <Button>Medium</Button>
-          <Button size="large">Large</Button>
-          <Button size="xlarge">XLarge</Button>
+          <Button large>Large</Button>
+          <Button xlarge>XLarge</Button>
         </div>
         <div class="button-row">
-          <Button size="small" tone="solid">Small</Button>
-          <Button tone="solid">Medium</Button>
-          <Button size="large" tone="solid">Large</Button>
-          <Button size="xlarge" tone="solid">XLarge</Button>
+          <Button small solid>Small</Button>
+          <Button solid>Medium</Button>
+          <Button large solid>Large</Button>
+          <Button xlarge solid>XLarge</Button>
         </div>
       </div>
     </Article>

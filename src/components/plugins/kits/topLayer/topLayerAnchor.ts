@@ -40,7 +40,7 @@ const layoutProperties = [
   'grid-column-end',
   'grid-row-start',
   'grid-row-end',
-] as const
+]
 
 /** 影子直接继承原元素算出的轮廓，不为 Top Layer 另造固定形状。 */
 const shapeProperties = [
@@ -53,7 +53,7 @@ const shapeProperties = [
   'corner-bottom-right-shape',
   'corner-bottom-left-shape',
   'border-shape',
-] as const
+]
 
 export function createTopLayerAnchor(source: HTMLElement): TopLayerAnchor {
   const ownerDocument = source.ownerDocument
@@ -154,7 +154,7 @@ function readNaturalSize(source: HTMLElement, sourceSize: LogicalSize): LogicalS
 
 function measureSize(
   source: HTMLElement,
-  declarations: Readonly<Record<string, string>>,
+  declarations: Record<string, string>,
 ): LogicalSize {
   const previousDeclarations = Object.keys(declarations).map(property => ({
     property,
@@ -236,7 +236,7 @@ function sizeChanged(current: number, natural: number): boolean {
 function copyComputedProperties(
   source: CSSStyleDeclaration,
   target: CSSStyleDeclaration,
-  properties: readonly string[],
+  properties: string[],
 ): void {
   for (const property of properties) {
     target.setProperty(property, source.getPropertyValue(property))

@@ -7,51 +7,59 @@
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
-import { clickable } from '../../plugins'
-import { type StatusInput } from '../../utils/status'
 import { type Source } from '../../../hooks'
+import { clickable } from '../../plugins'
 import { Piv, type PivProps } from '../../Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
+import { createBrandPropsParser, type BrandProps } from '../utils/parseBrandProps'
+import { createStatusPropsParser, type StatusProps } from '../utils/parseStatusProps'
 import './Button.css'
-import { createKitProfile, type ProfileProps } from './createKitProfile'
 
-interface ButtonProfileProps extends ProfileProps {
-  /** 用户执行这个按钮动作时触发。Button 在内部把它翻译成 Piv 的 click 事件声明。 */
-  onClick?: EventListenerInput<'click'>
+/**
+ * 按钮的动作声量 Brand Props。
+ *
+ * - bare：动作存在但退场，适合清除、跳过、更多这类低权重命令。
+ * - solid：动作需要优先被看见，适合主操作或高风险确认。
+ * - undefined：默认动作，适合普通确认、关闭、返回这类常规命令。
+ *
+ * 声量确定时优先声明 bare 或 solid；只有声量会在多个 Brand 之间变化时才使用 tone。
+ * tone 一旦声明便接管整个声量分组，即使当前值是 undefined 也不会回落到确定描述词。
+ */
+export type ButtonToneProps = BrandProps<'tone', 'bare' | 'solid'>
 
-  /**
-   * 动作声量，用来判断这个动作应该以多大权重进入界面。
-   *
-   * 默认是 normal，调用方不需要显式传入。
-   *
-   * 不用 Source<>，因为 tone 不会随状态变化而变化，直接用 string 就可以了。
-   *
-   * - bare：动作存在但退场，适合清除、跳过、更多这类低权重命令。
-   * - undefined：默认动作，适合普通确认、关闭、返回这类常规命令。
-   * - solid：动作需要优先被看见，适合主操作或高风险确认。
-   */
-  tone?: 'bare' | 'solid' | undefined
+/**
+ * 按钮的动作性质 Brand Props。
+ *
+ * - accent：推荐路径动作。
+ * - danger：破坏性动作。
+ * - undefined：普通动作。
+ *
+ * 性质确定时优先声明 accent 或 danger；只有性质会动态变化时才使用 intent。
+ * intent 一旦声明便接管整个动作性质分组，即使当前值是 undefined 也不会回落到确定描述词。
+ */
+export type ButtonIntentProps = BrandProps<'intent', 'accent' | 'danger'>
 
-  /**
-   * 动作性质，用来表达这个命令是什么类型的事。
-   *
-   * - undefined：普通动作。
-   * - accent：推荐路径动作。
-   * - danger：破坏性动作。
-   */
-  intent?: Source<'accent' | 'danger' | undefined>
+/**
+ * 按钮的物理尺寸 Brand Props。
+ *
+ * - small：紧凑，适用于工具栏或空间受限的场景。
+ * - large：宽松，适用于需要强调的场景或触控设备。
+ * - xlarge：极大，适用于需要更大命中面积的主入口。
+ * - undefined：默认尺度，适用于大多数场景。
+ *
+ * 尺寸确定时优先声明 small、large 或 xlarge；只有尺寸会在多个 Brand 之间变化时才使用 size。
+ * size 一旦声明便接管整个尺寸分组，即使当前值是 undefined 也不会回落到确定描述词。
+ */
+export type ButtonSizeProps = BrandProps<'size', 'small' | 'large' | 'xlarge'>
 
-  /**
-   * 按钮尺寸档位。
-   *
-   * size 直接表达按钮的物理尺度；选择时同时考虑当前区域的信息密度、操作频率和命中面积。
-   *
-   * - small：紧凑，适用于工具栏或空间受限的场景。
-   * - large：宽松，适用于需要强调的场景或触控设备。
-   * - undefined：默认尺度，适用于大多数场景。
-   */
-  size?: Source<'small' | 'large' | 'xlarge' | undefined>
+/**
+ * 按钮可以同时处于 loading 和 disabled 状态。
+ * 外部一旦声明某个状态字段，该字段始终跟随外部 Source；否则允许 Button 内部通过 Status Actions 改变。
+ */
+export type ButtonStatusProps = StatusProps<'loading' | 'disabled'>
 
+export interface ButtonProps
+  extends PivProps<'button'>, ButtonToneProps, ButtonIntentProps, ButtonSizeProps, ButtonStatusProps {
   /**
    * 动作名。
    *
@@ -63,29 +71,40 @@ interface ButtonProfileProps extends ProfileProps {
    */
   name?: Source<string | undefined>
 
-  /**
-   * 外部注入的动作状态。
-   *
-   * Button 只表达状态，不判断为什么 loading 或 disabled。
-   */
-  status?: StatusInput<'loading' | 'disabled'>
+  /** 用户执行这个按钮动作时触发。Button 在内部把它翻译成 Piv 的 click 事件声明。 */
+  onClick?: EventListenerInput<'click'>
 }
 
-// 这种写法是为了让 props 声明更像排比插件，更具可读性。
-export interface ButtonProps extends PivProps<'button'>, ButtonProfileProps {}
+const parseButtonBrandProps = createBrandPropsParser([
+  { groupName: 'tone', candidates: ['bare', 'solid'] },
+  { groupName: 'intent', candidates: ['accent', 'danger'] },
+  { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
+])
+
+const parseButtonStatusProps = createStatusPropsParser({
+  candidates: ['loading', 'disabled'],
+  effect: ({ loading, disabled }) => ({
+    htmlProps: {
+      disabled,
+      'aria-busy': loading,
+    },
+  }),
+})
 
 export function Button(props: ButtonProps) {
-  // UIKit 都适用的标识，标识能够标识出它是一个怎样的存在的组件
-  const { plugin: kitProfilePlugin } = createKitProfile(props)
+  const { brandShadowProps } = parseButtonBrandProps(props)
+  const { statusShadowProps } = parseButtonStatusProps(props)
 
-  // TODO：对于Button特有的状态，需要直接写在Button组件内部
   return (
     <Piv
       as="button"
-      shadowProps={props}
+      shadowProps={[props, brandShadowProps, statusShadowProps]}
       class="Button"
-      plugins={[kitProfilePlugin, clickable({ componentName: 'Button' })]}
-      htmlProps={{ type: 'button' }}
+      plugins={[clickable({ componentName: 'Button' })]}
+      htmlProps={{
+        type: 'button',
+        'aria-label': props.name,
+      }}
       on={{ click: props.onClick }}
     >
       {props.children}

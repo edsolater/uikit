@@ -44,7 +44,7 @@ const topLayerGeometryProperties = [
   'box-sizing',
   'inline-size',
   'block-size',
-] as const
+]
 
 /**
  * 为现有元素创建一个独立的 Top Layer 控制器。

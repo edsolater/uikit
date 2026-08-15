@@ -3,7 +3,7 @@
  * plugin 可以返回低优先级 shadow props；用户直接传入的 props 始终覆盖 plugin 结果。
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
  */
-import { mergeMayArray, toArray, mayMap } from '@edsolater/fnkit'
+import { mayMap, mergeMayArray, toArray } from '@edsolater/fnkit'
 import { val } from '../../../hooks'
 import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'

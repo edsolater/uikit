@@ -3,7 +3,13 @@
  * 全局 theme mode 副作用交给 hook，这里只负责控件展示。
  */
 import { For } from 'solid-js'
-import { useUIThemeMode, val } from '../../hooks'
+import { useUIThemeMode, val, type UIThemeMode } from '../../hooks'
+
+const themeModeOptions: { value: UIThemeMode; label: string }[] = [
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色' },
+  { value: 'system', label: '跟随系统' },
+]
 
 export function ThemeModeControl() {
   const themeMode = useUIThemeMode()
@@ -11,15 +17,7 @@ export function ThemeModeControl() {
   return (
     <fieldset>
       <legend>模式切换</legend>
-      <For
-        each={
-          [
-            { value: 'light', label: '浅色' },
-            { value: 'dark', label: '深色' },
-            { value: 'system', label: '跟随系统' },
-          ] as const
-        }
-      >
+      <For each={themeModeOptions}>
         {(item) => (
           <label>
             <input

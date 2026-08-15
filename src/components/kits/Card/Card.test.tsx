@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { render } from 'solid-js/web'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { createState } from '../../../hooks'
 import { Card } from './Card'
 
 let dispose: (() => void) | undefined
@@ -9,18 +10,19 @@ let dispose: (() => void) | undefined
 afterEach(() => {
   dispose?.()
   dispose = undefined
+  vi.restoreAllMocks()
   document.body.replaceChildren()
 })
 
 describe('Card', () => {
-  test('保留原生元素语义、组合 class 并输出稳定画像', () => {
+  test('保留原生元素语义、组合 class 并输出确定 Brand', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => (
       <Card
         as="article"
         class="example-card"
-        tone="solid"
-        size="large"
+        solid
+        large
         htmlProps={{ 'aria-label': 'Example detail', 'data-testid': 'card' }}
       >
         内容
@@ -37,12 +39,26 @@ describe('Card', () => {
     expect(card.textContent).toBe('内容')
   })
 
-  test('省略 tone 和 size 时使用默认画像', () => {
+  test('省略 Brand Props 时使用 undefined 默认结果', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Card>默认卡片</Card>, host)
 
     const card = host.firstElementChild as HTMLElement
     expect(card.hasAttribute('data-tone')).toBe(false)
     expect(card.hasAttribute('data-size')).toBe(false)
+  })
+
+  test('tone 字段可以动态选择 Brand，并优先于 soft', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const tone = createState<'soft' | 'solid' | undefined>()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <Card soft tone={tone}>动态卡片</Card>, host)
+    const card = host.firstElementChild as HTMLElement
+
+    expect(card.hasAttribute('data-tone')).toBe(false)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“tone”接管整个分组'))
+
+    tone.set('solid')
+    expect(card.getAttribute('data-tone')).toBe('solid')
   })
 })
