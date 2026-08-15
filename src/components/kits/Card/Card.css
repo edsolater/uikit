@@ -17,13 +17,13 @@
     backdrop-filter: saturate(1.12) brightness(1.03);
   }
 
-  .Card[data-tone='soft'] {
+  .Card[data-variant='soft'] {
     --Card-bg: color-mix(in oklab, var(--color-surface) 58%, transparent);
     --Card-border: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 48%, transparent);
     --Card-shadow: var(--shadow-1);
   }
 
-  .Card[data-tone='solid'] {
+  .Card[data-variant='solid'] {
     --Card-bg: var(--color-surface);
     --Card-border: var(--boundary-1) solid var(--color-line-soft);
   }

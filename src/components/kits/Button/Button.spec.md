@@ -10,7 +10,7 @@ Button = action + content + Brand Props + Status Props
 
 - `children` 是用户看到的动作内容。
 - `name` 是动作名；纯图形按钮必须提供，最终映射到 `aria-label`。
-- tone、intent、size 是三个互不相关的 Brand 分组。
+- variant、tone、size 是三个互不相关的 Brand 分组。
 - loading、disabled 是可以同时成立的 Status。
 
 ## 选择规则
@@ -37,7 +37,7 @@ Button = action + content + Brand Props + Status Props
 确定描述词直接形成代码的阅读轮廓。只有具体值会变化时，才使用分组字段：
 
 ```tsx
-<Button size={buttonSize} tone={buttonTone}>动态按钮</Button>
+<Button size={buttonSize} variant={buttonVariant}>动态按钮</Button>
 ```
 
 ## Props 契约
@@ -45,8 +45,8 @@ Button = action + content + Brand Props + Status Props
 ```ts
 interface ButtonProps
   extends PivProps<'button'>,
-    BrandProps<'tone', 'bare' | 'solid'>,
-    BrandProps<'intent', 'accent' | 'danger'>,
+    BrandProps<'variant', 'bare' | 'solid'>,
+    BrandProps<'tone', 'accent' | 'danger'>,
     BrandProps<'size', 'small' | 'large' | 'xlarge'>,
     StatusProps<'loading' | 'disabled'> {
   name?: Source<string | undefined>
@@ -58,8 +58,8 @@ interface ButtonProps
 
 | 分组 | 确定描述词 | 不定字段 | 省略时 |
 | --- | --- | --- | --- |
-| 动作声量 | `bare`、`solid` | `tone` | 默认声量 |
-| 动作性质 | `accent`、`danger` | `intent` | 普通动作 |
+| 动作声量 | `bare`、`solid` | `variant` | 默认声量 |
+| 动作语气 | `accent`、`danger` | `tone` | 普通语气 |
 | 物理尺寸 | `small`、`large`、`xlarge` | `size` | 默认尺寸 |
 
 - 确定描述词的值是 `Source<boolean | undefined>`，适合具体 Brand 已知、只需决定是否存在的场景。
@@ -79,17 +79,17 @@ interface ButtonProps
 
 ## Brand 选择
 
-### Tone
+### Variant
 
 - `bare`：动作存在但退场，适合清除、跳过、更多等低权重命令。
 - `solid`：动作需要优先被看见，适合主操作或高风险确认。
 - 省略：普通确认、关闭、返回等常规命令。
 
-### Intent
+### Tone
 
 - `accent`：当前流程推荐用户执行的动作。
 - `danger`：删除、移除、重置、撤销权限等破坏性动作。
-- intent 不决定声量；危险动作既可以是 `bare`，也可以是 `solid`。
+- tone 不决定声量；危险动作既可以是 `bare`，也可以是 `solid`。
 
 ### Size
 
@@ -108,6 +108,6 @@ interface ButtonProps
 
 ## 输出协议
 
-- Brand 分组分别输出 `data-tone`、`data-intent`、`data-size`。
+- Brand 分组分别输出 `data-variant`、`data-tone`、`data-size`。
 - 当前成立的 Status 合并输出到 `data-status`，以空格分隔。
 - 这些分类概念仍然存在于类型、注释和 DOM 协议中；运行时不需要 Profile 或枚举对象维持分类。

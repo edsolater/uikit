@@ -20,9 +20,12 @@ export type ArticleProps = Omit<PivProps<'article'>, 'as'> & {
   as?: undefined
 }
 
-export function Article(props: ArticleProps): JSX.Element
-export function Article<Carrier extends ArticleCarrier>(props: ArticleCarrierProps<Carrier>): JSX.Element
-export function Article(rawProps: ArticleProps | ArticleCarrierProps<ArticleCarrier>): JSX.Element {
+interface ArticleComponent {
+  (props: ArticleProps): JSX.Element
+  <Carrier extends ArticleCarrier>(props: ArticleCarrierProps<Carrier>): JSX.Element
+}
+
+export const Article: ArticleComponent = (rawProps) => {
   const [local, carrierProps] = splitProps(rawProps, ['as'])
   const Carrier = local.as
 

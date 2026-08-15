@@ -2,7 +2,7 @@
 
 ## 背景
 
-Button 在 tone、hover、active 等状态切换时，需要同时变化背景和描边。
+Button 在 variant、hover、active 等状态切换时，需要同时变化背景和描边。
 
 如果描边直接使用 `border`，在过渡过程中容易出现视觉抖动。问题通常不是 `border-width` 本身变化，而是控件边界参与布局和像素对齐后，在切换时更容易让界面产生“震动感”。
 
@@ -12,7 +12,7 @@ Button 在 tone、hover、active 等状态切换时，需要同时变化背景�
 
 - 真实 `border` 设为 `none`
 - 用 `inset box-shadow` 模拟 1px 描边
-- tone 相关状态只改描边颜色变量，不再直接驱动 `border`
+- variant 相关状态只改描边颜色变量，不再直接驱动 `border`
 - 过渡时动画 `box-shadow`，不动画 `border-color`
 
 示意：

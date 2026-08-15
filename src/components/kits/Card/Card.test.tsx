@@ -33,7 +33,7 @@ describe('Card', () => {
     expect(card.tagName).toBe('ARTICLE')
     expect(card.classList.contains('Card')).toBe(true)
     expect(card.classList.contains('example-card')).toBe(true)
-    expect(card.getAttribute('data-tone')).toBe('solid')
+    expect(card.getAttribute('data-variant')).toBe('solid')
     expect(card.getAttribute('data-size')).toBe('large')
     expect(card.getAttribute('aria-label')).toBe('Example detail')
     expect(card.textContent).toBe('内容')
@@ -44,21 +44,21 @@ describe('Card', () => {
     dispose = render(() => <Card>默认卡片</Card>, host)
 
     const card = host.firstElementChild as HTMLElement
-    expect(card.hasAttribute('data-tone')).toBe(false)
+    expect(card.hasAttribute('data-variant')).toBe(false)
     expect(card.hasAttribute('data-size')).toBe(false)
   })
 
-  test('tone 字段可以动态选择 Brand，并优先于 soft', () => {
+  test('variant 字段可以动态选择 Brand，并优先于 soft', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    const tone = createState<'soft' | 'solid' | undefined>()
+    const variant = createState<'soft' | 'solid' | undefined>()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Card soft tone={tone}>动态卡片</Card>, host)
+    dispose = render(() => <Card soft variant={variant}>动态卡片</Card>, host)
     const card = host.firstElementChild as HTMLElement
 
-    expect(card.hasAttribute('data-tone')).toBe(false)
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“tone”接管整个分组'))
+    expect(card.hasAttribute('data-variant')).toBe(false)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“variant”接管整个分组'))
 
-    tone.set('solid')
-    expect(card.getAttribute('data-tone')).toBe('solid')
+    variant.set('solid')
+    expect(card.getAttribute('data-variant')).toBe('solid')
   })
 })

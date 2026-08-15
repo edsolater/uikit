@@ -50,8 +50,8 @@ describe('ExampleDashboard', () => {
     const defaultCard = document.querySelector<HTMLElement>('.Card.example-card')!
     const smallCard = document.querySelector<HTMLElement>('.card-example-item[data-size="small"]')!
     const largeCard = document.querySelector<HTMLElement>('.card-example-item[data-size="large"]')!
-    const softCard = document.querySelector<HTMLElement>('.card-example-item[data-tone="soft"]')!
-    const solidCard = document.querySelector<HTMLElement>('.card-example-item[data-tone="solid"]')!
+    const softCard = document.querySelector<HTMLElement>('.card-example-item[data-variant="soft"]')!
+    const solidCard = document.querySelector<HTMLElement>('.card-example-item[data-variant="solid"]')!
     expect(getComputedStyle(defaultCard).display).toBe('grid')
     expect(Number.parseFloat(getComputedStyle(defaultCard).padding)).toBeGreaterThan(0)
     expect(Number.parseFloat(getComputedStyle(largeCard).padding)).toBeGreaterThan(

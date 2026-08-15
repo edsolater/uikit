@@ -14,7 +14,6 @@
 - `Input` 承载用户正在输入或修改的一个值。
 - `Input` 的首要目标是让用户一眼知道这里可以编辑。
 - `Input` 不用动作声量模型。
-- `Input` 不提供 `tone`。
 - `Input` 不提供 `variant`。
 - `Input` 不提供 `ghost`、`bare` 或 `solid`。
 
@@ -129,7 +128,6 @@ type ValidityOptions = {
 ## 不提供的 API
 
 - 不提供 `variant`。
-- 不提供 `tone`。
 - 不提供 `ghost`。
 - 不提供 `bare`。
 - 不提供 `solid`。
@@ -143,7 +141,6 @@ type ValidityOptions = {
 | API       | 删除原因 |
 | --------- | -------- |
 | `variant` | 只说明视觉分支，不说明输入语义。 |
-| `tone`    | Input 不是动作，不使用动作声量模型。 |
 | `ghost`   | 弱边界会降低可编辑区域识别度。 |
 | `bare`    | 内联编辑是专门场景，不属于普通 Input。 |
 | `solid`   | 强容器容易被误读成主操作入口。 |

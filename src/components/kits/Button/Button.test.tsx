@@ -26,14 +26,14 @@ describe('Button', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
-  test('确定描述词直接形成各 Brand 分组的 DOM 描述', () => {
+  test('分组字段形成 variant、tone 和 size 的 DOM 描述', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button small solid accent>保存</Button>, host)
+    dispose = render(() => <Button size="small" variant="solid" tone="accent">保存</Button>, host)
     const element = host.firstElementChild as HTMLButtonElement
 
     expect(element.getAttribute('data-size')).toBe('small')
-    expect(element.getAttribute('data-tone')).toBe('solid')
-    expect(element.getAttribute('data-intent')).toBe('accent')
+    expect(element.getAttribute('data-variant')).toBe('solid')
+    expect(element.getAttribute('data-tone')).toBe('accent')
   })
 
   test('不定字段一旦声明便接管分组，undefined 不回落到确定描述词', () => {

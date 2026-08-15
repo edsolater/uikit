@@ -2,7 +2,7 @@
  * 这个文件定义基础按钮组件 Button。
  * Button 承载当前界面里的一个可执行动作，适合保存、确认、取消、清除、删除这类命令。
  * 会改变位置的交互应使用 Link；业务流程判断、表单编排和状态来源不塞进 Button 本体。
- * Button 只把动作内容、动作声量、动作性质、按钮尺寸和外部状态翻译成原生 button。
+ * Button 只把动作内容、动作声量、动作语气、按钮尺寸和外部状态翻译成原生 button。
  *
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
@@ -22,22 +22,22 @@ import './Button.css'
  * - solid：动作需要优先被看见，适合主操作或高风险确认。
  * - undefined：默认动作，适合普通确认、关闭、返回这类常规命令。
  *
- * 声量确定时优先声明 bare 或 solid；只有声量会在多个 Brand 之间变化时才使用 tone。
- * tone 一旦声明便接管整个声量分组，即使当前值是 undefined 也不会回落到确定描述词。
+ * 声量确定时优先声明 bare 或 solid；只有声量会在多个 Brand 之间变化时才使用 variant。
+ * variant 一旦声明便接管整个声量分组，即使当前值是 undefined 也不会回落到确定描述词。
  */
-export type ButtonToneProps = BrandProps<'tone', 'bare' | 'solid'>
+export type ButtonVariantProps = BrandProps<'variant', 'bare' | 'solid'>
 
 /**
- * 按钮的动作性质 Brand Props。
+ * 按钮的动作语气 Brand Props。
  *
  * - accent：推荐路径动作。
  * - danger：破坏性动作。
- * - undefined：普通动作。
+ * - undefined：普通语气。
  *
- * 性质确定时优先声明 accent 或 danger；只有性质会动态变化时才使用 intent。
- * intent 一旦声明便接管整个动作性质分组，即使当前值是 undefined 也不会回落到确定描述词。
+ * 语气确定时优先声明 accent 或 danger；只有语气会动态变化时才使用 tone。
+ * tone 一旦声明便接管整个动作语气分组，即使当前值是 undefined 也不会回落到确定描述词。
  */
-export type ButtonIntentProps = BrandProps<'intent', 'accent' | 'danger'>
+export type ButtonToneProps = BrandProps<'tone', 'accent' | 'danger'>
 
 /**
  * 按钮的物理尺寸 Brand Props。
@@ -59,7 +59,7 @@ export type ButtonSizeProps = BrandProps<'size', 'small' | 'large' | 'xlarge'>
 export type ButtonStatusProps = StatusProps<'loading' | 'disabled'>
 
 export interface ButtonProps
-  extends PivProps<'button'>, ButtonToneProps, ButtonIntentProps, ButtonSizeProps, ButtonStatusProps {
+  extends PivProps<'button'>, ButtonVariantProps, ButtonToneProps, ButtonSizeProps, ButtonStatusProps {
   /**
    * 动作名。
    *
@@ -76,8 +76,8 @@ export interface ButtonProps
 }
 
 const parseButtonBrandProps = createBrandPropsParser([
-  { groupName: 'tone', candidates: ['bare', 'solid'] },
-  { groupName: 'intent', candidates: ['accent', 'danger'] },
+  { groupName: 'variant', candidates: ['bare', 'solid'] },
+  { groupName: 'tone', candidates: ['accent', 'danger'] },
   { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
 ])
 

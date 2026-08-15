@@ -12,7 +12,7 @@ import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
  *
  * 适合：
  * - size: 'sm' | 'md' | 'lg'
- * - intent: 'primary' | 'secondary' | 'danger'
+ * - intent: 'save' | 'delete' | 'cancel'
  * - placement: 'top' | 'right' | 'bottom' | 'left'
  * - tone: 'neutral' | 'positive' | 'warning' | 'danger'
  *

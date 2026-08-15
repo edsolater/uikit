@@ -13,7 +13,7 @@
 ```txt
 调用方
   ├─ children / name：动作信息
-  ├─ tone / intent / size：Brand 分类
+  ├─ variant / tone / size：Brand 分类
   └─ loading / disabled：外部状态波
           ↓
         Button
@@ -32,8 +32,8 @@
 
 Button 有三个 Brand 分组：
 
-- tone：`bare`、`solid`
-- intent：`accent`、`danger`
+- variant：`bare`、`solid`
+- tone：`accent`、`danger`
 - size：`small`、`large`、`xlarge`
 
 具体 Brand 已知时优先使用确定描述词：
@@ -45,7 +45,7 @@ Button 有三个 Brand 分组：
 具体 Brand 会变化时使用不定字段：
 
 ```tsx
-<Button tone={tone} intent={intent} size={size}>保存</Button>
+<Button variant={variant} tone={tone} size={size}>保存</Button>
 ```
 
 确定描述词让阅读者直接看到选择结果；不定字段让阅读者先看到“这一分类是不定的”。两种输入都可以响应式变化。分组字段一旦声明便接管同组输入，即使当前值是 `undefined`。同组冲突只警告，不中断运行。
@@ -64,7 +64,7 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 ## 稳定输出
 
-- tone、intent、size 分别输出到 `data-tone`、`data-intent`、`data-size`。
+- variant、tone、size 分别输出到 `data-variant`、`data-tone`、`data-size`。
 - 当前 Status 合并到 `data-status`。
 - loading 同步到 `aria-busy`。
 - disabled 同步到原生 `disabled`。

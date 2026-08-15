@@ -13,7 +13,7 @@ export function ButtonExample() {
         <span>Component</span>
         <h2>Button</h2>
       </div>
-      <p>按钮只表达动作声量、动作性质和交互尺寸，不承载导航语义。</p>
+      <p>按钮只表达视觉形态、动作语气和交互尺寸，不承载导航语义。</p>
 
       <div class="button-example-grid">
         <div class="button-example-head">类型</div>

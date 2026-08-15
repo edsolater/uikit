@@ -44,7 +44,7 @@ describe('Article', () => {
     expect(article.classList.contains('Card')).toBe(true)
     expect(article.classList.contains('example-card')).toBe(true)
     expect(article.getAttribute('data-size')).toBe('large')
-    expect(article.hasAttribute('data-tone')).toBe(false)
+    expect(article.hasAttribute('data-variant')).toBe(false)
     expect(article.textContent).toBe('卡片正文')
     expect(host.children).toHaveLength(1)
   })

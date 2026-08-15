@@ -21,7 +21,7 @@
 - `Input` 的规格说明落在 `src/components/kits/Input/Input.spec.md`。
 - `src/components/index.ts` 负责对外导出这个组件。
 - 当前阶段只需要默认输入形态。
-- 当前阶段不提供 `ghost`、`bare`、`solid` 或 `tone`。
+- 当前阶段不提供 `variant`、`ghost`、`bare` 或 `solid`。
 
 ## 最小验证
 

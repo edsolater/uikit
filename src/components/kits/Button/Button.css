@@ -2,7 +2,7 @@
   .Button {
     /*
      * Button 只维护组件槽位。
-     * 扁平 selector 保证 tone / intent / status 的覆盖顺序可控。
+     * 扁平 selector 保证 variant / tone / status 的覆盖顺序可控。
      */
     --Button-neutral-bg: var(--dye-neutral-1);
     --Button-neutral-bg-hover: var(--dye-neutral-2);
@@ -83,7 +83,7 @@
   }
 
   /* 动作声量：退场。 */
-  .Button[data-tone='bare'] {
+  .Button[data-variant='bare'] {
     --Button-bg-rest: transparent;
     --Button-bg: var(--Button-bg-rest);
     --Button-bg-hover: color-mix(in oklab, var(--Button-neutral-bg) 88%, var(--color-accent-soft));
@@ -101,7 +101,7 @@
   }
 
   /* 动作声量：强调。 */
-  .Button[data-tone='solid'] {
+  .Button[data-variant='solid'] {
     --Button-bg-rest: var(--color-action);
     --Button-bg: var(--Button-bg-rest);
     --Button-bg-hover: var(--color-action-hover);
@@ -119,22 +119,51 @@
     --Button-shadow-active: var(--shadow-0);
   }
 
-  /* 动作性质：推荐。 */
-  .Button[data-tone='solid'][data-intent='accent'] {
-    --Button-bg-rest: var(--color-accent);
-    --Button-bg: var(--Button-bg-rest);
-    --Button-bg-hover: color-mix(in oklab, var(--color-accent) 88%, var(--color-fg-strong));
-    --Button-bg-active: color-mix(in oklab, var(--color-accent) 78%, var(--color-fg-strong));
-    --Button-focus-ring: var(--color-accent-focus);
+  /* 动作语气只选择语义颜色，variant 继续决定呈现形态。 */
+  .Button[data-tone='accent'] {
+    --Button-tone-color: var(--color-accent);
+    --Button-tone-soft: var(--color-accent-soft);
+    --Button-tone-strong: var(--color-accent-strong);
+    --Button-tone-fg: var(--color-accent-fg);
+    --Button-tone-line: var(--color-accent-focus);
   }
 
-  /* 动作性质：危险。 */
-  .Button[data-tone='solid'][data-intent='danger'] {
-    --Button-bg-rest: var(--color-bad);
+  .Button[data-tone='danger'] {
+    --Button-tone-color: var(--color-bad);
+    --Button-tone-soft: var(--color-bad-soft);
+    --Button-tone-strong: var(--color-bad);
+    --Button-tone-fg: var(--color-bad-fg);
+    --Button-tone-line: var(--color-bad-line);
+  }
+
+  .Button[data-tone] {
+    --Button-bg-rest: color-mix(in oklab, var(--Button-neutral-bg) 76%, var(--Button-tone-soft));
     --Button-bg: var(--Button-bg-rest);
-    --Button-bg-hover: color-mix(in oklab, var(--color-bad) 88%, var(--color-fg-strong));
-    --Button-bg-active: color-mix(in oklab, var(--color-bad) 78%, var(--color-fg-strong));
-    --Button-focus-ring: var(--color-bad-line);
+    --Button-bg-hover: color-mix(in oklab, var(--Button-neutral-bg-hover) 68%, var(--Button-tone-soft));
+    --Button-bg-active: color-mix(in oklab, var(--Button-neutral-bg-active) 58%, var(--Button-tone-soft));
+    --Button-fg-rest: var(--Button-tone-strong);
+    --Button-fg: var(--Button-fg-rest);
+    --Button-fg-hover: var(--Button-tone-strong);
+    --Button-fg-active: var(--Button-tone-strong);
+    --Button-focus-ring: var(--Button-tone-line);
+  }
+
+  .Button[data-variant='bare'][data-tone] {
+    --Button-bg-rest: transparent;
+    --Button-bg: var(--Button-bg-rest);
+    --Button-bg-hover: color-mix(in oklab, var(--Button-neutral-bg) 82%, var(--Button-tone-soft));
+    --Button-bg-active: color-mix(in oklab, var(--Button-neutral-bg-hover) 74%, var(--Button-tone-soft));
+  }
+
+  .Button[data-variant='solid'][data-tone] {
+    --Button-bg-rest: var(--Button-tone-color);
+    --Button-bg: var(--Button-bg-rest);
+    --Button-bg-hover: color-mix(in oklab, var(--Button-tone-color) 88%, var(--color-fg-strong));
+    --Button-bg-active: color-mix(in oklab, var(--Button-tone-color) 78%, var(--color-fg-strong));
+    --Button-fg-rest: color-mix(in oklab, var(--Button-tone-fg) 90%, var(--Button-bg-rest));
+    --Button-fg: var(--Button-fg-rest);
+    --Button-fg-hover: var(--Button-tone-fg);
+    --Button-fg-active: var(--Button-tone-fg);
   }
 
   /* 交互尺寸：偏小紧凑型。 */
@@ -170,12 +199,12 @@
 
   .Button:disabled,
   .Button[data-status~='disabled'],
+  .Button[data-variant]:disabled,
+  .Button[data-variant][data-status~='disabled'],
   .Button[data-tone]:disabled,
   .Button[data-tone][data-status~='disabled'],
-  .Button[data-intent]:disabled,
-  .Button[data-intent][data-status~='disabled'],
-  .Button[data-tone][data-intent]:disabled,
-  .Button[data-tone][data-intent][data-status~='disabled'] {
+  .Button[data-variant][data-tone]:disabled,
+  .Button[data-variant][data-tone][data-status~='disabled'] {
     --Button-bg: color-mix(in oklab, var(--Button-bg-rest) 48%, var(--dye-neutral-2));
     --Button-bg-hover: var(--Button-bg);
     --Button-bg-active: var(--Button-bg);

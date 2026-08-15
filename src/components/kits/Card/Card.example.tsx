@@ -10,7 +10,7 @@ export function CardExample() {
         <span>Component</span>
         <h2>Card</h2>
       </div>
-      <p>省略属性即可得到完整信息卡片；tone 调整视觉声量，size 调整内部容纳尺度。</p>
+      <p>省略属性即可得到完整信息卡片；variant 调整视觉声量，size 调整内部容纳尺度。</p>
 
       <div class="card-example-grid">
         <Card class="card-example-item" small>

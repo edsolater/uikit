@@ -78,17 +78,17 @@ Article 可以让另一个组件承载它的视觉形式：
 | `plugin`、`plugins`、`trait` | 注入 Piv 底层能力。 |
 | `shadowProps` | 上层组件转交低优先级 Piv props。 |
 
-传入 `as={Card}` 后，Article 接受 Card 除 `as` 之外的公开属性，例如 `tone` 和 `size`。Article 占有最终原生语义，因此调用方不能再把载体改成其他标签。
+传入 `as={Card}` 后，Article 接受 Card 除 `as` 之外的公开属性，例如 `variant` 和 `size`。Article 占有最终原生语义，因此调用方不能再把载体改成其他标签。
 
 ## 默认 Card 不需要额外属性
 
-Card 的默认 tone 已经是完整可用的半透明主题卡片。Article 只需要默认 Card 时直接写：
+Card 的默认 variant 已经是完整可用的半透明主题卡片。Article 只需要默认 Card 时直接写：
 
 ```tsx
 <Article as={Card}>正文内容</Article>
 ```
 
-不要为了表示“这是正文”附加 `solid`。tone 只在正文确实需要不同视觉声量时选择。
+不要为了表示“这是正文”附加 `solid`。variant 只在正文确实需要不同视觉声量时选择。
 
 ## CSS 变量
 

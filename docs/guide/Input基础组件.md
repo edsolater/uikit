@@ -71,7 +71,6 @@ flowchart LR
 - 当前有效性状态会输出 `invalid` class。
 - 当前有效性状态会输出 `aria-invalid`。
 - 当前 `Input` 不暴露 `variant`。
-- 当前 `Input` 不暴露 `tone`。
 - 当前 `Input` 不暴露 `ghost`、`bare` 或 `solid`。
 
 ## 当前不做什么
