@@ -2,7 +2,7 @@
  * 本文件验证 Val 与 val 的最终读取协议。
  * 它不承担 Source 输入类型和 toStateView 转换 options 的测试。
  */
-import { toObjectProxy } from '@edsolater/fnkit'
+import { toPromiseResultProxy } from '@edsolater/fnkit'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createReactionFn } from './createReactiveRunner'
 import { val, type Val } from './read'
@@ -142,24 +142,24 @@ test('val 在 PromiseLike rejected 时继续读取 defaultValue', async () => {
 
 test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
   const deferred = createDeferred<Source<number>>()
-  const objectProxy = toObjectProxy(
+  const promiseResultProxy = toPromiseResultProxy(
     deferred.promise.then((value) => ({ value })),
   ).value
-  const sourceFromProxy: Source<number | undefined> = objectProxy
+  const sourceFromProxy: Source<number | undefined> = promiseResultProxy
   const source = createState(2)
   const observedValues: number[] = []
   const runner = createReactionFn(() => {
-    const value = val(objectProxy, 0)
+    const value = val(promiseResultProxy, 0)
     observedValues.push(value)
     return value
   })
 
-  expect(sourceFromProxy).toBe(objectProxy)
-  expectTypeOf(val(objectProxy, 0)).toEqualTypeOf<number>()
+  expect(sourceFromProxy).toBe(promiseResultProxy)
+  expectTypeOf(val(promiseResultProxy, 0)).toEqualTypeOf<number>()
   expect(observedValues).toEqual([0])
 
   deferred.resolve(source)
-  await objectProxy
+  await promiseResultProxy
   await Promise.resolve()
 
   expect(runner.getResult()).toBe(2)
@@ -172,12 +172,12 @@ test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
   runner.dispose()
 })
 
-test('ObjectProxy 作为 PromiseLike Source 自动转换为 StateView', async () => {
+test('PromiseResultProxy 作为 PromiseLike Source 自动转换为 StateView', async () => {
   const deferred = createDeferred<{ value: number }>()
-  const objectProxy = toObjectProxy(deferred.promise)
+  const promiseResultProxy = toPromiseResultProxy(deferred.promise)
   const observedValues: ({ value: number } | undefined)[] = []
   const runner = createReactionFn(() => {
-    const value = val(objectProxy)
+    const value = val(promiseResultProxy)
     observedValues.push(value)
     return value
   })
@@ -187,7 +187,7 @@ test('ObjectProxy 作为 PromiseLike Source 自动转换为 StateView', async ()
 
   const object = { value: 8 }
   deferred.resolve(object)
-  await objectProxy
+  await promiseResultProxy
   await Promise.resolve()
 
   expect(runner.getResult()).toBe(object)
