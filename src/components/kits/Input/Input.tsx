@@ -29,6 +29,11 @@ export function Input(props: InputProps) {
   const { statusShadowProps } = parseInputStatusProps({ invalid: isInvalid })
 
   return (
-    <Piv as="input" shadowProps={[props, statusShadowProps]} class="Input" htmlProps={{ type: 'text' }} />
+    <Piv
+      as="input"
+      shadowProps={[props, statusShadowProps]}
+      class="Input"
+      htmlProps={{ type: 'text', autocorrect: 'off', spellcheck: 'false', autocomplete: 'off', autocapitalize: 'none' }}
+    />
   )
 }
