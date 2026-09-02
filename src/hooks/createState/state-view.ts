@@ -31,12 +31,12 @@ export interface StateView<T = any> {
 /**
  * 可转换来源与默认 StateView 的身份映射。
  *
- * WeakMap 不会保活来源；只要调用方仍能再次传入同一个来源，val() 与 toStateView() 就会复用同一个 StateView。
+ * WeakMap 不会保活来源；只要调用方仍能再次传入同一个来源，val() 与 stateView() 就会复用同一个 StateView。
  * 来源不再可达后，映射及其 StateView 可以一同被垃圾回收。
  */
 const stateViewCache = new WeakMap<PromiseLike<unknown>, StateView<unknown>>()
 
-export type ToStateViewOptions<V, U> = {
+export type StateViewOptions<V, U> = {
   /** 转换完成后继续映射 StateView 的当前值。 */
   map: (value: V) => U | StateView<U>
 }
@@ -59,68 +59,68 @@ export function isStateView(value: unknown): value is StateView {
  *
  * 第二个参数统一表示转换 options；直接传入函数是 `{ map: fn }` 的简写。
  */
-export function toStateView<V>(sourceOrValue: StateView<V>): StateView<V>
-export function toStateView<R, D, E, U>(
+export function stateView<V>(sourceOrValue: StateView<V>): StateView<V>
+export function stateView<R, D, E, U>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D, E>
     & { errorValue: E }
-    & ToStateViewOptions<Awaited<R> | D | E, U>,
+    & StateViewOptions<Awaited<R> | D | E, U>,
 ): StateView<U>
-export function toStateView<R, D, U>(
+export function stateView<R, D, U>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D>
-    & ToStateViewOptions<Awaited<R> | D, U>,
+    & StateViewOptions<Awaited<R> | D, U>,
 ): StateView<U>
-export function toStateView<R, U>(
+export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
-  options: ToStateViewOptions<Awaited<R> | undefined, U>,
+  options: StateViewOptions<Awaited<R> | undefined, U>,
 ): StateView<U>
-export function toStateView<R, D, E>(
+export function stateView<R, D, E>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
 ): StateView<Awaited<R> | D | E>
-export function toStateView<R, D>(
+export function stateView<R, D>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D>,
 ): StateView<Awaited<R> | D>
-export function toStateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R> | undefined>
-export function toStateView<R, U>(
+export function stateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R> | undefined>
+export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   map: (value: Awaited<R> | undefined) => U | StateView<U>,
 ): StateView<U>
-export function toStateView<V>(sourceOrValue: Source<V>): StateView<V>
-export function toStateView<V, U>(
+export function stateView<V>(sourceOrValue: Source<V>): StateView<V>
+export function stateView<V, U>(
   sourceOrValue: Source<V>,
-  options: ToStateViewOptions<V, U>,
+  options: StateViewOptions<V, U>,
 ): StateView<U>
-export function toStateView<V, U>(
+export function stateView<V, U>(
   sourceOrValue: Source<V>,
   map: (value: V) => U | StateView<U>,
 ): StateView<U>
-export function toStateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
+export function stateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
   const options = isFunction(optionsOrMap) ? { map: optionsOrMap } : optionsOrMap
 
   if (isPromiseLike(sourceOrValue)) {
-    let stateView: StateView
+    let view: StateView
     if (!options || !('defaultValue' in options)) {
       const cachedStateView = stateViewCache.get(sourceOrValue)
       if (cachedStateView) {
-        stateView = cachedStateView
+        view = cachedStateView
       } else {
-        stateView = toStateViewFromPromiseLike(sourceOrValue)
-        stateViewCache.set(sourceOrValue, stateView)
+        view = toStateViewFromPromiseLike(sourceOrValue)
+        stateViewCache.set(sourceOrValue, view)
       }
     } else if (!('errorValue' in options) && !options.onRejected) {
-      stateView = toStateViewFromPromiseLike(sourceOrValue).map(
+      view = toStateViewFromPromiseLike(sourceOrValue).map(
         (value) => value === undefined ? options.defaultValue : value,
       )
     } else {
-      stateView = toStateViewFromPromiseLike(sourceOrValue, options)
+      view = toStateViewFromPromiseLike(sourceOrValue, options)
     }
 
-    return options?.map ? stateView.map(options.map) : stateView
+    return options?.map ? view.map(options.map) : view
   }
 
-  const stateView = isStateView(sourceOrValue) ? sourceOrValue : createState(sourceOrValue)
-  return options?.map ? stateView.map(options.map) : stateView
+  const view = isStateView(sourceOrValue) ? sourceOrValue : createState(sourceOrValue)
+  return options?.map ? view.map(options.map) : view
 }

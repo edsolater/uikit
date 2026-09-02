@@ -16,7 +16,7 @@
  */
 import { isExist, shrinkFn, type Primitive } from '@edsolater/fnkit'
 import { isStateViewable, type Source } from './source'
-import { toStateView, type StateView } from './state-view'
+import { stateView, type StateView } from './state-view'
 
 /** 解除 PromiseLike 与 StateView 包装后得到的最终读取值。 */
 export type Val<S> =
@@ -46,7 +46,7 @@ export type Val<S> =
  * - 继续向下传递动态输入时，保留 `Source<T>`，不要提前解包。
  * - 普通 Source 的第二个参数只在 source 为 `null` 或 `undefined` 时执行，用于提供惰性默认值。
  * - PromiseLike 的第二个参数是 pending 与 rejected 阶段直接使用的 defaultValue。
- * - PromiseLike 需要 errorValue 或 onRejected 时，先显式调用 `toStateView()`，再交给 `val()` 读取。
+ * - PromiseLike 需要 errorValue 或 onRejected 时，先显式调用 `stateView()`，再交给 `val()` 读取。
  *
  * AI 规则：
  * - 不要把 `val()` 当成通用“规范化”步骤放在函数开头。
@@ -101,7 +101,7 @@ export function val(source: any, defaultValue?: any) {
   }
 
   if (isStateViewable(source)) {
-    const value = toStateView(source as any).read()
+    const value = stateView(source as any).read()
     return arguments.length > 1 ? val(value, defaultValue) : val(value)
   }
 

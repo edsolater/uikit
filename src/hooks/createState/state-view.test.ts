@@ -1,12 +1,12 @@
 /**
- * 本文件验证 toStateView 的统一转换、身份复用、映射和 options 分派。
+ * 本文件验证 stateView 的统一转换、身份复用、映射和 options 分派。
  * PromiseLike 领域自身只验证结算行为。
  */
 import { expect, expectTypeOf, test } from 'vitest'
 import { createReactionFn } from './createReactiveRunner'
 import { val } from './read'
 import { createState } from './state'
-import { toStateView, type StateView } from './state-view'
+import { stateView, type StateView } from './state-view'
 
 interface Deferred<V> {
   promise: Promise<V>
@@ -25,26 +25,26 @@ function createDeferred<V>(): Deferred<V> {
   return { promise, resolve, reject }
 }
 
-test('toStateView 按来源身份复用默认 StateView', async () => {
+test('stateView 按来源身份复用默认 StateView', async () => {
   const deferred = createDeferred<number>()
-  const stateView = toStateView(deferred.promise)
+  const view = stateView(deferred.promise)
 
-  expect(toStateView(deferred.promise)).toBe(stateView)
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number | undefined>>()
-  expect(stateView.read()).toBeUndefined()
+  expect(stateView(deferred.promise)).toBe(view)
+  expectTypeOf(view).toEqualTypeOf<StateView<number | undefined>>()
+  expect(view.read()).toBeUndefined()
 
   deferred.resolve(8)
   await deferred.promise
   await Promise.resolve()
 
-  expect(stateView.read()).toBe(8)
+  expect(view.read()).toBe(8)
 })
 
-test('toStateView 的函数参数等价于 options.map', () => {
+test('stateView 的函数参数等价于 options.map', () => {
   const source = createState(2)
   const map = (value: number) => value * 2
-  const fromFunction = toStateView(source, map)
-  const fromOptions = toStateView(source, { map })
+  const fromFunction = stateView(source, map)
+  const fromOptions = stateView(source, { map })
 
   expectTypeOf(fromFunction).toEqualTypeOf<StateView<number>>()
   expectTypeOf(fromOptions).toEqualTypeOf<StateView<number>>()
@@ -57,17 +57,17 @@ test('toStateView 的函数参数等价于 options.map', () => {
   expect(fromOptions.read()).toBe(6)
 })
 
-test('toStateView 使用 defaultValue 后仍在 fulfilled 时响应式更新', async () => {
+test('stateView 使用 defaultValue 后仍在 fulfilled 时响应式更新', async () => {
   const deferred = createDeferred<number>()
-  const stateView = toStateView(deferred.promise, { defaultValue: 0 })
+  const view = stateView(deferred.promise, { defaultValue: 0 })
   const observedValues: number[] = []
   const runner = createReactionFn(() => {
-    const value = val(stateView)
+    const value = val(view)
     observedValues.push(value)
     return value
   })
 
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number>>()
+  expectTypeOf(view).toEqualTypeOf<StateView<number>>()
   expect(observedValues).toEqual([0])
 
   deferred.resolve(8)
@@ -79,20 +79,20 @@ test('toStateView 使用 defaultValue 后仍在 fulfilled 时响应式更新', a
   runner.dispose()
 })
 
-test('toStateView 在 PromiseLike 转换后应用 options.map', async () => {
+test('stateView 在 PromiseLike 转换后应用 options.map', async () => {
   const deferred = createDeferred<number>()
-  const stateView = toStateView(deferred.promise, {
+  const view = stateView(deferred.promise, {
     defaultValue: 0,
     map: (value) => `value:${value}`,
   })
   const observedValues: string[] = []
   const runner = createReactionFn(() => {
-    const value = val(stateView)
+    const value = val(view)
     observedValues.push(value)
     return value
   })
 
-  expectTypeOf(stateView).toEqualTypeOf<StateView<string>>()
+  expectTypeOf(view).toEqualTypeOf<StateView<string>>()
   expect(observedValues).toEqual(['value:0'])
 
   deferred.resolve(8)
@@ -104,11 +104,11 @@ test('toStateView 在 PromiseLike 转换后应用 options.map', async () => {
   runner.dispose()
 })
 
-test('toStateView 使用 errorValue 与 onRejected 定义 rejected 路径', async () => {
+test('stateView 使用 errorValue 与 onRejected 定义 rejected 路径', async () => {
   const deferred = createDeferred<number>()
   const error = new Error('load failed')
   let rejectedReason: unknown
-  const stateView = toStateView(deferred.promise, {
+  const view = stateView(deferred.promise, {
     defaultValue: 0,
     errorValue: 'failed',
     onRejected(reason) {
@@ -117,12 +117,12 @@ test('toStateView 使用 errorValue 与 onRejected 定义 rejected 路径', asyn
   })
   const observedValues: (number | string)[] = []
   const runner = createReactionFn(() => {
-    const value = val(stateView)
+    const value = val(view)
     observedValues.push(value)
     return value
   })
 
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number | string>>()
+  expectTypeOf(view).toEqualTypeOf<StateView<number | string>>()
   expect(observedValues).toEqual([0])
 
   deferred.reject(error)

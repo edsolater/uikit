@@ -4,7 +4,7 @@
  * 它不负责 Input DOM、样式或值同步策略。
  */
 import { isObject } from '@edsolater/fnkit'
-import { toStateView, val, type MayArraySource, type Source, type StateView } from '../../../hooks'
+import { stateView, val, type MayArraySource, type Source, type StateView } from '../../../hooks'
 import type { StatusProps } from '../utils/parseStatusProps'
 
 export type ValidationRule = {
@@ -26,7 +26,7 @@ export type InputValidity = {
 }
 
 export function createInputValidity(props: InputValidityProps): InputValidity {
-  const allRulesPassed = toStateView(props.validIf).map((validIf) => {
+  const allRulesPassed = stateView(props.validIf).map((validIf) => {
     const validationInputs = validIf === undefined
       ? []
       : Array.isArray(validIf)

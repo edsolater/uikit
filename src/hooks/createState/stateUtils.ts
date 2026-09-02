@@ -2,7 +2,7 @@ import { createReactionFn } from './createReactiveRunner'
 import { val, type Val } from './read'
 import type { Source } from './source'
 import { type State } from './state'
-import { toStateView, type StateView } from './state-view'
+import { stateView, type StateView } from './state-view'
 
 /**
  * 把一个 Source 映射成新的 StateView。
@@ -10,13 +10,13 @@ import { toStateView, type StateView } from './state-view'
  * PromiseLike Source 在完成前会把 undefined 交给 mapper；其他 Source 也统一通过 StateView 建立持续映射。
  * 这个函数只公开映射结果，不公开内部写入口。
  *
- * 直接依赖 `toStateView()` 统一普通值、StateView 与 PromiseLike，不自行管理 StateView 身份映射。
+ * 直接依赖 `stateView()` 统一普通值、StateView 与 PromiseLike，不自行管理 StateView 身份映射。
  */
 export function mapSource<T, U>(
   source: Source<T>,
   mapper: (value: T) => U | StateView<U>,
 ): StateView<U> {
-  return toStateView(source).map(mapper)
+  return stateView(source).map(mapper)
 }
 
 /**

@@ -1,6 +1,6 @@
 /**
  * 本文件验证 Val 与 val 的最终读取协议。
- * 它不承担 Source 输入类型和 toStateView 转换 options 的测试。
+ * 它不承担 Source 输入类型和 stateView 转换 options 的测试。
  */
 import { toPromiseResultProxy } from '@edsolater/fnkit'
 import { expect, expectTypeOf, test } from 'vitest'
