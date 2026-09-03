@@ -4,17 +4,44 @@ import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
 import { Button } from './Button'
+import { buttonStyleURL } from './Button.style'
 
 let dispose: (() => void) | undefined
+const buttonStyleSelector = 'style[data-uikit-css="' + buttonStyleURL + '"]'
 
 afterEach(() => {
   dispose?.()
   dispose = undefined
   vi.restoreAllMocks()
   document.body.replaceChildren()
+  document.head.querySelectorAll(buttonStyleSelector).forEach((element) => element.remove())
 })
 
 describe('Button', () => {
+  test('同一 Document 中的多个 Button 只插入一次组件样式', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+    const append = vi.spyOn(document.head, 'append')
+    const ref = vi.fn()
+
+    dispose = render(
+      () => (
+        <>
+          <Button ref={ref}>一</Button>
+          <Button>二</Button>
+          <Button>三</Button>
+        </>
+      ),
+      host,
+    )
+
+    expect(document.head.querySelectorAll(buttonStyleSelector)).toHaveLength(1)
+    expect(append).toHaveBeenCalledOnce()
+    expect(ref).toHaveBeenCalledOnce()
+    expect(append.mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
+    expect(ref).toHaveBeenCalledWith(host.firstElementChild)
+    expect(document.head.querySelector(buttonStyleSelector)?.textContent).toContain(".Button[data-size='small']")
+  })
+
   test('把自身的 onClick 动作翻译成底层 click 事件', () => {
     const host = document.body.appendChild(document.createElement('div'))
     const onClick = vi.fn()
@@ -28,7 +55,14 @@ describe('Button', () => {
 
   test('分组字段形成 variant、tone 和 size 的 DOM 描述', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button size="small" variant="solid" tone="accent">保存</Button>, host)
+    dispose = render(
+      () => (
+        <Button size="small" variant="solid" tone="accent">
+          保存
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLButtonElement
 
     expect(element.getAttribute('data-size')).toBe('small')
@@ -40,7 +74,14 @@ describe('Button', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const size = createState<'small' | 'large' | 'xlarge' | undefined>()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button small size={size}>保存</Button>, host)
+    dispose = render(
+      () => (
+        <Button small size={size}>
+          保存
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLButtonElement
 
     expect(element.hasAttribute('data-size')).toBe(false)
@@ -54,7 +95,14 @@ describe('Button', () => {
   test('多个确定描述词只警告并按定义顺序产生稳定结果', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button small large>保存</Button>, host)
+    dispose = render(
+      () => (
+        <Button small large>
+          保存
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLButtonElement
 
     expect(element.getAttribute('data-size')).toBe('small')
@@ -75,7 +123,14 @@ describe('Button', () => {
 
   test('多个 Status 同时成立，并由 effect 补充原生状态', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button loading disabled>保存中</Button>, host)
+    dispose = render(
+      () => (
+        <Button loading disabled>
+          保存中
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLButtonElement
 
     expect(element.getAttribute('data-status')).toBe('loading disabled')
