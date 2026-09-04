@@ -8,7 +8,7 @@ import { onCleanup, onMount } from 'solid-js'
 import { createToggle, type State } from '../../../../hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
-import { registerCSS } from '../../utils/cssRegisterer'
+import { registerCSS } from '../../utils/css-stylesheet'
 import { createTopLayerAnchor } from './topLayerAnchor'
 import topLayerCSS from './topLayer.css?raw'
 

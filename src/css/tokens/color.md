@@ -568,7 +568,7 @@ base-status 状态绝对色域
 text 作为底层前景色
 content 作为颜色 role
 weak / subtle / muted
-dye-neutral-bg / surface / fg 这种用途词
+dye-surface-color / surface / fg 这种用途词
 在亮色 neutral 曲线里提前塞暗色逻辑
 blackwhite 这种物理拼接词
 从 brand / accent 主派生 good / bad / warn / info

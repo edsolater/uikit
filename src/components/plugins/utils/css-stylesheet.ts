@@ -1,15 +1,6 @@
 /** 把 TypeScript 样式规则转换并注册到浏览器 Document。 */
-import type { JSX } from 'solid-js'
+import type { CSSRule } from './css-rule'
 
-type CSSPropertyValue = string | number | undefined
-
-/** 一条 stylesheet rule 中的完整声明集合。 */
-export type CSSDeclarations = JSX.CSSProperties & Record<string, CSSPropertyValue>
-
-export interface CSSRule {
-  selector: string
-  declarations: CSSDeclarations
-}
 
 export interface CSSStyleSheetDefinition {
   layer?: string
@@ -18,17 +9,12 @@ export interface CSSStyleSheetDefinition {
 
 const registeredCSSByDocument = new WeakMap<Document, Map<string, HTMLStyleElement>>()
 
-/** 建立一条无副作用的 CSS 规则描述。 */
-export function cssRule(selector: string, declarations: CSSDeclarations): CSSRule {
-  return { selector, declarations }
-}
-
 /** 按输入顺序把规则定义转换成浏览器可执行的 CSS 文本。 */
 export function createCSSStyleSheetText({ layer, rules }: CSSStyleSheetDefinition): string {
   const rulesText = rules
     .map(({ selector, declarations }) => {
       const declarationsText = Object.entries(declarations)
-        .filter((entry): entry is [string, string | number] => entry[1] !== undefined)
+        .filter((entry) => entry[1] !== undefined)
         .map(([property, value]) => '  ' + property + ': ' + String(value) + ';')
         .join('\n')
 

@@ -1,61 +1,61 @@
 /** 定义 Button 的组件样式，并提供浏览器端注册入口。 */
-import { createCSSStyleSheetText, cssRule, registerCSS, type CSSDeclarations } from '../../plugins/utils/cssRegisterer'
+import { cssColorMix } from '../../plugins/utils/css-web-utils'
+import { registCssVariable } from '../../plugins/utils/css-variable'
+import { createCSSStyleSheetText, registerCSS } from '../../plugins/utils/css-stylesheet'
+import { cssRule } from '../../plugins/utils/css-rule'
+import { type CSSDeclarations } from '../../plugins/utils/css-declararion'
 
 export const buttonStyleURL = import.meta.url
 
 // 组件槽位承接全局 token，并由后续规则按交互状态和组件属性覆盖。
 const buttonCSSVariables = {
-  '--Button-neutral-bg': 'var(--dye-neutral-1)',
-  '--Button-neutral-bg-hover': 'var(--dye-neutral-2)',
-  '--Button-neutral-bg-active': 'var(--dye-neutral-3)',
+  '--surface-color': 'var(--dye-neutral-1)',
+  '--surface-color-hover': 'var(--dye-neutral-2)',
+  '--surface-color-active': 'var(--dye-neutral-3)',
 
-  '--Button-bg-rest': 'color-mix(in oklab, var(--Button-neutral-bg) 82%, var(--color-accent-soft))',
-  '--Button-bg-hover': 'color-mix(in oklab, var(--Button-neutral-bg-hover) 72%, var(--color-accent-soft))',
-  '--Button-bg-active': 'color-mix(in oklab, var(--Button-neutral-bg-active) 62%, var(--color-accent-soft))',
-  '--Button-bg': 'var(--Button-bg-rest)',
-  '--Button-fg-rest': 'var(--color-fg)',
-  '--Button-fg-hover': 'var(--color-fg-strong)',
-  '--Button-fg-active': 'var(--color-fg-strong)',
-  '--Button-fg': 'var(--Button-fg-rest)',
-  '--Button-border': 'transparent',
-  '--Button-border-hover': 'transparent',
-  '--Button-border-active': 'transparent',
-  '--Button-focus-ring': 'var(--color-accent-focus)',
-  '--Button-shadow': 'var(--shadow-1)',
-  '--Button-shadow-hover': 'var(--shadow-2)',
-  '--Button-shadow-active': 'var(--shadow-0)',
+  // '--bg-default': 'color-mix(in oklab, var(--surface-color) 82%, var(--color-accent-soft))',
+  // '--bg-hover': 'color-mix(in oklab, var(--surface-color-hover) 72%, var(--color-accent-soft))',
+  // '--bg-active': 'color-mix(in oklab, var(--surface-color-active) 62%, var(--color-accent-soft))',
 
-  '--Button-border-width': 'var(--boundary-1)',
-  '--Button-min-height': 'var(--size-5)',
-  '--Button-padding-x': 'var(--space-6)',
-  '--Button-padding-y': 'var(--space-3)',
-  '--Button-gap': 'var(--space-3)',
-  '--Button-font-size': 'var(--font-size-lg)',
-  '--Button-active-offset': 'var(--boundary-1)',
-  '--Button-focus-width': 'var(--boundary-2)',
-  '--Button-focus-offset': 'var(--boundary-2)',
-} satisfies CSSDeclarations
+  
+  '--border': 'transparent',
+  '--border-hover': 'transparent',
+  '--border-active': 'transparent',
+  '--focus-ring': 'var(--color-accent-focus)',
+  '--shadow': 'var(--shadow-1)',
+  '--shadow-hover': 'var(--shadow-2)',
+  '--shadow-active': 'var(--shadow-0)',
+
+  '--border-width': 'var(--boundary-1)',
+  '--min-height': 'var(--size-5)',
+  '--padding-x': 'var(--space-6)',
+  '--padding-y': 'var(--space-3)',
+  '--gap': 'var(--space-3)',
+  '--font-size': 'var(--font-size-lg)',
+  '--active-offset': 'var(--boundary-1)',
+  '--focus-width': 'var(--boundary-2)',
+  '--focus-offset': 'var(--boundary-2)',
+} as const
 
 const baseRules = [
   cssRule('.Button', {
-    ...buttonCSSVariables,
     'display': 'inline-flex',
     'align-items': 'center',
     'align-self': 'center',
     'justify-content': 'center',
-    'gap': 'var(--Button-gap)',
-    'min-height': 'var(--Button-min-height)',
-    'border': 'var(--Button-border-width) solid var(--Button-border)',
-    'box-shadow': 'var(--Button-shadow)',
+    'gap': 'var(--gap)',
+    'min-height': 'var(--min-height)',
+    'border': 'var(--border-width) solid var(--border)',
+    'box-shadow': 'var(--shadow)',
     'border-radius': '999px',
     'corner-shape': 'squircle',
-    'padding': 'var(--Button-padding-y) var(--Button-padding-x)',
-    'color': 'var(--Button-fg)',
+    'padding': 'var(--padding-y) var(--padding-x)',
+    'color': 'var(--fg)',
     'font': 'inherit',
-    'font-size': 'var(--Button-font-size)',
+    'font-size': 'var(--font-size)',
     'font-weight': 'bold',
     'line-height': '1',
-    'background-color': 'var(--Button-bg)',
+    'background-color': 'var(--bg)',
     'cursor': 'pointer',
     'user-select': 'none',
     'transition': `background-color var(--motion-duration-fast) var(--motion-ease-standard),
@@ -69,144 +69,144 @@ const baseRules = [
 
 const interactionRules = [
   cssRule('.Button:hover:not(:disabled)', {
-    'background-color': 'var(--Button-bg-hover)',
-    'color': 'var(--Button-fg-hover)',
-    '--Button-border': 'var(--Button-border-hover)',
-    '--Button-shadow': 'var(--Button-shadow-hover)',
+    'background-color': 'var(--bg-hover)',
+    'color': 'var(--fg-hover)',
+    '--border': 'var(--border-hover)',
+    '--shadow': 'var(--shadow-hover)',
   }),
 
   cssRule('.Button:active:not(:disabled)', {
-    'background-color': 'var(--Button-bg-active)',
-    'color': 'var(--Button-fg-active)',
-    '--Button-border': 'var(--Button-border-active)',
-    '--Button-shadow': 'var(--Button-shadow-active)',
-    'transform': 'translateY(var(--Button-active-offset))',
+    'background-color': 'var(--bg-active)',
+    'color': 'var(--fg-active)',
+    '--border': 'var(--border-active)',
+    '--shadow': 'var(--shadow-active)',
+    'transform': 'translateY(var(--active-offset))',
   }),
 
   cssRule('.Button:focus-visible', {
-    'outline': 'var(--Button-focus-width) solid var(--Button-focus-ring)',
-    'outline-offset': 'var(--Button-focus-offset)',
+    'outline': 'var(--focus-width) solid var(--focus-ring)',
+    'outline-offset': 'var(--focus-offset)',
   }),
 ]
 
 const variantRules = [
   // variant="bare"：低权重的退场动作。
   cssRule(".Button[data-variant='bare']", {
-    '--Button-bg-rest': 'transparent',
-    '--Button-bg': 'var(--Button-bg-rest)',
-    '--Button-bg-hover': 'color-mix(in oklab, var(--Button-neutral-bg) 88%, var(--color-accent-soft))',
-    '--Button-bg-active': 'color-mix(in oklab, var(--Button-neutral-bg-hover) 82%, var(--color-accent-soft))',
-    '--Button-fg-rest': 'var(--color-fg)',
-    '--Button-fg': 'var(--Button-fg-rest)',
-    '--Button-fg-hover': 'var(--color-fg-strong)',
-    '--Button-fg-active': 'var(--color-fg-strong)',
-    '--Button-border': 'transparent',
-    '--Button-border-hover': 'transparent',
-    '--Button-border-active': 'transparent',
-    '--Button-shadow': 'none',
-    '--Button-shadow-hover': 'none',
-    '--Button-shadow-active': 'none',
+    '--bg': 'transparent',
+    '--bg': 'var(--bg)',
+    '--bg-hover': 'color-mix(in oklab, var(--surface-color) 88%, var(--color-accent-soft))',
+    '--bg-active': 'color-mix(in oklab, var(--surface-color-hover) 82%, var(--color-accent-soft))',
+    '--fg-rest': 'var(--color-fg)',
+    '--fg': 'var(--fg-rest)',
+    '--fg-hover': 'var(--color-fg-strong)',
+    '--fg-active': 'var(--color-fg-strong)',
+    '--border': 'transparent',
+    '--border-hover': 'transparent',
+    '--border-active': 'transparent',
+    '--shadow': 'none',
+    '--shadow-hover': 'none',
+    '--shadow-active': 'none',
   }),
 
   // variant="solid"：需要优先被看见的强调动作。
   cssRule(".Button[data-variant='solid']", {
-    '--Button-bg-rest': 'var(--color-action)',
-    '--Button-bg': 'var(--Button-bg-rest)',
-    '--Button-bg-hover': 'var(--color-action-hover)',
-    '--Button-bg-active': 'var(--color-action-active)',
-    '--Button-fg-rest': 'color-mix(in oklab, var(--color-action-fg) 90%, var(--Button-bg-rest))',
-    '--Button-fg': 'var(--Button-fg-rest)',
-    '--Button-fg-hover': 'var(--color-action-fg)',
-    '--Button-fg-active': 'var(--color-action-fg)',
-    '--Button-border': 'transparent',
-    '--Button-border-hover': 'transparent',
-    '--Button-border-active': 'transparent',
-    '--Button-focus-ring': 'var(--color-action-line)',
-    '--Button-shadow': 'var(--shadow-2)',
-    '--Button-shadow-hover': 'var(--shadow-3)',
-    '--Button-shadow-active': 'var(--shadow-0)',
+    '--bg': 'var(--color-action)',
+    '--bg': 'var(--bg)',
+    '--bg-hover': 'var(--color-action-hover)',
+    '--bg-active': 'var(--color-action-active)',
+    '--fg-rest': 'color-mix(in oklab, var(--color-action-fg) 90%, var(--bg))',
+    '--fg': 'var(--fg-rest)',
+    '--fg-hover': 'var(--color-action-fg)',
+    '--fg-active': 'var(--color-action-fg)',
+    '--border': 'transparent',
+    '--border-hover': 'transparent',
+    '--border-active': 'transparent',
+    '--focus-ring': 'var(--color-action-line)',
+    '--shadow': 'var(--shadow-2)',
+    '--shadow-hover': 'var(--shadow-3)',
+    '--shadow-active': 'var(--shadow-0)',
   }),
 ]
 
 const toneRules = [
   // tone="accent"：当前流程推荐执行的动作。
   cssRule(".Button[data-tone='accent']", {
-    '--Button-tone-color': 'var(--color-accent)',
-    '--Button-tone-soft': 'var(--color-accent-soft)',
-    '--Button-tone-strong': 'var(--color-accent-strong)',
-    '--Button-tone-fg': 'var(--color-accent-fg)',
-    '--Button-tone-line': 'var(--color-accent-focus)',
+    '--tone-color': 'var(--color-accent)',
+    '--tone-soft': 'var(--color-accent-soft)',
+    '--tone-strong': 'var(--color-accent-strong)',
+    '--tone-fg': 'var(--color-accent-fg)',
+    '--tone-line': 'var(--color-accent-focus)',
   }),
 
   // tone="danger"：删除、重置等破坏性动作。
   cssRule(".Button[data-tone='danger']", {
-    '--Button-tone-color': 'var(--color-bad)',
-    '--Button-tone-soft': 'var(--color-bad-soft)',
-    '--Button-tone-strong': 'var(--color-bad)',
-    '--Button-tone-fg': 'var(--color-bad-fg)',
-    '--Button-tone-line': 'var(--color-bad-line)',
+    '--tone-color': 'var(--color-bad)',
+    '--tone-soft': 'var(--color-bad-soft)',
+    '--tone-strong': 'var(--color-bad)',
+    '--tone-fg': 'var(--color-bad-fg)',
+    '--tone-line': 'var(--color-bad-line)',
   }),
 
   // tone 只替换语义颜色，variant 继续决定动作声量。
   cssRule('.Button[data-tone]', {
-    '--Button-bg-rest': 'color-mix(in oklab, var(--Button-neutral-bg) 76%, var(--Button-tone-soft))',
-    '--Button-bg': 'var(--Button-bg-rest)',
-    '--Button-bg-hover': 'color-mix(in oklab, var(--Button-neutral-bg-hover) 68%, var(--Button-tone-soft))',
-    '--Button-bg-active': 'color-mix(in oklab, var(--Button-neutral-bg-active) 58%, var(--Button-tone-soft))',
-    '--Button-fg-rest': 'var(--Button-tone-strong)',
-    '--Button-fg': 'var(--Button-fg-rest)',
-    '--Button-fg-hover': 'var(--Button-tone-strong)',
-    '--Button-fg-active': 'var(--Button-tone-strong)',
-    '--Button-focus-ring': 'var(--Button-tone-line)',
+    '--bg': 'color-mix(in oklab, var(--surface-color) 76%, var(--tone-soft))',
+    '--bg': 'var(--bg)',
+    '--bg-hover': 'color-mix(in oklab, var(--surface-color-hover) 68%, var(--tone-soft))',
+    '--bg-active': 'color-mix(in oklab, var(--surface-color-active) 58%, var(--tone-soft))',
+    '--fg-rest': 'var(--tone-strong)',
+    '--fg': 'var(--fg-rest)',
+    '--fg-hover': 'var(--tone-strong)',
+    '--fg-active': 'var(--tone-strong)',
+    '--focus-ring': 'var(--tone-line)',
   }),
 
   // bare 与 tone 组合时仍保持退场形态。
   cssRule(".Button[data-variant='bare'][data-tone]", {
-    '--Button-bg-rest': 'transparent',
-    '--Button-bg': 'var(--Button-bg-rest)',
-    '--Button-bg-hover': 'color-mix(in oklab, var(--Button-neutral-bg) 82%, var(--Button-tone-soft))',
-    '--Button-bg-active': 'color-mix(in oklab, var(--Button-neutral-bg-hover) 74%, var(--Button-tone-soft))',
+    '--bg': 'transparent',
+    '--bg': 'var(--bg)',
+    '--bg-hover': 'color-mix(in oklab, var(--surface-color) 82%, var(--tone-soft))',
+    '--bg-active': 'color-mix(in oklab, var(--surface-color-hover) 74%, var(--tone-soft))',
   }),
 
   // solid 与 tone 组合时仍保持强调形态。
   cssRule(".Button[data-variant='solid'][data-tone]", {
-    '--Button-bg-rest': 'var(--Button-tone-color)',
-    '--Button-bg': 'var(--Button-bg-rest)',
-    '--Button-bg-hover': 'color-mix(in oklab, var(--Button-tone-color) 88%, var(--color-fg-strong))',
-    '--Button-bg-active': 'color-mix(in oklab, var(--Button-tone-color) 78%, var(--color-fg-strong))',
-    '--Button-fg-rest': 'color-mix(in oklab, var(--Button-tone-fg) 90%, var(--Button-bg-rest))',
-    '--Button-fg': 'var(--Button-fg-rest)',
-    '--Button-fg-hover': 'var(--Button-tone-fg)',
-    '--Button-fg-active': 'var(--Button-tone-fg)',
+    '--bg': 'var(--tone-color)',
+    '--bg': 'var(--bg)',
+    '--bg-hover': 'color-mix(in oklab, var(--tone-color) 88%, var(--color-fg-strong))',
+    '--bg-active': 'color-mix(in oklab, var(--tone-color) 78%, var(--color-fg-strong))',
+    '--fg-rest': 'color-mix(in oklab, var(--tone-fg) 90%, var(--bg))',
+    '--fg': 'var(--fg-rest)',
+    '--fg-hover': 'var(--tone-fg)',
+    '--fg-active': 'var(--tone-fg)',
   }),
 ]
 
 const sizeRules = [
   // size="small"：工具栏、表格行等高密度区域。
   cssRule(".Button[data-size='small']", {
-    '--Button-min-height': 'var(--size-3)',
-    '--Button-padding-x': 'var(--space-4)',
-    '--Button-padding-y': 'var(--space-2)',
-    '--Button-gap': 'var(--space-2)',
-    '--Button-font-size': 'var(--font-size-md)',
+    '--min-height': 'var(--size-3)',
+    '--padding-x': 'var(--space-4)',
+    '--padding-y': 'var(--space-2)',
+    '--gap': 'var(--space-2)',
+    '--font-size': 'var(--font-size-md)',
   }),
 
   // size="large"：主行动区和触控优先区域。
   cssRule(".Button[data-size='large']", {
-    '--Button-min-height': 'var(--size-7)',
-    '--Button-padding-x': 'var(--space-7)',
-    '--Button-padding-y': 'var(--space-3)',
-    '--Button-gap': 'var(--space-4)',
-    '--Button-font-size': 'var(--font-size-xl)',
+    '--min-height': 'var(--size-7)',
+    '--padding-x': 'var(--space-7)',
+    '--padding-y': 'var(--space-3)',
+    '--gap': 'var(--space-4)',
+    '--font-size': 'var(--font-size-xl)',
   }),
 
   // size="xlarge"：需要更大命中面积的主入口。
   cssRule(".Button[data-size='xlarge']", {
-    '--Button-min-height': 'var(--size-8)',
-    '--Button-padding-x': 'var(--space-8)',
-    '--Button-padding-y': 'var(--space-4)',
-    '--Button-gap': 'var(--space-5)',
-    '--Button-font-size': 'var(--font-size-2xl)',
+    '--min-height': 'var(--size-8)',
+    '--padding-x': 'var(--space-8)',
+    '--padding-y': 'var(--space-4)',
+    '--gap': 'var(--space-5)',
+    '--font-size': 'var(--font-size-2xl)',
   }),
 ]
 
@@ -229,14 +229,14 @@ const statusRules = [
       ".Button[data-variant][data-tone][data-status~='disabled']",
     ].join(',\n'),
     {
-      '--Button-bg': 'color-mix(in oklab, var(--Button-bg-rest) 48%, var(--dye-neutral-2))',
-      '--Button-bg-hover': 'var(--Button-bg)',
-      '--Button-bg-active': 'var(--Button-bg)',
-      '--Button-fg': 'color-mix(in oklab, var(--Button-fg-rest) 48%, transparent)',
-      '--Button-fg-hover': 'var(--Button-fg)',
-      '--Button-fg-active': 'var(--Button-fg)',
-      '--Button-border': 'transparent',
-      '--Button-shadow': 'none',
+      '--bg': 'color-mix(in oklab, var(--bg) 48%, var(--dye-neutral-2))',
+      '--bg-hover': 'var(--bg)',
+      '--bg-active': 'var(--bg)',
+      '--fg': 'color-mix(in oklab, var(--fg-rest) 48%, transparent)',
+      '--fg-hover': 'var(--fg)',
+      '--fg-active': 'var(--fg)',
+      '--border': 'transparent',
+      '--shadow': 'none',
       'cursor': 'not-allowed',
     },
   ),
