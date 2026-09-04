@@ -1,255 +1,280 @@
-/** 定义 Button 的组件样式，并提供浏览器端注册入口。 */
-import { cssColorMix } from '../../plugins/utils/css-web-utils'
-import { registCssVariable } from '../../plugins/utils/css-variable'
-import { createCSSStyleSheetText, registerCSS } from '../../plugins/utils/css-stylesheet'
-import { cssRule } from '../../plugins/utils/css-rule'
-import { type CSSDeclarations } from '../../plugins/utils/css-declararion'
+/**
+ * 定义、组合并在 Button 真实执行时挂载它的完整样式。
+ * Button 只组合通用 CSS 原子，不向 cssBlocks registry 注册组件业务片段。
+ */
+import {
+  atRuleBox,
+  cssBlocks,
+  cssColorMix,
+  cssValueSequence,
+  cssVariable,
+  joinCssValues,
+  mountCssStylesheet,
+  selectorBox,
+  stylesheetBox,
+  type CssBlock,
+  type CssBox,
+} from '../../../style-utils'
+
+type ButtonTone = 'accent' | 'danger'
+type ButtonSize = 'small' | 'large' | 'xlarge'
 
 export const buttonStyleURL = import.meta.url
 
-// 组件槽位承接全局 token，并由后续规则按交互状态和组件属性覆盖。
-const buttonCSSVariables = {
-  '--surface-color': 'var(--dye-neutral-1)',
-  '--surface-color-hover': 'var(--dye-neutral-2)',
-  '--surface-color-active': 'var(--dye-neutral-3)',
+const tokens = {
+  colorSurface: cssVariable('color-surface'),
+  colorAction: cssVariable('color-action'),
+  colorActionHover: cssVariable('color-action-hover'),
+  colorActionActive: cssVariable('color-action-active'),
+  colorActionForeground: cssVariable('color-action-fg'),
+  colorForeground: cssVariable('color-fg'),
+  colorForegroundStrong: cssVariable('color-fg-strong'),
+  colorLine: cssVariable('color-line'),
+  colorAccent: cssVariable('color-accent'),
+  colorAccentSoft: cssVariable('color-accent-soft'),
+  colorAccentForeground: cssVariable('color-accent-fg'),
+  colorAccentFocus: cssVariable('color-accent-focus'),
+  colorBad: cssVariable('color-bad'),
+  colorBadSoft: cssVariable('color-bad-soft'),
+  colorBadForeground: cssVariable('color-bad-fg'),
+  colorBadLine: cssVariable('color-bad-line'),
+  shadow0: cssVariable('shadow-0'),
+  shadow1: cssVariable('shadow-1'),
+  shadow2: cssVariable('shadow-2'),
+  shadow3: cssVariable('shadow-3'),
+  boundary1: cssVariable('boundary-1'),
+  size3: cssVariable('size-3'),
+  size5: cssVariable('size-5'),
+  size7: cssVariable('size-7'),
+  size8: cssVariable('size-8'),
+  space2: cssVariable('space-2'),
+  space3: cssVariable('space-3'),
+  space4: cssVariable('space-4'),
+  space5: cssVariable('space-5'),
+  space6: cssVariable('space-6'),
+  space7: cssVariable('space-7'),
+  space8: cssVariable('space-8'),
+  fontSizeMd: cssVariable('font-size-md'),
+  fontSizeLg: cssVariable('font-size-lg'),
+  fontSizeXl: cssVariable('font-size-xl'),
+  fontSize2xl: cssVariable('font-size-2xl'),
+  motionDurationFast: cssVariable('motion-duration-fast'),
+  motionEaseStandard: cssVariable('motion-ease-standard'),
+}
 
-  // '--bg-default': 'color-mix(in oklab, var(--surface-color) 82%, var(--color-accent-soft))',
-  // '--bg-hover': 'color-mix(in oklab, var(--surface-color-hover) 72%, var(--color-accent-soft))',
-  // '--bg-active': 'color-mix(in oklab, var(--surface-color-active) 62%, var(--color-accent-soft))',
+const variables = {
+  background: cssVariable('button-bg'),
+  backgroundHover: cssVariable('button-bg-hover'),
+  backgroundActive: cssVariable('button-bg-active'),
+  foreground: cssVariable('button-fg'),
+  foregroundHover: cssVariable('button-fg-hover'),
+  border: cssVariable('button-border'),
+  shadow: cssVariable('button-shadow'),
+  shadowHover: cssVariable('button-shadow-hover'),
+  shadowActive: cssVariable('button-shadow-active'),
+  minHeight: cssVariable('button-min-height'),
+  paddingX: cssVariable('button-padding-x'),
+  paddingY: cssVariable('button-padding-y'),
+  gap: cssVariable('button-gap'),
+  fontSize: cssVariable('button-font-size'),
+  tone: cssVariable('button-tone'),
+  toneSoft: cssVariable('button-tone-soft'),
+  toneForeground: cssVariable('button-tone-fg'),
+  focus: cssVariable('button-focus', { fallback: tokens.colorAccentFocus }),
+}
 
-  
-  '--border': 'transparent',
-  '--border-hover': 'transparent',
-  '--border-active': 'transparent',
-  '--focus-ring': 'var(--color-accent-focus)',
-  '--shadow': 'var(--shadow-1)',
-  '--shadow-hover': 'var(--shadow-2)',
-  '--shadow-active': 'var(--shadow-0)',
-
-  '--border-width': 'var(--boundary-1)',
-  '--min-height': 'var(--size-5)',
-  '--padding-x': 'var(--space-6)',
-  '--padding-y': 'var(--space-3)',
-  '--gap': 'var(--space-3)',
-  '--font-size': 'var(--font-size-lg)',
-  '--active-offset': 'var(--boundary-1)',
-  '--focus-width': 'var(--boundary-2)',
-  '--focus-offset': 'var(--boundary-2)',
-} as const
-
-const baseRules = [
-  cssRule('.Button', {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'align-self': 'center',
-    'justify-content': 'center',
-    'gap': 'var(--gap)',
-    'min-height': 'var(--min-height)',
-    'border': 'var(--border-width) solid var(--border)',
-    'box-shadow': 'var(--shadow)',
-    'border-radius': '999px',
-    'corner-shape': 'squircle',
-    'padding': 'var(--padding-y) var(--padding-x)',
-    'color': 'var(--fg)',
-    'font': 'inherit',
-    'font-size': 'var(--font-size)',
-    'font-weight': 'bold',
-    'line-height': '1',
-    'background-color': 'var(--bg)',
-    'cursor': 'pointer',
-    'user-select': 'none',
-    'transition': `background-color var(--motion-duration-fast) var(--motion-ease-standard),
-      box-shadow var(--motion-duration-fast) var(--motion-ease-standard),
-      transform var(--motion-duration-fast) var(--motion-ease-standard),
-      border-color var(--motion-duration-fast) var(--motion-ease-standard),
-      color var(--motion-duration-fast) var(--motion-ease-standard),
-      opacity var(--motion-duration-fast) var(--motion-ease-standard)`,
-  }),
-]
-
-const interactionRules = [
-  cssRule('.Button:hover:not(:disabled)', {
-    'background-color': 'var(--bg-hover)',
-    'color': 'var(--fg-hover)',
-    '--border': 'var(--border-hover)',
-    '--shadow': 'var(--shadow-hover)',
-  }),
-
-  cssRule('.Button:active:not(:disabled)', {
-    'background-color': 'var(--bg-active)',
-    'color': 'var(--fg-active)',
-    '--border': 'var(--border-active)',
-    '--shadow': 'var(--shadow-active)',
-    'transform': 'translateY(var(--active-offset))',
-  }),
-
-  cssRule('.Button:focus-visible', {
-    'outline': 'var(--focus-width) solid var(--focus-ring)',
-    'outline-offset': 'var(--focus-offset)',
-  }),
-]
-
-const variantRules = [
-  // variant="bare"：低权重的退场动作。
-  cssRule(".Button[data-variant='bare']", {
-    '--bg': 'transparent',
-    '--bg': 'var(--bg)',
-    '--bg-hover': 'color-mix(in oklab, var(--surface-color) 88%, var(--color-accent-soft))',
-    '--bg-active': 'color-mix(in oklab, var(--surface-color-hover) 82%, var(--color-accent-soft))',
-    '--fg-rest': 'var(--color-fg)',
-    '--fg': 'var(--fg-rest)',
-    '--fg-hover': 'var(--color-fg-strong)',
-    '--fg-active': 'var(--color-fg-strong)',
-    '--border': 'transparent',
-    '--border-hover': 'transparent',
-    '--border-active': 'transparent',
-    '--shadow': 'none',
-    '--shadow-hover': 'none',
-    '--shadow-active': 'none',
-  }),
-
-  // variant="solid"：需要优先被看见的强调动作。
-  cssRule(".Button[data-variant='solid']", {
-    '--bg': 'var(--color-action)',
-    '--bg': 'var(--bg)',
-    '--bg-hover': 'var(--color-action-hover)',
-    '--bg-active': 'var(--color-action-active)',
-    '--fg-rest': 'color-mix(in oklab, var(--color-action-fg) 90%, var(--bg))',
-    '--fg': 'var(--fg-rest)',
-    '--fg-hover': 'var(--color-action-fg)',
-    '--fg-active': 'var(--color-action-fg)',
-    '--border': 'transparent',
-    '--border-hover': 'transparent',
-    '--border-active': 'transparent',
-    '--focus-ring': 'var(--color-action-line)',
-    '--shadow': 'var(--shadow-2)',
-    '--shadow-hover': 'var(--shadow-3)',
-    '--shadow-active': 'var(--shadow-0)',
-  }),
-]
-
-const toneRules = [
-  // tone="accent"：当前流程推荐执行的动作。
-  cssRule(".Button[data-tone='accent']", {
-    '--tone-color': 'var(--color-accent)',
-    '--tone-soft': 'var(--color-accent-soft)',
-    '--tone-strong': 'var(--color-accent-strong)',
-    '--tone-fg': 'var(--color-accent-fg)',
-    '--tone-line': 'var(--color-accent-focus)',
-  }),
-
-  // tone="danger"：删除、重置等破坏性动作。
-  cssRule(".Button[data-tone='danger']", {
-    '--tone-color': 'var(--color-bad)',
-    '--tone-soft': 'var(--color-bad-soft)',
-    '--tone-strong': 'var(--color-bad)',
-    '--tone-fg': 'var(--color-bad-fg)',
-    '--tone-line': 'var(--color-bad-line)',
-  }),
-
-  // tone 只替换语义颜色，variant 继续决定动作声量。
-  cssRule('.Button[data-tone]', {
-    '--bg': 'color-mix(in oklab, var(--surface-color) 76%, var(--tone-soft))',
-    '--bg': 'var(--bg)',
-    '--bg-hover': 'color-mix(in oklab, var(--surface-color-hover) 68%, var(--tone-soft))',
-    '--bg-active': 'color-mix(in oklab, var(--surface-color-active) 58%, var(--tone-soft))',
-    '--fg-rest': 'var(--tone-strong)',
-    '--fg': 'var(--fg-rest)',
-    '--fg-hover': 'var(--tone-strong)',
-    '--fg-active': 'var(--tone-strong)',
-    '--focus-ring': 'var(--tone-line)',
-  }),
-
-  // bare 与 tone 组合时仍保持退场形态。
-  cssRule(".Button[data-variant='bare'][data-tone]", {
-    '--bg': 'transparent',
-    '--bg': 'var(--bg)',
-    '--bg-hover': 'color-mix(in oklab, var(--surface-color) 82%, var(--tone-soft))',
-    '--bg-active': 'color-mix(in oklab, var(--surface-color-hover) 74%, var(--tone-soft))',
-  }),
-
-  // solid 与 tone 组合时仍保持强调形态。
-  cssRule(".Button[data-variant='solid'][data-tone]", {
-    '--bg': 'var(--tone-color)',
-    '--bg': 'var(--bg)',
-    '--bg-hover': 'color-mix(in oklab, var(--tone-color) 88%, var(--color-fg-strong))',
-    '--bg-active': 'color-mix(in oklab, var(--tone-color) 78%, var(--color-fg-strong))',
-    '--fg-rest': 'color-mix(in oklab, var(--tone-fg) 90%, var(--bg))',
-    '--fg': 'var(--fg-rest)',
-    '--fg-hover': 'var(--tone-fg)',
-    '--fg-active': 'var(--tone-fg)',
-  }),
-]
-
-const sizeRules = [
-  // size="small"：工具栏、表格行等高密度区域。
-  cssRule(".Button[data-size='small']", {
-    '--min-height': 'var(--size-3)',
-    '--padding-x': 'var(--space-4)',
-    '--padding-y': 'var(--space-2)',
-    '--gap': 'var(--space-2)',
-    '--font-size': 'var(--font-size-md)',
-  }),
-
-  // size="large"：主行动区和触控优先区域。
-  cssRule(".Button[data-size='large']", {
-    '--min-height': 'var(--size-7)',
-    '--padding-x': 'var(--space-7)',
-    '--padding-y': 'var(--space-3)',
-    '--gap': 'var(--space-4)',
-    '--font-size': 'var(--font-size-xl)',
-  }),
-
-  // size="xlarge"：需要更大命中面积的主入口。
-  cssRule(".Button[data-size='xlarge']", {
-    '--min-height': 'var(--size-8)',
-    '--padding-x': 'var(--space-8)',
-    '--padding-y': 'var(--space-4)',
-    '--gap': 'var(--space-5)',
-    '--font-size': 'var(--font-size-2xl)',
-  }),
-]
-
-const statusRules = [
-  // status="loading"：动作已触发，正在等待结果。
-  cssRule(".Button[data-status~='loading']", {
-    cursor: 'progress',
-  }),
-
-  // disabled 最终覆盖所有 variant 与 tone 组合，避免组合样式恢复可交互外观。
-  cssRule(
-    [
-      '.Button:disabled',
-      ".Button[data-status~='disabled']",
-      '.Button[data-variant]:disabled',
-      ".Button[data-variant][data-status~='disabled']",
-      '.Button[data-tone]:disabled',
-      ".Button[data-tone][data-status~='disabled']",
-      '.Button[data-variant][data-tone]:disabled',
-      ".Button[data-variant][data-tone][data-status~='disabled']",
-    ].join(',\n'),
-    {
-      '--bg': 'color-mix(in oklab, var(--bg) 48%, var(--dye-neutral-2))',
-      '--bg-hover': 'var(--bg)',
-      '--bg-active': 'var(--bg)',
-      '--fg': 'color-mix(in oklab, var(--fg-rest) 48%, transparent)',
-      '--fg-hover': 'var(--fg)',
-      '--fg-active': 'var(--fg)',
-      '--border': 'transparent',
-      '--shadow': 'none',
-      'cursor': 'not-allowed',
-    },
+const composites = {
+  padding: joinCssValues(' ', variables.paddingY, variables.paddingX),
+  border: joinCssValues(' ', tokens.boundary1, 'solid', variables.border),
+  activeTransform: cssValueSequence('translateY(', tokens.boundary1, ')'),
+  transition: joinCssValues(
+    ', ',
+    joinCssValues(' ', 'background-color', tokens.motionDurationFast, tokens.motionEaseStandard),
+    joinCssValues(' ', 'border-color', tokens.motionDurationFast, tokens.motionEaseStandard),
+    joinCssValues(' ', 'box-shadow', tokens.motionDurationFast, tokens.motionEaseStandard),
+    joinCssValues(' ', 'color', tokens.motionDurationFast, tokens.motionEaseStandard),
+    joinCssValues(' ', 'opacity', tokens.motionDurationFast, tokens.motionEaseStandard),
+    joinCssValues(' ', 'transform', tokens.motionDurationFast, tokens.motionEaseStandard),
   ),
+  defaultBackground: cssColorMix([tokens.colorSurface, 0.9], tokens.colorAction),
+  defaultBackgroundHover: cssColorMix([tokens.colorSurface, 0.82], tokens.colorAction),
+  defaultBackgroundActive: cssColorMix([tokens.colorSurface, 0.74], tokens.colorAction),
+  defaultBorder: cssColorMix([tokens.colorLine, 0.72], 'transparent'),
+}
+
+// 低权重动作退出视觉焦点；数组只保存 Button 的业务组合，不形成新的 CssBlock。
+const bareBlocks = [
+  cssBlocks.customProperty(variables.background, 'transparent'),
+  cssBlocks.customProperty(
+    variables.backgroundHover,
+    cssColorMix([tokens.colorForeground, 0.08], 'transparent'),
+  ),
+  cssBlocks.customProperty(
+    variables.backgroundActive,
+    cssColorMix([tokens.colorForeground, 0.14], 'transparent'),
+  ),
+  cssBlocks.customProperty(variables.border, 'transparent'),
+  cssBlocks.customProperty(variables.shadow, 'none'),
+  cssBlocks.customProperty(variables.shadowHover, 'none'),
+  cssBlocks.customProperty(variables.shadowActive, 'none'),
 ]
 
-const buttonStyleText = createCSSStyleSheetText({
-  layer: 'uikit',
-  // 数组顺序就是样式覆盖顺序，新增规则时不要按名称重新排序。
-  rules: [...baseRules, ...interactionRules, ...variantRules, ...toneRules, ...sizeRules, ...statusRules],
-})
+// 实色表面表达需要优先被看到的动作。
+const solidBlocks = [
+  cssBlocks.customProperty(variables.background, tokens.colorAction),
+  cssBlocks.customProperty(variables.backgroundHover, tokens.colorActionHover),
+  cssBlocks.customProperty(variables.backgroundActive, tokens.colorActionActive),
+  cssBlocks.customProperty(variables.foreground, tokens.colorActionForeground),
+  cssBlocks.customProperty(variables.foregroundHover, tokens.colorActionForeground),
+  cssBlocks.customProperty(variables.border, 'transparent'),
+  cssBlocks.customProperty(variables.shadow, tokens.shadow2),
+  cssBlocks.customProperty(variables.shadowHover, tokens.shadow3),
+  cssBlocks.customProperty(variables.shadowActive, tokens.shadow0),
+]
 
-/** 在浏览器端注册 Button 样式；SSR 时跳过，重复调用仍只保留一份。 */
+// solid 与 tone 同时出现时，tone 决定实色表面。
+const solidToneBlocks = [
+  cssBlocks.customProperty(variables.background, variables.tone),
+  cssBlocks.customProperty(
+    variables.backgroundHover,
+    cssColorMix([variables.tone, 0.88], tokens.colorForegroundStrong),
+  ),
+  cssBlocks.customProperty(
+    variables.backgroundActive,
+    cssColorMix([variables.tone, 0.78], tokens.colorForegroundStrong),
+  ),
+  cssBlocks.customProperty(variables.foreground, variables.toneForeground),
+  cssBlocks.customProperty(variables.foregroundHover, variables.toneForeground),
+]
+
+let buttonStylesheet: CssBox | undefined
+
+/** 把动作语气选择翻译成一组通用 declaration blocks。 */
+function createToneBlocks(tone: ButtonTone): CssBlock[] {
+  const toneColor = tone === 'danger' ? tokens.colorBad : tokens.colorAccent
+  const softColor = tone === 'danger' ? tokens.colorBadSoft : tokens.colorAccentSoft
+  const foreground = tone === 'danger' ? tokens.colorBadForeground : tokens.colorAccentForeground
+  const focus = tone === 'danger' ? tokens.colorBadLine : tokens.colorAccentFocus
+
+  return [
+    cssBlocks.customProperty(variables.tone, toneColor),
+    cssBlocks.customProperty(variables.toneSoft, softColor),
+    cssBlocks.customProperty(variables.toneForeground, foreground),
+    cssBlocks.customProperty(
+      variables.background,
+      cssColorMix([tokens.colorSurface, 0.76], variables.toneSoft),
+    ),
+    cssBlocks.customProperty(
+      variables.backgroundHover,
+      cssColorMix([tokens.colorSurface, 0.66], variables.toneSoft),
+    ),
+    cssBlocks.customProperty(
+      variables.backgroundActive,
+      cssColorMix([tokens.colorSurface, 0.56], variables.toneSoft),
+    ),
+    cssBlocks.customProperty(variables.foreground, variables.tone),
+    cssBlocks.customProperty(variables.foregroundHover, variables.tone),
+    cssBlocks.customProperty(variables.focus, focus),
+  ]
+}
+
+/** 把物理尺寸选择翻译成一组通用 custom property blocks。 */
+function createSizeBlocks(size: ButtonSize): CssBlock[] {
+  const sizeValuesBySize = {
+    small: [tokens.size3, tokens.space4, tokens.space2, tokens.space2, tokens.fontSizeMd],
+    large: [tokens.size7, tokens.space7, tokens.space3, tokens.space4, tokens.fontSizeXl],
+    xlarge: [tokens.size8, tokens.space8, tokens.space4, tokens.space5, tokens.fontSize2xl],
+  }[size]
+
+  return [
+    cssBlocks.customProperty(variables.minHeight, sizeValuesBySize[0]),
+    cssBlocks.customProperty(variables.paddingX, sizeValuesBySize[1]),
+    cssBlocks.customProperty(variables.paddingY, sizeValuesBySize[2]),
+    cssBlocks.customProperty(variables.gap, sizeValuesBySize[3]),
+    cssBlocks.customProperty(variables.fontSize, sizeValuesBySize[4]),
+  ]
+}
+
+/** 延迟建立 Button 根 box，使首次使用前完成的原子 block 覆盖能够进入结果。 */
+function getButtonStylesheet(): CssBox {
+  if (buttonStylesheet) return buttonStylesheet
+
+  buttonStylesheet = stylesheetBox(
+    atRuleBox(
+      '@layer uikit',
+      selectorBox(
+        '.Button',
+        cssBlocks.customProperty(variables.background, composites.defaultBackground),
+        cssBlocks.customProperty(variables.backgroundHover, composites.defaultBackgroundHover),
+        cssBlocks.customProperty(variables.backgroundActive, composites.defaultBackgroundActive),
+        cssBlocks.customProperty(variables.foreground, tokens.colorForegroundStrong),
+        cssBlocks.customProperty(variables.foregroundHover, tokens.colorForegroundStrong),
+        cssBlocks.customProperty(variables.border, composites.defaultBorder),
+        cssBlocks.customProperty(variables.shadow, tokens.shadow1),
+        cssBlocks.customProperty(variables.shadowHover, tokens.shadow2),
+        cssBlocks.customProperty(variables.shadowActive, tokens.shadow0),
+        cssBlocks.customProperty(variables.minHeight, tokens.size5),
+        cssBlocks.customProperty(variables.paddingX, tokens.space6),
+        cssBlocks.customProperty(variables.paddingY, tokens.space3),
+        cssBlocks.customProperty(variables.gap, tokens.space3),
+        cssBlocks.customProperty(variables.fontSize, tokens.fontSizeLg),
+        cssBlocks.inlineFlex(),
+        cssBlocks.alignItems('center'),
+        cssBlocks.alignSelf('center'),
+        cssBlocks.justifyContent('center'),
+        cssBlocks.gap(variables.gap),
+        cssBlocks.minHeight(variables.minHeight),
+        cssBlocks.padding(composites.padding),
+        cssBlocks.border(composites.border),
+        cssBlocks.borderRadius('999px'),
+        cssBlocks.backgroundColor(variables.background),
+        cssBlocks.boxShadow(variables.shadow),
+        cssBlocks.color(variables.foreground),
+        cssBlocks.font('inherit'),
+        cssBlocks.fontSize(variables.fontSize),
+        cssBlocks.fontWeight(700),
+        cssBlocks.lineHeight(1),
+        cssBlocks.cursor('pointer'),
+        cssBlocks.userSelect('none'),
+        cssBlocks.transition(composites.transition),
+      ),
+      selectorBox(
+        '.Button:hover:not(:disabled)',
+        cssBlocks.backgroundColor(variables.backgroundHover),
+        cssBlocks.boxShadow(variables.shadowHover),
+        cssBlocks.color(variables.foregroundHover),
+      ),
+      selectorBox(
+        '.Button:active:not(:disabled)',
+        cssBlocks.backgroundColor(variables.backgroundActive),
+        cssBlocks.boxShadow(variables.shadowActive),
+        cssBlocks.transform(composites.activeTransform),
+      ),
+      selectorBox('.Button:focus-visible', cssBlocks.focusRing(variables.focus)),
+      selectorBox(".Button[data-variant='bare']", ...bareBlocks),
+      selectorBox(".Button[data-variant='solid']", ...solidBlocks),
+      selectorBox(".Button[data-tone='accent']", ...createToneBlocks('accent')),
+      selectorBox(".Button[data-tone='danger']", ...createToneBlocks('danger')),
+      selectorBox(".Button[data-variant='bare'][data-tone]", ...bareBlocks),
+      selectorBox(".Button[data-variant='solid'][data-tone]", ...solidToneBlocks),
+      selectorBox(".Button[data-size='small']", ...createSizeBlocks('small')),
+      selectorBox(".Button[data-size='large']", ...createSizeBlocks('large')),
+      selectorBox(".Button[data-size='xlarge']", ...createSizeBlocks('xlarge')),
+      selectorBox(".Button[data-status~='loading']", cssBlocks.cursor('progress')),
+      selectorBox(
+        ".Button:disabled,\n.Button[data-status~='disabled']",
+        cssBlocks.boxShadow('none'),
+        cssBlocks.cursor('not-allowed'),
+        cssBlocks.opacity(0.48),
+        cssBlocks.transform('none'),
+      ),
+    ),
+  )
+  return buttonStylesheet
+}
+
+/** 在 Button 真实执行时激活样式；SSR 跳过，同一 Document 中保持单份。 */
 export function registerButtonStyle(): void {
   if (typeof document === 'undefined') return
-  registerCSS(document, buttonStyleURL, buttonStyleText)
+  mountCssStylesheet(document, buttonStyleURL, getButtonStylesheet())
 }

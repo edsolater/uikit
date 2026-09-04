@@ -1,159 +1,91 @@
-# Architecture
+# 文件职责
 
-## Purpose
+本文件是 UIKit 当前架构的总入口，说明现役领域、领域边界和真实运行链。领域内部的文件职责由对应领域文档继续展开；未来迁移方案写入 Plan，不用尚未完成的目标替代当前事实。
 
-- 这个文件是当前仓库的结构与边界入口。
-- 它负责帮助维护者和 AI 快速理解“这个项目分成哪些层、每层负责什么、应该去哪里改”。
-- 它不替代源码文件头注释。
-- 它不承载通用代码规范、CSS 规范、命名规范或注释规范。
+# 当前系统组成
 
-## Capability Model
+- `src/components/Piv`：基础 DOM 原子。负责消费 class、style、HTML props、事件、ref 与 plugins，不承载具体 kit 的业务语义。
+- `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
+- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
+- `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
+- `src/hooks`：对外响应式状态与浏览器协作能力。领域入口和内部阅读路线见 [hooks README](src/hooks/README.md)。
+- `src/style-utils`：JSS 工具定义领域。负责保存可组合的 CSS 结果、在最终边界解析结果，并按 `Document` 挂载 stylesheet；每个文件的职责见 [style-utils 架构](src/style-utils/architecture.md)。
+- `src/css`：仍在服役的静态 CSS 领域。当前继续提供 reset、tokens、controls、traits 与尚未迁移的 CSS 工具；当前结构见 [CSS 架构](src/css/architecture.md)。
+- `src/app/example-dashboard`：本地 Example 浏览与浏览器验收入口，不是正式业务应用。
+- `src/types`：没有单一源码主体可归属的浏览器与 JSX 全局类型补丁。
+- `src/index.ts`：包根发布入口，只汇总现役公开能力和当前基础 CSS 入口。
 
-- 当前仓库是 SolidJS UIKit 项目。
-- 当前仓库的目标是沉淀基础 DOM 原子、基础组件、基础 hook 和本地验证方式。
-- 当前仓库同时承载面向组件库验收的 Example 浏览应用，但它不是正式业务项目。
-- 当前仓库不是大而全的设计系统。
-- 当前仓库优先提供稳定、直接、边界清楚的基础能力。
-- 当前仓库默认只考虑最新浏览器和现代 CSS 能力。
+`src/fnkit` 是当前仓库中的历史空目录，不构成现役领域。
 
-## Layering
+# 公开入口
 
-- `src/base`：基础抽象原子层。
-  - 负责底层 DOM、状态原子、局部组件能力和 trait。
-  - 这一层提供可复用能力，不直接承载业务级组件语义。
-- `src/components`：对外组件层。
-  - 负责基础组件主体与组件级 Example / Story。
-  - 这一层向调用方暴露稳定组件入口。
-- `src/hooks`：对外 hook 层。
-  - 负责浏览器协作类或通用调用方能力。
-  - 这一层向调用方暴露稳定 hook 入口。
-- `src/app/example-dashboard`：组件库 Example 浏览层。
-  - 负责提供 Example 索引、URL 详情导航和本地挂载，用来反向验证组件 API、token 和组合能力。
-  - 这一层不是正式业务项目，不应为了补业务而绕过或污染组件库职责。
-- `src/app/example-dashboard/pages/ExampleDashboard.tsx`：Example 浏览框架。
-  - 索引只列出可浏览 Example；URL 选中具体条目后才渲染详情。
-  - 具体 Example 继续由各主体旁边的 `.example.tsx` 承载。
-- `src/index.ts`：发布入口层。
-  - 负责统一对外导出。
-  - 不承载 demo、story 或本地验证逻辑。
+- `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、hooks 和 style-utils。当前仍会加载 `src/css/all-base.css`。
+- `@edsolater/uikit/style-utils` 从 `src/style-utils/index.ts` 进入，只公开 JSS 工具，不经过包根的基础 CSS 副作用。
+- `src/components/index.ts`、`src/components/kits/index.ts`、`src/components/plugins/index.ts` 和 `src/hooks/index.ts` 分别收口所属领域的公开成员。
+- Example、Story、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
 
-## Runtime Flow
+# 运行链
 
-- 本地开发入口从 `src/app/example-dashboard/index.tsx` 进入。
-- `index.tsx` 只负责挂载 `pages/ExampleDashboard.tsx`。
-- `/examples` 显示索引；`/examples/<id>` 显示具体详情，并支持直接访问、刷新和浏览历史。
-- 各主体旁边的 `.example.tsx` 独立承载验收场景，不反向成为组件库发布入口的一部分。
-- 组件和 hook 的正式发布入口始终从 `src/index.ts` 收口。
-- `src/components/index.ts` 和 `src/hooks/index.ts` 负责各自目录的对外汇总导出。
+## 组件渲染
 
-## File Map
+```txt
+调用方
+  -> kit 组件
+    -> Piv 与 plugins
+      -> SolidJS
+        -> DOM
+```
 
-- 根目录
-  - `Agents.md`：agent 入口与仓库级协作约束。
-  - `Architecture.md`：项目架构、模块边界、目录职责与调用链路。
-  - `README.md`：项目入口说明。
-  - `package.json`：包信息、依赖和本地命令。
-  - `src`
-    - `app`
-      - `example-dashboard`
-        - `index.tsx`：Example 浏览应用挂载入口。
-        - `pages/ExampleDashboard.tsx`：索引、URL 详情导航与 Example 注册表。
-        - `pages/ExampleDashboard.css`：Example 浏览框架与条目共享样式。
-    - `base`
-      - `BasicComponent`
-        - `className.ts`：把 class 声明绑定到 DOM `classList`。
-        - `domMap.tsx`：原生 tag 到 JSX 模板的映射。
-        - `handleHTMLProps.ts`：合并并消费普通 HTML props。
-        - `handleHTMLPropsValue.ts`：单个 HTML prop 的 DOM 写入语义。
-        - `handleOn.ts`：静态事件绑定与清理。
-        - `handlePivPlugin.ts`：plugin 执行、shadow props 收集与合并。
-        - `handleStyle.ts`：style 归一、合并与 DOM 绑定。
-        - `index.ts`：`BasicComponent` 目录导出入口。
-        - `Piv.tsx`：基础 DOM 组件原子。
-        - `ref.ts`：ref 消费与清理。
-        - `type.ts`：`BasicComponent` 相关基础类型工具。
-      - `component`
-        - `index.ts`：`component` 目录导出入口。
-        - `kitContext.tsx`：组件树内局部 context 链能力。
-        - `Loop.tsx`：响应式循环组件。
-      - `hooks`
-        - `base-state`
-          - `createState.ts`：状态创建边界，统一 signal/store 封装。
-          - `index.ts`：`base-state` 目录导出入口。
-          - `read.ts`：状态读取语义，定义 `Source` 和 `val()`。
-        - `domRef.ts`：DOM ref 状态原子与 ref 写入口。
-        - `index.ts`：`base/hooks` 目录导出入口。
-        - `value-state`
-          - `collection.ts`：集合状态相关 hook 预留落点。
-          - `count.ts`：整数计数状态。
-          - `ident.ts`：离散 ident 状态。
-          - `matcher.ts`：基于 accessor 的匹配器原子。
-          - `toggle.ts`：boolean 标记状态。
-      - `traits`
-        - `index.ts`：`traits` 目录导出入口。
-        - `tabular-num.css`：等宽数字 trait 样式。
-        - `tabular-num.ts`：等宽数字 trait。
-    - `components`
-      - `Button`
-        - `Button.example.tsx`：Button 的可浏览 Example。
-        - `index.ts`：`Button` 目录导出入口。
-        - `Button.stories.tsx`：Button 的 Storybook 示例。
-        - `Button.tsx`：基础按钮组件。
-        - `button.css`：Button 样式。
-      - `Popover`
-        - `hooks`
-          - `createPopoverController.ts`：Popover 本地控制能力，管理原生 popover 生命周期与打开状态镜像。
-        - `Popover.example.tsx`：Popover 的可浏览 Example。
-        - `index.ts`：`Popover` 目录导出入口。
-        - `Popover.stories.tsx`：Popover 的 Storybook 示例。
-        - `Popover.tsx`：基础 Popover 组件，封装触发器、原生 popover 容器与 anchor positioning 结构。
-        - `popover.css`：Popover 样式，包含原生定位与 border-shape 箭头样式。
-      - `index.ts`：`components` 目录导出入口。
-    - `css`
-      - `architecture.md`：CSS 结构说明。
-      - `controls.css`：内建控件样式。
-      - `color.css`：颜色变量与颜色相关样式。
-      - `dimension.css`：尺寸变量与尺寸相关样式。
-      - `how-to-use.md`：CSS 使用说明。
-      - `reset.css`：基础重置样式。
-      - `todo.md`：CSS 待办记录。
-    - `hooks`
-      - `index.ts`：对外 hooks 目录导出入口。
-      - `useTitle`
-        - `index.ts`：`useTitle` 目录导出入口。
-        - `useDocumentTitle.example.tsx`：`useDocumentTitle` 的可浏览 Example。
-        - `useTitle.stories.tsx`：`useTitle` 的 Storybook 示例。
-        - `useTitle.ts`：浏览器标题 hook。
-    - `index.css`：全局样式入口。
-    - `index.ts`：包发布入口。
-    - `types`
-      - `htmlPopover.d.ts`：Popover API 与相关 HTML 属性的 JSX 类型补丁。
-      - `htmlElementViewTransition.d.ts`：`HTMLElement.startViewTransition()` 的全局类型补丁。
-  - `tsconfig.build.json`：发布类型声明构建配置。
-  - `tsconfig.json`：本地开发与 Storybook 类型检查配置。
-  - `vite.config.ts`：组件库构建配置。
+kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果写入 DOM。组件可以使用 hooks、component utils 和 style-utils；基础设施不反向依赖具体 kit。
 
-## Module Boundaries
+## Button 样式
 
-- `src/base` 不应反向依赖 `src/components` 或 `src/hooks` 的业务主体。
-- `src/components` 的 Example、Story 和局部能力应尽量就近放在组件目录内。
-- `src/hooks` 的 Example、Story 和主体实现应尽量就近放在 hook 目录内。
-- `.example.tsx` 表示进入 Example 索引并拥有独立详情 URL 的可浏览条目；`.demo.tsx` 只保留给不进入该浏览框架的局部演示。
-- `src/app/example-dashboard` 只负责发现和打开 Example，不应演化成正式业务应用层，也不定义具体 Example 内容。
-- `src/index.ts` 只处理对外导出，不夹带本地验证代码。
-- `types` 目录只承载没有明确单一主体归属的全局类型补丁。
+```txt
+Button 实际执行
+  -> registerButtonStyle()
+    -> Button.style.ts 中的业务组合
+      -> style-utils 的 CssBox / CssBlock / CssValue 结果
+        -> parseCssStylesheet()
+          -> mountCssStylesheet()
+            -> 当前 Document 的 <style>
+```
 
-## Do Not Do
+只 import Button 不会挂载 Button stylesheet。组件函数真实执行时才连接 stylesheet 根；相同 `Document`、稳定身份和根不会重复挂载。Button 的 selector、状态、tone 和 size 组合属于 Button style 领域，style-utils 只定义通用工具。
 
-- 不要把具体 Example 长期堆在 `ExampleDashboard.tsx`。
-- 不要把 Story、Example 和正式发布入口混成同一职责文件。
-- 不要把 Example 浏览应用当成业务需求堆叠区，或在里面绕过组件库直接手写组件视觉样式。
-- 不要把 `src/base` 当成业务级组件目录使用。
-- 不要把结构文档退化成单纯的目录清单，而忽略层次和边界。
-- 不要重新引入已经被否决的 Surface 抽象；原因和同类提议的判断方式见 [失败组件](docs/组件失败记录.md)。
+## 当前静态 CSS
 
-## Agent Notes
+```txt
+src/index.ts
+  -> src/css/all-base.css
+    -> reset + tokens + controls + traits
+```
 
-- AI 先读 `Agents.md`，再读本文件理解当前仓库结构。
-- 需要判断“文件该落在哪一层、应该改谁、不该跨哪条边界”时，优先参考本文件。
-- 发现本文件缺少结构信息时，应补结构、边界和调用链，而不是只补文件名索引。
+除 Button 外的多数组件和 plugins 目前仍各自 import CSS。只保留 `reset.css` 的状态是迁移目标，不是当前事实；实施规划见 [JSS 样式系统 Plan](docs/plans/JSS样式系统.md)。
+
+## Example 浏览
+
+```txt
+src/app/example-dashboard/index.tsx
+  -> pages/ExampleDashboard.tsx
+    -> /examples 索引
+    -> /examples/<id> 对应的相邻 .example.tsx
+```
+
+Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，不定义组件自身的业务能力。
+
+# 领域边界
+
+- 工具的领域发生在工具定义端。Button 使用 `cssBlocks` 不会让通用 block 变成 style-utils 内的 Button 子领域，也不会授权 style-utils 注册 `buttonFoundation`、`buttonDisabled` 一类业务组合。
+- `src/style-utils` 只提供通用 CSS 表达、组合、解析和挂载能力；具体组件 selector、状态和视觉组合留在组件自己的 style 文件。
+- `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-utils` 都不能反向依赖具体 kit。
+- `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
+- `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。
+- `src/index.ts` 和各目录 `index.ts` 只表达公开契约，不承载 demo、测试或新的业务实现。
+- `src/types` 只承载无法就近归属到单一主体的全局补丁。
+
+# 文档边界
+
+- 本文件记录当前可由代码验证的系统关系。
+- [style-utils 架构](src/style-utils/architecture.md) 和 [CSS 架构](src/css/architecture.md) 记录各自领域的当前文件职责与内部链路。
+- [JSS 样式系统 Plan](docs/plans/JSS样式系统.md) 记录尚未完成的迁移目标、顺序、验收和未决问题。
+- 通用代码、命名、注释与 CSS 规则从 [AI Rules README](../ai-rules/README.md) 进入，不复制到当前仓库架构中。

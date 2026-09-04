@@ -21,6 +21,12 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./style-utils": {
+      "development": "./src/style-utils/index.ts",
+      "types": "./dist/style-utils/index.d.ts",
+      "import": "./dist/style-utils/index.js",
+      "default": "./dist/style-utils/index.js"
+    },
     "./css/*": "./dist/css/*"
   },
   "publishConfig": {

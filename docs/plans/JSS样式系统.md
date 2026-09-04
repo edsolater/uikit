@@ -1,6 +1,6 @@
 # JSS 样式系统
 
-本 Plan 负责把 UIKit 除 `reset.css` 以外的运行时样式迁移到 JS 管理的完整 JSS 体系。JSS 用 `CssBox` 组织结构、顺序、挂载和生命周期，用 `CssKey` 与 `CssValue` 表达内容；`cssBlocks` 则把已经成立的内容和外层 box 打包成可复用积木。本文描述修改目标、代码落点、实施顺序、验证方式和未决问题，不把当前未完成实现当作稳定协议。
+本 Plan 负责把 UIKit 除 `reset.css` 以外的运行时样式迁移到 JS 管理的完整 JSS 体系。JSS 用 `CssBox` 保留结构与顺序，用 `CssKey` 与 `CssValue` 保留内容意图；`cssBlocks` 则把已经成立的内容和外层 box 打包成可复用积木。所有中间结果继续保持可组合，只有进入真实 stylesheet 前才由 `parseCss*` 系列递归解释并压平。本文描述修改目标、代码落点、实施顺序、验证方式和未决问题，不把当前未完成实现当作稳定协议。
 
 ## 修改目标
 
@@ -28,7 +28,7 @@
 
 ## 完整模型
 
-JSS 的基础由组织体系和内容体系组成，`cssBlocks` 是建立在两者之上的快捷表达层。translator 与 stylesheet runtime 负责把它们连接到浏览器，不成为另一套业务表达语言。
+JSS 的基础由 box 与 value 结果组成，`cssBlocks` 是建立在两者之上的快捷表达层。`parseCss*` 与 stylesheet runtime 负责在最终边界解释这些结果并连接浏览器，不成为另一套业务表达语言。
 
 | 体系 | 对象 | 职责 |
 | --- | --- | --- |
@@ -49,11 +49,21 @@ flowchart TD
   namespace[cssBlocks namespace] --> reusable[CssBlock]
   reusable --> outer
 
-  root --> translator[translator]
-  translator --> document[Document stylesheet]
+  root --> parser[parseCss series]
+  parser --> document[Document stylesheet]
 
   reset[reset.css] --> html[原始 HTML]
 ```
+
+## 领域与载体边界
+
+领域判断发生在能力的定义端，不从使用端调用了哪些工具反推领域。`style-utils` 定义 box、value、block、激活和最终解析等通用协议，这些能力拥有各自规则或生命周期时才可能形成边界。Button、Card 等组件是业务使用端；它们在同一份样式中使用 `CssVariable`、`CssValue`、`CssBlock` 和 selector box，不会因此产生 variable、value、block 或 selector 子领域。
+
+- Button 样式的定义端是 Button 的 style 领域。token、局部 value、基础形态、hover、variant、tone、size 和 stylesheet 组合只是这条样式主线中的材料、段落或阶段。
+- 使用了不同工具、创建了不同对象、代码可以被命名，均不能证明新领域或新文件成立。
+- 业务样式默认保留在一个连续 style 载体中。只有某一部分能够脱离组件独立接收材料、执行自己的规则或生命周期并交付稳定结果时，才重新判断是否形成外部领域。
+- `style-utils` 的文件边界也不能照类型表机械建立。只有完整责任会独立变化、合并会泄漏私有规则且拆开不需要调用方重新拼装时，边界才成立。
+- 文件行数不是领域证据。一个较长但连续交付 Button 样式的文件，比按 foundation、interaction、variant、size、tokens、values 拆成一排伪领域文件更清楚。
 
 ### `cssBlocks`
 
@@ -66,6 +76,8 @@ flowchart TD
 ### `CssBlock`
 
 - `CssBlock` 是快捷表达层中的可复用样式内容物，也是一次已经打包的组织结果；它不是独立的组织体系。
+- block 的边界来自可复用 CSS 含义，不来自组件业务段落。`display + none`、`padding + 某个 value`、`cursor + not-allowed` 各自包进外层 box 后可以成为原子 block；Button 的 disabled、tone 或 size 整体只是业务组合，不因此成为通用 block。
+- 组件 selector box 直接融合原子 blocks，例如 disabled 状态组合 `cssBlocks.boxShadow('none')`、`cssBlocks.cursor('not-allowed')`、`cssBlocks.opacity(0.48)` 与 `cssBlocks.transform('none')`。
 - 调用方不检查 `CssBlock` 内部由 key/value、box、selector、at-rule、其他 block 或后续新对象中的哪些部分组成。
 - 内部组成不能成为 `CssBlock` 的公开联合类型，也不能迫使调用方按语法种类分支。
 - 每个 `CssBlock` 对外都具有完整 box 边界。`{ display: none }` 可以成为 `CssBlock`，但 `display + none` 不能独立成为 `CssBlock`。
@@ -78,7 +90,7 @@ flowchart TD
 - box 可以为空，可以包含 key/value，也可以包含其他 box；具体内部表示不进入 `CssBlock` 的公开协议。
 - selector 是一种具有 selector 显化头部的 box；at-rule 和 stylesheet 也是具有不同头部或根职责的 box。
 - selector 文本不是 box 的唯一身份。相同 selector 可以按 cascade 顺序出现多次，不能因为文本相同而被错误去重。
-- box 中内容顺序必须稳定。translator 不能把 key/value 与子 box 拆成两组后重新排序。
+- box 中内容顺序必须稳定。`parseCssStylesheet` 不能把 key/value 与子 box 拆成两组后重新排序。
 - 子 box 挂到父 box 后继承父 box 的生命周期；连续挂载链最终连通活的 stylesheet 根时，整条链才激活。
 
 ### `CssKey`
@@ -136,7 +148,7 @@ cssBlocks.focusRing()
 2. stylesheet 根激活所有沿 box 挂载链可达的内容。
 3. 活 box 激活其中通过 key 使用的 values；组合 value 继续激活自己的依赖。
 4. 任何具有外部 CSS 依赖的 value 都只在第一次激活时执行幂等注册；`CssVariable` 注册 `@property` 只是其中一个例子。
-5. translator 按 box 内容顺序生成 CSS，并按 stylesheet 身份在所属环境中去重。
+5. `parseCss*` 按结果树原始顺序生成 CSS，并由 stylesheet 按身份在所属环境中去重。
 
 ```txt
 已 import
@@ -158,20 +170,29 @@ cssBlocks.focusRing()
 - value 的一次性注册缓存必须按真实所属环境确定，不能用一个模块级 boolean 错误覆盖多个 `Document` 或浏览器全局环境。
 - stylesheet 规则是否也永久保留到 `Document` 结束，仍作为独立问题裁决；不能从 value 不失活机械推出全部 box 的清理策略。
 
-## 翻译边界
+## 最终解析边界
 
-- block 创建、box 挂载和 value 组合阶段不要求业务调用方判断最终组合是否合法。
-- translator 负责读取 box 头部、保持内容顺序、解析 key/value、递归处理 value 依赖并生成 CSS。
-- 无法合法翻译的组合必须产生可定位错误，不能依赖浏览器静默丢弃。
-- `CssFunction` 调用属于 `CssValue`；需要输出的 `@function` 定义属于结构依赖，可以由 value 首次激活与 translator 共同接入。
+- `CssValue` 组合必须保存子 value、原始片段、动态来源和附着的激活规则，不能在 `cssColorMix`、`cssVariable`、`joinCssValues` 或业务样式中调用 `parseCssValue` 拼成字符串。
+- `CssBox` 创建必须保存 declarations、子 box 和 block 的原始结果与顺序，不能在创建时把 block 拆成 box，或把 declarations 预先改写成另一组中间声明对象。
+- 已经组成 value、block 或 box 的结果在最终解析前仍允许被包装、替换或附着生命周期；后续 `CssIf`、`CssFunction` 和新的注册机制沿同一结果树插入，而不是要求既有组合函数增加专用分支。
+- block 创建、box 挂载和 value 组合阶段不要求业务调用方判断最终组合是否合法，也不读取最终 CSS 文本。
+- `parseCssValue` 是 value 结果第一次允许递归压平的位置；它沿真实可达结果触发 value 生命周期，并把嵌套结果解释成 CSS value 文本。
+- `parseCssStylesheet` 是 box/block 结果第一次允许递归解包的位置；它保持顺序、验证结构上下文，并调用 `parseCssValue` 形成最终 stylesheet 文本。
+- 无法合法解析的组合必须产生可定位错误，不能依赖浏览器静默丢弃。
+- `CssFunction` 调用属于 `CssValue`；需要输出的 `@function` 定义属于结构依赖，可以由 value 首次激活与最终解析共同接入。
 - `CssVariable` 的 `var()` 引用属于 `CssValue`；需要的 `@property` 定义或注册只是同一通用激活机制的当前例子。
+
+这里的“最后时刻”不是某个组合函数内部最后返回前，而是结果已经连接到活 stylesheet、即将形成浏览器接收文本的统一边界。任何中间层即使延迟到回调里才调用 `parseCssValue`，仍然属于提前压平。
 
 ## 命名
 
 - 英文缩写和普通单词一样参与命名风格转换。
 - 使用 `cssBlocks`、`CssBlock`、`CssBox`、`CssKey`、`CssValue`、`CssVariable`、`CssIf`、`CssFunction`、`cssHtml`、`parseCssValue`。
 - 不使用 `css.blocks`、`CSSBlock`、`CSSVariable`、`CSSValue` 或 `cssHTML`。
-- 文件名和内部函数名仍需根据最终职责单独裁决，不能从类型名机械复制。
+- 新增源码文件的主体名称统一使用全小写 kebab-case；工具或项目已经确认的 `index.ts`、`.test.ts`、`.browser.test.tsx` 等角色标记继续保留。
+- 已有文件不符合新名称协议时不顺带批量迁移；本轮新增的 `css-value.ts`、`parse-css-stylesheet.ts`、`style-utils.test.ts` 和 `button.browser.test.tsx` 必须直接符合协议。
+- TypeScript 标识符使用普通 camel case，缩写不取得特殊大写形式。函数名表达动作，复杂对象不能用 `data`、`value`、`item` 等含糊词代替已经明确的主体。
+- 文件名和内部函数名仍需根据最终职责单独裁决，不能从类型名机械复制；kebab-case 只规定词形，不替候选名称证明领域和职责成立。
 
 ## 当前代码事实
 
@@ -181,23 +202,39 @@ cssBlocks.focusRing()
 - `src/css/color-utils.css` 与 `src/css/dimension-utils.css` 当前以 CSS `@function` 提供值计算能力，并被 token CSS 间接加载。
 - Card、Input、Popover、draggable 和 tabular-num 当前仍通过模块顶层 CSS import 加载样式。
 - topLayer 当前 import 原始 CSS 文本后，在 plugin 实际使用时注册。
-- Button 当前在组件函数执行时调用 `registerButtonStyle()`，已形成局部按需入口，但内部仍按 rule、declaration、value、variable 和 stylesheet 多套类型组织。
-- 最近一次 `样式元语jss化 1` 提交只是未完成探索。新增的 `css-declararion.ts`、`css-rule.ts`、`css-value.ts`、`css-variable.ts`、`css-web-utils.ts` 和 `css-stylesheet.ts` 应作为迁移材料重新裁决，不作为最终模块或公开 API。
+- Button 在组件函数执行时调用 `registerButtonStyle()`，已经改由 `src/style-utils` 建立 stylesheet 根并完成局部按需挂载。
+- 最近一次 `样式元语jss化 1` 提交中的 `css-declararion.ts`、`css-rule.ts`、`css-value.ts`、`css-variable.ts`、`css-web-utils.ts` 和 `css-stylesheet.ts` 仍是未完成探索；Button 已不再依赖它们，后续迁移完成后再统一删除。
+
+## 当前落地边界
+
+- 第一份基础实现独立建立在 `src/style-utils`，没有修改或复用当前 `components/plugins/utils` 下的临时 CSS 工具。
+- 当前基础实现已经包含类型明确的 `CssValue`、`CssKey`、`CssBox`、`CssBlock`，统一 `cssBlocks` registry、`parseCss*`、stylesheet 挂载和通用 value 激活链。
+- `registerCssBlocks({...})` 负责外部工具模块成组扩展通用原子；组件业务样式不把自己的状态、variant 或局部段落注册进统一 namespace。
+- `src/style-utils` 不使用一个总 `css.ts` 混合所有独立规则；文件边界依据工具定义端的完整责任与生命周期裁决，不按 value、variable、color、key、box、block 等名词机械各占一份，也不因文件行数自动拆分。
+- 新 value API 延续 `样式元语jss化 1` 已建立的风格：`cssValue()` 保留原始或动态内容，`CssValue.cssString()` 交付仍可嵌套的结果，`cssColorMix()` 与 `cssVariable()` 继续组合这个结果；只有 `parseCssValue()` 负责最终展开。激活生命周期附着在 value 结果上，不以重复的字符串依赖表替代结果关系。
+- `@edsolater/uikit/style-utils` 作为独立发布入口，不要求外部 block 模块为了注册工厂而经过当前仍会加载 `all-base.css` 的包根入口。
+- `CssVariable` 作为 value 激活的第一个实例：模块执行只创建 JS 对象，带元数据的变量进入活 box 后才把 `@property` 注册到所属 `Document`。
+- Button 是当前唯一接入新体系的组件。它的公开 props、DOM 协议和动作语义保持不变，视觉实现允许重新设计。
+- Button 的 tokens、内部 values、基础形态、交互、variant/tone、尺寸与 stylesheet 组合共同属于 Button style 使用主线，保留在连续的 `Button.style.ts`，不按使用的工具或视觉段落拆成伪领域文件。
+- Button 不注册 `buttonFoundation`、`buttonDisabled`、`buttonTone` 等业务 blocks；它的 selector boxes 直接组合 `display`、`padding`、`boxShadow`、`cursor`、`opacity`、`transform` 和 custom property 等通用原子 blocks。
+- Button 不直接拼写 `var(--...)`；全局 token 和组件局部变量先成为 `CssVariable`，颜色混合与其他复合内容通过 `CssValue` 组合后再进入 blocks。
+- Card、Input、Popover、其他组件、plugins、基础 tokens 和 utils 仍继续使用现有 CSS；本轮不迁移它们，也不要求新 Button 为旧 CSS 中尚未定义或尚未迁移的变量兜底。
+- `src/index.ts` 仍加载 `all-base.css`。只保留 reset 的最终状态要等基础 tokens、utils 和其余消费者完成迁移后再收口。
 
 ## 代码落点
 
-### `src/css/jss`
+### `src/style-utils`
 
-JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施，不属于 components plugin utils。计划在 `src/css/jss` 下按职责组织：
+JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施，不属于 components plugin utils，也不从现有临时 CSS 工具迁移实现。`src/style-utils` 只为工具定义端已经成立的独立责任建立边界：
 
 - box 区域：组织体系本体，承载 `CssBox`、selector/at-rule/stylesheet box、顺序和挂载链。
 - value 区域：`CssKey`、`CssValue`、`CssVariable`，以及 `CssIf`、`CssFunction` 等扩展位置。
 - blocks 区域：快捷表达层，承载 `CssBlock` 黑盒协议、`cssBlocks` registry 和经过验证的原子积木。
-- translator 区域：遍历活 box、解析 key/value、检查上下文并生成 CSS。
+- parse 区域：只在最终边界遍历活 box、解释 key/value、检查上下文并生成 CSS。
 - stylesheet 区域：连接 `Document`、按所属环境去重并保存一次性激活结果。
-- 相邻测试：使用不依赖 Button 的中性对象验证黑盒复用、box 挂载、value 激活和翻译。
+- 相邻测试：使用不依赖 Button 的中性对象验证黑盒复用、box 挂载、value 激活和最终解析。
 
-这些是职责区域，不预先要求每个区域必须成为目录，也不要求每个对象单独占一个文件。若拆分后只能得到参数转发层或零散 helper，则继续聚合在职责清楚的主体中。
+这些只是判断工具定义责任时的候选对象，不是预制文件清单。若两个角色必须共同修改才能交付一次结果，或拆开后调用方必须重新拼装，则它们仍属于同一文件；若一项机制拥有独立协议、状态或生命周期，才保留定义端边界。
 
 ### `src/css`
 
@@ -214,7 +251,7 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 - 组件被 import 但没有执行时，不注册组件 CSS，也不激活其 values。
 - 组件第一次实际执行时连接对应 stylesheet 根；同一环境中的后续实例不重复注册相同样式依赖。
 - Example Dashboard 与各 Example 的 CSS 也迁移到 JSS，使最终源码中的静态 CSS 只剩 reset。
-- Button 作为首个真实迁移样本，但不能把当前语法分类文件继续固化成业务入口。
+- Button 作为首个真实迁移样本；它可以使用全部 JSS 工具，但这些使用关系必须留在 Button style 领域，不能按 token/value/block、selector、状态或其他语法与视觉分类生成业务文件。
 
 ### 包入口与构建
 
@@ -225,9 +262,10 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 
 ### 文档
 
-- `src/css/architecture.md` 改写为完整 JSS 架构，明确 box 组织体系、key/value 内容体系、blocks 快捷表达层、translator 和 stylesheet runtime。
+- `src/style-utils/architecture.md` 已记录现役 JSS 工具的领域身份、每个文件的职责和真实运行链；当前实现变更必须同步维护它。
+- `Architecture.md` 已连接 `src/style-utils`、Button 样式调用链和当前静态 CSS；后续迁移每改变一条现役系统关系，都同步更新当前架构事实。
+- `src/css/architecture.md` 在迁移期间继续说明仍在服役的静态 CSS；迁移完成后再按最终职责改写，不能提前把目标状态写成当前事实。
 - `src/css/how-to-use.md` 改写 JSS 消费入口，不再推荐引入 tokens、controls 或 traits CSS。
-- `Architecture.md` 更新 `src/css/jss`、组件样式调用链和 reset 例外。
 - 稳定协议确认后建立对应 Guide；本 Plan 不长期代替 JSS 的稳定定义。
 
 ## 实施顺序
@@ -235,8 +273,8 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 ### 第一阶段：固定总边界
 
 1. 阅读当前静态 CSS、Button 生成 CSS 和关键组件状态，只提取仍然成立的组件语义与历史问题；旧 selector、变量、结构和计算样式不建立精确对照基线。
-2. 固定 `cssBlocks`、`CssBlock`、`CssBox`、`CssKey`、`CssValue`、translator 和 stylesheet runtime 的职责。
-3. 确认 `src/css/jss` 内各区域的文件职责，不从当前临时文件名直接继承模块划分。
+2. 固定 `cssBlocks`、`CssBlock`、`CssBox`、`CssKey`、`CssValue`、`parseCss*` 和 stylesheet runtime 的职责。
+3. 确认 `src/style-utils` 内各区域的文件职责，不从当前临时文件名直接继承模块划分。
 4. 建立中性测试骨架，后续阶段使用同一组结构、内容和生命周期事实验证。
 
 阶段完成信号：类型和测试能够清楚区分 box 组织体系、key/value 内容体系、blocks 快捷表达层与运行时设施。
@@ -263,14 +301,15 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 
 1. 定义不透明 `CssBlock`，只保证外层具有 `CssBox`，不公开其内部组成联合类型。
 2. 建立 `cssBlocks` registry，验证所有成员都是返回 `CssBlock` 的函数。
-3. 从重复且语义已经成立的 CSS 中提取第一组原子 blocks，而不是为尚无真实消费者的设想预建积木。
-4. 验证 `{ display: none }` 可以形成可复用 block，而裸 `display + none` 不能绕过 box 边界成为 block。
-5. 验证同一个 block 可以用于多个组件或多个 box，不产生唯一 parent 冲突。
-6. 建立 block 的独立验证入口，使通过验证的 block 可以在组件审查中作为黑盒使用。
+3. CSS property 与 value 形成最小可复用含义后，由独立外层 box 建立原子 block，例如 `cssBlocks.display('none')`、`cssBlocks.padding(gap)` 和 `cssBlocks.opacity(0.48)`。
+4. 多项原子在组件状态中共同出现只形成业务组合，不自动注册 `buttonDisabled` 一类组件 block；只有整个组合脱离当前组件仍保持同一可复用含义时才扩大 block 边界。
+5. 验证 `{ display: none }` 可以形成可复用 block，而未进入外层 box 的裸 key/value 不能成为 block。
+6. 验证同一个 block 可以用于多个组件或多个 box，不产生唯一 parent 冲突。
+7. 建立 block 的独立验证入口，使通过验证的 block 可以在组件审查中作为黑盒使用。
 
 阶段完成信号：组件样式能够通过少量已命名 blocks 表达稳定片段；调用方只看到积木及组合关系，不读取其内部语法组成。
 
-### 第五阶段：连接 translator 与 stylesheet 根
+### 第五阶段：连接最终解析与 stylesheet 根
 
 1. 实现从活 StylesheetBox 开始的顺序遍历。
 2. 激活可达 box 中通过 key 使用的 values，并递归激活 value 依赖。
@@ -285,11 +324,12 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 1. 用新 JSS 协议重写 Button 样式，不继续扩展当前 `cssRule`、`CSSDeclarations` 等业务可见分类。
 2. 把 Button 运行入口连接到其 StylesheetBox 根。
 3. 让 Button 所需变量和工具沿 value 依赖按需激活。
-4. 重新设计 Button 的 selector、局部变量、box 结构、blocks 和视觉实现；旧代码只作为语义与问题参考。
+4. 重新设计 Button 的 selector、局部变量、box 结构、原子 block 组合和视觉实现；旧代码只作为语义与问题参考。
 5. 保留已经确认的组件语义：例如 `solid` 仍表达强调动作，bare、tone、size 和 status 仍按各自业务含义组合；除非实施前另行裁决，不借样式重写改变组件公开协议。
 6. 通过不同属性和状态组合检查视觉表达是否符合对应语义，不要求与旧实现逐像素或逐声明一致。
-7. 通过 Button 反查基础设施职责；若调用方仍需检查 block 内部成分或 translator 语法类型，阶段不通过。
-8. 检查 Button 样式是否已经主要呈现为可扫描的积木组合；若仍需通读大量底层 key/value 才能理解整体，原子边界尚未成立。
+7. 搜索 registry，确认没有 `buttonFoundation`、`buttonDisabled`、`buttonTone` 等只表达 Button 业务段落的工厂。
+8. 通过 Button 反查基础设施职责；若调用方仍需检查 block 内部成分或 `parseCss*` 的内部语法类型，阶段不通过。
+9. 检查 Button 样式是否已经主要呈现为可扫描的原子组合；若仍需通读大量底层 key/value 才能理解整体，原子边界尚未成立。
 
 阶段完成信号：只 import Button 不产生 Button style；第一次实际渲染产生一份样式；多实例不重复注册；不同所属环境分别注册；Button 的公开语义和交互成立，视觉能够表达对应语义，但不要求复刻旧 CSS。
 
@@ -321,6 +361,8 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 - 验证 `CssBox` 独立承担组织、顺序、挂载和生命周期，`CssBlock` 不被当成第二套组织体系。
 - 验证每个 `CssBlock` 都具有外层 `CssBox`。
 - 验证裸 key/value 不能绕过 box 成为 block。
+- 验证 selector box 能直接融合多个 property/value 原子 blocks，并保持声明顺序。
+- 验证组件状态组合不会向 registry 注册仅在该组件中成立的业务 block。
 - 验证空 box、selector box、at-rule box 和 stylesheet box 的挂载关系。
 - 验证 box 内容顺序与生成 CSS 顺序一致。
 - 验证 block 可以同时被多个位置复用。
@@ -338,15 +380,17 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 - 验证组合 value 递归激活子 values，并保持确定依赖顺序。
 - 验证已经激活的 value 不反注册。
 
-### translator 与组件生命周期
+### 最终解析与组件生命周期
 
-- 验证 stylesheet 根只翻译从该根可达的 boxes、blocks 和 values。
-- 验证非法组合由 translator 报出明确错误。
+- 验证 stylesheet 根只解析从该根可达的 boxes、blocks 和 values。
+- 验证非法组合由最终解析边界报出明确错误。
 - 增加“只 import 未渲染”“首次渲染”“多实例”“不同 Document 或全局环境”四类用例。
 - 在浏览器首次绘制检查点确认组件样式已生效，避免运行时注册引入可见闪动。
 
 ### 发布与下游
 
+- 检查本轮新增源码文件的主体名称全部为 kebab-case，并逐一确认文件头与具名函数 JSDoc。
+- 检查函数、复杂对象和集合名称能够直接指出动作或主体，没有用 `value`、`data`、`item` 等含糊名称隐藏已知语义。
 - 运行 `bun run type-check`、`bun run test`、`bun run build` 和 `git diff --check`。
 - 检查 `dist` 的 JS 模块、声明、source map 和 reset CSS export。
 - 检查产物中不存在非 reset 的静态 UIKit CSS。
@@ -357,8 +401,8 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 - `CssBox` 的不同显化头部使用共同字段还是内部变体表示。
 - value 激活入口的最终名称，以及缓存键怎样区分 `Document`、浏览器全局环境和其他未来目标。
 - 当前浏览器对 CSS `@function` 支持不完整；`CssFunction` 是先只保留扩展边界，还是只在能够真实验证的环境中实现，尚未裁决，不为此增加兼容层。
-- stylesheet box 在最后一个使用方消失后是否保留到当前 `Document` 生命周期结束；`CssValue` 不失活已经确认，不再列入该问题。
-- `cssBlocks` registry 的覆盖冲突、覆盖时机和作用域如何定义。
+- 当前 stylesheet runtime 会把已挂载根保留到所属 `Document` 生命周期结束；这是否成为最终稳定契约，仍需结合后续组件迁移裁决。`CssValue` 不失活已经确认，不再列入该问题。
+- `cssBlocks` 当前使用后一次 JS 注册覆盖前一次注册，并在 stylesheet 根首次建立前读取最终工厂；以后是否需要作用域或已激活后的覆盖协议仍未裁决。
 - stylesheet 根的稳定身份采用模块身份、显式名称还是其他来源。
 - SSR 若进入项目范围，是在服务端收集活根生成 CSS，还是只保证模块可安全导入。
 - `localStorage` 记录已使用内容并在后续加载中预热属于后续优化，不进入本轮基础迁移。
@@ -371,6 +415,8 @@ JSS 是 tokens、组件、plugin 和 Example 共同依赖的样式基础设施�
 - 不把 `cssBlocks` 或 `CssBlock` 描述为 JSS 的组织体系；组织职责只属于 `CssBox`。
 - 不允许裸 key/value 绕过 `CssBox` 成为 `CssBlock`。
 - 不按 declaration、rule、at-rule 建立平行业务 namespace。
+- 不把组件名称、状态、variant、tone、size 或样式段落直接注册为通用 block；组件只组合已经成立的 CSS 原子。
+- 不用仓库里的旧文件名为新增源码文件授权非 kebab-case 写法。
 - 不为 `CssValue` 设计失活、反注册或依赖回收。
 - 不把 value 激活机制实现成 `CssVariable` 专用分支。
 - 不把静态 CSS 文件大小当作唯一验收信号；重点是未使用结构和内容没有进入 stylesheet，组件公开语义、积木组合和真实视觉结果成立。
