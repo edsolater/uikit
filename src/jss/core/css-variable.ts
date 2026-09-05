@@ -1,9 +1,18 @@
-/** 用通用 CssValue 生命周期表达 custom property 引用与按需注册。 */
-import { cssValueSequence, type CssValue, type CssValueContent } from './css-value'
+/** 用 CssValue 表达 custom property，并在激活时注册它拥有的全局默认与状态规则。 */
+import { cssDeclaration, type CssDeclaration } from './css-declaration'
+import {
+  cssValueSequence,
+  isCssValue,
+  withCssValueDependencies,
+  type CssValue,
+  type CssValueContent,
+} from './css-value'
 import { withCssValueActivation } from './css-value-activation'
 
 export interface CssVariable extends CssValue {
   name: string
+  /** 取得一项显式局部 custom property declaration。 */
+  declaration: (value?: CssVariableDeclarationValue) => CssDeclaration
 }
 
 export interface CssVariableProperty {
@@ -12,22 +21,37 @@ export interface CssVariableProperty {
   initialValue?: CssValueContent
 }
 
+export interface CssVariableStateValues {
+  default: CssValueContent
+  hover?: CssValueContent
+  active?: CssValueContent
+  focusVisible?: CssValueContent
+}
+
+export type CssVariableDeclarationValue = CssValueContent
+
 export interface CssVariableOptions {
   fallback?: CssValueContent
   property?: CssVariableProperty
+  value?: CssVariableDeclarationValue | CssVariableStateValues
 }
 
-const propertyDefinitionsByDocument = new WeakMap<Document, Map<string, string>>()
-const propertyStyleByDocument = new WeakMap<Document, HTMLStyleElement>()
+interface CssVariableRegistration {
+  cssText: string
+}
+
+const registrationsByDocument = new WeakMap<Document, Map<string, CssVariableRegistration>>()
+const registrationStyleByDocument = new WeakMap<Document, HTMLStyleElement>()
 
 /**
- * 创建 custom property 引用；存在 property 定义时只在 value 首次真实解析时注册。
+ * 创建 custom property value，并把可选全局配方保留到真实激活。
  *
  * @example
- * const progress = cssVariable('progress', {
- *   fallback: 0,
- *   property: { syntax: '<number>', inherits: false, initialValue: 0 },
+ * const color = cssVariable('smart-color', {
+ *   property: { syntax: '<color>', inherits: true, initialValue: 'blue' },
+ *   value: { default: 'blue', hover: 'green', active: 'red', focusVisible: 'orange' },
  * })
+ * const colorDeclaration = color.declaration()
  */
 export function cssVariable(name: string, options: CssVariableOptions = {}): CssVariable {
   const variableName = normalizeVariableName(name)
@@ -35,64 +59,137 @@ export function cssVariable(name: string, options: CssVariableOptions = {}): Css
     options.fallback === undefined
       ? cssValueSequence('var(', variableName, ')')
       : cssValueSequence('var(', variableName, ', ', options.fallback, ')')
-  /** 保留 CssVariable 与其引用结果之间的嵌套关系。 */
+
+  const stateValues = readStateValues(options.value)
+  let variable: CssVariable
+
+  /** 交付变量引用的嵌套 value 结果。 */
   function readVariableReference(): CssValue {
     return reference
   }
 
-  const variable: CssVariable = { name: variableName, cssString: readVariableReference }
+  /** 取得显式局部声明，并连接变量自身的激活生命周期。 */
+  function declaration(value: CssVariableDeclarationValue | undefined = stateValues.default): CssDeclaration {
+    if (value === undefined) throw new Error('CssVariable “' + variableName + '”没有可用的 declaration value。')
+    return cssDeclaration(variableName, value, [variable])
+  }
 
-  if (options.property) {
-    withCssValueActivation(variable, ({ document, parse }) =>
-      registerProperty(document, variableName, options.property!, parse),
-    )
+  variable = { name: variableName, cssString: readVariableReference, declaration }
+
+  const dependencies = [
+    options.fallback,
+    options.property?.initialValue,
+    stateValues.default,
+    stateValues.hover,
+    stateValues.active,
+    stateValues.focusVisible,
+  ].filter((content): content is CssValueContent => content !== undefined)
+  withCssValueDependencies(variable, ...dependencies)
+
+  if (options.property || options.value !== undefined) {
+    withCssValueActivation(variable, ({ document, parse }) => {
+      registerVariable(document, variableName, options.property, stateValues, parse)
+    })
   }
   return variable
 }
 
-/** 在一个 Document 中记录 property，并维护一份只增不减的定义样式。 */
-function registerProperty(
-  document: Document,
-  name: string,
-  property: CssVariableProperty,
-  parse: (content: CssValueContent) => string,
-): void {
-  let definitions = propertyDefinitionsByDocument.get(document)
-  if (!definitions) {
-    definitions = new Map()
-    propertyDefinitionsByDocument.set(document, definitions)
-  }
-
-  const definition = createPropertyDefinition(name, property, parse)
-  const currentDefinition = definitions.get(name)
-  if (currentDefinition && currentDefinition !== definition) {
-    throw new Error('CssVariable “' + name + '”在同一 Document 中存在冲突的 @property 定义。')
-  }
-  if (currentDefinition) return
-
-  definitions.set(name, definition)
-  let style = propertyStyleByDocument.get(document)
-  if (!style?.isConnected) {
-    style = document.createElement('style')
-    style.dataset.uikitCssProperties = ''
-    document.head.append(style)
-    propertyStyleByDocument.set(document, style)
-  }
-  style.textContent = [...definitions.values()].join('\n\n')
+/** 把普通默认值和状态值统一成变量自身的状态配方。 */
+function readStateValues(value: CssVariableOptions['value']): Partial<CssVariableStateValues> {
+  if (value === undefined) return {}
+  if (isCssVariableStateValues(value)) return value
+  return { default: value }
 }
 
-/** 在最终激活边界把 property 元数据解析为浏览器原生规则。 */
-function createPropertyDefinition(
+/** 判断 options value 是否是带默认项的状态配方。 */
+function isCssVariableStateValues(value: CssVariableOptions['value']): value is CssVariableStateValues {
+  return !isCssValue(value) && typeof value === 'object' && value !== null && 'default' in value
+}
+
+/** 在所属 Document 中注册变量自己拥有的全局 CSS 配方。 */
+function registerVariable(
+  document: Document,
+  name: string,
+  property: CssVariableProperty | undefined,
+  values: Partial<CssVariableStateValues>,
+  parse: (content: CssValueContent) => string,
+): void {
+  const rules: string[] = []
+  const parsedValues = new Map<CssValueContent, string>()
+
+  /** 在一份变量注册中只读取同一个内容对象一次。 */
+  function parseOnce(content: CssValueContent): string {
+    const parsed = parsedValues.get(content)
+    if (parsed !== undefined) return parsed
+    const cssText = parse(content)
+    parsedValues.set(content, cssText)
+    return cssText
+  }
+
+  const initialValue = property?.initialValue === undefined ? undefined : parseOnce(property.initialValue)
+  const defaultValue = values.default === undefined ? undefined : parseOnce(values.default)
+  if (property) rules.push(createPropertyRule(name, property, initialValue))
+  if (defaultValue !== undefined && defaultValue !== initialValue) {
+    rules.push(createValueRule(':where(:root)', name, defaultValue))
+  }
+  if (values.hover !== undefined) rules.push(createValueRule(':where(:hover)', name, parseOnce(values.hover)))
+  if (values.active !== undefined) rules.push(createValueRule(':where(:active)', name, parseOnce(values.active)))
+  if (values.focusVisible !== undefined) {
+    rules.push(createValueRule(':where(:focus-visible)', name, parseOnce(values.focusVisible)))
+  }
+  updateVariableRegistration(document, name, rules.join('\n\n'))
+}
+
+/** 把 property 元数据保留到注册输出边界再解释。 */
+function createPropertyRule(
   name: string,
   property: CssVariableProperty,
-  parse: (content: CssValueContent) => string,
+  initialValue: string | undefined,
 ): string {
   const lines = ['  syntax: ' + JSON.stringify(property.syntax) + ';', '  inherits: ' + String(property.inherits) + ';']
-  if (property.initialValue !== undefined) lines.push('  initial-value: ' + parse(property.initialValue) + ';')
+  if (initialValue !== undefined) lines.push('  initial-value: ' + initialValue + ';')
   return '@property ' + name + ' {\n' + lines.join('\n') + '\n}'
 }
 
-/** 接受带或不带 -- 的变量名，并拒绝不能组成 custom property 的输入。 */
+/** 把一个变量状态交付为保持全局低权重的 CSS rule。 */
+function createValueRule(
+  selector: string,
+  name: string,
+  value: string,
+): string {
+  return selector + ' {\n  ' + name + ': ' + value + ';\n}'
+}
+
+/** 幂等合并一个变量的完整注册配方，并刷新所属 Document 的注册样式。 */
+function updateVariableRegistration(
+  document: Document,
+  name: string,
+  cssText: string,
+): void {
+  const registrations = registrationsByDocument.get(document) ?? new Map<string, CssVariableRegistration>()
+
+  const registeredCss = registrations.get(name)?.cssText
+  if (registeredCss && registeredCss !== cssText) {
+    throw new Error('CssVariable “' + name + '”在同一 Document 中存在冲突的注册。')
+  }
+  const nextRegistrations = new Map(registrations)
+  if (!registeredCss) nextRegistrations.set(name, { cssText })
+
+  let style = registrationStyleByDocument.get(document)
+  if (!style?.isConnected) {
+    style = document.createElement('style')
+    style.dataset.uikitCssVariables = ''
+  }
+
+  style.textContent = [...nextRegistrations.values()]
+    .map((registeredVariable) => registeredVariable.cssText)
+    .join('\n\n')
+  if (!style.isConnected) document.head.append(style)
+  registrationsByDocument.set(document, nextRegistrations)
+  registrationStyleByDocument.set(document, style)
+}
+
+/** 接受带或不带 `--` 的变量名，并拒绝不能组成 custom property 的输入。 */
 function normalizeVariableName(name: string): string {
   const normalizedName = name.trim()
   const variableName = normalizedName.startsWith('--') ? normalizedName : '--' + normalizedName

@@ -37,7 +37,7 @@ export default defineConfig({
     reportCompressedSize: false,
     cssCodeSplit: true,
     lib: {
-      entry: ['src/index.ts', 'src/style-utils/index.ts'],
+      entry: ['src/index.ts', 'src/jss/index.ts'],
       formats: ['es'],
     },
     rollupOptions: {

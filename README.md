@@ -57,3 +57,4 @@ bun run build-storybook
 包名是 `@edsolater/uikit`。
 
 对外导出从 [src/index.ts](src/index.ts) 进入，组件和 hooks 分别由 `src/components`、`src/hooks` 汇总导出。
+JSS 也可以从 `@edsolater/uikit/jss` 单独引入，该入口不加载包根的基础 CSS。

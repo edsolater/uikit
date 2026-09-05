@@ -1,4 +1,4 @@
-/** 保留 CSS value 的原始、动态与嵌套组合意图。 */
+/** 保留 CSS value 的原始、动态、嵌套内容及其依赖关系。 */
 
 export type CssRawValue = string | number
 export type CssValueContent = CssRawValue | CssValue | CssValueParts
@@ -16,6 +16,7 @@ export interface CssValueParts {
 }
 
 const contentByParts = new WeakMap<CssValueParts, CssValueContent[]>()
+const dependenciesByValue = new WeakMap<CssValue, CssValueContent[]>()
 
 /** 判断输入是否已经遵循 CssValue 的内容协议。 */
 export function isCssValue(value: unknown): value is CssValue {
@@ -36,7 +37,9 @@ export function cssValue(source: CssValueSource): CssValue {
     return typeof source === 'function' ? source() : source
   }
 
-  return { cssString: readCssValueContent }
+  const value = { cssString: readCssValueContent }
+  if (typeof source !== 'function' && typeof source === 'object') dependenciesByValue.set(value, [source])
+  return value
 }
 
 /** 按原始次序保存多个内容片段，供最终解析边界递归展开。 */
@@ -64,6 +67,19 @@ export function isCssValueParts(value: unknown): value is CssValueParts {
 /** 在最终解析时读取序列内容，不向组合调用方暴露可变数组。 */
 export function readCssValueParts(parts: CssValueParts): CssValueContent[] {
   const content = contentByParts.get(parts)
-  if (!content) throw new Error('收到的对象不是由 style-utils 创建的 CssValueParts。')
+  if (!content) throw new Error('收到的对象不是由 JSS 创建的 CssValueParts。')
   return content
+}
+
+/** 给 value 连接无需读取动态来源就能确定的生命周期依赖。 */
+export function withCssValueDependencies(value: CssValue, ...dependencies: CssValueContent[]): CssValue {
+  const currentDependencies = dependenciesByValue.get(value) ?? []
+  currentDependencies.push(...dependencies)
+  dependenciesByValue.set(value, currentDependencies)
+  return value
+}
+
+/** 读取 value 在组合阶段已经明确连接的生命周期依赖。 */
+export function readCssValueDependencies(value: CssValue): CssValueContent[] {
+  return dependenciesByValue.get(value) ?? []
 }

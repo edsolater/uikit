@@ -4,12 +4,12 @@
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
-import { cssBlocks } from '../../../jss'
+import { cssAtom } from '../../../jss'
 import { Button } from './Button'
-import { buttonStyleURL } from './Button.style'
+import { buttonStyleUrl } from './Button.style'
 
 let dispose: (() => void) | undefined
-const buttonStyleSelector = 'style[data-uikit-css="' + buttonStyleURL + '"]'
+const buttonStyleSelector = 'style[data-uikit-css="' + buttonStyleUrl + '"]'
 
 afterEach(() => {
   dispose?.()
@@ -20,10 +20,10 @@ afterEach(() => {
 })
 
 describe('Button', () => {
-  test('组件样式不向通用 registry 注册 Button 业务 blocks', () => {
-    expect(cssBlocks.buttonFoundation).toBeUndefined()
-    expect(cssBlocks.buttonDisabled).toBeUndefined()
-    expect(cssBlocks.buttonTone).toBeUndefined()
+  test('组件样式不向通用 atoms 注册 Button 业务 blocks', () => {
+    expect(cssAtom.buttonFoundation).toBeUndefined()
+    expect(cssAtom.buttonDisabled).toBeUndefined()
+    expect(cssAtom.buttonTone).toBeUndefined()
   })
 
   test('同一 Document 中的多个 Button 只插入一次组件样式', () => {
@@ -43,13 +43,14 @@ describe('Button', () => {
     )
 
     expect(document.head.querySelectorAll(buttonStyleSelector)).toHaveLength(1)
-    expect(append).toHaveBeenCalledOnce()
+    expect(append).toHaveBeenCalled()
     expect(ref).toHaveBeenCalledOnce()
     expect(append.mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
+    expect(append.mock.invocationCallOrder.at(-1)).toBeLessThan(ref.mock.invocationCallOrder[0])
     expect(ref).toHaveBeenCalledWith(host.firstElementChild)
     const cssText = document.head.querySelector(buttonStyleSelector)?.textContent
     expect(cssText).toContain(".Button[data-size='small']")
-    expect(cssText).toContain('var(--color-surface)')
+    expect(cssText).toContain('var(--bg)')
     expect(cssText).not.toContain('[object Object]')
   })
 

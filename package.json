@@ -21,11 +21,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./style-utils": {
-      "development": "./src/style-utils/index.ts",
-      "types": "./dist/style-utils/index.d.ts",
-      "import": "./dist/style-utils/index.js",
-      "default": "./dist/style-utils/index.js"
+    "./jss": {
+      "development": "./src/jss/index.ts",
+      "types": "./dist/jss/index.d.ts",
+      "import": "./dist/jss/index.js",
+      "default": "./dist/jss/index.js"
     },
     "./css/*": "./dist/css/*"
   },

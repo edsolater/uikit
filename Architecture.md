@@ -9,7 +9,7 @@
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
 - `src/hooks`：对外响应式状态与浏览器协作能力。领域入口和内部阅读路线见 [hooks README](src/hooks/README.md)。
-- `src/jss`：JSS 定义领域。当前底层实现位于 `src/jss/core`，负责保存可组合的 CSS 结果、在最终边界解析结果，并按 `Document` 挂载 stylesheet；文件职责见 [JSS 架构](src/jss/architecture.md)。
+- `src/jss`：JSS 定义领域。`core` 保存对象与真实激活链，`atoms` 提供通用积木，`tokens` 定义默认及智能派生材料；最终输出按 `Document` 挂载，文件职责见 [JSS 架构](src/jss/architecture.md)。
 - `src/css`：仍在服役的静态 CSS 领域。当前继续提供 reset、tokens、controls、traits 与尚未迁移的 CSS 工具；当前结构见 [CSS 架构](src/css/architecture.md)。
 - `src/app/example-dashboard`：本地 Example 浏览与浏览器验收入口，不是正式业务应用。
 - `src/types`：没有单一源码主体可归属的浏览器与 JSX 全局类型补丁。
@@ -20,7 +20,7 @@
 # 公开入口
 
 - `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、hooks 和 JSS 源码能力。当前仍会加载 `src/css/all-base.css`。
-- `src/jss/index.ts` 是 JSS 的源码入口。`package.json` 中旧 `./style-utils` 子路径仍指向已移动的目录，发布子路径尚未完成收口。
+- `@edsolater/uikit/jss` 从 `src/jss/index.ts` 进入，只公开 JSS 能力，不经过包根的基础 CSS 副作用。
 - `src/components/index.ts`、`src/components/kits/index.ts`、`src/components/plugins/index.ts` 和 `src/hooks/index.ts` 分别收口所属领域的公开成员。
 - Example、Story、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
 
@@ -44,13 +44,14 @@ kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果�
 Button 实际执行
   -> registerButtonStyle()
     -> Button.style.ts 中的业务组合
-      -> src/jss/core 的 CssBox / CssBlock / CssValue 结果
-        -> parseCssStylesheet()
-          -> mountCssStylesheet()
-            -> 当前 Document 的 <style>
+      -> cssBaseVariable / cssAtom / tokens 对象组合
+        -> mountCssStylesheet() 连接活根
+          -> Box 激活向 declaration / value 传播
+          -> parseCssStylesheet() 最终解析并收集动态依赖
+            -> 激活依赖并更新当前 Document 的 <style>
 ```
 
-只 import Button 不会挂载 Button stylesheet。组件函数真实执行时才连接 stylesheet 根；相同 `Document`、稳定身份和根不会重复挂载。Button 的 selector、状态、tone 和 size 组合属于 Button style 领域，JSS 只定义通用工具。
+只 import Button 不会挂载 Button stylesheet。组件函数真实执行时才连接 stylesheet 根；相同 `Document`、稳定身份和根复用同一 style，活 Box 追加内容会刷新对应 style。变量注册保留全局默认和状态作用范围，局部覆盖遵从 CSS 层叠。Button 的 selector、tone 和 size 组合属于 Button style 领域。
 
 ## 当前静态 CSS
 
@@ -75,7 +76,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 
 # 领域边界
 
-- 工具的领域发生在工具定义端。Button 使用当前 `cssBlocks` 不会让通用 block 变成 JSS 内的 Button 子领域，也不会授权 JSS 注册 `buttonFoundation`、`buttonDisabled` 一类业务组合。
+- 工具的领域发生在工具定义端。Button 使用 `cssAtom` 不会让通用 atom 变成 JSS 内的 Button 子领域，也不会授权 JSS 注册 `buttonFoundation`、`buttonDisabled` 一类业务组合。
 - `src/jss` 只提供通用 CSS 表达、组合、解析和挂载能力；具体组件 selector、状态和视觉组合留在组件自己的 style 文件。
 - `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/jss` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。

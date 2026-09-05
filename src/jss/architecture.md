@@ -1,72 +1,83 @@
 # JSS 架构
 
-## 领域身份
+## 领域与入口
 
-`src/jss` 是 UIKit 的 JSS 定义领域。它不定义 Button、Card 或其他组件的业务样式，只提供通用 CSS 内容表达、容器组合、最终解析、激活和 stylesheet 挂载能力。
+src/jss 提供 CSS 对象表达、组合、生命周期和输出。业务组件从 @edsolater/uikit/jss 使用公开能力，领域不反向依赖组件。
 
-当前底层实现位于 `src/jss/core`。它保留调用方交付的中间结果，直到真实 stylesheet 输出边界才压平。
+- core 保存 Value、Declaration、Box 和 Block 对象，实现激活与最终解析。
+- atoms 提供返回 CssBlock 的通用工厂与注册 namespace。
+- tokens 定义颜色、尺寸、阴影、动效和排版材料，保存默认值及对象派生关系。
+- Button.style.ts 消费这些材料，组织自己的 selector、语气和尺寸覆盖。
 
-源码公开入口是 `src/jss/index.ts`。`package.json` 中原 `./style-utils` 发布子路径还指向已移动的旧目录，因此当前没有可宣称已收口的 JSS 发布子路径。
+## 从组合到 CSS
 
-## 当前核心对象
-
-- `CssKey` 表示 CSS 内容的写入位置。
-- `CssValue` 保存原始、动态或嵌套的 CSS 内容结果。普通值可以没有激活动作；需要外部 CSS 定义的 value 可以附着按 `Document` 隔离的一次性激活行为。
-- `CssBox` 是当前的组织和生命周期容器。匿名 box、selector box、at-rule box 和 stylesheet box 使用同一内容协议，并保留原始挂载顺序。
-- `CssBlock` 是当前可复用快捷结果。其内部内容不对调用方分类，外层由独立 `CssBox` 包裹。
-- `cssBlocks` 是当前实现的 block 工厂 registry。它仍与通用 property 工厂和 `focusRing` 混在 core，是待重构现状。
-
-## 当前运行链
+创建、import、declaration()、离线 attach 与单独 parse 均不注册 CSS。mountCssStylesheet 把根连接到 Document，并为这份挂载建立 Box 激活环境。
 
 ```txt
-CssKey + CssValue / CssBox / CssBlock
-  -> 调用方继续组合，保留原始结果与顺序
-    -> stylesheetBox() 形成可连接的根
-      -> parseCssStylesheet() 递归解释可达结果
-        -> parseCssValue() 压平 value 并执行可达激活
-          -> mountCssStylesheet() 按 Document 与身份挂载 <style>
+组件执行
+  -> mountCssStylesheet
+    -> Box 激活环境沿子 Box / Block 传播
+      -> Declaration 连接 Value 依赖
+        -> Value 首次激活，执行自身延迟注册配方
+    -> 最终 parse 读取对象树并收集动态出现的 Value
+      -> 挂载方补激活动态依赖
+      -> 更新该 Document 的 stylesheet
 ```
 
-创建、import、JS registry 注册或离线组合都不会自行写入 stylesheet。只有结果进入被挂载的 stylesheet 根，它和其中可达的 values 才激活。当前生命周期只保证同一 `Document` 内幂等激活，不做反注册。
+Box 保留每个活挂载的传播进度。活 Box 追加内容时，继续激活并更新它连接的所有 stylesheet；共享 Box 可以服务多个根与 Document。Value 的成功激活动作按 Document 幂等，失败仍可重试，不做反注册。
+
+parseCssValue 和 parseCssStylesheet 只转换和收集结果。动态 source 在最终解析时读取，返回的子对象仍被递归识别，业务无需额外登记它的激活关系。解析成功而激活失败时保留待交付结果；解析失败保留待刷新状态，不能将空 stylesheet 当作成功。
+
+## 智能变量与层叠
+
+cssVariable 保存变量引用、全局注册配方与局部 declaration() 接口。其 value 配方支持默认、hover、active、focusVisible。首次消费触发全局注册，不借用使用方 selector。
+
+- @property 保存 CSS 类型、初值和继承选择。
+- 需要另行提供的默认值写在 :where(:root)，不逐元素重置。
+- 状态写在全局 :where(:hover)、:where(:active)、:where(:focus-visible)。
+- declaration(value) 取得有意的局部覆盖，局部覆盖、祖先继承、状态竞争均由 CSS 决定。
+- inherits:false 的元素采用自身注册初值，不继承根 declaration。
+- 全局伪类也可命中祖先；后代可能继承祖先的状态值。JSS 不把它缩成组件范围。
+
+Button 当前使用非命名层，与全局变量配方按正常权重和顺序竞争。其他调用方可自行使用 atRule('@layer ...')，层的优先级仍遵从原生 CSS。
+
+## 材料与业务
+
+tokens/token.ts 将 token 默认值、暗色主题和减少动效条件保留为 Box/Declaration 对象，首次消费才挂载根规则。材料可以互相依赖；未消费的材料只存在于 JS。
+
+颜色从品牌和中性色元派生语义颜色。cssBaseVariable.surface 持有状态表面，bg 通过 color-mix 对象依赖表面与强调色，fg 和 action 各有自己的状态配方。尺寸与排版提供可覆盖阶梯，阴影引用共享阴影色，动效时长引用媒体偏好缩放。
+
+当前只覆盖 Button 所需材料闭包，其余静态 tokens 和组件还在后续迁移范围内。Button 浏览器测试不导入 all-base.css，验证其材料自身有默认定义；已有 CSS 或调用方仍可按层叠覆盖变量。
 
 ## 文件职责
 
-| 文件 | 当前职责 |
+| 文件 | 职责 |
 | --- | --- |
-| `architecture.md` | 当前 JSS 领域、运行链、文件职责与阅读路线。 |
-| `index.ts` | JSS 源码公开契约；汇总当前 core 类型与函数。 |
-| `core/css-key.ts` | 定义极薄的 `CssKey` 与 key 规范化边界。 |
-| `core/css-value.ts` | 定义 `CssValue` 内容协议、动态读取和嵌套序列，不负责最终字符串化。 |
-| `core/css-value-activation.ts` | 给已有 `CssValue` 附着激活行为，并记录每个 `Document` 的一次性激活状态。 |
-| `core/css-variable.ts` | 用 value 协议表达 `var(...)`；有 `@property` 元数据时，在 value 首次真实解析时按需注册。 |
-| `core/css-color.ts` | 用仍可嵌套的 `CssValue` 结果表达 `color-mix(...)`，不提前解析颜色内容。 |
-| `core/css-box.ts` | 建立匿名、selector、at-rule 和 stylesheet box，保存头部、内容与挂载顺序。 |
-| `core/css-block.ts` | 定义 `CssBlock`、`cssBlocks` registry、注册入口和当前通用 block 工厂。 |
-| `core/parse-css-value.ts` | value 的最终解释边界；递归压平结果树、阻止循环引用并执行激活。 |
-| `core/parse-css-stylesheet.ts` | stylesheet 的最终解释边界；递归展开 box 与 block，校验结构上下文。 |
-| `core/css-stylesheet.ts` | 把 stylesheet 根连接到指定 `Document`，按稳定身份和根复用或更新 `<style>`。 |
-| `style-utils.test.ts` | 当前 JSS 黑盒测试；文件名仍保留旧命名，尚未随领域收口。 |
+| index.ts | 公开 JSS 协议、atoms 和 tokens |
+| atoms/css-atom.ts | 通用 property 工厂、focusRing 与可扩展 registry |
+| tokens/token.ts | token 根默认、主题和媒体配方的延迟挂载 |
+| tokens/color.ts | 颜色材料与智能 surface、bg、fg、action 派生 |
+| tokens/dimension.ts | 间距、尺寸和边界厚度 |
+| tokens/elevation.ts | 阴影颜色及高度派生 |
+| tokens/motion.ts | 减少动效偏好、时长和缓动 |
+| tokens/typography.ts | 共享字号 |
+| core/css-key.ts | CSS key 规范化 |
+| core/css-value.ts | 对象内容、序列及明确依赖 |
+| core/css-value-activation.ts | Value 依赖激活、幂等和注册输出边界 |
+| core/css-variable.ts | 全局变量配方与局部 declaration |
+| core/css-declaration.ts | key/value 与激活依赖的离线结果 |
+| core/css-color.ts | 不提前压平的 color-mix 对象组合 |
+| core/css-box.ts | 有序内容及每个活挂载的传播状态 |
+| core/css-box-activation.ts | 将 Box 内容连接到 Block、Declaration 和 Value 激活 |
+| core/css-block.ts | 带独立外 Box 的可复用内容 |
+| core/parse-css-value.ts | 最终 value 字符串与实际对象收集，检测循环 |
+| core/parse-css-stylesheet.ts | 最终结构解析、顺序与循环检查 |
+| core/css-stylesheet.ts | Document 挂载、活链刷新及失败重试 |
+| jss.test.ts | 离线组合、动态依赖、活链、多根与失败反例 |
+| jss.browser.test.ts | 全局状态、局部覆盖、继承、主题和真实 DOM 更新 |
 
-## 定义端与使用端
-
-JSS 的文件边界按工具自身的协议、状态和生命周期划分，不按调用方的视觉段落拆分。
-
-- `cssBlocks.display('none')` 和 `cssBlocks.opacity(0.48)` 是当前由 JSS 定义的通用 block 工厂。
-- Button 的 foundation、disabled、tone、size、selector 和状态组合只在 Button 语义下成立，留在 `Button.style.ts`。
-- Button 使用 `CssVariable`、`CssValue` 或 `CssBox` 只是对工具的消费，不会产生 `button-values.ts`、`button-blocks.ts` 等工具分类文件。
-
-## 组合边界
-
-- 中间层不得调用 `parseCssValue()` 或 `parseCssStylesheet()` 换取普通字符串；解析只发生在最终输出边界。
-- `CssBlock` 调用方不读取内部 box，不根据内部语法分支。
-- `CssValue` 可以嵌套其他 values；激活沿最终可达结果树传播，不由 import 或 registry 注册触发。
-- `CssVariable` 是当前第一个利用 value 激活的类型，不定义整套生命周期。
-- stylesheet 挂载按所属 `Document` 隔离；模块 import 阶段不读取全局 `document`。
+文件边界发生在定义端。Button 的 tone、size、bare、solid 等业务组合留在 Button.style.ts；不会按所用工具类别创建 button-values 或 button-blocks 伪领域。
 
 ## 阅读路线
 
-- 使用当前源码 API：从 `index.ts` 开始。
-- 查 block 与容器：读 `core/css-block.ts`、`core/css-box.ts` 和 `core/parse-css-stylesheet.ts`。
-- 查 value 与激活：读 `core/css-value.ts`、`core/css-value-activation.ts`、`core/parse-css-value.ts` 和 `core/css-variable.ts`。
-- 查 DOM 挂载：读 `core/css-stylesheet.ts`。
-- 理解尚未完成的目标 API、atoms、状态变量和 CSS 全量迁移：读 [JSS 样式系统 Plan](../../docs/plans/JSS%E6%A0%B7%E5%BC%8F%E7%B3%BB%E7%BB%9F.md)。
+调用从 index.ts 进入；查材料读 tokens，查通用积木读 atoms。生命周期从 css-stylesheet → css-box → css-box-activation → css-value-activation 阅读；最终对象转换读 parse-css 系列。后续迁移见 [JSS 样式系统 Plan](../../docs/plans/JSS样式系统.md)。

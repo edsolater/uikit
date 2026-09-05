@@ -20,7 +20,8 @@
     "src/components/**/*.ts",
     "src/components/**/*.tsx",
     "src/hooks/**/*.ts",
-    "src/hooks/**/*.tsx"
+    "src/hooks/**/*.tsx",
+    "src/jss/**/*.ts"
   ],
   "exclude": [
     "src/**/*.demo.tsx",
