@@ -4,7 +4,7 @@
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
-import { cssBlocks } from '../../../style-utils'
+import { cssBlocks } from '../../../jss'
 import { Button } from './Button'
 import { buttonStyleURL } from './Button.style'
 

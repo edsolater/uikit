@@ -14,7 +14,7 @@ import {
   stylesheetBox,
   type CssBlock,
   type CssBox,
-} from '../../../style-utils'
+} from '../../../jss'
 
 type ButtonTone = 'accent' | 'danger'
 type ButtonSize = 'small' | 'large' | 'xlarge'

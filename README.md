@@ -21,7 +21,7 @@ SolidJS 基础组件与 hooks 组件库。
 src/
   components/    Piv、kits、plugins 与组件共用能力
   hooks/         对外 hooks
-  style-utils/   JSS 工具定义领域
+  jss/           JSS 定义领域，当前底层实现位于 core/
   css/           当前仍在服役的静态 CSS
   app/           本地 Example 浏览应用
   types/         全局类型补丁
