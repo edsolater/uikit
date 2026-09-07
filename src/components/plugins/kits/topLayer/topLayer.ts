@@ -8,12 +8,10 @@ import { onCleanup, onMount } from 'solid-js'
 import { createToggle, type State } from '../../../../hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
-import { registerCSS } from '../../utils/css-stylesheet'
 import { createTopLayerAnchor } from './topLayerAnchor'
-import topLayerCSS from './topLayer.css?raw'
+import './topLayer.css'
 
 const topLayerClass = 'top-layer'
-const topLayerCSSPath = 'components/plugins/kits/topLayer/topLayer.css'
 
 export interface TopLayerController {
   /** 当前元素是否已经进入 Top Layer。 */
@@ -53,7 +51,6 @@ const topLayerGeometryProperties = [
  * 能力直接使用此入口，Plugin 只在它外面增加 Piv 生命周期包装。
  */
 export function createTopLayerController(element: HTMLElement): TopLayerController {
-  registerCSS(element.ownerDocument, topLayerCSSPath, topLayerCSS)
 
   const [active, activeControl] = createToggle(false)
   let session: TopLayerSession | undefined

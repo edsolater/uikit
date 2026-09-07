@@ -1,23 +1,18 @@
-import { cssColorMix } from './css-web-utils'
 import { cssValue, isCssValue, type CssValue } from './css-value'
-import { cssRule } from './css-rule'
-import { cssDeclarations, type CSSDeclarations } from './css-declararion'
 import { containKey, isObject } from '@edsolater/fnkit'
 
-type CssVariable = {
+interface CssVariable extends CssValue {
   name: string
   defaultValue?: CssValue
-  cssString: () => CssValue
 }
 
 /** 一个已注册的裸css变量 */
-function cssVariable(name: string, defaultValue?: CssValue): CssVariable {
+export function cssVariable(name: string, defaultValue?: CssValue): CssVariable {
   const cssString = defaultValue ? cssValue(`var(--${name}, ${defaultValue})`) : cssValue(`var(--${name})`)
-  return {
-    name,
-    defaultValue,
-    cssString: () => cssString,
-  }
+  const newCssValue = cssValue(cssString) as CssVariable
+  newCssValue.name = name
+  newCssValue.defaultValue = defaultValue
+  return newCssValue
 }
 
 /**
@@ -26,7 +21,6 @@ function cssVariable(name: string, defaultValue?: CssValue): CssVariable {
 function isCssVariable(value: unknown): value is CssVariable {
   return isCssValue(value) && containKey(value, 'name')
 }
-
 
 /** 注册 “智能（状态自适应）css变量” 时的选项 */
 interface CssStateVariableRegisterOption {
@@ -86,34 +80,3 @@ const states = {
 } as const
 
 type CssVariableStates = keyof typeof states
-
-/** 代表 任意组件 的 表面颜色（纯粹印象的主体色） */
-export const surfaceColor = registCssVariable({
-  type: 'color',
-  name: 'surface-color',
-  value: {
-    default: cssVariable('dye-neutral-1'),
-    hover: cssVariable('dye-neutral-2'),
-    active: cssVariable('dye-neutral-3'),
-  },
-})
-
-export const bgColor = registCssVariable({
-  type: 'color',
-  name: 'bg',
-  value: {
-    default: cssColorMix([cssVariable('surface-color'), 0.82], cssVariable('color-accent-soft')),
-    hover: cssColorMix([cssVariable('surface-color-hover'), 0.72], cssVariable('color-accent-soft')),
-    active: cssColorMix([cssVariable('surface-color-active'), 0.62], cssVariable('color-accent-soft')),
-  },
-})
-
-export const fgColor = registCssVariable({
-  type: 'color',
-  name: 'fg',
-  value: {
-    default: cssVariable('color-fg'), // TODO: 这里还不对，需要确认用什么颜色,但此时修改 api
-    hover: cssVariable('color-fg-strong'),
-    active: cssVariable('color-fg-strong'),
-  },
-})

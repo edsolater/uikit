@@ -1,4 +1,4 @@
-import { cssValue, parseCSSValue, type CssValue } from './css-value'
+import { cssValue, toCssString, type CssValue } from '../core/css-value'
 
 type CssColor = CssValue
 
@@ -9,7 +9,7 @@ export function cssColorMix(...colors: (CssColor | [color: CssColor, weight: num
       `color-mix(in oklab, ${colors
         .map((paramColor) => {
           const [color, weight] = Array.isArray(paramColor) ? paramColor : [paramColor, undefined]
-          return weight === undefined ? color : `${parseCSSValue(color)} ${weight * 100}%`
+          return weight === undefined ? color : `${toCssString(color)} ${weight * 100}%`
         })
         .join(', ')})`,
   )
