@@ -4,6 +4,8 @@
 
 # 当前系统组成
 
+正在构建的 `src/style-system` 尚未接管现有 JSS；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
+
 - `src/components/Piv`：基础 DOM 原子。负责消费 class、style、HTML props、事件、ref 与 plugins，不承载具体 kit 的业务语义。
 - `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
