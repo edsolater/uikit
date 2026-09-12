@@ -1,132 +1,96 @@
-/** 为对象图提供按对象首次写入才浅复制的稳定视图。 */
+/** 为指定层数内的对象提供首次写入才浅复制的代理。 */
+import { isObjectLike } from '@edsolater/fnkit'
 
-/** 决定是否把嵌套对象纳入当前写时复制视图。 */
+/** 指定写时复制覆盖的对象层数。 */
 export interface LazyCopyOptions {
-  /** 默认只隔离传入对象；启用后也隔离嵌套对象。 */
-  deep?: boolean
+  /** 默认 0 只隔离自身；1 包含直接属性对象，Infinity 包含所有层。 */
+  depth?: number
 }
 
-/** 返回惰性副本；非对象原值返回，未写入的对象持续读取来源。
- * 默认保留字段值的原引用；deep 模式递归代理，并保留别名和循环引用。
- * 两种模式读取均不浅复制；每个被代理对象只在首次写入时浅复制。
- * 隔离范围是属性写入、删除和定义；函数照常调用，不隔离闭包或外部副作用。
- * Map、Date 等内部槽和类私有字段不属于属性协议，不能通过此视图操作。
- * 显式定义的不可配置且不可写属性必须原样返回指定值，不再代理该值。
+/** 返回惰性副本；非引用值直接返回，每个对象只在首次写入时浅复制。
  * @example
- * const source = [1]
- * const next = lazyCopy(source)
- * next.push(2) // source 仍为 [1]
- * const nested = lazyCopy({ items: source }, { deep: true })
- * nested.items.push(3) // source 仍为 [1]
+ * const source = { items: [1] }
+ * const next = lazyCopy(source, { depth: 1 })
+ * next.items.push(2) // source.items 仍为 [1]
  */
 export function lazyCopy<T>(source: T, options?: LazyCopyOptions): T {
-  const views = new WeakMap<object, object>()
+  const copies = new WeakMap<object, object>()
 
-  /** 取得当前对象图中同一来源的稳定代理。 */
-  function view<T>(value: T): T {
-    if (value === null || (typeof value !== 'object' && typeof value !== 'function')) {
-      return value
-    }
-    const existing = views.get(value)
+  /** 取得同一来源对象的稳定惰性副本。 */
+  function copy<T>(value: T, depth: number): T {
+    if (!isObjectLike(value)) return value
+    const existing = copies.get(value)
     if (existing) return existing as T
 
-    const target = createTarget(value)
-    let copied = false
+    const sourceObject = value as object
+    const target = createTarget(sourceObject)
+    let current = sourceObject
 
-    /** 首次写入时复制当前属性描述符，不求值访问器或复制子对象。 */
-    function writable(): object {
-      if (!copied) {
-        const descriptors = Object.getOwnPropertyDescriptors(value)
-        for (const key of Reflect.ownKeys(target)) {
-          if (!Object.hasOwn(descriptors, key)) Reflect.deleteProperty(target, key)
-        }
-        for (const key of Reflect.ownKeys(descriptors)) {
-          const descriptor = descriptors[key as keyof typeof descriptors]
-          if (options?.deep && 'value' in descriptor) descriptor.value = view(descriptor.value)
-        }
-        Object.defineProperties(target, descriptors)
-        copied = true
+    /** 首次写入时取得当前属性的浅副本。 */
+    function writable() {
+      if (current === sourceObject) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors({ ...sourceObject }))
+        current = target
       }
       return target
     }
 
     const proxy = new Proxy(target, {
-      /** 读取当前属性，并把对象引用接回同一惰性视图。 */
+      /** 读取当前值，并在指定深度内继续建立惰性副本。 */
       get(_, key, receiver) {
-        const fixed = copied && Reflect.getOwnPropertyDescriptor(target, key)
-        if (fixed && fixed.configurable === false && fixed.writable === false) return fixed.value
-        const result = Reflect.get(copied ? target : value, key, receiver)
-        return options?.deep ? view(result) : result
+        const result = Reflect.get(current, key, receiver)
+        return depth > 0 ? copy(result, depth - 1) : result
       },
-      /** 让赋值及访问器通过当前副本完成写入。 */
-      set(_, key, next, receiver) {
-        return Reflect.set(writable(), key, next, receiver)
+      /** 首次赋值前取得浅副本。 */
+      set(_, key, next) {
+        return Reflect.set(writable(), key, next)
       },
-      /** 在副本上删除属性。 */
+      /** 首次删除前取得浅副本。 */
       deleteProperty(_, key) {
         return Reflect.deleteProperty(writable(), key)
       },
-      /** 在副本上定义属性，保留调用者指定的描述符身份约束。 */
+      /** 首次定义属性前取得浅副本。 */
       defineProperty(_, key, descriptor) {
         return Reflect.defineProperty(writable(), key, descriptor)
       },
-      /** 查询当前视图中的属性存在性。 */
+      /** 查询当前来源或副本中的属性。 */
       has(_, key) {
-        return Reflect.has(copied ? target : value, key)
+        return Reflect.has(current, key)
       },
-      /** 枚举当前视图中的自有属性。 */
+      /** 枚举当前来源或副本中的属性。 */
       ownKeys() {
-        return Reflect.ownKeys(copied ? target : value)
+        return Reflect.ownKeys(current)
       },
-      /** 暴露当前描述符；复制前的虚拟属性须保持可配置。 */
+      /** 取得当前来源或副本中的属性描述符。 */
       getOwnPropertyDescriptor(_, key) {
-        const descriptor = Reflect.getOwnPropertyDescriptor(copied ? target : value, key)
+        const descriptor = Reflect.getOwnPropertyDescriptor(current, key)
         if (!descriptor) return undefined
+        const targetDescriptor = Reflect.getOwnPropertyDescriptor(target, key)
         return {
           ...descriptor,
-          ...(options?.deep && 'value' in descriptor && !(copied && !descriptor.configurable && !descriptor.writable)
-            ? { value: view(descriptor.value) }
-            : {}),
-          configurable: copied
-            ? descriptor.configurable
-            : Reflect.getOwnPropertyDescriptor(target, key)?.configurable !== false,
+          configurable: targetDescriptor?.configurable === false ? false : true,
         }
       },
-      /** 读取当前对象的原型。 */
-      getPrototypeOf() {
-        return Reflect.getPrototypeOf(copied ? target : value)
-      },
-      /** 在副本上改写原型。 */
-      setPrototypeOf(_, prototype) {
-        return Reflect.setPrototypeOf(writable(), prototype)
-      },
-      /** 实体化属性后关闭副本扩展，满足代理不变量。 */
-      preventExtensions() {
-        return Reflect.preventExtensions(writable())
-      },
       ...(typeof value === 'function' ? {
-        /** 保留函数调用及接收者语义。 */
+        /** 保持可调用对象的调用行为。 */
         apply(_, receiver, args) {
           return Reflect.apply(value, receiver, args)
         },
-        /** 保留构造调用，由来源函数判断自身是否可构造。 */
-        construct(_, args, newTarget) {
-          return Reflect.construct(value, args, newTarget === proxy ? value : newTarget)
-        },
       } : {}),
     })
-    views.set(value, proxy)
-    views.set(proxy, proxy)
+    copies.set(sourceObject, proxy)
     return proxy as T
   }
 
-  return view(source)
+  return copy(source, options?.depth ?? 0)
 }
 
-/** 创建不含来源属性的代理载体，保留数组身份、函数能力及原型。 */
+/** 创建保持数组、函数或对象基本能力的代理载体。 */
 function createTarget(source: object): object {
   const target = typeof source === 'function'
     ? function () {}.bind(undefined)
     : Array.isArray(source) ? [] : {}
+  Reflect.deleteProperty(target, 'name')
+  Reflect.deleteProperty(target, 'length')
   return Object.setPrototypeOf(target, Object.getPrototypeOf(source))
 }

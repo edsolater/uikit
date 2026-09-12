@@ -33,7 +33,7 @@ test('命名值直接复用，调用派生才隔离原始内容', () => {
   expect(value(0).parseCss()).toBe('0')
 })
 
-test('Property → Variable → Value 保存原对象并共享激活', () => {
+test('重复连接共享同一属性，激活其读取到的值副本', () => {
   const active = vi.fn()
   const fallback = value('blue', { onActive: active })
   const parse = vi.spyOn(fallback, 'parseCss')
@@ -43,20 +43,22 @@ test('Property → Variable → Value 保存原对象并共享激活', () => {
   const second = selector('.input').attach(color)
   first.activate()
   second.activate()
-  expect(color.value).toBe(foreground)
-  expect(foreground.defaultValue).toBe(fallback)
-  expect(fallback.isActive).toBe(true)
+  expect(color.value).not.toBe(foreground)
+  expect(color.value.isActive).toBe(true)
+  expect(fallback.isActive).toBe(false)
   expect(active).toHaveBeenCalledTimes(1)
   expect(parse).not.toHaveBeenCalled()
   expect(first.parseCss()).toBe('.button { color: var(--foreground, blue); }')
 })
 
-test('变量派生保留名称字段，独立修改不回写，依赖仍可共享', () => {
+test('变量派生隔离名称及直接持有的兜底值', () => {
   const fallback = value('blue')
   const original = variable('first', fallback)
   const next = original()
   next.name = 'next'
-  expect(next.defaultValue).toBe(fallback)
+  expect(next.defaultValue).not.toBe(fallback)
+  next.defaultValue?.activate()
+  expect(fallback.isActive).toBe(false)
   expect(next().name).toBe('next')
   expect(original.parseCss()).toBe('var(--first, blue)')
   expect(next.parseCss()).toBe('var(--next, blue)')

@@ -1,10 +1,10 @@
 /** 保存 CSS 对象的连接，提供显式派生及沿依赖传播的激活。 */
-import { deriveObject } from '../fnkit/derivable-object'
+import { deriveable } from '../fnkit/derivable-object'
 
 /** 可直接组合的 CSS 对象；连接与激活不更换对象身份，调用才派生。 */
 export interface Block {
   /** 从当前属性和连接派生，子对象引用保持共享。 */
-  (): this
+  (override?: Partial<Block>): this
   kind: string
   children: Block[]
   dependence: Block[]
@@ -62,7 +62,7 @@ const blockMethods = {
  * })
  */
 export function block<T extends object = object>(properties?: T, options?: BlockOptions<T>): Block & T {
-  return deriveObject(
+  return deriveable(
     {
       kind: 'block', ...properties,
       children: [] as Block[], dependence: [...(options?.dependence ?? [])],
@@ -71,8 +71,6 @@ export function block<T extends object = object>(properties?: T, options?: Block
       parseCss: options?.parseCss ?? blockMethods.parseCss,
       getDependencies: options?.getDependencies ?? blockMethods.getDependencies,
     },
-    /** 集合由通用派生提供浅层写时复制；Block 只覆盖生命周期状态。 */
-    { overrideWhenDerive: { isActive: false } },
   ) as Block & T
 }
 

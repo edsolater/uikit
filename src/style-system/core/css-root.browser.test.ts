@@ -38,8 +38,9 @@ test('唯一 Selector 直接挂载，Root 与业务持有同一对象', () => {
   expect(root.children).toEqual([button, input])
   expect(root.children[0]).toBe(button)
   expect(button.children[0]).toBe(input.children[0])
-  expect(color.value).toBe(foreground)
-  expect(foreground.isActive).toBe(true)
+  expect(color.value).not.toBe(foreground)
+  expect(color.value.isActive).toBe(true)
+  expect(foreground.isActive).toBe(false)
   expect(active).toHaveBeenCalledTimes(1)
   expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
   expect(style.sheet!.cssRules.length).toBe(3)
@@ -76,7 +77,7 @@ test('离线组合不解析，六个基础 Token 挂载后按原生顺序生效'
   expect(computed.marginBottom).toBe('12px')
   expect(computed.marginLeft).toBe('20px')
   expect(computed.boxShadow).not.toBe('none')
-  expect(active).toHaveBeenCalledTimes(1)
+  expect(active).toHaveBeenCalledTimes(4)
 })
 
 test('挂载时读取当前对象内容，显式派生的修改只作用于其选择器', () => {
@@ -93,14 +94,14 @@ test('挂载时读取当前对象内容，显式派生的修改只作用于其�
   expect(getComputedStyle(element).marginTop).toBe('18px')
 })
 
-test('共享依赖首次激活可挂载全局规则，不移入消费选择器', () => {
+test('依赖副本各自激活并挂载全局规则，不移入消费选择器', () => {
   const registration = selector(':where(:hover)').attach(property('--token-shadow', value('none')))
   const activate = vi.fn(() => root.attach(registration))
   const shadow = variable('token-shadow', value('none'))
   shadow.onActive = activate
   const appearance = selector('.token-example').attach(boxShadow(shadow))
   root.attach(appearance, selector('.other-example').attach(boxShadow(shadow)))
-  expect(activate).toHaveBeenCalledTimes(1)
+  expect(activate).toHaveBeenCalledTimes(2)
   expect(style.sheet!.cssRules[1].cssText).toContain(':where(:hover)')
   expect(style.sheet!.cssRules[1].cssText).not.toContain('.token-example')
   expect(root.children[0]).toBe(registration)

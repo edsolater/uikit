@@ -4,24 +4,27 @@ import { block, type Block } from '../css-block'
 import { property, type Property } from './css-property'
 import { value } from './css-value'
 
-test('属性有自己的键和值对象，直接连接不复制输入', () => {
+test('连接保留输入，直接值属性在读取时取得惰性副本', () => {
   const blue = value('blue')
   const color = property('color', blue)
   const parent = block().attach(color)
   expectTypeOf<Property>().toExtend<Block>()
   expect(parent.children[0]).toBe(color)
-  expect(color.value).toBe(blue)
-  expect(color.getDependencies()).toEqual([blue])
+  expect(color.value).not.toBe(blue)
+  expect(color.getDependencies()).toEqual([color.value])
   expect(color.parseCss()).toBe('color: blue;')
 })
 
-test('属性显式派生隔离自己的内容，未派生的值保持共享', () => {
+test('属性派生隔离直接持有的值对象', () => {
   const blue = value('blue')
   const original = property('color', blue)
   const next = original()
   expectTypeOf(next).toEqualTypeOf(original)
   next.key = 'background'
-  expect(next.value).toBe(blue)
+  expect(next.value).not.toBe(blue)
+  next.value.activate()
+  expect(next.value.isActive).toBe(true)
+  expect(blue.isActive).toBe(false)
   next.value = value('red')
   expect(original.parseCss()).toBe('color: blue;')
   expect(next.parseCss()).toBe('background: red;')

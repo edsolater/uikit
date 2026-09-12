@@ -1,51 +1,61 @@
-/** 构造可直接使用、调用后从当前状态派生的函数对象。 */
+/** 建立可直接使用、调用后从当前属性继续派生的对象。 */
+import { getKeys, mergeObjects } from '@edsolater/fnkit'
 import { lazyCopy } from './lazy-copy'
 
-/** 兼具普通函数能力与领域属性的可派生对象。 */
+/** 兼具领域属性和派生调用的对象。 */
 export type DerivableObject<O extends object> = O & {
-  /** 从当前对象继续派生。 */
-  (): DerivableObject<O>
+  /** 从当前属性继续派生。 */
+  (override?: Partial<O>): DerivableObject<O>
 }
 
-/** 派生后覆盖指定属性。 */
-export interface DeriveObjectOptions<O extends object> {
-  overrideWhenDerive?: Partial<O>
-}
-
-/** 让属性成为可派生对象；对象属性使用浅层写时复制，函数保持共享。
- * options.override 只声明派生后需要改写的属性。
+/** 属性首次读取时取得惰性副本；调用时由当前属性和覆盖值派生下一对象。
  * @example
- * const list = deriveObject(
- *   { items: [1], isActive: true },
- *   { override: { isActive: false } },
- * )
- * const another = list()
+ * const list = deriveable({ items: [1], isActive: true })
+ * const another = list({ isActive: false })
+ * another.items.push(2) // list.items 仍为 [1]
  */
-export function deriveObject<O extends object>(
-  originalRaw: O,
-  options?: DeriveObjectOptions<O>,
-): DerivableObject<O> {
-  let result: DerivableObject<O>
+export function deriveable<O extends object>(source: O): DerivableObject<O> {
+  const self: Record<PropertyKey, unknown> = {}
 
-  /** 从当前函数对象建立下一层惰性属性视图。 */
-  function deriveFromCurrentObject(): DerivableObject<O> {
-    const properties = lazyCopyProperties(result)
-    return deriveObject({ ...properties, ...options?.overrideWhenDerive }, options)
-  }
+  return new Proxy((override?: Partial<O>) => deriveable(mergeObjects(source, self, override ?? {}) as O), {
+    /** 优先读取当前属性，只为来源中的引用值建立惰性副本。 */
+    get(_target, key, receiver) {
+      if (Object.hasOwn(self, key)) return Reflect.get(self, key, receiver)
 
-  result = Object.defineProperties(
-    deriveFromCurrentObject,
-    Object.getOwnPropertyDescriptors(originalRaw),
-  ) as DerivableObject<O>
-  return result
-}
+      // 读取来源
+      const sourceValue = Reflect.get(source, key, receiver)
 
-/** 为每个可枚举对象属性建立惰性浅副本，其他属性保持原值。 */
-function lazyCopyProperties<T extends object>(source: T): T {
-  return Object.fromEntries(
-    Object.entries(source).map(([key, value]) => [
-      key,
-      value !== null && typeof value === 'object' ? lazyCopy(value) : value,
-    ]),
-  ) as T
+      // 创造惰性副本
+      const lazyValue = lazyCopy(sourceValue)
+
+      // 写入自身
+      Reflect.set(self, key, lazyValue)
+
+      return lazyValue
+    },
+    /** 将赋值保存在当前对象。 */
+    set(_target, key, value) {
+      return Reflect.set(self, key, value)
+    },
+    /** 查询当前对象、来源或函数载体中的属性。 */
+    has( _target, key) {
+      return Object.hasOwn(self, key) || Reflect.has(source, key)
+    },
+    /** 枚举当前对象能够提供的全部属性。 */
+    ownKeys(target) {
+      return getKeys([source, self, target])
+    },
+    /** 取得当前对象能够提供的属性描述符。 */
+    getOwnPropertyDescriptor(target, key) {
+      const descriptor =
+        Reflect.getOwnPropertyDescriptor(self, key) ??
+        Reflect.getOwnPropertyDescriptor(source, key) ??
+        Reflect.getOwnPropertyDescriptor(target, key)
+      return descriptor ? { ...descriptor, configurable: true } : undefined
+    },
+    /** 将新属性定义在当前对象。 */
+    defineProperty(_target, key, descriptor) {
+      return Reflect.defineProperty(self, key, descriptor)
+    },
+  }) as DerivableObject<O>
 }

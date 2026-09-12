@@ -13,10 +13,7 @@ test('对象直接可用，调用才派生；不存在 Factory 和 Instance 两�
   expect('create' in original).toBe(false)
   expect('setValue' in original).toBe(false)
   expect(next).not.toBe(original)
-  expect(next).toBeInstanceOf(Function)
-  expect(typeof next.call).toBe('function')
-  expect(typeof next.bind).toBe('function')
-  expect(next.attach).toBe(original.attach)
+  expect(next.attach()).toBe(next)
   expectTypeOf(next).toEqualTypeOf(original)
   expectTypeOf<typeof next>().toExtend<Block>()
 })
@@ -103,14 +100,14 @@ test('活对象新增连接立即激活实际输入，不提前解析', () => {
   expect(parse).not.toHaveBeenCalled()
 })
 
-test('从活对象派生得到未激活的新对象，动作的 this 也是新对象', () => {
+test('调用参数可重置激活状态，动作的 this 是新对象', () => {
   const receivers: Block[] = []
   const original = block(undefined, {
     /** 记录实际激活对象。 */
     onActive() { receivers.push(this) },
   })
   original.activate()
-  const next = original()
+  const next = original({ isActive: false })
   expect(next.isActive).toBe(false)
   next.activate()
   expect(receivers).toEqual([original, next])

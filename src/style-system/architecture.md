@@ -4,9 +4,9 @@ Style System 保存可组合的 CSS 对象，由唯一固定 Root 接通并提�
 
 所有 Block 都是可调用对象。直接引用对象就能使用，`x()` 才从 x 的当前属性派生新对象；结果仍可继续调用。Value、Property、Selector 共享 Block 能力，Variable 属于 Value，业务不另填分类。
 
-`fnkit/derivable-object.ts` 负责建立保留完整 Function 能力的可调用对象。派生时为每个可枚举对象属性建立默认浅层 `lazyCopy` 视图，首次写入才复制该容器；更深引用继续共享，函数保持原引用。可选的 `options.override` 只覆盖派生后需要改写的属性，CSS 层用它清空激活状态。children、dependence 等数组在写入前读取来源，写入后拥有自己的容器。
+`fnkit/derivable-object.ts` 用函数 Proxy 承接属性。未覆盖的 primitive 始终从来源读取；引用值首次读取时保存 `lazyCopy(value)`，赋值只覆盖自身。调用时合并来源、当前状态和调用参数，建立下一对象。Block 通过 `block({ isActive: false })` 的调用形式显式重置派生状态，不再传构造选项。
 
-`fnkit/lazy-copy.ts` 同时提供浅层与深层写时复制。默认保留嵌套字段原引用；`deep: true` 递归建立代理并保持别名与循环引用。Block 的默认派生使用浅层模式。
+`fnkit/lazy-copy.ts` 用 depth 指定隔离层数：默认 0 只处理自身，1 包含直接属性，Infinity 处理全部层数。同一来源在一次 lazyCopy 中复用同一代理。函数调用保持来源行为，写时复制只处理可见属性。
 
 业务决定哪里需要独立状态。唯一使用的 Selector、需要共享的 Value 都可直接使用；需要隔离的对象才显式调用。attach 和激活不会替业务派生。
 
@@ -21,7 +21,7 @@ const border = property('border-width', thin)
 const button = selector('.button').attach(border)
 root.attach(button)
 
-// 需要独立组合时，显式派生；border 和 thin 仍是共享材料。
+// 需要独立组合时显式派生；连接数组中的 border 仍共享。
 const input = button()
 input.selector = '.input'
 root.attach(input)
@@ -69,4 +69,4 @@ root.attach 保存实际对象，激活后调用其 parseCss，再通过 insertR
 
 当前没有规则替换、刷新、撤销及挂载位置管理，不向共享 Block 写入单个 parent 或 index 冒充全部使用关系。活对象 attach 后内部结构和激活已变化，但先前写入的 CSSOM 不会自动变化。
 
-变量全局智能注册仍未实现，既有状态后缀材料不能证明注册需求已经完成。通用派生能力目前只存在于本目录的 fnkit 组织目录，尚未迁入外部 FNKIT。
+变量全局智能注册仍未实现，既有状态后缀材料不能证明注册需求已经完成。deriveable 与 lazyCopy 目前只存在于本目录的 fnkit 组织目录，尚未迁入外部 FNKIT；对象合并直接使用外部 FNKIT。

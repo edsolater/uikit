@@ -25,32 +25,33 @@ test('变量与混色不提前解析，colors 按写入隔离且内部颜色材�
   expect(mixed.parseCss()).toBe('color-mix(in oklab, var(--example-color, blue) 50%, transparent)')
 })
 
-test('基础方法返回 Property，margin 的四方向共享同一个值对象', () => {
+test('基础方法返回 Property，四个方向分别读取值的惰性副本', () => {
   const length = value('2px')
   for (const token of [marginTop, marginRight, marginBottom, marginLeft, boxShadow]) {
     const declaration = token(length)
     expect(declaration.kind).toBe('property')
-    expect(declaration.value).toBe(length)
+    expect(declaration.value).not.toBe(length)
+    expect(declaration.value.parseCss()).toBe('2px')
     expect(declaration().key).toBe(declaration.key)
   }
   const combined = margin(length)
   expect(combined.children.map(child => 'key' in child ? child.key : '')).toEqual([
     'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
   ])
-  expect(combined.children.every(child => child.getDependencies()[0] === length)).toBe(true)
+  expect(combined.children.every(child => child.getDependencies()[0] !== length)).toBe(true)
 })
 
-test('多方向共享的长度只激活一次，活组合追加阴影立即接通实际值', () => {
+test('四个方向分别激活值副本，重复激活不重复执行', () => {
   const active = vi.fn()
   const combined = margin(value('2px', { onActive: active }))
   combined.activate()
   combined.activate()
-  expect(active).toHaveBeenCalledTimes(1)
+  expect(active).toHaveBeenCalledTimes(4)
   const shadow = value('none', { onActive: active })
   const parse = vi.spyOn(shadow, 'parseCss')
   combined.attach(boxShadow(shadow))
-  expect(shadow.isActive).toBe(true)
-  expect(active).toHaveBeenCalledTimes(2)
+  expect(shadow.isActive).toBe(false)
+  expect(active).toHaveBeenCalledTimes(5)
   expect(parse).not.toHaveBeenCalled()
 })
 
