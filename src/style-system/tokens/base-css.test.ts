@@ -1,32 +1,60 @@
-/** 验证基础 Token 的统一表达、组合顺序与延迟求值。 */
+/** 验证基础样式积木及混色保留对象关系，按最终顺序解析。 */
 import { expect, test, vi } from 'vitest'
-import { cssBlock } from '../core/css-block'
+import { value } from '../core/derive/css-value'
+import { block } from '../core/css-block'
 import { boxShadow, margin, marginBottom, marginLeft, marginRight, marginTop } from './base-css'
+import { variable } from '../core/derive/css-variable'
+import { colorMix } from './css-color-mix'
 
-test('六个基础方法全部返回不强制包裹的 Block', () => {
-  for (const token of [margin, marginTop, marginRight, marginBottom, marginLeft, boxShadow]) {
-    const output = vi.fn(() => '0px')
-    const box = token(cssBlock(output))
-    expect(typeof box.attach).toBe('function')
-    expect(output).not.toHaveBeenCalled()
-    expect(String(box)).not.toContain('{')
+test('变量与混色不提前解析，colors 按写入隔离且内部颜色材料共享', () => {
+  const fallback = value('blue')
+  const parse = vi.spyOn(fallback, 'parseCss')
+  const reference = variable('example-color', fallback)
+  const mixed = colorMix([reference, 0.5], value('transparent'))
+  const next = mixed()
+  expect(parse).not.toHaveBeenCalled()
+  expect(next.colors).not.toBe(mixed.colors)
+  expect(next.colors[0]).toBe(mixed.colors[0])
+  const stop = next.colors[0]
+  if (!Array.isArray(stop)) throw new Error('测试需要带权重的颜色')
+  expect(stop[0]).toBe(reference)
+  next.colors.push(value('black'))
+  expect(mixed.colors).toHaveLength(2)
+  expect(next.colors).toHaveLength(3)
+  expect(next.parseCss()).toBe('color-mix(in oklab, var(--example-color, blue) 50%, transparent, black)')
+  expect(mixed.parseCss()).toBe('color-mix(in oklab, var(--example-color, blue) 50%, transparent)')
+})
+
+test('基础方法返回 Property，margin 的四方向共享同一个值对象', () => {
+  const length = value('2px')
+  for (const token of [marginTop, marginRight, marginBottom, marginLeft, boxShadow]) {
+    const declaration = token(length)
+    expect(declaration.kind).toBe('property')
+    expect(declaration.value).toBe(length)
+    expect(declaration().key).toBe(declaration.key)
   }
+  const combined = margin(length)
+  expect(combined.children.map(child => 'key' in child ? child.key : '')).toEqual([
+    'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+  ])
+  expect(combined.children.every(child => child.getDependencies()[0] === length)).toBe(true)
 })
 
-test('共享值只激活一次，接通后的新增依赖立即激活但不提前转换', () => {
-  const activate = vi.fn()
-  const box = margin(cssBlock('2px', { onActive: activate }))
-  box.activate()
-  box.activate()
-  expect(activate).toHaveBeenCalledTimes(1)
-  const lateActivate = vi.fn()
-  const output = vi.fn(() => 'none')
-  box.attach(boxShadow(cssBlock(output, { onActive: lateActivate })))
-  expect(lateActivate).toHaveBeenCalledTimes(1)
-  expect(output).not.toHaveBeenCalled()
+test('多方向共享的长度只激活一次，活组合追加阴影立即接通实际值', () => {
+  const active = vi.fn()
+  const combined = margin(value('2px', { onActive: active }))
+  combined.activate()
+  combined.activate()
+  expect(active).toHaveBeenCalledTimes(1)
+  const shadow = value('none', { onActive: active })
+  const parse = vi.spyOn(shadow, 'parseCss')
+  combined.attach(boxShadow(shadow))
+  expect(shadow.isActive).toBe(true)
+  expect(active).toHaveBeenCalledTimes(2)
+  expect(parse).not.toHaveBeenCalled()
 })
 
-test('默认 slot 保持挂载顺序，不产生多余花括号', () => {
-  const box = cssBlock().attach(marginLeft(cssBlock('2px'))).attach(marginLeft(cssBlock('4px')))
-  expect(String(box).replace(/\s/g, '')).toBe('margin-left:2px;margin-left:4px;')
+test('普通组合保留声明顺序，不过滤重复属性或添加花括号', () => {
+  const combined = block().attach(marginLeft(value('2px')), marginLeft(value('4px')))
+  expect(combined.parseCss()).toBe('margin-left: 2px;\nmargin-left: 4px;')
 })

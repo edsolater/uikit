@@ -1,34 +1,35 @@
-import { registCssVariable, cssVariable } from '../core/css-variable';
-import { cssColorMix } from './css-web-utils';
+/** 组合组件共享的默认颜色及状态颜色定义。 */
+import { registerVariable, variable } from '../core/derive/css-variable';
+import { colorMix } from './css-color-mix';
 
 /** 代表 任意组件 的 表面颜色（纯粹印象的主体色） */
 
-export const surfaceColor = registCssVariable({
+export const surfaceColor = registerVariable({
   type: 'color',
   name: 'surface-color',
   value: {
-    default: cssVariable('dye-neutral-1'),
-    hover: cssVariable('dye-neutral-2'),
-    active: cssVariable('dye-neutral-3'),
+    default: variable('dye-neutral-1'),
+    hover: variable('dye-neutral-2'),
+    active: variable('dye-neutral-3'),
   },
 });
 
-export const bgColor = registCssVariable({
+export const bgColor = registerVariable({
   type: 'color',
   name: 'bg',
   value: {
-    default: cssColorMix([cssVariable('surface-color'), 0.82], cssVariable('color-accent-soft')),
-    hover: cssColorMix([cssVariable('surface-color-hover'), 0.72], cssVariable('color-accent-soft')),
-    active: cssColorMix([cssVariable('surface-color-active'), 0.62], cssVariable('color-accent-soft')),
+    default: colorMix([variable('surface-color'), 0.82], variable('color-accent-soft')),
+    hover: colorMix([variable('surface-color-hover'), 0.72], variable('color-accent-soft')),
+    active: colorMix([variable('surface-color-active'), 0.62], variable('color-accent-soft')),
   },
 });
 
-export const fgColor = registCssVariable({
+export const fgColor = registerVariable({
   type: 'color',
   name: 'fg',
   value: {
-    default: cssVariable('color-fg'), // TODO: 这里还不对，需要确认用什么颜色,但此时修改 api
-    hover: cssVariable('color-fg-strong'),
-    active: cssVariable('color-fg-strong'),
+    default: variable('color-fg'), // TODO: 这里还不对，需要确认用什么颜色,但此时修改 api
+    hover: variable('color-fg-strong'),
+    active: variable('color-fg-strong'),
   },
 });

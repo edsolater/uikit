@@ -1,91 +1,137 @@
-/** 验证统一表达的 slot 落点、可选依赖与激活传播。 */
-import { expect, test, vi } from 'vitest'
-import { cssBlock } from './css-block'
-import { cssSelector } from './derive/css-selector'
+/** 验证可调用 Block 的对象身份、显式派生及真实激活链。 */
+import { expect, expectTypeOf, test, vi } from 'vitest'
+import { block, isBlock, type Block } from './css-block'
+import { selector } from './derive/css-selector'
+import { value } from './derive/css-value'
+import { property } from './derive/css-property'
 
-test('未激活时多项 attach 立即更新内部表达，保持落点和顺序', () => {
+test('对象直接可用，调用才派生；不存在 Factory 和 Instance 两套入口', () => {
+  const original = selector('.first')
+  const next = original()
+  expect(isBlock(original)).toBe(true)
+  expect(isBlock(next)).toBe(true)
+  expect('create' in original).toBe(false)
+  expect('setValue' in original).toBe(false)
+  expect(next).not.toBe(original)
+  expect(next).toBeInstanceOf(Function)
+  expect(typeof next.call).toBe('function')
+  expect(typeof next.bind).toBe('function')
+  expect(next.attach).toBe(original.attach)
+  expectTypeOf(next).toEqualTypeOf(original)
+  expectTypeOf<typeof next>().toExtend<Block>()
+})
+
+test('反复派生以当前内容和连接为起点，修改独立属性不回写', () => {
+  const blue = property('color', value('blue'))
+  const original = selector('.original').attach(blue)
+  original.selector = '.current'
+  const next = original()
+  next.selector = '.next'
+  next.attach(property('opacity', value(0.5)))
+  const last = next()
+  last.selector = '.last'
+  expect(original.selector).toBe('.current')
+  expect(next.selector).toBe('.next')
+  expect(last.children).toEqual(next.children)
+  expect(last.children).not.toBe(next.children)
+  expect(original.children).toEqual([blue])
+  expect(last.children[0]).toBe(blue)
+  original.selector = '.later'
+  expect(last.parseCss()).toBe('.last { color: blue;\nopacity: 0.5; }')
+})
+
+test('attach 接受零个或多个对象，原样保存重复及共享引用', () => {
+  const child = value('shared')
+  const first = block()
+  const second = block()
+  expect(first.attach()).toBe(first)
+  expect(first.attach(child, child)).toBe(first)
+  second.attach(child)
+  expect(first.children[0]).toBe(child)
+  expect(first.children[1]).toBe(child)
+  expect(second.children[0]).toBe(child)
+  expect('parent' in child).toBe(false)
+  expect('index' in child).toBe(false)
+})
+
+test('派生复制连接集合，不暗中派生子对象；隔离子级也由业务显式选择', () => {
+  const child = block().attach(value('a'))
+  const original = block().attach(child)
+  const next = original()
+  expect(next.children[0]).toBe(child)
+  const isolated = block().attach(child())
+  isolated.children[0].attach(value('b'))
+  expect(child.children).toHaveLength(1)
+  expect(isolated.children[0].children).toHaveLength(2)
+})
+
+test('离线构造、连接与派生不解析或激活', () => {
   const active = vi.fn()
-  const output = vi.fn(() => 'a')
-  const first = cssBlock(output, { onActive: active })
-  const parent = cssBlock(slot => `before(${slot})after`)
-  expect(parent.attach()).toBe(parent)
-  expect(parent.attach(first, cssBlock('b'))).toBe(parent)
-  expect(output).not.toHaveBeenCalled()
+  const child = value('2px', { onActive: active })
+  const parse = vi.spyOn(child, 'parseCss')
+  const original = block().attach(child)
+  original()
   expect(active).not.toHaveBeenCalled()
-  expect(String(parent)).toBe('before(a\nb)after')
-  parent.attach(cssBlock('c'))
-  expect(String(parent)).toBe('before(a\nb\nc)after')
+  expect(parse).not.toHaveBeenCalled()
+  expect(original.parseCss()).toBe('2px')
 })
 
-test('激活后多项 attach 更新内部表达并接通每项，仍不提前求值', () => {
+test('额外依赖共享激活，不自动拼入输出', () => {
   const active = vi.fn()
-  const output = vi.fn(() => 'a')
-  const parent = cssBlock()
-  parent.activate()
-  parent.attach(cssBlock(output, { onActive: active }), cssBlock('b', { onActive: active }))
-  expect(active).toHaveBeenCalledTimes(2)
-  expect(output).not.toHaveBeenCalled()
-  expect(String(parent)).toBe('a\nb')
-})
-
-test('共享内容修改被各使用处读取，局部 attach 只改变该组合', () => {
-  const shared = cssBlock('a')
-  const first = cssBlock().attach(shared)
-  const second = cssBlock().attach(shared)
-  shared.setValue('b')
-  first.attach(cssBlock('c'), cssBlock('d'))
-  expect(String(first)).toBe('b\nc\nd')
-  expect(String(second)).toBe('b')
-})
-
-test('dependence 可省略，也可与 onActive 同时提供', () => {
-  const active = vi.fn()
-  const dependency = cssBlock('dependency', { onActive: active })
-  const parent = cssBlock('content', { dependence: [dependency], onActive: active })
-  parent.activate()
-  expect(active).toHaveBeenCalledTimes(2)
-  expect(String(parent)).toBe('content')
-  expect(String(cssBlock('plain'))).toBe('plain')
-})
-
-test('slot 在指定位置展开，构建及连接不执行内容函数', () => {
-  const content = vi.fn(slot => `before(${slot})after`)
-  const block = cssBlock(content).attach(cssBlock('inside'))
-  expect(content).not.toHaveBeenCalled()
-  expect(String(block)).toBe('before(inside)after')
-})
-
-test('依赖只激活，不自动追加输出', () => {
-  const active = vi.fn()
-  const dependency = cssBlock('不应出现', { onActive: active })
-  const block = cssBlock('2px', { dependence: [dependency] })
-  block.activate()
+  const dependency = value('hidden', { onActive: active })
+  const original = block(undefined, { dependence: [dependency] }).attach(value('shown'))
+  const next = original()
+  expect(next.dependence).not.toBe(original.dependence)
+  expect(next.dependence[0]).toBe(dependency)
+  original.activate()
+  next.activate()
   expect(active).toHaveBeenCalledTimes(1)
-  expect(String(block)).toBe('2px')
+  expect(original.parseCss()).toBe('shown')
 })
 
-test('Block 作为 content 保留对象引用及激活关系', () => {
+test('活对象新增连接立即激活实际输入，不提前解析', () => {
+  const parent = block()
+  parent.activate()
   const active = vi.fn()
-  const inner = cssBlock('2px', { onActive: active })
-  const outer = cssBlock(inner)
-  inner.setValue('4px')
-  outer.activate()
+  const child = value('late', { onActive: active })
+  const parse = vi.spyOn(child, 'parseCss')
+  parent.attach(child, child)
+  parent.activate()
+  expect(parent.children[0]).toBe(child)
+  expect(child.isActive).toBe(true)
   expect(active).toHaveBeenCalledTimes(1)
-  expect(String(outer)).toBe('4px')
+  expect(parse).not.toHaveBeenCalled()
 })
 
-test('selector 只在 attach 后输出括号，不过滤空内容', () => {
-  const selector = cssSelector('.example')
-  expect(String(selector)).toBe('')
-  selector.attach(cssBlock(''))
-  expect(String(selector)).toBe('.example {  }')
+test('从活对象派生得到未激活的新对象，动作的 this 也是新对象', () => {
+  const receivers: Block[] = []
+  const original = block(undefined, {
+    /** 记录实际激活对象。 */
+    onActive() { receivers.push(this) },
+  })
+  original.activate()
+  const next = original()
+  expect(next.isActive).toBe(false)
+  next.activate()
+  expect(receivers).toEqual([original, next])
 })
 
-test('同一片段可以组合到不同 selector，嵌套由表达决定', () => {
-  const declaration = cssBlock('color: blue;')
-  const hover = cssSelector('&:hover').attach(declaration)
-  const first = cssSelector('.first').attach(hover)
-  const second = cssSelector('.second').attach(declaration)
-  expect(String(first)).toBe('.first { &:hover { color: blue; } }')
-  expect(String(second)).toBe('.second { color: blue; }')
+test('重入激活及激活中追加子级均只执行一次', () => {
+  const late = value('late', { onActive: vi.fn() })
+  const original = block(undefined, {
+    /** 在激活过程中继续组装，不生成新的对象身份。 */
+    onActive() { this.attach(late); this.activate() },
+  })
+  original.activate()
+  expect(late.isActive).toBe(true)
+  expect(late.onActive).toHaveBeenCalledTimes(1)
+})
+
+test('选择器按语义解析嵌套和空规则，普通组合不增加花括号', () => {
+  const color = property('color', value('blue'))
+  const grouped = block().attach(color)
+  const nested = selector('.input').attach(grouped, selector('&:hover').attach(color))
+  expect(nested.parseCss()).toBe('.input { color: blue;\n&:hover { color: blue; } }')
+  expect(selector('.empty').parseCss()).toBe('.empty {  }')
+  expect(grouped.parseCss()).toBe('color: blue;')
 })

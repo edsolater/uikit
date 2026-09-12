@@ -1,38 +1,28 @@
-/** 将 Block 挂载到 HTML 中固定的 #css-root 样式节点。 */
-import type { CssBlock } from './css-block'
+/** 将实际 Block 对象接通并写入固定的 #css-root 样式节点。 */
+import type { Block } from './css-block'
 
-const mountedBlocks = new Set<CssBlock>()
-const pendingBlocks = new Set<CssBlock>()
+/** 唯一 stylesheet 挂载节点，自身没有激活生命周期。 */
+export interface Root {
+  children: Block[]
+  /** 直接挂载输入对象，不创建另一份对象。 */
+  attach(...blocks: Block[]): Root
+}
 
-/** 唯一 stylesheet 根，不需要创建或激活。 */
-export const cssRoot = {
-  /** 接通 Block 并提交顶层内容；重复挂载同一 Block 不重复写入。 */
-  attach(...blocks: CssBlock[]) {
-    for (const block of blocks) {
-      if (mountedBlocks.has(block) || pendingBlocks.has(block)) continue
+/** 固定根保存实际对象，多处使用不向对象反复覆盖单个 parent 或 index。 */
+export const root: Root = {
+  children: [],
+  /** 接通并追加完整规则，固定 style#css-root 必须已存在。
+   * @example
+   * root.attach(selector('.button').attach(property('color', value('blue'))))
+   */
+  attach(...blocks) {
+    for (const child of blocks) {
       const stylesheet = document.querySelector<HTMLStyleElement>('style#css-root')?.sheet
       if (!stylesheet) throw new Error('缺少样式挂载节点：<style id="css-root"></style>')
-
-      pendingBlocks.add(block)
-      try {
-        block.activate()
-        // 只在提交时展开表达，不增删花括号。
-        const parsedStylesheet = new CSSStyleSheet()
-        parsedStylesheet.replaceSync(String(block))
-        const startIndex = stylesheet.cssRules.length
-        try {
-          for (const rule of parsedStylesheet.cssRules) {
-            stylesheet.insertRule(rule.cssText, stylesheet.cssRules.length)
-          }
-        } catch (error) {
-          while (stylesheet.cssRules.length > startIndex) stylesheet.deleteRule(startIndex)
-          throw error
-        }
-        mountedBlocks.add(block)
-      } finally {
-        pendingBlocks.delete(block)
-      }
+      child.activate()
+      stylesheet.insertRule(child.parseCss(), stylesheet.cssRules.length)
+      this.children.push(child)
     }
-    return cssRoot
+    return this
   },
 }

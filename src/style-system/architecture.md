@@ -1,39 +1,72 @@
-# Style System
+Style System 保存可组合的 CSS 对象，由唯一固定 Root 接通并提交浏览器。此目录尚未接管组件使用的 `src/jss`；设计取舍与待做事项见 [设计文档](design.md)。
 
-此目录使用统一 CssBlock 表达可组合的 CSS 片段，尚未接管组件使用的 `src/jss`。
+# 对象与派生
 
-## 文件职责
+所有 Block 都是可调用对象。直接引用对象就能使用，`x()` 才从 x 的当前属性派生新对象；结果仍可继续调用。Value、Property、Selector 共享 Block 能力，Variable 属于 Value，业务不另填分类。
 
-- `core/css-block.ts`：保存延迟表达、唯一 slot 和可选依赖，提供 attach、激活传播与最终转换。
-- `core/css-block.test.ts`：验证 slot 落点、对象内容、依赖与输出分离及 selector 组合。
-- `core/derive/css-selector.ts`：基于 CssBlock 表达 selector，attach 后输出花括号。
-- `core/css-variable.ts`：基于 CssBlock 构造变量引用和状态派生；真实变量注册尚未接入。
-- `core/css-root.ts`：唯一固定 stylesheet 挂载节点，通过 attach 接通并提交 Block。
-- `core/css-root.browser.test.ts`：验证 Token 组合经固定节点产生真实样式。
-- `tokens/base-css.ts`：六个基础构造方法，全部接收并返回 CssBlock；margin 将单值组合到四个方向。
-- `tokens/base-css.test.ts`：验证基础表达的组合顺序、激活与延迟求值。
-- `tokens/css-web-utils.ts`：保留颜色对象与依赖，延迟输出混色表达。
-- `tokens/well-known-css-variables.ts`：组合基础颜色变量。
-- 仓库 `index.html`：静态提供 `<style id="css-root"></style>`。
+`fnkit/derivable-object.ts` 负责建立保留完整 Function 能力的可调用对象。派生时为每个可枚举对象属性建立默认浅层 `lazyCopy` 视图，首次写入才复制该容器；更深引用继续共享，函数保持原引用。可选的 `options.override` 只覆盖派生后需要改写的属性，CSS 层用它清空激活状态。children、dependence 等数组在写入前读取来源，写入后拥有自己的容器。
 
-core 是核心领域；derive 只是组织延伸构造的分组目录，不建立独立协议或 index 入口。具体组件组合仍属于业务，不进入 core。
+`fnkit/lazy-copy.ts` 同时提供浅层与深层写时复制。默认保留嵌套字段原引用；`deep: true` 递归建立代理并保持别名与循环引用。Block 的默认派生使用浅层模式。
 
-## 表达与连接
-
-CssBlock 既可以是纯值，也可以是声明或完整规则，没有强制花括号。content 是第一个参数，可以是字符串、数字、另一个 Block，或接收 slot 的延迟函数。直接传入的 Block 保留引用及激活关系；闭包内的其他引用由 options 中可选的 dependence 显式连接，不做自动追踪。
-
-attach(...blocks) 接受任意数量的对象，按参数顺序接入唯一 slot，同时连接激活关系；多次 attach 按顺序进入同一个 slot，不代表多个独立插槽。slot 不带花括号，也不自动追加到 content 末尾。依赖只负责激活，不自动拼接输出。省略 content 时直接表达 slot。
+业务决定哪里需要独立状态。唯一使用的 Selector、需要共享的 Value 都可直接使用；需要隔离的对象才显式调用。attach 和激活不会替业务派生。
 
 ```ts
-const rule = cssSelector('.example')
-rule.attach(margin(cssBlock('12px')), boxShadow(cssBlock('none')))
-cssRoot.attach(rule)
+import { selector } from './core/derive/css-selector'
+import { property } from './core/derive/css-property'
+import { value } from './core/derive/css-value'
+import { root } from './core/css-root'
+
+const thin = value('2px')
+const border = property('border-width', thin)
+const button = selector('.button').attach(border)
+root.attach(button)
+
+// 需要独立组合时，显式派生；border 和 thin 仍是共享材料。
+const input = button()
+input.selector = '.input'
+root.attach(input)
 ```
 
-cssSelector 的 content 决定 selector 后的空格、花括号和 slot 位置：没有 attach 时表达为空，attach 后输出括号。底层不检查空内容或修正业务组合。分线器、多独立 slot 和订阅体系均未实现。
+---
 
-## 根与激活
+# 连接、激活与解析
 
-cssRoot 是对象，不接收 stylesheet 参数，自身不激活。attach 时沿依赖激活，再将最终表达写入固定样式节点；不剥离括号，不补结构。共享 Block 只激活一次，已接通 Block 新增连接会立即激活新依赖。
+attach 接受任意数量的实际对象，按顺序保存引用，返回接收者。离线组合只改变结构；接通 Root 后，激活沿 children、可选 dependence 及语义字段依赖传播。isActive 保证每个对象只激活一次，活对象新增连接立即接通新增对象。
 
-创建和离线连接不转换字符串；转换接口由最终输出调用。相同 Block 在根只提交一次。挂载后的内容更新尚未自动刷新 stylesheet；智能变量的完整注册也尚未接入。
+Property 保存 key 和 value；Variable 保存 name 和 defaultValue。getDependencies 从当前字段取得依赖，不额外缓存一份值关系。普通 Block 只展开子级，Selector 生成选择器规则，Property 生成声明，各自的 parseCss 负责最终标点。Root 提交时才启动解析，构造、派生和激活均不求字符串。
+
+原始值可修改 raw，选择器可修改 selector，属性可修改 key 或 value。离线修改会进入首次解析。当前没有自动监听字段赋值：活对象直接更换值依赖不会自动接通新值，也不会刷新 CSSOM；已实现的实时传播入口是 attach。没有通用 setValue 或字符串 Content 包装层。
+
+---
+
+# 文件职责
+
+core 拥有 CSS 对象与激活语义；derive 和 fnkit 都是组织目录，不建立分组入口。前者排列 CSS 语义派生，后者存放不认识 CSS 的基础能力。tokens 组合通用材料，组件业务组合仍留在组件 style 文件。
+
+| 文件 | 职责 |
+| --- | --- |
+| [fnkit/lazy-copy.ts](fnkit/lazy-copy.ts) | 提供默认浅层及可选深层的惰性写时复制。 |
+| [fnkit/derivable-object.ts](fnkit/derivable-object.ts) | 建立完整的可调用对象，对属性使用浅层写时复制并连续派生。 |
+| [core/css-block.ts](core/css-block.ts) | 定义共同对象与构造选项，保存连接，传播激活，安排 CSS 状态的派生。 |
+| [core/derive/css-value.ts](core/derive/css-value.ts) | 将基本文本或数值保存为命名值对象。 |
+| [core/derive/css-variable.ts](core/derive/css-variable.ts) | 保存变量引用、兜底值及既有状态后缀材料；尚不执行浏览器注册。 |
+| [core/derive/css-property.ts](core/derive/css-property.ts) | 保存属性名和值对象，取得值依赖并解析声明。 |
+| [core/derive/css-selector.ts](core/derive/css-selector.ts) | 保存选择器及子级，解析完整样式规则，包括空规则。 |
+| [core/css-root.ts](core/css-root.ts) | 将实际对象接通并向固定 stylesheet 追加完整规则。 |
+| [tokens/base-css.ts](tokens/base-css.ts) | 五个单项 Property 构造，以及组合四个方向的 margin。 |
+| [tokens/css-color-mix.ts](tokens/css-color-mix.ts) | 保存颜色对象与权重，派生时隔离权重集合，最终解析混色。 |
+| [tokens/well-known-css-variables.ts](tokens/well-known-css-variables.ts) | 组合共享颜色及既有状态后缀材料。 |
+
+相邻测试承担对应验证：derivable-object.test.ts 使用中性对象；css-block.test.ts 检查身份、连接及激活；css-property.test.ts、css-value.test.ts 检查语义字段关系；base-css.test.ts 检查基础组合；css-root.browser.test.ts 检查真实浏览器结果。测试不构成额外领域。
+
+---
+
+# 固定根与当前边界
+
+仓库 index.html 静态提供 `<style id="css-root"></style>`。root 是唯一固定对象，不接收外部 stylesheet，自身没有激活生命周期。
+
+root.attach 保存实际对象，激活后调用其 parseCss，再通过 insertRule 追加完整规则。重复传入同一对象会追加多条规则，但共享该对象的激活状态；没有隐式实例化。嵌套结构随外层规则提交。
+
+当前没有规则替换、刷新、撤销及挂载位置管理，不向共享 Block 写入单个 parent 或 index 冒充全部使用关系。活对象 attach 后内部结构和激活已变化，但先前写入的 CSSOM 不会自动变化。
+
+变量全局智能注册仍未实现，既有状态后缀材料不能证明注册需求已经完成。通用派生能力目前只存在于本目录的 fnkit 组织目录，尚未迁入外部 FNKIT。

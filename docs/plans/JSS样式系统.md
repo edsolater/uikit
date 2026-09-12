@@ -1,5 +1,7 @@
 # JSS 样式系统
 
+本文保留旧 `src/jss` 阶段的计划与验收记录。新 `src/style-system` 的当前对象及挂载设计见 [Style System 设计](../../src/style-system/design.md)；下文旧概念与“满足”状态不用于证明新体系已实现。
+
 本 Plan 负责 UIKit 样式的 JSS 化。长期目标是只保留直接服务原始 HTML 的 reset.css；当前实施范围是 JSS 基础体系与 Button，其余组件和静态样式继续分阶段迁移。
 
 ## 目标与原始依据
