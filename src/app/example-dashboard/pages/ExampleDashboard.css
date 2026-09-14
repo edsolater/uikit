@@ -1,3 +1,4 @@
+/* Example 页面的布局与展示容器，不接管组件交互样式。 */
 .example-shell {
   min-block-size: 100svb;
   margin: 0;
@@ -63,21 +64,6 @@
   color: var(--color-fg-soft);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-}
-
-.button-example-state-hover .Button {
-  --Button-border: var(--Button-border-hover);
-  --Button-shadow: var(--Button-shadow-hover);
-  background-color: var(--Button-bg-hover);
-  color: var(--Button-fg-hover);
-}
-
-.button-example-state-active .Button {
-  --Button-border: var(--Button-border-active);
-  --Button-shadow: var(--Button-shadow-active);
-  background-color: var(--Button-bg-active);
-  color: var(--Button-fg-active);
-  transform: translateY(var(--Button-active-offset));
 }
 
 .button-size-stack {

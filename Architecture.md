@@ -4,7 +4,7 @@
 
 # 当前系统组成
 
-正在构建的 `src/style-system` 尚未接管现有 JSS；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
+`src/style-system` 已接管 Button 样式，其他 JSS 消费者未迁移；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
 
 - `src/components/Piv`：基础 DOM 原子。负责消费 class、style、HTML props、事件、ref 与 plugins，不承载具体 kit 的业务语义。
 - `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
@@ -46,14 +46,14 @@ kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果�
 Button 实际执行
   -> registerButtonStyle()
     -> Button.style.ts 中的业务组合
-      -> cssBaseVariable / cssAtom / tokens 对象组合
-        -> mountCssStylesheet() 连接活根
-          -> Box 激活向 declaration / value 传播
-          -> parseCssStylesheet() 最终解析并收集动态依赖
-            -> 激活依赖并更新当前 Document 的 <style>
+      -> 共享 Value、Declaration 与样式片段
+        -> styleRule('.Button')(...) 组成完整规则
+          -> cssRoot.activate(buttonRules)
+            -> Value.onActive 返回附加规则并继续遍历
+              -> 向 style#css-root 永久追加 CSS
 ```
 
-只 import Button 不会挂载 Button stylesheet。组件函数真实执行时才连接 stylesheet 根；相同 `Document`、稳定身份和根复用同一 style，活 Box 追加内容会刷新对应 style。变量注册保留全局默认和状态作用范围，局部覆盖遵从 CSS 层叠。Button 的 selector、tone 和 size 组合属于 Button style 领域。
+只 import Button 不激活。浏览器宿主先提供 style#css-root，组件执行时同步激活共享规则；服务器端跳过注册。相同 Root 按对象身份去重，既有 CSS 不刷新或卸载，状态变化由 selector 与局部变量表达。Button 的 selector、tone 和 size 配方留在 Button.style.ts，通用属性与材料由 Style System 提供。
 
 ## 当前静态 CSS
 
@@ -78,7 +78,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 
 # 领域边界
 
-- 工具的领域发生在工具定义端。Button 使用 `cssAtom` 不会让通用 atom 变成 JSS 内的 Button 子领域，也不会授权 JSS 注册 `buttonFoundation`、`buttonDisabled` 一类业务组合。
+- 工具的领域发生在工具定义端。Button 使用通用属性函数和材料，不会让 Style System 获得 Button 的业务配方；具体组合留在 Button.style.ts。
 - `src/jss` 只提供通用 CSS 表达、组合、解析和挂载能力；具体组件 selector、状态和视觉组合留在组件自己的 style 文件。
 - `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/jss` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。

@@ -2,33 +2,29 @@
 
 /** 验证 Button 的公开行为、DOM 描述与样式挂载。 */
 import { render } from 'solid-js/web'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
-import { cssAtom } from '../../../jss'
 import { Button } from './Button'
-import { buttonStyleUrl } from './Button.style'
+import { cssRoot } from '../../../style-system/core'
+import { buttonRules } from './Button.style'
 
 let dispose: (() => void) | undefined
-const buttonStyleSelector = 'style[data-uikit-css="' + buttonStyleUrl + '"]'
+
+// DOM 行为留在 jsdom，CSSOM 的实际注册由相邻浏览器用例验证。
+beforeEach(() => {
+  vi.spyOn(cssRoot, 'activate').mockReturnValue(cssRoot)
+})
 
 afterEach(() => {
   dispose?.()
   dispose = undefined
   vi.restoreAllMocks()
   document.body.replaceChildren()
-  document.head.querySelectorAll(buttonStyleSelector).forEach((element) => element.remove())
 })
 
 describe('Button', () => {
-  test('组件样式不向通用 atoms 注册 Button 业务 blocks', () => {
-    expect(cssAtom.buttonFoundation).toBeUndefined()
-    expect(cssAtom.buttonDisabled).toBeUndefined()
-    expect(cssAtom.buttonTone).toBeUndefined()
-  })
-
-  test('同一 Document 中的多个 Button 只插入一次组件样式', () => {
+  test('首次 ref 回调前开始激活，多实例复用同一份规则', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    const append = vi.spyOn(document.head, 'append')
     const ref = vi.fn()
 
     dispose = render(
@@ -42,16 +38,11 @@ describe('Button', () => {
       host,
     )
 
-    expect(document.head.querySelectorAll(buttonStyleSelector)).toHaveLength(1)
-    expect(append).toHaveBeenCalled()
+    expect(cssRoot.activate).toHaveBeenCalledTimes(3)
+    expect(cssRoot.activate).toHaveBeenCalledWith(buttonRules)
     expect(ref).toHaveBeenCalledOnce()
-    expect(append.mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
-    expect(append.mock.invocationCallOrder.at(-1)).toBeLessThan(ref.mock.invocationCallOrder[0])
+    expect(vi.mocked(cssRoot.activate).mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
     expect(ref).toHaveBeenCalledWith(host.firstElementChild)
-    const cssText = document.head.querySelector(buttonStyleSelector)?.textContent
-    expect(cssText).toContain(".Button[data-size='small']")
-    expect(cssText).toContain('var(--bg)')
-    expect(cssText).not.toContain('[object Object]')
   })
 
   test('把自身的 onClick 动作翻译成底层 click 事件', () => {

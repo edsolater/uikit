@@ -73,6 +73,8 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 ## 边界
 
+浏览器宿主须在渲染 Button 前提供 `<style id="css-root"></style>`。Button 首次执行时激活共享规则，多实例不重复插入；只 import 和服务器端渲染不注册 CSS。该节点在页面生命周期内保留，卸载组件不移除样式。样式组合与变量覆盖见 [Style System 架构](../../src/style-system/architecture.md#button-接入)。
+
 - Button 不内建 validator、validIf 或 enabled 判断协议。
 - Button 不提供 href、target 或导航语义。
 - Button 不提供 icon props；图标属于 children。

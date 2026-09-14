@@ -1,5 +1,5 @@
 /** 媒体条件下生效的 CSS 规则。 */
-import type { Block, Rule } from '../css-block'
+import { flattenContent, type Block, type Content, type Rule } from '../css-block'
 import type { RenderContext } from '../css-value'
 
 export interface Media extends Block {
@@ -8,11 +8,14 @@ export interface Media extends Block {
   readonly body: readonly Rule[]
 }
 
-export function media(condition: string, body: readonly Rule[]): Media {
+/** 媒体条件分支；浏览器只在条件满足时应用内部规则。 */
+export function media(condition: string, ...body: Content<Rule>[]): Media {
   return {
-    kind: 'media', condition, body: [...body],
+    kind: 'media',
+    condition,
+    body: flattenContent<Rule>(body),
     parseCss(context?: RenderContext) {
-      return `@media ${this.condition} { ${this.body.map(rule => rule.parseCss(context)).join('\n')} }`
+      return `@media ${this.condition} { ${this.body.map((rule) => rule.parseCss(context)).join('\n')} }`
     },
   }
 }

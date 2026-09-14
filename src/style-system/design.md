@@ -1,4 +1,4 @@
-本文保存 Style System 对象模型、激活过程和浏览器提交边界的设计裁决。采用 Key、Value、Declaration、Block、Root 五个 CSS 角色；deriveable 只是对象派生手段。五角色核心已实现，当前代码事实由 [architecture.md](architecture.md) 负责，未裁决扩展留在本文。
+本文保存 Style System 对象模型、组合方式、激活过程和浏览器提交边界的设计裁决。采用 Key、Value、Declaration、Block、Root 五个 CSS 角色；deriveable 只是对象派生手段。本轮已批准递归片段、选择器分步调用和结构化属性入口，并先迁移 Button；实际实现状态由 [architecture.md](architecture.md) 负责。
 
 # 设计裁决
 
@@ -16,19 +16,43 @@ CSS 对象按以下职责分开：
 
 五个角色不能互相代替。Key 和 Value 不预先绑定；Declaration 建立声明关系；具体 Block 在构造时确定内部节点的位置；Root 不拥有 CSS 语法。用于组织资料的对象、数组和普通函数仍然只是 JavaScript 手段，不增加 CSS 角色。
 
+Core 与 Tokens 各有自己的 index.ts，分别向 Style System 外部公开核心能力和通用样式材料。Button 等外部使用方通过入口导入；Style System 内部直接引用具体文件，Tokens 使用 Core 也不经过 index。入口只承担导出，不承载业务或注册。
+
+Tokens 通过 `values`、`properties`、`variables` 和 `selectors` 命名空间公开共享取值、属性操作、变量接口和选择条件。前三个入口分别由 values、css-properties、css-variables 的 index.ts 汇总，selectors 直接来自同名文件；内部引用仍指向具体文件。样式上下文中不重复 CSS 前缀，公共变量成员也不带 component 前缀。组件不重新声明一套带组件名称的变量；共享变量的公共 fallback 与组件取值定义分开。
+
+CSS Variable 的三个动作是声明、定义、使用：Tokens 调用 variable(name, options) 声明公共变量；组件调用 `variables.paddingY(value)` 定义它在当前规则中的取值，得到 Declaration；变量本身作为 Value 输入时自动坍缩为 var(...)。调用不修改变量对象或 fallback，不立即注册 CSS；定义进入 Root 的渲染路径时，变量及输入 Value 参与激活。可选 @property 注册与作用域内赋值不是同一件事。
+
+两个规则可以定义同一个公共变量的不同取值；直接传入该变量时仍是引用。JS 成员名与 CSS 自定义属性名独立，`variables.paddingY` 仍对应 `--component-padding-y`。
+
+`values.space` 提供固定间距尺度；`variables.space` 保留可通过 CSS 覆盖的间距阶梯，其默认值取自前者。选择固定值还是可覆盖的引用由使用方决定，不因命名空间调整而移除原有样式接口。
+
+```ts
+import { styleRule } from '../../../style-system/core'
+import { properties, variables, values } from '../../../style-system/tokens'
+
+const button = styleRule('.Button')(
+  variables.paddingY(values.space.normal),
+  properties.padding(variables.paddingY),
+)
+const input = styleRule('.Input')(
+  variables.paddingY(values.space.small),
+  properties.padding(variables.paddingY),
+)
+```
+
 ---
 
 # Key
 
 Key 是普通对象。构造时只确定 CSS 属性名，不接收 Value，也不产生 Declaration。
 
-    const color = key('color')
+    const colorKey = key('color')
 
 Key 对外使用 name 保存 CSS 属性名，key 的 const generic 保留该名称的字面量类型：
 
-    color.name // 'color'
+    colorKey.name // 'color'
 
-key(name) 返回对象，不使用 Brand，也不把 Key 压成不可扩展的字符串。对象身份为未来关联 Key 留出承载位置，例如 font.family、font.size；当前只确认这种扩展方向，不预先定义 shorthand 的展开、重置或约束规则。
+key(name) 返回对象，不使用 Brand，也不把 Key 压成不可扩展的字符串。对象身份为未来关联 Key 留出承载位置；当前不引入子 Key 协议。简写属性的参数语义由属性函数负责，不由 Key 承担。
 
 Key 不激活，不承担值内容，也不生成冒号和分号。
 
@@ -47,6 +71,12 @@ Value 承担能够进入 CSS 的内容。相同 Value 可以被不同 Key 和不
 
 Value 不直接调用全局 Root，也不自行插入 CSS。Root 接收返回值，并把它加入当前激活过程。当前只采用“返回可选 Block”这一种入口；向回调传入 attachRoot、attachRule 等方法属于以后另行裁决的扩展。
 
+具体数值、长度、颜色等内容先提取为可引用的 Value；属性关键字可直接传入字符串，由入口自动包装。不维护全局关键字或各属性的合法值名单，CSS 合法性由浏览器判断。复合 Value 保留子 Value 的实际引用，输出时逐项通过 parseValue 传递激活上下文，不在定义时拼成字符串。
+
+值的提供方与使用方分开：同一个空间尺度可以用于 padding、margin 或边框宽度，不按使用属性复制一份值。单位表达数值的量纲，空间尺度、圆角半径等设计含义则由材料自身表达；相同单位或数值不意味着必须合并不同设计含义。
+
+CSS Variable 是对外暴露的样式接口，不只是 JavaScript 常量的另一种命名。已有覆盖入口要保留，不以当前是否有调用方覆盖为删除依据；局部 Value 与公开 CSS Variable 可以同时存在，变量的默认值仍可引用共享材料。
+
 ---
 
 # Declaration
@@ -56,8 +86,8 @@ Declaration 是独立语法节点，不是 Block。Key + Value = Declaration；D
 常用属性可以显式定义 Key，再用普通函数提供便捷入口：
 
     const colorKey = key('color')
-    const color = (value: Value): Declaration<'color'> => declaration(colorKey, value)
-    const colorDeclaration = color(value('blue'))
+    const color = (input: Value | string): Declaration<'color'> => declaration(colorKey, toValue(input))
+    const colorDeclaration = color('blue')
     colorKey.name // 'color'
     colorDeclaration.key === colorKey // true
 
@@ -65,11 +95,47 @@ Declaration 是独立语法节点，不是 Block。Key + Value = Declaration；D
 
 Declaration 自己不激活，也没有 onActive。Root 沿规则坍缩经过 Declaration 时，Declaration 继续经过它包含的 Value；激活上下文由这条实际渲染路径传递，不另行登记值依赖。
 
+## 属性参数
+
+默认使用位置参数。各部分容易凭用途区分时，不为它们增加对象字段；只有角色容易混淆、或存在需要明确归属的特殊分隔关系时，才用非位置参数消除歧义。padding 的一至四个位置参数采用 CSS 原有顺序，也可显式指定方向：
+
+```ts
+padding(space)
+padding(vertical, horizontal)
+padding(top, horizontal, bottom)
+padding(top, right, bottom, left)
+padding({ top, right, bottom, left })
+```
+
+padding 对象形式只输出给出的方向，不为缺省方向补值或重置；位置形式输出完整 shorthand。border 的宽度、线型和颜色可以自然区分，直接用参数组成空格分隔的值，保留输入顺序，不识别或重排内容。font 的字号与行高可能使用相同单位，并通过 `/` 关联，用对象字段明确归属：
+
+```ts
+border(distance, 'solid', lineColor)
+border('solid', lineColor, distance)
+font({ size: fontSize, lineHeight, family: fontFamily })
+```
+
+位置参数或对象字段承载内容，属性函数承担 CSS 排列和分隔格式。判断依据是歧义，不是参数数量、是否混合类型或是否属于简写属性；也不建立通用的 CSS 类型识别器。不是将整个 border 或 font 包装为一个原始字符串，不新增 DeclarationCreator，不提前穷举 CSS。
+
 ---
 
 # Block
 
-Block 是声明式 CSS 组织体。内容在构造 Value、Declaration 和具体 Block 时已经确定；Block 负责这些内容之间的格式、层次，以及内部节点进入 body 的具体语法位置。构造器复制传入的 body 列表，对外提供 readonly body；后续修改来源数组不改变已定义结构。
+Block 是声明式 CSS 组织体。内容在构造 Value、Declaration 和具体 Block 时已经确定；Block 负责这些内容之间的格式、层次，以及内部节点进入 body 的具体语法位置。内容入口接受单个节点和任意深度的有限集合；构造时按顺序展开集合，公开 readonly body，保留节点引用。后续修改来源数组不改变已定义结构。
+
+数组嵌套只有 JavaScript 组织意义，不产生花括号，也不改变 CSS 归属。`a, b`、`[a, b]`、`[[a], [[b]]]` 输出相同；展开只穿过集合，不能拆掉具体 Block。调用方不需要知道片段是一个节点还是集合，不负责使用 spread。
+
+## 选择条件与内容分开
+
+styleRule 分两次调用：第一次绑定 selector，第二次通过 rest parameter 接收内容。部分应用后的普通函数可复用，但还不是完整 Rule；每次调用生成独立规则，不累计内容。
+
+```ts
+const hover = styleRule('&:hover')
+const button = styleRule('.Button')
+const buttonRules = button(layout, appearance, hover(hoverAppearance))
+```
+
+相对 selector 的 `&` 由最终 CSS 上下文解释，不由数组层数解释。其他具体 Block 同样允许其合法节点的递归集合；本轮只将 StyleRule 改为分步调用，不强制其他 header 采用同一函数形式。
 
 不同 Block 对应不同 CSS 组织方式：
 
@@ -95,7 +161,7 @@ activate 代替 attach。这次调用不是建立可撤销的父子关系，而�
 
 Root 在一次同步 JavaScript 调用中完成：
 
-1. 接收入口顶层 Rule 或 Rule 数组；
+1. 接收入口顶层 Rule 及其任意深度的有限集合；
 2. 沿 Block、Declaration 的实际坍缩路径访问其中的 Value；
 3. 第一次遇到 Value 时同步执行 onActive；
 4. 把 onActive 返回的 Block 纳入 Root，并继续激活该分支；
@@ -138,18 +204,30 @@ Key 是普通对象；属性便捷入口是普通 JavaScript 函数；Declaratio
 - 活 Block 新增连接后继续传播激活；
 - 修改已注册对象后刷新、替换或撤销既有 CSSOM。
 
-替代后的实际运行链见 [architecture.md](architecture.md)。旧 JSS 及组件迁移不属于本轮范围。
+替代后的实际运行链见 [architecture.md](architecture.md)。本轮只迁移 Button 及其所需的通用材料，旧 JSS 的其他消费者与其他组件不迁移。
+
+---
+
+# Button 迁移
+
+Button.style.ts 从 Tokens 取得公共变量和值，通过调用公共变量定义尺寸、圆角、字重和语气分支的取值，再由 `styleRule('.Button')(...)` 连接属性与交互。共享选择条件、属性函数和公共材料属于 Style System，Button 的业务组合留在组件目录。不在 Button 内调用 variable 或 value 重新制造材料，不按语句机械拆文件。
+
+保留现有 default、bare、solid、accent、danger、三档尺寸、loading、disabled、焦点、hover 和 active 的视觉能力与 CSS Variable 覆盖入口。状态分支显式组成规则，不恢复旧 JSS 的智能状态派生。运行中的连续变化通过 DOM style 赋变量，不更新已注册 CSS。
+
+原组件专属 --button-* 名称改为共享的 --component-*，语气使用 --component-tone-*；覆盖能力保留，不为旧名称新增兼容转发。
+
+模块加载只构建共享规则；Button 实际执行时沿 registerButtonStyle 调用 cssRoot.activate。服务器端不注册；浏览器宿主须先提供 style#css-root。Example 已有该节点，其余本仓库的 Button 宿主同步补齐。Root 不因这次迁移增加自动创建节点、卸载或重建机制。
 
 ---
 
 # 未决问题
 
-- Key 的关联子 Key 写法，以及 shorthand 的真实语义；
+- Key 的关联子 Key 写法，以及尚未使用的 shorthand 扩展；
 - Root 对同名但内容不同的全局注册如何报告冲突；
-- 上级通过什么现役生命周期入口授予 Root 存活权限；
+- Button 之外的上级通过什么生命周期入口授予 Root 存活权限；
 - 除单个返回 Block 外，onActive 是否需要多个结果或 Root 操作上下文。
 
-这些扩展在实际需要时继续裁决；本轮不推断 shorthand，不按名称去重，也不替组件确定存活入口。
+这些扩展在实际需要时继续裁决；不按名称去重，不将 Button 的接入方式推广为其他组件的既定生命周期。
 
 ---
 
@@ -164,3 +242,5 @@ Key 是普通对象；属性便捷入口是普通 JavaScript 函数；Declaratio
 - 完整顶层 Block 在最终边界坍缩为合法 CSS Rule，Root 不承担具体 CSS 语法；
 - 重复引用同一 Value 或 Block 不会重复执行 onActive 或重复注册；
 - 当前实现完成迁移后，architecture.md 与真实代码一致，浏览器测试验证 Keyframes、@property 和普通 Style Rule 的实际结果。
+- 递归集合保持顺序、节点引用和 CSS 层次，复用 selector 不累计内容；复合属性的子 Value 继续参与同一激活波。
+- Button 的真实渲染验证既有尺寸、变体、语气、交互、局部变量覆盖和重复挂载；测试集中在组合与挂载关节，不给每个属性或业务片段机械配套测试。

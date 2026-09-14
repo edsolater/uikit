@@ -1,5 +1,5 @@
 /** 动画关键帧及其时间位置。 */
-import type { Block } from '../css-block'
+import { flattenContent, type Block, type Content } from '../css-block'
 import type { Declaration } from '../css-declaration'
 import { parseValue, type RenderContext, type Value } from '../css-value'
 
@@ -17,20 +17,26 @@ export interface Frame extends Block {
   readonly body: readonly Declaration[]
 }
 
-export function keyframes(name: Value, body: readonly Frame[]): Keyframes {
+/** 按动画名组织各时间点的样式；名称 Value 也沿渲染路径参与激活。 */
+export function keyframes(name: Value, ...body: Content<Frame>[]): Keyframes {
   return {
-    kind: 'keyframes', name, body: [...body],
+    kind: 'keyframes',
+    name,
+    body: flattenContent<Frame>(body),
     parseCss(context?: RenderContext) {
-      return `@keyframes ${parseValue(this.name, context)} { ${this.body.map(frame => frame.parseCss(context)).join('\n')} }`
+      return `@keyframes ${parseValue(this.name, context)} { ${this.body.map((frame) => frame.parseCss(context)).join('\n')} }`
     },
   }
 }
 
-export function frame(position: string, body: readonly Declaration[]): Frame {
+/** 动画在指定时间点的样式；position 可写 from、to 或百分比列表。 */
+export function frame(position: string, ...body: Content<Declaration>[]): Frame {
   return {
-    kind: 'frame', position, body: [...body],
+    kind: 'frame',
+    position,
+    body: flattenContent<Declaration>(body),
     parseCss(context?: RenderContext) {
-      return `${this.position} { ${this.body.map(declaration => declaration.parseCss(context)).join('\n')} }`
+      return `${this.position} { ${this.body.map((declaration) => declaration.parseCss(context)).join('\n')} }`
     },
   }
 }

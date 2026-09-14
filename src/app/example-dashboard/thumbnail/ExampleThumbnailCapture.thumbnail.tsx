@@ -1,7 +1,8 @@
+/** 在固定样式宿主中渲染各个 Example 并生成缩略图。 */
 import { page, userEvent } from 'vitest/browser'
 import type { Component } from 'solid-js'
 import { render } from 'solid-js/web'
-import { afterEach, test } from 'vitest'
+import { afterAll, afterEach, beforeAll, test } from 'vitest'
 import '../../../css/all-base.css'
 import '../pages/ExampleDashboard.css'
 import { ButtonExample } from '../../../components/kits/Button/Button.example'
@@ -18,6 +19,10 @@ import { UseDocumentTitleExample } from '../../../hooks/useDocumentTitle/useDocu
 import './ExampleThumbnailCapture.css'
 
 let dispose: (() => void) | undefined
+const style = document.createElement('style')
+style.id = 'css-root'
+beforeAll(() => { document.head.append(style) })
+afterAll(() => { style.remove() })
 
 const waitForLayout = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
 

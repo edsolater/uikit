@@ -19,10 +19,17 @@ export interface Value {
  * @example
  * const fadeName = value('fade', { onActive: () => fadeRules })
  */
-export function value(raw: string | number, options?: Pick<Value, 'onActive'>): Value & { readonly raw: string | number } {
+export function value(
+  raw: string | number,
+  options?: Pick<Value, 'onActive'>,
+): Value & { readonly raw: string | number } {
   return {
-    kind: 'value', raw, onActive: options?.onActive,
-    parseCss() { return String(this.raw) },
+    kind: 'value',
+    raw,
+    onActive: options?.onActive,
+    parseCss() {
+      return String(this.raw)
+    },
   }
 }
 
@@ -34,4 +41,20 @@ export function value(raw: string | number, options?: Pick<Value, 'onActive'>): 
 export function parseValue(value: Value, context?: RenderContext): string {
   context?.activateValue(value)
   return value.parseCss(context)
+}
+
+/** 字符串原样包装；已有 Value 保留原引用。 */
+export function toValue(input: Value | string): Value {
+  return typeof input === 'string' ? value(input) : input
+}
+
+/** 分隔符属于语法，子值直到渲染时才解析。 */
+export function joinValues(separator: string, ...parts: (Value | string)[]): Value {
+  const values = parts.map(toValue)
+  return {
+    kind: 'value',
+    parseCss(context) {
+      return values.map((item) => parseValue(item, context)).join(separator)
+    },
+  }
 }

@@ -13,19 +13,19 @@ export function ButtonExample() {
         <span>Component</span>
         <h2>Button</h2>
       </div>
-      <p>按钮只表达视觉形态、动作语气和交互尺寸，不承载导航语义。</p>
+      <p>按钮只表达视觉形态、动作语气和交互尺寸，不承载导航语义。悬停或按住按钮体验真实交互状态。</p>
 
       <div class="button-example-grid">
         <div class="button-example-head">类型</div>
         <div class="button-example-head">默认</div>
-        <div class="button-example-head">悬停</div>
-        <div class="button-example-head">按下</div>
+        <div class="button-example-head">悬停体验</div>
+        <div class="button-example-head">按下体验</div>
         <div class="button-example-head">流程</div>
 
         <div class="button-example-label">普通</div>
         <div><Button>Default</Button></div>
-        <div class="button-example-state-hover"><Button>Default</Button></div>
-        <div class="button-example-state-active"><Button>Default</Button></div>
+        <div><Button>Default</Button></div>
+        <div><Button>Default</Button></div>
         <div class="button-row">
           <Button loading>Loading</Button>
           <Button disabled>Disabled</Button>
@@ -33,8 +33,8 @@ export function ButtonExample() {
 
         <div class="button-example-label">主操作</div>
         <div><Button solid>Solid</Button></div>
-        <div class="button-example-state-hover"><Button solid>Solid</Button></div>
-        <div class="button-example-state-active"><Button solid>Solid</Button></div>
+        <div><Button solid>Solid</Button></div>
+        <div><Button solid>Solid</Button></div>
         <div class="button-row">
           <Button solid loading>Loading</Button>
           <Button solid disabled>Disabled</Button>
@@ -42,8 +42,8 @@ export function ButtonExample() {
 
         <div class="button-example-label">推荐</div>
         <div><Button accent solid>Accent</Button></div>
-        <div class="button-example-state-hover"><Button accent solid>Accent</Button></div>
-        <div class="button-example-state-active"><Button accent solid>Accent</Button></div>
+        <div><Button accent solid>Accent</Button></div>
+        <div><Button accent solid>Accent</Button></div>
         <div class="button-row">
           <Button accent solid loading>Loading</Button>
           <Button accent solid disabled>Disabled</Button>
@@ -51,8 +51,8 @@ export function ButtonExample() {
 
         <div class="button-example-label">危险</div>
         <div><Button danger solid>Danger</Button></div>
-        <div class="button-example-state-hover"><Button danger solid>Danger</Button></div>
-        <div class="button-example-state-active"><Button danger solid>Danger</Button></div>
+        <div><Button danger solid>Danger</Button></div>
+        <div><Button danger solid>Danger</Button></div>
         <div class="button-row">
           <Button danger solid loading>Loading</Button>
           <Button danger solid disabled>Disabled</Button>
@@ -60,8 +60,8 @@ export function ButtonExample() {
 
         <div class="button-example-label">退场</div>
         <div><Button bare>Bare</Button></div>
-        <div class="button-example-state-hover"><Button bare>Bare</Button></div>
-        <div class="button-example-state-active"><Button bare>Bare</Button></div>
+        <div><Button bare>Bare</Button></div>
+        <div><Button bare>Bare</Button></div>
         <div class="button-row">
           <Button bare loading>Loading</Button>
           <Button bare disabled>Disabled</Button>
