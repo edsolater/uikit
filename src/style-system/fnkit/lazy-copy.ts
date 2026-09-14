@@ -1,13 +1,13 @@
 /** 为指定层数内的对象提供首次写入才浅复制的代理。 */
 import { isObjectLike } from '@edsolater/fnkit'
 
-/** 指定写时复制覆盖的对象层数。 */
 export interface LazyCopyOptions {
   /** 默认 0 只隔离自身；1 包含直接属性对象，Infinity 包含所有层。 */
   depth?: number
 }
 
-/** 返回惰性副本；非引用值直接返回，每个对象只在首次写入时浅复制。
+/**
+ * 首次写入前仍读取来源；写入后只修改副本。非引用值原样返回。
  * @example
  * const source = { items: [1] }
  * const next = lazyCopy(source, { depth: 1 })
@@ -41,27 +41,21 @@ export function lazyCopy<T>(source: T, options?: LazyCopyOptions): T {
         const result = Reflect.get(current, key, receiver)
         return depth > 0 ? copy(result, depth - 1) : result
       },
-      /** 首次赋值前取得浅副本。 */
       set(_, key, next) {
         return Reflect.set(writable(), key, next)
       },
-      /** 首次删除前取得浅副本。 */
       deleteProperty(_, key) {
         return Reflect.deleteProperty(writable(), key)
       },
-      /** 首次定义属性前取得浅副本。 */
       defineProperty(_, key, descriptor) {
         return Reflect.defineProperty(writable(), key, descriptor)
       },
-      /** 查询当前来源或副本中的属性。 */
       has(_, key) {
         return Reflect.has(current, key)
       },
-      /** 枚举当前来源或副本中的属性。 */
       ownKeys() {
         return Reflect.ownKeys(current)
       },
-      /** 取得当前来源或副本中的属性描述符。 */
       getOwnPropertyDescriptor(_, key) {
         const descriptor = Reflect.getOwnPropertyDescriptor(current, key)
         if (!descriptor) return undefined
@@ -72,7 +66,6 @@ export function lazyCopy<T>(source: T, options?: LazyCopyOptions): T {
         }
       },
       ...(typeof value === 'function' ? {
-        /** 保持可调用对象的调用行为。 */
         apply(_, receiver, args) {
           return Reflect.apply(value, receiver, args)
         },

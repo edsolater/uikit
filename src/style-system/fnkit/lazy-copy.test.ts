@@ -67,7 +67,6 @@ test('数组方法在对应深度首次写入时复制数组', () => {
 })
 
 test('可调用对象保持调用及属性写时复制', () => {
-  /** 返回参数。 */
   function identity(value: number) { return value }
   const source = Object.assign(identity, { items: [1] })
   const next = lazyCopy(source, { depth: 1 })

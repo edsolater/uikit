@@ -1,28 +1,45 @@
-/** 将实际 Block 对象接通并写入固定的 #css-root 样式节点。 */
-import type { Block } from './css-block'
+/** 同步激活 CSS，并永久追加到 style#css-root。 */
+import type { Rule } from './css-block'
+import type { RenderContext, Value } from './css-value'
 
-/** 唯一 stylesheet 挂载节点，自身没有激活生命周期。 */
-export interface Root {
-  children: Block[]
-  /** 直接挂载输入对象，不创建另一份对象。 */
-  attach(...blocks: Block[]): Root
-}
+/** 每个实例独立去重：同一 Value 只激活一次，同一 Rule 只插入一次。 */
+export class Root {
+  private readonly activatedValues = new WeakMap<Value, Rule | void>()
+  private readonly registeredRules = new WeakSet<Rule>()
 
-/** 固定根保存实际对象，多处使用不向对象反复覆盖单个 parent 或 index。 */
-export const root: Root = {
-  children: [],
-  /** 接通并追加完整规则，固定 style#css-root 必须已存在。
+  /**
+   * 调用前须有可用的 style#css-root；本次调用内完成激活及规则追加。
+   * 插入失败会抛错，已插入的规则保留；再次调用可补齐失败规则。
    * @example
-   * root.attach(selector('.button').attach(property('color', value('blue'))))
+   * cssRoot.activate(styleRule('.button', [declaration(key('color'), value('blue'))]))
    */
-  attach(...blocks) {
-    for (const child of blocks) {
-      const stylesheet = document.querySelector<HTMLStyleElement>('style#css-root')?.sheet
-      if (!stylesheet) throw new Error('缺少样式挂载节点：<style id="css-root"></style>')
-      child.activate()
-      stylesheet.insertRule(child.parseCss(), stylesheet.cssRules.length)
-      this.children.push(child)
+  activate(rules: Rule | readonly Rule[]): this {
+    const stylesheet = typeof document === 'undefined'
+      ? undefined
+      : document.querySelector<HTMLStyleElement>('style#css-root')?.sheet
+    if (!stylesheet) throw new Error('缺少样式挂载节点：<style id="css-root"></style>')
+
+    const pendingRules = new Set<Rule>(Array.isArray(rules) ? rules : [rules as Rule])
+    const renderedRules = new Map<Rule, string>()
+    const context: RenderContext = {
+      activateValue: value => {
+        if (!this.activatedValues.has(value)) this.activatedValues.set(value, value.onActive?.())
+        const registration = this.activatedValues.get(value)
+        if (registration) pendingRules.add(registration)
+      },
+    }
+
+    for (const rule of pendingRules) {
+      // 已插入的规则也要遍历，才能重试上次插入失败的依赖。
+      const css = rule.parseCss(context)
+      if (!this.registeredRules.has(rule)) renderedRules.set(rule, css)
+    }
+    for (const [rule, css] of renderedRules) {
+      stylesheet.insertRule(css, stylesheet.cssRules.length)
+      this.registeredRules.add(rule)
     }
     return this
-  },
+  }
 }
+
+export const cssRoot = new Root()

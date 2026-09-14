@@ -47,7 +47,6 @@ test('保持函数能力，方法以当前对象作为 this', () => {
   const original = deriveable({
     name: 'first',
     items: [1],
-    /** 向当前对象加入一项。 */
     append(this: { items: number[] }, item: number) {
       this.items.push(item)
     },

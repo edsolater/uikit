@@ -1,35 +1,27 @@
-/** 组合组件共享的默认颜色及状态颜色定义。 */
-import { registerVariable, variable } from '../core/derive/css-variable';
-import { colorMix } from './css-color-mix';
+/** 默认、悬停和按下状态的共享颜色变量。 */
+import { variable } from '../core/css-variable'
+import type { Value } from '../core/css-value'
+import { colorMix } from './css-color-mix'
 
-/** 代表 任意组件 的 表面颜色（纯粹印象的主体色） */
+/** 用 '*' 注册且不设初值，让未赋值的变量仍能使用 fallback。 */
+function inheritedVariable(name: string, fallback: Value) {
+  return variable(name, { fallback, registration: { syntax: '*', inherits: true } })
+}
 
-export const surfaceColor = registerVariable({
-  type: 'color',
-  name: 'surface-color',
-  value: {
-    default: variable('dye-neutral-1'),
-    hover: variable('dye-neutral-2'),
-    active: variable('dye-neutral-3'),
+export const surfaceColor = Object.assign(inheritedVariable('surface-color', variable('dye-neutral-1')), {
+  hover: inheritedVariable('surface-color-hover', variable('dye-neutral-2')),
+  active: inheritedVariable('surface-color-active', variable('dye-neutral-3')),
+})
+
+export const bgColor = Object.assign(
+  inheritedVariable('bg', colorMix([surfaceColor, 0.82], variable('color-accent-soft'))),
+  {
+    hover: inheritedVariable('bg-hover', colorMix([surfaceColor.hover, 0.72], variable('color-accent-soft'))),
+    active: inheritedVariable('bg-active', colorMix([surfaceColor.active, 0.62], variable('color-accent-soft'))),
   },
-});
+)
 
-export const bgColor = registerVariable({
-  type: 'color',
-  name: 'bg',
-  value: {
-    default: colorMix([variable('surface-color'), 0.82], variable('color-accent-soft')),
-    hover: colorMix([variable('surface-color-hover'), 0.72], variable('color-accent-soft')),
-    active: colorMix([variable('surface-color-active'), 0.62], variable('color-accent-soft')),
-  },
-});
-
-export const fgColor = registerVariable({
-  type: 'color',
-  name: 'fg',
-  value: {
-    default: variable('color-fg'), // TODO: 这里还不对，需要确认用什么颜色,但此时修改 api
-    hover: variable('color-fg-strong'),
-    active: variable('color-fg-strong'),
-  },
-});
+export const fgColor = Object.assign(inheritedVariable('fg', variable('color-fg')), {
+  hover: inheritedVariable('fg-hover', variable('color-fg-strong')),
+  active: inheritedVariable('fg-active', variable('color-fg-strong')),
+})

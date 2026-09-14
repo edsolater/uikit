@@ -1,158 +1,166 @@
-本文记录 Style System 可调用 Block 的设计裁决。可调用对象、业务显式派生、对象连接、激活传播及最终解析已实现；当前代码职责见 [architecture.md](architecture.md)。规则更新、撤销及完整智能变量注册仍不在本次实现范围内。
+本文保存 Style System 对象模型、激活过程和浏览器提交边界的设计裁决。采用 Key、Value、Declaration、Block、Root 五个 CSS 角色；deriveable 只是对象派生手段。五角色核心已实现，当前代码事实由 [architecture.md](architecture.md) 负责，未裁决扩展留在本文。
 
-# 目标与对象模型
+# 设计裁决
 
-样式先原子化成有名称、可追踪的材料，再组合成组件样式。使用者可以检查积木及其连接，不必从大量原始 CSS 文本中重建关系。即使只是 `2px`，也应当能定义为命名的 Value；相同文本不意味着相同语义。
+Stylesheet 中的 CSS 定义一旦注册便永久存在，只允许继续增加，不修改或卸载既有规则。运行中的视觉变化交给浏览器：伪类、class、data attribute 和条件规则负责状态选择，元素上的 CSS Variable 由 DOM style 更新；Style System 不为这些变化重写 Stylesheet。
 
-Block 是对象，不是包着字符串的生成器。Value、Property、Selector 是 Block 的语义派生，Variable 是 Value 的语义派生。分类由构造工具提供，业务不额外填写；不因分类不同建立多套组合和激活机制。
+CSS 对象按以下职责分开：
 
-所有 Block 使用同一种可调用对象模型：
-
-| 写法 | 含义 |
+| 对象 | 职责 |
 | --- | --- |
-| `x` | 直接引用现有对象，使用其身份与状态。 |
-| `x()` | 以 x 当前的内容和组合为模板，派生新的独立对象。 |
-| `x.attach(y)` | 把 y 连接到 x，修改 x，返回 x 本身。 |
-| `x().attach(y)` | 派生后再连接；修改并返回新对象。 |
+| Key | 表示可命名、可检索的 CSS 属性身份。 |
+| Value | 承担 CSS 内容；只有 Value 能在激活波经过时执行 onActive。 |
+| Declaration | 保存 Key 与 Value 的声明关系，负责冒号和分号，是独立语法节点。 |
+| Block | 承担具体规则格式、层次，以及定义时已经声明的 body 和内部节点位置。 |
+| Root | 在取得存活权限后同步激活整份定义，接纳新增 Block，坍缩并注册 CSS。 |
 
-调用不是“取得对象的使用资格”。x 已经是对象，也有 attach 等能力；括号明确表达派生动作。派生结果同样可调用，可以继续派生，不回到最初定义重新创建。
-
-不再把对象强分为 Factory 与 Instance 两种业务身份，也不要求每个派生有 SelectorFactory、ValueFactory 等类型。本次实现移除 BlockInstance 与 create 入口，直接调用对象表达派生，不增加同义别名。
-
----
-
-# 业务端决定是否派生
-
-所有 Block 及其 Value、Variable、Property、Selector 等语义派生都具备可调用派生能力，但是否使用由业务决定。需要独立掌控本次内容、连接或生命周期状态时，才显式派生；不能把“能够派生”解释成“使用前必须派生”。
-
-唯一使用的 Selector 可以直接组合、挂载。复用也不必然需要派生：没有需要隔离的状态，或业务本来就要共享状态时，直接使用同一个对象即可。往后连接了节点意味着需要审视状态归属，不意味着底层必须自动派生。不按类型、复用次数或是否存在后续节点强制决定。
-
-Value、Variable 作为共享材料使用时，通常直接引用，不必为了进入组合再调用一次。共享不是“不允许有激活能力”：变量可以有依赖及一次性注册行为，这些状态本来需要共享时也不必复制。不按 kind 强制决定是否派生。
-
-以下为当前用法：
-
-```ts
-const thin = value('2px')
-const border = property('border-width', thin)
-const base = selector('.button')
-
-const style = base.attach(border)
-root.attach(style)
-```
-
-这里 base 只组织这一份样式，border 也没有另一路需要隔离的使用，因此都直接使用。thin 是命名的值对象，不是散落的裸字符串。attach 返回自身，所以 style 就是 base，也是实际挂载的对象。
-
-如果同一份材料需要用于彼此独立的组合，则由使用方明确选择派生哪些对象：
-
-```ts
-const sharedBase = selector('.button')
-const firstStyle = sharedBase().attach(border())
-const secondStyle = sharedBase().attach(border())
-```
-
-这里两次调用 sharedBase 建立独立连接状态；若属性对象的本次使用状态也需要隔离，就调用 border，而其直接持有的 thin 在读取时取得惰性副本。若属性无需隔离，两处直接 attach(border) 也成立。派生依据是状态归属，不是为了让写法一致。
-
-`base.attach(border)` 与 `base().attach(border)` 的区别是修改对象不同，不是前一种缺少调用而应该被类型系统禁止。使用方选择复用同一个对象，就接受共享该对象的状态；底层不暗中改成隔离使用。
+五个角色不能互相代替。Key 和 Value 不预先绑定；Declaration 建立声明关系；具体 Block 在构造时确定内部节点的位置；Root 不拥有 CSS 语法。用于组织资料的对象、数组和普通函数仍然只是 JavaScript 手段，不增加 CSS 角色。
 
 ---
 
-# 派生与状态
+# Key
 
-对象通过函数 Proxy 读取来源，赋值直接覆盖自身。未覆盖的 primitive 始终从来源读取；引用值首次读取时保存其 `lazyCopy`，对象容器首次写入才浅复制，容器内部引用仍共享。调用时惰性合并来源、当前状态和调用参数，再创建下一对象。初始对象也遵守此规则，直接 Value 属性会隔离，children 数组中的 Block 仍共享。
+Key 是普通对象。构造时只确定 CSS 属性名，不接收 Value，也不产生 Declaration。
 
-数组和普通对象属性在首次写入时取得独立容器，不需要每个领域重复声明复制。写入前仍能读取来源的后续变更，写入后读取自己的浅副本；方法必须通过 this 操作当前对象，不能闭包持有原对象状态。
+    const color = key('color')
 
-连接集合独立，不等于把集合里引用的所有 Block 都自动递归复制。被连接的 Value 可以保持共享；需要独立状态的子 Block 由使用方显式派生。已有复合结构派生时如何表达逐层共享与独立，具体接口仍需设计，不能用隐式深拷贝代替这一选择。
+Key 对外使用 name 保存 CSS 属性名，key 的 const generic 保留该名称的字面量类型：
 
-新对象默认继承当前字段；需要重新激活时显式覆盖 isActive。对象从谁派生，与它连接到谁，是两件事。
+    color.name // 'color'
 
-派生对象保留 instanceof Function、call 与 bind。调用时通过可选参数覆盖字段，例如 `original({ isActive: false })`。无参调用继承当前状态，不自动重置激活状态。
+key(name) 返回对象，不使用 Brand，也不把 Key 压成不可扩展的字符串。对象身份为未来关联 Key 留出承载位置，例如 font.family、font.size；当前只确认这种扩展方向，不预先定义 shorthand 的展开、重置或约束规则。
 
----
-
-# 连接与激活
-
-attach 接受任意数量的实际 Block 对象，连接的是传入对象本身，返回接收者。不调用输入对象来派生，也不把调用者持有的对象替换成别的对象。
-
-未接通 Root 时，attach 只改变对象关系。接通时，激活沿已有连接和依赖传播；已接通对象新增连接时，新接入的对象随之接通。激活传播不触发对象派生，业务持有的引用始终指向实际参与生效的对象。
-
-激活具有幂等性。普通值可以不执行任何激活动作；需要注册的变量等材料，才利用首次激活完成副作用。变量只是例子，未来其他值表达也可以使用同一机制。同一个实际对象重复激活只执行一次；不同消费者读取到的直接属性副本会分别执行激活动作。
-
-Root 仍是唯一固定 stylesheet 挂载节点，自身没有激活生命周期，也不接收动态 stylesheet 参数。parent 表达对象之间的相对关系，不另造 BlockParent 实体类别。
-
-共享对象可以有多个使用关系，因此不能用反复覆盖一个 parent 或 index 来假装记录了全部使用位置。具体关系存储及 CSSOM 更新继续留待后续设计，不影响本轮“不隐式派生”的裁决。
+Key 不激活，不承担值内容，也不生成冒号和分号。
 
 ---
 
-# 内容、关系与最终解析
+# Value
 
-内容和连接是两件事。对象保存值、属性名、选择器等材料，以及与其他对象的关系；可以只有内容、只有连接，也可以兼具两者。Property 消费 Value 是对象关系，不是先保存一段完整声明文本。
+Value 承担能够进入 CSS 的内容。相同 Value 可以被不同 Key 和不同 Block 复用，不需要知道自己的属性名或最终位置。
 
-JS 中始终流通对象，只有最终提交 CSS 时才解析成字符串。花括号、冒号、分号等是对象语义与关系的最终表达，不是业务预先配置的连接字符；不建立“只要有连接就加花括号”这样的通用规定。
+只有 Value 具有 onActive。激活波第一次经过某个 Value 时，Root 同步执行其 onActive；回调可以返回一个新的 Block。这个返回值表示“只要该 Value 生效，这个 CSS 定义也必须存在”，不表示修改已有 CSS。
 
-旧 Content 联合类型及字符串模板回调不再是 Block 的基本模型；不能因为回调执行得晚，就认为它已经清楚保存了对象结构。也不为原样包住另一个 Block 而增加一层内容包装。
+两个首要用例是：
 
-通用 setValue 不是所有 Block 的必备能力。连接改变由连接操作表达，特定内容的修改由其语义字段表达。本次使用 parseCss 在最终阶段解析这些字段及连接，不保留 slot 模板。直接替换原始表达至多是将来有明确需求时的特殊入口，不预先作为核心“逃生舱”。
+- animation name Value 返回对应的 Keyframes Block；
+- CSS Variable Value 返回注册该变量的 @property Block。
 
-变量注册、局部定义与使用仍须区分。智能变量的全局注册及状态规则在真实消费激活时才生效，不搬进某个消费 selector 的局部范围；组件局部覆盖继续由 CSS 原生层叠负责。当前代码中的状态后缀变量不能证明这套注册需求已经完成。
-
----
-
-# 命名与职责边界
-
-- 函数使用 camelCase：block、selector、property、value、variable。类型使用 PascalCase，类型声明本身说明对象身份与契约，不能仅靠字段注释。
-- 源码文件用 kebab-case，并保留 CSS 对象身份，例如 css-block.ts、css-selector.ts。文件前缀与样式使用端可以省略的函数前缀分开判断。
-- core 定义 CSS 对象、连接和激活语义，并使用通用派生能力；derive 是排列 CSS 语义派生工具的组织目录，不是独立领域，不建立分组入口。
-- tokens 提供基础命名材料与通用样式积木，组件的业务组合留在组件 style 文件，不注册进全局通用工具。
-- 底层不替业务检查、过滤或修补任意 CSS 组合。reset 保留静态 CSS 的整体方向不变，其他样式按实际使用生效。
+Value 不直接调用全局 Root，也不自行插入 CSS。Root 接收返回值，并把它加入当前激活过程。当前只采用“返回可选 Block”这一种入口；向回调传入 attachRoot、attachRule 等方法属于以后另行裁决的扩展。
 
 ---
 
-# 通用派生能力的归属
+# Declaration
 
-可调用对象从当前对象继续派生，是业务无关的基础能力，不应实现在 CSS Block 专属逻辑中。现由 Style System 的 `fnkit/derivable-object.ts` 独立承载，函数名为 deriveable。fnkit 是组织目录，不命名为 utils，也不另立为领域；此文件不描述 CSS 对象，不加 css 前缀。
+Declaration 是独立语法节点，不是 Block。Key + Value = Declaration；Declaration 保存双方的实际对象，并负责将关系表达为 `key: value;`。
 
-这项能力支持反复派生，通过 FNKIT 的 `mergeObjects(source, current, override)` 保留当前修改。get 把首次读取的惰性副本写入 current；ownKeys 与属性描述符暴露完整字段，避免 lazyCopy 丢失未读属性。`mergeObjects` 后者覆盖前者，包括显式 undefined。
+常用属性可以显式定义 Key，再用普通函数提供便捷入口：
 
-`fnkit/lazy-copy.ts` 独立提供写时复制能力。`depth` 默认 0，仅隔离自身；1 包含直接属性对象，Infinity 包含全部层数。每个对象在首次写入时浅复制，同一来源在一次调用中复用同一代理。函数调用保持来源行为，不感知 deriveable 或其他 Proxy。
+    const colorKey = key('color')
+    const color = (value: Value): Declaration<'color'> => declaration(colorKey, value)
+    const colorDeclaration = color(value('blue'))
+    colorKey.name // 'color'
+    colorDeclaration.key === colorKey // true
 
-后续可把这项能力迁入 FNKIT。实现前优先确认 FNKIT 是否已有语义一致的能力，有则直接复用。本轮检查未找到完整对应能力：现有 createConfigableFunction 处理参数预绑定，调用时执行原函数，不等于从当前可调用对象继续派生；cloneObject、浅合并也不表达连续派生，不能仅因实现相近就代用。参数绑定是另一个问题，不在此重写。
+这里的 color 只是 JavaScript 函数，不是独立对象模型，也没有自身的 Key、状态或生命周期。基础 CSS 按系列保存明确命名的 Key 与属性函数，例如 marginTopKey 和 marginTop；一次性内部声明则可直接调用 declaration(key, value)。
 
-deriveable 与 lazyCopy 仍在本地实现；对象合并已直接接入外部 FNKIT。实际方法、属性复制和调用链见架构文档。
-
----
-
-# 取舍与历史覆盖
-
-此前比较的方案不同时作为现行契约：
-
-| 历史方案 | 本次选择及原因 |
-| --- | --- |
-| 纯生成函数，必须调用后才能 attach | 不采用。Value 等命名材料需要直接复用，不应为了形式统一强制生成。 |
-| 定义与实例二分，attach 时创建实例 | 不采用。连接应操作实际对象，不偷偷替换引用。 |
-| 激活波到来时再创建实例 | 不采用。派生是否必要由业务决定，激活只负责生效。 |
-| 可调用对象，直接使用或显式派生 | 采用。共享材料保持身份，独立结构由调用动作明确取得。 |
-| 从最初定义重新创建 | 改为从当前对象派生，保留当前内容及组合。 |
-
-旧实现仍可在代码和 [架构文档](architecture.md) 中查到；它描述目前程序如何运行，不是本设计的并行约束。[旧 JSS Plan](../../docs/plans/JSS样式系统.md) 保留其历史阶段，不在本次重写或迁移。
+Declaration 自己不激活，也没有 onActive。Root 沿规则坍缩经过 Declaration 时，Declaration 继续经过它包含的 Value；激活上下文由这条实际渲染路径传递，不另行登记值依赖。
 
 ---
 
-# 本次实现的验收
+# Block
 
-以下条件由本次可调用对象测试验证，不沿用旧实例模型的测试结论：
+Block 是声明式 CSS 组织体。内容在构造 Value、Declaration 和具体 Block 时已经确定；Block 负责这些内容之间的格式、层次，以及内部节点进入 body 的具体语法位置。构造器复制传入的 body 列表，对外提供 readonly body；后续修改来源数组不改变已定义结构。
 
-- 同一个 Block 既可直接 attach，也可调用派生；不存在“必须调用才获得对象”的隐藏阶段。
-- 唯一使用的 Selector 可以直接挂载；复用但无需隔离状态的材料可以保持同一对象，不因类型或连接数量被自动派生。
-- x() 从 x 的当前内容派生；派生后的再派生不退回最初定义。修改新对象的内容和连接集合不影响原对象。
-- 连接数组保留共享引用；直接 Value 属性首次读取取得惰性副本，各副本分别激活。
-- attach 返回自身，保存输入对象；Root 接通与激活传播都不复制或替换它们。
-- 离线组合与派生不写 CSS、不提前转字符串；真实接通后原对象引用可以观察到生效状态。
-- 活对象新增连接能接通新对象；共享材料的一次性激活不因重复使用而重复执行。
-- 最终解析保留实际对象的内容、组合顺序与语义，业务不手写花括号控制模板。
-- 类型声明自身、文件头与必要方法说明能让读者直接理解对象、派生、连接和激活的区别。
-- 通用派生能力可用不含 CSS 概念的对象独立验证；CSS 层负责自己的状态语义，通用工具不依赖 CSS 模块。
+不同 Block 对应不同 CSS 组织方式：
 
-对应证据为 fnkit/derivable-object.test.ts、core/css-block.test.ts、core/derive/css-property.test.ts、core/derive/css-value.test.ts、tokens/base-css.test.ts 与 core/css-root.browser.test.ts。类型检查验证可调用返回值保留具体派生类型；浏览器测试验证固定根的真实样式及对象身份。
+- Style Rule Block 组织 selector 和 declarations，产生规则花括号；
+- Media Block 组织 condition 和内部 rules；
+- Keyframes Block 组织 animation name 和 frames；
+- Frame Block 组织时间位置和 declarations；
+- @property Block 组织变量名和注册描述符。
 
-本次修改限于 Style System 的通用派生、核心及其必要消费者和测试，未修改旧 JSS、组件或 AI Rules。规则替换、撤销、多个挂载位置管理、派生修饰参数及完整智能变量注册另行设计与实施。
+具体 Block 只理解自己的语法，不能由一个通用 Block 根据“是否连接了子对象”猜测花括号、分号或合法位置。业务不填写字符串模板、slot 或连接标点。
+
+Block 没有 isActive、activate、onActive、dependence 或 getDependencies。Block 也不通过 attach 管理运行关系；它在构造时已经是一份完整定义。
+
+---
+
+# Root
+
+Root 是全局 CSS 注册入口。上级在 Root 已经取得存活权限、浏览器承载节点可用时调用：
+
+    cssRoot.activate(wholeRules)
+
+activate 代替 attach。这次调用不是建立可撤销的父子关系，而是让一份已经完成的 CSS 定义永久生效。
+
+Root 在一次同步 JavaScript 调用中完成：
+
+1. 接收入口顶层 Rule 或 Rule 数组；
+2. 沿 Block、Declaration 的实际坍缩路径访问其中的 Value；
+3. 第一次遇到 Value 时同步执行 onActive；
+4. 把 onActive 返回的 Block 纳入 Root，并继续激活该分支；
+5. 重复以上过程，直到没有新增 Block；
+6. 保留这条路径产生的每个完整顶层 Rule 字符串；
+7. 激活闭包结束后，将本次新增 Rule 逐条追加到全局 Stylesheet。
+
+Root 实例记录已经激活的 Value 和成功注册的顶层 Block，阻止同一对象重复执行或重复插入。只有 insertRule 成功返回才登记为已注册。激活状态属于 Root 的运行视图，不写回 Block。循环到达同一对象时由本次待处理集合终止，不依赖 Block 自己防重入。嵌套 Block 的出现位置属于外层定义，不作为额外顶层规则注册。
+
+Root 不等待通用的 DOMContentLoaded 事件；何时调用由上级的存活关系决定。承载节点不可用时不能伪装成已经激活。
+
+---
+
+# 浏览器提交
+
+Key、Value、Declaration 和 Block 在进入最终渲染路径前保留结构。具体节点的 parseCss(context) 在坍缩时继续传递激活上下文，parseValue(value, context) 报告实际经过的 Value。Root 收齐当前闭包的完整规则文本后，通过浏览器 Stylesheet API 追加。
+
+不把整套 Style System 提前压成一个字符串，也不以逐项修改 CSSStyleRule.style 作为主要输出路径。字符串边界发生在完整 CSS Rule 提交之前；浏览器负责最终解析和合法性判断。
+
+Block 的组织决定最终字符串。Root 调用 parseCss(context)，不自行拼接 selector、冒号、分号或花括号。
+
+---
+
+# deriveable
+
+deriveable 给对象增加“从自身当前状态派生独立对象”的能力，是可选通用手段，不是五个 CSS 角色之外的新层次。
+
+Key 是普通对象；属性便捷入口是普通 JavaScript 函数；Declaration 是由 declaration(key, value) 产生的具体节点。本轮 CSS 核心不使用 deriveable，独立定义由构造器表达；通用 deriveable 和 lazyCopy 的实现、测试继续保留，供后续需要对象派生的场景使用。
+
+---
+
+# 被覆盖的旧理解
+
+以下旧理解已退出现役代码：
+
+- 所有 Value、Property、Selector 都继承同一个可激活 Block；
+- Block 同时保存 children、dependence、激活状态和解析方法；
+- Block 通过 getDependencies 再声明语义字段中已经存在的关系；
+- root.attach(block) 建立并保留可继续修改的连接；
+- 活 Block 新增连接后继续传播激活；
+- 修改已注册对象后刷新、替换或撤销既有 CSSOM。
+
+替代后的实际运行链见 [architecture.md](architecture.md)。旧 JSS 及组件迁移不属于本轮范围。
+
+---
+
+# 未决问题
+
+- Key 的关联子 Key 写法，以及 shorthand 的真实语义；
+- Root 对同名但内容不同的全局注册如何报告冲突；
+- 上级通过什么现役生命周期入口授予 Root 存活权限；
+- 除单个返回 Block 外，onActive 是否需要多个结果或 Root 操作上下文。
+
+这些扩展在实际需要时继续裁决；本轮不推断 shorthand，不按名称去重，也不替组件确定存活入口。
+
+---
+
+# 实现验收
+
+- key('color') 返回具有 name 的普通 Key 对象；declaration(colorKey, value) 得到独立 Declaration；常用属性函数只是对这次组合的 JavaScript 封装；
+- Value 是唯一具有 onActive 的对象，回调同步返回的 Block 被 Root 自动接纳并继续激活；
+- Declaration 自己不激活，负责声明标点并继续经过其 Value；
+- Block 只承担具体 CSS 格式、层次与定义时 body 位置，不拥有激活、依赖或 Root 连接状态；
+- cssRoot.activate(wholeRules) 在承载节点可用后同步完成激活闭包和新增 CSS 注册；
+- 已注册 CSS 只增加，不修改或卸载；运行时变化通过 DOM 状态和 CSS Variable 表达；
+- 完整顶层 Block 在最终边界坍缩为合法 CSS Rule，Root 不承担具体 CSS 语法；
+- 重复引用同一 Value 或 Block 不会重复执行 onActive 或重复注册；
+- 当前实现完成迁移后，architecture.md 与真实代码一致，浏览器测试验证 Keyframes、@property 和普通 Style Rule 的实际结果。

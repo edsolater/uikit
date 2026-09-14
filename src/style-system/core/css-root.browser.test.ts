@@ -1,15 +1,29 @@
-/** 验证实际对象经固定根挂载后的浏览器样式及激活身份。 */
+/** 在浏览器中检查样式生效、按需注册、去重和失败重试。 */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { value } from './derive/css-value'
-import { block } from './css-block'
-import { root } from './css-root'
-import { selector } from './derive/css-selector'
-import { property } from './derive/css-property'
-import { variable } from './derive/css-variable'
-import { boxShadow, margin, marginLeft } from '../tokens/base-css'
+import type { Rule } from './css-block'
+import { frame, keyframes } from './css-block/keyframe'
+import { media } from './css-block/media'
+import { styleRule } from './css-block/style'
+import { declaration } from './css-declaration'
+import { key } from './css-key'
+import { cssRoot, Root } from './css-root'
+import { value } from './css-value'
+import { variable } from './css-variable'
+import { boxShadow } from '../tokens/base-css/box-shadow'
+import { margin, marginLeft } from '../tokens/base-css/margin'
+import { bgColor } from '../tokens/well-known-css-variables'
+
+const opacityKey = key('opacity')
+const animationNameKey = key('animation-name')
+const animationDurationKey = key('animation-duration')
+const animationPlayStateKey = key('animation-play-state')
+const colorKey = key('color')
+const retryGapKey = key('--retry-gap')
+const backgroundColorKey = key('background-color')
 
 let style: HTMLStyleElement
 let element: HTMLDivElement
+let root: Root
 
 beforeEach(() => {
   style = document.createElement('style')
@@ -19,127 +33,175 @@ beforeEach(() => {
   element = document.createElement('div')
   element.className = 'token-example'
   document.body.append(element)
+  root = new Root()
 })
 
 afterEach(() => {
   element.remove()
   style.remove()
-  root.children.length = 0
+  vi.restoreAllMocks()
 })
 
-test('唯一 Selector 直接挂载，Root 与业务持有同一对象', () => {
-  const active = vi.fn()
-  const foreground = variable('foreground', value('rgb(0, 0, 255)', { onActive: active }))
-  const color = property('color', foreground)
-  const button = selector('.token-example').attach(color)
-  const input = selector('.other-example').attach(color)
-  expect(button.isActive).toBe(false)
-  root.attach(button, input)
-  expect(root.children).toEqual([button, input])
-  expect(root.children[0]).toBe(button)
-  expect(button.children[0]).toBe(input.children[0])
-  expect(color.value).not.toBe(foreground)
-  expect(color.value.isActive).toBe(true)
-  expect(foreground.isActive).toBe(false)
-  expect(active).toHaveBeenCalledTimes(1)
-  expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
-  expect(style.sheet!.cssRules.length).toBe(3)
-  expect(style.sheet!.cssRules[0].cssText).toContain('.existing')
-})
-
-test('根接受多个对象及重复引用，不隐式派生或覆写对象索引', () => {
-  const appearance = selector('.token-example').attach(margin(value('7px')))
-  expect(root.attach()).toBe(root)
-  expect(root.attach(appearance, appearance)).toBe(root)
-  expect(root.children[0]).toBe(appearance)
-  expect(root.children[1]).toBe(appearance)
-  expect('parent' in appearance).toBe(false)
-  expect('index' in appearance).toBe(false)
-  expect(style.sheet!.cssRules.length).toBe(3)
-  expect(getComputedStyle(element).marginTop).toBe('7px')
-})
-
-test('离线组合不解析，六个基础 Token 挂载后按原生顺序生效', () => {
+test('正式 cssRoot 入口同步注册普通规则，并保留原有规则', () => {
   const active = vi.fn()
   const distance = value('12px', { onActive: active })
-  const parse = vi.spyOn(distance, 'parseCss')
-  const appearance = block().attach(margin(distance), marginLeft(value('20px')))
-    .attach(boxShadow(value('rgb(0, 0, 0) 0px 1px 2px')))
-  const button = selector('.token-example').attach(appearance)
-  expect(parse).not.toHaveBeenCalled()
-  expect(active).not.toHaveBeenCalled()
-  expect(style.sheet!.cssRules.length).toBe(1)
-  expect('activate' in root).toBe(false)
-  root.attach(button)
+  const appearance = styleRule('.token-example', [...margin(distance), marginLeft(value('20px')), boxShadow(value('black 0px 1px 2px'))])
+  expect(cssRoot.activate(appearance)).toBe(cssRoot)
+  expect(active).toHaveBeenCalledTimes(1)
+  expect(appearance.body[0].kind).toBe('declaration')
+  expect(style.sheet!.cssRules).toHaveLength(2)
+  expect(style.sheet!.cssRules[0].cssText).toContain('.existing')
   const computed = getComputedStyle(element)
   expect(computed.marginTop).toBe('12px')
   expect(computed.marginRight).toBe('12px')
   expect(computed.marginBottom).toBe('12px')
   expect(computed.marginLeft).toBe('20px')
   expect(computed.boxShadow).not.toBe('none')
-  expect(active).toHaveBeenCalledTimes(4)
 })
 
-test('挂载时读取当前对象内容，显式派生的修改只作用于其选择器', () => {
-  const distance = value('2px')
-  const base = selector('.unused').attach(margin(distance))
-  const button = base()
-  button.selector = '.token-example'
-  distance.raw = '18px'
-  root.attach(button)
-  expect(base.isActive).toBe(false)
-  expect(button.isActive).toBe(true)
-  expect(base.selector).toBe('.unused')
-  expect(root.children[0]).toBe(button)
-  expect(getComputedStyle(element).marginTop).toBe('18px')
-})
-
-test('依赖副本各自激活并挂载全局规则，不移入消费选择器', () => {
-  const registration = selector(':where(:hover)').attach(property('--token-shadow', value('none')))
-  const activate = vi.fn(() => root.attach(registration))
-  const shadow = variable('token-shadow', value('none'))
-  shadow.onActive = activate
-  const appearance = selector('.token-example').attach(boxShadow(shadow))
-  root.attach(appearance, selector('.other-example').attach(boxShadow(shadow)))
-  expect(activate).toHaveBeenCalledTimes(2)
-  expect(style.sheet!.cssRules[1].cssText).toContain(':where(:hover)')
-  expect(style.sheet!.cssRules[1].cssText).not.toContain('.token-example')
-  expect(root.children[0]).toBe(registration)
-  expect(getComputedStyle(element).boxShadow).toBe('none')
-})
-
-test('固定节点缺失时失败，不激活内容或创建替代节点', () => {
-  style.remove()
+test('同一个 Root 对 Value 和顶层 Block 均按对象身份幂等', () => {
   const active = vi.fn()
-  const appearance = selector('.token-example').attach(margin(value('2px', { onActive: active })))
-  expect(() => root.attach(appearance)).toThrow('缺少样式挂载节点')
-  expect(active).not.toHaveBeenCalled()
-  expect(appearance.isActive).toBe(false)
-  expect(document.getElementById('css-root')).toBeNull()
+  const opacity = value(0.5, { onActive: active })
+  const first = styleRule('.token-example', [declaration(opacityKey, opacity)])
+  const second = styleRule('.other', [declaration(opacityKey, opacity)])
+  root.activate([first, first, second])
+  root.activate([first, second])
+  expect(active).toHaveBeenCalledTimes(1)
+  expect(style.sheet!.cssRules).toHaveLength(3)
+  expect('isActive' in opacity).toBe(false)
+  new Root().activate(first)
+  expect(active).toHaveBeenCalledTimes(2)
+  expect(style.sheet!.cssRules).toHaveLength(4)
 })
 
-test('空规则可挂载，嵌套规则保留结构和实际样式', () => {
-  const empty = selector('.empty')
-  const appearance = selector('.token-example').attach(
-    selector('&').attach(property('color', value('rgb(0, 0, 255)'))),
-    property('opacity', value(0.5)),
-  )
-  root.attach(empty, appearance)
-  expect(style.sheet!.cssRules[1].cssText).toContain('.empty')
-  expect(style.sheet!.cssRules[2].cssText).toContain('&')
+test('变量初次消费在同一调用注册 @property，初值及类型约束实际生效', () => {
+  const gap = variable('registered-gap', { registration: { syntax: '<length>', inherits: false, initialValue: value('8px') } })
+  const appearance = styleRule('.token-example', [marginLeft(gap)])
+  expect(style.sheet!.cssRules).toHaveLength(1)
+  root.activate([appearance, appearance])
+  expect(Array.from(style.sheet!.cssRules).filter(rule => rule.cssText.startsWith('@property'))).toHaveLength(1)
+  expect(getComputedStyle(element).marginLeft).toBe('8px')
+  element.style.setProperty('--registered-gap', '13px')
+  expect(getComputedStyle(element).marginLeft).toBe('13px')
+  element.style.setProperty('--registered-gap', 'red')
+  expect(getComputedStyle(element).marginLeft).toBe('8px')
+  expect(style.sheet!.cssRules).toHaveLength(3)
+})
+
+test('动画名称返回 Keyframes，帧内变量继续注册并在同一激活波生效', () => {
+  const initialActive = vi.fn(() => { expect(style.sheet!.cssRules).toHaveLength(1) })
+  const opacity = variable('frame-opacity', { registration: { syntax: '<number>', inherits: false, initialValue: value(0.25, { onActive: initialActive }) } })
+  let animationRules: Rule
+  const nameActive = vi.fn(() => animationRules)
+  const animationName = value('token-fade', { onActive: nameActive })
+  animationRules = keyframes(animationName, [
+    frame('from', [declaration(opacityKey, opacity)]),
+    frame('to', [declaration(opacityKey, value(1))]),
+  ])
+  root.activate(styleRule('.token-example', [
+    declaration(animationNameKey, animationName),
+    declaration(animationDurationKey, value('10s')),
+    declaration(animationPlayStateKey, value('paused')),
+  ]))
+  expect(nameActive).toHaveBeenCalledTimes(1)
+  expect(initialActive).toHaveBeenCalledTimes(1)
+  expect(style.sheet!.cssRules).toHaveLength(4)
+  expect(Array.from(style.sheet!.cssRules).filter(rule => rule.cssText.startsWith('@keyframes'))).toHaveLength(1)
+  expect(getComputedStyle(element).animationName).toBe('token-fade')
+  expect(getComputedStyle(element).opacity).toBe('0.25')
+})
+
+test('递归回到入口 Block 及共享新增 Block 时终止且只注册一次', () => {
+  let first: Rule
+  let second: Rule
+  const activateFirst = vi.fn(() => first)
+  const activateSecond = vi.fn(() => second)
+  first = styleRule('.token-example', [declaration(opacityKey, value(0.5, { onActive: activateSecond }))])
+  second = styleRule('.other', [declaration(opacityKey, value(1, { onActive: activateFirst }))])
+  root.activate([first, styleRule('.third', [declaration(opacityKey, value(1, { onActive: activateSecond }))])])
+  expect(activateFirst).toHaveBeenCalledTimes(1)
+  expect(activateSecond).toHaveBeenCalledTimes(2)
+  expect(style.sheet!.cssRules).toHaveLength(4)
+})
+
+test('嵌套和媒体内部的 Value 经真实结构激活并保留原生层次', () => {
+  const active = vi.fn()
+  const blue = value('rgb(0, 0, 255)', { onActive: active })
+  root.activate([
+    styleRule('.empty'),
+    media('(min-width: 1px)', [styleRule('.token-example', [styleRule('&', [declaration(colorKey, blue)])])]),
+  ])
+  expect(active).toHaveBeenCalledTimes(1)
+  expect(style.sheet!.cssRules[2].cssText).toContain('@media')
   expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
-  expect(getComputedStyle(element).opacity).toBe('0.5')
 })
 
-test('接通后追加对象更新内部结构并激活，不冒充已经同步 CSSOM', () => {
-  const appearance = selector('.token-example').attach(marginLeft(value('2px')))
-  root.attach(appearance)
-  const before = style.sheet!.cssRules[1].cssText
-  const late = marginLeft(value('20px'))
-  appearance.attach(late)
-  expect(late.isActive).toBe(true)
-  expect(appearance.children.at(-1)).toBe(late)
-  expect(appearance.parseCss()).toContain('20px')
-  expect(style.sheet!.cssRules[1].cssText).toBe(before)
+test('CSS 只追加，DOM 状态和局部变量改变视觉结果而不重写样式表', () => {
+  const first = styleRule('.token-example', [marginLeft(variable('local-gap', { fallback: value('2px') }))])
+  root.activate(first)
+  const originalRule = style.sheet!.cssRules[1]
+  const originalCss = originalRule.cssText
+  root.activate(styleRule('.token-example[data-state="wide"]', [marginLeft(value('20px'))]))
+  expect(style.sheet!.cssRules[1]).toBe(originalRule)
+  element.style.setProperty('--local-gap', '12px')
+  expect(getComputedStyle(element).marginLeft).toBe('12px')
+  element.dataset.state = 'wide'
+  expect(getComputedStyle(element).marginLeft).toBe('20px')
+  root.activate(first)
+  expect(style.sheet!.cssRules).toHaveLength(3)
+  expect(originalRule.cssText).toBe(originalCss)
+})
+
+test('固定承载节点缺失时先失败，不执行 onActive，恢复后能够首次激活', () => {
+  const active = vi.fn()
+  const appearance = styleRule('.token-example', [marginLeft(value('2px', { onActive: active }))])
+  style.remove()
+  expect(() => root.activate(appearance)).toThrow('缺少样式挂载节点')
+  expect(active).not.toHaveBeenCalled()
+  expect(document.getElementById('css-root')).toBeNull()
+  document.head.append(style)
+  root.activate(appearance)
+  expect(active).toHaveBeenCalledTimes(1)
+})
+
+test('浏览器插入异常不会把失败的 Block 记为成功注册', () => {
+  const active = vi.fn()
+  const appearance = styleRule('.token-example', [marginLeft(value('3px', { onActive: active }))])
+  vi.spyOn(style.sheet!, 'insertRule').mockImplementationOnce(() => { throw new Error('测试插入失败') })
+  expect(() => root.activate(appearance)).toThrow('测试插入失败')
+  root.activate(appearance)
+  expect(active).toHaveBeenCalledTimes(1)
+  expect(style.sheet!.cssRules).toHaveLength(2)
+  expect(getComputedStyle(element).marginLeft).toBe('3px')
+})
+
+test('入口插入成功但依赖失败时，再激活入口会补齐依赖且不重复入口', () => {
+  const dependencyActive = vi.fn()
+  const registration = styleRule(':root', [declaration(retryGapKey, value('9px', { onActive: dependencyActive }))])
+  const active = vi.fn(() => registration)
+  const appearance = styleRule('.token-example', [marginLeft(value('var(--retry-gap, 2px)', { onActive: active }))])
+  const sheet = style.sheet!
+  vi.spyOn(sheet, 'insertRule')
+    .mockImplementationOnce((css, index) => CSSStyleSheet.prototype.insertRule.call(sheet, css, index))
+    .mockImplementationOnce(() => { throw new Error('测试依赖插入失败') })
+  expect(() => root.activate(appearance)).toThrow('测试依赖插入失败')
+  expect(sheet.cssRules).toHaveLength(2)
+  const insertedAppearance = sheet.cssRules[1]
   expect(getComputedStyle(element).marginLeft).toBe('2px')
+  root.activate(appearance)
+  expect(sheet.cssRules).toHaveLength(3)
+  expect(sheet.cssRules[1]).toBe(insertedAppearance)
+  expect(active).toHaveBeenCalledTimes(1)
+  expect(dependencyActive).toHaveBeenCalledTimes(1)
+  expect(getComputedStyle(element).marginLeft).toBe('9px')
+})
+
+test('正式颜色 Token 保留嵌套混色及兜底变量的按需注册', () => {
+  element.style.setProperty('--dye-neutral-1', 'blue')
+  element.style.setProperty('--color-accent-soft', 'red')
+  root.activate(styleRule('.token-example', [declaration(backgroundColorKey, bgColor)]))
+  const registrations = Array.from(style.sheet!.cssRules).filter(rule => rule.cssText.startsWith('@property'))
+  expect(registrations).toHaveLength(2)
+  expect(registrations.map(rule => rule.cssText).join('\n')).toContain('--surface-color')
+  expect(getComputedStyle(element).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
 })
