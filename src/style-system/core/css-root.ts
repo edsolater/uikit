@@ -4,14 +4,14 @@ import type { RenderContext, Value } from './css-value'
 
 /** 每个实例独立去重：同一 Value 只激活一次，同一 Rule 只插入一次。 */
 export class Root {
-  private readonly activatedValues = new WeakMap<Value, Rule | void>()
-  private readonly registeredRules = new WeakSet<Rule>()
+  private activatedValues = new WeakMap<Value, Content<Rule> | void>()
+  private registeredRules = new WeakSet<Rule>()
 
   /**
    * 调用前须有可用的 style#css-root；本次调用内完成激活及规则追加。
    * 插入失败会抛错，已插入的规则保留；再次调用可补齐失败规则。
    * @example
-   * cssRoot.activate(styleRule('.button')(declaration(key('color'), value('blue'))))
+   * cssRoot.activate(styleRule('.button').attach(declaration(key('color'), value('blue'))))
    */
   activate(...rules: Content<Rule>[]): this {
     const stylesheet =
@@ -24,7 +24,9 @@ export class Root {
       activateValue: (value) => {
         if (!this.activatedValues.has(value)) this.activatedValues.set(value, value.onActive?.())
         const registration = this.activatedValues.get(value)
-        if (registration) pendingRules.add(registration)
+        if (registration) {
+          for (const rule of flattenContent<Rule>([registration])) pendingRules.add(rule)
+        }
       },
     }
 

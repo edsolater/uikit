@@ -3,9 +3,9 @@ import type { Key } from './css-key'
 import { parseValue, type RenderContext, type Value } from './css-value'
 
 export interface Declaration<K extends string = string> {
-  readonly kind: 'declaration'
-  readonly key: Key<K>
-  readonly value: Value
+  kind: 'declaration'
+  key: Key<K>
+  value: Value
   parseCss(context?: RenderContext): string
 }
 

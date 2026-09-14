@@ -47,8 +47,8 @@ Button 实际执行
   -> registerButtonStyle()
     -> Button.style.ts 中的业务组合
       -> 共享 Value、Declaration 与样式片段
-        -> styleRule('.Button')(...) 组成完整规则
-          -> cssRoot.activate(buttonRules)
+        -> kitRoot.attach(...) 连接内容与样式分支
+          -> cssRoot.activate(kitRoot)
             -> Value.onActive 返回附加规则并继续遍历
               -> 向 style#css-root 永久追加 CSS
 ```

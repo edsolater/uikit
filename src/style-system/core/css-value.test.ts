@@ -2,18 +2,18 @@
 import { expect, expectTypeOf, test, vi } from 'vitest'
 import type { Block } from './css-block'
 import { parseValue, value, type Value } from './css-value'
-import { variable } from './css-variable'
-import { token } from '../tokens/token'
-import { padding } from '../tokens/css-properties/padding'
-import { font } from '../tokens/css-properties/font'
-import { display } from '../tokens/css-properties/layout'
-import { border } from '../tokens/css-properties/border'
-import { transition, transitionValue } from '../tokens/css-properties/transition'
+import { declareVariable, variable } from './css-variable'
+import { padding } from '../css-properties/padding'
+import { font } from '../css-properties/font'
+import { display } from '../css-properties/layout'
+import { border } from '../css-properties/border'
+import { transition, transitionValue } from '../css-properties/transition'
 
 test('Value 独立保存内容，只有显式上下文能报告激活', () => {
   const active = vi.fn()
   const literal = value(0, { onActive: active })
   expectTypeOf<Value>().not.toExtend<Block>()
+  expect(typeof literal).toBe('object')
   expect(parseValue(literal)).toBe('0')
   expect(active).not.toHaveBeenCalled()
   const visit = vi.fn()
@@ -28,15 +28,16 @@ test('变量保留兜底对象，注册以独立完整规则返回', () => {
     registration: { syntax: '<length>', inherits: false, initialValue: value('8px') },
   })
   expect(gap.fallback).toBe(fallback)
-  expect(typeof gap).toBe('function')
+  expect(typeof gap).toBe('object')
   expect(gap.name).toBe('gap')
-  expect(gap('inherit').parseCss()).toBe('--gap: inherit;')
+  expect(declareVariable(gap, 'inherit').parseCss()).toBe('--gap: inherit;')
   expect(parseValue(gap)).toBe('var(--gap, 4px)')
-  expect(gap.onActive?.()?.parseCss()).toBe(
+  expect(gap.onActive?.()?.[0].parseCss()).toBe(
     '@property --gap { syntax: "<length>";\ninherits: false;\ninitial-value: 8px; }',
   )
   expect(parseValue(variable('plain'))).toBe('var(--plain)')
   expect(variable('plain').onActive).toBeUndefined()
+  expect(variable('local', { fallback }).onActive).toBeUndefined()
   const visited: Value[] = []
   parseValue(gap, {
     activateValue: (current) => {
@@ -46,10 +47,10 @@ test('变量保留兜底对象，注册以独立完整规则返回', () => {
   expect(visited).toEqual([gap, fallback])
 
   const assigned = value('12px')
-  const first = gap(assigned)
-  const second = gap(value('20px'))
+  const first = declareVariable(gap, assigned)
+  const second = declareVariable(gap, value('20px'))
   expect(first.kind).toBe('declaration')
-  expect(first.key).toBe(second.key)
+  expect(first.key.name).toBe(second.key.name)
   expect(first.parseCss()).toBe('--gap: 12px;')
   expect(second.parseCss()).toBe('--gap: 20px;')
   expect(gap.fallback).toBe(fallback)
@@ -59,12 +60,12 @@ test('变量保留兜底对象，注册以独立完整规则返回', () => {
   expect(visited).toEqual(expect.arrayContaining([gap, assigned]))
   expect(visited).not.toContain(fallback)
 
-  const themed = token('themed-gap', fallback, { dark: assigned })
+  const themed = variable('themed-gap', { root: { value: fallback, dark: assigned } })
   expect(themed.name).toBe('themed-gap')
-  expect(themed(assigned).parseCss()).toBe('--themed-gap: 12px;')
+  expect(declareVariable(themed, assigned).parseCss()).toBe('--themed-gap: 12px;')
   expect(parseValue(themed)).toBe('var(--themed-gap)')
   visited.length = 0
-  themed.onActive?.()?.parseCss({ activateValue: (item) => visited.push(item) })
+  themed.onActive?.()?.[0].parseCss({ activateValue: (item) => visited.push(item) })
   expect(visited.filter((item) => item === themed)).toHaveLength(2)
 })
 

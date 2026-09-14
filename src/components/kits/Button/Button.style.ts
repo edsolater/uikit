@@ -1,241 +1,317 @@
-/** Button 选择共享材料，在自身规则中定义变量取值和交互。 */
-import { styleRule, cssRoot, type Value } from '../../../style-system/core'
-import { properties, variables, values, selectors } from '../../../style-system/tokens'
-
-type ButtonSize = 'small' | 'large' | 'xlarge'
-
-/** 状态切换时平滑过渡颜色、阴影、透明度与位移，不让尺寸跟着补间。 */
-const transitionProperties = [
-  properties.backgroundColorKey,
-  properties.borderColorKey,
-  properties.boxShadowKey,
-  properties.colorKey,
-  properties.opacityKey,
-  properties.transformKey,
-]
-
-/** 可点击提示与状态反馈：悬停换色、按下下移，键盘焦点显示轮廓。 */
-const interaction = [
-  // 鼠标提示可点击，拖动经过文字时不选中文本。
-  properties.cursor('pointer'),
-  properties.userSelect('none'),
-
-  // 共用时长与缓动；减少动效偏好由共享动效变量处理。
-  properties.transition(
-    transitionProperties.map((property) =>
-      properties.transitionValue(property, variables.motion.fast, variables.motion.standard),
-    ),
-  ),
-
-  // 原生禁用控件排除在悬停反馈之外。
-  selectors.enabledHover(
-    properties.backgroundColor(variables.bgColor.hover),
-    properties.color(variables.fgColor.hover),
-    properties.boxShadow(variables.shadow.hover),
-  ),
-
-  // 按下时切换到按压外观，并向下移动一个边界厚度。
-  selectors.enabledActive(
-    properties.backgroundColor(variables.bgColor.active),
-    properties.color(variables.fgColor.active),
-    properties.boxShadow(variables.shadow.active),
-    properties.transform(properties.translateY(variables.boundary.thin)),
-  ),
-
-  // 焦点轮廓不占布局空间，与边缘留出间隔。
-  selectors.focusVisible(
-    properties.outlineWidth(variables.boundary.focus),
-    properties.outlineStyle('solid'),
-    properties.outlineColor(variables.focusColor),
-    properties.outlineOffset(variables.boundary.focus),
-  ),
-]
-
-/** 低权重动作退去背景与阴影，只在交互时提示位置。 */
-const bareAppearance = [
-  properties.backgroundColor('transparent'),
-  properties.border(variables.boundary.thin, 'solid', 'transparent'),
-  properties.boxShadow('none'),
-
-  selectors.enabledHover(properties.backgroundColor(values.overlays.hover), properties.boxShadow('none')),
-
-  selectors.enabledActive(properties.backgroundColor(values.overlays.active), properties.boxShadow('none')),
-]
-
-/** 实心底色配合抬升阴影，悬停与按下保持实心外观和对应前景色。 */
-const solidAppearance = [
-  properties.backgroundColor(variables.actionColor),
-  properties.border(variables.boundary.thin, 'solid', 'transparent'),
-  properties.boxShadow(variables.shadows.raised),
-  properties.color(variables.colors.actionFg),
-
-  selectors.enabledHover(
-    properties.backgroundColor(variables.actionColor.hover),
-    properties.color(variables.colors.actionFg),
-    properties.boxShadow(variables.shadows.raised),
-  ),
-
-  selectors.enabledActive(
-    properties.backgroundColor(variables.actionColor.active),
-    properties.color(variables.colors.actionFg),
-    properties.boxShadow(variables.shadows.raised),
-  ),
-]
-
-/**
- * 语气色覆盖基础外观，悬停与按下继续使用对应语气。
- * @example
- * toneAppearance(variables.colors.bad, variables.colors.badSoft, variables.colors.badFg, variables.colors.badLine)
- */
-function toneAppearance(main: Value, soft: Value, foreground: Value, focus: Value) {
-  return [
-    variables.toneColor(main),
-    variables.toneSoftColor(soft),
-    variables.toneForeground(foreground),
-    variables.focusColor(focus),
-    variables.borderColor(soft),
-
-    properties.border(variables.boundary.thin, 'solid', variables.borderColor),
-    properties.backgroundColor(variables.toneBackground),
-    properties.color(variables.toneColor),
-
-    selectors.enabledHover(
-      properties.backgroundColor(variables.toneBackground.hover),
-      properties.color(variables.toneForeground),
-    ),
-
-    selectors.enabledActive(
-      properties.backgroundColor(variables.toneBackground.active),
-      properties.color(variables.toneForeground),
-    ),
-  ]
-}
-
-/** 小、大、超大档位的成组取值；普通尺寸沿用公共变量的兜底值。 */
-const sizes = {
-  small: {
-    height: variables.size.small,
-    x: variables.space.medium,
-    y: variables.space.small,
-    gap: variables.space.small,
-    font: variables.textSize.normal,
-  },
-
-  large: {
-    height: variables.size.large,
-    x: variables.space.wide,
-    y: variables.space.normal,
-    gap: variables.space.medium,
-    font: variables.textSize.xlarge,
-  },
-
-  xlarge: {
-    height: variables.size.xlarge,
-    x: variables.space.widest,
-    y: variables.space.medium,
-    gap: variables.space.large,
-    font: variables.textSize.heading,
-  },
-}
-
-/** 尺寸档位同步调整控件高度、内边距、内容间距与字号。 */
-function sizeLayout(name: ButtonSize) {
-  const selected = sizes[name]
-  return [
-    variables.minHeight(selected.height),
-    variables.paddingX(selected.x),
-    variables.paddingY(selected.y),
-    variables.gap(selected.gap),
-    variables.fontSize(selected.font),
-  ]
-}
-
-/** 淡化外观，移除阴影和位移，并显示不可用光标；不负责阻止事件。 */
-const unavailable = [
-  properties.backgroundColor(variables.colors.surface),
-  properties.color(variables.colors.fg),
-  properties.boxShadow('none'),
-  properties.cursor('not-allowed'),
-  properties.opacity(values.opacities.disabled),
-  properties.transform('none'),
-]
-
-// 外观与语气分别选择：裸底/实心不决定强调色或危险色。
-const bare = styleRule('&[data-variant="bare"]')
-const solid = styleRule('&[data-variant="solid"]')
-const accent = styleRule('&[data-tone="accent"]')
-const danger = styleRule('&[data-tone="danger"]')
-
-// 尺寸分支只选择档位，具体尺寸关系集中在 sizes 中。
-const small = styleRule('&[data-size="small"]')
-const large = styleRule('&[data-size="large"]')
-const xlarge = styleRule('&[data-size="xlarge"]')
-
-// 加载和禁用状态可同时存在；禁用兼顾原生属性与状态标记。
-const loading = styleRule('&[data-status~="loading"]')
-const disabled = styleRule('&:disabled, &[data-status~="disabled"]')
+/** Button 的样式入口；每个分支在接入处公开自身，允许独立补充内容。 */
+import {
+  styleRule,
+  cssRoot,
+  declareVariable,
+  focusVisible,
+  stateHover,
+  stateActive,
+  inlineCenter,
+} from '../../../style-system'
+import { transitionValue, transition } from '../../../style-system/css-properties/transition'
+import { transformKey, transform, translateY } from '../../../style-system/css-properties/transform'
+import { minHeight } from '../../../style-system/css-properties/size'
+import { padding } from '../../../style-system/css-properties/padding'
+import { outlineWidth, outlineStyle, outlineColor, outlineOffset } from '../../../style-system/css-properties/outline'
+import { opacityKey, opacity } from '../../../style-system/css-properties/opacity'
+import { gap } from '../../../style-system/css-properties/layout'
+import { cursor, userSelect } from '../../../style-system/css-properties/interaction'
+import { font, fontSize, fontWeight, lineHeight } from '../../../style-system/css-properties/font'
+import { colorKey, color, backgroundColorKey, backgroundColor } from '../../../style-system/css-properties/color'
+import { boxShadowKey, boxShadow } from '../../../style-system/css-properties/box-shadow'
+import { borderColorKey, border, borderRadius } from '../../../style-system/css-properties/border'
+import {
+  baseSurfaceColor,
+  foregroundColor,
+  actionForegroundColor,
+  accentColor,
+  accentSoftColor,
+  accentForegroundColor,
+  accentFocusColor,
+  dangerColor,
+  dangerSoftColor,
+  dangerForegroundColor,
+  dangerLineColor,
+} from '../../../style-system/css-values/color-theme'
+import {
+  bgColor,
+  bgHoverColor,
+  bgActiveColor,
+  fgColor,
+  fgHoverColor,
+  fgActiveColor,
+  actionColor,
+  actionHoverColor,
+  actionActiveColor,
+} from '../../../style-system/css-values/color-surface'
+import {
+  toneColor,
+  toneSoftColor,
+  toneForeground,
+  toneBackground,
+  toneHoverBackground,
+  toneActiveBackground,
+} from '../../../style-system/css-values/color-tone'
+import { hoverOverlay, activeOverlay } from '../../../style-system/css-values/color-overlay'
+import { pillRadius } from '../../../style-system/css-values/dimension-scale'
+import {
+  smallSpace,
+  normalSpace,
+  mediumSpace,
+  largeSpace,
+  wideSpace,
+  widestSpace,
+  smallSize,
+  largeSize,
+  xlargeSize,
+  thinBoundary,
+  focusBoundary,
+} from '../../../style-system/css-values/dimension-theme'
+import {
+  minimumHeight,
+  horizontalPadding,
+  verticalPadding,
+  contentGap,
+} from '../../../style-system/css-values/dimension-spacing'
+import { boldWeight } from '../../../style-system/css-values/font-scale'
+import {
+  normalTextSize,
+  xlargeTextSize,
+  headingTextSize,
+  controlTextSize,
+  textWeight,
+  textLineHeight,
+} from '../../../style-system/css-values/font-theme'
+import { fastDuration, standardEasing } from '../../../style-system/css-values/motion-theme'
+import { raisedShadow } from '../../../style-system/css-values/shadow-theme'
+import { disabledOpacity } from '../../../style-system/css-values/opacity'
+import {
+  cornerRadius,
+  edgeColor,
+  focusColor,
+  shadow,
+  hoverShadow,
+  activeShadow,
+} from '../../../style-system/css-values/appearance'
 
 /**
- * 胶囊形按钮：基础外观之上叠加交互、变体、语气和尺寸。
- * 实心与语气组合的前景色优先级高于禁用分支；排列顺序不改变这一关系。
+ * 按钮的基础规则及扩展入口。
+ * 实心与语气组合的前景色优先级高于禁用分支。
  */
-export const buttonRules = styleRule('.Button')(
-  // 本组件选择胶囊圆角与粗字重，其他组件仍可独立定义同一组变量。
-  variables.radius(values.radii.pill),
-  variables.fontWeight(values.fontWeights.bold),
+export const kitRoot = styleRule('.Button')
 
-  // 内容居中；高度、间隔和内边距由公共变量控制。
-  properties.inlineCenter,
-  properties.gap(variables.gap),
-  properties.minHeight(variables.minHeight),
-  properties.padding(variables.paddingY, variables.paddingX),
+// 胶囊圆角与粗字重只在按钮作用域内定义，不改变共享材料。
+kitRoot.attach(declareVariable(cornerRadius, pillRadius), declareVariable(textWeight, boldWeight))
 
-  // 细实线边缘搭配可覆盖的圆角。
-  properties.border(variables.boundary.thin, 'solid', variables.borderColor),
-  properties.borderRadius(variables.radius),
+// 内容居中；尺寸、间隔与内边距仍可通过共享变量覆盖。
+kitRoot.attach(inlineCenter(), gap(contentGap), minHeight(minimumHeight), padding(verticalPadding, horizontalPadding))
 
-  // 继承字体后，应用组件字号、字重与行高。
-  properties.font('inherit'),
-  properties.fontSize(variables.fontSize),
-  properties.fontWeight(variables.fontWeight),
-  properties.lineHeight(variables.lineHeight),
+// 细实线边缘与圆角。
+kitRoot.attach(border(thinBoundary, 'solid', edgeColor), borderRadius(cornerRadius))
 
-  // 默认底色、前景色与阴影，随后接入各交互状态。
-  properties.backgroundColor(variables.bgColor),
-  properties.color(variables.fgColor),
-  properties.boxShadow(variables.shadow),
-  interaction,
+// 继承字体后，应用可独立覆盖的字号、字重与行高。
+kitRoot.attach(font('inherit'), fontSize(controlTextSize), fontWeight(textWeight), lineHeight(textLineHeight))
 
-  // 裸底和实心外观覆盖默认外观，语气分支再确定强调或危险配色。
-  bare(bareAppearance),
-  solid(solidAppearance),
-  accent(
-    toneAppearance(
-      variables.colors.accent,
-      variables.colors.accentSoft,
-      variables.colors.accentFg,
-      variables.colors.accentFocus,
+// 默认底色、文字色与阴影。
+kitRoot.attach(backgroundColor(bgColor), color(fgColor), boxShadow(shadow))
+
+// 可点击提示；平滑过渡颜色、阴影、透明度与位移，不让尺寸跟着补间。
+kitRoot.attach(
+  cursor('pointer'),
+  userSelect('none'),
+  transition(
+    [backgroundColorKey, borderColorKey, boxShadowKey, colorKey, opacityKey, transformKey].map((property) =>
+      transitionValue(property, fastDuration, standardEasing),
     ),
   ),
-  danger(
-    toneAppearance(variables.colors.bad, variables.colors.badSoft, variables.colors.badFg, variables.colors.badLine),
-  ),
+)
 
-  // 实心且带语气时采用动作前景色；该选择器比禁用分支更具体。
-  styleRule('&[data-variant="solid"][data-tone]')(properties.color(variables.colors.actionFg)),
+/** 按钮悬停时切换底色、文字色和阴影。 */
+export const hoverStyle = styleRule(stateHover)
+kitRoot.attach(hoverStyle)
 
-  // 高度、内边距、内容间距和字号成组切换。
-  small(sizeLayout('small')),
-  large(sizeLayout('large')),
-  xlarge(sizeLayout('xlarge')),
+hoverStyle.attach(backgroundColor(bgHoverColor), color(fgHoverColor), boxShadow(hoverShadow))
 
-  // 加载只提示忙碌；禁用分支随后叠加，仍受前述选择器优先级限制。
-  loading(properties.cursor('progress')),
-  disabled(unavailable),
+/** 按钮按下时切换外观，并向下移动一个细边界厚度。 */
+export const activeStyle = styleRule(stateActive)
+kitRoot.attach(activeStyle)
+
+activeStyle.attach(
+  backgroundColor(bgActiveColor),
+  color(fgActiveColor),
+  boxShadow(activeShadow),
+  transform(translateY(thinBoundary)),
+)
+
+/** 键盘焦点轮廓不占布局空间，与按钮边缘留出间隔。 */
+export const focusStyle = styleRule(focusVisible)
+kitRoot.attach(focusStyle)
+
+focusStyle.attach(
+  outlineWidth(focusBoundary),
+  outlineStyle('solid'),
+  outlineColor(focusColor),
+  outlineOffset(focusBoundary),
+)
+
+/** 裸底按钮退去背景与阴影，只在交互时提示位置。 */
+export const bareStyle = styleRule('&[data-variant="bare"]')
+kitRoot.attach(bareStyle)
+
+bareStyle.attach(backgroundColor('transparent'), border(thinBoundary, 'solid', 'transparent'), boxShadow('none'))
+
+/** 裸底按钮悬停时使用浅色覆盖层。 */
+export const bareHoverStyle = styleRule(stateHover)
+bareStyle.attach(bareHoverStyle)
+
+bareHoverStyle.attach(backgroundColor(hoverOverlay), boxShadow('none'))
+
+/** 裸底按钮按下时加深覆盖层。 */
+export const bareActiveStyle = styleRule(stateActive)
+bareStyle.attach(bareActiveStyle)
+
+bareActiveStyle.attach(backgroundColor(activeOverlay), boxShadow('none'))
+
+/** 实心按钮使用动作底色和抬升阴影。 */
+export const solidStyle = styleRule('&[data-variant="solid"]')
+kitRoot.attach(solidStyle)
+
+solidStyle.attach(
+  backgroundColor(actionColor),
+  border(thinBoundary, 'solid', 'transparent'),
+  boxShadow(raisedShadow),
+  color(actionForegroundColor),
+)
+
+/** 实心按钮悬停时保持实心外观。 */
+export const solidHoverStyle = styleRule(stateHover)
+solidStyle.attach(solidHoverStyle)
+
+solidHoverStyle.attach(backgroundColor(actionHoverColor), color(actionForegroundColor), boxShadow(raisedShadow))
+
+/** 实心按钮按下时保持动作前景色和阴影。 */
+export const solidActiveStyle = styleRule(stateActive)
+solidStyle.attach(solidActiveStyle)
+
+solidActiveStyle.attach(backgroundColor(actionActiveColor), color(actionForegroundColor), boxShadow(raisedShadow))
+
+/** 强调按钮定义语气配色；外观变体不决定语气。 */
+export const accentStyle = styleRule('&[data-tone="accent"]')
+kitRoot.attach(accentStyle)
+
+accentStyle.attach(
+  declareVariable(toneColor, accentColor),
+  declareVariable(toneSoftColor, accentSoftColor),
+  declareVariable(toneForeground, accentForegroundColor),
+  declareVariable(focusColor, accentFocusColor),
+  declareVariable(edgeColor, accentSoftColor),
+)
+
+// 边缘、背景与文字消费当前作用域的语气值。
+accentStyle.attach(border(thinBoundary, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor))
+
+/** 强调按钮悬停时增加语气色占比。 */
+export const accentHoverStyle = styleRule(stateHover)
+accentStyle.attach(accentHoverStyle)
+
+accentHoverStyle.attach(backgroundColor(toneHoverBackground), color(toneForeground))
+
+/** 强调按钮按下时继续加深语气色。 */
+export const accentActiveStyle = styleRule(stateActive)
+accentStyle.attach(accentActiveStyle)
+
+accentActiveStyle.attach(backgroundColor(toneActiveBackground), color(toneForeground))
+
+/** 危险按钮定义语气配色；外观变体不决定语气。 */
+export const dangerStyle = styleRule('&[data-tone="danger"]')
+kitRoot.attach(dangerStyle)
+
+dangerStyle.attach(
+  declareVariable(toneColor, dangerColor),
+  declareVariable(toneSoftColor, dangerSoftColor),
+  declareVariable(toneForeground, dangerForegroundColor),
+  declareVariable(focusColor, dangerLineColor),
+  declareVariable(edgeColor, dangerSoftColor),
+)
+
+// 边缘、背景与文字消费当前作用域的语气值。
+dangerStyle.attach(border(thinBoundary, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor))
+
+/** 危险按钮悬停时增加语气色占比。 */
+export const dangerHoverStyle = styleRule(stateHover)
+dangerStyle.attach(dangerHoverStyle)
+
+dangerHoverStyle.attach(backgroundColor(toneHoverBackground), color(toneForeground))
+
+/** 危险按钮按下时继续加深语气色。 */
+export const dangerActiveStyle = styleRule(stateActive)
+dangerStyle.attach(dangerActiveStyle)
+
+dangerActiveStyle.attach(backgroundColor(toneActiveBackground), color(toneForeground))
+
+/** 实心且带语气时使用动作前景色；此条件比禁用分支更具体。 */
+export const solidToneStyle = styleRule('&[data-variant="solid"][data-tone]')
+kitRoot.attach(solidToneStyle)
+
+solidToneStyle.attach(color(actionForegroundColor))
+
+/** 小号按钮同步调整高度、内边距、内容间距与字号。 */
+export const smallStyle = styleRule('&[data-size="small"]')
+kitRoot.attach(smallStyle)
+
+smallStyle.attach(
+  declareVariable(minimumHeight, smallSize),
+  declareVariable(horizontalPadding, mediumSpace),
+  declareVariable(verticalPadding, smallSpace),
+  declareVariable(contentGap, smallSpace),
+  declareVariable(controlTextSize, normalTextSize),
+)
+
+/** 大号按钮同步调整高度、内边距、内容间距与字号。 */
+export const largeStyle = styleRule('&[data-size="large"]')
+kitRoot.attach(largeStyle)
+
+largeStyle.attach(
+  declareVariable(minimumHeight, largeSize),
+  declareVariable(horizontalPadding, wideSpace),
+  declareVariable(verticalPadding, normalSpace),
+  declareVariable(contentGap, mediumSpace),
+  declareVariable(controlTextSize, xlargeTextSize),
+)
+
+/** 超大号按钮同步调整高度、内边距、内容间距与字号。 */
+export const xlargeStyle = styleRule('&[data-size="xlarge"]')
+kitRoot.attach(xlargeStyle)
+
+xlargeStyle.attach(
+  declareVariable(minimumHeight, xlargeSize),
+  declareVariable(horizontalPadding, widestSpace),
+  declareVariable(verticalPadding, mediumSpace),
+  declareVariable(contentGap, largeSpace),
+  declareVariable(controlTextSize, headingTextSize),
+)
+
+/** 加载只提示忙碌，不阻止事件。 */
+export const loadingStyle = styleRule('&[data-status~="loading"]')
+kitRoot.attach(loadingStyle)
+
+loadingStyle.attach(cursor('progress'))
+
+/** 禁用兼顾原生属性与状态标记，淡化外观并移除阴影和位移。 */
+export const disabledStyle = styleRule('&:disabled, &[data-status~="disabled"]')
+kitRoot.attach(disabledStyle)
+
+disabledStyle.attach(
+  backgroundColor(baseSurfaceColor),
+  color(foregroundColor),
+  boxShadow('none'),
+  cursor('not-allowed'),
+  opacity(disabledOpacity),
+  transform('none'),
 )
 
 /** 浏览器宿主须先提供 style#css-root；服务器端只保留定义。 */
 export function registerButtonStyle(): void {
   if (typeof document === 'undefined') return
-  cssRoot.activate(buttonRules)
+  cssRoot.activate(kitRoot)
 }

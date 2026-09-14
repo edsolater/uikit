@@ -5,8 +5,8 @@ import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
 import { Button } from './Button'
-import { cssRoot } from '../../../style-system/core'
-import { buttonRules } from './Button.style'
+import { cssRoot } from '../../../style-system'
+import { kitRoot } from './Button.style'
 
 let dispose: (() => void) | undefined
 
@@ -39,7 +39,7 @@ describe('Button', () => {
     )
 
     expect(cssRoot.activate).toHaveBeenCalledTimes(3)
-    expect(cssRoot.activate).toHaveBeenCalledWith(buttonRules)
+    expect(cssRoot.activate).toHaveBeenCalledWith(kitRoot)
     expect(ref).toHaveBeenCalledOnce()
     expect(vi.mocked(cssRoot.activate).mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
     expect(ref).toHaveBeenCalledWith(host.firstElementChild)

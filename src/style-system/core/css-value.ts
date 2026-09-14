@@ -1,5 +1,5 @@
 /** CSS 值及渲染时的激活通知。 */
-import type { Rule } from './css-block'
+import type { Content, Rule } from './css-block'
 
 export interface RenderContext {
   /** 每次渲染前通知，由接收方处理重复激活。 */
@@ -7,9 +7,11 @@ export interface RenderContext {
 }
 
 export interface Value {
-  readonly kind: 'value'
-  /** 激活时同步执行；返回的规则随此值一起注册。 */
-  readonly onActive?: () => Rule | void
+  kind: 'value'
+
+  /** 激活时同步执行；返回的规则或递归规则集合随此值一起注册。 */
+  onActive?: () => Content<Rule> | void
+
   /** 内部 Value 须通过 parseValue 渲染并传递 context，才能参与激活。 */
   parseCss(context?: RenderContext): string
 }
@@ -22,7 +24,7 @@ export interface Value {
 export function value(
   raw: string | number,
   options?: Pick<Value, 'onActive'>,
-): Value & { readonly raw: string | number } {
+): Value & { raw: string | number } {
   return {
     kind: 'value',
     raw,

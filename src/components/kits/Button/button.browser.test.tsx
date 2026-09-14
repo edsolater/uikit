@@ -4,8 +4,13 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { Button } from './Button'
 import { registerButtonStyle } from './Button.style'
-import { cssRoot, styleRule } from '../../../style-system/core'
-import { properties, variables, values } from '../../../style-system/tokens'
+import { cssRoot, styleRule, declareVariable } from '../../../style-system'
+import { borderRadius } from '../../../style-system/css-properties/border'
+import { padding } from '../../../style-system/css-properties/padding'
+import { cornerRadius } from '../../../style-system/css-values/appearance'
+import { smallRadius, px8 } from '../../../style-system/css-values/dimension-scale'
+import { horizontalPadding, verticalPadding } from '../../../style-system/css-values/dimension-spacing'
+import { smallSpace } from '../../../style-system/css-values/dimension-theme'
 
 let dispose: (() => void) | undefined
 const buttonStyleSelector = 'style#css-root'
@@ -69,12 +74,12 @@ describe('Button styles', () => {
     input.className = 'shared-input'
     host.append(input)
     cssRoot.activate(
-      styleRule('.shared-input')(
-        variables.radius(values.radii.small),
-        variables.paddingX(variables.space.small),
-        variables.paddingY(values.space.normal),
-        properties.borderRadius(variables.radius),
-        properties.padding(variables.paddingY, variables.paddingX),
+      styleRule('.shared-input').attach(
+        declareVariable(cornerRadius, smallRadius),
+        declareVariable(horizontalPadding, smallSpace),
+        declareVariable(verticalPadding, px8),
+        borderRadius(cornerRadius),
+        padding(verticalPadding, horizontalPadding),
       ),
     )
     expect(getComputedStyle(input).borderTopLeftRadius).toBe('4px')
