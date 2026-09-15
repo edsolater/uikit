@@ -1,4 +1,4 @@
-/** 按主题定义按钮配置，在末尾组装规则；组件执行时按需注册。 */
+/** 按钮的样式配置与注册。 */
 import {
   styleRule,
   cssRoot,
@@ -87,12 +87,7 @@ import {
   textLineHeight,
 } from '../../../style-system/values/materials/font'
 import { fastDuration, standardEasing } from '../../../style-system/values/materials/motion'
-import {
-  raisedShadow,
-  normalShadow,
-  hoverShadow,
-  activeShadow,
-} from '../../../style-system/values/materials/shadow'
+import { raisedShadow, normalShadow, hoverShadow, activeShadow } from '../../../style-system/values/materials/shadow'
 import { disabledOpacity } from '../../../style-system/values/materials/opacity'
 import { edgeColor, focusColor } from '../../../style-system/values/materials/color-edge'
 
@@ -100,38 +95,31 @@ import { edgeColor, focusColor } from '../../../style-system/values/materials/co
 // 基础样式
 // =============================================================================
 
-// --- 作用域取值 ---
+/** 组件变量定义：圆角、字重 */
+const variables = [declareVariable(cornerRadius, pillRadius), declareVariable(textWeight, boldFontWeight)]
 
-// 胶囊圆角与粗字重只在按钮作用域内定义，不改变共享材料。
-const buttonVariablesDeclaration = [declareVariable(cornerRadius, pillRadius), declareVariable(textWeight, boldFontWeight)]
+/** 尺寸、空间与定位 */
+const baseLayout = [
+  inlineCenter(),
+  gap(contentGap),
+  minHeight(minimumHeight),
+  padding(verticalPadding, horizontalPadding),
+]
 
-// --- 布局与外形 ---
+/** 文字排版 */
+const typography = [font('inherit'), fontSize(controlTextSize), fontWeight(textWeight), lineHeight(textLineHeight)]
 
-// 内容居中；尺寸、间隔与内边距仍可通过共享变量覆盖。
-const buttonLayout = [inlineCenter(), gap(contentGap), minHeight(minimumHeight), padding(verticalPadding, horizontalPadding)]
+/** 默认外观 */
+const appearance = [
+  border(thinDistance, 'solid', edgeColor),
+  borderRadius(cornerRadius),
+  backgroundColor(bgColor),
+  color(foregroundColor),
+  boxShadow(normalShadow),
+]
 
-// 细实线边缘与圆角。
-const buttonShape = [border(thinDistance, 'solid', edgeColor), borderRadius(cornerRadius)]
-
-// --- 文字与外观 ---
-
-// 继承字体后，应用可独立覆盖的字号、字重与行高。
-const buttonTypography = [font('inherit'), fontSize(controlTextSize), fontWeight(textWeight), lineHeight(textLineHeight)]
-
-// 默认底色、文字色与阴影。
-const buttonAppearance = [backgroundColor(bgColor), color(foregroundColor), boxShadow(normalShadow)]
-
-// =============================================================================
-// 交互反馈
-// =============================================================================
-
-// --- 指针与过渡 ---
-
-// 可点击提示，并避免点击时选中文字。
-const buttonInteraction = [cursor('pointer'), userSelect('none')]
-
-/** 按钮颜色、阴影、透明度与位移的过渡；不让尺寸跟着补间。 */
-const buttonTransition = transition(
+/** 状态切换的过渡效果 */
+const baseTransition = transition(
   [backgroundColorKey, fastDuration, standardEasing],
   [borderColorKey, fastDuration, standardEasing],
   [boxShadowKey, fastDuration, standardEasing],
@@ -140,27 +128,26 @@ const buttonTransition = transition(
   [transformKey, fastDuration, standardEasing],
 )
 
-// --- 悬停、按下与焦点 ---
+// =============================================================================
+// 交互反馈
+// =============================================================================
 
-/** 按钮悬停时切换底色、文字色和阴影。 */
-const hoverStyle = styleRule(stateHover)
+/** 指针与文本选择 */
+const interaction = [cursor('pointer'), userSelect('none')]
 
-const buttonHoverAppearance = [backgroundColor(bgHoverColor), color(foregroundHoverColor), boxShadow(hoverShadow)]
+/** 外观（state：hover） */
+const appearanceWhenHover = [backgroundColor(bgHoverColor), color(foregroundHoverColor), boxShadow(hoverShadow)]
 
-/** 按钮按下时切换外观，并向下移动一个细边界厚度。 */
-const activeStyle = styleRule(stateActive)
-
-const buttonActiveAppearance = [
+/** 外观（state：active） */
+const appearanceWhenActive = [
   backgroundColor(bgActiveColor),
   color(foregroundActiveColor),
   boxShadow(activeShadow),
   transform(translateY(thinDistance)),
 ]
 
-/** 键盘焦点轮廓不占布局空间，与按钮边缘留出间隔。 */
-const focusStyle = styleRule(focusVisible)
-
-const buttonFocusOutline = [
+/** 外观（state：focus-visible） */
+const appearanceWhenFocus = [
   outlineWidth(focusOutlineThickness),
   outlineStyle('solid'),
   outlineColor(focusColor),
@@ -168,58 +155,56 @@ const buttonFocusOutline = [
 ]
 
 // =============================================================================
-// 外观变体
+// variant 外观
 // =============================================================================
 
-// --- 裸式 ---
+// --- variant:bare ---
 
-/** 裸底按钮退去背景与阴影，只在交互时提示位置。 */
-const bareStyle = styleRule('&[data-variant="bare"]')
+/** 外观（variant：bare） */
+const appearanceWhenBare = [
+  backgroundColor('transparent'),
+  border(thinDistance, 'solid', 'transparent'),
+  boxShadow('none'),
+]
 
-const buttonBareAppearance = [backgroundColor('transparent'), border(thinDistance, 'solid', 'transparent'), boxShadow('none')]
+/** 外观（variant：bare，state：hover） */
+const appearanceWhenBareAndHover = [backgroundColor(hoverOverlayColor), boxShadow('none')]
 
-/** 裸底按钮悬停时使用浅色覆盖层。 */
-const bareHoverStyle = styleRule(stateHover)
+/** 外观（variant：bare，state：active） */
+const appearanceWhenBareAndActive = [backgroundColor(activeOverlayColor), boxShadow('none')]
 
-const buttonBareHoverAppearance = [backgroundColor(hoverOverlayColor), boxShadow('none')]
+// --- variant:solid ---
 
-/** 裸底按钮按下时加深覆盖层。 */
-const bareActiveStyle = styleRule(stateActive)
-
-const buttonBareActiveAppearance = [backgroundColor(activeOverlayColor), boxShadow('none')]
-
-// --- 实心 ---
-
-/** 实心按钮使用动作底色和抬升阴影。 */
-const solidStyle = styleRule('&[data-variant="solid"]')
-
-const buttonSolidAppearance = [
+/** 外观（variant：solid） */
+const appearanceWhenSolid = [
   backgroundColor(actionColor),
   border(thinDistance, 'solid', 'transparent'),
   boxShadow(raisedShadow),
   color(actionForegroundColor),
 ]
 
-/** 实心按钮悬停时保持实心外观。 */
-const solidHoverStyle = styleRule(stateHover)
+/** 外观（variant：solid，state：hover） */
+const appearanceWhenSolidAndHover = [
+  backgroundColor(actionHoverColor),
+  color(actionForegroundColor),
+  boxShadow(raisedShadow),
+]
 
-const buttonSolidHoverAppearance = [backgroundColor(actionHoverColor), color(actionForegroundColor), boxShadow(raisedShadow)]
-
-/** 实心按钮按下时保持动作前景色和阴影。 */
-const solidActiveStyle = styleRule(stateActive)
-
-const buttonSolidActiveAppearance = [backgroundColor(actionActiveColor), color(actionForegroundColor), boxShadow(raisedShadow)]
+/** 外观（variant：solid，state：active） */
+const appearanceWhenSolidAndActive = [
+  backgroundColor(actionActiveColor),
+  color(actionForegroundColor),
+  boxShadow(raisedShadow),
+]
 
 // =============================================================================
-// 语义色调
+// tone 语气
 // =============================================================================
 
-// --- 强调操作 ---
+// --- tone:accent ---
 
-/** 强调按钮定义语气配色；外观变体不决定语气。 */
-const accentStyle = styleRule('&[data-tone="accent"]')
-
-const buttonAccentVariablesDeclaration = [
+/** 配色变量（tone：accent） */
+const variablesWhenAccent = [
   declareVariable(toneColor, accentColor),
   declareVariable(toneSoftColor, accentSoftColor),
   declareVariable(toneForeground, accentForegroundColor),
@@ -227,25 +212,23 @@ const buttonAccentVariablesDeclaration = [
   declareVariable(edgeColor, accentSoftColor),
 ]
 
-// 边缘、背景与文字消费当前作用域的语气值。
-const buttonAccentAppearance = [border(thinDistance, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor)]
+/** 外观（tone：accent） */
+const appearanceWhenAccent = [
+  border(thinDistance, 'solid', edgeColor),
+  backgroundColor(toneBackground),
+  color(toneColor),
+]
 
-/** 强调按钮悬停时增加语气色占比。 */
-const accentHoverStyle = styleRule(stateHover)
+/** 外观（tone：accent，state：hover） */
+const appearanceWhenAccentAndHover = [backgroundColor(toneHoverBackground), color(toneForeground)]
 
-const buttonAccentHoverAppearance = [backgroundColor(toneHoverBackground), color(toneForeground)]
+/** 外观（tone：accent，state：active） */
+const appearanceWhenAccentAndActive = [backgroundColor(toneActiveBackground), color(toneForeground)]
 
-/** 强调按钮按下时继续加深语气色。 */
-const accentActiveStyle = styleRule(stateActive)
+// --- tone:danger ---
 
-const buttonAccentActiveAppearance = [backgroundColor(toneActiveBackground), color(toneForeground)]
-
-// --- 危险操作 ---
-
-/** 危险按钮定义语气配色；外观变体不决定语气。 */
-const dangerStyle = styleRule('&[data-tone="danger"]')
-
-const buttonDangerVariablesDeclaration = [
+/** 配色变量（tone：danger） */
+const variablesWhenDanger = [
   declareVariable(toneColor, dangerColor),
   declareVariable(toneSoftColor, dangerSoftColor),
   declareVariable(toneForeground, dangerForegroundColor),
@@ -253,36 +236,32 @@ const buttonDangerVariablesDeclaration = [
   declareVariable(edgeColor, dangerSoftColor),
 ]
 
-// 边缘、背景与文字消费当前作用域的语气值。
-const buttonDangerAppearance = [border(thinDistance, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor)]
+/** 外观（tone：danger） */
+const appearanceWhenDanger = [
+  border(thinDistance, 'solid', edgeColor),
+  backgroundColor(toneBackground),
+  color(toneColor),
+]
 
-/** 危险按钮悬停时增加语气色占比。 */
-const dangerHoverStyle = styleRule(stateHover)
+/** 外观（tone：danger，state：hover） */
+const appearanceWhenDangerAndHover = [backgroundColor(toneHoverBackground), color(toneForeground)]
 
-const buttonDangerHoverAppearance = [backgroundColor(toneHoverBackground), color(toneForeground)]
+/** 外观（tone：danger，state：active） */
+const appearanceWhenDangerAndActive = [backgroundColor(toneActiveBackground), color(toneForeground)]
 
-/** 危险按钮按下时继续加深语气色。 */
-const dangerActiveStyle = styleRule(stateActive)
+// --- variant:solid + tone ---
 
-const buttonDangerActiveAppearance = [backgroundColor(toneActiveBackground), color(toneForeground)]
-
-// --- 实心与色调组合 ---
-
-/** 实心且带语气时使用动作前景色；此条件比禁用分支更具体。 */
-const solidToneStyle = styleRule('&[data-variant="solid"][data-tone]')
-
-const buttonSolidToneForeground = color(actionForegroundColor)
+/** 文字色（variant：solid，tone：accent 或 danger；优先于禁用色） */
+const foregroundWhenSolidWithTone = color(actionForegroundColor)
 
 // =============================================================================
-// 尺寸
+// size 尺寸
 // =============================================================================
 
-// --- 小号 ---
+// --- size:small ---
 
-/** 小号按钮同步调整高度、内边距、内容间距与字号。 */
-const smallStyle = styleRule('&[data-size="small"]')
-
-const buttonSmallVariablesDeclaration = [
+/** 尺寸与排版变量（size：small） */
+const variablesWhenSmall = [
   declareVariable(minimumHeight, smallControlSize),
   declareVariable(horizontalPadding, mediumSpace),
   declareVariable(verticalPadding, smallSpace),
@@ -290,12 +269,10 @@ const buttonSmallVariablesDeclaration = [
   declareVariable(controlTextSize, normalTextSize),
 ]
 
-// --- 大号 ---
+// --- size:large ---
 
-/** 大号按钮同步调整高度、内边距、内容间距与字号。 */
-const largeStyle = styleRule('&[data-size="large"]')
-
-const buttonLargeVariablesDeclaration = [
+/** 尺寸与排版变量（size：large） */
+const variablesWhenLarge = [
   declareVariable(minimumHeight, largeControlSize),
   declareVariable(horizontalPadding, wideSpace),
   declareVariable(verticalPadding, normalSpace),
@@ -303,12 +280,10 @@ const buttonLargeVariablesDeclaration = [
   declareVariable(controlTextSize, xlargeTextSize),
 ]
 
-// --- 超大号 ---
+// --- size:xlarge ---
 
-/** 超大号按钮同步调整高度、内边距、内容间距与字号。 */
-const xlargeStyle = styleRule('&[data-size="xlarge"]')
-
-const buttonXlargeVariablesDeclaration = [
+/** 尺寸与排版变量（size：xlarge） */
+const variablesWhenXlarge = [
   declareVariable(minimumHeight, xlargeControlSize),
   declareVariable(horizontalPadding, widestSpace),
   declareVariable(verticalPadding, mediumSpace),
@@ -317,22 +292,18 @@ const buttonXlargeVariablesDeclaration = [
 ]
 
 // =============================================================================
-// 状态
+// status 状态
 // =============================================================================
 
-// --- 加载 ---
+// --- status:loading ---
 
-/** 加载只提示忙碌，不阻止事件。 */
-const loadingStyle = styleRule('&[data-status~="loading"]')
+/** 指针（state：loading） */
+const interactionWhenLoading = cursor('progress')
 
-const buttonLoadingCursor = cursor('progress')
+// --- status:disabled ---
 
-// --- 禁用 ---
-
-/** 禁用兼顾原生属性与状态标记，淡化外观并移除阴影和位移。 */
-const disabledStyle = styleRule('&:disabled, &[data-status~="disabled"]')
-
-const buttonDisabledAppearance = [
+/** 外观（state：disabled） */
+const appearanceWhenDisabled = [
   backgroundColor(baseSurfaceColor),
   color(defaultForegroundColor),
   boxShadow('none'),
@@ -347,76 +318,85 @@ const buttonDisabledAppearance = [
 
 // --- 交互反馈 ---
 
-hoverStyle.of(buttonHoverAppearance)
+const hoverStyle = styleRule(stateHover)
+hoverStyle.of(appearanceWhenHover)
 
-activeStyle.of(buttonActiveAppearance)
+const activeStyle = styleRule(stateActive)
+activeStyle.of(appearanceWhenActive)
 
-focusStyle.of(buttonFocusOutline)
+const focusStyle = styleRule(focusVisible)
+focusStyle.of(appearanceWhenFocus)
 
-// --- 外观变体 ---
+// --- variant 外观 ---
 
-bareHoverStyle.of(buttonBareHoverAppearance)
+const bareHoverStyle = styleRule(stateHover)
+bareHoverStyle.of(appearanceWhenBareAndHover)
 
-bareActiveStyle.of(buttonBareActiveAppearance)
+const bareActiveStyle = styleRule(stateActive)
+bareActiveStyle.of(appearanceWhenBareAndActive)
 
-bareStyle.of(buttonBareAppearance, bareHoverStyle, bareActiveStyle)
+const bareStyle = styleRule('&[data-variant="bare"]')
+bareStyle.of(appearanceWhenBare, bareHoverStyle, bareActiveStyle)
 
-solidHoverStyle.of(buttonSolidHoverAppearance)
+const solidHoverStyle = styleRule(stateHover)
+solidHoverStyle.of(appearanceWhenSolidAndHover)
 
-solidActiveStyle.of(buttonSolidActiveAppearance)
+const solidActiveStyle = styleRule(stateActive)
+solidActiveStyle.of(appearanceWhenSolidAndActive)
 
-solidStyle.of(buttonSolidAppearance, solidHoverStyle, solidActiveStyle)
+const solidStyle = styleRule('&[data-variant="solid"]')
+solidStyle.of(appearanceWhenSolid, solidHoverStyle, solidActiveStyle)
 
-// --- 语义色调 ---
+// --- tone 语气 ---
 
-accentHoverStyle.of(buttonAccentHoverAppearance)
+const accentHoverStyle = styleRule(stateHover)
+accentHoverStyle.of(appearanceWhenAccentAndHover)
 
-accentActiveStyle.of(buttonAccentActiveAppearance)
+const accentActiveStyle = styleRule(stateActive)
+accentActiveStyle.of(appearanceWhenAccentAndActive)
 
-accentStyle.of(
-  buttonAccentVariablesDeclaration,
-  buttonAccentAppearance,
-  accentHoverStyle,
-  accentActiveStyle,
-)
+const accentStyle = styleRule('&[data-tone="accent"]')
+accentStyle.of(variablesWhenAccent, appearanceWhenAccent, accentHoverStyle, accentActiveStyle)
 
-dangerHoverStyle.of(buttonDangerHoverAppearance)
+const dangerHoverStyle = styleRule(stateHover)
+dangerHoverStyle.of(appearanceWhenDangerAndHover)
 
-dangerActiveStyle.of(buttonDangerActiveAppearance)
+const dangerActiveStyle = styleRule(stateActive)
+dangerActiveStyle.of(appearanceWhenDangerAndActive)
 
-dangerStyle.of(
-  buttonDangerVariablesDeclaration,
-  buttonDangerAppearance,
-  dangerHoverStyle,
-  dangerActiveStyle,
-)
+const dangerStyle = styleRule('&[data-tone="danger"]')
+dangerStyle.of(variablesWhenDanger, appearanceWhenDanger, dangerHoverStyle, dangerActiveStyle)
 
-solidToneStyle.of(buttonSolidToneForeground)
+const solidToneStyle = styleRule('&[data-variant="solid"][data-tone]')
+solidToneStyle.of(foregroundWhenSolidWithTone)
 
-// --- 尺寸与状态 ---
+// --- size 与 status ---
 
-smallStyle.of(buttonSmallVariablesDeclaration)
+const smallStyle = styleRule('&[data-size="small"]')
+smallStyle.of(variablesWhenSmall)
 
-largeStyle.of(buttonLargeVariablesDeclaration)
+const largeStyle = styleRule('&[data-size="large"]')
+largeStyle.of(variablesWhenLarge)
 
-xlargeStyle.of(buttonXlargeVariablesDeclaration)
+const xlargeStyle = styleRule('&[data-size="xlarge"]')
+xlargeStyle.of(variablesWhenXlarge)
 
-loadingStyle.of(buttonLoadingCursor)
+const loadingStyle = styleRule('&[data-status~="loading"]')
+loadingStyle.of(interactionWhenLoading)
 
-disabledStyle.of(buttonDisabledAppearance)
+const disabledStyle = styleRule('&:disabled, &[data-status~="disabled"]')
+disabledStyle.of(appearanceWhenDisabled)
 
 // --- 按钮根规则 ---
 
-/** 按钮的完整规则；实心与色调组合的文字色优先于禁用分支。 */
 const kitStyle = styleRule('.Button')
 kitStyle.of(
-  buttonVariablesDeclaration,
-  buttonLayout,
-  buttonShape,
-  buttonTypography,
-  buttonAppearance,
-  buttonInteraction,
-  buttonTransition,
+  variables,
+  baseLayout,
+  typography,
+  appearance,
+  interaction,
+  baseTransition,
   hoverStyle,
   activeStyle,
   focusStyle,
@@ -434,7 +414,7 @@ kitStyle.of(
 
 // --- 按需注册 ---
 
-/** 浏览器宿主须先提供 style#css-root；服务器端只保留定义。 */
+/** 注册按钮样式；浏览器须先提供 style#css-root，服务器端跳过。 */
 export function registerButtonStyle(): void {
   if (typeof document === 'undefined') return
   cssRoot.activate(kitStyle)

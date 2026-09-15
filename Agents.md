@@ -13,6 +13,7 @@
 - 写代码、改代码、重构、命名、写注释、写 CSS、写组件或类型时，再从 [代码规则](D:/mycode/ai-rules/code/README.md) 进入对应主题。
 - 编写或修改 TypeScript 前，直接阅读 [readonly 约束](D:/mycode/ai-rules/rules/Code-readonly约束.md)。
 - 写或改 CSS 时，必须直接阅读 [CSS 规则](D:/mycode/ai-rules/code/css/README.md)，先确定样式归属并阻止规则膨胀。
+- 写或改组件的 `.style.ts` 时，再读本项目的 [样式文件写法](docs/style/样式文件写法.md)，并对照组件定义确认分类与状态。
 - 查当前仓库结构、模块边界和调用链时读 [Architecture.md](Architecture.md)。
 - 写 Guide 或 Plan 时读 [Guide 写法](docs/how-to-write-guide.md) 和 [Plan 写法](docs/how-to-write-plan.md)。
 

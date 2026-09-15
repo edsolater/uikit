@@ -108,11 +108,11 @@ root 和 registration 可以同时存在，按类型注册、根默认定义的�
 
 ## Button 配置与接入
 
-[Button.style.ts](../components/kits/Button/Button.style.ts) 使用直接导入，不再使用属性或材料 namespace。正文按基础样式、交互反馈、外观变体、语义色调、尺寸与状态定义配置，所有 of 在末尾组装区表达归属；分支先组成完整内容，再按既有顺序进入根节点 kitStyle。
+[Button.style.ts](../components/kits/Button/Button.style.ts) 使用直接导入。正文按基础样式、交互反馈、variant、tone、size 与 status 定义配置；名称以内容为主体、条件为限定，例如 appearanceWhenBareAndHover。所有 styleRule 的创建与 of 都留在末尾组装区；分支先组成完整内容，再按既有顺序进入根节点 kitStyle。
 
-文件是一级阅读单元；三行长等号注释区分二级区域，单行短横线标题区分三级主题，例如“语义色调”下的“危险操作”。节点注释与空行提供局部中文扫读入口，不为排版制造函数。inlineCenter() 返回通用居中组合；Button 专用外观与直接列出六条配置的 buttonTransition 留在当前文件，不要求 transitionValue 或 map。
+inlineCenter() 返回通用居中组合；组件专用外观与直接列出六条配置的 baseTransition 留在当前文件，不要求 transitionValue 或 map。
 
-当前唯一导出是 registerButtonStyle。kitStyle、各分支与声明节点均为内部配置，不承诺外部 JS 修改入口；测试通过组件的实际激活调用验证规则复用，不依赖导出私有节点。完整阅读约定见 [Button 的阅读与连接方式](design.md#button-的阅读与连接方式)。
+当前唯一导出是 registerButtonStyle。kitStyle、各分支与声明节点均为内部配置，不承诺外部 JS 修改入口；测试通过组件的实际激活调用验证规则复用，不依赖导出私有节点。完整写法见项目专属的 [样式文件写法](../../docs/style/样式文件写法.md)。
 
 Button 实际执行 → registerButtonStyle → cssRoot.activate(kitStyle) → 沿 Value 闭合注册 → 向 style#css-root 追加规则。只 import 不激活，服务器端跳过。Example 的 index.html、Storybook 的 preview-head.html 和浏览器验证宿主提供承载节点。
 
