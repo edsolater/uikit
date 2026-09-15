@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
 import { Button } from './Button'
 import { cssRoot } from '../../../style-system'
-import { kitStyle } from './Button.style'
 
 let dispose: (() => void) | undefined
 
@@ -39,7 +38,10 @@ describe('Button', () => {
     )
 
     expect(cssRoot.activate).toHaveBeenCalledTimes(3)
-    expect(cssRoot.activate).toHaveBeenCalledWith(kitStyle)
+    const activationCalls = vi.mocked(cssRoot.activate).mock.calls
+    const firstRule = activationCalls[0][0]
+    expect(firstRule).toEqual(expect.objectContaining({ kind: 'style-rule', selector: '.Button' }))
+    for (const [rule] of activationCalls) expect(rule).toBe(firstRule)
     expect(ref).toHaveBeenCalledOnce()
     expect(vi.mocked(cssRoot.activate).mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
     expect(ref).toHaveBeenCalledWith(host.firstElementChild)

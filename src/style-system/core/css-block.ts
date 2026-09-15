@@ -1,14 +1,18 @@
 /** CSS Block 持有累计内容，具体种类负责对应的 CSS 格式。 */
-import type { Keyframes } from '../css-block/keyframe'
-import type { Media } from '../css-block/media'
-import type { PropertyRule } from '../css-block/property'
-import type { StyleRule } from '../css-block/style'
+import { flapDeep, type MayDeepArray } from '@edsolater/fnkit'
+import type { Keyframes } from '../blocks/keyframe'
+import type { Media } from '../blocks/media'
+import type { PropertyRule } from '../blocks/property'
+import type { StyleRule } from '../blocks/style'
 import type { RenderContext } from './css-value'
 
 export type BlockKind = 'style-rule' | 'media' | 'keyframes' | 'frame' | 'property-rule'
 
 export interface Block<Node = unknown> {
-  /** 向自身追加内容并返回自身；空内容不创建副本。 */
+  /**
+   * 展开分组数组后向自身追加节点；不进入节点内部的 content。
+   * @example rule.of(a, [b, [c]]) // 接收结果等效于 rule.of(a, b, c)，节点引用不变。
+   */
   of(...content: Content<Node>[]): this
 
   kind: BlockKind
@@ -24,7 +28,7 @@ export interface Block<Node = unknown> {
 export type Rule = StyleRule | Media | Keyframes | PropertyRule
 
 /** 集合只负责分组；CSS 结构仍由节点决定。 */
-export type Content<T> = T | Content<T>[]
+export type Content<T> = MayDeepArray<T>
 
 /**
  * 每个 Block 独立累计内容；具体语法由 definition 提供。
@@ -42,23 +46,8 @@ export function block<B extends Block<B['body'][number]>>(
     ...definition,
     body,
     of(...content: Content<Node>[]) {
-      for (const node of flattenContent<Node>(content)) body.push(node)
+      for (const node of flapDeep(content)) body.push(node)
       return this
     },
   }
-}
-
-/** 按原顺序取得节点快照，不展开节点内部的 CSS 结构。 */
-export function flattenContent<T>(content: Content<T>[]): T[] {
-  const result: T[] = []
-  const pending = [...content].reverse()
-  while (pending.length) {
-    const item = pending.pop()!
-    if (Array.isArray(item)) {
-      for (let index = item.length - 1; index >= 0; index--) pending.push(item[index])
-    } else {
-      result.push(item as T)
-    }
-  }
-  return result
 }

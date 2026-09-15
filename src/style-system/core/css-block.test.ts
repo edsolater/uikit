@@ -1,13 +1,13 @@
 /** Block 的身份、累计状态、实例隔离与嵌套输出。 */
 import { expect, test } from 'vitest'
-import { frame, keyframes } from '../css-block/keyframe'
-import { media } from '../css-block/media'
-import { propertyRule } from '../css-block/property'
-import { styleRule } from '../css-block/style'
+import { frame, keyframes } from '../blocks/keyframe'
+import { media } from '../blocks/media'
+import { propertyRule } from '../blocks/property'
+import { styleRule } from '../blocks/style'
 import { declaration } from './css-declaration'
 import { key } from './css-key'
 import { value } from './css-value'
-import { stateHover } from '../css-selectors/msic'
+import { stateHover } from '../selectors/msic'
 
 test('attach 累计到同一实例，来源集合与另建实例不共享列表', () => {
   const color = declaration(key('color'), value('red'))

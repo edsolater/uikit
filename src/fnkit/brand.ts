@@ -1,4 +1,5 @@
-import { isObject } from '@edsolater/fnkit'
+/** 为对象附加身份标记，并按标记组合判断身份。 */
+import { isObject, toArray } from '@edsolater/fnkit'
 
 /**
  * 标识
@@ -50,8 +51,8 @@ export function hasBrand<B extends Brand, Ex extends Brand>(
   excludeBrand?: Ex | Ex[],
 ): value is BrandValue<B> {
   if (!isObject(value)) return false
-  const brands = Array.isArray(targetBrand) ? targetBrand : [targetBrand]
-  const excludes = excludeBrand ? (Array.isArray(excludeBrand) ? excludeBrand : [excludeBrand]) : []
+  const brands = toArray(targetBrand)
+  const excludes = toArray(excludeBrand)
   return (
     brands.every((brand) => hasSingleBrand(value, brand)) && excludes.every((brand) => !hasSingleBrand(value, brand))
   )

@@ -40,7 +40,8 @@ export function value(
  * @example
  * const css = parseValue(value('2px')) // '2px'，不执行 onActive
  */
-export function parseValue(value: Value, context?: RenderContext): string {
+export function parseValue(value: Value | string, context?: RenderContext): string {
+  if (typeof value === 'string') return value
   context?.activateValue(value)
   return value.parseCss(context)
 }
@@ -48,15 +49,4 @@ export function parseValue(value: Value, context?: RenderContext): string {
 /** 字符串原样包装；已有 Value 保留原引用。 */
 export function toValue(input: Value | string): Value {
   return typeof input === 'string' ? value(input) : input
-}
-
-/** 分隔符属于语法，子值直到渲染时才解析。 */
-export function joinValues(separator: string, ...parts: (Value | string)[]): Value {
-  const values = parts.map(toValue)
-  return {
-    kind: 'value',
-    parseCss(context) {
-      return values.map((item) => parseValue(item, context)).join(separator)
-    },
-  }
 }

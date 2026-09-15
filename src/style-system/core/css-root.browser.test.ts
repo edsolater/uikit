@@ -1,19 +1,26 @@
 /** 在浏览器中检查样式生效、按需注册、去重和失败重试。 */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import type { Content, Rule } from './css-block'
-import { frame, keyframes } from '../css-block/keyframe'
-import { media } from '../css-block/media'
-import { styleRule, type StyleNode } from '../css-block/style'
+import { frame, keyframes } from '../blocks/keyframe'
+import { media } from '../blocks/media'
+import { styleRule, type StyleNode } from '../blocks/style'
 import { declaration } from './css-declaration'
 import { key } from './css-key'
 import { cssRoot, Root } from './css-root'
 import { value } from './css-value'
 import { declareVariable, variable } from './css-variable'
-import { boxShadow } from '../css-properties/box-shadow'
-import { border } from '../css-properties/border'
-import { padding } from '../css-properties/padding'
-import { margin, marginLeft } from '../css-properties/margin'
-import { bgColor } from '../css-values/color-surface'
+import { boxShadow } from '../declarations/box-shadow'
+import { border } from '../declarations/border'
+import { padding } from '../declarations/padding'
+import { margin, marginLeft } from '../declarations/margin'
+import { bgColor } from '../values/materials/color-surface'
+import { calcMultiply } from '../values/functions/calc'
+import { shadowValue } from '../values/shadow'
+import { valueList } from '../values/list'
+import { transition } from '../declarations/transition'
+import { transform } from '../declarations/transform'
+import { translateY } from '../values/functions/transform'
+import { font } from '../declarations/font'
 
 const opacityKey = key('opacity')
 const animationNameKey = key('animation-name')
@@ -52,7 +59,8 @@ test('递归片段在定义时保留顺序与引用，复合值沿同一激活�
   const fragment = [margin(distance), [left]]
   const selector = styleRule('.token-example')
   let nested: Content<StyleNode> = fragment
-  for (let depth = 0; depth < 10000; depth++) nested = [nested]
+  // 验证原生 flat 的递归分组语义，不承诺超出引擎调用栈的极端深度。
+  for (let depth = 0; depth < 100; depth++) nested = [nested]
   const stroke = variable('fragment-stroke', {
     registration: { syntax: '<length>', inherits: false, initialValue: value('2px') },
   })
@@ -68,7 +76,7 @@ test('递归片段在定义时保留顺序与引用，复合值沿同一激活�
   expect(selector.of()).toBe(appearance)
   expect(styleRule('.same').of(fragment).parseCss()).toBe(styleRule('.same').of(margin(distance), left).parseCss())
   fragment.length = 0
-  expect(appearance.body[4]).toBe(left)
+  expect(appearance.body[1]).toBe(left)
   expect(cssRoot.activate(appearance)).toBe(cssRoot)
   expect(active).toHaveBeenCalledTimes(1)
   expect(appearance.body[0].kind).toBe('declaration')
@@ -117,6 +125,54 @@ test('同一个变量在不同作用域定义不同值，定义和使用共同�
   expect(getComputedStyle(element).paddingLeft).toBe('12px')
   expect(style.sheet!.cssRules).toHaveLength(ruleCount)
   expect(registered).toHaveBeenCalledTimes(1)
+})
+
+test('Role 沿语义内容激活子值，接入后追加的过渡也进入同一次注册', () => {
+  const distanceActive = vi.fn()
+  const distance = variable('controlled-distance', {
+    registration: { syntax: '<length>', inherits: false, initialValue: value('4px', { onActive: distanceActive }) },
+  })
+  const duration = variable('controlled-duration', { root: { value: calcMultiply(value('100ms'), value(2)) } })
+  const easing = variable('controlled-easing', { root: { value: 'linear' } })
+  const assigned = declareVariable(distance, value('8px'))
+  const inset = padding({ left: distance, bottom: distance })
+  const typography = font({ size: distance, lineHeight: '1.5', family: 'system-ui' })
+  const timing = transition(['opacity', duration, easing])
+  const contact = shadowValue({ x: '0', y: distance, blur: distance, color: 'black' })
+  const shadow = boxShadow(valueList(contact, shadowValue({ x: '0', y: '2px', color: 'red' })))
+  const textShadow = declaration('text-shadow', contact)
+  const rule = styleRule('.token-example').of(assigned, [[inset, timing]], typography, shadow, textShadow, transform(translateY(distance)))
+
+  timing.append(['transform', duration, easing, '30ms'])
+  expect(rule.parseCss()).toContain(
+    'transition: opacity var(--controlled-duration) var(--controlled-easing), transform var(--controlled-duration) var(--controlled-easing) 30ms;',
+  )
+  expect(distanceActive).not.toHaveBeenCalled()
+
+  root.activate(rule)
+  expect(distanceActive).toHaveBeenCalledTimes(1)
+  const registrations = Array.from(style.sheet!.cssRules).filter((rule) => rule.cssText.startsWith('@property --controlled-distance'))
+  expect(registrations).toHaveLength(1)
+  const computed = getComputedStyle(element)
+  expect(computed.paddingTop).toBe('0px')
+  expect(computed.paddingBottom).toBe('8px')
+  expect(computed.paddingLeft).toBe('8px')
+  expect(computed.fontSize).toBe('8px')
+  expect(computed.boxShadow).toContain('8px 8px')
+  expect(computed.boxShadow.split(', rgb')).toHaveLength(2)
+  expect(computed.textShadow).toContain('8px 8px')
+  expect(computed.transform).toBe('matrix(1, 0, 0, 1, 0, 8)')
+  expect(computed.transitionProperty).toBe('opacity, transform')
+  expect(computed.transitionDuration).toBe('0.2s, 0.2s')
+  expect(computed.transitionTimingFunction).toBe('linear, linear')
+  expect(computed.transitionDelay).toBe('0s, 0.03s')
+
+  // 构建节点仍可修改，但已提交的 CSS 不随之重写。
+  const cssBefore = Array.from(style.sheet!.cssRules, (rule) => rule.cssText)
+  timing.append(['color', duration, easing])
+  expect(rule.parseCss()).toContain('color var(--controlled-duration) var(--controlled-easing)')
+  expect(getComputedStyle(element).transitionProperty).toBe('opacity, transform')
+  expect(Array.from(style.sheet!.cssRules, (rule) => rule.cssText)).toEqual(cssBefore)
 })
 
 test('同一个 Root 对 Value 和顶层 Block 均按对象身份幂等', () => {

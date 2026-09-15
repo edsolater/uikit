@@ -3,11 +3,24 @@ import { expect, expectTypeOf, test, vi } from 'vitest'
 import type { Block } from './css-block'
 import { parseValue, value, type Value } from './css-value'
 import { declareVariable, variable } from './css-variable'
-import { padding } from '../css-properties/padding'
-import { font } from '../css-properties/font'
-import { display } from '../css-properties/layout'
-import { border } from '../css-properties/border'
-import { transition, transitionValue } from '../css-properties/transition'
+import { padding } from '../declarations/padding'
+import { font } from '../declarations/font'
+import { display } from '../declarations/layout'
+import { border } from '../declarations/border'
+import { transition } from '../declarations/transition'
+import type { Transition } from '../values/transition'
+import { valueList } from '../values/list'
+import { formatCommaList } from '../formatters/comma-list'
+
+test('通用列表格式不拆开条目数组，值列表也不绑定阴影或其他属性', () => {
+  const pairs = [[1, 2], [3, 4]]
+  expect(formatCommaList(pairs, ([x, y]) => `${x} ${y}`)).toBe('1 2, 3 4')
+
+  const reference = variable('second-animation')
+  const animations = valueList(value('fade'), reference)
+  expect(animations.items[1]).toBe(reference)
+  expect(animations.parseCss()).toBe('fade, var(--second-animation)')
+})
 
 test('Value 独立保存内容，只有显式上下文能报告激活', () => {
   const active = vi.fn()
@@ -50,7 +63,7 @@ test('变量保留兜底对象，注册以独立完整规则返回', () => {
   const first = declareVariable(gap, assigned)
   const second = declareVariable(gap, value('20px'))
   expect(first.kind).toBe('declaration')
-  expect(first.key.name).toBe(second.key.name)
+  expect(first.name).toBe(second.name)
   expect(first.parseCss()).toBe('--gap: 12px;')
   expect(second.parseCss()).toBe('--gap: 20px;')
   expect(gap.fallback).toBe(fallback)
@@ -78,7 +91,7 @@ test('属性入口不限制关键字，按自身语法组合并保留子 Value',
   expect(padding(top, right).parseCss()).toBe('padding: 1px 2px;')
   expect(padding(top, right, bottom).parseCss()).toBe('padding: 1px 2px 3px;')
   expect(padding(top, right, bottom, left).parseCss()).toBe('padding: 1px 2px 3px 4px;')
-  expect(padding({ left }).map((item) => item.parseCss())).toEqual(['padding-left: 4px;'])
+  expect(padding({ left }).parseCss()).toBe('padding-left: 4px;')
   expect(display('inline-flex').parseCss()).toBe('display: inline-flex;')
   expectTypeOf<Parameters<typeof display>[0]>().toEqualTypeOf<Value | string>()
   expect(display('future-keyword').parseCss()).toBe('display: future-keyword;')
@@ -101,11 +114,11 @@ test('属性入口不限制关键字，按自身语法组合并保留子 Value',
 
   const duration = value('120ms')
   const easing = value('ease')
-  const fade = transitionValue('opacity', duration, easing)
-  const movement = transitionValue('transform', duration, easing)
+  const fade: Transition = ['opacity', duration, easing]
+  const movement: Transition = ['transform', duration, easing]
   visited.length = 0
-  expect(transition([fade, [movement]]).parseCss({ activateValue: (item) => visited.push(item) })).toBe(
+  expect(transition(fade, movement).parseCss({ activateValue: (item) => visited.push(item) })).toBe(
     'transition: opacity 120ms ease, transform 120ms ease;',
   )
-  expect(visited).toEqual(expect.arrayContaining([fade, movement, duration, easing]))
+  expect(visited).toEqual([duration, easing, duration, easing])
 })

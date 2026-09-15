@@ -1,11 +1,11 @@
 /** CSS 变量引用，以及显式可选的根默认定义和 @property 注册。 */
 import type { Rule } from './css-block'
-import { media } from '../css-block/media'
-import { styleRule } from '../css-block/style'
-import { propertyRule } from '../css-block/property'
+import { media } from '../blocks/media'
+import { styleRule } from '../blocks/style'
+import { propertyRule } from '../blocks/property'
 import { declaration, type Declaration } from './css-declaration'
 import { key } from './css-key'
-import { parseValue, toValue, value, type Value } from './css-value'
+import { parseValue, value, type Value } from './css-value'
 
 /** CSS 变量引用；局部取值由 declareVariable 定义，引用本身不保存当前取值。 */
 export interface Variable extends Value {
@@ -109,15 +109,11 @@ export function variable(name: string, options?: VariableOptions): Variable {
 /**
  * 在接收此 Declaration 的规则内定义变量取值，不修改引用及其 fallback。
  * 定义本身也会激活变量的注册能力，不要求另有属性消费该引用。
- * @example kitRoot.attach(declareVariable(horizontalPadding, normalSpace))
+ * @example kitStyle.of(declareVariable(horizontalPadding, normalSpace))
  */
 export function declareVariable(reference: Variable, input: Value | string): Declaration {
-  const assigned = toValue(input)
-  return declaration(key(`--${reference.name}`), {
-    kind: 'value',
-    parseCss(context) {
-      context?.activateValue(reference)
-      return parseValue(assigned, context)
-    },
+  return declaration(key(`--${reference.name}`), input, (content: Value | string, context) => {
+    context?.activateValue(reference)
+    return parseValue(content, context)
   })
 }
