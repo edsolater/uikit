@@ -15,7 +15,7 @@
 | Key | 保存可检索的属性名称，普通对象，不与 Value 预先绑定。 |
 | Value | 提供可用于 CSS 的内容；固定值、变量引用和复合值具有同一使用契约。 |
 | Declaration | 保存 Key 与 Value 的关系，负责冒号和分号。 |
-| Block | 持有累计内容，提供 attach，具体种类负责格式和合法节点位置。 |
+| Block | 持有累计内容，提供 of，具体种类负责格式和合法节点位置。 |
 | Root | 沿实际结构激活 Value，把完整顶层规则同步追加到样式表。 |
 
 函数是创建或组合手段，不增加 CSS 角色。Value、CSS Variable 和 Block 本身都不可调用；属性操作、组合工具及构造函数可以调用。
@@ -86,16 +86,17 @@ Selector 保存选择条件，直接复用字符串即可。stateHover、stateAc
 每次创建 Block 就创建独立累计状态。Block 是普通对象，不是函数、函数工厂或外加控制器的包装。
 
 ```ts
-const kitRoot = styleRule('.Button')
+const kitStyle = styleRule('.Button')
 
 /** 按钮的悬停反馈。 */
 const hoverStyle = styleRule(stateHover)
-kitRoot.attach(hoverStyle)
+kitStyle.of(hoverStyle)
 
-hoverStyle.attach(backgroundColor(bgHoverColor))
+const buttonHoverAppearance = [backgroundColor(bgHoverColor)]
+hoverStyle.of(buttonHoverAppearance)
 ```
 
-attach 接收多个节点及任意深度的有限集合，按顺序追加并返回自身。body 保存当前累计内容；parseCss 输出当前结构。不施加只读类型约束，由调用方遵守节点的修改约定。接收时展开集合、保留节点身份；来源数组后续变化不回写列表，子 Block 后续追加则可被父 Block 的下一次输出读取。
+of 表达 Block 与内容的组成关系，接收多个节点及任意深度的有限集合，按顺序追加并返回自身，不替换已有内容或派生新对象。body 保存当前累计内容；parseCss 输出当前结构。不施加只读类型约束，由调用方遵守节点的修改约定。接收时展开集合、保留节点身份；来源数组后续变化不回写列表，子 Block 后续追加则可被父 Block 的下一次输出读取。
 
 数组和普通对象只负责组织，不产生 CSS 层次。具体种类决定合法节点及标点：
 
@@ -104,36 +105,46 @@ attach 接收多个节点及任意深度的有限集合，按顺序追加并返�
 - Keyframes 接收 Frame；名称也是 Value。
 - Frame 和 PropertyRule 接收 Declaration。
 
-Rule 是可提交到样式表顶层的具体 Block 集合，不包括 Frame。Block 不承担 isActive、onActive、依赖表或 Root 订阅状态。通用 attach 不猜测花括号、分号或插入位置。
+Rule 是可提交到样式表顶层的具体 Block 集合，不包括 Frame。Block 不承担 isActive、onActive、依赖表或 Root 订阅状态。通用 of 不猜测花括号、分号或插入位置。
 
 ## Button 的阅读与连接方式
 
-根节点叫 kitRoot。文件提供 Button 领域语境；局部样式按用途命名，例如 hoverStyle、solidStyle。节点在使用位置创建，紧接着说明归属，再提供内容；不在开头创建整张控制表，也不在文件末尾集中挂接。
+根节点叫 kitStyle。样式节点在使用位置创建，紧接着接入父规则；不在开头创建整张控制表，也不在文件末尾集中接入。
+
+有明确意义的内容先形成具名节点，再由相邻的 of 表达它属于哪个规则。读者可以把内容内部当黑盒，分别取得“这组材料是什么”和“在哪里生效”，不必进入 of 的参数逐项辨认。
 
 ```ts
-export const kitRoot = styleRule('.Button')
+export const kitStyle = styleRule('.Button')
 
-kitRoot.attach(
+// 按钮采用胶囊圆角与粗字重，不改变共享变量的兜底值。
+const buttonVariablesDeclaration = [
   declareVariable(cornerRadius, pillRadius),
-  inlineCenter(),
-  padding(verticalPadding, horizontalPadding),
-)
+  declareVariable(textWeight, boldWeight),
+]
+kitStyle.of(buttonVariablesDeclaration)
 
 /** 实心按钮的外观。 */
 const solidStyle = styleRule('&[data-variant="solid"]')
-kitRoot.attach(solidStyle)
-solidStyle.attach(backgroundColor(actionColor))
+kitStyle.of(solidStyle)
+
+// 动作底色与抬升阴影。
+const buttonSolidAppearance = [backgroundColor(actionColor), boxShadow(raisedShadow)]
+solidStyle.of(buttonSolidAppearance)
 ```
+
+具名内容节点可以是单个 Declaration，也可以是嵌套集合；of 接收时不要求调用方展开。数组本身没有 CSS 作用域，接入哪个 Block 才决定归属。
+
+节点只使用一次也可以成立：它须有独立、明确的意义，名称与中文说明让读者无需展开就能判断用途。Button 专用内容保留明确的按钮或分支语义，不伪装成跨组件材料；只为换行、转发或给每个属性套一层名字的提取不成立。已有名称的节点直接接入，不再增加同义别名。
 
 独立节点、职责段落和状态分支间留一行空白，注释紧贴所属代码。中文说明提供扫读入口，不重复结构显而易见的信息，不机械给每条语句加标题。
 
-组合工具始终以函数调用表达，例如 inlineCenter()。它可以无参数，因为内部已经提供明确属性和值。只有用途稳定、确实减少使用负担的工具才共享；专用片段留在 Button，勉强抽取的几行代码直接重复即可。不为了隐藏长文件发明配方框架。
+组合工具始终以函数调用表达，例如 inlineCenter()。它可以无参数，因为内部已经提供明确属性和值。只有用途稳定、确实减少使用负担的工具才跨组件共享；Button 的具名内容节点留在当前文件，不因为具名就升级为共享工具，也不为了隐藏长文件发明配方框架。
 
 需要被其他代码继续接入的节点直接导出；不要为了导出而另建 buttonStyles 聚合对象。
 
 ## Root 与浏览器提交
 
-浏览器宿主先提供 style#css-root；调用者在它可用后执行 cssRoot.activate(kitRoot)。只 import Button 不激活；组件执行时同步注册，服务器端跳过，不等待通用 DOMContentLoaded 事件。
+浏览器宿主先提供 style#css-root；调用者在它可用后执行 cssRoot.activate(kitStyle)。只 import Button 不激活；组件执行时同步注册，服务器端跳过，不等待通用 DOMContentLoaded 事件。
 
 Root 在一次调用中建立激活闭包：沿 Block、Declaration 和复合 Value 的实际内容渲染，首次经过 Value 时执行 onActive，将返回 Rule 加入待处理集合并继续遍历，然后逐条 insertRule。
 
@@ -143,7 +154,7 @@ Root 不拼接具体 CSS 语法。离线 parseCss 不触发激活；已提交 CS
 
 ## 尚未扩展的运行边界
 
-- 已注册顶层 Block 继续 attach 后，当前 Root 不自动提交累计变化；Block 不冻结，增量提交机制另行裁决。
+- 已注册顶层 Block 继续 of 后，当前 Root 不自动提交累计变化；Block 不冻结，增量提交机制另行裁决。
 - declareVariable 只产生定义；把定义直接应用到某个 DOM 元素的通用入口尚未加入，不另建 setTheme。
 - 同名全局注册冲突的报告，以及 Button 之外的宿主生命周期另行裁决。
 - onActive 只提供规则或规则集合，不增加 attachRoot、attachRule 等回调操作协议。

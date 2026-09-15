@@ -17,9 +17,9 @@ test('attach 累计到同一实例，来源集合与另建实例不共享列表'
   const body = rule.body
 
   expect(typeof rule).toBe('object')
-  expect(rule.attach()).toBe(rule)
-  expect(rule.attach(source)).toBe(rule)
-  expect(rule.attach([[opacity]])).toBe(rule)
+  expect(rule.of()).toBe(rule)
+  expect(rule.of(source)).toBe(rule)
+  expect(rule.of([[opacity]])).toBe(rule)
   source.length = 0
   expect(body).toBe(rule.body)
   expect(body).toEqual([color, opacity])
@@ -31,21 +31,21 @@ test('已连接的子 Block 继续累计，媒体、关键帧和注册规则使�
   const opacity = declaration(key('opacity'), value(0.5))
   const rule = styleRule('.example')
   const responsive = media('(min-width: 1px)')
-  expect(responsive.attach(rule)).toBe(responsive)
-  rule.attach(opacity)
+  expect(responsive.of(rule)).toBe(responsive)
+  rule.of(opacity)
   expect(responsive.parseCss()).toBe('@media (min-width: 1px) { .example { opacity: 0.5; } }')
 
   const name = value('fade')
   const animation = keyframes(name)
   const start = frame('from')
-  expect(animation.attach(start)).toBe(animation)
-  expect(start.attach(opacity)).toBe(start)
+  expect(animation.of(start)).toBe(animation)
+  expect(start.of(opacity)).toBe(start)
   expect(animation.name).toBe(name)
   expect(animation.parseCss()).toBe('@keyframes fade { from { opacity: 0.5; } }')
 
   const registration = propertyRule('fade-opacity')
   const syntax = declaration(key('syntax'), value('"<number>"'))
-  expect(registration.attach(syntax)).toBe(registration)
+  expect(registration.of(syntax)).toBe(registration)
   expect(registration.name).toBe('fade-opacity')
   expect(registration.parseCss()).toBe('@property --fade-opacity { syntax: "<number>"; }')
 })
@@ -53,10 +53,10 @@ test('已连接的子 Block 继续累计，媒体、关键帧和注册规则使�
 test('共享选择条件创建独立入口，已连接的状态可继续补充', () => {
   const first = styleRule(stateHover)
   const second = styleRule(stateHover)
-  const parent = styleRule('.example').attach(first)
+  const parent = styleRule('.example').of(first)
   const color = declaration(key('color'), value('red'))
 
-  first.attach(color)
+  first.of(color)
   expect(second.body).toEqual([])
   expect(parent.body[0]).toBe(first)
   expect(parent.parseCss()).toBe('.example { &:where(:hover):not(:disabled) { color: red; } }')

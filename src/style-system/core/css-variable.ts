@@ -88,16 +88,16 @@ export function variable(name: string, options?: VariableOptions): Variable {
   const root = options?.root
   if (root) {
     rules.push(
-      styleRule(':where(:root)').attach(
+      styleRule(':where(:root)').of(
         declareVariable(reference, root.value),
         root.dark === undefined
           ? []
-          : styleRule('&:where([data-theme="dark"])').attach(declareVariable(reference, root.dark)),
+          : styleRule('&:where([data-theme="dark"])').of(declareVariable(reference, root.dark)),
         root.reducedMotion === undefined
           ? []
           : media(
               '(prefers-reduced-motion: reduce)',
-              styleRule('&').attach(declareVariable(reference, root.reducedMotion)),
+              styleRule('&').of(declareVariable(reference, root.reducedMotion)),
             ),
       ),
     )

@@ -98,25 +98,30 @@ import {
  * 按钮的基础规则及扩展入口。
  * 实心与语气组合的前景色优先级高于禁用分支。
  */
-export const kitRoot = styleRule('.Button')
+export const kitStyle = styleRule('.Button')
 
 // 胶囊圆角与粗字重只在按钮作用域内定义，不改变共享材料。
-kitRoot.attach(declareVariable(cornerRadius, pillRadius), declareVariable(textWeight, boldWeight))
+const buttonVariablesDeclaration = [declareVariable(cornerRadius, pillRadius), declareVariable(textWeight, boldWeight)]
+kitStyle.of(buttonVariablesDeclaration)
 
 // 内容居中；尺寸、间隔与内边距仍可通过共享变量覆盖。
-kitRoot.attach(inlineCenter(), gap(contentGap), minHeight(minimumHeight), padding(verticalPadding, horizontalPadding))
+const buttonLayout = [inlineCenter(), gap(contentGap), minHeight(minimumHeight), padding(verticalPadding, horizontalPadding)]
+kitStyle.of(buttonLayout)
 
 // 细实线边缘与圆角。
-kitRoot.attach(border(thinBoundary, 'solid', edgeColor), borderRadius(cornerRadius))
+const buttonShape = [border(thinBoundary, 'solid', edgeColor), borderRadius(cornerRadius)]
+kitStyle.of(buttonShape)
 
 // 继承字体后，应用可独立覆盖的字号、字重与行高。
-kitRoot.attach(font('inherit'), fontSize(controlTextSize), fontWeight(textWeight), lineHeight(textLineHeight))
+const buttonTypography = [font('inherit'), fontSize(controlTextSize), fontWeight(textWeight), lineHeight(textLineHeight)]
+kitStyle.of(buttonTypography)
 
 // 默认底色、文字色与阴影。
-kitRoot.attach(backgroundColor(bgColor), color(fgColor), boxShadow(shadow))
+const buttonAppearance = [backgroundColor(bgColor), color(fgColor), boxShadow(shadow)]
+kitStyle.of(buttonAppearance)
 
 // 可点击提示；平滑过渡颜色、阴影、透明度与位移，不让尺寸跟着补间。
-kitRoot.attach(
+const buttonInteraction = [
   cursor('pointer'),
   userSelect('none'),
   transition(
@@ -124,194 +129,218 @@ kitRoot.attach(
       transitionValue(property, fastDuration, standardEasing),
     ),
   ),
-)
+]
+kitStyle.of(buttonInteraction)
 
 /** 按钮悬停时切换底色、文字色和阴影。 */
 export const hoverStyle = styleRule(stateHover)
-kitRoot.attach(hoverStyle)
+kitStyle.of(hoverStyle)
 
-hoverStyle.attach(backgroundColor(bgHoverColor), color(fgHoverColor), boxShadow(hoverShadow))
+const buttonHoverAppearance = [backgroundColor(bgHoverColor), color(fgHoverColor), boxShadow(hoverShadow)]
+hoverStyle.of(buttonHoverAppearance)
 
 /** 按钮按下时切换外观，并向下移动一个细边界厚度。 */
 export const activeStyle = styleRule(stateActive)
-kitRoot.attach(activeStyle)
+kitStyle.of(activeStyle)
 
-activeStyle.attach(
+const buttonActiveAppearance = [
   backgroundColor(bgActiveColor),
   color(fgActiveColor),
   boxShadow(activeShadow),
   transform(translateY(thinBoundary)),
-)
+]
+activeStyle.of(buttonActiveAppearance)
 
 /** 键盘焦点轮廓不占布局空间，与按钮边缘留出间隔。 */
 export const focusStyle = styleRule(focusVisible)
-kitRoot.attach(focusStyle)
+kitStyle.of(focusStyle)
 
-focusStyle.attach(
+const buttonFocusOutline = [
   outlineWidth(focusBoundary),
   outlineStyle('solid'),
   outlineColor(focusColor),
   outlineOffset(focusBoundary),
-)
+]
+focusStyle.of(buttonFocusOutline)
 
 /** 裸底按钮退去背景与阴影，只在交互时提示位置。 */
 export const bareStyle = styleRule('&[data-variant="bare"]')
-kitRoot.attach(bareStyle)
+kitStyle.of(bareStyle)
 
-bareStyle.attach(backgroundColor('transparent'), border(thinBoundary, 'solid', 'transparent'), boxShadow('none'))
+const buttonBareAppearance = [backgroundColor('transparent'), border(thinBoundary, 'solid', 'transparent'), boxShadow('none')]
+bareStyle.of(buttonBareAppearance)
 
 /** 裸底按钮悬停时使用浅色覆盖层。 */
 export const bareHoverStyle = styleRule(stateHover)
-bareStyle.attach(bareHoverStyle)
+bareStyle.of(bareHoverStyle)
 
-bareHoverStyle.attach(backgroundColor(hoverOverlay), boxShadow('none'))
+const buttonBareHoverAppearance = [backgroundColor(hoverOverlay), boxShadow('none')]
+bareHoverStyle.of(buttonBareHoverAppearance)
 
 /** 裸底按钮按下时加深覆盖层。 */
 export const bareActiveStyle = styleRule(stateActive)
-bareStyle.attach(bareActiveStyle)
+bareStyle.of(bareActiveStyle)
 
-bareActiveStyle.attach(backgroundColor(activeOverlay), boxShadow('none'))
+const buttonBareActiveAppearance = [backgroundColor(activeOverlay), boxShadow('none')]
+bareActiveStyle.of(buttonBareActiveAppearance)
 
 /** 实心按钮使用动作底色和抬升阴影。 */
 export const solidStyle = styleRule('&[data-variant="solid"]')
-kitRoot.attach(solidStyle)
+kitStyle.of(solidStyle)
 
-solidStyle.attach(
+const buttonSolidAppearance = [
   backgroundColor(actionColor),
   border(thinBoundary, 'solid', 'transparent'),
   boxShadow(raisedShadow),
   color(actionForegroundColor),
-)
+]
+solidStyle.of(buttonSolidAppearance)
 
 /** 实心按钮悬停时保持实心外观。 */
 export const solidHoverStyle = styleRule(stateHover)
-solidStyle.attach(solidHoverStyle)
+solidStyle.of(solidHoverStyle)
 
-solidHoverStyle.attach(backgroundColor(actionHoverColor), color(actionForegroundColor), boxShadow(raisedShadow))
+const buttonSolidHoverAppearance = [backgroundColor(actionHoverColor), color(actionForegroundColor), boxShadow(raisedShadow)]
+solidHoverStyle.of(buttonSolidHoverAppearance)
 
 /** 实心按钮按下时保持动作前景色和阴影。 */
 export const solidActiveStyle = styleRule(stateActive)
-solidStyle.attach(solidActiveStyle)
+solidStyle.of(solidActiveStyle)
 
-solidActiveStyle.attach(backgroundColor(actionActiveColor), color(actionForegroundColor), boxShadow(raisedShadow))
+const buttonSolidActiveAppearance = [backgroundColor(actionActiveColor), color(actionForegroundColor), boxShadow(raisedShadow)]
+solidActiveStyle.of(buttonSolidActiveAppearance)
 
 /** 强调按钮定义语气配色；外观变体不决定语气。 */
 export const accentStyle = styleRule('&[data-tone="accent"]')
-kitRoot.attach(accentStyle)
+kitStyle.of(accentStyle)
 
-accentStyle.attach(
+const buttonAccentVariablesDeclaration = [
   declareVariable(toneColor, accentColor),
   declareVariable(toneSoftColor, accentSoftColor),
   declareVariable(toneForeground, accentForegroundColor),
   declareVariable(focusColor, accentFocusColor),
   declareVariable(edgeColor, accentSoftColor),
-)
+]
+accentStyle.of(buttonAccentVariablesDeclaration)
 
 // 边缘、背景与文字消费当前作用域的语气值。
-accentStyle.attach(border(thinBoundary, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor))
+const buttonAccentAppearance = [border(thinBoundary, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor)]
+accentStyle.of(buttonAccentAppearance)
 
 /** 强调按钮悬停时增加语气色占比。 */
 export const accentHoverStyle = styleRule(stateHover)
-accentStyle.attach(accentHoverStyle)
+accentStyle.of(accentHoverStyle)
 
-accentHoverStyle.attach(backgroundColor(toneHoverBackground), color(toneForeground))
+const buttonAccentHoverAppearance = [backgroundColor(toneHoverBackground), color(toneForeground)]
+accentHoverStyle.of(buttonAccentHoverAppearance)
 
 /** 强调按钮按下时继续加深语气色。 */
 export const accentActiveStyle = styleRule(stateActive)
-accentStyle.attach(accentActiveStyle)
+accentStyle.of(accentActiveStyle)
 
-accentActiveStyle.attach(backgroundColor(toneActiveBackground), color(toneForeground))
+const buttonAccentActiveAppearance = [backgroundColor(toneActiveBackground), color(toneForeground)]
+accentActiveStyle.of(buttonAccentActiveAppearance)
 
 /** 危险按钮定义语气配色；外观变体不决定语气。 */
 export const dangerStyle = styleRule('&[data-tone="danger"]')
-kitRoot.attach(dangerStyle)
+kitStyle.of(dangerStyle)
 
-dangerStyle.attach(
+const buttonDangerVariablesDeclaration = [
   declareVariable(toneColor, dangerColor),
   declareVariable(toneSoftColor, dangerSoftColor),
   declareVariable(toneForeground, dangerForegroundColor),
   declareVariable(focusColor, dangerLineColor),
   declareVariable(edgeColor, dangerSoftColor),
-)
+]
+dangerStyle.of(buttonDangerVariablesDeclaration)
 
 // 边缘、背景与文字消费当前作用域的语气值。
-dangerStyle.attach(border(thinBoundary, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor))
+const buttonDangerAppearance = [border(thinBoundary, 'solid', edgeColor), backgroundColor(toneBackground), color(toneColor)]
+dangerStyle.of(buttonDangerAppearance)
 
 /** 危险按钮悬停时增加语气色占比。 */
 export const dangerHoverStyle = styleRule(stateHover)
-dangerStyle.attach(dangerHoverStyle)
+dangerStyle.of(dangerHoverStyle)
 
-dangerHoverStyle.attach(backgroundColor(toneHoverBackground), color(toneForeground))
+const buttonDangerHoverAppearance = [backgroundColor(toneHoverBackground), color(toneForeground)]
+dangerHoverStyle.of(buttonDangerHoverAppearance)
 
 /** 危险按钮按下时继续加深语气色。 */
 export const dangerActiveStyle = styleRule(stateActive)
-dangerStyle.attach(dangerActiveStyle)
+dangerStyle.of(dangerActiveStyle)
 
-dangerActiveStyle.attach(backgroundColor(toneActiveBackground), color(toneForeground))
+const buttonDangerActiveAppearance = [backgroundColor(toneActiveBackground), color(toneForeground)]
+dangerActiveStyle.of(buttonDangerActiveAppearance)
 
 /** 实心且带语气时使用动作前景色；此条件比禁用分支更具体。 */
 export const solidToneStyle = styleRule('&[data-variant="solid"][data-tone]')
-kitRoot.attach(solidToneStyle)
+kitStyle.of(solidToneStyle)
 
-solidToneStyle.attach(color(actionForegroundColor))
+const buttonSolidToneForeground = color(actionForegroundColor)
+solidToneStyle.of(buttonSolidToneForeground)
 
 /** 小号按钮同步调整高度、内边距、内容间距与字号。 */
 export const smallStyle = styleRule('&[data-size="small"]')
-kitRoot.attach(smallStyle)
+kitStyle.of(smallStyle)
 
-smallStyle.attach(
+const buttonSmallVariablesDeclaration = [
   declareVariable(minimumHeight, smallSize),
   declareVariable(horizontalPadding, mediumSpace),
   declareVariable(verticalPadding, smallSpace),
   declareVariable(contentGap, smallSpace),
   declareVariable(controlTextSize, normalTextSize),
-)
+]
+smallStyle.of(buttonSmallVariablesDeclaration)
 
 /** 大号按钮同步调整高度、内边距、内容间距与字号。 */
 export const largeStyle = styleRule('&[data-size="large"]')
-kitRoot.attach(largeStyle)
+kitStyle.of(largeStyle)
 
-largeStyle.attach(
+const buttonLargeVariablesDeclaration = [
   declareVariable(minimumHeight, largeSize),
   declareVariable(horizontalPadding, wideSpace),
   declareVariable(verticalPadding, normalSpace),
   declareVariable(contentGap, mediumSpace),
   declareVariable(controlTextSize, xlargeTextSize),
-)
+]
+largeStyle.of(buttonLargeVariablesDeclaration)
 
 /** 超大号按钮同步调整高度、内边距、内容间距与字号。 */
 export const xlargeStyle = styleRule('&[data-size="xlarge"]')
-kitRoot.attach(xlargeStyle)
+kitStyle.of(xlargeStyle)
 
-xlargeStyle.attach(
+const buttonXlargeVariablesDeclaration = [
   declareVariable(minimumHeight, xlargeSize),
   declareVariable(horizontalPadding, widestSpace),
   declareVariable(verticalPadding, mediumSpace),
   declareVariable(contentGap, largeSpace),
   declareVariable(controlTextSize, headingTextSize),
-)
+]
+xlargeStyle.of(buttonXlargeVariablesDeclaration)
 
 /** 加载只提示忙碌，不阻止事件。 */
 export const loadingStyle = styleRule('&[data-status~="loading"]')
-kitRoot.attach(loadingStyle)
+kitStyle.of(loadingStyle)
 
-loadingStyle.attach(cursor('progress'))
+const buttonLoadingCursor = cursor('progress')
+loadingStyle.of(buttonLoadingCursor)
 
 /** 禁用兼顾原生属性与状态标记，淡化外观并移除阴影和位移。 */
 export const disabledStyle = styleRule('&:disabled, &[data-status~="disabled"]')
-kitRoot.attach(disabledStyle)
+kitStyle.of(disabledStyle)
 
-disabledStyle.attach(
+const buttonDisabledAppearance = [
   backgroundColor(baseSurfaceColor),
   color(foregroundColor),
   boxShadow('none'),
   cursor('not-allowed'),
   opacity(disabledOpacity),
   transform('none'),
-)
+]
+disabledStyle.of(buttonDisabledAppearance)
 
 /** 浏览器宿主须先提供 style#css-root；服务器端只保留定义。 */
 export function registerButtonStyle(): void {
   if (typeof document === 'undefined') return
-  cssRoot.activate(kitRoot)
+  cssRoot.activate(kitStyle)
 }

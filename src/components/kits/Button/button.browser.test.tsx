@@ -74,7 +74,7 @@ describe('Button styles', () => {
     input.className = 'shared-input'
     host.append(input)
     cssRoot.activate(
-      styleRule('.shared-input').attach(
+      styleRule('.shared-input').of(
         declareVariable(cornerRadius, smallRadius),
         declareVariable(horizontalPadding, smallSpace),
         declareVariable(verticalPadding, px8),

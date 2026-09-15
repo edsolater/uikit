@@ -9,11 +9,11 @@ export type BlockKind = 'style-rule' | 'media' | 'keyframes' | 'frame' | 'proper
 
 export interface Block<Node = unknown> {
   /** 向自身追加内容并返回自身；空内容不创建副本。 */
-  attach(...content: Content<Node>[]): this
+  of(...content: Content<Node>[]): this
 
   kind: BlockKind
 
-  /** 当前累计的节点；追加经过 attach 入口，读取时保留子节点身份。 */
+  /** 当前累计的节点；追加经过 of 入口，读取时保留子节点身份。 */
   body: Node[]
 
   /** 输出完整 CSS；context 沿内部节点传递，省略时不触发激活。 */
@@ -30,18 +30,18 @@ export type Content<T> = T | Content<T>[]
  * 每个 Block 独立累计内容；具体语法由 definition 提供。
  * @example
  * const rule = block<StyleRule>({ kind: 'style-rule', selector, body: [], parseCss })
- * rule.attach(declarations)
+ * rule.of(declarations)
  */
 export function block<B extends Block<B['body'][number]>>(
-  definition: Omit<B, 'attach'>,
-): Omit<B, 'attach'> & Block<B['body'][number]> {
+  definition: Omit<B, 'of'>,
+): Omit<B, 'of'> & Block<B['body'][number]> {
   type Node = B['body'][number]
   const body: Node[] = [...definition.body]
 
   return {
     ...definition,
     body,
-    attach(...content: Content<Node>[]) {
+    of(...content: Content<Node>[]) {
       for (const node of flattenContent<Node>(content)) body.push(node)
       return this
     },
