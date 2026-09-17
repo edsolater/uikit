@@ -45,7 +45,7 @@ export type ValueExpression =
   | { type: 'product'; amount: ValueInput; factor: ValueInput }
   | { type: 'function'; name: string; arguments: ValueInput[] }
   | { type: 'animation'; name: ValueInput; duration: ValueInput; easing?: ValueInput; delay?: ValueInput; iterations?: ValueInput; direction?: ValueInput; fillMode?: ValueInput; playState?: ValueInput }
-  | { type: 'color-mix'; colors: (ValueInput | [ValueInput, number])[] }
+  | { type: 'color-mix'; colors: (ValueInput | [ValueInput, ValueInput])[] }
   | { type: 'shadow'; x: ValueInput; y: ValueInput; blur?: ValueInput; spread?: ValueInput; color?: ValueInput; inset?: boolean }
 
 /** 保存默认值、条件分支与按需依赖；不求值或触发依赖。 */

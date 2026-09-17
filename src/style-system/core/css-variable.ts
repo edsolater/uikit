@@ -1,5 +1,5 @@
 /** 可按 Condition 重定义的 CSS Variable。 */
-import { condition, media, type Condition, type ConditionPath } from './css-condition'
+import { condition, media, type Condition } from './css-condition'
 import type { Rules } from './css-rule'
 import type { Value, ValueInput } from './css-value'
 
@@ -44,14 +44,6 @@ export function isVariable(input: unknown): input is Variable {
     && 'kind' in input && input.kind === 'value'
     && 'name' in input && typeof input.name === 'string'
     && expression?.type === 'variable'
-}
-
-/** 按 Condition header 生成无碰撞的 Custom Property 名。 */
-export function variableName(name: string, path: ConditionPath): string {
-  const baseName = name.replace(/^--/, '')
-  if (path.length === 0) return baseName
-  const suffix = path.map((item) => Array.from(item.header, (character) => character.codePointAt(0)!.toString(16)).join('-'))
-  return `${baseName}-${suffix.map((name) => `when-${name}`).join('-')}`
 }
 
 /** 创建逻辑 Variable；创建时不登记，编译消费时提供根值与注册。 */

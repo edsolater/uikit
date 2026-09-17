@@ -2,6 +2,7 @@
 import {
   rules,
   value,
+  variable,
   innerText,
   contentLayout,
   size,
@@ -61,6 +62,11 @@ import { flat, raised, interactiveElevation } from '../../../style-system/values
 
 const button = '.Button'
 
+/** 默认底色中的中性表面占比。 */
+const surfaceRatio = variable('button-surface-ratio', {
+  fallback: value(0.82, [[whenHover, 0.72], [whenActive, 0.62]]),
+})
+
 // =============================================================================
 // 默认效果
 // =============================================================================
@@ -85,11 +91,7 @@ rules(button, [
     radius: pill,
   }),
   color({
-    background: value(colorMix([interactiveSurface, 0.82], softAccent), [
-      [whenHover, colorMix([interactiveSurface, 0.72], softAccent)],
-      [whenActive, colorMix([interactiveSurface, 0.62], softAccent)],
-      [whenDisabled, surface],
-    ]),
+    background: value(colorMix([interactiveSurface, surfaceRatio], softAccent), [[whenDisabled, surface]]),
     foreground: interactiveForeground,
   }),
   elevation(interactiveElevation),

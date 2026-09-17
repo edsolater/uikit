@@ -1,18 +1,27 @@
 /** 把源 Rules 与按需依赖编译为 CSS string。 */
-import type { ConditionPath } from '../core/css-condition'
+import { conditionPathKey, type ConditionPath } from '../core/css-condition'
 import { isCSSPair } from '../core/css-declaration'
 import { declarationSyntax, propertyName, type CSSKey } from '../core/css-key'
 import type { Rules, RuleValue } from '../core/css-rule'
 import type { Value, ValueInput } from '../core/css-value'
 import { isVariable, type VariableInput } from '../core/css-variable'
 import { compileDeclaration, compileVariableDeclaration, expandProperty } from './compile-declaration'
-import { compileValue, compileAt, resolveValue, valuePaths, conditionPathKey, type ValueContext } from './compile-value'
+import { compileValue, type ValueContext } from './compile-value'
 
 /** 一条待输出声明。 */
 interface CompiledDeclaration { path: ConditionPath; property?: string; text: string }
 
 /** 按完整主体替换的具名 CSS 定义。 */
-interface CompiledDefinition { owner: Rules; declarations: Map<string, CompiledDeclaration> }
+interface CompiledDefinition {
+  owner: Rules
+  defaults: Map<string, CompiledDeclaration>
+  declarations: Map<string, CompiledDeclaration>
+}
+
+/** 合并默认声明与显式声明，显式同址优先。 */
+function applyDefaults(defaults: Map<string, CompiledDeclaration>, declarations: Map<string, CompiledDeclaration>): CompiledDeclaration[] {
+  return [...[...defaults].filter(([address]) => !declarations.has(address)).map(([, entry]) => entry), ...declarations.values()]
+}
 
 /** 编译 Rules 快照；按需依赖只进入本次结果，失败时直接抛错。 */
 export function compileRules(source: Rules): string {
@@ -20,28 +29,41 @@ export function compileRules(source: Rules): string {
   const activated = new Set<Value>()
   const visitingRules = new Set<Rules>()
   const declarations = new Map<string, CompiledDeclaration | CompiledDefinition>()
+  const variableDefaults = new Map<string, CompiledDeclaration>()
   const resolving = new Map<object, Set<string>>()
   let compilingSource = source
   /** 写入编译结果；同址覆盖不移动位置，具名定义按 owner 整体替换。 */
-  const write = (path: ConditionPath, property: string | undefined, text: string, owner = compilingSource) => {
+  const write = (path: ConditionPath, property: string | undefined, text: string, owner = compilingSource, isDefault = false) => {
     const address = JSON.stringify([conditionPathKey(path), property])
     const definitionIndex = path.findIndex((item) => /^@(function|keyframes|property)\s/.test(item.header))
     if (definitionIndex === -1) {
-      declarations.set(address, { path, property, text })
+      if (isDefault) variableDefaults.set(address, { path, property, text })
+      else declarations.set(address, { path, property, text })
       return
     }
     const definitionAddress = `definition:${conditionPathKey(path.slice(0, definitionIndex + 1))}`
     const previous = declarations.get(definitionAddress)
     const definition = previous && 'owner' in previous && previous.owner === owner
       ? previous
-      : { owner, declarations: new Map<string, CompiledDeclaration>() }
-    definition.declarations.set(address, { path, property, text })
+      : { owner, defaults: new Map<string, CompiledDeclaration>(), declarations: new Map<string, CompiledDeclaration>() }
+    const target = isDefault ? definition.defaults : definition.declarations
+    target.set(address, { path, property, text })
     declarations.set(definitionAddress, definition)
   }
   /** 解读 Rules、Declaration 或 Value；递归 Rules 直接报错。 */
   const visit = (input: RuleValue, path: ConditionPath, key?: CSSKey, definitionOwner?: Rules): void => {
     const context: ValueContext = {
       root: source, path, key, resolving,
+      /** 为当前消费地址补充同名变量的条件默认值。 */
+      defineVariable(name, values, location) {
+        for (const value of values) {
+          const path = [...location.path, ...value.path]
+          const property = `--${name}`
+          write(path, property, value.text, definitionOwner, true)
+        }
+      },
+      /** 完整 Rules 继续继承当前声明位置。 */
+      visitRules(rules, location) { visit(rules, location, key, definitionOwner) },
       /** 激活对象一次，并收集本次编译依赖。 */
       activate(value, location = { root: source, path, key }) {
         if (typeof value !== 'object' || activated.has(value)) return
@@ -63,7 +85,7 @@ export function compileRules(source: Rules): string {
       return
     }
     if (isVariable(key) && !isCSSPair(input)) {
-      for (const result of compileVariableDeclaration(key, input as VariableInput, context)) write(path, result.property, result.text, definitionOwner)
+      for (const result of compileVariableDeclaration(key, input as VariableInput, context)) write([...path, ...result.path], result.property, result.text, definitionOwner)
       return
     }
     if (isCSSPair(input)) {
@@ -76,20 +98,6 @@ export function compileRules(source: Rules): string {
         return
       }
       for (const result of compileDeclaration(input, { ...context, key: declarationKey })) write([...path, ...result.path], result.property, result.text, definitionOwner)
-      return
-    }
-    if (typeof input === 'object' && input.default !== undefined) {
-      for (const relativePath of valuePaths(input)) {
-        const location = { ...context, path: [...path, ...relativePath] }
-        resolveValue(input, relativePath, location, (resolved, exactKey) => {
-          if (resolved instanceof Map) visit(resolved, location.path, key, definitionOwner)
-          else {
-            const result = { path: location.path, text: compileAt(resolved, relativePath, location, exactKey) }
-            if (key === undefined) write(result.path, undefined, result.text, definitionOwner)
-            else for (const declaration of expandProperty(propertyName(key), result)) write(declaration.path, declaration.property, declaration.text, definitionOwner)
-          }
-        })
-      }
       return
     }
     for (const result of compileValue(input, context)) {
@@ -105,7 +113,10 @@ export function compileRules(source: Rules): string {
   // 只复用连续地址的公共前缀，不重排声明。
   let path: ConditionPath = []
   const css: string[] = []
-  const output = [...declarations.values()].flatMap((entry) => 'owner' in entry ? [...entry.declarations.values()] : [entry])
+  const output = [
+    ...[...variableDefaults].filter(([address]) => !declarations.has(address)).map(([, entry]) => entry),
+    ...[...declarations.values()].flatMap((entry) => 'owner' in entry ? applyDefaults(entry.defaults, entry.declarations) : [entry]),
+  ]
   for (const declaration of output) {
     let shared = 0
     while (shared < path.length && shared < declaration.path.length && path[shared].header === declaration.path[shared].header) shared++

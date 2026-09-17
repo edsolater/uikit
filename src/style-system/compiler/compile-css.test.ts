@@ -6,7 +6,7 @@ import { condition, media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
 import { value } from '../core/css-value'
-import { variable, variableName } from '../core/css-variable'
+import { variable } from '../core/css-variable'
 import { $margin, $marginLeft } from '../properties/margin'
 import { $padding } from '../properties/padding'
 import { $border } from '../properties/border'
@@ -80,13 +80,11 @@ test('不同 Condition 对象的相同 header 共享 Rule、Value 与 Variable �
   keep(rules('.same-variable', [[foreground, [[sameHover, 'silver']]], [$color, foreground]]))
 
   const css = compileCSS()
-  const hoverProperty = `--${variableName('color-condition-identity', [firstHover])}`
-  expect(variableName('color-condition-identity', [sameHover])).toBe(variableName('color-condition-identity', [firstHover]))
   expect(css).toContain('.same-rule {\n&:hover {\ncolor: blue;\n}\n}')
   expect(css).not.toContain('.same-rule {\n&:hover {\ncolor: red;')
   expect(css).toContain('.same-value {\ncolor: red;\n&:hover {\ncolor: navy;')
-  expect(css).toContain(`.same-variable {\n${hoverProperty}: silver;`)
-  expect(css).toContain(`&:hover {\ncolor: var(${hoverProperty}, gray);`)
+  expect(css).toContain('.same-variable {\n&:hover {\n--color-condition-identity: silver;')
+  expect(css).toContain('color: var(--color-condition-identity, black);')
 })
 
 test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
@@ -137,7 +135,7 @@ test('批量删除只删除本批仍然拥有的地址，重复地址保持首�
   expect(compileCSS()).toBe('.example {\ncolor: green;\n}')
 })
 
-test('定义只保存结构；编译按同键读取子 Value，缺失键穿过 default', () => {
+test('定义只保存结构；外层 default 与条件分支约束子 Value', () => {
   const active = vi.fn()
   const red = value('red', [['&:hover', 'lightcoral'], ['&:active', 'darkred']], { onActive: active })
   const blue = value('blue', [['&:hover', value(value('cyan'))]])
@@ -146,7 +144,7 @@ test('定义只保存结构；编译按同键读取子 Value，缺失键穿过 d
   expect(active).not.toHaveBeenCalled()
   keep(rule('.example', 'color', foreground))
   const css = compileCSS()
-  expect(css).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n}\n&:active {\ncolor: darkred;\n}\n}')
+  expect(css).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n}\n}')
   expect(active).toHaveBeenCalledTimes(1)
 })
 
@@ -160,7 +158,7 @@ test('同一个 Value 的 hover 与 active 各读自身属性，共享 DAG 不�
   expect(css).toContain('border-color: darkred')
 })
 
-test('Value 支持业务选择器和媒体 Condition，同路径递归与交集不依赖 State 分类', () => {
+test('Value 支持业务选择器和媒体 Condition，不同分支不自动合成地址', () => {
   const compact = condition('&[data-density="compact"]')
   const wide = media('(width > 800px)')
   const compactSize = value('8px', [[compact, '6px']])
@@ -171,7 +169,8 @@ test('Value 支持业务选择器和媒体 Condition，同路径递归与交集�
   const css = compileCSS()
   expect(css).toContain('&[data-density="compact"] {\ngap: 6px;')
   expect(css).toContain('@media (width > 800px) {\ngap: 16px;')
-  expect(css).toContain('&[data-density="compact"] {\n@media (width > 800px) {\nwidth: calc(3px * 4);')
+  expect(css).toContain('width: calc(2px * 2);')
+  expect(css.match(/width:/g)).toHaveLength(1)
 })
 
 test('当前链再次访问实际槽位时抛错；fallback 循环也能终止', () => {
@@ -202,17 +201,17 @@ test('完整 Rules 仍可作为递归内容切换属性', () => {
   expect(compileCSS()).toBe('.example {\ncolor: red;\ndisplay: grid;\n&:hover {\ncolor: blue;\n}\n}')
 })
 
-test('复合值保持各子值的状态与交集，重复状态键后写生效', () => {
+test('复合值只保留相容分支，重复状态键后写生效', () => {
   keep(rule('.example', 'width', calcMultiply(value('2px', [['&:hover', '4px']]), value(2, [['&:active', 3]]))))
-  expect(compileCSS()).toContain('&:hover {\n&:active {\nwidth: calc(4px * 3)')
+  expect(compileCSS()).toBe('.example {\nwidth: calc(2px * 2);\n}')
   keep(rule('.same', 'width', calcMultiply(value(2, [['&:hover', 3], ['&:hover', 4]]), value(2, [['&:hover', 5]]))))
   expect(compileCSS()).toContain('width: calc(4 * 5)')
 })
 
-test('显式复合状态键穿过表达式时仍按完整同键匹配', () => {
+test('完整条件地址与子 Value 分支不符时拒绝该分支', () => {
   const amount = value(2, [['&:hover', 4]])
   keep(rule('.example', 'width', value('1px', [[[condition('&:hover'), condition('&:active')], calcMultiply(amount, 3)]])))
-  expect(compileCSS()).toContain('&:hover {\n&:active {\nwidth: calc(2 * 3)')
+  expect(compileCSS()).toBe('.example {\nwidth: 1px;\n}')
 })
 
 test('依赖只进入本次编译，删掉源条目后派生资源退出', () => {
@@ -251,7 +250,7 @@ test('依赖回指同一集合终止，Rules 内容递归报错', () => {
   expect(() => compileCSS()).toThrow('递归引用')
 })
 
-test('逻辑变量按已有 Condition Path 读取，并通过 Condition 引用局部重定义派生 Custom Property', () => {
+test('Variable 条件默认值与局部声明共享同名 Custom Property，显式声明优先', () => {
   const hover = condition('&:hover')
   const active = condition('&:active')
   const missing = condition('&:missing')
@@ -264,16 +263,14 @@ test('逻辑变量按已有 Condition Path 读取，并通过 Condition 引用�
   keep(rules('.same-active', [[foreground, [[active, 'silver']]]]))
   keep(rules('.example', [[$color, foreground]]))
   const css = compileCSS()
-  const hoverProperty = `--${variableName('color-foreground-test', [hover])}`
-  const activeProperty = `--${variableName('color-foreground-test', [active])}`
   expect(css).toContain('--color-foreground-test: red')
-  expect(css).toContain(`${hoverProperty}: blue`)
-  expect(css).toContain(`${activeProperty}: green`)
-  expect(css).toContain(`.same-active {\n${activeProperty}: silver`)
-  expect(css).not.toContain('orange')
+  expect(css).toContain('&:hover {\n--color-foreground-test: blue;')
+  expect(css).toContain('&:active {\n--color-foreground-test: green;')
+  expect(css).toContain('.same-active {\n&:active {\n--color-foreground-test: silver;')
+  expect(css).toContain('&:missing {\n--color-foreground-test: orange;')
   expect(css).toContain('color: var(--color-foreground-test, black)')
-  expect(css).toContain(`color: var(${hoverProperty}, gray)`)
-  expect(css).toContain(`color: var(${activeProperty}, silver)`)
+  expect(css.match(/color: var\(/g)).toHaveLength(1)
+  expect(css).not.toContain('--color-foreground-test-when-')
   expect(css.match(/@property --color-foreground-test/g)).toHaveLength(1)
 })
 
@@ -324,4 +321,17 @@ test('动画和函数激活完整资源，同名函数替换整个定义', () =>
   expect(css).toContain('result: 24px')
   expect(css).not.toContain('--old-local')
   expect(css).not.toContain('20px')
+})
+
+test('同名函数替换时，旧函数中的条件变量默认定义一并退出', () => {
+  const ratio = variable('old-function-ratio', { fallback: value(0.8, [[media('(width > 1px)'), 0.6]]) })
+  const oldBody: Rules = new Map([[[undefined, 'result'], ratio]])
+  const nextBody: Rules = new Map([[[undefined, 'result'], 1]])
+  keep(rule('.old-function', 'opacity', cssFunction('--example-ratio() returns <number>', oldBody)()))
+  keep(rule('.new-function', 'opacity', cssFunction('--example-ratio() returns <number>', nextBody)()))
+
+  const css = compileCSS()
+  expect(css.match(/@function --example-ratio/g)).toHaveLength(1)
+  expect(css).not.toContain('--old-function-ratio')
+  expect(css).toContain('result: 1;')
 })

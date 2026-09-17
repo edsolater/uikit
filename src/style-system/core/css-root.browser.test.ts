@@ -12,6 +12,7 @@ import { $padding } from '../properties/padding'
 import { animationName, animationValue } from '../values/animation'
 import { calcMultiply } from '../values/functions/calc'
 import { cssFunction } from '../values/functions/custom'
+import { colorMix } from '../values/functions/color-mix'
 
 let style: HTMLStyleElement
 let element: HTMLDivElement
@@ -53,16 +54,42 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   expect(Array.from(style.sheet!.cssRules).filter((entry) => entry.cssText.startsWith('@property --space-example'))).toHaveLength(1)
 })
 
-test('条件子 Value 更新完整复合值，两个条件同时成立时得到交集结果', async () => {
+test('不同 Value 分支不生成交集规则，浏览器只获得共同 default', async () => {
   const distance = value('2px', [['&:hover', '4px']])
   const factor = value(2, [['&[data-large]', 3]])
   handles.push(rule('.example', 'margin-left', calcMultiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
   element.dataset.large = ''
-  expect(getComputedStyle(element).marginLeft).toBe('6px')
+  expect(getComputedStyle(element).marginLeft).toBe('4px')
+  await userEvent.hover(element)
+  expect(getComputedStyle(element).marginLeft).toBe('4px')
+})
+
+test('同址 Value 分支在浏览器中共同更新复合值', async () => {
+  const distance = value('2px', [['&:hover', '4px']])
+  const factor = value(2, [['&:hover', 3]])
+  handles.push(rule('.example', 'margin-left', calcMultiply(distance, factor)))
+  root.mount()
+  expect(getComputedStyle(element).marginLeft).toBe('4px')
   await userEvent.hover(element)
   expect(getComputedStyle(element).marginLeft).toBe('12px')
+})
+
+test('Variable 比例在浏览器改变混色结果，消费函数只定义一次', async () => {
+  const ratio = variable('surface-ratio', { fallback: value(0.8, [['&:hover', 0.6]]) })
+  handles.push(rule('.example', 'background-color', colorMix(['black', ratio], 'white')))
+  root.mount()
+  expect(style.textContent!.match(/background-color:/g)).toHaveLength(1)
+  expect(getComputedStyle(element).getPropertyValue('--surface-ratio').trim()).toBe('0.8')
+  const initial = getComputedStyle(element).backgroundColor
+  expect(initial).not.toBe('rgba(0, 0, 0, 0)')
+  await userEvent.hover(element)
+  expect(getComputedStyle(element).getPropertyValue('--surface-ratio').trim()).toBe('0.6')
+  const hovered = getComputedStyle(element).backgroundColor
+  expect(hovered).not.toBe(initial)
+  element.style.setProperty('--surface-ratio', '0.2')
+  expect(getComputedStyle(element).backgroundColor).not.toBe(hovered)
 })
 
 test('动画复合值激活帧定义，并继续解析帧内变量', () => {

@@ -6,15 +6,15 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 
 | 位置 | 职责 |
 | --- | --- |
-| `core/css-condition.ts` | Condition 与有序地址。 |
+| `core/css-condition.ts` | Condition、有序地址与分支合并约束。 |
 | `core/css-key.ts` | CSS Key 及其内容语法。 |
 | `core/css-declaration.ts` | `[key, content]` Declaration。 |
 | `core/css-rule.ts` | Rule 登记、批量展开与句柄。 |
 | `core/css-value.ts` | RawValue、Condition Value、复合值与按需依赖。 |
-| `core/css-variable.ts` | 逻辑 Variable、条件 Custom Property 与局部覆盖。 |
+| `core/css-variable.ts` | 同名 Variable 引用、根值与注册。 |
 | `core/css-root.ts` | 唯一源账本、快照编译与宿主提交。 |
-| `compiler/compile-css.ts` | 单次编译会话与 CSS string 输出。 |
-| `compiler/compile-value.ts` | Value 路径、读取、循环检测与复合值降级。 |
+| `compiler/compile-css.ts` | 编译会话、条件变量默认定义与 CSS string 输出。 |
+| `compiler/compile-value.ts` | 从外向内展开 Value、循环检测与复合值降级。 |
 | `compiler/compile-declaration.ts` | Declaration 语法与静态简写展开。 |
 | `properties` | 浏览器 CSS 属性的 Key。 |
 | `selectors/interaction.ts` | 可复用交互 Condition。 |
@@ -48,6 +48,8 @@ render()
 [Button.style.ts](../components/kits/Button/Button.style.ts) 在模块顶层登记全部 Rule，并按默认效果、浏览器交互、variant、tone、size、status 分区。Button 配方留在组件内；共享效果通过 `innerText()`、`contentLayout()`、`size()`、`boundary()`、`color()`、`elevation()` 与 `clickable()` 进入 Style System。
 
 焦点规则由 `whenFocusVisible` 确定生效地址，再用 `boundary({ outline })` 建立边界。danger tone 只覆盖轮廓颜色，不建立焦点专用转发 Mixin。
+
+默认底色保留一次 `colorMix`；中性表面与混合占比都使用 Variable。hover、active 只改变同名变量的值，禁用背景仍由 Button 直接选择。
 
 Button.tsx 静态导入 Button.style.ts。Example、Storybook 和缩略图入口都在渲染前准备 `style#css-root` 并统一挂载；组件渲染不编译样式。懒加载组件仍需由应用样式清单提前导入，`package.json` 的 sideEffects 保留 `.style.ts` 及产物 `.style.js`。
 

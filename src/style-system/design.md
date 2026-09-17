@@ -27,7 +27,7 @@ Style System 及其共享 values、selectors、properties、mixins 是定义层�
 | 对象 | 职责 |
 | --- | --- |
 | Condition | 描述相对于当前地址的 selector、状态、媒体条件或 At Rule 头。 |
-| Condition Path | 由 Condition 组成的有序地址；嵌套时直接追加。 |
+| Condition Path | 有序地址；普通 Rule 追加地址，Value 分支只允许同址合并。 |
 | CSS Key | Declaration 的受体，包括普通属性、Variable 和 Descriptor；普通属性同时保存固定的内容语法。 |
 | RawValue | 已不可继续拆解的原始值，当前是 `string` 或 `number`。 |
 | Value | 原始值、随 Condition 取值的对象或复合表达；创建时不生成 CSS。 |
@@ -167,15 +167,13 @@ rules(button, [[$backgroundColor, interactiveSurface]])
 
 这里 `interactiveSurface` 表达可交互的承载面，而不是 `background-color` 的镜像名称。`$backgroundColor` 已经说明 CSS 实现位置，Value 只补充该位置要放入的语义内容。
 
-## Variable 按已有 Condition Path 局部重定义
+## Variable 在各条件下改写同一个值
 
-`[variable, input]` 不用 input 整体替换 Variable，而是把 input 提供的 Condition Path 投影到 Variable 已经拥有的路径：
+Variable 始终对应同名 Custom Property。它作为 Value 被消费时只输出一个 `var(--name, fallback)`，条件分支改变该变量的赋值，不展开消费它的 CSS Function。
 
-- RawValue 或不带 Condition 的 Value 只提供 default，因此只重定义基础 Custom Property。
-- 带 Condition 的 Value 可以同时提供 default 与若干 Condition Path。
-- 条目数组可以直接引用 Condition，只提供需要局部重定义的路径；没有提供的路径保持原定义。
-- input 提供、但 Variable 原定义中不存在的路径不参与输出。
-- 只要匹配路径被明确提供，就生成定义；不比较新旧值是否相同。
+动态 fallback 在实际消费地址生成 default 与条件赋值；静态 fallback 只留在 `var()` 内。编译器先输出这些条件默认值，再输出显式声明，同一地址的显式声明优先。不同消费地址分别得到自己的条件默认值。
+
+`[variable, input]` 可以用完整 Value 同时修改 default 与条件分支，也可以用条目数组只修改指定地址。未声明的地址保留默认定义；允许增加 fallback 中没有的条件。
 
 ```ts
 const exampleBackground = variable('color-background-example', {
@@ -186,25 +184,25 @@ const exampleBackground = variable('color-background-example', {
 // 只定义 --color-background-example。
 
 [exampleBackground, [[hover, 'blue']]]
-// 只定义 hover 对应的条件 Custom Property。
+// 在 hover 下写入 --color-background-example: blue。
 
 [exampleBackground, value('red', [[active, 'green']])]
-// 定义基础 Custom Property 与 active 对应的条件 Custom Property。
+// 默认写入 red，active 时向同一个变量写入 green。
 ```
 
-局部条目和 Value 都直接携带 Condition；匹配使用完整 `header` 序列。条件 Custom Property 的后缀只由编译器对 `header`做稳定编码，不形成另一套业务身份。
+Variable 表达独立可赋值的输入，不为普通 CSS 属性预先建立同名槽位。Button 的中性表面占比属于 Button，因此其 Variable 配方留在 Button；共享的仍是编译机制。
 
-Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同一路径的值作为 fallback。当业务确实要重定义这个独立语义输入时，Rule 可以只覆盖需要变化的 Condition Path。Variable 不用来为每个普通 CSS 属性预先建立同名原始槽位。
+## 从 Rule 地址向叶子展开
 
-## 按请求条件逐层读取
+编译先取得 Rule 地址，再携带临时分支逐层进入 Value 与 CSS Function。Function 按顺序解析子值，前一个子值确定的分支继续约束后一个子值；嵌套 Function 使用相同过程。
 
-编译器对每个待生成的 Condition Path 执行同一规则：
+- RawValue 与无条件的 Value 不增加分支约束。
+- 动态 Value 的 default 是真实分支，内部以空路径表示；未选择任何分支用 `undefined` 表示。只有输出 CSS 时，default 才表现为空地址。
+- 同址分支合并：default 与 default、hover 与 hover、active 与 active。
+- 不同分支拒绝：default 与 hover、default 与 active、hover 与 active。不自动拼出交集选择器，也不以另一个动态 Value 的 default 补齐缺失分支。
+- 路径身份由完整 `header` 序列决定；重复分支最后一次定义生效。
 
-1. 当前对象是 RawValue 时停止。
-2. 当前 Value 存在同路径 Condition 时，读取对应 Value；否则读取 default。
-3. 进入子 Value 后继续携带最初请求的 Condition Path。
-4. 子 Value 仍按同路径 Condition 取值，没有则读取它的 default。
-5. 同一个 Condition Path 重复定义时，取最后对应的 Value。
+例如两个子 Value 都有 default、hover、active，复合结果只有三条。同一函数的两个子 Value 分别只有 default/hover 与 default/active 时，只有 default 共同成立。
 
 例如：
 
@@ -219,16 +217,16 @@ const foreground = value('red', [
 ])
 ```
 
-foreground 的 hover 最终得到 cyan；active 没有选择 blue，因此仍得到 red。读取 hover 对应 Value 时，不引入其中其他 Condition。
+foreground 的 default 得到 red，hover 得到 cyan；不会进入 blue 的 active 分支。
 
 ## 循环只按实际访问槽位判断
 
-循环检测记录当前递归链正在访问的 `(Value 对象身份, 实际键)`：
+循环检测记录当前递归链正在访问的 `(Value 对象身份, 临时分支)`：
 
 - hover 与 active 是同一 Value 的两个不同槽位，可以分别读取。
 - 一个 Value 被不同声明共享，前一次读取结束后不会污染下一次读取。
-- 当前链再次进入完全相同的对象与实际键时，才判定为循环并停止编译。
-- 请求的条件不存在而读取 default 时，实际键是 default；不能把外层请求键误记为已访问槽位。
+- 当前链再次进入完全相同的对象与分支时，判定为循环并停止编译。
+- 未选择分支与已选择 default 分别记录；不把不同分支混为一项。
 
 访问结束后立即移出活动链。若以后增加已完成结果缓存，它也必须与活动链分开。
 
@@ -238,7 +236,9 @@ foreground 的 hover 最终得到 cyan；active 没有选择 blue，因此仍得
 
 ## 复合值保留子 Value
 
-calc、color-mix、shadow、transition、transform、animation 和列表都保存组成它们的子 Value。若不同子值分别拥有 hover 与 active，编译器会生成默认、单条件和交集结果；业务 selector 与媒体条件也使用同一机制。条件组合发生在 Value 读取阶段，不改变作者登记的 Rule Path。
+calc、color-mix、shadow、transition、transform、animation 和列表都保存子 Value，由同一套顺序展开机制编译。各函数只负责最终 CSS 语法，不自行发现或传播条件。
+
+`colorMix([color, ratio], otherColor)` 的比例也接受 Value 或 Variable。数字 `0.82` 在编译时成为 `82%`；Variable 比例成为 `calc(var(--ratio, 0.82) * 100%)`，由浏览器使用当前变量值计算。业务构造阶段不做数值换算。
 
 ## 通用状态与业务条件
 
@@ -283,9 +283,9 @@ const cssString = compileCSS()
 1. 快照当前源 Rules。
 2. 按登记顺序累计 Condition Path 与 CSS Key。
 3. 解读 Declaration，统一展开需要静态扩写的属性。
-4. 按请求条件解读 Value，并触发可达的 `onActive`。
+4. 从当前地址向叶子展开 Value，并触发可达的 `onActive`。
 5. 继续处理本次产生的派生 Rules，直到没有新的依赖。
-6. 相同最终地址由后写内容覆盖，不调整地址原有顺序。
+6. 条件变量默认值先于显式声明输出；显式声明同址后写覆盖，保留地址原有顺序。
 7. 根据连续 Condition Path 生长花括号，返回 CSS string。
 
 Compiler 比 Formatter、Encoder 或 Decoder 更准确：这里不仅排版，还会解读高层对象、按 Condition 取值、触发依赖、扩写属性并降级为浏览器接受的 CSS。
@@ -323,12 +323,12 @@ render(() => <App />, root)
 2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；声明统一为 `[key, content]`，`declare()` 只返回相同二元数组，无效批次不产生部分写入。
 3. 同址后写覆盖前写并保持 Map 顺序，旧句柄不能影响新的写入。
 4. `Value` 与 `RawValue` 足以表达普通取值、各 Condition 对应的取值和复合值；不建立 State 专用分类。
-5. `value()` 在定义时只保存结构，编译时按同键否则 default 的规则递归读取。
+5. Value 与 CSS Function 在定义时只保存结构；编译从 Rule 向叶子展开，同址分支合并，不同分支拒绝。
 6. 循环检测区分同一 Value 在不同 Condition Path 下的实际访问，共享引用不会被误判。
 7. 普通 Rule Path 不去重，合法的重复 selector 原样输出。
 8. `onActive` 只向本次派生 Rules 添加可达依赖，不污染源 Rules。
 9. CSSRoot 持有内部账本；`compileCSS()` 无参生成 CSS string，App 在渲染前无参挂载且原子提交。
 10. Style System 定义层提供业务无关的材料、Condition、CSS Key 和 Mixin；组件特有效果直接留在自己的 `.style.ts`。
 11. Mixin 以完整效果为语义单位，不按单个 CSS Key 机械拆分，也不与具体业务组件绑定。
-12. Variable 必须表达独立语义输入，不为普通 CSS Key 创建去掉 `$` 的属性镜像；已成立的逻辑 Variable 仍按 Condition Path 派生稳定 Custom Property。
+12. Variable 表达独立语义输入；不同条件修改同名 Custom Property，不展开消费表达式，不派生条件变量名。
 13. 抽象后若仍需查看实现才能理解业务，该抽象必须回到直接 Rule；不用顶层行数代替理解链验收。

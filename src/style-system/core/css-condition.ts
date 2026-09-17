@@ -9,6 +9,19 @@ export interface Condition {
 /** 从根部逐层嵌套的 Condition 地址。 */
 export type ConditionPath = Condition[]
 
+/** 未选择分支为 undefined，default 分支为空路径。 */
+export type ConditionBranch = ConditionPath | undefined
+
+/** Condition 地址身份。 */
+export function conditionPathKey(path: ConditionPath): string {
+  return JSON.stringify(path.map((item) => item.header))
+}
+
+/** 合并同址 Value 分支；不同分支返回 null。 */
+export function mergeConditionBranch(current: ConditionBranch, next: ConditionPath): ConditionPath | null {
+  return current === undefined || conditionPathKey(current) === conditionPathKey(next) ? next : null
+}
+
 /** Condition 地址输入；缺省表示当前位置。 */
 export type ConditionInput = Condition | string | (Condition | string)[] | undefined
 

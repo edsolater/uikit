@@ -12,7 +12,7 @@ const hoverOverlayRatio = 0.08
 /** 轻量按下底色中的前景色占比，范围为零至一。 */
 const activeOverlayRatio = 0.14
 
-/** 可覆盖的中性表面配方；default、hover 与 active 分别拥有可局部重定义的 Variable Key。 */
+/** 中性表面；同名变量随交互状态切换。 */
 export const interactiveSurface = variable('color-surface-interactive', {
   fallback: value(lowSurface, [[whenHover, hoverSurface], [whenActive, activeSurface]]),
   registration: { syntax: '*', inherits: true }

@@ -17,7 +17,7 @@
 
 CSS 名称中的“单词”指以连字符分隔的完整语义词；开头的 `--` 和纯数字片段都不算单词。`--color-background` 有两个单词，`--space-scale-2` 有两个单词和一个编号；`--background`、`--space-2` 和 `--fg` 都不足两个完整单词，未经用户明确指定不得定义。
 
-这项约束覆盖 Variable 基础名、Keyframes 名、CSS `@function` 名及其他由 Style System 定义、最终作为完整标识写入 CSS 的名称。Condition 不另设名称；Variable 的条件后缀由编译器编码真实 CSS header，不作为源码命名入口。
+这项约束覆盖 Variable 名、Keyframes 名、CSS `@function` 名及其他由 Style System 定义、最终作为完整标识写入 CSS 的名称。Condition 不另设名称；Variable 在不同条件下始终使用同一个 CSS 名称。
 
 # CSS 名称与源码名称分工
 

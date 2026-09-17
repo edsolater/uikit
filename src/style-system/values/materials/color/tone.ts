@@ -64,7 +64,7 @@ export const softTone = variable('color-tone-soft', { fallback: softAccent })
 /** 语气交互态的前景色。 */
 export const toneForeground = variable('color-tone-foreground', { fallback: accentForeground })
 
-/** 可覆盖的语气底色配方；default、hover 与 active 分别拥有可局部重定义的 Variable Key。 */
+/** 语气底色；同名变量随交互状态切换。 */
 export const toneSurface = variable('color-tone-background', {
   fallback: value(colorMix([surface, toneSurfaceRatio], softTone), [
     [whenHover, colorMix([surface, toneHoverSurfaceRatio], softTone)],

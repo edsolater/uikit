@@ -3,11 +3,11 @@ import type { Declaration } from '../core/css-declaration'
 import { toConditionPath } from '../core/css-condition'
 import type { ValueInput } from '../core/css-value'
 import { declarationSyntax, propertyName } from '../core/css-key'
-import { isVariable, variableName, type Variable, type VariableInput } from '../core/css-variable'
+import { isVariable, type Variable, type VariableInput } from '../core/css-variable'
 import type { FontParts } from '../properties/font'
 import type { PaddingSides } from '../properties/padding'
 import type { Transition } from '../values/transition'
-import { combineValues, compileAt, compileValue, conditionPathKey, valuePaths, type ValueContext, type ValueResult } from './compile-value'
+import { compileValueParts, compileValue, type ValueContext, type ValueResult } from './compile-value'
 
 /** 带相对 Condition Path 的声明结果。 */
 export interface DeclarationResult extends ValueResult { property: string }
@@ -20,7 +20,7 @@ export function compileDeclaration(input: Declaration<unknown>, context: ValueCo
   /** 为值结果补充并展开目标属性。 */
   const expandValues = (values: ValueResult[], property = name) => values.flatMap((value) => expandProperty(property, value))
   /** 编译并组合同一消费位置的组成部分。 */
-  const compose = (parts: ValueInput[], format: (parts: string[]) => string) => combineValues(parts.map((item) => compileValue(item, context)), format)
+  const compose = (parts: ValueInput[], format: (parts: string[]) => string) => compileValueParts(parts, context, format)
   if (isVariable(key)) return compileVariableDeclaration(key, content as VariableInput, context)
   switch (syntax) {
     case 'value': return expandValues(compileValue(content as ValueInput, context))
@@ -60,33 +60,31 @@ export function compileDeclaration(input: Declaration<unknown>, context: ValueCo
       if (!Array.isArray(content)) return expandValues(compileValue(content as ValueInput, context))
       const entries = (content as Transition[]).map(([property, duration, easing, delay]) => {
         if (typeof property === 'object' && 'kind' in property) context.activate(property)
-        return compose([propertyName(property), duration, easing, ...(delay === undefined ? [] : [delay])], (parts) => parts.join(' '))
+        return [propertyName(property), duration, easing, ...(delay === undefined ? [] : [delay])]
       })
-      return expandValues(combineValues(entries, (parts) => parts.join(', ')))
+      return expandValues(compose(entries.flat(), (parts) => {
+        let offset = 0
+        return entries.map((entry) => {
+          const text = parts.slice(offset, offset + entry.length).join(' ')
+          offset += entry.length
+          return text
+        }).join(', ')
+      }))
     }
   }
   throw new Error(`不支持 ${name} 的声明语法。`)
 }
 
-/** 把 Variable 重定义投影到已有 Condition Path。 */
+/** 在各条件地址改写同一个 Custom Property。 */
 export function compileVariableDeclaration(reference: Variable, input: VariableInput, context: ValueContext): DeclarationResult[] {
-  const referencePaths = valuePaths(reference)
-  const properties = new Map(referencePaths.map((path) => [conditionPathKey(path), `--${variableName(reference.name, path)}`]))
+  const property = `--${reference.name}`
   if (Array.isArray(input)) {
     return input.flatMap(([conditionInput, value]) => {
       const path = toConditionPath(conditionInput)
-      const property = properties.get(conditionPathKey(path))
-      if (property === undefined) return []
-      const valueContext = { ...context, path: [...context.path, ...path] }
-      return [{ path: [], property, text: compileAt(value, path, valueContext) }]
+      return compileValue(value, context, path).map((result) => ({ ...result, property }))
     })
   }
-  return valuePaths(input).flatMap((path) => {
-    const property = properties.get(conditionPathKey(path))
-    if (property === undefined) return []
-    const valueContext = { ...context, path: [...context.path, ...path] }
-    return [{ path: [], property, text: compileAt(input, path, valueContext) }]
-  })
+  return compileValue(input, context).map((result) => ({ ...result, property }))
 }
 
 /** 展开 margin/padding 的一至四项静态简写；其他文本原样保留。 */
