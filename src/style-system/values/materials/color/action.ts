@@ -1,9 +1,9 @@
 /** 实心动作配色及完整交互取值。 */
-import { variable } from '../../core/css-variable'
-import { value } from '../../core/css-value'
-import { whenHover, whenActive } from '../../selectors/msic'
-import { brand, strongInk } from './color-palette'
-import { $colorMix } from '../functions/color-mix'
+import { variable } from '../../../core/css-variable'
+import { value } from '../../../core/css-value'
+import { whenHover, whenActive } from '../../../selectors/msic'
+import { brand, strongInk } from './palette'
+import { colorMix } from '../../functions/color-mix'
 
 /** 实心动作底色。 */
 export const action = variable('color-action', { root: { value: brand } })
@@ -17,8 +17,8 @@ export const actionForeground = variable('color-action-foreground', { root: { va
 /** 可覆盖的实心动作底色配方；default、hover 与 active 分别拥有可局部重定义的 Variable Key。 */
 export const actionSurface = variable('color-action-background', {
   fallback: value(action, [
-    [whenHover, $colorMix([action, 0.9], actionShade)],
-    [whenActive, $colorMix([action, 0.8], 'black')],
+    [whenHover, colorMix([action, 0.9], actionShade)],
+    [whenActive, colorMix([action, 0.8], 'black')],
   ]),
   registration: { syntax: '*', inherits: true }
 })

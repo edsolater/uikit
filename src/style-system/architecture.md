@@ -17,8 +17,12 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 | [core/css-variable.ts](core/css-variable.ts) | 逻辑 CSS Variable、Condition Key 对应的 Custom Property 名称、局部重定义及按需根定义。 |
 | [core/css-root.ts](core/css-root.ts) | 私有源 Rules 账本、同址写入所有权与句柄；快照编译、宿主查找和原子提交。 |
 | [values/animation.ts](values/animation.ts)、[values/functions/custom.ts](values/functions/custom.ts) | 动画、Keyframes、CSS 函数调用及其按需定义。 |
-| properties、values | 普通 CSS Key、复合值和共享材料；创建时不生成 CSS。 |
-| selectors、mixins | 可复用 Condition，以及由普通函数返回的声明组合。 |
+| properties | 浏览器原生 CSS 属性的 CSS Key。 |
+| values/functions、values | 复合值、CSS 函数和按需定义；创建时不生成 CSS。 |
+| values/materials | 能脱离具体组件复用的设计系统材料；不为普通 CSS Key 建立同名镜像 Value。 |
+| values/materials/color | 颜色 namespace 的透明分组目录；`action.ts`、`edge.ts`、`palette.ts`、`surface.ts`、`text.ts`、`tone.ts` 分别承载具体目的，目录不建立整体入口。 |
+| selectors | 可复用 Condition。 |
+| mixins/content.ts、mixins/space.ts、mixins/interaction.ts | 与具体组件无关的完整效果，按内容、空间和交互领域归档；函数返回 Declaration 组合只是实现形式。 |
 
 [index.ts](index.ts) 公开 `rule`、`rules`、可选的 `declare` 助手、Value、Declaration、`cssRoot` 和 `compileCSS`，不公开 Root 类、内部登记函数或源账本。包根另外导出 `cssRoot`、`compileCSS`，供应用启动使用。材料与属性从具体文件具名导入，内部文件不绕行公共入口。
 
@@ -39,7 +43,7 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 
 ```ts
 rules('.example', [
-  [$color, color],
+  [$color, foreground],
   [$padding, ['4px', '8px']],
 ])
 ```
@@ -115,20 +119,20 @@ CSSRoot 是唯一源账本所有者。公共 `compileCSS()` 和 `cssRoot.mount()
 
 # Button 接入
 
-[Button.style.ts](../components/kits/Button/Button.style.ts) 在模块顶层完成全部 Rule 登记。基础、variant、tone、size 与 status 仍按 Button 业务协议分区；不再存在只为包裹登记过程而创建的变量。
+[Button.style.ts](../components/kits/Button/Button.style.ts) 在模块顶层完成全部 Rule 登记。基础、variant、tone、size 与 status 按 Button 业务协议分区；Button 专属定义直接写在对应 Rule 中，不为一次性内容建立私有 Mixin 或具名 Value。
 
-Style System 定义层保存通用 feature 的 hover、active、disabled 等条件取值。Button 文件整体属于业务层，只消费这些定义并重定义已有 Variable Key，不在文件顶部复制一套状态 Value。基础消费直接写：
+Style System 提供以整个 UIKit 为范围的通用材料和效果。Button 可以直接把 `content()`、`clickable()`、`focusRing()` 和交互材料当作黑盒，因为这些目的不与 Button 绑定；具体材料通过参数或声明交给效果：
 
 ```ts
-[$backgroundColor, backgroundColor]
-[$color, color]
-[$boxShadow, boxShadow]
-[$cursor, cursor]
-[$opacity, opacity]
-[$transform, pressFeedback]
+content({ font: 'inherit', emphasis: bold, leading: singleLine })
+[$color, interactiveForeground]
+[$boxShadow, interactiveElevation]
+clickable()
 ```
 
-一个逻辑 Variable 可以拥有 default 与多个 Condition Key。每个 Condition Key 落盘为独立 Custom Property；Variable 本身在 `[variable, content]` 中充当 Key，在其他声明的 content 中充当引用。Button 的 Variant、Tone、Size 与 loading 使用外层业务 Rule 选择配方，但只重定义对应 Variable，不重新声明普通 CSS 属性，也不创建 `loadingCursor`、`solidToneForeground` 一类补偿 Value。
+Button 的 `solid` 外观、tone 映射和尺寸档位无法脱离 Button 协议，因此直接声明 CSS Key 与材料的关系。局部出现两次相似代码不足以把它们提升为 Style System 抽象；反之，一个目的能与绑定组件解耦时，不必等到第二个组件出现才建立通用黑盒。
+
+逻辑 Variable 仍可在 `[variable, content]` 中充当 Key，以 Condition Key 定义局部配方；它必须表达独立语义输入，不用来为普通 CSS 属性建立同名镜像槽位。
 
 `whenDisabled` 同时匹配 `:disabled` 与 `[data-status~="disabled"]`；`whenHover`、`whenActive` 排除相同禁用协议。这些通用状态是具有稳定 name 的 Condition，Variable 派生名称和局部重定义按 name 匹配，不按 CSS header 文本猜测。
 

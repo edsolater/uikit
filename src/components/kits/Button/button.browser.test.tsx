@@ -4,11 +4,11 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { Button, type ButtonProps } from './Button'
 import { cssRoot, rule, rules, value, whenHover, whenActive, whenDisabled, type RulesHandle } from '../../../style-system'
-import { backgroundColor } from '../../../style-system/values/materials/color-surface'
 import { $borderRadius } from '../../../style-system/properties/border'
+import { $backgroundColor } from '../../../style-system/properties/color'
 import { $padding } from '../../../style-system/properties/padding'
 import { subtle } from '../../../style-system/values/materials/radius'
-import { paddingInline, paddingBlock, smallSpace } from '../../../style-system/values/materials/space'
+import { smallSpace } from '../../../style-system/values/materials/space'
 
 let dispose: (() => void) | undefined
 const handles: RulesHandle[] = []
@@ -53,9 +53,6 @@ describe('Button styles', () => {
       if (entry.mode === 'native') button.dataset.status = entry.loading ? 'loading' : ''
       if (entry.mode === 'status') button.disabled = false
       button.style.transition = 'none'
-      button.style.setProperty('--color-background', 'red')
-      button.style.setProperty('--color-content', 'red')
-      button.style.setProperty('--shadow-box', '0 0 10px red')
       expect(button.matches(whenDisabled.header.replace('&', ''))).toBe(true)
       const computed = getComputedStyle(button)
       expect(computed.backgroundColor).toBe(background)
@@ -120,10 +117,8 @@ describe('Button styles', () => {
     expect(style.sheet!.cssRules).toHaveLength(0)
 
     handles.push(rules('.shared-input', [
-      [paddingInline, smallSpace],
-      [paddingBlock, '8px'],
       [$borderRadius, subtle],
-      [$padding, [paddingBlock, paddingInline]],
+      [$padding, ['8px', smallSpace]],
     ]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
@@ -192,7 +187,6 @@ describe('Button styles', () => {
     expect(style).not.toBeNull()
     const cssRules = Array.from(style.sheet!.cssRules)
     const cssText = cssRules.map((rule) => rule.cssText).join('\n')
-    expect(cssText).toContain('@property --color-background')
     expect(cssText).toContain('&:where(:hover)')
     expect(cssText).toContain('&:where(:active)')
     expect(cssText).not.toContain('[object Object]')
@@ -220,27 +214,13 @@ describe('Button styles', () => {
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(defaultBackground)
     await userEvent.unhover(getButton('default'))
 
-    getButton('default').style.setProperty('--color-background', 'rgb(1, 2, 3)')
-    expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(1, 2, 3)')
-    getButton('default').style.removeProperty('--color-background')
-    getButton('default').style.setProperty('--color-background-when-hover', 'rgb(4, 5, 6)')
-    await userEvent.hover(getButton('default'))
-    expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')
-    await userEvent.unhover(getButton('default'))
-    getButton('default').style.removeProperty('--color-background-when-hover')
-    handles.push(rule('.Button[data-testid="default"]', backgroundColor, value('rgb(1, 2, 3)', [[whenHover, 'rgb(4, 5, 6)']])))
+    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, value('rgb(1, 2, 3)', [[whenHover, 'rgb(4, 5, 6)']])))
     cssRoot.mount()
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')
     await userEvent.unhover(getButton('default'))
     handles.pop()!.remove()
     cssRoot.mount()
-
-    getButton('default').style.setProperty('--space-padding-inline', '31px')
-    getButton('default').style.setProperty('--space-gap', '9px')
-    expect(getComputedStyle(getButton('default')).paddingLeft).toBe('31px')
-    expect(getComputedStyle(getButton('default')).gap).toBe('9px')
-    expect(getComputedStyle(input).paddingLeft).toBe('4px')
 
     await userEvent.tab()
     const focused = document.activeElement as HTMLElement

@@ -30,12 +30,3 @@ export const focusStroke = variable('boundary-focus-width', { root: { value: '2p
 
 /** 焦点轮廓与控件之间的距离；与轮廓宽度独立。 */
 export const focusGap = variable('space-focus-offset', { root: { value: '2px' } })
-
-/** 横向内边距 Variable，默认采用超大档间距。 */
-export const paddingInline = variable('space-padding-inline', { fallback: extraLargeSpace })
-
-/** 纵向内边距 Variable，默认采用常规档间距。 */
-export const paddingBlock = variable('space-padding-block', { fallback: normalSpace })
-
-/** 内容间隔 Variable，与四周内边距分开控制。 */
-export const gap = variable('space-gap', { fallback: normalSpace })

@@ -1,5 +1,5 @@
 /** 自定义 CSS 函数的定义是 Rule，调用是带依赖的普通 Value。 */
-import { $function } from '../../core/css-condition'
+import { functionDefinition } from '../../core/css-condition'
 import type { Rules } from '../../core/css-rule'
 import type { Value, ValueInput } from '../../core/css-value'
 
@@ -12,7 +12,7 @@ import type { Value, ValueInput } from '../../core/css-value'
  * lengthDouble('4px') // 编译为 --length-double(4px)，并带上上述 @function 定义。
  */
 export function cssFunction(signature: string, body: Rules): (...args: ValueInput[]) => Value {
-  const target = $function(signature)
+  const target = functionDefinition(signature)
   const name = signature.split('(')[0].trim()
   const definition: Rules = new Map([[[[target], undefined], body]])
   return (...args) => ({

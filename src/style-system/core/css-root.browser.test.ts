@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { cssRoot as root } from './css-root'
 import { rule, rules, type RulesHandle, type Rules } from './css-rule'
-import { condition, $media } from './css-condition'
+import { condition, media } from './css-condition'
 import { value } from './css-value'
 import { variable } from './css-variable'
 import { declare } from './css-declaration'
@@ -81,7 +81,7 @@ test('动画复合值激活帧定义，并继续解析帧内变量', () => {
 
 test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的函数', () => {
   const body: Rules = new Map([
-    [[undefined, 'result'], value('16px', [[$media('(width > 1px)'), '20px']])],
+    [[undefined, 'result'], value('16px', [[media('(width > 1px)'), '20px']])],
   ])
   const size = cssFunction('--example-size() returns <length>', body)
   handles.push(rule('.example', 'font-size', size()))

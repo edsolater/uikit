@@ -16,9 +16,9 @@ Block、StyleRule、MediaRule 和 KeyframeRule 不再是对象模型。它们在
 
 ## 定义层与业务层
 
-Style System 及其共享 values、selectors、properties 才是定义层；整个组件 `.style.ts` 都是业务层。把 `value()` 写在组件文件顶部，不会使它成为定义层代码。
+Style System 及其共享 values、selectors、properties、mixins 是定义层；整个组件 `.style.ts` 是业务层。载体位置不能把一次性定义变成可复用抽象。
 
-能够表达通用颜色、阴影、间距、交互状态或其他共享 feature 的定义，应先进入 Style System。只有无法取得足够通用语义的值才留在业务层；边界需要结合真实复用范围和表达质量判断，不能因为不存在机械分类规则，就默认所有值都属于组件。业务样式应主要选择已有定义和重定义 CSS Variable，代码量保持很小。
+定义层提供业务无关、能脱离具体组件复用的材料、条件、CSS Key 和效果。判断范围是整个 UIKit 的多组件设计系统：像 `clickable()` 这样可与绑定组件解耦的目的，即使暂时只有一个消费者也可成为共享黑盒；Button 的 `solid` 外观和尺寸档位无法脱离 Button 协议，因此直接由 `.style.ts` 中的 Rule 表达。是否共享不取决于当前调用次数，也不取决于抽出后的顶层代码是否更短。
 
 ---
 
@@ -78,11 +78,11 @@ RuleValue 可以继续包含 Rules。编译器进入它时沿用上层地址，�
 `rule()` 与 `rules()` 在 `.style.ts` 顶层直接调用，把配置按实际调用顺序写入 CSSRoot 内部源账本：
 
 ```ts
-rule(button, $color, color)
+rule(button, $color, foreground)
 
 rules(button, [
-  [$color, color],
-  [$backgroundColor, backgroundColor],
+  [$color, foreground],
+  [$backgroundColor, actionSurface],
 ])
 ```
 
@@ -92,22 +92,22 @@ Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回
 
 ```ts
 [$borderRadius, pill]
-[$gap, gap]
-[$padding, [paddingBlock, paddingInline]]
+[$gap, normalSpace]
+[$padding, [normalSpace, wideSpace]]
 [$transition, [
   [$backgroundColor, fast, standard],
   [$color, fast, standard],
 ]]
 ```
 
-`rules()` 递归展开声明组合和 Mixin 返回的分组；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读 content。
+`rules()` 递归展开声明组合和 Mixin 返回值；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读 content。
 
 同址后写覆盖前写，位置仍沿用该地址首次进入 Map 时的顺序。这就是普通 Map 更新的顺序语义；编译器不按 Path 深度、名称或输出长度重排。
 
 `rule()` 返回句柄：
 
 ```ts
-const appearance = rule(button, $color, color)
+const appearance = rule(button, $color, foreground)
 
 appearance.replace(nextForeground)
 appearance.remove()
@@ -117,9 +117,27 @@ appearance.remove()
 
 源 Rules 是 CSSRoot 的内部状态，不从公共入口暴露。测试保存登记返回的句柄并在用例结束后删除，避免直接清空账本或建立业务侧配置容器。
 
+## Mixin 表达效果
+
+Mixin 是返回 Declaration 组合的函数，但数组和函数只是它的实现形式。Mixin 必须向当前主体赋予一个完整、与具体业务组件无关的效果；内部多条声明共同满足这个目的。具体组件可以通过参数选择材料，Mixin 继续拥有这些材料怎样共同形成效果的稳定关系。
+
+Mixin 文件按效果所属领域组织：内容、空间、交互等领域分别承载自己的效果。`msic` 只能说明暂未分类，不能成为持续接收新 Mixin 的领域；同时也不为每个函数机械建立单独文件。
+
+```ts
+rules(button, [
+  content({ font: 'inherit', emphasis: bold, leading: singleLine }),
+  clickable(),
+  inlineCenter(),
+])
+```
+
+`content()` 让业务侧选择字体、强调程度和行距，但不要求业务重新组织内容排版的 CSS Key。`clickable()` 可以统一管理指针、按压、禁用和过渡反馈；业务侧不需要看见它内部的条件 Value。Button 的 size 或 appearance 只服务 Button 协议，因此直接写在对应 Rule 中，不再包装成私有函数。
+
+判断参数化 Mixin 时，暂时去掉组件名称，并把具体 Value 换成参数：如果剩余关系仍表达一个准确、完整的目的，而且该目的增加声明时所有调用者都应共同获得，边界成立。参数只承接调用者必须作出的语义选择；若仍需查看实现才能知道函数实际上做什么，或参数只是逐项复刻内部 CSS Key，仍是假黑盒。
+
 ---
 
-# Value 在定义层保存各 Condition 对应的值
+# Value 表达内容
 
 Value 只有两个基础概念：`Value` 与 `RawValue`。不再建立额外的状态值或单值类型与构造函数。
 
@@ -134,30 +152,30 @@ const foreground = value('red', [
 
 Condition 是机制，State 只是其中一种语义用法。hover、active、disabled 是常见例子，不限制 Value 的取值维度；媒体条件、Variant 或其他 Condition 也可以对应不同 Value。类型和编译器不分类或限制 State。
 
-通用与业务由作者根据服务对象、复用范围和表达质量判断，不是两种 Condition 类型。定义层优先保存能够复用的完整 feature；业务层只保留确实依赖具体组件协议的选择。横跨多个属性的组件配方仍可用外层 Rule，但不能因此把本可通用的单属性取值矩阵留给组件重复表达。
+通用与业务由服务对象决定，不是两种 Condition 类型。共享材料保存自身语义所需的条件取值；组件特有的一次性配方直接由 Rule 表达，不为缩短调用处而建立具名私有 Value。通用效果的实现 Value 由 Mixin 封装，不向业务暴露一组只有实现含义的原始槽位。
 
 ```ts
 const compact = condition('&[data-density="compact"]')
 const spacing = value('12px', [
   [compact, '6px'],
-  [$media('(width > 800px)'), '16px'],
+  [media('(width > 800px)'), '16px'],
 ])
 ```
 
-一个 feature 应在 Style System 的定义处保存各 Condition 对应的 Value，消费处只使用它：
+一个共享材料可以把属于自身语义的 Condition 取值保存在定义处：
 
 ```ts
-export const color = variable('color-content', {
-  fallback: value(foreground, [
-    [whenHover, strongForeground],
-    [whenActive, strongForeground],
+export const interactiveSurface = variable('color-surface-interactive', {
+  fallback: value(lowSurface, [
+    [whenHover, hoverSurface],
+    [whenActive, activeSurface],
   ]),
 })
 
-rules(button, [[$color, color]])
+rules(button, [[$backgroundColor, interactiveSurface]])
 ```
 
-这里的逻辑 CSS Variable 同时拥有 default、hover、active 等 Key。组件仍只消费 `color`；各 Key 在落盘时取得独立的 Custom Property 名称，例如 `--color-content`、`--color-content-when-hover`、`--color-content-when-active`。`$color` 是 CSS Key，`color` 是对应的最底层 Variable；同词干不需要再增加组件主体。
+这里 `interactiveSurface` 表达可交互的承载面，而不是 `background-color` 的镜像名称。`$backgroundColor` 已经说明 CSS 实现位置，Value 只补充该位置要放入的语义内容。
 
 ## Variable 按已有 Key 局部重定义
 
@@ -171,7 +189,7 @@ rules(button, [[$color, color]])
 
 ```ts
 const exampleBackground = variable('color-background-example', {
-  fallback: value('white', [[$hover, 'gray'], [$active, 'silver']]),
+  fallback: value('white', [[hover, 'gray'], [active, 'silver']]),
 })
 
 [exampleBackground, 'red']
@@ -180,13 +198,13 @@ const exampleBackground = variable('color-background-example', {
 [exampleBackground, { hover: 'blue' }]
 // 只定义 --color-background-example-when-hover。
 
-[exampleBackground, value('red', [[$active, 'green']])]
+[exampleBackground, value('red', [[active, 'green']])]
 // 定义 --color-background-example 与 --color-background-example-when-active。
 ```
 
 对象 Key 使用 Condition name；复合 Condition Path 按 name 顺序组成 Key。Condition 的 CSS header 可以演进，Variable 的匹配和派生名称仍由稳定 name 决定。
 
-Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同 Key 的值作为 fallback。业务 Rule 因此只重定义需要变化的 Key，不重新创建一份状态 Value，也不重复声明消费该 feature 的普通属性。
+Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同 Key 的值作为 fallback。当业务确实要重定义这个独立语义输入时，Rule 可以只覆盖需要变化的 Condition Key。Variable 不用来为每个普通 CSS 属性预先建立同名原始槽位。
 
 ## 按请求条件逐层读取
 
@@ -238,7 +256,7 @@ calc、color-mix、shadow、transition、transform、animation 和列表都保�
 
 hover、active、disabled 等通用状态在 Style System 中定义为具有稳定 name 的 Condition。State 仍只是 Condition 的语义称呼，不增加 State 类型或构造函数。
 
-loading、具体 Variant 或 Tone 是否足够通用，需要按真实服务对象判断。留在 Button 的业务条件只负责选择或重定义定义层 Variable；它不能在组件文件里复制 hover、active、disabled 的完整取值矩阵。若某个状态结果需要被特殊组合覆盖，业务 Rule 只重定义该 Variable 对应的 Condition Key。
+通用状态只提供可复用的 Condition 身份，不决定每个组件的视觉结果。`clickable()` 等通用 Mixin 可以拥有自己的 active 与 disabled 反馈；Button 的 variant、tone 和 size 配方则留在 `Button.style.ts`。只在某个 Value 或 Variable 本身就表达可复用材料时，才把它的条件取值提升到定义层。
 
 Rules 也可以作为 Value 内容，用于需要继续携带 Key 或嵌套结构的场景。CSS `@function` 的完整函数体可以因此作为一个 Value 被按需挂载；编译器仍按相同的二项地址递归处理。
 
@@ -320,5 +338,7 @@ render(() => <App />, root)
 7. 普通 Rule Path 不去重，合法的重复 selector 原样输出。
 8. `onActive` 只向本次派生 Rules 添加可达依赖，不污染源 Rules。
 9. CSSRoot 持有内部账本；`compileCSS()` 无参生成 CSS string，App 在渲染前无参挂载且原子提交。
-10. Style System 定义层保存通用 feature 的 Condition Key；组件样式只选择定义并按已有 Key 重定义 Variable。
-11. 一个逻辑 Variable 为每个 Condition Key 派生稳定 Custom Property；Variable 本身可作为 Declaration Key 或 Value，局部声明不替换未提供的 Key，也不新增原定义没有的 Key。
+10. Style System 定义层提供业务无关的材料、Condition、CSS Key 和 Mixin；组件特有效果直接留在自己的 `.style.ts`。
+11. Mixin 以完整效果为语义单位，不按单个 CSS Key 机械拆分，也不与具体业务组件绑定。
+12. Variable 必须表达独立语义输入，不为普通 CSS Key 创建去掉 `$` 的属性镜像；已成立的逻辑 Variable 仍按 Condition Key 派生稳定 Custom Property。
+13. 抽象后若仍需查看实现才能理解业务，该抽象必须回到直接 Rule；不用顶层行数代替理解链验收。

@@ -12,6 +12,3 @@ export const large = variable('size-scale-7', { root: { value: '64px' } })
 
 /** 可覆盖的超大档尺寸 Variable。 */
 export const extraLarge = variable('size-scale-8', { root: { value: '80px' } })
-
-/** 最小高度 Variable，未局部重定义时读取常规档尺寸。 */
-export const minHeight = variable('size-minimum-height', { fallback: normal })

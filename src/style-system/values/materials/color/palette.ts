@@ -1,6 +1,6 @@
 /** 明暗基础色板及中性色元，为各类配色提供共同来源。 */
-import { value } from '../../core/css-value'
-import { variable } from '../../core/css-variable'
+import { value } from '../../../core/css-value'
+import { variable } from '../../../core/css-variable'
 
 /** 明暗两套基础色板，提供品牌色、中性色和危险色。 */
 export const palette = {

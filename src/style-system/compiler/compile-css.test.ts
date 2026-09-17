@@ -2,7 +2,7 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { compileCSS } from '../core/css-root'
 import { rule, rules, type Rules, type RuleAddress, type RuleValue, type RulesHandle, type Declarations } from '../core/css-rule'
-import { condition, $media, type ConditionInput } from '../core/css-condition'
+import { condition, media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
 import { value } from '../core/css-value'
@@ -130,7 +130,7 @@ test('同一个 Value 的 hover 与 active 各读自身属性，共享 DAG 不�
 
 test('Value 支持业务选择器和媒体 Condition，同路径递归与交集不依赖 State 分类', () => {
   const compact = condition('&[data-density="compact"]')
-  const wide = $media('(width > 800px)')
+  const wide = media('(width > 800px)')
   const compactSize = value('8px', [[compact, '6px']])
   const size = value('12px', [[compact, compactSize], [wide, '16px']])
   expect(size.conditions.map(([path]) => path)).toEqual([[compact], [wide]])
@@ -278,7 +278,7 @@ test('动画和函数激活完整资源，同名函数替换整个定义', () =>
   const opacity = variable('--fade-opacity', { root: { value: 1 } })
   const frames: Rules = new Map<RuleAddress, RuleValue>([[[[condition('from')], 'opacity'], 0], [[[condition('to')], 'opacity'], opacity]])
   keep(rule('.example', 'animation', animationValue({ name: animationName('motion-fade', frames), duration: '1s' })))
-  const oldBody: Rules = new Map<RuleAddress, RuleValue>([[[undefined, '--old-local'], '100px'], [[undefined, 'result'], value('16px', [[$media('(width > 1px)'), '20px']])]])
+  const oldBody: Rules = new Map<RuleAddress, RuleValue>([[[undefined, '--old-local'], '100px'], [[undefined, 'result'], value('16px', [[media('(width > 1px)'), '20px']])]])
   const nextBody: Rules = new Map([[[undefined, 'result'], '24px']])
   keep(rule('.first', 'width', cssFunction('--size-example() returns <length>', oldBody)()))
   keep(rule('.second', 'width', cssFunction('--size-example() returns <length>', nextBody)()))

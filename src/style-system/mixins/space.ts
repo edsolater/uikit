@@ -1,4 +1,4 @@
-/** 常用属性的声明组合，交给 rules 批量登记。 */
+/** 为组件内容建立可复用的空间排列效果。 */
 import type { Declarations } from '../core/css-rule'
 import { $display, $alignItems, $alignSelf, $justifyContent } from '../properties/layout'
 

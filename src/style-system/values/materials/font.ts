@@ -22,12 +22,3 @@ export const extraLargeText = variable('font-size-extra-large', { root: { value:
 
 /** 可覆盖的标题字号 Variable，默认读取标题固定尺度。 */
 export const heading = variable('font-size-heading', { root: { value: '24px' } })
-
-/** 字号 Variable，未局部重定义时读取大档字号。 */
-export const fontSize = variable('font-size', { fallback: largeText })
-
-/** 字重 Variable，未局部重定义时读取常规字重。 */
-export const fontWeight = variable('font-weight', { fallback: regular })
-
-/** 行高 Variable，未局部重定义时读取单倍行高。 */
-export const lineHeight = variable('font-line-height', { fallback: singleLine })

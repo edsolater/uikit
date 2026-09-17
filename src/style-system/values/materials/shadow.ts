@@ -41,7 +41,9 @@ export const raised = variable('shadow-raised', {
   },
 })
 
-/** 可覆盖的盒阴影配方；default、hover、active 与 disabled 分别拥有可局部重定义的 Variable Key。 */
-export const boxShadow = variable('shadow-box', {
-  fallback: value(low, [[whenHover, raised], [whenActive, flat], [whenDisabled, flat]]),
-})
+/** 可交互主体的层级反馈；悬停时抬升，按下或禁用时回到平面。 */
+export const interactiveElevation = value(low, [
+  [whenHover, raised],
+  [whenActive, flat],
+  [whenDisabled, flat],
+])

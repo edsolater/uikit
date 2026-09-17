@@ -13,7 +13,7 @@
 | 单词名称例外 | 只有用户明确指定某个单词名称时才允许使用。Agent 不能因为名称常见、简短或当前没有冲突，自行定义单词名称。 | 未经明确指定，不得定义 `surface`、`action`、`motion`、`background` 或 `foreground` 作为完整 CSS 名称。 |
 | namespace 在前 | 名称先写所属样式 namespace，再写语义主体、实现位置和必要限定。 | 使用 `color-background`，不使用 `background-color` 作为 Style System 自有名称。 |
 | 禁止 `BG` / `FG` | `bg`、`fg`、`BG`、`FG` 都不是允许的名称单词或缩写。必须完整写作 `background`、`foreground`。 | 使用 `color-background`、`color-foreground`，不使用 `color-bg`、`color-fg`。 |
-| 外部 CSS 协议 | 浏览器原生属性、关键字、函数和选择器不是 Style System 自行定义的名称，不受两个单词和 namespace 顺序约束。对应的 JS 标识符统一用 `$` 标出其词汇来源。 | `$color`、`$backgroundColor`、`$colorMix`、`$focusVisible` |
+| 外部 CSS 协议 | 浏览器原生属性、关键字、函数和选择器不是 Style System 自行定义的名称，不受两个单词和 namespace 顺序约束。只有 CSS Key 的 JS 标识符使用 `$` 前缀。 | `$color`、`$backgroundColor`；`colorMix()`、`focusVisible` 不加 `$`。 |
 
 CSS 名称中的“单词”指以连字符分隔的完整语义词；开头的 `--` 和纯数字片段都不算单词。`--color-background` 有两个单词，`--space-scale-2` 有两个单词和一个编号；`--background`、`--space-2` 和 `--fg` 都不足两个完整单词，未经用户明确指定不得定义。
 
@@ -25,30 +25,30 @@ CSS 名称和 TypeScript 标识符不做逐词映射。CSS 名称承担全局地
 
 | 源码命名原则 | 裁决 | 示例 |
 | --- | --- | --- |
-| 标出 CSS 固有词汇 | JS 标识符直接代表 CSS 标准定义的属性、关键字、函数或选择器时，以 `$` 开头；`$` 不表示类型、参数位置或读写方向。 | `$backgroundColor`、`$inherit`、`$colorMix`、`$focusVisible`。 |
-| 自定义词不加 `$` | `value()`、`variable()`、Mixin 及组件语义都沿用普通 JS 名称。Variable 即使作为声明目标，也不因此增加 `$`。 | `surface`、`backgroundColor`、`pill`、`inlineCenter()`。 |
+| `$` 只标识 CSS Key | 由 `key()` 建立、直接表示 CSS 属性写入位置的标识符以 `$` 开头；Condition、Mixin、Value、CSS 函数表达和普通值均不使用 `$`。看到 `$` 即可确定对象是 CSS Key。 | `$backgroundColor`、`$padding`；`focusVisible`、`colorMix()`、`translateY()`。 |
+| 自定义词不加 `$` | `value()`、`variable()`、Mixin 及组件语义都沿用普通 JS 名称。Variable 即使作为声明目标，也不因此增加 `$`。 | `surface`、`tone`、`pill`、`clickable()`。 |
 | 不复述 Key | Key 已经说明属性时，Value 只表达尚未出现的语义、状态或程度。 | `[$backgroundColor, surface]`，不写 `[$backgroundColor, colorSurfaceBackground]`。 |
+| 不建立属性镜像 | 不为每个 CSS Key 创建去掉 `$` 的“原始 Variable”。只重复实现位置的名称没有表达能力。 | 使用 `[$fontWeight, bold]`，不写 `[$fontWeight, fontWeight]`。 |
+| Mixin 命名效果 | Mixin 赋予当前主体一个与具体组件无关的完整效果；名称回答“获得什么效果”，不复述内部属性。 | `clickable()`、`focusRing()`、`inlineCenter()`。 |
 | 按服务对象区分 | 当前原始值相同，但服务对象不同，仍然建立不同 Value。 | 一像素边缘使用 `thinBoundary`，一像素按压位移使用 `pressOffset`。 |
 | 冲突暴露歧义 | 两个 Value 在同一阅读范围内无法使用同一名称，说明名称没有表达各自服务对象，不能靠复制同一个 Value 或机械加 namespace 掩盖。 | `focusStroke` 与 `focusGap` 分别表达线条和间隔。 |
 | 不为字面量制造跳转 | 原始值没有复用关系、条件、依赖或独立语义时，直接写字符串或数字。 | 使用 `'8px'`，不建立只包装它的 `px8`。 |
 | 不镜像 CSS 路径 | 源码名称不需要复制 CSS 名称的全部单词与顺序。 | `fast` 对应 `motion-duration-fast`。 |
 
-例如，Variable 使用自定义语义名称，CSS 落盘名称仍保留完整路径：
+例如，Variable 必须表达独立的语义输入，CSS 落盘名称仍保留完整路径：
 
 ```ts
-export const backgroundColor = variable('color-background', {
-  fallback: surface,
-})
+export const tone = variable('color-tone-base', { fallback: accent })
 ```
 
-普通属性 Key 是浏览器协议的代码表示，不是 Style System 自己创造的 CSS 名称，因此写作 `$backgroundColor = key('background-color')`。`$backgroundColor` 表示 CSS 原生属性；`backgroundColor` 表示与该 Key 一对一对应的最底层 Variable。两者可以共享词干，由 `$` 明确区分词汇来源：
+普通属性 Key 是浏览器协议的代码表示，不是 Style System 自己创造的 CSS 名称，因此写作 `$backgroundColor = key('background-color')`。`$backgroundColor` 只表示 CSS 实现位置；右侧 Value 选择放入该位置的语义内容：
 
 ```ts
-[backgroundColor, actionSurface]
-[$backgroundColor, backgroundColor]
+[tone, danger]
+[$backgroundColor, toneSurface]
 ```
 
-这里的 `$` 只回答“这个词是否来自 CSS”。它不回答“这个对象是不是 Key、Value 或 Variable”。不带 `$` 的同词干名称仍是自定义 Variable，不会因为位于声明左侧而变成 CSS Key。原始字符串不因为内容是 CSS 关键字而获得源码前缀；只有将该关键字定义为 JS 标识符时，标识符才写作 `$inherit`、`$none` 等。
+这里的 `$` 只回答“这个对象是否是 CSS Key”。Condition 和 CSS 函数即使直接表达浏览器语法，也分别写作 `focusVisible`、`media()`、`colorMix()`；原始字符串和普通 Value 同样不使用 `$`。
 
 ---
 
@@ -61,7 +61,7 @@ export const backgroundColor = variable('color-background', {
 | `surface` | 承载面 | 颜色体验语义 | 使页面、卡片、面板、菜单或弹层被感知为承载内容的一个面。 | 不是底色，也不等于背景位。 | `color-surface` / `surface` |
 | `action` | 操作语义 | 颜色体验语义 | 为可执行操作提供识别与反馈；可以用于实心操作或裸露操作。 | 不预先绑定背景或前景。 | `color-action` / `action` |
 | `motion` | 动效 | 样式 namespace | 表达界面变化在时间上的反馈方式，其下继续区分时长、缓动等对象。 | 不是 `transition`、`transform` 或 `animation` 中任意一个 CSS 实现。 | `motion-duration-fast` / `fast` |
-| `background` | 背景位 | 颜色实现位置 | 表示颜色画在内容后方的位置。 | 不说明颜色来自承载面、操作、强调还是危险语义。 | `color-background` / `backgroundColor` |
+| `background` | 背景位 | 颜色实现位置 | 表示颜色画在内容后方的位置。 | 不说明颜色来自承载面、操作、强调还是危险语义。 | `$backgroundColor` / `surface` |
 | `foreground` | 前景位 | 颜色实现位置 | 表示文字、图标、SVG glyph 等前景内容使用颜色的位置。 | 不是单一的原生 CSS 属性。 | `color-foreground` / `foreground` |
 
 `surface` 经常进入背景位，但二者不是同一个对象；`action` 可以进入背景位，也可以进入前景位：
@@ -81,7 +81,7 @@ export const backgroundColor = variable('color-background', {
 
 | 要表达的对象 | CSS 名称 | 源码 Value 名称示例 | 禁止作为自有 CSS 名称 | 浏览器实现示例 |
 | --- | --- | --- | --- | --- |
-| 背景颜色实现位 | `color-background` | `backgroundColor` | `background`、`background-color`、`bg`、`color-bg` | `background-color` |
+| 背景颜色实现位 | 不建立自有镜像名称 | 由 `$backgroundColor` 表示 | `background`、`background-color`、`bg`、`color-bg` | `background-color` |
 | 通用前景颜色 | `color-foreground` | `foreground` | `foreground`、`foreground-color`、`fg`、`color-fg` | `color`、`fill`、`stroke` |
 | 承载面颜色语义 | `color-surface` | `surface` | `surface`、`surface-color` | 常进入 `background-color` |
 | 操作颜色语义 | `color-action` | `action` | `action`、`action-color` | 可进入背景或前景 |

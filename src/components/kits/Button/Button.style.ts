@@ -1,19 +1,27 @@
-/** 按钮的样式配置与注册。 */
-import { rules, $focusVisible, inlineCenter } from '../../../style-system'
-import { $transition } from '../../../style-system/properties/transition'
-import { $transform } from '../../../style-system/properties/transform'
+/** 按钮的样式效果与生效条件。 */
+import {
+  rules,
+  value,
+  innerText,
+  inlineCenter,
+  clickable,
+  focusRing,
+  focusVisible,
+  whenHover,
+  whenActive,
+  whenDisabled,
+} from '../../../style-system'
 import { $minHeight } from '../../../style-system/properties/size'
 import { $padding } from '../../../style-system/properties/padding'
-import { $outlineWidth, $outlineStyle, $outlineColor, $outlineOffset } from '../../../style-system/properties/outline'
-import { $opacity } from '../../../style-system/properties/opacity'
 import { $gap } from '../../../style-system/properties/layout'
-import { $cursor, $userSelect } from '../../../style-system/properties/interaction'
-import { $font, $fontSize, $fontWeight, $lineHeight } from '../../../style-system/properties/font'
+import { $cursor } from '../../../style-system/properties/interaction'
+import { colorMix } from '../../../style-system/values/functions/color-mix'
+import { $fontSize } from '../../../style-system/properties/font'
 import { $color, $backgroundColor } from '../../../style-system/properties/color'
 import { $boxShadow } from '../../../style-system/properties/box-shadow'
 import { $borderColor, $border, $borderRadius } from '../../../style-system/properties/border'
-import { color } from '../../../style-system/values/materials/color-text'
-import { actionForeground, actionSurface } from '../../../style-system/values/materials/color-action'
+import { foreground, interactiveForeground } from '../../../style-system/values/materials/color/text'
+import { actionForeground, actionSurface } from '../../../style-system/values/materials/color/action'
 import {
   accent,
   softAccent,
@@ -27,199 +35,153 @@ import {
   softTone,
   toneForeground,
   toneSurface,
-} from '../../../style-system/values/materials/color-tone'
-import { backgroundColor, bareActionSurface } from '../../../style-system/values/materials/color-surface'
+} from '../../../style-system/values/materials/color/tone'
+import {
+  interactiveSurface,
+  hoverOverlay,
+  activeOverlay,
+} from '../../../style-system/values/materials/color/surface'
+import { softLine } from '../../../style-system/values/materials/color/edge'
+import { surface } from '../../../style-system/values/materials/color/palette'
 import { pill } from '../../../style-system/values/materials/radius'
 import {
   smallSpace,
   normalSpace,
   mediumSpace,
   largeSpace,
+  extraLargeSpace,
   wideSpace,
   widestSpace,
   thinBoundary,
-  focusStroke,
-  focusGap,
-  paddingInline,
-  paddingBlock,
-  gap,
 } from '../../../style-system/values/materials/space'
-import { small, large, extraLarge, minHeight } from '../../../style-system/values/materials/size'
-import {
-  bold,
-  normalText,
-  extraLargeText,
-  heading,
-  fontSize,
-  fontWeight,
-  lineHeight,
-} from '../../../style-system/values/materials/font'
-import { fast, standard } from '../../../style-system/values/materials/motion'
-import { flat, raised, boxShadow } from '../../../style-system/values/materials/shadow'
-import { cursor, opacity, pressFeedback } from '../../../style-system/values/materials/interaction'
-import { borderColor, outlineColor } from '../../../style-system/values/materials/color-edge'
+import { small, normal, large, extraLarge } from '../../../style-system/values/materials/size'
+import { bold, singleLine, normalText, largeText, extraLargeText, heading } from '../../../style-system/values/materials/font'
+import { flat, raised, interactiveElevation } from '../../../style-system/values/materials/shadow'
 
 const button = '.Button'
 
 // =============================================================================
-// 基础样式与交互反馈
+// 默认效果
 // =============================================================================
 
 rules(button, [
-  [fontWeight, bold],
+  // --- 内容排版 ---
+  innerText({ font: 'inherit',fontSize:largeText, emphasis: bold, leading: singleLine }),
 
+  // --- 内容空间与默认尺寸 ---
   inlineCenter(),
+  [$padding, [normalSpace, extraLargeSpace]],
+  [$gap, normalSpace],
+  [$minHeight, normal],
 
-  [$gap, gap],
-  [$minHeight, minHeight],
-  [$padding, [paddingBlock, paddingInline]],
-  [$font, 'inherit'],
-  [$fontSize, fontSize],
-  [$fontWeight, fontWeight],
-  [$lineHeight, lineHeight],
-  [$border, [thinBoundary, 'solid', borderColor]],
+
+  // --- 默认外观 ---
+  [$border, [thinBoundary, 'solid', softLine]],
   [$borderRadius, pill],
-  [$backgroundColor, backgroundColor],
-  [$color, color],
-  [$boxShadow, boxShadow],
-  [$cursor, cursor],
-  
-  [$opacity, opacity],
-  [$transform, pressFeedback],
-  [$userSelect, 'none'],
   [
-    $transition,
-    [
-      [$backgroundColor, fast, standard],
-      [$borderColor, fast, standard],
-      [$boxShadow, fast, standard],
-      [$color, fast, standard],
-      [$opacity, fast, standard],
-      [$transform, fast, standard],
-    ],
+    $backgroundColor,
+    value(colorMix([interactiveSurface, 0.82], softAccent), [
+      [whenHover, colorMix([interactiveSurface, 0.72], softAccent)],
+      [whenActive, colorMix([interactiveSurface, 0.62], softAccent)],
+      [whenDisabled, surface],
+    ]),
+  ],
+  [$color, interactiveForeground],
+  [$boxShadow, interactiveElevation],
+
+  // --- 通用交互 ---
+  clickable(),
+])
+
+rules([button, focusVisible], [focusRing(accentFocus)])
+rules([button, '&[data-tone="danger"]', focusVisible], [focusRing(dangerLine)])
+
+// =============================================================================
+// variant 动作声量
+// =============================================================================
+
+rules([button, '&[data-variant="bare"]'], [
+  [
+    $backgroundColor,
+    value('transparent', [
+      [whenHover, hoverOverlay],
+      [whenActive, activeOverlay],
+      [whenDisabled, surface],
+    ]),
+  ],
+  [$borderColor, 'transparent'],
+  [$boxShadow, flat],
+])
+
+rules([button, '&[data-variant="solid"]'], [
+  [$backgroundColor, value(actionSurface, [[whenDisabled, surface]])],
+  [$borderColor, 'transparent'],
+  [$boxShadow, value(raised, [[whenDisabled, flat]])],
+  [$color, value(actionForeground, [[whenDisabled, foreground]])],
+])
+
+// =============================================================================
+// tone 动作语气
+// =============================================================================
+
+rules([button, '&[data-tone]'], [
+  [$backgroundColor, value(toneSurface, [[whenDisabled, surface]])],
+  [
+    $color,
+    value(tone, [
+      [whenHover, toneForeground],
+      [whenActive, toneForeground],
+      [whenDisabled, foreground],
+    ]),
   ],
 ])
 
-rules(
-  [button, $focusVisible],
-  [
-    [$outlineWidth, focusStroke],
-    [$outlineStyle, 'solid'],
-    [$outlineColor, outlineColor],
-    [$outlineOffset, focusGap],
-  ],
-)
+rules([button, '&[data-tone="accent"]'], [
+  [tone, accent],
+  [softTone, softAccent],
+  [toneForeground, accentForeground],
+  [$borderColor, softAccent],
+])
+
+rules([button, '&[data-tone="danger"]'], [
+  [tone, danger],
+  [softTone, softDanger],
+  [toneForeground, dangerForeground],
+  [$borderColor, softDanger],
+])
+
+/** 实心语气按钮的禁用文字仍保持动作前景色。 */
+rules([button, '&[data-variant="solid"][data-tone]', whenDisabled], [[$color, actionForeground]])
 
 // =============================================================================
-// variant 外观
+// size 物理尺寸
 // =============================================================================
 
-/** bare 使用透明交互底色并移除边缘与阴影重量。 */
-rules(
-  [button, '&[data-variant="bare"]'],
-  [
-    [backgroundColor, bareActionSurface],
-    [borderColor, 'transparent'],
-    [boxShadow, { default: flat, hover: flat, active: flat }],
-  ],
-)
+rules([button, '&[data-size="small"]'], [
+  [$padding, [smallSpace, mediumSpace]],
+  [$gap, smallSpace],
+  [$minHeight, small],
+  [$fontSize, normalText],
+])
 
-/** solid 使用动作配色与持续抬升的阴影。 */
-rules(
-  [button, '&[data-variant="solid"]'],
-  [
-    [backgroundColor, actionSurface],
-    [borderColor, 'transparent'],
-    [boxShadow, { default: raised, hover: raised, active: raised }],
-    [
-      color,
-      {
-        default: actionForeground,
-        hover: actionForeground,
-        active: actionForeground,
-      },
-    ],
-  ],
-)
+rules([button, '&[data-size="large"]'], [
+  [$padding, [normalSpace, wideSpace]],
+  [$gap, mediumSpace],
+  [$minHeight, large],
+  [$fontSize, extraLargeText],
+])
+
+rules([button, '&[data-size="xlarge"]'], [
+  [$padding, [mediumSpace, widestSpace]],
+  [$gap, largeSpace],
+  [$minHeight, extraLarge],
+  [$fontSize, heading],
+])
 
 // =============================================================================
-// tone 语气
+// status 外部状态
 // =============================================================================
 
-/** accent 选择强调色系，并让背景与文字读取相同语气。 */
-rules(
-  [button, '&[data-tone="accent"]'],
-  [
-    [tone, accent],
-    [softTone, softAccent],
-    [toneForeground, accentForeground],
-    [outlineColor, accentFocus],
-    [borderColor, softAccent],
-    [backgroundColor, toneSurface],
-    [color, { default: tone, hover: toneForeground, active: toneForeground }],
-  ],
-)
-
-/** danger 选择危险色系，并让背景与文字读取相同语气。 */
-rules(
-  [button, '&[data-tone="danger"]'],
-  [
-    [tone, danger],
-    [softTone, softDanger],
-    [toneForeground, dangerForeground],
-    [outlineColor, dangerLine],
-    [borderColor, softDanger],
-    [backgroundColor, toneSurface],
-    [color, { default: tone, hover: toneForeground, active: toneForeground }],
-  ],
-)
-
-/** 实心语气按钮的禁用文字色仍使用动作前景色。 */
-rules([button, '&[data-variant="solid"][data-tone]'], [[color, { disabled: actionForeground }]])
-
-// =============================================================================
-// size 尺寸
-// =============================================================================
-
-/** 尺寸与排版变量（size：small） */
-rules(
-  [button, '&[data-size="small"]'],
-  [
-    [minHeight, small],
-    [paddingInline, mediumSpace],
-    [paddingBlock, smallSpace],
-    [gap, smallSpace],
-    [fontSize, normalText],
-  ],
-)
-
-/** 尺寸与排版变量（size：large） */
-rules(
-  [button, '&[data-size="large"]'],
-  [
-    [minHeight, large],
-    [paddingInline, wideSpace],
-    [paddingBlock, normalSpace],
-    [gap, mediumSpace],
-    [fontSize, extraLargeText],
-  ],
-)
-
-/** 尺寸与排版变量（size：xlarge） */
-rules(
-  [button, '&[data-size="xlarge"]'],
-  [
-    [minHeight, extraLarge],
-    [paddingInline, widestSpace],
-    [paddingBlock, mediumSpace],
-    [gap, largeSpace],
-    [fontSize, heading],
-  ],
-)
-
-// =============================================================================
-// status 状态
-// =============================================================================
-
-/** loading 只重定义常态指针；disabled Key 继续使用不可操作指针。 */
-rules([button, '&[data-status~="loading"]'], [[cursor, 'progress']])
+rules([button, '&[data-status~="loading"]'], [
+  [$cursor, value('progress', [[whenDisabled, 'not-allowed']])],
+])

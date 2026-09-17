@@ -1,5 +1,5 @@
 /** 为一套 Value 提供稳定 CSS Custom Property 地址，使业务 Rule 可按已有 Condition 局部重定义。 */
-import { condition, $media, type ConditionPath } from './css-condition'
+import { condition, media, type ConditionPath } from './css-condition'
 import type { Rules } from './css-rule'
 import type { Value, ValueInput } from './css-value'
 
@@ -106,7 +106,7 @@ export function variable(name: string, options?: VariableOptions): Variable {
       if (root) {
         rules.set([[condition(':where(:root)')], reference], root.value)
         if (root.dark !== undefined) rules.set([[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], reference], root.dark)
-        if (root.reducedMotion !== undefined) rules.set([[condition(':where(:root)'), $media('(prefers-reduced-motion: reduce)'), condition('&')], reference], root.reducedMotion)
+        if (root.reducedMotion !== undefined) rules.set([[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], reference], root.reducedMotion)
       }
       return rules
     }
