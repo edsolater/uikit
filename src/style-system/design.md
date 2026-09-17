@@ -18,7 +18,7 @@ Block、StyleRule、MediaRule 和 KeyframeRule 不再是对象模型。它们在
 
 Style System 及其共享 values、selectors、properties、mixins 是定义层；整个组件 `.style.ts` 是业务层。载体位置不能把一次性定义变成可复用抽象。
 
-定义层提供业务无关、能脱离具体组件复用的材料、条件、CSS Key 和效果。判断范围是整个 UIKit 的多组件设计系统：像 `clickable()` 这样可与绑定组件解耦的目的，即使暂时只有一个消费者也可成为共享黑盒；Button 的 `solid` 外观和尺寸档位无法脱离 Button 协议，因此直接由 `.style.ts` 中的 Rule 表达。是否共享不取决于当前调用次数，也不取决于抽出后的顶层代码是否更短。
+定义层提供业务无关、能脱离具体组件复用的材料、条件、CSS Key 和效果。判断范围是整个 UIKit 的多组件设计系统：像 `clickable()`、`boundary()`、`elevation()` 这样可与绑定组件解耦的目的，即使暂时只有一个消费者也可成为共享黑盒；Button 的 `solid` 配方和尺寸档位仍由 `.style.ts` 中的 Rule 选择材料，再交给通用 Mixin 翻译。是否共享不取决于当前调用次数，也不取决于抽出后的顶层代码是否更短。
 
 ---
 
@@ -31,7 +31,7 @@ Style System 及其共享 values、selectors、properties、mixins 是定义层�
 | CSS Key | Declaration 的受体，包括普通属性、Variable 和 Descriptor；普通属性同时保存固定的内容语法。 |
 | RawValue | 已不可继续拆解的原始值，当前是 `string` 或 `number`。 |
 | Value | 原始值、随 Condition 取值的对象或复合表达；创建时不生成 CSS。 |
-| Declaration | 已经匹配好的 Key 与 content；只保存这对关系，不拥有定义行为。 |
+| Declaration | 已经匹配好的 Key 与可选 content；只保存这对关系，content 为 `undefined` 时整条声明无效。 |
 | Rule | 一条 `[RuleAddress, RuleValue]` 配置。 |
 | Rules | 按登记顺序保存 Rule 的内部 Map。 |
 | Rule Handle | 控制一次 `rule()` 登记仍然有效的内容。 |
@@ -86,7 +86,7 @@ rules(button, [
 ])
 ```
 
-`rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明二元数组与嵌套分组，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
+`rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明二元数组、嵌套分组与表示“本层没有声明”的 `undefined`，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
 
 Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回同一个二元数组，作者可以按上下文决定是否使用。普通属性 Key、Variable 和 Descriptor 都直接充当受体；一个内容直接放在第二项，多个有序内容放进第二项内部的数组：
 
@@ -100,7 +100,7 @@ Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回
 ]]
 ```
 
-`rules()` 递归展开声明组合和 Mixin 返回值；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读 content。
+`rules()` 递归展开声明组合和 Mixin 返回值，跳过任意层级的独立 `undefined`；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Declaration 的 content 为 `undefined` 时整条声明同样被跳过。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读有效 content。
 
 同址后写覆盖前写，位置仍沿用该地址首次进入 Map 时的顺序。这就是普通 Map 更新的顺序语义；编译器不按 Path 深度、名称或输出长度重排。
 
@@ -119,19 +119,23 @@ appearance.remove()
 
 ## Mixin 表达效果
 
-Mixin 是返回 Declaration 组合的函数，但数组和函数只是它的实现形式。Mixin 必须向当前主体赋予一个完整、与具体业务组件无关的效果；内部多条声明共同满足这个目的。具体组件可以通过参数选择材料，Mixin 继续拥有这些材料怎样共同形成效果的稳定关系。
+Mixin 是返回 Declaration 组合的函数，但数组和函数只是它的实现形式。Mixin 必须负责一个完整、与具体业务组件无关的效果；内部声明共同满足这个目的。具体组件可以分层提供当前 Rule 要建立或覆盖的语义配置，Mixin 继续拥有这些选择怎样翻译为 CSS Key 的稳定关系。省略配置让对应 Declaration 的 content 为 `undefined`，由 `rules()`统一跳过，不重置其他 Rule 已经建立的效果。
 
-Mixin 文件按效果所属领域组织：内容、空间、交互等领域分别承载自己的效果。`msic` 只能说明暂未分类，不能成为持续接收新 Mixin 的领域；同时也不为每个函数机械建立单独文件。
+Mixin 文件按效果所属领域组织：内容、基础结构、视觉呈现和交互分别承载自己的效果。基础结构包含草稿阶段就要确定的尺寸与边界；视觉呈现包含结构确定后加入的颜色与层级。`msic` 只能说明暂未分类，不能成为持续接收新 Mixin 的领域；同时也不为每个函数机械建立单独文件。
 
 ```ts
 rules(button, [
-  content({ font: 'inherit', emphasis: bold, leading: singleLine }),
+  innerText({ font: 'inherit', fontSize: largeText, emphasis: bold, leading: singleLine }),
+  contentLayout({ mode: 'center', gap: normalSpace, padding: [normalSpace, extraLargeSpace] }),
+  size({ minHeight: normal }),
+  boundary({ border: [thinBoundary, 'solid', softLine], radius: pill }),
+  color({ foreground: interactiveForeground, background: interactiveSurface }),
+  elevation(interactiveElevation),
   clickable(),
-  inlineCenter(),
 ])
 ```
 
-`content()` 让业务侧选择字体、强调程度和行距，但不要求业务重新组织内容排版的 CSS Key。`clickable()` 可以统一管理指针、按压、禁用和过渡反馈；业务侧不需要看见它内部的条件 Value。Button 的 size 或 appearance 只服务 Button 协议，因此直接写在对应 Rule 中，不再包装成私有函数。
+`innerText()` 让业务侧选择文字排版，`contentLayout()` 让业务侧选择内部排列与内容空间。`size()`与`boundary()`负责草稿阶段的主体结构，`color()`与`elevation()`负责结构之上的视觉呈现；它们处于不同阶段，也不存在必须共同变化的新目的，因此不再增加总包装。后续业务 Rule 可以再次调用这些 Mixin，只覆盖本层字段。`clickable()` 可以统一管理指针、按压、禁用和过渡反馈；业务侧不需要看见内部 CSS Key 或条件 Value。Button 的 variant、tone 与尺寸档位仍服务 Button 协议，但通过通用 Mixin 选择材料，不包装成 Button 私有函数。
 
 判断参数化 Mixin 时，暂时去掉组件名称，并把具体 Value 换成参数：如果剩余关系仍表达一个准确、完整的目的，而且该目的增加声明时所有调用者都应共同获得，边界成立。参数只承接调用者必须作出的语义选择；若仍需查看实现才能知道函数实际上做什么，或参数只是逐项复刻内部 CSS Key，仍是假黑盒。
 

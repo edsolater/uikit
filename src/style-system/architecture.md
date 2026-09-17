@@ -8,10 +8,10 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 | --- | --- |
 | [core/css-condition.ts](core/css-condition.ts) | Condition 的稳定名称、CSS 块头和 Condition Path。 |
 | [core/css-key.ts](core/css-key.ts) | 普通属性、CSS Variable 与 Descriptor 共用的 Key，以及普通属性固定的内容语法。 |
-| [core/css-rule.ts](core/css-rule.ts) | Rule/Rules 协议、单项登记与批量输入的完整归一化验证。 |
+| [core/css-rule.ts](core/css-rule.ts) | Rule/Rules 协议、空项及无 content Declaration 的跳过语义、单项登记与批量输入验证。 |
 | [core/css-value.ts](core/css-value.ts) | RawValue、条件 Value、复合 Value 与可选 `onActive`。 |
 | [core/css-declaration.ts](core/css-declaration.ts) | `[key, content]` 声明二元数组，以及返回同一结构的可选 `declare()` 助手。 |
-| [compiler/compile-css.ts](compiler/compile-css.ts) | 单次编译会话、派生依赖、地址覆盖和 CSS string 输出。 |
+| [compiler/compile-css.ts](compiler/compile-css.ts) | 单次编译会话、无效 Declaration 跳过、派生依赖、地址覆盖和 CSS string 输出。 |
 | [compiler/compile-value.ts](compiler/compile-value.ts) | Condition Path 收集、对应 Value 读取、循环检测与复合值降级。 |
 | [compiler/compile-declaration.ts](compiler/compile-declaration.ts) | 声明语法和方向简写扩写。 |
 | [core/css-variable.ts](core/css-variable.ts) | 逻辑 CSS Variable、Condition Key 对应的 Custom Property 名称、局部重定义及按需根定义。 |
@@ -22,7 +22,7 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 | values/materials | 能脱离具体组件复用的设计系统材料；不为普通 CSS Key 建立同名镜像 Value。 |
 | values/materials/color | 颜色 namespace 的透明分组目录；`action.ts`、`edge.ts`、`palette.ts`、`surface.ts`、`text.ts`、`tone.ts` 分别承载具体目的，目录不建立整体入口。 |
 | selectors | 可复用 Condition。 |
-| mixins/content.ts、mixins/space.ts、mixins/interaction.ts | 与具体组件无关的完整效果，按内容、空间和交互领域归档；函数返回 Declaration 组合只是实现形式。 |
+| mixins/content.ts、mixins/structure.ts、mixins/appearance.ts、mixins/interaction.ts | 与具体组件无关的完整效果，按内容、基础结构、视觉呈现和交互领域归档；一个领域文件可承载多个 Mixin。 |
 
 [index.ts](index.ts) 公开 `rule`、`rules`、可选的 `declare` 助手、Value、Declaration、`cssRoot` 和 `compileCSS`，不公开 Root 类、内部登记函数或源账本。包根另外导出 `cssRoot`、`compileCSS`，供应用启动使用。材料与属性从具体文件具名导入，内部文件不绕行公共入口。
 
@@ -121,16 +121,19 @@ CSSRoot 是唯一源账本所有者。公共 `compileCSS()` 和 `cssRoot.mount()
 
 [Button.style.ts](../components/kits/Button/Button.style.ts) 在模块顶层完成全部 Rule 登记。基础、variant、tone、size 与 status 按 Button 业务协议分区；Button 专属定义直接写在对应 Rule 中，不为一次性内容建立私有 Mixin 或具名 Value。
 
-Style System 提供以整个 UIKit 为范围的通用材料和效果。Button 可以直接把 `content()`、`clickable()`、`focusRing()` 和交互材料当作黑盒，因为这些目的不与 Button 绑定；具体材料通过参数或声明交给效果：
+Style System 提供以整个 UIKit 为范围的通用材料和效果。Button 可以直接把 `innerText()`、`contentLayout()`、`size()`、`boundary()`、`color()`、`elevation()`、`clickable()` 与 `focusRing()` 当作黑盒，因为这些目的不与 Button 绑定；具体材料与模式通过参数交给效果：
 
 ```ts
-content({ font: 'inherit', emphasis: bold, leading: singleLine })
-[$color, interactiveForeground]
-[$boxShadow, interactiveElevation]
+innerText({ font: 'inherit', fontSize: largeText, emphasis: bold, leading: singleLine })
+contentLayout({ mode: 'center', gap: normalSpace, padding: [normalSpace, extraLargeSpace] })
+size({ minHeight: normal })
+boundary({ border: [thinBoundary, 'solid', softLine], radius: pill })
+color({ foreground: interactiveForeground, background: interactiveSurface })
+elevation(interactiveElevation)
 clickable()
 ```
 
-Button 的 `solid` 外观、tone 映射和尺寸档位无法脱离 Button 协议，因此直接声明 CSS Key 与材料的关系。局部出现两次相似代码不足以把它们提升为 Style System 抽象；反之，一个目的能与绑定组件解耦时，不必等到第二个组件出现才建立通用黑盒。
+后续 size Rule 通过 `innerText({ fontSize })`、`contentLayout({ gap, padding })` 与 `size({ minHeight })` 覆盖本层选择，不直接依赖这些 Mixin 内部的 CSS Key。Button 的 `solid` 配方、tone 映射和尺寸档位仍属于 Button 协议，但通过通用效果选择材料。局部出现两次相似代码不足以建立抽象；反之，一个目的能与绑定组件解耦时，不必等到第二个组件出现才建立通用黑盒。
 
 逻辑 Variable 仍可在 `[variable, content]` 中充当 Key，以 Condition Key 定义局部配方；它必须表达独立语义输入，不用来为普通 CSS 属性建立同名镜像槽位。
 

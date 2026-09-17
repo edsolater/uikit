@@ -3,7 +3,11 @@ import {
   rules,
   value,
   innerText,
-  inlineCenter,
+  contentLayout,
+  size,
+  boundary,
+  color,
+  elevation,
   clickable,
   focusRing,
   focusVisible,
@@ -11,15 +15,8 @@ import {
   whenActive,
   whenDisabled,
 } from '../../../style-system'
-import { $minHeight } from '../../../style-system/properties/size'
-import { $padding } from '../../../style-system/properties/padding'
-import { $gap } from '../../../style-system/properties/layout'
 import { $cursor } from '../../../style-system/properties/interaction'
 import { colorMix } from '../../../style-system/values/functions/color-mix'
-import { $fontSize } from '../../../style-system/properties/font'
-import { $color, $backgroundColor } from '../../../style-system/properties/color'
-import { $boxShadow } from '../../../style-system/properties/box-shadow'
-import { $borderColor, $border, $borderRadius } from '../../../style-system/properties/border'
 import { foreground, interactiveForeground } from '../../../style-system/values/materials/color/text'
 import { actionForeground, actionSurface } from '../../../style-system/values/materials/color/action'
 import {
@@ -36,11 +33,7 @@ import {
   toneForeground,
   toneSurface,
 } from '../../../style-system/values/materials/color/tone'
-import {
-  interactiveSurface,
-  hoverOverlay,
-  activeOverlay,
-} from '../../../style-system/values/materials/color/surface'
+import { interactiveSurface, hoverOverlay, activeOverlay } from '../../../style-system/values/materials/color/surface'
 import { softLine } from '../../../style-system/values/materials/color/edge'
 import { surface } from '../../../style-system/values/materials/color/palette'
 import { pill } from '../../../style-system/values/materials/radius'
@@ -55,7 +48,14 @@ import {
   thinBoundary,
 } from '../../../style-system/values/materials/space'
 import { small, normal, large, extraLarge } from '../../../style-system/values/materials/size'
-import { bold, singleLine, normalText, largeText, extraLargeText, heading } from '../../../style-system/values/materials/font'
+import {
+  bold,
+  singleLine,
+  normalText,
+  largeText,
+  extraLargeText,
+  heading,
+} from '../../../style-system/values/materials/font'
 import { flat, raised, interactiveElevation } from '../../../style-system/values/materials/shadow'
 
 const button = '.Button'
@@ -66,28 +66,32 @@ const button = '.Button'
 
 rules(button, [
   // --- 内容排版 ---
-  innerText({ font: 'inherit',fontSize:largeText, emphasis: bold, leading: singleLine }),
+  innerText({ font: 'inherit', fontSize: largeText, emphasis: bold, leading: singleLine }),
 
-  // --- 内容空间与默认尺寸 ---
-  inlineCenter(),
-  [$padding, [normalSpace, extraLargeSpace]],
-  [$gap, normalSpace],
-  [$minHeight, normal],
+  // --- 内容布局 ---
+  contentLayout({
+    mode: 'center',
+    gap: normalSpace,
+    padding: [normalSpace, extraLargeSpace],
+  }),
 
+  // --- 默认物理尺寸 ---
+  size({ minHeight: normal }),
 
   // --- 默认外观 ---
-  [$border, [thinBoundary, 'solid', softLine]],
-  [$borderRadius, pill],
-  [
-    $backgroundColor,
-    value(colorMix([interactiveSurface, 0.82], softAccent), [
+  boundary({
+    border: [thinBoundary, 'solid', softLine],
+    radius: pill,
+  }),
+  color({
+    background: value(colorMix([interactiveSurface, 0.82], softAccent), [
       [whenHover, colorMix([interactiveSurface, 0.72], softAccent)],
       [whenActive, colorMix([interactiveSurface, 0.62], softAccent)],
       [whenDisabled, surface],
     ]),
-  ],
-  [$color, interactiveForeground],
-  [$boxShadow, interactiveElevation],
+    foreground: interactiveForeground,
+  }),
+  elevation(interactiveElevation),
 
   // --- 通用交互 ---
   clickable(),
@@ -100,88 +104,107 @@ rules([button, '&[data-tone="danger"]', focusVisible], [focusRing(dangerLine)])
 // variant 动作声量
 // =============================================================================
 
-rules([button, '&[data-variant="bare"]'], [
+rules(
+  [button, '&[data-variant="bare"]'],
   [
-    $backgroundColor,
-    value('transparent', [
-      [whenHover, hoverOverlay],
-      [whenActive, activeOverlay],
-      [whenDisabled, surface],
-    ]),
+    boundary({ borderColor: 'transparent' }),
+    color({
+      background: value('transparent', [
+        [whenHover, hoverOverlay],
+        [whenActive, activeOverlay],
+        [whenDisabled, surface],
+      ]),
+    }),
+    elevation(flat),
   ],
-  [$borderColor, 'transparent'],
-  [$boxShadow, flat],
-])
+)
 
-rules([button, '&[data-variant="solid"]'], [
-  [$backgroundColor, value(actionSurface, [[whenDisabled, surface]])],
-  [$borderColor, 'transparent'],
-  [$boxShadow, value(raised, [[whenDisabled, flat]])],
-  [$color, value(actionForeground, [[whenDisabled, foreground]])],
-])
+rules(
+  [button, '&[data-variant="solid"]'],
+  [
+    boundary({ borderColor: 'transparent' }),
+    color({
+      background: value(actionSurface, [[whenDisabled, surface]]),
+      foreground: value(actionForeground, [[whenDisabled, foreground]]),
+    }),
+    elevation(value(raised, [[whenDisabled, flat]])),
+  ],
+)
 
 // =============================================================================
 // tone 动作语气
 // =============================================================================
 
-rules([button, '&[data-tone]'], [
-  [$backgroundColor, value(toneSurface, [[whenDisabled, surface]])],
+rules(
+  [button, '&[data-tone]'],
   [
-    $color,
-    value(tone, [
-      [whenHover, toneForeground],
-      [whenActive, toneForeground],
-      [whenDisabled, foreground],
-    ]),
+    color({
+      background: value(toneSurface, [[whenDisabled, surface]]),
+      foreground: value(tone, [
+        [whenHover, toneForeground],
+        [whenActive, toneForeground],
+        [whenDisabled, foreground],
+      ]),
+    }),
   ],
-])
+)
 
-rules([button, '&[data-tone="accent"]'], [
-  [tone, accent],
-  [softTone, softAccent],
-  [toneForeground, accentForeground],
-  [$borderColor, softAccent],
-])
+rules(
+  [button, '&[data-tone="accent"]'],
+  [
+    [tone, accent],
+    [softTone, softAccent],
+    [toneForeground, accentForeground],
+    boundary({ borderColor: softAccent }),
+  ],
+)
 
-rules([button, '&[data-tone="danger"]'], [
-  [tone, danger],
-  [softTone, softDanger],
-  [toneForeground, dangerForeground],
-  [$borderColor, softDanger],
-])
+rules(
+  [button, '&[data-tone="danger"]'],
+  [
+    [tone, danger],
+    [softTone, softDanger],
+    [toneForeground, dangerForeground],
+    boundary({ borderColor: softDanger }),
+  ],
+)
 
 /** 实心语气按钮的禁用文字仍保持动作前景色。 */
-rules([button, '&[data-variant="solid"][data-tone]', whenDisabled], [[$color, actionForeground]])
+rules([button, '&[data-variant="solid"][data-tone]', whenDisabled], [color({ foreground: actionForeground })])
 
 // =============================================================================
 // size 物理尺寸
 // =============================================================================
 
-rules([button, '&[data-size="small"]'], [
-  [$padding, [smallSpace, mediumSpace]],
-  [$gap, smallSpace],
-  [$minHeight, small],
-  [$fontSize, normalText],
-])
+rules(
+  [button, '&[data-size="small"]'],
+  [
+    innerText({ fontSize: normalText }),
+    contentLayout({ gap: smallSpace, padding: [smallSpace, mediumSpace] }),
+    size({ minHeight: small }),
+  ],
+)
 
-rules([button, '&[data-size="large"]'], [
-  [$padding, [normalSpace, wideSpace]],
-  [$gap, mediumSpace],
-  [$minHeight, large],
-  [$fontSize, extraLargeText],
-])
+rules(
+  [button, '&[data-size="large"]'],
+  [
+    innerText({ fontSize: extraLargeText }),
+    contentLayout({ gap: mediumSpace, padding: [normalSpace, wideSpace] }),
+    size({ minHeight: large }),
+  ],
+)
 
-rules([button, '&[data-size="xlarge"]'], [
-  [$padding, [mediumSpace, widestSpace]],
-  [$gap, largeSpace],
-  [$minHeight, extraLarge],
-  [$fontSize, heading],
-])
+rules(
+  [button, '&[data-size="xlarge"]'],
+  [
+    innerText({ fontSize: heading }),
+    contentLayout({ gap: largeSpace, padding: [mediumSpace, widestSpace] }),
+    size({ minHeight: extraLarge }),
+  ],
+)
 
 // =============================================================================
 // status 外部状态
 // =============================================================================
 
-rules([button, '&[data-status~="loading"]'], [
-  [$cursor, value('progress', [[whenDisabled, 'not-allowed']])],
-])
+rules([button, '&[data-status~="loading"]'], [[$cursor, value('progress', [[whenDisabled, 'not-allowed']])]])

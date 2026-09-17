@@ -96,6 +96,7 @@ export function compileRules(source: Rules): string {
     }
     if (isCSSPair(input)) {
       const [declarationKey, content] = input
+      if (content === undefined) return
       if (typeof declarationKey === 'object' && 'kind' in declarationKey) context.activate(declarationKey)
       const syntax = declarationSyntax(declarationKey)
       if ((syntax === 'value' && !isVariable(declarationKey)) || content instanceof Map) {

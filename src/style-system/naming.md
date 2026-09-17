@@ -29,7 +29,7 @@ CSS 名称和 TypeScript 标识符不做逐词映射。CSS 名称承担全局地
 | 自定义词不加 `$` | `value()`、`variable()`、Mixin 及组件语义都沿用普通 JS 名称。Variable 即使作为声明目标，也不因此增加 `$`。 | `surface`、`tone`、`pill`、`clickable()`。 |
 | 不复述 Key | Key 已经说明属性时，Value 只表达尚未出现的语义、状态或程度。 | `[$backgroundColor, surface]`，不写 `[$backgroundColor, colorSurfaceBackground]`。 |
 | 不建立属性镜像 | 不为每个 CSS Key 创建去掉 `$` 的“原始 Variable”。只重复实现位置的名称没有表达能力。 | 使用 `[$fontWeight, bold]`，不写 `[$fontWeight, fontWeight]`。 |
-| Mixin 命名效果 | Mixin 赋予当前主体一个与具体组件无关的完整效果；名称回答“获得什么效果”，不复述内部属性。 | `clickable()`、`focusRing()`、`inlineCenter()`。 |
+| Mixin 命名效果 | Mixin 负责一个与具体组件无关的完整目的；名称回答“获得什么效果”，不暴露 CSS Key 或 Flex/Grid 等实现技术。 | `clickable()`、`focusRing()`、`innerText()`、`contentLayout()`、`boundary()`、`elevation()`。 |
 | 按服务对象区分 | 当前原始值相同，但服务对象不同，仍然建立不同 Value。 | 一像素边缘使用 `thinBoundary`，一像素按压位移使用 `pressOffset`。 |
 | 冲突暴露歧义 | 两个 Value 在同一阅读范围内无法使用同一名称，说明名称没有表达各自服务对象，不能靠复制同一个 Value 或机械加 namespace 掩盖。 | `focusStroke` 与 `focusGap` 分别表达线条和间隔。 |
 | 不为字面量制造跳转 | 原始值没有复用关系、条件、依赖或独立语义时，直接写字符串或数字。 | 使用 `'8px'`，不建立只包装它的 `px8`。 |

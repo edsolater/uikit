@@ -8,12 +8,12 @@ import { $transition } from '../properties/transition'
 import { $backgroundColor, $color } from '../properties/color'
 import { $borderColor } from '../properties/border'
 import { $boxShadow } from '../properties/box-shadow'
-import { $outlineWidth, $outlineStyle, $outlineColor, $outlineOffset } from '../properties/outline'
 import { translateY } from '../values/functions/transform'
 import { whenActive, whenDisabled } from '../selectors/msic'
 import { disabledFade } from '../values/materials/opacity'
 import { fast, standard } from '../values/materials/motion'
 import { focusStroke, focusGap } from '../values/materials/space'
+import { boundary } from './structure'
 
 /** 赋予当前主体可点击效果，统一管理指针、按压、禁用和过渡反馈。 */
 export const clickable = (): Declarations => [
@@ -38,9 +38,11 @@ export const clickable = (): Declarations => [
 ]
 
 /** 使用指定提示色为当前主体提供可见的键盘焦点轮廓。 */
-export const focusRing = (ringColor: ValueInput): Declarations => [
-  [$outlineWidth, focusStroke],
-  [$outlineStyle, 'solid'],
-  [$outlineColor, ringColor],
-  [$outlineOffset, focusGap],
-]
+export const focusRing = (ringColor: ValueInput): Declarations => [boundary({
+  outline: {
+    width: focusStroke,
+    style: 'solid',
+    color: ringColor,
+    offset: focusGap,
+  },
+})]

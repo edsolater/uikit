@@ -20,8 +20,8 @@ export type Rule = [RuleAddress, RuleValue]
 /** 按登记顺序保存多条 Rule 的账本；它也可作为嵌套 Value 或按需依赖继续被编译。 */
 export type Rules = Map<RuleAddress, RuleValue>
 
-/** rules() 与 Mixin 共用的声明组合；内部可以继续嵌套同类组合。 */
-export type Declarations = (Declaration<unknown> | Declarations)[]
+/** rules() 与 Mixin 共用的声明组合；可嵌套，空项或 content 为 undefined 的 Declaration 不登记 Rule。 */
+export type Declarations = (Declaration<unknown> | Declarations | undefined)[]
 
 /** 一次 Rule 登记的控制句柄，只能删除仍由该次登记拥有的条目。 */
 export interface RulesHandle {
@@ -60,7 +60,7 @@ export function rule(path: ConditionInput, key: CSSKey | undefined, input: RuleV
 }
 
 /**
- * 按输入顺序展开声明二元数组和嵌套分组，全部校验通过后批量登记，不编译或提交 CSS。
+ * 按输入顺序展开声明二元数组和嵌套分组，忽略空项及 content 为 undefined 的声明，再批量登记。
  * 无效条目或递归分组使整批登记失败，不留下半批写入；返回句柄批量删除仍由本次写入拥有的条目。
  * @example
  * const handle = rules('.Button', [[$color, 'red'], [[$padding, ['8px']]]])
@@ -83,7 +83,9 @@ export function rules(path: ConditionInput, declarations: Declarations): RulesHa
     if (visiting.has(group)) throw new Error('rules() 的声明分组存在递归引用。')
     visiting.add(group)
     for (const entry of group) {
-      if (isCSSPair(entry) && entry[1] !== undefined) {
+      if (entry === undefined) continue
+      if (isCSSPair(entry)) {
+        if (entry[1] === undefined) continue
         entries.push([[conditionPath, entry[0]], entry])
       } else if (Array.isArray(entry)) visit(entry as Declarations)
       else throw new Error('rules() 只接受声明二元数组或嵌套声明分组。')

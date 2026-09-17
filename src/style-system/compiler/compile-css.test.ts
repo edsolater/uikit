@@ -79,6 +79,13 @@ test('嵌套批量声明与单项属性不会混淆', () => {
   expect(compileCSS()).toContain('color: red')
 })
 
+test('声明组合忽略空项和 content 为 undefined 的 Declaration，不把缺失声明登记为 Rule', () => {
+  expect(declare($color, undefined)).toEqual([$color, undefined])
+  keep(rules('.example', [undefined, [$color, 'red'], [$font, undefined], [undefined, [$padding, ['1px']], undefined]]))
+  keep(rule('.omitted', undefined, declare($color, undefined)))
+  expect(compileCSS()).toBe('.example {\ncolor: red;\npadding-top: 1px;\npadding-right: 1px;\npadding-bottom: 1px;\npadding-left: 1px;\n}')
+})
+
 test('批量登记先验证整批，失败时既有条目与句柄保持有效', () => {
   const original = keep(rule('.example', 'color', 'red'))
   const invalid = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
@@ -92,6 +99,7 @@ test('批量登记先验证整批，失败时既有条目与句柄保持有效',
   expect(compileCSS()).toContain('color: green')
   const invalidProperty = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
   expect(() => keep(rules('.example', invalidProperty))).toThrow()
+  keep(rules('.example', [[$color, undefined]]))
   expect(() => keep(rules([null] as unknown as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
   expect(compileCSS()).toContain('color: green')
 })

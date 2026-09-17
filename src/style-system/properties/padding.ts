@@ -23,3 +23,6 @@ export interface PaddingSides {
 
 /** 按 CSS 简写顺序表示一至四个内边距位置值，作为 padding Declaration 的 content。 */
 export type PaddingPositions = [ValueInput] | [ValueInput, ValueInput] | [ValueInput, ValueInput, ValueInput] | [ValueInput, ValueInput, ValueInput, ValueInput]
+
+/** padding Key 接受的完整内容；既可整体取值，也可按位置或方向提供。 */
+export type PaddingInput = ValueInput | PaddingPositions | PaddingSides

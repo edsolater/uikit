@@ -128,7 +128,10 @@ describe('Button styles', () => {
     dispose = render(
       () => (
         <>
-          <Button htmlProps={{ 'data-testid': 'default' }}>Default</Button>
+          <Button htmlProps={{ 'data-testid': 'default' }}>
+            <span>Default</span>
+            <span>Action</span>
+          </Button>
           <Button solid htmlProps={{ 'data-testid': 'solid' }}>
             Solid
           </Button>
@@ -175,7 +178,9 @@ describe('Button styles', () => {
     host.querySelectorAll<HTMLElement>('button').forEach((button) => {
       button.style.transition = 'none'
     })
-    const defaultStyle = getComputedStyle(getButton('default'))
+    const defaultButton = getButton('default')
+    defaultButton.style.width = '240px'
+    const defaultStyle = getComputedStyle(defaultButton)
     const solidStyle = getComputedStyle(getButton('solid'))
     const bareStyle = getComputedStyle(getButton('bare'))
     const accentStyle = getComputedStyle(getButton('accent'))
@@ -192,8 +197,17 @@ describe('Button styles', () => {
     expect(cssText).not.toContain('[object Object]')
     expect(cssRules.filter((rule) => rule instanceof CSSStyleRule && rule.selectorText === '.Button')).toHaveLength(1)
     expect(document.head.querySelectorAll(buttonStyleSelector)).toHaveLength(1)
-    expect(defaultStyle.display).toBe('inline-flex')
+    const [firstContent, secondContent] = defaultButton.querySelectorAll<HTMLElement>('span')
+    const buttonRect = defaultButton.getBoundingClientRect()
+    const firstRect = firstContent.getBoundingClientRect()
+    const secondRect = secondContent.getBoundingClientRect()
+    expect(secondRect.left).toBeGreaterThan(firstRect.right)
+    expect(secondRect.left - firstRect.right).toBeCloseTo(8, 0)
+    expect((firstRect.left + secondRect.right) / 2).toBeCloseTo((buttonRect.left + buttonRect.right) / 2, 0)
+    expect((firstRect.top + firstRect.bottom) / 2).toBeCloseTo((buttonRect.top + buttonRect.bottom) / 2, 0)
+    expect((secondRect.top + secondRect.bottom) / 2).toBeCloseTo((buttonRect.top + buttonRect.bottom) / 2, 0)
     expect(defaultStyle.minHeight).toBe('48px')
+    expect(defaultStyle.fontSize).toBe('16px')
     expect(defaultStyle.paddingTop).toBe('8px')
     expect(defaultStyle.paddingLeft).toBe('24px')
     expect(defaultStyle.borderTopWidth).toBe('1px')
@@ -203,8 +217,15 @@ describe('Button styles', () => {
     expect(accentStyle.backgroundColor).not.toBe(dangerStyle.backgroundColor)
     expect(Number.parseFloat(xlargeStyle.minHeight)).toBeGreaterThan(Number.parseFloat(smallStyle.minHeight))
     expect(smallStyle.minHeight).toBe('32px')
-    expect(getComputedStyle(getButton('large')).minHeight).toBe('64px')
+    expect(smallStyle.fontSize).toBe('14px')
+    expect(smallStyle.columnGap).toBe('4px')
+    const largeStyle = getComputedStyle(getButton('large'))
+    expect(largeStyle.minHeight).toBe('64px')
+    expect(largeStyle.fontSize).toBe('20px')
+    expect(largeStyle.columnGap).toBe('12px')
     expect(xlargeStyle.minHeight).toBe('80px')
+    expect(xlargeStyle.fontSize).toBe('24px')
+    expect(xlargeStyle.columnGap).toBe('16px')
     expect(getComputedStyle(getButton('loading')).cursor).toBe('progress')
     expect(disabledStyle.cursor).toBe('not-allowed')
     expect(disabledStyle.opacity).toBe('0.48')
