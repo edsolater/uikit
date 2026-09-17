@@ -1,7 +1,7 @@
 /** 实心动作配色及完整交互取值。 */
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
-import { whenHover, whenActive } from '../../../selectors/msic'
+import { whenHover, whenActive } from '../../../selectors/interaction'
 import { brand, strongInk } from './palette'
 import { colorMix } from '../../functions/color-mix'
 

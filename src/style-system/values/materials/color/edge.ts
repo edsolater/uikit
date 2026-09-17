@@ -1,4 +1,4 @@
-/** 分隔线、边缘与焦点提示色。 */
+/** 分隔线与边缘色。 */
 import { variable } from '../../../core/css-variable'
 import { colorMix } from '../../functions/color-mix'
 import { foreground } from './text'

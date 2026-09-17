@@ -13,11 +13,11 @@
 | 单词名称例外 | 只有用户明确指定某个单词名称时才允许使用。Agent 不能因为名称常见、简短或当前没有冲突，自行定义单词名称。 | 未经明确指定，不得定义 `surface`、`action`、`motion`、`background` 或 `foreground` 作为完整 CSS 名称。 |
 | namespace 在前 | 名称先写所属样式 namespace，再写语义主体、实现位置和必要限定。 | 使用 `color-background`，不使用 `background-color` 作为 Style System 自有名称。 |
 | 禁止 `BG` / `FG` | `bg`、`fg`、`BG`、`FG` 都不是允许的名称单词或缩写。必须完整写作 `background`、`foreground`。 | 使用 `color-background`、`color-foreground`，不使用 `color-bg`、`color-fg`。 |
-| 外部 CSS 协议 | 浏览器原生属性、关键字、函数和选择器不是 Style System 自行定义的名称，不受两个单词和 namespace 顺序约束。只有 CSS Key 的 JS 标识符使用 `$` 前缀。 | `$color`、`$backgroundColor`；`colorMix()`、`focusVisible` 不加 `$`。 |
+| 外部 CSS 协议 | 浏览器原生属性、关键字、函数和选择器不是 Style System 自行定义的名称，不受两个单词和 namespace 顺序约束。 | `background-color`、`color-mix()`、`:focus-visible`。 |
 
 CSS 名称中的“单词”指以连字符分隔的完整语义词；开头的 `--` 和纯数字片段都不算单词。`--color-background` 有两个单词，`--space-scale-2` 有两个单词和一个编号；`--background`、`--space-2` 和 `--fg` 都不足两个完整单词，未经用户明确指定不得定义。
 
-这项约束覆盖 Variable 基础名、Keyframes 名、CSS `@function` 名及其他由 Style System 定义、最终作为完整标识写入 CSS 的名称。Condition name 只作为派生名称中的一个片段时，检查生成后的完整名称，不把该片段当作独立 CSS 名称。
+这项约束覆盖 Variable 基础名、Keyframes 名、CSS `@function` 名及其他由 Style System 定义、最终作为完整标识写入 CSS 的名称。Condition 不另设名称；Variable 的条件后缀由编译器编码真实 CSS header，不作为源码命名入口。
 
 # CSS 名称与源码名称分工
 
@@ -25,11 +25,10 @@ CSS 名称和 TypeScript 标识符不做逐词映射。CSS 名称承担全局地
 
 | 源码命名原则 | 裁决 | 示例 |
 | --- | --- | --- |
-| `$` 只标识 CSS Key | 由 `key()` 建立、直接表示 CSS 属性写入位置的标识符以 `$` 开头；Condition、Mixin、Value、CSS 函数表达和普通值均不使用 `$`。看到 `$` 即可确定对象是 CSS Key。 | `$backgroundColor`、`$padding`；`focusVisible`、`colorMix()`、`translateY()`。 |
-| 自定义词不加 `$` | `value()`、`variable()`、Mixin 及组件语义都沿用普通 JS 名称。Variable 即使作为声明目标，也不因此增加 `$`。 | `surface`、`tone`、`pill`、`clickable()`。 |
+| `$` 只标识 CSS Key | 由 `key()` 建立、直接表示 CSS 属性写入位置的标识符以 `$` 开头；Condition、Mixin、Value、CSS 函数、Variable 和普通值均不使用 `$`。Variable 即使作为声明目标也不增加前缀。 | `$backgroundColor`、`$padding`；`whenFocusVisible`、`colorMix()`、`tone`。 |
 | 不复述 Key | Key 已经说明属性时，Value 只表达尚未出现的语义、状态或程度。 | `[$backgroundColor, surface]`，不写 `[$backgroundColor, colorSurfaceBackground]`。 |
 | 不建立属性镜像 | 不为每个 CSS Key 创建去掉 `$` 的“原始 Variable”。只重复实现位置的名称没有表达能力。 | 使用 `[$fontWeight, bold]`，不写 `[$fontWeight, fontWeight]`。 |
-| Mixin 命名效果 | Mixin 负责一个与具体组件无关的完整目的；名称回答“获得什么效果”，不暴露 CSS Key 或 Flex/Grid 等实现技术。 | `clickable()`、`focusRing()`、`innerText()`、`contentLayout()`、`boundary()`、`elevation()`。 |
+| Mixin 命名效果 | Mixin 负责一个与具体组件无关的完整目的；名称回答“获得什么效果”，不暴露 CSS Key 或 Flex/Grid 等实现技术。 | `clickable()`、`innerText()`、`contentLayout()`、`boundary()`、`elevation()`。 |
 | 按服务对象区分 | 当前原始值相同，但服务对象不同，仍然建立不同 Value。 | 一像素边缘使用 `thinBoundary`，一像素按压位移使用 `pressOffset`。 |
 | 冲突暴露歧义 | 两个 Value 在同一阅读范围内无法使用同一名称，说明名称没有表达各自服务对象，不能靠复制同一个 Value 或机械加 namespace 掩盖。 | `focusStroke` 与 `focusGap` 分别表达线条和间隔。 |
 | 不为字面量制造跳转 | 原始值没有复用关系、条件、依赖或独立语义时，直接写字符串或数字。 | 使用 `'8px'`，不建立只包装它的 `px8`。 |
@@ -47,8 +46,6 @@ export const tone = variable('color-tone-base', { fallback: accent })
 [tone, danger]
 [$backgroundColor, toneSurface]
 ```
-
-这里的 `$` 只回答“这个对象是否是 CSS Key”。Condition 和 CSS 函数即使直接表达浏览器语法，也分别写作 `focusVisible`、`media()`、`colorMix()`；原始字符串和普通 Value 同样不使用 `$`。
 
 ---
 

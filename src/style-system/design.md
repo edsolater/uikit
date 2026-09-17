@@ -39,14 +39,14 @@ Style System 及其共享 values、selectors、properties、mixins 是定义层�
 | CSSRoot | 拥有源 Rules 账本，负责统一编译与宿主提交。 |
 | CSS Compiler | 解读源 Rules 和派生 Rules，最终返回 CSS string。 |
 
-Condition 同时有 `name` 和 `header`。`name` 是 Rule 合并、Value 取值与 Variable Key 共用的稳定名称；`header` 是生成 CSS 时写在花括号前的 selector 或 At Rule 文本。两个 Condition 可以使用同一个 name 而使用不同 header，表示同一取值名的 CSS 表达发生了变化：
+Condition 只保存 `header`；它既是真实 CSS 条件，也是 Rule 合并与 Value 取值使用的地址身份。共享条件时直接复用同一个 Condition 变量，不在对象中复制一份字符串名称：
 
 ```ts
-const hover = condition('&:hover', 'hover')
-const enabledHover = condition('&:hover:not(:disabled)', 'hover')
+const hover = condition('&:hover')
+const enabledHover = condition('&:hover:not(:disabled)')
 ```
 
-`value('red', [[enabledHover, 'blue']])` 仍以 `hover` 匹配取值与局部覆盖，生成 CSS 时则使用 `&:hover:not(:disabled)`。
+两者的 CSS 生效范围不同，因此是不同地址。`value('red', [[enabledHover, 'blue']])`直接引用 `enabledHover`；需要在多处使用同一条件时继续引用这个变量。
 
 `Rule` 是一条配置，不是容器；`Rules` 才是集合：
 
@@ -119,25 +119,11 @@ appearance.remove()
 
 ## Mixin 表达效果
 
-Mixin 是返回 Declaration 组合的函数，但数组和函数只是它的实现形式。Mixin 必须负责一个完整、与具体业务组件无关的效果；内部声明共同满足这个目的。具体组件可以分层提供当前 Rule 要建立或覆盖的语义配置，Mixin 继续拥有这些选择怎样翻译为 CSS Key 的稳定关系。省略配置让对应 Declaration 的 content 为 `undefined`，由 `rules()`统一跳过，不重置其他 Rule 已经建立的效果。
+Mixin 是返回 Declaration 组合的完整效果。它不绑定具体组件，并拥有“语义配置怎样翻译为 CSS Key”的关系。省略配置产生 content 为 `undefined` 的 Declaration，由 `rules()` 跳过，不重置其他 Rule。
 
-Mixin 文件按效果所属领域组织：内容、基础结构、视觉呈现和交互分别承载自己的效果。基础结构包含草稿阶段就要确定的尺寸与边界；视觉呈现包含结构确定后加入的颜色与层级。`msic` 只能说明暂未分类，不能成为持续接收新 Mixin 的领域；同时也不为每个函数机械建立单独文件。
+判断参数化 Mixin 时，去掉组件名称并把材料换成参数：剩余关系仍是完整目的，而且目的扩展时所有调用者都应共同获得，边界成立。只转发另一个 Mixin、逐项复刻 CSS Key 或必须查看实现才能理解的函数，都不是黑盒。
 
-```ts
-rules(button, [
-  innerText({ font: 'inherit', fontSize: largeText, emphasis: bold, leading: singleLine }),
-  contentLayout({ mode: 'center', gap: normalSpace, padding: [normalSpace, extraLargeSpace] }),
-  size({ minHeight: normal }),
-  boundary({ border: [thinBoundary, 'solid', softLine], radius: pill }),
-  color({ foreground: interactiveForeground, background: interactiveSurface }),
-  elevation(interactiveElevation),
-  clickable(),
-])
-```
-
-`innerText()` 让业务侧选择文字排版，`contentLayout()` 让业务侧选择内部排列与内容空间。`size()`与`boundary()`负责草稿阶段的主体结构，`color()`与`elevation()`负责结构之上的视觉呈现；它们处于不同阶段，也不存在必须共同变化的新目的，因此不再增加总包装。后续业务 Rule 可以再次调用这些 Mixin，只覆盖本层字段。`clickable()` 可以统一管理指针、按压、禁用和过渡反馈；业务侧不需要看见内部 CSS Key 或条件 Value。Button 的 variant、tone 与尺寸档位仍服务 Button 协议，但通过通用 Mixin 选择材料，不包装成 Button 私有函数。
-
-判断参数化 Mixin 时，暂时去掉组件名称，并把具体 Value 换成参数：如果剩余关系仍表达一个准确、完整的目的，而且该目的增加声明时所有调用者都应共同获得，边界成立。参数只承接调用者必须作出的语义选择；若仍需查看实现才能知道函数实际上做什么，或参数只是逐项复刻内部 CSS Key，仍是假黑盒。
+Mixin 的文件归属见 [architecture.md／文件职责](architecture.md#文件职责)，组件使用方法见 [样式文件写法／Mixin 赋予效果](../../docs/style/样式文件写法.md#mixin-赋予效果)。
 
 ---
 
@@ -181,15 +167,15 @@ rules(button, [[$backgroundColor, interactiveSurface]])
 
 这里 `interactiveSurface` 表达可交互的承载面，而不是 `background-color` 的镜像名称。`$backgroundColor` 已经说明 CSS 实现位置，Value 只补充该位置要放入的语义内容。
 
-## Variable 按已有 Key 局部重定义
+## Variable 按已有 Condition Path 局部重定义
 
-`[variable, input]` 不用 input 整体替换 Variable，而是把 input 提供的 Condition Key 投影到 Variable 已经拥有的 Condition Key：
+`[variable, input]` 不用 input 整体替换 Variable，而是把 input 提供的 Condition Path 投影到 Variable 已经拥有的路径：
 
 - RawValue 或不带 Condition 的 Value 只提供 default，因此只重定义基础 Custom Property。
-- 带 Condition 的 Value 可以同时提供 default 与若干 Condition Key。
-- 对象形式可以只提供 `hover`、`active` 等指定 Key；没有提供的 Key 保持原定义。
-- input 提供、但 Variable 原定义中不存在的 Key 不参与输出。
-- 只要匹配 Key 被明确提供，就生成定义；不比较新旧值是否相同。
+- 带 Condition 的 Value 可以同时提供 default 与若干 Condition Path。
+- 条目数组可以直接引用 Condition，只提供需要局部重定义的路径；没有提供的路径保持原定义。
+- input 提供、但 Variable 原定义中不存在的路径不参与输出。
+- 只要匹配路径被明确提供，就生成定义；不比较新旧值是否相同。
 
 ```ts
 const exampleBackground = variable('color-background-example', {
@@ -199,16 +185,16 @@ const exampleBackground = variable('color-background-example', {
 [exampleBackground, 'red']
 // 只定义 --color-background-example。
 
-[exampleBackground, { hover: 'blue' }]
-// 只定义 --color-background-example-when-hover。
+[exampleBackground, [[hover, 'blue']]]
+// 只定义 hover 对应的条件 Custom Property。
 
 [exampleBackground, value('red', [[active, 'green']])]
-// 定义 --color-background-example 与 --color-background-example-when-active。
+// 定义基础 Custom Property 与 active 对应的条件 Custom Property。
 ```
 
-对象 Key 使用 Condition name；复合 Condition Path 按 name 顺序组成 Key。Condition 的 CSS header 可以演进，Variable 的匹配和派生名称仍由稳定 name 决定。
+局部条目和 Value 都直接携带 Condition；匹配使用完整 `header` 序列。条件 Custom Property 的后缀只由编译器对 `header`做稳定编码，不形成另一套业务身份。
 
-Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同 Key 的值作为 fallback。当业务确实要重定义这个独立语义输入时，Rule 可以只覆盖需要变化的 Condition Key。Variable 不用来为每个普通 CSS 属性预先建立同名原始槽位。
+Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同一路径的值作为 fallback。当业务确实要重定义这个独立语义输入时，Rule 可以只覆盖需要变化的 Condition Path。Variable 不用来为每个普通 CSS 属性预先建立同名原始槽位。
 
 ## 按请求条件逐层读取
 
@@ -256,9 +242,9 @@ calc、color-mix、shadow、transition、transform、animation 和列表都保�
 
 ## 通用状态与业务条件
 
-`whenDisabled` 与 `whenHover`、`whenActive` 都是通用 Condition。禁用匹配原生 `:disabled` 或 UIKit 的 `[data-status~="disabled"]`；hover/active 反馈排除这两种禁用协议。
+`whenFocus`、`whenFocusWithin`、`whenFocusVisible`、`whenDisabled`、`whenHover` 与 `whenActive` 都是通用 Condition。禁用匹配原生 `:disabled` 或 UIKit 的 `[data-status~="disabled"]`；hover/active 反馈排除这两种禁用协议。
 
-hover、active、disabled 等通用状态在 Style System 中定义为具有稳定 name 的 Condition。State 仍只是 Condition 的语义称呼，不增加 State 类型或构造函数。
+hover、active、disabled 等通用状态在 Style System 中定义为可直接引用的 Condition。State 仍只是 Condition 的语义称呼，不增加 State 类型或构造函数。
 
 通用状态只提供可复用的 Condition 身份，不决定每个组件的视觉结果。`clickable()` 等通用 Mixin 可以拥有自己的 active 与 disabled 反馈；Button 的 variant、tone 和 size 配方则留在 `Button.style.ts`。只在某个 Value 或 Variable 本身就表达可复用材料时，才把它的条件取值提升到定义层。
 
@@ -327,7 +313,7 @@ render(() => <App />, root)
 
 宿主由 App 的 HTML 提供 `<style id="css-root"></style>`。漏导入自身样式是组件封装问题；缺少宿主或启动挂载是 App 基础设施问题。服务器可调用 `compileCSS()`，不执行浏览器挂载。
 
-静态 CSS 要求所有样式模块在首次挂载前完成登记。懒加载组件的样式由应用样式清单提前导入；不在组件渲染时补编译。当前 Example 静态导入全部 Example；Storybook 在 preview 提前导入 Button 样式，再统一挂载。打包配置保留 `.style.ts` 与产物 `.style.js` 的模块副作用。
+静态 CSS 要求所有样式模块在首次挂载前完成登记；各应用入口与打包配置怎样满足这项约束，见 [architecture.md／Button 接入](architecture.md#button-接入)。
 
 ---
 
@@ -344,5 +330,5 @@ render(() => <App />, root)
 9. CSSRoot 持有内部账本；`compileCSS()` 无参生成 CSS string，App 在渲染前无参挂载且原子提交。
 10. Style System 定义层提供业务无关的材料、Condition、CSS Key 和 Mixin；组件特有效果直接留在自己的 `.style.ts`。
 11. Mixin 以完整效果为语义单位，不按单个 CSS Key 机械拆分，也不与具体业务组件绑定。
-12. Variable 必须表达独立语义输入，不为普通 CSS Key 创建去掉 `$` 的属性镜像；已成立的逻辑 Variable 仍按 Condition Key 派生稳定 Custom Property。
+12. Variable 必须表达独立语义输入，不为普通 CSS Key 创建去掉 `$` 的属性镜像；已成立的逻辑 Variable 仍按 Condition Path 派生稳定 Custom Property。
 13. 抽象后若仍需查看实现才能理解业务，该抽象必须回到直接 Rule；不用顶层行数代替理解链验收。

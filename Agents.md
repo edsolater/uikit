@@ -3,16 +3,11 @@
 ## 文件职责
 
 - 本文件只做当前仓库的 agent 入口。
-- 本文件不承载详细代码规范、CSS 规范、命名规范、注释规范或重构规范。
-- 详细规则统一从 [AI Rules README](D:/mycode/ai-rules/README.md) 进入，再按 [代码规则](D:/mycode/ai-rules/code/README.md) 的领域地图读取具体主题。
-- 如果发现本文件和 `ai-rules` 规则重复，应删除本文件里的重复内容，保留 `ai-rules` 作为唯一规则来源。
+- 开始任何任务前，进入 [AI Rules Agent 入口](D:/mycode/ai-rules/AGENTS.md)；共享规则的选择、执行和验收全部由该入口负责。
+- 本文件只补充 UIKit 独有的阅读顺序与项目边界，不连接或复制 AI Rules 内部 Rule。
 
-## 阅读顺序
+## 项目阅读顺序
 
-- 先读 [AI Rules README](D:/mycode/ai-rules/README.md)。
-- 写代码、改代码、重构、命名、写注释、写 CSS、写组件或类型时，再从 [代码规则](D:/mycode/ai-rules/code/README.md) 进入对应主题。
-- 编写或修改 TypeScript 前，直接阅读 [readonly 约束](D:/mycode/ai-rules/rules/Code-readonly约束.md)。
-- 写或改 CSS 时，必须直接阅读 [CSS 规则](D:/mycode/ai-rules/code/css/README.md)，先确定样式归属并阻止规则膨胀。
 - 写或改组件的 `.style.ts` 时，再读本项目的 [样式文件写法](docs/style/样式文件写法.md)，并对照组件定义确认分类与状态。
 - 查当前仓库结构、模块边界和调用链时读 [Architecture.md](Architecture.md)。
 - 写 Guide 或 Plan 时读 [Guide 写法](docs/how-to-write-guide.md) 和 [Plan 写法](docs/how-to-write-plan.md)。
@@ -23,10 +18,9 @@
 - 默认只考虑最新浏览器和现代 CSS 能力，不为旧浏览器保留兼容层。
 - 显示面统一简体中文，包括 UI 文案、日志、终端输出、注释、docstring 和 Markdown 说明。
 - 代码结构面统一英文，包括变量名、函数名、类名、方法名、属性名、源码文件名、目录名、类型名和数据字段名。
-- Markdown 文件名按 [Markdown 文档命名规则](D:/mycode/ai-rules/Markdown文档写法.md) 区分结构角色与描述性主题，不套用源码文件命名规则。
 
 ## 维护方式
 
-- 发现缺失的通用代码规则时，优先补到 `D:\mycode\ai-rules\code` 对应规则文件。
+- 发现共享规则缺口时，回到 AI Rules Agent 入口处理，不在本文件补写通用规则。
 - 只有当前仓库独有、且不适合迁移到通用规则项目的入口信息，才允许写进本文件。
 - 本文件应保持轻量；新增内容前先判断是否应该放进 `ai-rules` 或 [Architecture.md](Architecture.md)。

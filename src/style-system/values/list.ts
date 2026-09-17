@@ -1,12 +1,12 @@
-/** 完整 Value 的逗号列表，不提前展开列表成员。 */
+/** 逗号分隔的复合值。 */
 import type { Value, ValueInput } from '../core/css-value'
 
-/** 多个完整 Value 组成的逗号列表，编译时同时传播每个成员的 Condition。 */
+/** 保留成员 Condition 的 Value 列表。 */
 export type ValueList = Extract<Value, { kind: 'value' }> & {
   expression: { type: 'list'; items: ValueInput[] }
 }
 
-/** 创建按逗号连接的 Value；各成员的 Condition 在编译时共同展开。 */
+/** 创建逗号分隔值。 */
 export function valueList(...items: [ValueInput, ...ValueInput[]]): ValueList {
   return { kind: 'value', expression: { type: 'list', items } }
 }

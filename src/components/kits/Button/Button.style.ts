@@ -9,8 +9,7 @@ import {
   color,
   elevation,
   clickable,
-  focusRing,
-  focusVisible,
+  whenFocusVisible,
   whenHover,
   whenActive,
   whenDisabled,
@@ -46,6 +45,8 @@ import {
   wideSpace,
   widestSpace,
   thinBoundary,
+  focusStroke,
+  focusGap,
 } from '../../../style-system/values/materials/space'
 import { small, normal, large, extraLarge } from '../../../style-system/values/materials/size'
 import {
@@ -97,8 +98,19 @@ rules(button, [
   clickable(),
 ])
 
-rules([button, focusVisible], [focusRing(accentFocus)])
-rules([button, '&[data-tone="danger"]', focusVisible], [focusRing(dangerLine)])
+// =============================================================================
+// 浏览器交互
+// =============================================================================
+
+rules([button, whenFocusVisible], [boundary({
+  outline: {
+    width: focusStroke,
+    style: 'solid',
+    color: accentFocus,
+    offset: focusGap,
+  },
+})])
+rules([button, '&[data-tone="danger"]', whenFocusVisible], [boundary({ outline: { color: dangerLine } })])
 
 // =============================================================================
 // variant 动作声量

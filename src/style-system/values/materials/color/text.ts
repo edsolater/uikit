@@ -1,7 +1,7 @@
 /** 提供可覆盖的文字前景色，并在定义处保存 hover、active 与 disabled 的完整取值。 */
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
-import { whenHover, whenActive, whenDisabled } from '../../../selectors/msic'
+import { whenHover, whenActive, whenDisabled } from '../../../selectors/interaction'
 import { ink, strongInk } from './palette'
 
 /** 普通文字色。 */

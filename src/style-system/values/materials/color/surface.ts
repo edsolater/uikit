@@ -2,7 +2,7 @@
 import { lowSurface, hoverSurface, activeSurface } from './palette'
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
-import { whenHover, whenActive } from '../../../selectors/msic'
+import { whenHover, whenActive } from '../../../selectors/interaction'
 import { colorMix } from '../../functions/color-mix'
 import { foreground } from './text'
 

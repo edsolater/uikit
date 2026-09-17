@@ -6,7 +6,7 @@ import { condition, media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
 import { value } from '../core/css-value'
-import { variable } from '../core/css-variable'
+import { variable, variableName } from '../core/css-variable'
 import { $margin, $marginLeft } from '../properties/margin'
 import { $padding } from '../properties/padding'
 import { $border } from '../properties/border'
@@ -59,10 +59,34 @@ test('同一对象被后写覆盖后，旧句柄不能删除新登记', () => {
   expect(compileCSS()).toContain('color: red')
 })
 
-test('Condition name 保持同一地址，header 可用新 CSS 表达覆盖', () => {
-  keep(rule(['.example', condition('&:hover', 'hover')], 'color', 'red'))
-  keep(rule(['.example', condition('&:where(:hover)', 'hover')], 'color', 'blue'))
-  expect(compileCSS()).toBe('.example {\n&:where(:hover) {\ncolor: blue;\n}\n}')
+test('Condition header 决定真实地址，不同 CSS 条件分别保留', () => {
+  keep(rule(['.example', condition('&:hover')], 'color', 'red'))
+  keep(rule(['.example', condition('&:where(:hover)')], 'color', 'blue'))
+  const css = compileCSS()
+  expect(css).toContain('&:hover {\ncolor: red;')
+  expect(css).toContain('&:where(:hover) {\ncolor: blue;')
+})
+
+test('不同 Condition 对象的相同 header 共享 Rule、Value 与 Variable 地址', () => {
+  const firstHover = condition('&:hover')
+  const sameHover = condition('&:hover')
+  keep(rule(['.same-rule', firstHover], 'color', 'red'))
+  keep(rule(['.same-rule', sameHover], 'color', 'blue'))
+  const nested = value('black', [[firstHover, 'navy']])
+  keep(rule('.same-value', 'color', value('red', [[sameHover, nested]])))
+  const foreground = variable('color-condition-identity', {
+    fallback: value('black', [[firstHover, 'gray']]),
+  })
+  keep(rules('.same-variable', [[foreground, [[sameHover, 'silver']]], [$color, foreground]]))
+
+  const css = compileCSS()
+  const hoverProperty = `--${variableName('color-condition-identity', [firstHover])}`
+  expect(variableName('color-condition-identity', [sameHover])).toBe(variableName('color-condition-identity', [firstHover]))
+  expect(css).toContain('.same-rule {\n&:hover {\ncolor: blue;\n}\n}')
+  expect(css).not.toContain('.same-rule {\n&:hover {\ncolor: red;')
+  expect(css).toContain('.same-value {\ncolor: red;\n&:hover {\ncolor: navy;')
+  expect(css).toContain(`.same-variable {\n${hoverProperty}: silver;`)
+  expect(css).toContain(`&:hover {\ncolor: var(${hoverProperty}, gray);`)
 })
 
 test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
@@ -227,26 +251,29 @@ test('依赖回指同一集合终止，Rules 内容递归报错', () => {
   expect(() => compileCSS()).toThrow('递归引用')
 })
 
-test('逻辑变量按已有 Condition Key 读取和局部重定义派生 Custom Property', () => {
-  const hover = condition('&:hover', 'hover')
-  const active = condition('&:active', 'active')
+test('逻辑变量按已有 Condition Path 读取，并通过 Condition 引用局部重定义派生 Custom Property', () => {
+  const hover = condition('&:hover')
+  const active = condition('&:active')
+  const missing = condition('&:missing')
   const foreground = variable('--color-foreground-test', {
     fallback: value('black', [[hover, 'gray'], [active, 'silver']]),
     registration: { syntax: '*', inherits: true },
   })
   keep(rule('.example', foreground, value('red', [[hover, 'blue']])))
-  keep(rules('.only-active', [[foreground, { active: 'green', missing: 'orange' }]]))
-  keep(rules('.same-active', [[foreground, { active: 'silver' }]]))
+  keep(rules('.only-active', [[foreground, [[active, 'green'], [missing, 'orange']]]]))
+  keep(rules('.same-active', [[foreground, [[active, 'silver']]]]))
   keep(rules('.example', [[$color, foreground]]))
   const css = compileCSS()
+  const hoverProperty = `--${variableName('color-foreground-test', [hover])}`
+  const activeProperty = `--${variableName('color-foreground-test', [active])}`
   expect(css).toContain('--color-foreground-test: red')
-  expect(css).toContain('--color-foreground-test-when-hover: blue')
-  expect(css).toContain('--color-foreground-test-when-active: green')
-  expect(css).toContain('.same-active {\n--color-foreground-test-when-active: silver')
+  expect(css).toContain(`${hoverProperty}: blue`)
+  expect(css).toContain(`${activeProperty}: green`)
+  expect(css).toContain(`.same-active {\n${activeProperty}: silver`)
   expect(css).not.toContain('orange')
   expect(css).toContain('color: var(--color-foreground-test, black)')
-  expect(css).toContain('color: var(--color-foreground-test-when-hover, gray)')
-  expect(css).toContain('color: var(--color-foreground-test-when-active, silver)')
+  expect(css).toContain(`color: var(${hoverProperty}, gray)`)
+  expect(css).toContain(`color: var(${activeProperty}, silver)`)
   expect(css.match(/@property --color-foreground-test/g)).toHaveLength(1)
 })
 

@@ -3,7 +3,7 @@ import { type ShadowShape, shadowValue } from '../shadow'
 import { valueList } from '../list'
 import { value } from '../../core/css-value'
 import { variable } from '../../core/css-variable'
-import { whenHover, whenActive, whenDisabled } from '../../selectors/msic'
+import { whenHover, whenActive, whenDisabled } from '../../selectors/interaction'
 
 /** 贴近表面的阴影几何：水平偏移、垂直偏移、模糊半径，长度单位为像素。 */
 export const contactShape: ShadowShape = { x: value(0), y: value('1px'), blur: value('2px') }

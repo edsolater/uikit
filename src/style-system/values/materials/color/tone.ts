@@ -1,7 +1,7 @@
 /** 强调、危险及可由使用规则定义的语气配色。 */
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
-import { whenHover, whenActive } from '../../../selectors/msic'
+import { whenHover, whenActive } from '../../../selectors/interaction'
 import { colorMix } from '../../functions/color-mix'
 import { brand, palette, surface } from './palette'
 import { actionForeground } from './action'

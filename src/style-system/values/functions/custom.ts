@@ -1,16 +1,9 @@
-/** 自定义 CSS 函数的定义是 Rule，调用是带依赖的普通 Value。 */
+/** 按需定义的 CSS 函数值。 */
 import { functionDefinition } from '../../core/css-condition'
 import type { Rules } from '../../core/css-rule'
 import type { Value, ValueInput } from '../../core/css-value'
 
-/**
- * 把签名和 Rules 函数体保存为可调用的 Value 工厂；创建工厂或调用它都不登记函数定义。
- * 只有调用产生的 Value 被编译访问时，才把完整 @function 定义作为本次编译依赖提交。
- * @example
- * const body: Rules = new Map([[[undefined, 'result'], 'calc(var(--size-input) * 2)']])
- * const lengthDouble = cssFunction('--length-double(--size-input <length>) returns <length>', body)
- * lengthDouble('4px') // 编译为 --length-double(4px)，并带上上述 @function 定义。
- */
+/** 创建 CSS 函数 Value 工厂；函数调用被消费时提供完整定义。 */
 export function cssFunction(signature: string, body: Rules): (...args: ValueInput[]) => Value {
   const target = functionDefinition(signature)
   const name = signature.split('(')[0].trim()
@@ -18,7 +11,7 @@ export function cssFunction(signature: string, body: Rules): (...args: ValueInpu
   return (...args) => ({
     kind: 'value',
     expression: { type: 'function', name, arguments: args },
-    /** 交回本工厂共享的完整函数定义，由编译器登记到本次输出。 */
+    /** 提供本次编译的函数定义。 */
     onActive: () => definition,
   })
 }

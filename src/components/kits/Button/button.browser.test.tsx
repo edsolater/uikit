@@ -108,6 +108,43 @@ describe('Button styles', () => {
     } finally { await userEvent.keyboard('[/Space]') }
   })
 
+  test('focus-visible 建立完整边界，danger 只覆盖颜色', async () => {
+    const style = document.createElement('style')
+    style.id = 'css-root'
+    document.head.append(style)
+    cssRoot.mount()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <>
+      <Button htmlProps={{ 'data-testid': 'focus-default' }}>默认</Button>
+      <Button danger htmlProps={{ 'data-testid': 'focus-danger' }}>危险</Button>
+    </>, host)
+    const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
+    const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
+    const reference = document.body.appendChild(document.createElement('div'))
+    reference.style.color = 'var(--color-accent-focus)'
+    const accentColor = getComputedStyle(reference).color
+    reference.style.color = 'var(--color-danger-line)'
+    const dangerColor = getComputedStyle(reference).color
+
+    await userEvent.tab()
+    expect(document.activeElement).toBe(defaultButton)
+    expect(defaultButton.matches(':focus-visible')).toBe(true)
+    const defaultStyle = getComputedStyle(defaultButton)
+    expect(defaultStyle.outlineWidth).toBe('2px')
+    expect(defaultStyle.outlineStyle).toBe('solid')
+    expect(defaultStyle.outlineOffset).toBe('2px')
+    expect(defaultStyle.outlineColor).toBe(accentColor)
+
+    await userEvent.tab()
+    expect(document.activeElement).toBe(dangerButton)
+    expect(dangerButton.matches(':focus-visible')).toBe(true)
+    const dangerStyle = getComputedStyle(dangerButton)
+    expect(dangerStyle.outlineWidth).toBe('2px')
+    expect(dangerStyle.outlineStyle).toBe('solid')
+    expect(dangerStyle.outlineOffset).toBe('2px')
+    expect(dangerStyle.outlineColor).toBe(dangerColor)
+  })
+
   test('模块导入只登记，应用在首次渲染前统一挂载全部样式', async () => {
     expect(document.head.querySelector(buttonStyleSelector)).toBeNull()
 
@@ -242,12 +279,6 @@ describe('Button styles', () => {
     await userEvent.unhover(getButton('default'))
     handles.pop()!.remove()
     cssRoot.mount()
-
-    await userEvent.tab()
-    const focused = document.activeElement as HTMLElement
-    expect(focused.matches('button:focus-visible')).toBe(true)
-    expect(getComputedStyle(focused).outlineStyle).toBe('solid')
-    expect(getComputedStyle(focused).outlineWidth).toBe('2px')
 
     const disabledButton = getButton('disabled')
     disabledButton.style.transition = 'none'
