@@ -1,37 +1,30 @@
-/** 各方向及四边共用的外边距。 */
-import { declaration, type Declaration } from '../core/css-declaration'
+/** 外边距在编译时按上、右、下、左展开。 */
+import { declaration } from '../core/css-declaration'
 import { key } from '../core/css-key'
-import { toValue, type Value } from '../core/css-value'
+import type { ValueInput } from '../core/css-value'
 
-/** 上外边距 */
+/** margin 简写声明的属性位置。 */
+export const marginKey = key('margin')
+/** margin-top 声明的属性位置。 */
 export const marginTopKey = key('margin-top')
-export const marginTop = (input: Value | string): Declaration<'margin-top'> => declaration(marginTopKey, toValue(input))
-
-/** 右外边距 */
+/** margin-right 声明的属性位置。 */
 export const marginRightKey = key('margin-right')
-export const marginRight = (input: Value | string): Declaration<'margin-right'> =>
-  declaration(marginRightKey, toValue(input))
-
-/** 下外边距 */
+/** margin-bottom 声明的属性位置。 */
 export const marginBottomKey = key('margin-bottom')
-export const marginBottom = (input: Value | string): Declaration<'margin-bottom'> =>
-  declaration(marginBottomKey, toValue(input))
-
-/** 左外边距 */
+/** margin-left 声明的属性位置。 */
 export const marginLeftKey = key('margin-left')
-export const marginLeft = (input: Value | string): Declaration<'margin-left'> =>
-  declaration(marginLeftKey, toValue(input))
 
-/**
- * 四边共用同一值，按上、右、下、左排列。
- * @example
- * margin('8px').parseCss() // margin-top、right、bottom、left 各为 8px。
- */
-export function margin(input: Value | string) {
-  return declaration('margin', input, {
-    parseCss(_name, content, context) {
-      return [marginTop(content), marginRight(content), marginBottom(content), marginLeft(content)]
-        .map((node) => node.parseCss(context)).join('\n')
-    },
-  })
-}
+/** 创建只设置顶部外边距的 Declaration，不补充其他方向。 */
+export const marginTop = (input: ValueInput) => declaration(marginTopKey, input)
+
+/** 创建只设置右侧外边距的 Declaration，不补充其他方向。 */
+export const marginRight = (input: ValueInput) => declaration(marginRightKey, input)
+
+/** 创建只设置底部外边距的 Declaration，不补充其他方向。 */
+export const marginBottom = (input: ValueInput) => declaration(marginBottomKey, input)
+
+/** 创建只设置左侧外边距的 Declaration，不补充其他方向。 */
+export const marginLeft = (input: ValueInput) => declaration(marginLeftKey, input)
+
+/** 创建 margin 简写 Declaration；值可静态拆分时由编译器扩写四个方向。 */
+export const margin = (input: ValueInput) => declaration(marginKey, input)

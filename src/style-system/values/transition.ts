@@ -1,21 +1,11 @@
-/** 一项属性过渡的目标、时长、缓动与延迟；不负责 transition 声明。 */
-import type { Key } from '../core/css-key'
-import { parseValue, type RenderContext, type Value } from '../core/css-value'
+/** 一项过渡的目标属性、时长、缓动与可选延迟。 */
+import type { CSSProperty } from '../core/css-key'
+import type { ValueInput } from '../core/css-value'
 
-/** 单项过渡；两个时间值分别是时长与延迟，不是分组数组。 */
+/** 一个 CSS transition 条目：目标属性、持续时间和缓动为必填，延迟可选；各部分保留 Value 的 Condition。 */
 export type Transition = [
-  property: Key | string,
-  duration: Value | string,
-  easing: Value | string,
-  delay?: Value | string,
+  property: CSSProperty,
+  duration: ValueInput,
+  easing: ValueInput,
+  delay?: ValueInput,
 ]
-
-/**
- * 解析一项过渡；不输出属性名、分号或条目间的逗号。
- * @example parseTransition(['opacity', '120ms', 'ease', '30ms']) // opacity 120ms ease 30ms
- */
-export function parseTransition([property, duration, easing, delay]: Transition, context?: RenderContext): string {
-  const name = typeof property === 'string' ? property : property.name
-  const timing = `${name} ${parseValue(duration, context)} ${parseValue(easing, context)}`
-  return delay === undefined ? timing : `${timing} ${parseValue(delay, context)}`
-}

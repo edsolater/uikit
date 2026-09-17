@@ -1,63 +1,33 @@
-/** 带有明确目的的样式声明；内部 Role 决定输出一条还是多条属性。 */
-import type { Key } from './css-key'
-import { parseValue, type RenderContext, type Value } from './css-value'
+/** 把 CSS 属性与尚未取值的内容绑定成 Declaration，由编译器按属性语法生成最终声明。 */
+import { propertyName, type CSSProperty, type Key } from './css-key'
+import type { ValueInput } from './css-value'
+
+/** 编译器支持的声明组合方式；它决定 content 是完整值还是需要排列、追加或扩写的结构。 */
+export type DeclarationSyntax = 'value' | 'border' | 'font' | 'padding' | 'margin' | 'transition' | 'box-shadow'
 
 /**
- * 声明内部的完整输出规则，不是交给 Block 的另一种节点。
- * @example
- * const sides: DeclarationRole<string> = {
- *   parseCss(_name, distance) { return `margin-top: ${distance};\nmargin-bottom: ${distance};` },
- * }
- * declaration('vertical-margin', '4px', sides).parseCss()
- * // margin-top: 4px;\nmargin-bottom: 4px;
+ * 一条尚未编译的 CSS 声明：property 选择输出位置，content 保留 Value 或结构内容，syntax 选择解读方式。
+ * Declaration 可由 rules() 登记，但自身不写入 CSSRoot，也不生成 CSS string。
  */
-export interface DeclarationRole<C> {
-  /** 输出完整声明；访问子 Value 时须传递同一 context。 */
-  parseCss(name: string, content: C, context?: RenderContext): string
-}
-
-export interface Declaration<N extends string = string, C = Value | string> {
+export interface Declaration<N extends string = string, C = ValueInput> {
   kind: 'declaration'
-
-  /** 声明目的，例如 padding；不要求它与输出的每个长属性同名。 */
   name: N
+  property: CSSProperty
   content: C
-  role: DeclarationRole<C>
-  parseCss(context?: RenderContext): string
+  syntax: DeclarationSyntax
 }
 
 /**
- * 普通属性提供 Key 与值；复合属性可提供内容解析函数或完整 Role。
- * @example declaration(key('color'), 'red').parseCss() // color: red;
+ * 保存属性、内容及编译语法；不登记 Rule，也不读取内部 Value 或扩写简写属性。
+ * 默认 value 语法把 content 作为完整 Value 保存；其他语法要求相应内容形状，通常由 padding、font 等构造器配对提供。
+ * 此函数不校验 syntax 与 content 是否匹配，类型也不保证配对正确；错误配对可能在编译时失败或产生错误结果。
  * @example
- * declaration(key('font-size'), { size: value('16px') }, (content, context) => parseValue(content.size, context)).parseCss()
- * // font-size: 16px;
+ * declaration('color', 'red') // 保存 syntax: 'value'、content: 'red'，编译为 color: red。
+ * declaration('padding', ['4px', '8px'], 'padding')
+ * // 与 padding('4px', '8px') 保存的结构相同，编译为上/下 4px、右/左 8px。
  */
-export function declaration<N extends string>(name: Key<N> | N, content: Value | string): Declaration<N>
-export function declaration<N extends string, C>(
-  name: Key<N> | N,
-  content: C,
-  role: DeclarationRole<C> | ((content: C, context?: RenderContext) => string),
-): Declaration<N, C>
-export function declaration<N extends string, C>(
-  name: Key<N> | N,
-  content: C,
-  role?: DeclarationRole<C> | ((content: C, context?: RenderContext) => string),
-): Declaration<N, C> {
-  const contentParser = typeof role === 'function' ? role : undefined
-  return {
-    kind: 'declaration',
-    name: typeof name === 'string' ? name : name.name,
-    content,
-    role: typeof role === 'object' ? role : {
-      parseCss(name, content, context) {
-        // 省略第三个参数的重载只接受 Value 或字符串。
-        const css = contentParser ? contentParser(content, context) : parseValue(content as Value | string, context)
-        return `${name}: ${css};`
-      },
-    },
-    parseCss(context) {
-      return this.role.parseCss(this.name, this.content, context)
-    },
-  }
+export function declaration<N extends string, C = ValueInput>(property: Key<N> | N, content: C, syntax?: DeclarationSyntax): Declaration<N, C>
+export function declaration<C = ValueInput>(property: CSSProperty, content: C, syntax?: DeclarationSyntax): Declaration<string, C>
+export function declaration(property: CSSProperty, content: unknown, syntax: DeclarationSyntax = 'value'): Declaration<string, unknown> {
+  return { kind: 'declaration', name: propertyName(property), property, content, syntax }
 }

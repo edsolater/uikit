@@ -1,5 +1,7 @@
 /** 强调、危险及可由使用规则定义的语气配色。 */
 import { variable } from '../../core/css-variable'
+import { value } from '../../core/css-value'
+import { whenHover, whenActive } from '../../selectors/msic'
 import { colorMix } from '../functions/color-mix'
 import { brand, palette, baseSurfaceColor } from './color-palette'
 import { actionForegroundColor } from './color-action'
@@ -62,21 +64,10 @@ export const toneSoftColor = variable('component-tone-soft-color', { fallback: a
 /** 语气交互态的前景色。 */
 export const toneForeground = variable('component-tone-foreground', { fallback: accentForegroundColor })
 
-/** 语气底色；悬停和按下逐步增加语气色占比，各状态仍可单独覆盖。 */
+/** 可覆盖的语气底色配方；default、hover 与 active 分别拥有可局部重定义的 Variable Key。 */
 export const toneBackground = variable('component-tone-background', {
-  fallback: colorMix([baseSurfaceColor, toneSurfaceRatio], toneSoftColor),
-})
-
-/** 悬停语气底色；优先使用状态覆盖，再回退到共同取值与状态默认值。 */
-export const toneHoverBackground = variable('component-tone-background-hover', {
-  fallback: variable('component-tone-background', {
-    fallback: colorMix([baseSurfaceColor, toneHoverSurfaceRatio], toneSoftColor),
-  }),
-})
-
-/** 按下语气底色；优先使用状态覆盖，再回退到共同取值与状态默认值。 */
-export const toneActiveBackground = variable('component-tone-background-active', {
-  fallback: variable('component-tone-background', {
-    fallback: colorMix([baseSurfaceColor, toneActiveSurfaceRatio], toneSoftColor),
-  }),
+  fallback: value(colorMix([baseSurfaceColor, toneSurfaceRatio], toneSoftColor), [
+    [whenHover, colorMix([baseSurfaceColor, toneHoverSurfaceRatio], toneSoftColor)],
+    [whenActive, colorMix([baseSurfaceColor, toneActiveSurfaceRatio], toneSoftColor)],
+  ]),
 })

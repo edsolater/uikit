@@ -10,5 +10,6 @@ import './css/all-base.css'
 
 export * from './components'
 export * from './hooks'
+export { cssRoot, compileCSS } from './style-system'
 
 

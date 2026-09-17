@@ -21,7 +21,7 @@ SolidJS 基础组件与 hooks 组件库。
 src/
   components/    Piv、kits、plugins 与组件共用能力
   hooks/         对外 hooks
-  jss/           JSS 定义领域，当前底层实现位于 core/
+  style-system/  Rule 登记、Value 与静态样式编译
   css/           当前仍在服役的静态 CSS
   app/           本地 Example 浏览应用
   types/         全局类型补丁
@@ -57,4 +57,4 @@ bun run build-storybook
 包名是 `@edsolater/uikit`。
 
 对外导出从 [src/index.ts](src/index.ts) 进入，组件和 hooks 分别由 `src/components`、`src/hooks` 汇总导出。
-JSS 也可以从 `@edsolater/uikit/jss` 单独引入，该入口不加载包根的基础 CSS。
+包根同时导出 `cssRoot` 与 `compileCSS`。应用在组件渲染前统一挂载已登记的静态样式，接入方式见 [样式文件写法](docs/style/样式文件写法.md#启动挂载与控制)。

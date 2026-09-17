@@ -1,32 +1,10 @@
-/** CSS color-mix 函数，保留颜色与混合比例。 */
-import { type Value, toValue, parseValue } from '../../core/css-value'
+/** 混色材料只描述颜色及比例，编译时传播子值条件。 */
+import type { Value, ValueInput } from '../../core/css-value'
 
-/** 已包装的混色参与项；未给比例时交由 CSS 分配。 */
-type MixColor = Value | [color: Value, weight: number]
+/** 混色中的一个颜色，可单独使用或携带零至一的比例。 */
+export type MixColorInput = ValueInput | [color: ValueInput, weight: number]
 
-/** 混色输入允许直接使用颜色关键字。 */
-type MixColorInput = Value | string | [color: Value | string, weight: number]
-
-/** 保留参与颜色和混合比例的复合颜色值。 */
-export interface ColorMix extends Value {
-  colors: MixColor[]
-}
-
-/**
- * 在 oklab 中混合颜色；weight 取 0 到 1，对应 CSS 的百分比。
- * @example
- * colorMix(['red', 0.5], 'transparent').parseCss() // color-mix(in oklab, red 50%, transparent)
- */
-export function colorMix(...colors: MixColorInput[]): ColorMix {
-  return {
-    kind: 'value',
-    colors: colors.map<MixColor>((color) =>
-      typeof color === 'string' || 'kind' in color ? toValue(color) : [toValue(color[0]), color[1]],
-    ),
-    parseCss(context) {
-      return `color-mix(in oklab, ${this.colors
-        .map((color) => 'kind' in color ? parseValue(color, context) : `${parseValue(color[0], context)} ${color[1] * 100}%`)
-        .join(', ')})`
-    },
-  }
+/** 创建 oklab 混色 Value；元组第二项是比例，编译时乘以 100 输出百分比，不自动归一化。 */
+export function colorMix(...colors: MixColorInput[]): Value {
+  return { kind: 'value', expression: { type: 'color-mix', colors } }
 }

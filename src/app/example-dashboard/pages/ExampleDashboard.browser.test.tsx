@@ -1,15 +1,25 @@
 import { render } from 'solid-js/web'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import '../../../css/all-base.css'
 import ExampleDashboard from './ExampleDashboard'
+import { cssRoot } from '../../../style-system'
 
 const runnerPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
 let dispose: (() => void) | undefined
+let style: HTMLStyleElement
+
+beforeEach(() => {
+  style = document.createElement('style')
+  style.id = 'css-root'
+  document.head.append(style)
+  cssRoot.mount()
+})
 
 afterEach(() => {
   dispose?.()
   dispose = undefined
   document.body.replaceChildren()
+  style.remove()
   document.documentElement.removeAttribute('data-theme')
   window.history.replaceState(null, '', runnerPath)
 })

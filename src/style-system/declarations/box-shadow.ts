@@ -1,37 +1,35 @@
-/** 盒阴影属性。 */
+/** 盒阴影声明保留完整阴影列表或单个值。 */
 import { declaration, type Declaration } from '../core/css-declaration'
 import { key } from '../core/css-key'
-import { parseValue, type Value } from '../core/css-value'
+import type { ValueInput } from '../core/css-value'
 import type { Shadow } from '../values/shadow'
-import { formatCommaList } from '../formatters/comma-list'
 
+/** box-shadow 声明的属性位置，可供 Rule 或过渡条目引用。 */
 export const boxShadowKey = key('box-shadow')
 
-/** 盒阴影属性声明；内容可以是独立阴影列表，也可以是完整值引用。 */
-export interface BoxShadowDeclaration extends Declaration<'box-shadow', Shadow[] | Value | string> {
-  /** 追加完整阴影；只用于以阴影列表构造的属性，不拆解变量或关键字。 */
+/** 可保存完整阴影 Value，或继续追加多层 Shadow 的声明。 */
+export interface BoxShadowDeclaration extends Declaration<'box-shadow', Shadow[] | ValueInput> {
+  /** 原位追加阴影并返回当前声明；内容不是阴影列表时抛出 TypeError。 */
   append(...shadows: Shadow[]): this
 }
 
 /**
- * 盒阴影，可使用变量、关键字或直接配置多条阴影。
+ * 保存一个完整 Value 或多条 Shadow；只有按 Shadow 列表构造的声明支持 append，不提前编译。
  * @example
- * boxShadow(shadowValue({ x: '0', y: '2px', blur: '4px', color: 'black' })).parseCss()
- * // box-shadow: 0 2px 4px black;
+ * const first = shadowValue({ x: '0', y: '1px', color: 'black' })
+ * const next = shadowValue({ x: '0', y: '2px', color: 'gray' })
+ * boxShadow(first).append(next) // 编译为 box-shadow: 0 1px black, 0 2px gray。
+ * boxShadow('none').append(first) // 抛错，完整 Value 不是可追加的阴影列表。
  */
-export function boxShadow(...inputs: [Value | string] | [Shadow, ...Shadow[]]): BoxShadowDeclaration {
+export function boxShadow(...inputs: [ValueInput] | [Shadow, ...Shadow[]]): BoxShadowDeclaration {
   const first = inputs[0]
-  const content = typeof first === 'string' || !('x' in first && 'y' in first) ? first : inputs as Shadow[]
-  return Object.assign(
-    declaration(boxShadowKey, content, (content, context) =>
-      Array.isArray(content) ? formatCommaList(content, parseValue, context) : parseValue(content, context),
-    ),
-    {
-      append(this: BoxShadowDeclaration, ...shadows: Shadow[]) {
-        if (!Array.isArray(this.content)) throw new TypeError('当前内容不是阴影列表；需要追加时，请在构造处传入各条阴影。')
-        this.content.push(...shadows)
-        return this
-      },
+  const content = typeof first === 'object' && !(first instanceof Map) && first.expression?.type === 'shadow' ? inputs as Shadow[] : first
+  return Object.assign(declaration(boxShadowKey, content, 'box-shadow'), {
+    /** 追加到当前阴影列表并返回自身；完整 Value 内容不接受追加，示例见 boxShadow。 */
+    append(this: BoxShadowDeclaration, ...shadows: Shadow[]) {
+      if (!Array.isArray(this.content)) throw new TypeError('当前内容不是阴影列表；请在构造处传入各条阴影。')
+      this.content.push(...shadows)
+      return this
     },
-  )
+  })
 }

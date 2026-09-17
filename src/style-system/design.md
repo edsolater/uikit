@@ -1,204 +1,306 @@
-# Style System 设计
+# Style System 2.0 设计
 
-本文保存已经确认的对象模型与使用方式；真实实现及运行边界见 [architecture.md](architecture.md)。
+本文说明 Style System 2.0 已确定的对象模型和编译语义。当前文件职责见 [architecture.md](architecture.md)，组件样式写法见 [样式文件写法](../../docs/style/样式文件写法.md)。
 
-## 目标与范围
+# 设计目标
 
-样式要能够分片提供内容，让读者通过语义分区找到配置，再通过组装清单确认节点归属。去掉只为维持旧调用方式存在的包装，不把现有代码、旧测试或已用过的名称当作不可改变的要求。
+样式作者只表达“哪个地址拥有什么值”，不为最终 CSS 的花括号手工创建 Block：
 
-本轮覆盖 Style System 与 Button 的正式使用链；其他组件不迁移。保留现有 CSS 属性名、变量覆盖入口、默认取值、选择条件及级联关系，不借 API 调整改写视觉策略。
+- Condition Path 表达地址。
+- `rule()` 登记一条源配置，`rules()` 按顺序批量登记，账本由 CSSRoot 持有。
+- Declaration 与 Value 保存尚未展开的语义。
+- `compileCSS()` 在执行时解读全部源配置，展开条件、属性和值，并返回 CSS string。
+- CSS Variable、Keyframes 和 CSS `@function` 等依赖，只在编译器真正访问相应 Value 时进入本次结果。
 
-## 五个角色
+Block、StyleRule、MediaRule 和 KeyframeRule 不再是对象模型。它们在最终 CSS 中的结构，都由 Condition Path 和编译规则生长出来。
+
+## 定义层与业务层
+
+Style System 及其共享 values、selectors、declarations 才是定义层；整个组件 `.style.ts` 都是业务层。把 `value()` 写在组件文件顶部，不会使它成为定义层代码。
+
+能够表达通用颜色、阴影、间距、交互状态或其他共享 feature 的定义，应先进入 Style System。只有无法取得足够通用语义的值才留在业务层；边界需要结合真实复用范围和表达质量判断，不能因为不存在机械分类规则，就默认所有值都属于组件。业务样式应主要选择已有定义和重定义 CSS Variable，代码量保持很小。
+
+---
+
+# 核心对象
 
 | 对象 | 职责 |
 | --- | --- |
-| Key | 保存可检索的属性名称，普通对象，不与 Value 预先绑定。 |
-| Value | 提供可用于 CSS 的内容；固定值、变量引用和复合值具有同一使用契约。 |
-| Declaration | 用 name 表明声明目的，包含内容和 DeclarationRole；可输出一条或多条属性声明。 |
-| Block | 持有累计内容，提供 of，具体种类负责格式和合法节点位置。 |
-| Root | 沿实际结构激活 Value，把完整顶层规则同步追加到样式表。 |
+| Condition | 描述相对于当前地址的 selector、状态、媒体条件或 At Rule 头。 |
+| Condition Path | 由 Condition 组成的有序地址；嵌套时直接追加。 |
+| CSS Property | 表达声明左侧的位置，包括普通属性、Custom Property 和 Descriptor。 |
+| RawValue | 已不可继续拆解的原始值，当前是 `string` 或 `number`。 |
+| Value | 原始值、随 Condition 取值的对象或复合表达；创建时不生成 CSS。 |
+| Declaration | 保存 CSS Property 与 Value 的关系，以及必要的属性扩写语义。 |
+| Rule | 一条 `[RuleAddress, RuleValue]` 配置。 |
+| Rules | 按登记顺序保存 Rule 的内部 Map。 |
+| Rule Handle | 控制一次 `rule()` 登记仍然有效的内容。 |
+| Rules Handle | 删除一次 `rules()` 批量登记中仍然有效的条目。 |
+| CSSRoot | 拥有源 Rules 账本，负责统一编译与宿主提交。 |
+| CSS Compiler | 解读源 Rules 和派生 Rules，最终返回 CSS string。 |
 
-函数是创建或组合手段，不增加 CSS 角色。Value、CSS Variable 和 Block 本身都不可调用；属性操作、组合工具及构造函数可以调用。
-
-## Key 与属性操作
-
-key(name) 返回保存 name 的普通 Key 对象，使用 const generic 保留字面量类型，不添加 Brand。declaration(key, value) 产生 Declaration；常用属性用具名函数提供入口，Key 与函数分别存在。
+Condition 同时有 `name` 和 `header`。`name` 是 Rule 合并、Value 取值与 Variable Key 共用的稳定名称；`header` 是生成 CSS 时写在花括号前的 selector 或 At Rule 文本。两个 Condition 可以使用同一个 name 而使用不同 header，表示同一取值名的 CSS 表达发生了变化：
 
 ```ts
-const colorKey = key('color')
-const color = (input: Value | string) => declaration(colorKey, toValue(input))
+const hover = condition('&:hover', 'hover')
+const enabledHover = condition('&:hover:not(:disabled)', 'hover')
 ```
 
-属性操作必须显式给值，不用无参数调用自动选择 initial、unset、主题值或其他默认值。属性关键字可以直接传字符串；Value 保留原引用。合法性由浏览器判断，不穷举全局或各属性的关键字名单。
+`value('red', [[enabledHover, 'blue']])` 仍以 `hover` 匹配取值与局部覆盖，生成 CSS 时则使用 `&:hover:not(:disabled)`。
 
-复杂属性保存各组成值，而不是把整个 border、font 等提前变成字符串。易于区分用途的部分使用位置参数；角色易混淆或涉及特殊分隔关系时用对象字段。例如 padding 支持一至四个位置值及按方向覆盖的对象；border 按输入顺序以空格连接；font 的字号与行高用对象明确斜杠关系。
-
-## Declaration 的内容、解析与控制
-
-外界只面对 Declaration，不再区分单条声明和声明组。name 表明它的目的，例如 color、padding、margin；role 是包含在节点内部的 DeclarationRole，负责把 content 解析成完整声明。一条属性只是其中一种输出形式，名称不决定实际输出几条属性。
-
-declaration(key, content) 沿用普通属性语法；第三个参数可提供内容解析函数，或提供负责完整输出的 Role。Role 访问子 Value 时必须调用 parseValue 并传递 context，不提前字符串化，也不另列依赖表。
-
-普通配置不使用通用 set。当前运行链没有必须依赖整体替换的情形，因此不提供 set，也不预留 _set。需要调整配置时先在构造处明确内容，或使用属性自己的语义操作；不能通过直接改写 content 或另起一个替换方法绕过此限制。
-
-将来确实需要内部替换时，统一用 _set 并标注内部方法。只有缺少它会使程序无法运行，且不存在合理的构造、组合或职责调整方案时才允许引入和调用；方便、少写几行、兼容旧调用和让测试通过都不构成必要性。必须在负责位置说明不可替代的原因。
-
-transition 的 append 追加完整过渡条目，boxShadow 的 append 追加独立 Shadow。两者不拆解变量、关键字或已经组合的 Value；需要属性上的追加能力时，在构造处直接提供单项内容。
+`Rule` 是一条配置，不是容器；`Rules` 才是集合：
 
 ```ts
-const buttonTransition = transition(
-  [backgroundColorKey, fastDuration, standardEasing],
-  [borderColorKey, fastDuration, standardEasing],
-)
-kitStyle.of(buttonTransition)
-buttonTransition.append([opacityKey, fastDuration, standardEasing])
+type RuleAddress = [
+  ConditionPath | undefined,
+  CSSProperty | undefined,
+]
 
-const buttonPadding = padding({ top: normalSpace })
-kitStyle.of(buttonPadding)
-// buttonPadding 仍是 Declaration；其 Role 输出 padding-top，而不是 padding 简写。
+type Rule = [RuleAddress, RuleValue]
+type Rules = Map<RuleAddress, RuleValue>
 ```
 
-Block 的 of 直接使用 fnkit 的 flapDeep 展开全部分组数组，保留顺序与节点引用，不另建展开方法；Content 复用 MayDeepArray 类型。Declaration 是数组中的对象，其内部 content 不属于外部分组，过渡条目不会被拆散。flapDeep 底层使用原生展开，受引擎调用栈限制，不承诺极端嵌套深度。
+RuleAddress 固定为两项，两项都允许为空：
 
-移除 joinValues 与 transitionValue。属性决定如何消费单项或组合内容，通用格式器提供逗号等共同排版能力，不把分隔符和字符串片段包装成 Value。计算、颜色函数、阴影等独立内容拥有自己的语义解析器；属性消费这些内容，不重复实现它们的内部语法。
+| 地址 | 语义 |
+| --- | --- |
+| `[path, property]` | 追加 path，并选择 property。 |
+| `[path, undefined]` | 只追加 path，沿用当前 property。 |
+| `[undefined, property]` | 保持当前 path，选择 property。 |
+| `[undefined, undefined]` | 保持当前地址。 |
 
-这些控制只作用于构建内容和后续解析。Root 不订阅 append，不更新已经提交的 CSS；激活后更新策略仍未确定。
+RuleValue 可以继续包含 Rules。编译器进入它时沿用上层地址，再按内部 RuleAddress 继续寻址。因此 CSS `@function` 的函数体、Keyframes 的帧和其他嵌套内容都使用同一个模型，不需要专用 Block。
 
-## Value、材料与目录
+---
 
-Value 提供 parseCss(context)，只有 Value 具有可选 onActive。复合值在渲染时继续访问组成值，不预先丢掉引用，也不另外维护依赖清单。
+# Rule 直接登记源配置
 
-calcMultiply(amount, factor) 明确表示 CSS calc 乘法，不是 JS 立即求值。例如 calcMultiply(value('120ms'), value(2)) 输出 calc(120ms * 2)，浏览器计算为 240ms。materials/motion 用时长乘以动效倍率，普通偏好为 1，减少动效偏好为 0；这不是新增 Theme 系统。
-
-固定尺度与变量引用都可以成为属性输入。材料按颜色、空间、半径、字体、动效、阴影等含义组织，不再将 values 与 variables 作为两套公共使用入口。Theme、Color、Size 只是组织组名，不决定成员的注册、激活或赋值行为，不另建 Theme 系统。
-
-Token 只表示可复用的值材料，不增加对象角色、构造函数或目录。Variable 属于 Value；CSS 属性操作不是 Value，单独归入 declarations。
-
-基础 CSS 对象位于 core/，具体 Block 位于 blocks/。values 保存独立于消费属性的值对象与内容结构，不按“内部有多个部分”统一归为 composites：
-
-- materials 提供已经定义好的值材料，回答“选用哪个值”。固定值、CSS variable 和预先组合的值可以同处一个系列，按颜色、空间、圆角、字体、动效等含义组织，不按构造方式拆文件。
-- functions 保存 calc、color-mix、translateY 等 CSS 函数值，各自负责对应的运算或函数语法。
-- shadow.ts 表达一条阴影，transition.ts 表达一项过渡，list.ts 表达完整值节点的列表。它们不是 CSS 属性声明，也不因结构复杂就变成 CSS 函数。
-
-格式能力位于 formatters。formatCommaList 只按顺序解析完整条目并输出逗号列表，不认识阴影、动画或背景，不展开条目内部的数组，也不创建 Value。当前阴影和过渡共同使用它；不为尚未实现的背景或动画属性增加空壳。
-
-材料系列使用 font.ts、motion.ts、color-surface.ts 等文件名，不以 theme 表示“使用了变量”，也不以 appearance 收纳不同类别。系列内不再建立子目录。values、materials、functions、formatters 都是分组目录，不建立 index。选择条件与组合工具分别位于 selectors/、mixins/。
-
-### 值对象、组合与消费属性
-
-Value 首先表达内容自身的含义，不围绕某个 Key 建立身份。单个属性恰好直接消费一个值，不意味着值类型就是属性类型；聚合后的内容也不会成为 Key，而是成为 Declaration 的内容。
-
-Shadow 表达一条阴影的偏移、模糊、扩展与颜色；shadowValue(shape) 返回 Shadow。BoxShadowDeclaration 表达 box-shadow 属性对一条或多条阴影的消费，Key 只指出属性名称。Transition 表达一项过渡，TransitionDeclaration 表达 transition 属性及其条目列表；过渡中的 property 字段是过渡目标，不是它自身所属的消费 Key。
+`rule()` 与 `rules()` 在 `.style.ts` 顶层直接调用，把配置按实际调用顺序写入 CSSRoot 内部源账本：
 
 ```ts
-const contact = shadowValue({ x: '0', y: '1px', blur: '2px', color: 'black' })
-const diffuse = shadowValue({ x: '0', y: '6px', blur: '18px', color: 'black' })
+rule(button, colorKey, foregroundColor)
 
-const appearance = boxShadow(contact, diffuse) // BoxShadowDeclaration，不是 Shadow。
-const sharedShadow = variable('shared-shadow', { fallback: valueList(contact, diffuse) })
+rules(button, [
+  color(foregroundColor),
+  backgroundColor(background),
+])
 ```
 
-valueList 保存完整 Value 节点及其顺序，解决多项内容被变量引用的需要；阴影并不独占这个能力。它不接受任意分隔符或字符串片段，不恢复 joinValues。列表解析通过 parseValue 保留每个节点的激活链；属性直接配置列表时同样保留单项引用。
+`rule(condition, property, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受 Declaration、`[CSSProperty, Value]` 与嵌套分组，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
 
-各条阴影内部的长度位置由 Shadow 自己解析，逗号由列表格式器提供，冒号与分号由 Declaration 提供。背景、动画等后续属性沿用这一职责判断，不把各自的内容语法塞入通用格式器。
+同址后写覆盖前写，位置仍沿用该地址首次进入 Map 时的顺序。这就是普通 Map 更新的顺序语义；编译器不按 Path 深度、名称或输出长度重排。
 
-名词式函数调用表示取得该对象，保留 shadowValue，不机械添加 create、build 等构造动词。MixColor 表达混色参与项。材料名称区分默认来源与作用域覆盖入口，例如 defaultForegroundColor 与 foregroundColor；不靠缩写或词序倒置区分二者。CSS 自定义属性名称仍是既有样式接口，不随内部重命名改变。
-
-混色比例由各配方就近保存并说明占比主体，不集中放在透明度材料中。相同字面量不意味着相同业务配置，不为了消除数字重复而制造共享节点。
-
-基础数值有明确单位或比例；同一个空间尺度可以用于 padding、margin、gap 或边缘厚度，不按使用属性复制数值。半径与普通空间即使数值相等也可保留各自语义。
-
-使用方直接导入有独立含义的名字，例如 bgColor、normalSpace、pillRadius；不依赖 properties、cssProp、mix、values、variables 等 namespace 才能理解。移除 namespace 后，把必要语义放进具体名称，不用 normal、small 等脱离语境的名字冒充完整入口。
-
-## CSS Variable 的声明、定义与使用
-
-CSS Variable 是 Value 的一种，保存名称、可选 fallback 和可选注册行为，是不可调用的普通对象。
+`rule()` 返回句柄：
 
 ```ts
-const bgColor = variable('bg', { fallback: defaultBackground })
-const localDefinition = declareVariable(bgColor, red)
-const appearance = backgroundColor(bgColor)
+const appearance = rule(button, colorKey, foregroundColor)
+
+appearance.replace(nextForegroundColor)
+appearance.remove()
 ```
 
-- variable 声明引用身份，不为任何组件设置当前取值。
-- declareVariable(variable, input) 产生 Declaration；参数必须是 CSS Variable，不是任意固定 Value。
-- 把 Variable 作为属性输入时，输出 var(...)。
-- Declaration 接入哪个规则，定义就属于哪个作用域；不改变共享 Variable 或它的 fallback。
+单项句柄可以替换仍由自己持有的值；批量句柄可以删除本次登记中仍由自己持有的条目。如果同址内容已经被后一次 `rule()` 覆盖，旧句柄不能替换或删除新的理解。句柄只修改源配置，不直接编译或操作 DOM。
 
-declareVariable 使用谓宾顺序表达动作。定义渲染时，目标 Variable 和输入 Value 都沿同一上下文参与激活，不能因为只定义而未使用就漏掉 @property 注册。
+源 Rules 是 CSSRoot 的内部状态，不从公共入口暴露。测试保存登记返回的句柄并在用例结束后删除，避免直接清空账本或建立业务侧配置容器。
 
-variable 是唯一的变量创建入口，原 token 构造入口退出。fallback 是引用兜底，root 是显式可选的根作用域默认定义，registration 是 @property 注册，不能相互替代。
+---
+
+# Value 在定义层保存各 Condition 对应的值
+
+Value 只有两个基础概念：`Value` 与 `RawValue`。不再建立额外的状态值或单值类型与构造函数。
 
 ```ts
-const spacing = variable('spacing', { fallback: distance })
-const themeColor = variable('theme-color', {
-  root: { value: lightColor, dark: darkColor },
+const foreground = value('red', [
+  [whenHover, 'blue'],
+  [whenActive, 'green'],
+])
+```
+
+`value(default, conditions)` 保存 default 以及若干 Condition 对应的 Value。第二参数是 `[ConditionInput, ValueInput][]`，内部 `conditions` 字段直接保存 `[ConditionPath, ValueInput][]`。创建时不递归解包、字符串化或触发 `onActive`。普通 `value('red')` 也保留 Value 对象；编译给定 Condition Path 时才向下读取，直到得到 RawValue 或可由编译器降级的复合表达。
+
+Condition 是机制，State 只是其中一种语义用法。hover、active、disabled 是常见例子，不限制 Value 的取值维度；媒体条件、Variant 或其他 Condition 也可以对应不同 Value。类型和编译器不分类或限制 State。
+
+通用与业务由作者根据服务对象、复用范围和表达质量判断，不是两种 Condition 类型。定义层优先保存能够复用的完整 feature；业务层只保留确实依赖具体组件协议的选择。横跨多个属性的组件配方仍可用外层 Rule，但不能因此把本可通用的单属性取值矩阵留给组件重复表达。
+
+```ts
+const compact = condition('&[data-density="compact"]')
+const spacing = value('12px', [
+  [compact, '6px'],
+  [media('(width > 800px)'), '16px'],
+])
+```
+
+一个 feature 应在 Style System 的定义处保存各 Condition 对应的 Value，消费处只使用它：
+
+```ts
+export const foregroundColor = variable('fg', {
+  fallback: value(defaultForegroundColor, [
+    [whenHover, strongForegroundColor],
+    [whenActive, strongForegroundColor],
+  ]),
 })
+
+rules(button, [color(foregroundColor)])
 ```
 
-未提供 root 时不产生根规则；提供时保留低优先级 :where(:root)、data-theme 暗色覆盖与可选 reducedMotion 覆盖。root.value 是根默认值，不是 var 的 fallback 或 @property 的 initialValue。这些条件是既有样式约定，不另建 Theme 系统。
+这里的逻辑 CSS Variable 同时拥有 default、hover、active 等 Key。组件仍只消费 `foregroundColor`；各 Key 在落盘时取得独立的 Custom Property 名称，例如 `--fg`、`--fg-when-hover`、`--fg-when-active`。
 
-registration 与 root 可以同时提供。Value 的 onActive 返回值可以是单个 Rule 或递归 Rule 集合，Root 沿用集合展开；Variable 返回自身需要提交的规则列表。这样无需包装 Block，也不会漏掉其中一项。
+## Variable 按已有 Key 局部重定义
 
-作用域取值仍由 declareVariable 产生 Declaration。提供 registration 时由 Variable 的 onActive 返回 PropertyRule；初值中的 Value 继续参与激活。不因材料属于 Theme 组就强制注册。
+`declareVariable(variable, input)` 不用 input 整体替换 Variable，而是先把 input 解释成 Value，再把它提供的 Key 投影到 Variable 已经拥有的 Key：
 
-## Block 与 Selector
-
-Selector 保存选择条件，直接复用字符串即可。stateHover、stateActive 的定义注释说明具体匹配范围；名称变化不暗中改变是否排除禁用等条件。
-
-每次创建 Block 就创建独立累计状态。Block 是普通对象，不是函数、函数工厂或外加控制器的包装。
+- RawValue 或不带 Condition 的 Value 只提供 default，因此只重定义基础 Custom Property。
+- 带 Condition 的 Value 可以同时提供 default 与若干 Condition Key。
+- 对象形式可以只提供 `hover`、`active` 等指定 Key；没有提供的 Key 保持原定义。
+- input 提供、但 Variable 原定义中不存在的 Key 不参与输出。
+- 只要匹配 Key 被明确提供，就生成定义；不比较新旧值是否相同。
 
 ```ts
-const kitStyle = styleRule('.Button')
+declareVariable(backgroundColor, 'red')
+// 只定义 --background-color。
 
-/** 按钮的悬停反馈。 */
-const hoverStyle = styleRule(stateHover)
-kitStyle.of(hoverStyle)
+declareVariable(backgroundColor, { hover: 'blue' })
+// 只定义 --background-color-when-hover。
 
-const buttonHoverAppearance = [backgroundColor(bgHoverColor)]
-hoverStyle.of(buttonHoverAppearance)
+declareVariable(backgroundColor, value('red', [[active, 'green']]))
+// 定义 --background-color 与 --background-color-when-active。
 ```
 
-of 表达 Block 与内容的组成关系，接收多个节点及递归分组，按顺序追加并返回自身，不替换已有内容或派生新对象。body 保存当前累计内容；parseCss 输出当前结构。不施加只读类型约束，由调用方遵守节点的修改约定。接收时展开集合、保留节点身份；来源数组后续变化不回写列表，子 Block 后续追加则可被父 Block 的下一次输出读取。
+对象 Key 使用 Condition name；复合 Condition Path 按 name 顺序组成 Key。Condition 的 CSS header 可以演进，Variable 的匹配和派生名称仍由稳定 name 决定。
 
-数组和普通对象只负责组织，不产生 CSS 层次。具体种类决定合法节点及标点：
+Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同 Key 的值作为 fallback。业务 Rule 因此只重定义需要变化的 Key，不重新创建一份状态 Value，也不重复声明消费该 feature 的 CSS Property。
 
-- StyleRule 接收 Declaration、嵌套 StyleRule、Media。
-- Media 接收顶层 Rule。
-- Keyframes 接收 Frame；名称也是 Value。
-- Frame 和 PropertyRule 接收 Declaration。
+## 按请求条件逐层读取
 
-Rule 是可提交到样式表顶层的具体 Block 集合，不包括 Frame。Block 不承担 isActive、onActive、依赖表或 Root 订阅状态。通用 of 不猜测花括号、分号或插入位置。
+编译器对每个待生成的 Condition Path 执行同一规则：
 
-## Button 的阅读与连接方式
+1. 当前对象是 RawValue 时停止。
+2. 当前 Value 存在同路径 Condition 时，读取对应 Value；否则读取 default。
+3. 进入子 Value 后继续携带最初请求的 Condition Path。
+4. 子 Value 仍按同路径 Condition 取值，没有则读取它的 default。
+5. 同一个 Condition Path 重复定义时，取最后对应的 Value。
 
-组件样式的专属写法统一见 [样式文件写法](../../docs/style/样式文件写法.md)：先对照组件定义，再组织配置、名称、注释与末尾组装。这里不另维护一套 Button 命名或标题层级。
+例如：
 
-具名内容可为单个 Declaration 或嵌套集合，of 按顺序接收并保留节点身份。组件只导出实际需要的注册入口；节点的可控制能力不等于对外操作权限。
+```ts
+const blue = value('blue', [
+  [whenHover, 'cyan'],
+  [whenActive, 'navy'],
+])
 
-## Root 与浏览器提交
+const foreground = value('red', [
+  [whenHover, blue],
+])
+```
 
-浏览器宿主先提供 style#css-root；调用者在它可用后执行 cssRoot.activate(kitStyle)。只 import Button 不激活；组件执行时同步注册，服务器端跳过，不等待通用 DOMContentLoaded 事件。
+foreground 的 hover 最终得到 cyan；active 没有选择 blue，因此仍得到 red。读取 hover 对应 Value 时，不引入其中其他 Condition。
 
-Root 在一次调用中建立激活闭包：沿 Block、Declaration 和复合 Value 的实际内容渲染，首次经过 Value 时执行 onActive，将返回 Rule 加入待处理集合并继续遍历，然后逐条 insertRule。
+## 循环只按实际访问槽位判断
 
-按对象身份去重，不按名称或文本合并；回到同一待处理 Rule 时终止该激活环。仅 insertRule 成功后记录已注册；失败原样抛出，重试能够补齐失败依赖而不重复成功规则或 onActive。不同 Root 独立登记。嵌套 Block 不另行提升到顶层。
+循环检测记录当前递归链正在访问的 `(Value 对象身份, 实际键)`：
 
-Root 不拼接具体 CSS 语法。离线 parseCss 不触发激活；已提交 CSS 不重写、不卸载，动态视觉由 DOM 状态、条件和元素 style 上的变量取值表达。
+- hover 与 active 是同一 Value 的两个不同槽位，可以分别读取。
+- 一个 Value 被不同声明共享，前一次读取结束后不会污染下一次读取。
+- 当前链再次进入完全相同的对象与实际键时，才判定为循环并停止编译。
+- 请求的条件不存在而读取 default 时，实际键是 default；不能把外层请求键误记为已访问槽位。
 
-## 尚未扩展的运行边界
+访问结束后立即移出活动链。若以后增加已完成结果缓存，它也必须与活动链分开。
 
-- 已注册顶层 Block 继续 of 后，当前 Root 不自动提交累计变化；Block 不冻结，增量提交机制另行裁决。
-- declareVariable 只产生定义；把定义直接应用到某个 DOM 元素的通用入口尚未加入，不另建 setTheme。
-- 同名全局注册冲突的报告，以及 Button 之外的宿主生命周期另行裁决。
-- onActive 只提供规则或规则集合，不增加 attachRoot、attachRule 等回调操作协议。
+## 普通 Condition Path 不去重
 
-这些边界不妨碍明确范围内的实现，也不能被隐式订阅、兼容工厂或重写规则所绕过。
+按 Condition Path 读取 Value 不修改普通 Rule 的地址。外层 Rule 已有 hover，所选 Value 又产生 hover 时，结果可以是 `.Button:hover:hover`。这是合法 CSS，会增加 selector specificity；编译器不替用户删除重复 Condition。
 
-## 保留与验收
+## 复合值保留子 Value
 
-deriveable 与 lazyCopy 保留为独立通用能力，不重新覆盖所有 CSS 对象；需要对象派生时另行使用，不让 Block 的空调用暗含复制。
+calc、color-mix、shadow、transition、transform、animation 和列表都保存组成它们的子 Value。若不同子值分别拥有 hover 与 active，编译器会生成默认、单条件和交集结果；业务 selector 与媒体条件也使用同一机制。条件组合发生在 Value 读取阶段，不改变作者登记的 Rule Path。
 
-Style System 的 index 公开基础对象、选择条件和组合工具。values 与 declarations 只是分组目录，不拥有独立领域契约，不建立 index；使用方直接引用其中的具体文件。内部直接导入具体文件，不通过对外 index 绕行。旧的可调用 Block、可调用 Variable 和 namespace 包装退出正式使用链。
+## 通用状态与业务条件
 
-验收集中在关节：普通对象与类型约束、累计身份和隔离、递归集合、变量定义及使用的激活、@property、Keyframes、失败重试、真实 Button 挂载与 CSS 输出。具体属性和业务片段不逐个机械配套测试。保存修改前的完整 Button 规则和依赖输出，检查取值、顺序、变量接口及浏览器效果；测试通过不能替代扫读和职责检查。
+`whenDisabled` 与 `whenHover`、`whenActive` 都是通用 Condition。禁用匹配原生 `:disabled` 或 UIKit 的 `[data-status~="disabled"]`；hover/active 反馈排除这两种禁用协议。
+
+hover、active、disabled 等通用状态在 Style System 中定义为具有稳定 name 的 Condition。State 仍只是 Condition 的语义称呼，不增加 State 类型或构造函数。
+
+loading、具体 Variant 或 Tone 是否足够通用，需要按真实服务对象判断。留在 Button 的业务条件只负责选择或重定义定义层 Variable；它不能在组件文件里复制 hover、active、disabled 的完整取值矩阵。若某个状态结果需要被特殊组合覆盖，业务 Rule 只重定义该 Variable 对应的 Condition Key。
+
+Rules 也可以作为 Value 内容，用于需要继续携带 Property 或嵌套结构的场景。CSS `@function` 的完整函数体可以因此作为一个 Value 被按需挂载；编译器仍按相同的二项地址递归处理。
+
+---
+
+# `onActive` 只产生本次派生 Rules
+
+Value 可以提供可选的 `onActive`：
+
+```ts
+interface ValueOptions {
+  onActive?: (context: CompileContext) => Rules | Rules[] | undefined
+}
+```
+
+创建 Value、登记 Rule 或只导入样式模块都不触发回调。`compileCSS()` 真正访问该 Value 时才触发；返回的 Rules 进入当前编译的派生集合，并继续接受同一套递归解读。
+
+派生 Rules 不写回源 Rules。因此删除源 Value 后再编译，它曾带来的 `@property`、Keyframes 或 `@function` 会自然退出结果，不需要单独的停用阶段。
+
+同一 Value 在一次编译中只激活一次，首次实际消费位置作为回调上下文。Rules 自引用和 Value 槽位循环都会终止并报错，不产生部分 CSS。
+
+---
+
+# `compileCSS()` 是唯一生成入口
+
+公开生成操作只有：
+
+```ts
+const cssString = compileCSS()
+```
+
+它不接收业务侧 Rule 容器，也不返回中间树。内部步骤是：
+
+1. 快照当前源 Rules。
+2. 按登记顺序累计 Condition Path 与 CSS Property。
+3. 解读 Declaration，统一展开需要静态扩写的属性。
+4. 按请求条件解读 Value，并触发可达的 `onActive`。
+5. 继续处理本次产生的派生 Rules，直到没有新的依赖。
+6. 相同最终地址由后写内容覆盖，不调整地址原有顺序。
+7. 根据连续 Condition Path 生长花括号，返回 CSS string。
+
+Compiler 比 Formatter、Encoder 或 Decoder 更准确：这里不仅排版，还会解读高层对象、按 Condition 取值、触发依赖、扩写属性并降级为浏览器接受的 CSS。
+
+---
+
+# CSSRoot 账本与应用启动
+
+CSSRoot 拥有源 Rules 账本和同址写入所有权。公开对象只提供无参 `cssRoot.mount()`；无参 `compileCSS()` 使用同一账本快照，只返回 CSS string。挂载先确认宿主存在，再编译，成功后提交到 `style#css-root`：
+
+- 保留宿主原有前缀内容。
+- 新结果与上次结果相同时不改写节点，现有 CSSOM 对象保持不变。
+- 编译失败时不提交，宿主继续保留上一次成功结果。
+- Rule Handle 更新源配置后，需要再次调用 `mount()` 才反映到 DOM；当前不建立自动订阅。
+
+组件通过静态 `import './Button.style'` 保证样式模块执行。App 入口在静态依赖执行完毕后、`render()` 之前统一调用 `cssRoot.mount()`；组件渲染不触发编译。
+
+```ts
+import { cssRoot } from '@edsolater/uikit'
+import App from './App'
+
+cssRoot.mount()
+render(() => <App />, root)
+```
+
+宿主由 App 的 HTML 提供 `<style id="css-root"></style>`。漏导入自身样式是组件封装问题；缺少宿主或启动挂载是 App 基础设施问题。服务器可调用 `compileCSS()`，不执行浏览器挂载。
+
+静态 CSS 要求所有样式模块在首次挂载前完成登记。懒加载组件的样式由应用样式清单提前导入；不在组件渲染时补编译。当前 Example 静态导入全部 Example；Storybook 在 preview 提前导入 Button 样式，再统一挂载。打包配置保留 `.style.ts` 与产物 `.style.js` 的模块副作用。
+
+---
+
+# 验收条件
+
+1. `Rule` 只表示一条配置，`Rules` 才表示集合；公共 API 不暴露源 Rules。
+2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；无效批次不产生部分写入。
+3. 同址后写覆盖前写并保持 Map 顺序，旧句柄不能影响新的写入。
+4. `Value` 与 `RawValue` 足以表达普通取值、各 Condition 对应的取值和复合值；不建立 State 专用分类。
+5. `value()` 在定义时只保存结构，编译时按同键否则 default 的规则递归读取。
+6. 循环检测区分同一 Value 在不同 Condition Path 下的实际访问，共享引用不会被误判。
+7. 普通 Rule Path 不去重，合法的重复 selector 原样输出。
+8. `onActive` 只向本次派生 Rules 添加可达依赖，不污染源 Rules。
+9. CSSRoot 持有内部账本；`compileCSS()` 无参生成 CSS string，App 在渲染前无参挂载且原子提交。
+10. Style System 定义层保存通用 feature 的 Condition Key；组件样式只选择定义并按已有 Key 重定义 Variable。
+11. 一个逻辑 Variable 为每个 Condition Key 派生稳定 Custom Property；局部声明不替换未提供的 Key，也不新增原定义没有的 Key。

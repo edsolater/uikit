@@ -1,8 +1,9 @@
-/** 预定义阴影及状态覆盖入口，阴影颜色随明暗主题切换。 */
+/** 预定义阴影与交互配方，阴影颜色随明暗主题切换。 */
 import { type ShadowShape, shadowValue } from '../shadow'
 import { valueList } from '../list'
 import { value } from '../../core/css-value'
 import { variable } from '../../core/css-variable'
+import { whenHover, whenActive, whenDisabled } from '../../selectors/msic'
 
 /** 贴近表面的阴影几何：水平偏移、垂直偏移、模糊半径，长度单位为像素。 */
 export const contactShadowShape: ShadowShape = { x: value(0), y: value('1px'), blur: value('2px') }
@@ -40,11 +41,7 @@ export const raisedShadow = variable('shadow-2', {
   },
 })
 
-/** 普通态阴影；hover、active 优先读各自覆盖值，再读共同覆盖值，最后采用状态默认阴影。 */
-export const normalShadow = variable('component-shadow', { fallback: lowShadow })
-
-/** 悬停阴影；优先使用状态覆盖，再回退到共同取值与状态默认值。 */
-export const hoverShadow = variable('component-shadow-hover', { fallback: variable('component-shadow', { fallback: raisedShadow }) })
-
-/** 按下阴影；优先使用状态覆盖，再回退到共同取值与状态默认值。 */
-export const activeShadow = variable('component-shadow-active', { fallback: variable('component-shadow', { fallback: flatShadow }) })
+/** 可覆盖的阴影配方；default、hover、active 与 disabled 分别拥有可局部重定义的 Variable Key。 */
+export const normalShadow = variable('component-shadow', {
+  fallback: value(lowShadow, [[whenHover, raisedShadow], [whenActive, flatShadow], [whenDisabled, flatShadow]]),
+})

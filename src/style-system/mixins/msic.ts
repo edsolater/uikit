@@ -1,4 +1,4 @@
-/** 常用属性的组合工具；仍返回普通节点，不持有挂载状态。 */
+/** 常用属性的声明组合，交给 rules 批量登记。 */
 import { display, alignItems, alignSelf, justifyContent } from '../declarations/layout'
 
 /** 行内弹性容器，内容双向居中；自身作为布局子项时也居中对齐。 */

@@ -1,119 +1,127 @@
-/** CSS 变量引用，以及显式可选的根默认定义和 @property 注册。 */
-import type { Rule } from './css-block'
-import { media } from '../blocks/media'
-import { styleRule } from '../blocks/style'
-import { propertyRule } from '../blocks/property'
+/** 为一套 Value 提供稳定 CSS Custom Property 地址，使业务 Rule 可按已有 Condition 局部重定义。 */
+import { condition, media, type ConditionPath } from './css-condition'
 import { declaration, type Declaration } from './css-declaration'
-import { key } from './css-key'
-import { parseValue, value, type Value } from './css-value'
-
-/** CSS 变量引用；局部取值由 declareVariable 定义，引用本身不保存当前取值。 */
-export interface Variable extends Value {
-  /** 变量的类型注册和根默认定义在同一激活波提交。 */
-  onActive?: () => Rule[]
-
-  /** 不包含开头的 --。 */
-  name: string
-
-  /** 引用未取得有效值时使用的兜底内容。 */
-  fallback?: Value
-}
-
-export interface VariableOptions {
-  /** 根作用域的默认定义；省略时不生成任何根规则。 */
-  root?: {
-    /** :where(:root) 的默认取值，可被局部定义覆盖。 */
-    value: Value | string
-
-    /** 根元素 data-theme="dark" 时的取值。 */
-    dark?: Value | string
-
-    /** prefers-reduced-motion: reduce 时的取值。 */
-    reducedMotion?: Value | string
-  }
-
-  /** var(...) 的兜底内容，不是在作用域内预先赋值。 */
-  fallback?: Value
-
-  /** 可选的浏览器类型注册，首次激活时提交，不等同于局部取值定义。 */
-  registration?: {
-    /** CSS 值语法，例如 '<length>'；'*' 不限制值语法。 */
-    syntax: string
-
-    /** 是否继承父元素的取值。 */
-    inherits: boolean
-
-    /** syntax 不是 '*' 时必填；必须能独立计算，不依赖其他属性值。 */
-    initialValue?: Value
-  }
-}
-
-const syntaxKey = key('syntax')
-const inheritsKey = key('inherits')
-const initialValueKey = key('initial-value')
+import type { Rules } from './css-rule'
+import type { Value, ValueInput } from './css-value'
 
 /**
- * 声明变量引用；仅在显式提供 root 或 registration 时附带相应的激活内容。
+ * 可在普通 Value 位置读取、也可在属性位置被重定义的逻辑 CSS Variable。
+ * fallback 中的每个 Condition 会变成独立 Custom Property，例如 hover 使用 `--name-when-hover`。
+ */
+export type Variable = Extract<Value, { kind: 'value' }> & {
+  name: string
+  expression: { type: 'variable'; name: string; fallback?: ValueInput }
+}
+
+/** 定义逻辑 Variable 的默认取值、根作用域值及可选 `@property` 注册；这些内容只在 Variable 被编译访问时进入结果。 */
+export interface VariableOptions {
+  /** 变量激活后生成根作用域赋值及显式提供的条件覆盖。 */
+  root?: {
+    value: ValueInput
+    /** 根元素具有 [data-theme="dark"] 时覆盖，不使用 prefers-color-scheme。 */
+    dark?: ValueInput
+    /** 媒体条件 prefers-reduced-motion: reduce 成立时覆盖根值。 */
+    reducedMotion?: ValueInput
+  }
+  /** 局部未重定义时使用的 Value；它拥有的 Condition 同时定义可重定义 Key。 */
+  fallback?: ValueInput
+  /** 需要浏览器显式注册的 Custom Property 语法、继承性与可选初值。 */
+  registration?: {
+    syntax: string
+    inherits: boolean
+    initialValue?: ValueInput
+  }
+}
+
+/** 判断 Value 是否是可用于属性位置的逻辑 CSS Variable。 */
+export function isVariable(input: unknown): input is Variable {
+  const expression = input !== null && typeof input === 'object' && 'expression' in input
+    ? input.expression as { type?: unknown } | undefined
+    : undefined
+  return input !== null && typeof input === 'object'
+    && 'kind' in input && input.kind === 'value'
+    && 'name' in input && typeof input.name === 'string'
+    && expression?.type === 'variable'
+}
+
+/**
+ * 把 Condition Path 编码成声明对象使用的 Key；default 表示空路径，其余部分使用稳定的 Condition name。
  * @example
- * const gap = variable('gap', {
- *   registration: { syntax: '<length>', inherits: false, initialValue: value('8px') },
+ * variableConditionKey([]) // 'default'
+ * variableConditionKey([condition('&:hover', 'hover')]) // 'hover'
+ */
+export function variableConditionKey(path: ConditionPath): string {
+  return path.length === 0 ? 'default' : path.map((item) => item.name).join('.')
+}
+
+/**
+ * 为逻辑 Variable 的一个 Condition Key 生成落盘名称；普通状态保持可读，其他 Condition name 转成稳定十六进制片段。
+ * @example
+ * variableName('bg-color', []) // 'bg-color'
+ * variableName('bg-color', [condition('&:hover', 'hover')]) // 'bg-color-when-hover'
+ */
+export function variableName(name: string, path: ConditionPath): string {
+  const baseName = name.replace(/^--/, '')
+  if (path.length === 0) return baseName
+  const suffix = path.map((item) => Array.from(item.name, (character) => /[a-zA-Z0-9_-]/.test(character)
+    ? character
+    : `-${character.codePointAt(0)!.toString(16)}-`).join(''))
+  return `${baseName}-${suffix.map((name) => `when-${name}`).join('-')}`
+}
+
+/**
+ * 创建既可充当声明属性、又可作为 var() 引用的逻辑 Variable；name 接受带或不带 -- 的名称。
+ * fallback 的 Condition 决定可读取和重定义的 Key；各 Key 编译为独立 Custom Property。root 与 registration 在访问时提供。
+ * @example
+ * const background = variable('--background', {
+ *   fallback: value('red', [[condition('&:hover', 'hover'), 'blue']]),
  * })
- * const surface = variable('surface', { root: { value: light, dark } })
+ * // 默认读取 var(--background, red)，hover 读取 var(--background-when-hover, blue)。
+ * declareVariable(background, { hover: 'cyan' }) // 保存 --background-when-hover: cyan，尚未登记。
  */
 export function variable(name: string, options?: VariableOptions): Variable {
-  const rules: Rule[] = []
+  const bareName = name.replace(/^--/, '')
   const reference: Variable = {
     kind: 'value',
-    name,
-    fallback: options?.fallback,
-    onActive: options?.registration || options?.root ? () => rules : undefined,
-    parseCss(context) {
-      return this.fallback ? `var(--${name}, ${parseValue(this.fallback, context)})` : `var(--${name})`
-    },
+    name: bareName,
+    expression: { type: 'variable', name: bareName, fallback: options?.fallback },
   }
-
-  // 类型注册与根取值互相独立，也可以同时存在。
-  const registration = options?.registration
-  if (registration) {
-    rules.push(
-      propertyRule(
-        name,
-        declaration(syntaxKey, value(JSON.stringify(registration.syntax))),
-        declaration(inheritsKey, value(String(registration.inherits))),
-        registration.initialValue ? declaration(initialValueKey, registration.initialValue) : [],
-      ),
-    )
+  if (options?.registration || options?.root) {
+    /**
+     * 为当前变量的基础名称生成 @property，并把根作用域赋值交回编译器处理；不写 CSSRoot 的源账本。
+     * 深色和减少动效的覆盖只在 options 显式提供时生成，值保留给编译器继续解读。
+     * @example
+     * // options 为 { root: { value: 'red', dark: 'blue' } }：
+     * reference.onActive(context) // 返回根作用域 red、深色根作用域 blue 两条 Rules。
+     */
+    reference.onActive = () => {
+      const rules: Rules = new Map()
+      const registration = options.registration
+      if (registration) {
+        const path = [condition(`@property --${bareName}`)]
+        rules.set([path, 'syntax'], JSON.stringify(registration.syntax))
+        rules.set([path, 'inherits'], String(registration.inherits))
+        if (registration.initialValue !== undefined) rules.set([path, 'initial-value'], registration.initialValue)
+      }
+      const root = options.root
+      if (root) {
+        rules.set([[condition(':where(:root)')], reference], root.value)
+        if (root.dark !== undefined) rules.set([[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], reference], root.dark)
+        if (root.reducedMotion !== undefined) rules.set([[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], reference], root.reducedMotion)
+      }
+      return rules
+    }
   }
-
-  const root = options?.root
-  if (root) {
-    rules.push(
-      styleRule(':where(:root)').of(
-        declareVariable(reference, root.value),
-        root.dark === undefined
-          ? []
-          : styleRule('&:where([data-theme="dark"])').of(declareVariable(reference, root.dark)),
-        root.reducedMotion === undefined
-          ? []
-          : media(
-              '(prefers-reduced-motion: reduce)',
-              styleRule('&').of(declareVariable(reference, root.reducedMotion)),
-            ),
-      ),
-    )
-  }
-
   return reference
 }
 
 /**
- * 在接收此 Declaration 的规则内定义变量取值，不修改引用及其 fallback。
- * 定义本身也会激活变量的注册能力，不要求另有属性消费该引用。
- * @example kitStyle.of(declareVariable(horizontalPadding, normalSpace))
+ * 保存一次局部重定义；编译时只输出 input 明确提供、且 reference 原本拥有的 Condition Key。
+ * RawValue 只重定义 default；对象按 Condition name 选择 Key；未匹配 Key 忽略，不比较新旧值。
+ * @example
+ * declareVariable(background, 'red') // 只定义 --background。
+ * declareVariable(background, { hover: 'blue' }) // 只定义 --background-when-hover。
  */
-export function declareVariable(reference: Variable, input: Value | string): Declaration {
-  return declaration(key(`--${reference.name}`), input, (content: Value | string, context) => {
-    context?.activateValue(reference)
-    return parseValue(content, context)
-  })
+export function declareVariable(reference: Variable, input: ValueInput | Record<string, ValueInput>): Declaration<string, unknown> {
+  return declaration(reference, input)
 }

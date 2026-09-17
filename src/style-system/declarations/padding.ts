@@ -1,63 +1,52 @@
-/** 内边距的位置简写与按方向覆盖。 */
+/** 内边距按位置或方向保存，不在构造时扩写。 */
 import { declaration, type Declaration } from '../core/css-declaration'
 import { key } from '../core/css-key'
-import { parseValue, toValue, type Value } from '../core/css-value'
+import type { ValueInput } from '../core/css-value'
 
+/** padding 简写声明的属性位置。 */
 export const paddingKey = key('padding')
+/** padding-top 声明的属性位置。 */
 export const paddingTopKey = key('padding-top')
+/** padding-right 声明的属性位置。 */
 export const paddingRightKey = key('padding-right')
+/** padding-bottom 声明的属性位置。 */
 export const paddingBottomKey = key('padding-bottom')
+/** padding-left 声明的属性位置。 */
 export const paddingLeftKey = key('padding-left')
 
-/** 上内边距。 */
-export const paddingTop = (input: Value | string) => declaration(paddingTopKey, toValue(input))
+/** 创建只设置顶部内边距的 Declaration，不补充其他方向。 */
+export const paddingTop = (input: ValueInput) => declaration(paddingTopKey, input)
 
-/** 右内边距。 */
-export const paddingRight = (input: Value | string) => declaration(paddingRightKey, toValue(input))
+/** 创建只设置右侧内边距的 Declaration，不补充其他方向。 */
+export const paddingRight = (input: ValueInput) => declaration(paddingRightKey, input)
 
-/** 下内边距。 */
-export const paddingBottom = (input: Value | string) => declaration(paddingBottomKey, toValue(input))
+/** 创建只设置底部内边距的 Declaration，不补充其他方向。 */
+export const paddingBottom = (input: ValueInput) => declaration(paddingBottomKey, input)
 
-/** 左内边距。 */
-export const paddingLeft = (input: Value | string) => declaration(paddingLeftKey, toValue(input))
+/** 创建只设置左侧内边距的 Declaration，不补充其他方向。 */
+export const paddingLeft = (input: ValueInput) => declaration(paddingLeftKey, input)
 
+/** 只为指定方向生成声明的内边距输入；缺省方向不会从其他值补齐。 */
 export interface PaddingSides {
-  top?: Value | string
-  right?: Value | string
-  bottom?: Value | string
-  left?: Value | string
+  top?: ValueInput
+  right?: ValueInput
+  bottom?: ValueInput
+  left?: ValueInput
 }
 
-/** 按 CSS 顺序分别为四边、纵横、上横下或上右下左。 */
-export type PaddingPositions =
-  | [Value | string]
-  | [Value | string, Value | string]
-  | [Value | string, Value | string, Value | string]
-  | [Value | string, Value | string, Value | string, Value | string]
+/** 按 CSS 简写顺序表示一至四个内边距位置值。 */
+export type PaddingPositions = [ValueInput] | [ValueInput, ValueInput] | [ValueInput, ValueInput, ValueInput] | [ValueInput, ValueInput, ValueInput, ValueInput]
 
 /**
- * 位置参数沿用 CSS 的一至四值顺序；对象只覆盖给出的方向。
+ * 保存一至四个位置值，或仅指定方向的值；方向扩写及内部 Value 求值留给编译器。
  * @example
- * padding('4px', '8px').parseCss() // padding: 4px 8px;
- * padding({ top: '4px', bottom: '4px' }).parseCss() // padding-top: 4px; padding-bottom: 4px;
+ * padding('4px', '8px') // 编译为上/下 4px、右/左 8px。
+ * padding({ left: '2px' }) // 只生成 padding-left: 2px，不补其他方向。
  */
 export function padding(...positions: PaddingPositions): Declaration<'padding', PaddingPositions>
 export function padding(sides: PaddingSides): Declaration<'padding', PaddingSides>
 export function padding(...inputs: PaddingPositions | [PaddingSides]) {
   const first = inputs[0]
-  if (typeof first === 'string' || 'kind' in first) {
-    return declaration(paddingKey, inputs as PaddingPositions, (positions, context) =>
-      positions.map((position) => parseValue(position, context)).join(' '),
-    )
-  }
-  return declaration(paddingKey, first, {
-    parseCss(_name, sides, context) {
-      return [
-        sides.top === undefined ? [] : paddingTop(sides.top),
-        sides.right === undefined ? [] : paddingRight(sides.right),
-        sides.bottom === undefined ? [] : paddingBottom(sides.bottom),
-        sides.left === undefined ? [] : paddingLeft(sides.left),
-      ].flat().map((node) => node.parseCss(context)).join('\n')
-    },
-  })
+  const content = typeof first !== 'object' || first instanceof Map || 'kind' in first ? inputs : first
+  return declaration(paddingKey, content, 'padding')
 }

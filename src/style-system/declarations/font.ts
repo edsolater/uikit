@@ -1,48 +1,36 @@
-/** 字体、字号、字重与行高。 */
+/** 字体字段保留语义关系，字号与行高的组合交给编译器。 */
 import { declaration } from '../core/css-declaration'
 import { key } from '../core/css-key'
-import { parseValue, toValue, type Value } from '../core/css-value'
+import type { ValueInput } from '../core/css-value'
 
+/** CSS font 复合声明的组成字段；字号与字体族必填，其余字段缺省时不输出对应片段。 */
 export interface FontParts {
-  /** 正常、斜体等字形风格。 */
-  style?: Value | string
-  /** 字重。 */
-  weight?: Value | string
-
-  /** 字号，与行高通过斜杠分隔。 */
-  size: Value | string
-  /** 行高；省略时不在简写中指定。 */
-  lineHeight?: Value | string
-
-  /** 字体族及其候选顺序。 */
-  family: Value | string
+  style?: ValueInput
+  weight?: ValueInput
+  size: ValueInput
+  lineHeight?: ValueInput
+  family: ValueInput
 }
 
+/** font 简写声明的属性位置。 */
 export const fontKey = key('font')
+/** font-size 声明的属性位置。 */
+export const fontSizeKey = key('font-size')
+/** font-weight 声明的属性位置。 */
+export const fontWeightKey = key('font-weight')
+/** line-height 声明的属性位置。 */
+export const lineHeightKey = key('line-height')
 
-/**
- * 字体简写；对象明确字号、行高与字体族的归属，也可直接传 inherit 等关键字。
- * @example font({ size: textSize, lineHeight: textLeading, family: 'system-ui' })
- */
-export function font(input: FontParts | Value | string) {
-  return declaration(fontKey, input, (content, context) => {
-    if (typeof content === 'string' || 'kind' in content) return parseValue(content, context)
-    const style = content.style === undefined ? '' : `${parseValue(content.style, context)} `
-    const weight = content.weight === undefined ? '' : `${parseValue(content.weight, context)} `
-    const size = parseValue(content.size, context)
-    const leading = content.lineHeight === undefined ? '' : `/${parseValue(content.lineHeight, context)}`
-    return `${style}${weight}${size}${leading} ${parseValue(content.family, context)}`
-  })
+/** 创建 font 简写 Declaration；保存完整值或字段，编译时连接字号与可选行高。 */
+export function font(input: FontParts | ValueInput) {
+  return declaration(fontKey, input, 'font')
 }
 
-export const fontSizeKey = key('font-size')
-/** 字号。 */
-export const fontSize = (input: Value | string) => declaration(fontSizeKey, toValue(input))
+/** 创建只设置字号的 Declaration，不补充其他字体字段。 */
+export const fontSize = (input: ValueInput) => declaration(fontSizeKey, input)
 
-export const fontWeightKey = key('font-weight')
-/** 字重。 */
-export const fontWeight = (input: Value | string) => declaration(fontWeightKey, toValue(input))
+/** 创建只设置字重的 Declaration，不补充其他字体字段。 */
+export const fontWeight = (input: ValueInput) => declaration(fontWeightKey, input)
 
-export const lineHeightKey = key('line-height')
-/** 行高；无单位数值表示相对字号的倍数。 */
-export const lineHeight = (input: Value | string) => declaration(lineHeightKey, toValue(input))
+/** 创建只设置行高的 Declaration，不补充其他字体字段。 */
+export const lineHeight = (input: ValueInput) => declaration(lineHeightKey, input)

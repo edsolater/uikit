@@ -1,23 +1,12 @@
-/** 可被变量引用的完整值列表；列表不绑定某个 CSS 属性。 */
-import { parseValue, type Value } from '../core/css-value'
-import { formatCommaList } from '../formatters/comma-list'
+/** 完整 Value 的逗号列表，不提前展开列表成员。 */
+import type { Value, ValueInput } from '../core/css-value'
 
-/** 各项仍是独立 Value，列表只持有它们的引用和顺序。 */
-export interface ValueList<T extends Value = Value> extends Value {
-  items: T[]
+/** 多个完整 Value 组成的逗号列表，编译时同时传播每个成员的 Condition。 */
+export type ValueList = Extract<Value, { kind: 'value' }> & {
+  expression: { type: 'list'; items: ValueInput[] }
 }
 
-/**
- * 将完整值组成逗号列表；不接收字符串片段或可配置分隔符。
- * @example valueList(value('first'), value('second')).parseCss() // first, second
- * @example variable('shadow', { fallback: valueList(contactShadow, diffuseShadow) })
- */
-export function valueList<T extends [Value, ...Value[]]>(...items: T): ValueList<T[number]> {
-  return {
-    kind: 'value',
-    items,
-    parseCss(context) {
-      return formatCommaList(this.items, parseValue, context)
-    },
-  }
+/** 创建按逗号连接的 Value；各成员的 Condition 在编译时共同展开。 */
+export function valueList(...items: [ValueInput, ...ValueInput[]]): ValueList {
+  return { kind: 'value', expression: { type: 'list', items } }
 }

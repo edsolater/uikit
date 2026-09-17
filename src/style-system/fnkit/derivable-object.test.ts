@@ -47,6 +47,7 @@ test('保持函数能力，方法以当前对象作为 this', () => {
   const original = deriveable({
     name: 'first',
     items: [1],
+    /** 把一项追加到当前派生对象，用于验证方法的 this 指向派生结果。 */
     append(this: { items: number[] }, item: number) {
       this.items.push(item)
     },

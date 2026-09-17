@@ -1,8 +1,8 @@
-# JSS 样式系统
+# JSS 样式系统历史记录
 
-本文保留旧 `src/jss` 阶段的计划与验收记录。新 `src/style-system` 的当前对象及挂载设计见 [Style System 设计](../../src/style-system/design.md)；下文旧概念与“满足”状态不用于证明新体系已实现。
+旧 `src/jss` 已彻底删除，`@edsolater/uikit/jss` 子路径已经退出。本文仅保留截至 2026-09-05 的旧方案与验收记录，下文的“当前”“本轮”和“满足”均属于当时语境，不表示现役模块、API 或待实施计划。现役对象及挂载设计见 [Style System 设计](../../src/style-system/design.md)。
 
-本 Plan 负责 UIKit 样式的 JSS 化。长期目标是只保留直接服务原始 HTML 的 reset.css；当前实施范围是 JSS 基础体系与 Button，其余组件和静态样式继续分阶段迁移。
+当时的 Plan 负责 UIKit 样式的 JSS 化，目标是只保留直接服务原始 HTML 的 reset.css；当时实施范围是 JSS 基础体系与 Button。
 
 ## 目标与原始依据
 
@@ -113,8 +113,8 @@ selector('.Override', cssBaseVariable.bg.declaration('blue'),
 - 生命周期：活链追加立即更新；共享 Box 多根、多 Document；失败可重试；循环与注册冲突暴露错误。
 - 无静态基础 CSS 的 Button 显示、状态、尺寸和语气成立。
 - UIKit 类型检查、单元与浏览器测试、生产构建；下游 2048 测试和构建。
-- 具名函数 JSDoc、文件头、kebab-case 新文件、缩写 camelCase；不引入源码 declare / readonly。
-- 当前包入口 @edsolater/uikit/jss，旧 style-utils 子路径和错误状态分支职责不得并存。
+- 具名函数 JSDoc、文件头、kebab-case 新文件、缩写 camelCase。
+- 当时包入口为 @edsolater/uikit/jss；该入口现已退出。
 
 ## 本轮交付证据
 

@@ -4,7 +4,7 @@
 
 # 当前系统组成
 
-`src/style-system` 已接管 Button 样式，其他 JSS 消费者未迁移；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
+`src/style-system` 已接管 Button 样式，其余组件目前仍使用各自的静态 CSS；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
 
 组件样式文件的配置、命名、注释与组装约定见 [样式文件写法](docs/style/样式文件写法.md)。
 
@@ -13,7 +13,7 @@
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
 - `src/hooks`：对外响应式状态与浏览器协作能力。领域入口和内部阅读路线见 [hooks README](src/hooks/README.md)。
-- `src/jss`：JSS 定义领域。`core` 保存对象与真实激活链，`atoms` 提供通用积木，`tokens` 定义默认及智能派生材料；最终输出按 `Document` 挂载，文件职责见 [JSS 架构](src/jss/architecture.md)。
+- `src/style-system`：Rule 与 Value 样式定义领域。CSSRoot 持有源账本，编译器展开声明、状态与依赖，应用统一提交 CSS string；文件职责见 [Style System 架构](src/style-system/architecture.md)。
 - `src/css`：仍在服役的静态 CSS 领域。当前继续提供 reset、tokens、controls、traits 与尚未迁移的 CSS 工具；当前结构见 [CSS 架构](src/css/architecture.md)。
 - `src/app/example-dashboard`：本地 Example 浏览与浏览器验收入口，不是正式业务应用。
 - `src/types`：没有单一源码主体可归属的浏览器与 JSX 全局类型补丁。
@@ -23,8 +23,7 @@
 
 # 公开入口
 
-- `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、hooks 和 JSS 源码能力。当前仍会加载 `src/css/all-base.css`。
-- `@edsolater/uikit/jss` 从 `src/jss/index.ts` 进入，只公开 JSS 能力，不经过包根的基础 CSS 副作用。
+- `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、hooks，以及 Style System 的 `cssRoot` 和 `compileCSS` 启动入口。当前仍会加载 `src/css/all-base.css`。
 - `src/components/index.ts`、`src/components/kits/index.ts`、`src/components/plugins/index.ts` 和 `src/hooks/index.ts` 分别收口所属领域的公开成员。
 - Example、Story、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
 
@@ -40,22 +39,26 @@
         -> DOM
 ```
 
-kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果写入 DOM。组件可以使用 hooks、component utils 和 JSS；基础设施不反向依赖具体 kit。
+kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果写入 DOM。组件可以使用 hooks、component utils 和 Style System；基础设施不反向依赖具体 kit。
 
 ## Button 样式
 
 ```txt
-Button 实际执行
-  -> registerButtonStyle()
-    -> Button.style.ts 中的业务组合
-      -> 共享 Value、Declaration 与样式片段
-        -> kitStyle.of(...) 连接内容与样式分支
-          -> cssRoot.activate(kitStyle)
-            -> Value.onActive 返回附加规则并继续遍历
-              -> 向 style#css-root 永久追加 CSS
+导入 Button.style.ts
+  -> 模块顶层 rule() / rules() 登记到 CSSRoot 源账本
+
+App 入口执行 cssRoot.mount()
+  -> 快照 CSSRoot 全部源 Rules
+    -> 解读 Declaration 与 Value
+    -> 收集 onActive 返回的本次派生 Rules
+    -> 生成 CSS string
+  -> 完整提交到 style#css-root
+  -> render() 开始组件渲染
 ```
 
-只 import Button 不激活。浏览器宿主先提供 style#css-root，组件执行时同步激活共享规则；服务器端跳过注册。相同 Root 按对象身份去重，既有 CSS 不刷新或卸载，状态变化由 selector 与局部变量表达。Button 的 selector、tone 和 size 配方留在 Button.style.ts，通用属性与材料由 Style System 提供。
+Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、写入所有权和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 配方留在 Button.style.ts。完整链路见 [Style System 架构](src/style-system/architecture.md)。
+
+Example 入口静态导入全部 Example，再统一挂载。Storybook preview 提前导入 Button 样式后挂载；缩略图 runner 在渲染前建立宿主并挂载。懒加载组件的样式必须由应用样式清单提前导入。package.json 保留 `.style.ts` 与产物 `.style.js` 的副作用，防止静态登记被打包器删除。
 
 ## 当前静态 CSS
 
@@ -65,7 +68,7 @@ src/index.ts
     -> reset + tokens + controls + traits
 ```
 
-除 Button 外的多数组件和 plugins 目前仍各自 import CSS。只保留 `reset.css` 的状态是迁移目标，不是当前事实；实施规划见 [JSS 样式系统 Plan](docs/plans/JSS样式系统.md)。
+除 Button 外的多数组件和 plugins 目前仍各自 import CSS；`all-base.css` 和对应静态样式仍是现役实现。
 
 ## Example 浏览
 
@@ -81,8 +84,8 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 # 领域边界
 
 - 工具的领域发生在工具定义端。Button 使用通用属性函数和材料，不会让 Style System 获得 Button 的业务配方；具体组合留在 Button.style.ts。
-- `src/jss` 只提供通用 CSS 表达、组合、解析和挂载能力；具体组件 selector、状态和视觉组合留在组件自己的 style 文件。
-- `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/jss` 都不能反向依赖具体 kit。
+- `src/style-system` 只提供通用 Rule 登记、Condition 寻址、Declaration、Value、编译和挂载能力；具体组件 selector、业务分类和视觉组合留在组件自己的 style 文件。
+- `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-system` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
 - `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。
 - `src/index.ts` 和各目录 `index.ts` 只表达公开契约，不承载 demo、测试或新的业务实现。
@@ -91,6 +94,6 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 # 文档边界
 
 - 本文件记录当前可由代码验证的系统关系。
-- [JSS 架构](src/jss/architecture.md) 和 [CSS 架构](src/css/architecture.md) 记录各自领域的当前文件职责与内部链路。
-- [JSS 样式系统 Plan](docs/plans/JSS样式系统.md) 记录尚未完成的迁移目标、顺序、验收和未决问题。
+- [Style System 架构](src/style-system/architecture.md) 和 [CSS 架构](src/css/architecture.md) 记录各自领域的当前文件职责与内部链路。
+- [JSS 样式系统历史记录](docs/plans/JSS样式系统.md) 仅保留已经退出的旧方案与验收证据，不作为当前模块、API 或实施计划。
 - 通用代码、命名、注释与 CSS 规则从 [AI Rules README](../ai-rules/README.md) 进入，不复制到当前仓库架构中。

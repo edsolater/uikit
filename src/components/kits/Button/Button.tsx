@@ -13,7 +13,7 @@ import { Piv, type PivProps } from '../../Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
 import { createBrandPropsParser, type BrandProps } from '../utils/parseBrandProps'
 import { createStatusPropsParser, type StatusProps } from '../utils/parseStatusProps'
-import { registerButtonStyle } from './Button.style'
+import './Button.style'
 
 /**
  * 按钮的动作声量 Brand Props。
@@ -92,8 +92,6 @@ const parseButtonStatusProps = createStatusPropsParser({
 })
 
 export function Button(props: ButtonProps) {
-  registerButtonStyle()
-
   const { brandShadowProps } = parseButtonBrandProps(props)
   const { statusShadowProps } = parseButtonStatusProps(props)
 

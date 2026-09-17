@@ -5,5 +5,7 @@
  */
 import { render } from 'solid-js/web'
 import App from './pages/ExampleDashboard'
+import { cssRoot } from '../../style-system'
 
+cssRoot.mount()
 render(() => <App />, document.getElementById('root')!)

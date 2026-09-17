@@ -14,7 +14,7 @@ export const palette = {
   danger: { light: value('#c42b1c'), dark: value('oklch(70% 0.18 28)') },
 }
 
-// 基础色板随根主题切换，语义颜色继续引用这些可覆盖的色元。
+/** 品牌基础色，随根元素的明暗主题切换，并为语义颜色提供可覆盖色元。 */
 export const brand = variable('base-brand', { root: { value: palette.brand.light, dark: palette.brand.dark } })
 
 /** 亮色主题的纸面底色。 */

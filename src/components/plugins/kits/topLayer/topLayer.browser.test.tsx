@@ -25,9 +25,7 @@ describe('topLayer', () => {
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    expect(document.querySelectorAll(
-      'style[data-uikit-css="components/plugins/kits/topLayer/topLayer.css"]',
-    )).toHaveLength(1)
+    expect(getComputedStyle(source).boxShadow).not.toBe('none')
 
     dispose()
     dispose = undefined

@@ -1,20 +1,19 @@
-/** 边框的宽度、线型、颜色和圆角。 */
-import { declaration, type Declaration } from '../core/css-declaration'
+/** 边框保留有序组成部分，编译器负责组合。 */
+import { declaration } from '../core/css-declaration'
 import { key } from '../core/css-key'
-import { parseValue, toValue, type Value } from '../core/css-value'
+import type { ValueInput } from '../core/css-value'
 
+/** border 简写声明的属性位置。 */
 export const borderKey = key('border')
+/** border-color 声明的属性位置。 */
 export const borderColorKey = key('border-color')
+/** border-radius 声明的属性位置。 */
+export const borderRadiusKey = key('border-radius')
 
-/**
- * 边框宽度、线型与颜色按输入顺序组合，不识别或重排各部分。
- * @example border(distance, 'solid', foreground)
- */
-export function border(...parts: [Value | string, ...(Value | string)[]]) {
-  return declaration(borderKey, parts, (parts, context) => parts.map((part) => parseValue(part, context)).join(' '))
+/** 创建 border 简写 Declaration；保留组成值顺序，编译时用空格连接。 */
+export function border(...parts: [ValueInput, ...ValueInput[]]) {
+  return declaration(borderKey, parts, 'border')
 }
 
-export const borderRadiusKey = key('border-radius')
-/** 边框圆角半径。 */
-export const borderRadius = (input: Value | string): Declaration<'border-radius'> =>
-  declaration(borderRadiusKey, toValue(input))
+/** 创建 border-radius Declaration；完整 Value 留到编译时取值。 */
+export const borderRadius = (input: ValueInput) => declaration(borderRadiusKey, input)

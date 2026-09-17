@@ -17,11 +17,15 @@ import { PivStructureExample } from '../../../components/Piv/PivStructure.exampl
 import { ColorDashboardExample } from '../../../css/ColorDashboardExample'
 import { UseDocumentTitleExample } from '../../../hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleThumbnailCapture.css'
+import { cssRoot } from '../../../style-system'
 
 let dispose: (() => void) | undefined
 const style = document.createElement('style')
 style.id = 'css-root'
-beforeAll(() => { document.head.append(style) })
+beforeAll(() => {
+  document.head.append(style)
+  cssRoot.mount()
+})
 afterAll(() => { style.remove() })
 
 const waitForLayout = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))

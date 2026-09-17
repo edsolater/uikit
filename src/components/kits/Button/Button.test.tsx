@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-/** 验证 Button 的公开行为、DOM 描述与样式挂载。 */
+/** 验证 Button 的公开行为、DOM 描述与应用启动职责边界。 */
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
@@ -11,7 +11,7 @@ let dispose: (() => void) | undefined
 
 // DOM 行为留在 jsdom，CSSOM 的实际注册由相邻浏览器用例验证。
 beforeEach(() => {
-  vi.spyOn(cssRoot, 'activate').mockReturnValue(cssRoot)
+  vi.spyOn(cssRoot, 'mount').mockReturnValue(cssRoot)
 })
 
 afterEach(() => {
@@ -22,7 +22,7 @@ afterEach(() => {
 })
 
 describe('Button', () => {
-  test('首次 ref 回调前开始激活，多实例复用同一份规则', () => {
+  test('组件渲染与 ref 回调不触发全局样式编译挂载', () => {
     const host = document.body.appendChild(document.createElement('div'))
     const ref = vi.fn()
 
@@ -37,13 +37,8 @@ describe('Button', () => {
       host,
     )
 
-    expect(cssRoot.activate).toHaveBeenCalledTimes(3)
-    const activationCalls = vi.mocked(cssRoot.activate).mock.calls
-    const firstRule = activationCalls[0][0]
-    expect(firstRule).toEqual(expect.objectContaining({ kind: 'style-rule', selector: '.Button' }))
-    for (const [rule] of activationCalls) expect(rule).toBe(firstRule)
+    expect(cssRoot.mount).not.toHaveBeenCalled()
     expect(ref).toHaveBeenCalledOnce()
-    expect(vi.mocked(cssRoot.activate).mock.invocationCallOrder[0]).toBeLessThan(ref.mock.invocationCallOrder[0])
     expect(ref).toHaveBeenCalledWith(host.firstElementChild)
   })
 
