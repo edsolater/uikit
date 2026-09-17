@@ -1,40 +1,35 @@
 /** 按钮的样式配置与注册。 */
+import { rules, $focusVisible, inlineCenter } from '../../../style-system'
+import { $transition } from '../../../style-system/properties/transition'
+import { $transform } from '../../../style-system/properties/transform'
+import { $minHeight } from '../../../style-system/properties/size'
+import { $padding } from '../../../style-system/properties/padding'
+import { $outlineWidth, $outlineStyle, $outlineColor, $outlineOffset } from '../../../style-system/properties/outline'
+import { $opacity } from '../../../style-system/properties/opacity'
+import { $gap } from '../../../style-system/properties/layout'
+import { $cursor, $userSelect } from '../../../style-system/properties/interaction'
+import { $font, $fontSize, $fontWeight, $lineHeight } from '../../../style-system/properties/font'
+import { $color, $backgroundColor } from '../../../style-system/properties/color'
+import { $boxShadow } from '../../../style-system/properties/box-shadow'
+import { $borderColor, $border, $borderRadius } from '../../../style-system/properties/border'
+import { color } from '../../../style-system/values/materials/color-text'
+import { actionForeground, actionSurface } from '../../../style-system/values/materials/color-action'
 import {
-  rules,
-  declareVariable,
-  focusVisible,
-  inlineCenter,
-} from '../../../style-system'
-import { transition } from '../../../style-system/declarations/transition'
-import { transformKey, transform } from '../../../style-system/declarations/transform'
-import { minHeight } from '../../../style-system/declarations/size'
-import { padding } from '../../../style-system/declarations/padding'
-import { outlineWidth, outlineStyle, outlineColor, outlineOffset } from '../../../style-system/declarations/outline'
-import { opacityKey, opacity } from '../../../style-system/declarations/opacity'
-import { gap } from '../../../style-system/declarations/layout'
-import { cursor, userSelect } from '../../../style-system/declarations/interaction'
-import { font, fontSize, fontWeight, lineHeight } from '../../../style-system/declarations/font'
-import { colorKey, color, backgroundColorKey, backgroundColor } from '../../../style-system/declarations/color'
-import { boxShadowKey, boxShadow } from '../../../style-system/declarations/box-shadow'
-import { borderColorKey, border, borderRadius } from '../../../style-system/declarations/border'
-import { foregroundColor } from '../../../style-system/values/materials/color-text'
-import { actionForegroundColor, actionColor } from '../../../style-system/values/materials/color-action'
-import {
-  accentColor,
-  accentSoftColor,
-  accentForegroundColor,
-  accentFocusColor,
-  dangerColor,
-  dangerSoftColor,
-  dangerForegroundColor,
-  dangerLineColor,
-  toneColor,
-  toneSoftColor,
+  accent,
+  softAccent,
+  accentForeground,
+  accentFocus,
+  danger,
+  softDanger,
+  dangerForeground,
+  dangerLine,
+  tone,
+  softTone,
   toneForeground,
-  toneBackground,
+  toneSurface,
 } from '../../../style-system/values/materials/color-tone'
-import { bgColor, transparentInteractionColor } from '../../../style-system/values/materials/color-surface'
-import { pillRadius, cornerRadius } from '../../../style-system/values/materials/radius'
+import { backgroundColor, bareActionSurface } from '../../../style-system/values/materials/color-surface'
+import { pill } from '../../../style-system/values/materials/radius'
 import {
   smallSpace,
   normalSpace,
@@ -42,31 +37,27 @@ import {
   largeSpace,
   wideSpace,
   widestSpace,
-  thinDistance,
-  focusOutlineThickness,
-  horizontalPadding,
-  verticalPadding,
-  contentGap,
+  thinBoundary,
+  focusStroke,
+  focusGap,
+  paddingInline,
+  paddingBlock,
+  gap,
 } from '../../../style-system/values/materials/space'
+import { small, large, extraLarge, minHeight } from '../../../style-system/values/materials/size'
 import {
-  smallControlSize,
-  largeControlSize,
-  xlargeControlSize,
-  minimumHeight,
-} from '../../../style-system/values/materials/size'
-import {
-  boldFontWeight,
-  normalTextSize,
-  xlargeTextSize,
-  headingTextSize,
-  controlTextSize,
-  textWeight,
-  textLineHeight,
+  bold,
+  normalText,
+  extraLargeText,
+  heading,
+  fontSize,
+  fontWeight,
+  lineHeight,
 } from '../../../style-system/values/materials/font'
-import { fastDuration, standardEasing } from '../../../style-system/values/materials/motion'
-import { flatShadow, raisedShadow, normalShadow } from '../../../style-system/values/materials/shadow'
-import { actionCursor, interactionOpacity, pressTransform } from '../../../style-system/values/materials/interaction'
-import { edgeColor, focusColor } from '../../../style-system/values/materials/color-edge'
+import { fast, standard } from '../../../style-system/values/materials/motion'
+import { flat, raised, boxShadow } from '../../../style-system/values/materials/shadow'
+import { cursor, opacity, pressFeedback } from '../../../style-system/values/materials/interaction'
+import { borderColor, outlineColor } from '../../../style-system/values/materials/color-edge'
 
 const button = '.Button'
 
@@ -75,42 +66,47 @@ const button = '.Button'
 // =============================================================================
 
 rules(button, [
-  declareVariable(cornerRadius, pillRadius),
-  declareVariable(textWeight, boldFontWeight),
+  [fontWeight, bold],
+
   inlineCenter(),
-  gap(contentGap),
-  minHeight(minimumHeight),
-  padding(verticalPadding, horizontalPadding),
-  font('inherit'),
-  fontSize(controlTextSize),
-  fontWeight(textWeight),
-  lineHeight(textLineHeight),
-  border(thinDistance, 'solid', edgeColor),
-  borderRadius(cornerRadius),
-  backgroundColor(bgColor),
-  color(foregroundColor),
-  boxShadow(normalShadow),
-  cursor(actionCursor),
-  opacity(interactionOpacity),
-  transform(pressTransform),
-  userSelect('none'),
-  transition(
-    [backgroundColorKey, fastDuration, standardEasing],
-    [borderColorKey, fastDuration, standardEasing],
-    [boxShadowKey, fastDuration, standardEasing],
-    [colorKey, fastDuration, standardEasing],
-    [opacityKey, fastDuration, standardEasing],
-    [transformKey, fastDuration, standardEasing],
-  ),
+
+  [$gap, gap],
+  [$minHeight, minHeight],
+  [$padding, [paddingBlock, paddingInline]],
+  [$font, 'inherit'],
+  [$fontSize, fontSize],
+  [$fontWeight, fontWeight],
+  [$lineHeight, lineHeight],
+  [$border, [thinBoundary, 'solid', borderColor]],
+  [$borderRadius, pill],
+  [$backgroundColor, backgroundColor],
+  [$color, color],
+  [$boxShadow, boxShadow],
+  [$cursor, cursor],
+  
+  [$opacity, opacity],
+  [$transform, pressFeedback],
+  [$userSelect, 'none'],
+  [
+    $transition,
+    [
+      [$backgroundColor, fast, standard],
+      [$borderColor, fast, standard],
+      [$boxShadow, fast, standard],
+      [$color, fast, standard],
+      [$opacity, fast, standard],
+      [$transform, fast, standard],
+    ],
+  ],
 ])
 
 rules(
-  [button, focusVisible],
+  [button, $focusVisible],
   [
-    outlineWidth(focusOutlineThickness),
-    outlineStyle('solid'),
-    outlineColor(focusColor),
-    outlineOffset(focusOutlineThickness),
+    [$outlineWidth, focusStroke],
+    [$outlineStyle, 'solid'],
+    [$outlineColor, outlineColor],
+    [$outlineOffset, focusGap],
   ],
 )
 
@@ -122,9 +118,9 @@ rules(
 rules(
   [button, '&[data-variant="bare"]'],
   [
-    declareVariable(bgColor, transparentInteractionColor),
-    declareVariable(edgeColor, 'transparent'),
-    declareVariable(normalShadow, { default: flatShadow, hover: flatShadow, active: flatShadow }),
+    [backgroundColor, bareActionSurface],
+    [borderColor, 'transparent'],
+    [boxShadow, { default: flat, hover: flat, active: flat }],
   ],
 )
 
@@ -132,14 +128,17 @@ rules(
 rules(
   [button, '&[data-variant="solid"]'],
   [
-    declareVariable(bgColor, actionColor),
-    declareVariable(edgeColor, 'transparent'),
-    declareVariable(normalShadow, { default: raisedShadow, hover: raisedShadow, active: raisedShadow }),
-    declareVariable(foregroundColor, {
-      default: actionForegroundColor,
-      hover: actionForegroundColor,
-      active: actionForegroundColor,
-    }),
+    [backgroundColor, actionSurface],
+    [borderColor, 'transparent'],
+    [boxShadow, { default: raised, hover: raised, active: raised }],
+    [
+      color,
+      {
+        default: actionForeground,
+        hover: actionForeground,
+        active: actionForeground,
+      },
+    ],
   ],
 )
 
@@ -151,13 +150,13 @@ rules(
 rules(
   [button, '&[data-tone="accent"]'],
   [
-    declareVariable(toneColor, accentColor),
-    declareVariable(toneSoftColor, accentSoftColor),
-    declareVariable(toneForeground, accentForegroundColor),
-    declareVariable(focusColor, accentFocusColor),
-    declareVariable(edgeColor, accentSoftColor),
-    declareVariable(bgColor, toneBackground),
-    declareVariable(foregroundColor, { default: toneColor, hover: toneForeground, active: toneForeground }),
+    [tone, accent],
+    [softTone, softAccent],
+    [toneForeground, accentForeground],
+    [outlineColor, accentFocus],
+    [borderColor, softAccent],
+    [backgroundColor, toneSurface],
+    [color, { default: tone, hover: toneForeground, active: toneForeground }],
   ],
 )
 
@@ -165,21 +164,18 @@ rules(
 rules(
   [button, '&[data-tone="danger"]'],
   [
-    declareVariable(toneColor, dangerColor),
-    declareVariable(toneSoftColor, dangerSoftColor),
-    declareVariable(toneForeground, dangerForegroundColor),
-    declareVariable(focusColor, dangerLineColor),
-    declareVariable(edgeColor, dangerSoftColor),
-    declareVariable(bgColor, toneBackground),
-    declareVariable(foregroundColor, { default: toneColor, hover: toneForeground, active: toneForeground }),
+    [tone, danger],
+    [softTone, softDanger],
+    [toneForeground, dangerForeground],
+    [outlineColor, dangerLine],
+    [borderColor, softDanger],
+    [backgroundColor, toneSurface],
+    [color, { default: tone, hover: toneForeground, active: toneForeground }],
   ],
 )
 
 /** 实心语气按钮的禁用文字色仍使用动作前景色。 */
-rules(
-  [button, '&[data-variant="solid"][data-tone]'],
-  [declareVariable(foregroundColor, { disabled: actionForegroundColor })],
-)
+rules([button, '&[data-variant="solid"][data-tone]'], [[color, { disabled: actionForeground }]])
 
 // =============================================================================
 // size 尺寸
@@ -189,11 +185,11 @@ rules(
 rules(
   [button, '&[data-size="small"]'],
   [
-    declareVariable(minimumHeight, smallControlSize),
-    declareVariable(horizontalPadding, mediumSpace),
-    declareVariable(verticalPadding, smallSpace),
-    declareVariable(contentGap, smallSpace),
-    declareVariable(controlTextSize, normalTextSize),
+    [minHeight, small],
+    [paddingInline, mediumSpace],
+    [paddingBlock, smallSpace],
+    [gap, smallSpace],
+    [fontSize, normalText],
   ],
 )
 
@@ -201,11 +197,11 @@ rules(
 rules(
   [button, '&[data-size="large"]'],
   [
-    declareVariable(minimumHeight, largeControlSize),
-    declareVariable(horizontalPadding, wideSpace),
-    declareVariable(verticalPadding, normalSpace),
-    declareVariable(contentGap, mediumSpace),
-    declareVariable(controlTextSize, xlargeTextSize),
+    [minHeight, large],
+    [paddingInline, wideSpace],
+    [paddingBlock, normalSpace],
+    [gap, mediumSpace],
+    [fontSize, extraLargeText],
   ],
 )
 
@@ -213,11 +209,11 @@ rules(
 rules(
   [button, '&[data-size="xlarge"]'],
   [
-    declareVariable(minimumHeight, xlargeControlSize),
-    declareVariable(horizontalPadding, widestSpace),
-    declareVariable(verticalPadding, mediumSpace),
-    declareVariable(contentGap, largeSpace),
-    declareVariable(controlTextSize, headingTextSize),
+    [minHeight, extraLarge],
+    [paddingInline, widestSpace],
+    [paddingBlock, mediumSpace],
+    [gap, largeSpace],
+    [fontSize, heading],
   ],
 )
 
@@ -226,4 +222,4 @@ rules(
 // =============================================================================
 
 /** loading 只重定义常态指针；disabled Key 继续使用不可操作指针。 */
-rules([button, '&[data-status~="loading"]'], [declareVariable(actionCursor, 'progress')])
+rules([button, '&[data-status~="loading"]'], [[cursor, 'progress']])

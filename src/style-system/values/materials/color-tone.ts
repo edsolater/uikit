@@ -2,9 +2,9 @@
 import { variable } from '../../core/css-variable'
 import { value } from '../../core/css-value'
 import { whenHover, whenActive } from '../../selectors/msic'
-import { colorMix } from '../functions/color-mix'
-import { brand, palette, baseSurfaceColor } from './color-palette'
-import { actionForegroundColor } from './color-action'
+import { $colorMix } from '../functions/color-mix'
+import { brand, palette, surface } from './color-palette'
+import { actionForeground } from './color-action'
 
 /** 语气底色中的表面色占比，范围为零至一。 */
 const toneSurfaceRatio = 0.76
@@ -16,58 +16,58 @@ const toneHoverSurfaceRatio = 0.66
 const toneActiveSurfaceRatio = 0.56
 
 /** 强调主色。 */
-export const accentColor = variable('color-accent', { root: { value: colorMix([brand, 0.8], 'cyan') } })
+export const accent = variable('color-accent', { root: { value: $colorMix([brand, 0.8], 'cyan') } })
 
 /** 淡强调色，用于轻量底色或边缘。 */
-export const accentSoftColor = variable('color-accent-soft', {
+export const softAccent = variable('color-accent-soft', {
   root: {
-    value: colorMix([accentColor, 0.14], 'transparent'),
+    value: $colorMix([accent, 0.14], 'transparent'),
   },
 })
 
 /** 强调语气的前景色。 */
-export const accentForegroundColor = variable('color-accent-fg', { root: { value: actionForegroundColor } })
+export const accentForeground = variable('color-accent-foreground', { root: { value: actionForeground } })
 
 /** 强调语气的焦点提示色。 */
-export const accentFocusColor = variable('color-accent-focus', {
+export const accentFocus = variable('color-accent-focus', {
   root: {
-    value: colorMix([accentColor, 0.42], 'transparent'),
+    value: $colorMix([accent, 0.42], 'transparent'),
   },
 })
 
 /** 危险主色。 */
-export const dangerColor = variable('color-bad', { root: { value: palette.danger.light, dark: palette.danger.dark } })
+export const danger = variable('color-danger', { root: { value: palette.danger.light, dark: palette.danger.dark } })
 
 /** 淡危险色，用于轻量底色或边缘。 */
-export const dangerSoftColor = variable('color-bad-soft', {
+export const softDanger = variable('color-danger-soft', {
   root: {
-    value: colorMix([dangerColor, 0.14], 'transparent'),
+    value: $colorMix([danger, 0.14], 'transparent'),
   },
 })
 
 /** 危险语气的前景色。 */
-export const dangerForegroundColor = variable('color-bad-fg', { root: { value: actionForegroundColor } })
+export const dangerForeground = variable('color-danger-foreground', { root: { value: actionForeground } })
 
 /** 危险语气的边缘提示色。 */
-export const dangerLineColor = variable('color-bad-line', {
+export const dangerLine = variable('color-danger-line', {
   root: {
-    value: colorMix([dangerColor, 0.44], 'transparent'),
+    value: $colorMix([danger, 0.44], 'transparent'),
   },
 })
 
 /** 语气主色，默认采用强调色。 */
-export const toneColor = variable('component-tone-color', { fallback: accentColor })
+export const tone = variable('color-tone', { fallback: accent })
 
 /** 低浓度语气色，用于与表面底色混合。 */
-export const toneSoftColor = variable('component-tone-soft-color', { fallback: accentSoftColor })
+export const softTone = variable('color-tone-soft', { fallback: softAccent })
 
 /** 语气交互态的前景色。 */
-export const toneForeground = variable('component-tone-foreground', { fallback: accentForegroundColor })
+export const toneForeground = variable('color-tone-foreground', { fallback: accentForeground })
 
 /** 可覆盖的语气底色配方；default、hover 与 active 分别拥有可局部重定义的 Variable Key。 */
-export const toneBackground = variable('component-tone-background', {
-  fallback: value(colorMix([baseSurfaceColor, toneSurfaceRatio], toneSoftColor), [
-    [whenHover, colorMix([baseSurfaceColor, toneHoverSurfaceRatio], toneSoftColor)],
-    [whenActive, colorMix([baseSurfaceColor, toneActiveSurfaceRatio], toneSoftColor)],
+export const toneSurface = variable('color-tone-background', {
+  fallback: value($colorMix([surface, toneSurfaceRatio], softTone), [
+    [whenHover, $colorMix([surface, toneHoverSurfaceRatio], softTone)],
+    [whenActive, $colorMix([surface, toneActiveSurfaceRatio], softTone)],
   ]),
 })

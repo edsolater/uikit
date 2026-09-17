@@ -1,5 +1,6 @@
 /** 编译时按请求 Condition Path 逐层取值；当前访问链负责检测循环。 */
 import type { ConditionPath } from '../core/css-condition'
+import { isCSSPair } from '../core/css-declaration'
 import type { CompileContext, Value, ValueInput, ValueExpression } from '../core/css-value'
 import { variableName } from '../core/css-variable'
 
@@ -172,7 +173,7 @@ export function compileAt(input: ValueInput, requested: ConditionPath, context: 
       if (resolved instanceof Map) {
         let selected: ValueInput | undefined
         for (const [[path, property], child] of resolved) {
-          if (property !== undefined || (typeof child === 'object' && !(child instanceof Map) && child.kind === 'declaration')) throw new Error('复合 Value 内的规则不能切换声明属性。')
+          if (property !== undefined || isCSSPair(child)) throw new Error('复合 Value 内的规则不能切换声明 Key。')
           if (includesPath(requested, path ?? [])) selected = child
         }
         if (selected === undefined) throw new Error('Value 缺少可解析的 default。')

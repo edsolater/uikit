@@ -1,6 +1,7 @@
 /** 将源 Rules 及本次激活的依赖编译为按地址顺序排列的 CSS string。 */
 import type { ConditionPath } from '../core/css-condition'
-import { propertyName, type CSSProperty } from '../core/css-key'
+import { isCSSPair } from '../core/css-declaration'
+import { declarationSyntax, propertyName, type CSSKey } from '../core/css-key'
 import type { Rules, RuleValue } from '../core/css-rule'
 import type { Value, ValueInput } from '../core/css-value'
 import { isVariable } from '../core/css-variable'
@@ -52,16 +53,16 @@ export function compileRules(source: Rules): string {
   }
   /**
    * 在消费地址解读 Rules、Declaration 或 Value，并把展开结果交给 write，不直接输出 CSS。
-   * 嵌套 Rules 连接相对路径，缺省属性继承外层属性；Declaration 则使用自身属性。
+   * 嵌套 Rules 连接相对路径，缺省 Key 继承外层 Key；Declaration 则使用自身 Key。
    * definitionOwner 沿具名定义传递，使整份定义共同参与替换；当前访问链重复进入同一 Rules 时抛错。
    * @example
    * const hover = condition('&:hover')
    * visit(new Map([[[[hover], undefined], 'blue']]), [condition('.Button')], 'color')
    * // 等价于 write([condition('.Button'), hover], 'color', 'blue')。
    */
-  const visit = (input: RuleValue, path: ConditionPath, property?: CSSProperty, definitionOwner?: Rules): void => {
+  const visit = (input: RuleValue, path: ConditionPath, key?: CSSKey, definitionOwner?: Rules): void => {
     const context: ValueContext = {
-      root: source, path, property, resolving,
+      root: source, path, key, resolving,
       /**
        * 本次编译首次遇到对象值时调用 onActive；回调得到当前消费位置，返回的 Rules 排入待编译集合。
        * 同一对象再次被引用不重复调用；回调抛错会终止编译，源账本不接收回调返回的依赖。
@@ -70,55 +71,57 @@ export function compileRules(source: Rules): string {
        * context.activate(shared); context.activate(shared)
        * // shared.onActive 只执行一次；返回的依赖在当前待编译 Rules 之后处理。
        */
-      activate(value, location = { root: source, path, property }) {
+      activate(value, location = { root: source, path, key }) {
         if (typeof value !== 'object' || activated.has(value)) return
         activated.add(value)
-        const dependencies = value.onActive?.({ root: source, path: location.path, property: location.property })
+        const dependencies = value.onActive?.({ root: source, path: location.path, key: location.key })
         if (dependencies) for (const dependency of dependencies instanceof Map ? [dependencies] : dependencies) pending.add(dependency)
       },
     }
-    if (property !== undefined && typeof property === 'object' && 'kind' in property) context.activate(property)
+    if (key !== undefined && typeof key === 'object' && 'kind' in key) context.activate(key)
     if (input instanceof Map) {
       if (visitingRules.has(input)) throw new Error('Rules 内容存在递归引用，无法生成 CSS。')
       visitingRules.add(input)
       try {
         for (const [[relativePath, nextProperty], child] of input) {
           const owner = relativePath?.some((item) => /^@(function|keyframes|property)\s/.test(item.header)) ? input : definitionOwner
-          visit(child, [...path, ...(relativePath ?? [])], nextProperty ?? property, owner)
+          visit(child, [...path, ...(relativePath ?? [])], nextProperty ?? key, owner)
         }
       } finally { visitingRules.delete(input) }
       return
     }
-    if (isVariable(property) && !(typeof input === 'object' && input.kind === 'declaration')) {
-      for (const result of compileVariableDeclaration(property, input as ValueInput, context)) write(path, result.property, result.text, definitionOwner)
+    if (isVariable(key) && !isCSSPair(input)) {
+      for (const result of compileVariableDeclaration(key, input as ValueInput, context)) write(path, result.property, result.text, definitionOwner)
       return
     }
-    if (typeof input === 'object' && input.kind === 'declaration') {
-      if (typeof input.property === 'object' && 'kind' in input.property) context.activate(input.property)
-      if ((input.syntax === 'value' && !isVariable(input.property)) || input.content instanceof Map) {
-        visit(input.content as ValueInput, path, input.property, definitionOwner)
+    if (isCSSPair(input)) {
+      const [declarationKey, content] = input
+      if (typeof declarationKey === 'object' && 'kind' in declarationKey) context.activate(declarationKey)
+      const syntax = declarationSyntax(declarationKey)
+      if ((syntax === 'value' && !isVariable(declarationKey)) || content instanceof Map) {
+        visit(content as ValueInput, path, declarationKey, definitionOwner)
         return
       }
-      for (const result of compileDeclaration(input, { ...context, property: input.property })) write([...path, ...result.path], result.property, result.text, definitionOwner)
+      for (const result of compileDeclaration(input, { ...context, key: declarationKey })) write([...path, ...result.path], result.property, result.text, definitionOwner)
       return
     }
     if (typeof input === 'object' && input.default !== undefined) {
       for (const relativePath of valuePaths(input)) {
         const location = { ...context, path: [...path, ...relativePath] }
         resolveValue(input, relativePath, location, (resolved, exactKey) => {
-          if (resolved instanceof Map) visit(resolved, location.path, property, definitionOwner)
+          if (resolved instanceof Map) visit(resolved, location.path, key, definitionOwner)
           else {
             const result = { path: location.path, text: compileAt(resolved, relativePath, location, exactKey) }
-            if (property === undefined) write(result.path, undefined, result.text, definitionOwner)
-            else for (const declaration of expandProperty(propertyName(property), result)) write(declaration.path, declaration.property, declaration.text, definitionOwner)
+            if (key === undefined) write(result.path, undefined, result.text, definitionOwner)
+            else for (const declaration of expandProperty(propertyName(key), result)) write(declaration.path, declaration.property, declaration.text, definitionOwner)
           }
         })
       }
       return
     }
     for (const result of compileValue(input, context)) {
-      if (property === undefined) write([...path, ...result.path], undefined, result.text, definitionOwner)
-      else for (const declaration of expandProperty(propertyName(property), result)) write([...path, ...declaration.path], declaration.property, declaration.text, definitionOwner)
+      if (key === undefined) write([...path, ...result.path], undefined, result.text, definitionOwner)
+      else for (const declaration of expandProperty(propertyName(key), result)) write([...path, ...declaration.path], declaration.property, declaration.text, definitionOwner)
     }
   }
   for (const Rules of pending) {

@@ -42,16 +42,16 @@ export function toConditionPath(input: ConditionInput): ConditionPath {
 }
 
 /** 用完整媒体查询构造一层 @media 条件，不校验查询语法。 */
-export function media(query: string): Condition {
+export function $media(query: string): Condition {
   return condition(`@media ${query}`)
 }
 
 /**
  * CSS 块头保留完整函数签名，条件名默认只使用函数名，使同名函数按整份定义替换。
  * @example
- * atFunction('--double(--x <length>) returns <length>')
- * // name 为 '@function --double'，header 保留全部参数及返回类型。
+ * $function('--length-double(--length-input <length>) returns <length>')
+ * // name 为 '@function --length-double'，header 保留全部参数及返回类型。
  */
-export function atFunction(signature: string, name = signature.split('(')[0].trim()): Condition {
+export function $function(signature: string, name = signature.split('(')[0].trim()): Condition {
   return condition(`@function ${signature}`, `@function ${name}`)
 }

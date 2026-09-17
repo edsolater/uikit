@@ -1,6 +1,6 @@
 /** 将原始 CSS 文本、条件取值和复合表达统一为可由 Declaration 消费的 Value，创建时不生成 CSS。 */
 import { toConditionPath, type ConditionInput, type ConditionPath } from './css-condition'
-import type { CSSProperty } from './css-key'
+import type { CSSKey } from './css-key'
 import type { Rules } from './css-rule'
 
 /** Value 被编译器实际访问时的消费位置，供 onActive 在同一次编译中派生额外 Rules。 */
@@ -9,8 +9,8 @@ export interface CompileContext {
   root: Rules
   /** 包含外层 Rule 与当前 Value 条件的完整消费路径。 */
   path: ConditionPath
-  /** 当前消费属性；无属性的原文或结构内容可以缺省。 */
-  property?: CSSProperty
+  /** 当前消费 Key；无 Key 的原文或结构内容可以缺省。 */
+  key?: CSSKey
 }
 
 /** Value 在被编译消费时可选触发的依赖激活契约。 */
@@ -20,8 +20,8 @@ export interface ValueOptions {
    * 返回的 Rules 从根地址开始解释，不自动继承消费 path；需要原位置时显式使用 context.path。
    * 再次编译会重新触发；抛错终止当前编译，不生成部分 CSS。
    * @example
-   * value('red', { onActive: () => new Map([[[[condition(':root')], '--visited'], 1]]) })
-   * // 即使在 .Button 消费，也额外生成 :root { --visited: 1; }，不嵌套在 .Button 内。
+   * value('red', { onActive: () => new Map([[[[condition(':root')], '--state-visited'], 1]]) })
+   * // 即使在 .Button 消费，也额外生成 :root { --state-visited: 1; }，不嵌套在 .Button 内。
    * // 单独创建该 Value 不产生此声明。
    */
   onActive?: (context: CompileContext) => Rules | Rules[] | void
@@ -75,9 +75,4 @@ export function value(input: ValueInput, conditionsOrOptions?: [ConditionInput, 
     conditions: Array.isArray(conditionsOrOptions) ? conditionsOrOptions.map(([path, child]) => [toConditionPath(path), child]) : [],
     ...(Array.isArray(conditionsOrOptions) ? options : conditionsOrOptions),
   }
-}
-
-/** 已有 Value 对象保留身份，RawValue 与 Rules 包成 default；不读取内部内容。 */
-export function toValue(input: ValueInput): Value {
-  return typeof input === 'object' && !(input instanceof Map) ? input : value(input)
 }

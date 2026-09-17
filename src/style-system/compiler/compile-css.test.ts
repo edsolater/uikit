@@ -1,18 +1,19 @@
 /** 验证登记、按 Condition 读取 Value、依赖闭包与完整 CSS 输出。 */
 import { afterEach, expect, test, vi } from 'vitest'
 import { compileCSS } from '../core/css-root'
-import { rule, rules, type Rules, type RuleAddress, type RuleValue, type RulesHandle, type RuleDeclarations } from '../core/css-rule'
-import { condition, media, type ConditionInput } from '../core/css-condition'
+import { rule, rules, type Rules, type RuleAddress, type RuleValue, type RulesHandle, type Declarations } from '../core/css-rule'
+import { condition, $media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
+import { declare } from '../core/css-declaration'
 import { value } from '../core/css-value'
-import { declareVariable, variable } from '../core/css-variable'
-import { margin, marginLeft } from '../declarations/margin'
-import { padding } from '../declarations/padding'
-import { border } from '../declarations/border'
-import { font } from '../declarations/font'
-import { color } from '../declarations/color'
-import { transition } from '../declarations/transition'
-import { boxShadow } from '../declarations/box-shadow'
+import { variable } from '../core/css-variable'
+import { $margin, $marginLeft } from '../properties/margin'
+import { $padding } from '../properties/padding'
+import { $border } from '../properties/border'
+import { $font } from '../properties/font'
+import { $color } from '../properties/color'
+import { $transition } from '../properties/transition'
+import { $boxShadow } from '../properties/box-shadow'
 import { shadowValue } from '../values/shadow'
 import { calcMultiply } from '../values/functions/calc'
 import { cssFunction } from '../values/functions/custom'
@@ -64,31 +65,39 @@ test('Condition name 保持同一地址，header 可用新 CSS 表达覆盖', ()
   expect(compileCSS()).toBe('.example {\n&:where(:hover) {\ncolor: blue;\n}\n}')
 })
 
+test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
+  const foreground = variable('local-foreground', { fallback: 'black' })
+  expect(declare(foreground, 'red')).toEqual([foreground, 'red'])
+  expect(declare($color, foreground)).toEqual([$color, foreground])
+  keep(rules('.example', [[foreground, 'red'], [$color, foreground]]))
+  expect(compileCSS()).toContain('--local-foreground: red;\ncolor: var(--local-foreground, black);')
+})
+
 test('嵌套批量声明与单项属性不会混淆', () => {
-  keep(rules('.example', [[color('red'), padding('1px')]]))
+  keep(rules('.example', [[[$color, 'red'], [$padding, ['1px']]]]))
   expect(compileCSS()).toContain('padding-left: 1px')
   expect(compileCSS()).toContain('color: red')
 })
 
 test('批量登记先验证整批，失败时既有条目与句柄保持有效', () => {
   const original = keep(rule('.example', 'color', 'red'))
-  const invalid = [color('blue'), ['display', undefined]] as unknown as RuleDeclarations
-  expect(() => keep(rules('.example', invalid))).toThrow('属性条目')
+  const invalid = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
+  expect(() => keep(rules('.example', invalid))).toThrow('只接受声明二元数组')
   expect(compileCSS()).toBe('.example {\ncolor: red;\n}')
   original.replace('green')
   expect(compileCSS()).toContain('color: green')
-  const recursive: RuleDeclarations = [color('blue')]
+  const recursive: Declarations = [[$color, 'blue']]
   recursive.push(recursive)
   expect(() => keep(rules('.example', recursive))).toThrow('递归引用')
   expect(compileCSS()).toContain('color: green')
-  const invalidProperty = [color('blue'), [{ name: 1 }, 'grid']] as unknown as RuleDeclarations
+  const invalidProperty = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
   expect(() => keep(rules('.example', invalidProperty))).toThrow()
-  expect(() => keep(rules([null] as unknown as ConditionInput, [color('blue'), ['display', 'grid']]))).toThrow('Condition Path')
+  expect(() => keep(rules([null] as unknown as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
   expect(compileCSS()).toContain('color: green')
 })
 
 test('批量删除只删除本批仍然拥有的地址，重复地址保持首次位置', () => {
-  const batch = keep(rules('.example', [color('red'), ['display', 'grid'], [color('blue')]]))
+  const batch = keep(rules('.example', [[$color, 'red'], [key('display'), 'grid'], [[$color, 'blue']]]))
   expect(compileCSS()).toBe('.example {\ncolor: blue;\ndisplay: grid;\n}')
   keep(rule('.example', 'color', 'green'))
   batch.remove()
@@ -121,7 +130,7 @@ test('同一个 Value 的 hover 与 active 各读自身属性，共享 DAG 不�
 
 test('Value 支持业务选择器和媒体 Condition，同路径递归与交集不依赖 State 分类', () => {
   const compact = condition('&[data-density="compact"]')
-  const wide = media('(width > 800px)')
+  const wide = $media('(width > 800px)')
   const compactSize = value('8px', [[compact, '6px']])
   const size = value('12px', [[compact, compactSize], [wide, '16px']])
   expect(size.conditions.map(([path]) => path)).toEqual([[compact], [wide]])
@@ -175,13 +184,13 @@ test('显式复合状态键穿过表达式时仍按完整同键匹配', () => {
 })
 
 test('依赖只进入本次编译，删掉源条目后派生资源退出', () => {
-  const nestedActive = vi.fn((): Rules => new Map([[[[condition(':root')], '--factor'], 3]]))
+  const nestedActive = vi.fn((): Rules => new Map([[[[condition(':root')], '--value-factor'], 3]]))
   const nested = value('3px', { onActive: nestedActive })
-  const active = vi.fn((): Rules => new Map([[[[condition(':root')], '--size'], nested]]))
-  const size = value('var(--size)', { onActive: active })
+  const active = vi.fn((): Rules => new Map([[[[condition(':root')], '--size-example'], nested]]))
+  const size = value('var(--size-example)', { onActive: active })
   const handle = keep(rule('.example', 'width', calcMultiply(size, size)))
   expect(active).not.toHaveBeenCalled()
-  expect(compileCSS()).toContain('--factor: 3')
+  expect(compileCSS()).toContain('--value-factor: 3')
   expect(active).toHaveBeenCalledTimes(1)
   expect(nestedActive).toHaveBeenCalledTimes(1)
   compileCSS()
@@ -195,7 +204,7 @@ test('onActive 收到真正消费状态的地址', () => {
   const distance = value('2px', [['&:hover', value('4px', { onActive: active })]])
   keep(rule('.example', 'width', calcMultiply(distance, 2)))
   compileCSS()
-  expect(active).toHaveBeenCalledWith(expect.objectContaining({ path: [condition('.example'), condition('&:hover')], property: 'width' }))
+  expect(active).toHaveBeenCalledWith(expect.objectContaining({ path: [condition('.example'), condition('&:hover')], key: 'width' }))
 })
 
 test('依赖回指同一集合终止，Rules 内容递归报错', () => {
@@ -213,40 +222,53 @@ test('依赖回指同一集合终止，Rules 内容递归报错', () => {
 test('逻辑变量按已有 Condition Key 读取和局部重定义派生 Custom Property', () => {
   const hover = condition('&:hover', 'hover')
   const active = condition('&:active', 'active')
-  const foreground = variable('--fg', {
+  const foreground = variable('--color-foreground-test', {
     fallback: value('black', [[hover, 'gray'], [active, 'silver']]),
     registration: { syntax: '*', inherits: true },
   })
   keep(rule('.example', foreground, value('red', [[hover, 'blue']])))
-  keep(rules('.only-active', [declareVariable(foreground, { active: 'green', missing: 'orange' })]))
-  keep(rules('.same-active', [declareVariable(foreground, { active: 'silver' })]))
-  keep(rules('.example', [color(foreground)]))
+  keep(rules('.only-active', [[foreground, { active: 'green', missing: 'orange' }]]))
+  keep(rules('.same-active', [[foreground, { active: 'silver' }]]))
+  keep(rules('.example', [[$color, foreground]]))
   const css = compileCSS()
-  expect(css).toContain('--fg: red')
-  expect(css).toContain('--fg-when-hover: blue')
-  expect(css).toContain('--fg-when-active: green')
-  expect(css).toContain('.same-active {\n--fg-when-active: silver')
+  expect(css).toContain('--color-foreground-test: red')
+  expect(css).toContain('--color-foreground-test-when-hover: blue')
+  expect(css).toContain('--color-foreground-test-when-active: green')
+  expect(css).toContain('.same-active {\n--color-foreground-test-when-active: silver')
   expect(css).not.toContain('orange')
-  expect(css).toContain('color: var(--fg, black)')
-  expect(css).toContain('color: var(--fg-when-hover, gray)')
-  expect(css).toContain('color: var(--fg-when-active, silver)')
-  expect(css.match(/@property --fg/g)).toHaveLength(1)
+  expect(css).toContain('color: var(--color-foreground-test, black)')
+  expect(css).toContain('color: var(--color-foreground-test-when-hover, gray)')
+  expect(css).toContain('color: var(--color-foreground-test-when-active, silver)')
+  expect(css.match(/@property --color-foreground-test/g)).toHaveLength(1)
 })
 
-test('简写扩写、长属性覆盖与复合字段保留', () => {
-  keep(rules('.example', [margin('4px'), marginLeft('8px'), padding('1px', '2px', '3px'), border('red', '4px', 'solid'), font({ style: 'italic', size: '16px', lineHeight: 1.5, family: 'system-ui' })]))
+test('单值直接声明，多个有序内容用数组，简写与复合字段在编译时展开', () => {
+  keep(rules('.example', [
+    [$margin, '4px'],
+    [$marginLeft, '8px'],
+    [$padding, ['1px', '2px', '3px']],
+    [$border, ['red', '4px', 'solid']],
+    [$font, { style: 'italic', size: '16px', lineHeight: 1.5, family: 'system-ui' }],
+  ]))
+  keep(rules('.single', [[$padding, '4px'], [$border, 'none']]))
   const css = compileCSS()
   expect(css).toContain('margin-left: 8px')
   expect(css).not.toContain('margin-left: 4px')
   expect(css).toContain('padding-bottom: 3px')
   expect(css).toContain('font: italic 16px/1.5 system-ui')
+  expect(css).toContain('.single {\npadding-top: 4px')
+  expect(css).toContain('border: none')
 })
 
-test('阴影与过渡追加内容保留状态和完整语法', () => {
-  const shadow = boxShadow(shadowValue({ x: 0, y: value('2px', [['&:hover', '4px']]), color: 'black' }))
-  const timing = transition(['opacity', '100ms', 'ease'])
-  shadow.append(shadowValue({ x: 0, y: 0, spread: '1px', color: 'red' }))
-  timing.append(['transform', '200ms', 'linear', '30ms'])
+test('阴影与过渡数组内容保留状态和完整语法', () => {
+  const shadow = declare($boxShadow, [
+    shadowValue({ x: 0, y: value('2px', [['&:hover', '4px']]), color: 'black' }),
+    shadowValue({ x: 0, y: 0, spread: '1px', color: 'red' }),
+  ])
+  const timing = declare($transition, [
+    [key('opacity'), '100ms', 'ease'],
+    [key('transform'), '200ms', 'linear', '30ms'],
+  ])
   keep(rules('.example', [shadow, timing]))
   expect(compileCSS()).toContain('box-shadow: 0 4px black, 0 0 0 1px red')
   expect(compileCSS()).toContain('transition: opacity 100ms ease, transform 200ms linear 30ms')
@@ -255,15 +277,15 @@ test('阴影与过渡追加内容保留状态和完整语法', () => {
 test('动画和函数激活完整资源，同名函数替换整个定义', () => {
   const opacity = variable('--fade-opacity', { root: { value: 1 } })
   const frames: Rules = new Map<RuleAddress, RuleValue>([[[[condition('from')], 'opacity'], 0], [[[condition('to')], 'opacity'], opacity]])
-  keep(rule('.example', 'animation', animationValue({ name: animationName('fade', frames), duration: '1s' })))
-  const oldBody: Rules = new Map<RuleAddress, RuleValue>([[[undefined, '--old-local'], '100px'], [[undefined, 'result'], value('16px', [[media('(width > 1px)'), '20px']])]])
+  keep(rule('.example', 'animation', animationValue({ name: animationName('motion-fade', frames), duration: '1s' })))
+  const oldBody: Rules = new Map<RuleAddress, RuleValue>([[[undefined, '--old-local'], '100px'], [[undefined, 'result'], value('16px', [[$media('(width > 1px)'), '20px']])]])
   const nextBody: Rules = new Map([[[undefined, 'result'], '24px']])
-  keep(rule('.first', 'width', cssFunction('--size() returns <length>', oldBody)()))
-  keep(rule('.second', 'width', cssFunction('--size() returns <length>', nextBody)()))
+  keep(rule('.first', 'width', cssFunction('--size-example() returns <length>', oldBody)()))
+  keep(rule('.second', 'width', cssFunction('--size-example() returns <length>', nextBody)()))
   const css = compileCSS()
-  expect(css).toContain('@keyframes fade')
+  expect(css).toContain('@keyframes motion-fade')
   expect(css).toContain('--fade-opacity: 1')
-  expect(css.match(/@function --size/g)).toHaveLength(1)
+  expect(css.match(/@function --size-example/g)).toHaveLength(1)
   expect(css).toContain('result: 24px')
   expect(css).not.toContain('--old-local')
   expect(css).not.toContain('20px')

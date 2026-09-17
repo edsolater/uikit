@@ -3,12 +3,12 @@ import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { Button, type ButtonProps } from './Button'
-import { cssRoot, rule, rules, declareVariable, value, whenHover, whenActive, whenDisabled, type RulesHandle } from '../../../style-system'
-import { bgColor } from '../../../style-system/values/materials/color-surface'
-import { borderRadius } from '../../../style-system/declarations/border'
-import { padding } from '../../../style-system/declarations/padding'
-import { cornerRadius, smallRadius } from '../../../style-system/values/materials/radius'
-import { px8, horizontalPadding, verticalPadding, smallSpace } from '../../../style-system/values/materials/space'
+import { cssRoot, rule, rules, value, whenHover, whenActive, whenDisabled, type RulesHandle } from '../../../style-system'
+import { backgroundColor } from '../../../style-system/values/materials/color-surface'
+import { $borderRadius } from '../../../style-system/properties/border'
+import { $padding } from '../../../style-system/properties/padding'
+import { subtle } from '../../../style-system/values/materials/radius'
+import { paddingInline, paddingBlock, smallSpace } from '../../../style-system/values/materials/space'
 
 let dispose: (() => void) | undefined
 const handles: RulesHandle[] = []
@@ -42,10 +42,10 @@ describe('Button styles', () => {
 
     const reference = document.body.appendChild(document.createElement('div'))
     reference.style.backgroundColor = 'var(--color-surface)'
-    reference.style.color = 'var(--color-fg)'
+    reference.style.color = 'var(--color-foreground)'
     const background = getComputedStyle(reference).backgroundColor
     const foreground = getComputedStyle(reference).color
-    reference.style.color = 'var(--color-action-fg)'
+    reference.style.color = 'var(--color-action-foreground)'
     const actionForeground = getComputedStyle(reference).color
 
     for (const [index, entry] of cases.entries()) {
@@ -53,9 +53,9 @@ describe('Button styles', () => {
       if (entry.mode === 'native') button.dataset.status = entry.loading ? 'loading' : ''
       if (entry.mode === 'status') button.disabled = false
       button.style.transition = 'none'
-      button.style.setProperty('--bg', 'red')
-      button.style.setProperty('--fg', 'red')
-      button.style.setProperty('--component-shadow', '0 0 10px red')
+      button.style.setProperty('--color-background', 'red')
+      button.style.setProperty('--color-content', 'red')
+      button.style.setProperty('--shadow-box', '0 0 10px red')
       expect(button.matches(whenDisabled.header.replace('&', ''))).toBe(true)
       const computed = getComputedStyle(button)
       expect(computed.backgroundColor).toBe(background)
@@ -120,11 +120,10 @@ describe('Button styles', () => {
     expect(style.sheet!.cssRules).toHaveLength(0)
 
     handles.push(rules('.shared-input', [
-      declareVariable(cornerRadius, smallRadius),
-      declareVariable(horizontalPadding, smallSpace),
-      declareVariable(verticalPadding, px8),
-      borderRadius(cornerRadius),
-      padding(verticalPadding, horizontalPadding),
+      [paddingInline, smallSpace],
+      [paddingBlock, '8px'],
+      [$borderRadius, subtle],
+      [$padding, [paddingBlock, paddingInline]],
     ]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
@@ -193,7 +192,7 @@ describe('Button styles', () => {
     expect(style).not.toBeNull()
     const cssRules = Array.from(style.sheet!.cssRules)
     const cssText = cssRules.map((rule) => rule.cssText).join('\n')
-    expect(cssText).toContain('@property --bg')
+    expect(cssText).toContain('@property --color-background')
     expect(cssText).toContain('&:where(:hover)')
     expect(cssText).toContain('&:where(:active)')
     expect(cssText).not.toContain('[object Object]')
@@ -221,15 +220,15 @@ describe('Button styles', () => {
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(defaultBackground)
     await userEvent.unhover(getButton('default'))
 
-    getButton('default').style.setProperty('--bg', 'rgb(1, 2, 3)')
+    getButton('default').style.setProperty('--color-background', 'rgb(1, 2, 3)')
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(1, 2, 3)')
-    getButton('default').style.removeProperty('--bg')
-    getButton('default').style.setProperty('--bg-when-hover', 'rgb(4, 5, 6)')
+    getButton('default').style.removeProperty('--color-background')
+    getButton('default').style.setProperty('--color-background-when-hover', 'rgb(4, 5, 6)')
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')
     await userEvent.unhover(getButton('default'))
-    getButton('default').style.removeProperty('--bg-when-hover')
-    handles.push(rule('.Button[data-testid="default"]', bgColor, value('rgb(1, 2, 3)', [[whenHover, 'rgb(4, 5, 6)']])))
+    getButton('default').style.removeProperty('--color-background-when-hover')
+    handles.push(rule('.Button[data-testid="default"]', backgroundColor, value('rgb(1, 2, 3)', [[whenHover, 'rgb(4, 5, 6)']])))
     cssRoot.mount()
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')
@@ -237,8 +236,8 @@ describe('Button styles', () => {
     handles.pop()!.remove()
     cssRoot.mount()
 
-    getButton('default').style.setProperty('--component-padding-x', '31px')
-    getButton('default').style.setProperty('--component-gap', '9px')
+    getButton('default').style.setProperty('--space-padding-inline', '31px')
+    getButton('default').style.setProperty('--space-gap', '9px')
     expect(getComputedStyle(getButton('default')).paddingLeft).toBe('31px')
     expect(getComputedStyle(getButton('default')).gap).toBe('9px')
     expect(getComputedStyle(input).paddingLeft).toBe('4px')

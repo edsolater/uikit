@@ -8,6 +8,8 @@
 
 组件样式文件的配置、命名、注释与组装约定见 [样式文件写法](docs/style/样式文件写法.md)。
 
+Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System 命名](src/style-system/naming.md)。
+
 - `src/components/Piv`：基础 DOM 原子。负责消费 class、style、HTML props、事件、ref 与 plugins，不承载具体 kit 的业务语义。
 - `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
@@ -49,7 +51,7 @@ kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果�
 
 App 入口执行 cssRoot.mount()
   -> 快照 CSSRoot 全部源 Rules
-    -> 解读 Declaration 与 Value
+    -> 解读声明二元数组与 Value
     -> 收集 onActive 返回的本次派生 Rules
     -> 生成 CSS string
   -> 完整提交到 style#css-root
@@ -84,7 +86,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 # 领域边界
 
 - 工具的领域发生在工具定义端。Button 使用通用属性函数和材料，不会让 Style System 获得 Button 的业务配方；具体组合留在 Button.style.ts。
-- `src/style-system` 只提供通用 Rule 登记、Condition 寻址、Declaration、Value、编译和挂载能力；具体组件 selector、业务分类和视觉组合留在组件自己的 style 文件。
+- `src/style-system` 只提供通用 Rule 登记、Condition 寻址、声明二元数组、Value、编译和挂载能力；具体组件 selector、业务分类和视觉组合留在组件自己的 style 文件。
 - `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-system` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
 - `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。

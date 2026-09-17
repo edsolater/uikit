@@ -11,7 +11,7 @@ export interface ShadowShape {
   inset?: boolean
 }
 
-/** 可被 boxShadow() 与其他 Shadow 追加组合的完整阴影 Value。 */
+/** 可放入 boxShadow Declaration 内容数组的完整阴影 Value。 */
 export type Shadow = Extract<Value, { kind: 'value' }> & {
   expression: ShadowShape & { type: 'shadow' }
 }

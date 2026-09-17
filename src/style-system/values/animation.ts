@@ -7,7 +7,7 @@ import { value, type Value, type ValueInput } from '../core/css-value'
  * 创建带帧定义依赖的动画名称 Value；它被编译访问时才把 @keyframes 提供给本次编译，不写源账本。
  * @example
  * const frames: Rules = new Map([[[[condition('to')], 'opacity'], 0]])
- * animationName('fade', frames) // 值文本为 fade，并生成 @keyframes fade { to { opacity: 0; } }。
+ * animationName('motion-fade', frames) // 值文本为 motion-fade，并生成 @keyframes motion-fade { to { opacity: 0; } }。
  */
 export function animationName(name: string, frames: Rules): Value {
   return value(name, { onActive: () => new Map([[[[condition(`@keyframes ${name}`)], undefined], frames]]) })

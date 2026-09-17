@@ -15,16 +15,16 @@ export const palette = {
 }
 
 /** 品牌基础色，随根元素的明暗主题切换，并为语义颜色提供可覆盖色元。 */
-export const brand = variable('base-brand', { root: { value: palette.brand.light, dark: palette.brand.dark } })
+export const brand = variable('color-brand', { root: { value: palette.brand.light, dark: palette.brand.dark } })
 
 /** 亮色主题的纸面底色。 */
-const paper = variable('dye-neutral-0', { root: { value: palette.paper.light, dark: palette.paper.dark } })
+const paperSurface = variable('dye-neutral-0', { root: { value: palette.paper.light, dark: palette.paper.dark } })
 
 /** 低层中性表面。 */
-export const lowSurfaceColor = variable('dye-neutral-1', { root: { value: palette.lowSurface.light, dark: palette.lowSurface.dark } })
+export const lowSurface = variable('dye-neutral-1', { root: { value: palette.lowSurface.light, dark: palette.lowSurface.dark } })
 
 /** 悬停时的中性表面。 */
-export const defaultSurfaceHoverColor = variable('dye-neutral-2', {
+export const hoverSurface = variable('dye-neutral-2', {
   root: {
     value: palette.hoverSurface.light,
     dark: palette.hoverSurface.dark,
@@ -32,7 +32,7 @@ export const defaultSurfaceHoverColor = variable('dye-neutral-2', {
 })
 
 /** 按下时的中性表面。 */
-export const defaultSurfaceActiveColor = variable('dye-neutral-3', {
+export const activeSurface = variable('dye-neutral-3', {
   root: {
     value: palette.activeSurface.light,
     dark: palette.activeSurface.dark,
@@ -46,4 +46,4 @@ export const ink = variable('dye-neutral-7', { root: { value: palette.ink.light,
 export const strongInk = variable('dye-neutral-8', { root: { value: palette.strongInk.light, dark: palette.strongInk.dark } })
 
 /** 通用表面底色，暗色主题采用低层表面。 */
-export const baseSurfaceColor = variable('color-surface', { root: { value: paper, dark: lowSurfaceColor } })
+export const surface = variable('color-surface', { root: { value: paperSurface, dark: lowSurface } })

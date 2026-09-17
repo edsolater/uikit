@@ -7,20 +7,20 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 | 位置 | 当前职责 |
 | --- | --- |
 | [core/css-condition.ts](core/css-condition.ts) | Condition 的稳定名称、CSS 块头和 Condition Path。 |
-| [core/css-key.ts](core/css-key.ts) | 普通属性、CSS Variable 与 Descriptor 共用的 CSSProperty 坐标。 |
+| [core/css-key.ts](core/css-key.ts) | 普通属性、CSS Variable 与 Descriptor 共用的 Key，以及普通属性固定的内容语法。 |
 | [core/css-rule.ts](core/css-rule.ts) | Rule/Rules 协议、单项登记与批量输入的完整归一化验证。 |
 | [core/css-value.ts](core/css-value.ts) | RawValue、条件 Value、复合 Value 与可选 `onActive`。 |
-| [core/css-declaration.ts](core/css-declaration.ts) | Property、内容与声明语法种类。 |
+| [core/css-declaration.ts](core/css-declaration.ts) | `[key, content]` 声明二元数组，以及返回同一结构的可选 `declare()` 助手。 |
 | [compiler/compile-css.ts](compiler/compile-css.ts) | 单次编译会话、派生依赖、地址覆盖和 CSS string 输出。 |
 | [compiler/compile-value.ts](compiler/compile-value.ts) | Condition Path 收集、对应 Value 读取、循环检测与复合值降级。 |
 | [compiler/compile-declaration.ts](compiler/compile-declaration.ts) | 声明语法和方向简写扩写。 |
 | [core/css-variable.ts](core/css-variable.ts) | 逻辑 CSS Variable、Condition Key 对应的 Custom Property 名称、局部重定义及按需根定义。 |
 | [core/css-root.ts](core/css-root.ts) | 私有源 Rules 账本、同址写入所有权与句柄；快照编译、宿主查找和原子提交。 |
 | [values/animation.ts](values/animation.ts)、[values/functions/custom.ts](values/functions/custom.ts) | 动画、Keyframes、CSS 函数调用及其按需定义。 |
-| declarations、values | 具体属性构造、复合值和共享材料；创建时不生成 CSS。 |
-| selectors、mixins | 可复用 Condition 与 Declaration 组合。 |
+| properties、values | 普通 CSS Key、复合值和共享材料；创建时不生成 CSS。 |
+| selectors、mixins | 可复用 Condition，以及由普通函数返回的声明组合。 |
 
-[index.ts](index.ts) 公开 `rule`、`rules`、Value、Declaration、`cssRoot` 和 `compileCSS`，不公开 Root 类、内部登记函数或源账本。包根另外导出 `cssRoot`、`compileCSS`，供应用启动使用。材料与属性从具体文件具名导入，内部文件不绕行公共入口。
+[index.ts](index.ts) 公开 `rule`、`rules`、可选的 `declare` 助手、Value、Declaration、`cssRoot` 和 `compileCSS`，不公开 Root 类、内部登记函数或源账本。包根另外导出 `cssRoot`、`compileCSS`，供应用启动使用。材料与属性从具体文件具名导入，内部文件不绕行公共入口。
 
 ---
 
@@ -31,7 +31,7 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 ```ts
 [
   ConditionPath | undefined,
-  CSSProperty | undefined,
+  CSSKey | undefined,
 ]
 ```
 
@@ -39,16 +39,16 @@ Style System 2.0 由模块顶层的 `rule()` / `rules()` 向 CSSRoot 账本登�
 
 ```ts
 rules('.example', [
-  color(foregroundColor),
-  padding('4px', '8px'),
+  [$color, color],
+  [$padding, ['4px', '8px']],
 ])
 ```
 
-`rule(path, property, value)` 只登记单项；`rules(path, declarations)` 先完整展开并验证 Declaration、属性值对和嵌套分组，再按顺序登记。CSSRoot 拥有全部写入：地址按 Condition name 序列与 Property 名称比较，同址后写覆盖前写，但沿用首次插入位置。
+`rule(path, key, value)` 只登记单项；`rules(path, declarations)` 递归展开并验证声明二元数组与嵌套分组，再按顺序登记。以 CSS Key 开始的 `[key, content]` 是展开终点，content 即使是数组也整体保留；`declare(key, content)` 只返回相同的二元数组。CSSRoot 拥有全部写入：地址按 Condition name 序列与 Key 名称比较，同址后写覆盖前写，但沿用首次插入位置。
 
 单项 Rule Handle 支持 replace/remove；批量 Rules Handle 只提供 remove。句柄仅控制本次登记仍然拥有的条目，后写内容取得所有权后，旧句柄不能干预；删除后也不能复活。无效批量输入不影响任何已有条目或句柄。Handle 的动作只影响下一次编译，不直接操作 DOM。
 
-RuleValue 可以是 Value、Declaration 或递归 Rules。递归 Rules 用于函数体、帧定义等需要继续携带相对 Path 或 Property 的内部结构，不构成业务侧源容器。
+RuleValue 可以是 Value、声明二元数组或递归 Rules。递归 Rules 用于函数体、帧定义等需要继续携带相对 Path 或 Property 的内部结构，不构成业务侧源容器。
 
 ---
 
@@ -76,7 +76,7 @@ RuleValue 可以是 Value、Declaration 或递归 Rules。递归 Rules 用于函
 
 1. 由 CSSRoot 浅拷贝内部源 Rules，传给内部 `compileRules()`，固定本次源配置。
 2. 按 Map 顺序递归累计 Path 与 Property。
-3. 解读 Declaration，展开可静态确定的属性结构。
+3. 解读声明二元数组，展开可静态确定的属性结构。
 4. 读取各 Condition 对应的 Value，解读复合内容。
 5. 激活实际访问到的 Value，把 `onActive` 返回的 Rules 放入本次待处理集合。
 6. 继续处理派生 Rules，直到依赖闭合。
@@ -100,7 +100,7 @@ RuleValue 可以是 Value、Declaration 或递归 Rules。递归 Rules 用于函
 App 入口 cssRoot.mount()
   -> 内部编译
     -> 源 Rules 快照
-    -> Value 与 Declaration 解读
+    -> Value 与声明二元数组解读
     -> 本次派生 Rules
     -> CSS string
   -> style#css-root
@@ -120,15 +120,15 @@ CSSRoot 是唯一源账本所有者。公共 `compileCSS()` 和 `cssRoot.mount()
 Style System 定义层保存通用 feature 的 hover、active、disabled 等条件取值。Button 文件整体属于业务层，只消费这些定义并重定义已有 Variable Key，不在文件顶部复制一套状态 Value。基础消费直接写：
 
 ```ts
-backgroundColor(bgColor)
-color(foregroundColor)
-boxShadow(normalShadow)
-cursor(actionCursor)
-opacity(interactionOpacity)
-transform(pressTransform)
+[$backgroundColor, backgroundColor]
+[$color, color]
+[$boxShadow, boxShadow]
+[$cursor, cursor]
+[$opacity, opacity]
+[$transform, pressFeedback]
 ```
 
-一个逻辑 Variable 可以拥有 default 与多个 Condition Key。每个 Key 落盘为独立 Custom Property；`declareVariable()` 只输出输入明确提供、且原 Variable 已拥有的 Key。Button 的 Variant、Tone、Size 与 loading 使用外层业务 Rule 选择配方，但只重定义对应 Variable，不重新声明 CSS Property，也不创建 `loadingCursor`、`solidToneForeground` 一类补偿 Value。
+一个逻辑 Variable 可以拥有 default 与多个 Condition Key。每个 Condition Key 落盘为独立 Custom Property；Variable 本身在 `[variable, content]` 中充当 Key，在其他声明的 content 中充当引用。Button 的 Variant、Tone、Size 与 loading 使用外层业务 Rule 选择配方，但只重定义对应 Variable，不重新声明普通 CSS 属性，也不创建 `loadingCursor`、`solidToneForeground` 一类补偿 Value。
 
 `whenDisabled` 同时匹配 `:disabled` 与 `[data-status~="disabled"]`；`whenHover`、`whenActive` 排除相同禁用协议。这些通用状态是具有稳定 name 的 Condition，Variable 派生名称和局部重定义按 name 匹配，不按 CSS header 文本猜测。
 

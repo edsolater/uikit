@@ -1,6 +1,5 @@
 /** 为一套 Value 提供稳定 CSS Custom Property 地址，使业务 Rule 可按已有 Condition 局部重定义。 */
-import { condition, media, type ConditionPath } from './css-condition'
-import { declaration, type Declaration } from './css-declaration'
+import { condition, $media, type ConditionPath } from './css-condition'
 import type { Rules } from './css-rule'
 import type { Value, ValueInput } from './css-value'
 
@@ -57,8 +56,8 @@ export function variableConditionKey(path: ConditionPath): string {
 /**
  * 为逻辑 Variable 的一个 Condition Key 生成落盘名称；普通状态保持可读，其他 Condition name 转成稳定十六进制片段。
  * @example
- * variableName('bg-color', []) // 'bg-color'
- * variableName('bg-color', [condition('&:hover', 'hover')]) // 'bg-color-when-hover'
+ * variableName('background-color', []) // 'background-color'
+ * variableName('background-color', [condition('&:hover', 'hover')]) // 'background-color-when-hover'
  */
 export function variableName(name: string, path: ConditionPath): string {
   const baseName = name.replace(/^--/, '')
@@ -73,11 +72,11 @@ export function variableName(name: string, path: ConditionPath): string {
  * 创建既可充当声明属性、又可作为 var() 引用的逻辑 Variable；name 接受带或不带 -- 的名称。
  * fallback 的 Condition 决定可读取和重定义的 Key；各 Key 编译为独立 Custom Property。root 与 registration 在访问时提供。
  * @example
- * const background = variable('--background', {
+ * const exampleBackground = variable('--color-background-example', {
  *   fallback: value('red', [[condition('&:hover', 'hover'), 'blue']]),
  * })
- * // 默认读取 var(--background, red)，hover 读取 var(--background-when-hover, blue)。
- * declareVariable(background, { hover: 'cyan' }) // 保存 --background-when-hover: cyan，尚未登记。
+ * // 默认读取 var(--color-background-example, red)，hover 读取 var(--color-background-example-when-hover, blue)。
+ * declare(exampleBackground, { hover: 'cyan' }) // 保存 --color-background-example-when-hover: cyan，尚未登记。
  */
 export function variable(name: string, options?: VariableOptions): Variable {
   const bareName = name.replace(/^--/, '')
@@ -107,21 +106,10 @@ export function variable(name: string, options?: VariableOptions): Variable {
       if (root) {
         rules.set([[condition(':where(:root)')], reference], root.value)
         if (root.dark !== undefined) rules.set([[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], reference], root.dark)
-        if (root.reducedMotion !== undefined) rules.set([[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], reference], root.reducedMotion)
+        if (root.reducedMotion !== undefined) rules.set([[condition(':where(:root)'), $media('(prefers-reduced-motion: reduce)'), condition('&')], reference], root.reducedMotion)
       }
       return rules
     }
   }
   return reference
-}
-
-/**
- * 保存一次局部重定义；编译时只输出 input 明确提供、且 reference 原本拥有的 Condition Key。
- * RawValue 只重定义 default；对象按 Condition name 选择 Key；未匹配 Key 忽略，不比较新旧值。
- * @example
- * declareVariable(background, 'red') // 只定义 --background。
- * declareVariable(background, { hover: 'blue' }) // 只定义 --background-when-hover。
- */
-export function declareVariable(reference: Variable, input: ValueInput | Record<string, ValueInput>): Declaration<string, unknown> {
-  return declaration(reference, input)
 }

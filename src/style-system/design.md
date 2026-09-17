@@ -1,6 +1,6 @@
 # Style System 2.0 设计
 
-本文说明 Style System 2.0 已确定的对象模型和编译语义。当前文件职责见 [architecture.md](architecture.md)，组件样式写法见 [样式文件写法](../../docs/style/样式文件写法.md)。
+本文说明 Style System 2.0 已确定的对象模型和编译语义。样式名称的 namespace、语义层级与 CSS 实现边界见 [naming.md](naming.md)，当前文件职责见 [architecture.md](architecture.md)，组件样式写法见 [样式文件写法](../../docs/style/样式文件写法.md)。
 
 # 设计目标
 
@@ -16,7 +16,7 @@ Block、StyleRule、MediaRule 和 KeyframeRule 不再是对象模型。它们在
 
 ## 定义层与业务层
 
-Style System 及其共享 values、selectors、declarations 才是定义层；整个组件 `.style.ts` 都是业务层。把 `value()` 写在组件文件顶部，不会使它成为定义层代码。
+Style System 及其共享 values、selectors、properties 才是定义层；整个组件 `.style.ts` 都是业务层。把 `value()` 写在组件文件顶部，不会使它成为定义层代码。
 
 能够表达通用颜色、阴影、间距、交互状态或其他共享 feature 的定义，应先进入 Style System。只有无法取得足够通用语义的值才留在业务层；边界需要结合真实复用范围和表达质量判断，不能因为不存在机械分类规则，就默认所有值都属于组件。业务样式应主要选择已有定义和重定义 CSS Variable，代码量保持很小。
 
@@ -28,10 +28,10 @@ Style System 及其共享 values、selectors、declarations 才是定义层；�
 | --- | --- |
 | Condition | 描述相对于当前地址的 selector、状态、媒体条件或 At Rule 头。 |
 | Condition Path | 由 Condition 组成的有序地址；嵌套时直接追加。 |
-| CSS Property | 表达声明左侧的位置，包括普通属性、Custom Property 和 Descriptor。 |
+| CSS Key | Declaration 的受体，包括普通属性、Variable 和 Descriptor；普通属性同时保存固定的内容语法。 |
 | RawValue | 已不可继续拆解的原始值，当前是 `string` 或 `number`。 |
 | Value | 原始值、随 Condition 取值的对象或复合表达；创建时不生成 CSS。 |
-| Declaration | 保存 CSS Property 与 Value 的关系，以及必要的属性扩写语义。 |
+| Declaration | 已经匹配好的 Key 与 content；只保存这对关系，不拥有定义行为。 |
 | Rule | 一条 `[RuleAddress, RuleValue]` 配置。 |
 | Rules | 按登记顺序保存 Rule 的内部 Map。 |
 | Rule Handle | 控制一次 `rule()` 登记仍然有效的内容。 |
@@ -53,7 +53,7 @@ const enabledHover = condition('&:hover:not(:disabled)', 'hover')
 ```ts
 type RuleAddress = [
   ConditionPath | undefined,
-  CSSProperty | undefined,
+  CSSKey | undefined,
 ]
 
 type Rule = [RuleAddress, RuleValue]
@@ -64,9 +64,9 @@ RuleAddress 固定为两项，两项都允许为空：
 
 | 地址 | 语义 |
 | --- | --- |
-| `[path, property]` | 追加 path，并选择 property。 |
-| `[path, undefined]` | 只追加 path，沿用当前 property。 |
-| `[undefined, property]` | 保持当前 path，选择 property。 |
+| `[path, key]` | 追加 path，并选择 key。 |
+| `[path, undefined]` | 只追加 path，沿用当前 key。 |
+| `[undefined, key]` | 保持当前 path，选择 key。 |
 | `[undefined, undefined]` | 保持当前地址。 |
 
 RuleValue 可以继续包含 Rules。编译器进入它时沿用上层地址，再按内部 RuleAddress 继续寻址。因此 CSS `@function` 的函数体、Keyframes 的帧和其他嵌套内容都使用同一个模型，不需要专用 Block。
@@ -78,24 +78,38 @@ RuleValue 可以继续包含 Rules。编译器进入它时沿用上层地址，�
 `rule()` 与 `rules()` 在 `.style.ts` 顶层直接调用，把配置按实际调用顺序写入 CSSRoot 内部源账本：
 
 ```ts
-rule(button, colorKey, foregroundColor)
+rule(button, $color, color)
 
 rules(button, [
-  color(foregroundColor),
-  backgroundColor(background),
+  [$color, color],
+  [$backgroundColor, backgroundColor],
 ])
 ```
 
-`rule(condition, property, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受 Declaration、`[CSSProperty, Value]` 与嵌套分组，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
+`rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明二元数组与嵌套分组，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
+
+Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回同一个二元数组，作者可以按上下文决定是否使用。普通属性 Key、Variable 和 Descriptor 都直接充当受体；一个内容直接放在第二项，多个有序内容放进第二项内部的数组：
+
+```ts
+[$borderRadius, pill]
+[$gap, gap]
+[$padding, [paddingBlock, paddingInline]]
+[$transition, [
+  [$backgroundColor, fast, standard],
+  [$color, fast, standard],
+]]
+```
+
+`rules()` 递归展开声明组合和 Mixin 返回的分组；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读 content。
 
 同址后写覆盖前写，位置仍沿用该地址首次进入 Map 时的顺序。这就是普通 Map 更新的顺序语义；编译器不按 Path 深度、名称或输出长度重排。
 
 `rule()` 返回句柄：
 
 ```ts
-const appearance = rule(button, colorKey, foregroundColor)
+const appearance = rule(button, $color, color)
 
-appearance.replace(nextForegroundColor)
+appearance.replace(nextForeground)
 appearance.remove()
 ```
 
@@ -126,28 +140,28 @@ Condition 是机制，State 只是其中一种语义用法。hover、active、di
 const compact = condition('&[data-density="compact"]')
 const spacing = value('12px', [
   [compact, '6px'],
-  [media('(width > 800px)'), '16px'],
+  [$media('(width > 800px)'), '16px'],
 ])
 ```
 
 一个 feature 应在 Style System 的定义处保存各 Condition 对应的 Value，消费处只使用它：
 
 ```ts
-export const foregroundColor = variable('fg', {
-  fallback: value(defaultForegroundColor, [
-    [whenHover, strongForegroundColor],
-    [whenActive, strongForegroundColor],
+export const color = variable('color-content', {
+  fallback: value(foreground, [
+    [whenHover, strongForeground],
+    [whenActive, strongForeground],
   ]),
 })
 
-rules(button, [color(foregroundColor)])
+rules(button, [[$color, color]])
 ```
 
-这里的逻辑 CSS Variable 同时拥有 default、hover、active 等 Key。组件仍只消费 `foregroundColor`；各 Key 在落盘时取得独立的 Custom Property 名称，例如 `--fg`、`--fg-when-hover`、`--fg-when-active`。
+这里的逻辑 CSS Variable 同时拥有 default、hover、active 等 Key。组件仍只消费 `color`；各 Key 在落盘时取得独立的 Custom Property 名称，例如 `--color-content`、`--color-content-when-hover`、`--color-content-when-active`。`$color` 是 CSS Key，`color` 是对应的最底层 Variable；同词干不需要再增加组件主体。
 
 ## Variable 按已有 Key 局部重定义
 
-`declareVariable(variable, input)` 不用 input 整体替换 Variable，而是先把 input 解释成 Value，再把它提供的 Key 投影到 Variable 已经拥有的 Key：
+`[variable, input]` 不用 input 整体替换 Variable，而是把 input 提供的 Condition Key 投影到 Variable 已经拥有的 Condition Key：
 
 - RawValue 或不带 Condition 的 Value 只提供 default，因此只重定义基础 Custom Property。
 - 带 Condition 的 Value 可以同时提供 default 与若干 Condition Key。
@@ -156,19 +170,23 @@ rules(button, [color(foregroundColor)])
 - 只要匹配 Key 被明确提供，就生成定义；不比较新旧值是否相同。
 
 ```ts
-declareVariable(backgroundColor, 'red')
-// 只定义 --background-color。
+const exampleBackground = variable('color-background-example', {
+  fallback: value('white', [[$hover, 'gray'], [$active, 'silver']]),
+})
 
-declareVariable(backgroundColor, { hover: 'blue' })
-// 只定义 --background-color-when-hover。
+[exampleBackground, 'red']
+// 只定义 --color-background-example。
 
-declareVariable(backgroundColor, value('red', [[active, 'green']]))
-// 定义 --background-color 与 --background-color-when-active。
+[exampleBackground, { hover: 'blue' }]
+// 只定义 --color-background-example-when-hover。
+
+[exampleBackground, value('red', [[$active, 'green']])]
+// 定义 --color-background-example 与 --color-background-example-when-active。
 ```
 
 对象 Key 使用 Condition name；复合 Condition Path 按 name 顺序组成 Key。Condition 的 CSS header 可以演进，Variable 的匹配和派生名称仍由稳定 name 决定。
 
-Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同 Key 的值作为 fallback。业务 Rule 因此只重定义需要变化的 Key，不重新创建一份状态 Value，也不重复声明消费该 feature 的 CSS Property。
+Variable 在值位置按当前 Condition 读取对应的派生 Custom Property，并以定义层 Value 中同 Key 的值作为 fallback。业务 Rule 因此只重定义需要变化的 Key，不重新创建一份状态 Value，也不重复声明消费该 feature 的普通属性。
 
 ## 按请求条件逐层读取
 
@@ -222,7 +240,7 @@ hover、active、disabled 等通用状态在 Style System 中定义为具有稳�
 
 loading、具体 Variant 或 Tone 是否足够通用，需要按真实服务对象判断。留在 Button 的业务条件只负责选择或重定义定义层 Variable；它不能在组件文件里复制 hover、active、disabled 的完整取值矩阵。若某个状态结果需要被特殊组合覆盖，业务 Rule 只重定义该 Variable 对应的 Condition Key。
 
-Rules 也可以作为 Value 内容，用于需要继续携带 Property 或嵌套结构的场景。CSS `@function` 的完整函数体可以因此作为一个 Value 被按需挂载；编译器仍按相同的二项地址递归处理。
+Rules 也可以作为 Value 内容，用于需要继续携带 Key 或嵌套结构的场景。CSS `@function` 的完整函数体可以因此作为一个 Value 被按需挂载；编译器仍按相同的二项地址递归处理。
 
 ---
 
@@ -255,7 +273,7 @@ const cssString = compileCSS()
 它不接收业务侧 Rule 容器，也不返回中间树。内部步骤是：
 
 1. 快照当前源 Rules。
-2. 按登记顺序累计 Condition Path 与 CSS Property。
+2. 按登记顺序累计 Condition Path 与 CSS Key。
 3. 解读 Declaration，统一展开需要静态扩写的属性。
 4. 按请求条件解读 Value，并触发可达的 `onActive`。
 5. 继续处理本次产生的派生 Rules，直到没有新的依赖。
@@ -294,7 +312,7 @@ render(() => <App />, root)
 # 验收条件
 
 1. `Rule` 只表示一条配置，`Rules` 才表示集合；公共 API 不暴露源 Rules。
-2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；无效批次不产生部分写入。
+2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；声明统一为 `[key, content]`，`declare()` 只返回相同二元数组，无效批次不产生部分写入。
 3. 同址后写覆盖前写并保持 Map 顺序，旧句柄不能影响新的写入。
 4. `Value` 与 `RawValue` 足以表达普通取值、各 Condition 对应的取值和复合值；不建立 State 专用分类。
 5. `value()` 在定义时只保存结构，编译时按同键否则 default 的规则递归读取。
@@ -303,4 +321,4 @@ render(() => <App />, root)
 8. `onActive` 只向本次派生 Rules 添加可达依赖，不污染源 Rules。
 9. CSSRoot 持有内部账本；`compileCSS()` 无参生成 CSS string，App 在渲染前无参挂载且原子提交。
 10. Style System 定义层保存通用 feature 的 Condition Key；组件样式只选择定义并按已有 Key 重定义 Variable。
-11. 一个逻辑 Variable 为每个 Condition Key 派生稳定 Custom Property；局部声明不替换未提供的 Key，也不新增原定义没有的 Key。
+11. 一个逻辑 Variable 为每个 Condition Key 派生稳定 Custom Property；Variable 本身可作为 Declaration Key 或 Value，局部声明不替换未提供的 Key，也不新增原定义没有的 Key。

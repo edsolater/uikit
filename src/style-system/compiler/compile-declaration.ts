@@ -1,10 +1,10 @@
 /** Declaration 的语法规则集中在编译阶段；构造端只记录内容。 */
 import type { Declaration } from '../core/css-declaration'
 import type { ValueInput } from '../core/css-value'
-import { propertyName } from '../core/css-key'
+import { declarationSyntax, propertyName } from '../core/css-key'
 import { isVariable, variableConditionKey, variableName, type Variable } from '../core/css-variable'
-import type { FontParts } from '../declarations/font'
-import type { PaddingSides } from '../declarations/padding'
+import type { FontParts } from '../properties/font'
+import type { PaddingSides } from '../properties/padding'
 import type { Transition } from '../values/transition'
 import { combineValues, compileAt, compileValue, conditionPathKey, valuePaths, type ValueContext, type ValueResult } from './compile-value'
 
@@ -18,11 +18,13 @@ export interface DeclarationResult extends ValueResult { property: string }
  * // 本例只使用原始值，无需激活依赖；正式编译由 compileRules 提供 activate。
  * // resolving 跟踪尚未退出的取值链，本次调用从空链开始。
  * const context: ValueContext = { root: new Map(), path: [], resolving: new Map(), activate() {} }
- * compileDeclaration(padding('4px', '8px'), context)
+ * compileDeclaration(declare($padding, ['4px', '8px']), context)
  * // 路径均为 []，依次为 padding-top: 4px、right: 8px、bottom: 4px、left: 8px。
  */
-export function compileDeclaration(input: Declaration<string, unknown>, context: ValueContext): DeclarationResult[] {
-  const { content, syntax, name } = input
+export function compileDeclaration(input: Declaration<unknown>, context: ValueContext): DeclarationResult[] {
+  const [key, content] = input
+  const name = propertyName(key)
+  const syntax = declarationSyntax(key)
   /**
    * 给值结果补充目标属性，并按 expandProperty 的规则展开方向；保留各自相对路径。
    * @example
@@ -35,13 +37,20 @@ export function compileDeclaration(input: Declaration<string, unknown>, context:
    * compose(['1px', 'solid', 'red'], (parts) => parts.join(' ')) // [{ path: [], text: '1px solid red' }]
    */
   const compose = (parts: ValueInput[], format: (parts: string[]) => string) => combineValues(parts.map((item) => compileValue(item, context)), format)
-  if (isVariable(input.property)) return compileVariableDeclaration(input.property, content as ValueInput | Record<string, ValueInput>, context)
+  if (isVariable(key)) return compileVariableDeclaration(key, content as ValueInput | Record<string, ValueInput>, context)
   switch (syntax) {
     case 'value': return expandValues(compileValue(content as ValueInput, context))
-    case 'border': return expandValues(compose(content as ValueInput[], (parts) => parts.join(' ')))
-    case 'margin':
+    case 'border': return expandValues(Array.isArray(content)
+      ? compose(content as ValueInput[], (parts) => parts.join(' '))
+      : compileValue(content as ValueInput, context))
+    case 'margin': return expandValues(Array.isArray(content)
+      ? compose(content, (parts) => parts.join(' '))
+      : compileValue(content as ValueInput, context))
     case 'padding': {
       if (Array.isArray(content)) return expandValues(compose(content, (parts) => parts.join(' ')))
+      if (typeof content !== 'object' || content === null || content instanceof Map || 'kind' in content) {
+        return expandValues(compileValue(content as ValueInput, context))
+      }
       const sides = content as PaddingSides
       return (['top', 'right', 'bottom', 'left'] as ('top' | 'right' | 'bottom' | 'left')[]).flatMap((side) =>
         sides[side] === undefined ? [] : expandValues(compileValue(sides[side], context), `${name}-${side}`),
@@ -72,16 +81,17 @@ export function compileDeclaration(input: Declaration<string, unknown>, context:
       return expandValues(combineValues(entries, (parts) => parts.join(', ')))
     }
   }
+  throw new Error(`不支持 ${name} 的声明语法。`)
 }
 
 /**
  * 把一次逻辑 Variable 重定义投影到它已有的 Condition Key，并将每个匹配 Key 编译成同一 Rule 地址下的独立 Custom Property。
  * 普通 Value 以自身实际路径提供 Key；对象只读取与 Variable 已有 Condition name 匹配的属性。未提供或未匹配的 Key 不输出。
  * @example
- * const background = variable('background', { fallback: value('red', [[whenHover, 'blue']]) })
+ * const exampleBackground = variable('color-background-example', { fallback: value('red', [[whenHover, 'blue']]) })
  * const context: ValueContext = { root: new Map(), path: [], resolving: new Map(), activate() {} }
- * compileVariableDeclaration(background, { hover: 'cyan' }, context)
- * // [{ path: [], property: '--background-when-hover', text: 'cyan' }]
+ * compileVariableDeclaration(exampleBackground, { hover: 'cyan' }, context)
+ * // [{ path: [], property: '--color-background-example-when-hover', text: 'cyan' }]
  */
 export function compileVariableDeclaration(reference: Variable, input: ValueInput | Record<string, ValueInput>, context: ValueContext): DeclarationResult[] {
   const referencePaths = valuePaths(reference)
@@ -110,8 +120,8 @@ export function compileVariableDeclaration(reference: Variable, input: ValueInpu
  * @example
  * expandProperty('margin', { path: [], text: '4px 8px' })
  * // 依次得到 margin-top/right/bottom/left，文本为 4px/8px/4px/8px。
- * expandProperty('padding', { path: [], text: 'var(--space)' })
- * // [{ path: [], property: 'padding', text: 'var(--space)' }]
+ * expandProperty('padding', { path: [], text: 'var(--space-example)' })
+ * // [{ path: [], property: 'padding', text: 'var(--space-example)' }]
  */
 export function expandProperty(property: string, value: ValueResult): DeclarationResult[] {
   if (!['margin', 'padding'].includes(property) || /var\(/.test(value.text)) return [{ ...value, property }]
