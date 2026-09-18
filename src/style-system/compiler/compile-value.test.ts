@@ -10,6 +10,7 @@ import { $transform } from '../properties/transform'
 import { calcMultiply } from '../values/functions/calc'
 import { colorMix } from '../values/functions/color-mix'
 import { translateY } from '../values/functions/transform'
+import { compileValue } from './compile-value'
 
 const handles: RulesHandle[] = []
 
@@ -101,7 +102,7 @@ test('嵌套 CSS Function 沿同一临时地址继续解析', () => {
   expect(css).not.toContain('&:active {\n&:hover')
 })
 
-test('前一个参数约束后续参数，拒绝分支不激活其叶子依赖', () => {
+test('完整解析各参数候选，访问依赖后由挂载拒绝异址组合', () => {
   const hover = condition('&:hover')
   const active = condition('&:active')
   const rejected = vi.fn()
@@ -111,7 +112,46 @@ test('前一个参数约束后续参数，拒绝分支不激活其叶子依赖',
 
   expect(rejected).not.toHaveBeenCalled()
   expect(compileCSS()).toBe('.OrderedArguments {\nwidth: calc(2px * 2);\n}')
-  expect(rejected).not.toHaveBeenCalled()
+  expect(rejected).toHaveBeenCalledTimes(1)
+})
+
+test('兄弟声明独立形成候选，再共同挂载到唯一的条件区域', () => {
+  const hover = condition('&:hover')
+  const active = condition('&:active')
+  const first = value('red', [[hover, 'pink']])
+  const second = value('blue', [[hover, 'cyan'], [active, 'navy']])
+  const third = value('white', [[hover, 'silver'], [active, 'gray']])
+  keep(rules('.SiblingCandidates', [
+    ['background-color', colorMix(first, colorMix(second, third))],
+    ['border-color', colorMix(second, third)],
+  ]))
+  expect(compileCSS()).toBe([
+    '.SiblingCandidates {',
+    'background-color: color-mix(in oklab, red, color-mix(in oklab, blue, white));',
+    'border-color: color-mix(in oklab, blue, white);',
+    '&:hover {',
+    'background-color: color-mix(in oklab, pink, color-mix(in oklab, cyan, silver));',
+    'border-color: color-mix(in oklab, cyan, silver);',
+    '}',
+    '&:active {',
+    'border-color: color-mix(in oklab, navy, gray);',
+    '}',
+    '}',
+  ].join('\n'))
+})
+
+test('嵌套函数解析保留全部十八个组合与三个 Value 的条件贡献', () => {
+  const hover = condition('&:hover')
+  const active = condition('&:active')
+  const first = value('red', [[hover, 'pink']])
+  const second = value('blue', [[hover, 'cyan'], [active, 'navy']])
+  const third = value('white', [[hover, 'silver'], [active, 'gray']])
+  const candidates = compileValue(colorMix(first, colorMix(second, third)), {
+    root: new Map(), path: [], resolving: new Set(), activate() {}, defineVariable() {},
+  })
+  expect(candidates).toHaveLength(18)
+  expect(candidates.every((candidate) => candidate.conditions.length === 3)).toBe(true)
+  expect(candidates.some((candidate) => JSON.stringify(candidate.conditions) === JSON.stringify([[], [hover], [active]]))).toBe(true)
 })
 
 test('三个智能参数与嵌套函数只保留共同分支', () => {
@@ -136,7 +176,7 @@ test('动态 Variable 在每个消费地址补充同名默认赋值，显式覆�
   keep(rules('.SecondConsumer', [[ratio, [[hover, 0.3]]], ['opacity', ratio]]))
 
   const css = compileCSS()
-  expect(css).toContain('.FirstConsumer {\n--shared-ratio: 0.8;\n&:hover {\n--shared-ratio: 0.6;')
+  expect(css).toContain('.FirstConsumer {\n--shared-ratio: 0.8;\nopacity: var(--shared-ratio, 0.8);\n&:hover {\n--shared-ratio: 0.6;')
   expect(css).toContain('.SecondConsumer {\n--shared-ratio: 0.8;')
   expect(css).toContain('&:hover {\n--shared-ratio: 0.3;')
   expect(count(css, '--shared-ratio: 0.6;')).toBe(1)

@@ -83,7 +83,7 @@ test('不同 Condition 对象的相同 header 共享 Rule、Value 与 Variable �
   expect(css).toContain('.same-rule {\n&:hover {\ncolor: blue;\n}\n}')
   expect(css).not.toContain('.same-rule {\n&:hover {\ncolor: red;')
   expect(css).toContain('.same-value {\ncolor: red;\n&:hover {\ncolor: navy;')
-  expect(css).toContain('.same-variable {\n&:hover {\n--color-condition-identity: silver;')
+  expect(css).toContain('.same-variable {\n--color-condition-identity: black;\ncolor: var(--color-condition-identity, black);\n&:hover {\n--color-condition-identity: silver;')
   expect(css).toContain('color: var(--color-condition-identity, black);')
 })
 
@@ -186,12 +186,12 @@ test('当前链再次访问实际槽位时抛错；fallback 循环也能终止',
   expect(() => compileCSS()).toThrow('循环引用')
 })
 
-test('外层状态只选择同键，不展开所选颜色无关的 active', () => {
+test('异址候选不挂载，但完整候选解析仍检查其中的循环', () => {
   const blue = value('blue', [['&:hover', 'cyan'], ['&:active', 'navy']])
   keep(rule('.example', 'color', value('red', [['&:hover', blue]])))
   expect(compileCSS()).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n}\n}')
   blue.conditions.push([[condition('&:active')], blue])
-  expect(compileCSS()).not.toContain('&:active')
+  expect(() => compileCSS()).toThrow('循环引用')
 })
 
 test('完整 Rules 仍可作为递归内容切换属性', () => {

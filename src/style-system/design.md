@@ -27,7 +27,7 @@ Style System 及其共享 values、selectors、properties、mixins 是定义层�
 | 对象 | 职责 |
 | --- | --- |
 | Condition | 描述相对于当前地址的 selector、状态、媒体条件或 At Rule 头。 |
-| Condition Path | 有序地址；普通 Rule 追加地址，Value 分支只允许同址合并。 |
+| Condition Path | 有序地址；挂载时验证 Value 的条件贡献，同址归一、异址拒绝。 |
 | CSS Key | Declaration 的受体，包括普通属性、Variable 和 Descriptor；普通属性同时保存固定的内容语法。 |
 | RawValue | 已不可继续拆解的原始值，当前是 `string` 或 `number`。 |
 | Value | 原始值、随 Condition 取值的对象或复合表达；创建时不生成 CSS。 |
@@ -102,7 +102,7 @@ Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回
 
 `rules()` 递归展开声明组合和 Mixin 返回值，跳过任意层级的独立 `undefined`；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Declaration 的 content 为 `undefined` 时整条声明同样被跳过。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读有效 content。
 
-同址后写覆盖前写，位置仍沿用该地址首次进入 Map 时的顺序。这就是普通 Map 更新的顺序语义；编译器不按 Path 深度、名称或输出长度重排。
+源账本同址后写覆盖前写，位置沿用该地址首次进入 Map 的顺序。最终 CSS 记录的父子关系由挂载阶段建立，见下文 [有序 CSS 记录](#有序-css-记录)。
 
 `rule()` 返回句柄：
 
@@ -171,7 +171,7 @@ rules(button, [[$backgroundColor, interactiveSurface]])
 
 Variable 始终对应同名 Custom Property。它作为 Value 被消费时只输出一个 `var(--name, fallback)`，条件分支改变该变量的赋值，不展开消费它的 CSS Function。
 
-动态 fallback 在实际消费地址生成 default 与条件赋值；静态 fallback 只留在 `var()` 内。编译器先输出这些条件默认值，再输出显式声明，同一地址的显式声明优先。不同消费地址分别得到自己的条件默认值。
+动态 fallback 在实际消费地址生成 default 与条件赋值；静态 fallback 只留在 `var()` 内。条件默认值与显式声明都进入同一挂载器，同一地址的显式声明优先，与解析先后无关。不同消费地址分别得到自己的条件默认值。
 
 `[variable, input]` 可以用完整 Value 同时修改 default 与条件分支，也可以用条目数组只修改指定地址。未声明的地址保留默认定义；允许增加 fallback 中没有的条件。
 
@@ -194,15 +194,15 @@ Variable 表达独立可赋值的输入，不为普通 CSS 属性预先建立同
 
 ## 从 Rule 地址向叶子展开
 
-编译先取得 Rule 地址，再携带临时分支逐层进入 Value 与 CSS Function。Function 按顺序解析子值，前一个子值确定的分支继续约束后一个子值；嵌套 Function 使用相同过程。
+编译先取得 Rule 地址，再逐层进入 Value 与 CSS Function。每个动态 Value 提供自己的 default 与条件分支；Function 解析全部子值组合，并保留每个 Value 的条件贡献。嵌套 Function 不建立新的条件作用域。
 
-- RawValue 与无条件的 Value 不增加分支约束。
-- 动态 Value 的 default 是真实分支，内部以空路径表示；未选择任何分支用 `undefined` 表示。只有输出 CSS 时，default 才表现为空地址。
-- 同址分支合并：default 与 default、hover 与 hover、active 与 active。
-- 不同分支拒绝：default 与 hover、default 与 active、hover 与 active。不自动拼出交集选择器，也不以另一个动态 Value 的 default 补齐缺失分支。
+- RawValue 与无条件的 Value 不增加条件贡献。
+- 动态 Value 的 default 是真实贡献，解析结果以空路径保留，交给挂载器时降级为 `undefined`；验证前不能删除。
+- 挂载阶段验证完整候选：default 与 default、hover 与 hover、active 与 active 同址归一。
+- default 与 hover、default 与 active、hover 与 active 不同址，候选挂载失败，记录数组保持原样。CSS Function 不判断这些冲突。
 - 路径身份由完整 `header` 序列决定；重复分支最后一次定义生效。
 
-例如两个子 Value 都有 default、hover、active，复合结果只有三条。同一函数的两个子 Value 分别只有 default/hover 与 default/active 时，只有 default 共同成立。
+例如两个子 Value 都有 default、hover、active，先形成九个候选，挂载后留下三条。同一函数的两个子 Value 分别只有 default/hover 与 default/active 时，先形成四个候选，挂载后只留下 default。
 
 例如：
 
@@ -219,16 +219,11 @@ const foreground = value('red', [
 
 foreground 的 default 得到 red，hover 得到 cyan；不会进入 blue 的 active 分支。
 
-## 循环只按实际访问槽位判断
+## 循环检查覆盖全部候选
 
-循环检测记录当前递归链正在访问的 `(Value 对象身份, 临时分支)`：
+循环检测记录当前递归链中的 Value 对象。再次进入同一对象时停止编译并报错；访问完成立即退出活动链，因此不同参数、分支和声明共享同一 Value 不会误报。
 
-- hover 与 active 是同一 Value 的两个不同槽位，可以分别读取。
-- 一个 Value 被不同声明共享，前一次读取结束后不会污染下一次读取。
-- 当前链再次进入完全相同的对象与分支时，判定为循环并停止编译。
-- 未选择分支与已选择 default 分别记录；不把不同分支混为一项。
-
-访问结束后立即移出活动链。若以后增加已完成结果缓存，它也必须与活动链分开。
+解析必须形成全部候选，所以最终因条件冲突而无法挂载的候选也会接受循环检查，不能通过提前剪枝隐藏循环。
 
 ## 普通 Condition Path 不去重
 
@@ -236,7 +231,7 @@ foreground 的 default 得到 red，hover 得到 cyan；不会进入 blue 的 ac
 
 ## 复合值保留子 Value
 
-calc、color-mix、shadow、transition、transform、animation 和列表都保存子 Value，由同一套顺序展开机制编译。各函数只负责最终 CSS 语法，不自行发现或传播条件。
+calc、color-mix、shadow、transition、transform、animation 和列表都保存子 Value，由同一套完整候选解析机制编译。各函数只负责最终 CSS 语法，不裁决条件冲突。
 
 `colorMix([color, ratio], otherColor)` 的比例也接受 Value 或 Variable。数字 `0.82` 在编译时成为 `82%`；Variable 比例成为 `calc(var(--ratio, 0.82) * 100%)`，由浏览器使用当前变量值计算。业务构造阶段不做数值换算。
 
@@ -262,11 +257,31 @@ interface ValueOptions {
 }
 ```
 
-创建 Value、登记 Rule 或只导入样式模块都不触发回调。`compileCSS()` 真正访问该 Value 时才触发；返回的 Rules 进入当前编译的派生集合，并继续接受同一套递归解读。
+创建 Value、登记 Rule 或只导入样式模块都不触发回调。`compileCSS()` 解析访问该 Value 时触发；返回的 Rules 进入当前编译的派生集合，并继续接受同一套递归解读。完整候选中的依赖都会被访问，即使对应声明最终因条件冲突而未挂载。
 
 派生 Rules 不写回源 Rules。因此删除源 Value 后再编译，它曾带来的 `@property`、Keyframes 或 `@function` 会自然退出结果，不需要单独的停用阶段。
 
-同一 Value 在一次编译中只激活一次，首次实际消费位置作为回调上下文。Rules 自引用和 Value 槽位循环都会终止并报错，不产生部分 CSS。
+同一 Value 在一次编译中只激活一次，首次解析位置作为回调上下文。Rules 自引用和 Value 递归引用都会终止并报错，不产生部分 CSS。
+
+## 有序 CSS 记录
+
+内部记录使用普通可变三元组数组：
+
+```ts
+type CSSRecord = [conditions: (string | undefined)[], key: string | undefined, css: string]
+```
+
+Condition 与 CSS Key 在进入记录前降级为字符串；不存 Value、owner 或节点对象。树只由 conditions 的前缀关系表达。
+
+挂载完整候选时先验证所有条件贡献，无效候选不改变数组；default 验证通过后投影到当前节点。有效记录直接插入所属区域：
+
+- 同 Path、同 Key 原位覆盖；同 Path 的不同 Key 连续共存。
+- 父节点声明先于全部后代；每个子树只占一段连续区域。
+- 兄弟子树保持首次挂载顺序；向已有 hover 添加声明时进入原 hover 区域。
+- 条件变量默认值与显式声明共用这些规则，显式同址优先。
+- 具名 `@function`、`@keyframes`、`@property` 按主体整体替换，旧子树退出，新主体保留原兄弟位置。
+
+数组在挂载过程中形成规范顺序，不在末尾排序或重新分组。字符串函数只接收这份数组，比较相邻路径的公共前缀，打开或关闭块，再写入属性与内容；它不处理值解析、条件冲突、覆盖或所有权。
 
 ---
 
@@ -278,15 +293,12 @@ interface ValueOptions {
 const cssString = compileCSS()
 ```
 
-它不接收业务侧 Rule 容器，也不返回中间树。内部步骤是：
+它不接收业务侧 Rule 容器，也不返回中间树。源账本快照进入两个内部步骤：
 
-1. 快照当前源 Rules。
-2. 按登记顺序累计 Condition Path 与 CSS Key。
-3. 解读 Declaration，统一展开需要静态扩写的属性。
-4. 从当前地址向叶子展开 Value，并触发可达的 `onActive`。
-5. 继续处理本次产生的派生 Rules，直到没有新的依赖。
-6. 条件变量默认值先于显式声明输出；显式声明同址后写覆盖，保留地址原有顺序。
-7. 根据连续 Condition Path 生长花括号，返回 CSS string。
+1. `resolveRules()` 解析 Rules、Value、Variable、CSS Function 与依赖，把有效候选挂载为有序记录数组。
+2. `stringifyCSS()` 线性读取完整数组，返回 CSS string。
+
+这两个边界仅供编译器内部使用和测试，不从 Style System 公共入口导出。
 
 Compiler 比 Formatter、Encoder 或 Decoder 更准确：这里不仅排版，还会解读高层对象、按 Condition 取值、触发依赖、扩写属性并降级为浏览器接受的 CSS。
 
@@ -323,8 +335,8 @@ render(() => <App />, root)
 2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；声明统一为 `[key, content]`，`declare()` 只返回相同二元数组，无效批次不产生部分写入。
 3. 同址后写覆盖前写并保持 Map 顺序，旧句柄不能影响新的写入。
 4. `Value` 与 `RawValue` 足以表达普通取值、各 Condition 对应的取值和复合值；不建立 State 专用分类。
-5. Value 与 CSS Function 在定义时只保存结构；编译从 Rule 向叶子展开，同址分支合并，不同分支拒绝。
-6. 循环检测区分同一 Value 在不同 Condition Path 下的实际访问，共享引用不会被误判。
+5. Value 与 CSS Function 在定义时只保存结构；解析保留全部组合，挂载时同址归一、异址原子拒绝。
+6. 循环检查覆盖全部候选；共享引用不会被误判。
 7. 普通 Rule Path 不去重，合法的重复 selector 原样输出。
 8. `onActive` 只向本次派生 Rules 添加可达依赖，不污染源 Rules。
 9. CSSRoot 持有内部账本；`compileCSS()` 无参生成 CSS string，App 在渲染前无参挂载且原子提交。

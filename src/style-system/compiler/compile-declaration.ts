@@ -9,10 +9,10 @@ import type { PaddingSides } from '../properties/padding'
 import type { Transition } from '../values/transition'
 import { compileValueParts, compileValue, type ValueContext, type ValueResult } from './compile-value'
 
-/** 带相对 Condition Path 的声明结果。 */
+/** 带完整条件贡献的声明候选。 */
 export interface DeclarationResult extends ValueResult { property: string }
 
-/** 按 Key 语法编译 Declaration，并传播子值 Condition。 */
+/** 按 Key 语法解析 Declaration 候选。 */
 export function compileDeclaration(input: Declaration<unknown>, context: ValueContext): DeclarationResult[] {
   const [key, content] = input
   const name = propertyName(key)
@@ -81,7 +81,7 @@ export function compileVariableDeclaration(reference: Variable, input: VariableI
   if (Array.isArray(input)) {
     return input.flatMap(([conditionInput, value]) => {
       const path = toConditionPath(conditionInput)
-      return compileValue(value, context, path).map((result) => ({ ...result, property }))
+      return compileValue(value, context, [...(context.conditions ?? []), path]).map((result) => ({ ...result, property }))
     })
   }
   return compileValue(input, context).map((result) => ({ ...result, property }))

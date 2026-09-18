@@ -15,7 +15,7 @@ export interface CompileContext {
 
 /** Value 的按需依赖。 */
 export interface ValueOptions {
-  /** 首次消费时产生本次编译的根地址 Rules；异常终止编译。 */
+  /** 首次解析访问时产生根地址 Rules；异常终止编译。 */
   onActive?: (context: CompileContext) => Rules | Rules[] | void
 }
 

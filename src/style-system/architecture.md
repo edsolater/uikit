@@ -6,15 +6,16 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 
 | 位置 | 职责 |
 | --- | --- |
-| `core/css-condition.ts` | Condition、有序地址与分支合并约束。 |
+| `core/css-condition.ts` | Condition 与挂载时的候选地址规范。 |
 | `core/css-key.ts` | CSS Key 及其内容语法。 |
 | `core/css-declaration.ts` | `[key, content]` Declaration。 |
 | `core/css-rule.ts` | Rule 登记、批量展开与句柄。 |
 | `core/css-value.ts` | RawValue、Condition Value、复合值与按需依赖。 |
 | `core/css-variable.ts` | 同名 Variable 引用、根值与注册。 |
 | `core/css-root.ts` | 唯一源账本、快照编译与宿主提交。 |
-| `compiler/compile-css.ts` | 编译会话、条件变量默认定义与 CSS string 输出。 |
-| `compiler/compile-value.ts` | 从外向内展开 Value、循环检测与复合值降级。 |
+| `compiler/compile-css.ts` | 解析挂载与线性字符串输出两个内部入口。 |
+| `compiler/css-records.ts` | 三元组记录的原子挂载与深度优先顺序。 |
+| `compiler/compile-value.ts` | 完整 Value 候选、条件贡献、循环检测与复合值降级。 |
 | `compiler/compile-declaration.ts` | Declaration 语法与静态简写展开。 |
 | `properties` | 浏览器 CSS 属性的 Key。 |
 | `selectors/interaction.ts` | 可复用交互 Condition。 |
@@ -34,14 +35,15 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
   -> rule() / rules() 登记源 Rule
 App 调用 cssRoot.mount()
   -> 快照源账本
-  -> 解读 Declaration 与 Value
-  -> 收集本次按需依赖
-  -> 生成 CSS string
+  -> resolveRules：解析完整候选与依赖，挂载有序记录数组
+  -> stringifyCSS：线性输出 CSS string
   -> 提交到 style#css-root
 render()
 ~~~
 
 `compileCSS()` 只返回同一账本的 CSS string，不写 DOM。`cssRoot.mount()` 保留宿主已有前缀；生成结果未变化时不改节点，编译失败时不提交。详细对象与覆盖语义由 [design.md](design.md) 负责。
+
+记录项严格为 `[(string | undefined)[], string | undefined, string]`，只保存条件、属性与内容。挂载时形成父声明在前、子树连续的顺序，不建立节点对象树，不进行事后排序。两个内部入口不从公共 `index.ts` 导出。
 
 # Button 接入
 
