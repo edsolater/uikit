@@ -1,5 +1,6 @@
-/** Condition Value 与复合值协议。 */
-import { toConditionPath, type ConditionInput, type ConditionPath } from './css-condition'
+/** 按 Subject Condition 名称分支的 Value 与复合值协议。 */
+import { isIterable, toCollectionIterator } from '@edsolater/fnkit'
+import type { ConditionPath } from './css-condition'
 import type { CSSKey } from './css-key'
 import type { Rules } from './css-rule'
 
@@ -22,11 +23,11 @@ export interface ValueOptions {
 /** 不再拆分的 CSS 值。 */
 export type RawValue = string | number
 
-/** Declaration 可消费的原始值、Condition Value 或复合值。 */
+/** Declaration 可消费的原始值、条件分支或复合值。 */
 export type Value = RawValue | (ValueOptions & {
   kind: 'value'
   default: ValueInput
-  conditions: [ConditionPath, ValueInput][]
+  conditions: [string, ValueInput][]
   expression?: never
 }) | (ValueOptions & {
   kind: 'value'
@@ -38,6 +39,9 @@ export type Value = RawValue | (ValueOptions & {
 /** Value 构造器和 Declaration 的内容。 */
 export type ValueInput = Value | Rules
 
+/** Subject Condition 名称到分支值的对象或键值 Iterable。 */
+export type ValueBranches = Record<string, ValueInput> | Iterable<[name: string, value: ValueInput]>
+
 /** 保留子 Value 的复合表达。 */
 export type ValueExpression =
   | { type: 'variable'; name: string; fallback?: ValueInput }
@@ -48,14 +52,36 @@ export type ValueExpression =
   | { type: 'color-mix'; colors: (ValueInput | [ValueInput, ValueInput])[] }
   | { type: 'shadow'; x: ValueInput; y: ValueInput; blur?: ValueInput; spread?: ValueInput; color?: ValueInput; inset?: boolean }
 
-/** 保存默认值、条件分支与按需依赖；不求值或触发依赖。 */
+/** 判断第二参数是否是按需依赖配置。 */
+function isValueOptions(input: ValueBranches | ValueOptions): input is ValueOptions {
+  return typeof input === 'object' && input !== null
+    && !isIterable(input)
+    && 'onActive' in input
+    && (input.onActive === undefined || typeof input.onActive === 'function')
+    && Object.keys(input).every((key) => key === 'onActive')
+}
+
+/** 把对象或键值 Iterable 转为固定分支数组。 */
+function branchEntries(input: ValueBranches): [string, ValueInput][] {
+  if (typeof input !== 'object' || input === null) throw new Error('Value 分支必须是名称对象或键值 Iterable。')
+  const source = isIterable(input) ? new Map(input as Iterable<[string, ValueInput]>) : input
+  return Array.from(toCollectionIterator(source), ({ key, value }) => {
+    if (typeof key !== 'string') throw new Error('Value 分支名称必须是字符串。')
+    return [key, value]
+  })
+}
+
+/** 保存默认值、名称分支与按需依赖；分支接受对象或键值 Iterable。 */
 export function value(input: ValueInput, options?: ValueOptions): Extract<Value, { default: ValueInput }>
-export function value(input: ValueInput, conditions: [ConditionInput, ValueInput][], options?: ValueOptions): Extract<Value, { default: ValueInput }>
-export function value(input: ValueInput, conditionsOrOptions?: [ConditionInput, ValueInput][] | ValueOptions, options?: ValueOptions): Extract<Value, { default: ValueInput }> {
+export function value(input: ValueInput, branches: ValueBranches, options?: ValueOptions): Extract<Value, { default: ValueInput }>
+export function value(input: ValueInput, branchesOrOptions?: ValueBranches | ValueOptions, options?: ValueOptions): Extract<Value, { default: ValueInput }> {
+  const branches = branchesOrOptions !== undefined && (options !== undefined || !isValueOptions(branchesOrOptions))
+    ? branchEntries(branchesOrOptions as ValueBranches)
+    : []
   return {
     kind: 'value',
     default: input,
-    conditions: Array.isArray(conditionsOrOptions) ? conditionsOrOptions.map(([path, child]) => [toConditionPath(path), child]) : [],
-    ...(Array.isArray(conditionsOrOptions) ? options : conditionsOrOptions),
+    conditions: branches,
+    ...(branchesOrOptions !== undefined && isValueOptions(branchesOrOptions) ? branchesOrOptions : options),
   }
 }

@@ -3,7 +3,8 @@ import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { Button, type ButtonProps } from './Button'
-import { cssRoot, rule, rules, value, whenHover, whenActive, whenDisabled, type RulesHandle } from '../../../style-system'
+import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
+import { whenHover, whenActive, whenDisabled } from '../../../style-system/selectors/interaction'
 import { $borderRadius } from '../../../style-system/properties/border'
 import { $backgroundColor } from '../../../style-system/properties/color'
 import { $padding } from '../../../style-system/properties/padding'
@@ -272,7 +273,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(defaultBackground)
     await userEvent.unhover(getButton('default'))
 
-    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, value('rgb(1, 2, 3)', [[whenHover, 'rgb(4, 5, 6)']])))
+    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, value('rgb(1, 2, 3)', [['hover', 'rgb(4, 5, 6)']])))
     cssRoot.mount()
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')

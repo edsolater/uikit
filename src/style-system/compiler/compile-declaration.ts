@@ -1,6 +1,6 @@
 /** Declaration 的语法编译。 */
 import type { Declaration } from '../core/css-declaration'
-import { toConditionPath } from '../core/css-condition'
+import { resolveSubjectConditions } from '../subject-conditions'
 import type { ValueInput } from '../core/css-value'
 import { declarationSyntax, propertyName } from '../core/css-key'
 import { isVariable, type Variable, type VariableInput } from '../core/css-variable'
@@ -79,9 +79,15 @@ export function compileDeclaration(input: Declaration<unknown>, context: ValueCo
 export function compileVariableDeclaration(reference: Variable, input: VariableInput, context: ValueContext): DeclarationResult[] {
   const property = `--${reference.name}`
   if (Array.isArray(input)) {
-    return input.flatMap(([conditionInput, value]) => {
-      const path = toConditionPath(conditionInput)
-      return compileValue(value, context, [...(context.conditions ?? []), path]).map((result) => ({ ...result, property }))
+    const branches = new Map(input)
+    const definitions = resolveSubjectConditions([...branches.keys()].filter((name) => name !== undefined))
+    const names: (string | undefined)[] = [
+      ...(branches.has(undefined) ? [undefined] : []),
+      ...definitions.map((definition) => definition.name),
+    ]
+    return names.flatMap((name) => {
+      const conditions = name === undefined ? [] : [name]
+      return compileValue(branches.get(name)!, context, [...(context.conditions ?? []), ...conditions]).map((result) => ({ ...result, property }))
     })
   }
   return compileValue(input, context).map((result) => ({ ...result, property }))

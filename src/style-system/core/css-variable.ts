@@ -1,5 +1,5 @@
-/** 可按 Condition 重定义的 CSS Variable。 */
-import { condition, media, type Condition } from './css-condition'
+/** 可按 Subject Condition 名称重定义的 CSS Variable。 */
+import { condition, media } from './css-condition'
 import type { Rules } from './css-rule'
 import type { Value, ValueInput } from './css-value'
 
@@ -19,7 +19,7 @@ export interface VariableOptions {
     /** 减少动效覆盖。 */
     reducedMotion?: ValueInput
   }
-  /** 默认读取及可重定义的 Condition Value。 */
+  /** 默认读取及可重定义的条件分支。 */
   fallback?: ValueInput
   /** `@property` 配置。 */
   registration?: {
@@ -29,8 +29,8 @@ export interface VariableOptions {
   }
 }
 
-/** 按 Condition 局部重定义 Variable。 */
-export type VariableOverrides = [condition: Condition | Condition[] | undefined, value: ValueInput][]
+/** 按 Subject Condition 名称局部重定义 Variable；undefined 表示 default。 */
+export type VariableOverrides = [condition: string | undefined, value: ValueInput][]
 
 /** Variable 的完整值或局部覆盖。 */
 export type VariableInput = ValueInput | VariableOverrides

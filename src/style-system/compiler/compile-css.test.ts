@@ -1,11 +1,12 @@
-/** 验证登记、按 Condition 读取 Value、依赖闭包与完整 CSS 输出。 */
+/** 验证登记、按 Subject Condition 名称读取 Value、依赖闭包与完整 CSS 输出。 */
 import { afterEach, expect, test, vi } from 'vitest'
+import { subjectCondition } from '../subject-conditions'
 import { compileCSS } from '../core/css-root'
 import { rule, rules, type Rules, type RuleAddress, type RuleValue, type RulesHandle, type Declarations } from '../core/css-rule'
 import { condition, media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
-import { value } from '../core/css-value'
+import { value, type ValueBranches } from '../core/css-value'
 import { variable } from '../core/css-variable'
 import { $margin, $marginLeft } from '../properties/margin'
 import { $padding } from '../properties/padding'
@@ -18,6 +19,10 @@ import { shadowValue } from '../values/shadow'
 import { calcMultiply } from '../values/functions/calc'
 import { cssFunction } from '../values/functions/custom'
 import { animationName, animationValue } from '../values/animation'
+
+subjectCondition('testHover', condition('&:hover'))
+subjectCondition('testActive', condition('&:active'))
+subjectCondition('testMedia', media('(width > 1px)'))
 
 const handles: RulesHandle[] = []
 /** 保留正式登记返回的句柄，交给 afterEach 清理；不改变句柄能力。 */
@@ -67,17 +72,38 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
   expect(css).toContain('&:where(:hover) {\ncolor: blue;')
 })
 
+test('Value 分支集合统一生成相同 CSS', () => {
+  function* entries(): IterableIterator<[string, string]> {
+    yield ['testHover', 'blue']
+    yield ['testActive', 'green']
+  }
+  const expected: [string, string][] = [['testHover', 'blue'], ['testActive', 'green']]
+  const inputs: ValueBranches[] = [
+    { testHover: 'blue', testActive: 'green' },
+    new Map(expected),
+    new Set(expected),
+    expected,
+    entries(),
+  ]
+  inputs.forEach((input, index) => keep(rule(`.branches-${index}`, 'color', value('red', input))))
+
+  const css = compileCSS()
+  inputs.forEach((_, index) => {
+    expect(css).toContain(`.branches-${index} {\ncolor: red;\n&:hover {\ncolor: blue;\n}\n&:active {\ncolor: green;\n}\n}`)
+  })
+})
+
 test('不同 Condition 对象的相同 header 共享 Rule、Value 与 Variable 地址', () => {
   const firstHover = condition('&:hover')
   const sameHover = condition('&:hover')
   keep(rule(['.same-rule', firstHover], 'color', 'red'))
   keep(rule(['.same-rule', sameHover], 'color', 'blue'))
-  const nested = value('black', [[firstHover, 'navy']])
-  keep(rule('.same-value', 'color', value('red', [[sameHover, nested]])))
+  const nested = value('black', [['testHover', 'navy']])
+  keep(rule('.same-value', 'color', value('red', [['testHover', nested]])))
   const foreground = variable('color-condition-identity', {
-    fallback: value('black', [[firstHover, 'gray']]),
+    fallback: value('black', [['testHover', 'gray']]),
   })
-  keep(rules('.same-variable', [[foreground, [[sameHover, 'silver']]], [$color, foreground]]))
+  keep(rules('.same-variable', [[foreground, [['testHover', 'silver']]], [$color, foreground]]))
 
   const css = compileCSS()
   expect(css).toContain('.same-rule {\n&:hover {\ncolor: blue;\n}\n}')
@@ -135,22 +161,22 @@ test('批量删除只删除本批仍然拥有的地址，重复地址保持首�
   expect(compileCSS()).toBe('.example {\ncolor: green;\n}')
 })
 
-test('定义只保存结构；外层 default 与条件分支约束子 Value', () => {
+test('定义只保存结构；外层 default 不限制子 Value 的条件分支', () => {
   const active = vi.fn()
-  const red = value('red', [['&:hover', 'lightcoral'], ['&:active', 'darkred']], { onActive: active })
-  const blue = value('blue', [['&:hover', value(value('cyan'))]])
-  const foreground = value(value(red), [['&:hover', blue]])
+  const red = value('red', [['testHover', 'lightcoral'], ['testActive', 'darkred']], { onActive: active })
+  const blue = value('blue', [['testHover', value(value('cyan'))]])
+  const foreground = value(value(red), [['testHover', blue]])
   expect(foreground.default).toHaveProperty('default', red)
   expect(active).not.toHaveBeenCalled()
   keep(rule('.example', 'color', foreground))
   const css = compileCSS()
-  expect(css).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n}\n}')
+  expect(css).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n}\n&:active {\ncolor: darkred;\n}\n}')
   expect(active).toHaveBeenCalledTimes(1)
 })
 
 test('同一个 Value 的 hover 与 active 各读自身属性，共享 DAG 不误报循环', () => {
-  const red = value('red', [['&:hover', 'lightcoral'], ['&:active', 'darkred']])
-  keep(rule('.example', 'color', value('black', [['&:hover', red], ['&:active', red]])))
+  const red = value('red', [['testHover', 'lightcoral'], ['testActive', 'darkred']])
+  keep(rule('.example', 'color', value('black', [['testHover', red], ['testActive', red]])))
   keep(rule('.example', 'border-color', red))
   const css = compileCSS()
   expect(css).toContain('color: lightcoral')
@@ -158,25 +184,25 @@ test('同一个 Value 的 hover 与 active 各读自身属性，共享 DAG 不�
   expect(css).toContain('border-color: darkred')
 })
 
-test('Value 支持业务选择器和媒体 Condition，不同分支不自动合成地址', () => {
-  const compact = condition('&[data-density="compact"]')
-  const wide = media('(width > 800px)')
+test('已登记的业务选择器与媒体名称可以形成嵌套地址', () => {
+  const compact = subjectCondition('testCompact', condition('&[data-density="compact"]')).name
+  const wide = subjectCondition('testWide', media('(width > 800px)')).name
   const compactSize = value('8px', [[compact, '6px']])
   const size = value('12px', [[compact, compactSize], [wide, '16px']])
-  expect(size.conditions.map(([path]) => path)).toEqual([[compact], [wide]])
+  expect(size.conditions.map(([name]) => name)).toEqual([compact, wide])
   keep(rule('.example', 'gap', size))
   keep(rule('.example', 'width', calcMultiply(value('2px', [[compact, '3px']]), value(2, [[wide, 4]]))))
   const css = compileCSS()
   expect(css).toContain('&[data-density="compact"] {\ngap: 6px;')
   expect(css).toContain('@media (width > 800px) {\ngap: 16px;')
   expect(css).toContain('width: calc(2px * 2);')
-  expect(css.match(/width:/g)).toHaveLength(1)
+  expect(css.match(/width:/g)).toHaveLength(4)
 })
 
 test('当前链再次访问实际槽位时抛错；fallback 循环也能终止', () => {
   const a = value('red')
   const b = value(a)
-  a.conditions.push([[condition('&:hover')], b])
+  a.conditions.push(['testHover', b])
   keep(rule('.example', 'color', a))
   expect(() => compileCSS()).toThrow('循环引用')
   for (const handle of handles.splice(0)) handle.remove()
@@ -186,32 +212,32 @@ test('当前链再次访问实际槽位时抛错；fallback 循环也能终止',
   expect(() => compileCSS()).toThrow('循环引用')
 })
 
-test('异址候选不挂载，但完整候选解析仍检查其中的循环', () => {
-  const blue = value('blue', [['&:hover', 'cyan'], ['&:active', 'navy']])
-  keep(rule('.example', 'color', value('red', [['&:hover', blue]])))
-  expect(compileCSS()).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n}\n}')
-  blue.conditions.push([[condition('&:active')], blue])
+test('嵌套候选保留条件交集，全部候选仍检查循环', () => {
+  const blue = value('blue', [['testHover', 'cyan'], ['testActive', 'navy']])
+  keep(rule('.example', 'color', value('red', [['testHover', blue]])))
+  expect(compileCSS()).toBe('.example {\ncolor: red;\n&:hover {\ncolor: cyan;\n&:active {\ncolor: navy;\n}\n}\n}')
+  blue.conditions.push(['testActive', blue])
   expect(() => compileCSS()).toThrow('循环引用')
 })
 
 test('完整 Rules 仍可作为递归内容切换属性', () => {
   const base: Rules = new Map([[[undefined, 'color'], 'red'], [[undefined, 'display'], 'grid']])
   const matched: Rules = new Map([[[undefined, 'color'], 'blue']])
-  keep(rule('.example', undefined, value(base, [['&:hover', matched]])))
+  keep(rule('.example', undefined, value(base, [['testHover', matched]])))
   expect(compileCSS()).toBe('.example {\ncolor: red;\ndisplay: grid;\n&:hover {\ncolor: blue;\n}\n}')
 })
 
-test('复合值只保留相容分支，重复状态键后写生效', () => {
-  keep(rule('.example', 'width', calcMultiply(value('2px', [['&:hover', '4px']]), value(2, [['&:active', 3]]))))
-  expect(compileCSS()).toBe('.example {\nwidth: calc(2px * 2);\n}')
-  keep(rule('.same', 'width', calcMultiply(value(2, [['&:hover', 3], ['&:hover', 4]]), value(2, [['&:hover', 5]]))))
+test('复合值保留条件组合，重复名称的分支后写生效', () => {
+  keep(rule('.example', 'width', calcMultiply(value('2px', [['testHover', '4px']]), value(2, [['testActive', 3]]))))
+  expect(compileCSS()).toBe('.example {\nwidth: calc(2px * 2);\n&:active {\nwidth: calc(2px * 3);\n}\n&:hover {\nwidth: calc(4px * 2);\n&:active {\nwidth: calc(4px * 3);\n}\n}\n}')
+  keep(rule('.same', 'width', calcMultiply(value(2, [['testHover', 3], ['testHover', 4]]), value(2, [['testHover', 5]]))))
   expect(compileCSS()).toContain('width: calc(4 * 5)')
 })
 
-test('完整条件地址与子 Value 分支不符时拒绝该分支', () => {
-  const amount = value(2, [['&:hover', 4]])
-  keep(rule('.example', 'width', value('1px', [[[condition('&:hover'), condition('&:active')], calcMultiply(amount, 3)]])))
-  expect(compileCSS()).toBe('.example {\nwidth: 1px;\n}')
+test('外层分支与子 Value 的条件按中央顺序嵌套', () => {
+  const amount = value(2, [['testHover', 4]])
+  keep(rule('.example', 'width', value('1px', [['testActive', calcMultiply(amount, 3)]])))
+  expect(compileCSS()).toBe('.example {\nwidth: 1px;\n&:active {\nwidth: calc(2 * 3);\n}\n&:hover {\n&:active {\nwidth: calc(4 * 3);\n}\n}\n}')
 })
 
 test('依赖只进入本次编译，删掉源条目后派生资源退出', () => {
@@ -232,7 +258,7 @@ test('依赖只进入本次编译，删掉源条目后派生资源退出', () =>
 
 test('onActive 收到真正消费状态的地址', () => {
   const active = vi.fn()
-  const distance = value('2px', [['&:hover', value('4px', { onActive: active })]])
+  const distance = value('2px', [['testHover', value('4px', { onActive: active })]])
   keep(rule('.example', 'width', calcMultiply(distance, 2)))
   compileCSS()
   expect(active).toHaveBeenCalledWith(expect.objectContaining({ path: [condition('.example'), condition('&:hover')], key: 'width' }))
@@ -251,9 +277,9 @@ test('依赖回指同一集合终止，Rules 内容递归报错', () => {
 })
 
 test('Variable 条件默认值与局部声明共享同名 Custom Property，显式声明优先', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
-  const missing = condition('&:missing')
+  const hover = 'testHover'
+  const active = 'testActive'
+  const missing = subjectCondition('testMissing', condition('&:missing')).name
   const foreground = variable('--color-foreground-test', {
     fallback: value('black', [[hover, 'gray'], [active, 'silver']]),
     registration: { syntax: '*', inherits: true },
@@ -294,7 +320,7 @@ test('单值直接声明，多个有序内容用数组，简写与复合字段�
 
 test('阴影与过渡数组内容保留状态和完整语法', () => {
   const shadow = declare($boxShadow, [
-    shadowValue({ x: 0, y: value('2px', [['&:hover', '4px']]), color: 'black' }),
+    shadowValue({ x: 0, y: value('2px', [['testHover', '4px']]), color: 'black' }),
     shadowValue({ x: 0, y: 0, spread: '1px', color: 'red' }),
   ])
   const timing = declare($transition, [
@@ -310,7 +336,7 @@ test('动画和函数激活完整资源，同名函数替换整个定义', () =>
   const opacity = variable('--fade-opacity', { root: { value: 1 } })
   const frames: Rules = new Map<RuleAddress, RuleValue>([[[[condition('from')], 'opacity'], 0], [[[condition('to')], 'opacity'], opacity]])
   keep(rule('.example', 'animation', animationValue({ name: animationName('motion-fade', frames), duration: '1s' })))
-  const oldBody: Rules = new Map<RuleAddress, RuleValue>([[[undefined, '--old-local'], '100px'], [[undefined, 'result'], value('16px', [[media('(width > 1px)'), '20px']])]])
+  const oldBody: Rules = new Map<RuleAddress, RuleValue>([[[undefined, '--old-local'], '100px'], [[undefined, 'result'], value('16px', [['testMedia', '20px']])]])
   const nextBody: Rules = new Map([[[undefined, 'result'], '24px']])
   keep(rule('.first', 'width', cssFunction('--size-example() returns <length>', oldBody)()))
   keep(rule('.second', 'width', cssFunction('--size-example() returns <length>', nextBody)()))
@@ -324,7 +350,7 @@ test('动画和函数激活完整资源，同名函数替换整个定义', () =>
 })
 
 test('同名函数替换时，旧函数中的条件变量默认定义一并退出', () => {
-  const ratio = variable('old-function-ratio', { fallback: value(0.8, [[media('(width > 1px)'), 0.6]]) })
+  const ratio = variable('old-function-ratio', { fallback: value(0.8, [['testMedia', 0.6]]) })
   const oldBody: Rules = new Map([[[undefined, 'result'], ratio]])
   const nextBody: Rules = new Map([[[undefined, 'result'], 1]])
   keep(rule('.old-function', 'opacity', cssFunction('--example-ratio() returns <number>', oldBody)()))

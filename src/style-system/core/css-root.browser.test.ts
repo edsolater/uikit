@@ -1,5 +1,6 @@
 /** 在真实浏览器验证全局源规则、按需依赖、重新挂载与失败边界。 */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { subjectCondition } from '../subject-conditions'
 import { userEvent } from 'vitest/browser'
 import { cssRoot as root } from './css-root'
 import { rule, rules, type RulesHandle, type Rules } from './css-rule'
@@ -13,6 +14,9 @@ import { animationName, animationValue } from '../values/animation'
 import { calcMultiply } from '../values/functions/calc'
 import { cssFunction } from '../values/functions/custom'
 import { colorMix } from '../values/functions/color-mix'
+
+subjectCondition('testLarge', condition('&[data-large]'))
+subjectCondition('testMedia', media('(width > 1px)'))
 
 let style: HTMLStyleElement
 let element: HTMLDivElement
@@ -54,21 +58,21 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   expect(Array.from(style.sheet!.cssRules).filter((entry) => entry.cssText.startsWith('@property --space-example'))).toHaveLength(1)
 })
 
-test('不同 Value 分支不生成交集规则，浏览器只获得共同 default', async () => {
-  const distance = value('2px', [['&:hover', '4px']])
-  const factor = value(2, [['&[data-large]', 3]])
+test('不同 Value 分支分别匹配，并由浏览器执行嵌套交集', async () => {
+  const distance = value('2px', [['hover', '4px']])
+  const factor = value(2, [['testLarge', 3]])
   handles.push(rule('.example', 'margin-left', calcMultiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
   element.dataset.large = ''
-  expect(getComputedStyle(element).marginLeft).toBe('4px')
+  expect(getComputedStyle(element).marginLeft).toBe('6px')
   await userEvent.hover(element)
-  expect(getComputedStyle(element).marginLeft).toBe('4px')
+  expect(getComputedStyle(element).marginLeft).toBe('12px')
 })
 
 test('同址 Value 分支在浏览器中共同更新复合值', async () => {
-  const distance = value('2px', [['&:hover', '4px']])
-  const factor = value(2, [['&:hover', 3]])
+  const distance = value('2px', [['hover', '4px']])
+  const factor = value(2, [['hover', 3]])
   handles.push(rule('.example', 'margin-left', calcMultiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
@@ -76,8 +80,32 @@ test('同址 Value 分支在浏览器中共同更新复合值', async () => {
   expect(getComputedStyle(element).marginLeft).toBe('12px')
 })
 
+test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', async () => {
+  const button = document.createElement('button')
+  button.className = 'subject-order'
+  button.textContent = '条件顺序验证'
+  document.body.append(button)
+  const handle = rule('.subject-order', 'margin-left', value('1px', [['hover', '2px'], ['active', '3px']]))
+  handles.push(handle)
+  try {
+    root.mount()
+    const forwardCSS = style.textContent
+    await userEvent.hover(button)
+    button.focus()
+    await userEvent.keyboard('[Space>]')
+    try {
+      expect(button.matches(':hover:active')).toBe(true)
+      expect(getComputedStyle(button).marginLeft).toBe('3px')
+      handle.replace(value('1px', [['active', '3px'], ['hover', '2px']]))
+      root.mount()
+      expect(style.textContent).toBe(forwardCSS)
+      expect(getComputedStyle(button).marginLeft).toBe('3px')
+    } finally { await userEvent.keyboard('[/Space]') }
+  } finally { button.remove() }
+})
+
 test('Variable 比例在浏览器改变混色结果，消费函数只定义一次', async () => {
-  const ratio = variable('surface-ratio', { fallback: value(0.8, [['&:hover', 0.6]]) })
+  const ratio = variable('surface-ratio', { fallback: value(0.8, [['hover', 0.6]]) })
   handles.push(rule('.example', 'background-color', colorMix(['black', ratio], 'white')))
   root.mount()
   expect(style.textContent!.match(/background-color:/g)).toHaveLength(1)
@@ -108,7 +136,7 @@ test('动画复合值激活帧定义，并继续解析帧内变量', () => {
 
 test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的函数', () => {
   const body: Rules = new Map([
-    [[undefined, 'result'], value('16px', [[media('(width > 1px)'), '20px']])],
+    [[undefined, 'result'], value('16px', [['testMedia', '20px']])],
   ])
   const size = cssFunction('--example-size() returns <length>', body)
   handles.push(rule('.example', 'font-size', size()))
@@ -146,4 +174,16 @@ test('缺少宿主时不触发 Value；编译失败保留之前成功提交的 C
   expect(() => root.mount()).toThrow('递归引用')
   expect(style.textContent).toBe(before)
   expect(getComputedStyle(element).marginLeft).toBe('2px')
+})
+
+test('未知 Subject Condition 使挂载失败并保留上次 CSS 与 CSSOM', () => {
+  handles.push(rule('.example', 'margin-left', '12px'))
+  root.mount()
+  const before = style.textContent
+  const beforeRules = Array.from(style.sheet!.cssRules)
+  handles.push(rule('.example', 'color', value('red', [['unknown-subject', 'blue']])))
+  expect(() => root.mount()).toThrow('未知 Subject Condition')
+  expect(style.textContent).toBe(before)
+  expect(Array.from(style.sheet!.cssRules)).toEqual(beforeRules)
+  expect(getComputedStyle(element).marginLeft).toBe('12px')
 })

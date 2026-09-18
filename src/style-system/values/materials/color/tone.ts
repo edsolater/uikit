@@ -1,7 +1,6 @@
 /** 强调、危险及可由使用规则定义的语气配色。 */
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
-import { whenHover, whenActive } from '../../../selectors/interaction'
 import { colorMix } from '../../functions/color-mix'
 import { brand, palette, surface } from './palette'
 import { actionForeground } from './action'
@@ -66,8 +65,8 @@ export const toneForeground = variable('color-tone-foreground', { fallback: acce
 
 /** 语气底色；同名变量随交互状态切换。 */
 export const toneSurface = variable('color-tone-background', {
-  fallback: value(colorMix([surface, toneSurfaceRatio], softTone), [
-    [whenHover, colorMix([surface, toneHoverSurfaceRatio], softTone)],
-    [whenActive, colorMix([surface, toneActiveSurfaceRatio], softTone)],
-  ]),
+  fallback: value(colorMix([surface, toneSurfaceRatio], softTone), {
+    hover: colorMix([surface, toneHoverSurfaceRatio], softTone),
+    active: colorMix([surface, toneActiveSurfaceRatio], softTone),
+  }),
 })

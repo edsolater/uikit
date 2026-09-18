@@ -1,5 +1,6 @@
 /** Rule 登记与所有权句柄。 */
-import { toConditionPath, type ConditionInput, type ConditionPath } from './css-condition'
+import { condition, type ConditionInput, type ConditionPath } from './css-condition'
+import { findSubjectCondition, resolveSubjectConditions } from '../subject-conditions'
 import { isCSSKey, type CSSKey } from './css-key'
 import { isCSSPair, type Declaration } from './css-declaration'
 import type { ValueInput } from './css-value'
@@ -32,10 +33,17 @@ export interface RuleHandle extends RulesHandle {
   replace(value: RuleValue): void
 }
 
-/** 归一化并校验登记地址。 */
+/** 保留普通地址，并将已安装名称归一为 Subject Condition。 */
 function rulePath(input: ConditionInput): ConditionPath | undefined {
   if (input === undefined) return undefined
-  const path = toConditionPath(input)
+  const ordinary: ConditionPath = []
+  const subjects: string[] = []
+  for (const item of Array.isArray(input) ? input : [input]) {
+    if (typeof item !== 'string') ordinary.push(item)
+    else if (findSubjectCondition(item)) subjects.push(item)
+    else ordinary.push(condition(item))
+  }
+  const path = [...ordinary, ...resolveSubjectConditions(subjects).map((definition) => definition.condition)]
   if (path.some((item) => !item || typeof item.header !== 'string')) {
     throw new Error('Rule 的 Condition Path 必须由有效 Condition 组成。')
   }

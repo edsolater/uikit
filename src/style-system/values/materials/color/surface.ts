@@ -2,7 +2,6 @@
 import { lowSurface, hoverSurface, activeSurface } from './palette'
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
-import { whenHover, whenActive } from '../../../selectors/interaction'
 import { colorMix } from '../../functions/color-mix'
 import { foreground } from './text'
 
@@ -14,7 +13,7 @@ const activeOverlayRatio = 0.14
 
 /** 中性表面；同名变量随交互状态切换。 */
 export const interactiveSurface = variable('color-surface-interactive', {
-  fallback: value(lowSurface, [[whenHover, hoverSurface], [whenActive, activeSurface]]),
+  fallback: value(lowSurface, { hover: hoverSurface, active: activeSurface }),
   registration: { syntax: '*', inherits: true }
 })
 

@@ -1,10 +1,13 @@
 /** 验证 CSS 记录的原子挂载与深度优先顺序。 */
 import { expect, test } from 'vitest'
+import { subjectCondition } from '../subject-conditions'
 import { condition } from '../core/css-condition'
 import { mountCSSRecord, type CSSRecord } from './css-records'
 import { resolveRules, stringifyCSS } from './compile-css'
 import { value } from '../core/css-value'
 import type { Rules, RuleAddress, RuleValue } from '../core/css-rule'
+
+subjectCondition('testHover', condition('&:hover'))
 
 test('挂载时形成三元组数组，父声明先于连续子树', () => {
   const button = '.Button'
@@ -34,26 +37,22 @@ test('挂载时形成三元组数组，父声明先于连续子树', () => {
   expect(stringifyCSS(records).match(/&:hover \{/g)).toHaveLength(1)
 })
 
-test('default 只在挂载后投影为空地址，异址候选原子拒绝', () => {
+test('挂载器只接收最终路径，保留普通路径顺序与重复项', () => {
   const button = '.Button'
   const hover = '&:hover'
   const active = '&:active'
   const records: CSSRecord[] = []
-  expect(mountCSSRecord(records, [[button], 'color', 'red'], [[undefined], [undefined]])).toBe(true)
-  const before = structuredClone(records)
-  expect(mountCSSRecord(records, [[button], 'color', 'blue'], [[undefined], [hover]])).toBe(false)
-  expect(mountCSSRecord(records, [[button], 'border', 'none'], [[hover], [active]])).toBe(false)
-  expect(records).toEqual(before)
-  expect(mountCSSRecord(records, [[button], 'color', 'navy'], [[hover], [hover]])).toBe(true)
-  expect(records).toEqual([[[button], 'color', 'red'], [[button, hover], 'color', 'navy']])
+  mountCSSRecord(records, [[button, undefined], 'color', 'red'])
+  mountCSSRecord(records, [[button, active, hover, hover], 'color', 'navy'])
+  expect(records).toEqual([[[button], 'color', 'red'], [[button, active, hover, hover], 'color', 'navy']])
 })
 
 test('Rules 解析挂载与字符串转换保持两个独立边界', () => {
   const button = '.Button'
   const hover = '&:hover'
   const source: Rules = new Map([
-    [[[condition(button)], 'background'], value('black', [[hover, 'navy']])],
-    [[[condition(button)], 'border'], value('none', [[hover, 'solid']])],
+    [[[condition(button)], 'background'], value('black', [['testHover', 'navy']])],
+    [[[condition(button)], 'border'], value('none', [['testHover', 'solid']])],
   ])
   const records = resolveRules(source)
   expect(records).toEqual([

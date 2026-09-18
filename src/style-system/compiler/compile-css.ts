@@ -1,12 +1,12 @@
 /** 将 Rules 挂载为有序 CSS 记录，再生成 CSS string。 */
-import { normalizeConditionPath, type ConditionPath } from '../core/css-condition'
+import type { ConditionPath } from '../core/css-condition'
 import { isCSSPair } from '../core/css-declaration'
 import { declarationSyntax, propertyName, type CSSKey } from '../core/css-key'
 import type { Rules, RuleValue } from '../core/css-rule'
 import type { Value, ValueInput } from '../core/css-value'
 import { isVariable, type VariableInput } from '../core/css-variable'
 import { compileDeclaration, compileVariableDeclaration, expandProperty } from './compile-declaration'
-import { compileValue, type ValueContext } from './compile-value'
+import { compileValue, valueConditionPath, type ValueContext, type ValueConditions } from './compile-value'
 import { hasConditionPrefix, mountCSSRecord, type CSSRecord } from './css-records'
 
 /** 解析全部候选与依赖，挂载为深度优先记录数组。 */
@@ -21,9 +21,8 @@ export function resolveRules(source: Rules): CSSRecord[] {
   let compilingSource = source
 
   /** 挂载有效声明；显式值优先，具名定义按 owner 整体替换。 */
-  const write = (path: ConditionPath, key: string | undefined, css: string, conditions: ConditionPath[], owner = compilingSource, isDefault = false): void => {
-    const headers = normalizeConditionPath(path.map((item) => item.header), conditions.map((branch) => branch.length ? branch.map((item) => item.header) : [undefined]))
-    if (headers === null) return
+  const write = (path: ConditionPath, key: string | undefined, css: string, conditions: ValueConditions, owner = compilingSource, isDefault = false): void => {
+    const headers = [...path, ...valueConditionPath(conditions)].map((item) => item.header)
     const record: CSSRecord = [headers, key, css]
     const address = JSON.stringify([headers, key])
     const definitionIndex = headers.findIndex((header) => header !== undefined && /^@(function|keyframes|property)\s/.test(header))
@@ -56,7 +55,7 @@ export function resolveRules(source: Rules): CSSRecord[] {
   }
 
   /** 解读当前 Rule 地址的声明与候选；递归 Rules 报错。 */
-  const visit = (input: RuleValue, path: ConditionPath, key?: CSSKey, definitionOwner?: Rules, conditions: ConditionPath[] = []): void => {
+  const visit = (input: RuleValue, path: ConditionPath, key?: CSSKey, definitionOwner?: Rules, conditions: ValueConditions = []): void => {
     const context: ValueContext = {
       root: source, path, key, conditions, resolving,
       /** 在当前消费位置挂载变量的条件默认值。 */

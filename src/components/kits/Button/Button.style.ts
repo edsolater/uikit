@@ -10,10 +10,6 @@ import {
   color,
   elevation,
   clickable,
-  whenFocusVisible,
-  whenHover,
-  whenActive,
-  whenDisabled,
 } from '../../../style-system'
 import { $cursor } from '../../../style-system/properties/interaction'
 import { colorMix } from '../../../style-system/values/functions/color-mix'
@@ -64,7 +60,7 @@ const button = '.Button'
 
 /** 默认底色中的中性表面占比。 */
 const surfaceRatio = variable('button-surface-ratio', {
-  fallback: value(0.82, [[whenHover, 0.72], [whenActive, 0.62]]),
+  fallback: value(0.82, { hover: 0.72, active: 0.62 }),
 })
 
 // =============================================================================
@@ -91,7 +87,7 @@ rules(button, [
     radius: pill,
   }),
   color({
-    background: value(colorMix([interactiveSurface, surfaceRatio], softAccent), [[whenDisabled, surface]]),
+    background: value(colorMix([interactiveSurface, surfaceRatio], softAccent), { disabled: surface }),
     foreground: interactiveForeground,
   }),
   elevation(interactiveElevation),
@@ -104,7 +100,7 @@ rules(button, [
 // 浏览器交互
 // =============================================================================
 
-rules([button, whenFocusVisible], [boundary({
+rules([button, 'focusVisible'], [boundary({
   outline: {
     width: focusStroke,
     style: 'solid',
@@ -112,7 +108,7 @@ rules([button, whenFocusVisible], [boundary({
     offset: focusGap,
   },
 })])
-rules([button, '&[data-tone="danger"]', whenFocusVisible], [boundary({ outline: { color: dangerLine } })])
+rules([button, '&[data-tone="danger"]', 'focusVisible'], [boundary({ outline: { color: dangerLine } })])
 
 // =============================================================================
 // variant 动作声量
@@ -123,11 +119,11 @@ rules(
   [
     boundary({ borderColor: 'transparent' }),
     color({
-      background: value('transparent', [
-        [whenHover, hoverOverlay],
-        [whenActive, activeOverlay],
-        [whenDisabled, surface],
-      ]),
+      background: value('transparent', {
+        hover: hoverOverlay,
+        active: activeOverlay,
+        disabled: surface,
+      }),
     }),
     elevation(flat),
   ],
@@ -138,10 +134,10 @@ rules(
   [
     boundary({ borderColor: 'transparent' }),
     color({
-      background: value(actionSurface, [[whenDisabled, surface]]),
-      foreground: value(actionForeground, [[whenDisabled, foreground]]),
+      background: value(actionSurface, { disabled: surface }),
+      foreground: value(actionForeground, { disabled: foreground }),
     }),
-    elevation(value(raised, [[whenDisabled, flat]])),
+    elevation(value(raised, { disabled: flat })),
   ],
 )
 
@@ -153,12 +149,12 @@ rules(
   [button, '&[data-tone]'],
   [
     color({
-      background: value(toneSurface, [[whenDisabled, surface]]),
-      foreground: value(tone, [
-        [whenHover, toneForeground],
-        [whenActive, toneForeground],
-        [whenDisabled, foreground],
-      ]),
+      background: value(toneSurface, { disabled: surface }),
+      foreground: value(tone, {
+        hover: toneForeground,
+        active: toneForeground,
+        disabled: foreground,
+      }),
     }),
   ],
 )
@@ -184,7 +180,7 @@ rules(
 )
 
 /** 实心语气按钮的禁用文字仍保持动作前景色。 */
-rules([button, '&[data-variant="solid"][data-tone]', whenDisabled], [color({ foreground: actionForeground })])
+rules([button, '&[data-variant="solid"][data-tone]', 'disabled'], [color({ foreground: actionForeground })])
 
 // =============================================================================
 // size 物理尺寸
@@ -221,4 +217,4 @@ rules(
 // status 外部状态
 // =============================================================================
 
-rules([button, '&[data-status~="loading"]'], [[$cursor, value('progress', [[whenDisabled, 'not-allowed']])]])
+rules([button, '&[data-status~="loading"]'], [[$cursor, value('progress', { disabled: 'not-allowed' })]])

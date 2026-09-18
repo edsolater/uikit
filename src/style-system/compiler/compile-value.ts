@@ -1,27 +1,39 @@
 /** 解析 Value 与 CSS Function 的完整候选及条件贡献。 */
-import { conditionPathKey, type ConditionPath } from '../core/css-condition'
+import type { ConditionPath } from '../core/css-condition'
+import { resolveSubjectConditions } from '../subject-conditions'
 import { isCSSPair } from '../core/css-declaration'
 import type { Rules } from '../core/css-rule'
 import type { CompileContext, Value, ValueInput, ValueExpression } from '../core/css-value'
 
-/** 候选值及各个动态 Value 贡献的条件；空路径保留 default。 */
-export interface ValueResult { conditions: ConditionPath[]; text: string }
+/** 普通 Rules 的路径与 Value 贡献的 Subject Condition 名称。 */
+export type ValueConditions = (ConditionPath | string)[]
+
+/** 候选值及条件贡献；default 不贡献名称。 */
+export interface ValueResult { conditions: ValueConditions; text: string }
+
+/** 保留普通路径的顺序与重复，再追加规范化的 Subject Condition。 */
+export function valueConditionPath(conditions: ValueConditions): ConditionPath {
+  return [
+    ...conditions.flatMap((entry) => typeof entry === 'string' ? [] : entry),
+    ...resolveSubjectConditions(conditions.filter((entry) => typeof entry === 'string')).map((definition) => definition.condition),
+  ]
+}
 
 /** Value 与本次编译会话的连接。 */
 export interface ValueContext extends CompileContext {
   /** 首次解析访问时登记依赖。 */
   activate(value: Value, location?: CompileContext): void
   resolving: Set<object>
-  conditions?: ConditionPath[]
+  conditions?: ValueConditions
   /** 在消费位置补充条件变量默认值，显式声明优先。 */
   defineVariable(name: string, values: ValueResult[], location: CompileContext): void
   /** 承接作为完整声明内容的 Rules。 */
-  visitRules?: (rules: Rules, conditions: ConditionPath[]) => void
+  visitRules?: (rules: Rules, conditions: ValueConditions) => void
 }
 
 /** 逐个解析组成部分，保留全部组合与条件贡献。 */
-function compileParts(parts: ValueInput[], context: ValueContext, conditions: ConditionPath[], format: (parts: string[]) => string): ValueResult[] {
-  let states: { conditions: ConditionPath[]; parts: string[] }[] = [{ conditions, parts: [] }]
+function compileParts(parts: ValueInput[], context: ValueContext, conditions: ValueConditions, format: (parts: string[]) => string): ValueResult[] {
+  let states: { conditions: ValueConditions; parts: string[] }[] = [{ conditions, parts: [] }]
   for (const part of parts) {
     states = states.flatMap((state) => expandValue(part, context, state.conditions).map((result) => ({
       conditions: result.conditions, parts: [...state.parts, result.text],
@@ -36,16 +48,16 @@ export function compileValueParts(parts: ValueInput[], context: ValueContext, fo
 }
 
 /** 编译复合表达；Variable 的条件只改变自身定义。 */
-function compileExpression(expression: ValueExpression, context: ValueContext, conditions: ConditionPath[]): ValueResult[] {
+function compileExpression(expression: ValueExpression, context: ValueContext, conditions: ValueConditions): ValueResult[] {
   /** 组合子值候选。 */
   const compose = (parts: ValueInput[], format: (parts: string[]) => string) => compileParts(parts, context, conditions, format)
   switch (expression.type) {
     case 'variable': {
       if (expression.fallback === undefined) return [{ conditions, text: `var(--${expression.name})` }]
       const fallback = expandValue(expression.fallback, { ...context, visitRules: undefined }, [])
-      const base = fallback.find((entry) => entry.conditions.every((path) => path.length === 0))
+      const base = fallback.find((entry) => valueConditionPath(entry.conditions).length === 0)
       if (!base) throw new Error('Variable 缺少可解析的 default。')
-      if (fallback.some((entry) => entry.conditions.some((path) => path.length > 0))) {
+      if (fallback.some((entry) => valueConditionPath(entry.conditions).length > 0)) {
         context.defineVariable(expression.name, fallback, context)
       }
       return [{ conditions, text: `var(--${expression.name}, ${base.text})` }]
@@ -78,8 +90,8 @@ function compileExpression(expression: ValueExpression, context: ValueContext, c
   }
 }
 
-/** 展开全部 Value 分支，保留条件冲突供挂载判断；递归引用报错。 */
-function expandValue(input: ValueInput, context: ValueContext, conditions: ConditionPath[]): ValueResult[] {
+/** 展开每个 Value 的单分支候选；未知名称与递归引用报错。 */
+function expandValue(input: ValueInput, context: ValueContext, conditions: ValueConditions): ValueResult[] {
   if (typeof input !== 'object') return [{ conditions, text: String(input) }]
   if (context.resolving.has(input)) throw new Error('Value 内容存在循环引用，无法生成 CSS。')
   context.resolving.add(input)
@@ -96,12 +108,15 @@ function expandValue(input: ValueInput, context: ValueContext, conditions: Condi
       }
       return results
     }
-    context.activate(input, { ...context, path: [...context.path, ...conditions.flat()] })
+    context.activate(input, { ...context, path: [...context.path, ...valueConditionPath(conditions)] })
     if (input.default !== undefined) {
       if (input.conditions.length === 0) return expandValue(input.default, context, conditions)
-      const branches = new Map<string, [ConditionPath, ValueInput]>([[conditionPathKey([]), [[], input.default]]])
-      for (const [path, child] of input.conditions) branches.set(conditionPathKey(path), [path, child])
-      return [...branches.values()].flatMap(([path, child]) => expandValue(child, context, [...conditions, path]))
+      const branches = new Map(input.conditions)
+      const definitions = resolveSubjectConditions([...branches.keys()])
+      return [
+        ...expandValue(input.default, context, conditions),
+        ...definitions.flatMap(({ name }) => expandValue(branches.get(name)!, context, [...conditions, name])),
+      ]
     }
     return compileExpression(input.expression, { ...context, visitRules: undefined }, conditions)
   } finally {

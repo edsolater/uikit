@@ -3,7 +3,6 @@ import { type ShadowShape, shadowValue } from '../shadow'
 import { valueList } from '../list'
 import { value } from '../../core/css-value'
 import { variable } from '../../core/css-variable'
-import { whenHover, whenActive, whenDisabled } from '../../selectors/interaction'
 
 /** 贴近表面的阴影几何：水平偏移、垂直偏移、模糊半径，长度单位为像素。 */
 export const contactShape: ShadowShape = { x: value(0), y: value('1px'), blur: value('2px') }
@@ -42,8 +41,8 @@ export const raised = variable('shadow-raised', {
 })
 
 /** 可交互主体的层级反馈；悬停时抬升，按下或禁用时回到平面。 */
-export const interactiveElevation = value(low, [
-  [whenHover, raised],
-  [whenActive, flat],
-  [whenDisabled, flat],
-])
+export const interactiveElevation = value(low, {
+  hover: raised,
+  active: flat,
+  disabled: flat,
+})

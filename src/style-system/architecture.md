@@ -6,11 +6,12 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 
 | 位置 | 职责 |
 | --- | --- |
-| `core/css-condition.ts` | Condition 与挂载时的候选地址规范。 |
+| `core/css-condition.ts` | Condition 与有序 Rule 地址。 |
+| `subject-conditions.ts` | Subject Condition 名称、已有 Condition 与固定登记顺序；提供内置交互名称。 |
 | `core/css-key.ts` | CSS Key 及其内容语法。 |
 | `core/css-declaration.ts` | `[key, content]` Declaration。 |
 | `core/css-rule.ts` | Rule 登记、批量展开与句柄。 |
-| `core/css-value.ts` | RawValue、Condition Value、复合值与按需依赖。 |
+| `core/css-value.ts` | RawValue、按 Subject Condition 名称分支的 Value、复合值与按需依赖。 |
 | `core/css-variable.ts` | 同名 Variable 引用、根值与注册。 |
 | `core/css-root.ts` | 唯一源账本、快照编译与宿主提交。 |
 | `compiler/compile-css.ts` | 解析挂载与线性字符串输出两个内部入口。 |
@@ -45,11 +46,13 @@ render()
 
 记录项严格为 `[(string | undefined)[], string | undefined, string]`，只保存条件、属性与内容。挂载时形成父声明在前、子树连续的顺序，不建立节点对象树，不进行事后排序。两个内部入口不从公共 `index.ts` 导出。
 
+`css-rule.ts` 与 `compile-value.ts` 直接依赖 `subject-conditions.ts`，后者引用 `selectors/interaction.ts` 的已有 Condition，所以 Rule、Value 与 Variable 都能解析预装名称。Rule 地址中的普通部分保持顺序与重复，已安装名称去重并按中央顺序追加；普通 Value 的候选名称也在挂载前去重、按中央顺序转为多层 Condition Path。Variable 的条件只进入自身 Custom Property 赋值，消费表达式保留 `var()`。
+
 # Button 接入
 
 [Button.style.ts](../components/kits/Button/Button.style.ts) 在模块顶层登记全部 Rule，并按默认效果、浏览器交互、variant、tone、size、status 分区。Button 配方留在组件内；共享效果通过 `innerText()`、`contentLayout()`、`size()`、`boundary()`、`color()`、`elevation()` 与 `clickable()` 进入 Style System。
 
-焦点规则由 `whenFocusVisible` 确定生效地址，再用 `boundary({ outline })` 建立边界。danger tone 只覆盖轮廓颜色，不建立焦点专用转发 Mixin。
+焦点规则由预装的 `focusVisible` 确定生效地址，再用 `boundary({ outline })` 建立边界。danger tone 只覆盖轮廓颜色，不建立焦点专用转发 Mixin。
 
 默认底色保留一次 `colorMix`；中性表面与混合占比都使用 Variable。hover、active 只改变同名变量的值，禁用背景仍由 Button 直接选择。
 
@@ -57,7 +60,7 @@ Button.tsx 静态导入 Button.style.ts。Example、Storybook 和缩略图入口
 
 # 验证边界
 
-- 编译器单元测试：登记、覆盖、Condition 取值、复合值、循环和按需依赖。
+- 编译器单元测试：登记、覆盖、Subject Condition 名称分支、复合值、循环和按需依赖。
 - Root 浏览器测试：CSSOM、宿主前缀、无变化提交与失败保留。
 - Condition 浏览器测试：原生交互选择器语义。
 - Button 浏览器测试：业务 selector、变量覆盖、交互状态与计算样式。

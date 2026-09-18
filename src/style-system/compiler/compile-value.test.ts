@@ -1,5 +1,6 @@
 /** 验证复合 Value 从 Rule 地址向叶子展开。 */
 import { afterEach, expect, test, vi } from 'vitest'
+import { subjectCondition } from '../subject-conditions'
 import { compileCSS } from '../core/css-root'
 import { rule, rules, type RulesHandle } from '../core/css-rule'
 import { condition } from '../core/css-condition'
@@ -11,6 +12,9 @@ import { calcMultiply } from '../values/functions/calc'
 import { colorMix } from '../values/functions/color-mix'
 import { translateY } from '../values/functions/transform'
 import { compileValue } from './compile-value'
+
+subjectCondition('testHover', condition('&:hover'))
+subjectCondition('testActive', condition('&:active'))
 
 const handles: RulesHandle[] = []
 
@@ -29,9 +33,9 @@ afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
 })
 
-test('同址 Condition Value 汇合，default 输出空地址', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+test('相同名称去重，不同名称形成嵌套路径，default 输出空地址', () => {
+  const hover = 'testHover'
+  const active = 'testActive'
   const surface = value('black', [[hover, 'navy'], [active, 'blue']])
   const ratio = value(0.82, [[hover, 0.72], [active, 0.62]])
 
@@ -42,6 +46,9 @@ test('同址 Condition Value 汇合，default 输出空地址', () => {
     'background-color: color-mix(in oklab, black 82%, white);',
     '&:hover {',
     'background-color: color-mix(in oklab, navy 72%, white);',
+    '&:active {',
+    'background-color: color-mix(in oklab, blue 72%, white);',
+    '}',
     '}',
     '&:active {',
     'background-color: color-mix(in oklab, blue 62%, white);',
@@ -50,23 +57,21 @@ test('同址 Condition Value 汇合，default 输出空地址', () => {
   ].join('\n'))
 })
 
-test('不同 Condition 分支不组合成临时交集地址', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+test('不同 Subject Condition 分支保留单条件与交集地址', () => {
+  const hover = 'testHover'
+  const active = 'testActive'
   const distance = value('2px', [[hover, '4px']])
   const factor = value(2, [[active, 3]])
 
   keep(rule('.CompiledInvalidIntersection', 'width', calcMultiply(distance, factor)))
 
   const css = compileCSS()
-  expect(css).toBe('.CompiledInvalidIntersection {\nwidth: calc(2px * 2);\n}')
-  expect(css).not.toContain('&:hover')
-  expect(css).not.toContain('&:active')
+  expect(css).toBe('.CompiledInvalidIntersection {\nwidth: calc(2px * 2);\n&:active {\nwidth: calc(2px * 3);\n}\n&:hover {\nwidth: calc(4px * 2);\n&:active {\nwidth: calc(4px * 3);\n}\n}\n}')
 })
 
 test('Variable 改写同名 Custom Property，不展开消费函数', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+  const hover = 'testHover'
+  const active = 'testActive'
   const ratio = variable('compiled-surface-ratio', {
     fallback: value(0.82, [[hover, 0.72], [active, 0.62]]),
   })
@@ -86,38 +91,37 @@ test('Variable 改写同名 Custom Property，不展开消费函数', () => {
 })
 
 test('嵌套 CSS Function 沿同一临时地址继续解析', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+  const hover = 'testHover'
+  const active = 'testActive'
   const distance = value('2px', [[hover, '4px'], [active, '6px']])
   const factor = value(1, [[hover, 2], [active, 3]])
 
   keep(rule('.CompiledNestedFunction', $transform, translateY(calcMultiply(distance, factor))))
 
   const css = compileCSS()
-  expect(count(css, 'transform:')).toBe(3)
+  expect(count(css, 'transform:')).toBe(4)
   expect(css).toContain('transform: translateY(calc(2px * 1));')
-  expect(css).toContain('&:hover {\ntransform: translateY(calc(4px * 2));\n}')
+  expect(css).toContain('&:hover {\ntransform: translateY(calc(4px * 2));\n&:active {\ntransform: translateY(calc(6px * 2));\n}')
   expect(css).toContain('&:active {\ntransform: translateY(calc(6px * 3));\n}')
-  expect(css).not.toContain('&:hover {\n&:active')
   expect(css).not.toContain('&:active {\n&:hover')
 })
 
-test('完整解析各参数候选，访问依赖后由挂载拒绝异址组合', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+test('完整解析各参数候选，条件交集的依赖只激活一次', () => {
+  const hover = 'testHover'
+  const active = 'testActive'
   const rejected = vi.fn()
   const distance = value('2px', [[hover, '4px']])
   const factor = value(2, [[active, value(3, { onActive: rejected })]])
   keep(rule('.OrderedArguments', 'width', calcMultiply(distance, factor)))
 
   expect(rejected).not.toHaveBeenCalled()
-  expect(compileCSS()).toBe('.OrderedArguments {\nwidth: calc(2px * 2);\n}')
+  expect(compileCSS()).toContain('&:hover {\nwidth: calc(4px * 2);\n&:active {\nwidth: calc(4px * 3);')
   expect(rejected).toHaveBeenCalledTimes(1)
 })
 
 test('兄弟声明独立形成候选，再共同挂载到唯一的条件区域', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+  const hover = 'testHover'
+  const active = 'testActive'
   const first = value('red', [[hover, 'pink']])
   const second = value('blue', [[hover, 'cyan'], [active, 'navy']])
   const third = value('white', [[hover, 'silver'], [active, 'gray']])
@@ -132,8 +136,13 @@ test('兄弟声明独立形成候选，再共同挂载到唯一的条件区域',
     '&:hover {',
     'background-color: color-mix(in oklab, pink, color-mix(in oklab, cyan, silver));',
     'border-color: color-mix(in oklab, cyan, silver);',
+    '&:active {',
+    'background-color: color-mix(in oklab, pink, color-mix(in oklab, navy, gray));',
+    'border-color: color-mix(in oklab, navy, silver);',
+    '}',
     '}',
     '&:active {',
+    'background-color: color-mix(in oklab, red, color-mix(in oklab, navy, gray));',
     'border-color: color-mix(in oklab, navy, gray);',
     '}',
     '}',
@@ -141,8 +150,8 @@ test('兄弟声明独立形成候选，再共同挂载到唯一的条件区域',
 })
 
 test('嵌套函数解析保留全部十八个组合与三个 Value 的条件贡献', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+  const hover = 'testHover'
+  const active = 'testActive'
   const first = value('red', [[hover, 'pink']])
   const second = value('blue', [[hover, 'cyan'], [active, 'navy']])
   const third = value('white', [[hover, 'silver'], [active, 'gray']])
@@ -150,27 +159,28 @@ test('嵌套函数解析保留全部十八个组合与三个 Value 的条件贡�
     root: new Map(), path: [], resolving: new Set(), activate() {}, defineVariable() {},
   })
   expect(candidates).toHaveLength(18)
-  expect(candidates.every((candidate) => candidate.conditions.length === 3)).toBe(true)
-  expect(candidates.some((candidate) => JSON.stringify(candidate.conditions) === JSON.stringify([[], [hover], [active]]))).toBe(true)
+  expect(candidates[0].conditions).toEqual([])
+  expect(candidates.some((candidate) => JSON.stringify(candidate.conditions) === JSON.stringify([hover, active]))).toBe(true)
+  expect(candidates.every((candidate) => candidate.conditions.length <= 3)).toBe(true)
 })
 
-test('三个智能参数与嵌套函数只保留共同分支', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+test('三个普通 Value 与嵌套函数保留各分支及规范交集', () => {
+  const hover = 'testHover'
+  const active = 'testActive'
   const first = value('black', [[hover, 'navy'], [active, 'blue']])
   const second = value('white', [[hover, 'silver'], [active, 'gray']])
   const ratio = value(0.8, [[hover, 0.7], [active, 0.6]])
   keep(rule('.ThreeArguments', 'background-color', colorMix([first, ratio], colorMix(second, 'transparent'))))
 
   const css = compileCSS()
-  expect(count(css, 'background-color:')).toBe(3)
+  expect(count(css, 'background-color:')).toBe(4)
   expect(css).toContain('black 80%, color-mix(in oklab, white, transparent)')
   expect(css).toContain('navy 70%, color-mix(in oklab, silver, transparent)')
   expect(css).toContain('blue 60%, color-mix(in oklab, gray, transparent)')
 })
 
 test('动态 Variable 在每个消费地址补充同名默认赋值，显式覆盖优先', () => {
-  const hover = condition('&:hover')
+  const hover = 'testHover'
   const ratio = variable('shared-ratio', { fallback: value(0.8, [[hover, 0.6]]) })
   keep(rule('.FirstConsumer', 'opacity', ratio))
   keep(rules('.SecondConsumer', [[ratio, [[hover, 0.3]]], ['opacity', ratio]]))
@@ -184,7 +194,7 @@ test('动态 Variable 在每个消费地址补充同名默认赋值，显式覆�
 })
 
 test('动态 Variable 嵌入 Function 与另一个 Variable 时仍保持引用', () => {
-  const hover = condition('&:hover')
+  const hover = 'testHover'
   const inner = variable('inner-ratio', { fallback: value(0.8, [[hover, 0.6]]) })
   const outer = variable('outer-ratio', { fallback: calcMultiply(inner, 0.5) })
   keep(rule('.NestedVariables', 'background-color', colorMix(['black', outer], 'white')))
@@ -196,10 +206,10 @@ test('动态 Variable 嵌入 Function 与另一个 Variable 时仍保持引用',
 })
 
 test('Variable 局部覆盖的条件继续约束嵌套 Value', () => {
-  const hover = condition('&:hover')
-  const active = condition('&:active')
+  const hover = 'testHover'
+  const active = 'testActive'
   const ratio = variable('local-ratio')
   keep(rules('.LocalOverride', [[ratio, [[hover, value(1, [[hover, 2], [active, 3]])]]]]))
 
-  expect(compileCSS()).toBe('.LocalOverride {\n&:hover {\n--local-ratio: 2;\n}\n}')
+  expect(compileCSS()).toBe('.LocalOverride {\n&:hover {\n--local-ratio: 2;\n&:active {\n--local-ratio: 3;\n}\n}\n}')
 })
