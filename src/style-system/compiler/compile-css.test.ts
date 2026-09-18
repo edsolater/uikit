@@ -24,6 +24,8 @@ import { valueList, valueSequence } from '../values/list'
 import { fontValue } from '../values/font'
 import { transitionValue } from '../values/transition'
 import { contentLayout } from '../mixins/content'
+import { boundary } from '../mixins/structure'
+import { clickable } from '../mixins/interaction'
 
 subjectCondition('testHover', condition('&:hover'))
 subjectCondition('testActive', condition('&:active'))
@@ -385,6 +387,40 @@ test('Key 只有名称；简写、详细属性和重复声明按书写顺序输�
 test('Mixin 处理方向配置，Key 不解释对象', () => {
   handles.push(rules('.Layout', [contentLayout({ padding: { left: '4px' } })]))
   expect(compileCSS()).toBe('.Layout {\npadding-left: 4px;\n}')
+})
+
+test('边界形状按需输出，省略时保留边框和焦点配置', () => {
+  keep(rules('.Shape', [boundary({ radius: '999px', cornerShape: 'squircle' })]))
+  keep(rules('.Boundary', [boundary({ border: ['1px', 'solid', 'transparent'], outline: { width: '2px', style: 'solid', color: 'blue', offset: '2px' } })]))
+  keep(rules('.EmptyBoundary', [boundary()]))
+  const css = compileCSS()
+  expect(css).toContain('.Shape {\nborder-radius: 999px;\ncorner-shape: squircle;')
+  expect(css).toContain('.Boundary {\nborder: 1px solid transparent;\noutline-width: 2px;\noutline-style: solid;\noutline-color: blue;\noutline-offset: 2px;')
+  expect(css.match(/corner-shape:/g)).toHaveLength(1)
+  expect(css).not.toContain('.EmptyBoundary')
+})
+
+test('新增 flex 居中不改变原 grid 居中及独立空间配置', () => {
+  keep(rules('.Flex', [contentLayout({ mode: 'flex-center' })]))
+  keep(rules('.Grid', [contentLayout({ mode: 'center' })]))
+  keep(rules('.Space', [contentLayout({ gap: '8px', padding: ['4px', '12px'] })]))
+  expect(compileCSS()).toBe('.Flex {\ndisplay: inline-flex;\nalign-items: center;\njustify-content: center;\n}\n.Grid {\ndisplay: inline-grid;\ngrid-auto-flow: column;\nplace-content: center;\nplace-items: center;\n}\n.Space {\ngap: 8px;\npadding: 4px 12px;\n}')
+})
+
+test('可点击效果允许选择透明度且保留省略参数时的旧默认', () => {
+  const original = keep(rules('.Original', [clickable()]))
+  const before = compileCSS()
+  expect(before).toContain('opacity: 0.48;')
+  expect(before).toContain('opacity: 1;')
+  original.remove()
+  keep(rules('.Explicit', [clickable({ opacity: value(1, { disabled: 0.56 }) })]))
+  const css = compileCSS()
+  expect(css).toContain('opacity: 0.56;')
+  expect(css).not.toContain('--opacity-disabled')
+  expect(css).toContain('cursor: not-allowed;')
+  expect(css).toContain('transform: translateY(1px);')
+  expect(css).toContain('transition: background-color')
+  expect(css).toContain('prefers-reduced-motion')
 })
 
 test('同一激活集合中，各 Value 都选择自身最高优先级分支', () => {

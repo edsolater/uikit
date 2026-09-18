@@ -1,6 +1,7 @@
 /** 在真实浏览器中验证启动时统一挂载的 Button 样式与核心视觉语义。 */
+import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { Button, type ButtonProps } from './Button'
 import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
@@ -10,10 +11,50 @@ import { $backgroundColor } from '../../../style-system/properties/color'
 import { contentLayout } from '../../../style-system/mixins/content'
 import { subtle } from '../../../style-system/values/materials/radius'
 import { smallSpace } from '../../../style-system/values/materials/space'
+import './Button.style'
+import baselineCSS from './Button.css?raw'
+import { action, actionHover, actionActive, actionForeground, actionLine } from '../../../style-system/values/materials/color/action'
+import { foreground, strongForeground } from '../../../style-system/values/materials/color/text'
+import { accent, softAccent, strongAccent, accentForeground, accentFocus, danger, softDanger, dangerForeground, dangerLine } from '../../../style-system/values/materials/color/tone'
+import { flat, low, raised, elevated } from '../../../style-system/values/materials/shadow'
+import '../../../components/kits/Input/Input.css'
+import '../../../components/kits/Popover/popover.css'
 
 let dispose: (() => void) | undefined
 const handles: RulesHandle[] = []
 const buttonStyleSelector = 'style#css-root'
+
+/** 模拟应用在渲染前提供挂载点并提交已登记样式。 */
+function mountButtonStyles() {
+  const style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  return style
+}
+
+beforeEach(() => {
+  // 入口切换前也只让 TS 命中 Button；原文件仅改类名后作为独立对照。
+  document.head.querySelectorAll<HTMLStyleElement>('style[data-vite-dev-id]').forEach(style => {
+    if (style.dataset.viteDevId?.replaceAll('\\', '/').endsWith('/Button.css')) style.sheet!.disabled = true
+  })
+  const baseline = document.body.appendChild(document.createElement('style'))
+  baseline.textContent = baselineCSS.replaceAll('.Button', '.BaselineButton')
+})
+
+/** 读取主体外观；不比较历史边缘场景中已明确调整的焦点环。 */
+function appearance(button: HTMLElement) {
+  const style = getComputedStyle(button)
+  return Object.fromEntries(['background-color', 'color', 'border-top-color', 'box-shadow', 'opacity', 'transform'].map(key => [key, style.getPropertyValue(key)]))
+}
+
+/** 旧 CSS 对照只改变样式身份，保留组件生成的属性与内容。 */
+function baselineButton(button: HTMLButtonElement) {
+  const baseline = button.cloneNode(true) as HTMLButtonElement
+  baseline.classList.replace('Button', 'BaselineButton')
+  button.parentElement!.append(baseline)
+  baseline.style.transition = 'none'
+  return baseline
+}
 
 afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
@@ -22,10 +63,92 @@ afterEach(() => {
   document.body.replaceChildren()
   document.head.querySelectorAll(buttonStyleSelector).forEach((element) => element.remove())
   document.documentElement.removeAttribute('data-theme')
+  document.documentElement.style.removeProperty('--base-brand')
 })
 
 describe('Button styles', () => {
-  test('所有 variant、tone、size 与 loading 的禁用组合保持各 feature 的覆盖', () => {
+  test('旧 CSS 固定为 9 月 3 日迁移前的 Git blob', async () => {
+    const content = new TextEncoder().encode(baselineCSS)
+    const header = new TextEncoder().encode(`blob ${content.length}\0`)
+    const blob = new Uint8Array(header.length + content.length)
+    blob.set(header)
+    blob.set(content, header.length)
+    const digest = await crypto.subtle.digest('SHA-1', blob)
+    expect(Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')).toBe('dab69febec84ce8d9e38921c33e2a5de16a8568a')
+  })
+  for (const theme of ['light', 'dark']) {
+    test(`${theme}：九种配方的常态、悬停和两种 active 交集与旧 CSS 一致`, async () => {
+      document.documentElement.dataset.theme = theme
+      mountButtonStyles()
+      const host = document.body.appendChild(document.createElement('div'))
+      const variants: ButtonProps['variant'][] = [undefined, 'bare', 'solid']
+      const tones: ButtonProps['tone'][] = [undefined, 'accent', 'danger']
+      dispose = render(() => variants.flatMap(variant => tones.map(tone => <Button variant={variant} tone={tone}>比较</Button>)), host)
+      for (const button of Array.from(host.querySelectorAll<HTMLButtonElement>('button'))) {
+        button.style.transition = 'none'
+        const baseline = baselineButton(button)
+        expect(appearance(button)).toEqual(appearance(baseline))
+        await userEvent.hover(baseline)
+        const hover = appearance(baseline)
+        baseline.focus()
+        await userEvent.keyboard('[Space>]')
+        const active = appearance(baseline)
+        const ring = ['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(baseline).getPropertyValue(property))
+        await userEvent.keyboard('[/Space]')
+        await userEvent.hover(button)
+        expect(appearance(button)).toEqual(hover)
+        button.focus()
+        await userEvent.keyboard('[Space>]')
+        try {
+          expect(button.matches(':hover:active')).toBe(true)
+          expect(appearance(button)).toEqual(active)
+          expect(button.matches(':focus-visible')).toBe(true)
+          expect(['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(button).getPropertyValue(property))).toEqual(ring)
+          await userEvent.unhover(button)
+          expect(button.matches(':active')).toBe(true)
+          expect(appearance(button)).toEqual(active)
+        } finally { await userEvent.keyboard('[/Space]') }
+        button.blur()
+        baseline.disabled = true
+        const disabledAppearance = appearance(baseline)
+        for (const mode of ['native', 'status', 'both']) {
+          button.disabled = mode !== 'status'
+          button.dataset.status = mode === 'native' ? 'loading' : 'loading disabled'
+          expect(appearance(button)).toEqual(disabledAppearance)
+          await userEvent.hover(button)
+          expect(appearance(button)).toEqual(disabledAppearance)
+          button.focus()
+          await userEvent.keyboard('[Space>]')
+          try {
+            if (mode === 'status') expect(button.matches(':active')).toBe(true)
+            expect(appearance(button)).toEqual(disabledAppearance)
+            expect(getComputedStyle(button).cursor).toBe('not-allowed')
+          } finally { await userEvent.keyboard('[/Space]') }
+          await userEvent.unhover(button)
+          button.blur()
+        }
+        baseline.remove()
+      }
+    })
+  }
+
+  test('隔离来源：停用 TS 后对照必须失败，旧 CSS 不替 Button 通过', () => {
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <Button solid accent>隔离</Button>, host)
+    const button = host.querySelector<HTMLButtonElement>('button')!
+    button.style.transition = 'none'
+    const baseline = baselineButton(button)
+    expect(appearance(button)).toEqual(appearance(baseline))
+    const style = document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)!
+    style.sheet!.disabled = true
+    expect(appearance(button)).not.toEqual(appearance(baseline))
+    style.sheet!.disabled = false
+    expect(appearance(button)).toEqual(appearance(baseline))
+  })
+
+  test.each(['light', 'dark'])('%s：所有 variant、tone、size 与 loading 的禁用组合保持各 feature 的覆盖', (theme) => {
+    document.documentElement.dataset.theme = theme
     const style = document.createElement('style')
     style.id = 'css-root'
     document.head.append(style)
@@ -41,28 +164,117 @@ describe('Button styles', () => {
       <Button {...entry} disabled htmlProps={{ 'data-testid': `disabled-${index}` }}>禁用</Button>
     )), host)
 
-    const reference = document.body.appendChild(document.createElement('div'))
-    reference.style.backgroundColor = 'var(--color-surface)'
-    reference.style.color = 'var(--color-foreground)'
-    const background = getComputedStyle(reference).backgroundColor
-    const foreground = getComputedStyle(reference).color
-    reference.style.color = 'var(--color-action-foreground)'
-    const actionForeground = getComputedStyle(reference).color
-
     for (const [index, entry] of cases.entries()) {
       const button = host.querySelector<HTMLButtonElement>(`[data-testid="disabled-${index}"]`)!
+      const baseline = baselineButton(button)
+      const expected = getComputedStyle(baseline)
       if (entry.mode === 'native') button.dataset.status = entry.loading ? 'loading' : ''
       if (entry.mode === 'status') button.disabled = false
       button.style.transition = 'none'
       expect(button.matches(whenDisabled.header.replace('&', ''))).toBe(true)
       const computed = getComputedStyle(button)
-      expect(computed.backgroundColor).toBe(background)
-      expect(computed.color).toBe(entry.variant === 'solid' && entry.tone ? actionForeground : foreground)
+      expect(computed.backgroundColor).toBe(expected.backgroundColor)
+      expect(computed.color).toBe(expected.color)
       expect(computed.boxShadow).toBe('none')
       expect(computed.cursor).toBe('not-allowed')
-      expect(computed.opacity).toBe('0.48')
+      expect(computed.opacity).toBe('0.56')
       expect(computed.transform).toBe('none')
       expect(computed.minHeight).toBe(entry.size === 'small' ? '32px' : entry.size === 'large' ? '64px' : entry.size === 'xlarge' ? '80px' : '48px')
+      baseline.remove()
+    }
+  })
+
+  test('材料与基础 token 等价，挂载前后非 Button 消费者及品牌覆盖不变', () => {
+    const materials = [
+      [action, '--color-action'], [actionHover, '--color-action-hover'], [actionActive, '--color-action-active'],
+      [actionForeground, '--color-action-fg'], [actionLine, '--color-action-line'],
+      [foreground, '--color-fg'], [strongForeground, '--color-fg-strong'],
+      [accent, '--color-accent'], [softAccent, '--color-accent-soft'], [strongAccent, '--color-accent-strong'],
+      [accentForeground, '--color-accent-fg'], [accentFocus, '--color-accent-focus'],
+      [danger, '--color-bad'], [softDanger, '--color-bad-soft'], [dangerForeground, '--color-bad-fg'], [dangerLine, '--color-bad-line'],
+    ] as [typeof action, string][]
+    const shadows = [[flat, '--shadow-0'], [low, '--shadow-1'], [raised, '--shadow-2'], [elevated, '--shadow-3']] as [typeof flat, string][]
+    const probes = [...materials.map(([material, token]) => ({ material, token, property: 'color' })),
+      ...shadows.map(([material, token]) => ({ material, token, property: 'box-shadow' }))]
+    const elements = probes.map((probe, index) => {
+      const reference = document.body.appendChild(document.createElement('div'))
+      reference.style.setProperty(probe.property, `var(${probe.token})`)
+      const actual = document.body.appendChild(document.createElement('div'))
+      actual.className = `material-${index}`
+      handles.push(rule(`.material-${index}`, probe.property, probe.material))
+      return { ...probe, reference, actual }
+    })
+    const input = document.body.appendChild(document.createElement('input'))
+    input.className = 'Input'
+    const popover = document.body.appendChild(document.createElement('div'))
+    popover.className = 'Popover'
+    const nonButton = [...elements.map(entry => entry.reference), input, popover]
+    // 根变量、Input/Popover 边框和 Dashboard 所用品牌材料都不得被 Button 登记覆盖。
+    for (const theme of ['light', 'dark']) {
+      document.documentElement.dataset.theme = theme
+      for (const brand of ['', 'oklch(60% 0.15 140)']) {
+        document.documentElement.style.setProperty('--base-brand', brand)
+        const existing = document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)
+        if (existing) existing.sheet!.disabled = true
+        const before = nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))
+        const style = existing ?? mountButtonStyles()
+        style.sheet!.disabled = false
+        expect(nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))).toEqual(before)
+        for (const entry of elements) {
+          expect(getComputedStyle(entry.actual).getPropertyValue(entry.property)).toBe(getComputedStyle(entry.reference).getPropertyValue(entry.property))
+        }
+        const host = document.body.appendChild(document.createElement('div'))
+        const unmount = render(() => <Button solid>品牌</Button>, host)
+        const button = host.querySelector<HTMLButtonElement>('button')!
+        button.style.transition = 'none'
+        const baseline = baselineButton(button)
+        expect(appearance(button)).toEqual(appearance(baseline))
+        const color = getComputedStyle(button).backgroundColor
+        if (theme === 'light' && brand) expect(color).toBe('oklch(0.6 0.15 140)')
+        if (theme === 'dark') expect(color).toBe('oklch(0.7 0.18 260)')
+        unmount()
+        host.remove()
+      }
+    }
+    const css = Array.from(document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)!.sheet!.cssRules).map(rule => rule.cssText).join('\n')
+    expect(css).not.toMatch(/--(?:color-(?:brand|accent|action|bad|foreground)|dye-neutral-\d|shadow-[0-3])\s*:/)
+  })
+
+  test('四尺寸、方圆角、内容与拉伸容器保持旧布局，后置 layer 可覆盖', () => {
+    const style = mountButtonStyles()
+    const sizes: ButtonProps['size'][] = ['small', undefined, 'large', 'xlarge']
+    const host = document.body.appendChild(document.createElement('div'))
+    host.style.cssText = 'display:flex; flex-direction:column; gap:16px'
+    dispose = render(() => sizes.flatMap(size => [
+      <Button size={size}>普通文字</Button>,
+      <Button size={size}><span aria-hidden="true">＋</span><span>图标文字</span></Button>,
+      <Button size={size} htmlProps={{ style: 'max-width:160px' }}>窄容器中较长的按钮内容换行</Button>,
+    ]), host)
+    for (const button of Array.from(host.querySelectorAll<HTMLButtonElement>('button'))) {
+      const baseline = baselineButton(button)
+      const actual = getComputedStyle(button)
+      const expected = getComputedStyle(baseline)
+      for (const property of ['display', 'align-self', 'align-items', 'justify-content', 'min-height', 'padding', 'gap', 'font-size', 'font-weight', 'line-height', 'border-radius', 'corner-shape', 'width', 'height']) {
+        expect(actual.getPropertyValue(property), property).toBe(expected.getPropertyValue(property))
+      }
+      expect(actual.getPropertyValue('corner-shape')).toBe('superellipse(2)')
+      const children = button.querySelectorAll('span')
+      if (children.length === 2) expect(children[1].getBoundingClientRect().left - children[0].getBoundingClientRect().right).toBeCloseTo(parseFloat(actual.columnGap), 5)
+      baseline.remove()
+    }
+    const stretch = document.body.appendChild(document.createElement('div'))
+    stretch.style.cssText = 'display:flex;height:120px'
+    const button = host.querySelectorAll<HTMLButtonElement>('button')[3]
+    stretch.append(button)
+    expect(button.getBoundingClientRect().height).toBe(48)
+    expect(button.getBoundingClientRect().top - stretch.getBoundingClientRect().top).toBe(36)
+    expect(getComputedStyle(button).transitionDuration.split(',').every(duration => duration.trim() === '0.12s')).toBe(true)
+    const override = document.body.appendChild(document.createElement('style'))
+    override.textContent = '@layer button-test-override { .Button { background-color: rgb(1, 2, 3); } }'
+    button.style.transition = 'none'
+    expect(getComputedStyle(button).backgroundColor).toBe('rgb(1, 2, 3)')
+    for (const rule of Array.from(style.sheet!.cssRules)) {
+      if (rule.cssText.includes('.Button')) expect(rule).toBeInstanceOf(CSSLayerBlockRule)
     }
   })
 
@@ -124,7 +336,7 @@ describe('Button styles', () => {
     const reference = document.body.appendChild(document.createElement('div'))
     reference.style.color = 'var(--color-accent-focus)'
     const accentColor = getComputedStyle(reference).color
-    reference.style.color = 'var(--color-danger-line)'
+    reference.style.color = 'var(--color-bad-line)'
     const dangerColor = getComputedStyle(reference).color
 
     await userEvent.tab()
@@ -233,7 +445,8 @@ describe('Button styles', () => {
     expect(cssText).toContain('&:where(:hover)')
     expect(cssText).toContain('&:where(:active)')
     expect(cssText).not.toContain('[object Object]')
-    expect(cssRules.filter((rule) => rule instanceof CSSStyleRule && rule.selectorText === '.Button')).toHaveLength(1)
+    const layer = cssRules.find(rule => rule instanceof CSSLayerBlockRule && rule.name === 'uikit') as CSSLayerBlockRule
+    expect(Array.from(layer.cssRules).filter(rule => rule instanceof CSSStyleRule && rule.selectorText === '.Button')).toHaveLength(1)
     expect(document.head.querySelectorAll(buttonStyleSelector)).toHaveLength(1)
     const [firstContent, secondContent] = defaultButton.querySelectorAll<HTMLElement>('span')
     const buttonRect = defaultButton.getBoundingClientRect()
@@ -266,7 +479,7 @@ describe('Button styles', () => {
     expect(xlargeStyle.columnGap).toBe('16px')
     expect(getComputedStyle(getButton('loading')).cursor).toBe('progress')
     expect(disabledStyle.cursor).toBe('not-allowed')
-    expect(disabledStyle.opacity).toBe('0.48')
+    expect(disabledStyle.opacity).toBe('0.56')
 
     const defaultBackground = defaultStyle.backgroundColor
     await userEvent.hover(getButton('default'))

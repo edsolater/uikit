@@ -1,8 +1,53 @@
 /** 验证交互状态 Condition 的浏览器语义。 */
 import { afterEach, expect, test } from 'vitest'
-import { whenFocus, whenFocusWithin } from './interaction'
+import { userEvent } from 'vitest/browser'
+import { compileCSS, rules, value } from '../index'
+import { whenFocus, whenFocusWithin, whenHover, whenActive } from './interaction'
 
 afterEach(() => document.body.replaceChildren())
+
+test('hover 与 active 的交集不增加权重压过变体', async () => {
+  const base = rules('.interaction-probe', [['color', value('red', { hover: 'blue', active: 'green' })]])
+  const variant = rules('.interaction-probe[data-variant="solid"]', [['color', 'white']])
+  const style = document.body.appendChild(document.createElement('style'))
+  style.textContent = compileCSS()
+  base.remove()
+  variant.remove()
+  const button = document.body.appendChild(document.createElement('button'))
+  button.className = 'interaction-probe'
+  button.dataset.variant = 'solid'
+  button.textContent = '交互探针'
+  await userEvent.hover(button)
+  expect(getComputedStyle(button).color).toBe('rgb(255, 255, 255)')
+  button.focus()
+  await userEvent.keyboard('[Space>]')
+  try {
+    expect(button.matches(':hover:active')).toBe(true)
+    expect(getComputedStyle(button).color).toBe('rgb(255, 255, 255)')
+    await userEvent.unhover(button)
+    expect(button.matches(':active')).toBe(true)
+    expect(getComputedStyle(button).color).toBe('rgb(255, 255, 255)')
+  } finally { await userEvent.keyboard('[/Space]') }
+})
+
+test('原生、标记与并存禁用均排除 hover 和 active', async () => {
+  for (const mode of ['native', 'status', 'both']) {
+    const button = document.body.appendChild(document.createElement('button'))
+    button.textContent = mode
+    button.disabled = mode !== 'status'
+    if (mode !== 'native') button.dataset.status = 'loading disabled'
+    await userEvent.hover(button)
+    expect(button.matches(':hover')).toBe(true)
+    expect(button.matches(whenHover.header.replace('&', ''))).toBe(false)
+    button.focus()
+    await userEvent.keyboard('[Space>]')
+    try {
+      if (mode === 'status') expect(button.matches(':active')).toBe(true)
+      expect(button.matches(whenActive.header.replace('&', ''))).toBe(false)
+    } finally { await userEvent.keyboard('[/Space]') }
+    button.remove()
+  }
+})
 
 test('focus 与 focus-within 分别匹配焦点主体和包含主体', () => {
   const parent = document.body.appendChild(document.createElement('div'))

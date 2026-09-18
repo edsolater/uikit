@@ -2,7 +2,7 @@
 import type { Declarations } from '../core/css-rule'
 import type { ValueInput } from '../core/css-value'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../properties/font'
-import { $display, $gap, $gridAutoFlow, $placeContent, $placeItems } from '../properties/layout'
+import { $display, $gap, $gridAutoFlow, $placeContent, $placeItems, $alignItems, $justifyContent } from '../properties/layout'
 import { $padding, $paddingTop, $paddingRight, $paddingBottom, $paddingLeft } from '../properties/padding'
 import { valueSequence } from '../values/list'
 import { fontValue, type FontParts } from '../values/font'
@@ -34,9 +34,9 @@ export interface PaddingSides {
 /** 内边距：完整值、CSS 顺序位置值或指定方向。 */
 export type PaddingInput = ValueInput | ValueInput[] | PaddingSides
 
-/** 内容布局配置。 */
+/** 内容布局配置；center 使用 grid 居中，flex-center 使用 flex 居中，省略 mode 不改变排列。 */
 export interface ContentLayoutMixinOptions {
-  mode?: 'center'
+  mode?: 'center' | 'flex-center'
   gap?: ValueInput
   padding?: PaddingInput
 }
@@ -50,6 +50,9 @@ export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarat
         [$placeContent, 'center'],
         [$placeItems, 'center'],
       ]
+    : undefined,
+  options.mode === 'flex-center'
+    ? [[$display, 'inline-flex'], [$alignItems, 'center'], [$justifyContent, 'center']]
     : undefined,
   [$gap, options.gap],
   paddingDeclarations(options.padding),

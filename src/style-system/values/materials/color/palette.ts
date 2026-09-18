@@ -20,24 +20,14 @@ export const brand = variable('color-brand', { root: { value: palette.brand.ligh
 /** 亮色主题的纸面底色。 */
 const paperSurface = variable('dye-neutral-0', { root: { value: palette.paper.light, dark: palette.paper.dark } })
 
-/** 低层中性表面。 */
-export const lowSurface = variable('dye-neutral-1', { root: { value: palette.lowSurface.light, dark: palette.lowSurface.dark } })
+/** 低层中性表面，引用已加载的基础 CSS token。 */
+export const lowSurface = variable('dye-neutral-1')
 
-/** 悬停时的中性表面。 */
-export const hoverSurface = variable('dye-neutral-2', {
-  root: {
-    value: palette.hoverSurface.light,
-    dark: palette.hoverSurface.dark,
-  },
-})
+/** 悬停时的中性表面，引用已加载的基础 CSS token。 */
+export const hoverSurface = variable('dye-neutral-2')
 
-/** 按下时的中性表面。 */
-export const activeSurface = variable('dye-neutral-3', {
-  root: {
-    value: palette.activeSurface.light,
-    dark: palette.activeSurface.dark,
-  },
-})
+/** 按下时的中性表面，引用已加载的基础 CSS token。 */
+export const activeSurface = variable('dye-neutral-3')
 
 /** 普通文字的基础色元。 */
 export const ink = variable('dye-neutral-7', { root: { value: palette.ink.light, dark: palette.ink.dark } })

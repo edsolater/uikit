@@ -14,7 +14,7 @@ export const whenFocusVisible = condition('&:focus-visible')
 export const whenDisabled = condition('&:is(:disabled, [data-status~="disabled"])')
 
 /** 未禁用时悬停。 */
-export const whenHover = condition('&:where(:hover):not(:disabled, [data-status~="disabled"])')
+export const whenHover = condition('&:where(:hover):where(:not(:disabled, [data-status~="disabled"]))')
 
 /** 未禁用时按下。 */
-export const whenActive = condition('&:where(:active):not(:disabled, [data-status~="disabled"])')
+export const whenActive = condition('&:where(:active):where(:not(:disabled, [data-status~="disabled"]))')

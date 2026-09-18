@@ -1,6 +1,5 @@
-/** 预定义阴影与交互配方，阴影颜色随明暗主题切换。 */
-import { type ShadowShape, shadowValue } from '../shadow'
-import { valueList } from '../list'
+/** 预定义阴影材料与交互配方；阴影档位引用已加载的基础 CSS token，随主题改变几何与浓度。 */
+import { type ShadowShape } from '../shadow'
 import { value } from '../../core/css-value'
 import { variable } from '../../core/css-variable'
 
@@ -19,26 +18,17 @@ export const darkShade = value('rgb(0 0 0 / 38%)')
 /** 双重阴影中贴近表面的接触色。 */
 export const contactShade = value('rgb(0 0 0 / 3%)')
 
-/** 随明暗主题切换的阴影颜色。 */
-const shadowShade = variable('color-shadow', { root: { value: lightShade, dark: darkShade } })
-
 /** 平面档，不产生阴影。 */
-export const flat = variable('shadow-flat', { root: { value: 'none' } })
+export const flat = variable('shadow-0')
 
 /** 贴近表面的低层阴影。 */
-export const low = variable('shadow-low', {
-  root: { value: shadowValue({ ...contactShape, color: shadowShade }) },
-})
+export const low = variable('shadow-1')
 
 /** 抬升档，组合接触与扩散两层阴影。 */
-export const raised = variable('shadow-raised', {
-  root: {
-    value: valueList(
-      shadowValue({ ...contactShape, color: contactShade }),
-      shadowValue({ ...raisedShape, color: shadowShade }),
-    ),
-  },
-})
+export const raised = variable('shadow-2')
+
+/** 强抬升档，使用基础 token 随主题选择的几何与浓度。 */
+export const elevated = variable('shadow-3')
 
 /** 可交互主体的层级反馈；悬停时抬升，按下或禁用时回到平面。 */
 export const interactiveElevation = value(low, {
