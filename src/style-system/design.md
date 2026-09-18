@@ -9,7 +9,7 @@
 - Condition Path 表达地址。
 - `rule()` 登记一条源配置，`rules()` 按顺序批量登记，账本由 CSSRoot 持有。
 - Declaration 与 Value 保存尚未展开的语义。
-- `compileCSS()` 在执行时解读全部源配置，展开条件、属性和值，并返回 CSS string。
+- `compileCSS()` 在执行时解读全部源配置，解析条件与内容，并返回 CSS string。
 - CSS Variable、Keyframes 和 CSS `@function` 等依赖，只在编译器真正访问相应 Value 时进入本次结果。
 
 Block、StyleRule、MediaRule 和 KeyframeRule 不再是对象模型。它们在最终 CSS 中的结构，都由 Condition Path 和编译规则生长出来。
@@ -20,7 +20,6 @@ Style System 及其共享 values、selectors、properties、mixins 是定义层�
 
 定义层提供业务无关、能脱离具体组件复用的材料、条件、CSS Key 和效果。判断范围是整个 UIKit 的多组件设计系统：像 `clickable()`、`boundary()`、`elevation()` 这样可与绑定组件解耦的目的，即使暂时只有一个消费者也可成为共享黑盒；Button 的 `solid` 配方和尺寸档位仍由 `.style.ts` 中的 Rule 选择材料，再交给通用 Mixin 翻译。是否共享不取决于当前调用次数，也不取决于抽出后的顶层代码是否更短。
 
----
 
 # 核心对象
 
@@ -29,12 +28,15 @@ Style System 及其共享 values、selectors、properties、mixins 是定义层�
 | Condition | 描述相对于当前地址的有序 selector、At Rule 或其他 CSS 结构。 |
 | Subject Condition | 引用已承诺主体稳定且满足交换律的 Condition；保存固定名称与嵌套顺序。 |
 | Condition Path | Condition 组成的有序嵌套地址；普通部分保留原顺序，Subject Condition 部分使用中央顺序。 |
-| CSS Key | Declaration 的受体，包括普通属性、Variable 和 Descriptor；普通属性同时保存固定的内容语法。 |
+| CSS Key | 原生属性或 Descriptor 的名称；Variable 也可充当声明目标。 |
 | RawValue | 已不可继续拆解的原始值，当前是 `string` 或 `number`。 |
-| Value | 原始值、按 Subject Condition 名称取值的对象或复合表达；创建时不生成 CSS。 |
+| Valuable | 可被 CSS 化的对象的共同协议，包含可选的按需依赖。 |
+| Value | 按 Subject Condition 选择内容；条件参与消费表达式展开。 |
+| Variable | 独立的变量身份；使用时引用并按需自动定义。 |
+| CSS Function | 编译时调用的内容生成函数；只认识自身输入与语法。 |
 | Declaration | 已经匹配好的 Key 与可选 content；只保存这对关系，content 为 `undefined` 时整条声明无效。 |
-| Rule | 一条 `[RuleAddress, RuleValue]` 配置。 |
-| Rules | 按登记顺序保存 Rule 的内部 Map。 |
+| Rule | 一条 `[Condition Path, Key, Content]` 配置，Key 只保存一次。 |
+| Rules | 按声明顺序保存 Rule 的数组。 |
 | Rule Handle | 控制一次 `rule()` 登记仍然有效的内容。 |
 | Rules Handle | 删除一次 `rules()` 批量登记中仍然有效的条目。 |
 | CSSRoot | 拥有源 Rules 账本，负责统一编译与宿主提交。 |
@@ -54,16 +56,17 @@ const foreground = value('red', {
 `Rule` 是一条配置，不是容器；`Rules` 才是集合：
 
 ```ts
-type RuleAddress = [
-  ConditionPath | undefined,
+type Rule = [
+  (Condition | string)[] | undefined,
   CSSKey | undefined,
+  RuleValue,
 ]
-
-type Rule = [RuleAddress, RuleValue]
-type Rules = Map<RuleAddress, RuleValue>
+type Rules = Rule[]
 ```
 
-RuleAddress 固定为两项，两项都允许为空：
+Rule 的前两项合称地址，不再另存一份 Key；两项都允许为空：
+
+源路径中的 Condition 保存普通嵌套，字符串保留已安装的主体条件名称。进入编译后，两者分别进入普通路径与激活集合；不能提前把名称转成普通 header 而丢失身份。
 
 | 地址 | 语义 |
 | --- | --- |
@@ -72,9 +75,8 @@ RuleAddress 固定为两项，两项都允许为空：
 | `[undefined, key]` | 保持当前 path，选择 key。 |
 | `[undefined, undefined]` | 保持当前地址。 |
 
-RuleValue 可以继续包含 Rules。编译器进入它时沿用上层地址，再按内部 RuleAddress 继续寻址。因此 CSS `@function` 的函数体、Keyframes 的帧和其他嵌套内容都使用同一个模型，不需要专用 Block。
+RuleValue 可以继续包含 Rules。编译器进入它时沿用上层地址，再按内部 Rule 的路径与 Key 继续寻址。因此 CSS `@function` 的函数体、Keyframes 的帧和其他嵌套内容都使用同一个模型，不需要专用 Block。
 
----
 
 # Rule 直接登记源配置
 
@@ -91,21 +93,21 @@ rules(button, [
 
 `rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明二元数组、嵌套分组与表示“本层没有声明”的 `undefined`，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
 
-Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回同一个二元数组，作者可以按上下文决定是否使用。普通属性 Key、Variable 和 Descriptor 都直接充当受体；一个内容直接放在第二项，多个有序内容放进第二项内部的数组：
+Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回同一个二元数组，作者可以按上下文决定是否使用。普通属性 Key、Variable 和 Descriptor 都直接充当受体。复合内容由具体函数生成，或通过目的 Mixin 配置；Key 不解释对象和数组：
 
 ```ts
 [$borderRadius, pill]
 [$gap, normalSpace]
-[$padding, [normalSpace, wideSpace]]
-[$transition, [
+contentLayout({ padding: [normalSpace, wideSpace] })
+[$transition, transitionValue(
   [$backgroundColor, fast, standard],
   [$color, fast, standard],
-]]
+)]
 ```
 
-`rules()` 递归展开声明组合和 Mixin 返回值，跳过任意层级的独立 `undefined`；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Declaration 的 content 为 `undefined` 时整条声明同样被跳过。Key 自己保存其内容的固定编译语法；编译器到执行阶段才按 Key 解读有效 content。
+`rules()` 递归展开声明组合和 Mixin 返回值，跳过任意层级的独立 `undefined`；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Declaration 的 content 为 `undefined` 时整条声明同样被跳过。登记时拆出 Key 和 content，编译时不再识别第二份 Declaration。Key 不保存语法，内容函数在编译时生成自身语法。
 
-源账本同址后写覆盖前写，位置沿用该地址首次进入 Map 的顺序。最终 CSS 记录的父子关系由挂载阶段建立，见下文 [有序 CSS 记录](#有序-css-记录)。
+源账本保留原生声明及顺序，不预先删除同址前值。例如浏览器会忽略无效后值，继续采用有效前值；编译器不能提前把前值丢掉。最终输出见[有序 CSS 记录](#有序-css-记录)。
 
 `rule()` 返回句柄：
 
@@ -116,7 +118,7 @@ appearance.replace(nextForeground)
 appearance.remove()
 ```
 
-单项句柄可以替换仍由自己持有的值；批量句柄可以删除本次登记中仍由自己持有的条目。如果同址内容已经被后一次 `rule()` 覆盖，旧句柄不能替换或删除新的理解。句柄只修改源配置，不直接编译或操作 DOM。
+句柄只修改或删除自己的登记，不控制其他同址声明。删除后再 replace 会报错；后写声明不会使先写句柄失效。句柄只修改源配置，不直接编译或操作 DOM。
 
 源 Rules 是 CSSRoot 的内部状态，不从公共入口暴露。测试保存登记返回的句柄并在用例结束后删除，避免直接清空账本或建立业务侧配置容器。
 
@@ -128,11 +130,10 @@ Mixin 是返回 Declaration 组合的完整效果。它不绑定具体组件，�
 
 Mixin 的文件归属见 [architecture.md／文件职责](architecture.md#文件职责)，组件使用方法见 [样式文件写法／Mixin 赋予效果](../../docs/style/样式文件写法.md#mixin-赋予效果)。
 
----
 
 # Value 表达内容
 
-Value 只有两个基础概念：`Value` 与 `RawValue`。不再建立额外的状态值或单值类型与构造函数。
+Value 与 Variable 独立，共同继承 Valuable；CSS Function 是保存输入的普通可调用函数，不是 Value 的表达式分支。原始内容仍是字符串或数值，不建立 Expression、状态值或单值体系。
 
 ```ts
 const foreground = value('red', {
@@ -141,7 +142,7 @@ const foreground = value('red', {
 })
 ```
 
-`value(default, conditions)` 保存 default 以及若干 Subject Condition 名称对应的 Value。对象是常规写法；Map、Set、键值数组与其他键值 Iterable 适合动态组装。创建时不递归解包、字符串化或触发 `onActive`。普通 `value('red')` 也保留 Value 对象；编译给定 Rule 地址时才向下读取，直到得到 RawValue 或可由编译器降级的复合表达。
+`value(default, conditions)` 保存 default 以及若干 Subject Condition 名称对应的 Value。对象是常规写法；Map、Set、键值数组与其他键值 Iterable 适合动态组装。创建时不递归解包、字符串化或触发 `onActive`。普通 `value('red')` 也保留 Value 对象；编译给定 Rule 地址时才向下读取，直到得到原始内容或调用 CSS Function 取得内容。
 
 # Subject Condition 决定 Value 分支
 
@@ -177,9 +178,9 @@ rules(button, [[$backgroundColor, interactiveSurface]])
 
 # Variable 在各条件下改写同一个值
 
-Variable 始终对应同名 Custom Property。它作为 Value 被消费时只输出一个 `var(--name, fallback)`，条件分支改变该变量的赋值，不展开消费它的 CSS Function。
+Variable 始终对应同名 Custom Property。它被作为内容消费时只输出一个 `var(--name, fallback)`，条件分支改变该变量的赋值，不展开消费它的 CSS Function。
 
-动态 fallback 在实际消费地址生成 default 与条件赋值；静态 fallback 只留在 `var()` 内。条件默认值与显式声明都进入同一挂载器，同一地址的显式声明优先，与解析先后无关。不同消费地址分别得到自己的条件默认值。
+动态 fallback 在实际消费地址生成 default 与条件赋值；静态 fallback 只留在 `var()` 内。解析结束后只补充没有显式同址声明的缺省赋值，并放在显式规则之前。不同消费地址分别得到自己的条件默认值。
 
 `[variable, input]` 可以用完整 Value 同时修改 default 与条件分支，也可以用条目数组只修改指定地址。未声明的地址保留默认定义；允许增加 fallback 中没有的条件。
 
@@ -204,16 +205,16 @@ Variable 表达独立可赋值的输入，不为普通 CSS 属性预先建立同
 
 # Value 从 Rule 地址向叶子展开
 
-编译先取得 Rule 地址，再逐层进入 Value 与 CSS Function。普通动态 Value 提供自己的 default 与 Subject Condition 分支；Function 组合普通 Value 的候选，Variable 始终保留为 `var()` 引用。嵌套 Function 不建立新的条件作用域。
+编译先取得 Rule 地址，再逐层进入 Value 与 CSS Function。普通 Value 提供可达的 Subject Condition；在每个目标激活集合下，所有输入按同一有效顺序取值，再由 Function 组合。Variable 始终保留为 `var()` 引用。嵌套 Function 不建立新的条件作用域。
 
 - RawValue 与无条件的 Value 不增加条件贡献。
-- 同一个 Value 一次只选择 default 或一个 Subject Condition 分支。
-- 不同普通 Value 各自选择后，合并它们贡献的 Subject Condition。
+- 每个激活集合下，Value 从自身已有分支中取最后一个匹配项；未匹配才 default。
+- 有效顺序目前来自 Subject Condition 注册顺序，与分支书写顺序无关。
 - default 不增加条件；重复条件只保留一项；不同条件共同保留。
 - Variable 的条件不加入消费表达式。
-- 合并结果按 Subject Condition 的固定顺序生成嵌套地址；顺序不表达 Value 优先级。
+- 合并结果按 Subject Condition 的固定顺序生成嵌套地址；取值和地址排列都遵循这套顺序。
 
-例如，A、B、C 表示三个不同的 Subject Condition。Value 1 有 default、A、B，Value 2 有 default、B、C，最终地址是 default、A、B、C、[A, B]、[A, C]、[B, C]。没有 `[A, B, C]`，因为单个 Value 一次只选择一个分支；两个 Value 都贡献 B 时，嵌套地址仍然只有一个 B。
+例如，A、B、C 表示三个不同的 Subject Condition。Value 1 有 default、A、B，Value 2 有 default、B、C，需要覆盖 default、A、B、C、[A, B]、[A, C]、[B, C]、[A, B, C]。A、B、C 同时激活时，Value 1 取 B、Value 2 取 C；条件身份仍各一份。
 
 假定定义层已登记容器条件 `compactContainer`。一个子 Value 受 hover 影响、另一个受 compactContainer 影响时，编译器生成 default、hover、compactContainer，以及包含二者的规范嵌套地址。具体先后由中央顺序决定；最后一项表示逐层嵌套两个 Condition，不是拼接 selector。CSS 属性值是一个整体；浏览器负责判断嵌套条件是否匹配，但不会替编译器拼接两条声明中的 Value 片段。
 
@@ -241,17 +242,16 @@ hover、active、disabled 等通用状态由 Style System 映射到 CSS header�
 
 通用状态只提供可复用的 Subject Condition 身份，不决定每个组件的视觉结果。`clickable()` 等通用 Mixin 可以拥有自己的 active 与 disabled 反馈；Button 的 variant、tone 和 size 配方则留在 `Button.style.ts`。只在某个 Value 或 Variable 本身就表达可复用材料时，才把它的条件取值提升到定义层。
 
-Rules 也可以作为 Value 内容，用于需要继续携带 Key 或嵌套结构的场景。CSS `@function` 的完整函数体可以因此作为一个 Value 被按需挂载；编译器仍按相同的二项地址递归处理。
+Rules 只在规则结构和依赖定义中嵌套，不作为 Value 内容。CSS `@function` 的完整函数体由其依赖定义携带；Value 展开不能追加普通路径。
 
----
 
 # `onActive` 只产生本次派生 Rules
 
-Value 可以提供可选的 `onActive`：
+Value、Variable 和 CSS Function 通过 Valuable 提供可选的 `onActive`：
 
 ```ts
-interface ValueOptions {
-  onActive?: (context: CompileContext) => Rules | Rules[] | undefined
+interface Valuable {
+  onActive?: (context: CompileContext) => Rules | void
 }
 ```
 
@@ -259,7 +259,7 @@ interface ValueOptions {
 
 派生 Rules 不写回源 Rules。因此删除源 Value 后再编译，它曾带来的 `@property`、Keyframes 或 `@function` 会自然退出结果，不需要单独的停用阶段。
 
-同一 Value 在一次编译中只激活一次，首次解析位置作为回调上下文。Rules 自引用和 Value 递归引用都会终止并报错，不产生部分 CSS。
+同一 Valuable 在一次编译中只激活一次，首次解析位置作为回调上下文。Rules 自引用和 Value 递归引用都会终止并报错，不产生部分 CSS。
 
 ## 有序 CSS 记录
 
@@ -271,17 +271,12 @@ type CSSRecord = [conditions: (string | undefined)[], key: string | undefined, c
 
 Condition 与 CSS Key 在进入记录前降级为字符串；不存 Value、owner 或节点对象。树只由 conditions 的前缀关系表达。
 
-普通 Value 的 Subject Condition 在挂载前已经完成合并与规范化，并作为多层 Condition Path 追加到 Rule 地址；挂载器只接收最终地址，default 对应当前 Rule Path。有效记录直接插入所属区域：
+值的激活集合先规范化、统一取值，再追加最终记录。记录不做全局重排或同址属性覆盖；相邻路径共享嵌套块，隔着其他声明的条件块可以再次出现。跨段合并会改变原生简写与详细属性的级联，不能为了合并而引入属性分析。
 
-- 同 Path、同 Key 原位覆盖；同 Path 的不同 Key 连续共存。
-- 父节点声明先于全部后代；每个子树只占一段连续区域。
-- 兄弟子树保持首次挂载顺序；向已有 hover 添加声明时进入原 hover 区域。
-- 条件变量默认值与显式声明共用这些规则，显式同址优先。
-- 具名 `@function`、`@keyframes`、`@property` 按主体整体替换，旧子树退出，新主体保留原兄弟位置。
+变量缺省值是单独的自动定义责任：不替换显式同址赋值。按需依赖是完整定义，以其声明的路径与 Key 接管同址前定义；不扫描 header 判断是否是函数、帧或属性注册。
 
-数组在挂载过程中形成规范顺序，不在末尾排序或重新分组。字符串函数只接收这份数组，比较相邻路径的公共前缀，打开或关闭块，再写入属性与内容；它不处理值解析、Subject Condition 组合、覆盖或所有权。
+字符串函数只比较相邻路径，开闭块并写入内容；不解析 Value、选择条件或处理属性覆盖。
 
----
 
 # `compileCSS()` 是唯一生成入口
 
@@ -298,13 +293,12 @@ const cssString = compileCSS()
 
 这两个边界仅供编译器内部使用和测试，不从 Style System 公共入口导出。
 
-Compiler 比 Formatter、Encoder 或 Decoder 更准确：这里不仅排版，还会解读高层对象、按 Subject Condition 展开 Value、触发依赖、扩写属性并降级为浏览器接受的 CSS。
+Compiler 比 Formatter、Encoder 或 Decoder 更准确：这里不仅排版，还会解读高层对象、按 Subject Condition 展开 Value、触发依赖、生成浏览器接受的 CSS 内容。
 
----
 
 # CSSRoot 账本与应用启动
 
-CSSRoot 拥有源 Rules 账本和同址写入所有权。公开对象只提供无参 `cssRoot.mount()`；无参 `compileCSS()` 使用同一账本快照，只返回 CSS string。挂载先确认宿主存在，再编译，成功后提交到 `style#css-root`：
+CSSRoot 拥有有序源 Rules 账本与登记句柄。公开对象只提供无参 `cssRoot.mount()`；无参 `compileCSS()` 使用同一账本快照，只返回 CSS string。挂载先确认宿主存在，再编译，成功后提交到 `style#css-root`：
 
 - 保留宿主原有前缀内容。
 - 新结果与上次结果相同时不改写节点，现有 CSSOM 对象保持不变。
@@ -325,16 +319,15 @@ render(() => <App />, root)
 
 静态 CSS 要求所有样式模块在首次挂载前完成登记；各应用入口与打包配置怎样满足这项约束，见 [architecture.md／Button 接入](architecture.md#button-接入)。
 
----
 
 # 验收条件
 
 1. `Rule` 只表示一条配置，`Rules` 才表示集合；公共 API 不暴露源 Rules。
 2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；声明统一为 `[key, content]`，`declare()` 只返回相同二元数组，无效批次不产生部分写入。
-3. 同址后写覆盖前写并保持 Map 顺序，旧句柄不能影响新的写入。
+3. 原生声明保留顺序，覆盖由 CSS 决定；句柄只控制自己的登记。
 4. Subject Condition 集中登记名称、已有 Condition 与固定顺序；主体稳定和交换律由登记者承诺，编译器不负责验证。
-5. `Value` 与 `RawValue` 足以表达普通取值、各 Subject Condition 名称对应的取值和复合值；不建立 State 专用分类。
-6. 同一 Value 一次只选择一个分支；不同普通 Value 的 Subject Condition 合并后，按固定顺序逐层嵌套，不拼接 selector。
+5. Value、Variable 独立继承 Valuable，CSS Function 延迟生成内容；不增加 Expression 或 Key 语法体系。
+6. 同一激活集合下，各 Value 按有效条件顺序选自身最后匹配分支；缺分支不丢失已有匹配，地址逐层嵌套。
 7. 循环检查覆盖全部候选；共享引用不会被误判。
 8. 普通 Rule Path 不重排、不去重；Variable 不向消费地址贡献条件。
 9. `onActive` 只向本次派生 Rules 添加可达依赖，不污染源 Rules。

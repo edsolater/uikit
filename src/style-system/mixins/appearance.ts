@@ -1,6 +1,7 @@
 /** 颜色与层级 Mixin。 */
 import type { Declarations } from '../core/css-rule'
 import type { ValueInput } from '../core/css-value'
+import { valueList } from '../values/list'
 import { $backgroundColor, $color } from '../properties/color'
 import { $boxShadow } from '../properties/box-shadow'
 
@@ -18,5 +19,5 @@ export const color = (options: ColorMixinOptions = {}): Declarations => [
 
 /** Mixin：视觉层级。 */
 export const elevation = (level?: ValueInput | ValueInput[]): Declarations => [
-  [$boxShadow, level],
+  [$boxShadow, Array.isArray(level) ? valueList(...level) : level],
 ]

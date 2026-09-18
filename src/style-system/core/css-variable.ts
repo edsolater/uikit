@@ -1,27 +1,24 @@
-/** 可按 Subject Condition 名称重定义的 CSS Variable。 */
+/** CSS 变量及其按需定义。 */
 import { condition, media } from './css-condition'
 import type { Rules } from './css-rule'
-import type { Value, ValueInput } from './css-value'
+import type { Valuable } from './css-valuable'
+import type { ValueInput } from './css-value'
 
-/** 同时作为 Value 与 Custom Property Key 的逻辑 Variable。 */
-export type Variable = Extract<Value, { kind: 'value' }> & {
+/** 可引用、可赋值的 CSS 变量。 */
+export interface Variable extends Valuable {
+  kind: 'variable'
   name: string
-  expression: { type: 'variable'; name: string; fallback?: ValueInput }
+  fallback?: ValueInput
 }
 
-/** Variable 配置；根值与注册仅在 Variable 被消费时进入本次编译。 */
+/** 变量的根值、引用缺省值与 CSS 注册。 */
 export interface VariableOptions {
-  /** 根作用域值。 */
   root?: {
     value: ValueInput
-    /** `[data-theme="dark"]` 覆盖。 */
     dark?: ValueInput
-    /** 减少动效覆盖。 */
     reducedMotion?: ValueInput
   }
-  /** 默认读取及可重定义的条件分支。 */
   fallback?: ValueInput
-  /** `@property` 配置。 */
   registration?: {
     syntax: string
     inherits: boolean
@@ -29,46 +26,38 @@ export interface VariableOptions {
   }
 }
 
-/** 按 Subject Condition 名称局部重定义 Variable；undefined 表示 default。 */
+/** 变量的局部分支；undefined 名称表示默认赋值。 */
 export type VariableOverrides = [condition: string | undefined, value: ValueInput][]
 
-/** Variable 的完整值或局部覆盖。 */
+/** 完整赋值或局部分支。 */
 export type VariableInput = ValueInput | VariableOverrides
 
-/** 判断输入是否是逻辑 Variable。 */
+/** 识别 CSS 变量。 */
 export function isVariable(input: unknown): input is Variable {
-  const expression = input !== null && typeof input === 'object' && 'expression' in input
-    ? input.expression as { type?: unknown } | undefined
-    : undefined
-  return input !== null && typeof input === 'object'
-    && 'kind' in input && input.kind === 'value'
-    && 'name' in input && typeof input.name === 'string'
-    && expression?.type === 'variable'
+  return input !== null && typeof input === 'object' && 'kind' in input && input.kind === 'variable'
 }
 
-/** 创建逻辑 Variable；创建时不登记，编译消费时提供根值与注册。 */
+/** 创建变量；根值与注册在使用时生效。 */
 export function variable(name: string, options?: VariableOptions): Variable {
   const bareName = name.replace(/^--/, '')
-  const reference: Variable = {
-    kind: 'value',
-    name: bareName,
-    expression: { type: 'variable', name: bareName, fallback: options?.fallback },
-  }
+  const reference: Variable = { kind: 'variable', name: bareName, fallback: options?.fallback }
   if (options?.registration || options?.root) {
     reference.onActive = () => {
-      const rules: Rules = new Map()
+      const rules: Rules = []
       const registration = options.registration
       if (registration) {
-        const path = [condition(`@property --${bareName}`)]
-        rules.set([path, 'syntax'], JSON.stringify(registration.syntax))
-        rules.set([path, 'inherits'], String(registration.inherits))
-        if (registration.initialValue !== undefined) rules.set([path, 'initial-value'], registration.initialValue)
+        const body: Rules = [
+          [undefined, 'syntax', JSON.stringify(registration.syntax)],
+          [undefined, 'inherits', String(registration.inherits)],
+        ]
+        if (registration.initialValue !== undefined) body.push([undefined, 'initial-value', registration.initialValue])
+        rules.push([[condition(`@property --${bareName}`)], undefined, body])
       }
       const root = options.root
       if (root) {
-        rules.set([[condition(':where(:root)')], reference], root.value)
-        if (root.dark !== undefined) rules.set([[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], reference], root.dark)
-        if (root.reducedMotion !== undefined) rules.set([[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], reference], root.reducedMotion)
+        rules.push([[condition(':where(:root)')], reference, root.value])
+        if (root.dark !== undefined) rules.push([[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], reference, root.dark])
+        if (root.reducedMotion !== undefined) rules.push([[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], reference, root.reducedMotion])
       }
       return rules
     }

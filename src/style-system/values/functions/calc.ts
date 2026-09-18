@@ -1,7 +1,11 @@
-/** CSS calc 乘法保留两个操作数，等待编译。 */
-import type { Value, ValueInput } from '../../core/css-value'
+/** CSS 乘法内容。 */
+import type { CSSFunction, ValueInput } from '../../core/css-value'
 
-/** 创建 calc 乘法 Value，不执行数值运算或推断单位。 */
-export function calcMultiply(amount: ValueInput, factor: ValueInput): Value {
-  return { kind: 'value', expression: { type: 'product', amount, factor } }
+/** 延迟生成 calc 乘法；单位交给 CSS。 */
+export function calcMultiply(amount: ValueInput, factor: ValueInput): CSSFunction {
+  return (read) => {
+    const left = read(amount)
+    const right = read(factor)
+    return left === undefined || right === undefined ? undefined : `calc(${left} * ${right})`
+  }
 }

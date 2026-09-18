@@ -1,5 +1,5 @@
-/** 阴影复合值。 */
-import type { Value, ValueInput } from '../core/css-value'
+/** CSS 阴影内容。 */
+import type { CSSFunction, ValueInput } from '../core/css-value'
 
 /** 单层阴影配置。 */
 export interface ShadowShape {
@@ -11,12 +11,16 @@ export interface ShadowShape {
   inset?: boolean
 }
 
-/** 单层阴影 Value。 */
-export type Shadow = Extract<Value, { kind: 'value' }> & {
-  expression: ShadowShape & { type: 'shadow' }
-}
-
-/** 创建单层阴影值。 */
-export function shadowValue(shape: ShadowShape): Shadow {
-  return { kind: 'value', expression: { type: 'shadow', ...shape } }
+/** 延迟生成单层阴影。 */
+export function shadowValue(shape: ShadowShape): CSSFunction {
+  return (read) => {
+    const x = read(shape.x)
+    const y = read(shape.y)
+    const blur = read(shape.blur)
+    const spread = read(shape.spread)
+    const color = read(shape.color)
+    if (x === undefined || y === undefined) return undefined
+    return [shape.inset ? 'inset' : undefined, x, y, blur ?? (spread === undefined ? undefined : '0'), spread, color]
+      .filter((part) => part !== undefined).join(' ')
+  }
 }

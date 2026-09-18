@@ -1,10 +1,20 @@
-/** 混色的颜色与比例描述。 */
-import type { Value, ValueInput } from '../../core/css-value'
+/** CSS 混色内容。 */
+import type { CSSFunction, ValueInput } from '../../core/css-value'
 
-/** 混色中的一个颜色，可单独使用或携带零至一的比例。 */
+/** 颜色及可选的零至一比例。 */
 export type MixColorInput = ValueInput | [color: ValueInput, weight: ValueInput]
 
-/** oklab 混色；比例在编译时换算为百分比。 */
-export function colorMix(...colors: MixColorInput[]): Value {
-  return { kind: 'value', expression: { type: 'color-mix', colors } }
+/** 延迟生成 oklab 混色；比例换算为百分比。 */
+export function colorMix(...colors: MixColorInput[]): CSSFunction {
+  return (read) => {
+    const parts = colors.map((input) => {
+      if (!Array.isArray(input)) return read(input)
+      const color = read(input[0])
+      const weight = read(input[1])
+      if (color === undefined || weight === undefined) return undefined
+      const percentage = Number.isFinite(Number(weight)) ? `${Number(weight) * 100}%` : `calc(${weight} * 100%)`
+      return `${color} ${percentage}`
+    })
+    return parts.some((part) => part === undefined) ? undefined : `color-mix(in oklab, ${parts.join(', ')})`
+  }
 }

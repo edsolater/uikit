@@ -1,11 +1,13 @@
-/** CSS transition 条目。 */
-import type { CSSKey } from '../core/css-key'
-import type { ValueInput } from '../core/css-value'
+/** CSS 过渡内容。 */
+import { propertyName, type CSSKey } from '../core/css-key'
+import type { CSSFunction, ValueInput } from '../core/css-value'
 
-/** 目标 Key、时长、缓动与可选延迟。 */
-export type Transition = [
-  key: CSSKey,
-  duration: ValueInput,
-  easing: ValueInput,
-  delay?: ValueInput,
-]
+/** 目标、时长、缓动与可选延迟。 */
+export type Transition = [key: CSSKey, duration: ValueInput, easing: ValueInput, delay?: ValueInput]
+
+/** 延迟生成多项过渡。 */
+export function transitionValue(...items: Transition[]): CSSFunction {
+  return (read) => items.map(([key, duration, easing, delay]) =>
+    [propertyName(key), read(duration), read(easing), read(delay)].filter((part) => part !== undefined).join(' ')
+  ).join(', ')
+}

@@ -11,6 +11,7 @@ import { $boxShadow } from '../properties/box-shadow'
 import { translateY } from '../values/functions/transform'
 import { disabledFade } from '../values/materials/opacity'
 import { fast, standard } from '../values/materials/motion'
+import { transitionValue } from '../values/transition'
 
 /** Mixin：可点击效果。 */
 export const clickable = (): Declarations => [
@@ -23,13 +24,13 @@ export const clickable = (): Declarations => [
   [$userSelect, 'none'],
   [
     $transition,
-    [
+    transitionValue(
       [$backgroundColor, fast, standard],
       [$borderColor, fast, standard],
       [$boxShadow, fast, standard],
       [$color, fast, standard],
       [$opacity, fast, standard],
       [$transform, fast, standard],
-    ],
+    ),
   ],
 ]

@@ -7,7 +7,7 @@ import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-sy
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/selectors/interaction'
 import { $borderRadius } from '../../../style-system/properties/border'
 import { $backgroundColor } from '../../../style-system/properties/color'
-import { $padding } from '../../../style-system/properties/padding'
+import { contentLayout } from '../../../style-system/mixins/content'
 import { subtle } from '../../../style-system/values/materials/radius'
 import { smallSpace } from '../../../style-system/values/materials/space'
 
@@ -156,7 +156,7 @@ describe('Button styles', () => {
 
     handles.push(rules('.shared-input', [
       [$borderRadius, subtle],
-      [$padding, ['8px', smallSpace]],
+      contentLayout({ padding: ['8px', smallSpace] }),
     ]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)

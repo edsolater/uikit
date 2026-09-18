@@ -47,7 +47,7 @@ compactContainer → @container (...)
 
 不同容器查询是不同的 Subject Condition。名称决定身份，定义顺序决定嵌套路径中的排列；调用处的出现顺序不改变结果。
 
-固定顺序只负责把同一组 Subject Condition 归一为同一条路径。它不赋予条件新的语义；路径能够重排，依赖的正是定义时已经承诺的交换律。
+有效顺序同时负责路径规范化和取值优先级，目前来自注册顺序：后注册的已有匹配分支优先。路径可交换来自君子协定，取值优先级来自单独约定，不能仅由交换律推出。
 
 编译器不拼接 Subject Condition 的 selector，也不创建组合 selector。它把规范化后的 Condition 逐层加入路径，最终由 CSS 记录按层嵌套：
 
@@ -73,7 +73,7 @@ A {
 
 # Value 合并条件身份
 
-同一个 Value 一次只选择 `default` 或一个 Subject Condition 分支；不同普通 Value 各自选择后，再合并它们贡献的 Subject Condition。
+先确定目标激活集合，再让每个 Value 按有效顺序选择自身最后匹配分支；没有匹配才 default。分支对象的书写顺序不改变优先级；没有高优先级分支时仍保留自身已有的匹配。
 
 调用处通常用对象表达“名称对应值”：
 
@@ -98,13 +98,13 @@ Value 1：default、A、B
 Value 2：default、B、C
 ```
 
-两个 Value 各选一个分支，得到：
+需要表达的激活集合为：
 
 ```text
-default、A、B、C、[A, B]、[A, C]、[B, C]
+default、A、B、C、[A, B]、[A, C]、[B, C]、[A, B, C]
 ```
 
-没有 `[A, B, C]`，因为单个 Value 一次不会同时选择自己的 A 与 B，或者 B 与 C。两个 Value 都贡献 B 时，路径仍然只有一个 B。
+假定注册顺序为 A、B、C，同时激活时 Value 1 取 B、Value 2 取 C。分支只取一个，不代表其他条件不激活。重复出现的条件身份只保留一份。
 
 当一个 Value 受 `hover` 影响、另一个 Value 受 `compactContainer` 影响时，编译器生成 default、hover、compactContainer，以及包含二者的规范嵌套路径。具体先后由中央顺序决定；无论先后，最后一项都是两层 Condition，不是把两个 header 拼成一个 selector。CSS 属性值是一个整体；如果编译器不生成这条嵌套路径，浏览器不能把两条声明中的不同 Value 片段拼成完整结果。
 
@@ -114,8 +114,8 @@ Variable 的 Subject Condition 只改变同名 Custom Property，不加入消费
 
 例如 Variable 1 有 default、A、B，普通 Value 2 有 default、B、C：
 
-- Variable 1 在 default、A、B 下分别写入 `--v1`。
-- 消费表达式只按 Value 2 生成 default、B、C。
+- Variable 1 在 default、A、B、[A, B] 下写入 `--v1`，组合时按自身分支选 B。
+- 消费表达式只按 Value 2 的条件生成 default、B、C、[B, C]，不受 A 扩散。
 - A 与 C 同时匹配时，C 规则仍引用 `var(--v1)`，浏览器取得 A 下的变量值。
 
 两个输入都是 Variable 时，消费它们的属性只输出一次；各 Variable 在自己的 Subject Condition 下改写值。

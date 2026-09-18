@@ -1,12 +1,12 @@
-/** 逗号分隔的复合值。 */
-import type { Value, ValueInput } from '../core/css-value'
+/** CSS 内容列表。 */
+import type { CSSFunction, ValueInput } from '../core/css-value'
 
-/** 保留成员 Condition 的 Value 列表。 */
-export type ValueList = Extract<Value, { kind: 'value' }> & {
-  expression: { type: 'list'; items: ValueInput[] }
+/** 逗号分隔内容。 */
+export function valueList(...items: ValueInput[]): CSSFunction {
+  return (read) => items.map(read).filter((item) => item !== undefined).join(', ')
 }
 
-/** 创建逗号分隔值。 */
-export function valueList(...items: [ValueInput, ...ValueInput[]]): ValueList {
-  return { kind: 'value', expression: { type: 'list', items } }
+/** 空格分隔内容。 */
+export function valueSequence(...items: ValueInput[]): CSSFunction {
+  return (read) => items.map(read).filter((item) => item !== undefined).join(' ')
 }

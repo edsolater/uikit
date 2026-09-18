@@ -51,14 +51,14 @@ kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果�
 
 App 入口执行 cssRoot.mount()
   -> 快照 CSSRoot 全部源 Rules
-    -> 解读声明二元数组与 Value
+    -> 解析三项 Rule、Value、Variable 与延迟 CSS Function
     -> 收集 onActive 返回的本次派生 Rules
     -> 生成 CSS string
   -> 完整提交到 style#css-root
   -> render() 开始组件渲染
 ```
 
-Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、写入所有权和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 配方留在 Button.style.ts；可与组件解耦的材料和效果由 Style System 提供。完整链路见 [Style System 架构](src/style-system/architecture.md)。
+Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、登记句柄和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 配方留在 Button.style.ts；可与组件解耦的材料和效果由 Style System 提供。完整链路见 [Style System 架构](src/style-system/architecture.md)。
 
 Example 入口静态导入全部 Example，再统一挂载。Storybook preview 提前导入 Button 样式后挂载；缩略图 runner 在渲染前建立宿主并挂载。懒加载组件的样式必须由应用样式清单提前导入。package.json 保留 `.style.ts` 与产物 `.style.js` 的副作用，防止静态登记被打包器删除。
 

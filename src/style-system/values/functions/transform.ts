@@ -1,7 +1,10 @@
-/** CSS 纵轴平移值。 */
-import type { Value, ValueInput } from '../../core/css-value'
+/** CSS 纵轴平移内容。 */
+import type { CSSFunction, ValueInput } from '../../core/css-value'
 
-/** 构造纵轴平移值，保留距离中的 Condition。 */
-export function translateY(distance: ValueInput): Value {
-  return { kind: 'value', expression: { type: 'function', name: 'translateY', arguments: [distance] } }
+/** 延迟生成纵轴平移。 */
+export function translateY(distance: ValueInput): CSSFunction {
+  return (read) => {
+    const text = read(distance)
+    return text === undefined ? undefined : `translateY(${text})`
+  }
 }

@@ -1,6 +1,7 @@
 /** 主体尺寸与边界 Mixin。 */
 import type { Declarations } from '../core/css-rule'
 import type { ValueInput } from '../core/css-value'
+import { valueSequence } from '../values/list'
 import { $minHeight } from '../properties/size'
 import { $border, $borderColor, $borderRadius } from '../properties/border'
 import { $outlineColor, $outlineOffset, $outlineStyle, $outlineWidth } from '../properties/outline'
@@ -30,7 +31,7 @@ export interface BoundaryMixinOptions {
 
 /** Mixin：空间边界。 */
 export const boundary = (options: BoundaryMixinOptions = {}): Declarations => [
-  [$border, options.border],
+  [$border, Array.isArray(options.border) ? valueSequence(...options.border) : options.border],
   [$borderColor, options.borderColor],
   [$borderRadius, options.radius],
   [$outlineWidth, options.outline?.width],

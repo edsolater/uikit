@@ -1,7 +1,6 @@
 /** CSSRoot 的源账本、编译与提交。 */
 import { compileRules } from '../compiler/compile-css'
-import { propertyName } from './css-key'
-import type { Rule, RuleAddress, RuleHandle, Rules } from './css-rule'
+import type { Rule, RuleHandle, Rules } from './css-rule'
 
 /** 宿主已有内容与上次提交结果。 */
 interface MountedRules {
@@ -11,41 +10,29 @@ interface MountedRules {
 
 /** Style System 的唯一源账本。 */
 class Root {
-  private source: Rules = new Map()
-  private writers = new WeakMap<RuleAddress, object>()
+  private source: Rules = []
   private hosts = new WeakMap<HTMLStyleElement, MountedRules>()
 
-  /** 登记 Rule；同址后写接管所有权并保留首次位置。 */
-  register([address, input]: Rule): RuleHandle {
-    const property = address[1] === undefined ? undefined : propertyName(address[1])
-    const existing = [...this.source.keys()].find(([path, key]) =>
-      (key === undefined ? undefined : propertyName(key)) === property
-      && (path?.length ?? 0) === (address[0]?.length ?? 0)
-      && (path ?? []).every((item, index) => item.header === address[0]?.[index].header))
-    const target = existing ?? address
-    target[0] = address[0]
-    target[1] = address[1]
-    const writer = {}
-    this.source.set(target, input)
-    this.writers.set(target, writer)
+  /** 按顺序登记；句柄只控制自己的声明，覆盖交给 CSS。 */
+  register(entry: Rule): RuleHandle {
+    this.source.push(entry)
     return {
-      /** 删除本次仍拥有的条目。 */
+      /** 删除本次登记。 */
       remove: () => {
-        if (this.writers.get(target) !== writer) return
-        this.source.delete(target)
-        this.writers.delete(target)
+        const index = this.source.indexOf(entry)
+        if (index !== -1) this.source.splice(index, 1)
       },
-      /** 更新本次仍拥有的条目。 */
+      /** 更新本次登记；删除后报错。 */
       replace: (value) => {
-        if (this.writers.get(target) !== writer) throw new Error('当前句柄已失效或被后续写入替代。')
-        this.source.set(target, value)
+        if (!this.source.includes(entry)) throw new Error('当前句柄已删除。')
+        entry[2] = value
       },
     }
   }
 
   /** 编译源账本快照，不提交 DOM。 */
   compile(): string {
-    return compileRules(new Map(this.source))
+    return compileRules(this.source.slice())
   }
 
   /** 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。 */

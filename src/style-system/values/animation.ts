@@ -1,14 +1,14 @@
-/** 动画值与按需帧定义。 */
+/** CSS 动画内容与按需帧定义。 */
 import { condition } from '../core/css-condition'
 import type { Rules } from '../core/css-rule'
-import { value, type Value, type ValueInput } from '../core/css-value'
+import { value, type Value, type ValueInput, type CSSFunction } from '../core/css-value'
 
-/** 创建动画名称 Value；消费时提供本次编译的 `@keyframes`。 */
+/** 动画名称；使用时提供帧定义。 */
 export function animationName(name: string, frames: Rules): Value {
-  return value(name, { onActive: () => new Map([[[[condition(`@keyframes ${name}`)], undefined], frames]]) })
+  return value(name, { onActive: () => [[[condition(`@keyframes ${name}`)], undefined, frames]] })
 }
 
-/** CSS animation 组成。 */
+/** 单条动画配置。 */
 export interface AnimationParts {
   name: ValueInput
   duration: ValueInput
@@ -20,7 +20,10 @@ export interface AnimationParts {
   playState?: ValueInput
 }
 
-/** 创建动画复合值。 */
-export function animationValue(parts: AnimationParts): Value {
-  return { kind: 'value', expression: { type: 'animation', ...parts } }
+/** 延迟生成动画内容。 */
+export function animationValue(parts: AnimationParts): CSSFunction {
+  return (read) => [
+    read(parts.name), read(parts.duration), read(parts.easing), read(parts.delay),
+    read(parts.iterations), read(parts.direction), read(parts.fillMode), read(parts.playState),
+  ].filter((part) => part !== undefined).join(' ')
 }

@@ -30,7 +30,7 @@ test('两个普通 Value 的不同分支形成逐层嵌套的条件交集', () =
   handles.push(rule('.Subject', 'width', calcMultiply(value('2px', [['hover', '4px']]), value(2, [['active', 3]]))))
   const css = compileCSS()
   expect(css.match(/width:/g)).toHaveLength(4)
-  expect(css).toContain('&:where(:hover):not(:disabled, [data-status~="disabled"]) {\nwidth: calc(4px * 2);\n&:where(:active):not(:disabled, [data-status~="disabled"]) {\nwidth: calc(4px * 3);')
+  expect(css).toContain('&:where(:hover):not(:disabled, [data-status~="disabled"]) {\n&:where(:active):not(:disabled, [data-status~="disabled"]) {\nwidth: calc(4px * 3);')
 })
 
 test('未知名称终止整个编译', () => {

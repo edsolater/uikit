@@ -1,118 +1,98 @@
-/** 将 Rules 挂载为有序 CSS 记录，再生成 CSS string。 */
+/** 解析规则与依赖，输出 CSS。 */
 import type { ConditionPath } from '../core/css-condition'
-import { isCSSPair } from '../core/css-declaration'
-import { declarationSyntax, propertyName, type CSSKey } from '../core/css-key'
-import type { Rules, RuleValue } from '../core/css-rule'
-import type { Value, ValueInput } from '../core/css-value'
+import { propertyName, type CSSKey } from '../core/css-key'
+import type { Rule, Rules } from '../core/css-rule'
+import type { Valuable, CompileContext } from '../core/css-valuable'
+import type { ValueInput } from '../core/css-value'
 import { isVariable, type VariableInput } from '../core/css-variable'
-import { compileDeclaration, compileVariableDeclaration, expandProperty } from './compile-declaration'
-import { compileValue, valueConditionPath, type ValueContext, type ValueConditions } from './compile-value'
-import { hasConditionPrefix, mountCSSRecord, type CSSRecord } from './css-records'
+import { compileVariableDeclaration } from './compile-variable'
+import { compileValue, valueConditionPath, type ValueContext } from './compile-value'
+import type { CSSRecord } from './css-records'
 
-/** 解析全部候选与依赖，挂载为深度优先记录数组。 */
+/** 解析源规则及按需依赖，得到有序 CSS 记录。 */
 export function resolveRules(source: Rules): CSSRecord[] {
-  const records: CSSRecord[] = []
-  const pending = new Set<Rules>([source])
-  const activated = new Set<Value>()
-  const visitingRules = new Set<Rules>()
+  const sourceOutput: { records: CSSRecord[]; defaults: CSSRecord[] } = { records: [], defaults: [] }
+  const definitions = new Map<string, typeof sourceOutput>()
+  const pending = new Map<string, Rule>()
+  const activated = new Set<Valuable>()
+  const visiting = new Set<Rules>()
   const resolving = new Set<object>()
-  const defaults = new Set<string>()
-  const definitionOwners = new Map<string, Rules>()
-  let compilingSource = source
 
-  /** 挂载有效声明；显式值优先，具名定义按 owner 整体替换。 */
-  const write = (path: ConditionPath, key: string | undefined, css: string, conditions: ValueConditions, owner = compilingSource, isDefault = false): void => {
-    const headers = [...path, ...valueConditionPath(conditions)].map((item) => item.header)
-    const record: CSSRecord = [headers, key, css]
-    const address = JSON.stringify([headers, key])
-    const definitionIndex = headers.findIndex((header) => header !== undefined && /^@(function|keyframes|property)\s/.test(header))
-    let replacementIndex: number | undefined
+  /** 激活依赖；同址完整定义采用后一次提供的内容。 */
+  const activate = (value: Valuable, location: CompileContext): void => {
+    if (activated.has(value)) return
+    activated.add(value)
+    const dependency = value.onActive?.(location)
+    if (dependency) {
+      for (const entry of dependency) {
+        const [path, key] = entry
+        const address = JSON.stringify([path, key === undefined ? undefined : propertyName(key)])
+        pending.set(address, entry)
+      }
+    }
+  }
 
-    if (definitionIndex !== -1) {
-      const prefix = headers.slice(0, definitionIndex + 1)
-      const definitionAddress = JSON.stringify(prefix)
-      if (definitionOwners.has(definitionAddress) && definitionOwners.get(definitionAddress) !== owner) {
-        const start = records.findIndex(([path]) => hasConditionPrefix(path, prefix))
-        if (start !== -1) {
-          let end = start
-          while (end < records.length && hasConditionPrefix(records[end][0], prefix)) {
-            defaults.delete(JSON.stringify([records[end][0], records[end][1]]))
-            end++
-          }
-          records.splice(start, end - start)
-          replacementIndex = start
+  /** 编译结构嵌套；值分支不进入此路径。 */
+  const visit = (rules: Rules, output: typeof sourceOutput, outer: ConditionPath = [], target?: CSSKey, inherited: string[] = []): void => {
+    if (visiting.has(rules)) throw new Error('Rules 内容存在递归引用，无法生成 CSS。')
+    visiting.add(rules)
+    try {
+      for (const [relative, ownKey, input] of rules) {
+        const path = [...outer]
+        const subjects = [...inherited]
+        for (const item of relative ?? []) {
+          if (typeof item === 'string') subjects.push(item)
+          else path.push(item)
+        }
+        const key = ownKey ?? target
+        if (Array.isArray(input) && input.every((entry) => Array.isArray(entry) && entry.length === 3)) {
+          visit(input as Rules, output, path, key, subjects)
+          continue
+        }
+        if (Array.isArray(input) && !isVariable(key)) throw new Error('嵌套 Rules 必须由路径、Key、内容三项组成。')
+        const context: ValueContext = {
+          root: source, path, key, resolving, conditions: subjects,
+          /** 按首次使用激活依赖。 */
+          activate: (value, location = { root: source, path, key }) => activate(value, location),
+          /** 补充变量缺省赋值；显式同址声明优先。 */
+          defineVariable(name, values, location) {
+            for (const result of values) {
+              const headers = [...location.path, ...valueConditionPath([...subjects, ...result.conditions])].map((item) => item.header)
+              if (!output.defaults.some(([existing, property]) => property === `--${name}` && JSON.stringify(existing) === JSON.stringify(headers))) {
+                output.defaults.push([headers, `--${name}`, result.text])
+              }
+            }
+          },
+        }
+        if (isVariable(key)) context.activate(key)
+        const values = isVariable(key)
+          ? compileVariableDeclaration(input as VariableInput, context)
+          : compileValue(input as ValueInput, context)
+        const property = key === undefined ? undefined : propertyName(key)
+        for (const result of values) {
+          output.records.push([[...path, ...valueConditionPath(result.conditions)].map((item) => item.header), property, result.text])
         }
       }
-      definitionOwners.set(definitionAddress, owner)
-    }
-
-    const existing = records.findIndex(([path, property]) => property === key && JSON.stringify(path) === JSON.stringify(headers))
-    if (isDefault && existing !== -1 && !defaults.has(address)) return
-    if (replacementIndex === undefined) mountCSSRecord(records, record)
-    else records.splice(replacementIndex, 0, record)
-    if (isDefault) defaults.add(address)
-    else defaults.delete(address)
+    } finally { visiting.delete(rules) }
   }
 
-  /** 解读当前 Rule 地址的声明与候选；递归 Rules 报错。 */
-  const visit = (input: RuleValue, path: ConditionPath, key?: CSSKey, definitionOwner?: Rules, conditions: ValueConditions = []): void => {
-    const context: ValueContext = {
-      root: source, path, key, conditions, resolving,
-      /** 在当前消费位置挂载变量的条件默认值。 */
-      defineVariable(name, values, location) {
-        for (const value of values) write(location.path, `--${name}`, value.text, value.conditions, definitionOwner, true)
-      },
-      /** 完整 Rules 沿用外层地址与候选条件。 */
-      visitRules(rules, contributions) { visit(rules, path, key, definitionOwner, contributions) },
-      /** 首次解析访问时激活依赖。 */
-      activate(value, location = { root: source, path, key }) {
-        if (typeof value !== 'object' || activated.has(value)) return
-        activated.add(value)
-        const dependencies = value.onActive?.({ root: source, path: location.path, key: location.key })
-        if (dependencies) for (const dependency of dependencies instanceof Map ? [dependencies] : dependencies) pending.add(dependency)
-      },
-    }
-    if (key !== undefined && typeof key === 'object' && 'kind' in key) context.activate(key)
-    if (input instanceof Map) {
-      if (visitingRules.has(input)) throw new Error('Rules 内容存在递归引用，无法生成 CSS。')
-      visitingRules.add(input)
-      try {
-        for (const [[relativePath, nextProperty], child] of input) {
-          const owner = relativePath?.some((item) => /^@(function|keyframes|property)\s/.test(item.header)) ? input : definitionOwner
-          visit(child, [...path, ...(relativePath ?? [])], nextProperty ?? key, owner, conditions)
-        }
-      } finally { visitingRules.delete(input) }
-      return
-    }
-    if (isVariable(key) && !isCSSPair(input)) {
-      for (const result of compileVariableDeclaration(key, input as VariableInput, context)) write(path, result.property, result.text, result.conditions, definitionOwner)
-      return
-    }
-    if (isCSSPair(input)) {
-      const [declarationKey, content] = input
-      if (content === undefined) return
-      if (typeof declarationKey === 'object' && 'kind' in declarationKey) context.activate(declarationKey)
-      const syntax = declarationSyntax(declarationKey)
-      if ((syntax === 'value' && !isVariable(declarationKey)) || content instanceof Map) {
-        visit(content as ValueInput, path, declarationKey, definitionOwner, conditions)
-        return
-      }
-      for (const result of compileDeclaration(input, { ...context, key: declarationKey })) write(path, result.property, result.text, result.conditions, definitionOwner)
-      return
-    }
-    for (const result of compileValue(input, context)) {
-      if (key === undefined) write(path, undefined, result.text, result.conditions, definitionOwner)
-      else for (const declaration of expandProperty(propertyName(key), result)) write(path, declaration.property, declaration.text, declaration.conditions, definitionOwner)
-    }
+  visit(source, sourceOutput)
+  while (pending.size) {
+    const [address, entry] = pending.entries().next().value!
+    pending.delete(address)
+    const output: typeof sourceOutput = { records: [], defaults: [] }
+    visit([entry], output)
+    definitions.set(address, output)
   }
-  for (const rules of pending) {
-    compilingSource = rules
-    visit(rules, [])
-  }
-  return records
+  const outputs = [sourceOutput, ...definitions.values()]
+  const records = outputs.flatMap((output) => output.records)
+  const defaults = outputs.flatMap((output) => output.defaults)
+  const missingDefaults = defaults.filter(([path, key]) => !records.some(([existing, property]) =>
+    property === key && JSON.stringify(existing) === JSON.stringify(path)))
+  return [...missingDefaults, ...records]
 }
 
-/** 线性输出完整记录数组；只按相邻地址打开和关闭 CSS 块。 */
+/** 按记录顺序开闭嵌套块，不解释属性内容。 */
 export function stringifyCSS(records: CSSRecord[]): string {
   let previous: string[] = []
   const css: string[] = []
@@ -129,7 +109,7 @@ export function stringifyCSS(records: CSSRecord[]): string {
   return css.join('\n')
 }
 
-/** 编译 Rules 快照为 CSS string，失败时不返回部分结果。 */
+/** 编译规则；失败时不返回部分 CSS。 */
 export function compileRules(source: Rules): string {
   return stringifyCSS(resolveRules(source))
 }

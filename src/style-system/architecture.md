@@ -8,16 +8,17 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 | --- | --- |
 | `core/css-condition.ts` | Condition 与有序 Rule 地址。 |
 | `subject-conditions.ts` | Subject Condition 名称、已有 Condition 与固定登记顺序；提供内置交互名称。 |
-| `core/css-key.ts` | CSS Key 及其内容语法。 |
+| `core/css-key.ts` | 原生属性名称与 Variable 目标名称。 |
 | `core/css-declaration.ts` | `[key, content]` Declaration。 |
 | `core/css-rule.ts` | Rule 登记、批量展开与句柄。 |
-| `core/css-value.ts` | RawValue、按 Subject Condition 名称分支的 Value、复合值与按需依赖。 |
+| `core/css-valuable.ts` | Value、Variable 与 CSS Function 的共同协议和消费上下文。 |
+| `core/css-value.ts` | 条件 Value、可调用 CSS Function 与内容输入。 |
 | `core/css-variable.ts` | 同名 Variable 引用、根值与注册。 |
 | `core/css-root.ts` | 唯一源账本、快照编译与宿主提交。 |
 | `compiler/compile-css.ts` | 解析挂载与线性字符串输出两个内部入口。 |
-| `compiler/css-records.ts` | 三元组记录的原子挂载与深度优先顺序。 |
-| `compiler/compile-value.ts` | 完整 Value 候选、条件贡献、循环检测与复合值降级。 |
-| `compiler/compile-declaration.ts` | Declaration 语法与静态简写展开。 |
+| `compiler/css-records.ts` | 最终 CSS 三项记录协议。 |
+| `compiler/compile-value.ts` | 激活集合、统一分支取值、内容递归与循环检测。 |
+| `compiler/compile-variable.ts` | 变量引用、局部赋值与条件缺省值。 |
 | `properties` | 浏览器 CSS 属性的 Key。 |
 | `selectors/interaction.ts` | 可复用交互 Condition。 |
 | `values/functions`、`values` | 复合值、CSS 函数与按需定义。 |
@@ -44,9 +45,9 @@ render()
 
 `compileCSS()` 只返回同一账本的 CSS string，不写 DOM。`cssRoot.mount()` 保留宿主已有前缀；生成结果未变化时不改节点，编译失败时不提交。详细对象与覆盖语义由 [design.md](design.md) 负责。
 
-记录项严格为 `[(string | undefined)[], string | undefined, string]`，只保存条件、属性与内容。挂载时形成父声明在前、子树连续的顺序，不建立节点对象树，不进行事后排序。两个内部入口不从公共 `index.ts` 导出。
+记录项严格为 `[(string | undefined)[], string | undefined, string]`，只保存条件、属性与内容。普通声明按源顺序追加；输出只共享相邻路径，不跨声明移动或覆盖记录。原生简写、详细属性和无效值的处理交给 CSS。两个内部入口不从公共 `index.ts` 导出。
 
-`css-rule.ts` 与 `compile-value.ts` 直接依赖 `subject-conditions.ts`，后者引用 `selectors/interaction.ts` 的已有 Condition，所以 Rule、Value 与 Variable 都能解析预装名称。Rule 地址中的普通部分保持顺序与重复，已安装名称去重并按中央顺序追加；普通 Value 的候选名称也在挂载前去重、按中央顺序转为多层 Condition Path。Variable 的条件只进入自身 Custom Property 赋值，消费表达式保留 `var()`。
+源 Rule 保留普通 Condition 与主体条件名称的区别。编译时分别进入普通路径和激活集合，主体名称直到输出才转成 header。Value 在同一激活集合下取自身最后匹配分支；Variable 的条件只进入自身赋值，消费表达式保留 `var()`。名称、排序和预装项由 `subject-conditions.ts` 唯一负责。
 
 # Button 接入
 
