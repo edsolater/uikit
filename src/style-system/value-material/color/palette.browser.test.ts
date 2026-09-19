@@ -1,7 +1,7 @@
 /** 验证色阶查询在真实主题、Mixin 消费与局部覆盖中的表现。 */
-import '../../../../css/all-base.css'
+import '../../../css/all-base.css'
 import { afterEach, expect, test } from 'vitest'
-import { color, compileCSS, rule, rules, type RulesHandle } from '../../../index'
+import { color, compileCSS, rule, rules, type RulesHandle } from '../../index'
 import { brand, paletteColor } from './palette'
 import { surface } from './surface'
 

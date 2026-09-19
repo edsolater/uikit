@@ -2,7 +2,6 @@
 import {
   rules,
   value,
-  variable,
   innerText,
   contentLayout,
   size,
@@ -11,10 +10,11 @@ import {
   elevation,
   clickable,
 } from '../../../style-system'
+import { surfaceColor, foregroundColor } from '../../../style-system/component-handle-material/color'
 import { $alignSelf } from '../../../style-system/properties/layout'
 import { colorMix } from '../../../style-system/values/functions/color-mix'
-import { foreground, strongForeground } from '../../../style-system/values/materials/color/text'
-import { action, actionHover, actionActive, actionForeground, actionLine } from '../../../style-system/values/materials/color/action'
+import { foreground, strongForeground } from '../../../style-system/value-material/color/text'
+import { action, actionHover, actionActive, actionForeground, actionLine } from '../../../style-system/value-material/color/action'
 import {
   accent,
   softAccent,
@@ -29,9 +29,9 @@ import {
   softTone,
   strongTone,
   toneForeground,
-} from '../../../style-system/values/materials/color/tone'
-import { paletteColor } from '../../../style-system/values/materials/color/palette'
-import { pill } from '../../../style-system/values/materials/radius'
+} from '../../../style-system/value-material/color/tone'
+import { paletteColor } from '../../../style-system/value-material/color/palette'
+import { pill } from '../../../style-system/value-material/radius'
 import {
   smallSpace,
   normalSpace,
@@ -43,8 +43,8 @@ import {
   thinBoundary,
   focusStroke,
   focusGap,
-} from '../../../style-system/values/materials/space'
-import { small, normal, large, extraLarge } from '../../../style-system/values/materials/size'
+} from '../../../style-system/value-material/space'
+import { small, normal, large, extraLarge } from '../../../style-system/value-material/size'
 import {
   bold,
   singleLine,
@@ -52,24 +52,18 @@ import {
   largeText,
   extraLargeText,
   heading,
-} from '../../../style-system/values/materials/font'
-import { flat, raised, elevated, interactiveElevation } from '../../../style-system/values/materials/shadow'
+} from '../../../style-system/value-material/font'
+import { flat, raised, elevated, interactiveElevation } from '../../../style-system/value-material/shadow'
 
 const button = ['@layer uikit', '.Button']
-
-/** 常态底色同时供常态显示、实心文字调和和禁用混色读取，不随交互派生。 */
-const restSurface = variable('button-rest-surface')
-
-/** 常态文字同时供常态显示与禁用淡化读取。 */
-const restForeground = variable('button-rest-foreground')
 
 // =============================================================================
 // 默认效果
 // =============================================================================
 
 rules(button, [
-  [restSurface, colorMix([paletteColor('neutral', 1), 0.82], softAccent)],
-  [restForeground, foreground],
+  [surfaceColor, colorMix([paletteColor('neutral', 1), 0.82], softAccent)],
+  [foregroundColor, foreground],
   // --- 内容排版 ---
   innerText({ font: 'inherit', fontSize: largeText, emphasis: bold, leading: singleLine }),
 
@@ -91,15 +85,15 @@ rules(button, [
     cornerShape: 'squircle',
   }),
   color({
-    background: value(restSurface, {
+    background: value(surfaceColor, {
       hover: colorMix([paletteColor('neutral', 2), 0.72], softAccent),
       active: colorMix([paletteColor('neutral', 3), 0.62], softAccent),
-      disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
+      disabled: colorMix([surfaceColor, 0.48], paletteColor('neutral', 2)),
     }),
-    foreground: value(restForeground, {
+    foreground: value(foregroundColor, {
       hover: strongForeground,
       active: strongForeground,
-      disabled: colorMix([restForeground, 0.48], 'transparent'),
+      disabled: colorMix([foregroundColor, 0.48], 'transparent'),
     }),
   }),
   elevation(interactiveElevation),
@@ -131,12 +125,12 @@ rules([...button, '&[data-tone="danger"]', 'focusVisible'], [boundary({ outline:
 rules(
   [...button, '&[data-variant="bare"]'],
   [
-    [restSurface, 'transparent'],
+    [surfaceColor, 'transparent'],
     color({
-      background: value(restSurface, {
+      background: value(surfaceColor, {
         hover: colorMix([paletteColor('neutral', 1), 0.88], softAccent),
         active: colorMix([paletteColor('neutral', 2), 0.82], softAccent),
-        disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
+        disabled: colorMix([surfaceColor, 0.48], paletteColor('neutral', 2)),
       }),
     }),
     elevation(flat),
@@ -146,18 +140,18 @@ rules(
 rules(
   [...button, '&[data-variant="solid"]'],
   [
-    [restSurface, action],
-    [restForeground, colorMix([actionForeground, 0.9], restSurface)],
+    [surfaceColor, action],
+    [foregroundColor, colorMix([actionForeground, 0.9], surfaceColor)],
     color({
-      background: value(restSurface, {
+      background: value(surfaceColor, {
         hover: actionHover,
         active: actionActive,
-        disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
+        disabled: colorMix([surfaceColor, 0.48], paletteColor('neutral', 2)),
       }),
-      foreground: value(restForeground, {
+      foreground: value(foregroundColor, {
         hover: actionForeground,
         active: actionForeground,
-        disabled: colorMix([restForeground, 0.48], 'transparent'),
+        disabled: colorMix([foregroundColor, 0.48], 'transparent'),
       }),
     }),
     elevation(value(raised, { hover: elevated, active: flat, disabled: flat })),
@@ -171,18 +165,18 @@ rules(
 rules(
   [...button, '&[data-tone]'],
   [
-    [restSurface, colorMix([paletteColor('neutral', 1), 0.76], softTone)],
-    [restForeground, strongTone],
+    [surfaceColor, colorMix([paletteColor('neutral', 1), 0.76], softTone)],
+    [foregroundColor, strongTone],
     color({
-      background: value(restSurface, {
+      background: value(surfaceColor, {
         hover: colorMix([paletteColor('neutral', 2), 0.68], softTone),
         active: colorMix([paletteColor('neutral', 3), 0.58], softTone),
-        disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
+        disabled: colorMix([surfaceColor, 0.48], paletteColor('neutral', 2)),
       }),
-      foreground: value(restForeground, {
+      foreground: value(foregroundColor, {
         hover: strongTone,
         active: strongTone,
-        disabled: colorMix([restForeground, 0.48], 'transparent'),
+        disabled: colorMix([foregroundColor, 0.48], 'transparent'),
       }),
     }),
   ],
@@ -211,27 +205,27 @@ rules(
 // --- 语气与声量组合：退场保留透明常态，实心保留语气实底 ---
 
 rules([...button, '&[data-variant="bare"][data-tone]'], [
-  [restSurface, 'transparent'],
-  color({ background: value(restSurface, {
+  [surfaceColor, 'transparent'],
+  color({ background: value(surfaceColor, {
     hover: colorMix([paletteColor('neutral', 1), 0.82], softTone),
     active: colorMix([paletteColor('neutral', 2), 0.74], softTone),
-    disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
+    disabled: colorMix([surfaceColor, 0.48], paletteColor('neutral', 2)),
   }) }),
 ])
 
 rules([...button, '&[data-variant="solid"][data-tone]'], [
-  [restSurface, tone],
-  [restForeground, colorMix([toneForeground, 0.9], restSurface)],
+  [surfaceColor, tone],
+  [foregroundColor, colorMix([toneForeground, 0.9], surfaceColor)],
   color({
-    background: value(restSurface, {
+    background: value(surfaceColor, {
       hover: colorMix([tone, 0.88], strongForeground),
       active: colorMix([tone, 0.78], strongForeground),
-      disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
+      disabled: colorMix([surfaceColor, 0.48], paletteColor('neutral', 2)),
     }),
-    foreground: value(restForeground, {
+    foreground: value(foregroundColor, {
       hover: toneForeground,
       active: toneForeground,
-      disabled: colorMix([restForeground, 0.48], 'transparent'),
+      disabled: colorMix([foregroundColor, 0.48], 'transparent'),
     }),
   }),
 ])

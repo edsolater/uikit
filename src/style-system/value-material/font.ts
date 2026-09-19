@@ -1,6 +1,6 @@
 /** 字号、字重、行高的固定尺度与可覆盖取值。 */
-import { value } from '../../core/css-value'
-import { variable } from '../../core/css-variable'
+import { value } from '../core/css-value'
+import { variable } from '../core/css-variable'
 
 /** 常规字重的固定 Value。 */
 export const regular = value(400)

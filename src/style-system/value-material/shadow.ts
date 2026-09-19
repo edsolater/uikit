@@ -1,7 +1,7 @@
 /** 预定义阴影材料与交互配方；阴影档位引用已加载的基础 CSS token，随主题改变几何与浓度。 */
-import { type ShadowShape } from '../shadow'
-import { value } from '../../core/css-value'
-import { variable } from '../../core/css-variable'
+import { type ShadowShape } from '../values/shadow'
+import { value } from '../core/css-value'
+import { variable } from '../core/css-variable'
 
 /** 贴近表面的阴影几何：水平偏移、垂直偏移、模糊半径，长度单位为像素。 */
 export const contactShape: ShadowShape = { x: value(0), y: value('1px'), blur: value('2px') }

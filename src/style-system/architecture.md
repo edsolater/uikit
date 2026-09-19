@@ -8,7 +8,7 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 | --- | --- |
 | `core/css-condition.ts` | Condition 与有序 Rule 地址。 |
 | `subject-conditions.ts` | Subject Condition 名称、已有 Condition 与固定登记顺序；提供内置交互名称。 |
-| `core/css-key.ts` | 原生属性、Variable 目标与对象声明名称的登记和解析。 |
+| `core/css-key.ts` | CSS 声明目标识别、原生属性名称登记与对象键解析。 |
 | `core/css-declaration.ts` | `[key, content]` Declaration。 |
 | `core/css-rule.ts` | 声明对象与条目 Iterable 的有序转换、Rule 登记与句柄。 |
 | `core/css-valuable.ts` | Value、Variable 与 CSS Function 的共同协议和消费上下文。 |
@@ -23,8 +23,10 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 | `properties/register.ts` | 汇集实际属性 Key，公共入口通过显式调用安装完整名称集合；打包后不依赖副作用导入保留注册责任。 |
 | `selectors/interaction.ts` | 可复用交互 Condition。 |
 | `values/functions`、`values` | 复合值、CSS 函数与按需定义。 |
-| `values/materials` | 可跨组件使用的设计材料。 |
-| `values/materials/color/palette.ts` | 原始色阶的预定义 Variable Cluster 与 `paletteColor` 查询；颜色数值继续由基础 CSS 提供。 |
+| `component-handle-material` | 组件可在自身选择器中声明的共享角色；角色使用现有 Variable，不预设组件配方。 |
+| `component-handle-material/color.ts` | 组件承载面与内容颜色角色；不同选择器声明各自取值，作用域与继承遵循原生 CSS。 |
+| `value-material` | 可作为声明内容复用的设计材料。 |
+| `value-material/color/palette.ts` | 原始色阶的预定义 Variable Cluster 与 `paletteColor` 查询；颜色数值继续由基础 CSS 提供。 |
 | `mixins/content.ts` | 内部文字与内容布局。 |
 | `mixins/structure.ts` | 主体尺寸与空间边界。 |
 | `mixins/appearance.ts` | 主体颜色与视觉层级。 |
@@ -57,7 +59,7 @@ render()
 
 焦点规则由预装的 `focusVisible` 确定生效地址，再用 `boundary({ outline })` 建立边界。danger tone 只覆盖轮廓颜色，不建立焦点专用转发 Mixin。
 
-中性色阶通过 `paletteColor` 取得 Variable；Button 自己选择常态、hover、active 的等级与混色比例。禁用背景读取固定常态材料，不借用当前交互状态。
+Button 通过共享 `surfaceColor`、`foregroundColor` 角色声明本选择器当前使用的材料；默认、variant 与 tone 配方仍由 Button 自己选择。中性色阶通过 `paletteColor` 取得 Variable；Button 自己选择常态、hover、active 的等级与混色比例。禁用背景读取固定常态材料，不借用当前交互状态。
 
 Button.tsx 静态导入 Button.style.ts。Example、Storybook 和缩略图入口都在渲染前准备 `style#css-root` 并统一挂载；组件渲染不编译样式。懒加载组件仍需由应用样式清单提前导入，`package.json` 的 sideEffects 保留 `.style.ts` 及产物 `.style.js`。
 

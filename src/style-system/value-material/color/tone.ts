@@ -1,7 +1,7 @@
 /** 强调、危险及可由使用规则定义的语气配色；具体语气颜色引用已加载的基础 CSS token。 */
-import { variable } from '../../../core/css-variable'
-import { value } from '../../../core/css-value'
-import { colorMix } from '../../functions/color-mix'
+import { variable } from '../../core/css-variable'
+import { value } from '../../core/css-value'
+import { colorMix } from '../../values/functions/color-mix'
 import { surface } from './surface'
 
 /** 语气底色中的表面色占比，范围为零至一。 */

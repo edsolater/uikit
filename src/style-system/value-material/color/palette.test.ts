@@ -1,7 +1,7 @@
 /** 验证色板 Variable Cluster 的查询身份、命名和原生变量消费。 */
 import { afterEach, expect, test } from 'vitest'
-import { compileCSS, rule, value, type RulesHandle } from '../../../index'
-import { colorMix } from '../../functions/color-mix'
+import { compileCSS, rule, value, type RulesHandle } from '../../index'
+import { colorMix } from '../../values/functions/color-mix'
 import { paletteColor } from './palette'
 
 const handles: RulesHandle[] = []

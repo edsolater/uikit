@@ -1,5 +1,5 @@
 /** 独立于普通空间长度的圆角尺度及覆盖入口。 */
-import { value } from '../../core/css-value'
+import { value } from '../core/css-value'
 
 /** 轻微圆角的固定 Value，与普通空间长度独立调整。 */
 export const subtle = value('4px')

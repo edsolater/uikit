@@ -1,5 +1,5 @@
 /** 尺寸档位及最小高度覆盖入口。 */
-import { variable } from '../../core/css-variable'
+import { variable } from '../core/css-variable'
 
 /** 可覆盖的小档尺寸 Variable，与内容间距独立调整。 */
 export const small = variable('size-scale-3', { root: { value: '32px' } })

@@ -1,5 +1,5 @@
 /** 间距档位、边界尺寸及控件内部空间。 */
-import { variable } from '../../core/css-variable'
+import { variable } from '../core/css-variable'
 
 /** 可覆盖的小档间距 Variable；可用于内外边距或内容间隔。 */
 export const smallSpace = variable('space-scale-2', { root: { value: '4px' } })

@@ -16,9 +16,9 @@ Block、StyleRule、MediaRule 和 KeyframeRule 不再是对象模型。它们在
 
 ## 定义层与业务层
 
-Style System 及其共享 values、selectors、properties、mixins 是定义层；整个组件 `.style.ts` 是业务层。载体位置不能把一次性定义变成可复用抽象。
+Style System 及其共享 Value Material、Component Handle Material、values、selectors、properties、mixins 是定义层；整个组件 `.style.ts` 是业务层。载体位置不能把一次性定义变成可复用抽象。
 
-定义层提供业务无关、能脱离具体组件复用的材料、条件、CSS Key 和效果。判断范围是整个 UIKit 的多组件设计系统：像 `clickable()`、`boundary()`、`elevation()` 这样可与绑定组件解耦的目的，即使暂时只有一个消费者也可成为共享黑盒；Button 的 `solid` 配方和尺寸档位仍由 `.style.ts` 中的 Rule 选择材料，再交给通用 Mixin 翻译。是否共享不取决于当前调用次数，也不取决于抽出后的顶层代码是否更短。
+定义层提供业务无关、能脱离具体组件复用的材料、条件、CSS Key 和效果。Value Material 表达可放入声明的材料本身；Component Handle Material 表达多个组件可共同声明、但由各组件选择配方的角色。两者都沿用现有 Value 与 Variable，不增加材料对象类型。判断范围是整个 UIKit 的多组件设计系统：像 `clickable()`、`boundary()`、`elevation()` 这样可与绑定组件解耦的目的，即使暂时只有一个消费者也可成为共享黑盒；Button 的 `solid` 配方和尺寸档位仍由 `.style.ts` 中的 Rule 选择材料，再交给通用 Mixin 翻译。是否共享不取决于当前调用次数，也不取决于抽出后的顶层代码是否更短。
 
 
 # 核心对象
@@ -99,7 +99,7 @@ rules(button, {
 
 `rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明对象，以及提供声明条目的数组、Map、Set 与其他 Iterable；这些输入可以与 `undefined` 和 Mixin 返回值嵌套组合。入口先把完整输入转换为有序 `[key, content]` 序列并验证，再按输入顺序写入。整批输入无效、存在循环或迭代器抛错时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
 
-对象名称先查询已登记的 CSS Key：`alignItems` 与 `$alignItems` 指向同一个 `align-items` 目标。`key()` 在定义属性时同时登记原生名称和驼峰名称，公共 Style System 入口通过 `registerPropertyKeys()` 消费现有属性定义并完成安装；这条真实数据依赖在打包后仍然成立，不依赖副作用导入。名称冲突直接报错，不静默改指。原生属性字符串和 `--custom-property` 保持直接入口；未登记的驼峰名称报错。显式 Key 与 Variable 继续通过声明二元组使用。
+对象名称先查询已登记的 CSS Key：`alignItems` 与 `$alignItems` 指向同一个 `align-items` 目标。对象右侧仍是完整 RuleValue，可直接使用原始字符串、Value、Variable 及其 Subject Condition 与按需依赖，不会在声明转换时展开或字符串化。`key()` 在定义属性时同时登记原生名称和驼峰名称，公共 Style System 入口通过 `registerPropertyKeys()` 消费现有属性定义并完成安装；这条真实数据依赖在打包后仍然成立，不依赖副作用导入。名称冲突直接报错，不静默改指。原生属性字符串和 `--custom-property` 保持直接入口；未登记的驼峰名称报错。显式 Key 与 Variable 目标继续通过声明二元组使用。
 
 Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回同一个二元数组，作者可以按上下文决定是否使用。普通属性 Key、Variable 和 Descriptor 都直接充当受体。复合内容由具体函数生成，或通过目的 Mixin 配置；Key 不解释对象和数组：
 
@@ -209,7 +209,7 @@ const exampleBackground = variable('color-background-example', {
 
 Variable 的 Subject Condition 只改变同名 Custom Property，不加入消费表达式的 Subject Condition 集合。两个输入都是 Variable 时，消费它们的属性只输出一次，由浏览器取得各变量当前的值。
 
-Variable 表达独立可赋值的输入，不为普通 CSS 属性预先建立同名槽位。Button 的中性表面占比属于 Button，因此其 Variable 配方留在 Button；共享的仍是编译机制。
+Variable 表达独立可赋值的输入，不为普通 CSS 属性预先建立同名槽位。组件共同需要声明的角色可以复用 Component Handle Material；各组件仍在自身 Rule 中选择 Value Material 或原始内容。声明生成 CSS Custom Property 定义，不修改 Variable 的 JS 对象，最终取值、作用域与继承由浏览器决定。
 
 # Value 从 Rule 地址向叶子展开
 

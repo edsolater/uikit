@@ -34,6 +34,8 @@ CSS 名称和 TypeScript 标识符不做逐词映射。CSS 名称承担全局地
 | 不为字面量制造跳转 | 原始值没有复用关系、条件、依赖或独立语义时，直接写字符串或数字。 | 使用 `'8px'`，不建立只包装它的 `px8`。 |
 | 不镜像 CSS 路径 | 源码名称不需要复制 CSS 名称的全部单词与顺序。 | `fast` 对应 `motion-duration-fast`。 |
 
+Component Handle Material 的源码名描述组件共同声明的角色，CSS 名称使用 `component` namespace；它不是原生 CSS 属性镜像。`surfaceColor` 与 `foregroundColor` 分别对应 `component-color-surface`、`component-color-foreground`，组件在自己的选择器中为同一个 Variable 角色选择材料。Value Material 继续描述材料本身，例如 `surface`、`action`、`foreground`，不因进入某个角色而改名。
+
 例如，Variable 必须表达独立的语义输入，CSS 落盘名称仍保留完整路径：
 
 ```ts
@@ -83,6 +85,8 @@ export const tone = variable('color-tone-base', { fallback: accent })
 | 承载面颜色语义 | `color-surface` | `surface` | `surface`、`surface-color` | 常进入 `background-color` |
 | 操作颜色语义 | `color-action` | `action` | `action`、`action-color` | 可进入背景或前景 |
 | action 上的前景颜色 | `color-action-foreground` | `actionForeground` | `action-foreground-color`、`foreground-action-color` | 常进入 `color` |
+| 组件承载面颜色角色 | `component-color-surface` | `surfaceColor` | `component-bg` | 由组件规则声明，常供背景位消费 |
+| 组件内容颜色角色 | `component-color-foreground` | `foregroundColor` | `component-fg` | 由组件规则声明，可供内容颜色位消费 |
 | 快速动效时长 | `motion-duration-fast` | `fast` | `duration`、`fast-duration` | `transition-duration` 等 |
 | 标准动效缓动 | `motion-easing-standard` | `standard` | `easing`、`standard-easing` | `transition-timing-function` 等 |
 

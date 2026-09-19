@@ -1,8 +1,8 @@
 /** 中性承载面与透明覆盖色，交互取值与各自材料保持在一起。 */
 import { paletteColor } from './palette'
-import { variable } from '../../../core/css-variable'
-import { value } from '../../../core/css-value'
-import { colorMix } from '../../functions/color-mix'
+import { variable } from '../../core/css-variable'
+import { value } from '../../core/css-value'
+import { colorMix } from '../../values/functions/color-mix'
 import { foreground } from './text'
 
 /** 轻量悬停底色中的前景色占比，范围为零至一。 */

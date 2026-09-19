@@ -1,6 +1,6 @@
 /** 引用基础 CSS token 的实心动作配色及交互取值，使用前须加载基础颜色样式。 */
-import { variable } from '../../../core/css-variable'
-import { value } from '../../../core/css-value'
+import { variable } from '../../core/css-variable'
+import { value } from '../../core/css-value'
 
 /** 实心动作底色。 */
 export const action = variable('color-action')

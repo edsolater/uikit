@@ -1,7 +1,7 @@
 /** 时长与缓动材料；减少动效偏好将默认时长归零。 */
-import { value } from '../../core/css-value'
-import { variable } from '../../core/css-variable'
-import { calcMultiply } from '../functions/calc'
+import { value } from '../core/css-value'
+import { variable } from '../core/css-variable'
+import { calcMultiply } from '../values/functions/calc'
 
 /** 快速反馈的基础时长，单位为毫秒。 */
 export const fastBase = value('120ms')

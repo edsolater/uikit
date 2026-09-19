@@ -1,5 +1,5 @@
 /** 原始色阶的 Variable Cluster；颜色定义由基础 CSS 提供，查询不创建变量。 */
-import { variable, type Variable } from '../../../core/css-variable'
+import { variable, type Variable } from '../../core/css-variable'
 
 /** 预定义色阶引用；下标就是等级，底层名称不暴露给调用方。 */
 const palette = {

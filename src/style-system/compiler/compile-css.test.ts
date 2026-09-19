@@ -131,6 +131,61 @@ test('声明二元数组只配对 Key 与 content，Variable 可同时作为声�
   expect(compileCSS()).toContain('--local-foreground: red;\ncolor: var(--local-foreground, black);')
 })
 
+test('声明对象保留智能 RHS，且能与 Variable 目标在同一批输入中协作', () => {
+  const fallback = value('black', [['testHover', 'gray']])
+  const foreground = variable('mixed-input-foreground', {
+    fallback,
+    root: { value: 'navy', dark: 'white' },
+    registration: { syntax: '<color>', inherits: true, initialValue: 'black' },
+  })
+  const dependency = vi.fn((): Rules => [[[condition(':root')], '--mixed-input-ready', 1]])
+  const opacity = value(1, [['testHover', value(0.75, { onActive: dependency })]])
+  const foregroundValue = value('red', [['testHover', 'blue']])
+  const foregroundBefore = { ...foreground }
+  const fallbackBefore = { ...fallback, conditions: [...fallback.conditions] }
+  const opacityBefore = { ...opacity, conditions: [...opacity.conditions] }
+  const foregroundValueBefore = { ...foregroundValue, conditions: [...foregroundValue.conditions] }
+  const inputs: Declarations[] = [
+    [
+      { display: 'inline-flex', color: foreground, opacity },
+      [foreground, foregroundValue],
+    ],
+    [
+      ['display', 'inline-flex'],
+      ['color', foreground],
+      ['opacity', opacity],
+      [foreground, foregroundValue],
+    ],
+  ]
+
+  expect(dependency).not.toHaveBeenCalled()
+  expect(foreground).toEqual(foregroundBefore)
+  expect(fallback).toEqual(fallbackBefore)
+  expect(opacity).toEqual(opacityBefore)
+  expect(foregroundValue).toEqual(foregroundValueBefore)
+  const outputs = inputs.map((input) => {
+    const handle = rules('.MixedInput', input)
+    const output = compileCSS()
+    handle.remove()
+    return output
+  })
+  expect(outputs[0]).toBe(outputs[1])
+  const css = outputs[0]
+  expect(css).toContain('@property --mixed-input-foreground')
+  expect(css).toContain(':where(:root) {\n--mixed-input-foreground: navy;')
+  expect(css).toContain('&:where([data-theme="dark"]) {\n--mixed-input-foreground: white;')
+  expect(css).toContain('.MixedInput {\ndisplay: inline-flex;\ncolor: var(--mixed-input-foreground, black);\nopacity: 1;')
+  expect(css).toContain('&:hover {\nopacity: 0.75;')
+  expect(css).toContain('--mixed-input-foreground: red;')
+  expect(css).toContain('&:hover {\n--mixed-input-foreground: blue;')
+  expect(css).toContain('--mixed-input-ready: 1;')
+  expect(dependency).toHaveBeenCalledTimes(2)
+  expect(foreground).toEqual(foregroundBefore)
+  expect(fallback).toEqual(fallbackBefore)
+  expect(opacity).toEqual(opacityBefore)
+  expect(foregroundValue).toEqual(foregroundValueBefore)
+})
+
 test('对象、数组、Map、Set 与一次性 Iterable 进入同一有序声明路径', () => {
   const tuples: [string, string][] = [
     ['display', 'inline-flex'],

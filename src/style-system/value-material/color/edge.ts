@@ -1,6 +1,6 @@
 /** 分隔线与边缘色。 */
-import { variable } from '../../../core/css-variable'
-import { colorMix } from '../../functions/color-mix'
+import { variable } from '../../core/css-variable'
+import { colorMix } from '../../values/functions/color-mix'
 import { foreground } from './text'
 
 const softLineRatio = 0.72
