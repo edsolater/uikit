@@ -1,7 +1,7 @@
 /** Rule 登记与声明组合。 */
 import { condition, type Condition, type ConditionInput } from './css-condition'
 import { findSubjectCondition } from '../subject-conditions'
-import { isCSSKey, type CSSKey } from './css-key'
+import { isCSSKey, resolveCSSKey, type CSSKey } from './css-key'
 import { isCSSPair, type Declaration } from './css-declaration'
 import type { ValueInput } from './css-value'
 import type { VariableOverrides } from './css-variable'
@@ -16,8 +16,17 @@ export type Rule = [path: (Condition | string)[] | undefined, key: CSSKey | unde
 /** 按声明顺序保存的规则。 */
 export type Rules = Rule[]
 
-/** Mixin 与批量登记共用的声明组合。 */
-export type Declarations = (Declaration<RuleValue> | Declarations | undefined)[]
+/** 以字符串名称表达的声明对象。 */
+export type DeclarationObject = Record<string, RuleValue>
+
+/** 声明序列中的单项；可继续嵌套对象或 Iterable。 */
+export type DeclarationItem = Declaration<RuleValue> | DeclarationObject | DeclarationGroup | undefined
+
+/** 按输入顺序提供声明条目的通用 Iterable。 */
+export interface DeclarationGroup extends Iterable<DeclarationItem> {}
+
+/** Mixin 与批量登记共用的声明输入。 */
+export type Declarations = DeclarationObject | DeclarationGroup
 
 /** 本次登记的删除入口。 */
 export interface RulesHandle {
@@ -48,27 +57,48 @@ function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
 /** 登记一条规则；undefined 内容不输出。 */
 export function rule(path: ConditionInput, key: CSSKey | undefined, input: RuleValue): RuleHandle {
   if (key !== undefined && !isCSSKey(key)) throw new Error('rule() 必须提供有效 CSSKey。')
-  return registerRule([rulePath(path), key, input])
+  return registerRule([rulePath(path), key === undefined ? undefined : resolveCSSKey(key), input])
 }
 
-/** 批量登记声明；无效分组整批拒绝，undefined 内容跳过。 */
+/** 识别名称声明对象，不把类实例误当声明集合。 */
+function isDeclarationObject(input: unknown): input is DeclarationObject {
+  if (typeof input !== 'object' || input === null || isDeclarationIterable(input)) return false
+  const prototype = Object.getPrototypeOf(input)
+  return prototype === Object.prototype || prototype === null
+}
+
+/** 识别标准 Iterable；字符串名称不能作为声明序列逐字展开。 */
+function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
+  if ((typeof input !== 'object' || input === null) && typeof input !== 'function') return false
+  return typeof (input as { [Symbol.iterator]?: unknown })[Symbol.iterator] === 'function'
+}
+
+/** 批量登记声明；无效输入整批拒绝，undefined 内容跳过。 */
 export function rules(path: ConditionInput, declarations: Declarations): RulesHandle {
   const conditionPath = rulePath(path)
   const entries: Rule[] = []
-  const visiting = new Set<Declarations>()
-  /** 收集有效声明，拒绝递归分组。 */
-  const visit = (group: Declarations): void => {
-    if (!Array.isArray(group)) throw new Error('rules() 必须提供声明数组。')
-    if (visiting.has(group)) throw new Error('rules() 的声明分组存在递归引用。')
-    visiting.add(group)
-    for (const entry of group) {
-      if (entry === undefined) continue
-      if (isCSSPair(entry)) {
-        if (entry[1] !== undefined) entries.push([conditionPath, entry[0], entry[1] as RuleValue])
-      } else if (Array.isArray(entry)) visit(entry as Declarations)
-      else throw new Error('rules() 只接受声明二元数组或嵌套声明分组。')
+  const visiting = new Set<object>()
+  /** 收集有效声明，拒绝递归输入。 */
+  const visit = (source: unknown): void => {
+    if (source === undefined) return
+    if (isCSSPair(source)) {
+      if (source[1] !== undefined) entries.push([conditionPath, resolveCSSKey(source[0]), source[1] as RuleValue])
+      return
     }
-    visiting.delete(group)
+    if (!isDeclarationObject(source) && !isDeclarationIterable(source)) {
+      throw new Error('rules() 只接受声明对象、声明二元数组或其 Iterable 组合。')
+    }
+    if (visiting.has(source)) throw new Error('rules() 的声明输入存在递归引用。')
+    visiting.add(source)
+    try {
+      if (isDeclarationObject(source)) {
+        for (const entry of Object.entries(source)) visit(entry)
+      } else {
+        for (const entry of source) visit(entry)
+      }
+    } finally {
+      visiting.delete(source)
+    }
   }
   visit(declarations)
   const handles = entries.map((entry) => registerRule(entry))

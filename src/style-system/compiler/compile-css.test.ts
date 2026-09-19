@@ -2,7 +2,7 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { subjectCondition } from '../subject-conditions'
 import { compileCSS } from '../core/css-root'
-import { rule, rules, type Rules, type RuleValue, type RulesHandle, type Declarations } from '../core/css-rule'
+import { rule, rules, type Rules, type RuleValue, type RulesHandle, type DeclarationGroup, type Declarations } from '../core/css-rule'
 import { condition, media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
@@ -131,6 +131,68 @@ test('声明二元数组只配对 Key 与 content，Variable 可同时作为声�
   expect(compileCSS()).toContain('--local-foreground: red;\ncolor: var(--local-foreground, black);')
 })
 
+test('对象、数组、Map、Set 与一次性 Iterable 进入同一有序声明路径', () => {
+  const tuples: [string, string][] = [
+    ['display', 'inline-flex'],
+    ['alignItems', 'center'],
+    ['justifyContent', 'center'],
+  ]
+  let iteratorCalls = 0
+  const once: DeclarationGroup = {
+    *[Symbol.iterator]() {
+      iteratorCalls += 1
+      if (iteratorCalls > 1) throw new Error('声明 Iterable 被重复读取。')
+      yield* tuples
+    },
+  }
+  const inputs: Declarations[] = [
+    { display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
+    tuples,
+    new Map(tuples),
+    new Set(tuples),
+    once,
+  ]
+  const outputs = inputs.map((input) => {
+    const handle = rules('.Inputs', input)
+    const output = compileCSS()
+    handle.remove()
+    return output
+  })
+  expect(new Set(outputs)).toHaveLength(1)
+  expect(outputs[0]).toBe('.Inputs {\ndisplay: inline-flex;\nalign-items: center;\njustify-content: center;\n}')
+  expect(iteratorCalls).toBe(1)
+})
+
+test('声明名称统一解析已登记别名，同时保留原生与自定义属性字符串', () => {
+  keep(rules('.Names', {
+    alignItems: 'center',
+    'future-property': 'native-value',
+    '--local-property': 'custom-value',
+  }))
+  keep(rule('.SingleName', 'justifyContent', 'center'))
+  expect(compileCSS()).toContain('.Names {\nalign-items: center;\nfuture-property: native-value;\n--local-property: custom-value;\n}')
+  expect(compileCSS()).toContain('.SingleName {\njustify-content: center;\n}')
+  key('test-collision-target')
+  expect(() => key('testCollision-target')).toThrow('CSS Key 名称冲突：testCollisionTarget')
+  expect(() => rule('.PartialName', 'testCollision-target', 'value')).toThrow('未知 CSS Key 名称：testCollision-target')
+  expect(() => rules('.Unknown', { unknownAlias: 'value' })).toThrow('未知 CSS Key 名称：unknownAlias')
+})
+
+test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefined', () => {
+  const local = variable('ordered-local', { fallback: 'black' })
+  const content = vi.fn(() => '4px')
+  const nested: Declarations = [
+    { margin: '1px' },
+    new Set<[string, RuleValue]>([['margin-left', '2px'], ['margin', '3px']]),
+    undefined,
+    [[local, 'red'], ['padding', content], ['color', local]],
+  ]
+  keep(rules('.Ordered', nested))
+  expect(content).not.toHaveBeenCalled()
+  expect(compileCSS()).toBe('.Ordered {\nmargin: 1px;\nmargin-left: 2px;\nmargin: 3px;\n--ordered-local: red;\npadding: 4px;\ncolor: var(--ordered-local, black);\n}')
+  expect(content).toHaveBeenCalled()
+})
+
 test('嵌套批量声明与单项属性不会混淆', () => {
   keep(rules('.example', [[[$color, 'red'], [$padding, '1px']]]))
   expect(compileCSS()).toContain('padding: 1px')
@@ -147,19 +209,32 @@ test('声明组合忽略空项和 content 为 undefined 的 Declaration，不把
 test('批量登记先验证整批，失败时既有条目与句柄保持有效', () => {
   const original = keep(rule('.example', 'color', 'red'))
   const invalid = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
-  expect(() => keep(rules('.example', invalid))).toThrow('只接受声明二元数组')
+  expect(() => keep(rules('.example', invalid))).toThrow('只接受声明对象')
   expect(compileCSS()).toBe('.example {\ncolor: red;\n}')
   original.replace('green')
   expect(compileCSS()).toContain('color: green')
-  const recursive: Declarations = [[$color, 'blue']]
+  const recursive: unknown[] = [[$color, 'blue']]
   recursive.push(recursive)
-  expect(() => keep(rules('.example', recursive))).toThrow('递归引用')
+  expect(() => keep(rules('.example', recursive as Declarations))).toThrow('递归引用')
   expect(compileCSS()).toContain('color: green')
   const invalidProperty = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
   expect(() => keep(rules('.example', invalidProperty))).toThrow()
   keep(rules('.example', [[$color, undefined]]))
   expect(() => keep(rules([null] as unknown as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
   expect(compileCSS()).toContain('color: green')
+})
+
+test('迭代器抛错与字符串输入整批失败，不留下已经读取的声明', () => {
+  const original = keep(rule('.Atomic', 'color', 'red'))
+  function* broken(): IterableIterator<[string, string]> {
+    yield ['color', 'blue']
+    throw new Error('读取声明失败。')
+  }
+  expect(() => rules('.Atomic', broken())).toThrow('读取声明失败')
+  expect(() => rules('.Atomic', 'color' as unknown as Declarations)).toThrow('只接受声明对象')
+  expect(compileCSS()).toBe('.Atomic {\ncolor: red;\n}')
+  original.replace('green')
+  expect(compileCSS()).toBe('.Atomic {\ncolor: green;\n}')
 })
 
 test('批量删除仅删除本批声明，重复声明不提前覆盖', () => {
@@ -400,11 +475,10 @@ test('边界形状按需输出，省略时保留边框和焦点配置', () => {
   expect(css).not.toContain('.EmptyBoundary')
 })
 
-test('新增 flex 居中不改变原 grid 居中及独立空间配置', () => {
-  keep(rules('.Flex', [contentLayout({ mode: 'flex-center' })]))
-  keep(rules('.Grid', [contentLayout({ mode: 'center' })]))
+test('center 由 Mixin 选择实现，独立空间配置不要求布局模式', () => {
+  keep(rules('.Center', [contentLayout({ mode: 'center' })]))
   keep(rules('.Space', [contentLayout({ gap: '8px', padding: ['4px', '12px'] })]))
-  expect(compileCSS()).toBe('.Flex {\ndisplay: inline-flex;\nalign-items: center;\njustify-content: center;\n}\n.Grid {\ndisplay: inline-grid;\ngrid-auto-flow: column;\nplace-content: center;\nplace-items: center;\n}\n.Space {\ngap: 8px;\npadding: 4px 12px;\n}')
+  expect(compileCSS()).toBe('.Center {\ndisplay: inline-flex;\nalign-items: center;\njustify-content: center;\n}\n.Space {\ngap: 8px;\npadding: 4px 12px;\n}')
 })
 
 test('可点击效果允许选择透明度且保留省略参数时的旧默认', () => {

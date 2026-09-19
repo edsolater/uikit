@@ -15,7 +15,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
 - `src/hooks`：对外响应式状态与浏览器协作能力。领域入口和内部阅读路线见 [hooks README](src/hooks/README.md)。
-- `src/style-system`：Rule 与 Value 样式定义领域。CSSRoot 持有源账本，编译器展开声明、状态与依赖，应用统一提交 CSS string；文件职责见 [Style System 架构](src/style-system/architecture.md)。
+- `src/style-system`：Rule 与 Value 样式定义领域。`rules()` 将声明对象和条目 Iterable 统一转换为有序 Declaration，CSSRoot 持有源账本，编译器展开声明、状态与依赖，应用统一提交 CSS string；文件职责见 [Style System 架构](src/style-system/architecture.md)。
 - `src/css`：仍在服役的静态 CSS 领域。当前继续提供 reset、tokens、controls、traits 与尚未迁移的 CSS 工具；当前结构见 [CSS 架构](src/css/architecture.md)。
 - `src/app/example-dashboard`：本地 Example 浏览与浏览器验收入口，不是正式业务应用。
 - `src/types`：没有单一源码主体可归属的浏览器与 JSX 全局类型补丁。
@@ -86,7 +86,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 # 领域边界
 
 - 工具的领域发生在工具定义端。Button 使用通用属性函数和材料，不会让 Style System 获得 Button 的业务配方；具体组合留在 Button.style.ts。
-- `src/style-system` 只提供通用 Rule 登记、Condition 寻址、声明二元数组、Value、编译和挂载能力；具体组件 selector、业务分类和视觉组合留在组件自己的 style 文件。
+- `src/style-system` 只提供通用 Rule 登记、Condition 寻址、声明输入转换、Value、编译和挂载能力；具体组件 selector、业务分类和视觉组合留在组件自己的 style 文件。
 - `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-system` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
 - `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。

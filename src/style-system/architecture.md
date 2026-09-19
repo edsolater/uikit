@@ -8,9 +8,9 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 | --- | --- |
 | `core/css-condition.ts` | Condition 与有序 Rule 地址。 |
 | `subject-conditions.ts` | Subject Condition 名称、已有 Condition 与固定登记顺序；提供内置交互名称。 |
-| `core/css-key.ts` | 原生属性名称与 Variable 目标名称。 |
+| `core/css-key.ts` | 原生属性、Variable 目标与对象声明名称的登记和解析。 |
 | `core/css-declaration.ts` | `[key, content]` Declaration。 |
-| `core/css-rule.ts` | Rule 登记、批量展开与句柄。 |
+| `core/css-rule.ts` | 声明对象与条目 Iterable 的有序转换、Rule 登记与句柄。 |
 | `core/css-valuable.ts` | Value、Variable 与 CSS Function 的共同协议和消费上下文。 |
 | `core/css-value.ts` | 条件 Value、可调用 CSS Function 与内容输入。 |
 | `core/css-variable.ts` | 同名 Variable 引用、根值与注册。 |
@@ -20,6 +20,7 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 | `compiler/compile-value.ts` | 激活集合、统一分支取值、内容递归与循环检测。 |
 | `compiler/compile-variable.ts` | 变量引用、局部赋值与条件缺省值。 |
 | `properties` | 浏览器 CSS 属性的 Key。 |
+| `properties/register.ts` | 汇集实际属性 Key，公共入口通过显式调用安装完整名称集合；打包后不依赖副作用导入保留注册责任。 |
 | `selectors/interaction.ts` | 可复用交互 Condition。 |
 | `values/functions`、`values` | 复合值、CSS 函数与按需定义。 |
 | `values/materials` | 可跨组件使用的设计材料。 |
@@ -48,7 +49,7 @@ render()
 
 记录项严格为 `[(string | undefined)[], string | undefined, string]`，只保存条件、属性与内容。普通声明按源顺序追加；输出只共享相邻路径，不跨声明移动或覆盖记录。原生简写、详细属性和无效值的处理交给 CSS。两个内部入口不从公共 `index.ts` 导出。
 
-源 Rule 保留普通 Condition 与主体条件名称的区别。编译时分别进入普通路径和激活集合，主体名称直到输出才转成 header。Value 在同一激活集合下取自身最后匹配分支；Variable 的条件只进入自身赋值，消费表达式保留 `var()`。名称、排序和预装项由 `subject-conditions.ts` 唯一负责。
+源 Rule 保留普通 Condition 与主体条件名称的区别。编译时分别进入普通路径和激活集合，主体名称直到输出才转成 header。Value 在同一激活集合下取自身最后匹配分支；Variable 的条件只进入自身赋值，消费表达式保留 `var()`。Subject Condition 的名称、排序和预装项由 `subject-conditions.ts` 唯一负责；声明名称由 `core/css-key.ts` 登记和解析，两套名称不共用注册表。
 
 # Button 接入
 

@@ -89,9 +89,17 @@ rules(button, [
   [$color, foreground],
   [$backgroundColor, actionSurface],
 ])
+
+rules(button, {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+})
 ```
 
-`rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明二元数组、嵌套分组与表示“本层没有声明”的 `undefined`，先完整归一化和验证，再按输入顺序写入。整批输入无效时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
+`rule(condition, key, value)` 只登记一条 Rule。`rules(condition, declarations)` 接受声明对象，以及提供声明条目的数组、Map、Set 与其他 Iterable；这些输入可以与 `undefined` 和 Mixin 返回值嵌套组合。入口先把完整输入转换为有序 `[key, content]` 序列并验证，再按输入顺序写入。整批输入无效、存在循环或迭代器抛错时不留下部分登记，也不改变已有句柄的所有权。两者均不编译或操作 DOM。
+
+对象名称先查询已登记的 CSS Key：`alignItems` 与 `$alignItems` 指向同一个 `align-items` 目标。`key()` 在定义属性时同时登记原生名称和驼峰名称，公共 Style System 入口通过 `registerPropertyKeys()` 消费现有属性定义并完成安装；这条真实数据依赖在打包后仍然成立，不依赖副作用导入。名称冲突直接报错，不静默改指。原生属性字符串和 `--custom-property` 保持直接入口；未登记的驼峰名称报错。显式 Key 与 Variable 继续通过声明二元组使用。
 
 Declaration 的结构就是 `[key, content]`。`declare(key, content)` 只返回同一个二元数组，作者可以按上下文决定是否使用。普通属性 Key、Variable 和 Descriptor 都直接充当受体。复合内容由具体函数生成，或通过目的 Mixin 配置；Key 不解释对象和数组：
 
@@ -105,7 +113,7 @@ contentLayout({ padding: [normalSpace, wideSpace] })
 )]
 ```
 
-`rules()` 递归展开声明组合和 Mixin 返回值，跳过任意层级的独立 `undefined`；遇到以 CSS Key 开始的二元数组就停止，content 即使是数组也整体保留。Declaration 的 content 为 `undefined` 时整条声明同样被跳过。登记时拆出 Key 和 content，编译时不再识别第二份 Declaration。Key 不保存语法，内容函数在编译时生成自身语法。
+`rules()` 按各输入自身的枚举顺序递归展开声明组合和 Mixin 返回值，跳过任意层级的独立 `undefined`；遇到以 CSS Key 开始的二元数组就停止，content 即使可迭代也整体保留。Declaration 的 content 为 `undefined` 时整条声明同样被跳过。转换不经过 Map 去重或 JSON 序列化，因此保留输入实际提供的重复声明与 content 身份；一次性 Iterable 只读取一次。登记时拆出 Key 和 content，编译时不再识别第二份 Declaration。Key 不保存语法，内容函数在编译时生成自身语法。
 
 源账本保留原生声明及顺序，不预先删除同址前值。例如浏览器会忽略无效后值，继续采用有效前值；编译器不能提前把前值丢掉。最终输出见[有序 CSS 记录](#有序-css-记录)。
 
@@ -323,7 +331,7 @@ render(() => <App />, root)
 # 验收条件
 
 1. `Rule` 只表示一条配置，`Rules` 才表示集合；公共 API 不暴露源 Rules。
-2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；声明统一为 `[key, content]`，`declare()` 只返回相同二元数组，无效批次不产生部分写入。
+2. `.style.ts` 顶层使用单项 `rule()` 或批量 `rules()`；声明对象与条目 Iterable 统一转换为有序 `[key, content]`，`declare()` 只返回相同二元数组，无效批次不产生部分写入。
 3. 原生声明保留顺序，覆盖由 CSS 决定；句柄只控制自己的登记。
 4. Subject Condition 集中登记名称、已有 Condition 与固定顺序；主体稳定和交换律由登记者承诺，编译器不负责验证。
 5. Value、Variable 独立继承 Valuable，CSS Function 延迟生成内容；不增加 Expression 或 Key 语法体系。

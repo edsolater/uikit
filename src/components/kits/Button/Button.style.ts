@@ -11,7 +11,6 @@ import {
   elevation,
   clickable,
 } from '../../../style-system'
-import { $cursor } from '../../../style-system/properties/interaction'
 import { $alignSelf } from '../../../style-system/properties/layout'
 import { colorMix } from '../../../style-system/values/functions/color-mix'
 import { foreground, strongForeground } from '../../../style-system/values/materials/color/text'
@@ -76,7 +75,7 @@ rules(button, [
 
   // --- 内容布局 ---
   contentLayout({
-    mode: 'flex-center',
+    mode: 'center',
     gap: normalSpace,
     padding: [normalSpace, extraLargeSpace],
   }),
@@ -272,4 +271,4 @@ rules(
 // status 外部状态
 // =============================================================================
 
-rules([...button, '&[data-status~="loading"]'], [[$cursor, value('progress', { disabled: 'not-allowed' })]])
+rules([...button, '&[data-status~="loading"]'], { cursor: value('progress', { disabled: 'not-allowed' }) })
