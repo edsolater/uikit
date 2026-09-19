@@ -1,39 +1,27 @@
-/** 明暗基础色板及中性色元，为各类配色提供共同来源。 */
-import { value } from '../../../core/css-value'
-import { variable } from '../../../core/css-variable'
+/** 原始色阶的 Variable Cluster；颜色定义由基础 CSS 提供，查询不创建变量。 */
+import { variable, type Variable } from '../../../core/css-variable'
 
-/** 明暗两套基础色板，提供品牌色、中性色和危险色。 */
-export const palette = {
-  brand: { light: value('oklch(58% 0.2 260)'), dark: value('oklch(70% 0.18 260)') },
-  paper: { light: value('oklch(98% 0.003 260)'), dark: value('oklch(13% 0.01 260)') },
-  lowSurface: { light: value('oklch(94.5% 0.006 260)'), dark: value('oklch(17% 0.012 260)') },
-  hoverSurface: { light: value('oklch(90% 0.008 260)'), dark: value('oklch(22% 0.014 260)') },
-  activeSurface: { light: value('oklch(84% 0.008 260)'), dark: value('oklch(31% 0.014 260)') },
-  ink: { light: value('oklch(26% 0.005 260)'), dark: value('oklch(87% 0.006 260)') },
-  strongInk: { light: value('oklch(15% 0.004 260)'), dark: value('oklch(96% 0.004 260)') },
-  danger: { light: value('#c42b1c'), dark: value('oklch(70% 0.18 28)') },
+/** 预定义色阶引用；下标就是等级，底层名称不暴露给调用方。 */
+const palette = {
+  neutral: [
+    variable('dye-neutral-0'),
+    variable('dye-neutral-1'),
+    variable('dye-neutral-2'),
+    variable('dye-neutral-3'),
+    variable('dye-neutral-4'),
+    variable('dye-neutral-5'),
+    variable('dye-neutral-6'),
+    variable('dye-neutral-7'),
+    variable('dye-neutral-8'),
+  ],
 }
 
-/** 品牌基础色，随根元素的明暗主题切换，并为语义颜色提供可覆盖色元。 */
-export const brand = variable('color-brand', { root: { value: palette.brand.light, dark: palette.brand.dark } })
+/** 取已有色阶 Variable；neutral 支持 0–8，等级越高越接近当前主题墨色，缺省为 0；未定义项报错。 */
+export function paletteColor(colorLabel: keyof typeof palette, level = 0): Variable {
+  const color = Number.isInteger(level) ? palette[colorLabel]?.[level] : undefined
+  if (!color) throw new Error(`未定义的色阶：${colorLabel}-${level}`)
+  return color
+}
 
-/** 亮色主题的纸面底色。 */
-const paperSurface = variable('dye-neutral-0', { root: { value: palette.paper.light, dark: palette.paper.dark } })
-
-/** 低层中性表面，引用已加载的基础 CSS token。 */
-export const lowSurface = variable('dye-neutral-1')
-
-/** 悬停时的中性表面，引用已加载的基础 CSS token。 */
-export const hoverSurface = variable('dye-neutral-2')
-
-/** 按下时的中性表面，引用已加载的基础 CSS token。 */
-export const activeSurface = variable('dye-neutral-3')
-
-/** 普通文字的基础色元。 */
-export const ink = variable('dye-neutral-7', { root: { value: palette.ink.light, dark: palette.ink.dark } })
-
-/** 强调文字的基础色元。 */
-export const strongInk = variable('dye-neutral-8', { root: { value: palette.strongInk.light, dark: palette.strongInk.dark } })
-
-/** 通用表面底色，暗色主题采用低层表面。 */
-export const surface = variable('color-surface', { root: { value: paperSurface, dark: lowSurface } })
+/** 品牌身份色；与原始色阶分开，沿用基础 CSS 的品牌覆盖入口。 */
+export const brand = variable('color-brand')

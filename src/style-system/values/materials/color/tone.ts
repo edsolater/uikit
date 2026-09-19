@@ -2,7 +2,7 @@
 import { variable } from '../../../core/css-variable'
 import { value } from '../../../core/css-value'
 import { colorMix } from '../../functions/color-mix'
-import { surface } from './palette'
+import { surface } from './surface'
 
 /** 语气底色中的表面色占比，范围为零至一。 */
 const toneSurfaceRatio = 0.76

@@ -23,6 +23,7 @@ Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提�
 | `selectors/interaction.ts` | 可复用交互 Condition。 |
 | `values/functions`、`values` | 复合值、CSS 函数与按需定义。 |
 | `values/materials` | 可跨组件使用的设计材料。 |
+| `values/materials/color/palette.ts` | 原始色阶的预定义 Variable Cluster 与 `paletteColor` 查询；颜色数值继续由基础 CSS 提供。 |
 | `mixins/content.ts` | 内部文字与内容布局。 |
 | `mixins/structure.ts` | 主体尺寸与空间边界。 |
 | `mixins/appearance.ts` | 主体颜色与视觉层级。 |
@@ -55,7 +56,7 @@ render()
 
 焦点规则由预装的 `focusVisible` 确定生效地址，再用 `boundary({ outline })` 建立边界。danger tone 只覆盖轮廓颜色，不建立焦点专用转发 Mixin。
 
-默认底色保留一次 `colorMix`；中性表面与混合占比都使用 Variable。hover、active 只改变同名变量的值，禁用背景仍由 Button 直接选择。
+中性色阶通过 `paletteColor` 取得 Variable；Button 自己选择常态、hover、active 的等级与混色比例。禁用背景读取固定常态材料，不借用当前交互状态。
 
 Button.tsx 静态导入 Button.style.ts。Example、Storybook 和缩略图入口都在渲染前准备 `style#css-root` 并统一挂载；组件渲染不编译样式。懒加载组件仍需由应用样式清单提前导入，`package.json` 的 sideEffects 保留 `.style.ts` 及产物 `.style.js`。
 

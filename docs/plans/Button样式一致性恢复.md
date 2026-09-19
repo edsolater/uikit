@@ -415,3 +415,37 @@ Edge 153.0.4234.32，视口 1600×1100，等待正常 120ms 过渡结束后截�
 | 暗色 / 常态 | [CSS](C:/Users/edsol/.codex/visualizations/2026/09/18/01a0b505-260d-7e00-8038-2d8861ccd785/restored-integrated-css-dark-rest.png) | [TS](C:/Users/edsol/.codex/visualizations/2026/09/18/01a0b505-260d-7e00-8038-2d8861ccd785/restored-integrated-style-dark-rest.png) |
 | 暗色 / 悬停 | [CSS](C:/Users/edsol/.codex/visualizations/2026/09/18/01a0b505-260d-7e00-8038-2d8861ccd785/restored-integrated-css-dark-hover.png) | [TS](C:/Users/edsol/.codex/visualizations/2026/09/18/01a0b505-260d-7e00-8038-2d8861ccd785/restored-integrated-style-dark-hover.png) |
 | 暗色 / 按下 | [CSS](C:/Users/edsol/.codex/visualizations/2026/09/18/01a0b505-260d-7e00-8038-2d8861ccd785/restored-integrated-css-dark-active.png) | [TS](C:/Users/edsol/.codex/visualizations/2026/09/18/01a0b505-260d-7e00-8038-2d8861ccd785/restored-integrated-style-dark-active.png) |
+
+# 后续授权：Variable Cluster 色阶聚合
+
+2026-09-19，用户批准先聚合原始色阶：`paletteColor(colorLabel, level = 0)` 只查询已有 Variable，业务不感知底层变量名。名称采用 Variable Cluster，不是返回 Declaration 的 Mixin。此前记录中保留旧色板及逐项色阶导出的决定，在本节范围内由这次授权替代；上文保留为历史实施记录。
+
+## 范围、落点与硬性边界
+
+1. `values/materials/color/palette.ts` 负责预定义表与查询。当前沿用已有 `neutral` 0–8，不把独立黑白极点 `ink` 偷换为中性色阶；名称问题已询问用户，未答复期间不做底层改名。
+2. `Button.style.ts` 和 `surface.ts` 改为按等级取色，不改混色比例、状态条件、布局和禁用策略。`surface` 归回承载面文件，`tone.ts` 只更新其导入。
+3. 删除 TS 重复色值表；`brand`、`surface` 语义材料保留，统一引用基础 CSS 的同名 token。它们不再按需输出另一份根定义；这一来源变化必须验证主题与局部覆盖，不能仅凭 Button 未消费就跳过检查。
+4. **不可违背：** 查询不创建 Variable、不生成颜色、不登记规则、不缓存；缺项报错，不能静默回退；不新增 Cluster 类、构造器、核心类型或编译器分支。没有曲线生成器，也不扩展其他阶梯材料。
+5. **不可顺带修改：** 基础 CSS 数值、组件 API、其他组件、布局 Mixin、禁用组合、入口与构建配置。检查不能生成临时截图；不改暂存区，不覆盖用户同时提交的旧修复。
+
+实行顺序是查询契约测试、预定义表和直接消费者迁移、浏览器保护测试、用法同步、完整回归与复杂度审查。材料来自现有基础 CSS，输入是色系和等级，交付原生 Variable；训练、学习与校准不涉及本次查表操作。稳定协议由[样式文件写法／Variable Cluster 查询材料](../style/样式文件写法.md#variable-cluster-查询材料)负责。
+
+## 监察点与实际验收
+
+本节依据《代码编写》《代码抽象》《代码修改验收》《理解监察》及项目样式写法；明确的用户授权决定范围，不用旧代码或测试反推需求。
+
+| 监察点 | 判定已完成的证据 | 结果 |
+| --- | --- | --- |
+| 查询已有对象 | `palette.test.ts`：缺省等级等于 0，九级逐项检查名称和重复查询对象身份，查询前后 CSS 相同 | 满足 |
+| 缺项拒绝 | 同文件：未知色系、负数、越界、小数、NaN、Infinity 报错；未知色系有类型反例 | 满足 |
+| 仍是 Variable | 同文件：直接作为声明受体、声明值、条件值与混色输入；没有新消费协议 | 满足 |
+| 全色阶与主题 | `palette.browser.test.ts`：九级分别等于基础 CSS，明暗值均非透明且可区分，切换无需重编译 | 满足 |
+| 局部覆盖 | 同文件：通过 `color()` 消费；对查询结果赋值后，本地和后代改变，邻居不变 | 满足 |
+| 语义材料来源 | 同文件：brand/surface 不输出根定义，两主题等于基础 token，局部覆盖继续有效 | 满足 |
+| Button 外观与交互不变 | 原有完整浏览器回归；编译 CSS 前后长度均为 19240，Bun 指纹均为 `11016386830676721411` | 满足 |
+| 理解链更短 | 去掉 `lowSurface/hoverSurface/activeSurface/ink/strongInk` 五个独立色阶出口；统一查询九级，不增加包装层；Button 的 Rule 数量和配方不变 | 满足 |
+| 修改边界 | 差异只涉及颜色材料、直接引用、两份新增测试及对应文档；核心、Mixin、基础 CSS、Input、Card 没有改动 | 满足 |
+
+查询测试先在无函数实现时失败，再通过；这是缺少能力的反例，不改写已有 Button 期望适配新实现。2026-09-19 03:50，运行版本为 `146d11b` 加本节工作区改动：类型检查通过；单元 30 文件 / 163 测试，浏览器 11 文件 / 58 测试全部通过；构建通过。浏览器命令使用 `--browser.screenshotFailures=false`，不修改测试配置、不产生截图。
+
+自审结论：简化的是定义来源与查找路径，不是 Button 的配方数量。Button 仍为 275 行，单个查询写法甚至比旧别名更长；收益是调用者不再记五个名字，定义层也不维护第二套明暗色值。没有把今后的生成器、布局或其他组件工作宣称为本次完成。

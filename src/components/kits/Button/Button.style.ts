@@ -31,7 +31,7 @@ import {
   strongTone,
   toneForeground,
 } from '../../../style-system/values/materials/color/tone'
-import { lowSurface, hoverSurface, activeSurface } from '../../../style-system/values/materials/color/palette'
+import { paletteColor } from '../../../style-system/values/materials/color/palette'
 import { pill } from '../../../style-system/values/materials/radius'
 import {
   smallSpace,
@@ -69,7 +69,7 @@ const restForeground = variable('button-rest-foreground')
 // =============================================================================
 
 rules(button, [
-  [restSurface, colorMix([lowSurface, 0.82], softAccent)],
+  [restSurface, colorMix([paletteColor('neutral', 1), 0.82], softAccent)],
   [restForeground, foreground],
   // --- 内容排版 ---
   innerText({ font: 'inherit', fontSize: largeText, emphasis: bold, leading: singleLine }),
@@ -93,9 +93,9 @@ rules(button, [
   }),
   color({
     background: value(restSurface, {
-      hover: colorMix([hoverSurface, 0.72], softAccent),
-      active: colorMix([activeSurface, 0.62], softAccent),
-      disabled: colorMix([restSurface, 0.48], hoverSurface),
+      hover: colorMix([paletteColor('neutral', 2), 0.72], softAccent),
+      active: colorMix([paletteColor('neutral', 3), 0.62], softAccent),
+      disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
     }),
     foreground: value(restForeground, {
       hover: strongForeground,
@@ -135,9 +135,9 @@ rules(
     [restSurface, 'transparent'],
     color({
       background: value(restSurface, {
-        hover: colorMix([lowSurface, 0.88], softAccent),
-        active: colorMix([hoverSurface, 0.82], softAccent),
-        disabled: colorMix([restSurface, 0.48], hoverSurface),
+        hover: colorMix([paletteColor('neutral', 1), 0.88], softAccent),
+        active: colorMix([paletteColor('neutral', 2), 0.82], softAccent),
+        disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
       }),
     }),
     elevation(flat),
@@ -153,7 +153,7 @@ rules(
       background: value(restSurface, {
         hover: actionHover,
         active: actionActive,
-        disabled: colorMix([restSurface, 0.48], hoverSurface),
+        disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
       }),
       foreground: value(restForeground, {
         hover: actionForeground,
@@ -172,13 +172,13 @@ rules(
 rules(
   [...button, '&[data-tone]'],
   [
-    [restSurface, colorMix([lowSurface, 0.76], softTone)],
+    [restSurface, colorMix([paletteColor('neutral', 1), 0.76], softTone)],
     [restForeground, strongTone],
     color({
       background: value(restSurface, {
-        hover: colorMix([hoverSurface, 0.68], softTone),
-        active: colorMix([activeSurface, 0.58], softTone),
-        disabled: colorMix([restSurface, 0.48], hoverSurface),
+        hover: colorMix([paletteColor('neutral', 2), 0.68], softTone),
+        active: colorMix([paletteColor('neutral', 3), 0.58], softTone),
+        disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
       }),
       foreground: value(restForeground, {
         hover: strongTone,
@@ -214,9 +214,9 @@ rules(
 rules([...button, '&[data-variant="bare"][data-tone]'], [
   [restSurface, 'transparent'],
   color({ background: value(restSurface, {
-    hover: colorMix([lowSurface, 0.82], softTone),
-    active: colorMix([hoverSurface, 0.74], softTone),
-    disabled: colorMix([restSurface, 0.48], hoverSurface),
+    hover: colorMix([paletteColor('neutral', 1), 0.82], softTone),
+    active: colorMix([paletteColor('neutral', 2), 0.74], softTone),
+    disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
   }) }),
 ])
 
@@ -227,7 +227,7 @@ rules([...button, '&[data-variant="solid"][data-tone]'], [
     background: value(restSurface, {
       hover: colorMix([tone, 0.88], strongForeground),
       active: colorMix([tone, 0.78], strongForeground),
-      disabled: colorMix([restSurface, 0.48], hoverSurface),
+      disabled: colorMix([restSurface, 0.48], paletteColor('neutral', 2)),
     }),
     foreground: value(restForeground, {
       hover: toneForeground,

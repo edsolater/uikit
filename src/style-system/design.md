@@ -165,16 +165,16 @@ const spacing = value('12px', {
 
 ```ts
 export const interactiveSurface = variable('color-surface-interactive', {
-  fallback: value(lowSurface, {
-    hover: hoverSurface,
-    active: activeSurface,
+  fallback: value(paletteColor('neutral', 1), {
+    hover: paletteColor('neutral', 2),
+    active: paletteColor('neutral', 3),
   }),
 })
 
 rules(button, [[$backgroundColor, interactiveSurface]])
 ```
 
-这里 `interactiveSurface` 表达可交互的承载面，而不是 `background-color` 的镜像名称。`$backgroundColor` 已经说明 CSS 实现位置，Value 只补充该位置要放入的语义内容。
+这里 `interactiveSurface` 表达可交互的承载面，而不是 `background-color` 的镜像名称。`$backgroundColor` 已经说明 CSS 实现位置，Value 只补充该位置要放入的语义内容。`paletteColor` 是原始色阶的 Variable Cluster 查询，不是 Mixin；只返回预定义 Variable，不增加核心对象类型。查询协议见[样式文件写法／Variable Cluster 查询材料](../../docs/style/样式文件写法.md#variable-cluster-查询材料)。
 
 # Variable 在各条件下改写同一个值
 
