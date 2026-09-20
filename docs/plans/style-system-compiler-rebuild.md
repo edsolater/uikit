@@ -22,7 +22,7 @@
 | --- | --- | --- |
 | [AI Rules 执行](../../../ai-rules/rules/Agent-AI-Rules执行.md)、[理解监察](../../../ai-rules/rules/Agent-理解监察.md)、[禁止绕过需求](../../../ai-rules/rules/Agent-禁止绕过需求.md) | 完整需求逐项对应改动与检查；新纠正不能抹掉未冲突要求 | 本文验收表逐项有结果，不能只汇报最近改的 Key |
 | [第一性原理](../../../ai-rules/rules/Code-第一性原理.md)、[代码抽象](../../../ai-rules/rules/Code-代码抽象.md) | 增加机制前先证明必要；旧实现、旧测试和方便编程都不是需求 | 每项新增协议、类型、状态说明对应需求，以及直接做法为何不足 |
-| [领域边界](../../../ai-rules/rules/Code-领域边界.md)、[公共协议归属](../../../ai-rules/rules/Code-公共协议归属.md)、[代码结构划分](../../../ai-rules/rules/Code-代码结构划分.md) | Key、Value、Variable、CSS Function、Rule 各负其责；先核对文件职责再改 | 文件头与真实依赖一致，无两套真相、重复入口 |
+| [领域边界](../../../ai-rules/rules/Code-领域边界.md)、[公共协议归属](../../../ai-rules/rules/Code-公共协议归属.md)、[代码结构划分](../../../ai-rules/archive/2026-09-20-code-split/Code-代码结构划分.md) | Key、Value、Variable、CSS Function、Rule 各负其责；先核对文件职责再改 | 文件头与真实依赖一致，无两套真相、重复入口 |
 | [代码编写](../../../ai-rules/rules/Code-代码编写.md)、[代码命名](../../../ai-rules/rules/Code-代码命名.md)、[readonly 约束](../../../ai-rules/rules/Code-readonly约束.md) | 英文代码标识符、中文说明；不新增 readonly、Readonly、ReadonlyArray 或 as const | 检查全部变更，而非只检查核心函数 |
 | [代码注释](../../../ai-rules/rules/Code-代码注释.md) | 文件职责、类型概念、函数黑盒说明简洁准确；不复述实现过程 | 逐项复查新增和修改的注释，如 `Mixin：盒子尺寸`；必要契约另写，不堆描述 |
 | [代码可读性](../../../ai-rules/rules/Code-代码可读性.md)、[阅读路径连续性](../../../ai-rules/rules/Code-代码阅读路径连续性.md)、[代码可维护性](../../../ai-rules/rules/Code-代码可维护性.md) | 主流程可顺读；不靠别名、转发层和迁移 switch 假装变清楚 | 对照改前与改后的实际调用链，说明减少了哪些跨层判断 |

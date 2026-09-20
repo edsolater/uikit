@@ -1,4 +1,6 @@
 /** 验证交互状态 Condition 的浏览器语义。 */
+import { key } from '../core/css-key'
+import { variable } from '../core/css-variable'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileCSS, rules, value } from '../index'
@@ -7,8 +9,8 @@ import { whenFocus, whenFocusWithin, whenHover, whenActive } from './interaction
 afterEach(() => document.body.replaceChildren())
 
 test('hover 与 active 的交集不增加权重压过变体', async () => {
-  const base = rules('.interaction-probe', [['color', value('red', { hover: 'blue', active: 'green' })]])
-  const variant = rules('.interaction-probe[data-variant="solid"]', [['color', 'white']])
+  const base = rules('.interaction-probe', [[key('color'), variable('red', { name: "browser-interaction-color", states: { hover: 'blue', active: 'green' } })]])
+  const variant = rules('.interaction-probe[data-variant="solid"]', [[key('color'), 'white']])
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileCSS()
   base.remove()

@@ -1,72 +1,61 @@
 # Style System 架构
 
-Style System 由模块顶层登记源 Rule，App 在渲染前统一编译并提交 CSS。对象语义见 [design.md](design.md)，命名见 [naming.md](naming.md)，组件写法见 [样式文件写法](../../docs/style/样式文件写法.md)。
+组件样式在模块顶层登记 Rule；App 在渲染前调用 cssRoot.mount()，统一生成并提交 CSS。对象语义见 [设计](design.md)，命名见 [命名](naming.md)，调用写法见 [样式文件写法](../../docs/style/样式文件写法.md)。
 
-# 文件职责
+## 文件职责
 
 | 位置 | 职责 |
 | --- | --- |
-| `core/css-condition.ts` | Condition 与有序 Rule 地址。 |
-| `subject-conditions.ts` | Subject Condition 名称、已有 Condition 与固定登记顺序；提供内置交互名称。 |
-| `core/css-key.ts` | CSS 声明目标识别、原生属性名称登记与对象键解析。 |
-| `core/css-declaration.ts` | `[key, content]` Declaration。 |
-| `core/css-rule.ts` | 声明对象与条目 Iterable 的有序转换、Rule 登记与句柄。 |
-| `core/css-valuable.ts` | Value、Variable 与 CSS Function 的共同协议和消费上下文。 |
-| `core/css-value.ts` | 条件 Value、可调用 CSS Function 与内容输入。 |
-| `core/css-variable.ts` | 同名 Variable 引用、根值与注册。 |
-| `core/css-root.ts` | 唯一源账本、快照编译与宿主提交。 |
-| `compiler/compile-css.ts` | 解析挂载与线性字符串输出两个内部入口。 |
-| `compiler/css-records.ts` | 最终 CSS 三项记录协议。 |
-| `compiler/compile-value.ts` | 激活集合、统一分支取值、内容递归与循环检测。 |
-| `compiler/compile-variable.ts` | 变量引用、局部赋值与条件缺省值。 |
-| `properties` | 浏览器 CSS 属性的 Key。 |
-| `properties/register.ts` | 汇集实际属性 Key，公共入口通过显式调用安装完整名称集合；打包后不依赖副作用导入保留注册责任。 |
-| `selectors/interaction.ts` | 可复用交互 Condition。 |
-| `values/functions`、`values` | 复合值、CSS 函数与按需定义。 |
-| `component-handle-material` | 组件可在自身选择器中声明的共享角色；角色使用现有 Variable，不预设组件配方。 |
-| `component-handle-material/color.ts` | 组件承载面与内容颜色角色；不同选择器声明各自取值，作用域与继承遵循原生 CSS。 |
-| `value-material` | 可作为声明内容复用的设计材料。 |
-| `value-material/color/palette.ts` | 原始色阶的预定义 Variable Cluster 与 `paletteColor` 查询；颜色数值继续由基础 CSS 提供。 |
-| `mixins/content.ts` | 内部文字与内容布局。 |
-| `mixins/structure.ts` | 主体尺寸与空间边界。 |
-| `mixins/appearance.ts` | 主体颜色与视觉层级。 |
-| `mixins/interaction.ts` | 点击交互效果。 |
+| core/css-condition.ts | Condition 与有序地址 |
+| state-conditions.ts | 主体状态名称、条件与中央顺序 |
+| core/css-key.ts | Key 对象、属性名及底层名称解析 |
+| core/css-declaration.ts | Key／Variable 与内容的二元声明 |
+| core/css-rule.ts | 声明组合、登记与句柄；公开类型只接受对象目标 |
+| core/css-valuable.ts | 按需依赖及消费位置 |
+| core/css-value.ts | 稳定 Value、可识别的可调用内容协议 |
+| core/css-variable.ts | 创建、source 回调、内部定义及引用链延伸 |
+| core/variable-cluster.ts | 对象成员配置、选择与 default 代理 |
+| core/css-root.ts | 源账本、快照编译与宿主提交 |
+| compiler/compile-value.ts | 稳定内容递归求值与循环检测 |
+| compiler/compile-variable.ts | 引用、自身状态及来源链的定义输出 |
+| compiler/compile-css.ts | 规则、依赖和自动定义记录，最后输出字符串 |
+| compiler/css-records.ts | 条件、属性、文本三项记录 |
+| properties、selectors | CSS Key 与条件 |
+| values | 混色、计算、复合内容和 CSS 函数 |
+| value-material | 可复用材料及其配方、状态 |
+| component-handle-material | 多个组件可声明的通用角色 |
+| mixins | 把完整效果转换成声明组合 |
 
-[index.ts](index.ts) 公开组件样式需要的 Rule、Value、Declaration、Condition、Mixin、`cssRoot` 与 `compileCSS`。Root 类、源账本和内部登记入口保持私有；材料与属性从负责文件具名导入。
+公共 index 公开创建、延伸、聚合、声明、编译和 Mixin；内部定义查找与来源连接不公开。Key 和材料从负责文件导入。已有 properties/register.ts 保留内部名称安装能力，公共入口直接使用 Key，不执行全量名称预注册。
 
-# 运行链
+## 从定义到浏览器
 
-~~~text
-静态导入组件样式
-  -> rule() / rules() 登记源 Rule
-App 调用 cssRoot.mount()
-  -> 快照源账本
-  -> resolveRules：解析完整候选与依赖，挂载有序记录数组
-  -> stringifyCSS：线性输出 CSS string
-  -> 提交到 style#css-root
-render()
-~~~
+```mermaid
+flowchart LR
+  Definition[Variable 与 Cluster 定义] --> Rule[样式 Rule]
+  Rule --> Root[CSSRoot 源账本]
+  Root --> Resolve[规则和内容解析]
+  Resolve --> Records[有序 CSS 记录]
+  Records --> CSS[CSS 字符串]
+  CSS --> Browser[浏览器样式引擎]
+```
 
-`compileCSS()` 只返回同一账本的 CSS string，不写 DOM。`cssRoot.mount()` 保留宿主已有前缀；生成结果未变化时不改节点，编译失败时不提交。详细对象与覆盖语义由 [design.md](design.md) 负责。
+Value 保留内容，Variable 保留黑盒身份，Cluster 保留 default 与选择关系。编译器消费 Variable 时输出 var 引用，并在消费地址补充其自身状态定义。普通 Value 不展开状态；Variable 自身的交集只约束它自己的声明。
 
-记录项严格为 `[(string | undefined)[], string | undefined, string]`，只保存条件、属性与内容。普通声明按源顺序追加；输出只共享相邻路径，不跨声明移动或覆盖记录。原生简写、详细属性和无效值的处理交给 CSS。两个内部入口不从公共 `index.ts` 导出。
+自动定义保留真实消费状态条件；同一 Variable、同一普通地址的自动声明从常态到状态交集按中央顺序排列，只交换该组已有位置，保持其他地址与显式规则的原顺序。自动定义与显式声明同址时，显式声明优先。每份源规则或依赖输出中，自动定义先于该份显式记录输出；CSS @function 的局部内容不会被拆成彼此覆盖的多份函数定义。普通 CSS 记录按书写顺序输出，只共享相邻路径，不跨条目合并或重排。
 
-源 Rule 保留普通 Condition 与主体条件名称的区别。编译时分别进入普通路径和激活集合，主体名称直到输出才转成 header。Value 在同一激活集合下取自身最后匹配分支；Variable 的条件只进入自身赋值，消费表达式保留 `var()`。Subject Condition 的名称、排序和预装项由 `subject-conditions.ts` 唯一负责；声明名称由 `core/css-key.ts` 登记和解析，两套名称不共用注册表。
+compileCSS() 返回字符串而不操作 DOM。cssRoot.mount() 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
 
-# Button 接入
+## 抽象归属与 Button
 
-[Button.style.ts](../components/kits/Button/Button.style.ts) 在模块顶层登记全部 Rule，并按默认效果、浏览器交互、variant、tone、size、status 分区。Button 配方留在组件内；共享效果通过 `innerText()`、`contentLayout()`、`size()`、`boundary()`、`color()`、`elevation()` 与 `clickable()` 进入 Style System。
+整个 Style System 是抽象层，包含面向基础细节和面向组件的通用定义。是否通用取决于描述目标及领域，不取决于当前消费者数量。
 
-焦点规则由预装的 `focusVisible` 确定生效地址，再用 `boundary({ outline })` 建立边界。danger tone 只覆盖轮廓颜色，不建立焦点专用转发 Mixin。
+Button.style.ts 拥有 Button 的选择器、variant、tone、size、status 与组件差异。各段 Variable 在首次使用前定义；语义配色由 accentColor、dangerColor、toneColor 等 Cluster 提供，actionColor 的交互状态由成员自身承担。Button 局部延伸通过 source 使用来源，不读取内部状态。
 
-Button 通过共享 `surfaceColor`、`foregroundColor` 角色声明本选择器当前使用的材料；默认、variant 与 tone 配方仍由 Button 自己选择。中性色阶通过 `paletteColor` 取得 Variable；Button 自己选择常态、hover、active 的等级与混色比例。禁用背景读取固定常态材料，不借用当前交互状态。
+clickable 消费通用焦点轮廓材料；focusVisible 属于 State Condition，轮廓尺寸和样式留在定义端。Button 只声明不同配色下的 focusColor，不手写四条焦点配方，也不通过重复调用 clickable 协调颜色。
 
-Button.tsx 静态导入 Button.style.ts。Example、Storybook 和缩略图入口都在渲染前准备 `style#css-root` 并统一挂载；组件渲染不编译样式。懒加载组件仍需由应用样式清单提前导入，`package.json` 的 sideEffects 保留 `.style.ts` 及产物 `.style.js`。
+Button 静态导入自身样式；Example、Storybook 和缩略图入口在 render 前统一挂载。懒加载样式仍由应用样式清单负责提前登记。
 
-# 验证边界
+## 验证
 
-- 编译器单元测试：登记、覆盖、Subject Condition 名称分支、复合值、循环和按需依赖。
-- Root 浏览器测试：CSSOM、宿主前缀、无变化提交与失败保留。
-- Condition 浏览器测试：原生交互选择器语义。
-- Button 浏览器测试：业务 selector、变量覆盖、交互状态与计算样式。
-- 测试登记的 Rule 通过句柄清理。
+单元测试覆盖稳定 Value、Variable 创建与延伸、Cluster、声明类型、依赖、循环和顺序。浏览器测试验证状态优先级、来源链、局部覆盖、CSS 函数局部定义，以及 Button 全部现有配方和交互。测试通过还需检查归属、阅读顺序与不必要修改。

@@ -1,6 +1,8 @@
 /** 不占布局空间的轮廓 CSS Key。 */
 import { key } from '../core/css-key'
 
+export const $outline = key('outline')
+
 /** outline-width Key，设置轮廓线厚度。 */
 export const $outlineWidth = key('outline-width')
 

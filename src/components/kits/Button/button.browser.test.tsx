@@ -1,4 +1,5 @@
 /** 在真实浏览器中验证启动时统一挂载的 Button 样式与核心视觉语义。 */
+import { variable } from '../../../style-system/core/css-variable'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
@@ -13,10 +14,11 @@ import { subtle } from '../../../style-system/value-material/radius'
 import { smallSpace } from '../../../style-system/value-material/space'
 import './Button.style'
 import baselineCSS from './Button.css?raw'
-import { action, actionHover, actionActive, actionForeground, actionLine } from '../../../style-system/value-material/color/action'
-import { foreground, strongForeground } from '../../../style-system/value-material/color/text'
-import { accent, softAccent, strongAccent, accentForeground, accentFocus, danger, softDanger, dangerForeground, dangerLine } from '../../../style-system/value-material/color/tone'
-import { flat, low, raised, elevated } from '../../../style-system/value-material/shadow'
+import { actionColor } from '../../../style-system/value-material/color/action'
+import { surfaceColor } from '../../../style-system/component-handle-material/color'
+import { textColor } from '../../../style-system/value-material/color/text'
+import { accentColor, dangerColor } from '../../../style-system/value-material/color/tone'
+import { flatShadow, lowShadow, raisedShadow, elevatedShadow } from '../../../style-system/value-material/shadow'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
 
@@ -67,6 +69,18 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test('solid 常态背景保留组件 surfaceColor 的局部覆盖', () => {
+    handles.push(rules('.Button[data-variant="solid"][data-surface-probe]', [
+      [surfaceColor, 'rgb(12, 34, 56)'],
+    ]))
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <Button solid htmlProps={{ 'data-surface-probe': '' }}>局部表面</Button>, host)
+    const button = host.querySelector('button')!
+    button.style.transition = 'none'
+    expect(getComputedStyle(button).backgroundColor).toBe('rgb(12, 34, 56)')
+  })
+
   test('旧 CSS 固定为 9 月 3 日迁移前的 Git blob', async () => {
     const content = new TextEncoder().encode(baselineCSS)
     const header = new TextEncoder().encode(`blob ${content.length}\0`)
@@ -186,14 +200,14 @@ describe('Button styles', () => {
 
   test('材料与基础 token 等价，挂载前后非 Button 消费者及品牌覆盖不变', () => {
     const materials = [
-      [action, '--color-action'], [actionHover, '--color-action-hover'], [actionActive, '--color-action-active'],
-      [actionForeground, '--color-action-fg'], [actionLine, '--color-action-line'],
-      [foreground, '--color-fg'], [strongForeground, '--color-fg-strong'],
-      [accent, '--color-accent'], [softAccent, '--color-accent-soft'], [strongAccent, '--color-accent-strong'],
-      [accentForeground, '--color-accent-fg'], [accentFocus, '--color-accent-focus'],
-      [danger, '--color-bad'], [softDanger, '--color-bad-soft'], [dangerForeground, '--color-bad-fg'], [dangerLine, '--color-bad-line'],
-    ] as [typeof action, string][]
-    const shadows = [[flat, '--shadow-0'], [low, '--shadow-1'], [raised, '--shadow-2'], [elevated, '--shadow-3']] as [typeof flat, string][]
+      [actionColor, '--color-action'],
+      [actionColor('foreground'), '--color-action-fg'], [actionColor('line'), '--color-action-line'],
+      [textColor, '--color-fg'], [textColor('strong'), '--color-fg-strong'],
+      [accentColor, '--color-accent'], [accentColor('soft'), '--color-accent-soft'], [accentColor('strong'), '--color-accent-strong'],
+      [accentColor('foreground'), '--color-accent-fg'], [accentColor('focus'), '--color-accent-focus'],
+      [dangerColor, '--color-bad'], [dangerColor('soft'), '--color-bad-soft'], [dangerColor('foreground'), '--color-bad-fg'], [dangerColor('line'), '--color-bad-line'],
+    ] as [typeof actionColor, string][]
+    const shadows = [[flatShadow, '--shadow-0'], [lowShadow, '--shadow-1'], [raisedShadow, '--shadow-2'], [elevatedShadow, '--shadow-3']] as [typeof flatShadow, string][]
     const probes = [...materials.map(([material, token]) => ({ material, token, property: 'color' })),
       ...shadows.map(([material, token]) => ({ material, token, property: 'box-shadow' }))]
     const elements = probes.map((probe, index) => {
@@ -366,10 +380,7 @@ describe('Button styles', () => {
     document.head.append(style)
     expect(style.sheet!.cssRules).toHaveLength(0)
 
-    handles.push(rules('.shared-input', [
-      [$borderRadius, subtle],
-      contentLayout({ padding: ['8px', smallSpace] }),
-    ]))
+    handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', smallSpace] })]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
     expect(beforeRender.length).toBeGreaterThan(0)
@@ -486,7 +497,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(defaultBackground)
     await userEvent.unhover(getButton('default'))
 
-    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, value('rgb(1, 2, 3)', [['hover', 'rgb(4, 5, 6)']])))
+    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, variable('rgb(1, 2, 3)', { name: "browser-button-color", states: Object.fromEntries([['hover', 'rgb(4, 5, 6)']]) })))
     cssRoot.mount()
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')

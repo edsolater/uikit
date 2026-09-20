@@ -8,10 +8,15 @@ import { isVariable, type VariableInput } from '../core/css-variable'
 import { compileVariableDeclaration } from './compile-variable'
 import { compileValue, valueConditionPath, type ValueContext } from './compile-value'
 import type { CSSRecord } from './css-records'
+import { resolveStateConditions, type StateCondition } from '../state-conditions'
 
 /** 解析源规则及按需依赖，得到有序 CSS 记录。 */
 export function resolveRules(source: Rules): CSSRecord[] {
-  const sourceOutput: { records: CSSRecord[]; defaults: CSSRecord[] } = { records: [], defaults: [] }
+  type Output = {
+    records: CSSRecord[]
+    defaults: { address: string; record: CSSRecord; states: StateCondition[] }[]
+  }
+  const sourceOutput: Output = { records: [], defaults: [] }
   const definitions = new Map<string, typeof sourceOutput>()
   const pending = new Map<string, Rule>()
   const activated = new Set<Valuable>()
@@ -56,10 +61,12 @@ export function resolveRules(source: Rules): CSSRecord[] {
           activate: (value, location = { root: source, path, key }) => activate(value, location),
           /** 补充变量缺省赋值；显式同址声明优先。 */
           defineVariable(name, values, location) {
+            const address = JSON.stringify([location.path, name])
             for (const result of values) {
-              const headers = [...location.path, ...valueConditionPath([...subjects, ...result.conditions])].map((item) => item.header)
-              if (!output.defaults.some(([existing, property]) => property === `--${name}` && JSON.stringify(existing) === JSON.stringify(headers))) {
-                output.defaults.push([headers, `--${name}`, result.text])
+              const states = resolveStateConditions(result.conditions)
+              const headers = [...location.path, ...states.map((state) => state.condition)].map((item) => item.header)
+              if (!output.defaults.some(({ record: [existing, property] }) => property === `--${name}` && JSON.stringify(existing) === JSON.stringify(headers))) {
+                output.defaults.push({ address, record: [headers, `--${name}`, result.text], states })
               }
             }
           },
@@ -80,16 +87,36 @@ export function resolveRules(source: Rules): CSSRecord[] {
   while (pending.size) {
     const [address, entry] = pending.entries().next().value!
     pending.delete(address)
-    const output: typeof sourceOutput = { records: [], defaults: [] }
+    const output: Output = { records: [], defaults: [] }
     visit([entry], output)
     definitions.set(address, output)
   }
-  const outputs = [sourceOutput, ...definitions.values()]
+  const outputs = [sourceOutput, ...definitions.values()].map((output) => {
+    const groups = new Map<string, typeof output.defaults>()
+    for (const entry of output.defaults) {
+      const group = groups.get(entry.address) ?? []
+      group.push(entry)
+      groups.set(entry.address, group)
+    }
+    for (const group of groups.values()) group.sort((left, right) => {
+      if (left.states.length !== right.states.length) return left.states.length - right.states.length
+      for (let index = left.states.length - 1; index >= 0; index--) {
+        const difference = left.states[index].order - right.states[index].order
+        if (difference) return difference
+      }
+      return 0
+    })
+    return {
+      records: output.records,
+      // 只交换同一 Variable、同一结构地址的槽位，其他地址仍在原位置输出。
+      defaults: output.defaults.map(({ address }) => groups.get(address)!.shift()!.record),
+    }
+  })
   const records = outputs.flatMap((output) => output.records)
   const defaults = outputs.flatMap((output) => output.defaults)
   const missingDefaults = defaults.filter(([path, key]) => !records.some(([existing, property]) =>
     property === key && JSON.stringify(existing) === JSON.stringify(path)))
-  return [...missingDefaults, ...records]
+  return outputs.flatMap((output) => [...output.defaults.filter((record) => missingDefaults.includes(record)), ...output.records])
 }
 
 /** 按记录顺序开闭嵌套块，不解释属性内容。 */
@@ -100,12 +127,12 @@ export function stringifyCSS(records: CSSRecord[]): string {
     const path = conditions.filter((header) => header !== undefined)
     let shared = 0
     while (shared < previous.length && shared < path.length && previous[shared] === path[shared]) shared++
-    for (let index = previous.length; index > shared; index--) css.push('}')
+    for (let index = previous.length;index > shared;index--) css.push('}')
     for (const header of path.slice(shared)) css.push(`${header} {`)
     css.push(key === undefined ? text : `${key}: ${text};`)
     previous = path
   }
-  for (let index = previous.length; index > 0; index--) css.push('}')
+  for (let index = previous.length;index > 0;index--) css.push('}')
   return css.join('\n')
 }
 

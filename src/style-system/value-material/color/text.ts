@@ -1,16 +1,17 @@
-/** 引用基础 CSS token 的文字前景色，并保存交互取值；使用前须加载基础颜色样式。 */
-import { variable } from '../../core/css-variable'
-import { value } from '../../core/css-value'
+/** 内容颜色及其交互状态。 */
+import { variable, variableFrom } from '../../core/css-variable'
+import { variableCluster } from '../../core/variable-cluster'
 
-/** 普通内容色（内容：文字+图标+图片等） */
-export const foreground = variable('color-fg')
+export const textColor = variableCluster({
+  default: variable('var(--color-fg)', { name: 'text-color' }),
+  strong: variable('var(--color-fg-strong)', { name: 'text-strong-color' }),
+})
 
-/** 强调内容色（内容：文字+图标+图片等） */
-export const strongForeground = variable('color-fg-strong')
-
-/** 可交互内容的前景色；交互时增强，禁用时恢复普通前景。 */
-export const interactiveForeground = value(foreground, {
-  hover: strongForeground,
-  active: strongForeground,
-  disabled: foreground,
+export const interactiveForegroundColor = variableFrom(textColor, {
+  name: 'interactive-foreground-color',
+  states: {
+    hover: textColor('strong'),
+    active: textColor('strong'),
+    disabled: source => source,
+  },
 })

@@ -2,12 +2,12 @@
 import { expect, test } from 'vitest'
 import { condition } from '../core/css-condition'
 import type { Rules } from '../core/css-rule'
-import { subjectCondition } from '../subject-conditions'
+import { stateCondition } from '../state-conditions'
 import { value } from '../core/css-value'
 import type { CSSRecord } from './css-records'
 import { resolveRules, stringifyCSS } from './compile-css'
 
-subjectCondition('testHover', condition('&:hover'))
+stateCondition('testHover', condition('&:hover'))
 
 test('记录只有三项；挂载保留交错声明，不重排或吞掉原生覆盖', () => {
   const input: CSSRecord[] = [
@@ -39,7 +39,8 @@ test('普通路径的重复项保留，default 不生成块头', () => {
 
 test('Rule 解析与字符串输出分开，候选顺序在挂载前确定', () => {
   const source: Rules = [
-    [[condition('.Button')], 'color', value('black', { testHover: 'navy' })],
+    [[condition('.Button')], 'color', value('black')],
+    [[condition('.Button'), 'testHover'], 'color', 'navy'],
     [[condition('.Button')], 'border', 'none'],
   ]
   expect(resolveRules(source)).toEqual([

@@ -2,8 +2,8 @@
 import '../../../css/all-base.css'
 import { afterEach, expect, test } from 'vitest'
 import { color, compileCSS, rule, rules, type RulesHandle } from '../../index'
-import { brand, paletteColor } from './palette'
-import { surface } from './surface'
+import { brandColor, neutralColor } from './palette'
+import { surfaceColor } from './surface'
 
 const handles: RulesHandle[] = []
 
@@ -22,7 +22,7 @@ function mountStyles() {
 
 test('完整九级色阶消费基础 CSS，切换主题不需重查或重编译', () => {
   const swatches = Array.from({ length: 9 }, (_, level) => {
-    handles.push(rule(`.swatch-${level}`, 'background-color', paletteColor('neutral', level)))
+    handles.push(rule(`.swatch-${level}`, 'background-color', neutralColor(level)))
     const swatch = document.body.appendChild(document.createElement('div'))
     swatch.className = `swatch-${level}`
     return swatch
@@ -48,8 +48,8 @@ test('完整九级色阶消费基础 CSS，切换主题不需重查或重编译'
 })
 
 test('查询结果用于 Mixin 与局部赋值，覆盖只影响本地及其后代', () => {
-  const background = paletteColor('neutral', 1)
-  const foreground = paletteColor('neutral', 7)
+  const background = neutralColor(1)
+  const foreground = neutralColor(7)
   handles.push(rules('.sample', [color({ background, foreground })]))
   handles.push(rule('.local', background, 'rgb(1, 2, 3)'))
   handles.push(rule('.local', foreground, 'rgb(4, 5, 6)'))
@@ -73,7 +73,7 @@ test('查询结果用于 Mixin 与局部赋值，覆盖只影响本地及其后�
 })
 
 test('语义材料保留品牌与承载面的基础 token 和局部覆盖入口', () => {
-  handles.push(rules('.semantic', [color({ foreground: brand, background: surface })]))
+  handles.push(rules('.semantic', [color({ foreground: brandColor, background: surfaceColor })]))
   const style = mountStyles()
   expect(style.textContent).not.toContain(':root')
   const sample = document.body.appendChild(document.createElement('div'))

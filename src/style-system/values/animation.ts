@@ -1,4 +1,5 @@
 /** CSS 动画内容与按需帧定义。 */
+import { cssContent } from '../core/css-value'
 import { condition } from '../core/css-condition'
 import type { Rules } from '../core/css-rule'
 import { value, type Value, type ValueInput, type CSSFunction } from '../core/css-value'
@@ -22,8 +23,8 @@ export interface AnimationParts {
 
 /** 延迟生成动画内容。 */
 export function animationValue(parts: AnimationParts): CSSFunction {
-  return (read) => [
+  return cssContent((read) => [
     read(parts.name), read(parts.duration), read(parts.easing), read(parts.delay),
     read(parts.iterations), read(parts.direction), read(parts.fillMode), read(parts.playState),
-  ].filter((part) => part !== undefined).join(' ')
+  ].filter((part) => part !== undefined).join(' '))
 }

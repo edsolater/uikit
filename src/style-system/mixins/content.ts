@@ -2,7 +2,7 @@
 import type { Declarations } from '../core/css-rule'
 import type { ValueInput } from '../core/css-value'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../properties/font'
-import { $gap } from '../properties/layout'
+import { $gap, $display, $alignItems, $justifyContent } from '../properties/layout'
 import { $padding, $paddingTop, $paddingRight, $paddingBottom, $paddingLeft } from '../properties/padding'
 import { valueSequence } from '../values/list'
 import { fontValue, type FontParts } from '../values/font'
@@ -44,7 +44,7 @@ export interface ContentLayoutMixinOptions {
 /** Mixin：内容布局。 */
 export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarations => [
   options.mode === 'center'
-    ? { display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }
+    ? [[$display, 'inline-flex'], [$alignItems, 'center'], [$justifyContent, 'center']]
     : undefined,
   [$gap, options.gap],
   paddingDeclarations(options.padding),

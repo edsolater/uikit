@@ -1,29 +1,29 @@
-/** 验证 Value 分支集合的统一输入。 */
+/** Value 稳定内容与输出协议。 */
 import { expect, test, vi } from 'vitest'
-import { value, type ValueBranches, type ValueInput } from './css-value'
+import { value, cssContent } from './css-value'
+import { variable } from './css-variable'
+import { colorMix } from '../values/functions/color-mix'
 
-const expected: [string, ValueInput][] = [['hover', 0.72], ['active', 0.62]]
-
-/** 生成键值条目。 */
-function* branches(): IterableIterator<[string, ValueInput]> {
-  yield ['hover', 0.72]
-  yield ['active', 0.62]
-}
-
-test('对象、Map、Set、数组与生成器形成相同分支', () => {
-  const inputs: ValueBranches[] = [
-    { hover: 0.72, active: 0.62 },
-    new Map(expected),
-    new Set(expected),
-    expected,
-    branches(),
-  ]
-  for (const input of inputs) expect(value(0.82, input).conditions).toEqual(expected)
-})
-
-test('按需配置不被当作分支，字符串不被逐字展开', () => {
+test('Value 只保存内容和按需依赖', () => {
   const onActive = vi.fn()
-  expect(value(1, { onActive })).toMatchObject({ conditions: [], onActive })
-  expect(value(1, { onActive: 2 }).conditions).toEqual([['onActive', 2]])
-  expect(() => value(1, 'hover' as unknown as ValueBranches)).toThrow('名称对象或键值 Iterable')
+  const content = value(0, { onActive })
+  expect(content).toEqual({ kind: 'value', content: 0, onActive })
+  expect('conditions' in content).toBe(false)
+  if (false) {
+    // @ts-expect-error Value 不再接受状态。
+    value(1, { hover: 2 })
+  }
+})
+test('混色对象有明确输出入口，直接调用保持同一输出', () => {
+  const content = colorMix(['black', 0.5], 'white')
+  const read = (input: unknown) => String(input)
+  expect(content(read)).toBe(content.serializeCSS(read))
+  expect(cssContent(() => 'red').serializeCSS(read)).toBe('red')
+})
+test('source 回调保持首参数类型和身份', () => {
+  const source = value('red')
+  const callback = vi.fn((received: typeof source) => received)
+  variable(source, { name: 'test-color', states: { active: callback } })
+  expect(callback).toHaveBeenCalledOnce()
+  expect(callback).toHaveBeenCalledWith(source)
 })

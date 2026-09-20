@@ -1,4 +1,5 @@
 /** CSS 过渡内容。 */
+import { cssContent } from '../core/css-value'
 import { propertyName, type CSSKey } from '../core/css-key'
 import type { CSSFunction, ValueInput } from '../core/css-value'
 
@@ -7,7 +8,7 @@ export type Transition = [key: CSSKey, duration: ValueInput, easing: ValueInput,
 
 /** 延迟生成多项过渡。 */
 export function transitionValue(...items: Transition[]): CSSFunction {
-  return (read) => items.map(([key, duration, easing, delay]) =>
+  return cssContent((read) => items.map(([key, duration, easing, delay]) =>
     [propertyName(key), read(duration), read(easing), read(delay)].filter((part) => part !== undefined).join(' ')
-  ).join(', ')
+  ).join(', '))
 }

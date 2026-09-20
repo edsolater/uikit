@@ -1,39 +1,20 @@
-/** 验证 Subject Condition 的预装名称、Rule 地址与 Value 组合。 */
-import { afterEach, expect, test } from 'vitest'
-import { subjectCondition } from '../subject-conditions'
+/** State Condition 的名称与 Rule 地址。 */
+import { expect, test } from 'vitest'
 import { condition } from '../core/css-condition'
-import { compileCSS } from '../core/css-root'
-import { rule, type RulesHandle } from '../core/css-rule'
-import { value } from '../core/css-value'
-import { calcMultiply } from '../values/functions/calc'
+import { variable } from '../core/css-variable'
+import { resolveRules } from './compile-css'
+import { stateCondition, resolveStateConditions } from '../state-conditions'
 
-const handles: RulesHandle[] = []
-const custom = subjectCondition('testSubjectRule', condition('&[data-subject]'))
-
-afterEach(() => {
-  for (const handle of handles.splice(0)) handle.remove()
+test('内置状态可由 Variable 直接采用', () => {
+  const color = variable('red', { name: 'state-color', states: { hover: 'blue' } })
+  expect(resolveRules([[[condition('.Example')], 'color', color]]).some(([path, key, text]) => path.length === 2 && key === '--state-color' && text === 'blue')).toBe(true)
 })
-
-test('只导入编译入口即可把内置名称解析为已有 Condition', () => {
-  handles.push(rule('.Subject', 'color', value('red', [['hover', 'blue']])))
-  expect(compileCSS()).toBe('.Subject {\ncolor: red;\n&:where(:hover):where(:not(:disabled, [data-status~="disabled"])) {\ncolor: blue;\n}\n}')
+test('重复状态去重，未知名称终止编译', () => {
+  expect(resolveStateConditions(['active', 'hover', 'active']).map(item => item.name)).toEqual(['hover', 'active'])
+  expect(() => resolveRules([[[condition('.Example')], 'color', variable('red', { name: 'unknown-color', states: { unknown: 'blue' } })]])).toThrow('未知 State Condition')
 })
-
-test('Rule 地址使用预装或自定义名称，普通 CSS 地址保持原样', () => {
-  handles.push(rule(['.Subject', 'active', 'focusWithin', 'active'], 'color', 'red'))
-  handles.push(rule(['.Subject', custom.name], 'background', 'blue'))
-  handles.push(rule(['.Subject', '&[data-raw]'], 'border-color', 'green'))
-  expect(compileCSS()).toBe('.Subject {\n&:focus-within {\n&:where(:active):where(:not(:disabled, [data-status~="disabled"])) {\ncolor: red;\n}\n}\n&[data-subject] {\nbackground: blue;\n}\n&[data-raw] {\nborder-color: green;\n}\n}')
-})
-
-test('两个普通 Value 的不同分支形成逐层嵌套的条件交集', () => {
-  handles.push(rule('.Subject', 'width', calcMultiply(value('2px', [['hover', '4px']]), value(2, [['active', 3]]))))
-  const css = compileCSS()
-  expect(css.match(/width:/g)).toHaveLength(4)
-  expect(css).toContain('&:where(:hover):where(:not(:disabled, [data-status~="disabled"])) {\n&:where(:active):where(:not(:disabled, [data-status~="disabled"])) {\nwidth: calc(4px * 3);')
-})
-
-test('未知名称终止整个编译', () => {
-  handles.push(rule('.Subject', 'color', value('red', [['unknown-subject', 'blue']])))
-  expect(() => compileCSS()).toThrow('未知 Subject Condition')
+test('自定义状态需要唯一名字', () => {
+  stateCondition('uniqueState', condition('&[data-unique]'))
+  expect(() => stateCondition('uniqueState', condition('&[data-other]'))).toThrow('已登记')
+  expect(() => stateCondition('default', condition('&'))).toThrow('default')
 })

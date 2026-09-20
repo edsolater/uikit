@@ -2,7 +2,7 @@
 import { variable } from '../core/css-variable'
 
 /** 组件承载面的当前颜色，由组件规则在自身选择器中声明。 */
-export const surfaceColor = variable('component-color-surface')
+export const surfaceColor = variable(undefined, { name: 'component-surface-color' })
 
 /** 组件内容的当前颜色，由组件规则在自身选择器中声明。 */
-export const foregroundColor = variable('component-color-foreground')
+export const foregroundColor = variable(undefined, { name: 'component-foreground-color' })

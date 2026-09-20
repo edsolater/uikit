@@ -1,59 +1,33 @@
-/** 条件取值与延迟 CSS 函数。 */
-import { isIterable, toCollectionIterator } from '@edsolater/fnkit'
+/** 稳定的 CSS 内容与延迟输出协议。 */
 import type { Valuable } from './css-valuable'
 import type { Variable } from './css-variable'
 
 export type { CompileContext } from './css-valuable'
-
-/** 按需依赖配置。 */
 export type ValueOptions = Valuable
-
-/** 原始 CSS 内容。 */
 export type RawValue = string | number
 
-/** 按主体条件选择内容；未匹配时使用 default。 */
+/** Value 只包装内容，不选择或传播状态。 */
 export interface Value extends Valuable {
   kind: 'value'
-  default: ValueInput
-  conditions: [string, ValueInput][]
+  content: ValueInput
 }
-
-/** 编译时生成内容；read 取得输入在当前条件下的 CSS 值。 */
+export type ValueReader = (input: ValueInput) => string | undefined
+export type ValueReaderFunction = (read: ValueReader) => string | undefined
+/** 已构造的内容可调用，也有明确的 CSS 输出入口。 */
 export interface CSSFunction extends Valuable {
-  (read: (input: ValueInput) => string | undefined): string | undefined
+  (read: ValueReader): string | undefined
+  serializeCSS: ValueReaderFunction
 }
-
-/** 可编译内容；undefined 不输出。 */
 export type ValueInput = RawValue | Value | Variable | CSSFunction | undefined
 
-/** 主体条件分支：名称对象或键值集合。 */
-export type ValueBranches = Record<string, ValueInput> | Iterable<[name: string, value: ValueInput]>
-
-/** 识别依赖配置。 */
-function isValueOptions(input: ValueBranches | ValueOptions): input is ValueOptions {
-  return typeof input === 'object' && input !== null && !isIterable(input)
-    && 'onActive' in input && (input.onActive === undefined || typeof input.onActive === 'function')
-    && Object.keys(input).every((key) => key === 'onActive')
+/** 标记输出能力，避免与 source 回调混淆。 */
+export function cssContent(serializeCSS: ValueReaderFunction): CSSFunction {
+  return Object.assign(serializeCSS, { serializeCSS })
 }
-
-/** 统一名称分支。 */
-function branchEntries(input: ValueBranches): [string, ValueInput][] {
-  if (typeof input !== 'object' || input === null) throw new Error('Value 分支必须是名称对象或键值 Iterable。')
-  const source = isIterable(input) ? new Map(input as Iterable<[string, ValueInput]>) : input
-  return Array.from(toCollectionIterator(source), ({ key, value }) => {
-    if (typeof key !== 'string') throw new Error('Value 分支名称必须是字符串。')
-    return [key, value]
-  })
+export function isCSSContent(input: unknown): input is CSSFunction {
+  return typeof input === 'function' && 'serializeCSS' in input && typeof input.serializeCSS === 'function'
 }
-
-/** 保存默认值、主体条件分支与依赖。 */
-export function value(input: ValueInput, options?: ValueOptions): Value
-export function value(input: ValueInput, branches: ValueBranches, options?: ValueOptions): Value
-export function value(input: ValueInput, branchesOrOptions?: ValueBranches | ValueOptions, options?: ValueOptions): Value {
-  const branches = branchesOrOptions !== undefined && (options !== undefined || !isValueOptions(branchesOrOptions))
-    ? branchEntries(branchesOrOptions as ValueBranches) : []
-  return {
-    kind: 'value', default: input, conditions: branches,
-    ...(branchesOrOptions !== undefined && isValueOptions(branchesOrOptions) ? branchesOrOptions : options),
-  }
+/** 包装稳定内容及其按需依赖。 */
+export function value(content: ValueInput, options?: ValueOptions): Value {
+  return { kind: 'value', content, ...options }
 }

@@ -1,6 +1,6 @@
 /** Rule 登记与声明组合。 */
 import { condition, type Condition, type ConditionInput } from './css-condition'
-import { findSubjectCondition } from '../subject-conditions'
+import { findStateCondition } from '../state-conditions'
 import { isCSSKey, resolveCSSKey, type CSSKey } from './css-key'
 import { isCSSPair, type Declaration } from './css-declaration'
 import type { ValueInput } from './css-value'
@@ -17,16 +17,16 @@ export type Rule = [path: (Condition | string)[] | undefined, key: CSSKey | unde
 export type Rules = Rule[]
 
 /** 以字符串名称表达的声明对象。 */
-export type DeclarationObject = Record<string, RuleValue>
+type DeclarationObject = Record<string, RuleValue>
 
-/** 声明序列中的单项；可继续嵌套对象或 Iterable。 */
-export type DeclarationItem = Declaration<RuleValue> | DeclarationObject | DeclarationGroup | undefined
+/** 声明序列中的单项；可继续嵌套声明 Iterable。 */
+export type DeclarationItem = Declaration<RuleValue> | DeclarationGroup | undefined
 
 /** 按输入顺序提供声明条目的通用 Iterable。 */
-export interface DeclarationGroup extends Iterable<DeclarationItem> {}
+export type DeclarationGroup = object & Iterable<DeclarationItem>
 
 /** Mixin 与批量登记共用的声明输入。 */
-export type Declarations = DeclarationObject | DeclarationGroup
+export type Declarations = DeclarationGroup
 
 /** 本次登记的删除入口。 */
 export interface RulesHandle {
@@ -45,7 +45,7 @@ function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
   if (input === undefined) return undefined
   const path: (Condition | string)[] = []
   for (const item of Array.isArray(input) ? input : [input]) {
-    if (typeof item !== 'string' || findSubjectCondition(item)) path.push(item)
+    if (typeof item !== 'string' || findStateCondition(item)) path.push(item)
     else path.push(condition(item))
   }
   if (path.some((item) => !item || (typeof item !== 'string' && typeof item.header !== 'string'))) {
@@ -86,7 +86,7 @@ export function rules(path: ConditionInput, declarations: Declarations): RulesHa
       return
     }
     if (!isDeclarationObject(source) && !isDeclarationIterable(source)) {
-      throw new Error('rules() 只接受声明对象、声明二元数组或其 Iterable 组合。')
+      throw new Error('rules() 只接受声明序列，条目为 Key／Variable 元组或其 Iterable 组合。')
     }
     if (visiting.has(source)) throw new Error('rules() 的声明输入存在递归引用。')
     visiting.add(source)

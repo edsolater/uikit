@@ -1,27 +1,19 @@
-/** 原始色阶的 Variable Cluster；颜色定义由基础 CSS 提供，查询不创建变量。 */
-import { variable, type Variable } from '../../core/css-variable'
+/** 基础色阶由 CSS 提供，Cluster 只选择已有 Variable。 */
+import { variable } from '../../core/css-variable'
+import { variableCluster } from '../../core/variable-cluster'
 
-/** 预定义色阶引用；下标就是等级，底层名称不暴露给调用方。 */
-const palette = {
-  neutral: [
-    variable('dye-neutral-0'),
-    variable('dye-neutral-1'),
-    variable('dye-neutral-2'),
-    variable('dye-neutral-3'),
-    variable('dye-neutral-4'),
-    variable('dye-neutral-5'),
-    variable('dye-neutral-6'),
-    variable('dye-neutral-7'),
-    variable('dye-neutral-8'),
-  ],
-}
-
-/** 取已有色阶 Variable；neutral 支持 0–8，等级越高越接近当前主题墨色，缺省为 0；未定义项报错。 */
-export function paletteColor(colorLabel: keyof typeof palette, level = 0): Variable {
-  const color = Number.isInteger(level) ? palette[colorLabel]?.[level] : undefined
-  if (!color) throw new Error(`未定义的色阶：${colorLabel}-${level}`)
-  return color
-}
-
-/** 品牌身份色；与原始色阶分开，沿用基础 CSS 的品牌覆盖入口。 */
-export const brand = variable('color-brand')
+const neutralBaseColor = variable('var(--dye-neutral-0)', { name: 'neutral-base-color' })
+export const neutralColor = variableCluster({
+  default: neutralBaseColor,
+  0: neutralBaseColor,
+  1: variable('var(--dye-neutral-1)', { name: 'neutral-1-color' }),
+  2: variable('var(--dye-neutral-2)', { name: 'neutral-2-color' }),
+  3: variable('var(--dye-neutral-3)', { name: 'neutral-3-color' }),
+  4: variable('var(--dye-neutral-4)', { name: 'neutral-4-color' }),
+  5: variable('var(--dye-neutral-5)', { name: 'neutral-5-color' }),
+  6: variable('var(--dye-neutral-6)', { name: 'neutral-6-color' }),
+  7: variable('var(--dye-neutral-7)', { name: 'neutral-7-color' }),
+  8: variable('var(--dye-neutral-8)', { name: 'neutral-8-color' }),
+})
+/** 品牌身份色，基础 CSS 继续拥有主题定义。 */
+export const brandColor = variable('var(--color-brand)', { name: 'brand-color' })
