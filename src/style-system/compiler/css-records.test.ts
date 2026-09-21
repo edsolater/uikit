@@ -4,7 +4,8 @@ import { condition } from '../core/css-condition'
 import type { Rules } from '../core/css-rule'
 import { stateCondition } from '../state-conditions'
 import { value } from '../core/css-value'
-import type { CSSRecord } from './css-records'
+import { variable } from '../core/css-variable'
+import { groupCSSRecords, type CSSRecord } from './css-records'
 import { resolveRules, stringifyCSS } from './compile-css'
 
 stateCondition('testHover', condition('&:hover'))
@@ -45,7 +46,7 @@ test('Rule 解析与字符串输出分开，候选顺序在挂载前确定', () 
   ]
   expect(resolveRules(source)).toEqual([
     [['.Button'], 'color', 'black'],
-    [['.Button', '&:hover'], 'color', 'navy'],
+    [['.Button', '&:where(:hover)'], 'color', 'navy'],
     [['.Button'], 'border', 'none'],
   ])
 })
@@ -62,4 +63,24 @@ test('显式结构不按 header 猜测定义身份，原始规则顺序保留', 
     [['.Between'], 'color', 'red'],
     [[definition.header], 'result', '24px'],
   ])
+})
+
+test('同名变量跨 A/B/A 地址仍保留原覆盖顺序', () => {
+  const records: CSSRecord[] = [
+    [['.First'], '--shared-color', 'red'],
+    [['.Second'], '--shared-color', 'green'],
+    [['.First'], '--other-color', 'blue'],
+    [['.First'], '--shared-color', 'purple'],
+  ]
+  const grouped = groupCSSRecords(records)
+  expect(grouped.filter(([, key]) => key === '--shared-color')).toEqual(records.filter(([, key]) => key === '--shared-color'))
+})
+
+test('源规则与依赖输出各自分组，不跨输出边界归并', () => {
+  const material = variable('red', { name: 'output-color', states: { hover: 'pink' } })
+  material.onActive = () => [[[condition('.Output')], '--dependency-color', 'blue']]
+  const records = resolveRules([[[condition('.Output')], 'color', material]])
+  expect(records.at(-1)).toEqual([['.Output'], '--dependency-color', 'blue'])
+  expect(records.findIndex(([path]) => path.some(header => header?.includes(':hover'))))
+    .toBeLessThan(records.length - 1)
 })

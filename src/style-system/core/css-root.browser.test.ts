@@ -8,6 +8,7 @@ import { rule, rules, type RulesHandle, type Rules } from './css-rule'
 import { condition, media } from './css-condition'
 import { value } from './css-value'
 import { variable } from './css-variable'
+import { variableCluster } from './variable-cluster'
 import { declare } from './css-declaration'
 import { $margin } from '../properties/margin'
 import { $padding } from '../properties/padding'
@@ -55,6 +56,31 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   expect(computed.paddingLeft).toBe('20px')
   expect(style.sheet!.cssRules[0].cssText).toContain('.existing')
   expect(Array.from(style.sheet!.cssRules).filter((entry) => entry.cssText.startsWith('@property --space-example'))).toHaveLength(1)
+})
+
+test('Cluster 整组声明可替换，未匹配成员恢复其原有默认值', () => {
+  const target = variableCluster({
+    default: variable('1px', { name: 'mounted-size' }),
+    soft: variable('2px', { name: 'mounted-soft-size' }),
+  })
+  const source = variableCluster({
+    default: variable('10px', { name: 'mounted-source-size' }),
+    soft: variable('20px', { name: 'mounted-source-soft-size' }),
+  })
+  handles.push(rules('.example', [[key('width'), target], [key('height'), target('soft')]]))
+  const handle = rule('.example', target, source)
+  handles.push(handle)
+  root.mount()
+  expect(getComputedStyle(element).width).toBe('10px')
+  expect(getComputedStyle(element).height).toBe('20px')
+  handle.replace(variableCluster({ default: variable('30px', { name: 'incomplete-size' }) }))
+  root.mount()
+  expect(getComputedStyle(element).width).toBe('30px')
+  expect(getComputedStyle(element).height).toBe('2px')
+  handle.replace(variableCluster({ default: source('soft'), soft: source }))
+  root.mount()
+  expect(getComputedStyle(element).width).toBe('20px')
+  expect(getComputedStyle(element).height).toBe('10px')
 })
 
 test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', async () => {

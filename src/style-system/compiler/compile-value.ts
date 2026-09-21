@@ -2,7 +2,7 @@
 import type { ConditionPath } from '../core/css-condition'
 import type { CompileContext, Valuable } from '../core/css-valuable'
 import { isCSSContent, type ValueInput } from '../core/css-value'
-import { isVariable } from '../core/css-variable'
+import { isVariable, type Variable } from '../core/css-variable'
 import { resolveStateConditions } from '../state-conditions'
 import { compileVariableReference } from './compile-variable'
 
@@ -12,7 +12,9 @@ export interface ValueContext extends CompileContext {
   activate(value: Valuable, location?: CompileContext): void
   resolving: Set<object>
   conditions?: ValueConditions
-  defineVariable(name: string, values: ValueResult[], location: CompileContext): void
+  /** 显式 Rule 与局部声明分支的作用域，不随 Variable 状态内容求值扩展。 */
+  scopeConditions?: ValueConditions
+  defineVariable(reference: Variable, location: ValueContext, values: (scope: ValueContext) => ValueResult[]): void
 }
 /** 将状态名称转换成中央顺序的条件路径；未知状态停止编译。 */
 export function valueConditionPath(names: ValueConditions): ConditionPath {

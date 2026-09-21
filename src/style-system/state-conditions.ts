@@ -1,6 +1,6 @@
 /** 集中登记 State Condition 的名称、已有条件与嵌套顺序。 */
 import type { Condition } from './core/css-condition'
-import { whenActive, whenDisabled, whenFocus, whenFocusVisible, whenFocusWithin, whenHover } from './selectors/interaction'
+import { whenActive, whenDisabled, whenFocusVisible, whenFocusWithin, whenHover } from './selectors/interaction'
 
 /** 定义者承诺条件始终约束当前主体，且与其他 State Condition 可交换。 */
 export interface StateCondition {
@@ -15,7 +15,10 @@ const definitions = new Map<string, StateCondition>()
 export function stateCondition(name: string, condition: Condition): StateCondition {
   if (!name.trim() || name === 'default') throw new Error('State Condition 名称不能为空或 default。')
   if (definitions.has(name)) throw new Error(`State Condition 名称已登记：${name}。`)
-  const definition = { name, condition, order: definitions.size }
+  // 状态只约束当前主体，附加条件归零权重，使中央顺序直接决定同一变量的状态优先级。
+  const header = condition.header
+  const normalized = header.startsWith('&') && header.length > 1 ? { header: `&:where(${header.slice(1)})` } : condition
+  const definition = { name, condition: normalized, order: definitions.size }
   definitions.set(name, definition)
   return definition
 }
@@ -34,7 +37,7 @@ export function resolveStateConditions(names: string[]): StateCondition[] {
   }).sort((left, right) => left.order - right.order)
 }
 
-stateCondition('focus', whenFocus)
+stateCondition('focus', whenFocusVisible)
 stateCondition('focusWithin', whenFocusWithin)
 stateCondition('focusVisible', whenFocusVisible)
 stateCondition('hover', whenHover)

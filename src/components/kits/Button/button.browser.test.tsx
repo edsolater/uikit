@@ -43,7 +43,7 @@ beforeEach(() => {
   baseline.textContent = baselineCSS.replaceAll('.Button', '.BaselineButton')
 })
 
-/** 读取主体外观；不比较历史边缘场景中已明确调整的焦点环。 */
+/** 读取主体外观；焦点轮廓在用例中单独比较。 */
 function appearance(button: HTMLElement) {
   const style = getComputedStyle(button)
   return Object.fromEntries(['background-color', 'color', 'border-top-color', 'box-shadow', 'opacity', 'transform'].map(key => [key, style.getPropertyValue(key)]))
@@ -91,7 +91,7 @@ describe('Button styles', () => {
     expect(Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')).toBe('dab69febec84ce8d9e38921c33e2a5de16a8568a')
   })
   for (const theme of ['light', 'dark']) {
-    test(`${theme}：九种配方的常态、悬停和两种 active 交集与旧 CSS 一致`, async () => {
+    test(`${theme}：九种配方的常态、独立焦点、悬停和两种 active 交集与旧 CSS 一致`, async () => {
       document.documentElement.dataset.theme = theme
       mountButtonStyles()
       const host = document.body.appendChild(document.createElement('div'))
@@ -102,6 +102,18 @@ describe('Button styles', () => {
         button.style.transition = 'none'
         const baseline = baselineButton(button)
         expect(appearance(button)).toEqual(appearance(baseline))
+        await userEvent.unhover(baseline)
+        baseline.focus()
+        await userEvent.keyboard('[ArrowRight]')
+        const focusAppearance = appearance(baseline)
+        const focusRing = ['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(baseline).getPropertyValue(property))
+        button.focus()
+        await userEvent.keyboard('[ArrowRight]')
+        expect(button.matches(':focus-visible')).toBe(true)
+        expect(button.matches(':hover, :active')).toBe(false)
+        expect(appearance(button)).toEqual(focusAppearance)
+        expect(['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(button).getPropertyValue(property))).toEqual(focusRing)
+        button.blur()
         await userEvent.hover(baseline)
         const hover = appearance(baseline)
         baseline.focus()
@@ -204,7 +216,7 @@ describe('Button styles', () => {
       [actionColor('foreground'), '--color-action-fg'], [actionColor('line'), '--color-action-line'],
       [textColor, '--color-fg'], [textColor('strong'), '--color-fg-strong'],
       [accentColor, '--color-accent'], [accentColor('soft'), '--color-accent-soft'], [accentColor('strong'), '--color-accent-strong'],
-      [accentColor('foreground'), '--color-accent-fg'], [accentColor('focus'), '--color-accent-focus'],
+      [accentColor('foreground'), '--color-accent-fg'], [accentColor('line'), '--color-accent-focus'],
       [dangerColor, '--color-bad'], [dangerColor('soft'), '--color-bad-soft'], [dangerColor('foreground'), '--color-bad-fg'], [dangerColor('line'), '--color-bad-line'],
     ] as [typeof actionColor, string][]
     const shadows = [[flatShadow, '--shadow-0'], [lowShadow, '--shadow-1'], [raisedShadow, '--shadow-2'], [elevatedShadow, '--shadow-3']] as [typeof flatShadow, string][]
@@ -453,8 +465,8 @@ describe('Button styles', () => {
     expect(style).not.toBeNull()
     const cssRules = Array.from(style.sheet!.cssRules)
     const cssText = cssRules.map((rule) => rule.cssText).join('\n')
-    expect(cssText).toContain('&:where(:hover)')
-    expect(cssText).toContain('&:where(:active)')
+    expect(cssText).toContain('&:where(:where(:hover):where(:not(:disabled, [data-status~="disabled"])))')
+    expect(cssText).toContain('&:where(:where(:active):where(:not(:disabled, [data-status~="disabled"])))')
     expect(cssText).not.toContain('[object Object]')
     const layer = cssRules.find(rule => rule instanceof CSSLayerBlockRule && rule.name === 'uikit') as CSSLayerBlockRule
     expect(Array.from(layer.cssRules).filter(rule => rule instanceof CSSStyleRule && rule.selectorText === '.Button')).toHaveLength(1)

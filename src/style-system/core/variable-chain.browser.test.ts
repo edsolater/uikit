@@ -1,5 +1,6 @@
 /** 在浏览器验证黑盒引用链、成员状态和局部声明。 */
 import { afterEach, expect, test } from 'vitest'
+import { userEvent } from 'vitest/browser'
 import { variable, variableFrom } from './css-variable'
 import { variableCluster } from './variable-cluster'
 import { condition } from './css-condition'
@@ -15,6 +16,75 @@ stateCondition('specificState', condition('&[data-specific]'))
 stateCondition('laterState', condition('&:where([data-later])'))
 
 afterEach(() => document.body.replaceChildren())
+
+test('真实 focusVisible 低于 hover 和 active，鼠标 focus 不等于 focusVisible', async () => {
+  const width = variable('10px', {
+    name: 'focused-size',
+    states: { focus: '12px', hover: '20px', active: '30px' },
+  })
+  const style = document.body.appendChild(document.createElement('style'))
+  style.textContent = compileRules([[[condition('.Focused')], 'width', width]])
+  const element = document.body.appendChild(document.createElement('button'))
+  element.className = 'Focused'
+  element.style.padding = '0'
+  element.style.border = '0'
+  element.textContent = '焦点状态'
+  await userEvent.click(element)
+  await userEvent.unhover(element)
+  expect(element.matches(':focus')).toBe(true)
+  expect(element.matches(':focus-visible')).toBe(false)
+  expect(getComputedStyle(element).width).toBe('10px')
+  await userEvent.keyboard('[ArrowRight]')
+  expect(element.matches(':focus-visible')).toBe(true)
+  expect(getComputedStyle(element).width).toBe('12px')
+  await userEvent.hover(element)
+  expect(getComputedStyle(element).width).toBe('20px')
+  await userEvent.keyboard('[Space>]')
+  try {
+    expect(element.matches(':focus-visible:hover:active')).toBe(true)
+    expect(getComputedStyle(element).width).toBe('30px')
+    await userEvent.unhover(element)
+    expect(getComputedStyle(element).width).toBe('30px')
+  } finally { await userEvent.keyboard('[/Space]') }
+  expect(getComputedStyle(element).width).toBe('12px')
+})
+
+test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用域', () => {
+  const target = variableCluster({
+    default: variable('1px', { name: 'cluster-target-size' }),
+    soft: variable('2px', { name: 'cluster-target-soft-size' }),
+    strong: variable('3px', { name: 'cluster-target-strong-size' }),
+    foreground: variable('black', { name: 'cluster-target-foreground-color' }),
+  })
+  const source = variableCluster({
+    default: variable('10px', { name: 'cluster-source-size' }),
+    soft: variable('20px', { name: 'cluster-source-soft-size', states: { chainHover: '25px' } }),
+    strong: variable('30px', { name: 'cluster-source-strong-size' }),
+    foreground: variable('red', { name: 'cluster-source-foreground-color' }),
+  })
+  const style = document.body.appendChild(document.createElement('style'))
+  style.textContent = compileRules([
+    [[condition('.ClusterConsumer')], 'width', target],
+    [[condition('.ClusterConsumer')], 'height', target('soft')],
+    [[condition('.ClusterConsumer')], 'margin-left', target('strong')],
+    [[condition('.ClusterConsumer')], 'color', target('foreground')],
+    [[condition('.ClusterLocal')], undefined, [[[condition('& > .ClusterConsumer')], target, source]]],
+  ])
+  const parent = document.body.appendChild(document.createElement('div'))
+  parent.className = 'ClusterLocal'
+  const local = parent.appendChild(document.createElement('div'))
+  local.className = 'ClusterConsumer'
+  const neighbor = document.body.appendChild(document.createElement('div'))
+  neighbor.className = 'ClusterConsumer'
+  expect(getComputedStyle(local).width).toBe('10px')
+  expect(getComputedStyle(local).height).toBe('20px')
+  expect(getComputedStyle(local).marginLeft).toBe('30px')
+  expect(getComputedStyle(local).color).toBe('rgb(255, 0, 0)')
+  local.dataset.hover = ''
+  expect(getComputedStyle(local).height).toBe('25px')
+  expect(getComputedStyle(neighbor).width).toBe('1px')
+  expect(getComputedStyle(neighbor).height).toBe('2px')
+})
 
 test.each([false, true])('首次状态内引用与普通消费的顺序不改变浏览器结果：%s', (ordinaryFirst) => {
   const inner = variable('10px', { name: 'audit-inner-size', states: { chainHover: '20px' } })

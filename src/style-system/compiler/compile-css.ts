@@ -1,22 +1,24 @@
 /** 解析规则与依赖，输出 CSS。 */
 import type { ConditionPath } from '../core/css-condition'
 import { propertyName, type CSSKey } from '../core/css-key'
-import type { Rule, Rules } from '../core/css-rule'
+import type { Rule, Rules, RuleValue } from '../core/css-rule'
 import type { Valuable, CompileContext } from '../core/css-valuable'
 import type { ValueInput } from '../core/css-value'
-import { isVariable, type VariableInput } from '../core/css-variable'
+import { isVariable, type Variable, type VariableInput } from '../core/css-variable'
 import { compileVariableDeclaration } from './compile-variable'
 import { compileValue, valueConditionPath, type ValueContext } from './compile-value'
-import type { CSSRecord } from './css-records'
+import { groupCSSRecords, type CSSRecord } from './css-records'
 import { resolveStateConditions, type StateCondition } from '../state-conditions'
+import { clusterDeclarations } from '../core/variable-cluster'
 
 /** 解析源规则及按需依赖，得到有序 CSS 记录。 */
 export function resolveRules(source: Rules): CSSRecord[] {
   type Output = {
     records: CSSRecord[]
     defaults: { address: string; record: CSSRecord; states: StateCondition[] }[]
+    variables: Map<Variable, Set<string>>
   }
-  const sourceOutput: Output = { records: [], defaults: [] }
+  const sourceOutput: Output = { records: [], defaults: [], variables: new Map() }
   const definitions = new Map<string, typeof sourceOutput>()
   const pending = new Map<string, Rule>()
   const activated = new Set<Valuable>()
@@ -55,29 +57,40 @@ export function resolveRules(source: Rules): CSSRecord[] {
           continue
         }
         if (Array.isArray(input) && !isVariable(key)) throw new Error('嵌套 Rules 必须由路径、Key、内容三项组成。')
-        const context: ValueContext = {
-          root: source, path, key, resolving, conditions: subjects,
-          /** 按首次使用激活依赖。 */
-          activate: (value, location = { root: source, path, key }) => activate(value, location),
-          /** 补充变量缺省赋值；显式同址声明优先。 */
-          defineVariable(name, values, location) {
-            const address = JSON.stringify([location.path, name])
-            for (const result of values) {
-              const states = resolveStateConditions(result.conditions)
-              const headers = [...location.path, ...states.map((state) => state.condition)].map((item) => item.header)
-              if (!output.defaults.some(({ record: [existing, property] }) => property === `--${name}` && JSON.stringify(existing) === JSON.stringify(headers))) {
-                output.defaults.push({ address, record: [headers, `--${name}`, result.text], states })
+        const declarations: [CSSKey | undefined, RuleValue][] = clusterDeclarations(key, input) ?? [[key, input]]
+        for (const [key, input] of declarations) {
+          const context: ValueContext = {
+            root: source, path, key, resolving, conditions: subjects, scopeConditions: subjects,
+            /** 按首次使用激活依赖。 */
+            activate: (value, location = { root: source, path, key }) => activate(value, location),
+            /** 补充变量缺省赋值；显式同址声明优先。 */
+            defineVariable(reference, location, materialize) {
+              const name = reference.name
+              const address = JSON.stringify([location.path, name])
+              const scopeConditions = location.scopeConditions ?? subjects
+              const scopeAddress = JSON.stringify([location.path, scopeConditions])
+              const scopes = output.variables.get(reference) ?? new Set<string>()
+              if (scopes.has(scopeAddress)) return
+              scopes.add(scopeAddress)
+              output.variables.set(reference, scopes)
+              const values = materialize({ ...location, conditions: scopeConditions })
+              for (const result of values) {
+                const states = resolveStateConditions(result.conditions)
+                const headers = [...location.path, ...states.map((state) => state.condition)].map((item) => item.header)
+                if (!output.defaults.some(({ record: [existing, property] }) => property === `--${name}` && JSON.stringify(existing) === JSON.stringify(headers))) {
+                  output.defaults.push({ address, record: [headers, `--${name}`, result.text], states })
+                }
               }
-            }
-          },
-        }
-        if (isVariable(key)) context.activate(key)
-        const values = isVariable(key)
-          ? compileVariableDeclaration(input as VariableInput, context)
-          : compileValue(input as ValueInput, context)
-        const property = key === undefined ? undefined : propertyName(key)
-        for (const result of values) {
-          output.records.push([[...path, ...valueConditionPath(result.conditions)].map((item) => item.header), property, result.text])
+            },
+          }
+          if (isVariable(key)) context.activate(key)
+          const values = isVariable(key)
+            ? compileVariableDeclaration(input as VariableInput, context)
+            : compileValue(input as ValueInput, context)
+          const property = key === undefined ? undefined : propertyName(key)
+          for (const result of values) {
+            output.records.push([[...path, ...valueConditionPath(result.conditions)].map((item) => item.header), property, result.text])
+          }
         }
       }
     } finally { visiting.delete(rules) }
@@ -87,7 +100,7 @@ export function resolveRules(source: Rules): CSSRecord[] {
   while (pending.size) {
     const [address, entry] = pending.entries().next().value!
     pending.delete(address)
-    const output: Output = { records: [], defaults: [] }
+    const output: Output = { records: [], defaults: [], variables: new Map() }
     visit([entry], output)
     definitions.set(address, output)
   }
@@ -116,7 +129,7 @@ export function resolveRules(source: Rules): CSSRecord[] {
   const defaults = outputs.flatMap((output) => output.defaults)
   const missingDefaults = defaults.filter(([path, key]) => !records.some(([existing, property]) =>
     property === key && JSON.stringify(existing) === JSON.stringify(path)))
-  return outputs.flatMap((output) => [...output.defaults.filter((record) => missingDefaults.includes(record)), ...output.records])
+  return outputs.flatMap((output) => groupCSSRecords([...output.defaults.filter((record) => missingDefaults.includes(record)), ...output.records]))
 }
 
 /** 按记录顺序开闭嵌套块，不解释属性内容。 */

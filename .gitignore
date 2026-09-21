@@ -25,3 +25,7 @@ storybook-static
 *.sw?
 
 *.lock
+
+# 浏览器测试自动生成的临时附件和失败截图；正式视觉基线应另设目录。
+.vitest-attachments/
+**/__screenshots__/

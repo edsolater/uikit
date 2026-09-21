@@ -1,10 +1,12 @@
 # State Condition
 
-State Condition 描述当前主体自身的状态，例如 hover、active、disabled、focusVisible。它保存名称、已有 Condition 和固定顺序，不描述语气，也不把目标切换成子元素或其他主体。
+State Condition 描述当前主体自身的状态，例如 focus、hover、active、disabled。它保存名称、已有 Condition 和固定顺序，不描述语气，也不把目标切换成子元素或其他主体。
 
 ## 名称与顺序
 
 [state-conditions.ts](state-conditions.ts) 统一安装 focus、focusWithin、focusVisible、hover、active、disabled。定义者可以通过 stateCondition(name, condition) 增加名称，但必须保证条件仍约束同一主体，条件组合的路径可以交换。
+
+`states.focus` 内置匹配浏览器判定需要显示焦点提示的 `:focus-visible`，无需额外登记。已有 focusVisible 名称同样匹配该条件；直接选择器 whenFocus 仍表达原生 `:focus`。鼠标获得焦点不等于显示轮廓。focus 的中央优先级低于 hover／active，同一 Variable 同时命中时按统一顺序选择内容。
 
 普通选择器、@layer、@function、@keyframes 等结构继续使用 Condition，不因能够嵌套就成为状态。未知状态名称终止编译；空名称、default 和重复登记报错。
 
@@ -22,9 +24,9 @@ const feedbackColor = variable(baseColor, {
 })
 ```
 
-编译器只为 feedbackColor 自身生成状态声明，使用它的 color 或 colorMix 不获得这些分支。为了让固定顺序不受选择器特异性影响，同一个 Variable 保留自身状态的交集。
+编译器只为 feedbackColor 生成常态、hover、active 三项声明，使用它的 color 或 colorMix 不获得分支。自动状态不枚举交集；显式 Rule 的嵌套条件仍然保留。
 
-例如 A 的选择器是 &[data-a]，B 是 &:where([data-b])。B 的特异性较低，单独后写仍不足以压过 A；A 与 B 的交集声明采用 B 的内容，使中央顺序成立。交集不跨普通 Value 依赖图扩张。
+登记时，当前主体选择器的附加条件统一包进 `:where()`，保留主体地址权重，让中央顺序决定状态优先级。例如 A 的 `&[data-a]` 与 B 的 `&:where([data-b])` 都不增加权重，后登记的 B 可以直接覆盖 A。原条件已使用 `:where()` 时允许嵌套，不为删除冗余包装引入选择器解析。At Rule 条件保持原样。
 
 ## 延伸时沿引用链查找
 

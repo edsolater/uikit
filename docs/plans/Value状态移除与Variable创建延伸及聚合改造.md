@@ -1,5 +1,7 @@
 # Value 状态移除与 Variable 创建、延伸及聚合改造 Plan
 
+后续裁决：本 Plan 的阶段记录保留；Cluster 同名匹配、focus 状态及自动状态交集的后续实施，以 [Variable Cluster 整组赋值与 focus 状态归属修正 Plan](VariableCluster整组赋值与Focus状态归属修正.md) 为准。旧完整匹配与 action 补齐选择已撤回。
+
 ## 要改成什么
 
 第一层要让业务样式直接使用有完整行为的 Variable，状态和配方由定义端处理。使用者选好材料以后，不需要再拆开材料、读取内部状态或者手写通用反馈。
@@ -12,7 +14,7 @@
 
 这三项来自用户已经明确的设计，下面的 API 说明整理这些约定。“实施顺序”和“怎样验收”是落实约定的工作安排。
 
-2026-09-21 工程验收：本轮主审与 Sol 源码审查完成，Terra 完整验证通过；用户最终裁决待进行。工程通过不等于用户认可本轮自主选择。
+2026-09-21 验收重开：Cluster 同名成员整组声明与定义端焦点职责已实现，正在独立复审与完整验证。下列 141 项单元、66 项浏览器与构建结果属于追加裁决前的阶段历史，不代表新要求的最终验收结果。
 
 同时落实两项使用端要求：所有定义放在首次使用之前；rules 的公开输入统一为声明元组及 Mixin 组合，不再接受普通声明对象或裸字符串属性键。
 
@@ -20,7 +22,7 @@
 
 - **修复：** 首次在外层 hover 内引用 inner 时，原实现会把 inner 的 10px 常态写成 20px，随后同址普通消费仍被污染。Variable 自动定义现保留递归消费的完整状态条件，同变量、同普通地址内按状态顺序填回原槽位；常态恢复 10px，hover 为 20px，其他地址与显式规则顺序保留。单元与浏览器回归覆盖两种消费顺序、状态反序发现、来源链及状态交集。公开声明类型、材料定义顺序、测试名称与契约注释同步收口，底层对象解析保留。
 - **完整验证：** 类型检查退出码 0（2.132 秒）；单元测试 32 文件、141 项通过（2.828 秒）；浏览器测试 13 文件、66 项通过（8.956 秒）；生产构建退出码 0（2.645 秒）。Terra 验证前后 253 份选定源码／配置的 SHA256 相同；原始结果见[验证摘要](C:/Users/edsol/AppData/Local/Temp/uikit-execution-verification-final-20260921-c801bf374b5c48168d369a7891924720/summary.json)。
-- **待用户裁决的保留判断：** Variable 自身状态交集继续保证优先级；保留 toneColor 角色及四成员绑定所需的维护成本；Cluster 接受动态 number 时，缺失成员在运行时报错；没有生产消费者的通用材料不据此删除。这些是当前工程选择，完整判断由交付回复汇总。
+- **阶段历史中的保留判断：** Variable 自身状态交集、动态 number 缺失成员运行时报错、没有生产消费者的通用材料暂留，其理由与代价在交付中解释；逐项绑定 toneColor 四成员的旧判断已被整组声明裁决覆盖。
 - **核验边界：** 本轮未读取 Git 完整差异，因此不声称历史旁改已全部排除；本记录只确认实际审查、修复与验证范围，不改写下文设计和实施顺序。
 
 ## 一、Value 只负责表达值
@@ -148,6 +150,24 @@ Cluster 返回特殊的黑盒对象，它本身也是 Variable。直接使用 `a
 
 Cluster 可以聚合基础颜色，也可以聚合通用语义颜色；不因现在只有 Button 使用就变成 Button 专属设计。原始 Variable 和延伸得到的 Variable 都属于可聚合的材料，不另建一套延伸材料体系。
 
+### 整组声明
+
+目标和内容都是 Cluster 时，`[toneColor, accentColor]` 按同名成员生成整组 Variable 声明，包括 default、soft、strong、foreground、line。普通值消费仍取 default，调用仍选择成员；普通 Variable 目标接收 Cluster 内容时也只取 default。
+
+最新裁决只配对双方已有的同名键；未匹配目标不增加声明，保留原有默认值或作用域覆盖，来源额外键不参与。缺少成员不报错；下述冲突检查只针对实际匹配项。多个成员只有目标对象与来源对象分别相同才合为一条声明；不同目标对象同名、同一目标对应不同来源都拒绝。成员赋给自身不输出，不同对象的目标与来源同名则报错，避免 CSS 自循环。这些冲突裁决仅约束整组入口。只展开一层，局部覆盖交给 CSS，不深度合并、不改共享 JS，也不公开成员反射接口。
+
+编译器负责展开，登记账本保留原对象，以覆盖普通 rules、单条 rule、句柄替换和直接编译的同一条路径。Button 的 solid／accent／danger 分支采用整组 tone 声明，焦点配色随 line 成员一起绑定。
+
+### 追加的焦点职责要求与实现
+
+Focus 属于 State Condition，优先级低于 hover／active。定义端状态能力与通用 Mixin 必须承担焦点，Button 不得写 `[focusColor, accentColor('focus')]`、`[focusColor, dangerColor('line')]` 或映射另一套焦点成员。保留现有 `:focus-visible` 的显示条件及视觉，不把它替换为 `:focus`，也不能为了轮廓颜色让背景、前景在 focus 时一起变色。
+
+最新裁决撤回为完整匹配而补造的 action soft／strong，包括 14% 混色和 strong 基色别名。action 只保留 default、foreground、line；tone 的 soft／strong 未匹配时不增加声明，不要求补齐配色，也不新增 Theme token。
+
+accent 的 focus 成员统一为 line，仍使用原 `--color-accent-focus` 色值；tone 增加 line，danger／action 保留原 line 材料。focusOutline 通过 states.focus 匹配 `:focus-visible` 并消费 tone line，通用 clickable 输出轮廓及偏移；独立 focusColor 角色和 Button 的焦点绑定删除。solid 选择 `[toneColor, actionColor]`，后续 accent／danger 整组声明覆盖，组件无需另选焦点效果。
+
+当前 Button 的无 tone solid 仍直接使用原 action 背景／前景配方；带 tone 时整组被 accent／danger 覆盖，撤回补造成员不改变这些配方。浏览器定向验证覆盖明暗主题九种配方的常态、独立焦点、hover、active 及其交集；另用同一 Variable 的 focus／hover／active 状态验证优先级，实际触发 `:focus-visible`，并区分鼠标原生焦点与可见焦点。
+
 ## 定义放哪里，Button 要简化到什么程度
 
 整个 Style System 都是抽象层，其中可以有面向基础细节的材料，也可以有面向组件的通用材料。当前具体业务样式在 `Button.style.ts`。
@@ -253,7 +273,7 @@ rules(button, [
 - **延伸：** 返回新 Variable，保存来源引用而不复制定义；自身状态优先，未定义时沿链查找，多层延伸遵循同一规则；来源不被修改，注册和声明使用正确对象及名字。
 - **黑盒取值：** active 内容直接使用来源 Variable 即得到其 active 下成立的值；消费代码不读取内部状态。
 - **混色内容：** 直接提供 colorMix 结果时，识别为内容对象；提供 source 回调时，传入正确来源并识别其返回内容。两种形式都能正确输出 CSS，不混用回调参数。
-- **Cluster：** 对象配置声明成员；直接使用表现为 default 成员，调用按声明的成员键返回对应 Variable。两种形式都能参与合法声明与组合，保留成员状态，消费端无需读取内部配置。
+- **Cluster：** 对象配置声明成员；普通值消费表现为 default，调用返回对应 Variable。双 Cluster 声明按目标同名成员整组展开，来源额外键允许、缺键和目标同名冲突报错；只展开一层，保留状态与局部作用域，不修改共享成员。普通 Variable 目标接收 Cluster 内容仍取 default，消费端无需读取内部配置。
 - **CSS 作用域：** 局部声明和嵌套继承按预期生效，不通过修改共享 JS 对象实现。
 - **材料与 Button：** 通用材料能在不依赖 Button 身份的主体上使用；Button 无需重新实现通用状态和焦点配方。
 - **整体维护性：** 没有平行的状态体系、额外配方选择步骤或无关清理；必要的定义重复不强行抽象。

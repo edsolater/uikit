@@ -9,7 +9,7 @@ export const accentColor = variableCluster({
   soft: variable('var(--color-accent-soft)', { name: 'accent-soft-color' }),
   strong: variable('var(--color-accent-strong)', { name: 'accent-strong-color' }),
   foreground: variable('var(--color-accent-fg)', { name: 'accent-foreground-color' }),
-  focus: variable('var(--color-accent-focus)', { name: 'accent-focus-color' }),
+  line: variable('var(--color-accent-focus)', { name: 'accent-line-color' }),
 })
 
 const dangerBaseColor = variable('var(--color-bad)', { name: 'danger-base-color' })
@@ -26,6 +26,7 @@ export const toneColor = variableCluster({
   soft: variable(accentColor('soft'), { name: 'tone-soft-color' }),
   strong: variable(accentColor('strong'), { name: 'tone-strong-color' }),
   foreground: variable(accentColor('foreground'), { name: 'tone-foreground-color' }),
+  line: variable(accentColor('line'), { name: 'tone-line-color' }),
 })
 
 /** 语气承载面，配方和状态留在定义端。 */

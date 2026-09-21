@@ -46,6 +46,53 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+// 用户明确要求的实现：同层同地址声明共同输出；下面只使用互不覆盖的不同 Variable。
+// Agent 测试假设：用正则读取这个无字符串/复杂内容的简单 CSS 夹具，不是通用 CSS 解析协议。
+test('六个独立 Variable 声明节点按同层地址组织为一个主体和两个状态块', () => {
+  // 使用公共编译入口验证结果，不限定分组必须发生在哪个内部函数中。
+  keep(rule('.Grouped', '--v1', 'red'))
+  keep(rule(['.Grouped', '&:hover'], '--v1', 'pink'))
+  keep(rule(['.Grouped', '&:active'], '--v1', 'darkred'))
+  keep(rule('.Grouped', '--v2', 'green'))
+  keep(rule(['.Grouped', '&:hover'], '--v2', 'lightgreen'))
+  keep(rule(['.Grouped', '&:active'], '--v2', 'darkgreen'))
+  const css = compileCSS().replace(/\s/g, '')
+  expect.soft(css.match(/\.Grouped\{/g)).toHaveLength(1)
+  for (const [state, expected] of [
+    ['hover', ['--v1:pink', '--v2:lightgreen']],
+    ['active', ['--v1:darkred', '--v2:darkgreen']],
+  ] as [string, string[]][]) {
+    const blocks = [...css.matchAll(new RegExp(`&:${state}\\{([^{}]*)\\}`, 'g'))]
+    expect.soft(blocks).toHaveLength(1)
+    expect.soft(blocks.flatMap(match => match[1].split(';').filter(Boolean)).sort()).toEqual(expected.sort())
+  }
+  expect(css.match(/--v[12]:/g)).toHaveLength(6)
+})
+
+// 用户明确要求：状态不自动扩散，同层同地址声明共同输出。
+// Agent 测试假设：复用现有 testHover/testActive 登记建立原始选择器；此函数不是用户要求的公共 API。
+// 正则、辅助登记和 fallback 的具体检查方式可替换，跨任务不能据此限定编译器内部组织。
+test('两个智能 Variable 的最终 CSS 每个状态只有一个块且没有自动交集', () => {
+  const first = variable('red', { name: 'grouped-first-color', states: { testHover: 'pink', testActive: 'darkred' } })
+  const second = variable('green', { name: 'grouped-second-color', states: { testHover: 'lightgreen', testActive: 'darkgreen' } })
+  keep(rule('.GroupedVariables', 'background-color', first))
+  keep(rule('.GroupedVariables', 'color', second))
+  const css = compileCSS().replace(/\s/g, '')
+  expect.soft(css.match(/&:where\(:hover\)\{/g)).toHaveLength(1)
+  expect.soft(css.match(/&:where\(:active\)\{/g)).toHaveLength(1)
+  for (const [state, expected] of [
+    ['hover', ['--grouped-first-color:pink', '--grouped-second-color:lightgreen']],
+    ['active', ['--grouped-first-color:darkred', '--grouped-second-color:darkgreen']],
+  ] as [string, string[]][]) {
+    const blocks = [...css.matchAll(new RegExp(`&:where\\(:${state}\\)\\{([^{}]*)\\}`, 'g'))]
+    expect.soft(blocks).toHaveLength(1)
+    expect.soft(blocks.flatMap(match => match[1].split(';').filter(Boolean)).sort()).toEqual(expected.sort())
+  }
+  expect.soft(css.match(/--grouped-(?:first|second)-color:/g)).toHaveLength(6)
+  expect(css).toMatch(/background-color:var\(--grouped-first-color(?:,red)?\);/)
+  expect(css).toMatch(/color:var\(--grouped-second-color(?:,green)?\);/)
+})
+
 test('三项 Rule 递归继承地址，普通 Rule 的重复条件原样保留', () => {
   const child: Rules = [[[condition('&:hover')], undefined, 'blue']]
   const source: Rules = [[[condition('.example'), condition('&:hover')], 'color', child]]
@@ -334,5 +381,5 @@ test('结构嵌套可以继承 Variable 目标，不误判为局部分支数组'
   const reference = variable(undefined, { name: 'nested-target' })
   const body: Rules = [[undefined, undefined, 1], [['testHover'], undefined, 2]]
   keep(rule('.NestedTarget', reference, body))
-  expect(compileCSS()).toBe('.NestedTarget {\n--nested-target: 1;\n&:hover {\n--nested-target: 2;\n}\n}')
+  expect(compileCSS()).toBe('.NestedTarget {\n--nested-target: 1;\n&:where(:hover) {\n--nested-target: 2;\n}\n}')
 })

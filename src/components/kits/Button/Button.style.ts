@@ -13,7 +13,6 @@ import {
 } from '../../../style-system'
 import { surfaceColor, foregroundColor } from '../../../style-system/component-handle-material/color'
 import { $cursor } from '../../../style-system/properties/interaction'
-import { focusColor } from '../../../style-system/component-handle-material/focus'
 import { $alignSelf } from '../../../style-system/properties/layout'
 import { colorMix } from '../../../style-system/values/functions/color-mix'
 import { textColor } from '../../../style-system/value-material/color/text'
@@ -138,7 +137,7 @@ const buttonSolidShadow = variable(raisedShadow, {
 rules(
   [...button, '&[data-variant="solid"]'],
   [
-    [focusColor, actionColor('line')],
+    [toneColor, actionColor],
     [surfaceColor, actionColor],
     [foregroundColor, colorMix([actionColor('foreground'), 0.9], surfaceColor)],
     color({
@@ -186,22 +185,14 @@ rules(
 rules(
   [...button, '&[data-tone="accent"]'],
   [
-    [focusColor, accentColor('focus')],
     [toneColor, accentColor],
-    [toneColor('soft'), accentColor('soft')],
-    [toneColor('strong'), accentColor('strong')],
-    [toneColor('foreground'), accentColor('foreground')],
   ],
 )
 
 rules(
   [...button, '&[data-tone="danger"]'],
   [
-    [focusColor, dangerColor('line')],
     [toneColor, dangerColor],
-    [toneColor('soft'), dangerColor('soft')],
-    [toneColor('strong'), dangerColor],
-    [toneColor('foreground'), dangerColor('foreground')],
   ],
 )
 

@@ -67,7 +67,9 @@ accentColor
 accentColor('soft')
 ```
 
-两种使用形式都是 Variable。选择参数对应成员键，可以是描述词，也可以是基础色阶的数字。选择语气不切换状态；soft 成员自己处理 hover、active 等状态。未定义成员报错，不临时生成或静默回退。直接使用 Cluster 只采用 default 成员，不表示给整个成员集合批量赋值。
+普通值消费 Cluster 时采用 default 成员，调用则选择对应成员 Variable。选择参数可以是描述词，也可以是基础色阶的数字。选择语气不切换状态；soft 成员自己处理 hover、active 等状态。未定义成员报错，不临时生成或静默回退。
+
+声明的目标与内容都是 Cluster 时，例如 `[toneColor, accentColor]`，编译器只为双方已有的同名成员产生局部 Variable 声明。未匹配目标不增加声明，保留原有默认值或作用域覆盖；来源额外成员不参与，也不激活依赖。多个成员只有目标对象与来源对象分别相同时才视为同一条声明；不同目标对象同名报错，以免遗漏对象的依赖。成员赋给自身不输出，不同对象的目标与来源同名则报错，避免 CSS 自循环。展开只有一层，不深度合并，也不修改共享成员；普通 Variable 目标接收 Cluster 内容时仍使用来源 default。
 
 ## 声明与作用域
 
@@ -89,6 +91,8 @@ rule 返回的句柄可以替换或删除自己的源条目；rules 返回批量
 
 状态只产生 Variable 自身的 Custom Property 声明，外部混色、计算或 Value 包装不获得状态分支。一个表达式组合多个有状态 Variable，消费属性仍输出一次。
 
-同一 Variable 的多个状态保留必要交集，确保中央顺序不被选择器特异性反转。引用链只检查 Variable 自身及延伸来源的状态，不收集普通内容依赖图的状态。具体边界见 [State Condition](state-condition.md)。
+每个 Variable 只生成常态与各项有效状态，不自动枚举状态交集。状态选择器的附加权重统一归零，确保中央顺序不被选择器特异性反转；显式嵌套条件保留。引用链只检查 Variable 自身及延伸来源的状态，不收集普通内容依赖图的状态。具体边界见 [State Condition](state-condition.md)。
+
+焦点轮廓由 focusOutline 的 focus 状态（匹配 `:focus-visible`）与通用 clickable Mixin 组成；配色来自当前 toneColor 的 line 成员。组件只选择整组配色，不另外绑定焦点成员。line 表示轮廓颜色用途，焦点仍是 State Condition，因此普通背景和前景不会为了轮廓反馈而改变自身颜色。
 
 内容在输出阶段通过 serializeCSS 得到文本。循环引用终止编译；共享但无环的内容可以重复消费。onActive 提供的依赖只参与本次编译，不写回源账本。函数定义的局部 Variable 与 result 保持在同一份定义中，避免同名函数的后定义覆盖前定义。

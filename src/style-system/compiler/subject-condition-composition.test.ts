@@ -18,5 +18,5 @@ test('延伸未定义的更高优先级状态仍沿来源链成立', () => {
   const next = variableFrom(source, { name: 'next-size', states: { compositionA: 2 } })
   const records = resolveRules([[[condition('.Example')], 'width', next]])
   const definitions = records.filter(([, key]) => key === '--next-size')
-  expect(definitions.map(([, , text]) => text)).toEqual(['var(--source-size, 1)', '2', 'var(--source-size, 1)', 'var(--source-size, 1)'])
+  expect(definitions.map(([, , text]) => text)).toEqual(['var(--source-size, 1)', '2', 'var(--source-size, 1)'])
 })
