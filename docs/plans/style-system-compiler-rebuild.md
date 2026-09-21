@@ -4,7 +4,7 @@
 
 ## 需求依据与范围
 
-[编译器修正草案](../../src/style-system/compiler-revision.md)是完整需求与问题分析；其“后续裁决与当前状态”覆盖明确冲突的旧结论，其余要求全部保留。本文只规定实施与验收，不替代草案。
+[编译器修正草案](../../src/style-system/doc/compiler-revision.md)是完整需求与问题分析；其“后续裁决与当前状态”覆盖明确冲突的旧结论，其余要求全部保留。本文只规定实施与验收，不替代草案。
 
 目标：纠正取值与编译责任，让业务意图到实现结果的理解链更短。代码行数、测试数量和 CSS 文本是否漂亮，都不是完成标准。
 
@@ -60,7 +60,7 @@
 
 ### 4. 分开条件容器，统一取值顺序
 
-[subject-conditions.ts](../../src/style-system/subject-conditions.ts) 提供唯一有效顺序；普通路径由 Rule 保持，Subject Condition 由值展开收集，两者分别保存。
+[state-conditions.ts](../../src/style-system/state-conditions.ts) 提供唯一有效顺序；普通路径由 Rule 保持，State Condition 由值展开收集，两者分别保存。
 
 编译从外层 Rule 地址进入内容。在一个目标激活集合下，每个 Value 都按同一有效顺序选择自身最后一个匹配分支，再交给函数组合；无匹配才取 default。不能先选出互相不一致的值，再靠同址覆盖决定结果。
 
@@ -82,7 +82,7 @@ Variable 的自动默认定义、显式赋值、注册与依赖各确定一个�
 
 测试按责任整理到 `core/`、`compiler/` 和浏览器用例；临时回归测试验证后归入合适位置，不留下重复断言堆。删除过程断言时记录替代的需求验证，不靠删测试取得通过。
 
-实现后同步 [design.md](../../src/style-system/design.md)、[architecture.md](../../src/style-system/architecture.md)、[subject-condition.md](../../src/style-system/subject-condition.md)，在完整草案中补充分析与裁决，不覆盖历史问题依据。
+实现后同步 [design.md](../../src/style-system/doc/design.md)、[architecture.md](../../src/style-system/architecture.md)、[state-condition.md](../../src/style-system/doc/state-condition.md)，在完整草案中补充分析与裁决，不覆盖历史问题依据。
 
 在本 Plan 记录每个区域：原职责、改动原因、最终职责、上下游关系、删除机制的接管位置，以及刻意未改的内容。不得只列文件数量或缩减行数。
 

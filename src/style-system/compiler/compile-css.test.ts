@@ -95,23 +95,23 @@ test('两个智能 Variable 的最终 CSS 每个状态只有一个块且没有�
 })
 
 test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保留未匹配成员配方', () => {
-  const toneDefaultColor = variable('blue', { name: 'tone-color' })
-  const toneLineSource = vi.fn(() => colorMix([toneDefaultColor, 0.32], 'transparent'))
+  const toneColorDefault = variable('blue', { name: 'tone-color' })
+  const toneColorLineSource = vi.fn(() => colorMix([toneColorDefault, 0.32], 'transparent'))
   const toneColor = variableCluster({
-    default: toneDefaultColor,
-    soft: variable('lightblue', { name: 'tone-soft-color' }),
-    line: variable(toneLineSource, { name: 'tone-line-color' }),
+    default: toneColorDefault,
+    soft: variable('lightblue', { name: 'tone-color-soft' }),
+    line: variable(toneColorLineSource, { name: 'tone-color-line' }),
   })
   const accentColor = variableCluster({
     default: variable('red', { name: 'accent-color' }),
-    soft: variable('pink', { name: 'accent-soft-color' }),
+    soft: variable('pink', { name: 'accent-color-soft' }),
   })
 
   keep(legacyRules('.LazyVariableButton', [['background', toneColor('line')]]))
   keep(legacyRules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColor, accentColor]]))
-  expect(toneLineSource).not.toHaveBeenCalled()
-  expect(compileCSS()).toBe('.LazyVariableButton {\nbackground: var(--tone-line-color, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));\n&[data-tone="accent"] {\n--tone-color: var(--accent-color, red);\n--tone-soft-color: var(--accent-soft-color, pink);\n}\n}')
-  expect(toneLineSource).toHaveBeenCalledTimes(1)
+  expect(toneColorLineSource).not.toHaveBeenCalled()
+  expect(compileCSS()).toBe('.LazyVariableButton {\nbackground: var(--tone-color-line, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));\n&[data-tone="accent"] {\n--tone-color: var(--accent-color, red);\n--tone-color-soft: var(--accent-color-soft, pink);\n}\n}')
+  expect(toneColorLineSource).toHaveBeenCalledTimes(1)
 })
 
 test('Variable source 函数可以返回直接内容或 Variable，循环返回自身仍然终止编译', () => {

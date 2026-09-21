@@ -1,3 +1,5 @@
+# Variable
+
 Variable 是可引用、可声明的样式内容身份。本文记录它的目标契约：Variable 只有一种；它可以直接保存可 CSS 化内容，也可以保存一个在编译时产生这类内容的函数。
 
 当前实现支持直接内容、Variable 引用、CSS Function 和 `() => ValueInput` 形式的 source 生产函数。函数在创建 Variable 时不执行，编译实际消费该 Variable 时才执行。
@@ -7,22 +9,22 @@ Variable 是可引用、可声明的样式内容身份。本文记录它的目�
 Variable 不区分“原始 Variable”和“派生 Variable”。两者拥有相同的对象身份与使用方式，差别只在保存的 source：
 
 ```ts
-const toneDefault = variable('blue', {
+const toneColorDefault = variable('blue', {
   name: 'tone-color',
 })
 
-const toneLine = variable(
-  () => toneDefault,
-  { name: 'tone-line-color' },
+const toneColorLine = variable(
+  () => toneColorDefault,
+  { name: 'tone-color-line' },
 )
 
-const toneSoft = variable(
-  () => colorMix([toneDefault, 0.2], 'white'),
-  { name: 'tone-soft-color' },
+const toneColorSoft = variable(
+  () => colorMix([toneColorDefault, 0.2], 'white'),
+  { name: 'tone-color-soft' },
 )
 ```
 
-`toneDefault` 保存直接内容；`toneLine` 的函数返回另一个 Variable；`toneSoft` 的函数返回可继续编译的颜色内容。三者都是普通 Variable，不增加派生类型、基础层或结果层。
+`toneColorDefault` 保存直接内容；`toneColorLine` 的函数返回另一个 Variable；`toneColorSoft` 的函数返回可继续编译的颜色内容。三者都是普通 Variable，不增加派生类型、基础层或结果层。
 
 # Source 契约
 
@@ -40,8 +42,8 @@ type VariableSource =
 
 ```ts
 variable(
-  colorMix([toneDefault, 0.2], 'white'),
-  { name: 'tone-soft-color' },
+  colorMix([toneColorDefault, 0.2], 'white'),
+  { name: 'tone-color-soft' },
 )
 ```
 
@@ -49,8 +51,8 @@ variable(
 
 ```ts
 variable(
-  () => colorMix([toneDefault, 0.2], 'white'),
-  { name: 'tone-soft-color' },
+  () => colorMix([toneColorDefault, 0.2], 'white'),
+  { name: 'tone-color-soft' },
 )
 ```
 
@@ -75,20 +77,20 @@ Variable Cluster 只聚合多个 Variable，不拥有另一套成员值：
 
 ```ts
 const toneColor = variableCluster({
-  default: toneDefault,
-  soft: toneSoft,
+  default: toneColorDefault,
+  soft: toneColorSoft,
   strong: variable(
-    () => colorMix([toneDefault, 0.8], 'black'),
-    { name: 'tone-strong-color' },
+    () => colorMix([toneColorDefault, 0.8], 'black'),
+    { name: 'tone-color-strong' },
   ),
   foreground: variable('white', {
-    name: 'tone-foreground-color',
+    name: 'tone-color-foreground',
   }),
-  line: toneLine,
+  line: toneColorLine,
 })
 ```
 
-`soft` 和 `strong` 不是状态，也不是特殊成员。它们是普通 Variable，其 source 生产函数读取 `default` Variable。
+`soft` 和 `strong` 不是状态，也不是特殊成员。它们是普通 Variable，其 source 生产函数读取 `toneColorDefault`。
 
 若来源 Cluster 只有 `default`、`foreground` 和 `line`：
 
@@ -103,17 +105,17 @@ rules('.Button[data-tone="accent"]', [
 ```css
 .Button[data-tone="accent"] {
   --tone-color: var(--accent-color, red);
-  --tone-foreground-color: var(--accent-foreground-color, white);
-  --tone-line-color: var(--accent-line-color, darkred);
+  --tone-color-foreground: var(--accent-color-foreground, white);
+  --tone-color-line: var(--accent-color-line, darkred);
 }
 ```
 
-`soft` 和 `strong` 没有被复制，也不需要重写。消费它们时，原有生产函数仍读取当前作用域的 `toneDefault`：
+`soft` 和 `strong` 没有被复制，也不需要重写。消费它们时，原有生产函数仍读取当前作用域的 `toneColorDefault`：
 
 ```css
 .Button {
   background-color: var(
-    --tone-soft-color,
+    --tone-color-soft,
     color-mix(in oklab, var(--tone-color, blue) 20%, white)
   );
 }

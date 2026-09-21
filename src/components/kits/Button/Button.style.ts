@@ -18,12 +18,12 @@ import { colorMix } from '../../../style-system/values/functions/color-mix'
 import { textColor } from '../../../style-system/value-material/color/text'
 import { actionColor } from '../../../style-system/value-material/color/action'
 import { accentColor, dangerColor, toneColor } from '../../../style-system/value-material/color/tone'
-import { neutralColor } from '../../../style-system/value-material/color/palette'
+import { neutralColor } from '../../../style-system/value-material/color/neutral'
 import { pill } from '../../../style-system/value-material/radius'
-import { smallSpace, normalSpace, mediumSpace, largeSpace, extraLargeSpace, wideSpace, widestSpace, thinBoundaryWidth } from '../../../style-system/value-material/space'
-import { smallSize, normalSize, largeSize, extraLargeSize } from '../../../style-system/value-material/size'
-import { bold, singleLine, normalTextSize, largeTextSize, extraLargeTextSize, headingSize } from '../../../style-system/value-material/font'
-import { flatShadow, raisedShadow, elevatedShadow, interactiveShadow } from '../../../style-system/value-material/shadow'
+import { spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin } from '../../../style-system/value-material/space'
+import { controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge } from '../../../style-system/value-material/size'
+import { bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge } from '../../../style-system/value-material/font'
+import { shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '../../../style-system/value-material/shadow'
 
 const button = ['@layer uikit', '.Button']
 
@@ -31,8 +31,8 @@ const button = ['@layer uikit', '.Button']
 // 默认效果
 // =============================================================================
 
-const buttonDefaultSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-default-surface-color',
+const surfaceColorDefault = variableFrom(surfaceColor, {
+  name: 'button-surface-color-default',
   states: {
     hover: colorMix([neutralColor(2), 0.72], accentColor('soft')),
     active: colorMix([neutralColor(3), 0.62], accentColor('soft')),
@@ -40,8 +40,8 @@ const buttonDefaultSurfaceColor = variableFrom(surfaceColor, {
   },
 })
 
-const buttonDefaultForegroundColor = variableFrom(foregroundColor, {
-  name: 'button-default-foreground-color',
+const foregroundColorDefault = variableFrom(foregroundColor, {
+  name: 'button-foreground-color-default',
   states: {
     hover: textColor('strong'),
     active: textColor('strong'),
@@ -49,8 +49,8 @@ const buttonDefaultForegroundColor = variableFrom(foregroundColor, {
   },
 })
 
-const buttonDefaultOpacity = variable(1, {
-  name: 'button-default-opacity',
+const opacity = variable(1, {
+  name: 'button-opacity',
   states: { disabled: 0.56 },
 })
 
@@ -58,41 +58,41 @@ rules(button, [
   [surfaceColor, colorMix([neutralColor(1), 0.82], accentColor('soft'))],
   [foregroundColor, textColor],
   // --- 内容排版 ---
-  innerText({ font: 'inherit', fontSize: largeTextSize, emphasis: bold, leading: singleLine }),
+  innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
 
   // --- 内容布局 ---
   contentLayout({
     mode: 'center',
-    gap: normalSpace,
-    padding: [normalSpace, extraLargeSpace],
+    gap: spaceNormal,
+    padding: [spaceNormal, spaceExtraLarge],
   }),
   [$alignSelf, 'center'],
 
   // --- 默认物理尺寸 ---
-  size({ minHeight: normalSize }),
+  size({ minHeight: controlSizeNormal }),
 
   // --- 默认外观 ---
   boundary({
-    border: [thinBoundaryWidth, 'solid', 'transparent'],
+    border: [boundaryWidthThin, 'solid', 'transparent'],
     radius: pill,
     cornerShape: 'squircle',
   }),
   color({
-    background: buttonDefaultSurfaceColor,
-    foreground: buttonDefaultForegroundColor,
+    background: surfaceColorDefault,
+    foreground: foregroundColorDefault,
   }),
-  elevation(interactiveShadow),
+  elevation(shadowInteractive),
 
   // --- 通用交互 ---
-  clickable({ opacity: buttonDefaultOpacity }),
+  clickable({ opacity }),
 ])
 
 // =============================================================================
 // variant 动作声量
 // =============================================================================
 
-const buttonBareSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-bare-surface-color',
+const surfaceColorBare = variableFrom(surfaceColor, {
+  name: 'button-surface-color-bare',
   states: {
     hover: colorMix([neutralColor(1), 0.88], accentColor('soft')),
     active: colorMix([neutralColor(2), 0.82], accentColor('soft')),
@@ -105,14 +105,14 @@ rules(
   [
     [surfaceColor, 'transparent'],
     color({
-      background: buttonBareSurfaceColor,
+      background: surfaceColorBare,
     }),
-    elevation(flatShadow),
+    elevation(shadowFlat),
   ],
 )
 
-const buttonSolidSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-solid-surface-color',
+const surfaceColorSolid = variableFrom(surfaceColor, {
+  name: 'button-surface-color-solid',
   states: {
     hover: actionColor,
     active: actionColor,
@@ -120,8 +120,8 @@ const buttonSolidSurfaceColor = variableFrom(surfaceColor, {
   },
 })
 
-const buttonSolidForegroundColor = variableFrom(foregroundColor, {
-  name: 'button-solid-foreground-color',
+const foregroundColorSolid = variableFrom(foregroundColor, {
+  name: 'button-foreground-color-solid',
   states: {
     hover: actionColor('foreground'),
     active: actionColor('foreground'),
@@ -129,9 +129,9 @@ const buttonSolidForegroundColor = variableFrom(foregroundColor, {
   },
 })
 
-const buttonSolidShadow = variable(raisedShadow, {
-  name: 'button-solid-shadow',
-  states: { hover: elevatedShadow, active: flatShadow, disabled: flatShadow },
+const shadowSolid = variable(shadowRaised, {
+  name: 'button-shadow-solid',
+  states: { hover: shadowElevated, active: shadowFlat, disabled: shadowFlat },
 })
 
 rules(
@@ -141,10 +141,10 @@ rules(
     [surfaceColor, actionColor],
     [foregroundColor, colorMix([actionColor('foreground'), 0.9], surfaceColor)],
     color({
-      background: buttonSolidSurfaceColor,
-      foreground: buttonSolidForegroundColor,
+      background: surfaceColorSolid,
+      foreground: foregroundColorSolid,
     }),
-    elevation(buttonSolidShadow),
+    elevation(shadowSolid),
   ],
 )
 
@@ -152,8 +152,8 @@ rules(
 // tone 动作语气
 // =============================================================================
 
-const buttonToneSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-tone-surface-color',
+const surfaceColorTone = variableFrom(surfaceColor, {
+  name: 'button-surface-color-tone',
   states: {
     hover: colorMix([neutralColor(2), 0.68], toneColor('soft')),
     active: colorMix([neutralColor(3), 0.58], toneColor('soft')),
@@ -161,8 +161,8 @@ const buttonToneSurfaceColor = variableFrom(surfaceColor, {
   },
 })
 
-const buttonToneForegroundColor = variableFrom(foregroundColor, {
-  name: 'button-tone-foreground-color',
+const foregroundColorTone = variableFrom(foregroundColor, {
+  name: 'button-foreground-color-tone',
   states: {
     hover: toneColor('strong'),
     active: toneColor('strong'),
@@ -176,8 +176,8 @@ rules(
     [surfaceColor, colorMix([neutralColor(1), 0.76], toneColor('soft'))],
     [foregroundColor, toneColor('strong')],
     color({
-      background: buttonToneSurfaceColor,
-      foreground: buttonToneForegroundColor,
+      background: surfaceColorTone,
+      foreground: foregroundColorTone,
     }),
   ],
 )
@@ -198,8 +198,9 @@ rules(
 
 // --- 语气与声量组合：退场保留透明常态，实心保留语气实底 ---
 
-const buttonBareToneSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-bare-tone-surface-color',
+// TODO: bare 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
+const surfaceColorBareTone = variableFrom(surfaceColor, {
+  name: 'button-surface-color-bare-tone',
   states: {
     hover: colorMix([neutralColor(1), 0.82], toneColor('soft')),
     active: colorMix([neutralColor(2), 0.74], toneColor('soft')),
@@ -209,11 +210,12 @@ const buttonBareToneSurfaceColor = variableFrom(surfaceColor, {
 
 rules([...button, '&[data-variant="bare"][data-tone]'], [
   [surfaceColor, 'transparent'],
-  color({ background: buttonBareToneSurfaceColor }),
+  color({ background: surfaceColorBareTone }),
 ])
 
-const buttonSolidToneSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-solid-tone-surface-color',
+// TODO: solid 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
+const surfaceColorSolidTone = variableFrom(surfaceColor, {
+  name: 'button-surface-color-solid-tone',
   states: {
     hover: colorMix([toneColor, 0.88], textColor('strong')),
     active: colorMix([toneColor, 0.78], textColor('strong')),
@@ -221,8 +223,9 @@ const buttonSolidToneSurfaceColor = variableFrom(surfaceColor, {
   },
 })
 
-const buttonSolidToneForegroundColor = variableFrom(foregroundColor, {
-  name: 'button-solid-tone-foreground-color',
+// TODO: solid 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
+const foregroundColorSolidTone = variableFrom(foregroundColor, {
+  name: 'button-foreground-color-solid-tone',
   states: {
     hover: toneColor('foreground'),
     active: toneColor('foreground'),
@@ -234,8 +237,8 @@ rules([...button, '&[data-variant="solid"][data-tone]'], [
   [surfaceColor, toneColor],
   [foregroundColor, colorMix([toneColor('foreground'), 0.9], surfaceColor)],
   color({
-    background: buttonSolidToneSurfaceColor,
-    foreground: buttonSolidToneForegroundColor,
+    background: surfaceColorSolidTone,
+    foreground: foregroundColorSolidTone,
   }),
 ])
 
@@ -246,27 +249,27 @@ rules([...button, '&[data-variant="solid"][data-tone]'], [
 rules(
   [...button, '&[data-size="small"]'],
   [
-    innerText({ fontSize: normalTextSize }),
-    contentLayout({ gap: smallSpace, padding: [smallSpace, mediumSpace] }),
-    size({ minHeight: smallSize }),
+    innerText({ fontSize: textSizeNormal }),
+    contentLayout({ gap: spaceSmall, padding: [spaceSmall, spaceMedium] }),
+    size({ minHeight: controlSizeSmall }),
   ],
 )
 
 rules(
   [...button, '&[data-size="large"]'],
   [
-    innerText({ fontSize: extraLargeTextSize }),
-    contentLayout({ gap: mediumSpace, padding: [normalSpace, wideSpace] }),
-    size({ minHeight: largeSize }),
+    innerText({ fontSize: textSizeExtraLarge }),
+    contentLayout({ gap: spaceMedium, padding: [spaceNormal, spaceWide] }),
+    size({ minHeight: controlSizeLarge }),
   ],
 )
 
 rules(
   [...button, '&[data-size="xlarge"]'],
   [
-    innerText({ fontSize: headingSize }),
-    contentLayout({ gap: largeSpace, padding: [mediumSpace, widestSpace] }),
-    size({ minHeight: extraLargeSize }),
+    innerText({ fontSize: textSizeExtraExtraLarge }),
+    contentLayout({ gap: spaceLarge, padding: [spaceMedium, spaceWidest] }),
+    size({ minHeight: controlSizeExtraLarge }),
   ],
 )
 
@@ -274,9 +277,9 @@ rules(
 // status 外部状态
 // =============================================================================
 
-const buttonLoadingCursor = variable('progress', {
-  name: 'button-loading-cursor',
+const cursorLoading = variable('progress', {
+  name: 'button-cursor-loading',
   states: { disabled: 'not-allowed' },
 })
 
-rules([...button, '&[data-status~="loading"]'], [[$cursor, buttonLoadingCursor]])
+rules([...button, '&[data-status~="loading"]'], [[$cursor, cursorLoading]])

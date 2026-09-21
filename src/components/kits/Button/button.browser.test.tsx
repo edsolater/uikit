@@ -11,14 +11,14 @@ import { $borderRadius } from '../../../style-system/properties/border'
 import { $backgroundColor } from '../../../style-system/properties/color'
 import { contentLayout } from '../../../style-system/mixins/content'
 import { subtle } from '../../../style-system/value-material/radius'
-import { smallSpace } from '../../../style-system/value-material/space'
+import { spaceSmall } from '../../../style-system/value-material/space'
 import './Button.style'
 import baselineCSS from './Button.css?raw'
 import { actionColor } from '../../../style-system/value-material/color/action'
 import { surfaceColor } from '../../../style-system/component-handle-material/color'
 import { textColor } from '../../../style-system/value-material/color/text'
 import { accentColor, dangerColor } from '../../../style-system/value-material/color/tone'
-import { flatShadow, lowShadow, raisedShadow, elevatedShadow } from '../../../style-system/value-material/shadow'
+import { shadowFlat, shadowLow, shadowRaised, shadowElevated } from '../../../style-system/value-material/shadow'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
 
@@ -219,7 +219,7 @@ describe('Button styles', () => {
       [accentColor('foreground'), '--color-accent-fg'], [accentColor('line'), '--color-accent-focus'],
       [dangerColor, '--color-bad'], [dangerColor('soft'), '--color-bad-soft'], [dangerColor('foreground'), '--color-bad-fg'], [dangerColor('line'), '--color-bad-line'],
     ] as [typeof actionColor, string][]
-    const shadows = [[flatShadow, '--shadow-0'], [lowShadow, '--shadow-1'], [raisedShadow, '--shadow-2'], [elevatedShadow, '--shadow-3']] as [typeof flatShadow, string][]
+    const shadows = [[shadowFlat, '--shadow-0'], [shadowLow, '--shadow-1'], [shadowRaised, '--shadow-2'], [shadowElevated, '--shadow-3']] as [typeof shadowFlat, string][]
     const probes = [...materials.map(([material, token]) => ({ material, token, property: 'color' })),
       ...shadows.map(([material, token]) => ({ material, token, property: 'box-shadow' }))]
     const elements = probes.map((probe, index) => {
@@ -392,7 +392,7 @@ describe('Button styles', () => {
     document.head.append(style)
     expect(style.sheet!.cssRules).toHaveLength(0)
 
-    handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', smallSpace] })]))
+    handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', spaceSmall] })]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
     expect(beforeRender.length).toBeGreaterThan(0)

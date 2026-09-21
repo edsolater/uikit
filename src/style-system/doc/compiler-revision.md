@@ -1,10 +1,10 @@
 # 编译器修正草案
 
-当前实施结果见文末“本轮实施分析”及[重做 Plan](../../docs/plans/style-system-compiler-rebuild.md#实施记录)。原分析正文保留；已删除文件的链接指向接管位置。
+当前实施结果见文末“本轮实施分析”及[重做 Plan](../../../docs/plans/style-system-compiler-rebuild.md#实施记录)。原分析正文保留；已删除文件的链接指向接管位置。
 
 记录当前编译器的问题、已确认修正、实现设计事项和验收方法。2026-09-18：已合入条件优先级、Variable 自动定义和具体语法归属的最新裁决，尚未修改实现。
 
-已确认要求以本轮用户裁决为准；与旧设计冲突的部分按本文修正。其余条目标明为分析或建议，不能因写入本文就视为已获实施授权。实际运行结构仍见 [architecture.md](architecture.md)。
+已确认要求以本轮用户裁决为准；与旧设计冲突的部分按本文修正。其余条目标明为分析或建议，不能因写入本文就视为已获实施授权。实际运行结构仍见 [架构](../architecture.md)。
 
 # 后续裁决与当前状态
 
@@ -27,7 +27,7 @@ Rule = [Condition Path, Key, Content]
 Address = Condition Path + Key
 ```
 
-当前 [rules()](core/css-rule.ts) 将 Declaration 登记为 `[[path, key], [key, content]]`，地址和内容重复保存 Key。`rule()` 又允许直接存内容，导致编译器保留两条声明处理路线。这是实现偏离要求，不是用户要求了两份 Key。
+当前 [rules()](../core/css-rule.ts) 将 Declaration 登记为 `[[path, key], [key, content]]`，地址和内容重复保存 Key。`rule()` 又允许直接存内容，导致编译器保留两条声明处理路线。这是实现偏离要求，不是用户要求了两份 Key。
 
 修正方向：源 Rule 统一表达三个组成；Declaration 在登记边界拆出 Key 与 Content，不能把完整 Declaration 再当同一条 Rule 的 Content 保存。编译器只从该 Rule 的 Key 取得本层受体，不再判断两份 Key 谁接管谁。公共调用写法是否调整、账本选择何种容器，另行确定。
 
@@ -42,7 +42,7 @@ Address = Condition Path + Key
 - Variable 可以作为声明目标，仍由 Declaration 表达“向这个目标声明什么内容”。
 - Variable 的赋值内容可以使用 Value；这些 Value 展开的目标是该 Variable。
 
-当前 [Variable](core/css-variable.ts) 从 Value 类型提取结构，保存 `kind: 'value'`；[CSS Key](core/css-key.ts) 又重复描述 Variable 的内部形状。引用处理位于 [compileExpression()](compiler/compile-value.ts)，赋值处理位于 [compileVariableDeclaration()](compiler/compile-css.ts)，默认赋值和注册又连接外层会话。应由明确的 Variable 编译责任接管这些关系。
+当前 [Variable](../core/css-variable.ts) 从 Value 类型提取结构，保存 `kind: 'value'`；[CSS Key](../core/css-key.ts) 又重复描述 Variable 的内部形状。引用处理位于 [compileExpression()](../compiler/compile-value.ts)，赋值处理位于 [compileVariableDeclaration()](../compiler/compile-css.ts)，默认赋值和注册又连接外层会话。应由明确的 Variable 编译责任接管这些关系。
 
 Valuable 的具体 TypeScript 协议、是否使用类继承、原始值及 CSS Function 怎样接入，属于实现设计事项。共同身份不要求所有对象返回相同形状的完整 Rule；表达式内部仍需要内容结果。所有求值和 CSS 生成继续由 Compiler 在实际编译时控制。
 
@@ -135,7 +135,7 @@ const b = value(1, { A: 7, B: 11 })
 
 ## 重新裁决：多种内部产物不是缺陷
 
-当前 [compileValue()](compiler/compile-value.ts) 的返回值只包含部分产物：
+当前 [compileValue()](../compiler/compile-value.ts) 的返回值只包含部分产物：
 
 1. 普通内容通过 `ValueResult[]` 返回，由上层写入记录。
 2. 动态 Variable 的默认赋值通过 `defineVariable()` 回调，立即调用外层 `write()`。
@@ -151,7 +151,7 @@ const b = value(1, { A: 7, B: 11 })
 
 ## 核心遍历混入具体 CSS 语法
 
-当前 [compileExpression()](compiler/compile-value.ts) 知道 color-mix 使用 oklab、比例如何成为百分比、shadow 的 blur/spread 如何补位、animation 的字段顺序；[compileDeclaration()](compiler/compile-css.ts) 知道 font 的斜杠、transition 的逗号和 padding 四边写法。
+当前 [compileExpression()](../compiler/compile-value.ts) 知道 color-mix 使用 oklab、比例如何成为百分比、shadow 的 blur/spread 如何补位、animation 的字段顺序；[compileDeclaration()](../compiler/compile-css.ts) 知道 font 的斜杠、transition 的逗号和 padding 四边写法。
 
 这些知识确实需要存在，但通用递归、条件组合、循环检查不需要因此了解每一种语法。现在新增一种复合表达，通常还要修改核心类型枚举与编译器 switch；语法变化容易牵动通用流程。
 
@@ -171,7 +171,7 @@ const b = value(1, { A: 7, B: 11 })
 
 ## 声明语法、变量处理存在重复入口
 
-[resolveRules()](compiler/compile-css.ts) 有时把 Declaration 送到 `compileDeclaration()`，有时拆出内容后直接进入 Value 解析；Variable 声明在两个位置识别。普通内容的简写展开也分别出现在入口和 Declaration 编译中。
+[resolveRules()](../compiler/compile-css.ts) 有时把 Declaration 送到 `compileDeclaration()`，有时拆出内容后直接进入 Value 解析；Variable 声明在两个位置识别。普通内容的简写展开也分别出现在入口和 Declaration 编译中。
 
 三项 Rule 统一后，应以一个明确入口承接当前 Key 的内容解释，再由内容类型进入各自解析。规则结构的递归由 Rule 处理，不通过 Value 的可选回调重新接回。
 
@@ -185,13 +185,13 @@ const b = value(1, { A: 7, B: 11 })
 
 ## 字符串生成后再次解析简写
 
-[expandProperty()](compiler/compile-css.ts) 先取得 margin/padding 字符串，再扫描括号和空白，将其拆为四个属性；遇到 `var()` 又跳过。
+[expandProperty()](../compiler/compile-css.ts) 先取得 margin/padding 字符串，再扫描括号和空白，将其拆为四个属性；遇到 `var()` 又跳过。
 
 这与简写、单边属性的覆盖有关，不能在未核对声明顺序前直接删除。待确认：当前是否仍需要统一四边，以及输入已经结构化时能否直接完成展开。旧测试要求出现四边，不足以证明反向解析字符串是必要机制。
 
 ## 测试把实现过程当成了正确依据
 
-[subject-condition-composition.test.ts](compiler/subject-condition-composition.test.ts) 固定了候选遍历覆盖结果；[compile-value.test.ts](compiler/compile-value.test.ts) 固定了中间候选数量。这些断言可以描述旧行为，不能批准其语义。
+[subject-condition-composition.test.ts](../compiler/subject-condition-composition.test.ts) 固定了候选遍历覆盖结果；[compile-value.test.ts](../compiler/compile-value.test.ts) 固定了中间候选数量。这些断言可以描述旧行为，不能批准其语义。
 
 修正测试时先明确输入、目标内容和可观察结果。保留地址归一化、Variable 隔离、真实 CSS 输出和浏览器行为验证；重新裁决上述过程断言。此前测试通过不能证明本轮指出的问题不存在。
 
@@ -231,11 +231,11 @@ const b = value(1, { A: 7, B: 11 })
 
 # 重做执行计划
 
-修改落点、顺序、AI Rules 链接、必要性审查与逐项验收统一见 [Style System 编译器重做计划](../../docs/plans/style-system-compiler-rebuild.md)。本文保留完整需求和问题分析；执行计划不替代这些决定。制定计划时的半成品不作为通过依据；本轮实施结果见下文。
+修改落点、顺序、AI Rules 链接、必要性审查与逐项验收统一见 [Style System 编译器重做计划](../../../docs/plans/style-system-compiler-rebuild.md)。本文保留完整需求和问题分析；执行计划不替代这些决定。制定计划时的半成品不作为通过依据；本轮实施结果见下文。
 
 # 本轮实施分析
 
-2026-09-18：按完整草案重做，不沿用失败实现的验收报告。代码与测试已接通，末次验证结果统一记录在 [Plan](../../docs/plans/style-system-compiler-rebuild.md#测试与质量证据)。
+2026-09-18：按完整草案重做，不沿用失败实现的验收报告。代码与测试已接通，末次验证结果统一记录在 [Plan](../../../docs/plans/style-system-compiler-rebuild.md#测试与质量证据)。
 
 ## 责任怎样回到原位
 

@@ -1,0 +1,36 @@
+# Style System 命名
+
+名字先给出稳定服务对象，再在后面追加成员、档位或配方后缀。例如 `dangerColorStrong`、`controlSizeSmall`、`neutralColor0`；CSS 名字保持相同顺序：`danger-color-strong`、`control-size-small`、`neutral-color-0`。
+
+## 对象命名
+
+| 对象 | 示例 | 含义 |
+| --- | --- | --- |
+| Key | $backgroundColor、$opacity | 原生 CSS 声明目标 |
+| Variable | surfaceColor、durationFast | 有稳定服务对象的材料及其选择 |
+| Cluster | accentColor、neutralColor | 同组 Variable 的统一入口 |
+| 成员键 | soft、strong、2 | 声明端指定的成员选择 |
+| Mixin | color、boundary、clickable | 完整效果 |
+| State Condition | hover、active、focusVisible | 主体自身状态 |
+
+`surfaceColor`、`controlSize`、`dangerColor` 是稳定身份；`bare`、`small`、`strong`、`0` 是该身份下的成员、档位或配方选择，因此放在后面。描述性部分内部的 `color`、`size`、`width` 仍留在稳定身份末尾，但整个标识符不要求以它们结尾。
+
+Cluster 本身也是 Variable。成员键不要求重复完整身份；`accentColor('soft')` 已经能表达所选成员。hover、active 属于 Variable 状态，不成为成员后缀。
+
+`default` 只是 Cluster 的默认成员键；没有独立的“默认颜色”概念时，直接由 `actionColor` 表达，不建立 `actionColorDefault`。只有同一局部作用域确实并存多个配方、且默认配方需要与它们区分时，才使用 `surfaceColorDefault` 这样的后缀。
+
+名称必须对应稳定服务对象。当前 24px 材料没有独立 Heading 消费者，因此使用 `textSizeExtraExtraLarge`，不以 `headingSize` 假造服务对象。反过来，若未来材料只服务文章标题，`headingSize` 就是稳定对象，不必改成 `textSizeHeading`。
+
+Value 只表达稳定内容；不能为承载状态而建立智能 Value。命名规则不要求把既有稳定 Value 一律改名，也不要求所有名字追加字面上的 Unit 或 CSS 单位。
+
+## 通用与组件归属
+
+`surfaceColor` 描述承载面的颜色，被 Button 使用仍可属于通用抽象。Button 文件中的 `surfaceColorBare` 描述 Button 自己的 bare 配方；JS 名称不重复文件已经提供的 Button 主语，CSS 名称保留 `button-surface-color-bare` 以形成全局身份。
+
+不能只删除 button 前缀就把组件配方搬进抽象层。判断标准是：不用业务名字仍能自然、准确地说明它，其他组件使用也不别扭。只描述某个组件领域的内容留在组件内。
+
+CSS 原始 token 可以继续由基础 CSS 提供。新 Variable 用有形式的名字，并引用原始 token；不为统一 JS 名字而改写无关 CSS 领域。
+
+## 阅读顺序
+
+所有定义都在首次使用之前，定义后紧接消费；后续继续复用。模块归属按描述目标判断，模块内部顺序按首次使用排列。不能先在文件开头堆放整批局部材料，让读者记住尚未使用的名字。

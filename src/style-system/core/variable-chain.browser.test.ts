@@ -88,18 +88,18 @@ test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用
 })
 
 test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 default', () => {
-  const toneDefaultColor = variable('blue', { name: 'browser-tone-color' })
+  const toneColorDefault = variable('blue', { name: 'browser-tone-color' })
   const toneColor = variableCluster({
-    default: toneDefaultColor,
-    soft: variable('lightblue', { name: 'browser-tone-soft-color' }),
+    default: toneColorDefault,
+    soft: variable('lightblue', { name: 'browser-tone-color-soft' }),
     line: variable(
-      () => colorMix([toneDefaultColor, 0.32], 'transparent'),
-      { name: 'browser-tone-line-color' },
+      () => colorMix([toneColorDefault, 0.32], 'transparent'),
+      { name: 'browser-tone-color-line' },
     ),
   })
   const accentColor = variableCluster({
     default: variable('red', { name: 'browser-accent-color' }),
-    soft: variable('pink', { name: 'browser-accent-soft-color' }),
+    soft: variable('pink', { name: 'browser-accent-color-soft' }),
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([

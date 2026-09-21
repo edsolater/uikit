@@ -1,5 +1,5 @@
 /** 中性承载面与透明覆盖色，交互取值与各自材料保持在一起。 */
-import { neutralColor } from './palette'
+import { neutralColor } from './neutral'
 import { variable } from '../../core/css-variable'
 import { colorMix } from '../../values/functions/color-mix'
 import { textColor } from './text'
@@ -8,8 +8,8 @@ import { textColor } from './text'
 export const surfaceColor = variable('var(--color-surface)', { name: 'surface-color' })
 
 /** 中性表面；同名变量随交互状态切换。 */
-export const interactiveSurfaceColor = variable(neutralColor(1), {
-  name: 'interactive-surface-color', registration: { syntax: '*', inherits: true }, states: {
+export const surfaceColorInteractive = variable(neutralColor(1), {
+  name: 'surface-color-interactive', registration: { syntax: '*', inherits: true }, states: {
     hover: neutralColor(2),
     active: neutralColor(3),
   }

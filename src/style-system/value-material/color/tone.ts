@@ -6,32 +6,32 @@ import { surfaceColor } from './surface'
 
 export const accentColor = variableCluster({
   default: variable('var(--color-accent)', { name: 'accent-color' }),
-  soft: variable('var(--color-accent-soft)', { name: 'accent-soft-color' }),
-  strong: variable('var(--color-accent-strong)', { name: 'accent-strong-color' }),
-  foreground: variable('var(--color-accent-fg)', { name: 'accent-foreground-color' }),
-  line: variable('var(--color-accent-focus)', { name: 'accent-line-color' }),
+  soft: variable('var(--color-accent-soft)', { name: 'accent-color-soft' }),
+  strong: variable('var(--color-accent-strong)', { name: 'accent-color-strong' }),
+  foreground: variable('var(--color-accent-fg)', { name: 'accent-color-foreground' }),
+  line: variable('var(--color-accent-focus)', { name: 'accent-color-line' }),
 })
 
-const dangerBaseColor = variable('var(--color-bad)', { name: 'danger-base-color' })
+const dangerColorStrong = variable('var(--color-bad)', { name: 'danger-color-strong' })
 export const dangerColor = variableCluster({
-  default: dangerBaseColor,
-  soft: variable('var(--color-bad-soft)', { name: 'danger-soft-color' }),
-  strong: dangerBaseColor,
-  foreground: variable('var(--color-bad-fg)', { name: 'danger-foreground-color' }),
-  line: variable('var(--color-bad-line)', { name: 'danger-line-color' }),
+  default: dangerColorStrong,
+  soft: variable('var(--color-bad-soft)', { name: 'danger-color-soft' }),
+  strong: dangerColorStrong,
+  foreground: variable('var(--color-bad-fg)', { name: 'danger-color-foreground' }),
+  line: variable('var(--color-bad-line)', { name: 'danger-color-line' }),
 })
 
 export const toneColor = variableCluster({
   default: variable(accentColor, { name: 'tone-color' }),
-  soft: variable(accentColor('soft'), { name: 'tone-soft-color' }),
-  strong: variable(accentColor('strong'), { name: 'tone-strong-color' }),
-  foreground: variable(accentColor('foreground'), { name: 'tone-foreground-color' }),
-  line: variable(accentColor('line'), { name: 'tone-line-color' }),
+  soft: variable(accentColor('soft'), { name: 'tone-color-soft' }),
+  strong: variable(accentColor('strong'), { name: 'tone-color-strong' }),
+  foreground: variable(accentColor('foreground'), { name: 'tone-color-foreground' }),
+  line: variable(accentColor('line'), { name: 'tone-color-line' }),
 })
 
 /** 语气承载面，配方和状态留在定义端。 */
-export const toneSurfaceColor = variable(colorMix([surfaceColor, 0.76], toneColor('soft')), {
-  name: 'tone-surface-color',
+export const surfaceColorTone = variable(colorMix([surfaceColor, 0.76], toneColor('soft')), {
+  name: 'surface-color-tone',
   states: {
     hover: colorMix([surfaceColor, 0.66], toneColor('soft')),
     active: colorMix([surfaceColor, 0.56], toneColor('soft')),

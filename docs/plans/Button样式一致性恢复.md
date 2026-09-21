@@ -119,7 +119,7 @@ Example 的 Accent、Danger 行实际是 `solid + tone`。因此截图中的浅�
 
 ## 材料换了公式，也换了可覆盖的来源
 
-当前材料并不是旧 token 的等价 TS 表达。例如 [tone.ts](../../src/style-system/values/materials/color/tone.ts) 把 accent 定义为品牌色 80% 与 CSS `cyan` 混色；旧色元则从品牌色调整亮度、色度、色相。两者不能通过相同变量名获得相同结果。
+当前材料并不是旧 token 的等价 TS 表达。例如 [tone.ts](../../src/style-system/value-material/color/tone.ts) 把 accent 定义为品牌色 80% 与 CSS `cyan` 混色；旧色元则从品牌色调整亮度、色度、色相。两者不能通过相同变量名获得相同结果。
 
 | 项目 | 旧来源或公式 | 当前来源或公式 |
 | --- | --- | --- |
@@ -133,7 +133,7 @@ Example 的 Accent、Danger 行实际是 `solid + tone`。因此截图中的浅�
 
 亮色 Solid 的常态色恰好相同，不能据此判断材料等价。实测旧 hover 为 `oklch(0.54 0.21 260)`，新 hover 的 OKLab 结果等价于约 `oklch(0.522 0.18 260)`；旧 active 为 `oklch(0.50 0.19 260)`，新 active 约为 `oklch(0.464 0.16 260)`。新版更暗，色度还同时降低。暗色 hover 的亮度也从旧版 0.75 变为新版约 0.73，active 从 0.64 变为约 0.56。
 
-更重要的是，旧 `[--base-brand → 色元 → 语义颜色]` 路径被新材料的固定色板绕过。[palette.ts](../../src/style-system/values/materials/color/palette.ts) 等材料通过 `root` 发出未分层的根变量定义，其中包含与原 token 同名的 `--color-brand`、`--color-accent` 等。它们会覆盖 `@layer tokens` 中的定义，不只影响 Button，也可能影响其他读取这些变量的界面。
+更重要的是，旧 `[--base-brand → 色元 → 语义颜色]` 路径被新材料的固定色板绕过。[palette.ts](../../src/style-system/value-material/color/palette.ts) 等材料通过 `root` 发出未分层的根变量定义，其中包含与原 token 同名的 `--color-brand`、`--color-accent` 等。它们会覆盖 `@layer tokens` 中的定义，不只影响 Button，也可能影响其他读取这些变量的界面。
 
 验证时把根元素 `--base-brand` 改成 `oklch(60% 0.15 140)`：旧 Solid 实底随之变绿，当前 TS 仍为 `oklch(58% 0.2 260)`。这是品牌色控制路径失效，不是主观色差。
 
@@ -262,7 +262,7 @@ Button 的候选修复是不再把通用 `toneSurface` 当成所有 variant 的�
 
 ## 2. 恢复颜色和阴影，先约束共享影响
 
-依据 R1—R5。候选落点是 [palette.ts](../../src/style-system/values/materials/color/palette.ts)、[action.ts](../../src/style-system/values/materials/color/action.ts)、[text.ts](../../src/style-system/values/materials/color/text.ts)、[tone.ts](../../src/style-system/values/materials/color/tone.ts)、[shadow.ts](../../src/style-system/values/materials/shadow.ts) 中被 Button 消费的材料；目录和其余导出不是整体迁移范围。
+依据 R1—R5。候选落点是 [palette.ts](../../src/style-system/value-material/color/palette.ts)、[action.ts](../../src/style-system/value-material/color/action.ts)、[text.ts](../../src/style-system/value-material/color/text.ts)、[tone.ts](../../src/style-system/value-material/color/tone.ts)、[shadow.ts](../../src/style-system/value-material/shadow.ts) 中被 Button 消费的材料；目录和其余导出不是整体迁移范围。
 
 | 监察点与动作 | 怎样判定完成，证据在哪里 | 停止线 | 状态与实际证据 |
 | --- | --- | --- | --- |
@@ -428,7 +428,7 @@ Edge 153.0.4234.32，视口 1600×1100，等待正常 120ms 过渡结束后截�
 4. **不可违背：** 查询不创建 Variable、不生成颜色、不登记规则、不缓存；缺项报错，不能静默回退；不新增 Cluster 类、构造器、核心类型或编译器分支。没有曲线生成器，也不扩展其他阶梯材料。
 5. **不可顺带修改：** 基础 CSS 数值、组件 API、其他组件、布局 Mixin、禁用组合、入口与构建配置。检查不能生成临时截图；不改暂存区，不覆盖用户同时提交的旧修复。
 
-实行顺序是查询契约测试、预定义表和直接消费者迁移、浏览器保护测试、用法同步、完整回归与复杂度审查。材料来自现有基础 CSS，输入是色系和等级，交付原生 Variable；训练、学习与校准不涉及本次查表操作。稳定协议由[样式文件写法／Variable Cluster 查询材料](../style/样式文件写法.md#variable-cluster-查询材料)负责。
+实行顺序是查询契约测试、预定义表和直接消费者迁移、浏览器保护测试、用法同步、完整回归与复杂度审查。材料来自现有基础 CSS，输入是色系和等级，交付原生 Variable；训练、学习与校准不涉及本次查表操作。稳定协议由[样式文件写法／选择同组材料](../style/样式文件写法.md#选择同组材料)负责。
 
 ## 监察点与实际验收
 

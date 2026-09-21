@@ -5,7 +5,7 @@ const definitions = new WeakMap<object, Record<string, Variable>>()
 
 /** 直接使用代表 default Variable；调用时按成员键取得原 Variable。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
-  <Name extends keyof Members | (Extract<keyof Members, number> extends never ? never : number)>(name: Name): Name extends keyof Members ? Members[Name] : Variable
+  <Name extends keyof Members>(name: Name): Members[Name]
 }
 
 /** 聚合带 default 的 Variable 成员；选择未声明成员时抛错。 */

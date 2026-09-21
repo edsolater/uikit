@@ -1,8 +1,9 @@
-/** 验证色阶查询在真实主题、Mixin 消费与局部覆盖中的表现。 */
+/** 验证中性色阶与语义颜色在真实主题和局部覆盖中的表现。 */
 import '../../../css/all-base.css'
 import { afterEach, expect, test } from 'vitest'
 import { color, compileCSS, rule, rules, type RulesHandle } from '../../index'
-import { brandColor, neutralColor } from './palette'
+import { brandColor } from './brand'
+import { neutralColor } from './neutral'
 import { surfaceColor } from './surface'
 
 const handles: RulesHandle[] = []
@@ -20,8 +21,9 @@ function mountStyles() {
   return style
 }
 
-test('完整九级色阶消费基础 CSS，切换主题不需重查或重编译', () => {
-  const swatches = Array.from({ length: 9 }, (_, level) => {
+test('完整九级中性色消费基础 CSS，切换主题不需重编译', () => {
+  const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const
+  const swatches = levels.map((level) => {
     handles.push(rule(`.swatch-${level}`, 'background-color', neutralColor(level)))
     const swatch = document.body.appendChild(document.createElement('div'))
     swatch.className = `swatch-${level}`
@@ -47,7 +49,7 @@ test('完整九级色阶消费基础 CSS，切换主题不需重查或重编译'
   expect(style.textContent).toBe(originalCSS)
 })
 
-test('查询结果用于 Mixin 与局部赋值，覆盖只影响本地及其后代', () => {
+test('Cluster 成员用于 Mixin 与局部赋值，覆盖只影响本地及其后代', () => {
   const background = neutralColor(1)
   const foreground = neutralColor(7)
   handles.push(rules('.sample', [color({ background, foreground })]))

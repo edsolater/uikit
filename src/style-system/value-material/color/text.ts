@@ -4,11 +4,11 @@ import { variableCluster } from '../../core/variable-cluster'
 
 export const textColor = variableCluster({
   default: variable('var(--color-fg)', { name: 'text-color' }),
-  strong: variable('var(--color-fg-strong)', { name: 'text-strong-color' }),
+  strong: variable('var(--color-fg-strong)', { name: 'text-color-strong' }),
 })
 
-export const interactiveForegroundColor = variableFrom(textColor, {
-  name: 'interactive-foreground-color',
+export const foregroundColorInteractive = variableFrom(textColor, {
+  name: 'foreground-color-interactive',
   states: {
     hover: textColor('strong'),
     active: textColor('strong'),

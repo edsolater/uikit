@@ -1,6 +1,6 @@
 # Style System 对象与行为
 
-Style System 提供样式定义与编译能力，业务样式选择材料并声明用途。文件职责见 [架构](architecture.md)，书写方式见 [样式文件写法](../../docs/style/样式文件写法.md)。
+Style System 提供样式定义与编译能力，业务样式选择材料并声明用途。代码文件职责与运行链见 [架构](../architecture.md)。
 
 ## 对象分别负责什么
 
@@ -42,8 +42,8 @@ const surfaceColor = variable(baseColor, {
   },
 })
 
-const buttonSurfaceColor = variableFrom(surfaceColor, {
-  name: 'button-surface-color',
+const surfaceColorDefault = variableFrom(surfaceColor, {
+  name: 'button-surface-color-default',
   states: {
     active: source => colorMix([source, 0.48], neutralColor(2)),
   },
@@ -78,7 +78,7 @@ accentColor('soft')
 ```ts
 rules(button, [
   [$alignSelf, 'center'],
-  [surfaceColor, buttonSurfaceColor],
+  [surfaceColor, surfaceColorDefault],
   color({ background: surfaceColor }),
 ])
 ```

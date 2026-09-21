@@ -12,13 +12,13 @@ export const bold = value(700)
 export const singleLine = value(1)
 
 /** 可覆盖的常规字号 Variable，默认读取常规固定尺度。 */
-export const normalTextSize = variable(undefined, { name: 'normal-text-size', root: { value: '14px' } })
+export const textSizeNormal = variable(undefined, { name: 'text-size-normal', root: { value: '14px' } })
 
 /** 可覆盖的大档字号 Variable，默认读取大档固定尺度。 */
-export const largeTextSize = variable(undefined, { name: 'large-text-size', root: { value: '16px' } })
+export const textSizeLarge = variable(undefined, { name: 'text-size-large', root: { value: '16px' } })
 
 /** 可覆盖的超大档字号 Variable，默认读取超大档固定尺度。 */
-export const extraLargeTextSize = variable(undefined, { name: 'extra-large-text-size', root: { value: '20px' } })
+export const textSizeExtraLarge = variable(undefined, { name: 'text-size-extra-large', root: { value: '20px' } })
 
-/** 可覆盖的标题字号 Variable，默认读取标题固定尺度。 */
-export const headingSize = variable(undefined, { name: 'heading-size', root: { value: '24px' } })
+/** 可覆盖的超超大档字号 Variable。 */
+export const textSizeExtraExtraLarge = variable(undefined, { name: 'text-size-extra-extra-large', root: { value: '24px' } })

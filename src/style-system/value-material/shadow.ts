@@ -19,22 +19,22 @@ export const darkShade = value('rgb(0 0 0 / 38%)')
 export const contactShade = value('rgb(0 0 0 / 3%)')
 
 /** 平面档，不产生阴影。 */
-export const flatShadow = variable('var(--shadow-0)', { name: 'flat-shadow' })
+export const shadowFlat = variable('var(--shadow-0)', { name: 'shadow-flat' })
 
 /** 贴近表面的低层阴影。 */
-export const lowShadow = variable('var(--shadow-1)', { name: 'low-shadow' })
+export const shadowLow = variable('var(--shadow-1)', { name: 'shadow-low' })
 
 /** 抬升档，组合接触与扩散两层阴影。 */
-export const raisedShadow = variable('var(--shadow-2)', { name: 'raised-shadow' })
+export const shadowRaised = variable('var(--shadow-2)', { name: 'shadow-raised' })
 
 /** 强抬升档，使用基础 token 随主题选择的几何与浓度。 */
-export const elevatedShadow = variable('var(--shadow-3)', { name: 'elevated-shadow' })
+export const shadowElevated = variable('var(--shadow-3)', { name: 'shadow-elevated' })
 
 /** 可交互主体的层级反馈；悬停时抬升，按下或禁用时回到平面。 */
-export const interactiveShadow = variable(lowShadow, {
-  name: 'interactive-shadow', states: {
-    hover: raisedShadow,
-    active: flatShadow,
-    disabled: flatShadow,
+export const shadowInteractive = variable(shadowLow, {
+  name: 'shadow-interactive', states: {
+    hover: shadowRaised,
+    active: shadowFlat,
+    disabled: shadowFlat,
   }
 })

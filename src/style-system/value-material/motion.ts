@@ -17,10 +17,10 @@ export const fastBase = value('120ms')
 
 /**
  * 可覆盖的快速过渡时长，默认将 120ms 乘以动效倍率。
- * @example [$transition, transitionValue([$opacity, fastDuration, standardEasing])] // 通常过渡 120ms；减少动效时为 0ms。
+ * @example [$transition, transitionValue([$opacity, durationFast, easingStandard])] // 通常过渡 120ms；减少动效时为 0ms。
  */
-export const fastDuration = variable(undefined, {
-  name: 'fast-duration', root: {
+export const durationFast = variable(undefined, {
+  name: 'duration-fast', root: {
     value: calcMultiply(fastBase, motionScaleRatio),
   }
 })
@@ -29,4 +29,4 @@ export const fastDuration = variable(undefined, {
 export const standardCurve = value('cubic-bezier(0.2, 0, 0, 1)')
 
 /** 可覆盖的标准缓动曲线。 */
-export const standardEasing = variable(undefined, { name: 'standard-easing', root: { value: standardCurve } })
+export const easingStandard = variable(undefined, { name: 'easing-standard', root: { value: standardCurve } })

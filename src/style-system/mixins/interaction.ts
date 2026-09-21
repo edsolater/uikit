@@ -11,7 +11,7 @@ import { $borderColor } from '../properties/border'
 import { $boxShadow } from '../properties/box-shadow'
 import { translateY } from '../values/functions/transform'
 import { disabledFade } from '../value-material/opacity'
-import { fastDuration, standardEasing } from '../value-material/motion'
+import { durationFast, easingStandard } from '../value-material/motion'
 import { transitionValue } from '../values/transition'
 import { $outline, $outlineOffset } from '../properties/outline'
 import { focusOutline, focusOffset } from '../value-material/focus'
@@ -37,12 +37,12 @@ export const clickable = (options: ClickableMixinOptions = {}): Declarations => 
   [
     $transition,
     transitionValue(
-      [$backgroundColor, fastDuration, standardEasing],
-      [$borderColor, fastDuration, standardEasing],
-      [$boxShadow, fastDuration, standardEasing],
-      [$color, fastDuration, standardEasing],
-      [$opacity, fastDuration, standardEasing],
-      [$transform, fastDuration, standardEasing],
+      [$backgroundColor, durationFast, easingStandard],
+      [$borderColor, durationFast, easingStandard],
+      [$boxShadow, durationFast, easingStandard],
+      [$color, durationFast, easingStandard],
+      [$opacity, durationFast, easingStandard],
+      [$transform, durationFast, easingStandard],
     ),
   ],
 ]
