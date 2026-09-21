@@ -13,11 +13,11 @@
 | core/css-rule.ts | 声明组合、登记与句柄；公开类型只接受对象目标 |
 | core/css-valuable.ts | 按需依赖及消费位置 |
 | core/css-value.ts | 稳定 Value、可识别的可调用内容协议 |
-| core/css-variable.ts | 创建、source 回调、内部定义及引用链延伸 |
+| core/css-variable.ts | 创建、直接或函数 source、内部定义及引用链延伸 |
 | core/variable-cluster.ts | 对象成员配置、选择、default 代理及内部同名声明配对 |
 | core/css-root.ts | 源账本、快照编译与宿主提交 |
 | compiler/compile-value.ts | 稳定内容递归求值与循环检测 |
-| compiler/compile-variable.ts | 引用、自身状态及来源链的定义输出 |
+| compiler/compile-variable.ts | 引用、函数 source、自身状态及来源链的定义输出 |
 | compiler/compile-css.ts | 规则、依赖和自动定义记录，最后输出字符串 |
 | compiler/css-records.ts | 条件、属性、文本三项记录 |
 | properties、selectors | CSS Key 与条件 |
@@ -40,7 +40,7 @@ flowchart LR
   CSS --> Browser[浏览器样式引擎]
 ```
 
-Value 保留内容，Variable 保留黑盒身份，Cluster 保留 default 与选择关系。编译器遇到目标和内容均为 Cluster 的声明时，只配对双方已有的同名成员并校验实际配对的别名冲突，再在同一地址展开一层 Variable 声明；普通值消费仍用 default。编译器消费 Variable 时输出 var 引用，并在消费地址补充其自身状态定义。普通 Value 不展开状态；每个 Variable 只生成常态及各项有效状态，不自动枚举交集。
+Value 保留内容，Variable 保留黑盒身份，Cluster 保留 default 与选择关系。Variable 可以直接保存 ValueInput，也可以保存 `() => ValueInput`；只有 Variable 编译器在实际消费时执行普通 source 函数，返回内容继续进入统一 ValueInput 读取。编译器遇到目标和内容均为 Cluster 的声明时，只配对双方已有的同名成员并校验实际配对的别名冲突，再在同一地址展开一层 Variable 声明；普通值消费仍用 default。编译器消费 Variable 时输出 var 引用，并在消费地址补充其自身状态定义。普通 Value 不展开状态；每个 Variable 只生成常态及各项有效状态，不自动枚举交集。
 
 自动定义采用显式 Rule 的消费作用域，状态内容求值时的临时条件不会污染依赖的常态。同一 Variable、同一普通地址的自动声明按中央状态顺序排列；显式同址声明优先。每份源规则或依赖输出先形成自动定义与显式记录，再将互不覆盖的同层同地址记录共同输出；同名变量、原生属性之间的潜在覆盖、原始内容与定义类 At Rule 阻止跨越重排，也不跨源规则与依赖输出边界归并。CSS @function 的局部内容与 result 保持在同一份定义中。
 

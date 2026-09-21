@@ -4,20 +4,23 @@ import type { Rules } from './css-rule'
 import type { Valuable } from './css-valuable'
 import { isCSSContent, type ValueInput } from './css-value'
 
+/** Variable 可直接保存内容，也可在编译消费时生成内容。 */
+export type VariableSource = ValueInput | (() => ValueInput)
+
 /** 可引用、可赋值的黑盒 CSS Variable。 */
 export interface Variable extends Valuable {
   kind: 'variable'
   name: string
 }
 /** Variable 的名称、状态配方与可选根值、注册配置；状态回调接收创建时的原始来源。 */
-export interface VariableOptions<Source extends ValueInput = ValueInput> {
+export interface VariableOptions<Source extends VariableSource = VariableSource> {
   name: string
   states?: Record<string, ValueInput | ((source: Source) => ValueInput)>
   root?: { value: ValueInput; dark?: ValueInput; reducedMotion?: ValueInput }
   registration?: { syntax: string; inherits: boolean; initialValue?: ValueInput }
 }
 interface VariableDefinition {
-  source: ValueInput
+  source: VariableSource
   states: Map<string, ValueInput>
   inherited?: Variable
 }
@@ -30,8 +33,12 @@ export function isVariable(input: unknown): input is Variable {
   return input !== null && (typeof input === 'object' || typeof input === 'function')
     && 'kind' in input && input.kind === 'variable'
 }
+/** 排除同样可调用的 Variable Cluster 与 CSS Function，只识别普通 source 函数。 */
+export function isVariableSourceFunction(input: VariableSource): input is () => ValueInput {
+  return typeof input === 'function' && !isVariable(input) && !isCSSContent(input)
+}
 /** 创建定义；回调只在创建时求值，收到原始首参数。 */
-export function variable<Source extends ValueInput>(source: Source, options: VariableOptions<NoInfer<Source>>): Variable {
+export function variable<Source extends VariableSource>(source: Source, options: VariableOptions<NoInfer<Source>>): Variable {
   const reference: Variable = { kind: 'variable', name: options.name.replace(/^--/, '') }
   const states = new Map<string, ValueInput>()
   for (const [name, content] of Object.entries(options.states ?? {})) {

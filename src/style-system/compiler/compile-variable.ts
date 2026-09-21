@@ -1,5 +1,5 @@
 /** Variable 引用、来源链与自身状态声明。 */
-import { variableDefinition, type Variable, type VariableInput } from '../core/css-variable'
+import { isVariableSourceFunction, variableDefinition, type Variable, type VariableInput, type VariableSource } from '../core/css-variable'
 import { resolveStateConditions } from '../state-conditions'
 import { compileValue, readValue, type ValueContext, type ValueResult } from './compile-value'
 
@@ -8,10 +8,15 @@ function stateNames(reference: Variable): string[] {
   const definition = variableDefinition(reference)
   return [...new Set([...(definition.inherited ? stateNames(definition.inherited) : []), ...definition.states.keys()])]
 }
+/** source 函数只由 Variable 编译执行；返回结果继续走统一 ValueInput 读取。 */
+function sourceContent(source: VariableSource) {
+  return isVariableSourceFunction(source) ? source() : source
+}
 /** 输出 Variable 引用及来源 fallback，并在显式消费作用域补充线性的自身状态声明。 */
 export function compileVariableReference(reference: Variable, context: ValueContext): string {
   const definition = variableDefinition(reference)
-  const fallback = readValue(definition.source, context)
+  const source = sourceContent(definition.source)
+  const fallback = readValue(source, context)
   const states = resolveStateConditions(stateNames(reference))
   if (states.length) {
     context.defineVariable(reference, context, (scope) => {
@@ -22,7 +27,7 @@ export function compileVariableReference(reference: Variable, context: ValueCont
       for (const state of states) {
         if (current && state.order <= current.order) continue
         const active = resolveStateConditions([...(scope.conditions ?? []), state.name])
-        const content = definition.states.has(state.name) ? definition.states.get(state.name) : definition.source
+        const content = definition.states.has(state.name) ? definition.states.get(state.name) : source
         const text = readValue(content, { ...scope, conditions: active.map((state) => state.name) })
         if (text !== undefined) values.push({ conditions: active.map((state) => state.name), text })
       }

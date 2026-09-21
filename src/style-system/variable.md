@@ -1,0 +1,145 @@
+Variable 是可引用、可声明的样式内容身份。本文记录它的目标契约：Variable 只有一种；它可以直接保存可 CSS 化内容，也可以保存一个在编译时产生这类内容的函数。
+
+当前实现支持直接内容、Variable 引用、CSS Function 和 `() => ValueInput` 形式的 source 生产函数。函数在创建 Variable 时不执行，编译实际消费该 Variable 时才执行。
+
+# 只有一种 Variable
+
+Variable 不区分“原始 Variable”和“派生 Variable”。两者拥有相同的对象身份与使用方式，差别只在保存的 source：
+
+```ts
+const toneDefault = variable('blue', {
+  name: 'tone-color',
+})
+
+const toneLine = variable(
+  () => toneDefault,
+  { name: 'tone-line-color' },
+)
+
+const toneSoft = variable(
+  () => colorMix([toneDefault, 0.2], 'white'),
+  { name: 'tone-soft-color' },
+)
+```
+
+`toneDefault` 保存直接内容；`toneLine` 的函数返回另一个 Variable；`toneSoft` 的函数返回可继续编译的颜色内容。三者都是普通 Variable，不增加派生类型、基础层或结果层。
+
+# Source 契约
+
+Variable 的 source 接受直接内容或内容生产函数：
+
+```ts
+type VariableSource =
+  | ValueInput
+  | (() => ValueInput)
+```
+
+`ValueInput` 表示编译器已经能够继续读取的内容，包括字符串、数字、Value、Variable、CSS Function 和 `undefined`。Value 只是其中一种包装，不代表所有可 CSS 化内容。
+
+直接传入内容时，调用方允许这个表达式在定义阶段构造：
+
+```ts
+variable(
+  colorMix([toneDefault, 0.2], 'white'),
+  { name: 'tone-soft-color' },
+)
+```
+
+传入生产函数时，Variable 只保存函数；编译器需要读取这个 Variable 时才执行整个表达式：
+
+```ts
+variable(
+  () => colorMix([toneDefault, 0.2], 'white'),
+  { name: 'tone-soft-color' },
+)
+```
+
+后者不能依赖 `colorMix()` 恰好怎样实现延迟。`colorMix()` 的返回值是黑盒：生产函数返回它以后，编译器只按统一的 ValueInput 协议继续读取。
+
+# 编译过程
+
+编译器读取 Variable 时按以下顺序处理 source：
+
+1. Variable 与 Variable Cluster 虽然可能可调用，仍按 Variable 读取。
+2. 已标记的 CSS Function 按自己的 CSS 输出协议读取。
+3. 其余普通函数作为 source 生产函数执行，返回结果重新进入 ValueInput 编译。
+4. 直接内容按已有 ValueInput 规则编译。
+
+这一区分不能只检查 `typeof source === 'function'`。Variable Cluster、CSS Function 与 source 生产函数都可能是函数对象，但职责不同。
+
+生产函数只确定求值推迟到编译需要该 Variable 时。一次编译中是否缓存结果、同一 Variable 被多次消费时执行几次，尚未裁决，不能从“类似 memo”推导。
+
+# Cluster 中的派生关系
+
+Variable Cluster 只聚合多个 Variable，不拥有另一套成员值：
+
+```ts
+const toneColor = variableCluster({
+  default: toneDefault,
+  soft: toneSoft,
+  strong: variable(
+    () => colorMix([toneDefault, 0.8], 'black'),
+    { name: 'tone-strong-color' },
+  ),
+  foreground: variable('white', {
+    name: 'tone-foreground-color',
+  }),
+  line: toneLine,
+})
+```
+
+`soft` 和 `strong` 不是状态，也不是特殊成员。它们是普通 Variable，其 source 生产函数读取 `default` Variable。
+
+若来源 Cluster 只有 `default`、`foreground` 和 `line`：
+
+```ts
+rules('.Button[data-tone="accent"]', [
+  [toneColor, accentColor],
+])
+```
+
+编译器只为双方已有的三个同名成员生成局部声明：
+
+```css
+.Button[data-tone="accent"] {
+  --tone-color: var(--accent-color, red);
+  --tone-foreground-color: var(--accent-foreground-color, white);
+  --tone-line-color: var(--accent-line-color, darkred);
+}
+```
+
+`soft` 和 `strong` 没有被复制，也不需要重写。消费它们时，原有生产函数仍读取当前作用域的 `toneDefault`：
+
+```css
+.Button {
+  background-color: var(
+    --tone-soft-color,
+    color-mix(in oklab, var(--tone-color, blue) 20%, white)
+  );
+}
+```
+
+若来源 Cluster 也提供 `soft` 或 `strong`，现有整组声明规则会赋值这些同名成员；该作用域便采用来源成员，而不是目标成员自己的 fallback 配方。
+
+# 与 variableFrom 的区别
+
+普通引用和计算不需要 `variableFrom()`：
+
+```ts
+variable(() => sourceVariable, options)
+variable(() => colorMix(sourceVariable, 'white'), options)
+```
+
+`variableFrom()` 还记录来源链，使新 Variable 继承来源 Variable 的状态定义。只有需要这项状态链语义时才使用它，不能用 `variableFrom()` 表示一种通用的“派生 Variable”。
+
+source 生产函数与 `states` 中的回调位于不同配置位置，也承担不同职责。本篇只确定 source 生产函数在编译时产生 ValueInput；状态回调怎样接收 source、何时求值，仍由 Variable 状态契约负责，不能由相同的函数语法顺带推断。
+
+# 实现验收
+
+这项契约已经通过以下条件验收：
+
+- 创建 Variable 时不执行 source 生产函数。
+- 编译实际消费的 Variable 时才执行生产函数，并继续编译其返回的 Variable、Value 或 CSS Function。
+- 编译器不会把 Variable Cluster 或 CSS Function 误当 source 生产函数执行。
+- Cluster 局部声明改变 `default` 后，未被赋值的 `soft`、`strong` 保留原配方并读取当前 `default`。
+- 循环引用仍然终止编译，不因增加生产函数绕过检测。

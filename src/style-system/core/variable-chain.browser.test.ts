@@ -7,6 +7,7 @@ import { condition } from './css-condition'
 import { compileRules } from '../compiler/compile-css'
 import { stateCondition } from '../state-conditions'
 import { calcMultiply } from '../values/functions/calc'
+import { colorMix } from '../values/functions/color-mix'
 import type { Rules } from './css-rule'
 
 stateCondition('chainHover', condition('&:where([data-hover])'))
@@ -84,6 +85,41 @@ test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用
   expect(getComputedStyle(local).height).toBe('25px')
   expect(getComputedStyle(neighbor).width).toBe('1px')
   expect(getComputedStyle(neighbor).height).toBe('2px')
+})
+
+test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 default', () => {
+  const toneDefaultColor = variable('blue', { name: 'browser-tone-color' })
+  const toneColor = variableCluster({
+    default: toneDefaultColor,
+    soft: variable('lightblue', { name: 'browser-tone-soft-color' }),
+    line: variable(
+      () => colorMix([toneDefaultColor, 0.32], 'transparent'),
+      { name: 'browser-tone-line-color' },
+    ),
+  })
+  const accentColor = variableCluster({
+    default: variable('red', { name: 'browser-accent-color' }),
+    soft: variable('pink', { name: 'browser-accent-soft-color' }),
+  })
+  const style = document.body.appendChild(document.createElement('style'))
+  style.textContent = compileRules([
+    [[condition('.LazyVariableButton')], 'background', toneColor('line')],
+    [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColor, accentColor],
+  ])
+
+  const ordinary = document.body.appendChild(document.createElement('div'))
+  ordinary.className = 'LazyVariableButton'
+  const accent = document.body.appendChild(document.createElement('div'))
+  accent.className = 'LazyVariableButton'
+  accent.dataset.tone = 'accent'
+  const ordinaryReference = document.body.appendChild(document.createElement('div'))
+  ordinaryReference.style.background = 'color-mix(in oklab, blue 32%, transparent)'
+  const accentReference = document.body.appendChild(document.createElement('div'))
+  accentReference.style.background = 'color-mix(in oklab, red 32%, transparent)'
+
+  expect(getComputedStyle(ordinary).backgroundColor).toBe(getComputedStyle(ordinaryReference).backgroundColor)
+  expect(getComputedStyle(accent).backgroundColor).toBe(getComputedStyle(accentReference).backgroundColor)
+  expect(getComputedStyle(accent).backgroundColor).not.toBe(getComputedStyle(ordinary).backgroundColor)
 })
 
 test.each([false, true])('首次状态内引用与普通消费的顺序不改变浏览器结果：%s', (ordinaryFirst) => {

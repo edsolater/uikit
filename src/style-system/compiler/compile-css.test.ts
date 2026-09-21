@@ -8,6 +8,7 @@ import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
 import { value, cssContent, type ValueInput } from '../core/css-value'
 import { variable } from '../core/css-variable'
+import { variableCluster } from '../core/variable-cluster'
 import { $margin, $marginLeft } from '../properties/margin'
 import { $padding } from '../properties/padding'
 import { $border } from '../properties/border'
@@ -91,6 +92,40 @@ test('两个智能 Variable 的最终 CSS 每个状态只有一个块且没有�
   expect.soft(css.match(/--grouped-(?:first|second)-color:/g)).toHaveLength(6)
   expect(css).toMatch(/background-color:var\(--grouped-first-color(?:,red)?\);/)
   expect(css).toMatch(/color:var\(--grouped-second-color(?:,green)?\);/)
+})
+
+test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保留未匹配成员配方', () => {
+  const toneDefaultColor = variable('blue', { name: 'tone-color' })
+  const toneLineSource = vi.fn(() => colorMix([toneDefaultColor, 0.32], 'transparent'))
+  const toneColor = variableCluster({
+    default: toneDefaultColor,
+    soft: variable('lightblue', { name: 'tone-soft-color' }),
+    line: variable(toneLineSource, { name: 'tone-line-color' }),
+  })
+  const accentColor = variableCluster({
+    default: variable('red', { name: 'accent-color' }),
+    soft: variable('pink', { name: 'accent-soft-color' }),
+  })
+
+  keep(legacyRules('.LazyVariableButton', [['background', toneColor('line')]]))
+  keep(legacyRules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColor, accentColor]]))
+  expect(toneLineSource).not.toHaveBeenCalled()
+  expect(compileCSS()).toBe('.LazyVariableButton {\nbackground: var(--tone-line-color, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));\n&[data-tone="accent"] {\n--tone-color: var(--accent-color, red);\n--tone-soft-color: var(--accent-soft-color, pink);\n}\n}')
+  expect(toneLineSource).toHaveBeenCalledTimes(1)
+})
+
+test('Variable source 函数可以返回直接内容或 Variable，循环返回自身仍然终止编译', () => {
+  const baseSize = variable('8px', { name: 'base-size' })
+  const directSize = variable(() => '12px', { name: 'direct-size' })
+  const linkedSize = variable(() => baseSize, { name: 'linked-size' })
+  keep(rule('.LazyVariableSource', 'width', directSize))
+  keep(rule('.LazyVariableSource', 'height', linkedSize))
+  expect(compileCSS()).toBe('.LazyVariableSource {\nwidth: var(--direct-size, 12px);\nheight: var(--linked-size, var(--base-size, 8px));\n}')
+
+  let circularColor: ReturnType<typeof variable>
+  circularColor = variable(() => circularColor, { name: 'circular-color' })
+  keep(rule('.CircularVariableSource', 'color', circularColor))
+  expect(() => compileCSS()).toThrow('循环引用')
 })
 
 test('三项 Rule 递归继承地址，普通 Rule 的重复条件原样保留', () => {

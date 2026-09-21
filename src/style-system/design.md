@@ -8,7 +8,7 @@ Style System 提供样式定义与编译能力，业务样式选择材料并声�
 | --- | --- |
 | Key | 表达一个 CSS 属性或描述符 |
 | Value | 包装稳定内容及按需依赖，不选择或传播状态 |
-| Variable | 拥有名字与状态行为；定义完成后作为黑盒使用 |
+| [Variable](variable.md) | 拥有名字、source 与状态行为；定义完成后作为黑盒使用 |
 | Variable Cluster | 聚合已有 Variable；直接使用代表 default，调用选择成员 |
 | State Condition | 表达同一主体的状态条件及优先级 |
 | Condition | 表达有序 CSS 地址，包括选择器和 At Rule |
@@ -30,6 +30,8 @@ flowchart LR
 ```
 
 ## 创建与延伸
+
+Variable 的统一身份、source 生产函数、编译时机及 Cluster 派生关系见 [Variable](variable.md)。本节其余文字说明状态链行为。
 
 ```ts
 const surfaceColor = variable(baseColor, {
