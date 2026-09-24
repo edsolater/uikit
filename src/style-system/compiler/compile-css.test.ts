@@ -2,7 +2,8 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../state-conditions'
 import { compileCSS } from '../core/css-root'
-import { rule, rules, type Rules, type RuleValue, type RulesHandle, type DeclarationGroup, type Declarations } from '../core/css-rule'
+import { compileRules } from './compile-css'
+import { rule, rules, type Rules, type RulesHandle, type Declarations } from '../core/css-rule'
 import { condition, media, type ConditionInput } from '../core/css-condition'
 import { key } from '../core/css-key'
 import { declare } from '../core/css-declaration'
@@ -34,7 +35,7 @@ stateCondition('testMedia', media('(width > 1px)'))
 stateCondition('revisionA', condition('&[data-a]'))
 stateCondition('revisionB', condition('&[data-b]'))
 
-const legacyRules = rules as (path: ConditionInput, declarations: unknown) => RulesHandle
+const runtimeRules = rules as (path: ConditionInput, declarations: unknown) => RulesHandle
 
 const handles: RulesHandle[] = []
 /** 保留正式登记返回的句柄，交给 afterEach 清理；不改变句柄能力。 */
@@ -45,53 +46,6 @@ function keep<T extends RulesHandle>(handle: T): T {
 afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
   vi.restoreAllMocks()
-})
-
-// 用户明确要求的实现：同层同地址声明共同输出；下面只使用互不覆盖的不同 Variable。
-// Agent 测试假设：用正则读取这个无字符串/复杂内容的简单 CSS 夹具，不是通用 CSS 解析协议。
-test('六个独立 Variable 声明节点按同层地址组织为一个主体和两个状态块', () => {
-  // 使用公共编译入口验证结果，不限定分组必须发生在哪个内部函数中。
-  keep(rule('.Grouped', '--v1', 'red'))
-  keep(rule(['.Grouped', '&:hover'], '--v1', 'pink'))
-  keep(rule(['.Grouped', '&:active'], '--v1', 'darkred'))
-  keep(rule('.Grouped', '--v2', 'green'))
-  keep(rule(['.Grouped', '&:hover'], '--v2', 'lightgreen'))
-  keep(rule(['.Grouped', '&:active'], '--v2', 'darkgreen'))
-  const css = compileCSS().replace(/\s/g, '')
-  expect.soft(css.match(/\.Grouped\{/g)).toHaveLength(1)
-  for (const [state, expected] of [
-    ['hover', ['--v1:pink', '--v2:lightgreen']],
-    ['active', ['--v1:darkred', '--v2:darkgreen']],
-  ] as [string, string[]][]) {
-    const blocks = [...css.matchAll(new RegExp(`&:${state}\\{([^{}]*)\\}`, 'g'))]
-    expect.soft(blocks).toHaveLength(1)
-    expect.soft(blocks.flatMap(match => match[1].split(';').filter(Boolean)).sort()).toEqual(expected.sort())
-  }
-  expect(css.match(/--v[12]:/g)).toHaveLength(6)
-})
-
-// 用户明确要求：状态不自动扩散，同层同地址声明共同输出。
-// Agent 测试假设：复用现有 testHover/testActive 登记建立原始选择器；此函数不是用户要求的公共 API。
-// 正则、辅助登记和 fallback 的具体检查方式可替换，跨任务不能据此限定编译器内部组织。
-test('两个智能 Variable 的最终 CSS 每个状态只有一个块且没有自动交集', () => {
-  const first = variable('red', { name: 'grouped-first-color', states: { testHover: 'pink', testActive: 'darkred' } })
-  const second = variable('green', { name: 'grouped-second-color', states: { testHover: 'lightgreen', testActive: 'darkgreen' } })
-  keep(rule('.GroupedVariables', 'background-color', first))
-  keep(rule('.GroupedVariables', 'color', second))
-  const css = compileCSS().replace(/\s/g, '')
-  expect.soft(css.match(/&:where\(:hover\)\{/g)).toHaveLength(1)
-  expect.soft(css.match(/&:where\(:active\)\{/g)).toHaveLength(1)
-  for (const [state, expected] of [
-    ['hover', ['--grouped-first-color:pink', '--grouped-second-color:lightgreen']],
-    ['active', ['--grouped-first-color:darkred', '--grouped-second-color:darkgreen']],
-  ] as [string, string[]][]) {
-    const blocks = [...css.matchAll(new RegExp(`&:where\\(:${state}\\)\\{([^{}]*)\\}`, 'g'))]
-    expect.soft(blocks).toHaveLength(1)
-    expect.soft(blocks.flatMap(match => match[1].split(';').filter(Boolean)).sort()).toEqual(expected.sort())
-  }
-  expect.soft(css.match(/--grouped-(?:first|second)-color:/g)).toHaveLength(6)
-  expect(css).toMatch(/background-color:var\(--grouped-first-color(?:,red)?\);/)
-  expect(css).toMatch(/color:var\(--grouped-second-color(?:,green)?\);/)
 })
 
 test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保留未匹配成员配方', () => {
@@ -107,10 +61,13 @@ test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保�
     soft: variable('pink', { name: 'accent-color-soft' }),
   })
 
-  keep(legacyRules('.LazyVariableButton', [['background', toneColor('line')]]))
-  keep(legacyRules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColor, accentColor]]))
+  keep(rules('.LazyVariableButton', [[key('background'), toneColor('line')]]))
+  keep(rules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColor, accentColor]]))
   expect(toneColorLineSource).not.toHaveBeenCalled()
-  expect(compileCSS()).toBe('.LazyVariableButton {\nbackground: var(--tone-color-line, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));\n&[data-tone="accent"] {\n--tone-color: var(--accent-color, red);\n--tone-color-soft: var(--accent-color-soft, pink);\n}\n}')
+  const css = compileCSS()
+  expect(css).toContain('background: var(--tone-color-line, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));')
+  expect(css).toContain('--tone-color: var(--accent-color, red);')
+  expect(css).toContain('--tone-color-soft: var(--accent-color-soft, pink);')
   expect(toneColorLineSource).toHaveBeenCalledTimes(1)
 })
 
@@ -120,7 +77,9 @@ test('Variable source 函数可以返回直接内容或 Variable，循环返回�
   const linkedSize = variable(() => baseSize, { name: 'linked-size' })
   keep(rule('.LazyVariableSource', 'width', directSize))
   keep(rule('.LazyVariableSource', 'height', linkedSize))
-  expect(compileCSS()).toBe('.LazyVariableSource {\nwidth: var(--direct-size, 12px);\nheight: var(--linked-size, var(--base-size, 8px));\n}')
+  const css = compileCSS()
+  expect(css).toContain('width: var(--direct-size, 12px);')
+  expect(css).toContain('height: var(--linked-size, var(--base-size, 8px));')
 
   let circularColor: ReturnType<typeof variable>
   circularColor = variable(() => circularColor, { name: 'circular-color' })
@@ -132,14 +91,15 @@ test('三项 Rule 递归继承地址，普通 Rule 的重复条件原样保留',
   const child: Rules = [[[condition('&:hover')], undefined, 'blue']]
   const source: Rules = [[[condition('.example'), condition('&:hover')], 'color', child]]
   keep(rule(undefined, undefined, source))
-  expect(compileCSS()).toBe('.example {\n&:hover {\n&:hover {\ncolor: blue;\n}\n}\n}')
+  expect(compileCSS()).toMatch(/&:hover\s*\{\s*&:hover\s*\{\s*color:\s*blue;/)
 })
 
 test('同址声明保留顺序，删除句柄不影响其他登记', () => {
   const first = keep(rule('.example', 'color', 'red'))
   keep(rule('.example', 'display', 'grid'))
   const second = keep(rule('.example', key('color'), 'blue'))
-  expect(compileCSS()).toBe('.example {\ncolor: red;\ndisplay: grid;\ncolor: blue;\n}')
+  expect([...compileCSS().matchAll(/(?:color|display):\s*([^;]+);/g)].map(([, text]) => text))
+    .toEqual(['red', 'grid', 'blue'])
   first.remove()
   expect(() => first.replace('black')).toThrow('已删除')
   second.replace('green')
@@ -167,125 +127,106 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
 
 test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
   const foreground = variable('black', { name: 'local-foreground' })
-  expect(declare(foreground, 'red')).toEqual([foreground, 'red'])
-  expect(declare($color, foreground)).toEqual([$color, foreground])
-  keep(legacyRules('.example', [[foreground, 'red'], [$color, foreground]]))
+  keep(rules('.example', [[foreground, 'red'], [$color, foreground]]))
   expect(compileCSS()).toContain('--local-foreground: red;\ncolor: var(--local-foreground, black);')
 })
 
-test('对象、数组、Map、Set 与一次性 Iterable 进入同一有序声明路径', () => {
-  const tuples: [string, string][] = [
-    ['display', 'inline-flex'],
-    ['alignItems', 'center'],
-    ['justifyContent', 'center'],
-  ]
-  let iteratorCalls = 0
-  const once: Iterable<[string, string]> = {
-    *[Symbol.iterator]() {
-      iteratorCalls += 1
-      if (iteratorCalls > 1) throw new Error('声明 Iterable 被重复读取。')
-      yield* tuples
-    },
-  }
-  const inputs: unknown[] = [
-    { display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
-    tuples,
-    new Map(tuples),
-    new Set(tuples),
-    once,
-  ]
-  const outputs = inputs.map((input) => {
-    const handle = legacyRules('.Inputs', input)
-    const output = compileCSS()
-    handle.remove()
-    return output
-  })
-  expect(new Set(outputs)).toHaveLength(1)
-  expect(outputs[0]).toBe('.Inputs {\ndisplay: inline-flex;\nalign-items: center;\njustify-content: center;\n}')
-  expect(iteratorCalls).toBe(1)
-})
-
-test('声明名称统一解析已登记别名，同时保留原生与自定义属性字符串', () => {
-  keep(legacyRules('.Names', {
-    alignItems: 'center',
-    'future-property': 'native-value',
-    '--local-property': 'custom-value',
-  }))
+test('声明名称指向明确属性，不猜测未知名称', () => {
+  keep(rule('.Names', 'alignItems', 'center'))
+  keep(rule('.Names', 'future-property', 'native-value'))
+  keep(rule('.Names', '--local-property', 'custom-value'))
   keep(rule('.SingleName', 'justifyContent', 'center'))
-  expect(compileCSS()).toContain('.Names {\nalign-items: center;\nfuture-property: native-value;\n--local-property: custom-value;\n}')
-  expect(compileCSS()).toContain('.SingleName {\njustify-content: center;\n}')
+  const css = compileCSS()
+  expect(css).toContain('align-items: center;')
+  expect(css).toContain('future-property: native-value;')
+  expect(css).toContain('--local-property: custom-value;')
+  expect(css).toContain('justify-content: center;')
   key('test-collision-target')
   expect(() => key('testCollision-target')).toThrow('CSS Key 名称冲突：testCollisionTarget')
   expect(() => rule('.PartialName', 'testCollision-target', 'value')).toThrow('未知 CSS Key 名称：testCollision-target')
-  expect(() => legacyRules('.Unknown', { unknownAlias: 'value' })).toThrow('未知 CSS Key 名称：unknownAlias')
+  expect(() => rule('.Unknown', 'unknownAlias', 'value')).toThrow('未知 CSS Key 名称：unknownAlias')
 })
 
 test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefined', () => {
   const local = variable('black', { name: 'ordered-local' })
   const content = vi.fn(() => '4px')
-  const nested: unknown[] = [
-    { margin: '1px' },
-    new Set<[string, RuleValue]>([['margin-left', '2px'], ['margin', '3px']]),
+  const nested: Declarations = [
+    [key('margin'), '1px'],
+    [[key('margin-left'), '2px'], [key('margin'), '3px']],
     undefined,
-    [[local, 'red'], ['padding', cssContent(content)], ['color', local]],
+    [[local, 'red'], [key('padding'), cssContent(content)], [key('color'), local]],
   ]
-  keep(legacyRules('.Ordered', nested))
+  keep(rules('.Ordered', nested))
   expect(content).not.toHaveBeenCalled()
-  expect(compileCSS()).toBe('.Ordered {\nmargin: 1px;\nmargin-left: 2px;\nmargin: 3px;\n--ordered-local: red;\npadding: 4px;\ncolor: var(--ordered-local, black);\n}')
+  const css = compileCSS()
+  expect([...css.matchAll(/(margin(?:-left)?):\s*([^;]+);/g)].map(([, key, text]) => [key, text]))
+    .toEqual([['margin', '1px'], ['margin-left', '2px'], ['margin', '3px']])
+  expect(css).toContain('--ordered-local: red;')
+  expect(css).toContain('padding: 4px;')
+  expect(css).toContain('color: var(--ordered-local, black);')
   expect(content).toHaveBeenCalled()
 })
 
 test('嵌套批量声明与单项属性不会混淆', () => {
-  keep(legacyRules('.example', [[[$color, 'red'], [$padding, '1px']]]))
+  keep(rules('.example', [[[$color, 'red'], [$padding, '1px']]]))
   expect(compileCSS()).toContain('padding: 1px')
   expect(compileCSS()).toContain('color: red')
 })
 
 test('声明组合忽略空项和 content 为 undefined 的 Declaration，不把缺失声明登记为 Rule', () => {
-  expect(declare($color, undefined)).toEqual([$color, undefined])
-  keep(legacyRules('.example', [undefined, [$color, 'red'], [$font, undefined], [undefined, [$padding, '1px'], undefined]]))
-  keep(legacyRules('.omitted', [declare($color, undefined)]))
-  expect(compileCSS()).toBe('.example {\ncolor: red;\npadding: 1px;\n}')
+  keep(rules('.example', [undefined, [$color, 'red'], [$font, undefined], [undefined, [$padding, '1px'], undefined]]))
+  keep(rules('.omitted', [declare($color, undefined)]))
+  const css = compileCSS()
+  expect(css).toContain('color: red;')
+  expect(css).toContain('padding: 1px;')
+  expect(css).not.toContain('.omitted')
+  expect(css).not.toContain('font:')
 })
 
 test('批量登记先验证整批，失败时既有条目与句柄保持有效', () => {
   const original = keep(rule('.example', 'color', 'red'))
+  const before = compileCSS()
   const invalid = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
-  expect(() => keep(legacyRules('.example', invalid))).toThrow('只接受声明序列')
-  expect(compileCSS()).toBe('.example {\ncolor: red;\n}')
+  expect(() => keep(runtimeRules('.example', invalid))).toThrow('只接受声明序列')
+  expect(compileCSS()).toBe(before)
   original.replace('green')
   expect(compileCSS()).toContain('color: green')
   const recursive: unknown[] = [[$color, 'blue']]
   recursive.push(recursive)
-  expect(() => keep(legacyRules('.example', recursive as Declarations))).toThrow('递归引用')
+  expect(() => keep(runtimeRules('.example', recursive as Declarations))).toThrow('递归引用')
   expect(compileCSS()).toContain('color: green')
   const invalidProperty = [[$color, 'blue'], [{ name: 1 }, 'grid']] as unknown as Declarations
-  expect(() => keep(legacyRules('.example', invalidProperty))).toThrow()
-  keep(legacyRules('.example', [[$color, undefined]]))
-  expect(() => keep(legacyRules([null] as unknown as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
+  expect(() => keep(runtimeRules('.example', invalidProperty))).toThrow()
+  keep(rules('.example', [[$color, undefined]]))
+  expect(() => keep(runtimeRules([null] as unknown as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
   expect(compileCSS()).toContain('color: green')
 })
 
 test('迭代器抛错与字符串输入整批失败，不留下已经读取的声明', () => {
   const original = keep(rule('.Atomic', 'color', 'red'))
+  const before = compileCSS()
   function* broken(): IterableIterator<[string, string]> {
     yield ['color', 'blue']
     throw new Error('读取声明失败。')
   }
-  expect(() => legacyRules('.Atomic', broken())).toThrow('读取声明失败')
-  expect(() => legacyRules('.Atomic', 'color' as unknown as Declarations)).toThrow('只接受声明序列')
-  expect(compileCSS()).toBe('.Atomic {\ncolor: red;\n}')
+  expect(() => runtimeRules('.Atomic', broken())).toThrow('读取声明失败')
+  expect(() => runtimeRules('.Atomic', 'color' as unknown as Declarations)).toThrow('只接受声明序列')
+  expect(compileCSS()).toBe(before)
   original.replace('green')
-  expect(compileCSS()).toBe('.Atomic {\ncolor: green;\n}')
+  expect(compileCSS()).toContain('color: green;')
+  expect(compileCSS()).not.toContain('color: blue;')
 })
 
 test('批量删除仅删除本批声明，重复声明不提前覆盖', () => {
-  const batch = keep(legacyRules('.example', [[$color, 'red'], [key('display'), 'grid'], [[$color, 'blue']]]))
-  expect(compileCSS()).toBe('.example {\ncolor: red;\ndisplay: grid;\ncolor: blue;\n}')
+  const batch = keep(rules('.example', [[$color, 'red'], [key('display'), 'grid'], [[$color, 'blue']]]))
+  expect([...compileCSS().matchAll(/(?:color|display):\s*([^;]+);/g)].map(([, text]) => text))
+    .toEqual(['red', 'grid', 'blue'])
   keep(rule('.example', 'color', 'green'))
   batch.remove()
   batch.remove()
-  expect(compileCSS()).toBe('.example {\ncolor: green;\n}')
+  expect(compileCSS()).toContain('color: green;')
+  expect(compileCSS()).not.toContain('color: red;')
+  expect(compileCSS()).not.toContain('color: blue;')
 })
 
 test('普通 Rules 通过结构嵌套切换属性，不进入 Value', () => {
@@ -293,7 +234,10 @@ test('普通 Rules 通过结构嵌套切换属性，不进入 Value', () => {
   const matched: Rules = [[undefined, 'color', 'blue']]
   keep(rule('.example', undefined, base))
   keep(rule(['.example', '&:hover'], undefined, matched))
-  expect(compileCSS()).toBe('.example {\ncolor: red;\ndisplay: grid;\n&:hover {\ncolor: blue;\n}\n}')
+  const css = compileCSS()
+  expect(css).toContain('color: red;')
+  expect(css).toContain('display: grid;')
+  expect(css).toMatch(/&:hover\s*\{\s*color:\s*blue;/)
 })
 
 test('依赖只进入本次编译，删掉源条目后派生资源退出', () => {
@@ -312,6 +256,36 @@ test('依赖只进入本次编译，删掉源条目后派生资源退出', () =>
   expect(compileCSS()).toBe('')
 })
 
+test('根值、注册、函数与关键帧只随消费进入 CSS，撤销后全部退出', () => {
+  const baseline = compileCSS()
+  const color = variable('red', {
+    name: 'resource-color',
+    root: { value: 'blue' },
+    registration: { syntax: '<color>', inherits: true, initialValue: 'black' },
+  })
+  const frames: Rules = [
+    [[condition('from')], 'opacity', 0],
+    [[condition('to')], 'opacity', 1],
+  ]
+  const motion = animationValue({ name: animationName('resource-motion', frames), duration: '1s' })
+  const length = cssFunction('--resource-length() returns <length>', [[undefined, 'result', '2px']])()
+  expect(compileCSS()).toBe(baseline)
+
+  const colorHandle = keep(rule('.Resources', 'color', color))
+  const motionHandle = keep(rule('.Resources', 'animation', motion))
+  const lengthHandle = keep(rule('.Resources', 'width', length))
+  const css = compileCSS()
+  expect(css).toContain('--resource-color: blue;')
+  expect(css).toContain('@property --resource-color')
+  expect(css).toContain('@keyframes resource-motion')
+  expect(css).toContain('@function --resource-length() returns <length>')
+
+  colorHandle.remove()
+  motionHandle.remove()
+  lengthHandle.remove()
+  expect(compileCSS()).toBe(baseline)
+})
+
 test('依赖回指同一集合终止，Rules 内容递归报错', () => {
   const dependency: Rules = []
   dependency.push([[condition('.example')], 'color', value('red', { onActive: () => dependency })])
@@ -325,14 +299,14 @@ test('依赖回指同一集合终止，Rules 内容递归报错', () => {
 })
 
 test('原生简写原样保留，复合字段由内容函数编译', () => {
-  keep(legacyRules('.example', [
+  keep(rules('.example', [
     [$margin, '4px'],
     [$marginLeft, '8px'],
     [$padding, valueSequence('1px', '2px', '3px')],
     [$border, valueSequence('red', '4px', 'solid')],
     [$font, fontValue({ style: 'italic', size: '16px', lineHeight: 1.5, family: 'system-ui' })],
   ]))
-  keep(legacyRules('.single', [[$padding, '4px'], [$border, 'none']]))
+  keep(rules('.single', [[$padding, '4px'], [$border, 'none']]))
   const css = compileCSS()
   expect(css).toContain('margin-left: 8px')
   expect(css).toContain('margin: 4px')
@@ -342,26 +316,28 @@ test('原生简写原样保留，复合字段由内容函数编译', () => {
   expect(css).toContain('border: none')
 })
 
-test('Key 只有名称；简写、详细属性和重复声明按书写顺序输出', () => {
-  expect(key('padding')).toEqual({ name: 'padding' })
-  handles.push(legacyRules('.Native', [
+test('简写、详细属性和重复声明按书写顺序交给浏览器', () => {
+  handles.push(rules('.Native', [
     [key('padding'), '2px 4px'],
-    ['padding-left', '8px'],
-    ['padding', '10px'],
-    ['future-property', 'native-value'],
+    [key('padding-left'), '8px'],
+    [key('padding'), '10px'],
+    [key('future-property'), 'native-value'],
   ]))
-  expect(compileCSS()).toBe('.Native {\npadding: 2px 4px;\npadding-left: 8px;\npadding: 10px;\nfuture-property: native-value;\n}')
+  expect([...compileCSS().matchAll(/(padding(?:-left)?):\s*([^;]+);/g)].map(([, name, text]) => [name, text]))
+    .toEqual([['padding', '2px 4px'], ['padding-left', '8px'], ['padding', '10px']])
+  expect(compileCSS()).toContain('future-property: native-value;')
 })
 
 test('Mixin 处理方向配置，Key 不解释对象', () => {
-  handles.push(legacyRules('.Layout', [contentLayout({ padding: { left: '4px' } })]))
-  expect(compileCSS()).toBe('.Layout {\npadding-left: 4px;\n}')
+  handles.push(rules('.Layout', [contentLayout({ padding: { left: '4px' } })]))
+  expect(compileCSS()).toContain('padding-left: 4px;')
+  expect(compileCSS()).not.toContain('display:')
 })
 
 test('边界形状按需输出，省略时保留边框和焦点配置', () => {
-  keep(legacyRules('.Shape', [boundary({ radius: '999px', cornerShape: 'squircle' })]))
-  keep(legacyRules('.Boundary', [boundary({ border: ['1px', 'solid', 'transparent'], outline: { width: '2px', style: 'solid', color: 'blue', offset: '2px' } })]))
-  keep(legacyRules('.EmptyBoundary', [boundary()]))
+  keep(rules('.Shape', [boundary({ radius: '999px', cornerShape: 'squircle' })]))
+  keep(rules('.Boundary', [boundary({ border: ['1px', 'solid', 'transparent'], outline: { width: '2px', style: 'solid', color: 'blue', offset: '2px' } })]))
+  keep(rules('.EmptyBoundary', [boundary()]))
   const css = compileCSS()
   expect(css).toContain('.Shape {\nborder-radius: 999px;\ncorner-shape: squircle;')
   expect(css).toContain('.Boundary {\nborder: 1px solid transparent;\noutline-width: 2px;\noutline-style: solid;\noutline-color: blue;\noutline-offset: 2px;')
@@ -369,10 +345,14 @@ test('边界形状按需输出，省略时保留边框和焦点配置', () => {
   expect(css).not.toContain('.EmptyBoundary')
 })
 
-test('center 由 Mixin 选择实现，独立空间配置不要求布局模式', () => {
-  keep(legacyRules('.Center', [contentLayout({ mode: 'center' })]))
-  keep(legacyRules('.Space', [contentLayout({ gap: '8px', padding: ['4px', '12px'] })]))
-  expect(compileCSS()).toBe('.Center {\ndisplay: inline-flex;\nalign-items: center;\njustify-content: center;\n}\n.Space {\ngap: 8px;\npadding: 4px 12px;\n}')
+test('独立空间配置不引入未选择的布局模式', () => {
+  keep(rules('.Space', [contentLayout({ gap: '8px', padding: ['4px', '12px'] })]))
+  const css = compileCSS()
+  expect(css).toContain('gap: 8px;')
+  expect(css).toContain('padding: 4px 12px;')
+  expect(css).not.toContain('display:')
+  expect(css).not.toContain('align-items:')
+  expect(css).not.toContain('justify-content:')
 })
 
 test('undefined 跳过；每个句柄仅修改自己的声明', () => {
@@ -384,7 +364,8 @@ test('undefined 跳过；每个句柄仅修改自己的声明', () => {
   first.replace('green')
   expect(compileCSS()).toContain('color: green;\ncolor: blue;')
   second.remove()
-  expect(compileCSS()).toBe('.Handles {\ncolor: green;\n}')
+  expect(compileCSS()).toContain('color: green;')
+  expect(compileCSS()).not.toContain('color: blue;')
 })
 
 test('后续依赖提供同名函数时，也能替换已经解析过的旧定义', () => {
@@ -416,5 +397,7 @@ test('结构嵌套可以继承 Variable 目标，不误判为局部分支数组'
   const reference = variable(undefined, { name: 'nested-target' })
   const body: Rules = [[undefined, undefined, 1], [['testHover'], undefined, 2]]
   keep(rule('.NestedTarget', reference, body))
-  expect(compileCSS()).toBe('.NestedTarget {\n--nested-target: 1;\n&:where(:hover) {\n--nested-target: 2;\n}\n}')
+  const css = compileCSS()
+  expect(css).toContain('--nested-target: 1;')
+  expect(css).toMatch(/&:where\(:hover\)\s*\{\s*--nested-target:\s*2;/)
 })

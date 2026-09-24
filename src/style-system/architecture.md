@@ -1,6 +1,6 @@
 # Style System 架构
 
-本文件说明 Style System 代码的当前职责与运行链。对象语义和组件样式书写方式见 [设计](doc/design.md)，命名见 [命名](doc/naming.md)。
+本文件说明 Style System 代码的当前职责与运行链。对象语义和组件样式书写方式见 [设计](doc/design.md)，命名见 [命名](doc/naming.md)，可证伪的行为边界见 [__spec.md](doc/behaviors/__spec.md)。
 
 ## 文件职责
 
@@ -16,14 +16,14 @@
 | core/css-variable.ts | Variable 创建、函数 source、定义及引用链延伸 |
 | core/variable-cluster.ts | Variable 成员聚合、选择、default 代理及同名声明配对 |
 | core/css-root.ts | 源账本、快照编译与宿主提交 |
-| compiler/compile-value.ts | 内容递归求值与循环检测 |
-| compiler/compile-variable.ts | Variable 引用、函数 source、状态及来源链输出 |
-| compiler/compile-css.ts | Rule、依赖和自动定义记录，最后输出 CSS 字符串 |
-| compiler/css-records.ts | 条件、属性、文本三项记录 |
+| compiler/compile-value.ts | 读取 Value 内容与嵌套引用，检测内容循环 |
+| compiler/compile-variable.ts | 把 Variable 引用、source 与自身状态转换为取值结果 |
+| compiler/compile-css.ts | 遍历 Rule、激活依赖、收集声明记录并输出 CSS 字符串 |
+| compiler/css-records.ts | 定义三项 CSS 记录，并在不改变层叠语义的前提下调整同址记录顺序 |
 | properties、selectors | CSS Key 与条件 |
 | values | 混色、计算、复合内容和 CSS 函数 |
 | value-material | 可复用 Variable、Cluster 及配方 |
-| component-handle-material | 多个组件可声明的通用角色 |
+| component-roles | 多个组件可在自身选择器中声明的共享角色；只定义角色，不规定具体色值 |
 | mixins | 把完整效果转换成声明组合 |
 | doc | 面向使用和设计阅读的对象契约 |
 

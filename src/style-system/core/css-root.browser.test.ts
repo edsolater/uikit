@@ -2,8 +2,9 @@
 import { key } from './css-key'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../state-conditions'
-import { userEvent } from 'vitest/browser'
-import { cssRoot as root } from './css-root'
+import { cdp, userEvent } from 'vitest/browser'
+import type { CDPSession } from '@vitest/browser-playwright'
+import { compileCSS, cssRoot as root } from './css-root'
 import { rule, rules, type RulesHandle, type Rules } from './css-rule'
 import { condition, media } from './css-condition'
 import { value } from './css-value'
@@ -16,6 +17,7 @@ import { animationName, animationValue } from '../values/animation'
 import { calcMultiply } from '../values/functions/calc'
 import { cssFunction } from '../values/functions/custom'
 import { colorMix } from '../values/functions/color-mix'
+import { contentLayout } from '../mixins/content'
 
 stateCondition('testLarge', condition('&[data-large]'))
 stateCondition('testMedia', media('(width > 1px)'))
@@ -49,6 +51,9 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   const gap = variable('4px', { name: '--space-example', root: { value: '12px' }, registration: { syntax: '<length>', inherits: true, initialValue: '2px' } })
   handles.push(rules('.example', [[$margin, '6px'], declare(key('margin-left'), '10px'), [$padding, gap]]))
   handles.push(rule('.example', gap, '20px'))
+  const before = style.textContent
+  expect(compileCSS()).toContain('padding: var(--space-example, 4px);')
+  expect(style.textContent).toBe(before)
   root.mount()
   const computed = getComputedStyle(element)
   expect(computed.marginTop).toBe('6px')
@@ -208,6 +213,21 @@ test('未知 State Condition 使挂载失败并保留上次 CSS 与 CSSOM', () =
   expect(getComputedStyle(element).marginLeft).toBe('12px')
 })
 
+test('选择居中布局后内容实际位于容器中心', () => {
+  handles.push(rules('.example', [contentLayout({ mode: 'center' })]))
+  element.style.width = '200px'
+  element.style.height = '100px'
+  element.textContent = ''
+  const child = element.appendChild(document.createElement('div'))
+  child.style.width = '20px'
+  child.style.height = '20px'
+  root.mount()
+  const outer = element.getBoundingClientRect()
+  const inner = child.getBoundingClientRect()
+  expect(Math.abs((inner.left + inner.right) / 2 - (outer.left + outer.right) / 2)).toBeLessThan(1)
+  expect(Math.abs((inner.top + inner.bottom) / 2 - (outer.top + outer.bottom) / 2)).toBeLessThan(1)
+})
+
 test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 55', () => {
   const first = variable(1, { name: "browser-first-ratio", states: { browserA: 2, browserB: 5 } })
   const second = variable(1, { name: "browser-second-ratio", states: { browserB: 11, browserA: 7 } })
@@ -222,6 +242,22 @@ test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 5
   width.replace(calcMultiply(calcMultiply(second, first), '1px'))
   root.mount()
   expect(getComputedStyle(element).width).toBe('55px')
+})
+
+test('不同主体可局部使用同名变量而互不污染', () => {
+  const first = variable('11px', { name: 'scoped-shared-size' })
+  const second = variable('23px', { name: 'scoped-shared-size' })
+  const neighbor = document.body.appendChild(document.createElement('div'))
+  neighbor.className = 'neighbor'
+  handles.push(rule('.example', 'width', first))
+  handles.push(rule('.neighbor', 'width', second))
+  try {
+    root.mount()
+    expect(getComputedStyle(element).width).toBe('11px')
+    expect(getComputedStyle(neighbor).width).toBe('23px')
+  } finally {
+    neighbor.remove()
+  }
 })
 
 test('交错条件块不能提前合并，否则会改变简写与详细属性的覆盖', () => {
@@ -249,4 +285,37 @@ test('同名函数的完整依赖由后一个定义接管，不残留旧局部�
   expect(getComputedStyle(element).marginLeft).toBe('24px')
   expect(getComputedStyle(element).marginRight).toBe('24px')
   expect(style.textContent).not.toContain('--old:')
+})
+
+test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', async () => {
+  const session = await cdp() as CDPSession
+  const size = variable('4px', {
+    name: 'environment-size',
+    root: { value: '8px', dark: '12px', reducedMotion: '0px' },
+  })
+  handles.push(rule('.example', 'width', size))
+  try {
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    })
+    root.mount()
+    const committed = style.textContent
+    expect(getComputedStyle(element).width).toBe('8px')
+    document.documentElement.dataset.theme = 'dark'
+    expect(getComputedStyle(element).width).toBe('12px')
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+    })
+    expect(getComputedStyle(element).width).toBe('0px')
+    document.documentElement.removeAttribute('data-theme')
+    expect(getComputedStyle(element).width).toBe('0px')
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    })
+    expect(getComputedStyle(element).width).toBe('8px')
+    expect(style.textContent).toBe(committed)
+  } finally {
+    document.documentElement.removeAttribute('data-theme')
+    await session.send('Emulation.setEmulatedMedia', { features: [] })
+  }
 })

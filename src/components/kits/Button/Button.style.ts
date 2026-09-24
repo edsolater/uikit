@@ -11,7 +11,7 @@ import {
   elevation,
   clickable,
 } from '../../../style-system'
-import { surfaceColor, foregroundColor } from '../../../style-system/component-handle-material/color'
+import { surfaceColor, foregroundColor } from '../../../style-system/component-roles/color'
 import { $cursor } from '../../../style-system/properties/interaction'
 import { $alignSelf } from '../../../style-system/properties/layout'
 import { colorMix } from '../../../style-system/values/functions/color-mix'

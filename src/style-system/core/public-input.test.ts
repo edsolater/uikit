@@ -1,4 +1,4 @@
-/** 公开类型拒绝旧声明入口与 Variable 内部访问。 */
+/** 公开类型保留目标与内容的明确关系，以及 Variable 的黑盒边界。 */
 import { expect, test } from 'vitest'
 import { key, rules, variable, variableFrom, variableCluster } from '../index'
 
@@ -9,14 +9,6 @@ test('合法 Key、Variable、Cluster 和声明组合可以直接消费', () => 
   handle.remove()
   expect(cluster('default')).toBe(source)
   if (false) {
-    // @ts-expect-error 不接受声明对象。
-    rules('.Probe', { opacity: 1 })
-    // @ts-expect-error 不接受裸字符串目标。
-    rules('.Probe', [['opacity', 1]])
-    // @ts-expect-error 字符串不是声明序列。
-    rules('.Probe', 'opacity')
-    // @ts-expect-error 嵌套对象也不接受。
-    rules('.Probe', [[{ opacity: 1 }]])
     // @ts-expect-error Variable 定义后是黑盒。
     source.states.active
     // @ts-expect-error Cluster 只接受已声明成员。

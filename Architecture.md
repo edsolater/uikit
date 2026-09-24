@@ -21,8 +21,6 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 - `src/types`：没有单一源码主体可归属的浏览器与 JSX 全局类型补丁。
 - `src/index.ts`：包根发布入口，只汇总现役公开能力和当前基础 CSS 入口。
 
-`src/fnkit` 是当前仓库中的历史空目录，不构成现役领域。
-
 # 公开入口
 
 - `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、hooks，以及 Style System 的 `cssRoot` 和 `compileCSS` 启动入口。当前仍会加载 `src/css/all-base.css`。

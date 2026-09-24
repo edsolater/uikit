@@ -4,7 +4,7 @@ import { variable } from '../core/css-variable'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileCSS, rules, value } from '../index'
-import { whenFocus, whenFocusWithin, whenHover, whenActive } from './interaction'
+import { whenFocus, whenFocusWithin, whenHover, whenActive, whenDisabled } from './interaction'
 
 afterEach(() => document.body.replaceChildren())
 
@@ -40,6 +40,7 @@ test('原生、标记与并存禁用均排除 hover 和 active', async () => {
     if (mode !== 'native') button.dataset.status = 'loading disabled'
     await userEvent.hover(button)
     expect(button.matches(':hover')).toBe(true)
+    expect(button.matches(whenDisabled.header.replace('&', ''))).toBe(true)
     expect(button.matches(whenHover.header.replace('&', ''))).toBe(false)
     button.focus()
     await userEvent.keyboard('[Space>]')
@@ -47,6 +48,30 @@ test('原生、标记与并存禁用均排除 hover 和 active', async () => {
       if (mode === 'status') expect(button.matches(':active')).toBe(true)
       expect(button.matches(whenActive.header.replace('&', ''))).toBe(false)
     } finally { await userEvent.keyboard('[/Space]') }
+    button.remove()
+  }
+})
+
+test('禁用主体呈现禁用颜色，不重新获得悬停或按下颜色', async () => {
+  const handle = rules('.disabled-probe', [[key('color'), variable('black', {
+    name: 'disabled-probe-color',
+    states: { hover: 'blue', active: 'green', disabled: 'gray' },
+  })]])
+  const style = document.head.appendChild(document.createElement('style'))
+  const button = document.body.appendChild(document.createElement('button'))
+  button.className = 'disabled-probe'
+  try {
+    style.textContent = compileCSS()
+    expect(getComputedStyle(button).color).toBe('rgb(0, 0, 0)')
+    button.disabled = true
+    await userEvent.hover(button)
+    expect(getComputedStyle(button).color).toBe('rgb(128, 128, 128)')
+    button.disabled = false
+    button.dataset.status = 'disabled'
+    expect(getComputedStyle(button).color).toBe('rgb(128, 128, 128)')
+  } finally {
+    handle.remove()
+    style.remove()
     button.remove()
   }
 })
