@@ -1,15 +1,15 @@
 /** 解析规则与依赖，输出 CSS。 */
-import type { ConditionPath } from '../core/css-condition'
-import { propertyName, type CSSKey } from '../core/css-key'
-import type { Rule, Rules, RuleValue } from '../core/css-rule'
-import type { Valuable, CompileContext } from '../core/css-valuable'
-import type { ValueInput } from '../core/css-value'
-import { isVariable, type Variable, type VariableInput } from '../core/css-variable'
+import type { ConditionPath } from '../condition'
+import { propertyName, type CSSKey } from '../css-key'
+import type { Rule, Rules, RuleValue } from '../rule'
+import type { Valuable, CompileContext } from '../valuable'
+import type { ValueInput } from '../value'
+import { isVariable, type Variable, type VariableInput } from '../variable'
 import { compileVariableDeclaration } from './compile-variable'
 import { compileValue, valueConditionPath, type ValueContext } from './compile-value'
-import { groupCSSRecords, type CSSRecord } from './css-records'
-import { resolveStateConditions, type StateCondition } from '../state-conditions'
-import { clusterDeclarations } from '../core/variable-cluster'
+import { groupCSSRecords, type CSSRecord } from './records'
+import { resolveStateConditions, type StateCondition } from '../materials/state-conditions'
+import { clusterDeclarations } from '../variable-cluster'
 
 /** 解析源规则及按需依赖，得到有序 CSS 记录。 */
 export function resolveRules(source: Rules): CSSRecord[] {

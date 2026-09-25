@@ -191,11 +191,11 @@ Button 继续拥有 variant、tone、size、status 的选择器及组件专属�
 
 | 位置 | 职责与改动 |
 | --- | --- |
-| `src/style-system/core/variable-cluster.ts` | 保存内部成员关系，校验并形成一层同名成员声明；不公开成员反射 API |
+| `src/style-system/variable-cluster.ts` | 保存内部成员关系，校验并形成一层同名成员声明；不公开成员反射 API |
 | `src/style-system/compiler/compile-css.ts` | 在当前 Rule 作用域展开 Cluster 声明，随后复用普通 Variable 编译链 |
 | `src/style-system/value-material/color/tone.ts` | tone 增加 line，accent 轮廓材料统一为 line；不强制各 Cluster 成员集合相同 |
 | `src/style-system/value-material/color/action.ts` | 保留动作基色状态与 foreground／line，移除仅为旧完整匹配限制增加的成员 |
-| `src/style-system/state-conditions.ts` | 核对内部条件解析，使 Variable 上直接声明的 focus 对应 :focus-visible；不要求使用者调用额外注册函数 |
+| `src/style-system/materials/state-conditions.ts` | 核对内部条件解析，使 Variable 上直接声明的 focus 对应 :focus-visible；不要求使用者调用额外注册函数 |
 | `src/style-system/value-material/focus.ts` | 由 focus 状态控制轮廓，并从 tone line 取得颜色 |
 | `src/style-system/component-handle-material/focus.ts` | 独立 focusColor 责任退出并删除 |
 | `src/style-system/mixins/interaction.ts` | 继续承担 outline 与 offset 到 CSS 属性的映射，不增加组件配色参数 |

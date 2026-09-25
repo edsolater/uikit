@@ -42,7 +42,7 @@
 
 | 范围 | 必须回答的问题 |
 | --- | --- |
-| `index.ts`、`bundle-consumption.test.ts` | 公开协议是否唯一；注册与按需定义在打包后是否保持；是否泄漏内部步骤 |
+| `index.ts`、`打包后的公开入口仍能生成样式.test.ts` | 公开协议是否唯一；注册与按需定义在打包后是否保持；是否泄漏内部步骤 |
 | `core/*` | Condition、Key、Declaration、Rule、Root、Valuable、Value、Variable 各拥有什么事实；注册、身份、生命周期是否有重复来源 |
 | `compiler/*` | 从完整 Rule 到 CSS 的步骤是否连贯；上下文、状态赋值、依赖、记录和输出的归属是否自然；是否存在旧协议与额外适配 |
 | `state-conditions.ts`、`selectors/*` | 主体状态与普通地址是否混淆；排序、去重、优先级及选择器权重怎样共同成立 |
@@ -53,7 +53,7 @@
 | `mixins/*` | 是否交付完整效果；是否出现只转发、逐项复刻属性或泄漏组件私有知识 |
 | `fnkit/*` | Lazy Copy 与 Derivable Object 的实际消费者、存续理由、状态及复制责任；不能因名称像通用工具就预设移动或删除 |
 | 全部相邻测试 | 断言是否覆盖现役需求；旧断言是否需要迁移；重复测试是否有不同失败路径；不能为测试数或整齐而删用例 |
-| `architecture.md`、`design.md`、`naming.md`、`state-condition.md`、`compiler-revision.md` | 区分现役契约与历史记录；核对名称、实现与文档，不以旧的代理结论替代用户要求 |
+| `architecture.md`、`样式系统对象与行为.md`、`样式系统命名.md`、`主体状态条件.md`、`编译器修正草案.md` | 区分现役契约与历史记录；核对名称、实现与文档，不以旧的代理结论替代用户要求 |
 
 同时追踪系统外的正式连接：根 `Architecture.md`、样式文件写法、Button 定义/样式/测试、包入口、基础 CSS 材料来源、应用挂载入口、测试及打包配置。只为确认真实输入输出读取这些连接；修改仅限全量审查证明必要的直接接管项。
 
@@ -164,7 +164,7 @@
 | F7 | `selectors/interaction.browser.test.ts:9–31` | “hover 与 active 的交集不增加权重压过变体”已不能证明其标题：状态写 Custom Property，变体写 `color`，两者不竞争同一声明目标。即使状态选择器恢复错误权重，测试仍可能通过。 |
 | F8 | `compiler/compile-css.test.ts:53,310,397,530`；状态组合测试 | 存在同一递归 Rule、同一 Mixin 方向转换的重复测试；同时旧 VariableOverrides 反序及重复名称取最后内容的有效断言没有完整迁移。测试维护同时存在冗余与缺口，不能只做删重。 |
 | F9 | `fnkit/lazy-copy.ts:27`、`fnkit/derivable-object.ts:49` | 稀疏数组首次写入会丢失尾部空槽对应的 length；派生对象显式定义不可配置属性会触发 Proxy 不变量错误。当前无正式消费者，影响范围局限于这些独立工具，不能据此扩大重写编译器。 |
-| F10 | 根 `Architecture.md`、`state-condition.md:26–27`、palette 文件头、旧测试说明 | 当前根架构仍说 Style System 不承接 Button 配方，与已采用的 Theme 材料归属冲突；State 示例省略了影响权重的 `:where`；palette 查询仍被称为新的 Variable Cluster。说明会把后续维护带回错误前提。 |
+| F10 | 根 `Architecture.md`、`主体状态条件.md:26–27`、palette 文件头、旧测试说明 | 当前根架构仍说 Style System 不承接 Button 配方，与已采用的 Theme 材料归属冲突；State 示例省略了影响权重的 `:where`；palette 查询仍被称为新的 Variable Cluster。说明会把后续维护带回错误前提。 |
 | F11 | `value-material/color/*`、`value-material/button.ts`、`Button.style.ts` | 第一层仅包装了部分上层配方，仍公开并使用分散的强弱、Hover/Active 材料。基础色与业务色均须通过实际 Cluster 聚合；描述性选择允许，状态归成员自身。此项是原需求未完成，不能推迟到第二层环境 API。 |
 
 F2、F3 的浏览器验证使用项目当前 CSS 和实际编译结果，在独立无头 Edge 页面中完成，不修改测试文件：
@@ -226,7 +226,7 @@ F9 的内存复现：`lazyCopy([1, ,])` 的副本写入索引 0 后，来源长�
 | 文件 | 行数 | 职责、消费者与判断 |
 | --- | ---: | --- |
 | `index.ts` | 23 | 内部公开入口与属性注册；组件和打包测试消费；保留，包级导出边界见待裁决表 |
-| `bundle-consumption.test.ts` | 31 | 单独打包样式入口并验证声明/Cluster/注册；有效，但非完整包导出验证 |
+| `打包后的公开入口仍能生成样式.test.ts` | 31 | 单独打包样式入口并验证声明/Cluster/注册；有效，但非完整包导出验证 |
 | `core/css-condition.ts` | 37 | 条件与原生地址便捷构造；Rule/依赖使用；保留 |
 | `core/css-declaration.ts` | 17 | 声明二元协议与识别；rules/Mixin 使用；保留 |
 | `core/css-key.ts` | 55 | 名称注册、别名、Key 识别及输出名称；声明/编译使用；保留，不使其承担材料依赖副作用 |
@@ -301,10 +301,10 @@ F9 的内存复现：`lazyCopy([1, ,])` 的副本写入索引 0 后，来源长�
 | `fnkit/lazy-copy.ts` | 91 | 写时复制；deriveable/自身测试；问题 F9，随代码岛裁决 |
 | `fnkit/lazy-copy.test.ts` | 80 | 深度/密集数组/函数复制；有效，缺稀疏数组 |
 | `architecture.md` | 74 | 当前领域内部结构；主要对应代码，但缺 fnkit 现役状态，并需接回未验收现场 |
-| `design.md` | 302 | 现役协议；第一层语义基本对应，依赖退出保证受 F4 反例否定 |
-| `naming.md` | 101 | 自有命名与原生协议边界；规则清楚，既有 CSS 名称迁移应单独裁决 |
-| `state-condition.md` | 99 | 主体资格/顺序/状态归属；F10 的权重示例不准确 |
-| `compiler-revision.md` | 262 | 历史裁决与重做依据；保留历史，不把旧 Value 状态继续视为现役；已删除测试的链接需历史定位 |
+| `样式系统对象与行为.md` | 302 | 现役协议；第一层语义基本对应，依赖退出保证受 F4 反例否定 |
+| `样式系统命名.md` | 101 | 自有命名与原生协议边界；规则清楚，既有 CSS 名称迁移应单独裁决 |
+| `主体状态条件.md` | 99 | 主体资格/顺序/状态归属；F10 的权重示例不准确 |
+| `编译器修正草案.md` | 262 | 历史裁决与重做依据；保留历史，不把旧 Value 状态继续视为现役；已删除测试的链接需历史定位 |
 
 截图 `selectors/__screenshots__/interaction.browser.test.ts/hover---active--------------1.png` 已查看：是白底交互探针，当前没有截图断言或其他引用。它不是有效的视觉基线，可作为独立产物清理候选，未删除。
 

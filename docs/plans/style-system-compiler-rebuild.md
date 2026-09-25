@@ -4,7 +4,7 @@
 
 ## 需求依据与范围
 
-[编译器修正草案](../../src/style-system/doc/compiler-revision.md)是完整需求与问题分析；其“后续裁决与当前状态”覆盖明确冲突的旧结论，其余要求全部保留。本文只规定实施与验收，不替代草案。
+[编译器修正草案](../../src/style-system/doc/编译器修正草案.md)是完整需求与问题分析；其“后续裁决与当前状态”覆盖明确冲突的旧结论，其余要求全部保留。本文只规定实施与验收，不替代草案。
 
 目标：纠正取值与编译责任，让业务意图到实现结果的理解链更短。代码行数、测试数量和 CSS 文本是否漂亮，都不是完成标准。
 
@@ -38,20 +38,20 @@
 
 核对暂存区、工作区和完整草案。现有半成品逐项判定保留、重写或删除，不因已经写出就保留。记录各文件原职责和当前断点，不复用失败实现的通过报告。
 
-先整理编译回归测试及现有相关测试：条件输出使用真实注册定义；测试间清理注册与挂载；失败须来自需求缺失，不能来自错误选择器、类型错误或测试污染。实施后回归用例已归入 [compile-css.test.ts](../../src/style-system/compiler/compile-css.test.ts)，不保留临时测试副本。
+先整理编译回归测试及现有相关测试：条件输出使用真实注册定义；测试间清理注册与挂载；失败须来自需求缺失，不能来自错误选择器、类型错误或测试污染。实施后回归用例已归入 [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)，不保留临时测试副本。
 
 ### 2. 统一 Rule，恢复简单 Key
 
-- [css-rule.ts](../../src/style-system/core/css-rule.ts)：登记边界将 Declaration 拆为 `[Condition Path, Key, Content]`；本层 Key 只保存一次。单项、批量共用内部表示。
-- [css-declaration.ts](../../src/style-system/core/css-declaration.ts)：只表达目标与内容；内容为 undefined 时跳过，不要求调用方条件拼装。
-- [css-key.ts](../../src/style-system/core/css-key.ts) 与 `properties/`：Key 只描述原生名称；删除 content、expand、syntax 等属性解释责任。
-- [css-root.ts](../../src/style-system/core/css-root.ts)：只调整新 Rule 表示所必需的登记、更新和卸载衔接。先核对现有句柄语义，不借重构改成另一套覆盖契约。
+- [rule.ts](../../src/style-system/rule.ts)：登记边界将 Declaration 拆为 `[Condition Path, Key, Content]`；本层 Key 只保存一次。单项、批量共用内部表示。
+- [declaration.ts](../../src/style-system/declaration.ts)：只表达目标与内容；内容为 undefined 时跳过，不要求调用方条件拼装。
+- [css-key.ts](../../src/style-system/css-key.ts) 与 `materials/keys/`：Key 只描述原生名称；删除 content、expand、syntax 等属性解释责任。
+- [css-root.ts](../../src/style-system/css-root.ts)：只调整新 Rule 表示所必需的登记、更新和卸载衔接。先核对现有句柄语义，不借重构改成另一套覆盖契约。
 
 原生简写和详细属性按声明顺序交给 CSS 引擎；不得编译后反向解析字符串、拆四边或增加属性覆盖表。
 
 ### 3. 分开 Value、Variable 与延迟内容
 
-- [css-value.ts](../../src/style-system/core/css-value.ts)、[css-variable.ts](../../src/style-system/core/css-variable.ts)、[css-valuable.ts](../../src/style-system/core/css-valuable.ts)：Value 与 Variable 独立，共享“可被 CSS 化”的 Valuable 协议，不使用 Variable 继承 Value 或伪装 Value 的捷径。
+- [value.ts](../../src/style-system/value.ts)、[variable.ts](../../src/style-system/variable.ts)、[valuable.ts](../../src/style-system/valuable.ts)：Value 与 Variable 独立，共享“可被 CSS 化”的 Valuable 协议，不使用 Variable 继承 Value 或伪装 Value 的捷径。
 - [compile-value.ts](../../src/style-system/compiler/compile-value.ts)：负责当前条件下的取值与递归；不认识变量注册细节或具体 CSS 函数语法。
 - [compile-variable.ts](../../src/style-system/compiler/compile-variable.ts)：负责变量引用、自身赋值及必要的自动定义，普通消费者不跟随其条件展开。
 - `values/functions/`、`values/shadow.ts`、`values/animation.ts` 等定义处：保留原始输入关系，提供延迟生成方法。编译器控制调用时机与输入解析；生成方法只组织自身内容。
@@ -60,7 +60,7 @@
 
 ### 4. 分开条件容器，统一取值顺序
 
-[state-conditions.ts](../../src/style-system/state-conditions.ts) 提供唯一有效顺序；普通路径由 Rule 保持，State Condition 由值展开收集，两者分别保存。
+[state-conditions.ts](../../src/style-system/materials/state-conditions.ts) 提供唯一有效顺序；普通路径由 Rule 保持，State Condition 由值展开收集，两者分别保存。
 
 编译从外层 Rule 地址进入内容。在一个目标激活集合下，每个 Value 都按同一有效顺序选择自身最后一个匹配分支，再交给函数组合；无匹配才取 default。不能先选出互相不一致的值，再靠同址覆盖决定结果。
 
@@ -72,7 +72,7 @@ Subject Condition 同名去重、按注册顺序排列；普通路径保留顺�
 
 - Rule 的当前 Key 与内容进入唯一解析路线。实施审查后删除 `compile-declaration.ts`：移出属性语法后，它只剩分派与重包装，已并入 [compile-css.ts](../../src/style-system/compiler/compile-css.ts)。
 - [compile-css.ts](../../src/style-system/compiler/compile-css.ts)：组织 Rule、依赖与解析；结构嵌套留在这里，不从 Value 回调重新进入普通 Rules。
-- [css-records.ts](../../src/style-system/compiler/css-records.ts)：最终只存条件路径、Key、CSS 内容三项。条件项及 Key 的空值按已有契约处理，不增加 owner 等长期字段。
+- [records.ts](../../src/style-system/compiler/records.ts)：最终只存条件路径、Key、CSS 内容三项。条件项及 Key 的空值按已有契约处理，不增加 owner 等长期字段。
 - 解析挂载后再生成 CSS string；输出遵循挂载顺序，不做全局重排。同一目标的条件共享不得破坏原生声明的级联顺序。
 - `mixins/`：承接字体、空间、边界、过渡等目的配置；具体内容生成留在对应定义处。不为了删除 Key 的语法配置而丢失这些能力，也不把 Button 配方冒充通用 Mixin。
 
@@ -80,9 +80,9 @@ Variable 的自动默认定义、显式赋值、注册与依赖各确定一个�
 
 ### 6. 同步测试、文档与实施分析
 
-测试按责任整理到 `core/`、`compiler/` 和浏览器用例；临时回归测试验证后归入合适位置，不留下重复断言堆。删除过程断言时记录替代的需求验证，不靠删测试取得通过。
+只验证同名源码业务契约的测试靠近受测文件；跨文件协作和完整 Style System 流程的测试放在 `test/`。临时回归测试验证后归入合适位置，不留下重复断言堆。删除过程断言时记录替代的需求验证，不靠删测试取得通过。
 
-实现后同步 [design.md](../../src/style-system/doc/design.md)、[architecture.md](../../src/style-system/architecture.md)、[state-condition.md](../../src/style-system/doc/state-condition.md)，在完整草案中补充分析与裁决，不覆盖历史问题依据。
+实现后同步 [样式系统对象与行为.md](../../src/style-system/doc/样式系统对象与行为.md)、[architecture.md](../../src/style-system/architecture.md)、[主体状态条件.md](../../src/style-system/doc/主体状态条件.md)，在完整草案中补充分析与裁决，不覆盖历史问题依据。
 
 在本 Plan 记录每个区域：原职责、改动原因、最终职责、上下游关系、删除机制的接管位置，以及刻意未改的内容。不得只列文件数量或缩减行数。
 
@@ -179,7 +179,7 @@ git diff --cached --check
 
 已新增并实测过失败后修复的反例：Rule 名称与 Value 同条件重复嵌套、主体条件下 Variable 错取 default、后续依赖不能替换已解析定义。
 
-功能证据集中于 [compile-css.test.ts](../../src/style-system/compiler/compile-css.test.ts)、[compile-value.test.ts](../../src/style-system/compiler/compile-value.test.ts)、[subject-condition-composition.test.ts](../../src/style-system/compiler/subject-condition-composition.test.ts)、[css-records.test.ts](../../src/style-system/compiler/css-records.test.ts) 与 [Root 浏览器测试](../../src/style-system/core/css-root.browser.test.ts)。Button 浏览器测试只将 padding 测试配置迁入 contentLayout，未改视觉预期。
+功能证据集中于 [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)、[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts)、[状态顺序与变量来源链共同决定取值.test.ts](../../src/style-system/test/状态顺序与变量来源链共同决定取值.test.ts)、[records.test.ts](../../src/style-system/compiler/records.test.ts) 与 [Root 浏览器测试](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts)。Button 浏览器测试只将 padding 测试配置迁入 contentLayout，未改视觉预期。
 
 阅读链复查：普通内容为 Rule → compileValue → 记录；变量在此转入 compileVariableReference；复合内容直接调用定义处函数。相较旧实现，省去 Declaration 二次识别、Key 语法分派、表达式 switch、属性反向解析和属性覆盖管理。文件头、类型与具名函数均按最短职责说明复查；不以代码缩短代替这项判断。
 

@@ -1,30 +1,32 @@
 # Style System 架构
 
-本文件说明 Style System 代码的当前职责与运行链。对象语义和组件样式书写方式见 [设计](doc/design.md)，命名见 [命名](doc/naming.md)，可证伪的行为边界见 [__spec.md](doc/behaviors/__spec.md)。
+本文件说明 Style System 代码的当前职责与运行链。对象语义和组件样式书写方式见 [设计](doc/样式系统对象与行为.md)，命名见 [命名](doc/样式系统命名.md)，可证伪的行为边界见 [__spec.md](doc/behaviors/__spec.md)。
 
 ## 文件职责
 
 | 位置 | 职责 |
 | --- | --- |
-| core/css-condition.ts | Condition 与有序地址 |
-| state-conditions.ts | 主体状态名称、条件与中央顺序 |
-| core/css-key.ts | Key 对象与 CSS 属性名 |
-| core/css-declaration.ts | Key／Variable 与内容的二元声明 |
-| core/css-rule.ts | 声明组合、登记与句柄 |
-| core/css-valuable.ts | 按需依赖及消费位置 |
-| core/css-value.ts | 稳定 Value 与可识别的可调用内容协议 |
-| core/css-variable.ts | Variable 创建、函数 source、定义及引用链延伸 |
-| core/variable-cluster.ts | Variable 成员聚合、选择、default 代理及同名声明配对 |
-| core/css-root.ts | 源账本、快照编译与宿主提交 |
+| condition.ts | Condition 与有序地址 |
+| materials/state-conditions.ts | 主体状态名称、条件登记与中央顺序 |
+| css-key.ts | CSS Key 的创建、声明目标识别与名称解析 |
+| declaration.ts | Key／Variable 与内容的二元声明 |
+| rule.ts | 声明组合、登记与句柄 |
+| valuable.ts | Valuable 的按需依赖及消费位置 |
+| value.ts | 稳定 Value 与可识别的可调用内容协议 |
+| variable.ts | Variable 创建、函数 source、定义及引用链延伸 |
+| variable-cluster.ts | Variable 成员聚合、选择、default 代理及同名声明配对 |
+| css-root.ts | 源账本、快照编译与宿主提交 |
 | compiler/compile-value.ts | 读取 Value 内容与嵌套引用，检测内容循环 |
 | compiler/compile-variable.ts | 把 Variable 引用、source 与自身状态转换为取值结果 |
 | compiler/compile-css.ts | 遍历 Rule、激活依赖、收集声明记录并输出 CSS 字符串 |
-| compiler/css-records.ts | 定义三项 CSS 记录，并在不改变层叠语义的前提下调整同址记录顺序 |
-| properties、selectors | CSS Key 与条件 |
-| values | 混色、计算、复合内容和 CSS 函数 |
-| value-material | 可复用 Variable、Cluster 及配方 |
-| component-roles | 多个组件可在自身选择器中声明的共享角色；只定义角色，不规定具体色值 |
-| mixins | 把完整效果转换成声明组合 |
+| compiler/records.ts | 定义三项 CSS 记录，并在不改变层叠语义的前提下调整同址记录顺序 |
+| materials/keys | 可复用的 CSS Key 定义及其名称登记 |
+| materials/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
+| materials/valuables | 按用途组织的现成 Valuable 材料；Value、Variable 与组合配方可留在同一文件中 |
+| materials/valuable-tools | 构造 Valuable 的混色、计算与复合工具 |
+| materials/roles | 供组件在自身选择器中赋值的共享角色；不规定具体色值 |
+| materials/mixins | 把完整效果转换成声明组合 |
+| test | 验证 Style System 多文件协作与完整业务流程 |
 | doc | 面向使用和设计阅读的对象契约 |
 
 公共 index 公开创建、延伸、聚合、声明、编译和 Mixin。Key 和材料从负责文件导入；内部定义查找与来源连接不公开。
@@ -62,5 +64,7 @@ Style System 是抽象层，包含基础材料和面向组件的通用定义。�
 Button 静态导入自身样式；Example、Storybook 和缩略图入口在 render 前统一挂载。懒加载样式仍由应用样式清单负责提前登记。
 
 ## 验证
+
+同目录测试只验证同名源码文件自身的业务契约，文件名以对应源码名加 `.test.ts` 或 `.browser.test.ts` 构成。跨文件协作及 Style System 整体流程的测试放在 `test/`，用中文描述所验证的目的并保留英文测试后缀；归属仍由断言对象决定。
 
 单元测试覆盖 Value、Variable、Cluster、声明、依赖、循环与顺序。浏览器测试验证状态优先级、来源链、局部覆盖、CSS 函数局部定义，以及 Button 的现有配方和交互。测试通过后仍需检查归属、阅读顺序与不必要机制。

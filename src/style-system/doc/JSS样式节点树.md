@@ -129,4 +129,4 @@ const nodes: StyleNode[] = [
 
 同一属性的多个节点可以各自携带一份内容；状态路径只决定各节点何时有效。对于 `box-shadow`，有效内容要按什么规则组合，以及如何输出合法 CSS，仍需另行确定。节点形状本身既不自动聚合，也不把普通同名声明的浏览器层叠改成聚合。
 
-现役 [Rule](../core/css-rule.ts) 与 [State Condition](../state-conditions.ts) 提供了部分相关信息，[编译器](../compiler/compile-css.ts) 当前直接形成 CSS 输出记录。本文描述的是拟议的中间表示，不把这些现役文件视为已经实现了上述 Style Node 队列。
+现役 [Rule](../rule.ts) 与 [State Condition](../materials/state-conditions.ts) 提供了部分相关信息，[编译器](../compiler/compile-css.ts) 当前直接形成 CSS 输出记录。本文描述的是拟议的中间表示，不把这些现役文件视为已经实现了上述 Style Node 队列。

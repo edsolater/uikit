@@ -1,6 +1,6 @@
 # JSS 样式系统历史记录
 
-旧 `src/jss` 已彻底删除，`@edsolater/uikit/jss` 子路径已经退出。本文仅保留截至 2026-09-05 的旧方案与验收记录，下文的“当前”“本轮”和“满足”均属于当时语境，不表示现役模块、API 或待实施计划。现役对象及挂载设计见 [Style System 设计](../../src/style-system/doc/design.md)。
+旧 `src/jss` 已彻底删除，`@edsolater/uikit/jss` 子路径已经退出。本文仅保留截至 2026-09-05 的旧方案与验收记录，下文的“当前”“本轮”和“满足”均属于当时语境，不表示现役模块、API 或待实施计划。现役对象及挂载设计见 [Style System 设计](../../src/style-system/doc/样式系统对象与行为.md)。
 
 当时的 Plan 负责 UIKit 样式的 JSS 化，目标是只保留直接服务原始 HTML 的 reset.css；当时实施范围是 JSS 基础体系与 Button。
 

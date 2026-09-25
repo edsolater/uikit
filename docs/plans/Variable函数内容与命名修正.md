@@ -7,7 +7,7 @@
 本 Plan 分两步完成：
 
 1. Variable 可以保存直接 `ValueInput`，也可以保存 `() => ValueInput`。函数在创建 Variable 时不执行，编译实际消费该 Variable 时才执行；返回结果继续按统一 ValueInput 协议编译。
-2. 按 [Style System 命名](../../src/style-system/doc/naming.md) 检查全部 Variable 与 Variable Cluster。名字必须表达用途与存在形式，成员键继续只表达 default、soft、line 等组内选择。
+2. 按 [Style System 命名](../../src/style-system/doc/样式系统命名.md) 检查全部 Variable 与 Variable Cluster。名字必须表达用途与存在形式，成员键继续只表达 default、soft、line 等组内选择。
 
 两步不同时实施。第一阶段通过后停止，由用户判断是否进入第二阶段。
 

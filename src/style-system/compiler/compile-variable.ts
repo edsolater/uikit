@@ -1,6 +1,6 @@
 /** Variable 引用、来源链与自身状态声明。 */
-import { isVariableSourceFunction, variableDefinition, type Variable, type VariableInput, type VariableSource } from '../core/css-variable'
-import { resolveStateConditions } from '../state-conditions'
+import { isVariableSourceFunction, variableDefinition, type Variable, type VariableInput, type VariableSource } from '../variable'
+import { resolveStateConditions } from '../materials/state-conditions'
 import { compileValue, readValue, type ValueContext, type ValueResult } from './compile-value'
 
 /** 只收集延伸链上的状态，不遍历普通值依赖。 */

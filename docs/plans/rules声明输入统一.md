@@ -32,12 +32,12 @@ rules(button, [
 
 | 位置 | 当前事实 | 后续责任 |
 | --- | --- | --- |
-| [css-rule.ts](../../src/style-system/core/css-rule.ts) | `rules` 已将声明对象及条目 Iterable 统一转换为有序 Declaration；完整验证后才登记，并支持嵌套组合与 undefined | 继续由此负责输入转换与批量登记 |
-| [css-key.ts](../../src/style-system/core/css-key.ts) | CSSKey 包含 string；`key()` 登记原生名称与驼峰名称，`resolveCSSKey()` 统一解析字符串与显式目标 | 继续由此负责名称登记、冲突拒绝和解析 |
-| [css-declaration.ts](../../src/style-system/core/css-declaration.ts) | Declaration 是二元组；识别到声明后，内容不再当分组展开 | 保持内容边界，配合新输入类型；不增加第二种内部声明结构 |
-| [css-value.ts](../../src/style-system/core/css-value.ts) | 条件分支已接受对象与键值 Iterable，使用 fnkit 集合转换 | 可参考集合访问方法；其先转 Map 的做法会合并重复键，不能直接搬到声明序列 |
-| [properties/layout.ts](../../src/style-system/properties/layout.ts) 等属性文件 | 已定义 `$alignItems = key('align-items')` 等 Key | 名称映射尽量依托原有定义，避免维护两套属性清单 |
-| [mixins/content.ts](../../src/style-system/mixins/content.ts) | `contentLayout` 只公开 center 目的，内部选择 inline-flex；中心声明使用对象输入 | 继续作为声明输入消费者，不承担输入转换设施 |
+| [rule.ts](../../src/style-system/rule.ts) | `rules` 已将声明对象及条目 Iterable 统一转换为有序 Declaration；完整验证后才登记，并支持嵌套组合与 undefined | 继续由此负责输入转换与批量登记 |
+| [css-key.ts](../../src/style-system/css-key.ts) | CSSKey 包含 string；`key()` 登记原生名称与驼峰名称，`resolveCSSKey()` 统一解析字符串与显式目标 | 继续由此负责名称登记、冲突拒绝和解析 |
+| [declaration.ts](../../src/style-system/declaration.ts) | Declaration 是二元组；识别到声明后，内容不再当分组展开 | 保持内容边界，配合新输入类型；不增加第二种内部声明结构 |
+| [value.ts](../../src/style-system/value.ts) | 条件分支已接受对象与键值 Iterable，使用 fnkit 集合转换 | 可参考集合访问方法；其先转 Map 的做法会合并重复键，不能直接搬到声明序列 |
+| [keys/layout.ts](../../src/style-system/materials/keys/layout.ts) 等属性文件 | 已定义 `$alignItems = key('align-items')` 等 Key | 名称映射尽量依托原有定义，避免维护两套属性清单 |
+| [mixins/content.ts](../../src/style-system/materials/mixins/content.ts) | `contentLayout` 只公开 center 目的，内部选择 inline-flex；中心声明使用对象输入 | 继续作为声明输入消费者，不承担输入转换设施 |
 
 # 实施顺序与监察点
 
@@ -46,7 +46,7 @@ rules(button, [
 | 步骤 | 要做什么 | 完成判据与测试位置 | 状态 |
 | --- | --- | --- | --- |
 | 1. 明确名称解析 | 确定 `alignItems` 如何找到 `align-items` 对应 Key，以及注册冲突、初始化与未知名称的处理；原生 CSS 字符串入口继续有效 | `key()` 登记原名与驼峰名；公共入口显式调用 `registerPropertyKeys()` 消费全部实际 Key；重复目标允许，异目标同名报错；原生属性和自定义属性直通，未知驼峰名报错 | 已完成 |
-| 2. 统一声明输入 | `rules` 接受对象和声明条目 Iterable，复用同一转换路径；更新 Declarations 类型，让 Mixin 返回值自然接入 | [compile-css.test.ts](../../src/style-system/compiler/compile-css.test.ts) 已验证对象、数组、Map、Set 条目和一次性 Iterable 生成相同 CSS；类型检查通过 | 已完成 |
+| 2. 统一声明输入 | `rules` 接受对象和声明条目 Iterable，复用同一转换路径；更新 Declarations 类型，让 Mixin 返回值自然接入 | [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts) 已验证对象、数组、Map、Set 条目和一次性 Iterable 生成相同 CSS；类型检查通过 | 已完成 |
 | 3. 保留序列与内容 | 正确处理嵌套混合分组、重复 Key、undefined、Variable 目标及数组内容 | 编译器测试已验证 `margin`、`margin-left`、重复 `margin` 的原序输出，Variable 目标、延迟内容身份、undefined 与一次性遍历均保持 | 已完成 |
 | 4. 保留整批拒绝 | 完整转换成功后才登记；无效条目、循环分组或迭代器抛错均不留下半批规则 | 编译器测试已验证无效输入、循环、迭代器抛错和字符串输入均不留下登记，已有句柄仍可替换 | 已完成 |
 | 5. 用真实调用验证简化 | 在获准的消费者处采用对象声明，展示转换前后的代码；统一 center 作为紧随其后的独立小步 | `contentLayout` 的 center 和 Button loading Rule 使用对象输入；Button 改用 center 后编译 CSS 长度与 Bun.hash 均保持 `19240`、`11016386830676721411`，浏览器回归通过 | 已完成 |

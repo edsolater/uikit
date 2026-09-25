@@ -256,7 +256,7 @@ rules(button, [
 | `src/style-system/core/css-variable.ts`、`compiler/compile-variable.ts` | 创建配置、引用链延伸、状态解析和最终 CSS 输出；自身定义优先，缺失时沿来源查找，内部结构不向使用者泄露 |
 | `src/style-system/values/functions/color-mix.ts`、内容协议及其编译入口 | 返回可识别且可调用的混色对象，接入 CSS 输出能力，和普通状态回调分别处理 |
 | Style System 的 Cluster 实现及导出入口 | 聚合 Variable，支持选择成员和直接使用；具体文件划分根据职责确定 |
-| `src/style-system/state-conditions.ts` 及状态调用方 | 统一 State Condition 名称，保留主体状态含义 |
+| `src/style-system/materials/state-conditions.ts` 及状态调用方 | 统一 State Condition 名称，保留主体状态含义 |
 | `core/css-rule.ts`、`compiler/compile-css.ts` | 让新 Variable / Cluster 正确参与声明与消费，保持对象关系直到需要输出 |
 | `core/css-rule.ts`、`core/css-declaration.ts`、`core/css-key.ts` 及属性入口 | 收紧 rules 公开输入，使用 Key／Variable 元组，不接受普通声明对象和字符串属性键；直接对象路径不依赖名称预注册，不为此强删底层兼容处理 |
 | `value-material`、`component-handle-material`、`mixins` | 将通用材料的状态和配方放回正确的定义，接管现有需求 |

@@ -36,9 +36,9 @@ CSS Property Value 聚合仍是本 Plan 要解决的用途：多项独立声明�
 
 ## 当前实现与待做步骤
 
-现役 [Rule](../../src/style-system/core/css-rule.ts) 已按顺序保存路径、目标与内容，[CSSRoot](../../src/style-system/core/css-root.ts) 从源账本编译快照。现役 [State Condition](../../src/style-system/state-conditions.ts) 有独立身份，但 [编译器](../../src/style-system/compiler/compile-css.ts) 最终把地址和状态一起降成 [CSS 文本记录](../../src/style-system/compiler/css-records.ts)。本 Plan 不把现役 `Rule` 或 CSS 记录称为已完成的 Style Node 队列。
+现役 [Rule](../../src/style-system/rule.ts) 已按顺序保存路径、目标与内容，[CSSRoot](../../src/style-system/css-root.ts) 从源账本编译快照。现役 [State Condition](../../src/style-system/materials/state-conditions.ts) 有独立身份，但 [编译器](../../src/style-system/compiler/compile-css.ts) 最终把地址和状态一起降成 [CSS 文本记录](../../src/style-system/compiler/records.ts)。本 Plan 不把现役 `Rule` 或 CSS 记录称为已完成的 Style Node 队列。
 
-1. 对照现役 [Condition](../../src/style-system/core/css-condition.ts)、Rule 与 State Condition，确定如何从登记内容取得 `conditionPaths`、`stateConditions` 和属性声明，不丢失原有次序。
+1. 对照现役 [Condition](../../src/style-system/condition.ts)、Rule 与 State Condition，确定如何从登记内容取得 `conditionPaths`、`stateConditions` 和属性声明，不丢失原有次序。
 2. 在源账本快照与 CSS string 之间形成上述最小节点队列，确定规则如何读取、改写它；先保持原有普通声明的输出结果。
 3. 以 `box-shadow` 的多份独立内容验证改写后的聚合，再用 `background-image` 检查不同属性的组合语义。不得从已经输出的 CSS 字符串反向猜测贡献关系。
 4. 最后将普通地址与 State Condition 转换成 CSS 输出，保持 `compileCSS(): string` 的公开边界。

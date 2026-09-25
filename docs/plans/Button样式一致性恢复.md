@@ -100,7 +100,7 @@ Example 的 Accent、Danger 行实际是 `solid + tone`。因此截图中的浅�
 1. 通用状态条件不应因为交集增加权重而反过来压过组件变体。
 2. Solid 本身缺少明确的 active 无阴影配方；当前鼠标下“恰好无阴影”来自错误覆盖，不能当成正确实现保留。
 
-预置条件的代码落在 [selectors/interaction.ts](../../src/style-system/selectors/interaction.ts)。目前没有证据要求重写编译器的交集生成；交集本身是必要能力，不能靠删除交集或提高 Button 选择器权重掩盖问题。
+预置条件的代码落在 [selectors/interaction.ts](../../src/style-system/materials/conditions/interaction.ts)。目前没有证据要求重写编译器的交集生成；交集本身是必要能力，不能靠删除交集或提高 Button 选择器权重掩盖问题。
 
 ## 圆角形状与父布局约束没有迁移完整
 
@@ -119,7 +119,7 @@ Example 的 Accent、Danger 行实际是 `solid + tone`。因此截图中的浅�
 
 ## 材料换了公式，也换了可覆盖的来源
 
-当前材料并不是旧 token 的等价 TS 表达。例如 [tone.ts](../../src/style-system/value-material/color/tone.ts) 把 accent 定义为品牌色 80% 与 CSS `cyan` 混色；旧色元则从品牌色调整亮度、色度、色相。两者不能通过相同变量名获得相同结果。
+当前材料并不是旧 token 的等价 TS 表达。例如 [tone.ts](../../src/style-system/materials/valuables/color/tone.ts) 把 accent 定义为品牌色 80% 与 CSS `cyan` 混色；旧色元则从品牌色调整亮度、色度、色相。两者不能通过相同变量名获得相同结果。
 
 | 项目 | 旧来源或公式 | 当前来源或公式 |
 | --- | --- | --- |
@@ -222,7 +222,7 @@ Button 的候选修复是不再把通用 `toneSurface` 当成所有 variant 的�
 | variant × tone 组合 | 已支持普通复合选择器 | `Button.style.ts` 直接恢复组合 Rule，不建 Button 私有框架 |
 | hover/active/disabled 派生 | 已支持；预置条件权重有问题 | `selectors/interaction.ts` 将 hover/active 的完整状态判断放进 `:where()`，保留原生与标记禁用排除 |
 | `@layer uikit` | 已支持普通 Condition；当前组件未使用 | Button 各 Rule 地址统一带 `@layer uikit` 前缀，不新增编译器 layer 分支 |
-| `corner-shape` | 原始 Key 已支持；boundary 未暴露 | 在 `properties/border.ts` 增加 `$cornerShape`，`boundary()` 增加可选 `cornerShape`，Button 选择 `squircle` |
+| `corner-shape` | 原始 Key 已支持；boundary 未暴露 | 在 `materials/keys/border.ts` 增加 `$cornerShape`，`boundary()` 增加可选 `cornerShape`，Button 选择 `squircle` |
 | 内部 flex 居中 | CSS Key 已有；`contentLayout` 当前 center 固定 grid | 给内容布局补明确的 flex 居中排列模式，由 Mixin 发出 `inline-flex`、内容居中；保留已有模式，避免默改其他消费者 |
 | 主体在父容器内居中 | 已有 `$alignSelf`，当前 Button 未声明 | Button 使用现有 Key 恢复 `align-self: center`；它不是内部内容布局，不塞进 `contentLayout` |
 | 禁用透明度选择 | `clickable()` 写死材料 0.48 | 增加可选 `opacity: ValueInput` 参数，默认保持现有策略；Button 明确选择常态 1、禁用 0.56，不用后置重置 Rule 抵消 Mixin |
@@ -253,7 +253,7 @@ Button 的候选修复是不再把通用 `toneSurface` 当成所有 variant 的�
 
 ## 1. 修正预置交互条件，不动编译机制
 
-依据 R2、R3、R7。源码只涉及 [selectors/interaction.ts](../../src/style-system/selectors/interaction.ts) 的 hover/active 判断；测试落在 T2。
+依据 R2、R3、R7。源码只涉及 [selectors/interaction.ts](../../src/style-system/materials/conditions/interaction.ts) 的 hover/active 判断；测试落在 T2。
 
 | 监察点与动作 | 怎样判定完成，证据在哪里 | 停止线 | 状态与实际证据 |
 | --- | --- | --- | --- |
@@ -262,7 +262,7 @@ Button 的候选修复是不再把通用 `toneSurface` 当成所有 variant 的�
 
 ## 2. 恢复颜色和阴影，先约束共享影响
 
-依据 R1—R5。候选落点是 [palette.ts](../../src/style-system/value-material/color/palette.ts)、[action.ts](../../src/style-system/value-material/color/action.ts)、[text.ts](../../src/style-system/value-material/color/text.ts)、[tone.ts](../../src/style-system/value-material/color/tone.ts)、[shadow.ts](../../src/style-system/value-material/shadow.ts) 中被 Button 消费的材料；目录和其余导出不是整体迁移范围。
+依据 R1—R5。候选落点是 [palette.ts](../../src/style-system/value-material/color/palette.ts)、[action.ts](../../src/style-system/materials/valuables/color/action.ts)、[text.ts](../../src/style-system/materials/valuables/color/text.ts)、[tone.ts](../../src/style-system/materials/valuables/color/tone.ts)、[shadow.ts](../../src/style-system/materials/valuables/shadow.ts) 中被 Button 消费的材料；目录和其余导出不是整体迁移范围。
 
 | 监察点与动作 | 怎样判定完成，证据在哪里 | 停止线 | 状态与实际证据 |
 | --- | --- | --- | --- |
@@ -276,9 +276,9 @@ Button 的候选修复是不再把通用 `toneSurface` 当成所有 variant 的�
 
 | 监察点与源码落点 | 怎样判定完成，证据在哪里 | 停止线 | 状态与实际证据 |
 | --- | --- | --- | --- |
-| 3.1 方圆角：[border.ts](../../src/style-system/properties/border.ts)、[structure.ts](../../src/style-system/mixins/structure.ts) | T3 证明 `boundary` 选择 squircle 时输出对应声明，省略时不新增该属性；T5 实际计算形状正确，旧边框/outline 配置输出不变 | 不改变已有 radius 默认，不加浏览器兼容层，不替所有组件开启 squircle | 满足；T3 选用 / 省略与边框 outline 保护通过；T5 实际 corner-shape 为 superellipse(2) |
-| 3.2 flex 居中：[content.ts](../../src/style-system/mixins/content.ts) | T3 新排列模式输出 inline-flex 与内容居中；旧 center 模式、仅 padding/gap 调用的输出保持；T5 验证图标文字间距与长文本 | 不把现有 center 的 grid 行为全局替换；父布局 align-self 不混入内部布局 Mixin | 满足；T3 旧 center 仍 grid，新 flex-center 输出 flex；T5 四尺寸三内容场景及间距通过 |
-| 3.3 可选透明度：[interaction.ts](../../src/style-system/mixins/interaction.ts) | T3 证明显式 opacity Value 生效，无参数调用仍输出原有策略；T5 验证 Button 原生禁用为 0.56，过渡、光标、位移功能不丢 | 不能直接把共享 disabledFade 全局改成 0.56；标记禁用分支须有 W7 裁决 | 满足；T3 无参仍 0.48，显式 0.56；T1 原生 / 标记 / 并存均 0.56 且不进入交互 |
+| 3.1 方圆角：[border.ts](../../src/style-system/materials/keys/border.ts)、[structure.ts](../../src/style-system/materials/mixins/structure.ts) | T3 证明 `boundary` 选择 squircle 时输出对应声明，省略时不新增该属性；T5 实际计算形状正确，旧边框/outline 配置输出不变 | 不改变已有 radius 默认，不加浏览器兼容层，不替所有组件开启 squircle | 满足；T3 选用 / 省略与边框 outline 保护通过；T5 实际 corner-shape 为 superellipse(2) |
+| 3.2 flex 居中：[content.ts](../../src/style-system/materials/mixins/content.ts) | T3 新排列模式输出 inline-flex 与内容居中；旧 center 模式、仅 padding/gap 调用的输出保持；T5 验证图标文字间距与长文本 | 不把现有 center 的 grid 行为全局替换；父布局 align-self 不混入内部布局 Mixin | 满足；T3 旧 center 仍 grid，新 flex-center 输出 flex；T5 四尺寸三内容场景及间距通过 |
+| 3.3 可选透明度：[interaction.ts](../../src/style-system/materials/mixins/interaction.ts) | T3 证明显式 opacity Value 生效，无参数调用仍输出原有策略；T5 验证 Button 原生禁用为 0.56，过渡、光标、位移功能不丢 | 不能直接把共享 disabledFade 全局改成 0.56；标记禁用分支须有 W7 裁决 | 满足；T3 无参仍 0.48，显式 0.56；T1 原生 / 标记 / 并存均 0.56 且不进入交互 |
 
 ## 4. 恢复 Button 的每一类配方
 
@@ -317,11 +317,11 @@ Button 的禁用公式需要常态颜色作为输入。若必须引入组件 Var
 | 测试编号与具体落点 | 要留下的长期回归证据 | 对应监察点 |
 | --- | --- | --- |
 | T1：`src/components/kits/Button/button.browser.test.tsx` 的隔离对照、配方矩阵用例 | 真实 props 渲染 3 variant × 3 tone × 2 主题，记录背景/文字/边框/阴影；真实 hover、鼠标 active、键盘 active、三类禁用来源及 loading 交集。旧公式是独立期望，不能从待测材料直接读取并当作答案；移除 TS 样式的负对照须失败 | 0.2、4.1—4.4 |
-| T2：`src/style-system/selectors/interaction.browser.test.ts`；现有 `compiler/subject-condition.test.ts`、`compiler/subject-condition-composition.test.ts` 回归 | 通用状态与更具体变体在同时 hover+active 时仍正确覆盖；禁用排除不变；普通自定义 Condition 保持原义。编译器测试只调整与获准 selector 文本变化直接对应的期望，其他语义不改 | 1.1、1.2 |
-| T3：`src/style-system/compiler/compile-css.test.ts` 的 Mixin 与条件输出用例 | boundary 新字段选用/省略；contentLayout 新模式与旧模式；clickable 显式 opacity 与无参数旧默认；Button layer 地址及常态颜色派生无循环。每个新配置有正例和省略配置的保护例 | 3.1—3.3、4.7，以及 4.1—4.4 的声明表达 |
+| T2：`src/style-system/materials/conditions/interaction.browser.test.ts`、`src/style-system/test/交互状态与变体正确层叠.browser.test.ts`；现有 `test/状态名称登记并用于变量编译.test.ts`、`test/状态顺序与变量来源链共同决定取值.test.ts` 回归 | 通用状态与更具体变体在同时 hover+active 时仍正确覆盖；禁用排除不变；普通自定义 Condition 保持原义。编译器测试只调整与获准 selector 文本变化直接对应的期望，其他语义不改 | 1.1、1.2 |
+| T3：`src/style-system/test/样式登记经依赖解析生成CSS.test.ts` 的 Mixin 与条件输出用例 | boundary 新字段选用/省略；contentLayout 新模式与旧模式；clickable 显式 opacity 与无参数旧默认；Button layer 地址及常态颜色派生无循环。每个新配置有正例和省略配置的保护例 | 3.1—3.3、4.7，以及 4.1—4.4 的声明表达 |
 | T4：`src/components/kits/Button/button.browser.test.tsx` 的材料消费与非 Button 探针用例 | 固定旧 token 输入下的明暗数值、品牌覆盖、alpha 和四档阴影；同页非 Button 元素读取受影响共享变量，按 0.3 消费者清单验证既有约定，不只看 Button。涉及真实其他组件时优先运行其现有测试，不修改其实现或期望 | 0.3、2.1—2.3、4.7 |
 | T5：`src/components/kits/Button/button.browser.test.tsx` 的交互、几何、保护用例及实际页面截图 | 核对 4.5—4.7 与下表的实际计算值；四尺寸的文字、图标文字、长文本、窄容器；真实焦点、鼠标与键盘、120px 父容器、减少动效和 loading。截图注明主题、输入动作、视口与版本 | 0.3、3.1—3.3、4.3、4.5—4.7 |
-| T6：`src/components/kits/Button/Button.test.tsx`、`button.browser.test.tsx`、`src/style-system/core/css-root.browser.test.ts` 的原有契约回归，以及实际 Example/Storybook 入口检查 | 切换前：组件协议既有测试不回归，在隔离 TS 场景验证只登记、统一挂载及重复渲染不新增规则。切换后：真实入口只加载 TS，CSSRoot 仍按原方式启动，截图结果与隔离场景一致；构建产物与预览入口也通过 | 0.3、5.1—5.3 |
+| T6：`src/components/kits/Button/Button.test.tsx`、`button.browser.test.tsx`、`src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts` 的原有契约回归，以及实际 Example/Storybook 入口检查 | 切换前：组件协议既有测试不回归，在隔离 TS 场景验证只登记、统一挂载及重复渲染不新增规则。切换后：真实入口只加载 TS，CSSRoot 仍按原方式启动，截图结果与隔离场景一致；构建产物与预览入口也通过 | 0.3、5.1—5.3 |
 
 T2、T3 的精确单元用例新增或调整属于对应能力的验收；不授权修改编译器实现。T6 的组件协议与 CSSRoot 既有用例原则上保持原断言；若发现与本次目标直接冲突，先列出冲突及裁决依据，不能批量更新快照。
 

@@ -1,9 +1,9 @@
 /** 稳定内容求值；状态只由 Variable 产生。 */
-import type { ConditionPath } from '../core/css-condition'
-import type { CompileContext, Valuable } from '../core/css-valuable'
-import { isCSSContent, type ValueInput } from '../core/css-value'
-import { isVariable, type Variable } from '../core/css-variable'
-import { resolveStateConditions } from '../state-conditions'
+import type { ConditionPath } from '../condition'
+import type { CompileContext, Valuable } from '../valuable'
+import { isCSSContent, type ValueInput } from '../value'
+import { isVariable, type Variable } from '../variable'
+import { resolveStateConditions } from '../materials/state-conditions'
 import { compileVariableReference } from './compile-variable'
 
 export type ValueConditions = string[]
