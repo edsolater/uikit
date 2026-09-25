@@ -10,16 +10,17 @@
 | materials/state-conditions.ts | 主体状态名称、条件登记与中央顺序 |
 | css-key.ts | CSS Key 的创建、声明目标识别与名称解析 |
 | declaration.ts | Key／Variable 与内容的二元声明 |
-| rule.ts | 声明组合、登记与句柄 |
+| rule.ts | 声明组合、登记、句柄与特殊 Rule 的节点改写协议 |
 | valuable.ts | Valuable 的按需依赖及消费位置 |
 | value.ts | 稳定 Value 与可识别的可调用内容协议 |
 | variable.ts | Variable 创建、函数 source、定义及引用链延伸 |
 | variable-cluster.ts | Variable 成员聚合、选择、default 代理及同名声明配对 |
 | css-root.ts | 源账本、快照编译与宿主提交 |
 | compiler/compile-value.ts | 读取 Value 内容与嵌套引用，检测内容循环 |
-| compiler/compile-variable.ts | 把 Variable 引用、source 与自身状态转换为取值结果 |
-| compiler/compile-css.ts | 遍历 Rule、激活依赖、收集声明记录并输出 CSS 字符串 |
-| compiler/records.ts | 定义三项 CSS 记录，并在不改变层叠语义的前提下调整同址记录顺序 |
+| compiler/compile-variable-reference.ts | 把 Variable 引用、source 与自身状态转换为取值结果 |
+| compiler/style-nodes.ts | 改写前的普通／特殊节点与改写后的可输出节点形状 |
+| compiler/compile-rules.ts | 展开 Rules、执行节点改写、读取内容与依赖，再从 parsed 节点输出 CSS 字符串 |
+| compiler/group-parsed-nodes-by-address.ts | 在不改变层叠语义的前提下按地址保守分组 parsed 节点 |
 | materials/keys | 可复用的 CSS Key 定义及其名称登记 |
 | materials/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
 | materials/valuables | 按用途组织的现成 Valuable 材料；Value、Variable 与组合配方可留在同一文件中 |
@@ -37,9 +38,9 @@
 flowchart LR
   Definition[Variable 与 Cluster 定义] --> Rule[样式 Rule]
   Rule --> Root[CSSRoot 源账本]
-  Root --> Resolve[规则和内容解析]
-  Resolve --> Records[有序 CSS 记录]
-  Records --> CSS[CSS 字符串]
+  Root --> Nodes[有序 styleNodes]
+  Nodes --> Parsed[规则改写与求值后的 parsedStyleNodes]
+  Parsed --> CSS[CSS 字符串]
   CSS --> Browser[浏览器样式引擎]
 ```
 
@@ -49,7 +50,7 @@ Value 保留内容，Variable 保留黑盒身份，Cluster 聚合已有 Variable
 
 编译器消费 Variable 时输出 var 引用，并在消费地址补充其自身状态定义。普通 Value 不展开状态；每个 Variable 只生成常态及各项有效状态，不自动枚举交集。
 
-自动定义采用显式 Rule 的消费作用域。每份源规则或依赖先形成自动定义与显式记录，再将互不覆盖的同层同地址记录共同输出。CSS @function 的局部内容与 result 保持在同一份定义中。
+普通地址与当前受体状态在 `styleNodes` 中分别保存。特殊 Rule 经正式登记入口改写节点；源 Rules 和按需依赖 Rules 都经过这条阶段链。改写后只保留可输出内容，并将状态并入 `parsedStyleNodes` 的输出地址。自动定义采用显式 Rule 的消费作用域，在求值时补充为 parsed 内容；同址节点只作不改变层叠的保守分组。CSS @function 的局部内容与 result 保持在同一份定义中。
 
 `compileCSS()` 只返回字符串。`cssRoot.mount()` 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
 

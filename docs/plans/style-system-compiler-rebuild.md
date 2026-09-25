@@ -1,6 +1,6 @@
 # Style System 编译器重做计划
 
-2026-09-18。实现已接通；验收与实施选择见文末。本计划保留原目标，实施中撤回的中转层在记录中说明。
+2026-09-18。实现已接通；验收与实施选择见文末。本计划保留原目标，实施中撤回的中转层在记录中说明。已删除文件名记录的是当时的实施对象，不表示现行文件仍同名。
 
 ## 需求依据与范围
 
@@ -53,7 +53,7 @@
 
 - [value.ts](../../src/style-system/value.ts)、[variable.ts](../../src/style-system/variable.ts)、[valuable.ts](../../src/style-system/valuable.ts)：Value 与 Variable 独立，共享“可被 CSS 化”的 Valuable 协议，不使用 Variable 继承 Value 或伪装 Value 的捷径。
 - [compile-value.ts](../../src/style-system/compiler/compile-value.ts)：负责当前条件下的取值与递归；不认识变量注册细节或具体 CSS 函数语法。
-- [compile-variable.ts](../../src/style-system/compiler/compile-variable.ts)：负责变量引用、自身赋值及必要的自动定义，普通消费者不跟随其条件展开。
+- [compile-variable-reference.ts](../../src/style-system/compiler/compile-variable-reference.ts)：负责变量引用、自身赋值及必要的自动定义，普通消费者不跟随其条件展开。
 - `values/functions/`、`values/shadow.ts`、`values/animation.ts` 等定义处：保留原始输入关系，提供延迟生成方法。编译器控制调用时机与输入解析；生成方法只组织自身内容。
 
 优先验证“具体函数保存输入，编译器提供输入解析能力”的直接做法。不得为延迟编译附带增加通用 Expression 体系、格式化注册表、通用对象遍历，或将内容协议放回 Key。也不默认给任意数组新增“空格拼接”的语义。
@@ -70,9 +70,9 @@ Subject Condition 同名去重、按注册顺序排列；普通路径保留顺�
 
 ### 5. 收口编译、挂载与 Mixin
 
-- Rule 的当前 Key 与内容进入唯一解析路线。实施审查后删除 `compile-declaration.ts`：移出属性语法后，它只剩分派与重包装，已并入 [compile-css.ts](../../src/style-system/compiler/compile-css.ts)。
-- [compile-css.ts](../../src/style-system/compiler/compile-css.ts)：组织 Rule、依赖与解析；结构嵌套留在这里，不从 Value 回调重新进入普通 Rules。
-- [records.ts](../../src/style-system/compiler/records.ts)：最终只存条件路径、Key、CSS 内容三项。条件项及 Key 的空值按已有契约处理，不增加 owner 等长期字段。
+- Rule 的当前 Key 与内容进入唯一解析路线。实施审查后删除 `compile-declaration.ts`：移出属性语法后，它只剩分派与重包装，已并入 [compile-rules.ts](../../src/style-system/compiler/compile-rules.ts)。
+- [compile-rules.ts](../../src/style-system/compiler/compile-rules.ts)：组织 Rule、依赖与解析；结构嵌套留在这里，不从 Value 回调重新进入普通 Rules。
+- `records.ts`：最终只存条件路径、Key、CSS 内容三项。条件项及 Key 的空值按已有契约处理，不增加 owner 等长期字段。
 - 解析挂载后再生成 CSS string；输出遵循挂载顺序，不做全局重排。同一目标的条件共享不得破坏原生声明的级联顺序。
 - `mixins/`：承接字体、空间、边界、过渡等目的配置；具体内容生成留在对应定义处。不为了删除 Key 的语法配置而丢失这些能力，也不把 Button 配方冒充通用 Mixin。
 
@@ -179,7 +179,7 @@ git diff --cached --check
 
 已新增并实测过失败后修复的反例：Rule 名称与 Value 同条件重复嵌套、主体条件下 Variable 错取 default、后续依赖不能替换已解析定义。
 
-功能证据集中于 [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)、[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts)、[状态顺序与变量来源链共同决定取值.test.ts](../../src/style-system/test/状态顺序与变量来源链共同决定取值.test.ts)、[records.test.ts](../../src/style-system/compiler/records.test.ts) 与 [Root 浏览器测试](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts)。Button 浏览器测试只将 padding 测试配置迁入 contentLayout，未改视觉预期。
+功能证据集中于 [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)、[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts)、[状态顺序与变量来源链共同决定取值.test.ts](../../src/style-system/test/状态顺序与变量来源链共同决定取值.test.ts)、`records.test.ts` 与 [Root 浏览器测试](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts)。Button 浏览器测试只将 padding 测试配置迁入 contentLayout，未改视觉预期。
 
 阅读链复查：普通内容为 Rule → compileValue → 记录；变量在此转入 compileVariableReference；复合内容直接调用定义处函数。相较旧实现，省去 Declaration 二次识别、Key 语法分派、表达式 switch、属性反向解析和属性覆盖管理。文件头、类型与具名函数均按最短职责说明复查；不以代码缩短代替这项判断。
 

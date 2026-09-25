@@ -1,6 +1,6 @@
 /** Value 内容留到编译消费时求值。 */
 import { expect, test, vi } from 'vitest'
-import { compileRules } from '../compiler/compile-css'
+import { compileRules } from '../compiler/compile-rules'
 import { condition } from '../condition'
 import { cssContent, value } from '../value'
 

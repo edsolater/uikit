@@ -1,5 +1,5 @@
 /** CSSRoot 的源账本、编译与提交。 */
-import { compileRules } from './compiler/compile-css'
+import { compileRules } from './compiler/compile-rules'
 import type { Rule, RuleHandle, Rules } from './rule'
 
 /** 宿主已有内容与上次提交结果。 */

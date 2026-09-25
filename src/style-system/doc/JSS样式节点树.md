@@ -1,18 +1,19 @@
-本文记录讨论中的 Style System 编译链，尚未实现：`rule()`／`rules()` 向 CSSRoot 登记 Rules → 可改写的 `styleNodes` → 改写完成的 `parsedStyleNodes` → `CSSString`。按 Condition Path 查看前一阶段的节点队列，可以看到树状的地址关系；队列仍保留声明原来的先后位置。
+现役 Style System 编译链为：`rule()`／`rules()` 向 CSSRoot 登记 Rules → 可改写的 `styleNodes` → 改写完成的 `parsedStyleNodes` → `CSSString`。按 Condition Path 查看前一阶段的节点队列，可以看到树状的地址关系；队列仍保留声明原来的先后位置。
 
 # 节点保存什么
 
 ```ts
-// 普通内容节点的概念形状，并非现役类型声明或完整节点类型。
+// 普通内容节点的概念形状；完整类型见 compiler/style-nodes.ts。
 type StyleNode = {
+  kind: 'content'
   conditionPath: Condition[]
   stateConditionPath: StateCondition[]
-  key: CSSKey
-  value: ValueInput
+  key: CSSKey | undefined
+  value: ValueInput | CSSOutputContent
 }
 ```
 
-这里仅展示普通内容节点；`styleNodes` 还可以有待定义的特殊节点。`conditionPath` 是普通 Condition 构成的地址，说明声明作用在哪里。`stateConditionPath` 是当前受体上逐层叠加的状态条件，说明这个节点何时生效，不改变地址。`key` 与 `value` 是一项声明。队列位置保留声明顺序，不另设节点顺序字段。
+这里仅展示普通内容节点；特殊节点由内容对象的 `rewriteStyleNodes()` 方法取得改写身份。`conditionPath` 是普通 Condition 构成的地址，说明声明作用在哪里。`stateConditionPath` 是当前受体上逐层叠加的状态条件，说明这个节点何时生效，不改变地址。`key` 与 `value` 是一项声明。队列位置保留声明顺序，不另设节点顺序字段。
 
 ```mermaid
 flowchart LR
@@ -21,7 +22,7 @@ flowchart LR
   Parsed --> CSS[CSSString]
 ```
 
-规则对 `styleNodes` 进行改写，得到 `parsedStyleNodes`。具体改写接口及 CSS 属性值聚合方式尚未确定；节点结构不预设某个 `contribute()` 操作。
+特殊 Rule 经 `rewriteStyleNodes(nodes, index, node)` 改写 `styleNodes`，普通内容求值后形成 `parsedStyleNodes`。CSS 属性值聚合属于另一项需求，当前节点链不处理该语义。
 
 # 改写完成后的节点
 
@@ -129,4 +130,4 @@ const nodes: StyleNode[] = [
 
 同一属性的多个节点可以各自携带一份内容；状态路径只决定各节点何时有效。对于 `box-shadow`，有效内容要按什么规则组合，以及如何输出合法 CSS，仍需另行确定。节点形状本身既不自动聚合，也不把普通同名声明的浏览器层叠改成聚合。
 
-现役 [Rule](../rule.ts) 与 [State Condition](../materials/state-conditions.ts) 提供了部分相关信息，[编译器](../compiler/compile-css.ts) 当前直接形成 CSS 输出记录。本文描述的是拟议的中间表示，不把这些现役文件视为已经实现了上述 Style Node 队列。
+现役 [Rule](../rule.ts) 提供登记和改写协议，[State Condition](../materials/state-conditions.ts) 提供状态身份，[节点类型](../compiler/style-nodes.ts) 与 [编译器](../compiler/compile-rules.ts) 实现上述节点队列、改写、求值和字符串输出阶段。
