@@ -16,7 +16,7 @@ export function variableCluster<Members extends { default: Variable } & Record<s
   }
   const cluster = new Proxy(select, {
     get(target, property, receiver) {
-      if (property === 'kind' || property === 'name' || property === 'onActive') return Reflect.get(members.default, property)
+      if (property === 'kind' || property === 'name' || property === 'onActive' || property === 'parse' || property === 'parseWaveIndex') return Reflect.get(members.default, property)
       return Reflect.get(target, property, receiver)
     },
     has(target, property) { return property in members.default || property in target },

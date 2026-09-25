@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { stateCondition } from '../materials/state-conditions'
 import { condition } from '../condition'
 import { variable, variableFrom } from '../variable'
-import { compileRules } from '../compiler/compile-rules'
+import { compileRules } from '../compiler/rules'
 
 stateCondition('compositionA', condition('&:where([data-a])'))
 stateCondition('compositionB', condition('&:where([data-b])'))

@@ -7,5 +7,5 @@ export function translateY(distance: ValueInput): CSSFunction {
   return cssContent((read) => {
     const text = read(distance)
     return text === undefined ? undefined : `translateY(${text})`
-  })
+  }, [distance])
 }

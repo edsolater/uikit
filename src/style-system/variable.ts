@@ -2,7 +2,9 @@
 import { condition, media } from './condition'
 import type { Rules } from './rule'
 import type { Valuable } from './valuable'
-import { isCSSContent, type ValueInput } from './value'
+import type { ASTController } from './compiler/ast-controller'
+import { cssContent, isCSSContent, value, type ValueInput } from './value'
+import { resolveStateConditions } from './materials/state-conditions'
 
 /** Variable 可直接保存内容，也可在编译消费时生成内容。 */
 export type VariableSource = ValueInput | (() => ValueInput)
@@ -11,6 +13,8 @@ export type VariableSource = ValueInput | (() => ValueInput)
 export interface Variable extends Valuable {
   kind: 'variable'
   name: string
+  parseWaveIndex?: number
+  parse(astController: ASTController): ValueInput
 }
 /** Variable 的名称、状态配方与可选根值、注册配置；状态回调接收创建时的原始来源。 */
 export interface VariableOptions<Source extends VariableSource = VariableSource> {
@@ -18,6 +22,7 @@ export interface VariableOptions<Source extends VariableSource = VariableSource>
   states?: Record<string, ValueInput | ((source: Source) => ValueInput)>
   root?: { value: ValueInput; dark?: ValueInput; reducedMotion?: ValueInput }
   registration?: { syntax: string; inherits: boolean; initialValue?: ValueInput }
+  parseWaveIndex?: number
 }
 interface VariableDefinition {
   source: VariableSource
@@ -33,41 +38,93 @@ export function isVariable(input: unknown): input is Variable {
   return input !== null && (typeof input === 'object' || typeof input === 'function')
     && 'kind' in input && input.kind === 'variable'
 }
-/** 排除同样可调用的 Variable Cluster 与 CSS Function，只识别普通 source 函数。 */
+/** 可调用的 Parseable 也是内容对象，不应被误当作 source 工厂或状态回调。 */
+function isParseableFunction(input: unknown): boolean {
+  return typeof input === 'function' && 'parse' in input && typeof input.parse === 'function'
+}
+/** 排除同样可调用的 Variable、CSS Function 与 Parseable，只识别普通 source 函数。 */
 export function isVariableSourceFunction(input: VariableSource): input is () => ValueInput {
-  return typeof input === 'function' && !isVariable(input) && !isCSSContent(input)
+  return typeof input === 'function' && !isVariable(input) && !isCSSContent(input) && !isParseableFunction(input)
 }
 /** 创建定义；回调只在创建时求值，收到原始首参数。 */
 export function variable<Source extends VariableSource>(source: Source, options: VariableOptions<NoInfer<Source>>): Variable {
-  const reference: Variable = { kind: 'variable', name: options.name.replace(/^--/, '') }
+  const reference = { kind: 'variable' as const, name: options.name.replace(/^--/, '') } as Variable
+  if (options.parseWaveIndex !== undefined) reference.parseWaveIndex = options.parseWaveIndex
   const states = new Map<string, ValueInput>()
   for (const [name, content] of Object.entries(options.states ?? {})) {
-    states.set(name, typeof content === 'function' && !isVariable(content) && !isCSSContent(content)
+    states.set(name, typeof content === 'function' && !isVariable(content) && !isCSSContent(content) && !isParseableFunction(content)
       ? content(source) : content as ValueInput)
   }
   definitions.set(reference, { source, states })
-  if (options.registration || options.root) {
-    reference.onActive = () => {
-      const rules: Rules = []
+  reference.parse = (astController) => {
+    astController.activate(reference)
+    if (astController.claimOnce(reference)) {
       const registration = options.registration
       if (registration) {
-        const body: Rules = [
-          [undefined, 'syntax', JSON.stringify(registration.syntax)],
-          [undefined, 'inherits', String(registration.inherits)],
-        ]
-        if (registration.initialValue !== undefined) body.push([undefined, 'initial-value', registration.initialValue])
-        rules.push([[condition(`@property --${reference.name}`)], undefined, body])
+        const address = `variable-registration:${reference.name}`
+        astController.replaceResource(address)
+        const registrationPath = {
+          targetConditionPath: [condition(`@property --${reference.name}`)],
+          stateConditionPath: [],
+        }
+        astController.insertResource(address, registrationPath, 'syntax', JSON.stringify(registration.syntax))
+        astController.insertResource(address, registrationPath, 'inherits', String(registration.inherits))
+        if (registration.initialValue !== undefined) astController.insertResource(address, registrationPath, 'initial-value', registration.initialValue)
       }
       const root = options.root
       if (root) {
-        rules.push([[condition(':where(:root)')], reference, root.value])
-        if (root.dark !== undefined) rules.push([[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], reference, root.dark])
-        if (root.reducedMotion !== undefined) rules.push([[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], reference, root.reducedMotion])
+        astController.insertVariableDefinition({
+          targetConditionPath: [condition(':where(:root)')], stateConditionPath: [],
+        }, reference, root.value)
+        if (root.dark !== undefined) astController.insertVariableDefinition({
+          targetConditionPath: [condition(':where(:root)'), condition('&:where([data-theme="dark"])')], stateConditionPath: [],
+        }, reference, root.dark)
+        if (root.reducedMotion !== undefined) astController.insertVariableDefinition({
+          targetConditionPath: [condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], stateConditionPath: [],
+        }, reference, root.reducedMotion)
       }
-      return rules
     }
+    if (astController.role === 'declaration-key') return value(`var(--${reference.name})`)
+
+    const definition = variableDefinition(reference)
+    const sourceValue = isVariableSourceFunction(definition.source) ? definition.source() : definition.source
+    const stateConditions = resolveStateConditions(collectStateNames(reference))
+    if (stateConditions.length) {
+      const stateScope = astController.isVariableDefinition
+        ? { targetConditionPath: [...astController.conditionPath.targetConditionPath], stateConditionPath: [] }
+        : astController.conditionPath
+      const activeState = astController.isVariableDefinition ? undefined
+        : [...stateConditions].reverse().find((state) => astController.conditionPath.stateConditionPath.some((current) => current.name === state.name))
+      const defaultValue = activeState && definition.states.has(activeState.name)
+        ? definition.states.get(activeState.name)
+        : sourceValue
+      astController.insertVariableDefinition(stateScope, reference, defaultValue)
+
+      for (const state of stateConditions) {
+        if (activeState && state.order <= activeState.order) continue
+        const stateValue = definition.states.has(state.name) ? definition.states.get(state.name) : sourceValue
+        astController.insertVariableDefinition({
+          targetConditionPath: [...stateScope.targetConditionPath],
+          stateConditionPath: resolveStateConditions([
+            ...stateScope.stateConditionPath.map((current) => current.name), state.name,
+          ]),
+        }, reference, stateValue)
+      }
+    }
+
+    const contents: ValueInput[] = sourceValue === undefined ? [] : [sourceValue]
+    return value(cssContent((read) => {
+      const fallback = contents.length ? read(contents[0]) : undefined
+      return fallback === undefined ? `var(--${reference.name})` : `var(--${reference.name}, ${fallback})`
+    }, contents))
   }
   return reference
+}
+
+/** 合并延伸链上的状态身份；每个成员保留自身定义来源。 */
+function collectStateNames(reference: Variable): string[] {
+  const definition = variableDefinition(reference)
+  return [...new Set([...(definition.inherited ? collectStateNames(definition.inherited) : []), ...definition.states.keys()])]
 }
 /** 延伸保存来源引用和自身覆盖，不复制来源定义。 */
 export function variableFrom<Source extends Variable>(source: Source, options: VariableOptions<NoInfer<Source>>): Variable {

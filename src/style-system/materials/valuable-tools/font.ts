@@ -22,5 +22,5 @@ export function fontValue(parts: FontParts): CSSFunction {
     if (size === undefined || family === undefined) return undefined
     return [style, weight, leading === undefined ? size : `${size}/${leading}`, family]
       .filter((part) => part !== undefined).join(' ')
-  })
+  }, [parts.style, parts.weight, parts.size, parts.lineHeight, parts.family])
 }

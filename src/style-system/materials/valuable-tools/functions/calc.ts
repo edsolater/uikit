@@ -8,5 +8,5 @@ export function calcMultiply(amount: ValueInput, factor: ValueInput): CSSFunctio
     const left = read(amount)
     const right = read(factor)
     return left === undefined || right === undefined ? undefined : `calc(${left} * ${right})`
-  })
+  }, [amount, factor])
 }

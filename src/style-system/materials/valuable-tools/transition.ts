@@ -10,5 +10,5 @@ export type Transition = [key: CSSKey, duration: ValueInput, easing: ValueInput,
 export function transitionValue(...items: Transition[]): CSSFunction {
   return cssContent((read) => items.map(([key, duration, easing, delay]) =>
     [propertyName(key), read(duration), read(easing), read(delay)].filter((part) => part !== undefined).join(' ')
-  ).join(', '))
+  ).join(', '), items.flatMap(([, duration, easing, delay]) => [duration, easing, delay]))
 }

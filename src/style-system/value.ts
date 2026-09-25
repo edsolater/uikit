@@ -1,5 +1,5 @@
 /** 稳定的 CSS 内容与延迟输出协议。 */
-import type { Valuable } from './valuable'
+import type { ASTParseable, Valuable } from './valuable'
 import type { Variable } from './variable'
 
 export type { CompileContext } from './valuable'
@@ -17,12 +17,13 @@ export type ValueReaderFunction = (read: ValueReader) => string | undefined
 export interface CSSFunction extends Valuable {
   (read: ValueReader): string | undefined
   serializeCSS: ValueReaderFunction
+  contents: ValueInput[]
 }
-export type ValueInput = RawValue | Value | Variable | CSSFunction | undefined
+export type ValueInput = RawValue | Value | Variable | CSSFunction | ASTParseable | undefined
 
 /** 标记输出能力，避免与 source 回调混淆。 */
-export function cssContent(serializeCSS: ValueReaderFunction): CSSFunction {
-  return Object.assign(serializeCSS, { serializeCSS })
+export function cssContent(serializeCSS: ValueReaderFunction, contents: ValueInput[] = []): CSSFunction {
+  return Object.assign(serializeCSS, { serializeCSS, contents })
 }
 export function isCSSContent(input: unknown): input is CSSFunction {
   return typeof input === 'function' && 'serializeCSS' in input && typeof input.serializeCSS === 'function'

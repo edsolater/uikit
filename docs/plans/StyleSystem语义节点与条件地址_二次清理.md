@@ -1,6 +1,6 @@
 # Style System 语义节点与条件地址：二次清理
 
-> 状态：TODO，待用户确认，尚未施工。本 Plan 附属于 [AST Plan](StyleSystem语义节点与条件地址.md)；[属性值聚合](StyleSystem属性值贡献与聚合.md)是另一项需求。确认后才修改代码和 [Architecture](../../src/style-system/architecture.md)，施工按 [Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)执行。
+> 状态：用户已授权执行，Plan 组独立来源审查通过，施工完成、独立验收通过。本 Plan 附属于 [AST Plan](StyleSystem语义节点与条件地址.md)，并接管其未施工的解析方向；[属性值聚合](StyleSystem属性值贡献与聚合.md)是另一项需求。施工和 [Architecture](../../src/style-system/architecture.md) 更新按 [Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)执行。
 
 ## 目标与边界
 
@@ -68,9 +68,11 @@ src/style-system/【目录】：规则登记与样式对象。
 
 1. 建立复合路径、节点和 `ASTController`；用正式规则验证当前路径、定点插入、按 key 查找，以及后一项解析可见前一项修改。
 2. 接通 Root 波与 Content 次波：共用波号，验证默认第 0 波、最早波号、纯值直接完成、复合内容遍历、等待更高波号、新规则进入后续 Root 波、返回值接回原位置与循环终止。Variable 用自己的 `parse` 在 Root 注册 `@property` 并返回内容。
-3. 迁移现役 Value／Variable／Cluster、状态与局部声明、按需依赖和未使用资源不输出的能力。重复同址同 key 节点按原顺序输出，让浏览器决定结果。
+3. 迁移现役规则登记、更新与撤销，Value／Variable／Cluster、Variable 自动定义与状态优先级、状态与局部声明、按需依赖和未使用资源不输出的能力。重复同址同 key 节点按原顺序输出，让浏览器决定结果。
 4. 抽出 CSS 输出，移除旧编译通路；验证 Button、浏览器状态和层叠、CSSRoot 完整提交与失败回退。更新 Architecture 与引用，完成类型、必要测试和独立审查。
 
 **实现约束：** 复合 Content 在构造时保留内部对象的连接；现役 CSS 函数也要能在输出字符串前让次波看见操作数。完成状态以本次编译中的 Content 位置为准：同一个对象在不同路径复用时仍分别处理，等待更高波号的对象不能提前标为完成。可以用 WeakSet 等缓存安全跳过已经完整处理的内容，但缓存不是解析正确性的前提。如何保存连接和完成状态由施工选择，无需另设 `sample` 标记或让用户决定具体容器。
 
-本次只修订待审 Plan，不修改代码或 Architecture。实施从 [UIKit Agent 入口](../../AGENTS.md)进入 AI Rules，按 [分工规则](../../../bcoin-machine-learning/docs/rules/Agent自动分工与模型配置.md)安排执行和独立审查；用户确认本 Plan 前不施工。
+本次选择[分工规则的低配版](../../../bcoin-machine-learning/docs/rules/Agent自动分工与模型配置.md#低配版)：GPT-6 Sol 主 Agent 组织任务、裁决重大问题并最终验收；GPT-6 Luna 执行负责人带领 Luna 实现 Agent 按本 Plan 施工、集成、测试和普通修复。独立 Luna 审查 Agent 不参与实现，直接交回反证与结论；Watchdog 独立检查约束。并发不足时按阶段启用，主 Agent 不接手日常代码施工。
+
+实施从 [UIKit Agent 入口](../../AGENTS.md)进入 AI Rules，按 [Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)完成施工与验收。独立来源审查先发现父 Plan 的初版协议与本 Plan 冲突；父 Plan 明确将旧协议划为历史、由本 Plan 接管未施工方向后，复审通过。该结论只放行施工，不代表代码已验收。

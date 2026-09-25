@@ -1,4 +1,5 @@
 /** Condition 与有序生效地址。 */
+import type { StateCondition } from './materials/state-conditions'
 
 /** 一层 CSS 地址；header 同时是身份和输出块头。 */
 export interface Condition {
@@ -8,6 +9,15 @@ export interface Condition {
 
 /** 从根部逐层嵌套的 Condition 地址。 */
 export type ConditionPath = Condition[]
+
+/** 当前目标状态条件；不修改目标地址身份。 */
+export type StateConditionPath = StateCondition[]
+
+/** 语义节点地址由目标位置与目标状态共同组成。 */
+export interface CompositeConditionPath {
+  targetConditionPath: ConditionPath
+  stateConditionPath: StateConditionPath
+}
 
 /** 已降级的条件地址；undefined 表示 default。 */
 export type ConditionHeaders = (string | undefined)[]

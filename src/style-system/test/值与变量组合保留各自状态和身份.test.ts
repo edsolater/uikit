@@ -6,7 +6,7 @@ import { variable, variableFrom } from '../variable'
 import { variableCluster } from '../variable-cluster'
 import { colorMix } from '../materials/valuable-tools/functions/color-mix'
 import { calcMultiply } from '../materials/valuable-tools/functions/calc'
-import { compileRules } from '../compiler/compile-rules'
+import { compileRules } from '../compiler/rules'
 import { cssFunction } from '../materials/valuable-tools/functions/custom'
 import { stateCondition } from '../materials/state-conditions'
 import { media } from '../condition'
@@ -73,6 +73,26 @@ test('多个有状态变量组合时，消费属性仍只有一份声明', () =>
   expect(css).toContain('--first-color: navy;')
   expect(css).toContain('--second-color: silver;')
   expect(css).toContain('--mix-ratio: 0.7;')
+})
+
+test('共享 Value 在不同地址分别解析，重复编译不修改来源对象', () => {
+  const shared = value(variable('2px', { name: 'shared-position-size', states: { hover: '4px' } }))
+  const rules: Rules = [
+    [[condition('.AuditA')], 'width', shared],
+    [[condition('.AuditB')], 'width', shared],
+  ]
+  const compileAndCheck = () => {
+    const css = compileRules(rules)
+    expect(css).toMatch(/\.AuditA[\s\S]*--shared-position-size:\s*2px;/)
+    expect(css).toMatch(/\.AuditA[\s\S]*--shared-position-size:\s*4px;/)
+    expect(css).toMatch(/\.AuditB[\s\S]*--shared-position-size:\s*2px;/)
+    expect(css).toMatch(/\.AuditB[\s\S]*--shared-position-size:\s*4px;/)
+  }
+
+  compileAndCheck()
+  expect(shared.content).toMatchObject({ kind: 'variable', name: 'shared-position-size' })
+  compileAndCheck()
+  expect(shared.content).toMatchObject({ kind: 'variable', name: 'shared-position-size' })
 })
 test('延伸保持来源引用，自身覆盖和未定义状态都声明到新名字', () => {
   const source = variable('red', { name: 'source-color', states: { hover: 'pink', active: 'blue', disabled: 'gray' } })

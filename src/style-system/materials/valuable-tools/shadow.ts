@@ -23,5 +23,5 @@ export function shadowValue(shape: ShadowShape): CSSFunction {
     if (x === undefined || y === undefined) return undefined
     return [shape.inset ? 'inset' : undefined, x, y, blur ?? (spread === undefined ? undefined : '0'), spread, color]
       .filter((part) => part !== undefined).join(' ')
-  })
+  }, [shape.x, shape.y, shape.blur, shape.spread, shape.color])
 }

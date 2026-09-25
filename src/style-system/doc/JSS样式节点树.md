@@ -1,133 +1,44 @@
-现役 Style System 编译链为：`rule()`／`rules()` 向 CSSRoot 登记 Rules → 可改写的 `styleNodes` → 改写完成的 `parsedStyleNodes` → `CSSString`。按 Condition Path 查看前一阶段的节点队列，可以看到树状的地址关系；队列仍保留声明原来的先后位置。
+# Style System 语义节点与 Content 解析链
 
-# 节点保存什么
+现役链路为 `rule()`／`rules()` 登记 Rules → 有序 `StyleNode` 队列 → Root 波与 Content 次波 → 只含完成内容的 `ParsedStyleNode` 队列 → CSS 字符串。目标地址和受体状态在待解析节点中分别保存；解析完成后合并为输出地址。CSS 属性值聚合属于另一项需求，本链只保留每项声明及其浏览器层叠顺序。
+
+## 节点队列
 
 ```ts
-// 普通内容节点的概念形状；完整类型见 compiler/style-nodes.ts。
-type StyleNode = {
-  kind: 'content'
-  conditionPath: Condition[]
-  stateConditionPath: StateCondition[]
+interface StyleNode {
+  conditionPath: {
+    targetConditionPath: Condition[]
+    stateConditionPath: StateCondition[]
+  }
   key: CSSKey | undefined
-  value: ValueInput | CSSOutputContent
+  content: ValueInput | CSSOutputContent
 }
 ```
 
-这里仅展示普通内容节点；特殊节点由内容对象的 `rewriteStyleNodes()` 方法取得改写身份。`conditionPath` 是普通 Condition 构成的地址，说明声明作用在哪里。`stateConditionPath` 是当前受体上逐层叠加的状态条件，说明这个节点何时生效，不改变地址。`key` 与 `value` 是一项声明。队列位置保留声明顺序，不另设节点顺序字段。
+队列位置决定 Rule 声明顺序。`targetConditionPath` 表示 `.button`、`@media` 等普通条件地址；`stateConditionPath` 使用已登记的状态身份表示受体状态，例如 `hover`。解析器只把值都带入完整身份，不从 CSS 字符串推断状态。
+
+每个 `StyleNode` 的 Key 和 Content 都在其自身位置解析。解析器先遍历 Value、CSSFunction 或其他对象的整个 `contents` 链；链上的 Variable、可选 `parse(astController)` 对象都可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已解析或无需解析后，节点才成为 `ParsedStyleNode`。
 
 ```mermaid
 flowchart LR
-  Rules[Rules 登记到 CSSRoot] --> Nodes[styleNodes：可改写的语义节点]
-  Nodes --> Parsed[parsedStyleNodes：普通内容节点]
-  Parsed --> CSS[CSSString]
+  Rules[Rules] --> Queue[有序 StyleNode 队列]
+  Queue --> RootWave[Root 波：按节点位置解析 Key 与 Content]
+  RootWave --> ContentWave[Content 次波：沿 Value / 函数 / 对象链遍历]
+  ContentWave -->|insert| Queue
+  ContentWave --> Parsed[整条链完成后产生 ParsedStyleNode]
+  Parsed --> Output[CSS String]
 ```
 
-特殊 Rule 经 `rewriteStyleNodes(nodes, index, node)` 改写 `styleNodes`，普通内容求值后形成 `parsedStyleNodes`。CSS 属性值聚合属于另一项需求，当前节点链不处理该语义。
+`ASTController` 只暴露当前 `parseWaveIndex`、复合地址和有限的 `activate`、`claimOnce`、`findByKey`、`insert`、`insertVariableDefinition`、`replaceResource`、`insertResource` 操作。解析对象只能通过 Controller 读写节点队列。较晚的 `parseWaveIndex` 会让该对象等待后续 Root 波；返回值接回当前 Content 位置继续解析。引用环和超过上限的内容链会明确失败。资源操作用于按地址替换并登记成组资源，例如 Variable 的 `@property` 描述。
 
-# 改写完成后的节点
+## Content 链与 Variable
 
-`parsedStyleNodes` 只包含可以直接对应 CSS 输出的普通内容节点。到这一阶段，规则改写节点及其他特殊节点已经处理完毕；`stateConditionPath` 已并入 `conditionPath`，不再单独保存。这里的“普通内容”指内容已经具备输出 CSS 文本的能力，不要求 `value` 提前变成字符串。
+`Value` 只包装 Content，不改变 Variable 身份。CSS 函数保留 serializer 闭包使用的原操作数，并在 `contents` 中显露这些操作数，让次波解析嵌套引用。解析器按当前 Content 位置记录 parse 返回对象，序列化闭包读取原操作数时会得到已解析的对应值。
 
-```ts
-// 概念示例；toCSSString 仅表示对象具备 CSS 输出方法，不预定方法名称。
-const parsedStyleNodes = [
-  {
-    conditionPath: ['.Button', '&:hover'],
-    key: 'box-shadow',
-    value: 'none',
-  },
-  {
-    conditionPath: ['.Button', '&:focus-visible'],
-    key: 'box-shadow',
-    value: {
-      toCSSString() { return '0 0 0 2px blue' },
-    },
-  },
-]
-```
+`Variable.parse(astController)` 在消费时插入 `@property` 注册、根值及 Variable 自身状态定义，再返回可输出的 CSS `var()` Value。状态定义继续按登记的优先顺序排列，不生成状态交集。局部 Variable 声明及 Cluster 双方同名成员仍由对应 Rule/Cluster 逻辑生成普通队列节点；按需依赖使用同一解析和输出链。
 
-第一项的内容直接是字符串；第二项的内容是对象，输出阶段调用它的 CSS 输出方法。两项都已是普通内容节点，对应的 CSS 声明如下：
+## 输出阶段
 
-```css
-.Button {
-  &:hover {
-    box-shadow: none;
-  }
-  &:focus-visible {
-    box-shadow: 0 0 0 2px blue;
-  }
-}
-```
+`ParsedStyleNode` 只有输出地址、Key 和最终 CSS 文本，以及定义排序或依赖替换所需的内部元数据。其 `conditionPath` 合并 target/state 以描述最终 CSS 嵌套位置。输出器只消费完成节点，打开和关闭 CSS 条件块并返回 CSS 字符串；它不执行内容解析或属性值聚合。相同地址的声明仍按浏览器层叠规则保留书写顺序。
 
-多个节点可以共用 CSS 块头，但每个 `parsedStyleNode` 都有对应的 CSS 内容。最后一步取得内容输出的 CSS 文本，再按路径和目标组装 `CSSString`；它不再执行聚合或解释特殊规则。
-
-# 一个节点的状态路径怎样生效
-
-以下 `button`、`icon` 是普通 Condition；`hover`、`focusVisible` 是已认定的 State Condition。示例只展示节点模型，不声称当前 `rule()` 已接受这种对象输入。
-
-```ts
-const node: StyleNode = {
-  conditionPath: [button],
-  stateConditionPath: [hover, focusVisible],
-  key: $opacity,
-  value: 0.7,
-}
-```
-
-该节点的地址始终是 `.button`。状态路径 `[hover, focusVisible]` 要求 **hover 与 focus-visible 同时成立**；它不是两条互相独立的状态分支。经过规则改写后，状态条件进入 `parsedStyleNode.conditionPath`：
-
-```ts
-{
-  conditionPath: ['.button', '&:where(:hover)', '&:where(:focus-visible)'],
-  key: 'opacity',
-  value: '0.7',
-}
-```
-
-概念上的 CSS 效果如下；实际输出仍要遵守 Style System 的选择器和顺序规则。
-
-```css
-.button:where(:hover):where(:focus-visible) {
-  opacity: 0.7;
-}
-```
-
-| `.button` 当前状态 | 这个节点是否生效 |
-| --- | --- |
-| 无状态 | 否 |
-| 只有 hover | 否 |
-| 只有 focus-visible | 否 |
-| hover 与 focus-visible 同时成立 | 是 |
-
-# 多个节点与地址变化
-
-若两个状态要分别产生声明，就使用两个节点。它们可以在浏览器中同时生效：
-
-```ts
-const nodes: StyleNode[] = [
-  { conditionPath: [button], stateConditionPath: [hover], key: $opacity, value: 0.8 },
-  { conditionPath: [button], stateConditionPath: [focusVisible], key: $opacity, value: 0.9 },
-  { conditionPath: [button], stateConditionPath: [hover, focusVisible], key: $opacity, value: 0.7 },
-  { conditionPath: [button, icon], stateConditionPath: [hover], key: $opacity, value: 0.6 },
-]
-```
-
-前三项的普通地址都是 `.button`。当 hover 与 focus-visible 同时成立时，前三项都匹配；示例中的第三项明确描述了交集，并在概念 CSS 中放在后面，使 `.button` 最终得到 `opacity: 0.7`。第四项的 `& .icon` 进入普通地址，声明作用于 `.button` 内的 icon；它的 hover 仍附着在自己的状态路径上。
-
-```css
-/* 仅展示地址、状态与本例顺序的关系，不作为现役编译器输出快照。 */
-.button:where(:hover) { opacity: 0.8; }
-.button:where(:focus-visible) { opacity: 0.9; }
-.button:where(:hover):where(:focus-visible) { opacity: 0.7; }
-.button .icon:where(:hover) { opacity: 0.6; }
-```
-
-把前三项画在 `.button` 地址下、第四项画在 `.button → & .icon` 地址下，只是一种树状阅读视图。真实中间表示仍按队列保存四项，不为聚拢同地址节点而改变原有声明顺序。
-
-# State Condition 的身份与属性聚合
-
-一个 Condition 只有经 State Condition 构造与登记认定，才进入 `styleNode.stateConditionPath`。例如包含 `:is()` 的条件可以描述当前受体状态，但 `:is()` 这个 CSS 函数本身不赋予状态身份；未经认定的普通 Condition 进入 `styleNode.conditionPath`。两类路径在可改写节点中分开，在形成 `parsedStyleNode` 时合并为输出用的 `conditionPath`。
-
-同一属性的多个节点可以各自携带一份内容；状态路径只决定各节点何时有效。对于 `box-shadow`，有效内容要按什么规则组合，以及如何输出合法 CSS，仍需另行确定。节点形状本身既不自动聚合，也不把普通同名声明的浏览器层叠改成聚合。
-
-现役 [Rule](../rule.ts) 提供登记和改写协议，[State Condition](../materials/state-conditions.ts) 提供状态身份，[节点类型](../compiler/style-nodes.ts) 与 [编译器](../compiler/compile-rules.ts) 实现上述节点队列、改写、求值和字符串输出阶段。
+相关实现：[Rule](../rule.ts)、[Value](../value.ts)、[Variable](../variable.ts)、[ASTController](../compiler/ast-controller.ts)、[节点类型](../compiler/style-nodes.ts)、[波次解析器](../compiler/rule-parser.ts)、[Rules 编排](../compiler/rules.ts) 与 [CSS 字符串输出](../compiler/css-string.ts)。正式入口覆盖见 [内容解析波测试](../test/内容解析波遍历及插入节点.test.ts) 和 [样式登记与依赖测试](../test/样式登记经依赖解析生成CSS.test.ts)。

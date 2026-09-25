@@ -12,7 +12,7 @@ export function cssFunction(signature: string, body: Rules): (...args: ValueInpu
     cssContent((read: Parameters<CSSFunction>[0]) => {
       const parts = args.map(read)
       return parts.some((part) => part === undefined) ? undefined : `${name}(${parts.join(', ')})`
-    }),
+    }, args),
     { onActive: () => definition },
   )
 }

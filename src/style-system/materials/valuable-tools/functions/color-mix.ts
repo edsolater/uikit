@@ -17,5 +17,5 @@ export function colorMix(...colors: MixColorInput[]): CSSFunction {
       return `${color} ${percentage}`
     })
     return parts.some((part) => part === undefined) ? undefined : `color-mix(in oklab, ${parts.join(', ')})`
-  })
+  }, colors.flatMap((input) => Array.isArray(input) ? [input[0], input[1]] : [input]))
 }

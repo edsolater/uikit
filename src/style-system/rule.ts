@@ -6,15 +6,11 @@ import { isCSSPair, type Declaration } from './declaration'
 import type { ValueInput } from './value'
 import type { VariableOverrides } from './variable'
 import { registerRule } from './css-root'
-import type { RewriteStyleNode, StyleNode, CSSOutputContent } from './compiler/style-nodes'
-
-/** 改写 Rule 对当前节点队列作一次同步修改。 */
-export interface RewriteRuleContent {
-  rewriteStyleNodes(nodes: StyleNode[], index: number, node: RewriteStyleNode): void
-}
+import type { CSSOutputContent } from './compiler/style-nodes'
+import type { ASTParseable } from './valuable'
 
 /** 待编译内容或嵌套规则。 */
-export type RuleValue = ValueInput | Rules | VariableOverrides | CSSOutputContent | RewriteRuleContent
+export type RuleValue = ValueInput | Rules | VariableOverrides | CSSOutputContent | ASTParseable
 
 /** 路径、目标与内容；路径中的字符串是主体条件名称，空项沿用外层。 */
 export type Rule = [path: (Condition | string)[] | undefined, key: CSSKey | undefined, content: RuleValue]

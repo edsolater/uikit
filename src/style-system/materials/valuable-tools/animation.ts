@@ -26,5 +26,8 @@ export function animationValue(parts: AnimationParts): CSSFunction {
   return cssContent((read) => [
     read(parts.name), read(parts.duration), read(parts.easing), read(parts.delay),
     read(parts.iterations), read(parts.direction), read(parts.fillMode), read(parts.playState),
-  ].filter((part) => part !== undefined).join(' '))
+  ].filter((part) => part !== undefined).join(' '), [
+    parts.name, parts.duration, parts.easing, parts.delay,
+    parts.iterations, parts.direction, parts.fillMode, parts.playState,
+  ])
 }

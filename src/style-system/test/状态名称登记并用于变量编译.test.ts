@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { variable } from '../variable'
-import { compileRules } from '../compiler/compile-rules'
+import { compileRules } from '../compiler/rules'
 import { stateCondition } from '../materials/state-conditions'
 
 test('内置状态可由 Variable 直接采用', () => {

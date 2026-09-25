@@ -1,10 +1,18 @@
 # Style System 语义节点与条件地址 Plan
 
-> 状态：TODO。AST 初版已有[实施详情](StyleSystem语义节点与条件地址_实施详情.md)；本次“能力迁移、不保留旧写法”的新裁决尚未施工和验收。本 Plan 只负责语义节点编译链，施工按 Bcoin 项目的[Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)执行；属性值聚合由独立的 [CSS 属性值贡献与聚合 Plan](StyleSystem属性值贡献与聚合.md) 承接。
+> 状态：AST 初版已有[实施详情](StyleSystem语义节点与条件地址_实施详情.md)；初版事实保留在下文。用户后续裁决改变了未施工部分的解析模型，本次施工由附属 [二次清理 Plan](StyleSystem语义节点与条件地址_二次清理.md)承接。本文下方的初版协议与目录方案不再作为本次施工依据；属性值聚合仍由独立的 [CSS 属性值贡献与聚合 Plan](StyleSystem属性值贡献与聚合.md) 承接。
 
-初始语义节点与规则改写视图的关系另见附属 [二次清理 Plan](StyleSystem语义节点与条件地址_二次清理.md)；该讨论稿不改变本 Plan 已记录的实施状态。
+## 本次施工方向与验收
 
-## 目标与边界
+当前有效的编译链是：CSSRoot 中的 Rules → 有序语义节点队列 → Root 波与 Content 次波调用对象自己的 `parse(astController)` → 只含可输出内容的 `parsedStyleNodes` → CSS string。`conditionPath` 由 `targetConditionPath` 和 `stateConditionPath` 组成；Variable 等对象按最低波号解析，复合 Content 的内部对象全部完成后，该 Content 位置才算 parsed。控制器只提供有限的当前队列操作，不交出整条队列。本次仅处理 AST，绝不加入 CSS 属性值聚合。
+
+本次验收按[二次清理 Plan](StyleSystem语义节点与条件地址_二次清理.md#施工与验收)检查：现役规则登记、更新与撤销，Value／Variable／Cluster，状态和局部声明，Variable 自动定义与状态优先级，按需依赖与循环终止，未使用资源不输出，Button，浏览器层叠，以及 CSSRoot 完整成功提交与失败回退，都须由新链路承接；旧 API 写法不是验收合同。二次清理 Plan 的独立来源审查与本次实施审查重新进行，初版审查结论不替代它们。施工按 Bcoin [Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)执行。
+
+## 初版设计与当时的待办记录
+
+以下记录 AST 初版的方案、验收与当时尚未施工的设想。它们解释已有[实施详情](StyleSystem语义节点与条件地址_实施详情.md)的背景；与上面的本次施工方向冲突时，以二次清理 Plan 为准。
+
+### 目标与边界
 
 编译链是：业务规则登记到 CSSRoot → `styleNodes` → 规则改写后的 `parsedStyleNodes` → `CSSString`。`styleNodes` 是业务规则与最终 CSS 文本之间可读取、可改写的有序语义节点队列；按普通 `conditionPath` 阅读时呈树状地址关系，实际存储无需是一棵嵌套树。规则改写需要在文本生成前看见节点的地址、状态和内容。当前 AST 初版已接通这条链，本次要检查它是否仍为旧写法留有多余责任。
 
@@ -14,7 +22,7 @@
 
 语义模型的具体示例见 [JSS 样式节点树](../../src/style-system/doc/JSS样式节点树.md)。这里记录修改责任、信息流、验收与尚未确定的设计。
 
-## 现役目录结构与缺口
+### 现役目录结构与缺口
 
 以下是 AST 初版落地后的现役载体。缩进表示文件归属，不表示调用顺序。
 
@@ -35,7 +43,7 @@ src/style-system/【目录】：Style System 的声明、登记与编译。
 
 AST 初版已接通正式编译链，但仍有为旧行为留下的结构。例如 `style-nodes.ts` 的 `deferredStateConditions` 为无内容节点维持旧的未知状态报错时机；`records.ts` 的名称仍指向已退出的 CSSRecord。它们不是本轮必须保存的契约。施工先核对各自的现役责任，再删除、合并或准确命名，避免把旧路径误当 AST 的必要组成。
 
-## 目标目录结构与责任
+### 目标目录结构与责任
 
 以下只画本轮能力迁移与结构收口的关键责任。动作标记表达目标责任，实际落点仍要由施工时的调用链核对；改写协议不由后续聚合需求反推。
 
@@ -59,7 +67,7 @@ src/style-system/【目录】：继续拥有规则、材料和编译入口。
 
 `condition.ts` 和 `materials/state-conditions.ts` 继续分别提供普通地址协议与状态身份。`css-root.ts` 的提交能力必须由唯一入口承接；`rule.ts` 的登记形式若需要改变，就迁移调用方，不要求旧 `rule()`／`rules()` 的调用形式继续兼容。未受影响的文件不为填满目标树机械修改。
 
-## 本轮规则改写的最小协议
+### 本轮规则改写的最小协议
 
 普通内容节点只承载一项 `[key, value]` 声明；来源里有多项声明，就按原顺序产生多个节点。这样重复 `key` 不丢失，每个 parsed 内容节点可追到对应的 CSS 输出。特殊节点仍是 `styleNodes` 队列中的对象，保存自身的 `conditionPath`、`stateConditionPath`、`key` 与内容。AST 初版由内容对象的 `rewriteStyleNodes(nodes, index, node)` 方法取得改写能力；施工可以调整输入形式，但正式业务规则仍须能触发节点改写，普通 CSS 内容不能自动取得改写身份。不因初版使用 `rule()`／`rules()` 登记，就要求旧调用形式永久兼容。
 
@@ -67,7 +75,7 @@ src/style-system/【目录】：继续拥有规则、材料和编译入口。
 
 这一协议只建立 AST 改写能力。正式端到端用例使用非聚合的 Rule 改写普通声明，证明业务登记、节点队列变化、parsed 内容与 CSS 输出贯通；不借后续属性聚合规则充当测试样例。按需依赖生成的 Rules 仍须进入同一阶段边界，不得绕过节点改写直接拼入最终 CSS。
 
-## 一次规则怎样走到 CSS
+### 一次规则怎样走到 CSS
 
 1. 业务按选定的登记写法形成有序 Rules；CSSRoot 持有源账本，编译时取快照。旧 `rule()`／`rules()` 形式不是这一阶段的兼容条件。
 2. Compiler 从 Rules 建立 `styleNodes`。普通内容节点表达 `conditionPath`、`stateConditionPath`、`key`、`value`；改写节点在此基础上由内容对象提供改写方法。`conditionPath` 是声明受体的地址，`stateConditionPath` 是同一受体上的状态限制。节点在队列中的位置保留输入顺序。`[hover, focusVisible]` 在同一状态路径中表示两者同时成立，并非两个独立分支。
@@ -101,7 +109,7 @@ const parsedStyleNodes = [
 
 State Condition 的身份来自 `stateCondition(...)` 的构造与登记，不由 `:hover`、`:is()` 等文本自动推断。即使最后的 CSS 路径文本相同，普通 Condition 与 State Condition 在 `styleNodes` 中仍有不同作用：前者参与地址，后者只限制当前受体何时生效。
 
-## 实施顺序与验收
+### 实施顺序与验收
 
 1. **盘点能力与调用方。** 从现役业务用法与浏览器结果列出需要迁移的能力，区分产品能力与旧 API、旧报错时机、旧文件名。核对规则登记、Cluster、Value／Variable、依赖、CSSRoot 与 Button 的使用场景；旧测试快照本身不构成新契约。
 2. **收口唯一节点链。** 来源规则和依赖规则都经过可改写 `styleNodes`；改写后的地址、状态、目标和内容决定求值及纯内容 `parsedStyleNodes`，再输出 CSS。消除仅为旧写法存在的附带字段、转发层和并行通路；旧载体的现役责任先找到接手者再退出。
@@ -110,13 +118,13 @@ State Condition 的身份来自 `stateCondition(...)` 的构造与登记，不�
 
 若某项现役能力只能经旧语法或平行编译路径工作，判为未完成；若为了删旧路径使该能力消失，也判为未完成。相同属性的独立普通声明不得在本轮自动聚合。AST 初版已有的测试通过只证明当时版本，本次新裁决尚未完成代码验收。
 
-## 实施前与实施中复核
+### 实施前与实施中复核
 
 - 先用正式业务规则输入检查改写协议能实际编辑节点；按需依赖、Variable 定义或嵌套 Rules 不得走直接拼串的平行入口。
 - 核对 Value、Variable 与 CSS 函数在改写前后的求值时机；可输出内容对象不能因过早字符串化而失去节点改写所需的信息。循环检测与失败不提交部分结果的能力仍须成立，无须复制旧报错时机和文字。
 - 若真实调用链证明某个目标文件不能清楚拥有树中责任，先指出该证据并重新审查职责；不能通过改写本 Plan 的验收把未接通的阶段说成完成。
 
-## 分工与 Plan 落地
+### 分工与 Plan 落地
 
 本 Plan 从 [UIKit Agent 入口](../../AGENTS.md) 进入 AI Rules；施工按 Bcoin 的 [Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)记录事实、处理偏差并逐项验收，岗位按其 [Agent 自动分工与模型配置](../../../bcoin-machine-learning/docs/rules/Agent自动分工与模型配置.md)组织。建议一支执行负责人施工队负责完整代码迁移与集成；独立审查 Agent 从用户原话反查 Plan、实现和现役能力，Watchdog 只读检查边界与旧路径退出；技术总监处理重大裁决和最终验收。审查和监察不参与被审查代码编写。
 
