@@ -21,7 +21,13 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
   expect(output).toContain(':where(:root) {\n--bundle-surface: red;')
-  expect(output).toContain('align-items: center;\nmargin-left: 2px;\ncolor: var(--bundle-surface, black);\nopacity: var(--bundle-opacity, 1);')
+  const declarationOrder = [
+    'align-items: center;', 'margin-left: 2px;',
+    'color: var(--bundle-surface, black);', 'opacity: var(--bundle-opacity, 1);',
+    '--bundle-surface: blue;',
+  ].map((declaration) => output.indexOf(declaration))
+  expect(declarationOrder.every((index) => index >= 0)).toBe(true)
+  expect(declarationOrder).toEqual([...declarationOrder].sort((left, right) => left - right))
   // Agent 测试假设：精确包装只检查本轮归零实现，不构成公共选择器格式契约。
   expect(output).toContain('&:where(:where(:hover):where(:not(:disabled, [data-status~="disabled"]))) {\n--bundle-opacity: 0.5;')
   expect(output).toContain('--bundle-surface: blue;')

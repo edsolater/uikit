@@ -115,6 +115,26 @@ test('Cluster 直接使用等同默认成员，选择返回原对象并保留状
   expect(() => (cluster as (name: string) => unknown)('missing')).toThrow('未定义成员')
 })
 
+test('Variable 与 Cluster 的 onActive 由通用遍历各自调用一次', () => {
+  const directActive = vi.fn((): Rules => [[[condition(':root')], '--direct-active', '1']])
+  const direct = variable('red', { name: 'generic-active-variable' })
+  direct.onActive = directActive
+  const defaultActive = vi.fn((): Rules => [[[condition(':root')], '--cluster-active', '1']])
+  const defaultMember = variable('blue', { name: 'generic-active-cluster' })
+  defaultMember.onActive = defaultActive
+  const cluster = variableCluster({ default: defaultMember })
+
+  const css = compileRules([
+    [[condition('.GenericActivation')], 'color', direct],
+    [[condition('.GenericActivation')], 'background', cluster],
+  ])
+
+  expect(directActive).toHaveBeenCalledTimes(1)
+  expect(defaultActive).toHaveBeenCalledTimes(1)
+  expect(css).toContain('--direct-active: 1;')
+  expect(css).toContain('--cluster-active: 1;')
+})
+
 test('Cluster 声明按目标同名成员整组展开，允许来源额外成员', () => {
   const target = variableCluster({
     default: variable('black', { name: 'target-color' }),
@@ -228,7 +248,7 @@ test('动态内容没有被消费时不执行，消费时产生 CSS', () => {
 })
 test('声明来源 Variable 不修改其定义，局部显式声明优先', () => {
   const ratio = variable(0.8, { name: 'surface-ratio', states: { hover: 0.6 } })
-  const css = compileRules([[[condition('.Example')], ratio, [['hover', 0.3]]], [[condition('.Example')], 'opacity', calcMultiply(ratio, 0.5)]])
+  const css = compileRules([[[condition('.Example'), 'hover'], ratio, 0.3], [[condition('.Example')], 'opacity', calcMultiply(ratio, 0.5)]])
   expect(css).toContain('--surface-ratio: 0.3;')
   expect(css).not.toContain('--surface-ratio: 0.6;')
 })
@@ -257,7 +277,7 @@ test('五成员目标接收三成员来源时，只覆盖双方已有成员', ()
 test('显式 Variable 局部分支保留其消费状态，状态内容的临时条件不扩散', () => {
   const inner = variable('10px', { name: 'branch-inner-size', states: { hover: '20px', active: '30px' } })
   const target = variable(undefined, { name: 'branch-target-size' })
-  const css = compileRules([[[condition('.BranchScope')], target, [['active', inner]]]])
+  const css = compileRules([[[condition('.BranchScope'), 'active'], target, inner]])
   expect(css).toContain('--branch-inner-size: 30px;')
   expect(css).not.toContain('--branch-inner-size: 20px;')
 })

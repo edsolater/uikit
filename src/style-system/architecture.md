@@ -9,16 +9,16 @@ flowchart LR
   Definitions[Value / Variable / Cluster] --> Rules[rule 与 rules 登记]
   Rules --> Root[CSSRoot 源账本]
   Root --> Queue[有序 StyleNode 队列]
-  Queue --> RootWave[Root 解析波]
-  RootWave --> ContentWave[Content 链解析次波]
-  ContentWave --> Parsed[只含已解析内容的 ParsedStyleNode]
+  Queue --> Parse[按通用能力解析 Key 与 Content]
+  Parse -->|insert / replace / remove| Queue
+  Parse --> Parsed[只含已解析内容的 ParsedStyleNode]
   Parsed --> CSS[CSS String]
   CSS --> Browser[浏览器样式引擎]
 ```
 
-`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造语义节点。编译器按队列顺序遍历节点的 Key 和 Content。Content 上的 `parse(astController)` 可以读取当前复合地址、查询节点、插入节点并返回下一层内容；返回内容会继续在原 Content 位置解析。解析器遍历 Value、CSS 函数和对象公开的 `contents` 链，直至整条链无需继续解析后才输出 `ParsedStyleNode`。插入的节点进入同一队列，并在后续 Root 波处理。Root 波和 Content 次波共用波号，`parseWaveIndex` 可让内容等待指定波次。
+`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造语义节点。编译器按队列顺序遍历节点的 Key 和 Content，只检查通用的 `onActive`、`parse`、子内容链接与 `toCSSString` 能力，不识别 Variable、Value、Cluster 或 CSS 函数身份。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的生命周期内容可以产生依赖而不输出当前声明。`parse(astController)` 在解析波中读取当前复合地址、查询节点、插入、替换或删除节点，也可返回下一层内容。返回内容会继续在当前位置解析。解析器沿对象公开的 `contents` 链继续访问，直至整条链无需继续解析后才输出 `ParsedStyleNode`。插入的节点进入同一队列并参与后续解析；`parseWaveIndex` 可让内容等待指定解析波。
 
-目标地址和受体状态分开保存在 `CompositeConditionPath`：`targetConditionPath` 保留普通 Condition，`stateConditionPath` 保留已登记的状态身份。解析器只向内容对象提供有限的 [ASTController](compiler/ast-controller.ts)，不能直接操作底层队列。循环引用、超出 Content 嵌套上限或无进展的解析会明确失败。
+目标地址和受体状态分开保存在 `CompositeConditionPath`：`targetConditionPath` 保留普通 Condition，`stateConditionPath` 保留已登记的状态身份。解析器向内容对象提供有限的 [ASTController](compiler/ast-controller.ts)，其中包含当前 Key、Content、位置 role 与地址视图；内容对象不能直接操作底层队列。解析完成的节点队列直接交给 CSS 输出，不执行按 Variable 或依赖来源分组的尾部重排。循环引用、超出 Content 嵌套上限或无进展的解析会明确失败。
 
 `Value` 包装内容但不传播 Variable 状态。`Variable.parse()` 在实际消费时插入 `@property`、根值和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 的嵌套引用通过 Content 链解析。`VariableCluster` 代理默认 Variable 的解析接口，选择和双方同名成员配对仍由 Cluster 自身负责。现役 CSS 函数通过 `contents` 暴露闭包使用的操作数，保持延迟序列化。
 
@@ -35,12 +35,12 @@ flowchart LR
 | css-key.ts | CSS Key 的创建、声明目标识别与名称解析 |
 | declaration.ts | Key／Variable 与内容的二元声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
-| valuable.ts | Valuable 的按需依赖及消费位置；定义 Content parse 接口 |
-| value.ts | 稳定 Value、CSS 函数和操作数 Content 链 |
+| valuable.ts | Valuable 生命周期通知、ASTParseable、子内容输出协议 |
+| value.ts | 稳定 Value、CSS 函数和操作数 Content 链；提供输出能力供 Compiler 调用 |
 | variable.ts | Variable 创建、按需定义、注册、状态与引用链解析 |
 | variable-cluster.ts | Variable 成员选择、default 代理及同名声明配对 |
 | css-root.ts | 源账本、快照编译和宿主提交 |
-| compiler/rules.ts | 从源 Rules 构建队列、编排解析与按需依赖 |
+| compiler/rules.ts | 从源 Rules 构建队列、通用编排解析与按需依赖 |
 | compiler/ast-controller.ts | 面向当前 Content 位置的有限队列操作 |
 | compiler/rule-parser.ts | Root 波、Content 次波、循环/上限检查及 parsed 转换 |
 | compiler/style-nodes.ts | 待解析语义节点、复合地址和 parsed 节点形状 |

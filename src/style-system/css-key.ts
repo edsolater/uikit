@@ -1,13 +1,16 @@
 /** CSS Key 的创建、识别与名称解析。 */
-import { isVariable, type Variable } from './variable'
-
 /** 原生属性名称。 */
-export interface Key<K extends string = string> {
+export interface CSSKeyOutput {
+  toCSSString(): string
+}
+
+/** 原生属性名称与可输出的自定义 Key。 */
+export interface Key<K extends string = string> extends CSSKeyOutput {
   name: K
 }
 
 /** 属性或变量声明目标。 */
-export type CSSKey = Key | string | Variable
+export type CSSKey = CSSKeyOutput | string
 
 const names = new Map<string, Key>()
 
@@ -28,16 +31,15 @@ export function registerCSSKey(target: Key): void {
 
 /** 创建 CSS Key。 */
 export function key<K extends string>(name: K): Key<K> {
-  const target: Key<K> = { name }
+  const target: Key<K> = { name, toCSSString: () => name }
   registerCSSKey(target)
   return target
 }
 
 /** 识别声明目标。 */
 export function isCSSKey(input: unknown): input is CSSKey {
-  return typeof input === 'string' || isVariable(input)
-    || (typeof input === 'object' && input !== null && !('kind' in input)
-      && 'name' in input && typeof input.name === 'string')
+  return typeof input === 'string' || (input !== null && (typeof input === 'object' || typeof input === 'function')
+    && 'toCSSString' in input && typeof input.toCSSString === 'function')
 }
 
 /** 解析对象与字符串条目中的声明名称；原生属性和自定义属性保持字符串入口。 */
@@ -51,5 +53,5 @@ export function resolveCSSKey(input: CSSKey): CSSKey {
 
 /** 取得原生属性名。 */
 export function propertyName(key: CSSKey): string {
-  return typeof key === 'string' ? key : isVariable(key) ? `--${key.name}` : key.name
+  return typeof key === 'string' ? key : key.toCSSString()
 }

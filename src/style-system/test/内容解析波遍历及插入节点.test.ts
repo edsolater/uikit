@@ -7,6 +7,9 @@ import { compileRules } from '../compiler/rules'
 import { cssContent, value } from '../value'
 import { variable } from '../variable'
 import type { ASTController } from '../compiler/ast-controller'
+import type { CSSKeyOutput } from '../css-key'
+import type { ASTParseable } from '../valuable'
+import type { Rules } from '../rule'
 
 stateCondition('contentWaveHover', condition('&:where([data-wave-hover])'))
 
@@ -79,6 +82,49 @@ test('后续对象修改已解析的队列节点时，最终 parsed 读取最终
   expect(css).toContain('--audit-existing-node: 11px;')
   expect(css).not.toContain('--audit-existing-node: 9px;')
   expect(css).toContain('width: 5px;')
+})
+
+test('自定义 Key 只凭通用 parse 与输出能力插入节点', () => {
+  let parseCalls = 0
+  const customKey: CSSKeyOutput & ASTParseable = {
+    toCSSString: () => '--custom-unparsed-key',
+    parse(controller: ASTController) {
+      parseCalls++
+      controller.insert(controller.conditionPath, '--custom-key-dependency', '7px')
+      return this
+    },
+  }
+  const css = compileRules([[[condition('.CustomKey')], customKey, '5px']])
+
+  expect(parseCalls).toBe(1)
+  expect(css).toContain('--custom-key-dependency: 7px;')
+  expect(css).toContain('--custom-unparsed-key: 5px;')
+})
+
+test('只提供 onActive 的内容生成按需 Rules，本声明不输出', () => {
+  let activations = 0
+  const lifecycleOnly = {
+    onActive() {
+      activations++
+      return [[[condition('.LifecycleDependency')], 'color', 'red']] as Rules
+    },
+  }
+  const css = compileRules([
+    [[condition('.LifecycleOnly')], 'display', lifecycleOnly],
+  ])
+
+  expect(activations).toBe(1)
+  expect(css).toContain('.LifecycleDependency')
+  expect(css).toContain('color: red;')
+  expect(css).not.toContain('display:')
+  expect(() => compileRules([[[condition('.Invalid')], 'color', {}]])).toThrow('不是可解析的 CSS 内容')
+})
+
+test('Variable Content 根 parse 返回值进入正式 CSS 输出', () => {
+  const source = variable('red', { name: 'content-root-replacement' })
+  const css = compileRules([[[condition('.ContentRootReplacement')], 'color', source]])
+
+  expect(css).toContain('color: var(--content-root-replacement, red);')
 })
 
 test('Variable source 与状态中的可调用 Parseable 按对象解析而非工厂调用', () => {

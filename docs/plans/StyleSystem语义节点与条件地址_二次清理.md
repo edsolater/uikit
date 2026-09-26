@@ -2,6 +2,8 @@
 
 > 状态：用户已授权执行，Plan 组独立来源审查通过，施工完成、独立验收通过。本 Plan 附属于 [AST Plan](StyleSystem语义节点与条件地址.md)，并接管其未施工的解析方向；[属性值聚合](StyleSystem属性值贡献与聚合.md)是另一项需求。施工和 [Architecture](../../src/style-system/architecture.md) 更新按 [Plan 落地契约](../../../bcoin-machine-learning/docs/how-to-apply-plan.md)执行。
 
+> 后续复盘发现 Compiler 仍按 Variable 身份分支并在 parsed 后重排；当时的行为验收不覆盖这条结构边界。整改方向见[三次清理 Plan](StyleSystem语义节点与条件地址_三次清理.md)。
+
 ## 目标与边界
 
 CSSRoot 保存有序 Rules。Compiler 每次从 Rules 建立新的语义节点队列，在**当下这条队列**上逐波解析，得到只含可输出内容的 `parsedStyleNodes`，最后生成 CSS string。解析对象只能通过有限的 `ASTController` 操作队列，不直接拿到整条队列。后一项解析可以看见前一项已经造成的变化；不另存一棵供每项读取的原始树。

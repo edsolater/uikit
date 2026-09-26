@@ -4,13 +4,10 @@ import { findStateCondition } from './materials/state-conditions'
 import { isCSSKey, resolveCSSKey, type CSSKey } from './css-key'
 import { isCSSPair, type Declaration } from './declaration'
 import type { ValueInput } from './value'
-import type { VariableOverrides } from './variable'
 import { registerRule } from './css-root'
-import type { CSSOutputContent } from './compiler/style-nodes'
-import type { ASTParseable } from './valuable'
 
 /** 待编译内容或嵌套规则。 */
-export type RuleValue = ValueInput | Rules | VariableOverrides | CSSOutputContent | ASTParseable
+export type RuleValue = ValueInput | Rules
 
 /** 路径、目标与内容；路径中的字符串是主体条件名称，空项沿用外层。 */
 export type Rule = [path: (Condition | string)[] | undefined, key: CSSKey | undefined, content: RuleValue]

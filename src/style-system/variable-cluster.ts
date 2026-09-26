@@ -1,5 +1,7 @@
 /** 成员选择与默认 Variable 的同一入口。 */
 import { connectVariable, type Variable } from './variable'
+import type { ASTController } from './compiler/ast-controller'
+import type { ValueInput } from './value'
 
 const definitions = new WeakMap<object, Record<string, Variable>>()
 
@@ -14,9 +16,26 @@ export function variableCluster<Members extends { default: Variable } & Record<s
     if (!Object.hasOwn(members, name)) throw new Error(`Variable Cluster 未定义成员：${String(name)}。`)
     return members[name]
   }
-  const cluster = new Proxy(select, {
+  let cluster: VariableCluster<Members>
+  const parse = (controller: ASTController): ValueInput => {
+    if (controller.role === 'declaration-key') {
+      const sourceMembers = controller.content !== null && (typeof controller.content === 'object' || typeof controller.content === 'function')
+        ? definitions.get(controller.content as object)
+        : undefined
+      if (sourceMembers) {
+        for (const [member, source] of clusterDeclarations(cluster, controller.content) ?? []) {
+          controller.insert(controller.conditionPath, member, source)
+        }
+        controller.remove()
+        return undefined
+      }
+    }
+    return members.default.parse(controller)
+  }
+  cluster = new Proxy(select, {
     get(target, property, receiver) {
-      if (property === 'kind' || property === 'name' || property === 'onActive' || property === 'parse' || property === 'parseWaveIndex') return Reflect.get(members.default, property)
+      if (property === 'parse') return parse
+      if (property === 'kind' || property === 'name' || property === 'onActive' || property === 'parseWaveIndex' || property === 'toCSSString') return Reflect.get(members.default, property)
       return Reflect.get(target, property, receiver)
     },
     has(target, property) { return property in members.default || property in target },
