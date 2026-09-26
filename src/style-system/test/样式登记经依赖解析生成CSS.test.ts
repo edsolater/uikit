@@ -2,12 +2,13 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../materials/state-conditions'
 import { compileCSS } from '../css-root'
-import { compileRules } from '../compiler/rules'
+import { compileRules } from '../css-root'
 import { rule, rules, type Rules, type RulesHandle, type Declarations } from '../rule'
 import { condition, media, type ConditionInput } from '../condition'
-import { key } from '../css-key'
+import { key } from '../key'
 import { declare } from '../declaration'
-import { value, cssContent, type ValueInput } from '../value'
+import { createJSSContent } from '../content'
+import { value, type ValueInput } from '../value'
 import { variable } from '../variable'
 import { variableCluster } from '../variable-cluster'
 import { $margin, $marginLeft } from '../materials/keys/margin'
@@ -17,14 +18,14 @@ import { $font } from '../materials/keys/font'
 import { $color } from '../materials/keys/color'
 import { $transition } from '../materials/keys/transition'
 import { $boxShadow } from '../materials/keys/box-shadow'
-import { shadowValue } from '../materials/valuable-tools/shadow'
-import { calcMultiply } from '../materials/valuable-tools/functions/calc'
-import { colorMix } from '../materials/valuable-tools/functions/color-mix'
-import { cssFunction } from '../materials/valuable-tools/functions/custom'
-import { animationName, animationValue } from '../materials/valuable-tools/animation'
-import { valueList, valueSequence } from '../materials/valuable-tools/list'
-import { fontValue } from '../materials/valuable-tools/font'
-import { transitionValue } from '../materials/valuable-tools/transition'
+import { shadowValue } from '../materials/tools/shadow'
+import { calcMultiply } from '../materials/tools/functions/calc'
+import { colorMix } from '../materials/tools/functions/color-mix'
+import { cssFunction } from '../materials/tools/functions/custom'
+import { animationName, animationValue } from '../materials/tools/animation'
+import { valueList, valueSequence } from '../materials/tools/list'
+import { fontValue } from '../materials/tools/font'
+import { transitionValue } from '../materials/tools/transition'
 import { contentLayout } from '../materials/mixins/content'
 import { boundary } from '../materials/mixins/structure'
 import { clickable } from '../materials/mixins/interaction'
@@ -142,9 +143,9 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
   expect(css).toContain('--local-property: custom-value;')
   expect(css).toContain('justify-content: center;')
   key('test-collision-target')
-  expect(() => key('testCollision-target')).toThrow('CSS Key 名称冲突：testCollisionTarget')
-  expect(() => rule('.PartialName', 'testCollision-target', 'value')).toThrow('未知 CSS Key 名称：testCollision-target')
-  expect(() => rule('.Unknown', 'unknownAlias', 'value')).toThrow('未知 CSS Key 名称：unknownAlias')
+  expect(() => key('testCollision-target')).toThrow('JSSKey 名称冲突：testCollisionTarget')
+  expect(() => rule('.PartialName', 'testCollision-target', 'value')).toThrow('未知 JSSKey 名称：testCollision-target')
+  expect(() => rule('.Unknown', 'unknownAlias', 'value')).toThrow('未知 JSSKey 名称：unknownAlias')
 })
 
 test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefined', () => {
@@ -154,7 +155,7 @@ test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefin
     [key('margin'), '1px'],
     [[key('margin-left'), '2px'], [key('margin'), '3px']],
     undefined,
-    [[local, 'red'], [key('padding'), cssContent(content)], [key('color'), local]],
+    [[local, 'red'], [key('padding'), createJSSContent(content)], [key('color'), local]],
   ]
   keep(rules('.Ordered', nested))
   expect(content).not.toHaveBeenCalled()

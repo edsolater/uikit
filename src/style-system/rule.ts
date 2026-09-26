@@ -1,7 +1,7 @@
 /** Rule 登记与声明组合。 */
 import { condition, type Condition, type ConditionInput } from './condition'
 import { findStateCondition } from './materials/state-conditions'
-import { isCSSKey, resolveCSSKey, type CSSKey } from './css-key'
+import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './declaration'
 import type { ValueInput } from './value'
 import { registerRule } from './css-root'
@@ -10,7 +10,7 @@ import { registerRule } from './css-root'
 export type RuleValue = ValueInput | Rules
 
 /** 路径、目标与内容；路径中的字符串是主体条件名称，空项沿用外层。 */
-export type Rule = [path: (Condition | string)[] | undefined, key: CSSKey | undefined, content: RuleValue]
+export type Rule = [path: (Condition | string)[] | undefined, key: JSSKey | undefined, content: RuleValue]
 
 /** 按声明顺序保存的规则。 */
 export type Rules = Rule[]
@@ -54,9 +54,9 @@ function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
 }
 
 /** 登记一条规则；undefined 内容不输出。 */
-export function rule(path: ConditionInput, key: CSSKey | undefined, input: RuleValue): RuleHandle {
-  if (key !== undefined && !isCSSKey(key)) throw new Error('rule() 必须提供有效 CSSKey。')
-  return registerRule([rulePath(path), key === undefined ? undefined : resolveCSSKey(key), input])
+export function rule(path: ConditionInput, key: JSSKey | undefined, input: RuleValue): RuleHandle {
+  if (key !== undefined && !isJSSKey(key)) throw new Error('rule() 必须提供有效 JSSKey。')
+  return registerRule([rulePath(path), key === undefined ? undefined : resolveJSSKey(key), input])
 }
 
 /** 识别名称声明对象，不把类实例误当声明集合。 */
@@ -81,7 +81,7 @@ export function rules(path: ConditionInput, declarations: Declarations): RulesHa
   const visit = (source: unknown): void => {
     if (source === undefined) return
     if (isCSSPair(source)) {
-      if (source[1] !== undefined) entries.push([conditionPath, resolveCSSKey(source[0]), source[1] as RuleValue])
+      if (source[1] !== undefined) entries.push([conditionPath, resolveJSSKey(source[0]), source[1] as RuleValue])
       return
     }
     if (!isDeclarationObject(source) && !isDeclarationIterable(source)) {

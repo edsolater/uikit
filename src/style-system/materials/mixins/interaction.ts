@@ -9,12 +9,12 @@ import { $transition } from '../keys/transition'
 import { $backgroundColor, $color } from '../keys/color'
 import { $borderColor } from '../keys/border'
 import { $boxShadow } from '../keys/box-shadow'
-import { translateY } from '../valuable-tools/functions/transform'
-import { disabledFade } from '../valuables/opacity'
-import { durationFast, easingStandard } from '../valuables/motion'
-import { transitionValue } from '../valuable-tools/transition'
+import { translateY } from '../tools/functions/transform'
+import { disabledFade } from '../style-values/opacity'
+import { durationFast, easingStandard } from '../style-values/motion'
+import { transitionValue } from '../tools/transition'
 import { $outline, $outlineOffset } from '../keys/outline'
-import { focusOutline, focusOffset } from '../valuables/focus'
+import { focusOutline, focusOffset } from '../style-values/focus'
 
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {

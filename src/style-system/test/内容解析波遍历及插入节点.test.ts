@@ -1,14 +1,15 @@
 /** 通过正式 Rules 入口验证 Content 次波、嵌套内容与节点插入。 */
 import { expect, test } from 'vitest'
 import { condition } from '../condition'
-import { key } from '../css-key'
+import { key } from '../key'
 import { stateCondition } from '../materials/state-conditions'
-import { compileRules } from '../compiler/rules'
-import { cssContent, value } from '../value'
+import { compileRules } from '../css-root'
+import { createJSSContent } from '../content'
+import { value } from '../value'
 import { variable } from '../variable'
-import type { ASTController } from '../compiler/ast-controller'
-import type { CSSKeyOutput } from '../css-key'
-import type { ASTParseable } from '../valuable'
+import type { ASTController } from '../compiler/style-nodes-to-content-nodes'
+import type { JSSKeyObject } from '../key'
+import type { JSSContentContext, JSSContent } from '../content'
 import type { Rules } from '../rule'
 
 stateCondition('contentWaveHover', condition('&:where([data-wave-hover])'))
@@ -31,7 +32,7 @@ test('正式 Rule 按波解析嵌套 Content，读取复合地址并把插入节
       parseWaves.push(controller.parseWaveIndex)
       observedController = controller
       controller.insert(controller.conditionPath, key('--wave-inserted-value'), '9px')
-      return value(cssContent((read) => {
+      return value(createJSSContent((read) => {
         const input = read(nested)
         return input === undefined ? undefined : `calc(${input} * 2)`
       }, [nested]))
@@ -86,7 +87,7 @@ test('后续对象修改已解析的队列节点时，最终 parsed 读取最终
 
 test('自定义 Key 只凭通用 parse 与输出能力插入节点', () => {
   let parseCalls = 0
-  const customKey: CSSKeyOutput & ASTParseable = {
+  const customKey: JSSKeyObject & JSSContent = {
     toCSSString: () => '--custom-unparsed-key',
     parse(controller: ASTController) {
       parseCalls++
@@ -103,17 +104,21 @@ test('自定义 Key 只凭通用 parse 与输出能力插入节点', () => {
 
 test('只提供 onActive 的内容生成按需 Rules，本声明不输出', () => {
   let activations = 0
+  let observedContext: JSSContentContext | undefined
   const lifecycleOnly = {
-    onActive() {
+    onActive(context: JSSContentContext) {
       activations++
+      observedContext = context
       return [[[condition('.LifecycleDependency')], 'color', 'red']] as Rules
     },
   }
   const css = compileRules([
-    [[condition('.LifecycleOnly')], 'display', lifecycleOnly],
+    [[condition('.LifecycleOnly'), 'contentWaveHover'], 'display', lifecycleOnly],
   ])
 
   expect(activations).toBe(1)
+  expect(observedContext?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.LifecycleOnly'])
+  expect(observedContext?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual(['contentWaveHover'])
   expect(css).toContain('.LifecycleDependency')
   expect(css).toContain('color: red;')
   expect(css).not.toContain('display:')

@@ -1,8 +1,9 @@
 /** CSS 动画内容与按需帧定义。 */
-import { cssContent } from '../../value'
+import { createJSSContent } from '../../content'
 import { condition } from '../../condition'
 import type { Rules } from '../../rule'
-import { value, type Value, type ValueInput, type CSSFunction } from '../../value'
+import { value, type Value, type ValueInput } from '../../value'
+import type { JSSContent } from '../../content'
 
 /** 动画名称；使用时提供帧定义。 */
 export function animationName(name: string, frames: Rules): Value {
@@ -22,8 +23,8 @@ export interface AnimationParts {
 }
 
 /** 延迟生成动画内容。 */
-export function animationValue(parts: AnimationParts): CSSFunction {
-  return cssContent((read) => [
+export function animationValue(parts: AnimationParts): JSSContent {
+  return createJSSContent((read) => [
     read(parts.name), read(parts.duration), read(parts.easing), read(parts.delay),
     read(parts.iterations), read(parts.direction), read(parts.fillMode), read(parts.playState),
   ].filter((part) => part !== undefined).join(' '), [

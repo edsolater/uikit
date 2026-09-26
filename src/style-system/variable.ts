@@ -1,19 +1,20 @@
 /** Variable 创建与引用链延伸；定义只供内部编译使用。 */
 import { condition, media } from './condition'
 import type { Rules } from './rule'
-import type { CSSKeyOutput } from './css-key'
-import type { Valuable } from './valuable'
-import type { ASTController } from './compiler/ast-controller'
-import { cssContent, isCSSContent, value, type ValueInput } from './value'
+import type { JSSKeyObject } from './key'
+import { createJSSContent, isJSSContent, type JSSContent } from './content'
+import type { ASTController } from './compiler/style-nodes-to-content-nodes'
+import { value, type ValueInput } from './value'
 import { resolveStateConditions } from './materials/state-conditions'
 
 /** Variable 可直接保存内容，也可在编译消费时生成内容。 */
 export type VariableSource = ValueInput | (() => ValueInput)
 
 /** 可引用、可赋值的黑盒 CSS Variable。 */
-export interface Variable extends Valuable, CSSKeyOutput {
+export interface Variable extends JSSContent {
   kind: 'variable'
   name: string
+  toCSSString(): string
   parseWaveIndex?: number
   parse(astController: ASTController): ValueInput
 }
@@ -34,28 +35,20 @@ const definitions = new WeakMap<Variable, VariableDefinition>()
 const definitionClaimKeys = new WeakMap<Variable, Map<string, object>>()
 const variableDefinitionKeys = new WeakSet<object>()
 
-export function isVariable(input: unknown): input is Variable {
-  return input !== null && (typeof input === 'object' || typeof input === 'function')
-    && 'kind' in input && input.kind === 'variable'
-}
-/** 可调用的 Parseable 也是内容对象，不应被误当作 source 工厂或状态回调。 */
-function isParseableFunction(input: unknown): boolean {
-  return typeof input === 'function' && 'parse' in input && typeof input.parse === 'function'
-}
-/** 排除同样可调用的 Variable、CSS Function 与 Parseable，只识别普通 source 函数。 */
+/** 可调用的内容对象不是 source 工厂。 */
 export function isVariableSourceFunction(input: VariableSource): input is () => ValueInput {
-  return typeof input === 'function' && !isVariable(input) && !isCSSContent(input) && !isParseableFunction(input)
+  return typeof input === 'function' && !isJSSContent(input)
 }
 /** 创建定义；回调只在创建时求值，收到原始首参数。 */
 export function variable<Source extends VariableSource>(source: Source, options: VariableOptions<NoInfer<Source>>): Variable {
   const reference = { kind: 'variable' as const, name: options.name.replace(/^--/, '') } as Variable
   reference.toCSSString = () => `--${reference.name}`
-  const definitionKey: CSSKeyOutput = { toCSSString: reference.toCSSString }
+  const definitionKey: JSSKeyObject = { toCSSString: reference.toCSSString }
   variableDefinitionKeys.add(definitionKey)
   if (options.parseWaveIndex !== undefined) reference.parseWaveIndex = options.parseWaveIndex
   const states = new Map<string, ValueInput>()
   for (const [name, content] of Object.entries(options.states ?? {})) {
-    states.set(name, typeof content === 'function' && !isVariable(content) && !isCSSContent(content) && !isParseableFunction(content)
+    states.set(name, typeof content === 'function' && !isJSSContent(content)
       ? content(source) : content as ValueInput)
   }
   definitions.set(reference, { source, states })
@@ -119,7 +112,7 @@ export function variable<Source extends VariableSource>(source: Source, options:
     }
 
     const contents: ValueInput[] = sourceValue === undefined ? [] : [sourceValue]
-    return value(cssContent((read) => {
+    return value(createJSSContent((read) => {
       const fallback = contents.length ? read(contents[0]) : undefined
       return fallback === undefined ? `var(--${reference.name})` : `var(--${reference.name}, ${fallback})`
     }, contents))
@@ -127,12 +120,12 @@ export function variable<Source extends VariableSource>(source: Source, options:
   return reference
 }
 
-/** 以普通 CSS Key 按最终目标地址插入 Variable 定义。 */
+/** 以普通 JSSKey 按最终目标地址插入 Variable 定义。 */
 function insertDefinition(
   controller: ASTController,
   reference: Variable,
-  key: CSSKeyOutput,
-  path: import('./condition').CompositeConditionPath,
+  key: JSSKeyObject,
+  path: import('./condition').ConditionPath,
   content: ValueInput,
 ): void {
   if (controller.findByKey(key, path)) return

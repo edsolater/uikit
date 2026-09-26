@@ -2,9 +2,9 @@
 import '../../css/all-base.css'
 import { afterEach, expect, test } from 'vitest'
 import { color, compileCSS, rule, rules, type RulesHandle } from '../index'
-import { brandColor } from '../materials/valuables/color/brand'
-import { neutralColor } from '../materials/valuables/color/neutral'
-import { surfaceColor } from '../materials/valuables/color/surface'
+import { brandColor } from '../materials/style-values/color/brand'
+import { neutralColor } from '../materials/style-values/color/neutral'
+import { surfaceColor } from '../materials/style-values/color/surface'
 
 const handles: RulesHandle[] = []
 

@@ -1,7 +1,7 @@
 /** 焦点轮廓的尺寸、配色与状态由材料定义拥有。 */
 import { variable } from '../../variable'
 import { toneColor } from './color/tone'
-import { valueSequence } from '../valuable-tools/list'
+import { valueSequence } from '../tools/list'
 import { focusStrokeWidth, focusGapSize } from './space'
 
 export const focusOutline = variable('none', {

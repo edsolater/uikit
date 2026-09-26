@@ -49,7 +49,8 @@ kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果�
 
 App 入口执行 cssRoot.mount()
   -> 快照 CSSRoot 全部源 Rules
-    -> 解析三项 Rule、Value、Variable 与延迟 CSS Function
+    -> 建立 JSSStyleNode 队列，按 JSSContent 的通用能力解析
+    -> 生成 JSSContentNode 队列，再输出 CSS string
     -> 收集 onActive 返回的本次派生 Rules
     -> 生成 CSS string
   -> 完整提交到 style#css-root

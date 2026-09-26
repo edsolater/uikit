@@ -1,5 +1,5 @@
 /** 在真实浏览器验证全局源规则、按需依赖、重新挂载与失败边界。 */
-import { key } from '../css-key'
+import { key } from '../key'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../materials/state-conditions'
 import { cdp, userEvent } from 'vitest/browser'
@@ -13,10 +13,10 @@ import { variableCluster } from '../variable-cluster'
 import { declare } from '../declaration'
 import { $margin } from '../materials/keys/margin'
 import { $padding } from '../materials/keys/padding'
-import { animationName, animationValue } from '../materials/valuable-tools/animation'
-import { calcMultiply } from '../materials/valuable-tools/functions/calc'
-import { cssFunction } from '../materials/valuable-tools/functions/custom'
-import { colorMix } from '../materials/valuable-tools/functions/color-mix'
+import { animationName, animationValue } from '../materials/tools/animation'
+import { calcMultiply } from '../materials/tools/functions/calc'
+import { cssFunction } from '../materials/tools/functions/custom'
+import { colorMix } from '../materials/tools/functions/color-mix'
 import { contentLayout } from '../materials/mixins/content'
 
 stateCondition('testLarge', condition('&[data-large]'))

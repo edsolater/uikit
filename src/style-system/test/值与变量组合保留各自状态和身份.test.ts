@@ -1,13 +1,14 @@
 /** 稳定组合不会传播 Variable 的状态。 */
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
-import { cssContent, value } from '../value'
+import { createJSSContent } from '../content'
+import { value } from '../value'
 import { variable, variableFrom } from '../variable'
 import { variableCluster } from '../variable-cluster'
-import { colorMix } from '../materials/valuable-tools/functions/color-mix'
-import { calcMultiply } from '../materials/valuable-tools/functions/calc'
-import { compileRules } from '../compiler/rules'
-import { cssFunction } from '../materials/valuable-tools/functions/custom'
+import { colorMix } from '../materials/tools/functions/color-mix'
+import { calcMultiply } from '../materials/tools/functions/calc'
+import { compileRules } from '../css-root'
+import { cssFunction } from '../materials/tools/functions/custom'
 import { stateCondition } from '../materials/state-conditions'
 import { media } from '../condition'
 import type { Rules } from '../rule'
@@ -241,7 +242,7 @@ test('稳定 Value 共享引用不误报循环，真实循环停止', () => {
 })
 test('动态内容没有被消费时不执行，消费时产生 CSS', () => {
   const serialize = vi.fn(() => 'blue')
-  const source = variable(cssContent(serialize), { name: 'deferred-color' })
+  const source = variable(createJSSContent(serialize), { name: 'deferred-color' })
   expect(serialize).not.toHaveBeenCalled()
   expect(compileRules([[[condition('.Example')], 'color', source]])).toContain('color: var(--deferred-color, blue);')
   expect(serialize).toHaveBeenCalled()

@@ -1,6 +1,6 @@
 /** 成员选择与默认 Variable 的同一入口。 */
 import { connectVariable, type Variable } from './variable'
-import type { ASTController } from './compiler/ast-controller'
+import type { ASTController } from './compiler/style-nodes-to-content-nodes'
 import type { ValueInput } from './value'
 
 const definitions = new WeakMap<object, Record<string, Variable>>()

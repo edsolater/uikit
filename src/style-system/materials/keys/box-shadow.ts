@@ -1,4 +1,4 @@
-/** 阴影 CSS Key。 */
-import { key } from '../../css-key'
+/** 阴影 JSSKey。 */
+import { key } from '../../key'
 
 export const $boxShadow = key('box-shadow')

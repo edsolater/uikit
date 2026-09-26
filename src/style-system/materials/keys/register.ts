@@ -1,5 +1,5 @@
 /** 按现成材料 Key 定义集中安装名称集合。 */
-import { registerCSSKey, type Key } from '../../css-key'
+import { registerJSSKey, type JSSKeyDefinition } from '../../key'
 import * as border from './border'
 import * as boxShadow from './box-shadow'
 import * as color from './color'
@@ -14,7 +14,7 @@ import * as size from './size'
 import * as transform from './transform'
 import * as transition from './transition'
 
-const materialKeys: Key[] = [
+const materialKeys: JSSKeyDefinition[] = [
   ...Object.values(border),
   ...Object.values(boxShadow),
   ...Object.values(color),
@@ -32,5 +32,5 @@ const materialKeys: Key[] = [
 
 /** 安装全部现役材料 Key 名称；显式数据依赖保证打包后仍保留注册责任。 */
 export function registerMaterialKeys(): void {
-  for (const target of materialKeys) registerCSSKey(target)
+  for (const target of materialKeys) registerJSSKey(target)
 }

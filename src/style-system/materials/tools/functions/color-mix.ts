@@ -1,13 +1,14 @@
 /** CSS 混色内容。 */
-import { cssContent } from '../../../value'
-import type { CSSFunction, ValueInput } from '../../../value'
+import { createJSSContent } from '../../../content'
+import type { ValueInput } from '../../../value'
+import type { JSSContent } from '../../../content'
 
 /** 颜色及可选的零至一比例。 */
 export type MixColorInput = ValueInput | [color: ValueInput, weight: ValueInput]
 
 /** 延迟生成 oklab 混色；比例换算为百分比。 */
-export function colorMix(...colors: MixColorInput[]): CSSFunction {
-  return cssContent((read) => {
+export function colorMix(...colors: MixColorInput[]): JSSContent {
+  return createJSSContent((read) => {
     const parts = colors.map((input) => {
       if (!Array.isArray(input)) return read(input)
       const color = read(input[0])

@@ -1,4 +1,4 @@
-/** 过渡 CSS Key。 */
-import { key } from '../../css-key'
+/** 过渡 JSSKey。 */
+import { key } from '../../key'
 
 export const $transition = key('transition')

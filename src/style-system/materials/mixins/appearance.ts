@@ -1,7 +1,7 @@
 /** 颜色与层级 Mixin。 */
 import type { Declarations } from '../../rule'
 import type { ValueInput } from '../../value'
-import { valueList } from '../valuable-tools/list'
+import { valueList } from '../tools/list'
 import { $backgroundColor, $color } from '../keys/color'
 import { $boxShadow } from '../keys/box-shadow'
 

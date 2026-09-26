@@ -1,5 +1,5 @@
 /** 预定义阴影材料与交互配方；阴影档位引用已加载的基础 CSS token，随主题改变几何与浓度。 */
-import { type ShadowShape } from '../valuable-tools/shadow'
+import { type ShadowShape } from '../tools/shadow'
 import { value } from '../../value'
 import { variable } from '../../variable'
 

@@ -1,5 +1,5 @@
-/** 文字与背景颜色 CSS Key。 */
-import { key } from '../../css-key'
+/** 文字与背景颜色 JSSKey。 */
+import { key } from '../../key'
 
 /** color Key，可作为 Declaration 受体或过渡目标。 */
 export const $color = key('color')

@@ -1,5 +1,5 @@
-/** 内边距 CSS Key。 */
-import { key } from '../../css-key'
+/** 内边距 JSSKey。 */
+import { key } from '../../key'
 
 export const $padding = key('padding')
 export const $paddingTop = key('padding-top')

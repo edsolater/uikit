@@ -1,5 +1,5 @@
-/** 边框 CSS Key。 */
-import { key } from '../../css-key'
+/** 边框 JSSKey。 */
+import { key } from '../../key'
 
 export const $border = key('border')
 export const $borderColor = key('border-color')

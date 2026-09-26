@@ -1,5 +1,5 @@
 /** 验证交互状态经过 Variable、Rule 和浏览器层叠后的表现。 */
-import { key } from '../css-key'
+import { key } from '../key'
 import { variable } from '../variable'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'

@@ -1,5 +1,5 @@
-/** 字体 CSS Key。 */
-import { key } from '../../css-key'
+/** 字体 JSSKey。 */
+import { key } from '../../key'
 
 export const $font = key('font')
 export const $fontSize = key('font-size')

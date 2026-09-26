@@ -1,7 +1,7 @@
 /** 时长与缓动材料；减少动效偏好将默认时长归零。 */
 import { value } from '../../value'
 import { variable } from '../../variable'
-import { calcMultiply } from '../valuable-tools/functions/calc'
+import { calcMultiply } from '../tools/functions/calc'
 
 /** 完整动效的时长倍率，保留原时长。 */
 export const fullMotion = value(1)

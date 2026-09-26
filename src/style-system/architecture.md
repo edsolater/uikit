@@ -4,25 +4,20 @@
 
 ## 从定义到浏览器
 
-```mermaid
-flowchart LR
-  Definitions[Value / Variable / Cluster] --> Rules[rule 与 rules 登记]
-  Rules --> Root[CSSRoot 源账本]
-  Root --> Queue[有序 StyleNode 队列]
-  Queue --> Parse[按通用能力解析 Key 与 Content]
-  Parse -->|insert / replace / remove| Queue
-  Parse --> Parsed[只含已解析内容的 ParsedStyleNode]
-  Parsed --> CSS[CSS String]
-  CSS --> Browser[浏览器样式引擎]
+```text
+Value / Variable / Variable Cluster / JSSTools → Rules → CSSRoot
+Rules → rules-to-style-nodes.ts → JSSStyleNode[]
+JSSStyleNode[] → style-nodes-to-content-nodes.ts → JSSContentNode[]
+JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 ```
 
-`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造语义节点。编译器按队列顺序遍历节点的 Key 和 Content，只检查通用的 `onActive`、`parse`、子内容链接与 `toCSSString` 能力，不识别 Variable、Value、Cluster 或 CSS 函数身份。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的生命周期内容可以产生依赖而不输出当前声明。`parse(astController)` 在解析波中读取当前复合地址、查询节点、插入、替换或删除节点，也可返回下一层内容。返回内容会继续在当前位置解析。解析器沿对象公开的 `contents` 链继续访问，直至整条链无需继续解析后才输出 `ParsedStyleNode`。插入的节点进入同一队列并参与后续解析；`parseWaveIndex` 可让内容等待指定解析波。
+`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造 `JSSStyleNode` 队列。Value、Variable 与 JSSTools 产物都可作为 `JSSContent` 进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`parse` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`parse(astController)` 在解析波中查询、插入、替换或删除当前队列节点，也可返回下一层内容。解析器沿 `contents` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始解析。
 
-目标地址和受体状态分开保存在 `CompositeConditionPath`：`targetConditionPath` 保留普通 Condition，`stateConditionPath` 保留已登记的状态身份。解析器向内容对象提供有限的 [ASTController](compiler/ast-controller.ts)，其中包含当前 Key、Content、位置 role 与地址视图；内容对象不能直接操作底层队列。解析完成的节点队列直接交给 CSS 输出，不执行按 Variable 或依赖来源分组的尾部重排。循环引用、超出 Content 嵌套上限或无进展的解析会明确失败。
+完整的 `conditionPath` 由 `targetConditionPath` 和 `stateConditionPath` 组成。解析器通过有限的 [ASTController](compiler/style-nodes-to-content-nodes.ts) 取得当前位置与队列操作，不能直接操作整条队列。解析完成时，状态路径并入 CSS 输出地址；`JSSContentNode` 保留已完成的内容对象及子内容解析结果。最后一段才调用 `toCSSString` 并写出 CSS，不按 Variable 或依赖来源重排。循环引用、超出嵌套上限或无进展的解析会明确失败。
 
-`Value` 包装内容但不传播 Variable 状态。`Variable.parse()` 在实际消费时插入 `@property`、根值和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 的嵌套引用通过 Content 链解析。`VariableCluster` 代理默认 Variable 的解析接口，选择和双方同名成员配对仍由 Cluster 自身负责。现役 CSS 函数通过 `contents` 暴露闭包使用的操作数，保持延迟序列化。
+`Value` 包装内容但不传播 Variable 状态。`Variable.parse()` 在实际消费时插入 `@property`、根值和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 的嵌套引用通过 Content 链解析。`VariableCluster` 代理默认 Variable 的解析接口，选择和双方同名成员配对仍由 Cluster 自身负责。JSSTools 构造的内容节点通过 `contents` 暴露操作数，在最终输出时生成 CSS 文本。
 
-`compiler/rules.ts` 展开 Rules 并编排按需依赖；[rule-parser.ts](compiler/rule-parser.ts) 负责波次、Controller 与完整链解析；[style-nodes.ts](compiler/style-nodes.ts) 表达待解析和已解析节点；[css-string.ts](compiler/css-string.ts) 只消费 parsed 节点输出 CSS 字符串。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。相同路径与 key 的普通声明继续按节点队列顺序交给浏览器层叠，不聚合属性值。
+[rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[style-nodes-to-content-nodes.ts](compiler/style-nodes-to-content-nodes.ts) 逐波解析并处理按需 Rules；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一解析波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。相同路径与 key 的普通声明继续按节点队列顺序交给浏览器层叠，不聚合属性值。
 
 `compileCSS()` 只返回 CSS 字符串。`cssRoot.mount()` 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
 
@@ -30,25 +25,23 @@ flowchart LR
 
 | 位置 | 职责 |
 | --- | --- |
-| condition.ts | Condition 与 target/state 复合地址 |
+| condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址 |
 | materials/state-conditions.ts | 主体状态名称、条件登记与中央顺序 |
-| css-key.ts | CSS Key 的创建、声明目标识别与名称解析 |
+| key.ts | JSSKey 的创建、声明目标识别与名称解析 |
 | declaration.ts | Key／Variable 与内容的二元声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
-| valuable.ts | Valuable 生命周期通知、ASTParseable、子内容输出协议 |
-| value.ts | 稳定 Value、CSS 函数和操作数 Content 链；提供输出能力供 Compiler 调用 |
+| content.ts | 内容对象共同的可选行为、子内容读取与构造方法 |
+| value.ts | 稳定 Value 的内容包装与输入类型 |
 | variable.ts | Variable 创建、按需定义、注册、状态与引用链解析 |
 | variable-cluster.ts | Variable 成员选择、default 代理及同名声明配对 |
-| css-root.ts | 源账本、快照编译和宿主提交 |
-| compiler/rules.ts | 从源 Rules 构建队列、通用编排解析与按需依赖 |
-| compiler/ast-controller.ts | 面向当前 Content 位置的有限队列操作 |
-| compiler/rule-parser.ts | Root 波、Content 次波、循环/上限检查及 parsed 转换 |
-| compiler/style-nodes.ts | 待解析语义节点、复合地址和 parsed 节点形状 |
-| compiler/css-string.ts | parsed 节点到 CSS 字符串的唯一输出阶段 |
-| materials/keys | 可复用的 CSS Key 定义及其名称登记 |
+| css-root.ts | 源账本、三步编译调用和宿主提交 |
+| compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |
+| compiler/style-nodes-to-content-nodes.ts | 用解析波与 ASTController 改写队列，生成 JSSContentNode 队列 |
+| compiler/content-nodes-to-css-string.ts | 按 JSSContentNode 队列顺序输出 CSS 字符串 |
+| materials/keys | 可复用的 JSSKey 定义及其名称登记 |
 | materials/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
-| materials/valuables | 按用途组织的现成 Valuable 材料 |
-| materials/valuable-tools | 构造 Valuable 的混色、计算与复合工具 |
+| materials/style-values | 按用途组织的现成 Value、Variable 与组合材料 |
+| materials/tools | 构造内容节点的混色、计算与复合工具 |
 | materials/roles | 供组件在自身选择器中赋值的共享角色 |
 | materials/mixins | 把完整效果转换成声明组合 |
 | test | 验证 Style System 多文件协作与完整业务流程 |

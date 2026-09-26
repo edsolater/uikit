@@ -1,5 +1,5 @@
-/** 不占布局空间的轮廓 CSS Key。 */
-import { key } from '../../css-key'
+/** 不占布局空间的轮廓 JSSKey。 */
+import { key } from '../../key'
 
 export const $outline = key('outline')
 

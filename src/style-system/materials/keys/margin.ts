@@ -1,5 +1,5 @@
-/** 外边距 CSS Key。 */
-import { key } from '../../css-key'
+/** 外边距 JSSKey。 */
+import { key } from '../../key'
 
 export const $margin = key('margin')
 export const $marginTop = key('margin-top')

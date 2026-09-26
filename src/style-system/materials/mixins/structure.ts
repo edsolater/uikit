@@ -1,7 +1,7 @@
 /** 主体尺寸与边界 Mixin。 */
 import type { Declarations } from '../../rule'
 import type { ValueInput } from '../../value'
-import { valueSequence } from '../valuable-tools/list'
+import { valueSequence } from '../tools/list'
 import { $minHeight } from '../keys/size'
 import { $border, $borderColor, $borderRadius, $cornerShape } from '../keys/border'
 import { $outlineColor, $outlineOffset, $outlineStyle, $outlineWidth } from '../keys/outline'

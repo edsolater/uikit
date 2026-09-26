@@ -1,5 +1,5 @@
-/** 鼠标指针与文本选择 CSS Key。 */
-import { key } from '../../css-key'
+/** 鼠标指针与文本选择 JSSKey。 */
+import { key } from '../../key'
 
 /** cursor Key，描述鼠标经过元素时的指针形态。 */
 export const $cursor = key('cursor')

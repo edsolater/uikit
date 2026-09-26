@@ -1,7 +1,7 @@
 /** 中性承载面与透明覆盖色，交互取值与各自材料保持在一起。 */
 import { neutralColor } from './neutral'
 import { variable } from '../../../variable'
-import { colorMix } from '../../valuable-tools/functions/color-mix'
+import { colorMix } from '../../tools/functions/color-mix'
 import { textColor } from './text'
 
 /** 通用承载面；明暗主题与局部覆盖由基础 CSS 的语义 token 决定。 */

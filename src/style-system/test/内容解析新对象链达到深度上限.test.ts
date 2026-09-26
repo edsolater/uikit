@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compileRules } from '../compiler/rules'
+import { compileRules } from '../css-root'
 
 describe('Content 次波终止', () => {
   it('新对象持续生成解析对象时，在调用栈溢出前以深度上限失败', () => {

@@ -1,6 +1,7 @@
 /** CSS 字体内容。 */
-import { cssContent } from '../../value'
-import type { CSSFunction, ValueInput } from '../../value'
+import { createJSSContent } from '../../content'
+import type { ValueInput } from '../../value'
+import type { JSSContent } from '../../content'
 
 /** 字体简写配置。 */
 export interface FontParts {
@@ -12,8 +13,8 @@ export interface FontParts {
 }
 
 /** 延迟生成字体简写。 */
-export function fontValue(parts: FontParts): CSSFunction {
-  return cssContent((read) => {
+export function fontValue(parts: FontParts): JSSContent {
+  return createJSSContent((read) => {
     const style = read(parts.style)
     const weight = read(parts.weight)
     const size = read(parts.size)

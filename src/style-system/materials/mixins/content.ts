@@ -4,8 +4,8 @@ import type { ValueInput } from '../../value'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../keys/font'
 import { $gap, $display, $alignItems, $justifyContent } from '../keys/layout'
 import { $padding, $paddingTop, $paddingRight, $paddingBottom, $paddingLeft } from '../keys/padding'
-import { valueSequence } from '../valuable-tools/list'
-import { fontValue, type FontParts } from '../valuable-tools/font'
+import { valueSequence } from '../tools/list'
+import { fontValue, type FontParts } from '../tools/font'
 
 /** 内部文字配置。 */
 export interface InnerTextMixinOptions {

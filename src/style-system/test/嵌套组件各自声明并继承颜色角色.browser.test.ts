@@ -1,5 +1,5 @@
 /** 验证共享组件颜色角色由各选择器声明，并按原生 CSS 作用域传给嵌套内容。 */
-import { key } from '../css-key'
+import { key } from '../key'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { cssRoot, rules, type RulesHandle } from '../index'
 import { foregroundColor, surfaceColor } from '../materials/roles/color'
