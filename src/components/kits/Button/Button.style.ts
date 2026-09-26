@@ -11,19 +11,19 @@ import {
   elevation,
   clickable,
 } from '../../../style-system'
-import { surfaceColor, foregroundColor } from '../../../style-system/materials/roles/color'
-import { $cursor } from '../../../style-system/materials/keys/interaction'
-import { $alignSelf } from '../../../style-system/materials/keys/layout'
-import { colorMix } from '../../../style-system/materials/tools/functions/color-mix'
-import { textColor } from '../../../style-system/materials/style-values/color/text'
-import { actionColor } from '../../../style-system/materials/style-values/color/action'
-import { accentColor, dangerColor, toneColor } from '../../../style-system/materials/style-values/color/tone'
-import { neutralColor } from '../../../style-system/materials/style-values/color/neutral'
-import { pill } from '../../../style-system/materials/style-values/radius'
-import { spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin } from '../../../style-system/materials/style-values/space'
-import { controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge } from '../../../style-system/materials/style-values/size'
-import { bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge } from '../../../style-system/materials/style-values/font'
-import { shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '../../../style-system/materials/style-values/shadow'
+import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
+import { $cursor } from '../../../style-system/pieces/keys/interaction'
+import { $alignSelf } from '../../../style-system/pieces/keys/layout'
+import { colorMix } from '../../../style-system/pieces/contents/combiners/color-mix'
+import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
+import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
+import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
+import { neutralColor } from '../../../style-system/pieces/contents/atoms/color/neutral'
+import { pill } from '../../../style-system/pieces/contents/atoms/radius'
+import { spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin } from '../../../style-system/pieces/contents/atoms/space'
+import { controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge } from '../../../style-system/pieces/contents/atoms/size'
+import { bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge } from '../../../style-system/pieces/contents/atoms/font'
+import { shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '../../../style-system/pieces/contents/atoms/shadow'
 
 const button = ['@layer uikit', '.Button']
 

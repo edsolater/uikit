@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { variable } from '../variable'
 import { compileRules } from '../css-root'
-import { stateCondition } from '../materials/state-conditions'
+import { stateCondition } from '../pieces/state-conditions'
 
 test('内置状态可由 Variable 直接采用', () => {
   const color = variable('red', { name: 'state-color', states: { hover: 'blue' } })

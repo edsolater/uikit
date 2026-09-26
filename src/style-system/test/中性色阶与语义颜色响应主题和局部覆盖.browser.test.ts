@@ -2,9 +2,9 @@
 import '../../css/all-base.css'
 import { afterEach, expect, test } from 'vitest'
 import { color, compileCSS, rule, rules, type RulesHandle } from '../index'
-import { brandColor } from '../materials/style-values/color/brand'
-import { neutralColor } from '../materials/style-values/color/neutral'
-import { surfaceColor } from '../materials/style-values/color/surface'
+import { brandColor } from '../pieces/contents/atoms/color/brand'
+import { neutralColor } from '../pieces/contents/atoms/color/neutral'
+import { surfaceColor } from '../pieces/contents/atoms/color/surface'
 
 const handles: RulesHandle[] = []
 
@@ -74,7 +74,7 @@ test('Cluster 成员用于 Mixin 与局部赋值，覆盖只影响本地及其�
   }
 })
 
-test('语义材料保留品牌与承载面的基础 token 和局部覆盖入口', () => {
+test('语义颜色 Atom 保留品牌与承载面的基础 token 和局部覆盖入口', () => {
   handles.push(rules('.semantic', [color({ foreground: brandColor, background: surfaceColor })]))
   const style = mountStyles()
   expect(style.textContent).not.toContain(':root')

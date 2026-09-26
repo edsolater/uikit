@@ -5,7 +5,7 @@ import type { JSSKeyObject } from './key'
 import { createJSSContent, isJSSContent, type JSSContent } from './content'
 import type { ASTController } from './compiler/style-nodes-to-content-nodes'
 import { value, type ValueInput } from './value'
-import { resolveStateConditions } from './materials/state-conditions'
+import { resolveStateConditions } from './pieces/state-conditions'
 
 /** Variable 可直接保存内容，也可在编译消费时生成内容。 */
 export type VariableSource = ValueInput | (() => ValueInput)

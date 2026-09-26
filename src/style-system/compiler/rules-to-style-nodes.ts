@@ -2,7 +2,7 @@
 import type { ConditionPath, TargetConditionPath } from '../condition'
 import type { JSSKey } from '../key'
 import type { Rules } from '../rule'
-import { resolveStateConditions } from '../materials/state-conditions'
+import { resolveStateConditions } from '../pieces/state-conditions'
 import { isJSSContent } from '../content'
 
 /** 队列中一项可改写的样式内容；地址保留目标与状态，位置决定输出顺序。 */

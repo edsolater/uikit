@@ -1,6 +1,6 @@
 /** Rule 登记与声明组合。 */
 import { condition, type Condition, type ConditionInput } from './condition'
-import { findStateCondition } from './materials/state-conditions'
+import { findStateCondition } from './pieces/state-conditions'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './declaration'
 import type { ValueInput } from './value'

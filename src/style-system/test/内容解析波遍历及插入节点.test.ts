@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { key } from '../key'
-import { stateCondition } from '../materials/state-conditions'
+import { stateCondition } from '../pieces/state-conditions'
 import { compileRules } from '../css-root'
 import { createJSSContent } from '../content'
 import { value } from '../value'

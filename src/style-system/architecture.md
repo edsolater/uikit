@@ -5,17 +5,19 @@
 ## 从定义到浏览器
 
 ```text
-Value / Variable / Variable Cluster / JSSTools → Rules → CSSRoot
+Condition + Declaration(声明目标, Content) → Rules → CSSRoot
 Rules → rules-to-style-nodes.ts → JSSStyleNode[]
 JSSStyleNode[] → style-nodes-to-content-nodes.ts → JSSContentNode[]
 JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 ```
 
-`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造 `JSSStyleNode` 队列。Value、Variable 与 JSSTools 产物都可作为 `JSSContent` 进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`parse` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`parse(astController)` 在解析波中查询、插入、替换或删除当前队列节点，也可返回下一层内容。解析器沿 `contents` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始解析。
+Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 统称 Atom，Combiners 与 Atom Creators 提供构造内容的方式。
+
+`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造 `JSSStyleNode` 队列。Atom、Combiner 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`parse` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`parse(astController)` 在解析波中查询、插入、替换或删除当前队列节点，也可返回下一层内容。解析器沿 `contents` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始解析。
 
 完整的 `conditionPath` 由 `targetConditionPath` 和 `stateConditionPath` 组成。解析器通过有限的 [ASTController](compiler/style-nodes-to-content-nodes.ts) 取得当前位置与队列操作，不能直接操作整条队列。解析完成时，状态路径并入 CSS 输出地址；`JSSContentNode` 保留已完成的内容对象及子内容解析结果。最后一段才调用 `toCSSString` 并写出 CSS，不按 Variable 或依赖来源重排。循环引用、超出嵌套上限或无进展的解析会明确失败。
 
-`Value` 包装内容但不传播 Variable 状态。`Variable.parse()` 在实际消费时插入 `@property`、根值和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 的嵌套引用通过 Content 链解析。`VariableCluster` 代理默认 Variable 的解析接口，选择和双方同名成员配对仍由 Cluster 自身负责。JSSTools 构造的内容节点通过 `contents` 暴露操作数，在最终输出时生成 CSS 文本。
+`Value` 包装内容但不传播 Variable 状态。`Variable.parse()` 在实际消费时插入 `@property`、根值和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 的嵌套引用通过 Content 链解析。`VariableCluster` 代理默认 Variable 的解析接口，选择和双方同名成员配对仍由 Cluster 自身负责。Combiner 与 Atom Creator 构造的内容通过 `contents` 暴露操作数，在最终输出时生成 CSS 文本。
 
 [rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[style-nodes-to-content-nodes.ts](compiler/style-nodes-to-content-nodes.ts) 逐波解析并处理按需 Rules；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一解析波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。相同路径与 key 的普通声明继续按节点队列顺序交给浏览器层叠，不聚合属性值。
 
@@ -26,7 +28,7 @@ JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 | 位置 | 职责 |
 | --- | --- |
 | condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址 |
-| materials/state-conditions.ts | 主体状态名称、条件登记与中央顺序 |
+| pieces/state-conditions.ts | 主体状态名称、条件登记与中央顺序 |
 | key.ts | JSSKey 的创建、声明目标识别与名称解析 |
 | declaration.ts | Key／Variable 与内容的二元声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
@@ -38,22 +40,23 @@ JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 | compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |
 | compiler/style-nodes-to-content-nodes.ts | 用解析波与 ASTController 改写队列，生成 JSSContentNode 队列 |
 | compiler/content-nodes-to-css-string.ts | 按 JSSContentNode 队列顺序输出 CSS 字符串 |
-| materials/keys | 可复用的 JSSKey 定义及其名称登记 |
-| materials/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
-| materials/style-values | 按用途组织的现成 Value、Variable 与组合材料 |
-| materials/tools | 构造内容节点的混色、计算与复合工具 |
-| materials/roles | 供组件在自身选择器中赋值的共享角色 |
-| materials/mixins | 把完整效果转换成声明组合 |
+| pieces/keys | 可复用的 JSSKey 定义及其名称登记 |
+| pieces/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
+| pieces/contents/atoms | 按用途组织的现成 Value 与 Variable |
+| pieces/contents/combiners | 混色、计算等内容组合操作 |
+| pieces/contents/atom-creators | 按结构生成阴影、动画等内容 |
+| pieces/roles | 供组件在自身选择器中赋值的共享角色 |
+| pieces/mixins | 把完整效果转换成声明组合 |
 | test | 验证 Style System 多文件协作与完整业务流程 |
 | doc | 面向使用和设计阅读的对象契约 |
 
-公共 `index` 公开创建、延伸、聚合、声明、编译和 Mixin。Key 和材料从负责文件导入；内部定义查找与来源连接不公开。
+公共 `index` 公开创建、延伸、聚合、声明、编译和 Mixin。Key 和其他碎片从负责文件导入；内部定义查找与来源连接不公开。
 
 ## Button 接入
 
-Style System 是抽象层，包含基础材料和面向组件的通用定义。是否通用取决于描述目标与领域，不取决于当前消费者数量。
+Style System 是抽象层，包含可复用碎片和面向组件的通用定义。是否通用取决于描述目标与领域，不取决于当前消费者数量。
 
-`Button.style.ts` 拥有 Button 的选择器、variant、tone、size、status 与组件差异。语义配色由 `accentColor`、`dangerColor`、`toneColor` 等 Cluster 提供；Button 通过声明选择整组材料，不读取 Cluster 内部定义。
+`Button.style.ts` 拥有 Button 的选择器、variant、tone、size、status 与组件差异。语义配色由 `accentColor`、`dangerColor`、`toneColor` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
 
 当前 Button 仍存在 `bare + tone`、`solid + tone` 的显式交集配方。这些定义已用 `TODO` 标出，是待删除的不可组合临时方案，不是 Style System 的组合模型。
 

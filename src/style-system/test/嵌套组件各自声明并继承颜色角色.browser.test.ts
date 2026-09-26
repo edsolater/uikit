@@ -2,7 +2,7 @@
 import { key } from '../key'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { cssRoot, rules, type RulesHandle } from '../index'
-import { foregroundColor, surfaceColor } from '../materials/roles/color'
+import { foregroundColor, surfaceColor } from '../pieces/roles/color'
 
 let style: HTMLStyleElement
 const handles: RulesHandle[] = []

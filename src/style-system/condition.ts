@@ -1,5 +1,5 @@
 /** 创建 Condition，并表达目标、状态与 CSS 输出地址。 */
-import type { StateCondition } from './materials/state-conditions'
+import type { StateCondition } from './pieces/state-conditions'
 
 /** 一层 CSS 地址；header 同时是身份和输出块头。 */
 export interface Condition {

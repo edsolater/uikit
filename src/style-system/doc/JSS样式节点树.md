@@ -18,7 +18,7 @@ interface JSSStyleNode {
 
 队列位置决定 Rule 声明顺序。`targetConditionPath` 表示 `.button`、`@media` 等普通条件地址；`stateConditionPath` 使用已登记的状态身份表示受体状态，例如 `hover`。解析器只把值都带入完整身份，不从 CSS 字符串推断状态。
 
-每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置解析。Content 可以是字面值或 `JSSContent`；Value、Variable 和 JSSTools 产物各有业务用途，Compiler 只调用对象按需提供的 `onActive`、`parse(astController)`、`contents` 和 `toCSSString`。只有 `onActive` 的内容可以提供依赖而不输出当前声明；对象也可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已解析或无需解析后，节点才成为 `JSSContentNode`。
+每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置解析。Content 可以是字面值或 `JSSContent`；Value 与 Variable 统称 Atom，Combiner 和 Atom Creator 可构造其他内容。Compiler 只调用对象按需提供的 `onActive`、`parse(astController)`、`contents` 和 `toCSSString`，不按碎片分类分支处理。只有 `onActive` 的内容可以提供依赖而不输出当前声明；对象也可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已解析或无需解析后，节点才成为 `JSSContentNode`。
 
 ```text
 Rules → JSSStyleNode[] → 逐波解析并改写当前队列 → JSSContentNode[] → CSS string
@@ -28,7 +28,7 @@ Rules → JSSStyleNode[] → 逐波解析并改写当前队列 → JSSContentNod
 
 ## Content 链与 Variable
 
-`Value` 只包装 Content，不改变 Variable 身份。JSSTools 构造的内容对象在 `contents` 中显露原操作数，让次波解析嵌套引用。解析器按当前 Content 位置记录 `parse` 返回对象；最终输出读取原操作数时会取得对应的解析结果。
+`Value` 只包装 Content，不改变 Variable 身份。Combiner 和 Atom Creator 构造的内容对象在 `contents` 中显露原操作数，让次波解析嵌套引用。解析器按当前 Content 位置记录 `parse` 返回对象；最终输出读取原操作数时会取得对应的解析结果。
 
 `Variable.parse(astController)` 在消费时插入 `@property` 注册、根值及 Variable 自身状态定义，再返回可输出的 CSS `var()` Value。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动定义 Key 与用户显式 Key 在 Variable 内部保持可区分；Compiler 不接收此身份标记。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；按需依赖使用同一解析和输出链。
 

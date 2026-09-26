@@ -57,7 +57,7 @@ App 入口执行 cssRoot.mount()
   -> render() 开始组件渲染
 ```
 
-Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、登记句柄和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 选择规则留在 Button.style.ts；Button 自身差异在首次使用前定义为 Variable，通用材料拥有共享状态，Mixin 翻译完整效果。完整链路见 [Style System 架构](src/style-system/architecture.md)。
+Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、登记句柄和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 选择规则留在 Button.style.ts；Button 自身差异在首次使用前定义为 Variable，通用 Variable 拥有共享状态，Mixin 翻译完整效果。完整链路见 [Style System 架构](src/style-system/architecture.md)。
 
 Example 入口静态导入全部 Example，再统一挂载。Storybook preview 提前导入 Button 样式后挂载；缩略图 runner 在渲染前建立宿主并挂载。懒加载组件的样式必须由应用样式清单提前导入。package.json 保留 `.style.ts` 与产物 `.style.js` 的副作用，防止静态登记被打包器删除。
 
@@ -84,8 +84,8 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 
 # 领域边界
 
-- 工具的领域发生在工具定义端。通用 Mixin 不感知 Button；通用材料按描述目标和领域归属抽象层，Button 专属定义保留在 Button.style.ts；Variable 定义后作为黑盒使用。
-- `src/style-system` 提供 Rule 登记、Condition 寻址、声明输入转换、Value、Variable、编译和挂载能力，以及可复用材料和 Theme 配方；具体组件 selector 与业务分类留在组件自己的 style 文件。
+- 碎片的领域发生在定义端。通用 Mixin 不感知 Button；可复用 Pieces 按描述目标和领域归属抽象层，Button 专属定义保留在 Button.style.ts；Variable 定义后作为黑盒使用。
+- `src/style-system` 提供 Rule 登记、Condition 寻址、声明输入转换、Value、Variable、编译和挂载能力，以及可复用 Pieces 和 Theme 配方；具体组件 selector 与业务分类留在组件自己的 style 文件。
 - `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-system` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
 - `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。

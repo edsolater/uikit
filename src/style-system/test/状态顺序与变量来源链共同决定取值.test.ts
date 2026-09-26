@@ -1,6 +1,6 @@
 /** 状态仅在 Variable 自身与引用链上解析。 */
 import { expect, test } from 'vitest'
-import { stateCondition } from '../materials/state-conditions'
+import { stateCondition } from '../pieces/state-conditions'
 import { condition } from '../condition'
 import { variable, variableFrom } from '../variable'
 import { compileRules } from '../css-root'
