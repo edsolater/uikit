@@ -18,7 +18,7 @@ interface JSSStyleNode {
 
 队列位置决定 Rule 声明顺序。`targetConditionPath` 表示 `.button`、`@media` 等普通条件地址；`stateConditionPath` 使用已登记的状态身份表示受体状态，例如 `hover`。解析器只把值都带入完整身份，不从 CSS 字符串推断状态。
 
-每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置解析。Content 可以是字面值或 `JSSContent`；Value 与 Variable 统称 Atom，Combiner 和 Atom Creator 可构造其他内容。Compiler 只调用对象按需提供的 `onActive`、`parse(astController)`、`contents` 和 `toCSSString`，不按碎片分类分支处理。只有 `onActive` 的内容可以提供依赖而不输出当前声明；对象也可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已解析或无需解析后，节点才成为 `JSSContentNode`。
+每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置解析。Content 可以是字面值或 `JSSContent`；Value 与 Variable 在组合时统称 Atom，Atom 不增加对象类型。Combiner 和 Atom Creator 也可构造作为一块使用的内容。Compiler 只调用对象按需提供的 `onActive`、`parse(astController)`、`contents` 和 `toCSSString`，不按碎片分类分支处理。只有 `onActive` 的内容可以提供依赖而不输出当前声明；对象也可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已解析或无需解析后，节点才成为 `JSSContentNode`。
 
 ```text
 Rules → JSSStyleNode[] → 逐波解析并改写当前队列 → JSSContentNode[] → CSS string

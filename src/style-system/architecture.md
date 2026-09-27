@@ -11,7 +11,7 @@ JSSStyleNode[] → style-nodes-to-content-nodes.ts → JSSContentNode[]
 JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 ```
 
-Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 统称 Atom，Combiners 与 Atom Creators 提供构造内容的方式。
+Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层；对象仍遵守 JSSContent 约定。Combiners 与 Atom Creators 提供构造内容的方式。
 
 `rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译从源账本快照构造 `JSSStyleNode` 队列。Atom、Combiner 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`parse` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`parse(astController)` 在解析波中查询、插入、替换或删除当前队列节点，也可返回下一层内容。解析器沿 `contents` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始解析。
 
