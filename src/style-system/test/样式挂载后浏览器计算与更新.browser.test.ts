@@ -18,6 +18,8 @@ import { calcMultiply } from '../pieces/contents/combiners/calc'
 import { cssFunction } from '../pieces/contents/combiners/custom'
 import { colorMix } from '../pieces/contents/combiners/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
+import { durationFast } from '../pieces/contents/atoms/motion'
+import { lineColor } from '../pieces/contents/atoms/color/edge'
 
 stateCondition('testLarge', condition('&[data-large]'))
 stateCondition('testMedia', media('(width > 1px)'))
@@ -48,7 +50,7 @@ afterEach(() => {
 })
 
 test('简写与长属性覆盖生效，变量注册与局部定义沿同一次编译', () => {
-  const gap = variable('4px', { name: '--space-example', root: { value: '12px' }, registration: { syntax: '<length>', inherits: true, initialValue: '2px' } })
+  const gap = variable('4px', { name: '--space-example', registration: { syntax: '<length>', inherits: true, initialValue: '2px' } })
   handles.push(rules('.example', [[$margin, '6px'], declare(key('margin-left'), '10px'), [$padding, gap]]))
   handles.push(rule('.example', gap, '20px'))
   const before = style.textContent
@@ -151,7 +153,7 @@ test('Variable 比例在浏览器改变混色结果，消费函数只定义一�
 })
 
 test('动画复合值激活帧定义，并继续解析帧内变量', () => {
-  const opacity = variable(undefined, { name: '--final-opacity', root: { value: 0.7 } })
+  const opacity = variable(0.7, { name: '--final-opacity' })
   const frames: Rules = [[[condition('from')], 'opacity', opacity], [[condition('to')], 'opacity', opacity]]
   const name = animationName('motion-appearance', frames)
   handles.push(rule('.example', 'animation', animationValue({ name, duration: '1s', playState: 'paused' })))
@@ -170,7 +172,7 @@ test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的�
 })
 
 test('源 Rule 删除后重新挂载，派生依赖随可达性退出且既有宿主内容保留', () => {
-  const reference = variable(undefined, { name: '--temporary-reference', root: { value: '12px' } })
+  const reference = variable('12px', { name: '--temporary-reference' })
   const handle = rule('.example', 'margin-left', reference)
   handles.push(handle)
   root.mount()
@@ -291,7 +293,11 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
   const session = await cdp() as CDPSession
   const size = variable('4px', {
     name: 'environment-size',
-    root: { value: '8px', dark: '12px', reducedMotion: '0px' },
+    onActive: (): Rules => [
+      [[condition(':where(:root)')], size, '8px'],
+      [[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], size, '12px'],
+      [[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], size, '0px'],
+    ],
   })
   handles.push(rule('.example', 'width', size))
   try {
@@ -316,6 +322,34 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
     expect(style.textContent).toBe(committed)
   } finally {
     document.documentElement.removeAttribute('data-theme')
+    await session.send('Emulation.setEmulatedMedia', { features: [] })
+  }
+})
+
+test('动效与分隔线在根上求值，局部依赖覆盖不改变已有根值', async () => {
+  const session = await cdp() as CDPSession
+  document.documentElement.style.setProperty('--color-fg', 'blue')
+  handles.push(rule('.example', 'transition-duration', durationFast))
+  handles.push(rule('.example', 'border-color', lineColor))
+  try {
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+    })
+    root.mount()
+    const committed = style.textContent
+    const originalLine = getComputedStyle(element).borderTopColor
+    expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
+    element.style.setProperty('--motion-scale-ratio', '2')
+    element.style.setProperty('--text-color', 'red')
+    expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
+    expect(getComputedStyle(element).borderTopColor).toBe(originalLine)
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+    })
+    expect(getComputedStyle(element).transitionDuration).toBe('0s')
+    expect(style.textContent).toBe(committed)
+  } finally {
+    document.documentElement.style.removeProperty('--color-fg')
     await session.send('Emulation.setEmulatedMedia', { features: [] })
   }
 })

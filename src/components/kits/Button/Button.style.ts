@@ -2,7 +2,6 @@
 import {
   rules,
   variable,
-  variableFrom,
   innerText,
   contentLayout,
   size,
@@ -26,26 +25,29 @@ import { bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, te
 import { shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '../../../style-system/pieces/contents/atoms/shadow'
 
 const button = ['@layer uikit', '.Button']
+// 禁用配方读取已在按钮作用域声明的角色值，由 CSS 保留变体与语气覆盖。
+const currentSurfaceColor = `var(${surfaceColor.toCSSString()})`
+const currentForegroundColor = `var(${foregroundColor.toCSSString()})`
 
 // =============================================================================
 // 默认效果
 // =============================================================================
 
-const surfaceColorDefault = variableFrom(surfaceColor, {
+const surfaceColorDefault = variable(surfaceColor, {
   name: 'button-surface-color-default',
   states: {
     hover: colorMix([neutralColor(2), 0.72], accentColor('soft')),
     active: colorMix([neutralColor(3), 0.62], accentColor('soft')),
-    disabled: source => colorMix([source, 0.48], neutralColor(2)),
+    disabled: colorMix([currentSurfaceColor, 0.48], neutralColor(2)),
   },
 })
 
-const foregroundColorDefault = variableFrom(foregroundColor, {
+const foregroundColorDefault = variable(foregroundColor, {
   name: 'button-foreground-color-default',
   states: {
     hover: textColor('strong'),
     active: textColor('strong'),
-    disabled: source => colorMix([source, 0.48], 'transparent'),
+    disabled: colorMix([currentForegroundColor, 0.48], 'transparent'),
   },
 })
 
@@ -91,12 +93,12 @@ rules(button, [
 // variant 动作声量
 // =============================================================================
 
-const surfaceColorBare = variableFrom(surfaceColor, {
+const surfaceColorBare = variable(surfaceColor, {
   name: 'button-surface-color-bare',
   states: {
     hover: colorMix([neutralColor(1), 0.88], accentColor('soft')),
     active: colorMix([neutralColor(2), 0.82], accentColor('soft')),
-    disabled: source => colorMix([source, 0.48], neutralColor(2)),
+    disabled: colorMix([currentSurfaceColor, 0.48], neutralColor(2)),
   },
 })
 
@@ -111,21 +113,21 @@ rules(
   ],
 )
 
-const surfaceColorSolid = variableFrom(surfaceColor, {
+const surfaceColorSolid = variable(surfaceColor, {
   name: 'button-surface-color-solid',
   states: {
     hover: actionColor,
     active: actionColor,
-    disabled: source => colorMix([source, 0.48], neutralColor(2)),
+    disabled: colorMix([currentSurfaceColor, 0.48], neutralColor(2)),
   },
 })
 
-const foregroundColorSolid = variableFrom(foregroundColor, {
+const foregroundColorSolid = variable(foregroundColor, {
   name: 'button-foreground-color-solid',
   states: {
     hover: actionColor('foreground'),
     active: actionColor('foreground'),
-    disabled: source => colorMix([source, 0.48], 'transparent'),
+    disabled: colorMix([currentForegroundColor, 0.48], 'transparent'),
   },
 })
 
@@ -152,21 +154,27 @@ rules(
 // tone 动作语气
 // =============================================================================
 
-const surfaceColorTone = variableFrom(surfaceColor, {
+// 语气状态配方读取本按钮同名成员的局部声明。
+const currentToneColor = `var(${toneColor.toCSSString()})`
+const currentToneColorSoft = `var(${toneColor('soft').toCSSString()})`
+const currentToneColorStrong = `var(${toneColor('strong').toCSSString()})`
+const currentToneColorForeground = `var(${toneColor('foreground').toCSSString()})`
+
+const surfaceColorTone = variable(surfaceColor, {
   name: 'button-surface-color-tone',
   states: {
-    hover: colorMix([neutralColor(2), 0.68], toneColor('soft')),
-    active: colorMix([neutralColor(3), 0.58], toneColor('soft')),
-    disabled: source => colorMix([source, 0.48], neutralColor(2)),
+    hover: colorMix([neutralColor(2), 0.68], currentToneColorSoft),
+    active: colorMix([neutralColor(3), 0.58], currentToneColorSoft),
+    disabled: colorMix([currentSurfaceColor, 0.48], neutralColor(2)),
   },
 })
 
-const foregroundColorTone = variableFrom(foregroundColor, {
+const foregroundColorTone = variable(foregroundColor, {
   name: 'button-foreground-color-tone',
   states: {
-    hover: toneColor('strong'),
-    active: toneColor('strong'),
-    disabled: source => colorMix([source, 0.48], 'transparent'),
+    hover: currentToneColorStrong,
+    active: currentToneColorStrong,
+    disabled: colorMix([currentForegroundColor, 0.48], 'transparent'),
   },
 })
 
@@ -199,12 +207,12 @@ rules(
 // --- 语气与声量组合：退场保留透明常态，实心保留语气实底 ---
 
 // TODO: bare 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
-const surfaceColorBareTone = variableFrom(surfaceColor, {
+const surfaceColorBareTone = variable(surfaceColor, {
   name: 'button-surface-color-bare-tone',
   states: {
-    hover: colorMix([neutralColor(1), 0.82], toneColor('soft')),
-    active: colorMix([neutralColor(2), 0.74], toneColor('soft')),
-    disabled: source => colorMix([source, 0.48], neutralColor(2)),
+    hover: colorMix([neutralColor(1), 0.82], currentToneColorSoft),
+    active: colorMix([neutralColor(2), 0.74], currentToneColorSoft),
+    disabled: colorMix([currentSurfaceColor, 0.48], neutralColor(2)),
   },
 })
 
@@ -214,22 +222,22 @@ rules([...button, '&[data-variant="bare"][data-tone]'], [
 ])
 
 // TODO: solid 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
-const surfaceColorSolidTone = variableFrom(surfaceColor, {
+const surfaceColorSolidTone = variable(surfaceColor, {
   name: 'button-surface-color-solid-tone',
   states: {
-    hover: colorMix([toneColor, 0.88], textColor('strong')),
-    active: colorMix([toneColor, 0.78], textColor('strong')),
-    disabled: source => colorMix([source, 0.48], neutralColor(2)),
+    hover: colorMix([currentToneColor, 0.88], textColor('strong')),
+    active: colorMix([currentToneColor, 0.78], textColor('strong')),
+    disabled: colorMix([currentSurfaceColor, 0.48], neutralColor(2)),
   },
 })
 
 // TODO: solid 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
-const foregroundColorSolidTone = variableFrom(foregroundColor, {
+const foregroundColorSolidTone = variable(foregroundColor, {
   name: 'button-foreground-color-solid-tone',
   states: {
-    hover: toneColor('foreground'),
-    active: toneColor('foreground'),
-    disabled: source => colorMix([source, 0.48], 'transparent'),
+    hover: currentToneColorForeground,
+    active: currentToneColorForeground,
+    disabled: colorMix([currentForegroundColor, 0.48], 'transparent'),
   },
 })
 

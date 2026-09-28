@@ -10,17 +10,22 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     const source = await result.outputs[0].text()
     const moduleURL = 'data:text/javascript;base64,' + Buffer.from(source).toString('base64')
     const styleSystem = await import(moduleURL)
-    const surface = styleSystem.variable('black', { name: 'bundle-surface', root: { value: 'red' } })
+    const surface = styleSystem.variable('black', { name: 'bundle-surface' })
     const opacity = styleSystem.variable(1, { name: 'bundle-opacity', states: { hover: 0.5 } })
     styleSystem.rules('.Built', [
       [styleSystem.key('align-items'), 'center'], [styleSystem.key('margin-left'), '2px'],
       [styleSystem.key('color'), surface], [styleSystem.key('opacity'), opacity],
       [surface, 'blue'],
     ])
+    const count = styleSystem.variable(1, { name: 'bundle-modified-count', modification: {
+      apply: (current, change) => styleSystem.createJSSContent(read => 'calc(' + read(current) + ' + ' + read(change) + ')', [current, change]),
+    } })
+    styleSystem.rules('.Built', [count.declare()])
+    styleSystem.rules(['.Built', '&:hover'], [count.modify(3)])
     console.log(styleSystem.compileCSS())
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
-  expect(output).toContain(':where(:root) {\n--bundle-surface: red;')
+  expect(output).not.toContain(':where(:root) {\n--bundle-surface:')
   const declarationOrder = [
     'align-items: center;', 'margin-left: 2px;',
     'color: var(--bundle-surface, black);', 'opacity: var(--bundle-opacity, 1);',
@@ -31,4 +36,5 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
   // Agent 测试假设：精确包装只检查本轮归零实现，不构成公共选择器格式契约。
   expect(output).toContain('&:where(:where(:hover):where(:not(:disabled, [data-status~="disabled"]))) {\n--bundle-opacity: 0.5;')
   expect(output).toContain('--bundle-surface: blue;')
+  expect(output).toContain('calc(var(--bundle-modified-count-modify-1-step-1-input) + 3)')
 })

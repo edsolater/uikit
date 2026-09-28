@@ -18,6 +18,8 @@ export type StateConditionPath = StateCondition[]
 
 /** 语义节点的完整地址，由目标位置与主体状态组成。 */
 export interface ConditionPath {
+  /** 未经状态排序的输入父链，用于语义归属；输出仍使用下列规范化地址。 */
+  semanticPath?: (Condition | string)[]
   targetConditionPath: TargetConditionPath
   stateConditionPath: StateConditionPath
 }
@@ -43,4 +45,16 @@ export function media(query: string): Condition {
 /** 创建 CSS `@function` Condition。 */
 export function functionDefinition(signature: string): Condition {
   return condition(`@function ${signature}`)
+}
+
+/** 返回可比较的语义路径片段；有原始语义地址时保留其输入顺序。 */
+export function semanticPathParts(path: ConditionPath): string[] {
+  return (path.semanticPath ?? [...path.targetConditionPath, ...path.stateConditionPath.map((state) => state.name)])
+    .map((item) => typeof item === 'string' ? `state:${item}` : `condition:${item.header}`)
+}
+/** 判断前一路径是否覆盖后一路径的起始片段；同一路径也成立。 */
+export function isSemanticPathPrefix(parent: ConditionPath, child: ConditionPath): boolean {
+  const prefix = semanticPathParts(parent)
+  const parts = semanticPathParts(child)
+  return prefix.length <= parts.length && prefix.every((item, index) => item === parts[index])
 }

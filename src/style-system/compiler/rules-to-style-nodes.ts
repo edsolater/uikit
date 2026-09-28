@@ -7,11 +7,17 @@ import { isJSSContent } from '../content'
 
 /** 队列中一项可改写的样式内容；地址保留目标与状态，位置决定输出顺序。 */
 export interface JSSStyleNode {
+  /** 编译会话中的稳定位置身份。 */
+  identity?: string
   conditionPath: ConditionPath
   key: JSSKey | undefined
   content: unknown
+  /** 解析本节点内容及子内容时沿途传递的状态名称。 */
+  readState?: string
   /** 按需产生的资源用此身份替换同址旧资源；源规则不带此字段。 */
   resourceAddress?: string
+  /** 生成产物的可选查询标识；不参与节点来源与资源替换。 */
+  productTag?: object
 }
 
 /** 判断 Rule 声明的内容能否进入解析队列。 */
@@ -26,7 +32,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
   const expandingRuleGroups = new Set<Rules>()
 
   /** 将 Rules 接到当前节点队列；嵌套项沿用上层地址与 Key。 */
-  const appendStyleNodes = (rules: Rules, parentPath: TargetConditionPath = [], inheritedKey?: JSSKey, inheritedStateNames: string[] = []): void => {
+  const appendStyleNodes = (rules: Rules, parentPath: TargetConditionPath = [], inheritedKey?: JSSKey, inheritedStateNames: string[] = [], parentSemanticPath: NonNullable<ConditionPath['semanticPath']> = []): void => {
     if (expandingRuleGroups.has(rules)) throw new Error('Rules 内容存在递归引用，无法生成 CSS。')
     expandingRuleGroups.add(rules)
     try {
@@ -42,12 +48,12 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
           if (!ruleContent.every((entry) => Array.isArray(entry) && entry.length === 3)) {
             throw new Error('嵌套 Rules 必须由路径、Key、内容三项组成。')
           }
-          appendStyleNodes(ruleContent as Rules, targetConditionPath, key, stateNames)
+          appendStyleNodes(ruleContent as Rules, targetConditionPath, key, stateNames, [...parentSemanticPath, ...relativePath ?? []])
           continue
         }
         if (!isRuleContent(ruleContent)) throw new Error('Rules 声明内容不是可解析的 CSS 内容。')
         styleNodes.push({
-          conditionPath: { targetConditionPath, stateConditionPath: resolveStateConditions(stateNames) },
+          conditionPath: { targetConditionPath, stateConditionPath: resolveStateConditions(stateNames), semanticPath: [...parentSemanticPath, ...relativePath ?? []] },
           key,
           content: ruleContent,
         })

@@ -84,7 +84,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 
 # 领域边界
 
-- 碎片的领域发生在定义端。通用 Mixin 不感知 Button；可复用 Pieces 按描述目标和领域归属抽象层，Button 专属定义保留在 Button.style.ts；Variable 定义后作为黑盒使用。
+- 碎片的领域发生在定义端。通用 Mixin 不感知 Button；可复用 Pieces 按描述目标和领域归属抽象层，Button 专属定义保留在 Button.style.ts；Variable 的创建配置由同一对象的 `config` 承载。
 - `src/style-system` 提供 Rule 登记、Condition 寻址、声明输入转换、Value、Variable、编译和挂载能力，以及可复用 Pieces 和 Theme 配方；具体组件 selector 与业务分类留在组件自己的 style 文件。
 - `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-system` 都不能反向依赖具体 kit。
 - `.example.tsx`、`.stories.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。

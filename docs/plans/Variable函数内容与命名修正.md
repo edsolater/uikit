@@ -171,7 +171,7 @@ Button 的 variant 与 tone 是两个独立条件。下面两个 Variable 不是
 
 ```ts
 // TODO: bare 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
-const surfaceColorBareTone = variableFrom(surfaceColor, {
+const surfaceColorBareTone = variable(surfaceColor, {
   name: 'button-surface-color-bare-tone',
   states: {
     hover: colorMix([neutralColor(1), 0.82], toneColor('soft')),
@@ -186,7 +186,7 @@ rules([...button, '&[data-variant="bare"][data-tone]'], [
 
 ```ts
 // TODO: solid 与 tone 的显式交集配方不可组合；下一步改为由独立效果在运行结果中组合，并删除这个交集 Variable。
-const surfaceColorSolidTone = variableFrom(surfaceColor, {
+const surfaceColorSolidTone = variable(surfaceColor, {
   name: 'button-surface-color-solid-tone',
   states: {
     hover: colorMix([toneColor, 0.88], textColor('strong')),

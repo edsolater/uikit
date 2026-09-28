@@ -1,5 +1,5 @@
 /** 内容颜色及其交互状态。 */
-import { variable, variableFrom } from '../../../../variable'
+import { variable } from '../../../../variable'
 import { variableCluster } from '../../../../variable-cluster'
 
 export const textColor = variableCluster({
@@ -7,7 +7,7 @@ export const textColor = variableCluster({
   strong: variable('var(--color-fg-strong)', { name: 'text-color-strong' }),
 })
 
-export const foregroundColorInteractive = variableFrom(textColor, {
+export const foregroundColorInteractive = variable(textColor, {
   name: 'foreground-color-interactive',
   states: {
     hover: textColor('strong'),

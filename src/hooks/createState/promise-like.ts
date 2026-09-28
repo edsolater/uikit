@@ -25,7 +25,7 @@ export type PromiseLikeStateViewOptions<D, E = D> = {
  * 直接依赖 fnkit 的 `hasProperty()` 与 `isFunction()`；业务对象一旦公开可调用的 `then`，即视为 PromiseLike。
  */
 export function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
-  return hasProperty(value, 'then') && isFunction(value.then)
+  return hasProperty(value, 'then', isFunction)
 }
 
 /**
@@ -36,9 +36,7 @@ export function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
  *
  * 直接依赖 UIKit 的 `createState()` 承载 Solid signal，并使用原生 Promise 统一展开 thenable。
  */
-export function toStateViewFromPromiseLike<V>(
-  promiseLike: PromiseLike<V>,
-): StateView<Awaited<V> | undefined>
+export function toStateViewFromPromiseLike<V>(promiseLike: PromiseLike<V>): StateView<Awaited<V> | undefined>
 export function toStateViewFromPromiseLike<V, D, E>(
   promiseLike: PromiseLike<V>,
   options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },

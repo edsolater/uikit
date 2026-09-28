@@ -29,10 +29,48 @@ import { transitionValue } from '../pieces/contents/atom-creators/transition'
 import { contentLayout } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
 import { clickable } from '../pieces/mixins/interaction'
+import { durationFast } from '../pieces/contents/atoms/motion'
+import { lineColor } from '../pieces/contents/atoms/color/edge'
 
 stateCondition('testHover', condition('&:hover'))
 stateCondition('testActive', condition('&:active'))
 stateCondition('testMedia', media('(width > 1px)'))
+
+test('动效和分隔线按需提供普通根规则，空输入不激活', () => {
+  expect(compileRules([])).toBe('')
+  const motionCSS = compileRules([[[condition('.Motion')], 'transition-duration', durationFast]])
+  expect(motionCSS).toContain('--motion-scale-ratio: 1;')
+  expect(motionCSS).toContain('@media (prefers-reduced-motion: reduce)')
+  expect(motionCSS).toContain('--motion-scale-ratio: 0;')
+  expect(motionCSS).toContain('--duration-fast: calc(120ms * var(--motion-scale-ratio, 1));')
+  expect(motionCSS).not.toContain('--line-color:')
+  const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor]])
+  expect(lineCSS).toContain('--line-color: color-mix(')
+  expect(lineCSS).not.toContain('--motion-scale-ratio:')
+})
+
+test('Variable 创建时不激活，按需规则可引用自身与稍后创建的 Variable', () => {
+  const baseline = compileCSS()
+  const firstActive = vi.fn((): Rules => [
+    [[condition(':where(:root)')], first, 'red'],
+    [[condition('.Linked')], 'color', second],
+  ])
+  const first = variable('black', { name: 'linked-first-color', onActive: firstActive })
+  const secondActive = vi.fn((): Rules => [[[condition(':where(:root)')], second, 'blue']])
+  const second = variable('navy', { name: 'linked-second-color', onActive: secondActive })
+  expect(firstActive).not.toHaveBeenCalled()
+  expect(secondActive).not.toHaveBeenCalled()
+  expect(compileCSS()).toBe(baseline)
+
+  const handle = keep(rule('.Linked', 'border-color', first))
+  const css = compileCSS()
+  expect(firstActive).toHaveBeenCalledTimes(1)
+  expect(secondActive).toHaveBeenCalledTimes(1)
+  expect(css).toContain('--linked-first-color: red;')
+  expect(css).toContain('--linked-second-color: blue;')
+  handle.remove()
+  expect(compileCSS()).toBe(baseline)
+})
 stateCondition('revisionA', condition('&[data-a]'))
 stateCondition('revisionB', condition('&[data-b]'))
 
@@ -261,8 +299,8 @@ test('根值、注册、函数与关键帧只随消费进入 CSS，撤销后全�
   const baseline = compileCSS()
   const color = variable('red', {
     name: 'resource-color',
-    root: { value: 'blue' },
     registration: { syntax: '<color>', inherits: true, initialValue: 'black' },
+    onActive: (): Rules => [[[condition(':where(:root)')], color, 'blue']],
   })
   const frames: Rules = [
     [[condition('from')], 'opacity', 0],

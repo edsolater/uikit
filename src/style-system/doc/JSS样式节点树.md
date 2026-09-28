@@ -13,6 +13,7 @@ interface JSSStyleNode {
   key: JSSKey | undefined
   content: unknown
   resourceAddress?: string
+  productTag?: object
 }
 ```
 
@@ -24,16 +25,20 @@ interface JSSStyleNode {
 Rules → JSSStyleNode[] → 逐波解析并改写当前队列 → JSSContentNode[] → CSS string
 ```
 
-`ASTController` 暴露当前 `parseWaveIndex`、复合地址、Key、Content 和位置 `role`，以及有限的 `activate`、`claimOnce`、`findByKey`、`insert`、`remove`、`replaceResource`、`insertResource` 操作。解析对象只能通过 Controller 读写节点队列。较晚的 `parseWaveIndex` 会让该对象等待后续解析波；返回值接回当前位置继续解析。引用环和超过上限的内容链会明确失败。资源操作用于按地址替换并登记成组资源，例如 Variable 的 `@property` 描述。
+`ASTController` 暴露当前 `parseWaveIndex`、复合地址、Key、Content 和位置 `role`，以及有限的 `activate`、`withClaim`、`findByKey`、`findParent`、`neighbors`、`productsByTag`、`insert`、`detach`、`removeNode`、`replaceResource`、`insertResource` 操作。`findParent` 可按指定目标 `ConditionPath` 查找最近的语义父节点；省略时使用当前位置。解析对象只能通过 Controller 读写节点队列。较晚的 `parseWaveIndex` 会让该对象等待后续解析波；返回值接回当前位置继续解析。引用环和超过上限的内容链会明确失败。资源操作用于按地址替换并登记成组资源，例如 Variable 的 `@property` 描述。
 
 ## Content 链与 Variable
 
 `Value` 只包装 Content，不改变 Variable 身份。Combiner 和 Atom Creator 构造的内容对象在 `contents` 中显露原操作数，让次波解析嵌套引用。解析器按当前 Content 位置记录 `parse` 返回对象；最终输出读取原操作数时会取得对应的解析结果。
 
-`Variable.parse(astController)` 在消费时插入 `@property` 注册、根值及 Variable 自身状态定义，再返回可输出的 CSS `var()` Value。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动定义 Key 与用户显式 Key 在 Variable 内部保持可区分；Compiler 不接收此身份标记。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；按需依赖使用同一解析和输出链。
+`Variable.parse(astController)` 在普通消费时插入 `@property` 注册及 Variable 自身状态定义，再返回可输出的 CSS `var()` Value。Variable 生成状态内容节点时直接携带选中的状态，解析器从该节点内容入口沿返回值与 contents 传递；嵌套 Variable 按同名状态读取内容，缺失时取默认内容，无 states 的来源也取默认内容，不把来源其他状态加入当前 Variable。普通 Rule 消费仍保留 CSS 引用。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动状态定义按即将插入的目标地址查找最近的同一 Variable 局部声明，使用其基础值 Key；没有局部声明时使用 `config.definitionKey`。自动产物以 Variable 对象作为不透明 `productTag`，局部声明通过通用产物查询和语义父链清理归属自身的旧产物；`productTag` 只供查询，不改变节点来源所有权或资源替换。Compiler 不按 Variable 类型分支。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；按需依赖使用同一解析和输出链。
 
 ## 输出阶段
 
 `JSSContentNode` 是解析完成的声明，保留输出地址、JSSKey、内容对象及子内容解析结果。其 `conditionPath` 已合并 target/state，描述最终 CSS 嵌套位置。解析完成的队列就是输出顺序；输出器在此时读取内容对象的 `toCSSString`，打开和关闭条件块并返回 CSS 字符串。它不再解析内容、按来源分组或聚合属性值。相同地址的声明仍按浏览器层叠规则保留队列顺序。
 
 相关实现：[Rule](../rule.ts)、[JSSKey](../key.ts)、[JSSContent](../content.ts)、[Value](../value.ts)、[Variable](../variable.ts)、[Rules 到样式节点](../compiler/rules-to-style-nodes.ts)、[样式节点到内容节点及 ASTController](../compiler/style-nodes-to-content-nodes.ts)、[内容节点到 CSS 字符串](../compiler/content-nodes-to-css-string.ts) 与 [CSSRoot](../css-root.ts)。正式入口覆盖见 [内容解析波测试](../test/内容解析波遍历及插入节点.test.ts) 和 [样式登记与依赖测试](../test/样式登记经依赖解析生成CSS.test.ts)。
+
+`detach` 只移除当前展开入口的输出位置，保留其来源和产物；`removeNode` 撤销节点，并删除失去全部来源的后继。待入队依赖只接受仍存活的来源，共享资源不会因一个消费者消失而被撤销。节点插入和移动统一由 ASTSession 执行。
+
+Variable 的 declare/modify 内容和其他内容一样直接调用 parse；AST 只按调用方指定的谓词和位置查询父节点、邻近节点，不认识 Variable 或修改步骤。Compiler 不设专门的改写器阶段。

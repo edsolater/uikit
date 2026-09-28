@@ -3,8 +3,8 @@ import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { value } from '../value'
-import { variable, variableFrom } from '../variable'
-import { variableCluster } from '../variable-cluster'
+import { variable } from '../variable'
+import { clusterFrom, variableCluster } from '../variable-cluster'
 import { colorMix } from '../pieces/contents/combiners/color-mix'
 import { calcMultiply } from '../pieces/contents/combiners/calc'
 import { compileRules } from '../css-root'
@@ -45,15 +45,49 @@ test.each([false, true])('状态内引用与普通消费交换顺序后，依赖
   expect(css).toContain('--audit-inner-size: 20px;')
 })
 
-test('仅由状态内容引用的变量，不生成两个状态的隐式交集', () => {
+test('状态内容读取来源同状态内容，不生成来源独立定义或隐式交集', () => {
   const inner = variable('10px', { name: 'state-inner-size', states: { hover: '20px', active: '30px' } })
   const outer = variable('1px', { name: 'state-outer-size', states: { hover: inner, active: inner } })
   const css = compileRules([[[condition('.StateReference')], 'width', outer]])
-  expect(css.match(/--state-inner-size:/g)).toHaveLength(3)
+  expect(css).not.toContain('--state-inner-size:')
   expect(css.match(/--state-outer-size:/g)).toHaveLength(3)
-  expect(css).toContain('--state-inner-size: 10px;')
-  expect(css).toContain('--state-inner-size: 20px;')
-  expect(css).toContain('--state-inner-size: 30px;')
+  expect(css).toContain('--state-outer-size: 1px;')
+  expect(css).toContain('--state-outer-size: 20px;')
+  expect(css).toContain('--state-outer-size: 30px;')
+})
+
+test('外层 active 不改变 hover 内容沿多层来源读取的状态', () => {
+  const palette = variable('gray', { name: 'chain-palette-color', states: { hover: 'blue', active: 'red' } })
+  const nested = variable('silver', { name: 'chain-nested-color', states: { hover: palette } })
+  const fallback = variable('black', { name: 'chain-fallback-color', states: { active: 'orange' } })
+  const surface = variable('white', {
+    name: 'chain-surface-color',
+    states: { hover: colorMix(nested, fallback) },
+  })
+  const css = compileRules([[[condition('.Chain'), 'active'], 'background-color', surface]])
+  expect(css.match(/--chain-surface-color:/g)).toHaveLength(2)
+  expect(css).toContain('--chain-surface-color: color-mix(in oklab, blue, black);')
+  expect(css).not.toContain('--chain-palette-color:')
+  expect(css).not.toContain('--chain-nested-color:')
+  expect(css).not.toContain('--chain-fallback-color:')
+  expect(css).not.toContain('red')
+  expect(css).not.toContain('orange')
+})
+
+test('仅被状态内容内联的来源不输出未被 CSS 引用的注册', () => {
+  const palette = variable('gray', {
+    name: 'inline-palette-color',
+    states: { hover: 'blue', active: 'red' },
+    registration: { syntax: '<color>', inherits: true, initialValue: 'gray' },
+  })
+  const surface = variable('white', { name: 'inline-surface-color', states: { hover: palette } })
+  const css = compileRules([[[condition('.InlinePalette')], 'background-color', surface]])
+  expect(css).toContain('--inline-surface-color: blue;')
+  expect(css).not.toContain('@property --inline-palette-color')
+  expect(css).not.toContain('--inline-palette-color:')
+  const direct = compileRules([[[condition('.DirectPalette')], 'color', palette]])
+  expect(direct).toContain('@property --inline-palette-color')
+  expect(direct).toContain('color: var(--inline-palette-color, gray);')
 })
 
 test('函数的局部 Variable 与 result 留在同一份函数定义', () => {
@@ -95,15 +129,57 @@ test('共享 Value 在不同地址分别解析，重复编译不修改来源对�
   compileAndCheck()
   expect(shared.content).toMatchObject({ kind: 'variable', name: 'shared-position-size' })
 })
-test('延伸保持来源引用，自身覆盖和未定义状态都声明到新名字', () => {
+test('内部声明 Key 在使用时按当前变量名生成，自动状态仍归于当前名称', () => {
+  const target = variable('1px', { name: 'before-size', states: { hover: '2px' } })
+  const firstKey = target.config.definitionKey
+  target.name = 'after-size'
+  const nextKey = target.config.definitionKey
+
+  expect(nextKey).not.toBe(firstKey)
+  expect(nextKey.toCSSString()).toBe('--after-size')
+  const css = compileRules([[[condition('.Renamed')], 'width', target]])
+  expect(css).toContain('width: var(--after-size, 1px);')
+  expect(css).toContain('--after-size: 1px;')
+  expect(css).toContain('--after-size: 2px;')
+  expect(css).not.toContain('--before-size')
+})
+test('Cluster 多层成员继承保持来源引用、自身覆盖和未定义状态', () => {
   const source = variable('red', { name: 'source-color', states: { hover: 'pink', active: 'blue', disabled: 'gray' } })
-  const derived = variableFrom(source, { name: 'derived-color', states: { active: source => colorMix(source, 'white') } })
-  const final = variableFrom(derived, { name: 'final-color', states: { hover: 'green' } })
-  const css = compileRules([[[condition('.Example')], 'color', final]])
-  expect(css).toContain('--derived-color: color-mix(in oklab, var(--source-color, red), white);')
+  const sourceCluster = variableCluster({ default: source, soft: variable('orange', { name: 'source-soft-color', states: { hover: 'yellow' } }) })
+  const derived = clusterFrom(sourceCluster, {
+    default: { name: 'derived-color', states: { active: source => colorMix(source, 'white') } },
+    soft: { name: 'derived-soft-color' },
+  })
+  const final = clusterFrom(derived, { default: { name: 'final-color', states: { hover: 'green' } } })
+  const css = compileRules([[[condition('.Example')], 'color', final], [[condition('.Soft')], 'color', derived('soft')]])
+  expect(css).toContain('--derived-color: color-mix(in oklab, blue, white);')
   expect(css).toContain('--final-color: green;')
   expect(css).toContain('var(--derived-color')
+  expect(css).toContain('--derived-soft-color: var(--source-soft-color, orange);')
+  expect(css).toContain('--source-soft-color: yellow;')
+  expect(final('soft')).toBe(derived('soft'))
   expect(compileRules([[[condition('.Source')], 'color', source]])).not.toContain('--final-color:')
+})
+
+test('Cluster 继承保留未改成员，也能加入新成员且未用成员不激活', () => {
+  const unusedActive = vi.fn()
+  const source = variableCluster({
+    default: variable('red', { name: 'family-source-color', states: { hover: 'blue' } }),
+    soft: variable('pink', { name: 'family-source-soft-color', onActive: unusedActive }),
+  })
+  const extra = variable('white', { name: 'family-extra-color' })
+  const family = clusterFrom(source, {
+    default: { name: 'family-color' },
+    extra,
+  })
+  expect(family('soft')).toBe(source('soft'))
+  expect(family('extra')).toBe(extra)
+  const css = compileRules([[[condition('.Family')], 'color', family]])
+  expect(css).toContain('--family-color: var(--family-source-color, red);')
+  expect(css).toContain('--family-source-color: blue;')
+  expect(css).not.toContain('--family-source-soft-color:')
+  expect(css).not.toContain('--family-extra-color:')
+  expect(unusedActive).not.toHaveBeenCalled()
 })
 test('Cluster 直接使用等同默认成员，选择返回原对象并保留状态', () => {
   const normal = variable('red', { name: 'normal-color' })
@@ -118,11 +194,9 @@ test('Cluster 直接使用等同默认成员，选择返回原对象并保留状
 
 test('Variable 与 Cluster 的 onActive 由通用遍历各自调用一次', () => {
   const directActive = vi.fn((): Rules => [[[condition(':root')], '--direct-active', '1']])
-  const direct = variable('red', { name: 'generic-active-variable' })
-  direct.onActive = directActive
+  const direct = variable('red', { name: 'generic-active-variable', onActive: directActive })
   const defaultActive = vi.fn((): Rules => [[[condition(':root')], '--cluster-active', '1']])
-  const defaultMember = variable('blue', { name: 'generic-active-cluster' })
-  defaultMember.onActive = defaultActive
+  const defaultMember = variable('blue', { name: 'generic-active-cluster', onActive: defaultActive })
   const cluster = variableCluster({ default: defaultMember })
 
   const css = compileRules([
@@ -190,13 +264,11 @@ test('Cluster 自身成员赋值不产生 CSS 自循环，不同对象同名引�
 test('Cluster 只激活双方同名成员，未匹配的目标与来源均不激活', () => {
   const targetSize = variable('1px', { name: 'activated-target-size' })
   const sourceSize = variable('2px', { name: 'activated-source-size' })
-  const unused = variable('3px', { name: 'unused-source-size' })
   const unusedActive = vi.fn()
-  unused.onActive = unusedActive
+  const unused = variable('3px', { name: 'unused-source-size', onActive: unusedActive })
   const source = variableCluster({ default: sourceSize, extra: unused })
-  const unusedTarget = variable('4px', { name: 'unused-target-size' })
   const unusedTargetActive = vi.fn()
-  unusedTarget.onActive = unusedTargetActive
+  const unusedTarget = variable('4px', { name: 'unused-target-size', onActive: unusedTargetActive })
   const css = compileRules([[undefined, variableCluster({ default: targetSize, soft: unusedTarget }), source]])
   expect(css).toContain('--activated-target-size: var(--activated-source-size, 2px);')
   expect(css).not.toContain('--unused-target-size:')
@@ -213,7 +285,7 @@ test('状态直接接收 Cluster 和混色对象，不当成 source 回调', () 
 })
 test('零值不会沿来源链退回', () => {
   const source = variable(1, { name: 'source-opacity', states: { disabled: 0.5 } })
-  const next = variableFrom(source, { name: 'next-opacity', states: { disabled: 0 } })
+  const next = variable(source, { name: 'next-opacity', states: { disabled: 0 } })
   expect(compileRules([[[condition('.Example')], 'opacity', next]])).toContain('--next-opacity: 0;')
 })
 
@@ -224,12 +296,12 @@ test('已在 active Rule 内消费时，首次自动声明采用 active 内容',
   expect(css).not.toContain('--active-color: red;')
 })
 
-test('延伸的注册使用新名字，来源根值继续按需激活', () => {
-  const source = variable('red', { name: 'registered-source-color', root: { value: 'blue' } })
-  const next = variableFrom(source, { name: 'registered-next-color', registration: { syntax: '<color>', inherits: true, initialValue: 'black' } })
+test('延伸的注册使用新名字，来源默认值继续按需读取', () => {
+  const source = variable('blue', { name: 'registered-source-color' })
+  const next = variable(source, { name: 'registered-next-color', registration: { syntax: '<color>', inherits: true, initialValue: 'black' } })
   const css = compileRules([[[condition('.Example')], 'color', next]])
   expect(css).toContain('@property --registered-next-color')
-  expect(css).toContain('--registered-source-color: blue;')
+  expect(css).toContain('var(--registered-source-color, blue)')
   expect(css).not.toContain('@property --registered-source-color')
 })
 test('稳定 Value 共享引用不误报循环，真实循环停止', () => {
