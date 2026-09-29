@@ -11,7 +11,7 @@ import type { Declaration } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
 import type { ASTController } from './compiler/ast-controller'
-import type { ValueInput } from './value'
+import { value, type Value, type ValueInput } from './value'
 import { resolveStateConditions } from './pieces/state-conditions'
 import type { Variable, VariableDefaultValue } from './variable'
 
@@ -28,6 +28,18 @@ interface VariableInstance {
   baseRegistration: JSSStyleNode[]
   /** 同一 ID 的修改共用一步，作用范围限于此局部声明。 */
   shared: Map<string | symbol, VariableStep>
+}
+
+/** 局部 Variable 同址赋值保留最后一个实际输出的值。 */
+function joinVariableValues(values: Value[]): ValueInput {
+  return value(values, { toCSSString: (items, read) => {
+    let latest: string | undefined
+    for (const item of items) {
+      const output = read(item)
+      if (output !== undefined) latest = output
+    }
+    return latest
+  } })
 }
 
 /** 一次相对修改：读取前一步结果，在匹配的样式条件下生成新值。 */
@@ -144,7 +156,10 @@ function ensureVariableInstance(controller: ASTController, node: JSSStyleNode): 
     number: ++session.nextNumber,
     count: 0,
     baseName: variable.name,
-    baseKey: { toCSSString: () => `--${instance.baseName}` },
+    baseKey: {
+      toCSSString: () => `--${instance.baseName}`,
+      join: joinVariableValues,
+    },
     baseRegistration: [],
     shared: new Map(),
   }
@@ -210,7 +225,7 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
           target,
           'result',
           target.conditionPath,
-          variable.toCSSString(),
+          { toCSSString: () => variable.toCSSString(), join: joinVariableValues },
           `var(--${instance.baseName})`,
         )
       }
@@ -228,7 +243,7 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
           target,
           `${name}/default`,
           target.conditionPath,
-          `--${name}`,
+          { toCSSString: () => `--${name}`, join: joinVariableValues },
           `var(--${name}-input)`,
         )
         step = {
@@ -248,7 +263,7 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
         controller.node,
         'modification',
         controller.conditionPath,
-        `--${step.name}`,
+        step.fallback.key!,
         apply(`var(--${step.name}-input)`, change),
       )
       step.members.set(controller.node, assignment)

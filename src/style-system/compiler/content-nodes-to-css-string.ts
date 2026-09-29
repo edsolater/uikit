@@ -5,7 +5,7 @@ import { hasJSSContentOutput } from '../content'
 import { propertyName } from '../key'
 
 /** 读取已解析的内容链；解析阶段留下的替代结果在这里生效。 */
-function contentToCSSString(input: unknown, resolvedContents: WeakMap<object, unknown>, reading = new Set<object>()): string | undefined {
+export function contentToCSSString(input: unknown, resolvedContents: WeakMap<object, unknown>, reading = new Set<object>()): string | undefined {
   if (input === undefined) return undefined
   if (typeof input === 'string' || typeof input === 'number') return String(input)
   assert(isObjectLike(input), '无效的 CSS 内容。')
@@ -23,7 +23,7 @@ function contentToCSSString(input: unknown, resolvedContents: WeakMap<object, un
   }
 }
 
-/** 按节点地址输出 CSS 内容；同址重复声明保持原序。 */
+/** 按节点地址输出 CSS 内容；同址组合已在解析队列完成。 */
 export function contentNodesToCSSString(contentNodes: JSSContentNode[]): string {
   let openHeaders: string[] = []
   const lines: string[] = []

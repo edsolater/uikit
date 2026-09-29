@@ -272,10 +272,11 @@ test('交错条件块不能提前合并，否则会改变简写与详细属性�
   expect(getComputedStyle(element).marginTop).toBe('3px')
 })
 
-test('原生同名声明不预先覆盖，浏览器忽略无效后值并采用前值', () => {
+test('原生同名声明默认组合，浏览器忽略无效的组合值', () => {
   handles.push(rules('.example', [[key('margin-left'), '7px'], [key('margin-left'), '不是合法长度']]))
   root.mount()
-  expect(getComputedStyle(element).marginLeft).toBe('7px')
+  expect(style.textContent).toContain('margin-left: 7px, 不是合法长度;')
+  expect(getComputedStyle(element).marginLeft).toBe('0px')
 })
 
 test('同名函数的完整依赖由后一个定义接管，不残留旧局部变量', () => {

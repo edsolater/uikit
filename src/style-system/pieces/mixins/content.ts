@@ -1,10 +1,10 @@
 /** 内容排版 Mixin。 */
 import type { Declarations } from '../../rule'
 import type { ValueInput } from '../../value'
+import { valueSequence } from '../contents/atom-creators/list'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../keys/font'
 import { $gap, $display, $alignItems, $justifyContent } from '../keys/layout'
 import { $padding, $paddingTop, $paddingRight, $paddingBottom, $paddingLeft } from '../keys/padding'
-import { valueSequence } from '../contents/atom-creators/list'
 import { fontValue, type FontParts } from '../contents/atom-creators/font'
 
 /** 内部文字配置。 */

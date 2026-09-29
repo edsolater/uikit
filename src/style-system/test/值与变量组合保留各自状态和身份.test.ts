@@ -348,7 +348,7 @@ test('稳定 Value 共享引用不误报循环，真实循环停止', () => {
   const shared = value('red')
   expect(compileRules([[[condition('.Shared')], 'color', colorMix(shared, shared)]]))
     .toContain('color: color-mix(in oklab, red, red);')
-  const cycle = value(undefined)
+  const cycle = value<import('../value').ValueData>(undefined)
   cycle.content = cycle
   expect(() => compileRules([[[condition('.Cycle')], 'color', cycle]])).toThrow('循环引用')
 })

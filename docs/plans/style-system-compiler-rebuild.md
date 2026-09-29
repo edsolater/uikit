@@ -157,7 +157,7 @@ git diff --cached --check
 - 保留 CSSFunction：普通可调用函数；没有 Expression 对象、语法索引或通用对象遍历。编译器提供 read，定义处生成字符串。
 - 保留条件集合与本次编译的 seen：共享名称不再按每个参数重复排列；移除它会重复求值并失去唯一组合。状态不跨编译保存。
 - 保留本次依赖的完整输出：后续依赖可能替换已解析的同址定义，旧声明及局部变量缺省值必须一起退出。它只是编译内部的数组，不进入最终三项记录，没有 owner 字段。
-- `fontValue`、`transitionValue`、`valueSequence` 承接原有字体、过渡、空格列表的真实语法；没有新增效果或 Key 能力。
+- `fontValue`、`transitionValue` 与 `valueSequence` 承接原有字体、过渡、空格列表的真实语法；没有新增效果或 Key 能力。现役 `valueSequence` 是 Value 输出规则的薄包装。
 - 删除 `compile-declaration.ts` 与只做 push 的挂载函数；它们不再承担独立判断。撤回任意数组自动拼接、Variable 伪装 Value 等半成品。
 
 ### 已采用的取舍

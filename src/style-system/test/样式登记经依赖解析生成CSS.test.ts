@@ -9,6 +9,7 @@ import { key } from '../key'
 import { declare } from '../declaration'
 import { createJSSContent } from '../content'
 import { value, type ValueInput } from '../value'
+import { valueSequence } from '../pieces/contents/atom-creators/list'
 import { variable } from '../variable'
 import { variableCluster } from '../variable-cluster'
 import { $margin, $marginLeft } from '../pieces/keys/margin'
@@ -23,7 +24,6 @@ import { calcMultiply } from '../pieces/contents/combiners/calc'
 import { colorMix } from '../pieces/contents/combiners/color-mix'
 import { cssFunction } from '../pieces/contents/combiners/custom'
 import { animationName, animationValue } from '../pieces/contents/atom-creators/animation'
-import { valueList, valueSequence } from '../pieces/contents/atom-creators/list'
 import { fontValue } from '../pieces/contents/atom-creators/font'
 import { transitionValue } from '../pieces/contents/atom-creators/transition'
 import { contentLayout } from '../pieces/mixins/content'
@@ -133,12 +133,12 @@ test('三项 Rule 递归继承地址，普通 Rule 的重复条件原样保留',
   expect(compileCSS()).toMatch(/&:hover\s*\{\s*&:hover\s*\{\s*color:\s*blue;/)
 })
 
-test('同址声明保留顺序，删除句柄不影响其他登记', () => {
+test('同址声明在末项合并，删除句柄不影响其他登记', () => {
   const first = keep(rule('.example', 'color', 'red'))
   keep(rule('.example', 'display', 'grid'))
   const second = keep(rule('.example', key('color'), 'blue'))
   expect([...compileCSS().matchAll(/(?:color|display):\s*([^;]+);/g)].map(([, text]) => text))
-    .toEqual(['red', 'grid', 'blue'])
+    .toEqual(['grid', 'red, blue'])
   first.remove()
   expect(() => first.replace('black')).toThrow('已删除')
   second.replace('green')
@@ -199,7 +199,7 @@ test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefin
   expect(content).not.toHaveBeenCalled()
   const css = compileCSS()
   expect([...css.matchAll(/(margin(?:-left)?):\s*([^;]+);/g)].map(([, key, text]) => [key, text]))
-    .toEqual([['margin', '1px'], ['margin-left', '2px'], ['margin', '3px']])
+    .toEqual([['margin-left', '2px'], ['margin', '1px, 3px']])
   expect(css).toContain('--ordered-local: red;')
   expect(css).toContain('padding: 4px;')
   expect(css).toContain('color: var(--ordered-local, black);')
@@ -257,10 +257,10 @@ test('迭代器抛错与字符串输入整批失败，不留下已经读取的�
   expect(compileCSS()).not.toContain('color: blue;')
 })
 
-test('批量删除仅删除本批声明，重复声明不提前覆盖', () => {
+test('批量删除仅删除本批声明，重复声明在末项合并', () => {
   const batch = keep(rules('.example', [[$color, 'red'], [key('display'), 'grid'], [[$color, 'blue']]]))
   expect([...compileCSS().matchAll(/(?:color|display):\s*([^;]+);/g)].map(([, text]) => text))
-    .toEqual(['red', 'grid', 'blue'])
+    .toEqual(['grid', 'red, blue'])
   keep(rule('.example', 'color', 'green'))
   batch.remove()
   batch.remove()
@@ -356,7 +356,7 @@ test('原生简写原样保留，复合字段由内容函数编译', () => {
   expect(css).toContain('border: none')
 })
 
-test('简写、详细属性和重复声明按书写顺序交给浏览器', () => {
+test('简写与详细属性保持相对顺序，同名声明在末项合并', () => {
   handles.push(rules('.Native', [
     [key('padding'), '2px 4px'],
     [key('padding-left'), '8px'],
@@ -364,7 +364,7 @@ test('简写、详细属性和重复声明按书写顺序交给浏览器', () =>
     [key('future-property'), 'native-value'],
   ]))
   expect([...compileCSS().matchAll(/(padding(?:-left)?):\s*([^;]+);/g)].map(([, name, text]) => [name, text]))
-    .toEqual([['padding', '2px 4px'], ['padding-left', '8px'], ['padding', '10px']])
+    .toEqual([['padding-left', '8px'], ['padding', '2px 4px, 10px']])
   expect(compileCSS()).toContain('future-property: native-value;')
 })
 
@@ -402,7 +402,7 @@ test('undefined 跳过；每个句柄仅修改自己的声明', () => {
   handles.push(second)
   handles.push(rule('.Handles', 'color', undefined))
   first.replace('green')
-  expect(compileCSS()).toContain('color: green;\ncolor: blue;')
+  expect(compileCSS()).toContain('color: green, blue;')
   second.remove()
   expect(compileCSS()).toContain('color: green;')
   expect(compileCSS()).not.toContain('color: blue;')

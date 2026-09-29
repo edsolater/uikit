@@ -29,6 +29,14 @@ export function outputConditionPath(conditionPath: ConditionPath): CSSConditionP
   return [...conditionPath.targetConditionPath, ...conditionPath.stateConditionPath.map((state) => state.condition)]
 }
 
+/** 同一目标与规范化主体状态的输出地址；原始语义父链不参与。 */
+export function conditionAddressKey(path: ConditionPath): string {
+  return JSON.stringify([
+    path.targetConditionPath.map((item) => item.header),
+    path.stateConditionPath.map((state) => state.name),
+  ])
+}
+
 /** Condition 地址输入；缺省表示当前位置。 */
 export type ConditionInput = Condition | string | (Condition | string)[] | undefined
 

@@ -1,11 +1,13 @@
 /** 将可改写的 JSS 样式节点逐波解析为只含可输出内容的节点。 */
 import { assert, hasProperty, isArray, isFunction, isObjectLike } from '@edsolater/fnkit'
-import { outputConditionPath, type ConditionPath, type CSSConditionPath } from '../condition'
-import { propertyName, type JSSKey } from '../key'
+import { conditionAddressKey, outputConditionPath, type ConditionPath, type CSSConditionPath } from '../condition'
+import { propertyName, type JSSKey, type JSSKeyObject } from '../key'
 import type { Rule, Rules } from '../rule'
 import { hasJSSContentParser, hasJSSContentOutput, type JSSContentContext, type JSSContent } from '../content'
 import { rulesToStyleNodes, type JSSStyleNode } from './rules-to-style-nodes'
 import { createASTController, ASTSession, type ASTController } from './ast-controller'
+import { contentToCSSString } from './content-nodes-to-css-string'
+import { value, type Value, type ValueData } from '../value'
 
 /** 一项已完成解析的声明；保留内容对象和子内容的解析结果供输出阶段读取。 */
 export interface JSSContentNode {
@@ -175,7 +177,95 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
   }
   const states = new WeakMap<JSSStyleNode, StyleNodeParseState>()
   const budget: ParseBudget = { operations: 0, maximumOperations: 100_000 }
+  const aggregatedInputs = new Set<JSSStyleNode>()
+  const aggregatedResults = new Set<JSSStyleNode>()
+  const hiddenResults = new Set<JSSStyleNode>()
+  const aggregations = new Map<string, {
+    inputs: JSSStyleNode[]
+    keys: (JSSKey | undefined)[]
+    joiners: JSSKeyObject['join'][]
+    contents: unknown[]
+    versions: number[]
+    results: JSSStyleNode[]
+  }>()
   let parseWaveIndex = 0
+
+  /** 队列稳定后重新核对同址输入；结果自己的产物可能带来下一项贡献。 */
+  const aggregateReadyNodes = (): number => {
+    const groups = new Map<string, JSSStyleNode[]>()
+    for (const node of styleNodes) {
+      if (node.key === undefined || aggregatedResults.has(node)) continue
+      const address = JSON.stringify([conditionAddressKey(node.conditionPath), propertyName(node.key)])
+      let group = groups.get(address)
+      if (!group) groups.set(address, group = [])
+      group.push(node)
+    }
+
+    let changed = 0
+    for (const [address, record] of aggregations) {
+      const group = groups.get(address) ?? []
+      const positions = record.inputs.map((node) => group.indexOf(node))
+      const keptOrder = positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1]))
+      const sameKeys = record.inputs.every((node, index) => node.key === record.keys[index]
+        && (typeof node.key === 'string' ? undefined : node.key?.join) === record.joiners[index])
+      const sameContents = record.inputs.every((node, index) => node.content === record.contents[index] && session.version(node) === record.versions[index])
+      const latest = record.results[record.results.length - 1]
+      if (keptOrder && sameKeys && sameContents && session.isAlive(latest)) {
+        session.moveAfter(latest, group[group.length - 1])
+        continue
+      }
+      for (const result of [...record.results].reverse()) {
+        session.remove(result)
+        aggregatedResults.delete(result)
+        hiddenResults.delete(result)
+      }
+      for (const input of record.inputs) aggregatedInputs.delete(input)
+      aggregations.delete(address)
+      changed++
+    }
+    if (changed) return changed
+
+    for (const [address, group] of groups) {
+      if (group.length < 2) continue
+      const joiners = new Set(group.flatMap((node) => typeof node.key === 'string' || !node.key?.join ? [] : [node.key.join]))
+      assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(group[0].key!)}。`)
+      const join = [...joiners][0]
+      const previous = aggregations.get(address)
+      if (previous && previous.inputs.length === group.length) continue
+      const values = group.map((node) => {
+        const state = states.get(node)!
+        const content = node.content
+        const resolvedContents = state.contentReplacements
+        let view: Value<ValueData>
+        view = value(content as ValueData, {
+          get contents() { return view.content === content ? [] : value(view.content).contents },
+          toCSSString: (current, read) => value(current).toCSSString(current === content
+            ? (item) => contentToCSSString(item, resolvedContents)
+            : read),
+        })
+        return view
+      })
+      const anchor = group[group.length - 1]
+      const content = join ? join(values) : value(values)
+      const result = session.insert(anchor, session.insertionIdentity(anchor, 'key-aggregation'), anchor.conditionPath, anchor.key, content, anchor, 'after')
+      for (const node of group) {
+        session.own(node, result)
+        aggregatedInputs.add(node)
+      }
+      if (previous) hiddenResults.add(previous.results[previous.results.length - 1])
+      aggregatedResults.add(result)
+      aggregations.set(address, {
+        inputs: group,
+        keys: group.map((node) => node.key),
+        joiners: group.map((node) => typeof node.key === 'string' ? undefined : node.key?.join),
+        contents: group.map((node) => node.content),
+        versions: group.map((node) => session.version(node)),
+        results: [...previous?.results ?? [], result],
+      })
+      changed++
+    }
+    return changed
+  }
 
   while (true) {
     const waveStyleNodes = styleNodes.slice()
@@ -254,15 +344,17 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
       }
     }
     session.append(dependencyStyleNodes)
+    let hasChangedNodes = false
     for (const node of styleNodes) {
       const state = states.get(node)
       if (!state) continue
-      if (state.version !== session.version(node)) { state.contentComplete = false; hasWaitingContent = true }
+      if (state.version !== session.version(node)) { state.contentComplete = false; hasWaitingContent = true; hasChangedNodes = true }
       if (state.hasKeySnapshot && state.keySnapshot !== node.key) {
         state.parsedKeyObjects = new WeakSet<object>()
         state.keyComplete = !hasJSSContentParser(node.key)
         state.keySnapshot = node.key
         hasWaitingContent = true
+        hasChangedNodes = true
       }
       if (state.hasContentSnapshot && state.contentSnapshot !== node.content) {
         state.parsedContentObjects = new WeakSet<object>()
@@ -270,6 +362,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
         state.contentComplete = false
         state.contentSnapshot = node.content
         hasWaitingContent = true
+        hasChangedNodes = true
       }
     }
     const hasNewStyleNodes = dependencyStyleNodes.length > 0 || styleNodes.some((node) => !states.has(node))
@@ -279,7 +372,13 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
     })) throw session.deferred.values().next().value
     // 只有所有现存位置都完成，且没有新节点时，才交付输出队列。
     if (!hasWaitingContent && !hasNewStyleNodes) {
+      if (aggregateReadyNodes()) {
+        parseWaveIndex++
+        assert(parseWaveIndex <= 10_000, 'AST 解析波超过上限 10000，Content 仍未完成。')
+        continue
+      }
       return styleNodes.flatMap((node) => {
+        if (aggregatedInputs.has(node) || hiddenResults.has(node)) return []
         const state = states.get(node)
         if (!state || !state.keyComplete || !state.contentComplete) return []
         return [{
@@ -290,7 +389,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
         }]
       })
     }
-    assert(hasNewStyleNodes || waveStyleNodes.some((node) => {
+    assert(hasNewStyleNodes || hasChangedNodes || waveStyleNodes.some((node) => {
       const state = states.get(node)
       return styleNodes.includes(node) && state && (!state.keyComplete || !state.contentComplete)
     }), 'AST 解析波没有进展，无法完成 Content。')

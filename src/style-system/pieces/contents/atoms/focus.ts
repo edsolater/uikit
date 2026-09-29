@@ -9,7 +9,9 @@ const currentToneLineColor = `var(${toneColor('line').toCSSString()}, var(${acce
 export const focusOutline = variable('none', {
   name: 'focus-outline',
   // 轮廓读取当前作用域的语气成员，使 danger 等局部声明继续生效。
-  states: { focus: valueSequence(focusStrokeWidth, 'solid', currentToneLineColor) },
+  states: {
+    focus: valueSequence(focusStrokeWidth, 'solid', currentToneLineColor),
+  },
 })
 export const focusOffset = variable('0px', {
   name: 'focus-offset',

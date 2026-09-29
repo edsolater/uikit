@@ -1,6 +1,6 @@
 /** 编译会话的节点定位、依赖所有权与当前位置操作。 */
 import { assert } from '@edsolater/fnkit'
-import { semanticPathParts, isSemanticPathPrefix, type ConditionPath } from '../condition'
+import { conditionAddressKey, semanticPathParts, isSemanticPathPrefix, type ConditionPath } from '../condition'
 import { propertyName, type JSSKey } from '../key'
 import type { JSSContent } from '../content'
 import type { JSSStyleNode } from './rules-to-style-nodes'
@@ -126,11 +126,9 @@ export function createASTController(
     withClaim: (value, build) => session.withClaim(currentNode, value, build),
     findByKey(nodeKey, path = currentPath) {
       const wantedName = propertyName(nodeKey)
-      const target = path.targetConditionPath.map((item) => item.header)
-      const states = path.stateConditionPath.map((state) => state.name)
+      const address = conditionAddressKey(path)
       return styleNodes.find((node) => node.key !== undefined && propertyName(node.key) === wantedName
-        && JSON.stringify(node.conditionPath.targetConditionPath.map((item) => item.header)) === JSON.stringify(target)
-        && JSON.stringify(node.conditionPath.stateConditionPath.map((state) => state.name)) === JSON.stringify(states))
+        && conditionAddressKey(node.conditionPath) === address)
     },
     insert,
     detach: () => session.detach(currentNode),
@@ -278,6 +276,13 @@ export class ASTSession {
     if (index < 0 || target < 0 || index <= target) return
     this.nodes.splice(index, 1)
     this.nodes.splice(target, 0, node)
+  }
+
+  /** 将现存内部节点放在指定节点后，不改变两者来源。 */
+  moveAfter(node: JSSStyleNode, anchor: JSSStyleNode): void {
+    if (node === anchor || !this.nodes.includes(node) || !this.nodes.includes(anchor)) return
+    this.nodes.splice(this.nodes.indexOf(node), 1)
+    this.nodes.splice(this.nodes.indexOf(anchor) + 1, 0, node)
   }
 
   /** 标记节点供后续解析波重访。 */
