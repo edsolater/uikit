@@ -238,6 +238,7 @@ test('批量登记先验证整批，失败时既有条目与句柄保持有效',
   expect(() => keep(runtimeRules('.example', invalidProperty))).toThrow()
   keep(rules('.example', [[$color, undefined]]))
   expect(() => keep(runtimeRules([null] as unknown as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
+  expect(() => keep(runtimeRules(new Array(1) as ConditionInput, [[$color, 'blue']]))).toThrow('Condition Path')
   expect(compileCSS()).toContain('color: green')
 })
 
@@ -433,9 +434,9 @@ test('同名变量注册按完整定义替换，不混入旧 initial-value', () 
 })
 
 test('结构嵌套可以继承 Variable 目标，不误判为局部分支数组', () => {
-  const reference = variable(undefined, { name: 'nested-target' })
+  const nestedTargetVariable = variable(undefined, { name: 'nested-target' })
   const body: Rules = [[undefined, undefined, 1], [['testHover'], undefined, 2]]
-  keep(rule('.NestedTarget', reference, body))
+  keep(rule('.NestedTarget', nestedTargetVariable, body))
   const css = compileCSS()
   expect(css).toContain('--nested-target: 1;')
   expect(css).toMatch(/&:where\(:hover\)\s*\{\s*--nested-target:\s*2;/)

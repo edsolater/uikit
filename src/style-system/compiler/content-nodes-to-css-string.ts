@@ -1,4 +1,5 @@
 /** 将有序 JSS 内容节点写成 CSS 字符串。 */
+import { assert, isObjectLike } from '@edsolater/fnkit'
 import type { JSSContentNode } from './style-nodes-to-content-nodes'
 import { hasJSSContentOutput } from '../content'
 import { propertyName } from '../key'
@@ -7,15 +8,15 @@ import { propertyName } from '../key'
 function contentToCSSString(input: unknown, resolvedContents: WeakMap<object, unknown>, reading = new Set<object>()): string | undefined {
   if (input === undefined) return undefined
   if (typeof input === 'string' || typeof input === 'number') return String(input)
-  if (input === null || (typeof input !== 'object' && typeof input !== 'function')) throw new Error('无效的 CSS 内容。')
-  if (reading.has(input)) throw new Error('CSS 内容存在循环引用，无法生成 CSS。')
+  assert(isObjectLike(input), '无效的 CSS 内容。')
+  assert(!reading.has(input), 'CSS 内容存在循环引用，无法生成 CSS。')
   reading.add(input)
   try {
     if (resolvedContents.has(input)) {
       const resolved = resolvedContents.get(input)
       if (resolved !== input) return contentToCSSString(resolved, resolvedContents, reading)
     }
-    if (!hasJSSContentOutput(input)) throw new Error('CSS 内容仍未完成自身解析或输出。')
+    assert(hasJSSContentOutput(input), 'CSS 内容仍未完成自身解析或输出。')
     return input.toCSSString((child) => contentToCSSString(child, resolvedContents, reading))
   } finally {
     reading.delete(input)

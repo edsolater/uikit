@@ -1,4 +1,5 @@
 /** 将可改写的 JSS 样式节点逐波解析为只含可输出内容的节点。 */
+import { assert, hasProperty, isArray, isFunction, isObjectLike } from '@edsolater/fnkit'
 import { outputConditionPath, type ConditionPath, type CSSConditionPath } from '../condition'
 import { propertyName, type JSSKey } from '../key'
 import type { Rule, Rules } from '../rule'
@@ -41,11 +42,6 @@ interface ParseBudget {
   maximumOperations: number
 }
 
-/** 区分可按身份追踪的对象与无需追踪的字面内容。 */
-function isObjectReference(input: unknown): input is Record<PropertyKey, unknown> {
-  return input !== null && (typeof input === 'object' || typeof input === 'function')
-}
-
 /** 在当前波访问 Key 或 Content 链，交回当前位置的内容及是否仍需后续波。 */
 function visitContent(
   input: unknown,
@@ -57,24 +53,24 @@ function visitContent(
   readState?: string,
   depth = 0,
 ): ContentVisitResult {
-  if (depth > 256) throw new Error('Content 解析嵌套超过上限 256，解析无法终止。')
+  assert(depth <= 256, 'Content 解析嵌套超过上限 256，解析无法终止。')
   if (input === undefined || typeof input === 'string' || typeof input === 'number') return { content: input, complete: true }
-  if (!isObjectReference(input)) throw new Error('无效的 CSS 内容。')
-  if (activeObjects.has(input)) throw new Error('CSS 内容存在循环引用，无法生成 CSS。')
+  assert(isObjectLike(input), '无效的 CSS 内容。')
+  assert(!activeObjects.has(input), 'CSS 内容存在循环引用，无法生成 CSS。')
   activeObjects.add(input)
   try {
-    if ('onActive' in input && typeof input.onActive === 'function') controller.activate(input as JSSContent)
+    if (hasProperty(input, 'onActive', isFunction)) controller.activate(input)
 
     if (hasJSSContentParser(input)) {
       const earliestWave = input.parseWaveIndex ?? 0
-      if (!Number.isInteger(earliestWave) || earliestWave < 0) throw new Error('parseWaveIndex 必须是非负整数。')
+      assert(Number.isInteger(earliestWave) && earliestWave >= 0, 'parseWaveIndex 必须是非负整数。')
       if (!parsedObjects.has(input) && earliestWave > controller.parseWaveIndex) {
         visitChildren(input, controller, parsedObjects, replacements, activeObjects, budget, readState, depth)
         return { content: input, complete: false }
       }
       if (!parsedObjects.has(input)) {
         budget.operations++
-        if (budget.operations > budget.maximumOperations) throw new Error(`AST parse 操作超过上限 ${budget.maximumOperations}，解析无法终止。`)
+        assert(budget.operations <= budget.maximumOperations, `AST parse 操作超过上限 ${budget.maximumOperations}，解析无法终止。`)
         parsedObjects.add(input)
         const replacement = input.parse(controller, readState)
         if (replacement !== input) {
@@ -93,7 +89,7 @@ function visitContent(
 
 /** 沿对象的 contents 链访问子内容，汇总本波是否仍需继续解析。 */
 function visitChildren(
-  input: Record<PropertyKey, unknown>,
+  input: object,
   controller: ASTController,
   parsedObjects: WeakSet<object>,
   replacements: WeakMap<object, unknown> | undefined,
@@ -102,12 +98,12 @@ function visitChildren(
   readState: string | undefined,
   depth: number,
 ): ContentVisitResult {
-  const contents = 'contents' in input && Array.isArray(input.contents) ? input.contents : undefined
+  const contents = hasProperty(input, 'contents', isArray) ? input.contents : undefined
   if (contents) {
     let complete = true
     for (const child of contents) {
       const result = visitContent(child, controller, parsedObjects, replacements, activeObjects, budget, readState, depth + 1)
-      if (result.content !== child && isObjectReference(child)) replacements?.set(child, result.content)
+      if (result.content !== child && isObjectLike(child)) replacements?.set(child, result.content)
       complete &&= result.complete
     }
     return { content: input, complete }
@@ -115,7 +111,7 @@ function visitChildren(
 
   if (hasJSSContentOutput(input)) return { content: input, complete: true }
   if (hasJSSContentParser(input)) return { content: input, complete: true }
-  if ('onActive' in input && typeof input.onActive === 'function' && !contents) {
+  if (hasProperty(input, 'onActive', isFunction) && !contents) {
     return { content: undefined, complete: true }
   }
   throw new Error('无效的 CSS 内容。')
@@ -237,7 +233,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
       if (!state.contentComplete) {
         const controller = createASTController(session, node, 'declaration-content', parseWaveIndex, activateHere)
         const result = visitContent(node.content, controller, state.parsedContentObjects, state.contentReplacements, activeObjects, budget, node.readState)
-        if (result.content !== node.content && isObjectReference(node.content)) {
+        if (result.content !== node.content && isObjectLike(node.content)) {
           state.contentReplacements.set(node.content, result.content)
         }
         state.contentComplete = result.complete && !session.deferred.has(node)
@@ -294,11 +290,11 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
         }]
       })
     }
-    if (!hasNewStyleNodes && !waveStyleNodes.some((node) => {
+    assert(hasNewStyleNodes || waveStyleNodes.some((node) => {
       const state = states.get(node)
       return styleNodes.includes(node) && state && (!state.keyComplete || !state.contentComplete)
-    })) throw new Error('AST 解析波没有进展，无法完成 Content。')
+    }), 'AST 解析波没有进展，无法完成 Content。')
     parseWaveIndex++
-    if (parseWaveIndex > 10_000) throw new Error('AST 解析波超过上限 10000，Content 仍未完成。')
+    assert(parseWaveIndex <= 10_000, 'AST 解析波超过上限 10000，Content 仍未完成。')
   }
 }

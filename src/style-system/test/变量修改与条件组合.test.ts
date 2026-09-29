@@ -10,6 +10,12 @@ const add = (current: unknown, change: unknown) => createJSSContent((read) => `c
 const row = (path: (ReturnType<typeof condition> | string)[], pair: ReturnType<import('../variable').Variable['declare']>): Rules[number] => [path, ...pair]
 
 describe('变量修改与条件组合', () => {
+  it('普通值节点不会被误认为局部声明', () => {
+    const n = variable(1, { name: 'primitive-neighbor', modification: { apply: add } })
+    const css = compileRules([[[button], 'width', '1px'], row([button], n.declare(4)), row([button, hover], n.modify(3))])
+    expect(css).toContain('width: 1px;')
+    expect(css).toContain('calc(var(--primitive-neighbor-modify-1-step-1-input) + 3)')
+  })
   it('首参数默认值不随局部定义或修改改变，注册初始值独立', () => {
     const n = variable(1, { name: 'stable-default', registration: { syntax: '<number>', inherits: true, initialValue: 9 }, modification: { apply: add } })
     const css = compileRules([row([button], n.declare(4)), row([button, hover], n.modify(3)), [[button], 'z-index', n]])

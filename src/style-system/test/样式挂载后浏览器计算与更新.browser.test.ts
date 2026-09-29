@@ -172,8 +172,8 @@ test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的�
 })
 
 test('源 Rule 删除后重新挂载，派生依赖随可达性退出且既有宿主内容保留', () => {
-  const reference = variable('12px', { name: '--temporary-reference' })
-  const handle = rule('.example', 'margin-left', reference)
+  const temporaryVariable = variable('12px', { name: '--temporary-reference' })
+  const handle = rule('.example', 'margin-left', temporaryVariable)
   handles.push(handle)
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('12px')

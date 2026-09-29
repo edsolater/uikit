@@ -1,4 +1,5 @@
 /** JSS 声明目标的创建、识别与名称解析。 */
+import { assert } from '@edsolater/fnkit'
 /** 原生属性名称。 */
 export interface JSSKeyObject {
   toCSSString(): string
@@ -24,7 +25,7 @@ export function registerJSSKey(target: JSSKeyDefinition): void {
   const aliases = target.name.startsWith('--') ? [target.name] : [...new Set([target.name, propertyAlias(target.name)])]
   for (const name of aliases) {
     const existing = names.get(name)
-    if (existing && existing.name !== target.name) throw new Error(`JSSKey 名称冲突：${name}。`)
+    assert(!existing || existing.name === target.name, `JSSKey 名称冲突：${name}。`)
   }
   for (const name of aliases) if (!names.has(name)) names.set(name, target)
 }

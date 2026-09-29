@@ -1,4 +1,5 @@
 /** 将有序 Rules 展开为带条件地址的 JSS 样式节点队列。 */
+import { assert } from '@edsolater/fnkit'
 import type { ConditionPath, TargetConditionPath } from '../condition'
 import type { JSSKey } from '../key'
 import type { Rules } from '../rule'
@@ -33,7 +34,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
 
   /** 将 Rules 接到当前节点队列；嵌套项沿用上层地址与 Key。 */
   const appendStyleNodes = (rules: Rules, parentPath: TargetConditionPath = [], inheritedKey?: JSSKey, inheritedStateNames: string[] = [], parentSemanticPath: NonNullable<ConditionPath['semanticPath']> = []): void => {
-    if (expandingRuleGroups.has(rules)) throw new Error('Rules 内容存在递归引用，无法生成 CSS。')
+    assert(!expandingRuleGroups.has(rules), 'Rules 内容存在递归引用，无法生成 CSS。')
     expandingRuleGroups.add(rules)
     try {
       for (const [relativePath, ruleKey, ruleContent] of rules) {
@@ -45,13 +46,14 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
         }
         const key = ruleKey ?? inheritedKey
         if (Array.isArray(ruleContent)) {
-          if (!ruleContent.every((entry) => Array.isArray(entry) && entry.length === 3)) {
-            throw new Error('嵌套 Rules 必须由路径、Key、内容三项组成。')
-          }
+          assert(
+            ruleContent.every((entry) => Array.isArray(entry) && entry.length === 3),
+            '嵌套 Rules 必须由路径、Key、内容三项组成。',
+          )
           appendStyleNodes(ruleContent as Rules, targetConditionPath, key, stateNames, [...parentSemanticPath, ...relativePath ?? []])
           continue
         }
-        if (!isRuleContent(ruleContent)) throw new Error('Rules 声明内容不是可解析的 CSS 内容。')
+        assert(isRuleContent(ruleContent), 'Rules 声明内容不是可解析的 CSS 内容。')
         styleNodes.push({
           conditionPath: { targetConditionPath, stateConditionPath: resolveStateConditions(stateNames), semanticPath: [...parentSemanticPath, ...relativePath ?? []] },
           key,

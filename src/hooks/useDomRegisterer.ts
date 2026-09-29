@@ -2,6 +2,8 @@
  * 描述全局 DOM 节点应该挂到哪里。
  * 调用方可以直接给 body / head，也可以给现成容器，或者延迟解析容器。
  */
+import { result } from '@edsolater/fnkit'
+
 type DOMRegisterTarget = 'head' | 'body' | ParentNode | (() => ParentNode | null | undefined)
 
 /**
@@ -57,7 +59,7 @@ function resolveDOMRegisterTarget(target: DOMRegisterTarget | undefined): Parent
     return document.body
   }
 
-  return (typeof target === 'function' ? target() : target) ?? null
+  return result(target) ?? null
 }
 
 /**

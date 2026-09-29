@@ -1,6 +1,7 @@
 /** Rule 登记与声明组合。 */
+import { assert, isString } from '@edsolater/fnkit'
 import { condition, type Condition, type ConditionInput } from './condition'
-import { findStateCondition } from './pieces/state-conditions'
+import { hasStateCondition } from './pieces/state-conditions'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './declaration'
 import type { ValueInput } from './value'
@@ -39,23 +40,43 @@ export interface RuleHandle extends RulesHandle {
   replace(value: RuleValue): void
 }
 
-/** 普通地址保留 header，主体条件保留名称身份。 */
+/** 把普通 CSS 地址字符串表示为 Condition，保留已登记的状态名和现成的 Condition。
+ * `'.Button'` → `{ header: '.Button' }`。
+ * 已登记的 `'hover'` → 原字符串。
+ * 传入 Condition → 原对象。
+ * 此处只区分路径成员，不校验路径是否有效。
+ */
+function resolvePathCondition(item: Condition | string): Condition | string {
+  if (!isString(item) || hasStateCondition(item)) return item
+  return condition(item)
+}
+
+/** 检查规则路径成员的形状；符合要求则不改输入，否则抛错。
+ * `['hover', condition('.Button')]` 通过，输入不变。
+ * 运行时传入 `[undefined]` 会抛错。
+ */
+function assertValidConditionPath(path: (Condition | string)[]): void {
+  assert(
+    path.every((item) => item && (isString(item) || isString(item.header))),
+    'Rule 的 Condition Path 必须由有效 Condition 组成。',
+  )
+}
+
+/** 把单项或数组输入整理成规则地址，保留状态名并拒绝不合形状的成员。
+ * 已登记 `hover` 时，`['.Button', 'hover']` → `[{ header: '.Button' }, 'hover']`。
+ * 运行时传入 `[undefined]` 会抛错。
+ * `undefined` 仍返回 `undefined`，表示沿用外层路径。
+ */
 function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
   if (input === undefined) return undefined
-  const path: (Condition | string)[] = []
-  for (const item of Array.isArray(input) ? input : [input]) {
-    if (typeof item !== 'string' || findStateCondition(item)) path.push(item)
-    else path.push(condition(item))
-  }
-  if (path.some((item) => !item || (typeof item !== 'string' && typeof item.header !== 'string'))) {
-    throw new Error('Rule 的 Condition Path 必须由有效 Condition 组成。')
-  }
+  const path = Array.from(Array.isArray(input) ? input : [input], resolvePathCondition)
+  assertValidConditionPath(path)
   return path
 }
 
 /** 登记一条规则；undefined 内容不输出。 */
 export function rule(path: ConditionInput, key: JSSKey | undefined, input: RuleValue): RuleHandle {
-  if (key !== undefined && !isJSSKey(key)) throw new Error('rule() 必须提供有效 JSSKey。')
+  assert(key === undefined || isJSSKey(key), 'rule() 必须提供有效 JSSKey。')
   return registerRule([rulePath(path), key === undefined ? undefined : resolveJSSKey(key), input])
 }
 
@@ -84,10 +105,11 @@ export function rules(path: ConditionInput, declarations: Declarations): RulesHa
       if (source[1] !== undefined) entries.push([conditionPath, resolveJSSKey(source[0]), source[1] as RuleValue])
       return
     }
-    if (!isDeclarationObject(source) && !isDeclarationIterable(source)) {
-      throw new Error('rules() 只接受声明序列，条目为 Key／Variable 元组或其 Iterable 组合。')
-    }
-    if (visiting.has(source)) throw new Error('rules() 的声明输入存在递归引用。')
+    assert(
+      isDeclarationObject(source) || isDeclarationIterable(source),
+      'rules() 只接受声明序列，条目为 Key／Variable 元组或其 Iterable 组合。',
+    )
+    assert(!visiting.has(source), 'rules() 的声明输入存在递归引用。')
     visiting.add(source)
     try {
       if (isDeclarationObject(source)) {

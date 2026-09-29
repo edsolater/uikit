@@ -4,7 +4,7 @@
  * 本文件定义可写 State，并负责创建与识别 State。
  * State 建立在 StateView 之上，但不负责 Source 的统一转换。
  */
-import { isFunction, isObject, shrinkFn, type MayFn } from '@edsolater/fnkit'
+import { isFunction, isObject, result, type MayFn } from '@edsolater/fnkit'
 import { createSignal } from 'solid-js'
 import { createReactionFn } from './createReactiveRunner'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
@@ -49,7 +49,7 @@ export function isState(value: unknown): value is State {
 export function createState<T = unknown>(): State<T | undefined>
 export function createState<T = unknown>(initialValue: MayFn<T>): State<T>
 export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
-  const [solidjsAccessor, solidjsSetSignal] = createSignal(shrinkFn(initialValue)) // 这里不应该使用跟随，不然的话语义就不对了
+  const [solidjsAccessor, solidjsSetSignal] = createSignal(result(initialValue)) // 这里不应该使用跟随，不然的话语义就不对了
   const thisState: State = {
     read() {
       return solidjsAccessor()

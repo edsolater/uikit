@@ -1,29 +1,32 @@
 /** 将成员选择与默认 Variable 操作合并为一个入口。 */
+import { assert, Unresultable } from '@edsolater/fnkit'
 import { variable, type Variable, type VariableOptions } from './variable'
 import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
 
-const membersByCluster = new WeakMap<object, Record<string, Variable>>()
+/** 通过登记记录识别 Cluster，查询前允许身份未知；宽输入只属于这张表。 */
+const membersByCluster: WeakMap<object, Record<string, Variable>> & {
+  get(input: unknown): Record<string, Variable> | undefined
+} = new WeakMap<object, Record<string, Variable>>()
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
+  readonly [Unresultable]: true
   <Name extends keyof Members>(name: Name): Members[Name]
 }
 
 /** 聚合带 default 的 Variable 成员；调用时选择成员，未知名称报错。 */
 export function variableCluster<Members extends { default: Variable } & Record<string | number, Variable>>(members: Members): VariableCluster<Members> {
   /** 按成员键返回原 Variable，未知键报错。 */
-  const select = (name: keyof Members) => {
-    if (!Object.hasOwn(members, name)) throw new Error(`Variable Cluster 未定义成员：${String(name)}。`)
+  const select = Object.assign((name: keyof Members) => {
+    assert(Object.hasOwn(members, name), `Variable Cluster 未定义成员：${String(name)}。`)
     return members[name]
-  }
+  }, { [Unresultable]: true as const })
   let cluster: VariableCluster<Members>
   /** 配对 Cluster 声明，其他引用代理 default 成员解析。 */
   const parse = (controller: ASTController): ValueInput => {
     if (controller.role === 'declaration-key') {
-      const sourceMembers = controller.content !== null && (typeof controller.content === 'object' || typeof controller.content === 'function')
-        ? membersByCluster.get(controller.content as object)
-        : undefined
+      const sourceMembers = membersByCluster.get(controller.content)
       if (sourceMembers) {
         for (const [member, source] of clusterDeclarations(cluster, controller.content) ?? []) {
           controller.insert(controller.conditionPath, member, source)
@@ -60,7 +63,7 @@ export function clusterFrom<
   Omit<SourceMembers, keyof Changes> & { [Name in keyof Changes]: Changes[Name] extends Variable ? Changes[Name] : Variable } & { default: Variable }
 > {
   const sourceMembers = membersByCluster.get(source)
-  if (!sourceMembers) throw new Error('clusterFrom 需要 Variable Cluster 来源。')
+  assert(!!sourceMembers, 'clusterFrom 需要 Variable Cluster 来源。')
   const members: Record<string, Variable> = { ...sourceMembers }
   for (const [name, change] of Object.entries(changes)) {
     if ('kind' in change && change.kind === 'variable') {
@@ -69,7 +72,7 @@ export function clusterFrom<
     }
     const options = change as VariableOptions<Variable, any>
     const sourceMember = sourceMembers[name]
-    if (!sourceMember) throw new Error(`Variable Cluster 未定义来源成员：${name}。新增成员须提供 Variable。`)
+    assert(!!sourceMember, `Variable Cluster 未定义来源成员：${name}。新增成员须提供 Variable。`)
     const sourceStates = Object.fromEntries(
       [...sourceMember.config.states.keys()].map((state) => [state, sourceMember]),
     )
@@ -81,8 +84,6 @@ export function clusterFrom<
 
 /** 按成员名配对两个 Cluster；同名目标对应不同对象或来源时拒绝整组。 */
 export function clusterDeclarations(target: unknown, source: unknown): [Variable, Variable][] | undefined {
-  if (target === null || (typeof target !== 'object' && typeof target !== 'function')
-    || source === null || (typeof source !== 'object' && typeof source !== 'function')) return undefined
   const targets = membersByCluster.get(target)
   const sources = membersByCluster.get(source)
   if (!targets || !sources) return undefined
@@ -91,12 +92,14 @@ export function clusterDeclarations(target: unknown, source: unknown): [Variable
     if (!Object.hasOwn(sources, name)) continue
     const content = sources[name]
     const existing = declarations.get(member.name)
-    if (existing && (existing[0] !== member || existing[1] !== content)) {
-      throw new Error(`Variable Cluster ${targets.default.name} ← ${sources.default.name} 的同名目标存在对象或来源冲突：${name}（--${member.name}）。`)
-    }
-    if (member !== content && member.name === content.name) {
-      throw new Error(`Variable Cluster ${targets.default.name} ← ${sources.default.name} 的成员 ${name} 使用不同对象引用同名变量 --${member.name}。`)
-    }
+    assert(
+      !existing || (existing[0] === member && existing[1] === content),
+      `Variable Cluster ${targets.default.name} ← ${sources.default.name} 的同名目标存在对象或来源冲突：${name}（--${member.name}）。`,
+    )
+    assert(
+      member === content || member.name !== content.name,
+      `Variable Cluster ${targets.default.name} ← ${sources.default.name} 的成员 ${name} 使用不同对象引用同名变量 --${member.name}。`,
+    )
     declarations.set(member.name, [member, content])
   }
   return [...declarations.values()].filter(([member, content]) => member !== content)

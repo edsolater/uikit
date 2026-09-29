@@ -1,5 +1,6 @@
 /** 通过正式 Rules 入口验证 Content 次波、嵌套内容与节点插入。 */
 import { expect, test } from 'vitest'
+import { Unresultable } from '@edsolater/fnkit'
 import { condition } from '../condition'
 import { key } from '../key'
 import { stateCondition } from '../pieces/state-conditions'
@@ -139,6 +140,7 @@ test('Variable source 与状态中的可调用 Parseable 按对象解析而非�
     sourceFactoryCalls++
     return 'green'
   }, {
+    [Unresultable]: true,
     parse() {
       sourceParseCalls++
       return 'red'
@@ -150,6 +152,7 @@ test('Variable source 与状态中的可调用 Parseable 按对象解析而非�
     stateFactoryCalls++
     return 'yellow'
   }, {
+    [Unresultable]: true,
     parse() {
       stateParseCalls++
       return 'blue'

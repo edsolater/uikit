@@ -1,10 +1,11 @@
 /** 稳定组合不会传播 Variable 的状态。 */
 import { expect, test, vi } from 'vitest'
+import { result } from '@edsolater/fnkit'
 import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
-import { clusterFrom, variableCluster } from '../variable-cluster'
+import { clusterDeclarations, clusterFrom, variableCluster } from '../variable-cluster'
 import { colorMix } from '../pieces/contents/combiners/color-mix'
 import { calcMultiply } from '../pieces/contents/combiners/calc'
 import { compileRules } from '../css-root'
@@ -54,6 +55,21 @@ test('状态内容读取来源同状态内容，不生成来源独立定义或�
   expect(css).toContain('--state-outer-size: 1px;')
   expect(css).toContain('--state-outer-size: 20px;')
   expect(css).toContain('--state-outer-size: 30px;')
+})
+
+test('命中来源同名状态时不执行未消费的默认值，普通引用仍读取一次', () => {
+  const createDefault = vi.fn(() => '10px')
+  const source = variable(createDefault, { name: 'lazy-source-size', states: { hover: '20px' } })
+  const target = variable('1px', { name: 'lazy-target-size', states: { hover: source } })
+
+  const nested = compileRules([[[condition('.Nested')], 'width', target]])
+  expect(nested).toContain('--lazy-target-size: 20px;')
+  expect(nested).not.toContain('--lazy-source-size:')
+  expect(createDefault).not.toHaveBeenCalled()
+
+  const direct = compileRules([[[condition('.Direct')], 'width', source]])
+  expect(direct).toContain('width: var(--lazy-source-size, 10px);')
+  expect(createDefault).toHaveBeenCalledTimes(1)
 })
 
 test('外层 active 不改变 hover 内容沿多层来源读取的状态', () => {
@@ -186,10 +202,34 @@ test('Cluster 直接使用等同默认成员，选择返回原对象并保留状
   const soft = variable('pink', { name: 'soft-color', states: { active: 'purple' } })
   const cluster = variableCluster({ default: normal, soft })
   expect(cluster('soft')).toBe(soft)
+  expect(result(cluster)).toBe(cluster)
   const css = compileRules([[[condition('.Example')], 'color', cluster], [[condition('.Soft')], 'color', cluster('soft')]])
   expect(css).toContain('color: var(--normal-color, red);')
   expect(css).toContain('--soft-color: purple;')
   expect(() => (cluster as (name: string) => unknown)('missing')).toThrow('未定义成员')
+})
+
+test('未登记的原始值或普通函数没有 Cluster 成员', () => {
+  const cluster = variableCluster({ default: variable('red', { name: 'registered-cluster' }) })
+  expect(clusterDeclarations(cluster, 'red')).toBeUndefined()
+  expect(clusterDeclarations(1, cluster)).toBeUndefined()
+  expect(clusterDeclarations(cluster, () => 'red')).toBeUndefined()
+})
+
+test('状态直接使用 Cluster 时保留其身份，普通状态工厂仍收到原始默认值', () => {
+  const cluster = variableCluster({ default: variable('blue', { name: 'state-cluster-source' }) })
+  const factory = vi.fn((defaultValue: string) => defaultValue + 'px')
+  const target = variable('2', {
+    name: 'state-cluster-target',
+    states: { hover: cluster, active: factory },
+  })
+
+  expect(target.config.states.get('hover')).toBe(cluster)
+  expect(target.config.states.get('active')).toBe('2px')
+  expect(factory).toHaveBeenCalledExactlyOnceWith('2')
+  const css = compileRules([[[condition('.StateCluster')], 'width', target]])
+  expect(css).toContain('--state-cluster-target: var(--state-cluster-source, blue);')
+  expect(css).toContain('--state-cluster-target: 2px;')
 })
 
 test('Variable 与 Cluster 的 onActive 由通用遍历各自调用一次', () => {

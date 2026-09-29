@@ -1,4 +1,5 @@
 /** 编译会话的节点定位、依赖所有权与当前位置操作。 */
+import { assert } from '@edsolater/fnkit'
 import { semanticPathParts, isSemanticPathPrefix, type ConditionPath } from '../condition'
 import { propertyName, type JSSKey } from '../key'
 import type { JSSContent } from '../content'
@@ -247,7 +248,7 @@ export class ASTSession {
   /** 所有即时插入共用节点创建、来源登记和位置处理。 */
   insert(owner: JSSStyleNode, identity: string, path: ConditionPath, key: JSSKey | undefined, content: unknown, anchor = owner, position: 'before' | 'after' = 'before', productTag?: object): JSSStyleNode {
     const index = this.nodes.indexOf(anchor)
-    if (index < 0 || !this.isAlive(owner)) throw new Error('不能在已撤销或已脱离输出的节点位置生成内容。')
+    assert(index >= 0 && this.isAlive(owner), '不能在已撤销或已脱离输出的节点位置生成内容。')
     const node: JSSStyleNode = {
       identity,
       conditionPath: {
@@ -266,7 +267,7 @@ export class ASTSession {
 
   /** 已展开的依赖节点也通过同一入口进入输出队列。 */
   append(nodes: JSSStyleNode[], index = this.nodes.length): void {
-    if (this.nodes.length + nodes.length > maximumStyleNodeCount) throw new Error(`AST 节点超过上限 ${maximumStyleNodeCount}，解析无法终止。`)
+    assert(this.nodes.length + nodes.length <= maximumStyleNodeCount, `AST 节点超过上限 ${maximumStyleNodeCount}，解析无法终止。`)
     this.nodes.splice(index, 0, ...nodes)
   }
 

@@ -1,4 +1,5 @@
 /** CSSRoot 的源账本、编译与提交。 */
+import { assert } from '@edsolater/fnkit'
 import { rulesToStyleNodes } from './compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-nodes'
 import { contentNodesToCSSString } from './compiler/content-nodes-to-css-string'
@@ -33,7 +34,7 @@ class Root {
       },
       /** 更新本次登记；删除后报错。 */
       replace: (value) => {
-        if (!this.source.includes(entry)) throw new Error('当前句柄已删除。')
+        assert(this.source.includes(entry), '当前句柄已删除。')
         entry[2] = value
       },
     }
@@ -47,7 +48,7 @@ class Root {
   /** 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。 */
   mount(): this {
     const style = typeof document === 'undefined' ? null : document.querySelector<HTMLStyleElement>('style#css-root')
-    if (!style?.sheet) throw new Error('缺少样式挂载节点：<style id="css-root"></style>')
+    assert(!!style?.sheet, '缺少样式挂载节点：<style id="css-root"></style>')
     const mounted = this.hosts.get(style) ?? {
       prefix: Array.from(style.sheet.cssRules, (rule) => rule.cssText).join('\n'),
       css: '',

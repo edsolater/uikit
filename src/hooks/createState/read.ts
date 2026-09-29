@@ -14,7 +14,7 @@
  * - 描述 store 字段访问能力。
  * - 管理活水源连接关系。
  */
-import { isExist, shrinkFn, type Primitive } from '@edsolater/fnkit'
+import { isExist, result, type Primitive } from '@edsolater/fnkit'
 import { isStateViewable, type Source } from './source'
 import { stateView, type StateView } from './state-view'
 
@@ -97,7 +97,7 @@ export function val<S, DefaultValue>(
 ): Exclude<Val<S>, null | undefined> | DefaultVal<DefaultValue>
 export function val(source: any, defaultValue?: any) {
   if (!isExist(source)) {
-    return isExist(defaultValue) ? val(shrinkFn(defaultValue)) : undefined
+    return isExist(defaultValue) ? val(result(defaultValue)) : undefined
   }
 
   if (isStateViewable(source)) {
