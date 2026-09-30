@@ -26,6 +26,23 @@ interface JoinRecord {
   results: JSSStyleNode[]
 }
 
+/** 捕获已确认至少两项的有序声明的完整生成输入并选择唯一连接规则；同名规则冲突时拒绝连接。 */
+function captureInputs(nodes: Iterable<JSSStyleNode>): { inputs: Map<JSSStyleNode, InputSnapshot>; join: JSSKeyObject['join'] } {
+  const inputs = new Map<JSSStyleNode, InputSnapshot>()
+  for (const node of nodes) {
+    inputs.set(node, {
+      key: node.key,
+      join: typeof node.key === 'string' ? undefined : node.key?.join,
+      content: node.content,
+      revision: node.compileRevision,
+    })
+  }
+  const joiners = new Set([...inputs.values()].flatMap((input) => input.join ? [input.join] : []))
+  const first = [...inputs.keys()][0]
+  assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(inputs.get(first)!.key!)}。`)
+  return { inputs, join: [...joiners][0] }
+}
+
 /** 为原贡献建立惰性 Value；保留其位置解析结果，改写内容后由连接结果消费新内容。 */
 function createView(content: unknown, resolvedContents: WeakMap<object, unknown>): Value<ValueData> {
   let view: Value<ValueData>
@@ -115,24 +132,23 @@ export class Join {
   /** 为至少两项贡献连接一次结果；以业务回调前的实际输入登记快照与历史来源。 */
   private join(address: string, group: Map<JSSStyleNode, number>): boolean {
     if (group.size < 2) return false
-    const inputs = new Map<JSSStyleNode, InputSnapshot>()
-    for (const node of group.keys()) {
-      inputs.set(node, {
-        key: node.key,
-        join: typeof node.key === 'string' ? undefined : node.key?.join,
-        content: node.content,
-        revision: node.compileRevision,
-      })
-    }
-    const joiners = new Set([...inputs.values()].flatMap((input) => input.join ? [input.join] : []))
-    const nodes = [...inputs.keys()]
-    assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(inputs.get(nodes[0])!.key!)}。`)
-    const join = [...joiners][0]
+    const { inputs, join } = captureInputs(group.keys())
     const previous = this.records.get(address)
     if (previous && previous.inputs.size === group.size) return false
+    const content = this.createContent(inputs, join)
+    this.publish(address, inputs, content, previous)
+    return true
+  }
+
+  /** 按生成快照建立原位置 Value 视图，调用选定连接规则；省略规则时返回默认数组内容。 */
+  private createContent(inputs: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
     const values = Array.from(inputs, ([node, input]) => createView(input.content, this.resolvedContents(node)))
-    const anchor = nodes.at(-1)!
-    const content = join ? join(values) : value(values)
+    return join ? join(values) : value(values)
+  }
+
+  /** 将连接内容放在末项声明之后，登记全部输入来源与结果历史；旧记录由连接前确定。 */
+  private publish(address: string, inputs: Map<JSSStyleNode, InputSnapshot>, content: unknown, previous: JoinRecord | undefined): void {
+    const anchor = [...inputs.keys()].at(-1)!
     const result = this.session.insert(anchor, this.session.insertionIdentity(anchor), anchor.conditionPath, inputs.get(anchor)!.key, content, anchor, 'after')
     const record = previous ?? { inputs, results: [] }
     record.inputs = inputs
@@ -143,6 +159,5 @@ export class Join {
     record.results.push(result)
     this.recordOf.set(result, record)
     this.records.set(address, record)
-    return true
   }
 }
