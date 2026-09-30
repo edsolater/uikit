@@ -239,10 +239,18 @@ function activateVariableResources(variable: Variable, context: JSSCompileContex
     stateConditionPath: [],
   }
   const provenance = { owner: context.node, resourceAddress: address, productTag: variable }
-  controller.insert({ before: context.node, conditionPath: registrationPath }, ['syntax', JSON.stringify(registration.syntax)], provenance)
-  controller.insert({ before: context.node, conditionPath: registrationPath }, ['inherits', String(registration.inherits)], provenance)
-  if (registration.initialValue !== undefined)
-    controller.insert({ before: context.node, conditionPath: registrationPath }, ['initial-value', registration.initialValue], provenance)
+  for (const declaration of variableRegistrationDeclarations(registration))
+    controller.insert({ before: context.node, conditionPath: registrationPath }, declaration, provenance)
+}
+
+/** 生成 @property 的字段内容；省略 initialValue 时不提供 initial-value，生命周期由消费方处理。 */
+export function variableRegistrationDeclarations(registration: NonNullable<VariableOptions['registration']>): [key: string, content: ValueInput][] {
+  const declarations: [key: string, content: ValueInput][] = [
+    ['syntax', JSON.stringify(registration.syntax)],
+    ['inherits', String(registration.inherits)],
+  ]
+  if (registration.initialValue !== undefined) declarations.push(['initial-value', registration.initialValue])
+  return declarations
 }
 
 /** 在指定条件补入变量的基础值或状态值；有局部声明时写入其基础目标。

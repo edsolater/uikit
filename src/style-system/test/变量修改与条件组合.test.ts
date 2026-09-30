@@ -1,13 +1,51 @@
-import { describe, expect, it } from 'vitest'
+/** Variable 局部声明与修改条件的流程测试。
+ *
+ * 验证基础值、状态归属、修改连接与最终 CSS。
+ *
+ * 防止节点增删和条件组合后沿用错误的局部来源。
+ */
+import { describe, expect, it, vi } from 'vitest'
 import { condition, createJSSContent, variable, value } from '../index'
 import { compileRules } from '../css-root'
 import type { Rules } from '../rule'
+import { semanticPathParts } from '../condition'
+import { appendStateCondition } from '../pieces/state-conditions'
+import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
+import * as astModule from '../compiler/ast-controller'
+import type { JSSContent } from '../content'
+import * as conditionModule from '../condition'
 
 const button = condition('.button')
 const hover = condition('&:hover')
 const focus = condition('&:focus')
+/** 生成读取前序值与修改量的 CSS 加法内容。 */
 const add = (current: unknown, change: unknown) => createJSSContent((resolve) => `calc(${resolve(current)} + ${resolve(change)})`, [current, change])
+/** 将声明配到指定条件路径，不改变声明对象。 */
 const row = (path: (ReturnType<typeof condition> | string)[], pair: ReturnType<import('../variable').Variable['declare']>): Rules[number] => [path, ...pair]
+
+it('局部声明缺少语义快照时，生成状态保留已有状态再接新状态', () => {
+  const n = variable(1, { name: 'missing-semantic-state', states: { focus: 10 }, modification: { apply: add } })
+  const input: Rules = [
+    row([button, 'hover'], n.declare()),
+    row([button, 'hover', 'focus'], n.modify(3)),
+    [[], 'order', { compileWaveIndex: 1, onCompile(_, ast) {
+      const generated = ast.search({}).find((node) => node.content === 10 && node.readState === 'focus')!
+      expect(semanticPathParts(generated.conditionPath)).toEqual(semanticPathParts(expected))
+      expect(generated.conditionPath.stateConditionPath.map((state) => state.name)).toEqual(['focus', 'hover'])
+      return 1
+    } }],
+  ]
+  const nodes = rulesToStyleNodes(input)
+  delete nodes[0].conditionPath.semanticPath
+  const expected = appendStateCondition(nodes[0].conditionPath, 'focus')
+  const css = contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
+  expect(css).toContain('--missing-semantic-state-modify-1-base: 10;')
+  expect(css).toContain('calc(var(--missing-semantic-state-modify-1-step-1-input) + 3)')
+  expect(css).not.toContain('step-2')
+  expect(compileRules(input)).toContain('--missing-semantic-state-modify-1-base: 10;')
+})
 
 describe('变量修改与条件组合', () => {
   it('普通值节点不会被误认为局部声明', () => {
@@ -129,6 +167,171 @@ it('显式定义保留默认基础值并激活 Variable 注册', () => {
   expect(css).toContain('@property --registered {')
   expect(css).toContain('--registered-modify-1-base: 7')
   expect(css).toContain('@property --registered-modify-1-step-1 {')
+})
+
+it.each([undefined, 9])('普通注册与修改内部注册共享同一字段内容，initialValue=%s', (initialValue) => {
+  const n = variable(7, { name: 'shared-registration-content', registration: { syntax: '<number>', inherits: false, initialValue }, modification: { apply: add } })
+  const css = compileRules([row([button], n.declare()), row([button, 'hover'], n.modify(2))])
+  const registrations = [...css.matchAll(/@property (--shared-registration-content[^ ]*) \{\n([^}]+)\}/g)]
+  expect(registrations.map(([, name]) => name)).toEqual([
+    '--shared-registration-content', '--shared-registration-content-modify-1-base', '--shared-registration-content-modify-1-step-1',
+  ])
+  const expected = `syntax: "<number>";\ninherits: false;\n${initialValue === undefined ? '' : 'initial-value: 9;\n'}`
+  for (const [, , body] of registrations) expect(body).toBe(expected)
+  expect(css).not.toContain('undefined')
+})
+
+it('一次修改操作复用候选，业务 apply 返回后重新取得当前队列', () => {
+  const n = variable(1, { name: 'operation-candidates', modification: { apply: add } })
+  const definitionKey = n.config.definitionKey
+  Object.defineProperty(n.config, 'definitionKey', { get: () => definitionKey })
+  const create = astModule.createASTController
+  let queries = 0
+  const factory = vi.spyOn(astModule, 'createASTController').mockImplementation((session) => {
+    const controller = create(session)
+    const search = controller.search
+    controller.search = (query) => { if (query.key === definitionKey) queries++; return search(query) }
+    return controller
+  })
+  try {
+    const css = compileRules([row([button], n.declare()), row([button], n.modify(2)), row([button], n.modify(3)), row([button], n.modify(4))])
+    expect(css).toContain('--operation-candidates-modify-1-step-3-input: var(--operation-candidates-modify-1-step-2);')
+    expect(queries).toBe(7)
+  } finally { factory.mockRestore() }
+})
+
+it('apply 回调移动共享成员时，返回后用新候选重选锚点与连接', () => {
+  let controller: astModule.ASTController
+  const n = variable(1, { name: 'apply-moved-anchor', modification: { apply(current, change) {
+    if (change === 4) {
+      const nodes = controller.search({ key: n.config.definitionKey })
+      controller.move(nodes.find((node) => node.content === sharedFirst[1])!, { after: nodes.find((node) => node.content === sharedNext[1])! })
+    }
+    return add(current, change)
+  } } })
+  const sharedFirst = n.modify(2, { id: 'shared' })
+  const middle = n.modify(3)
+  const sharedNext = n.modify(4, { id: 'shared' })
+  const css = compileRules([
+    [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
+    row([button], n.declare()), row([button, 'hover'], sharedFirst), row([button], middle), row([button, 'focus'], sharedNext),
+  ])
+  expect(css).toContain('--apply-moved-anchor-modify-1-step-2-input: var(--apply-moved-anchor-modify-1-base);')
+  expect(css).toContain('--apply-moved-anchor-modify-1-step-1-input: var(--apply-moved-anchor-modify-1-step-2);')
+  expect(css).toContain('--apply-moved-anchor: var(--apply-moved-anchor-modify-1-step-1);')
+})
+
+it('apply 回调读取新步骤时已经连接前序，返回后最终连接仍保持', () => {
+  let controller: astModule.ASTController
+  let observed: unknown
+  const n = variable(1, { name: 'apply-visible-chain', modification: { apply(current, change) {
+    if (change === 3) observed = controller.search({ key: '--apply-visible-chain-modify-1-step-2-input' })[0].content
+    return add(current, change)
+  } } })
+  const css = compileRules([
+    [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
+    row([button], n.declare()), row([button], n.modify(2)), row([button], n.modify(3)),
+  ])
+  expect(observed).toBe('var(--apply-visible-chain-modify-1-step-1)')
+  expect(css).toContain('--apply-visible-chain-modify-1-step-2-input: var(--apply-visible-chain-modify-1-step-1);')
+  expect(css).toContain('--apply-visible-chain: var(--apply-visible-chain-modify-1-step-2);')
+})
+
+it('局部基础生产函数改写定义路径后，归属判断使用新路径深度', () => {
+  let controller: astModule.ASTController
+  const n = variable(1, { name: 'source-boundary', modification: { apply: add } })
+  const local = n.declare(2)
+  n.config.defaultValue = () => {
+    const nodes = controller.search({ key: n.config.definitionKey })
+    nodes.find((node) => node.content === late[1])!.conditionPath = appendStateCondition(nodes.find((node) => node.content === local[1])!.conditionPath, 'focus')
+    return 10
+  }
+  const late = n.declare()
+  Object.assign(late[1] as JSSContent, { compileWaveIndex: 1 })
+  const css = compileRules([
+    [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
+    row([button], n.declare(1)), row([button, 'hover'], local), row([button, 'hover', 'focus'], n.modify(3)), row([button, 'focus'], late),
+  ])
+  expect(css).toContain('--source-boundary-modify-3-base: 10;')
+  expect(css).toContain('calc(var(--source-boundary-modify-3-step-1-input) + 3)')
+  expect(css).not.toContain('--source-boundary-modify-2-step-1')
+})
+
+it('晚到定义接管同路径多步时，当前操作复用最近归属判断', () => {
+  let measuring = false
+  let checks = 0
+  const prefix = conditionModule.isSemanticPathPrefix
+  const matching = vi.spyOn(conditionModule, 'isSemanticPathPrefix').mockImplementation((parent, child) => {
+    if (measuring) checks++
+    return prefix(parent, child)
+  })
+  const n = variable(1, { name: 'reused-semantic-owner', modification: { apply: add } })
+  n.config.defaultValue = () => { measuring = true; return 10 }
+  const late = n.declare()
+  try {
+    const css = compileRules([
+      row([button], n.declare(1)),
+      row([button, 'hover'], n.modify(2)), row([button, 'hover'], n.modify(3)), row([button, 'hover'], n.modify(4)),
+      [[button, 'hover'], 'opacity', { compileWaveIndex: 1, onCompile(context, ast) {
+        ast.insert({ before: context.node, conditionPath: context.conditionPath }, late, { owner: context.node })
+        return 1
+      } }],
+      [[], 'order', { compileWaveIndex: 2, onCompile() { measuring = false; expect(checks).toBe(2); return 1 } }],
+    ])
+    expect(css).toContain('--reused-semantic-owner-modify-2-base: 10;')
+    expect(css).toContain('--reused-semantic-owner-modify-2-step-3-input: var(--reused-semantic-owner-modify-2-step-2);')
+  } finally { matching.mockRestore() }
+})
+
+it('已编译的中间步骤移动并显式重访后重新连接，不重复生成 apply', () => {
+  let applies = 0
+  const n = variable(1, { name: 'moved-middle-step', modification: { apply(current, change) { applies++; return add(current, change) } } })
+  const first = n.modify(2)
+  const middle = n.modify(3)
+  const last = n.modify(4)
+  const css = compileRules([
+    row([button], n.declare()), row([button], first), row([button], middle), row([button], last),
+    [[button], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+      const candidates = ast.search({ key: n.config.definitionKey })
+      const moved = candidates.find((node) => node.content === middle[1])!
+      ast.move(moved, { after: candidates.find((node) => node.content === last[1])! })
+      moved.compileRevision++
+      return 1
+    } }],
+  ])
+  expect(applies).toBe(3)
+  expect(css).toContain('--moved-middle-step-modify-1-step-3-input: var(--moved-middle-step-modify-1-step-1);')
+  expect(css).toContain('--moved-middle-step-modify-1-step-2-input: var(--moved-middle-step-modify-1-step-3);')
+  expect(css).toContain('--moved-middle-step: var(--moved-middle-step-modify-1-step-2);')
+})
+
+it('共享步骤移动后重新选择最早成员，撤销该成员再按当前候选连接', () => {
+  let applies = 0
+  const n = variable(1, { name: 'moved-shared-step', modification: { apply(current, change) { applies++; return add(current, change) } } })
+  const first = n.modify(2)
+  const sharedFirst = n.modify(3, { id: 'shared' })
+  const middle = n.modify(4)
+  const sharedNext = n.modify(5, { id: 'shared' })
+  const css = compileRules([
+    row([button], n.declare()), row([button], first), row([button, 'hover'], sharedFirst), row([button], middle), row([button, 'focus'], sharedNext),
+    [[button], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+      const nodes = ast.search({ key: n.config.definitionKey })
+      const moved = nodes.find((node) => node.content === sharedFirst[1])!
+      ast.move(moved, { after: nodes.find((node) => node.content === sharedNext[1])! })
+      moved.compileRevision++
+      return 1
+    } }],
+    [[button], 'opacity', { compileWaveIndex: 3, onCompile(_, ast) {
+      ast.remove(ast.search({ key: n.config.definitionKey }).find((node) => node.content === sharedNext[1])!)
+      return 1
+    } }],
+  ])
+  expect(applies).toBe(4)
+  expect(css).toContain('--moved-shared-step-modify-1-step-3-input: var(--moved-shared-step-modify-1-step-1);')
+  expect(css).toContain('--moved-shared-step-modify-1-step-2-input: var(--moved-shared-step-modify-1-step-3);')
+  expect(css).toContain('--moved-shared-step: var(--moved-shared-step-modify-1-step-2);')
+  expect(css).not.toContain(' + 5)')
+  expect(css).toContain(' + 3)')
 })
 
 it('晚到消费者仍沿原始状态父链将状态路由到 base', () => {

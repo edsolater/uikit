@@ -1,4 +1,9 @@
-/** CSSRoot 的源账本、编译与提交。 */
+/** CSSRoot 的源账本与编译入口。
+ *
+ * 隔离每次编译的规则容器，将完整 CSS 提交到宿主。
+ *
+ * 让回调改写本次规则时不污染登记来源或直接输入。
+ */
 import { assert } from '@edsolater/fnkit'
 import { rulesToStyleNodes } from './compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-nodes'
@@ -8,8 +13,22 @@ import type { Rule, RuleHandle, Rules } from './rule'
 /** 依次将源 Rules 建为样式节点、已编译内容节点和 CSS 字符串。 */
 export function compileRules(sourceRules: Rules): string {
   const styleNodes = rulesToStyleNodes(sourceRules)
-  const contentNodes = styleNodesToContentNodes(styleNodes, sourceRules)
+  const snapshot = snapshotRules(sourceRules)
+  const contentNodes = styleNodesToContentNodes(styleNodes, snapshot)
   return contentNodesToCSSString(contentNodes)
+}
+
+/** 只复制规则容器和路径数组；业务对象保留身份，循环嵌套明确拒绝。 */
+function snapshotRules(source: Rules, visiting = new Set<Rules>()): Rules {
+  assert(!visiting.has(source), 'Rules 内容存在递归引用，无法生成 CSS。')
+  visiting.add(source)
+  try {
+    return source.map(([path, key, content]) => [
+      path?.slice(),
+      key,
+      Array.isArray(content) ? snapshotRules(content, visiting) : content,
+    ])
+  } finally { visiting.delete(source) }
 }
 
 /** 宿主已有内容与上次提交结果。 */
@@ -42,7 +61,7 @@ class Root {
 
   /** 编译源账本快照，不提交 DOM。 */
   compile(): string {
-    return compileRules(this.source.slice())
+    return compileRules(this.source)
   }
 
   /** 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。 */

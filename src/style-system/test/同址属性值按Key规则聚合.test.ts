@@ -1,5 +1,10 @@
-/** 验证同址重复声明、Key 聚合规则和编译结果的来源关系。 */
-import { expect, test } from 'vitest'
+/** 同址声明聚合的跨文件流程测试。
+ *
+ * 验证输入顺序、Key 组合、结果历史与依赖来源。
+ *
+ * 防止重建或隐藏结果时丢失真实贡献及存活资源。
+ */
+import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { compileCSS, compileRules } from '../css-root'
 import { key } from '../key'
@@ -11,9 +16,133 @@ import { arraySequenceToCSSString, value, type Value } from '../value'
 import type { JSSCompileContext } from '../content'
 import type { ASTController } from '../compiler/ast-controller'
 import type { Rules } from '../rule'
+import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
 
 stateCondition('aggregateHover', condition('&:where([data-aggregate-hover])'))
 stateCondition('aggregateFocus', condition('&:where([data-aggregate-focus])'))
+
+test.each([20, 40])('同组 %s 项的顺序检查不逐项扫描整个分组', (count) => {
+  const target = key(`--linear-order-${count}`)
+  const input: Rules = Array.from({ length: count }, (_, index) => [[condition('.LinearOrder')], target, index])
+  const nodes = rulesToStyleNodes(input)
+  const indexOf = Array.prototype.indexOf
+  let comparisons = 0
+  let positions = 0
+  const get = Map.prototype.get
+  const positionLookup = vi.spyOn(Map.prototype, 'get').mockImplementation(function (this: Map<unknown, unknown>, item: unknown) {
+    const found = get.call(this, item)
+    if (this.size === count && typeof found === 'number' && typeof item === 'object' && item !== null && 'key' in item && item.key === target) positions++
+    return found
+  })
+  const lookup = vi.spyOn(Array.prototype, 'indexOf').mockImplementation(function (this: unknown[], item: unknown, from?: number) {
+    if (this !== nodes && this.length === count && this.every((node) => typeof node === 'object' && node !== null && 'key' in node && node.key === target)) {
+      for (let index = from ?? 0; index < this.length; index++) {
+        comparisons++
+        if (this[index] === item) break
+      }
+    }
+    return indexOf.call(this, item, from)
+  })
+  try {
+    const css = contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
+    expect(css).toContain(`${target.name}: ${Array.from({ length: count }, (_, index) => index).join(', ')};`)
+    expect(comparisons).toBe(0)
+    expect(positions).toBe(count)
+  } finally { lookup.mockRestore(); positionLookup.mockRestore() }
+})
+
+test('历史聚合结果提供新贡献与独占资源，隐藏结果后资源仍存活', () => {
+  let joins = 0
+  const target = key('--historical-owner', { join(items) {
+    joins++
+    return value(items, { toCSSString: arraySequenceToCSSString, onActive: joins === 1 ? () => [
+      [[condition('.HistoricalOwner')], target, 'c'],
+      [[condition('.HistoricalResource')], 'color', 'red'],
+    ] : undefined })
+  } })
+  const css = compileRules([
+    [[condition('.HistoricalOwner')], target, 'a'],
+    [[condition('.HistoricalOwner')], target, 'b'],
+  ])
+  expect(joins).toBe(2)
+  expect(css).toContain('--historical-owner: a b c;')
+  expect(css.match(/--historical-owner:/g)).toHaveLength(1)
+  expect(css).toContain('.HistoricalResource {\ncolor: red;\n}')
+})
+
+test('结果把新贡献插到原输入之前，快照顺序随本次完整分组更新', () => {
+  let joins = 0
+  const target = key('--front-contribution', { join(items) {
+    const first = joins++ === 0
+    return { onCompile(context: JSSCompileContext, ast: ASTController) {
+      if (first) ast.insert({ before: ast.search({ key: target })[0], conditionPath: context.conditionPath }, [target, 'c'], { owner: context.node })
+      return value(items, { toCSSString: arraySequenceToCSSString })
+    } }
+  } })
+  const css = compileRules([
+    [[condition('.FrontContribution')], target, 'a'],
+    [[condition('.FrontContribution')], target, 'b'],
+  ])
+  expect(joins).toBe(2)
+  expect(css).toContain('--front-contribution: c a b;')
+})
+
+test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也退出', () => {
+  let joins = 0
+  const cleaned: number[] = []
+  const target = key('--revoked-history', { join(items) {
+    const generation = ++joins
+    return {
+      onActive: generation === 1 ? () => [
+        [[condition('.RevokedHistory')], target, 'c'],
+        [[condition('.RevokedHistoryResource')], 'color', 'red'],
+      ] : undefined,
+      onCompile(context: JSSCompileContext, ast: ASTController) {
+        ast.onRemove(context.node, () => cleaned.push(generation))
+        if (generation === 2) ast.search({ key: target }).find((node) => node.content === 'a')!.content = 'x'
+        return value(items, { toCSSString: arraySequenceToCSSString })
+      },
+    }
+  } })
+  const css = compileRules([
+    [[condition('.RevokedHistory')], target, 'a'],
+    [[condition('.RevokedHistory')], target, 'b'],
+  ])
+  expect(joins).toBe(3)
+  expect(cleaned).toEqual([2, 1])
+  expect(css).toContain('--revoked-history: x b;')
+  expect(css).not.toContain('.RevokedHistoryResource')
+  expect(css).not.toContain('a b c')
+})
+
+test.each(['move', 'revision'])('聚合输入只改变 %s 时重新组合实际顺序与解析值', (change) => {
+  let renders = 0
+  let firstValue = 2
+  let joins = 0
+  const first = { onCompile: () => { renders++; return firstValue } }
+  const target = key(`--changed-input-${change}`, { join(items) {
+    const initial = joins++ === 0
+    return { onCompile(context: JSSCompileContext, ast: ASTController) {
+      if (initial) {
+        const nodes = ast.search({ key: target })
+        const source = nodes.find((node) => node.content === first)!
+        if (change === 'move') ast.move(nodes.find((node) => node.content === 3)!, { before: source })
+        else { firstValue = 7; source.compileRevision++ }
+      }
+      return value(items, { toCSSString: arraySequenceToCSSString })
+    } }
+  } })
+  const css = compileRules([
+    [[condition('.ChangedInput')], target, first],
+    [[condition('.ChangedInput')], target, 3],
+  ])
+  expect(joins).toBe(2)
+  expect(renders).toBe(change === 'revision' ? 2 : 1)
+  expect(css).toContain(`${target.name}: ${change === 'move' ? '3 2' : '7 3'};`)
+  expect(css.match(new RegExp(`${target.name}:`, 'g'))).toHaveLength(1)
+})
 
 test('阴影层与已有完整列表按声明顺序保留重复项，结果落在最后声明的位置', () => {
   const css = compileRules([

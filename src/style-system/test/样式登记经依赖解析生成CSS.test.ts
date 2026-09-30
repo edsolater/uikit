@@ -1,4 +1,9 @@
-/** 验证登记、按 State Condition 名称读取 Variable、依赖闭包与完整 CSS 输出。 */
+/** 样式登记与内容依赖解析的流程测试。
+ *
+ * 验证声明、Mixin、Variable 和按需资源生成完整 CSS。
+ *
+ * 防止定义端组合在编译与资源退出时丢失原有语义。
+ */
 import { afterEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../pieces/state-conditions'
 import { compileCSS } from '../css-root'
@@ -26,7 +31,7 @@ import { cssFunction } from '../pieces/contents/combiners/custom'
 import { animationName, animationValue } from '../pieces/contents/atom-creators/animation'
 import { fontValue } from '../pieces/contents/atom-creators/font'
 import { transitionValue } from '../pieces/contents/atom-creators/transition'
-import { contentLayout } from '../pieces/mixins/content'
+import { contentLayout, innerText } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
 import { clickable } from '../pieces/mixins/interaction'
 import { durationFast } from '../pieces/contents/atoms/motion'
@@ -374,6 +379,66 @@ test('Mixin 处理方向配置，Key 不解释对象', () => {
   expect(compileCSS()).not.toContain('display:')
 })
 
+test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () => {
+  const activate = vi.fn((): Rules => [[[condition(':root')], '--padding-resource', '4px']])
+  const compileFont = vi.fn(() => 'italic 18px system-ui')
+  keep(rules('.ResourcePadding', [contentLayout({ padding: { onActive: activate } })]))
+  keep(rules('.ContentFont', [innerText({ font: { family: 'metadata', onCompile: compileFont } })]))
+  keep(rules('.PlainConfig', [
+    contentLayout({ padding: { top: '2px', left: '4px' } }),
+    innerText({ font: { size: '16px', family: 'serif' } }),
+  ]))
+  const css = compileCSS()
+  expect(activate).toHaveBeenCalledTimes(1)
+  expect(css).toContain('--padding-resource: 4px;')
+  expect(css).not.toContain('.ResourcePadding')
+  expect(compileFont).toHaveBeenCalledTimes(1)
+  expect(css).toContain('.ContentFont {\nfont: italic 18px system-ui;')
+  expect(css).toContain('padding-top: 2px;')
+  expect(css).toContain('padding-left: 4px;')
+  expect(css).toContain('font: 16px serif;')
+})
+
+test('编译 root 的规则容器改写不污染登记账本或直接输入', () => {
+  const target = keep(rule('.SnapshotTarget', 'color', 'red'))
+  const trigger = keep(rule('.SnapshotTrigger', undefined, {
+    onActive: ({ root }) => { root.find((entry) => entry[0]?.some((item) => typeof item !== 'string' && item.header === '.SnapshotTarget'))![2] = 'blue' },
+  }))
+  expect(compileCSS()).toContain('color: red;')
+  trigger.remove()
+  expect(compileCSS()).toContain('color: red;')
+  target.remove()
+
+  const shared = variable('green', { name: 'snapshot-shared-color' })
+  const childPath = [condition('& .Child')]
+  const nested: Rules = [[childPath, 'color', shared]]
+  const sourcePath = [condition('.SnapshotInput')]
+  const source: Rules = [[sourcePath, undefined, nested]]
+  source.push([[condition('.MutateSnapshot')], undefined, {
+    onActive: ({ root }) => {
+      expect(root[0][2]).not.toBe(nested)
+      const snapshot = root[0][2] as Rules
+      expect(snapshot[0][2]).toBe(shared)
+      root[0][0]!.push(condition('.Extra'))
+      snapshot[0][0]!.push(condition('.NestedExtra'))
+      snapshot[0][2] = 'blue'
+    },
+  }])
+  const css = compileRules(source)
+  expect(css).toContain('var(--snapshot-shared-color, green)')
+  expect(sourcePath).toHaveLength(1)
+  expect(childPath).toHaveLength(1)
+  expect(nested[0][2]).toBe(shared)
+  source.pop()
+  expect(compileRules(source)).toContain('var(--snapshot-shared-color, green)')
+  const circular: Rules = []
+  circular.push([undefined, undefined, circular])
+  expect(() => compileRules(circular)).toThrow('递归引用')
+  for (const invalid of [[1], [[]]]) {
+    expect(() => compileRules([[undefined, undefined, invalid as unknown as Rules]])).toThrow('嵌套 Rules 必须由路径、Key、内容三项组成')
+  }
+})
+
 test('边界形状按需输出，省略时保留边框和焦点配置', () => {
   keep(rules('.Shape', [boundary({ radius: '999px', cornerShape: 'squircle' })]))
   keep(rules('.Boundary', [boundary({ border: ['1px', 'solid', 'transparent'], outline: { width: '2px', style: 'solid', color: 'blue', offset: '2px' } })]))
@@ -431,6 +496,36 @@ test('同名变量注册按完整定义替换，不混入旧 initial-value', () 
   expect(css.match(/@property --registration-replacement/g)).toHaveLength(1)
   expect(css).toContain('syntax: "*";\ninherits: false;')
   expect(css).not.toContain('initial-value: 7px;')
+})
+
+test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资源退出', () => {
+  const old = variable('red', { name: 'creator-old-color', registration: { syntax: '<color>', inherits: false, initialValue: 'red' } })
+  const next = variable('blue', { name: 'creator-new-color', registration: { syntax: '<color>', inherits: false, initialValue: 'blue' } })
+  const handle = keep(rule('.CompleteCreator', $boxShadow, shadowValue({ x: '1px', y: '2px', color: old })))
+  const first = compileCSS()
+  expect(first).toContain('box-shadow: 1px 2px var(--creator-old-color, red);')
+  expect(first).toContain('@property --creator-old-color {')
+  handle.replace(shadowValue({ x: '3px', y: '4px', color: next }))
+  const second = compileCSS()
+  expect(second).toContain('box-shadow: 3px 4px var(--creator-new-color, blue);')
+  expect(second).toContain('@property --creator-new-color {')
+  expect(second).not.toContain('--creator-old-color')
+  let calls = 0
+  const child = {
+    onActive: (): Rules => [[[condition('.CreatorNewDependency')], 'width', '7px']],
+    onCompile: () => { calls++; return '9px' },
+  }
+  handle.replace(shadowValue({ x: child, y: '4px', color: 'black' }))
+  const third = compileCSS()
+  expect(third).toContain('box-shadow: 9px 4px black;')
+  expect(third).toContain('.CreatorNewDependency {\nwidth: 7px;\n}')
+  expect(third).not.toContain('--creator-old-color')
+  expect(third).not.toContain('--creator-new-color')
+  expect(calls).toBe(1)
+  handle.remove()
+  const removed = compileCSS()
+  expect(removed).not.toContain('.CompleteCreator')
+  expect(removed).not.toContain('.CreatorNewDependency')
 })
 
 test('结构嵌套可以继承 Variable 目标，不误判为局部分支数组', () => {

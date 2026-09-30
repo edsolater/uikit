@@ -1,4 +1,10 @@
-/** 内容排版 Mixin。 */
+/** 内容排版 Mixin。
+ *
+ * 将文字和布局配置转换为声明，完整内容保持原身份。
+ *
+ * 让配方复用内容协议，避免将内容行为误当配置字段。
+ */
+import { isJSSContent } from '../../content'
 import type { Declarations } from '../../rule'
 import type { ValueInput } from '../../value'
 import { valueSequence } from '../contents/atom-creators/list'
@@ -17,7 +23,7 @@ export interface InnerTextMixinOptions {
 
 /** Mixin：内部文字。 */
 export const innerText = (options: InnerTextMixinOptions = {}): Declarations => [
-  [$font, options.font && typeof options.font === 'object' && 'family' in options.font ? fontValue(options.font) : options.font],
+  [$font, options.font && typeof options.font === 'object' && !isJSSContent(options.font) && 'family' in options.font ? fontValue(options.font) : options.font],
   [$fontSize, options.fontSize],
   [$fontWeight, options.emphasis],
   [$lineHeight, options.leading],
@@ -53,7 +59,7 @@ export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarat
 /** 内边距声明；未指定的方向不赋值。 */
 function paddingDeclarations(input: PaddingInput): Declarations {
   if (Array.isArray(input)) return [[$padding, valueSequence(...input)]]
-  if (input && typeof input === 'object' && !('kind' in input) && !('onCompile' in input) && !('toCSSString' in input)) {
+  if (input && typeof input === 'object' && !isJSSContent(input)) {
     const sides = input as PaddingSides
     return [[$paddingTop, sides.top], [$paddingRight, sides.right], [$paddingBottom, sides.bottom], [$paddingLeft, sides.left]]
   }

@@ -1,4 +1,9 @@
-/** 将可改写的 JSS 样式节点逐波编译为只含可输出内容的节点。 */
+/** JSS 样式节点的内容编译器。
+ *
+ * 逐波推进内容、依赖与聚合，交付可输出的内容节点。
+ *
+ * 让可改写的声明完成全部内容行为后再进入 CSS 输出。
+ */
 import { assert, hasProperty, isArray, isFunction, isObjectLike } from '@edsolater/fnkit'
 import { conditionAddressKey, outputConditionPath, type ConditionPath, type CSSConditionPath } from '../condition'
 import { propertyName, type JSSKey, type JSSKeyObject } from '../key'
@@ -21,18 +26,16 @@ export interface JSSContentNode {
 /** 分别记录节点的 Key 与 Content 编译进度；任一内容被替换后重访对应位置。 */
 interface StyleNodeCompileState {
   version: number
-  compiledKeyObjects: WeakSet<object>
-  compiledContentObjects: WeakSet<object>
+  keyProgress: WeakMap<object, ContentVisitResult>
+  contentProgress: WeakMap<object, ContentVisitResult>
   contentReplacements: WeakMap<object, unknown>
   keySnapshot: unknown
   contentSnapshot: unknown
-  hasKeySnapshot: boolean
-  hasContentSnapshot: boolean
   keyComplete: boolean
   contentComplete: boolean
 }
 
-/** 当前波访问一段内容的结果；未完成时保留它等待后续波。 */
+/** 内容访问的返回值与完成度；回调已调用后保留此进度，后续波继续访问未完成的替代链。 */
 interface ContentVisitResult {
   content: unknown
   complete: boolean
@@ -44,13 +47,33 @@ interface CompileBudget {
   maximumOperations: number
 }
 
+/** 内容的一次激活及其规则产物；同一 Rule 身份可被多个激活记录共享。 */
+interface ActivationRecord {
+  rules: Rules
+  nodes: JSSStyleNode[]
+}
+
+/** 聚合输入在本次组合时的完整快照；Map 顺序就是原贡献顺序。 */
+interface AggregationInput {
+  key: JSSKey | undefined
+  join: JSSKeyObject['join']
+  content: unknown
+  revision: number
+}
+
+/** 同址聚合拥有输入快照与结果历史；最后一个结果输出，旧结果保留依赖来源。 */
+interface AggregationRecord {
+  inputs: Map<JSSStyleNode, AggregationInput>
+  results: JSSStyleNode[]
+}
+
 /** 在当前编译波访问 Key 或 Content 链，交回当前位置的内容及是否仍需后续波。 */
 function visitContent(
   input: unknown,
   context: JSSCompileContext,
   controller: ASTController,
   compileWaveIndex: number,
-  compiledObjects: WeakSet<object>,
+  progress: WeakMap<object, ContentVisitResult>,
   replacements: WeakMap<object, unknown> | undefined,
   activeObjects: Set<object>,
   budget: CompileBudget,
@@ -66,59 +89,61 @@ function visitContent(
     if (hasProperty(input, 'onActive', isFunction)) activate(input)
 
     if (hasJSSContentOnCompileMethod(input)) {
+      let previous = progress.get(input)
       const earliestWave = input.compileWaveIndex ?? 0
       assert(Number.isInteger(earliestWave) && earliestWave >= 0, 'compileWaveIndex 必须是非负整数。')
-      if (!compiledObjects.has(input) && earliestWave > compileWaveIndex) {
-        visitChildren(input, context, controller, compileWaveIndex, compiledObjects, replacements, activeObjects, budget, activate, depth)
+      if (!previous && earliestWave > compileWaveIndex) {
+        visitChildren(input, context, controller, compileWaveIndex, progress, replacements, activeObjects, budget, activate, depth)
         return { content: input, complete: false }
       }
-      if (!compiledObjects.has(input)) {
+      if (!previous) {
         budget.operations++
         assert(budget.operations <= budget.maximumOperations, `AST 编译操作超过上限 ${budget.maximumOperations}，编译无法终止。`)
-        compiledObjects.add(input)
-        const replacement = input.onCompile(context, controller)
-        if (replacement !== input) {
-          const result = visitContent(replacement, context, controller, compileWaveIndex, compiledObjects, replacements, activeObjects, budget, activate, depth + 1)
-          if (result.complete) replacements?.set(input, result.content)
-          return result
-        }
+        previous = { content: input.onCompile(context, controller), complete: false }
+        progress.set(input, previous)
       }
+      const result = previous.content === input
+        ? visitChildren(input, context, controller, compileWaveIndex, progress, replacements, activeObjects, budget, activate, depth)
+        : visitContent(previous.content, context, controller, compileWaveIndex, progress, replacements, activeObjects, budget, activate, depth + 1)
+      progress.set(input, result)
+      if (result.complete && result.content !== input) replacements?.set(input, result.content)
+      return result
     }
 
-    return visitChildren(input, context, controller, compileWaveIndex, compiledObjects, replacements, activeObjects, budget, activate, depth)
+    return visitChildren(input, context, controller, compileWaveIndex, progress, replacements, activeObjects, budget, activate, depth)
   } finally {
     activeObjects.delete(input)
   }
 }
 
-/** 沿对象的 dependencies 链访问子内容，汇总本波是否仍需继续编译。 */
+/** 访问依赖并判断当前输出；无输出对象等待依赖完成后才从内容链消失。 */
 function visitChildren(
   input: object,
   context: JSSCompileContext,
   controller: ASTController,
   compileWaveIndex: number,
-  compiledObjects: WeakSet<object>,
+  progress: WeakMap<object, ContentVisitResult>,
   replacements: WeakMap<object, unknown> | undefined,
   activeObjects: Set<object>,
   budget: CompileBudget,
   activate: (content: JSSContent) => void,
   depth: number,
 ): ContentVisitResult {
-  const dependencies = hasProperty(input, 'dependencies', isArray) ? input.dependencies : undefined
+  const dependencyValue = 'dependencies' in input ? input.dependencies : undefined
+  const dependencies = isArray(dependencyValue) ? dependencyValue : undefined
+  let complete = true
   if (dependencies) {
-    let complete = true
     for (const child of dependencies) {
-      const result = visitContent(child, context, controller, compileWaveIndex, compiledObjects, replacements, activeObjects, budget, activate, depth + 1)
-      if (result.content !== child && isObjectLike(child)) replacements?.set(child, result.content)
+      const result = visitContent(child, context, controller, compileWaveIndex, progress, replacements, activeObjects, budget, activate, depth + 1)
+      if (result.complete && result.content !== child && isObjectLike(child)) replacements?.set(child, result.content)
       complete &&= result.complete
     }
-    return { content: input, complete }
   }
 
-  if (hasJSSContentOutput(input)) return { content: input, complete: true }
-  if (hasJSSContentOnCompileMethod(input)) return { content: input, complete: true }
-  if (hasProperty(input, 'onActive', isFunction) && !dependencies) {
-    return { content: undefined, complete: true }
+  if (hasJSSContentOutput(input)) return { content: input, complete }
+  if (hasJSSContentOnCompileMethod(input)) return { content: input, complete }
+  if (dependencies || hasProperty(input, 'onActive', isFunction)) {
+    return { content: complete ? undefined : input, complete }
   }
   throw new Error('无效的 CSS 内容。')
 }
@@ -140,8 +165,8 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
   const session = new ASTSession(styleNodes)
   const controller = createASTController(session)
   const resourceIdentities = new Map<string | symbol, number>()
-  const pendingRules = new Map<string, { rule: Rule; owners: Set<JSSStyleNode> }>()
-  const activatedContents = new Map<JSSContent, { rules: Rules; nodes: JSSStyleNode[] }>()
+  const pendingRules = new Map<string, { rule: Rule; owners: Set<JSSStyleNode>; records: Set<ActivationRecord> }>()
+  const activatedContents = new Map<JSSContent, ActivationRecord>()
   /** 通知实际消费的内容，并收集它按需提供的 Rules。 */
   const activate = (value: JSSContent, context: JSSContentContext, owner: JSSStyleNode): void => {
     let record = activatedContents.get(value)
@@ -149,7 +174,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
       record = { rules: value.onActive?.(context) ?? [], nodes: [] }
       activatedContents.set(value, record)
     }
-    const surviving = record.nodes.filter((node) => styleNodes.includes(node))
+    const surviving = record.nodes.filter((node) => session.hasOutput(node))
     if (surviving.length) {
       surviving.forEach((node) => session.own(owner, node))
       return
@@ -157,7 +182,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
     for (const rule of record.rules) {
       const address = ruleAddress(rule, resourceIdentities)
       let pending = pendingRules.get(address)
-      if (!pending) pendingRules.set(address, pending = { rule, owners: new Set() })
+      if (!pending) pendingRules.set(address, pending = { rule, owners: new Set(), records: new Set() })
       pending.rule = rule
       pending.owners.add(owner)
     }
@@ -166,77 +191,107 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
   const createDependencyNodes = (): JSSStyleNode[] => {
     const pending = [...pendingRules.entries()]
     pendingRules.clear()
+    if (!pending.length) return []
+    const finalRules = new Map<Rule, Set<ActivationRecord>>()
+    for (const [, entry] of pending) {
+      let records = finalRules.get(entry.rule)
+      if (!records) finalRules.set(entry.rule, records = entry.records)
+      else entry.records = records
+    }
+    // 生成时读取各记录的当前 Rules；一次收集精确身份关系，产物不再逐项反查。
+    for (const record of activatedContents.values()) {
+      for (const rule of record.rules) finalRules.get(rule)?.add(record)
+    }
     return pending.flatMap(([address, entry]) => {
       const owners = [...entry.owners].filter((owner) => session.isAlive(owner))
       if (!owners.length) return []
       return rulesToStyleNodes([entry.rule]).map((node, index) => {
-      node.resourceAddress = address
-      node.identity = `dependency/${address}/${index}`
-      for (const owner of owners) session.own(owner, node)
-      for (const record of activatedContents.values()) {
-        if (record.rules.includes(entry.rule)) record.nodes.push(node)
-      }
-      return node
+        node.resourceAddress = address
+        node.identity = `dependency/${address}/${index}`
+        for (const owner of owners) session.own(owner, node)
+        for (const record of entry.records) record.nodes.push(node)
+        return node
       })
     })
   }
   const states = new WeakMap<JSSStyleNode, StyleNodeCompileState>()
+  /** 按当前节点输入使旧角色进度失效；访问前与波末共用同一重置规则。 */
+  const invalidateNodeState = (node: JSSStyleNode): boolean => {
+    const state = states.get(node)
+    if (!state) return false
+    const revisionChanged = state.version !== node.compileRevision
+    const keyChanged = revisionChanged || state.keySnapshot !== node.key
+    const contentChanged = revisionChanged || state.contentSnapshot !== node.content
+    if (keyChanged) {
+      state.keyProgress = new WeakMap<object, ContentVisitResult>()
+      state.keyComplete = !hasJSSContentOnCompileMethod(node.key)
+      state.keySnapshot = node.key
+    }
+    if (contentChanged) {
+      state.contentProgress = new WeakMap<object, ContentVisitResult>()
+      state.contentReplacements = new WeakMap<object, unknown>()
+      state.contentComplete = false
+      state.contentSnapshot = node.content
+    }
+    state.version = node.compileRevision
+    if (keyChanged || contentChanged) delete node.deferredReason
+    return keyChanged || contentChanged
+  }
   const budget: CompileBudget = { operations: 0, maximumOperations: 100_000 }
-  const aggregatedInputs = new Set<JSSStyleNode>()
-  const aggregatedResults = new Set<JSSStyleNode>()
-  const hiddenResults = new Set<JSSStyleNode>()
-  const aggregations = new Map<string, {
-    inputs: JSSStyleNode[]
-    keys: (JSSKey | undefined)[]
-    joiners: JSSKeyObject['join'][]
-    contents: unknown[]
-    versions: number[]
-    results: JSSStyleNode[]
-  }>()
+  const aggregations = new Map<string, AggregationRecord>()
+  const aggregationOf = new WeakMap<JSSStyleNode, AggregationRecord>()
   let compileWaveIndex = 0
 
   /** 队列稳定后重新核对同址输入；结果自己的产物可能带来下一项贡献。 */
   const aggregateReadyNodes = (): number => {
-    const groups = new Map<string, JSSStyleNode[]>()
+    const groups = new Map<string, { nodes: JSSStyleNode[]; positions: Map<JSSStyleNode, number> }>()
     for (const node of styleNodes) {
-      if (node.key === undefined || aggregatedResults.has(node)) continue
+      const record = aggregationOf.get(node)
+      if (node.key === undefined || (record && !record.inputs.has(node))) continue
       const address = JSON.stringify([conditionAddressKey(node.conditionPath), propertyName(node.key)])
       let group = groups.get(address)
-      if (!group) groups.set(address, group = [])
-      group.push(node)
+      if (!group) groups.set(address, group = { nodes: [], positions: new Map() })
+      group.positions.set(node, group.nodes.length)
+      group.nodes.push(node)
     }
 
     let changed = 0
     for (const [address, record] of aggregations) {
-      const group = groups.get(address) ?? []
-      const positions = record.inputs.map((node) => group.indexOf(node))
-      const keptOrder = positions.every((position, index) => position >= 0 && (index === 0 || position > positions[index - 1]))
-      const sameKeys = record.inputs.every((node, index) => node.key === record.keys[index]
-        && (typeof node.key === 'string' ? undefined : node.key?.join) === record.joiners[index])
-      const sameContents = record.inputs.every((node, index) => node.content === record.contents[index] && node.compileRevision === record.versions[index])
-      const latest = record.results[record.results.length - 1]
-      if (keptOrder && sameKeys && sameContents && session.isAlive(latest)) {
-        session.move(latest, group[group.length - 1], 'after')
+      const group = groups.get(address)
+      let previousPosition = -1
+      let unchanged = true
+      for (const [node, snapshot] of record.inputs) {
+        const position = group?.positions.get(node)
+        if (position === undefined || position <= previousPosition || node.key !== snapshot.key
+          || (typeof node.key === 'string' ? undefined : node.key?.join) !== snapshot.join
+          || node.content !== snapshot.content || node.compileRevision !== snapshot.revision) {
+          unchanged = false
+          break
+        }
+        previousPosition = position
+      }
+      const latest = record.results.at(-1)!
+      if (unchanged && session.isAlive(latest)) {
+        session.move(latest, group!.nodes.at(-1)!, 'after')
         continue
       }
       for (const result of [...record.results].reverse()) {
         session.remove(result)
-        aggregatedResults.delete(result)
-        hiddenResults.delete(result)
+        aggregationOf.delete(result)
       }
-      for (const input of record.inputs) aggregatedInputs.delete(input)
+      for (const input of record.inputs.keys()) aggregationOf.delete(input)
       aggregations.delete(address)
       changed++
     }
     if (changed) return changed
 
-    for (const [address, group] of groups) {
+    for (const [address, { nodes: group }] of groups) {
       if (group.length < 2) continue
       const joiners = new Set(group.flatMap((node) => typeof node.key === 'string' || !node.key?.join ? [] : [node.key.join]))
       assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(group[0].key!)}。`)
       const join = [...joiners][0]
       const previous = aggregations.get(address)
-      if (previous && previous.inputs.length === group.length) continue
+      if (previous && previous.inputs.size === group.length) continue
       const values = group.map((node) => {
         const state = states.get(node)!
         const content = node.content
@@ -253,20 +308,21 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
       const anchor = group[group.length - 1]
       const content = join ? join(values) : value(values)
       const result = session.insert(anchor, session.insertionIdentity(anchor), anchor.conditionPath, anchor.key, content, anchor, 'after')
+      const record = previous ?? { inputs: new Map<JSSStyleNode, AggregationInput>(), results: [] }
+      record.inputs = new Map()
       for (const node of group) {
         session.own(node, result)
-        aggregatedInputs.add(node)
+        record.inputs.set(node, {
+          key: node.key,
+          join: typeof node.key === 'string' ? undefined : node.key?.join,
+          content: node.content,
+          revision: node.compileRevision,
+        })
+        aggregationOf.set(node, record)
       }
-      if (previous) hiddenResults.add(previous.results[previous.results.length - 1])
-      aggregatedResults.add(result)
-      aggregations.set(address, {
-        inputs: group,
-        keys: group.map((node) => node.key),
-        joiners: group.map((node) => typeof node.key === 'string' ? undefined : node.key?.join),
-        contents: group.map((node) => node.content),
-        versions: group.map((node) => node.compileRevision),
-        results: [...previous?.results ?? [], result],
-      })
+      record.results.push(result)
+      aggregationOf.set(result, record)
+      aggregations.set(address, record)
       changed++
     }
     return changed
@@ -279,32 +335,20 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
 
     // 本波只访问开始时已有的节点，改写后已删除的节点立即跳过。
     for (const node of waveStyleNodes) {
-      if (!styleNodes.includes(node)) continue
+      if (!session.hasOutput(node)) continue
       delete node.deferredReason
-      if (states.get(node)?.version !== node.compileRevision) states.delete(node)
+      invalidateNodeState(node)
       const state = states.get(node) ?? {
         version: node.compileRevision,
-        compiledKeyObjects: new WeakSet<object>(),
-        compiledContentObjects: new WeakSet<object>(),
+        keyProgress: new WeakMap<object, ContentVisitResult>(),
+        contentProgress: new WeakMap<object, ContentVisitResult>(),
         contentReplacements: new WeakMap<object, unknown>(),
         keySnapshot: node.key,
         contentSnapshot: node.content,
-        hasKeySnapshot: false,
-        hasContentSnapshot: false,
         keyComplete: !hasJSSContentOnCompileMethod(node.key),
         contentComplete: false,
       }
       states.set(node, state)
-
-      if (state.hasKeySnapshot && state.keySnapshot !== node.key) {
-        state.compiledKeyObjects = new WeakSet<object>()
-        state.keyComplete = !hasJSSContentOnCompileMethod(node.key)
-      }
-      if (state.hasContentSnapshot && state.contentSnapshot !== node.content) {
-        state.compiledContentObjects = new WeakSet<object>()
-        state.contentReplacements = new WeakMap<object, unknown>()
-        state.contentComplete = false
-      }
 
       const path: ConditionPath = node.conditionPath
       const activateHere = (content: JSSContent): void => activate(content, {
@@ -331,25 +375,23 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
       })
       if (!state.keyComplete) {
         const context = contextFor('declaration-key')
-        const result = visitContent(node.key, context, controller, compileWaveIndex, state.compiledKeyObjects, undefined, activeObjects, budget, activateHere)
+        const result = visitContent(node.key, context, controller, compileWaveIndex, state.keyProgress, undefined, activeObjects, budget, activateHere)
         state.keyComplete = result.complete && node.deferredReason === undefined
-        if (node.deferredReason !== undefined) state.compiledKeyObjects = new WeakSet<object>()
+        state.keySnapshot = context.key
+        if (node.deferredReason !== undefined) state.keyProgress = new WeakMap<object, ContentVisitResult>()
       }
-      state.keySnapshot = node.key
-      state.hasKeySnapshot = true
-      if (!styleNodes.includes(node)) continue
+      if (!session.hasOutput(node)) continue
 
       if (!state.contentComplete) {
         const context = contextFor('declaration-content')
-        const result = visitContent(node.content, context, controller, compileWaveIndex, state.compiledContentObjects, state.contentReplacements, activeObjects, budget, activateHere)
-        if (result.content !== node.content && isObjectLike(node.content)) {
-          state.contentReplacements.set(node.content, result.content)
+        const result = visitContent(node.content, context, controller, compileWaveIndex, state.contentProgress, state.contentReplacements, activeObjects, budget, activateHere)
+        if (result.complete && result.content !== context.content && isObjectLike(context.content)) {
+          state.contentReplacements.set(context.content, result.content)
         }
         state.contentComplete = result.complete && node.deferredReason === undefined
-        if (node.deferredReason !== undefined) state.compiledContentObjects = new WeakSet<object>()
+        state.contentSnapshot = context.content
+        if (node.deferredReason !== undefined) state.contentProgress = new WeakMap<object, ContentVisitResult>()
       }
-      state.contentSnapshot = node.content
-      state.hasContentSnapshot = true
       if (!state.keyComplete || !state.contentComplete || state.version !== node.compileRevision) hasWaitingContent = true
     }
 
@@ -365,21 +407,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
     session.append(dependencyStyleNodes)
     let hasChangedNodes = false
     for (const node of styleNodes) {
-      const state = states.get(node)
-      if (!state) continue
-      if (state.version !== node.compileRevision) { state.contentComplete = false; hasWaitingContent = true; hasChangedNodes = true }
-      if (state.hasKeySnapshot && state.keySnapshot !== node.key) {
-        state.compiledKeyObjects = new WeakSet<object>()
-        state.keyComplete = !hasJSSContentOnCompileMethod(node.key)
-        state.keySnapshot = node.key
-        hasWaitingContent = true
-        hasChangedNodes = true
-      }
-      if (state.hasContentSnapshot && state.contentSnapshot !== node.content) {
-        state.compiledContentObjects = new WeakSet<object>()
-        state.contentReplacements = new WeakMap<object, unknown>()
-        state.contentComplete = false
-        state.contentSnapshot = node.content
+      if (invalidateNodeState(node)) {
         hasWaitingContent = true
         hasChangedNodes = true
       }
@@ -398,7 +426,8 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
         continue
       }
       return styleNodes.flatMap((node) => {
-        if (aggregatedInputs.has(node) || hiddenResults.has(node)) return []
+        const aggregation = aggregationOf.get(node)
+        if (aggregation && aggregation.results.at(-1) !== node) return []
         const state = states.get(node)
         if (!state || !state.keyComplete || !state.contentComplete) return []
         return [{
@@ -411,7 +440,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
     }
     assert(hasNewStyleNodes || hasChangedNodes || waveStyleNodes.some((node) => {
       const state = states.get(node)
-      return styleNodes.includes(node) && state && (!state.keyComplete || !state.contentComplete)
+      return session.hasOutput(node) && state && (!state.keyComplete || !state.contentComplete)
     }), 'AST 编译波没有进展，无法完成 Content。')
     compileWaveIndex++
     assert(compileWaveIndex <= 10_000, 'AST 编译波超过上限 10000，Content 仍未完成。')

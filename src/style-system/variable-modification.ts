@@ -12,8 +12,8 @@ import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
 import type { ASTController } from './compiler/ast-controller'
 import { value, type Value, type ValueInput } from './value'
-import { resolveStateConditions } from './pieces/state-conditions'
-import type { Variable, VariableDefaultValue } from './variable'
+import { appendStateCondition, resolveStateConditions } from './pieces/state-conditions'
+import { variableRegistrationDeclarations, type Variable, type VariableDefaultValue } from './variable'
 
 /** 一个局部声明的基础值、最终值和修改步骤；只在本次编译内有效。 */
 interface VariableInstance {
@@ -83,21 +83,47 @@ function sessionOf(context: JSSCompileContext): VariableSession {
 function declaredVariable(node: JSSStyleNode): Variable | undefined {
   return declaredVariables.get(node.content)?.variable
 }
-/** 找到给定条件所属的最近局部声明，只认同一个 Variable 对象；没有则返回 undefined。 */
-function findLocalDeclaration(
-  context: JSSCompileContext,
-  controller: ASTController,
-  variable: Variable,
-  path: ConditionPath = context.conditionPath,
-): JSSStyleNode | undefined {
-  let nearest: JSSStyleNode | undefined
-  let depth = -1
-  for (const node of controller.search({ key: variable.config.definitionKey })) {
-    if (declaredVariable(node) !== variable || !isSemanticPathPrefix(node.conditionPath, path)) continue
-    const candidateDepth = semanticPathParts(node.conditionPath).length
-    if (candidateDepth > depth) { nearest = node; depth = candidateDepth }
+/** 一次局部操作的候选与归属判断；节点结构变更后的新操作必须重新取得。 */
+interface VariableCandidates {
+  nodes: JSSStyleNode[]
+  declarations: { node: JSSStyleNode; address: string; depth: number }[]
+  refresh(): void
+  nearest(path: ConditionPath): JSSStyleNode | undefined
+}
+
+/** 查询一次声明目标，在当前操作内复用同对象声明、语义地址与最近归属。 */
+function variableCandidates(controller: ASTController, variable: Variable): VariableCandidates {
+  const nearestByAddress = new Map<string, JSSStyleNode | undefined>()
+  const candidates: VariableCandidates = {
+    nodes: [],
+    declarations: [],
+    /** 业务回调或撤销可能改写源节点；重新查询并结束先前归属缓存。 */
+    refresh() {
+      candidates.nodes = controller.search({ key: variable.config.definitionKey })
+      candidates.declarations = candidates.nodes.filter((node) => declaredVariable(node) === variable).map((node) => {
+        const parts = semanticPathParts(node.conditionPath)
+        return { node, address: JSON.stringify(parts), depth: parts.length }
+      })
+      nearestByAddress.clear()
+    },
+    /** 找到当前路径的最近同对象局部声明；相同路径在本次操作内复用。 */
+    nearest(path) {
+      const address = JSON.stringify(semanticPathParts(path))
+      if (nearestByAddress.has(address)) return nearestByAddress.get(address)
+      let nearest: JSSStyleNode | undefined
+      let depth = -1
+      for (const candidate of candidates.declarations) {
+        if (candidate.depth > depth && isSemanticPathPrefix(candidate.node.conditionPath, path)) {
+          nearest = candidate.node
+          depth = candidate.depth
+        }
+      }
+      nearestByAddress.set(address, nearest)
+      return nearest
+    },
   }
-  return nearest
+  candidates.refresh()
+  return candidates
 }
 
 /** 找到状态内容应写入的局部基础值，返回其 Key；没有局部声明则返回 undefined。
@@ -109,8 +135,9 @@ export function findLocalBaseKey(
   variable: Variable,
   path: ConditionPath,
 ): JSSKeyObject | undefined {
-  const target = findLocalDeclaration(context, controller, variable, path)
-  return target ? ensureVariableInstance(context, controller, target).baseKey : undefined
+  const candidates = variableCandidates(controller, variable)
+  const target = candidates.nearest(path)
+  return target ? ensureVariableInstance(context, controller, target, candidates).baseKey : undefined
 }
 
 /** 为 Variable 创建局部基础值声明；返回的声明在编译消费时生成基础值，并接管归属它的已有修改。 */
@@ -123,15 +150,16 @@ export function declareVariable(
     resourceIdentity: Symbol('variable-declaration'),
     onCompile(context, controller) {
       activateResources(variable, context, controller)
-      ensureVariableInstance(context, controller, context.node)
+      const candidates = variableCandidates(controller, variable)
+      ensureVariableInstance(context, controller, context.node, candidates)
       // 新局部定义接管已有修改时，重新确定这些修改的归属。
       const session = sessionOf(context)
-      for (const node of controller.search({ key: variable.config.definitionKey })) {
+      for (const node of candidates.nodes) {
         const step = session.steps.get(node)
         if (
           step?.instance.variable === variable &&
           step.instance.node !== context.node &&
-          findLocalDeclaration(context, controller, variable, node.conditionPath) === context.node
+          candidates.nearest(node.conditionPath) === context.node
         )
           node.compileRevision++
       }
@@ -143,21 +171,14 @@ export function declareVariable(
 }
 
 /** 为局部声明生成基础值及各状态值，并取得这次编译中的修改归属；同一语义路径重复声明会报错。 */
-function ensureVariableInstance(context: JSSCompileContext, controller: ASTController, node: JSSStyleNode): VariableInstance {
+function ensureVariableInstance(context: JSSCompileContext, controller: ASTController, node: JSSStyleNode, candidates: VariableCandidates): VariableInstance {
   const session = sessionOf(context)
   const existing = session.instances.get(node)
   if (existing) return existing
   const { variable, content } = declaredVariables.get(node.content)!
-  const path = semanticPathParts(node.conditionPath)
+  const address = JSON.stringify(semanticPathParts(node.conditionPath))
   assert(
-    !controller
-      .search({ key: variable.config.definitionKey })
-      .some(
-        (other) =>
-          other !== node &&
-          declaredVariable(other) === variable &&
-          JSON.stringify(semanticPathParts(other.conditionPath)) === JSON.stringify(path),
-      ),
+    !candidates.declarations.some((other) => other.node !== node && other.address === address),
     `Variable ${variable.name} 在同一语义路径重复定义。`,
   )
   const instance: VariableInstance = {
@@ -174,23 +195,18 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
     shared: new Map(),
   }
   session.instances.set(node, instance)
+  const baseContent = result(content)
+  if (typeof content === 'function') candidates.refresh()
   controller.insert(
     { before: node, conditionPath: node.conditionPath },
-    [instance.baseKey, result(content)],
+    [instance.baseKey, baseContent],
     { owner: node, identity: 'base' },
   )
   for (const state of resolveStateConditions([...variable.config.states.keys()])) {
     const stateNode = controller.insert(
       {
         before: node,
-        conditionPath: {
-          targetConditionPath: node.conditionPath.targetConditionPath,
-          stateConditionPath: resolveStateConditions([
-            ...node.conditionPath.stateConditionPath.map((item) => item.name),
-            state.name,
-          ]),
-          semanticPath: [...(node.conditionPath.semanticPath ?? node.conditionPath.targetConditionPath), state.name],
-        },
+        conditionPath: appendStateCondition(node.conditionPath, state.name),
       },
       [instance.baseKey, variable.config.states.get(state.name)],
       { owner: node, identity: `state/${state.name}` },
@@ -199,9 +215,11 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
   }
   for (const candidate of controller.search({ productTag: variable })) {
     if (
-      candidate.resourceAddress === undefined && findLocalDeclaration(context, controller, variable, candidate.conditionPath) === node
-    )
+      candidate.resourceAddress === undefined && candidates.nearest(candidate.conditionPath) === node
+    ) {
       controller.remove(candidate)
+      candidates.refresh()
+    }
   }
   controller.onRemove(node, () => {
     for (const candidate of controller.search({ key: instance.variable.config.definitionKey }))
@@ -215,16 +233,25 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
   const content: JSSContent = {
     resourceIdentity: Symbol('variable-modification'),
     onCompile(context, controller) {
-      const target = findLocalDeclaration(context, controller, variable)
+      let candidates = variableCandidates(controller, variable)
+      const target = candidates.nearest(context.conditionPath)
       if (!target) {
         controller.defer(context.node, `Variable ${variable.name} 的修改找不到父路径定义。`)
         return undefined
       }
       const session = sessionOf(context)
-      const instance = ensureVariableInstance(context, controller, target)
+      const instance = ensureVariableInstance(context, controller, target, candidates)
       const old = session.steps.get(context.node)
-      if (old?.instance === instance) return undefined
-      if (old) removeModification(context, controller, old, context.node)
+      if (old?.instance === instance) {
+        disconnectStep(old)
+        old.anchor = candidates.nodes.find((node) => old.members.has(node))!
+        connectStep(context, old, candidates.nodes)
+        return undefined
+      }
+      if (old) {
+        removeModification(context, controller, old, context.node)
+        candidates = variableCandidates(controller, variable)
+      }
       const apply = variable.config.modification?.apply
       assert(!!apply, `Variable ${variable.name} 没有配置 modification.apply。`)
       if (!instance.result) {
@@ -260,21 +287,20 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
           id,
         }
         if (id !== undefined) instance.shared.set(id, step)
-        connectStep(context, controller, step)
+        connectStep(context, step, candidates.nodes)
       }
       const assignment = controller.insert(
         { before: context.node, conditionPath: context.conditionPath },
         [step.fallback.key!, apply(`var(--${step.name}-input)`, change)],
         { owner: context.node, identity: 'modification' },
       )
+      candidates.refresh()
       step.members.set(context.node, assignment)
       session.steps.set(context.node, step)
-      const first = controller.search({ key: variable.config.definitionKey }).find((node) => step!.members.has(node))!
-      if (first !== step.anchor) {
-        disconnectStep(step)
-        step.anchor = first
-        connectStep(context, controller, step)
-      }
+      const first = candidates.nodes.find((node) => step!.members.has(node))!
+      disconnectStep(step)
+      step.anchor = first
+      connectStep(context, step, candidates.nodes)
       controller.move(step.input, { before: assignment })
       controller.move(step.fallback, { before: assignment })
       if (!old)
@@ -289,9 +315,8 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
 }
 
 /** 把修改接到样式顺序中的正确位置，使后续修改从这一步的结果继续。 */
-function connectStep(context: JSSCompileContext, controller: ASTController, step: VariableStep): void {
+function connectStep(context: JSSCompileContext, step: VariableStep, nodes: JSSStyleNode[]): void {
   const session = sessionOf(context)
-  const nodes = controller.search({ key: step.instance.variable.config.definitionKey })
   const position = nodes.indexOf(step.anchor)
   const matches = (node: JSSStyleNode): boolean => {
     const other = session.steps.get(node)
@@ -327,9 +352,10 @@ function removeModification(context: JSSCompileContext, controller: ASTControlle
   if (assignment) controller.remove(assignment)
   if (step.members.size) {
     if (step.anchor === node) {
+      const candidates = variableCandidates(controller, step.instance.variable)
       disconnectStep(step)
-      step.anchor = controller.search({ key: step.instance.variable.config.definitionKey }).find((candidate) => step.members.has(candidate))!
-      connectStep(context, controller, step)
+      step.anchor = candidates.nodes.find((candidate) => step.members.has(candidate))!
+      connectStep(context, step, candidates.nodes)
     }
     return
   }
@@ -351,11 +377,7 @@ function registerInternalVariable(controller: ASTController, instance: VariableI
   const path: ConditionPath = { targetConditionPath: [condition(`@property --${name}`)], stateConditionPath: [] }
   const provenance = { owner: instance.node }
   const position = { before: instance.node, conditionPath: path }
-  const nodes = [
-    controller.insert(position, ['syntax', JSON.stringify(registration.syntax)], { ...provenance, identity: `${name}/syntax` }),
-    controller.insert(position, ['inherits', String(registration.inherits)], { ...provenance, identity: `${name}/inherits` }),
-  ]
-  if (registration.initialValue !== undefined)
-    nodes.push(controller.insert(position, ['initial-value', registration.initialValue], { ...provenance, identity: `${name}/initial` }))
-  return nodes
+  return variableRegistrationDeclarations(registration).map(([key, content]) =>
+    controller.insert(position, [key, content], { ...provenance, identity: `${name}/${key === 'initial-value' ? 'initial' : key}` }),
+  )
 }
