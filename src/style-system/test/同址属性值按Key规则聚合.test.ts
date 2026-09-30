@@ -632,3 +632,25 @@ test('公开 rules 声明序列重复普通 Key 自动聚合', () => {
     handle.remove()
   }
 })
+
+test.each(['content', 'revision', 'join'])('连接回调直接改写输入 %s 后，按真实生成快照重新连接', (change) => {
+  let source: JSSCompileContext['node']
+  let input = 'a'
+  let calls = 0
+  const first = { onCompile(context: JSSCompileContext) { source = context.node; return input } }
+  const target = key(`--join-callback-${change}`, { join(items) {
+    if (calls++ === 0) {
+      if (change === 'content') source.content = 'x'
+      if (change === 'revision') { input = 'x'; source.compileRevision++ }
+      if (change === 'join') target.join = (next) => { calls++; return value(next, { toCSSString: arraySequenceToCSSString }) }
+    }
+    return change === 'join' ? 'old' : value(items, { toCSSString: arraySequenceToCSSString })
+  } })
+  const css = compileRules([
+    [[condition('.JoinCallback')], target, first],
+    [[condition('.JoinCallback')], target, 'b'],
+  ])
+  expect(calls).toBe(2)
+  expect(css).toContain(`${target.name}: ${change === 'join' ? 'a b' : 'x b'};`)
+  expect(css).not.toContain('old')
+})

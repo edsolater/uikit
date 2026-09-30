@@ -181,6 +181,19 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
     !candidates.declarations.some((other) => other.node !== node && other.address === address),
     `Variable ${variable.name} 在同一语义路径重复定义。`,
   )
+  const instance = createVariableInstance(session, node, variable)
+  session.instances.set(node, instance)
+  declareInstanceValues(controller, instance, content, candidates)
+  takeOverAutomaticStates(controller, instance, candidates)
+  controller.onRemove(node, () => {
+    for (const candidate of controller.search({ key: instance.variable.config.definitionKey }))
+      if (session.steps.get(candidate)?.instance === instance) candidate.compileRevision++
+  })
+  return instance
+}
+
+/** 为本次局部声明分配实例编号、基础 Key 及共享步骤账本，不生成 AST 产物。 */
+function createVariableInstance(session: VariableSession, node: JSSStyleNode, variable: Variable): VariableInstance {
   const instance: VariableInstance = {
     node,
     variable,
@@ -194,7 +207,12 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
     baseRegistration: [],
     shared: new Map(),
   }
-  session.instances.set(node, instance)
+  return instance
+}
+
+/** 求基础生产函数并发布基础值与有序状态值；业务回调后结束旧候选有效期。 */
+function declareInstanceValues(controller: ASTController, instance: VariableInstance, content: VariableDefaultValue, candidates: VariableCandidates): void {
+  const { node, variable } = instance
   const baseContent = result(content)
   if (typeof content === 'function') candidates.refresh()
   controller.insert(
@@ -213,6 +231,11 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
     )
     stateNode.readState = state.name
   }
+}
+
+/** 局部声明接管同归属的自动状态产物，每次撤销后重新取得候选。 */
+function takeOverAutomaticStates(controller: ASTController, instance: VariableInstance, candidates: VariableCandidates): void {
+  const { node, variable } = instance
   for (const candidate of controller.search({ productTag: variable })) {
     if (
       candidate.resourceAddress === undefined && candidates.nearest(candidate.conditionPath) === node
@@ -221,11 +244,6 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
       candidates.refresh()
     }
   }
-  controller.onRemove(node, () => {
-    for (const candidate of controller.search({ key: instance.variable.config.definitionKey }))
-      if (session.steps.get(candidate)?.instance === instance) candidate.compileRevision++
-  })
-  return instance
 }
 
 /** 为最近的同一 Variable 局部声明添加修改；编译消费时用 change 生成条件值，缺少声明或 apply 会报错。 */
@@ -243,9 +261,7 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
       const instance = ensureVariableInstance(context, controller, target, candidates)
       const old = session.steps.get(context.node)
       if (old?.instance === instance) {
-        disconnectStep(old)
-        old.anchor = candidates.nodes.find((node) => old.members.has(node))!
-        connectStep(context, old, candidates.nodes)
+        relocateStep(context, old, candidates.nodes)
         return undefined
       }
       if (old) {
@@ -254,55 +270,9 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
       }
       const apply = variable.config.modification?.apply
       assert(!!apply, `Variable ${variable.name} 没有配置 modification.apply。`)
-      if (!instance.result) {
-        instance.baseName = `${variable.name}-modify-${instance.number}-base`
-        instance.baseRegistration = registerInternalVariable(controller, instance, instance.baseName)
-        instance.result = controller.insert(
-          { before: target, conditionPath: target.conditionPath },
-          [{ toCSSString: () => variable.toCSSString(), join: joinVariableValues }, `var(--${instance.baseName})`],
-          { owner: target, identity: 'result' },
-        )
-      }
-      let step = id === undefined ? undefined : instance.shared.get(id)
-      if (!step) {
-        const name = `${variable.name}-modify-${instance.number}-step-${++instance.count}`
-        const input = controller.insert(
-          { before: target, conditionPath: target.conditionPath },
-          [`--${name}-input`, `var(--${instance.baseName})`],
-          { owner: target, identity: `${name}/input` },
-        )
-        const fallback = controller.insert(
-          { before: target, conditionPath: target.conditionPath },
-          [{ toCSSString: () => `--${name}`, join: joinVariableValues }, `var(--${name}-input)`],
-          { owner: target, identity: `${name}/default` },
-        )
-        step = {
-          instance,
-          name,
-          anchor: context.node,
-          input,
-          fallback,
-          registration: registerInternalVariable(controller, instance, name),
-          members: new Map(),
-          id,
-        }
-        if (id !== undefined) instance.shared.set(id, step)
-        connectStep(context, step, candidates.nodes)
-      }
-      const assignment = controller.insert(
-        { before: context.node, conditionPath: context.conditionPath },
-        [step.fallback.key!, apply(`var(--${step.name}-input)`, change)],
-        { owner: context.node, identity: 'modification' },
-      )
-      candidates.refresh()
-      step.members.set(context.node, assignment)
-      session.steps.set(context.node, step)
-      const first = candidates.nodes.find((node) => step!.members.has(node))!
-      disconnectStep(step)
-      step.anchor = first
-      connectStep(context, step, candidates.nodes)
-      controller.move(step.input, { before: assignment })
-      controller.move(step.fallback, { before: assignment })
+      ensureModificationResult(controller, instance)
+      const step = ensureModificationStep(context, controller, instance, id, candidates.nodes)
+      applyModification(context, controller, step, change, apply, candidates)
       if (!old)
         controller.onRemove(context.node, () => {
           const current = session.steps.get(context.node)
@@ -312,6 +282,73 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
     },
   }
   return [{ toCSSString: variable.toCSSString }, content]
+}
+
+/** 首次修改将公开值接入内部基础值，生成注册与最终结果；后续步骤复用同一结果。 */
+function ensureModificationResult(controller: ASTController, instance: VariableInstance): void {
+  if (instance.result) return
+  instance.baseName = `${instance.variable.name}-modify-${instance.number}-base`
+  instance.baseRegistration = registerInternalVariable(controller, instance, instance.baseName)
+  instance.result = controller.insert(
+    { before: instance.node, conditionPath: instance.node.conditionPath },
+    [{ toCSSString: () => instance.variable.toCSSString(), join: joinVariableValues }, `var(--${instance.baseName})`],
+    { owner: instance.node, identity: 'result' },
+  )
+}
+
+/** 取得共享步骤或创建完整输入、默认值及注册；新步骤在业务 apply 前已连到前序。 */
+function ensureModificationStep(context: JSSCompileContext, controller: ASTController, instance: VariableInstance, id: string | symbol | undefined, nodes: JSSStyleNode[]): VariableStep {
+  const shared = id === undefined ? undefined : instance.shared.get(id)
+  if (shared) return shared
+  const name = `${instance.variable.name}-modify-${instance.number}-step-${++instance.count}`
+  const input = controller.insert(
+    { before: instance.node, conditionPath: instance.node.conditionPath },
+    [`--${name}-input`, `var(--${instance.baseName})`],
+    { owner: instance.node, identity: `${name}/input` },
+  )
+  const fallback = controller.insert(
+    { before: instance.node, conditionPath: instance.node.conditionPath },
+    [{ toCSSString: () => `--${name}`, join: joinVariableValues }, `var(--${name}-input)`],
+    { owner: instance.node, identity: `${name}/default` },
+  )
+  const step: VariableStep = {
+    instance,
+    name,
+    anchor: context.node,
+    input,
+    fallback,
+    registration: registerInternalVariable(controller, instance, name),
+    members: new Map(),
+    id,
+  }
+  if (id !== undefined) instance.shared.set(id, step)
+  connectStep(context, step, nodes)
+  return step
+}
+
+/** 来自 Variable 配置的业务修改能力；内部步骤沿用同一输入输出协议。 */
+type VariableApply = NonNullable<Variable['config']['modification']>['apply']
+
+/** 消费一次业务 apply，登记成员并按回调后的当前候选重连；不跨回调复用旧归属。 */
+function applyModification(context: JSSCompileContext, controller: ASTController, step: VariableStep, change: unknown, apply: VariableApply, candidates: VariableCandidates): void {
+  const assignment = controller.insert(
+    { before: context.node, conditionPath: context.conditionPath },
+    [step.fallback.key!, apply(`var(--${step.name}-input)`, change)],
+    { owner: context.node, identity: 'modification' },
+  )
+  candidates.refresh()
+  step.members.set(context.node, assignment)
+  sessionOf(context).steps.set(context.node, step)
+  relocateStep(context, step, candidates.nodes)
+  controller.move(step.input, { before: assignment })
+  controller.move(step.fallback, { before: assignment })
+}
+
+/** 按当前最早成员重接同一步；重访、业务回调与成员撤销共用此顺序规则。 */
+function relocateStep(context: JSSCompileContext, step: VariableStep, nodes: JSSStyleNode[]): void {
+  disconnectStep(step)
+  step.anchor = nodes.find((node) => step.members.has(node))!
+  connectStep(context, step, nodes)
 }
 
 /** 把修改接到样式顺序中的正确位置，使后续修改从这一步的结果继续。 */
@@ -353,9 +390,7 @@ function removeModification(context: JSSCompileContext, controller: ASTControlle
   if (step.members.size) {
     if (step.anchor === node) {
       const candidates = variableCandidates(controller, step.instance.variable)
-      disconnectStep(step)
-      step.anchor = candidates.nodes.find((candidate) => step.members.has(candidate))!
-      connectStep(context, step, candidates.nodes)
+      relocateStep(context, step, candidates.nodes)
     }
     return
   }

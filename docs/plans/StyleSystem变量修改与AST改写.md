@@ -36,7 +36,7 @@ Variable.declare / modify
 | variable.ts | 同一 Variable 对象及类型；创建配置、引用、状态、注册，以及 declare/modify 调用入口 | 不维护局部修改步骤或全局修改提交集 |
 | variable-modification.ts | 局部声明基础值、相对修改步骤与编译会话中的连接、重绑、撤销 | 不定义新公共控制器，不缓存整组表达式再重建 |
 | compiler/ast-controller.ts | 当前节点、指定位置插入、按谓词查最近语义父节点/邻近节点、共享来源与撤销 | 不认识 Variable、Modifier、步骤或业务状态 |
-| compiler/style-nodes-to-content-nodes.ts | 继续处理待解析内容、按需 Rules、重访和完成判断 | 不设置某一波专门执行修改，不为 Variable 另设调度阶段 |
+| compiler/style-nodes-to-content-nodes/compilation.ts | 继续处理待解析内容、按需 Rules、重访和完成判断 | 不设置某一波专门执行修改，不为 Variable 另设调度阶段 |
 | variable-cluster.ts | 选择成员、代理默认 Variable、已有整组赋值配对 | 不拥有独立修改算法 |
 
 当前实际目录如下；定义与修改没有独立调度目录。
@@ -50,7 +50,12 @@ src/style-system/
     compiler/
         ast-controller.ts
         rules-to-style-nodes.ts
-        style-nodes-to-content-nodes.ts
+        style-nodes-to-content-nodes/
+            index.ts
+            compilation.ts
+            node-compilation.ts
+            resource-compilation.ts
+            join.ts
         content-nodes-to-css-string.ts
     doc/
         变量定义与消费.md

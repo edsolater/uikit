@@ -1,4 +1,9 @@
-/** 验证 CSS 字符串输出保持 JSS 内容节点的原始队列顺序。 */
+/** CSS 内容节点队列顺序的流程测试。
+ *
+ * 验证编译结果到最终 CSS 文本的顺序与惰性读取。
+ *
+ * 防止输出阶段改写已确定的声明位置。
+ */
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'

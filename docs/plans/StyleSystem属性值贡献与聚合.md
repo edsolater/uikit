@@ -57,7 +57,7 @@ AST Plan 已独立交付 `Rules → styleNodes → contentNodes → CSSString`�
 | `condition.ts`、`compiler/ast-controller.ts` | 共用最终 Target／State 地址身份；AST 查询与聚合不各自实现一套地址比较 |
 | `pieces/keys/box-shadow.ts` | 作为普通 Key 使用默认组合，不判断各项阴影形状 |
 | `variable-modification.ts` | 仅在同址重复的内部基础值、步骤与结果声明上显式取最后有效值，维持 Variable 原有赋值语义 |
-| `compiler/style-nodes-to-content-nodes.ts` | 等待原队列稳定，按地址和属性名收集；保留输入来源，在末项生成结果节点并继续解析；来源变化或结果被删时重建 |
+| `compiler/style-nodes-to-content-nodes/join.ts` | 等待原队列稳定，按地址和属性名收集；保留输入来源，在末项生成结果节点并继续解析；来源变化或结果被删时重建 |
 | `compiler/content-nodes-to-css-string.ts` | 提供惰性读取每项已解析内容的方法，最后仍按内容节点顺序生成 CSS 文本 |
 
 各源节点的解析替代关系独立保存；Compiler 在相应 Value 上装配惰性读取，不把不同节点的 `WeakMap` 合成最后节点的一份，也不重新解析原内容。`join` 保留输入 Value 对象时，继续读取其来源位置的解析结果；改写 `content` 引入新内容时，它在结果节点解析。聚合结果可以返回带 `parse`、`onActive`、`dependencies` 的内容对象；它产生新同址贡献时，再按原始贡献完整重算，旧结果保留来源关系但不输出。隐藏的旧聚合声明仍是存活来源，它持有的按需产物不会仅因输出被隐藏而自动撤销：新增贡献可能正依赖这些资源，沿用 ASTSession 现有来源契约，无须为聚合扩展一套清理机制。无进展的持续生成仍由解析波和节点上限拒绝。

@@ -1,4 +1,9 @@
-/** Rule 配置、CSS 编译与宿主提交的公共入口。 */
+/** Rule 配置、CSS 编译与宿主提交的公共入口。
+ *
+ * 公开现役样式能力及其类型契约。
+ *
+ * 让业务方从同一入口取得已经收口的样式 API。
+ */
 export * from './key'
 export * from './condition'
 export { stateCondition } from './pieces/state-conditions'

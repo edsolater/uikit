@@ -1,4 +1,9 @@
-/** 将有序 JSS 内容节点写成 CSS 字符串。 */
+/** 有序 JSS 内容节点的 CSS 输出器。
+ *
+ * 解析已完成的内容并按节点顺序交付 CSS 文本。
+ *
+ * 让输出保持编译位置与层级，不重新安排内容行为。
+ */
 import { assert, isObjectLike } from '@edsolater/fnkit'
 import type { JSSContentNode } from './style-nodes-to-content-nodes'
 import { hasJSSContentOutput } from '../content'

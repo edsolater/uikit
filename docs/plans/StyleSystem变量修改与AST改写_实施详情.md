@@ -18,7 +18,7 @@
 | [variable-modification.ts](../../src/style-system/variable-modification.ts) | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态 |
 | [ast-controller.ts](../../src/style-system/compiler/ast-controller.ts) | 通用父节点/邻近节点定位、插入、移动、共享来源、撤销和重访；不包含修改专属概念 |
 | [condition.ts](../../src/style-system/condition.ts) | 提供原始语义路径比较；状态中央排序仅用于输出 |
-| [style-nodes-to-content-nodes.ts](../../src/style-system/compiler/style-nodes-to-content-nodes.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理 |
+| [节点内容编译入口](../../src/style-system/compiler/style-nodes-to-content-nodes/node-compilation.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理 |
 | [variable-cluster.ts](../../src/style-system/variable-cluster.ts) | 默认成员代理、同名成员配对和集合继承创建；无独立修改规则 |
 
 Variable 保留公开入口和普通消费；局部定义、单个步骤与相邻连接由 VariableModification 共同维护，因为它们共享作用域、覆盖、源顺序和撤销事实。AST 只拥有位置和来源。Compiler 继续消费内容，不识别 Variable。
@@ -59,7 +59,7 @@ Cluster 成员继承迁移后，Button 与 `foregroundColorInteractive` 的普�
 
 创建期 `onActive` 调整另用目的测试确认：创建后回调未执行；按需资源中的 Variable 可惰性引用自身与稍后声明的 Variable；正式 Rule 移除后 CSS 不残留。Cluster 默认成员、环境媒体规则及注册资源继续由既有单元与浏览器案例覆盖。`declare()` 仍只展开局部声明与注册，不额外触发对象的 `onActive`。
 
-正式证据文件：[变量修改单元流程](../../src/style-system/test/变量修改与条件组合.test.ts)、[真实浏览器流程](../../src/style-system/test/变量修改与条件组合.browser.test.ts)、[内容自身操作 AST](../../src/style-system/test/内容解析直接操作AST.test.ts)。下表记录 2026-09-28 状态读取简化及 Button 配方修正后的验证范围：
+正式证据文件：[变量修改单元流程](../../src/style-system/test/变量修改与条件组合.test.ts)、[真实浏览器流程](../../src/style-system/test/变量修改与条件组合.browser.test.ts)、[内容编译波与 AST 操作](../../src/style-system/test/内容编译波遍历及插入节点.test.ts)。下表记录 2026-09-28 状态读取简化及 Button 配方修正后的验证范围：
 
 | 验证 | 结果 |
 | --- | --- |

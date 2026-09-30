@@ -18,11 +18,42 @@ import { variable } from '../variable'
 import { variableCluster } from '../variable-cluster'
 import type { JSSCompileContext } from '../index'
 import type { ASTController } from '../compiler/ast-controller'
+
 import type { JSSKeyObject } from '../key'
 import type { JSSContentContext, JSSContent } from '../content'
 import type { Rules } from '../rule'
 
+test.each([['最早编译波', '撤销'], ['暂缓', '撤销'], ['最早编译波', '退出输出'], ['暂缓', '退出输出']])('本波%s等待的声明%s后，只按当前输出队列判断完成', (waiting, removal) => {
+  let delayedCalls = 0
+  const css = compileRules([
+    [[], 'width', { compileWaveIndex: waiting === '最早编译波' ? 2 : 0, onCompile(context, ast) {
+      delayedCalls++
+      if (waiting === '暂缓') { ast.defer(context.node, '待定义'); return undefined }
+      return '9px'
+    } }],
+    [[], 'color', { onCompile(_, ast) { ast.remove(ast.search({ key: 'width' })[0], removal === '退出输出' ? { from: 'output' } : undefined); return 'red' } }],
+  ])
+  expect(css).toBe('color: red;')
+  expect(delayedCalls).toBe(waiting === '最早编译波' ? 0 : 1)
+})
 stateCondition('contentWaveHover', condition('&:where([data-wave-hover])'))
+
+test('Key 替换路径后，Content 激活仍复制节点访问开始时取得的路径引用', () => {
+  let observed: string[] = []
+  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'width', onCompile(context) {
+    context.node.conditionPath.targetConditionPath.push(condition('.ChangedBefore'))
+    context.node.conditionPath = { targetConditionPath: [condition('.After')], stateConditionPath: [] }
+    return this
+  } }
+  const content: JSSContent = { onActive(context) {
+    observed = context.conditionPath.targetConditionPath.map(item => item.header)
+    return []
+  }, toCSSString: () => '7px' }
+  const css = compileRules([[[condition('.Before')], target, content]])
+  expect(observed).toEqual(['.Before', '.ChangedBefore'])
+  expect(css).toContain('.After')
+  expect(css).toContain('width: 7px;')
+})
 
 test('返回的替代内容跨波等待，源回调不重调且最早波限制生效', () => {
   const events: string[] = []
