@@ -1,6 +1,7 @@
 /** 将成员选择与默认 Variable 操作合并为一个入口。 */
 import { assert, Unresultable } from '@edsolater/fnkit'
 import { variable, type Variable, type VariableOptions } from './variable'
+import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
 
@@ -11,7 +12,7 @@ const membersByCluster: WeakMap<object, Record<string, Variable>> & {
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
-  readonly [Unresultable]: true
+  [Unresultable]: true
   <Name extends keyof Members>(name: Name): Members[Name]
 }
 
@@ -21,25 +22,25 @@ export function variableCluster<Members extends { default: Variable } & Record<s
   const select = Object.assign((name: keyof Members) => {
     assert(Object.hasOwn(members, name), `Variable Cluster 未定义成员：${String(name)}。`)
     return members[name]
-  }, { [Unresultable]: true as const })
+  }, { [Unresultable]: true as true })
   let cluster: VariableCluster<Members>
   /** 配对 Cluster 声明，其他引用代理 default 成员编译。 */
-  const compile = (controller: ASTController): ValueInput => {
-    if (controller.role === 'declaration-key') {
-      const sourceMembers = membersByCluster.get(controller.content)
+  const onCompile = (context: JSSCompileContext, controller: ASTController): ValueInput => {
+    if (context.role === 'declaration-key') {
+      const sourceMembers = membersByCluster.get(context.content)
       if (sourceMembers) {
-        for (const [member, source] of clusterDeclarations(cluster, controller.content) ?? []) {
-          controller.insert(controller.conditionPath, member, source)
+        for (const [member, source] of clusterDeclarations(cluster, context.content) ?? []) {
+          controller.insert({ before: context.node, conditionPath: context.conditionPath }, [member, source], { owner: context.node })
         }
-        controller.detach()
+        controller.remove(context.node, { from: 'output' })
         return undefined
       }
     }
-    return members.default.compile(controller)
+    return members.default.onCompile(context, controller)
   }
   cluster = new Proxy(select, {
     get(target, property, receiver) {
-      if (property === 'compile') return compile
+      if (property === 'onCompile') return onCompile
       if (property in members.default) return Reflect.get(members.default, property)
       return Reflect.get(target, property, receiver)
     },

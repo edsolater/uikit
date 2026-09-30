@@ -138,8 +138,8 @@ test('晚编译的前置修改按源位置连接，编号和编译时机不决�
     else multiplications++
     return createJSSContent((resolve) => `calc(${resolve(current)} ${change === 'add' ? '+ 2' : '* 3'})`, [current])
   } } })
-  const delayed = { compileWaveIndex: 1, compile(controller: import('../index').ASTController) {
-    controller.insert(controller.conditionPath, ...n.modify('add'))
+  const delayed = { compileWaveIndex: 1, onCompile(context: import('../index').JSSCompileContext, controller: import('../index').ASTController) {
+    controller.insert({ before: context.node, conditionPath: context.conditionPath }, n.modify('add'), { owner: context.node })
     return undefined
   } }
   const { element } = mount([row([button], n.declare()), [[button], 'order', delayed], row([button], n.modify('multiply')), [[button], 'z-index', n]])
@@ -154,8 +154,8 @@ test.each([false, true])('撤销中间修改或共享首声明后，剩余非交
   const middle = n.modify({ operator: '*', amount: 3 })
   const last = n.modify({ operator: '+', amount: 4 }, shared ? { id: 'shared' } : undefined)
   const removed = shared ? first : middle
-  const cleanup = value('1', { onActive: () => [[[button], 'opacity', { compile(controller) {
-    controller.removeNode(controller.nodes().find((node) => node.content === removed[1])!)
+  const cleanup = value('1', { onActive: () => [[[button], 'opacity', { onCompile(context, controller) {
+    controller.remove(controller.search({}).find((node) => node.content === removed[1])!)
     return undefined
   } }]] })
   const { element } = mount([row([button], n.declare()), row([button], first), row([button], middle), row([button], last), [[button], 'order', cleanup], [[button], 'z-index', n]])

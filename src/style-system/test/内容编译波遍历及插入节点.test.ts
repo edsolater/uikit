@@ -8,6 +8,8 @@ import { compileRules } from '../css-root'
 import { createJSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
+import { variableCluster } from '../variable-cluster'
+import type { JSSCompileContext } from '../index'
 import type { ASTController } from '../compiler/ast-controller'
 import type { JSSKeyObject } from '../key'
 import type { JSSContentContext, JSSContent } from '../content'
@@ -15,24 +17,115 @@ import type { Rules } from '../rule'
 
 stateCondition('contentWaveHover', condition('&:where([data-wave-hover])'))
 
+test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色复用', () => {
+  const contexts: JSSCompileContext[] = []
+  const controllers: ASTController[] = []
+  const nested: JSSContent = { onCompile(context, ast) {
+    contexts.push(context)
+    controllers.push(ast)
+    return '3px'
+  } }
+  const replacement: JSSContent = { dependencies: [nested], onCompile(context, ast) {
+    contexts.push(context)
+    controllers.push(ast)
+    return replacement
+  }, toCSSString: () => '3px' }
+  const source: JSSContent = { onCompile(context, ast) {
+    contexts.push(context)
+    controllers.push(ast)
+    context.node.key = 'width'
+    context.node.content = '2px'
+    context.node.conditionPath.targetConditionPath.push(condition('.later'))
+    return replacement
+  } }
+  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'height', onCompile(context, ast) {
+    contexts.push(context)
+    controllers.push(ast)
+    context.node.key = 'height'
+    context.node.conditionPath.targetConditionPath.push(condition('.live'))
+    return target
+  } }
+  const input: Rules = [[[condition('.snapshot')], target, source]]
+  compileRules(input)
+  const [keyContext, contentContext, returnedContext, nestedContext] = contexts
+  expect(keyContext.role).toBe('declaration-key')
+  expect(keyContext.key).toBe(target)
+  expect(keyContext.content).toBe(source)
+  expect(keyContext.conditionPath.targetConditionPath.map(item => item.header)).toEqual(['.snapshot'])
+  expect(contentContext.role).toBe('declaration-content')
+  expect(contentContext.key).toBe('height')
+  expect(contentContext.content).toBe(source)
+  expect(contentContext.conditionPath.targetConditionPath.map(item => item.header)).toEqual(['.snapshot', '.live'])
+  expect(contentContext.node.key).toBe('width')
+  expect(contentContext.node.content).toBe('2px')
+  expect(returnedContext).toBe(contentContext)
+  expect(nestedContext).toBe(contentContext)
+  expect(keyContext.node).toBe(contentContext.node)
+  expect(keyContext.session).toBe(contentContext.session)
+  expect('compileWaveIndex' in keyContext).toBe(false)
+  expect('compileWaveIndex' in contentContext).toBe(false)
+  expect(new Set(controllers).size).toBe(1)
+  compileRules(input)
+  expect(contexts[4].session).not.toBe(keyContext.session)
+  expect(controllers[4]).not.toBe(controllers[0])
+})
+
+test('状态沿返回内容和 dependencies 传递，Cluster 转交默认成员且 Key 不携带读取状态', () => {
+  const cluster = variableCluster({ default: variable('red', {
+    name: 'context-state-default', states: { contentWaveHover: 'blue' },
+  }) })
+  const roles: [string, string | undefined][] = []
+  const child: JSSContent = { onCompile(context) {
+    roles.push([context.role, context.readState])
+    return value(cluster)
+  } }
+  const returned: JSSContent = { dependencies: [child], toCSSString: () => '1px', onCompile(context) {
+    roles.push([context.role, context.readState])
+    return returned
+  } }
+  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'color', onCompile(context) {
+    roles.push([context.role, context.readState])
+    return target
+  } }
+  const generator: JSSContent = { onCompile(context, ast) {
+    const first = ast.insert({ before: context.node, conditionPath: context.conditionPath },
+      [target, value(cluster)], { owner: context.node })
+    first.readState = 'contentWaveHover'
+    const second = ast.insert({ before: context.node, conditionPath: context.conditionPath },
+      ['width', { onCompile: () => returned }], { owner: context.node })
+    second.readState = 'contentWaveHover'
+    return undefined
+  } }
+  const css = compileRules([[[condition('.StateContext')], 'display', generator]])
+  expect(roles).toEqual([
+    ['declaration-key', undefined],
+    ['declaration-content', 'contentWaveHover'],
+    ['declaration-content', 'contentWaveHover'],
+  ])
+  expect(css).toContain('color: blue;')
+  expect(css).not.toContain('var(--context-state-default')
+})
+
 test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插入节点接回 Root 队列', () => {
-  const compileWaves: number[] = []
+  const events: string[] = []
   const nested = {
     dependencies: ['6px'],
     compileWaveIndex: 0,
-    compile() {
-      compileWaves.push(0)
+    onCompile() {
+      events.push('nested')
       return value('6px')
     },
   }
   let observedController: ASTController | undefined
+  let observedCompileContext: JSSCompileContext | undefined
   const content = {
     dependencies: [nested],
     compileWaveIndex: 2,
-    compile(controller: ASTController) {
-      compileWaves.push(controller.compileWaveIndex)
+    onCompile(context: JSSCompileContext, controller: ASTController) {
+      events.push('delayed')
       observedController = controller
-      controller.insert(controller.conditionPath, key('--wave-inserted-value'), '9px')
+      observedCompileContext = context
+      controller.insert({ before: context.node, conditionPath: context.conditionPath }, [key('--wave-inserted-value'), '9px'], { owner: context.node })
       return value(createJSSContent((resolve) => {
         const input = resolve(nested)
         return input === undefined ? undefined : `calc(${input} * 2)`
@@ -42,8 +135,8 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
   let updatedInsertedNode = false
   const laterContent = {
     compileWaveIndex: 2,
-    compile(controller: ASTController) {
-      const inserted = controller.findByKey(key('--wave-inserted-value'))
+    onCompile(context: JSSCompileContext, controller: ASTController) {
+      const inserted = controller.search({ key: key('--wave-inserted-value'), conditionPath: context.conditionPath })[0]
       if (!inserted) throw new Error('后续编译对象没有观察到前序插入。')
       inserted.content = '11px'
       updatedInsertedNode = true
@@ -54,12 +147,13 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
     [[condition('.WaveContent'), 'contentWaveHover'], 'color', 'red'],
     [[condition('.WaveContent'), 'contentWaveHover'], 'width', content],
     [[condition('.WaveContent'), 'contentWaveHover'], 'height', laterContent],
+    [[condition('.WaveContent')], 'order', { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }],
   ])
 
-  expect(compileWaves).toEqual([0, 2])
-  expect(observedController?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.WaveContent'])
-  expect(observedController?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual(['contentWaveHover'])
-  expect(observedController?.findByKey(key('color'))?.content).toBe('red')
+  expect(events).toEqual(['nested', 'middle', 'delayed'])
+  expect(observedCompileContext?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.WaveContent'])
+  expect(observedCompileContext?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual(['contentWaveHover'])
+  expect(observedController?.search({ key: key('color') })[0]?.content).toBe('red')
   expect(updatedInsertedNode).toBe(true)
   expect(css).toContain('--wave-inserted-value: 11px;')
   expect(css).toContain('width: calc(6px * 2);')
@@ -69,8 +163,8 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
 
 test('后续对象修改已编译的队列节点时，最终输出读取最终队列内容', () => {
   const mutator = {
-    compile(controller: ASTController) {
-      const existing = controller.findByKey(key('--audit-existing-node'))
+    onCompile(context: JSSCompileContext, controller: ASTController) {
+      const existing = controller.search({ key: key('--audit-existing-node'), conditionPath: context.conditionPath })[0]
       if (!existing) throw new Error('没有找到此前的队列节点。')
       existing.content = '11px'
       return '5px'
@@ -86,13 +180,13 @@ test('后续对象修改已编译的队列节点时，最终输出读取最终�
   expect(css).toContain('width: 5px;')
 })
 
-test('自定义 Key 只凭通用 compile 与输出能力插入节点', () => {
+test('自定义 Key 只凭通用 onCompile 与输出能力插入节点', () => {
   let compileCalls = 0
   const customKey: JSSKeyObject & JSSContent = {
     toCSSString: () => '--custom-compiled-key',
-    compile(controller: ASTController) {
+    onCompile(context: JSSCompileContext, controller: ASTController) {
       compileCalls++
-      controller.insert(controller.conditionPath, '--custom-key-dependency', '7px')
+      controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['--custom-key-dependency', '7px'], { owner: context.node })
       return this
     },
   }
@@ -126,7 +220,7 @@ test('只提供 onActive 的内容生成按需 Rules，本声明不输出', () =
   expect(() => compileRules([[[condition('.Invalid')], 'color', {}]])).toThrow('不是可编译的 CSS 内容')
 })
 
-test('Variable Content 根 compile 返回值进入正式 CSS 输出', () => {
+test('Variable Content 根 onCompile 返回值进入正式 CSS 输出', () => {
   const source = variable('red', { name: 'content-root-replacement' })
   const css = compileRules([[[condition('.ContentRootReplacement')], 'color', source]])
 
@@ -141,7 +235,7 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     return 'green'
   }, {
     [Unresultable]: true,
-    compile() {
+    onCompile() {
       sourceCompileCalls++
       return 'red'
     },
@@ -153,7 +247,7 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     return 'yellow'
   }, {
     [Unresultable]: true,
-    compile() {
+    onCompile() {
       stateCompileCalls++
       return 'blue'
     },

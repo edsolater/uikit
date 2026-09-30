@@ -8,6 +8,7 @@ import { $boxShadow } from '../pieces/keys/box-shadow'
 import { stateCondition } from '../pieces/state-conditions'
 import { rule, rules } from '../rule'
 import { arraySequenceToCSSString, value, type Value } from '../value'
+import type { JSSCompileContext } from '../content'
 import type { ASTController } from '../compiler/ast-controller'
 import type { Rules } from '../rule'
 
@@ -72,8 +73,8 @@ test('无专属规则的对象 Key 与字符串 Key 按属性名默认组合，�
 })
 
 test('聚合规则同时取得原对象身份与各项独立的解析读取结果', () => {
-  const firstContent = { compile: () => '2px' }
-  const secondContent = { compile: () => '3px' }
+  const firstContent = { onCompile: () => '2px' }
+  const secondContent = { onCompile: () => '3px' }
   const observed: unknown[] = []
   const spacing = key('--aggregate-spacing', {
     join(items) {
@@ -95,7 +96,7 @@ test('同一原对象在两个声明位置分别解析，Value 仍保留同一�
   let activations = 0
   const shared = {
     onActive: () => { activations++; return [] },
-    compile: () => `${++compiles}px`,
+    onCompile: () => `${++compiles}px`,
   }
   const observed: Value[] = []
   const spacing = key('--shared-content-spacing', {
@@ -149,7 +150,7 @@ test('join 修改 Value 内容为新解析对象时沿结果节点解析与激�
   let activations = 0
   const child = {
     onActive: () => { activations++; return [] },
-    compile: () => { compiles++; return 'new' },
+    onCompile: () => { compiles++; return 'new' },
   }
   const target = key('--replace-value-child', {
     join(items) {
@@ -171,7 +172,7 @@ test('嵌套同一原对象在两个声明位置各自解析成数组 Value', ()
   let activations = 0
   const shared = {
     onActive: () => { activations++; return [] },
-    compile: () => value([++compiles, false]),
+    onCompile: () => value([++compiles, false]),
   }
   const nested = value([[shared]])
   const observed: Value[] = []
@@ -197,9 +198,9 @@ test('join 保留输入 Value 对象时继续使用各声明位置的编译结�
   let activations = 0
   const shared = {
     onActive: () => { activations++; return [] },
-    compile: () => String(++compiles),
+    onCompile: () => String(++compiles),
   }
-  const fresh = { compile: () => 'new' }
+  const fresh = { onCompile: () => 'new' }
   const target = key('--retain-source-view', {
     join(items) { return value([valueList(items[0], fresh), items[1]]) },
   })
@@ -215,8 +216,8 @@ test('join 保留输入 Value 对象时继续使用各声明位置的编译结�
 test('第 2 波插入的同址声明参加聚合，原贡献的按需依赖仍保留', () => {
   const late = {
     compileWaveIndex: 2,
-    compile(controller: ASTController) {
-      controller.insert(controller.conditionPath, $boxShadow, '3px 4px blue')
+    onCompile(context: JSSCompileContext, controller: ASTController) {
+      controller.insert({ before: context.node, conditionPath: context.conditionPath }, [$boxShadow, '3px 4px blue'], { owner: context.node })
       return '8px'
     },
   }
@@ -236,8 +237,8 @@ test('聚合产物返回待解析内容，新增同址贡献后重新收集全�
     join(items) {
       const originals = items.map((item) => item.content)
       return {
-        compile(controller: ASTController) {
-          if (additions++ === 0) controller.insert(controller.conditionPath, stacking, 4, 'after')
+        onCompile(context: JSSCompileContext, controller: ASTController) {
+          if (additions++ === 0) controller.insert({ conditionPath: context.conditionPath, after: context.node }, [stacking, 4], { owner: context.node })
           return originals.reduce<number>((sum, item) => sum + Number(item), 0)
         },
       }
@@ -278,12 +279,12 @@ test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果',
   const sum = key('--aggregate-rewrite', {
     join(items) {
       return {
-        compile(controller: ASTController) {
+        onCompile(context: JSSCompileContext, controller: ASTController) {
           if (rewrites++ === 0) {
-            const first = controller.findByKey(sum)
+            const first = controller.search({ key: sum, conditionPath: context.conditionPath })[0]
             if (!first) throw new Error('没有找到聚合来源。')
             first.content = 7
-            controller.revisit(first)
+            first.compileRevision++
           }
           return items.reduce<number>((total, item) => total + Number(item.content), 0)
         },
@@ -302,11 +303,11 @@ test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果',
   const removable = key('--aggregate-remove', {
     join(items) {
       return {
-        compile(controller: ASTController) {
+        onCompile(context: JSSCompileContext, controller: ASTController) {
           if (removals++ === 0) {
-            const first = controller.findByKey(removable)
+            const first = controller.search({ key: removable, conditionPath: context.conditionPath })[0]
             if (!first) throw new Error('没有找到聚合来源。')
-            controller.removeNode(first)
+            controller.remove(first)
           }
           return items.reduce<number>((total, item) => total + Number(item.content), 0)
         },
@@ -342,7 +343,7 @@ test('显式组合规则在结果解析中修改后重新计算', () => {
   let switched = false
   const target = key('--changed-combiner', {
     join: () => ({
-      compile() {
+      onCompile() {
         if (!switched) {
           switched = true
           target.join = (items) => value(items)
@@ -375,10 +376,10 @@ test('组合产物把来源改成同名默认 Key 后撤销旧结果并按默认
   const aggregating = key('--changed-aggregate-key', {
     join(items) {
       return {
-        compile(controller: ASTController) {
+        onCompile(context: JSSCompileContext, controller: ASTController) {
           if (!changed) {
             changed = true
-            for (const node of controller.nodes()) {
+            for (const node of controller.search({ key: aggregating })) {
               if (node.key === aggregating && typeof node.content === 'number') node.key = plain
             }
           }
@@ -400,10 +401,10 @@ test('一个聚合结果被其他解析对象移除后，存活来源重新生�
   let removed = false
   const first = key('--first-aggregate', {
     join: () => ({
-      compile(controller: ASTController) {
+      onCompile(context: JSSCompileContext, controller: ASTController) {
         if (!removed) {
-          const result = controller.nodes().find((node) => node.key === second && node.content === 2)
-          if (result) { controller.removeNode(result); removed = true }
+          const result = controller.search({ key: second }).find((node) => node.content === 2)
+          if (result) { controller.remove(result); removed = true }
         }
         return 'first'
       },
@@ -426,12 +427,12 @@ test('聚合后的来源跨过其他属性移动，结果仍紧跟最后来源',
   const moving = key('--moving-aggregate', {
     join(items) {
       return {
-        compile(controller: ASTController) {
+        onCompile(context: JSSCompileContext, controller: ASTController) {
           if (!moved) {
-            const source = controller.nodes().find((node) => node.key === moving && node.content === 2)
-            const color = controller.nodes().find((node) => node.key === 'color')
+            const source = controller.search({ key: moving }).find((node) => node.content === 2)
+            const color = controller.search({ key: 'color' })[0]
             if (!source || !color) throw new Error('没有找到待移动的声明。')
-            controller.moveBefore(source, color)
+            controller.move(source, { before: color })
             moved = true
           }
           return items.reduce<number>((sum, item) => sum + Number(item.content), 0)

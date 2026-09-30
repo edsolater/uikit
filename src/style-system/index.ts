@@ -10,7 +10,7 @@ export type { Rule, Rules, RuleValue, RuleHandle, RulesHandle, DeclarationItem, 
 export type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 export type { JSSContentNode } from './compiler/style-nodes-to-content-nodes'
 export type { ASTController } from './compiler/ast-controller'
-export type { JSSContent, JSSContentResolver, JSSContentContext } from './content'
+export type { JSSContent, JSSContentResolver, JSSContentContext, JSSCompileContext } from './content'
 export { createJSSContent } from './content'
 export { variable } from './variable'
 export type { Variable, VariableOptions, VariableDefaultValue } from './variable'

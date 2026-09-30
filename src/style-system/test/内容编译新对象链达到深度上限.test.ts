@@ -3,8 +3,8 @@ import { compileRules } from '../css-root'
 
 describe('Content 次波终止', () => {
   it('新对象持续生成待编译对象时，在调用栈溢出前以深度上限失败', () => {
-    const createCompilable = (): { compile(): ReturnType<typeof createCompilable> } => ({
-      compile: createCompilable,
+    const createCompilable = (): { onCompile(): ReturnType<typeof createCompilable> } => ({
+      onCompile: createCompilable,
     })
 
     expect(() => compileRules([[undefined, 'color', createCompilable()]]))

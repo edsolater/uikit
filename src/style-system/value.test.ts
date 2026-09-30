@@ -15,14 +15,14 @@ test('数组 Value 默认逗号输出，空项不占分隔位置，空格规则�
 })
 
 test('数组 Value 的子内容逐项编译，修改 content 后按新内容遍历', () => {
-  const output = value<ValueData[]>([{ compile: () => '2px' }, '3px'], { toCSSString: arraySequenceToCSSString })
+  const output = value<ValueData[]>([{ onCompile: () => '2px' }, '3px'], { toCSSString: arraySequenceToCSSString })
   expect(compileRules([[[condition('.ChangingValue')], 'padding', output]])).toContain('padding: 2px 3px;')
-  output.content = [{ compile: () => '4px' }, '5px']
+  output.content = [{ onCompile: () => '4px' }, '5px']
   expect(compileRules([[[condition('.ChangingValue')], 'padding', output]])).toContain('padding: 4px 5px;')
 })
 
 test('Value 的显式 dependencies 在当前声明位置编译', () => {
-  const nested = { compile: () => '8px' }
+  const nested = { onCompile: () => '8px' }
   const output = value('unused', {
     dependencies: [nested],
     toCSSString: (_, resolve) => resolve(nested),
@@ -62,9 +62,9 @@ test('嵌套数组、列表 Value、零与 false 按层解析，null 和 undefin
   expect(css).toContain('--nested: 0, false, a, 0;')
 })
 
-test('嵌套 compile 结果按原位置读取，自定义输出规则也可读取各类子项', () => {
+test('嵌套 onCompile 结果按原位置读取，自定义输出规则也可读取各类子项', () => {
   const css = compileRules([
-    [[condition('.ReadValue')], '--compiled', value(['first', [{ compile: () => 'second' }]])],
+    [[condition('.ReadValue')], '--compiled', value(['first', [{ onCompile: () => 'second' }]])],
     [[condition('.ReadValue')], '--custom', value([false, [1, 2], { label: 'plain' }], {
       toCSSString: (items, resolve) => items.map(resolve).join(' | '),
     })],

@@ -10,6 +10,10 @@ import { isJSSContent } from '../content'
 export interface JSSStyleNode {
   /** 编译会话中的稳定位置身份。 */
   identity?: string
+  /** 内容身份未变但编译前提改变时递增，使旧结果失效。 */
+  compileRevision: number
+  /** 当前尝试无法继续的原因；下次尝试前清除。 */
+  deferredReason?: Error
   conditionPath: ConditionPath
   key: JSSKey | undefined
   content: unknown
@@ -55,6 +59,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
         }
         assert(isRuleContent(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
         styleNodes.push({
+          compileRevision: 0,
           conditionPath: { targetConditionPath, stateConditionPath: resolveStateConditions(stateNames), semanticPath: [...parentSemanticPath, ...relativePath ?? []] },
           key,
           content: ruleContent,

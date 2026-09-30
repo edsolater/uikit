@@ -53,7 +53,7 @@ export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarat
 /** 内边距声明；未指定的方向不赋值。 */
 function paddingDeclarations(input: PaddingInput): Declarations {
   if (Array.isArray(input)) return [[$padding, valueSequence(...input)]]
-  if (input && typeof input === 'object' && !('kind' in input) && !('compile' in input) && !('toCSSString' in input)) {
+  if (input && typeof input === 'object' && !('kind' in input) && !('onCompile' in input) && !('toCSSString' in input)) {
     const sides = input as PaddingSides
     return [[$paddingTop, sides.top], [$paddingRight, sides.right], [$paddingBottom, sides.bottom], [$paddingLeft, sides.left]]
   }

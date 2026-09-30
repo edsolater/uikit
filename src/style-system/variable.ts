@@ -8,7 +8,7 @@ import { condition, type ConditionPath } from './condition'
 import type { Declaration } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
-import { createJSSContent, type JSSContent } from './content'
+import { createJSSContent, type JSSCompileContext, type JSSContent } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import { value, type ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
@@ -69,7 +69,7 @@ export interface Variable extends JSSContent {
    * 指定状态：读取本 Variable 的同名状态；未命中才读取默认内容，不登记资源。
    * 普通引用：返回 var(...)，并生成注册资源与自身状态声明；默认内容可作为回退。
    */
-  compile(astController: ASTController, readState?: string): ValueInput
+  onCompile(context: JSSCompileContext, astController: ASTController): ValueInput
 }
 /** 一个 Variable 的名称、各状态基础值及可选的注册和修改能力。 */
 export interface VariableOptions<
@@ -144,16 +144,16 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
     toCSSString() {
       return `--${self.name}`
     },
-    compile(astController, readState) {
-      if (astController.role === 'declaration-key') {
-        activateVariableResources(self, astController)
+    onCompile(context, astController) {
+      if (context.role === 'declaration-key') {
+        activateVariableResources(self, context, astController)
         return value(`var(--${self.name})`)
       }
-      if (readState) return readVariableContent(self, readState)
+      if (context.readState) return readVariableContent(self, context.readState)
 
-      activateVariableResources(self, astController)
+      activateVariableResources(self, context, astController)
       const fallbackValue = readVariableContent(self)
-      declareVariableStates(astController, self, fallbackValue)
+      declareVariableStates(context, astController, self, fallbackValue)
       return createVariableReference(self, fallbackValue)
     },
   }
@@ -182,18 +182,18 @@ function findCurrentState(states: StateCondition[], path: ConditionPath): StateC
  * ```
  * 若当前位置仅命中 hover，则当前值为 `8`，只再补登记顺序靠后的状态。
  */
-function declareVariableStates(controller: ASTController, variable: Variable, fallbackValue: ValueInput): void {
+function declareVariableStates(context: JSSCompileContext, controller: ASTController, variable: Variable, fallbackValue: ValueInput): void {
   const stateConditions = resolveStateConditions([...variable.config.states.keys()])
   if (!stateConditions.length) return
 
-  const currentState = findCurrentState(stateConditions, controller.conditionPath)
+  const currentState = findCurrentState(stateConditions, context.conditionPath)
   const currentValue = currentState ? variable.config.states.get(currentState.name) : fallbackValue
-  insertDefinition(controller, variable, controller.conditionPath, currentValue, currentState?.name)
+  insertDefinition(context, controller, variable, context.conditionPath, currentValue, currentState?.name)
 
   for (const state of stateConditions) {
     if (currentState && state.order <= currentState.order) continue
     const stateValue = variable.config.states.get(state.name)
-    insertDefinition(controller, variable, appendStateCondition(controller.conditionPath, state.name), stateValue, state.name)
+    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state.name), stateValue, state.name)
   }
 }
 
@@ -208,23 +208,41 @@ function createVariableReference(variable: Variable, fallbackValue: ValueInput):
   )
 }
 
-/** 按 registration 为正在使用的 Variable 登记 CSS @property；未配置则不输出。 */
-function activateVariableResources(variable: Variable, controller: ASTController): void {
-  controller.withClaim(variable, () => {
-    const registration = variable.config.registration
-    if (registration) {
-      const address = `variable-registration:${variable.name}`
-      controller.replaceResource(address)
-      const registrationPath = {
-        targetConditionPath: [condition(`@property --${variable.name}`)],
-        stateConditionPath: [],
-      }
-      controller.insertResource(address, registrationPath, 'syntax', JSON.stringify(registration.syntax))
-      controller.insertResource(address, registrationPath, 'inherits', String(registration.inherits))
-      if (registration.initialValue !== undefined)
-        controller.insertResource(address, registrationPath, 'initial-value', registration.initialValue)
-    }
-  })
+/** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
+const registrationSessions = new WeakMap<object, Map<Variable, Set<JSSStyleNode>>>()
+
+/** 按 registration 登记 CSS @property；对象首次消费时替换同址资源，全部消费者撤销后可再次激活。 */
+function activateVariableResources(variable: Variable, context: JSSCompileContext, controller: ASTController): void {
+  const registration = variable.config.registration
+  if (!registration) return
+  const address = `variable-registration:${variable.name}`
+  let registrations = registrationSessions.get(context.session)
+  if (!registrations) registrationSessions.set(context.session, registrations = new Map())
+  let consumers = registrations.get(variable)
+  const active = consumers !== undefined
+  if (!consumers) registrations.set(variable, consumers = new Set())
+  if (!consumers.has(context.node)) {
+    consumers.add(context.node)
+    const currentConsumers = consumers
+    controller.onRemove(context.node, () => {
+      currentConsumers.delete(context.node)
+      if (!currentConsumers.size) registrations.delete(variable)
+    })
+  }
+  if (active) {
+    for (const node of controller.search({ resourceAddress: address, productTag: variable })) controller.depend(node, { owner: context.node })
+    return
+  }
+  for (const node of controller.search({ resourceAddress: address })) controller.remove(node)
+  const registrationPath = {
+    targetConditionPath: [condition(`@property --${variable.name}`)],
+    stateConditionPath: [],
+  }
+  const provenance = { owner: context.node, resourceAddress: address, productTag: variable }
+  controller.insert({ before: context.node, conditionPath: registrationPath }, ['syntax', JSON.stringify(registration.syntax)], provenance)
+  controller.insert({ before: context.node, conditionPath: registrationPath }, ['inherits', String(registration.inherits)], provenance)
+  if (registration.initialValue !== undefined)
+    controller.insert({ before: context.node, conditionPath: registrationPath }, ['initial-value', registration.initialValue], provenance)
 }
 
 /** 在指定条件补入变量的基础值或状态值；有局部声明时写入其基础目标。
@@ -232,19 +250,20 @@ function activateVariableResources(variable: Variable, controller: ASTController
  * 首次查找局部基础目标时，可能同时建立该声明的基础值和状态值。
  */
 function insertDefinition(
+  context: JSSCompileContext,
   controller: ASTController,
   variable: Variable,
   path: ConditionPath,
   content: ValueInput,
   readState?: string,
 ): JSSStyleNode | undefined {
-  const key = findLocalBaseKey(controller, variable, path) ?? variable.config.definitionKey
-  const existing = controller.findByKey(key, path)
+  const key = findLocalBaseKey(context, controller, variable, path) ?? variable.config.definitionKey
+  const existing = controller.search({ key, conditionPath: path })[0]
   if (existing) {
-    controller.retain(existing)
+    controller.depend(existing, { owner: context.node })
     return undefined
   }
-  const node = controller.insert(path, key, content, 'before', variable)
+  const node = controller.insert({ before: context.node, conditionPath: path }, [key, content], { owner: context.node, productTag: variable })
   node.readState = readState
   return node
 }
