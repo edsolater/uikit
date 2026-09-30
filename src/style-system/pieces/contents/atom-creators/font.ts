@@ -14,12 +14,12 @@ export interface FontParts {
 /** 延迟生成字体简写。 */
 export function fontValue(parts: FontParts): JSSContent {
   return createJSSContent(
-    (read) => {
-      const style = read(parts.style)
-      const weight = read(parts.weight)
-      const size = read(parts.size)
-      const leading = read(parts.lineHeight)
-      const family = read(parts.family)
+    (resolve) => {
+      const style = resolve(parts.style)
+      const weight = resolve(parts.weight)
+      const size = resolve(parts.size)
+      const leading = resolve(parts.lineHeight)
+      const family = resolve(parts.family)
       if (size === undefined || family === undefined) return undefined
       return [style, weight, leading === undefined ? size : `${size}/${leading}`, family]
         .filter((part) => part !== undefined)

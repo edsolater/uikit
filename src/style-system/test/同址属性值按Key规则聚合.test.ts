@@ -1,4 +1,4 @@
-/** 验证同址重复声明、Key 聚合规则和解析结果的来源关系。 */
+/** 验证同址重复声明、Key 聚合规则和编译结果的来源关系。 */
 import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { compileCSS, compileRules } from '../css-root'
@@ -72,8 +72,8 @@ test('无专属规则的对象 Key 与字符串 Key 按属性名默认组合，�
 })
 
 test('聚合规则同时取得原对象身份与各项独立的解析读取结果', () => {
-  const firstContent = { parse: () => '2px' }
-  const secondContent = { parse: () => '3px' }
+  const firstContent = { compile: () => '2px' }
+  const secondContent = { compile: () => '3px' }
   const observed: unknown[] = []
   const spacing = key('--aggregate-spacing', {
     join(items) {
@@ -91,11 +91,11 @@ test('聚合规则同时取得原对象身份与各项独立的解析读取结�
 })
 
 test('同一原对象在两个声明位置分别解析，Value 仍保留同一身份且不重复激活', () => {
-  let parses = 0
+  let compiles = 0
   let activations = 0
   const shared = {
     onActive: () => { activations++; return [] },
-    parse: () => `${++parses}px`,
+    compile: () => `${++compiles}px`,
   }
   const observed: Value[] = []
   const spacing = key('--shared-content-spacing', {
@@ -111,7 +111,7 @@ test('同一原对象在两个声明位置分别解析，Value 仍保留同一�
   expect(observed[0].content).toBe(shared)
   expect(observed[1].content).toBe(shared)
   expect(observed[0]).not.toBe(observed[1])
-  expect(parses).toBe(2)
+  expect(compiles).toBe(2)
   expect(activations).toBe(1)
   expect(css).toContain('--shared-content-spacing: 1px 2px;')
 })
@@ -145,11 +145,11 @@ test('聚合规则把 Value 当前内容改成数组时仍按 Value 默认规则
 })
 
 test('join 修改 Value 内容为新解析对象时沿结果节点解析与激活', () => {
-  let parses = 0
+  let compiles = 0
   let activations = 0
   const child = {
     onActive: () => { activations++; return [] },
-    parse: () => { parses++; return 'new' },
+    compile: () => { compiles++; return 'new' },
   }
   const target = key('--replace-value-child', {
     join(items) {
@@ -161,17 +161,17 @@ test('join 修改 Value 内容为新解析对象时沿结果节点解析与激�
     [[condition('.ReplaceChild')], target, 'old'],
     [[condition('.ReplaceChild')], target, 'tail'],
   ])
-  expect(parses).toBe(1)
+  expect(compiles).toBe(1)
   expect(activations).toBe(1)
   expect(css).toContain('--replace-value-child: new, tail;')
 })
 
 test('嵌套同一原对象在两个声明位置各自解析成数组 Value', () => {
-  let parses = 0
+  let compiles = 0
   let activations = 0
   const shared = {
     onActive: () => { activations++; return [] },
-    parse: () => value([++parses, false]),
+    compile: () => value([++compiles, false]),
   }
   const nested = value([[shared]])
   const observed: Value[] = []
@@ -187,19 +187,19 @@ test('嵌套同一原对象在两个声明位置各自解析成数组 Value', ()
   ])
   expect(observed[0].content).toBe(nested)
   expect(observed[1].content).toBe(nested)
-  expect(parses).toBe(2)
+  expect(compiles).toBe(2)
   expect(activations).toBe(1)
   expect(css).toContain('--nested-shared: 1, false, 2, false;')
 })
 
-test('join 保留输入 Value 对象时继续使用各声明位置的解析结果', () => {
-  let parses = 0
+test('join 保留输入 Value 对象时继续使用各声明位置的编译结果', () => {
+  let compiles = 0
   let activations = 0
   const shared = {
     onActive: () => { activations++; return [] },
-    parse: () => String(++parses),
+    compile: () => String(++compiles),
   }
-  const fresh = { parse: () => 'new' }
+  const fresh = { compile: () => 'new' }
   const target = key('--retain-source-view', {
     join(items) { return value([valueList(items[0], fresh), items[1]]) },
   })
@@ -207,15 +207,15 @@ test('join 保留输入 Value 对象时继续使用各声明位置的解析结�
     [[condition('.RetainView')], target, shared],
     [[condition('.RetainView')], target, shared],
   ])
-  expect(parses).toBe(2)
+  expect(compiles).toBe(2)
   expect(activations).toBe(1)
   expect(css).toContain('--retain-source-view: 1, new, 2;')
 })
 
 test('第 2 波插入的同址声明参加聚合，原贡献的按需依赖仍保留', () => {
   const late = {
-    parseWaveIndex: 2,
-    parse(controller: ASTController) {
+    compileWaveIndex: 2,
+    compile(controller: ASTController) {
       controller.insert(controller.conditionPath, $boxShadow, '3px 4px blue')
       return '8px'
     },
@@ -236,7 +236,7 @@ test('聚合产物返回待解析内容，新增同址贡献后重新收集全�
     join(items) {
       const originals = items.map((item) => item.content)
       return {
-        parse(controller: ASTController) {
+        compile(controller: ASTController) {
           if (additions++ === 0) controller.insert(controller.conditionPath, stacking, 4, 'after')
           return originals.reduce<number>((sum, item) => sum + Number(item), 0)
         },
@@ -278,7 +278,7 @@ test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果',
   const sum = key('--aggregate-rewrite', {
     join(items) {
       return {
-        parse(controller: ASTController) {
+        compile(controller: ASTController) {
           if (rewrites++ === 0) {
             const first = controller.findByKey(sum)
             if (!first) throw new Error('没有找到聚合来源。')
@@ -302,7 +302,7 @@ test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果',
   const removable = key('--aggregate-remove', {
     join(items) {
       return {
-        parse(controller: ASTController) {
+        compile(controller: ASTController) {
           if (removals++ === 0) {
             const first = controller.findByKey(removable)
             if (!first) throw new Error('没有找到聚合来源。')
@@ -342,7 +342,7 @@ test('显式组合规则在结果解析中修改后重新计算', () => {
   let switched = false
   const target = key('--changed-combiner', {
     join: () => ({
-      parse() {
+      compile() {
         if (!switched) {
           switched = true
           target.join = (items) => value(items)
@@ -375,7 +375,7 @@ test('组合产物把来源改成同名默认 Key 后撤销旧结果并按默认
   const aggregating = key('--changed-aggregate-key', {
     join(items) {
       return {
-        parse(controller: ASTController) {
+        compile(controller: ASTController) {
           if (!changed) {
             changed = true
             for (const node of controller.nodes()) {
@@ -400,7 +400,7 @@ test('一个聚合结果被其他解析对象移除后，存活来源重新生�
   let removed = false
   const first = key('--first-aggregate', {
     join: () => ({
-      parse(controller: ASTController) {
+      compile(controller: ASTController) {
         if (!removed) {
           const result = controller.nodes().find((node) => node.key === second && node.content === 2)
           if (result) { controller.removeNode(result); removed = true }
@@ -426,7 +426,7 @@ test('聚合后的来源跨过其他属性移动，结果仍紧跟最后来源',
   const moving = key('--moving-aggregate', {
     join(items) {
       return {
-        parse(controller: ASTController) {
+        compile(controller: ASTController) {
           if (!moved) {
             const source = controller.nodes().find((node) => node.key === moving && node.content === 2)
             const color = controller.nodes().find((node) => node.key === 'color')

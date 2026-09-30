@@ -61,15 +61,15 @@ export interface Variable extends JSSContent {
   ): Declaration
   /** 返回 CSS 自定义属性名（如 --amount），供声明目标使用。 */
   toCSSString(): string
-  /** 此对象最早可被解析的波次；配置含义见 VariableOptions.parseWaveIndex。 */
-  parseWaveIndex?: number
+  /** 此对象最早可被编译的波次；配置含义见 VariableOptions.compileWaveIndex。 */
+  compileWaveIndex?: number
   /**
    * 为样式中的三种用途提供对应内容：
    * 声明目标：返回 var(...) 引用，并登记注册资源。
    * 指定状态：读取本 Variable 的同名状态；未命中才读取默认内容，不登记资源。
    * 普通引用：返回 var(...)，并生成注册资源与自身状态声明；默认内容可作为回退。
    */
-  parse(astController: ASTController, readState?: string): ValueInput
+  compile(astController: ASTController, readState?: string): ValueInput
 }
 /** 一个 Variable 的名称、各状态基础值及可选的注册和修改能力。 */
 export interface VariableOptions<
@@ -98,14 +98,14 @@ export interface VariableOptions<
   }
 
   /**
-   * 此 Variable 最早可解析的波次，须为非负整数；省略为 0。
-   * 仅控制内容解析时机，不决定修改顺序。
+   * 此 Variable 最早可编译的波次，须为非负整数；省略为 0。
+   * 仅控制内容编译时机，不决定修改顺序。
    */
-  parseWaveIndex?: number
+  compileWaveIndex?: number
   /** 为 modify 提供相对修改能力；不调用 modify 时可省略。 */
   modification?: {
     /**
-     * 编译时根据前序引用与 change 生成内容表达式，再交给普通解析。
+     * 编译时根据前序引用与 change 生成内容表达式，再交给普通内容编译。
      * 浏览器条件变化不会重调此函数。
      * @param currentValue 前序结果的 CSS 引用，不是浏览器计算值。
      * @param change modify 传入的原样数据；框架不校验其形状。
@@ -133,7 +133,7 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
         return { toCSSString: () => self.toCSSString() }
       },
     },
-    parseWaveIndex: options.parseWaveIndex,
+    compileWaveIndex: options.compileWaveIndex,
     onActive: options.onActive,
     declare(...contents) {
       return declareVariable(self, contents.length ? contents[0] : self.config.defaultValue, activateVariableResources)
@@ -144,7 +144,7 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
     toCSSString() {
       return `--${self.name}`
     },
-    parse(astController, readState) {
+    compile(astController, readState) {
       if (astController.role === 'declaration-key') {
         activateVariableResources(self, astController)
         return value(`var(--${self.name})`)
@@ -197,12 +197,12 @@ function declareVariableStates(controller: ASTController, variable: Variable, fa
   }
 }
 
-/** 生成样式内容的 `var(--name)` 引用；回退内容解析出值时附在第二参数。 */
+/** 生成样式内容的 `var(--name)` 引用；回退内容在当前声明位置编译后附在第二参数。 */
 function createVariableReference(variable: Variable, fallbackValue: ValueInput): ValueInput {
   const contents: ValueInput[] = fallbackValue === undefined ? [] : [fallbackValue]
   return value(
-    createJSSContent((read) => {
-      const fallback = contents.length ? read(contents[0]) : undefined
+    createJSSContent((resolve) => {
+      const fallback = contents.length ? resolve(contents[0]) : undefined
       return fallback === undefined ? `var(--${variable.name})` : `var(--${variable.name}, ${fallback})`
     }, contents),
   )

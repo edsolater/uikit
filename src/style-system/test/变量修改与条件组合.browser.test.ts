@@ -5,7 +5,7 @@ import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
 import type { Rules } from '../rule'
 
-const add = (current: unknown, change: unknown) => createJSSContent((read) => `calc(${read(current)} + ${read(change)})`, [current, change])
+const add = (current: unknown, change: unknown) => createJSSContent((resolve) => `calc(${resolve(current)} + ${resolve(change)})`, [current, change])
 const row = (path: (ReturnType<typeof condition> | string)[], pair: ReturnType<import('../variable').Variable['declare']>): Rules[number] => [path, ...pair]
 const button = condition('.ModifyButton')
 const panel = condition('.ModifyPanel')
@@ -53,7 +53,7 @@ test.each([true, false])('状态基础 10 再修改 3 得到 13，普通引用�
 })
 
 test('有序非交换修改支持尺寸；共享 ID 由层叠选中一步', () => {
-  const size = variable('10px', { name: 'ordered-size', modification: { apply: (current, change: { kind: string; amount: string | number }) => createJSSContent((read) => `calc(${read(current)} ${change.kind === 'add' ? '+' : '*'} ${read(change.amount)})`, [current, change.amount]) } })
+  const size = variable('10px', { name: 'ordered-size', modification: { apply: (current, change: { kind: string; amount: string | number }) => createJSSContent((resolve) => `calc(${resolve(current)} ${change.kind === 'add' ? '+' : '*'} ${resolve(change.amount)})`, [current, change.amount]) } })
   const { element } = mount([row([button], size.declare()), row([button, hover], size.modify({ kind: 'add', amount: '2px' })), row([button, focus], size.modify({ kind: 'multiply', amount: 3 })), [[button], 'width', size]])
   element.dataset.hover = ''
   element.dataset.focus = ''
@@ -87,7 +87,7 @@ test('复用已有数值注册，20、200、1000 项修改都能同时生效和�
 
 test('已有尺寸与颜色注册同样允许长修改链，不依赖颜色专用机制', () => {
   const size = variable('10px', { name: 'registered-length', registration: { syntax: '<length>', inherits: true, initialValue: '10px' }, modification: { apply: add } })
-  const color = variable('red', { name: 'registered-color', registration: { syntax: '<color>', inherits: true, initialValue: 'red' }, modification: { apply: (current) => createJSSContent((read) => `color-mix(in srgb, ${read(current)} 99%, white)`, [current]) } })
+  const color = variable('red', { name: 'registered-color', registration: { syntax: '<color>', inherits: true, initialValue: 'red' }, modification: { apply: (current) => createJSSContent((resolve) => `color-mix(in srgb, ${resolve(current)} 99%, white)`, [current]) } })
   const { element } = mount([row([button], size.declare()), row([button], color.declare()), ...Array.from({ length: 200 }, () => row([button, hover], size.modify('1px'))), ...Array.from({ length: 200 }, () => row([button, hover], color.modify(undefined))), [[button], 'width', size], [[button], 'color', color]])
   element.dataset.hover = ''
   expect(getComputedStyle(element).width).toBe('210px')
@@ -130,15 +130,15 @@ test('declare 可给两个局部定义不同基础内容', () => {
   expect(getComputedStyle(neighbor).zIndex).toBe('24')
 })
 
-test('晚解析的前置修改按源位置连接，编号和解析时机不决定非交换顺序', () => {
+test('晚编译的前置修改按源位置连接，编号和编译时机不决定非交换顺序', () => {
   let additions = 0
   let multiplications = 0
   const n = variable(1, { name: 'late-front', modification: { apply: (current, change) => {
     if (change === 'add') additions++
     else multiplications++
-    return createJSSContent((read) => `calc(${read(current)} ${change === 'add' ? '+ 2' : '* 3'})`, [current])
+    return createJSSContent((resolve) => `calc(${resolve(current)} ${change === 'add' ? '+ 2' : '* 3'})`, [current])
   } } })
-  const delayed = { parseWaveIndex: 1, parse(controller: import('../index').ASTController) {
+  const delayed = { compileWaveIndex: 1, compile(controller: import('../index').ASTController) {
     controller.insert(controller.conditionPath, ...n.modify('add'))
     return undefined
   } }
@@ -149,12 +149,12 @@ test('晚解析的前置修改按源位置连接，编号和解析时机不决�
 })
 
 test.each([false, true])('撤销中间修改或共享首声明后，剩余非交换步骤局部重连，共享=%s', (shared) => {
-  const n = variable(1, { name: `removed-step-${shared}`, modification: { apply: (current, change: { operator: string; amount: number }) => createJSSContent((read) => `calc(${read(current)} ${change.operator} ${change.amount})`, [current]) } })
+  const n = variable(1, { name: `removed-step-${shared}`, modification: { apply: (current, change: { operator: string; amount: number }) => createJSSContent((resolve) => `calc(${resolve(current)} ${change.operator} ${change.amount})`, [current]) } })
   const first = n.modify({ operator: '+', amount: 2 }, shared ? { id: 'shared' } : undefined)
   const middle = n.modify({ operator: '*', amount: 3 })
   const last = n.modify({ operator: '+', amount: 4 }, shared ? { id: 'shared' } : undefined)
   const removed = shared ? first : middle
-  const cleanup = value('1', { onActive: () => [[[button], 'opacity', { parse(controller) {
+  const cleanup = value('1', { onActive: () => [[[button], 'opacity', { compile(controller) {
     controller.removeNode(controller.nodes().find((node) => node.content === removed[1])!)
     return undefined
   } }]] })

@@ -6,7 +6,7 @@ import type { Value, ValueInput } from './value'
 export interface JSSKeyObject {
   toCSSString(): string
   /**
-   * 同 Target／State 地址、同属性名有至少两项时，按声明顺序连接 Value；省略时默认生成逗号数组。保留输入 Value 即保留其声明位置的解析结果；改写 content 后新内容在结果位置解析。
+   * 同 Target／State 地址、同属性名有至少两项时，按声明顺序连接 Value；省略时默认生成逗号数组。保留输入 Value 即保留其声明位置的编译结果；改写 content 后新内容在结果位置编译。
    * @example
    * const $gap = key('gap', { join: values => valueSequence(...values) })
    * rules('.example', [[$gap, '2px'], [$gap, '3px']])

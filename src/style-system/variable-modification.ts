@@ -32,10 +32,10 @@ interface VariableInstance {
 
 /** 局部 Variable 同址赋值保留最后一个实际输出的值。 */
 function joinVariableValues(values: Value[]): ValueInput {
-  return value(values, { toCSSString: (items, read) => {
+  return value(values, { toCSSString: (items, resolve) => {
     let latest: string | undefined
     for (const item of items) {
-      const output = read(item)
+      const output = resolve(item)
       if (output !== undefined) latest = output
     }
     return latest
@@ -111,7 +111,7 @@ export function declareVariable(
 ): Declaration {
   const content: JSSContent = {
     resourceIdentity: Symbol('variable-declaration'),
-    parse(controller) {
+    compile(controller) {
       activateResources(variable, controller)
       ensureVariableInstance(controller, controller.node)
       // 新局部定义接管已有修改时，重新确定这些修改的归属。
@@ -205,7 +205,7 @@ function ensureVariableInstance(controller: ASTController, node: JSSStyleNode): 
 export function modifyVariable(variable: Variable, change: unknown, id?: string | symbol): Declaration {
   const content: JSSContent = {
     resourceIdentity: Symbol('variable-modification'),
-    parse(controller) {
+    compile(controller) {
       const target = findLocalDeclaration(controller, variable)
       if (!target) {
         controller.defer(`Variable ${variable.name} 的修改找不到父路径定义。`)

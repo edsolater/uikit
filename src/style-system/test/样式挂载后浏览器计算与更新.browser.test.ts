@@ -152,7 +152,7 @@ test('Variable 比例在浏览器改变混色结果，消费函数只定义一�
   expect(getComputedStyle(element).backgroundColor).not.toBe(hovered)
 })
 
-test('动画复合值激活帧定义，并继续解析帧内变量', () => {
+test('动画复合值激活帧定义，并继续编译帧内变量', () => {
   const opacity = variable(0.7, { name: '--final-opacity' })
   const frames: Rules = [[[condition('from')], 'opacity', opacity], [[condition('to')], 'opacity', opacity]]
   const name = animationName('motion-appearance', frames)

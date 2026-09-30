@@ -4,9 +4,9 @@ import { conditionAddressKey, semanticPathParts, isSemanticPathPrefix, type Cond
 import { propertyName, type JSSKey } from '../key'
 import type { JSSContent } from '../content'
 import type { JSSStyleNode } from './rules-to-style-nodes'
-/** 在当前解析位置查询和改写本次编译的样式节点。 */
+/** 在当前编译位置查询和改写本次编译的样式节点。 */
 export interface ASTController {
-  /** 当前正在解析的节点。 */
+  /** 当前正在编译的节点。 */
   node: JSSStyleNode
   /** 返回当前输出队列的节点快照。 */
   nodes(): JSSStyleNode[]
@@ -26,19 +26,19 @@ export interface ASTController {
   insertAt(owner: JSSStyleNode, identity: string, path: ConditionPath, key: JSSKey | undefined, content: unknown): JSSStyleNode
   /** 移动内部节点的输出位置，不改变其 Condition Path 或依赖来源。 */
   moveBefore(node: JSSStyleNode, anchor: JSSStyleNode): void
-  /** 使现存节点在后续解析波重新解析。 */
+  /** 使现存节点在后续编译波重新编译。 */
   revisit(node: JSSStyleNode): void
   /** 节点被撤销时执行清理。 */
   onRemove(node: JSSStyleNode, cleanup: () => void): void
-  /** 暂缓当前节点；解析再无进展时抛出指定错误。 */
+  /** 暂缓当前节点；编译再无进展时抛出指定错误。 */
   defer(message: string): void
-  /** 当前解析波；对象可据此决定是否已经到达自己的解析时机。 */
-  parseWaveIndex: number
+  /** 当前编译波；对象可据此决定是否已经到达自己的编译时机。 */
+  compileWaveIndex: number
   /** 当前节点的目标地址与主体状态。 */
   conditionPath: ConditionPath
   key: JSSKey | undefined
   content: unknown
-  /** 区分正在解析声明目标还是声明内容。 */
+  /** 区分正在编译声明目标还是声明内容。 */
   role: 'declaration-key' | 'declaration-content'
   /** 请求激活一个内容对象；同一对象在本次编译中只通知一次。 */
   activate(value: JSSContent): void
@@ -46,7 +46,7 @@ export interface ASTController {
   withClaim(value: object, build: () => void): void
   /** 按属性名和条件地址查找第一条节点；缺省地址是当前位置。 */
   findByKey(key: JSSKey, conditionPath?: ConditionPath): JSSStyleNode | undefined
-  /** 相对当前节点插入内容，默认插在前面；新节点从下一波开始解析。productTag 供 productsByTag 查询产物，不改变来源关系。 */
+  /** 相对当前节点插入内容，默认插在前面；新节点从下一波开始编译。productTag 供 productsByTag 查询产物，不改变来源关系。 */
   insert(conditionPath: ConditionPath, key: JSSKey | undefined, content: unknown, position?: 'before' | 'after', productTag?: object): JSSStyleNode
   /** 从输出队列移除当前展开入口，保留它对已生成产物的来源关系。 */
   detach(): void
@@ -58,12 +58,12 @@ export interface ASTController {
 
 const maximumStyleNodeCount = 100_000
 
-/** 为当前解析位置建立控制器；其操作直接作用于本次编译的节点队列。 */
+/** 为当前编译位置建立控制器；其操作直接作用于本次编译的节点队列。 */
 export function createASTController(
   session: ASTSession,
   currentNode: JSSStyleNode,
   role: ASTController['role'],
-  parseWaveIndex: number,
+  compileWaveIndex: number,
   activate: (value: JSSContent) => void,
 ): ASTController {
   const styleNodes = session.nodes
@@ -117,7 +117,7 @@ export function createASTController(
     revisit: (node) => session.revisit(node),
     onRemove: (node, cleanup) => session.onRemove(node, cleanup),
     defer: (message) => session.deferred.set(currentNode, new Error(message)),
-    parseWaveIndex,
+    compileWaveIndex,
     conditionPath: currentPath,
     key,
     content,
@@ -171,7 +171,7 @@ export class ASTSession {
     return this.values.get(key) as T
   }
 
-  /** 给同一来源、解析角色下的连续插入分配不同身份。 */
+  /** 给同一来源、编译角色下的连续插入分配不同身份。 */
   insertionIdentity(owner: JSSStyleNode, role: string): string {
     let counts = this.insertionCounts.get(owner)
     if (!counts) this.insertionCounts.set(owner, counts = new Map())
@@ -265,7 +265,7 @@ export class ASTSession {
 
   /** 已展开的依赖节点也通过同一入口进入输出队列。 */
   append(nodes: JSSStyleNode[], index = this.nodes.length): void {
-    assert(this.nodes.length + nodes.length <= maximumStyleNodeCount, `AST 节点超过上限 ${maximumStyleNodeCount}，解析无法终止。`)
+    assert(this.nodes.length + nodes.length <= maximumStyleNodeCount, `AST 节点超过上限 ${maximumStyleNodeCount}，编译无法终止。`)
     this.nodes.splice(index, 0, ...nodes)
   }
 
@@ -285,7 +285,7 @@ export class ASTSession {
     this.nodes.splice(this.nodes.indexOf(anchor) + 1, 0, node)
   }
 
-  /** 标记节点供后续解析波重访。 */
+  /** 标记节点供后续编译波重访。 */
   revisit(node: JSSStyleNode): void {
     if (!this.nodes.includes(node)) return
     this.revisions.set(node, this.version(node) + 1)

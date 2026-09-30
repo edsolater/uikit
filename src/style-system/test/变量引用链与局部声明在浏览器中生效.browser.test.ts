@@ -270,7 +270,7 @@ test('状态内容只采用自身状态，并将两个来源按当前状态编�
   const missing = variable('7px', { name: 'context-missing-size', states: { chainActive: '9px' } })
   const combined = variable('1px', {
     name: 'context-combined-size',
-    states: { chainHover: createJSSContent((read) => `calc(${read(first)} + ${read(second)} + ${read(missing)})`, [first, second, missing]) },
+    states: { chainHover: createJSSContent((resolve) => `calc(${resolve(first)} + ${resolve(second)} + ${resolve(missing)})`, [first, second, missing]) },
   })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.StateContext')], 'background-color', surface],
@@ -300,7 +300,7 @@ test('状态读取无状态来源的默认内容，普通引用仍读取局部 C
   const source = variable('5px', { name: 'context-local-source-size' })
   const derived = variable('1px', {
     name: 'context-local-derived-size',
-    states: { chainHover: createJSSContent((read) => `calc(${read(source)} * 2)`, [source]) },
+    states: { chainHover: createJSSContent((resolve) => `calc(${resolve(source)} * 2)`, [source]) },
   })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.LocalContext')], 'width', derived],

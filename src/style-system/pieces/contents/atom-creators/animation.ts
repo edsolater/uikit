@@ -24,9 +24,9 @@ export interface AnimationParts {
 
 /** 延迟生成动画内容。 */
 export function animationValue(parts: AnimationParts): JSSContent {
-  return createJSSContent((read) => [
-    read(parts.name), read(parts.duration), read(parts.easing), read(parts.delay),
-    read(parts.iterations), read(parts.direction), read(parts.fillMode), read(parts.playState),
+  return createJSSContent((resolve) => [
+    resolve(parts.name), resolve(parts.duration), resolve(parts.easing), resolve(parts.delay),
+    resolve(parts.iterations), resolve(parts.direction), resolve(parts.fillMode), resolve(parts.playState),
   ].filter((part) => part !== undefined).join(' '), [
     parts.name, parts.duration, parts.easing, parts.delay,
     parts.iterations, parts.direction, parts.fillMode, parts.playState,

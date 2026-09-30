@@ -10,7 +10,7 @@ const amount = variable(1, {
   states: { hover: 10 },
   modification: {
     apply: (current, change) => createJSSContent(
-      read => `calc(${read(current)} + ${read(change)})`, [current, change]),
+      resolve => `calc(${resolve(current)} + ${resolve(change)})`, [current, change]),
   },
 })
 rules('.Button', [amount.declare(), [key('z-index'), amount]])

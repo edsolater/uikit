@@ -6,7 +6,7 @@ import type { Rules } from '../rule'
 const button = condition('.button')
 const hover = condition('&:hover')
 const focus = condition('&:focus')
-const add = (current: unknown, change: unknown) => createJSSContent((read) => `calc(${read(current)} + ${read(change)})`, [current, change])
+const add = (current: unknown, change: unknown) => createJSSContent((resolve) => `calc(${resolve(current)} + ${resolve(change)})`, [current, change])
 const row = (path: (ReturnType<typeof condition> | string)[], pair: ReturnType<import('../variable').Variable['declare']>): Rules[number] => [path, ...pair]
 
 describe('变量修改与条件组合', () => {
@@ -107,7 +107,7 @@ it('按需产生的同址修改仍是两个独立贡献', () => {
 
 it('另一组晚到的最近定义重新接管修改，并撤销旧表达式的独占依赖', () => {
   const oldDependency = value('1', { onActive: () => [[[condition('.old-resource')], 'color', 'red']] })
-  const n = variable(1, { name: 'rebound', modification: { apply: (current, change) => String(current).includes('-modify-1-') ? createJSSContent((read) => `calc(${read(current)} + ${read(oldDependency)})`, [current, oldDependency]) : add(current, change) } })
+  const n = variable(1, { name: 'rebound', modification: { apply: (current, change) => String(current).includes('-modify-1-') ? createJSSContent((resolve) => `calc(${resolve(current)} + ${resolve(oldDependency)})`, [current, oldDependency]) : add(current, change) } })
   const trigger = variable(0, { name: 'trigger', modification: { apply: (current, change) => value(add(current, change), { onActive: () => [row([button, hover], n.declare())] }) } })
   const css = compileRules([row([button], n.declare()), row([button, hover], n.modify(2)), row([button], trigger.declare()), row([button, focus], trigger.modify(1))])
   expect(css).not.toContain('.old-resource')
@@ -116,7 +116,7 @@ it('另一组晚到的最近定义重新接管修改，并撤销旧表达式的�
 
 it('撤销一个生成消费者仍保留另一个消费者使用的共享依赖', () => {
   const shared = value('1', { onActive: () => [[[condition('.shared-resource')], 'color', 'red']] })
-  const n = variable(1, { name: 'rebound-shared', modification: { apply: (current, change) => String(current).includes('-modify-1-') ? createJSSContent((read) => `calc(${read(current)} + ${read(shared)})`, [current, shared]) : add(current, change) } })
+  const n = variable(1, { name: 'rebound-shared', modification: { apply: (current, change) => String(current).includes('-modify-1-') ? createJSSContent((resolve) => `calc(${resolve(current)} + ${resolve(shared)})`, [current, shared]) : add(current, change) } })
   const trigger = variable(0, { name: 'trigger-shared', modification: { apply: (current, change) => value(add(current, change), { onActive: () => [row([button, hover], n.declare())] }) } })
   const css = compileRules([row([button], n.declare()), row([button, hover], n.modify(2)), row([button], trigger.declare()), row([button, focus], trigger.modify(1)), [[button], 'opacity', shared]])
   expect(css).toContain('.shared-resource')
@@ -146,14 +146,14 @@ it('定义由其他普通内容晚到时，当前修改只等待队列的实际�
   expect(css).toContain('calc(var(--late-definition-modify-1-step-1-input) + 2)')
 })
 
-it('apply 返回递归内容由普通内容解析诊断，修改器不提前消费引用链', () => {
+it('apply 返回递归内容由普通内容编译诊断，修改器不提前消费引用链', () => {
   const recursive: ReturnType<typeof createJSSContent> = createJSSContent(() => '1')
-  recursive.contents = [recursive]
+  recursive.dependencies = [recursive]
   const n = variable(1, { name: 'recursive-modification', modification: { apply: () => recursive } })
   expect(() => compileRules([row([button], n.declare()), row([button, hover], n.modify(2))])).toThrow('循环引用')
 })
 
-it('定义来源由真实 base 消费一次，不通过隐藏容器重复解析', () => {
+it('定义来源由真实 base 消费一次，不通过隐藏容器重复编译', () => {
   let reads = 0
   const source = variable(() => { reads++; return 1 }, { name: 'counted-source' })
   const n = variable(source, { name: 'single-consumer' })

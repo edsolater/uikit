@@ -4,7 +4,7 @@ import type { JSSContentNode } from './style-nodes-to-content-nodes'
 import { hasJSSContentOutput } from '../content'
 import { propertyName } from '../key'
 
-/** 读取已解析的内容链；解析阶段留下的替代结果在这里生效。 */
+/** 读取已编译的内容链；编译阶段留下的替代结果在这里生效。 */
 export function contentToCSSString(input: unknown, resolvedContents: WeakMap<object, unknown>, reading = new Set<object>()): string | undefined {
   if (input === undefined) return undefined
   if (typeof input === 'string' || typeof input === 'number') return String(input)
@@ -16,14 +16,14 @@ export function contentToCSSString(input: unknown, resolvedContents: WeakMap<obj
       const resolved = resolvedContents.get(input)
       if (resolved !== input) return contentToCSSString(resolved, resolvedContents, reading)
     }
-    assert(hasJSSContentOutput(input), 'CSS 内容仍未完成自身解析或输出。')
+    assert(hasJSSContentOutput(input), 'CSS 内容仍未完成自身编译或输出。')
     return input.toCSSString((child) => contentToCSSString(child, resolvedContents, reading))
   } finally {
     reading.delete(input)
   }
 }
 
-/** 按节点地址输出 CSS 内容；同址组合已在解析队列完成。 */
+/** 按节点地址输出 CSS 内容；同址组合已在编译队列完成。 */
 export function contentNodesToCSSString(contentNodes: JSSContentNode[]): string {
   let openHeaders: string[] = []
   const lines: string[] = []

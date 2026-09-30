@@ -8,11 +8,11 @@ export type MixColorInput = ValueInput | [color: ValueInput, weight: ValueInput]
 
 /** 延迟生成 oklab 混色；比例换算为百分比。 */
 export function colorMix(...colors: MixColorInput[]): JSSContent {
-  return createJSSContent((read) => {
+  return createJSSContent((resolve) => {
     const parts = colors.map((input) => {
-      if (!Array.isArray(input)) return read(input)
-      const color = read(input[0])
-      const weight = read(input[1])
+      if (!Array.isArray(input)) return resolve(input)
+      const color = resolve(input[0])
+      const weight = resolve(input[1])
       if (color === undefined || weight === undefined) return undefined
       const percentage = Number.isFinite(Number(weight)) ? `${Number(weight) * 100}%` : `calc(${weight} * 100%)`
       return `${color} ${percentage}`

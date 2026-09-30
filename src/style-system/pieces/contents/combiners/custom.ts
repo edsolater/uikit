@@ -10,8 +10,8 @@ export function cssFunction(signature: string, body: Rules): (...args: ValueInpu
   const name = signature.split('(')[0].trim()
   const definition: Rules = [[[functionDefinition(signature)], undefined, body]]
   return (...args) => Object.assign(
-    createJSSContent((read) => {
-      const parts = args.map(read)
+    createJSSContent((resolve) => {
+      const parts = args.map(resolve)
       return parts.some((part) => part === undefined) ? undefined : `${name}(${parts.join(', ')})`
     }, args),
     { onActive: () => definition },

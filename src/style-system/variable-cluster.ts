@@ -23,8 +23,8 @@ export function variableCluster<Members extends { default: Variable } & Record<s
     return members[name]
   }, { [Unresultable]: true as const })
   let cluster: VariableCluster<Members>
-  /** 配对 Cluster 声明，其他引用代理 default 成员解析。 */
-  const parse = (controller: ASTController): ValueInput => {
+  /** 配对 Cluster 声明，其他引用代理 default 成员编译。 */
+  const compile = (controller: ASTController): ValueInput => {
     if (controller.role === 'declaration-key') {
       const sourceMembers = membersByCluster.get(controller.content)
       if (sourceMembers) {
@@ -35,11 +35,11 @@ export function variableCluster<Members extends { default: Variable } & Record<s
         return undefined
       }
     }
-    return members.default.parse(controller)
+    return members.default.compile(controller)
   }
   cluster = new Proxy(select, {
     get(target, property, receiver) {
-      if (property === 'parse') return parse
+      if (property === 'compile') return compile
       if (property in members.default) return Reflect.get(members.default, property)
       return Reflect.get(target, property, receiver)
     },

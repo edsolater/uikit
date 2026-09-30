@@ -9,7 +9,7 @@ export type Transition = [key: JSSKey, duration: ValueInput, easing: ValueInput,
 
 /** 延迟生成多项过渡。 */
 export function transitionValue(...items: Transition[]): JSSContent {
-  return createJSSContent((read) => items.map(([key, duration, easing, delay]) =>
-    [propertyName(key), read(duration), read(easing), read(delay)].filter((part) => part !== undefined).join(' ')
+  return createJSSContent((resolve) => items.map(([key, duration, easing, delay]) =>
+    [propertyName(key), resolve(duration), resolve(easing), resolve(delay)].filter((part) => part !== undefined).join(' ')
   ).join(', '), items.flatMap(([, duration, easing, delay]) => [duration, easing, delay]))
 }

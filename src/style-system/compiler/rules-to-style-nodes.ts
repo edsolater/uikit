@@ -13,7 +13,7 @@ export interface JSSStyleNode {
   conditionPath: ConditionPath
   key: JSSKey | undefined
   content: unknown
-  /** 解析本节点内容及子内容时沿途传递的状态名称。 */
+  /** 编译本节点内容及子内容时沿途传递的状态名称。 */
   readState?: string
   /** 按需产生的资源用此身份替换同址旧资源；源规则不带此字段。 */
   resourceAddress?: string
@@ -21,7 +21,7 @@ export interface JSSStyleNode {
   productTag?: object
 }
 
-/** 判断 Rule 声明的内容能否进入解析队列。 */
+/** 判断 Rule 声明的内容能否进入编译队列。 */
 function isRuleContent(input: unknown): boolean {
   if (input === undefined || typeof input === 'string' || typeof input === 'number') return true
   return isJSSContent(input)
@@ -53,7 +53,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
           appendStyleNodes(ruleContent as Rules, targetConditionPath, key, stateNames, [...parentSemanticPath, ...relativePath ?? []])
           continue
         }
-        assert(isRuleContent(ruleContent), 'Rules 声明内容不是可解析的 CSS 内容。')
+        assert(isRuleContent(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
         styleNodes.push({
           conditionPath: { targetConditionPath, stateConditionPath: resolveStateConditions(stateNames), semanticPath: [...parentSemanticPath, ...relativePath ?? []] },
           key,

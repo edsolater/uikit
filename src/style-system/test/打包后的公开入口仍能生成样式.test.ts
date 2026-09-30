@@ -18,7 +18,7 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
       [surface, 'blue'],
     ])
     const count = styleSystem.variable(1, { name: 'bundle-modified-count', modification: {
-      apply: (current, change) => styleSystem.createJSSContent(read => 'calc(' + read(current) + ' + ' + read(change) + ')', [current, change]),
+      apply: (current, change) => styleSystem.createJSSContent(resolve => 'calc(' + resolve(current) + ' + ' + resolve(change) + ')', [current, change]),
     } })
     styleSystem.rules('.Built', [count.declare()])
     styleSystem.rules(['.Built', '&:hover'], [count.modify(3)])

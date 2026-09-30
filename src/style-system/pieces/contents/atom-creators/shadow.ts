@@ -15,12 +15,12 @@ export interface ShadowShape {
 
 /** 延迟生成单层阴影。 */
 export function shadowValue(shape: ShadowShape): JSSContent {
-  return createJSSContent((read) => {
-    const x = read(shape.x)
-    const y = read(shape.y)
-    const blur = read(shape.blur)
-    const spread = read(shape.spread)
-    const color = read(shape.color)
+  return createJSSContent((resolve) => {
+    const x = resolve(shape.x)
+    const y = resolve(shape.y)
+    const blur = resolve(shape.blur)
+    const spread = resolve(shape.spread)
+    const color = resolve(shape.color)
     if (x === undefined || y === undefined) return undefined
     return [shape.inset ? 'inset' : undefined, x, y, blur ?? (spread === undefined ? undefined : '0'), spread, color]
       .filter((part) => part !== undefined).join(' ')

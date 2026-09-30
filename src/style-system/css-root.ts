@@ -5,7 +5,7 @@ import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-node
 import { contentNodesToCSSString } from './compiler/content-nodes-to-css-string'
 import type { Rule, RuleHandle, Rules } from './rule'
 
-/** 依次将源 Rules 建为样式节点、已解析内容节点和 CSS 字符串。 */
+/** 依次将源 Rules 建为样式节点、已编译内容节点和 CSS 字符串。 */
 export function compileRules(sourceRules: Rules): string {
   const styleNodes = rulesToStyleNodes(sourceRules)
   const contentNodes = styleNodesToContentNodes(styleNodes, sourceRules)
