@@ -73,9 +73,31 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 ## 边界
 
-浏览器宿主须在渲染 Button 前提供 `<style id="css-root"></style>`。Button 首次执行时激活共享规则，多实例不重复插入；只 import 和服务器端渲染不注册 CSS。该节点在页面生命周期内保留，卸载组件不移除样式。样式组合与变量覆盖见 [Style System 架构](../../src/style-system/architecture.md#button-接入)。
+浏览器宿主须在渲染 Button 前提供 `<style id="css-root"></style>`。Button 静态导入样式模块，模块加载时登记规则；应用在所有静态样式登记后、render 前调用 `cssRoot.mount()`。组件渲染不触发编译或重复登记，卸载组件不移除静态样式。样式组合与变量覆盖见 [Style System 架构](../../src/style-system/architecture.md#button-接入)。
 
 - Button 不内建 validator、validIf 或 enabled 判断协议。
 - Button 不提供 href、target 或导航语义。
 - Button 不提供 icon props；图标属于 children。
 - Button 不因为视觉分类而建立运行时 Profile；分类由类型、解析器声明、注释和 DOM 属性共同表达。
+
+## 样式控制入口
+
+Button 从组件及包入口公开三个 Variable，同一对象也由 Button 样式消费：
+
+| 控制点 | 控制内容 | 当前操作 |
+| --- | --- | --- |
+| buttonSurfaceSource | 背景混色的色源 | declare |
+| buttonSurfaceCanvas | 背景混色的画布 | declare |
+| buttonSurfaceStrength | 色源参与背景的强度 | declare、modify；modify 为相对增量 |
+
+```mermaid
+flowchart LR
+  Caller[调用方局部声明] --> V[Button 公开 Variable 控制点]
+  V --> R[Button 分类与状态规则]
+  Tools[Style System 通用工具] --> R
+  R --> CSS[编译与挂载 CSS]
+```
+
+控制定义与分类组合都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 中；三个控制点以 export 定义，其他业务配方保持私有。相对修改遵守 Variable 的最近语义父定义契约；具体选择条件由调用方表达。内部分类贡献、阴影与光标没有因此成为新的公开控制点，整体禁用淡化复用通用 clickable。
+
+这些 Variable 已可用于 Rules 中的局部声明和组合。目前操作返回声明，由应用挂载 CSS；直接修改 JS 对象不会自动更新页面。未来动态控制沿用这些对象身份，本轮不增加自动插入 CSS 的运行机制。

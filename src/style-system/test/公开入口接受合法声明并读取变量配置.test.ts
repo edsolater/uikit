@@ -27,7 +27,7 @@ test('公开 Variable 方法直接作为声明，Cluster 代理默认成员的�
   const amount = variable(1, { name: 'method-amount', modification: { apply: (current) => current } })
   const cluster = variableCluster({ default: amount })
   const declaration = rules('.Method', [amount.declare(10), [key('z-index'), amount]])
-  const modification = rules(['.Method', 'hover'], [amount.modify({ arbitrary: true })])
+  const modification = rules(['.Method', '&:hover'], [amount.modify({ arbitrary: true })])
   expect(cluster.declare).toBe(amount.declare)
   expect(cluster.modify).toBe(amount.modify)
   declaration.remove()

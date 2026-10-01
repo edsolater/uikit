@@ -5,6 +5,11 @@ import { condition } from '../condition'
 import { variable } from '../variable'
 import { clusterFrom, variableCluster } from '../variable-cluster'
 import { compileRules } from '../css-root'
+import { appendStateCondition } from '../pieces/state-conditions'
+import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
+
 
 stateCondition('compositionA', condition('&:where([data-a])'))
 stateCondition('compositionB', condition('&:where([data-b])'))
@@ -16,12 +21,12 @@ test('状态书写顺序不改变中央优先级', () => {
 })
 test('普通引用从当前位置状态取值，只补更高优先级状态', () => {
   const size = variable('1px', { name: 'current-state-size', states: { compositionA: '2px', compositionB: '3px' } })
-  const fromA = compileRules([[[condition('.Example'), 'compositionA'], 'width', size]])
+  const fromA = compileStateFixture([[[condition('.Example')], 'width', size]], 'compositionA')
   expect(fromA).toContain('--current-state-size: 2px;')
   expect(fromA).toContain('--current-state-size: 3px;')
   expect(fromA).not.toContain('--current-state-size: 1px;')
 
-  const fromB = compileRules([[[condition('.Example'), 'compositionB'], 'width', size]])
+  const fromB = compileStateFixture([[[condition('.Example')], 'width', size]], 'compositionB')
   expect(fromB).toContain('--current-state-size: 3px;')
   expect(fromB).not.toContain('--current-state-size: 2px;')
 })
@@ -42,3 +47,10 @@ test('Cluster 成员未覆盖的更高优先级状态仍沿来源成立', () => 
   expect(css).toContain('--next-size: 2;')
   expect(css).toContain('--next-size: var(--source-size, 1);')
 })
+
+/** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */
+function compileStateFixture(input: import('../rule').Rules, state: string): string {
+  const nodes = rulesToStyleNodes(input)
+  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, state)
+  return contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
+}

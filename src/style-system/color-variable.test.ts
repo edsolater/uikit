@@ -5,6 +5,10 @@ import { compileCSS } from './css-root'
 import { rules, type Rules, type RulesHandle } from './rule'
 import { key } from './key'
 import { variable } from './variable'
+import { condition } from './condition'
+import { stateCondition } from './pieces/state-conditions'
+import { value } from './value'
+import { compileRules } from './css-root'
 import { actionColor } from './pieces/contents/atoms/color/action'
 
 const handles: RulesHandle[] = []
@@ -114,4 +118,58 @@ test('直接同名来源被拒绝，不生成基础色自循环', () => {
   expect(() => color.declare(colorVariable('red', { name: 'collision-color' }))).toThrow('基础色或通道名称')
   handles.push(rules('.Self', color.declare(color)))
   expect(compileCSS()).not.toContain('--collision-color-base: var(--collision-color')
+})
+
+
+test('私有聚合与普通按需声明同址时，末激活资源完整替换而非逗号混合', () => {
+  const color = colorVariable('red', { name: 'resource-address-color' })
+  const later = value('black', { onActive: () => [[['.ResourceAddress'], color, 'blue']] })
+  const css = compileRules([[['.ResourceAddress'], 'background-color', color], [['.ResourceAddress'], 'color', later]])
+  expect(css).toContain('--resource-address-color: blue;')
+  expect(css).not.toContain('--resource-address-color: oklch(')
+  expect(css).not.toContain(', blue;')
+})
+
+test('同名不同颜色的末激活聚合完整接管同址定义', () => {
+  const red = colorVariable('red', { name: 'replacement-color' })
+  const blue = colorVariable('blue', { name: 'replacement-color' })
+  const css = compileRules([[['.Replacement'], 'background-color', red], [['.Replacement'], 'color', blue]])
+  expect(css.match(/--replacement-color: oklch/g)).toHaveLength(1)
+  expect(css).toContain('var(--replacement-color-base, blue)')
+  expect(css.match(/--replacement-color: ([^;]+);/)?.[1]).not.toContain('var(--replacement-color-base, red)')
+})
+
+test('相同 CSS 条件的不同状态资源保留各自状态与语义身份', () => {
+  stateCondition('resourceAliasA', condition('&[data-resource-alias]'))
+  stateCondition('resourceAliasB', condition('&[data-resource-alias]'))
+  const color = colorVariable('red', { name: 'state-resource-color' })
+  const source = variable('black', { name: 'state-resource-source', states: { resourceAliasA: color, resourceAliasB: color } })
+  const observed: string[][] = []
+  const css = compileRules([
+    [['.StateResource'], 'color', source],
+    [[], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+      const nodes = ast.search({ key: color }).filter(node => node.resourceAddress !== undefined)
+      observed.push(...nodes.map(node => node.conditionPath.stateConditionPath.map(state => state.name)))
+      expect(nodes.map(node => node.conditionPath.semanticPath?.at(-1))).toEqual(['resourceAliasA', 'resourceAliasB'])
+      return 1
+    } }],
+  ])
+  expect(observed).toEqual([['resourceAliasA'], ['resourceAliasB']])
+  expect(css).toContain('--state-resource-color: oklch(')
+})
+
+
+test.each([true, false])('同址共享聚合撤销一个消费者保留另一，最后消费者存活=%s', (keepLast) => {
+  const color = colorVariable('red', { name: 'shared-owner-color' })
+  const css = compileRules([
+    [['.SharedOwner'], 'background-color', color],
+    [['.SharedOwner'], 'color', color],
+    [[], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+      ast.remove(ast.search({ key: 'background-color' })[0])
+      if (!keepLast) ast.remove(ast.search({ key: 'color' })[0])
+      return undefined
+    } }],
+  ])
+  expect(css.includes('--shared-owner-color: oklch(')).toBe(keepLast)
+  if (keepLast) expect(css.match(/--shared-owner-color: oklch/g)).toHaveLength(1)
 })

@@ -180,13 +180,14 @@ test('聚合按属性名与最终目标状态地址隔离，同名对象可共�
   expect(css).not.toContain('--aggregate-sum: 2;')
 })
 
-test('同组状态输入顺序不同仍汇入规范化的同一地址', () => {
+test('普通条件保留嵌套顺序，不按登记状态重新聚合', () => {
   const css = compileRules([
     [[condition('.Normalized'), 'aggregateHover', 'aggregateFocus'], $boxShadow, '1px 2px red'],
     [[condition('.Normalized'), 'aggregateFocus', 'aggregateHover'], $boxShadow, '3px 4px blue'],
   ])
-  expect(css).toContain('box-shadow: 1px 2px red, 3px 4px blue;')
-  expect(css.match(/box-shadow:/g)).toHaveLength(1)
+  expect(css).toContain('box-shadow: 1px 2px red;')
+  expect(css).toContain('box-shadow: 3px 4px blue;')
+  expect(css.match(/box-shadow:/g)).toHaveLength(2)
 })
 
 test('无专属规则的对象 Key 与字符串 Key 按属性名默认组合，单项原样输出', () => {

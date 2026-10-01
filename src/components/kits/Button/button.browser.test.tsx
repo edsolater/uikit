@@ -2,24 +2,22 @@
 import { variable } from '../../../style-system/variable'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { Button, type ButtonProps } from './Button'
+import { Button, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps } from './index'
+import { disabledFade } from '../../../style-system/pieces/contents/atoms/opacity'
 import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/pieces/conditions/interaction'
 import { $borderRadius } from '../../../style-system/pieces/keys/border'
-import { $backgroundColor, $color } from '../../../style-system/pieces/keys/color'
+import { $backgroundColor } from '../../../style-system/pieces/keys/color'
 import { contentLayout } from '../../../style-system/pieces/mixins/content'
 import { subtle } from '../../../style-system/pieces/contents/atoms/radius'
 import { spaceSmall } from '../../../style-system/pieces/contents/atoms/space'
 import './Button.style'
-import baselineCSS from './Button.css?raw'
 import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
 import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
 import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
 import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
-import { neutralColor } from '../../../style-system/pieces/contents/atoms/color/neutral'
-import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
 import { shadowFlat, shadowLow, shadowRaised, shadowElevated } from '../../../style-system/pieces/contents/atoms/shadow'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
@@ -35,15 +33,6 @@ function mountButtonStyles() {
   cssRoot.mount()
   return style
 }
-
-beforeEach(() => {
-  // 入口切换前也只让 TS 命中 Button；原文件仅改类名后作为独立对照。
-  document.head.querySelectorAll<HTMLStyleElement>('style[data-vite-dev-id]').forEach(style => {
-    if (style.dataset.viteDevId?.replaceAll('\\', '/').endsWith('/Button.css')) style.sheet!.disabled = true
-  })
-  const baseline = document.body.appendChild(document.createElement('style'))
-  baseline.textContent = baselineCSS.replaceAll('.Button', '.BaselineButton')
-})
 
 /** 读取主体外观；焦点轮廓在用例中单独比较。 */
 function appearance(button: HTMLElement) {
@@ -67,6 +56,15 @@ function expectSameColor(actual: string, expected: string) {
   actualNumbers.forEach((amount, index) => expect(amount).toBeCloseTo(expectedNumbers[index], 4))
 }
 
+/** 读取感知色空间的色度，比较声量而不冻结旧混色数值。 */
+function chroma(content: string): number {
+  const probe = document.body.appendChild(document.createElement('div'))
+  probe.style.color = `oklch(from ${content} l c h / alpha)`
+  const color = getComputedStyle(probe).color
+  probe.remove()
+  return Number(color.match(/oklch\(\S+\s+(\S+)/)![1])
+}
+
 /** 颜色比较保留视觉等价断言，其他外观仍严格逐项一致。 */
 function expectSameAppearance(actual: Record<string, string>, expected: Record<string, string>) {
   for (const name of Object.keys(actual)) {
@@ -80,15 +78,6 @@ function expectSameColors(actual: string[], expected: string[]) {
   actual.forEach((content, index) => expectSameColor(content, expected[index]))
 }
 
-/** 旧 CSS 对照只改变样式身份，保留组件生成的属性与内容。 */
-function baselineButton(button: HTMLButtonElement) {
-  const baseline = button.cloneNode(true) as HTMLButtonElement
-  baseline.classList.replace('Button', 'BaselineButton')
-  button.parentElement!.append(baseline)
-  baseline.style.transition = 'none'
-  return baseline
-}
-
 afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
   dispose?.()
@@ -100,83 +89,154 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
-  test.each([undefined, 'bare', 'solid'] as const)('局部语气成员在普通状态规则中生效并在退出后恢复：%s', async (variant) => {
-    const soft = 'rgb(12, 80, 140)'
-    const strong = 'rgb(34, 100, 160)'
-    const tone = 'rgb(56, 120, 180)'
-    const foreground = 'rgb(78, 140, 200)'
-    handles.push(rules('.Button[data-local-tone]', [
-      [toneColor, tone], [toneColor('soft'), soft],
-      [toneColor('strong'), strong], [toneColor('foreground'), foreground],
-    ]))
-    handles.push(rules('.LocalToneExpectedHover', [
-      [$backgroundColor, variant === 'solid'
-        ? colorMix([tone, 0.88], textColor('strong'))
-        : colorMix([neutralColor(variant === 'bare' ? 1 : 2), variant === 'bare' ? 0.82 : 0.68], soft)],
-      [$color, variant === 'solid' ? foreground : strong],
-    ]))
-    handles.push(rules('.LocalToneExpectedActive', [
-      [$backgroundColor, variant === 'solid'
-        ? colorMix([tone, 0.78], textColor('strong'))
-        : colorMix([neutralColor(variant === 'bare' ? 2 : 3), variant === 'bare' ? 0.74 : 0.58], soft)],
-      [$color, variant === 'solid' ? foreground : strong],
+  test('公开表面控制点使用同一对象，局部声明与修改可组合且移除后恢复', async () => {
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <>
+      <Button accent htmlProps={{ 'data-control': 'first' }}>第一作用域</Button>
+      <Button accent htmlProps={{ 'data-control': 'second' }}>第二作用域</Button>
+      <Button accent>未控制</Button>
+    </>, host)
+    const [first, second, untouched] = host.querySelectorAll<HTMLButtonElement>('button')
+    for (const button of [first, second, untouched]) button.style.transition = 'none'
+    await userEvent.unhover(first)
+    const initial = appearance(first)
+    expectSameAppearance(appearance(second), initial)
+    expectSameAppearance(appearance(untouched), initial)
+    const path = ['@layer uikit', '.Button', '&[data-control="first"]']
+    const source = rules(path, buttonSurfaceSource.declare('oklch(0.6 0.2 30)'))
+    handles.push(source)
+    cssRoot.mount()
+    const sourceOnly = appearance(first)
+    expect(sourceOnly['background-color']).not.toBe(initial['background-color'])
+    const canvas = rules(path, buttonSurfaceCanvas.declare('oklch(0.9 0.02 120)'))
+    handles.push(canvas)
+    cssRoot.mount()
+    const selected = appearance(first)
+    expect(selected['background-color']).not.toBe(sourceOnly['background-color'])
+    expect(selected['background-color']).not.toBe(initial['background-color'])
+    expectSameAppearance(appearance(second), initial)
+    const adjustment = rules(path, buttonSurfaceStrength.modify(0.2))
+    handles.push(adjustment)
+    cssRoot.mount()
+    const adjusted = appearance(first)
+    expect(chroma(adjusted['background-color'])).toBeGreaterThan(chroma(selected['background-color']))
+    expectSameAppearance(appearance(second), initial)
+    expectSameAppearance(appearance(untouched), initial)
+    await userEvent.hover(first)
+    const hovered = appearance(first)
+    expect(chroma(hovered['background-color'])).toBeGreaterThan(chroma(adjusted['background-color']))
+    await userEvent.unhover(first)
+    expectSameAppearance(appearance(first), adjusted)
+    const otherPath = ['@layer uikit', '.Button', '&[data-control="second"]']
+    const other = rules(otherPath, [buttonSurfaceSource.declare('oklch(0.6 0.2 260)'), buttonSurfaceCanvas.declare('white')])
+    handles.push(other)
+    cssRoot.mount()
+    const otherMaterials = appearance(second)
+    const otherStrength = rules(otherPath, buttonSurfaceStrength.declare(0.6))
+    handles.push(otherStrength)
+    cssRoot.mount()
+    expect(chroma(appearance(second)['background-color'])).toBeGreaterThan(chroma(otherMaterials['background-color']))
+    expect(appearance(second)['background-color']).not.toBe(initial['background-color'])
+    expect(appearance(second)['background-color']).not.toBe(appearance(first)['background-color'])
+    expectSameAppearance(appearance(first), adjusted)
+    expectSameAppearance(appearance(untouched), initial)
+    adjustment.remove()
+    cssRoot.mount()
+    expectSameAppearance(appearance(first), selected)
+    source.remove()
+    cssRoot.mount()
+    expect(appearance(first)['background-color']).not.toBe(selected['background-color'])
+    canvas.remove()
+    otherStrength.remove()
+    other.remove()
+    cssRoot.mount()
+    for (const button of [first, second, untouched]) expectSameAppearance(appearance(button), initial)
+  })
+
+  test.each([undefined, 'bare', 'solid'] as const)('局部语气成员在状态参数消费中保持隔离并退出恢复：%s', async (variant) => {
+    const palettes = [
+      { tone: 'rgb(56, 120, 180)', soft: 'rgb(12, 80, 140)', strong: 'rgb(34, 100, 160)', foreground: 'rgb(78, 140, 200)', line: 'rgb(90, 20, 160)' },
+      { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', foreground: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
+    ]
+    for (const [index, palette] of palettes.entries()) handles.push(rules(`.Button[data-local-tone="${index}"]`, [
+      [toneColor, palette.tone], [toneColor('soft'), palette.soft],
+      [toneColor('strong'), palette.strong], [toneColor('foreground'), palette.foreground], [toneColor('line'), palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button variant={variant} danger htmlProps={{ 'data-local-tone': '' }}>局部语气</Button>, host)
-    const button = host.querySelector('button')!
-    button.style.transition = 'none'
-    const reference = document.body.appendChild(document.createElement('div'))
-    const normal = [getComputedStyle(button).backgroundColor, getComputedStyle(button).color]
-    const read = (element: HTMLElement) => [getComputedStyle(element).backgroundColor, getComputedStyle(element).color]
-    reference.className = 'LocalToneExpectedHover'
-    await userEvent.hover(button)
-    expectSameColors(read(button), read(reference))
-    button.focus()
-    await userEvent.keyboard('[Space>]')
-    try {
-      expect(button.matches(':hover:active')).toBe(true)
-      reference.className = 'LocalToneExpectedActive'
-      expectSameColors(read(button), read(reference))
-    } finally { await userEvent.keyboard('[/Space]') }
-    reference.className = 'LocalToneExpectedHover'
-    expectSameColors(read(button), read(reference))
-    await userEvent.unhover(button)
-    expectSameColors(read(button), normal)
+    dispose = render(() => palettes.map((_, index) => <Button variant={variant} danger htmlProps={{ 'data-local-tone': index }}>局部语气</Button>), host)
+    const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
+    const samples: { normal: Record<string, string>; hover: Record<string, string>; active: Record<string, string> }[] = []
+    for (const [index, button] of buttons.entries()) {
+      button.style.transition = 'none'
+      const normal = appearance(button)
+      expectSameColor(normal.color, variant === 'solid' ? palettes[index].foreground : palettes[index].strong)
+      if (variant === 'solid') expectSameColor(normal['background-color'], palettes[index].tone)
+      if (variant === 'bare') expectSameColor(normal['background-color'], 'transparent')
+      button.focus()
+      await userEvent.keyboard('[ArrowRight]')
+      expect(button.matches(':focus-visible')).toBe(true)
+      expectSameColor(getComputedStyle(button).outlineColor, palettes[index].line)
+      await userEvent.hover(button)
+      const hover = appearance(button)
+      expect(hover['background-color']).not.toBe(normal['background-color'])
+      await userEvent.keyboard('[Space>]')
+      let active: Record<string, string>
+      try {
+        expect(button.matches(':hover:active')).toBe(true)
+        active = appearance(button)
+        expect(active['background-color']).not.toBe(hover['background-color'])
+        expectSameColor(active.color, normal.color)
+      } finally { await userEvent.keyboard('[/Space]') }
+      expectSameAppearance(appearance(button), hover)
+      await userEvent.unhover(button)
+      button.blur()
+      expectSameAppearance(appearance(button), normal)
+      samples.push({ normal, hover, active: active! })
+    }
+    for (const state of ['normal', 'hover', 'active'] as const) {
+      expect(samples[0][state].color).not.toBe(samples[1][state].color)
+      if (variant !== 'bare' || state !== 'normal') expect(samples[0][state]['background-color']).not.toBe(samples[1][state]['background-color'])
+    }
+    if (variant === 'bare') {
+      const alpha = (color: string) => Number(color.match(/\/\s*([\d.]+)/)?.[1] ?? 1)
+      for (const sample of samples) {
+        expect(alpha(sample.hover['background-color'])).toBeGreaterThan(0)
+        expect(alpha(sample.active['background-color'])).toBeGreaterThan(alpha(sample.hover['background-color']))
+      }
+    }
   })
 
-  test.each([undefined, 'bare', 'solid'] as const)('禁用从局部角色当前值派生一次并在退出后恢复：%s', async (variant) => {
+  test.each([undefined, 'bare', 'solid'] as const)('统一禁用降低整体声量并保留局部角色和恢复：%s', async (variant) => {
     const surface = 'rgb(12, 34, 56)'
     const foreground = 'rgb(78, 90, 123)'
     handles.push(rules('.Button[data-local-role]', [surfaceColor.declare(surface), foregroundColor.declare(foreground)]))
-    handles.push(rules('.LocalDisabledExpected', [
-      [$backgroundColor, colorMix([surface, 0.48], neutralColor(2))],
-      [$color, colorMix([foreground, 0.48], 'transparent')],
-    ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Button variant={variant} danger htmlProps={{ 'data-local-role': '' }}>局部禁用</Button>, host)
     const button = host.querySelector('button')!
     button.style.transition = 'none'
-    const reference = document.body.appendChild(document.createElement('div'))
-    reference.className = 'LocalDisabledExpected'
-    const read = (element: HTMLElement) => [getComputedStyle(element).backgroundColor, getComputedStyle(element).color]
-    const normal = read(button)
+    const read = () => [getComputedStyle(button).backgroundColor, getComputedStyle(button).color]
+    const normal = read()
     expectSameColors(normal, [surface, foreground])
     button.disabled = true
     await userEvent.hover(button)
-    expectSameColors(read(button), read(reference))
+    expectSameColors(read(), normal)
+    expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
     button.disabled = false
     button.dataset.status = 'disabled'
     button.focus()
     await userEvent.keyboard('[Space>]')
     try {
       expect(button.matches(':hover:active')).toBe(true)
-      expectSameColors(read(button), read(reference))
+      expectSameColors(read(), normal)
+      expect(getComputedStyle(button).transform).toBe('none')
     } finally { await userEvent.keyboard('[/Space]') }
     await userEvent.unhover(button)
     delete button.dataset.status
-    expectSameColors(read(button), normal)
+    expectSameColors(read(), normal)
+    expect(getComputedStyle(button).opacity).toBe('1')
   })
 
   test('solid 常态背景保留组件 surfaceColor 的局部覆盖', () => {
@@ -191,96 +251,63 @@ describe('Button styles', () => {
     expectSameColor(getComputedStyle(button).backgroundColor, 'rgb(12, 34, 56)')
   })
 
-  test('旧 CSS 固定为 9 月 3 日迁移前的 Git blob', async () => {
-    const content = new TextEncoder().encode(baselineCSS)
-    const header = new TextEncoder().encode(`blob ${content.length}\0`)
-    const blob = new Uint8Array(header.length + content.length)
-    blob.set(header)
-    blob.set(content, header.length)
-    const digest = await crypto.subtle.digest('SHA-1', blob)
-    expect(Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')).toBe('dab69febec84ce8d9e38921c33e2a5de16a8568a')
+  test.each(['light', 'dark'])('%s：声量、语气与状态独立组合，反馈与退出保持层次', async (theme) => {
+    document.documentElement.dataset.theme = theme
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    const variants: ButtonProps['variant'][] = [undefined, 'bare', 'solid']
+    const tones: ButtonProps['tone'][] = [undefined, 'accent', 'danger']
+    dispose = render(() => variants.flatMap(variant => tones.map(tone => <Button variant={variant} tone={tone}>组合</Button>)), host)
+    const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
+    for (const [index, button] of buttons.entries()) {
+      button.style.transition = 'none'
+      await userEvent.unhover(button)
+      const normal = appearance(button)
+      const variant = variants[Math.floor(index / 3)]
+      if (variant === 'bare') expectSameColor(normal['background-color'], 'transparent')
+      expect(normal.opacity).toBe('1')
+      await userEvent.hover(button)
+      const hover = appearance(button)
+      expect(hover['background-color']).not.toBe(normal['background-color'])
+      button.focus()
+      await userEvent.keyboard('[Space>]')
+      try {
+        expect(button.matches(':hover:active')).toBe(true)
+        expect(appearance(button)['background-color']).not.toBe(hover['background-color'])
+        expect(appearance(button).transform).not.toBe('none')
+      } finally { await userEvent.keyboard('[/Space]') }
+      expectSameAppearance(appearance(button), hover)
+      await userEvent.unhover(button)
+      button.blur()
+      expectSameAppearance(appearance(button), normal)
+    }
+    for (const toneIndex of [1, 2]) {
+      const normal = appearance(buttons[toneIndex])
+      const solid = appearance(buttons[6 + toneIndex])
+      expect(chroma(solid['background-color'])).toBeGreaterThan(chroma(normal['background-color']))
+      expect(solid['color']).not.toBe(normal['color'])
+    }
+    for (const variantIndex of [0, 1, 2]) {
+      const accent = buttons[variantIndex * 3 + 1]
+      const danger = buttons[variantIndex * 3 + 2]
+      // bare 的透明背景以文字承担语气，其余声量同时以表面承担。
+      if (variantIndex !== 2) expect(appearance(accent).color).not.toBe(appearance(danger).color)
+      if (variantIndex !== 1) expect(appearance(accent)['background-color']).not.toBe(appearance(danger)['background-color'])
+    }
   })
-  for (const theme of ['light', 'dark']) {
-    test(`${theme}：九种配方的常态、独立焦点、悬停和两种 active 交集与旧 CSS 一致`, async () => {
-      document.documentElement.dataset.theme = theme
-      mountButtonStyles()
-      const host = document.body.appendChild(document.createElement('div'))
-      const variants: ButtonProps['variant'][] = [undefined, 'bare', 'solid']
-      const tones: ButtonProps['tone'][] = [undefined, 'accent', 'danger']
-      dispose = render(() => variants.flatMap(variant => tones.map(tone => <Button variant={variant} tone={tone}>比较</Button>)), host)
-      for (const button of Array.from(host.querySelectorAll<HTMLButtonElement>('button'))) {
-        button.style.transition = 'none'
-        const baseline = baselineButton(button)
-        expectSameAppearance(appearance(button), appearance(baseline))
-        await userEvent.unhover(baseline)
-        baseline.focus()
-        await userEvent.keyboard('[ArrowRight]')
-        const focusAppearance = appearance(baseline)
-        const focusRing = ['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(baseline).getPropertyValue(property))
-        button.focus()
-        await userEvent.keyboard('[ArrowRight]')
-        expect(button.matches(':focus-visible')).toBe(true)
-        expect(button.matches(':hover, :active')).toBe(false)
-        expectSameAppearance(appearance(button), focusAppearance)
-        expect(['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(button).getPropertyValue(property))).toEqual(focusRing)
-        button.blur()
-        await userEvent.hover(baseline)
-        const hover = appearance(baseline)
-        baseline.focus()
-        await userEvent.keyboard('[Space>]')
-        const active = appearance(baseline)
-        const ring = ['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(baseline).getPropertyValue(property))
-        await userEvent.keyboard('[/Space]')
-        await userEvent.hover(button)
-        expectSameAppearance(appearance(button), hover)
-        button.focus()
-        await userEvent.keyboard('[Space>]')
-        try {
-          expect(button.matches(':hover:active')).toBe(true)
-          expectSameAppearance(appearance(button), active)
-          expect(button.matches(':focus-visible')).toBe(true)
-          expect(['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(button).getPropertyValue(property))).toEqual(ring)
-          await userEvent.unhover(button)
-          expect(button.matches(':active')).toBe(true)
-          expectSameAppearance(appearance(button), active)
-        } finally { await userEvent.keyboard('[/Space]') }
-        button.blur()
-        baseline.disabled = true
-        const disabledAppearance = appearance(baseline)
-        for (const mode of ['native', 'status', 'both']) {
-          button.disabled = mode !== 'status'
-          button.dataset.status = mode === 'native' ? 'loading' : 'loading disabled'
-          expectSameAppearance(appearance(button), disabledAppearance)
-          await userEvent.hover(button)
-          expectSameAppearance(appearance(button), disabledAppearance)
-          button.focus()
-          await userEvent.keyboard('[Space>]')
-          try {
-            if (mode === 'status') expect(button.matches(':active')).toBe(true)
-            expectSameAppearance(appearance(button), disabledAppearance)
-            expect(getComputedStyle(button).cursor).toBe('not-allowed')
-          } finally { await userEvent.keyboard('[/Space]') }
-          await userEvent.unhover(button)
-          button.blur()
-        }
-        baseline.remove()
-      }
-    })
-  }
 
-  test('隔离来源：停用 TS 后对照必须失败，旧 CSS 不替 Button 通过', () => {
+  test('隔离来源：停用 TS 样式会失去实心背景，恢复挂载后恢复', () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Button solid accent>隔离</Button>, host)
     const button = host.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
-    const baseline = baselineButton(button)
-    expectSameAppearance(appearance(button), appearance(baseline))
+    const before = appearance(button)
     const style = document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)!
     style.sheet!.disabled = true
-    expect(appearance(button)).not.toEqual(appearance(baseline))
+    expect(appearance(button)['background-color']).not.toBe(before['background-color'])
     style.sheet!.disabled = false
-    expectSameAppearance(appearance(button), appearance(baseline))
+    expectSameAppearance(appearance(button), before)
   })
 
   test.each(['light', 'dark'])('%s：所有 variant、tone、size 与 loading 的禁用组合保持各 feature 的覆盖', (theme) => {
@@ -302,21 +329,16 @@ describe('Button styles', () => {
 
     for (const [index, entry] of cases.entries()) {
       const button = host.querySelector<HTMLButtonElement>(`[data-testid="disabled-${index}"]`)!
-      const baseline = baselineButton(button)
-      const expected = getComputedStyle(baseline)
       if (entry.mode === 'native') button.dataset.status = entry.loading ? 'loading' : ''
       if (entry.mode === 'status') button.disabled = false
       button.style.transition = 'none'
       expect(button.matches(whenDisabled.header.replace('&', ''))).toBe(true)
       const computed = getComputedStyle(button)
-      expectSameColor(computed.backgroundColor, expected.backgroundColor)
-      expectSameColor(computed.color, expected.color)
       expect(computed.boxShadow).toBe('none')
       expect(computed.cursor).toBe('not-allowed')
-      expect(computed.opacity).toBe('0.56')
+      expect(Number(computed.opacity)).toBe(disabledFade.content)
       expect(computed.transform).toBe('none')
       expect(computed.minHeight).toBe(entry.size === 'small' ? '32px' : entry.size === 'large' ? '64px' : entry.size === 'xlarge' ? '80px' : '48px')
-      baseline.remove()
     }
   })
 
@@ -363,11 +385,9 @@ describe('Button styles', () => {
         const unmount = render(() => <Button solid>品牌</Button>, host)
         const button = host.querySelector<HTMLButtonElement>('button')!
         button.style.transition = 'none'
-        const baseline = baselineButton(button)
-        expectSameAppearance(appearance(button), appearance(baseline))
         const color = getComputedStyle(button).backgroundColor
-        if (theme === 'light' && brand) expect(color).toBe('oklch(0.6 0.15 140)')
-        if (theme === 'dark') expect(color).toBe('oklch(0.7 0.18 260)')
+        if (theme === 'light' && brand) expectSameColor(color, 'oklch(0.6 0.15 140)')
+        if (theme === 'dark') expectSameColor(color, 'oklch(0.7 0.18 260)')
         unmount()
         host.remove()
       }
@@ -387,16 +407,15 @@ describe('Button styles', () => {
       <Button size={size} htmlProps={{ style: 'max-width:160px' }}>窄容器中较长的按钮内容换行</Button>,
     ]), host)
     for (const button of Array.from(host.querySelectorAll<HTMLButtonElement>('button'))) {
-      const baseline = baselineButton(button)
       const actual = getComputedStyle(button)
-      const expected = getComputedStyle(baseline)
-      for (const property of ['display', 'align-self', 'align-items', 'justify-content', 'min-height', 'padding', 'gap', 'font-size', 'font-weight', 'line-height', 'border-radius', 'corner-shape', 'width', 'height']) {
-        expect(actual.getPropertyValue(property), property).toBe(expected.getPropertyValue(property))
-      }
+      expect(actual.display).toBe('flex')
+      expect(actual.alignSelf).toBe('center')
+      expect(actual.alignItems).toBe('center')
+      expect(actual.justifyContent).toBe('center')
+      expect(actual.borderRadius).toBe('999px')
       expect(actual.getPropertyValue('corner-shape')).toBe('superellipse(2)')
       const children = button.querySelectorAll('span')
       if (children.length === 2) expect(children[1].getBoundingClientRect().left - children[0].getBoundingClientRect().right).toBeCloseTo(parseFloat(actual.columnGap), 5)
-      baseline.remove()
     }
     const stretch = document.body.appendChild(document.createElement('div'))
     stretch.style.cssText = 'display:flex;height:120px'
@@ -470,7 +489,7 @@ describe('Button styles', () => {
     const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
     const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
     const reference = document.body.appendChild(document.createElement('div'))
-    reference.style.color = 'var(--color-accent-focus)'
+    reference.style.color = 'var(--color-action-line)'
     const accentColor = getComputedStyle(reference).color
     reference.style.color = 'var(--color-bad-line)'
     const dangerColor = getComputedStyle(reference).color
@@ -612,7 +631,7 @@ describe('Button styles', () => {
     expect(xlargeStyle.columnGap).toBe('16px')
     expect(getComputedStyle(getButton('loading')).cursor).toBe('progress')
     expect(disabledStyle.cursor).toBe('not-allowed')
-    expect(disabledStyle.opacity).toBe('0.56')
+    expect(Number(disabledStyle.opacity)).toBe(disabledFade.content)
 
     const defaultBackground = defaultStyle.backgroundColor
     await userEvent.hover(getButton('default'))

@@ -35,11 +35,11 @@ test('同址三层阴影按声明顺序计算，状态各自聚合且同时成�
     [$boxShadow, '1px 2px red'],
     [$boxShadow, '3px 4px blue, 5px 6px green'],
   ]))
-  handles.push(rules(['.aggregate-shadow-example', 'shadowHover'], [
+  handles.push(rules(['.aggregate-shadow-example', condition('&:where([data-shadow-hover])')], [
     [$boxShadow, '7px 8px purple'],
     [$boxShadow, '9px 10px orange'],
   ]))
-  handles.push(rule(['.aggregate-shadow-example', 'shadowActive'], $boxShadow, '11px 12px black'))
+  handles.push(rule(['.aggregate-shadow-example', condition('&:where([data-shadow-active])')], $boxShadow, '11px 12px black'))
   cssRoot.mount()
 
   const base = getComputedStyle(element).boxShadow

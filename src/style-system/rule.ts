@@ -1,7 +1,6 @@
 /** Rule 登记与声明组合。 */
 import { assert, isString } from '@edsolater/fnkit'
 import { condition, type Condition, type ConditionInput } from './condition'
-import { hasStateCondition } from './pieces/state-conditions'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './declaration'
 import type { ValueInput } from './value'
@@ -10,7 +9,7 @@ import { registerRule } from './css-root'
 /** 待编译内容或嵌套规则。 */
 export type RuleValue = ValueInput | Rules
 
-/** 路径、目标与内容；路径中的字符串是主体条件名称，空项沿用外层。 */
+/** 路径、目标与内容；字符串是普通 CSS 条件，空项沿用外层。 */
 export type Rule = [path: (Condition | string)[] | undefined, key: JSSKey | undefined, content: RuleValue]
 
 /** 按声明顺序保存的规则。 */
@@ -40,14 +39,14 @@ export interface RuleHandle extends RulesHandle {
   replace(value: RuleValue): void
 }
 
-/** 把普通 CSS 地址字符串表示为 Condition，保留已登记的状态名和现成的 Condition。
+/** 把 CSS 地址字符串表示为 Condition，现成的 Condition 保留对象。
  * `'.Button'` → `{ header: '.Button' }`。
- * 已登记的 `'hover'` → 原字符串。
+ * `'hover'` → `{ header: 'hover' }`，不解释状态名称。
  * 传入 Condition → 原对象。
  * 此处只区分路径成员，不校验路径是否有效。
  */
-function resolvePathCondition(item: Condition | string): Condition | string {
-  if (!isString(item) || hasStateCondition(item)) return item
+function resolvePathCondition(item: Condition | string): Condition {
+  if (!isString(item)) return item
   return condition(item)
 }
 
@@ -62,8 +61,8 @@ function assertValidConditionPath(path: (Condition | string)[]): void {
   )
 }
 
-/** 把单项或数组输入整理成规则地址，保留状态名并拒绝不合形状的成员。
- * 已登记 `hover` 时，`['.Button', 'hover']` → `[{ header: '.Button' }, 'hover']`。
+/** 把单项或数组输入整理成普通规则地址，拒绝不合形状的成员。
+ * `['.Button', '&:hover']` → 两个普通 Condition。
  * 运行时传入 `[undefined]` 会抛错。
  * `undefined` 仍返回 `undefined`，表示沿用外层路径。
  */

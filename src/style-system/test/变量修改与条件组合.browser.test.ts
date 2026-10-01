@@ -43,7 +43,7 @@ test('两个组件独立组合，并在退出状态时恢复基础值', () => {
 
 test.each([true, false])('状态基础 10 再修改 3 得到 13，普通引用提前=%s', (early) => {
   const n = variable(1, { name: 'state-count', states: { modifierHover: 10 }, modification: { apply: add } })
-  const declarations: Rules = [row([button], n.declare()), row([button, 'modifierHover'], n.modify(3))]
+  const declarations: Rules = [row([button], n.declare()), row([button, hover], n.modify(3))]
   if (early) declarations.unshift([[button], 'z-index', n])
   else declarations.push([[button], 'z-index', n])
   const { element } = mount(declarations)
@@ -111,7 +111,7 @@ test('共享 ID 让后写条件覆盖同一步，退出后恢复仍匹配的赋�
 
 test.each([false, true])('修改先于定义登记时，内部默认不能覆盖实际修改，状态路径=%s', (withState) => {
   const n = variable(1, { name: `early-modifier-${withState}`, modification: { apply: add } })
-  const { element } = mount([row(withState ? [button, 'modifierHover'] : [button], n.modify(3)), row([button], n.declare()), [[button], 'z-index', n]])
+  const { element } = mount([row(withState ? [button, hover] : [button], n.modify(3)), row([button], n.declare()), [[button], 'z-index', n]])
   if (withState) element.dataset.hover = ''
   expect(getComputedStyle(element).zIndex).toBe('4')
 })

@@ -6,6 +6,7 @@ import type { Rules } from './rule'
 import { variable, type Variable, type VariableOptions } from './variable'
 import { value, type Value, type ValueInput } from './value'
 import { oklch } from './pieces/contents/functions/oklch'
+import { resourceRule } from './compiler/resource-rule'
 
 /** 颜色沿用 Variable 消费协议；基础色、绝对通道与增量各自声明，互不清空。 */
 export interface ColorVariable extends Omit<Variable, 'declare'> {
@@ -44,10 +45,7 @@ export function colorVariable(defaultColor: ValueInput = 'black',
   const join = (items: Value[]): ValueInput => value(items, { toCSSString: (contents, resolve) =>
     contents.map(resolve).filter((content) => content !== undefined).at(-1) })
   /** 在当前消费地址重算主色，避免继承父元素已计算完的主色。 */
-  const activateAggregate = (context: JSSContentContext): Rules => [[
-    [...context.conditionPath.targetConditionPath, ...context.conditionPath.stateConditionPath.map((state) => state.name)],
-    color, aggregate,
-  ]]
+  const activateAggregate = (context: JSSContentContext): Rules => [resourceRule(context.conditionPath, color, aggregate)]
   /** 每次编译消费产生自身激活包装，使同一声明可复用于多个地址。 */
   const set = (channel: Variable, content: ValueInput): Declaration => declare(
     { toCSSString: () => channel.toCSSString(), join },

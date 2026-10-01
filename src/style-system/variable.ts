@@ -39,7 +39,7 @@ export interface Variable extends JSSContent {
    * 省略 content 使用创建默认值；显式传入 undefined 则不提供基础内容。
    * @example 已配置修改能力的 amount：
    * `rules('.Button', [amount.declare(10)])`
-   * `rules(['.Button', 'hover'], [amount.modify(2)])`
+   * `rules(['.Button', '&:hover'], [amount.modify(2)])`
    */
   declare(content?: ValueInput): Declaration
   /**

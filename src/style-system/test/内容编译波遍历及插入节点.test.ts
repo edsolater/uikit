@@ -243,15 +243,15 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
     },
   }
   const css = compileRules([
-    [[condition('.WaveContent'), 'contentWaveHover'], 'color', 'red'],
-    [[condition('.WaveContent'), 'contentWaveHover'], 'width', content],
-    [[condition('.WaveContent'), 'contentWaveHover'], 'height', laterContent],
+    [[condition('.WaveContent'), condition('&:where([data-wave-hover])')], 'color', 'red'],
+    [[condition('.WaveContent'), condition('&:where([data-wave-hover])')], 'width', content],
+    [[condition('.WaveContent'), condition('&:where([data-wave-hover])')], 'height', laterContent],
     [[condition('.WaveContent')], 'order', { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }],
   ])
 
   expect(events).toEqual(['nested', 'middle', 'delayed'])
-  expect(observedCompileContext?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.WaveContent'])
-  expect(observedCompileContext?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual(['contentWaveHover'])
+  expect(observedCompileContext?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.WaveContent', '&:where([data-wave-hover])'])
+  expect(observedCompileContext?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual([])
   expect(observedController?.search({ key: key('color') })[0]?.content).toBe('red')
   expect(updatedInsertedNode).toBe(true)
   expect(css).toContain('--wave-inserted-value: 11px;')
@@ -536,12 +536,12 @@ test.each([false, true])('onActive 内容生成按需 Rules，带空 dependencie
     },
   }
   const css = compileRules([
-    [[condition('.LifecycleOnly'), 'contentWaveHover'], 'display', lifecycleOnly],
+    [[condition('.LifecycleOnly'), condition('&:where([data-wave-hover])')], 'display', lifecycleOnly],
   ])
 
   expect(activations).toBe(1)
-  expect(observedContext?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.LifecycleOnly'])
-  expect(observedContext?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual(['contentWaveHover'])
+  expect(observedContext?.conditionPath.targetConditionPath.map((item) => item.header)).toEqual(['.LifecycleOnly', '&:where([data-wave-hover])'])
+  expect(observedContext?.conditionPath.stateConditionPath.map((item) => item.name)).toEqual([])
   expect(css).toContain('.LifecycleDependency')
   expect(css).toContain('color: red;')
   expect(css).not.toContain('display:')
@@ -626,12 +626,13 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     },
   })
   const css = compileRules([[
-    [condition('.CompilableFunction'), 'contentWaveHover'],
+    [condition('.CompilableFunction'), condition('&:where([data-wave-hover])')],
     'color',
     variable(source, { name: 'compilable-function-color', states: { contentWaveHover: state } }),
   ]])
 
-  expect(sourceCompileCalls).toBe(1)
+  // 普通条件不设置 readState；引用回退与常态自动声明分别编译来源。
+  expect(sourceCompileCalls).toBe(2)
   expect(sourceFactoryCalls).toBe(0)
   expect(stateCompileCalls).toBe(1)
   expect(stateFactoryCalls).toBe(0)

@@ -1,7 +1,7 @@
 /** 按钮的样式效果与生效条件。 */
 import {
   rules,
-  calcMultiply,
+  calcAdd,
   variable,
   innerText,
   contentLayout,
@@ -15,138 +15,101 @@ import { surfaceColor, foregroundColor } from '../../../style-system/pieces/role
 import { $cursor } from '../../../style-system/pieces/keys/interaction'
 import { $alignSelf } from '../../../style-system/pieces/keys/layout'
 import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
-import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
+import { foregroundColorInteractive } from '../../../style-system/pieces/contents/atoms/color/text'
 import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
 import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
-import { neutralColor } from '../../../style-system/pieces/contents/atoms/color/neutral'
+import { surfaceColorInteractive } from '../../../style-system/pieces/contents/atoms/color/surface'
 import { pill } from '../../../style-system/pieces/contents/atoms/radius'
-import { spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin } from '../../../style-system/pieces/contents/atoms/space'
-import { controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge } from '../../../style-system/pieces/contents/atoms/size'
-import { bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge } from '../../../style-system/pieces/contents/atoms/font'
-import { shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '../../../style-system/pieces/contents/atoms/shadow'
+import {
+  spaceSmall,
+  spaceNormal,
+  spaceMedium,
+  spaceLarge,
+  spaceExtraLarge,
+  spaceWide,
+  spaceWidest,
+  boundaryWidthThin,
+} from '../../../style-system/pieces/contents/atoms/space'
+import {
+  controlSizeSmall,
+  controlSizeNormal,
+  controlSizeLarge,
+  controlSizeExtraLarge,
+} from '../../../style-system/pieces/contents/atoms/size'
+import {
+  bold,
+  singleLine,
+  textSizeNormal,
+  textSizeLarge,
+  textSizeExtraLarge,
+  textSizeExtraExtraLarge,
+} from '../../../style-system/pieces/contents/atoms/font'
+import {
+  shadowFlat,
+  shadowRaised,
+  shadowElevated,
+  shadowInteractive,
+} from '../../../style-system/pieces/contents/atoms/shadow'
 
 const button = ['@layer uikit', '.Button']
 
-// =============================================================================
-// 默认效果
-// =============================================================================
+/** 混色的动作色来源，默认使用局部语气的柔和成员。 */
+export const buttonSurfaceSource = variable(toneColor('soft'), { name: 'button-surface-source' })
 
-const opacity = variable(1, {
-  name: 'button-opacity',
-  states: { disabled: 0.56 },
+/** 混色的承载画布，默认沿用中性表面的交互状态。 */
+export const buttonSurfaceCanvas = variable(surfaceColorInteractive, { name: 'button-surface-canvas' })
+
+/** 动作色在表面中的占比；分类和外部修改沿前序结果组合。 */
+export const buttonSurfaceStrength = variable(0.18, {
+  name: 'button-surface-strength',
+  states: { hover: 0.28, active: 0.38 },
+  modification: { apply: (current, change) => calcAdd(current, change) },
 })
 
 rules(button, [
-  surfaceColor.declare(colorMix([neutralColor(1), 0.82], accentColor('soft'))),
-  foregroundColor.declare(textColor),
-  // --- 内容排版 ---
+  [toneColor, actionColor],
+  buttonSurfaceStrength.declare(),
+  surfaceColor.declare(colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
+  foregroundColor.declare(foregroundColorInteractive),
+
   innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
-
-  // --- 内容布局 ---
-  contentLayout({
-    mode: 'center',
-    gap: spaceNormal,
-    padding: [spaceNormal, spaceExtraLarge],
-  }),
+  contentLayout({ mode: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
   [$alignSelf, 'center'],
-
-  // --- 默认物理尺寸 ---
   size({ minHeight: controlSizeNormal }),
-
-  // --- 默认外观 ---
-  boundary({
-    border: [boundaryWidthThin, 'solid', 'transparent'],
-    radius: pill,
-    cornerShape: 'squircle',
-  }),
+  boundary({ border: [boundaryWidthThin, 'solid', 'transparent'], radius: pill, cornerShape: 'squircle' }),
   color({ background: surfaceColor, foreground: foregroundColor }),
   elevation(shadowInteractive),
-
-  // --- 通用交互 ---
-  clickable({ opacity }),
+  clickable(),
 ])
 
-// 普通状态声明保持来源的 JSS 身份，由当前位置的角色与语气声明决定颜色。
-rules([...button, 'hover'], [
-  surfaceColor.declare(colorMix([neutralColor(2), 0.72], accentColor('soft'))),
-  foregroundColor.declare(textColor('strong')),
-])
-rules([...button, 'active'], [
-  surfaceColor.declare(colorMix([neutralColor(3), 0.62], accentColor('soft'))),
-  foregroundColor.declare(textColor('strong')),
-])
+// tone 只选择材料；声量与状态沿用各自的独立效果。
+rules([...button, '&[data-tone]'], [foregroundColor.declare(toneColor('strong'))])
+rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
+rules([...button, '&[data-tone="danger"]'], [[toneColor, dangerColor]])
 
-// =============================================================================
-// variant 动作声量
-// =============================================================================
-
+// bare 保留透明常态，悬停和按下只增加轻量语气反馈。
+const bareStrength = variable(-0.18, {
+  name: 'button-bare-strength',
+  states: { hover: -0.2, active: -0.24 },
+})
 const bareButton = [...button, '&[data-variant="bare"]']
-rules(bareButton, [surfaceColor.declare('transparent'), elevation(shadowFlat)])
-rules([...bareButton, 'hover'], [surfaceColor.declare(colorMix([neutralColor(1), 0.88], accentColor('soft')))])
-rules([...bareButton, 'active'], [surfaceColor.declare(colorMix([neutralColor(2), 0.82], accentColor('soft')))])
+rules(bareButton, [buttonSurfaceStrength.modify(bareStrength), [buttonSurfaceCanvas, 'transparent'], elevation(shadowFlat)])
 
+// solid 使用语气实底与对应前景，交互时露出中性画布形成层次。
+const solidStrength = variable(0.82, {
+  name: 'button-solid-strength',
+  states: { hover: 0.62, active: 0.42 },
+})
 const shadowSolid = variable(shadowRaised, {
   name: 'button-shadow-solid',
   states: { hover: shadowElevated, active: shadowFlat, disabled: shadowFlat },
 })
-
 const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
-  [toneColor, actionColor],
-  surfaceColor.declare(actionColor),
-  foregroundColor.declare(colorMix([actionColor('foreground'), 0.9], surfaceColor)),
+  buttonSurfaceStrength.modify(solidStrength),
+  [buttonSurfaceSource, toneColor],
+  foregroundColor.declare(toneColor('foreground')),
   elevation(shadowSolid),
-])
-rules([...solidButton, 'hover'], [foregroundColor.declare(actionColor('foreground'))])
-rules([...solidButton, 'active'], [foregroundColor.declare(actionColor('foreground'))])
-
-// =============================================================================
-// tone 动作语气
-// =============================================================================
-
-const toneButton = [...button, '&[data-tone]']
-rules(toneButton, [
-  surfaceColor.declare(colorMix([neutralColor(1), 0.76], toneColor('soft'))),
-  foregroundColor.declare(toneColor('strong')),
-])
-rules([...toneButton, 'hover'], [
-  surfaceColor.declare(colorMix([neutralColor(2), 0.68], toneColor('soft'))),
-  foregroundColor.declare(toneColor('strong')),
-])
-rules([...toneButton, 'active'], [
-  surfaceColor.declare(colorMix([neutralColor(3), 0.58], toneColor('soft'))),
-  foregroundColor.declare(toneColor('strong')),
-])
-
-rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
-rules([...button, '&[data-tone="danger"]'], [[toneColor, dangerColor]])
-
-// --- 语气与声量组合：退场保留透明常态，实心保留语气实底 ---
-// TODO: 当前交集仍有专属混色比例，后续应由声量与语气的独立效果组合表达。
-
-const bareToneButton = [...button, '&[data-variant="bare"][data-tone]']
-rules(bareToneButton, [surfaceColor.declare('transparent')])
-rules([...bareToneButton, 'hover'], [surfaceColor.declare(colorMix([neutralColor(1), 0.82], toneColor('soft')))])
-rules([...bareToneButton, 'active'], [surfaceColor.declare(colorMix([neutralColor(2), 0.74], toneColor('soft')))])
-
-const solidToneButton = [...button, '&[data-variant="solid"][data-tone]']
-rules(solidToneButton, [
-  surfaceColor.declare(toneColor),
-  foregroundColor.declare(colorMix([toneColor('foreground'), 0.9], surfaceColor)),
-])
-rules([...solidToneButton, 'hover'], [
-  surfaceColor.declare(colorMix([toneColor, 0.88], textColor('strong'))),
-  foregroundColor.declare(toneColor('foreground')),
-])
-rules([...solidToneButton, 'active'], [
-  surfaceColor.declare(colorMix([toneColor, 0.78], textColor('strong'))),
-  foregroundColor.declare(toneColor('foreground')),
-])
-
-// 禁用在最终背景上混色，前景仅缩放透明度；颜色角色不需要额外转接变量。
-rules([...button, 'disabled'], [
-  color({ background: colorMix([surfaceColor, 0.48], neutralColor(2)) }),
-  foregroundColor.setAlpha(calcMultiply('alpha', 0.48)),
 ])
 
 // =============================================================================

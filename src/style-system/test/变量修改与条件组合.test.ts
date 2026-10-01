@@ -28,8 +28,8 @@ const row = (path: (ReturnType<typeof condition> | string)[], pair: ReturnType<i
 it('局部声明缺少语义快照时，生成状态保留已有状态再接新状态', () => {
   const n = variable(1, { name: 'missing-semantic-state', states: { focus: 10 }, modification: { apply: add } })
   const input: Rules = [
-    row([button, 'hover'], n.declare()),
-    row([button, 'hover', 'focus'], n.modify(3)),
+    row([button, hover], n.declare()),
+    row([button, hover, focus], n.modify(3)),
     [[], 'order', { compileWaveIndex: 1, onCompile(_, ast) {
       const generated = ast.search({}).find((node) => node.content === 10 && node.readState === 'focus')!
       expect(semanticPathParts(generated.conditionPath)).toEqual(semanticPathParts(expected))
@@ -38,13 +38,15 @@ it('局部声明缺少语义快照时，生成状态保留已有状态再接新�
     } }],
   ]
   const nodes = rulesToStyleNodes(input)
+  nodes[0].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, 'hover')
+  nodes[1].conditionPath = appendStateCondition(nodes[0].conditionPath, 'focus')
   delete nodes[0].conditionPath.semanticPath
   const expected = appendStateCondition(nodes[0].conditionPath, 'focus')
   const css = contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
   expect(css).toContain('--missing-semantic-state-modify-1-base: 10;')
   expect(css).toContain('calc(var(--missing-semantic-state-modify-1-step-1-input) + 3)')
   expect(css).not.toContain('step-2')
-  expect(compileRules(input)).toContain('--missing-semantic-state-modify-1-base: 10;')
+  expect(contentNodesToCSSString(styleNodesToContentNodes(nodes, input))).toContain('--missing-semantic-state-modify-1-base: 10;')
 })
 
 describe('变量修改与条件组合', () => {
@@ -74,7 +76,7 @@ describe('变量修改与条件组合', () => {
   })
   it('状态写入基础值，普通引用先出现也不留下公共状态覆盖', () => {
     const n = variable(1, { name: 'n', states: { hover: 10 }, modification: { apply: add } })
-    const css = compileRules([[ [button], 'z-index', n ], row([button], n.declare()), row([button, 'hover'], n.modify(3))])
+    const css = compileRules([[ [button], 'z-index', n ], row([button], n.declare()), row([button, hover], n.modify(3))])
     expect(css).toContain('--n-modify-1-base: 10')
     expect(css).not.toContain('--n: 10')
   })
@@ -98,8 +100,8 @@ describe('变量修改与条件组合', () => {
     const css = compileRules([
       [[button], 'z-index', n],
       row([button], n.declare()),
-      row([button, 'hover'], n.declare()),
-      row([button, 'hover', 'focus'], n.modify(3)),
+      row([button, hover], n.declare()),
+      row([button, hover, focus], n.modify(3)),
     ])
     expect(css).toContain('--nested-target-modify-2-base: 10')
     expect(css).toContain('calc(var(--nested-target-modify-2-step-1-input) + 3)')
@@ -124,7 +126,7 @@ describe('变量修改与条件组合', () => {
   })
   it('原始状态父链决定最近定义，不使用排序后的状态顺序', () => {
     const n = variable(1, { name: 'n', modification: { apply: add } })
-    const css = compileRules([row([button], n.declare()), row([button, 'hover'], n.declare()), row([button, 'hover', 'focus'], n.modify(3))])
+    const css = compileRules([row([button], n.declare()), row([button, hover], n.declare()), row([button, hover, focus], n.modify(3))])
     expect(css).toContain('calc(var(--n-modify-2-step-1-input) + 3)')
     expect(css).not.toContain('--n-modify-1-base')
   })
@@ -171,7 +173,7 @@ it('显式定义保留默认基础值并激活 Variable 注册', () => {
 
 it.each([undefined, 9])('普通注册与修改内部注册共享同一字段内容，initialValue=%s', (initialValue) => {
   const n = variable(7, { name: 'shared-registration-content', registration: { syntax: '<number>', inherits: false, initialValue }, modification: { apply: add } })
-  const css = compileRules([row([button], n.declare()), row([button, 'hover'], n.modify(2))])
+  const css = compileRules([row([button], n.declare()), row([button, hover], n.modify(2))])
   const registrations = [...css.matchAll(/@property (--shared-registration-content[^ ]*) \{\n([^}]+)\}/g)]
   expect(registrations.map(([, name]) => name)).toEqual([
     '--shared-registration-content', '--shared-registration-content-modify-1-base', '--shared-registration-content-modify-1-step-1',
@@ -214,7 +216,7 @@ it('apply 回调移动共享成员时，返回后用新候选重选锚点与连�
   const sharedNext = n.modify(4, { id: 'shared' })
   const css = compileRules([
     [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
-    row([button], n.declare()), row([button, 'hover'], sharedFirst), row([button], middle), row([button, 'focus'], sharedNext),
+    row([button], n.declare()), row([button, hover], sharedFirst), row([button], middle), row([button, focus], sharedNext),
   ])
   expect(css).toContain('--apply-moved-anchor-modify-1-step-2-input: var(--apply-moved-anchor-modify-1-base);')
   expect(css).toContain('--apply-moved-anchor-modify-1-step-1-input: var(--apply-moved-anchor-modify-1-step-2);')
@@ -248,10 +250,15 @@ it('局部基础生产函数改写定义路径后，归属判断使用新路径�
   }
   const late = n.declare()
   Object.assign(late[1] as JSSContent, { compileWaveIndex: 1 })
-  const css = compileRules([
+  const input: Rules = [
     [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
-    row([button], n.declare(1)), row([button, 'hover'], local), row([button, 'hover', 'focus'], n.modify(3)), row([button, 'focus'], late),
-  ])
+    row([button], n.declare(1)), row([button, hover], local), row([button, hover, focus], n.modify(3)), row([button, focus], late),
+  ]
+  const nodes = rulesToStyleNodes(input)
+  nodes[2].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, 'hover')
+  nodes[3].conditionPath = appendStateCondition(nodes[2].conditionPath, 'focus')
+  nodes[4].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, 'focus')
+  const css = contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
   expect(css).toContain('--source-boundary-modify-3-base: 10;')
   expect(css).toContain('calc(var(--source-boundary-modify-3-step-1-input) + 3)')
   expect(css).not.toContain('--source-boundary-modify-2-step-1')
@@ -271,8 +278,8 @@ it('晚到定义接管同路径多步时，当前操作复用最近归属判断'
   try {
     const css = compileRules([
       row([button], n.declare(1)),
-      row([button, 'hover'], n.modify(2)), row([button, 'hover'], n.modify(3)), row([button, 'hover'], n.modify(4)),
-      [[button, 'hover'], 'opacity', { compileWaveIndex: 1, onCompile(context, ast) {
+      row([button, hover], n.modify(2)), row([button, hover], n.modify(3)), row([button, hover], n.modify(4)),
+      [[button, hover], 'opacity', { compileWaveIndex: 1, onCompile(context, ast) {
         ast.insert({ before: context.node, conditionPath: context.conditionPath }, late, { owner: context.node })
         return 1
       } }],
@@ -313,7 +320,7 @@ it('共享步骤移动后重新选择最早成员，撤销该成员再按当前�
   const middle = n.modify(4)
   const sharedNext = n.modify(5, { id: 'shared' })
   const css = compileRules([
-    row([button], n.declare()), row([button], first), row([button, 'hover'], sharedFirst), row([button], middle), row([button, 'focus'], sharedNext),
+    row([button], n.declare()), row([button], first), row([button, hover], sharedFirst), row([button], middle), row([button, focus], sharedNext),
     [[button], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
       const nodes = ast.search({ key: n.config.definitionKey })
       const moved = nodes.find((node) => node.content === sharedFirst[1])!
@@ -336,8 +343,8 @@ it('共享步骤移动后重新选择最早成员，撤销该成员再按当前�
 
 it('晚到消费者仍沿原始状态父链将状态路由到 base', () => {
   const n = variable(1, { name: 'late-state', states: { hover: 10, active: 20 }, modification: { apply: add } })
-  const trigger = variable(0, { name: 'state-trigger', modification: { apply: (current, change) => value(add(current, change), { onActive: () => [[[button, 'hover', 'focus'], 'z-index', n]] }) } })
-  const css = compileRules([row([button, 'hover'], n.declare()), row([button, 'hover', 'focus'], n.modify(3)), row([button], trigger.declare()), row([button, focus], trigger.modify(1))])
+  const trigger = variable(0, { name: 'state-trigger', modification: { apply: (current, change) => value(add(current, change), { onActive: () => [[[button, hover, focus], 'z-index', n]] }) } })
+  const css = compileRules([row([button, hover], n.declare()), row([button, hover, focus], n.modify(3)), row([button], trigger.declare()), row([button, focus], trigger.modify(1))])
   expect(css).toContain('--late-state-modify-1-base: 20')
   expect(css).not.toContain('--late-state: 20')
 })

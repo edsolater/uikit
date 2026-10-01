@@ -9,6 +9,11 @@ import { clusterDeclarations, clusterFrom, variableCluster } from '../variable-c
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { calcMultiply } from '../pieces/contents/functions/calc'
 import { compileRules } from '../css-root'
+import { appendStateCondition } from '../pieces/state-conditions'
+import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
+
 import { cssFunction } from '../pieces/contents/functions/custom'
 import { stateCondition } from '../pieces/state-conditions'
 import { media } from '../condition'
@@ -80,7 +85,7 @@ test('外层 active 不改变 hover 内容沿多层来源读取的状态', () =>
     name: 'chain-surface-color',
     states: { hover: colorMix(nested, fallback) },
   })
-  const css = compileRules([[[condition('.Chain'), 'active'], 'background-color', surface]])
+  const css = compileRules([[[condition('.Chain'), condition('&:active')], 'background-color', surface]])
   expect(css.match(/--chain-surface-color:/g)).toHaveLength(2)
   expect(css).toContain('--chain-surface-color: color-mix(in oklab, blue, black);')
   expect(css).not.toContain('--chain-palette-color:')
@@ -331,7 +336,7 @@ test('零值不会沿来源链退回', () => {
 
 test('已在 active Rule 内消费时，首次自动声明采用 active 内容', () => {
   const source = variable('red', { name: 'active-color', states: { active: 'blue' } })
-  const css = compileRules([[[condition('.Example'), 'active'], 'color', source]])
+  const css = compileStateFixture([[[condition('.Example')], 'color', source]], 'active')
   expect(css).toContain('--active-color: blue;')
   expect(css).not.toContain('--active-color: red;')
 })
@@ -361,7 +366,7 @@ test('动态内容没有被消费时不执行，消费时产生 CSS', () => {
 })
 test('声明来源 Variable 不修改其定义，局部显式声明优先', () => {
   const ratio = variable(0.8, { name: 'surface-ratio', states: { hover: 0.6 } })
-  const css = compileRules([[[condition('.Example'), 'hover'], ratio, 0.3], [[condition('.Example')], 'opacity', calcMultiply(ratio, 0.5)]])
+  const css = compileStateFixture([[[condition('.Example')], ratio, 0.3], [[condition('.Example')], 'opacity', calcMultiply(ratio, 0.5)]], 'hover')
   expect(css).toContain('--surface-ratio: 0.3;')
   expect(css).not.toContain('--surface-ratio: 0.6;')
 })
@@ -390,7 +395,14 @@ test('五成员目标接收三成员来源时，只覆盖双方已有成员', ()
 test('显式 Variable 局部分支保留其消费状态，状态内容的临时条件不扩散', () => {
   const inner = variable('10px', { name: 'branch-inner-size', states: { hover: '20px', active: '30px' } })
   const target = variable(undefined, { name: 'branch-target-size' })
-  const css = compileRules([[[condition('.BranchScope'), 'active'], target, inner]])
+  const css = compileStateFixture([[[condition('.BranchScope')], target, inner]], 'active')
   expect(css).toContain('--branch-inner-size: 30px;')
   expect(css).not.toContain('--branch-inner-size: 20px;')
 })
+
+/** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */
+function compileStateFixture(input: import('../rule').Rules, state: string): string {
+  const nodes = rulesToStyleNodes(input)
+  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, state)
+  return contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
+}

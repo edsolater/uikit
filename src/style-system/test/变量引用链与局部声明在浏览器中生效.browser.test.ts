@@ -314,11 +314,11 @@ test('状态读取无状态来源的默认内容，普通引用仍读取局部 C
   expect(getComputedStyle(element).height).toBe('7px')
 })
 
-test('首次只在显式 hover Rule 消费时也固定选中内容的来源状态', () => {
+test('普通 hover 条件不设置读取状态，自动 hover 配方仍固定其来源状态', () => {
   const palette = variable('gray', { name: 'explicit-palette-color', states: { chainHover: 'blue', chainActive: 'red' } })
   const surface = variable('white', { name: 'explicit-surface-color', states: { chainHover: palette } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
-    [[condition('.ExplicitContext'), 'chainHover'], 'background-color', surface],
+    [[condition('.ExplicitContext'), condition('&:where([data-hover])')], 'background-color', surface],
   ])
   const element = document.body.appendChild(document.createElement('div'))
   element.className = 'ExplicitContext'
@@ -328,11 +328,11 @@ test('首次只在显式 hover Rule 消费时也固定选中内容的来源状�
   expect(getComputedStyle(element).backgroundColor).toBe('rgb(0, 0, 255)')
 })
 
-test('显式 active Rule 内生成的 surface.hover 仍按 hover 取来源内容', () => {
+test('普通 active 条件内生成的 surface.hover 仍按 hover 取来源内容', () => {
   const palette = variable('gray', { name: 'nested-palette-color', states: { chainHover: 'blue', chainActive: 'red' } })
   const surface = variable('white', { name: 'nested-surface-color', states: { chainHover: palette } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
-    [[condition('.NestedContext'), 'chainActive'], 'background-color', surface],
+    [[condition('.NestedContext'), condition('&:where([data-active])')], 'background-color', surface],
   ])
   const element = document.body.appendChild(document.createElement('div'))
   element.className = 'NestedContext'

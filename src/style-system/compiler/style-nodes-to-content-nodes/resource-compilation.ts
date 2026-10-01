@@ -9,6 +9,8 @@ import type { Rule, Rules } from '../../rule'
 import type { JSSContentContext, JSSContent } from '../../content'
 import { rulesToStyleNodes, type JSSStyleNode } from '../rules-to-style-nodes'
 import type { ASTSession } from '../ast-controller'
+import { resourceConditionPath } from '../resource-rule'
+import { condition, conditionAddressKey } from '../../condition'
 
 /** 内容的一次激活及其规则产物；同一 Rule 身份可被多个激活记录共享。 */
 interface ActivationRecord {
@@ -20,9 +22,13 @@ interface ActivationRecord {
 function ruleAddress(rule: Rule, identities: Map<string | symbol, number>): string {
   const [conditionPath, key, content] = rule
   const identity = content && typeof content === 'object' && 'resourceIdentity' in content ? content.resourceIdentity : undefined
+  const path = resourceConditionPath(rule)
   if (identity !== undefined && !identities.has(identity)) identities.set(identity, identities.size)
   return JSON.stringify([
-    conditionPath?.map((item) => typeof item === 'string' ? item : item.header),
+    conditionAddressKey(path ?? {
+      targetConditionPath: (conditionPath ?? []).map((item) => typeof item === 'string' ? condition(item) : item),
+      stateConditionPath: [],
+    }),
     key === undefined ? undefined : propertyName(key),
     identity === undefined ? undefined : identities.get(identity),
   ])
@@ -76,6 +82,8 @@ export class ResourceCompilation {
       const owners = [...entry.owners].filter((owner) => this.session.isAlive(owner))
       if (!owners.length) return []
       return rulesToStyleNodes([entry.rule]).map((node, index) => {
+        const path = resourceConditionPath(entry.rule)
+        if (path) node.conditionPath = path
         node.resourceAddress = address
         node.identity = `dependency/${address}/${index}`
         for (const owner of owners) this.session.own(owner, node)

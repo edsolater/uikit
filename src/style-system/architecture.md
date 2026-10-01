@@ -13,6 +13,8 @@ JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 
 Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层；对象仍遵守 JSSContent 约定。functions 与 Atom Creators 提供构造内容的方式。
 
+公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询 StateCondition 登记表。状态名称只在 Variable 的 `states` 内解释；自动展开复用完整 `ConditionPath`、中央顺序与既有节点编译链。
+
 `functions/` 提供 CSS 函数内容，如混色、计算与 `oklch(base, channels, deltas)`。[ColorVariable](color-variable.ts) 与 [Variable](variable.ts) 是同级领域概念；前者沿用后者的消费协议，拥有基础色、四个绝对通道和四个独立增量。`declare(source)` 只声明基础色；set 与 delta 分别赋值对应字段；未设置时在 CSS 相对 OKLCH 上下文使用原始通道与零增量，不预先声明通道。主色在每个消费或设置地址按需重新聚合，避免继承父元素已计算完的主色。`surfaceColor` 与 `foregroundColor` 直接使用该能力，Button 无额外颜色转接 Variable。
 
 `rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译验证并展开源 Rules；给 `onActive` 的 root 另复制规则容器（Rules、tuple、路径及嵌套 Rules），保留业务对象身份。Atom、Function 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`onCompile` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`onCompile(context, ast)` 在编译波中查询、插入、替换或删除当前队列节点，也可返回下一层内容；已经调用的对象保存替代链进度，跨波等待不会重复调用。编译器沿 `dependencies` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始编译。Key、Content 或 revision 改变时，由同一失效规则分别在访问前和波末重置对应角色进度。
@@ -35,6 +37,8 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 
 [rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[内容编译流程](compiler/style-nodes-to-content-nodes/compilation.ts) 逐波编译、处理按需 Rules 和同址组合；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一编译波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。同址同名 Key 默认组合，单条声明仍直接输出。
 
+颜色聚合的内部按需 Rule 使用 [resource-rule.ts](compiler/resource-rule.ts) 保存既有完整条件路径，输出仍是实际 Condition。ResourceCompilation 保留内部状态与语义身份，并复用原账本完成同址替换、共享与撤销；该桥接不增加公开状态名称入口。
+
 `compileCSS()` 只返回 CSS 字符串。`cssRoot.mount()` 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
 
 ## 文件职责
@@ -53,6 +57,7 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 | variable-cluster.ts | Variable 成员选择、default 代理、同名声明配对及成员继承创建 |
 | css-root.ts | 源账本、三步编译调用和宿主提交 |
 | compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |
+| compiler/resource-rule.ts | 内部按需 Rule 与既有完整条件路径的身份关联 |
 | compiler/style-nodes-to-content-nodes/index.ts | 汇总公开编译函数与 JSSContentNode 结果类型 |
 | compiler/style-nodes-to-content-nodes/compilation.ts | 组合三项编译账本，编排访问、资源发布、波末核验、聚合和输出 |
 | compiler/style-nodes-to-content-nodes/node-compilation.ts | 节点角色进度、输入失效、单次内容链访问、完成判断及内容节点结果 |
@@ -78,7 +83,9 @@ Style System 是抽象层，包含可复用碎片和面向组件的通用定义�
 
 `Button.style.ts` 拥有 Button 的选择器、variant、tone、size、status 与组件差异。语义配色由 `accentColor`、`dangerColor`、`toneColor` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
 
-当前 Button 仍存在 `bare + tone`、`solid + tone` 的显式交集配方。这些定义已用 `TODO` 标出，是待删除的不可组合临时方案，不是 Style System 的组合模型。
+[Button.style.ts](../components/kits/Button/Button.style.ts) 同时定义公开的色源、画布、背景强度控制点与业务规则。控制点以 export 定义，组件入口导出同一 Variable 对象，样式直接消费。色源与画布支持局部 declare，强度支持 declare／modify。底层工具提供通用操作语义，业务规则决定分类如何选择材料与加入贡献；专属 opacity 已退出，禁用淡化复用 clickable 默认策略。当前控制仍通过 Rules 登记与应用挂载执行，未实现运行时变值自动插入 CSS。
+
+Button 的背景来源与画布由分类选择，强度 Variable 持有状态，bare／solid 的贡献通过既有 modify 组合。tone 选择成员材料，前景直接声明共享角色；组件不登记逐状态消费 Rule，也不登记 variant×tone 交集配方。验收关注退场、突出、层次和状态反馈，旧实现的混色系数不作为约束。
 
 Button 静态导入自身样式；Example、Storybook 和缩略图入口在 render 前统一挂载。懒加载样式仍由应用样式清单负责提前登记。
 

@@ -530,7 +530,7 @@ test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资�
 
 test('结构嵌套可以继承 Variable 目标，不误判为局部分支数组', () => {
   const nestedTargetVariable = variable(undefined, { name: 'nested-target' })
-  const body: Rules = [[undefined, undefined, 1], [['testHover'], undefined, 2]]
+  const body: Rules = [[undefined, undefined, 1], [[condition('&:where(:hover)')], undefined, 2]]
   keep(rule('.NestedTarget', nestedTargetVariable, body))
   const css = compileCSS()
   expect(css).toContain('--nested-target: 1;')
