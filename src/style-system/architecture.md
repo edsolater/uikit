@@ -11,9 +11,11 @@ JSSStyleNode[] → compiler/style-nodes-to-content-nodes/index.ts → JSSContent
 JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 ```
 
-Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层；对象仍遵守 JSSContent 约定。Combiners 与 Atom Creators 提供构造内容的方式。
+Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层；对象仍遵守 JSSContent 约定。functions 与 Atom Creators 提供构造内容的方式。
 
-`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译验证并展开源 Rules；给 `onActive` 的 root 另复制规则容器（Rules、tuple、路径及嵌套 Rules），保留业务对象身份。Atom、Combiner 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`onCompile` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`onCompile(context, ast)` 在编译波中查询、插入、替换或删除当前队列节点，也可返回下一层内容；已经调用的对象保存替代链进度，跨波等待不会重复调用。编译器沿 `dependencies` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始编译。Key、Content 或 revision 改变时，由同一失效规则分别在访问前和波末重置对应角色进度。
+`functions/` 提供 CSS 函数内容，如混色、计算与 `oklch(base, channels, deltas)`。[ColorVariable](color-variable.ts) 与 [Variable](variable.ts) 是同级领域概念；前者沿用后者的消费协议，拥有基础色、四个绝对通道和四个独立增量。`declare(source)` 只声明基础色；set 与 delta 分别赋值对应字段；未设置时在 CSS 相对 OKLCH 上下文使用原始通道与零增量，不预先声明通道。主色在每个消费或设置地址按需重新聚合，避免继承父元素已计算完的主色。`surfaceColor` 与 `foregroundColor` 直接使用该能力，Button 无额外颜色转接 Variable。
+
+`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译验证并展开源 Rules；给 `onActive` 的 root 另复制规则容器（Rules、tuple、路径及嵌套 Rules），保留业务对象身份。Atom、Function 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`onCompile` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules；只有 `onActive` 的内容可以产生依赖而不输出当前声明。`onCompile(context, ast)` 在编译波中查询、插入、替换或删除当前队列节点，也可返回下一层内容；已经调用的对象保存替代链进度，跨波等待不会重复调用。编译器沿 `dependencies` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始编译。Key、Content 或 revision 改变时，由同一失效规则分别在访问前和波末重置对应角色进度。
 
 内部主线显式执行节点访问→资源发布→波末核验→稳定连接→输出。NodeCompilation 统一角色进度、输入失效和当前队列完成判断；visitContent 函数直接完成单次角色访问，其 visit、compile、visitChildren 子步骤负责对象访问、编译替代链与依赖，完成替代仍由对象访问统一登记；ResourceCompilation 完整提交本波资源并保留激活账本；Join 负责同址连接、失效撤销与最新输出选择；单次连接由 captureInputs 捕获并校验回调前输入，createContent 建立位置 Value 视图并调用业务 Key.join，publish 接入结果与全部来源历史。三块沿同一份快照交接，连接入口保留先后顺序与是否需要生成的判断。调度入口不读取子步骤的私有索引。compiler/style-nodes-to-content-nodes/ 是节点到内容编译的领域目录，拥有共同的输入输出契约与编译规则；index.ts 只汇总公开编译函数与结果类型；compilation.ts 编排五阶段，node-compilation.ts 维护节点进度与单次内容访问，资源与连接在各自文件完整维护状态。外部从目录取得既有编译函数与结果类型，不深引内部成员或另加转发。等待事实只取当前输出队列，退出输出但仍存活的来源不阻止本波完成。
 
@@ -29,7 +31,7 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 
 已编译步骤移动后，调用方显式增加 revision 才触发重访。编号只保证名称唯一。晚到定义触发对应修改重绑，其他引用仍由普通 `onCompile/onActive` 推进。没有独立 Rewriter 协议、操作转发或整组表达式缓存。
 
-`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在普通消费时读取同一 Variable 对象的 `config`，插入 `@property` 和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 生成状态声明时把选中的状态随内容节点交给编译器；编译器从内容入口沿返回值和 `dependencies` 传递该状态。嵌套来源 Variable 按同名状态读取内容，缺失则读取默认内容；来源其他状态不会进入该声明。普通 Rule 消费仍保留 CSS 引用。Variable 的嵌套引用通过 Content 链编译。根声明由需要它的具体 Atom 通过普通 Condition Rule 按需提供。可组合定义的状态先写入内部 base，再应用修改；`registration` 的类型约束同步到内部步骤；字段内容由 variable.ts 统一生成，普通引用与内部步骤各自保留激活、位置、来源及撤销责任。`VariableCluster` 代理默认 Variable 的对象属性和编译接口，选择和双方同名成员配对由 Cluster 自身负责。`clusterFrom` 按同名来源成员建立普通 Variable，保留来源状态引用并应用本组覆盖；未配置成员复用原对象。Combiner 与 Atom Creator 构造的内容通过 `dependencies` 暴露操作数，在最终输出时生成 CSS 文本。Creator 新配置通过整份内容重建及 `RuleHandle.replace` 消费，新内容与依赖一起重新编译。
+`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在普通消费时读取同一 Variable 对象的 `config`，插入 `@property` 和自身状态定义，并返回带 CSS `var()` 回退值的 Value；Variable 生成状态声明时把选中的状态随内容节点交给编译器；编译器从内容入口沿返回值和 `dependencies` 传递该状态。嵌套来源 Variable 按同名状态读取内容，缺失则读取默认内容；来源其他状态不会进入该声明。普通 Rule 消费仍保留 CSS 引用。Variable 的嵌套引用通过 Content 链编译。根声明由需要它的具体 Atom 通过普通 Condition Rule 按需提供。可组合定义的状态先写入内部 base，再应用修改；`registration` 的类型约束同步到内部步骤；字段内容由 variable.ts 统一生成，普通引用与内部步骤各自保留激活、位置、来源及撤销责任。`VariableCluster` 代理默认 Variable 的对象属性和编译接口，选择和双方同名成员配对由 Cluster 自身负责。`clusterFrom` 按同名来源成员建立普通 Variable，保留来源状态引用并应用本组覆盖；未配置成员复用原对象。Function 与 Atom Creator 构造的内容通过 `dependencies` 暴露操作数，在最终输出时生成 CSS 文本。Creator 新配置通过整份内容重建及 `RuleHandle.replace` 消费，新内容与依赖一起重新编译。
 
 [rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[内容编译流程](compiler/style-nodes-to-content-nodes/compilation.ts) 逐波编译、处理按需 Rules 和同址组合；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一编译波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。同址同名 Key 默认组合，单条声明仍直接输出。
 
@@ -61,7 +63,7 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 | pieces/keys | 可复用的 JSSKey 定义；创建时由 key() 登记名称与别名 |
 | pieces/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
 | pieces/contents/atoms | 按用途组织的现成 Value 与 Variable |
-| pieces/contents/combiners | 混色、计算等内容组合操作 |
+| pieces/contents/functions | 混色、计算等内容组合操作 |
 | pieces/contents/atom-creators | 按结构生成阴影、动画等内容 |
 | pieces/roles | 供组件在自身选择器中赋值的共享角色 |
 | pieces/mixins | 把完整效果转换成声明组合 |

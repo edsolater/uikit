@@ -1,6 +1,7 @@
 /** 按钮的样式效果与生效条件。 */
 import {
   rules,
+  calcMultiply,
   variable,
   innerText,
   contentLayout,
@@ -13,7 +14,7 @@ import {
 import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
 import { $cursor } from '../../../style-system/pieces/keys/interaction'
 import { $alignSelf } from '../../../style-system/pieces/keys/layout'
-import { colorMix } from '../../../style-system/pieces/contents/combiners/color-mix'
+import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
 import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
 import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
 import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
@@ -30,26 +31,14 @@ const button = ['@layer uikit', '.Button']
 // 默认效果
 // =============================================================================
 
-// 最终颜色从当前角色值继续派生；禁用效果与声量、语气共用这一份局部基础值。
-const buttonSurfaceColor = variable(surfaceColor, {
-  name: 'button-surface-color',
-  modification: { apply: (current, weight: number) => colorMix([current, weight], neutralColor(2)) },
-})
-const buttonForegroundColor = variable(foregroundColor, {
-  name: 'button-foreground-color',
-  modification: { apply: (current, weight: number) => colorMix([current, weight], 'transparent') },
-})
-
 const opacity = variable(1, {
   name: 'button-opacity',
   states: { disabled: 0.56 },
 })
 
 rules(button, [
-  [surfaceColor, colorMix([neutralColor(1), 0.82], accentColor('soft'))],
-  [foregroundColor, textColor],
-  buttonSurfaceColor.declare(),
-  buttonForegroundColor.declare(),
+  surfaceColor.declare(colorMix([neutralColor(1), 0.82], accentColor('soft'))),
+  foregroundColor.declare(textColor),
   // --- 内容排版 ---
   innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
 
@@ -70,7 +59,7 @@ rules(button, [
     radius: pill,
     cornerShape: 'squircle',
   }),
-  color({ background: buttonSurfaceColor, foreground: buttonForegroundColor }),
+  color({ background: surfaceColor, foreground: foregroundColor }),
   elevation(shadowInteractive),
 
   // --- 通用交互 ---
@@ -79,12 +68,12 @@ rules(button, [
 
 // 普通状态声明保持来源的 JSS 身份，由当前位置的角色与语气声明决定颜色。
 rules([...button, 'hover'], [
-  [surfaceColor, colorMix([neutralColor(2), 0.72], accentColor('soft'))],
-  [foregroundColor, textColor('strong')],
+  surfaceColor.declare(colorMix([neutralColor(2), 0.72], accentColor('soft'))),
+  foregroundColor.declare(textColor('strong')),
 ])
 rules([...button, 'active'], [
-  [surfaceColor, colorMix([neutralColor(3), 0.62], accentColor('soft'))],
-  [foregroundColor, textColor('strong')],
+  surfaceColor.declare(colorMix([neutralColor(3), 0.62], accentColor('soft'))),
+  foregroundColor.declare(textColor('strong')),
 ])
 
 // =============================================================================
@@ -92,9 +81,9 @@ rules([...button, 'active'], [
 // =============================================================================
 
 const bareButton = [...button, '&[data-variant="bare"]']
-rules(bareButton, [[surfaceColor, 'transparent'], elevation(shadowFlat)])
-rules([...bareButton, 'hover'], [[surfaceColor, colorMix([neutralColor(1), 0.88], accentColor('soft'))]])
-rules([...bareButton, 'active'], [[surfaceColor, colorMix([neutralColor(2), 0.82], accentColor('soft'))]])
+rules(bareButton, [surfaceColor.declare('transparent'), elevation(shadowFlat)])
+rules([...bareButton, 'hover'], [surfaceColor.declare(colorMix([neutralColor(1), 0.88], accentColor('soft')))])
+rules([...bareButton, 'active'], [surfaceColor.declare(colorMix([neutralColor(2), 0.82], accentColor('soft')))])
 
 const shadowSolid = variable(shadowRaised, {
   name: 'button-shadow-solid',
@@ -104,12 +93,12 @@ const shadowSolid = variable(shadowRaised, {
 const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
   [toneColor, actionColor],
-  [surfaceColor, actionColor],
-  [foregroundColor, colorMix([actionColor('foreground'), 0.9], surfaceColor)],
+  surfaceColor.declare(actionColor),
+  foregroundColor.declare(colorMix([actionColor('foreground'), 0.9], surfaceColor)),
   elevation(shadowSolid),
 ])
-rules([...solidButton, 'hover'], [[foregroundColor, actionColor('foreground')]])
-rules([...solidButton, 'active'], [[foregroundColor, actionColor('foreground')]])
+rules([...solidButton, 'hover'], [foregroundColor.declare(actionColor('foreground'))])
+rules([...solidButton, 'active'], [foregroundColor.declare(actionColor('foreground'))])
 
 // =============================================================================
 // tone 动作语气
@@ -117,16 +106,16 @@ rules([...solidButton, 'active'], [[foregroundColor, actionColor('foreground')]]
 
 const toneButton = [...button, '&[data-tone]']
 rules(toneButton, [
-  [surfaceColor, colorMix([neutralColor(1), 0.76], toneColor('soft'))],
-  [foregroundColor, toneColor('strong')],
+  surfaceColor.declare(colorMix([neutralColor(1), 0.76], toneColor('soft'))),
+  foregroundColor.declare(toneColor('strong')),
 ])
 rules([...toneButton, 'hover'], [
-  [surfaceColor, colorMix([neutralColor(2), 0.68], toneColor('soft'))],
-  [foregroundColor, toneColor('strong')],
+  surfaceColor.declare(colorMix([neutralColor(2), 0.68], toneColor('soft'))),
+  foregroundColor.declare(toneColor('strong')),
 ])
 rules([...toneButton, 'active'], [
-  [surfaceColor, colorMix([neutralColor(3), 0.58], toneColor('soft'))],
-  [foregroundColor, toneColor('strong')],
+  surfaceColor.declare(colorMix([neutralColor(3), 0.58], toneColor('soft'))),
+  foregroundColor.declare(toneColor('strong')),
 ])
 
 rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
@@ -136,26 +125,29 @@ rules([...button, '&[data-tone="danger"]'], [[toneColor, dangerColor]])
 // TODO: 当前交集仍有专属混色比例，后续应由声量与语气的独立效果组合表达。
 
 const bareToneButton = [...button, '&[data-variant="bare"][data-tone]']
-rules(bareToneButton, [[surfaceColor, 'transparent']])
-rules([...bareToneButton, 'hover'], [[surfaceColor, colorMix([neutralColor(1), 0.82], toneColor('soft'))]])
-rules([...bareToneButton, 'active'], [[surfaceColor, colorMix([neutralColor(2), 0.74], toneColor('soft'))]])
+rules(bareToneButton, [surfaceColor.declare('transparent')])
+rules([...bareToneButton, 'hover'], [surfaceColor.declare(colorMix([neutralColor(1), 0.82], toneColor('soft')))])
+rules([...bareToneButton, 'active'], [surfaceColor.declare(colorMix([neutralColor(2), 0.74], toneColor('soft')))])
 
 const solidToneButton = [...button, '&[data-variant="solid"][data-tone]']
 rules(solidToneButton, [
-  [surfaceColor, toneColor],
-  [foregroundColor, colorMix([toneColor('foreground'), 0.9], surfaceColor)],
+  surfaceColor.declare(toneColor),
+  foregroundColor.declare(colorMix([toneColor('foreground'), 0.9], surfaceColor)),
 ])
 rules([...solidToneButton, 'hover'], [
-  [surfaceColor, colorMix([toneColor, 0.88], textColor('strong'))],
-  [foregroundColor, toneColor('foreground')],
+  surfaceColor.declare(colorMix([toneColor, 0.88], textColor('strong'))),
+  foregroundColor.declare(toneColor('foreground')),
 ])
 rules([...solidToneButton, 'active'], [
-  [surfaceColor, colorMix([toneColor, 0.78], textColor('strong'))],
-  [foregroundColor, toneColor('foreground')],
+  surfaceColor.declare(colorMix([toneColor, 0.78], textColor('strong'))),
+  foregroundColor.declare(toneColor('foreground')),
 ])
 
-// 禁用从当前基色派生一次，不为各个声量与语气重复枚举退化配方。
-rules([...button, 'disabled'], [buttonSurfaceColor.modify(0.48), buttonForegroundColor.modify(0.48)])
+// 禁用在最终背景上混色，前景仅缩放透明度；颜色角色不需要额外转接变量。
+rules([...button, 'disabled'], [
+  color({ background: colorMix([surfaceColor, 0.48], neutralColor(2)) }),
+  foregroundColor.setAlpha(calcMultiply('alpha', 0.48)),
+])
 
 // =============================================================================
 // size 物理尺寸

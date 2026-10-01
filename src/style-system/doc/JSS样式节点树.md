@@ -21,7 +21,7 @@ interface JSSStyleNode {
 
 队列位置决定 Rule 声明顺序。`targetConditionPath` 表示 `.button`、`@media` 等普通条件地址；`stateConditionPath` 使用已登记的状态身份表示受体状态，例如 `hover`。编译器只把值都带入完整身份，不从 CSS 字符串推断状态。
 
-每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置编译。Content 可以是字面值或 `JSSContent`；Value 与 Variable 在组合时统称 Atom，Atom 不增加对象类型。Combiner 和 Atom Creator 也可构造作为一块使用的内容。Compiler 只调用对象按需提供的 `onActive`、`onCompile(context, ast)`、`dependencies` 和 `toCSSString`，不按碎片分类分支处理。只有 `onActive` 的内容可以提供依赖而不输出当前声明；对象也可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已编译或无需编译后，节点才成为 `JSSContentNode`。
+每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置编译。Content 可以是字面值或 `JSSContent`；Value 与 Variable 在组合时统称 Atom，Atom 不增加对象类型。Function 和 Atom Creator 也可构造作为一块使用的内容。Compiler 只调用对象按需提供的 `onActive`、`onCompile(context, ast)`、`dependencies` 和 `toCSSString`，不按碎片分类分支处理。只有 `onActive` 的内容可以提供依赖而不输出当前声明；对象也可插入后续节点或返回新内容。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已编译或无需编译后，节点才成为 `JSSContentNode`。
 
 ```text
 Rules → JSSStyleNode[] → 逐波编译并改写当前队列 → JSSContentNode[] → CSS string
@@ -65,7 +65,7 @@ onCompile(context, ast) {
 
 ## Content 链与 Variable
 
-`Value` 包装 Content，默认把数组递归输出为逗号列表，也可用 `toCSSString` 改写输出，不改变 Variable 身份。`valueList` 与 `valueSequence` 分别装配默认逗号和空格列表；Value 的 `dependencies` 显露嵌套数组中的待编译内容对象。Combiner 和 Atom Creator 构造的内容对象同样在 `dependencies` 中显露原操作数，让次波编译嵌套引用。编译器按当前 Content 位置记录 `onCompile` 返回对象；最终输出读取原操作数时会取得对应的编译结果。
+`Value` 包装 Content，默认把数组递归输出为逗号列表，也可用 `toCSSString` 改写输出，不改变 Variable 身份。`valueList` 与 `valueSequence` 分别装配默认逗号和空格列表；Value 的 `dependencies` 显露嵌套数组中的待编译内容对象。Function 和 Atom Creator 构造的内容对象同样在 `dependencies` 中显露原操作数，让次波编译嵌套引用。编译器按当前 Content 位置记录 `onCompile` 返回对象；最终输出读取原操作数时会取得对应的编译结果。
 
 `Variable.onCompile(context, ast)` 在普通消费时插入 `@property` 注册及 Variable 自身状态定义，再返回可输出的 CSS `var()` Value。Variable 生成状态内容节点时直接携带选中的状态，编译器从该节点内容入口沿返回值与 `dependencies` 传递；嵌套 Variable 按同名状态读取内容，缺失时取默认内容，无 states 的来源也取默认内容，不把来源其他状态加入当前 Variable。普通 Rule 消费仍保留 CSS 引用。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动状态定义按即将插入的目标地址查找最近的同一 Variable 局部声明，使用其基础值 Key；没有局部声明时使用 `config.definitionKey`。自动产物以 Variable 对象作为不透明 `productTag`，局部声明通过通用产物查询和语义父链清理归属自身的旧产物；`productTag` 只供查询，不改变节点来源所有权或资源替换。Compiler 不按 Variable 类型分支。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；普通引用向默认成员转交完整上下文，与默认 Variable 一样按同名状态读取内容，缺失时读取默认值；按需依赖使用同一编译和输出链。
 

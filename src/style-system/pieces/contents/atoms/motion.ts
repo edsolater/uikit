@@ -2,7 +2,7 @@
 import { value } from '../../../value'
 import { variable } from '../../../variable'
 import { condition, media } from '../../../condition'
-import { calcMultiply } from '../combiners/calc'
+import { calcMultiply } from '../functions/calc'
 
 /** 完整动效的时长倍率，保留原时长。 */
 export const fullMotion = value(1)

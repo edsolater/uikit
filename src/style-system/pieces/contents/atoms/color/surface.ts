@@ -1,7 +1,7 @@
 /** 中性承载面与透明覆盖色，交互取值由各自 Atom 定义。 */
 import { neutralColor } from './neutral'
 import { variable } from '../../../../variable'
-import { colorMix } from '../../combiners/color-mix'
+import { colorMix } from '../../functions/color-mix'
 import { textColor } from './text'
 
 /** 通用承载面；明暗主题与局部覆盖由基础 CSS 的语义 token 决定。 */

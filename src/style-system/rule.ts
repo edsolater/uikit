@@ -94,7 +94,7 @@ function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
 }
 
 /** 批量登记声明；无效输入整批拒绝，undefined 内容跳过。 */
-export function rules(path: ConditionInput, declarations: Declarations): RulesHandle {
+export function rules(path: ConditionInput, declarations: Declaration<RuleValue> | Declarations): RulesHandle {
   const conditionPath = rulePath(path)
   const entries: Rule[] = []
   const visiting = new Set<object>()

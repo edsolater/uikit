@@ -19,7 +19,7 @@ import { surfaceColor, foregroundColor } from '../../../style-system/pieces/role
 import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
 import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
 import { neutralColor } from '../../../style-system/pieces/contents/atoms/color/neutral'
-import { colorMix } from '../../../style-system/pieces/contents/combiners/color-mix'
+import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
 import { shadowFlat, shadowLow, shadowRaised, shadowElevated } from '../../../style-system/pieces/contents/atoms/shadow'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
@@ -49,6 +49,35 @@ beforeEach(() => {
 function appearance(button: HTMLElement) {
   const style = getComputedStyle(button)
   return Object.fromEntries(['background-color', 'color', 'border-top-color', 'box-shadow', 'opacity', 'transform'].map(key => [key, style.getPropertyValue(key)]))
+}
+
+/** 用浏览器转换到同一色空间再比较数值，容许 CSS 序列化的末位舍入。 */
+function expectSameColor(actual: string, expected: string) {
+  const numbers = (content: string) => {
+    const probe = document.body.appendChild(document.createElement('div'))
+    probe.style.color = `color(from ${content} srgb r g b / alpha)`
+    const result = getComputedStyle(probe).color.match(/[-+]?(?:\d*\.?\d+)(?:e[-+]?\d+)?/gi)!.map(Number)
+    probe.remove()
+    if (result.length === 3) result.push(1)
+    return result
+  }
+  const actualNumbers = numbers(actual)
+  const expectedNumbers = numbers(expected)
+  expect(actualNumbers).toHaveLength(expectedNumbers.length)
+  actualNumbers.forEach((amount, index) => expect(amount).toBeCloseTo(expectedNumbers[index], 4))
+}
+
+/** 颜色比较保留视觉等价断言，其他外观仍严格逐项一致。 */
+function expectSameAppearance(actual: Record<string, string>, expected: Record<string, string>) {
+  for (const name of Object.keys(actual)) {
+    if (name.endsWith('color')) expectSameColor(actual[name], expected[name])
+    else expect(actual[name], name).toBe(expected[name])
+  }
+}
+
+/** 背景与前景分别比较，避免混色空间标签导致同色误判。 */
+function expectSameColors(actual: string[], expected: string[]) {
+  actual.forEach((content, index) => expectSameColor(content, expected[index]))
 }
 
 /** 旧 CSS 对照只改变样式身份，保留组件生成的属性与内容。 */
@@ -102,24 +131,24 @@ describe('Button styles', () => {
     const read = (element: HTMLElement) => [getComputedStyle(element).backgroundColor, getComputedStyle(element).color]
     reference.className = 'LocalToneExpectedHover'
     await userEvent.hover(button)
-    expect(read(button)).toEqual(read(reference))
+    expectSameColors(read(button), read(reference))
     button.focus()
     await userEvent.keyboard('[Space>]')
     try {
       expect(button.matches(':hover:active')).toBe(true)
       reference.className = 'LocalToneExpectedActive'
-      expect(read(button)).toEqual(read(reference))
+      expectSameColors(read(button), read(reference))
     } finally { await userEvent.keyboard('[/Space]') }
     reference.className = 'LocalToneExpectedHover'
-    expect(read(button)).toEqual(read(reference))
+    expectSameColors(read(button), read(reference))
     await userEvent.unhover(button)
-    expect(read(button)).toEqual(normal)
+    expectSameColors(read(button), normal)
   })
 
   test.each([undefined, 'bare', 'solid'] as const)('禁用从局部角色当前值派生一次并在退出后恢复：%s', async (variant) => {
     const surface = 'rgb(12, 34, 56)'
     const foreground = 'rgb(78, 90, 123)'
-    handles.push(rules('.Button[data-local-role]', [[surfaceColor, surface], [foregroundColor, foreground]]))
+    handles.push(rules('.Button[data-local-role]', [surfaceColor.declare(surface), foregroundColor.declare(foreground)]))
     handles.push(rules('.LocalDisabledExpected', [
       [$backgroundColor, colorMix([surface, 0.48], neutralColor(2))],
       [$color, colorMix([foreground, 0.48], 'transparent')],
@@ -133,33 +162,33 @@ describe('Button styles', () => {
     reference.className = 'LocalDisabledExpected'
     const read = (element: HTMLElement) => [getComputedStyle(element).backgroundColor, getComputedStyle(element).color]
     const normal = read(button)
-    expect(normal).toEqual([surface, foreground])
+    expectSameColors(normal, [surface, foreground])
     button.disabled = true
     await userEvent.hover(button)
-    expect(read(button)).toEqual(read(reference))
+    expectSameColors(read(button), read(reference))
     button.disabled = false
     button.dataset.status = 'disabled'
     button.focus()
     await userEvent.keyboard('[Space>]')
     try {
       expect(button.matches(':hover:active')).toBe(true)
-      expect(read(button)).toEqual(read(reference))
+      expectSameColors(read(button), read(reference))
     } finally { await userEvent.keyboard('[/Space]') }
     await userEvent.unhover(button)
     delete button.dataset.status
-    expect(read(button)).toEqual(normal)
+    expectSameColors(read(button), normal)
   })
 
   test('solid 常态背景保留组件 surfaceColor 的局部覆盖', () => {
     handles.push(rules('.Button[data-variant="solid"][data-surface-probe]', [
-      [surfaceColor, 'rgb(12, 34, 56)'],
+      surfaceColor.declare('rgb(12, 34, 56)'),
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Button solid htmlProps={{ 'data-surface-probe': '' }}>局部表面</Button>, host)
     const button = host.querySelector('button')!
     button.style.transition = 'none'
-    expect(getComputedStyle(button).backgroundColor).toBe('rgb(12, 34, 56)')
+    expectSameColor(getComputedStyle(button).backgroundColor, 'rgb(12, 34, 56)')
   })
 
   test('旧 CSS 固定为 9 月 3 日迁移前的 Git blob', async () => {
@@ -182,7 +211,7 @@ describe('Button styles', () => {
       for (const button of Array.from(host.querySelectorAll<HTMLButtonElement>('button'))) {
         button.style.transition = 'none'
         const baseline = baselineButton(button)
-        expect(appearance(button)).toEqual(appearance(baseline))
+        expectSameAppearance(appearance(button), appearance(baseline))
         await userEvent.unhover(baseline)
         baseline.focus()
         await userEvent.keyboard('[ArrowRight]')
@@ -192,7 +221,7 @@ describe('Button styles', () => {
         await userEvent.keyboard('[ArrowRight]')
         expect(button.matches(':focus-visible')).toBe(true)
         expect(button.matches(':hover, :active')).toBe(false)
-        expect(appearance(button)).toEqual(focusAppearance)
+        expectSameAppearance(appearance(button), focusAppearance)
         expect(['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(button).getPropertyValue(property))).toEqual(focusRing)
         button.blur()
         await userEvent.hover(baseline)
@@ -203,17 +232,17 @@ describe('Button styles', () => {
         const ring = ['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(baseline).getPropertyValue(property))
         await userEvent.keyboard('[/Space]')
         await userEvent.hover(button)
-        expect(appearance(button)).toEqual(hover)
+        expectSameAppearance(appearance(button), hover)
         button.focus()
         await userEvent.keyboard('[Space>]')
         try {
           expect(button.matches(':hover:active')).toBe(true)
-          expect(appearance(button)).toEqual(active)
+          expectSameAppearance(appearance(button), active)
           expect(button.matches(':focus-visible')).toBe(true)
           expect(['outline-width', 'outline-style', 'outline-color', 'outline-offset'].map(property => getComputedStyle(button).getPropertyValue(property))).toEqual(ring)
           await userEvent.unhover(button)
           expect(button.matches(':active')).toBe(true)
-          expect(appearance(button)).toEqual(active)
+          expectSameAppearance(appearance(button), active)
         } finally { await userEvent.keyboard('[/Space]') }
         button.blur()
         baseline.disabled = true
@@ -221,14 +250,14 @@ describe('Button styles', () => {
         for (const mode of ['native', 'status', 'both']) {
           button.disabled = mode !== 'status'
           button.dataset.status = mode === 'native' ? 'loading' : 'loading disabled'
-          expect(appearance(button)).toEqual(disabledAppearance)
+          expectSameAppearance(appearance(button), disabledAppearance)
           await userEvent.hover(button)
-          expect(appearance(button)).toEqual(disabledAppearance)
+          expectSameAppearance(appearance(button), disabledAppearance)
           button.focus()
           await userEvent.keyboard('[Space>]')
           try {
             if (mode === 'status') expect(button.matches(':active')).toBe(true)
-            expect(appearance(button)).toEqual(disabledAppearance)
+            expectSameAppearance(appearance(button), disabledAppearance)
             expect(getComputedStyle(button).cursor).toBe('not-allowed')
           } finally { await userEvent.keyboard('[/Space]') }
           await userEvent.unhover(button)
@@ -246,12 +275,12 @@ describe('Button styles', () => {
     const button = host.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
     const baseline = baselineButton(button)
-    expect(appearance(button)).toEqual(appearance(baseline))
+    expectSameAppearance(appearance(button), appearance(baseline))
     const style = document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)!
     style.sheet!.disabled = true
     expect(appearance(button)).not.toEqual(appearance(baseline))
     style.sheet!.disabled = false
-    expect(appearance(button)).toEqual(appearance(baseline))
+    expectSameAppearance(appearance(button), appearance(baseline))
   })
 
   test.each(['light', 'dark'])('%s：所有 variant、tone、size 与 loading 的禁用组合保持各 feature 的覆盖', (theme) => {
@@ -280,8 +309,8 @@ describe('Button styles', () => {
       button.style.transition = 'none'
       expect(button.matches(whenDisabled.header.replace('&', ''))).toBe(true)
       const computed = getComputedStyle(button)
-      expect(computed.backgroundColor).toBe(expected.backgroundColor)
-      expect(computed.color).toBe(expected.color)
+      expectSameColor(computed.backgroundColor, expected.backgroundColor)
+      expectSameColor(computed.color, expected.color)
       expect(computed.boxShadow).toBe('none')
       expect(computed.cursor).toBe('not-allowed')
       expect(computed.opacity).toBe('0.56')
@@ -335,7 +364,7 @@ describe('Button styles', () => {
         const button = host.querySelector<HTMLButtonElement>('button')!
         button.style.transition = 'none'
         const baseline = baselineButton(button)
-        expect(appearance(button)).toEqual(appearance(baseline))
+        expectSameAppearance(appearance(button), appearance(baseline))
         const color = getComputedStyle(button).backgroundColor
         if (theme === 'light' && brand) expect(color).toBe('oklch(0.6 0.15 140)')
         if (theme === 'dark') expect(color).toBe('oklch(0.7 0.18 260)')

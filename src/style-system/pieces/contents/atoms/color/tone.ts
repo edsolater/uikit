@@ -1,7 +1,7 @@
 /** 基础语义配色及当前作用域的语气 Atom。 */
 import { variable } from '../../../../variable'
 import { variableCluster } from '../../../../variable-cluster'
-import { colorMix } from '../../combiners/color-mix'
+import { colorMix } from '../../functions/color-mix'
 import { surfaceColor } from './surface'
 
 export const accentColor = variableCluster({

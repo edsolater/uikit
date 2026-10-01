@@ -19,8 +19,8 @@ afterEach(() => {
 })
 
 test('嵌套组件重新声明同一角色，组件自身与未重定义内容取得各自当前值', () => {
-  handles.push(rules('.first-component', [[surfaceColor, 'rgb(10, 20, 30)'], [foregroundColor, 'rgb(240, 241, 242)']]))
-  handles.push(rules('.second-component', [[surfaceColor, 'rgb(210, 220, 230)'], [foregroundColor, 'rgb(40, 41, 42)']]))
+  handles.push(rules('.first-component', [surfaceColor.declare('rgb(10, 20, 30)'), foregroundColor.declare('rgb(240, 241, 242)')]))
+  handles.push(rules('.second-component', [surfaceColor.declare('rgb(210, 220, 230)'), foregroundColor.declare('rgb(40, 41, 42)')]))
   handles.push(rules('.component-content', [[key("background-color"), surfaceColor], [key("color"), foregroundColor]]))
   cssRoot.mount()
 
@@ -33,12 +33,19 @@ test('嵌套组件重新声明同一角色，组件自身与未重定义内容�
   const secondContent = second.appendChild(document.createElement('span'))
   secondContent.className = 'component-content'
 
-  expect(getComputedStyle(first).backgroundColor).toBe('rgb(10, 20, 30)')
-  expect(getComputedStyle(first).color).toBe('rgb(240, 241, 242)')
-  expect(getComputedStyle(firstContent).backgroundColor).toBe('rgb(10, 20, 30)')
-  expect(getComputedStyle(firstContent).color).toBe('rgb(240, 241, 242)')
-  expect(getComputedStyle(second).backgroundColor).toBe('rgb(210, 220, 230)')
-  expect(getComputedStyle(second).color).toBe('rgb(40, 41, 42)')
-  expect(getComputedStyle(secondContent).backgroundColor).toBe('rgb(210, 220, 230)')
-  expect(getComputedStyle(secondContent).color).toBe('rgb(40, 41, 42)')
+  const normalized = (content: string) => {
+    const reference = document.body.appendChild(document.createElement('div'))
+    reference.style.color = `oklch(from ${content} l c h / alpha)`
+    const result = getComputedStyle(reference).color
+    reference.remove()
+    return result
+  }
+  expect(getComputedStyle(first).backgroundColor).toBe(normalized('rgb(10, 20, 30)'))
+  expect(getComputedStyle(first).color).toBe(normalized('rgb(240, 241, 242)'))
+  expect(getComputedStyle(firstContent).backgroundColor).toBe(normalized('rgb(10, 20, 30)'))
+  expect(getComputedStyle(firstContent).color).toBe(normalized('rgb(240, 241, 242)'))
+  expect(getComputedStyle(second).backgroundColor).toBe(normalized('rgb(210, 220, 230)'))
+  expect(getComputedStyle(second).color).toBe(normalized('rgb(40, 41, 42)'))
+  expect(getComputedStyle(secondContent).backgroundColor).toBe(normalized('rgb(210, 220, 230)'))
+  expect(getComputedStyle(secondContent).color).toBe(normalized('rgb(40, 41, 42)'))
 })

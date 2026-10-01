@@ -2,7 +2,7 @@
 import { variable } from '../variable'
 import { afterEach, expect, test } from 'vitest'
 import { compileCSS, rule, type RulesHandle } from '../index'
-import { colorMix } from '../pieces/contents/combiners/color-mix'
+import { colorMix } from '../pieces/contents/functions/color-mix'
 import { neutralColor } from '../pieces/contents/atoms/color/neutral'
 
 const handles: RulesHandle[] = []
