@@ -4,7 +4,7 @@ import type { ValueInput } from '../../../value'
 import type { JSSContent } from '../../../content'
 
 /** 延迟生成 calc 乘法；单位交给 CSS。 */
-export function calcMultiply(amount: ValueInput, factor: ValueInput): JSSContent {
+export function multiply(amount: ValueInput, factor: ValueInput): JSSContent {
   return createJSSContent((resolve) => {
     const left = resolve(amount)
     const right = resolve(factor)
@@ -13,7 +13,7 @@ export function calcMultiply(amount: ValueInput, factor: ValueInput): JSSContent
 }
 
 /** 延迟生成 calc 加法；单位和求值交给 CSS。 */
-export function calcAdd(amount: ValueInput, change: ValueInput): JSSContent {
+export function add(amount: ValueInput, change: ValueInput): JSSContent {
   return createJSSContent((resolve) => {
     const left = resolve(amount)
     const right = resolve(change)

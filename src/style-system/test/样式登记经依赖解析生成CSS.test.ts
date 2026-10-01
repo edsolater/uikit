@@ -25,7 +25,7 @@ import { $color } from '../pieces/keys/color'
 import { $transition } from '../pieces/keys/transition'
 import { $boxShadow } from '../pieces/keys/box-shadow'
 import { shadowValue } from '../pieces/contents/atom-creators/shadow'
-import { calcMultiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/contents/functions/calc'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { cssFunction } from '../pieces/contents/functions/custom'
 import { animationName, animationValue } from '../pieces/contents/atom-creators/animation'
@@ -290,7 +290,7 @@ test('依赖只进入本次编译，删掉源条目后派生资源退出', () =>
   const nested = value('3px', { onActive: nestedActive })
   const active = vi.fn((): Rules => [[[condition(':root')], '--size-example', nested]])
   const size = value('var(--size-example)', { onActive: active })
-  const handle = keep(rule('.example', 'width', calcMultiply(size, size)))
+  const handle = keep(rule('.example', 'width', multiply(size, size)))
   expect(active).not.toHaveBeenCalled()
   expect(compileCSS()).toContain('--value-factor: 3')
   expect(active).toHaveBeenCalledTimes(1)

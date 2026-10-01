@@ -12,7 +12,7 @@ import { createJSSContent, type JSSCompileContext, type JSSContent } from './con
 import type { ASTController } from './compiler/ast-controller'
 import { value, type ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
-import { get, result } from '@edsolater/fnkit'
+import { result } from '@edsolater/fnkit'
 import { declareVariable, findLocalBaseKey, modifyVariable } from './variable-modification'
 
 /** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
@@ -26,8 +26,8 @@ export interface Variable extends JSSContent {
   config: {
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
     defaultValue: VariableDefaultValue
-    /** 各状态的基础内容；创建时求得，命中时不求默认值。 */
-    states: Map<string, ValueInput>
+    /** 创建时解析条件并求内容，按登记顺序保存；命中时不求默认值。 */
+    states: Map<StateCondition, ValueInput>
     modification?: VariableOptions<VariableDefaultValue, unknown>['modification']
     registration?: VariableOptions['registration']
     /** 自动状态声明的目标 Key，始终指向当前 Variable 名称。 */
@@ -118,8 +118,13 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
   defaultValue: DefaultValue,
   options: VariableOptions<NoInfer<DefaultValue>, Change>,
 ): Variable {
-  const states = new Map<string, ValueInput>(
-    Object.entries(options.states ?? {}).map(([name, content]) => [name, result(content, defaultValue)]),
+  const entries = Object.entries(options.states ?? {})
+  const conditions = resolveStateConditions(entries.map(([name]) => name))
+  const states = new Map<StateCondition, ValueInput>(
+    entries.map(([name, content]): [StateCondition, ValueInput] => [
+      conditions.find((state) => state.name === name)!, result(content, defaultValue),
+    ])
+      .sort(([left], [right]) => left.order - right.order),
   )
   const self: Variable = {
     kind: 'variable',
@@ -162,7 +167,8 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
 
 /** 读取此 Variable 的指定状态；只有状态缺项时才求默认内容。 */
 function readVariableContent(variable: Variable, readState?: string): ValueInput {
-  return get(variable.config.states, readState, variable.config.defaultValue)
+  const entry = readState === undefined ? undefined : [...variable.config.states].find(([state]) => state.name === readState)
+  return entry ? entry[1] : result(variable.config.defaultValue)
 }
 
 /** 从按登记顺序排列的候选中，取当前路径最后命中的状态。 */
@@ -183,17 +189,16 @@ function findCurrentState(states: StateCondition[], path: ConditionPath): StateC
  * 若当前位置仅命中 hover，则当前值为 `8`，只再补登记顺序靠后的状态。
  */
 function declareVariableStates(context: JSSCompileContext, controller: ASTController, variable: Variable, fallbackValue: ValueInput): void {
-  const stateConditions = resolveStateConditions([...variable.config.states.keys()])
-  if (!stateConditions.length) return
+  const states = [...variable.config.states.keys()]
+  if (!states.length) return
 
-  const currentState = findCurrentState(stateConditions, context.conditionPath)
-  const currentValue = currentState ? variable.config.states.get(currentState.name) : fallbackValue
+  const currentState = findCurrentState(states, context.conditionPath)
+  const currentValue = currentState ? variable.config.states.get(currentState) : fallbackValue
   insertDefinition(context, controller, variable, context.conditionPath, currentValue, currentState?.name)
 
-  for (const state of stateConditions) {
+  for (const [state, content] of variable.config.states) {
     if (currentState && state.order <= currentState.order) continue
-    const stateValue = variable.config.states.get(state.name)
-    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state.name), stateValue, state.name)
+    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state), content, state.name)
   }
 }
 

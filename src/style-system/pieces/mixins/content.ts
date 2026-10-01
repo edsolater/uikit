@@ -9,7 +9,7 @@ import type { Declarations } from '../../rule'
 import type { ValueInput } from '../../value'
 import { valueSequence } from '../contents/atom-creators/list'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../keys/font'
-import { $gap, $display, $alignItems, $justifyContent } from '../keys/layout'
+import { $gap, $display, $alignItems, $justifyContent, $alignSelf } from '../keys/layout'
 import { $padding, $paddingTop, $paddingRight, $paddingBottom, $paddingLeft } from '../keys/padding'
 import { fontValue, type FontParts } from '../contents/atom-creators/font'
 
@@ -43,6 +43,8 @@ export type PaddingInput = ValueInput | ValueInput[] | PaddingSides
 /** 内容布局配置；center 负责选择实现并完成居中，省略 mode 不改变排列。 */
 export interface ContentLayoutMixinOptions {
   mode?: 'center'
+  /** 主体在父容器中的自身对齐，不随 mode 隐式设置。 */
+  alignSelf?: ValueInput
   gap?: ValueInput
   padding?: PaddingInput
 }
@@ -52,6 +54,7 @@ export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarat
   options.mode === 'center'
     ? [[$display, 'inline-flex'], [$alignItems, 'center'], [$justifyContent, 'center']]
     : undefined,
+  [$alignSelf, options.alignSelf],
   [$gap, options.gap],
   paddingDeclarations(options.padding),
 ]

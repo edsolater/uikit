@@ -14,7 +14,7 @@ import { declare } from '../declaration'
 import { $margin } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
 import { animationName, animationValue } from '../pieces/contents/atom-creators/animation'
-import { calcMultiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/contents/functions/calc'
 import { cssFunction } from '../pieces/contents/functions/custom'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
@@ -93,7 +93,7 @@ test('Cluster 整组声明可替换，未匹配成员恢复其原有默认值', 
 test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', async () => {
   const distance = variable('2px', { name: "browser-distance-size", states: Object.fromEntries([['hover', '4px']]) })
   const factor = variable(2, { name: "browser-distance-ratio", states: Object.fromEntries([['testLarge', 3]]) })
-  handles.push(rule('.example', 'margin-left', calcMultiply(distance, factor)))
+  handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
   element.dataset.large = ''
@@ -105,7 +105,7 @@ test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', a
 test('同址 Variable 分支在浏览器中共同更新复合值', async () => {
   const distance = variable('2px', { name: "browser-shared-size", states: Object.fromEntries([['hover', '4px']]) })
   const factor = variable(2, { name: "browser-shared-ratio", states: Object.fromEntries([['hover', 3]]) })
-  handles.push(rule('.example', 'margin-left', calcMultiply(distance, factor)))
+  handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
   await userEvent.hover(element)
@@ -195,23 +195,39 @@ test('缺少宿主时不触发 Value；编译失败保留之前成功提交的 C
   document.head.append(style)
   root.mount()
   const before = style.textContent
+  const beforeRules = Array.from(style.sheet!.cssRules)
   const invalid: Rules = []
   invalid.push([undefined, undefined, invalid])
   handles.push(rule('.example', 'color', value('red', { onActive: () => invalid })))
   expect(() => root.mount()).toThrow('递归引用')
   expect(style.textContent).toBe(before)
+  expect(Array.from(style.sheet!.cssRules)).toEqual(beforeRules)
   expect(getComputedStyle(element).marginLeft).toBe('2px')
 })
 
-test('未知 State Condition 使挂载失败并保留上次 CSS 与 CSSOM', () => {
+test('未登记的主体条件实际叠加、读取同条件来源并退出恢复', () => {
   handles.push(rule('.example', 'margin-left', '12px'))
   root.mount()
   const before = style.textContent
-  const beforeRules = Array.from(style.sheet!.cssRules)
-  handles.push(rule('.example', 'color', variable('red', { name: "browser-unknown-color", states: Object.fromEntries([['unknown-subject', 'blue']]) })))
-  expect(() => root.mount()).toThrow('未知 State Condition')
-  expect(style.textContent).toBe(before)
-  expect(Array.from(style.sheet!.cssRules)).toEqual(beforeRules)
+  const danger = '&[data-tone="danger"]'
+  const emphasis = '&[data-emphasis]'
+  const source = variable('green', { name: 'browser-raw-source', states: { [danger]: 'blue' } })
+  const color = variable('red', { name: 'browser-raw-color', states: { [danger]: source, [emphasis]: source } })
+  handles.push(rule('.example', 'color', color))
+  root.mount()
+  expect(style.textContent).not.toBe(before)
+  expect(Array.from(style.sheet!.cssRules).some(entry => entry.cssText.includes('--browser-raw-color'))).toBe(true)
+  const committed = style.textContent
+  expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
+  element.dataset.tone = 'danger'
+  expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
+  element.dataset.emphasis = ''
+  expect(getComputedStyle(element).color).toBe('rgb(0, 128, 0)')
+  element.removeAttribute('data-emphasis')
+  expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
+  element.removeAttribute('data-tone')
+  expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
+  expect(style.textContent).toBe(committed)
   expect(getComputedStyle(element).marginLeft).toBe('12px')
 })
 
@@ -233,7 +249,7 @@ test('选择居中布局后内容实际位于容器中心', () => {
 test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 55', () => {
   const first = variable(1, { name: "browser-first-ratio", states: { browserA: 2, browserB: 5 } })
   const second = variable(1, { name: "browser-second-ratio", states: { browserB: 11, browserA: 7 } })
-  const width = rule('.example', 'width', calcMultiply(calcMultiply(first, second), '1px'))
+  const width = rule('.example', 'width', multiply(multiply(first, second), '1px'))
   handles.push(width)
   root.mount()
   expect(getComputedStyle(element).width).toBe('1px')
@@ -241,7 +257,7 @@ test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 5
   expect(getComputedStyle(element).width).toBe('14px')
   element.dataset.b = ''
   expect(getComputedStyle(element).width).toBe('55px')
-  width.replace(calcMultiply(calcMultiply(second, first), '1px'))
+  width.replace(multiply(multiply(second, first), '1px'))
   root.mount()
   expect(getComputedStyle(element).width).toBe('55px')
 })

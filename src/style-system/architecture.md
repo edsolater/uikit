@@ -13,7 +13,7 @@ JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 
 Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层；对象仍遵守 JSSContent 约定。functions 与 Atom Creators 提供构造内容的方式。
 
-公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询 StateCondition 登记表。状态名称只在 Variable 的 `states` 内解释；自动展开复用完整 `ConditionPath`、中央顺序与既有节点编译链。
+公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询快捷名称表。Variable 创建时展开 `states` 中匹配到的快捷名称，其他输入直接作为条件，保存条件到内容的映射；自动展开直接消费这些条件，复用完整 `ConditionPath` 与既有节点编译链。快捷条件保留中央顺序，直接条件随后按书写顺序排列。资源 Rule 继续传递内部路径身份，不承担快捷名称解释。
 
 `functions/` 提供 CSS 函数内容，如混色、计算与 `oklch(base, channels, deltas)`。[ColorVariable](color-variable.ts) 与 [Variable](variable.ts) 是同级领域概念；前者沿用后者的消费协议，拥有基础色、四个绝对通道和四个独立增量。`declare(source)` 只声明基础色；set 与 delta 分别赋值对应字段；未设置时在 CSS 相对 OKLCH 上下文使用原始通道与零增量，不预先声明通道。主色在每个消费或设置地址按需重新聚合，避免继承父元素已计算完的主色。`surfaceColor` 与 `foregroundColor` 直接使用该能力，Button 无额外颜色转接 Variable。
 

@@ -1,7 +1,7 @@
 /** 按钮的样式效果与生效条件。 */
 import {
   rules,
-  calcAdd,
+  add,
   variable,
   innerText,
   contentLayout,
@@ -13,7 +13,6 @@ import {
 } from '../../../style-system'
 import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
 import { $cursor } from '../../../style-system/pieces/keys/interaction'
-import { $alignSelf } from '../../../style-system/pieces/keys/layout'
 import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
 import { foregroundColorInteractive } from '../../../style-system/pieces/contents/atoms/color/text'
 import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
@@ -63,7 +62,7 @@ export const buttonSurfaceCanvas = variable(surfaceColorInteractive, { name: 'bu
 export const buttonSurfaceStrength = variable(0.18, {
   name: 'button-surface-strength',
   states: { hover: 0.28, active: 0.38 },
-  modification: { apply: (current, change) => calcAdd(current, change) },
+  modification: { apply: (current, delta) => add(current, delta) },
 })
 
 rules(button, [
@@ -73,19 +72,27 @@ rules(button, [
   foregroundColor.declare(foregroundColorInteractive),
 
   innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
-  contentLayout({ mode: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
-  [$alignSelf, 'center'],
+  contentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
   size({ minHeight: controlSizeNormal }),
   boundary({ border: [boundaryWidthThin, 'solid', 'transparent'], radius: pill, cornerShape: 'squircle' }),
   color({ background: surfaceColor, foreground: foregroundColor }),
   elevation(shadowInteractive),
+
   clickable(),
 ])
+
+// =============================================================================
+// tone 动作语气
+// =============================================================================
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
 rules([...button, '&[data-tone]'], [foregroundColor.declare(toneColor('strong'))])
 rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
 rules([...button, '&[data-tone="danger"]'], [[toneColor, dangerColor]])
+
+// =============================================================================
+// variant 动作声量
+// =============================================================================
 
 // bare 保留透明常态，悬停和按下只增加轻量语气反馈。
 const bareStrength = variable(-0.18, {
@@ -93,7 +100,11 @@ const bareStrength = variable(-0.18, {
   states: { hover: -0.2, active: -0.24 },
 })
 const bareButton = [...button, '&[data-variant="bare"]']
-rules(bareButton, [buttonSurfaceStrength.modify(bareStrength), [buttonSurfaceCanvas, 'transparent'], elevation(shadowFlat)])
+rules(bareButton, [
+  buttonSurfaceStrength.modify(bareStrength),
+  [buttonSurfaceCanvas, 'transparent'],
+  elevation(shadowFlat),
+])
 
 // solid 使用语气实底与对应前景，交互时露出中性画布形成层次。
 const solidStrength = variable(0.82, {

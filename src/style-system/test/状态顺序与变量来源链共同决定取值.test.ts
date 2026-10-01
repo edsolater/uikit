@@ -5,7 +5,7 @@ import { condition } from '../condition'
 import { variable } from '../variable'
 import { clusterFrom, variableCluster } from '../variable-cluster'
 import { compileRules } from '../css-root'
-import { appendStateCondition } from '../pieces/state-conditions'
+import { appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
@@ -51,6 +51,6 @@ test('Cluster 成员未覆盖的更高优先级状态仍沿来源成立', () => 
 /** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */
 function compileStateFixture(input: import('../rule').Rules, state: string): string {
   const nodes = rulesToStyleNodes(input)
-  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, state)
+  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, resolveStateConditions([state])[0])
   return contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
 }

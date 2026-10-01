@@ -7,9 +7,9 @@ import { value } from '../value'
 import { variable } from '../variable'
 import { clusterDeclarations, clusterFrom, variableCluster } from '../variable-cluster'
 import { colorMix } from '../pieces/contents/functions/color-mix'
-import { calcMultiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/contents/functions/calc'
 import { compileRules } from '../css-root'
-import { appendStateCondition } from '../pieces/state-conditions'
+import { appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
@@ -229,8 +229,8 @@ test('状态直接使用 Cluster 时保留其身份，普通状态工厂仍收�
     states: { hover: cluster, active: factory },
   })
 
-  expect(target.config.states.get('hover')).toBe(cluster)
-  expect(target.config.states.get('active')).toBe('2px')
+  expect(target.config.states.get(resolveStateConditions(['hover'])[0])).toBe(cluster)
+  expect(target.config.states.get(resolveStateConditions(['active'])[0])).toBe('2px')
   expect(factory).toHaveBeenCalledExactlyOnceWith('2')
   const css = compileRules([[[condition('.StateCluster')], 'width', target]])
   expect(css).toContain('--state-cluster-target: blue;')
@@ -366,7 +366,7 @@ test('动态内容没有被消费时不执行，消费时产生 CSS', () => {
 })
 test('声明来源 Variable 不修改其定义，局部显式声明优先', () => {
   const ratio = variable(0.8, { name: 'surface-ratio', states: { hover: 0.6 } })
-  const css = compileStateFixture([[[condition('.Example')], ratio, 0.3], [[condition('.Example')], 'opacity', calcMultiply(ratio, 0.5)]], 'hover')
+  const css = compileStateFixture([[[condition('.Example')], ratio, 0.3], [[condition('.Example')], 'opacity', multiply(ratio, 0.5)]], 'hover')
   expect(css).toContain('--surface-ratio: 0.3;')
   expect(css).not.toContain('--surface-ratio: 0.6;')
 })
@@ -403,6 +403,6 @@ test('显式 Variable 局部分支保留其消费状态，状态内容的临时�
 /** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */
 function compileStateFixture(input: import('../rule').Rules, state: string): string {
   const nodes = rulesToStyleNodes(input)
-  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, state)
+  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, resolveStateConditions([state])[0])
   return contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
 }

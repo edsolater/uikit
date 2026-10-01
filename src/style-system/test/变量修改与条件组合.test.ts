@@ -9,7 +9,9 @@ import { condition, createJSSContent, variable, value } from '../index'
 import { compileRules } from '../css-root'
 import type { Rules } from '../rule'
 import { semanticPathParts } from '../condition'
-import { appendStateCondition } from '../pieces/state-conditions'
+import { appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
+
+const [focusState, hoverState] = resolveStateConditions(['focus', 'hover'])
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
@@ -38,10 +40,10 @@ it('局部声明缺少语义快照时，生成状态保留已有状态再接新�
     } }],
   ]
   const nodes = rulesToStyleNodes(input)
-  nodes[0].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, 'hover')
-  nodes[1].conditionPath = appendStateCondition(nodes[0].conditionPath, 'focus')
+  nodes[0].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, hoverState)
+  nodes[1].conditionPath = appendStateCondition(nodes[0].conditionPath, focusState)
   delete nodes[0].conditionPath.semanticPath
-  const expected = appendStateCondition(nodes[0].conditionPath, 'focus')
+  const expected = appendStateCondition(nodes[0].conditionPath, focusState)
   const css = contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
   expect(css).toContain('--missing-semantic-state-modify-1-base: 10;')
   expect(css).toContain('calc(var(--missing-semantic-state-modify-1-step-1-input) + 3)')
@@ -245,7 +247,7 @@ it('局部基础生产函数改写定义路径后，归属判断使用新路径�
   const local = n.declare(2)
   n.config.defaultValue = () => {
     const nodes = controller.search({ key: n.config.definitionKey })
-    nodes.find((node) => node.content === late[1])!.conditionPath = appendStateCondition(nodes.find((node) => node.content === local[1])!.conditionPath, 'focus')
+    nodes.find((node) => node.content === late[1])!.conditionPath = appendStateCondition(nodes.find((node) => node.content === local[1])!.conditionPath, focusState)
     return 10
   }
   const late = n.declare()
@@ -255,9 +257,9 @@ it('局部基础生产函数改写定义路径后，归属判断使用新路径�
     row([button], n.declare(1)), row([button, hover], local), row([button, hover, focus], n.modify(3)), row([button, focus], late),
   ]
   const nodes = rulesToStyleNodes(input)
-  nodes[2].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, 'hover')
-  nodes[3].conditionPath = appendStateCondition(nodes[2].conditionPath, 'focus')
-  nodes[4].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, 'focus')
+  nodes[2].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, hoverState)
+  nodes[3].conditionPath = appendStateCondition(nodes[2].conditionPath, focusState)
+  nodes[4].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, focusState)
   const css = contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
   expect(css).toContain('--source-boundary-modify-3-base: 10;')
   expect(css).toContain('calc(var(--source-boundary-modify-3-step-1-input) + 3)')

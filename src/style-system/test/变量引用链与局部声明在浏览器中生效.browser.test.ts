@@ -6,7 +6,7 @@ import { clusterFrom, variableCluster } from '../variable-cluster'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
-import { calcMultiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/contents/functions/calc'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { createJSSContent } from '../content'
 import { focusOutline } from '../pieces/contents/atoms/focus'
@@ -206,7 +206,7 @@ test('多层延伸使用自身状态，其余沿链查找；source 直接使用�
   })
   const sourceCluster = variableCluster({ default: source, soft: variable('11px', { name: 'chain-source-soft-size', states: { chainHover: '17px' } }) })
   const derived = clusterFrom(sourceCluster, {
-    default: { name: 'chain-derived-size', states: { chainActive: source => calcMultiply(source, 2) } },
+    default: { name: 'chain-derived-size', states: { chainActive: source => multiply(source, 2) } },
     soft: { name: 'chain-derived-soft-size', states: { chainActive: '19px' } },
   })
   const cluster = clusterFrom(derived, {
@@ -245,7 +245,7 @@ test('多层延伸使用自身状态，其余沿链查找；source 直接使用�
 test('有状态来源在派生状态内容中取配置值，不随来源局部覆盖变化', () => {
   const source = variable('10px', { name: 'scope-source-size', states: { chainActive: '30px' } })
   const derived = clusterFrom(variableCluster({ default: source, extra: variable('4px', { name: 'scope-extra-size' }) }), {
-    default: { name: 'scope-derived-size', states: { chainActive: source => calcMultiply(source, 2) } },
+    default: { name: 'scope-derived-size', states: { chainActive: source => multiply(source, 2) } },
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([

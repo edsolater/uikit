@@ -1,6 +1,6 @@
 /** 集中登记 State Condition 的名称、已有条件与嵌套顺序。 */
 import { assert } from '@edsolater/fnkit'
-import type { Condition, ConditionPath } from '../condition'
+import { condition, type Condition, type ConditionPath } from '../condition'
 import { whenActive, whenDisabled, whenFocusVisible, whenFocusWithin, whenHover } from './conditions/interaction'
 
 /** 定义者承诺条件始终约束当前主体，且与其他 State Condition 可交换。 */
@@ -32,30 +32,29 @@ export function hasStateCondition(name: string): boolean {
   return definitions.has(name)
 }
 
-/** 按名称去重并按中央顺序取得定义；未知名称终止编译。 */
+/** 创建配方时展开登记的快捷名称；其余条件原样保留，排在快捷条件之后。 */
 export function resolveStateConditions(names: string[]): StateCondition[] {
-  return [...new Set(names)].map((name) => {
-    const definition = definitions.get(name)
-    assert(!!definition, `未知 State Condition：${name}。`)
-    return definition
+  return [...new Set(names)].map((name) => definitions.get(name) ?? {
+    name,
+    condition: condition(name),
+    order: definitions.size + names.indexOf(name),
   }).sort((left, right) => left.order - right.order)
 }
 
 /** 在原路径后接一个状态，并按登记顺序排列输出条件。 */
-export function appendStateCondition(path: ConditionPath, name: string): ConditionPath {
+export function appendStateCondition(path: ConditionPath, state: StateCondition): ConditionPath {
+  const states = new Map(path.stateConditionPath.map((current) => [current.name, current]))
+  states.set(state.name, state)
   return {
     semanticPath: [
       ...(path.semanticPath ?? [
         ...path.targetConditionPath,
         ...path.stateConditionPath.map((state) => state.name),
       ]),
-      name,
+      state.name,
     ],
     targetConditionPath: [...path.targetConditionPath],
-    stateConditionPath: resolveStateConditions([
-      ...path.stateConditionPath.map((state) => state.name),
-      name,
-    ]),
+    stateConditionPath: [...states.values()].sort((left, right) => left.order - right.order),
   }
 }
 

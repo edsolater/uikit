@@ -12,7 +12,7 @@ import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
 import type { ASTController } from './compiler/ast-controller'
 import { value, type Value, type ValueInput } from './value'
-import { appendStateCondition, resolveStateConditions } from './pieces/state-conditions'
+import { appendStateCondition } from './pieces/state-conditions'
 import { variableRegistrationDeclarations, type Variable, type VariableDefaultValue } from './variable'
 
 /** 一个局部声明的基础值、最终值和修改步骤；只在本次编译内有效。 */
@@ -220,13 +220,13 @@ function declareInstanceValues(controller: ASTController, instance: VariableInst
     [instance.baseKey, baseContent],
     { owner: node, identity: 'base' },
   )
-  for (const state of resolveStateConditions([...variable.config.states.keys()])) {
+  for (const [state, stateContent] of variable.config.states) {
     const stateNode = controller.insert(
       {
         before: node,
-        conditionPath: appendStateCondition(node.conditionPath, state.name),
+        conditionPath: appendStateCondition(node.conditionPath, state),
       },
-      [instance.baseKey, variable.config.states.get(state.name)],
+      [instance.baseKey, stateContent],
       { owner: node, identity: `state/${state.name}` },
     )
     stateNode.readState = state.name

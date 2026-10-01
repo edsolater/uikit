@@ -75,7 +75,7 @@ export function clusterFrom<
     const sourceMember = sourceMembers[name]
     assert(!!sourceMember, `Variable Cluster 未定义来源成员：${name}。新增成员须提供 Variable。`)
     const sourceStates = Object.fromEntries(
-      [...sourceMember.config.states.keys()].map((state) => [state, sourceMember]),
+      [...sourceMember.config.states.keys()].map((state) => [state.name, sourceMember]),
     )
     members[name] = variable(sourceMember, { ...options, states: { ...sourceStates, ...options.states } })
   }

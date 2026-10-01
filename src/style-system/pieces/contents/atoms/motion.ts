@@ -2,7 +2,7 @@
 import { value } from '../../../value'
 import { variable } from '../../../variable'
 import { condition, media } from '../../../condition'
-import { calcMultiply } from '../functions/calc'
+import { multiply } from '../functions/calc'
 
 /** 完整动效的时长倍率，保留原时长。 */
 export const fullMotion = value(1)
@@ -22,7 +22,7 @@ const motionScaleRatio = variable(fullMotion, {
 /** 快速反馈的基础时长，单位为毫秒。 */
 export const fastBase = value('120ms')
 
-const durationFastDefault = calcMultiply(fastBase, motionScaleRatio)
+const durationFastDefault = multiply(fastBase, motionScaleRatio)
 /**
  * 可覆盖的快速过渡时长，默认在根上将 120ms 乘以动效倍率。
  * @example [$transition, transitionValue([$opacity, durationFast, easingStandard])] // 通常过渡 120ms；减少动效时为 0ms。
