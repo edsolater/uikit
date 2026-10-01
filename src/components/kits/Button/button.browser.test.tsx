@@ -8,16 +8,18 @@ import { Button, type ButtonProps } from './Button'
 import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/pieces/conditions/interaction'
 import { $borderRadius } from '../../../style-system/pieces/keys/border'
-import { $backgroundColor } from '../../../style-system/pieces/keys/color'
+import { $backgroundColor, $color } from '../../../style-system/pieces/keys/color'
 import { contentLayout } from '../../../style-system/pieces/mixins/content'
 import { subtle } from '../../../style-system/pieces/contents/atoms/radius'
 import { spaceSmall } from '../../../style-system/pieces/contents/atoms/space'
 import './Button.style'
 import baselineCSS from './Button.css?raw'
 import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
-import { surfaceColor } from '../../../style-system/pieces/roles/color'
+import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
 import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
-import { accentColor, dangerColor } from '../../../style-system/pieces/contents/atoms/color/tone'
+import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
+import { neutralColor } from '../../../style-system/pieces/contents/atoms/color/neutral'
+import { colorMix } from '../../../style-system/pieces/contents/combiners/color-mix'
 import { shadowFlat, shadowLow, shadowRaised, shadowElevated } from '../../../style-system/pieces/contents/atoms/shadow'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
@@ -69,6 +71,85 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test.each([undefined, 'bare', 'solid'] as const)('局部语气成员在普通状态规则中生效并在退出后恢复：%s', async (variant) => {
+    const soft = 'rgb(12, 80, 140)'
+    const strong = 'rgb(34, 100, 160)'
+    const tone = 'rgb(56, 120, 180)'
+    const foreground = 'rgb(78, 140, 200)'
+    handles.push(rules('.Button[data-local-tone]', [
+      [toneColor, tone], [toneColor('soft'), soft],
+      [toneColor('strong'), strong], [toneColor('foreground'), foreground],
+    ]))
+    handles.push(rules('.LocalToneExpectedHover', [
+      [$backgroundColor, variant === 'solid'
+        ? colorMix([tone, 0.88], textColor('strong'))
+        : colorMix([neutralColor(variant === 'bare' ? 1 : 2), variant === 'bare' ? 0.82 : 0.68], soft)],
+      [$color, variant === 'solid' ? foreground : strong],
+    ]))
+    handles.push(rules('.LocalToneExpectedActive', [
+      [$backgroundColor, variant === 'solid'
+        ? colorMix([tone, 0.78], textColor('strong'))
+        : colorMix([neutralColor(variant === 'bare' ? 2 : 3), variant === 'bare' ? 0.74 : 0.58], soft)],
+      [$color, variant === 'solid' ? foreground : strong],
+    ]))
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <Button variant={variant} danger htmlProps={{ 'data-local-tone': '' }}>局部语气</Button>, host)
+    const button = host.querySelector('button')!
+    button.style.transition = 'none'
+    const reference = document.body.appendChild(document.createElement('div'))
+    const normal = [getComputedStyle(button).backgroundColor, getComputedStyle(button).color]
+    const read = (element: HTMLElement) => [getComputedStyle(element).backgroundColor, getComputedStyle(element).color]
+    reference.className = 'LocalToneExpectedHover'
+    await userEvent.hover(button)
+    expect(read(button)).toEqual(read(reference))
+    button.focus()
+    await userEvent.keyboard('[Space>]')
+    try {
+      expect(button.matches(':hover:active')).toBe(true)
+      reference.className = 'LocalToneExpectedActive'
+      expect(read(button)).toEqual(read(reference))
+    } finally { await userEvent.keyboard('[/Space]') }
+    reference.className = 'LocalToneExpectedHover'
+    expect(read(button)).toEqual(read(reference))
+    await userEvent.unhover(button)
+    expect(read(button)).toEqual(normal)
+  })
+
+  test.each([undefined, 'bare', 'solid'] as const)('禁用从局部角色当前值派生一次并在退出后恢复：%s', async (variant) => {
+    const surface = 'rgb(12, 34, 56)'
+    const foreground = 'rgb(78, 90, 123)'
+    handles.push(rules('.Button[data-local-role]', [[surfaceColor, surface], [foregroundColor, foreground]]))
+    handles.push(rules('.LocalDisabledExpected', [
+      [$backgroundColor, colorMix([surface, 0.48], neutralColor(2))],
+      [$color, colorMix([foreground, 0.48], 'transparent')],
+    ]))
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <Button variant={variant} danger htmlProps={{ 'data-local-role': '' }}>局部禁用</Button>, host)
+    const button = host.querySelector('button')!
+    button.style.transition = 'none'
+    const reference = document.body.appendChild(document.createElement('div'))
+    reference.className = 'LocalDisabledExpected'
+    const read = (element: HTMLElement) => [getComputedStyle(element).backgroundColor, getComputedStyle(element).color]
+    const normal = read(button)
+    expect(normal).toEqual([surface, foreground])
+    button.disabled = true
+    await userEvent.hover(button)
+    expect(read(button)).toEqual(read(reference))
+    button.disabled = false
+    button.dataset.status = 'disabled'
+    button.focus()
+    await userEvent.keyboard('[Space>]')
+    try {
+      expect(button.matches(':hover:active')).toBe(true)
+      expect(read(button)).toEqual(read(reference))
+    } finally { await userEvent.keyboard('[/Space]') }
+    await userEvent.unhover(button)
+    delete button.dataset.status
+    expect(read(button)).toEqual(normal)
+  })
+
   test('solid 常态背景保留组件 surfaceColor 的局部覆盖', () => {
     handles.push(rules('.Button[data-variant="solid"][data-surface-probe]', [
       [surfaceColor, 'rgb(12, 34, 56)'],
