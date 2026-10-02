@@ -4,7 +4,7 @@
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '../../../hooks'
-import { Button, buttonDefaultPropSettings, type ButtonAppearance } from './Button'
+import { Button, buttonMapping, type ButtonAppearance } from './index'
 import { cssRoot } from '../../../style-system'
 
 let dispose: (() => void) | undefined
@@ -28,12 +28,12 @@ describe('Button', () => {
     expect((host.firstElementChild as HTMLElement).dataset.appearance).toBe('outlined')
     dispose()
     host.replaceChildren()
-    Object.assign(buttonDefaultPropSettings.appearance, { undefined: 'filled' })
+    Object.assign(buttonMapping.appearance, { undefined: 'filled' })
     try {
       dispose = render(() => <Button>配置后</Button>, host)
       expect((host.firstElementChild as HTMLElement).dataset.appearance).toBe('filled')
     } finally {
-      Object.assign(buttonDefaultPropSettings.appearance, { undefined: 'outlined' })
+      Object.assign(buttonMapping.appearance, { undefined: 'outlined' })
     }
   })
 

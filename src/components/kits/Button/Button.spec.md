@@ -6,7 +6,7 @@
 
 - `emphasis` 表达组件整体的存在感，取值为 `soft`、`strong`；直接属性使用同名描述词，省略时为普通表现。不规定透明、实底或边框等实现方式。
 - `tone` 表达动作的语义基调，当前确定的标记为 `danger`；原 `accent` 退出。其他候选以后讨论。
-- 分组提供外部可配置入口，不等于组内必然互斥。不同组可以组合，例如 `danger` 与 `strong`；具体选择由业务决定。
+- Variant 描述组件的分类选择，分组内单选，分组之间可以组合，例如 `danger` 与 `strong`。Status 独立描述当前成立的情况，多个状态可以叠加。两者都允许响应式变化。
 - `appearance` 表达外观形式，取值为 `filled`、`outlined`、`plain`。原始选择省略时仍为 `undefined`，由公开映射表转换成外观输出，初始映射为 `outlined`。
 
 ## 组件定义
@@ -14,12 +14,12 @@
 `Button` 表达“在当前上下文执行一个命令”。它不表达导航、值编辑、持续状态切换或状态展示。
 
 ```txt
-Button = action + content + Brand Props + Status Props
+Button = action + content + Variant Props + Status Props
 ```
 
 - `children` 是用户看到的动作内容。
 - `name` 是动作名；纯图形按钮必须提供，最终映射到 `aria-label`。
-- appearance、tone、emphasis、size 是四个独立的 Brand 分组。
+- appearance、tone、emphasis、size 是四个独立的 Variant 分组。
 - loading、disabled 是可以同时成立的 Status。
 
 ## 选择规则
@@ -54,17 +54,17 @@ Button = action + content + Brand Props + Status Props
 ```ts
 interface ButtonProps
   extends PivProps<'button'>,
-    BrandProps<'appearance', 'filled' | 'outlined' | 'plain'>,
-    BrandProps<'tone', 'danger'>,
-    BrandProps<'emphasis', 'soft' | 'strong'>,
-    BrandProps<'size', 'small' | 'large' | 'xlarge'>,
+    VariantProps<'appearance', 'filled' | 'outlined' | 'plain'>,
+    VariantProps<'tone', 'danger'>,
+    VariantProps<'emphasis', 'soft' | 'strong'>,
+    VariantProps<'size', 'small' | 'large' | 'xlarge'>,
     StatusProps<'loading' | 'disabled'> {
   name?: Source<string | undefined>
   onClick?: EventListenerInput<'click'>
 }
 ```
 
-### Brand Props
+### Variant Props
 
 | 分组 | 确定描述词 | 不定字段 | 省略时 |
 | --- | --- | --- | --- |
@@ -73,11 +73,11 @@ interface ButtonProps
 | 存在感 | `soft`、`strong` | `emphasis` | 普通表现 |
 | 物理尺寸 | `small`、`large`、`xlarge` | `size` | 默认尺寸 |
 
-- 确定描述词的值是 `Source<boolean | undefined>`，适合具体 Brand 已知、只需决定是否存在的场景。
-- 不定字段的值是对应候选的 `Source`，适合具体 Brand 会变化的场景。
+- 确定描述词的值是 `Source<boolean | undefined>`，适合具体 Variant 已知、只需决定是否存在的场景。
+- 不定字段的值是对应候选的 `Source`，适合具体 Variant 会变化的场景。
 - 不定字段按“是否声明”接管整个分组；即使当前值是 `undefined`，也不会回落到同组确定描述词。
 - 同组输入冲突会给出详细警告，但不会让组件崩溃。
-- 分组本身不代表互斥；当前已接入的外观、强调与尺寸候选按单选解析，不同组可以同时成立。
+- 同一 Variant 分组按单选解析，不同组可以同时成立。
 - 原始选择默认是 `undefined`，不存在 `normal`、`neutral`、`medium` 这类默认候选。映射只改变 DOM 输出，解析器的 `details` 和 `effect` 保留原始选择。
 
 ### Status Props
@@ -89,7 +89,7 @@ interface ButtonProps
 - 外部一旦声明某个状态字段，该字段由外部持续控制；组件内部对该状态的更改保持无效且不报错。
 - Button 接收状态，但不判断状态为什么成立。
 
-## Brand 选择
+## Variant 选择
 
 ### Appearance
 
@@ -137,6 +137,6 @@ export const buttonMapping = {
 
 ## 输出协议
 
-- Brand 分组分别输出 `data-appearance`、`data-tone`、`data-emphasis`、`data-size`；不输出旧 `data-variant`。
+- Variant 分组分别输出 `data-appearance`、`data-tone`、`data-emphasis`、`data-size`；不输出旧 `data-variant`。
 - 当前成立的 Status 合并输出到 `data-status`，以空格分隔。
 - 这些分类概念仍然存在于类型、注释和 DOM 协议中；运行时不需要 Profile 或枚举对象维持分类。

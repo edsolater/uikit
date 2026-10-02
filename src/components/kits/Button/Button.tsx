@@ -11,13 +11,13 @@ import { type Source } from '../../../hooks'
 import { clickable } from '../../plugins'
 import { Piv, type PivProps } from '../../Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
-import { createBrandPropsParser, type BrandProps } from '../utils/parseBrandProps'
+import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
 import { createStatusPropsParser, type StatusProps } from '../utils/parseStatusProps'
-import { buttonDefaultPropSettings } from './Button.mapping'
+import { buttonMapping } from './Button.mapping'
 import './Button.style'
 
 /**
- * 按钮的外观 Brand Props。
+ * 按钮的外观 Variant Props。
  *
  * - filled、outlined、plain：外观候选，具体呈现待讨论。
  * - undefined：未指定外观。
@@ -34,7 +34,7 @@ export type ButtonAppearance = 'filled' | 'outlined' | 'plain'
 export type ButtonEmphasis = 'soft' | 'strong'
 
 /**
- * 按钮的动作语气 Brand Props。
+ * 按钮的动作语气 Variant Props。
  *
  * - danger：破坏性动作。
  * - undefined：普通语气。
@@ -45,14 +45,14 @@ export type ButtonEmphasis = 'soft' | 'strong'
 export type ButtonTone = 'danger'
 
 /**
- * 按钮的物理尺寸 Brand Props。
+ * 按钮的物理尺寸 Variant Props。
  *
  * - small：紧凑，适用于工具栏或空间受限的场景。
  * - large：需要更宽松尺度或更大命中面积。
  * - xlarge：需要更大的命中面积。
  * - undefined：默认尺度，适用于大多数场景。
  *
- * 尺寸确定时优先声明 small、large 或 xlarge；只有尺寸会在多个 Brand 之间变化时才使用 size。
+ * 尺寸确定时优先声明 small、large 或 xlarge；只有尺寸会在多个 Variant 之间变化时才使用 size。
  * size 一旦声明便接管整个尺寸分组，即使当前值是 undefined 也不会回落到确定描述词。
  */
 export type ButtonSize = 'small' | 'large' | 'xlarge'
@@ -66,10 +66,10 @@ export type ButtonStatus = 'loading' | 'disabled'
 export interface ButtonProps
   extends
     PivProps<'button'>,
-    BrandProps<'appearance', ButtonAppearance>,
-    BrandProps<'emphasis', ButtonEmphasis>,
-    BrandProps<'tone', ButtonTone>,
-    BrandProps<'size', ButtonSize>,
+    VariantProps<'appearance', ButtonAppearance>,
+    VariantProps<'emphasis', ButtonEmphasis>,
+    VariantProps<'tone', ButtonTone>,
+    VariantProps<'size', ButtonSize>,
     StatusProps<ButtonStatus> {
   /**
    * 动作名。
@@ -86,14 +86,14 @@ export interface ButtonProps
   onClick?: EventListenerInput<'click'>
 }
 
-const parseButtonBrandProps = createBrandPropsParser(
+const parseButtonVariantProps = createVariantPropsParser(
   [
     { groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'] },
     { groupName: 'emphasis', candidates: ['soft', 'strong'] },
     { groupName: 'tone', candidates: ['danger'] },
     { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
   ],
-  buttonDefaultPropSettings,
+  buttonMapping,
 )
 
 const parseButtonStatusProps = createStatusPropsParser({
@@ -107,13 +107,13 @@ const parseButtonStatusProps = createStatusPropsParser({
 })
 
 export function Button(props: ButtonProps) {
-  const { brandShadowProps } = parseButtonBrandProps(props)
+  const { variantShadowProps } = parseButtonVariantProps(props)
   const { statusShadowProps } = parseButtonStatusProps(props)
 
   return (
     <Piv
       as="button"
-      shadowProps={[props, brandShadowProps, statusShadowProps]}
+      shadowProps={[props, variantShadowProps, statusShadowProps]}
       class="Button"
       plugins={[clickable({ componentName: 'Button' })]}
       htmlProps={{

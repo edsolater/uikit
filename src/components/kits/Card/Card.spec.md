@@ -81,8 +81,8 @@ Card = 一个独立信息单元 + variant + size
 ```ts
 interface CardProps<Tag extends PivSupportedElementTag = 'div'>
   extends PivProps<Tag>,
-    BrandProps<'variant', 'soft' | 'solid'>,
-    BrandProps<'size', 'small' | 'large' | 'xlarge'> {}
+    VariantProps<'variant', 'soft' | 'solid'>,
+    VariantProps<'size', 'small' | 'large' | 'xlarge'> {}
 ```
 
 ### Card 自有属性

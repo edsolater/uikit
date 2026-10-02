@@ -1,14 +1,14 @@
 import { createRoot } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
 import { createState, val, type Source } from '../../../hooks'
-import { createBrandPropsParser } from './parseBrandProps'
+import { createVariantPropsParser } from './parseVariantProps'
 
-describe('createBrandPropsParser', () => {
+describe('createVariantPropsParser', () => {
   test('没有自有转换表的分组不读取原型属性', () => {
-    const parser = createBrandPropsParser([{ groupName: 'constructor', candidates: ['length'] }], { appearance: { undefined: 'outlined' } })
-    const { details, brandShadowProps } = parser({ constructor: 'length' })
+    const parser = createVariantPropsParser([{ groupName: 'constructor', candidates: ['length'] }], { appearance: { undefined: 'outlined' } })
+    const { details, variantShadowProps } = parser({ constructor: 'length' })
     expect(details.constructor).toBe('length')
-    expect(brandShadowProps.htmlProps!['data-constructor']).toBe(details.constructor)
+    expect(variantShadowProps.htmlProps!['data-constructor']).toBe(details.constructor)
   })
 
   test('映射只转换 DOM Source，原始 undefined 与 effect 身份不变', () => {
@@ -17,9 +17,9 @@ describe('createBrandPropsParser', () => {
       const mapping = { appearance: { undefined: 'outlined', plain: undefined } }
       Object.setPrototypeOf(mapping.appearance, { filled: 'outlined' })
       const effect = vi.fn(() => undefined)
-      const parser = createBrandPropsParser([{ groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'], effect }], mapping)
-      const { details, brandShadowProps } = parser({ appearance })
-      const mapped = brandShadowProps.htmlProps!['data-appearance'] as Source<string | undefined>
+      const parser = createVariantPropsParser([{ groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'], effect }], mapping)
+      const { details, variantShadowProps } = parser({ appearance })
+      const mapped = variantShadowProps.htmlProps!['data-appearance'] as Source<string | undefined>
       expect(details.appearance).toBe(appearance)
       expect(val(details.appearance)).toBeUndefined()
       expect(effect).toHaveBeenCalledExactlyOnceWith(appearance)
@@ -40,22 +40,22 @@ describe('createBrandPropsParser', () => {
   test('effect 只运行一次，后续变化由同一个选中结果 Source 承载', () => {
     createRoot((dispose) => {
       const large = createState(false)
-      let effectBrand: Source<string | undefined> | undefined
-      const effect = vi.fn((selectedBrand: Source<string | undefined>) => {
-        effectBrand = selectedBrand
-        return { htmlProps: { 'data-effect-brand': selectedBrand } }
+      let effectVariant: Source<string | undefined> | undefined
+      const effect = vi.fn((selectedVariant: Source<string | undefined>) => {
+        effectVariant = selectedVariant
+        return { htmlProps: { 'data-effect-brand': selectedVariant } }
       })
-      const parseProps = createBrandPropsParser([
+      const parseProps = createVariantPropsParser([
         { groupName: 'size', candidates: ['small', 'large'], effect },
       ])
 
-      const { details, brandShadowProps } = parseProps({ large })
+      const { details, variantShadowProps } = parseProps({ large })
 
       expect(effect).toHaveBeenCalledOnce()
-      expect(effectBrand).toBe(details.size)
-      expect(brandShadowProps.htmlProps!['data-size']).toBe(details.size)
-      expect(Array.isArray(brandShadowProps)).toBe(false)
-      expect(brandShadowProps.shadowProps).toHaveLength(1)
+      expect(effectVariant).toBe(details.size)
+      expect(variantShadowProps.htmlProps!['data-size']).toBe(details.size)
+      expect(Array.isArray(variantShadowProps)).toBe(false)
+      expect(variantShadowProps.shadowProps).toHaveLength(1)
       expect(val(details.size)).toBeUndefined()
 
       large.set(true)

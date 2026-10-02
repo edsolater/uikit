@@ -11,17 +11,17 @@ export type VariantInput<V extends Variant> = Source<V>
  *
  * 示例：
  * ```ts
- * interface ButtonProps extends VariantProps<'solid' | 'outline' | 'ghost'> {
+ * interface ButtonProps extends VariantManagerProps<'solid' | 'outline' | 'ghost'> {
  *   // ...
  * }
  */
-export type VariantProps<V extends Variant = Variant> = {
+export type VariantManagerProps<V extends Variant = Variant> = {
   variant?: VariantInput<V>
 }
 
 /** 创建一个可拔插的 底层Piv的一个插件Plugin */
 export function createVariantManager<V extends Variant>(
-  props: VariantProps<V>,
+  props: VariantManagerProps<V>,
   options?: { defaultVariant?: VariantInput<V> },
 ) {
   const variant = stateView(props.variant).map((v) => v ?? options?.defaultVariant)

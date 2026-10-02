@@ -15,7 +15,7 @@ afterEach(() => {
 })
 
 describe('Card', () => {
-  test('保留原生元素语义、组合 class 并输出确定 Brand', () => {
+  test('保留原生元素语义、组合 class 并输出确定 Variant', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => (
       <Card
@@ -39,7 +39,7 @@ describe('Card', () => {
     expect(card.textContent).toBe('内容')
   })
 
-  test('省略 Brand Props 时使用 undefined 默认结果', () => {
+  test('省略 Variant Props 时使用 undefined 默认结果', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Card>默认卡片</Card>, host)
 
@@ -48,7 +48,7 @@ describe('Card', () => {
     expect(card.hasAttribute('data-size')).toBe(false)
   })
 
-  test('variant 字段可以动态选择 Brand，并优先于 soft', () => {
+  test('variant 字段可以动态选择 Variant，并优先于 soft', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const variant = createState<'soft' | 'solid' | undefined>()
     const host = document.body.appendChild(document.createElement('div'))

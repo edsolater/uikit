@@ -5,7 +5,7 @@ import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { createState } from '../../../hooks'
-import { Button, buttonDefaultPropSettings, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps, type ButtonAppearance } from './index'
+import { Button, buttonMapping, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps, type ButtonAppearance } from './index'
 import { disabledFade } from '../../../style-system/pieces/contents/atoms/opacity'
 import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/pieces/conditions/interaction'
@@ -115,14 +115,14 @@ describe('Button styles', () => {
 
   test('外界生成前配置公开外观转换表，不引入旧样式属性', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    Object.assign(buttonDefaultPropSettings.appearance, { undefined: 'filled' })
+    Object.assign(buttonMapping.appearance, { undefined: 'filled' })
     try {
       dispose = render(() => <Button>配置外观</Button>, host)
       const button = host.querySelector('button')!
       expect(button.dataset.appearance).toBe('filled')
       expect(button.hasAttribute('data-variant')).toBe(false)
     } finally {
-      Object.assign(buttonDefaultPropSettings.appearance, { undefined: 'outlined' })
+      Object.assign(buttonMapping.appearance, { undefined: 'outlined' })
     }
   })
 

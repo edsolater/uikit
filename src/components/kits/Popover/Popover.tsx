@@ -4,18 +4,18 @@
  */
 import { Show, mergeProps, onMount, type JSX } from 'solid-js'
 import { Piv } from '../../Piv/Piv'
-import { createBrandPropsParser, type BrandProps } from '../utils/parseBrandProps'
+import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
 import { createStatusPropsParser } from '../utils/parseStatusProps'
 import { createPopoverController, type PopoverToggleEvent } from './createPopoverController'
 import './popover.css'
 
 /**
- * Popover 相对触发器的位置 Brand Props。
+ * Popover 相对触发器的位置 Variant Props。
  *
  * 位置确定时优先声明 top、right、bottom 或 left；只有位置会变化时才使用 placement。
  * 省略整个分组时默认显示在 bottom。
  */
-export type PopoverPlacementProps = BrandProps<'placement', 'top' | 'right' | 'bottom' | 'left'>
+export type PopoverPlacementProps = VariantProps<'placement', 'top' | 'right' | 'bottom' | 'left'>
 
 export type PopoverMode = 'auto' | 'hint' | 'manual'
 export type PopoverAction = 'toggle' | 'show' | 'hide'
@@ -60,7 +60,7 @@ const defaultPopoverProps: {
   defaultOpen: false,
 }
 
-const parsePopoverBrandProps = createBrandPropsParser([
+const parsePopoverVariantProps = createVariantPropsParser([
   { groupName: 'placement', candidates: ['top', 'right', 'bottom', 'left'] },
 ])
 
@@ -70,7 +70,7 @@ const parsePopoverStatusProps = createStatusPropsParser({
 
 export function Popover(props: PopoverProps) {
   const mergedProps = mergeProps(defaultPopoverProps, props)
-  const { brandShadowProps } = parsePopoverBrandProps(props)
+  const { variantShadowProps } = parsePopoverVariantProps(props)
   const controller = createPopoverController({
     onToggle: mergedProps.onToggle,
     onBeforeToggle: mergedProps.onBeforeToggle,
@@ -85,7 +85,7 @@ export function Popover(props: PopoverProps) {
 
   return (
     <Piv
-      shadowProps={[brandShadowProps, statusShadowProps]}
+      shadowProps={[variantShadowProps, statusShadowProps]}
       class={joinClassName('Popover', mergedProps.class)}
       style={mergedProps.style}
     >

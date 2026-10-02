@@ -8,12 +8,12 @@
 
 ## 业务目标
 
-`Button` 是当前界面里的动作入口。它把动作内容、动作名、四个 Brand 分组和可合并 Status 翻译成一个原生 `button`，不接管导航、表单编排或状态成因。
+`Button` 是当前界面里的动作入口。它把动作内容、动作名、四个 Variant 分组和可合并 Status 翻译成一个原生 `button`，不接管导航、表单编排或状态成因。
 
 ```txt
 调用方
   ├─ children / name：动作信息
-  ├─ appearance / tone / emphasis / size：Brand 分类
+  ├─ appearance / tone / emphasis / size：Variant 分类
   └─ loading / disabled：外部状态波
           ↓
         Button
@@ -28,22 +28,22 @@
 - 输入值使用 Input；切换持续状态使用对应表单控件。
 - `children` 承载可见动作内容；纯图形内容通过 `name` 提供动作名。
 
-## Brand 输入轮廓
+## Variant 输入轮廓
 
-Button 有四个 Brand 分组：
+Button 有四个 Variant 分组：
 
 - appearance（外观形式）：`filled`、`outlined`、`plain`。
 - tone（动作的语义基调）：`danger`；原 accent 退出。
 - emphasis（整体存在感）：`soft`、`strong`；不绑定透明、实底等实现方式。
 - size：`small`、`large`、`xlarge`
 
-具体 Brand 已知时优先使用确定描述词：
+具体 Variant 已知时优先使用确定描述词：
 
 ```tsx
 <Button strong filled large>保存</Button>
 ```
 
-具体 Brand 会变化时使用不定字段：
+具体 Variant 会变化时使用不定字段：
 
 ```tsx
 <Button appearance={appearance} tone={tone} emphasis={emphasis} size={size}>保存</Button>
@@ -59,9 +59,11 @@ import { buttonMapping } from '@edsolater/uikit'
 Object.assign(buttonMapping.appearance, { undefined: 'filled' })
 ```
 
-映射能力位于独立的 [brandPropsMapping.ts](../../src/components/kits/utils/brandPropsMapping.ts)，由 `createBrandPropsParser` 的第二参数接入整份组件表，按分组名读取子表，再以 `String(原始值)` 查询属性，其他 Kit 也可使用。映射只决定 DOM 输出，`details` 与 `effect` 保留原始选择；未命中映射时原样输出。`buttonMapping` 是普通对象字面量，使用 `as const` 保留字面量类型；它没有运行时冻结，也不主动触发响应式更新。
+映射能力位于独立的 [variantPropsMapping.ts](../../src/components/kits/utils/variantPropsMapping.ts)，由 `createVariantPropsParser` 的第二参数接入整份组件表，按分组名读取子表，再以 `String(原始值)` 查询属性，其他 Kit 也可使用。映射只决定 DOM 输出，`details` 与 `effect` 保留原始选择；未命中映射时原样输出。`buttonMapping` 是普通对象字面量，使用 `as const` 保留字面量类型；它没有运行时冻结，也不主动触发响应式更新。
 
-四组可以独立组合，例如 `<Button danger strong filled>`。分组是配置入口，不天然代表互斥；当前外观、强调与尺寸候选按单选解析。tone 表达动作性质，emphasis 表达存在感，appearance 表达外观，三者不互相推导。
+Variant 描述组件的分类选择；每个分组单选，不同分组可以组合，例如 `<Button danger strong filled>`。tone 表达动作性质，emphasis 表达存在感，appearance 表达外观，三者不互相推导。
+
+Status 独立描述组件当前成立的情况，`loading` 与 `disabled` 可以同时成立。两类输入都支持响应式变化；区别在表达的职责，不在值是否能改变。
 
 ## Status 输入轮廓
 
