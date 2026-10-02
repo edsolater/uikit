@@ -32,12 +32,11 @@ it('局部声明缺少语义快照时，生成状态保留已有状态再接新�
   const input: Rules = [
     row([button, hover], n.declare()),
     row([button, hover, focus], n.modify(3)),
-    [[], 'order', { compileWaveIndex: 1, onCompile(_, ast) {
+    [[], 'order', { compileWaveIndex: 1, onCompile(context, ast) {
       const generated = ast.search({}).find((node) => node.content === 10 && node.readState === 'focus')!
       expect(semanticPathParts(generated.conditionPath)).toEqual(semanticPathParts(expected))
       expect(generated.conditionPath.stateConditionPath.map((state) => state.name)).toEqual(['focus', 'hover'])
-      return 1
-    } }],
+      ast.setContent(context, 1); } }],
   ]
   const nodes = rulesToStyleNodes(input)
   nodes[0].conditionPath = appendStateCondition({ targetConditionPath: [button], stateConditionPath: [] }, hoverState)
@@ -217,7 +216,7 @@ it('apply 回调移动共享成员时，返回后用新候选重选锚点与连�
   const middle = n.modify(3)
   const sharedNext = n.modify(4, { id: 'shared' })
   const css = compileRules([
-    [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
+    [[], 'order', { onCompile(context, ast) { controller = ast; ast.setContent(context, 1); } }],
     row([button], n.declare()), row([button, hover], sharedFirst), row([button], middle), row([button, focus], sharedNext),
   ])
   expect(css).toContain('--apply-moved-anchor-modify-1-step-2-input: var(--apply-moved-anchor-modify-1-base);')
@@ -233,7 +232,7 @@ it('apply 回调读取新步骤时已经连接前序，返回后最终连接仍�
     return add(current, change)
   } } })
   const css = compileRules([
-    [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
+    [[], 'order', { onCompile(context, ast) { controller = ast; ast.setContent(context, 1); } }],
     row([button], n.declare()), row([button], n.modify(2)), row([button], n.modify(3)),
   ])
   expect(observed).toBe('var(--apply-visible-chain-modify-1-step-1)')
@@ -253,7 +252,7 @@ it('局部基础生产函数改写定义路径后，归属判断使用新路径�
   const late = n.declare()
   Object.assign(late[1] as JSSContent, { compileWaveIndex: 1 })
   const input: Rules = [
-    [[], 'order', { onCompile(_, ast) { controller = ast; return 1 } }],
+    [[], 'order', { onCompile(context, ast) { controller = ast; ast.setContent(context, 1); } }],
     row([button], n.declare(1)), row([button, hover], local), row([button, hover, focus], n.modify(3)), row([button, focus], late),
   ]
   const nodes = rulesToStyleNodes(input)
@@ -283,9 +282,8 @@ it('晚到定义接管同路径多步时，当前操作复用最近归属判断'
       row([button, hover], n.modify(2)), row([button, hover], n.modify(3)), row([button, hover], n.modify(4)),
       [[button, hover], 'opacity', { compileWaveIndex: 1, onCompile(context, ast) {
         ast.insert({ before: context.node, conditionPath: context.conditionPath }, late, { owner: context.node })
-        return 1
-      } }],
-      [[], 'order', { compileWaveIndex: 2, onCompile() { measuring = false; expect(checks).toBe(2); return 1 } }],
+        ast.setContent(context, 1); } }],
+      [[], 'order', { compileWaveIndex: 2, onCompile(context, controller) { measuring = false; expect(checks).toBe(2); controller.setContent(context, 1); } }],
     ])
     expect(css).toContain('--reused-semantic-owner-modify-2-base: 10;')
     expect(css).toContain('--reused-semantic-owner-modify-2-step-3-input: var(--reused-semantic-owner-modify-2-step-2);')
@@ -300,13 +298,12 @@ it('已编译的中间步骤移动并显式重访后重新连接，不重复生�
   const last = n.modify(4)
   const css = compileRules([
     row([button], n.declare()), row([button], first), row([button], middle), row([button], last),
-    [[button], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+    [[button], 'order', { compileWaveIndex: 2, onCompile(context, ast) {
       const candidates = ast.search({ key: n.config.definitionKey })
       const moved = candidates.find((node) => node.content === middle[1])!
       ast.move(moved, { after: candidates.find((node) => node.content === last[1])! })
       moved.compileRevision++
-      return 1
-    } }],
+      ast.setContent(context, 1); } }],
   ])
   expect(applies).toBe(3)
   expect(css).toContain('--moved-middle-step-modify-1-step-3-input: var(--moved-middle-step-modify-1-step-1);')
@@ -323,17 +320,15 @@ it('共享步骤移动后重新选择最早成员，撤销该成员再按当前�
   const sharedNext = n.modify(5, { id: 'shared' })
   const css = compileRules([
     row([button], n.declare()), row([button], first), row([button, hover], sharedFirst), row([button], middle), row([button, focus], sharedNext),
-    [[button], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+    [[button], 'order', { compileWaveIndex: 2, onCompile(context, ast) {
       const nodes = ast.search({ key: n.config.definitionKey })
       const moved = nodes.find((node) => node.content === sharedFirst[1])!
       ast.move(moved, { after: nodes.find((node) => node.content === sharedNext[1])! })
       moved.compileRevision++
-      return 1
-    } }],
-    [[button], 'opacity', { compileWaveIndex: 3, onCompile(_, ast) {
+      ast.setContent(context, 1); } }],
+    [[button], 'opacity', { compileWaveIndex: 3, onCompile(context, ast) {
       ast.remove(ast.search({ key: n.config.definitionKey }).find((node) => node.content === sharedNext[1])!)
-      return 1
-    } }],
+      ast.setContent(context, 1); } }],
   ])
   expect(applies).toBe(4)
   expect(css).toContain('--moved-shared-step-modify-1-step-3-input: var(--moved-shared-step-modify-1-step-1);')

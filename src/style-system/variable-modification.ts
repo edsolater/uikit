@@ -163,7 +163,6 @@ export function declareVariable(
         )
           node.compileRevision++
       }
-      return undefined
     },
   }
   declaredVariables.set(content, { variable, content: value })
@@ -255,14 +254,14 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
       const target = candidates.nearest(context.conditionPath)
       if (!target) {
         controller.defer(context.node, `Variable ${variable.name} 的修改找不到父路径定义。`)
-        return undefined
+        return
       }
       const session = sessionOf(context)
       const instance = ensureVariableInstance(context, controller, target, candidates)
       const old = session.steps.get(context.node)
       if (old?.instance === instance) {
         relocateStep(context, old, candidates.nodes)
-        return undefined
+        return
       }
       if (old) {
         removeModification(context, controller, old, context.node)
@@ -278,7 +277,6 @@ export function modifyVariable(variable: Variable, change: unknown, id?: string 
           const current = session.steps.get(context.node)
           if (current) removeModification(context, controller, current, context.node)
         })
-      return undefined
     },
   }
   return [{ toCSSString: variable.toCSSString }, content]

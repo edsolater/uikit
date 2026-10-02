@@ -17,7 +17,7 @@ export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules
   const session = new ASTSession(styleNodes)
   const resources = new ResourceCompilation(session)
   const nodes = new NodeCompilation(session, createASTController(session), sourceRules, resources)
-  const join = new Join(session, (node) => nodes.resolvedContents(node))
+  const join = new Join(session, (node) => nodes.compiledContents(node))
   for (let wave = 0; ; wave++) {
     assert(wave <= 10_000, 'AST 编译波超过上限 10000，Content 仍未完成。')
     nodes.visit(wave)

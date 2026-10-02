@@ -16,10 +16,9 @@ it('当前操作立即改写，产物中的按需规则继续独立编译', () =
         ? value('1', { onActive: () => [[[path], 'height', operation(2)]] })
         : createJSSContent((resolve) => `calc(${resolve(2)} * 3px)`, [2])
       controller.insert({ before: context.node, conditionPath: context.conditionPath }, [amount === 1 ? 'opacity' : 'height', content], { owner: context.node, identity: 'output' })
-      return undefined
     } }
   }
-  const unrelated: JSSContent = { onCompile() { events.push('unrelated'); return '1' } }
+  const unrelated: JSSContent = { onCompile(context, controller) { events.push('unrelated'); controller.setContent(context, '1'); } }
   const input: Parameters<typeof compileRules>[0] = [[[path], 'opacity', operation(1)], [[path], 'order', unrelated]]
   const css = compileRules(input)
   expect(events).toEqual(['rewrite-1', 'unrelated', 'rewrite-2'])
@@ -31,7 +30,7 @@ it('当前操作立即改写，产物中的按需规则继续独立编译', () =
 it('即时改写可删除当前节点，不保留全局提交集等待收口', () => {
   const path = condition('.rewriter-removal')
   let visits = 0
-  const content: JSSContent = { onCompile(context, controller) { visits++; controller.remove(context.node); return undefined } }
+  const content: JSSContent = { onCompile(context, controller) { visits++; controller.remove(context.node); } }
   expect(compileRules([[[path], 'opacity', content]])).toBe('')
   expect(visits).toBe(1)
 })
@@ -41,7 +40,7 @@ it('删除首次消费位置不会撤销另一消费者共享的一次性注册�
   const registered = variable(1, { name: 'shared-registration', registration: { syntax: '<number>', inherits: false, initialValue: 1 } })
   const first: JSSContent = { onCompile(context, controller) {
     const target = context.node
-    return value(registered, { onActive: () => [[[path], 'display', { onCompile(_context, next) { next.remove(target); return undefined } }]] })
+    controller.setContent(context, value(registered, { onActive: () => [[[path], 'display', { onCompile(_context, next) { next.remove(target) } }]] }))
   } }
   const css = compileRules([[[path], 'z-index', first], [[path], 'order', registered]])
   expect(css).toContain('@property --shared-registration')
@@ -65,7 +64,6 @@ it('同名资源替换后旧对象所有消费者撤销，再消费可重新注�
     controller.remove(controller.search({ key: 'width' })[0])
     controller.remove(controller.search({ key: 'height' })[0])
     controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['opacity', first], { owner: context.node })
-    return undefined
   } }
   const css = compileRules([[[], 'width', first], [[], 'color', second], [[], 'height', first], [[], 'display', remove]])
   expect(css).toContain('syntax: "<number>"')
@@ -79,7 +77,6 @@ it.each([false, true])('同波删除消费者不会产生孤儿资源，共享�
   const removeFirst: JSSContent = { onCompile(context, controller) {
     const first = controller.search({ key: 'width' })[0]!
     controller.remove(first)
-    return undefined
   } }
   const input: Parameters<typeof compileRules>[0] = [[[path], 'width', dependency]]
   if (shared) input.push([[path], 'height', dependency])
@@ -92,20 +89,18 @@ it('已暂缓节点收到显式重访后，继续编译而不误报无进展', (
   const path = condition('.deferred-revisit')
   let ready = false
   const first: JSSContent = { onCompile(context, controller) {
-    if (!ready) { controller.defer(context.node, '等待前提'); return undefined }
-    return '1px'
-  } }
+    if (!ready) { controller.defer(context.node, '等待前提'); return }
+    controller.setContent(context, '1px'); } }
   const second: JSSContent = { onCompile(context, controller) {
     ready = true
     controller.search({ key: 'width' }).find(node => node.content === first)!.compileRevision++
-    return '2px'
-  } }
+    controller.setContent(context, '2px'); } }
   const css = compileRules([[[path], 'width', first], [[path], 'height', second]])
   expect(css).toContain('width: 1px')
   expect(css).toContain('height: 2px')
 })
 
-it('声明目标暂缓后等待下一波重试，不因本波返回自身就提前完成', () => {
+it('声明目标暂缓后等待下一波重试，不因本波通知自身就提前完成', () => {
   const path = condition('.deferred-key')
   let visits = 0
   const target: JSSKeyObject & JSSContent = {
@@ -116,7 +111,7 @@ it('声明目标暂缓后等待下一波重试，不因本波返回自身就提�
         controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['height', '2px'], { owner: context.node })
         controller.defer(context.node, '等待下一波目标')
       }
-      return target
+
     },
   }
   const css = compileRules([[[path], target, '1px']])
@@ -128,7 +123,7 @@ it('声明目标暂缓后等待下一波重试，不因本波返回自身就提�
 it('声明目标暂缓且没有进展时报告原因', () => {
   const target: JSSKeyObject & JSSContent = {
     toCSSString: () => 'width',
-    onCompile(context, controller) { controller.defer(context.node, '目标没有前提'); return target },
+    onCompile(context, controller) { controller.defer(context.node, '目标没有前提'); },
   }
   expect(() => compileRules([[[], target, '1px']])).toThrow('目标没有前提')
 })
@@ -139,14 +134,12 @@ it('展开入口脱离输出后仍保留来源链，撤销祖先时产物一并�
   const child: JSSContent = { onCompile(context, controller) {
     controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['width', '3px'], { owner: context.node })
     controller.remove(context.node, { from: 'output' })
-    return undefined
   } }
   const source: JSSContent = { onCompile(context, controller) {
     original = context.node
     controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['height', child], { owner: context.node })
-    return undefined
   } }
-  const removal = value('1', { onActive: () => [[[path], 'display', { onCompile(context, controller) { controller.remove(original); return undefined } }]] })
+  const removal = value('1', { onActive: () => [[[path], 'display', { onCompile(context, controller) { controller.remove(original); } }]] })
   const css = compileRules([[[path], 'opacity', source], [[path], 'order', removal]])
   expect(css).not.toContain('width:')
   expect(css).toContain('order: 1')
@@ -158,7 +151,6 @@ it.each(['output', 'session'])('当前位置退出后不再出现在查询结果
   const content: JSSContent = { onCompile(context, controller) {
     controller.remove(context.node, from === 'output' ? { from: 'output' } : undefined)
     expect(controller.search({ key: 'height' })).toEqual([])
-    return undefined
   } }
   compileRules([[[path], 'width', '1px'], [[path], 'height', content], [[path], 'opacity', 1]])
 })

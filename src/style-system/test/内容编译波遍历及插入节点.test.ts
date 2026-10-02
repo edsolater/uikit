@@ -28,10 +28,9 @@ test.each([['最早编译波', '撤销'], ['暂缓', '撤销'], ['最早编译�
   const css = compileRules([
     [[], 'width', { compileWaveIndex: waiting === '最早编译波' ? 2 : 0, onCompile(context, ast) {
       delayedCalls++
-      if (waiting === '暂缓') { ast.defer(context.node, '待定义'); return undefined }
-      return '9px'
-    } }],
-    [[], 'color', { onCompile(_, ast) { ast.remove(ast.search({ key: 'width' })[0], removal === '退出输出' ? { from: 'output' } : undefined); return 'red' } }],
+      if (waiting === '暂缓') { ast.defer(context.node, '待定义'); return }
+      ast.setContent(context, '9px'); } }],
+    [[], 'color', { onCompile(context, ast) { ast.remove(ast.search({ key: 'width' })[0], removal === '退出输出' ? { from: 'output' } : undefined); ast.setContent(context, 'red'); } }],
   ])
   expect(css).toBe('color: red;')
   expect(delayedCalls).toBe(waiting === '最早编译波' ? 0 : 1)
@@ -40,10 +39,9 @@ stateCondition('contentWaveHover', condition('&:where([data-wave-hover])'))
 
 test('Key 替换路径后，Content 激活仍复制节点访问开始时取得的路径引用', () => {
   let observed: string[] = []
-  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'width', onCompile(context) {
+  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'width', onCompile(context, controller) {
     context.node.conditionPath.targetConditionPath.push(condition('.ChangedBefore'))
     context.node.conditionPath = { targetConditionPath: [condition('.After')], stateConditionPath: [] }
-    return this
   } }
   const content: JSSContent = { onActive(context) {
     observed = context.conditionPath.targetConditionPath.map(item => item.header)
@@ -55,15 +53,14 @@ test('Key 替换路径后，Content 激活仍复制节点访问开始时取得�
   expect(css).toContain('width: 7px;')
 })
 
-test('返回的替代内容跨波等待，源回调不重调且最早波限制生效', () => {
+test('Controller 设定的替代内容跨波等待，源回调不重调且最早波限制生效', () => {
   const events: string[] = []
-  const delayed: JSSContent = { compileWaveIndex: 2, onCompile() {
+  const delayed: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) {
     expect(events).toEqual(['source', 'middle'])
     events.push('delayed')
-    return '9px'
-  } }
-  const source: JSSContent = { onCompile() { events.push('source'); return delayed } }
-  const middle: JSSContent = { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }
+    controller.setContent(context, '9px'); } }
+  const source: JSSContent = { onCompile(context, controller) { events.push('source'); controller.setContent(context, delayed); } }
+  const middle: JSSContent = { compileWaveIndex: 1, onCompile(context, controller) { events.push('middle'); controller.setContent(context, 1); } }
   const css = compileRules([[[condition('.WaitingReplacement')], 'width', source], [[], 'order', middle]])
 
   expect(events).toEqual(['source', 'middle', 'delayed'])
@@ -72,33 +69,31 @@ test('返回的替代内容跨波等待，源回调不重调且最早波限制�
 
 test('多层替代链分别等待各自编译波，完成结果回到原声明', () => {
   const events: string[] = []
-  const final: JSSContent = { compileWaveIndex: 4, onCompile() {
+  const final: JSSContent = { compileWaveIndex: 4, onCompile(context, controller) {
     expect(events).toEqual(['source', 'middle', 'delayed', 'later'])
     events.push('final')
-    return '11px'
-  } }
-  const delayed: JSSContent = { compileWaveIndex: 2, onCompile() { events.push('delayed'); return final } }
-  const source: JSSContent = { onCompile() { events.push('source'); return delayed } }
-  const middle: JSSContent = { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }
-  const later: JSSContent = { compileWaveIndex: 3, onCompile() { events.push('later'); return 2 } }
+    controller.setContent(context, '11px'); } }
+  const delayed: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) { events.push('delayed'); controller.setContent(context, final); } }
+  const source: JSSContent = { onCompile(context, controller) { events.push('source'); controller.setContent(context, delayed); } }
+  const middle: JSSContent = { compileWaveIndex: 1, onCompile(context, controller) { events.push('middle'); controller.setContent(context, 1); } }
+  const later: JSSContent = { compileWaveIndex: 3, onCompile(context, controller) { events.push('later'); controller.setContent(context, 2); } }
   const css = compileRules([[[], 'width', source], [[], 'order', middle], [[], 'z-index', later]])
 
   expect(events).toEqual(['source', 'middle', 'delayed', 'later', 'final'])
   expect(css).toContain('width: 11px;')
 })
 
-test('Key 返回的替代链也继续等待，不因源回调已调用就跳过后续对象', () => {
+test('Key 设定的内容链也继续等待，不因源回调已调用就跳过后续对象', () => {
   const events: string[] = []
-  const delayed: JSSContent = { compileWaveIndex: 2, onCompile() {
+  const delayed: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) {
     expect(events).toEqual(['key', 'middle'])
     events.push('delayed')
-    return 'width'
-  } }
+    controller.setContent(context, 'width'); } }
   const target: JSSKeyObject & JSSContent = {
     toCSSString: () => 'width',
-    onCompile() { events.push('key'); return delayed },
+    onCompile(context, controller) { events.push('key'); controller.setContent(context, delayed); },
   }
-  const middle: JSSContent = { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }
+  const middle: JSSContent = { compileWaveIndex: 1, onCompile(context, controller) { events.push('middle'); controller.setContent(context, 1); } }
   const css = compileRules([[[], target, '9px'], [[], 'order', middle]])
 
   expect(events).toEqual(['key', 'middle', 'delayed'])
@@ -108,8 +103,8 @@ test('Key 返回的替代链也继续等待，不因源回调已调用就跳过�
 test('跨波替代链回到已有对象时仍诊断循环', () => {
   let sourceCalls = 0
   let delayedCalls = 0
-  const delayed: JSSContent = { compileWaveIndex: 2, onCompile() { delayedCalls++; return source } }
-  const source: JSSContent = { onCompile() { sourceCalls++; return delayed } }
+  const delayed: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) { delayedCalls++; controller.setContent(context, source); } }
+  const source: JSSContent = { onCompile(context, controller) { sourceCalls++; controller.setContent(context, delayed); } }
 
   expect(() => compileRules([[[], 'width', source]])).toThrow('循环引用')
   expect(sourceCalls).toBe(1)
@@ -122,12 +117,11 @@ test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色
   const nested: JSSContent = { onCompile(context, ast) {
     contexts.push(context)
     controllers.push(ast)
-    return '3px'
-  } }
+    ast.setContent(context, '3px'); } }
   const replacement: JSSContent = { dependencies: [nested], onCompile(context, ast) {
     contexts.push(context)
     controllers.push(ast)
-    return replacement
+
   }, toCSSString: () => '3px' }
   const source: JSSContent = { onCompile(context, ast) {
     contexts.push(context)
@@ -135,14 +129,12 @@ test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色
     context.node.key = 'width'
     context.node.content = '2px'
     context.node.conditionPath.targetConditionPath.push(condition('.later'))
-    return replacement
-  } }
+    ast.setContent(context, replacement); } }
   const target: JSSKeyObject & JSSContent = { toCSSString: () => 'height', onCompile(context, ast) {
     contexts.push(context)
     controllers.push(ast)
     context.node.key = 'height'
     context.node.conditionPath.targetConditionPath.push(condition('.live'))
-    return target
   } }
   const input: Rules = [[[condition('.snapshot')], target, source]]
   compileRules(input)
@@ -157,8 +149,13 @@ test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色
   expect(contentContext.conditionPath.targetConditionPath.map(item => item.header)).toEqual(['.snapshot', '.live'])
   expect(contentContext.node.key).toBe('width')
   expect(contentContext.node.content).toBe('2px')
-  expect(returnedContext).toBe(contentContext)
-  expect(nestedContext).toBe(contentContext)
+  expect(contentContext.input).toBe(source)
+  expect(returnedContext.input).toBe(replacement)
+  expect(nestedContext.input).toBe(nested)
+  expect(returnedContext.content).toBe(contentContext.content)
+  expect(nestedContext.content).toBe(contentContext.content)
+  expect(returnedContext.conditionPath).toBe(contentContext.conditionPath)
+  expect(nestedContext.conditionPath).toBe(contentContext.conditionPath)
   expect(keyContext.node).toBe(contentContext.node)
   expect(keyContext.session).toBe(contentContext.session)
   expect('compileWaveIndex' in keyContext).toBe(false)
@@ -169,31 +166,27 @@ test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色
   expect(controllers[4]).not.toBe(controllers[0])
 })
 
-test('状态沿返回内容和 dependencies 传递，Cluster 转交默认成员且 Key 不携带读取状态', () => {
+test('状态沿设定内容和 dependencies 传递，Cluster 转交默认成员且 Key 不携带读取状态', () => {
   const cluster = variableCluster({ default: variable('red', {
     name: 'context-state-default', states: { contentWaveHover: 'blue' },
   }) })
   const roles: [string, string | undefined][] = []
-  const child: JSSContent = { onCompile(context) {
+  const child: JSSContent = { onCompile(context, controller) {
     roles.push([context.role, context.readState])
-    return value(cluster)
+    controller.setContent(context, value(cluster)); } }
+  const returned: JSSContent = { dependencies: [child], toCSSString: () => '1px', onCompile(context, controller) {
+    roles.push([context.role, context.readState])
   } }
-  const returned: JSSContent = { dependencies: [child], toCSSString: () => '1px', onCompile(context) {
+  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'color', onCompile(context, controller) {
     roles.push([context.role, context.readState])
-    return returned
-  } }
-  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'color', onCompile(context) {
-    roles.push([context.role, context.readState])
-    return target
   } }
   const generator: JSSContent = { onCompile(context, ast) {
     const first = ast.insert({ before: context.node, conditionPath: context.conditionPath },
       [target, value(cluster)], { owner: context.node })
     first.readState = 'contentWaveHover'
     const second = ast.insert({ before: context.node, conditionPath: context.conditionPath },
-      ['width', { onCompile: () => returned }], { owner: context.node })
+      ['width', { onCompile: (context, controller) => { controller.setContent(context, returned) } }], { owner: context.node })
     second.readState = 'contentWaveHover'
-    return undefined
   } }
   const css = compileRules([[[condition('.StateContext')], 'display', generator]])
   expect(roles).toEqual([
@@ -210,10 +203,9 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
   const nested = {
     dependencies: ['6px'],
     compileWaveIndex: 0,
-    onCompile() {
+    onCompile(context, controller) {
       events.push('nested')
-      return value('6px')
-    },
+      controller.setContent(context, value('6px')); },
   }
   let observedController: ASTController | undefined
   let observedCompileContext: JSSCompileContext | undefined
@@ -225,11 +217,10 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
       observedController = controller
       observedCompileContext = context
       controller.insert({ before: context.node, conditionPath: context.conditionPath }, [key('--wave-inserted-value'), '9px'], { owner: context.node })
-      return value(createJSSContent((resolve) => {
+      controller.setContent(context, value(createJSSContent((resolve) => {
         const input = resolve(nested)
         return input === undefined ? undefined : `calc(${input} * 2)`
-      }, [nested]))
-    },
+      }, [nested]))); },
   }
   let updatedInsertedNode = false
   const laterContent = {
@@ -239,14 +230,13 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
       if (!inserted) throw new Error('后续编译对象没有观察到前序插入。')
       inserted.content = '11px'
       updatedInsertedNode = true
-      return '4px'
-    },
+      controller.setContent(context, '4px'); },
   }
   const css = compileRules([
     [[condition('.WaveContent'), condition('&:where([data-wave-hover])')], 'color', 'red'],
     [[condition('.WaveContent'), condition('&:where([data-wave-hover])')], 'width', content],
     [[condition('.WaveContent'), condition('&:where([data-wave-hover])')], 'height', laterContent],
-    [[condition('.WaveContent')], 'order', { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }],
+    [[condition('.WaveContent')], 'order', { compileWaveIndex: 1, onCompile(context, controller) { events.push('middle'); controller.setContent(context, 1); } }],
   ])
 
   expect(events).toEqual(['nested', 'middle', 'delayed'])
@@ -266,8 +256,7 @@ test('后续对象修改已编译的队列节点时，最终输出读取最终�
       const existing = controller.search({ key: key('--audit-existing-node'), conditionPath: context.conditionPath })[0]
       if (!existing) throw new Error('没有找到此前的队列节点。')
       existing.content = '11px'
-      return '5px'
-    },
+      controller.setContent(context, '5px'); },
   }
   const css = compileRules([
     [[condition('.AuditMutation')], key('--audit-existing-node'), '9px'],
@@ -282,14 +271,14 @@ test('后续对象修改已编译的队列节点时，最终输出读取最终�
 test('角色改写自身的内容或 Key 时，旧访问结果不归给新输入', () => {
   let nextContentCalls = 0
   let nextKeyCalls = 0
-  const nextContent = { onCompile() { nextContentCalls++; return '7px' } }
-  const source = { onCompile(context: JSSCompileContext) { context.node.content = nextContent; return '3px' } }
+  const nextContent = { onCompile(context, controller) { nextContentCalls++; controller.setContent(context, '7px'); } }
+  const source = { onCompile(context: JSSCompileContext, controller) { context.node.content = nextContent; controller.setContent(context, '3px'); } }
   const nextKey: JSSKeyObject & JSSContent = {
-    onCompile() { nextKeyCalls++; return this },
+    onCompile(context, controller) { nextKeyCalls++; },
     toCSSString: () => '--next-key',
   }
   const sourceKey: JSSKeyObject & JSSContent = {
-    onCompile(context) { context.node.key = nextKey; return this },
+    onCompile(context, controller) { context.node.key = nextKey; },
     toCSSString: () => '--old-key',
   }
   const css = compileRules([[[], 'width', source], [[], sourceKey, '8px']])
@@ -303,31 +292,29 @@ test('角色改写自身的内容或 Key 时，旧访问结果不归给新输入
 
 test('统一失效在访问前、波末和 revision 改写时重新访问对应角色', () => {
   const calls = { original: 0, before: 0, after: 0, key: 0, revised: 0, stable: 0 }
-  const original = { onCompile() { calls.original++; return '1px' } }
-  const before = { onCompile() { calls.before++; return '2px' } }
-  const after = { onCompile() { calls.after++; return '4px' } }
-  const revised = { onCompile() { calls.revised++; return calls.revised === 1 ? '5px' : '6px' } }
-  const newKey: JSSKeyObject & JSSContent = { onCompile() { calls.key++; return this }, toCSSString: () => '--changed-key' }
+  const original = { onCompile(context, controller) { calls.original++; controller.setContent(context, '1px'); } }
+  const before = { onCompile(context, controller) { calls.before++; controller.setContent(context, '2px'); } }
+  const after = { onCompile(context, controller) { calls.after++; controller.setContent(context, '4px'); } }
+  const revised = { onCompile(context, controller) { calls.revised++; controller.setContent(context, calls.revised === 1 ? '5px' : '6px'); } }
+  const newKey: JSSKeyObject & JSSContent = { onCompile(context, controller) { calls.key++; }, toCSSString: () => '--changed-key' }
   let changed = false
   const css = compileRules([
-    [[], 'top', { onCompile(_, ast) {
+    [[], 'top', { onCompile(context, ast) {
       const future = ast.search({ key: 'width' })[0]
       future.content = before
       future.key = newKey
-      return '0px'
-    } }],
+      ast.setContent(context, '0px'); } }],
     [[], 'width', original],
     [[], 'height', original],
     [[], 'margin', revised],
-    [[], 'order', { onCompile() { calls.stable++; return 1 } }],
-    [[], 'bottom', { onCompile(_, ast) {
+    [[], 'order', { onCompile(context, controller) { calls.stable++; controller.setContent(context, 1); } }],
+    [[], 'bottom', { onCompile(context, ast) {
       if (!changed) {
         changed = true
         ast.search({ key: 'height' })[0].content = after
         ast.search({ key: 'margin' })[0].compileRevision++
       }
-      return '0px'
-    } }],
+      ast.setContent(context, '0px'); } }],
   ])
   expect(calls).toEqual({ original: 1, before: 1, after: 1, key: 1, revised: 2, stable: 1 })
   expect(css).toContain('--changed-key: 2px;')
@@ -339,26 +326,24 @@ test('统一失效在访问前、波末和 revision 改写时重新访问对应�
 
 test('访问前失效本波重访已有缓存，波末失效重访被后项替换的 Key', () => {
   const events: string[] = []
-  const oldContent = { onCompile() { events.push('old-content'); return '1px' } }
-  const nextContent = { onCompile() { events.push('next-content'); return '2px' } }
-  const oldKey: JSSKeyObject & JSSContent = { onCompile() { events.push('old-key'); return this }, toCSSString: () => '--before-key' }
-  const nextKey: JSSKeyObject & JSSContent = { onCompile() { events.push('next-key'); return this }, toCSSString: () => '--before-next' }
-  const afterKey: JSSKeyObject & JSSContent = { onCompile() { events.push('after-key'); return this }, toCSSString: () => '--after-next' }
+  const oldContent = { onCompile(context, controller) { events.push('old-content'); controller.setContent(context, '1px'); } }
+  const nextContent = { onCompile(context, controller) { events.push('next-content'); controller.setContent(context, '2px'); } }
+  const oldKey: JSSKeyObject & JSSContent = { onCompile(context, controller) { events.push('old-key'); }, toCSSString: () => '--before-key' }
+  const nextKey: JSSKeyObject & JSSContent = { onCompile(context, controller) { events.push('next-key'); }, toCSSString: () => '--before-next' }
+  const afterKey: JSSKeyObject & JSSContent = { onCompile(context, controller) { events.push('after-key'); }, toCSSString: () => '--after-next' }
   const css = compileRules([
-    [[], 'top', { compileWaveIndex: 1, onCompile(_, ast) {
+    [[], 'top', { compileWaveIndex: 1, onCompile(context, ast) {
       expect(events).toEqual(['old-key', 'old-content'])
       const cached = ast.search({ key: '--before-key' })[0]
       cached.key = nextKey
       cached.content = nextContent
-      return '0px'
-    } }],
+      ast.setContent(context, '0px'); } }],
     [[], oldKey, oldContent],
     [[], '--after-key', '3px'],
-    [[], 'bottom', { compileWaveIndex: 1, onCompile(_, ast) {
+    [[], 'bottom', { compileWaveIndex: 1, onCompile(context, ast) {
       expect(events).toEqual(['old-key', 'old-content', 'next-key', 'next-content'])
       ast.search({ key: '--after-key' })[0].key = afterKey
-      return '0px'
-    } }],
+      ast.setContent(context, '0px'); } }],
   ])
   expect(events).toEqual(['old-key', 'old-content', 'next-key', 'next-content', 'after-key'])
   expect(css).toContain('--before-next: 2px;')
@@ -399,11 +384,11 @@ test.each([20, 40])('按需资源每批线性收集激活关联，不逐项反�
   const repeated = {
     onActive() {
       repeatedActivations++
-      return [[[condition('.RepeatedResource')], 'color', { onCompile() { resourceVisits++; return 'blue' } }]] as Rules
+      return [[[condition('.RepeatedResource')], 'color', { onCompile(context, controller) { resourceVisits++; controller.setContent(context, 'blue'); } }]] as Rules
     },
   }
   source.push([[], 'width', repeated])
-  source.push([[], 'height', { compileWaveIndex: 2, onCompile() { return repeated } }])
+  source.push([[], 'height', { compileWaveIndex: 2, onCompile(context, controller) { controller.setContent(context, repeated); } }])
   const css = compileRules(source)
   expect(css).toContain(`--resource-${count - 1}: ${count - 1};`)
   expect(css).toContain('.RepeatedResource {\ncolor: blue;')
@@ -415,13 +400,13 @@ test.each([20, 40])('按需资源每批线性收集激活关联，不逐项反�
 
 test('同一 Rule 身份的多个激活记录均关联最后产物，不将不同 Rule 当成获胜记录', () => {
   let visits = 0
-  const sharedRule: Rules[0] = [[condition('.SharedRuleIdentity')], 'color', { onCompile() { visits++; return 'blue' } }]
+  const sharedRule: Rules[0] = [[condition('.SharedRuleIdentity')], 'color', { onCompile(context, controller) { visits++; controller.setContent(context, 'blue'); } }]
   const first: JSSContent = { onActive: () => [sharedRule] }
   const other: JSSContent = { onActive: () => [[[condition('.SharedRuleIdentity')], 'color', 'red']] }
   const same: JSSContent = { onActive: () => [sharedRule] }
   const css = compileRules([
     [[], 'width', first], [[], 'height', other], [[], 'margin', same],
-    [[], 'padding', { compileWaveIndex: 2, onCompile() { return first } }],
+    [[], 'padding', { compileWaveIndex: 2, onCompile(context, controller) { controller.setContent(context, first); } }],
   ])
   expect(css).toContain('color: blue;')
   expect(css).not.toContain('color: red;')
@@ -433,23 +418,22 @@ test('再次消费激活内容时使用当前 Rules，并退出已经替换的 R
   const content: JSSContent = { onActive: () => resources }
   const css = compileRules([
     [[], 'width', content],
-    [[], 'height', { compileWaveIndex: 1, onCompile() {
+    [[], 'height', { compileWaveIndex: 1, onCompile(context, controller) {
       resources.push([[], 'color', 'red'])
-      return content
-    } }],
+      controller.setContent(context, content); } }],
   ])
   expect(css).toContain('color: red;')
 
   let oldVisits = 0
   let newVisits = 0
-  const original: Rules[0] = [[condition('.ChangedActiveRules')], 'color', { onCompile() { oldVisits++; return 'red' } }]
-  const replacement: Rules[0] = [[condition('.ChangedActiveRules')], 'color', { onCompile() { newVisits++; return 'blue' } }]
+  const original: Rules[0] = [[condition('.ChangedActiveRules')], 'color', { onCompile(context, controller) { oldVisits++; controller.setContent(context, 'red'); } }]
+  const replacement: Rules[0] = [[condition('.ChangedActiveRules')], 'color', { onCompile(context, controller) { newVisits++; controller.setContent(context, 'blue'); } }]
   const changed: Rules = [original]
   const active: JSSContent = { onActive: () => changed }
   const output = compileRules([
     [[], 'width', active],
-    [[], 'height', { onCompile() { changed.splice(0, 1, replacement); return active } }],
-    [[], 'margin', { compileWaveIndex: 2, onCompile() { return active } }],
+    [[], 'height', { onCompile(context, controller) { changed.splice(0, 1, replacement); controller.setContent(context, active); } }],
+    [[], 'margin', { compileWaveIndex: 2, onCompile(context, controller) { controller.setContent(context, active); } }],
   ])
   expect(output).toContain('color: blue;')
   expect(output).not.toContain('color: red;')
@@ -460,24 +444,23 @@ test('再次消费激活内容时使用当前 Rules，并退出已经替换的 R
 test.each(['append', 'delete', 'replace'])('未再次消费的记录改写 Rules，生成时按当前身份关联：%s', (change) => {
   let originalVisits = 0
   let replacementVisits = 0
-  const original: Rules[0] = [[condition('.CurrentActiveRules')], 'color', { onCompile() { originalVisits++; return 'red' } }]
-  const replacement: Rules[0] = [[condition('.CurrentActiveRules')], 'color', { onCompile() { replacementVisits++; return 'blue' } }]
+  const original: Rules[0] = [[condition('.CurrentActiveRules')], 'color', { onCompile(context, controller) { originalVisits++; controller.setContent(context, 'red'); } }]
+  const replacement: Rules[0] = [[condition('.CurrentActiveRules')], 'color', { onCompile(context, controller) { replacementVisits++; controller.setContent(context, 'blue'); } }]
   const resources: Rules = change === 'append' ? [] : [original]
   const first: JSSContent = { onActive: () => resources }
   const winner: JSSContent = { onActive: () => [original] }
   const css = compileRules([
     [[], 'width', first],
     [[], 'height', winner],
-    [[], 'margin', { onCompile() {
+    [[], 'margin', { onCompile(context, controller) {
       if (change === 'append') resources.push(original)
       else resources.splice(0, 1, ...(change === 'replace' ? [replacement] : []))
-      return undefined
+
     } }],
-    [[], 'padding', { compileWaveIndex: 2, onCompile() {
+    [[], 'padding', { compileWaveIndex: 2, onCompile(context, controller) {
       expect(originalVisits).toBe(1)
       if (change === 'delete') resources.push(replacement)
-      return first
-    } }],
+      controller.setContent(context, first); } }],
   ])
   expect(originalVisits).toBe(1)
   expect(replacementVisits).toBe(change === 'append' ? 0 : 1)
@@ -489,17 +472,17 @@ test.each([false, true])('同址按需资源最后替换，多个消费者撤销
   let cleanups = 0
   const old: JSSContent = { onActive: () => [[[condition('.SharedResource')], 'color', 'red']] }
   const shared: JSSContent = { onActive: () => [[[condition('.SharedResource')], 'color', {
-    onCompile(context: JSSCompileContext, ast: ASTController) { ast.onRemove(context.node, () => { cleanups++ }); return 'blue' },
+    onCompile(context: JSSCompileContext, ast: ASTController) { ast.onRemove(context.node, () => { cleanups++ }); ast.setContent(context, 'blue'); },
   }]] }
   const css = compileRules([
     [[], 'width', old],
     [[], 'height', shared],
     [[], 'margin', shared],
-    [[], 'padding', { compileWaveIndex: 2, onCompile(_, ast) {
+    [[], 'padding', { compileWaveIndex: 2, onCompile(context, ast) {
       ast.remove(ast.search({ key: 'width' })[0])
       ast.remove(ast.search({ key: 'height' })[0])
       if (!keepShared) ast.remove(ast.search({ key: 'margin' })[0])
-      return undefined
+
     } }],
   ])
   expect(css.includes('color: blue;')).toBe(keepShared)
@@ -514,7 +497,7 @@ test('自定义 Key 只凭通用 onCompile 与输出能力插入节点', () => {
     onCompile(context: JSSCompileContext, controller: ASTController) {
       compileCalls++
       controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['--custom-key-dependency', '7px'], { owner: context.node })
-      return this
+
     },
   }
   const css = compileRules([[[condition('.CustomKey')], customKey, '5px']])
@@ -550,26 +533,25 @@ test.each([false, true])('onActive 内容生成按需 Rules，带空 dependencie
 
 test('只有子内容的对象等依赖完成后不输出当前声明', () => {
   let visits = 0
-  const child: JSSContent = { compileWaveIndex: 2, onCompile() { visits++; return '9px' } }
+  const child: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) { visits++; controller.setContent(context, '9px'); } }
   const container: JSSContent = { dependencies: [child] }
 
   expect(compileRules([[[], 'width', container]])).toBe('')
   expect(visits).toBe(1)
 })
 
-test('返回的无输出容器保留未完成依赖，完成后才退出当前声明', () => {
+test('设定的无输出容器保留未完成依赖，完成后才退出当前声明', () => {
   const events: string[] = []
-  const child: JSSContent = { compileWaveIndex: 2, onCompile() {
+  const child: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) {
     expect(events).toEqual(['source', 'middle'])
     events.push('child')
-    return '9px'
-  } }
+    controller.setContent(context, '9px'); } }
   const container: JSSContent = {
     dependencies: [child],
     onActive: () => [[[condition('.NoOutputResource')], 'color', 'red']],
   }
-  const source: JSSContent = { onCompile() { events.push('source'); return container } }
-  const middle: JSSContent = { compileWaveIndex: 1, onCompile() { events.push('middle'); return 1 } }
+  const source: JSSContent = { onCompile(context, controller) { events.push('source'); controller.setContent(context, container); } }
+  const middle: JSSContent = { compileWaveIndex: 1, onCompile(context, controller) { events.push('middle'); controller.setContent(context, 1); } }
   const css = compileRules([[[], 'width', source], [[], 'order', middle]])
 
   expect(events).toEqual(['source', 'middle', 'child'])
@@ -581,7 +563,7 @@ test('返回的无输出容器保留未完成依赖，完成后才退出当前�
 test('dependencies getter 每次访问只读取一次，并在后续波重新读取', () => {
   let dependencyReads = 0
   let childCalls = 0
-  const child: JSSContent = { compileWaveIndex: 2, onCompile() { childCalls++; return '9px' } }
+  const child: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) { childCalls++; controller.setContent(context, '9px'); } }
   const content: JSSContent = {
     get dependencies() { dependencyReads++; return [child] },
     toCSSString: (resolve) => resolve?.(child),
@@ -593,7 +575,7 @@ test('dependencies getter 每次访问只读取一次，并在后续波重新读
   expect(dependencyReads).toBe(3)
 })
 
-test('Variable Content 根 onCompile 返回值进入正式 CSS 输出', () => {
+test('Variable Content 根通知设定内容进入正式 CSS 输出', () => {
   const source = variable('red', { name: 'content-root-replacement' })
   const css = compileRules([[[condition('.ContentRootReplacement')], 'color', source]])
 
@@ -608,10 +590,9 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     return 'green'
   }, {
     [Unresultable]: true,
-    onCompile() {
+    onCompile(context, controller) {
       sourceCompileCalls++
-      return 'red'
-    },
+      controller.setContent(context, 'red'); },
   })
   let stateCompileCalls = 0
   let stateFactoryCalls = 0
@@ -620,10 +601,9 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     return 'yellow'
   }, {
     [Unresultable]: true,
-    onCompile() {
+    onCompile(context, controller) {
       stateCompileCalls++
-      return 'blue'
-    },
+      controller.setContent(context, 'blue'); },
   })
   const css = compileRules([[
     [condition('.CompilableFunction'), condition('&:where([data-wave-hover])')],

@@ -97,7 +97,9 @@ test.each(['declare', 'set', 'delta'] as const)('同一%s声明复用于两处�
 
 test('延后增量保留 JSS 编译波次和资源，移除后清理', () => {
   const activated = vi.fn(() => [[[{ header: '.DelayedResource' }], key('opacity'), 0.4]] as Rules)
-  const compiled = vi.fn(() => 0.1)
+  const compiled = vi.fn((context: import('./content').JSSCompileContext, controller: import('./compiler/ast-controller').ASTController) => {
+    controller.setContent(context, 0.1)
+  })
   const content = { onCompile: compiled, onActive: activated, compileWaveIndex: 2 }
   const color = colorVariable('black', { name: 'delayed-color' })
   const declaration = color.deltaLightness(content)
@@ -147,12 +149,11 @@ test('相同 CSS 条件的不同状态资源保留各自状态与语义身份', 
   const observed: string[][] = []
   const css = compileRules([
     [['.StateResource'], 'color', source],
-    [[], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+    [[], 'order', { compileWaveIndex: 2, onCompile(context, ast) {
       const nodes = ast.search({ key: color }).filter(node => node.resourceAddress !== undefined)
       observed.push(...nodes.map(node => node.conditionPath.stateConditionPath.map(state => state.name)))
       expect(nodes.map(node => node.conditionPath.semanticPath?.at(-1))).toEqual(['resourceAliasA', 'resourceAliasB'])
-      return 1
-    } }],
+      ast.setContent(context, 1); } }],
   ])
   expect(observed).toEqual([['resourceAliasA'], ['resourceAliasB']])
   expect(css).toContain('--state-resource-color: oklch(')
@@ -164,10 +165,10 @@ test.each([true, false])('同址共享聚合撤销一个消费者保留另一，
   const css = compileRules([
     [['.SharedOwner'], 'background-color', color],
     [['.SharedOwner'], 'color', color],
-    [[], 'order', { compileWaveIndex: 2, onCompile(_, ast) {
+    [[], 'order', { compileWaveIndex: 2, onCompile(context, ast) {
       ast.remove(ast.search({ key: 'background-color' })[0])
       if (!keepLast) ast.remove(ast.search({ key: 'color' })[0])
-      return undefined
+
     } }],
   ])
   expect(css.includes('--shared-owner-color: oklch(')).toBe(keepLast)

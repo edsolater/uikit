@@ -8,7 +8,7 @@ import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
 import { propertyName, type JSSKey, type JSSKeyObject } from '../../key'
 import type { JSSStyleNode } from '../rules-to-style-nodes'
-import type { ASTSession } from '../ast-controller'
+import type { ASTSession, ContentCompilationRecord } from '../ast-controller'
 import { contentToCSSString } from '../content-nodes-to-css-string'
 import { value, type Value, type ValueData } from '../../value'
 
@@ -44,12 +44,12 @@ function captureInputs(nodes: Iterable<JSSStyleNode>): { inputs: Map<JSSStyleNod
 }
 
 /** 为原贡献建立惰性 Value；保留其位置解析结果，改写内容后由连接结果消费新内容。 */
-function createView(content: unknown, resolvedContents: WeakMap<object, unknown>): Value<ValueData> {
+function createView(content: unknown, compiledContents: WeakMap<object, ContentCompilationRecord>): Value<ValueData> {
   let view: Value<ValueData>
   view = value(content as ValueData, {
     get dependencies() { return view.content === content ? [] : value(view.content).dependencies },
     toCSSString: (current, resolve) => value(current).toCSSString(current === content
-      ? (item) => contentToCSSString(item, resolvedContents)
+      ? (item) => contentToCSSString(item, compiledContents)
       : resolve),
   })
   return view
@@ -61,7 +61,7 @@ export class Join {
   private recordOf = new WeakMap<JSSStyleNode, JoinRecord>()
 
   /** 绑定当前队列及原贡献已经完成的解析结果，不接管内容编译进度。 */
-  constructor(private session: ASTSession, private resolvedContents: (node: JSSStyleNode) => WeakMap<object, unknown>) {}
+  constructor(private session: ASTSession, private compiledContents: (node: JSSStyleNode) => WeakMap<object, ContentCompilationRecord>) {}
 
   /** 稳定队列中撤销失效历史或组合新增贡献；有变更时结果须进入后续编译波。 */
   update(): boolean {
@@ -142,7 +142,7 @@ export class Join {
 
   /** 按生成快照建立原位置 Value 视图，调用选定连接规则；省略规则时返回默认数组内容。 */
   private createContent(inputs: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
-    const values = Array.from(inputs, ([node, input]) => createView(input.content, this.resolvedContents(node)))
+    const values = Array.from(inputs, ([node, input]) => createView(input.content, this.compiledContents(node)))
     return join ? join(values) : value(values)
   }
 

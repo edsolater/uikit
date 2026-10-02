@@ -49,13 +49,16 @@ export function colorVariable(defaultColor: ValueInput = 'black',
   /** 每次编译消费产生自身激活包装，使同一声明可复用于多个地址。 */
   const set = (channel: Variable, content: ValueInput): Declaration => declare(
     { toCSSString: () => channel.toCSSString(), join },
-    { onCompile: () => value(content, { onActive: activateAggregate }) },
+    { onCompile(context, controller) { controller.setContent(context, value(content, { onActive: activateAggregate })) } },
   )
 
   return Object.assign(color, { lightness, chroma, hue, alpha,
     onCompile(context, controller) {
-      const compiled = compile(context, controller)
-      return context.role === 'declaration-key' ? compiled : value(compiled, { onActive: activateAggregate })
+      if (context.role === 'declaration-key') {
+        compile(context, controller)
+        return
+      }
+      controller.setContent(context, value({ onCompile: compile }, { onActive: activateAggregate }))
     },
     declare(source: ValueInput = defaultColor): Declaration {
       if (source === color) return set(baseColor, undefined)

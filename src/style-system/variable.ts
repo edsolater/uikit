@@ -66,11 +66,11 @@ export interface Variable extends JSSContent {
   compileWaveIndex?: number
   /**
    * 为样式中的三种用途提供对应内容：
-   * 声明目标：返回 var(...) 引用，并登记注册资源。
-   * 指定状态：读取本 Variable 的同名状态；未命中才读取默认内容，不登记资源。
-   * 普通引用：返回 var(...)，并生成注册资源与自身状态声明；默认内容可作为回退。
+   * 声明目标：登记注册资源，保持当前 Variable 的目标 Key。
+   * 指定状态：设定本 Variable 的同名状态内容；未命中才读取默认内容，不登记资源。
+   * 普通引用：设定 var(...) 内容，并生成注册资源与自身状态声明；默认内容可作为回退。
    */
-  onCompile(context: JSSCompileContext, astController: ASTController): ValueInput
+  onCompile(context: JSSCompileContext, astController: ASTController): void
 }
 /** 一个 Variable 的名称、各状态基础值及可选的注册和修改能力。 */
 export interface VariableOptions<
@@ -158,14 +158,17 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
     onCompile(context, astController) {
       if (context.role === 'declaration-key') {
         activateVariableResources(self, context, astController)
-        return value(`var(--${self.name})`)
+        return
       }
-      if (context.readState) return readVariableContent(self, context.readState)
+      if (context.readState) {
+        astController.setContent(context, readVariableContent(self, context.readState))
+        return
+      }
 
       activateVariableResources(self, context, astController)
       const fallbackValue = readVariableContent(self)
       declareVariableStates(context, astController, self, fallbackValue)
-      return createVariableReference(self, fallbackValue)
+      astController.setContent(context, createVariableReference(self, fallbackValue))
     },
   }
   return self

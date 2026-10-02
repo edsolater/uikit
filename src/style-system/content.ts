@@ -22,13 +22,15 @@ export interface JSSContentContext {
 /** 一次声明角色访问的输入快照；node 保留可改写的原节点引用。 */
 export interface JSSCompileContext {
   node: JSSStyleNode
+  /** 此次通知的内容对象；嵌套内容各自取得自己的输入身份。 */
+  input: JSSContent
   /** 本次编译的不透明稳定身份，供消费者保存私有状态。 */
   session: object
   conditionPath: ConditionPath
   key: JSSKey | undefined
   content: unknown
   role: 'declaration-key' | 'declaration-content'
-  /** 仅声明内容角色携带；沿替代内容和 dependencies 传递。 */
+  /** 仅声明内容角色携带；沿编译内容和 dependencies 传递。 */
   readState?: string
 }
 
@@ -40,8 +42,8 @@ export interface JSSContent {
   onActive?: (context: JSSContentContext) => Rules | void
   /** 最早执行 onCompile 的编译波，省略为第 0 波。 */
   compileWaveIndex?: number
-  /** 按角色输入快照编译内容；通过独立 AST 操作队列。返回值与子内容沿用 context.readState。 */
-  onCompile?: (context: JSSCompileContext, ast: ASTController) => unknown
+  /** 编译时通知当前消费位置；通过 Controller 操作内容与队列，不使用返回值。 */
+  onCompile?: (context: JSSCompileContext, ast: ASTController) => void
   /** 随本对象一起编译的依赖内容。 */
   dependencies?: unknown[]
   /** 输出 CSS 文本；resolve 可取得已经编译的子内容。 */

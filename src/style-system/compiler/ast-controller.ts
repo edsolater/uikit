@@ -8,6 +8,29 @@ import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey, type ConditionPath } from '../condition'
 import { propertyName, type JSSKey } from '../key'
 import type { JSSStyleNode } from './rules-to-style-nodes'
+import type { JSSCompileContext } from '../content'
+
+/** 一处内容的通知进度与当前输出；编译与输出共同读取，不复制最终结果。 */
+export interface ContentCompilationRecord {
+  content: unknown
+  notified: boolean
+  /** 仅当前同步通知期间允许操作此记录，阻止旧上下文写入后来的记录。 */
+  notifyingContext?: JSSCompileContext
+}
+
+/** 一个声明角色的原输入与各嵌套内容记录。 */
+export interface RoleCompilationState {
+  input: unknown
+  contents: WeakMap<object, ContentCompilationRecord>
+  complete: boolean
+}
+
+/** 本次会话中一个节点的两个角色及失效版本。 */
+export interface StyleNodeCompileState {
+  version: number
+  key: RoleCompilationState
+  content: RoleCompilationState
+}
 
 /** 查询字段取交集；未指定的字段不限制结果。 */
 export interface ASTQuery {
@@ -21,6 +44,8 @@ export type ASTPosition = { before: JSSStyleNode; after?: never } | { after: JSS
 
 /** 查询和改写本次编译的样式节点。 */
 export interface ASTController {
+  /** 改写此次通知的内容位置；不改写整条声明，也不改变其他消费位置。显式 undefined 使此处不输出。 */
+  setContent(context: JSSCompileContext, content: unknown): void
   /** 当前输出队列的有序查询，没有副作用；Key 按属性名、条件路径按输出地址匹配。 */
   search(query: ASTQuery): JSSStyleNode[]
   /** 按同一查询语义判断是否存在节点。 */
@@ -42,7 +67,7 @@ export interface ASTController {
   depend(node: JSSStyleNode, options: { owner: JSSStyleNode }): void
   /** 注册节点撤销时执行的清理；只退出输出不触发。 */
   onRemove(node: JSSStyleNode, cleanup: () => void): void
-  /** 写入指定节点的 deferredReason；编译无进展时报告此原因。 */
+  /** 暂缓当前通知，等待后续波重试；不撤回已经执行的内容和队列操作，无进展时报告此原因。 */
   defer(node: JSSStyleNode, message: string): void
 }
 
@@ -61,6 +86,12 @@ export function createASTController(session: ASTSession): ASTController {
       (query.resourceAddress === undefined || node.resourceAddress === query.resourceAddress)
   }
   return {
+    setContent(context, content) {
+      const role = context.role === 'declaration-key' ? 'key' : 'content'
+      const record = session.compilations.get(context.node)?.[role].contents.get(context.input)
+      assert(session.isAlive(context.node) && record?.notifyingContext === context, '只能操作当前通知的内容位置。')
+      record.content = content
+    },
     search: (query) => session.nodes.filter(matching(query)),
     has: (query) => session.nodes.some(matching(query)),
     nodes: () => session.nodes.slice(),
@@ -85,6 +116,8 @@ export function createASTController(session: ASTSession): ASTController {
 /** 保存一次编译中的节点来源和撤销生命周期。 */
 export class ASTSession {
   identity: object = {}
+  /** 本次节点编译的唯一位置账本；节点编译维护进度，Controller 操作其中的当前内容。 */
+  compilations = new WeakMap<JSSStyleNode, StyleNodeCompileState>()
   private owners = new Map<JSSStyleNode, Set<JSSStyleNode>>()
   private products = new Map<JSSStyleNode, Set<JSSStyleNode>>()
   private removalCallbacks = new WeakMap<JSSStyleNode, Set<() => void>>()

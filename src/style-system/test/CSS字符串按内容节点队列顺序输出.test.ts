@@ -25,11 +25,11 @@ test('解析完成仍保留内容对象，到最终输出才读取 CSS 文本', 
 })
 
 test('跨地址交错的节点不为合并地址而重排', () => {
-  const resolvedContents = new WeakMap<object, unknown>()
+  const compiledContents = new WeakMap<object, import('../compiler/ast-controller').ContentCompilationRecord>()
   const css = contentNodesToCSSString([
-    { conditionPath: [condition('.A')], key: '--a', content: '1', resolvedContents },
-    { conditionPath: [condition('.B')], key: 'color', content: 'red', resolvedContents },
-    { conditionPath: [condition('.A')], key: '--b', content: '2', resolvedContents },
+    { conditionPath: [condition('.A')], key: '--a', content: '1', compiledContents },
+    { conditionPath: [condition('.B')], key: 'color', content: 'red', compiledContents },
+    { conditionPath: [condition('.A')], key: '--b', content: '2', compiledContents },
   ])
 
   expect(css).toBe([

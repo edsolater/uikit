@@ -25,7 +25,7 @@ export function variableCluster<Members extends { default: Variable } & Record<s
   }, { [Unresultable]: true as true })
   let cluster: VariableCluster<Members>
   /** 配对 Cluster 声明，其他引用代理 default 成员编译。 */
-  const onCompile = (context: JSSCompileContext, controller: ASTController): ValueInput => {
+  const onCompile = (context: JSSCompileContext, controller: ASTController): void => {
     if (context.role === 'declaration-key') {
       const sourceMembers = membersByCluster.get(context.content)
       if (sourceMembers) {
@@ -33,10 +33,10 @@ export function variableCluster<Members extends { default: Variable } & Record<s
           controller.insert({ before: context.node, conditionPath: context.conditionPath }, [member, source], { owner: context.node })
         }
         controller.remove(context.node, { from: 'output' })
-        return undefined
+        return
       }
     }
-    return members.default.onCompile(context, controller)
+    members.default.onCompile(context, controller)
   }
   cluster = new Proxy(select, {
     get(target, property, receiver) {

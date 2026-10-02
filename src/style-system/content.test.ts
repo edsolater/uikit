@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { hasJSSContentOutput, hasJSSContentOnCompileMethod, isJSSContent } from './content'
 
 test('继承的内容方法和可调用内容保留其行为', () => {
-  const inherited = Object.create({ onCompile: () => 'compiled' })
+  const inherited = Object.create({ onCompile: (context, controller) => { controller.setContent(context, 'compiled') } })
   const callable = Object.assign(() => 'value', { toCSSString: () => 'css' })
 
   expect(hasJSSContentOnCompileMethod(inherited)).toBe(true)

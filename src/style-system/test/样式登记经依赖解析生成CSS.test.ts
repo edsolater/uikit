@@ -381,7 +381,9 @@ test('Mixin 处理方向配置，Key 不解释对象', () => {
 
 test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () => {
   const activate = vi.fn((): Rules => [[[condition(':root')], '--padding-resource', '4px']])
-  const compileFont = vi.fn(() => 'italic 18px system-ui')
+  const compileFont = vi.fn((context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) => {
+    controller.setContent(context, 'italic 18px system-ui')
+  })
   keep(rules('.ResourcePadding', [contentLayout({ padding: { onActive: activate } })]))
   keep(rules('.ContentFont', [innerText({ font: { family: 'metadata', onCompile: compileFont } })]))
   keep(rules('.PlainConfig', [
@@ -513,7 +515,7 @@ test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资�
   let calls = 0
   const child = {
     onActive: (): Rules => [[[condition('.CreatorNewDependency')], 'width', '7px']],
-    onCompile: () => { calls++; return '9px' },
+    onCompile: (context, controller) => { calls++; controller.setContent(context, '9px'); },
   }
   handle.replace(shadowValue({ x: child, y: '4px', color: 'black' }))
   const third = compileCSS()
