@@ -1,6 +1,7 @@
 import { createComputed } from 'solid-js'
 import { createState, val, type Source } from '../../../hooks'
 import type { ShadowProps } from '../../Piv/plugin/handlePivPlugin'
+import { mapBrandProps } from './brandPropsMapping'
 
 /**
  * 定义一个 Brand 分组的两种输入轮廓。
@@ -35,7 +36,10 @@ export type BrandDetails<Groups extends BrandPropsGroup[]> = {
  * 确定描述词优先用于阅读；不定字段一旦声明便接管整个分组，即使当前值是 undefined 也不会回落。
  * 每个分组最多产生一个 Brand；多个确定描述词同时声明时只警告，不中断组件运行。
  */
-export function createBrandPropsParser<const Groups extends BrandPropsGroup[]>(groups: Groups) {
+export function createBrandPropsParser<const Groups extends BrandPropsGroup[]>(
+  groups: Groups,
+  mapping?: Record<string, Record<string, string | undefined>>,
+) {
   return function parseBrandProps(props: object) {
     const detailsRecord: Record<string, Source<string | undefined>> = {}
     const brandHTMLProps: Record<`data-${string}`, Source<string | undefined>> = {}
@@ -44,7 +48,8 @@ export function createBrandPropsParser<const Groups extends BrandPropsGroup[]>(g
     for (const group of groups) {
       const selectedBrand = parseBrandGroup(props, group)
       detailsRecord[group.groupName] = selectedBrand
-      brandHTMLProps[`data-${group.groupName}`] = selectedBrand
+      const groupMapping = mapping && Object.hasOwn(mapping, group.groupName) ? mapping[group.groupName] : undefined
+      brandHTMLProps[`data-${group.groupName}`] = groupMapping ? mapBrandProps(selectedBrand, groupMapping) : selectedBrand
 
       // effect 只建立一次附加声明；返回 props 内的 Source 会由 Piv 持续消费。
       const effectShadowProps = group.effect?.(selectedBrand)

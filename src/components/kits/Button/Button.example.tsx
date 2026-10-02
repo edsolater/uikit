@@ -13,7 +13,7 @@ export function ButtonExample() {
         <span>Component</span>
         <h2>Button</h2>
       </div>
-      <p>按钮只表达视觉形态、动作语气和交互尺寸，不承载导航语义。悬停或按住按钮体验真实交互状态。</p>
+      <p>按钮分别描述外观、强调程度、动作语气和尺寸，不承载导航语义。新外观与强调字段的样式尚待设计。</p>
 
       <div class="button-example-grid">
         <div class="button-example-head">类型</div>
@@ -31,40 +31,40 @@ export function ButtonExample() {
           <Button disabled>Disabled</Button>
         </div>
 
-        <div class="button-example-label">主操作</div>
-        <div><Button solid>Solid</Button></div>
-        <div><Button solid>Solid</Button></div>
-        <div><Button solid>Solid</Button></div>
+        <div class="button-example-label">filled 外观</div>
+        <div><Button filled>Filled</Button></div>
+        <div><Button filled>Filled</Button></div>
+        <div><Button filled>Filled</Button></div>
         <div class="button-row">
-          <Button solid loading>Loading</Button>
-          <Button solid disabled>Disabled</Button>
+          <Button filled loading>Loading</Button>
+          <Button filled disabled>Disabled</Button>
         </div>
 
-        <div class="button-example-label">推荐</div>
-        <div><Button accent solid>Accent</Button></div>
-        <div><Button accent solid>Accent</Button></div>
-        <div><Button accent solid>Accent</Button></div>
+        <div class="button-example-label">较强强调</div>
+        <div><Button strong filled>强调</Button></div>
+        <div><Button strong filled>强调</Button></div>
+        <div><Button strong filled>强调</Button></div>
         <div class="button-row">
-          <Button accent solid loading>Loading</Button>
-          <Button accent solid disabled>Disabled</Button>
+          <Button strong filled loading>处理中</Button>
+          <Button strong filled disabled>禁用</Button>
         </div>
 
         <div class="button-example-label">危险</div>
-        <div><Button danger solid>Danger</Button></div>
-        <div><Button danger solid>Danger</Button></div>
-        <div><Button danger solid>Danger</Button></div>
+        <div><Button danger filled>Danger</Button></div>
+        <div><Button danger filled>Danger</Button></div>
+        <div><Button danger filled>Danger</Button></div>
         <div class="button-row">
-          <Button danger solid loading>Loading</Button>
-          <Button danger solid disabled>Disabled</Button>
+          <Button danger filled loading>Loading</Button>
+          <Button danger filled disabled>Disabled</Button>
         </div>
 
-        <div class="button-example-label">退场</div>
-        <div><Button bare>Bare</Button></div>
-        <div><Button bare>Bare</Button></div>
-        <div><Button bare>Bare</Button></div>
+        <div class="button-example-label">plain 外观</div>
+        <div><Button plain>Plain</Button></div>
+        <div><Button plain>Plain</Button></div>
+        <div><Button plain>Plain</Button></div>
         <div class="button-row">
-          <Button bare loading>Loading</Button>
-          <Button bare disabled>Disabled</Button>
+          <Button plain loading>Loading</Button>
+          <Button plain disabled>Disabled</Button>
         </div>
       </div>
 
@@ -77,10 +77,10 @@ export function ButtonExample() {
           <Button xlarge>XLarge</Button>
         </div>
         <div class="button-row">
-          <Button small solid>Small</Button>
-          <Button solid>Medium</Button>
-          <Button large solid>Large</Button>
-          <Button xlarge solid>XLarge</Button>
+          <Button small filled>Small</Button>
+          <Button filled>Medium</Button>
+          <Button large filled>Large</Button>
+          <Button xlarge filled>XLarge</Button>
         </div>
       </div>
     </Article>

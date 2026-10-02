@@ -1,10 +1,11 @@
-/** 在真实浏览器中验证启动时统一挂载的 Button 样式与核心视觉语义。 */
+/** 保留旧样式 DOM 协议的视觉反例；新 Button API 的 DOM 描述单独验证，样式尚未迁移。 */
 import { variable } from '../../../style-system/variable'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { Button, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps } from './index'
+import { createState } from '../../../hooks'
+import { Button, buttonDefaultPropSettings, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps, type ButtonAppearance } from './index'
 import { disabledFade } from '../../../style-system/pieces/contents/atoms/opacity'
 import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/pieces/conditions/interaction'
@@ -89,13 +90,49 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test('新组件描述外观、强调与语气，动态强调退出后不输出旧 variant', () => {
+    const emphasis = createState<'soft' | 'strong' | undefined>('soft')
+    const selectedAppearance = createState<ButtonAppearance | undefined>('filled')
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <Button appearance={selectedAppearance} emphasis={emphasis} danger small loading>确认</Button>, host)
+    const button = host.querySelector('button')!
+    expect(button.dataset.appearance).toBe('filled')
+    expect(button.dataset.emphasis).toBe('soft')
+    expect(button.dataset.tone).toBe('danger')
+    expect(button.dataset.size).toBe('small')
+    expect(button.dataset.status).toBe('loading')
+    expect(button.hasAttribute('data-variant')).toBe(false)
+    for (const name of ['appearance', 'emphasis', 'tone', 'strong', 'danger', 'small']) expect(button.hasAttribute(name)).toBe(false)
+    emphasis.set('strong')
+    expect(button.dataset.emphasis).toBe('strong')
+    emphasis.set(undefined)
+    expect(button.hasAttribute('data-emphasis')).toBe(false)
+    selectedAppearance.set('plain')
+    expect(button.dataset.appearance).toBe('plain')
+    selectedAppearance.set(undefined)
+    expect(button.dataset.appearance).toBe('outlined')
+  })
+
+  test('外界生成前配置公开外观转换表，不引入旧样式属性', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+    Object.assign(buttonDefaultPropSettings.appearance, { undefined: 'filled' })
+    try {
+      dispose = render(() => <Button>配置外观</Button>, host)
+      const button = host.querySelector('button')!
+      expect(button.dataset.appearance).toBe('filled')
+      expect(button.hasAttribute('data-variant')).toBe(false)
+    } finally {
+      Object.assign(buttonDefaultPropSettings.appearance, { undefined: 'outlined' })
+    }
+  })
+
   test('公开表面控制点使用同一对象，局部声明与修改可组合且移除后恢复', async () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <>
-      <Button accent htmlProps={{ 'data-control': 'first' }}>第一作用域</Button>
-      <Button accent htmlProps={{ 'data-control': 'second' }}>第二作用域</Button>
-      <Button accent>未控制</Button>
+      <button class="Button" data-tone="accent" data-control="first">第一作用域</button>
+      <button class="Button" data-tone="accent" data-control="second">第二作用域</button>
+      <button class="Button" data-tone="accent">未控制</button>
     </>, host)
     const [first, second, untouched] = host.querySelectorAll<HTMLButtonElement>('button')
     for (const button of [first, second, untouched]) button.style.transition = 'none'
@@ -165,7 +202,7 @@ describe('Button styles', () => {
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => palettes.map((_, index) => <Button variant={variant} danger htmlProps={{ 'data-local-tone': index }}>局部语气</Button>), host)
+    dispose = render(() => palettes.map((_, index) => <button class="Button" data-variant={variant} data-tone="danger" data-local-tone={index}>局部语气</button>), host)
     const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
     const samples: { normal: Record<string, string>; hover: Record<string, string>; active: Record<string, string> }[] = []
     for (const [index, button] of buttons.entries()) {
@@ -214,7 +251,7 @@ describe('Button styles', () => {
     handles.push(rules('.Button[data-local-role]', [surfaceColor.declare(surface), foregroundColor.declare(foreground)]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button variant={variant} danger htmlProps={{ 'data-local-role': '' }}>局部禁用</Button>, host)
+    dispose = render(() => <button class="Button" data-variant={variant} data-tone="danger" data-local-role>局部禁用</button>, host)
     const button = host.querySelector('button')!
     button.style.transition = 'none'
     const read = () => [getComputedStyle(button).backgroundColor, getComputedStyle(button).color]
@@ -245,7 +282,7 @@ describe('Button styles', () => {
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button solid htmlProps={{ 'data-surface-probe': '' }}>局部表面</Button>, host)
+    dispose = render(() => <button class="Button" data-variant="solid" data-surface-probe>局部表面</button>, host)
     const button = host.querySelector('button')!
     button.style.transition = 'none'
     expectSameColor(getComputedStyle(button).backgroundColor, 'rgb(12, 34, 56)')
@@ -255,9 +292,9 @@ describe('Button styles', () => {
     document.documentElement.dataset.theme = theme
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    const variants: ButtonProps['variant'][] = [undefined, 'bare', 'solid']
-    const tones: ButtonProps['tone'][] = [undefined, 'accent', 'danger']
-    dispose = render(() => variants.flatMap(variant => tones.map(tone => <Button variant={variant} tone={tone}>组合</Button>)), host)
+    const variants: ('bare' | 'solid' | undefined)[] = [undefined, 'bare', 'solid']
+    const tones: ('accent' | 'danger' | undefined)[] = [undefined, 'accent', 'danger']
+    dispose = render(() => variants.flatMap(variant => tones.map(tone => <button class="Button" data-variant={variant} data-tone={tone}>组合</button>)), host)
     const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
     for (const [index, button] of buttons.entries()) {
       button.style.transition = 'none'
@@ -299,7 +336,7 @@ describe('Button styles', () => {
   test('隔离来源：停用 TS 样式会失去实心背景，恢复挂载后恢复', () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button solid accent>隔离</Button>, host)
+    dispose = render(() => <button class="Button" data-variant="solid" data-tone="accent">隔离</button>, host)
     const button = host.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
     const before = appearance(button)
@@ -317,14 +354,15 @@ describe('Button styles', () => {
     document.head.append(style)
     cssRoot.mount()
 
-    const variants: ButtonProps['variant'][] = [undefined, 'bare', 'solid']
-    const tones: ButtonProps['tone'][] = [undefined, 'accent', 'danger']
+    const variants: ('bare' | 'solid' | undefined)[] = [undefined, 'bare', 'solid']
+    const tones: ('accent' | 'danger' | undefined)[] = [undefined, 'accent', 'danger']
     const sizes: ButtonProps['size'][] = [undefined, 'small', 'large', 'xlarge']
     const cases = variants.flatMap(variant => tones.flatMap(tone => sizes.flatMap(size =>
       [false, true].flatMap(loading => ['native', 'status', 'both'].map(mode => ({ variant, tone, size, loading, mode }))))))
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => cases.map((entry, index) => (
-      <Button {...entry} disabled htmlProps={{ 'data-testid': `disabled-${index}` }}>禁用</Button>
+      <button class="Button" data-variant={entry.variant} data-tone={entry.tone} data-size={entry.size}
+        data-status={entry.loading ? 'loading disabled' : 'disabled'} disabled data-testid={`disabled-${index}`}>禁用</button>
     )), host)
 
     for (const [index, entry] of cases.entries()) {
@@ -382,7 +420,7 @@ describe('Button styles', () => {
           expect(getComputedStyle(entry.actual).getPropertyValue(entry.property)).toBe(getComputedStyle(entry.reference).getPropertyValue(entry.property))
         }
         const host = document.body.appendChild(document.createElement('div'))
-        const unmount = render(() => <Button solid>品牌</Button>, host)
+        const unmount = render(() => <button class="Button" data-variant="solid">品牌</button>, host)
         const button = host.querySelector<HTMLButtonElement>('button')!
         button.style.transition = 'none'
         const color = getComputedStyle(button).backgroundColor
@@ -441,7 +479,7 @@ describe('Button styles', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <>
       <Button loading>启用</Button>
-      <Button solid danger loading disabled>禁用</Button>
+      <Button filled danger loading disabled>禁用</Button>
     </>, host)
     const [enabled, disabledButton] = host.querySelectorAll<HTMLButtonElement>('button')
     enabled.style.transition = 'none'
@@ -534,18 +572,18 @@ describe('Button styles', () => {
             <span>Default</span>
             <span>Action</span>
           </Button>
-          <Button solid htmlProps={{ 'data-testid': 'solid' }}>
+          <button class="Button" data-variant="solid" data-testid="solid">
             Solid
-          </Button>
-          <Button bare htmlProps={{ 'data-testid': 'bare' }}>
+          </button>
+          <button class="Button" data-variant="bare" data-testid="bare">
             Bare
-          </Button>
-          <Button solid accent htmlProps={{ 'data-testid': 'accent' }}>
+          </button>
+          <button class="Button" data-variant="solid" data-tone="accent" data-testid="accent">
             Accent
-          </Button>
-          <Button solid danger htmlProps={{ 'data-testid': 'danger' }}>
+          </button>
+          <button class="Button" data-variant="solid" data-tone="danger" data-testid="danger">
             Danger
-          </Button>
+          </button>
           <Button small htmlProps={{ 'data-testid': 'small' }}>
             Small
           </Button>

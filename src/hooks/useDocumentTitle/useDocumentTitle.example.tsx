@@ -23,7 +23,7 @@ export function UseDocumentTitleExample() {
       <div class="title-card">
         <strong>{currentTitle()}</strong>
         <Button
-          bare
+          plain
           onClick={() => {
             titleIndex.set((index) => (index + 1) % titles.length)
           }}

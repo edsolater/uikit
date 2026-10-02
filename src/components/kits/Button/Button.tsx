@@ -2,7 +2,7 @@
  * 这个文件定义基础按钮组件 Button。
  * Button 承载当前界面里的一个可执行动作，适合保存、确认、取消、清除、删除这类命令。
  * 会改变位置的交互应使用 Link；业务流程判断、表单编排和状态来源不塞进 Button 本体。
- * Button 只把动作内容、动作声量、动作语气、按钮尺寸和外部状态翻译成原生 button。
+ * Button 只把动作内容、外观、强调程度、动作语气、按钮尺寸和外部状态翻译成原生 button。
  *
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
@@ -13,53 +13,64 @@ import { Piv, type PivProps } from '../../Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
 import { createBrandPropsParser, type BrandProps } from '../utils/parseBrandProps'
 import { createStatusPropsParser, type StatusProps } from '../utils/parseStatusProps'
+import { buttonDefaultPropSettings } from './Button.mapping'
 import './Button.style'
 
 /**
- * 按钮的动作声量 Brand Props。
+ * 按钮的外观 Brand Props。
  *
- * - bare：动作存在但退场，适合清除、跳过、更多这类低权重命令。
- * - solid：动作需要优先被看见，适合主操作或高风险确认。
- * - undefined：默认动作，适合普通确认、关闭、返回这类常规命令。
+ * - filled、outlined、plain：外观候选，具体呈现待讨论。
+ * - undefined：未指定外观。
  *
- * 声量确定时优先声明 bare 或 solid；只有声量会在多个 Brand 之间变化时才使用 variant。
- * variant 一旦声明便接管整个声量分组，即使当前值是 undefined 也不会回落到确定描述词。
+ * 外观确定时优先声明 filled、outlined 或 plain；动态选择使用 appearance。
+ * appearance 一旦声明便接管整个外观分组，undefined 不回落到确定描述词。
  */
-export type ButtonVariantProps = BrandProps<'variant', 'bare' | 'solid'>
+export type ButtonAppearance = 'filled' | 'outlined' | 'plain'
+
+/**
+ * 强调程度独立于外观和语气：soft 降低整体存在感，strong 提高，省略保持普通程度。
+ * soft/strong 是确定描述词，emphasis 用于动态选择。
+ */
+export type ButtonEmphasis = 'soft' | 'strong'
 
 /**
  * 按钮的动作语气 Brand Props。
  *
- * - accent：推荐路径动作。
  * - danger：破坏性动作。
  * - undefined：普通语气。
  *
- * 语气确定时优先声明 accent 或 danger；只有语气会动态变化时才使用 tone。
+ * 破坏性动作声明 danger；动态选择使用 tone。
  * tone 一旦声明便接管整个动作语气分组，即使当前值是 undefined 也不会回落到确定描述词。
  */
-export type ButtonToneProps = BrandProps<'tone', 'accent' | 'danger'>
+export type ButtonTone = 'danger'
 
 /**
  * 按钮的物理尺寸 Brand Props。
  *
  * - small：紧凑，适用于工具栏或空间受限的场景。
- * - large：宽松，适用于需要强调的场景或触控设备。
- * - xlarge：极大，适用于需要更大命中面积的主入口。
+ * - large：需要更宽松尺度或更大命中面积。
+ * - xlarge：需要更大的命中面积。
  * - undefined：默认尺度，适用于大多数场景。
  *
  * 尺寸确定时优先声明 small、large 或 xlarge；只有尺寸会在多个 Brand 之间变化时才使用 size。
  * size 一旦声明便接管整个尺寸分组，即使当前值是 undefined 也不会回落到确定描述词。
  */
-export type ButtonSizeProps = BrandProps<'size', 'small' | 'large' | 'xlarge'>
+export type ButtonSize = 'small' | 'large' | 'xlarge'
 
 /**
  * 按钮可以同时处于 loading 和 disabled 状态。
  * 外部一旦声明某个状态字段，该字段始终跟随外部 Source；否则允许 Button 内部通过 Status Actions 改变。
  */
-export type ButtonStatusProps = StatusProps<'loading' | 'disabled'>
+export type ButtonStatus = 'loading' | 'disabled'
 
 export interface ButtonProps
-  extends PivProps<'button'>, ButtonVariantProps, ButtonToneProps, ButtonSizeProps, ButtonStatusProps {
+  extends
+    PivProps<'button'>,
+    BrandProps<'appearance', ButtonAppearance>,
+    BrandProps<'emphasis', ButtonEmphasis>,
+    BrandProps<'tone', ButtonTone>,
+    BrandProps<'size', ButtonSize>,
+    StatusProps<ButtonStatus> {
   /**
    * 动作名。
    *
@@ -75,11 +86,15 @@ export interface ButtonProps
   onClick?: EventListenerInput<'click'>
 }
 
-const parseButtonBrandProps = createBrandPropsParser([
-  { groupName: 'variant', candidates: ['bare', 'solid'] },
-  { groupName: 'tone', candidates: ['accent', 'danger'] },
-  { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
-])
+const parseButtonBrandProps = createBrandPropsParser(
+  [
+    { groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'] },
+    { groupName: 'emphasis', candidates: ['soft', 'strong'] },
+    { groupName: 'tone', candidates: ['danger'] },
+    { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
+  ],
+  buttonDefaultPropSettings,
+)
 
 const parseButtonStatusProps = createStatusPropsParser({
   candidates: ['loading', 'disabled'],
@@ -102,7 +117,7 @@ export function Button(props: ButtonProps) {
       class="Button"
       plugins={[clickable({ componentName: 'Button' })]}
       htmlProps={{
-        type: 'button',
+        'type': 'button',
         'aria-label': props.name,
       }}
       on={{ click: props.onClick }}

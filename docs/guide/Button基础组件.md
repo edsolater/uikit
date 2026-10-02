@@ -8,12 +8,12 @@
 
 ## 业务目标
 
-`Button` 是当前界面里的动作入口。它把动作内容、动作名、三个 Brand 分组和可合并 Status 翻译成一个原生 `button`，不接管导航、表单编排或状态成因。
+`Button` 是当前界面里的动作入口。它把动作内容、动作名、四个 Brand 分组和可合并 Status 翻译成一个原生 `button`，不接管导航、表单编排或状态成因。
 
 ```txt
 调用方
   ├─ children / name：动作信息
-  ├─ variant / tone / size：Brand 分类
+  ├─ appearance / tone / emphasis / size：Brand 分类
   └─ loading / disabled：外部状态波
           ↓
         Button
@@ -30,27 +30,38 @@
 
 ## Brand 输入轮廓
 
-Button 有三个 Brand 分组：
+Button 有四个 Brand 分组：
 
-- variant：`bare`、`solid`
-- tone：`accent`、`danger`
+- appearance（外观形式）：`filled`、`outlined`、`plain`。
+- tone（动作的语义基调）：`danger`；原 accent 退出。
+- emphasis（整体存在感）：`soft`、`strong`；不绑定透明、实底等实现方式。
 - size：`small`、`large`、`xlarge`
 
 具体 Brand 已知时优先使用确定描述词：
 
 ```tsx
-<Button accent solid large>保存</Button>
+<Button strong filled large>保存</Button>
 ```
 
 具体 Brand 会变化时使用不定字段：
 
 ```tsx
-<Button variant={variant} tone={tone} size={size}>保存</Button>
+<Button appearance={appearance} tone={tone} emphasis={emphasis} size={size}>保存</Button>
 ```
 
 确定描述词让阅读者直接看到选择结果；不定字段让阅读者先看到“这一分类是不定的”。两种输入都可以响应式变化。分组字段一旦声明便接管同组输入，即使当前值是 `undefined`。同组冲突只警告，不中断运行。
 
-省略分组就是默认形态。默认解析结果为 `undefined`，不建立 `normal`、`neutral` 或 `medium` 候选。
+省略分组时，原始选择为 `undefined`，不建立 `normal`、`neutral` 或 `medium` 候选。组件的公开映射表 `buttonMapping` 定义于 [Button.mapping.ts](../../src/components/kits/Button/Button.mapping.ts)，其中 `appearance.undefined` 初始为 `outlined`，应用可以在生成组件前更改：
+
+```ts
+import { buttonMapping } from '@edsolater/uikit'
+
+Object.assign(buttonMapping.appearance, { undefined: 'filled' })
+```
+
+映射能力位于独立的 [brandPropsMapping.ts](../../src/components/kits/utils/brandPropsMapping.ts)，由 `createBrandPropsParser` 的第二参数接入整份组件表，按分组名读取子表，再以 `String(原始值)` 查询属性，其他 Kit 也可使用。映射只决定 DOM 输出，`details` 与 `effect` 保留原始选择；未命中映射时原样输出。`buttonMapping` 是普通对象字面量，使用 `as const` 保留字面量类型；它没有运行时冻结，也不主动触发响应式更新。
+
+四组可以独立组合，例如 `<Button danger strong filled>`。分组是配置入口，不天然代表互斥；当前外观、强调与尺寸候选按单选解析。tone 表达动作性质，emphasis 表达存在感，appearance 表达外观，三者不互相推导。
 
 ## Status 输入轮廓
 
@@ -64,7 +75,7 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 ## 稳定输出
 
-- variant、tone、size 分别输出到 `data-variant`、`data-tone`、`data-size`。
+- appearance、tone、emphasis、size 分别输出到 `data-appearance`、`data-tone`、`data-emphasis`、`data-size`，不再输出 `data-variant`。
 - 当前 Status 合并到 `data-status`。
 - loading 同步到 `aria-busy`。
 - disabled 同步到原生 `disabled`。
@@ -81,6 +92,8 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 - Button 不因为视觉分类而建立运行时 Profile；分类由类型、解析器声明、注释和 DOM 属性共同表达。
 
 ## 样式控制入口
+
+本轮仅迁移组件 API，Button.style.ts 与旧 CSS 未修改。旧样式仍通过 data-variant 选择外观，尚未消费 data-appearance 或 data-emphasis；appearance 与 emphasis 的新输出暂不驱动对应视觉变化。下述控制点与配方说明描述保留中的旧样式，不是新分类的视觉契约。
 
 Button 从组件及包入口公开三个 Variable，同一对象也由 Button 样式消费：
 

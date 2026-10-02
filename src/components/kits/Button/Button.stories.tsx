@@ -17,24 +17,24 @@ export default meta
 
 export const Normal: StoryObj<typeof meta> = {}
 
-export const Solid: StoryObj<typeof meta> = {
+export const Filled: StoryObj<typeof meta> = {
   args: {
-    solid: true,
-    accent: true,
+    filled: true,
+    strong: true,
     children: 'Save',
   },
 }
 
-export const Bare: StoryObj<typeof meta> = {
+export const Plain: StoryObj<typeof meta> = {
   args: {
-    bare: true,
+    plain: true,
     children: 'Clear',
   },
 }
 
-export const BareDanger: StoryObj<typeof meta> = {
+export const PlainDanger: StoryObj<typeof meta> = {
   args: {
-    bare: true,
+    plain: true,
     danger: true,
     children: 'Remove',
   },
