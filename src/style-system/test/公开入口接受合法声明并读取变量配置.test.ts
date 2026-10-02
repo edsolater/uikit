@@ -1,6 +1,8 @@
 /** 公开类型保留目标与内容的关系，并直接提供 Variable 创建配置。 */
-import { expect, test } from 'vitest'
+import { expect, expectTypeOf, test, vi } from 'vitest'
 import { clusterFrom, key, rules, variable, variableCluster } from '../index'
+import { condition } from '../condition'
+import { compileRules } from '../css-root'
 
 test('合法 Key、Variable、Cluster 和声明组合可以直接消费', () => {
   const source = variable('red', { name: 'public-color' })
@@ -43,4 +45,43 @@ test('Cluster 延伸配置允许由 apply 自行解释任意修改参数', () =>
     },
   })
   expect(cluster('default').modify({ amount: 3 })).toBeDefined()
+})
+
+test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => {
+  const shorthand = variable({ default: 1, active: 3, hover: 2 }, '--public-shorthand')
+  const full = variable(1, { name: 'public-shorthand', states: { hover: 2, active: 3 } })
+  const compile = (content: typeof shorthand) => compileRules([[[condition('.Shorthand')], 'opacity', content]])
+  const css = compile(shorthand)
+  expect(css).toBe(compile(full))
+  expect(css).toContain('--public-shorthand: 1;')
+  expect(css).toContain('--public-shorthand: 2;')
+  expect(css).toContain('--public-shorthand: 3;')
+  expect(css.indexOf('--public-shorthand: 2;')).toBeLessThan(css.indexOf('--public-shorthand: 3;'))
+})
+
+test('简写状态回调创建时执行并收到原始默认生产函数，默认内容消费时才求值', () => {
+  const source = vi.fn(() => 1)
+  const hover = vi.fn((defaultValue: typeof source) => {
+    expect(defaultValue).toBe(source)
+    return 2
+  })
+  const amount = variable({ default: source, hover }, 'public-lazy-shorthand')
+  expect(hover).toHaveBeenCalledOnce()
+  expect(source).not.toHaveBeenCalled()
+  const css = compileRules([[[condition('.LazyShorthand')], 'opacity', amount]])
+  expect(css).toContain('--public-lazy-shorthand: 1;')
+  expect(css).toContain('--public-lazy-shorthand: 2;')
+  expect(source).toHaveBeenCalled()
+  expect(hover).toHaveBeenCalledOnce()
+})
+
+test('简写状态和完整配置回调仍按默认值推导参数类型', () => {
+  const amount = variable({ default: 1, hover: (current) => {
+    expectTypeOf(current).toMatchTypeOf<number>()
+    return current + 1
+  } }, { name: 'public-typed-shorthand', states: { active: (current) => {
+    expectTypeOf(current).toMatchTypeOf<number>()
+    return current + 2
+  } } })
+  expect([...amount.config.states.values()]).toEqual([2, 3])
 })

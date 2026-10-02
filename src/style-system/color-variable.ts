@@ -29,7 +29,7 @@ export interface ColorVariable extends Omit<Variable, 'declare'> {
 
 /** 默认基础色为黑色；通道不预先声明，缺省在相对颜色上下文使用 l/c/h/alpha。 */
 export function colorVariable(defaultColor: ValueInput = 'black',
-  options: Pick<VariableOptions, 'name' | 'onActive' | 'compileWaveIndex' | 'registration'>): ColorVariable {
+  options: Pick<VariableOptions, 'onActive' | 'compileWaveIndex' | 'registration'> & { name: string }): ColorVariable {
   const baseColor = variable(defaultColor, { name: `${options.name}-base` })
   const channels = ['lightness', 'chroma', 'hue', 'alpha'].map((name, index) =>
     variable(['l', 'c', 'h', 'alpha'][index], { name: `${options.name}-${name}` }))

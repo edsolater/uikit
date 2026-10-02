@@ -106,6 +106,8 @@ const parseButtonStatusProps = createStatusPropsParser({
   }),
 })
 
+
+// 实际核心定义代码
 export function Button(props: ButtonProps) {
   const { variantShadowProps } = parseButtonVariantProps(props)
   const { statusShadowProps } = parseButtonStatusProps(props)

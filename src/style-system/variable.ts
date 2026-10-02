@@ -14,6 +14,7 @@ import { value, type ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
 import { result } from '@edsolater/fnkit'
 import { declareVariable, findLocalBaseKey, modifyVariable } from './variable-modification'
+import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
 
 /** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
 export type VariableDefaultValue = ValueInput | (() => ValueInput)
@@ -76,8 +77,8 @@ export interface VariableOptions<
   DefaultValue extends VariableDefaultValue = VariableDefaultValue,
   Change = ValueInput,
 > {
-  /** CSS 自定义属性名；可带或省略开头的 --。 */
-  name: string
+  /** CSS 自定义属性名；可带或省略开头的 --，省略时由入口分配 temp 序号名称。 */
+  name?: string
   /**
    * 各 State Condition 下使用的基础内容；修改从选中的基础内容继续。
    * 回调在创建时执行，收到原始 defaultValue，包括尚未求值的生产函数。
@@ -113,33 +114,38 @@ export interface VariableOptions<
     apply(currentValue: ValueInput, change: Change): ValueInput
   }
 }
-/** 创建可在样式中复用的 Variable；状态配置此时求值，默认值生产函数在编译消费时求值。 */
+/**
+ * Variable，样式中的基本复用变量；状态配置此时求值，默认值生产函数在编译消费时求值。
+ * 默认值也可写成 { default, ...states }，名称也可直接传字符串；两处简写可独立使用。
+ * 省略名称时自动分配 temp 序号名称。
+ */
 export function variable<DefaultValue extends VariableDefaultValue, Change = ValueInput>(
-  defaultValue: DefaultValue,
-  options: VariableOptions<NoInfer<DefaultValue>, Change>,
+  input: DefaultValue | VariableStateValues<DefaultValue>,
+  options?: string | VariableOptions<NoInfer<DefaultValue>, Change>,
 ): Variable {
-  const entries = Object.entries(options.states ?? {})
+  const config = parseVariableArgs(input, options)
+  const entries = Object.entries(config.states ?? {})
   const conditions = resolveStateConditions(entries.map(([name]) => name))
   const states = new Map<StateCondition, ValueInput>(
     entries.map(([name, content]): [StateCondition, ValueInput] => [
-      conditions.find((state) => state.name === name)!, result(content, defaultValue),
+      conditions.find((state) => state.name === name)!, result(content, config.defaultValue),
     ])
       .sort(([left], [right]) => left.order - right.order),
   )
   const self: Variable = {
     kind: 'variable',
-    name: options.name.replace(/^--/, ''),
+    name: config.name.replace(/^--/, ''),
     config: {
-      defaultValue,
+      defaultValue: config.defaultValue,
       states,
-      modification: options.modification,
-      registration: options.registration,
+      modification: config.modification,
+      registration: config.registration,
       get definitionKey() {
         return { toCSSString: () => self.toCSSString() }
       },
     },
-    compileWaveIndex: options.compileWaveIndex,
-    onActive: options.onActive,
+    compileWaveIndex: config.compileWaveIndex,
+    onActive: config.onActive,
     declare(...contents) {
       return declareVariable(self, contents.length ? contents[0] : self.config.defaultValue, activateVariableResources)
     },

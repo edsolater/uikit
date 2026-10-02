@@ -49,8 +49,10 @@ import {
   shadowElevated,
   shadowInteractive,
 } from '../../../style-system/pieces/contents/atoms/shadow'
+import { Button } from './Button'
 
-const button = ['@layer uikit', '.Button']
+const button = ['@layer uikit', `.${Button.name}`]
+
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
 export const buttonSurfaceSource = variable(toneColor('soft'), { name: 'button-surface-source' })
@@ -65,6 +67,8 @@ export const buttonSurfaceStrength = variable(0.18, {
   modification: { apply: (current, delta) => add(current, delta) },
 })
 
+
+// 定义button的样式架构
 rules(button, [
   [toneColor, actionColor],
   buttonSurfaceStrength.declare(),
@@ -84,6 +88,8 @@ rules(button, [
 // =============================================================================
 // tone 动作语气
 // =============================================================================
+
+
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
 rules([...button, '&[data-tone]'], [foregroundColor.declare(toneColor('strong'))])
