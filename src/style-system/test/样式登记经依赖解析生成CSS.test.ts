@@ -35,13 +35,13 @@ import { contentLayout, innerText } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
 import { clickable } from '../pieces/mixins/interaction'
 import { durationFast } from '../pieces/contents/atoms/motion'
-import { lineColor } from '../pieces/contents/atoms/color/edge'
+import { lineColor } from '../pieces/contents/atoms/color/colors'
 
 stateCondition('testHover', condition('&:hover'))
 stateCondition('testActive', condition('&:active'))
 stateCondition('testMedia', media('(width > 1px)'))
 
-test('动效和分隔线按需提供普通根规则，空输入不激活', () => {
+test('动效按需提供根规则，分隔线在消费者处引用文字变量，空输入不激活', () => {
   expect(compileRules([])).toBe('')
   const motionCSS = compileRules([[[condition('.Motion')], 'transition-duration', durationFast]])
   expect(motionCSS).toContain('--motion-scale-ratio: 1;')
@@ -50,7 +50,9 @@ test('动效和分隔线按需提供普通根规则，空输入不激活', () =>
   expect(motionCSS).toContain('--duration-fast: calc(120ms * var(--motion-scale-ratio, 1));')
   expect(motionCSS).not.toContain('--line-color:')
   const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor]])
-  expect(lineCSS).toContain('--line-color: color-mix(')
+  expect(lineCSS).toContain('border-color: var(--line-color, color-mix(')
+  expect(lineCSS).toContain('var(--foreground-color,')
+  expect(lineCSS).not.toContain(':root')
   expect(lineCSS).not.toContain('--motion-scale-ratio:')
 })
 

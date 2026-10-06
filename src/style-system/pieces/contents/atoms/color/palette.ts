@@ -1,57 +1,56 @@
 /**
- * 基础颜色、中性材料与亮暗环境。
+ * 基础颜色材料与品牌派生色。
  *
- * 同一环境需要同时照顾纸面和文字。
+ * 定义颜色的 JS 源头，派生材料交给 Color System 处理。
+ *
+ * 材料与 CSS 输出分离，使同一材料可继续参与颜色计算。
  */
 
-import type { ColorEnvironment, ColorMaterial } from '../../../../../color-system/core'
+import type { ColorMaterial } from '../../../../../color-system/core'
 
-// 保留中性材料自身色值；当前只响应冷暖，亮暗目标尚未定义。
+// 各材料直接配置自身响应；下面说明每个比例的取舍意图，具体数值是人为配方，没有唯一的推导值。
+// 百分比指单次接受多少目标差异，按环境 influence 为 1 理解；实际观感由色表检查与调整。
+
 export const paper: ColorMaterial = {
   base: { lightness: 0.98, chroma: 0.003, hue: 260 },
-  environmentSensitivities: { hue: 1 },
+  environmentSensitivities: {
+    // 取 100%，让纸面完整到达自身的亮暗目标；较小比例会让暗纸面残留过多原来的白色。
+    lightness: 1,
+    // 暂取 25%，让纸面接受一部分环境彩度，同时以自身近中性色为主，避免纸面染色过重。
+    chroma: 0.25,
+    // 暂取 4%，让大面积纸面带出轻微冷暖；单次色相最多偏移 7.2°，不完全跟随环境色相。
+    hue: 0.04,
+  },
+  // 亮环境接近白纸，暗环境保持接近黑色的深灰。
+  environmentTargets: { lightness: (_base, environment) => 0.18 + 0.8 * environment.tint!.lightness! },
   purpose: 'surface',
 }
 
 export const ink: ColorMaterial = {
   base: { lightness: 0.15, chroma: 0.004, hue: 260 },
-  environmentSensitivities: { hue: 1 },
+  environmentSensitivities: {
+    // 取 100%，让墨色完整到达自身的深灰或浅色目标；暗环境下不能继续保留原来的深色文字。
+    lightness: 1,
+    // 暂取 18%，弱于纸面的彩度响应，让文字适应环境而少带颜色，保留灰色文字的辨识。
+    chroma: 0.18,
+    // 暂取 2%，低于纸面的冷暖响应，让文字稍随纸面偏色；单次色相最多偏移 3.6°。
+    hue: 0.02,
+  },
+  // 亮环境用可辨识深灰，暗环境转为清晰浅色。
+  environmentTargets: { lightness: (_base, environment) => 0.88 - 0.56 * environment.tint!.lightness! },
   purpose: 'content',
 }
 
-/** 中性材料取原色阶中段；色值不绑定用途层级。 */
+/** 独立中性材料；色值不绑定用途层级。 */
 export const neutral: ColorMaterial = {
   base: { lightness: 0.58, chroma: 0.007, hue: 260 },
-  environmentSensitivities: { hue: 1 },
+  environmentSensitivities: {
+    // 暂取 40%，比品牌色更明显地适应背景明暗，同时保留 60% 自身与目标的差异，避免灰色完全消失在背景中。
+    lightness: 0.4,
+    // 暂取 25%，允许灰色带入少量环境彩度，但不把中性材料直接替换成环境色。
+    chroma: 0.25,
+    // 暂取 1%，让中性灰的冷暖变化弱于纸面与墨色；单次色相最多偏移 1.8°。
+    hue: 0.01,
+  },
   purpose: 'content',
-}
-
-// 冷暖角度和染色强度是可调配方，尚未按实际界面校准。
-
-// 亮环境略偏暖；省略明度与色度影响，保留亮色基底。
-export const lightTheme: ColorEnvironment = {
-  tint: {
-    // 60 偏橙黄，选作暖色方向。
-    hue: 60
-  },
-  influence: {
-    // 沿最短色相距离只走 2%（最多 3.6°），用于轻微染色。
-    hue: 0.02
-  },
-}
-
-// 暗环境，略偏冷。
-export const darkTheme: ColorEnvironment = {
-  tint: {
-    // 250 偏蓝，选作冷色方向。
-    hue: 250
-  },
-  influence: {
-    // 明度环境作用强度；没有明度目标时不产生变化。
-    lightness: 1,
-    // 彩度环境作用强度；没有彩度目标时不产生变化。
-    chroma: 1,
-    // 沿最短色相距离只走 2%（最多 3.6°），用于轻微染色。
-    hue: 0.02
-  },
 }

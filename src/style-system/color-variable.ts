@@ -5,7 +5,7 @@ import { declare, type Declaration } from './declaration'
 import type { Rules } from './rule'
 import { variable, type Variable, type VariableOptions } from './variable'
 import { value, type Value, type ValueInput } from './value'
-import { oklch } from './pieces/contents/functions/oklch'
+import { deriveColor } from './pieces/contents/functions/compose-relative-oklch'
 import { resourceRule } from './compiler/resource-rule'
 
 /** 颜色沿用 Variable 消费协议；基础色、绝对通道与增量各自声明，互不清空。 */
@@ -36,8 +36,10 @@ export function colorVariable(defaultColor: ValueInput = 'black',
   const deltas = ['lightness', 'chroma', 'hue', 'alpha'].map((name) =>
     variable(0, { name: `${options.name}-delta-${name}` }))
   const [lightness, chroma, hue, alpha] = channels
-  const aggregate = oklch(baseColor, [lightness, chroma, hue, alpha],
-    [deltas[0], deltas[1], deltas[2], deltas[3]])
+  const aggregate = deriveColor(baseColor, {
+    channels: { lightness, chroma, hue, alpha },
+    adjustments: { lightness: deltas[0], chroma: deltas[1], hue: deltas[2], alpha: deltas[3] },
+  })
   const color = variable(aggregate, options)
   const compile = color.onCompile
 

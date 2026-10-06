@@ -5,7 +5,7 @@
  *
  * 同步调整材料的环境感知，供后续颜色处理与环境求值使用。
  */
-import { evaluateSensitivity, type ColorEnvironment, type ColorEnvironmentSensitive, type ColorMaterial, type OKLCH } from '../core'
+import { evaluateLightnessTarget, evaluateSensitivity, type ColorEnvironment, type ColorEnvironmentSensitive, type ColorMaterial, type OKLCH } from '../core'
 
 /**
  * emphasis:凸显颜色
@@ -13,6 +13,7 @@ import { evaluateSensitivity, type ColorEnvironment, type ColorEnvironmentSensit
  *
  * 整数用于色阶，小数用于平滑过渡。环境只作参照，不追加贡献。
  * 返回材料仍可响应环境；Alpha 与用途不变，不保存参照环境。
+ * 负级将材料的明度适应目标同步褪向环境目标；正级保留目标，0 级保持身份。
  *
  * @example
  * const near = emphasis(color, environment, 1)
@@ -26,8 +27,16 @@ export function emphasis<T extends ColorMaterial>(color: T, environment: ColorEn
   const progress = emphasisProgress(level)
   const base = transitionColor(color.base, target, progress)
   const environmentSensitivities = adjustEnvironmentSensitivities(color, environment, level, progress)
+  const lightnessTarget = color.environmentTargets?.lightness
+  const environmentTargets = level < 0 && lightnessTarget !== undefined
+    ? { ...color.environmentTargets, lightness: (currentBase: OKLCH, currentEnvironment: ColorEnvironment) => {
+      const ambient = currentEnvironment.tint?.lightness ?? currentBase.lightness
+      const target = evaluateLightnessTarget(lightnessTarget, currentBase, currentEnvironment) ?? currentBase.lightness
+      return target + (ambient - target) * progress
+    } }
+    : color.environmentTargets
 
-  return { ...color, base, environmentSensitivities }
+  return { ...color, base, environmentSensitivities, ...(environmentTargets ? { environmentTargets } : {}) }
 }
 
 /** 确定清晰或褪色的目标：彩色正级增强自身，负级靠近环境，灰色正级增强明暗辨识。 */

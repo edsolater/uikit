@@ -9,7 +9,7 @@ import { condition } from './condition'
 import { stateCondition } from './pieces/state-conditions'
 import { value } from './value'
 import { compileRules } from './css-root'
-import { actionColor } from './pieces/contents/atoms/color/action'
+import { interactiveColor } from './pieces/contents/atoms/color/colors'
 
 const handles: RulesHandle[] = []
 afterEach(() => handles.splice(0).forEach((handle) => handle.remove()))
@@ -57,11 +57,13 @@ test('通道改名在消费时解析，增量仍是独立字段', () => {
 
 test('整体动态来源保留原 Variable 状态及按需注册，不提前读取颜色', () => {
   const target = colorVariable('black', { name: 'action-target' })
-  handles.push(rules('.ActionTarget', target.declare(actionColor)))
+  handles.push(rules('.ActionTarget', target.declare(interactiveColor)))
   const css = compileCSS()
-  expect(css).toContain('--action-target-base: var(--action-color, var(--color-action));')
-  expect(css).toContain('--color-action-hover')
-  expect(css).toContain('@property --action-color')
+  expect(css).toContain('--action-target-base: var(--interactive-color,')
+  expect(css).toContain('var(--brand-color,')
+  expect(css).toContain('oklch(from ')
+  expect(css).toContain('@property --interactive-color')
+  expect(css).not.toMatch(/var\(--(?:color-|dye-)/)
 })
 
 test('另一 ColorVariable 作为完整颜色来源，不转接通道或基础色身份', () => {

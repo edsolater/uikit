@@ -15,6 +15,7 @@
 ## 当前项目边界
 
 - 当前仓库是 SolidJS UIKit 项目。
+- 所有 Agent 的临时任务文件统一写入仓库根目录下的 `agents/run/`。
 - 当前项目采用 `@edsolater/fnkit`，本地源码位于 `D:/mycode/fnkit`；新增或改写能力时优先查证并复用其现役公开 API。保留局部实现时说明实际契约差异，复用判断与验收从统一 AI Rules Agent 入口取得。
 - 默认只考虑最新浏览器和现代 CSS 能力，不为旧浏览器保留兼容层。
 - 显示面统一简体中文，包括 UI 文案、日志、终端输出、注释、docstring 和 Markdown 说明。

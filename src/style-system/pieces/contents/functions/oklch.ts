@@ -1,15 +1,28 @@
-/** 在 CSS 相对 OKLCH 上下文组合基础色、绝对通道与增量。 */
+/** 将具名 OKLCH 通道包装为普通 CSS 颜色内容。 */
 import { createJSSContent, type JSSContent } from '../../../content'
 import type { ValueInput } from '../../../value'
-import { add } from './calc'
 
-/** 四通道按明度、色度、色相、透明度排列，由 CSS 保留原始色的通道符号。 */
-export function oklch(base: ValueInput, channels: [ValueInput, ValueInput, ValueInput, ValueInput],
-  deltas: [ValueInput, ValueInput, ValueInput, ValueInput]): JSSContent {
-  const adjusted = channels.map((channel, index) => add(channel, deltas[index]))
+/** 普通 OKLCH 颜色通道；透明度省略时为完全不透明。 */
+export interface OKLCHChannels {
+  lightness: ValueInput
+  chroma: ValueInput
+  hue: ValueInput
+  alpha?: ValueInput
+}
+
+/**
+ * 构造普通 OKLCH 颜色，通道中的 JSS 内容在编译消费时解析。
+ * @example
+ * // 创建明度为 0.6、透明度为 0.8 的蓝色，不创建 CSS Variable。
+ * oklch({ lightness: 0.6, chroma: 0.12, hue: 250, alpha: 0.8 })
+ * // 明度跟随样式变量，其余通道使用指定值。
+ * oklch({ lightness: variable(0.6, 'surface-lightness'), chroma: 0.02, hue: 250 })
+ */
+export function oklch({ lightness, chroma, hue, alpha }: OKLCHChannels): JSSContent {
   return createJSSContent((resolve) => {
-    const contents = [base, ...adjusted].map(resolve)
-    return contents.some((content) => content === undefined) ? undefined
-      : `oklch(from ${contents[0]} ${contents[1]} ${contents[2]} ${contents[3]} / ${contents[4]})`
-  }, [base, ...adjusted])
+    const channels = [lightness, chroma, hue].map(resolve)
+    const opacity = resolve(alpha)
+    if (channels.some((channel) => channel === undefined) || (alpha !== undefined && opacity === undefined)) return undefined
+    return `oklch(${channels.join(' ')}${opacity === undefined || opacity === '1' ? '' : ` / ${opacity}`})`
+  }, [lightness, chroma, hue, alpha])
 }

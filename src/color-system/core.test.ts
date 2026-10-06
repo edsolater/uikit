@@ -5,7 +5,7 @@
  *
  * 防止自身色值与环境目标混淆，或前一通道的求值污染后续响应。
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { applyEnvironment, type ColorMaterial } from './core'
 import { hue } from './tools/channels'
 
@@ -15,6 +15,28 @@ const material: ColorMaterial = {
 }
 
 describe('材料环境感知', () => {
+  it('明度目标属于材料，固定目标和动态目标仍按原感知比例参与', () => {
+    const fixed: ColorMaterial = { ...material, environmentSensitivities: { lightness: 0.5 }, environmentTargets: { lightness: 0.8 } }
+    expect(applyEnvironment(fixed, { tint: { lightness: 0 } }).base.lightness).toBeCloseTo(0.7)
+    const dynamic: ColorMaterial = { ...material, environmentSensitivities: { lightness: 1 },
+      environmentTargets: { lightness: (base, environment) => 1 - environment.tint!.lightness! * base.lightness } }
+    const environment = { tint: { lightness: 0.2 } }
+    const changed = applyEnvironment(dynamic, environment)
+    expect(changed.base.lightness).toBeCloseTo(0.88)
+    expect(applyEnvironment(changed, environment).base.lightness).toBeCloseTo(0.824)
+    expect(dynamic.base.lightness).toBe(0.6)
+  })
+
+  it('缺少环境明度或明度感知为零时不求材料目标，活动目标拒绝非有限值', () => {
+    const target = vi.fn(() => Infinity)
+    const responsive: ColorMaterial = { ...material, environmentSensitivities: { lightness: 1 }, environmentTargets: { lightness: target } }
+    expect(applyEnvironment(responsive, { tint: { hue: 90 } }).base).toEqual(material.base)
+    expect(applyEnvironment({ ...responsive, environmentSensitivities: { lightness: 0 } }, { tint: { lightness: 0 } }).base).toEqual(material.base)
+    expect(target).not.toHaveBeenCalled()
+    expect(() => applyEnvironment(responsive, { tint: { lightness: 0 } })).toThrow(RangeError)
+    expect(() => applyEnvironment({ ...responsive, environmentTargets: { lightness: NaN } }, { tint: { lightness: 0 } })).toThrow(RangeError)
+  })
+
   it('本次多环境按权重作用，后续计算不沿用旧环境', () => {
     const responsive = { ...material, alpha: 0.4, environmentSensitivities: { lightness: 0.5 } }
     const result = applyEnvironment(responsive,

@@ -17,6 +17,26 @@ function material(hue: number, lightness = 0.6, chroma = 0.24): ColorMaterial {
 }
 
 describe('OKLCH 材料混合', () => {
+  it('材料目标按来源权重和感知合成，缺少目标的来源仍响应环境', () => {
+    const a: ColorMaterial = { ...material(30), environmentSensitivities: { lightness: 0.2 }, environmentTargets: { lightness: 0.8 } }
+    const b: ColorMaterial = { ...material(90), environmentSensitivities: { lightness: 0.6 } }
+    const mixed = mix(a, b)
+    expect(applyEnvironment(mixed, { tint: { lightness: 0.1 } }).base.lightness).toBeCloseTo(0.47)
+    const inactive: ColorMaterial = { ...a, environmentSensitivities: { lightness: 0 },
+      environmentTargets: { lightness: () => { throw new Error('不响应的来源不应求目标') } } }
+    expect(applyEnvironment(mix(inactive, b), { tint: { lightness: 0.1 } }).base.lightness).toBeCloseTo(0.45)
+  })
+
+  it('混合材料的目标函数在环境求值时读取当前混合色值', () => {
+    const a: ColorMaterial = { ...material(30), environmentSensitivities: { lightness: 1 },
+      environmentTargets: { lightness: (base, environment) => 1 - environment.tint!.lightness! * base.lightness } }
+    const mixed = mix(a, a)
+    const environment = { tint: { lightness: 0.2 } }
+    const changed = applyEnvironment(mixed, environment)
+    expect(changed.base.lightness).toBeCloseTo(0.88)
+    expect(applyEnvironment(changed, environment).base.lightness).toBeCloseTo(0.824)
+  })
+
   it('透明颜色的明度彩度按预乘 Alpha 混合，色相仍按原权重', () => {
     const a = { ...material(30, 0.4, 0.2), alpha: 0 }
     const b = material(90, 0.8, 0.1)

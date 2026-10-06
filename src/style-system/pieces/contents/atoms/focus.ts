@@ -1,10 +1,23 @@
-/** 焦点轮廓的尺寸、配色与状态由焦点 Atom 自身定义。 */
+/** 焦点轮廓的样式变量。
+ *
+ * 定义焦点尺寸、间距，以及当前作用域的语气边缘配色。
+ *
+ * 状态展开后仍保留颜色变量引用，使局部配色继续生效。
+ */
 import { variable } from '../../../variable'
-import { accentColor, toneColor } from './color/tone'
+import { highlightColor, toneColor } from './color/colors'
+import { value } from '../../../value'
 import { valueSequence } from '../atom-creators/list'
 import { focusStrokeWidth, focusGapSize } from './space'
 
-const currentToneLineColor = `var(${toneColor('line').toCSSString()}, var(${accentColor('line').toCSSString()}, var(--color-accent-focus)))`
+const toneLine = toneColor('line')
+const highlightLine = highlightColor('line')
+const currentToneLineColor = value([toneLine, highlightLine], {
+  toCSSString: (_, resolve) => {
+    const fallback = resolve(highlightLine)
+    return `var(${toneLine.toCSSString()}, var(${highlightLine.toCSSString()}, ${fallback}))`
+  },
+})
 
 export const focusOutline = variable('none', {
   name: 'focus-outline',

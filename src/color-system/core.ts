@@ -1,4 +1,9 @@
-/** 颜色材料与环境的数值表达；颜色处理工具位于 tools。 */
+/** 颜色材料与环境的数值协议。
+ *
+ * 合成本次环境，并按材料自己的感知与适应目标求颜色。
+ *
+ * 材料保存颜色规则，环境只参与本次计算，不写入材料历史。
+ */
 import { mix } from './tools/mix'
 
 export interface OKLCH {
@@ -17,12 +22,18 @@ export interface ColorMaterial {
   /** 各通道受环境影响的程度；省略的通道不响应。 */
   environmentSensitivities?: ColorEnvironmentSensitive
 
+  /** 材料自己的环境明度目标；省略则向环境明度靠近，环境未提供明度时不求值。 */
+  environmentTargets?: { lightness?: EnvironmentLightnessTarget }
+
   /** 承载内容的表面，或表面上的文字、图标等内容。 */
   purpose: 'surface' | 'content'
 }
 
 /** 固定比例，或根据材料自身色值与合成环境计算比例；结果须在 0～1。 */
 export type EnvironmentSensitivity = number | ((base: Readonly<OKLCH>, environment: Readonly<ColorEnvironment>) => number)
+
+/** 固定明度目标，或根据材料当前色值与本次环境求目标；结果须为有限数值。 */
+export type EnvironmentLightnessTarget = number | ((base: OKLCH, environment: ColorEnvironment) => number)
 
 /** 材料的环境感知规则；每个通道都可读取自身全部 OKLCH 信息。 */
 export interface ColorEnvironmentSensitive {
@@ -93,7 +104,8 @@ function combineEnvironment(inputs: readonly EnvironmentInput[]): ColorEnvironme
  * 将本次传入的环境应用到颜色，返回可继续处理的颜色材料。
  *
  * 多环境只在本次应用时按权重合成；感知函数读取本次输入的 base 与合成环境。
- * 当前环境公式向 tint 靠近，influence 缺省为 1；缺省感知或 tint 的通道不改变。
+ * 明度可向材料配置的目标靠近，其余通道向 tint 靠近；influence 缺省为 1。
+ * 缺省感知或 tint 的通道不改变，不求值该通道的材料目标。
  * 结果明度限制在 0～1，色度不低于 0，不舍入。
  *
  * 不修改输入，不保存环境历史；再次应用从返回材料的新 base 开始。
@@ -108,9 +120,13 @@ export function applyEnvironment<T extends ColorMaterial>(material: T, ...enviro
   const combined = combineEnvironment(environments)
   const result = { ...base }
   for (const channel of ['lightness', 'chroma', 'hue'] as const) {
-    const target = combined.tint?.[channel]
-    if (target === undefined) continue
+    const environmentTarget = combined.tint?.[channel]
+    if (environmentTarget === undefined) continue
     const response = evaluateSensitivity(environmentSensitivities?.[channel], base, combined)
+    if (response === 0) continue
+    const target = channel === 'lightness'
+      ? evaluateLightnessTarget(material.environmentTargets?.lightness, base, combined) ?? environmentTarget
+      : environmentTarget
     let difference = target - base[channel]
     if (channel === 'hue') difference = ((difference % 360 + 540) % 360) - 180
     result[channel] += difference * (combined.influence?.[channel] ?? 1) * response
@@ -133,4 +149,13 @@ export function evaluateSensitivity(rule: EnvironmentSensitivity | undefined, ba
     throw new RangeError('环境感知比例必须是 0～1 之间的有限数值')
   }
   return response
+}
+
+/** 读取本次环境明度与材料目标；缺环境明度时不调用规则，无效目标报错。 */
+export function evaluateLightnessTarget(rule: EnvironmentLightnessTarget | undefined,
+  base: OKLCH, environment: ColorEnvironment): number | undefined {
+  if (environment.tint?.lightness === undefined) return undefined
+  const target = typeof rule === 'function' ? rule(base, environment) : rule ?? environment.tint.lightness
+  if (!Number.isFinite(target)) throw new RangeError('材料环境明度目标必须是有限数值')
+  return target
 }

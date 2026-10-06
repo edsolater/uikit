@@ -14,10 +14,14 @@ import {
 import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
 import { $cursor } from '../../../style-system/pieces/keys/interaction'
 import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
-import { foregroundColorInteractive } from '../../../style-system/pieces/contents/atoms/color/text'
-import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
-import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
-import { surfaceColorInteractive } from '../../../style-system/pieces/contents/atoms/color/surface'
+import {
+  foregroundColorInteractive,
+  interactiveColor,
+  highlightColor,
+  badColor,
+  toneColor,
+  surfaceColorInteractive,
+} from '../../../style-system/pieces/contents/atoms/color/colors'
 import { pill } from '../../../style-system/pieces/contents/atoms/radius'
 import {
   spaceSmall,
@@ -70,7 +74,7 @@ export const buttonSurfaceStrength = variable(0.18, {
 
 // 定义button的样式架构
 rules(button, [
-  [toneColor, actionColor],
+  [toneColor, interactiveColor],
   buttonSurfaceStrength.declare(),
   surfaceColor.declare(colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
   foregroundColor.declare(foregroundColorInteractive),
@@ -93,8 +97,8 @@ rules(button, [
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
 rules([...button, '&[data-tone]'], [foregroundColor.declare(toneColor('strong'))])
-rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
-rules([...button, '&[data-tone="danger"]'], [[toneColor, dangerColor]])
+rules([...button, '&[data-tone="accent"]'], [[toneColor, highlightColor]])
+rules([...button, '&[data-tone="danger"]'], [[toneColor, badColor]])
 
 // =============================================================================
 // variant 动作声量

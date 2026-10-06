@@ -10,7 +10,7 @@ import { multiply } from '../pieces/contents/functions/calc'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { createJSSContent } from '../content'
 import { focusOutline } from '../pieces/contents/atoms/focus'
-import { accentColor, toneColor } from '../pieces/contents/atoms/color/tone'
+import { highlightColor, toneColor } from '../pieces/contents/atoms/color/colors'
 import type { Rules } from '../rule'
 
 stateCondition('chainHover', condition('&:where([data-hover])'))
@@ -24,7 +24,7 @@ afterEach(() => document.body.replaceChildren())
 test('焦点轮廓依次读取局部语气色、局部强调色和基础色', async () => {
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.AccentFocus')], 'outline', focusOutline],
-    [[condition('.AccentFocus')], accentColor('line'), 'rgb(12, 34, 56)'],
+    [[condition('.AccentFocus')], highlightColor('line'), 'rgb(12, 34, 56)'],
     [[condition('.ToneFocus')], 'outline', focusOutline],
     [[condition('.ToneFocus')], toneColor('line'), 'rgb(56, 78, 90)'],
   ])
@@ -119,14 +119,14 @@ test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 de
       { name: 'browser-tone-color-line' },
     ),
   })
-  const accentColor = variableCluster({
+  const highlightColor = variableCluster({
     default: variable('red', { name: 'browser-accent-color' }),
     soft: variable('pink', { name: 'browser-accent-color-soft' }),
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([
     [[condition('.LazyVariableButton')], 'background', toneColor('line')],
-    [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColor, accentColor],
+    [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColor, highlightColor],
   ])
 
   const ordinary = document.body.appendChild(document.createElement('div'))

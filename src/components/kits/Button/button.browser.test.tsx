@@ -15,10 +15,8 @@ import { contentLayout } from '../../../style-system/pieces/mixins/content'
 import { subtle } from '../../../style-system/pieces/contents/atoms/radius'
 import { spaceSmall } from '../../../style-system/pieces/contents/atoms/space'
 import './Button.style'
-import { actionColor } from '../../../style-system/pieces/contents/atoms/color/action'
 import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
-import { textColor } from '../../../style-system/pieces/contents/atoms/color/text'
-import { accentColor, dangerColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/tone'
+import { interactiveColor, badColor, toneColor } from '../../../style-system/pieces/contents/atoms/color/colors'
 import { shadowFlat, shadowLow, shadowRaised, shadowElevated } from '../../../style-system/pieces/contents/atoms/shadow'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
@@ -380,60 +378,51 @@ describe('Button styles', () => {
     }
   })
 
-  test('材料与基础 token 等价，挂载前后非 Button 消费者及品牌覆盖不变', () => {
-    const materials = [
-      [actionColor, '--color-action'],
-      [actionColor('foreground'), '--color-action-fg'], [actionColor('line'), '--color-action-line'],
-      [textColor, '--color-fg'], [textColor('strong'), '--color-fg-strong'],
-      [accentColor, '--color-accent'], [accentColor('soft'), '--color-accent-soft'], [accentColor('strong'), '--color-accent-strong'],
-      [accentColor('foreground'), '--color-accent-fg'], [accentColor('line'), '--color-accent-focus'],
-      [dangerColor, '--color-bad'], [dangerColor('soft'), '--color-bad-soft'], [dangerColor('foreground'), '--color-bad-fg'], [dangerColor('line'), '--color-bad-line'],
-    ] as [typeof actionColor, string][]
-    const shadows = [[shadowFlat, '--shadow-0'], [shadowLow, '--shadow-1'], [shadowRaised, '--shadow-2'], [shadowElevated, '--shadow-3']] as [typeof shadowFlat, string][]
-    const probes = [...materials.map(([material, token]) => ({ material, token, property: 'color' })),
-      ...shadows.map(([material, token]) => ({ material, token, property: 'box-shadow' }))]
-    const elements = probes.map((probe, index) => {
+  test('挂载 Button 样式保留其他组件的静态样式和阴影契约', () => {
+    const shadows: [typeof shadowFlat, string][] = [[shadowFlat, '--shadow-0'], [shadowLow, '--shadow-1'], [shadowRaised, '--shadow-2'], [shadowElevated, '--shadow-3']]
+    const probes = shadows.map(([material, token], index) => {
       const reference = document.body.appendChild(document.createElement('div'))
-      reference.style.setProperty(probe.property, `var(${probe.token})`)
+      reference.style.boxShadow = `var(${token})`
       const actual = document.body.appendChild(document.createElement('div'))
-      actual.className = `material-${index}`
-      handles.push(rule(`.material-${index}`, probe.property, probe.material))
-      return { ...probe, reference, actual }
+      actual.className = `shadow-probe-${index}`
+      handles.push(rule(`.shadow-probe-${index}`, 'box-shadow', material))
+      return { reference, actual }
     })
     const input = document.body.appendChild(document.createElement('input'))
     input.className = 'Input'
     const popover = document.body.appendChild(document.createElement('div'))
     popover.className = 'Popover'
-    const nonButton = [...elements.map(entry => entry.reference), input, popover]
-    // 根变量、Input/Popover 边框和 Dashboard 所用品牌材料都不得被 Button 登记覆盖。
+    const nonButton = [...probes.map(probe => probe.reference), input, popover]
+    const style = mountButtonStyles()
     for (const theme of ['light', 'dark']) {
       document.documentElement.dataset.theme = theme
-      for (const brand of ['', 'oklch(60% 0.15 140)']) {
-        document.documentElement.style.setProperty('--base-brand', brand)
-        const existing = document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)
-        if (existing) existing.sheet!.disabled = true
-        const before = nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))
-        const style = existing ?? mountButtonStyles()
-        style.sheet!.disabled = false
-        expect(nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))).toEqual(before)
-        for (const entry of elements) {
-          expect(getComputedStyle(entry.actual).getPropertyValue(entry.property)).toBe(getComputedStyle(entry.reference).getPropertyValue(entry.property))
-        }
-        const host = document.body.appendChild(document.createElement('div'))
-        const unmount = render(() => <button class="Button" data-variant="solid">品牌</button>, host)
-        const button = host.querySelector<HTMLButtonElement>('button')!
-        button.style.transition = 'none'
-        const color = getComputedStyle(button).backgroundColor
-        if (theme === 'light' && brand) expectSameColor(color, 'oklch(0.6 0.15 140)')
-        if (theme === 'dark') expectSameColor(color, 'oklch(0.7 0.18 260)')
-        unmount()
-        host.remove()
-      }
+      style.sheet!.disabled = true
+      const before = nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))
+      style.sheet!.disabled = false
+      expect(nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))).toEqual(before)
+      for (const { actual, reference } of probes) expect(getComputedStyle(actual).boxShadow).toBe(getComputedStyle(reference).boxShadow)
     }
-    const css = Array.from(document.head.querySelector<HTMLStyleElement>(buttonStyleSelector)!.sheet!.cssRules).map(rule => rule.cssText).join('\n')
-    expect(css).not.toMatch(/--(?:color-(?:brand|accent|action|bad|foreground)|dye-neutral-\d|shadow-[0-3])\s*:/)
   })
 
+  test('Button 消费 JS 品牌材料，局部品牌覆盖改变主体并保留相邻组件', () => {
+    const style = mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <>
+      <button class="Button" data-variant="solid" data-testid="local-brand">品牌</button>
+      <button class="Button" data-variant="solid" data-testid="neighbor-brand">邻居</button>
+    </>, host)
+    const button = host.querySelector<HTMLButtonElement>('[data-testid="local-brand"]')!
+    const neighbor = host.querySelector<HTMLButtonElement>('[data-testid="neighbor-brand"]')!
+    button.style.transition = 'none'
+    neighbor.style.transition = 'none'
+    const before = getComputedStyle(neighbor).backgroundColor
+    const originalCSS = style.textContent
+    button.style.setProperty('--brand-color', 'oklch(60% 0.15 140)')
+    expect(getComputedStyle(button).backgroundColor).not.toBe(before)
+    expect(getComputedStyle(neighbor).backgroundColor).toBe(before)
+    expect(style.textContent).toBe(originalCSS)
+    expect(style.textContent).not.toMatch(/var\(--(?:color-|dye-|base-)/)
+  })
   test('四尺寸、方圆角、内容与拉伸容器保持旧布局，后置 layer 可覆盖', () => {
     const style = mountButtonStyles()
     const sizes: ButtonProps['size'][] = ['small', undefined, 'large', 'xlarge']
@@ -527,10 +516,13 @@ describe('Button styles', () => {
     const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
     const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
     const reference = document.body.appendChild(document.createElement('div'))
-    reference.style.color = 'var(--color-action-line)'
-    const accentColor = getComputedStyle(reference).color
-    reference.style.color = 'var(--color-bad-line)'
-    const dangerColor = getComputedStyle(reference).color
+    handles.push(rule('.focus-reference-interactive', 'color', interactiveColor('line')))
+    handles.push(rule('.focus-reference-bad', 'color', badColor('line')))
+    cssRoot.mount()
+    reference.className = 'focus-reference-interactive'
+    const interactiveLine = getComputedStyle(reference).color
+    reference.className = 'focus-reference-bad'
+    const badLine = getComputedStyle(reference).color
 
     await userEvent.tab()
     expect(document.activeElement).toBe(defaultButton)
@@ -539,7 +531,7 @@ describe('Button styles', () => {
     expect(defaultStyle.outlineWidth).toBe('2px')
     expect(defaultStyle.outlineStyle).toBe('solid')
     expect(defaultStyle.outlineOffset).toBe('2px')
-    expect(defaultStyle.outlineColor).toBe(accentColor)
+    expect(defaultStyle.outlineColor).toBe(interactiveLine)
 
     await userEvent.tab()
     expect(document.activeElement).toBe(dangerButton)
@@ -548,7 +540,7 @@ describe('Button styles', () => {
     expect(dangerStyle.outlineWidth).toBe('2px')
     expect(dangerStyle.outlineStyle).toBe('solid')
     expect(dangerStyle.outlineOffset).toBe('2px')
-    expect(dangerStyle.outlineColor).toBe(dangerColor)
+    expect(dangerStyle.outlineColor).toBe(badLine)
   })
 
   test('模块导入只登记，应用在首次渲染前统一挂载全部样式', async () => {
@@ -690,9 +682,9 @@ describe('Button styles', () => {
     await userEvent.hover(disabledButton)
     expect(getComputedStyle(disabledButton).backgroundColor).toBe(disabledBackground)
 
-    const lightBackground = getComputedStyle(getButton('default')).backgroundColor
-    document.documentElement.dataset.theme = 'dark'
-    expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(lightBackground)
+    const originalBackground = getComputedStyle(getButton('default')).backgroundColor
+    getButton('default').style.setProperty('--paper-color', 'oklch(0.2 0.003 260)')
+    expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(originalBackground)
     const beforeMount = Array.from(style.sheet!.cssRules)
     cssRoot.mount()
     const afterMount = Array.from(style.sheet!.cssRules)

@@ -15,7 +15,7 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 
 公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询快捷名称表。Variable 创建时展开 `states` 中匹配到的快捷名称，其他输入直接作为条件，保存条件到内容的映射；自动展开直接消费这些条件，复用完整 `ConditionPath` 与既有节点编译链。快捷条件保留中央顺序，直接条件随后按书写顺序排列。资源 Rule 继续传递内部路径身份，不承担快捷名称解释。
 
-`functions/` 提供 CSS 函数内容，如混色、计算与 `oklch(base, channels, deltas)`。[ColorVariable](color-variable.ts) 与 [Variable](variable.ts) 是同级领域概念；前者沿用后者的消费协议，拥有基础色、四个绝对通道和四个独立增量。`declare(source)` 只声明基础色；set 与 delta 分别赋值对应字段；未设置时在 CSS 相对 OKLCH 上下文使用原始通道与零增量，不预先声明通道。主色在每个消费或设置地址按需重新聚合，避免继承父元素已计算完的主色。`surfaceColor` 与 `foregroundColor` 直接使用该能力，Button 无额外颜色转接 Variable。
+`functions/` 提供 CSS 函数内容，如混色、计算，以及将具名通道对象包装为普通颜色内容的 `oklch({ lightness, chroma, hue, alpha })`。内部 `composeRelativeOKLCH(source, { channels, adjustments })` 构造相对颜色，分别接收通道覆盖与独立增量。[颜色入口](pieces/contents/atoms/color/colors.ts) 中的 `toJSSColor(color, name)` 将 Color System 颜色创建为 Variable；`applyColorChange(source, { original, target })` 独立比较两份颜色，将差值应用到来源当前的 CSS 颜色。[ColorVariable](color-variable.ts) 与 [Variable](variable.ts) 是同级领域概念；前者沿用后者的消费协议，拥有基础色、四个绝对通道和四个独立增量。`declare(source)` 只声明基础色；set 与 delta 分别赋值对应字段；未设置时在 CSS 相对 OKLCH 上下文使用原始通道与零增量，不预先声明通道。主色在每个消费或设置地址按需重新聚合，避免继承父元素已计算完的主色。`surfaceColor` 与 `foregroundColor` 直接使用该能力，Button 无额外颜色转接 Variable。
 
 `rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译验证并展开源 Rules；给 `onActive` 的 root 另复制规则容器（Rules、tuple、路径及嵌套 Rules），保留业务对象身份。Atom、Function 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`onCompile` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules。`onCompile(context, ast)` 是返回 void 的编译通知，编译器不读取返回值；回调通过 Controller 查询、插入、移动或删除节点，通过 `setContent(context, content)` 改写当前被通知的内容位置。嵌套内容各自处理，不覆盖外层声明。已经成功通知的对象跨波等待时不会重调。编译器沿设定内容与 `dependencies` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始编译。Key、Content 或 revision 改变时，由同一失效规则分别在访问前和波末重置对应角色进度。
 
@@ -81,7 +81,7 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 
 Style System 是抽象层，包含可复用碎片和面向组件的通用定义。是否通用取决于描述目标与领域，不取决于当前消费者数量。
 
-`Button.style.ts` 拥有 Button 的选择器、variant、tone、size、status 与组件差异。语义配色由 `accentColor`、`dangerColor`、`toneColor` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
+`Button.style.ts` 拥有 Button 的选择器、variant、tone、size、status 与组件差异。语义配色由 `interactiveColor`、`highlightColor`、`badColor`、`toneColor` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
 
 [Button.style.ts](../components/kits/Button/Button.style.ts) 同时定义公开的色源、画布、背景强度控制点与业务规则。控制点以 export 定义，组件入口导出同一 Variable 对象，样式直接消费。色源与画布支持局部 declare，强度支持 declare／modify。底层工具提供通用操作语义，业务规则决定分类如何选择材料与加入贡献；专属 opacity 已退出，禁用淡化复用 clickable 默认策略。当前控制仍通过 Rules 登记与应用挂载执行，未实现运行时变值自动插入 CSS。
 

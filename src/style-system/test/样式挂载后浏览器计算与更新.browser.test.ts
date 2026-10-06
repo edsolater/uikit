@@ -19,7 +19,7 @@ import { cssFunction } from '../pieces/contents/functions/custom'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
 import { durationFast } from '../pieces/contents/atoms/motion'
-import { lineColor } from '../pieces/contents/atoms/color/edge'
+import { lineColor } from '../pieces/contents/atoms/color/colors'
 
 stateCondition('testLarge', condition('&[data-large]'))
 stateCondition('testMedia', media('(width > 1px)'))
@@ -343,9 +343,10 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
   }
 })
 
-test('动效与分隔线在根上求值，局部依赖覆盖不改变已有根值', async () => {
+test('动效保留根求值，分隔线按本地文字变量实时派生', async () => {
   const session = await cdp() as CDPSession
-  document.documentElement.style.setProperty('--color-fg', 'blue')
+  document.documentElement.style.setProperty('--foreground-color', 'blue')
+  element.style.transitionProperty = 'opacity'
   handles.push(rule('.example', 'transition-duration', durationFast))
   handles.push(rule('.example', 'border-color', lineColor))
   try {
@@ -357,16 +358,16 @@ test('动效与分隔线在根上求值，局部依赖覆盖不改变已有根�
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
     element.style.setProperty('--motion-scale-ratio', '2')
-    element.style.setProperty('--text-color', 'red')
+    element.style.setProperty('--foreground-color', 'red')
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
-    expect(getComputedStyle(element).borderTopColor).toBe(originalLine)
+    expect(getComputedStyle(element).borderTopColor).not.toBe(originalLine)
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
     })
     expect(getComputedStyle(element).transitionDuration).toBe('0s')
     expect(style.textContent).toBe(committed)
   } finally {
-    document.documentElement.style.removeProperty('--color-fg')
+    document.documentElement.style.removeProperty('--foreground-color')
     await session.send('Emulation.setEmulatedMedia', { features: [] })
   }
 })

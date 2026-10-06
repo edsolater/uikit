@@ -1,6 +1,11 @@
-/** 在 OKLCH 中混合颜色材料，保留来源与环境响应参数。 */
+/** OKLCH 颜色材料混合。
+ *
+ * 合成色值、来源权重、环境感知与材料明度目标。
+ *
+ * 混合后仍是一份可继续处理、按本次环境求值的材料。
+ */
 
-import { evaluateSensitivity, type ColorEnvironmentSensitive, type ColorMaterial } from '../core'
+import { evaluateLightnessTarget, evaluateSensitivity, type ColorEnvironmentSensitive, type ColorMaterial } from '../core'
 
 /** 色相沿色环的混合方向；默认最短路径。 */
 export type HueInterpolation = 'shorter' | 'longer' | 'increasing' | 'decreasing'
@@ -50,6 +55,7 @@ function wrapHue(hue: number): number {
  * Alpha 单独加权，明度、彩度按 Alpha 预乘后混合；Alpha 为 1 时省略。
  * 环境感知规则按权重合成；函数保留到环境求值时，读取混合材料自身 base。
  * 省略的感知通道按 0 参与；这属于材料规则，不是 CSS 色值规则。
+ * 来源有明度目标时按权重与感知比例合成，保持来源响应的加权效果。
  * 不舍入、不压缩色域，不改变输入；至少传入一种颜色。
  *
  * @example
@@ -115,10 +121,26 @@ export function mix(...args: ColorMaterial[] | [MixOptions]): MixedColorMaterial
         sum + evaluateSensitivity(material.environmentSensitivities?.[channel], material.base, {}) * weight, 0)
     }
   }
+  const environmentTargets: ColorMaterial['environmentTargets'] = sources.some(source => source.material.environmentTargets?.lightness !== undefined)
+    ? { lightness: (base, environment) => {
+      let totalResponse = 0
+      let weightedTarget = 0
+      for (const { material, weight } of sources) {
+        const response = evaluateSensitivity(material.environmentSensitivities?.lightness, base, environment) * weight
+        if (response === 0) continue
+        const target = evaluateLightnessTarget(material.environmentTargets?.lightness, base, environment)
+        if (target === undefined) continue
+        totalResponse += response
+        weightedTarget += target * response
+      }
+      return totalResponse > 0 ? weightedTarget / totalResponse : environment.tint?.lightness ?? base.lightness
+    } }
+    : undefined
   return {
     base: { lightness: mixedAlpha > 0 ? lightness / mixedAlpha : lightness, chroma: mixedAlpha > 0 ? chroma / mixedAlpha : chroma, hue: angle ?? 0 },
     ...(mixedAlpha === 1 ? {} : { alpha: mixedAlpha }),
     environmentSensitivities,
+    ...(environmentTargets ? { environmentTargets } : {}),
     purpose,
     sources,
   }
