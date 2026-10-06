@@ -5,7 +5,6 @@
 这些用途共享一份默认值与状态配置，具体输出由样式中的使用位置决定。
 */
 import { condition, type ConditionPath } from './condition'
-import type { Declaration } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
 import { createJSSContent, type JSSCompileContext, type JSSContent } from './content'
@@ -13,7 +12,8 @@ import type { ASTController } from './compiler/ast-controller'
 import { value, type ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
 import { result } from '@edsolater/fnkit'
-import { declareVariable, findLocalBaseKey, modifyVariable } from './variable-modification'
+import { consumeVariable, findLocalBaseKey } from './variable-modification'
+import type { Expression } from './content'
 import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
 
 /** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
@@ -34,32 +34,6 @@ export interface Variable extends JSSContent {
     /** 自动状态声明的目标 Key，始终指向当前 Variable 名称。 */
     definitionKey: JSSKeyObject
   }
-  /**
-   * 在当前样式位置声明基础值，供此处及下级条件中的 modify 修改。
-   * 返回的声明在编译消费时生效。
-   * 省略 content 使用创建默认值；显式传入 undefined 则不提供基础内容。
-   * @example 已配置修改能力的 amount：
-   * `rules('.Button', [amount.declare(10)])`
-   * `rules(['.Button', '&:hover'], [amount.modify(2)])`
-   */
-  declare(content?: ValueInput): Declaration
-  /**
-   * 在最近的局部声明上叠加一次修改，所在样式条件由 CSS 决定是否生效。
-   * 只查找同一 Variable 对象的声明。
-   * 返回的声明在编译消费时由 modification.apply 将 change 转为 CSS。
-   * 缺少局部声明或修改能力会报错。
-   */
-  modify(
-    change: unknown,
-    options?: {
-      /**
-       * 省略时每次调用形成独立步骤；同一局部声明内相同 ID 共用一步。
-       * 共用步骤的条件赋值由 CSS 层叠选择；不同局部声明互不影响。
-       * ID 不决定步骤顺序。
-       */
-      id?: string | symbol
-    },
-  ): Declaration
   /** 返回 CSS 自定义属性名（如 --amount），供声明目标使用。 */
   toCSSString(): string
   /** 此对象最早可被编译的波次；配置含义见 VariableOptions.compileWaveIndex。 */
@@ -108,10 +82,10 @@ export interface VariableOptions<
     /**
      * 编译时根据前序引用与 change 生成内容表达式，再交给普通内容编译。
      * 浏览器条件变化不会重调此函数。
-     * @param currentValue 前序结果的 CSS 引用，不是浏览器计算值。
-     * @param change modify 传入的原样数据；框架不校验其形状。
+     * @param currentExpression 前序结果的延迟 CSS 表达式，不是浏览器计算值。
+     * @param modification modify 传入的完整规则或原样数据，由本配置解释。
      */
-    apply(currentValue: ValueInput, change: Change): ValueInput
+    apply(currentExpression: Expression, modification: Change): Expression
   }
 }
 /**
@@ -146,12 +120,6 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
     },
     compileWaveIndex: config.compileWaveIndex,
     onActive: config.onActive,
-    declare(...contents) {
-      return declareVariable(self, contents.length ? contents[0] : self.config.defaultValue, activateVariableResources)
-    },
-    modify(change, options) {
-      return modifyVariable(self, change, options?.id)
-    },
     toCSSString() {
       return `--${self.name}`
     },
@@ -166,6 +134,7 @@ export function variable<DefaultValue extends VariableDefaultValue, Change = Val
       }
 
       activateVariableResources(self, context, astController)
+      consumeVariable(context, astController, self)
       const fallbackValue = readVariableContent(self)
       declareVariableStates(context, astController, self, fallbackValue)
       astController.setContent(context, createVariableReference(self, fallbackValue))

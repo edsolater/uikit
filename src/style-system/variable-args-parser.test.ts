@@ -9,7 +9,7 @@ import { parseVariableArgs } from './variable-args-parser'
 
 test('两处简写独立展开，完整配置保留其他字段', () => {
   const onActive = vi.fn()
-  const modification = { apply: (current: import('./value').ValueInput) => current }
+  const modification = { apply: (current: import('./content').Expression) => current }
   const options = { name: 'amount', onActive, modification, compileWaveIndex: 2 }
   expect(parseVariableArgs(1, 'amount')).toEqual({ defaultValue: 1, name: 'amount' })
   expect(parseVariableArgs(1, options)).toEqual({ ...options, defaultValue: 1 })

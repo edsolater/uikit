@@ -1,4 +1,6 @@
 /** 保留旧样式 DOM 协议的视觉反例；新 Button API 的 DOM 描述单独验证，样式尚未迁移。 */
+import { declare } from '../../../style-system/declaration'
+import { modify } from '../../../style-system/variable-modification'
 import { variable } from '../../../style-system/variable'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
@@ -139,19 +141,19 @@ describe('Button styles', () => {
     expectSameAppearance(appearance(second), initial)
     expectSameAppearance(appearance(untouched), initial)
     const path = ['@layer uikit', '.Button', '&[data-control="first"]']
-    const source = rules(path, buttonSurfaceSource.declare('oklch(0.6 0.2 30)'))
+    const source = rules(path, declare(buttonSurfaceSource, 'oklch(0.6 0.2 30)'))
     handles.push(source)
     cssRoot.mount()
     const sourceOnly = appearance(first)
     expect(sourceOnly['background-color']).not.toBe(initial['background-color'])
-    const canvas = rules(path, buttonSurfaceCanvas.declare('oklch(0.9 0.02 120)'))
+    const canvas = rules(path, declare(buttonSurfaceCanvas, 'oklch(0.9 0.02 120)'))
     handles.push(canvas)
     cssRoot.mount()
     const selected = appearance(first)
     expect(selected['background-color']).not.toBe(sourceOnly['background-color'])
     expect(selected['background-color']).not.toBe(initial['background-color'])
     expectSameAppearance(appearance(second), initial)
-    const adjustment = rules(path, buttonSurfaceStrength.modify(0.2))
+    const adjustment = rules(path, modify(buttonSurfaceStrength, 0.2))
     handles.push(adjustment)
     cssRoot.mount()
     const adjusted = appearance(first)
@@ -164,11 +166,11 @@ describe('Button styles', () => {
     await userEvent.unhover(first)
     expectSameAppearance(appearance(first), adjusted)
     const otherPath = ['@layer uikit', '.Button', '&[data-control="second"]']
-    const other = rules(otherPath, [buttonSurfaceSource.declare('oklch(0.6 0.2 260)'), buttonSurfaceCanvas.declare('white')])
+    const other = rules(otherPath, [declare(buttonSurfaceSource, 'oklch(0.6 0.2 260)'), declare(buttonSurfaceCanvas, 'white')])
     handles.push(other)
     cssRoot.mount()
     const otherMaterials = appearance(second)
-    const otherStrength = rules(otherPath, buttonSurfaceStrength.declare(0.6))
+    const otherStrength = rules(otherPath, declare(buttonSurfaceStrength, 0.6))
     handles.push(otherStrength)
     cssRoot.mount()
     expect(chroma(appearance(second)['background-color'])).toBeGreaterThan(chroma(otherMaterials['background-color']))
@@ -246,7 +248,7 @@ describe('Button styles', () => {
   test.each([undefined, 'bare', 'solid'] as const)('统一禁用降低整体声量并保留局部角色和恢复：%s', async (variant) => {
     const surface = 'rgb(12, 34, 56)'
     const foreground = 'rgb(78, 90, 123)'
-    handles.push(rules('.Button[data-local-role]', [surfaceColor.declare(surface), foregroundColor.declare(foreground)]))
+    handles.push(rules('.Button[data-local-role]', [declare(surfaceColor, surface), declare(foregroundColor, foreground)]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <button class="Button" data-variant={variant} data-tone="danger" data-local-role>局部禁用</button>, host)
@@ -276,7 +278,7 @@ describe('Button styles', () => {
 
   test('solid 常态背景保留组件 surfaceColor 的局部覆盖', () => {
     handles.push(rules('.Button[data-variant="solid"][data-surface-probe]', [
-      surfaceColor.declare('rgb(12, 34, 56)'),
+      declare(surfaceColor, 'rgb(12, 34, 56)'),
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))

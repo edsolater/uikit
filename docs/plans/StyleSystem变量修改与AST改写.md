@@ -1,5 +1,7 @@
 # Variable 局部定义与修改的 AST 实现 Plan
 
+历史方案：本文保留当时的设计与验收记录；完整修改规则和函数 declare／modify 的现役契约见 [变量定义与消费](../../src/style-system/doc/变量定义与消费.md)，旧方法与通道设施不作为当前接口。
+
 状态：按最新职责裁决完成实现，验证证据见 [实施详情](StyleSystem变量修改与AST改写_实施详情.md)。Variable 的稳定目的与能力以 [变量定义与消费](../../src/style-system/doc/变量定义与消费.md) 为准；本文只规定修改途径和实现边界。
 
 ## 从入口到 CSS

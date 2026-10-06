@@ -1,4 +1,11 @@
-/** 按钮的样式效果与生效条件。 */
+/** 按钮的样式效果与生效条件。
+
+组合颜色、尺寸和布局，声明组件控制变量及各分类贡献。
+
+组件自身的选择条件留在样式定义端，可复用效果交给 Style System。
+*/
+import { declare } from '../../../style-system/declaration'
+import { modify } from '../../../style-system/variable-modification'
 import {
   rules,
   add,
@@ -75,9 +82,9 @@ export const buttonSurfaceStrength = variable(0.18, {
 // 定义button的样式架构
 rules(button, [
   [toneColor, interactiveColor],
-  buttonSurfaceStrength.declare(),
-  surfaceColor.declare(colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
-  foregroundColor.declare(foregroundColorInteractive),
+  declare(buttonSurfaceStrength),
+  declare(surfaceColor, colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
+  declare(foregroundColor, foregroundColorInteractive),
 
   innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
   contentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
@@ -96,7 +103,7 @@ rules(button, [
 
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
-rules([...button, '&[data-tone]'], [foregroundColor.declare(toneColor('strong'))])
+rules([...button, '&[data-tone]'], [declare(foregroundColor, toneColor('strong'))])
 rules([...button, '&[data-tone="accent"]'], [[toneColor, highlightColor]])
 rules([...button, '&[data-tone="danger"]'], [[toneColor, badColor]])
 
@@ -111,7 +118,7 @@ const bareStrength = variable(-0.18, {
 })
 const bareButton = [...button, '&[data-variant="bare"]']
 rules(bareButton, [
-  buttonSurfaceStrength.modify(bareStrength),
+  modify(buttonSurfaceStrength, bareStrength),
   [buttonSurfaceCanvas, 'transparent'],
   elevation(shadowFlat),
 ])
@@ -127,9 +134,9 @@ const shadowSolid = variable(shadowRaised, {
 })
 const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
-  buttonSurfaceStrength.modify(solidStrength),
+  modify(buttonSurfaceStrength, solidStrength),
   [buttonSurfaceSource, toneColor],
-  foregroundColor.declare(toneColor('foreground')),
+  declare(foregroundColor, toneColor('foreground')),
   elevation(shadowSolid),
 ])
 

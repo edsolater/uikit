@@ -50,6 +50,9 @@ export interface JSSContent {
   toCSSString?: (resolve?: JSSContentResolver) => string | undefined
 }
 
+/** 修改回调操作并返回的延迟 CSS 内容表达式。 */
+export type Expression = JSSContent
+
 /** 连接依赖内容和输出方法，供业务构造工具及自定义内容使用。 */
 export function createJSSContent(
   toCSSString: (resolve: JSSContentResolver) => string | undefined,

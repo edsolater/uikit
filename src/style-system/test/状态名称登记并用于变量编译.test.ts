@@ -1,4 +1,6 @@
 /** State Condition 的名称与 Rule 地址。 */
+import { declare } from '../declaration'
+import { modify } from '../variable-modification'
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { variable } from '../variable'
@@ -114,8 +116,8 @@ test('普通引用、局部modify、Cluster继承与状态追加直接消费已�
     const path = appendStateCondition({ targetConditionPath: [condition('.Resolved')], stateConditionPath: [] }, hover)
     expect(appendStateCondition(path, hover).stateConditionPath).toEqual([hover])
     const css = compileRules([
-      [['.Resolved'], ...source.declare()],
-      [['.Resolved', '&[data-modified]'], ...source.modify(0.1)],
+      [['.Resolved'], ...declare(source)],
+      [['.Resolved', '&[data-modified]'], ...modify(source, 0.1)],
       [['.Resolved'], 'opacity', source],
       [['.ResolvedNext'], 'opacity', next],
     ])

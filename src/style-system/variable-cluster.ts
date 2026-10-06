@@ -1,4 +1,9 @@
-/** 将成员选择与默认 Variable 操作合并为一个入口。 */
+/** 已有 Variable 成员的选择与配对入口。
+
+代理默认成员，按名称选择成员并对同名成员声明。
+
+整组内容可复用现有 Variable 协议，不另建变量模型。
+*/
 import { assert, Unresultable } from '@edsolater/fnkit'
 import { variable, type Variable, type VariableOptions } from './variable'
 import type { JSSCompileContext } from './content'
@@ -9,6 +14,11 @@ import type { ValueInput } from './value'
 const membersByCluster: WeakMap<object, Record<string, Variable>> & {
   get(input: unknown): Record<string, Variable> | undefined
 } = new WeakMap<object, Record<string, Variable>>()
+
+/** 单值操作针对 Cluster 的默认成员；成员选择与整组配对仍由 Cluster 负责。 */
+export function resolveVariable(variable: Variable): Variable {
+  return membersByCluster.get(variable)?.default ?? variable
+}
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {

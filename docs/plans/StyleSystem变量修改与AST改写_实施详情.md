@@ -1,5 +1,7 @@
 # Variable 局部定义与修改实施详情
 
+历史方案：本文保留当时的设计与验收记录；完整修改规则和函数 declare／modify 的现役契约见 [变量定义与消费](../../src/style-system/doc/变量定义与消费.md)，旧方法与通道设施不作为当前接口。
+
 对应 [Plan](StyleSystem变量修改与AST改写.md)。稳定目的以 [Variable](../../src/style-system/doc/变量定义与消费.md) 为准。本文记录当前实施结构、修正原因和证据，不把实现步骤当作 Variable 的永久能力定义。
 
 ## 这次实际删掉了什么

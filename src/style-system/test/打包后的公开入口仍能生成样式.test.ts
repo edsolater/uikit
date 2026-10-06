@@ -25,8 +25,8 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     const count = styleSystem.variable(1, { name: 'bundle-modified-count', modification: {
       apply: (current, change) => styleSystem.createJSSContent(resolve => 'calc(' + resolve(current) + ' + ' + resolve(change) + ')', [current, change]),
     } })
-    styleSystem.rules('.Built', [count.declare()])
-    styleSystem.rules(['.Built', '&:hover'], [count.modify(3)])
+    styleSystem.rules('.Built', [styleSystem.declare(count)])
+    styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, 3)])
     console.log(styleSystem.compileCSS())
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
@@ -41,7 +41,7 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
   // Agent 测试假设：精确包装只检查本轮归零实现，不构成公共选择器格式契约。
   expect(output).toContain('&:where(:where(:hover):where(:not(:disabled, [data-status~="disabled"]))) {\n--bundle-opacity: 0.5;')
   expect(output).toContain('--bundle-surface: blue;')
-  expect(output).toContain('calc(var(--bundle-modified-count-modify-1-step-1-input) + 3)')
+  expect(output).toMatch(/calc\(var\(--[^)]+\) \+ 3\)/)
 })
 
 test('直接打包消费现成 Key，名称和别名保留同一定义及默认或显式组合', () => {

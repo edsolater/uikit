@@ -5,16 +5,16 @@
  * 颜色来源由 JS 持有，浏览器按输出的依赖关系响应局部覆盖。
  */
 import type { ColorMaterial } from '../../../../../color-system/core'
-import { alpha, chroma, lightness } from '../../../../../color-system/tools/channels'
 import { variable, type Variable } from '../../../../variable'
 import { variableCluster } from '../../../../variable-cluster'
-import { value, type ValueInput } from '../../../../value'
+import { type ValueInput } from '../../../../value'
 import { createJSSContent } from '../../../../content'
 import { oklch } from '../../functions/oklch'
-import { deriveColor } from '../../functions/compose-relative-oklch'
+import { colorModification, applyColorModification } from '../../functions/color-modification'
+import { add } from '../../functions/calc'
 import { colorMix } from '../../functions/color-mix'
 import { paper, ink, neutral } from './palette'
-import { brand, interactive, highlight } from './brand-color'
+import { brand, highlight } from './brand-color'
 import { good, bad, warn, info } from './info-color'
 
 /**
@@ -22,39 +22,20 @@ import { good, bad, warn, info } from './info-color'
  * @example
  * // 用纸色定义表面变量；样式可局部声明另一颜色。
  * const surface = toJSSColor(paper, 'example-surface')
- * surface.declare('white')
+ * declare(surface, 'white')
  */
 function toJSSColor(color: ColorMaterial, name: string): Variable {
   return variable(oklch({ ...color.base, alpha: color.alpha }), name)
 }
 
-/**
- * 将两份颜色的变化应用到来源当前的 CSS 颜色上，返回保留目标颜色的 Value。
- *
- * 明度、色度和色相使用 target 相对 original 的差值；透明度未变化时跟随来源，
- * 变化时使用 target.alpha，省略按完全不透明处理。
- * @example
- * // 悬停时从当前表面颜色降低明度，局部覆盖表面后仍从覆盖后的颜色派生。
- * applyColorChange(currentColorReference(surfaceColor), {
- *   original: paper,
- *   target: lightness(paper, (current) => current - 0.04),
- * })
- * // 从当前品牌色派生透明度为 0.14 的柔和底色，保留其三个颜色通道。
- * applyColorChange(currentColorReference(brandColor), {
- *   original: brand,
- *   target: alpha(brand, 0.14),
- * })
- */
-function applyColorChange(source: ValueInput, { original, target }: { original: ColorMaterial; target: ColorMaterial }) {
-  const expression = deriveColor(source, {
-    channels: { alpha: target.alpha === original.alpha ? undefined : (target.alpha ?? 1) },
-    adjustments: {
-      lightness: target.base.lightness - original.base.lightness,
-      chroma: target.base.chroma - original.base.chroma,
-      hue: target.base.hue - original.base.hue,
-    },
+/** 比较两份独立定义的颜色，生成可应用于任意来源的完整规则。 */
+function deriveColorChange({ original, target }: { original: ColorMaterial; target: ColorMaterial }) {
+  return colorModification({
+    lightness: currentExpression => add(currentExpression, target.base.lightness - original.base.lightness),
+    chroma: currentExpression => add(currentExpression, target.base.chroma - original.base.chroma),
+    hue: currentExpression => add(currentExpression, target.base.hue - original.base.hue),
+    alpha: target.alpha === original.alpha ? undefined : target.alpha ?? 1,
   })
-  return value(target, { dependencies: [expression], toCSSString: (_, resolve) => resolve(expression) })
 }
 
 export const paperColor = toJSSColor(paper, 'paper-color')
@@ -62,24 +43,15 @@ export const inkColor = toJSSColor(ink, 'ink-color')
 export const brandColor = toJSSColor(brand, 'brand-color')
 export const neutralColor = toJSSColor(neutral, 'neutral-color')
 
-/** 为已有基础 Variable 配置语气成员，派生始终读取其当前颜色。 */
-function colorMembers(
-  name: string,
-  material: ColorMaterial,
-  base: Variable,
-  lineAlpha: number,
-  strongMaterial: ColorMaterial = material,
-  foreground: ValueInput = currentColorReference(paperColor),
-) {
+/** 为已有基础 Variable 配置语气成员，独立规则始终应用到当前颜色。 */
+function colorMembers(name: string, base: Variable, lineAlpha: number,
+  strongChange?: ValueInput, foreground: ValueInput = currentColorReference(paperColor)) {
   const currentBase = currentColorReference(base)
   return variableCluster({
     default: base,
-    strong:
-      strongMaterial === material
-        ? base
-        : variable(applyColorChange(currentBase, { original: material, target: strongMaterial }), `${name}-color-strong`),
-    soft: variable(applyColorChange(currentBase, { original: material, target: alpha(material, 0.14) }), `${name}-color-soft`),
-    line: variable(applyColorChange(currentBase, { original: material, target: alpha(material, lineAlpha) }), `${name}-color-line`),
+    strong: strongChange === undefined ? base : variable(applyColorModification(currentBase, strongChange), `${name}-color-strong`),
+    soft: variable(applyColorModification(currentBase, colorModification({ alpha: 0.14 })), `${name}-color-soft`),
+    line: variable(applyColorModification(currentBase, colorModification({ alpha: lineAlpha })), `${name}-color-line`),
     foreground: variable(foreground, `${name}-color-foreground`),
   })
 }
@@ -114,40 +86,31 @@ const interactiveDefault = variable(currentBrandColor, {
   name: 'interactive-color',
   registration: { syntax: '*', inherits: true },
   states: {
-    hover: applyColorChange(currentBrandColor, {
-      original: interactive,
-      target: chroma(
-        lightness(interactive, (current) => current - 0.04),
-        (current) => current + 0.01,
-      ),
-    }),
-    active: applyColorChange(currentBrandColor, {
-      original: interactive,
-      target: chroma(
-        lightness(interactive, (current) => current - 0.08),
-        (current) => current - 0.01,
-      ),
-    }),
+    hover: applyColorModification(currentBrandColor, colorModification({
+      lightness: currentExpression => add(currentExpression, -0.04),
+      chroma: currentExpression => add(currentExpression, 0.01),
+    })),
+    active: applyColorModification(currentBrandColor, colorModification({
+      lightness: currentExpression => add(currentExpression, -0.08),
+      chroma: currentExpression => add(currentExpression, -0.01),
+    })),
   },
 })
-export const interactiveColor = colorMembers('interactive', interactive, interactiveDefault, 0.48)
-export const highlightColor = colorMembers(
-  'highlight',
-  highlight,
-  variable(applyColorChange(currentBrandColor, { original: brand, target: highlight }), 'highlight-color'),
-  0.42,
-  chroma(
-    lightness(highlight, (current) => current + 0.08),
-    (current) => current + 0.02,
-  ),
+export const interactiveColor = colorMembers('interactive', interactiveDefault, 0.48)
+export const highlightColor = colorMembers('highlight',
+  variable(applyColorModification(currentBrandColor, deriveColorChange({ original: brand, target: highlight })), 'highlight-color'),
+  0.42, colorModification({
+    lightness: currentExpression => add(currentExpression, 0.08),
+    chroma: currentExpression => add(currentExpression, 0.02),
+  }),
 )
 const goodDefault = toJSSColor(good, 'good-color')
 const warnDefault = toJSSColor(warn, 'warn-color')
 const infoDefault = toJSSColor(info, 'info-color')
-export const goodColor = colorMembers('good', good, goodDefault, 0.44, good, readableForeground(goodDefault))
-export const badColor = colorMembers('bad', bad, toJSSColor(bad, 'bad-color'), 0.44)
-export const warnColor = colorMembers('warn', warn, warnDefault, 0.44, warn, readableForeground(warnDefault))
-export const infoColor = colorMembers('info', info, infoDefault, 0.44, info, readableForeground(infoDefault))
+export const goodColor = colorMembers('good', goodDefault, 0.44, undefined, readableForeground(goodDefault))
+export const badColor = colorMembers('bad', toJSSColor(bad, 'bad-color'), 0.44)
+export const warnColor = colorMembers('warn', warnDefault, 0.44, undefined, readableForeground(warnDefault))
+export const infoColor = colorMembers('info', infoDefault, 0.44, undefined, readableForeground(infoDefault))
 
 export const canvasColor = variable(currentColorReference(paperColor), 'canvas-color')
 export const surfaceColor = variable(currentColorReference(paperColor), 'surface-color')
@@ -170,14 +133,12 @@ export const surfaceColorInteractive = variable(currentSurfaceColor, {
   name: 'surface-color-interactive',
   registration: { syntax: '*', inherits: true },
   states: {
-    hover: applyColorChange(currentSurfaceColor, {
-      original: paper,
-      target: lightness(paper, (current) => current - 0.04),
-    }),
-    active: applyColorChange(currentSurfaceColor, {
-      original: paper,
-      target: lightness(paper, (current) => current - 0.08),
-    }),
+    hover: applyColorModification(currentSurfaceColor, colorModification({
+      lightness: currentExpression => add(currentExpression, -0.04),
+    })),
+    active: applyColorModification(currentSurfaceColor, colorModification({
+      lightness: currentExpression => add(currentExpression, -0.08),
+    })),
   },
 })
 const currentForegroundColor = currentColorReference(foregroundColor)
