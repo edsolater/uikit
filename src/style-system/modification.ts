@@ -2,7 +2,7 @@
 import { assert, containKey, isFinite, isFunction } from '@edsolater/fnkit'
 import { evaluateExpression, isEvaluableExpression, type Expression } from './content'
 import { isValue, value, type ValueData, type ValueInput } from './value'
-import { isVariable, type Variable } from './variable'
+import { isVariable, variable, type Variable } from './variable'
 import { resolveVariable } from './variable-cluster'
 import { applyColorChannel, type ColorModification } from './pieces/contents/functions/color-modification'
 
@@ -19,7 +19,9 @@ export interface Modification {
 /** 判断对象是否保存修改规则，不执行回调。 */
 export const isModification = (input: unknown): input is Modification => containKey(input, modificationRule)
 
-/** 沿默认来源取得实际数据载体，保留其格式器，不执行生产函数。 */
+/**
+ * 沿默认来源取得实际数据载体，保留其格式器，不执行生产函数。
+ */
 const readVariableDefault = (input: unknown): unknown =>
   isVariable(input)
     ? readVariableDefault(resolveVariable(input).config.defaultValue)
@@ -45,21 +47,30 @@ export function readNumber(input: unknown): number {
  * 构造表达式修改规则；CSS 接受任意内容表达式，JS 应用求值已知数值算术。
  * @example
  * const increase = modification(currentExpression => add(currentExpression, 2))
- * adjust(amount, increase) // 直接修改 amount 的 JS 基础值
+ * const increased = adjust(amount, increase) // 新 Variable，amount 保持原值
+ * adjust('mutable', amount, increase) // 直接修改 amount 的 JS 基础值
  * rules(['.item', '&:hover'], [modify(amount, increase)]) // 浏览器条件下应用
  */
 export const modification = (change: (currentExpression: Expression) => Expression): Modification => ({ [modificationRule]: change })
 
 /**
- * 直接修改目标 Variable 的 JS 基础内容；状态内容和 CSS 注册保持各自含义。
+ * 默认返回持有调整后 JS 基础内容的新 Variable，使用独立的匿名 CSS 名称。
+ * 显式传入 'mutable' 时修改原 Variable，并返回原输入；Cluster 使用默认成员。
+ * 两种模式都保留状态内容、格式器和按需行为，不修改共享来源。
  * 生产函数与只有 CSS 表达式的来源没有可直接修改的 JS 值。
  * @example
  * const surface = variable(oklch({ lightness: 0.5, chroma: 0.1, hue: 240 }))
- * adjust(surface, colorModification({ lightness: currentExpression => add(currentExpression, 0.1) }))
- * // surface 仍是同一个 Variable，下一次编译读取明度 0.6。
+ * const brighter = adjust(surface, colorModification({ lightness: currentExpression => add(currentExpression, 0.1) }))
+ * // surface 明度仍为 0.5，brighter 明度为 0.6。
+ * adjust('mutable', surface, colorModification({ lightness: 0.7 }))
+ * // 原 surface 的下一次编译读取明度 0.7。
  */
-export function adjust(target: Variable, change: Modification): Variable {
-  const variable = resolveVariable(target)
+export function adjust(target: Variable, change: Modification): Variable
+export function adjust<Target extends Variable>(mode: 'mutable', target: Target, change: Modification): Target
+export function adjust(...args: [target: Variable, change: Modification] | [mode: 'mutable', target: Variable, change: Modification]): Variable {
+  const target = args[0] === 'mutable' ? args[1] : args[0]
+  const change = args[0] === 'mutable' ? args[2] : args[1]
+  const source = resolveVariable(target)
   const rule = change[modificationRule]
   /** 保留原 Value 包装和格式器，只在实际 JS 数据处执行规则。 */
   const updateContent = (input: unknown): unknown => {
@@ -83,6 +94,18 @@ export function adjust(target: Variable, change: Modification): Variable {
     }
     return next
   }
-  variable.config.defaultValue = updateContent(variable.config.defaultValue) as ValueInput
-  return target
+  const updated = updateContent(source.config.defaultValue) as ValueInput
+  if (args[0] === 'mutable') {
+    source.config.defaultValue = updated
+    return target
+  }
+  const options = {
+    onActive: source.onActive,
+    compileWaveIndex: source.compileWaveIndex,
+    registration: source.config.registration ? { ...source.config.registration } : undefined,
+  }
+  let adjusted = variable(updated, options)
+  if (adjusted.name === source.name) adjusted = variable(updated, options)
+  adjusted.config.states = new Map(source.config.states)
+  return adjusted
 }

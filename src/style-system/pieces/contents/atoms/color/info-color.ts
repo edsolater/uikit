@@ -17,7 +17,7 @@ export const good: ColorMaterial = {
 // 原错误红 #c42b1c 转为同色 OKLCH，保留数值精度。
 
 export const bad: ColorMaterial = {
-  base: { lightness: 0.5361498345613248, chroma: 0.19118569119968412, hue: 30.071355693888393 },
+  base: { lightness: 0.53, chroma: 0.19, hue: 30.07 },
   environmentSensitivities: {
     // 暂取 18%，比成功绿更少接受明暗变化，以保留错误红的状态辨识，不让亮暗环境过度改写它。
     lightness: 0.18,

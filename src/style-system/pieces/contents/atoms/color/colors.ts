@@ -29,15 +29,14 @@ function toJSSColor(color: ColorMaterial, name: string): Variable {
   return variable(oklch({ ...color.base, alpha: color.alpha }), name)
 }
 
-/** 比较两份独立定义的颜色，生成可应用于任意来源的完整规则。 */
-function deriveColorChange({ original, target }: { original: ColorMaterial; target: ColorMaterial }) {
-  return colorModification({
+/** 比较两份独立定义的颜色，按差异创建可复用的 Modification。 */
+const createColorModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }): Modification =>
+  colorModification({
     lightness: currentExpression => add(currentExpression, target.base.lightness - original.base.lightness),
     chroma: currentExpression => add(currentExpression, target.base.chroma - original.base.chroma),
     hue: currentExpression => add(currentExpression, target.base.hue - original.base.hue),
     alpha: target.alpha === original.alpha ? undefined : target.alpha ?? 1,
   })
-}
 
 export const paperColor = toJSSColor(paper, 'paper-color')
 export const inkColor = toJSSColor(ink, 'ink-color')
@@ -99,7 +98,7 @@ const interactiveDefault = variable(currentBrandColor, {
 })
 export const interactiveColor = colorMembers('interactive', interactiveDefault, 0.48)
 export const highlightColor = colorMembers('highlight',
-  variable(applyColorModification(currentBrandColor, deriveColorChange({ original: brand, target: highlight })), 'highlight-color'),
+  variable(applyColorModification(currentBrandColor, createColorModificationByDiff({ original: brand, target: highlight })), 'highlight-color'),
   0.42, colorModification({
     lightness: currentExpression => add(currentExpression, 0.08),
     chroma: currentExpression => add(currentExpression, 0.02),

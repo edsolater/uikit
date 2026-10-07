@@ -38,7 +38,12 @@ test('Cluster默认成员应用规则闭包捕获的领域参数', () => {
   const change = modification(currentExpression => add(currentExpression, payload.amount))
   const css = compileRules([[[condition('.Public')], ...declare(cluster)], [[condition('.Public')], ...modify(cluster, change)]])
   expect(css).toContain('+ 3)')
-  adjust(cluster, change)
+  const adjusted = adjust(cluster, change)
+  expect(compileRules([[['.source'], ...declare(cluster)], [['.adjusted'], ...declare(adjusted)]])).toContain(`${adjusted.toCSSString()}: 4;`)
+  expect(compileRules([[['.source'], ...declare(cluster)]])).toContain('--public-derived-number: var(--public-source-number, 1);')
+  const mutable = adjust('mutable', cluster, change)
+  expect(mutable).toBe(cluster)
+  expect(mutable('default').config.defaultValue).toBe(4)
   expect(cluster.config.defaultValue).toBe(4)
 })
 

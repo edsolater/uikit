@@ -198,8 +198,8 @@ test('无额外Variable配置的数值规则按顺序应用，CSS条件退出恢
   const first = modification(currentExpression => add(currentExpression, 2))
   const second = modification(currentExpression => multiply(currentExpression, 3))
   const amount = variable(2, 'dual-amount'), direct = variable(2, 'dual-number')
-  adjust(direct, first)
-  adjust(direct, second)
+  adjust('mutable', direct, first)
+  adjust('mutable', direct, second)
   const { element, neighbor } = mount([
     row([button], declare(amount)), row([button, hover], modify(amount, first)), row([button, focus], modify(amount, second)),
     [[button], 'z-index', amount], row([panel], declare(direct)), [[panel], 'z-index', direct],
