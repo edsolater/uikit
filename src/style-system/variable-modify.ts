@@ -7,7 +7,7 @@
 import { createJSSContent, type JSSCompileContext, type JSSContent } from './content'
 import type { Expression } from './content'
 import { resolveVariable } from './variable-cluster'
-import { assert, result } from '@edsolater/fnkit'
+import { assert, containKey, isFunction, result } from '@edsolater/fnkit'
 import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
 import type { Declaration } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
@@ -15,7 +15,9 @@ import type { JSSKeyObject } from './key'
 import type { ASTController } from './compiler/ast-controller'
 import { value, type Value, type ValueInput } from './value'
 import { appendStateCondition } from './pieces/state-conditions'
-import { variableRegistrationDeclarations, type Variable, type VariableDefaultValue } from './variable'
+import { variableContent, variableRegistrationDeclarations, type Variable, type VariableDefaultValue } from './variable'
+import { isModification, modificationRule, readJSValue, type Modification } from './modification'
+import { applyColorModification } from './pieces/contents/functions/color-modification'
 
 /** 一个局部声明的基础值、最终值和修改步骤；只在本次编译内有效。 */
 interface VariableInstance {
@@ -31,8 +33,8 @@ interface VariableInstance {
 }
 
 /** 局部 Variable 同址赋值保留最后一个实际输出的值。 */
-function joinVariableValues(values: Value[]): ValueInput {
-  return value(values, { toCSSString: (items, resolve) => {
+const joinVariableValues = (values: Value[]): ValueInput =>
+  value(values, { toCSSString: (items, resolve) => {
     let latest: string | undefined
     for (const item of items) {
       const output = resolve(item)
@@ -40,7 +42,6 @@ function joinVariableValues(values: Value[]): ValueInput {
     }
     return latest
   } })
-}
 
 /** 一个消费地址的本地结果链；同址消费者共享，条件与继承交给 CSS。 */
 interface VariableResult {
@@ -66,10 +67,8 @@ interface VariableDeclaration extends JSSContent {
   content: VariableDefaultValue
 }
 /** 识别显式局部声明；其他内容不参与局部归属。 */
-function declarationOf(input: unknown): VariableDeclaration | undefined {
-  return input !== null && typeof input === 'object' && 'kind' in input && input.kind === 'variable-declaration'
-    ? input as VariableDeclaration : undefined
-}
+const isVariableDeclaration = (input: unknown): input is VariableDeclaration =>
+  containKey(input, 'kind') && input.kind === 'variable-declaration'
 const variableSessions = new WeakMap<object, VariableSession>()
 /** 本次编译中，各声明和修改节点所属的局部实例与步骤。 */
 interface VariableSession {
@@ -88,15 +87,13 @@ function sessionOf(context: JSSCompileContext): VariableSession {
   return session
 }
 /** 识别局部声明所用的 Variable；其他样式节点返回 undefined。 */
-function declaredVariable(node: JSSStyleNode): Variable | undefined {
-  return declarationOf(node.content)?.variable
-}
+const declaredVariable = (node: JSSStyleNode): Variable | undefined =>
+  isVariableDeclaration(node.content) ? node.content.variable : undefined
 /** 从当前 AST 取得语义父链上最近的同对象声明。 */
-function nearestDeclaration(controller: ASTController, variable: Variable, path: ConditionPath): JSSStyleNode | undefined {
-  return controller.search({ key: variable.config.definitionKey })
+const nearestDeclaration = (controller: ASTController, variable: Variable, path: ConditionPath): JSSStyleNode | undefined =>
+  controller.search({ key: variable.config.definitionKey })
     .filter(node => declaredVariable(node) === variable && isSemanticPathPrefix(node.conditionPath, path))
     .sort((left, right) => semanticPathParts(right.conditionPath).length - semanticPathParts(left.conditionPath).length)[0]
-}
 
 /** 找到状态内容应写入的局部基础值，返回其 Key；没有局部声明则返回 undefined。
  * 该局部实例尚未建立时，会同时生成基础值和状态值。
@@ -138,7 +135,8 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
   const session = sessionOf(context)
   const existing = session.instances.get(node)
   if (existing) return existing
-  const { variable, content } = declarationOf(node.content)!
+  assert(isVariableDeclaration(node.content), '局部 Variable 实例需要 Variable 声明。')
+  const { variable, content } = node.content
   const address = JSON.stringify(semanticPathParts(node.conditionPath))
   assert(
     !controller.search({ key: variable.config.definitionKey }).some(other => other !== node && declaredVariable(other) === variable && JSON.stringify(semanticPathParts(other.conditionPath)) === address),
@@ -177,7 +175,7 @@ function createVariableInstance(session: VariableSession, node: JSSStyleNode, va
 /** 求基础生产函数并发布基础值与有序状态值。 */
 function declareInstanceValues(controller: ASTController, instance: VariableInstance, content: VariableDefaultValue): void {
   const { node, variable } = instance
-  const baseContent = result(content)
+  const baseContent = variableContent(result(content))
   controller.insert(
     { before: node, conditionPath: node.conditionPath },
     [instance.baseKey, baseContent],
@@ -189,7 +187,7 @@ function declareInstanceValues(controller: ASTController, instance: VariableInst
         before: node,
         conditionPath: appendStateCondition(node.conditionPath, state),
       },
-      [instance.baseKey, stateContent],
+      [instance.baseKey, variableContent(stateContent)],
       { owner: node, identity: `state/${state.name}` },
     )
     stateNode.readState = state.name
@@ -210,7 +208,6 @@ function takeOverAutomaticStates(controller: ASTController, instance: VariableIn
 
 /** 在普通引用地址求完整修改链，允许子元素覆盖规则 Variable 后当地应用。 */
 export function consumeVariable(context: JSSCompileContext, controller: ASTController, variable: Variable): void {
-  if (!variable.config.modification) return
   const target = nearestDeclaration(controller, variable, context.conditionPath)
   if (!target) return
   const instance = ensureVariableInstance(context, controller, target)
@@ -228,13 +225,13 @@ export function consumeVariable(context: JSSCompileContext, controller: ASTContr
 }
 
 /**
- * 将完整规则或领域数据应用到最近的同对象声明，条件由 CSS 决定。
+ * 将独立规则应用到最近的同对象声明，规则可由普通 Variable 保存，条件由 CSS 决定。
  * 相同 id 在同一局部声明内共用一步；未指定 id 时每次调用形成独立步骤。
  * @example
  * rules('.button', [declare(surfaceColor, baseColor)])
  * rules(['.button', '&:hover'], [modify(surfaceColor, hoverChange)])
  */
-export function modify(variable: Variable, modification: unknown, options?: { id?: string | symbol }): Declaration {
+export function modify(variable: Variable, modification: Modification | Variable, options?: { id?: string | symbol }): Declaration {
   variable = resolveVariable(variable)
   return [variable, {
     resourceIdentity: Symbol('variable-modification'),
@@ -246,8 +243,9 @@ export function modify(variable: Variable, modification: unknown, options?: { id
       const old = session.steps.get(context.node)
       if (old?.instance === instance) { refreshSteps(controller, instance); return }
       if (old) removeModification(context, controller, old, context.node)
-      const apply = variable.config.modification?.apply
-      assert(!!apply, `Variable ${variable.name} 没有配置 modification.apply。`)
+      const stored = readJSValue(modification)
+      assert(isModification(stored), `Variable ${variable.name} 的修改需要提供可应用的 Modification 规则。`)
+      const rule = stored[modificationRule]
       if (!instance.steps.length) {
         instance.baseName = `${variable.name}-modify-${instance.number}-base`
         publishResult(controller, instance, instance.node)
@@ -256,7 +254,7 @@ export function modify(variable: Variable, modification: unknown, options?: { id
       }
       const step = instance.steps.find(step => options?.id !== undefined && step.id === options.id)
         ?? createStep(context, controller, instance, options?.id)
-      const output = apply(step.currentExpression, modification)
+      const output = isFunction(rule) ? rule(step.currentExpression) : applyColorModification(step.currentExpression, modification)
       const gate = `${step.name}-candidate-${++step.count}`
       const selection = controller.insert({ before: context.node, conditionPath: context.conditionPath },
         [undefined, createJSSContent(resolve => resolve(output) === undefined ? undefined : selectionText(step, gate), [output])],
@@ -274,11 +272,10 @@ export function modify(variable: Variable, modification: unknown, options?: { id
 }
 
 /** 空 token 关闭候选，initial 使 var() 使用该候选表达式；整组始终一同参与层叠。 */
-function selectionText(step: VariableStep, selected = `${step.name}-identity`): string {
-  return [`${step.name}-identity`, ...[...step.members.values()].map(member => member.gate)]
+const selectionText = (step: VariableStep, selected = `${step.name}-identity`): string =>
+  [`${step.name}-identity`, ...[...step.members.values()].map(member => member.gate)]
     .map(name => `--${name}: ${name === selected ? 'initial' : ''};`).join('\n')
     + (step.instance.variable.config.registration?.inherits === false ? `\n--${step.name}-present: ;` : '')
-}
 /** 每个阶段引用前序结果，避免把前序表达式复制进多个分支造成指数展开。 */
 function createStep(context: JSSCompileContext, controller: ASTController, instance: VariableInstance, id?: string | symbol): VariableStep {
   const name = `${instance.variable.name}-modify-${instance.number}-step-${++instance.count}`

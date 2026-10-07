@@ -1,5 +1,5 @@
 /** 将有序 Rules 展开为带条件地址的 JSS 样式节点队列。 */
-import { assert } from '@edsolater/fnkit'
+import { assert, isArray, isNumber, isString } from '@edsolater/fnkit'
 import { condition, type ConditionPath, type TargetConditionPath } from '../condition'
 import type { JSSKey } from '../key'
 import type { Rules } from '../rule'
@@ -24,12 +24,6 @@ export interface JSSStyleNode {
   productTag?: object
 }
 
-/** 判断 Rule 声明的内容能否进入编译队列。 */
-function isRuleContent(input: unknown): boolean {
-  if (input === undefined || typeof input === 'string' || typeof input === 'number') return true
-  return isJSSContent(input)
-}
-
 /** 将源 Rules 展开为有序节点；嵌套项继承外层地址与 Key，递归或无效内容时报错。 */
 export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
   const styleNodes: JSSStyleNode[] = []
@@ -41,17 +35,17 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
     expandingRuleGroups.add(rules)
     try {
       for (const [relativePath, ruleKey, ruleContent] of rules) {
-        const targetConditionPath = [...parentPath, ...(relativePath ?? []).map((item) => typeof item === 'string' ? condition(item) : item)]
+        const targetConditionPath = [...parentPath, ...(relativePath ?? []).map((item) => isString(item) ? condition(item) : item)]
         const key = ruleKey ?? inheritedKey
-        if (Array.isArray(ruleContent)) {
+        if (isArray(ruleContent)) {
           assert(
-            ruleContent.every((entry) => Array.isArray(entry) && entry.length === 3),
+            ruleContent.every((entry) => isArray(entry) && entry.length === 3),
             '嵌套 Rules 必须由路径、Key、内容三项组成。',
           )
           appendStyleNodes(ruleContent as Rules, targetConditionPath, key)
           continue
         }
-        assert(isRuleContent(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
+        assert(ruleContent === undefined || isString(ruleContent) || isNumber(ruleContent) || isJSSContent(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
         styleNodes.push({
           compileRevision: 0,
           conditionPath: { targetConditionPath, stateConditionPath: [], semanticPath: [...targetConditionPath] },

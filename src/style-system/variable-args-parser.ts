@@ -5,19 +5,17 @@
 后续创建逻辑只处理统一配置，不再区分调用写法。
 */
 import { containKey, IdGenerator, isString } from '@edsolater/fnkit'
-import type { ValueInput } from './value'
-import type { VariableDefaultValue, VariableOptions } from './variable'
+import type { VariableContent, VariableDefaultValue, VariableOptions } from './variable'
 
 /** default 是默认内容，其余自身可枚举字段是状态内容；默认生产函数仍保留原样。 */
 export type VariableStateValues<DefaultValue extends VariableDefaultValue = VariableDefaultValue> = {
   default: DefaultValue
-} & Record<string, ValueInput | ((defaultValue: DefaultValue) => ValueInput)>
+} & Record<string, VariableContent | ((defaultValue: DefaultValue) => VariableContent)>
 
 /** 解析后的创建配置；状态回调和默认生产函数尚未执行。 */
 export type VariableConfig<
   DefaultValue extends VariableDefaultValue = VariableDefaultValue,
-  Change = ValueInput,
-> = VariableOptions<DefaultValue, Change> & { defaultValue: DefaultValue; name: string }
+> = VariableOptions<DefaultValue> & { defaultValue: DefaultValue; name: string }
 
 /** 所有匿名 Variable 共用的临时名称序号，仅在缺少名称时分配。 */
 const nameGenerator = new IdGenerator('temp')
@@ -30,10 +28,10 @@ const nameGenerator = new IdGenerator('temp')
  * @example parseVariableArgs({ default: 1, hover: 2 }, 'amount')
  * 返回 { defaultValue: 1, states: { hover: 2 }, name: 'amount' }。
  */
-export function parseVariableArgs<DefaultValue extends VariableDefaultValue, Change = ValueInput>(
+export function parseVariableArgs<DefaultValue extends VariableDefaultValue>(
   input: DefaultValue | VariableStateValues<DefaultValue>,
-  options?: string | VariableOptions<NoInfer<DefaultValue>, Change>,
-): VariableConfig<DefaultValue, Change> {
+  options?: string | VariableOptions<NoInfer<DefaultValue>>,
+): VariableConfig<DefaultValue> {
   const config = isString(options) ? { name: options } : options ?? {}
   const name = config.name ?? `temp-${nameGenerator.genID()}`
   if (isStateValues(input)) {
@@ -44,8 +42,7 @@ export function parseVariableArgs<DefaultValue extends VariableDefaultValue, Cha
 }
 
 /** 按 fnkit 的字段存在性协议识别状态值简写。 */
-function isStateValues<DefaultValue extends VariableDefaultValue>(
+const isStateValues = <DefaultValue extends VariableDefaultValue>(
   input: DefaultValue | VariableStateValues<DefaultValue>,
-): input is VariableStateValues<DefaultValue> {
-  return containKey(input, 'default')
-}
+): input is VariableStateValues<DefaultValue> =>
+  containKey(input, 'default')

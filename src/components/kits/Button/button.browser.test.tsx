@@ -1,6 +1,6 @@
 /** 保留旧样式 DOM 协议的视觉反例；新 Button API 的 DOM 描述单独验证，样式尚未迁移。 */
 import { declare } from '../../../style-system/declaration'
-import { modify } from '../../../style-system/variable-modification'
+import { modify } from '../../../style-system/variable-modify'
 import { variable } from '../../../style-system/variable'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
@@ -9,7 +9,7 @@ import { userEvent } from 'vitest/browser'
 import { createState } from '../../../hooks'
 import { Button, buttonMapping, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps, type ButtonAppearance } from './index'
 import { disabledFade } from '../../../style-system/pieces/contents/atoms/opacity'
-import { cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
+import { add, modification, cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/pieces/conditions/interaction'
 import { $borderRadius } from '../../../style-system/pieces/keys/border'
 import { $backgroundColor } from '../../../style-system/pieces/keys/color'
@@ -153,7 +153,7 @@ describe('Button styles', () => {
     expect(selected['background-color']).not.toBe(sourceOnly['background-color'])
     expect(selected['background-color']).not.toBe(initial['background-color'])
     expectSameAppearance(appearance(second), initial)
-    const adjustment = rules(path, modify(buttonSurfaceStrength, 0.2))
+    const adjustment = rules(path, modify(buttonSurfaceStrength, modification(currentExpression => add(currentExpression, 0.2))))
     handles.push(adjustment)
     cssRoot.mount()
     const adjusted = appearance(first)

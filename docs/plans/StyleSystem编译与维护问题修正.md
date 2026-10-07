@@ -80,7 +80,7 @@
 
 **实施结果：** 已完成，独立实际代码复查通过。修改模块消费 `pieces/state-conditions.ts` 的现役 helper，旧的手工路径构造退出；helper 保持原位置。真实编译节点缺 semanticPath 且已有 hover 的反例从遗漏 hover 失败修正为保留 hover、再追加 focus；同时经 Variable.modify 与正式 compileRules 验证状态基础值及最终表达式。全量单元测试 258 项（38 个文件）、类型检查、浏览器测试 98 项（16 个文件）通过。
 
-- **实施前问题与证据：** [局部修改](../../src/style-system/variable-modification.ts) 自行拼接状态路径，其 semanticPath 缺失时的回退没有包含已有状态片段；[状态条件工具](../../src/style-system/pieces/state-conditions.ts) 的 `appendStateCondition` 已负责该完整路径语义。两套算法对缺失 semanticPath 的相同输入产生不同语义归属。
+- **实施前问题与证据：** [局部修改](../../src/style-system/variable-modify.ts) 自行拼接状态路径，其 semanticPath 缺失时的回退没有包含已有状态片段；[状态条件工具](../../src/style-system/pieces/state-conditions.ts) 的 `appendStateCondition` 已负责该完整路径语义。两套算法对缺失 semanticPath 的相同输入产生不同语义归属。
 - **修改目标与落点：** 修改模块消费既有 `appendStateCondition(path, state.name)`；状态路径的追加与回退规则由 pieces/state-conditions.ts 承担，完整地址协议仍由 condition.ts 定义；修改模块只决定追加哪一个状态。
 - **顺序与前置：** 在状态编译与失效行为稳定后单独迁移；不与 @property 内容生成混在一次修改中。
 - **最小验收：** 以已有 stateConditionPath、缺失 semanticPath 的路径生成修改状态，断言语义路径同时保留已有状态与新状态，与 appendStateCondition 一致。再经实际 Variable.modify 与 compileRules 验证嵌套状态归属和最终状态 CSS，没有重复或漏失状态。
@@ -99,7 +99,7 @@
 **实施结果：** 已完成，独立实际代码复查通过。候选、同对象声明、语义地址与最近归属只在本次操作内共享；业务 apply、基础生产函数及撤销回调可能编辑队列，返回后重新取得。三步修改的定义查询由 11 次降为 7 次；晚到定义接管三条同路径修改的语义匹配由 6 次降为 2 次，临时禁用复用时反例失败。已编译中间步骤移动并由调用方显式增加 revision 后重新连接，apply 保持一次；不改变 move 或自动重编合同。保留 apply 前新步骤已经接好前序的可观察时点；共享锚点在 apply 内移动、基础生产函数改写路径、共享成员撤销与晚到定义均有真实回归。回调边界回归临时去掉对应刷新时失败，恢复后通过；全量单元测试 267 项（38 个文件）、类型检查、浏览器测试 98 项（16 个文件）通过。
 
 - **实施前问题与证据：** 修改模块在寻找局部声明、清理重复声明、重绑、自动状态清理和连接步骤的循环中反复 search 同一 Key，再筛 Variable 身份与语义路径。当前约第 87、129、200、292 行的相关循环各自重做候选查询及归属判断；同一次操作已有的信息被重复计算。
-- **修改目标与落点：** 在负责修改链的 variable-modification.ts 中，使一次明确操作取得候选及其语义归属，并在该操作内复用。候选的有效范围要随插入、移动、撤销和晚到定义边界终止或重新取得，不预建跨操作的永久索引，也不将 Variable 专用归属放回 Controller。
+- **修改目标与落点：** 在负责修改链的 variable-modify.ts 中，使一次明确操作取得候选及其语义归属，并在该操作内复用。候选的有效范围要随插入、移动、撤销和晚到定义边界终止或重新取得，不预建跨操作的永久索引，也不将 Variable 专用归属放回 Controller。
 - **顺序与前置：** 第 9 项统一路径语义，第 10 项收拢注册内容后再整理查询，避免复用错误的地址判断。
 - **最小验收：** 对一条包含多个 modify 步骤的链统计同次操作的候选查询和归属判断，重复调用减少而 CSS 顺序不变。移动中间步骤、撤销步骤、晚到局部定义分别触发重新取得候选；断言后续步骤连接和输出随新位置与新定义变化，不能使用旧候选快照。
 

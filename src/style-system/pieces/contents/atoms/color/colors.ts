@@ -11,6 +11,7 @@ import { type ValueInput } from '../../../../value'
 import { createJSSContent } from '../../../../content'
 import { oklch } from '../../functions/oklch'
 import { colorModification, applyColorModification } from '../../functions/color-modification'
+import type { Modification } from '../../../../modification'
 import { add } from '../../functions/calc'
 import { colorMix } from '../../functions/color-mix'
 import { paper, ink, neutral } from './palette'
@@ -45,7 +46,7 @@ export const neutralColor = toJSSColor(neutral, 'neutral-color')
 
 /** 为已有基础 Variable 配置语气成员，独立规则始终应用到当前颜色。 */
 function colorMembers(name: string, base: Variable, lineAlpha: number,
-  strongChange?: ValueInput, foreground: ValueInput = currentColorReference(paperColor)) {
+  strongChange?: Modification | Variable, foreground: ValueInput = currentColorReference(paperColor)) {
   const currentBase = currentColorReference(base)
   return variableCluster({
     default: base,

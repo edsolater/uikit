@@ -4,11 +4,11 @@
  *
  * 将跨波进度和内容链访问留在同一责任内，供编排统一推进。
  */
-import { assert, hasProperty, isArray, isFunction, isObjectLike, isString, isNumber, isUndefined } from '@edsolater/fnkit'
+import { assert, isArray, isIndexNumber, isObjectLike, isString, isNumber, isUndefined } from '@edsolater/fnkit'
 import { outputConditionPath, type ConditionPath, type CSSConditionPath } from '../../condition'
 import type { JSSKey } from '../../key'
 import type { Rules } from '../../rule'
-import { hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
+import { hasJSSContentOnActiveMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
 import type { JSSStyleNode } from '../rules-to-style-nodes'
 import type { ASTSession, ASTController, RoleCompilationState, ContentCompilationRecord } from '../ast-controller'
 import type { ResourceCompilation } from './resource-compilation'
@@ -22,13 +22,11 @@ export interface JSSContentNode {
 }
 
 /** 为当前输入建立未访问的角色；不含编译行为的 Key 可直接参与输出。 */
-function roleCompilationState(input: unknown, role: JSSCompileContext['role']): RoleCompilationState {
-  return {
-    input,
-    contents: new WeakMap(),
-    complete: role === 'declaration-key' && !hasJSSContentOnCompileMethod(input),
-  }
-}
+const roleCompilationState = (input: unknown, role: JSSCompileContext['role']): RoleCompilationState => ({
+  input,
+  contents: new WeakMap(),
+  complete: role === 'declaration-key' && !hasJSSContentOnCompileMethod(input),
+})
 
 /** 本次编译允许调用 onCompile 的总次数。 */
 interface CompileBudget {
@@ -59,7 +57,7 @@ function visitContent(
     assert(!activeObjects.has(input), 'CSS 内容存在循环引用，无法生成 CSS。')
     activeObjects.add(input)
     try {
-      if (hasProperty(input, 'onActive', isFunction)) activate(input)
+      if (hasJSSContentOnActiveMethod(input)) activate(input)
 
       return hasJSSContentOnCompileMethod(input)
         ? compile(input, depth)
@@ -73,7 +71,7 @@ function visitContent(
   function compile(input: JSSContent & Required<Pick<JSSContent, 'onCompile'>>, depth: number): boolean {
     let record = state.contents.get(input)
     const earliestWave = input.compileWaveIndex ?? 0
-    assert(Number.isInteger(earliestWave) && earliestWave >= 0, 'compileWaveIndex 必须是非负整数。')
+    assert(isIndexNumber(earliestWave), 'compileWaveIndex 必须是非负整数。')
     if (!record?.notified && earliestWave > wave) {
       visitChildren(input, depth)
       return false
@@ -107,7 +105,7 @@ function visitContent(
       complete &&= finished
     }
 
-    if (hasJSSContentOutput(input) || hasJSSContentOnCompileMethod(input) || dependencies || hasProperty(input, 'onActive', isFunction)) return complete
+    if (hasJSSContentOutput(input) || hasJSSContentOnCompileMethod(input) || dependencies || hasJSSContentOnActiveMethod(input)) return complete
     throw new Error('无效的 CSS 内容。')
   }
 }
@@ -213,10 +211,8 @@ export class NodeCompilation {
 }
 
 /** 为角色或激活回调隔离当前路径容器，保留 Condition 身份；每次调用都取得当时输入。 */
-function conditionPathSnapshot(path: ConditionPath): ConditionPath {
-  return {
-    semanticPath: path.semanticPath?.slice(),
-    targetConditionPath: [...path.targetConditionPath],
-    stateConditionPath: [...path.stateConditionPath],
-  }
-}
+const conditionPathSnapshot = (path: ConditionPath): ConditionPath => ({
+  semanticPath: path.semanticPath?.slice(),
+  targetConditionPath: [...path.targetConditionPath],
+  stateConditionPath: [...path.stateConditionPath],
+})

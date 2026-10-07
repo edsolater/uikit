@@ -50,36 +50,41 @@ export interface JSSContent {
   toCSSString?: (resolve?: JSSContentResolver) => string | undefined
 }
 
-/** 修改回调操作并返回的延迟 CSS 内容表达式。 */
+/** 修改回调操作并返回的延迟 CSS 内容表达式。如l-.2 */
 export type Expression = JSSContent
 
+/** 已知表达式的 JS 求值协议；调用由求值消费者负责。 */
+export const evaluateExpression = Symbol('evaluateExpression')
+
+/** 识别可求值表达式的方法，不执行求值。 */
+export const isEvaluableExpression = (input: unknown): input is Expression & { [evaluateExpression](): number } =>
+  hasProperty(input, evaluateExpression, isFunction)
+
 /** 连接依赖内容和输出方法，供业务构造工具及自定义内容使用。 */
-export function createJSSContent(
+export const createJSSContent = (
   toCSSString: (resolve: JSSContentResolver) => string | undefined,
   dependencies: unknown[] = [],
-): JSSContent {
-  return {
-    dependencies,
-    toCSSString: (resolve) => toCSSString(resolve ?? (() => undefined)),
-  }
-}
+): JSSContent => ({
+  dependencies,
+  toCSSString: (resolve) => toCSSString(resolve ?? (() => undefined)),
+})
 
 /** 判断内容对象是否提供 onCompile 方法。 */
-export function hasJSSContentOnCompileMethod(input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onCompile'>> {
-  return hasProperty(input, 'onCompile', isFunction)
-}
+export const hasJSSContentOnCompileMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onCompile'>> =>
+  hasProperty(input, 'onCompile', isFunction)
 
 /** 判断内容对象是否公开 CSS 输出方法。 */
-export function hasJSSContentOutput(input: unknown): input is JSSContent & Required<Pick<JSSContent, 'toCSSString'>> {
-  return hasProperty(input, 'toCSSString', isFunction)
-}
+export const hasJSSContentOutput = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'toCSSString'>> =>
+  hasProperty(input, 'toCSSString', isFunction)
+
+/** 判断内容对象是否提供 onActive 方法，不激活资源。 */
+export const hasJSSContentOnActiveMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onActive'>> =>
+  hasProperty(input, 'onActive', isFunction)
 
 /** 判断对象是否承担任一种 JSS 内容行为。 */
-export function isJSSContent(input: unknown): input is JSSContent {
-  return (
-    hasJSSContentOnCompileMethod(input) ||
-    hasJSSContentOutput(input) ||
-    hasProperty(input, 'dependencies', isArray) ||
-    hasProperty(input, 'onActive', isFunction)
-  )
-}
+export const isJSSContent = (input: unknown): input is JSSContent => (
+  hasJSSContentOnCompileMethod(input) ||
+  hasJSSContentOutput(input) ||
+  hasProperty(input, 'dependencies', isArray) ||
+  hasJSSContentOnActiveMethod(input)
+)

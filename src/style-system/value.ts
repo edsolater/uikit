@@ -1,5 +1,5 @@
 /** Value 包装业务内容，并决定如何将其编译结果输出为 CSS。 */
-import { assert } from '@edsolater/fnkit'
+import { assert, containKey, isArray, isFunction, isNullish } from '@edsolater/fnkit'
 import { isJSSContent } from './content'
 import type { JSSContent, JSSContentResolver } from './content'
 
@@ -10,7 +10,7 @@ export type ValueToCSSString<T extends ValueData = ValueData> = (content: T, res
 
 export interface ValueOptions<T extends ValueData = ValueData> extends Pick<JSSContent, 'onActive'> {
   /** 随 Value 编译的依赖内容；省略时从 content 及嵌套数组取得内容对象。 */
-  dependencies?: ValueInput[]
+  dependencies?: ValueInput[] | ((content: T) => ValueInput[])
   /** 根据原内容与各子项的编译结果输出 CSS。 */
   toCSSString?: ValueToCSSString<T>
 }
@@ -21,12 +21,17 @@ export interface Value<T extends ValueData = ValueData> extends JSSContent {
   content: T
   dependencies: ValueInput[]
   toCSSString(resolve?: JSSContentResolver): string | undefined
+  /** 用新内容创建独立 Value，沿用本 Value 的输出规则和依赖配置。 */
+  withContent(content: T): Value<T>
 }
 
+/** 识别对象持有的 Value 身份，不展开内容。 */
+export const isValue = (input: unknown): input is Value => containKey(input, 'kind') && input.kind === 'value'
+
 /** 找出数组中的内容对象，原语和纯数据对象留给 Value 自身输出。 */
-function valueContents(content: unknown, active = new Set<object>(), depth = 0): JSSContent[] {
+function valueContents(content: unknown, active = new Set<object>(), depth = 0): ValueInput[] {
   assert(depth <= 256, 'Value 数组嵌套超过上限 256。')
-  if (Array.isArray(content)) {
+  if (isArray(content)) {
     assert(!active.has(content), 'Value 数组存在循环引用。')
     active.add(content)
     try { return content.flatMap((item) => valueContents(item, active, depth + 1)) }
@@ -38,8 +43,8 @@ function valueContents(content: unknown, active = new Set<object>(), depth = 0):
 /** 按类型输出内容；嵌套数组各自保持逗号分隔。 */
 function defaultToCSSString(content: unknown, resolve: JSSContentResolver, active = new Set<object>(), depth = 0): string | undefined {
   assert(depth <= 256, 'Value 数组嵌套超过上限 256。')
-  if (content === undefined || content === null) return undefined
-  if (Array.isArray(content)) {
+  if (isNullish(content)) return undefined
+  if (isArray(content)) {
     assert(!active.has(content), 'Value 数组存在循环引用。')
     active.add(content)
     try { return joinCSSValues(content, resolve, ', ', active, depth + 1) }
@@ -55,9 +60,8 @@ function joinCSSValues(content: unknown[], resolve: JSSContentResolver, separato
 }
 
 /** 按原顺序输出空格分隔的数组，跳过未定义项。 */
-export function arraySequenceToCSSString(content: ValueData[], resolve: JSSContentResolver): string | undefined {
-  return joinCSSValues(content, resolve, ' ')
-}
+export const arraySequenceToCSSString = (content: ValueData[], resolve: JSSContentResolver): string | undefined =>
+  joinCSSValues(content, resolve, ' ')
 
 /**
  * 包装内容；数组默认递归以逗号连接，可指定自己的 CSS 输出规则。
@@ -67,21 +71,20 @@ export function arraySequenceToCSSString(content: ValueData[], resolve: JSSConte
  * rules('.stack', [[key('z-index'), value(3, { toCSSString: (number: number) => String(number * 2) })]])
  * compileCSS().includes('z-index: 6;') // true
  */
-export function value<T extends ValueData>(content: T, options?: ValueOptions<T>): Value<T> {
-  return {
-    kind: 'value',
-    content,
-    onActive: options?.onActive,
-    get dependencies() {
-      const current = this.content
-      return options?.dependencies ?? valueContents(current)
-    },
-    toCSSString(resolve) {
-      const resolver = resolve ?? (() => undefined)
-      const resolveValue: JSSContentResolver = (child) => defaultToCSSString(child, resolver)
-      const current = this.content
-      if (options?.toCSSString) return options.toCSSString(current, resolveValue)
-      return resolveValue(current)
-    },
-  }
-}
+export const value = <T extends ValueData>(content: T, options?: ValueOptions<T>): Value<T> => ({
+  kind: 'value',
+  content,
+  withContent: content => value(content, options),
+  onActive: options?.onActive,
+  get dependencies() {
+    const current = this.content
+    return isFunction(options?.dependencies) ? options.dependencies(current) : options?.dependencies ?? valueContents(current)
+  },
+  toCSSString(resolve) {
+    const resolver = resolve ?? (() => undefined)
+    const resolveValue: JSSContentResolver = (child) => defaultToCSSString(child, resolver)
+    const current = this.content
+    if (options?.toCSSString) return options.toCSSString(current, resolveValue)
+    return resolveValue(current)
+  },
+})

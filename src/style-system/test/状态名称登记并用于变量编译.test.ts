@@ -1,10 +1,10 @@
 /** State Condition 的名称与 Rule 地址。 */
 import { declare } from '../declaration'
-import { modify } from '../variable-modification'
+import { modify } from '../variable-modify'
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { variable } from '../variable'
-import { rule, value } from '../index'
+import { modification, rule, value } from '../index'
 import { compileCSS, compileRules } from '../css-root'
 import { stateCondition, appendStateCondition } from '../pieces/state-conditions'
 import * as stateConditions from '../pieces/state-conditions'
@@ -107,7 +107,7 @@ test('状态输出按登记顺序，创建回调保持输入顺序且不求默�
 test('普通引用、局部modify、Cluster继承与状态追加直接消费已解析条件', () => {
   const lookup = vi.spyOn(stateConditions, 'resolveStateConditions')
   try {
-    const source = variable(1, { name: 'resolved-source', states: { active: 3, hover: 2, '&[data-raw-resolved]': 5 }, modification: { apply: add } })
+    const source = variable(1, { name: 'resolved-source', states: { active: 3, hover: 2, '&[data-raw-resolved]': 5 } })
     const cluster = variableCluster({ default: source })
     const next = clusterFrom(cluster, { default: { name: 'resolved-next', states: { active: 4 } } })
     expect(lookup).toHaveBeenCalled()
@@ -117,7 +117,7 @@ test('普通引用、局部modify、Cluster继承与状态追加直接消费已�
     expect(appendStateCondition(path, hover).stateConditionPath).toEqual([hover])
     const css = compileRules([
       [['.Resolved'], ...declare(source)],
-      [['.Resolved', '&[data-modified]'], ...modify(source, 0.1)],
+      [['.Resolved', '&[data-modified]'], ...modify(source, modification(currentExpression => add(currentExpression, 0.1)))],
       [['.Resolved'], 'opacity', source],
       [['.ResolvedNext'], 'opacity', next],
     ])

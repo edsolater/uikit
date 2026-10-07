@@ -1,8 +1,8 @@
 /** 公开类型保留目标与内容的关系，并直接提供 Variable 创建配置。 */
 import { declare } from '../declaration'
-import { modify } from '../variable-modification'
+import { modify } from '../variable-modify'
 import { expect, expectTypeOf, test, vi } from 'vitest'
-import { clusterFrom, key, rules, variable, variableCluster } from '../index'
+import { add, adjust, clusterFrom, key, modification, rules, variable, variableCluster } from '../index'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 
@@ -27,15 +27,19 @@ test('合法 Key、Variable、Cluster 和声明组合可以直接消费', () => 
 })
 
 
-test('Cluster 延伸配置允许由 apply 自行解释任意修改参数', () => {
+test('Cluster默认成员应用规则闭包捕获的领域参数', () => {
   const source = variableCluster({ default: variable(1, { name: 'public-source-number' }) })
   const cluster = clusterFrom(source, {
     default: {
       name: 'public-derived-number',
-      modification: { apply: (current: import('../content').Expression, change: { amount: number }) => current },
     },
   })
-  expect(modify(cluster('default'), { amount: 3 })).toBeDefined()
+  const payload = { amount: 3 }
+  const change = modification(currentExpression => add(currentExpression, payload.amount))
+  const css = compileRules([[[condition('.Public')], ...declare(cluster)], [[condition('.Public')], ...modify(cluster, change)]])
+  expect(css).toContain('+ 3)')
+  adjust(cluster, change)
+  expect(cluster.config.defaultValue).toBe(4)
 })
 
 test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => {

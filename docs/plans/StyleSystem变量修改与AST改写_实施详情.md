@@ -6,7 +6,7 @@
 
 ## 这次实际删掉了什么
 
-原先 `variableDeclare/variableModify → operation → variableRewriter → updateDefinition` 的路径由 Variable 的 `declare/modify → parse` 接管。旧的 rewriter.ts、variable-modification.ts 和公共 Rewriter 类型已删除，Compiler 不再提供 rewrite 转发方法。当前 `variable-modification.ts` 只承接局部声明与修改链的编译实现，不恢复旧 Rewriter 协议。
+原先 `variableDeclare/variableModify → operation → variableRewriter → updateDefinition` 的路径由 Variable 的 `declare/modify → parse` 接管。旧的 rewriter.ts、variable-modification.ts 和公共 Rewriter 类型已删除，Compiler 不再提供 rewrite 转发方法。当前 `variable-modify.ts` 只承接局部声明与修改链的编译实现，不恢复旧 Rewriter 协议。
 
 原来的 DefinitionGroup、generated、expressions 以及每次遍历整组重建的逻辑删除。现在每个修改只展开自己的输入引用、默认传递与条件赋值。AST 按实际位置提供相邻节点；Variable 重连相邻引用，既有 apply 不因晚到前插重新执行。名称中的编号只负责唯一性，修改顺序来自声明的 AST 位置。
 
@@ -17,7 +17,7 @@
 | 文件 | 当前责任和变化 |
 | --- | --- |
 | [variable.ts](../../src/style-system/variable.ts) | 统一 Variable 创建、引用、declare/modify 调用入口、自身状态与注册；普通消费和自动状态声明留在此处 |
-| [variable-modification.ts](../../src/style-system/variable-modification.ts) | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态 |
+| [variable-modify.ts](../../src/style-system/variable-modify.ts) | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态 |
 | [ast-controller.ts](../../src/style-system/compiler/ast-controller.ts) | 通用父节点/邻近节点定位、插入、移动、共享来源、撤销和重访；不包含修改专属概念 |
 | [condition.ts](../../src/style-system/condition.ts) | 提供原始语义路径比较；状态中央排序仅用于输出 |
 | [节点内容编译入口](../../src/style-system/compiler/style-nodes-to-content-nodes/node-compilation.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理 |

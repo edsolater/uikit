@@ -5,7 +5,7 @@
 整组内容可复用现有 Variable 协议，不另建变量模型。
 */
 import { assert, Unresultable } from '@edsolater/fnkit'
-import { variable, type Variable, type VariableOptions } from './variable'
+import { isVariable, variable, type Variable, type VariableOptions } from './variable'
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
@@ -16,9 +16,8 @@ const membersByCluster: WeakMap<object, Record<string, Variable>> & {
 } = new WeakMap<object, Record<string, Variable>>()
 
 /** 单值操作针对 Cluster 的默认成员；成员选择与整组配对仍由 Cluster 负责。 */
-export function resolveVariable(variable: Variable): Variable {
-  return membersByCluster.get(variable)?.default ?? variable
-}
+export const resolveVariable = (variable: Variable): Variable =>
+  membersByCluster.get(variable)?.default ?? variable
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
@@ -69,7 +68,7 @@ export function variableCluster<Members extends { default: Variable } & Record<s
  */
 export function clusterFrom<
   SourceMembers extends { default: Variable } & Record<string, Variable>,
-  Changes extends Record<string, Variable | VariableOptions<Variable, any>>,
+  Changes extends Record<string, Variable | VariableOptions<Variable>>,
 >(source: VariableCluster<SourceMembers>, changes: Changes): VariableCluster<
   Omit<SourceMembers, keyof Changes> & { [Name in keyof Changes]: Changes[Name] extends Variable ? Changes[Name] : Variable } & { default: Variable }
 > {
@@ -77,11 +76,11 @@ export function clusterFrom<
   assert(!!sourceMembers, 'clusterFrom 需要 Variable Cluster 来源。')
   const members: Record<string, Variable> = { ...sourceMembers }
   for (const [name, change] of Object.entries(changes)) {
-    if ('kind' in change && change.kind === 'variable') {
+    if (isVariable(change)) {
       members[name] = change
       continue
     }
-    const options = change as VariableOptions<Variable, any>
+    const options = change as VariableOptions<Variable>
     const sourceMember = sourceMembers[name]
     assert(!!sourceMember, `Variable Cluster 未定义来源成员：${name}。新增成员须提供 Variable。`)
     const sourceStates = Object.fromEntries(

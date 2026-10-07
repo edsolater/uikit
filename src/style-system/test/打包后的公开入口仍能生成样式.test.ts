@@ -22,11 +22,9 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
       [styleSystem.key('color'), surface], [styleSystem.key('opacity'), opacity],
       [surface, 'blue'],
     ])
-    const count = styleSystem.variable(1, { name: 'bundle-modified-count', modification: {
-      apply: (current, change) => styleSystem.createJSSContent(resolve => 'calc(' + resolve(current) + ' + ' + resolve(change) + ')', [current, change]),
-    } })
+    const count = styleSystem.variable(1, { name: 'bundle-modified-count' })
     styleSystem.rules('.Built', [styleSystem.declare(count)])
-    styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, 3)])
+    styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, styleSystem.modification(currentExpression => styleSystem.add(currentExpression, 3)))])
     console.log(styleSystem.compileCSS())
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })

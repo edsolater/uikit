@@ -6,7 +6,7 @@
 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { add, applyColorModification, color, colorModification, cssRoot, declare, modify, multiply, rules, variable, type RulesHandle } from '../index'
+import { add, color, colorModification, cssRoot, declare, key, modify, adjust, multiply, oklch, rules, variable, type RulesHandle } from '../index'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 
 const handles: RulesHandle[] = []
@@ -24,7 +24,7 @@ function element(className: string, parent: HTMLElement = document.body) {
   result.className = className
   return result
 }
-const configured = (name: string) => variable('black', { name, modification: { apply: applyColorModification } })
+const configured = (name: string) => variable('black', { name })
 
 test('完整规则一次设置四通道，再按顺序应用另一完整规则', () => {
   const surface = configured('whole-color')
@@ -74,19 +74,6 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
   expect(getComputedStyle(first).backgroundColor).toBe('oklch(0.6 0.16 260)')
 })
 
-test('子元素应用独立规则时在当地继续计算，并继承父位置的条件规则', () => {
-  const surface = configured('inherited-color')
-  handles.push(rules('.Parent', [declare(surface, 'oklch(.4 .1 120 / .8)'), color({ background: surface })]))
-  handles.push(rules(['.Parent', '& .Child'], [modify(surface, colorModification({ lightness: currentExpression => add(currentExpression, 0.1) })), color({ background: surface })]))
-  handles.push(rules(['.Parent', '&[data-change]'], modify(surface, colorModification({ chroma: currentExpression => multiply(currentExpression, 2) }))))
-  mount()
-  const parent = element('Parent'), child = element('Child', parent)
-  expect(getComputedStyle(child).backgroundColor).toBe('oklch(0.5 0.1 120 / 0.8)')
-  parent.dataset.change = ''
-  expect(getComputedStyle(parent).backgroundColor).toBe('oklch(0.4 0.2 120 / 0.8)')
-  expect(getComputedStyle(child).backgroundColor).toBe('oklch(0.5 0.2 120 / 0.8)')
-})
-
 test('另一个普通Variable来源保留完整修改结果', () => {
   const source = configured('source-color'), target = configured('target-color')
   handles.push(rules('.Source', [declare(source, 'red'), modify(source, colorModification({ lightness: 0.5, chroma: 0.1, hue: 120 }))]))
@@ -125,4 +112,30 @@ test('基础来源Variable状态进入与退出仍更新最终颜色', async () 
   await userEvent.unhover(targetElement)
   reference.style.backgroundColor = 'oklch(from red l c h / .5)'
   expect(getComputedStyle(targetElement).backgroundColor).toBe(getComputedStyle(reference).backgroundColor)
+})
+test('整条规则保存到普通Variable，CSS状态组合与直接JS应用得到同色', () => {
+  const base = oklch({ lightness: 0.4, chroma: 0.1, hue: 120, alpha: 0.8 })
+  const surface = variable(base, 'dual-surface'), direct = variable(base, 'dual-direct')
+  const hover = colorModification({ lightness: currentExpression => add(currentExpression, 0.1), chroma: currentExpression => multiply(currentExpression, 2) })
+  const active = colorModification({ hue: 150, alpha: currentExpression => add(currentExpression, -0.2) })
+  const hoverRule = variable(hover, 'dual-hover-rule')
+  adjust(direct, hover)
+  adjust(direct, active)
+  handles.push(rules('.Dual', [declare(surface), declare(hoverRule), [key('background-color'), surface]]))
+  handles.push(rules(['.Dual', '&[data-hover]'], modify(surface, hoverRule)))
+  handles.push(rules(['.Dual', '&[data-active]'], modify(surface, active)))
+  handles.push(rules(['.Dual', '& .Child'], [[key('background-color'), surface]]))
+  handles.push(rules('.Direct', [declare(direct), [key('background-color'), direct]]))
+  mount()
+  const target = element('Dual'), child = element('Child', target), reference = element('Direct')
+  expect(getComputedStyle(target).backgroundColor).toBe('oklch(0.4 0.1 120 / 0.8)')
+  target.dataset.hover = target.dataset.active = ''
+  expect(getComputedStyle(target).backgroundColor).toBe(getComputedStyle(reference).backgroundColor)
+  expect(getComputedStyle(child).backgroundColor).toBe(getComputedStyle(reference).backgroundColor)
+  child.style.setProperty('--dual-hover-rule', '0.7 c h / alpha')
+  expect(getComputedStyle(child).backgroundColor).toBe('oklch(0.7 0.1 150 / 0.6)')
+  delete target.dataset.hover
+  expect(getComputedStyle(target).backgroundColor).toBe('oklch(0.4 0.1 150 / 0.6)')
+  delete target.dataset.active
+  expect(getComputedStyle(target).backgroundColor).toBe('oklch(0.4 0.1 120 / 0.8)')
 })

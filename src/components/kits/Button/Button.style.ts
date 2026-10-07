@@ -5,10 +5,11 @@
 组件自身的选择条件留在样式定义端，可复用效果交给 Style System。
 */
 import { declare } from '../../../style-system/declaration'
-import { modify } from '../../../style-system/variable-modification'
+import { modify } from '../../../style-system/variable-modify'
 import {
   rules,
   add,
+  modification,
   variable,
   innerText,
   contentLayout,
@@ -75,7 +76,6 @@ export const buttonSurfaceCanvas = variable(surfaceColorInteractive, { name: 'bu
 export const buttonSurfaceStrength = variable(0.18, {
   name: 'button-surface-strength',
   states: { hover: 0.28, active: 0.38 },
-  modification: { apply: (current, delta) => add(current, delta) },
 })
 
 
@@ -118,7 +118,7 @@ const bareStrength = variable(-0.18, {
 })
 const bareButton = [...button, '&[data-variant="bare"]']
 rules(bareButton, [
-  modify(buttonSurfaceStrength, bareStrength),
+  modify(buttonSurfaceStrength, modification(currentExpression => add(currentExpression, bareStrength))),
   [buttonSurfaceCanvas, 'transparent'],
   elevation(shadowFlat),
 ])
@@ -134,7 +134,7 @@ const shadowSolid = variable(shadowRaised, {
 })
 const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
-  modify(buttonSurfaceStrength, solidStrength),
+  modify(buttonSurfaceStrength, modification(currentExpression => add(currentExpression, solidStrength))),
   [buttonSurfaceSource, toneColor],
   declare(foregroundColor, toneColor('foreground')),
   elevation(shadowSolid),

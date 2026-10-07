@@ -15,7 +15,11 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 
 公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询快捷名称表。Variable 创建时展开 `states` 中匹配到的快捷名称，其他输入直接作为条件，保存条件到内容的映射；自动展开直接消费这些条件，复用完整 `ConditionPath` 与既有节点编译链。快捷条件保留中央顺序，直接条件随后按书写顺序排列。资源 Rule 继续传递内部路径身份，不承担快捷名称解释。
 
-`functions/` 构造 CSS 内容：`oklch({ lightness, chroma, hue, alpha })` 只输出普通颜色；`colorModification({ lightness, chroma, hue, alpha })` 将通道常量或 Expression 回调构成完整修改规则；`applyColorModification(currentExpression, modification)` 输出相对 `oklch(from …)`。规则可保存为单一普通 Variable，来源色和规则各自复用。[颜色入口](pieces/contents/atoms/color/colors.ts) 的 `toJSSColor` 包装 Color System 颜色；只有两份独立材料确需比较时，私有 `deriveColorChange` 生成规则。交互、柔和底色和线色直接描述动作，不先修改材料再回推差值。`surfaceColor`、`foregroundColor` 使用普通 Variable，配置颜色规则的应用方式。
+`oklch({ lightness, chroma, hue, alpha })` 用 Value 持有原始通道并输出普通颜色。`colorModification({ lightness, chroma, hue, alpha })` 返回独立 JS Modification，保存常量和 Expression 回调，构造时不执行回调或生成 CSS；JS 应用时回调操作当前通道数值表达式，CSS 消费时操作 l/c/h/alpha 表达式。完整颜色规则可保存为单一普通 Variable，来源色和规则各自复用。`applyColorModification(currentExpression, modification)` 负责相对 `oklch(from …)` 内容。[颜色入口](pieces/contents/atoms/color/colors.ts) 的 `toJSSColor` 包装 Color System 颜色；只有两份独立材料确需比较时，私有 `deriveColorChange` 生成规则。交互、柔和底色和线色直接描述动作，不先修改材料再回推差值。
+
+Modification 用自己的内部 symbol 保存规则描述，不是 CSS 内容，不提供执行或输出方法。`modify(variable, rule)` 在编译消费时解释规则并生成 CSS 条件组合；`adjust(variable, rule)` 解释同一规则、求 JS 结果并替换目标的基础内容，不修改共享来源、状态或注册。Variable 的默认值和状态可以保存规则，消费时把完整颜色规则解释为单条通道内容；通用 Value 和 Compiler 不识别规则。Value 用 `withContent` 按原配置包装新内容。隐式 declare 每次编译读取当前默认值，显式 declare 保持自身内容；DOM 提交仍由应用显式编译或 mount。
+
+`modification(currentExpression => add(currentExpression, 2))` 提供数值规则。`add`、`multiply` 共享操作数并分别提供 CSS 输出与有限 JS 数值求值，不解析 CSS 字符串，不把任意 JS 函数编译为 CSS。JS 修改只支持直接持有的默认数据及已知算术，基础生产函数不自动执行；通道中的 CSS-only 内容可直接被固定值替换，需要读取该内容的相对 JS 运算会诊断失败。数值规则通过 modify 应用到来源，裸 CSS Variable 无法给任意回调提供当前数值，因此独立 CSS 输出会明确诊断；完整颜色规则则使用原生相对颜色语法，支持 CSS Variable 保存和覆盖。
 
 `rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译验证并展开源 Rules；给 `onActive` 的 root 另复制规则容器（Rules、tuple、路径及嵌套 Rules），保留业务对象身份。Atom、Function 和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`onCompile` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules。`onCompile(context, ast)` 是返回 void 的编译通知，编译器不读取返回值；回调通过 Controller 查询、插入、移动或删除节点，通过 `setContent(context, content)` 改写当前被通知的内容位置。嵌套内容各自处理，不覆盖外层声明。已经成功通知的对象跨波等待时不会重调。编译器沿设定内容与 `dependencies` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始编译。Key、Content 或 revision 改变时，由同一失效规则分别在访问前和波末重置对应角色进度。
 
@@ -27,17 +31,17 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 
 完整的 `conditionPath` 保存 `targetConditionPath`、规范化 `stateConditionPath` 与未排序的 `semanticPath`。语义归属沿原始父链判断，CSS 输出仍按状态中央顺序。编译器为每个声明角色建立输入快照，通知每个内容时通过 `JSSCompileContext.input` 标识该内容，并传入本次编译共用的 [ASTController](compiler/ast-controller.ts)。Context 同时提供节点引用、会话身份、地址、Key、Content、role 与读取状态；Controller 提供当前内容操作，以及显式位置和来源的队列操作。`setContent` 仅在对应通知期间有效，旧上下文不能写入后来的位置记录。ASTSession 区分存活来源与输出成员，拒绝已撤销来源，按来源关系级联撤销；退出输出的来源仍存活。当前编译波由编译器内部掌握，内容对象保留最早编译波配置。编译完成时，状态路径并入 CSS 输出地址；`JSSContentNode` 保留已完成的内容对象及同一份位置记录。最后一段才调用 `toCSSString` 并写出 CSS，不按 Variable 或依赖来源重排。暂缓只重试尚未完成的通知，不撤回已执行的内容或队列操作；当前输出队列只剩暂缓角色且没有新节点时，编译报告实际暂缓原因。循环引用、嵌套、操作和编译波超过上限时分别明确失败。
 
-`declare(variable, value?)` 与 `modify(variable, modification, options?)` 返回 Declaration。Variable 保存默认值、状态、注册及 `modification.apply`；修改器按最近同对象语义声明归属，按当前节点顺序保存步骤。每步保留一个结果变量，前序 Expression 在输出时解析，不建立输入别名或双向步骤链。步骤及不继承存在标记的注册资源归属该步的默认选择门节点，基础注册归属根消费地址的结果引用，复用 AST 的来源级联撤销。
+`declare(variable, value?)` 与 `modify(variable, modification, options?)` 返回 Declaration。Variable 保存默认值、状态与注册；Modification 自己持有修改规则，任意领域数据由规则闭包捕获。修改器按最近同对象语义声明归属，按当前节点顺序保存步骤。每步保留一个结果变量，前序 Expression 在输出时解析，不建立输入别名或双向步骤链。步骤及不继承存在标记的注册资源归属该步的默认选择门节点，基础注册归属根消费地址的结果引用，复用 AST 的来源级联撤销。
 
-局部声明发布基础值与状态值，并接管同归属的自动产物。修改入口调用领域 apply 构造表达式，按存活成员的当前节点位置排序；重访、业务回调和撤销共用有序步骤更新。晚到或撤销声明重新确定修改和普通消费者的归属，前序 Expression 随最终顺序解析。
+局部声明发布基础值与状态值，并接管同归属的自动产物。修改入口解释规则描述构造表达式，按存活成员的当前节点位置排序；重访、业务回调和撤销共用有序步骤更新。晚到或撤销声明重新确定修改和普通消费者的归属，前序 Expression 随最终顺序解析。
 
 已编译步骤移动后，调用方显式增加 revision 才触发重访。编号只保证名称唯一。晚到或撤销定义让对应修改及普通消费者重新进入最近声明，按现役 `onCompile/onActive` 推进。没有独立 Rewriter 协议、操作转发或整组表达式缓存。
 
-`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在普通消费时读取同一 Variable 对象的 `config`，插入 `@property` 和自身状态定义，并通过 `setContent` 设定带 CSS `var()` 回退值的 Value；Variable 生成状态声明时把选中的状态随内容节点交给编译器；编译器从内容入口沿设定内容和 `dependencies` 传递该状态。嵌套来源 Variable 按同名状态读取内容，缺失则读取默认内容；来源其他状态不会进入该声明。普通 Rule 消费仍保留 CSS 引用。Variable 的嵌套引用通过 Content 链编译。根声明由需要它的具体 Atom 通过普通 Condition Rule 按需提供。可组合定义的状态先写入内部 base，再应用修改；`registration` 的类型约束同步到内部步骤；字段内容由 variable.ts 统一生成，普通引用与内部步骤各自保留激活、位置、来源及撤销责任。`VariableCluster` 代理默认 Variable 的对象属性和编译接口，选择和双方同名成员配对由 Cluster 自身负责。`clusterFrom` 按同名来源成员建立普通 Variable，保留来源状态引用并应用本组覆盖；未配置成员复用原对象。Function 与 Atom Creator 构造的内容通过 `dependencies` 暴露操作数，在最终输出时生成 CSS 文本。Creator 新配置通过整份内容重建及 `RuleHandle.replace` 消费，新内容与依赖一起重新编译。
+`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在普通消费时读取同一 Variable 对象的 `config`，插入 `@property` 和自身状态定义，并通过 `setContent` 设定带 CSS `var()` 回退值的内容表达式；Variable 生成状态声明时把选中的状态随内容节点交给编译器；编译器从内容入口沿设定内容和 `dependencies` 传递该状态。嵌套来源 Variable 按同名状态读取内容，缺失则读取默认内容；来源其他状态不会进入该声明。普通 Rule 消费仍保留 CSS 引用。Variable 的嵌套引用通过 Content 链编译。根声明由需要它的具体 Atom 通过普通 Condition Rule 按需提供。可组合定义的状态先写入内部 base，再应用修改；`registration` 的类型约束同步到内部步骤；字段内容由 variable.ts 统一生成，普通引用与内部步骤各自保留激活、位置、来源及撤销责任。`VariableCluster` 代理默认 Variable 的对象属性和编译接口，选择和双方同名成员配对由 Cluster 自身负责。`clusterFrom` 按同名来源成员建立普通 Variable，保留来源状态引用并应用本组覆盖；未配置成员复用原对象。Function 与 Atom Creator 构造的内容通过 `dependencies` 暴露操作数，在最终输出时生成 CSS 文本。Creator 新配置通过整份内容重建及 `RuleHandle.replace` 消费，新内容与依赖一起重新编译。
 
 [rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[内容编译流程](compiler/style-nodes-to-content-nodes/compilation.ts) 逐波编译、处理按需 Rules 和同址组合；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一编译波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。同址同名 Key 默认组合，单条声明仍直接输出。
 
-修改保留为完整规则或领域数据，原 selector 只选择当前步骤的候选；空 token 与 `initial` 选择门由 CSS 原生层叠和继承。修改地址及普通消费地址当地生成阶段结果，每阶段只引用前序 CSS 变量。未显式声明的后代继承规则选择，显式 `declare` 建立独立基础与修改归属；不解析选择器或复制祖先状态。`registration.inherits: false` 通过不继承的当地存在标记阻止消费链重新应用祖先修改，前序与最终引用保留注册基础值回退。
+修改保留为完整规则，领域数据由规则闭包捕获；原 selector 只选择当前步骤的候选，空 token 与 `initial` 选择门由 CSS 原生层叠和继承。修改地址及普通消费地址当地生成阶段结果，每阶段只引用前序 CSS 变量。未显式声明的后代继承规则选择，显式 `declare` 建立独立基础与修改归属；不解析选择器或复制祖先状态。`registration.inherits: false` 通过不继承的当地存在标记阻止消费链重新应用祖先修改，前序与最终引用保留注册基础值回退。
 
 `compileCSS()` 只返回 CSS 字符串。`cssRoot.mount()` 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
 
@@ -50,10 +54,11 @@ Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。
 | key.ts | JSSKey 的创建、可选聚合协议、声明目标识别与名称解析 |
 | declaration.ts | declare 入口，Key 配对及 Variable 局部基础声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
-| content.ts | 内容对象共同的可选行为、子内容读取与构造方法 |
+| content.ts | 内容对象共同的可选行为、子内容读取、CSS 消费协议与构造方法 |
 | value.ts | 稳定 Value 的内容包装与输入类型 |
-| variable.ts | Variable 创建、引用、状态与注册，以及领域 modification.apply 配置 |
-| variable-modification.ts | modify 入口、局部声明基础值、有序修改步骤及撤销 |
+| variable.ts | Variable 创建、引用、状态与注册 |
+| variable-modify.ts | modify 入口、局部声明基础值、有序修改步骤及撤销 |
+| modification.ts | 独立 JS/CSS 修改规则协议、数值规则、已知 JS 数值读取及 adjust |
 | variable-cluster.ts | Variable 成员选择、default 代理、同名声明配对及成员继承创建 |
 | css-root.ts | 源账本、三步编译调用和宿主提交 |
 | compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |

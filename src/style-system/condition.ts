@@ -1,5 +1,6 @@
 /** 创建 Condition，并表达目标、状态与 CSS 输出地址。 */
 import type { StateCondition } from './pieces/state-conditions'
+import { isString } from '@edsolater/fnkit'
 
 /** 一层 CSS 地址；header 同时是身份和输出块头。 */
 export interface Condition {
@@ -58,7 +59,7 @@ export function functionDefinition(signature: string): Condition {
 /** 返回可比较的语义路径片段；有原始语义地址时保留其输入顺序。 */
 export function semanticPathParts(path: ConditionPath): string[] {
   return (path.semanticPath ?? [...path.targetConditionPath, ...path.stateConditionPath.map((state) => state.name)])
-    .map((item) => typeof item === 'string' ? `state:${item}` : `condition:${item.header}`)
+    .map((item) => isString(item) ? `state:${item}` : `condition:${item.header}`)
 }
 /** 判断前一路径是否覆盖后一路径的起始片段；同一路径也成立。 */
 export function isSemanticPathPrefix(parent: ConditionPath, child: ConditionPath): boolean {

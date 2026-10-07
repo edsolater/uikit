@@ -56,7 +56,7 @@ AST Plan 已独立交付 `Rules → styleNodes → contentNodes → CSSString`�
 | `rule.ts` | 继续登记有序 Rules；声明序列保留重复 Key，未增加贡献专用入口 |
 | `condition.ts`、`compiler/ast-controller.ts` | 共用最终 Target／State 地址身份；AST 查询与聚合不各自实现一套地址比较 |
 | `pieces/keys/box-shadow.ts` | 作为普通 Key 使用默认组合，不判断各项阴影形状 |
-| `variable-modification.ts` | 仅在同址重复的内部基础值、步骤与结果声明上显式取最后有效值，维持 Variable 原有赋值语义 |
+| `variable-modify.ts` | 仅在同址重复的内部基础值、步骤与结果声明上显式取最后有效值，维持 Variable 原有赋值语义 |
 | `compiler/style-nodes-to-content-nodes/join.ts` | 等待原队列稳定，按地址和属性名收集；保留输入来源，在末项生成结果节点并继续解析；来源变化或结果被删时重建 |
 | `compiler/content-nodes-to-css-string.ts` | 提供惰性读取每项已解析内容的方法，最后仍按内容节点顺序生成 CSS 文本 |
 

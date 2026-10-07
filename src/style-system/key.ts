@@ -1,5 +1,5 @@
 /** JSS 声明目标的创建、识别与名称解析。 */
-import { assert } from '@edsolater/fnkit'
+import { assert, hasProperty, isFunction, isString } from '@edsolater/fnkit'
 import type { Value, ValueInput } from './value'
 
 /** 原生属性名称。 */
@@ -26,9 +26,8 @@ export type JSSKey = JSSKeyObject | string
 const names = new Map<string, JSSKeyDefinition>()
 
 /** 将原生属性名转换为对象声明使用的驼峰名称。 */
-function propertyAlias(name: string): string {
-  return name.replace(/-([a-z0-9])/g, (_, character: string) => character.toUpperCase())
-}
+const propertyAlias = (name: string): string =>
+  name.replace(/-([a-z0-9])/g, (_, character: string) => character.toUpperCase())
 
 /** 登记属性原名与对象声明别名；同名目标不允许静默改指其他属性。 */
 export function registerJSSKey(target: JSSKeyDefinition): void {
@@ -56,14 +55,12 @@ export function key<K extends string>(name: K, options?: Pick<JSSKeyObject, 'joi
 }
 
 /** 识别声明目标。 */
-export function isJSSKey(input: unknown): input is JSSKey {
-  return typeof input === 'string' || (input !== null && (typeof input === 'object' || typeof input === 'function')
-    && 'toCSSString' in input && typeof input.toCSSString === 'function')
-}
+export const isJSSKey = (input: unknown): input is JSSKey =>
+  isString(input) || hasProperty(input, 'toCSSString', isFunction)
 
 /** 解析对象与字符串条目中的声明名称；原生属性和自定义属性保持字符串入口。 */
 export function resolveJSSKey(input: JSSKey): JSSKey {
-  if (typeof input !== 'string') return input
+  if (!isString(input)) return input
   const registered = names.get(input)
   if (registered) return registered
   if ((input.startsWith('--') && input.length > 2) || /^-?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(input)) return input
@@ -71,6 +68,4 @@ export function resolveJSSKey(input: JSSKey): JSSKey {
 }
 
 /** 取得原生属性名。 */
-export function propertyName(key: JSSKey): string {
-  return typeof key === 'string' ? key : key.toCSSString()
-}
+export const propertyName = (key: JSSKey): string => isString(key) ? key : key.toCSSString()

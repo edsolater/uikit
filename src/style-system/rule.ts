@@ -1,5 +1,5 @@
 /** Rule 登记与声明组合。 */
-import { assert, isString } from '@edsolater/fnkit'
+import { assert, isArray, isFunction, isObject, isObjectLike, isString } from '@edsolater/fnkit'
 import { condition, type Condition, type ConditionInput } from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './declaration'
@@ -68,7 +68,7 @@ function assertValidConditionPath(path: (Condition | string)[]): void {
  */
 function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
   if (input === undefined) return undefined
-  const path = Array.from(Array.isArray(input) ? input : [input], resolvePathCondition)
+  const path = Array.from(isArray(input) ? input : [input], resolvePathCondition)
   assertValidConditionPath(path)
   return path
 }
@@ -81,15 +81,14 @@ export function rule(path: ConditionInput, key: JSSKey | undefined, input: RuleV
 
 /** 识别名称声明对象，不把类实例误当声明集合。 */
 function isDeclarationObject(input: unknown): input is DeclarationObject {
-  if (typeof input !== 'object' || input === null || isDeclarationIterable(input)) return false
+  if (!isObject(input) || isDeclarationIterable(input)) return false
   const prototype = Object.getPrototypeOf(input)
   return prototype === Object.prototype || prototype === null
 }
 
 /** 识别标准 Iterable；字符串名称不能作为声明序列逐字展开。 */
 function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
-  if ((typeof input !== 'object' || input === null) && typeof input !== 'function') return false
-  return typeof (input as { [Symbol.iterator]?: unknown })[Symbol.iterator] === 'function'
+  return isObjectLike(input) && isFunction((input as { [Symbol.iterator]?: unknown })[Symbol.iterator])
 }
 
 /** 批量登记声明；无效输入整批拒绝，undefined 内容跳过。 */
