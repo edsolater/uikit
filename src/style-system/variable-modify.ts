@@ -4,10 +4,9 @@
 
 样式节点增删后，修改仍须按当前归属与顺序从基础值继续计算。
 */
-import { createJSSContent, type JSSCompileContext, type JSSContent } from './content'
-import type { Expression } from './content'
+import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
 import { resolveVariable } from './variable-cluster'
-import { assert, containKey, isFunction, result } from '@edsolater/fnkit'
+import { assert, containKey, hasProperty, isFunction, result } from '@edsolater/fnkit'
 import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
 import type { Declaration } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
@@ -15,9 +14,10 @@ import type { JSSKeyObject } from './key'
 import type { ASTController } from './compiler/ast-controller'
 import { value, type Value, type ValueInput } from './value'
 import { appendStateCondition } from './pieces/state-conditions'
-import { variableContent, variableRegistrationDeclarations, type Variable, type VariableDefaultValue } from './variable'
-import { isModification, modificationRule, readJSValue, type Modification } from './modification'
-import { applyColorModification } from './pieces/contents/functions/color-modification'
+import { isVariable, readJSValue, variableRegistrationDeclarations, type Variable, type VariableDefaultValue } from './variable'
+import type { Modification } from './modification'
+import type { colorVariableModification } from './color-variable-modification'
+import { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
 
 /** 一个局部声明的基础值、最终值和修改步骤；只在本次编译内有效。 */
 interface VariableInstance {
@@ -172,13 +172,14 @@ function createVariableInstance(session: VariableSession, node: JSSStyleNode, va
   return instance
 }
 
-/** 求基础生产函数并发布基础值与有序状态值。 */
+/**
+ * 求基础生产函数并发布基础值与有序状态值。
+ */
 function declareInstanceValues(controller: ASTController, instance: VariableInstance, content: VariableDefaultValue): void {
   const { node, variable } = instance
-  const baseContent = variableContent(result(content))
   controller.insert(
     { before: node, conditionPath: node.conditionPath },
-    [instance.baseKey, baseContent],
+    [instance.baseKey, result(content)],
     { owner: node, identity: 'base' },
   )
   for (const [state, stateContent] of variable.config.states) {
@@ -187,7 +188,7 @@ function declareInstanceValues(controller: ASTController, instance: VariableInst
         before: node,
         conditionPath: appendStateCondition(node.conditionPath, state),
       },
-      [instance.baseKey, variableContent(stateContent)],
+      [instance.baseKey, stateContent],
       { owner: node, identity: `state/${state.name}` },
     )
     stateNode.readState = state.name
@@ -225,13 +226,14 @@ export function consumeVariable(context: JSSCompileContext, controller: ASTContr
 }
 
 /**
- * 将独立规则应用到最近的同对象声明，规则可由普通 Variable 保存，条件由 CSS 决定。
+ * 返回条件修改 Declaration；编译消费时直接执行变化回调或组合颜色配方，生成前序 Expression 的修改结果。
+ * 修改归属最近的同对象声明；规则可由 Variable 保存，生效条件由 CSS 决定。
  * 相同 id 在同一局部声明内共用一步；未指定 id 时每次调用形成独立步骤。
  * @example
  * rules('.button', [declare(surfaceColor, baseColor)])
  * rules(['.button', '&:hover'], [modify(surfaceColor, hoverChange)])
  */
-export function modify(variable: Variable, modification: Modification | Variable, options?: { id?: string | symbol }): Declaration {
+export function modify(variable: Variable, modification: Modification<(currentExpression: Expression) => Expression> | ReturnType<typeof colorVariableModification> | Variable, options?: { id?: string | symbol }): Declaration {
   variable = resolveVariable(variable)
   return [variable, {
     resourceIdentity: Symbol('variable-modification'),
@@ -244,8 +246,8 @@ export function modify(variable: Variable, modification: Modification | Variable
       if (old?.instance === instance) { refreshSteps(controller, instance); return }
       if (old) removeModification(context, controller, old, context.node)
       const stored = readJSValue(modification)
-      assert(isModification(stored), `Variable ${variable.name} 的修改需要提供可应用的 Modification 规则。`)
-      const rule = stored[modificationRule]
+      assert(hasProperty(stored, 'change', isFunction) || (hasProperty(stored, 'change') && isJSSContent(stored)),
+        `Variable ${variable.name} 的修改需要提供可应用的 Modification 规则。`)
       if (!instance.steps.length) {
         instance.baseName = `${variable.name}-modify-${instance.number}-base`
         publishResult(controller, instance, instance.node)
@@ -254,7 +256,8 @@ export function modify(variable: Variable, modification: Modification | Variable
       }
       const step = instance.steps.find(step => options?.id !== undefined && step.id === options.id)
         ?? createStep(context, controller, instance, options?.id)
-      const output = isFunction(rule) ? rule(step.currentExpression) : applyColorModification(step.currentExpression, modification)
+      const output = hasProperty(stored, 'change', isFunction) ? stored.change(step.currentExpression)
+        : relativeOKLCH(step.currentExpression, isVariable(modification) ? modification : stored)
       const gate = `${step.name}-candidate-${++step.count}`
       const selection = controller.insert({ before: context.node, conditionPath: context.conditionPath },
         [undefined, createJSSContent(resolve => resolve(output) === undefined ? undefined : selectionText(step, gate), [output])],

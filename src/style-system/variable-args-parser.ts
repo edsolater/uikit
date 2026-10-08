@@ -5,12 +5,13 @@
 后续创建逻辑只处理统一配置，不再区分调用写法。
 */
 import { containKey, IdGenerator, isString } from '@edsolater/fnkit'
-import type { VariableContent, VariableDefaultValue, VariableOptions } from './variable'
+import type { VariableDefaultValue, VariableOptions } from './variable'
+import type { ValueInput } from './value'
 
 /** default 是默认内容，其余自身可枚举字段是状态内容；默认生产函数仍保留原样。 */
 export type VariableStateValues<DefaultValue extends VariableDefaultValue = VariableDefaultValue> = {
   default: DefaultValue
-} & Record<string, VariableContent | ((defaultValue: DefaultValue) => VariableContent)>
+} & Record<string, ValueInput | ((defaultValue: DefaultValue) => ValueInput)>
 
 /** 解析后的创建配置；状态回调和默认生产函数尚未执行。 */
 export type VariableConfig<

@@ -291,8 +291,8 @@ test('共享步骤保持选择器优先级，当地规则覆盖继承，空输�
 })
 
 test.each(['late-declare', 'removed-declare'])('普通颜色消费者在局部声明变化后重新确定归属，操作=%s', async operation => {
-  const { colorModification, applyColorModification, add } = await import('../index')
-  const change = variable(colorModification({ lightness: currentExpression => add(currentExpression, 0.1) }), 'consumer-rule')
+  const { colorVariableModification, add } = await import('../index')
+  const change = variable(colorVariableModification({ lightness: currentExpression => add(currentExpression, 0.1) }), 'consumer-rule')
   const surface = variable('oklch(0.2 0.1 120)', { name: 'consumer-surface' })
   const declaration = declare(surface, 'oklch(0.5 0.1 120)')
   const input: import('../rule').Rules = [

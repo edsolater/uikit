@@ -10,8 +10,8 @@ import { variableCluster } from '../../../../variable-cluster'
 import { type ValueInput } from '../../../../value'
 import { createJSSContent } from '../../../../content'
 import { oklch } from '../../functions/oklch'
-import { colorModification, applyColorModification } from '../../functions/color-modification'
-import type { Modification } from '../../../../modification'
+import { colorVariableModification } from '../../../../color-variable-modification'
+import { relativeOKLCH } from '../../functions/relative-oklch'
 import { add } from '../../functions/calc'
 import { colorMix } from '../../functions/color-mix'
 import { paper, ink, neutral } from './palette'
@@ -29,9 +29,11 @@ function toJSSColor(color: ColorMaterial, name: string): Variable {
   return variable(oklch({ ...color.base, alpha: color.alpha }), name)
 }
 
-/** 比较两份独立定义的颜色，按差异创建可复用的 Modification。 */
-const createColorModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }): Modification =>
-  colorModification({
+/**
+ * 返回从 original 到 target 的颜色 Modification；通道差值由保存的回调计算，alpha 变化在构造时确定。
+ */
+const createColorVariableModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }) =>
+  colorVariableModification({
     lightness: currentExpression => add(currentExpression, target.base.lightness - original.base.lightness),
     chroma: currentExpression => add(currentExpression, target.base.chroma - original.base.chroma),
     hue: currentExpression => add(currentExpression, target.base.hue - original.base.hue),
@@ -43,15 +45,17 @@ export const inkColor = toJSSColor(ink, 'ink-color')
 export const brandColor = toJSSColor(brand, 'brand-color')
 export const neutralColor = toJSSColor(neutral, 'neutral-color')
 
-/** 为已有基础 Variable 配置语气成员，独立规则始终应用到当前颜色。 */
+/**
+ * 由 base、strongChange 与透明度配置生成语气 VariableCluster；派生颜色引用当前 base 和通道配方。
+ */
 function colorMembers(name: string, base: Variable, lineAlpha: number,
-  strongChange?: Modification | Variable, foreground: ValueInput = currentColorReference(paperColor)) {
+  strongChange?: ValueInput, foreground: ValueInput = currentColorReference(paperColor)) {
   const currentBase = currentColorReference(base)
   return variableCluster({
     default: base,
-    strong: strongChange === undefined ? base : variable(applyColorModification(currentBase, strongChange), `${name}-color-strong`),
-    soft: variable(applyColorModification(currentBase, colorModification({ alpha: 0.14 })), `${name}-color-soft`),
-    line: variable(applyColorModification(currentBase, colorModification({ alpha: lineAlpha })), `${name}-color-line`),
+    strong: strongChange === undefined ? base : variable(relativeOKLCH(currentBase, strongChange), `${name}-color-strong`),
+    soft: variable(relativeOKLCH(currentBase, colorVariableModification({ alpha: 0.14 })), `${name}-color-soft`),
+    line: variable(relativeOKLCH(currentBase, colorVariableModification({ alpha: lineAlpha })), `${name}-color-line`),
     foreground: variable(foreground, `${name}-color-foreground`),
   })
 }
@@ -86,11 +90,11 @@ const interactiveDefault = variable(currentBrandColor, {
   name: 'interactive-color',
   registration: { syntax: '*', inherits: true },
   states: {
-    hover: applyColorModification(currentBrandColor, colorModification({
+    hover: relativeOKLCH(currentBrandColor, colorVariableModification({
       lightness: currentExpression => add(currentExpression, -0.04),
       chroma: currentExpression => add(currentExpression, 0.01),
     })),
-    active: applyColorModification(currentBrandColor, colorModification({
+    active: relativeOKLCH(currentBrandColor, colorVariableModification({
       lightness: currentExpression => add(currentExpression, -0.08),
       chroma: currentExpression => add(currentExpression, -0.01),
     })),
@@ -98,8 +102,8 @@ const interactiveDefault = variable(currentBrandColor, {
 })
 export const interactiveColor = colorMembers('interactive', interactiveDefault, 0.48)
 export const highlightColor = colorMembers('highlight',
-  variable(applyColorModification(currentBrandColor, createColorModificationByDiff({ original: brand, target: highlight })), 'highlight-color'),
-  0.42, colorModification({
+  variable(relativeOKLCH(currentBrandColor, createColorVariableModificationByDiff({ original: brand, target: highlight })), 'highlight-color'),
+  0.42, colorVariableModification({
     lightness: currentExpression => add(currentExpression, 0.08),
     chroma: currentExpression => add(currentExpression, 0.02),
   }),
@@ -133,10 +137,10 @@ export const surfaceColorInteractive = variable(currentSurfaceColor, {
   name: 'surface-color-interactive',
   registration: { syntax: '*', inherits: true },
   states: {
-    hover: applyColorModification(currentSurfaceColor, colorModification({
+    hover: relativeOKLCH(currentSurfaceColor, colorVariableModification({
       lightness: currentExpression => add(currentExpression, -0.04),
     })),
-    active: applyColorModification(currentSurfaceColor, colorModification({
+    active: relativeOKLCH(currentSurfaceColor, colorVariableModification({
       lightness: currentExpression => add(currentExpression, -0.08),
     })),
   },

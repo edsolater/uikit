@@ -1,6 +1,6 @@
 /** 同一条规则的 JS 应用、目标隔离和后续样式消费。 */
 import { expect, test } from 'vitest'
-import { add, colorModification, createJSSContent, declare, key, modification, adjust, multiply, oklch, value, variable } from '../index'
+import { add, colorVariableModification, createJSSContent, declare, key, modification, adjust, multiply, oklch, value, variable } from '../index'
 import { compileRules } from '../css-root'
 import type { Value } from '../value'
 import type { OKLCHChannels } from '../index'
@@ -14,7 +14,7 @@ test('同一颜色规则连续修改目标，另一个共享来源及状态内�
   const wrapped = variable(value(source), 'js-wrapped')
   const declarations: Rules = [[['.target'], ...declare(target)], [['.other'], ...declare(other)], [['.source'], ...declare(source)], [['.explicit'], ...declare(target, shared)], [['.wrapped'], ...declare(wrapped)]]
   expect(compileRules(declarations)).toContain('--js-source: oklch(0.4 0.1 120 / 0.8);')
-  const change = colorModification({
+  const change = colorVariableModification({
     lightness: currentExpression => add(currentExpression, 0.1),
     chroma: currentExpression => multiply(currentExpression, 2), hue: 150,
     alpha: currentExpression => add(currentExpression, -0.2),
@@ -45,14 +45,14 @@ test('固定通道赋值不读取旧CSS表达式，省略通道和alpha保留数
   const opaque = createJSSContent(() => 'var(--unknown)')
   const original = { lightness: opaque, chroma: 0.1, hue: 120 }
   const namedRule = { lightness: 0.6, description: '固定明度' }
-  const fixed = colorModification(namedRule)
+  const fixed = colorVariableModification(namedRule)
   const target = variable(oklch(original))
   adjust('mutable', target, fixed)
   expect((target.config.defaultValue as Value).content).toEqual({ lightness: 0.6, chroma: 0.1, hue: 120 })
   const alpha = variable(oklch(original))
-  adjust('mutable', alpha, colorModification({ alpha: 1 }))
+  adjust('mutable', alpha, colorVariableModification({ alpha: 1 }))
   expect((alpha.config.defaultValue as Value).content).toEqual({ ...original, alpha: 1 })
-  const relative = colorModification({ lightness: currentExpression => add(currentExpression, 0.1) })
+  const relative = colorVariableModification({ lightness: currentExpression => add(currentExpression, 0.1) })
   expect(() => adjust('mutable', variable(oklch(original)), relative)).toThrow('JS 数值')
   const missingLightness = variable(oklch({ ...original, lightness: undefined }))
   expect(() => adjust('mutable', missingLightness, relative)).toThrow('JS 数值')
@@ -124,7 +124,7 @@ test('默认调整产生独立变量，保留格式、资源和已解析状态�
 
 test('两种调整模式在规则求值失败时均保留目标原内容', () => {
   const source = variable(oklch({ lightness: 0.4, chroma: 0.1, hue: 120 }), 'adjust-failure')
-  const invalid = colorModification({ lightness: 0.6, chroma: () => createJSSContent(() => 'var(--unknown)') })
+  const invalid = colorVariableModification({ lightness: 0.6, chroma: () => createJSSContent(() => 'var(--unknown)') })
   expect(() => adjust(source, invalid)).toThrow('JS 数值')
   expect(() => adjust('mutable', source, invalid)).toThrow('JS 数值')
   expect(compileRules([[['.failure'], ...declare(source)]])).toContain('--adjust-failure: oklch(0.4 0.1 120);')
@@ -132,7 +132,7 @@ test('两种调整模式在规则求值失败时均保留目标原内容', () =>
 
 test('构造规则不执行回调，JS调整不执行CSS输出或生产函数', () => {
   const source = variable(() => { throw new Error('生产函数不应执行') }, 'js-producer')
-  const change = colorModification({ lightness: () => { throw new Error('规则尚未应用') } })
+  const change = colorVariableModification({ lightness: () => { throw new Error('规则尚未应用') } })
   expect(() => adjust(source, change)).toThrow('不求值基础生产函数')
   expect(() => adjust('mutable', source, change)).toThrow('不求值基础生产函数')
   const target = variable(value(1, { toCSSString: () => { throw new Error('JS 调整不应调用 CSS 输出') } }), 'js-only')

@@ -1,6 +1,6 @@
 /** 样式中定义和使用 Variable 的入口。
 
-创建可复用的变量，并为声明目标、状态读取和普通引用提供对应的 CSS 内容。
+创建和引用变量，保存默认值与状态，并展开已持有的默认数据。
 
 这些用途共享一份默认值与状态配置，具体输出由样式中的使用位置决定。
 */
@@ -9,18 +9,15 @@ import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
 import { createJSSContent, type JSSCompileContext, type JSSContent } from './content'
 import type { ASTController } from './compiler/ast-controller'
-import type { ValueInput } from './value'
+import { isValue, type ValueInput } from './value'
+import { resolveVariable } from './variable-cluster'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
 import { hasProperty, result } from '@edsolater/fnkit'
 import { consumeVariable, findLocalBaseKey } from './variable-modify'
 import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
-import { isModification, modificationRule, type Modification } from './modification'
-import { colorModificationContent } from './pieces/contents/functions/color-modification'
 
-/** Variable 持有的 CSS 内容或完整修改规则。 */
-export type VariableContent = ValueInput | Modification
 /** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
-export type VariableDefaultValue = VariableContent | (() => VariableContent)
+export type VariableDefaultValue = ValueInput | (() => ValueInput)
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
 export interface Variable extends JSSContent {
@@ -31,7 +28,7 @@ export interface Variable extends JSSContent {
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
     defaultValue: VariableDefaultValue
     /** 创建时解析条件并求内容，按登记顺序保存；命中时不求默认值。 */
-    states: Map<StateCondition, VariableContent>
+    states: Map<StateCondition, ValueInput>
     registration?: VariableOptions['registration']
     /** 自动状态声明的目标 Key，始终指向当前 Variable 名称。 */
     definitionKey: JSSKeyObject
@@ -63,7 +60,7 @@ export interface VariableOptions<
    * 各 State Condition 下使用的基础内容；修改从选中的基础内容继续。
    * 回调在创建时执行，收到原始 defaultValue，包括尚未求值的生产函数。
    */
-  states?: Record<string, VariableContent | ((defaultValue: DefaultValue) => VariableContent)>
+  states?: Record<string, ValueInput | ((defaultValue: DefaultValue) => ValueInput)>
 
   /** 首次消费时提供按需 Rules；与普通 JSSContent.onActive 使用同一生命周期。 */
   onActive?: JSSContent['onActive']
@@ -96,8 +93,8 @@ export function variable<DefaultValue extends VariableDefaultValue>(
   const config = parseVariableArgs(input, options)
   const entries = Object.entries(config.states ?? {})
   const conditions = resolveStateConditions(entries.map(([name]) => name))
-  const states = new Map<StateCondition, VariableContent>(
-    entries.map(([name, content]): [StateCondition, VariableContent] => [
+  const states = new Map<StateCondition, ValueInput>(
+    entries.map(([name, content]): [StateCondition, ValueInput] => [
       conditions.find((state) => state.name === name)!, result(content, config.defaultValue),
     ])
       .sort(([left], [right]) => left.order - right.order),
@@ -138,23 +135,36 @@ export function variable<DefaultValue extends VariableDefaultValue>(
   return self
 }
 
+/**
+ * 只追溯 Variable 的 defaultValue（Cluster 取默认成员），原样返回内容，生产函数保留为函数。
+ */
+export const readVariableDefault = (input: unknown): unknown =>
+  isVariable(input)
+    ? readVariableDefault(resolveVariable(input).config.defaultValue)
+    : input
 
-
-/** 读取此 Variable 的指定状态；只有状态缺项时才求默认内容。 */
-function readVariableContent(variable: Variable, readState?: string): ValueInput {
-  const entry = readState === undefined ? undefined : [...variable.config.states].find(([state]) => state.name === readState)
-  return variableContent(entry ? entry[1] : result(variable.config.defaultValue))
+/**
+ * 只展开 Variable/Cluster 默认来源与 Value 包装，原样返回内容，不执行生产函数或表达式。
+ */
+export function readJSValue(input: unknown): unknown {
+  const current = readVariableDefault(input)
+  return isValue(current) ? readJSValue(current.content) : current
 }
 
-/** 将 Variable 持有的颜色规则解释为整条 CSS 通道内容，普通内容直接消费。 */
-export const variableContent = (content: VariableContent): ValueInput =>
-  isModification(content) ? colorModificationContent(content[modificationRule]) : content
+/**
+ * 读取此 Variable 的指定状态；只有状态缺项时才求默认内容。
+ */
+function readVariableContent(variable: Variable, readState?: string): ValueInput {
+  const entry = readState === undefined ? undefined : [...variable.config.states].find(([state]) => state.name === readState)
+  return entry ? entry[1] : result(variable.config.defaultValue)
+}
 
 /** 从按登记顺序排列的候选中，取当前路径最后命中的状态。 */
 const findCurrentState = (states: StateCondition[], path: ConditionPath): StateCondition | undefined =>
   states.findLast((state) => path.stateConditionPath.some((current) => current.name === state.name))
 
-/** 为普通引用写出当前位置和后续状态的变量声明。
+/**
+ * 为普通引用写出当前位置和后续状态的变量声明。
  * `n` 默认 `4`、hover 为 `8`，首次在 `.button` 普通引用且无局部声明时生成：
  * ```css
  * .button {
@@ -171,12 +181,12 @@ function declareVariableStates(context: JSSCompileContext, controller: ASTContro
   if (!states.length) return
 
   const currentState = findCurrentState(states, context.conditionPath)
-  const currentValue = currentState ? variableContent(variable.config.states.get(currentState)) : fallbackValue
+  const currentValue = currentState ? variable.config.states.get(currentState) : fallbackValue
   insertDefinition(context, controller, variable, context.conditionPath, currentValue, currentState?.name)
 
   for (const [state, content] of variable.config.states) {
     if (currentState && state.order <= currentState.order) continue
-    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state), variableContent(content), state.name)
+    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state), content, state.name)
   }
 }
 

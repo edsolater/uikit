@@ -5,7 +5,7 @@
  * 这里检查编译失败和资源输出，不绑定内部步骤名称或查询次数。
  */
 import { expect, test } from 'vitest'
-import { add, condition, createJSSContent, declare, modification, modify, value, variable, type Modification } from '../index'
+import { add, adjust, condition, createJSSContent, declare, modification, modify, value, variable, type Expression, type Modification } from '../index'
 import { compileRules } from '../css-root'
 import type { Declaration } from '../declaration'
 import type { Rules } from '../rule'
@@ -13,10 +13,21 @@ import type { Rules } from '../rule'
 const button = condition('.button'), hover = condition('&:hover')
 const row = (path: (ReturnType<typeof condition> | string)[], declaration: Declaration): Rules[number] => [path, ...declaration]
 
+test('使用端直接消费变化描述，表达式变化不要求数值求值或内容编译', () => {
+  const amount = variable(3, 'plain-rule')
+  const change: Modification<(current: Expression) => Expression> = { change: current => add(current, 2) }
+  expect(compileRules([row([button], declare(amount)), row([button], modify(amount, change))])).toContain('+ 2)')
+  expect(adjust(amount, change).config.defaultValue).toBe(5)
+  const color = variable('red', 'expression-color')
+  const replacement = modification(() => value('blue'))
+  expect(compileRules([row([button], declare(color)), row([button], modify(color, replacement))])).toContain('blue')
+  expect(() => adjust(amount, replacement)).toThrow('有限 JS 数值')
+})
+
 test('缺失局部声明或应用规则时给出明确诊断', () => {
   const amount = variable(1, 'diagnostic-amount')
   expect(() => compileRules([row([button], modify(amount, modification(currentExpression => add(currentExpression, 3))))])).toThrow('找不到父路径定义')
-  expect(() => compileRules([row([button], declare(amount)), row([button], modify(amount, 3 as unknown as Modification))])).toThrow('可应用的 Modification 规则')
+  expect(() => compileRules([row([button], declare(amount)), row([button], modify(amount, 3 as unknown as ReturnType<typeof modification>))])).toThrow('可应用的 Modification 规则')
 })
 
 test('同名不同对象不共用局部声明，重复同路径局部声明给出诊断', () => {

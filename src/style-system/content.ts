@@ -1,4 +1,9 @@
-/** 定义 CSS 内容被消费、编译和输出时的行为。 */
+/** JSS 内容与表达式的消费协议。
+ *
+ * 定义广义生命周期、子内容解析与纯内容表达式的输出边界。
+ *
+ * 让编译器消费对象能力，同时让内容组织工具保持自身职责。
+ */
 import { hasProperty, isArray, isFunction } from '@edsolater/fnkit'
 import type { ConditionPath } from './condition'
 import type { JSSKey } from './key'
@@ -50,38 +55,57 @@ export interface JSSContent {
   toCSSString?: (resolve?: JSSContentResolver) => string | undefined
 }
 
-/** 修改回调操作并返回的延迟 CSS 内容表达式。如l-.2 */
-export type Expression = JSSContent
+/** 只组织自身依赖与 CSS 输出的表达式；自身不承担消费位置、AST 操作或资源定义。 */
+export interface Expression extends JSSContent {
+  dependencies: unknown[]
+  toCSSString(resolve?: JSSContentResolver): string | undefined
+  onActive?: never
+  onCompile?: never
+  compileWaveIndex?: never
+  resourceIdentity?: never
+}
 
-/** 已知表达式的 JS 求值协议；调用由求值消费者负责。 */
+/** 内容的 JS 数值求值协议；调用由求值消费者负责。 */
 export const evaluateExpression = Symbol('evaluateExpression')
 
-/** 识别可求值表达式的方法，不执行求值。 */
-export const isEvaluableExpression = (input: unknown): input is Expression & { [evaluateExpression](): number } =>
+/**
+ * 识别内容的 JS 数值求值方法，不执行求值。
+ */
+export const isEvaluableExpression = (input: unknown): input is JSSContent & { [evaluateExpression](): number } =>
   hasProperty(input, evaluateExpression, isFunction)
 
-/** 连接依赖内容和输出方法，供业务构造工具及自定义内容使用。 */
+/**
+ * 连接依赖内容和输出方法，构造自身没有编译或激活行为的 Expression。
+ */
 export const createJSSContent = (
   toCSSString: (resolve: JSSContentResolver) => string | undefined,
   dependencies: unknown[] = [],
-): JSSContent => ({
+): Expression => ({
   dependencies,
   toCSSString: (resolve) => toCSSString(resolve ?? (() => undefined)),
 })
 
-/** 判断内容对象是否提供 onCompile 方法。 */
+/**
+ * 判断内容对象是否提供 onCompile 方法。
+ */
 export const hasJSSContentOnCompileMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onCompile'>> =>
   hasProperty(input, 'onCompile', isFunction)
 
-/** 判断内容对象是否公开 CSS 输出方法。 */
+/**
+ * 判断内容对象是否公开 CSS 输出方法。
+ */
 export const hasJSSContentOutput = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'toCSSString'>> =>
   hasProperty(input, 'toCSSString', isFunction)
 
-/** 判断内容对象是否提供 onActive 方法，不激活资源。 */
+/**
+ * 判断内容对象是否提供 onActive 方法，不激活资源。
+ */
 export const hasJSSContentOnActiveMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onActive'>> =>
   hasProperty(input, 'onActive', isFunction)
 
-/** 判断对象是否承担任一种 JSS 内容行为。 */
+/**
+ * 判断对象是否承担任一种 JSS 内容行为。
+ */
 export const isJSSContent = (input: unknown): input is JSSContent => (
   hasJSSContentOnCompileMethod(input) ||
   hasJSSContentOutput(input) ||

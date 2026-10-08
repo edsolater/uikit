@@ -1,13 +1,20 @@
-/** CSS 混色内容。 */
+/** 混色的内容组织。
+ *
+ * 连接颜色与比例，延迟生成 oklab 混色文本。
+ *
+ * 保留依赖的编译结果，颜色和比例可随外界状态变化。
+ */
 import { createJSSContent } from '../../../content'
 import type { ValueInput } from '../../../value'
-import type { JSSContent } from '../../../content'
+import type { Expression } from '../../../content'
 
 /** 颜色及可选的零至一比例。 */
 export type MixColorInput = ValueInput | [color: ValueInput, weight: ValueInput]
 
-/** 延迟生成 oklab 混色；比例换算为百分比。 */
-export function colorMix(...colors: MixColorInput[]): JSSContent {
+/**
+ * 延迟生成 oklab 混色；比例换算为百分比。
+ */
+export function colorMix(...colors: MixColorInput[]): Expression {
   return createJSSContent((resolve) => {
     const parts = colors.map((input) => {
       if (!Array.isArray(input)) return resolve(input)

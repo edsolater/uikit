@@ -14,7 +14,7 @@ import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
 
-import { cssFunction } from '../pieces/contents/functions/custom'
+import { cssFunction } from '../css-function'
 import { stateCondition } from '../pieces/state-conditions'
 import { media } from '../condition'
 import type { Rules } from '../rule'
