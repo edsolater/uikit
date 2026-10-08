@@ -10,7 +10,7 @@ import { variableCluster } from '../../../../variable-cluster'
 import { type ValueInput } from '../../../../value'
 import { createJSSContent } from '../../../../content'
 import { oklch } from '../../functions/oklch'
-import { colorVariableModification } from '../../../../color-variable-modification'
+import { modification } from '../../../../modification'
 import { relativeOKLCH } from '../../functions/relative-oklch'
 import { add } from '../../functions/calc'
 import { colorMix } from '../../functions/color-mix'
@@ -32,13 +32,13 @@ function toJSSColor(color: ColorMaterial, name: string): Variable {
 /**
  * 返回从 original 到 target 的颜色 Modification；通道差值由保存的回调计算，alpha 变化在构造时确定。
  */
-const createColorVariableModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }) =>
-  colorVariableModification({
+const createColorModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }) =>
+  modification({ type: 'color', detail: {
     lightness: currentExpression => add(currentExpression, target.base.lightness - original.base.lightness),
     chroma: currentExpression => add(currentExpression, target.base.chroma - original.base.chroma),
     hue: currentExpression => add(currentExpression, target.base.hue - original.base.hue),
     alpha: target.alpha === original.alpha ? undefined : target.alpha ?? 1,
-  })
+  } })
 
 export const paperColor = toJSSColor(paper, 'paper-color')
 export const inkColor = toJSSColor(ink, 'ink-color')
@@ -54,13 +54,15 @@ function colorMembers(name: string, base: Variable, lineAlpha: number,
   return variableCluster({
     default: base,
     strong: strongChange === undefined ? base : variable(relativeOKLCH(currentBase, strongChange), `${name}-color-strong`),
-    soft: variable(relativeOKLCH(currentBase, colorVariableModification({ alpha: 0.14 })), `${name}-color-soft`),
-    line: variable(relativeOKLCH(currentBase, colorVariableModification({ alpha: lineAlpha })), `${name}-color-line`),
+    soft: variable(relativeOKLCH(currentBase, modification({ type: 'color', detail: { alpha: 0.14 } })), `${name}-color-soft`),
+    line: variable(relativeOKLCH(currentBase, modification({ type: 'color', detail: { alpha: lineAlpha } })), `${name}-color-line`),
     foreground: variable(foreground, `${name}-color-foreground`),
   })
 }
 
-/** 状态展开仍保留当前 CSS 变量；回退由原 Variable 的 JS 定义提供。 */
+/**
+ * 状态展开仍保留当前 CSS 变量引用；未声明时使用原 Variable 的定义作为回退。
+ */
 function currentColorReference(source: Variable) {
   return createJSSContent(
     (resolve) => {
@@ -71,7 +73,9 @@ function currentColorReference(source: Variable) {
   )
 }
 
-/** 由当前底色求可读前景，并按原配方保留少量底色气息。 */
+/**
+ * 由当前底色求可读前景，并按原配方保留少量底色气息。
+ */
 function readableForeground(base: Variable) {
   const currentBase = currentColorReference(base)
   const contrast = createJSSContent(
@@ -90,23 +94,23 @@ const interactiveDefault = variable(currentBrandColor, {
   name: 'interactive-color',
   registration: { syntax: '*', inherits: true },
   states: {
-    hover: relativeOKLCH(currentBrandColor, colorVariableModification({
+    hover: relativeOKLCH(currentBrandColor, modification({ type: 'color', detail: {
       lightness: currentExpression => add(currentExpression, -0.04),
       chroma: currentExpression => add(currentExpression, 0.01),
-    })),
-    active: relativeOKLCH(currentBrandColor, colorVariableModification({
+    } })),
+    active: relativeOKLCH(currentBrandColor, modification({ type: 'color', detail: {
       lightness: currentExpression => add(currentExpression, -0.08),
       chroma: currentExpression => add(currentExpression, -0.01),
-    })),
+    } })),
   },
 })
 export const interactiveColor = colorMembers('interactive', interactiveDefault, 0.48)
 export const highlightColor = colorMembers('highlight',
-  variable(relativeOKLCH(currentBrandColor, createColorVariableModificationByDiff({ original: brand, target: highlight })), 'highlight-color'),
-  0.42, colorVariableModification({
+  variable(relativeOKLCH(currentBrandColor, createColorModificationByDiff({ original: brand, target: highlight })), 'highlight-color'),
+  0.42, modification({ type: 'color', detail: {
     lightness: currentExpression => add(currentExpression, 0.08),
     chroma: currentExpression => add(currentExpression, 0.02),
-  }),
+  } }),
 )
 const goodDefault = toJSSColor(good, 'good-color')
 const warnDefault = toJSSColor(warn, 'warn-color')
@@ -137,12 +141,12 @@ export const surfaceColorInteractive = variable(currentSurfaceColor, {
   name: 'surface-color-interactive',
   registration: { syntax: '*', inherits: true },
   states: {
-    hover: relativeOKLCH(currentSurfaceColor, colorVariableModification({
+    hover: relativeOKLCH(currentSurfaceColor, modification({ type: 'color', detail: {
       lightness: currentExpression => add(currentExpression, -0.04),
-    })),
-    active: relativeOKLCH(currentSurfaceColor, colorVariableModification({
+    } })),
+    active: relativeOKLCH(currentSurfaceColor, modification({ type: 'color', detail: {
       lightness: currentExpression => add(currentExpression, -0.08),
-    })),
+    } })),
   },
 })
 const currentForegroundColor = currentColorReference(foregroundColor)

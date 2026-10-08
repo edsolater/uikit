@@ -4,7 +4,7 @@ import { modify } from '../variable-modify'
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { variable } from '../variable'
-import { modification, rule, value } from '../index'
+import { rule, value } from '../index'
 import { compileCSS, compileRules } from '../css-root'
 import { stateCondition, appendStateCondition } from '../pieces/state-conditions'
 import * as stateConditions from '../pieces/state-conditions'
@@ -117,7 +117,7 @@ test('普通引用、局部modify、Cluster继承与状态追加直接消费已�
     expect(appendStateCondition(path, hover).stateConditionPath).toEqual([hover])
     const css = compileRules([
       [['.Resolved'], ...declare(source)],
-      [['.Resolved', '&[data-modified]'], ...modify(source, modification(currentExpression => add(currentExpression, 0.1)))],
+      [['.Resolved', '&[data-modified]'], ...modify(source, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 0.1) }))],
       [['.Resolved'], 'opacity', source],
       [['.ResolvedNext'], 'opacity', next],
     ])

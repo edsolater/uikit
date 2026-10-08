@@ -1,26 +1,27 @@
 /** 样式中定义和使用 Variable 的入口。
 
-创建和引用变量，保存默认值与状态，并展开已持有的默认数据。
+创建和引用变量，保存默认值与状态，并支持独立声明、调整绑定及条件修改。
 
 这些用途共享一份默认值与状态配置，具体输出由样式中的使用位置决定。
 */
 import { condition, type ConditionPath } from './condition'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
-import { createJSSContent, type JSSCompileContext, type JSSContent } from './content'
+import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
 import type { ASTController } from './compiler/ast-controller'
-import { isValue, type ValueInput } from './value'
-import { resolveVariable } from './variable-cluster'
+import type { ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
-import { hasProperty, result } from '@edsolater/fnkit'
-import { consumeVariable, findLocalBaseKey } from './variable-modify'
-import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
+import { find, hasProperty, mapGet, result } from '@edsolater/fnkit'
+import { consumeVariable, findVariableDeclaration, findLocalBaseKey, type ModifyTargetProtocol } from './variable-modify'
+import { declare } from './declaration'
+import { resolveVariable } from './variable-cluster'
+import { allocateVariableName, parseVariableArgs, type VariableStateValues } from './variable-args-parser'
 
 /** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
 export type VariableDefaultValue = ValueInput | (() => ValueInput)
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
-export interface Variable extends JSSContent {
+export interface Variable extends ModifyTargetProtocol {
   kind: 'variable'
   name: string
   /** 这一个 Variable 的基础内容、状态和可选行为。 */
@@ -33,20 +34,21 @@ export interface Variable extends JSSContent {
     /** 自动状态声明的目标 Key，始终指向当前 Variable 名称。 */
     definitionKey: JSSKeyObject
   }
-  /** 返回 CSS 自定义属性名（如 --amount），供声明目标使用。 */
+  /**
+   * 返回 CSS 自定义属性名（如 --amount），供声明目标使用。
+   */
   toCSSString(): string
   /** 此对象最早可被编译的波次；配置含义见 VariableOptions.compileWaveIndex。 */
   compileWaveIndex?: number
   /**
-   * 为样式中的三种用途提供对应内容：
-   * 声明目标：登记注册资源，保持当前 Variable 的目标 Key。
-   * 指定状态：设定本 Variable 的同名状态内容；未命中才读取默认内容，不登记资源。
-   * 普通引用：设定 var(...) 内容，并生成注册资源与自身状态声明；默认内容可作为回退。
+   * 按当前位置生成 CSS 引用或指定状态内容，并激活普通引用及声明目标所需资源。
    */
   onCompile(context: JSSCompileContext, astController: ASTController): void
 }
 
-/** 识别 Variable 身份，包含可调用 Cluster，不读取基础内容。 */
+/**
+ * 识别 Variable 身份，包含可调用 Cluster，不读取基础内容。
+ */
 export const isVariable = (input: unknown): input is Variable =>
   hasProperty(input, 'kind', (v) => v === 'variable')
 
@@ -91,6 +93,7 @@ export function variable<DefaultValue extends VariableDefaultValue>(
   options?: string | VariableOptions<NoInfer<DefaultValue>>,
 ): Variable {
   const config = parseVariableArgs(input, options)
+  let name = config.name.replace(/^--/, '')
   const entries = Object.entries(config.states ?? {})
   const conditions = resolveStateConditions(entries.map(([name]) => name))
   const states = new Map<StateCondition, ValueInput>(
@@ -101,121 +104,146 @@ export function variable<DefaultValue extends VariableDefaultValue>(
   )
   const self: Variable = {
     kind: 'variable',
-    name: config.name.replace(/^--/, ''),
+    /**
+     * 读取当前 CSS 名称；名称变化后声明与引用使用新名称。
+     */
+    get name() { return name },
+    /**
+     * 登记新的显式名称，使后续匿名对象避让当前名称。
+     */
+    set name(nextName) { name = allocateVariableName(nextName).replace(/^--/, '') },
     config: {
       defaultValue: config.defaultValue,
       states,
       registration: config.registration,
+      /**
+       * 提供跟随当前名称的声明目标；与内容引用分开编译。
+       */
       get definitionKey() {
-        return { toCSSString: () => self.toCSSString() }
+        return { toCSSString: self.toCSSString }
       },
     },
     compileWaveIndex: config.compileWaveIndex,
     onActive: config.onActive,
+    /**
+     * 返回当前名称对应的 CSS 自定义属性名。
+     */
     toCSSString() {
       return `--${self.name}`
     },
+    /**
+     * 读取自身声明目标，不另存一份名称。
+     */
+    get key() { return self.config.definitionKey },
+    /**
+     * 读取当前默认内容，生产函数留到实际消费。
+     */
+    get content() { return self.config.defaultValue },
+    /**
+     * 读取已有状态材料，不复制状态表。
+     */
+    get states() { return self.config.states },
+    /**
+     * 读取已有注册材料，不复制注册配置。
+     */
+    get registration() { return self.config.registration },
+    /**
+     * 按声明目标、指定状态或普通引用角色激活资源并提供对应内容。
+     */
     onCompile(context, astController) {
-      if (context.role === 'declaration-key') {
-        activateVariableResources(self, context, astController)
-        return
-      }
-      if (context.readState) {
-        astController.setContent(context, readVariableContent(self, context.readState))
-        return
-      }
-
-      activateVariableResources(self, context, astController)
-      consumeVariable(context, astController, self)
-      const fallbackValue = readVariableContent(self)
-      declareVariableStates(context, astController, self, fallbackValue)
-      astController.setContent(context, createVariableReference(self, fallbackValue))
+      compileVariableContent(self, context, astController)
     },
   }
   return self
 }
 
 /**
- * 只追溯 Variable 的 defaultValue（Cluster 取默认成员），原样返回内容，生产函数保留为函数。
+ * 将自定义属性材料作为内容引用；依赖原信息体，保留其资源激活关系。
  */
-export const readVariableDefault = (input: unknown): unknown =>
-  isVariable(input)
-    ? readVariableDefault(resolveVariable(input).config.defaultValue)
-    : input
+export const referenceVariable = (target: ModifyTargetProtocol): JSSContent & JSSKeyObject => ({
+  dependencies: isJSSContent(target) ? [target] : [],
+  /**
+   * 作为声明目标时输出材料的当前 CSS 名称。
+   */
+  toCSSString: () => target.key.toCSSString(),
+  /**
+   * 按当前位置编译材料的引用、状态和注册资源。
+   */
+  onCompile: (context, controller) => compileVariableContent(target, context, controller),
+})
 
 /**
- * 只展开 Variable/Cluster 默认来源与 Value 包装，原样返回内容，不执行生产函数或表达式。
+ * 按消费角色组织目标、状态或普通 CSS 引用；天然材料与 Variable 使用同一引用生命周期。
  */
-export function readJSValue(input: unknown): unknown {
-  const current = readVariableDefault(input)
-  return isValue(current) ? readJSValue(current.content) : current
+export function compileVariableContent(target: ModifyTargetProtocol, context: JSSCompileContext, controller: ASTController): void {
+  for (const dependency of target.declarations ?? []) {
+    const existing = findVariableDeclaration(controller, dependency, context.conditionPath)
+    if (existing) controller.depend(existing, { owner: context.node })
+    else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
+  }
+  if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return }
+  const states = context.readState === undefined ? undefined : target.states
+  const entry = states ? find(states, (_, state) => state.name === context.readState) : undefined
+  const fallback = entry ? entry.value : result(target.content)
+  if (context.readState) { controller.setContent(context, fallback); return }
+  if (target.declarations?.length) {
+    const definition = findVariableDeclaration(controller, target, context.conditionPath)
+    insertDefinition(context, controller, target, context.conditionPath, definition ? result(definition.content.content) : fallback)
+  }
+  activateVariableResources(target, context, controller)
+  consumeVariable(context, controller, target)
+  declareVariableStates(context, controller, target, fallback)
+  const reference = createVariableReference(target, fallback)
+  if (resolveVariable(context.input as ModifyTargetProtocol) !== target && isJSSContent(target)) reference.dependencies.push(target)
+  controller.setContent(context, reference)
 }
 
 /**
- * 读取此 Variable 的指定状态；只有状态缺项时才求默认内容。
+ * 为普通引用声明当前基础值及后续状态；已有局部定义时写入其基础目标。
+ * 当前位置命中状态时使用对应内容，只补登记顺序更靠后的状态。
  */
-function readVariableContent(variable: Variable, readState?: string): ValueInput {
-  const entry = readState === undefined ? undefined : [...variable.config.states].find(([state]) => state.name === readState)
-  return entry ? entry[1] : result(variable.config.defaultValue)
-}
-
-/** 从按登记顺序排列的候选中，取当前路径最后命中的状态。 */
-const findCurrentState = (states: StateCondition[], path: ConditionPath): StateCondition | undefined =>
-  states.findLast((state) => path.stateConditionPath.some((current) => current.name === state.name))
-
-/**
- * 为普通引用写出当前位置和后续状态的变量声明。
- * `n` 默认 `4`、hover 为 `8`，首次在 `.button` 普通引用且无局部声明时生成：
- * ```css
- * .button {
- *   --n: 4;
- *   &:where(:where(:hover):where(:not(:disabled, [data-status~="disabled"]))) {
- *     --n: 8;
- *   }
- * }
- * ```
- * 若当前位置仅命中 hover，则当前值为 `8`，只再补登记顺序靠后的状态。
- */
-function declareVariableStates(context: JSSCompileContext, controller: ASTController, variable: Variable, fallbackValue: ValueInput): void {
-  const states = [...variable.config.states.keys()]
+function declareVariableStates(context: JSSCompileContext, controller: ASTController, variable: ModifyTargetProtocol, fallbackValue: ValueInput): void {
+  const states = [...variable.states?.keys() ?? []]
   if (!states.length) return
 
-  const currentState = findCurrentState(states, context.conditionPath)
-  const currentValue = currentState ? variable.config.states.get(currentState) : fallbackValue
+  const currentState = states.findLast(state => context.conditionPath.stateConditionPath.some(current => current.name === state.name))
+  const currentValue = currentState ? variable.states?.get(currentState) : fallbackValue
   insertDefinition(context, controller, variable, context.conditionPath, currentValue, currentState?.name)
 
-  for (const [state, content] of variable.config.states) {
+  for (const [state, content] of variable.states ?? []) {
     if (currentState && state.order <= currentState.order) continue
     insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state), content, state.name)
   }
 }
 
-/** 生成样式内容的 `var(--name)` 引用；回退内容在当前声明位置编译后附在第二参数。 */
-const createVariableReference = (variable: Variable, fallbackValue: ValueInput): ValueInput =>
+/**
+ * 生成样式内容的 `var(--name)` 引用；回退内容在当前声明位置编译后附在第二参数。
+ */
+const createVariableReference = (variable: ModifyTargetProtocol, fallbackValue: ValueInput): Expression =>
   createJSSContent((resolve) => {
     const fallback = resolve(fallbackValue)
-    return fallback === undefined ? `var(--${variable.name})` : `var(--${variable.name}, ${fallback})`
+    return fallback === undefined ? `var(${variable.key.toCSSString()})` : `var(${variable.key.toCSSString()}, ${fallback})`
   }, [fallbackValue])
 
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
-const registrationSessions = new WeakMap<object, Map<Variable, Set<JSSStyleNode>>>()
+const registrationSessions = new WeakMap<object, Map<ModifyTargetProtocol, Set<JSSStyleNode>>>()
 
-/** 按 registration 登记 CSS @property；对象首次消费时替换同址资源，全部消费者撤销后可再次激活。 */
-function activateVariableResources(variable: Variable, context: JSSCompileContext, controller: ASTController): void {
-  const registration = variable.config.registration
+/**
+ * 按 registration 登记 CSS @property；对象首次消费时替换同址资源，全部消费者撤销后可再次激活。
+ */
+function activateVariableResources(variable: ModifyTargetProtocol, context: JSSCompileContext, controller: ASTController): void {
+  const registration = variable.registration
   if (!registration) return
-  const address = `variable-registration:${variable.name}`
+  const address = `variable-registration:${variable.key.toCSSString()}`
   let registrations = registrationSessions.get(context.session)
   if (!registrations) registrationSessions.set(context.session, registrations = new Map())
-  let consumers = registrations.get(variable)
-  const active = consumers !== undefined
-  if (!consumers) registrations.set(variable, consumers = new Set())
+  const active = registrations.has(variable)
+  const consumers = mapGet(registrations, variable, () => new Set<JSSStyleNode>())
   if (!consumers.has(context.node)) {
     consumers.add(context.node)
-    const currentConsumers = consumers
     controller.onRemove(context.node, () => {
-      currentConsumers.delete(context.node)
-      if (!currentConsumers.size) registrations.delete(variable)
+      consumers.delete(context.node)
+      if (!consumers.size) registrations.delete(variable)
     })
   }
   if (active) {
@@ -224,7 +252,7 @@ function activateVariableResources(variable: Variable, context: JSSCompileContex
   }
   for (const node of controller.search({ resourceAddress: address })) controller.remove(node)
   const registrationPath = {
-    targetConditionPath: [condition(`@property --${variable.name}`)],
+    targetConditionPath: [condition(`@property ${variable.key.toCSSString()}`)],
     stateConditionPath: [],
   }
   const provenance = { owner: context.node, resourceAddress: address, productTag: variable }
@@ -232,7 +260,9 @@ function activateVariableResources(variable: Variable, context: JSSCompileContex
     controller.insert({ before: context.node, conditionPath: registrationPath }, declaration, provenance)
 }
 
-/** 生成 @property 的字段内容；省略 initialValue 时不提供 initial-value，生命周期由消费方处理。 */
+/**
+ * 生成 @property 的字段内容；省略 initialValue 时不提供 initial-value，生命周期由消费方处理。
+ */
 export function variableRegistrationDeclarations(registration: NonNullable<VariableOptions['registration']>): [key: string, content: ValueInput][] {
   const declarations: [key: string, content: ValueInput][] = [
     ['syntax', JSON.stringify(registration.syntax)],
@@ -242,19 +272,20 @@ export function variableRegistrationDeclarations(registration: NonNullable<Varia
   return declarations
 }
 
-/** 在指定条件补入变量的基础值或状态值；有局部声明时写入其基础目标。
+/**
+ * 在指定条件补入变量的基础值或状态值；有局部声明时写入其基础目标。
  * 同目标已有声明则保留它并返回 `undefined`，否则返回新节点。
  * 首次查找局部基础目标时，可能同时建立该声明的基础值和状态值。
  */
 function insertDefinition(
   context: JSSCompileContext,
   controller: ASTController,
-  variable: Variable,
+  variable: ModifyTargetProtocol,
   path: ConditionPath,
   content: ValueInput,
   readState?: string,
 ): JSSStyleNode | undefined {
-  const key = findLocalBaseKey(context, controller, variable, path) ?? variable.config.definitionKey
+  const key = findLocalBaseKey(context, controller, variable, path) ?? variable.key
   const existing = controller.search({ key, conditionPath: path })[0]
   if (existing) {
     controller.depend(existing, { owner: context.node })

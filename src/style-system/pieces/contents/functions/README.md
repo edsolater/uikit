@@ -21,12 +21,12 @@ const content = createJSSContent(resolve => {
 
 类型限制的是表达式自身可提供的协议，无法证明任意闭包没有副作用。输出方法及其他内容计算仍须遵守上述行为公约，不能绕过类型从外部改写 AST 或状态。
 
-Expression 可以附带内容计算能力。`add`、`multiply` 可求已知 JS 数值，[calc.ts](calc.ts) 的 `readNumber` 是这些算术内容的 JS 求值辅助，读取已持有的数据并检查有限结果；`oklch` 用 ExpressionValue 保留原始通道，供 `adjust` 处理，`withContent` 替换数据后仍保留窄契约。这些能力不需要知道消费位置或修改 AST。
+`add`、`multiply` 保存操作数与依赖，输出 CSS calc 文本，数值与单位由浏览器解释。`oklch` 用 ExpressionValue 保存原始通道并输出颜色文本；Value 的 `withContent` 以新数据创建独立包装，沿用输出规则与依赖配置，ExpressionValue 替换内容后仍保留窄契约。这些内容能力不需要知道消费位置或修改 AST。
 
 ## 内容工具与修改规则、定义主体的边界
 
-[modification.ts](../../../modification.ts) 只保存变化自身的描述。[variable-modify.ts](../../../variable-modify.ts) 直接消费描述并组织条件修改表达式，[variable-adjust.ts](../../../variable-adjust.ts) 直接消费描述并计算 JS 基础数据。[color-variable-modification.ts](../../../color-variable-modification.ts) 的 `colorVariableModification(changes)` 保存通道配置，另有 `onCompile` 执行当前配置的回调、通过 `setContent` 提供配方 Expression。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化描述或 Variable 身份。
+[modification.ts](../../../modification.ts) 用单个配置保存变化的 `name/type/detail`，显式名称是完整 CSS 自定义属性名，内置转译在编译时生成与来源无关的颜色通道配方，并提供独立声明和应用材料。[variable-modify.ts](../../../variable-modify.ts) 通过 FNKit DataShape／`matchShape` 识别双方的自然材料，组织条件修改表达式与步骤；[variable-adjust.ts](../../../variable-adjust.ts) 绑定 Source、Modification 与结果 Variable，使一次结果声明共同声明三者。来源与配方保留 CSS 引用，局部覆盖由浏览器作用域决定。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化描述或 Variable 身份。
 
 [css-function.ts](../../../css-function.ts) 中的 CSSFunction 与 Variable 同属 Style System 的定义主体。`cssFunction(signature, body)` 创建一个可调用主体，其调用返回 Expression，通过依赖引用主体与实参。按需函数定义属于主体，调用表达式不提供定义。主体的程序身份是对象本身；CSS 名字由签名决定，同名定义的作用域和完整接管由现有编译链处理。
 
-需要消费位置、AST 操作、资源定义或条件应用的对象使用广义 JSSContent，并归到负责这些行为的领域。仅仅返回 JSSContent，不能作为放进 `functions` 的理由。
+需要消费位置、AST 操作或资源定义的内容对象使用广义 JSSContent，归到负责这些行为的领域；条件应用由外部使用端组织。仅仅返回 JSSContent，不能作为放进 `functions` 的理由。

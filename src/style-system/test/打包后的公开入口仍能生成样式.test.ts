@@ -24,7 +24,7 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     ])
     const count = styleSystem.variable(1, { name: 'bundle-modified-count' })
     styleSystem.rules('.Built', [styleSystem.declare(count)])
-    styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, styleSystem.modification(currentExpression => styleSystem.add(currentExpression, 3)))])
+    styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, { type: 'expression', detail: currentExpression => styleSystem.add(currentExpression, 3) })])
     console.log(styleSystem.compileCSS())
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })

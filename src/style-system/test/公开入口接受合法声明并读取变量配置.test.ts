@@ -2,7 +2,7 @@
 import { declare } from '../declaration'
 import { modify } from '../variable-modify'
 import { expect, expectTypeOf, test, vi } from 'vitest'
-import { add, adjust, clusterFrom, key, modification, rules, variable, variableCluster } from '../index'
+import { add, clusterFrom, key, rules, variable, variableCluster } from '../index'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 
@@ -35,16 +35,10 @@ test('Cluster默认成员应用规则闭包捕获的领域参数', () => {
     },
   })
   const payload = { amount: 3 }
-  const change = modification(currentExpression => add(currentExpression, payload.amount))
+  const change = ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, payload.amount) })
   const css = compileRules([[[condition('.Public')], ...declare(cluster)], [[condition('.Public')], ...modify(cluster, change)]])
   expect(css).toContain('+ 3)')
-  const adjusted = adjust(cluster, change)
-  expect(compileRules([[['.source'], ...declare(cluster)], [['.adjusted'], ...declare(adjusted)]])).toContain(`${adjusted.toCSSString()}: 4;`)
   expect(compileRules([[['.source'], ...declare(cluster)]])).toContain('--public-derived-number: var(--public-source-number, 1);')
-  const mutable = adjust('mutable', cluster, change)
-  expect(mutable).toBe(cluster)
-  expect(mutable('default').config.defaultValue).toBe(4)
-  expect(cluster.config.defaultValue).toBe(4)
 })
 
 test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => {

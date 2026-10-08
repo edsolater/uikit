@@ -9,7 +9,7 @@ import { userEvent } from 'vitest/browser'
 import { createState } from '../../../hooks'
 import { Button, buttonMapping, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength, type ButtonProps, type ButtonAppearance } from './index'
 import { disabledFade } from '../../../style-system/pieces/contents/atoms/opacity'
-import { add, modification, cssRoot, rule, rules, value, type RulesHandle } from '../../../style-system'
+import { add, cssRoot, rule, rules, type RulesHandle } from '../../../style-system'
 import { whenHover, whenActive, whenDisabled } from '../../../style-system/pieces/conditions/interaction'
 import { $borderRadius } from '../../../style-system/pieces/keys/border'
 import { $backgroundColor } from '../../../style-system/pieces/keys/color'
@@ -153,7 +153,7 @@ describe('Button styles', () => {
     expect(selected['background-color']).not.toBe(sourceOnly['background-color'])
     expect(selected['background-color']).not.toBe(initial['background-color'])
     expectSameAppearance(appearance(second), initial)
-    const adjustment = rules(path, modify(buttonSurfaceStrength, modification(currentExpression => add(currentExpression, 0.2))))
+    const adjustment = rules(path, modify(buttonSurfaceStrength, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 0.2) })))
     handles.push(adjustment)
     cssRoot.mount()
     const adjusted = appearance(first)

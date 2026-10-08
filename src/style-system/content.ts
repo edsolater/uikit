@@ -65,15 +65,6 @@ export interface Expression extends JSSContent {
   resourceIdentity?: never
 }
 
-/** 内容的 JS 数值求值协议；调用由求值消费者负责。 */
-export const evaluateExpression = Symbol('evaluateExpression')
-
-/**
- * 识别内容的 JS 数值求值方法，不执行求值。
- */
-export const isEvaluableExpression = (input: unknown): input is JSSContent & { [evaluateExpression](): number } =>
-  hasProperty(input, evaluateExpression, isFunction)
-
 /**
  * 连接依赖内容和输出方法，构造自身没有编译或激活行为的 Expression。
  */

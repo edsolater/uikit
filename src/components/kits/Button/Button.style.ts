@@ -9,7 +9,6 @@ import { modify } from '../../../style-system/variable-modify'
 import {
   rules,
   add,
-  modification,
   variable,
   innerText,
   contentLayout,
@@ -118,7 +117,7 @@ const bareStrength = variable(-0.18, {
 })
 const bareButton = [...button, '&[data-variant="bare"]']
 rules(bareButton, [
-  modify(buttonSurfaceStrength, modification(currentExpression => add(currentExpression, bareStrength))),
+  modify(buttonSurfaceStrength, { type: 'expression', detail: currentExpression => add(currentExpression, bareStrength) }),
   [buttonSurfaceCanvas, 'transparent'],
   elevation(shadowFlat),
 ])
@@ -134,7 +133,7 @@ const shadowSolid = variable(shadowRaised, {
 })
 const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
-  modify(buttonSurfaceStrength, modification(currentExpression => add(currentExpression, solidStrength))),
+  modify(buttonSurfaceStrength, { type: 'expression', detail: currentExpression => add(currentExpression, solidStrength) }),
   [buttonSurfaceSource, toneColor],
   declare(foregroundColor, toneColor('foreground')),
   elevation(shadowSolid),

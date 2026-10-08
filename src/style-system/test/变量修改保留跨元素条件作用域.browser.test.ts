@@ -11,7 +11,6 @@ import { declare } from '../declaration'
 import { modify } from '../variable-modify'
 import { variable } from '../variable'
 import { createJSSContent } from '../content'
-import { modification } from '../modification'
 afterEach(() => document.body.replaceChildren())
 
 const parent = condition('.Parent')
@@ -19,7 +18,7 @@ const child = condition('& .child')
 const grandchild = condition('& .grandchild')
 const sibling = condition('& .sibling')
 const amount = (name: string) => variable(1, { name })
-const amountModification = (change: { operator: string; amount: number }) => modification(currentExpression => createJSSContent(resolve => `calc(${resolve(currentExpression)} ${change.operator} ${change.amount})`, [currentExpression]))
+const amountModification = (change: { operator: string; amount: number }) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent(resolve => `calc(${resolve(currentExpression)} ${change.operator} ${change.amount})`, [currentExpression]) })
 const read = (selector: string) => getComputedStyle(document.querySelector(selector)!).zIndex
 const mount = (css: string) => { document.body.innerHTML = `<style>${css}</style><div class="Parent"><div class="child"><span class="grandchild"></span><span class="child nested-child"></span></div><div class="sibling"><span class="child sibling-child"></span></div></div>` }
 test('同一后代的两条独立规则依次加三再乘二', () => {
@@ -125,7 +124,7 @@ test('函数声明与修改仍消费Variable自己的按需资源', () => {
   const n = variable(1, { name: 'activation-subject',
     onActive: () => [[[resource], 'opacity', 0.4]],
   })
-  const nModification = (delta: number) => modification(currentExpression => createJSSContent(resolve => `calc(${resolve(currentExpression)} + ${delta})`, [currentExpression]))
+  const nModification = (delta: number) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent(resolve => `calc(${resolve(currentExpression)} + ${delta})`, [currentExpression]) })
   const css = compileRules([
     [[parent], ...declare(n)],
     [[parent], ...modify(n, nModification(2))],
@@ -269,9 +268,9 @@ test('共享步骤保持选择器优先级，当地规则覆盖继承，空输�
   const local = condition('&[data-local]')
   const empty = condition('&[data-local][data-empty]')
   const n = variable(2, { name: 'shared-selection-contract' })
-  const nModification = (change: number | undefined) => modification(currentExpression => change === undefined
+  const nModification = (change: number | undefined) => ({ type: 'expression' as const, detail: currentExpression => change === undefined
       ? createJSSContent(() => undefined)
-      : createJSSContent(resolve => `calc(${resolve(currentExpression)} ${change === 3 ? '*' : '+'} ${change})`, [currentExpression]))
+      : createJSSContent(resolve => `calc(${resolve(currentExpression)} ${change === 3 ? '*' : '+'} ${change})`, [currentExpression]) })
   mount(compileRules([
     [[parent], ...declare(n)],
     [[parent, active], ...modify(n, nModification(3), { id: 'shared' })],
@@ -291,8 +290,8 @@ test('共享步骤保持选择器优先级，当地规则覆盖继承，空输�
 })
 
 test.each(['late-declare', 'removed-declare'])('普通颜色消费者在局部声明变化后重新确定归属，操作=%s', async operation => {
-  const { colorVariableModification, add } = await import('../index')
-  const change = variable(colorVariableModification({ lightness: currentExpression => add(currentExpression, 0.1) }), 'consumer-rule')
+  const { modification, add } = await import('../index')
+  const change = modification({ name: '--consumer-rule', type: 'color', detail: { lightness: currentExpression => add(currentExpression, 0.1) } })
   const surface = variable('oklch(0.2 0.1 120)', { name: 'consumer-surface' })
   const declaration = declare(surface, 'oklch(0.5 0.1 120)')
   const input: import('../rule').Rules = [
@@ -319,9 +318,9 @@ test('不继承且无注册初值时保留普通引用回退，不把默认内�
   const n = variable(7, { name: 'universal-without-initial',
     registration: { syntax: '*', inherits: false },
   })
-  const nModification = (change: { fixed?: number; amount?: number }) => modification(currentExpression => change.fixed === undefined
+  const nModification = (change: { fixed?: number; amount?: number }) => ({ type: 'expression' as const, detail: currentExpression => change.fixed === undefined
       ? createJSSContent(resolve => `calc(${resolve(currentExpression)} + ${change.amount})`, [currentExpression])
-      : createJSSContent(() => String(change.fixed)))
+      : createJSSContent(() => String(change.fixed)) })
   mount(compileRules([
     [[parent], ...declare(n, 10)], [[parent], ...modify(n, nModification({ amount: 3 }))],
     [[parent, child, local], ...modify(n, nModification({ fixed: 20 }))],

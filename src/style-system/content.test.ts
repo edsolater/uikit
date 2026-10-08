@@ -10,7 +10,6 @@ import { value, type ValueOptions } from './value'
 import { variable } from './variable'
 import { cssFunction } from './css-function'
 import { modification, type Modification } from './modification'
-import { colorVariableModification } from './color-variable-modification'
 import { oklch } from './pieces/contents/functions/oklch'
 
 test('继承的内容方法和可调用内容保留其行为', () => {
@@ -38,13 +37,9 @@ test('广义内容和定义主体不属于Expression，其输出表达式属于E
   expectTypeOf<JSSContent>().not.toExtend<Expression>()
   expectTypeOf<Required<Pick<JSSContent, 'dependencies' | 'toCSSString' | 'onCompile'>>>().not.toExtend<Expression>()
   expectTypeOf(variable(3)).not.toExtend<Expression>()
-  expectTypeOf(colorVariableModification()).not.toExtend<Expression>()
-  expectTypeOf<Modification<unknown>>().not.toExtend<JSSContent>()
-  expectTypeOf(colorVariableModification()).toExtend<JSSContent>()
-  if (false) {
-    // @ts-expect-error 表达式变化规则没有独立内容输出，不能作为 Variable 的默认内容。
-    variable(modification(() => value(3)))
-  }
+  expectTypeOf(modification({ type: 'color', detail: {} })).not.toExtend<Expression>()
+  expectTypeOf<Modification>().toExtend<JSSContent>()
+  expectTypeOf(modification({ type: 'color', detail: {} })).toExtend<JSSContent>()
   const custom = cssFunction('--identity(--n <number>)', [[[], 'result', 'var(--n)']])
   expectTypeOf(custom).not.toExtend<Expression>()
   expectTypeOf(custom(3)).toExtend<Expression>()

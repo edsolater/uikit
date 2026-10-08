@@ -9,15 +9,18 @@ import { isVariable, variable, type Variable, type VariableOptions } from './var
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
+import type { DeclareProtocol } from './declaration'
 
 /** 通过登记记录识别 Cluster，查询前允许身份未知；宽输入只属于这张表。 */
 const membersByCluster: WeakMap<object, Record<string, Variable>> & {
   get(input: unknown): Record<string, Variable> | undefined
 } = new WeakMap<object, Record<string, Variable>>()
 
-/** 单值操作针对 Cluster 的默认成员；成员选择与整组配对仍由 Cluster 负责。 */
-export const resolveVariable = (variable: Variable): Variable =>
-  membersByCluster.get(variable)?.default ?? variable
+/**
+ * 单值操作针对 Cluster 的默认成员；成员选择与整组配对仍由 Cluster 负责。
+ */
+export const resolveVariable = <Target extends DeclareProtocol>(variable: Target): Target =>
+  (membersByCluster.get(variable)?.default ?? variable) as Target
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
@@ -25,34 +28,44 @@ export type VariableCluster<Members extends { default: Variable }> = Variable & 
   <Name extends keyof Members>(name: Name): Members[Name]
 }
 
-/** 聚合带 default 的 Variable 成员；调用时选择成员，未知名称报错。 */
+/**
+ * 聚合带 default 的 Variable 成员；调用时选择成员，未知名称报错。
+ */
 export function variableCluster<Members extends { default: Variable } & Record<string | number, Variable>>(members: Members): VariableCluster<Members> {
-  /** 按成员键返回原 Variable，未知键报错。 */
+  /**
+ * 按成员键返回原 Variable，未知键报错。
+ */
   const select = Object.assign((name: keyof Members) => {
     assert(Object.hasOwn(members, name), `Variable Cluster 未定义成员：${String(name)}。`)
     return members[name]
   }, { [Unresultable]: true as true })
   let cluster: VariableCluster<Members>
-  /** 配对 Cluster 声明，其他引用代理 default 成员编译。 */
+  /**
+ * 配对 Cluster 声明，其他引用代理 default 成员编译。
+ */
   const onCompile = (context: JSSCompileContext, controller: ASTController): void => {
-    if (context.role === 'declaration-key') {
-      const sourceMembers = membersByCluster.get(context.content)
-      if (sourceMembers) {
-        for (const [member, source] of clusterDeclarations(cluster, context.content) ?? []) {
-          controller.insert({ before: context.node, conditionPath: context.conditionPath }, [member, source], { owner: context.node })
-        }
-        controller.remove(context.node, { from: 'output' })
-        return
+    const declarations = context.role === 'declaration-key' ? clusterDeclarations(cluster, context.content) : undefined
+    if (declarations) {
+      for (const [member, source] of declarations) {
+        controller.insert({ before: context.node, conditionPath: context.conditionPath }, [member, source], { owner: context.node })
       }
+      controller.remove(context.node, { from: 'output' })
+      return
     }
     members.default.onCompile(context, controller)
   }
   cluster = new Proxy(select, {
+    /**
+     * 默认成员的字段优先，编译入口保留整组声明的配对行为。
+     */
     get(target, property, receiver) {
       if (property === 'onCompile') return onCompile
       if (property in members.default) return Reflect.get(members.default, property)
       return Reflect.get(target, property, receiver)
     },
+    /**
+     * 字段存在性与代理读取保持一致，包括默认成员的材料。
+     */
     has(target, property) { return property in members.default || property in target },
   }) as VariableCluster<Members>
   membersByCluster.set(cluster, members)
@@ -92,7 +105,9 @@ export function clusterFrom<
     { [Name in keyof Changes]: Changes[Name] extends Variable ? Changes[Name] : Variable } & { default: Variable })
 }
 
-/** 按成员名配对两个 Cluster；同名目标对应不同对象或来源时拒绝整组。 */
+/**
+ * 按成员名配对两个 Cluster；同名目标对应不同对象或来源时拒绝整组。
+ */
 export function clusterDeclarations(target: unknown, source: unknown): [Variable, Variable][] | undefined {
   const targets = membersByCluster.get(target)
   const sources = membersByCluster.get(source)
