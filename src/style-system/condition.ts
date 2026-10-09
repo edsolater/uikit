@@ -8,6 +8,11 @@ export interface Condition {
   header: string
 }
 
+/** 创建一层 CSS 地址。 */
+export function condition(header: string): Condition {
+  return { header }
+}
+
 /** 从根部逐层嵌套的目标地址。 */
 export type TargetConditionPath = Condition[]
 
@@ -40,11 +45,6 @@ export function conditionAddressKey(path: ConditionPath): string {
 
 /** Condition 地址输入；缺省表示当前位置。 */
 export type ConditionInput = Condition | string | (Condition | string)[] | undefined
-
-/** 创建一层 CSS 地址。 */
-export function condition(header: string): Condition {
-  return { header }
-}
 
 /** 创建 `@media` Condition。 */
 export function media(query: string): Condition {

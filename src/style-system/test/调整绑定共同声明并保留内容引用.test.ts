@@ -5,7 +5,7 @@
 断言公开声明与消费结果，浏览器中的局部覆盖另由流程测试验证。
 */
 import { expect, test } from 'vitest'
-import { add, adjust, declare, key, modification, modify, oklch, value, variable, variableCluster, type Declaration, type ModificationDefinition, type Rules } from '../index'
+import { add, adjust, declare, key, modification, modify, oklch, value, variable, variableCluster, type Declaration, type Modification, type Rules } from '../index'
 import { compileRules } from '../css-root'
 
 /**
@@ -13,11 +13,14 @@ import { compileRules } from '../css-root'
  */
 const compile = (...entries: Declaration[]): string => compileRules(entries.map(entry => [['.Binding'], ...entry]))
 
-test('变化独立声明固定通道与相对配方，可直接引用且不绑定某个来源', () => {
+test('不同描述可独立声明，颜色配方可直接引用且不绑定某个来源', () => {
   const change = modification({ name: '--change', type: 'color', detail: { lightness: 0.3, chroma: x => add(x, 0.3) } })
   const css = compile(declare(change), [key('--reference'), change])
   expect(css).toContain('--change: 0.3 calc(c + 0.3) h / alpha;')
   expect(css).toContain('--reference: var(--change, 0.3 calc(c + 0.3) h / alpha);')
+  const targetKey = key('--generic-description')
+  const generic: Modification<number, 'number'> = { ...targetKey, key: targetKey, name: targetKey.toCSSString(), type: 'number', detail: 5, content: 5 }
+  expect(compile(declare(generic))).toContain('--generic-description: 5;')
 })
 
 test('声明结果共同声明来源、变化与结果，两个来源共享同一变化声明', () => {
@@ -32,10 +35,6 @@ test('声明结果共同声明来源、变化与结果，两个来源共享同�
   expect(css).toContain(`${firstResult.toCSSString()}: oklch(from var(--source-first, oklch(0.5 0.1 240)) var(--shared-change, 0.3 c h / alpha));`)
   expect(css).toContain(`${secondResult.toCSSString()}: oklch(from var(--source-second, red) var(--shared-change, 0.3 c h / alpha));`)
 })
-
-
-
-
 
 test('配方回调延迟到消费，通道可调用内容与alpha含义仍保留', () => {
   let delta = 0.1
@@ -88,8 +87,13 @@ test.each(['explicit', 'natural', 'source', 'change'])('匿名绑定避让显式
 })
 
 test('必要材料与内容领域不符时明确失败，完整CSS配方名直接保存', () => {
-  expect(() => modification({ type: 'unknown', detail: {} } as unknown as ModificationDefinition)).toThrow('尚未支持内容领域')
   const source = { key: key('--natural-source'), content: 'red' }
+  for (const type of ['unknown', 'constructor', 'toString', '__proto__', new String('color')]) {
+    expect(() => modification({ type, detail: {} } as never)).toThrow('尚未支持内容领域')
+    const change = { type, key: key('--unsupported-route'), content: 'l c h / alpha' } as never
+    expect(() => adjust(source, change)).toThrow('配方材料')
+    expect(() => modify(source, change)).toThrow('变化材料')
+  }
   const invalid = { key: key('--missing-content') } as unknown as typeof source
   expect(() => declare(invalid)).toThrow('key/content')
   expect(compile(declare({ key: key('--empty'), content: undefined }))).toBe('')
@@ -98,7 +102,7 @@ test('必要材料与内容领域不符时明确失败，完整CSS配方名直�
   expect(() => modification({ type: 'color', name: 'bare-name', detail: {} })).toThrow('完整 CSS')
   for (const name of [undefined, 7, 'color', { toString: () => '--false-name' }]) {
     const invalidKey = { toCSSString: () => name } as never
-    expect(() => adjust(source, { type: 'color', key: invalidKey, content: 'l c h / 1' })).toThrow('颜色配方')
+    expect(() => adjust(source, { type: 'color', key: invalidKey, content: 'l c h / 1' })).toThrow('配方材料')
     if (typeof name !== 'string') expect(() => declare({ key: invalidKey, content: 'red' })).toThrow('CSS Key')
   }
   const change = modification({ type: 'color', name: '--complete-name', detail: {} })

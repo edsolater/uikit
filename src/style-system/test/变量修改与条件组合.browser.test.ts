@@ -61,8 +61,7 @@ test.each([true, false])('状态基础 10 再修改 3 得到 13，普通引用�
 
 test('有序非交换修改支持尺寸；共享 ID 由层叠选中一步', () => {
   const size = variable('10px', { name: 'ordered-size' })
-  const sizeModification = (change: { kind: string; amount: string | number }) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent((resolve) => `calc(${resolve(currentExpression)} ${change.kind === 'add' ? '+' : '*'} ${resolve(change.amount)})`, [currentExpression, change.amount]) })
-  const { element } = mount([row([button], declare(size)), row([button, hover], modify(size, sizeModification({ kind: 'add', amount: '2px' }))), row([button, focus], modify(size, sizeModification({ kind: 'multiply', amount: 3 }))), [[button], 'width', size]])
+  const { element } = mount([row([button], declare(size)), row([button, hover], modify(size, { type: 'expression', detail: current => add(current, '2px') })), row([button, focus], modify(size, { type: 'expression', detail: current => multiply(current, 3) })), [[button], 'width', size]])
   element.dataset.hover = ''
   element.dataset.focus = ''
   expect(getComputedStyle(element).width).toBe('36px')
@@ -127,22 +126,18 @@ test('declare 可给两个局部定义不同基础内容', () => {
 
 test('晚编译的前置修改按源位置连接，编号和编译时机不决定非交换顺序', () => {
   const n = variable(1, { name: 'late-front' })
-  const nModification = (change: import('../value').ValueInput) => ({ type: 'expression' as const, detail: currentExpression => {
-    return createJSSContent((resolve) => `calc(${resolve(currentExpression)} ${change === 'add' ? '+ 2' : '* 3'})`, [currentExpression])
-  } })
   const delayed = { compileWaveIndex: 1, onCompile(context: import('../index').JSSCompileContext, controller: import('../index').ASTController) {
-    controller.insert({ before: context.node, conditionPath: context.conditionPath }, modify(n, nModification('add')), { owner: context.node })
+    controller.insert({ before: context.node, conditionPath: context.conditionPath }, modify(n, { type: 'expression', detail: current => add(current, 2) }), { owner: context.node })
   } }
-  const { element } = mount([row([button], declare(n)), [[button], 'order', delayed], row([button], modify(n, nModification('multiply'))), [[button], 'z-index', n]])
+  const { element } = mount([row([button], declare(n)), [[button], 'order', delayed], row([button], modify(n, { type: 'expression', detail: current => multiply(current, 3) })), [[button], 'z-index', n]])
   expect(getComputedStyle(element).zIndex).toBe('9')
 })
 
 test.each([false, true])('撤销中间修改或共享首声明后，剩余非交换步骤局部重连，共享=%s', (shared) => {
   const n = variable(1, { name: `removed-step-${shared}` })
-  const nModification = (change: { operator: string; amount: number }) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent((resolve) => `calc(${resolve(currentExpression)} ${change.operator} ${change.amount})`, [currentExpression]) })
-  const first = modify(n, nModification({ operator: '+', amount: 2 }), shared ? { id: 'shared' } : undefined)
-  const middle = modify(n, nModification({ operator: '*', amount: 3 }))
-  const last = modify(n, nModification({ operator: '+', amount: 4 }), shared ? { id: 'shared' } : undefined)
+  const first = modify(n, { type: 'expression', detail: current => add(current, 2) }, shared ? { id: 'shared' } : undefined)
+  const middle = modify(n, { type: 'expression', detail: current => multiply(current, 3) })
+  const last = modify(n, { type: 'expression', detail: current => add(current, 4) }, shared ? { id: 'shared' } : undefined)
   const removed = shared ? first : middle
   const cleanup = value('1', { onActive: () => [[[button], 'opacity', { onCompile(context, controller) {
     controller.remove(controller.search({}).find((node) => node.content === removed[1])!)
@@ -154,13 +149,11 @@ test.each([false, true])('撤销中间修改或共享首声明后，剩余非交
 
 test.each(['& .child', '&:hover .child', '&.selected > .child', '&[data-on] .child', '&:is([data-on]) .child', '&[data-on], & .child', '& [data-symbol="&"]', '& .\\31 child'])('子元素修改前序后重新应用父位置后续规则，目标=%s', async (selector) => {
   const amount = variable(1, { name: 'descendant-ordered' })
-  const amountModification = (change: { operator: string; amount: number }) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent(
-      resolve => `calc(${resolve(currentExpression)} ${change.operator} ${change.amount})`, [currentExpression]) })
   const childPath = condition(selector)
   const { element } = mount([
     row([button], declare(amount)),
-    row([button, childPath], modify(amount, amountModification({ operator: '+', amount: 3 }))),
-    row([button, focus], modify(amount, amountModification({ operator: '*', amount: 2 }))),
+    row([button, childPath], modify(amount, { type: 'expression', detail: current => add(current, 3) })),
+    row([button, focus], modify(amount, { type: 'expression', detail: current => multiply(current, 2) })),
     [[button], 'z-index', amount], [[button, childPath], 'z-index', amount],
   ])
   element.classList.add('selected')

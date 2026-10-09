@@ -6,7 +6,7 @@
 */
 import { isJSSKey, type JSSKey } from './key'
 import type { ValueInput } from './value'
-import { and, assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
+import { assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
 import { isJSSContent } from './content'
 import { declareVariable } from './variable-modify'
 import { resolveVariable } from './variable-cluster'
@@ -23,14 +23,11 @@ export interface DeclareProtocol {
   declarations?: DeclareProtocol[]
 }
 
-/** 按实际目标及内容匹配，缺失 content 不等同显式 undefined；继承与可调用信息体照常读取。 */
-export const declareShape = and(
-  input => hasProperty(input, 'content'),
-  input => matchShape(input, {
-    key: { toCSSString: isFunction },
-    content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
-  }),
-) satisfies DataShape
+/** 声明材料的字段形状；入口另检查 content 存在，显式 undefined 表示无输出。 */
+export const declareShape = {
+  key: { toCSSString: isFunction },
+  content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
+} satisfies DataShape
 
 /**
  * 判断输入是否是 Declaration。
@@ -45,7 +42,7 @@ export const isCSSPair = (input: unknown): input is [JSSKey, unknown] =>
 export function declare(target: DeclareProtocol, content?: ValueInput | (() => ValueInput)): Declaration
 export function declare<C = ValueInput | undefined>(key: Exclude<JSSKey, string>, content: C): Declaration<C>
 export function declare(key: DeclareProtocol | Exclude<JSSKey, string>, ...contents: unknown[]): Declaration<unknown> {
-  if (matchShape(key, declareShape)) {
+  if (hasProperty(key, 'content') && matchShape(key, declareShape)) {
     const target = resolveVariable(key as DeclareProtocol)
     const content = (contents.length ? contents[0] : target.content) as DeclareProtocol['content']
     const name = target.key.toCSSString()

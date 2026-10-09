@@ -36,6 +36,49 @@ export type ExpressionValue<T extends ValueData = ValueData> = Omit<Value<T>, 'w
 }
 
 /**
+ * 包装内容；数组默认递归以逗号连接，可指定自己的 CSS 输出规则。
+ * @example
+ * rules('.example', [[key('--numbers'), value([1, 2])]])
+ * compileCSS().includes('--numbers: 1, 2;') // true
+ * rules('.stack', [[key('z-index'), value(3, { toCSSString: (number: number) => String(number * 2) })]])
+ * compileCSS().includes('z-index: 6;') // true
+ */
+export function value<T extends ValueData>(content: T, options: ValueOptions<T> & { onActive: NonNullable<JSSContent['onActive']> }): Value<T>
+
+/**
+ * 包装没有自身激活行为的内容；替换内容后仍只组织依赖与输出。
+ */
+export function value<T extends ValueData>(content: T, options?: ValueOptions<T> & { onActive?: never }): ExpressionValue<T>
+
+/**
+ * 包装内容并按需提供资源；未携带激活行为的选项使用 ExpressionValue 契约。
+ */
+export function value<T extends ValueData>(content: T, options?: ValueOptions<T>): Value<T>
+
+/**
+ * 沿用原配置输出内容，withContent 只替换数据，不改变激活与输出约定。
+ */
+export function value<T extends ValueData>(content: T, options?: ValueOptions<T>): Value<T> {
+  return {
+    kind: 'value',
+    content,
+    withContent: content => value(content, options),
+    onActive: options?.onActive,
+    get dependencies() {
+      const current = this.content
+      return isFunction(options?.dependencies) ? options.dependencies(current) : options?.dependencies ?? valueContents(current)
+    },
+    toCSSString(resolve) {
+      const resolver = resolve ?? (() => undefined)
+      const resolveValue: JSSContentResolver = (child) => defaultToCSSString(child, resolver)
+      const current = this.content
+      if (options?.toCSSString) return options.toCSSString(current, resolveValue)
+      return resolveValue(current)
+    },
+  }
+}
+
+/**
  * 识别对象持有的 Value 身份，不展开内容。
  */
 export const isValue = (input: unknown): input is Value => containKey(input, 'kind') && input.kind === 'value'
@@ -82,46 +125,3 @@ function joinCSSValues(content: unknown[], resolve: JSSContentResolver, separato
  */
 export const arraySequenceToCSSString = (content: ValueData[], resolve: JSSContentResolver): string | undefined =>
   joinCSSValues(content, resolve, ' ')
-
-/**
- * 包装内容；数组默认递归以逗号连接，可指定自己的 CSS 输出规则。
- * @example
- * rules('.example', [[key('--numbers'), value([1, 2])]])
- * compileCSS().includes('--numbers: 1, 2;') // true
- * rules('.stack', [[key('z-index'), value(3, { toCSSString: (number: number) => String(number * 2) })]])
- * compileCSS().includes('z-index: 6;') // true
- */
-export function value<T extends ValueData>(content: T, options: ValueOptions<T> & { onActive: NonNullable<JSSContent['onActive']> }): Value<T>
-
-/**
- * 包装没有自身激活行为的内容；替换内容后仍只组织依赖与输出。
- */
-export function value<T extends ValueData>(content: T, options?: ValueOptions<T> & { onActive?: never }): ExpressionValue<T>
-
-/**
- * 包装内容并按需提供资源；未携带激活行为的选项使用 ExpressionValue 契约。
- */
-export function value<T extends ValueData>(content: T, options?: ValueOptions<T>): Value<T>
-
-/**
- * 沿用原配置输出内容，withContent 只替换数据，不改变激活与输出约定。
- */
-export function value<T extends ValueData>(content: T, options?: ValueOptions<T>): Value<T> {
-  return {
-    kind: 'value',
-    content,
-    withContent: content => value(content, options),
-    onActive: options?.onActive,
-    get dependencies() {
-      const current = this.content
-      return isFunction(options?.dependencies) ? options.dependencies(current) : options?.dependencies ?? valueContents(current)
-    },
-    toCSSString(resolve) {
-      const resolver = resolve ?? (() => undefined)
-      const resolveValue: JSSContentResolver = (child) => defaultToCSSString(child, resolver)
-      const current = this.content
-      if (options?.toCSSString) return options.toCSSString(current, resolveValue)
-      return resolveValue(current)
-    },
-  }
-}

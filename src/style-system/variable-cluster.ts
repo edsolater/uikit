@@ -8,19 +8,7 @@ import { assert, Unresultable } from '@edsolater/fnkit'
 import { isVariable, variable, type Variable, type VariableOptions } from './variable'
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
-import type { ValueInput } from './value'
 import type { DeclareProtocol } from './declaration'
-
-/** 通过登记记录识别 Cluster，查询前允许身份未知；宽输入只属于这张表。 */
-const membersByCluster: WeakMap<object, Record<string, Variable>> & {
-  get(input: unknown): Record<string, Variable> | undefined
-} = new WeakMap<object, Record<string, Variable>>()
-
-/**
- * 单值操作针对 Cluster 的默认成员；成员选择与整组配对仍由 Cluster 负责。
- */
-export const resolveVariable = <Target extends DeclareProtocol>(variable: Target): Target =>
-  (membersByCluster.get(variable)?.default ?? variable) as Target
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
@@ -71,6 +59,17 @@ export function variableCluster<Members extends { default: Variable } & Record<s
   membersByCluster.set(cluster, members)
   return cluster
 }
+
+/** 通过登记记录识别 Cluster，查询前允许身份未知；宽输入只属于这张表。 */
+const membersByCluster: WeakMap<object, Record<string, Variable>> & {
+  get(input: unknown): Record<string, Variable> | undefined
+} = new WeakMap<object, Record<string, Variable>>()
+
+/**
+ * 单值操作针对 Cluster 的默认成员；成员选择与整组配对仍由 Cluster 负责。
+ */
+export const resolveVariable = <Target extends DeclareProtocol>(variable: Target): Target =>
+  (membersByCluster.get(variable)?.default ?? variable) as Target
 
 /**
  * 沿来源 Cluster 创建成员集合。

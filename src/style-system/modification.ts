@@ -1,24 +1,104 @@
 /** 可独立声明的变化描述。
 
-保存领域参数，内置转译颜色配方，并提供声明与应用所需的内容材料。
+保存名称与领域参数，按 type 选择源无关内容转译，并提供声明与应用材料。
 
 变化与来源分别复用，绑定和条件应用由 Adjust、Modify 的使用端组织。
 */
-import { and, assert, isFunction, isObject, isString, matchShape, type DataShape } from '@edsolater/fnkit'
+import {
+  and,
+  assert,
+  check,
+  equal,
+  hasProperty,
+  isFunction,
+  isNumber,
+  isObject,
+  isString,
+  isUndefined,
+  matchShape,
+  or,
+  type DataShape,
+} from '@edsolater/fnkit'
 import { createJSSContent, isJSSContent, type Expression, type JSSContent } from './content'
-import { declareShape, type DeclareProtocol } from './declaration'
+import type { DeclareProtocol } from './declaration'
 import { compileVariableContent } from './variable'
-import { key } from './key'
-import { allocateVariableName } from './variable-args-parser'
+import { allocateVariableName, key } from './key'
 import { value, type ValueInput } from './value'
 
-/** 变化自身的定义、声明与应用材料；没有来源绑定或运行时更新控制。 */
-export interface Modification extends ModificationDefinition, ColorModificationContent, JSSContent {
+/** 变化自身就是定义；Detail/Type 表达领域差异，key 与 CSS 目标始终跟随当前完整 name。 */
+export interface Modification<Detail = unknown, Type extends string = string> extends DeclareProtocol, JSSContent {
+  type: Type
   name: string
+  detail: Detail
   /**
    * 返回自身 CSS 自定义属性名，供声明目标使用。
    */
   toCSSString(): string
+}
+
+/**
+ * 保存 type/name/detail；按 type 的策略校验描述，消费时转译源无关内容。
+ * name 保持完整 CSS 名称，省略时自动分配；构造不执行内容回调。
+ */
+export function modification<Type extends keyof typeof modificationTypes>(
+  definition: Pick<Modification<ModificationDetails[Type], Type>, 'type' | 'detail'> & { name?: string },
+): Modification<ModificationDetails[Type], Type> {
+  assert(
+    isString(definition.type) && Object.hasOwn(modificationTypes, definition.type),
+    `Modification 尚未支持内容领域：${definition.type}。`,
+  )
+  const strategy = (modificationTypes as ModificationStrategies)[definition.type]
+  assert(matchShape(definition.detail, strategy.detailShape), 'Modification 需要有效 detail 材料。')
+  assert(
+    definition.name === undefined || (isString(definition.name) && /^--.+/.test(definition.name)),
+    'Modification name 需要完整 CSS 自定义属性名。',
+  )
+  let name = definition.name === undefined ? `--${allocateVariableName()}` : allocateVariableName(definition.name)
+  const self: Modification<ModificationDetails[Type], Type> = {
+    ...definition,
+    get name() {
+      return name
+    },
+    /**
+     * 登记新的显式配方名称，使后续匿名对象避让它。
+     */
+    set name(nextName) {
+      assert(isString(nextName) && /^--.+/.test(nextName), 'Modification name 需要完整 CSS 自定义属性名。')
+      name = allocateVariableName(nextName)
+    },
+    get key() {
+      return key(self.name)
+    },
+    content: {
+      /**
+       * 当前描述在消费时转译，不冻结创建时的 detail 或回调结果。
+       */
+      onCompile: (context, controller) => controller.setContent(context, strategy.toContent(self.detail)),
+    },
+    /**
+     * 作为 CSS Key 输出当前完整名称。
+     */
+    toCSSString() {
+      return self.name
+    },
+    /**
+     * 普通消费提供配方引用；作为声明目标时保留属性名。
+     */
+    onCompile: (context, controller) => compileVariableContent(self, context, controller),
+  }
+  return self
+}
+
+/** 各 type 的 detail 由该策略的转译签名决定，不重复手写一份领域映射。 */
+type ModificationDetails = {
+  [Type in keyof typeof modificationTypes]: Parameters<(typeof modificationTypes)[Type]['toContent']>[0]
+}
+/** 同一 type 的形状与转译参数保持关联，新增策略不改通用对象生命周期。 */
+type ModificationStrategies = {
+  [Type in keyof ModificationDetails]: {
+    detailShape: DataShape
+    toContent: (detail: ModificationDetails[Type]) => ValueInput
+  }
 }
 
 /** 固定通道内容或当前通道表达式的变化；未指定通道保留来源。 */
@@ -38,77 +118,36 @@ export interface ColorModificationContent extends DeclareProtocol {
 }
 
 /** 颜色操作需要领域标识及可声明的源无关配方材料。 */
-export const colorModificationShape = and(
-  input => declareShape(input),
-  input => matchShape(input, { type: type => type === 'color', key: key => {
-    const name = key.toCSSString()
-    return isString(name) && /^--.+/.test(name)
-  } }),
-) satisfies DataShape
-
-/** 内置颜色转译的定义参数；Size 参数尚未定义，不接受未实现的内容领域。 */
-export interface ModificationDefinition {
-  type: 'color'
-  name?: string
-  detail: ColorModificationDetail
-}
+export const colorModificationShape = {
+  type: check(equal, 'color'),
+  key: check(
+    hasProperty,
+    'toCSSString',
+    and(isFunction, (f) => and(isString, (v) => /^--.+/.test(v))(f())),
+  ),
+  // key: (key) => {
+  //   const name = hasProperty(key, 'toCSSString', isFunction) && key.toCSSString()
+  //   return isString(name) && /^--.+/.test(name)
+  // },
+  content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
+} satisfies DataShape
 
 /**
- * 保存 type/detail，返回可独立声明和引用的 Modification；构造时不执行通道回调。
- * 固定值设定通道，相对回调由内置转译使用通道符号生成配方。
- * @example
- * const change = modification({ type: 'color', name: '--change', detail: { lightness: 0.3, chroma: x => add(x, 0.3) } })
- * declare(change) // --change: 0.3 calc(c + 0.3) h / alpha;
- * adjust(source, change) // 绑定来源、变化与新的结果 Variable。
+ * 用通道符号转译颜色 detail，内容依赖保留到输出阶段，调用方负责消费时机。
+ * 可调用 JSS 内容保留为内容，普通回调接收当前通道的表达式。
  */
-export function modification(definition: ModificationDefinition): Modification {
-  assert(definition.type === 'color', `Modification 尚未支持内容领域：${definition.type}。`)
-  assert(isObject(definition.detail), 'Modification 需要颜色 detail 材料。')
-  assert(definition.name === undefined || (isString(definition.name) && /^--.+/.test(definition.name)), 'Modification name 需要完整 CSS 自定义属性名。')
-  let name = definition.name === undefined ? `--${allocateVariableName()}` : allocateVariableName(definition.name)
-  const recipe: JSSContent = {
-    /**
-     * 在消费时转译当前定义，提供与来源无关的 OKLCH 配方。
-     */
-    onCompile(context, controller) {
-      const channels = Object.entries({
-        l: self.detail.lightness, c: self.detail.chroma, h: self.detail.hue, alpha: self.detail.alpha,
-      }).map(([symbol, change]) => change === undefined ? symbol : !isJSSContent(change) && isFunction(change) ? change(value(symbol)) : change)
-      controller.setContent(context, createJSSContent(resolve => {
-        const values = channels.map(resolve)
-        return values.some(channel => channel === undefined) ? undefined
-          : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
-      }, channels))
-    },
-  }
-  const self: Modification = {
-    ...definition,
-    /**
-     * 读取当前配方名称；声明与引用使用同一名称。
-     */
-    get name() { return name },
-    /**
-     * 登记新的显式配方名称，使后续匿名对象避让它。
-     */
-    set name(nextName) {
-      assert(isString(nextName) && /^--.+/.test(nextName), 'Modification name 需要完整 CSS 自定义属性名。')
-      name = allocateVariableName(nextName)
-    },
-    /**
-     * 声明目标随当前完整 CSS 名称变化。
-     */
-    get key() { return key(self.name) },
-    content: recipe,
-    /**
-     * 返回配方的声明目标名称。
-     */
-    toCSSString() { return self.name },
-    /**
-     * 普通消费提供配方引用；作为声明目标时保留属性名。
-     */
-    onCompile(context, controller) {
-      compileVariableContent(self, context, controller)
-    },
-  }
-  return self
+function colorContent(detail: ColorModificationDetail): Expression {
+  const channels = Object.entries({ l: detail.lightness, c: detail.chroma, h: detail.hue, alpha: detail.alpha }).map(
+    ([symbol, change]) =>
+      change === undefined ? symbol : !isJSSContent(change) && isFunction(change) ? change(value(symbol)) : change,
+  )
+  return createJSSContent((resolve) => {
+    const values = channels.map(resolve)
+    return values.some((channel) => channel === undefined)
+      ? undefined
+      : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
+  }, channels)
 }
+
+/** 当前内置的 type 转译；扩展领域在这里增加独立描述与策略，通用生命周期不变。 */
+const modificationTypes = { color: { detailShape: isObject, toContent: colorContent } }

@@ -17,15 +17,15 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询快捷名称表。Variable 创建时展开 `states` 中匹配到的快捷名称，其他输入直接作为条件，保存条件到内容的映射；自动展开直接消费这些条件，复用完整 `ConditionPath` 与既有节点编译链。快捷条件保留中央顺序，直接条件随后按书写顺序排列。资源 Rule 继续传递内部路径身份，不承担快捷名称解释。
 
-`oklch({ lightness, chroma, hue, alpha })` 返回持有原始通道的 ExpressionValue，输出时生成普通颜色文本。[modification.ts](modification.ts) 通过单个配置保存 `name`、`type: 'color'` 与 `detail`，显式 name 使用完整 CSS 自定义属性名（例如 `--change`），内置转译在配方编译时用 l/c/h/alpha 表达式执行通道回调，输出与来源无关的通道配方。固定值设定通道，未指定通道保留来源；构造时不执行回调。Modification 持有 Declare、Adjust、Modify 所需的自然材料，可通过 `declare(change)` 独立声明，不需要 Variable 包装或独立 Adapter 层。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化。
+`oklch({ lightness, chroma, hue, alpha })` 返回持有原始通道的 ExpressionValue，输出时生成普通颜色文本。`Modification<Detail, Type>` 是通用变化定义，持有 type/name/detail 及声明内容，不继承颜色材料；通用构造按 type 选择私有转译策略，名称和声明生命周期共用。Color 的参数、材料形状与源无关转译集中在文件后部，作为当前策略成员；加入其他领域时扩展对应描述和策略，不改通用对象。[modification.ts](modification.ts) 通过单个配置保存 `name`、`type: 'color'` 与 `detail`，显式 name 使用完整 CSS 自定义属性名（例如 `--change`），内置转译在配方编译时用 l/c/h/alpha 表达式执行通道回调，输出与来源无关的通道配方。固定值设定通道，未指定通道保留来源；构造时不执行回调。Modification 持有 Declare、Adjust、Modify 所需的自然材料，可通过 `declare(change)` 独立声明，不需要 Variable 包装或独立 Adapter 层。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化。
 
 [colors.ts](pieces/contents/atoms/color/colors.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；私有 `createColorModificationByDiff` 保存两份材料的通道差值回调，通过 Modification 入口构造变化。交互、柔和底色和线色直接描述变化，不先修改材料再回推差值。
 
 [declaration.ts](declaration.ts) 的 Declare 协议用 FNKit 的 DataShape 描述 `key/content` 材料形状，`declare` 通过 `matchShape` 识别并建立声明。[variable.ts](variable.ts) 的 Variable 投影自身已有的声明目标、默认内容、状态和注册事实，不承担外部操作。Adjust、Modify 的使用端直接读取双方材料，组织绑定或条件修改；对象无需认识协议，也无需协议登记、品牌或操作方法，参与能力不以构造来源决定。
 
-[variable-adjust.ts](variable-adjust.ts) 的 `adjust(source, change)` 构造引用双方的表达式与 mergedResult Variable，并用可选 `declarations` 保存来源与配方的共同声明关系。[variable.ts](variable.ts) 的 `compileVariableContent` 统一处理天然材料和内置对象的声明依赖、当地重算、状态与资源，`referenceVariable` 复用这条消费链。`declare(mergedResult)` 共同声明三者，显式覆盖结果内容也保留依赖；当前或祖先作用域已有依赖声明优先，自动声明只补缺项。结果在消费地址重新组合，使子元素局部覆盖来源或配方后使用当地值。多个 Source 可共享同一 Modification；绑定不执行 JS 基础数据求值，也不修改来源的默认内容。
+[variable-adjust.ts](variable-adjust.ts) 的 `adjust(source, change)` 按 type 选择具体领域组合，构造引用双方的表达式与 mergedResult Variable，并用可选 `declarations` 保存来源与配方的共同声明关系。[variable.ts](variable.ts) 的 `compileVariableContent` 统一处理天然材料和内置对象的声明依赖、当地重算、状态与资源，`referenceVariable` 复用这条消费链。`declare(mergedResult)` 共同声明三者，显式覆盖结果内容也保留依赖；当前或祖先作用域已有依赖声明优先，自动声明只补缺项。结果在消费地址重新组合，使子元素局部覆盖来源或配方后使用当地值。多个 Source 可共享同一 Modification；绑定不执行 JS 基础数据求值，也不修改来源的默认内容。
 
-[variable-modify.ts](variable-modify.ts) 的 `modify(target, change)` 返回 Declaration；编译消费时取得最近同对象声明的前序 Expression。颜色材料通过 `type: 'color'` 与配方引用参与相对颜色组合；表达式材料通过 `{ type: 'expression', detail: current => add(current, delta) }` 执行前序表达式变化。应用方发布条件修改步骤，浏览器决定条件是否生效。表达式回调材料不是独立可声明的 Modification。
+[variable-modify.ts](variable-modify.ts) 的 `modify(target, change)` 按 type 选择后部的具体应用，返回 Declaration；编译消费时取得最近同对象声明的前序 Expression。颜色材料通过 `type: 'color'` 与配方引用参与相对颜色组合；表达式材料通过 `{ type: 'expression', detail: current => add(current, delta) }` 执行前序表达式变化。应用方发布条件修改步骤，浏览器决定条件是否生效。表达式回调材料不是独立可声明的 Modification。
 
 `add`、`multiply` 构造的 Expression 保存操作数与依赖，在输出时生成 CSS calc 文本，数值与单位由浏览器解释。它们同时用于变化配方和其他内容组合，不承担 JS 默认数据求值。
 
@@ -59,7 +59,8 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | --- | --- |
 | condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份 |
 | pieces/state-conditions.ts | 主体状态名称、条件登记、中央顺序与状态路径追加 |
-| key.ts | JSSKey 的创建、可选聚合协议、声明目标识别与名称解析 |
+| key.ts | JSSKey 的创建、聚合、识别与别名解析；共用 CSS 自定义属性名称分配，别名登记与名称避让分别保存 |
+| variable-args-parser.ts | 将 Variable 默认值、状态和名称简写整理为创建配置；名称取自 key.ts |
 | declaration.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |

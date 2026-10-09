@@ -6,7 +6,7 @@
 */
 import { condition, type ConditionPath } from './condition'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
-import type { JSSKeyObject } from './key'
+import { allocateVariableName, type JSSKeyObject } from './key'
 import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
@@ -15,7 +15,7 @@ import { find, hasProperty, mapGet, result } from '@edsolater/fnkit'
 import { consumeVariable, findVariableDeclaration, findLocalBaseKey, type ModifyTargetProtocol } from './variable-modify'
 import { declare } from './declaration'
 import { resolveVariable } from './variable-cluster'
-import { allocateVariableName, parseVariableArgs, type VariableStateValues } from './variable-args-parser'
+import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
 
 /** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
 export type VariableDefaultValue = ValueInput | (() => ValueInput)
@@ -45,12 +45,6 @@ export interface Variable extends ModifyTargetProtocol {
    */
   onCompile(context: JSSCompileContext, astController: ASTController): void
 }
-
-/**
- * 识别 Variable 身份，包含可调用 Cluster，不读取基础内容。
- */
-export const isVariable = (input: unknown): input is Variable =>
-  hasProperty(input, 'kind', (v) => v === 'variable')
 
 /** 一个 Variable 的名称、各状态基础值及可选注册。 */
 export interface VariableOptions<
@@ -116,9 +110,6 @@ export function variable<DefaultValue extends VariableDefaultValue>(
       defaultValue: config.defaultValue,
       states,
       registration: config.registration,
-      /**
-       * 提供跟随当前名称的声明目标；与内容引用分开编译。
-       */
       get definitionKey() {
         return { toCSSString: self.toCSSString }
       },
@@ -131,31 +122,23 @@ export function variable<DefaultValue extends VariableDefaultValue>(
     toCSSString() {
       return `--${self.name}`
     },
-    /**
-     * 读取自身声明目标，不另存一份名称。
-     */
     get key() { return self.config.definitionKey },
-    /**
-     * 读取当前默认内容，生产函数留到实际消费。
-     */
     get content() { return self.config.defaultValue },
-    /**
-     * 读取已有状态材料，不复制状态表。
-     */
     get states() { return self.config.states },
-    /**
-     * 读取已有注册材料，不复制注册配置。
-     */
     get registration() { return self.config.registration },
     /**
      * 按声明目标、指定状态或普通引用角色激活资源并提供对应内容。
      */
-    onCompile(context, astController) {
-      compileVariableContent(self, context, astController)
-    },
+    onCompile: (context, astController) => compileVariableContent(self, context, astController),
   }
   return self
 }
+
+/**
+ * 识别 Variable 身份，包含可调用 Cluster，不读取基础内容。
+ */
+export const isVariable = (input: unknown): input is Variable =>
+  hasProperty(input, 'kind', (v) => v === 'variable')
 
 /**
  * 将自定义属性材料作为内容引用；依赖原信息体，保留其资源激活关系。

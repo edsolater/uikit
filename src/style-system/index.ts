@@ -4,7 +4,8 @@
  *
  * 让业务方从同一入口取得已经收口的样式 API。
  */
-export * from './key'
+export { key, isJSSKey, registerJSSKey, resolveJSSKey, propertyName } from './key'
+export type { JSSKeyObject, JSSKeyDefinition, JSSKey } from './key'
 export * from './condition'
 export { stateCondition } from './pieces/state-conditions'
 export type { StateCondition } from './pieces/state-conditions'
@@ -29,7 +30,7 @@ export * from './pieces/contents/atom-creators/animation'
 export { modify } from './variable-modify'
 export type { ModifyProtocol, ModifyTargetProtocol, ExpressionModification } from './variable-modify'
 export { modification } from './modification'
-export type { Modification, ModificationDefinition, ColorModificationDetail, ColorChannelModification, ColorModificationContent } from './modification'
+export type { Modification, ColorModificationDetail, ColorChannelModification, ColorModificationContent } from './modification'
 export { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
 export { add, multiply } from './pieces/contents/functions/calc'
 export { oklch } from './pieces/contents/functions/oklch'

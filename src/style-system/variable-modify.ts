@@ -4,11 +4,11 @@
 
 样式节点增删后，修改仍须按当前归属与顺序从基础值继续计算。
 */
-import { createJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
+import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
 import { resolveVariable } from './variable-cluster'
-import { and, assert, containKey, isArray, isFunction, isMap, isString, mapGet, matchShape, optional, or, result, type DataShape } from '@edsolater/fnkit'
+import { assert, containKey, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, mapGet, matchShape, optional, or, result, type DataShape } from '@edsolater/fnkit'
 import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
-import { declare, declareShape, type Declaration, type DeclareProtocol } from './declaration'
+import type { Declaration, DeclareProtocol } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from './key'
 import type { ASTController } from './compiler/ast-controller'
@@ -18,14 +18,8 @@ import { referenceVariable, variableRegistrationDeclarations, type VariableDefau
 import { colorModificationShape, type ColorModificationContent } from './modification'
 import { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
 
-/** 任意 CSS 表达变化的描述；回调由 Modify 使用端应用，不承诺可独立声明。 */
-export interface ExpressionModification {
-  type: 'expression'
-  detail: (currentExpression: Expression) => Expression
-}
-
-/** 修改方交付的材料；颜色保持独立配方引用，表达描述保留现有条件数值修改。 */
-export type ModifyProtocol = ColorModificationContent | ExpressionModification
+/** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
+export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]
 
 /** 可修改自定义属性的基础材料；状态和注册仅在存在时参与，不要求对象实现操作。 */
 export interface ModifyTargetProtocol extends DeclareProtocol, JSSContent {
@@ -34,19 +28,66 @@ export interface ModifyTargetProtocol extends DeclareProtocol, JSSContent {
 }
 
 /** 操作所需的自定义属性材料；继承字段和可调用对象按 FNKit 形状读取。 */
-export const modifyTargetShape = and(
-  input => declareShape(input),
-  input => matchShape(input, { states: optional(isMap), declarations: optional(isArray) }),
-  input => {
-    const name = (input as DeclareProtocol).key.toCSSString()
+export const modifyTargetShape = {
+  key: key => {
+    const name = hasProperty(key, 'toCSSString', isFunction) && key.toCSSString()
     return isString(name) && /^--.+/.test(name)
   },
-) satisfies DataShape
-/** 颜色配方或相对表达描述，均不携带外部操作方法。 */
-const modifyShape = or(
-  input => colorModificationShape(input),
-  input => matchShape(input, { type: type => type === 'expression', detail: isFunction }),
-) satisfies DataShape
+  content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
+  states: optional(isMap),
+  declarations: optional(isArray),
+} satisfies DataShape
+
+/**
+ * 返回条件修改 Declaration；按 type 选择应用，编译消费时生成前序 Expression 的修改结果。
+ * 修改归属最近的同对象声明；颜色材料保留配方 CSS 引用，生效条件由 CSS 决定。
+ * 相同 id 在同一局部声明内共用一步；未指定 id 时每次调用形成独立步骤。
+ * @example
+ * rules('.button', [declare(surfaceColor, baseColor)])
+ * rules(['.button', '&:hover'], [modify(surfaceColor, hoverChange)])
+ */
+export function modify(variable: ModifyTargetProtocol, modification: ModifyProtocol, options?: { id?: string | symbol }): Declaration {
+  assert(hasProperty(variable, 'content') && matchShape(variable, modifyTargetShape), 'modify 需要自定义属性的 key/content 材料。')
+  const strategy = hasProperty(modification, 'type', isString) && Object.hasOwn(modifyTypes, modification.type) ? modifyTypes[modification.type] : undefined
+  assert(strategy && strategy.accepts(modification), 'modify 需要颜色配方或表达变化材料。')
+  variable = resolveVariable(variable)
+  return [variable.key, {
+    resourceIdentity: Symbol('variable-modification'),
+    /**
+     * 按最近声明及书写顺序发布当前修改，维护消费链和撤销关系。
+     */
+    onCompile(context, controller) {
+      const target = findVariableDeclaration(controller, variable, context.conditionPath)
+      if (!target) { controller.defer(context.node, `自定义属性 ${variable.key.toCSSString()} 的修改找不到父路径定义。`); return }
+      const session = sessionOf(context)
+      const instance = ensureVariableInstance(context, controller, target)
+      const old = session.steps.get(context.node)
+      if (old?.instance === instance) { refreshSteps(controller, instance); return }
+      if (old) removeModification(context, controller, old, context.node)
+      if (!instance.steps.length) {
+        instance.baseName = `${variable.key.toCSSString().slice(2)}-modify-${instance.number}-base`
+        publishResult(controller, instance, instance.node)
+        const alias = instance.results.get(conditionAddressKey(instance.node.conditionPath))!.alias!
+        registerInternalVariable(controller, instance, instance.baseName, alias)
+      }
+      const step = instance.steps.find(step => options?.id !== undefined && step.id === options.id)
+        ?? createStep(context, controller, instance, options?.id)
+      const output = (strategy.apply as (current: Expression, change: ModifyProtocol) => Expression)(step.currentExpression, modification)
+      const gate = `${step.name}-candidate-${++step.count}`
+      const selection = controller.insert({ before: context.node, conditionPath: context.conditionPath },
+        [undefined, createJSSContent(resolve => resolve(output) === undefined ? undefined : selectionText(step, gate), [output])],
+        { owner: context.node, identity: 'modification' })
+      step.members.set(context.node, { gate, output, selection })
+      session.steps.set(context.node, step)
+      publishResult(controller, instance, context.node)
+      refreshSteps(controller, instance, step)
+      controller.onRemove(context.node, () => {
+        const current = session.steps.get(context.node)
+        if (current) removeModification(context, controller, current, context.node)
+      })
+    },
+  }]
+}
 
 /** 一个局部声明的基础值、最终值和修改步骤；只在本次编译内有效。 */
 interface VariableInstance {
@@ -69,14 +110,8 @@ const joinVariableValues = (values: Value[]): ValueInput =>
     /**
      * 忽略没有输出的贡献，返回本地址最后有效的声明值。
      */
-    toCSSString: (items, resolve) => {
-      let latest: string | undefined
-      for (const item of items) {
-        const output = resolve(item)
-        if (output !== undefined) latest = output
-      }
-      return latest
-  } })
+    toCSSString: (items, resolve) => items.map(resolve).findLast(output => output !== undefined),
+  })
 
 /** 一个消费地址的本地结果链；同址消费者共享，条件与继承交给 CSS。 */
 interface VariableResult {
@@ -194,22 +229,6 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
     !controller.search({ key: variable.key }).some(other => other !== node && declaredVariable(other) === variable && JSON.stringify(semanticPathParts(other.conditionPath)) === address),
     `自定义属性 ${variable.key.toCSSString()} 在同一语义路径重复定义。`,
   )
-  const instance = createVariableInstance(session, node, variable)
-  session.instances.set(node, instance)
-  declareInstanceValues(controller, instance, content)
-  takeOverAutomaticStates(controller, instance)
-  controller.onRemove(node, () => {
-    for (const consumer of controller.nodes())
-      if (session.steps.get(consumer)?.instance === instance || session.consumers.get(consumer)?.get(variable) === instance)
-        consumer.compileRevision++
-  })
-  return instance
-}
-
-/**
- * 为本次局部声明建立基础目标和修改步骤，尚不发布 CSS 声明。
- */
-function createVariableInstance(session: VariableSession, node: JSSStyleNode, variable: ModifyTargetProtocol): VariableInstance {
   const instance: VariableInstance = {
     node,
     variable,
@@ -226,6 +245,14 @@ function createVariableInstance(session: VariableSession, node: JSSStyleNode, va
     steps: [],
     results: new Map(),
   }
+  session.instances.set(node, instance)
+  declareInstanceValues(controller, instance, content)
+  takeOverAutomaticStates(controller, instance)
+  controller.onRemove(node, () => {
+    for (const consumer of controller.nodes())
+      if (session.steps.get(consumer)?.instance === instance || session.consumers.get(consumer)?.get(variable) === instance)
+        consumer.compileRevision++
+  })
   return instance
 }
 
@@ -284,57 +311,6 @@ export function consumeVariable(context: JSSCompileContext, controller: ASTContr
   controller.onRemove(context.node, () => {
     if (consumers.get(variable) === instance) { consumers.delete(variable); releaseResult(controller, instance, context.node) }
   })
-}
-
-/**
- * 返回条件修改 Declaration；编译消费时直接执行变化回调或组合颜色配方，生成前序 Expression 的修改结果。
- * 修改归属最近的同对象声明；颜色材料保留配方 CSS 引用，生效条件由 CSS 决定。
- * 相同 id 在同一局部声明内共用一步；未指定 id 时每次调用形成独立步骤。
- * @example
- * rules('.button', [declare(surfaceColor, baseColor)])
- * rules(['.button', '&:hover'], [modify(surfaceColor, hoverChange)])
- */
-export function modify(variable: ModifyTargetProtocol, modification: ModifyProtocol, options?: { id?: string | symbol }): Declaration {
-  assert(matchShape(variable, modifyTargetShape), 'modify 需要自定义属性的 key/content 材料。')
-  assert(matchShape(modification, modifyShape), 'modify 需要颜色配方或表达变化材料。')
-  variable = resolveVariable(variable)
-  return [variable.key, {
-    resourceIdentity: Symbol('variable-modification'),
-    /**
-     * 按最近声明及书写顺序发布当前修改，维护消费链和撤销关系。
-     */
-    onCompile(context, controller) {
-      const target = findVariableDeclaration(controller, variable, context.conditionPath)
-      if (!target) { controller.defer(context.node, `自定义属性 ${variable.key.toCSSString()} 的修改找不到父路径定义。`); return }
-      const session = sessionOf(context)
-      const instance = ensureVariableInstance(context, controller, target)
-      const old = session.steps.get(context.node)
-      if (old?.instance === instance) { refreshSteps(controller, instance); return }
-      if (old) removeModification(context, controller, old, context.node)
-      if (!instance.steps.length) {
-        instance.baseName = `${variable.key.toCSSString().slice(2)}-modify-${instance.number}-base`
-        publishResult(controller, instance, instance.node)
-        const alias = instance.results.get(conditionAddressKey(instance.node.conditionPath))!.alias!
-        registerInternalVariable(controller, instance, instance.baseName, alias)
-      }
-      const step = instance.steps.find(step => options?.id !== undefined && step.id === options.id)
-        ?? createStep(context, controller, instance, options?.id)
-      const output = modification.type === 'expression' ? modification.detail(step.currentExpression)
-        : relativeOKLCH(step.currentExpression, referenceVariable(modification))
-      const gate = `${step.name}-candidate-${++step.count}`
-      const selection = controller.insert({ before: context.node, conditionPath: context.conditionPath },
-        [undefined, createJSSContent(resolve => resolve(output) === undefined ? undefined : selectionText(step, gate), [output])],
-        { owner: context.node, identity: 'modification' })
-      step.members.set(context.node, { gate, output, selection })
-      session.steps.set(context.node, step)
-      publishResult(controller, instance, context.node)
-      refreshSteps(controller, instance, step)
-      controller.onRemove(context.node, () => {
-        const current = session.steps.get(context.node)
-        if (current) removeModification(context, controller, current, context.node)
-      })
-    },
-  }]
 }
 
 /**
@@ -477,4 +453,35 @@ function registerInternalVariable(controller: ASTController, instance: VariableI
   variableRegistrationDeclarations(registration).forEach(([key, content]) =>
     controller.insert(position, [key, content], { ...provenance, identity: `${name}/${key === 'initial-value' ? 'initial' : key}` }),
   )
+}
+
+
+/** 任意 CSS 表达变化的描述；回调由 Modify 使用端应用，不承诺可独立声明。 */
+export interface ExpressionModification {
+  type: 'expression'
+  detail: (currentExpression: Expression) => Expression
+}
+
+/** 各领域的材料检查及前序表达式应用；不介入通用步骤、归属和撤销。 */
+const modifyTypes = {
+  color: {
+    /**
+     * 识别可独立声明的颜色配方，保持模块循环中的材料延迟读取。
+     */
+    accepts: (change: unknown) => hasProperty(change, 'content') && matchShape(change, colorModificationShape),
+    /**
+     * 以独立颜色配方的 CSS 引用改变前序结果。
+     */
+    apply: (current: Expression, change: ColorModificationContent) => relativeOKLCH(current, referenceVariable(change)),
+  },
+  expression: {
+    /**
+     * 识别持有表达式变化回调的材料。
+     */
+    accepts: (change: unknown) => hasProperty(change, 'detail', isFunction),
+    /**
+     * 将前序表达式交给变化回调，保留它返回的内容与依赖。
+     */
+    apply: (current: Expression, change: ExpressionModification) => change.detail(current),
+  },
 }

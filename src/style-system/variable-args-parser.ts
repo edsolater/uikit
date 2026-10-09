@@ -1,10 +1,11 @@
 /** Variable 创建参数的统一入口。
 
-把默认值、状态值简写和名称简写整理为一份创建配置，并为 Variable 与 Modification 共用的 CSS 名称分配避让。
+把默认值、状态值简写和名称简写整理为一份创建配置。
 
 后续创建逻辑只处理统一配置，不再区分调用写法。
 */
-import { containKey, IdGenerator, isString } from '@edsolater/fnkit'
+import { containKey, isString } from '@edsolater/fnkit'
+import { allocateVariableName } from './key'
 import type { VariableDefaultValue, VariableOptions } from './variable'
 import type { ValueInput } from './value'
 
@@ -17,23 +18,6 @@ export type VariableStateValues<DefaultValue extends VariableDefaultValue = Vari
 export type VariableConfig<
   DefaultValue extends VariableDefaultValue = VariableDefaultValue,
 > = VariableOptions<DefaultValue> & { defaultValue: DefaultValue; name: string }
-
-/** Variable 与 Modification 共用的临时名称序号，仅在缺少名称时分配。 */
-const nameGenerator = new IdGenerator('temp')
-/** 已用于变量或变化声明的名称；自动分配避让显式名称，显式同名仍允许 CSS 局部覆盖。 */
-const usedNames = new Set<string>()
-
-/**
- * 分配同一 CSS 自定义属性命名空间中的名称；匿名名称避让已登记的显式名称。
- * 显式同名保留，用于 CSS 局部覆盖；返回名称保留调用者传入的 -- 前缀。
- */
-export function allocateVariableName(name?: string): string {
-  if (name === undefined) {
-    do { name = `temp-${nameGenerator.genID()}` } while (usedNames.has(name))
-  }
-  usedNames.add(name.replace(/^--/, ''))
-  return name
-}
 
 /**
  * 将两处独立简写展开为创建配置，不执行内容函数。
@@ -49,17 +33,9 @@ export function parseVariableArgs<DefaultValue extends VariableDefaultValue>(
 ): VariableConfig<DefaultValue> {
   const config = isString(options) ? { name: options } : options ?? {}
   const name = allocateVariableName(config.name)
-  if (isStateValues(input)) {
-    const { default: defaultValue, ...states } = input
+  if (containKey(input, 'default')) {
+    const { default: defaultValue, ...states } = input as VariableStateValues<DefaultValue>
     return { ...config, name, defaultValue, states: { ...states, ...config.states } }
   }
   return { ...config, name, defaultValue: input }
 }
-
-/**
- * 按 fnkit 的字段存在性协议识别状态值简写。
- */
-const isStateValues = <DefaultValue extends VariableDefaultValue>(
-  input: DefaultValue | VariableStateValues<DefaultValue>,
-): input is VariableStateValues<DefaultValue> =>
-  containKey(input, 'default')
