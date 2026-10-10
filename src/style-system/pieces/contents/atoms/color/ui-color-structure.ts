@@ -4,10 +4,8 @@
  *
  * 共用构造依赖颜色与样式基础能力，各用途定义可单向复用。
  */
-import { modification } from '@/style-system/modification'
 import type { ValueInput } from '@/style-system/value'
 import { type Variable, variable } from '@/style-system/variable'
-import { relativeOKLCH } from '../../functions/relative-oklch'
 import { createJSSContent } from '@/style-system/content'
 import { colorMix } from '../../functions/color-mix'
 import type { ColorMaterial } from '@/color-system'
@@ -45,11 +43,11 @@ export function baseUIColorStructure({
     default: base,
     strong: strong === undefined ? base : variable(strong, `${base.name}-strong`),
     soft: variable(
-      relativeOKLCH(base, modification({ type: 'color', detail: { alpha: softAlpha } })),
+      oklch(base, { alpha: softAlpha }),
       `${base.name}-soft`,
     ),
     line: variable(
-      relativeOKLCH(base, modification({ type: 'color', detail: { alpha: lineAlpha } })),
+      oklch(base, { alpha: lineAlpha }),
       `${base.name}-line`,
     ),
     content: variable(content, `${base.name}-content`),

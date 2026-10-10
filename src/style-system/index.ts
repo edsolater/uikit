@@ -45,10 +45,9 @@ export type {
   ColorChannelModification,
   ColorModificationContent,
 } from './modification'
-export { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
 export { add, multiply } from './pieces/contents/functions/calc'
 export { oklch } from './pieces/contents/functions/oklch'
-export type { OKLCHChannels } from './pieces/contents/functions/oklch'
+export type { OKLCHChannels, OKLCHChanges, OKLCHChannelChange } from './pieces/contents/functions/oklch'
 export * from './pieces/mixins/content'
 export * from './pieces/mixins/structure'
 export * from './pieces/mixins/appearance'

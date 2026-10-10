@@ -1,9 +1,8 @@
 /** 交互颜色的 Variable 状态模板；变量的名称、注册与创建由调用处决定。 */
-import { modification } from '@/style-system/modification'
 import type { ValueInput } from '@/style-system/value'
 import type { VariableStateValues } from '@/style-system/variable-args-parser'
 import { add } from '@/style-system/pieces/contents/functions/calc'
-import { relativeOKLCH } from '@/style-system/pieces/contents/functions/relative-oklch'
+import { oklch } from '@/style-system/pieces/contents/functions/oklch'
 
 /**
  * 返回默认颜色及 hover、active 配方，始终引用 base 的当前颜色。
@@ -20,13 +19,10 @@ export function interactiveColorStates({
   lightnessResponse?: number
   chromaResponse?: number
 }): VariableStateValues<ValueInput> {
-  const state = (lightnessDelta: number, chromaDelta: number) => relativeOKLCH(base, modification({
-    type: 'color',
-    detail: {
-      lightness: current => add(current, lightnessDelta * lightnessResponse),
-      chroma: chromaResponse === 0 ? undefined : current => add(current, chromaDelta * chromaResponse),
-    },
-  }))
+  const state = (lightnessDelta: number, chromaDelta: number) => oklch(base, {
+    lightness: current => add(current, lightnessDelta * lightnessResponse),
+    chroma: chromaResponse === 0 ? undefined : current => add(current, chromaDelta * chromaResponse),
+  })
   return {
     default: base,
     hover: state(-0.04, 0.01),

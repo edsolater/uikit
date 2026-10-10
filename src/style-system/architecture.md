@@ -17,9 +17,9 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 公开 Rules 与原始 Rules 的路径字符串统一转换成普通 Condition，不查询快捷名称表。Variable 创建时展开 `states` 中匹配到的快捷名称，其他输入直接作为条件，保存条件到内容的映射；自动展开直接消费这些条件，复用完整 `ConditionPath` 与既有节点编译链。快捷条件保留中央顺序，直接条件随后按书写顺序排列。资源 Rule 继续传递内部路径身份，不承担快捷名称解释。
 
-`oklch({ lightness, chroma, hue, alpha })` 返回持有原始通道的 ExpressionValue，输出时生成普通颜色文本。`Modification<Detail, Type>` 是通用变化定义，持有 type/name/detail 及声明内容，不继承颜色材料；通用构造按 type 选择私有转译策略，名称和声明生命周期共用。Color 的参数、材料形状与源无关转译集中在文件后部，作为当前策略成员；加入其他领域时扩展对应描述和策略，不改通用对象。[modification.ts](modification.ts) 通过单个配置保存 `name`、`type: 'color'` 与 `detail`，显式 name 使用完整 CSS 自定义属性名（例如 `--change`），内置转译在配方编译时用 l/c/h/alpha 表达式执行通道回调，输出与来源无关的通道配方。固定值设定通道，未指定通道保留来源；构造时不执行回调。Modification 持有 Declare、Adjust、Modify 所需的自然材料，可通过 `declare(change)` 独立声明，不需要 Variable 包装或独立 Adapter 层。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化。
+`oklch({ lightness, chroma, hue, alpha })` 返回持有原始通道的 ExpressionValue，输出时生成普通颜色文本；`oklch(source, { lightness: current => add(current, -0.04) })` 返回相对颜色 Expression，直接接收通道变化，未指定通道保留来源，不创建 Modification 或 Variable。`Modification<Detail, Type>` 是通用变化定义，持有 type/name/detail 及声明内容，不继承颜色材料；通用构造按 type 选择私有转译策略，名称和声明生命周期共用。Color 的材料形状与策略连接集中在文件后部，通道参数与源无关转译复用 `oklch.ts`；加入其他领域时扩展对应描述和策略，不改通用对象。[modification.ts](modification.ts) 通过单个配置保存 `name`、`type: 'color'` 与 `detail`，显式 name 使用完整 CSS 自定义属性名（例如 `--change`），内置转译在配方编译时用 l/c/h/alpha 表达式执行通道回调，输出与来源无关的通道配方。固定值设定通道，未指定通道保留来源；构造时不执行回调。Modification 持有 Declare、Adjust、Modify 所需的自然材料，可通过 `declare(change)` 独立声明，不需要 Variable 包装或独立 Adapter 层。`oklch(source, channels)` 也接受完整通道内容，为独立配方保留 CSS 引用；外层 Expression 只组织依赖与输出，直接通道配置由依赖自身在编译时转译，不插入声明或资源。
 
-[ui-color-structure.ts](pieces/contents/atoms/color/ui-color-structure.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；颜色族生成器提供浅底与边线透明度默认值。交互、高亮、柔和底色和线色通过 Modification 直接描述变化，保留来源 Variable 的当前颜色与局部覆盖。
+[ui-color-structure.ts](pieces/contents/atoms/color/ui-color-structure.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；颜色族生成器提供浅底与边线透明度默认值。交互、高亮、柔和底色和线色通过 `oklch(source, changes)` 直接描述通道变化，保留来源 Variable 的当前颜色与局部覆盖。
 
 [declaration.ts](declaration.ts) 的 Declare 协议用 FNKit 的 DataShape 描述 `key/content` 材料形状，`declare` 通过 `matchShape` 识别并建立声明。[variable.ts](variable.ts) 的 Variable 投影自身已有的声明目标、默认内容、状态和注册事实，不承担外部操作。Adjust、Modify 的使用端直接读取双方材料，组织绑定或条件修改；对象无需认识协议，也无需协议登记、品牌或操作方法，参与能力不以构造来源决定。
 
@@ -86,7 +86,7 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | pieces/contents/atoms | 按用途组织的现成 Value 与 Variable |
 | pieces/contents/functions | 遵守 JSS 内容组织工具公约的混色、计算和相对颜色等 Expression 构造 |
 | pieces/contents/functions/calc.ts | 保存操作数依赖，构造 CSS calc 算术 Expression |
-| pieces/contents/functions/relative-oklch.ts | 来源颜色与通道内容的纯相对 OKLCH 组合，不解释 Modification 或 Variable |
+| pieces/contents/functions/oklch.ts | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译 |
 | pieces/contents/functions/SPEC.md | JSS 内容组织工具公约与 Expression、规则及定义主体的边界 |
 | pieces/contents/atom-creators | 按结构生成阴影、动画等内容 |
 | pieces/roles | 供组件在自身选择器中赋值的共享角色 |

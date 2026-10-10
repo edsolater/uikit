@@ -17,10 +17,11 @@ import {
   or,
   type DataShape
 } from '@edsolater/fnkit'
-import { createJSSContent, isJSSContent, type Expression, type JSSContent } from './content'
+import { isJSSContent, type JSSContent } from './content'
 import type { DeclareProtocol } from './declaration'
 import { allocateVariableName, key } from './key'
-import { value, type ValueInput } from './value'
+import type { ValueInput } from './value'
+import { oklchChannels, type OKLCHChannelChange, type OKLCHChanges } from './pieces/contents/functions/oklch'
 import { compileVariableContent } from './variable'
 
 /** 变化自身就是定义；Detail/Type 表达领域差异，key 与 CSS 目标始终跟随当前完整 name。 */
@@ -35,6 +36,8 @@ export interface Modification<Detail = unknown, Type extends string = string> ex
 }
 
 /**
+ * 它的设计目的，是让“颜色怎么变化”可以独立命名、声明和覆盖，而不绑定某一个来源颜色。
+ * 
  * 保存 type/name/detail；按 type 的策略校验描述，消费时转译源无关内容。
  * name 保持完整 CSS 名称，省略时自动分配；构造不执行内容回调。
  */
@@ -100,15 +103,10 @@ type ModificationStrategies = {
 }
 
 /** 固定通道内容或当前通道表达式的变化；未指定通道保留来源。 */
-export type ColorChannelModification = ValueInput | ((currentExpression: Expression) => Expression)
+export type ColorChannelModification = OKLCHChannelChange
 
 /** 一份 OKLCH 变化参数；回调在配方编译时收到 l/c/h/alpha 表达式。 */
-export interface ColorModificationDetail {
-  lightness?: ColorChannelModification
-  chroma?: ColorChannelModification
-  hue?: ColorChannelModification
-  alpha?: ColorChannelModification
-}
+export interface ColorModificationDetail extends OKLCHChanges {}
 
 /** 颜色应用的材料；content 是独立配方，使用端负责引用它并组合来源。 */
 export interface ColorModificationContent extends DeclareProtocol {
@@ -124,22 +122,5 @@ export const colorModificationShape = {
   content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
 } satisfies DataShape
 
-/**
- * 用通道符号转译颜色 detail，内容依赖保留到输出阶段，调用方负责消费时机。
- * 可调用 JSS 内容保留为内容，普通回调接收当前通道的表达式。
- */
-function colorContent(detail: ColorModificationDetail): Expression {
-  const channels = Object.entries({ l: detail.lightness, c: detail.chroma, h: detail.hue, alpha: detail.alpha }).map(
-    ([symbol, change]) =>
-      change === undefined ? symbol : !isJSSContent(change) && isFunction(change) ? change(value(symbol)) : change,
-  )
-  return createJSSContent((resolve) => {
-    const values = channels.map(resolve)
-    return values.some((channel) => channel === undefined)
-      ? undefined
-      : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
-  }, channels)
-}
-
 /** 当前内置的 type 转译；扩展领域在这里增加独立描述与策略，通用生命周期不变。 */
-const modificationTypes = { color: { detailShape: isObject, toContent: colorContent } }
+const modificationTypes = { color: { detailShape: isObject, toContent: oklchChannels } }

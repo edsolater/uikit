@@ -12,7 +12,7 @@ import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext
 import type { Declaration, DeclareProtocol } from './declaration'
 import type { JSSKeyObject } from './key'
 import { colorModificationShape, type ColorModificationContent } from './modification'
-import { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
+import { oklch } from './pieces/contents/functions/oklch'
 import { appendStateCondition } from './pieces/state-conditions'
 import { value, type Value, type ValueInput } from './value'
 import { referenceVariable, variableRegistrationDeclarations, type VariableDefaultValue, type VariableOptions } from './variable'
@@ -470,7 +470,7 @@ const modifyTypes = {
     /**
      * 以独立颜色配方的 CSS 引用改变前序结果。
      */
-    apply: (current: Expression, change: ColorModificationContent) => relativeOKLCH(current, referenceVariable(change)),
+    apply: (current: Expression, change: ColorModificationContent) => oklch(current, referenceVariable(change)),
   },
   expression: {
     /**

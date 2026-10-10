@@ -1,6 +1,6 @@
 # JSS 内容组织工具公约
 
-`functions` 保存用已有输入组织 JSS 内容的工具，例如 `add`、`multiply`、`colorMix`、`oklch`、`relativeOKLCH` 和 `translateY`。目录名保持 `functions`；“JSS 内容组织工具”说明这里的共同职责。
+`functions` 保存用已有输入组织 JSS 内容的工具，例如 `add`、`multiply`、`colorMix`、`oklch` 和 `translateY`。目录名保持 `functions`；“JSS 内容组织工具”说明这里的共同职责。
 
 ## 组织自身内容
 
@@ -25,7 +25,7 @@ const content = createJSSContent(resolve => {
 
 ## 内容工具与修改规则、定义主体的边界
 
-[modification.ts](../../../modification.ts) 的 `Modification<Detail, Type>` 表示通用变化定义，不依赖颜色父类型；通用生命周期按 type 选择源无关转译，Color 参数与实现集中在文件后段。构造用单个配置保存变化的 `name/type/detail`，显式名称是完整 CSS 自定义属性名，内置转译在编译时生成与来源无关的颜色通道配方，并提供独立声明和应用材料。[variable-modify.ts](../../../variable-modify.ts) 通过 FNKit DataShape／`matchShape` 识别双方的自然材料，组织条件修改表达式与步骤；[variable-adjust.ts](../../../variable-adjust.ts) 绑定 Source、Modification 与结果 Variable，使一次结果声明共同声明三者。来源与配方保留 CSS 引用，局部覆盖由浏览器作用域决定。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化描述或 Variable 身份。
+[modification.ts](../../../modification.ts) 的 `Modification<Detail, Type>` 表示通用变化定义，不依赖颜色父类型；通用生命周期按 type 选择源无关转译，Color 材料形状与策略连接集中在文件后段，通道配置与转译复用 `oklch.ts`。构造用单个配置保存变化的 `name/type/detail`，显式名称是完整 CSS 自定义属性名，内置转译在编译时生成与来源无关的颜色通道配方，并提供独立声明和应用材料。[variable-modify.ts](../../../variable-modify.ts) 通过 FNKit DataShape／`matchShape` 识别双方的自然材料，组织条件修改表达式与步骤；[variable-adjust.ts](../../../variable-adjust.ts) 绑定 Source、Modification 与结果 Variable，使一次结果声明共同声明三者。来源与配方保留 CSS 引用，局部覆盖由浏览器作用域决定。`oklch(channels)` 生成普通颜色，`oklch(source, changes)` 直接接收通道变化并生成相对颜色；也可消费独立配方的完整通道内容引用。外层保持 Expression；配置依赖只在编译时将自身转为通道表达式，不读取选择器或目标，不插入声明或资源。
 
 [css-function.ts](../../../css-function.ts) 中的 CSSFunction 与 Variable 同属 Style System 的定义主体。`cssFunction(signature, body)` 创建一个可调用主体，其调用返回 Expression，通过依赖引用主体与实参。按需函数定义属于主体，调用表达式不提供定义。主体的程序身份是对象本身；CSS 名字由签名决定，同名定义的作用域和完整接管由现有编译链处理。
 

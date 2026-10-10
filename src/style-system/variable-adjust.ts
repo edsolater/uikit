@@ -7,7 +7,7 @@
 import { assert, hasProperty, isString, matchShape } from '@edsolater/fnkit'
 import type { DeclareProtocol } from './declaration'
 import { colorModificationShape, type ColorModificationContent } from './modification'
-import { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
+import { oklch } from './pieces/contents/functions/oklch'
 import { referenceVariable, variable, type Variable } from './variable'
 import { allocateVariableName } from './key'
 import { resolveVariable } from './variable-cluster'
@@ -46,6 +46,6 @@ const adjustTypes = {
    */
   color: (source: AdjustTargetProtocol, change: ColorModificationContent) => {
     assert(hasProperty(change, 'content') && matchShape(change, colorModificationShape), 'adjust 需要有效的 type/key/content 配方材料。')
-    return relativeOKLCH(referenceVariable(source), referenceVariable(change))
+    return oklch(referenceVariable(source), referenceVariable(change))
   },
 }
