@@ -1,7 +1,9 @@
 /** 验证 JS 颜色材料独立供色，以及基础 Variable 覆盖沿用途规则传播。 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { color, compileCSS, rule, rules, type RulesHandle } from '../index'
+import { color } from '../pieces/mixins/appearance'
+import { compileCSS } from '../css-root'
+import { rule, rules, type RulesHandle } from '../rule'
 import { brandColor, canvasColor, interactiveColor, highlightColor, neutralColor, paperColor, inkColor, surfaceColor, foregroundColor, surfaceColorInteractive, foregroundColorInteractive, goodColor, badColor, warnColor, infoColor, lineColor } from '../pieces/contents/atoms/color/colors'
 import { paper, ink, neutral } from '../pieces/contents/atoms/color/palette'
 

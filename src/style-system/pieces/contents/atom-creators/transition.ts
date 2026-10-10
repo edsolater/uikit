@@ -1,8 +1,7 @@
 /** CSS 过渡内容。 */
-import { createJSSContent } from '../../../content'
+import { createJSSContent, type JSSContent } from '../../../content'
 import { propertyName, type JSSKey } from '../../../key'
 import type { ValueInput } from '../../../value'
-import type { JSSContent } from '../../../content'
 
 /** 目标、时长、缓动与可选延迟。 */
 export type Transition = [key: JSSKey, duration: ValueInput, easing: ValueInput, delay?: ValueInput]

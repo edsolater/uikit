@@ -1,7 +1,6 @@
 /** CSS 阴影内容。 */
-import { createJSSContent } from '../../../content'
+import { createJSSContent, type JSSContent } from '../../../content'
 import type { ValueInput } from '../../../value'
-import type { JSSContent } from '../../../content'
 
 /** 单层阴影配置。 */
 export interface ShadowShape {

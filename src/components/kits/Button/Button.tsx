@@ -7,9 +7,9 @@
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
-import { type Source } from '../../../hooks'
-import { clickable } from '../../plugins'
-import { Piv, type PivProps } from '../../Piv'
+import { type Source } from '@/foundation'
+import { clickable } from '../../plugins/kits/clickable/clickable'
+import { Piv, type PivProps } from '../../Piv/Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
 import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
 import { createStatusPropsParser, type StatusProps } from '../utils/parseStatusProps'

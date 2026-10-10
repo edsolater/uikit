@@ -3,8 +3,8 @@
  *
  * 【职责边界】公开启停与拖动状态；指针事务、来源元素位移和 Droppable 命中由内部设施完成。
  */
-import { onCleanup } from 'solid-js'
-import { createToggle, type State } from '../../../../hooks'
+import { onCleanup, type State } from '@/foundation'
+import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 import { createPointerDrag } from './createPointerDrag'

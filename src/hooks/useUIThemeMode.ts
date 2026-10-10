@@ -2,9 +2,8 @@
  * 这个 hook 负责管理全局 theme mode，并把解析后的主题写回 document 根节点。
  * 它只处理 light / dark / system 三态切换，不负责具体控件展示。
  */
-import { createEffect, onCleanup, onMount } from 'solid-js'
+import { createEffect, onCleanup, onMount, createState, val } from '@/foundation'
 import { createElementAttributeMarker } from './createElementAttributeMarker'
-import { createState, val } from './createState'
 import { useDOMRegisterer } from './useDOMRegisterer'
 
 export type UIThemeMode = 'light' | 'dark' | 'system'

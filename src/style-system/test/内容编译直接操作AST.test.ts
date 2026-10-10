@@ -1,8 +1,10 @@
 /** 内容自身处理当前操作；后续内容由普通编译队列推进。 */
 import { expect, it } from 'vitest'
-import { condition, createJSSContent, value, variable } from '../index'
+import { condition } from '../condition'
+import { createJSSContent, type JSSContent } from '../content'
+import { value } from '../value'
+import { variable } from '../variable'
 import { compileRules } from '../css-root'
-import type { JSSContent } from '../index'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from '../key'
 

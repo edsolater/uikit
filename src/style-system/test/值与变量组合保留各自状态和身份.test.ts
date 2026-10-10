@@ -1,7 +1,7 @@
 /** 稳定组合不会传播 Variable 的状态。 */
 import { expect, test, vi } from 'vitest'
 import { result } from '@edsolater/fnkit'
-import { condition } from '../condition'
+import { condition, media } from '../condition'
 import { createJSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
@@ -9,14 +9,12 @@ import { clusterDeclarations, clusterFrom, variableCluster } from '../variable-c
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { multiply } from '../pieces/contents/functions/calc'
 import { compileRules } from '../css-root'
-import { appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
+import { appendStateCondition, resolveStateConditions, stateCondition } from '../pieces/state-conditions'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
-import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
 
 import { cssFunction } from '../css-function'
-import { stateCondition } from '../pieces/state-conditions'
-import { media } from '../condition'
 import type { Rules } from '../rule'
 
 stateCondition('functionMedia', media('(width > 1px)'))

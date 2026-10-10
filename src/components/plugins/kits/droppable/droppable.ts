@@ -3,8 +3,8 @@
  *
  * 【职责边界】公开接收判断、放下回调和悬停状态；两类输入在内部归一为 DropContext。
  */
-import { onCleanup } from 'solid-js'
-import { createToggle, type State } from '../../../../hooks'
+import { onCleanup, type State } from '@/foundation'
+import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 import { registerInternalDropTarget } from '../dragAndDrop'

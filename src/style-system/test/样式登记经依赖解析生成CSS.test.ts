@@ -6,8 +6,7 @@
  */
 import { afterEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../pieces/state-conditions'
-import { compileCSS } from '../css-root'
-import { compileRules } from '../css-root'
+import { compileCSS, compileRules } from '../css-root'
 import { rule, rules, type Rules, type RulesHandle, type Declarations } from '../rule'
 import { condition, media, type ConditionInput } from '../condition'
 import { key } from '../key'

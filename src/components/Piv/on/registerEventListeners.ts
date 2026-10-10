@@ -2,7 +2,7 @@
  * 这个文件负责把已经归一好的 on 声明注册成真实 DOM listener。
  * 它只处理监听器生命周期、cleanup 时序和 Web API 桥接，不负责声明形状解析。
  */
-import { onCleanup } from 'solid-js'
+import { onCleanup } from '@/foundation'
 import { toListenerDiscriptorPairs, type EventListeners, type EventListenerDiscriptorPair } from './handleOn'
 
 export type EventKey = keyof GlobalEventHandlersEventMap

@@ -2,7 +2,7 @@
 
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { createState } from '../../../hooks'
+import { createState } from '@/foundation'
 import { Card } from './Card'
 
 let dispose: (() => void) | undefined

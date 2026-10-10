@@ -5,9 +5,7 @@
  * 防止材料缺少通道感知，或以环境强度掩盖颜色被完全染色的问题。
  */
 import { expect, test } from 'vitest'
-import { applyEnvironment } from '../../../../../color-system/core'
-import { alpha, hue } from '../../../../../color-system/tools/channels'
-import { emphasis } from '../../../../../color-system/tools/emphasis'
+import { applyEnvironment, alpha, hue, emphasis } from '@/color-system'
 import { paper, ink, neutral } from './palette'
 import { brand, interactive, highlight } from './brand-color'
 import { good, bad, warn, info } from './info-color'

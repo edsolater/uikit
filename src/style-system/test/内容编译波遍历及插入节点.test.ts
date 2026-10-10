@@ -7,20 +7,17 @@
 import { expect, test } from 'vitest'
 import { Unresultable } from '@edsolater/fnkit'
 import { condition } from '../condition'
-import { key } from '../key'
+import { key, type JSSKeyObject } from '../key'
 import { stateCondition } from '../pieces/state-conditions'
 import { compileRules } from '../css-root'
-import { createJSSContent } from '../content'
-import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { createJSSContent, type JSSCompileContext, type JSSContentContext, type JSSContent } from '../content'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { value } from '../value'
 import { variable } from '../variable'
 import { variableCluster } from '../variable-cluster'
-import type { JSSCompileContext } from '../index'
 import type { ASTController } from '../compiler/ast-controller'
 
-import type { JSSKeyObject } from '../key'
-import type { JSSContentContext, JSSContent } from '../content'
 import type { Rules } from '../rule'
 
 test.each([['最早编译波', '撤销'], ['暂缓', '撤销'], ['最早编译波', '退出输出'], ['暂缓', '退出输出']])('本波%s等待的声明%s后，只按当前输出队列判断完成', (waiting, removal) => {

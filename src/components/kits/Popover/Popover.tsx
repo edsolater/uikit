@@ -2,8 +2,9 @@
  * 这个文件定义基础 Popover 组件。
  * 它负责触发器、原生 popover 容器和 anchor positioning 结构，不负责菜单协议、表单校验或业务弹层编排。
  */
-import { Show, mergeProps, onMount, type JSX } from 'solid-js'
+import { onMount, Show, type JSX } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
+import { addDefaultProps } from '../../utils/defaultProps'
 import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
 import { createStatusPropsParser } from '../utils/parseStatusProps'
 import { createPopoverController, type PopoverToggleEvent } from './createPopoverController'
@@ -69,7 +70,7 @@ const parsePopoverStatusProps = createStatusPropsParser({
 })
 
 export function Popover(props: PopoverProps) {
-  const mergedProps = mergeProps(defaultPopoverProps, props)
+  const mergedProps = addDefaultProps(props, defaultPopoverProps)
   const { variantShadowProps } = parsePopoverVariantProps(props)
   const controller = createPopoverController({
     onToggle: mergedProps.onToggle,

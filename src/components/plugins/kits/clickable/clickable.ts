@@ -1,7 +1,8 @@
 /** Clickable Plugin：为一个 Piv 提供 hover、focus、pressed 与键盘点击能力。 */
-import { createToggle, type State } from '../../../../hooks'
+import { createToggle } from '@/hooks'
+import { type State } from '@/foundation'
 import type { PivTag } from '../../../Piv/domMap'
-import { hoverable, type HoverableController } from '../hoverable'
+import { hoverable, type HoverableController } from '../hoverable/hoverable'
 import { createPlugin } from '../../definePlugin'
 import { usePlugin } from '../../usePlugin'
 

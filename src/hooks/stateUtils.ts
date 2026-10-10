@@ -1,8 +1,11 @@
-import { createReactionFn } from './createReactiveRunner'
-import { val, type Val } from './read'
-import type { Source } from './source'
-import { type State } from './state'
-import { stateView, type StateView } from './state-view'
+/**
+ * 使用基础状态能力的派生与跟随组合。
+ *
+ * 组合 Foundation 的读取、映射和响应式运行能力，不定义 State 协议。
+ *
+ * 让使用状态的组合与基础状态定义保持各自职责。
+ */
+import { createReactionFn, val, type Val, type Source, type State, stateView, type StateView } from '@/foundation'
 
 /**
  * 把一个 Source 映射成新的 StateView。

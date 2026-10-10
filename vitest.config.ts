@@ -7,8 +7,10 @@
  */
 import solid from 'vite-plugin-solid'
 import { defineConfig } from 'vitest/config'
+import { sourceAlias } from './vite.shared'
 
 export default defineConfig({
+  resolve: { alias: sourceAlias },
   plugins: [solid({ hot: false })],
   test: {
     environment: 'node',

@@ -1,5 +1,4 @@
-import { createState } from '../createState'
-import type { State } from '../createState'
+import { createState, type State } from '@/foundation'
 
 /**
  * ToggleControl

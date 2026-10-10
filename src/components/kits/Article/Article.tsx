@@ -4,8 +4,8 @@
  *
  * 组件选择与透明承载协议见 [Article 设计规格](./Article.spec.md)。
  */
-import { splitProps, type JSX } from 'solid-js'
-import { Piv, type PivProps } from '../../Piv'
+import { splitProps, type JSX } from '@/foundation'
+import { Piv, type PivProps } from '../../Piv/Piv'
 
 type ArticleCarrier = (props: PivProps<'article'>) => JSX.Element
 

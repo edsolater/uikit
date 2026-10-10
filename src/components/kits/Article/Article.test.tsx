@@ -2,7 +2,7 @@
 
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
-import { Card } from '../Card'
+import { Card } from '../Card/Card'
 import { Article } from './Article'
 
 let dispose: (() => void) | undefined

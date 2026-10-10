@@ -1,8 +1,8 @@
 /** 在真实浏览器中验证 pointer 事件、DOM 状态和实例隔离。 */
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
-import { val } from '../../../../hooks'
-import { Piv } from '../../../Piv'
+import { val } from '@/foundation'
+import { Piv } from '../../../Piv/Piv'
 import { usePlugin } from '../../usePlugin'
 import { hoverable, type HoverableController } from './hoverable'
 

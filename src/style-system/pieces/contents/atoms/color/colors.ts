@@ -4,7 +4,7 @@
  *
  * 颜色来源由 JS 持有，浏览器按输出的依赖关系响应局部覆盖。
  */
-import type { ColorMaterial } from '../../../../../color-system/core'
+import type { ColorMaterial } from '@/color-system'
 import { variable, type Variable } from '../../../../variable'
 import { variableCluster } from '../../../../variable-cluster'
 import { type ValueInput } from '../../../../value'

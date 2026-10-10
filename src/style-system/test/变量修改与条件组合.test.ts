@@ -5,9 +5,14 @@
  * 这里检查编译失败和资源输出，不绑定内部步骤名称或查询次数。
  */
 import { expect, test } from 'vitest'
-import { add, condition, createJSSContent, declare, modify, value, variable, type ExpressionModification } from '../index'
+import { add } from '../pieces/contents/functions/calc'
+import { condition } from '../condition'
+import { createJSSContent } from '../content'
+import { declare, type Declaration } from '../declaration'
+import { modify, type ExpressionModification } from '../variable-modify'
+import { value } from '../value'
+import { variable } from '../variable'
 import { compileRules } from '../css-root'
-import type { Declaration } from '../declaration'
 import type { Rules } from '../rule'
 
 const button = condition('.button'), hover = condition('&:hover')

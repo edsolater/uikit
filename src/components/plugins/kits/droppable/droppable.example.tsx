@@ -2,17 +2,17 @@
  * Droppable Example。
  * 内置拖动源只负责配合验收；draggable 的独立用法见 ../draggable/draggable.example.tsx。
  */
-import { createSignal } from 'solid-js'
-import { Piv } from '../../../Piv'
-import { Card } from '../../../kits/Card'
-import { Article } from '../../../kits/Article'
+import { createState, val } from '@/foundation'
+import { Piv } from '../../../Piv/Piv'
+import { Card } from '../../../kits/Card/Card'
+import { Article } from '../../../kits/Article/Article'
 import '../../DragAndDrop.example.css'
-import { draggable } from '../draggable'
+import { draggable } from '../draggable/draggable'
 import { droppable } from './droppable'
 
 export function DroppableExample() {
-  const [payloadResult, setPayloadResult] = createSignal<string>()
-  const [fileResult, setFileResult] = createSignal<string>()
+  const payloadResult = createState<string>()
+  const fileResult = createState<string>()
 
   return (
     <Article as={Card} class="example-card">
@@ -33,14 +33,14 @@ export function DroppableExample() {
           <Piv
             plugin={droppable({
               accepts: ({ kind }) => kind === 'internal',
-              onDrop: ({ payload }) => setPayloadResult(JSON.stringify(payload)),
+              onDrop: ({ payload }) => payloadResult.set(JSON.stringify(payload)),
             })}
             class="drag-drop-example-target"
-            htmlProps={payloadResult() ? { 'data-drop-received': 'true' } : {}}
+            htmlProps={val(payloadResult) ? { 'data-drop-received': 'true' } : {}}
           >
             <span class="drag-drop-example-target-label">接收 UIKit payload</span>
             <output class="drag-drop-example-target-result" aria-live="polite">
-              {payloadResult() ? `已接收：${payloadResult()}` : '等待放下'}
+              {val(payloadResult) ? `已接收：${val(payloadResult)}` : '等待放下'}
             </output>
           </Piv>
         </div>
@@ -51,17 +51,17 @@ export function DroppableExample() {
               accepts: ({ kind, files }) => kind === 'external' && files.length > 0,
               dropEffect: 'copy',
               onDrop: ({ files }) => {
-                setFileResult(files.length > 0
+                fileResult.set(files.length > 0
                   ? files.map((file) => file.name).join('、')
                   : '浏览器没有公开文件名')
               },
             })}
             class="drag-drop-example-target"
-            htmlProps={fileResult() ? { 'data-drop-received': 'true' } : {}}
+            htmlProps={val(fileResult) ? { 'data-drop-received': 'true' } : {}}
           >
             <span class="drag-drop-example-target-label">把系统文件拖到这里</span>
             <output class="drag-drop-example-target-result" aria-live="polite">
-              {fileResult() ? `已接收：${fileResult()}` : '可以从桌面或文件管理器拖入文件'}
+              {val(fileResult) ? `已接收：${val(fileResult)}` : '可以从桌面或文件管理器拖入文件'}
             </output>
           </Piv>
         </div>

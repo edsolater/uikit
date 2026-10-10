@@ -1,5 +1,4 @@
-import type { ColorMaterial } from '../../../../../color-system/core';
-import { hue, chroma, lightness } from '../../../../../color-system/tools/channels';
+import { type ColorMaterial, hue, chroma, lightness } from '@/color-system'
 
 /** 默认品牌材料，取当前 CSS 的品牌基色。 */
 

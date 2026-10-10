@@ -1,16 +1,16 @@
 /** Scope Example：同一 Scope 内允许 Drag and Drop，跨 Scope 时拒绝。 */
-import { createSignal } from 'solid-js'
-import { Piv } from '../../../Piv'
-import { Card } from '../../../kits/Card'
-import { Article } from '../../../kits/Article'
+import { createState, val } from '@/foundation'
+import { Piv } from '../../../Piv/Piv'
+import { Card } from '../../../kits/Card/Card'
+import { Article } from '../../../kits/Article/Article'
 import '../../DragAndDrop.example.css'
 import { dragAndDrop } from '../dragAndDrop'
-import { draggable } from '../draggable'
-import { droppable } from '../droppable'
+import { draggable } from '../draggable/draggable'
+import { droppable } from '../droppable/droppable'
 import { scope } from './scope'
 
 export function ScopeExample() {
-  const [results, setResults] = createSignal<Record<string, string>>({})
+  const results = createState<Record<string, string>>({})
 
   const renderScope = (name: string) => (
     <Piv
@@ -26,17 +26,17 @@ export function ScopeExample() {
       </Piv>
       <Piv
         plugin={droppable({
-          onDrop: ({ payload }) => setResults((current) => ({
+          onDrop: ({ payload }) => results.set((current) => ({
             ...current,
             [name]: `${name} 接收到 ${String(payload)}`,
           })),
         })}
         class="drag-drop-example-target"
-        htmlProps={results()[name] ? { 'data-drop-received': 'true' } : {}}
+        htmlProps={val(results)[name] ? { 'data-drop-received': 'true' } : {}}
       >
         <span class="drag-drop-example-target-label">放入 Scope {name}</span>
         <output class="drag-drop-example-target-result" aria-live="polite">
-          {results()[name] ?? '等待同范围材料'}
+          {val(results)[name] ?? '等待同范围材料'}
         </output>
       </Piv>
     </Piv>

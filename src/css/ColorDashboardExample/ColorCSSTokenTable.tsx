@@ -2,10 +2,8 @@
  * 这个文件只负责 ColorDashboard 的颜色列表展示。
  * 它负责扫描当前页面的颜色 CSS 变量名，并整理成颜色 token 表格行。
  */
-import { onMount } from 'solid-js'
-import { Piv } from '../../components/Piv'
-import { Table } from '../../components/kits'
-import { createState } from '../../hooks'
+import { onMount, createState } from '@/foundation'
+import { Piv, Table } from '@/components'
 
 const colorNumberFormatter = new Intl.NumberFormat('en-US', {
   maximumSignificantDigits: 3,

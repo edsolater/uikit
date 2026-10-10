@@ -2,7 +2,7 @@ import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import '../../../css/all-base.css'
 import ExampleDashboard from './ExampleDashboard'
-import { cssRoot } from '../../../style-system'
+import { cssRoot } from '@/style-system'
 
 const runnerPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
 let dispose: (() => void) | undefined

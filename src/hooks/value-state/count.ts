@@ -1,4 +1,4 @@
-import { createState, type State, val } from '../createState'
+import { createState, type State, val } from '@/foundation'
 
 /**
  * CounterControl

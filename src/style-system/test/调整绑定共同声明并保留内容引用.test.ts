@@ -5,7 +5,17 @@
 断言公开声明与消费结果，浏览器中的局部覆盖另由流程测试验证。
 */
 import { expect, test } from 'vitest'
-import { add, adjust, declare, key, modification, modify, oklch, value, variable, variableCluster, type Declaration, type Modification, type Rules } from '../index'
+import { add } from '../pieces/contents/functions/calc'
+import { adjust } from '../variable-adjust'
+import { declare, type Declaration } from '../declaration'
+import { key } from '../key'
+import { modification, type Modification } from '../modification'
+import { modify } from '../variable-modify'
+import { oklch } from '../pieces/contents/functions/oklch'
+import { value } from '../value'
+import { variable } from '../variable'
+import { variableCluster } from '../variable-cluster'
+import { type Rules } from '../rule'
 import { compileRules } from '../css-root'
 
 /**

@@ -2,7 +2,7 @@
 
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
-import { createState } from '../../../hooks'
+import { createState } from '@/foundation'
 import { Popover } from './Popover'
 
 let dispose: (() => void) | undefined

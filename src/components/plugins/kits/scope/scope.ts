@@ -3,7 +3,7 @@
  *
  * 【职责边界】登记范围并按能力身份寻找最近边界；不解释 Drag and Drop 等具体能力的行为。
  */
-import { onCleanup } from 'solid-js'
+import { onCleanup } from '@/foundation'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 

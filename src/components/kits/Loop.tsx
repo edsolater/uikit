@@ -2,10 +2,9 @@
  * 响应式列表组件。
  * 它基于 Solid 的 mapArray 维护子树复用，只负责列表结构，不解包 item 内部字段。
  */
-import { createEffect, mapArray, type Accessor, type JSX } from 'solid-js'
-import { createDomRef } from '../../hooks/domRef'
-import { createState, val } from '../../hooks/createState'
-import { Piv } from '../Piv'
+import { mapArray, type Accessor, type JSX, createEffect, createState, val } from '@/foundation'
+import { createDomRef } from '@/hooks'
+import { Piv } from '../Piv/Piv'
 
 export type Read<T> = Accessor<T>
 

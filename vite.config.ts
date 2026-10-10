@@ -4,6 +4,7 @@ import { libInjectCss } from 'vite-plugin-lib-inject-css'
 import solid from 'vite-plugin-solid'
 import { cpSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { sourceAlias } from './vite.shared'
 
 // 排除打包的第三方库
 const externalDependencies = ['solid-js', '@edsolater/fnkit']
@@ -28,6 +29,7 @@ function copyCss() {
 }
 
 export default defineConfig({
+  resolve: { alias: sourceAlias },
   plugins: [solid(), libInjectCss(), copyCss()],
   build: {
     target: 'esnext',

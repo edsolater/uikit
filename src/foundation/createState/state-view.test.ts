@@ -3,6 +3,7 @@
  * PromiseLike 领域自身只验证结算行为。
  */
 import { expect, expectTypeOf, test } from 'vitest'
+import { createRoot } from 'solid-js'
 import { createReactionFn } from './createReactiveRunner'
 import { val } from './read'
 import { createState } from './state'
@@ -41,7 +42,11 @@ test('stateView 按来源身份复用默认 StateView', async () => {
 })
 
 test('stateView 的函数参数等价于 options.map', () => {
-  const source = createState(2)
+  let initializationCount = 0
+  const source = createState(() => {
+    initializationCount += 1
+    return 2
+  })
   const map = (value: number) => value * 2
   const fromFunction = stateView(source, map)
   const fromOptions = stateView(source, { map })
@@ -55,6 +60,43 @@ test('stateView 的函数参数等价于 options.map', () => {
 
   expect(fromFunction.read()).toBe(6)
   expect(fromOptions.read()).toBe(6)
+  expect(initializationCount).toBe(1)
+})
+
+test('映射视图复用当前结果，切换分支后跟随新来源，并随所属作用域释放', () => {
+  const source = createState(true)
+  const first = createState(2)
+  const second = createState(5)
+  let mappingCount = 0
+  const { view, dispose } = createRoot((dispose) => {
+    const view = source.map((enabled) => {
+      mappingCount += 1
+      return enabled ? first : second
+    }).map((value) => value * 2)
+    return { view, dispose }
+  })
+
+  expect(val(view)).toBe(4)
+  const initialCount = mappingCount
+  expect(val(view)).toBe(4)
+  expect(mappingCount).toBe(initialCount)
+
+  first.set(3)
+  expect(val(view)).toBe(6)
+  source.set(false)
+  expect(val(view)).toBe(10)
+  const switchedCount = mappingCount
+  first.set(8)
+  expect(val(view)).toBe(10)
+  expect(mappingCount).toBe(switchedCount)
+  second.set(7)
+  expect(val(view)).toBe(14)
+
+  dispose()
+  const disposedCount = mappingCount
+  source.set(true)
+  second.set(9)
+  expect(mappingCount).toBe(disposedCount)
 })
 
 test('stateView 使用 defaultValue 后仍在 fulfilled 时响应式更新', async () => {

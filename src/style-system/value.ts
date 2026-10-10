@@ -5,8 +5,7 @@
  * 支持数据替换复用原格式，纯内容包装保持 Expression 契约。
  */
 import { assert, containKey, isArray, isFunction, isNullish } from '@edsolater/fnkit'
-import { isJSSContent } from './content'
-import type { Expression, JSSContent, JSSContentResolver } from './content'
+import { isJSSContent, type Expression, type JSSContent, type JSSContentResolver } from './content'
 
 export type ValueInput = string | number | JSSContent | undefined
 /** Value 自己持有的数据；裸 RuleValue 数组仍由 Rules 解释。 */

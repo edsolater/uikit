@@ -8,7 +8,12 @@ import { declare } from '../declaration'
 import { modify } from '../variable-modify'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { add, condition, createJSSContent, multiply, variable, variableCluster, value } from '../index'
+import { add, multiply } from '../pieces/contents/functions/calc'
+import { condition } from '../condition'
+import { createJSSContent } from '../content'
+import { variable } from '../variable'
+import { variableCluster } from '../variable-cluster'
+import { value } from '../value'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
 import type { Rules } from '../rule'
@@ -126,7 +131,7 @@ test('declare 可给两个局部定义不同基础内容', () => {
 
 test('晚编译的前置修改按源位置连接，编号和编译时机不决定非交换顺序', () => {
   const n = variable(1, { name: 'late-front' })
-  const delayed = { compileWaveIndex: 1, onCompile(context: import('../index').JSSCompileContext, controller: import('../index').ASTController) {
+  const delayed = { compileWaveIndex: 1, onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) {
     controller.insert({ before: context.node, conditionPath: context.conditionPath }, modify(n, { type: 'expression', detail: current => add(current, 2) }), { owner: context.node })
   } }
   const { element } = mount([row([button], declare(n)), [[button], 'order', delayed], row([button], modify(n, { type: 'expression', detail: current => multiply(current, 3) })), [[button], 'z-index', n]])

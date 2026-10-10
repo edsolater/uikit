@@ -4,62 +4,7 @@
 
 组件自身的选择条件留在样式定义端，可复用效果交给 Style System。
 */
-import { declare } from '../../../style-system/declaration'
-import { modify } from '../../../style-system/variable-modify'
-import {
-  rules,
-  add,
-  variable,
-  innerText,
-  contentLayout,
-  size,
-  boundary,
-  color,
-  elevation,
-  clickable,
-} from '../../../style-system'
-import { surfaceColor, foregroundColor } from '../../../style-system/pieces/roles/color'
-import { $cursor } from '../../../style-system/pieces/keys/interaction'
-import { colorMix } from '../../../style-system/pieces/contents/functions/color-mix'
-import {
-  foregroundColorInteractive,
-  interactiveColor,
-  highlightColor,
-  badColor,
-  toneColor,
-  surfaceColorInteractive,
-} from '../../../style-system/pieces/contents/atoms/color/colors'
-import { pill } from '../../../style-system/pieces/contents/atoms/radius'
-import {
-  spaceSmall,
-  spaceNormal,
-  spaceMedium,
-  spaceLarge,
-  spaceExtraLarge,
-  spaceWide,
-  spaceWidest,
-  boundaryWidthThin,
-} from '../../../style-system/pieces/contents/atoms/space'
-import {
-  controlSizeSmall,
-  controlSizeNormal,
-  controlSizeLarge,
-  controlSizeExtraLarge,
-} from '../../../style-system/pieces/contents/atoms/size'
-import {
-  bold,
-  singleLine,
-  textSizeNormal,
-  textSizeLarge,
-  textSizeExtraLarge,
-  textSizeExtraExtraLarge,
-} from '../../../style-system/pieces/contents/atoms/font'
-import {
-  shadowFlat,
-  shadowRaised,
-  shadowElevated,
-  shadowInteractive,
-} from '../../../style-system/pieces/contents/atoms/shadow'
+import { declare, modify, rules, add, variable, innerText, contentLayout, size, boundary, color, elevation, clickable, surfaceColor, foregroundColor, $cursor, colorMix, foregroundColorInteractive, interactiveColor, highlightColor, badColor, toneColor, surfaceColorInteractive, pill, spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin, controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge, bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge, shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '@/style-system'
 import { Button } from './Button'
 
 const button = ['@layer uikit', `.${Button.name}`]

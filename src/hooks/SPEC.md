@@ -2,7 +2,8 @@
 
 ## 目录职责
 
-- 本目录负责承载对外暴露的 hooks 与相关 primitive。
+- 本目录负责承载使用 Foundation 的派生组合、hooks 与浏览器协作能力。
+- State、Effect 与 Context 的定义和运行时接入由 [Foundation](../foundation/SPEC.md) 负责。
 - 本目录同时承载这些能力的目录级约定文档。
 - 本目录不承载某一个具体 hook 的完整业务说明；具体职责边界仍应写在对应源码文件开头。
 
@@ -17,7 +18,8 @@
 - `naming.md`：hooks 与 primitive 的命名约定，重点是领域词怎么写。
 - `writing.md`：hooks 代码文件的写法约定，重点是职责注释、出口注释和同步要求。
 - `index.ts`：稳定 hook 出口汇总。
-- `createState/`：无领域、全领域通用的基础状态能力。
+- `stateUtils.ts`：使用基础状态能力的映射、派生与跟随组合。
+- `snapshots.ts`：使用 StateView 的树形快照读取工具。
 - `value-state/`：ValueState 领域的一组状态型 hooks。
 - 其余单文件或子目录：各自负责对应领域的 hook / primitive 实现。
 

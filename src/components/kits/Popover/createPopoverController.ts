@@ -2,8 +2,8 @@
  * 这个文件负责 Popover 的本地控制能力。
  * 它只管理 popover 元素引用、打开状态镜像和原生 toggle 生命周期，不负责组件结构或视觉样式。
  */
-import { createEffect, onCleanup } from 'solid-js'
-import { val, type State, createDomRef, createToggle } from '../../../hooks'
+import { createEffect, onCleanup, val, type State } from '@/foundation'
+import { createDomRef, createToggle } from '@/hooks'
 
 export type PopoverToggleState = 'open' | 'closed'
 

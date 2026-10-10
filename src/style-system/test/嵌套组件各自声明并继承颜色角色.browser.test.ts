@@ -2,7 +2,8 @@
 import { declare } from '../declaration'
 import { key } from '../key'
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { cssRoot, rules, type RulesHandle } from '../index'
+import { cssRoot } from '../css-root'
+import { rules, type RulesHandle } from '../rule'
 import { foregroundColor, surfaceColor } from '../pieces/roles/color'
 
 let style: HTMLStyleElement

@@ -21,6 +21,8 @@
     "src/components/**/*.tsx",
     "src/hooks/**/*.ts",
     "src/hooks/**/*.tsx",
+    "src/foundation/**/*.ts",
+    "src/foundation/**/*.tsx",
     "src/style-system/**/*.ts"
   ],
   "exclude": [

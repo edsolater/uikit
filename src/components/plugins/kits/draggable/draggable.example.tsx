@@ -1,7 +1,7 @@
 /** Draggable Example：验证原始元素移动不依赖 Droppable。 */
-import { Piv } from '../../../Piv'
-import { Card } from '../../../kits/Card'
-import { Article } from '../../../kits/Article'
+import { Piv } from '../../../Piv/Piv'
+import { Card } from '../../../kits/Card/Card'
+import { Article } from '../../../kits/Article/Article'
 import '../../DragAndDrop.example.css'
 import { draggable } from './draggable'
 

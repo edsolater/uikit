@@ -2,8 +2,8 @@
  * 这个文件消费 Piv 的用户 ref 声明。
  * ref 是命令式逃生口；声明式 DOM 能力应优先落到 class、style、htmlProps 或 on。
  */
+import { onCleanup } from '@/foundation'
 import { isFunction, toArray, type AnyFn, type MayArray } from '@edsolater/fnkit'
-import { onCleanup } from 'solid-js'
 import type { PivHTMLElement, PivTag } from './domMap'
 import type { PivProps } from './Piv'
 

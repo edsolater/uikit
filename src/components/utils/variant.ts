@@ -1,5 +1,5 @@
-import { createPivPlugin } from '../Piv'
-import { stateView, type Source } from '../../hooks'
+import { createPivPlugin } from '../Piv/plugin/helpers'
+import { stateView, type Source } from '@/foundation'
 import type { PluginManager } from './type'
 
 type Variant = string

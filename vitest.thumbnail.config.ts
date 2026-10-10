@@ -2,8 +2,10 @@
 import { playwright } from '@vitest/browser-playwright'
 import solid from 'vite-plugin-solid'
 import { defineConfig } from 'vitest/config'
+import { sourceAlias } from './vite.shared'
 
 export default defineConfig({
+  resolve: { alias: sourceAlias },
   plugins: [solid({ hot: false })],
   test: {
     include: ['src/app/example-dashboard/thumbnail/**/*.thumbnail.tsx'],

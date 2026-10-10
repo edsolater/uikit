@@ -5,8 +5,7 @@
  * State 建立在 StateView 之上，但不负责 Source 的统一转换。
  */
 import { isFunction, isObject, result, type MayFn } from '@edsolater/fnkit'
-import { createSignal } from 'solid-js'
-import { createReactionFn } from './createReactiveRunner'
+import { createMemo, createSignal } from 'solid-js'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
 
 export const stateBrand = Symbol('State')
@@ -66,13 +65,30 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
       return thisState
     },
     map(toNew) {
-      const mappedState = createState()
-      createReactionFn(() => {
-        const newValue = toNew(thisState.read())
-        mappedState.set(isStateView(newValue) ? newValue.read() : newValue)
-      })
-      return mappedState as State<any>
+      return mapStateView(thisState, toNew)
     },
   }
   return thisState
+}
+
+/**
+ * 创建缓存当前映射结果的 StateView，映射返回的 StateView 会继续跟随其当前值。
+ * 派生视图属于创建时的响应式作用域，作用域释放后停止跟随依赖。
+ */
+function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<U> {
+  const read = createMemo<U>(() => {
+    const mapped = mapper(view.read())
+    return isStateView(mapped) ? mapped.read() : mapped
+  })
+  const mappedView: StateView<U> = {
+    read,
+    [stateViewBrand]: true,
+    /**
+     * 在当前视图之上继续创建派生视图。
+     */
+    map(toNew) {
+      return mapStateView(mappedView, toNew)
+    },
+  }
+  return mappedView
 }

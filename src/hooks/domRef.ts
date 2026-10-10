@@ -1,4 +1,4 @@
-import { createState, type StateView, type State } from './createState'
+import { createState, type StateView, type State } from '@/foundation'
 
 // 获得底层的DOM, 叫 DomRef 是习惯
 export function createDomRef<T extends HTMLElement = HTMLElement>(): [

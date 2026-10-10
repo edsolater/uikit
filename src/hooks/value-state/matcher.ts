@@ -1,19 +1,18 @@
-import { createMemo, type Accessor } from 'solid-js'
-import { val, type Source } from '../createState'
-import { isFunction } from '@edsolater/fnkit'
-
 /**
- * 匹配器负责围绕现有 accessor 提供匹配与判断能力。
+ * 匹配器负责围绕现有 Source 提供匹配与判断能力。
  *
  * 这个文件不创建状态，不决定值怎么更新，
  * 只负责把“当前值如何被匹配”收口成可复用的小语法。
  */
+import { derive } from '../stateUtils'
+import { val, type Source, type StateView } from '@/foundation'
+import { isFunction } from '@edsolater/fnkit'
 
 type MatcherPredicate<Value> = (value: Value) => Source<boolean>
 
 export interface MatcherOperator<Value> {
   /**
-   * 创建一个响应式匹配 accessor。
+   * 创建一个响应式匹配 StateView。
    *
    * 用于判断 source 当前值是否等于 targetValue，
    * 或满足 predicate。
@@ -27,20 +26,20 @@ export interface MatcherOperator<Value> {
    * - value.items.length === 0
    *
    * 注意：
-   * - 返回 Accessor<boolean>
+   * - 返回 StateView<boolean>，通过 val() 读取
    * - 不会立即返回 boolean
    * - 立即判断请用 is()
    * - 传入普通值时，按 Object.is 进行等值匹配
    * - 传入函数时，按 predicate 进行条件匹配
    */
-  match: (targetValueOrPredicate: Value | MatcherPredicate<Value>) => Accessor<boolean>
+  match: (targetValueOrPredicate: Value | MatcherPredicate<Value>) => StateView<boolean>
 
   /**
-   * 创建一个响应式不匹配 accessor。
+   * 创建一个响应式不匹配 StateView。
    *
-   * 等价于响应式版本的 !match(targetValueOrPredicate)()。
+   * 等价于响应式版本的 !val(match(targetValueOrPredicate))。
    */
-  notMatch: (targetValueOrPredicate: Value | MatcherPredicate<Value>) => Accessor<boolean>
+  notMatch: (targetValueOrPredicate: Value | MatcherPredicate<Value>) => StateView<boolean>
 
   /**
    * 立即判断 source 当前值是否等于 targetValue。
@@ -49,7 +48,7 @@ export interface MatcherOperator<Value> {
    *
    * 注意：
    * - 返回 boolean
-   * - 不创建 Accessor
+   * - 不创建派生 StateView
    * - 响应式等值判断请用 match()
    */
   is: (targetValue: Value) => boolean
@@ -83,9 +82,9 @@ export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Val
   }
 
   const match = (targetValueOrPredicate: Value | MatcherPredicate<Value>) => {
-    return createMemo(() => {
+    return derive(source, (value) => {
       if (isPredicate(targetValueOrPredicate)) {
-        return val(targetValueOrPredicate(val(source)))
+        return val(targetValueOrPredicate(value))
       }
 
       return is(targetValueOrPredicate)
@@ -93,7 +92,7 @@ export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Val
   }
 
   const notMatch = (targetValueOrPredicate: Value | MatcherPredicate<Value>) => {
-    return createMemo(() => !match(targetValueOrPredicate)())
+    return match(targetValueOrPredicate).map((matched) => !matched)
   }
 
   return {
@@ -109,6 +108,6 @@ export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Val
  * @param source
  * @returns
  */
-export function createMatch<Value>(source: Source<Value>, matchFunction: (value: Value) => boolean): Accessor<boolean> {
+export function createMatch<Value>(source: Source<Value>, matchFunction: (value: Value) => boolean): StateView<boolean> {
   return createMatcher(source).match(matchFunction)
 }

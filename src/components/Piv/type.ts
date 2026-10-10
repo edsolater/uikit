@@ -5,7 +5,7 @@
  */
 
 import type { MayArray } from '@edsolater/fnkit'
-import type { Accessor } from 'solid-js'
+import type { Accessor } from '@/foundation'
 
 export type Accessable<T> = T | Accessor<T>/**
 

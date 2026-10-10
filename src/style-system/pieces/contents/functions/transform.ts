@@ -4,9 +4,8 @@
  *
  * 距离的依赖先由编译器解析，再参与自身输出。
  */
-import { createJSSContent } from '../../../content'
+import { createJSSContent, type Expression } from '../../../content'
 import type { ValueInput } from '../../../value'
-import type { Expression } from '../../../content'
 
 /**
  * 延迟生成纵轴平移。

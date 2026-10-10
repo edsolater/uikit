@@ -4,7 +4,7 @@
  * 【职责边界】登记 Droppable、沿 composed tree 命中指针下的目标，并用 Scope
  * 判断拖放双方是否处在同一范围；自身不是 Plugin。
  */
-import { createScopeCapability, findScopeBoundary } from './scope'
+import { createScopeCapability, findScopeBoundary } from './scope/scope'
 
 export const dragAndDrop = createScopeCapability('drag-and-drop')
 

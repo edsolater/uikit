@@ -1,9 +1,9 @@
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { Piv } from '../../../Piv'
+import { Piv } from '../../../Piv/Piv'
 import { dragAndDrop } from '../dragAndDrop'
-import { draggable } from '../draggable'
-import { droppable } from '../droppable'
+import { draggable } from '../draggable/draggable'
+import { droppable } from '../droppable/droppable'
 import { findScopeBoundary, scope } from './scope'
 
 let dispose: (() => void) | undefined

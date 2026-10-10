@@ -3,9 +3,8 @@
  * 它只负责创建元素、绑定 richRef 和插入 children，不消费 class、style、HTML props、事件或 plugin。
  * 如果要新增 Piv 支持的 tag，应在这里补充模板，并让 PivSupportedElementTag 自动收敛。
  */
-import type { JSX } from 'solid-js/jsx-runtime'
+import { type JSX, type Accessor, type JSXElement } from '@/foundation'
 import type { JSXable } from '../utils/toJSX'
-import type { Accessor, JSXElement } from 'solid-js'
 
 const createDivElement: CreatePivElement<'div'> = (props) => <div ref={props.richRef}>{props.children()}</div>
 const createSpanElement: CreatePivElement<'span'> = (props) => <span ref={props.richRef}>{props.children()}</span>

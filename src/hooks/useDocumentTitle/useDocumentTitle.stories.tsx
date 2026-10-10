@@ -3,18 +3,19 @@
  * 这里验证浏览器标题同步行为，不扩展 hook 职责。
  */
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
-import { Button } from '../../components/kits/Button'
-import { createState, val } from '../createState'
+import { Button } from '@/components'
+import { createState, val } from '@/foundation'
+import { derive } from '../stateUtils'
 import { useDocumentTitle } from './useDocumentTitle'
 
 function UseDocumentTitlePreview() {
   const samples = ['Storybook Title', 'Hook State Title', 'Solid Kit Preview']
   const index = createState(0)
-  const title = useDocumentTitle(() => samples[val(index)])
+  const title = useDocumentTitle(derive(index, value => samples[value]))
 
   return (
     <div style={{ display: 'grid', gap: '16px', 'max-width': '320px' }}>
-      <strong>{title()}</strong>
+      <strong>{val(title)}</strong>
       <Button plain onClick={() => {
         index.set((value) => (value + 1) % samples.length)
       }}>

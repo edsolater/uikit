@@ -3,9 +3,8 @@
  * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
+import { onCleanup, createRenderEffect, type JSX, val, type MayArraySource } from '@/foundation'
 import { isTruthy, toArray } from '@edsolater/fnkit'
-import { createRenderEffect, onCleanup, type JSX } from 'solid-js'
-import { val, type MayArraySource } from '../../hooks'
 import type { PivHTMLElement, PivTag } from './domMap'
 import {
   setSingleDomProp,

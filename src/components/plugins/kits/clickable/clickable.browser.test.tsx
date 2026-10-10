@@ -1,8 +1,8 @@
 /** 在真实浏览器中验证焦点、pointer、键盘点击和实例隔离。 */
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { val } from '../../../../hooks'
-import { Piv } from '../../../Piv'
+import { val } from '@/foundation'
+import { Piv } from '../../../Piv/Piv'
 import { usePlugin } from '../../usePlugin'
 import { clickable, type ClickableController } from './clickable'
 

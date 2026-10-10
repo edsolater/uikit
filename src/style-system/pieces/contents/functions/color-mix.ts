@@ -4,9 +4,8 @@
  *
  * 保留依赖的编译结果，颜色和比例可随外界状态变化。
  */
-import { createJSSContent } from '../../../content'
+import { createJSSContent, type Expression } from '../../../content'
 import type { ValueInput } from '../../../value'
-import type { Expression } from '../../../content'
 
 /** 颜色及可选的零至一比例。 */
 export type MixColorInput = ValueInput | [color: ValueInput, weight: ValueInput]

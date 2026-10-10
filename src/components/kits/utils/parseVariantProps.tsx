@@ -1,5 +1,12 @@
-import { createComputed } from 'solid-js'
-import { createState, val, type Source } from '../../../hooks'
+/**
+ * 组件 Variant Props 解析器。
+ *
+ * 负责互斥分组的选中值和属性映射，不负责选中值对应的业务动作。
+ *
+ * 让输入选择规则与后续响应式读取保持在同一条 Source 链上。
+ */
+import { derive } from '@/hooks'
+import { val, type Source } from '@/foundation'
 import type { ShadowProps } from '../../Piv/plugin/handlePivPlugin'
 import { mapVariantProps } from './variantPropsMapping'
 
@@ -87,15 +94,11 @@ function parseVariantGroup(props: object, group: VariantPropsGroup): Source<stri
 
   if (hasGroupProp) return propRecord[group.groupName] as Source<string | undefined>
 
-  const selectedVariant = createState<string | undefined>()
-  createComputed(() => {
-    selectedVariant.set(
-      group.candidates.find(
-        (candidate) => val(propRecord[candidate] as Source<boolean | undefined>) === true,
-      ),
+  return derive(propRecord, () => {
+    return group.candidates.find(
+      (candidate) => val(propRecord[candidate] as Source<boolean | undefined>) === true,
     )
   })
-  return selectedVariant
 }
 
 function formatCandidates(candidates: string[]): string {

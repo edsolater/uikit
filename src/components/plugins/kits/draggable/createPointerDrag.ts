@@ -11,7 +11,7 @@ import {
   type InternalDrag,
   type InternalDropMatch,
 } from '../dragAndDrop'
-import { createTopLayerController, type TopLayerController } from '../topLayer'
+import { createTopLayerController, type TopLayerController } from '../topLayer/topLayer'
 
 export interface PointerDragOptions {
   source: HTMLElement

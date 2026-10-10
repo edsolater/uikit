@@ -1,7 +1,7 @@
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
-import { val } from '../../../../hooks'
-import { Piv } from '../../../Piv'
+import { val } from '@/foundation'
+import { Piv } from '../../../Piv/Piv'
 import { usePlugin } from '../../usePlugin'
 import { createTopLayerController, topLayer, type TopLayerController } from './topLayer'
 

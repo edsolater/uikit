@@ -3,6 +3,7 @@
  * 它不负责创建 DOM、解析 plugin、处理 style、普通 HTML props 或事件。
  * Piv 完成 props 整合后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
  */
+import { onCleanup, createRenderEffect, val, type MayArraySource, type Source } from '@/foundation'
 import {
   isObject,
   isArray,
@@ -12,8 +13,6 @@ import {
   type Stringable,
   toArray,
 } from '@edsolater/fnkit'
-import { createRenderEffect, onCleanup } from 'solid-js'
-import { val, type MayArraySource, type Source } from '../../hooks'
 
 /** 一条 class 声明，可以是 token、token 列表或按 Source 条件启用的 token 对象。 */
 export type ClassNameAtom = Stringable | MayArray<Stringable> | { [classname: string]: Source<Booleanable> }

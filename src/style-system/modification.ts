@@ -6,8 +6,7 @@
 */
 import {
   assert,
-  check,
-  equal,
+  is,
   hasMethod,
   isFunction,
   isNumber,
@@ -16,13 +15,13 @@ import {
   isUndefined,
   matchShape,
   or,
-  type DataShape,
+  type DataShape
 } from '@edsolater/fnkit'
 import { createJSSContent, isJSSContent, type Expression, type JSSContent } from './content'
 import type { DeclareProtocol } from './declaration'
-import { compileVariableContent } from './variable'
 import { allocateVariableName, key } from './key'
 import { value, type ValueInput } from './value'
+import { compileVariableContent } from './variable'
 
 /** 变化自身就是定义；Detail/Type 表达领域差异，key 与 CSS 目标始终跟随当前完整 name。 */
 export interface Modification<Detail = unknown, Type extends string = string> extends DeclareProtocol, JSSContent {
@@ -118,9 +117,9 @@ export interface ColorModificationContent extends DeclareProtocol {
 
 /** 颜色操作需要领域标识及可声明的源无关配方材料。 */
 export const colorModificationShape = {
-  type: check(equal, 'color'),
-  key: check(hasMethod, 'toCSSString', {
-    resultIs: [isString, name => /^--.+/.test(name as string)],
+  type: is('color'),
+  key: hasMethod('toCSSString', {
+    resultIs: [isString, (name) => /^--.+/.test(name)],
   }),
   content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
 } satisfies DataShape

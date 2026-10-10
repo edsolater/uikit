@@ -1,5 +1,12 @@
-import { createMemo, type Accessor } from 'solid-js'
-import { createState, val, type State } from '../createState'
+/**
+ * 离散标识状态与操作器。
+ *
+ * 负责标识的设置、循环切换和派生匹配，不负责标识对应的业务动作。
+ *
+ * 让标识状态通过 UIKit 的 State 与 StateView 统一读取。
+ */
+import { createState, val, type State, type StateView } from '@/foundation'
+import { derive } from '../stateUtils'
 import { createMatcher, type MatcherOperator } from './matcher'
 import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
 
@@ -95,14 +102,14 @@ export interface CycleIdentOperator<Ident extends PresentPrimitive> extends Iden
   isLast: () => boolean
 
   /**
-   * 创建响应式 accessor，用于判断当前 ident 是否是第一个。
+   * 创建通过 val() 读取的 StateView，用于判断当前 ident 是否是第一个。
    */
-  matchFirst: () => Accessor<boolean>
+  matchFirst: () => StateView<boolean>
 
   /**
-   * 创建响应式 accessor，用于判断当前 ident 是否是最后一个。
+   * 创建通过 val() 读取的 StateView，用于判断当前 ident 是否是最后一个。
    */
-  matchLast: () => Accessor<boolean>
+  matchLast: () => StateView<boolean>
 }
 
 type IdentValue<T extends Primitive = Primitive> = T
@@ -123,18 +130,18 @@ export type CreateIdentOptions<T extends PresentIdentValue> = {
  * 创建一个 ident 状态。
  *
  * 返回：
- * - 第一个值：accessor，用于读取当前 ident
+ * - 第一个值：State，通过 val() 读取当前 ident
  * - 第二个值：identifier，用于操作、判断、读取元信息
  *
  * @example
  * const [size, sizeIdentifier] = createIdent('md' as 'sm' | 'md' | 'lg')
  *
- * size()
+ * val(size)
  * sizeIdentifier.set('lg')
- * sizeIdentifier.match('lg')()
- * sizeIdentifier.match((value) => value === 'lg')()
- * sizeIdentifier.notMatch('sm')()
- * sizeIdentifier.notMatch((value) => value === 'sm')()
+ * val(sizeIdentifier.match('lg'))
+ * val(sizeIdentifier.match((value) => value === 'lg'))
+ * val(sizeIdentifier.notMatch('sm'))
+ * val(sizeIdentifier.notMatch((value) => value === 'sm'))
  * sizeIdentifier.is('md')
  * sizeIdentifier.isNot('sm')
  * sizeIdentifier.reset()
@@ -230,11 +237,11 @@ export function createIdent<T extends PresentIdentValue>(
   }
 
   const matchFirst = () => {
-    return createMemo(isFirst)
+    return derive(ident, (value) => value === idents[0])
   }
 
   const matchLast = () => {
-    return createMemo(isLast)
+    return derive(ident, (value) => value === idents[idents.length - 1])
   }
 
   return [

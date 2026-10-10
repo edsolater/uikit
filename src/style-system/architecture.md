@@ -11,7 +11,7 @@ JSSStyleNode[] → compiler/style-nodes-to-content-nodes/index.ts → JSSContent
 JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 ```
 
-Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层。functions 按 [README.md](pieces/contents/functions/README.md) 中的 JSS 内容组织工具公约构造 Expression；Atom Creators 提供其他内容构造方式。
+Pieces 是可复用碎片的统称，不是 Rules 中的节点或编译阶段。Rules 包含 Condition 与 Declaration；Declaration 将声明目标和 Content 配对。`pieces/contents/` 对应内容这一侧：Value 与 Variable 在组合时统称 Atom，表示可作为一块使用的最小内容单元，不增加类型层。functions 按 [SPEC.md](pieces/contents/functions/SPEC.md) 中的 JSS 内容组织工具公约构造 Expression；Atom Creators 提供其他内容构造方式。
 
 Expression 要求依赖与输出，禁止自身提供消费位置通知、AST 操作与资源定义；JSSContent 继续允许这些广义能力。CSSFunction 是与 Variable 同层的定义主体，保留签名与完整定义体；调用返回只依赖主体与实参的 Expression，主体的 `onActive` 通过既有依赖访问提供按需定义。对象身份用于共享主体，签名中的 CSS 名字与作用域用于同名定义接管，不增加 Symbol 或注册体系。
 
@@ -87,7 +87,7 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | pieces/contents/functions | 遵守 JSS 内容组织工具公约的混色、计算和相对颜色等 Expression 构造 |
 | pieces/contents/functions/calc.ts | 保存操作数依赖，构造 CSS calc 算术 Expression |
 | pieces/contents/functions/relative-oklch.ts | 来源颜色与通道内容的纯相对 OKLCH 组合，不解释 Modification 或 Variable |
-| pieces/contents/functions/README.md | JSS 内容组织工具公约与 Expression、规则及定义主体的边界 |
+| pieces/contents/functions/SPEC.md | JSS 内容组织工具公约与 Expression、规则及定义主体的边界 |
 | pieces/contents/atom-creators | 按结构生成阴影、动画等内容 |
 | pieces/roles | 供组件在自身选择器中赋值的共享角色 |
 | pieces/mixins | 把完整效果转换成声明组合 |

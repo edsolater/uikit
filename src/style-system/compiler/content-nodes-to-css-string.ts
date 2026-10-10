@@ -5,7 +5,7 @@
  * 让输出保持编译位置与层级，不重新安排内容行为。
  */
 import { assert, isObjectLike, isString, isNumber } from '@edsolater/fnkit'
-import type { JSSContentNode } from './style-nodes-to-content-nodes'
+import type { JSSContentNode } from './style-nodes-to-content-nodes/node-compilation'
 import { hasJSSContentOutput } from '../content'
 import { propertyName } from '../key'
 import type { ContentCompilationRecord } from './ast-controller'

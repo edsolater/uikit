@@ -8,7 +8,7 @@ import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
-import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
 import { createJSSContent } from '../content'
 import type { Rules } from '../rule'
 

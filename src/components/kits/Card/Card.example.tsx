@@ -1,6 +1,6 @@
 /** Card 的本地 Example：验证独立信息单元的默认形态、声量和尺寸。 */
 import { Card } from './Card'
-import { Article } from '../Article'
+import { Article } from '../Article/Article'
 import './Card.example.css'
 
 export function CardExample() {

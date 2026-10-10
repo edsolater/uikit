@@ -1,4 +1,4 @@
-import type { JSX } from 'solid-js'
+import type { JSX } from '@/foundation'
 import type { Stringable } from '@edsolater/fnkit'
 
 export type JSXable = JSX.Element | Stringable

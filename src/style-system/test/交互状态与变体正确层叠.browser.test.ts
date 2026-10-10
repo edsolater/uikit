@@ -3,7 +3,8 @@ import { key } from '../key'
 import { variable } from '../variable'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { compileCSS, rules } from '../index'
+import { compileCSS } from '../css-root'
+import { rules } from '../rule'
 
 afterEach(() => document.body.replaceChildren())
 

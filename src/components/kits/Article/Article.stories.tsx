@@ -1,6 +1,6 @@
 /** Article 的 Storybook 示例验证正文语义可以由 Card 透明承载。 */
 import type { Meta, StoryObj } from 'storybook-solidjs-vite'
-import { Card } from '../Card'
+import { Card } from '../Card/Card'
 import { Article } from './Article'
 
 const meta: Meta<typeof Article> = {

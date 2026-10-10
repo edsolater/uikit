@@ -4,7 +4,7 @@
  *
  * 组件选择与档位规则见 [Card 设计规格](./Card.spec.md)。
  */
-import { Piv, type PivProps } from '../../Piv'
+import { Piv, type PivProps } from '../../Piv/Piv'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
 import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
 import './Card.css'

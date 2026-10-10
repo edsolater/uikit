@@ -1,13 +1,12 @@
 /** 状态由 Variable 自身与 Cluster 成员继承共同决定。 */
 import { expect, test, vi } from 'vitest'
-import { stateCondition } from '../pieces/state-conditions'
+import { stateCondition, appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
 import { condition } from '../condition'
 import { variable } from '../variable'
 import { clusterFrom, variableCluster } from '../variable-cluster'
 import { compileRules } from '../css-root'
-import { appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
-import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes'
+import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
 import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
 
 

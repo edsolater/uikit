@@ -1,7 +1,8 @@
 /** 验证纸色、墨色和中性色变量作为声明目标、内容及混色输入的消费流程。 */
 import { variable } from '../variable'
 import { afterEach, expect, test } from 'vitest'
-import { compileCSS, rule, type RulesHandle } from '../index'
+import { compileCSS } from '../css-root'
+import { rule, type RulesHandle } from '../rule'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { paperColor, inkColor, neutralColor } from '../pieces/contents/atoms/color/colors'
 

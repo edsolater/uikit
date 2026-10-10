@@ -1,6 +1,8 @@
 /** 验证普通 OKLCH 具名通道及其 JSS 依赖消费。 */
 import { expect, test } from 'vitest'
-import { oklch, variable, condition } from '../../..'
+import { oklch } from './oklch'
+import { variable } from '../../../variable'
+import { condition } from '../../../condition'
 import { compileRules } from '../../../css-root'
 
 test.each([undefined, 1, 0, 0.8])('普通颜色正确输出透明度 %s', (alpha) => {

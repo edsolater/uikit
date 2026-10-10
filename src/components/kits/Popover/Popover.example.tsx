@@ -3,8 +3,8 @@
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
 import { Popover } from './Popover'
-import { Card } from '../Card'
-import { Article } from '../Article'
+import { Card } from '../Card/Card'
+import { Article } from '../Article/Article'
 
 export function PopoverExample() {
   return (

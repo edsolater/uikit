@@ -1,4 +1,4 @@
-import { mergeProps as solidjsMergeProps } from "solid-js"
+import { mergeProps as solidjsMergeProps } from '@/foundation'
 import type { ValidProps } from "./type"
 
 /** use solidjs's mergeProps */

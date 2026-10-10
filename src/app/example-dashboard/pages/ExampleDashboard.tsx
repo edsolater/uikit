@@ -2,19 +2,19 @@
  * Example 浏览入口：主页只负责发现，URL 选中具体条目后才渲染详情。
  * Example 内容继续留在各自领域旁边，本文件只拥有目录和浏览历史。
  */
-import { createSignal, For, onCleanup, onMount, type Component } from 'solid-js'
-import { ButtonExample } from '../../../components/kits/Button/Button.example'
-import { Card } from '../../../components/kits/Card'
-import { CardExample } from '../../../components/kits/Card/Card.example'
-import { ArticleExample } from '../../../components/kits/Article/Article.example'
-import { InputExample } from '../../../components/kits/Input/Input.example'
-import { PopoverExample } from '../../../components/kits/Popover/Popover.example'
-import { PivStructureExample } from '../../../components/Piv/PivStructure.example'
-import { DraggableExample } from '../../../components/plugins/kits/draggable/draggable.example'
-import { DroppableExample } from '../../../components/plugins/kits/droppable/droppable.example'
-import { ScopeExample } from '../../../components/plugins/kits/scope/scope.example'
-import { ColorDashboardExample } from '../../../css/ColorDashboardExample'
-import { UseDocumentTitleExample } from '../../../hooks/useDocumentTitle/useDocumentTitle.example'
+import { onCleanup, onMount, createState, val, For, type Component } from '@/foundation'
+import { ButtonExample } from '@/components/kits/Button/Button.example'
+import { Card } from '@/components'
+import { CardExample } from '@/components/kits/Card/Card.example'
+import { ArticleExample } from '@/components/kits/Article/Article.example'
+import { InputExample } from '@/components/kits/Input/Input.example'
+import { PopoverExample } from '@/components/kits/Popover/Popover.example'
+import { PivStructureExample } from '@/components/Piv/PivStructure.example'
+import { DraggableExample } from '@/components/plugins/kits/draggable/draggable.example'
+import { DroppableExample } from '@/components/plugins/kits/droppable/droppable.example'
+import { ScopeExample } from '@/components/plugins/kits/scope/scope.example'
+import { ColorDashboardExample } from '@/css/ColorDashboardExample'
+import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleDashboard.css'
 import './ExampleHome.css'
 
@@ -56,9 +56,9 @@ const exampleEntries: ExampleEntry[] = [
 ]
 
 export default function ExampleDashboard() {
-  const [pathname, setPathname] = createSignal(window.location.pathname)
+  const pathname = createState(window.location.pathname)
 
-  const syncLocation = () => setPathname(window.location.pathname)
+  const syncLocation = () => pathname.set(window.location.pathname)
 
   onMount(() => window.addEventListener('popstate', syncLocation))
   onCleanup(() => window.removeEventListener('popstate', syncLocation))
@@ -69,14 +69,14 @@ export default function ExampleDashboard() {
     event.preventDefault()
     const nextPath = (event.currentTarget as HTMLAnchorElement).pathname
     window.history.pushState(null, '', nextPath)
-    setPathname(nextPath)
+    pathname.set(nextPath)
     window.scrollTo({ top: 0 })
   }
 
   return (
     <main class="example-shell">
       {(() => {
-        const id = readExampleId(pathname())
+        const id = readExampleId(val(pathname))
         if (!id) return <ExampleHome onNavigate={navigate} />
 
         const example = exampleEntries.find(entry => entry.id === id)

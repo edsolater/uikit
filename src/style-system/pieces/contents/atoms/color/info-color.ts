@@ -1,4 +1,4 @@
-import type { ColorMaterial } from '../../../../../color-system/core';
+import type { ColorMaterial } from '@/color-system';
 
 /** 跨品牌稳定的状态材料；不在 CSS token 中保存颜色来源。 */
 

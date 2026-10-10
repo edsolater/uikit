@@ -6,7 +6,7 @@
  */
 import { assert } from '@edsolater/fnkit'
 import { rulesToStyleNodes } from './compiler/rules-to-style-nodes'
-import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-nodes'
+import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-nodes/compilation'
 import { contentNodesToCSSString } from './compiler/content-nodes-to-css-string'
 import type { Rule, RuleHandle, Rules } from './rule'
 

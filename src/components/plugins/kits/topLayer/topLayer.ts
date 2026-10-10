@@ -4,8 +4,8 @@
  * 【职责边界】拥有一次提升的 Anchor、基础位置、尺寸、提升视觉和完整恢复；
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
  */
-import { onCleanup, onMount } from 'solid-js'
-import { createToggle, type State } from '../../../../hooks'
+import { onCleanup, onMount, type State } from '@/foundation'
+import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'

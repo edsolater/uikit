@@ -5,10 +5,9 @@
  * 调用方只提供已经整理好的同构数据；需要局部改写表头或单元格内容时，通过 renderParts 提供纯渲染器。
  */
 import { type Stringable } from '@edsolater/fnkit'
-import { For } from 'solid-js'
+import { For, stateView, val, type Source } from '@/foundation'
 import { toJSX, type JSXable } from '../../utils/toJSX'
-import { stateView, val, type Source } from '../../../hooks'
-import { Piv } from '../../Piv'
+import { Piv } from '../../Piv/Piv'
 
 type TableDataRow = Record<string, Stringable>
 

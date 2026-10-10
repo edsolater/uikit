@@ -1,5 +1,5 @@
 /** Article 的本地 Example：正文语义由 Article 提供，视觉形式由 Card 提供。 */
-import { Card } from '../Card'
+import { Card } from '../Card/Card'
 import { Article } from './Article'
 import './Article.example.css'
 

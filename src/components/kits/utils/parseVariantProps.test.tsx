@@ -1,6 +1,6 @@
 import { createRoot } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
-import { createState, val, type Source } from '../../../hooks'
+import { createState, val, type Source } from '@/foundation'
 import { createVariantPropsParser } from './parseVariantProps'
 
 describe('createVariantPropsParser', () => {

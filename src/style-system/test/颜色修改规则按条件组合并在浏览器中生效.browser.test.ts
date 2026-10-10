@@ -6,7 +6,17 @@
 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { add, color, modification, cssRoot, declare, key, modify, adjust, multiply, oklch, rules, variable, type RulesHandle } from '../index'
+import { add, multiply } from '../pieces/contents/functions/calc'
+import { color } from '../pieces/mixins/appearance'
+import { modification } from '../modification'
+import { cssRoot } from '../css-root'
+import { declare } from '../declaration'
+import { key } from '../key'
+import { modify } from '../variable-modify'
+import { adjust } from '../variable-adjust'
+import { oklch } from '../pieces/contents/functions/oklch'
+import { rules, type RulesHandle } from '../rule'
+import { variable } from '../variable'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 
 const handles: RulesHandle[] = []

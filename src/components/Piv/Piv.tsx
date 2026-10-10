@@ -4,8 +4,7 @@
  * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
  */
 import { type MayArray, type ID } from '@edsolater/fnkit'
-import { children, Show, type JSX, type JSXElement } from 'solid-js'
-import { val, type Source } from '../../hooks'
+import { children, Show, type JSX, type JSXElement, val, type Source } from '@/foundation'
 import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,

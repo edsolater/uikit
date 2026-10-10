@@ -5,11 +5,9 @@
  * plugin 的返回值只表达 prompt 类声明补丁；第二参数提供的结构工具会改变真实 DOM 附属结构，
  * 但不应改变调用方心智里的 Piv 主体层级。
  */
-
+import { onCleanup, onMount, type JSXElement, insert } from '@/foundation'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
-import { onCleanup, onMount, type JSXElement } from 'solid-js'
-import { insert } from 'solid-js/web'
 import {
   createPluginInstanceSymbol,
   type Plugin,

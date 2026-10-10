@@ -18,7 +18,7 @@
   ],
   "exports": {
     ".": {
-      "development": "./src/index.ts",
+      "development": "./dist/index.js",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
@@ -32,7 +32,7 @@
   "scripts": {
     "dev": "vite",
     "link:local": "bun link --no-save @edsolater/fnkit",
-    "build": "vite build && tsc -p tsconfig.build.json",
+    "build": "vite build && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
@@ -56,6 +56,7 @@
     "solid-js": "^1.9.12",
     "storybook": "^10.3.5",
     "storybook-solidjs-vite": "^10.0.12",
+    "tsc-alias": "^1.9.7",
     "typescript": "~6.0.2",
     "vite": "^8.0.4",
     "vite-plugin-lib-inject-css": "^2.2.2",

@@ -4,19 +4,19 @@
 
 样式节点增删后，修改仍须按当前归属与顺序从基础值继续计算。
 */
-import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
-import { resolveVariable } from './variable-cluster'
-import { assert, check, containKey, hasMethod, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, mapGet, matchShape, optional, or, result, type DataShape } from '@edsolater/fnkit'
-import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
-import type { Declaration, DeclareProtocol } from './declaration'
-import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
-import type { JSSKeyObject } from './key'
+import { assert, containKey, hasMethod, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, mapGet, matchShape, optional, or, result, type DataShape } from '@edsolater/fnkit'
 import type { ASTController } from './compiler/ast-controller'
-import { value, type Value, type ValueInput } from './value'
-import { appendStateCondition } from './pieces/state-conditions'
-import { referenceVariable, variableRegistrationDeclarations, type VariableDefaultValue, type VariableOptions } from './variable'
+import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
+import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
+import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
+import type { Declaration, DeclareProtocol } from './declaration'
+import type { JSSKeyObject } from './key'
 import { colorModificationShape, type ColorModificationContent } from './modification'
 import { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
+import { appendStateCondition } from './pieces/state-conditions'
+import { value, type Value, type ValueInput } from './value'
+import { referenceVariable, variableRegistrationDeclarations, type VariableDefaultValue, type VariableOptions } from './variable'
+import { resolveVariable } from './variable-cluster'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
 export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]
@@ -29,7 +29,7 @@ export interface ModifyTargetProtocol extends DeclareProtocol, JSSContent {
 
 /** 操作所需的自定义属性材料；继承字段和可调用对象按 FNKit 形状读取。 */
 export const modifyTargetShape = {
-  key: check(hasMethod, 'toCSSString', {
+  key: hasMethod('toCSSString', {
     resultIs: [isString, name => /^--.+/.test(name as string)],
   }),
   content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),

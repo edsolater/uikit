@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { val } from '../../../../hooks'
+import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { droppable } from './droppable'
 

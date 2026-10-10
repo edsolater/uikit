@@ -21,6 +21,6 @@
 
 ## 新增或修改时的同步要求
 
-- 新增 hook 之前，先看 [README.md](./README.md)、[naming.md](./naming.md) 和本文件。
+- 新增 hook 之前，先看 [SPEC.md](./SPEC.md)、[naming.md](./naming.md) 和本文件。
 - 当团队对 hooks 写法形成新的稳定共识时，应同步更新本文档。
 - 当新增 hook 需要依赖本文档之外的例外写法时，应先更新本文档，再落代码。

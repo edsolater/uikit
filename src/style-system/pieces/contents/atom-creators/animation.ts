@@ -1,9 +1,8 @@
 /** CSS 动画内容与按需帧定义。 */
-import { createJSSContent } from '../../../content'
+import { createJSSContent, type JSSContent } from '../../../content'
 import { condition } from '../../../condition'
 import type { Rules } from '../../../rule'
 import { value, type Value, type ValueInput } from '../../../value'
-import type { JSSContent } from '../../../content'
 
 /** 动画名称；使用时提供帧定义。 */
 export function animationName(name: string, frames: Rules): Value {

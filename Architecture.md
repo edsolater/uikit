@@ -14,7 +14,8 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 - `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
-- `src/hooks`：对外响应式状态与浏览器协作能力。领域入口和内部阅读路线见 [hooks README](src/hooks/README.md)。
+- `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
+- `src/hooks`：使用 Foundation 的派生组合与浏览器协作能力。领域入口和内部阅读路线见 [hooks SPEC](src/hooks/SPEC.md)。
 - `src/color-system`：颜色信息与 JS 数值计算。材料先经过层级变换，再应用环境得到最终颜色；不依赖 JSS 或生成 CSS。
 - `src/style-system`：Rule、Value 与 Variable 样式定义领域。`rules()` 将 Key／Variable 声明序列和 Mixin 组合转换为有序 Declaration，CSSRoot 持有源账本，编译器展开声明、状态与依赖，应用统一提交 CSS string；文件职责见 [Style System 架构](src/style-system/architecture.md)。
 - `src/css`：仍在服役的静态 CSS 领域。当前继续提供 reset、tokens、controls、traits 与尚未迁移的 CSS 工具；当前结构见 [CSS 架构](src/css/architecture.md)。
@@ -24,8 +25,8 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 
 # 公开入口
 
-- `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、hooks，以及 Style System 的 `cssRoot` 和 `compileCSS` 启动入口。当前仍会加载 `src/css/all-base.css`。
-- `src/components/index.ts`、`src/components/kits/index.ts`、`src/components/plugins/index.ts` 和 `src/hooks/index.ts` 分别收口所属领域的公开成员。
+- `@edsolater/uikit` 从 `src/index.ts` 进入，公开 components、foundation、hooks，以及 Style System 的 `cssRoot` 和 `compileCSS` 启动入口。当前仍会加载 `src/css/all-base.css`。
+- `src/components/index.ts`、`src/components/kits/index.ts`、`src/components/plugins/index.ts`、`src/foundation/index.ts` 和 `src/hooks/index.ts` 分别收口所属领域的公开成员。
 - Example、Story、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
 
 # 运行链
@@ -36,8 +37,9 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 调用方
   -> kit 组件
     -> Piv 与 plugins
-      -> SolidJS
-        -> DOM
+      -> Foundation 的运行时接入
+        -> SolidJS
+          -> DOM
 ```
 
 kit 负责组件语义，`Piv` 负责把已经形成的 props 与 plugin 结果写入 DOM。组件可以使用 hooks、component utils 和 Style System；基础设施不反向依赖具体 kit。

@@ -3,9 +3,10 @@
 /** 验证 Button 的公开行为、DOM 描述与应用启动职责边界。 */
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { createState } from '../../../hooks'
-import { Button, buttonMapping, type ButtonAppearance } from './index'
-import { cssRoot } from '../../../style-system'
+import { createState } from '@/foundation'
+import { Button, type ButtonAppearance } from './Button'
+import { buttonMapping } from './Button.mapping'
+import { cssRoot } from '@/style-system'
 
 let dispose: (() => void) | undefined
 

@@ -1,7 +1,7 @@
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { Piv } from '../../../Piv'
-import { draggable } from '../draggable'
+import { Piv } from '../../../Piv/Piv'
+import { draggable } from '../draggable/draggable'
 import { DroppableExample } from './droppable.example'
 import { droppable } from './droppable'
 

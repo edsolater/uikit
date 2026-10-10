@@ -1,4 +1,11 @@
-import { onCleanup } from 'solid-js'
+/**
+ * 浏览器帧调度 hook。
+ *
+ * 负责延迟若干帧执行动作、覆盖未完成的调度，并在所属作用域释放时取消调度。
+ *
+ * 让调用方不必各自维护帧句柄与清理动作。
+ */
+import { onCleanup } from '@/foundation'
 
 type AnimationFrameCallback = () => void
 

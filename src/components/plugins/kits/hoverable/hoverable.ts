@@ -1,5 +1,6 @@
 /** Hoverable Plugin：感知并控制一个 Piv 的 hover 状态。 */
-import { createToggle, type State } from '../../../../hooks'
+import { createToggle } from '@/hooks'
+import { type State } from '@/foundation'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 

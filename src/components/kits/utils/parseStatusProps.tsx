@@ -1,5 +1,12 @@
-import { createComputed } from 'solid-js'
-import { createState, derive, val, type Source, type State } from '../../../hooks'
+/**
+ * 组件 Status Props 解析器。
+ *
+ * 负责外部状态归属、内部状态操作和状态属性派生，不负责状态对应的业务动作。
+ *
+ * 让多个可同时成立的状态保持为统一的 Source。
+ */
+import { createState, val, type Source, type State } from '@/foundation'
+import { derive } from '@/hooks'
 import type { ShadowProps } from '../../Piv/plugin/handlePivPlugin'
 
 /** Status Props 中的每一个字段都是可以独立存在、也可以同时成立的状态来源。 */
@@ -64,12 +71,11 @@ export function createStatusPropsParser<const Candidates extends string[]>(optio
       },
     }
 
-    const statusAttribute = createState<string | undefined>()
-    createComputed(() => {
+    const statusAttribute = derive(statusDetails, () => {
       const activeStatuses = options.candidates.filter(
         (statusName) => val(statusDetails[statusName]) === true,
       )
-      statusAttribute.set(activeStatuses.length > 0 ? activeStatuses.join(' ') : undefined)
+      return activeStatuses.length > 0 ? activeStatuses.join(' ') : undefined
     })
 
     const statusShadowProps: ShadowProps<any> = {
