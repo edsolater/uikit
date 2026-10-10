@@ -83,7 +83,7 @@ test('墨色负强调后继续应用暗环境时逐渐褪入背景，目标不�
 })
 
 test('品牌派生保留材料感知，显式正常环境强度下仍保留红色色相', () => {
-  expect(interactive).toBe(brand)
+  expect(interactive).toEqual(brand)
   expect(highlight.environmentSensitivities).toEqual(brand.environmentSensitivities)
   const red = hue(brand, 30)
   const changed = applyEnvironment(red, { tint: { hue: 210 }, influence: { hue: 1 } })

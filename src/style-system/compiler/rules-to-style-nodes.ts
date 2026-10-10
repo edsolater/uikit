@@ -16,8 +16,6 @@ export interface JSSStyleNode {
   conditionPath: ConditionPath
   key: JSSKey | undefined
   content: unknown
-  /** 编译本节点内容及子内容时沿途传递的状态名称。 */
-  readState?: string
   /** 按需产生的资源用此身份替换同址旧资源；源规则不带此字段。 */
   resourceAddress?: string
   /** 生成产物的可选查询标识；不参与节点来源与资源替换。 */

@@ -6,25 +6,14 @@
  */
 import { variable } from '../../../variable'
 import { toneColors } from './color/colors'
-import { highlightColors } from './color/ui-action-colors'
-import { value } from '../../../value'
 import { valueSequence } from '../atom-creators/list'
 import { focusStrokeWidth, focusGapSize } from './space'
-
-const toneLine = toneColors('line')
-const highlightLine = highlightColors('line')
-const currentToneLineColor = value([toneLine, highlightLine], {
-  toCSSString: (_, resolve) => {
-    const fallback = resolve(highlightLine)
-    return `var(${toneLine.toCSSString()}, var(${highlightLine.toCSSString()}, ${fallback}))`
-  },
-})
 
 export const focusOutline = variable('none', {
   name: 'focus-outline',
   // 轮廓读取当前作用域的语气成员，使 danger 等局部声明继续生效。
   states: {
-    focus: valueSequence(focusStrokeWidth, 'solid', currentToneLineColor),
+    focus: valueSequence(focusStrokeWidth, 'solid', toneColors('line')),
   },
 })
 export const focusOffset = variable('0px', {

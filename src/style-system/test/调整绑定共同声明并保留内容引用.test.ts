@@ -80,9 +80,8 @@ test('撤销一份绑定保留另一份的共享依赖，全部撤销后不泄�
   }
 })
 
-test.each(['explicit', 'natural', 'source', 'change'])('匿名绑定避让显式、天然材料与改名后的当前CSS名称：%s', mode => {
-  const previous = variable(0)
-  const reserved = `temp-${Number(previous.name.slice(5)) + 1}`
+test.each(['explicit', 'natural', 'source', 'change'])('匿名绑定与显式、天然材料及改名材料独立声明：%s', mode => {
+  const reserved = 'binding-source'
   const source = mode === 'natural' ? { key: key(`--${reserved}`), content: 'red' } : variable('red', mode === 'explicit' ? reserved : 'renamed-source')
   const change = modification({ type: 'color', name: mode === 'explicit' ? undefined : '--renamed-change', detail: { alpha: 0.5 } })
   if (mode === 'source' && 'name' in source) source.name = reserved

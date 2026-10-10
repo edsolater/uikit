@@ -185,7 +185,6 @@ export class NodeCompilation {
       key: node.key,
       content: node.content,
       role: name === 'key' ? 'declaration-key' : 'declaration-content',
-      readState: name === 'content' ? node.readState : undefined,
     }
     /** 为当前声明激活内容的按需 Rules，保留其条件地址与消费者关系。 */
     const activate = (content: JSSContent): void => this.resources.activate(content, {

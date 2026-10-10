@@ -205,7 +205,7 @@ test('缺少宿主时不触发 Value；编译失败保留之前成功提交的 C
   expect(getComputedStyle(element).marginLeft).toBe('2px')
 })
 
-test('未登记的主体条件实际叠加、读取同条件来源并退出恢复', () => {
+test('未登记的主体条件实际叠加、读取来源当前值并退出恢复', () => {
   handles.push(rule('.example', 'margin-left', '12px'))
   root.mount()
   const before = style.textContent
@@ -222,10 +222,14 @@ test('未登记的主体条件实际叠加、读取同条件来源并退出恢�
   element.dataset.tone = 'danger'
   expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
   element.dataset.emphasis = ''
-  expect(getComputedStyle(element).color).toBe('rgb(0, 128, 0)')
+  expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
   element.removeAttribute('data-emphasis')
   expect(getComputedStyle(element).color).toBe('rgb(0, 0, 255)')
   element.removeAttribute('data-tone')
+  expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
+  element.dataset.emphasis = ''
+  expect(getComputedStyle(element).color).toBe('rgb(0, 128, 0)')
+  element.removeAttribute('data-emphasis')
   expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
   expect(style.textContent).toBe(committed)
   expect(getComputedStyle(element).marginLeft).toBe('12px')

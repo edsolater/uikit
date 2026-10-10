@@ -1,8 +1,7 @@
 import type { ColorMaterial } from '@/color-system'
 import { variableCluster } from '@/style-system/variable-cluster'
-import { toJSSColor, currentColorReference, paperColor } from './colors'
-import { readableForeground } from './ui-color-structure'
-import { baseUIColorStructure } from './ui-color-structure'
+import { paperColor } from './palette'
+import { toJSSColor, readableForeground, baseUIColorStructure } from './ui-color-structure'
 
 /** 跨品牌稳定的状态材料；不在 CSS token 中保存颜色来源。 */
 
@@ -77,7 +76,7 @@ export const badColors = variableCluster(
     base: badColor,
     softAlpha: 0.14,
     lineAlpha: 0.44,
-    foreground: currentColorReference(paperColor),
+    foreground: paperColor,
   }),
 )
 

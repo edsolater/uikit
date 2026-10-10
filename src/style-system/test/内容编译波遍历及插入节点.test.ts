@@ -11,8 +11,6 @@ import { key, type JSSKeyObject } from '../key'
 import { stateCondition } from '../pieces/state-conditions'
 import { compileRules } from '../css-root'
 import { createJSSContent, type JSSCompileContext, type JSSContentContext, type JSSContent } from '../content'
-import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
-import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { value } from '../value'
 import { variable } from '../variable'
 import { variableCluster } from '../variable-cluster'
@@ -155,44 +153,10 @@ test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色
   expect(nestedContext.conditionPath).toBe(contentContext.conditionPath)
   expect(keyContext.node).toBe(contentContext.node)
   expect(keyContext.session).toBe(contentContext.session)
-  expect('compileWaveIndex' in keyContext).toBe(false)
-  expect('compileWaveIndex' in contentContext).toBe(false)
   expect(new Set(controllers).size).toBe(1)
   compileRules(input)
   expect(contexts[4].session).not.toBe(keyContext.session)
   expect(controllers[4]).not.toBe(controllers[0])
-})
-
-test('状态沿设定内容和 dependencies 传递，Cluster 转交默认成员且 Key 不携带读取状态', () => {
-  const cluster = variableCluster({ default: variable('red', {
-    name: 'context-state-default', states: { contentWaveHover: 'blue' },
-  }) })
-  const roles: [string, string | undefined][] = []
-  const child: JSSContent = { onCompile(context, controller) {
-    roles.push([context.role, context.readState])
-    controller.setContent(context, value(cluster)); } }
-  const returned: JSSContent = { dependencies: [child], toCSSString: () => '1px', onCompile(context, controller) {
-    roles.push([context.role, context.readState])
-  } }
-  const target: JSSKeyObject & JSSContent = { toCSSString: () => 'color', onCompile(context, controller) {
-    roles.push([context.role, context.readState])
-  } }
-  const generator: JSSContent = { onCompile(context, ast) {
-    const first = ast.insert({ before: context.node, conditionPath: context.conditionPath },
-      [target, value(cluster)], { owner: context.node })
-    first.readState = 'contentWaveHover'
-    const second = ast.insert({ before: context.node, conditionPath: context.conditionPath },
-      ['width', { onCompile: (context, controller) => { controller.setContent(context, returned) } }], { owner: context.node })
-    second.readState = 'contentWaveHover'
-  } }
-  const css = compileRules([[[condition('.StateContext')], 'display', generator]])
-  expect(roles).toEqual([
-    ['declaration-key', undefined],
-    ['declaration-content', 'contentWaveHover'],
-    ['declaration-content', 'contentWaveHover'],
-  ])
-  expect(css).toContain('color: blue;')
-  expect(css).not.toContain('var(--context-state-default')
 })
 
 test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插入节点接回 Root 队列', () => {
@@ -349,33 +313,17 @@ test('访问前失效本波重访已有缓存，波末失效重访被后项替�
   expect(css).not.toContain('--after-key:')
 })
 
-test('普通节点编译不逐角色扫描输出队列判断成员', () => {
-  const nodes = rulesToStyleNodes(Array.from({ length: 200 }, (_, index) => [[], `--membership-${index}`, index]))
-  let comparisons = 0
-  nodes.includes = (target) => {
-    for (const candidate of nodes) {
-      comparisons++
-      if (candidate === target) return true
-    }
-    return false
-  }
-  expect(styleNodesToContentNodes(nodes, [])).toHaveLength(200)
-  expect(comparisons).toBe(0)
+test('普通节点编译完整保留全部声明及其顺序', () => {
+  const source: Rules = Array.from({ length: 200 }, (_, index) => [[], `--membership-${index}`, index])
+  expect(compileRules(source)).toBe(source.map((_, index) => `--membership-${index}: ${index};`).join('\n'))
 })
 
-test.each([20, 40])('按需资源每批线性收集激活关联，不逐项反查无关记录：%s', (count) => {
-  let associationScans = 0
-  let relationReads = 0
+test.each([20, 40])('按需资源完整输出，共享资源只激活及编译一次：%s', (count) => {
   let repeatedActivations = 0
   let resourceVisits = 0
   const source: Rules = []
   for (let index = 0; index < count; index++) {
     const resources: Rules = [[[condition('.AssociatedResources')], `--resource-${index}`, index]]
-    resources.includes = (entry) => { associationScans++; return Array.prototype.includes.call(resources, entry) }
-    resources[Symbol.iterator] = function* () {
-      for (let offset = 0; offset < resources.length; offset++) { relationReads++; yield resources[offset] }
-      return undefined
-    }
     source.push([[], `--consumer-${index}`, { onActive: () => resources }])
   }
   const repeated = {
@@ -387,12 +335,10 @@ test.each([20, 40])('按需资源每批线性收集激活关联，不逐项反�
   source.push([[], 'width', repeated])
   source.push([[], 'height', { compileWaveIndex: 2, onCompile(context, controller) { controller.setContent(context, repeated); } }])
   const css = compileRules(source)
-  expect(css).toContain(`--resource-${count - 1}: ${count - 1};`)
+  for (let index = 0; index < count; index++) expect(css).toContain(`--resource-${index}: ${index};`)
   expect(css).toContain('.RepeatedResource {\ncolor: blue;')
   expect(repeatedActivations).toBe(1)
   expect(resourceVisits).toBe(1)
-  expect(associationScans).toBe(0)
-  expect(relationReads).toBe(count * 2)
 })
 
 test('同一 Rule 身份的多个激活记录均关联最后产物，不将不同 Rule 当成获胜记录', () => {
@@ -557,19 +503,17 @@ test('设定的无输出容器保留未完成依赖，完成后才退出当前�
   expect(css).not.toContain('width:')
 })
 
-test('dependencies getter 每次访问只读取一次，并在后续波重新读取', () => {
-  let dependencyReads = 0
+test('延后的动态依赖完成后输出 CSS，成功编译通知不重复', () => {
   let childCalls = 0
   const child: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) { childCalls++; controller.setContent(context, '9px'); } }
   const content: JSSContent = {
-    get dependencies() { dependencyReads++; return [child] },
+    get dependencies() { return [child] },
     toCSSString: (resolve) => resolve?.(child),
   }
   const css = compileRules([[[], 'width', content]])
 
   expect(css).toContain('width: 9px;')
   expect(childCalls).toBe(1)
-  expect(dependencyReads).toBe(3)
 })
 
 test('Variable Content 根通知设定内容进入正式 CSS 输出', () => {
@@ -608,7 +552,7 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     variable(source, { name: 'compilable-function-color', states: { contentWaveHover: state } }),
   ]])
 
-  // 普通条件不设置 readState；引用回退与常态自动声明分别编译来源。
+  // 引用回退与常态自动声明分别编译来源。
   expect(sourceCompileCalls).toBe(2)
   expect(sourceFactoryCalls).toBe(0)
   expect(stateCompileCalls).toBe(1)

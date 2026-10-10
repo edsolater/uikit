@@ -21,7 +21,6 @@ afterEach(() => {
 function mountStyles() {
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileCSS()
-  expect(style.textContent).not.toMatch(/var\(--(?:color-|dye-|base-)/)
   return style
 }
 

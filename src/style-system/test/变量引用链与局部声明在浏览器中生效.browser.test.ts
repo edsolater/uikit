@@ -166,29 +166,6 @@ test.each([false, true])('首次状态内引用与普通消费的顺序不改变
   expect(getComputedStyle(element).marginLeft).toBe('1px')
 })
 
-test('来源当前状态由外层内容状态固定，普通来源独立按浏览器状态变化', () => {
-  const inner = variable('10px', { name: 'ordered-inner-size', states: { chainHover: '20px', chainActive: '30px' } })
-  const active = variable('1px', { name: 'ordered-active-size', states: { chainActive: inner } })
-  const hover = variable('2px', { name: 'ordered-hover-size', states: { chainHover: inner } })
-  const style = document.body.appendChild(document.createElement('style'))
-  style.textContent = compileRules([
-    [[condition('.Ordered')], 'margin-left', active],
-    [[condition('.Ordered')], 'margin-right', hover],
-    [[condition('.Ordered')], 'width', inner],
-  ])
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'Ordered'
-  expect(getComputedStyle(element).width).toBe('10px')
-  element.dataset.hover = ''
-  expect(getComputedStyle(element).width).toBe('20px')
-  element.dataset.active = ''
-  expect(getComputedStyle(element).width).toBe('30px')
-  expect(getComputedStyle(element).marginLeft).toBe('30px')
-  expect(getComputedStyle(element).marginRight).toBe('20px')
-  delete element.dataset.hover
-  expect(getComputedStyle(element).width).toBe('30px')
-})
-
 test('较早状态的高特异性不能压过较晚状态', () => {
   const size = variable('10px', { name: 'priority-size', states: { specificState: '20px', laterState: '30px' } })
   const style = document.body.appendChild(document.createElement('style'))
@@ -243,7 +220,7 @@ test('多层延伸使用自身状态，其余沿链查找；source 直接使用�
   expect(getComputedStyle(original).width).toBe('30px')
 })
 
-test('有状态来源在派生状态内容中取配置值，不随来源局部覆盖变化', () => {
+test('有状态来源在派生状态内容中读取局部 CSS 覆盖', () => {
   const source = variable('10px', { name: 'scope-source-size', states: { chainActive: '30px' } })
   const derived = clusterFrom(variableCluster({ default: source, extra: variable('4px', { name: 'scope-extra-size' }) }), {
     default: { name: 'scope-derived-size', states: { chainActive: source => multiply(source, 2) } },
@@ -259,11 +236,11 @@ test('有状态来源在派生状态内容中取配置值，不随来源局部�
   const neighbor = document.body.appendChild(document.createElement('div'))
   neighbor.className = 'Consumer'
   neighbor.dataset.active = ''
-  expect(getComputedStyle(local).width).toBe('60px')
+  expect(getComputedStyle(local).width).toBe('14px')
   expect(getComputedStyle(neighbor).width).toBe('60px')
 })
 
-test('状态内容只采用自身状态，并将两个来源按当前状态编译组合', () => {
+test('状态内容组合各来源当前 CSS 状态值', () => {
   const palette = variable('gray', { name: 'context-palette-color', states: { chainHover: 'blue', chainActive: 'red' } })
   const surface = variable('white', { name: 'context-surface-color', states: { chainHover: palette } })
   const first = variable('10px', { name: 'context-first-size', states: { chainHover: '20px', chainActive: '30px' } })
@@ -289,33 +266,15 @@ test('状态内容只采用自身状态，并将两个来源按当前状态编�
   expect(getComputedStyle(element).width).toBe('30px')
   element.dataset.active = ''
   independent.dataset.active = ''
-  expect(getComputedStyle(element).backgroundColor).toBe('rgb(0, 0, 255)')
-  expect(getComputedStyle(element).width).toBe('30px')
+  expect(getComputedStyle(element).backgroundColor).toBe('rgb(255, 0, 0)')
+  expect(getComputedStyle(element).width).toBe('44px')
   expect(getComputedStyle(independent).color).toBe('rgb(255, 0, 0)')
   delete element.dataset.hover
   expect(getComputedStyle(element).backgroundColor).toBe('rgb(255, 255, 255)')
   expect(getComputedStyle(element).width).toBe('1px')
 })
 
-test('状态读取无状态来源的默认内容，普通引用仍读取局部 CSS 声明', () => {
-  const source = variable('5px', { name: 'context-local-source-size' })
-  const derived = variable('1px', {
-    name: 'context-local-derived-size',
-    states: { chainHover: createJSSContent((resolve) => `calc(${resolve(source)} * 2)`, [source]) },
-  })
-  document.body.appendChild(document.createElement('style')).textContent = compileRules([
-    [[condition('.LocalContext')], 'width', derived],
-    [[condition('.LocalContext')], 'height', source],
-    [[condition('.LocalContext')], source, '7px'],
-  ])
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'LocalContext'
-  element.dataset.hover = ''
-  expect(getComputedStyle(element).width).toBe('10px')
-  expect(getComputedStyle(element).height).toBe('7px')
-})
-
-test('普通 hover 条件不设置读取状态，自动 hover 配方仍固定其来源状态', () => {
+test('普通 hover 条件中的状态配方引用来源当前状态', () => {
   const palette = variable('gray', { name: 'explicit-palette-color', states: { chainHover: 'blue', chainActive: 'red' } })
   const surface = variable('white', { name: 'explicit-surface-color', states: { chainHover: palette } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
@@ -326,10 +285,10 @@ test('普通 hover 条件不设置读取状态，自动 hover 配方仍固定其
   element.dataset.hover = ''
   expect(getComputedStyle(element).backgroundColor).toBe('rgb(0, 0, 255)')
   element.dataset.active = ''
-  expect(getComputedStyle(element).backgroundColor).toBe('rgb(0, 0, 255)')
+  expect(getComputedStyle(element).backgroundColor).toBe('rgb(255, 0, 0)')
 })
 
-test('普通 active 条件内生成的 surface.hover 仍按 hover 取来源内容', () => {
+test('普通 active 条件内的 hover 配方读取来源 active 值', () => {
   const palette = variable('gray', { name: 'nested-palette-color', states: { chainHover: 'blue', chainActive: 'red' } })
   const surface = variable('white', { name: 'nested-surface-color', states: { chainHover: palette } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
@@ -340,5 +299,5 @@ test('普通 active 条件内生成的 surface.hover 仍按 hover 取来源内�
   element.dataset.active = ''
   expect(getComputedStyle(element).backgroundColor).toBe('rgb(255, 255, 255)')
   element.dataset.hover = ''
-  expect(getComputedStyle(element).backgroundColor).toBe('rgb(0, 0, 255)')
+  expect(getComputedStyle(element).backgroundColor).toBe('rgb(255, 0, 0)')
 })

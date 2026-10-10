@@ -42,14 +42,13 @@ test('无 default 的内容保留普通内容身份', () => {
   expect(config.states).toBeUndefined()
 })
 
-test('省略名称时连续分配临时名称，显式名称不占用序号', () => {
-  const first = parseVariableArgs(1)
-  expect(first.name).toBe('temp-1')
+test('显式名称原样保留，省略名称时生成不同的非空名称', () => {
   expect(parseVariableArgs(1, 'explicit').name).toBe('explicit')
   expect(parseVariableArgs(1, { name: 'configured' }).name).toBe('configured')
   expect(parseVariableArgs(1, '').name).toBe('')
-  expect(parseVariableArgs({ default: 1, hover: 2 }, {}).name).toBe('temp-2')
-  expect(parseVariableArgs(1, { name: undefined }).name).toBe('temp-3')
+  const names = [parseVariableArgs(1).name, parseVariableArgs({ default: 1, hover: 2 }, {}).name, parseVariableArgs(1, { name: undefined }).name]
+  expect(names.every(name => typeof name === 'string' && name.length > 0)).toBe(true)
+  expect(new Set(names).size).toBe(names.length)
 })
 
 test('默认生产函数和状态回调解析后均保留原样，不在 parser 中执行', () => {

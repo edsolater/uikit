@@ -39,7 +39,7 @@ onCompile(context, ast) {
 }
 ```
 
-`context.node` 是可改写节点引用，`conditionPath`、`key`、`content` 是角色开始时的输入快照；改写 `node` 不改变这些快照。`context.input` 是当前被通知的内容对象，嵌套内容各自取得自己的通知上下文。`role` 区分声明目标与声明内容。仅内容角色携带 `readState`，设定内容及 `dependencies` 沿用角色快照与读取状态。`context.session` 是本次编译的不透明稳定身份，供消费者保存私有状态。Controller 不携带以上字段，也不携带当前编译波。
+`context.node` 是可改写节点引用，`conditionPath`、`key`、`content` 是角色开始时的输入快照；改写 `node` 不改变这些快照。`context.input` 是当前被通知的内容对象，嵌套内容各自取得自己的通知上下文。`role` 区分声明目标与声明内容。设定内容及 `dependencies` 沿用声明角色的输入快照。`context.session` 是本次编译的不透明稳定身份，供消费者保存私有状态。Controller 不携带以上字段，也不携带当前编译波。
 
 正常队列操作只使用以下入口：
 
@@ -67,7 +67,7 @@ onCompile(context, ast) {
 
 `Value` 包装 Content，默认把数组递归输出为逗号列表，也可用 `toCSSString` 改写输出，不改变 Variable 身份。`valueList` 与 `valueSequence` 分别装配默认逗号和空格列表；Value 的 `dependencies` 显露嵌套数组中的待编译内容对象。JSS 内容组织工具和 Atom Creator 构造的内容对象同样在 `dependencies` 中显露原操作数，让次波编译嵌套引用。每个声明角色按内容对象保存唯一位置记录，通知与 Controller 操作修改该记录；最终输出与同址聚合直接读取同一份记录，没有额外的返回值或结果副本。
 
-`Variable.onCompile(context, ast)` 在普通消费时插入 `@property` 注册及 Variable 自身状态定义，再通过 `setContent` 设定可输出的 CSS `var()` Value。Variable 生成状态内容节点时直接携带选中的状态，编译器从该节点内容入口沿设定内容与 `dependencies` 传递；嵌套 Variable 按同名状态读取内容，缺失时取默认内容，无 states 的来源也取默认内容，不把来源其他状态加入当前 Variable。普通 Rule 消费仍保留 CSS 引用。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动状态定义按即将插入的目标地址查找最近的同一 Variable 局部声明，使用其基础值 Key；没有局部声明时使用 `config.definitionKey`。自动产物以 Variable 对象作为不透明 `productTag`，局部声明通过通用产物查询和语义父链清理归属自身的旧产物；`productTag` 只供查询，不改变节点来源所有权或资源替换。Compiler 不按 Variable 类型分支。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；普通引用向默认成员转交完整上下文，与默认 Variable 一样按同名状态读取内容，缺失时读取默认值；按需依赖使用同一编译和输出链。
+`Variable.onCompile(context, ast)` 在普通消费时插入 `@property` 注册及 Variable 自身状态定义，再通过 `setContent` 设定可输出的 CSS `var()` Value。普通内容和状态配方中的来源 Variable 都保留 CSS 引用，由浏览器读取当前状态、局部覆盖和修改结果；配方状态不替来源选择内容。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动状态定义按即将插入的目标地址查找最近的同一 Variable 局部声明，使用其基础值 Key；没有局部声明时使用 `config.definitionKey`。自动产物以 Variable 对象作为不透明 `productTag`，局部声明通过通用产物查询和语义父链清理归属自身的旧产物；`productTag` 只供查询，不改变节点来源所有权或资源替换。Compiler 不按 Variable 类型分支。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；普通引用向默认成员转交完整上下文，与默认 Variable 一样生成 CSS 引用并激活所需资源；按需依赖使用同一编译和输出链。
 
 ## 输出阶段
 

@@ -1,12 +1,13 @@
 /**
- * 基础颜色材料与品牌派生色。
+ * 纸色、墨色与中性色的基础材料及对应 Variable。
  *
- * 定义颜色的 JS 源头，派生材料交给 Color System 处理。
+ * 定义颜色的 JS 源头，并由共用转换入口创建基础颜色变量。
  *
- * 材料与 CSS 输出分离，使同一材料可继续参与颜色计算。
+ * 材料可继续参与颜色计算，Variable 供用途配方直接引用。
  */
 
 import type { ColorMaterial } from '@/color-system'
+import { toJSSColor } from './ui-color-structure'
 
 // 各材料直接配置自身响应；下面说明每个比例的取舍意图，具体数值是人为配方，没有唯一的推导值。
 // 百分比指单次接受多少目标差异，按环境 influence 为 1 理解；实际观感由色表检查与调整。
@@ -54,3 +55,7 @@ export const neutral: ColorMaterial = {
   },
   purpose: 'content',
 }
+
+export const paperColor = toJSSColor(paper, 'paper-color')
+export const inkColor = toJSSColor(ink, 'ink-color')
+export const neutralColor = toJSSColor(neutral, 'neutral-color')

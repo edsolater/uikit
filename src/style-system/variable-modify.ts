@@ -266,7 +266,7 @@ function declareInstanceValues(controller: ASTController, instance: VariableInst
     { owner: node, identity: 'base' },
   )
   for (const [state, stateContent] of variable.states ?? []) {
-    const stateNode = controller.insert(
+    controller.insert(
       {
         before: node,
         conditionPath: appendStateCondition(node.conditionPath, state),
@@ -274,7 +274,6 @@ function declareInstanceValues(controller: ASTController, instance: VariableInst
       [instance.baseKey, stateContent],
       { owner: node, identity: `state/${state.name}` },
     )
-    stateNode.readState = state.name
   }
 }
 

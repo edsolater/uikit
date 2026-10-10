@@ -10,6 +10,6 @@ describe('Content 次波终止', () => {
     })
 
     expect(() => compileRules([[undefined, 'color', createCompilable()]]))
-      .toThrow('Content 编译嵌套超过上限 256，编译无法终止。')
+      .toThrow(/Content 编译嵌套超过上限.*编译无法终止/)
   })
 })

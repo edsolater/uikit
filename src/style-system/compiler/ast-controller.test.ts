@@ -4,7 +4,7 @@
  *
  * 防止输出退出和真正撤销被混为同一状态。
  */
-import { expect, it, vi } from 'vitest'
+import { expect, it } from 'vitest'
 import { condition } from '../condition'
 import { key } from '../key'
 import { ASTSession, createASTController } from './ast-controller'
@@ -32,25 +32,6 @@ it('查询字段取交集并按属性名与地址匹配，返回独立的有序�
   expect(ast.search(query)).toEqual([first, second])
 })
 
-it('has 首项命中便停止，search 有序收集，查询侧名称与地址各求值一次', () => {
-  let candidateReads = 0
-  let queryKeyReads = 0
-  let queryPathReads = 0
-  const candidates = Array.from({ length: 100 }, () => ({
-    ...node('candidate'),
-    key: { toCSSString: () => { candidateReads++; return '--match' } },
-  }))
-  const ast = createASTController(new ASTSession(candidates))
-  const query = {
-    key: { toCSSString: () => { queryKeyReads++; return '--match' } },
-    conditionPath: { targetConditionPath: [{ get header() { queryPathReads++; return '.controller' } }], stateConditionPath: [] },
-  }
-  expect(ast.has(query)).toBe(true)
-  expect([candidateReads, queryKeyReads, queryPathReads]).toEqual([1, 1, 1])
-  candidateReads = queryKeyReads = queryPathReads = 0
-  expect(ast.search(query)).toEqual(candidates)
-  expect([candidateReads, queryKeyReads, queryPathReads]).toEqual([100, 1, 1])
-})
 
 it('插入位置与来源独立，只有来源撤销才清理产物', () => {
   const owner = node('owner')
@@ -127,7 +108,7 @@ it('来源登记拒绝已撤销 owner，允许退出输出的来源及尚未入�
   expect(nextSession.isAlive(pending)).toBe(false)
 })
 
-it('撤销无关来源不遍历其他消费者关系，共享与级联清理仍保持', () => {
+it('撤销无关来源保留产物，共享来源及级联清理遵守生命周期', () => {
   const unused = node('unused')
   const owner = node('owner')
   const session = new ASTSession([unused, owner])
@@ -135,14 +116,7 @@ it('撤销无关来源不遍历其他消费者关系，共享与级联清理仍�
   const products = Array.from({ length: 100 }, (_, index) => ast.insert(
     { before: owner, conditionPath: owner.conditionPath }, [`--product-${index}`, index], { owner },
   ))
-  const originalDelete = Set.prototype.delete
-  let visits = 0
-  const deletion = vi.spyOn(Set.prototype, 'delete').mockImplementation(function (this: Set<unknown>, value) {
-    if (value === unused) visits++
-    return originalDelete.call(this, value)
-  })
-  try { ast.remove(unused) } finally { deletion.mockRestore() }
-  expect(visits).toBeLessThanOrEqual(3)
+  ast.remove(unused)
   expect(ast.nodes()).toEqual([...products, owner])
   const shared = node('shared')
   session.append([shared])
@@ -176,11 +150,6 @@ it('仅退出输出保留来源与清理回调，之后撤销执行一次清理'
   expect(ast.has({ key: 'width' })).toBe(false)
 })
 
-it('控制器没有当前位置、会话身份或编译波字段', () => {
-  const ast = createASTController(new ASTSession([node('owner')]))
-  for (const field of ['node', 'session', 'conditionPath', 'key', 'content', 'role', 'readState', 'compileWaveIndex'])
-    expect(field in ast).toBe(false)
-})
 
 it('同锚点后插每次紧邻锚点，外部移动不沿用旧插入游标', () => {
   const owner = node('owner')

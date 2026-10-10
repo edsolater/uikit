@@ -35,8 +35,6 @@ export interface JSSCompileContext {
   key: JSSKey | undefined
   content: unknown
   role: 'declaration-key' | 'declaration-content'
-  /** 仅声明内容角色携带；沿编译内容和 dependencies 传递。 */
-  readState?: string
 }
 
 /** 可按需提供依赖规则、编译结果或 CSS 输出的内容对象。 */

@@ -1,7 +1,7 @@
 import { type ColorMaterial } from '@/color-system'
-import { currentColorReference, brandColor } from './colors';
+import { toJSSColor } from './ui-color-structure'
 
-/** 默认品牌材料，取当前 CSS 的品牌基色。 */
+/** 默认品牌材料及对应的可声明颜色变量。 */
 
 export const brand: ColorMaterial = {
   base: { lightness: 0.58, chroma: 0.2, hue: 260 },
@@ -14,5 +14,6 @@ export const brand: ColorMaterial = {
     hue: 0.02,
   },
   purpose: 'content',
-};export const currentBrandColor = currentColorReference(brandColor)
+}
+export const brandColor = toJSSColor(brand, 'brand-color')
 

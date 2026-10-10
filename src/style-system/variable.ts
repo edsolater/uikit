@@ -11,7 +11,7 @@ import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext
 import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
-import { find, hasProperty, mapGet, result } from '@edsolater/fnkit'
+import { hasProperty, mapGet, result } from '@edsolater/fnkit'
 import { consumeVariable, findVariableDeclaration, findLocalBaseKey, type ModifyTargetProtocol } from './variable-modify'
 import { declare } from './declaration'
 import { resolveVariable } from './variable-cluster'
@@ -28,7 +28,7 @@ export interface Variable extends ModifyTargetProtocol {
   config: {
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
     defaultValue: VariableDefaultValue
-    /** 创建时解析条件并求内容，按登记顺序保存；命中时不求默认值。 */
+    /** 创建时解析条件并求状态内容，按登记顺序保存；默认生产函数在编译引用时求值。 */
     states: Map<StateCondition, ValueInput>
     registration?: VariableOptions['registration']
     /** 自动状态声明的目标 Key，始终指向当前 Variable 名称。 */
@@ -41,7 +41,7 @@ export interface Variable extends ModifyTargetProtocol {
   /** 此对象最早可被编译的波次；配置含义见 VariableOptions.compileWaveIndex。 */
   compileWaveIndex?: number
   /**
-   * 按当前位置生成 CSS 引用或指定状态内容，并激活普通引用及声明目标所需资源。
+   * 按当前位置生成 CSS 引用，并激活引用及声明目标所需资源。
    */
   onCompile(context: JSSCompileContext, astController: ASTController): void
 }
@@ -127,7 +127,7 @@ export function variable<DefaultValue extends VariableDefaultValue>(
     get states() { return self.config.states },
     get registration() { return self.config.registration },
     /**
-     * 按声明目标、指定状态或普通引用角色激活资源并提供对应内容。
+     * 按声明目标或内容引用角色激活资源并提供对应内容。
      */
     onCompile: (context, astController) => compileVariableContent(self, context, astController),
   }
@@ -165,10 +165,7 @@ export function compileVariableContent(target: ModifyTargetProtocol, context: JS
     else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
   }
   if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return }
-  const states = context.readState === undefined ? undefined : target.states
-  const entry = states ? find(states, (_, state) => state.name === context.readState) : undefined
-  const fallback = entry ? entry.value : result(target.content)
-  if (context.readState) { controller.setContent(context, fallback); return }
+  const fallback = result(target.content)
   if (target.declarations?.length) {
     const definition = findVariableDeclaration(controller, target, context.conditionPath)
     insertDefinition(context, controller, target, context.conditionPath, definition ? result(definition.content.content) : fallback)
@@ -191,11 +188,11 @@ function declareVariableStates(context: JSSCompileContext, controller: ASTContro
 
   const currentState = states.findLast(state => context.conditionPath.stateConditionPath.some(current => current.name === state.name))
   const currentValue = currentState ? variable.states?.get(currentState) : fallbackValue
-  insertDefinition(context, controller, variable, context.conditionPath, currentValue, currentState?.name)
+  insertDefinition(context, controller, variable, context.conditionPath, currentValue)
 
   for (const [state, content] of variable.states ?? []) {
     if (currentState && state.order <= currentState.order) continue
-    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state), content, state.name)
+    insertDefinition(context, controller, variable, appendStateCondition(context.conditionPath, state), content)
   }
 }
 
@@ -266,7 +263,6 @@ function insertDefinition(
   variable: ModifyTargetProtocol,
   path: ConditionPath,
   content: ValueInput,
-  readState?: string,
 ): JSSStyleNode | undefined {
   const key = findLocalBaseKey(context, controller, variable, path) ?? variable.key
   const existing = controller.search({ key, conditionPath: path })[0]
@@ -275,6 +271,5 @@ function insertDefinition(
     return undefined
   }
   const node = controller.insert({ before: context.node, conditionPath: path }, [key, content], { owner: context.node, productTag: variable })
-  node.readState = readState
   return node
 }

@@ -12,8 +12,10 @@ import { compileRules } from './css-root'
 test('省略配置或配置内名称时都能创建并编译 Variable', () => {
   const amount = variable(1)
   const stateful = variable({ default: 2, hover: 3 }, { states: { active: 4 } })
-  expect(amount.name).toMatch(/^temp-\d+$/)
-  expect(stateful.name).toMatch(/^temp-\d+$/)
+  expect(amount.name).toEqual(expect.any(String))
+  expect(stateful.name).toEqual(expect.any(String))
+  expect(amount.name).not.toBe('')
+  expect(stateful.name).not.toBe('')
   expect(stateful.name).not.toBe(amount.name)
   const css = compileRules([[[condition('.Anonymous')], 'opacity', stateful]])
   expect(css).toContain(`--${stateful.name}: 2;`)

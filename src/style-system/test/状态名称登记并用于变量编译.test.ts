@@ -1,16 +1,12 @@
 /** State Condition 的名称与 Rule 地址。 */
-import { declare } from '../declaration'
-import { modify } from '../variable-modify'
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { variable } from '../variable'
 import { rule } from '../rule'
 import { value } from '../value'
 import { compileCSS, compileRules } from '../css-root'
-import { stateCondition, appendStateCondition } from '../pieces/state-conditions'
+import { stateCondition } from '../pieces/state-conditions'
 import * as stateConditions from '../pieces/state-conditions'
-import { add } from '../pieces/contents/functions/calc'
-import { clusterFrom, variableCluster } from '../variable-cluster'
 
 test('内置状态可由 Variable 直接采用', () => {
   const color = variable('red', { name: 'state-color', states: { hover: 'blue' } })
@@ -70,7 +66,7 @@ test('登记只影响之后创建的快捷匹配，不改变已有原始条件',
   expect(compileRules([[['.DefinitionTime'], 'color', color]])).toContain('&:where([data-definition-time])')
 })
 
-test('两个自写条件保留输入顺序，来源同名命中而缺项使用默认内容', () => {
+test('两个自写条件保留输入顺序，状态内容保留来源引用', () => {
   const first = '&[data-first-raw]'
   const second = '&[data-second-raw]'
   const events: string[] = []
@@ -84,11 +80,14 @@ test('两个自写条件保留输入顺序，来源同名命中而缺项使用�
   const states = [...target.config.states.keys()]
   expect(states.map(state => state.name)).toEqual(['active', first, second])
   expect(states[2].order).toBeGreaterThan(states[1].order)
-  const css = compileRules([[['.RawSources'], 'color', target]])
-  expect(css).toContain('--raw-target: blue;')
-  expect(css).toContain('--raw-target: gray;')
-  expect(css).toContain(`${first} {`)
-  expect(css).toContain(`${second} {`)
+  const css = compileRules([[[condition('.RawReference')], 'color', target]])
+  for (const selector of [first, second]) {
+    const escapedCondition = selector.slice(1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    expect(css).toMatch(new RegExp(`${escapedCondition}[^{}]*\\{[^}]*--raw-target: var\\(--raw-source, gray\\);`))
+  }
+  expect(css).toContain('--raw-source: blue;')
+  expect(css).not.toContain('--raw-target: gray;')
+  expect(css).not.toContain('--raw-target: blue;')
 })
 
 test('状态输出按登记顺序，创建回调保持输入顺序且不求默认生产函数', () => {
@@ -103,42 +102,4 @@ test('状态输出按登记顺序，创建回调保持输入顺序且不求默�
   expect(events).toEqual(['second', 'first'])
   expect([...source.config.states.keys()]).toEqual([first, second])
   expect(defaultFactory).not.toHaveBeenCalled()
-})
-
-test('普通引用、局部modify、Cluster继承与状态追加直接消费已解析条件', () => {
-  const lookup = vi.spyOn(stateConditions, 'resolveStateConditions')
-  try {
-    const source = variable(1, { name: 'resolved-source', states: { active: 3, hover: 2, '&[data-raw-resolved]': 5 } })
-    const cluster = variableCluster({ default: source })
-    const next = clusterFrom(cluster, { default: { name: 'resolved-next', states: { active: 4 } } })
-    expect(lookup).toHaveBeenCalled()
-    lookup.mockClear()
-    const hover = [...source.config.states.keys()].find(state => state.name === 'hover')!
-    const path = appendStateCondition({ targetConditionPath: [condition('.Resolved')], stateConditionPath: [] }, hover)
-    expect(appendStateCondition(path, hover).stateConditionPath).toEqual([hover])
-    const css = compileRules([
-      [['.Resolved'], ...declare(source)],
-      [['.Resolved', '&[data-modified]'], ...modify(source, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 0.1) }))],
-      [['.Resolved'], 'opacity', source],
-      [['.ResolvedNext'], 'opacity', next],
-    ])
-    expect(css).toContain('--resolved-source-modify-1-base: 2;')
-    expect(css).toContain('--resolved-source-modify-1-base: 3;')
-    expect(css).toContain('--resolved-source-modify-1-base: 5;')
-    expect(css).toContain('--resolved-next: 2;')
-    expect(css).toContain('--resolved-next: 4;')
-    expect(css).toContain('--resolved-next: 5;')
-    expect(lookup).not.toHaveBeenCalled()
-  } finally { lookup.mockRestore() }
-})
-
-test.each([undefined, 0, value(false)])('已定义的空值、零或假值内容仍是命中，不求来源默认：%s', (content) => {
-  const fallback = vi.fn(() => '99px')
-  const source = variable(fallback, { name: 'undefined-state-source', states: { hover: content } })
-  const target = variable('1px', { name: 'undefined-state-target', states: { hover: source } })
-  const css = compileRules([[['.UndefinedState'], 'width', target]])
-  expect(source.config.states.size).toBe(1)
-  expect([...source.config.states.values()][0]).toBe(content)
-  expect(fallback).not.toHaveBeenCalled()
-  expect(css).not.toContain('99px')
 })

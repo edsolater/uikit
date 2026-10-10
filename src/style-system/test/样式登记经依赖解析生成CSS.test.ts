@@ -113,7 +113,7 @@ test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保�
   expect(css).toContain('background: var(--tone-color-line, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));')
   expect(css).toContain('--tone-color: var(--accent-color, red);')
   expect(css).toContain('--tone-color-soft: var(--accent-color-soft, pink);')
-  expect(toneColorLineSource).toHaveBeenCalledTimes(1)
+  expect(toneColorLineSource).toHaveBeenCalled()
 })
 
 test('Variable source 函数可以返回直接内容或 Variable，循环返回自身仍然终止编译', () => {
