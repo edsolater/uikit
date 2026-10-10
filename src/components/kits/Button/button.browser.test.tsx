@@ -1,5 +1,5 @@
 /** 保留旧样式 DOM 协议的视觉反例；新 Button API 的 DOM 描述单独验证，样式尚未迁移。 */
-import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, surfaceColor, foregroundColor, interactiveColor, badColor, toneColor, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
+import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, surfaceColor, foregroundColor, interactiveColors, badColors, toneColor, toneColors, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
@@ -186,8 +186,8 @@ describe('Button styles', () => {
       { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', foreground: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
     ]
     for (const [index, palette] of palettes.entries()) handles.push(rules(`.Button[data-local-tone="${index}"]`, [
-      [toneColor, palette.tone], [toneColor('soft'), palette.soft],
-      [toneColor('strong'), palette.strong], [toneColor('foreground'), palette.foreground], [toneColor('line'), palette.line],
+      [toneColor, palette.tone], [toneColors('soft'), palette.soft],
+      [toneColors('strong'), palette.strong], [toneColors('foreground'), palette.foreground], [toneColors('line'), palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -507,8 +507,8 @@ describe('Button styles', () => {
     const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
     const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
     const reference = document.body.appendChild(document.createElement('div'))
-    handles.push(rule('.focus-reference-interactive', 'color', interactiveColor('line')))
-    handles.push(rule('.focus-reference-bad', 'color', badColor('line')))
+    handles.push(rule('.focus-reference-interactive', 'color', interactiveColors('line')))
+    handles.push(rule('.focus-reference-bad', 'color', badColors('line')))
     cssRoot.mount()
     reference.className = 'focus-reference-interactive'
     const interactiveLine = getComputedStyle(reference).color

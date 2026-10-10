@@ -4,7 +4,9 @@ import { userEvent } from 'vitest/browser'
 import { color } from '../pieces/mixins/appearance'
 import { compileCSS } from '../css-root'
 import { rule, rules, type RulesHandle } from '../rule'
-import { brandColor, canvasColor, interactiveColor, highlightColor, neutralColor, paperColor, inkColor, surfaceColor, foregroundColor, surfaceColorInteractive, foregroundColorInteractive, goodColor, badColor, warnColor, infoColor, lineColor } from '../pieces/contents/atoms/color/colors'
+import { brandColor, canvasColor, neutralColor, paperColor, inkColor, surfaceColor, foregroundColor, surfaceColorInteractive, foregroundColorInteractive, lineColor } from '../pieces/contents/atoms/color/colors'
+import { interactiveColor, highlightColor } from '../pieces/contents/atoms/color/ui-action-colors'
+import { goodColors, badColors, warnColors, infoColors } from '../pieces/contents/atoms/color/ui-info-color'
 import { paper, ink, neutral } from '../pieces/contents/atoms/color/palette'
 
 const handles: RulesHandle[] = []
@@ -162,9 +164,9 @@ test('交互用途色的状态派生保留局部纸色与墨色覆盖', async ()
 })
 
 test('状态基色及其前景与分隔用途在没有静态颜色 CSS 时有效渲染', () => {
-  const statuses = [goodColor, badColor, warnColor, infoColor]
+  const statuses = [goodColors, badColors, warnColors, infoColors]
   const samples = statuses.map((status, index) => {
-    handles.push(rules(`.status-${index}`, [color({ background: status, foreground: status('foreground') })]))
+    handles.push(rules(`.status-${index}`, [color({ background: status('default'), foreground: status('foreground') })]))
     const sample = document.body.appendChild(document.createElement('div'))
     sample.className = `status-${index}`
     sample.textContent = '状态信息'

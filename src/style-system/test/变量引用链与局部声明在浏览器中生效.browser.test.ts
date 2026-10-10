@@ -10,7 +10,8 @@ import { multiply } from '../pieces/contents/functions/calc'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { createJSSContent } from '../content'
 import { focusOutline } from '../pieces/contents/atoms/focus'
-import { highlightColor, toneColor } from '../pieces/contents/atoms/color/colors'
+import { toneColors } from '../pieces/contents/atoms/color/colors'
+import { highlightColors } from '../pieces/contents/atoms/color/ui-action-colors'
 import type { Rules } from '../rule'
 
 stateCondition('chainHover', condition('&:where([data-hover])'))
@@ -24,9 +25,9 @@ afterEach(() => document.body.replaceChildren())
 test('焦点轮廓依次读取局部语气色、局部强调色和基础色', async () => {
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.AccentFocus')], 'outline', focusOutline],
-    [[condition('.AccentFocus')], highlightColor('line'), 'rgb(12, 34, 56)'],
+    [[condition('.AccentFocus')], highlightColors('line'), 'rgb(12, 34, 56)'],
     [[condition('.ToneFocus')], 'outline', focusOutline],
-    [[condition('.ToneFocus')], toneColor('line'), 'rgb(56, 78, 90)'],
+    [[condition('.ToneFocus')], toneColors('line'), 'rgb(56, 78, 90)'],
   ])
   const accentButton = document.body.appendChild(document.createElement('button'))
   accentButton.className = 'AccentFocus'
@@ -111,7 +112,7 @@ test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用
 
 test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 default', () => {
   const toneColorDefault = variable('blue', { name: 'browser-tone-color' })
-  const toneColor = variableCluster({
+  const toneColors = variableCluster({
     default: toneColorDefault,
     soft: variable('lightblue', { name: 'browser-tone-color-soft' }),
     line: variable(
@@ -119,14 +120,14 @@ test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 de
       { name: 'browser-tone-color-line' },
     ),
   })
-  const highlightColor = variableCluster({
+  const highlightColors = variableCluster({
     default: variable('red', { name: 'browser-accent-color' }),
     soft: variable('pink', { name: 'browser-accent-color-soft' }),
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([
-    [[condition('.LazyVariableButton')], 'background', toneColor('line')],
-    [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColor, highlightColor],
+    [[condition('.LazyVariableButton')], 'background', toneColors('line')],
+    [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColors, highlightColors],
   ])
 
   const ordinary = document.body.appendChild(document.createElement('div'))

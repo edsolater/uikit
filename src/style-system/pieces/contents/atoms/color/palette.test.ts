@@ -7,8 +7,9 @@
 import { expect, test } from 'vitest'
 import { applyEnvironment, alpha, hue, emphasis } from '@/color-system'
 import { paper, ink, neutral } from './palette'
-import { brand, interactive, highlight } from './brand-color'
-import { good, bad, warn, info } from './info-color'
+import { brand } from './brand-color'
+import { interactive, highlight } from './ui-action-colors'
+import { good, bad, warn, info } from './ui-info-color'
 import { lightTheme, darkTheme } from './theme'
 
 test('红色在亮环境更亮、暗环境更深，蓝色环境不会把它变为蓝色', () => {

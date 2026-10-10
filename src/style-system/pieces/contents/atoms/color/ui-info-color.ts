@@ -1,4 +1,8 @@
-import type { ColorMaterial } from '@/color-system';
+import type { ColorMaterial } from '@/color-system'
+import { variableCluster } from '@/style-system/variable-cluster'
+import { toJSSColor, currentColorReference, paperColor } from './colors'
+import { readableForeground } from './ui-color-structure'
+import { baseUIColorStructure } from './ui-color-structure'
 
 /** 跨品牌稳定的状态材料；不在 CSS token 中保存颜色来源。 */
 
@@ -13,7 +17,7 @@ export const good: ColorMaterial = {
     hue: 0.01,
   },
   purpose: 'content',
-};
+}
 // 原错误红 #c42b1c 转为同色 OKLCH，保留数值精度。
 
 export const bad: ColorMaterial = {
@@ -27,7 +31,7 @@ export const bad: ColorMaterial = {
     hue: 0.01,
   },
   purpose: 'content',
-};
+}
 
 export const warn: ColorMaterial = {
   base: { lightness: 0.72, chroma: 0.17, hue: 78 },
@@ -40,7 +44,7 @@ export const warn: ColorMaterial = {
     hue: 0.015,
   },
   purpose: 'content',
-};
+}
 
 export const info: ColorMaterial = {
   base: { lightness: 0.62, chroma: 0.16, hue: 235 },
@@ -53,4 +57,46 @@ export const info: ColorMaterial = {
     hue: 0.015,
   },
   purpose: 'content',
-};
+}
+
+
+// ------------ ui使用
+export const goodColor = toJSSColor(good, 'good-color')
+export const goodColors = variableCluster(
+  baseUIColorStructure({
+    base: goodColor,
+    softAlpha: 0.14,
+    lineAlpha: 0.44,
+    foreground: readableForeground(goodColor),
+  }),
+)
+
+export const badColor = toJSSColor(bad, 'bad-color')
+export const badColors = variableCluster(
+  baseUIColorStructure({
+    base: badColor,
+    softAlpha: 0.14,
+    lineAlpha: 0.44,
+    foreground: currentColorReference(paperColor),
+  }),
+)
+
+export const warnColor = toJSSColor(warn, 'warn-color')
+export const warnColors = variableCluster(
+  baseUIColorStructure({
+    base: warnColor,
+    softAlpha: 0.14,
+    lineAlpha: 0.44,
+    foreground: readableForeground(warnColor),
+  }),
+)
+
+export const infoColor = toJSSColor(info, 'info-color')
+export const infoColors = variableCluster(
+  baseUIColorStructure({
+    base: infoColor,
+    softAlpha: 0.14,
+    lineAlpha: 0.44,
+    foreground: readableForeground(infoColor),
+  }),
+)

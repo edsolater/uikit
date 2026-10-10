@@ -5,13 +5,14 @@
  * 状态展开后仍保留颜色变量引用，使局部配色继续生效。
  */
 import { variable } from '../../../variable'
-import { highlightColor, toneColor } from './color/colors'
+import { toneColors } from './color/colors'
+import { highlightColors } from './color/ui-action-colors'
 import { value } from '../../../value'
 import { valueSequence } from '../atom-creators/list'
 import { focusStrokeWidth, focusGapSize } from './space'
 
-const toneLine = toneColor('line')
-const highlightLine = highlightColor('line')
+const toneLine = toneColors('line')
+const highlightLine = highlightColors('line')
 const currentToneLineColor = value([toneLine, highlightLine], {
   toCSSString: (_, resolve) => {
     const fallback = resolve(highlightLine)

@@ -96,18 +96,18 @@ afterEach(() => {
 test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保留未匹配成员配方', () => {
   const toneColorDefault = variable('blue', { name: 'tone-color' })
   const toneColorLineSource = vi.fn(() => colorMix([toneColorDefault, 0.32], 'transparent'))
-  const toneColor = variableCluster({
+  const toneColors = variableCluster({
     default: toneColorDefault,
     soft: variable('lightblue', { name: 'tone-color-soft' }),
     line: variable(toneColorLineSource, { name: 'tone-color-line' }),
   })
-  const accentColor = variableCluster({
+  const accentColors = variableCluster({
     default: variable('red', { name: 'accent-color' }),
     soft: variable('pink', { name: 'accent-color-soft' }),
   })
 
-  keep(rules('.LazyVariableButton', [[key('background'), toneColor('line')]]))
-  keep(rules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColor, accentColor]]))
+  keep(rules('.LazyVariableButton', [[key('background'), toneColors('line')]]))
+  keep(rules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColors, accentColors]]))
   expect(toneColorLineSource).not.toHaveBeenCalled()
   const css = compileCSS()
   expect(css).toContain('background: var(--tone-color-line, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));')

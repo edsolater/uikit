@@ -4,14 +4,14 @@
 
 组件自身的选择条件留在样式定义端，可复用效果交给 Style System。
 */
-import { declare, modify, rules, add, variable, innerText, contentLayout, size, boundary, color, elevation, clickable, surfaceColor, foregroundColor, $cursor, colorMix, foregroundColorInteractive, interactiveColor, highlightColor, badColor, toneColor, surfaceColorInteractive, pill, spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin, controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge, bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge, shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '@/style-system'
+import { declare, modify, rules, add, variable, innerText, contentLayout, size, boundary, color, elevation, clickable, surfaceColor, foregroundColor, $cursor, colorMix, foregroundColorInteractive, interactiveColors, highlightColors, badColors, toneColor, toneColors, surfaceColorInteractive, pill, spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin, controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge, bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge, shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '@/style-system'
 import { Button } from './Button'
 
 const button = ['@layer uikit', `.${Button.name}`]
 
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
-export const buttonSurfaceSource = variable(toneColor('soft'), { name: 'button-surface-source' })
+export const buttonSurfaceSource = variable(toneColors('soft'), { name: 'button-surface-source' })
 
 /** 混色的承载画布，默认沿用中性表面的交互状态。 */
 export const buttonSurfaceCanvas = variable(surfaceColorInteractive, { name: 'button-surface-canvas' })
@@ -25,7 +25,7 @@ export const buttonSurfaceStrength = variable(0.18, {
 
 // 定义button的样式架构
 rules(button, [
-  [toneColor, interactiveColor],
+  [toneColors, interactiveColors],
   declare(buttonSurfaceStrength),
   declare(surfaceColor, colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
   declare(foregroundColor, foregroundColorInteractive),
@@ -47,9 +47,9 @@ rules(button, [
 
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
-rules([...button, '&[data-tone]'], [declare(foregroundColor, toneColor('strong'))])
-rules([...button, '&[data-tone="accent"]'], [[toneColor, highlightColor]])
-rules([...button, '&[data-tone="danger"]'], [[toneColor, badColor]])
+rules([...button, '&[data-tone]'], [declare(foregroundColor, toneColors('strong'))])
+rules([...button, '&[data-tone="accent"]'], [[toneColors, highlightColors]])
+rules([...button, '&[data-tone="danger"]'], [[toneColors, badColors]])
 
 // =============================================================================
 // variant 动作声量
@@ -80,7 +80,7 @@ const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
   modify(buttonSurfaceStrength, { type: 'expression', detail: currentExpression => add(currentExpression, solidStrength) }),
   [buttonSurfaceSource, toneColor],
-  declare(foregroundColor, toneColor('foreground')),
+  declare(foregroundColor, toneColors('foreground')),
   elevation(shadowSolid),
 ])
 

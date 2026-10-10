@@ -7,7 +7,6 @@
 import type { ColorMaterial } from '@/color-system'
 import { variable, type Variable } from '../../../../variable'
 import { variableCluster } from '../../../../variable-cluster'
-import { type ValueInput } from '../../../../value'
 import { createJSSContent } from '../../../../content'
 import { oklch } from '../../functions/oklch'
 import { modification } from '../../../../modification'
@@ -15,8 +14,8 @@ import { relativeOKLCH } from '../../functions/relative-oklch'
 import { add } from '../../functions/calc'
 import { colorMix } from '../../functions/color-mix'
 import { paper, ink, neutral } from './palette'
-import { brand, highlight } from './brand-color'
-import { good, bad, warn, info } from './info-color'
+import { brand } from './brand-color'
+import { highlightColor, highlightColors } from './ui-action-colors'
 
 /**
  * 将 Color System 的颜色创建为可声明、引用的 JSS Variable。
@@ -25,14 +24,14 @@ import { good, bad, warn, info } from './info-color'
  * const surface = toJSSColor(paper, 'example-surface')
  * declare(surface, 'white')
  */
-function toJSSColor(color: ColorMaterial, name: string): Variable {
+export function toJSSColor(color: ColorMaterial, name: string): Variable {
   return variable(oklch({ ...color.base, alpha: color.alpha }), name)
 }
 
 /**
  * 返回从 original 到 target 的颜色 Modification；通道差值由保存的回调计算，alpha 变化在构造时确定。
  */
-const createColorModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }) =>
+export const createColorModificationByDiff = ({ original, target }: { original: ColorMaterial; target: ColorMaterial }) =>
   modification({ type: 'color', detail: {
     lightness: currentExpression => add(currentExpression, target.base.lightness - original.base.lightness),
     chroma: currentExpression => add(currentExpression, target.base.chroma - original.base.chroma),
@@ -46,24 +45,9 @@ export const brandColor = toJSSColor(brand, 'brand-color')
 export const neutralColor = toJSSColor(neutral, 'neutral-color')
 
 /**
- * 由 base、strongChange 与透明度配置生成语气 VariableCluster；派生颜色引用当前 base 和通道配方。
- */
-function colorMembers(name: string, base: Variable, lineAlpha: number,
-  strongChange?: ValueInput, foreground: ValueInput = currentColorReference(paperColor)) {
-  const currentBase = currentColorReference(base)
-  return variableCluster({
-    default: base,
-    strong: strongChange === undefined ? base : variable(relativeOKLCH(currentBase, strongChange), `${name}-color-strong`),
-    soft: variable(relativeOKLCH(currentBase, modification({ type: 'color', detail: { alpha: 0.14 } })), `${name}-color-soft`),
-    line: variable(relativeOKLCH(currentBase, modification({ type: 'color', detail: { alpha: lineAlpha } })), `${name}-color-line`),
-    foreground: variable(foreground, `${name}-color-foreground`),
-  })
-}
-
-/**
  * 状态展开仍保留当前 CSS 变量引用；未声明时使用原 Variable 的定义作为回退。
  */
-function currentColorReference(source: Variable) {
+export function currentColorReference(source: Variable) {
   return createJSSContent(
     (resolve) => {
       const fallback = resolve(source)
@@ -73,65 +57,14 @@ function currentColorReference(source: Variable) {
   )
 }
 
-/**
- * 由当前底色求可读前景，并按原配方保留少量底色气息。
- */
-function readableForeground(base: Variable) {
-  const currentBase = currentColorReference(base)
-  const contrast = createJSSContent(
-    (resolve) => {
-      const source = resolve(currentBase)
-      return source === undefined ? undefined : `contrast-color(${source})`
-    },
-    [currentBase],
-  )
-  return colorMix([contrast, 0.8], [currentBase, 0.2])
-}
-
-const currentBrandColor = currentColorReference(brandColor)
-
-const interactiveDefault = variable(currentBrandColor, {
-  name: 'interactive-color',
-  registration: { syntax: '*', inherits: true },
-  states: {
-    hover: relativeOKLCH(currentBrandColor, modification({ type: 'color', detail: {
-      lightness: currentExpression => add(currentExpression, -0.04),
-      chroma: currentExpression => add(currentExpression, 0.01),
-    } })),
-    active: relativeOKLCH(currentBrandColor, modification({ type: 'color', detail: {
-      lightness: currentExpression => add(currentExpression, -0.08),
-      chroma: currentExpression => add(currentExpression, -0.01),
-    } })),
-  },
-})
-export const interactiveColor = colorMembers('interactive', interactiveDefault, 0.48)
-export const highlightColor = colorMembers('highlight',
-  variable(relativeOKLCH(currentBrandColor, createColorModificationByDiff({ original: brand, target: highlight })), 'highlight-color'),
-  0.42, modification({ type: 'color', detail: {
-    lightness: currentExpression => add(currentExpression, 0.08),
-    chroma: currentExpression => add(currentExpression, 0.02),
-  } }),
-)
-const goodDefault = toJSSColor(good, 'good-color')
-const warnDefault = toJSSColor(warn, 'warn-color')
-const infoDefault = toJSSColor(info, 'info-color')
-export const goodColor = colorMembers('good', goodDefault, 0.44, undefined, readableForeground(goodDefault))
-export const badColor = colorMembers('bad', toJSSColor(bad, 'bad-color'), 0.44)
-export const warnColor = colorMembers('warn', warnDefault, 0.44, undefined, readableForeground(warnDefault))
-export const infoColor = colorMembers('info', infoDefault, 0.44, undefined, readableForeground(infoDefault))
-
 export const canvasColor = variable(currentColorReference(paperColor), 'canvas-color')
 export const surfaceColor = variable(currentColorReference(paperColor), 'surface-color')
-const foregroundDefault = variable(currentColorReference(inkColor), 'foreground-color')
-export const foregroundColor = variableCluster({
-  default: foregroundDefault,
-  strong: foregroundDefault,
-})
+export const foregroundColor = variable(currentColorReference(inkColor), 'foreground-color')
 export const foregroundColorInteractive = variable(currentColorReference(foregroundColor), {
   name: 'foreground-color-interactive',
   states: {
-    hover: currentColorReference(foregroundColor('strong')),
-    active: currentColorReference(foregroundColor('strong')),
+    hover: currentColorReference(foregroundColor),
+    active: currentColorReference(foregroundColor),
     disabled: (source) => source,
   },
 })
@@ -155,14 +88,15 @@ export const softLine = colorMix([currentColorReference(lineColor), 0.72], 'tran
 export const hoverOverlay = colorMix([currentForegroundColor, 0.08], 'transparent')
 export const activeOverlay = colorMix([currentForegroundColor, 0.14], 'transparent')
 
-export const toneColor = variableCluster({
-  default: variable(currentColorReference(highlightColor), 'tone-color'),
-  soft: variable(currentColorReference(highlightColor('soft')), 'tone-color-soft'),
-  strong: variable(currentColorReference(highlightColor('strong')), 'tone-color-strong'),
-  foreground: variable(currentColorReference(highlightColor('foreground')), 'tone-color-foreground'),
-  line: variable(currentColorReference(highlightColor('line')), 'tone-color-line'),
+export const toneColor = variable(currentColorReference(highlightColor), 'tone-color')
+export const toneColors = variableCluster({
+  default: toneColor,
+  soft: variable(currentColorReference(highlightColors('soft')), 'tone-color-soft'),
+  strong: variable(currentColorReference(highlightColors('strong')), 'tone-color-strong'),
+  foreground: variable(currentColorReference(highlightColors('foreground')), 'tone-color-foreground'),
+  line: variable(currentColorReference(highlightColors('line')), 'tone-color-line'),
 })
-const currentToneSoftColor = currentColorReference(toneColor('soft'))
+const currentToneSoftColor = currentColorReference(toneColors('soft'))
 export const surfaceColorTone = variable(colorMix([currentSurfaceColor, 0.76], currentToneSoftColor), {
   name: 'surface-color-tone',
   states: {
