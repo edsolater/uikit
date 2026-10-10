@@ -5,11 +5,10 @@
 变化与来源分别复用，绑定和条件应用由 Adjust、Modify 的使用端组织。
 */
 import {
-  and,
   assert,
   check,
   equal,
-  hasProperty,
+  hasMethod,
   isFunction,
   isNumber,
   isObject,
@@ -120,15 +119,9 @@ export interface ColorModificationContent extends DeclareProtocol {
 /** 颜色操作需要领域标识及可声明的源无关配方材料。 */
 export const colorModificationShape = {
   type: check(equal, 'color'),
-  key: check(
-    hasProperty,
-    'toCSSString',
-    and(isFunction, (f) => and(isString, (v) => /^--.+/.test(v))(f())),
-  ),
-  // key: (key) => {
-  //   const name = hasProperty(key, 'toCSSString', isFunction) && key.toCSSString()
-  //   return isString(name) && /^--.+/.test(name)
-  // },
+  key: check(hasMethod, 'toCSSString', {
+    resultIs: [isString, name => /^--.+/.test(name as string)],
+  }),
   content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
 } satisfies DataShape
 

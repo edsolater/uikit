@@ -6,7 +6,7 @@
 */
 import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
 import { resolveVariable } from './variable-cluster'
-import { assert, containKey, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, mapGet, matchShape, optional, or, result, type DataShape } from '@edsolater/fnkit'
+import { assert, check, containKey, hasMethod, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, mapGet, matchShape, optional, or, result, type DataShape } from '@edsolater/fnkit'
 import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
 import type { Declaration, DeclareProtocol } from './declaration'
 import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
@@ -29,10 +29,9 @@ export interface ModifyTargetProtocol extends DeclareProtocol, JSSContent {
 
 /** 操作所需的自定义属性材料；继承字段和可调用对象按 FNKit 形状读取。 */
 export const modifyTargetShape = {
-  key: key => {
-    const name = hasProperty(key, 'toCSSString', isFunction) && key.toCSSString()
-    return isString(name) && /^--.+/.test(name)
-  },
+  key: check(hasMethod, 'toCSSString', {
+    resultIs: [isString, name => /^--.+/.test(name as string)],
+  }),
   content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
   states: optional(isMap),
   declarations: optional(isArray),
