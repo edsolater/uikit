@@ -215,7 +215,7 @@ ink / paper 不直接使用，只参与组合
 ```txt
 neutral-0 最接近 paper
 neutral-8 最接近 ink
-数字越大，前景压强越高
+数字越大，内容色压强越高
 neutral 是层级材料，不是 soft 的默认底料
 neutral 不直接给组件使用，而是映射到 canvas / surface / fg / line 等 color 语义
 neutral-0 也不使用纯白，避免界面只剩纯白和灰边
@@ -225,7 +225,7 @@ neutral 主要服务结构层级：
 
 ```txt
 canvas / surface 的画布和承载面层级
-fg 的默认、次要、高权重前景压强
+fg 的默认、次要、高权重内容色压强
 line 的默认、弱、强边界压强
 ```
 
@@ -329,11 +329,11 @@ surface-high     高层级承载面 / 抬升面 / menu / popover
 surface-overlay  遮罩层 / 固定使用黑色压暗材料
 surface-inverse  反相承载面
 
-fg               默认前景内容
-fg-soft          次要前景内容 / 低语气信息
-fg-strong        高权重前景内容 / 高语气信息
-fg-disabled      禁用前景
-fg-inverse       反相前景
+fg               默认内容
+fg-soft          次要内容 / 低语气信息
+fg-strong        高权重内容 / 高语气信息
+fg-disabled      禁用内容色
+fg-inverse       反相内容色
 
 line             默认边界
 line-soft        弱边界 / 低语气边界
@@ -344,15 +344,15 @@ control          中性可操作控件的默认承载面
 control-hover    中性控件兴趣态承载面
 control-active   中性控件按下态承载面
 control-disabled 中性控件禁用承载面
-control-fg       中性控件前景
+control-fg       中性控件内容色
 control-line     中性控件边界
 
 field            可编辑值承载面
 field-hover      字段兴趣态承载面
 field-focus      字段聚焦承载面
 field-disabled   字段禁用承载面
-field-fg         字段输入内容前景
-field-placeholder 字段占位前景
+field-fg         字段输入内容色
+field-placeholder 字段占位内容色
 field-line       字段默认边界
 field-line-focus 字段聚焦边界
 field-focus-ring 字段聚焦外环
@@ -543,7 +543,7 @@ soft / strong / low / high / overlay / inverse / hover / active / disabled / foc
 
 ```txt
 soft 不用 weak/subtle/muted
-fg 不用 text/content
+静态 CSS 现有内容色 token 沿用 fg 缩写；Style System 内容色角色与族成员命名为 contentColor、content
 默认态不加 base / normal / default 后缀
 soft / strong 是语气，不是层级
 low / high 是同种类中的层级语义
@@ -565,8 +565,7 @@ base-status 状态绝对色域
 不要用：
 
 ```txt
-text 作为底层前景色
-content 作为颜色 role
+text 作为底层内容色
 weak / subtle / muted
 dye-surface-color / surface / fg 这种用途词
 在亮色 neutral 曲线里提前塞暗色逻辑

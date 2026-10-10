@@ -173,20 +173,20 @@ test('Cluster 声明按目标同名成员整组展开，允许来源额外成员
     default: variable('black', { name: 'target-color' }),
     soft: variable('gray', { name: 'target-soft-color' }),
     strong: variable('navy', { name: 'target-strong-color' }),
-    foreground: variable('white', { name: 'target-foreground-color' }),
+    content: variable('white', { name: 'target-content-color' }),
   })
   const source = variableCluster({
     default: variable('red', { name: 'source-color' }),
     soft: variable('pink', { name: 'source-soft-color', states: { hover: 'purple' } }),
     strong: variable('maroon', { name: 'source-strong-color' }),
-    foreground: variable('yellow', { name: 'source-foreground-color' }),
+    content: variable('yellow', { name: 'source-content-color' }),
     line: variable('orange', { name: 'source-line-color' }),
   })
   const css = compileRules([[[condition('.Cluster')], target, source]])
   expect(css).toContain('--target-color: var(--source-color, red);')
   expect(css).toContain('--target-soft-color: var(--source-soft-color, pink);')
   expect(css).toContain('--target-strong-color: var(--source-strong-color, maroon);')
-  expect(css).toContain('--target-foreground-color: var(--source-foreground-color, yellow);')
+  expect(css).toContain('--target-content-color: var(--source-content-color, yellow);')
   expect(css).not.toContain('--source-line-color:')
   const plain = variable(undefined, { name: 'plain-color' })
   expect(compileRules([[[condition('.Plain')], plain, source]]))
@@ -282,17 +282,17 @@ test('五成员目标接收三成员来源时，只覆盖双方已有成员', ()
     default: variable('black', { name: 'partial-target-color' }),
     soft: variable('gray', { name: 'partial-target-soft-color' }),
     strong: variable('black', { name: 'partial-target-strong-color' }),
-    foreground: variable('white', { name: 'partial-target-foreground-color' }),
+    content: variable('white', { name: 'partial-target-content-color' }),
     line: variable('silver', { name: 'partial-target-line-color' }),
   })
   const source = variableCluster({
     default: variable('blue', { name: 'partial-source-color' }),
-    foreground: variable('white', { name: 'partial-source-foreground-color' }),
+    content: variable('white', { name: 'partial-source-content-color' }),
     line: variable('navy', { name: 'partial-source-line-color' }),
   })
   const css = compileRules([[[condition('.Partial')], target, source]])
   expect(css).toContain('--partial-target-color: var(--partial-source-color, blue);')
-  expect(css).toContain('--partial-target-foreground-color: var(--partial-source-foreground-color, white);')
+  expect(css).toContain('--partial-target-content-color: var(--partial-source-content-color, white);')
   expect(css).toContain('--partial-target-line-color: var(--partial-source-line-color, navy);')
   expect(css).not.toContain('--partial-target-soft-color:')
   expect(css).not.toContain('--partial-target-strong-color:')

@@ -5,15 +5,15 @@ import { valueList } from '../contents/atom-creators/list'
 import { $backgroundColor, $color } from '../keys/color'
 import { $boxShadow } from '../keys/box-shadow'
 
-/** 前景与背景颜色配置。 */
+/** 内容色与背景颜色配置。 */
 export interface ColorMixinOptions {
-  foreground?: ValueInput
+  content?: ValueInput
   background?: ValueInput
 }
 
 /** Mixin：主体颜色。 */
 export const color = (options: ColorMixinOptions = {}): Declarations => [
-  [$color, options.foreground],
+  [$color, options.content],
   [$backgroundColor, options.background],
 ]
 

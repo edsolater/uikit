@@ -78,20 +78,20 @@ test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用
     default: variable('1px', { name: 'cluster-target-size' }),
     soft: variable('2px', { name: 'cluster-target-soft-size' }),
     strong: variable('3px', { name: 'cluster-target-strong-size' }),
-    foreground: variable('black', { name: 'cluster-target-foreground-color' }),
+    content: variable('black', { name: 'cluster-target-content-color' }),
   })
   const source = variableCluster({
     default: variable('10px', { name: 'cluster-source-size' }),
     soft: variable('20px', { name: 'cluster-source-soft-size', states: { chainHover: '25px' } }),
     strong: variable('30px', { name: 'cluster-source-strong-size' }),
-    foreground: variable('red', { name: 'cluster-source-foreground-color' }),
+    content: variable('red', { name: 'cluster-source-content-color' }),
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([
     [[condition('.ClusterConsumer')], 'width', target],
     [[condition('.ClusterConsumer')], 'height', target('soft')],
     [[condition('.ClusterConsumer')], 'margin-left', target('strong')],
-    [[condition('.ClusterConsumer')], 'color', target('foreground')],
+    [[condition('.ClusterConsumer')], 'color', target('content')],
     [[condition('.ClusterLocal')], undefined, [[[condition('& > .ClusterConsumer')], target, source]]],
   ])
   const parent = document.body.appendChild(document.createElement('div'))

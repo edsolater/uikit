@@ -12,7 +12,16 @@ export type { StateCondition } from './pieces/state-conditions'
 export * from './value'
 export * from './declaration'
 export { rule, rules } from './rule'
-export type { Rule, Rules, RuleValue, RuleHandle, RulesHandle, DeclarationItem, DeclarationGroup, Declarations } from './rule'
+export type {
+  Rule,
+  Rules,
+  RuleValue,
+  RuleHandle,
+  RulesHandle,
+  DeclarationItem,
+  DeclarationGroup,
+  Declarations,
+} from './rule'
 export type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 export type { JSSContentNode } from './compiler/style-nodes-to-content-nodes/node-compilation'
 export type { ASTController } from './compiler/ast-controller'
@@ -30,7 +39,12 @@ export * from './pieces/contents/atom-creators/animation'
 export { modify } from './variable-modify'
 export type { ModifyProtocol, ModifyTargetProtocol, ExpressionModification } from './variable-modify'
 export { modification } from './modification'
-export type { Modification, ColorModificationDetail, ColorChannelModification, ColorModificationContent } from './modification'
+export type {
+  Modification,
+  ColorModificationDetail,
+  ColorChannelModification,
+  ColorModificationContent,
+} from './modification'
 export { relativeOKLCH } from './pieces/contents/functions/relative-oklch'
 export { add, multiply } from './pieces/contents/functions/calc'
 export { oklch } from './pieces/contents/functions/oklch'
@@ -44,11 +58,46 @@ export { whenHover, whenActive, whenDisabled } from './pieces/conditions/interac
 export { $borderRadius } from './pieces/keys/border'
 export { $backgroundColor } from './pieces/keys/color'
 export { subtle, pill } from './pieces/contents/atoms/radius'
-export { spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin } from './pieces/contents/atoms/space'
-export { surfaceColor, foregroundColor } from './pieces/roles/color'
-export { interactiveColor, interactiveColors, badColor, badColors, toneColor, toneColors, foregroundColorInteractive, highlightColor, highlightColors, surfaceColorInteractive } from './pieces/contents/atoms/color/colors'
+export {
+  spaceSmall,
+  spaceNormal,
+  spaceMedium,
+  spaceLarge,
+  spaceExtraLarge,
+  spaceWide,
+  spaceWidest,
+  boundaryWidthThin,
+} from './pieces/contents/atoms/space'
+export { surfaceColor, contentColor } from './pieces/roles/color'
+export {
+  globalSurfaceColor,
+  globalContentColor,
+  globalCanvasColor,
+  interactiveColor,
+  interactiveColors,
+  badColor,
+  badColors,
+  toneColor,
+  toneColors,
+  highlightColor,
+  highlightColors,
+  surfaceColorInteractive,
+} from './pieces/contents/atoms/color/colors'
 export { shadowFlat, shadowLow, shadowRaised, shadowElevated, shadowInteractive } from './pieces/contents/atoms/shadow'
 export { $cursor } from './pieces/keys/interaction'
 export { colorMix } from './pieces/contents/functions/color-mix'
-export { controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge } from './pieces/contents/atoms/size'
-export { bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge } from './pieces/contents/atoms/font'
+export { interactiveColorStates } from './pieces/contents/atoms/color/ui-variable-structure'
+export {
+  controlSizeSmall,
+  controlSizeNormal,
+  controlSizeLarge,
+  controlSizeExtraLarge,
+} from './pieces/contents/atoms/size'
+export {
+  bold,
+  singleLine,
+  textSizeNormal,
+  textSizeLarge,
+  textSizeExtraLarge,
+  textSizeExtraExtraLarge,
+} from './pieces/contents/atoms/font'

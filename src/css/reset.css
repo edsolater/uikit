@@ -80,7 +80,7 @@
     /* svb 是 small viewport block，能避开移动端地址栏伸缩导致的 100vh 抖动。 */
     min-block-size: 100svb;
 
-    /* 优先使用 UIKit 主题前景色；单独引入 reset 时回退到系统文本色。 */
+    /* 优先使用 UIKit 主题内容色；单独引入 reset 时回退到系统文本色。 */
     color: var(--color-fg, CanvasText);
 
     /* 优先使用 UIKit 主题画布色；单独引入 reset 时回退到系统画布色。 */

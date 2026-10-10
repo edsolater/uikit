@@ -19,7 +19,7 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 `oklch({ lightness, chroma, hue, alpha })` 返回持有原始通道的 ExpressionValue，输出时生成普通颜色文本。`Modification<Detail, Type>` 是通用变化定义，持有 type/name/detail 及声明内容，不继承颜色材料；通用构造按 type 选择私有转译策略，名称和声明生命周期共用。Color 的参数、材料形状与源无关转译集中在文件后部，作为当前策略成员；加入其他领域时扩展对应描述和策略，不改通用对象。[modification.ts](modification.ts) 通过单个配置保存 `name`、`type: 'color'` 与 `detail`，显式 name 使用完整 CSS 自定义属性名（例如 `--change`），内置转译在配方编译时用 l/c/h/alpha 表达式执行通道回调，输出与来源无关的通道配方。固定值设定通道，未指定通道保留来源；构造时不执行回调。Modification 持有 Declare、Adjust、Modify 所需的自然材料，可通过 `declare(change)` 独立声明，不需要 Variable 包装或独立 Adapter 层。`relativeOKLCH(source, channels)` 只组织来源与通道内容，不解释变化。
 
-[colors.ts](pieces/contents/atoms/color/colors.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；私有 `createColorModificationByDiff` 保存两份材料的通道差值回调，通过 Modification 入口构造变化。交互、柔和底色和线色直接描述变化，不先修改材料再回推差值。
+[ui-color-structure.ts](pieces/contents/atoms/color/ui-color-structure.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；颜色族生成器提供浅底与边线透明度默认值。交互、高亮、柔和底色和线色通过 Modification 直接描述变化，保留来源 Variable 的当前颜色与局部覆盖。
 
 [declaration.ts](declaration.ts) 的 Declare 协议用 FNKit 的 DataShape 描述 `key/content` 材料形状，`declare` 通过 `matchShape` 识别并建立声明。[variable.ts](variable.ts) 的 Variable 投影自身已有的声明目标、默认内容、状态和注册事实，不承担外部操作。Adjust、Modify 的使用端直接读取双方材料，组织绑定或条件修改；对象无需认识协议，也无需协议登记、品牌或操作方法，参与能力不以构造来源决定。
 
@@ -104,9 +104,11 @@ Style System 是抽象层，包含可复用碎片和面向组件的通用定义�
 
 `colors.ts` 中的 `xxxColor` 是单个 Variable，`xxxColors` 是 VariableCluster。`baseUIColorStructure` 按基础色、透明度和用途配方生成成员结构，族定义再调用 `variableCluster` 聚合；配色决定留在配置处，生成器负责成员的派生、命名与创建。
 
+`ui-variable-structure.ts` 的 `interactiveColorStates` 按明度、彩度响应倍率生成单个颜色的默认值与交互状态配方，定义端再显式调用 `variable` 创建变量。
+
 [Button.style.ts](../components/kits/Button/Button.style.ts) 同时定义公开的色源、画布、背景强度控制点与业务规则。控制点以 export 定义，组件入口导出同一 Variable 对象，样式直接消费。色源与画布支持局部 declare，强度支持 declare／modify。底层工具提供通用操作语义，业务规则决定分类如何选择材料与加入贡献；专属 opacity 已退出，禁用淡化复用 clickable 默认策略。当前控制仍通过 Rules 登记与应用挂载执行，未实现运行时变值自动插入 CSS。
 
-Button 的背景来源与画布由分类选择，强度 Variable 持有状态，bare／solid 的贡献通过既有 modify 组合。tone 选择成员材料，前景直接声明共享角色；组件不登记逐状态消费 Rule，也不登记 variant×tone 交集配方。验收关注退场、突出、层次和状态反馈，旧实现的混色系数不作为约束。
+Button 的背景来源与画布由分类选择，强度 Variable 持有状态，bare／solid 的贡献通过既有 modify 组合。tone 选择成员材料，内容色直接声明共享角色；组件不登记逐状态消费 Rule，也不登记 variant×tone 交集配方。验收关注退场、突出、层次和状态反馈，旧实现的混色系数不作为约束。
 
 Button 静态导入自身样式；Example、Storybook 和缩略图入口在 render 前统一挂载。懒加载样式仍由应用样式清单负责提前登记。
 

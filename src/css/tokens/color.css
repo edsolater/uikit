@@ -10,11 +10,11 @@
 @import '../color-utils.css';
 
 /*
- * --foreground-on：根据背景色推导可读前景色。
+ * --content-on：根据背景色推导可读内容色。
  * 参数：(<color>)。
- * 示例：color: --foreground-on(var(--color-brand))。
+ * 示例：color: --content-on(var(--color-brand))。
  */
-@function --foreground-on(--color <color>) returns <color> {
+@function --content-on(--color <color>) returns <color> {
   result: --color-mix(contrast-color(var(--color)), 8, var(--color), 2);
 }
 
@@ -153,7 +153,7 @@
      * Structure：基础视觉语义。
      * canvas 是页面或应用的最底层画布，用于 body 这类全局背景。
      * surface 是组件、卡片、面板和局部区块的干净承载面。
-     * fg 是前景内容，line 是边界线。
+     * fg 是内容，line 是边界线。
      */
     --color-canvas: var(--dye-neutral-1);
     --color-surface: var(--dye-neutral-0);
@@ -185,7 +185,7 @@
     --color-brand: var(--dye-brand);
     --color-brand-soft: --color-adjust(var(--dye-brand), opacity, 14%);
     --color-brand-strong: --color-adjust(var(--dye-brand), darker, 6%, vivid, 0.02);
-    --color-brand-fg: --foreground-on(var(--color-brand));
+    --color-brand-fg: --content-on(var(--color-brand));
     --color-brand-line: --color-adjust(var(--dye-brand), opacity, 44%);
 
     /*
@@ -228,7 +228,7 @@
      */
     --color-good: var(--dye-good);
     --color-good-soft: --color-adjust(var(--dye-good), opacity, 14%);
-    --color-good-fg: --foreground-on(var(--color-good));
+    --color-good-fg: --content-on(var(--color-good));
     --color-good-line: --color-adjust(var(--dye-good), opacity, 44%);
 
     --color-bad: var(--dye-bad);
@@ -238,12 +238,12 @@
 
     --color-warn: var(--dye-warn);
     --color-warn-soft: --color-adjust(var(--dye-warn), opacity, 14%);
-    --color-warn-fg: --foreground-on(var(--color-warn));
+    --color-warn-fg: --content-on(var(--color-warn));
     --color-warn-line: --color-adjust(var(--dye-warn), opacity, 44%);
 
     --color-info: var(--dye-info);
     --color-info-soft: --color-adjust(var(--dye-info), opacity, 14%);
-    --color-info-fg: --foreground-on(var(--color-info));
+    --color-info-fg: --content-on(var(--color-info));
     --color-info-line: --color-adjust(var(--dye-info), opacity, 44%);
   }
 

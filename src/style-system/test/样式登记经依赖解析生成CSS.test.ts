@@ -50,7 +50,7 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(motionCSS).not.toContain('--line-color:')
   const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor]])
   expect(lineCSS).toContain('border-color: var(--line-color, color-mix(')
-  expect(lineCSS).toContain('var(--foreground-color,')
+  expect(lineCSS).toContain('var(--global-content-color,')
   expect(lineCSS).not.toContain(':root')
   expect(lineCSS).not.toContain('--motion-scale-ratio:')
 })
@@ -155,9 +155,9 @@ test('同址声明在末项合并，删除句柄不影响其他登记', () => {
 })
 
 test('同一内容重复登记，旧句柄不能删除新登记', () => {
-  const foreground = value('red')
-  const handle = keep(rule('.example', 'color', foreground))
-  keep(rule('.example', 'color', foreground))
+  const content = value('red')
+  const handle = keep(rule('.example', 'color', content))
+  keep(rule('.example', 'color', content))
   handle.remove()
   expect(compileCSS()).toContain('color: red')
 })
@@ -171,9 +171,9 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
 })
 
 test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
-  const foreground = variable('black', { name: 'local-foreground' })
-  keep(rules('.example', [[foreground, 'red'], [$color, foreground]]))
-  expect(compileCSS()).toContain('--local-foreground: red;\ncolor: var(--local-foreground, black);')
+  const content = variable('black', { name: 'local-content' })
+  keep(rules('.example', [[content, 'red'], [$color, content]]))
+  expect(compileCSS()).toContain('--local-content: red;\ncolor: var(--local-content, black);')
 })
 
 test('声明名称指向明确属性，不猜测未知名称', () => {

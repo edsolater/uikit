@@ -12,7 +12,7 @@
     --sys-shadow-scale: 1;
 
     /*
-     * Shadow / Backdrop：阴影和遮罩是物理材料，不等同于当前前景 ink。
+     * Shadow / Backdrop：阴影和遮罩是物理材料，不等同于当前内容色 ink。
      * 亮色模式用低透明黑色避免灰雾。
      */
     --color-shadow: rgb(0 0 0 / 4%);

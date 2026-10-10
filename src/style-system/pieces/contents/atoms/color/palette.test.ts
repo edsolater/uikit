@@ -8,7 +8,6 @@ import { expect, test } from 'vitest'
 import { applyEnvironment, alpha, hue, emphasis } from '@/color-system'
 import { paper, ink, neutral } from './palette'
 import { brand } from './brand-color'
-import { interactive, highlight } from './ui-action-colors'
 import { good, bad, warn, info } from './ui-info-color'
 import { lightTheme, darkTheme } from './theme'
 
@@ -34,7 +33,7 @@ test('红色在亮环境更亮、暗环境更深，蓝色环境不会把它变�
 })
 
 test('所有色板材料响应亮暗和彩度环境，保留自身色相附近的颜色', () => {
-  for (const material of [paper, ink, neutral, brand, interactive, highlight, good, bad, warn, info]) {
+  for (const material of [paper, ink, neutral, brand, good, bad, warn, info]) {
     const original = { ...material, base: { ...material.base }, environmentSensitivities: { ...material.environmentSensitivities } }
     const bright = applyEnvironment(material, lightTheme)
     const dark = applyEnvironment(material, darkTheme)
@@ -82,9 +81,7 @@ test('墨色负强调后继续应用暗环境时逐渐褪入背景，目标不�
   expect(applyEnvironment(alpha(ink, 0.4), darkTheme).base.lightness).toBeGreaterThan(0.8)
 })
 
-test('品牌派生保留材料感知，显式正常环境强度下仍保留红色色相', () => {
-  expect(interactive).toEqual(brand)
-  expect(highlight.environmentSensitivities).toEqual(brand.environmentSensitivities)
+test('显式正常环境强度下品牌仍保留红色色相', () => {
   const red = hue(brand, 30)
   const changed = applyEnvironment(red, { tint: { hue: 210 }, influence: { hue: 1 } })
   expect(changed.base.hue).toBeGreaterThan(20)

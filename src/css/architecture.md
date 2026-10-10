@@ -69,7 +69,7 @@ var(--color-surface)
 var(--color-surface-low)
 var(--color-line)
 var(--color-brand)
---foreground-on(var(--color-brand))
+--content-on(var(--color-brand))
 
 var(--space-4)
 var(--size-3)

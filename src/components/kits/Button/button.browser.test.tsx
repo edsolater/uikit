@@ -1,5 +1,5 @@
 /** 保留旧样式 DOM 协议的视觉反例；新 Button API 的 DOM 描述单独验证，样式尚未迁移。 */
-import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, surfaceColor, foregroundColor, interactiveColors, badColors, toneColor, toneColors, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
+import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, surfaceColor, contentColor, interactiveColors, badColors, toneColor, toneColors, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
@@ -9,6 +9,7 @@ import { Button, type ButtonProps, type ButtonAppearance } from './Button'
 import { buttonMapping } from './Button.mapping'
 import { buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength } from './Button.style'
 import './Button.style'
+import { inkColor } from '@/style-system/pieces/contents/atoms/color/palette'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
 
@@ -63,7 +64,7 @@ function expectSameAppearance(actual: Record<string, string>, expected: Record<s
   }
 }
 
-/** 背景与前景分别比较，避免混色空间标签导致同色误判。 */
+/** 背景与内容色分别比较，避免混色空间标签导致同色误判。 */
 function expectSameColors(actual: string[], expected: string[]) {
   actual.forEach((content, index) => expectSameColor(content, expected[index]))
 }
@@ -79,6 +80,28 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test('普通按钮沿用局部墨色，嵌套语气内容色不改变其默认来源', async () => {
+    const parent = document.body.appendChild(document.createElement('div'))
+    parent.className = 'Button'
+    parent.dataset.tone = 'danger'
+    parent.style.setProperty(`--${inkColor.name}`, 'rgb(78, 90, 123)')
+    const button = parent.appendChild(document.createElement('button'))
+    button.className = 'Button'
+    button.textContent = '普通按钮'
+    button.style.transition = 'none'
+    mountButtonStyles()
+    expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
+    await userEvent.hover(button)
+    expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
+    button.style.setProperty(`--${inkColor.name}`, 'rgb(123, 90, 78)')
+    button.focus()
+    await userEvent.keyboard('[Space>]')
+    try {
+      expect(button.matches(':active')).toBe(true)
+      expectSameColor(getComputedStyle(button).color, 'rgb(123, 90, 78)')
+    } finally { await userEvent.keyboard('[/Space]') }
+  })
+
   test('新组件描述外观、强调与语气，动态强调退出后不输出旧 variant', () => {
     const emphasis = createState<'soft' | 'strong' | undefined>('soft')
     const selectedAppearance = createState<ButtonAppearance | undefined>('filled')
@@ -182,12 +205,12 @@ describe('Button styles', () => {
 
   test.each([undefined, 'bare', 'solid'] as const)('局部语气成员在状态参数消费中保持隔离并退出恢复：%s', async (variant) => {
     const palettes = [
-      { tone: 'rgb(56, 120, 180)', soft: 'rgb(12, 80, 140)', strong: 'rgb(34, 100, 160)', foreground: 'rgb(78, 140, 200)', line: 'rgb(90, 20, 160)' },
-      { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', foreground: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
+      { tone: 'rgb(56, 120, 180)', soft: 'rgb(12, 80, 140)', strong: 'rgb(34, 100, 160)', content: 'rgb(78, 140, 200)', line: 'rgb(90, 20, 160)' },
+      { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', content: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
     ]
     for (const [index, palette] of palettes.entries()) handles.push(rules(`.Button[data-local-tone="${index}"]`, [
       [toneColor, palette.tone], [toneColors('soft'), palette.soft],
-      [toneColors('strong'), palette.strong], [toneColors('foreground'), palette.foreground], [toneColors('line'), palette.line],
+      [toneColors('strong'), palette.strong], [toneColors('content'), palette.content], [toneColors('line'), palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -197,7 +220,7 @@ describe('Button styles', () => {
     for (const [index, button] of buttons.entries()) {
       button.style.transition = 'none'
       const normal = appearance(button)
-      expectSameColor(normal.color, variant === 'solid' ? palettes[index].foreground : palettes[index].strong)
+      expectSameColor(normal.color, variant === 'solid' ? palettes[index].content : palettes[index].strong)
       if (variant === 'solid') expectSameColor(normal['background-color'], palettes[index].tone)
       if (variant === 'bare') expectSameColor(normal['background-color'], 'transparent')
       button.focus()
@@ -236,8 +259,8 @@ describe('Button styles', () => {
 
   test.each([undefined, 'bare', 'solid'] as const)('统一禁用降低整体声量并保留局部角色和恢复：%s', async (variant) => {
     const surface = 'rgb(12, 34, 56)'
-    const foreground = 'rgb(78, 90, 123)'
-    handles.push(rules('.Button[data-local-role]', [declare(surfaceColor, surface), declare(foregroundColor, foreground)]))
+    const content = 'rgb(78, 90, 123)'
+    handles.push(rules('.Button[data-local-role]', [declare(surfaceColor, surface), declare(contentColor, content)]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <button class="Button" data-variant={variant} data-tone="danger" data-local-role>局部禁用</button>, host)
@@ -245,7 +268,7 @@ describe('Button styles', () => {
     button.style.transition = 'none'
     const read = () => [getComputedStyle(button).backgroundColor, getComputedStyle(button).color]
     const normal = read()
-    expectSameColors(normal, [surface, foreground])
+    expectSameColors(normal, [surface, content])
     button.disabled = true
     await userEvent.hover(button)
     expectSameColors(read(), normal)

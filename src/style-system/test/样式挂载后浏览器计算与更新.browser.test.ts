@@ -349,7 +349,7 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
 
 test('动效保留根求值，分隔线按本地文字变量实时派生', async () => {
   const session = await cdp() as CDPSession
-  document.documentElement.style.setProperty('--foreground-color', 'blue')
+  document.documentElement.style.setProperty('--global-content-color', 'blue')
   element.style.transitionProperty = 'opacity'
   handles.push(rule('.example', 'transition-duration', durationFast))
   handles.push(rule('.example', 'border-color', lineColor))
@@ -362,7 +362,7 @@ test('动效保留根求值，分隔线按本地文字变量实时派生', async
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
     element.style.setProperty('--motion-scale-ratio', '2')
-    element.style.setProperty('--foreground-color', 'red')
+    element.style.setProperty('--global-content-color', 'red')
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
     expect(getComputedStyle(element).borderTopColor).not.toBe(originalLine)
     await session.send('Emulation.setEmulatedMedia', {
@@ -371,7 +371,7 @@ test('动效保留根求值，分隔线按本地文字变量实时派生', async
     expect(getComputedStyle(element).transitionDuration).toBe('0s')
     expect(style.textContent).toBe(committed)
   } finally {
-    document.documentElement.style.removeProperty('--foreground-color')
+    document.documentElement.style.removeProperty('--global-content-color')
     await session.send('Emulation.setEmulatedMedia', { features: [] })
   }
 })

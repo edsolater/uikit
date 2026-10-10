@@ -4,11 +4,56 @@
 
 组件自身的选择条件留在样式定义端，可复用效果交给 Style System。
 */
-import { declare, modify, rules, add, variable, innerText, contentLayout, size, boundary, color, elevation, clickable, surfaceColor, foregroundColor, $cursor, colorMix, foregroundColorInteractive, interactiveColors, highlightColors, badColors, toneColor, toneColors, surfaceColorInteractive, pill, spaceSmall, spaceNormal, spaceMedium, spaceLarge, spaceExtraLarge, spaceWide, spaceWidest, boundaryWidthThin, controlSizeSmall, controlSizeNormal, controlSizeLarge, controlSizeExtraLarge, bold, singleLine, textSizeNormal, textSizeLarge, textSizeExtraLarge, textSizeExtraExtraLarge, shadowFlat, shadowRaised, shadowElevated, shadowInteractive } from '@/style-system'
+import {
+  declare,
+  modify,
+  rules,
+  add,
+  variable,
+  innerText,
+  contentLayout,
+  size,
+  boundary,
+  color,
+  elevation,
+  clickable,
+  surfaceColor,
+  contentColor,
+  $cursor,
+  colorMix,
+  interactiveColors,
+  highlightColors,
+  badColors,
+  toneColor,
+  toneColors,
+  surfaceColorInteractive,
+  pill,
+  spaceSmall,
+  spaceNormal,
+  spaceMedium,
+  spaceLarge,
+  spaceExtraLarge,
+  spaceWide,
+  spaceWidest,
+  boundaryWidthThin,
+  controlSizeSmall,
+  controlSizeNormal,
+  controlSizeLarge,
+  controlSizeExtraLarge,
+  bold,
+  singleLine,
+  textSizeNormal,
+  textSizeLarge,
+  textSizeExtraLarge,
+  textSizeExtraExtraLarge,
+  shadowFlat,
+  shadowRaised,
+  shadowElevated,
+  shadowInteractive,
+} from '@/style-system'
 import { Button } from './Button'
 
 const button = ['@layer uikit', `.${Button.name}`]
-
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
 export const buttonSurfaceSource = variable(toneColors('soft'), { name: 'button-surface-source' })
@@ -22,19 +67,18 @@ export const buttonSurfaceStrength = variable(0.18, {
   states: { hover: 0.28, active: 0.38 },
 })
 
-
 // 定义button的样式架构
 rules(button, [
   [toneColors, interactiveColors],
   declare(buttonSurfaceStrength),
   declare(surfaceColor, colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
-  declare(foregroundColor, foregroundColorInteractive),
+  declare(contentColor),
 
   innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
   contentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
   size({ minHeight: controlSizeNormal }),
   boundary({ border: [boundaryWidthThin, 'solid', 'transparent'], radius: pill, cornerShape: 'squircle' }),
-  color({ background: surfaceColor, foreground: foregroundColor }),
+  color({ background: surfaceColor, content: contentColor }),
   elevation(shadowInteractive),
 
   clickable(),
@@ -44,10 +88,8 @@ rules(button, [
 // tone 动作语气
 // =============================================================================
 
-
-
 // tone 只选择材料；声量与状态沿用各自的独立效果。
-rules([...button, '&[data-tone]'], [declare(foregroundColor, toneColors('strong'))])
+rules([...button, '&[data-tone]'], [declare(contentColor, toneColors('strong'))])
 rules([...button, '&[data-tone="accent"]'], [[toneColors, highlightColors]])
 rules([...button, '&[data-tone="danger"]'], [[toneColors, badColors]])
 
@@ -62,12 +104,15 @@ const bareStrength = variable(-0.18, {
 })
 const bareButton = [...button, '&[data-variant="bare"]']
 rules(bareButton, [
-  modify(buttonSurfaceStrength, { type: 'expression', detail: currentExpression => add(currentExpression, bareStrength) }),
+  modify(buttonSurfaceStrength, {
+    type: 'expression',
+    detail: (currentExpression) => add(currentExpression, bareStrength),
+  }),
   [buttonSurfaceCanvas, 'transparent'],
   elevation(shadowFlat),
 ])
 
-// solid 使用语气实底与对应前景，交互时露出中性画布形成层次。
+// solid 使用语气实底与对应内容色，交互时露出中性画布形成层次。
 const solidStrength = variable(0.82, {
   name: 'button-solid-strength',
   states: { hover: 0.62, active: 0.42 },
@@ -78,9 +123,12 @@ const shadowSolid = variable(shadowRaised, {
 })
 const solidButton = [...button, '&[data-variant="solid"]']
 rules(solidButton, [
-  modify(buttonSurfaceStrength, { type: 'expression', detail: currentExpression => add(currentExpression, solidStrength) }),
+  modify(buttonSurfaceStrength, {
+    type: 'expression',
+    detail: (currentExpression) => add(currentExpression, solidStrength),
+  }),
   [buttonSurfaceSource, toneColor],
-  declare(foregroundColor, toneColors('foreground')),
+  declare(contentColor, toneColors('content')),
   elevation(shadowSolid),
 ])
 

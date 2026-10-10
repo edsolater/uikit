@@ -1,7 +1,7 @@
 import type { ColorMaterial } from '@/color-system'
 import { variableCluster } from '@/style-system/variable-cluster'
 import { paperColor } from './palette'
-import { toJSSColor, readableForeground, baseUIColorStructure } from './ui-color-structure'
+import { toJSSColor, readableContent, baseUIColorStructure } from './ui-color-structure'
 
 /** 跨品牌稳定的状态材料；不在 CSS token 中保存颜色来源。 */
 
@@ -64,9 +64,7 @@ export const goodColor = toJSSColor(good, 'good-color')
 export const goodColors = variableCluster(
   baseUIColorStructure({
     base: goodColor,
-    softAlpha: 0.14,
-    lineAlpha: 0.44,
-    foreground: readableForeground(goodColor),
+    content: readableContent(goodColor),
   }),
 )
 
@@ -74,9 +72,7 @@ export const badColor = toJSSColor(bad, 'bad-color')
 export const badColors = variableCluster(
   baseUIColorStructure({
     base: badColor,
-    softAlpha: 0.14,
-    lineAlpha: 0.44,
-    foreground: paperColor,
+    content: paperColor,
   }),
 )
 
@@ -84,9 +80,7 @@ export const warnColor = toJSSColor(warn, 'warn-color')
 export const warnColors = variableCluster(
   baseUIColorStructure({
     base: warnColor,
-    softAlpha: 0.14,
-    lineAlpha: 0.44,
-    foreground: readableForeground(warnColor),
+    content: readableContent(warnColor),
   }),
 )
 
@@ -94,8 +88,6 @@ export const infoColor = toJSSColor(info, 'info-color')
 export const infoColors = variableCluster(
   baseUIColorStructure({
     base: infoColor,
-    softAlpha: 0.14,
-    lineAlpha: 0.44,
-    foreground: readableForeground(infoColor),
+    content: readableContent(infoColor),
   }),
 )

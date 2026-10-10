@@ -4,10 +4,12 @@ import { userEvent } from 'vitest/browser'
 import { color } from '../pieces/mixins/appearance'
 import { compileCSS } from '../css-root'
 import { rule, rules, type RulesHandle } from '../rule'
-import { brandColor, canvasColor, neutralColor, paperColor, inkColor, surfaceColor, foregroundColor, surfaceColorInteractive, foregroundColorInteractive, lineColor } from '../pieces/contents/atoms/color/colors'
-import { interactiveColor, highlightColor } from '../pieces/contents/atoms/color/ui-action-colors'
+import { brandColor, globalCanvasColor, neutralColor, paperColor, inkColor, globalSurfaceColor, globalContentColor, surfaceColorInteractive, lineColor } from '../pieces/contents/atoms/color/colors'
+import { interactiveColor, highlightColor, interactiveColors, highlightColors } from '../pieces/contents/atoms/color/ui-action-colors'
 import { goodColors, badColors, warnColors, infoColors } from '../pieces/contents/atoms/color/ui-info-color'
 import { paper, ink, neutral } from '../pieces/contents/atoms/color/palette'
+import { interactiveColorStates, variable, variableCluster } from '@/style-system'
+import { baseUIColorStructure } from '../pieces/contents/atoms/color/ui-color-structure'
 
 const handles: RulesHandle[] = []
 
@@ -43,6 +45,33 @@ function expectSameColor(actual: string, expected: string) {
   left.forEach((amount, index) => expect(amount).toBeCloseTo(right[index], 4))
 }
 
+test.each([
+  { lightnessResponse: 0, chromaResponse: 0 },
+  { lightnessResponse: 0, chromaResponse: 1 },
+  { lightnessResponse: 2, chromaResponse: 0.5 },
+])('交互颜色模板按明度 $lightnessResponse、彩度 $chromaResponse 倍率响应当前来源', async ({ lightnessResponse, chromaResponse }) => {
+  const source = variable('oklch(0.6 0.15 140 / 0.4)', 'response-source')
+  const color = variable(interactiveColorStates({ base: source, lightnessResponse, chromaResponse }), 'response-color')
+  handles.push(rule('.response-swatch', 'color', color))
+  const style = mountStyles()
+  const originalCSS = style.textContent
+  const button = document.body.appendChild(document.createElement('button'))
+  button.className = 'response-swatch'
+  button.textContent = '响应倍率'
+  expectSameColor(getComputedStyle(button).color, 'oklch(0.6 0.15 140 / 0.4)')
+  await userEvent.hover(button)
+  expectSameColor(getComputedStyle(button).color, `oklch(${0.6 - 0.04 * lightnessResponse} ${0.15 + 0.01 * chromaResponse} 140 / 0.4)`)
+  button.style.setProperty(`--${source.name}`, 'oklch(0.8 0.2 30 / 0.6)')
+  expectSameColor(getComputedStyle(button).color, `oklch(${0.8 - 0.04 * lightnessResponse} ${0.2 + 0.01 * chromaResponse} 30 / 0.6)`)
+  button.focus()
+  await userEvent.keyboard('[Space>]')
+  try {
+    expect(button.matches(':active')).toBe(true)
+    expectSameColor(getComputedStyle(button).color, `oklch(${0.8 - 0.08 * lightnessResponse} ${0.2 - 0.01 * chromaResponse} 30 / 0.6)`)
+  } finally { await userEvent.keyboard('[/Space]') }
+  expect(style.textContent).toBe(originalCSS)
+})
+
 test('不加载 color.css 也能渲染纸色、墨色和中性材料', () => {
   const sources = [paperColor, inkColor, neutralColor]
   const materials = [paper, ink, neutral]
@@ -63,10 +92,10 @@ test('不加载 color.css 也能渲染纸色、墨色和中性材料', () => {
 
 test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后代', () => {
   const background = paperColor
-  const foreground = inkColor
-  handles.push(rules('.sample', [color({ background, foreground })]))
+  const content = inkColor
+  handles.push(rules('.sample', [color({ background, content })]))
   handles.push(rule('.local', background, 'rgb(1, 2, 3)'))
-  handles.push(rule('.local', foreground, 'rgb(4, 5, 6)'))
+  handles.push(rule('.local', content, 'rgb(4, 5, 6)'))
   mountStyles()
   const local = document.body.appendChild(document.createElement('div'))
   local.className = 'sample local'
@@ -83,10 +112,10 @@ test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后�
 })
 
 test('纸色与品牌变量局部修改后，用途色和品牌变化自动更新而不重编译', () => {
-  handles.push(rules('.semantic', [color({ foreground: interactiveColor, background: surfaceColor })]))
+  handles.push(rules('.semantic', [color({ content: interactiveColor, background: globalSurfaceColor })]))
   handles.push(rule('.highlight', 'color', highlightColor))
-  handles.push(rule('.canvas', 'background-color', canvasColor))
-  handles.push(rule('.text', 'color', foregroundColor))
+  handles.push(rule('.canvas', 'background-color', globalCanvasColor))
+  handles.push(rule('.text', 'color', globalContentColor))
   const style = mountStyles()
   const originalCSS = style.textContent
   const sample = document.body.appendChild(document.createElement('div'))
@@ -99,16 +128,16 @@ test('纸色与品牌变量局部修改后，用途色和品牌变化自动更�
   text.className = 'text'
   const neighbor = document.body.appendChild(document.createElement('div'))
   neighbor.className = 'semantic'
-  const before = { surface: getComputedStyle(sample).backgroundColor, highlight: getComputedStyle(highlight).color }
+  const before = { surface: getComputedStyle(sample).backgroundColor }
   expect(getComputedStyle(sample).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
-  sample.style.setProperty(`--${brandColor.name}`, 'rgb(10, 20, 30)')
+  sample.style.setProperty(`--${brandColor.name}`, 'oklch(0.6 0.15 140 / 0.4)')
   sample.style.setProperty(`--${paperColor.name}`, 'rgb(240, 241, 242)')
-  expect(getComputedStyle(sample).color).toBe('rgb(10, 20, 30)')
-  expect(getComputedStyle(highlight).color).not.toBe(before.highlight)
+  expectSameColor(getComputedStyle(sample).color, 'oklch(0.6 0.15 140 / 0.4)')
+  expectSameColor(getComputedStyle(highlight).color, 'oklch(0.64 0.16 122 / 0.4)')
   expect(getComputedStyle(sample).backgroundColor).not.toBe(before.surface)
   expectSameColor(getComputedStyle(canvas).backgroundColor, 'rgb(240, 241, 242)')
   expect(getComputedStyle(text).color).not.toBe('rgba(0, 0, 0, 0)')
-  expect(getComputedStyle(neighbor).color).not.toBe('rgb(10, 20, 30)')
+  expect(getComputedStyle(neighbor).color).not.toBe(getComputedStyle(sample).color)
   expect(style.textContent).toBe(originalCSS)
 })
 
@@ -138,7 +167,7 @@ test('交互状态的品牌变化仍引用局部品牌变量', async () => {
 })
 
 test('交互用途色的状态派生保留局部纸色与墨色覆盖', async () => {
-  handles.push(rules('.interactive-purpose', [color({ background: surfaceColorInteractive, foreground: foregroundColorInteractive })]))
+  handles.push(rules('.interactive-purpose', [color({ background: surfaceColorInteractive, content: globalContentColor })]))
   const style = mountStyles()
   const originalCSS = style.textContent
   const button = document.body.appendChild(document.createElement('button'))
@@ -162,10 +191,10 @@ test('交互用途色的状态派生保留局部纸色与墨色覆盖', async ()
   expect(style.textContent).toBe(originalCSS)
 })
 
-test('状态基色及其前景与分隔用途在没有静态颜色 CSS 时有效渲染', () => {
+test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有效渲染', () => {
   const statuses = [goodColors, badColors, warnColors, infoColors]
   const samples = statuses.map((status, index) => {
-    handles.push(rules(`.status-${index}`, [color({ background: status('default'), foreground: status('foreground') })]))
+    handles.push(rules(`.status-${index}`, [color({ background: status('default'), content: status('content') })]))
     const sample = document.body.appendChild(document.createElement('div'))
     sample.className = `status-${index}`
     sample.textContent = '状态信息'
@@ -184,8 +213,30 @@ test('状态基色及其前景与分隔用途在没有静态颜色 CSS 时有效
   expect(getComputedStyle(separator).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
   for (const index of [0, 2, 3]) {
     samples[index].style.setProperty(`--${statuses[index].name}`, 'white')
-    const brightForeground = getComputedStyle(samples[index]).color
+    const brightContent = getComputedStyle(samples[index]).color
     samples[index].style.setProperty(`--${statuses[index].name}`, 'black')
-    expect(getComputedStyle(samples[index]).color).not.toBe(brightForeground)
+    expect(getComputedStyle(samples[index]).color).not.toBe(brightContent)
   }
+})
+
+test('颜色族透明度默认值与自定义值保留局部基色', () => {
+  const custom = variableCluster(baseUIColorStructure({
+    base: variable('oklch(0.6 0.15 140 / 0.6)', 'custom-color'),
+    content: inkColor, softAlpha: 0.2, lineAlpha: 0.7,
+  }))
+  const families = [interactiveColors, highlightColors, goodColors, badColors, warnColors, infoColors, custom]
+  const samples = families.map((family, index) => {
+    handles.push(rules(`.family-${index}`, [color({ background: family('soft'), content: family('line') })]))
+    const sample = document.body.appendChild(document.createElement('div'))
+    sample.className = `family-${index}`
+    sample.style.setProperty(`--${family.name}`, 'oklch(0.6 0.15 140 / 0.6)')
+    return sample
+  })
+  mountStyles()
+  samples.forEach((sample, index) => {
+    const softAlpha = index === families.length - 1 ? 0.2 : 0.14
+    const lineAlpha = index === families.length - 1 ? 0.7 : 0.44
+    expectSameColor(getComputedStyle(sample).backgroundColor, `oklch(0.6 0.15 140 / ${softAlpha})`)
+    expectSameColor(getComputedStyle(sample).color, `oklch(0.6 0.15 140 / ${lineAlpha})`)
+  })
 })
