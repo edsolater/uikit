@@ -22,7 +22,6 @@ import {
   $cursor,
   colorMix,
   interactiveColors,
-  highlightColors,
   badColors,
   toneColor,
   toneColors,
@@ -50,7 +49,9 @@ import {
   shadowRaised,
   shadowElevated,
   shadowInteractive,
+  disabledFade,
 } from '@/style-system'
+import { $opacity } from '@/style-system/pieces/keys/opacity'
 
 const button = ['@layer uikit', `.Button`]
 
@@ -64,6 +65,12 @@ export const buttonSurfaceCanvas = variable(surfaceColorInteractive, { name: 'bu
 export const buttonSurfaceStrength = variable(0.18, {
   name: 'button-surface-strength',
   states: { hover: 0.28, active: 0.38 },
+})
+
+/** 整体存在感的人工配方：普通 0.9，柔和 0.7，强调 1；禁用始终沿用统一淡化。 */
+const buttonOpacity = variable(0.9, {
+  name: 'button-opacity',
+  states: { disabled: disabledFade },
 })
 
 // 定义button的样式架构
@@ -82,7 +89,7 @@ rules(button, [
   color({ background: surfaceColor, content: contentColor }),
   elevation(shadowInteractive),
 
-  clickable(),
+  clickable({ opacity: buttonOpacity }),
 ])
 
 // =============================================================================
@@ -91,47 +98,57 @@ rules(button, [
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
 rules([...button, '&[data-tone]'], [declare(contentColor, toneColors('strong'))])
-rules([...button, '&[data-tone="accent"]'], [[toneColors, highlightColors]])
 rules([...button, '&[data-tone="danger"]'], [[toneColors, badColors]])
 
 // =============================================================================
-// variant 动作声量
+// appearance 外观形式
 // =============================================================================
 
-// bare 保留透明常态，悬停和按下只增加轻量语气反馈。
-const bareStrength = variable(-0.18, {
-  name: 'button-bare-strength',
+// outlined 保留浅底，并用当前语气的线色形成可见轮廓。
+rules([...button, '&[data-appearance="outlined"]'], [
+  boundary({ border: [boundaryWidthThin, 'solid', toneColors('line')] }),
+])
+
+// plain 保留透明常态与无边界，悬停和按下只增加轻量语气反馈。
+const plainStrength = variable(-0.18, {
+  name: 'button-plain-strength',
   states: { hover: -0.2, active: -0.24 },
 })
-const bareButton = [...button, '&[data-variant="bare"]']
-rules(bareButton, [
+const plainButton = [...button, '&[data-appearance="plain"]']
+rules(plainButton, [
   modify(buttonSurfaceStrength, {
     type: 'expression',
-    detail: (currentExpression) => add(currentExpression, bareStrength),
+    detail: (currentExpression) => add(currentExpression, plainStrength),
   }),
   [buttonSurfaceCanvas, 'transparent'],
   elevation(shadowFlat),
 ])
 
-// solid 使用语气实底与对应内容色，交互时露出中性画布形成层次。
-const solidStrength = variable(0.82, {
-  name: 'button-solid-strength',
+// filled 使用语气实底与对应内容色，交互时露出中性画布形成层次。
+const filledStrength = variable(0.82, {
+  name: 'button-filled-strength',
   states: { hover: 0.62, active: 0.42 },
 })
-const shadowSolid = variable(shadowRaised, {
-  name: 'button-shadow-solid',
+const shadowFilled = variable(shadowRaised, {
+  name: 'button-shadow-filled',
   states: { hover: shadowElevated, active: shadowFlat, disabled: shadowFlat },
 })
-const solidButton = [...button, '&[data-variant="solid"]']
-rules(solidButton, [
+const filledButton = [...button, '&[data-appearance="filled"]']
+rules(filledButton, [
   modify(buttonSurfaceStrength, {
     type: 'expression',
-    detail: (currentExpression) => add(currentExpression, solidStrength),
+    detail: (currentExpression) => add(currentExpression, filledStrength),
   }),
   [buttonSurfaceSource, toneColor],
   declare(contentColor, toneColors('content')),
-  elevation(shadowSolid),
+  elevation(shadowFilled),
 ])
+
+// emphasis 只调整整体存在感，不改变外观、语气或尺寸；禁用状态由 Variable 保持。
+const softOpacity = variable(0.7, { states: { disabled: disabledFade } })
+rules([...button, '&[data-emphasis="soft"]'], [[$opacity, softOpacity]])
+const strongOpacity = variable(1, { states: { disabled: disabledFade } })
+rules([...button, '&[data-emphasis="strong"]'], [[$opacity, strongOpacity]])
 
 // =============================================================================
 // size 物理尺寸

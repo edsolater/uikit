@@ -95,7 +95,7 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 ## 样式控制入口
 
-本轮仅迁移组件 API，Button.style.ts 与旧 CSS 未修改。旧样式仍通过 data-variant 选择外观，尚未消费 data-appearance 或 data-emphasis；appearance 与 emphasis 的新输出暂不驱动对应视觉变化。下述控制点与配方说明描述保留中的旧样式，不是新分类的视觉契约。
+Button.style.ts 消费 data-appearance、data-emphasis、data-tone 和 data-size。filled 使用填充背景，outlined 保留浅底及可见轮廓，plain 常态透明且无边界。soft、普通、strong 依次提高整颗按钮的存在感，文字和图形内容一起变化；强调不改变外观形式、语气或尺寸。当前视觉配方使用整体透明度 0.7、0.9、1，这些数值由组件样式定义，不属于 Props 固定契约。各档禁用时仍使用通用 disabledFade。
 
 Button 从组件及包入口公开三个 Variable，同一对象也由 Button 样式消费：
 
@@ -113,6 +113,6 @@ flowchart LR
   R --> CSS[编译与挂载 CSS]
 ```
 
-控制定义与分类组合都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 中；三个控制点以 export 定义，其他业务配方保持私有。相对修改遵守 Variable 的最近语义父定义契约；具体选择条件由调用方表达。内部分类贡献、阴影与光标没有因此成为新的公开控制点，整体禁用淡化复用通用 clickable。
+控制定义与分类组合都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 中；三个控制点以 export 定义，其他业务配方保持私有。相对修改遵守 Variable 的最近语义父定义契约；具体选择条件由调用方表达。内部分类贡献、阴影、光标与存在感材料没有因此成为新的公开控制点，常态透明度通过 clickable 的配置消费，禁用淡化复用通用 disabledFade。
 
 这些 Variable 已可用于 Rules 中的局部声明和组合。目前操作返回声明，由应用挂载 CSS；直接修改 JS 对象不会自动更新页面。未来动态控制沿用这些对象身份，本轮不增加自动插入 CSS 的运行机制。

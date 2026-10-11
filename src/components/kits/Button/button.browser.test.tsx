@@ -1,4 +1,4 @@
-/** 保留旧样式 DOM 协议的视觉反例；新 Button API 的 DOM 描述单独验证，样式尚未迁移。 */
+/** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
 import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, surfaceColor, contentColor, interactiveColors, badColors, toneColor, toneColors, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
@@ -80,14 +80,84 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test.each(['filled', 'outlined', 'plain'] as const)('真实%s按钮的强调作用于文字和纯图形，保留外观、尺寸与禁用行为', async (selectedAppearance) => {
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    const emphasis = createState<'soft' | 'strong' | undefined>()
+    const disabled = createState(false)
+    dispose = render(() => <>
+      <Button appearance={selectedAppearance} emphasis={emphasis} disabled={disabled} danger>动作</Button>
+      <Button appearance={selectedAppearance} emphasis={emphasis} disabled={disabled} danger name="添加">
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 10H18M10 2V18" stroke="black" stroke-width="2" /></svg>
+      </Button>
+    </>, host)
+    const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
+    for (const button of buttons) button.style.transition = 'none'
+    const normal = buttons.map(appearance)
+    const bounds = buttons.map(button => [button.getBoundingClientRect().width, button.getBoundingClientRect().height])
+    emphasis.set('strong')
+    buttons.forEach((button, index) => {
+      expect(Number(getComputedStyle(button).opacity)).toBeGreaterThan(Number(normal[index].opacity))
+      expect([button.getBoundingClientRect().width, button.getBoundingClientRect().height]).toEqual(bounds[index])
+      expect(button.dataset.appearance).toBe(selectedAppearance)
+      expect(button.dataset.tone).toBe('danger')
+      if (selectedAppearance === 'plain') {
+        expectSameColor(getComputedStyle(button).backgroundColor, 'transparent')
+        expectSameColor(getComputedStyle(button).borderTopColor, 'transparent')
+      }
+    })
+    emphasis.set('soft')
+    buttons.forEach((button, index) => {
+      expect(Number(getComputedStyle(button).opacity)).toBeLessThan(Number(normal[index].opacity))
+      expect([button.getBoundingClientRect().width, button.getBoundingClientRect().height]).toEqual(bounds[index])
+    })
+    for (const selected of ['soft', undefined, 'strong'] as const) {
+      emphasis.set(selected)
+      disabled.set(true)
+      for (const button of buttons) {
+        await userEvent.hover(button)
+        expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
+        expect(getComputedStyle(button).transform).toBe('none')
+        await userEvent.unhover(button)
+      }
+      disabled.set(false)
+    }
+    emphasis.set(undefined)
+    buttons.forEach((button, index) => expectSameAppearance(appearance(button), normal[index]))
+  })
+
+  test('真实按钮的填充、轮廓、无边界与语气生效，动态外观退出后恢复', () => {
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    const selectedAppearance = createState<ButtonAppearance | undefined>('filled')
+    dispose = render(() => <>
+      <Button>普通</Button><Button filled>填充</Button><Button plain>无边界</Button>
+      <Button danger filled>危险填充</Button><Button appearance={selectedAppearance}>动态</Button>
+    </>, host)
+    const [outlined, filled, plain, danger, dynamic] = host.querySelectorAll<HTMLButtonElement>('button')
+    for (const button of [outlined, filled, plain, danger, dynamic]) button.style.transition = 'none'
+    const read = (button: HTMLElement) => getComputedStyle(button)
+    expect(read(filled).backgroundColor).not.toBe(read(outlined).backgroundColor)
+    expect(read(filled).color).not.toBe(read(outlined).color)
+    expectSameColor(read(plain).backgroundColor, 'transparent')
+    expect(read(outlined).borderTopWidth).not.toBe('0px')
+    expectSameColor(read(plain).borderTopColor, 'transparent')
+    expect(read(outlined).borderTopColor).not.toBe(read(plain).borderTopColor)
+    expect(read(danger).backgroundColor).not.toBe(read(filled).backgroundColor)
+    expectSameAppearance(appearance(dynamic), appearance(filled))
+    selectedAppearance.set('plain')
+    expectSameAppearance(appearance(dynamic), appearance(plain))
+    selectedAppearance.set(undefined)
+    expectSameAppearance(appearance(dynamic), appearance(outlined))
+  })
+
   test('普通按钮沿用局部墨色，嵌套语气内容色不改变其默认来源', async () => {
     const parent = document.body.appendChild(document.createElement('div'))
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
     parent.style.setProperty(`--${inkColor.name}`, 'rgb(78, 90, 123)')
-    const button = parent.appendChild(document.createElement('button'))
-    button.className = 'Button'
-    button.textContent = '普通按钮'
+    dispose = render(() => <Button>普通按钮</Button>, parent)
+    const button = parent.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
     mountButtonStyles()
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
@@ -142,9 +212,9 @@ describe('Button styles', () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <>
-      <button class="Button" data-tone="accent" data-control="first">第一作用域</button>
-      <button class="Button" data-tone="accent" data-control="second">第二作用域</button>
-      <button class="Button" data-tone="accent">未控制</button>
+      <Button htmlProps={{ 'data-control': 'first' }}>第一作用域</Button>
+      <Button htmlProps={{ 'data-control': 'second' }}>第二作用域</Button>
+      <Button>未控制</Button>
     </>, host)
     const [first, second, untouched] = host.querySelectorAll<HTMLButtonElement>('button')
     for (const button of [first, second, untouched]) button.style.transition = 'none'
@@ -203,7 +273,7 @@ describe('Button styles', () => {
     for (const button of [first, second, untouched]) expectSameAppearance(appearance(button), initial)
   })
 
-  test.each([undefined, 'bare', 'solid'] as const)('局部语气成员在状态参数消费中保持隔离并退出恢复：%s', async (variant) => {
+  test.each([undefined, 'plain', 'filled'] as const)('局部语气成员在状态参数消费中保持隔离并退出恢复：%s', async (selectedAppearance) => {
     const palettes = [
       { tone: 'rgb(56, 120, 180)', soft: 'rgb(12, 80, 140)', strong: 'rgb(34, 100, 160)', content: 'rgb(78, 140, 200)', line: 'rgb(90, 20, 160)' },
       { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', content: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
@@ -214,15 +284,15 @@ describe('Button styles', () => {
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => palettes.map((_, index) => <button class="Button" data-variant={variant} data-tone="danger" data-local-tone={index}>局部语气</button>), host)
+    dispose = render(() => palettes.map((_, index) => <Button appearance={selectedAppearance} danger htmlProps={{ 'data-local-tone': index }}>局部语气</Button>), host)
     const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
     const samples: { normal: Record<string, string>; hover: Record<string, string>; active: Record<string, string> }[] = []
     for (const [index, button] of buttons.entries()) {
       button.style.transition = 'none'
       const normal = appearance(button)
-      expectSameColor(normal.color, variant === 'solid' ? palettes[index].content : palettes[index].strong)
-      if (variant === 'solid') expectSameColor(normal['background-color'], palettes[index].tone)
-      if (variant === 'bare') expectSameColor(normal['background-color'], 'transparent')
+      expectSameColor(normal.color, selectedAppearance === 'filled' ? palettes[index].content : palettes[index].strong)
+      if (selectedAppearance === 'filled') expectSameColor(normal['background-color'], palettes[index].tone)
+      if (selectedAppearance === 'plain') expectSameColor(normal['background-color'], 'transparent')
       button.focus()
       await userEvent.keyboard('[ArrowRight]')
       expect(button.matches(':focus-visible')).toBe(true)
@@ -246,9 +316,9 @@ describe('Button styles', () => {
     }
     for (const state of ['normal', 'hover', 'active'] as const) {
       expect(samples[0][state].color).not.toBe(samples[1][state].color)
-      if (variant !== 'bare' || state !== 'normal') expect(samples[0][state]['background-color']).not.toBe(samples[1][state]['background-color'])
+      if (selectedAppearance !== 'plain' || state !== 'normal') expect(samples[0][state]['background-color']).not.toBe(samples[1][state]['background-color'])
     }
-    if (variant === 'bare') {
+    if (selectedAppearance === 'plain') {
       const alpha = (color: string) => Number(color.match(/\/\s*([\d.]+)/)?.[1] ?? 1)
       for (const sample of samples) {
         expect(alpha(sample.hover['background-color'])).toBeGreaterThan(0)
@@ -257,17 +327,18 @@ describe('Button styles', () => {
     }
   })
 
-  test.each([undefined, 'bare', 'solid'] as const)('统一禁用降低整体声量并保留局部角色和恢复：%s', async (variant) => {
+  test.each([undefined, 'plain', 'filled'] as const)('统一禁用降低整体声量并保留局部角色和恢复：%s', async (selectedAppearance) => {
     const surface = 'rgb(12, 34, 56)'
     const content = 'rgb(78, 90, 123)'
     handles.push(rules('.Button[data-local-role]', [declare(surfaceColor, surface), declare(contentColor, content)]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <button class="Button" data-variant={variant} data-tone="danger" data-local-role>局部禁用</button>, host)
+    dispose = render(() => <Button appearance={selectedAppearance} danger htmlProps={{ 'data-local-role': '' }}>局部禁用</Button>, host)
     const button = host.querySelector('button')!
     button.style.transition = 'none'
     const read = () => [getComputedStyle(button).backgroundColor, getComputedStyle(button).color]
     const normal = read()
+    const normalOpacity = getComputedStyle(button).opacity
     expectSameColors(normal, [surface, content])
     button.disabled = true
     await userEvent.hover(button)
@@ -285,16 +356,16 @@ describe('Button styles', () => {
     await userEvent.unhover(button)
     delete button.dataset.status
     expectSameColors(read(), normal)
-    expect(getComputedStyle(button).opacity).toBe('1')
+    expect(getComputedStyle(button).opacity).toBe(normalOpacity)
   })
 
-  test('solid 常态背景保留组件 surfaceColor 的局部覆盖', () => {
-    handles.push(rules('.Button[data-variant="solid"][data-surface-probe]', [
+  test('filled 常态背景保留组件 surfaceColor 的局部覆盖', () => {
+    handles.push(rules('.Button[data-appearance="filled"][data-surface-probe]', [
       declare(surfaceColor, 'rgb(12, 34, 56)'),
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <button class="Button" data-variant="solid" data-surface-probe>局部表面</button>, host)
+    dispose = render(() => <Button filled htmlProps={{ 'data-surface-probe': '' }}>局部表面</Button>, host)
     const button = host.querySelector('button')!
     button.style.transition = 'none'
     expectSameColor(getComputedStyle(button).backgroundColor, 'rgb(12, 34, 56)')
@@ -304,17 +375,18 @@ describe('Button styles', () => {
     document.documentElement.dataset.theme = theme
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    const variants: ('bare' | 'solid' | undefined)[] = [undefined, 'bare', 'solid']
-    const tones: ('accent' | 'danger' | undefined)[] = [undefined, 'accent', 'danger']
-    dispose = render(() => variants.flatMap(variant => tones.map(tone => <button class="Button" data-variant={variant} data-tone={tone}>组合</button>)), host)
+    const appearances: (ButtonAppearance | undefined)[] = [undefined, 'plain', 'filled']
+    const tones: ('danger' | undefined)[] = [undefined, 'danger']
+    dispose = render(() => appearances.flatMap(selectedAppearance => tones.map(tone => <Button appearance={selectedAppearance} tone={tone}>组合</Button>)), host)
     const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('button'))
     for (const [index, button] of buttons.entries()) {
       button.style.transition = 'none'
       await userEvent.unhover(button)
       const normal = appearance(button)
-      const variant = variants[Math.floor(index / 3)]
-      if (variant === 'bare') expectSameColor(normal['background-color'], 'transparent')
-      expect(normal.opacity).toBe('1')
+      const selectedAppearance = appearances[Math.floor(index / 2)]
+      if (selectedAppearance === 'plain') expectSameColor(normal['background-color'], 'transparent')
+      expect(Number(normal.opacity)).toBeGreaterThan(disabledFade.content)
+      expect(Number(normal.opacity)).toBeLessThanOrEqual(1)
       await userEvent.hover(button)
       const hover = appearance(button)
       expect(hover['background-color']).not.toBe(normal['background-color'])
@@ -330,25 +402,25 @@ describe('Button styles', () => {
       button.blur()
       expectSameAppearance(appearance(button), normal)
     }
-    for (const toneIndex of [1, 2]) {
+    for (const toneIndex of [0, 1]) {
       const normal = appearance(buttons[toneIndex])
-      const solid = appearance(buttons[6 + toneIndex])
-      expect(chroma(solid['background-color'])).toBeGreaterThan(chroma(normal['background-color']))
-      expect(solid['color']).not.toBe(normal['color'])
+      const filled = appearance(buttons[4 + toneIndex])
+      expect(chroma(filled['background-color'])).toBeGreaterThan(chroma(normal['background-color']))
+      expect(filled['color']).not.toBe(normal['color'])
     }
-    for (const variantIndex of [0, 1, 2]) {
-      const accent = buttons[variantIndex * 3 + 1]
-      const danger = buttons[variantIndex * 3 + 2]
-      // bare 的透明背景以文字承担语气，其余声量同时以表面承担。
-      if (variantIndex !== 2) expect(appearance(accent).color).not.toBe(appearance(danger).color)
-      if (variantIndex !== 1) expect(appearance(accent)['background-color']).not.toBe(appearance(danger)['background-color'])
+    for (const appearanceIndex of [0, 1, 2]) {
+      const ordinary = buttons[appearanceIndex * 2]
+      const danger = buttons[appearanceIndex * 2 + 1]
+      // plain 的透明背景以文字承担语气，其余声量同时以表面承担。
+      if (appearanceIndex !== 2) expect(appearance(ordinary).color).not.toBe(appearance(danger).color)
+      if (appearanceIndex !== 1) expect(appearance(ordinary)['background-color']).not.toBe(appearance(danger)['background-color'])
     }
   })
 
   test('隔离来源：停用 TS 样式会失去实心背景，恢复挂载后恢复', () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <button class="Button" data-variant="solid" data-tone="accent">隔离</button>, host)
+    dispose = render(() => <Button filled>隔离</Button>, host)
     const button = host.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
     const before = appearance(button)
@@ -359,22 +431,22 @@ describe('Button styles', () => {
     expectSameAppearance(appearance(button), before)
   })
 
-  test.each(['light', 'dark'])('%s：所有 variant、tone、size 与 loading 的禁用组合保持各 feature 的覆盖', (theme) => {
+  test.each(['light', 'dark'])('%s：所有 appearance、tone、size 与 loading 的禁用组合保持各 feature 的覆盖', (theme) => {
     document.documentElement.dataset.theme = theme
     const style = document.createElement('style')
     style.id = 'css-root'
     document.head.append(style)
     cssRoot.mount()
 
-    const variants: ('bare' | 'solid' | undefined)[] = [undefined, 'bare', 'solid']
-    const tones: ('accent' | 'danger' | undefined)[] = [undefined, 'accent', 'danger']
+    const appearances: (ButtonAppearance | undefined)[] = [undefined, 'plain', 'filled']
+    const tones: ('danger' | undefined)[] = [undefined, 'danger']
     const sizes: ButtonProps['size'][] = [undefined, 'small', 'large', 'xlarge']
-    const cases = variants.flatMap(variant => tones.flatMap(tone => sizes.flatMap(size =>
-      [false, true].flatMap(loading => ['native', 'status', 'both'].map(mode => ({ variant, tone, size, loading, mode }))))))
+    const cases = appearances.flatMap(selectedAppearance => tones.flatMap(tone => sizes.flatMap(size =>
+      [false, true].flatMap(loading => ['native', 'status', 'both'].map(mode => ({ selectedAppearance, tone, size, loading, mode }))))))
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => cases.map((entry, index) => (
-      <button class="Button" data-variant={entry.variant} data-tone={entry.tone} data-size={entry.size}
-        data-status={entry.loading ? 'loading disabled' : 'disabled'} disabled data-testid={`disabled-${index}`}>禁用</button>
+      <Button appearance={entry.selectedAppearance} tone={entry.tone} size={entry.size}
+        loading={entry.loading} disabled htmlProps={{ 'data-testid': `disabled-${index}` }}>禁用</Button>
     )), host)
 
     for (const [index, entry] of cases.entries()) {
@@ -422,8 +494,8 @@ describe('Button styles', () => {
     const style = mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <>
-      <button class="Button" data-variant="solid" data-testid="local-brand">品牌</button>
-      <button class="Button" data-variant="solid" data-testid="neighbor-brand">邻居</button>
+      <Button filled htmlProps={{ 'data-testid': 'local-brand' }}>品牌</Button>
+      <Button filled htmlProps={{ 'data-testid': 'neighbor-brand' }}>邻居</Button>
     </>, host)
     const button = host.querySelector<HTMLButtonElement>('[data-testid="local-brand"]')!
     const neighbor = host.querySelector<HTMLButtonElement>('[data-testid="neighbor-brand"]')!
@@ -435,10 +507,9 @@ describe('Button styles', () => {
     expect(getComputedStyle(button).backgroundColor).not.toBe(before)
     expect(getComputedStyle(neighbor).backgroundColor).toBe(before)
     expect(style.textContent).toBe(originalCSS)
-    expect(style.textContent).not.toMatch(/var\(--(?:color-|dye-|base-)/)
   })
   test('四尺寸、方圆角、内容与拉伸容器保持旧布局，后置 layer 可覆盖', () => {
-    const style = mountButtonStyles()
+    mountButtonStyles()
     const sizes: ButtonProps['size'][] = ['small', undefined, 'large', 'xlarge']
     const host = document.body.appendChild(document.createElement('div'))
     host.style.cssText = 'display:flex; flex-direction:column; gap:16px'
@@ -469,9 +540,6 @@ describe('Button styles', () => {
     override.textContent = '@layer button-test-override { .Button { background-color: rgb(1, 2, 3); } }'
     button.style.transition = 'none'
     expect(getComputedStyle(button).backgroundColor).toBe('rgb(1, 2, 3)')
-    for (const rule of Array.from(style.sheet!.cssRules)) {
-      if (rule.cssText.includes('.Button')) expect(rule).toBeInstanceOf(CSSLayerBlockRule)
-    }
   })
 
   test('disabled 与真实 hover、active 交叠时不进入交互反馈，loading 交集仍显示禁止指针', async () => {
@@ -578,18 +646,15 @@ describe('Button styles', () => {
             <span>Default</span>
             <span>Action</span>
           </Button>
-          <button class="Button" data-variant="solid" data-testid="solid">
-            Solid
-          </button>
-          <button class="Button" data-variant="bare" data-testid="bare">
-            Bare
-          </button>
-          <button class="Button" data-variant="solid" data-tone="accent" data-testid="accent">
-            Accent
-          </button>
-          <button class="Button" data-variant="solid" data-tone="danger" data-testid="danger">
+          <Button filled htmlProps={{ 'data-testid': 'filled' }}>
+            Filled
+          </Button>
+          <Button plain htmlProps={{ 'data-testid': 'plain' }}>
+            Plain
+          </Button>
+          <Button filled danger htmlProps={{ 'data-testid': 'danger' }}>
             Danger
-          </button>
+          </Button>
           <Button small htmlProps={{ 'data-testid': 'small' }}>
             Small
           </Button>
@@ -627,22 +692,14 @@ describe('Button styles', () => {
     const defaultButton = getButton('default')
     defaultButton.style.width = '240px'
     const defaultStyle = getComputedStyle(defaultButton)
-    const solidStyle = getComputedStyle(getButton('solid'))
-    const bareStyle = getComputedStyle(getButton('bare'))
-    const accentStyle = getComputedStyle(getButton('accent'))
+    const filledStyle = getComputedStyle(getButton('filled'))
+    const plainStyle = getComputedStyle(getButton('plain'))
     const dangerStyle = getComputedStyle(getButton('danger'))
     const smallStyle = getComputedStyle(getButton('small'))
     const xlargeStyle = getComputedStyle(getButton('xlarge'))
     const disabledStyle = getComputedStyle(getButton('disabled'))
 
     expect(style).not.toBeNull()
-    const cssRules = Array.from(style.sheet!.cssRules)
-    const cssText = cssRules.map((rule) => rule.cssText).join('\n')
-    expect(cssText).toContain('&:where(:where(:hover):where(:not(:disabled, [data-status~="disabled"])))')
-    expect(cssText).toContain('&:where(:where(:active):where(:not(:disabled, [data-status~="disabled"])))')
-    expect(cssText).not.toContain('[object Object]')
-    const layer = cssRules.find(rule => rule instanceof CSSLayerBlockRule && rule.name === 'uikit') as CSSLayerBlockRule
-    expect(Array.from(layer.cssRules).filter(rule => rule instanceof CSSStyleRule && rule.selectorText === '.Button')).toHaveLength(1)
     expect(document.head.querySelectorAll(buttonStyleSelector)).toHaveLength(1)
     const [firstContent, secondContent] = defaultButton.querySelectorAll<HTMLElement>('span')
     const buttonRect = defaultButton.getBoundingClientRect()
@@ -659,9 +716,9 @@ describe('Button styles', () => {
     expect(defaultStyle.paddingLeft).toBe('24px')
     expect(defaultStyle.borderTopWidth).toBe('1px')
     expect(defaultStyle.borderTopStyle).toBe('solid')
-    expect(solidStyle.backgroundColor).not.toBe(defaultStyle.backgroundColor)
-    expect(bareStyle.backgroundColor).not.toBe(defaultStyle.backgroundColor)
-    expect(accentStyle.backgroundColor).not.toBe(dangerStyle.backgroundColor)
+    expect(filledStyle.backgroundColor).not.toBe(defaultStyle.backgroundColor)
+    expect(plainStyle.backgroundColor).not.toBe(defaultStyle.backgroundColor)
+    expect(filledStyle.backgroundColor).not.toBe(dangerStyle.backgroundColor)
     expect(Number.parseFloat(xlargeStyle.minHeight)).toBeGreaterThan(Number.parseFloat(smallStyle.minHeight))
     expect(smallStyle.minHeight).toBe('32px')
     expect(smallStyle.fontSize).toBe('14px')

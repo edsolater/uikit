@@ -100,15 +100,15 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 Style System 是抽象层，包含可复用碎片和面向组件的通用定义。是否通用取决于描述目标与领域，不取决于当前消费者数量。
 
-`Button.style.ts` 拥有 Button 的选择器、variant、tone、size、status 与组件差异。语义配色由 `interactiveColors`、`highlightColors`、`badColors`、`toneColors` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
+`Button.style.ts` 拥有 Button 的选择器、appearance、emphasis、tone、size、status 与组件差异。语义配色由 `interactiveColors`、`badColors`、`toneColors` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
 
 `colors.ts` 中的 `xxxColor` 是单个 Variable，`xxxColors` 是 VariableCluster。`baseUIColorStructure` 按基础色、透明度和用途配方生成成员结构，族定义再调用 `variableCluster` 聚合；配色决定留在配置处，生成器负责成员的派生、命名与创建。
 
 `ui-variable-structure.ts` 的 `interactiveColorStates` 按明度、彩度响应倍率生成单个颜色的默认值与交互状态配方，定义端再显式调用 `variable` 创建变量。
 
-[Button.style.ts](../components/kits/Button/Button.style.ts) 同时定义公开的色源、画布、背景强度控制点与业务规则。控制点以 export 定义，组件入口导出同一 Variable 对象，样式直接消费。色源与画布支持局部 declare，强度支持 declare／modify。底层工具提供通用操作语义，业务规则决定分类如何选择材料与加入贡献；专属 opacity 已退出，禁用淡化复用 clickable 默认策略。当前控制仍通过 Rules 登记与应用挂载执行，未实现运行时变值自动插入 CSS。
+[Button.style.ts](../components/kits/Button/Button.style.ts) 同时定义公开的色源、画布、背景强度控制点与业务规则。控制点以 export 定义，组件入口导出同一 Variable 对象，样式直接消费。色源与画布支持局部 declare，强度支持 declare／modify。底层工具提供通用操作语义，业务规则决定分类如何选择材料与加入贡献；存在感的透明度材料保持私有，各档 Variable 的禁用状态复用 disabledFade，没有新增公开 opacity 控制点。当前控制仍通过 Rules 登记与应用挂载执行，未实现运行时变值自动插入 CSS。
 
-Button 的背景来源与画布由分类选择，强度 Variable 持有状态，bare／solid 的贡献通过既有 modify 组合。tone 选择成员材料，内容色直接声明共享角色；组件不登记逐状态消费 Rule，也不登记 variant×tone 交集配方。验收关注退场、突出、层次和状态反馈，旧实现的混色系数不作为约束。
+Button 的背景来源与画布由分类选择，强度 Variable 持有状态，plain／filled 的贡献通过既有 modify 组合，outlined 声明当前语气的边线。emphasis 独立选择整颗按钮的透明度材料，保留外观形式与尺寸。tone 选择成员材料，内容色直接声明共享角色；组件不登记逐状态消费 Rule，也不登记 appearance×tone 交集配方。验收关注退场、突出、层次和状态反馈，旧实现的混色系数不作为约束。
 
 Button 静态导入自身样式；Example、Storybook 和缩略图入口在 render 前统一挂载。懒加载样式仍由应用样式清单负责提前登记。
 

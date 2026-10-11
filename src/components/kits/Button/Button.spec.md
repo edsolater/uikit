@@ -1,8 +1,8 @@
 # Button 设计规格
 
-## 分类契约与样式迁移边界
+## 分类契约与样式
 
-组件 API 使用 appearance、tone、emphasis、size 四组分类。本轮仅迁移组件契约，Button.style.ts 与旧 CSS 保持原样：旧外观规则仍读取 data-variant，尚未消费 data-appearance 或 data-emphasis；新属性输出不表示视觉效果已经接入。
+组件 API 使用 appearance、tone、emphasis、size 四组分类。Button.style.ts 消费这些分类：filled 使用填充背景及对应内容色，outlined 保留浅底和可见轮廓，plain 常态透明且无边界；danger 选择危险配色。emphasis 调整整颗按钮的存在感，包含文字与图形内容，不改变外观形式和尺寸。
 
 - `emphasis` 表达组件整体的存在感，取值为 `soft`、`strong`；直接属性使用同名描述词，省略时为普通表现。不规定透明、实底或边框等实现方式。
 - `tone` 表达动作的语义基调，当前确定的标记为 `danger`；原 `accent` 退出。其他候选以后讨论。

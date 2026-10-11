@@ -19,7 +19,7 @@ import './Button.style'
 /**
  * 按钮的外观 Variant Props。
  *
- * - filled、outlined、plain：外观候选，具体呈现待讨论。
+ * - filled、outlined、plain：填充、轮廓、无边界形式，由 Button 样式消费。
  * - undefined：未指定外观。
  *
  * 外观确定时优先声明 filled、outlined 或 plain；动态选择使用 appearance。

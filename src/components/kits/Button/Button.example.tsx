@@ -13,7 +13,7 @@ export function ButtonExample() {
         <span>Component</span>
         <h2>Button</h2>
       </div>
-      <p>按钮分别描述外观、强调程度、动作语气和尺寸，不承载导航语义。新外观与强调字段的样式尚待设计。</p>
+      <p>按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。</p>
 
       <div class="button-example-grid">
         <div class="button-example-head">类型</div>
