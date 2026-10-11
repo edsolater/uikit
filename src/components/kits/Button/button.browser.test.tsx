@@ -80,6 +80,47 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test.each([false, true])('真实 filled 按钮在悬停和按下时有可辨明度反馈，危险语气保持反馈并退出恢复：strong=%s', async (strong) => {
+    document.documentElement.dataset.theme = 'light'
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <><Button filled strong={strong}>确认</Button><Button filled danger strong={strong}>删除</Button></>, host)
+    // 明度变化下限是视觉验收选择；拒绝只有文本、色度或阴影变化而明度互相抵消。
+    const lightness = (content: string) => {
+      const probe = document.body.appendChild(document.createElement('div'))
+      probe.style.color = `oklch(from ${content} l c h / alpha)`
+      const result = Number(getComputedStyle(probe).color.match(/oklch\((\S+)/)![1])
+      probe.remove()
+      return result
+    }
+    for (const button of host.querySelectorAll<HTMLButtonElement>('button')) {
+      button.style.transition = 'none'
+      await userEvent.unhover(button)
+      const normal = appearance(button)
+      await userEvent.hover(button)
+      const hover = appearance(button)
+      expect(normal['background-color']).not.toBe(hover['background-color'])
+      expect(Math.abs(lightness(normal['background-color']) - lightness(hover['background-color']))).toBeGreaterThan(0.015)
+      button.focus()
+      await userEvent.keyboard('[Space>]')
+      try {
+        expect(button.matches(':hover:active')).toBe(true)
+        expect(Math.abs(lightness(hover['background-color']) - lightness(appearance(button)['background-color']))).toBeGreaterThan(0.015)
+      } finally { await userEvent.keyboard('[/Space]') }
+      expectSameAppearance(appearance(button), hover)
+      await userEvent.unhover(button)
+      button.blur()
+      expectSameAppearance(appearance(button), normal)
+      button.disabled = true
+      await userEvent.hover(button)
+      expectSameColors([getComputedStyle(button).backgroundColor, getComputedStyle(button).color], [normal['background-color'], normal.color])
+      expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
+      await userEvent.unhover(button)
+      button.disabled = false
+      expectSameAppearance(appearance(button), normal)
+    }
+  })
+
   test.each(['filled', 'outlined', 'plain'] as const)('真实%s按钮的强调作用于文字和纯图形，保留外观、尺寸与禁用行为', async (selectedAppearance) => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))

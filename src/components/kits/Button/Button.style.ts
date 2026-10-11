@@ -124,10 +124,10 @@ rules(plainButton, [
   elevation(shadowFlat),
 ])
 
-// filled 使用语气实底与对应内容色，交互时露出中性画布形成层次。
+// filled 使用语气实底；交互时少量露出画布，避免混色抵消交互色的明度变化。
 const filledStrength = variable(0.82, {
   name: 'button-filled-strength',
-  states: { hover: 0.62, active: 0.42 },
+  states: { hover: 0.67, active: 0.52 },
 })
 const shadowFilled = variable(shadowRaised, {
   name: 'button-shadow-filled',
