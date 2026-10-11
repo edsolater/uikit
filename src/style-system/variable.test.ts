@@ -21,6 +21,6 @@ test('省略配置或配置内名称时都能创建并编译 Variable', () => {
   expect(css).toContain(`--${stateful.name}: 2;`)
   expect(css).toContain(`--${stateful.name}: 3;`)
   expect(css).toContain(`--${stateful.name}: 4;`)
-  expect(css).toContain(`opacity: var(--${stateful.name}, 2);`)
+  expect(css).toContain(`opacity: var(--${stateful.name});`)
   expect(amount.toCSSString()).toBe(`--${amount.name}`)
 })

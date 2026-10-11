@@ -12,12 +12,12 @@ import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
 import { appendStateCondition, resolveStateConditions, type StateCondition } from './pieces/state-conditions'
 import { hasProperty, mapGet, result } from '@edsolater/fnkit'
-import { consumeVariable, findVariableDeclaration, findLocalBaseKey, type ModifyTargetProtocol } from './variable-modify'
+import { consumeVariable, declaredVariable, findVariableDeclaration, findLocalBaseKey, type ModifyTargetProtocol } from './variable-modify'
 import { declare } from './declaration'
 import { resolveVariable } from './variable-cluster'
 import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
 
-/** 未命中状态时的基础内容；生产函数在编译消费时求值。 */
+/** 未命中状态时的声明内容；生产函数在编译消费时求值。 */
 export type VariableDefaultValue = ValueInput | (() => ValueInput)
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
@@ -165,15 +165,29 @@ export function compileVariableContent(target: ModifyTargetProtocol, context: JS
     else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
   }
   if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return }
-  const fallback = result(target.content)
+  const defaultContent = result(target.content)
   if (target.declarations?.length) {
     const definition = findVariableDeclaration(controller, target, context.conditionPath)
-    insertDefinition(context, controller, target, context.conditionPath, definition ? result(definition.content.content) : fallback)
+    insertDefinition(context, controller, target, context.conditionPath, definition ? result(definition.content.content) : defaultContent)
   }
   activateVariableResources(target, context, controller)
   consumeVariable(context, controller, target)
-  declareVariableStates(context, controller, target, fallback)
-  const reference = createVariableReference(target, fallback)
+  const rootDependency = context.node.resourceAddress?.startsWith('variable-default:')
+  if (!rootDependency) declareVariableStates(context, controller, target, defaultContent)
+  if (!rootDependency && readsVariableContent(defaultContent)) {
+    if (!hasVariableDefinition(controller, target)) insertDefinition(context, controller, target, context.conditionPath, defaultContent)
+  }
+  let usages = variableUsages.get(context.session)
+  if (!usages) {
+    variableUsages.set(context.session, usages = new Map())
+    controller.addSettlementCheck(() => declareUsedVariables(context.session, controller))
+  }
+  const usage = mapGet(usages, target, () => ({ consumers: new Set<JSSStyleNode>(), declared: hasVariableDefinition(controller, target) }))
+  if (!usage.consumers.has(context.node)) {
+    usage.consumers.add(context.node)
+    controller.onRemove(context.node, () => usage.consumers.delete(context.node))
+  }
+  const reference = createVariableReference(target, defaultContent)
   if (resolveVariable(context.input as ModifyTargetProtocol) !== target && isJSSContent(target)) reference.dependencies.push(target)
   controller.setContent(context, reference)
 }
@@ -182,13 +196,14 @@ export function compileVariableContent(target: ModifyTargetProtocol, context: JS
  * 为普通引用声明当前基础值及后续状态；已有局部定义时写入其基础目标。
  * 当前位置命中状态时使用对应内容，只补登记顺序更靠后的状态。
  */
-function declareVariableStates(context: JSSCompileContext, controller: ASTController, variable: ModifyTargetProtocol, fallbackValue: ValueInput): void {
+function declareVariableStates(context: JSSCompileContext, controller: ASTController, variable: ModifyTargetProtocol, defaultContent: ValueInput): void {
   const states = [...variable.states?.keys() ?? []]
   if (!states.length) return
 
   const currentState = states.findLast(state => context.conditionPath.stateConditionPath.some(current => current.name === state.name))
-  const currentValue = currentState ? variable.states?.get(currentState) : fallbackValue
-  insertDefinition(context, controller, variable, context.conditionPath, currentValue)
+  const currentValue = currentState ? variable.states?.get(currentState) : defaultContent
+  if (currentState || (readsVariableContent(currentValue) && !hasVariableDefinition(controller, variable)))
+    insertDefinition(context, controller, variable, context.conditionPath, currentValue)
 
   for (const [state, content] of variable.states ?? []) {
     if (currentState && state.order <= currentState.order) continue
@@ -197,13 +212,65 @@ function declareVariableStates(context: JSSCompileContext, controller: ASTContro
 }
 
 /**
- * 生成样式内容的 `var(--name)` 引用；回退内容在当前声明位置编译后附在第二参数。
+ * 引用只输出 CSS 名称；内容依赖仍负责按需资源与来源的编译。
  */
-const createVariableReference = (variable: ModifyTargetProtocol, fallbackValue: ValueInput): Expression =>
-  createJSSContent((resolve) => {
-    const fallback = resolve(fallbackValue)
-    return fallback === undefined ? `var(${variable.key.toCSSString()})` : `var(${variable.key.toCSSString()}, ${fallback})`
-  }, [fallbackValue])
+const createVariableReference = (variable: ModifyTargetProtocol, content: ValueInput): Expression =>
+  createJSSContent(() => `var(${variable.key.toCSSString()})`, [content])
+
+/** 本次编译中实际使用的变量；根声明沿现有 AST 来源关系存活。 */
+interface VariableUsage {
+  consumers: Set<JSSStyleNode>
+  declared: boolean
+  root?: JSSStyleNode
+}
+const variableUsages = new WeakMap<object, Map<ModifyTargetProtocol, VariableUsage>>()
+
+/** 全树查同对象声明；同 CSS 名称的其他对象不替代此 Variable 的定义。 */
+function hasVariableDefinition(controller: ASTController, variable: ModifyTargetProtocol): boolean {
+  return controller.search({ key: variable.key }).some(node =>
+    (declaredVariable(node) === variable || node.key === variable ||
+      (isVariable(node.key) && resolveVariable(node.key) === variable)))
+}
+
+/** 只有读取 Variable 或含消费行为的配方需要当地求值；纯值沿根声明继承。 */
+function readsVariableContent(content: unknown, seen = new Set<JSSContent>()): boolean {
+  if (!isJSSContent(content) || seen.has(content)) return false
+  if (isVariable(content) || content.onCompile) return true
+  seen.add(content)
+  return content.dependencies?.some(item => readsVariableContent(item, seen)) ?? false
+}
+
+/** 队列稳定后补未声明变量的根基础内容；新依赖仍交普通编译波处理。 */
+function declareUsedVariables(session: object, controller: ASTController): boolean {
+  let changed = false
+  for (const [variable, usage] of variableUsages.get(session) ?? []) {
+    const declared = hasVariableDefinition(controller, variable)
+    if (declared !== usage.declared) {
+      usage.declared = declared
+      for (const consumer of usage.consumers) consumer.compileRevision++
+      changed = true
+    }
+    if (declared) {
+      if (usage.root) { controller.remove(usage.root); usage.root = undefined; changed = true }
+      for (const node of variable.declarations?.length ? [] : controller.search({ key: variable.key, productTag: variable })) {
+        if (!node.conditionPath.stateConditionPath.length) { controller.remove(node); changed = true }
+      }
+      continue
+    }
+    const owner = [...usage.consumers].find(node => controller.nodes().includes(node))
+    if (!owner) continue
+    if (!usage.root) {
+      usage.root = controller.insert({ before: controller.nodes()[0]!, conditionPath: {
+        targetConditionPath: [condition(':root')], stateConditionPath: [],
+      } }, [variable.key, result(variable.content)], { owner, productTag: variable,
+        resourceAddress: `variable-default:${variable.key.toCSSString()}` })
+      controller.onRemove(usage.root, () => { usage.root = undefined })
+      changed = true
+    }
+    for (const consumer of usage.consumers) controller.depend(usage.root, { owner: consumer })
+  }
+  return changed
+}
 
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
 const registrationSessions = new WeakMap<object, Map<ModifyTargetProtocol, Set<JSSStyleNode>>>()

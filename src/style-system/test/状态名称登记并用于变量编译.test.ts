@@ -83,7 +83,7 @@ test('两个自写条件保留输入顺序，状态内容保留来源引用', ()
   const css = compileRules([[[condition('.RawReference')], 'color', target]])
   for (const selector of [first, second]) {
     const escapedCondition = selector.slice(1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    expect(css).toMatch(new RegExp(`${escapedCondition}[^{}]*\\{[^}]*--raw-target: var\\(--raw-source, gray\\);`))
+    expect(css).toMatch(new RegExp(`${escapedCondition}[^{}]*\\{[^}]*--raw-target: var\\(--raw-source\\);`))
   }
   expect(css).toContain('--raw-source: blue;')
   expect(css).not.toContain('--raw-target: gray;')

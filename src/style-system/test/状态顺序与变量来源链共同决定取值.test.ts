@@ -23,7 +23,7 @@ test('普通引用从当前位置状态取值，只补更高优先级状态', ()
   const fromA = compileStateFixture([[[condition('.Example')], 'width', size]], 'compositionA')
   expect(fromA).toContain('--current-state-size: 2px;')
   expect(fromA).toContain('--current-state-size: 3px;')
-  expect(fromA).not.toContain('--current-state-size: 1px;')
+  expect(fromA).toMatch(/:root\s*\{[^}]*--current-state-size: 1px;/)
 
   const fromB = compileStateFixture([[[condition('.Example')], 'width', size]], 'compositionB')
   expect(fromB).toContain('--current-state-size: 3px;')
@@ -44,7 +44,7 @@ test('Cluster 成员未覆盖的更高优先级状态仍沿来源成立', () => 
   })
   const css = compileRules([[[condition('.Example')], 'width', next]])
   expect(css).toContain('--next-size: 2;')
-  expect(css).toContain('--next-size: var(--source-size, 1);')
+  expect(css).toContain('--next-size: var(--source-size);')
 })
 
 /** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */

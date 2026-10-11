@@ -17,7 +17,7 @@ test.each([undefined, 1, 0, 0.8])('普通颜色正确输出透明度 %s', (alpha
 test('通道 Variable 在编译时解析并保留其 CSS 引用', () => {
   const lightness = variable(0.6, 'swatch-lightness')
   const css = compileRules([[[condition('.Swatch')], 'color', oklch({ lightness, chroma: 0.12, hue: 250 })]])
-  expect(css).toContain('color: oklch(var(--swatch-lightness, 0.6) 0.12 250);')
+  expect(css).toContain('color: oklch(var(--swatch-lightness) 0.12 250);')
 })
 
 test('替换普通颜色内容后沿用格式并解析新通道依赖', () => {
@@ -25,7 +25,7 @@ test('替换普通颜色内容后沿用格式并解析新通道依赖', () => {
   const lightness = variable(0.4, 'replacement-lightness')
   const next = original.withContent({ lightness, chroma: 0.08, hue: 30, alpha: 0 })
   const css = compileRules([[[condition('.Replaced')], 'color', next]])
-  expect(css).toContain('color: oklch(var(--replacement-lightness, 0.4) 0.08 30 / 0);')
+  expect(css).toContain('color: oklch(var(--replacement-lightness) 0.08 30 / 0);')
 })
 
 test.each([

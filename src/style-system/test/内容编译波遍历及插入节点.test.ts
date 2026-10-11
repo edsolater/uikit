@@ -520,11 +520,10 @@ test('Variable Content 根通知设定内容进入正式 CSS 输出', () => {
   const source = variable('red', { name: 'content-root-replacement' })
   const css = compileRules([[[condition('.ContentRootReplacement')], 'color', source]])
 
-  expect(css).toContain('color: var(--content-root-replacement, red);')
+  expect(css).toContain('color: var(--content-root-replacement);')
 })
 
 test('Variable source 与状态中的可调用内容按对象编译而非工厂调用', () => {
-  let sourceCompileCalls = 0
   let sourceFactoryCalls = 0
   const source = Object.assign(() => {
     sourceFactoryCalls++
@@ -532,10 +531,8 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
   }, {
     [Unresultable]: true,
     onCompile(context, controller) {
-      sourceCompileCalls++
       controller.setContent(context, 'red'); },
   })
-  let stateCompileCalls = 0
   let stateFactoryCalls = 0
   const state = Object.assign(() => {
     stateFactoryCalls++
@@ -543,7 +540,6 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
   }, {
     [Unresultable]: true,
     onCompile(context, controller) {
-      stateCompileCalls++
       controller.setContent(context, 'blue'); },
   })
   const css = compileRules([[
@@ -552,12 +548,10 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
     variable(source, { name: 'compilable-function-color', states: { contentWaveHover: state } }),
   ]])
 
-  // 引用回退与常态自动声明分别编译来源。
-  expect(sourceCompileCalls).toBe(2)
   expect(sourceFactoryCalls).toBe(0)
-  expect(stateCompileCalls).toBe(1)
   expect(stateFactoryCalls).toBe(0)
-  expect(css).toContain('color: var(--compilable-function-color, red);')
+  expect(css).toContain('color: var(--compilable-function-color);')
+  expect(css).toContain('--compilable-function-color: red;')
   expect(css).toContain('--compilable-function-color: blue;')
   expect(css).not.toContain('green')
   expect(css).not.toContain('yellow')

@@ -31,7 +31,7 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
   expect(output).not.toContain(':where(:root) {\n--bundle-surface:')
   const declarationOrder = [
     'align-items: center;', 'margin-left: 2px;',
-    'color: var(--bundle-surface, black);', 'opacity: var(--bundle-opacity, 1);',
+    'color: var(--bundle-surface);', 'opacity: var(--bundle-opacity);',
     '--bundle-surface: blue;',
   ].map((declaration) => output.indexOf(declaration))
   expect(declarationOrder.every((index) => index >= 0)).toBe(true)

@@ -51,9 +51,8 @@ import {
   shadowElevated,
   shadowInteractive,
 } from '@/style-system'
-import { Button } from './Button'
 
-const button = ['@layer uikit', `.${Button.name}`]
+const button = ['@layer uikit', `.Button`]
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
 export const buttonSurfaceSource = variable(toneColors('soft'), { name: 'button-surface-source' })
@@ -70,6 +69,8 @@ export const buttonSurfaceStrength = variable(0.18, {
 // 定义button的样式架构
 rules(button, [
   [toneColors, interactiveColors],
+  declare(buttonSurfaceSource),
+  declare(buttonSurfaceCanvas),
   declare(buttonSurfaceStrength),
   declare(surfaceColor, colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas)),
   declare(contentColor),

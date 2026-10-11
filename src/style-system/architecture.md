@@ -45,11 +45,11 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 已编译步骤移动后，调用方显式增加 revision 才触发重访。编号只保证名称唯一。晚到或撤销定义让对应修改及普通消费者重新进入最近声明，按现役 `onCompile/onActive` 推进。没有独立 Rewriter 协议、操作转发或整组表达式缓存。
 
-`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在普通消费时读取同一 Variable 对象的 `config`，插入 `@property` 和自身状态定义，并通过 `setContent` 设定带 CSS `var()` 回退值的内容表达式；普通内容和状态配方中的来源 Variable 都保留 CSS 引用，由浏览器读取来源当前状态、局部覆盖和修改结果；外层状态只决定配方何时生效。Variable 的嵌套引用通过 Content 链编译。根声明由需要它的具体 Atom 通过普通 Condition Rule 按需提供。可组合定义的状态先写入内部 base，再应用修改；`registration` 的类型约束同步到内部步骤；字段内容由 variable.ts 统一生成，普通引用与内部步骤各自保留激活、位置、来源及撤销责任。`VariableCluster` 代理默认 Variable 的对象属性和编译接口，选择和双方同名成员配对由 Cluster 自身负责。`clusterFrom` 按同名来源成员建立普通 Variable，保留来源状态引用并应用本组覆盖；未配置成员复用原对象。JSS 内容组织工具与 Atom Creator 构造的内容通过 `dependencies` 暴露操作数，在最终输出时生成 CSS 文本。Creator 新配置通过整份内容重建及 `RuleHandle.replace` 消费，新内容与依赖一起重新编译。
+`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在普通消费时读取同一 Variable 对象的 `config`，插入 `@property` 和自身状态定义，并通过 `setContent` 设定只含名称的 `var(--name)` 引用；普通内容和状态配方中的来源 Variable 都保留 CSS 引用，由浏览器读取来源当前状态、局部覆盖和修改结果；外层状态只决定配方何时生效。Variable 的嵌套引用通过 Content 链编译。队列稳定后，已使用且整棵 AST 没有同对象声明的 Variable 自动补 `:root` 基础声明；后到声明和撤销都按最终队列重新核对。引用依赖仍激活内容资源；派生定义在消费处重算，自身状态也在消费处触发。指定根配方和环境分支继续由具体 Atom 通过普通 Condition Rule 按需提供。可组合定义的状态先写入内部 base，再应用修改；`registration` 的类型约束同步到内部步骤；字段内容由 variable.ts 统一生成，普通引用与内部步骤各自保留激活、位置、来源及撤销责任。`VariableCluster` 代理默认 Variable 的对象属性和编译接口，选择和双方同名成员配对由 Cluster 自身负责。`clusterFrom` 按同名来源成员建立普通 Variable，保留来源状态引用并应用本组覆盖；未配置成员复用原对象。JSS 内容组织工具与 Atom Creator 构造的内容通过 `dependencies` 暴露操作数，在最终输出时生成 CSS 文本。Creator 新配置通过整份内容重建及 `RuleHandle.replace` 消费，新内容与依赖一起重新编译。
 
 [rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[compilation.ts](compiler/style-nodes-to-content-nodes/compilation.ts) 逐波编译、处理按需 Rules 和同址组合；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一编译波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。同址同名 Key 默认组合，单条声明仍直接输出。
 
-修改保留为完整变化描述；原 selector 只选择当前步骤的候选，空 token 与 `initial` 选择门由 CSS 原生层叠和继承。修改地址及普通消费地址当地生成阶段结果，每阶段只引用前序 CSS 变量。未显式声明的后代继承规则选择，显式 `declare` 建立独立基础与修改归属；不解析选择器或复制祖先状态。`registration.inherits: false` 通过不继承的当地存在标记阻止消费链重新应用祖先修改，前序与最终引用保留注册基础值回退。
+修改保留为完整变化描述；原 selector 只选择当前步骤的候选，空 token 与 `initial` 选择门由 CSS 原生层叠和继承。修改地址及普通消费地址当地生成阶段结果，每阶段只引用前序 CSS 变量。未显式声明的后代继承规则选择，显式 `declare` 建立独立基础与修改归属；不解析选择器或复制祖先状态。`registration.inherits: false` 通过不继承的当地存在标记阻止消费链重新应用祖先修改，内部阶段引用保留注册基础值回退；这是条件选择机制，普通 Variable 引用没有默认内容第二参数。
 
 `compileCSS()` 只返回 CSS 字符串。`cssRoot.mount()` 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
 

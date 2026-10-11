@@ -55,7 +55,7 @@ test('函数的局部 Variable 与 result 留在同一份函数定义', () => {
   const css = compileRules([[[condition('.Example')], 'font-size', content]])
   expect(css.match(/@function --measured-size/g)).toHaveLength(1)
   expect(css).toContain('--function-size: 20px;')
-  expect(css).toContain('result: var(--function-size, 16px);')
+  expect(css).toContain('result: var(--function-size);')
 })
 
 test('多个有状态变量组合时，消费属性仍只有一份声明', () => {
@@ -77,9 +77,8 @@ test('共享 Value 在不同地址分别解析，重复编译不修改来源对�
   ]
   const compileAndCheck = () => {
     const css = compileRules(rules)
-    expect(css).toMatch(/\.AuditA[\s\S]*--shared-position-size:\s*2px;/)
+    expect(css).toMatch(/:root\s*\{[^}]*--shared-position-size:\s*2px;/)
     expect(css).toMatch(/\.AuditA[\s\S]*--shared-position-size:\s*4px;/)
-    expect(css).toMatch(/\.AuditB[\s\S]*--shared-position-size:\s*2px;/)
     expect(css).toMatch(/\.AuditB[\s\S]*--shared-position-size:\s*4px;/)
   }
 
@@ -93,7 +92,7 @@ test('变量改名后引用、默认声明与自动状态都采用当前名称',
   target.name = 'after-size'
 
   const css = compileRules([[[condition('.Renamed')], 'width', target]])
-  expect(css).toContain('width: var(--after-size, 1px);')
+  expect(css).toContain('width: var(--after-size);')
   expect(css).toContain('--after-size: 1px;')
   expect(css).toContain('--after-size: 2px;')
   expect(css).not.toContain('--before-size')
@@ -112,7 +111,7 @@ test('Cluster 继承保留未改成员，也能加入新成员且未用成员不
   expect(family('soft')).toBe(source('soft'))
   expect(family('extra')).toBe(extra)
   const css = compileRules([[[condition('.Family')], 'color', family]])
-  expect(css).toContain('--family-color: var(--family-source-color, red);')
+  expect(css).toContain('--family-color: var(--family-source-color);')
   expect(css).toContain('--family-source-color: blue;')
   expect(css).not.toContain('--family-source-soft-color:')
   expect(css).not.toContain('--family-extra-color:')
@@ -125,7 +124,7 @@ test('Cluster 直接使用等同默认成员，选择返回原对象并保留状
   expect(cluster('soft')).toBe(soft)
   expect(result(cluster)).toBe(cluster)
   const css = compileRules([[[condition('.Example')], 'color', cluster], [[condition('.Soft')], 'color', cluster('soft')]])
-  expect(css).toContain('color: var(--normal-color, red);')
+  expect(css).toContain('color: var(--normal-color);')
   expect(css).toContain('--soft-color: purple;')
   expect(() => (cluster as (name: string) => unknown)('missing')).toThrow('未定义成员')
 })
@@ -183,14 +182,14 @@ test('Cluster 声明按目标同名成员整组展开，允许来源额外成员
     line: variable('orange', { name: 'source-line-color' }),
   })
   const css = compileRules([[[condition('.Cluster')], target, source]])
-  expect(css).toContain('--target-color: var(--source-color, red);')
-  expect(css).toContain('--target-soft-color: var(--source-soft-color, pink);')
-  expect(css).toContain('--target-strong-color: var(--source-strong-color, maroon);')
-  expect(css).toContain('--target-content-color: var(--source-content-color, yellow);')
+  expect(css).toContain('--target-color: var(--source-color);')
+  expect(css).toContain('--target-soft-color: var(--source-soft-color);')
+  expect(css).toContain('--target-strong-color: var(--source-strong-color);')
+  expect(css).toContain('--target-content-color: var(--source-content-color);')
   expect(css).not.toContain('--source-line-color:')
   const plain = variable(undefined, { name: 'plain-color' })
   expect(compileRules([[[condition('.Plain')], plain, source]]))
-    .toContain('--plain-color: var(--source-color, red);')
+    .toContain('--plain-color: var(--source-color);')
 })
 
 test('Cluster 忽略未匹配成员，只拒绝已匹配目标别名的不同来源', () => {
@@ -199,7 +198,7 @@ test('Cluster 忽略未匹配成员，只拒绝已匹配目标别名的不同来
   const first = variable('2px', { name: 'first-size' })
   const second = variable('3px', { name: 'second-size' })
   expect(compileRules([[undefined, target, variableCluster({ default: first })]]))
-    .toContain('--alias-size: var(--first-size, 2px);')
+    .toContain('--alias-size: var(--first-size);')
   expect(() => compileRules([[undefined, target, variableCluster({ default: first, 0: second })]]))
     .toThrow('同名目标存在对象或来源冲突')
   const sameName = variableCluster({ default: shared, 0: variable('9px', { name: shared.name }) })
@@ -208,7 +207,7 @@ test('Cluster 忽略未匹配成员，只拒绝已匹配目标别名的不同来
   expect(() => compileRules([[undefined, sameName, variableCluster({ default: first, 0: first })]]))
     .toThrow('同名目标存在对象或来源冲突')
   expect(compileRules([[undefined, target, variableCluster({ default: first, 0: first })]]))
-    .toContain('--alias-size: var(--first-size, 2px);')
+    .toContain('--alias-size: var(--first-size);')
 })
 
 test('Cluster 自身成员赋值不产生 CSS 自循环，不同对象同名引用明确报错', () => {
@@ -228,7 +227,7 @@ test('Cluster 只激活双方同名成员，未匹配的目标与来源均不激
   const unusedTargetActive = vi.fn()
   const unusedTarget = variable('4px', { name: 'unused-target-size', onActive: unusedTargetActive })
   const css = compileRules([[undefined, variableCluster({ default: targetSize, soft: unusedTarget }), source]])
-  expect(css).toContain('--activated-target-size: var(--activated-source-size, 2px);')
+  expect(css).toContain('--activated-target-size: var(--activated-source-size);')
   expect(css).not.toContain('--unused-target-size:')
   expect(css).not.toContain('--unused-source-size:')
   expect(unusedTargetActive).not.toHaveBeenCalled()
@@ -244,7 +243,7 @@ test('已在 active Rule 内消费时，首次自动声明采用 active 内容',
   const source = variable('red', { name: 'active-color', states: { active: 'blue' } })
   const css = compileStateFixture([[[condition('.Example')], 'color', source]], 'active')
   expect(css).toContain('--active-color: blue;')
-  expect(css).not.toContain('--active-color: red;')
+  expect(css).toMatch(/:root\s*\{[^}]*--active-color: red;/)
 })
 
 test('延伸的注册使用新名字，来源默认值继续按需读取', () => {
@@ -252,7 +251,7 @@ test('延伸的注册使用新名字，来源默认值继续按需读取', () =>
   const next = variable(source, { name: 'registered-next-color', registration: { syntax: '<color>', inherits: true, initialValue: 'black' } })
   const css = compileRules([[[condition('.Example')], 'color', next]])
   expect(css).toContain('@property --registered-next-color')
-  expect(css).toContain('var(--registered-source-color, blue)')
+  expect(css).toContain('var(--registered-source-color)')
   expect(css).not.toContain('@property --registered-source-color')
 })
 test('稳定 Value 共享引用不误报循环，真实循环停止', () => {
@@ -267,7 +266,7 @@ test('动态内容没有被消费时不执行，消费时产生 CSS', () => {
   const serialize = vi.fn(() => 'blue')
   const source = variable(createJSSContent(serialize), { name: 'deferred-color' })
   expect(serialize).not.toHaveBeenCalled()
-  expect(compileRules([[[condition('.Example')], 'color', source]])).toContain('color: var(--deferred-color, blue);')
+  expect(compileRules([[[condition('.Example')], 'color', source]])).toContain('color: var(--deferred-color);')
   expect(serialize).toHaveBeenCalled()
 })
 test('声明来源 Variable 不修改其定义，局部显式声明优先', () => {
@@ -291,9 +290,9 @@ test('五成员目标接收三成员来源时，只覆盖双方已有成员', ()
     line: variable('navy', { name: 'partial-source-line-color' }),
   })
   const css = compileRules([[[condition('.Partial')], target, source]])
-  expect(css).toContain('--partial-target-color: var(--partial-source-color, blue);')
-  expect(css).toContain('--partial-target-content-color: var(--partial-source-content-color, white);')
-  expect(css).toContain('--partial-target-line-color: var(--partial-source-line-color, navy);')
+  expect(css).toContain('--partial-target-color: var(--partial-source-color);')
+  expect(css).toContain('--partial-target-content-color: var(--partial-source-content-color);')
+  expect(css).toContain('--partial-target-line-color: var(--partial-source-line-color);')
   expect(css).not.toContain('--partial-target-soft-color:')
   expect(css).not.toContain('--partial-target-strong-color:')
 })

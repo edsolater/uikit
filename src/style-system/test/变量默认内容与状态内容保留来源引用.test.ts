@@ -8,19 +8,21 @@ import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { variable } from '../variable'
 
-test('普通默认内容作为自身 CSS 引用的 fallback', () => {
+test('普通默认内容在根声明，使用处仅引用名称', () => {
   const paperColor = variable('white', 'contract-paper-color')
   const css = compileRules([[['.Paper'], 'color', paperColor]])
 
-  expect(css).toMatch(/color:\s*var\(\s*--contract-paper-color\s*,\s*white\s*\)\s*;/)
+  expect(css).toMatch(/:root\s*\{[^}]*--contract-paper-color:\s*white\s*;/)
+  expect(css).toMatch(/color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
 })
 
-test('默认内容是另一 Variable 时保留两层引用及其 fallback', () => {
+test('默认内容是另一 Variable 时声明保留来源引用，使用处不展开链', () => {
   const paperColor = variable('white', 'contract-paper-color')
   const canvasColor = variable(paperColor, 'contract-canvas-color')
   const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 
-  expect(css).toMatch(/background-color:\s*var\(\s*--contract-canvas-color\s*,\s*var\(\s*--contract-paper-color\s*,\s*white\s*\)\s*\)\s*;/)
+  expect(css).toMatch(/--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
+  expect(css).toMatch(/background-color:\s*var\(\s*--contract-canvas-color\s*\)\s*;/)
 })
 
 test.each([false, true])('状态内容保留来源引用，不替换为来源定义；来源有自身状态：%s', (sourceHasState) => {
@@ -34,6 +36,6 @@ test.each([false, true])('状态内容保留来源引用，不替换为来源定
   })
   const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 
-  expect(css).toMatch(/--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*,\s*white\s*\)\s*;/)
+  expect(css).toMatch(/--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
   expect(css).not.toMatch(/--contract-canvas-color:\s*(?:white|black)\s*;/)
 })

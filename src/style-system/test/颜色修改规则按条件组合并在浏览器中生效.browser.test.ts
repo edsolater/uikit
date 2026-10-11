@@ -129,7 +129,7 @@ test('独立变化的条件修改与连续Adjust绑定得到同色，子元素�
   const hover = modification({ name: '--dual-hover-rule', type: 'color', detail: { lightness: currentExpression => add(currentExpression, 0.1), chroma: currentExpression => multiply(currentExpression, 2) } })
   const active = modification({ type: 'color', detail: { hue: 150, alpha: currentExpression => add(currentExpression, -0.2) } })
   const direct = adjust(adjust(variable(base, 'dual-direct'), hover), active)
-  handles.push(rules('.Dual', [declare(surface), declare(hover), [key('background-color'), surface]]))
+  handles.push(rules('.Dual', [declare(surface), declare(hover), declare(active), [key('background-color'), surface]]))
   handles.push(rules(['.Dual', '&[data-hover]'], modify(surface, hover)))
   handles.push(rules(['.Dual', '&[data-active]'], modify(surface, active)))
   handles.push(rules(['.Dual', '& .Child'], [[key('background-color'), surface]]))

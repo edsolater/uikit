@@ -13,6 +13,7 @@ import { focusOutline } from '../pieces/contents/atoms/focus'
 import { toneColors } from '../pieces/contents/atoms/color/colors'
 import { highlightColors } from '../pieces/contents/atoms/color/ui-action-colors'
 import type { Rules } from '../rule'
+import { declare } from '../declaration'
 
 stateCondition('chainHover', condition('&:where([data-hover])'))
 stateCondition('chainActive', condition('&:where([data-active])'))
@@ -25,6 +26,7 @@ afterEach(() => document.body.replaceChildren())
 test('焦点轮廓依次读取局部语气色、局部强调色和基础色', async () => {
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.AccentFocus')], 'outline', focusOutline],
+    [[condition('.AccentFocus')], ...declare(toneColors('line'))],
     [[condition('.AccentFocus')], highlightColors('line'), 'rgb(12, 34, 56)'],
     [[condition('.ToneFocus')], 'outline', focusOutline],
     [[condition('.ToneFocus')], toneColors('line'), 'rgb(56, 78, 90)'],
@@ -106,8 +108,8 @@ test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用
   expect(getComputedStyle(local).color).toBe('rgb(255, 0, 0)')
   local.dataset.hover = ''
   expect(getComputedStyle(local).height).toBe('25px')
-  expect(getComputedStyle(neighbor).width).toBe('1px')
-  expect(getComputedStyle(neighbor).height).toBe('2px')
+  expect(getComputedStyle(neighbor).getPropertyValue('--cluster-target-size')).toBe('')
+  expect(getComputedStyle(neighbor).getPropertyValue('--cluster-target-soft-size')).toBe('')
 })
 
 test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 default', () => {
@@ -126,6 +128,7 @@ test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 de
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([
+    [[condition('.LazyVariableButton')], ...declare(toneColorDefault)],
     [[condition('.LazyVariableButton')], 'background', toneColors('line')],
     [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColors, highlightColors],
   ])

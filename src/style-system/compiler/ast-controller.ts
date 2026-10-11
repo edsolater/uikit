@@ -69,6 +69,8 @@ export interface ASTController {
   onRemove(node: JSSStyleNode, cleanup: () => void): void
   /** 暂缓当前通知，等待后续波重试；不撤回已经执行的内容和队列操作，无进展时报告此原因。 */
   defer(node: JSSStyleNode, message: string): void
+  /** 登记队列稳定后的核对；改变队列时返回 true，继续普通编译波。 */
+  addSettlementCheck(check: () => boolean): void
 }
 
 const maximumStyleNodeCount = 100_000
@@ -110,6 +112,7 @@ export function createASTController(session: ASTSession): ASTController {
     depend: (node, options) => session.own(options.owner, node),
     onRemove: (node, cleanup) => session.onRemove(node, cleanup),
     defer: (node, message) => { node.deferredReason = new Error(message) },
+    addSettlementCheck: check => session.settlementChecks.add(check),
   }
 }
 
@@ -118,6 +121,7 @@ export class ASTSession {
   identity: object = {}
   /** 本次节点编译的唯一位置账本；节点编译维护进度，Controller 操作其中的当前内容。 */
   compilations = new WeakMap<JSSStyleNode, StyleNodeCompileState>()
+  settlementChecks = new Set<() => boolean>()
   private owners = new Map<JSSStyleNode, Set<JSSStyleNode>>()
   private products = new Map<JSSStyleNode, Set<JSSStyleNode>>()
   private removalCallbacks = new WeakMap<JSSStyleNode, Set<() => void>>()
@@ -134,6 +138,16 @@ export class ASTSession {
       node.identity ??= `source/${index}`
       node.compileRevision ??= 0
     })
+  }
+
+  /** 当前全部内容完成后核对队列；任何新增或撤销仍由同一编译流程处理。 */
+  updateSettlement(): boolean {
+    let changed = false
+    for (const check of this.settlementChecks) {
+      const updated = check()
+      changed ||= updated
+    }
+    return changed
   }
 
   /** 给同一来源的连续插入分配不同身份，无需知道调用角色。 */

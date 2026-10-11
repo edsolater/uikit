@@ -314,7 +314,7 @@ test.each(['late-declare', 'removed-declare'])('普通颜色消费者在局部�
 })
 
 
-test('不继承且无注册初值时保留普通引用回退，不把默认内容伪装成初值', () => {
+test('不继承且无注册初值时不补普通引用回退，也不把默认内容伪装成初值', () => {
   const local = condition('&[data-local]')
   const n = variable(7, { name: 'universal-without-initial',
     registration: { syntax: '*', inherits: false },
@@ -328,9 +328,9 @@ test('不继承且无注册初值时保留普通引用回退，不把默认内�
     [[parent], 'z-index', n], [[parent, child], 'z-index', n],
   ]))
   const element = document.querySelector('.Parent > .child')!
-  expect({ parent: read('.Parent'), child: read('.Parent > .child') }).toEqual({ parent: '13', child: '7' })
+  expect({ parent: read('.Parent'), child: read('.Parent > .child') }).toEqual({ parent: '13', child: 'auto' })
   element.setAttribute('data-local', '')
   expect(read('.Parent > .child')).toBe('20')
   element.removeAttribute('data-local')
-  expect(read('.Parent > .child')).toBe('7')
+  expect(read('.Parent > .child')).toBe('auto')
 })

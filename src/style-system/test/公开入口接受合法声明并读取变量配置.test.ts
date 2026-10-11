@@ -38,7 +38,7 @@ test('Cluster默认成员应用规则闭包捕获的领域参数', () => {
   const change = ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, payload.amount) })
   const css = compileRules([[[condition('.Public')], ...declare(cluster)], [[condition('.Public')], ...modify(cluster, change)]])
   expect(css).toContain('+ 3)')
-  expect(compileRules([[['.source'], ...declare(cluster)]])).toContain('--public-derived-number: var(--public-source-number, 1);')
+  expect(compileRules([[['.source'], ...declare(cluster)]])).toContain('--public-derived-number: var(--public-source-number);')
 })
 
 test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => {

@@ -162,7 +162,7 @@ function sessionOf(context: JSSCompileContext): VariableSession {
 /**
  * 识别局部声明所用的 Variable；其他样式节点返回 undefined。
  */
-const declaredVariable = (node: JSSStyleNode): ModifyTargetProtocol | undefined =>
+export const declaredVariable = (node: JSSStyleNode): ModifyTargetProtocol | undefined =>
   isVariableDeclaration(node.content) ? node.content.variable : undefined
 /**
  * 取得语义父链上最近的同对象基础声明；同 Key 的修改和普通赋值不视为局部定义。

@@ -27,7 +27,7 @@ test('不同描述可独立声明，颜色配方可直接引用且不绑定某�
   const change = modification({ name: '--change', type: 'color', detail: { lightness: 0.3, chroma: x => add(x, 0.3) } })
   const css = compile(declare(change), [key('--reference'), change])
   expect(css).toContain('--change: 0.3 calc(c + 0.3) h / alpha;')
-  expect(css).toContain('--reference: var(--change, 0.3 calc(c + 0.3) h / alpha);')
+  expect(css).toContain('--reference: var(--change);')
   const targetKey = key('--generic-description')
   const generic: Modification<number, 'number'> = { ...targetKey, key: targetKey, name: targetKey.toCSSString(), type: 'number', detail: 5, content: 5 }
   expect(compile(declare(generic))).toContain('--generic-description: 5;')
@@ -42,8 +42,8 @@ test('声明结果共同声明来源、变化与结果，两个来源共享同�
   expect(css).toContain('--source-first: oklch(0.5 0.1 240);')
   expect(css).toContain('--source-second: red;')
   expect(css.match(/--shared-change:/g)).toHaveLength(1)
-  expect(css).toContain(`${firstResult.toCSSString()}: oklch(from var(--source-first, oklch(0.5 0.1 240)) var(--shared-change, 0.3 c h / alpha));`)
-  expect(css).toContain(`${secondResult.toCSSString()}: oklch(from var(--source-second, red) var(--shared-change, 0.3 c h / alpha));`)
+  expect(css).toContain(`${firstResult.toCSSString()}: oklch(from var(--source-first) var(--shared-change));`)
+  expect(css).toContain(`${secondResult.toCSSString()}: oklch(from var(--source-second) var(--shared-change));`)
 })
 
 test('配方回调延迟到消费，通道可调用内容与alpha含义仍保留', () => {
@@ -51,7 +51,7 @@ test('配方回调延迟到消费，通道可调用内容与alpha含义仍保留
   const lightness = variableCluster({ default: variable(0.6, 'callable-lightness') })
   const change = modification({ name: '--callable-change', type: 'color', detail: { lightness, chroma: x => add(x, delta), alpha: 1 } })
   delta = 0.2
-  expect(compile(declare(change))).toContain('--callable-change: var(--callable-lightness, 0.6) calc(c + 0.2) h / 1;')
+  expect(compile(declare(change))).toContain('--callable-change: var(--callable-lightness) calc(c + 0.2) h / 1;')
   expect(compile(declare(modification({ name: '--keep-alpha', type: 'color', detail: {} })))).toContain('--keep-alpha: l c h / alpha;')
 })
 

@@ -46,7 +46,7 @@ it('删除首次消费位置不会撤销另一消费者共享的一次性注册�
   } }
   const css = compileRules([[[path], 'z-index', first], [[path], 'order', registered]])
   expect(css).toContain('@property --shared-registration')
-  expect(css).toContain('order: var(--shared-registration, 1)')
+  expect(css).toContain('order: var(--shared-registration)')
   expect(css).not.toContain('z-index:')
 })
 

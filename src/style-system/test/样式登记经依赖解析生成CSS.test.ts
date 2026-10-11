@@ -46,12 +46,12 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(motionCSS).toContain('--motion-scale-ratio: 1;')
   expect(motionCSS).toContain('@media (prefers-reduced-motion: reduce)')
   expect(motionCSS).toContain('--motion-scale-ratio: 0;')
-  expect(motionCSS).toContain('--duration-fast: calc(120ms * var(--motion-scale-ratio, 1));')
+  expect(motionCSS).toContain('--duration-fast: calc(120ms * var(--motion-scale-ratio));')
   expect(motionCSS).not.toContain('--line-color:')
   const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor]])
-  expect(lineCSS).toContain('border-color: var(--line-color, color-mix(')
-  expect(lineCSS).toContain('var(--global-content-color,')
-  expect(lineCSS).not.toContain(':root')
+  expect(lineCSS).toContain('border-color: var(--line-color);')
+  expect(lineCSS).toContain('var(--global-content-color)')
+  expect(lineCSS).toContain(':root')
   expect(lineCSS).not.toContain('--motion-scale-ratio:')
 })
 
@@ -110,9 +110,9 @@ test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保�
   keep(rules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColors, accentColors]]))
   expect(toneColorLineSource).not.toHaveBeenCalled()
   const css = compileCSS()
-  expect(css).toContain('background: var(--tone-color-line, color-mix(in oklab, var(--tone-color, blue) 32%, transparent));')
-  expect(css).toContain('--tone-color: var(--accent-color, red);')
-  expect(css).toContain('--tone-color-soft: var(--accent-color-soft, pink);')
+  expect(css).toContain('background: var(--tone-color-line);')
+  expect(css).toContain('--tone-color: var(--accent-color);')
+  expect(css).toContain('--tone-color-soft: var(--accent-color-soft);')
   expect(toneColorLineSource).toHaveBeenCalled()
 })
 
@@ -123,8 +123,8 @@ test('Variable source 函数可以返回直接内容或 Variable，循环返回�
   keep(rule('.LazyVariableSource', 'width', directSize))
   keep(rule('.LazyVariableSource', 'height', linkedSize))
   const css = compileCSS()
-  expect(css).toContain('width: var(--direct-size, 12px);')
-  expect(css).toContain('height: var(--linked-size, var(--base-size, 8px));')
+  expect(css).toContain('width: var(--direct-size);')
+  expect(css).toContain('height: var(--linked-size);')
 
   let circularColor: ReturnType<typeof variable>
   circularColor = variable(() => circularColor, { name: 'circular-color' })
@@ -173,7 +173,7 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
 test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
   const content = variable('black', { name: 'local-content' })
   keep(rules('.example', [[content, 'red'], [$color, content]]))
-  expect(compileCSS()).toContain('--local-content: red;\ncolor: var(--local-content, black);')
+  expect(compileCSS()).toContain('--local-content: red;\ncolor: var(--local-content);')
 })
 
 test('声明名称指向明确属性，不猜测未知名称', () => {
@@ -208,7 +208,7 @@ test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefin
     .toEqual([['margin-left', '2px'], ['margin', '1px, 3px']])
   expect(css).toContain('--ordered-local: red;')
   expect(css).toContain('padding: 4px;')
-  expect(css).toContain('color: var(--ordered-local, black);')
+  expect(css).toContain('color: var(--ordered-local);')
   expect(content).toHaveBeenCalled()
 })
 
@@ -428,12 +428,12 @@ test('编译 root 的规则容器改写不污染登记账本或直接输入', ()
     },
   }])
   const css = compileRules(source)
-  expect(css).toContain('var(--snapshot-shared-color, green)')
+  expect(css).toContain('var(--snapshot-shared-color)')
   expect(sourcePath).toHaveLength(1)
   expect(childPath).toHaveLength(1)
   expect(nested[0][2]).toBe(shared)
   source.pop()
-  expect(compileRules(source)).toContain('var(--snapshot-shared-color, green)')
+  expect(compileRules(source)).toContain('var(--snapshot-shared-color)')
   const circular: Rules = []
   circular.push([undefined, undefined, circular])
   expect(() => compileRules(circular)).toThrow('递归引用')
@@ -506,11 +506,11 @@ test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资�
   const next = variable('blue', { name: 'creator-new-color', registration: { syntax: '<color>', inherits: false, initialValue: 'blue' } })
   const handle = keep(rule('.CompleteCreator', $boxShadow, shadowValue({ x: '1px', y: '2px', color: old })))
   const first = compileCSS()
-  expect(first).toContain('box-shadow: 1px 2px var(--creator-old-color, red);')
+  expect(first).toContain('box-shadow: 1px 2px var(--creator-old-color);')
   expect(first).toContain('@property --creator-old-color {')
   handle.replace(shadowValue({ x: '3px', y: '4px', color: next }))
   const second = compileCSS()
-  expect(second).toContain('box-shadow: 3px 4px var(--creator-new-color, blue);')
+  expect(second).toContain('box-shadow: 3px 4px var(--creator-new-color);')
   expect(second).toContain('@property --creator-new-color {')
   expect(second).not.toContain('--creator-old-color')
   let calls = 0

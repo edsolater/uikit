@@ -54,7 +54,7 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   handles.push(rules('.example', [[$margin, '6px'], declare(key('margin-left'), '10px'), [$padding, gap]]))
   handles.push(rule('.example', gap, '20px'))
   const before = style.textContent
-  expect(compileCSS()).toContain('padding: var(--space-example, 4px);')
+  expect(compileCSS()).toContain('padding: var(--space-example);')
   expect(style.textContent).toBe(before)
   root.mount()
   const computed = getComputedStyle(element)
@@ -266,13 +266,15 @@ test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 5
   expect(getComputedStyle(element).width).toBe('55px')
 })
 
-test('不同主体可局部使用同名变量而互不污染', () => {
+test('不同主体显式局部声明同名变量而互不污染', () => {
   const first = variable('11px', { name: 'scoped-shared-size' })
   const second = variable('23px', { name: 'scoped-shared-size' })
   const neighbor = document.body.appendChild(document.createElement('div'))
   neighbor.className = 'neighbor'
   handles.push(rule('.example', 'width', first))
   handles.push(rule('.neighbor', 'width', second))
+  handles.push(rules('.example', [declare(first)]))
+  handles.push(rules('.neighbor', [declare(second)]))
   try {
     root.mount()
     expect(getComputedStyle(element).width).toBe('11px')
