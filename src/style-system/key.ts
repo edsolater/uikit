@@ -10,6 +10,8 @@ import type { Value, ValueInput } from './value'
 /** 原生属性名称。 */
 export interface JSSKeyObject {
   toCSSString(): string
+  /** 同完整地址的声明等级；普通 Key 省略时为最高档 999。 */
+  priority?: number
   /**
    * 同 Target／State 地址、同属性名有至少两项时，按声明顺序连接 Value；省略时默认生成逗号数组。保留输入 Value 即保留其声明位置的编译结果；改写 content 后新内容在结果位置编译。
    */
@@ -70,6 +72,11 @@ export function resolveJSSKey(input: JSSKey): JSSKey {
 
 /** 取得原生属性名。 */
 export const propertyName = (key: JSSKey): string => isString(key) ? key : key.toCSSString()
+
+/**
+ * 读取声明键的有效等级；字符串与普通 Key 默认使用999，可调用 Cluster 同样读取自身等级。
+ */
+export const keyPriority = (key: JSSKey | undefined): number => key !== undefined && typeof key !== 'string' ? key.priority ?? 999 : 999
 
 /** Variable 与 Modification 共用的临时名称序号，仅在缺少名称时分配。 */
 const nameGenerator = new IdGenerator('temp')

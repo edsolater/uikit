@@ -11,13 +11,13 @@ test('两处简写独立展开，完整配置保留其他字段', () => {
   const onActive = vi.fn()
   const modification = { apply: (current: import('./content').JSSContent) => current }
   const options = { name: 'amount', onActive, modification, compileWaveIndex: 2 }
-  expect(parseVariableArgs(1, 'amount')).toEqual({ defaultValue: 1, name: 'amount' })
-  expect(parseVariableArgs(1, options)).toEqual({ ...options, defaultValue: 1 })
+  expect(parseVariableArgs(1, 'amount')).toEqual({ defaultValue: 1, name: 'amount', priority: 0 })
+  expect(parseVariableArgs(1, options)).toEqual({ ...options, defaultValue: 1, priority: 0 })
   expect(parseVariableArgs({ default: 1, hover: 2 }, 'amount')).toEqual({
-    defaultValue: 1, name: 'amount', states: { hover: 2 },
+    defaultValue: 1, name: 'amount', priority: 0, states: { hover: 2 },
   })
   expect(parseVariableArgs({ default: 1, hover: 2 }, options)).toEqual({
-    ...options, defaultValue: 1, states: { hover: 2 },
+    ...options, defaultValue: 1, priority: 0, states: { hover: 2 },
   })
 })
 
@@ -31,7 +31,7 @@ test('显式 states 覆盖同名简写状态并保留双方其他状态，不修
 
 test('default 即使为 undefined 也识别', () => {
   expect(parseVariableArgs({ default: undefined, hover: 2 }, 'empty')).toEqual({
-    defaultValue: undefined, name: 'empty', states: { hover: 2 },
+    defaultValue: undefined, name: 'empty', priority: 0, states: { hover: 2 },
   })
 })
 
@@ -42,18 +42,14 @@ test('无 default 的内容保留普通内容身份', () => {
   expect(config.states).toBeUndefined()
 })
 
-test('显式名称原样保留，省略名称时生成不同的非空名称', () => {
+test('显式名称与名称简写原样保留', () => {
   expect(parseVariableArgs(1, 'explicit').name).toBe('explicit')
   expect(parseVariableArgs(1, { name: 'configured' }).name).toBe('configured')
-  expect(parseVariableArgs(1, '').name).toBe('')
-  const names = [parseVariableArgs(1).name, parseVariableArgs({ default: 1, hover: 2 }, {}).name, parseVariableArgs(1, { name: undefined }).name]
-  expect(names.every(name => typeof name === 'string' && name.length > 0)).toBe(true)
-  expect(new Set(names).size).toBe(names.length)
 })
 
 test('默认生产函数和状态回调解析后均保留原样，不在 parser 中执行', () => {
   const source = vi.fn(() => 1)
-  const hover = vi.fn((defaultValue: typeof source) => defaultValue())
+  const hover = vi.fn(() => 2)
   const config = parseVariableArgs({ default: source, hover }, 'lazy')
   expect(config.defaultValue).toBe(source)
   expect(config.states?.hover).toBe(hover)

@@ -9,6 +9,7 @@ import { isVariable, variable, type Variable, type VariableOptions } from './var
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import type { DeclareProtocol } from './declaration'
+import { allocateVariableName } from './key'
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */
 export type VariableCluster<Members extends { default: Variable }> = Variable & {
@@ -80,7 +81,7 @@ export const resolveVariable = <Target extends DeclareProtocol>(variable: Target
  */
 export function clusterFrom<
   SourceMembers extends { default: Variable } & Record<string, Variable>,
-  Changes extends Record<string, Variable | VariableOptions<Variable>>,
+  Changes extends Record<string, Variable | VariableOptions>,
 >(source: VariableCluster<SourceMembers>, changes: Changes): VariableCluster<
   Omit<SourceMembers, keyof Changes> & { [Name in keyof Changes]: Changes[Name] extends Variable ? Changes[Name] : Variable } & { default: Variable }
 > {
@@ -92,13 +93,13 @@ export function clusterFrom<
       members[name] = change
       continue
     }
-    const options = change as VariableOptions<Variable>
+    const options = change as VariableOptions
     const sourceMember = sourceMembers[name]
     assert(!!sourceMember, `Variable Cluster 未定义来源成员：${name}。新增成员须提供 Variable。`)
     const sourceStates = Object.fromEntries(
       [...sourceMember.config.states.keys()].map((state) => [state.name, sourceMember]),
     )
-    members[name] = variable(sourceMember, { ...options, states: { ...sourceStates, ...options.states } })
+    members[name] = variable(sourceMember, { ...options, name: options.name ?? allocateVariableName(), states: { ...sourceStates, ...options.states } })
   }
   return variableCluster(members as Omit<SourceMembers, keyof Changes> &
     { [Name in keyof Changes]: Changes[Name] extends Variable ? Changes[Name] : Variable } & { default: Variable })

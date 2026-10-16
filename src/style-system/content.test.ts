@@ -36,7 +36,7 @@ test('只有符合内容协议的属性才标识内容', () => {
 test('广义内容和定义主体不属于Expression，其输出表达式属于Expression', () => {
   expectTypeOf<JSSContent>().not.toExtend<Expression>()
   expectTypeOf<Required<Pick<JSSContent, 'dependencies' | 'toCSSString' | 'onCompile'>>>().not.toExtend<Expression>()
-  expectTypeOf(variable(3)).not.toExtend<Expression>()
+  expectTypeOf(variable(3, 'content-number')).not.toExtend<Expression>()
   expectTypeOf(modification({ type: 'color', detail: {} })).not.toExtend<Expression>()
   expectTypeOf<Modification>().toExtend<JSSContent>()
   expectTypeOf(modification({ type: 'color', detail: {} })).toExtend<JSSContent>()

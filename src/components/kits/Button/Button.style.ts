@@ -145,9 +145,9 @@ rules(filledButton, [
 ])
 
 // emphasis 只调整整体存在感，不改变外观、语气或尺寸；禁用状态由 Variable 保持。
-const softOpacity = variable(0.7, { states: { disabled: disabledFade } })
+const softOpacity = variable(0.7, { name: 'button-soft-opacity', states: { disabled: disabledFade } })
 rules([...button, '&[data-emphasis="soft"]'], [[$opacity, softOpacity]])
-const strongOpacity = variable(1, { states: { disabled: disabledFade } })
+const strongOpacity = variable(1, { name: 'button-strong-opacity', states: { disabled: disabledFade } })
 rules([...button, '&[data-emphasis="strong"]'], [[$opacity, strongOpacity]])
 
 // =============================================================================

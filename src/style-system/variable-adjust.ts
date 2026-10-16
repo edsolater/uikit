@@ -34,7 +34,7 @@ export function adjust(source: AdjustTargetProtocol, change: AdjustProtocol<keyo
   source = resolveVariable(source)
   const expression = combine(source, change)
   for (const target of [source, change]) allocateVariableName(target.key.toCSSString())
-  const merged = variable(expression)
+  const merged = variable(expression, allocateVariableName())
   merged.declarations = [source, change]
   return merged
 }

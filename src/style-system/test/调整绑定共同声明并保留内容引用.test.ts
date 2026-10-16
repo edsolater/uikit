@@ -121,7 +121,7 @@ test('必要材料与内容领域不符时明确失败，完整CSS配方名直�
 
 // 静态契约：操作需要声明材料和领域内容；天然材料的正例由上述行为测试覆盖。
 if (false) {
-  const source = variable('red')
+  const source = variable('red', 'adjust-typed-source')
   // @ts-expect-error 只有声明能力不足以成为内置Variable的颜色调整材料。
   adjust(source, { key: key('--invalid-change'), content: 1 })
   // @ts-expect-error Variable的内置颜色Adjust不接受未知内容领域。

@@ -19,7 +19,7 @@ export function interactiveColorStates({
   lightnessResponse?: number
   chromaResponse?: number
 }): VariableStateValues<ValueInput> {
-  const state = (lightnessDelta: number, chromaDelta: number) => oklch(base, {
+  const state = (lightnessDelta: number, chromaDelta: number) => (currentBase: ValueInput) => oklch(currentBase, {
     lightness: current => add(current, lightnessDelta * lightnessResponse),
     chroma: chromaResponse === 0 ? undefined : current => add(current, chromaDelta * chromaResponse),
   })

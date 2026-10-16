@@ -10,20 +10,21 @@ import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
 import { condition, conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
 import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
 import type { Declaration, DeclareProtocol } from './declaration'
-import type { JSSKeyObject } from './key'
+import { keyPriority, type JSSKeyObject } from './key'
 import { colorModificationShape, type ColorModificationContent } from './modification'
 import { oklch } from './pieces/contents/functions/oklch'
 import { appendStateCondition } from './pieces/state-conditions'
 import { value, type Value, type ValueInput } from './value'
-import { referenceVariable, variableRegistrationDeclarations, type VariableDefaultValue, type VariableOptions } from './variable'
+import { referenceVariable, variableRegistrationDeclarations, type VariableDefaultValue, type VariableOptions, type VariableStateRule } from './variable'
 import { resolveVariable } from './variable-cluster'
+import { observeDeclaration } from './variable-dependency'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
 export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]
 
 /** 可修改自定义属性的基础材料；状态和注册仅在存在时参与，不要求对象实现操作。 */
 export interface ModifyTargetProtocol extends DeclareProtocol, JSSContent {
-  states?: Map<import('./pieces/state-conditions').StateCondition, ValueInput>
+  states?: Map<import('./pieces/state-conditions').StateCondition, VariableStateRule>
   registration?: VariableOptions['registration']
 }
 
@@ -90,6 +91,9 @@ export function modify(variable: ModifyTargetProtocol, modification: ModifyProto
 
 /** 一个局部声明的基础值、最终值和修改步骤；只在本次编译内有效。 */
 interface VariableInstance {
+  input: unknown
+  revision: number
+  baseContent: ValueInput
   node: JSSStyleNode
   variable: ModifyTargetProtocol
   number: number
@@ -104,7 +108,7 @@ interface VariableInstance {
 /**
  * 局部 Variable 同址赋值保留最后一个实际输出的值。
  */
-const joinVariableValues = (values: Value[]): ValueInput =>
+export const joinVariableValues = (values: Value[]): ValueInput =>
   value(values, {
     /**
      * 忽略没有输出的贡献，返回本地址最后有效的声明值。
@@ -170,20 +174,23 @@ export const declaredVariable = (node: JSSStyleNode): ModifyTargetProtocol | und
 export const findVariableDeclaration = (controller: ASTController, variable: ModifyTargetProtocol, path: ConditionPath): (JSSStyleNode & { content: VariableDeclaration }) | undefined =>
   controller.search({ key: variable.key })
     .filter((node): node is JSSStyleNode & { content: VariableDeclaration } => declaredVariable(node) === variable && isSemanticPathPrefix(node.conditionPath, path))
-    .sort((left, right) => semanticPathParts(right.conditionPath).length - semanticPathParts(left.conditionPath).length)[0]
+    .sort((left, right) => semanticPathParts(right.conditionPath).length - semanticPathParts(left.conditionPath).length
+      || keyPriority(right.key) - keyPriority(left.key) || controller.nodes().indexOf(right) - controller.nodes().indexOf(left))[0]
 
 /**
- * 找到状态内容应写入的局部基础值，返回其 Key；没有局部声明则返回 undefined。
+ * 找到状态内容应写入的局部基础值及目标；没有局部声明则返回 undefined。
  * 该局部实例尚未建立时，会同时生成基础值和状态值。
  */
-export function findLocalBaseKey(
+export function findLocalBase(
   context: JSSCompileContext,
   controller: ASTController,
   variable: ModifyTargetProtocol,
   path: ConditionPath,
-): JSSKeyObject | undefined {
+): { key: JSSKeyObject; content: ValueInput } | undefined {
   const target = findVariableDeclaration(controller, variable, path)
-  return target ? ensureVariableInstance(context, controller, target).baseKey : undefined
+  if (!target) return undefined
+  const instance = ensureVariableInstance(context, controller, target)
+  return { key: instance.baseKey, content: instance.baseContent }
 }
 
 /**
@@ -192,6 +199,7 @@ export function findLocalBaseKey(
 export function declareVariable(
   variable: ModifyTargetProtocol,
   value: VariableDefaultValue,
+  priority = variable.key.priority,
 ): Declaration {
   variable = resolveVariable(variable)
   const content: VariableDeclaration = {
@@ -201,7 +209,8 @@ export function declareVariable(
      * 建立本地基础实例，并让已有消费和修改重新确认最近的声明归属。
      */
     onCompile(context, controller) {
-      ensureVariableInstance(context, controller, context.node)
+      const instance = ensureVariableInstance(context, controller, context.node)
+      observeDeclaration(variable, instance.baseContent, instance.baseKey, context, controller)
       // 新局部定义接管已有修改时，重新确定这些修改的归属。
       const session = sessionOf(context)
       for (const node of controller.nodes()) {
@@ -211,28 +220,37 @@ export function declareVariable(
       }
     },
   }
-  return [referenceVariable(variable), content]
+  return [{ ...referenceVariable(variable), priority }, content]
 }
 
 /**
- * 为局部声明生成基础值及各状态值，并取得这次编译中的修改归属；同一语义路径重复声明会报错。
+ * 为局部声明生成基础值及各状态值，并取得这次编译中的修改归属。
  */
 function ensureVariableInstance(context: JSSCompileContext, controller: ASTController, node: JSSStyleNode): VariableInstance {
   const session = sessionOf(context)
   const existing = session.instances.get(node)
-  if (existing) return existing
+  if (existing && existing.input === node.content && existing.revision === node.compileRevision) return existing
   assert(isVariableDeclaration(node.content), '局部 Variable 实例需要 Variable 声明。')
+  if (existing) {
+    for (const product of controller.search({ productTag: existing.baseKey })) controller.remove(product)
+    for (const product of controller.search({ productTag: existing })) controller.remove(product)
+    for (const step of existing.steps) {
+      controller.remove(step.fallback)
+      for (const candidate of step.members.values()) controller.remove(candidate.selection)
+    }
+    for (const consumer of controller.nodes())
+      if (consumer !== node && (session.steps.get(consumer)?.instance === existing
+        || [...session.consumers.get(consumer)?.values() ?? []].includes(existing))) consumer.compileRevision++
+  }
   const { variable, content } = node.content
-  const address = JSON.stringify(semanticPathParts(node.conditionPath))
-  assert(
-    !controller.search({ key: variable.key }).some(other => other !== node && declaredVariable(other) === variable && JSON.stringify(semanticPathParts(other.conditionPath)) === address),
-    `自定义属性 ${variable.key.toCSSString()} 在同一语义路径重复定义。`,
-  )
   const instance: VariableInstance = {
+    input: node.content,
+    revision: node.compileRevision,
     node,
     variable,
     number: ++session.nextNumber,
     count: 0,
+    baseContent: undefined,
     baseName: variable.key.toCSSString().slice(2),
     baseKey: {
       /**
@@ -240,16 +258,17 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
        */
       toCSSString: () => `--${instance.baseName}`,
       join: joinVariableValues,
+      priority: keyPriority(node.key),
     },
     steps: [],
     results: new Map(),
   }
   session.instances.set(node, instance)
   declareInstanceValues(controller, instance, content)
-  takeOverAutomaticStates(controller, instance)
-  controller.onRemove(node, () => {
+  if (!existing) controller.onRemove(node, () => {
+    const current = session.instances.get(node)!
     for (const consumer of controller.nodes())
-      if (session.steps.get(consumer)?.instance === instance || session.consumers.get(consumer)?.get(variable) === instance)
+      if (session.steps.get(consumer)?.instance === current || [...session.consumers.get(consumer)?.values() ?? []].includes(current))
         consumer.compileRevision++
   })
   return instance
@@ -260,35 +279,26 @@ function ensureVariableInstance(context: JSSCompileContext, controller: ASTContr
  */
 function declareInstanceValues(controller: ASTController, instance: VariableInstance, content: VariableDefaultValue): void {
   const { node, variable } = instance
-  controller.insert(
-    { before: node, conditionPath: node.conditionPath },
-    [instance.baseKey, result(content)],
-    { owner: node, identity: 'base' },
-  )
-  for (const [state, stateContent] of variable.states ?? []) {
+  const base = result(content)
+  instance.baseContent = base
+  for (const [path, value] of variableDeclarationValues(variable.states, base, node.conditionPath)) {
     controller.insert(
-      {
-        before: node,
-        conditionPath: appendStateCondition(node.conditionPath, state),
-      },
-      [instance.baseKey, stateContent],
-      { owner: node, identity: `state/${state.name}` },
+      { before: node, conditionPath: path }, [instance.baseKey, value], { owner: node, productTag: instance.baseKey },
     )
   }
 }
 
 /**
- * 局部声明接管同对象已生成的自动状态值，避免它们覆盖此声明的基础值和状态。
+ * 用本次基础内容绑定原始状态规则；自动消费与显式声明共用同一展开语义。
  */
-function takeOverAutomaticStates(controller: ASTController, instance: VariableInstance): void {
-  const { node, variable } = instance
-  for (const candidate of controller.search({ productTag: variable })) {
-    if (
-      candidate.resourceAddress === undefined && findVariableDeclaration(controller, variable, candidate.conditionPath) === node
-    ) {
-      controller.remove(candidate)
-    }
+export function variableDeclarationValues(states: ModifyTargetProtocol['states'], base: ValueInput, path: ConditionPath, includeBase = true): [ConditionPath, ValueInput][] {
+  const current = [...states?.keys() ?? []].findLast(state => path.stateConditionPath.some(item => item.name === state.name))
+  const values: [ConditionPath, ValueInput][] = includeBase || current ? [[path, current ? result(states!.get(current)!, base) : base]] : []
+  for (const [state, rule] of states ?? []) {
+    if (current && state.order <= current.order) continue
+    values.push([appendStateCondition(path, state), result(rule, base)])
   }
+  return values
 }
 
 /**
@@ -338,7 +348,7 @@ function createStep(context: JSSCompileContext, controller: ASTController, insta
   return step
 }
 /**
- * 为当前消费地址发布共享结果链；默认引用保留该地址已有的手写公开赋值。
+ * 为当前消费地址发布共享结果链，公开赋值与其他声明统一进入 Join 的等级选择。
  */
 function publishResult(controller: ASTController, instance: VariableInstance, member: JSSStyleNode): void {
   const address = conditionAddressKey(member.conditionPath)
@@ -346,14 +356,12 @@ function publishResult(controller: ASTController, instance: VariableInstance, me
   const result = mapGet(instance.results, address, () => ({ path: member.conditionPath, members: new Set<JSSStyleNode>() }))
   result.members.add(member)
   if (!result.alias && (instance.baseName !== instance.variable.key.toCSSString().slice(2) || instance.steps.length)) {
-    const manual = controller.search({ key: instance.variable.key, conditionPath: result.path })
-      .some(node => node !== instance.node && !declaredVariable(node) && !instance.steps.some(step => step.members.has(node)) && node.content !== member.content)
-    if (!manual || member === instance.node) result.alias = controller.insert({ before: member, conditionPath: result.path },
+    result.alias = controller.insert({ before: member, conditionPath: result.path },
       [{
         /**
          * 发布当前目标名称，聚合保留最后一个有效局部结果。
          */
-        toCSSString: () => instance.variable.key.toCSSString(), join: joinVariableValues },
+        toCSSString: () => instance.variable.key.toCSSString(), priority: keyPriority(instance.node.key), join: joinVariableValues },
         createJSSContent(() => stageReference(instance, instance.steps.at(-1)?.name))],
       { owner: instance.node, identity: `result/${address}`, productTag: instance })
   }

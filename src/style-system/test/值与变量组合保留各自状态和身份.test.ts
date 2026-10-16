@@ -116,6 +116,12 @@ test('Cluster 继承保留未改成员，也能加入新成员且未用成员不
   expect(css).not.toContain('--family-source-soft-color:')
   expect(css).not.toContain('--family-extra-color:')
   expect(unusedActive).not.toHaveBeenCalled()
+  const unnamed = clusterFrom(source, { default: { states: { hover: 'purple' } } })
+  const unnamedCSS = compileRules([[[condition('.Unnamed')], 'color', unnamed]])
+  expect(unnamed.name).not.toBe(source.name)
+  expect(unnamedCSS).toContain(`${unnamed.toCSSString()}: var(--family-source-color);`)
+  expect(unnamedCSS).toContain('--family-source-color: red;')
+  expect(unnamedCSS).toContain(`${unnamed.toCSSString()}: purple;`)
 })
 test('Cluster 直接使用等同默认成员，选择返回原对象并保留状态', () => {
   const normal = variable('red', { name: 'normal-color' })
@@ -136,17 +142,15 @@ test('未登记的原始值或普通函数没有 Cluster 成员', () => {
   expect(clusterDeclarations(cluster, () => 'red')).toBeUndefined()
 })
 
-test('状态直接使用 Cluster 时保留其身份，普通状态工厂仍收到原始默认值', () => {
+test('状态直接使用 Cluster 时保留其身份，常量状态独立保留', () => {
   const cluster = variableCluster({ default: variable('blue', { name: 'state-cluster-source' }) })
-  const factory = vi.fn((defaultValue: string) => defaultValue + 'px')
   const target = variable('2', {
     name: 'state-cluster-target',
-    states: { hover: cluster, active: factory },
+    states: { hover: cluster, active: '2px' },
   })
 
   expect(target.config.states.get(resolveStateConditions(['hover'])[0])).toBe(cluster)
   expect(target.config.states.get(resolveStateConditions(['active'])[0])).toBe('2px')
-  expect(factory).toHaveBeenCalledExactlyOnceWith('2')
 })
 
 test('Variable 与 Cluster 的 onActive 由通用遍历各自调用一次', () => {

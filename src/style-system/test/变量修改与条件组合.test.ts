@@ -33,11 +33,11 @@ test('缺失局部声明或应用规则时给出明确诊断', () => {
   expect(() => modify(amount, 3 as unknown as ExpressionModification)).toThrow('变化材料')
 })
 
-test('同名不同对象不共用局部声明，重复同路径局部声明给出诊断', () => {
+test('修改实例仍按对象归属，同一对象重复声明按原书写顺序取值', () => {
   const first = variable(1, { name: 'same-name' })
   const second = variable(1, { name: 'same-name' })
   expect(() => compileRules([row([button], declare(first)), row([button], modify(second, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 3) })))])).toThrow('找不到父路径定义')
-  expect(() => compileRules([row([button], declare(first)), row([button], declare(first))])).toThrow('重复定义')
+  expect(compileRules([row([button], declare(first, 1)), row([button], declare(first, 2))])).toContain('--same-name: 2;')
 })
 
 test('递归修改表达式由普通内容编译诊断', () => {

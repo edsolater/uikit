@@ -1,7 +1,7 @@
 /** 公开类型保留目标与内容的关系，并直接提供 Variable 创建配置。 */
 import { declare } from '../declaration'
 import { modify } from '../variable-modify'
-import { expect, expectTypeOf, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { add, clusterFrom, key, rules, variable, variableCluster } from '../index'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
@@ -53,29 +53,12 @@ test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => 
   expect(css.indexOf('--public-shorthand: 2;')).toBeLessThan(css.indexOf('--public-shorthand: 3;'))
 })
 
-test('简写状态回调创建时执行并收到原始默认生产函数，默认内容消费时才求值', () => {
+test('简写默认生产函数在消费时求值，常量状态独立保留', () => {
   const source = vi.fn(() => 1)
-  const hover = vi.fn((defaultValue: typeof source) => {
-    expect(defaultValue).toBe(source)
-    return 2
-  })
-  const amount = variable({ default: source, hover }, 'public-lazy-shorthand')
-  expect(hover).toHaveBeenCalledOnce()
+  const amount = variable({ default: source, hover: 2 }, 'public-lazy-shorthand')
   expect(source).not.toHaveBeenCalled()
   const css = compileRules([[[condition('.LazyShorthand')], 'opacity', amount]])
   expect(css).toContain('--public-lazy-shorthand: 1;')
   expect(css).toContain('--public-lazy-shorthand: 2;')
   expect(source).toHaveBeenCalled()
-  expect(hover).toHaveBeenCalledOnce()
-})
-
-test('简写状态和完整配置回调仍按默认值推导参数类型', () => {
-  const amount = variable({ default: 1, hover: (current) => {
-    expectTypeOf(current).toMatchTypeOf<number>()
-    return current + 1
-  } }, { name: 'public-typed-shorthand', states: { active: (current) => {
-    expectTypeOf(current).toMatchTypeOf<number>()
-    return current + 2
-  } } })
-  expect([...amount.config.states.values()]).toEqual([2, 3])
 })

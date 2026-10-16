@@ -6,7 +6,7 @@
  */
 import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
-import { propertyName, type JSSKey, type JSSKeyObject } from '../../key'
+import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../../key'
 import type { JSSStyleNode } from '../rules-to-style-nodes'
 import type { ASTSession, ContentCompilationRecord } from '../ast-controller'
 import { contentToCSSString } from '../content-nodes-to-css-string'
@@ -18,16 +18,27 @@ interface InputSnapshot {
   join: JSSKeyObject['join']
   content: unknown
   revision: number
+  priority: number
+  effective: boolean
 }
 
 /** 同址连接的输入快照与结果历史；输入 Map 保留贡献顺序，最后结果输出，旧结果保留依赖来源。 */
 interface JoinRecord {
   inputs: Map<JSSStyleNode, InputSnapshot>
+  anchor: JSSStyleNode
   results: JSSStyleNode[]
 }
 
-/** 捕获已确认至少两项的有序声明的完整生成输入并选择唯一连接规则；同名规则冲突时拒绝连接。 */
-function captureInputs(nodes: Iterable<JSSStyleNode>): { inputs: Map<JSSStyleNode, InputSnapshot>; join: JSSKeyObject['join'] } {
+/**
+ * 捕获有序输入，一次选择最高等级有效贡献、连接规则及其最后位置。
+ * 输掉的贡献仍保留失效快照，不改变获选声明与状态之间的顺序。
+ */
+function captureInputs(nodes: Iterable<JSSStyleNode>, compiledContents: (node: JSSStyleNode) => WeakMap<object, ContentCompilationRecord>): {
+  inputs: Map<JSSStyleNode, InputSnapshot>
+  selected: Map<JSSStyleNode, InputSnapshot>
+  anchor: JSSStyleNode
+  join: JSSKeyObject['join']
+} {
   const inputs = new Map<JSSStyleNode, InputSnapshot>()
   for (const node of nodes) {
     inputs.set(node, {
@@ -35,12 +46,16 @@ function captureInputs(nodes: Iterable<JSSStyleNode>): { inputs: Map<JSSStyleNod
       join: typeof node.key === 'string' ? undefined : node.key?.join,
       content: node.content,
       revision: node.compileRevision,
+      priority: keyPriority(node.key),
+      effective: contentToCSSString(node.content, compiledContents(node)) !== undefined,
     })
   }
-  const joiners = new Set([...inputs.values()].flatMap((input) => input.join ? [input.join] : []))
+  const priority = Math.max(...[...inputs.values()].filter(input => input.effective).map(input => input.priority))
+  const selected = new Map([...inputs].filter(([, input]) => input.effective && input.priority === priority))
+  const joiners = new Set([...selected.values()].flatMap(input => input.join ? [input.join] : []))
   const first = [...inputs.keys()][0]
   assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(inputs.get(first)!.key!)}。`)
-  return { inputs, join: [...joiners][0] }
+  return { inputs, selected, anchor: [...selected.keys()].at(-1) ?? [...inputs.keys()].at(-1)!, join: [...joiners][0] }
 }
 
 /** 为原贡献建立惰性 Value；保留其位置解析结果，改写内容后由连接结果消费新内容。 */
@@ -100,7 +115,7 @@ export class Join {
       const position = group?.get(node)
       if (position === undefined || position <= previousPosition || node.key !== snapshot.key
         || (typeof node.key === 'string' ? undefined : node.key?.join) !== snapshot.join
-        || node.content !== snapshot.content || node.compileRevision !== snapshot.revision) {
+        || node.content !== snapshot.content || node.compileRevision !== snapshot.revision || keyPriority(node.key) !== snapshot.priority) {
         return false
       }
       previousPosition = position
@@ -115,7 +130,7 @@ export class Join {
       const group = groups.get(address)
       const latest = record.results.at(-1)!
       if (this.matches(record, group) && this.session.isAlive(latest)) {
-        this.session.move(latest, [...group!.keys()].at(-1)!, 'after')
+        this.session.move(latest, record.anchor, 'after')
         continue
       }
       for (const result of [...record.results].reverse()) {
@@ -132,26 +147,31 @@ export class Join {
   /** 为至少两项贡献连接一次结果；以业务回调前的实际输入登记快照与历史来源。 */
   private join(address: string, group: Map<JSSStyleNode, number>): boolean {
     if (group.size < 2) return false
-    const { inputs, join } = captureInputs(group.keys())
+    const { inputs, selected, anchor, join } = captureInputs(group.keys(), this.compiledContents)
     const previous = this.records.get(address)
     if (previous && previous.inputs.size === group.size) return false
-    const content = this.createContent(inputs, join)
-    this.publish(address, inputs, content, previous)
+    const content = this.createContent(selected, join)
+    this.publish(address, inputs, anchor, content, previous)
     return true
   }
 
-  /** 按生成快照建立原位置 Value 视图，调用选定连接规则；省略规则时返回默认数组内容。 */
-  private createContent(inputs: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
-    const values = Array.from(inputs, ([node, input]) => createView(input.content, this.compiledContents(node)))
+  /**
+   * 只为已选择的同级贡献建立位置 Value 视图，再调用原 Key.join 或默认数组聚合。
+   */
+  private createContent(selected: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
+    const values = Array.from(selected, ([node, input]) => createView(input.content, this.compiledContents(node)))
     return join ? join(values) : value(values)
   }
 
-  /** 将连接内容放在末项声明之后，登记全部输入来源与结果历史；旧记录由连接前确定。 */
-  private publish(address: string, inputs: Map<JSSStyleNode, InputSnapshot>, content: unknown, previous: JoinRecord | undefined): void {
-    const anchor = [...inputs.keys()].at(-1)!
+  /**
+   * 将结果放在获选贡献的最后位置，全部输入继续作为来源参与撤销与恢复。
+   */
+  private publish(address: string, inputs: Map<JSSStyleNode, InputSnapshot>, anchor: JSSStyleNode, content: unknown, previous: JoinRecord | undefined): void {
     const result = this.session.insert(anchor, this.session.insertionIdentity(anchor), anchor.conditionPath, inputs.get(anchor)!.key, content, anchor, 'after')
-    const record = previous ?? { inputs, results: [] }
+    result.aggregate = true
+    const record = previous ?? { inputs, anchor, results: [] }
     record.inputs = inputs
+    record.anchor = anchor
     for (const node of inputs.keys()) {
       this.session.own(node, result)
       this.recordOf.set(node, record)
@@ -160,4 +180,5 @@ export class Join {
     this.recordOf.set(result, record)
     this.records.set(address, record)
   }
+
 }

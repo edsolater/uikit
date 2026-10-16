@@ -7,6 +7,8 @@ import { isJSSContent } from '../content'
 
 /** 队列中一项可改写的样式内容；地址保留目标与状态，位置决定输出顺序。 */
 export interface JSSStyleNode {
+  /** 同址聚合结果不是新的业务声明来源。 */
+  aggregate?: boolean
   /** 编译会话中的稳定位置身份。 */
   identity?: string
   /** 内容身份未变但编译前提改变时递增，使旧结果失效。 */

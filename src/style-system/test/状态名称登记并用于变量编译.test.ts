@@ -15,8 +15,8 @@ test('内置状态可由 Variable 直接采用', () => {
 test('未登记的主体条件原样采用，快捷条件仍保留禁用守卫', () => {
   const factory = vi.fn(() => 'blue')
   const color = variable('red', { name: 'raw-color', states: { hover: factory, '&[data-tone="danger"]': 'green' } })
-  expect(factory).toHaveBeenCalledOnce()
   const css = compileRules([[['.RawState'], 'color', color]])
+  expect(css).toContain('--raw-color: blue;')
   expect(css).toContain('&[data-tone="danger"] {')
   expect(css).toContain('--raw-color: green;')
   expect(css).toContain(':not(:disabled, [data-status~="disabled"])')
@@ -69,14 +69,12 @@ test('登记只影响之后创建的快捷匹配，不改变已有原始条件',
 test('两个自写条件保留输入顺序，状态内容保留来源引用', () => {
   const first = '&[data-first-raw]'
   const second = '&[data-second-raw]'
-  const events: string[] = []
   const source = variable('gray', { name: 'raw-source', states: { [first]: 'blue' } })
   const target = variable('red', { name: 'raw-target', states: {
-    [first]: () => { events.push('first'); return source },
-    active: () => { events.push('active'); return 'black' },
-    [second]: () => { events.push('second'); return source },
+    [first]: () => source,
+    active: () => 'black',
+    [second]: () => source,
   } })
-  expect(events).toEqual(['first', 'active', 'second'])
   const states = [...target.config.states.keys()]
   expect(states.map(state => state.name)).toEqual(['active', first, second])
   expect(states[2].order).toBeGreaterThan(states[1].order)
@@ -90,16 +88,16 @@ test('两个自写条件保留输入顺序，状态内容保留来源引用', ()
   expect(css).not.toContain('--raw-target: blue;')
 })
 
-test('状态输出按登记顺序，创建回调保持输入顺序且不求默认生产函数', () => {
+test('状态输出按登记顺序，默认生产函数保持消费前惰性', () => {
   const first = stateCondition('factoryOrderFirst', condition('&[data-first]'))
   const second = stateCondition('factoryOrderSecond', condition('&[data-second]'))
-  const events: string[] = []
   const defaultFactory = vi.fn(() => 1)
   const source = variable(defaultFactory, { name: 'ordered-state-source', states: {
-    factoryOrderSecond: (raw) => { expect(raw).toBe(defaultFactory); events.push('second'); return 3 },
-    factoryOrderFirst: (raw) => { expect(raw).toBe(defaultFactory); events.push('first'); return 2 },
+    factoryOrderSecond: () => 3,
+    factoryOrderFirst: () => 2,
   } })
-  expect(events).toEqual(['second', 'first'])
   expect([...source.config.states.keys()]).toEqual([first, second])
   expect(defaultFactory).not.toHaveBeenCalled()
+  const css = compileRules([[['.OrderedStates'], 'opacity', source]])
+  expect(css.indexOf('--ordered-state-source: 2;')).toBeLessThan(css.indexOf('--ordered-state-source: 3;'))
 })
