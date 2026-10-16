@@ -7,8 +7,8 @@
 import { afterEach, test, expect } from 'vitest'
 import { compileRules } from '../css-root'
 import { condition } from '../condition'
-import { declare } from '../declaration'
-import { modify } from '../variable-modify'
+import { declare } from '../operations/declare'
+import { modify } from '../operations/modify'
 import { variable } from '../variable'
 import { createJSSContent } from '../content'
 afterEach(() => document.body.replaceChildren())

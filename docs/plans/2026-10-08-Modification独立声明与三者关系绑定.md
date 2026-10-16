@@ -101,12 +101,12 @@ Modify 的目标方与变化方协议职责已接通，绑定结果作为普通 
 | 1 | 确定双方协议的最少材料、声明身份、内容表示和三者声明入口 | 根据 Declare、Adjust、Modify 的实际需要定义契约，不要求 Modification 继承 Variable，不凭旧方法名恢复中间转换层 |
 | 2 | 实现 `type`、`detail` 入口、内置内容转译及 Modification 的三个协议 | [modification.ts](../../src/style-system/modification.ts) 承担 Modification 自身定义与协议；颜色规则作为内置实现，具体承载文件在职责核对后确定 |
 | 3 | 迁移颜色配方并退出原组合概念、入口和出口 | 原 `color-variable-modification.ts` 的颜色通道转译已迁入 Modification 内置能力；旧入口及文件已移除，必要表达行为保留 |
-| 4 | 为 Variable 接通 Declare、Adjust Target、Modify Target 协议 | [variable.ts](../../src/style-system/variable.ts) 提供对象自身及目标侧能力；声明机制由 [declaration.ts](../../src/style-system/declaration.ts) 消费 Declare 协议 |
-| 5 | 实现三者绑定及一次共同声明 | [variable-adjust.ts](../../src/style-system/variable-adjust.ts) 根据双方协议组织关系；[declaration.ts](../../src/style-system/declaration.ts) 与现有编译机制处理声明输出、依赖与作用域 |
-| 6 | 接通 Modify 的双方协议消费 | [variable-modify.ts](../../src/style-system/variable-modify.ts) 负责具体修改应用及条件、顺序处理 |
+| 4 | 为 Variable 接通 Declare、Adjust Target、Modify Target 协议 | [variable/core.ts](../../src/style-system/variable/core.ts) 提供对象自身及目标侧能力；声明机制由 [operations/declare.ts](../../src/style-system/operations/declare.ts) 消费 Declare 协议 |
+| 5 | 实现三者绑定及一次共同声明 | [operations/adjust.ts](../../src/style-system/operations/adjust.ts) 根据双方协议组织关系；[operations/declare.ts](../../src/style-system/operations/declare.ts) 与现有编译机制处理声明输出、依赖与作用域 |
+| 6 | 接通 Modify 的双方协议消费 | [operations/modify.ts](../../src/style-system/operations/modify.ts) 负责具体修改应用；[编译修改链](../../src/style-system/variable/modify.ts) 负责条件与顺序处理 |
 | 7 | 同步公开出口、调用、注释和验证 | 核对 [index.ts](../../src/style-system/index.ts)、调用方及生成产物，清理旧入口引用，按下列行为验收 |
 
-实施前核对相关文件的开头职责注释。Modification 的自身描述、协议及内置转译归该主体；Variable 提供自身及目标侧协议；关系绑定与修改应用分别由 variable-adjust、variable-modify 承担。颜色转译可以有内部实现文件，但不能据此重建 Color Variable Modification 独立领域。
+实施前核对相关文件的开头职责注释。Modification 的自身描述、协议及内置转译归该主体；Variable 提供自身及目标侧协议；关系绑定与修改应用分别由 variable-adjust、modify 承担。颜色转译可以有内部实现文件，但不能据此重建 Color Variable Modification 独立领域。
 
 ## 最小验收
 
@@ -128,10 +128,10 @@ Modify 的目标方与变化方协议职责已接通，绑定结果作为普通 
 | 要求与负责主体 | 必须保留的材料、变换与交付 | 验收观察与证据位置 | 状态 |
 | --- | --- | --- | --- |
 | Modification 自身定义与协议 | `type + detail` 保存变化；内置转译；实现 Declare、Adjust、Modify；独立声明不需要 Variable 包装 | [modification.ts](../../src/style-system/modification.ts)；[调整绑定共同声明并保留内容引用.test.ts](../../src/style-system/test/调整绑定共同声明并保留内容引用.test.ts)的独立配方、延迟回调与可调用内容用例 | 满足 |
-| Variable 目标侧协议 | 实现 Declare、Adjust Target、Modify Target；应用入口按协议消费双方 | [variable.ts](../../src/style-system/variable.ts)、[declaration.ts](../../src/style-system/declaration.ts)；调整绑定流程的继承方法与自定义非颜色目标用例 | 满足 |
+| Variable 目标侧协议 | 实现 Declare、Adjust Target、Modify Target；应用入口按协议消费双方 | [variable/core.ts](../../src/style-system/variable/core.ts)、[operations/declare.ts](../../src/style-system/operations/declare.ts)；调整绑定流程的继承方法与自定义非颜色目标用例 | 满足 |
 | 颜色表达职责接管 | 颜色通道固定值、相对表达与未指定通道保留，由内置转译提供；退出旧组合概念和入口 | Modification 内置转译及 [colors.ts](../../src/style-system/pieces/contents/atoms/color/colors.ts) 迁移；源码、现役文档和重建 dist 中旧入口/旧求值链零残留 | 满足 |
-| Adjust 三者绑定 | Source、Modification、mergedResult 的身份及 CSS 引用关系；一次声明同时输出三者 | [variable-adjust.ts](../../src/style-system/variable-adjust.ts)；调整绑定流程的三者/共享/同址来源修改用例；[颜色修改规则按条件组合并在浏览器中生效.browser.test.ts](../../src/style-system/test/颜色修改规则按条件组合并在浏览器中生效.browser.test.ts)的来源与配方局部覆盖 | 满足 |
-| Modify 条件应用 | 目标与变化的协议材料；既有数字及颜色修改、条件、连续顺序、继承和撤销行为 | [variable-modify.ts](../../src/style-system/variable-modify.ts)、Button 数字调用；原数值/颜色流程回归及新增绑定结果继承 Modify、子级重算、退出恢复浏览器用例 | 满足 |
+| Adjust 三者绑定 | Source、Modification、mergedResult 的身份及 CSS 引用关系；一次声明同时输出三者 | [operations/adjust.ts](../../src/style-system/operations/adjust.ts)；调整绑定流程的三者/共享/同址来源修改用例；[颜色修改规则按条件组合并在浏览器中生效.browser.test.ts](../../src/style-system/test/颜色修改规则按条件组合并在浏览器中生效.browser.test.ts)的来源与配方局部覆盖 | 满足 |
+| Modify 条件应用 | 目标与变化的协议材料；既有数字及颜色修改、条件、连续顺序、继承和撤销行为 | [operations/modify.ts](../../src/style-system/operations/modify.ts)、[编译修改链](../../src/style-system/variable/modify.ts)、Button 数字调用；原数值/颜色流程回归及新增绑定结果继承 Modify、子级重算、退出恢复浏览器用例 | 满足 |
 | 输入失败与迁移 | 无效内容或协议失败须明确暴露；现有 JS Adjust 的新语义及旧调用迁移须有依据 | 调整绑定流程的不支持内容领域失败、文件级公开类型拒绝；原 JS adjust/mutable 被 CSS 绑定替换，数字 Modify 转用 expression 材料 | 满足 |
 | 生命周期与资源 | 复用声明、依赖、条件与撤销机制，保留名称唯一性；不引入独立 Adapter 层 | 沿用 AST insert/depend/onRemove/remove 与真实 Variable 声明查询；共享依赖退出、按需资源、显式/改名避碰行为用例；独立复用审查原反例复验通过 | 满足 |
 | 代码质量与责任完整性 | 中文职责注释、英文代码命名、完整阅读路径；按五工具检查必要性；旧职责由新入口接管 | 同名 Modification 布局、Variable/Modify 全文件具名函数黑盒说明及使用方应用边界复核；五工具结果见下文；独立审查关闭全部发现 | 满足 |
@@ -170,7 +170,7 @@ Modify 的目标方与变化方协议职责已接通，绑定结果作为普通 
 | 维护与代码清洁 | 当前 dirty 工作树已固定到 `agents/run/20261008-material-protocol/code-baseline.json`；在同一责任范围比较生产+测试，要求净减少并缩短整体链 | 最终新增/删除/净变化及五工具实际判断，文档排除 | 满足 |
 | 完整验证 | 行为断言保留业务约束；正式 unit/browser/type-check/build 全部通过 | 本轮准确命令、计数、exit 0 和 diff check | 满足 |
 
-代码落点沿用既有职责：`declaration.ts` 定义并消费声明材料；`variable-adjust.ts` 直接组织来源、变化、结果及共同声明；`variable-modify.ts` 从正式声明查询到修改账本均消费目标材料；`variable.ts` 提供自身数据及标准 JSS 内容表达；`modification.ts` 负责单配置变化及自身配方。不存在注册系统、独立 Adapter、新内容领域或控制器修改能力的需要。
+代码落点沿用既有职责：`declare.ts` 定义并消费声明材料；`variable-adjust.ts` 直接组织来源、变化、结果及共同声明；`modify.ts` 校验目标并选择应用，`variable/modify.ts` 从正式声明查询到修改账本均消费目标材料；`variable.ts` 提供自身数据及标准 JSS 内容表达；`modification.ts` 负责单配置变化及自身配方。不存在注册系统、独立 Adapter、新内容领域或控制器修改能力的需要。
 
 修改前问题已经具体确认：入口先调用目标动作再回到使用方应用，造成多余转发；仅入口结构识别不能让缺少 Variable 身份的材料进入正式声明/修改链；Modification 两参数与去前缀名称要求不符。最少方案及实际形状在独立前置审查后落实，接口细节按行为自行推断。
 
@@ -262,7 +262,7 @@ TEMP/TMP 仅使用 agents/run/20261008-fnkit-reuse/temp，旧任务目录保持�
 
 修改范围是 Declare、Adjust、Modify 所需材料的 Shape 表达。`Variable extends ModifyTargetProtocol` 保留：主体满足操作要求的材料关系成立，无需另立公共内容概念。通用 Modification 的 type/name/detail、领域路由与现有应用行为保留。
 
-在 [declaration.ts](../../src/style-system/declaration.ts)、[variable-modify.ts](../../src/style-system/variable-modify.ts)、[modification.ts](../../src/style-system/modification.ts) 中直接用对象列出字段，字段 Predicate 检查对应值；入口检查 content 字段存在，避免把缺失字段误作显式 undefined。[variable-adjust.ts](../../src/style-system/variable-adjust.ts) 同步入口检查。颜色配方与表达变化的联合判断仍由 Modify 使用端承担。不新增内容接口、转换层或注册流程。
+在 [operations/declare.ts](../../src/style-system/operations/declare.ts)、[operations/modify.ts](../../src/style-system/operations/modify.ts)、[modification.ts](../../src/style-system/modification.ts) 中直接用对象列出字段，字段 Predicate 检查对应值；入口检查 content 字段存在，避免把缺失字段误作显式 undefined。[operations/adjust.ts](../../src/style-system/operations/adjust.ts) 同步入口检查。颜色配方与表达变化的联合判断仍由 Modify 使用端承担。不新增内容接口、转换层或注册流程。
 
 验收沿用现有真实声明、三者绑定、自然材料、继承与可调用对象、无效材料、条件修改和资源撤销的行为测试。334 项单元测试、147 项浏览器测试、类型检查、构建与 diff 检查全部通过；能力复用、重复能力识别、精简与约束独立复查全部通过，本轮完成。生产新增 31 行、删除 32 行，净减少 1 行；测试未改，生产与测试合计净减少 1 行。基线、暂存指纹与验证结果见 [evidence.json](../../agents/run/20261009-protocol-cleanup/evidence.json)，测试及类型、构建日志保留在同一目录。没有通过删除断言或压缩语句取得减量。
 

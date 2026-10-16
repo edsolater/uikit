@@ -13,7 +13,7 @@ import { focusOutline } from '../pieces/contents/atoms/focus'
 import { toneColors } from '../pieces/contents/atoms/color/colors'
 import { highlightColors } from '../pieces/contents/atoms/color/ui-action-colors'
 import type { Rules } from '../rule'
-import { declare } from '../declaration'
+import { declare } from '../operations/declare'
 
 stateCondition('chainHover', condition('&:where([data-hover])'))
 stateCondition('chainActive', condition('&:where([data-active])'))

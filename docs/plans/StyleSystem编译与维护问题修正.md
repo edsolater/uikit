@@ -80,7 +80,7 @@
 
 **实施结果：** 已完成，独立实际代码复查通过。修改模块消费 `pieces/state-conditions.ts` 的现役 helper，旧的手工路径构造退出；helper 保持原位置。真实编译节点缺 semanticPath 且已有 hover 的反例从遗漏 hover 失败修正为保留 hover、再追加 focus；同时经 Variable.modify 与正式 compileRules 验证状态基础值及最终表达式。全量单元测试 258 项（38 个文件）、类型检查、浏览器测试 98 项（16 个文件）通过。
 
-- **实施前问题与证据：** [局部修改](../../src/style-system/variable-modify.ts) 自行拼接状态路径，其 semanticPath 缺失时的回退没有包含已有状态片段；[状态条件工具](../../src/style-system/pieces/state-conditions.ts) 的 `appendStateCondition` 已负责该完整路径语义。两套算法对缺失 semanticPath 的相同输入产生不同语义归属。
+- **实施前问题与证据：** [局部修改](../../src/style-system/variable/modify.ts) 自行拼接状态路径，其 semanticPath 缺失时的回退没有包含已有状态片段；[状态条件工具](../../src/style-system/pieces/state-conditions.ts) 的 `appendStateCondition` 已负责该完整路径语义。两套算法对缺失 semanticPath 的相同输入产生不同语义归属。
 - **修改目标与落点：** 修改模块消费既有 `appendStateCondition(path, state.name)`；状态路径的追加与回退规则由 pieces/state-conditions.ts 承担，完整地址协议仍由 condition.ts 定义；修改模块只决定追加哪一个状态。
 - **顺序与前置：** 在状态编译与失效行为稳定后单独迁移；不与 @property 内容生成混在一次修改中。
 - **最小验收：** 以已有 stateConditionPath、缺失 semanticPath 的路径生成修改状态，断言语义路径同时保留已有状态与新状态，与 appendStateCondition 一致。再经实际 Variable.modify 与 compileRules 验证嵌套状态归属和最终状态 CSS，没有重复或漏失状态。
@@ -89,7 +89,7 @@
 
 **实施结果：** 已完成，独立实际代码复查通过。Variable 协议所属模块统一生成注册字段，两条消费路径保留各自位置、来源、identity、激活期与撤销处理；旧的第二份 syntax／inherits／initial-value 字段列表退出。普通与修改内部注册在有／无 initialValue 时的基线及修改后字段完全一致，内部 syntax 约束保持；本项是保行为的责任合并，无自然失败反例，不伪造红测。既有 A/B/A 同名注册及归零重激活回归继续通过；全量单元测试 260 项（38 个文件）、类型检查、浏览器测试 98 项（16 个文件）通过。
 
-- **实施前问题与证据：** [Variable](../../src/style-system/variable.ts) 的资源激活与修改模块的内部 Variable 登记都手写 syntax、inherits、initial-value 声明。注册字段增改、默认值或序列化规则改变时必须同步两个字段列表；二者生命周期不同，复制字段并不能表达这种分工。
+- **实施前问题与证据：** [Variable](../../src/style-system/variable/core.ts) 的资源激活与修改模块的内部 Variable 登记都手写 syntax、inherits、initial-value 声明。注册字段增改、默认值或序列化规则改变时必须同步两个字段列表；二者生命周期不同，复制字段并不能表达这种分工。
 - **修改目标与落点：** 由拥有 Variable registration 协议的模块提供一处 @property 内容生成，普通 Variable 与内部修改步骤复用它。共享的是内容生成，激活期、同地址替换、owner 与撤销仍由各自消费路径处理；不合并生命周期状态。
 - **顺序与前置：** 第 8 项资源关联稳定后实施，并与第 9 项分别提交验证与复查。
 - **最小验收：** 同一 registration 配置用于普通 Variable 和 modify 内部步骤，断言两条路径的 syntax、inherits、initial-value 均一致，内部变量的 syntax 类型约束得到保留；未提供 initial-value 时应省略该声明，不能输出 undefined。保留 A/B/A 同名不同对象的激活期用例，以及消费者归零后重新激活用例，防止共享生成代码改动注册先后与撤销语义。

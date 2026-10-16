@@ -5,13 +5,13 @@
 来源和变化在各自作用域覆盖后，浏览器沿引用计算结果，无需 JS 预先求值。
 */
 import { assert, hasProperty, isString, matchShape } from '@edsolater/fnkit'
-import type { DeclareProtocol } from './declaration'
-import { colorModificationShape, type ColorModificationContent } from './modification'
-import { oklch } from './pieces/contents/functions/oklch'
-import { referenceVariable, variable, type Variable } from './variable'
-import { allocateVariableName } from './key'
-import { resolveVariable } from './variable-cluster'
-import { modifyTargetShape, type ModifyTargetProtocol } from './variable-modify'
+import type { DeclareProtocol } from './declare'
+import { colorModificationShape, type ColorModificationContent } from '../modification'
+import { oklch } from '../pieces/contents/functions/oklch'
+import { referenceVariable, variable, type Variable } from '../variable'
+import { allocateVariableName } from '../key'
+import { resolveVariable } from '../variable-cluster'
+import { modifyTargetShape, type ModifyTargetProtocol } from './modify'
 
 /** 调整方交付可声明的配方，type 选择对应的来源组合。 */
 export interface AdjustProtocol<Type extends string = string> extends DeclareProtocol {

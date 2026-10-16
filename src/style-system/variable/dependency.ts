@@ -5,16 +5,16 @@
  * 子元素重新声明来源时，派生关系须在当地建立，不能只继承祖先已经算好的值。
  */
 import { mapGet } from '@edsolater/fnkit'
-import { condition, conditionAddressKey, isSemanticPathPrefix, type ConditionPath } from './condition'
-import { isJSSContent, type JSSCompileContext, type JSSContent } from './content'
-import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from './key'
-import { isVariable } from './variable'
+import { condition, conditionAddressKey, isSemanticPathPrefix, type ConditionPath } from '../condition'
+import { isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
+import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../key'
+import { isVariable, type VariableTarget } from './core'
 import { declaredVariable, declareVariable, findVariableDeclaration, publishVariableBase, syncVariableStates, syncDeclarations, variableDefinition,
-  variableProductRoles, type VariableTarget, type VariableDefinition } from './variable-declaration'
-import { resolveVariable } from './variable-cluster'
-import type { ASTController } from './compiler/ast-controller'
-import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
-import type { ValueInput } from './value'
+  variableProductRoles, type VariableDefinition } from './declare'
+import { resolveVariable } from '../variable-cluster'
+import type { ASTController } from '../compiler/ast-controller'
+import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
+import type { ValueInput } from '../value'
 
 /** 已求得的消费配方及原节点快照；失效时退出名称索引。 */
 interface Consumption {

@@ -4,12 +4,12 @@
 
 声明与修改使用同一目标身份，交给编译器按条件消费。
 */
-import { isJSSKey, type JSSKey } from './key'
-import type { ValueInput } from './value'
+import { isJSSKey, type JSSKey } from '../key'
+import type { ValueInput } from '../value'
 import { assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
-import { isJSSContent } from './content'
-import { declareVariable } from './variable-declaration'
-import { resolveVariable } from './variable-cluster'
+import { isJSSContent } from '../content'
+import { declareVariable } from '../variable'
+import { resolveVariable } from '../variable-cluster'
 
 /** 一条 `[Key, content]` 声明；undefined content 表示无效。 */
 export type Declaration<C = ValueInput | undefined> = [key: Exclude<JSSKey, string>, content: C]

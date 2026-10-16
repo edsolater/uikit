@@ -1,6 +1,6 @@
 /** 公开类型保留目标与内容的关系，并直接提供 Variable 创建配置。 */
-import { declare } from '../declaration'
-import { modify } from '../variable-modify'
+import { declare } from '../operations/declare'
+import { modify } from '../operations/modify'
 import { expect, test, vi } from 'vitest'
 import { add, clusterFrom, key, rules, variable, variableCluster } from '../index'
 import { condition } from '../condition'

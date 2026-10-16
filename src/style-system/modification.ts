@@ -18,7 +18,7 @@ import {
   type DataShape
 } from '@edsolater/fnkit'
 import { isJSSContent, type JSSContent } from './content'
-import type { DeclareProtocol } from './declaration'
+import type { DeclareProtocol } from './operations/declare'
 import { allocateVariableName, key } from './key'
 import type { ValueInput } from './value'
 import { oklchChannels, type OKLCHChannelChange, type OKLCHChanges } from './pieces/contents/functions/oklch'

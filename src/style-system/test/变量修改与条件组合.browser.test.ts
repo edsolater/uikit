@@ -4,8 +4,8 @@
 
 用计算样式确认行为，不依赖内部步骤表示。
 */
-import { declare } from '../declaration'
-import { modify } from '../variable-modify'
+import { declare } from '../operations/declare'
+import { modify } from '../operations/modify'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { add, multiply } from '../pieces/contents/functions/calc'
@@ -18,7 +18,7 @@ import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
 import type { Rules } from '../rule'
 
-const row = (path: (ReturnType<typeof condition> | string)[], pair: import('../declaration').Declaration): Rules[number] => [path, ...pair]
+const row = (path: (ReturnType<typeof condition> | string)[], pair: import('../operations/declare').Declaration): Rules[number] => [path, ...pair]
 const button = condition('.ModifyButton')
 const panel = condition('.ModifyPanel')
 const hover = condition('&[data-hover]')

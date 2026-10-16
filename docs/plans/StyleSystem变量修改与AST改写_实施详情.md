@@ -16,8 +16,8 @@
 
 | 文件 | 当前责任和变化 |
 | --- | --- |
-| [variable.ts](../../src/style-system/variable.ts) | 统一 Variable 创建、引用、declare/modify 调用入口、自身状态与注册；普通消费和自动状态声明留在此处 |
-| [variable-modify.ts](../../src/style-system/variable-modify.ts) | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态 |
+| [variable/core.ts](../../src/style-system/variable/core.ts) | 统一 Variable 创建、引用、declare/modify 调用入口、自身状态与注册；普通消费和自动状态声明留在此处 |
+| [variable/modify.ts](../../src/style-system/variable/modify.ts) | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态 |
 | [ast-controller.ts](../../src/style-system/compiler/ast-controller.ts) | 通用父节点/邻近节点定位、插入、移动、共享来源、撤销和重访；不包含修改专属概念 |
 | [condition.ts](../../src/style-system/condition.ts) | 提供原始语义路径比较；状态中央排序仅用于输出 |
 | [节点内容编译入口](../../src/style-system/compiler/style-nodes-to-content-nodes/node-compilation.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理 |

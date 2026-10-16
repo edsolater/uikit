@@ -51,7 +51,7 @@ StateCondition 拥有“何时成立”，Variable 拥有“成立时取什么�
 | 落点 | 当前职责 | 计划处理与理由 |
 | --- | --- | --- |
 | [Button.style.ts](../../src/components/kits/Button/Button.style.ts) | 组件分类、材料选择与效果组装；颜色状态被拆成逐状态 Rule | 清点默认、bare、solid、tone 及必要组合配方，把同一效果的状态值收回 Variable，再交给 Mixin 消费 |
-| [variable.ts](../../src/style-system/variable.ts) | 保存状态内容；`declareVariableStates` 展开定义，`readState` 读取依赖的同名状态 | 优先复用现有展开链；若局部颜色来源无法正确接通，修复内容与声明的衔接，不让 Button 代替编译器展开 |
+| [variable/core.ts](../../src/style-system/variable/core.ts) | 保存状态内容；`declareVariableStates` 展开定义，`readState` 读取依赖的同名状态 | 优先复用现有展开链；若局部颜色来源无法正确接通，修复内容与声明的衔接，不让 Button 代替编译器展开 |
 | [state-conditions.ts](../../src/style-system/pieces/state-conditions.ts)、[interaction.ts](../../src/style-system/pieces/conditions/interaction.ts) | 中央名称、顺序、条件；hover／active 排除 disabled | 保留中央责任，核实生成结果符合已有条件；仅在验证发现实际缺口时修改，不新建平行登记表 |
 | [appearance.ts](../../src/style-system/pieces/mixins/appearance.ts)、[interaction Mixin](../../src/style-system/pieces/mixins/interaction.ts) | 接受内容并输出颜色、阴影、交互属性声明 | 直接接收携带状态的 Variable；不增加逐状态重发属性的能力 |
 | [变量定义与消费](../../src/style-system/doc/变量定义与消费.md)、[样式文件写法](../style/样式文件写法.md) | 目前包含普通状态 Rule 与前序修改的建议 | 实施时修正状态归属与示例；与另一篇 Plan 协调接口说明，不将状态职责混成默认颜色设置协议 |

@@ -1,27 +1,33 @@
-/** 样式中定义和使用 Variable 的入口。
+/** 样式中 Variable 的定义与消费主体。
 
 创建和引用变量，保存默认值与状态，并支持独立声明、调整绑定及条件修改。
 
 这些用途共享一份默认值与状态配置，具体输出由样式中的使用位置决定。
 */
-import { condition } from './condition'
-import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
-import { allocateVariableName, type JSSKeyObject } from './key'
-import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from './content'
-import type { ASTController } from './compiler/ast-controller'
-import type { ValueInput } from './value'
-import { resolveStateConditions, type StateCondition } from './pieces/state-conditions'
+import { condition } from '../condition'
+import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
+import { allocateVariableName, type JSSKeyObject } from '../key'
+import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from '../content'
+import type { ASTController } from '../compiler/ast-controller'
+import type { ValueInput } from '../value'
+import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
 import { hasProperty, mapGet, result } from '@edsolater/fnkit'
-import { consumeDeclaration, findVariableDeclaration, joinVariableValues, type VariableTarget } from './variable-declaration'
-import { declare } from './declaration'
-import { resolveVariable } from './variable-cluster'
-import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
-import { observeVariable } from './variable-dependency'
+import { consumeDeclaration, findVariableDeclaration, joinVariableValues } from './declare'
+import { declare, type DeclareProtocol } from '../operations/declare'
+import { resolveVariable } from '../variable-cluster'
+import { parseVariableArgs, type VariableStateValues } from './args-parser'
+import { observeVariable } from './dependency'
 
 /** 未命中状态时的声明内容；生产函数在编译消费时求值。 */
 export type VariableDefaultValue = ValueInput | (() => ValueInput)
 /** 状态配方中的 base 是本次声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
+
+/** 自定义属性材料；状态与注册仅在材料实际持有时参与。 */
+export interface VariableTarget extends DeclareProtocol, JSSContent {
+  states?: Map<StateCondition, VariableStateRule>
+  registration?: VariableOptions['registration']
+}
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
 export interface Variable extends VariableTarget, JSSKeyObject {

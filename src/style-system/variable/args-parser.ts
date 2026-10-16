@@ -5,8 +5,8 @@
 后续创建逻辑只处理统一配置，不再区分调用写法。
 */
 import { containKey, isString } from '@edsolater/fnkit'
-import { allocateVariableName } from './key'
-import type { VariableDefaultValue, VariableOptions, VariableStateRule } from './variable'
+import { allocateVariableName } from '../key'
+import type { VariableDefaultValue, VariableOptions, VariableStateRule } from './core'
 
 /** default 是默认内容，其余自身可枚举字段是状态内容；默认生产函数仍保留原样。 */
 export type VariableStateValues<DefaultValue extends VariableDefaultValue = VariableDefaultValue> = {

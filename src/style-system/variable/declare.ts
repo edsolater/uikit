@@ -5,22 +5,17 @@
  * 状态绑定 CSS 名称与本次基础，不应由是否经过 Modify 入口决定。
  */
 import { containKey, result } from '@edsolater/fnkit'
-import type { ASTController } from './compiler/ast-controller'
-import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
-import { conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from './condition'
-import type { JSSCompileContext, JSSContent } from './content'
-import type { Declaration, DeclareProtocol } from './declaration'
-import { keyPriority, propertyName, type JSSKey } from './key'
-import { appendStateCondition, type StateCondition } from './pieces/state-conditions'
-import { value, type Value, type ValueInput } from './value'
-import { isVariable, referenceVariable, type VariableDefaultValue, type VariableOptions, type VariableStateRule } from './variable'
-import { resolveVariable } from './variable-cluster'
+import type { ASTController } from '../compiler/ast-controller'
+import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
+import { conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from '../condition'
+import type { JSSCompileContext, JSSContent } from '../content'
+import type { Declaration } from '../operations/declare'
+import { keyPriority, propertyName, type JSSKey } from '../key'
+import { appendStateCondition, type StateCondition } from '../pieces/state-conditions'
+import { value, type Value, type ValueInput } from '../value'
+import { isVariable, referenceVariable, type VariableDefaultValue, type VariableTarget, type VariableStateRule } from './core'
+import { resolveVariable } from '../variable-cluster'
 
-/** 自定义属性材料；状态与注册仅在材料实际持有时参与。 */
-export interface VariableTarget extends DeclareProtocol, JSSContent {
-  states?: Map<StateCondition, VariableStateRule>
-  registration?: VariableOptions['registration']
-}
 /** 一次实际声明或当地投影的基础和状态；消费者只引用这份材料。 */
 export interface VariableDefinition {
   node: JSSStyleNode

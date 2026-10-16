@@ -5,11 +5,11 @@
 防止参数解析改变内容身份或提前执行生产函数。
 */
 import { expect, test, vi } from 'vitest'
-import { parseVariableArgs } from './variable-args-parser'
+import { parseVariableArgs } from './args-parser'
 
 test('两处简写独立展开，完整配置保留其他字段', () => {
   const onActive = vi.fn()
-  const modification = { apply: (current: import('./content').JSSContent) => current }
+  const modification = { apply: (current: import('../content').JSSContent) => current }
   const options = { name: 'amount', onActive, modification, compileWaveIndex: 2 }
   expect(parseVariableArgs(1, 'amount')).toEqual({ defaultValue: 1, name: 'amount', priority: 0 })
   expect(parseVariableArgs(1, options)).toEqual({ ...options, defaultValue: 1, priority: 0 })

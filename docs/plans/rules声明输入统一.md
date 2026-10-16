@@ -34,7 +34,7 @@ rules(button, [
 | --- | --- | --- |
 | [rule.ts](../../src/style-system/rule.ts) | `rules` 已将声明对象及条目 Iterable 统一转换为有序 Declaration；完整验证后才登记，并支持嵌套组合与 undefined | 继续由此负责输入转换与批量登记 |
 | [css-key.ts](../../src/style-system/css-key.ts) | CSSKey 包含 string；`key()` 登记原生名称与驼峰名称，`resolveCSSKey()` 统一解析字符串与显式目标 | 继续由此负责名称登记、冲突拒绝和解析 |
-| [declaration.ts](../../src/style-system/declaration.ts) | Declaration 是二元组；识别到声明后，内容不再当分组展开 | 保持内容边界，配合新输入类型；不增加第二种内部声明结构 |
+| [operations/declare.ts](../../src/style-system/operations/declare.ts) | Declaration 是二元组；识别到声明后，内容不再当分组展开 | 保持内容边界，配合新输入类型；不增加第二种内部声明结构 |
 | [value.ts](../../src/style-system/value.ts) | 条件分支已接受对象与键值 Iterable，使用 fnkit 集合转换 | 可参考集合访问方法；其先转 Map 的做法会合并重复键，不能直接搬到声明序列 |
 | [keys/layout.ts](../../src/style-system/materials/keys/layout.ts) 等属性文件 | 已定义 `$alignItems = key('align-items')` 等 Key | 名称映射尽量依托原有定义，避免维护两套属性清单 |
 | [mixins/content.ts](../../src/style-system/materials/mixins/content.ts) | `contentLayout` 只公开 center 目的，内部选择 inline-flex；中心声明使用对象输入 | 继续作为声明输入消费者，不承担输入转换设施 |

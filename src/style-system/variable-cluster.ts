@@ -8,7 +8,7 @@ import { assert, Unresultable } from '@edsolater/fnkit'
 import { isVariable, variable, type Variable, type VariableOptions } from './variable'
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
-import type { DeclareProtocol } from './declaration'
+import type { DeclareProtocol } from './operations/declare'
 import { allocateVariableName } from './key'
 
 /** 作为 Variable 使用时代理 default 成员；调用时返回指定成员。 */

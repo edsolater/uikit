@@ -41,7 +41,7 @@
 | 复合 `conditionPath` 保留 target/state 区别；解析器只能经有限 Controller 操作当前队列 | 通过 | 正式入口测试断言 target/state，调用 `findByKey` 与 `insert`；[ASTController](../../src/style-system/compiler/ast-controller.ts) 不暴露底层队列 |
 | 纯值、可选 `parse`、最早解析波、等待高波、返回内容接回、循环终止 | 通过 | 0→2 波与嵌套 CSS 函数返回值测试；[内容解析新对象链达到深度上限.test.ts](../../src/style-system/test/内容解析新对象链达到深度上限.test.ts) 1/1 明确失败；值/变量循环单测 |
 | 每个 Content 位置的完整对象关系处理后才形成 parsed 内容；对象跨路径复用不混淆完成状态 | 通过 | [值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts) 验证共享 Value 两地址及两次编译；[内容解析波遍历及插入节点.test.ts](../../src/style-system/test/内容解析波遍历及插入节点.test.ts) 验证复合对象源链接不被改写 |
-| Variable 自身 parse 在 Root 插入 `@property` 并返回可输出 Value | 通过 | [variable.ts](../../src/style-system/variable.ts)；同名注册替换和 CSS `@function` 局部 Variable 单测通过 |
+| Variable 自身 parse 在 Root 插入 `@property` 并返回可输出 Value | 通过 | [variable/core.ts](../../src/style-system/variable/core.ts)；同名注册替换和 CSS `@function` 局部 Variable 单测通过 |
 | Rules 登记、替换、撤销及 Value／Variable／Cluster／局部状态语义保留 | 通过 | [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)、[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts) |
 | 按需依赖同链、循环终止、未使用资源不输出、状态优先级与显式覆盖 | 通过 | 上述单测与 [样式挂载后浏览器计算与更新.browser.test.ts](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts) |
 | 重复同址同 key 声明按队列顺序输出；不引入属性值聚合 | 通过 | 登记单测的简写/详细属性书写顺序断言；[css-string.ts](../../src/style-system/compiler/css-string.ts) 只输出完成节点 |

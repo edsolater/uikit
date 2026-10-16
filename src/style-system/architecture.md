@@ -21,11 +21,15 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 [ui-color-structure.ts](pieces/contents/atoms/color/ui-color-structure.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；颜色族生成器提供浅底与边线透明度默认值。交互、高亮、柔和底色和线色通过 `oklch(source, changes)` 直接描述通道变化，保留来源 Variable 的当前颜色与局部覆盖。
 
-[declaration.ts](declaration.ts) 的 Declare 协议用 FNKit 的 DataShape 描述 `key/content` 材料形状，`declare` 通过 `matchShape` 识别并建立声明。[variable.ts](variable.ts) 的 Variable 投影自身已有的声明目标、默认内容、状态和注册事实，不承担外部操作。Adjust、Modify 的使用端直接读取双方材料，组织绑定或条件修改；对象无需认识协议，也无需协议登记、品牌或操作方法，参与能力不以构造来源决定。
+`operations/` 只按声明、修改、调整三个操作入口分组，不建立独立公共入口；Style System 的 index 直接公开各操作及其协议。Variable 的创建、声明发布、修改链和依赖协调归 `variable/` 领域；通用 AST 编译能力留在 `compiler/`，变化材料留在 `modification.ts`。
 
-[variable-adjust.ts](variable-adjust.ts) 的 `adjust(source, change)` 按 type 选择具体领域组合，构造引用双方的表达式与 mergedResult Variable，并用可选 `declarations` 保存来源与配方的共同声明关系。[variable.ts](variable.ts) 的 `compileVariableContent` 统一处理天然材料和内置对象的声明依赖、当地重算、状态与资源，`referenceVariable` 复用这条消费链。`declare(mergedResult)` 共同声明三者，显式覆盖结果内容也保留依赖；当前或祖先作用域已有依赖声明优先，自动声明只补缺项。结果在消费地址重新组合，使子元素局部覆盖来源或配方后使用当地值。多个 Source 可共享同一 Modification；绑定不执行 JS 基础数据求值，也不修改来源的默认内容。
+[variable/index.ts](variable/index.ts) 主动公开创建、引用、材料类型及操作入口需要的声明和修改消费契约。领域外从该入口取得能力，内部成员直接引用；解析细节、声明归属和步骤账本不随 index 暴露。`VariableCluster` 保持同级，负责自己的成员与配对。
 
-[variable-modify.ts](variable-modify.ts) 的 `modify(target, change)` 按 type 选择后部的具体应用，返回 Declaration；编译消费时取得最近同对象声明的前序 Expression。颜色材料通过 `type: 'color'` 与配方引用参与相对颜色组合；表达式材料通过 `{ type: 'expression', detail: current => add(current, delta) }` 执行前序表达式变化。应用方发布条件修改步骤，浏览器决定条件是否生效。表达式回调材料不是独立可声明的 Modification。
+[operations/declare.ts](operations/declare.ts) 的 Declare 协议用 FNKit 的 DataShape 描述 `key/content` 材料形状，`declare` 通过 `matchShape` 识别并建立声明。[variable/core.ts](variable/core.ts) 的 Variable 投影自身已有的声明目标、默认内容、状态和注册事实，不承担外部操作。Adjust、Modify 的使用端直接读取双方材料，组织绑定或条件修改；对象无需认识协议，也无需协议登记、品牌或操作方法，参与能力不以构造来源决定。
+
+[operations/adjust.ts](operations/adjust.ts) 的 `adjust(source, change)` 按 type 选择具体领域组合，构造引用双方的表达式与 mergedResult Variable，并用可选 `declarations` 保存来源与配方的共同声明关系。[variable/core.ts](variable/core.ts) 的 `compileVariableContent` 统一处理天然材料和内置对象的声明依赖、当地重算、状态与资源，`referenceVariable` 复用这条消费链。`declare(mergedResult)` 共同声明三者，显式覆盖结果内容也保留依赖；当前或祖先作用域已有依赖声明优先，自动声明只补缺项。结果在消费地址重新组合，使子元素局部覆盖来源或配方后使用当地值。多个 Source 可共享同一 Modification；绑定不执行 JS 基础数据求值，也不修改来源的默认内容。
+
+[operations/modify.ts](operations/modify.ts) 的 `modify(target, change)` 校验双方材料，按 type 选择具体应用并返回 Declaration；颜色应用与表达式应用规则留在该入口。编译消费时，[variable/modify.ts](variable/modify.ts) 取得最近同对象声明的前序 Expression，执行已选应用并维护步骤、当地结果和撤销。颜色材料通过 `type: 'color'` 与配方引用参与相对颜色组合；表达式材料通过 `{ type: 'expression', detail: current => add(current, delta) }` 执行前序表达式变化。浏览器决定条件是否生效，表达式回调材料不是独立可声明的 Modification。
 
 `add`、`multiply` 构造的 Expression 保存操作数与依赖，在输出时生成 CSS calc 文本，数值与单位由浏览器解释。它们同时用于变化配方和其他内容组合，不承担 JS 默认数据求值。
 
@@ -45,12 +49,12 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 已编译步骤移动后，调用方显式增加 revision 才触发重访。编号只保证名称唯一。晚到或撤销定义让对应修改及普通消费者重新进入最近声明，按现役 `onCompile/onActive` 推进。没有独立 Rewriter 协议、操作转发或整组表达式缓存。
 
-`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 读取创建材料，保留注册、共同声明与修改消费，通过 `setContent` 输出只含名称的 `var(--name)` 引用，并把已经求得的内容交给领域协调。来源 Variable 继续作为结构化依赖编译，外层状态只决定自身配方何时生效。未显式声明的已消费材料补根默认，派生关系在消费位置物化；完整 AST 中已有同对象声明则不补根默认。注册字段仍由 variable.ts 统一生成，内部修改步骤复用类型约束与 AST 来源生命周期。`VariableCluster` 代理默认成员，选择和双方同名配对由 Cluster 自身负责；`clusterFrom` 保留来源状态引用并覆盖指定配置，未配置成员复用原对象。JSS 内容组织工具通过 dependencies 暴露操作数，最终输出 CSS 文本；Creator 整份内容重建后由 RuleHandle.replace 消费。
-`variable-dependency.ts` 统一接管默认、当地配方和 CSS 名称联动，Variable 只交付实际求得的内容与消费上下文。真实原生属性消费按结构化依赖建立 `Map<CSS 名称, Set<Variable 材料>>`；Active、独立 declare 和资源描述符不激活，动画帧属性属于消费。有效同名来源声明触发各材料自己的配方，联动等级为其 priority - 1；状态沿用该次声明等级。自动状态也是来源，自动默认物化不重复建链。独立同名对象的 declare 可借用已消费材料的原始状态规则，以当地 base 绑定，自身明确同名规则优先；状态归属不是图边。
+`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 读取创建材料，保留注册、共同声明与修改消费，通过 `setContent` 输出只含名称的 `var(--name)` 引用，并把已经求得的内容交给领域协调。来源 Variable 继续作为结构化依赖编译，外层状态只决定自身配方何时生效。未显式声明的已消费材料补根默认，派生关系在消费位置物化；完整 AST 中已有同对象声明则不补根默认。注册字段仍由 variable/core.ts 统一生成，内部修改步骤复用类型约束与 AST 来源生命周期。`VariableCluster` 代理默认成员，选择和双方同名配对由 Cluster 自身负责；`clusterFrom` 保留来源状态引用并覆盖指定配置，未配置成员复用原对象。JSS 内容组织工具通过 dependencies 暴露操作数，最终输出 CSS 文本；Creator 整份内容重建后由 RuleHandle.replace 消费。
+`variable/dependency.ts` 统一接管默认、当地配方和 CSS 名称联动，Variable 只交付实际求得的内容与消费上下文。真实原生属性消费按结构化依赖建立 `Map<CSS 名称, Set<Variable 材料>>`；Active、独立 declare 和资源描述符不激活，动画帧属性属于消费。有效同名来源声明触发各材料自己的配方，联动等级为其 priority - 1；状态沿用该次声明等级。自动状态也是来源，自动默认物化不重复建链。独立同名对象的 declare 可借用已消费材料的原始状态规则，以当地 base 绑定，自身明确同名规则优先；状态归属不是图边。
 
 默认、借用状态和联动共享一次编译会话，来源交给 AST 管理；联动资格同时核对有效来源与真实消费，不把多来源 OR 当作两端 AND。消费节点的 key/content/revision 改变后旧记录退出，观察关系从当前已求值材料更新，默认与联动内容同步失效；不为建图额外执行生产函数。旧 variable.ts 的独立默认／状态协调已退出。所有产物仍走普通 AST 编译与 Join，编译结束只留下 CSS，不生成运行时观察者。
 
-`variable-declaration.ts` 拥有显式、原始二元、普通 Key、自动默认及联动声明的基础与状态材料。`publishVariableBase` 选择本地址基础，`syncVariableStates` 唯一发布自身及借用状态；相同声明地址先选有效规则，自身规则覆盖借用规则，再把一个贡献交给原 Key.join，两个真实 Key 声明仍分别参与聚合。普通 Key 保留等级999，借用状态沿用本次声明键等级。当前状态地址已有明确值时，借用规则只补后续状态，不重写该值。
+`variable/declare.ts` 拥有显式、原始二元、普通 Key、自动默认及联动声明的基础与状态材料。`publishVariableBase` 选择本地址基础，`syncVariableStates` 唯一发布自身及借用状态；相同声明地址先选有效规则，自身规则覆盖借用规则，再把一个贡献交给原 Key.join，两个真实 Key 声明仍分别参与聚合。普通 Key 保留等级999，借用状态沿用本次声明键等级。当前状态地址已有明确值时，借用规则只补后续状态，不重写该值。
 
 公共声明负责消费者改绑与重访撤销；Modify 只在实际修改出现时引用该声明并建立步骤，旧归属退出会释放当地结果。名字联动不把另一个同名 Key 变成 Modify 的同对象基础。依赖图只处理真实消费、名称配方和默认需求，不再回存声明实例或经 Modify 生成基础。默认重建先撤旧产物并退出本次核验，下波再建立当前索引，避免使用级联撤销前的材料。
 
@@ -67,16 +71,18 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份 |
 | pieces/state-conditions.ts | 主体状态名称、条件登记、中央顺序与状态路径追加 |
 | key.ts | JSSKey 的创建、聚合、识别与别名解析；共用 CSS 自定义属性名称分配，别名登记与名称避让分别保存 |
-| variable-args-parser.ts | 归一默认值、原始状态规则、名称简写及 extend；等级为显式值、继承加一或0 |
-| declaration.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
+| variable/args-parser.ts | 归一默认值、原始状态规则、名称简写及 extend；等级为显式值、继承加一或0 |
+| operations/declare.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
 | value.ts | 稳定 Value 的内容包装与输入类型 |
-| variable.ts | Variable 必填名称创建、自然材料投影、引用消费、共同声明依赖与注册资源 |
-| variable-declaration.ts | 公共声明基础、同名状态材料、消费者改绑与精确撤销；保留原 Key.join |
-| variable-modify.ts | Modify 双方协议、按需修改步骤、结果消费与撤销；引用公共声明 |
-| variable-dependency.ts | 当前消费、默认请求、CSS 名称配方与联动资格 |
-| variable-adjust.ts | Adjust 双方协议、来源与变化的 CSS 绑定、结果 Variable 创建及共同声明关系材料 |
+| variable/index.ts | Variable 领域主动公开的创建、引用、材料类型和操作接入契约 |
+| variable/core.ts | Variable 必填名称创建、自然材料投影、引用消费、共同声明依赖与注册资源 |
+| variable/declare.ts | 公共声明基础、同名状态材料、消费者改绑与精确撤销；保留原 Key.join |
+| operations/modify.ts | Modify 双方协议、材料校验、领域应用策略与操作内容构造 |
+| variable/modify.ts | 执行已选应用、按需修改步骤、结果消费与撤销；引用公共声明 |
+| variable/dependency.ts | 当前消费、默认请求、CSS 名称配方与联动资格 |
+| operations/adjust.ts | Adjust 双方协议、来源与变化的 CSS 绑定、结果 Variable 创建及共同声明关系材料 |
 | modification.ts | Modification 的 type/detail 定义、内置颜色转译、独立声明与应用材料 |
 | css-function.ts | CSSFunction 定义主体、按需完整定义与调用 Expression |
 | variable-cluster.ts | Variable 成员选择、default 代理、同名声明配对及成员继承创建 |

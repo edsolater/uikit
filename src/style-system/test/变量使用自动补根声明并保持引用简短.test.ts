@@ -1,7 +1,7 @@
 /** 通过正式编译入口验证引用、全树声明查找和按需根声明的撤销。 */
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
-import { declare } from '../declaration'
+import { declare } from '../operations/declare'
 import { variable } from '../variable'
 import type { JSSContent } from '../content'
 import { variableCluster } from '../variable-cluster'

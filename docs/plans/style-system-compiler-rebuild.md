@@ -43,7 +43,7 @@
 ### 2. 统一 Rule，恢复简单 Key
 
 - [rule.ts](../../src/style-system/rule.ts)：登记边界将 Declaration 拆为 `[Condition Path, Key, Content]`；本层 Key 只保存一次。单项、批量共用内部表示。
-- [declaration.ts](../../src/style-system/declaration.ts)：只表达目标与内容；内容为 undefined 时跳过，不要求调用方条件拼装。
+- [operations/declare.ts](../../src/style-system/operations/declare.ts)：只表达目标与内容；内容为 undefined 时跳过，不要求调用方条件拼装。
 - [css-key.ts](../../src/style-system/css-key.ts) 与 `materials/keys/`：Key 只描述原生名称；删除 content、expand、syntax 等属性解释责任。
 - [css-root.ts](../../src/style-system/css-root.ts)：只调整新 Rule 表示所必需的登记、更新和卸载衔接。先核对现有句柄语义，不借重构改成另一套覆盖契约。
 
@@ -51,7 +51,7 @@
 
 ### 3. 分开 Value、Variable 与延迟内容
 
-- [value.ts](../../src/style-system/value.ts)、[variable.ts](../../src/style-system/variable.ts)、[valuable.ts](../../src/style-system/valuable.ts)：Value 与 Variable 独立，共享“可被 CSS 化”的 Valuable 协议，不使用 Variable 继承 Value 或伪装 Value 的捷径。
+- [value.ts](../../src/style-system/value.ts)、[variable/core.ts](../../src/style-system/variable/core.ts)、[valuable.ts](../../src/style-system/valuable.ts)：Value 与 Variable 独立，共享“可被 CSS 化”的 Valuable 协议，不使用 Variable 继承 Value 或伪装 Value 的捷径。
 - [compile-value.ts](../../src/style-system/compiler/compile-value.ts)：负责当前条件下的取值与递归；不认识变量注册细节或具体 CSS 函数语法。
 - [compile-variable-reference.ts](../../src/style-system/compiler/compile-variable-reference.ts)：负责变量引用、自身赋值及必要的自动定义，普通消费者不跟随其条件展开。
 - `values/functions/`、`values/shadow.ts`、`values/animation.ts` 等定义处：保留原始输入关系，提供延迟生成方法。编译器控制调用时机与输入解析；生成方法只组织自身内容。
@@ -70,7 +70,7 @@ Subject Condition 同名去重、按注册顺序排列；普通路径保留顺�
 
 ### 5. 收口编译、挂载与 Mixin
 
-- Rule 的当前 Key 与内容进入唯一解析路线。实施审查后删除 `compile-declaration.ts`：移出属性语法后，它只剩分派与重包装，已并入 [compile-rules.ts](../../src/style-system/compiler/compile-rules.ts)。
+- Rule 的当前 Key 与内容进入唯一解析路线。实施审查后删除 `compile-declare.ts`：移出属性语法后，它只剩分派与重包装，已并入 [compile-rules.ts](../../src/style-system/compiler/compile-rules.ts)。
 - [compile-rules.ts](../../src/style-system/compiler/compile-rules.ts)：组织 Rule、依赖与解析；结构嵌套留在这里，不从 Value 回调重新进入普通 Rules。
 - `records.ts`：最终只存条件路径、Key、CSS 内容三项。条件项及 Key 的空值按已有契约处理，不增加 owner 等长期字段。
 - 解析挂载后再生成 CSS string；输出遵循挂载顺序，不做全局重排。同一目标的条件共享不得破坏原生声明的级联顺序。
@@ -158,7 +158,7 @@ git diff --cached --check
 - 保留条件集合与本次编译的 seen：共享名称不再按每个参数重复排列；移除它会重复求值并失去唯一组合。状态不跨编译保存。
 - 保留本次依赖的完整输出：后续依赖可能替换已解析的同址定义，旧声明及局部变量缺省值必须一起退出。它只是编译内部的数组，不进入最终三项记录，没有 owner 字段。
 - `fontValue`、`transitionValue` 与 `valueSequence` 承接原有字体、过渡、空格列表的真实语法；没有新增效果或 Key 能力。现役 `valueSequence` 是 Value 输出规则的薄包装。
-- 删除 `compile-declaration.ts` 与只做 push 的挂载函数；它们不再承担独立判断。撤回任意数组自动拼接、Variable 伪装 Value 等半成品。
+- 删除 `compile-declare.ts` 与只做 push 的挂载函数；它们不再承担独立判断。撤回任意数组自动拼接、Variable 伪装 Value 等半成品。
 
 ### 已采用的取舍
 

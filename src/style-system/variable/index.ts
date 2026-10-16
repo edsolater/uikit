@@ -1,0 +1,11 @@
+/** Variable 领域的公开契约。
+ *
+ * 公开创建、引用及操作入口需要的声明和修改消费能力。
+ *
+ * 内部声明归属、步骤和消费账本由领域成员自行维护，不随入口暴露。
+ */
+export { variable, isVariable, referenceVariable, compileVariableContent } from './core'
+export type { Variable, VariableOptions, VariableDefaultValue, VariableStateRule, VariableTarget } from './core'
+export type { VariableStateValues } from './args-parser'
+export { declareVariable } from './declare'
+export { compileVariableModification } from './modify'

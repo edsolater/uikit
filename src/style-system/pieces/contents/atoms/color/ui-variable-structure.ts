@@ -1,6 +1,6 @@
 /** 交互颜色的 Variable 状态模板；变量的名称、注册与创建由调用处决定。 */
 import type { ValueInput } from '@/style-system/value'
-import type { VariableStateValues } from '@/style-system/variable-args-parser'
+import type { VariableStateValues } from '@/style-system/variable'
 import { add } from '@/style-system/pieces/contents/functions/calc'
 import { oklch } from '@/style-system/pieces/contents/functions/oklch'
 

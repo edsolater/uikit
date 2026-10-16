@@ -2,7 +2,7 @@
 import { afterEach, expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { variable } from '../variable'
-import { declare } from '../declaration'
+import { declare } from '../operations/declare'
 import { condition } from '../condition'
 import { stateCondition } from '../pieces/state-conditions'
 import { multiply } from '../pieces/contents/functions/calc'

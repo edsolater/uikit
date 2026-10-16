@@ -2,10 +2,10 @@
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileRules } from '../css-root'
-import { declare } from '../declaration'
+import { declare } from '../operations/declare'
 import { add, multiply } from '../pieces/contents/functions/calc'
 import { variable } from '../variable'
-import { modify } from '../variable-modify'
+import { modify } from '../operations/modify'
 import { key } from '../key'
 import type { ValueInput } from '../value'
 

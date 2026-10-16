@@ -2,7 +2,7 @@
 import { assert, isArray, isFunction, isObject, isObjectLike, isString } from '@edsolater/fnkit'
 import { condition, type Condition, type ConditionInput } from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
-import { isCSSPair, type Declaration } from './declaration'
+import { isCSSPair, type Declaration } from './operations/declare'
 import type { ValueInput } from './value'
 import { registerRule } from './css-root'
 

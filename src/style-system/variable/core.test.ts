@@ -1,8 +1,8 @@
 /** Variable 显式名称的消费，以及无 extend 时 name/default 必填的类型契约。 */
 import { expect, test } from 'vitest'
-import { variable } from './variable'
-import { condition } from './condition'
-import { compileRules } from './css-root'
+import { variable } from './core'
+import { condition } from '../condition'
+import { compileRules } from '../css-root'
 
 test('显式名称在消费与自身状态声明中保持一致', () => {
   const amount = variable(1, 'named-amount')
