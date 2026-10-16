@@ -235,12 +235,19 @@ test('有状态来源在派生状态内容中读取局部 CSS 覆盖', () => {
   ])
   const local = document.body.appendChild(document.createElement('div'))
   local.className = 'Consumer Local'
-  local.dataset.active = ''
   const neighbor = document.body.appendChild(document.createElement('div'))
   neighbor.className = 'Consumer'
+  expect(getComputedStyle(local).getPropertyValue('--scope-source-size').trim()).toBe('7px')
+  expect(getComputedStyle(local).width).toBe('7px')
+  local.dataset.active = ''
   neighbor.dataset.active = ''
-  expect(getComputedStyle(local).width).toBe('14px')
+  expect(getComputedStyle(local).getPropertyValue('--scope-source-size').trim()).toBe('30px')
+  expect(getComputedStyle(local).width).toBe('60px')
   expect(getComputedStyle(neighbor).width).toBe('60px')
+  delete local.dataset.active
+  expect(getComputedStyle(local).getPropertyValue('--scope-source-size').trim()).toBe('7px')
+  expect(getComputedStyle(local).width).toBe('7px')
+  expect(getComputedStyle(neighbor).getPropertyValue('--scope-source-size').trim()).toBe('30px')
 })
 
 test('状态内容组合各来源当前 CSS 状态值', () => {

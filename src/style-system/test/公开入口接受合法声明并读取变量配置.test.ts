@@ -17,10 +17,6 @@ test('合法 Key、Variable、Cluster 和声明组合可以直接消费', () => 
   if (false) {
     // @ts-expect-error 状态内容位于 config.states。
     source.states.active
-    // @ts-expect-error Variable 不保存来源关系。
-    source.inherited
-    // @ts-expect-error 自动声明 Key 位于 config.definitionKey。
-    source.definitionKey
     // @ts-expect-error Cluster 只接受已声明成员。
     cluster('unknown')
   }

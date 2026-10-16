@@ -8,7 +8,7 @@ import { isJSSKey, type JSSKey } from './key'
 import type { ValueInput } from './value'
 import { assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
 import { isJSSContent } from './content'
-import { declareVariable } from './variable-modify'
+import { declareVariable } from './variable-declaration'
 import { resolveVariable } from './variable-cluster'
 
 /** 一条 `[Key, content]` 声明；undefined content 表示无效。 */

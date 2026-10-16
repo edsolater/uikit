@@ -50,6 +50,10 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 默认、借用状态和联动共享一次编译会话，来源交给 AST 管理；联动资格同时核对有效来源与真实消费，不把多来源 OR 当作两端 AND。消费节点的 key/content/revision 改变后旧记录退出，观察关系从当前已求值材料更新，默认与联动内容同步失效；不为建图额外执行生产函数。旧 variable.ts 的独立默认／状态协调已退出。所有产物仍走普通 AST 编译与 Join，编译结束只留下 CSS，不生成运行时观察者。
 
+`variable-declaration.ts` 拥有显式、原始二元、普通 Key、自动默认及联动声明的基础与状态材料。`publishVariableBase` 选择本地址基础，`syncVariableStates` 唯一发布自身及借用状态；相同声明地址先选有效规则，自身规则覆盖借用规则，再把一个贡献交给原 Key.join，两个真实 Key 声明仍分别参与聚合。普通 Key 保留等级999，借用状态沿用本次声明键等级。当前状态地址已有明确值时，借用规则只补后续状态，不重写该值。
+
+公共声明负责消费者改绑与重访撤销；Modify 只在实际修改出现时引用该声明并建立步骤，旧归属退出会释放当地结果。名字联动不把另一个同名 Key 变成 Modify 的同对象基础。依赖图只处理真实消费、名称配方和默认需求，不再回存声明实例或经 Modify 生成基础。默认重建先撤旧产物并退出本次核验，下波再建立当前索引，避免使用级联撤销前的材料。
+
 [rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[compilation.ts](compiler/style-nodes-to-content-nodes/compilation.ts) 逐波编译、处理按需 Rules 和同址组合；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一编译波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。同址同名 Key 默认组合，单条声明仍直接输出。
 
 修改保留为完整变化描述；原 selector 只选择当前步骤的候选，空 token 与 `initial` 选择门由 CSS 原生层叠和继承。修改地址及普通消费地址当地生成阶段结果，每阶段只引用前序 CSS 变量。未显式声明的后代继承规则选择，显式 `declare` 建立独立基础与修改归属；不解析选择器或复制祖先状态。`registration.inherits: false` 通过不继承的当地存在标记阻止消费链重新应用祖先修改，内部阶段引用保留注册基础值回退；这是条件选择机制，普通 Variable 引用没有默认内容第二参数。
@@ -69,8 +73,9 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
 | value.ts | 稳定 Value 的内容包装与输入类型 |
 | variable.ts | Variable 必填名称创建、自然材料投影、引用消费、共同声明依赖与注册资源 |
-| variable-modify.ts | Modify 双方协议、modify 入口、局部声明基础值、有序修改步骤及撤销 |
-| variable-dependency.ts | 会话默认与当地配方、CSS 名称观察者、同名状态展开与联动资格 |
+| variable-declaration.ts | 公共声明基础、同名状态材料、消费者改绑与精确撤销；保留原 Key.join |
+| variable-modify.ts | Modify 双方协议、按需修改步骤、结果消费与撤销；引用公共声明 |
+| variable-dependency.ts | 当前消费、默认请求、CSS 名称配方与联动资格 |
 | variable-adjust.ts | Adjust 双方协议、来源与变化的 CSS 绑定、结果 Variable 创建及共同声明关系材料 |
 | modification.ts | Modification 的 type/detail 定义、内置颜色转译、独立声明与应用材料 |
 | css-function.ts | CSSFunction 定义主体、按需完整定义与调用 Expression |

@@ -260,7 +260,8 @@ describe('声明优先级', () => {
     expect(values).toEqual([`--priority-line: ${sourceLast ? 'var(--priority-source)' : 'blue'};`])
   })
 
-  test('联动按各自配方减一级，传递和 states 不再额外扣级', () => {
+  test.each([7, 8, 9].flatMap(priority => [false, true].map(sourceLast => ({ priority, sourceLast }))))(
+    '传递状态恰为8，直接银值不被借用重写：对手$priority，来源后写=$sourceLast', ({ priority, sourceLast }) => {
     const source = variable('red', { name: 'priority-chain-source', priority: 0 })
     const middle = variable(source, { name: 'priority-chain-middle', priority: 6 })
     const outer = variable(middle, {
@@ -268,17 +269,22 @@ describe('声明优先级', () => {
       states: { '&[data-phase]': 'gold' },
     })
     const competitor = variable('blue', {
-      name: 'priority-chain-outer', priority: 7,
+      name: 'priority-chain-outer', priority,
     })
     const css = compileRules([
       [['.Parent'], 'border-color', outer],
-      [['.Child'], ...declare(source, 'green')],
-      [['.Child'], ...declare(competitor)],
-      [['.Child'], undefined, inPhase(competitor, 'silver')],
+      ...(sourceLast ? [
+        [['.Child'], ...declare(competitor)], [['.Child'], undefined, inPhase(competitor, 'silver')],
+        [['.Child'], ...declare(source, 'green')],
+      ] : [
+        [['.Child'], ...declare(source, 'green')],
+        [['.Child'], ...declare(competitor)], [['.Child'], undefined, inPhase(competitor, 'silver')],
+      ]) as Rules,
     ])
     expect(declarationsAt(css, ['.Child'])).toContain('--priority-chain-middle: var(--priority-chain-source);')
-    expect(declarationsAt(css, ['.Child'])).toContain('--priority-chain-outer: var(--priority-chain-middle);')
-    expect(declarationsAt(css, ['.Child', '&[data-phase]'])).toEqual(['--priority-chain-outer: gold;'])
+    const linkedWins = priority < 8 || priority === 8 && sourceLast
+    expect(declarationsAt(css, ['.Child'])).toContain(`--priority-chain-outer: ${linkedWins ? 'var(--priority-chain-middle)' : 'blue'};`)
+    expect(declarationsAt(css, ['.Child', '&[data-phase]'])).toEqual([`--priority-chain-outer: ${linkedWins ? 'gold' : 'silver'};`])
   })
 
   test('显式 declare 的自身 states 与声明键同级，胜过该状态地址后写的低等级直接声明', () => {

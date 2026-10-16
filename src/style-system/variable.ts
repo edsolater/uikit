@@ -12,7 +12,7 @@ import type { ASTController } from './compiler/ast-controller'
 import type { ValueInput } from './value'
 import { resolveStateConditions, type StateCondition } from './pieces/state-conditions'
 import { hasProperty, mapGet, result } from '@edsolater/fnkit'
-import { consumeVariable, findVariableDeclaration, joinVariableValues, type ModifyTargetProtocol } from './variable-modify'
+import { consumeDeclaration, findVariableDeclaration, joinVariableValues, type VariableTarget } from './variable-declaration'
 import { declare } from './declaration'
 import { resolveVariable } from './variable-cluster'
 import { parseVariableArgs, type VariableStateValues } from './variable-args-parser'
@@ -24,7 +24,7 @@ export type VariableDefaultValue = ValueInput | (() => ValueInput)
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
-export interface Variable extends ModifyTargetProtocol, JSSKeyObject {
+export interface Variable extends VariableTarget, JSSKeyObject {
   kind: 'variable'
   name: string
   priority: number
@@ -153,7 +153,7 @@ export const isVariable = (input: unknown): input is Variable =>
 /**
  * 将自定义属性材料作为内容引用；依赖原信息体，保留其资源激活关系。
  */
-export const referenceVariable = (target: ModifyTargetProtocol): JSSContent & JSSKeyObject => ({
+export const referenceVariable = (target: VariableTarget): JSSContent & JSSKeyObject => ({
   dependencies: isJSSContent(target) ? [target] : [],
   /**
    * 作为声明目标时输出材料的当前 CSS 名称。
@@ -168,7 +168,7 @@ export const referenceVariable = (target: ModifyTargetProtocol): JSSContent & JS
 /**
  * 按消费角色组织目标、状态或普通 CSS 引用；天然材料与 Variable 使用同一引用生命周期。
  */
-export function compileVariableContent(target: ModifyTargetProtocol, context: JSSCompileContext, controller: ASTController): void {
+export function compileVariableContent(target: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
   for (const dependency of target.declarations ?? []) {
     const existing = findVariableDeclaration(controller, dependency, context.conditionPath)
     if (existing) controller.depend(existing, { owner: context.node })
@@ -177,25 +177,25 @@ export function compileVariableContent(target: ModifyTargetProtocol, context: JS
   if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return }
   const defaultContent = result(target.content)
   activateVariableResources(target, context, controller)
-  consumeVariable(context, controller, target)
+  consumeDeclaration(context, controller, target)
   observeVariable(target, defaultContent, context, controller)
   const reference = createVariableReference(target, defaultContent)
-  if (resolveVariable(context.input as ModifyTargetProtocol) !== target && isJSSContent(target)) reference.dependencies.push(target)
+  if (resolveVariable(context.input as VariableTarget) !== target && isJSSContent(target)) reference.dependencies.push(target)
   controller.setContent(context, reference)
 }
 
 /**
  * 引用只输出 CSS 名称；结构化内容继续提供依赖与按需资源。
  */
-const createVariableReference = (variable: ModifyTargetProtocol, content: ValueInput): Expression =>
+const createVariableReference = (variable: VariableTarget, content: ValueInput): Expression =>
   createJSSContent(() => `var(${variable.key.toCSSString()})`, [content])
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
-const registrationSessions = new WeakMap<object, Map<ModifyTargetProtocol, Set<JSSStyleNode>>>()
+const registrationSessions = new WeakMap<object, Map<VariableTarget, Set<JSSStyleNode>>>()
 
 /**
  * 按 registration 登记 CSS @property；对象首次消费时替换同址资源，全部消费者撤销后可再次激活。
  */
-function activateVariableResources(variable: ModifyTargetProtocol, context: JSSCompileContext, controller: ASTController): void {
+function activateVariableResources(variable: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
   const registration = variable.registration
   if (!registration) return
   const address = `variable-registration:${variable.key.toCSSString()}`

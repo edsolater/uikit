@@ -6,8 +6,35 @@ import { declare } from '../declaration'
 import { add, multiply } from '../pieces/contents/functions/calc'
 import { variable } from '../variable'
 import { modify } from '../variable-modify'
+import { key } from '../key'
+import type { ValueInput } from '../value'
 
 afterEach(() => document.body.replaceChildren())
+
+/**
+ * 将本例的一次编译 CSS 与明确选择器元素挂到浏览器，断言仍由各场景直接表达。
+ */
+function mountCSS(css: string, className: string, tag = 'div'): HTMLElement {
+  document.body.appendChild(document.createElement('style')).textContent = css
+  const element = document.body.appendChild(document.createElement(tag))
+  element.className = className
+  return element
+}
+
+test('普通Key两次声明保留join，生成状态同为999而非借用材料等级', () => {
+  const source = variable('10px', { name: 'joined-key-state', states: { '&[data-phase]': base => multiply(base, 2) } })
+  const target = key('--joined-key-state', { join: values => values.reduce<ValueInput>((total, item) => add(total, item), '0px') })
+  const lower = variable('100px', { name: source.name, priority: 998, states: { '&[data-phase]': '100px' } })
+  const css = compileRules([
+    [['.Parent'], 'width', source],
+    [['.Child'], ...declare(target, '3px')], [['.Child'], ...declare(target, '4px')],
+    [['.Child'], ...declare(lower)], [['.Child'], 'width', 'var(--joined-key-state)'],
+  ])
+  const element = mountCSS(css, 'Child')
+  expect(getComputedStyle(element).width).toBe('7px')
+  element.dataset.phase = ''
+  expect(getComputedStyle(element).width).toBe('14px')
+})
 
 test('低等级后写声明不把高等级基础移到零附加权重状态之后', async () => {
   const high = variable('red', { name: 'priority-state-anchor', priority: 6, states: { hover: 'gold' } })
@@ -16,9 +43,7 @@ test('低等级后写声明不把高等级基础移到零附加权重状态之�
     [['.Probe'], ...declare(high)], [['.Probe'], ...declare(low)],
     [['.Probe'], 'color', 'var(--priority-state-anchor)'],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const element = document.body.appendChild(document.createElement('button'))
-  element.className = 'Probe'
+  const element = mountCSS(css, 'Probe', 'button')
   expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
   await userEvent.hover(element)
   expect(getComputedStyle(element).color).toBe('rgb(255, 215, 0)')
@@ -47,9 +72,7 @@ test('局部声明重访后状态和修改共用新基础，同名另一实例�
       })
     } }],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'Probe'
+  const element = mountCSS(css, 'Probe')
   const sibling = document.body.appendChild(document.createElement('div'))
   sibling.className = 'Other'
   expect(getComputedStyle(element).width).toBe('8px')
@@ -65,9 +88,7 @@ test('自动来源状态同样触发已消费依赖，子元素原生引用得�
     [['.Parent'], 'width', line],
     [['.Child'], 'height', source], [['.Child'], 'width', 'var(--automatic-state-line)'],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const parent = document.body.appendChild(document.createElement('div'))
-  parent.className = 'Parent'
+  const parent = mountCSS(css, 'Parent')
   const child = parent.appendChild(document.createElement('div'))
   child.className = 'Child'
   expect(getComputedStyle(child).width).toBe('10px')
@@ -77,21 +98,21 @@ test('自动来源状态同样触发已消费依赖，子元素原生引用得�
   expect(getComputedStyle(child).width).toBe('10px')
 })
 
-test('独立同名对象 declare 后，已消费材料的状态按当地7px基础展开为14px', () => {
+test.each(['Variable', 'Key'])('同名%s declare 后，已消费材料的状态按当地7px基础展开为14px', (entry) => {
   const source = variable('10px', { name: 'shared-state-size', priority: 0,
     states: { '&[data-phase]': base => multiply(base, 2) },
   })
-  const local = variable('1px', { name: 'shared-state-size', priority: 1 })
+  const local = entry === 'Key' ? key('--shared-state-size') : variable('1px', { name: 'shared-state-size', priority: 1 })
   const css = compileRules([
     [['.Parent'], 'width', source], [['.Child'], ...declare(local, '7px')],
     [['.Child'], 'width', 'var(--shared-state-size)'],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'Child'
+  const element = mountCSS(css, 'Child')
   expect(getComputedStyle(element).width).toBe('7px')
   element.dataset.phase = ''
   expect(getComputedStyle(element).width).toBe('14px')
+  delete element.dataset.phase
+  expect(getComputedStyle(element).width).toBe('7px')
 })
 
 test('只 declare 也展开自身 states，局部7px基础在状态下得到14px而非创建默认20px', () => {
@@ -104,9 +125,7 @@ test('只 declare 也展开自身 states，局部7px基础在状态下得到14px
     // 原生引用不激活 Variable 依赖消费，状态必须由 declare 自己提供。
     [['.Local'], 'width', 'var(--base-local-size)'],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'Local'
+  const element = mountCSS(css, 'Local')
   expect(getComputedStyle(element).width).toBe('7px')
   element.dataset.phase = ''
   expect(getComputedStyle(element).width).toBe('14px')
@@ -126,9 +145,7 @@ test('extend-only 继承名称和默认内容，保留原始状态规则', () =>
     [['.Inherited'], ...declare(inherited)],
     [['.Inherited'], 'width', 'var(--base-inherited-size)'],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'Inherited'
+  const element = mountCSS(css, 'Inherited')
   expect(getComputedStyle(element).width).toBe('10px')
   element.dataset.phase = ''
   expect(getComputedStyle(element).width).toBe('20px')
@@ -147,15 +164,13 @@ test('extend的新默认20px重绑继承规则，覆盖一个状态仍保留另�
     states: { '&[data-other]': '50px' },
   })
   const css = compileRules([
-    [['.Source'], 'width', source],
     [['.Larger'], ...declare(larger)],
-    [['.Larger'], 'width', `var(${larger.toCSSString()})`],
+    [['.Larger'], 'width', larger],
     [['.LocalLarger'], ...declare(larger, '7px')],
     [['.LocalLarger'], 'width', `var(${larger.toCSSString()})`],
+    [['.Source'], 'width', source],
   ])
-  document.body.appendChild(document.createElement('style')).textContent = css
-  const inherited = document.body.appendChild(document.createElement('div'))
-  inherited.className = 'Larger'
+  const inherited = mountCSS(css, 'Larger')
   const local = document.body.appendChild(document.createElement('div'))
   local.className = 'LocalLarger'
   expect(getComputedStyle(inherited).width).toBe('20px')
