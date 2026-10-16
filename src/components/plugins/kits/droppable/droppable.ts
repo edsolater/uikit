@@ -11,12 +11,6 @@ import { registerInternalDropTarget } from '../dragAndDrop'
 import { createExternalDropListeners } from './createExternalDropListeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
 
-export type {
-  DropContext,
-  ExternalDropContext,
-  InternalDropContext,
-} from './dropContext'
-
 export interface DroppableOptions {
   disabled?: boolean
   /** 只作用于系统外部原生拖放。 */

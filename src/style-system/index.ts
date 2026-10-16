@@ -72,16 +72,12 @@ export {
   globalSurfaceColor,
   globalContentColor,
   globalCanvasColor,
-  interactiveColor,
-  interactiveColors,
-  badColor,
-  badColors,
   toneColor,
   toneColors,
-  highlightColor,
-  highlightColors,
   surfaceColorInteractive,
 } from './pieces/contents/atoms/color/colors'
+export { interactiveColor, interactiveColors, highlightColor, highlightColors } from './pieces/contents/atoms/color/ui-action-colors'
+export { badColor, badColors } from './pieces/contents/atoms/color/ui-info-color'
 export { shadowFlat, shadowLow, shadowRaised, shadowElevated, shadowInteractive } from './pieces/contents/atoms/shadow'
 export { $cursor } from './pieces/keys/interaction'
 export { colorMix } from './pieces/contents/functions/color-mix'

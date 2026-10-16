@@ -11,12 +11,6 @@ import { paperColor, inkColor } from './palette'
 import { highlightColor, highlightColors } from './ui-action-colors'
 import { interactiveColorStates } from './ui-variable-structure'
 
-export { toJSSColor } from './ui-color-structure'
-export { paperColor, inkColor, neutralColor } from './palette'
-export { brandColor } from './brand-color'
-export { interactiveColor, interactiveColors, highlightColor, highlightColors } from './ui-action-colors'
-export { badColor, badColors } from './ui-info-color'
-
 /**
  * 页面整体的底色，例如卡片之间和组件之外露出的背景，默认引用纸色。
  * Canvas 在这里表示承载页面内容的画布；本变量没有引用浏览器的系统颜色 Canvas。
