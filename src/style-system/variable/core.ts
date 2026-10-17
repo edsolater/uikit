@@ -6,8 +6,8 @@
 */
 import { condition } from '../condition'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import { allocateVariableName, type JSSKeyObject } from '../key'
-import { createJSSContent, isJSSContent, type Expression, type JSSCompileContext, type JSSContent } from '../content'
+import type { JSSKeyObject } from '../key'
+import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { ASTController } from '../compiler/ast-controller'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
@@ -17,6 +17,7 @@ import { declare, type DeclareProtocol } from '../operations/declare'
 import { resolveVariable } from '../variable-cluster'
 import { parseVariableArgs, type VariableStateValues } from './args-parser'
 import { observeVariable } from './dependency'
+import { bindVariableName, getVariableNameAddress, type VariableName } from './name'
 
 /** 未命中状态时的声明内容；生产函数在编译消费时求值。 */
 export type VariableDefaultValue = ValueInput | (() => ValueInput)
@@ -32,7 +33,7 @@ export interface VariableTarget extends DeclareProtocol, JSSContent {
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
 export interface Variable extends VariableTarget, JSSKeyObject {
   kind: 'variable'
-  name: string
+  get name(): VariableName
   priority: number
   /** 这一个 Variable 的基础内容、状态和可选行为。 */
   config: {
@@ -41,15 +42,13 @@ export interface Variable extends VariableTarget, JSSKeyObject {
     /** 条件按登记顺序保存，原始规则在每次声明时绑定当地基础内容。 */
     states: Map<StateCondition, VariableStateRule>
     registration?: VariableOptions['registration']
-    /** 自动状态声明的目标 Key，始终指向当前 Variable 名称。 */
+    /** 自动状态声明的目标 Key，指向注册时绑定的名称。 */
     definitionKey: JSSKeyObject
   }
   /**
    * 返回 CSS 自定义属性名（如 --amount），供声明目标使用。
    */
   toCSSString(): string
-  /** 此对象最早可被编译的波次；配置含义见 VariableOptions.compileWaveIndex。 */
-  compileWaveIndex?: number
   /**
    * 按当前位置生成 CSS 引用，并激活引用及声明目标所需资源。
    */
@@ -58,8 +57,8 @@ export interface Variable extends VariableTarget, JSSKeyObject {
 
 /** 一个 Variable 的名称、各状态基础值及可选注册。 */
 export interface VariableOptions {
-  /** CSS 自定义属性名；可带或省略开头的 --，只有 extend 可沿用来源名称。 */
-  name?: string
+  /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，extend 可沿用来源身份。 */
+  name?: string | VariableName
   /** 继承名称、默认内容及原始状态规则；未指定等级时使用来源等级加一。 */
   extend?: Variable
   /** 声明键等级；普通创建默认0，继承默认来源等级加一，显式0仍生效。 */
@@ -84,7 +83,7 @@ export interface VariableOptions {
   }
 
   /**
-   * 此 Variable 最早可编译的波次，须为非负整数；省略为 0。
+   * 该定义内容最早可编译的波次，须为非负整数；省略为 0。
    * 仅控制内容编译时机，不决定修改顺序。
    */
   compileWaveIndex?: number
@@ -97,11 +96,11 @@ export interface VariableOptions {
 export function variable(options: VariableOptions & { extend: Variable }): Variable
 export function variable<DefaultValue extends VariableDefaultValue>(
   input: DefaultValue | VariableStateValues<DefaultValue>,
-  options: string | (VariableOptions & ({ name: string } | { extend: Variable })),
+  options: string | (VariableOptions & ({ name: string | VariableName } | { extend: Variable })),
 ): Variable
 export function variable(input: VariableDefaultValue | VariableStateValues | (VariableOptions & { extend: Variable }), options?: string | VariableOptions): Variable {
   const config = parseVariableArgs(input as VariableDefaultValue, options)
-  let name = config.name.replace(/^--/, '')
+  const name = config.name
   const entries = Object.entries(config.states ?? {})
   const conditions = resolveStateConditions(entries.map(([name]) => name))
   const states = new Map<StateCondition, VariableStateRule>(
@@ -114,13 +113,9 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
     kind: 'variable',
     priority: config.priority,
     /**
-     * 读取当前 CSS 名称；名称变化后声明与引用使用新名称。
+     * 注册时绑定的名称引用，不支持后续替换。
      */
     get name() { return name },
-    /**
-     * 登记新的显式名称，使内部名称分配避让当前名称。
-     */
-    set name(nextName) { name = allocateVariableName(nextName).replace(/^--/, '') },
     config: {
       defaultValue: config.defaultValue,
       states,
@@ -129,13 +124,11 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
         return { toCSSString: self.toCSSString, priority: self.priority, join: joinVariableValues }
       },
     },
-    compileWaveIndex: config.compileWaveIndex,
-    onActive: config.onActive,
     /**
-     * 返回当前名称对应的 CSS 自定义属性名。
+     * 返回绑定名称的 CSS 声明地址。
      */
     toCSSString() {
-      return `--${self.name}`
+      return getVariableNameAddress(name)
     },
     get key() { return self.config.definitionKey },
     get join() { return joinVariableValues },
@@ -143,10 +136,25 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
     get states() { return self.config.states },
     get registration() { return self.config.registration },
     /**
-     * 按声明目标或内容引用角色激活资源并提供对应内容。
+     * 声明目标保留自身材料，值引用统一转交绑定的 Name。
      */
-    onCompile: (context, astController) => compileVariableContent(self, context, astController),
+    onCompile(context, controller) {
+      controller.setContent(context, context.role === 'declaration-key'
+        ? createJSSContent(self.toCSSString, [definitionContent]) : name)
+    },
   }
+  // 同一份定义材料供名称引用和声明键消费，默认、状态仍从 self 读取。
+  const definitionContent: JSSContent = {
+    onActive: config.onActive,
+    compileWaveIndex: config.compileWaveIndex,
+    /**
+     * 消费当前定义的默认、状态及资源，不再次进入名称引用。
+     */
+    onCompile(context, controller) {
+      controller.setContent(context, { dependencies: consumeVariableDefinition(self, context, controller) })
+    },
+  }
+  bindVariableName(name, definitionContent)
   return self
 }
 
@@ -159,42 +167,47 @@ export const isVariable = (input: unknown): input is Variable =>
 /**
  * 将自定义属性材料作为内容引用；依赖原信息体，保留其资源激活关系。
  */
-export const referenceVariable = (target: VariableTarget): JSSContent & JSSKeyObject => ({
-  dependencies: isJSSContent(target) ? [target] : [],
-  /**
-   * 作为声明目标时输出材料的当前 CSS 名称。
-   */
-  toCSSString: () => target.key.toCSSString(),
-  /**
-   * 按当前位置编译材料的引用、状态和注册资源。
-   */
-  onCompile: (context, controller) => compileVariableContent(target, context, controller),
-})
+export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyObject {
+  if (isVariable(target)) return target
+  return {
+    dependencies: isJSSContent(target) ? [target] : [],
+    /**
+     * 作为声明目标时输出材料的当前 CSS 名称。
+     */
+    toCSSString: () => target.key.toCSSString(),
+    /**
+     * 天然材料的值引用与声明复用定义消费，Variable 直接使用已有内容协议。
+     */
+    onCompile: (context, controller) => compileVariableContent(target, context, controller),
+  }
+}
 
 /**
- * 按消费角色组织目标、状态或普通 CSS 引用；天然材料与 Variable 使用同一引用生命周期。
+ * 编译天然自定义属性材料的声明或值引用；定义副作用与 Variable 共用，值位置仅输出一次引用。
  */
 export function compileVariableContent(target: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
+  const dependencies = consumeVariableDefinition(target, context, controller)
+  if (context.role === 'declaration-key') return
+  if (resolveVariable(context.input as VariableTarget) !== target && isJSSContent(target)) dependencies.push(target)
+  controller.setContent(context, createJSSContent(() => `var(${target.key.toCSSString()})`, dependencies))
+}
+
+/**
+ * 激活定义所需的共同声明与注册资源，记录实际默认配方并交付结构化依赖；不生成值引用。
+ */
+function consumeVariableDefinition(target: VariableTarget, context: JSSCompileContext, controller: ASTController): unknown[] {
   for (const dependency of target.declarations ?? []) {
     const existing = findVariableDeclaration(controller, dependency, context.conditionPath)
     if (existing) controller.depend(existing, { owner: context.node })
     else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
   }
-  if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return }
+  if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return [] }
   const defaultContent = result(target.content)
   activateVariableResources(target, context, controller)
   consumeDeclaration(context, controller, target)
   observeVariable(target, defaultContent, context, controller)
-  const reference = createVariableReference(target, defaultContent)
-  if (resolveVariable(context.input as VariableTarget) !== target && isJSSContent(target)) reference.dependencies.push(target)
-  controller.setContent(context, reference)
+  return [defaultContent]
 }
-
-/**
- * 引用只输出 CSS 名称；结构化内容继续提供依赖与按需资源。
- */
-const createVariableReference = (variable: VariableTarget, content: ValueInput): Expression =>
-  createJSSContent(() => `var(${variable.key.toCSSString()})`, [content])
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
 const registrationSessions = new WeakMap<object, Map<VariableTarget, Set<JSSStyleNode>>>()
 

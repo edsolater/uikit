@@ -3,7 +3,8 @@ import { expect, it } from 'vitest'
 import { condition } from '../condition'
 import { createJSSContent, type JSSContent } from '../content'
 import { value } from '../value'
-import { variable } from '../variable'
+import { variable, referenceVariable } from '../variable'
+import { key } from '../key'
 import { compileRules } from '../css-root'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import type { JSSKeyObject } from '../key'
@@ -59,18 +60,33 @@ it('同名不同对象首次消费替换注册，旧对象再次消费不反向�
   expect(css).not.toContain('syntax: "<number>"')
 })
 
-it('同名资源替换后旧对象所有消费者撤销，再消费可重新注册', () => {
-  const first = variable(1, { name: 'registration-restart', registration: { syntax: '<number>', inherits: false } })
-  const second = variable('red', { name: 'registration-restart', registration: { syntax: '<color>', inherits: true } })
+it('天然材料同名资源替换后旧对象所有消费者撤销，再消费可重新注册', () => {
+  const first = { key: key('--registration-natural-restart'), content: 1, registration: { syntax: '<number>', inherits: false } }
+  const second = { key: key('--registration-natural-restart'), content: 'red', registration: { syntax: '<color>', inherits: true } }
   const remove: JSSContent = { onCompile(context, controller) {
     controller.remove(controller.search({ key: 'width' })[0])
     controller.remove(controller.search({ key: 'height' })[0])
-    controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['opacity', first], { owner: context.node })
+    controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['opacity', referenceVariable(first)], { owner: context.node })
   } }
-  const css = compileRules([[[], 'width', first], [[], 'color', second], [[], 'height', first], [[], 'display', remove]])
+  const css = compileRules([[[], 'width', referenceVariable(first)], [[], 'color', referenceVariable(second)], [[], 'height', referenceVariable(first)], [[], 'display', remove]])
   expect(css).toContain('syntax: "<number>"')
   expect(css).toContain('inherits: false')
   expect(css).not.toContain('syntax: "<color>"')
+})
+
+it('同名 Variable 共享 Name 仍有消费者时，重新引用任一对象不重启另一份资源', () => {
+  const first = variable(1, { name: 'registration-name-restart', registration: { syntax: '<number>', inherits: false } })
+  const second = variable('red', { name: first.name, registration: { syntax: '<color>', inherits: true } })
+  const remove: JSSContent = { onCompile(context, controller) {
+    controller.remove(controller.search({ key: 'width' })[0])
+    controller.remove(controller.search({ key: 'height' })[0])
+    controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['opacity', first.name], { owner: context.node })
+  } }
+  const css = compileRules([[[], 'width', first], [[], 'color', second.name], [[], 'height', first], [[], 'display', remove]])
+  expect(css).toContain('syntax: "<color>"')
+  expect(css).toContain('inherits: true')
+  expect(css).not.toContain('syntax: "<number>"')
+  expect(css).toContain('opacity: var(--registration-name-restart);')
 })
 
 it.each([false, true])('同波删除消费者不会产生孤儿资源，共享消费者=%s', (shared) => {

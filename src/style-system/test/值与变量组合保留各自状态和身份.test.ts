@@ -5,6 +5,7 @@ import { condition, media } from '../condition'
 import { createJSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
+import * as variables from '../variable'
 import { clusterDeclarations, clusterFrom, variableCluster } from '../variable-cluster'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { multiply } from '../pieces/contents/functions/calc'
@@ -70,7 +71,8 @@ test('多个有状态变量组合时，消费属性仍只有一份声明', () =>
 })
 
 test('共享 Value 在不同地址分别解析，重复编译不修改来源对象', () => {
-  const shared = value(variable('2px', { name: 'shared-position-size', states: { hover: '4px' } }))
+  const source = variable('2px', { name: 'shared-position-size', states: { hover: '4px' } })
+  const shared = value(source)
   const rules: Rules = [
     [[condition('.AuditA')], 'width', shared],
     [[condition('.AuditB')], 'width', shared],
@@ -83,19 +85,21 @@ test('共享 Value 在不同地址分别解析，重复编译不修改来源对�
   }
 
   compileAndCheck()
-  expect(shared.content).toMatchObject({ kind: 'variable', name: 'shared-position-size' })
+  expect(shared.content).toBe(source)
   compileAndCheck()
-  expect(shared.content).toMatchObject({ kind: 'variable', name: 'shared-position-size' })
+  expect(shared.content).toBe(source)
 })
-test('变量改名后引用、默认声明与自动状态都采用当前名称', () => {
-  const target = variable('1px', { name: 'before-size', states: { hover: '2px' } })
-  target.name = 'after-size'
+test('创建时绑定 Name，后续替换尝试不改变引用、默认声明与状态', () => {
+  const name = variables.variableName('bound-size')
+  const target = variable('1px', { name, states: { hover: '2px' } })
+  try { Reflect.set(target, 'name', variables.variableName('replacement-size')) } catch {}
+  expect(target.name).toBe(name)
 
   const css = compileRules([[[condition('.Renamed')], 'width', target]])
-  expect(css).toContain('width: var(--after-size);')
-  expect(css).toContain('--after-size: 1px;')
-  expect(css).toContain('--after-size: 2px;')
-  expect(css).not.toContain('--before-size')
+  expect(css).toContain('width: var(--bound-size);')
+  expect(css).toContain('--bound-size: 1px;')
+  expect(css).toContain('--bound-size: 2px;')
+  expect(css).not.toContain('--replacement-size')
 })
 test('Cluster 继承保留未改成员，也能加入新成员且未用成员不激活', () => {
   const unusedActive = vi.fn()
@@ -118,7 +122,7 @@ test('Cluster 继承保留未改成员，也能加入新成员且未用成员不
   expect(unusedActive).not.toHaveBeenCalled()
   const unnamed = clusterFrom(source, { default: { states: { hover: 'purple' } } })
   const unnamedCSS = compileRules([[[condition('.Unnamed')], 'color', unnamed]])
-  expect(unnamed.name).not.toBe(source.name)
+  expect(unnamed.key.toCSSString()).not.toBe(source.key.toCSSString())
   expect(unnamedCSS).toContain(`${unnamed.toCSSString()}: var(--family-source-color);`)
   expect(unnamedCSS).toContain('--family-source-color: red;')
   expect(unnamedCSS).toContain(`${unnamed.toCSSString()}: purple;`)

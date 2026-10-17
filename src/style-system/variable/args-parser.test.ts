@@ -6,18 +6,18 @@
 */
 import { expect, test, vi } from 'vitest'
 import { parseVariableArgs } from './args-parser'
+import * as variables from './index'
 
 test('两处简写独立展开，完整配置保留其他字段', () => {
   const onActive = vi.fn()
-  const modification = { apply: (current: import('../content').JSSContent) => current }
-  const options = { name: 'amount', onActive, modification, compileWaveIndex: 2 }
-  expect(parseVariableArgs(1, 'amount')).toEqual({ defaultValue: 1, name: 'amount', priority: 0 })
-  expect(parseVariableArgs(1, options)).toEqual({ ...options, defaultValue: 1, priority: 0 })
-  expect(parseVariableArgs({ default: 1, hover: 2 }, 'amount')).toEqual({
-    defaultValue: 1, name: 'amount', priority: 0, states: { hover: 2 },
+  const options = { name: 'amount', onActive, compileWaveIndex: 2 }
+  expect(parseVariableArgs(1, 'amount')).toMatchObject({ defaultValue: 1, priority: 0 })
+  expect(parseVariableArgs(1, options)).toMatchObject({ onActive, compileWaveIndex: 2, defaultValue: 1, priority: 0 })
+  expect(parseVariableArgs({ default: 1, hover: 2 }, 'amount')).toMatchObject({
+    defaultValue: 1, priority: 0, states: { hover: 2 },
   })
-  expect(parseVariableArgs({ default: 1, hover: 2 }, options)).toEqual({
-    ...options, defaultValue: 1, priority: 0, states: { hover: 2 },
+  expect(parseVariableArgs({ default: 1, hover: 2 }, options)).toMatchObject({
+    onActive, compileWaveIndex: 2, defaultValue: 1, priority: 0, states: { hover: 2 },
   })
 })
 
@@ -30,8 +30,8 @@ test('显式 states 覆盖同名简写状态并保留双方其他状态，不修
 })
 
 test('default 即使为 undefined 也识别', () => {
-  expect(parseVariableArgs({ default: undefined, hover: 2 }, 'empty')).toEqual({
-    defaultValue: undefined, name: 'empty', priority: 0, states: { hover: 2 },
+  expect(parseVariableArgs({ default: undefined, hover: 2 }, 'empty')).toMatchObject({
+    defaultValue: undefined, priority: 0, states: { hover: 2 },
   })
 })
 
@@ -42,9 +42,11 @@ test('无 default 的内容保留普通内容身份', () => {
   expect(config.states).toBeUndefined()
 })
 
-test('显式名称与名称简写原样保留', () => {
-  expect(parseVariableArgs(1, 'explicit').name).toBe('explicit')
-  expect(parseVariableArgs(1, { name: 'configured' }).name).toBe('configured')
+test('字符串快捷名称统一为 Name，显式 Name 保留传入身份', () => {
+  expect(typeof parseVariableArgs(1, 'explicit').name).not.toBe('string')
+  expect(typeof parseVariableArgs(1, { name: 'configured' }).name).not.toBe('string')
+  const name = variables.variableName('configured-name')
+  expect(parseVariableArgs(1, { name }).name).toBe(name)
 })
 
 test('默认生产函数和状态回调解析后均保留原样，不在 parser 中执行', () => {

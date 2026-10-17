@@ -5,7 +5,7 @@
 整组内容可复用现有 Variable 协议，不另建变量模型。
 */
 import { assert, Unresultable } from '@edsolater/fnkit'
-import { isVariable, variable, type Variable, type VariableOptions } from './variable'
+import { isVariable, variable, type Variable, type VariableOptions } from './variable/core'
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
 import type { DeclareProtocol } from './operations/declare'
@@ -116,16 +116,16 @@ export function clusterDeclarations(target: unknown, source: unknown): [Variable
   for (const [name, member] of Object.entries(targets)) {
     if (!Object.hasOwn(sources, name)) continue
     const content = sources[name]
-    const existing = declarations.get(member.name)
+    const existing = declarations.get(member.key.toCSSString())
     assert(
       !existing || (existing[0] === member && existing[1] === content),
-      `Variable Cluster ${targets.default.name} ← ${sources.default.name} 的同名目标存在对象或来源冲突：${name}（--${member.name}）。`,
+      `Variable Cluster ${targets.default.key.toCSSString()} ← ${sources.default.key.toCSSString()} 的同名目标存在对象或来源冲突：${name}（${member.key.toCSSString()}）。`,
     )
     assert(
-      member === content || member.name !== content.name,
-      `Variable Cluster ${targets.default.name} ← ${sources.default.name} 的成员 ${name} 使用不同对象引用同名变量 --${member.name}。`,
+      member === content || member.key.toCSSString() !== content.key.toCSSString(),
+      `Variable Cluster ${targets.default.key.toCSSString()} ← ${sources.default.key.toCSSString()} 的成员 ${name} 使用不同对象引用同名变量 ${member.key.toCSSString()}。`,
     )
-    declarations.set(member.name, [member, content])
+    declarations.set(member.key.toCSSString(), [member, content])
   }
   return [...declarations.values()].filter(([member, content]) => member !== content)
 }

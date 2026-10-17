@@ -14,6 +14,7 @@ import { modify } from '../operations/modify'
 import { oklch } from '../pieces/contents/functions/oklch'
 import { value } from '../value'
 import { variable } from '../variable'
+import * as variables from '../variable'
 import { variableCluster } from '../variable-cluster'
 import { type Rules } from '../rule'
 import { compileRules } from '../css-root'
@@ -80,11 +81,10 @@ test('撤销一份绑定保留另一份的共享依赖，全部撤销后不泄�
   }
 })
 
-test.each(['explicit', 'natural', 'source', 'change'])('匿名绑定与显式、天然材料及改名材料独立声明：%s', mode => {
+test.each(['explicit', 'natural', 'source', 'change'])('匿名绑定与显式、天然材料、预建名称及变化改名材料独立声明：%s', mode => {
   const reserved = 'binding-source'
-  const source = mode === 'natural' ? { key: key(`--${reserved}`), content: 'red' } : variable('red', mode === 'explicit' ? reserved : 'renamed-source')
+  const source = mode === 'natural' ? { key: key(`--${reserved}`), content: 'red' } : variable('red', mode === 'source' ? { name: variables.variableName(reserved) } : mode === 'explicit' ? reserved : 'binding-other-source')
   const change = modification({ type: 'color', name: mode === 'explicit' ? undefined : '--renamed-change', detail: { alpha: 0.5 } })
-  if (mode === 'source' && 'name' in source) source.name = reserved
   if (mode === 'change') change.name = `--${reserved}`
   const merged = adjust(source, change)
   const css = compile(declare(merged))

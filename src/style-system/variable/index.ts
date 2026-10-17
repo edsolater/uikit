@@ -9,3 +9,6 @@ export type { Variable, VariableOptions, VariableDefaultValue, VariableStateRule
 export type { VariableStateValues } from './args-parser'
 export { declareVariable } from './declare'
 export { compileVariableModification } from './modify'
+
+export { variableName } from './name'
+export type { VariableName } from './name'

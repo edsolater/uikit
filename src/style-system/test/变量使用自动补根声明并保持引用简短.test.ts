@@ -42,12 +42,12 @@ test('多层引用各自声明一条关系，使用处不展开依赖链', () =>
 })
 
 test.each([false, true])('全树任意位置已有显式声明，不补根默认；声明在引用前=%s', (before) => {
-  const color = variable('white', 'root-explicit-color')
+  const color = variable('white', `root-explicit-color-${before}`)
   const definition = [['.Other'], ...declare(color, 'red')] as Parameters<typeof compileRules>[0][number]
   const consumption = [['.Consumer'], 'color', color] as Parameters<typeof compileRules>[0][number]
   const css = compileRules(before ? [definition, consumption] : [consumption, definition])
-  expect(css).toContain('--root-explicit-color: red;')
-  expect(css).toContain('color: var(--root-explicit-color);')
+  expect(css).toContain(`--root-explicit-color-${before}: red;`)
+  expect(css).toContain(`color: var(--root-explicit-color-${before});`)
   expect(css).not.toContain(':root')
   expect(css).not.toContain('white')
 })

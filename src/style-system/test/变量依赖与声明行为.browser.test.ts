@@ -6,8 +6,10 @@ import { declare } from '../operations/declare'
 import { add, multiply } from '../pieces/contents/functions/calc'
 import { variable } from '../variable'
 import { modify } from '../operations/modify'
-import { key } from '../key'
+import { key, type JSSKey } from '../key'
 import type { ValueInput } from '../value'
+import * as variables from '../variable'
+import { colorMix } from '../pieces/contents/functions/color-mix'
 
 afterEach(() => document.body.replaceChildren())
 
@@ -20,6 +22,61 @@ function mountCSS(css: string, className: string, tag = 'div'): HTMLElement {
   element.className = className
   return element
 }
+
+test.each(['Key', '原始二元'])('只有前置 Name 的来源由 %s 声明，子元素使用当地蓝色派生', entry => {
+  const id = entry === 'Key' ? 'key' : 'raw'
+  const address = `--browser-name-only-source-${id}`
+  const sourceName = variables.variableName(address)
+  const line = variable(colorMix([sourceName, 0.18], 'transparent'), { name: `browser-name-only-line-${id}`, priority: 2 })
+  const parentDeclaration: [JSSKey, ValueInput] = entry === 'Key' ? declare(key(address), 'red') : [address, 'red']
+  const childDeclaration: [JSSKey, ValueInput] = entry === 'Key' ? declare(key(address), 'blue') : [address, 'blue']
+  const css = compileRules([
+    [['.Parent'], ...parentDeclaration], [['.Parent'], 'color', line],
+    [['.Child'], ...childDeclaration], [['.Child'], 'color', `var(--browser-name-only-line-${id})`],
+    [['.ExpectedBlue'], 'color', 'color-mix(in oklab, blue 18%, transparent)'],
+    [['.ExpectedRed'], 'color', 'color-mix(in oklab, red 18%, transparent)'],
+  ])
+  const parent = mountCSS(css, 'Parent')
+  const child = parent.appendChild(document.createElement('div'))
+  child.className = 'Child'
+  const blue = document.body.appendChild(document.createElement('div'))
+  blue.className = 'ExpectedBlue'
+  const red = document.body.appendChild(document.createElement('div'))
+  red.className = 'ExpectedRed'
+  expect(getComputedStyle(parent).color).toBe(getComputedStyle(red).color)
+  expect(getComputedStyle(child).color).toBe(getComputedStyle(blue).color)
+  expect(getComputedStyle(child).color).not.toBe(getComputedStyle(parent).color)
+})
+
+test.each([false, true])('前置 Name 颜色配方在子作用域跟随来源和状态，引用 Name=%s', useName => {
+  const surfaceName = variables.variableName('browser-forward-surface')
+  const line = variable(colorMix([surfaceName, 0.18], 'transparent'), {
+    name: 'browser-forward-line', priority: 2,
+  })
+  const surface = variable('red', {
+    name: surfaceName,
+    states: { '&[data-phase]': 'blue' },
+  })
+  const css = compileRules([
+    [['.Parent'], 'color', useName ? line.name : line],
+    [['.Child'], ...declare(surface, 'green')],
+    [['.Child'], 'color', 'var(--browser-forward-line)'],
+    [['.ExpectedGreen'], 'color', 'color-mix(in oklab, green 18%, transparent)'],
+    [['.ExpectedBlue'], 'color', 'color-mix(in oklab, blue 18%, transparent)'],
+  ])
+  const parent = mountCSS(css, 'Parent')
+  const child = parent.appendChild(document.createElement('div'))
+  child.className = 'Child'
+  const green = document.body.appendChild(document.createElement('div'))
+  green.className = 'ExpectedGreen'
+  const blue = document.body.appendChild(document.createElement('div'))
+  blue.className = 'ExpectedBlue'
+  expect(getComputedStyle(child).color).toBe(getComputedStyle(green).color)
+  child.dataset.phase = ''
+  expect(getComputedStyle(child).color).toBe(getComputedStyle(blue).color)
+  delete child.dataset.phase
+  expect(getComputedStyle(child).color).toBe(getComputedStyle(green).color)
+})
 
 test('普通Key两次声明保留join，生成状态同为999而非借用材料等级', () => {
   const source = variable('10px', { name: 'joined-key-state', states: { '&[data-phase]': base => multiply(base, 2) } })
@@ -51,14 +108,14 @@ test('低等级后写声明不把高等级基础移到零附加权重状态之�
   expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
 })
 
-test('局部声明重访后状态和修改共用新基础，同名另一实例保留自身值', () => {
+test.each([false, true])('局部声明重访后状态和修改共用新基础，同名另一实例保留自身值，引用 Name=%s', useName => {
   const source = variable('10px', { name: 'revisited-state-modify', states: { '&[data-phase]': base => multiply(base, 2) } })
   const other = variable('99px', { name: source.name })
   const initial = declare(source, '5px')
   const css = compileRules([
     [['.Probe'], ...initial],
     [['.Probe'], ...modify(source, { type: 'expression', detail: base => add(base, '1px') })],
-    [['.Probe'], 'width', source],
+    [['.Probe'], 'width', useName ? source.name : source],
     [['.Other'], ...declare(other)], [['.Other'], 'width', `var(${other.toCSSString()})`],
     [[], undefined, { onCompile(_context, controller) {
       let updated = false
@@ -81,12 +138,12 @@ test('局部声明重访后状态和修改共用新基础，同名另一实例�
   expect(getComputedStyle(sibling).width).toBe('99px')
 })
 
-test('自动来源状态同样触发已消费依赖，子元素原生引用得到当地14px', () => {
+test.each([false, true])('自动来源状态同样触发已消费依赖，子元素原生引用得到当地14px，引用 Name=%s', useName => {
   const source = variable('5px', { name: 'automatic-state-source', states: { '&[data-phase]': '7px' } })
-  const line = variable(multiply(source, 2), { name: 'automatic-state-line', priority: 2 })
+  const line = variable(multiply(useName ? source.name : source, 2), { name: 'automatic-state-line', priority: 2 })
   const css = compileRules([
-    [['.Parent'], 'width', line],
-    [['.Child'], 'height', source], [['.Child'], 'width', 'var(--automatic-state-line)'],
+    [['.Parent'], 'width', useName ? line.name : line],
+    [['.Child'], 'height', useName ? source.name : source], [['.Child'], 'width', 'var(--automatic-state-line)'],
   ])
   const parent = mountCSS(css, 'Parent')
   const child = parent.appendChild(document.createElement('div'))

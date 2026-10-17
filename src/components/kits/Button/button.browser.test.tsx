@@ -196,7 +196,7 @@ describe('Button styles', () => {
     const parent = document.body.appendChild(document.createElement('div'))
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
-    parent.style.setProperty(`--${inkColor.name}`, 'rgb(78, 90, 123)')
+    parent.style.setProperty(inkColor.key.toCSSString(), 'rgb(78, 90, 123)')
     dispose = render(() => <Button>普通按钮</Button>, parent)
     const button = parent.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
@@ -204,7 +204,7 @@ describe('Button styles', () => {
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
     await userEvent.hover(button)
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
-    button.style.setProperty(`--${inkColor.name}`, 'rgb(123, 90, 78)')
+    button.style.setProperty(inkColor.key.toCSSString(), 'rgb(123, 90, 78)')
     button.focus()
     await userEvent.keyboard('[Space>]')
     try {

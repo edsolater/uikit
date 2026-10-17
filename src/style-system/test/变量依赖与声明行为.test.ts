@@ -11,6 +11,188 @@ import type { Rules } from '../rule'
 import { variable, type Variable } from '../variable'
 import { variableCluster } from '../variable-cluster'
 import { value } from '../value'
+import * as variables from '../variable'
+import * as styleSystem from '../index'
+import { colorMix } from '../pieces/contents/functions/color-mix'
+
+describe('Name 连接定义与消费', () => {
+  test('引用 Variable 与 Name 遵守相同的定义波次与普通内容资源生命周期', () => {
+    let phase = 'red'
+    /**
+     * 用首次激活时的阶段快照提供资源，作为两种引用与普通内容比较的依据。
+     */
+    const onActive = (): Rules => [[['.WaveResource'], 'color', phase]]
+    const nextPhase: JSSContent = { compileWaveIndex: 1, onCompile(context, controller) {
+      phase = 'blue'
+      controller.setContent(context, 1)
+    } }
+    const source = variable(() => phase, {
+      name: 'equivalent-wave-source', compileWaveIndex: 2, onActive,
+    })
+    const ordinary: JSSContent = { compileWaveIndex: 2, onActive, onCompile(context, controller) {
+      controller.setContent(context, phase)
+    } }
+    const referenceCSS = compileRules([[['.Consumer'], 'color', ordinary], [['.Phase'], 'order', nextPhase]])
+    const expectedResource = declarationsAt(referenceCSS, ['.WaveResource'])
+    expect(expectedResource).toHaveLength(1)
+    expect(expectedResource[0]).toMatch(/^color: (red|blue);$/)
+    expect(declarationsAt(referenceCSS, ['.Consumer'])).toContain('color: blue;')
+    phase = 'red'
+    const objectCSS = compileRules([[['.Consumer'], 'color', source], [['.Phase'], 'order', nextPhase]])
+    phase = 'red'
+    const nameCSS = compileRules([[['.Consumer'], 'color', source.name], [['.Phase'], 'order', nextPhase]])
+    expect(declarationsAt(objectCSS, [':root'])).toContain('--equivalent-wave-source: blue;')
+    expect(declarationsAt(nameCSS, [':root'])).toContain('--equivalent-wave-source: blue;')
+    expect(declarationsAt(objectCSS, ['.WaveResource'])).toEqual(expectedResource)
+    expect(declarationsAt(nameCSS, ['.WaveResource'])).toEqual(expectedResource)
+    expect(nameCSS).toBe(objectCSS)
+  })
+
+  test.each(['Key', '原始二元'])('只有 Name 的来源由 %s 提供时，子作用域覆盖仍联动当地线条配方', entry => {
+    const id = entry === 'Key' ? 'key' : 'raw'
+    const address = `--name-only-source-${id}`
+    const sourceName = variables.variableName(address)
+    const line = variable(colorMix([sourceName, 0.18], 'transparent'), { name: `name-only-line-${id}`, priority: 2 })
+    const parent: Rules[number] = entry === 'Key'
+      ? [['.Parent'], ...declare(key(address), 'red')] : [['.Parent'], address, 'red']
+    const child: Rules[number] = entry === 'Key'
+      ? [['.Child'], ...declare(key(address), 'blue')] : [['.Child'], address, 'blue']
+    const css = compileRules([parent, [['.Parent'], 'color', line], child])
+    expect(declarationsAt(css, ['.Child'])).toEqual(expect.arrayContaining([
+      `${address}: blue;`,
+      `--name-only-line-${id}: color-mix(in oklab,var(${address})18%,transparent);`,
+    ]))
+    expect(css).not.toMatch(new RegExp(`:root\\s*\\{[^}]*${address}:`))
+  })
+
+  test.each(['字符串简写', '配置对象'])('快捷定义取出的 Name 能独立消费，声明键与值引用角色分开：%s', mode => {
+    const source = mode === '字符串简写'
+      ? variable('white', 'shortcut-name')
+      : variable('white', { name: 'shortcut-name' })
+    const named = compileRules([[['.Shortcut'], 'color', source.name]])
+    expect(named).toBe(compileRules([[['.Shortcut'], 'color', source]]))
+    expect(declarationsAt(named, [':root'])).toContain('--shortcut-name: white;')
+    expect(declarationsAt(named, ['.Shortcut'])).toContain('color: var(--shortcut-name);')
+    expect(declarationsAt(compileRules([[['.Declared'], ...declare(source)]]), ['.Declared']))
+      .toEqual(['--shortcut-name: white;'])
+  })
+  test('先保存 Name 配方，后注册来源，CSS 中仍有来源默认值和传递依赖', () => {
+    const surfaceName = styleSystem.variableName('forward-surface')
+    const line = variable(colorMix([surfaceName, 0.18], 'transparent'), 'forward-line')
+    const surface = variable('white', { name: surfaceName })
+    expect(surface.name).toBe(surfaceName)
+    const css = compileRules([[['.Forward'], 'border-color', line]])
+    expect(declarationsAt(css, [':root'])).toEqual(expect.arrayContaining([
+      '--forward-surface: white;',
+      '--forward-line: color-mix(in oklab,var(--forward-surface)18%,transparent);',
+    ]))
+    expect(declarationsAt(css, ['.Forward'])).toContain('border-color: var(--forward-line);')
+    expect(css).not.toMatch(/var\([^)]*,/)
+  })
+
+  test('创建 Name、注册定义和保存配方不执行默认内容，也不发布资源', () => {
+    const name = variables.variableName('dormant-name')
+    const source = variable(() => { throw new Error('未消费不应执行默认内容') }, {
+      name,
+      onActive: () => { throw new Error('未消费不应激活资源') },
+      registration: { syntax: '<number>', inherits: true, initialValue: 0 },
+    })
+    variable(multiply(source.name, 2), 'dormant-derived')
+    expect(compileRules([])).toBe('')
+    const css = compileRules([[['.Unrelated'], 'display', 'block']])
+    expect(declarationsAt(css, ['.Unrelated'])).toEqual(['display: block;'])
+    expect(css).not.toContain('dormant-')
+  })
+
+  test.each(['直接', '嵌套'])('引用 Variable 与 Name 的默认、状态、资源及 CSS 完全等效：%s', mode => {
+    const name = variables.variableName(`equivalent-${mode === '直接' ? 'direct' : 'nested'}`)
+    const source = variable(5, {
+      name,
+      states: { '&[data-phase]': base => multiply(base, 2) },
+      onActive: () => [[['.NameResource'], 'display', 'block']],
+      registration: { syntax: '<number>', inherits: true, initialValue: 0 },
+    })
+    const direct = mode === '直接' ? source : multiply(source, 3)
+    const named = mode === '直接' ? name : multiply(name, 3)
+    const expectedName = mode === '直接' ? 'equivalent-direct' : 'equivalent-nested'
+    const objectCSS = compileRules([[['.Consumer'], 'opacity', direct]])
+    const nameCSS = compileRules([[['.Consumer'], 'opacity', named]])
+    expect(nameCSS).toBe(objectCSS)
+    expect(declarationsAt(nameCSS, [':root'])).toContain(`--${expectedName}: 5;`)
+    expect(declarationsAt(nameCSS, ['.Consumer', '&[data-phase]'])).toContain(`--${expectedName}: calc(5*2);`)
+    expect(declarationsAt(nameCSS, ['.Consumer'])).toContain(mode === '直接'
+      ? `opacity: var(--${expectedName});` : `opacity: calc(var(--${expectedName})*3);`)
+    expect(declarationsAt(nameCSS, ['.NameResource'])).toEqual(['display: block;'])
+    expect(declarationsAt(nameCSS, [`@property --${expectedName}`])).toEqual([
+      'syntax: "<number>";', 'inherits: true;', 'initial-value: 0;',
+    ])
+    const mixed = compileRules([
+      [['.Consumer'], 'opacity', direct], [['.Consumer'], 'flex-grow', named],
+    ])
+    expect(declarationsAt(mixed, ['.NameResource'])).toEqual(['display: block;'])
+    expect(declarationsAt(mixed, [`@property --${expectedName}`])).toEqual([
+      'syntax: "<number>";', 'inherits: true;', 'initial-value: 0;',
+    ])
+  })
+
+  test('规范化同名的独立 Name 引用不隔断另一包装定义的状态和依赖', () => {
+    const consumedName = variables.variableName('wrapped-source')
+    const definitionName = variables.variableName('--wrapped-source')
+    const line = variable(multiply(consumedName, 2), { name: 'wrapped-line', priority: 2 })
+    const source = variable(5, { name: definitionName, states: { '&[data-phase]': 7 } })
+    const css = compileRules([
+      [['.Parent'], 'width', line], [['.Child'], ...declare(source, 9)],
+    ])
+    expect(declarationsAt(css, ['.Child'])).toContain('--wrapped-source: 9;')
+    expect(declarationsAt(css, ['.Child'])).toContain('--wrapped-line: calc(var(--wrapped-source)*2);')
+    expect(declarationsAt(css, ['.Child', '&[data-phase]'])).toContain('--wrapped-source: 7;')
+  })
+
+  test.each([false, true].flatMap(registerHighFirst => [false, true].map(highWrittenFirst => ({ registerHighFirst, highWrittenFirst }))))(
+    '同名候选按 priority 和书写地址选择，不按注册先后：先注册高=$registerHighFirst，先写高=$highWrittenFirst',
+    ({ registerHighFirst, highWrittenFirst }) => {
+      const name = variables.variableName('name-priority')
+      const high = registerHighFirst ? variable('red', { name, priority: 5 }) : undefined
+      const low = variable('blue', { name: variables.variableName('--name-priority'), priority: 1 })
+      const stronger = high ?? variable('red', { name, priority: 5 })
+      const candidates = highWrittenFirst ? [stronger, low] : [low, stronger]
+      const css = compileRules([
+        ...candidates.map(item => [['.Scope'], ...declare(item)] as Rules[number]),
+        [['.Scope'], 'color', name],
+        [['.Other'], ...declare(low)], [['.Other'], 'color', low.name],
+      ])
+      expect(declarationsAt(css, ['.Scope'])).toEqual(['--name-priority: red;', 'color: var(--name-priority);'])
+      expect(declarationsAt(css, ['.Other'])).toEqual(['--name-priority: blue;', 'color: var(--name-priority);'])
+    },
+  )
+
+  test.each([false, true])('仅消费 Name 补全默认声明时，同名高 priority 不被注册顺序丢弃：先注册高=%s', registerHighFirst => {
+    const name = variables.variableName('name-default-priority')
+    if (registerHighFirst) variable('red', { name, priority: 5 })
+    variable('blue', { name: variables.variableName('--name-default-priority'), priority: 1 })
+    if (!registerHighFirst) variable('red', { name, priority: 5 })
+    const css = compileRules([[['.DefaultConsumer'], 'color', name]])
+    expect(declarationsAt(css, [':root'])).toEqual(['--name-default-priority: red;'])
+    expect(declarationsAt(css, ['.DefaultConsumer'])).toEqual(['color: var(--name-default-priority);'])
+  })
+
+  test.each([false, true].flatMap(reverseRegistration => [false, true].map(reverseWriting => ({ reverseRegistration, reverseWriting }))))(
+    '同级同名按书写顺序，直接引用不绕过 Name 规则：反向注册=$reverseRegistration，反向书写=$reverseWriting',
+    ({ reverseRegistration, reverseWriting }) => {
+      const name = variables.variableName('name-tied')
+      const first = reverseRegistration ? undefined : variable('red', { name, priority: 4 })
+      const second = variable('blue', { name: variables.variableName('name-tied'), priority: 4 })
+      const red = first ?? variable('red', { name, priority: 4 })
+      const candidates = reverseWriting ? [second, red] : [red, second]
+      const rules: Rules = candidates.map(item => [['.Scope'], ...declare(item)])
+      const named = compileRules([...rules, [['.Scope'], 'color', name]])
+      expect(named).toBe(compileRules([...rules, [['.Scope'], 'color', red]]))
+      expect(declarationsAt(named, ['.Scope'])).toEqual([
+        `--name-tied: ${reverseWriting ? 'red' : 'blue'};`, 'color: var(--name-tied);',
+      ])
+    },
+  )
+})
 
 /**
  * 按完整 CSS 块读取声明，不依赖输出换行，也不模拟优先级选择。
@@ -62,33 +244,33 @@ describe('依赖联动', () => {
     expect(declarationsAt(css, ['.Scope'])).toContain('--dependency-declare-revision: 8;')
     expect(declarationsAt(css, ['.Scope', '&[data-phase]'])).toEqual(['--dependency-declare-revision: calc(8*2);'])
   })
-  test('动画帧原生属性消费激活依赖，资源描述符不激活', () => {
+  test.each([false, true])('动画帧原生属性消费激活依赖，资源描述符不激活，引用 Name=%s', useName => {
     const source = variable('5px', { name: 'dependency-frame-source' })
     const line = variable(source, { name: 'dependency-frame-line', priority: 2 })
     const resource = compileRules([
-      [['@property --descriptor'], 'initial-value', line],
+      [['@property --descriptor'], 'initial-value', useName ? line.name : line],
       [['.Child'], ...declare(source, '7px')],
     ])
     expect(declarationsAt(resource, ['.Child'])).not.toContain('--dependency-frame-line: var(--dependency-frame-source);')
     const css = compileRules([
-      [['@keyframes dependency-animation', 'to'], 'width', line],
+      [['@keyframes dependency-animation', 'to'], 'width', useName ? line.name : line],
       [['.Child'], ...declare(source, '7px')],
     ])
     expect(declarationsAt(css, ['.Child'])).toContain('--dependency-frame-line: var(--dependency-frame-source);')
   })
 
-  test('消费节点改读另一变量后撤销旧默认与状态，不要求节点被移除', () => {
+  test.each([false, true])('消费节点改读另一变量后撤销旧默认与状态，不要求节点被移除，引用 Name=%s', useName => {
     const old = variable('5px', { name: 'dependency-old-usage', states: { '&[data-phase]': '6px' } })
     const next = variable('9px', { name: 'dependency-new-usage' })
     const css = compileRules([
-      [['.Parent'], 'width', old],
+      [['.Parent'], 'width', useName ? old.name : old],
       [[], undefined, { onCompile(_context, controller) {
         let updated = false
         controller.addSettlementCheck(() => {
           if (updated) return false
           updated = true
           const consumer = controller.search({ key: 'width' })[0]
-          consumer.content = next
+          consumer.content = useName ? next.name : next
           consumer.compileRevision++
           return true
         })
@@ -98,14 +280,14 @@ describe('依赖联动', () => {
     expect(declarationsAt(css, ['.Parent'])).toContain('width: var(--dependency-new-usage);')
   })
 
-  test('配方重访更新默认和联动内容，旧依赖边随当前消费撤销', () => {
+  test.each([false, true])('配方重访更新默认和联动内容，旧依赖边随当前消费撤销，引用 Name=%s', useName => {
     const first = variable(5, { name: 'dependency-revision-first' })
     const second = variable(9, { name: 'dependency-revision-second' })
     let selected = first
     let factor = 2
     const line = variable(() => multiply(selected, factor), { name: 'dependency-revision-line', priority: 2 })
     const css = compileRules([
-      [['.Parent'], 'width', line], [['.Parent'], 'height', line],
+      [['.Parent'], 'width', useName ? line.name : line], [['.Parent'], 'height', useName ? line.name : line],
       [['.Old'], ...declare(first, 7)], [['.New'], ...declare(second, 11)],
       [[], undefined, { onCompile(_context, controller) {
         let updated = false
@@ -149,11 +331,11 @@ describe('依赖联动', () => {
     expect(css).not.toMatch(/var\([^)]*,/)
   })
 
-  test('只有 declare 与真实 Active 资源仍不激活依赖链，原生 Key 的来源声明可触发已消费观察者', () => {
+  test.each([false, true])('只有 declare 与真实 Active 资源仍不激活依赖链，原生 Key 的来源声明可触发已消费观察者，引用 Name=%s', useName => {
     const source = variable('red', { name: 'dependency-active-source', priority: 0 })
     const line = variable(source, { name: 'dependency-active-line', priority: 2 })
     const resource: JSSContent = {
-      dependencies: [line],
+      dependencies: [useName ? line.name : line],
       onActive: () => [[['.Resource'], 'display', 'block']],
     }
     const setup: Rules = [
@@ -165,7 +347,7 @@ describe('依赖联动', () => {
     expect(declarationsAt(inactive, ['.Resource'])).toContain('display: block;')
     expect(declarationsAt(inactive, ['.Defined'])).toContain('--dependency-active-line: var(--dependency-active-source);')
     expect(declarationsAt(inactive, ['.Child'])).not.toContain('--dependency-active-line: var(--dependency-active-source);')
-    const active = compileRules([...setup, [['.Parent'], 'border-color', line]])
+    const active = compileRules([...setup, [['.Parent'], 'border-color', useName ? line.name : line]])
     expect(declarationsAt(active, ['.Child'])).toContain('--dependency-active-line: var(--dependency-active-source);')
   })
 
@@ -189,14 +371,14 @@ describe('依赖联动', () => {
     expect(declarationsAt(css, ['.Child']).some(line => line.startsWith('--dependency-state-owner:'))).toBe(false)
   })
 
-  test.each([false, true])('消费者在后续编译波撤销，共享需求仍存在=%s，下一会话不保留观察者', (shared) => {
+  test.each([false, true].flatMap(shared => [false, true].map(useName => ({ shared, useName }))))('消费者撤销后共享需求=$shared，引用 Name=$useName，下一会话不保留观察者', ({ shared, useName }) => {
     const source = variable('red', { name: 'dependency-lifetime-source', priority: 0 })
     const line = variable(source, { name: 'dependency-lifetime-line', priority: 2 })
     const rules: Rules = [
-      [['.Parent'], 'border-color', line],
+      [['.Parent'], 'border-color', useName ? line.name : line],
       [['.Child'], ...declare(source, 'green')],
     ]
-    if (shared) rules.push([['.Parent'], 'background-color', line])
+    if (shared) rules.push([['.Parent'], 'background-color', useName ? line.name : line])
     rules.push([[], undefined, { compileWaveIndex: 3, onCompile(context, controller) {
       const consumer = controller.search({ key: 'border-color' })[0]
       controller.remove(consumer)
@@ -372,3 +554,11 @@ describe('声明优先级', () => {
       .toEqual([`--priority-late-line: ${remove ? 'var(--priority-late-source)' : 'blue'};`])
   })
 })
+
+// 合法 API 保留真实类型校验，不通过字符串替代或类型逃逸掩盖缺失实现。
+if (false) {
+  const name: variables.VariableName = styleSystem.variableName('typed-name-reference')
+  const source = variable('white', { name })
+  const returnedName: styleSystem.VariableName = source.name
+  variable(colorMix([returnedName, 0.18], 'transparent'), 'typed-name-line')
+}

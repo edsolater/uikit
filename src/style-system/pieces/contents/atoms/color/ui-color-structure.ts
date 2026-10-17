@@ -39,18 +39,19 @@ export function baseUIColorStructure({
   content: ValueInput
   strong?: ValueInput
 }) {
+  const baseName = base.key.toCSSString()
   return {
     default: base,
-    strong: strong === undefined ? base : variable(strong, `${base.name}-strong`),
+    strong: strong === undefined ? base : variable(strong, `${baseName}-strong`),
     soft: variable(
       oklch(base, { alpha: softAlpha }),
-      `${base.name}-soft`,
+      `${baseName}-soft`,
     ),
     line: variable(
       oklch(base, { alpha: lineAlpha }),
-      `${base.name}-line`,
+      `${baseName}-line`,
     ),
-    content: variable(content, `${base.name}-content`),
+    content: variable(content, `${baseName}-content`),
   }
 }
 

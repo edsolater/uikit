@@ -15,11 +15,13 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     const source = await result.outputs[0].text()
     const moduleURL = 'data:text/javascript;base64,' + Buffer.from(source).toString('base64')
     const styleSystem = await import(moduleURL)
-    const surface = styleSystem.variable('black', { name: 'bundle-surface' })
+    const surfaceName = styleSystem.variableName('bundle-surface')
+    const line = styleSystem.variable(surfaceName, 'bundle-line')
+    const surface = styleSystem.variable('black', { name: surfaceName })
     const opacity = styleSystem.variable(1, { name: 'bundle-opacity', states: { hover: 0.5 } })
     styleSystem.rules('.Built', [
       [styleSystem.key('align-items'), 'center'], [styleSystem.key('margin-left'), '2px'],
-      [styleSystem.key('color'), surface], [styleSystem.key('opacity'), opacity],
+      [styleSystem.key('color'), surface.name], [styleSystem.key('border-color'), line.name], [styleSystem.key('opacity'), opacity],
       [surface, 'blue'],
     ])
     const count = styleSystem.variable(1, { name: 'bundle-modified-count' })
@@ -36,6 +38,8 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
   ].map((declaration) => output.indexOf(declaration))
   expect(declarationOrder.every((index) => index >= 0)).toBe(true)
   expect(declarationOrder).toEqual([...declarationOrder].sort((left, right) => left - right))
+  expect(output).toContain('--bundle-line: var(--bundle-surface);')
+  expect(output).toContain('border-color: var(--bundle-line);')
   expect(output).toContain('--bundle-opacity: 0.5;')
   expect(output).toContain('--bundle-surface: blue;')
   expect(output).toMatch(/calc\(var\(--[^)]+\) \+ 3\)/)

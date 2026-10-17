@@ -167,6 +167,11 @@ export function publishVariableBase(definition: VariableDefinition, controller: 
 export function syncVariableStates(definition: VariableDefinition, materials: Iterable<VariableTarget>, controller: ASTController): boolean {
   // 先收集借用规则，最后处理自身规则，使同地址的自身规则保留覆盖权。
   const orderedMaterials = new Set(materials)
+  // 本地址已有独立声明的材料由自己的声明键发布状态，不能借另一 Key 的等级再次贡献。
+  for (const node of controller.nodes()) {
+    const declared = declaredVariable(node)
+    if (declared && conditionAddressKey(node.conditionPath) === conditionAddressKey(definition.path)) orderedMaterials.delete(declared)
+  }
   if (definition.variable) {
     orderedMaterials.delete(definition.variable)
     orderedMaterials.add(definition.variable)

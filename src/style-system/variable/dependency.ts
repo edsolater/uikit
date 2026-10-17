@@ -12,6 +12,7 @@ import { isVariable, type VariableTarget } from './core'
 import { declaredVariable, declareVariable, findVariableDeclaration, publishVariableBase, syncVariableStates, syncDeclarations, variableDefinition,
   variableProductRoles, type VariableDefinition } from './declare'
 import { resolveVariable } from '../variable-cluster'
+import { isVariableName, getVariableNameAddress } from './name'
 import type { ASTController } from '../compiler/ast-controller'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import type { ValueInput } from '../value'
@@ -77,11 +78,12 @@ function sessionOf(context: JSSCompileContext, controller: ASTController): Depen
 /**
  * 只读已求得内容的结构化依赖，不再执行生产函数，也不把状态归属当图边。
  */
-function referencedVariables(content: unknown, seen = new Set<object>()): VariableTarget[] {
+function collectReferencedNames(content: unknown, seen = new Set<object>()): string[] {
   if (!isJSSContent(content) || seen.has(content)) return []
-  if (isVariable(content)) return [resolveVariable(content)]
+  if (isVariable(content)) return [getVariableNameAddress(content.name)]
+  if (isVariableName(content)) return [getVariableNameAddress(content)]
   seen.add(content)
-  return (content.dependencies ?? []).flatMap(item => referencedVariables(item, seen))
+  return (content.dependencies ?? []).flatMap(item => collectReferencedNames(item, seen))
 }
 
 /**
@@ -96,8 +98,8 @@ function settleDeclarations(session: DependencySession, controller: ASTControlle
     }
     if (!input.native) continue
     mapGet(active, target.key.toCSSString(), () => new Set<VariableTarget>()).add(target)
-    for (const source of referencedVariables(input.content))
-      mapGet(mapGet(session.observers, source.key.toCSSString(), () => new Map()), target, () => input)
+    for (const name of collectReferencedNames(input.content))
+      mapGet(mapGet(session.observers, name, () => new Map()), target, () => input)
   }
   if (settleDefaults(session, active, controller)) return true
   return syncDeclarations(controller, active) || settleLinks(session, controller)
@@ -120,6 +122,8 @@ function settleDefaults(session: DependencySession, active: Map<string, Set<Vari
         mapGet(desired, conditionAddressKey(path), (): DefinitionRequest => ({ path, content: input.content, owners: [], key: usage.defaultKey, kind: 'root' })).owners.push(consumer)
       }
       const rawLocal = declarations.some(node => !declaredVariable(node) && isSemanticPathPrefix(node.conditionPath, consumer.conditionPath))
+        || nodes.some(node => declaredVariable(node) && node.key !== undefined && propertyName(node.key) === target.key.toCSSString()
+          && conditionAddressKey(node.conditionPath) === conditionAddressKey(consumer.conditionPath))
       if (rawLocal || variableProductRoles.get(consumer) === 'default') continue
       const declaration = findVariableDeclaration(controller, target, consumer.conditionPath)
       const local = declaration && variableDefinition(declaration)

@@ -64,7 +64,7 @@ test.each([
   expectSameColor(getComputedStyle(button).color, 'oklch(0.6 0.15 140 / 0.4)')
   await userEvent.hover(button)
   expectSameColor(getComputedStyle(button).color, `oklch(${0.6 - 0.04 * lightnessResponse} ${0.15 + 0.01 * chromaResponse} 140 / 0.4)`)
-  button.style.setProperty(`--${source.name}`, 'oklch(0.8 0.2 30 / 0.6)')
+  button.style.setProperty(source.key.toCSSString(), 'oklch(0.8 0.2 30 / 0.6)')
   expectSameColor(getComputedStyle(button).color, `oklch(${0.8 - 0.04 * lightnessResponse} ${0.2 + 0.01 * chromaResponse} 30 / 0.6)`)
   button.focus()
   await userEvent.keyboard('[Space>]')
@@ -133,8 +133,8 @@ test('纸色与品牌变量局部修改后，用途色和品牌变化自动更�
   neighbor.className = 'semantic'
   const before = { surface: getComputedStyle(sample).backgroundColor }
   expect(getComputedStyle(sample).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
-  sample.style.setProperty(`--${brandColor.name}`, 'oklch(0.6 0.15 140 / 0.4)')
-  sample.style.setProperty(`--${paperColor.name}`, 'rgb(240, 241, 242)')
+  sample.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 140 / 0.4)')
+  sample.style.setProperty(paperColor.key.toCSSString(), 'rgb(240, 241, 242)')
   expectSameColor(getComputedStyle(sample).color, 'oklch(0.6 0.15 140 / 0.4)')
   expectSameColor(getComputedStyle(highlight).color, 'oklch(0.64 0.16 122 / 0.4)')
   expect(getComputedStyle(sample).backgroundColor).not.toBe(before.surface)
@@ -151,10 +151,10 @@ test('交互状态的品牌变化仍引用局部品牌变量', async () => {
   const button = document.body.appendChild(document.createElement('button'))
   button.className = 'interactive-swatch'
   button.textContent = '交互颜色'
-  button.style.setProperty(`--${brandColor.name}`, 'oklch(0.6 0.15 140)')
+  button.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 140)')
   await userEvent.hover(button)
   const firstHover = getComputedStyle(button).color
-  button.style.setProperty(`--${brandColor.name}`, 'oklch(0.6 0.15 30 / 0.4)')
+  button.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 30 / 0.4)')
   expect(getComputedStyle(button).color).not.toBe(firstHover)
   expectSameColor(getComputedStyle(button).color, 'oklch(0.56 0.16 30 / 0.4)')
   button.focus()
@@ -162,7 +162,7 @@ test('交互状态的品牌变化仍引用局部品牌变量', async () => {
   try {
     expect(button.matches(':active')).toBe(true)
     const firstActive = getComputedStyle(button).color
-    button.style.setProperty(`--${brandColor.name}`, 'oklch(0.6 0.15 280)')
+    button.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 280)')
     expect(getComputedStyle(button).color).not.toBe(firstActive)
     expectSameColor(getComputedStyle(button).color, 'oklch(0.52 0.14 280)')
   } finally { await userEvent.keyboard('[/Space]') }
@@ -176,13 +176,13 @@ test('交互用途色的状态派生保留局部纸色与墨色覆盖', async ()
   const button = document.body.appendChild(document.createElement('button'))
   button.className = 'interactive-purpose'
   button.textContent = '用途颜色'
-  button.style.setProperty(`--${paperColor.name}`, 'oklch(0.8 0.02 140)')
-  button.style.setProperty(`--${inkColor.name}`, 'rgb(78, 90, 123)')
+  button.style.setProperty(paperColor.key.toCSSString(), 'oklch(0.8 0.02 140)')
+  button.style.setProperty(inkColor.key.toCSSString(), 'rgb(78, 90, 123)')
   await userEvent.hover(button)
   expectSameColor(getComputedStyle(button).backgroundColor, 'oklch(0.76 0.02 140)')
   expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
-  button.style.setProperty(`--${paperColor.name}`, 'oklch(0.6 0.02 30)')
-  button.style.setProperty(`--${inkColor.name}`, 'rgb(123, 90, 78)')
+  button.style.setProperty(paperColor.key.toCSSString(), 'oklch(0.6 0.02 30)')
+  button.style.setProperty(inkColor.key.toCSSString(), 'rgb(123, 90, 78)')
   expectSameColor(getComputedStyle(button).backgroundColor, 'oklch(0.56 0.02 30)')
   expectSameColor(getComputedStyle(button).color, 'rgb(123, 90, 78)')
   button.focus()
@@ -215,9 +215,9 @@ test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有
   }
   expect(getComputedStyle(separator).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
   for (const index of [0, 2, 3]) {
-    samples[index].style.setProperty(`--${statuses[index].name}`, 'white')
+    samples[index].style.setProperty(statuses[index].key.toCSSString(), 'white')
     const brightContent = getComputedStyle(samples[index]).color
-    samples[index].style.setProperty(`--${statuses[index].name}`, 'black')
+    samples[index].style.setProperty(statuses[index].key.toCSSString(), 'black')
     expect(getComputedStyle(samples[index]).color).not.toBe(brightContent)
   }
 })
@@ -232,7 +232,7 @@ test('颜色族透明度默认值与自定义值保留局部基色', () => {
     handles.push(rules(`.family-${index}`, [color({ background: family('soft'), content: family('line') })]))
     const sample = document.body.appendChild(document.createElement('div'))
     sample.className = `family-${index}`
-    sample.style.setProperty(`--${family.name}`, 'oklch(0.6 0.15 140 / 0.6)')
+    sample.style.setProperty(family.key.toCSSString(), 'oklch(0.6 0.15 140 / 0.6)')
     return sample
   })
   mountStyles()
