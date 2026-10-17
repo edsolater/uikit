@@ -4,9 +4,9 @@
  *
  * 共用构造依赖颜色与样式基础能力，各用途定义可单向复用。
  */
-import type { ValueInput } from '@/style-system/value'
-import { type Variable, variable } from '@/style-system/variable'
-import { createJSSContent } from '@/style-system/content'
+import type { ValueInput } from '../../../../value'
+import { type Variable, variable } from '../../../../variable'
+import { createJSSContent } from '../../../../content'
 import { colorMix } from '../../functions/color-mix'
 import type { ColorMaterial } from '@/color-system'
 import { oklch } from '../../functions/oklch'

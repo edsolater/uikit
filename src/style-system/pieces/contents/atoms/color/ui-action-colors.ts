@@ -4,8 +4,8 @@
  *
  * 用途配方留在样式层，局部品牌覆盖由浏览器继续传递。
  */
-import { variable } from '@/style-system/variable'
-import { variableCluster } from '@/style-system/variable-cluster'
+import { variable } from '../../../../variable'
+import { variableCluster } from '../../../../variable-cluster'
 import { add } from '../../functions/calc'
 import { oklch } from '../../functions/oklch'
 import { brandColor } from './brand-color'

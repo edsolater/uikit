@@ -1,5 +1,5 @@
 import type { ColorMaterial } from '@/color-system'
-import { variableCluster } from '@/style-system/variable-cluster'
+import { variableCluster } from '../../../../variable-cluster'
 import { paperColor } from './palette'
 import { toJSSColor, readableContent, baseUIColorStructure } from './ui-color-structure'
 
