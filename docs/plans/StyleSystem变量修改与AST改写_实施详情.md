@@ -1,3 +1,5 @@
+历史记录：本文涉及旧基础绑定、组包装及按名关联的部分已由[2026-10-18修正计划](20261018_变量规则函数化与整组换色.md)替代；现役用法见[Variable](../../src/style-system/doc/变量定义与消费.md)。其余历史推导保留，不作为新接口契约。
+
 # Variable 局部定义与修改实施详情
 
 历史方案：本文保留当时的设计与验收记录；完整修改规则和函数 declare／modify 的现役契约见 [变量定义与消费](../../src/style-system/doc/变量定义与消费.md)，旧方法与通道设施不作为当前接口。
@@ -21,7 +23,7 @@
 | [ast-controller.ts](../../src/style-system/compiler/ast-controller.ts) | 通用父节点/邻近节点定位、插入、移动、共享来源、撤销和重访；不包含修改专属概念 |
 | [condition.ts](../../src/style-system/condition.ts) | 提供原始语义路径比较；状态中央排序仅用于输出 |
 | [节点内容编译入口](../../src/style-system/compiler/style-nodes-to-content-nodes/node-compilation.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理 |
-| [variable-cluster.ts](../../src/style-system/variable-cluster.ts) | 默认成员代理、同名成员配对和集合继承创建；无独立修改规则 |
+| `variable-cluster.ts`（历史文件，现已删除） | 默认成员代理、同名成员配对和集合继承创建；无独立修改规则 |
 
 Variable 保留公开入口和普通消费；局部定义、单个步骤与相邻连接由 VariableModification 共同维护，因为它们共享作用域、覆盖、源顺序和撤销事实。AST 只拥有位置和来源。Compiler 继续消费内容，不识别 Variable。
 

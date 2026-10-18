@@ -1,3 +1,5 @@
+历史记录：本文涉及旧基础绑定、组包装及按名关联的部分已由[2026-10-18修正计划](20261018_变量规则函数化与整组换色.md)替代；现役用法见[Variable](../../src/style-system/doc/变量定义与消费.md)。其余历史推导保留，不作为新接口契约。
+
 # Value 状态移除与 Variable 创建、延伸及聚合改造 Plan
 
 当前成员状态继承由 `clusterFrom` 承担；下文的单 Variable 延伸保留为当时实施记录。现役契约见 [Variable](../../src/style-system/doc/变量定义与消费.md)。

@@ -19,11 +19,12 @@ import { focusOutline, focusOffset } from '../contents/atoms/focus'
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {
   opacity?: ValueInput
+  focusColor?: ValueInput
 }
 
 /** Mixin：可点击效果；可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。 */
 export const clickable = (options: ClickableMixinOptions = {}): Declarations => [
-  [$outline, focusOutline],
+  [$outline, focusOutline(options.focusColor)],
   [$outlineOffset, focusOffset],
   [$cursor, variable('pointer', { name: 'clickable-cursor', states: { disabled: 'not-allowed' } })],
   [$opacity, options.opacity ?? variable(1, { name: 'clickable-opacity', states: { disabled: disabledFade } })],

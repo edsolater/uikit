@@ -80,7 +80,7 @@ export function propertyName(key: JSSKey): string {
 }
 
 /**
- * 读取声明键的有效等级；字符串与普通 Key 默认使用999，可调用 Cluster 同样读取自身等级。
+ * 读取声明键的有效等级；字符串与普通 Key 默认使用999，内容对象同样读取自身等级。
  */
 export const keyPriority = (key: JSSKey | undefined): number => key !== undefined && typeof key !== 'string' ? key.priority ?? 999 : 999
 

@@ -9,7 +9,6 @@ import { rule, rules, type RulesHandle, type Rules } from '../rule'
 import { condition, media } from '../condition'
 import { value } from '../value'
 import { variable } from '../variable'
-import { variableCluster } from '../variable-cluster'
 import { declare } from '../operations/declare'
 import { $margin } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
@@ -63,31 +62,6 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   expect(computed.paddingLeft).toBe('20px')
   expect(style.sheet!.cssRules[0].cssText).toContain('.existing')
   expect(Array.from(style.sheet!.cssRules).filter((entry) => entry.cssText.startsWith('@property --space-example'))).toHaveLength(1)
-})
-
-test('Cluster 整组声明可替换，未匹配成员恢复其原有默认值', () => {
-  const target = variableCluster({
-    default: variable('1px', { name: 'mounted-size' }),
-    soft: variable('2px', { name: 'mounted-soft-size' }),
-  })
-  const source = variableCluster({
-    default: variable('10px', { name: 'mounted-source-size' }),
-    soft: variable('20px', { name: 'mounted-source-soft-size' }),
-  })
-  handles.push(rules('.example', [[key('width'), target], [key('height'), target('soft')]]))
-  const handle = rule('.example', target, source)
-  handles.push(handle)
-  root.mount()
-  expect(getComputedStyle(element).width).toBe('10px')
-  expect(getComputedStyle(element).height).toBe('20px')
-  handle.replace(variableCluster({ default: variable('30px', { name: 'incomplete-size' }) }))
-  root.mount()
-  expect(getComputedStyle(element).width).toBe('30px')
-  expect(getComputedStyle(element).height).toBe('2px')
-  handle.replace(variableCluster({ default: source('soft'), soft: source }))
-  root.mount()
-  expect(getComputedStyle(element).width).toBe('20px')
-  expect(getComputedStyle(element).height).toBe('10px')
 })
 
 test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', async () => {
@@ -351,10 +325,10 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
 
 test('动效保留根求值，分隔线按本地文字变量实时派生', async () => {
   const session = await cdp() as CDPSession
-  document.documentElement.style.setProperty('--global-content-color', 'blue')
+  document.documentElement.style.setProperty('--mounted-line-base', 'blue')
   element.style.transitionProperty = 'opacity'
   handles.push(rule('.example', 'transition-duration', durationFast))
-  handles.push(rule('.example', 'border-color', lineColor))
+  handles.push(rule('.example', 'border-color', lineColor(variable('black', 'mounted-line-base'))))
   try {
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
@@ -364,7 +338,7 @@ test('动效保留根求值，分隔线按本地文字变量实时派生', async
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
     element.style.setProperty('--motion-scale-ratio', '2')
-    element.style.setProperty('--global-content-color', 'red')
+    element.style.setProperty('--mounted-line-base', 'red')
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
     expect(getComputedStyle(element).borderTopColor).not.toBe(originalLine)
     await session.send('Emulation.setEmulatedMedia', {
@@ -373,7 +347,7 @@ test('动效保留根求值，分隔线按本地文字变量实时派生', async
     expect(getComputedStyle(element).transitionDuration).toBe('0s')
     expect(style.textContent).toBe(committed)
   } finally {
-    document.documentElement.style.removeProperty('--global-content-color')
+    document.documentElement.style.removeProperty('--mounted-line-base')
     await session.send('Emulation.setEmulatedMedia', { features: [] })
   }
 })

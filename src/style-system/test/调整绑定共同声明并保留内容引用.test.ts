@@ -15,7 +15,6 @@ import { oklch } from '../pieces/contents/functions/oklch'
 import { value } from '../value'
 import { variable } from '../variable'
 import * as variables from '../variable'
-import { variableCluster } from '../variable-cluster'
 import { type Rules } from '../rule'
 import { compileRules } from '../css-root'
 
@@ -45,15 +44,6 @@ test('声明结果共同声明来源、变化与结果，两个来源共享同�
   expect(css.match(/--shared-change:/g)).toHaveLength(1)
   expect(css).toContain(`${firstResult.toCSSString()}: oklch(from var(--source-first) var(--shared-change));`)
   expect(css).toContain(`${secondResult.toCSSString()}: oklch(from var(--source-second) var(--shared-change));`)
-})
-
-test('配方回调延迟到消费，通道可调用内容与alpha含义仍保留', () => {
-  let delta = 0.1
-  const lightness = variableCluster({ default: variable(0.6, 'callable-lightness') })
-  const change = modification({ name: '--callable-change', type: 'color', detail: { lightness, chroma: x => add(x, delta), alpha: 1 } })
-  delta = 0.2
-  expect(compile(declare(change))).toContain('--callable-change: var(--callable-lightness) calc(c + 0.2) h / 1;')
-  expect(compile(declare(modification({ name: '--keep-alpha', type: 'color', detail: {} })))).toContain('--keep-alpha: l c h / alpha;')
 })
 
 test('撤销一份绑定保留另一份的共享依赖，全部撤销后不泄漏声明或按需资源', () => {
@@ -131,3 +121,13 @@ if (false) {
   // @ts-expect-error mutable已由CSS绑定取代，不保留平行JS调整语义。
   adjust('mutable', source, modification({ type: 'color', detail: {} }))
 }
+
+
+test('配方回调延迟到消费，通道可调用内容与alpha含义仍保留', () => {
+  let delta = 0.1
+  const lightness = variable(0.6, 'callable-lightness')
+  const change = modification({ name: '--callable-change', type: 'color', detail: { lightness, chroma: x => add(x, delta), alpha: 1 } })
+  delta = 0.2
+  expect(compile(declare(change))).toContain('--callable-change: var(--callable-lightness) calc(c + 0.2) h / 1;')
+  expect(compile(declare(modification({ name: '--keep-alpha', type: 'color', detail: {} })))).toContain('--keep-alpha: l c h / alpha;')
+})

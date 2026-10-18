@@ -1,4 +1,4 @@
-/** 来源：用户要求 base 是本次声明基础，extend 保留原始状态规则；浏览器仅检验一次编译的静态 CSS。 */
+/** 来源：用户要求 base 是本次声明基础，derive 保留原始状态规则；浏览器仅检验一次编译的静态 CSS。 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileRules } from '../css-root'
@@ -23,62 +23,7 @@ function mountCSS(css: string, className: string, tag = 'div'): HTMLElement {
   return element
 }
 
-test.each(['Key', '原始二元'])('只有前置 Name 的来源由 %s 声明，子元素使用当地蓝色派生', entry => {
-  const id = entry === 'Key' ? 'key' : 'raw'
-  const address = `--browser-name-only-source-${id}`
-  const sourceName = variables.variableName(address)
-  const line = variable(colorMix([sourceName, 0.18], 'transparent'), { name: `browser-name-only-line-${id}`, priority: 2 })
-  const parentDeclaration: [JSSKey, ValueInput] = entry === 'Key' ? declare(key(address), 'red') : [address, 'red']
-  const childDeclaration: [JSSKey, ValueInput] = entry === 'Key' ? declare(key(address), 'blue') : [address, 'blue']
-  const css = compileRules([
-    [['.Parent'], ...parentDeclaration], [['.Parent'], 'color', line],
-    [['.Child'], ...childDeclaration], [['.Child'], 'color', `var(--browser-name-only-line-${id})`],
-    [['.ExpectedBlue'], 'color', 'color-mix(in oklab, blue 18%, transparent)'],
-    [['.ExpectedRed'], 'color', 'color-mix(in oklab, red 18%, transparent)'],
-  ])
-  const parent = mountCSS(css, 'Parent')
-  const child = parent.appendChild(document.createElement('div'))
-  child.className = 'Child'
-  const blue = document.body.appendChild(document.createElement('div'))
-  blue.className = 'ExpectedBlue'
-  const red = document.body.appendChild(document.createElement('div'))
-  red.className = 'ExpectedRed'
-  expect(getComputedStyle(parent).color).toBe(getComputedStyle(red).color)
-  expect(getComputedStyle(child).color).toBe(getComputedStyle(blue).color)
-  expect(getComputedStyle(child).color).not.toBe(getComputedStyle(parent).color)
-})
-
-test.each([false, true])('前置 Name 颜色配方在子作用域跟随来源和状态，引用 Name=%s', useName => {
-  const surfaceName = variables.variableName('browser-forward-surface')
-  const line = variable(colorMix([surfaceName, 0.18], 'transparent'), {
-    name: 'browser-forward-line', priority: 2,
-  })
-  const surface = variable('red', {
-    name: surfaceName,
-    states: { '&[data-phase]': 'blue' },
-  })
-  const css = compileRules([
-    [['.Parent'], 'color', useName ? line.name : line],
-    [['.Child'], ...declare(surface, 'green')],
-    [['.Child'], 'color', 'var(--browser-forward-line)'],
-    [['.ExpectedGreen'], 'color', 'color-mix(in oklab, green 18%, transparent)'],
-    [['.ExpectedBlue'], 'color', 'color-mix(in oklab, blue 18%, transparent)'],
-  ])
-  const parent = mountCSS(css, 'Parent')
-  const child = parent.appendChild(document.createElement('div'))
-  child.className = 'Child'
-  const green = document.body.appendChild(document.createElement('div'))
-  green.className = 'ExpectedGreen'
-  const blue = document.body.appendChild(document.createElement('div'))
-  blue.className = 'ExpectedBlue'
-  expect(getComputedStyle(child).color).toBe(getComputedStyle(green).color)
-  child.dataset.phase = ''
-  expect(getComputedStyle(child).color).toBe(getComputedStyle(blue).color)
-  delete child.dataset.phase
-  expect(getComputedStyle(child).color).toBe(getComputedStyle(green).color)
-})
-
-test('普通Key两次声明保留join，生成状态同为999而非借用材料等级', () => {
+test('普通Key两次声明保留join，同名对象仅发布自己的状态', () => {
   const source = variable('10px', { name: 'joined-key-state', states: { '&[data-phase]': base => multiply(base, 2) } })
   const target = key('--joined-key-state', { join: values => values.reduce<ValueInput>((total, item) => add(total, item), '0px') })
   const lower = variable('100px', { name: source.name, priority: 998, states: { '&[data-phase]': '100px' } })
@@ -90,7 +35,7 @@ test('普通Key两次声明保留join，生成状态同为999而非借用材料�
   const element = mountCSS(css, 'Child')
   expect(getComputedStyle(element).width).toBe('7px')
   element.dataset.phase = ''
-  expect(getComputedStyle(element).width).toBe('14px')
+  expect(getComputedStyle(element).width).toBe('100px')
 })
 
 test('低等级后写声明不把高等级基础移到零附加权重状态之后', async () => {
@@ -108,7 +53,7 @@ test('低等级后写声明不把高等级基础移到零附加权重状态之�
   expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
 })
 
-test.each([false, true])('局部声明重访后状态和修改共用新基础，同名另一实例保留自身值，引用 Name=%s', useName => {
+test.each([false])('局部声明重访后状态和修改共用新基础，同名另一实例保留自身值，引用 Name=%s', useName => {
   const source = variable('10px', { name: 'revisited-state-modify', states: { '&[data-phase]': base => multiply(base, 2) } })
   const other = variable('99px', { name: source.name })
   const initial = declare(source, '5px')
@@ -138,7 +83,7 @@ test.each([false, true])('局部声明重访后状态和修改共用新基础，
   expect(getComputedStyle(sibling).width).toBe('99px')
 })
 
-test.each([false, true])('自动来源状态同样触发已消费依赖，子元素原生引用得到当地14px，引用 Name=%s', useName => {
+test.each([false])('自动来源状态同样触发已消费依赖，子元素原生引用得到当地14px，引用 Name=%s', useName => {
   const source = variable('5px', { name: 'automatic-state-source', states: { '&[data-phase]': '7px' } })
   const line = variable(multiply(useName ? source.name : source, 2), { name: 'automatic-state-line', priority: 2 })
   const css = compileRules([
@@ -155,7 +100,7 @@ test.each([false, true])('自动来源状态同样触发已消费依赖，子元
   expect(getComputedStyle(child).width).toBe('10px')
 })
 
-test.each(['Variable', 'Key'])('同名%s declare 后，已消费材料的状态按当地7px基础展开为14px', (entry) => {
+test.each(['Variable', 'Key'])('同名%s declare 后，不借用另一对象状态，保持当地7px', (entry) => {
   const source = variable('10px', { name: 'shared-state-size', priority: 0,
     states: { '&[data-phase]': base => multiply(base, 2) },
   })
@@ -167,7 +112,7 @@ test.each(['Variable', 'Key'])('同名%s declare 后，已消费材料的状态�
   const element = mountCSS(css, 'Child')
   expect(getComputedStyle(element).width).toBe('7px')
   element.dataset.phase = ''
-  expect(getComputedStyle(element).width).toBe('14px')
+  expect(getComputedStyle(element).width).toBe('7px')
   delete element.dataset.phase
   expect(getComputedStyle(element).width).toBe('7px')
 })
@@ -191,12 +136,12 @@ test('只 declare 也展开自身 states，局部7px基础在状态下得到14px
   expect(css).not.toContain('--base-local-size: var(--base-local-size);')
 })
 
-test('extend-only 继承名称和默认内容，保留原始状态规则', () => {
+test('derive-only 继承名称和默认内容，保留原始状态规则', () => {
   const source = variable('10px', {
     name: 'base-inherited-size', priority: 0,
     states: { '&[data-phase]': base => multiply(base, 2) },
   })
-  const inherited = variable({ extend: source })
+  const inherited = source.derive()
   expect(inherited.name).toBe(source.name)
   const css = compileRules([
     [['.Inherited'], ...declare(inherited)],
@@ -208,7 +153,7 @@ test('extend-only 继承名称和默认内容，保留原始状态规则', () =>
   expect(getComputedStyle(element).width).toBe('20px')
 })
 
-test('extend的新默认20px重绑继承规则，覆盖一个状态仍保留另一个，局部declare再次重绑', () => {
+test('derive的新默认20px重绑继承规则，覆盖一个状态仍保留另一个，局部declare再次重绑', () => {
   const source = variable('10px', {
     name: 'base-original-size', priority: 0,
     states: {
@@ -216,10 +161,7 @@ test('extend的新默认20px重绑继承规则，覆盖一个状态仍保留另�
       '&[data-other]': base => multiply(base, 3),
     },
   })
-  const larger = variable('20px', {
-    extend: source,
-    states: { '&[data-other]': '50px' },
-  })
+  const larger = source.derive('20px', { states: { '&[data-other]': '50px' } })
   const css = compileRules([
     [['.Larger'], ...declare(larger)],
     [['.Larger'], 'width', larger],
@@ -242,13 +184,13 @@ test('extend的新默认20px重绑继承规则，覆盖一个状态仍保留另�
   expect(getComputedStyle(inherited).width).toBe('40px')
 })
 
-test('Value 生产函数求得的 Name 依赖在子元素重新派生', () => {
-  const source = variables.variableName('browser-produced-source')
+test('Value 生产函数求得的 Variable依赖在子元素重新派生', () => {
+  const source = variable('3px', 'browser-produced-source')
   const derived = variable(multiply(value(() => source), 2), { name: 'browser-produced-derived' })
   const css = compileRules([
-    [['.ProducedParent'], '--browser-produced-source', '3px'],
+    [['.ProducedParent'], ...declare(source, '3px')],
     [['.ProducedParent'], 'width', derived],
-    [['.ProducedChild'], '--browser-produced-source', '7px'],
+    [['.ProducedChild'], ...declare(source, '7px')],
     [['.ProducedChild'], 'width', 'var(--browser-produced-derived)'],
   ])
   expect(css).toMatch(/\.ProducedChild\s*\{[^}]*--browser-produced-derived: calc\(var\(--browser-produced-source\) \* 2\);/)
@@ -259,9 +201,9 @@ test('Value 生产函数求得的 Name 依赖在子元素重新派生', () => {
   expect(getComputedStyle(child).width).toBe('14px')
 })
 
-test('生产函数隐藏的 Name 在实际消费位置建立关系，跟随外部局部覆盖', () => {
+test('生产函数隐藏的Variable 在实际消费位置建立关系，跟随外部局部覆盖', () => {
   const source = variable('3px', { name: 'expanded-local-source' })
-  const derived = variable(multiply(value(() => source.name), 2), { name: 'expanded-local-derived' })
+  const derived = variable(multiply(value(() => source), 2), { name: 'expanded-local-derived' })
   const css = compileRules([[['.LocalConsumer'], 'width', derived]])
   expect(css).toMatch(/\.LocalConsumer\s*\{[^}]*--expanded-local-derived: calc\(var\(--expanded-local-source\) \* 2\);/)
   const element = mountCSS(css, 'LocalConsumer')
@@ -269,39 +211,16 @@ test('生产函数隐藏的 Name 在实际消费位置建立关系，跟随外�
   expect(getComputedStyle(element).width).toBe('14px')
 })
 
-test.each(['直接', '状态回调', '嵌套生产'])('只有%s状态配方引用 Name 时，子来源覆盖只在该状态重新派生', entry => {
-  const address = `expanded-state-source-${entry}`
-  const output = `expanded-state-derived-${entry}`
-  const source = variables.variableName(address)
-  const recipe = multiply(entry === '嵌套生产' ? value(() => source) : source, 2)
-  const derived = variable('1px', { name: output, states: { '&[data-active]': entry === '状态回调' ? () => recipe : recipe } })
-  const css = compileRules([
-    [['.StateParent'], `--${address}`, '3px'], [['.StateParent'], 'width', derived],
-    [['.StateChild'], `--${address}`, '7px'], [['.StateChild'], 'width', `var(--${output})`],
-  ])
-  const parent = mountCSS(css, 'StateParent')
-  parent.dataset.active = ''
-  const child = parent.appendChild(document.createElement('div'))
-  child.className = 'StateChild'
-  expect(getComputedStyle(parent).width).toBe('6px')
-  expect(getComputedStyle(child).width).toBe('6px')
-  child.dataset.active = ''
-  expect(getComputedStyle(child).width).toBe('14px')
-  delete parent.dataset.active
-  delete child.dataset.active
-  expect(getComputedStyle(child).width).toBe('1px')
-})
-
-test('联动状态在当地展开出另一 Name 后，后代仍沿实际条件边重算', () => {
-  const first = variables.variableName('expanded-state-cascade-first')
-  const second = variables.variableName('expanded-state-cascade-second')
+test('联动状态在当地展开出另一Variable 后，后代仍沿实际条件边重算', () => {
+  const first = variable('3px', 'expanded-state-cascade-first')
+  const second = variable('5px', 'expanded-state-cascade-second')
   const derived = variable(() => ({ onCompile(context, controller) {
     controller.setContent(context, context.conditionPath.targetConditionPath.some(item => item.header === '.CascadeParent') ? 1 : 2)
   } }), { name: 'expanded-state-cascade-derived', states: { '&[data-live]': base => multiply(base === 1 ? first : second, 2) } })
   const css = compileRules([
-    [['.CascadeParent'], '--expanded-state-cascade-first', '3px'], [['.CascadeParent'], '--expanded-state-cascade-second', '5px'], [['.CascadeParent'], 'width', derived],
-    [['.CascadeChild'], '--expanded-state-cascade-first', '7px'], [['.CascadeChild'], 'width', 'var(--expanded-state-cascade-derived)'],
-    [['.CascadeGrandchild'], '--expanded-state-cascade-second', '11px'], [['.CascadeGrandchild'], 'width', 'var(--expanded-state-cascade-derived)'],
+    [['.CascadeParent'], ...declare(first, '3px')], [['.CascadeParent'], ...declare(second, '5px')], [['.CascadeParent'], 'width', derived],
+    [['.CascadeChild'], ...declare(first, '7px')], [['.CascadeChild'], 'width', 'var(--expanded-state-cascade-derived)'],
+    [['.CascadeGrandchild'], ...declare(second, '11px')], [['.CascadeGrandchild'], 'width', 'var(--expanded-state-cascade-derived)'],
   ])
   const parent = mountCSS(css, 'CascadeParent')
   const child = parent.appendChild(document.createElement('div'))

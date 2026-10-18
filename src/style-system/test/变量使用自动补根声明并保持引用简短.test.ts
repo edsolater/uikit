@@ -4,16 +4,6 @@ import { compileRules } from '../css-root'
 import { declare } from '../operations/declare'
 import { variable } from '../variable'
 import type { JSSContent } from '../content'
-import { variableCluster } from '../variable-cluster'
-
-test('Cluster 作为原始声明目标时按其默认成员身份判断已有定义', () => {
-  const color = variable('white', 'root-cluster-default')
-  const cluster = variableCluster({ default: color })
-  const css = compileRules([[['.Other'], cluster, 'red'], [['.Consumer'], 'color', color]])
-  expect(css).toContain('--root-cluster-default: red;')
-  expect(css).not.toContain(':root')
-  expect(css).not.toContain('white')
-})
 
 test('使用未声明变量时补根声明，引用没有默认内容参数', () => {
   const color = variable('white', 'root-contract-color')

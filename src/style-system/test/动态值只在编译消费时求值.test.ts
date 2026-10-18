@@ -11,7 +11,6 @@ import { referenceVariable, variable, variableName } from '../variable'
 import { declare } from '../operations/declare'
 import { modification } from '../modification'
 import { animationName } from '../pieces/contents/atom-creators/animation'
-import { variableCluster } from '../variable-cluster'
 
 test('未被消费的动态 Value 不执行，消费后输出内容', () => {
   const serialize = vi.fn(() => 'red')
@@ -58,18 +57,6 @@ test('默认生产函数与状态 base 回调返回的生产内容保留资源�
   expect(css).toContain('--producer-default-state: calc(4px * 2);')
   expect(css).toContain('initial-value: 1px;')
   expect(css).toContain('color: red;')
-})
-
-test('可调用内容对象和 Cluster 按内容协议消费，不调用函数体', () => {
-  const callable = Object.assign(() => { throw new Error('不能执行内容对象') }, { toCSSString: () => '7px' })
-  const cluster = variableCluster({ default: variable('8px', { name: 'producer-callable-cluster' }) })
-  const css = compileRules([[['.Callable'], 'width', value(callable)], [['.Callable'], 'height', cluster]])
-  expect(css).toContain('width: 7px;')
-  expect(css).toContain('height: var(--producer-callable-cluster);')
-  const material = variable(callable, { name: 'producer-callable-material', states: { '&:hover': callable } })
-  const materialCSS = compileRules([[['.Callable'], 'width', material]])
-  expect(materialCSS).toContain('--producer-callable-material: 7px;')
-  expect(materialCSS).toContain('&:hover {')
 })
 
 test('生产函数返回另一生产函数仍可消费，自返函数明确报告循环', () => {
@@ -140,22 +127,6 @@ test('resolve 未声明的生产函数依赖时明确报错，不在输出时执
   expect(produce).not.toHaveBeenCalled()
 })
 
-test.each(['Cluster成员', 'Modification领域'])('%s 拒绝函数键，诊断也不执行或字符串化', entry => {
-  const invalid = vi.fn(() => { throw new Error('不应执行非法键') })
-  invalid.toString = () => { throw new Error('不应字符串化非法键') }
-  expect(() => {
-    if (entry === 'Cluster成员') {
-      const cluster = variableCluster({ default: variable('1px', { name: 'invalid-cluster-function-key' }) })
-      // @ts-expect-error 成员名不能是函数。
-      cluster(invalid)
-    } else {
-      // @ts-expect-error 领域标识不能是函数。
-      modification({ type: invalid, detail: {} })
-    }
-  }).toThrow(/成员键必须|type 必须/)
-  expect(invalid).not.toHaveBeenCalled()
-})
-
 test.each([false, true])('天然材料的 Key 输出函数时，值引用与注册都在插值前拒绝，registration=%s', registered => {
   const invalid = vi.fn(() => { throw new Error('不应执行非法天然属性名') })
   invalid.toString = () => { throw new Error('不应字符串化非法天然属性名') }
@@ -178,17 +149,7 @@ test('显式局部基础覆盖默认值时，不执行未使用的默认生产�
   expect(css).toContain('--expanded-unused-default: 12px;')
 })
 
-test('普通 Key 的基础生产结果与借用状态共享本次声明展开值', () => {
-  let next = 4
-  const produce = () => { const current = next; next *= 2; return `${current}px` }
-  const material = variable('1px', { name: 'expanded-key-base', states: { '&:hover': base => `${parseFloat(String(base)) * 2}px` } })
-  const css = compileRules([[['.SharedBase'], '--expanded-key-base', produce], [['.SharedBase'], 'width', material]])
-  expect(css).toContain('--expanded-key-base: 4px;')
-  expect(css).toContain('--expanded-key-base: 8px;')
-  expect(css).not.toContain('--expanded-key-base: 16px;')
-})
-
-test('名称图与输出读取同一次实际 dependencies 访问结果', () => {
+test('纯名称内容只输出引用，不建立具体对象的当地依赖', () => {
   let phase = 'first'
   const first = variableName('expanded-dependency-first')
   const later = variableName('expanded-dependency-later')
@@ -199,8 +160,8 @@ test('名称图与输出读取同一次实际 dependencies 访问结果', () => 
   }
   const material = variable(recipe, { name: 'expanded-dependency-recipe' })
   const css = compileRules([[['.Parent'], '--expanded-dependency-first', '3px'], [['.Parent'], 'width', material], [['.Child'], '--expanded-dependency-first', '7px']])
-  expect(css).toMatch(/\.Parent\s*\{[^}]*--expanded-dependency-recipe: var\(--expanded-dependency-first\);/)
-  expect(css).toMatch(/\.Child\s*\{[^}]*--expanded-dependency-recipe: var\(--expanded-dependency-later\);/)
+  expect(css).toContain('--expanded-dependency-recipe: var(--expanded-dependency-first);')
+  expect(css).not.toMatch(/\.Child\s*\{[^}]*--expanded-dependency-recipe:/)
 })
 
 test('同一显式声明的默认基础只展开一次，多个当地消费者沿用该基础', () => {
@@ -263,13 +224,13 @@ test('消费输入身份替换后，自动投影读取新的角色展开结果',
 test('原消费位置重新展开后，已完成的子联动也撤销旧配方', () => {
   let factor = 2
   let childDone = false
-  const source = variableName('expanded-linked-refresh-source')
+  const source = variable('1px', 'expanded-linked-refresh-source')
   const material = variable(() => ({ onCompile(context, controller) {
     controller.setContent(context, multiply(source, factor))
     if (context.conditionPath.targetConditionPath.some(item => item.header === '.RefreshChild')) childDone = true
   } }), { name: 'expanded-linked-refresh-derived' })
   const css = compileRules([
-    [['.RefreshParent'], 'width', material], [['.RefreshChild'], '--expanded-linked-refresh-source', '7px'],
+    [['.RefreshParent'], 'width', material], [['.RefreshChild'], ...declare(source, '7px')],
     [[], undefined, { onCompile(_context, controller) {
       let updated = false
       controller.addSettlementCheck(() => {
@@ -288,7 +249,7 @@ test('原消费位置重新展开后，已完成的子联动也撤销旧配方',
 test('状态联动跟随其真实局部声明的基础重访，不借其他原生消费者代表来源', () => {
   let fresh = false
   let grandchildDone = false
-  const source = variableName('expanded-state-origin-source')
+  const source = variable('1px', 'expanded-state-origin-source')
   const material = variable('1px', { name: 'expanded-state-origin-derived', states: { '&[data-active]': base => multiply(source, parseFloat(String(base))) } })
   const produceLocalBase = () => ({ onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) {
     controller.setContent(context, fresh ? '6px' : '5px')
@@ -296,7 +257,7 @@ test('状态联动跟随其真实局部声明的基础重访，不借其他原�
   } })
   const declaration = declare(material, produceLocalBase)
   const css = compileRules([
-    [['.OriginParent'], 'width', material], [['.OriginChild'], ...declaration], [['.OriginGrandchild'], '--expanded-state-origin-source', '11px'],
+    [['.OriginParent'], 'width', material], [['.OriginChild'], ...declaration], [['.OriginGrandchild'], ...declare(source, '11px')],
     [[], undefined, { onCompile(_context, controller) {
       let updated = false
       controller.addSettlementCheck(() => {
@@ -311,4 +272,24 @@ test('状态联动跟随其真实局部声明的基础重访，不借其他原�
   const grandchild = css.match(/\.OriginGrandchild\s*\{([\s\S]*?)\n\}/)?.[1]
   expect(grandchild).toContain('--expanded-state-origin-derived: calc(var(--expanded-state-origin-source) * 6);')
   expect(grandchild).not.toContain(' * 5)')
+})
+
+
+test('可调用内容对象按内容协议消费，不调用函数体', () => {
+  const callable = Object.assign(() => { throw new Error('不能执行内容对象') }, { toCSSString: () => '7px' })
+  const css = compileRules([[['.Callable'], 'width', value(callable)]])
+  expect(css).toContain('width: 7px;')
+  const material = variable(callable, { name: 'producer-callable-material', states: { '&:hover': callable } })
+  const materialCSS = compileRules([[['.Callable'], 'width', material]])
+  expect(materialCSS).toContain('--producer-callable-material: 7px;')
+  expect(materialCSS).toContain('&:hover {')
+})
+
+
+test('Modification领域拒绝函数键，诊断不执行或字符串化', () => {
+  const invalid = vi.fn(() => { throw new Error('不应执行非法键') })
+  invalid.toString = () => { throw new Error('不应字符串化非法键') }
+  // @ts-expect-error 领域标识不能是函数。
+  expect(() => modification({ type: invalid, detail: {} })).toThrow('type 必须')
+  expect(invalid).not.toHaveBeenCalled()
 })

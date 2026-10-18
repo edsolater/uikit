@@ -10,7 +10,6 @@ import type { Declaration } from './declare'
 import { colorModificationShape, type ColorModificationContent } from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
 import { compileVariableModification, referenceVariable, type VariableTarget } from '../variable'
-import { resolveVariable } from '../variable-cluster'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
 export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]
@@ -40,7 +39,6 @@ export function modify(variable: ModifyTargetProtocol, modification: ModifyProto
   assert(hasProperty(variable, 'content') && matchShape(variable, modifyTargetShape), 'modify 需要自定义属性的 key/content 材料。')
   const strategy = hasProperty(modification, 'type', isString) && Object.hasOwn(modifyTypes, modification.type) ? modifyTypes[modification.type] : undefined
   assert(strategy && strategy.accepts(modification), 'modify 需要颜色配方或表达变化材料。')
-  variable = resolveVariable(variable)
   return [variable.key, {
     resourceIdentity: Symbol('variable-modification'),
     /**

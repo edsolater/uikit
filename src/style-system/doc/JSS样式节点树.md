@@ -67,13 +67,13 @@ onCompile(context, ast) {
 
 `Value` 包装 Content，默认把数组递归输出为逗号列表，也可用 `toCSSString` 改写输出，不改变 Variable 身份。`valueList` 与 `valueSequence` 分别装配默认逗号和空格列表；Value 的 `dependencies` 显露嵌套数组中的待编译内容对象。JSS 内容组织工具和 Atom Creator 构造的内容对象同样在 `dependencies` 中显露原操作数，让次波编译嵌套引用。每个声明角色按内容对象保存唯一位置记录，通知与 Controller 操作修改该记录；最终输出与同址聚合直接读取同一份记录，没有额外的返回值或结果副本。
 
-`Variable.onCompile(context, ast)` 在普通消费时插入 `@property` 注册及 Variable 自身状态定义，再通过 `setContent` 设定可输出的 CSS `var()` Value。普通内容和状态配方中的来源 Variable 都保留 CSS 引用，由浏览器读取当前状态、局部覆盖和修改结果；配方状态不替来源选择内容。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动状态定义按即将插入的目标地址查找最近的同一 Variable 局部声明，使用其基础值 Key；没有局部声明时使用 `config.definitionKey`。自动产物以 Variable 对象作为不透明 `productTag`，局部声明通过通用产物查询和语义父链清理归属自身的旧产物；`productTag` 只供查询，不改变节点来源所有权或资源替换。Compiler 不按 Variable 类型分支。Cluster 的成组声明由 Cluster 自己配对并插入普通队列节点；普通引用向默认成员转交完整上下文，与默认 Variable 一样生成 CSS 引用并激活所需资源；按需依赖使用同一编译和输出链。
+`Variable.onCompile(context, ast)` 在普通消费时插入 `@property` 注册及 Variable 自身状态定义，再通过 `setContent` 设定可输出的 CSS `var()` Value。普通内容和状态配方中的来源 Variable 都保留 CSS 引用，由浏览器读取当前状态、局部覆盖和修改结果；配方状态不替来源选择内容。状态定义由 Variable 自己确定地址与插入顺序，不生成状态交集。自动状态定义按即将插入的目标地址查找最近的同一 Variable 局部声明，使用其基础值 Key；没有局部声明时使用 `config.definitionKey`。自动产物以 Variable 对象作为不透明 `productTag`，局部声明通过通用产物查询和语义父链清理归属自身的旧产物；`productTag` 只供查询，不改变节点来源所有权或资源替换。Compiler 不按 Variable 类型分支。多个独立目标由并列declare插入普通队列；具体Variable引用激活自身定义，纯Name只输出CSS引用。按需依赖沿同一编译和输出链处理。
 
 ## 输出阶段
 
 `JSSContentNode` 是编译完成的声明，保留输出地址、JSSKey、内容对象及子内容编译结果。其 `conditionPath` 已合并 target/state，描述最终 CSS 嵌套位置。同址同名至少两项在稳定队列中默认形成逗号数组 Value，或调用组内唯一显式 Key `join`；若结果带待编译内容，继续进入编译波。输出器读取最终队列内容对象的 `toCSSString`，打开和关闭条件块并返回 CSS 字符串，不再编译或聚合。
 
-相关实现：[Rule](../rule.ts)、[JSSKey](../key.ts)、[JSSContent](../content.ts)、[Value](../value.ts)、[Variable](../variable/core.ts)、[Rules 到样式节点](../compiler/rules-to-style-nodes.ts)、[样式节点到内容节点及 ASTController](../compiler/style-nodes-to-content-nodes/index.ts)、[内容节点到 CSS 字符串](../compiler/content-nodes-to-css-string.ts) 与 [CSSRoot](../css-root.ts)。正式入口覆盖见 [内容编译波测试](../test/内容编译波遍历及插入节点.test.ts) 和 [样式登记与依赖测试](../test/样式登记经依赖解析生成CSS.test.ts)。
+相关实现：[Rule](../rule.ts)、[JSSKey](../key.ts)、[JSSContent](../content.ts)、[Value](../value.ts)、[Variable](../variable/core.ts)、[Rules 到样式节点](../compiler/rules-to-style-nodes.ts)、[样式节点到内容节点及 ASTController](../compiler/style-nodes-to-content-nodes/compilation.ts)、[内容节点到 CSS 字符串](../compiler/content-nodes-to-css-string.ts) 与 [CSSRoot](../css-root.ts)。正式入口覆盖见 [内容编译波测试](../test/内容编译波遍历及插入节点.test.ts) 和 [样式登记与依赖测试](../test/样式登记经依赖解析生成CSS.test.ts)。
 
 `remove(node, { from: 'output' })` 只移除输出位置，保留其来源和产物；`remove(node)` 撤销节点，并删除失去全部来源的后继。待入队依赖只接受仍存活的来源，共享资源不会因一个消费者消失而被撤销。节点插入和移动统一由 ASTSession 执行。
 

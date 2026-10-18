@@ -2,7 +2,6 @@
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { variable } from '../variable'
-import { clusterFrom, variableCluster } from '../variable-cluster'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
@@ -10,8 +9,6 @@ import { multiply } from '../pieces/contents/functions/calc'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { createJSSContent } from '../content'
 import { focusOutline } from '../pieces/contents/atoms/focus'
-import { toneColors } from '../pieces/contents/atoms/color/colors'
-import { highlightColors } from '../pieces/contents/atoms/color/ui-action-colors'
 import type { Rules } from '../rule'
 import { declare } from '../operations/declare'
 
@@ -23,13 +20,15 @@ stateCondition('laterState', condition('&:where([data-later])'))
 
 afterEach(() => document.body.replaceChildren())
 
-test('焦点轮廓依次读取局部语气色、局部强调色和基础色', async () => {
+test('焦点轮廓读取调用者选择的具体颜色，局部声明保持独立', async () => {
+  const accent = variable('black', 'focus-accent')
+  const tone = variable('gray', 'focus-tone')
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
-    [[condition('.AccentFocus')], 'outline', focusOutline],
-    [[condition('.AccentFocus')], ...declare(toneColors('line'))],
-    [[condition('.AccentFocus')], highlightColors('line'), 'rgb(12, 34, 56)'],
-    [[condition('.ToneFocus')], 'outline', focusOutline],
-    [[condition('.ToneFocus')], toneColors('line'), 'rgb(56, 78, 90)'],
+    [[condition('.AccentFocus')], 'outline', focusOutline(accent)],
+    [[condition('.AccentFocus')], ...declare(accent)],
+    [[condition('.AccentFocus')], accent, 'rgb(12, 34, 56)'],
+    [[condition('.ToneFocus')], 'outline', focusOutline(tone)],
+    [[condition('.ToneFocus')], tone, 'rgb(56, 78, 90)'],
   ])
   const accentButton = document.body.appendChild(document.createElement('button'))
   accentButton.className = 'AccentFocus'
@@ -75,79 +74,6 @@ test('真实 focusVisible 低于 hover 和 active，鼠标 focus 不等于 focus
   expect(getComputedStyle(element).width).toBe('12px')
 })
 
-test('Cluster 整组声明保留成员状态、嵌套局部覆盖与相邻作用域', () => {
-  const target = variableCluster({
-    default: variable('1px', { name: 'cluster-target-size' }),
-    soft: variable('2px', { name: 'cluster-target-soft-size' }),
-    strong: variable('3px', { name: 'cluster-target-strong-size' }),
-    content: variable('black', { name: 'cluster-target-content-color' }),
-  })
-  const source = variableCluster({
-    default: variable('10px', { name: 'cluster-source-size' }),
-    soft: variable('20px', { name: 'cluster-source-soft-size', states: { chainHover: '25px' } }),
-    strong: variable('30px', { name: 'cluster-source-strong-size' }),
-    content: variable('red', { name: 'cluster-source-content-color' }),
-  })
-  const style = document.body.appendChild(document.createElement('style'))
-  style.textContent = compileRules([
-    [[condition('.ClusterConsumer')], 'width', target],
-    [[condition('.ClusterConsumer')], 'height', target('soft')],
-    [[condition('.ClusterConsumer')], 'margin-left', target('strong')],
-    [[condition('.ClusterConsumer')], 'color', target('content')],
-    [[condition('.ClusterLocal')], undefined, [[[condition('& > .ClusterConsumer')], target, source]]],
-  ])
-  const parent = document.body.appendChild(document.createElement('div'))
-  parent.className = 'ClusterLocal'
-  const local = parent.appendChild(document.createElement('div'))
-  local.className = 'ClusterConsumer'
-  const neighbor = document.body.appendChild(document.createElement('div'))
-  neighbor.className = 'ClusterConsumer'
-  expect(getComputedStyle(local).width).toBe('10px')
-  expect(getComputedStyle(local).height).toBe('20px')
-  expect(getComputedStyle(local).marginLeft).toBe('30px')
-  expect(getComputedStyle(local).color).toBe('rgb(255, 0, 0)')
-  local.dataset.hover = ''
-  expect(getComputedStyle(local).height).toBe('25px')
-  expect(getComputedStyle(neighbor).getPropertyValue('--cluster-target-size')).toBe('')
-  expect(getComputedStyle(neighbor).getPropertyValue('--cluster-target-soft-size')).toBe('')
-})
-
-test('未匹配的函数 source 成员在局部 Cluster 声明后读取当前 default', () => {
-  const toneColorDefault = variable('blue', { name: 'browser-tone-color' })
-  const toneColors = variableCluster({
-    default: toneColorDefault,
-    soft: variable('lightblue', { name: 'browser-tone-color-soft' }),
-    line: variable(
-      () => colorMix([toneColorDefault, 0.32], 'transparent'),
-      { name: 'browser-tone-color-line' },
-    ),
-  })
-  const highlightColors = variableCluster({
-    default: variable('red', { name: 'browser-accent-color' }),
-    soft: variable('pink', { name: 'browser-accent-color-soft' }),
-  })
-  const style = document.body.appendChild(document.createElement('style'))
-  style.textContent = compileRules([
-    [[condition('.LazyVariableButton')], ...declare(toneColorDefault)],
-    [[condition('.LazyVariableButton')], 'background', toneColors('line')],
-    [[condition('.LazyVariableButton'), condition('&[data-tone="accent"]')], toneColors, highlightColors],
-  ])
-
-  const ordinary = document.body.appendChild(document.createElement('div'))
-  ordinary.className = 'LazyVariableButton'
-  const accent = document.body.appendChild(document.createElement('div'))
-  accent.className = 'LazyVariableButton'
-  accent.dataset.tone = 'accent'
-  const ordinaryReference = document.body.appendChild(document.createElement('div'))
-  ordinaryReference.style.background = 'color-mix(in oklab, blue 32%, transparent)'
-  const accentReference = document.body.appendChild(document.createElement('div'))
-  accentReference.style.background = 'color-mix(in oklab, red 32%, transparent)'
-
-  expect(getComputedStyle(ordinary).backgroundColor).toBe(getComputedStyle(ordinaryReference).backgroundColor)
-  expect(getComputedStyle(accent).backgroundColor).toBe(getComputedStyle(accentReference).backgroundColor)
-  expect(getComputedStyle(accent).backgroundColor).not.toBe(getComputedStyle(ordinary).backgroundColor)
-})
-
 test.each([false, true])('首次状态内引用与普通消费的顺序不改变浏览器结果：%s', (ordinaryFirst) => {
   const inner = variable('10px', { name: 'audit-inner-size', states: { chainHover: '20px' } })
   const outer = variable('1px', { name: 'audit-outer-size', states: { chainHover: inner } })
@@ -178,76 +104,6 @@ test('较早状态的高特异性不能压过较晚状态', () => {
   element.dataset.specific = ''
   element.dataset.later = ''
   expect(getComputedStyle(element).width).toBe('30px')
-})
-
-test('多层延伸使用自身状态，其余沿链查找；source 直接使用当前状态值', () => {
-  const source = variable('10px', {
-    name: 'chain-source-size',
-    states: { chainHover: '20px', chainActive: '30px', chainDisabled: '0px' },
-  })
-  const sourceCluster = variableCluster({ default: source, soft: variable('11px', { name: 'chain-source-soft-size', states: { chainHover: '17px' } }) })
-  const derived = clusterFrom(sourceCluster, {
-    default: { name: 'chain-derived-size', states: { chainActive: source => multiply(source, 2) } },
-    soft: { name: 'chain-derived-soft-size', states: { chainActive: '19px' } },
-  })
-  const cluster = clusterFrom(derived, {
-    default: { name: 'chain-final-size', states: { chainHover: '25px' } },
-    soft: { name: 'chain-final-soft-size' },
-  })
-  const style = document.body.appendChild(document.createElement('style'))
-  style.textContent = compileRules([
-    [[condition('.Chain')], 'width', cluster],
-    [[condition('.ChainSoft')], 'width', cluster('soft')],
-    [[condition('.Source')], 'width', sourceCluster],
-  ])
-  const element = document.body.appendChild(document.createElement('div'))
-  element.className = 'Chain'
-  const soft = document.body.appendChild(document.createElement('div'))
-  soft.className = 'ChainSoft'
-  const original = document.body.appendChild(document.createElement('div'))
-  original.className = 'Source'
-  expect(getComputedStyle(element).width).toBe('10px')
-  expect(getComputedStyle(soft).width).toBe('11px')
-  element.dataset.hover = ''
-  soft.dataset.hover = ''
-  expect(getComputedStyle(element).width).toBe('25px')
-  expect(getComputedStyle(soft).width).toBe('17px')
-  element.dataset.active = ''
-  soft.dataset.active = ''
-  expect(getComputedStyle(element).width).toBe('60px')
-  expect(getComputedStyle(soft).width).toBe('19px')
-  element.dataset.disabled = ''
-  expect(getComputedStyle(element).width).toBe('0px')
-  expect(getComputedStyle(original).width).toBe('10px')
-  original.dataset.active = ''
-  expect(getComputedStyle(original).width).toBe('30px')
-})
-
-test('有状态来源在派生状态内容中读取局部 CSS 覆盖', () => {
-  const source = variable('10px', { name: 'scope-source-size', states: { chainActive: '30px' } })
-  const derived = clusterFrom(variableCluster({ default: source, extra: variable('4px', { name: 'scope-extra-size' }) }), {
-    default: { name: 'scope-derived-size', states: { chainActive: source => multiply(source, 2) } },
-  })
-  const style = document.body.appendChild(document.createElement('style'))
-  style.textContent = compileRules([
-    [[condition('.Consumer')], 'width', derived],
-    [[condition('.Local')], source, '7px'],
-  ])
-  const local = document.body.appendChild(document.createElement('div'))
-  local.className = 'Consumer Local'
-  const neighbor = document.body.appendChild(document.createElement('div'))
-  neighbor.className = 'Consumer'
-  expect(getComputedStyle(local).getPropertyValue('--scope-source-size').trim()).toBe('7px')
-  expect(getComputedStyle(local).width).toBe('7px')
-  local.dataset.active = ''
-  neighbor.dataset.active = ''
-  expect(getComputedStyle(local).getPropertyValue('--scope-source-size').trim()).toBe('30px')
-  expect(getComputedStyle(local).width).toBe('60px')
-  expect(getComputedStyle(neighbor).width).toBe('60px')
-  delete local.dataset.active
-  expect(getComputedStyle(local).getPropertyValue('--scope-source-size').trim()).toBe('7px')
-  expect(getComputedStyle(local).width).toBe('7px')
-  expect(getComputedStyle(neighbor).getPropertyValue('--scope-source-size').trim()).toBe('30px')
 })
 
 test('状态内容组合各来源当前 CSS 状态值', () => {

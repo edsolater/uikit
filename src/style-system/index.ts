@@ -31,8 +31,6 @@ export { isVariable, variable, variableName } from './variable'
 export { adjust } from './operations/adjust'
 export type { AdjustProtocol, AdjustTargetProtocol } from './operations/adjust'
 export type { Variable, VariableOptions, VariableDefaultValue, VariableName } from './variable'
-export { variableCluster, clusterFrom } from './variable-cluster'
-export type { VariableCluster } from './variable-cluster'
 export { cssRoot, compileCSS } from './css-root'
 export * from './css-function'
 export * from './pieces/contents/atom-creators/animation'
@@ -67,17 +65,10 @@ export {
   spaceWidest,
   boundaryWidthThin,
 } from './pieces/contents/atoms/space'
-export { surfaceColor, contentColor } from './pieces/roles/color'
-export {
-  globalSurfaceColor,
-  globalContentColor,
-  globalCanvasColor,
-  toneColor,
-  toneColors,
-  surfaceColorInteractive,
-} from './pieces/contents/atoms/color/colors'
-export { interactiveColor, interactiveColors, highlightColor, highlightColors } from './pieces/contents/atoms/color/ui-action-colors'
-export { badColor, badColors } from './pieces/contents/atoms/color/ui-info-color'
+export { globalSurfaceColor, globalContentColor, lineColor, lineStrength } from './pieces/contents/atoms/color/colors'
+export { paperColor, inkColor } from './pieces/contents/atoms/color/palette'
+export { interactiveColor, highlightColor } from './pieces/contents/atoms/color/ui-action-colors'
+export { goodColor, badColor, warnColor, infoColor } from './pieces/contents/atoms/color/ui-info-color'
 export { shadowFlat, shadowLow, shadowRaised, shadowElevated, shadowInteractive } from './pieces/contents/atoms/shadow'
 export { $cursor } from './pieces/keys/interaction'
 export { colorMix } from './pieces/contents/functions/color-mix'

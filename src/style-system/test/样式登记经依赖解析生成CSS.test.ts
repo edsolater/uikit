@@ -15,7 +15,6 @@ import { createJSSContent } from '../content'
 import { value, type ValueInput } from '../value'
 import { valueSequence } from '../pieces/contents/atom-creators/list'
 import { variable } from '../variable'
-import { variableCluster } from '../variable-cluster'
 import { $margin, $marginLeft } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
 import { $border } from '../pieces/keys/border'
@@ -48,9 +47,9 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(motionCSS).toContain('--motion-scale-ratio: 0;')
   expect(motionCSS).toContain('--duration-fast: calc(120ms * var(--motion-scale-ratio));')
   expect(motionCSS).not.toContain('--line-color:')
-  const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor]])
-  expect(lineCSS).toContain('border-color: var(--line-color);')
-  expect(lineCSS).toContain('var(--global-content-color)')
+  const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor(variable('black', 'local-line-base'))]])
+  expect(lineCSS).toContain('border-color: var(--local-line-base-line);')
+  expect(lineCSS).toContain('var(--local-line-base)')
   expect(lineCSS).toContain(':root')
   expect(lineCSS).not.toContain('--motion-scale-ratio:')
 })
@@ -91,29 +90,6 @@ function keep<T extends RulesHandle>(handle: T): T {
 afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
   vi.restoreAllMocks()
-})
-
-test('Variable 在编译消费时执行 source 函数，Cluster 局部声明保留未匹配成员配方', () => {
-  const toneColorDefault = variable('blue', { name: 'tone-color' })
-  const toneColorLineSource = vi.fn(() => colorMix([toneColorDefault, 0.32], 'transparent'))
-  const toneColors = variableCluster({
-    default: toneColorDefault,
-    soft: variable('lightblue', { name: 'tone-color-soft' }),
-    line: variable(toneColorLineSource, { name: 'tone-color-line' }),
-  })
-  const accentColors = variableCluster({
-    default: variable('red', { name: 'accent-color' }),
-    soft: variable('pink', { name: 'accent-color-soft' }),
-  })
-
-  keep(rules('.LazyVariableButton', [[key('background'), toneColors('line')]]))
-  keep(rules(['.LazyVariableButton', '&[data-tone="accent"]'], [[toneColors, accentColors]]))
-  expect(toneColorLineSource).not.toHaveBeenCalled()
-  const css = compileCSS()
-  expect(css).toContain('background: var(--tone-color-line);')
-  expect(css).toContain('--tone-color: var(--accent-color);')
-  expect(css).toContain('--tone-color-soft: var(--accent-color-soft);')
-  expect(toneColorLineSource).toHaveBeenCalled()
 })
 
 test('Variable source 函数可以返回直接内容或 Variable，循环返回自身仍然终止编译', () => {

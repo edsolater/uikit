@@ -13,7 +13,6 @@ import { compileRules } from '../css-root'
 import { createJSSContent, type JSSCompileContext, type JSSContentContext, type JSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
-import { variableCluster } from '../variable-cluster'
 import type { ASTController } from '../compiler/ast-controller'
 
 import type { Rules } from '../rule'

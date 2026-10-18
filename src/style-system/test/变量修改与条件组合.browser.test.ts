@@ -12,7 +12,6 @@ import { add, multiply } from '../pieces/contents/functions/calc'
 import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { variable } from '../variable'
-import { variableCluster } from '../variable-cluster'
 import { value } from '../value'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
@@ -174,23 +173,6 @@ test.each(['& .child', '&:hover .child', '&.selected > .child', '&[data-on] .chi
   expect(getComputedStyle(child).zIndex).toBe('8')
   delete element.dataset.focus
   expect(getComputedStyle(child).zIndex).toBe('4')
-})
-
-test('declare和modify通过Cluster默认成员生效，并保留其基础状态', () => {
-  const amount = variable(1, { name: 'cluster-default-amount', states: { modifierHover: 10 } })
-  const cluster = variableCluster({ default: amount, extra: variable(50, 'cluster-extra-amount') })
-  const { element } = mount([
-    row([button], declare(cluster, 2)),
-    row([button, focus], modify(cluster, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 3) }))),
-    [[button], 'z-index', cluster],
-  ])
-  expect(getComputedStyle(element).zIndex).toBe('2')
-  element.dataset.focus = ''
-  expect(getComputedStyle(element).zIndex).toBe('5')
-  element.dataset.hover = ''
-  expect(getComputedStyle(element).zIndex).toBe('13')
-  delete element.dataset.focus
-  expect(getComputedStyle(element).zIndex).toBe('10')
 })
 test('无额外Variable配置的数值规则按顺序应用，CSS条件退出恢复基础值', () => {
   const first = ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 2) })

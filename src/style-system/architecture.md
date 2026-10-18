@@ -7,7 +7,7 @@
 ```text
 Condition + Declaration(声明目标, Content) → Rules → CSSRoot
 Rules → rules-to-style-nodes.ts → JSSStyleNode[]
-JSSStyleNode[] → compiler/style-nodes-to-content-nodes/index.ts → JSSContentNode[]
+JSSStyleNode[] → compiler/style-nodes-to-content-nodes/compilation.ts → JSSContentNode[]
 JSSContentNode[] → content-nodes-to-css-string.ts → CSS string → 浏览器
 ```
 
@@ -19,52 +19,21 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 `oklch({ lightness, chroma, hue, alpha })` 返回持有原始通道的 ExpressionValue，输出时生成普通颜色文本；`oklch(source, { lightness: current => add(current, -0.04) })` 返回相对颜色 Expression，直接接收通道变化，未指定通道保留来源，不创建 Modification 或 Variable。`Modification<Detail, Type>` 是通用变化定义，持有 type/name/detail 及声明内容，不继承颜色材料；通用构造按 type 选择私有转译策略，名称和声明生命周期共用。Color 的材料形状与策略连接集中在文件后部，通道参数与源无关转译复用 `oklch.ts`；加入其他领域时扩展对应描述和策略，不改通用对象。[modification.ts](modification.ts) 通过单个配置保存 `name`、`type: 'color'` 与 `detail`，显式 name 使用完整 CSS 自定义属性名（例如 `--change`），内置转译在配方编译时用 l/c/h/alpha 表达式执行通道回调，输出与来源无关的通道配方。固定值设定通道，未指定通道保留来源；构造时不执行回调。Modification 持有 Declare、Adjust、Modify 所需的自然材料，可通过 `declare(change)` 独立声明，不需要 Variable 包装或独立 Adapter 层。`oklch(source, channels)` 也接受完整通道内容，为独立配方保留 CSS 引用；外层 Expression 只组织依赖与输出，直接通道配置由依赖自身在编译时转译，不插入声明或资源。
 
-[ui-color-structure.ts](pieces/contents/atoms/color/ui-color-structure.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；颜色族生成器提供浅底与边线透明度默认值。交互、高亮、柔和底色和线色通过 `oklch(source, changes)` 直接描述通道变化，保留来源 Variable 的当前颜色与局部覆盖。
+[ui-color-structure.ts](pieces/contents/atoms/color/ui-color-structure.ts) 的 `toJSSColor` 将 Color System 材料包装为 Variable；普通转换函数按具体来源创建所需变量。交互、高亮、柔和底色和线色通过 `oklch(source, changes)` 直接描述通道变化，保留来源 Variable 的当前颜色与局部覆盖。
 
 `operations/` 只按声明、修改、调整三个操作入口分组，不建立独立公共入口；Style System 的 index 直接公开各操作及其协议。Variable 的创建、声明发布、修改链和依赖协调归 `variable/` 领域；通用 AST 编译能力留在 `compiler/`，变化材料留在 `modification.ts`。
 
-[variable/index.ts](variable/index.ts) 主动公开创建、引用、材料类型及操作入口需要的声明和修改消费契约。领域外从该入口取得能力，内部成员直接引用；解析细节、声明归属和步骤账本不随 index 暴露。`VariableCluster` 保持同级，负责自己的成员与配对。
+Variable对象持有自己的默认内容、状态及定义消费材料。值引用输出var()并激活当前对象，Name只表示CSS地址：字符串化返回不带--的逻辑名，作为内容只输出var()，不查找或激活同名定义。derive沿用创建时默认/状态，名称默认沿用，priority默认来源加一；完整配置差异通过derive(source.content, options)表达，普通variable创建入口没有继承参数。
 
-[operations/declare.ts](operations/declare.ts) 的 Declare 协议用 FNKit 的 DataShape 描述 `key/content` 材料形状，`declare` 通过 `matchShape` 识别并建立声明。[variable/core.ts](variable/core.ts) 的 Variable 投影自身已有的声明目标、默认内容、状态和注册事实，不承担外部操作。Adjust、Modify 的使用端直接读取双方材料，组织绑定或条件修改；对象无需认识协议，也无需协议登记、品牌或操作方法，参与能力不以构造来源决定。
+variable/dependency.ts沿原有usages/defaults/links协调实际消费与当地物化，观察索引直接以具体Variable为键。默认和状态的实际展开内容通过getCompiledContent/getContentCompilation读取，不为建图再次执行生产函数。纯Name不形成对象关系；同名对象不相互借用状态或自动接管引用。CSS地址仍用于真实声明聚合、注册资源和层叠。
 
-[operations/adjust.ts](operations/adjust.ts) 的 `adjust(source, change)` 按 type 选择具体领域组合，构造引用双方的表达式与 mergedResult Variable，并用可选 `declarations` 保存来源与配方的共同声明关系。[variable/core.ts](variable/core.ts) 的 `consumeVariableDefinition` 统一处理声明依赖、默认配方、状态与资源；Name 负责具名值引用输出，天然材料的 `compileVariableContent` 负责自身引用输出，两者共享定义消费。`referenceVariable` 直接沿用已有 Variable 的内容协议，仅为天然材料构造引用。`declare(mergedResult)` 共同声明三者，显式覆盖结果内容也保留依赖；当前或祖先作用域已有依赖声明优先，自动声明只补缺项。结果在消费地址重新组合，使子元素局部覆盖来源或配方后使用当地值。多个 Source 可共享同一 Modification；绑定不执行 JS 基础数据求值，也不修改来源的默认内容。
+variable/declare.ts保留同对象声明归属、当前基础、状态绑定和消费者重访。每个声明只展开所属对象状态；修改沿最近语义父声明取得基础，来源退出时按AST所有权释放当地修改结果。自动投影和linked声明保留真实originNode/sourceCompilation/rule身份，先撤旧再按新事实建立产物。多个来源和状态组合不退化成同名关联。
 
-[operations/modify.ts](operations/modify.ts) 的 `modify(target, change)` 校验双方材料，按 type 选择具体应用并返回 Declaration；颜色应用与表达式应用规则留在该入口。编译消费时，[variable/modify.ts](variable/modify.ts) 取得最近同对象声明的前序 Expression，执行已选应用并维护步骤、当地结果和撤销。颜色材料通过 `type: 'color'` 与配方引用参与相对颜色组合；表达式材料通过 `{ type: 'expression', detail: current => add(current, delta) }` 执行前序表达式变化。浏览器决定条件是否生效，表达式回调材料不是独立可声明的 Modification。
+普通无参内容函数沿内容编译链延迟执行，可调用JSSContent遵守自身协议。每个角色保存实际访问的依赖与替代记录；输入或revision改变时失效重建。Join与自动投影复用该位置的已编译视图，不反复调用业务生产函数；编译结束仅输出CSS，不生成运行时JS观察网络。
 
-`add`、`multiply` 构造的 Expression 保存操作数与依赖，在输出时生成 CSS calc 文本，数值与单位由浏览器解释。它们同时用于变化配方和其他内容组合，不承担 JS 默认数据求值。
+Modify与Adjust仍分别处理相对变化及独立配方绑定。每阶段引用前序CSS变量，显式declare建立当地基础和修改归属；registration.inherits:false保留当地存在标记及注册初值边界。删除组适配不改变这些用途。
 
-`rule()`／`rules()` 登记源 Rules；`CSSRoot` 每次编译验证并展开源 Rules；给 `onActive` 的 root 另复制规则容器（Rules、tuple、路径及嵌套 Rules），保留业务对象身份。Atom、JSS 内容组织工具和 Atom Creator 的产物可进入内容位置。编译器按队列顺序遍历 Key 与 Content，只调用节点按需提供的 `onActive`、`onCompile` 和子内容链接，不识别具体业务对象。`onActive` 在内容被启用时通知并可返回按需 Rules。`onCompile(context, ast)` 是返回 void 的编译通知，编译器不读取返回值；回调通过 Controller 查询、插入、移动或删除节点，通过 `setContent(context, content)` 改写当前被通知的内容位置。嵌套内容各自处理，不覆盖外层声明。已经成功通知的对象跨波等待时不会重调。编译器沿设定内容与 `dependencies` 访问子内容，整条链完成后才产生 `JSSContentNode`；插入节点从下一波开始编译。Key、Content 或 revision 改变时，由同一失效规则分别在访问前和波末重置对应角色进度。
-
-内部主线显式执行节点访问→资源发布→波末核验→稳定连接→输出。NodeCompilation 统一角色进度、输入失效和当前队列完成判断；ASTSession 保存唯一位置账本，每个角色按内容对象记录当前内容和通知完成状态，Controller、内容访问、Join 及输出读取同一份记录，不复制最终替代结果。visitContent 的 visit、compile、visitChildren 子步骤负责对象访问、编译通知、设定内容与依赖；ResourceCompilation 完整提交本波资源并保留激活账本；Join 负责同址连接、失效撤销与最新输出选择；单次连接由 captureInputs 捕获并校验回调前输入，createContent 建立位置 Value 视图并调用业务 Key.join，publish 接入结果与全部来源历史。三块沿同一份快照交接，连接入口保留先后顺序与是否需要生成的判断。调度入口不读取子步骤的私有索引。compiler/style-nodes-to-content-nodes/ 是节点到内容编译的领域目录，拥有共同的输入输出契约与编译规则；index.ts 只汇总公开编译函数与结果类型；compilation.ts 编排五阶段，node-compilation.ts 维护节点进度与单次内容访问，资源与连接在各自文件完整维护状态。外部从目录取得既有编译函数与结果类型，不深引内部成员或另加转发。等待事实只取当前输出队列，退出输出但仍存活的来源不阻止本波完成。
-
-单次内容访问不建立临时实例，也不返回 visitor 对象；函数捕获该次真实回调环境，保留 AST 及内容回调的副作用。三个跨波编译节点各自保留类模板及实例账本，采用组合，不使用运行时继承；类型层继承允许。职责约束与状态有效期说明运行规则和生命周期，不能单独证明应使用类。
-
-队列稳定时，Join 按最终 Target、State 与属性名收集同址内容，先从有效编译输出中选择最高声明键等级，再对同级项调用 Key.join 或默认逗号聚合。Variable 的 join 保留最后有效值；普通 Key 默认等级999，Variable 等级由创建配置确定。每项 Value 保留原内容并从已编译结果惰性读取，结果放在获选贡献的最后位置；落败贡献不能把基础值搬到状态规则之后。聚合记录保存输入快照、获选位置与结果历史，输入撤销或等级、内容、revision 改变时统一失效重建。聚合结果标为 aggregate，领域观察者不把它重复当作声明来源。原输入仍是存活来源，隐藏不等于撤销，其按需产物继续由 ASTSession 管理。
-
-完整的 `conditionPath` 保存 `targetConditionPath`、规范化 `stateConditionPath` 与未排序的 `semanticPath`。语义归属沿原始父链判断，CSS 输出仍按状态中央顺序。编译器为每个声明角色建立输入快照，通知每个内容时通过 `JSSCompileContext.input` 标识该内容，并传入本次编译共用的 ASTController（见 [ast-controller.ts](compiler/ast-controller.ts)）。Context 同时提供节点引用、会话身份、地址、Key、Content 与 role；Controller 提供当前内容操作，以及显式位置和来源的队列操作。`setContent` 仅在对应通知期间有效，旧上下文不能写入后来的位置记录。ASTSession 区分存活来源与输出成员，拒绝已撤销来源，按来源关系级联撤销；退出输出的来源仍存活。当前编译波由编译器内部掌握，内容对象保留最早编译波配置。编译完成时，状态路径并入 CSS 输出地址；`JSSContentNode` 保留已完成的内容对象及同一份位置记录。最后一段才调用 `toCSSString` 并写出 CSS，不按 Variable 或依赖来源重排。暂缓只重试尚未完成的通知，不撤回已执行的内容或队列操作；当前输出队列只剩暂缓角色且没有新节点时，编译报告实际暂缓原因。循环引用、嵌套、操作和编译波超过上限时分别明确失败。
-
-`declare(target, value?)` 与 `modify(target, change, options?)` 返回 Declaration。Variable 保存默认值、状态与注册，并投影目标侧自然材料；Modification 保存 name/type/detail 与配方 key/content，应用时由使用端建立配方引用，表达式修改材料直接保存回调。修改器按最近同对象语义声明归属，按当前节点顺序保存步骤。每步保留一个结果变量，前序内容在输出时解析，不建立输入别名或双向步骤链。步骤及不继承存在标记的注册资源归属该步的默认选择门节点，基础注册归属根消费地址的结果引用，复用 AST 的来源级联撤销。
-
-局部声明用本次基础内容绑定原始状态规则，基础值与状态值使用同一声明键等级。最近同对象声明的修改归属先比较语义距离，同址再按等级与书写顺序选择。修改声明在编译消费时执行变化回调或组合颜色配方，生成新 Expression，步骤按存活成员的当前节点位置排序；重访、业务回调和撤销共用有序步骤更新。晚到或撤销声明重新确定修改和普通消费者的归属，前序内容随最终顺序解析。
-
-已编译步骤移动后，调用方显式增加 revision 才触发重访。编号只保证名称唯一。晚到或撤销定义让对应修改及普通消费者重新进入最近声明，按现役 `onCompile/onActive` 推进。没有独立 Rewriter 协议、操作转发或整组表达式缓存。
-
-`Value` 包装内容但不自行选择 Variable 状态。`Variable.onCompile()` 在值位置转交注册时绑定的 `VariableName`；Name 按规范化 CSS 地址连接全部同名定义，输出 `var(--name)` 并访问各定义唯一的消费材料。该材料从 Variable 读取当前默认、状态、注册和共同声明，通过 `consumeVariableDefinition()` 进入原声明与依赖协调，只交付结构化依赖，不生成无人读取的值引用，也不再经过 Variable 的名称入口。定义材料独自保存最早编译波次，Variable 值入口不重复门控；onActive 仍按普通 JSSContent 生命周期先于 onCompile 的波次判断。声明键仅访问自身定义材料；天然 key/content 材料复用同一定义消费函数。来源 Variable 继续作为结构化依赖编译，外层状态只决定自身配方何时生效。未显式声明的已消费材料补根默认，派生关系在消费位置物化；完整 AST 中已有同对象声明则不补根默认。注册字段仍由 variable/core.ts 统一生成，内部修改步骤复用类型约束与 AST 来源生命周期。`VariableCluster` 代理默认成员，选择和双方同名配对由 Cluster 自身负责；`clusterFrom` 保留来源状态引用并覆盖指定配置，未配置成员复用原对象。JSS 内容组织工具通过 dependencies 暴露操作数，最终输出 CSS 文本；Creator 整份内容重建后由 RuleHandle.replace 消费。
-`variable/dependency.ts` 统一接管默认、当地配方和 CSS 名称联动，Variable 交付所选材料、实际编译位置与消费上下文。结构化配方中的 Variable 归一到自己的 Name，独立 Name 直接以规范化地址建立依赖边；不再展开定义对象后反查名称。只有 Name 而没有 JSS 定义时，CSS Key／原始二元声明仍可沿该名称触发当地配方。真实原生属性消费建立 `Map<CSS 名称, Set<Variable 材料>>`；Active、独立 declare 和资源描述符不激活，动画帧属性属于消费。有效同名来源声明触发各材料自己的配方，联动等级为其 priority - 1；状态沿用该次声明等级。自动状态也是来源，自动默认物化不重复建链。独立同名对象的 declare 可借用已消费材料的原始状态规则，以当地 base 绑定，自身明确同名规则优先；状态归属不是图边。
-
-默认、借用状态和联动共享一次编译会话，来源交给 AST 管理；联动资格同时核对有效来源与真实消费，不把多来源 OR 当作两端 AND。消费节点的 key/content/revision 改变后旧记录退出，观察关系从当前已求值材料更新，默认与联动内容同步失效；不为建图额外执行生产函数。旧 variable.ts 的独立默认／状态协调已退出。所有产物仍走普通 AST 编译与 Join，编译结束只留下 CSS，不生成运行时观察者。
-
-`variable/declare.ts` 拥有显式、原始二元、普通 Key、自动默认及联动声明的基础与状态材料。`publishVariableBase` 选择本地址基础，`syncVariableStates` 唯一发布自身及借用状态；相同声明地址先选有效规则，自身规则覆盖借用规则，再把一个贡献交给原 Key.join，两个真实 Key 声明仍分别参与聚合。普通 Key 保留等级999，借用状态沿用本次声明键等级。当前状态地址已有明确值时，借用规则只补后续状态，不重写该值。同完整地址已有独立声明的材料使用自身键的等级发布状态，不再借其他 Key 重复发布；默认局部投影也不抢夺该地址的显式基础。
-
-公共声明负责消费者改绑与重访撤销；Modify 只在实际修改出现时引用该声明并建立步骤，旧归属退出会释放当地结果。名字联动不把另一个同名 Key 变成 Modify 的同对象基础。依赖图只处理真实消费、名称配方和默认需求，不再回存声明实例或经 Modify 生成基础。默认重建先撤旧产物并退出本次核验，下波再建立当前索引，避免使用级联撤销前的材料。
-
-普通内容生产函数由角色访问在现有替代记录中求值，Value 将嵌套函数作为依赖交付；可调用 JSSContent 保持自身协议。同一记录同时保存该阶段实际访问的依赖；onCompile 完成时更新其依赖阶段，输入或 revision 失效时重建记录。名称依赖与当地物化共用 getCompiledContent／getContentCompilation 读取事实，不再读取业务 dependencies getter。Join 与自动投影通过 compiled-value.ts 复用该位置的已编译视图；状态在基础完成后绑定展开值。状态 Name 边保留条件，读取当地实际配方，失效依据则来自实际声明基础的记录和原始状态规则；原生消费建立的 active 集合按名称及材料直接授予状态联动资格；声明创建时交付真实基础来源，默认、当地与联动投影继续沿用，不反扫生成物寻找来源，也不以自身新产物记录自激。最终输出只读取已编译内容并验证文本协议，固定名称与注册字段在各自负责入口验证，避免函数隐式字符串化。
-
-[rules-to-style-nodes.ts](compiler/rules-to-style-nodes.ts) 从 Rules 建立样式节点队列；[compilation.ts](compiler/style-nodes-to-content-nodes/compilation.ts) 逐波编译、处理按需 Rules 和同址组合；[content-nodes-to-css-string.ts](compiler/content-nodes-to-css-string.ts) 按内容节点顺序输出 CSS。按需 Rules 回到第一步建立节点，再进入下一编译波。依赖按完整地址替换，未被消费的 Value、Variable、函数、动画和自定义资源不进入 CSS。同址同名 Key 默认组合，单条声明仍直接输出。
-
-修改保留为完整变化描述；原 selector 只选择当前步骤的候选，空 token 与 `initial` 选择门由 CSS 原生层叠和继承。修改地址及普通消费地址当地生成阶段结果，每阶段只引用前序 CSS 变量。未显式声明的后代继承规则选择，显式 `declare` 建立独立基础与修改归属；不解析选择器或复制祖先状态。`registration.inherits: false` 通过不继承的当地存在标记阻止消费链重新应用祖先修改，内部阶段引用保留注册基础值回退；这是条件选择机制，普通 Variable 引用没有默认内容第二参数。
-
-`compileCSS()` 只返回 CSS 字符串。`cssRoot.mount()` 保留宿主已有前缀，结果未变化时不重写，编译失败时保留此前提交。测试登记通过句柄清理。
+compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不重写，编译或提交失败保留此前成功结果。
 
 ## 文件职责
 
@@ -73,26 +42,25 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份 |
 | pieces/state-conditions.ts | 主体状态名称、条件登记、中央顺序与状态路径追加 |
 | key.ts | JSSKey 的创建、聚合、识别与别名解析；共用 CSS 自定义属性名称分配，别名登记与名称避让分别保存 |
-| variable/name.ts | 独立名称身份、唯一具名引用输出及关联定义材料；登记不选择胜者、不执行默认内容 |
-| variable/args-parser.ts | 归一默认值、原始状态规则、名称简写及 extend；等级为显式值、继承加一或0 |
+| variable/name.ts | CSS名称对象、逻辑名字符串化及纯CSS引用；不登记定义 |
+| variable/args-parser.ts | 默认/状态/名称简写归一，接收内部派生来源；等级为显式值、来源加一或0 |
 | operations/declare.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
 | value.ts | 稳定 Value 的内容包装与输入类型 |
 | variable/index.ts | Variable 领域主动公开的创建、引用、材料类型和操作接入契约 |
-| variable/core.ts | Variable 注册时绑定名称、baseOn 的独立基础绑定、自然材料与唯一的定义消费投影、共同声明依赖与注册资源 |
-| variable/declare.ts | 公共声明基础、同名状态材料、消费者改绑与精确撤销；保留原 Key.join |
+| variable/core.ts | 具体Variable创建与derive、名称身份、对象自身定义消费、共同声明依赖与注册资源 |
+| variable/declare.ts | 公共声明基础、自身状态、消费者改绑与精确撤销；保留Key.join |
 | operations/modify.ts | Modify 双方协议、材料校验、领域应用策略与操作内容构造 |
 | variable/modify.ts | 执行已选应用、按需修改步骤、结果消费与撤销；引用公共声明 |
-| variable/dependency.ts | 当前消费、默认请求、CSS 名称配方与联动资格 |
+| variable/dependency.ts | 具体对象消费、默认请求、当地派生与联动资格及退出 |
 | operations/adjust.ts | Adjust 双方协议、来源与变化的 CSS 绑定、结果 Variable 创建及共同声明关系材料 |
 | modification.ts | Modification 的 type/detail 定义、内置颜色转译、独立声明与应用材料 |
 | css-function.ts | CSSFunction 定义主体、按需完整定义与调用 Expression |
-| variable-cluster.ts | Variable 成员选择、default 代理、同名声明配对及成员继承创建 |
 | css-root.ts | 源账本、三步编译调用和宿主提交 |
 | compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |
 | compiler/resource-rule.ts | 内部按需 Rule 与既有完整条件路径的身份关联 |
-| compiler/style-nodes-to-content-nodes/index.ts | 汇总公开编译函数与 JSSContentNode 结果类型 |
+| compiler/style-nodes-to-content-nodes/compilation.ts | 汇总公开编译函数与 JSSContentNode 结果类型 |
 | compiler/style-nodes-to-content-nodes/compilation.ts | 组合三项编译账本，编排访问、资源发布、波末核验、聚合和输出 |
 | compiler/style-nodes-to-content-nodes/node-compilation.ts | 节点角色进度、输入失效、单次内容链访问、完成判断及内容节点结果 |
 | compiler/style-nodes-to-content-nodes/resource-compilation.ts | 内容激活、当前 Rules 身份关联、共享消费者与同址资源完整提交 |
@@ -113,26 +81,16 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | test | 验证 Style System 多文件协作与完整业务流程 |
 | doc | 面向使用和设计阅读的对象契约 |
 
-公共 `index` 公开 Variable 与独立 VariableName 创建、Cluster 聚合与成员继承、声明、编译和 Mixin。Key 和其他碎片从负责文件导入；Variable 类型直接包含创建配置 `config`，自动状态声明 Key 位于 `config.definitionKey`。
+公共 `index` 公开 Variable 与独立 VariableName 创建、derive定义复用、声明、编译和 Mixin。Key 和其他碎片从负责文件导入；Variable 类型直接包含创建配置 `config`，自动状态声明 Key 位于 `config.definitionKey`。
 
 ## Button 接入
 
-Style System 是抽象层，包含可复用碎片和面向组件的通用定义。是否通用取决于描述目标与领域，不取决于当前消费者数量。
+Button.style.ts拥有Button具体颜色、条件及公开控制点。基础纸色、墨色、品牌色等材料与普通转换留在Style System；组件不经全局中转角色取得自己的表面、内容和边线定义。lineColor(base)是普通函数，lineStrength是可全局/局部控制的Variable。
 
-`Button.style.ts` 拥有 Button 的选择器、appearance、emphasis、tone、size、status 与组件差异。语义配色由 `interactiveColors`、`badColors`、`toneColors` 等 Cluster 提供；Button 通过声明选择整组成员，不读取 Cluster 内部定义。
+普通/危险语气通过同一rules中的并列declare分别选择buttonToneColor、buttonSoftColor、buttonStrongColor、buttonLineColor与buttonToneContentColor。原有浅底0.14、轮廓0.44和背景强度配方保留，plain/filled贡献继续用modify。Button表面、内容、来源、画布和强度均为具体对象，组件入口导出实际控制点。
 
-`colors.ts` 中的 `xxxColor` 是单个 Variable，`xxxColors` 是 VariableCluster。`baseUIColorStructure` 按基础色、透明度和用途配方生成成员结构，族定义再调用 `variableCluster` 聚合；配色决定留在配置处，生成器负责成员的派生、命名与创建。
-
-`ui-variable-structure.ts` 的 `interactiveColorStates` 按明度、彩度响应倍率生成单个颜色的默认值与交互状态配方，定义端再显式调用 `variable` 创建变量。
-
-[Button.style.ts](../components/kits/Button/Button.style.ts) 同时定义公开的色源、画布、背景强度控制点与业务规则。控制点以 export 定义，组件入口导出同一 Variable 对象，样式直接消费。色源与画布支持局部 declare，强度支持 declare／modify。底层工具提供通用操作语义，业务规则决定分类如何选择材料与加入贡献；存在感的透明度材料保持私有，各档 Variable 的禁用状态复用 disabledFade，没有新增公开 opacity 控制点。当前控制仍通过 Rules 登记与应用挂载执行，未实现运行时变值自动插入 CSS。
-
-Button 的背景来源与画布由分类选择，强度 Variable 持有状态，plain／filled 的贡献通过既有 modify 组合，outlined 声明当前语气的边线。emphasis 独立选择整颗按钮的透明度材料，保留外观形式与尺寸。tone 选择成员材料，内容色直接声明共享角色；组件不登记逐状态消费 Rule，也不登记 appearance×tone 交集配方。验收关注退场、突出、层次和状态反馈，旧实现的混色系数不作为约束。
-
-Button 静态导入自身样式；Example、Storybook 和缩略图入口在 render 前统一挂载。懒加载样式仍由应用样式清单负责提前登记。
+clickable的focusColor接收组件的具体边线；轮廓构造函数据所选内容创建有自身focus状态的Variable。布局、禁用淡化、按压和焦点仍由通用效果承担，不建立共享颜色组。Button静态导入样式，应用在render前统一mount。
 
 ## 验证
 
-同目录测试只验证同名源码文件自身的业务契约，文件名以对应源码名加 `.test.ts` 或 `.browser.test.ts` 构成。跨文件协作及 Style System 整体流程的测试放在 `test/`，用中文描述验证目的并保留英文测试后缀；归属仍由断言对象决定。
-
-单元测试覆盖 Value、Variable、Cluster、Controller/波次、声明、依赖、循环和顺序。浏览器测试验证状态优先级、Cluster 多成员继承、局部覆盖、CSS 函数局部定义，以及 Button 的现有配方和交互。测试通过后仍需检查归属、阅读顺序与不必要机制。
+同目录测试验证单文件契约，领域test/验证协作行为。单元测试覆盖对象隔离、Name纯引用、derive、默认/状态、编译波、资源、修改/调整、条件与失效清理；浏览器测试验证双基础转换与全局/局部强度、后代物化、状态组合、独立颜色声明及真实Button的普通/危险/hover/active/disabled/focus。

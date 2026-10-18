@@ -4,16 +4,17 @@ import { userEvent } from 'vitest/browser'
 import { color } from '../pieces/mixins/appearance'
 import { compileCSS } from '../css-root'
 import { rule, rules, type RulesHandle } from '../rule'
-import { globalCanvasColor, globalSurfaceColor, globalContentColor, surfaceColorInteractive, lineColor } from '../pieces/contents/atoms/color/colors'
+import { lineColor, lineStrength } from '../pieces/contents/atoms/color/colors'
 import { brandColor } from '../pieces/contents/atoms/color/brand-color'
-import { interactiveColor, highlightColor, interactiveColors, highlightColors } from '../pieces/contents/atoms/color/ui-action-colors'
-import { goodColors, badColors, warnColors, infoColors } from '../pieces/contents/atoms/color/ui-info-color'
+import { interactiveColor, highlightColor } from '../pieces/contents/atoms/color/ui-action-colors'
+import { goodColor, badColor, warnColor, infoColor } from '../pieces/contents/atoms/color/ui-info-color'
 import { paper, ink, neutral, paperColor, inkColor, neutralColor } from '../pieces/contents/atoms/color/palette'
 import { interactiveColorStates } from '../pieces/contents/atoms/color/ui-variable-structure'
 import { variable } from '../variable'
-import { variableCluster } from '../variable-cluster'
-import { baseUIColorStructure } from '../pieces/contents/atoms/color/ui-color-structure'
+import { declare } from '../operations/declare'
+import { readableContent } from '../pieces/contents/atoms/color/ui-color-structure'
 
+const surfaceColorInteractive = variable(interactiveColorStates({ base: paperColor }), 'purpose-surface')
 const handles: RulesHandle[] = []
 
 afterEach(() => {
@@ -115,10 +116,10 @@ test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后�
 })
 
 test('纸色与品牌变量局部修改后，用途色和品牌变化自动更新而不重编译', () => {
-  handles.push(rules('.semantic', [color({ content: interactiveColor, background: globalSurfaceColor })]))
+  handles.push(rules('.semantic', [color({ content: interactiveColor, background: paperColor })]))
   handles.push(rule('.highlight', 'color', highlightColor))
-  handles.push(rule('.canvas', 'background-color', globalCanvasColor))
-  handles.push(rule('.text', 'color', globalContentColor))
+  handles.push(rule('.canvas', 'background-color', paperColor))
+  handles.push(rule('.text', 'color', inkColor))
   const style = mountStyles()
   const originalCSS = style.textContent
   const sample = document.body.appendChild(document.createElement('div'))
@@ -170,7 +171,7 @@ test('交互状态的品牌变化仍引用局部品牌变量', async () => {
 })
 
 test('交互用途色的状态派生保留局部纸色与墨色覆盖', async () => {
-  handles.push(rules('.interactive-purpose', [color({ background: surfaceColorInteractive, content: globalContentColor })]))
+  handles.push(rules('.interactive-purpose', [color({ background: surfaceColorInteractive, content: inkColor })]))
   const style = mountStyles()
   const originalCSS = style.textContent
   const button = document.body.appendChild(document.createElement('button'))
@@ -195,15 +196,15 @@ test('交互用途色的状态派生保留局部纸色与墨色覆盖', async ()
 })
 
 test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有效渲染', () => {
-  const statuses = [goodColors, badColors, warnColors, infoColors]
+  const statuses = [goodColor, badColor, warnColor, infoColor]
   const samples = statuses.map((status, index) => {
-    handles.push(rules(`.status-${index}`, [color({ background: status('default'), content: status('content') })]))
+    handles.push(rules(`.status-${index}`, [color({ background: status, content: index === 1 ? paperColor : readableContent(status) })]))
     const sample = document.body.appendChild(document.createElement('div'))
     sample.className = `status-${index}`
     sample.textContent = '状态信息'
     return sample
   })
-  handles.push(rule('.separator', 'background-color', lineColor))
+  handles.push(rule('.separator', 'background-color', lineColor(inkColor)))
   const separator = document.body.appendChild(document.createElement('div'))
   separator.className = 'separator'
   document.body.style.color = 'magenta'
@@ -222,24 +223,35 @@ test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有
   }
 })
 
-test('颜色族透明度默认值与自定义值保留局部基色', () => {
-  const custom = variableCluster(baseUIColorStructure({
-    base: variable('oklch(0.6 0.15 140 / 0.6)', 'custom-color'),
-    content: inkColor, softAlpha: 0.2, lineAlpha: 0.7,
-  }))
-  const families = [interactiveColors, highlightColors, goodColors, badColors, warnColors, infoColors, custom]
-  const samples = families.map((family, index) => {
-    handles.push(rules(`.family-${index}`, [color({ background: family('soft'), content: family('line') })]))
-    const sample = document.body.appendChild(document.createElement('div'))
-    sample.className = `family-${index}`
-    sample.style.setProperty(family.key.toCSSString(), 'oklch(0.6 0.15 140 / 0.6)')
-    return sample
-  })
-  mountStyles()
-  samples.forEach((sample, index) => {
-    const softAlpha = index === families.length - 1 ? 0.2 : 0.14
-    const lineAlpha = index === families.length - 1 ? 0.7 : 0.44
-    expectSameColor(getComputedStyle(sample).backgroundColor, `oklch(0.6 0.15 140 / ${softAlpha})`)
-    expectSameColor(getComputedStyle(sample).color, `oklch(0.6 0.15 140 / ${lineAlpha})`)
-  })
+
+test('转换函数的两个基础分别响应当地表面与全局及局部线条强度', () => {
+  const first = variable('red', 'line-first-surface')
+  const second = variable('blue', 'line-second-surface')
+  const firstLine = lineColor(first)
+  const secondLine = lineColor(second)
+  handles.push(rules('.LineScope', [declare(first), declare(second), declare(lineStrength)]))
+  handles.push(rule('.FirstLine', 'color', firstLine))
+  handles.push(rule('.SecondLine', 'color', secondLine))
+  handles.push(rules('.LocalLine', [declare(first, 'lime'), declare(lineStrength, 0.5)]))
+  const style = mountStyles()
+  const originalCSS = style.textContent
+  const scope = document.body.appendChild(document.createElement('section'))
+  scope.className = 'LineScope'
+  const normal = scope.appendChild(document.createElement('div'))
+  normal.className = 'FirstLine'
+  const other = scope.appendChild(document.createElement('div'))
+  other.className = 'SecondLine'
+  const local = scope.appendChild(document.createElement('div'))
+  local.className = 'FirstLine LocalLine'
+  expectSameColor(getComputedStyle(normal).color, 'color-mix(in oklab, red 18%, transparent)')
+  expectSameColor(getComputedStyle(other).color, 'color-mix(in oklab, blue 18%, transparent)')
+  expectSameColor(getComputedStyle(local).color, 'color-mix(in oklab, lime 50%, transparent)')
+  scope.style.setProperty(lineStrength.toCSSString(), '0.4')
+  expectSameColor(getComputedStyle(normal).color, 'color-mix(in oklab, red 40%, transparent)')
+  expectSameColor(getComputedStyle(other).color, 'color-mix(in oklab, blue 40%, transparent)')
+  expectSameColor(getComputedStyle(local).color, 'color-mix(in oklab, lime 50%, transparent)')
+  local.style.setProperty(first.toCSSString(), 'yellow')
+  expectSameColor(getComputedStyle(local).color, 'color-mix(in oklab, yellow 50%, transparent)')
+  expectSameColor(getComputedStyle(normal).color, 'color-mix(in oklab, red 40%, transparent)')
+  expect(style.textContent).toBe(originalCSS)
 })

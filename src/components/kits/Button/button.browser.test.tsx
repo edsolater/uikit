@@ -1,5 +1,6 @@
+import { buttonSurfaceColor, buttonContentColor, buttonToneColor, buttonSoftColor, buttonStrongColor, buttonToneContentColor, buttonLineColor } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
-import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, surfaceColor, contentColor, interactiveColors, badColors, toneColor, toneColors, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
+import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, interactiveColor, badColor, oklch, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, test } from 'vitest'
@@ -9,6 +10,7 @@ import { Button, type ButtonProps, type ButtonAppearance } from './Button'
 import { buttonMapping } from './Button.mapping'
 import { buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength } from './Button.style'
 import './Button.style'
+import * as globalColors from '@/style-system/pieces/contents/atoms/color/colors'
 import { inkColor } from '@/style-system/pieces/contents/atoms/color/palette'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
@@ -320,8 +322,8 @@ describe('Button styles', () => {
       { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', content: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
     ]
     for (const [index, palette] of palettes.entries()) handles.push(rules(`.Button[data-local-tone="${index}"]`, [
-      [toneColor, palette.tone], [toneColors('soft'), palette.soft],
-      [toneColors('strong'), palette.strong], [toneColors('content'), palette.content], [toneColors('line'), palette.line],
+      [buttonToneColor, palette.tone], [buttonSoftColor, palette.soft],
+      [buttonStrongColor, palette.strong], [buttonToneContentColor, palette.content], [buttonLineColor, palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -371,7 +373,7 @@ describe('Button styles', () => {
   test.each([undefined, 'plain', 'filled'] as const)('统一禁用降低整体声量并保留局部角色和恢复：%s', async (selectedAppearance) => {
     const surface = 'rgb(12, 34, 56)'
     const content = 'rgb(78, 90, 123)'
-    handles.push(rules('.Button[data-local-role]', [declare(surfaceColor, surface), declare(contentColor, content)]))
+    handles.push(rules('.Button[data-local-role]', [declare(buttonSurfaceColor, surface), declare(buttonContentColor, content)]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Button appearance={selectedAppearance} danger htmlProps={{ 'data-local-role': '' }}>局部禁用</Button>, host)
@@ -400,9 +402,9 @@ describe('Button styles', () => {
     expect(getComputedStyle(button).opacity).toBe(normalOpacity)
   })
 
-  test('filled 常态背景保留组件 surfaceColor 的局部覆盖', () => {
+  test('filled 常态背景保留组件 buttonSurfaceColor 的局部覆盖', () => {
     handles.push(rules('.Button[data-appearance="filled"][data-surface-probe]', [
-      declare(surfaceColor, 'rgb(12, 34, 56)'),
+      declare(buttonSurfaceColor, 'rgb(12, 34, 56)'),
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -639,8 +641,8 @@ describe('Button styles', () => {
     const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
     const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
     const reference = document.body.appendChild(document.createElement('div'))
-    handles.push(rule('.focus-reference-interactive', 'color', interactiveColors('line')))
-    handles.push(rule('.focus-reference-bad', 'color', badColors('line')))
+    handles.push(rule('.focus-reference-interactive', 'color', oklch(interactiveColor, { alpha: 0.44 })))
+    handles.push(rule('.focus-reference-bad', 'color', oklch(badColor, { alpha: 0.44 })))
     cssRoot.mount()
     reference.className = 'focus-reference-interactive'
     const interactiveLine = getComputedStyle(reference).color
@@ -803,4 +805,52 @@ describe('Button styles', () => {
     expect(afterMount).toHaveLength(beforeMount.length)
     for (let index = 0; index < beforeMount.length; index++) expect(afterMount[index]).toBe(beforeMount[index])
   })
+})
+
+
+test('全局表面和内容来源联动真实Button，区域及组件覆盖保持隔离', async () => {
+  const { globalSurfaceColor, globalContentColor } = globalColors
+  expect(globalSurfaceColor, '必须提供全局表面来源').toBeDefined()
+  expect(globalContentColor, '必须提供全局内容来源').toBeDefined()
+  handles.push(rules('.ThemeRoot', [declare(globalSurfaceColor, 'rgb(220, 230, 240)'), declare(globalContentColor, 'rgb(20, 30, 40)')]))
+  handles.push(rules('.ThemeLocal', [declare(globalSurfaceColor, 'rgb(180, 210, 190)'), declare(globalContentColor, 'rgb(60, 70, 80)')]))
+  handles.push(rules('.ComponentLocal .Button', [declare(buttonSurfaceCanvas, 'rgb(240, 200, 180)'), declare(buttonContentColor, 'rgb(90, 80, 70)')]))
+  const style = mountButtonStyles()
+  const root = document.body.appendChild(document.createElement('div'))
+  root.className = 'ThemeRoot'
+  dispose = render(() => <><Button>普通</Button><div class="ThemeLocal"><Button>区域</Button></div><div class="ComponentLocal"><Button>组件</Button></div><Button filled danger>危险</Button></>, root)
+  const [normal, local, own, danger] = Array.from(root.querySelectorAll<HTMLButtonElement>('button'))
+  for (const button of [normal, local, own, danger]) button.style.transition = 'none'
+  const background = (button: HTMLElement, canvas: string, strength = 0.18) => {
+    const source = getComputedStyle(button).getPropertyValue(buttonSurfaceSource.toCSSString())
+    expectSameColor(getComputedStyle(button).backgroundColor, 'color-mix(in oklab, ' + source + ' ' + strength * 100 + '%, ' + canvas + ')')
+  }
+  background(normal, 'rgb(220, 230, 240)')
+  background(local, 'rgb(180, 210, 190)')
+  background(own, 'rgb(240, 200, 180)')
+  expectSameColor(getComputedStyle(normal).color, 'rgb(20, 30, 40)')
+  expectSameColor(getComputedStyle(local).color, 'rgb(60, 70, 80)')
+  expectSameColor(getComputedStyle(own).color, 'rgb(90, 80, 70)')
+  const dangerBefore = appearance(danger)
+  const cssBefore = style.textContent
+  root.style.setProperty(globalSurfaceColor.toCSSString(), 'rgb(200, 180, 230)')
+  root.style.setProperty(globalContentColor.toCSSString(), 'rgb(100, 40, 60)')
+  background(normal, 'rgb(200, 180, 230)')
+  background(local, 'rgb(180, 210, 190)')
+  background(own, 'rgb(240, 200, 180)')
+  expectSameColor(getComputedStyle(normal).color, 'rgb(100, 40, 60)')
+  expectSameAppearance(appearance(danger), dangerBefore)
+  await userEvent.hover(normal)
+  background(normal, 'oklch(from rgb(200, 180, 230) calc(l - 0.04) c h)', 0.28)
+  normal.focus()
+  await userEvent.keyboard('[Space>]')
+  try { background(normal, 'oklch(from rgb(200, 180, 230) calc(l - 0.08) c h)', 0.38) }
+  finally { await userEvent.keyboard('[/Space]') }
+  await userEvent.unhover(normal)
+  normal.blur()
+  normal.disabled = true
+  await userEvent.hover(normal)
+  background(normal, 'rgb(200, 180, 230)')
+  expect(Number(getComputedStyle(normal).opacity)).toBe(disabledFade.content)
+  expect(style.textContent).toBe(cssBefore)
 })

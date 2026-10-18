@@ -2,40 +2,9 @@
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
 import { expect, test, vi } from 'vitest'
-import { add, clusterFrom, key, rules, variable, variableCluster } from '../index'
+import { add, key, rules, variable } from '../index'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
-
-test('合法 Key、Variable、Cluster 和声明组合可以直接消费', () => {
-  const source = variable('red', { name: 'public-color' })
-  const cluster = variableCluster({ default: source, soft: variable(source, { name: 'public-soft-color' }) })
-  const handle = rules('.Public', [[key('color'), cluster('soft')], [cluster, 'blue']])
-  handle.remove()
-  expect(cluster('default')).toBe(source)
-  expect(source.config.defaultValue).toBe('red')
-  expect(cluster.config).toBe(source.config)
-  if (false) {
-    // @ts-expect-error 状态内容位于 config.states。
-    source.states.active
-    // @ts-expect-error Cluster 只接受已声明成员。
-    cluster('unknown')
-  }
-})
-
-
-test('Cluster默认成员应用规则闭包捕获的领域参数', () => {
-  const source = variableCluster({ default: variable(1, { name: 'public-source-number' }) })
-  const cluster = clusterFrom(source, {
-    default: {
-      name: 'public-derived-number',
-    },
-  })
-  const payload = { amount: 3 }
-  const change = ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, payload.amount) })
-  const css = compileRules([[[condition('.Public')], ...declare(cluster)], [[condition('.Public')], ...modify(cluster, change)]])
-  expect(css).toContain('+ 3)')
-  expect(compileRules([[['.source'], ...declare(cluster)]])).toContain('--public-derived-number: var(--public-source-number);')
-})
 
 test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => {
   const shorthand = variable({ default: 1, active: 3, hover: 2 }, '--public-shorthand')

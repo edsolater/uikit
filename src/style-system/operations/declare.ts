@@ -9,7 +9,6 @@ import type { ValueInput } from '../value'
 import { assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
 import { isJSSContent } from '../content'
 import { declareVariable } from '../variable'
-import { resolveVariable } from '../variable-cluster'
 
 /** 一条 `[Key, content]` 声明；undefined content 表示无效。 */
 export type Declaration<C = ValueInput | undefined> = [key: Exclude<JSSKey, string>, content: C]
@@ -43,7 +42,7 @@ export function declare(target: DeclareProtocol, content?: ValueInput): Declarat
 export function declare<C = ValueInput | undefined>(key: Exclude<JSSKey, string>, content: C): Declaration<C>
 export function declare(key: DeclareProtocol | Exclude<JSSKey, string>, ...contents: unknown[]): Declaration<unknown> {
   if (hasProperty(key, 'content') && matchShape(key, declareShape)) {
-    const target = resolveVariable(key as DeclareProtocol)
+    const target = key as DeclareProtocol
     const content = (contents.length ? contents[0] : target.content) as DeclareProtocol['content']
     const name = target.key.toCSSString()
     assert(isString(name), 'declare 的 CSS Key 需要输出字符串。')

@@ -6,21 +6,20 @@
 */
 import { condition } from '../condition'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import { allocateVariableName, propertyName, type JSSKeyObject } from '../key'
+import { propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { ASTController } from '../compiler/ast-controller'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
-import { assert, hasProperty, isFunction, mapGet, result } from '@edsolater/fnkit'
+import { assert, hasProperty, isFunction, mapGet } from '@edsolater/fnkit'
 import { consumeDeclaration, findVariableDeclaration, joinVariableValues } from './declare'
 import { declare, type DeclareProtocol } from '../operations/declare'
-import { resolveVariable } from '../variable-cluster'
 import { parseVariableArgs, type VariableStateValues } from './args-parser'
 import { observeVariable } from './dependency'
-import { bindVariableName, getVariableNameAddress, type VariableName } from './name'
+import { getVariableNameAddress, type VariableName } from './name'
 
-/** 未命中状态时的声明内容；生产函数消费时接收绑定基础，未绑定时无参执行。 */
-export type VariableDefaultValue = ValueInput | ((base?: ValueInput, ...args: never[]) => ValueInput)
+/** 未命中状态时的声明内容；生产函数消费时无参执行。 */
+export type VariableDefaultValue = ValueInput
 /** 状态配方中的 base 是本次声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
 
@@ -35,11 +34,9 @@ export interface Variable extends VariableTarget, JSSKeyObject {
   kind: 'variable'
   get name(): VariableName
   priority: number
-  /**
-   * 以指定内容为基础创建独立名称的 Variable，创建时继承当前默认配方和状态。
-   * 基础只作为当前默认生产函数的实参，在编译消费时传入。
-   */
-  baseOn(base: ValueInput): Variable
+  /** 创建时复用定义与状态，随后差异只属于新定义。 */
+  derive(): Variable
+  derive(input: VariableDefaultValue | VariableStateValues, nameOrOptions?: VariableDeriveName | VariableOptions): Variable
   /** 这一个 Variable 的基础内容、状态和可选行为。 */
   config: {
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
@@ -62,15 +59,13 @@ export interface Variable extends VariableTarget, JSSKeyObject {
 
 /** 一个 Variable 的名称、各状态基础值及可选注册。 */
 export interface VariableOptions {
-  /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，extend 可沿用来源身份。 */
+  /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，derive 可沿用来源身份。 */
   name?: string | VariableName
-  /** 继承名称、默认内容及原始状态规则；未指定等级时使用来源等级加一。 */
-  extend?: Variable
   /** 声明键等级；普通创建默认0，继承默认来源等级加一，显式0仍生效。 */
   priority?: number
   /**
    * 各 State Condition 下使用的基础内容；修改从选中的基础内容继续。
-   * 回调在声明展开时执行，收到本次声明基础内容；extend 保留规则并重新绑定。
+   * 回调在声明展开时执行，收到本次声明基础内容；derive 保留规则并重新绑定。
    */
   states?: Record<string, VariableStateRule>
 
@@ -93,18 +88,24 @@ export interface VariableOptions {
    */
   compileWaveIndex?: number
 }
+/** 派生定义可直接命名，也可按来源逻辑名计算新名称。 */
+export type VariableDeriveName = string | VariableName | ((name: VariableName) => string | VariableName)
+
 /**
  * Variable，样式中的基本复用变量；默认值生产函数在编译消费时求值，状态规则随每次声明绑定。
  * 默认值也可写成 { default, ...states }，名称也可直接传字符串；两处简写可独立使用。
- * 普通创建必须提供默认内容及名称；extend 可继承这两项。
+ * 普通创建必须提供默认内容及名称；derive 可继承这两项。
  */
-export function variable(options: VariableOptions & { extend: Variable }): Variable
 export function variable<DefaultValue extends VariableDefaultValue>(
   input: DefaultValue | VariableStateValues<DefaultValue>,
-  options: string | (VariableOptions & ({ name: string | VariableName } | { extend: Variable })),
-): Variable
-export function variable(input: VariableDefaultValue | VariableStateValues | (VariableOptions & { extend: Variable }), options?: string | VariableOptions): Variable {
-  const config = parseVariableArgs(input as VariableDefaultValue, options)
+  options: string | (VariableOptions & { name: string | VariableName }),
+): Variable {
+  return createVariable(input, options)
+}
+
+/** 创建与派生共用一份解析和内容协议；来源不成为额外公开创建入口。 */
+function createVariable(input: VariableDefaultValue | VariableStateValues, options: string | VariableOptions, source?: Variable): Variable {
+  const config = parseVariableArgs(input as VariableDefaultValue, options, source)
   const name = config.name
   const entries = Object.entries(config.states ?? {})
   const conditions = resolveStateConditions(entries.map(([name]) => name))
@@ -117,16 +118,12 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
   const self: Variable = {
     kind: 'variable',
     priority: config.priority,
-    /**
-     * 创建本次基础的独立变量；普通内容保持原样，生产配方延迟接收基础输入。
-     */
-    baseOn(base) {
-      let content = self.config.defaultValue
-      if (isFunction(content) && !isJSSContent(content)) {
-        const recipe = content
-        content = () => result(recipe, base)
-      }
-      return variable(content, { extend: self, name: allocateVariableName() })
+    /** 来源只在创建时读取，不建立动态配置继承。 */
+    derive(input?: VariableDefaultValue | VariableStateValues, naming?: VariableDeriveName | VariableOptions) {
+      const targetOptions = typeof naming === 'string' || isFunction(naming) || hasProperty(naming, 'kind', value => value === 'variable-name')
+          ? { name: isFunction(naming) ? naming(self.name) : naming as string | VariableName }
+          : naming ?? {}
+      return createVariable(arguments.length === 0 ? self.config.defaultValue : input, targetOptions, self)
     },
     /**
      * 注册时绑定的名称引用，不支持后续替换。
@@ -152,14 +149,15 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
     get states() { return self.config.states },
     get registration() { return self.config.registration },
     /**
-     * 声明目标保留自身材料，值引用统一转交绑定的 Name。
+     * 声明目标与值引用消费当前对象的同一份定义材料。
      */
     onCompile(context, controller) {
       controller.setContent(context, context.role === 'declaration-key'
-        ? createJSSContent(self.toCSSString, [definitionContent]) : name)
+        ? createJSSContent(self.toCSSString, [definitionContent])
+        : createJSSContent(() => `var(${self.toCSSString()})`, [definitionContent]))
     },
   }
-  // 同一份定义材料供名称引用和声明键消费，默认、状态仍从 self 读取。
+  // 同一份定义材料供当前对象引用和声明键消费，默认、状态仍从 self 读取。
   const definitionContent: JSSContent = {
     onActive: config.onActive,
     compileWaveIndex: config.compileWaveIndex,
@@ -170,12 +168,11 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
       controller.setContent(context, { dependencies: consumeVariableDefinition(self, context, controller) })
     },
   }
-  bindVariableName(name, definitionContent)
   return self
 }
 
 /**
- * 识别 Variable 身份，包含可调用 Cluster，不读取基础内容。
+ * 识别具体 Variable 身份，不读取基础内容。
  */
 export const isVariable = (input: unknown): input is Variable =>
   hasProperty(input, 'kind', (v) => v === 'variable')
@@ -204,7 +201,7 @@ export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyOb
 export function compileVariableContent(target: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
   const dependencies = consumeVariableDefinition(target, context, controller)
   if (context.role === 'declaration-key') return
-  if (resolveVariable(context.input as VariableTarget) !== target && isJSSContent(target)) dependencies.push(target)
+  if (context.input !== target && isJSSContent(target)) dependencies.push(target)
   controller.setContent(context, createJSSContent(() => `var(${propertyName(target.key)})`, dependencies))
 }
 

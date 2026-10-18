@@ -1,7 +1,5 @@
 import type { ColorMaterial } from '@/color-system'
-import { variableCluster } from '../../../../variable-cluster'
-import { paperColor } from './palette'
-import { toJSSColor, readableContent, baseUIColorStructure } from './ui-color-structure'
+import { toJSSColor } from './ui-color-structure'
 
 /** 跨品牌稳定的状态材料；不在 CSS token 中保存颜色来源。 */
 
@@ -61,33 +59,9 @@ export const info: ColorMaterial = {
 
 // ------------ ui使用
 export const goodColor = toJSSColor(good, 'good-color')
-export const goodColors = variableCluster(
-  baseUIColorStructure({
-    base: goodColor,
-    content: readableContent(goodColor),
-  }),
-)
 
 export const badColor = toJSSColor(bad, 'bad-color')
-export const badColors = variableCluster(
-  baseUIColorStructure({
-    base: badColor,
-    content: paperColor,
-  }),
-)
 
 export const warnColor = toJSSColor(warn, 'warn-color')
-export const warnColors = variableCluster(
-  baseUIColorStructure({
-    base: warnColor,
-    content: readableContent(warnColor),
-  }),
-)
 
 export const infoColor = toJSSColor(info, 'info-color')
-export const infoColors = variableCluster(
-  baseUIColorStructure({
-    base: infoColor,
-    content: readableContent(infoColor),
-  }),
-)

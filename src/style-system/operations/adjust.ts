@@ -10,7 +10,6 @@ import { colorModificationShape, type ColorModificationContent } from '../modifi
 import { oklch } from '../pieces/contents/functions/oklch'
 import { referenceVariable, variable, type Variable } from '../variable'
 import { allocateVariableName } from '../key'
-import { resolveVariable } from '../variable-cluster'
 import { modifyTargetShape, type ModifyTargetProtocol } from './modify'
 
 /** 调整方交付可声明的配方，type 选择对应的来源组合。 */
@@ -31,7 +30,6 @@ export function adjust(source: AdjustTargetProtocol, change: AdjustProtocol<keyo
   assert(hasProperty(source, 'content') && matchShape(source, modifyTargetShape), 'adjust 需要自定义属性的 key/content 来源材料。')
   const combine = hasProperty(change, 'type', isString) && Object.hasOwn(adjustTypes, change.type) ? adjustTypes[change.type] : undefined
   assert(combine !== undefined, 'adjust 需要已支持领域的配方材料。')
-  source = resolveVariable(source)
   const expression = combine(source, change)
   for (const target of [source, change]) allocateVariableName(target.key.toCSSString())
   const merged = variable(expression, allocateVariableName())

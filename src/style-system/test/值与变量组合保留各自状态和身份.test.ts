@@ -6,7 +6,6 @@ import { createJSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
 import * as variables from '../variable'
-import { clusterDeclarations, clusterFrom, variableCluster } from '../variable-cluster'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { multiply } from '../pieces/contents/functions/calc'
 import { compileRules } from '../css-root'
@@ -101,146 +100,6 @@ test('创建时绑定 Name，后续替换尝试不改变引用、默认声明与
   expect(css).toContain('--bound-size: 2px;')
   expect(css).not.toContain('--replacement-size')
 })
-test('Cluster 继承保留未改成员，也能加入新成员且未用成员不激活', () => {
-  const unusedActive = vi.fn()
-  const source = variableCluster({
-    default: variable('red', { name: 'family-source-color', states: { hover: 'blue' } }),
-    soft: variable('pink', { name: 'family-source-soft-color', onActive: unusedActive }),
-  })
-  const extra = variable('white', { name: 'family-extra-color' })
-  const family = clusterFrom(source, {
-    default: { name: 'family-color' },
-    extra,
-  })
-  expect(family('soft')).toBe(source('soft'))
-  expect(family('extra')).toBe(extra)
-  const css = compileRules([[[condition('.Family')], 'color', family]])
-  expect(css).toContain('--family-color: var(--family-source-color);')
-  expect(css).toContain('--family-source-color: blue;')
-  expect(css).not.toContain('--family-source-soft-color:')
-  expect(css).not.toContain('--family-extra-color:')
-  expect(unusedActive).not.toHaveBeenCalled()
-  const unnamed = clusterFrom(source, { default: { states: { hover: 'purple' } } })
-  const unnamedCSS = compileRules([[[condition('.Unnamed')], 'color', unnamed]])
-  expect(unnamed.key.toCSSString()).not.toBe(source.key.toCSSString())
-  expect(unnamedCSS).toContain(`${unnamed.toCSSString()}: var(--family-source-color);`)
-  expect(unnamedCSS).toContain('--family-source-color: red;')
-  expect(unnamedCSS).toContain(`${unnamed.toCSSString()}: purple;`)
-})
-test('Cluster 直接使用等同默认成员，选择返回原对象并保留状态', () => {
-  const normal = variable('red', { name: 'normal-color' })
-  const soft = variable('pink', { name: 'soft-color', states: { active: 'purple' } })
-  const cluster = variableCluster({ default: normal, soft })
-  expect(cluster('soft')).toBe(soft)
-  expect(result(cluster)).toBe(cluster)
-  const css = compileRules([[[condition('.Example')], 'color', cluster], [[condition('.Soft')], 'color', cluster('soft')]])
-  expect(css).toContain('color: var(--normal-color);')
-  expect(css).toContain('--soft-color: purple;')
-  expect(() => (cluster as (name: string) => unknown)('missing')).toThrow('未定义成员')
-})
-
-test('未登记的原始值或普通函数没有 Cluster 成员', () => {
-  const cluster = variableCluster({ default: variable('red', { name: 'registered-cluster' }) })
-  expect(clusterDeclarations(cluster, 'red')).toBeUndefined()
-  expect(clusterDeclarations(1, cluster)).toBeUndefined()
-  expect(clusterDeclarations(cluster, () => 'red')).toBeUndefined()
-})
-
-test('状态直接使用 Cluster 时保留其身份，常量状态独立保留', () => {
-  const cluster = variableCluster({ default: variable('blue', { name: 'state-cluster-source' }) })
-  const target = variable('2', {
-    name: 'state-cluster-target',
-    states: { hover: cluster, active: '2px' },
-  })
-
-  expect(target.config.states.get(resolveStateConditions(['hover'])[0])).toBe(cluster)
-  expect(target.config.states.get(resolveStateConditions(['active'])[0])).toBe('2px')
-})
-
-test('Variable 与 Cluster 的 onActive 由通用遍历各自调用一次', () => {
-  const directActive = vi.fn((): Rules => [[[condition(':root')], '--direct-active', '1']])
-  const direct = variable('red', { name: 'generic-active-variable', onActive: directActive })
-  const defaultActive = vi.fn((): Rules => [[[condition(':root')], '--cluster-active', '1']])
-  const defaultMember = variable('blue', { name: 'generic-active-cluster', onActive: defaultActive })
-  const cluster = variableCluster({ default: defaultMember })
-
-  const css = compileRules([
-    [[condition('.GenericActivation')], 'color', direct],
-    [[condition('.GenericActivation')], 'background', cluster],
-  ])
-
-  expect(directActive).toHaveBeenCalledTimes(1)
-  expect(defaultActive).toHaveBeenCalledTimes(1)
-  expect(css).toContain('--direct-active: 1;')
-  expect(css).toContain('--cluster-active: 1;')
-})
-
-test('Cluster 声明按目标同名成员整组展开，允许来源额外成员', () => {
-  const target = variableCluster({
-    default: variable('black', { name: 'target-color' }),
-    soft: variable('gray', { name: 'target-soft-color' }),
-    strong: variable('navy', { name: 'target-strong-color' }),
-    content: variable('white', { name: 'target-content-color' }),
-  })
-  const source = variableCluster({
-    default: variable('red', { name: 'source-color' }),
-    soft: variable('pink', { name: 'source-soft-color', states: { hover: 'purple' } }),
-    strong: variable('maroon', { name: 'source-strong-color' }),
-    content: variable('yellow', { name: 'source-content-color' }),
-    line: variable('orange', { name: 'source-line-color' }),
-  })
-  const css = compileRules([[[condition('.Cluster')], target, source]])
-  expect(css).toContain('--target-color: var(--source-color);')
-  expect(css).toContain('--target-soft-color: var(--source-soft-color);')
-  expect(css).toContain('--target-strong-color: var(--source-strong-color);')
-  expect(css).toContain('--target-content-color: var(--source-content-color);')
-  expect(css).not.toContain('--source-line-color:')
-  const plain = variable(undefined, { name: 'plain-color' })
-  expect(compileRules([[[condition('.Plain')], plain, source]]))
-    .toContain('--plain-color: var(--source-color);')
-})
-
-test('Cluster 忽略未匹配成员，只拒绝已匹配目标别名的不同来源', () => {
-  const shared = variable('1px', { name: 'alias-size' })
-  const target = variableCluster({ default: shared, 0: shared })
-  const first = variable('2px', { name: 'first-size' })
-  const second = variable('3px', { name: 'second-size' })
-  expect(compileRules([[undefined, target, variableCluster({ default: first })]]))
-    .toContain('--alias-size: var(--first-size);')
-  expect(() => compileRules([[undefined, target, variableCluster({ default: first, 0: second })]]))
-    .toThrow('同名目标存在对象或来源冲突')
-  const sameName = variableCluster({ default: shared, 0: variable('9px', { name: shared.name }) })
-  expect(() => compileRules([[undefined, sameName, variableCluster({ default: first, 0: second })]]))
-    .toThrow('同名目标存在对象或来源冲突')
-  expect(() => compileRules([[undefined, sameName, variableCluster({ default: first, 0: first })]]))
-    .toThrow('同名目标存在对象或来源冲突')
-  expect(compileRules([[undefined, target, variableCluster({ default: first, 0: first })]]))
-    .toContain('--alias-size: var(--first-size);')
-})
-
-test('Cluster 自身成员赋值不产生 CSS 自循环，不同对象同名引用明确报错', () => {
-  const size = variable('1px', { name: 'self-size' })
-  const target = variableCluster({ default: size })
-  expect(compileRules([[undefined, target, target]])).toBe('')
-  expect(() => compileRules([[undefined, target, variableCluster({ default: variable('2px', { name: size.name }) })]]))
-    .toThrow('不同对象引用同名变量 --self-size')
-})
-
-test('Cluster 只激活双方同名成员，未匹配的目标与来源均不激活', () => {
-  const targetSize = variable('1px', { name: 'activated-target-size' })
-  const sourceSize = variable('2px', { name: 'activated-source-size' })
-  const unusedActive = vi.fn()
-  const unused = variable('3px', { name: 'unused-source-size', onActive: unusedActive })
-  const source = variableCluster({ default: sourceSize, extra: unused })
-  const unusedTargetActive = vi.fn()
-  const unusedTarget = variable('4px', { name: 'unused-target-size', onActive: unusedTargetActive })
-  const css = compileRules([[undefined, variableCluster({ default: targetSize, soft: unusedTarget }), source]])
-  expect(css).toContain('--activated-target-size: var(--activated-source-size);')
-  expect(css).not.toContain('--unused-target-size:')
-  expect(css).not.toContain('--unused-source-size:')
-  expect(unusedTargetActive).not.toHaveBeenCalled()
-  expect(unusedActive).not.toHaveBeenCalled()
-})
 test('零值不会沿来源链退回', () => {
   const source = variable(1, { name: 'source-opacity', states: { disabled: 0.5 } })
   const next = variable(source, { name: 'next-opacity', states: { disabled: 0 } })
@@ -284,27 +143,6 @@ test('声明来源 Variable 不修改其定义，局部显式声明优先', () =
   expect(css).not.toContain('--surface-ratio: 0.6;')
 })
 
-test('五成员目标接收三成员来源时，只覆盖双方已有成员', () => {
-  const target = variableCluster({
-    default: variable('black', { name: 'partial-target-color' }),
-    soft: variable('gray', { name: 'partial-target-soft-color' }),
-    strong: variable('black', { name: 'partial-target-strong-color' }),
-    content: variable('white', { name: 'partial-target-content-color' }),
-    line: variable('silver', { name: 'partial-target-line-color' }),
-  })
-  const source = variableCluster({
-    default: variable('blue', { name: 'partial-source-color' }),
-    content: variable('white', { name: 'partial-source-content-color' }),
-    line: variable('navy', { name: 'partial-source-line-color' }),
-  })
-  const css = compileRules([[[condition('.Partial')], target, source]])
-  expect(css).toContain('--partial-target-color: var(--partial-source-color);')
-  expect(css).toContain('--partial-target-content-color: var(--partial-source-content-color);')
-  expect(css).toContain('--partial-target-line-color: var(--partial-source-line-color);')
-  expect(css).not.toContain('--partial-target-soft-color:')
-  expect(css).not.toContain('--partial-target-strong-color:')
-})
-
 test('显式 Variable 局部分支保留其消费状态，状态内容的临时条件不扩散', () => {
   const inner = variable('10px', { name: 'branch-inner-size', states: { hover: '20px', active: '30px' } })
   const target = variable(undefined, { name: 'branch-target-size' })
@@ -319,3 +157,21 @@ function compileStateFixture(input: import('../rule').Rules, state: string): str
   nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, resolveStateConditions([state])[0])
   return contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
 }
+
+
+test('两个具体Variable的onActive各自执行一次，共享引用不重复', () => {
+  const directActive = vi.fn((): Rules => [[[condition(':root')], '--direct-active', '1']])
+  const direct = variable('red', { name: 'generic-active-variable', onActive: directActive })
+  const defaultActive = vi.fn((): Rules => [[[condition(':root')], '--second-active', '1']])
+  const defaultMember = variable('blue', { name: 'generic-active-second', onActive: defaultActive })
+
+  const css = compileRules([
+    [[condition('.GenericActivation')], 'color', direct],
+    [[condition('.GenericActivation')], 'background', defaultMember],
+  ])
+
+  expect(directActive).toHaveBeenCalledTimes(1)
+  expect(defaultActive).toHaveBeenCalledTimes(1)
+  expect(css).toContain('--direct-active: 1;')
+  expect(css).toContain('--second-active: 1;')
+})

@@ -14,7 +14,6 @@ import { keyPriority, propertyName, type JSSKey } from '../key'
 import { appendStateCondition, type StateCondition } from '../pieces/state-conditions'
 import { value, type Value, type ValueInput } from '../value'
 import { isVariable, referenceVariable, type VariableDefaultValue, type VariableTarget, type VariableStateRule } from './core'
-import { resolveVariable } from '../variable-cluster'
 
 /** 一次实际声明或当地投影的基础和状态；消费者只引用这份材料。 */
 export interface VariableDefinition {
@@ -79,7 +78,6 @@ export function declareVariable(variable: VariableTarget, content: VariableDefau
  * 创建基础与状态材料；内部联动交付原来源，独立声明以自身为来源。
  */
 export function createVariableDeclaration(variable: VariableTarget, content: VariableDefaultValue, priority: number | undefined, originNode?: JSSStyleNode): Declaration {
-  variable = resolveVariable(variable)
   const declaration: VariableDeclaration = {
     kind: 'variable-declaration', variable, content, originNode, resourceIdentity: Symbol('variable-declaration'),
     /**
@@ -133,7 +131,7 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController): Variab
     for (const consumer of old.consumers ?? []) if (consumer !== node) consumer.compileRevision++
   }
   const variable = declaredVariable(node)
-  const target = variable ?? (isVariable(node.key) ? resolveVariable(node.key) : undefined)
+  const target = variable ?? (isVariable(node.key) ? node.key : undefined)
   const input = variable ? (node.content as VariableDeclaration).content : node.content as ValueInput
   const definition: VariableDefinition = { node, path: node.conditionPath, variable: target,
     baseContent: input, originNode: variable ? (node.content as VariableDeclaration).originNode ?? node : node,
@@ -151,13 +149,13 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController): Variab
 }
 
 /**
- * 按当前 CSS 名称为所有真实声明同步状态，生成物和聚合结果不再次充当新声明。
+ * 按具体对象为真实声明同步状态，生成物和聚合结果不再次充当新声明。
  */
-export function syncDeclarations(controller: ASTController, active: Map<string, Set<VariableTarget>>): boolean {
+export function syncDeclarations(controller: ASTController): boolean {
   let changed = false
   for (const node of controller.nodes()) {
     if (!node.key || node.aggregate || variableProductRoles.has(node) && !declaredVariable(node) || !propertyName(node.key).startsWith('--') || node.content === undefined) continue
-    if (syncVariableStates(ensureDefinition(node, controller), active.get(propertyName(node.key)) ?? [], controller)) changed = true
+    if (syncVariableStates(ensureDefinition(node, controller), controller)) changed = true
   }
   return changed
 }
@@ -175,20 +173,10 @@ export function publishVariableBase(definition: VariableDefinition, controller: 
 }
 
 /**
- * 每个声明地址只保留一份有效规则；自身状态覆盖借用规则，原 Key.join 不被模板重复调用。
+ * 每个声明地址只保留一份有效规则；仅展开所属对象状态，原 Key.join 不被模板重复调用。
  */
-export function syncVariableStates(definition: VariableDefinition, materials: Iterable<VariableTarget>, controller: ASTController): boolean {
-  // 先收集借用规则，最后处理自身规则，使同地址的自身规则保留覆盖权。
-  const orderedMaterials = new Set(materials)
-  // 本地址已有独立声明的材料由自己的声明键发布状态，不能借另一 Key 的等级再次贡献。
-  for (const node of controller.nodes()) {
-    const declared = declaredVariable(node)
-    if (declared && conditionAddressKey(node.conditionPath) === conditionAddressKey(definition.path)) orderedMaterials.delete(declared)
-  }
-  if (definition.variable) {
-    orderedMaterials.delete(definition.variable)
-    orderedMaterials.add(definition.variable)
-  }
+export function syncVariableStates(definition: VariableDefinition, controller: ASTController): boolean {
+  const orderedMaterials = definition.variable ? [definition.variable] : []
 
   const desired = new Map<string, { material: VariableTarget; rule: VariableStateRule; path: ConditionPath }>()
   for (const material of orderedMaterials) {
@@ -196,8 +184,8 @@ export function syncVariableStates(definition: VariableDefinition, materials: It
     for (const [state, rule] of material.states ?? []) {
       if (current && state.order <= current.order) {
         if (state !== current) continue
-        // 借用规则不改写当前明确值；自身当前状态已有基础声明时不重复发布。
-        if (material !== definition.variable || definition.baseNode && !declaredVariable(definition.node) && !definition.sourceNode) continue
+        // 自身当前状态已有基础声明时不重复发布。
+        if (definition.baseNode && !declaredVariable(definition.node) && !definition.sourceNode) continue
       }
       const path = state === current ? definition.path : appendStateCondition(definition.path, state)
       desired.set(conditionAddressKey(path), { material, rule, path })

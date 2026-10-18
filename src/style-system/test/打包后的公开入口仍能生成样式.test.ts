@@ -19,12 +19,12 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     const { pathToFileURL } = await import('node:url')
     const styleSystem = await import(pathToFileURL(modulePath).href)
     const surfaceName = styleSystem.variableName('bundle-surface')
-    const line = styleSystem.variable(surfaceName, 'bundle-line')
+    const line = styleSystem.variable(() => surface, 'bundle-line')
     const surface = styleSystem.variable('black', { name: surfaceName })
     const opacity = styleSystem.variable(1, { name: 'bundle-opacity', states: { hover: 0.5 } })
     styleSystem.rules('.Built', [
       [styleSystem.key('align-items'), 'center'], [styleSystem.key('margin-left'), '2px'],
-      [styleSystem.key('color'), surface.name], [styleSystem.key('border-color'), line.name], [styleSystem.key('opacity'), opacity],
+      [styleSystem.key('color'), surface], [styleSystem.key('border-color'), line], [styleSystem.key('opacity'), opacity],
       [surface, 'blue'],
     ])
     const count = styleSystem.variable(1, { name: 'bundle-modified-count' })

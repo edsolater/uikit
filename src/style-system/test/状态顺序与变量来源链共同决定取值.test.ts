@@ -3,7 +3,6 @@ import { expect, test, vi } from 'vitest'
 import { stateCondition, appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
 import { condition } from '../condition'
 import { variable } from '../variable'
-import { clusterFrom, variableCluster } from '../variable-cluster'
 import { compileRules } from '../css-root'
 import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
@@ -35,16 +34,6 @@ test('已求值的可调用默认内容不会在状态缺项时再次调用', ()
   const css = compileRules([[[condition('.Example')], 'width', size]])
   expect(css).toContain('--callable-default-size: 10px;')
   expect(content).not.toHaveBeenCalled()
-})
-test('Cluster 成员未覆盖的更高优先级状态仍沿来源成立', () => {
-  const source = variable(1, { name: 'source-size', states: { compositionB: 3 } })
-  const next = clusterFrom(variableCluster({ default: source, extra: variable(4, { name: 'source-extra-size' }) }), {
-    default: { name: 'next-size', states: { compositionA: 2 } },
-    extra: { name: 'next-extra-size' },
-  })
-  const css = compileRules([[[condition('.Example')], 'width', next]])
-  expect(css).toContain('--next-size: 2;')
-  expect(css).toContain('--next-size: var(--source-size);')
 })
 
 /** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */

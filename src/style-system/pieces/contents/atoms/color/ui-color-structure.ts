@@ -23,39 +23,6 @@ export function toJSSColor(color: ColorMaterial, name: string): Variable {
 }
 
 /**
- * 按内容色来源生成颜色族成员，名称沿用 base 的地址；浅底透明度默认 0.14，边线默认 0.44。
- * strong 是完整颜色内容；省略时沿用 base。返回成员结构，由定义端聚合为 VariableCluster。
- */
-export function baseUIColorStructure({
-  base,
-  softAlpha = 0.14,
-  lineAlpha = 0.44,
-  content,
-  strong,
-}: {
-  base: Variable
-  softAlpha?: number
-  lineAlpha?: number
-  content: ValueInput
-  strong?: ValueInput
-}) {
-  const baseName = base.key.toCSSString()
-  return {
-    default: base,
-    strong: strong === undefined ? base : variable(strong, `${baseName}-strong`),
-    soft: variable(
-      oklch(base, { alpha: softAlpha }),
-      `${baseName}-soft`,
-    ),
-    line: variable(
-      oklch(base, { alpha: lineAlpha }),
-      `${baseName}-line`,
-    ),
-    content: variable(content, `${baseName}-content`),
-  }
-}
-
-/**
  * 由当前底色求可读内容色，并按原配方保留少量底色气息。
  */
 export function readableContent(base: Variable) {
