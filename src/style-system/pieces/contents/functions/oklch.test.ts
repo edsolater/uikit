@@ -1,6 +1,6 @@
 /** 验证普通与相对 OKLCH 通道、依赖消费和缺失内容边界。 */
 import { expect, test } from 'vitest'
-import { oklch } from './oklch'
+import { oklch, oklchChannels } from './oklch'
 import { variable } from '../../../variable'
 import { condition } from '../../../condition'
 import { compileRules } from '../../../css-root'
@@ -60,4 +60,16 @@ test('完整通道内容保留输出，来源或通道缺失时不产生颜色',
   ])
   expect(css).toContain('color: oklch(from red calc(l + 0.1) c h / alpha);')
   expect(css).not.toContain('.Missing')
+})
+
+test('直接构造通道时不提前读取闭包，实际消费使用当时的变化', () => {
+  let delta = 0.1
+  let consumed = false
+  const changes = { lightness: (current: import('../../../content').Expression) => { consumed = true; return add(current, delta) } }
+  const channels = oklchChannels(changes)
+  expect(consumed).toBe(false)
+  delta = 0.2
+  changes.lightness = current => { consumed = true; return add(current, delta * 2) }
+  const css = compileRules([[['.LazyChannels'], '--channels', channels]])
+  expect(css).toContain('--channels: calc(l + 0.4) c h / alpha;')
 })

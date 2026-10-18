@@ -18,7 +18,7 @@ export type Declaration<C = ValueInput | undefined> = [key: Exclude<JSSKey, stri
 export interface DeclareProtocol {
   key: Exclude<JSSKey, string>
   /** 内容生产函数在编译消费时执行；undefined 表示不输出。 */
-  content: ValueInput | (() => ValueInput)
+  content: ValueInput
   /** 共同声明的依赖材料；覆盖自身内容时仍保留这些关系。 */
   declarations?: DeclareProtocol[]
 }
@@ -39,7 +39,7 @@ export const isCSSPair = (input: unknown): input is [JSSKey, unknown] =>
  * 声明 key/content 材料或局部覆盖；自定义属性建立后续修改使用的基础声明。
  * 其他 Key 直接配对内容，不要求材料具有 Variable 身份。
  */
-export function declare(target: DeclareProtocol, content?: ValueInput | (() => ValueInput)): Declaration
+export function declare(target: DeclareProtocol, content?: ValueInput): Declaration
 export function declare<C = ValueInput | undefined>(key: Exclude<JSSKey, string>, content: C): Declaration<C>
 export function declare(key: DeclareProtocol | Exclude<JSSKey, string>, ...contents: unknown[]): Declaration<unknown> {
   if (hasProperty(key, 'content') && matchShape(key, declareShape)) {

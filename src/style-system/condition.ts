@@ -1,6 +1,6 @@
 /** 创建 Condition，并表达目标、状态与 CSS 输出地址。 */
 import type { StateCondition } from './pieces/state-conditions'
-import { isString } from '@edsolater/fnkit'
+import { assert, isString } from '@edsolater/fnkit'
 
 /** 一层 CSS 地址；header 同时是身份和输出块头。 */
 export interface Condition {
@@ -10,6 +10,7 @@ export interface Condition {
 
 /** 创建一层 CSS 地址。 */
 export function condition(header: string): Condition {
+  assert(isString(header), 'Condition 的 header 必须是字符串。')
   return { header }
 }
 
@@ -48,11 +49,13 @@ export type ConditionInput = Condition | string | (Condition | string)[] | undef
 
 /** 创建 `@media` Condition。 */
 export function media(query: string): Condition {
+  assert(isString(query), 'media 的查询必须是字符串。')
   return condition(`@media ${query}`)
 }
 
 /** 创建 CSS `@function` Condition。 */
 export function functionDefinition(signature: string): Condition {
+  assert(isString(signature), 'functionDefinition 的签名必须是字符串。')
   return condition(`@function ${signature}`)
 }
 

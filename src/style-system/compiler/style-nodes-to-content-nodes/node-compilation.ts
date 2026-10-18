@@ -4,11 +4,11 @@
  *
  * 将跨波进度和内容链访问留在同一责任内，供编排统一推进。
  */
-import { assert, isArray, isIndexNumber, isObjectLike, isString, isNumber, isUndefined } from '@edsolater/fnkit'
+import { assert, isArray, isIndexNumber, isObjectLike, isString, isNumber, isUndefined, isFunction, result } from '@edsolater/fnkit'
 import { outputConditionPath, type ConditionPath, type CSSConditionPath } from '../../condition'
 import type { JSSKey } from '../../key'
 import type { Rules } from '../../rule'
-import { hasJSSContentOnActiveMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
+import { isJSSContent, hasJSSContentOnActiveMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
 import type { JSSStyleNode } from '../rules-to-style-nodes'
 import type { ASTSession, ASTController, RoleCompilationState, ContentCompilationRecord } from '../ast-controller'
 import type { ResourceCompilation } from './resource-compilation'
@@ -57,6 +57,12 @@ function visitContent(
     assert(!activeObjects.has(input), 'CSS 内容存在循环引用，无法生成 CSS。')
     activeObjects.add(input)
     try {
+      let record = state.contents.get(input)
+      if (!record) { record = { content: input, notified: false }; state.contents.set(input, record) }
+      if (isFunction(input) && !isJSSContent(input)) {
+        if (!record.notified) { record.content = result(input); record.notified = true }
+        return visit(record.content, depth + 1)
+      }
       if (hasJSSContentOnActiveMethod(input)) activate(input)
 
       return hasJSSContentOnCompileMethod(input)
@@ -69,16 +75,12 @@ function visitContent(
 
   /** 执行当前对象的一次编译并延续替代链；跨波复用进度，完成结果仍绑定原对象。 */
   function compile(input: JSSContent & Required<Pick<JSSContent, 'onCompile'>>, depth: number): boolean {
-    let record = state.contents.get(input)
+    const record = state.contents.get(input)!
     const earliestWave = input.compileWaveIndex ?? 0
     assert(isIndexNumber(earliestWave), 'compileWaveIndex 必须是非负整数。')
     if (!record?.notified && earliestWave > wave) {
       visitChildren(input, depth)
       return false
-    }
-    if (!record) {
-      record = { content: input, notified: false }
-      state.contents.set(input, record)
     }
     if (!record.notified) {
       budget.operations++
@@ -89,6 +91,8 @@ function visitContent(
       try { input.onCompile(notification, controller) }
       finally { delete record.notifyingContext }
       record.notified = context.node.deferredReason === deferredReason
+      // 波次门前访问的是输入依赖；编译完成后重新读取实际产物的依赖。
+      if (record.notified) delete record.dependencies
     }
     if (!record.notified) return false
     if (!session.hasOutput(context.node)) return true
@@ -97,8 +101,12 @@ function visitContent(
 
   /** 访问依赖并判断当前输出；无输出对象等待依赖完成后才从内容链消失。 */
   function visitChildren(input: object, depth: number): boolean {
-    const dependencyValue = 'dependencies' in input ? input.dependencies : undefined
-    const dependencies = isArray(dependencyValue) ? dependencyValue : undefined
+    const record = state.contents.get(input)!
+    if (!('dependencies' in record)) {
+      const dependencyValue = 'dependencies' in input ? input.dependencies : undefined
+      record.dependencies = isArray(dependencyValue) ? dependencyValue.slice() : undefined
+    }
+    const dependencies = record.dependencies
     let complete = true
     for (const child of dependencies ?? []) {
       const finished = visit(child, depth + 1)

@@ -2,7 +2,7 @@
  *
  * 验证公开入口、现成 Key 与创建登记在打包后仍可生成样式。
  *
- * 防止模块裁剪使名称、别名或组合协议丢失。
+ * 防止模块裁剪使名称、别名或组合协议丢失。生成模块写入临时文件，避开 Windows 对超长 data URL 的路径限制。
  */
 /// <reference types="node" />
 import { execFileSync } from 'node:child_process'
@@ -13,8 +13,11 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     const result = await Bun.build({ entrypoints: ['./src/style-system/index.ts'], target: 'browser', write: false, minify: false })
     if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\\n'))
     const source = await result.outputs[0].text()
-    const moduleURL = 'data:text/javascript;base64,' + Buffer.from(source).toString('base64')
-    const styleSystem = await import(moduleURL)
+    const modulePath = process.cwd() + '/agents/run/bundle-public-' + crypto.randomUUID() + '.mjs'
+    await Bun.write(modulePath, source)
+    try {
+    const { pathToFileURL } = await import('node:url')
+    const styleSystem = await import(pathToFileURL(modulePath).href)
     const surfaceName = styleSystem.variableName('bundle-surface')
     const line = styleSystem.variable(surfaceName, 'bundle-line')
     const surface = styleSystem.variable('black', { name: surfaceName })
@@ -28,6 +31,10 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     styleSystem.rules('.Built', [styleSystem.declare(count)])
     styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, { type: 'expression', detail: currentExpression => styleSystem.add(currentExpression, 3) })])
     console.log(styleSystem.compileCSS())
+    } finally {
+      const { unlinkSync } = await import('node:fs')
+      unlinkSync(modulePath)
+    }
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
   expect(output).not.toContain(':where(:root) {\n--bundle-surface:')
@@ -58,7 +65,11 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
     })
     if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\\n'))
     const source = await result.outputs[0].text()
-    const styleSystem = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'))
+    const modulePath = process.cwd() + '/agents/run/bundle-keys-' + crypto.randomUUID() + '.mjs'
+    await Bun.write(modulePath, source)
+    try {
+    const { pathToFileURL } = await import('node:url')
+    const styleSystem = await import(pathToFileURL(modulePath).href)
     const { $boxShadow, resolveJSSKey } = styleSystem
     if (resolveJSSKey('box-shadow') !== $boxShadow || resolveJSSKey('boxShadow') !== $boxShadow)
       throw new Error('现成 Key 的名称与别名没有解析到原定义。')
@@ -68,6 +79,10 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
       throw new Error('新建 Key 的名称与别名没有解析到原定义。')
     styleSystem.rules('.BundledCustomJoin', [[spacing, '2px'], [spacing.name, '3px'], ['bundleCombinedSpacing', '4px']])
     console.log(styleSystem.compileCSS())
+    } finally {
+      const { unlinkSync } = await import('node:fs')
+      unlinkSync(modulePath)
+    }
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
   expect(output).toContain('box-shadow: 1px 2px red, 3px 4px blue, 5px 6px green;')

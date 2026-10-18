@@ -44,8 +44,9 @@ export interface Modification<Detail = unknown, Type extends string = string> ex
 export function modification<Type extends keyof typeof modificationTypes>(
   definition: Pick<Modification<ModificationDetails[Type], Type>, 'type' | 'detail'> & { name?: string },
 ): Modification<ModificationDetails[Type], Type> {
+  assert(isString(definition.type), 'Modification 尚未支持内容领域：type 必须是字符串。')
   assert(
-    isString(definition.type) && Object.hasOwn(modificationTypes, definition.type),
+    Object.hasOwn(modificationTypes, definition.type),
     `Modification 尚未支持内容领域：${definition.type}。`,
   )
   const strategy = (modificationTypes as ModificationStrategies)[definition.type]

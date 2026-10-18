@@ -7,7 +7,7 @@ import { add, multiply } from '../pieces/contents/functions/calc'
 import { variable } from '../variable'
 import { modify } from '../operations/modify'
 import { key, type JSSKey } from '../key'
-import type { ValueInput } from '../value'
+import { value, type ValueInput } from '../value'
 import * as variables from '../variable'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 
@@ -240,4 +240,76 @@ test('extend的新默认20px重绑继承规则，覆盖一个状态仍保留另�
   expect(getComputedStyle(inherited).width).toBe('50px')
   delete inherited.dataset.other
   expect(getComputedStyle(inherited).width).toBe('40px')
+})
+
+test('Value 生产函数求得的 Name 依赖在子元素重新派生', () => {
+  const source = variables.variableName('browser-produced-source')
+  const derived = variable(multiply(value(() => source), 2), { name: 'browser-produced-derived' })
+  const css = compileRules([
+    [['.ProducedParent'], '--browser-produced-source', '3px'],
+    [['.ProducedParent'], 'width', derived],
+    [['.ProducedChild'], '--browser-produced-source', '7px'],
+    [['.ProducedChild'], 'width', 'var(--browser-produced-derived)'],
+  ])
+  expect(css).toMatch(/\.ProducedChild\s*\{[^}]*--browser-produced-derived: calc\(var\(--browser-produced-source\) \* 2\);/)
+  const parent = mountCSS(css, 'ProducedParent')
+  const child = parent.appendChild(document.createElement('div'))
+  child.className = 'ProducedChild'
+  expect(getComputedStyle(parent).width).toBe('6px')
+  expect(getComputedStyle(child).width).toBe('14px')
+})
+
+test('生产函数隐藏的 Name 在实际消费位置建立关系，跟随外部局部覆盖', () => {
+  const source = variable('3px', { name: 'expanded-local-source' })
+  const derived = variable(multiply(value(() => source.name), 2), { name: 'expanded-local-derived' })
+  const css = compileRules([[['.LocalConsumer'], 'width', derived]])
+  expect(css).toMatch(/\.LocalConsumer\s*\{[^}]*--expanded-local-derived: calc\(var\(--expanded-local-source\) \* 2\);/)
+  const element = mountCSS(css, 'LocalConsumer')
+  element.style.setProperty('--expanded-local-source', '7px')
+  expect(getComputedStyle(element).width).toBe('14px')
+})
+
+test.each(['直接', '状态回调', '嵌套生产'])('只有%s状态配方引用 Name 时，子来源覆盖只在该状态重新派生', entry => {
+  const address = `expanded-state-source-${entry}`
+  const output = `expanded-state-derived-${entry}`
+  const source = variables.variableName(address)
+  const recipe = multiply(entry === '嵌套生产' ? value(() => source) : source, 2)
+  const derived = variable('1px', { name: output, states: { '&[data-active]': entry === '状态回调' ? () => recipe : recipe } })
+  const css = compileRules([
+    [['.StateParent'], `--${address}`, '3px'], [['.StateParent'], 'width', derived],
+    [['.StateChild'], `--${address}`, '7px'], [['.StateChild'], 'width', `var(--${output})`],
+  ])
+  const parent = mountCSS(css, 'StateParent')
+  parent.dataset.active = ''
+  const child = parent.appendChild(document.createElement('div'))
+  child.className = 'StateChild'
+  expect(getComputedStyle(parent).width).toBe('6px')
+  expect(getComputedStyle(child).width).toBe('6px')
+  child.dataset.active = ''
+  expect(getComputedStyle(child).width).toBe('14px')
+  delete parent.dataset.active
+  delete child.dataset.active
+  expect(getComputedStyle(child).width).toBe('1px')
+})
+
+test('联动状态在当地展开出另一 Name 后，后代仍沿实际条件边重算', () => {
+  const first = variables.variableName('expanded-state-cascade-first')
+  const second = variables.variableName('expanded-state-cascade-second')
+  const derived = variable(() => ({ onCompile(context, controller) {
+    controller.setContent(context, context.conditionPath.targetConditionPath.some(item => item.header === '.CascadeParent') ? 1 : 2)
+  } }), { name: 'expanded-state-cascade-derived', states: { '&[data-live]': base => multiply(base === 1 ? first : second, 2) } })
+  const css = compileRules([
+    [['.CascadeParent'], '--expanded-state-cascade-first', '3px'], [['.CascadeParent'], '--expanded-state-cascade-second', '5px'], [['.CascadeParent'], 'width', derived],
+    [['.CascadeChild'], '--expanded-state-cascade-first', '7px'], [['.CascadeChild'], 'width', 'var(--expanded-state-cascade-derived)'],
+    [['.CascadeGrandchild'], '--expanded-state-cascade-second', '11px'], [['.CascadeGrandchild'], 'width', 'var(--expanded-state-cascade-derived)'],
+  ])
+  const parent = mountCSS(css, 'CascadeParent')
+  const child = parent.appendChild(document.createElement('div'))
+  child.className = 'CascadeChild'
+  const grandchild = child.appendChild(document.createElement('div'))
+  grandchild.className = 'CascadeGrandchild'
+  for (const element of [parent, child, grandchild]) element.dataset.live = ''
+  expect(getComputedStyle(parent).width).toBe('6px')
+  expect(getComputedStyle(child).width).toBe('10px')
+  expect(getComputedStyle(grandchild).width).toBe('22px')
 })

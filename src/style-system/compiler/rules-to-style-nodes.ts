@@ -1,5 +1,5 @@
 /** 将有序 Rules 展开为带条件地址的 JSS 样式节点队列。 */
-import { assert, isArray, isNumber, isString } from '@edsolater/fnkit'
+import { assert, isFunction, isArray, isNumber, isString } from '@edsolater/fnkit'
 import { condition, type ConditionPath, type TargetConditionPath } from '../condition'
 import type { JSSKey } from '../key'
 import type { Rules } from '../rule'
@@ -36,6 +36,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
     try {
       for (const [relativePath, ruleKey, ruleContent] of rules) {
         const targetConditionPath = [...parentPath, ...(relativePath ?? []).map((item) => isString(item) ? condition(item) : item)]
+        assert(targetConditionPath.every(item => isString(item.header)), 'CSS Condition 的 header 必须是字符串。')
         const key = ruleKey ?? inheritedKey
         if (isArray(ruleContent)) {
           assert(
@@ -45,7 +46,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
           appendStyleNodes(ruleContent as Rules, targetConditionPath, key)
           continue
         }
-        assert(ruleContent === undefined || isString(ruleContent) || isNumber(ruleContent) || isJSSContent(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
+        assert(ruleContent === undefined || isString(ruleContent) || isNumber(ruleContent) || isJSSContent(ruleContent) || isFunction(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
         styleNodes.push({
           compileRevision: 0,
           conditionPath: { targetConditionPath, stateConditionPath: [], semanticPath: [...targetConditionPath] },

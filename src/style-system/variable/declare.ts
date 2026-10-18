@@ -5,10 +5,10 @@
  * 状态绑定 CSS 名称与本次基础，不应由是否经过 Modify 入口决定。
  */
 import { containKey, result } from '@edsolater/fnkit'
-import type { ASTController } from '../compiler/ast-controller'
+import type { ASTController, ContentCompilationRecord } from '../compiler/ast-controller'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import { conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from '../condition'
-import type { JSSCompileContext, JSSContent } from '../content'
+import { isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { Declaration } from '../operations/declare'
 import { keyPriority, propertyName, type JSSKey } from '../key'
 import { appendStateCondition, type StateCondition } from '../pieces/state-conditions'
@@ -21,6 +21,10 @@ export interface VariableDefinition {
   node: JSSStyleNode
   path: ConditionPath
   variable?: VariableTarget
+  sourceNode?: JSSStyleNode
+  /** 基础的真实声明或消费来源；生成投影沿用它，重建时核对其位置记录。 */
+  originNode: JSSStyleNode
+  sourceCompilation?: ContentCompilationRecord
   baseContent: ValueInput
   baseKey: JSSKey
   baseName?: string
@@ -33,6 +37,7 @@ interface VariableDeclaration extends JSSContent {
   kind: 'variable-declaration'
   variable: VariableTarget
   content: VariableDefaultValue
+  originNode?: JSSStyleNode
 }
 const definitions = new WeakMap<JSSStyleNode, { input: unknown; key: unknown; revision: number; value: VariableDefinition }>()
 const bindings = new WeakMap<JSSStyleNode, Map<VariableTarget, VariableDefinition>>()
@@ -59,22 +64,29 @@ export const findVariableDeclaration = (controller: ASTController, variable: Var
       || keyPriority(right.key) - keyPriority(left.key) || controller.nodes().indexOf(right) - controller.nodes().indexOf(left))[0]
 
 /**
- * 读取已经形成的声明材料，不查询或生成修改链。
+ * 读取节点所属的声明材料；基础与状态产物在创建时沿用所属声明，不改变同对象归属选择。
  */
 export const variableDefinition = (node: JSSStyleNode): VariableDefinition | undefined => definitions.get(node)?.value
 
 /**
- * 显式声明自身负责基础与状态，后到声明使受影响的消费者重新选择归属。
+ * 创建独立变量声明；其自身成为基础来源，后到声明使消费者重新选择归属。
  */
 export function declareVariable(variable: VariableTarget, content: VariableDefaultValue, priority = variable.key.priority): Declaration {
+  return createVariableDeclaration(variable, content, priority)
+}
+
+/**
+ * 创建基础与状态材料；内部联动交付原来源，独立声明以自身为来源。
+ */
+export function createVariableDeclaration(variable: VariableTarget, content: VariableDefaultValue, priority: number | undefined, originNode?: JSSStyleNode): Declaration {
   variable = resolveVariable(variable)
   const declaration: VariableDeclaration = {
-    kind: 'variable-declaration', variable, content, resourceIdentity: Symbol('variable-declaration'),
+    kind: 'variable-declaration', variable, content, originNode, resourceIdentity: Symbol('variable-declaration'),
     /**
-     * 发布本次基础及自身状态，并使改归当前声明的消费者重新进入普通编译波。
+     * 发布本次基础，状态在基础完成后的统一核验中绑定；改归当前声明的消费者重新编译。
      */
     onCompile(context, controller) {
-      syncVariableStates(ensureDefinition(context.node, controller), [], controller)
+      ensureDefinition(context.node, controller)
       for (const node of controller.nodes()) if (declaredVariable(node) === variable) for (const consumer of variableDefinition(node)?.consumers ?? [])
         if (node !== context.node && findVariableDeclaration(controller, variable, consumer.conditionPath) === context.node) consumer.compileRevision++
     },
@@ -122,8 +134,9 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController): Variab
   }
   const variable = declaredVariable(node)
   const target = variable ?? (isVariable(node.key) ? resolveVariable(node.key) : undefined)
+  const input = variable ? (node.content as VariableDeclaration).content : node.content as ValueInput
   const definition: VariableDefinition = { node, path: node.conditionPath, variable: target,
-    baseContent: result(variable ? (node.content as VariableDeclaration).content : node.content as ValueInput),
+    baseContent: input, originNode: variable ? (node.content as VariableDeclaration).originNode ?? node : node,
     baseName: propertyName(node.key!).slice(2),
     baseKey: variable ? { toCSSString: () => `--${definition.baseName}`, priority: keyPriority(node.key), join: joinVariableValues } : node.key!,
     stateProducts: new Map(),
@@ -150,14 +163,14 @@ export function syncDeclarations(controller: ASTController, active: Map<string, 
 }
 
 /**
- * 发布基础时只选择本地址已命中规则，其他状态由统一状态发布处理。
+ * 发布基础内容；自动投影读取原消费位置，状态统一在基础完成后发布。
  */
 export function publishVariableBase(definition: VariableDefinition, controller: ASTController, anchor = definition.node): JSSStyleNode {
-  const state = currentVariableState(definition.variable?.states, definition.path)
-  const content = state ? result(definition.variable!.states!.get(state)!, definition.baseContent) : definition.baseContent
+  const content = definition.sourceNode ? controller.getCompiledValue(definition.sourceNode, definition.baseContent) : definition.baseContent
   const node = definition.baseNode = controller.insert({ before: anchor, conditionPath: definition.path }, [definition.baseKey, content],
     { owner: definition.node, productTag: definition })
-  variableProductRoles.set(node, state ? 'state' : 'base')
+  definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
+  variableProductRoles.set(node, 'base')
   return node
 }
 
@@ -184,7 +197,7 @@ export function syncVariableStates(definition: VariableDefinition, materials: It
       if (current && state.order <= current.order) {
         if (state !== current) continue
         // 借用规则不改写当前明确值；自身当前状态已有基础声明时不重复发布。
-        if (material !== definition.variable || definition.baseNode) continue
+        if (material !== definition.variable || definition.baseNode && !declaredVariable(definition.node) && !definition.sourceNode) continue
       }
       const path = state === current ? definition.path : appendStateCondition(definition.path, state)
       desired.set(conditionAddressKey(path), { material, rule, path })
@@ -212,10 +225,11 @@ export function syncVariableStates(definition: VariableDefinition, materials: It
     const position = anchor ? { after: anchor } : { before: definition.node }
     const node = controller.insert(
       { ...position, conditionPath: input.path },
-      [definition.baseKey, result(input.rule, definition.baseContent)],
+      [definition.baseKey, resolveStateContent(input.rule, definition, controller)],
       { owner: definition.node, productTag: definition },
     )
     if (anchor) anchor = node
+    definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
     variableProductRoles.set(node, 'state')
     definition.stateProducts.set(address, { ...input, node })
     changed = true
@@ -228,4 +242,20 @@ export function syncVariableStates(definition: VariableDefinition, materials: It
  */
 function currentVariableState(states: VariableTarget['states'], path: ConditionPath) {
   return [...states?.keys() ?? []].findLast(state => path.stateConditionPath.some(item => item.name === state.name))
+}
+
+/**
+ * 状态回调接收本次声明基础；可调用内容对象仍保留内容协议。
+ */
+function resolveStateContent(rule: VariableStateRule, definition: VariableDefinition, controller: ASTController): ValueInput {
+  let base = definition.baseContent
+  const source = definition.sourceNode ?? definition.baseNode ?? definition.node
+  const seen = new Set<unknown>()
+  while (!seen.has(base)) {
+    seen.add(base)
+    const compiled = controller.getCompiledContent(source, base) as ValueInput
+    if (compiled === base) break
+    base = compiled
+  }
+  return isJSSContent(rule) ? rule : result(rule, base)
 }

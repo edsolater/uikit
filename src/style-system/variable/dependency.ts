@@ -4,22 +4,33 @@
  *
  * 子元素重新声明来源时，派生关系须在当地建立，不能只继承祖先已经算好的值。
  */
-import { mapGet } from '@edsolater/fnkit'
-import { condition, conditionAddressKey, isSemanticPathPrefix, type ConditionPath } from '../condition'
-import { isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
+import { isObjectLike, mapGet } from '@edsolater/fnkit'
+import { condition, conditionAddressKey, isSemanticPathPrefix, type ConditionPath, type StateConditionPath } from '../condition'
+import { type JSSCompileContext } from '../content'
 import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../key'
-import { isVariable, type VariableTarget } from './core'
-import { declaredVariable, declareVariable, findVariableDeclaration, publishVariableBase, syncVariableStates, syncDeclarations, variableDefinition,
+import { isVariable, type VariableTarget, type VariableStateRule } from './core'
+import { declaredVariable, createVariableDeclaration, findVariableDeclaration, publishVariableBase, syncVariableStates, syncDeclarations, variableDefinition,
   variableProductRoles, type VariableDefinition } from './declare'
 import { resolveVariable } from '../variable-cluster'
 import { isVariableName, getVariableNameAddress } from './name'
-import type { ASTController } from '../compiler/ast-controller'
+import type { ASTController, ContentCompilationRecord } from '../compiler/ast-controller'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
+import { appendStateCondition } from '../pieces/state-conditions'
 import type { ValueInput } from '../value'
 
-/** 已求得的消费配方及原节点快照；失效时退出名称索引。 */
-interface Consumption {
+/** 一份配方的展开位置、状态条件和真实基础来源。 */
+interface Recipe {
   content: ValueInput
+  /** 配方实际编译的位置；状态边读取具体状态产物的展开记录。 */
+  sourceNode: JSSStyleNode
+  states?: StateConditionPath
+  /** 状态边的真实基础来源；可为声明或原生消费，投影重建不自激。 */
+  originNode: JSSStyleNode
+  /** 原始状态规则的身份变化也会使联动失效。 */
+  rule?: VariableStateRule
+}
+/** 所选基础与原消费快照；失效时退出名称索引。 */
+interface Consumption extends Recipe {
   native: boolean
   revision: number
   keyInput: JSSKey | undefined
@@ -34,24 +45,35 @@ interface Usage {
 /** 自动声明的完整地址及实际需求；根基础、当地关系与状态只在此归一。 */
 interface DefinitionRequest {
   path: ConditionPath
+  sourceNode: JSSStyleNode
+  originNode: JSSStyleNode
   content: ValueInput
   owners: JSSStyleNode[]
   key: JSSKey
   kind: 'root' | 'local' | 'states'
 }
+/** 一份条件联动声明及其真实基础来源；实际状态产物不另建失效源。 */
+interface LinkedDeclaration {
+  node: JSSStyleNode
+  content: ValueInput
+  originNode: JSSStyleNode
+  originCompilation?: ContentCompilationRecord
+  rule?: VariableStateRule
+}
 /** 名称索引直接带当前配方，默认与联动不另存公共声明归属。 */
 interface DependencySession {
   usages: Map<VariableTarget, Usage>
-  observers: Map<string, Map<VariableTarget, Consumption>>
-  links: Map<JSSStyleNode, Map<VariableTarget, { node: JSSStyleNode; content: ValueInput }>>
+  observers: Map<string, Map<VariableTarget, Map<string, Recipe>>>
+  links: Map<JSSStyleNode, Map<VariableTarget, Map<string, LinkedDeclaration>>>
 }
 const sessions = new WeakMap<object, DependencySession>()
 
 /**
  * 记录实际访问的配方；只有原生 CSS 属性激活依赖，描述符和独立声明不激活。
  */
-export function observeVariable(target: VariableTarget, content: ValueInput, context: JSSCompileContext, controller: ASTController): void {
+export function observeVariable(target: VariableTarget, content: ValueInput, context: JSSCompileContext, controller: ASTController, sourceNode = context.node, originNode = variableDefinition(context.node)?.originNode ?? sourceNode): void {
   const session = sessionOf(context, controller)
+  if (context.role === 'declaration-key') return
   const usage = mapGet(session.usages, target, () => ({ consumers: new Map(), defaults: new Map(),
     defaultKey: { ...target.key, priority: keyPriority(target.key) - 1 },
   }))
@@ -59,7 +81,7 @@ export function observeVariable(target: VariableTarget, content: ValueInput, con
     && !propertyName(context.key).startsWith('--')
     && !context.conditionPath.targetConditionPath.some(item => /^@(property|function|font-face)\b/.test(item.header))
   if (!usage.consumers.has(context.node)) controller.onRemove(context.node, () => usage.consumers.delete(context.node))
-  usage.consumers.set(context.node, { content, native, revision: context.node.compileRevision,
+  usage.consumers.set(context.node, { content, sourceNode, originNode, native, revision: context.node.compileRevision,
     keyInput: context.node.key, contentInput: context.node.content })
 }
 
@@ -78,12 +100,14 @@ function sessionOf(context: JSSCompileContext, controller: ASTController): Depen
 /**
  * 只读已求得内容的结构化依赖，不再执行生产函数，也不把状态归属当图边。
  */
-function collectReferencedNames(content: unknown, seen = new Set<object>()): string[] {
-  if (!isJSSContent(content) || seen.has(content)) return []
+function collectReferencedNames(content: unknown, node: JSSStyleNode, controller: ASTController, seen = new Set<object>()): string[] {
+  if (!isObjectLike(content) || seen.has(content)) return []
   if (isVariable(content)) return [getVariableNameAddress(content.name)]
   if (isVariableName(content)) return [getVariableNameAddress(content)]
   seen.add(content)
-  return (content.dependencies ?? []).flatMap(item => collectReferencedNames(item, seen))
+  const compiled = controller.getCompiledContent(node, content)
+  if (compiled !== content) return collectReferencedNames(compiled, node, controller, seen)
+  return (controller.getContentCompilation(node, content)?.dependencies ?? []).flatMap(item => collectReferencedNames(item, node, controller, seen))
 }
 
 /**
@@ -98,8 +122,15 @@ function settleDeclarations(session: DependencySession, controller: ASTControlle
     }
     if (!input.native) continue
     mapGet(active, target.key.toCSSString(), () => new Set<VariableTarget>()).add(target)
-    for (const name of collectReferencedNames(input.content))
-      mapGet(mapGet(session.observers, name, () => new Map()), target, () => input)
+    observeRecipe(session, target, input, input.content, controller)
+  }
+  const definitions = new Set<VariableDefinition>()
+  for (const usage of session.usages.values()) for (const record of usage.defaults.values()) definitions.add(record.definition)
+  for (const node of controller.nodes()) { const definition = variableDefinition(node); if (definition) definitions.add(definition) }
+  for (const definition of definitions) for (const product of definition.stateProducts.values()) {
+    if (active.get(product.material.key.toCSSString())?.has(product.material))
+      observeRecipe(session, product.material, { content: definition.baseContent, sourceNode: product.node,
+        states: product.node.conditionPath.stateConditionPath, originNode: definition.originNode, rule: product.rule }, product.node.content, controller)
   }
   if (settleDefaults(session, active, controller)) return true
   return syncDeclarations(controller, active) || settleLinks(session, controller)
@@ -119,7 +150,7 @@ function settleDefaults(session: DependencySession, active: Map<string, Set<Vari
     for (const [consumer, input] of usage.consumers) {
       if (!declarations.length) {
         const path = { targetConditionPath: [condition(':root')], stateConditionPath: [] }
-        mapGet(desired, conditionAddressKey(path), (): DefinitionRequest => ({ path, content: input.content, owners: [], key: usage.defaultKey, kind: 'root' })).owners.push(consumer)
+        mapGet(desired, conditionAddressKey(path), (): DefinitionRequest => ({ path, sourceNode: input.sourceNode, originNode: input.originNode, content: input.content, owners: [], key: usage.defaultKey, kind: 'root' })).owners.push(consumer)
       }
       const rawLocal = declarations.some(node => !declaredVariable(node) && isSemanticPathPrefix(node.conditionPath, consumer.conditionPath))
         || nodes.some(node => declaredVariable(node) && node.key !== undefined && propertyName(node.key) === target.key.toCSSString()
@@ -128,8 +159,8 @@ function settleDefaults(session: DependencySession, active: Map<string, Set<Vari
       const declaration = findVariableDeclaration(controller, target, consumer.conditionPath)
       const local = declaration && variableDefinition(declaration)
       if (local && conditionAddressKey(local.path) === conditionAddressKey(consumer.conditionPath)) continue
-      const kind = (!declarations.length && needsLocalValue(input.content)) || target.declarations?.length ? 'local' : 'states'
-      mapGet(desired, conditionAddressKey(consumer.conditionPath), (): DefinitionRequest => ({ path: consumer.conditionPath,
+      const kind = (!declarations.length && collectReferencedNames(input.content, input.sourceNode, controller).length > 0) || target.declarations?.length ? 'local' : 'states'
+      mapGet(desired, conditionAddressKey(consumer.conditionPath), (): DefinitionRequest => ({ path: consumer.conditionPath, sourceNode: local?.baseNode ?? input.sourceNode, originNode: local?.originNode ?? input.originNode,
         content: local?.baseContent ?? input.content, owners: [], key: local?.baseKey ?? usage.defaultKey, kind })).owners.push(consumer)
     }
     requests.set(target, desired)
@@ -138,7 +169,7 @@ function settleDefaults(session: DependencySession, active: Map<string, Set<Vari
     const usage = session.usages.get(target)!
     for (const [address, record] of usage.defaults) {
       const wanted = desired.get(address)
-      if (wanted && wanted.content === record.definition.baseContent && wanted.key === record.definition.baseKey && wanted.kind === record.kind
+      if (wanted && wanted.sourceNode === record.definition.sourceNode && wanted.originNode === record.definition.originNode && controller.getContentCompilation(wanted.sourceNode, wanted.sourceNode.content) === record.definition.sourceCompilation && wanted.content === record.definition.baseContent && wanted.key === record.definition.baseKey && wanted.kind === record.kind
         && (!record.definition.baseNode || controller.nodes().includes(record.definition.baseNode))) continue
       if (record.definition.baseNode) controller.remove(record.definition.baseNode)
       for (const product of record.definition.stateProducts.values()) controller.remove(product.node)
@@ -153,11 +184,11 @@ function settleDefaults(session: DependencySession, active: Map<string, Set<Vari
       if (!record) {
         const owner = request.owners[0]
         const definition: VariableDefinition = { node: owner, path: request.path, variable: target,
-          baseContent: request.content, baseKey: request.key, stateProducts: new Map() }
+          baseContent: request.content, sourceNode: request.sourceNode, originNode: request.originNode, sourceCompilation: controller.getContentCompilation(request.sourceNode, request.sourceNode.content), baseKey: request.key, stateProducts: new Map() }
         if (request.kind !== 'states') {
           const anchor = request.kind === 'root' ? controller.nodes()[0] : owner
           const base = publishVariableBase(definition, controller, anchor)
-          if (variableProductRoles.get(base) !== 'state') variableProductRoles.set(base, 'default')
+          variableProductRoles.set(base, 'default')
         }
         usage.defaults.set(address, record = { definition, kind: request.kind })
         changed = true
@@ -173,44 +204,56 @@ function settleDefaults(session: DependencySession, active: Map<string, Set<Vari
 }
 
 /**
- * 来源拥有联动产物；当前名称索引同时提供有效消费材料，退出需求时撤销资格。
+ * 按实际展开位置登记配方名称边；状态边保留其条件，基础内容用于当地重新绑定。
+ */
+function observeRecipe(session: DependencySession, target: VariableTarget, input: Recipe, content: unknown, controller: ASTController): void {
+  const address = JSON.stringify((input.states ?? []).map(state => state.name))
+  for (const name of collectReferencedNames(content, input.sourceNode, controller))
+    mapGet(mapGet(session.observers, name, () => new Map()), target, () => new Map()).set(address, input)
+}
+
+/**
+ * 来源拥有联动产物；状态边只在合并后的状态地址发布，不泄漏为无条件基础。
  */
 function settleLinks(session: DependencySession, controller: ASTController): boolean {
   let changed = false
   for (const source of controller.nodes()) {
     if (!source.key || source.aggregate || ['default', 'control'].includes(variableProductRoles.get(source) ?? '') || declaredVariable(source) || source.content === undefined) continue
-    const targets = session.observers.get(propertyName(source.key)) ?? new Map<VariableTarget, Consumption>()
+    const targets = session.observers.get(propertyName(source.key)) ?? new Map<VariableTarget, Map<string, Recipe>>()
     let links = session.links.get(source)
     if (!links && targets.size) {
       session.links.set(source, links = new Map())
       controller.onRemove(source, () => session.links.delete(source))
     }
-    for (const [target, product] of links ?? []) if (!targets.has(target)) {
-      controller.remove(product.node); links!.delete(target); changed = true
+    for (const [target, products] of links ?? []) if (!targets.has(target)) {
+      for (const product of products.values()) { controller.remove(product.node); return true }
+      links!.delete(target); changed = true
     }
-    for (const [target, input] of targets) {
-      const content = input.content
+    for (const [target, inputs] of targets) {
       if (target.key.toCSSString() === propertyName(source.key)) continue
-      const previous = links!.get(target)
-      if (previous?.content === content) continue
-      if (previous) controller.remove(previous.node)
-      const node = controller.insert({ after: source, conditionPath: source.conditionPath },
-        declareVariable(target, content, keyPriority(target.key) - 1), { owner: source, productTag: target })
-      links!.set(target, { node, content })
-      variableProductRoles.set(node, 'linked')
-      controller.onRemove(node, () => links!.delete(target))
-      changed = true
+      const products = mapGet(links!, target, () => new Map())
+      for (const [address, product] of products) if (!inputs.has(address)) {
+        controller.remove(product.node); products.delete(address); return true
+      }
+      for (const [address, input] of inputs) {
+        const path = (input.states ?? []).reduce(appendStateCondition, source.conditionPath)
+        // 同一消费地址已物化该配方时，沿用其实际展开结果。
+        const local = session.usages.get(target)?.defaults.get(conditionAddressKey(path))
+        if (local && local.kind !== 'states') continue
+        const previous = products.get(address)
+        const origin = input.originNode
+        const sourceCompilation = controller.getContentCompilation(origin, origin.content)
+        if (previous && previous.content === input.content && previous.originNode === origin && previous.originCompilation === sourceCompilation && previous.rule === input.rule) continue
+        // 撤旧会级联移除当前来源，交下一轮用现存队列继续发布。
+        if (previous) { controller.remove(previous.node); return true }
+        const node = controller.insert({ after: source, conditionPath: path },
+          createVariableDeclaration(target, input.content, keyPriority(target.key) - 1, origin), { owner: source, productTag: target })
+        products.set(address, { node, content: input.content, originNode: origin, originCompilation: sourceCompilation, rule: input.rule })
+        variableProductRoles.set(node, 'linked')
+        controller.onRemove(node, () => products.delete(address))
+        changed = true
+      }
     }
   }
   return changed
-}
-
-/**
- * 结构化来源与编译内容需要当地关系，常量基础只从根继承。
- */
-function needsLocalValue(content: unknown, seen = new Set<JSSContent>()): boolean {
-  if (!isJSSContent(content) || seen.has(content)) return false
-  if (isVariable(content) || content.onCompile) return true
-  seen.add(content)
-  return content.dependencies?.some(item => needsLocalValue(item, seen)) ?? false
 }

@@ -4,7 +4,7 @@
 
 整组内容可复用现有 Variable 协议，不另建变量模型。
 */
-import { assert, Unresultable } from '@edsolater/fnkit'
+import { assert, isNumber, isString, Unresultable } from '@edsolater/fnkit'
 import { isVariable, variable, type Variable, type VariableOptions } from './variable/core'
 import type { JSSCompileContext } from './content'
 import type { ASTController } from './compiler/ast-controller'
@@ -25,6 +25,7 @@ export function variableCluster<Members extends { default: Variable } & Record<s
  * 按成员键返回原 Variable，未知键报错。
  */
   const select = Object.assign((name: keyof Members) => {
+    assert(isString(name) || isNumber(name) || typeof name === 'symbol', 'Variable Cluster 成员键必须是字符串、数字或 Symbol。')
     assert(Object.hasOwn(members, name), `Variable Cluster 未定义成员：${String(name)}。`)
     return members[name]
   }, { [Unresultable]: true as true })

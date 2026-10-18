@@ -5,7 +5,7 @@
  * 通道数据供 JS 调整，JSS 依赖供编译输出。
  */
 import { isFunction, isObject } from '@edsolater/fnkit'
-import { createJSSContent, isJSSContent, type Expression, type JSSContent } from '../../../content'
+import { createJSSContent, isJSSContent, type Expression } from '../../../content'
 import { value, type ExpressionValue, type ValueInput } from '../../../value'
 
 /** 普通 OKLCH 颜色通道；透明度省略时为完全不透明。 */
@@ -50,7 +50,7 @@ export function oklch(source: ValueInput, changes: OKLCHChanges | ValueInput): E
 export function oklch(source: OKLCHChannels | ValueInput, changes?: OKLCHChanges | ValueInput): ExpressionValue<OKLCHChannels> | Expression {
   if (arguments.length === 2) {
     const channels: ValueInput = isObject(changes) && !isJSSContent(changes)
-      ? { onCompile: (context, controller) => controller.setContent(context, oklchChannels(changes)) } satisfies JSSContent
+      ? oklchChannels(changes as OKLCHChanges)
       : changes
     return createJSSContent(resolve => {
       const color = resolve(source)
@@ -70,12 +70,18 @@ export function oklch(source: OKLCHChannels | ValueInput, changes?: OKLCHChanges
  * 将通道变化转为源无关的 l/c/h/alpha 内容；可调用 JSS 内容保留身份，普通回调收到当前通道表达式。
  */
 export function oklchChannels(changes: OKLCHChanges): Expression {
-  const channels = Object.entries({ l: changes.lightness, c: changes.chroma, h: changes.hue, alpha: changes.alpha }).map(
-    ([symbol, change]) =>
-      change === undefined ? symbol : !isJSSContent(change) && isFunction(change) ? change(value(symbol)) : change,
-  )
-  return createJSSContent(resolve => {
-    const values = channels.map(resolve)
-    return values.some(channel => channel === undefined) ? undefined : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
-  }, channels)
+  return createJSSContent(resolve => resolve(produceChannels), [produceChannels])
+
+  /**
+   * 在消费位置读取当前字段，通道回调仍收到对应符号表达式。
+   */
+  function produceChannels(): Expression {
+    const inputs = Object.entries({ l: changes.lightness, c: changes.chroma, h: changes.hue, alpha: changes.alpha }).map(
+      ([symbol, change]) => change === undefined ? symbol : !isJSSContent(change) && isFunction(change) ? change(value(symbol)) : change,
+    )
+    return createJSSContent(resolve => {
+      const values = inputs.map(resolve)
+      return values.some(channel => channel === undefined) ? undefined : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
+    }, inputs)
+  }
 }

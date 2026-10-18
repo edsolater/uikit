@@ -5,6 +5,8 @@
  * 让编译行为共用显式位置和存活来源，保留输出退出的区别。
  */
 import { assert } from '@edsolater/fnkit'
+import { createCompiledValue } from './compiled-value'
+import type { Value } from '../value'
 import { conditionAddressKey, type ConditionPath } from '../condition'
 import { propertyName, type JSSKey } from '../key'
 import type { JSSStyleNode } from './rules-to-style-nodes'
@@ -14,6 +16,8 @@ import type { JSSCompileContext } from '../content'
 export interface ContentCompilationRecord {
   content: unknown
   notified: boolean
+  /** 当前位置、当前访问阶段的依赖；分析与输出共用这份事实。 */
+  dependencies?: unknown[]
   /** 仅当前同步通知期间允许操作此记录，阻止旧上下文写入后来的记录。 */
   notifyingContext?: JSSCompileContext
 }
@@ -46,6 +50,12 @@ export type ASTPosition = { before: JSSStyleNode; after?: never } | { after: JSS
 export interface ASTController {
   /** 改写此次通知的内容位置；不改写整条声明，也不改变其他消费位置。显式 undefined 使此处不输出。 */
   setContent(context: JSSCompileContext, content: unknown): void
+  /** 读取当前声明中内容的已编译替代结果；未访问内容保持原输入。 */
+  getCompiledContent(node: JSSStyleNode, input: unknown): unknown
+  /** 为同一位置的自动输出复用已编译内容，避免再次执行配方。 */
+  getCompiledValue(node: JSSStyleNode, input: unknown): Value
+  /** 读取位置记录中的替代与实际依赖，不再触发业务 getter。 */
+  getContentCompilation(node: JSSStyleNode, input: unknown): ContentCompilationRecord | undefined
   /** 当前输出队列的有序查询，没有副作用；Key 按属性名、条件路径按输出地址匹配。 */
   search(query: ASTQuery): JSSStyleNode[]
   /** 按同一查询语义判断是否存在节点。 */
@@ -94,6 +104,17 @@ export function createASTController(session: ASTSession): ASTController {
       assert(session.isAlive(context.node) && record?.notifyingContext === context, '只能操作当前通知的内容位置。')
       record.content = content
     },
+    /** 读取角色访问已留下的事实，不触发新的内容求值。 */
+    getCompiledContent: (node, input) => {
+      if (input === null || typeof input !== 'object' && typeof input !== 'function') return input
+      const record = session.compilations.get(node)?.content.contents.get(input)
+      return record ? record.content : input
+    },
+    /** 将当前位置已完成的记录交付给输出视图，不执行内容。 */
+    getCompiledValue: (node, input) => createCompiledValue(input, session.compilations.get(node)!.content.contents),
+    /** 只查询已有位置事实，供分析读取依赖及核对失效身份。 */
+    getContentCompilation: (node, input) => input !== null && (typeof input === 'object' || typeof input === 'function')
+      ? session.compilations.get(node)?.content.contents.get(input) : undefined,
     search: (query) => session.nodes.filter(matching(query)),
     has: (query) => session.nodes.some(matching(query)),
     nodes: () => session.nodes.slice(),

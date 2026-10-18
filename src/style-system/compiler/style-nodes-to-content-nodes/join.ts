@@ -4,13 +4,14 @@
  *
  * 让隐藏结果保留依赖来源，失效时完整撤销全部历史。
  */
+import { createCompiledValue } from '../compiled-value'
 import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
 import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../../key'
 import type { JSSStyleNode } from '../rules-to-style-nodes'
 import type { ASTSession, ContentCompilationRecord } from '../ast-controller'
 import { contentToCSSString } from '../content-nodes-to-css-string'
-import { value, type Value, type ValueData } from '../../value'
+import { value } from '../../value'
 
 /** 业务连接回调前的一项声明输入；用于生成本次结果并核对后续失效。 */
 interface InputSnapshot {
@@ -56,18 +57,6 @@ function captureInputs(nodes: Iterable<JSSStyleNode>, compiledContents: (node: J
   const first = [...inputs.keys()][0]
   assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(inputs.get(first)!.key!)}。`)
   return { inputs, selected, anchor: [...selected.keys()].at(-1) ?? [...inputs.keys()].at(-1)!, join: [...joiners][0] }
-}
-
-/** 为原贡献建立惰性 Value；保留其位置解析结果，改写内容后由连接结果消费新内容。 */
-function createView(content: unknown, compiledContents: WeakMap<object, ContentCompilationRecord>): Value<ValueData> {
-  let view: Value<ValueData>
-  view = value(content as ValueData, {
-    get dependencies() { return view.content === content ? [] : value(view.content).dependencies },
-    toCSSString: (current, resolve) => value(current).toCSSString(current === content
-      ? (item) => contentToCSSString(item, compiledContents)
-      : resolve),
-  })
-  return view
 }
 
 /** 本次编译的同址连接；拥有输入快照与历史来源，只选择最新结果输出。 */
@@ -159,7 +148,7 @@ export class Join {
    * 只为已选择的同级贡献建立位置 Value 视图，再调用原 Key.join 或默认数组聚合。
    */
   private createContent(selected: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
-    const values = Array.from(selected, ([node, input]) => createView(input.content, this.compiledContents(node)))
+    const values = Array.from(selected, ([node, input]) => createCompiledValue(input.content, this.compiledContents(node)))
     return join ? join(values) : value(values)
   }
 

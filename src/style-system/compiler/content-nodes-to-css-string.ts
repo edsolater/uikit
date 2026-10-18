@@ -4,9 +4,9 @@
  *
  * 让输出保持编译位置与层级，不重新安排内容行为。
  */
-import { assert, isObjectLike, isString, isNumber } from '@edsolater/fnkit'
+import { assert, isObjectLike, isString, isNumber, isFunction } from '@edsolater/fnkit'
 import type { JSSContentNode } from './style-nodes-to-content-nodes/node-compilation'
-import { hasJSSContentOutput } from '../content'
+import { hasJSSContentOutput, isJSSContent } from '../content'
 import { propertyName } from '../key'
 import type { ContentCompilationRecord } from './ast-controller'
 
@@ -22,8 +22,11 @@ export function contentToCSSString(input: unknown, compiledContents: WeakMap<obj
     if (compiled && compiled.content !== input) {
       return contentToCSSString(compiled.content, compiledContents, reading)
     }
+    assert(!isFunction(input) || isJSSContent(input), 'CSS 生产函数尚未编译，请通过 dependencies 声明依赖。')
     if (!hasJSSContentOutput(input)) return undefined
-    return input.toCSSString((child) => contentToCSSString(child, compiledContents, reading))
+    const output = input.toCSSString((child) => contentToCSSString(child, compiledContents, reading))
+    assert(output === undefined || isString(output), 'CSS 内容的 toCSSString 必须返回字符串或 undefined。')
+    return output
   } finally {
     reading.delete(input)
   }
@@ -37,6 +40,7 @@ export function contentNodesToCSSString(contentNodes: JSSContentNode[]): string 
     const content = contentToCSSString(node.content, node.compiledContents)
     if (content === undefined) continue
     const nextHeaders = node.conditionPath.map((condition) => condition.header).filter((header) => header !== undefined)
+    assert(nextHeaders.every(isString), 'CSS Condition 的 header 必须是字符串。')
     let sharedDepth = 0
     while (sharedDepth < openHeaders.length && sharedDepth < nextHeaders.length && openHeaders[sharedDepth] === nextHeaders[sharedDepth]) sharedDepth++
     for (let index = openHeaders.length; index > sharedDepth; index--) lines.push('}')

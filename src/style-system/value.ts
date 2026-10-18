@@ -7,7 +7,8 @@
 import { assert, containKey, isArray, isFunction, isNullish } from '@edsolater/fnkit'
 import { isJSSContent, type Expression, type JSSContent, type JSSContentResolver } from './content'
 
-export type ValueInput = string | number | JSSContent | undefined
+/** 可编译内容；普通生产函数由编译器求值，可调用内容对象遵守自身协议。 */
+export type ValueInput = string | number | JSSContent | (() => ValueInput) | undefined
 /** Value 自己持有的数据；裸 RuleValue 数组仍由 Rules 解释。 */
 export type ValueData = ValueInput | boolean | null | object
 export type ValueToCSSString<T extends ValueData = ValueData> = (content: T, resolve: JSSContentResolver) => string | undefined
@@ -83,7 +84,7 @@ export function value<T extends ValueData>(content: T, options?: ValueOptions<T>
 export const isValue = (input: unknown): input is Value => containKey(input, 'kind') && input.kind === 'value'
 
 /**
- * 找出数组中的内容对象，原语和纯数据对象留给 Value 自身输出。
+ * 找出数组中的内容对象与生产函数，原语和纯数据对象留给 Value 自身输出。
  */
 function valueContents(content: unknown, active = new Set<object>(), depth = 0): ValueInput[] {
   assert(depth <= 256, 'Value 数组嵌套超过上限 256。')
@@ -93,7 +94,7 @@ function valueContents(content: unknown, active = new Set<object>(), depth = 0):
     try { return content.flatMap((item) => valueContents(item, active, depth + 1)) }
     finally { active.delete(content) }
   }
-  return isJSSContent(content) ? [content] : []
+  return isJSSContent(content) || isFunction(content) ? [content] : []
 }
 
 /**
@@ -108,7 +109,7 @@ function defaultToCSSString(content: unknown, resolve: JSSContentResolver, activ
     try { return joinCSSValues(content, resolve, ', ', active, depth + 1) }
     finally { active.delete(content) }
   }
-  return isJSSContent(content) ? resolve(content) : String(content)
+  return isJSSContent(content) || isFunction(content) ? resolve(content) : String(content)
 }
 
 /**

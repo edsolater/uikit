@@ -6,12 +6,12 @@
 */
 import { condition } from '../condition'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import type { JSSKeyObject } from '../key'
+import { propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { ASTController } from '../compiler/ast-controller'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
-import { hasProperty, mapGet, result } from '@edsolater/fnkit'
+import { assert, hasProperty, mapGet } from '@edsolater/fnkit'
 import { consumeDeclaration, findVariableDeclaration, joinVariableValues } from './declare'
 import { declare, type DeclareProtocol } from '../operations/declare'
 import { resolveVariable } from '../variable-cluster'
@@ -20,7 +20,7 @@ import { observeVariable } from './dependency'
 import { bindVariableName, getVariableNameAddress, type VariableName } from './name'
 
 /** 未命中状态时的声明内容；生产函数在编译消费时求值。 */
-export type VariableDefaultValue = ValueInput | (() => ValueInput)
+export type VariableDefaultValue = ValueInput
 /** 状态配方中的 base 是本次声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
 
@@ -174,7 +174,7 @@ export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyOb
     /**
      * 作为声明目标时输出材料的当前 CSS 名称。
      */
-    toCSSString: () => target.key.toCSSString(),
+    toCSSString: () => propertyName(target.key),
     /**
      * 天然材料的值引用与声明复用定义消费，Variable 直接使用已有内容协议。
      */
@@ -189,7 +189,7 @@ export function compileVariableContent(target: VariableTarget, context: JSSCompi
   const dependencies = consumeVariableDefinition(target, context, controller)
   if (context.role === 'declaration-key') return
   if (resolveVariable(context.input as VariableTarget) !== target && isJSSContent(target)) dependencies.push(target)
-  controller.setContent(context, createJSSContent(() => `var(${target.key.toCSSString()})`, dependencies))
+  controller.setContent(context, createJSSContent(() => `var(${propertyName(target.key)})`, dependencies))
 }
 
 /**
@@ -201,12 +201,17 @@ function consumeVariableDefinition(target: VariableTarget, context: JSSCompileCo
     if (existing) controller.depend(existing, { owner: context.node })
     else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
   }
-  if (context.role === 'declaration-key') { activateVariableResources(target, context, controller); return [] }
-  const defaultContent = result(target.content)
+  if (context.role === 'declaration-key') {
+    activateVariableResources(target, context, controller)
+    // 独立声明也启动统一稳定核验；键访问不登记值消费。
+    observeVariable(target, undefined, context, controller)
+    return []
+  }
   activateVariableResources(target, context, controller)
-  consumeDeclaration(context, controller, target)
-  observeVariable(target, defaultContent, context, controller)
-  return [defaultContent]
+  const definition = consumeDeclaration(context, controller, target)
+  const content = definition ? definition.baseContent : target.content
+  observeVariable(target, content, context, controller, definition?.baseNode, definition?.originNode)
+  return definition ? [] : [content]
 }
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
 const registrationSessions = new WeakMap<object, Map<VariableTarget, Set<JSSStyleNode>>>()
@@ -217,7 +222,7 @@ const registrationSessions = new WeakMap<object, Map<VariableTarget, Set<JSSStyl
 function activateVariableResources(variable: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
   const registration = variable.registration
   if (!registration) return
-  const address = `variable-registration:${variable.key.toCSSString()}`
+  const address = `variable-registration:${propertyName(variable.key)}`
   let registrations = registrationSessions.get(context.session)
   if (!registrations) registrationSessions.set(context.session, registrations = new Map())
   const active = registrations.has(variable)
@@ -235,7 +240,7 @@ function activateVariableResources(variable: VariableTarget, context: JSSCompile
   }
   for (const node of controller.search({ resourceAddress: address })) controller.remove(node)
   const registrationPath = {
-    targetConditionPath: [condition(`@property ${variable.key.toCSSString()}`)],
+    targetConditionPath: [condition(`@property ${propertyName(variable.key)}`)],
     stateConditionPath: [],
   }
   const provenance = { owner: context.node, resourceAddress: address, productTag: variable }
@@ -247,6 +252,8 @@ function activateVariableResources(variable: VariableTarget, context: JSSCompile
  * 生成 @property 的字段内容；省略 initialValue 时不提供 initial-value，生命周期由消费方处理。
  */
 export function variableRegistrationDeclarations(registration: NonNullable<VariableOptions['registration']>): [key: string, content: ValueInput][] {
+  assert(typeof registration.syntax === 'string', 'Variable registration.syntax 必须是字符串。')
+  assert(typeof registration.inherits === 'boolean', 'Variable registration.inherits 必须是 boolean。')
   const declarations: [key: string, content: ValueInput][] = [
     ['syntax', JSON.stringify(registration.syntax)],
     ['inherits', String(registration.inherits)],

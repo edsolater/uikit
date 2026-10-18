@@ -70,8 +70,14 @@ export function resolveJSSKey(input: JSSKey): JSSKey {
   throw new Error(`未知 JSSKey 名称：${input}。`)
 }
 
-/** 取得原生属性名。 */
-export const propertyName = (key: JSSKey): string => isString(key) ? key : key.toCSSString()
+/**
+ * 读取并校验声明属性名，拒绝输出协议返回函数等非文本内容。
+ */
+export function propertyName(key: JSSKey): string {
+  const name = isString(key) ? key : key.toCSSString()
+  assert(isString(name), 'JSSKey 的 toCSSString 必须返回属性名字符串。')
+  return name
+}
 
 /**
  * 读取声明键的有效等级；字符串与普通 Key 默认使用999，可调用 Cluster 同样读取自身等级。
