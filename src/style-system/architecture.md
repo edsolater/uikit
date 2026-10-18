@@ -80,7 +80,7 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
 | value.ts | 稳定 Value 的内容包装与输入类型 |
 | variable/index.ts | Variable 领域主动公开的创建、引用、材料类型和操作接入契约 |
-| variable/core.ts | Variable 注册时绑定名称、自然材料与唯一的定义消费投影、共同声明依赖与注册资源 |
+| variable/core.ts | Variable 注册时绑定名称、baseOn 的独立基础绑定、自然材料与唯一的定义消费投影、共同声明依赖与注册资源 |
 | variable/declare.ts | 公共声明基础、同名状态材料、消费者改绑与精确撤销；保留原 Key.join |
 | operations/modify.ts | Modify 双方协议、材料校验、领域应用策略与操作内容构造 |
 | variable/modify.ts | 执行已选应用、按需修改步骤、结果消费与撤销；引用公共声明 |

@@ -3,6 +3,7 @@ import { expect, test } from 'vitest'
 import { variable } from './core'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
+import type { ValueInput } from '../value'
 
 test('显式名称在消费与自身状态声明中保持一致', () => {
   const amount = variable(1, 'named-amount')
@@ -30,4 +31,10 @@ if (false) {
   variable(2, { extend: source })
   // @ts-expect-error 名称在注册时绑定，不能在之后赋入字符串改名。
   source.name = 'renamed-after-registration'
+  variable(base => {
+    const content: ValueInput = base
+    // @ts-expect-error 基础内容是 ValueInput，不是 any 或纯数字。
+    const number: number = base
+    return content
+  }, 'typed-base-recipe').baseOn(source)
 }

@@ -6,12 +6,12 @@
 */
 import { condition } from '../condition'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import { propertyName, type JSSKeyObject } from '../key'
+import { allocateVariableName, propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { ASTController } from '../compiler/ast-controller'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
-import { assert, hasProperty, mapGet } from '@edsolater/fnkit'
+import { assert, hasProperty, isFunction, mapGet, result } from '@edsolater/fnkit'
 import { consumeDeclaration, findVariableDeclaration, joinVariableValues } from './declare'
 import { declare, type DeclareProtocol } from '../operations/declare'
 import { resolveVariable } from '../variable-cluster'
@@ -19,8 +19,8 @@ import { parseVariableArgs, type VariableStateValues } from './args-parser'
 import { observeVariable } from './dependency'
 import { bindVariableName, getVariableNameAddress, type VariableName } from './name'
 
-/** 未命中状态时的声明内容；生产函数在编译消费时求值。 */
-export type VariableDefaultValue = ValueInput
+/** 未命中状态时的声明内容；生产函数消费时接收绑定基础，未绑定时无参执行。 */
+export type VariableDefaultValue = ValueInput | ((base?: ValueInput, ...args: never[]) => ValueInput)
 /** 状态配方中的 base 是本次声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
 
@@ -35,6 +35,11 @@ export interface Variable extends VariableTarget, JSSKeyObject {
   kind: 'variable'
   get name(): VariableName
   priority: number
+  /**
+   * 以指定内容为基础创建独立名称的 Variable，创建时继承当前默认配方和状态。
+   * 基础只作为当前默认生产函数的实参，在编译消费时传入。
+   */
+  baseOn(base: ValueInput): Variable
   /** 这一个 Variable 的基础内容、状态和可选行为。 */
   config: {
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
@@ -112,6 +117,17 @@ export function variable(input: VariableDefaultValue | VariableStateValues | (Va
   const self: Variable = {
     kind: 'variable',
     priority: config.priority,
+    /**
+     * 创建本次基础的独立变量；普通内容保持原样，生产配方延迟接收基础输入。
+     */
+    baseOn(base) {
+      let content = self.config.defaultValue
+      if (isFunction(content) && !isJSSContent(content)) {
+        const recipe = content
+        content = () => result(recipe, base)
+      }
+      return variable(content, { extend: self, name: allocateVariableName() })
+    },
     /**
      * 注册时绑定的名称引用，不支持后续替换。
      */
