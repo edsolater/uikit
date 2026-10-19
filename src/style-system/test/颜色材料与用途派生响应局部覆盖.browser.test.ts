@@ -116,7 +116,7 @@ test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后�
 })
 
 test('纸色与品牌变量局部修改后，用途色和品牌变化自动更新而不重编译', () => {
-  handles.push(rules('.semantic', [color({ content: interactiveColor, background: paperColor })]))
+  handles.push(rules('.semantic', [declare(brandColor), declare(paperColor), color({ content: interactiveColor, background: paperColor })]))
   handles.push(rule('.highlight', 'color', highlightColor))
   handles.push(rule('.canvas', 'background-color', paperColor))
   handles.push(rule('.text', 'color', inkColor))

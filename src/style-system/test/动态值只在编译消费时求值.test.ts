@@ -1,4 +1,5 @@
 /** 内容生产函数只在编译时求值，输出协议不接受函数冒充文本。 */
+import { whenSettled } from './when-settled'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { condition, media, functionDefinition } from '../condition'
@@ -140,11 +141,12 @@ test.each([false, true])('天然材料的 Key 输出函数时，值引用与注�
   expect(invalid).not.toHaveBeenCalled()
 })
 
-test('显式局部基础覆盖默认值时，不执行未使用的默认生产函数', () => {
-  const material = variable(() => { throw new Error('未使用的默认内容不能执行') }, {
+test('根默认生产函数独立提供基础，显式局部值及状态不被替换', () => {
+  const material = variable(() => '4px', {
     name: 'expanded-unused-default', states: { '&:hover': base => `${parseFloat(String(base)) * 2}px` },
   })
   const css = compileRules([[['.Explicit'], ...declare(material, '6px')], [['.Explicit'], 'width', material]])
+  expect(css).toMatch(/:root\s*\{[^}]*--expanded-unused-default: 4px;/)
   expect(css).toContain('--expanded-unused-default: 6px;')
   expect(css).toContain('--expanded-unused-default: 12px;')
 })
@@ -197,53 +199,65 @@ test('编译波前访问过依赖后，onCompile 更新的依赖仍在完成阶�
   expect(compileRules([[['.ChangedDependencies'], 'color', input]])).toContain('color: red;')
 })
 
-test('明确的 undefined 局部基础不会回退执行默认函数', () => {
-  const material = variable(() => { throw new Error('明确空基础不能读取默认内容') }, { name: 'expanded-explicit-empty' })
+test('明确的undefined局部基础不输出，根默认仍独立提供基础', () => {
+  const material = variable(() => '4px', { name: 'expanded-explicit-empty' })
   const css = compileRules([[['.EmptyBase'], ...declare(material, undefined)], [['.EmptyBase'], 'width', material]])
   expect(css).toContain('width: var(--expanded-explicit-empty);')
-  expect(css).not.toContain('--expanded-explicit-empty:')
+  expect(css).toMatch(/:root\s*\{[^}]*--expanded-explicit-empty: 4px;/)
+  expect(css.match(/\.EmptyBase\s*\{([^}]*)\}/)?.[1]).not.toContain('--expanded-explicit-empty:')
 })
 
 test('消费输入身份替换后，自动投影读取新的角色展开结果', () => {
   let fresh = false
   const material = variable(() => fresh ? '8px' : '4px', { name: 'expanded-input-replacement' })
-  const css = compileRules([[['.InputReplacement'], 'width', material], [[], undefined, { onCompile(_context, controller) {
-    let updated = false
-    controller.addSettlementCheck(() => {
-      if (updated) return false
-      updated = true
-      fresh = true
-      controller.search({ key: 'width' })[0].content = value(material)
-      return true
-    })
-  } }]])
+  const css = compileRules([[['.InputReplacement'], 'width', material], [[], undefined, whenSettled(controller => {
+    fresh = true
+    controller.search({ key: 'width' })[0].content = value(material)
+    return true
+  })]])
   expect(css).toContain('--expanded-input-replacement: 8px;')
   expect(css).not.toContain('--expanded-input-replacement: 4px;')
 })
 
-test('原消费位置重新展开后，已完成的子联动也撤销旧配方', () => {
+test.each(['基数', '另一个引用', '同址固定'])('原消费重访或显式接管后撤销旧联动与资源：%s', mode => {
   let factor = 2
   let childDone = false
   const source = variable('1px', 'expanded-linked-refresh-source')
-  const material = variable(() => ({ onCompile(context, controller) {
-    controller.setContent(context, multiply(source, factor))
-    if (context.conditionPath.targetConditionPath.some(item => item.header === '.RefreshChild')) childDone = true
-  } }), { name: 'expanded-linked-refresh-derived' })
+  const another = variable('2px', 'expanded-linked-refresh-another')
+  let selected = source
+  const sourceDeclaration = declare(source, '7px')
+  const material = variable(() => ({
+    onActive: context => selected === source && context.conditionPath.targetConditionPath.some(item => item.header === '.RefreshChild')
+      ? [[['.StaleLinkedResource'], 'display', 'block']] : [],
+    onCompile(context, controller) {
+      controller.setContent(context, multiply(selected, factor))
+      if (context.conditionPath.targetConditionPath.some(item => item.header === '.RefreshChild')) childDone = true
+    } }), { name: 'expanded-linked-refresh-derived' })
   const css = compileRules([
-    [['.RefreshParent'], 'width', material], [['.RefreshChild'], ...declare(source, '7px')],
-    [[], undefined, { onCompile(_context, controller) {
-      let updated = false
-      controller.addSettlementCheck(() => {
-        if (updated || !childDone) return false
-        updated = true
-        factor = 3
-        controller.search({ key: 'width' })[0].content = value(material)
+    [['.RefreshParent'], 'width', material], [['.RefreshChild'], ...sourceDeclaration], [['.RefreshChild'], ...declare(another, '11px')],
+    [[], undefined, whenSettled(controller => {
+      if (!childDone) return false
+      if (mode === '同址固定') {
+        const anchor = controller.search({ key: source.key }).find(node => node.content === sourceDeclaration[1])!
+        controller.insert({ before: anchor, conditionPath: anchor.conditionPath }, declare(material, 20), { owner: anchor })
         return true
-      })
-    } }],
+      }
+      factor = 3
+      if (mode === '另一个引用') selected = another
+      controller.search({ key: 'width' })[0].content = value(material)
+      return true
+    })],
   ])
-  expect(css).not.toContain(' * 2)')
-  expect(css.match(/--expanded-linked-refresh-derived: calc\(var\(--expanded-linked-refresh-source\) \* 3\);/g)).toHaveLength(3)
+  const child = css.match(/\.RefreshChild\s*\{([^}]*)\}/)?.[1]
+  if (mode === '同址固定') expect(child).toContain('--expanded-linked-refresh-derived: 20;')
+  else {
+    expect(css).not.toContain(' * 2)')
+    const formula = `--expanded-linked-refresh-derived: calc(var(${selected.toCSSString()}) * 3);`
+    expect(css.match(/:root\s*\{([^}]*)\}/)?.[1]).toContain(formula)
+    expect(child).toContain(formula)
+  }
+  if (mode !== '基数') expect(css).not.toContain('.StaleLinkedResource')
+  expect(css.match(/\.RefreshParent\s*\{([^}]*)\}/)?.[1]).not.toContain('--expanded-linked-refresh-derived:')
 })
 
 test('状态联动跟随其真实局部声明的基础重访，不借其他原生消费者代表来源', () => {
@@ -251,27 +265,31 @@ test('状态联动跟随其真实局部声明的基础重访，不借其他原�
   let grandchildDone = false
   const source = variable('1px', 'expanded-state-origin-source')
   const material = variable('1px', { name: 'expanded-state-origin-derived', states: { '&[data-active]': base => multiply(source, parseFloat(String(base))) } })
+  /**
+   * 提供重访前后的当地基础，并在Grandchild实际编译后开放后续重访步骤。
+   */
   const produceLocalBase = () => ({ onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) {
     controller.setContent(context, fresh ? '6px' : '5px')
     if (context.conditionPath.targetConditionPath.some(item => item.header === '.OriginGrandchild')) grandchildDone = true
   } })
   const declaration = declare(material, produceLocalBase)
   const css = compileRules([
-    [['.OriginParent'], 'width', material], [['.OriginChild'], ...declaration], [['.OriginGrandchild'], ...declare(source, '11px')],
-    [[], undefined, { onCompile(_context, controller) {
-      let updated = false
-      controller.addSettlementCheck(() => {
-        if (updated || !grandchildDone) return false
-        updated = true
-        fresh = true
-        controller.nodes().find(node => node.content === declaration[1])!.compileRevision++
-        return true
-      })
-    } }],
+    [['.OriginParent'], 'width', material], [['.OriginParent', '.OriginChild'], ...declaration],
+    [['.OriginParent', '.OriginChild'], 'width', material],
+    [['.OriginParent', '.OriginChild', '.OriginGrandchild'], ...declare(source, '11px')],
+    [[], undefined, whenSettled(controller => {
+      if (!grandchildDone) return false
+      fresh = true
+      controller.nodes().find(node => node.content === declaration[1])!.compileRevision++
+      return true
+    })],
   ])
   const grandchild = css.match(/\.OriginGrandchild\s*\{([\s\S]*?)\n\}/)?.[1]
   expect(grandchild).toContain('--expanded-state-origin-derived: calc(var(--expanded-state-origin-source) * 6);')
   expect(grandchild).not.toContain(' * 5)')
+  const parent = css.match(/\.OriginParent\s*\{([\s\S]*?)\n\}/)?.[1]
+  expect(parent).toContain('--expanded-state-origin-derived: calc(var(--expanded-state-origin-source) * 1);')
+  expect(css.match(/:root\s*\{([^}]*)\}/)?.[1]).toContain('--expanded-state-origin-derived: 1px;')
 })
 
 

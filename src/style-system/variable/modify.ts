@@ -142,8 +142,8 @@ function publishResult(controller: ASTController, instance: VariableInstance, me
          */
         toCSSString: () => instance.definition.variable!.key.toCSSString(), priority: keyPriority(instance.definition.node.key), join: joinVariableValues },
         createJSSContent(() => stageReference(instance, instance.steps.at(-1)?.name))],
-      { owner: instance.definition.node, identity: `result/${address}`, productTag: instance })
-    variableProductRoles.set(result.alias, 'result')
+      { owner: instance.definition.node, identity: `result/${address}`, productTag: instance,
+        initialize: node => { variableProductRoles.set(node, 'result') } })
   }
   if (!existing) for (const step of instance.steps) publishStep(controller, step, result)
 }
@@ -175,9 +175,9 @@ function publishStep(controller: ASTController, step: VariableStep, result: Vari
     return presence + branches.join(' ')
   }, [step.currentExpression, ...[...step.members.values()].map(member => member.output)])
   const anchor = result.alias ?? [...result.members][0]
-  const node = controller.insert({ before: anchor, conditionPath: result.path }, [key, expression],
-    { owner: result.alias ?? step.instance.definition.node, identity: `${step.name}/result`, productTag: step.instance })
-  variableProductRoles.set(node, 'result')
+  controller.insert({ before: anchor, conditionPath: result.path }, [key, expression],
+    { owner: result.alias ?? step.instance.definition.node, identity: `${step.name}/result`, productTag: step.instance,
+      initialize: node => { variableProductRoles.set(node, 'result') } })
 }
 /**
  * 按样式书写顺序更新修改链；已有引用随步骤顺序变化，新候选更新自身阶段输出。

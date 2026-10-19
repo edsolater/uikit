@@ -136,9 +136,9 @@ export class Join {
   /** 为至少两项贡献连接一次结果；以业务回调前的实际输入登记快照与历史来源。 */
   private join(address: string, group: Map<JSSStyleNode, number>): boolean {
     if (group.size < 2) return false
-    const { inputs, selected, anchor, join } = captureInputs(group.keys(), this.compiledContents)
     const previous = this.records.get(address)
     if (previous && previous.inputs.size === group.size) return false
+    const { inputs, selected, anchor, join } = captureInputs(group.keys(), this.compiledContents)
     const content = this.createContent(selected, join)
     this.publish(address, inputs, anchor, content, previous)
     return true
@@ -156,8 +156,8 @@ export class Join {
    * 将结果放在获选贡献的最后位置，全部输入继续作为来源参与撤销与恢复。
    */
   private publish(address: string, inputs: Map<JSSStyleNode, InputSnapshot>, anchor: JSSStyleNode, content: unknown, previous: JoinRecord | undefined): void {
-    const result = this.session.insert(anchor, this.session.insertionIdentity(anchor), anchor.conditionPath, inputs.get(anchor)!.key, content, anchor, 'after')
-    result.aggregate = true
+    const result = this.session.insert(anchor, this.session.insertionIdentity(anchor), anchor.conditionPath, inputs.get(anchor)!.key, content, anchor, 'after', undefined,
+      node => { node.aggregate = true })
     const record = previous ?? { inputs, anchor, results: [] }
     record.inputs = inputs
     record.anchor = anchor

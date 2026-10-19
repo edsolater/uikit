@@ -1,4 +1,5 @@
 /** 来源：用户要求按具体Variable对象激活依赖链、按声明键 priority 与书写顺序选择结果；协调止于本次 AST。 */
+import { whenSettled } from './when-settled'
 import { describe, expect, test } from 'vitest'
 import { parse, type AnyNode } from 'postcss'
 import { compileRules } from '../css-root'
@@ -58,7 +59,10 @@ describe('具体定义消费与CSS同名层叠', () => {
       const candidates = reverseWriting ? [second, red] : [red, second]
       const rules: Rules = candidates.map(item => [['.Scope'], ...declare(item)])
       const named = compileRules([...rules, [['.Scope'], 'color', name]])
-      expect(named).toBe(compileRules([...rules, [['.Scope'], 'color', red]]))
+      const concrete = compileRules([...rules, [['.Scope'], 'color', red]])
+      expect(declarationsAt(named, ['.Scope'])).toEqual(declarationsAt(concrete, ['.Scope']))
+      expect(declarationsAt(named, [':root'])).toEqual([])
+      expect(declarationsAt(concrete, [':root'])).toContain('--name-tied: red;')
       expect(declarationsAt(named, ['.Scope'])).toEqual([
         `--name-tied: ${reverseWriting ? 'red' : 'blue'};`, 'color: var(--name-tied);',
       ])
@@ -101,82 +105,67 @@ describe('依赖联动', () => {
     const initial = declare(source, 7)
     const css = compileRules([
       [['.Scope'], ...initial], [['.Scope'], 'width', source],
-      [[], undefined, { onCompile(_context, controller) {
-        let updated = false
-        controller.addSettlementCheck(() => {
-          if (updated) return false
-          updated = true
-          const declaration = controller.search({ key: source.key }).find(node => node.content === initial[1])!
-          declaration.content = declare(source, 8)[1]
-          declaration.compileRevision++
-          return true
-        })
-      } }],
+      [[], undefined, whenSettled(controller => {
+        const declaration = controller.search({ key: source.key }).find(node => node.content === initial[1])!
+        declaration.content = declare(source, 8)[1]
+        declaration.compileRevision++
+        return true
+      })],
     ])
     expect(declarationsAt(css, ['.Scope'])).toContain('--dependency-declare-revision: 8;')
     expect(declarationsAt(css, ['.Scope', '&[data-phase]'])).toEqual(['--dependency-declare-revision: calc(8*2);'])
   })
-  test.each([false])('动画帧原生属性消费激活依赖，资源描述符不激活，引用 Name=%s', useName => {
+  test('动画帧原生属性消费激活依赖，资源描述符不激活', () => {
     const source = variable('5px', { name: 'dependency-frame-source' })
     const line = variable(source, { name: 'dependency-frame-line', priority: 2 })
     const resource = compileRules([
-      [['@property --descriptor'], 'initial-value', useName ? line.name : line],
+      [['@property --descriptor'], 'initial-value', line],
       [['.Child'], ...declare(source, '7px')],
     ])
     expect(declarationsAt(resource, ['.Child'])).not.toContain('--dependency-frame-line: var(--dependency-frame-source);')
     const css = compileRules([
-      [['@keyframes dependency-animation', 'to'], 'width', useName ? line.name : line],
+      [['@keyframes dependency-animation', 'to'], 'width', line],
       [['.Child'], ...declare(source, '7px')],
     ])
     expect(declarationsAt(css, ['.Child'])).toContain('--dependency-frame-line: var(--dependency-frame-source);')
   })
 
-  test.each([false])('消费节点改读另一变量后撤销旧默认与状态，不要求节点被移除，引用 Name=%s', useName => {
+  test('消费节点改读另一变量后撤销旧默认与状态，不要求节点被移除', () => {
     const old = variable('5px', { name: 'dependency-old-usage', states: { '&[data-phase]': '6px' } })
     const next = variable('9px', { name: 'dependency-new-usage' })
     const css = compileRules([
-      [['.Parent'], 'width', useName ? old.name : old],
-      [[], undefined, { onCompile(_context, controller) {
-        let updated = false
-        controller.addSettlementCheck(() => {
-          if (updated) return false
-          updated = true
-          const consumer = controller.search({ key: 'width' })[0]
-          consumer.content = useName ? next.name : next
-          consumer.compileRevision++
-          return true
-        })
-      } }],
+      [['.Parent'], 'width', old],
+      [[], undefined, whenSettled(controller => {
+        const consumer = controller.search({ key: 'width' })[0]
+        consumer.content = next
+        consumer.compileRevision++
+        return true
+      })],
     ])
     expect(css).not.toContain('--dependency-old-usage:')
     expect(declarationsAt(css, ['.Parent'])).toContain('width: var(--dependency-new-usage);')
   })
 
-  test.each([false])('配方重访更新默认和联动内容，旧依赖边随当前消费撤销，引用 Name=%s', useName => {
+  test('配方重访更新默认和联动内容，旧依赖边随当前消费撤销', () => {
     const first = variable(5, { name: 'dependency-revision-first' })
     const second = variable(9, { name: 'dependency-revision-second' })
     let selected = first
     let factor = 2
     const line = variable(() => multiply(selected, factor), { name: 'dependency-revision-line', priority: 2 })
     const css = compileRules([
-      [['.Parent'], 'width', useName ? line.name : line], [['.Parent'], 'height', useName ? line.name : line],
+      [['.Parent'], 'width', line], [['.Parent'], 'height', line],
       [['.Old'], ...declare(first, 7)], [['.New'], ...declare(second, 11)],
-      [[], undefined, { onCompile(_context, controller) {
-        let updated = false
-        controller.addSettlementCheck(() => {
-          if (updated) return false
-          updated = true
-          selected = second
-          factor = 3
-          controller.remove(controller.search({ key: 'height' })[0])
-          controller.search({ key: 'width' })[0].compileRevision++
-          return true
-        })
-      } }],
+      [[], undefined, whenSettled(controller => {
+        selected = second
+        factor = 3
+        controller.remove(controller.search({ key: 'height' })[0])
+        controller.search({ key: 'width' })[0].compileRevision++
+        return true
+      })],
     ])
     expect(declarationsAt(css, ['.Old'])).toEqual(['--dependency-revision-first: 7;'])
     expect(declarationsAt(css, [':root'])).toContain('--dependency-revision-line: calc(var(--dependency-revision-second)*3);')
-    expect(declarationsAt(css, ['.Parent'])).toContain('--dependency-revision-line: calc(var(--dependency-revision-second)*3);')
+    expect(declarationsAt(css, ['.Parent'])).toEqual(['width: var(--dependency-revision-line);'])
     expect(declarationsAt(css, ['.New'])).toContain('--dependency-revision-line: calc(var(--dependency-revision-second)*3);')
   })
 
@@ -200,14 +189,14 @@ describe('依赖联动', () => {
     expect(declarationsAt(css, ['.Child']).some(line => line.startsWith('--dependency-state-owner:'))).toBe(false)
   })
 
-  test.each([false, true].flatMap(shared => [false].map(useName => ({ shared, useName }))))('消费者撤销后共享需求=$shared，引用 Name=$useName，下一会话不保留观察者', ({ shared, useName }) => {
+  test.each([false, true])('消费者撤销后共享需求=%s，下一会话不保留观察者', shared => {
     const source = variable('red', { name: 'dependency-lifetime-source', priority: 0 })
     const line = variable(source, { name: 'dependency-lifetime-line', priority: 2 })
     const rules: Rules = [
-      [['.Parent'], 'border-color', useName ? line.name : line],
+      [['.Parent'], 'border-color', line],
       [['.Child'], ...declare(source, 'green')],
     ]
-    if (shared) rules.push([['.Parent'], 'background-color', useName ? line.name : line])
+    if (shared) rules.push([['.Parent'], 'background-color', line])
     rules.push([[], undefined, { compileWaveIndex: 3, onCompile(context, controller) {
       const consumer = controller.search({ key: 'border-color' })[0]
       controller.remove(consumer)

@@ -4,7 +4,7 @@
  *
  * 让编译器消费对象能力，同时让内容组织工具保持自身职责。
  */
-import { hasProperty, isArray, isFunction } from '@edsolater/fnkit'
+import { isObjectLike, isArray, isFunction } from '@edsolater/fnkit'
 import type { ConditionPath } from './condition'
 import type { JSSKey } from './key'
 import type { Rules } from './rule'
@@ -75,22 +75,22 @@ export const createJSSContent = (
 })
 
 /**
- * 判断内容对象是否提供 onCompile 方法。
+ * 判断内容对象是否提供 onCompile 方法，接受继承方法及可调用内容对象。
  */
 export const hasJSSContentOnCompileMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onCompile'>> =>
-  hasProperty(input, 'onCompile', isFunction)
+  isObjectLike(input) && 'onCompile' in input && isFunction(input.onCompile)
 
 /**
  * 判断内容对象是否公开 CSS 输出方法。
  */
 export const hasJSSContentOutput = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'toCSSString'>> =>
-  hasProperty(input, 'toCSSString', isFunction)
+  isObjectLike(input) && 'toCSSString' in input && isFunction(input.toCSSString)
 
 /**
  * 判断内容对象是否提供 onActive 方法，不激活资源。
  */
 export const hasJSSContentOnActiveMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onActive'>> =>
-  hasProperty(input, 'onActive', isFunction)
+  isObjectLike(input) && 'onActive' in input && isFunction(input.onActive)
 
 /**
  * 判断对象是否承担任一种 JSS 内容行为。
@@ -98,6 +98,6 @@ export const hasJSSContentOnActiveMethod = (input: unknown): input is JSSContent
 export const isJSSContent = (input: unknown): input is JSSContent => (
   hasJSSContentOnCompileMethod(input) ||
   hasJSSContentOutput(input) ||
-  hasProperty(input, 'dependencies', isArray) ||
+  isObjectLike(input) && 'dependencies' in input && isArray(input.dependencies) ||
   hasJSSContentOnActiveMethod(input)
 )

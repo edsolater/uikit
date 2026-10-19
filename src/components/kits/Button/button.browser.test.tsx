@@ -11,7 +11,8 @@ import { buttonMapping } from './Button.mapping'
 import { buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength } from './Button.style'
 import './Button.style'
 import * as globalColors from '@/style-system/pieces/contents/atoms/color/colors'
-import { inkColor } from '@/style-system/pieces/contents/atoms/color/palette'
+import { brandColor } from '@/style-system/pieces/contents/atoms/color/brand-color'
+import { inkColor, paperColor } from '@/style-system/pieces/contents/atoms/color/palette'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
 
@@ -195,6 +196,8 @@ describe('Button styles', () => {
   })
 
   test('普通按钮沿用局部墨色，嵌套语气内容色不改变其默认来源', async () => {
+    // 当地登记输入使派生基础联动；inherit继续接收祖先及自身inline控制。
+    handles.push(rules(['@layer uikit', '.Button'], [declare(inkColor, 'inherit')]))
     const parent = document.body.appendChild(document.createElement('div'))
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
@@ -321,7 +324,9 @@ describe('Button styles', () => {
       { tone: 'rgb(56, 120, 180)', soft: 'rgb(12, 80, 140)', strong: 'rgb(34, 100, 160)', content: 'rgb(78, 140, 200)', line: 'rgb(90, 20, 160)' },
       { tone: 'rgb(180, 56, 120)', soft: 'rgb(140, 12, 80)', strong: 'rgb(160, 34, 100)', content: 'rgb(200, 78, 140)', line: 'rgb(160, 90, 20)' },
     ]
-    for (const [index, palette] of palettes.entries()) handles.push(rules(`.Button[data-local-tone="${index}"]`, [
+    // 在已知外观的结构Address验证组合，不从平面选择器猜测DOM同时命中的分支。
+    for (const [index, palette] of palettes.entries()) handles.push(rules(['@layer uikit', '.Button',
+      ...(selectedAppearance ? [`&[data-appearance="${selectedAppearance}"]`] : []), `&[data-local-tone="${index}"]`], [
       [buttonToneColor, palette.tone], [buttonSoftColor, palette.soft],
       [buttonStrongColor, palette.strong], [buttonToneContentColor, palette.content], [buttonLineColor, palette.line],
     ]))
@@ -534,6 +539,8 @@ describe('Button styles', () => {
   })
 
   test('Button 消费 JS 品牌材料，局部品牌覆盖改变主体并保留相邻组件', () => {
+    // 当地登记实际输入，随后只改变CSS值即可验证已发布表达式。
+    handles.push(rules(['@layer uikit', '.Button'], [declare(brandColor, 'inherit')]))
     const style = mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <>
@@ -676,6 +683,8 @@ describe('Button styles', () => {
     document.head.append(style)
     expect(style.sheet!.cssRules).toHaveLength(0)
 
+    // 首次挂载前登记当地输入，保留之后的inline变化及CSSRule身份断言。
+    handles.push(rules(['@layer uikit', '.Button'], [declare(paperColor, 'inherit')]))
     handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', spaceSmall] })]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)

@@ -177,7 +177,7 @@ test('子元素消费绑定结果在当地重算依赖，同时保留继承的�
   handles.push(rules('.BindingParent', [declare(merged), [key('background-color'), merged]]))
   const operation = rules(['.BindingParent', '&[data-alpha]'], modify(merged, alpha))
   handles.push(operation)
-  handles.push(rules(['.BindingParent', '& .BindingChild'], [[key('background-color'), merged]]))
+  handles.push(rules(['.BindingParent', '& .BindingChild'], [declare(source), declare(change), [key('background-color'), merged]]))
   mount()
   const parent = element('BindingParent'), child = element('BindingChild', parent)
   expect(getComputedStyle(parent).backgroundColor).toBe('oklch(0.5 0.1 120)')

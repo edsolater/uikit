@@ -1,6 +1,6 @@
 /** 编译会话的 AST 控制器与节点来源管理。
  *
- * 提供节点查询、队列编辑与级联撤销。
+ * 提供节点查询、输入变化通知、队列编辑与级联撤销。
  *
  * 让编译行为共用显式位置和存活来源，保留输出退出的区别。
  */
@@ -62,12 +62,20 @@ export interface ASTController {
   has(query: ASTQuery): boolean
   /** 内部逃生舱：取得输出队列快照；常规查询使用 search。 */
   nodes(): JSSStyleNode[]
+  /** 订阅本次输出节点的加入、输入改写和退出；登记时按当前顺序交付已有节点。 */
+  observeNodes(observe: (node: JSSStyleNode, present: boolean) => void): void
+  /** 比较现存输出节点的书写顺序，不重新搜索队列。 */
+  compareOrder(left: JSSStyleNode, right: JSSStyleNode): number
+  /** 取得当前首个输出节点，供根声明保持原有插入位置。 */
+  firstNode(): JSSStyleNode
   /** 位置、声明和来源分别传入；插入点紧邻锚点，不隐含当前编译位置。 */
   insert(position: { conditionPath: ConditionPath } & ASTPosition, declaration: [key: JSSKey | undefined, content: unknown], provenance: {
     owner: JSSStyleNode
     identity?: string
     productTag?: object
     resourceAddress?: string
+    /** 发布前补齐领域归属；观察者只接收已经初始化的节点。 */
+    initialize?: (node: JSSStyleNode) => void
   }): JSSStyleNode
   /** 移到紧邻锚点的位置，不改变地址或来源。 */
   move(node: JSSStyleNode, position: ASTPosition): void
@@ -118,15 +126,19 @@ export function createASTController(session: ASTSession): ASTController {
     search: (query) => session.nodes.filter(matching(query)),
     has: (query) => session.nodes.some(matching(query)),
     nodes: () => session.nodes.slice(),
+    observeNodes: observe => session.observeNodes(observe),
+    compareOrder: (left, right) => session.compareOrder(left, right),
+    firstNode: () => session.nodes[0],
     insert(position, [key, content], provenance) {
       const direction = position.after ? 'after' : 'before'
       const anchor = position.before ?? position.after!
       const identity = provenance.identity === undefined
         ? session.insertionIdentity(provenance.owner)
         : `${provenance.owner.identity}/rewrite/${provenance.identity}`
-      const node = session.insert(provenance.owner, identity, position.conditionPath, key, content, anchor, direction, provenance.productTag)
-      node.resourceAddress = provenance.resourceAddress
-      return node
+      return session.insert(provenance.owner, identity, position.conditionPath, key, content, anchor, direction, provenance.productTag, node => {
+        node.resourceAddress = provenance.resourceAddress
+        provenance.initialize?.(node)
+      })
     },
     move: (node, position) => session.move(node, position.before ?? position.after!, position.after ? 'after' : 'before'),
     remove: (node, options) => options?.from === 'output' ? session.detach(node) : session.remove(node),
@@ -150,6 +162,9 @@ export class ASTSession {
   private roots: Set<JSSStyleNode>
   private liveNodes: Set<JSSStyleNode>
   private outputNodes: Set<JSSStyleNode>
+  private nodeObservers = new Set<(node: JSSStyleNode, present: boolean) => void>()
+  private trackedNodes = new WeakSet<JSSStyleNode>()
+  private order = new WeakMap<JSSStyleNode, number>()
 
   constructor(public nodes: JSSStyleNode[]) {
     this.roots = new Set(nodes)
@@ -158,7 +173,63 @@ export class ASTSession {
     nodes.forEach((node, index) => {
       node.identity ??= `source/${index}`
       node.compileRevision ??= 0
+      this.order.set(node, index)
+      this.track(node)
     })
+  }
+
+  /**
+   * 按现有顺序交付节点并订阅后续改变；事实来自AST编辑和节点输入本身。
+   */
+  observeNodes(observe: (node: JSSStyleNode, present: boolean) => void): void {
+    this.nodeObservers.add(observe)
+    for (const node of this.nodes) observe(node, true)
+  }
+
+  /**
+   * 返回两个输出位置的先后关系；仅顺序改变时调整位置，不在查询时搜索节点。
+   */
+  compareOrder(left: JSSStyleNode, right: JSSStyleNode): number {
+    return this.order.get(left)! - this.order.get(right)!
+  }
+
+  /**
+   * 当前节点的输入改写直接通知受体；保留原对象与可写字段，不另存一份节点内容。
+   */
+  private track(node: JSSStyleNode): void {
+    if (this.trackedNodes.has(node)) return
+    this.trackedNodes.add(node)
+    for (const field of ['key', 'content', 'compileRevision', 'conditionPath', 'aggregate'] as const) {
+      let input = node[field]
+      Object.defineProperty(node, field, { enumerable: true, configurable: true,
+        get: () => input,
+        set: value => {
+          if (input === value) return
+          input = value
+          delete node.deferredReason
+          this.notify(node)
+        },
+      })
+    }
+  }
+
+  /**
+   * 向编译期受体交付节点当前存在状态；没有受体时不产生后续工作。
+   */
+  private notify(node: JSSStyleNode): void {
+    for (const observe of this.nodeObservers) observe(node, this.hasOutput(node))
+  }
+
+  /**
+   * 为一段新位置保留相邻顺序；数字间距耗尽时统一重编号，不影响任何声明身份。
+   */
+  private position(nodes: JSSStyleNode[], index: number): void {
+    const before = this.order.get(this.nodes[index - 1]) ?? (this.order.get(this.nodes[index + nodes.length]) ?? 0) - 1
+    const after = this.order.get(this.nodes[index + nodes.length]) ?? before + nodes.length + 1
+    const step = (after - before) / (nodes.length + 1)
+    if (before + step === before || after - step === after) {
+      this.nodes.forEach((node, order) => this.order.set(node, order))
+    } else nodes.forEach((node, offset) => this.order.set(node, before + step * (offset + 1)))
   }
 
   /** 当前全部内容完成后核对队列；任何新增或撤销仍由同一编译流程处理。 */
@@ -196,6 +267,7 @@ export class ASTSession {
     if (index < 0) return
     this.nodes.splice(index, 1)
     this.outputNodes.delete(node)
+    this.notify(node)
     delete node.deferredReason
   }
 
@@ -216,6 +288,7 @@ export class ASTSession {
     if (index >= 0) this.nodes.splice(index, 1)
     this.liveNodes.delete(node)
     this.outputNodes.delete(node)
+    this.notify(node)
     for (const owner of this.owners.get(node) ?? []) {
       const products = this.products.get(owner)
       products?.delete(node)
@@ -236,7 +309,7 @@ export class ASTSession {
   }
 
   /** 所有即时插入共用节点创建、来源登记和位置处理。 */
-  insert(owner: JSSStyleNode, identity: string, path: ConditionPath, key: JSSKey | undefined, content: unknown, anchor = owner, position: 'before' | 'after' = 'before', productTag?: object): JSSStyleNode {
+  insert(owner: JSSStyleNode, identity: string, path: ConditionPath, key: JSSKey | undefined, content: unknown, anchor = owner, position: 'before' | 'after' = 'before', productTag?: object, initialize?: (node: JSSStyleNode) => void): JSSStyleNode {
     const index = this.nodes.indexOf(anchor)
     assert(index >= 0 && this.isAlive(owner), '不能在已撤销或已脱离输出的节点位置生成内容。')
     const node: JSSStyleNode = {
@@ -251,6 +324,7 @@ export class ASTSession {
       content,
       productTag,
     }
+    initialize?.(node)
     this.own(owner, node)
     this.append([node], index + (position === 'after' ? 1 : 0))
     return node
@@ -260,17 +334,25 @@ export class ASTSession {
   append(nodes: JSSStyleNode[], index = this.nodes.length): void {
     assert(this.nodes.length + nodes.length <= maximumStyleNodeCount, `AST 节点超过上限 ${maximumStyleNodeCount}，编译无法终止。`)
     this.nodes.splice(index, 0, ...nodes)
+    this.position(nodes, index)
     for (const node of nodes) {
       this.liveNodes.add(node)
       this.outputNodes.add(node)
+      this.track(node)
+      this.notify(node)
     }
   }
 
   /** 将现存节点紧邻锚点放置，不改变地址或来源。 */
   move(node: JSSStyleNode, anchor: JSSStyleNode, position: 'before' | 'after'): void {
     if (node === anchor || !this.hasOutput(node) || !this.hasOutput(anchor)) return
-    this.nodes.splice(this.nodes.indexOf(node), 1)
-    this.nodes.splice(this.nodes.indexOf(anchor) + (position === 'after' ? 1 : 0), 0, node)
+    const previous = this.nodes.indexOf(node)
+    if (previous === this.nodes.indexOf(anchor) + (position === 'after' ? 1 : -1)) return
+    this.nodes.splice(previous, 1)
+    const index = this.nodes.indexOf(anchor) + (position === 'after' ? 1 : 0)
+    this.nodes.splice(index, 0, node)
+    this.position([node], index)
+    this.notify(node)
   }
 
   /** 登记节点撤销时执行的清理函数。 */

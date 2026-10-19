@@ -4,10 +4,10 @@
  *
  * 状态绑定 CSS 名称与本次基础，不应由是否经过 Modify 入口决定。
  */
-import { containKey, result } from '@edsolater/fnkit'
+import { mapGet, result } from '@edsolater/fnkit'
 import type { ASTController, ContentCompilationRecord } from '../compiler/ast-controller'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import { conditionAddressKey, isSemanticPathPrefix, semanticPathParts, type ConditionPath } from '../condition'
+import { conditionAddressKey, semanticPathParts, type ConditionPath } from '../condition'
 import { isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { Declaration } from '../operations/declare'
 import { keyPriority, propertyName, type JSSKey } from '../key'
@@ -41,6 +41,69 @@ interface VariableDeclaration extends JSSContent {
 const definitions = new WeakMap<JSSStyleNode, { input: unknown; key: unknown; revision: number; value: VariableDefinition }>()
 const bindings = new WeakMap<JSSStyleNode, Map<VariableTarget, VariableDefinition>>()
 export const variableProductRoles = new WeakMap<JSSStyleNode, 'default' | 'base' | 'state' | 'linked' | 'control' | 'result'>()
+
+/** 本次AST的声明位置索引；只保存现有节点引用，输入与覆盖仍由原声明拥有。 */
+interface DeclarationRegistry {
+  /** 原始业务声明；自动产物不扩大当前定义查询的候选范围。 */
+  byVariable: Map<VariableTarget, Set<JSSStyleNode>>
+  /** 实际基础与状态位置，供当地输入联动；与原始定义分开查询。 */
+  sources: Map<VariableTarget, Set<JSSStyleNode>>
+  /** 当前有效根声明，供默认保障按CSS名称核对。 */
+  roots: Set<JSSStyleNode>
+  /** 新增或改写后需要同步自身状态的声明位置。 */
+  pending: Set<JSSStyleNode>
+  /** 同时交付退出的根名称，防止改名或移出根后漏掉原名称的默认保障。 */
+  observe: Set<(node: JSSStyleNode, previous?: VariableTarget, current?: VariableTarget, previousRoot?: string) => void>
+  update: (node: JSSStyleNode, present: boolean) => void
+}
+const registries = new WeakMap<ASTController, DeclarationRegistry>()
+
+/**
+ * 接回AST初始登记与后续节点变化；查询只访问所属Variable，根清单与待同步声明随变化更新。
+ */
+export function declarationRegistry(controller: ASTController): DeclarationRegistry {
+  let registry = registries.get(controller)
+  if (!registry) {
+    const targets = new WeakMap<JSSStyleNode, VariableTarget>()
+    const rootNames = new WeakMap<JSSStyleNode, string>()
+    registry = { byVariable: new Map(), sources: new Map(), roots: new Set(), pending: new Set(), observe: new Set(),
+      /**
+       * 更新该位置的声明归属和待办，通知实际受体；不复制声明值或推断其他位置。
+       */
+      update(node, present) {
+        const previous = targets.get(node)
+        const previousRoot = rootNames.get(node)
+        const current = present ? declaredVariable(node) ?? (isVariable(node.key) ? node.key : variableDefinition(node)?.variable) : undefined
+        if (previous) {
+          registry!.byVariable.get(previous)?.delete(node)
+          registry!.sources.get(previous)?.delete(node)
+        }
+        if (current) {
+          targets.set(node, current)
+          const role = variableProductRoles.get(node)
+          if (!node.aggregate && (declaredVariable(node) && role !== 'linked' || !role && node.key === current))
+            mapGet(registry!.byVariable, current, () => new Set<JSSStyleNode>()).add(node)
+          if (node.key && node.content !== undefined && !node.aggregate && (variableDefinition(node)?.baseNode === node || role === 'state'))
+            mapGet(registry!.sources, current, () => new Set<JSSStyleNode>()).add(node)
+        } else targets.delete(node)
+        registry!.roots.delete(node)
+        rootNames.delete(node)
+        if (present && node.key && !node.aggregate && propertyName(node.key).startsWith('--')) {
+          registry!.pending.add(node)
+          if (!node.conditionPath.stateConditionPath.length && node.conditionPath.targetConditionPath.length === 1
+            && [':root', ':where(:root)'].includes(node.conditionPath.targetConditionPath[0].header)) {
+            registry!.roots.add(node)
+            rootNames.set(node, propertyName(node.key))
+          }
+        } else registry!.pending.delete(node)
+        for (const observe of registry!.observe) observe(node, previous, current, previousRoot)
+      },
+    }
+    registries.set(controller, registry)
+    controller.observeNodes(registry.update)
+  }
+  return registry
+}
 /**
  * 同级覆盖材料保留最后有效内容，普通 Key 的 join 仍由原键负责。
  */
@@ -52,15 +115,30 @@ export const joinVariableValues = (values: Value[]): ValueInput => value(values,
  * 识别显式 Variable 基础；普通同名 Key 不成为 Modify 的对象归属。
  */
 export const declaredVariable = (node: JSSStyleNode): VariableTarget | undefined =>
-  containKey(node.content, 'kind') && node.content.kind === 'variable-declaration' ? (node.content as VariableDeclaration).variable : undefined
+  (node.content as VariableDeclaration | undefined)?.kind === 'variable-declaration' ? (node.content as VariableDeclaration).variable : undefined
 
 /**
- * 最近同对象声明按语义距离、等级和书写顺序选择，名称仅用于缩小查询。
+ * 按结构父路径选最近同对象原始声明，同址按priority及书写顺序选择。
+ * 联动产物只提供当地声明事实，不改变业务定义。
  */
-export const findVariableDeclaration = (controller: ASTController, variable: VariableTarget, path: ConditionPath): JSSStyleNode | undefined =>
-  controller.search({ key: variable.key }).filter(node => declaredVariable(node) === variable && isSemanticPathPrefix(node.conditionPath, path))
-    .sort((left, right) => semanticPathParts(right.conditionPath).length - semanticPathParts(left.conditionPath).length
-      || keyPriority(right.key) - keyPriority(left.key) || controller.nodes().indexOf(right) - controller.nodes().indexOf(left))[0]
+export function findVariableDeclaration(controller: ASTController, variable: VariableTarget, path: ConditionPath): JSSStyleNode | undefined {
+  const parts = semanticPathParts(path)
+  let selected: JSSStyleNode | undefined
+  let depth = -1
+  let priority = -Infinity
+  for (const node of declarationRegistry(controller).byVariable.get(variable) ?? []) {
+    if (node.key === undefined) continue
+    const parent = semanticPathParts(node.conditionPath)
+    if (parent.length > parts.length || !parent.every((part, index) => part === parts[index])) continue
+    const level = keyPriority(node.key)
+    if (!selected || parent.length > depth || parent.length === depth && (level > priority || level === priority && controller.compareOrder(node, selected) > 0)) {
+      selected = node
+      depth = parent.length
+      priority = level
+    }
+  }
+  return selected
+}
 
 /**
  * 读取节点所属的声明材料；基础与状态产物在创建时沿用所属声明，不改变同对象归属选择。
@@ -76,20 +154,19 @@ export function declareVariable(variable: VariableTarget, content: VariableDefau
 
 /**
  * 创建基础与状态材料；内部联动交付原来源，独立声明以自身为来源。
+ * baseKey沿用Modify现有的动态基础槽，不创建另一个Variable身份。
  */
-export function createVariableDeclaration(variable: VariableTarget, content: VariableDefaultValue, priority: number | undefined, originNode?: JSSStyleNode): Declaration {
+export function createVariableDeclaration(variable: VariableTarget, content: VariableDefaultValue, priority: number | undefined, originNode?: JSSStyleNode, baseKey: JSSKey = variable.key): Declaration {
   const declaration: VariableDeclaration = {
     kind: 'variable-declaration', variable, content, originNode, resourceIdentity: Symbol('variable-declaration'),
     /**
-     * 发布本次基础，状态在基础完成后的统一核验中绑定；改归当前声明的消费者重新编译。
+     * 发布本次基础，状态与消费者归属由统一声明登记维护。
      */
     onCompile(context, controller) {
       ensureDefinition(context.node, controller)
-      for (const node of controller.nodes()) if (declaredVariable(node) === variable) for (const consumer of variableDefinition(node)?.consumers ?? [])
-        if (node !== context.node && findVariableDeclaration(controller, variable, consumer.conditionPath) === context.node) consumer.compileRevision++
     },
   }
-  return [{ ...referenceVariable(variable), priority }, declaration]
+  return [{ ...referenceVariable(variable), toCSSString: () => propertyName(baseKey), priority }, declaration]
 }
 
 /**
@@ -100,7 +177,13 @@ export function consumeDeclaration(context: JSSCompileContext, controller: ASTCo
   if (!node) return undefined
   const definition = ensureDefinition(node, controller)
   let current = bindings.get(context.node)
-  if (!current) bindings.set(context.node, current = new Map())
+  if (!current) {
+    bindings.set(context.node, current = new Map())
+    controller.onRemove(context.node, () => {
+      for (const definition of current!.values()) { definition.consumers?.delete(context.node); definition.onConsume?.(context.node, false) }
+      current!.clear()
+    })
+  }
   const previous = current.get(variable)
   if (previous !== definition) {
     previous?.consumers?.delete(context.node)
@@ -108,18 +191,14 @@ export function consumeDeclaration(context: JSSCompileContext, controller: ASTCo
     current.set(variable, definition)
   }
   const consumers = definition.consumers ??= new Set()
-  if (!consumers.has(context.node)) {
-    consumers.add(context.node)
-    controller.onRemove(context.node, () => {
-      if (current.get(variable) === definition) { consumers.delete(context.node); definition.onConsume?.(context.node, false); current.delete(variable) }
-    })
-  }
+  consumers.add(context.node)
   definition.onConsume?.(context.node, true)
   return definition
 }
 
 /**
- * 声明输入重访精确撤旧；普通 Key 保留原基础节点与 join，不伪造 Variable。
+ * 两种原始声明入口统一登记，当前Address命中的旧消费者重新选择归属；输入重访精确撤旧。
+ * 普通Key保留原基础节点与join，不伪造Variable。
  */
 function ensureDefinition(node: JSSStyleNode, controller: ASTController): VariableDefinition {
   const previous = definitions.get(node)
@@ -140,8 +219,13 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController): Variab
     stateProducts: new Map(),
   }
   definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
+  const registry = declarationRegistry(controller)
+  // 两种原始声明入口共同使旧消费者重选；基础和状态映射可能属于同一份材料，只核对一次。
+  if (target && variableProductRoles.get(node) !== 'linked') for (const old of new Set([...registry.byVariable.get(target) ?? []].map(variableDefinition))) if (old && old.node !== node && old.variable === target)
+    for (const consumer of old.consumers ?? []) if (findVariableDeclaration(controller, target, consumer.conditionPath) === node) consumer.compileRevision++
   if (variable) publishVariableBase(definition, controller)
   else definition.baseNode = node
+  registry.update(node, true)
   if (!previous) controller.onRemove(node, () => {
     for (const consumer of variableDefinition(node)?.consumers ?? []) consumer.compileRevision++
   })
@@ -149,11 +233,13 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController): Variab
 }
 
 /**
- * 按具体对象为真实声明同步状态，生成物和聚合结果不再次充当新声明。
+ * 只为新增或改写的真实声明同步状态，生成物和聚合结果不再次充当新声明。
  */
 export function syncDeclarations(controller: ASTController): boolean {
   let changed = false
-  for (const node of controller.nodes()) {
+  const pending = declarationRegistry(controller).pending
+  for (const node of [...pending]) {
+    pending.delete(node)
     if (!node.key || node.aggregate || variableProductRoles.has(node) && !declaredVariable(node) || !propertyName(node.key).startsWith('--') || node.content === undefined) continue
     if (syncVariableStates(ensureDefinition(node, controller), controller)) changed = true
   }
@@ -163,23 +249,23 @@ export function syncDeclarations(controller: ASTController): boolean {
 /**
  * 发布基础内容；自动投影读取原消费位置，状态统一在基础完成后发布。
  */
-export function publishVariableBase(definition: VariableDefinition, controller: ASTController, anchor = definition.node): JSSStyleNode {
+export function publishVariableBase(definition: VariableDefinition, controller: ASTController, anchor = definition.node, role: 'base' | 'default' = 'base'): JSSStyleNode {
   const content = definition.sourceNode ? controller.getCompiledValue(definition.sourceNode, definition.baseContent) : definition.baseContent
-  const node = definition.baseNode = controller.insert({ before: anchor, conditionPath: definition.path }, [definition.baseKey, content],
-    { owner: definition.node, productTag: definition })
-  definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
-  variableProductRoles.set(node, 'base')
-  return node
+  return controller.insert({ before: anchor, conditionPath: definition.path }, [definition.baseKey, content],
+    { owner: definition.node, productTag: definition, initialize(node) {
+      definition.baseNode = node
+      definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
+      variableProductRoles.set(node, role)
+    } })
 }
 
 /**
  * 每个声明地址只保留一份有效规则；仅展开所属对象状态，原 Key.join 不被模板重复调用。
  */
 export function syncVariableStates(definition: VariableDefinition, controller: ASTController): boolean {
-  const orderedMaterials = definition.variable ? [definition.variable] : []
-
   const desired = new Map<string, { material: VariableTarget; rule: VariableStateRule; path: ConditionPath }>()
-  for (const material of orderedMaterials) {
+  const material = definition.variable
+  if (material) {
     const current = currentVariableState(material.states, definition.path)
     for (const [state, rule] of material.states ?? []) {
       if (current && state.order <= current.order) {
@@ -214,12 +300,13 @@ export function syncVariableStates(definition: VariableDefinition, controller: A
     const node = controller.insert(
       { ...position, conditionPath: input.path },
       [definition.baseKey, resolveStateContent(input.rule, definition, controller)],
-      { owner: definition.node, productTag: definition },
+      { owner: definition.node, productTag: definition, initialize(node) {
+        definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
+        variableProductRoles.set(node, 'state')
+        definition.stateProducts.set(address, { ...input, node })
+      } },
     )
     if (anchor) anchor = node
-    definitions.set(node, { input: node.content, key: node.key, revision: node.compileRevision, value: definition })
-    variableProductRoles.set(node, 'state')
-    definition.stateProducts.set(address, { ...input, node })
     changed = true
   }
   return changed

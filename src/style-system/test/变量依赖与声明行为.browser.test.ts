@@ -1,4 +1,5 @@
 /** 来源：用户要求 base 是本次声明基础，derive 保留原始状态规则；浏览器仅检验一次编译的静态 CSS。 */
+import { whenSettled } from './when-settled'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileRules } from '../css-root'
@@ -53,26 +54,21 @@ test('低等级后写声明不把高等级基础移到零附加权重状态之�
   expect(getComputedStyle(element).color).toBe('rgb(255, 0, 0)')
 })
 
-test.each([false])('局部声明重访后状态和修改共用新基础，同名另一实例保留自身值，引用 Name=%s', useName => {
+test('局部声明重访后状态和修改共用新基础，同名另一实例保留自身值', () => {
   const source = variable('10px', { name: 'revisited-state-modify', states: { '&[data-phase]': base => multiply(base, 2) } })
   const other = variable('99px', { name: source.name })
   const initial = declare(source, '5px')
   const css = compileRules([
     [['.Probe'], ...initial],
     [['.Probe'], ...modify(source, { type: 'expression', detail: base => add(base, '1px') })],
-    [['.Probe'], 'width', useName ? source.name : source],
+    [['.Probe'], 'width', source],
     [['.Other'], ...declare(other)], [['.Other'], 'width', `var(${other.toCSSString()})`],
-    [[], undefined, { onCompile(_context, controller) {
-      let updated = false
-      controller.addSettlementCheck(() => {
-        if (updated) return false
-        updated = true
-        const node = controller.search({ key: source.key }).find(node => node.content === initial[1])!
-        node.content = declare(source, '7px')[1]
-        node.compileRevision++
-        return true
-      })
-    } }],
+    [[], undefined, whenSettled(controller => {
+      const node = controller.search({ key: source.key }).find(node => node.content === initial[1])!
+      node.content = declare(source, '7px')[1]
+      node.compileRevision++
+      return true
+    })],
   ])
   const element = mountCSS(css, 'Probe')
   const sibling = document.body.appendChild(document.createElement('div'))
@@ -83,12 +79,12 @@ test.each([false])('局部声明重访后状态和修改共用新基础，同名
   expect(getComputedStyle(sibling).width).toBe('99px')
 })
 
-test.each([false])('自动来源状态同样触发已消费依赖，子元素原生引用得到当地14px，引用 Name=%s', useName => {
+test('自动来源状态同样触发已消费依赖，子元素原生引用得到当地14px', () => {
   const source = variable('5px', { name: 'automatic-state-source', states: { '&[data-phase]': '7px' } })
-  const line = variable(multiply(useName ? source.name : source, 2), { name: 'automatic-state-line', priority: 2 })
+  const line = variable(multiply(source, 2), { name: 'automatic-state-line', priority: 2 })
   const css = compileRules([
-    [['.Parent'], 'width', useName ? line.name : line],
-    [['.Child'], 'height', useName ? source.name : source], [['.Child'], 'width', 'var(--automatic-state-line)'],
+    [['.Parent'], 'width', line],
+    [['.Child'], 'height', source], [['.Child'], 'width', 'var(--automatic-state-line)'],
   ])
   const parent = mountCSS(css, 'Parent')
   const child = parent.appendChild(document.createElement('div'))
@@ -201,10 +197,10 @@ test('Value 生产函数求得的 Variable依赖在子元素重新派生', () =>
   expect(getComputedStyle(child).width).toBe('14px')
 })
 
-test('生产函数隐藏的Variable 在实际消费位置建立关系，跟随外部局部覆盖', () => {
+test('生产函数隐藏的Variable 在当地输入声明后建立关系，跟随CSS输入变化', () => {
   const source = variable('3px', { name: 'expanded-local-source' })
   const derived = variable(multiply(value(() => source), 2), { name: 'expanded-local-derived' })
-  const css = compileRules([[['.LocalConsumer'], 'width', derived]])
+  const css = compileRules([[['.LocalConsumer'], ...declare(source, '3px')], [['.LocalConsumer'], 'width', derived]])
   expect(css).toMatch(/\.LocalConsumer\s*\{[^}]*--expanded-local-derived: calc\(var\(--expanded-local-source\) \* 2\);/)
   const element = mountCSS(css, 'LocalConsumer')
   element.style.setProperty('--expanded-local-source', '7px')

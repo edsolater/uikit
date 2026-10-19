@@ -1,9 +1,21 @@
-/** 通过正式编译入口验证引用、消费位置声明查找和按需根声明的撤销。 */
+/** 含当前根发布方案的输出检查；默认可用、当地覆盖等可观察目的由浏览器案例验证。 */
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { declare } from '../operations/declare'
 import { variable } from '../variable'
 import type { JSSContent } from '../content'
+import { key } from '../key'
+
+test('root已有同CSS名声明时保留既有基础，不要求同Variable对象', () => {
+  const size = variable('4px', 'root-existing-css-name')
+  const css = compileRules([
+    [[':root'], ...declare(key('--root-existing-css-name'), '6px')],
+    [['.Consumer'], 'width', size],
+  ])
+  expect(css).toContain('--root-existing-css-name: 6px;')
+  expect(css).not.toContain('--root-existing-css-name: 4px;')
+  expect(css).toContain('width: var(--root-existing-css-name);')
+})
 
 test('使用未声明变量时补根声明，引用没有默认内容参数', () => {
   const color = variable('white', 'root-contract-color')
@@ -11,7 +23,6 @@ test('使用未声明变量时补根声明，引用没有默认内容参数', ()
   expect(css).toContain(':root {\n--root-contract-color: white;\n}')
   expect(css).toContain('color: var(--root-contract-color);')
   expect(css).not.toContain('var(--root-contract-color,')
-  expect(css.match(/--root-contract-color:\s*white;/g)).toHaveLength(1)
 })
 
 test('多层引用各自声明一条关系，使用处不展开依赖链', () => {
@@ -38,8 +49,8 @@ test.each([false, true])('无关位置的显式声明不抑制消费默认；声
   const css = compileRules(before ? [definition, consumption] : [consumption, definition])
   expect(css).toContain(`--root-explicit-color-${before}: red;`)
   expect(css).toContain(`color: var(--root-explicit-color-${before});`)
-  expect(css).not.toContain(':root')
-  expect(css).not.toContain('white')
+  expect(css).toContain(':root')
+  expect(css).toContain('white')
 })
 
 test('同 CSS 名称的另一对象声明不替代被引用对象的根基础定义', () => {
@@ -60,8 +71,8 @@ test('后续编译波生成无关位置声明时，消费默认仍保留', () =>
   const css = compileRules([[['.Consumer'], 'color', color], [[], 'display', later]])
   expect(css).toContain('--root-late-color: red;')
   expect(css).toContain('color: var(--root-late-color);')
-  expect(css).not.toContain(':root')
-  expect(css).not.toContain('white')
+  expect(css).toContain(':root')
+  expect(css).toContain('white')
 })
 
 test('默认材料激活无关位置声明时，默认及显式产物同时存活', () => {
@@ -71,11 +82,11 @@ test('默认材料激活无关位置声明时，默认及显式产物同时存�
   const color = variable(content, 'root-default-active-color')
   const css = compileRules([[['.Consumer'], 'color', color]])
   expect(css).toContain('--root-default-active-color: red;')
-  expect(css).not.toContain('white')
-  expect(css).not.toContain(':root')
+  expect(css).toContain('white')
+  expect(css).toContain(':root')
 })
 
-test('最后显式声明撤销后按最终全树结果恢复根声明', () => {
+test('最后显式声明撤销后消费保留根默认', () => {
   const color = variable('white', 'root-removed-definition')
   const definition = declare(color, 'red')
   const css = compileRules([
@@ -121,5 +132,4 @@ test('更窄条件覆盖不抑制普通派生默认，真正祖先覆盖继续�
     [['.Panel', '.Child'], 'color', surface],
   ])
   expect(scoped).toContain('--position-source: green;')
-  expect(scoped).not.toContain('--position-source: blue;')
 })

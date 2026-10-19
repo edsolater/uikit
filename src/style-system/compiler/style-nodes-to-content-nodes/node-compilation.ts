@@ -121,20 +121,49 @@ function visitContent(
 /** 本次编译的节点角色进度；逐波访问、输入失效与当前队列的完成判断由此统一负责。 */
 export class NodeCompilation {
   private budget: CompileBudget = { operations: 0, maximumOperations: 100_000 }
+  private pending = new Set<JSSStyleNode>()
+  private visiting?: JSSStyleNode[]
+  private current?: JSSStyleNode
 
-  /** 绑定当前队列、规则快照与资源激活能力，进度不跨编译共享。 */
-  constructor(private session: ASTSession, private controller: ASTController, private sourceRules: Rules, private resources: ResourceCompilation) {}
+  /**
+   * 接收AST中新增或输入改变的位置；已完成且未改变的节点不进入下一波。
+   */
+  constructor(private session: ASTSession, private controller: ASTController, private sourceRules: Rules, private resources: ResourceCompilation) {
+    controller.observeNodes((node, present) => {
+      if (!present) { this.pending.delete(node); return }
+      const state = session.compilations.get(node)
+      if (state?.key.complete && state.content.complete && state.version === node.compileRevision
+        && state.key.input === node.key && state.content.input === node.content) return
+      this.pending.add(node)
+      // 已有位置在轮到前改变，仍按本波顺序访问；本波新增节点留到下一波。
+      if (this.visiting && this.current && this.session.compilations.has(node)
+        && this.session.compareOrder(node, this.current) > 0 && !this.visiting.includes(node)) {
+        const index = this.visiting.findIndex(item => this.session.compareOrder(item, node) > 0)
+        this.visiting.splice(index < 0 ? this.visiting.length : index, 0, node)
+      }
+    })
+  }
 
-  /** 按波初顺序访问当前仍参与输出的节点，新增节点留给下一波。 */
+  /**
+   * 只访问本波受影响的位置；新增、改写及未完成的内容留给下一波。
+   */
   visit(compileWaveIndex: number): void {
-    for (const node of this.session.nodes.slice()) {
-      if (this.session.hasOutput(node)) this.visitNode(node, compileWaveIndex)
+    this.visiting = [...this.pending].sort((left, right) => this.session.compareOrder(left, right))
+    for (const node of this.visiting) {
+      this.current = node
+      this.pending.delete(node)
+      if (!this.session.hasOutput(node)) continue
+      this.visitNode(node, compileWaveIndex)
+      this.invalidate(node)
+      const state = this.session.compilations.get(node)!
+      if (!state.key.complete || !state.content.complete) this.pending.add(node)
     }
+    this.visiting = undefined
+    this.current = undefined
   }
 
   /** 波末核对当前输入；全部角色完成时返回 true，否则继续后续波；暂缓无推进来源时抛出实际原因。 */
   settle(): boolean {
-    for (const node of this.session.nodes) this.invalidate(node)
     return this.isReady()
   }
 
@@ -205,13 +234,12 @@ export class NodeCompilation {
     state.input = context[name]
   }
 
-  /** 只看本波结束的现存队列：新节点或未暂缓的未完成角色可进入下一波，否则报告实际暂缓原因。 */
+  /**
+   * 只核对尚待处理的位置；有新前提或未暂缓工作时继续，否则报告实际暂缓原因。
+   */
   private isReady(): boolean {
-    const pending = this.session.nodes.filter((node) => {
-      const state = this.session.compilations.get(node)
-      return !state?.key.complete || !state.content.complete
-    })
-    const deferred = this.session.nodes.find((node) => node.deferredReason !== undefined)
+    const pending = [...this.pending]
+    const deferred = pending.find((node) => node.deferredReason !== undefined)
     if (deferred && !pending.some((node) => !this.session.compilations.has(node) || node.deferredReason === undefined)) throw deferred.deferredReason
     return pending.length === 0
   }

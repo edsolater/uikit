@@ -103,7 +103,9 @@ export function variable<DefaultValue extends VariableDefaultValue>(
   return createVariable(input, options)
 }
 
-/** 创建与派生共用一份解析和内容协议；来源不成为额外公开创建入口。 */
+/**
+ * 创建与派生共用参数解析和内容协议；来源仅在创建时复制，不建立动态配置继承。
+ */
 function createVariable(input: VariableDefaultValue | VariableStateValues, options: string | VariableOptions, source?: Variable): Variable {
   const config = parseVariableArgs(input as VariableDefaultValue, options, source)
   const name = config.name
@@ -118,7 +120,9 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
   const self: Variable = {
     kind: 'variable',
     priority: config.priority,
-    /** 来源只在创建时读取，不建立动态配置继承。 */
+    /**
+     * 以当前对象的创建配置派生独立定义；未指定的默认内容、名称和状态沿用来源。
+     */
     derive(input?: VariableDefaultValue | VariableStateValues, naming?: VariableDeriveName | VariableOptions) {
       const targetOptions = typeof naming === 'string' || isFunction(naming) || hasProperty(naming, 'kind', value => value === 'variable-name')
           ? { name: isFunction(naming) ? naming(self.name) : naming as string | VariableName }
@@ -177,12 +181,22 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
 export const isVariable = (input: unknown): input is Variable =>
   hasProperty(input, 'kind', (v) => v === 'variable')
 
+/** 天然材料引用保留其原对象身份，不按CSS名称猜测所属定义。 */
+const referenceTargets = new WeakMap<object, VariableTarget>()
+
+/**
+ * 读取内容中的具体引用对象；这里只交付创建引用时已知的身份，不执行材料内容。
+ */
+export function referencedVariable(input: object): VariableTarget | undefined {
+  return isVariable(input) ? input : referenceTargets.get(input)
+}
+
 /**
  * 将自定义属性材料作为内容引用；依赖原信息体，保留其资源激活关系。
  */
 export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyObject {
   if (isVariable(target)) return target
-  return {
+  const reference: JSSContent & JSSKeyObject = {
     dependencies: isJSSContent(target) ? [target] : [],
     /**
      * 作为声明目标时输出材料的当前 CSS 名称。
@@ -193,6 +207,8 @@ export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyOb
      */
     onCompile: (context, controller) => compileVariableContent(target, context, controller),
   }
+  referenceTargets.set(reference, target)
+  return reference
 }
 
 /**
@@ -214,13 +230,12 @@ function consumeVariableDefinition(target: VariableTarget, context: JSSCompileCo
     if (existing) controller.depend(existing, { owner: context.node })
     else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
   }
+  activateVariableResources(target, context, controller)
   if (context.role === 'declaration-key') {
-    activateVariableResources(target, context, controller)
     // 独立声明也启动统一稳定核验；键访问不登记值消费。
     observeVariable(target, undefined, context, controller)
     return []
   }
-  activateVariableResources(target, context, controller)
   const definition = consumeDeclaration(context, controller, target)
   const content = definition ? definition.baseContent : target.content
   observeVariable(target, content, context, controller, definition?.baseNode, definition?.originNode)
