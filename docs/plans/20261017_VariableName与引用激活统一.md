@@ -160,7 +160,7 @@ Cluster 仍聚合 Variable，其同名检测和派生成员命名改从声明地
 需求测试阶段已取得 26 项单元及 4 项浏览器 RED。实施中修正前置 Name 测试的 CSS 规范化空格预期，并为独立参数用例隔离 CSS 名称，保留全部行为断言。原 Variable 同名资源重启测试的对象退出前提已被共同 Name 语义接管：天然材料继续验证完整退出后重新注册；Variable 则验证共同 Name 还有消费者时不会按对象重启。两种资源契约均有反证，未经修改实现绕过。
 
 
-首轮实施验收：单元测试 403 项、完整浏览器测试 175 项全部通过；最后颜色成员命名整理后定向复验颜色与 Button 浏览器 38 项通过。类型检查、正式 build、构建产物 Name 引用烟测及 `git diff --check` 通过。约束、复用、独立行为审查和精简复查均通过；现役契约已同步至 [变量定义与消费](../../src/style-system/doc/变量定义与消费.md) 和 [Style System 架构](../../src/style-system/architecture.md)。构建后的 dist 已实际更新，沿仓库现有规则忽略，不改变跟踪配置。
+首轮实施验收：单元测试 403 项、完整浏览器测试 175 项全部通过；最后颜色成员命名整理后定向复验颜色与 Button 浏览器 38 项通过。类型检查、正式 build、构建产物 Name 引用烟测及 `git diff --check` 通过。约束、复用、独立行为审查和精简复查均通过；现役契约已同步至 [变量定义与消费](../../src/style-system/doc/behaviors/__spec.md) 和 [Style System 架构](../../src/style-system/architecture.md)。构建后的 dist 已实际更新，沿仓库现有规则忽略，不改变跟踪配置。
 
 本阶段遗留的失败截图共 34 张已按实施前清单逐个识别、移入任务目录后清理；此前已有 44 张截图哈希保持一致。临时构建烟测脚本已清理，需求测试、Plan 和正式源码保留，运行日志及实施报告保存在 `agents/run/variable-name-implementation/`。
 

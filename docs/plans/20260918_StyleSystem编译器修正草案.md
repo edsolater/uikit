@@ -1,12 +1,12 @@
 # 编译器修正草案
 
-本文保留 2026-09-18 的问题分析与实施记录，作为历史材料；其中“当前”、旧文件与协议不描述现役实现，也不再作为待执行方案。现役结构见 [架构](../architecture.md)，内容工具边界见 [JSS 内容组织工具公约](../pieces/contents/functions/SPEC.md)。
+本文保留 2026-09-18 的问题分析与实施记录，作为历史材料；其中“当前”、旧文件与协议不描述现役实现，也不再作为待执行方案。现役结构见 [架构](../../src/style-system/architecture.md)，内容工具边界见 [JSS 内容组织工具公约](../../src/style-system/pieces/contents/functions/SPEC.md)。
 
 2026-10-08 的裁决已替代本文对 CSS Function 与 Expression 的旧实现选择：本文当时把“CSS Function”用于内容生成方式；现役 CSSFunction 指与 Variable 平级的定义主体，调用生成依赖主体的 Expression，调用表达式自身不提供资源定义。Expression 以自身依赖和输出为真实边界，“不增加 Expression 对象”的旧选择退出。其他符合现行契约的行为目的仍保留，历史协议与文件布局不能作为现役事实。
 
 记录当前编译器的问题、已确认修正、实现设计事项和验收方法。2026-09-18：已合入条件优先级、Variable 自动定义和具体语法归属的最新裁决，尚未修改实现。
 
-已确认要求以本轮用户裁决为准；与旧设计冲突的部分按本文修正。其余条目标明为分析或建议，不能因写入本文就视为已获实施授权。实际运行结构仍见 [架构](../architecture.md)。
+已确认要求以本轮用户裁决为准；与旧设计冲突的部分按本文修正。其余条目标明为分析或建议，不能因写入本文就视为已获实施授权。实际运行结构仍见 [架构](../../src/style-system/architecture.md)。
 
 # 后续裁决与当前状态
 
@@ -29,7 +29,7 @@ Rule = [Condition Path, Key, Content]
 Address = Condition Path + Key
 ```
 
-当前 [rules()](../rule.ts) 将 Declaration 登记为 `[[path, key], [key, content]]`，地址和内容重复保存 Key。`rule()` 又允许直接存内容，导致编译器保留两条声明处理路线。这是实现偏离要求，不是用户要求了两份 Key。
+当前 [rules()](../../src/style-system/rule.ts) 将 Declaration 登记为 `[[path, key], [key, content]]`，地址和内容重复保存 Key。`rule()` 又允许直接存内容，导致编译器保留两条声明处理路线。这是实现偏离要求，不是用户要求了两份 Key。
 
 修正方向：源 Rule 统一表达三个组成；Declaration 在登记边界拆出 Key 与 Content，不能把完整 Declaration 再当同一条 Rule 的 Content 保存。编译器只从该 Rule 的 Key 取得本层受体，不再判断两份 Key 谁接管谁。公共调用写法是否调整、账本选择何种容器，另行确定。
 
@@ -44,7 +44,7 @@ Address = Condition Path + Key
 - Variable 可以作为声明目标，仍由 Declaration 表达“向这个目标声明什么内容”。
 - Variable 的赋值内容可以使用 Value；这些 Value 展开的目标是该 Variable。
 
-当前 [Variable](../variable/core.ts) 从 Value 类型提取结构，保存 `kind: 'value'`；[CSS Key](../css-key.ts) 又重复描述 Variable 的内部形状。引用处理位于 `compileExpression()`，赋值处理位于 `compileVariableDeclaration()`，默认赋值和注册又连接外层会话。应由明确的 Variable 编译责任接管这些关系。
+当前 [Variable](../../src/style-system/variable/core.ts) 从 Value 类型提取结构，保存 `kind: 'value'`；[CSS Key](../../src/style-system/css-key.ts) 又重复描述 Variable 的内部形状。引用处理位于 `compileExpression()`，赋值处理位于 `compileVariableDeclaration()`，默认赋值和注册又连接外层会话。应由明确的 Variable 编译责任接管这些关系。
 
 Valuable 的具体 TypeScript 协议、是否使用类继承、原始值及 CSS Function 怎样接入，属于实现设计事项。共同身份不要求所有对象返回相同形状的完整 Rule；表达式内部仍需要内容结果。所有求值和 CSS 生成继续由 Compiler 在实际编译时控制。
 
@@ -193,7 +193,7 @@ const b = value(1, { A: 7, B: 11 })
 
 ## 测试把实现过程当成了正确依据
 
-[状态顺序与变量来源链共同决定取值.test.ts](../test/状态顺序与变量来源链共同决定取值.test.ts) 固定了候选遍历覆盖结果；[值与变量组合保留各自状态和身份.test.ts](../test/值与变量组合保留各自状态和身份.test.ts) 固定了中间候选数量。这些断言可以描述旧行为，不能批准其语义。
+[状态顺序与变量来源链共同决定取值.test.ts](../../src/style-system/test/状态顺序与变量来源链共同决定取值.test.ts) 固定了候选遍历覆盖结果；[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts) 固定了中间候选数量。这些断言可以描述旧行为，不能批准其语义。
 
 修正测试时先明确输入、目标内容和可观察结果。保留地址归一化、Variable 隔离、真实 CSS 输出和浏览器行为验证；重新裁决上述过程断言。此前测试通过不能证明本轮指出的问题不存在。
 
@@ -233,11 +233,11 @@ const b = value(1, { A: 7, B: 11 })
 
 # 重做执行计划
 
-修改落点、顺序、AI Rules 链接、必要性审查与逐项验收统一见 [Style System 编译器重做计划](../../../docs/plans/style-system-compiler-rebuild.md)。本文保留完整需求和问题分析；执行计划不替代这些决定。制定计划时的半成品不作为通过依据；本轮实施结果见下文。
+修改落点、顺序、AI Rules 链接、必要性审查与逐项验收统一见 [Style System 编译器重做计划](style-system-compiler-rebuild.md)。本文保留完整需求和问题分析；执行计划不替代这些决定。制定计划时的半成品不作为通过依据；本轮实施结果见下文。
 
 # 本轮实施分析
 
-2026-09-18：按完整草案重做，不沿用失败实现的验收报告。代码与测试已接通，末次验证结果统一记录在 [Plan](../../../docs/plans/style-system-compiler-rebuild.md#测试与质量证据)。
+2026-09-18：按完整草案重做，不沿用失败实现的验收报告。代码与测试已接通，末次验证结果统一记录在 [Plan](style-system-compiler-rebuild.md#测试与质量证据)。
 
 ## 责任怎样回到原位
 

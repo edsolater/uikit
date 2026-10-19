@@ -46,5 +46,5 @@
 | 按需依赖同链、循环终止、未使用资源不输出、状态优先级与显式覆盖 | 通过 | 上述单测与 [样式挂载后浏览器计算与更新.browser.test.ts](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts) |
 | 重复同址同 key 声明按队列顺序输出；不引入属性值聚合 | 通过 | 登记单测的简写/详细属性书写顺序断言；[css-string.ts](../../src/style-system/compiler/css-string.ts) 只输出完成节点 |
 | Button、浏览器层叠与实时状态、CSSRoot 完整成功提交和失败回退 | 通过 | `bun run test:browser --reporter=dot`：14 files、74 tests 通过；包含 Button、层叠以及 CSSRoot 编译失败保留旧 CSS |
-| 旧编译通路及旧改写协议退出，Architecture/活动材料如实更新 | 通过 | 旧编译文件删除；[Architecture](../../src/style-system/architecture.md)、[JSS 节点链 Guide](../../src/style-system/doc/JSS样式节点树.md) 和活动行为文档已更新 |
+| 旧编译通路及旧改写协议退出，Architecture/活动材料如实更新 | 通过 | 旧编译文件删除；[Architecture](../../src/style-system/architecture.md)、[JSS 节点链 Guide](../../src/style-system/architecture.md#内容扩展与位置记录) 和活动行为文档已更新 |
 | 独立实施审查完成、问题修正并复验 | 通过 | 独立审查复验：既有节点后续修改输出 11px；callable Parseable 分类正确；A、B、A 地址严格按输入顺序输出；type-check、32/135 单测、14/74 浏览器测试与 diff --check 全通过 |

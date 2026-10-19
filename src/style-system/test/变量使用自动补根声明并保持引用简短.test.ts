@@ -1,4 +1,4 @@
-/** 通过正式编译入口验证引用、全树声明查找和按需根声明的撤销。 */
+/** 通过正式编译入口验证引用、消费位置声明查找和按需根声明的撤销。 */
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { declare } from '../operations/declare'
@@ -31,7 +31,7 @@ test('多层引用各自声明一条关系，使用处不展开依赖链', () =>
   expect(unusedCalls).toBe(0)
 })
 
-test.each([false, true])('全树任意位置已有显式声明，不补根默认；声明在引用前=%s', (before) => {
+test.each([false, true])('无关位置的显式声明不抑制消费默认；声明在引用前=%s', (before) => {
   const color = variable('white', `root-explicit-color-${before}`)
   const definition = [['.Other'], ...declare(color, 'red')] as Parameters<typeof compileRules>[0][number]
   const consumption = [['.Consumer'], 'color', color] as Parameters<typeof compileRules>[0][number]
@@ -52,7 +52,7 @@ test('同 CSS 名称的另一对象声明不替代被引用对象的根基础定
   expect(css).not.toContain('white')
 })
 
-test('后续编译波按需生成显式声明时不留下根默认', () => {
+test('后续编译波生成无关位置声明时，消费默认仍保留', () => {
   const color = variable('white', 'root-late-color')
   const later: JSSContent = { compileWaveIndex: 2, onCompile(context, controller) {
     controller.setContent(context, { onActive: () => [[['.Other'], ...declare(color, 'red')]] })
@@ -64,7 +64,7 @@ test('后续编译波按需生成显式声明时不留下根默认', () => {
   expect(css).not.toContain('white')
 })
 
-test('默认材料激活同变量显式声明时取消根默认，显式产物继续存活', () => {
+test('默认材料激活无关位置声明时，默认及显式产物同时存活', () => {
   const content: JSSContent = { toCSSString: () => 'white',
     onActive: () => [[['.Other'], ...declare(color, 'red')]],
   }
@@ -103,4 +103,23 @@ test.each([false, true])('消费者撤销后清理自动根声明，其他消费
   expect(css.includes('--root-shared-canvas: var(--root-shared-paper);')).toBe(shared)
   expect(css).not.toMatch(/(?:^|\n)color: var\(--root-shared-canvas\);/)
   if (!shared) expect(css).toBe('')
+})
+
+
+test('更窄条件覆盖不抑制普通派生默认，真正祖先覆盖继续生效', () => {
+  const source = variable('blue', 'position-source')
+  const surface = variable(source, 'position-surface')
+  const css = compileRules([
+    [['.Button'], 'color', surface],
+    [['.Button', '&[data-danger]'], ...declare(source, 'red')],
+  ])
+  expect(css).toContain('--position-source: blue;')
+  expect(css).toContain('--position-source: red;')
+  expect(css).toContain('--position-surface: var(--position-source);')
+  const scoped = compileRules([
+    [['.Panel'], ...declare(source, 'green')],
+    [['.Panel', '.Child'], 'color', surface],
+  ])
+  expect(scoped).toContain('--position-source: green;')
+  expect(scoped).not.toContain('--position-source: blue;')
 })
