@@ -1,6 +1,6 @@
 /** Variable 创建参数的统一入口。
 
-把默认值、状态值简写和名称简写整理为一份创建配置，名称统一为 VariableName。
+把默认值、状态与变体定义及名称简写整理为一份创建配置，名称统一为 VariableName。
 
 后续创建逻辑只处理统一配置，不再区分调用写法。
 */
@@ -22,7 +22,7 @@ export type VariableConfig<
  * 将两处独立简写展开为创建配置，不执行内容函数。
  * 带 default 字段的对象表示状态值，字段判断沿用 fnkit 的 containKey。
  * 第二参数的字符串表示 name；options.states 覆盖简写中的同名状态，其余状态保留。
- * derive 沿用来源默认内容，名称与原始状态规则一起继承；不执行任何内容函数。
+ * derive 沿用来源默认内容，名称与原始状态、变体定义一起继承；不执行内容函数。
  * @example parseVariableArgs({ default: 1, hover: 2 }, 'amount')
  * 默认内容为 1，hover 为 2，name 为绑定 amount 地址的 VariableName。
  */
@@ -40,5 +40,6 @@ export function parseVariableArgs<DefaultValue extends VariableDefaultValue>(
   const sourceStates = source ? Object.fromEntries([...source.config.states].map(([state, rule]) => [state.name, rule])) : undefined
   const inputStates = shorthand ? Object.fromEntries(Object.entries(shorthand).filter(([name]) => name !== 'default')) : undefined
   const states = sourceStates || inputStates || config.states ? { ...sourceStates, ...inputStates, ...config.states } : undefined
-  return { ...config, name, priority, defaultValue, ...(states ? { states } : {}) }
+  const variants = source?.config.variants || config.variants ? { ...source?.config.variants, ...config.variants } : undefined
+  return { ...config, name, priority, defaultValue, ...(states ? { states } : {}), ...(variants ? { variants } : {}) }
 }

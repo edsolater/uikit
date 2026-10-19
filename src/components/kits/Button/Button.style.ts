@@ -55,12 +55,21 @@ import { $opacity } from '@/style-system/pieces/keys/opacity'
 
 const button = ['@layer uikit', `.Button`]
 
-/** Button自己的语气与颜色定义；危险条件分别声明所需颜色，不建立整组协议。 */
+/** 语气是组件的颜色输入；用途表达式显式引用它，分类只需选择一次材料。 */
 export const buttonToneColor = variable(interactiveColor, 'button-tone-color')
-export const buttonSoftColor = variable(oklch(buttonToneColor, { alpha: 0.14 }), 'button-soft-color')
-export const buttonStrongColor = variable(buttonToneColor, 'button-strong-color')
-export const buttonLineColor = variable(oklch(buttonToneColor, { alpha: 0.44 }), 'button-line-color')
-export const buttonToneContentColor = variable(paperColor, 'button-tone-content-color')
+const buttonColors = variable(buttonToneColor, {
+  name: 'button',
+  variants: {
+    'soft-color': base => oklch(base, { alpha: 0.14 }),
+    'strong-color': base => base,
+    'line-color': base => oklch(base, { alpha: 0.44 }),
+    'tone-content-color': paperColor,
+  },
+})
+export const buttonSoftColor = buttonColors.variant('soft-color')
+export const buttonStrongColor = buttonColors.variant('strong-color')
+export const buttonLineColor = buttonColors.variant('line-color')
+export const buttonToneContentColor = buttonColors.variant('tone-content-color')
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
 export const buttonSurfaceSource = variable(buttonSoftColor, { name: 'button-surface-source' })
@@ -113,13 +122,7 @@ rules(button, [
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
 rules([...button, '&[data-tone]'], [declare(buttonContentColor, buttonStrongColor)])
-rules([...button, '&[data-tone="danger"]'], [
-  declare(buttonToneColor, badColor),
-  declare(buttonSoftColor, oklch(badColor, { alpha: 0.14 })),
-  declare(buttonStrongColor, badColor),
-  declare(buttonLineColor, oklch(badColor, { alpha: 0.44 })),
-  declare(buttonToneContentColor, paperColor),
-])
+rules([...button, '&[data-tone="danger"]'], [declare(buttonToneColor, badColor)])
 
 // =============================================================================
 // appearance 外观形式
@@ -166,9 +169,9 @@ rules(filledButton, [
 ])
 
 // emphasis 只调整整体存在感，不改变外观、语气或尺寸；禁用状态由 Variable 保持。
-const softOpacity = variable(0.7, { name: 'button-soft-opacity', states: { disabled: disabledFade } })
+const softOpacity = buttonOpacity.derive(0.7, 'button-soft-opacity')
 rules([...button, '&[data-emphasis="soft"]'], [[$opacity, softOpacity]])
-const strongOpacity = variable(1, { name: 'button-strong-opacity', states: { disabled: disabledFade } })
+const strongOpacity = buttonOpacity.derive(1, 'button-strong-opacity')
 rules([...button, '&[data-emphasis="strong"]'], [[$opacity, strongOpacity]])
 
 // =============================================================================

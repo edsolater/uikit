@@ -57,7 +57,7 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
 | value.ts | 稳定 Value 的内容包装与输入类型 |
 | variable/index.ts | Variable 领域主动公开的创建、引用、材料类型和操作接入契约 |
-| variable/core.ts | 具体Variable创建与derive、名称身份、对象自身定义消费、共同声明依赖与注册资源 |
+| variable/core.ts | 具体Variable创建、derive与variant、名称身份、对象自身定义消费、共同声明依赖与注册资源 |
 | variable/declare.ts | 公共声明基础、自身状态、消费者改绑与精确撤销；保留Key.join |
 | operations/modify.ts | Modify 双方协议、材料校验、领域应用策略与操作内容构造 |
 | variable/modify.ts | 执行已选应用、按需修改步骤、结果消费与撤销；引用公共声明 |
@@ -91,6 +91,8 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 
 公共 `index` 公开 Variable 与独立 VariableName 创建、derive定义复用、声明、编译和 Mixin。Key 和其他碎片从负责文件导入；Variable 类型直接包含创建配置 `config`，自动状态声明 Key 位于 `config.definitionKey`。
 
+
+Variable 的 options.variants 保存变体规则或固定值，参数解析与 states 一样合并创建时定义。variant 通过已有 derive 创建普通 Variable，再去掉父层变体；消费与依赖继续走现役链。Button 的用途表达式明确引用 buttonToneColor，分类只声明该输入，无额外母子联动设施。
 
 ## 内容扩展与位置记录
 

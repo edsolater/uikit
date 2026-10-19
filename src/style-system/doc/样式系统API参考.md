@@ -25,11 +25,14 @@ Pieces是这些可复用材料的统称；Atom是在组合中将Value或Variable
 variable(defaultContent, nameOrOptions)
 variable({ default: defaultContent, hover: hoverContent }, nameOrOptions)
 source.derive()
+source.variant('content')
 source.derive(content, nameOrOptions)
 source.derive(source.content, { name: 'new-name', states: { hover: hoverContent }, priority: 0 })
 ```
 
-常见配置是name、states、priority、registration、onActive和compileWaveIndex。registration的syntax/inherits/initialValue分别有什么效果，见[注册行为](behaviors/变量注册保留显式类型与继承语义.md)；配置创建与之后消费的区别见[延迟消费](behaviors/动态样式只在使用时求值.md)。Variable.name的字符串拼接和CSS引用使用[名称行为](behaviors/引用只携带具体对象的定义.md)。
+常见配置是name、states、variants、priority、registration、onActive和compileWaveIndex。registration的syntax/inherits/initialValue分别有什么效果，见[注册行为](behaviors/变量注册保留显式类型与继承语义.md)；配置创建与之后消费的区别见[延迟消费](behaviors/动态样式只在使用时求值.md)。Variable.name的字符串拼接和CSS引用使用[名称行为](behaviors/引用只携带具体对象的定义.md)。
+
+variants 按名称保存变体规则或固定值；`source.variant('content')` 返回保留状态的 Variable，结果不带父层变体。所有 Variable 的 derive 原样继承 states 和 variants，规则基于新基础计算，固定值保持原值。完整例子见[变体教程](behaviors/变体保留配方并使用独立基础.md)。
 
 ## 独立变化与来源绑定
 

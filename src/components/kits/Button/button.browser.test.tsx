@@ -817,6 +817,20 @@ describe('Button styles', () => {
 })
 
 
+test('危险Button只改一个语气输入，内容与边线一起采用当地颜色且不污染兄弟', () => {
+  const selected = 'oklch(0.65 0.12 145)'
+  handles.push(rule('.Button.LocalTone', buttonToneColor, selected))
+  mountButtonStyles()
+  const host = document.body.appendChild(document.createElement('div'))
+  dispose = render(() => <><Button danger class="LocalTone">当地危险</Button><Button danger>原危险</Button></>, host)
+  const [local, sibling] = host.querySelectorAll<HTMLButtonElement>('button')
+  for (const element of [local, sibling]) element.style.transition = 'none'
+  expectSameColor(getComputedStyle(local).color, selected)
+  expectSameColor(getComputedStyle(local).borderTopColor, `oklch(from ${selected} l c h / 0.44)`)
+  expectSameColor(getComputedStyle(sibling).color, getComputedStyle(document.documentElement).getPropertyValue(badColor.toCSSString()))
+  expect(getComputedStyle(local).backgroundColor).not.toBe(getComputedStyle(sibling).backgroundColor)
+})
+
 test('全局表面和内容来源联动真实Button，区域及组件覆盖保持隔离', async () => {
   const { globalSurfaceColor, globalContentColor } = globalColors
   expect(globalSurfaceColor, '必须提供全局表面来源').toBeDefined()

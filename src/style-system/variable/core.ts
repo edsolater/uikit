@@ -1,8 +1,8 @@
 /** 样式中 Variable 的定义与消费主体。
 
-创建和引用变量，保存默认值与状态，并支持独立声明、调整绑定及条件修改。
+创建和引用变量，保存默认值、状态与变体，并支持独立声明、调整绑定及条件修改。
 
-这些用途共享一份默认值与状态配置，具体输出由样式中的使用位置决定。
+默认值、状态与变体由同一份创建配置保存，具体输出由样式中的使用位置决定。
 */
 import { condition } from '../condition'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
@@ -22,6 +22,8 @@ import { getVariableNameAddress, type VariableName } from './name'
 export type VariableDefaultValue = ValueInput
 /** 状态配方中的 base 是本次声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
+/** 变体以默认表达式生成新基础；固定值原样保留。 */
+export type VariableVariantRule = ValueInput | ((base: ValueInput) => ValueInput)
 
 /** 自定义属性材料；状态与注册仅在材料实际持有时参与。 */
 export interface VariableTarget extends DeclareProtocol, JSSContent {
@@ -34,15 +36,18 @@ export interface Variable extends VariableTarget, JSSKeyObject {
   kind: 'variable'
   get name(): VariableName
   priority: number
-  /** 创建时复用定义与状态，随后差异只属于新定义。 */
+  /** 创建时原样复用状态与变体定义，随后差异只属于新定义。 */
   derive(): Variable
   derive(input: VariableDefaultValue | VariableStateValues, nameOrOptions?: VariableDeriveName | VariableOptions): Variable
-  /** 这一个 Variable 的基础内容、状态和可选行为。 */
+  /** 选择变体，以新默认值生成保留状态的 Variable；结果不携带来源的变体定义。 */
+  variant(name: string): Variable
+  /** 这一个 Variable 的基础内容、状态、变体和可选行为。 */
   config: {
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
     defaultValue: VariableDefaultValue
     /** 条件按登记顺序保存，原始规则在每次声明时绑定当地基础内容。 */
     states: Map<StateCondition, VariableStateRule>
+    variants?: Record<string, VariableVariantRule>
     registration?: VariableOptions['registration']
     /** 自动状态声明的目标 Key，指向注册时绑定的名称。 */
     definitionKey: JSSKeyObject
@@ -57,7 +62,7 @@ export interface Variable extends VariableTarget, JSSKeyObject {
   onCompile(context: JSSCompileContext, astController: ASTController): void
 }
 
-/** 一个 Variable 的名称、各状态基础值及可选注册。 */
+/** 一个 Variable 的名称、状态与变体定义，以及可选注册。 */
 export interface VariableOptions {
   /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，derive 可沿用来源身份。 */
   name?: string | VariableName
@@ -68,6 +73,8 @@ export interface VariableOptions {
    * 回调在声明展开时执行，收到本次声明基础内容；derive 保留规则并重新绑定。
    */
   states?: Record<string, VariableStateRule>
+  /** 变体规则或固定基础；derive 按名称继承，显式同名项覆盖。 */
+  variants?: Record<string, VariableVariantRule>
 
   /** 首次消费时提供按需 Rules；与普通 JSSContent.onActive 使用同一生命周期。 */
   onActive?: JSSContent['onActive']
@@ -121,13 +128,21 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
     kind: 'variable',
     priority: config.priority,
     /**
-     * 以当前对象的创建配置派生独立定义；未指定的默认内容、名称和状态沿用来源。
+     * 以当前配置派生独立定义；默认内容、名称及未覆盖的状态与变体沿用来源。
      */
     derive(input?: VariableDefaultValue | VariableStateValues, naming?: VariableDeriveName | VariableOptions) {
       const targetOptions = typeof naming === 'string' || isFunction(naming) || hasProperty(naming, 'kind', value => value === 'variable-name')
           ? { name: isFunction(naming) ? naming(self.name) : naming as string | VariableName }
           : naming ?? {}
       return createVariable(arguments.length === 0 ? self.config.defaultValue : input, targetOptions, self)
+    },
+    variant(variantName) {
+      assert(self.config.variants && Object.hasOwn(self.config.variants, variantName), `Variable ${name} 未定义变体 ${variantName}。`)
+      const rule = self.config.variants[variantName]
+      const content = isFunction(rule) && !isJSSContent(rule) ? rule(self.content) : rule
+      const result = self.derive(content, `${name}-${variantName}`)
+      delete result.config.variants
+      return result
     },
     /**
      * 注册时绑定的名称引用，不支持后续替换。
@@ -136,6 +151,7 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
     config: {
       defaultValue: config.defaultValue,
       states,
+      variants: config.variants,
       registration: config.registration,
       get definitionKey() {
         return { toCSSString: self.toCSSString, priority: self.priority, join: joinVariableValues }
