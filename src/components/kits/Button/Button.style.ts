@@ -55,24 +55,21 @@ import { $opacity } from '@/style-system/pieces/keys/opacity'
 
 const button = ['@layer uikit', `.Button`]
 
-/** 语气是组件的颜色输入；用途表达式显式引用它，分类只需选择一次材料。 */
-export const buttonToneColor = variable(interactiveColor, 'button-tone-color')
-const buttonColors = variable(buttonToneColor, {
-  name: 'button',
+/** 组件的局部颜色输入；变体保留真实引用，分类只需选择一次材料。 */
+export const buttonColorInput = variable(interactiveColor, 'button-color-input')
+/** Button 的颜色定义；使用处按 soft、strong、line、content 选择变体。 */
+export const buttonColor = variable(buttonColorInput, {
+  name: 'button-color',
   variants: {
-    'soft-color': base => oklch(base, { alpha: 0.14 }),
-    'strong-color': base => base,
-    'line-color': base => oklch(base, { alpha: 0.44 }),
-    'tone-content-color': paperColor,
+    soft: base => oklch(base, { alpha: 0.14 }),
+    strong: base => base,
+    line: base => oklch(base, { alpha: 0.44 }),
+    content: paperColor,
   },
 })
-export const buttonSoftColor = buttonColors.variant('soft-color')
-export const buttonStrongColor = buttonColors.variant('strong-color')
-export const buttonLineColor = buttonColors.variant('line-color')
-export const buttonToneContentColor = buttonColors.variant('tone-content-color')
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
-export const buttonSurfaceSource = variable(buttonSoftColor, { name: 'button-surface-source' })
+export const buttonSurfaceSource = variable(buttonColor.variant('soft'), { name: 'button-surface-source' })
 
 /** 混色的承载画布，默认沿用中性表面的交互状态。 */
 export const buttonSurfaceCanvas = variable(interactiveColorStates({ base: globalSurfaceColor }), { name: 'button-surface-canvas' })
@@ -95,17 +92,13 @@ export const buttonContentColor = variable(globalContentColor, 'button-content-c
 
 // 定义button的样式架构
 rules(button, [
-  declare(buttonToneColor),
-  declare(buttonSoftColor),
-  declare(buttonStrongColor),
-  declare(buttonLineColor),
-  declare(buttonToneContentColor),
-  declare(buttonSurfaceSource),
+  // 输入与实色在当前按钮上求值，不继承祖先已经算好的颜色。
+  declare(buttonColorInput),
+  declare(buttonColor.variant('strong')),
+  // 画布的 hover/active 属于当前按钮，在此建立状态基础。
   declare(buttonSurfaceCanvas),
+  // modify 需要每个按钮的局部基础，避免相对变化沿用祖先按钮的结果。
   declare(buttonSurfaceStrength),
-  declare(buttonSurfaceColor),
-  declare(buttonContentColor),
-
   innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
   contentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
   size({ minHeight: controlSizeNormal }),
@@ -113,7 +106,7 @@ rules(button, [
   color({ background: buttonSurfaceColor, content: buttonContentColor }),
   elevation(shadowInteractive),
 
-  clickable({ opacity: buttonOpacity, focusColor: buttonLineColor }),
+  clickable({ opacity: buttonOpacity, focusColor: buttonColor.variant('line') }),
 ])
 
 // =============================================================================
@@ -121,8 +114,8 @@ rules(button, [
 // =============================================================================
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
-rules([...button, '&[data-tone]'], [declare(buttonContentColor, buttonStrongColor)])
-rules([...button, '&[data-tone="danger"]'], [declare(buttonToneColor, badColor)])
+rules([...button, '&[data-tone]'], [declare(buttonContentColor, buttonColor.variant('strong'))])
+rules([...button, '&[data-tone="danger"]'], [declare(buttonColorInput, badColor)])
 
 // =============================================================================
 // appearance 外观形式
@@ -130,7 +123,7 @@ rules([...button, '&[data-tone="danger"]'], [declare(buttonToneColor, badColor)]
 
 // outlined 保留浅底，并用当前语气的线色形成可见轮廓。
 rules([...button, '&[data-appearance="outlined"]'], [
-  boundary({ border: [boundaryWidthThin, 'solid', buttonLineColor] }),
+  boundary({ border: [boundaryWidthThin, 'solid', buttonColor.variant('line')] }),
 ])
 
 // plain 保留透明常态与无边界，悬停和按下只增加轻量语气反馈。
@@ -163,8 +156,8 @@ rules(filledButton, [
     type: 'expression',
     detail: (currentExpression) => add(currentExpression, filledStrength),
   }),
-  [buttonSurfaceSource, buttonToneColor],
-  declare(buttonContentColor, buttonToneContentColor),
+  [buttonSurfaceSource, buttonColorInput],
+  declare(buttonContentColor, buttonColor.variant('content')),
   elevation(shadowFilled),
 ])
 

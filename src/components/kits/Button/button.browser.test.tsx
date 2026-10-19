@@ -1,4 +1,4 @@
-import { buttonSurfaceColor, buttonContentColor, buttonToneColor, buttonSoftColor, buttonStrongColor, buttonToneContentColor, buttonLineColor } from './Button.style'
+import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
 import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, interactiveColor, badColor, oklch, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
@@ -327,8 +327,8 @@ describe('Button styles', () => {
     // 在已知外观的结构Address验证组合，不从平面选择器猜测DOM同时命中的分支。
     for (const [index, palette] of palettes.entries()) handles.push(rules(['@layer uikit', '.Button',
       ...(selectedAppearance ? [`&[data-appearance="${selectedAppearance}"]`] : []), `&[data-local-tone="${index}"]`], [
-      [buttonToneColor, palette.tone], [buttonSoftColor, palette.soft],
-      [buttonStrongColor, palette.strong], [buttonToneContentColor, palette.content], [buttonLineColor, palette.line],
+      [buttonColorInput, palette.tone], [buttonColor.variant('soft'), palette.soft],
+      [buttonColor.variant('strong'), palette.strong], [buttonColor.variant('content'), palette.content], [buttonColor.variant('line'), palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -819,7 +819,7 @@ describe('Button styles', () => {
 
 test('危险Button只改一个语气输入，内容与边线一起采用当地颜色且不污染兄弟', () => {
   const selected = 'oklch(0.65 0.12 145)'
-  handles.push(rule('.Button.LocalTone', buttonToneColor, selected))
+  handles.push(rule('.Button.LocalTone', buttonColorInput, selected))
   mountButtonStyles()
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => <><Button danger class="LocalTone">当地危险</Button><Button danger>原危险</Button></>, host)
