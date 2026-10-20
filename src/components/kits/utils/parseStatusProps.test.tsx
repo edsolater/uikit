@@ -1,9 +1,31 @@
+import { flush } from 'solid-js'
 import { createRoot } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
 import { createState, val } from '@/foundation'
 import { createStatusPropsParser } from './parseStatusProps'
 
 describe('createStatusPropsParser', () => {
+  test('已声明的外部 getter 字段持续更新，内部操作不接管它', () => {
+    createRoot(dispose => {
+      const disabled = createState(true)
+      const parser = createStatusPropsParser({ candidates: ['disabled'] })
+      const { details, statusActions, statusShadowProps } = parser({
+        get disabled() { return val(disabled) },
+      })
+      const attribute = statusShadowProps.htmlProps!['data-status']
+      expect(val(details.disabled)).toBe(true)
+      expect(val(attribute)).toBe('disabled')
+      disabled.set(false)
+      flush()
+      expect(val(details.disabled)).toBe(false)
+      expect(val(attribute)).toBeUndefined()
+      statusActions.setStatus('disabled', true)
+      flush()
+      expect(val(details.disabled)).toBe(false)
+      dispose()
+    })
+  })
+
   test('外部声明拥有状态，未声明状态才接受内部修改', () => {
     createRoot((dispose) => {
       const loading = createState(false)
@@ -27,15 +49,18 @@ describe('createStatusPropsParser', () => {
       expect(val(details.loading)).toBe(false)
 
       loading.set(true)
+      flush()
       expect(val(details.loading)).toBe(true)
       expect(val(statusActions.hasStatus('loading'))).toBe(true)
       expect(val(statusAttribute)).toBe('loading')
 
       statusActions.setStatus('disabled', true)
+      flush()
       expect(val(details.disabled)).toBe(true)
       expect(val(statusActions.hasStatus('disabled'))).toBe(true)
       expect(val(statusAttribute)).toBe('loading disabled')
       loading.set(false)
+      flush()
       expect(val(statusAttribute)).toBe('disabled')
       expect(effect).toHaveBeenCalledOnce()
 

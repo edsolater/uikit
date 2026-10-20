@@ -1,4 +1,5 @@
-import { render } from 'solid-js/web'
+import { flush } from 'solid-js'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { Piv } from '../../../Piv/Piv'
 import { draggable } from '../draggable/draggable'
@@ -45,13 +46,16 @@ describe('droppable', () => {
     stubPointerCapture(source)
 
     source.dispatchEvent(pointerEvent('pointerdown', 5, sourcePoint.x, sourcePoint.y))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 5, targetPoint.x, targetPoint.y))
+    flush()
 
     expect(getComputedStyle(source).translate).not.toBe('none')
     expect(document.elementsFromPoint(targetPoint.x, targetPoint.y)).toContain(target)
     expect(target.getAttribute('data-drop-acceptable')).toBe('true')
 
     window.dispatchEvent(pointerEvent('pointerup', 5, targetPoint.x, targetPoint.y))
+    flush()
     expect(receivedPayload).toBe('weather')
   })
 
@@ -68,8 +72,11 @@ describe('droppable', () => {
 
     expect(result.textContent).toBe('等待放下')
     source.dispatchEvent(pointerEvent('pointerdown', 6, 10, 10))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 6, 30, 30))
+    flush()
     window.dispatchEvent(pointerEvent('pointerup', 6, 30, 30))
+    flush()
 
     expect(result.parentElement).toBe(target)
     expect(result.textContent).toBe('已接收：{"widget":"weather"}')
@@ -113,9 +120,12 @@ describe('droppable', () => {
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([payloadTarget])
 
     source.dispatchEvent(pointerEvent('pointerdown', 7, 10, 10))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 7, 30, 30))
+    flush()
     expect(payloadTarget.getAttribute('data-drop-acceptable')).toBe('true')
     window.dispatchEvent(pointerEvent('pointerup', 7, 30, 30))
+    flush()
     expect(receivedPayload).toBe(payload)
     expect(payloadTarget.getAttribute('data-drop-hovering')).not.toBe('true')
 
@@ -126,11 +136,13 @@ describe('droppable', () => {
       cancelable: true,
       dataTransfer: externalTransfer,
     }))
+    flush()
     fileTarget.dispatchEvent(new DragEvent('drop', {
       bubbles: true,
       cancelable: true,
       dataTransfer: externalTransfer,
     }))
+    flush()
     expect(receivedFiles.map((file) => file.name)).toEqual(['hello.txt'])
     expect(receivedItems.map((item) => item.kind)).toEqual(['file'])
   })
@@ -171,7 +183,9 @@ describe('droppable', () => {
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([target])
 
     source.dispatchEvent(pointerEvent('pointerdown', 13, 10, 10))
+    flush()
     window.dispatchEvent(pointerEvent('pointerup', 13, 30, 30))
+    flush()
 
     expect(cleanedBeforeDrop).toBe(true)
     expect(host.childElementCount).toBe(0)

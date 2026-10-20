@@ -61,12 +61,11 @@ export const KitContext = (props: { children?: any } & Omit<KitContextNode, 'par
  *  const CardContextPayloads = useKitContext({target: 'Card'})
  *  const text = props.children.trim()
  * 
- *  createEffect(() => {
- *    const text = props.children.trim()
+ *  createEffect(() => props.children.trim(), text => {
  *    card?.setTitle?.(text)
- *    onCleanup(() => {
+ *    return () => {
  *      card?.setTitle?.(undefined)
- *    })
+ *    }
  *  })
  *  return <Piv>Title here</Piv>
  * }

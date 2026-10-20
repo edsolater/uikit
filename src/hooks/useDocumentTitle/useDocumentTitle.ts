@@ -35,9 +35,7 @@ export function useDocumentTitle(nextTitle?: Source<string | undefined>): State<
     onCleanup(() => observer.disconnect())
   }
 
-  createEffect(() => {
-    const title = val(nextTitle)
-
+  createEffect(nextTitle, title => {
     if (typeof document === 'undefined' || typeof title !== 'string' || title.length === 0) {
       return
     }

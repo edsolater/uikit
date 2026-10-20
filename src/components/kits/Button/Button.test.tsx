@@ -1,7 +1,8 @@
+import { flush } from 'solid-js'
 // @vitest-environment jsdom
 
 /** 验证 Button 的公开行为、DOM 描述与应用启动职责边界。 */
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '@/foundation'
 import { Button, type ButtonAppearance } from './Button'
@@ -46,10 +47,13 @@ describe('Button', () => {
     const element = host.firstElementChild as HTMLElement
     expect(element.dataset.appearance).toBe('outlined')
     appearance.set('filled')
+    flush()
     expect(element.dataset.appearance).toBe('filled')
     appearance.set('plain')
+    flush()
     expect(element.dataset.appearance).toBe('plain')
     appearance.set(undefined)
+    flush()
     expect(element.dataset.appearance).toBe('outlined')
     expect(element.hasAttribute('data-variant')).toBe(false)
   })
@@ -62,8 +66,10 @@ describe('Button', () => {
     expect(first.dataset.appearance).toBe('outlined')
     expect(second.dataset.appearance).toBe('outlined')
     filled.set(true)
+    flush()
     expect(first.dataset.appearance).toBe('filled')
     filled.set(false)
+    flush()
     expect(first.dataset.appearance).toBe('outlined')
   })
 
@@ -137,10 +143,13 @@ describe('Button', () => {
     expect(element.hasAttribute('data-emphasis')).toBe(false)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('“emphasis”接管整个分组'))
     emphasis.set('strong')
+    flush()
     expect(element.dataset.emphasis).toBe('strong')
     emphasis.set('soft')
+    flush()
     expect(element.dataset.emphasis).toBe('soft')
     emphasis.set(undefined)
+    flush()
     expect(element.hasAttribute('data-emphasis')).toBe(false)
   })
 
@@ -163,6 +172,7 @@ describe('Button', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('“size”接管整个分组'))
 
     size.set('large')
+    flush()
     expect(element.getAttribute('data-size')).toBe('large')
   })
 
@@ -192,6 +202,7 @@ describe('Button', () => {
     expect(element.hasAttribute('data-size')).toBe(false)
 
     small.set(true)
+    flush()
     expect(element.getAttribute('data-size')).toBe('small')
   })
 
@@ -222,6 +233,7 @@ describe('Button', () => {
     expect(element.hasAttribute('aria-busy')).toBe(false)
 
     loading.set(true)
+    flush()
     expect(element.getAttribute('data-status')).toBe('loading')
     expect(element.getAttribute('aria-busy')).toBe('true')
   })

@@ -1,6 +1,7 @@
+import { flush } from 'solid-js'
 // @vitest-environment jsdom
 
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createState } from '@/foundation'
 import { Card } from './Card'
@@ -59,6 +60,7 @@ describe('Card', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('“variant”接管整个分组'))
 
     variant.set('solid')
+    flush()
     expect(card.getAttribute('data-variant')).toBe('solid')
   })
 })

@@ -92,7 +92,7 @@ function parseVariantGroup(props: object, group: VariantPropsGroup): Source<stri
     )
   }
 
-  if (hasGroupProp) return propRecord[group.groupName] as Source<string | undefined>
+  if (hasGroupProp) return derive(propRecord, () => val(propRecord[group.groupName] as Source<string | undefined>))
 
   return derive(propRecord, () => {
     return group.candidates.find(

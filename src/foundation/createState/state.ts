@@ -48,10 +48,13 @@ export function isState(value: unknown): value is State {
 export function createState<T = unknown>(): State<T | undefined>
 export function createState<T = unknown>(initialValue: MayFn<T>): State<T>
 export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
-  const [solidjsAccessor, solidjsSetSignal] = createSignal(result(initialValue)) // 这里不应该使用跟随，不然的话语义就不对了
+  // 当前值由 UIKit 保存，Solid 仅追踪变更，避免函数值和 Promise 被当作派生来源。
+  let value = result(initialValue)
+  const [solidjsAccessor, solidjsSetSignal] = createSignal(0, { ownedWrite: true })
   const thisState: State = {
     read() {
-      return solidjsAccessor()
+      solidjsAccessor()
+      return value
     },
     
     [stateViewBrand]: true,
@@ -61,7 +64,10 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
       // 只要这个 state 没有被外部引用了，它就会被垃圾回收掉，Solid 的 createEffect 也会自动清理对它的订阅。
     },
     set(newValue) {
-      solidjsSetSignal(isFunction(newValue) ? newValue : () => newValue)
+      const nextValue = isFunction(newValue) ? newValue(value) : newValue
+      if (nextValue === value) return thisState
+      value = nextValue
+      solidjsSetSignal(version => version + 1)
       return thisState
     },
     map(toNew) {
@@ -76,12 +82,12 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
  * 派生视图属于创建时的响应式作用域，作用域释放后停止跟随依赖。
  */
 function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<U> {
-  const read = createMemo<U>(() => {
+  const read = createMemo(() => {
     const mapped = mapper(view.read())
-    return isStateView(mapped) ? mapped.read() : mapped
-  })
+    return { value: isStateView(mapped) ? mapped.read() : mapped }
+  }, { equals: (previous, next) => previous.value === next.value })
   const mappedView: StateView<U> = {
-    read,
+    read: () => read().value,
     [stateViewBrand]: true,
     /**
      * 在当前视图之上继续创建派生视图。

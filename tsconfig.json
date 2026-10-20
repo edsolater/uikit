@@ -17,7 +17,7 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "jsx": "preserve",
-    "jsxImportSource": "solid-js"
+    "jsxImportSource": "@solidjs/web"
   },
   "include": ["src", ".storybook/**/*.ts", ".storybook/**/*.tsx"]
 }

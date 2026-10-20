@@ -3,7 +3,8 @@
  * 它不负责创建 DOM、解析 plugin、处理 style、普通 HTML props 或事件。
  * Piv 完成 props 整合后调用这里，保证 class 与其他 DOM 能力走同一条消费路径。
  */
-import { onCleanup, createRenderEffect, val, type MayArraySource, type Source } from '@/foundation'
+import { createRenderEffect, val, type MayArraySource, type Source } from '@/foundation'
+import { mapArray } from '@/foundation/render'
 import {
   isObject,
   isArray,
@@ -29,18 +30,12 @@ export function consumeClassName(
 ) {
   const tokenCounts = new Map<string, number>()
 
-  createRenderEffect(() => {
-    const lists = toArray(val(readClassNameList())).filter(isTruthy)
-
-    for (const atom of lists) {
-      createRenderEffect(() => {
-        const tokens = resolveClassTokens(val(atom))
-        addClassTokens(element, tokenCounts, tokens)
-        onCleanup(() => {
-          removeClassTokens(element, tokenCounts, tokens)
-        })
-      })
-    }
+  mapArray(() => toArray(val(readClassNameList())).filter(isTruthy), atom => {
+    createRenderEffect(() => resolveClassTokens(val(atom)), tokens => {
+      addClassTokens(element, tokenCounts, tokens)
+      return () => removeClassTokens(element, tokenCounts, tokens)
+    })
+    return atom
   })
 }
 

@@ -3,7 +3,8 @@
  * 它不负责 class、普通 HTML props、事件或 plugin 解析。
  * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
  */
-import { onCleanup, createRenderEffect, type JSX, val, type MayArraySource, type Source } from '@/foundation'
+import { createRenderEffect, type JSX, val, type MayArraySource, type Source } from '@/foundation'
+import { createMemo, mapArray } from '@/foundation/render'
 import { isTruthy, toArray } from '@edsolater/fnkit'
 
 type StyleValueAtom = string | number | null | undefined
@@ -23,20 +24,20 @@ export function consumeStyle(
   element: HTMLElement,
   readStyleList: () => StyleList | undefined,
 ) {
-  createRenderEffect(() => {
+  const styleRecord = createMemo(() => {
     const styles = toArray(val(readStyleList()))
       .map((style) => val(style))
       .filter(isTruthy)
-    const styleRecord = mergeStyleRecords(styles)
+    return mergeStyleRecords(styles)
+  })
 
-    for (const [key, value] of Object.entries(styleRecord)) {
-      createRenderEffect(() => {
-        setStyleProperty(element, key, val(value))
-        onCleanup(() => {
-          element.style.removeProperty(key)
-        })
-      })
-    }
+  // 字段按 key 复用所属作用域，换源时由同一 effect 先清理再提交，首次写入仍在 ref 前完成。
+  mapArray(() => Object.keys(styleRecord()), key => {
+    createRenderEffect(() => val(styleRecord()[key]), styleValue => {
+      setStyleProperty(element, key, styleValue)
+      return () => element.style.removeProperty(key)
+    })
+    return key
   })
 }
 

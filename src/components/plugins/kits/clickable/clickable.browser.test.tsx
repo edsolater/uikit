@@ -1,5 +1,5 @@
 /** 在真实浏览器中验证焦点、pointer、键盘点击和实例隔离。 */
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'

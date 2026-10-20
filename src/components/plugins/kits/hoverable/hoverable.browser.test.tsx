@@ -1,5 +1,6 @@
+import { flush } from 'solid-js'
 /** 在真实浏览器中验证 pointer 事件、DOM 状态和实例隔离。 */
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
@@ -46,12 +47,14 @@ describe('hoverable', () => {
     expect(configured.getAttribute('data-hovered')).toBe('true')
 
     first.dispatchEvent(new PointerEvent('pointerenter'))
+    flush()
     expect(first.getAttribute('data-hovered')).toBe('true')
     expect(second.hasAttribute('data-hovered')).toBe(false)
     expect(val(firstController.hovered)).toBe(true)
     expect(val(secondController.hovered)).toBe(false)
 
     first.dispatchEvent(new PointerEvent('pointerleave'))
+    flush()
     expect(first.hasAttribute('data-hovered')).toBe(false)
   })
 })

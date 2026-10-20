@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
 import { Piv } from './Piv'
 

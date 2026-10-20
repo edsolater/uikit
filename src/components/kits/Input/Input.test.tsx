@@ -1,6 +1,7 @@
+import { flush } from 'solid-js'
 // @vitest-environment jsdom
 
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { createState } from '@/foundation'
 import { Input } from './Input'
@@ -33,6 +34,7 @@ describe('Input', () => {
     expect(input.getAttribute('aria-invalid')).toBe('true')
 
     validIf.set(true)
+    flush()
     expect(input.hasAttribute('data-status')).toBe(false)
     expect(input.hasAttribute('aria-invalid')).toBe(false)
   })

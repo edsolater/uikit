@@ -2,7 +2,7 @@
  * 这个文件负责 Popover 的本地控制能力。
  * 它只管理 popover 元素引用、打开状态镜像和原生 toggle 生命周期，不负责组件结构或视觉样式。
  */
-import { createEffect, onCleanup, val, type State } from '@/foundation'
+import { createEffect, val, type State } from '@/foundation'
 import { createDomRef, createToggle } from '@/hooks'
 
 export type PopoverToggleState = 'open' | 'closed'
@@ -58,9 +58,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
     isOpenControl.turnOff()
   }
 
-  createEffect(() => {
-    const element = val(popoverElement)
-
+  createEffect(popoverElement, element => {
     if (!element) {
       return
     }
@@ -85,10 +83,10 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
     element.addEventListener('toggle', handleToggle)
     element.addEventListener('beforetoggle', handleBeforeToggle)
 
-    onCleanup(() => {
+    return () => {
       element.removeEventListener('toggle', handleToggle)
       element.removeEventListener('beforetoggle', handleBeforeToggle)
-    })
+    }
   })
 
   function showPopover() {

@@ -57,7 +57,7 @@ export function createStatusPropsParser<const Candidates extends string[]>(optio
       const internalStatus = createState<boolean | undefined>()
       internalStatusStates[statusName] = internalStatus
       statusDetails[statusName] = externalStatusNames.has(statusName)
-        ? propRecord[statusName] as Source<boolean | undefined>
+        ? derive(propRecord, () => val(propRecord[statusName] as Source<boolean | undefined>))
         : internalStatus
     }
 

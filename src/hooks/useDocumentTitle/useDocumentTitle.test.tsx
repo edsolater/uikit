@@ -1,3 +1,4 @@
+import { flush } from 'solid-js'
 /**
  * 浏览器标题与 State 来源的同步验证。
  *
@@ -6,7 +7,7 @@
  * 防止标题 hook 更换状态协议后丢失同步与清理行为。
  */
 // @vitest-environment jsdom
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
 import { createState, val, type State } from '@/foundation'
 import { derive } from '../stateUtils'
@@ -29,11 +30,13 @@ describe('useDocumentTitle', () => {
       expect(host.textContent).toBe('初始标题')
 
       index.set(1)
+      flush()
       expect(document.title).toBe('更新标题')
       expect(val(currentTitle)).toBe('更新标题')
       expect(host.textContent).toBe('更新标题')
 
       index.set(2)
+      flush()
       expect(document.title).toBe('更新标题')
       expect(val(currentTitle)).toBe('更新标题')
     } finally {

@@ -5,4 +5,5 @@
  *
  * 避免上层直接引用运行时类型。
  */
-export type { JSX, JSXElement, Accessor, Component } from 'solid-js'
+export type { JSX } from '@solidjs/web'
+export type { Element as JSXElement, Accessor, Component } from 'solid-js'

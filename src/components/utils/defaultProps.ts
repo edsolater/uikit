@@ -1,4 +1,4 @@
-import { mergeProps as solidjsMergeProps } from '@/foundation'
+import { mergeProps } from '@/foundation'
 import type { ValidProps } from "./type"
 
 /** use solidjs's mergeProps */
@@ -6,7 +6,7 @@ export function addDefaultProps<T extends ValidProps, const D>(
   props: T,
   defaultProps: D,
 ): Omit<T, keyof D> & Pick<Required<T>, keyof D & string> {
-  return solidjsMergeProps(defaultProps, props) as any
+  return mergeProps(defaultProps, props) as any
 }
 
 

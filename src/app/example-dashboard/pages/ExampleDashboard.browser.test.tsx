@@ -1,4 +1,5 @@
-import { render } from 'solid-js/web'
+import { flush } from 'solid-js'
+import { render } from '@solidjs/web'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import '../../../css/all-base.css'
 import ExampleDashboard from './ExampleDashboard'
@@ -52,6 +53,7 @@ describe('ExampleDashboard', () => {
     expect(document.querySelector('.example-home article')).toBeNull()
 
     document.querySelector<HTMLAnchorElement>('a[href="/examples/card"]')!.click()
+    flush()
 
     expect(window.location.pathname).toBe('/examples/card')
     expect(document.querySelector('.example-detail h2')?.textContent).toBe('Card')
@@ -91,6 +93,7 @@ describe('ExampleDashboard', () => {
 
     window.history.replaceState(null, '', '/examples/scope')
     window.dispatchEvent(new PopStateEvent('popstate'))
+    flush()
 
     expect(document.querySelector('.example-detail h2')?.textContent).toBe('Scope + Drag and Drop')
   })
@@ -122,16 +125,19 @@ describe('ExampleDashboard', () => {
     expect(getComputedStyle(card).backgroundColor).not.toBe(lightBackground)
 
     source.dispatchEvent(pointerEvent('pointerdown', 21, 20, 30))
+    flush()
     expect(source.getAttribute('data-interacting')).toBe('true')
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(getComputedStyle(card).backdropFilter).toBe(initialFilter)
 
     window.dispatchEvent(pointerEvent('pointermove', 21, 52, 74))
+    flush()
     expect(getComputedStyle(source).translate).toBe('32px 44px')
     expect(getComputedStyle(card).backdropFilter).toBe(initialFilter)
     expect(getComputedStyle(card).backdropFilter).not.toContain('blur(')
 
     window.dispatchEvent(pointerEvent('pointerup', 21, 52, 74))
+    flush()
     expect(source.hasAttribute('data-interacting')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(getComputedStyle(card).backdropFilter).toBe(initialFilter)

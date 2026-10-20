@@ -4,7 +4,7 @@
  *
  * 组件选择与透明承载协议见 [Article 设计规格](./Article.spec.md)。
  */
-import { splitProps, type JSX } from '@/foundation'
+import type { JSX } from '@/foundation'
 import { Piv, type PivProps } from '../../Piv/Piv'
 
 type ArticleCarrier = (props: PivProps<'article'>) => JSX.Element
@@ -26,10 +26,6 @@ interface ArticleComponent {
 }
 
 export const Article: ArticleComponent = (rawProps) => {
-  const [local, carrierProps] = splitProps(rawProps, ['as'])
-  const Carrier = local.as
-
-  return Carrier
-    ? <Carrier {...carrierProps} as="article" />
-    : <Piv {...carrierProps} as="article" />
+  const Carrier = rawProps.as ?? Piv
+  return <Carrier {...rawProps} as="article" />
 }

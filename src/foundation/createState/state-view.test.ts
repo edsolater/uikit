@@ -1,3 +1,4 @@
+import { flush } from 'solid-js'
 /**
  * 本文件验证 stateView 的统一转换、身份复用、映射和 options 分派。
  * PromiseLike 领域自身只验证结算行为。
@@ -57,6 +58,7 @@ test('stateView 的函数参数等价于 options.map', () => {
   expect(fromOptions.read()).toBe(4)
 
   source.set(3)
+  flush()
 
   expect(fromFunction.read()).toBe(6)
   expect(fromOptions.read()).toBe(6)
@@ -82,20 +84,26 @@ test('映射视图复用当前结果，切换分支后跟随新来源，并随�
   expect(mappingCount).toBe(initialCount)
 
   first.set(3)
+  flush()
   expect(val(view)).toBe(6)
   source.set(false)
+  flush()
   expect(val(view)).toBe(10)
   const switchedCount = mappingCount
   first.set(8)
+  flush()
   expect(val(view)).toBe(10)
   expect(mappingCount).toBe(switchedCount)
   second.set(7)
+  flush()
   expect(val(view)).toBe(14)
 
   dispose()
   const disposedCount = mappingCount
   source.set(true)
+  flush()
   second.set(9)
+  flush()
   expect(mappingCount).toBe(disposedCount)
 })
 

@@ -1,3 +1,4 @@
+import { flush } from 'solid-js'
 /**
  * 本文件验证 Val 与 val 的最终读取协议。
  * 它不承担 Source 输入类型和 stateView 转换 options 的测试。
@@ -63,6 +64,7 @@ test('val 在 UIKit 读取边界递归解除内部包装', () => {
   expect(observedValues).toEqual([1])
 
   value.set(2)
+  flush()
 
   expect(runner.getResult()).toBe(2)
   expect(observedValues).toEqual([1, 2])
@@ -166,6 +168,7 @@ test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
   expect(observedValues).toEqual([0, 2])
 
   source.set(4)
+  flush()
 
   expect(runner.getResult()).toBe(4)
   expect(observedValues).toEqual([0, 2, 4])

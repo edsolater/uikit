@@ -18,12 +18,10 @@ export function Each<T>(props: EachProps<T>) {
   const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()
   const innerState = createState<T[]>([])
 
-  createEffect(() => {
-    const nextItems = props.each()
-
-    val(loopContainer)?.startViewTransition(() => {
+  createEffect(() => ({ items: props.each(), container: val(loopContainer) }), ({ items, container }) => {
+    container?.startViewTransition(() => {
       // 这里才会有 viewTransition 的动画，所以外部数据也要在这里提交。
-      innerState.set(nextItems)
+      innerState.set(items)
     })
   })
 

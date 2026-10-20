@@ -1,6 +1,7 @@
+import { flush } from 'solid-js'
 // @vitest-environment jsdom
 
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { createState } from '@/foundation'
 import { Popover } from './Popover'
@@ -32,6 +33,7 @@ describe('Popover', () => {
     expect(popover.hasAttribute('data-placement')).toBe(false)
 
     placement.set('top')
+    flush()
     expect(popover.getAttribute('data-placement')).toBe('top')
   })
 

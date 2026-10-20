@@ -7,16 +7,44 @@
  */
 import {
   createEffect as solidCreateEffect,
+  createRenderEffect as solidCreateRenderEffect,
   onCleanup as solidOnCleanup,
-  onMount as solidOnMount,
+  onSettled as solidOnMount,
+  getOwner,
+  runWithOwner,
+  type EffectOptions,
 } from 'solid-js'
+import { isArray, isFunction } from '@edsolater/fnkit'
+import { val, type Val } from './createState/read'
+
+type EffectAction<T> = (value: T) => void | (() => void)
+type EffectValues<Sources extends unknown[]> = { [Index in keyof Sources]: Val<Sources[Index]> }
 
 /**
- * 建立响应式副作用，动作中同步读取的响应式值成为依赖，依赖变化后重新执行动作。
- * 沿用当前运行时的执行调度与所属作用域的释放行为，不提供独立释放句柄。
+ * 先读取来源并跟踪依赖，再执行不收集依赖的动作；动作返回的 cleanup 由 Solid 管理。
+ * 优先传入单个来源，确需多个来源时传入 tuple，计算函数用于前两者不能自然表达的情况。
  */
-export function createEffect(action: () => void): void {
-  solidCreateEffect(action)
+export function createEffect<T>(compute: () => T | PromiseLike<T>, action: EffectAction<T>): void
+export function createEffect<const Sources extends unknown[]>(sources: Sources, action: EffectAction<EffectValues<Sources>>): void
+export function createEffect<Source>(source: Source, action: EffectAction<Val<Source>>): void
+export function createEffect(source: unknown, action: EffectAction<any>): void {
+  solidCreateEffect(normalizeEffectSource(source), action)
+}
+
+/** 使用相同来源契约，默认首次同步提交，并透传原有原生选项。 */
+export function createRenderEffect<T>(compute: () => T | PromiseLike<T>, action: EffectAction<T>, options?: EffectOptions): void
+export function createRenderEffect<const Sources extends unknown[]>(sources: Sources, action: EffectAction<EffectValues<Sources>>, options?: EffectOptions): void
+export function createRenderEffect<Source>(source: Source, action: EffectAction<Val<Source>>, options?: EffectOptions): void
+export function createRenderEffect(source: unknown, action: EffectAction<any>, options?: EffectOptions): void {
+  solidCreateRenderEffect(normalizeEffectSource(source), action, options)
+}
+
+function normalizeEffectSource(source: unknown): () => unknown {
+  return isFunction(source)
+    ? source
+    : isArray(source)
+      ? () => source.map(item => val(item))
+      : () => val(source)
 }
 
 /**
@@ -32,5 +60,6 @@ export function onCleanup(action: () => void): void {
  * 必须在组件所属作用域中登记。
  */
 export function onMount(action: () => void): void {
-  solidOnMount(action)
+  const owner = getOwner()
+  solidOnMount(() => runWithOwner(owner, action))
 }

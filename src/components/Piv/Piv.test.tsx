@@ -1,11 +1,108 @@
+import { flush } from 'solid-js'
 // @vitest-environment jsdom
 
-import { createSignal } from 'solid-js'
-import { render } from 'solid-js/web'
+import { createRoot, createSignal } from 'solid-js'
+import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
-import { createState } from '@/foundation'
+import { createState, isStateView, onCleanup, val } from '@/foundation'
 import { Piv } from './Piv'
 import { createPivPlugin } from './plugin/helpers'
+import { mergePivProps } from './plugin/handlePivPlugin'
+
+describe('Piv 生命周期', () => {
+  test('外部 ref 拿到已提交初始字段的真实 DOM', () => {
+    const host = document.createElement('div')
+    let observed: unknown
+    const dispose = render(() => <Piv as="input" style={{ color: 'red' }} htmlProps={{ value: 'ready', disabled: true }}
+      ref={element => { observed = [element.style.color, element.value, element.disabled] }} />, host)
+    expect(observed).toEqual(['red', 'ready', true])
+    dispose()
+  })
+
+  test('同值来源替换后仅跟随新来源，字段退出恢复绑定前的 DOM', () => {
+    const host = document.createElement('div')
+    const oldValue = createState('red')
+    const newValue = createState('red')
+    const style = createState({ color: oldValue })
+    const htmlProps = createState<{ value?: typeof oldValue }>({ value: oldValue })
+    const className = createState('shared old')
+    const dispose = render(() => <Piv as="input" style={style} htmlProps={htmlProps}
+      class={['shared', className]} />, host)
+    const element = host.firstElementChild as HTMLInputElement
+    style.set({ color: newValue })
+    htmlProps.set({ value: newValue })
+    className.set('shared new')
+    flush()
+    expect(element.style.color).toBe('red')
+    expect(element.value).toBe('red')
+    expect(element.classList.contains('shared')).toBe(true)
+    expect(element.classList.contains('old')).toBe(false)
+    oldValue.set('green')
+    flush()
+    expect(element.style.color).toBe('red')
+    expect(element.value).toBe('red')
+    newValue.set('blue')
+    flush()
+    expect(element.style.color).toBe('blue')
+    expect(element.value).toBe('blue')
+    htmlProps.set({})
+    flush()
+    expect(element.value).toBe('')
+    dispose()
+    expect(element.style.color).toBe('')
+    expect(element.className).toBe('')
+  })
+
+  test('自身隐藏后释放旧元素资源，重建和卸载分别清理当前元素', async () => {
+    const host = document.createElement('div')
+    const visible = createState(true)
+    const className = createState('before')
+    const initialized: Element[] = []
+    const cleaned: Element[] = []
+    let clicks = 0
+    const plugin = createPivPlugin(({ element }) => {
+      initialized.push(element)
+      onCleanup(() => cleaned.push(element))
+      return undefined
+    })
+    const dispose = render(() => <Piv if={visible} class={className} plugin={plugin}
+      on={{ click: () => { clicks += 1 } }} ref={element => {
+        element.setAttribute('data-ref', 'ready')
+      }} />, host)
+    const oldElement = host.firstElementChild as HTMLElement
+    expect(initialized).toEqual([oldElement])
+    expect(oldElement.dataset.ref).toBe('ready')
+    oldElement.click()
+    expect(clicks).toBe(1)
+
+    visible.set(false)
+    flush()
+    await Promise.resolve()
+    expect(host.firstElementChild).toBeNull()
+    expect(cleaned).toEqual([oldElement])
+    const disposedClassName = oldElement.className
+    className.set('after')
+    flush()
+    await Promise.resolve()
+    expect(oldElement.className).toBe(disposedClassName)
+    oldElement.click()
+    expect(clicks).toBe(1)
+
+    visible.set(true)
+    flush()
+    await Promise.resolve()
+    const newElement = host.firstElementChild as HTMLElement
+    expect(newElement).not.toBe(oldElement)
+    expect(newElement.className).toBe('after')
+    expect(initialized).toEqual([oldElement, newElement])
+    newElement.click()
+    expect(clicks).toBe(2)
+    dispose()
+    expect(cleaned).toEqual([oldElement, newElement])
+    newElement.click()
+    expect(clicks).toBe(2)
+  })
+})
 
 describe('Piv children', () => {
   test('StateView 可以作为 children 直接传入并持续更新', () => {
@@ -17,6 +114,7 @@ describe('Piv children', () => {
     expect(element.textContent).toBe('修改前')
 
     content.set('修改后')
+    flush()
 
     expect(host.firstElementChild).toBe(element)
     expect(element.textContent).toBe('修改后')
@@ -24,7 +122,7 @@ describe('Piv children', () => {
     dispose()
   })
 
-  test('动态文本来源更新后同步更新同一个 DOM 的文本', () => {
+  test('动态文本来源更新后提交后更新同一个 DOM 的文本', () => {
     const host = document.createElement('div')
     let setValue!: (value: number) => void
 
@@ -38,6 +136,7 @@ describe('Piv children', () => {
 
     expect(host.textContent).toBe('2')
     setValue(4)
+    flush()
     expect(host.textContent).toBe('4')
 
     dispose()
@@ -57,6 +156,7 @@ describe('Piv children', () => {
 
     expect(host.querySelector('span')).toBeNull()
     setVisible(true)
+    flush()
     expect(host.querySelector('span')?.textContent).toBe('已显示')
 
     dispose()
@@ -64,6 +164,61 @@ describe('Piv children', () => {
 })
 
 describe('Piv Source 属性', () => {
+  test('合并层输出稳定 id Source，持续跟随声明换源及各来源合并', () => {
+    const shadow = createState('shadow')
+    const pluginId = createState('plugin')
+    const previous = createState('direct')
+    const next = createState('direct')
+    const [readSource, setSource] = createSignal(previous)
+    const { merged, dispose } = createRoot(dispose => ({
+      merged: mergePivProps(document.createElement('div'), {
+        get id() { return readSource() },
+        shadowProps: { id: shadow },
+        plugin: createPivPlugin(() => ({ id: pluginId })),
+      }),
+      dispose,
+    }))
+    const source = merged.id
+    expect(isStateView(source)).toBe(true)
+    expect(val(source)).toEqual(['shadow', 'plugin', 'direct'])
+    setSource(next)
+    flush()
+    expect(merged.id).toBe(source)
+    previous.set('旧来源退出')
+    shadow.set('shadow-next')
+    pluginId.set('plugin-next')
+    next.set('direct-next')
+    flush()
+    expect(merged.id).toBe(source)
+    expect(val(source)).toEqual(['shadow-next', 'plugin-next', 'direct-next'])
+    dispose()
+  })
+
+  test('id getter 整体换源后只跟随新来源，并保留数组值及卸载边界', () => {
+    const host = document.createElement('div')
+    const previous = createState<string | string[] | undefined>('same')
+    const next = createState<string | string[] | undefined>('same')
+    const [readSource, setSource] = createSignal(previous)
+    const dispose = render(() => <Piv id={readSource()} />, host)
+    const element = host.firstElementChild as HTMLElement
+    expect(element.id).toBe('same')
+    setSource(next)
+    flush()
+    previous.set('旧来源退出')
+    flush()
+    expect(element.id).toBe('same')
+    next.set(['first', 'second'])
+    flush()
+    expect(element.id).toBe('first,second')
+    next.set(undefined)
+    flush()
+    expect(element.hasAttribute('id')).toBe(false)
+    dispose()
+    next.set('卸载后')
+    flush()
+    expect(element.hasAttribute('id')).toBe(false)
+  })
+
   test('id 接收单个 StateView 并持续更新真实 DOM 身份', () => {
     const host = document.createElement('div')
     const id = createState<string | undefined>('before')
@@ -73,9 +228,11 @@ describe('Piv Source 属性', () => {
     expect(element.id).toBe('before')
 
     id.set('after')
+    flush()
     expect(element.id).toBe('after')
 
     id.set(undefined)
+    flush()
     expect(element.hasAttribute('id')).toBe(false)
 
     dispose()
@@ -125,8 +282,11 @@ describe('Piv Source 属性', () => {
     expect(element.getAttribute('data-value')).toBe('before')
 
     className.set('after')
+    flush()
     style.set({ color: 'blue' })
+    flush()
     htmlProps.set({ 'data-value': 'after' })
+    flush()
 
     expect(element.className).toBe('after')
     expect(element.style.color).toBe('blue')
@@ -135,7 +295,7 @@ describe('Piv Source 属性', () => {
     dispose()
   })
 
-  test('UIKit StateView 会同步更新 class 和 data attribute', () => {
+  test('UIKit StateView 提交后更新 class 和 data attribute', () => {
     const host = document.createElement('div')
     const className = createState('before')
     const value = createState(2)
@@ -149,7 +309,9 @@ describe('Piv Source 属性', () => {
     expect(element.getAttribute('data-value')).toBe('2')
 
     className.set('after')
+    flush()
     value.set(4)
+    flush()
 
     expect(element.className).toBe('after')
     expect(element.getAttribute('data-value')).toBe('4')
@@ -174,6 +336,7 @@ describe('Piv Source 属性', () => {
     expect(element.classList.contains('value-2')).toBe(true)
 
     setValue(4)
+    flush()
 
     expect(host.firstElementChild).toBe(element)
     expect(element.classList.contains('Tile')).toBe(true)
@@ -213,6 +376,7 @@ describe('Piv Source 属性', () => {
     expect(element.classList.contains('direct-2')).toBe(true)
 
     setValue(4)
+    flush()
 
     expect(host.firstElementChild).toBe(element)
     expect(element.classList.contains('direct-2')).toBe(false)
@@ -241,7 +405,9 @@ describe('Piv style 属性', () => {
     expect(element.style.backgroundColor).toBe('black')
 
     setColor('blue')
+    flush()
     backgroundColor.set('white')
+    flush()
 
     expect(host.firstElementChild).toBe(element)
     expect(element.style.color).toBe('blue')
@@ -267,6 +433,7 @@ describe('Piv style 属性', () => {
     expect(element.style.backgroundColor).toBe('black')
 
     directStyles.set([{ 'border-color': 'blue' }])
+    flush()
 
     expect(element.style.color).toBe('green')
     expect(element.style.backgroundColor).toBe('black')
@@ -300,6 +467,7 @@ describe('Piv htmlProps 属性', () => {
     expect(element.hasAttribute('data-active')).toBe(false)
 
     setActive(true)
+    flush()
 
     expect(host.firstElementChild).toBe(element)
     expect(element.hasAttribute('data-id')).toBe(false)
@@ -331,10 +499,12 @@ describe('Piv htmlProps 属性', () => {
     expect(pluginValueReadCount).toBe(0)
 
     pluginValue.set('plugin-after')
+    flush()
     expect(element.getAttribute('data-value')).toBe('direct-before')
     expect(pluginValueReadCount).toBe(0)
 
     directValue.set('direct-after')
+    flush()
     expect(element.getAttribute('data-value')).toBe('direct-after')
 
     dispose()
@@ -362,6 +532,7 @@ describe('Piv htmlProps 属性', () => {
     expect(element.checked).toBe(true)
 
     setActive(false)
+    flush()
 
     expect(element.value).toBe('')
     expect(element.checked).toBe(false)

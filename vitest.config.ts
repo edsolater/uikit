@@ -5,13 +5,14 @@
  *
  * 【不负责】不修改 Vite 开发服务器和组件库构建配置。
  */
-import solid from 'vite-plugin-solid'
+import solid from '@solidjs/vite-plugin'
 import { defineConfig } from 'vitest/config'
 import { sourceAlias } from './vite.shared'
 
 export default defineConfig({
-  resolve: { alias: sourceAlias },
-  plugins: [solid({ hot: false })],
+  resolve: { alias: sourceAlias, conditions: ['browser'] },
+  ssr: { resolve: { conditions: ['browser'] }, noExternal: ['solid-js', '@solidjs/web'] },
+  plugins: [solid()],
   test: {
     environment: 'node',
     include: ['src/**/*.test.{ts,tsx}'],

@@ -2,7 +2,7 @@
  * 这个 hook 负责管理全局 theme mode，并把解析后的主题写回 document 根节点。
  * 它只处理 light / dark / system 三态切换，不负责具体控件展示。
  */
-import { createEffect, onCleanup, onMount, createState, val } from '@/foundation'
+import { createEffect, onCleanup, onMount, createState } from '@/foundation'
 import { createElementAttributeMarker } from './createElementAttributeMarker'
 import { useDOMRegisterer } from './useDOMRegisterer'
 
@@ -66,13 +66,13 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
     onCleanup(themeSwitchingStyleRegisterer.unregister)
   })
 
-  createEffect(() => {
+  createEffect(themeMode, mode => {
     if (typeof window === 'undefined' || root === undefined) {
       return
     }
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const applyTheme = () => applyGlobalUIThemeMode(val(themeMode), root, themeSwitchingMarker.mark)
+    const applyTheme = () => applyGlobalUIThemeMode(mode, root, themeSwitchingMarker.mark)
 
     applyTheme()
 
@@ -80,12 +80,12 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
      * 只有“跟随系统”模式需要监听系统主题变化。
      * 显式 light / dark 模式下，重复注册监听只会增加维护噪音。
      */
-    if (val(themeMode) !== 'system') {
+    if (mode !== 'system') {
       return
     }
 
     media.addEventListener('change', applyTheme)
-    onCleanup(() => media.removeEventListener('change', applyTheme))
+    return () => media.removeEventListener('change', applyTheme)
   })
 
   onCleanup(() => {

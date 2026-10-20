@@ -1,4 +1,4 @@
-import { createComputed, createRoot } from 'solid-js'
+import { createRenderEffect, createRoot, runWithOwner } from 'solid-js'
 
 export interface ReactiveRunner<T = void> {
   /**
@@ -39,13 +39,14 @@ export function createReactionFn<T>(action: () => T): ReactiveRunner<T> {
   let result!: T
   let disposed = false
 
-  const disposeRoot = createRoot((dispose) => {
-    createComputed(() => {
+  const disposeRoot = runWithOwner(null, () => createRoot((dispose) => {
+    // runner 保留同步首跑与追踪整个 action 的独立契约；它不是两阶段 createEffect 的替代入口。
+    createRenderEffect(() => {
       result = action()
-    })
+    }, () => {})
 
     return dispose
-  })
+  }))
 
   const dispose = (): void => {
     if (disposed) return

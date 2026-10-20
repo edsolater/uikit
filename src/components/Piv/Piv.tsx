@@ -5,6 +5,7 @@
  */
 import { type MayArray, type ID } from '@edsolater/fnkit'
 import { children, Show, type JSX, type JSXElement, val, type Source } from '@/foundation'
+import { getOwner, runWithOwner } from '@/foundation/render'
 import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,
@@ -109,7 +110,7 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivPro
     richRef: (element: PivHTMLElement<Tag>) => {
       const props = mergePivProps(element, rawProps)
 
-      consumeId(element, () => props.id)
+      consumeId(element, props.id)
 
       consumeClassName(element, () => props.class)
 
@@ -131,9 +132,17 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivPro
     children: resolvedChildren,
   }
 
+  // 每次创建真实元素时捕获当前分支作用域，ref 拿到 DOM 后在该作用域内初始化。
+  const createElement = () => {
+    const owner = getOwner()
+    return jsxCreator({
+      ...parsedProps,
+      richRef: element => runWithOwner(owner, () => parsedProps.richRef(element)),
+    })
+  }
   if (rawProps.if !== undefined) {
-    return <Show when={val(rawProps.if)}>{jsxCreator(parsedProps)}</Show>
+    return <Show when={val(rawProps.if)}>{createElement()}</Show>
   } else {
-    return jsxCreator(parsedProps)
+    return createElement()
   }
 }

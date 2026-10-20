@@ -1,8 +1,9 @@
+import { flush } from 'solid-js'
 import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
 import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, interactiveColor, badColor, oklch, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { createState } from '@/foundation'
@@ -140,6 +141,7 @@ describe('Button styles', () => {
     const normal = buttons.map(appearance)
     const bounds = buttons.map(button => [button.getBoundingClientRect().width, button.getBoundingClientRect().height])
     emphasis.set('strong')
+    flush()
     buttons.forEach((button, index) => {
       expect(Number(getComputedStyle(button).opacity)).toBeGreaterThan(Number(normal[index].opacity))
       expect([button.getBoundingClientRect().width, button.getBoundingClientRect().height]).toEqual(bounds[index])
@@ -151,13 +153,16 @@ describe('Button styles', () => {
       }
     })
     emphasis.set('soft')
+    flush()
     buttons.forEach((button, index) => {
       expect(Number(getComputedStyle(button).opacity)).toBeLessThan(Number(normal[index].opacity))
       expect([button.getBoundingClientRect().width, button.getBoundingClientRect().height]).toEqual(bounds[index])
     })
     for (const selected of ['soft', undefined, 'strong'] as const) {
       emphasis.set(selected)
+      flush()
       disabled.set(true)
+      flush()
       for (const button of buttons) {
         await userEvent.hover(button)
         expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
@@ -165,8 +170,10 @@ describe('Button styles', () => {
         await userEvent.unhover(button)
       }
       disabled.set(false)
+      flush()
     }
     emphasis.set(undefined)
+    flush()
     buttons.forEach((button, index) => expectSameAppearance(appearance(button), normal[index]))
   })
 
@@ -190,8 +197,10 @@ describe('Button styles', () => {
     expect(read(danger).backgroundColor).not.toBe(read(filled).backgroundColor)
     expectSameAppearance(appearance(dynamic), appearance(filled))
     selectedAppearance.set('plain')
+    flush()
     expectSameAppearance(appearance(dynamic), appearance(plain))
     selectedAppearance.set(undefined)
+    flush()
     expectSameAppearance(appearance(dynamic), appearance(outlined))
   })
 
@@ -232,12 +241,16 @@ describe('Button styles', () => {
     expect(button.hasAttribute('data-variant')).toBe(false)
     for (const name of ['appearance', 'emphasis', 'tone', 'strong', 'danger', 'small']) expect(button.hasAttribute(name)).toBe(false)
     emphasis.set('strong')
+    flush()
     expect(button.dataset.emphasis).toBe('strong')
     emphasis.set(undefined)
+    flush()
     expect(button.hasAttribute('data-emphasis')).toBe(false)
     selectedAppearance.set('plain')
+    flush()
     expect(button.dataset.appearance).toBe('plain')
     selectedAppearance.set(undefined)
+    flush()
     expect(button.dataset.appearance).toBe('outlined')
   })
 

@@ -1,4 +1,5 @@
-import { render } from 'solid-js/web'
+import { flush } from 'solid-js'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
@@ -45,6 +46,7 @@ describe('draggable', () => {
     const originalRect = source.getBoundingClientRect()
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 7, 20, 30))
+    flush()
 
     const sourceRect = source.getBoundingClientRect()
     expect(source.draggable).toBe(false)
@@ -69,12 +71,14 @@ describe('draggable', () => {
     expect(val(controller.dragging)).toBe(true)
 
     window.dispatchEvent(pointerEvent('pointermove', 7, 52, 74))
+    flush()
     expect(source.style.getPropertyValue('--drag-x')).toBe('32px')
     expect(source.style.getPropertyValue('--drag-y')).toBe('44px')
     expect(getComputedStyle(source).translate).toBe('32px 44px')
     expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
 
     window.dispatchEvent(pointerEvent('pointerup', 7, 52, 74))
+    flush()
     expect(source.style.getPropertyValue('--drag-x')).toBe('')
     expect(source.style.getPropertyValue('--drag-y')).toBe('')
     expect(getComputedStyle(source).translate).toBe('none')
@@ -98,6 +102,7 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
+    flush()
     expect(source.getAttribute('data-interacting')).toBe('true')
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
@@ -117,11 +122,14 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 8, 3, 4))
+    flush()
     expect(source.getAttribute('data-interacting')).not.toBe('true')
     expect(source.classList.contains('top-layer')).toBe(false)
 
     window.dispatchEvent(pointerEvent('pointermove', 8, 6, 4))
+    flush()
     expect(source.getAttribute('data-interacting')).toBe('true')
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(source.style.getPropertyValue('--drag-x')).toBe('6px')
@@ -145,11 +153,14 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 18, 0, 0))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 18, 8, 0))
+    flush()
     expect(source.style.getPropertyValue('--drag-x')).toBe('2px')
     expect(source.style.getPropertyValue('--drag-y')).toBe('0px')
 
     window.dispatchEvent(pointerEvent('pointermove', 18, 10, 0))
+    flush()
     expect(source.style.getPropertyValue('--drag-x')).toBe('4px')
   })
 
@@ -166,15 +177,20 @@ describe('draggable', () => {
     const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 9, 10, 10))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 9, 30, 40))
+    flush()
     expect(getComputedStyle(source).translate).toBe('20px 30px')
 
     window.dispatchEvent(pointerEvent('pointercancel', 9, 30, 40))
+    flush()
     expect(getComputedStyle(source).translate).toBe('none')
     expect(source.classList.contains('top-layer')).toBe(false)
 
     source.dispatchEvent(pointerEvent('pointerdown', 10, 10, 10))
+    flush()
     source.dispatchEvent(pointerEvent('lostpointercapture', 10, 10, 10))
+    flush()
     expect(getComputedStyle(source).translate).toBe('none')
     expect(source.classList.contains('top-layer')).toBe(false)
   })

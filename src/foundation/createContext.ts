@@ -8,6 +8,8 @@
 import {
   createContext as solidCreateContext,
   useContext as solidUseContext,
+  getOwner,
+  type Context as SolidContext,
 } from 'solid-js'
 import type { JSX } from './types'
 
@@ -28,6 +30,8 @@ export interface ContextOptions {
   name?: string
 }
 
+const missingContext = Symbol('没有提供者')
+
 /**
  * 建立组件树共享数据通道；未提供默认值时，提供者以外的读取结果为 undefined。
  * options 中的名称用于开发环境调试，不改变数据的传递方式。
@@ -35,12 +39,23 @@ export interface ContextOptions {
 export function createContext<T>(defaultValue?: undefined, options?: ContextOptions): Context<T | undefined>
 export function createContext<T>(defaultValue: T, options?: ContextOptions): Context<T>
 export function createContext<T>(defaultValue?: T, options?: ContextOptions): Context<T | undefined> {
-  return solidCreateContext(defaultValue, options)
+  const solidContext = solidCreateContext(defaultValue === undefined ? missingContext : defaultValue, options)
+  const context: Context<T | undefined> = {
+    id: solidContext.id,
+    defaultValue,
+    Provider: solidContext as Context<T | undefined>['Provider'],
+  }
+  return context
 }
 
 /**
  * 读取所属组件树中最近提供者的值，没有可用提供者值时返回上下文默认值。
  */
 export function useContext<T>(context: Context<T>): T {
-  return solidUseContext(context)
+  if (!getOwner()) return context.defaultValue
+  const value = solidUseContext({
+    id: context.id,
+    defaultValue: context.defaultValue === undefined ? missingContext : context.defaultValue,
+  } as SolidContext<T | typeof missingContext>)
+  return value === missingContext ? context.defaultValue : value
 }

@@ -3,11 +3,12 @@
  * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
-import { onCleanup, createRenderEffect, type JSX, val, type MayArraySource } from '@/foundation'
+import { type JSX, val, type MayArraySource } from '@/foundation'
+import { createMemo, mapArray } from '@/foundation/render'
 import { isTruthy, toArray } from '@edsolater/fnkit'
 import type { PivHTMLElement, PivTag } from './domMap'
 import {
-  setSingleDomProp,
+  consumeHTMLProp,
   type HTMLPropAtom,
   type HTMLPropPrimitive,
 } from './handleHTMLPropsValue'
@@ -35,23 +36,17 @@ export function consumeHTMLProps<Tag extends PivTag>(
   element: PivHTMLElement<Tag>,
   readHTMLPropsList: () => HTMLPropsList<Tag> | undefined,
 ) {
-  createRenderEffect(() => {
+  const activeProps = createMemo(() => {
     const htmlPropsList = toArray(val(readHTMLPropsList()))
       .map((htmlProps) => val(htmlProps))
       .filter(isTruthy)
-    const htmlPropEntries = readActiveHTMLPropEntries(htmlPropsList)
-    const restoreDOMProps: (() => void)[] = []
+    return new Map(readActiveHTMLPropEntries(htmlPropsList).filter(([key]) => !isReservedHTMLPropKey(key)))
+  })
 
-    for (const [key, atom] of htmlPropEntries) {
-      if (isReservedHTMLPropKey(key)) continue
-      restoreDOMProps.push(setSingleDomProp(element, key, atom))
-    }
-
-    onCleanup(() => {
-      for (const restoreDOMProp of restoreDOMProps) {
-        restoreDOMProp()
-      }
-    })
+  // 同 key 的监听随来源变化持续存在；字段退出时由原生列表作用域释放本轮绑定。
+  mapArray(() => Array.from(activeProps().keys()), key => {
+    consumeHTMLProp(element, key, () => activeProps().get(key))
+    return key
   })
 }
 

@@ -1,13 +1,13 @@
 /** 配置 UIKit 的 SolidJS 库构建、模块保留与 CSS 发布。 */
 import { defineConfig } from 'vite'
 import { libInjectCss } from 'vite-plugin-lib-inject-css'
-import solid from 'vite-plugin-solid'
+import solid from '@solidjs/vite-plugin'
 import { cpSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { sourceAlias } from './vite.shared'
 
 // 排除打包的第三方库
-const externalDependencies = ['solid-js', '@edsolater/fnkit']
+const externalDependencies = ['solid-js', '@solidjs/web', '@edsolater/fnkit']
 
 /** 判断一个 import path 是否指向指定的第三方包。 */
 function isDependency(targetPackageName: string, importPath: string): boolean {

@@ -22,12 +22,14 @@ export type HTMLPropAtom<Raw = HTMLPropPrimitive> = MayArraySource<HTMLPropAtomV
 /**
  * 按 key 语义写入 DOM。
  * data-* 和 aria-* 固定走 attribute；其他普通 key 才允许 property 探测。
- * 返回恢复函数，供上层在动态声明消失或组件清理时恢复绑定前的 DOM 值。
+ * 动作阶段建立绑定，并返回恢复函数；新动作前或所属字段退出时恢复绑定前的 DOM 值。
  */
-export function setSingleDomProp(element: HTMLElement, key: string, atom: HTMLPropAtom) {
-  const binding = createDOMPropBinding(element, key)
-  consumeHTMLPropAtom(atom, binding.writeValue)
-  return binding.restoreValue
+export function consumeHTMLProp(element: HTMLElement, key: string, readAtom: () => HTMLPropAtom | undefined): void {
+  createRenderEffect(() => readHTMLPropAtom(readAtom()), htmlPropValue => {
+    const binding = createDOMPropBinding(element, key)
+    binding.writeValue(htmlPropValue)
+    return binding.restoreValue
+  })
 }
 
 /**
@@ -88,20 +90,15 @@ function createPropertyBinding(element: HTMLElement, key: string) {
 }
 
 /** 响应式读取单字段声明，并把归一后的终端值交给对应 DOM 写入函数。 */
-function consumeHTMLPropAtom(
-  atom: HTMLPropAtom,
-  writeValue: (value: HTMLPropPrimitive) => void,
-): void {
-  createRenderEffect(() => {
-    const values = val(atom)
-    let activePrimitive: HTMLPropPrimitive
+function readHTMLPropAtom(atom: HTMLPropAtom | undefined): HTMLPropPrimitive {
+  const values = val(atom)
+  let activePrimitive: HTMLPropPrimitive
 
-    for (const htmlValue of isArray(values) ? values : [values]) {
-      activePrimitive = parseHTMLPropertyValue(val(htmlValue), activePrimitive)
-    }
+  for (const htmlValue of isArray(values) ? values : [values]) {
+    activePrimitive = parseHTMLPropertyValue(val(htmlValue), activePrimitive)
+  }
 
-    writeValue(activePrimitive)
-  })
+  return activePrimitive
 }
 
 /**

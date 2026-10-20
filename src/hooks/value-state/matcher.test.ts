@@ -1,3 +1,4 @@
+import { flush } from 'solid-js'
 /**
  * 匹配 StateView 的响应式行为验收。
  *
@@ -26,13 +27,17 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
     expect(val(matchesCondition)).toBe(true)
 
     enabled.set(false)
+    flush()
     expect(val(matchesCondition)).toBe(false)
     source.set(2)
+    flush()
     expect(val(equalsOne)).toBe(false)
     expect(val(differsFromOne)).toBe(true)
     enabled.set(true)
+    flush()
     expect(val(matchesCondition)).toBe(true)
     source.set(0)
+    flush()
     expect(val(matchesCondition)).toBe(false)
     dispose()
   })
@@ -48,10 +53,12 @@ test('标识循环的首尾匹配通过 StateView 跟随同一个标识状态', 
     expect(val(first)).toBe(true)
     expect(val(last)).toBe(false)
     operator.next()
+    flush()
     expect(val(ident)).toBe('last')
     expect(val(first)).toBe(false)
     expect(val(last)).toBe(true)
     operator.reset()
+    flush()
     expect(val(first)).toBe(true)
     expect(val(last)).toBe(false)
     dispose()

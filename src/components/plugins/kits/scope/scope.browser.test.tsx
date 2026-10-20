@@ -1,4 +1,5 @@
-import { render } from 'solid-js/web'
+import { flush } from 'solid-js'
+import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { Piv } from '../../../Piv/Piv'
 import { dragAndDrop } from '../dragAndDrop'
@@ -65,17 +66,23 @@ describe('scope', () => {
 
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([targetA])
     sourceA.dispatchEvent(pointerEvent('pointerdown', 7, 10, 10))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 7, 20, 20))
+    flush()
     expect(targetA.getAttribute('data-drop-acceptable')).toBe('true')
     window.dispatchEvent(pointerEvent('pointerup', 7, 20, 20))
+    flush()
     expect(aDrops).toBe(1)
 
     vi.mocked(document.elementsFromPoint).mockReturnValue([targetB])
     sourceA.dispatchEvent(pointerEvent('pointerdown', 8, 10, 10))
+    flush()
     window.dispatchEvent(pointerEvent('pointermove', 8, 20, 20))
+    flush()
     expect(targetB.getAttribute('data-drop-hovering')).toBe('true')
     expect(targetB.getAttribute('data-drop-acceptable')).not.toBe('true')
     window.dispatchEvent(pointerEvent('pointerup', 8, 20, 20))
+    flush()
     expect(bDrops).toBe(0)
   })
 })

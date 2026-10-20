@@ -6,7 +6,7 @@
  * 防止上下文入口迁移后丢失组件树的作用范围。
  */
 // @vitest-environment jsdom
-import { render } from 'solid-js/web'
+import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
 import { createContext, useContext } from './createContext'
 
@@ -34,7 +34,7 @@ describe('组件树上下文', () => {
      * 将当前组件树的上下文值显示为文本。
      */
     function Consumer() {
-      return <span>{useContext(context)}</span>
+      return <span>{useContext({ ...context })}</span>
     }
 
     const dispose = render(() => (
