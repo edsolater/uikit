@@ -30,6 +30,12 @@ function copyCss() {
 
 export default defineConfig({
   resolve: { alias: sourceAlias },
+  server: {
+    watch: {
+      // Agent 临时产物不参与开发文件监听。
+      ignored: ['**/agents/run/**'],
+    },
+  },
   plugins: [solid(), libInjectCss(), copyCss()],
   build: {
     target: 'esnext',

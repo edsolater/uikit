@@ -17,6 +17,31 @@ afterEach(() => {
 })
 
 describe('draggable', () => {
+  test('Pointer 事务在通知前提交交互标记，结束与取消后立即释放', () => {
+    const source = document.body.appendChild(document.createElement('div'))
+    stubPointerCapture(source)
+    const changes: [boolean, boolean][] = []
+    const pointerDrag = createPointerDrag({
+      source,
+      payload: 'weather',
+      activationDistance: 0,
+      activationJump: true,
+      enabled: () => true,
+      onDraggingChange(dragging) {
+        changes.push([dragging, source.getAttribute('data-interacting') === 'true'])
+      },
+    })
+    dispose = pointerDrag.cancel
+    pointerDrag.start(pointerEvent('pointerdown', 20, 10, 10))
+    expect(source.getAttribute('data-interacting')).toBe('true')
+    pointerDrag.cancel()
+    expect(source.hasAttribute('data-interacting')).toBe(false)
+    pointerDrag.start(pointerEvent('pointerdown', 21, 10, 10))
+    pointerDrag.end(pointerEvent('pointerup', 21, 30, 30))
+    expect(source.hasAttribute('data-interacting')).toBe(false)
+    expect(changes).toEqual([[true, true], [false, false], [true, true], [false, false]])
+  })
+
   test('在 Top Layer 基础位置上移动原始 source', () => {
     let controller!: DraggableController
     const host = document.body.appendChild(document.createElement('div'))

@@ -151,8 +151,11 @@ class PointerDragSession implements PointerDrag {
           ),
       translation: { x: 0, y: 0 },
     }
-    this.options.onDraggingChange(true)
     this.moveSource(interaction, point)
+    // 交互标识须在状态通知和 onDrop 前同步更新；Solid 2 的响应式属性提交会延后，
+    // 因此当前由 activate/clear 直接设置和移除，不通过 dragging State 驱动。
+    this.options.source.setAttribute('data-interacting', 'true')
+    this.options.onDraggingChange(true)
   }
 
   private moveSource(interaction: PointerInteraction, point: DragPoint): void {
@@ -219,7 +222,10 @@ class PointerDragSession implements PointerDrag {
     if (this.options.source.hasPointerCapture(interaction.pointerId)) {
       this.options.source.releasePointerCapture(interaction.pointerId)
     }
-    if (interaction.active) this.options.onDraggingChange(false)
+    if (interaction.active) {
+      this.options.source.removeAttribute('data-interacting')
+      this.options.onDraggingChange(false)
+    }
   }
 }
 
