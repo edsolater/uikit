@@ -2,7 +2,6 @@
  * 这个文件负责把已经归一好的 on 声明注册成真实 DOM listener。
  * 它只处理监听器生命周期、cleanup 时序和 Web API 桥接，不负责声明形状解析。
  */
-import { onCleanup } from '@/foundation'
 import { toListenerDiscriptorPairs, type EventListeners, type EventListenerDiscriptorPair } from './handleOn'
 
 export type EventKey = keyof GlobalEventHandlersEventMap
@@ -82,9 +81,8 @@ function shouldAvoidCleanup(
  */
 export function consumeEventListeners(element: HTMLElement, eventListeners: EventListeners) {
   const discriptorPairs = toListenerDiscriptorPairs(eventListeners)
-  for (const discriptor of discriptorPairs) {
-    registerAEventListener(element, discriptor)
-  }
+  const cleanups = discriptorPairs.map(discriptor => registerAEventListener(element, discriptor))
+  return () => cleanups.forEach(cleanup => cleanup())
 }
 
 /**
@@ -189,7 +187,5 @@ function registerAEventListener<K extends EventKey>(
   element.addEventListener(eventName, listener, options)
 
   // 组件生命周期结束时，和手动 cancel 一样走同一条解绑路径。
-  onCleanup(() => {
-    stopListening()
-  })
+  return () => stopListening()
 }

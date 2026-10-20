@@ -61,7 +61,7 @@ function isListenerDiscriptorPair(value: any): value is EventListenerPair {
   return value && isArray(value) && value.length === 2 && isString(value[0])
 }
 
-function toEventListenersList(eventListeners: EventListeners): NonNullable<EventListenerDeclaration>[] {
+export function toEventListenersList(eventListeners: EventListeners): NonNullable<EventListenerDeclaration>[] {
   if (!eventListeners) return []
   // 单体输入的情况；要做单独判断
   if (isListenerDiscriptorPair(eventListeners) || isEventListenerDiscriptor(eventListeners)) {

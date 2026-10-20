@@ -9,7 +9,7 @@ import { createMemo, type Merge } from 'solid-js'
 import { isFunction } from '@edsolater/fnkit'
 export { For, Show, children, mapArray, createMemo } from 'solid-js'
 export { createRenderEffect } from './createEffect'
-export { getOwner, runWithOwner } from 'solid-js'
+export { getOwner, runWithOwner, untrack } from 'solid-js'
 export { render, insert } from '@solidjs/web'
 
 /** 高优先级 undefined 继续回退默认值，保持现有 props 合并契约。 */
@@ -18,18 +18,19 @@ export function mergeProps<T extends unknown[]>(...sources: T): Merge<T> {
     ? createMemo(() => source() || {})
     : () => source || {})
   const hasProperty = (key: PropertyKey) => readSources.some(read => key in read())
+  const readProperty = (key: PropertyKey) => {
+    for (let index = readSources.length - 1; index >= 0; index--) {
+      const value = readSources[index]()[key]
+      if (value !== undefined) return value
+    }
+  }
 
   return new Proxy({}, {
-    get(_, key) {
-      for (let index = readSources.length - 1; index >= 0; index--) {
-        const value = readSources[index]()[key]
-        if (value !== undefined) return value
-      }
-    },
+    get: (_, key) => readProperty(key),
     has: (_, key) => hasProperty(key),
     ownKeys: () => [...new Set(readSources.flatMap(read => Reflect.ownKeys(read())))],
     getOwnPropertyDescriptor: (_, key) => hasProperty(key)
-      ? { enumerable: true, configurable: true }
+      ? { enumerable: true, configurable: true, get: () => readProperty(key) }
       : undefined,
   }) as Merge<T>
 }

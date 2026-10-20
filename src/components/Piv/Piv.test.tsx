@@ -4,12 +4,46 @@ import { flush } from 'solid-js'
 import { createRoot, createSignal } from 'solid-js'
 import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
-import { createState, isStateView, onCleanup, val } from '@/foundation'
+import { createContext, createState, isStateView, onCleanup, onMount, useContext, val } from '@/foundation'
 import { Piv } from './Piv'
 import { createPivPlugin } from './plugin/helpers'
 import { mergePivProps } from './plugin/handlePivPlugin'
 
 describe('Piv 生命周期', () => {
+  test('插件和 ref 在子节点插入前初始化，mount 后可见子节点且旁读不重建分支', () => {
+    const host = document.createElement('div')
+    const visible = createState(true)
+    const incidental = createState('before')
+    const context = createContext('default')
+    const observations: string[] = []
+    const plugin = createPivPlugin(({ element }) => {
+      val(incidental)
+      observations.push(`plugin:${element.childElementCount}:${useContext(context)}`)
+      onMount(() => { observations.push(`mount:${element.childElementCount}`) })
+      return undefined
+    })
+    const dispose = render(() => <context.Provider value="provided"><Piv if={visible} plugin={plugin}
+      ref={element => { val(incidental); observations.push(`ref:${element.childElementCount}`) }}>
+      <span>child</span>
+    </Piv></context.Provider>, host)
+    flush()
+    const element = host.firstElementChild
+    expect(observations).toEqual(['plugin:0:provided', 'ref:0', 'mount:1'])
+    incidental.set('after')
+    flush()
+    expect(host.firstElementChild).toBe(element)
+    expect(observations).toHaveLength(3)
+    dispose()
+  })
+
+  test.each(['input', 'textarea', 'img', 'iframe'] as const)('%s 保留不插入 children 的模板契约', tag => {
+    const host = document.createElement('div')
+    const dispose = render(() => <Piv as={tag}><span>ignored</span></Piv>, host)
+    expect(host.firstElementChild?.localName).toBe(tag)
+    expect(host.firstElementChild?.childNodes).toHaveLength(0)
+    dispose()
+  })
+
   test('外部 ref 拿到已提交初始字段的真实 DOM', () => {
     const host = document.createElement('div')
     let observed: unknown
@@ -105,6 +139,34 @@ describe('Piv 生命周期', () => {
 })
 
 describe('Piv children', () => {
+  test('if 隐藏时不首次求值，children 随显示分支清理与重建', () => {
+    const host = document.createElement('div')
+    const visible = createState(false)
+    let initialized = 0
+    let cleaned = 0
+    function Child() {
+      initialized += 1
+      onCleanup(() => { cleaned += 1 })
+      return <span>child</span>
+    }
+    const dispose = render(() => <Piv if={visible}><Child /></Piv>, host)
+    expect([initialized, cleaned]).toEqual([0, 0])
+    visible.set(true)
+    flush()
+    const child = host.querySelector('span')
+    expect([initialized, cleaned]).toEqual([1, 0])
+    visible.set(false)
+    flush()
+    expect(host.firstElementChild).toBeNull()
+    expect([initialized, cleaned]).toEqual([1, 1])
+    visible.set(true)
+    flush()
+    expect(host.querySelector('span')).not.toBe(child)
+    expect([initialized, cleaned]).toEqual([2, 1])
+    dispose()
+    expect([initialized, cleaned]).toEqual([2, 2])
+  })
+
   test('StateView 可以作为 children 直接传入并持续更新', () => {
     const host = document.createElement('div')
     const content = createState('修改前')

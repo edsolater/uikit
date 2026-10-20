@@ -1,148 +1,40 @@
 /**
- * 这个文件定义 Piv，项目里唯一真实 DOM 出口。
- * 它只负责按 as 选择原生 tag，并在 ref 阶段整合 plugin props，再连接 class、style、htmlProps、on 和 ref 消费者。
- * 它不负责具体组件外观、业务语义、主题系统或组件控制器抽象；这些应落在上层组件或对应 helper 文件。
+ * Piv 管理元素身份、显示分支、声明来源与插件生命周期。
+ * 组织后的 DOM 声明交给内部 Dode 解析和绑定，两者共用一个真实元素。
  */
-import { type MayArray, type ID } from '@edsolater/fnkit'
-import { children, Show, type JSX, type JSXElement, val, type Source } from '@/foundation'
-import { getOwner, runWithOwner } from '@/foundation/render'
-import { consumeClassName, type ClassNameList } from './className'
-import {
-  domMap,
-  type CreatePivElement,
-  type ParsedPivProps,
-  type PivHTMLElement,
-  type PivSupportedElementTag,
-  type PivTag,
-} from './domMap'
-import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
-import { consumeId } from './id'
-import { type EventListeners } from './on/handleOn'
+import type { MayArray } from '@edsolater/fnkit'
+import { Show, type JSX, val, type Source } from '@/foundation'
+import { Dode, type DodeDOMProps } from './Dode'
+import { domMap, type CreatePivElement, type PivSupportedElementTag, type PivTag } from './domMap'
 import { mergePivProps, type ShadowProps } from './plugin/handlePivPlugin'
-import { type PivPlugin } from './plugin/runPlugin'
-import { consumeEventListeners } from './on/registerEventListeners'
-import { consumeStyle, type StyleList } from './handleStyle'
-import { parseNormalRefs, type PivRef } from './ref'
+import type { PivPlugin } from './plugin/runPlugin'
+import type { PublicCapabilityProps } from './plugin/publicCapabilities'
 
-export type PivProps<Tag extends PivTag = 'div'> = {
-  /**
-   * 代表这个Piv的身份模板， 默认为div
-   * （元能力，只可用显式定义，不可被plugin系自动修改）
-   */
+export interface PivProps<Tag extends PivTag = 'div'>
+  extends DodeDOMProps<Tag>, PublicCapabilityProps {
+  /** 原生元素类型，默认 div；只能由直接声明决定。 */
   as?: Tag
-
-  /**
-   * false 时 Piv 自身和 children 都不进入 DOM。
-   * （元能力，只可用显式定义，不可被plugin系自动修改）
-   */
+  /** false 时元素与子内容不进入 DOM；只能由直接声明决定。 */
   if?: Source<boolean>
-
-  /**
-   * 真实 DOM 的全局身份。
-   * 可以是响应值或列表，并沿用 Piv 的普通 props 合并规则。
-   */
-  id?: Source<MayArray<ID> | undefined>
-
-  /**
-   * 上层组件转交给当前 Piv 的低优先级 props。
-   * 可以传入一份 props 或一维 props 数组，不接受嵌套数组。
-   */
+  /** 上层组件转交的低优先级声明，接受一份或一维数组。 */
   shadowProps?: MayArray<ShadowProps<Tag>>
-
-  /**
-   * Piv 的底层扩展入口。plugin 可以使用当前 DOM，并返回一层低优先级 props。
-   * 返回 undefined 表示这个 plugin 只执行结构能力，不补充 props。
-   */
+  /** 使用真实 DOM 的扩展入口；可以返回低优先级声明或仅执行结构能力。 */
   plugin?: MayArray<PivPlugin<Tag>>
-
-  /** 多个底层扩展能力的兼容入口；单个能力优先使用 plugin。 */
+  /** 多插件的兼容入口；单个能力优先使用 plugin。 */
   plugins?: MayArray<PivPlugin<Tag>>
-
-  /**
-   * plugin 的语义化 alias，用来表达稳定能力或性质。
-   */
+  /** plugin 的语义化别名，表达稳定能力或性质。 */
   trait?: MayArray<PivPlugin<Tag>>
-
-  /**
-   * class 声明。支持字符串、列表、条件对象和 Source，并与各 plugin 来源共同合并。
-   */
-  class?: ClassNameList
-
-  /**
-   * DOM style 特殊项。支持普通 style、列表或整体 Source，并按 CSS 字段细粒度订阅。
-   */
-  style?: StyleList
-
-  /**
-   * 普通原生 HTML 字段，以及 attr: / prop: 显式落点；记录整体和单字段都可以使用 Source。
-   * class、style、事件、children 和 ref 使用各自的专用入口，不进入这里。
-   */
-  htmlProps?: HTMLPropsList<Tag>
-
-  /**
-   * 事件，dom:onXXX
-   */
-  on?: EventListeners
-
-  /**
-   * 获取真实 DOM 的命令式逃生口；声明式需求应优先使用 class、style、htmlProps 或 on。
-   */
-  ref?: PivRef<Tag>
-
-  /** 子内容既可以是普通 JSX，也可以是整体可替换的 StateView。 */
-  children?: Source<JSXElement>
 }
 
-/**
- * Piv 是一切组件的基石
- * 它的props都是元能力props
- */
+/** 对外管理入口；底层 DOM 属性契约由 Dode 提供。 */
 export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivProps<Tag>): JSX.Element {
-  // --------------------- 处理 as，默认 div ---------------------
   const jsxCreator = domMap[rawProps.as ?? 'div'] as CreatePivElement<Tag>
-  /**
-   * Piv 会把 children 再传给 domMap，因此这里保留可重复读取的响应式来源，
-   * 避免中间对象把动态文本或动态结构固化成首次渲染快照。
-   */
-  const resolvedChildren = children(() => val(rawProps.children))
-
-  const parsedProps: ParsedPivProps<Tag> = {
-    richRef: (element: PivHTMLElement<Tag>) => {
-      const props = mergePivProps(element, rawProps)
-
-      consumeId(element, props.id)
-
-      consumeClassName(element, () => props.class)
-
-      consumeStyle(element, () => props.style)
-
-      const on = props.on
-      if (on) {
-        consumeEventListeners(element, on)
-      }
-
-      consumeHTMLProps<Tag>(element, () => props.htmlProps)
-
-      const ref = props.ref
-      if (ref) {
-        parseNormalRefs(element, ref)
-      }
-    },
-
-    children: resolvedChildren,
-  }
-
-  // 每次创建真实元素时捕获当前分支作用域，ref 拿到 DOM 后在该作用域内初始化。
-  const createElement = () => {
-    const owner = getOwner()
-    return jsxCreator({
-      ...parsedProps,
-      richRef: element => runWithOwner(owner, () => parsedProps.richRef(element)),
-    })
-  }
-  if (rawProps.if !== undefined) {
-    return <Show when={val(rawProps.if)}>{createElement()}</Show>
-  } else {
-    return createElement()
-  }
+  const createElement = () => <Dode
+    createElement={jsxCreator}
+    children={rawProps.children}
+    setup={element => mergePivProps(element, rawProps)}
+  />
+  return rawProps.if !== undefined
+    ? <Show when={val(rawProps.if)}>{createElement()}</Show>
+    : createElement()
 }

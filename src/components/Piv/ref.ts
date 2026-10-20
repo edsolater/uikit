@@ -5,7 +5,6 @@
 import { onCleanup } from '@/foundation'
 import { isFunction, toArray, type AnyFn, type MayArray } from '@edsolater/fnkit'
 import type { PivHTMLElement, PivTag } from './domMap'
-import type { PivProps } from './Piv'
 
 type RefFunction<T extends Element> = (element: T) => void
 
@@ -15,7 +14,7 @@ export type PivRef<Tag extends PivTag = 'div'> = MayArray<RefFunction<PivHTMLEle
  */
 export function parseNormalRefs<T extends Element, Tag extends PivTag>(
   element: T,
-  refList:PivProps<Tag>['ref'],
+  refList: PivRef<Tag>,
 ) {
   const refs = toArray(refList).filter(isFunction) as RefFunction<T>[]
   const cleanups = refs.map((ref) => ref(element)).filter(isFunction) as unknown as AnyFn[]
