@@ -1,16 +1,15 @@
-/** 来源、变化与组合结果的绑定。
-
-读取双方天然持有的材料，创建保留 CSS 引用的结果，并共同声明三者。
-
-来源和变化在各自作用域覆盖后，浏览器沿引用计算结果，无需 JS 预先求值。
-*/
+/** 完整定义的独立加工。
+ *
+ * 为来源的默认、状态和变体结果统一应用变化，保留来源本身。
+ */
 import { assert, hasProperty, isString, matchShape } from '@edsolater/fnkit'
 import type { DeclareProtocol } from './declare'
 import { colorModificationShape, type ColorModificationContent } from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
-import { referenceVariable, variable, type Variable } from '../variable'
+import { referenceVariable, transformVariable, type Variable } from '../variable/core'
 import { allocateVariableName } from '../key'
 import { modifyTargetShape, type ModifyTargetProtocol } from './modify'
+import type { ValueInput } from '../value'
 
 /** 调整方交付可声明的配方，type 选择对应的来源组合。 */
 export interface AdjustProtocol<Type extends string = string> extends DeclareProtocol {
@@ -21,29 +20,24 @@ export interface AdjustProtocol<Type extends string = string> extends DeclarePro
 export type AdjustTargetProtocol = ModifyTargetProtocol
 
 /**
- * 按 type 绑定来源与配方，返回引用双方的结果；声明和消费结果时共同管理三者依赖。
+ * 从来源创建独立结果，各状态与变体先得到自己的值，再统一应用配方。
  * @example
  * const merged = adjust(source, modification({ type: 'color', detail: { alpha: 0.5 } }))
- * rules('.item', [declare(merged), [key('color'), merged]])
+ * rules('.item', [[key('color'), merged]])
  */
 export function adjust(source: AdjustTargetProtocol, change: AdjustProtocol<keyof typeof adjustTypes>): Variable {
   assert(hasProperty(source, 'content') && matchShape(source, modifyTargetShape), 'adjust 需要自定义属性的 key/content 来源材料。')
   const combine = hasProperty(change, 'type', isString) && Object.hasOwn(adjustTypes, change.type) ? adjustTypes[change.type] : undefined
   assert(combine !== undefined, 'adjust 需要已支持领域的配方材料。')
-  const expression = combine(source, change)
+  assert(hasProperty(change, 'content') && matchShape(change, colorModificationShape), 'adjust 需要有效的 type/key/content 配方材料。')
   for (const target of [source, change]) allocateVariableName(target.key.toCSSString())
-  const merged = variable(expression, allocateVariableName())
-  merged.declarations = [source, change]
-  return merged
+  return transformVariable(source, current => combine(current, change), allocateVariableName())
 }
 
 /** 当前支持的来源组合；领域细节不进入绑定与共同声明链。 */
 const adjustTypes = {
   /**
-   * 验证可声明的颜色配方，再以双方 CSS 引用组合相对颜色。
+   * 加工各自已经选定的结果，配方仍通过 CSS 引用参与。
    */
-  color: (source: AdjustTargetProtocol, change: ColorModificationContent) => {
-    assert(hasProperty(change, 'content') && matchShape(change, colorModificationShape), 'adjust 需要有效的 type/key/content 配方材料。')
-    return oklch(referenceVariable(source), referenceVariable(change))
-  },
+  color: (current: ValueInput, change: ColorModificationContent) => oklch(current, referenceVariable(change)),
 }

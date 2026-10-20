@@ -1,18 +1,18 @@
 /** 稳定组合不会传播 Variable 的状态。 */
 import { expect, test, vi } from 'vitest'
-import { result } from '@edsolater/fnkit'
+
 import { condition, media } from '../condition'
 import { createJSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
 import * as variables from '../variable'
 import { colorMix } from '../pieces/contents/functions/color-mix'
-import { multiply } from '../pieces/contents/functions/calc'
+
 import { compileRules } from '../css-root'
-import { appendStateCondition, resolveStateConditions, stateCondition } from '../pieces/state-conditions'
-import { rulesToStyleNodes } from '../compiler/rules-to-style-nodes'
-import { styleNodesToContentNodes } from '../compiler/style-nodes-to-content-nodes/compilation'
-import { contentNodesToCSSString } from '../compiler/content-nodes-to-css-string'
+import { stateCondition } from '../pieces/state-conditions'
+
+
+
 
 import { cssFunction } from '../css-function'
 import type { Rules } from '../rule'
@@ -70,17 +70,17 @@ test('多个有状态变量组合时，消费属性仍只有一份声明', () =>
 })
 
 test('共享 Value 在不同地址分别解析，重复编译不修改来源对象', () => {
-  const source = variable('2px', { name: 'shared-position-size', states: { hover: '4px' } })
+  const source = variable('2px', { name: 'shared-position-size', address: '.Audit', states: { hover: '4px' } })
   const shared = value(source)
   const rules: Rules = [
-    [[condition('.AuditA')], 'width', shared],
-    [[condition('.AuditB')], 'width', shared],
+    [[condition('.Audit .AuditA')], 'width', shared],
+    [[condition('.Audit .AuditB')], 'width', shared],
   ]
   const compileAndCheck = () => {
     const css = compileRules(rules)
-    expect(css).toMatch(/:root\s*\{[^}]*--shared-position-size:\s*2px;/)
-    expect(css).toMatch(/\.AuditA[\s\S]*--shared-position-size:\s*4px;/)
-    expect(css).toMatch(/\.AuditB[\s\S]*--shared-position-size:\s*4px;/)
+    expect(css).toContain('--shared-position-size: 2px;')
+    expect(css).toContain('--shared-position-size: 4px;')
+    expect(css).toContain('width: var(--shared-position-size);')
   }
 
   compileAndCheck()
@@ -106,13 +106,6 @@ test('零值不会沿来源链退回', () => {
   expect(compileRules([[[condition('.Example')], 'opacity', next]])).toContain('--next-opacity: 0;')
 })
 
-test('已在 active Rule 内消费时，首次自动声明采用 active 内容', () => {
-  const source = variable('red', { name: 'active-color', states: { active: 'blue' } })
-  const css = compileStateFixture([[[condition('.Example')], 'color', source]], 'active')
-  expect(css).toContain('--active-color: blue;')
-  expect(css).toMatch(/:root\s*\{[^}]*--active-color: red;/)
-})
-
 test('延伸的注册使用新名字，来源默认值继续按需读取', () => {
   const source = variable('blue', { name: 'registered-source-color' })
   const next = variable(source, { name: 'registered-next-color', registration: { syntax: '<color>', inherits: true, initialValue: 'black' } })
@@ -136,28 +129,6 @@ test('动态内容没有被消费时不执行，消费时产生 CSS', () => {
   expect(compileRules([[[condition('.Example')], 'color', source]])).toContain('color: var(--deferred-color);')
   expect(serialize).toHaveBeenCalled()
 })
-test('声明来源 Variable 不修改其定义，局部显式声明优先', () => {
-  const ratio = variable(0.8, { name: 'surface-ratio', states: { hover: 0.6 } })
-  const css = compileStateFixture([[[condition('.Example')], ratio, 0.3], [[condition('.Example')], 'opacity', multiply(ratio, 0.5)]], 'hover')
-  expect(css).toContain('--surface-ratio: 0.3;')
-  expect(css).not.toContain('--surface-ratio: 0.6;')
-})
-
-test('显式 Variable 局部分支保留其消费状态，状态内容的临时条件不扩散', () => {
-  const inner = variable('10px', { name: 'branch-inner-size', states: { hover: '20px', active: '30px' } })
-  const target = variable(undefined, { name: 'branch-target-size' })
-  const css = compileStateFixture([[[condition('.BranchScope')], target, inner]], 'active')
-  expect(css).toContain('--branch-inner-size: 30px;')
-  expect(css).not.toContain('--branch-inner-size: 20px;')
-})
-
-/** 显式构造内部状态节点，区别于公开 Rules 的普通条件。 */
-function compileStateFixture(input: import('../rule').Rules, state: string): string {
-  const nodes = rulesToStyleNodes(input)
-  nodes[0].conditionPath = appendStateCondition(nodes[0].conditionPath, resolveStateConditions([state])[0])
-  return contentNodesToCSSString(styleNodesToContentNodes(nodes, input))
-}
-
 
 test('两个具体Variable的onActive各自执行一次，共享引用不重复', () => {
   const directActive = vi.fn((): Rules => [[[condition(':root')], '--direct-active', '1']])

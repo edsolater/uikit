@@ -1,7 +1,7 @@
 /** 验证变体转换、原样继承及单层选择产生的实际样式。 */
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
-import { variable, variableName } from '../variable'
+import { variable, variableFrom, variableName } from '../variable'
 import type { ValueInput } from '../value'
 import { multiply, add } from '../pieces/contents/functions/calc'
 
@@ -14,12 +14,12 @@ test('所有Variable都能派生，规则与固定值原样复用，变体结果
     states: { hover: plusThree, active: 99 },
     variants: { scaled: twice, fixed: 7, zero: 0 },
   })
-  const changed = source.derive(20, { name: 'variant-inherited-next', variants: { fixed: 8 } })
+  const changed = variableFrom(source, 20, { name: 'variant-inherited-next', variants: { fixed: 8 } })
   const scaled = changed.variant('scaled')
   const fixed = changed.variant('fixed')
   const zero = changed.variant('zero')
-  const again = fixed.derive(30, 'variant-fixed-next')
-  const plain = variable(5, 'variant-plain').derive(8, 'variant-plain-next')
+  const again = variableFrom(fixed, 30, 'variant-fixed-next')
+  const plain = variableFrom(variable(5, 'variant-plain'), 8, 'variant-plain-next')
   const css = compileRules([
     [['.Scaled'], 'z-index', scaled], [['.Fixed'], 'z-index', fixed],
     [['.Zero'], 'z-index', zero], [['.Again'], 'z-index', again], [['.Plain'], 'z-index', plain],
@@ -60,7 +60,7 @@ test('选择变体后不能再取得来源变体，再次派生也不找回来�
   const surface = variable(10, { name: 'variant-one-level', variants: { content: twice, line: base => add(base, 1) } })
   const content = surface.variant('content')
   expect(() => content.variant('line')).toThrow()
-  expect(() => content.derive(30, 'variant-result-next').variant('line')).toThrow()
+  expect(() => variableFrom(content, 30, 'variant-result-next').variant('line')).toThrow()
   expect(compileRules([[['.Content'], 'width', content]])).toMatch(/--[\w-]+:\s*20\s*;/)
 })
 

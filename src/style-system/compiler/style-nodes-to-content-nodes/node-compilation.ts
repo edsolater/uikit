@@ -5,7 +5,7 @@
  * 将跨波进度和内容链访问留在同一责任内，供编排统一推进。
  */
 import { assert, isArray, isIndexNumber, isObjectLike, isString, isNumber, isUndefined, isFunction, result } from '@edsolater/fnkit'
-import { outputConditionPath, type ConditionPath, type CSSConditionPath } from '../../condition'
+import { conditionAddressKey, outputConditionPath, type ConditionPath, type CSSConditionPath } from '../../condition'
 import type { JSSKey } from '../../key'
 import type { Rules } from '../../rule'
 import { isJSSContent, hasJSSContentOnActiveMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
@@ -25,6 +25,7 @@ export interface JSSContentNode {
 const roleCompilationState = (input: unknown, role: JSSCompileContext['role']): RoleCompilationState => ({
   input,
   contents: new WeakMap(),
+  visitedContents: new Set(),
   complete: role === 'declaration-key' && !hasJSSContentOnCompileMethod(input),
 })
 
@@ -56,6 +57,7 @@ function visitContent(
     assert(isObjectLike(input), '无效的 CSS 内容。')
     assert(!activeObjects.has(input), 'CSS 内容存在循环引用，无法生成 CSS。')
     activeObjects.add(input)
+    state.visitedContents.add(input)
     try {
       let record = state.contents.get(input)
       if (!record) { record = { content: input, notified: false }; state.contents.set(input, record) }
@@ -133,6 +135,7 @@ export class NodeCompilation {
       if (!present) { this.pending.delete(node); return }
       const state = session.compilations.get(node)
       if (state?.key.complete && state.content.complete && state.version === node.compileRevision
+        && state.address === conditionAddressKey(node.conditionPath)
         && state.key.input === node.key && state.content.input === node.content) return
       this.pending.add(node)
       // 已有位置在轮到前改变，仍按本波顺序访问；本波新增节点留到下一波。
@@ -187,12 +190,13 @@ export class NodeCompilation {
     if (!state) return
     let changed = false
     for (const name of ['key', 'content'] as const) {
-      if (state.version !== node.compileRevision || state[name].input !== node[name]) {
+      if (state.version !== node.compileRevision || state.address !== conditionAddressKey(node.conditionPath) || state[name].input !== node[name]) {
         state[name] = roleCompilationState(node[name], name === 'key' ? 'declaration-key' : 'declaration-content')
         changed = true
       }
     }
     state.version = node.compileRevision
+    state.address = conditionAddressKey(node.conditionPath)
     if (changed) delete node.deferredReason
   }
 
@@ -202,6 +206,7 @@ export class NodeCompilation {
     this.invalidate(node)
     const state = this.session.compilations.get(node) ?? {
       version: node.compileRevision,
+      address: conditionAddressKey(node.conditionPath),
       key: roleCompilationState(node.key, 'declaration-key'),
       content: roleCompilationState(node.content, 'declaration-content'),
     }
@@ -215,6 +220,8 @@ export class NodeCompilation {
 
   /** 访问当前角色的实际输入，替代结果仍归原输入；暂缓后只重新尝试该角色回调。 */
   private visitRole(node: JSSStyleNode, name: 'key' | 'content', state: RoleCompilationState, wave: number, activationPath: ConditionPath): void {
+    state.visitedContents.clear()
+    const activatedContents = new Set<JSSContent>()
     const context: Omit<JSSCompileContext, 'input'> = {
       node,
       session: this.session.identity,
@@ -224,14 +231,18 @@ export class NodeCompilation {
       role: name === 'key' ? 'declaration-key' : 'declaration-content',
     }
     /** 为当前声明激活内容的按需 Rules，保留其条件地址与消费者关系。 */
-    const activate = (content: JSSContent): void => this.resources.activate(content, {
-      root: this.sourceRules,
-      conditionPath: conditionPathSnapshot(activationPath),
-      key: node.key,
-    }, node)
+    const activate = (content: JSSContent): void => {
+      activatedContents.add(content)
+      this.resources.activate(content, {
+        root: this.sourceRules,
+        conditionPath: conditionPathSnapshot(activationPath),
+        key: node.key,
+      }, node)
+    }
     const complete = visitContent(context[name], context, this.controller, this.session, wave, state, this.budget, activate)
     state.complete = complete && node.deferredReason === undefined
     state.input = context[name]
+    this.resources.updateConsumer(node, name, activatedContents, state.complete)
   }
 
   /**
@@ -247,7 +258,6 @@ export class NodeCompilation {
 
 /** 为角色或激活回调隔离当前路径容器，保留 Condition 身份；每次调用都取得当时输入。 */
 const conditionPathSnapshot = (path: ConditionPath): ConditionPath => ({
-  semanticPath: path.semanticPath?.slice(),
   targetConditionPath: [...path.targetConditionPath],
   stateConditionPath: [...path.stateConditionPath],
 })

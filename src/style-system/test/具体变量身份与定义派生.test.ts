@@ -2,7 +2,7 @@
 import { describe, expect, test } from 'vitest'
 import { parse } from 'postcss'
 import { compileRules } from '../css-root'
-import { variable, variableName } from '../variable'
+import { variable, variableFrom, variableName } from '../variable'
 import { declare } from '../operations/declare'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { multiply } from '../pieces/contents/functions/calc'
@@ -30,10 +30,10 @@ describe('具体变量定义与名称分工', () => {
     expect(unused).toBe(0)
   })
 
-  test('derive保留默认和状态，独立名称与显式等级只改变指定差异', () => {
+  test('variableFrom保留默认和状态，独立名称与显式等级只改变指定差异', () => {
     const source = variable({ default: '4px', hover: base => multiply(base, 2) }, { name: 'derive-source', priority: 3 })
-    const copied = source.derive()
-    const changed = source.derive('7px', { name: 'derive-changed', priority: 0 })
+    const copied = variableFrom(source, source.content)
+    const changed = variableFrom(source, '7px', { name: 'derive-changed', priority: 0 })
     expect(copied.name).toBe(source.name)
     expect(copied.priority).toBe(4)
     const copiedCSS = compileRules([[['.Copied'], 'width', copied]])
@@ -44,7 +44,7 @@ describe('具体变量定义与名称分工', () => {
     const snapshotCSS = compileRules([[['.Copied'], 'width', copied]])
     expect(snapshotCSS).toContain('--derive-source: 4px')
     expect(snapshotCSS).toContain('calc(4px * 2)')
-    const overridden = source.derive(source.content, { name: 'derive-states', states: { hover: '12px' } })
+    const overridden = variableFrom(source, source.content, { name: 'derive-states', states: { hover: '12px' } })
     const overriddenCSS = compileRules([[['.Overridden'], 'width', overridden]])
     expect(overriddenCSS).toContain('--derive-states: 9px')
     expect(overriddenCSS).toContain('--derive-states: 12px')
@@ -55,11 +55,11 @@ describe('具体变量定义与名称分工', () => {
   })
 
   test('两个同名对象均消费时，各自状态只发布到自己的使用位置', () => {
-    const first = variable({ default: 'red', hover: 'pink' }, 'shared-state-name')
-    const second = variable({ default: 'blue', active: 'navy' }, 'shared-state-name')
+    const first = variable({ default: 'red', hover: 'pink' }, { name: 'shared-state-name', address: '.IdentityFirst' })
+    const second = variable({ default: 'blue', active: 'navy' }, { name: 'shared-state-name', address: '.IdentitySecond' })
     const css = compileRules([
-      [['.IdentityFirst'], ...declare(first)], [['.IdentityFirst'], 'color', first],
-      [['.IdentitySecond'], ...declare(second)], [['.IdentitySecond'], 'color', second],
+      [['.IdentityFirst'], 'color', first],
+      [['.IdentitySecond'], 'color', second],
       [['.NameRead'], 'color', first.name],
     ])
     const at = (selector: string) => parse(css).nodes.find(node => node.type === 'rule' && node.selector === selector)!.toString()
@@ -78,32 +78,14 @@ describe('具体变量定义与名称分工', () => {
     const resource = { onActive: () => { active++; return [] } }
     const waveOnly = { compileWaveIndex: 2 }
     const content = { toCSSString: () => '8px' }
-    expect(source.derive(resource).content).toBe(resource)
-    expect(source.derive(waveOnly).content).toBe(waveOnly)
-    expect(source.derive(content).content).toBe(content)
-    const configured = source.derive(source.content, { name: 'derive-active-config', onActive: resource.onActive })
+    expect(variableFrom(source, resource).content).toBe(resource)
+    expect(variableFrom(source, waveOnly).content).toBe(waveOnly)
+    expect(variableFrom(source, content).content).toBe(content)
+    const configured = variableFrom(source, source.content, { name: 'derive-active-config', onActive: resource.onActive })
     expect(compileRules([[['.Configured'], 'width', configured]])).toContain('--derive-active-config: 4px')
     expect(active).toBe(1)
-    const empty = source.derive(undefined, 'derive-empty')
+    const empty = variableFrom(source, undefined, 'derive-empty')
     expect(empty.content).toBeUndefined()
-  })
-
-  test('同址的另一个对象声明不压掉当前对象的状态和依赖物化', () => {
-    const sourceA = variable('2px', 'identity-source-a')
-    const sourceB = variable('3px', 'identity-source-b')
-    const first = variable({ default: multiply(sourceA, 2), hover: '17px' }, 'shared-address')
-    const second = variable({ default: multiply(sourceB, 3), active: '29px' }, 'shared-address')
-    const css = compileRules([
-      [['.Together'], ...declare(second)], [['.Together'], 'width', first], [['.Together'], 'height', second],
-      [['.LocalA'], ...declare(sourceA, '5px')], [['.LocalB'], ...declare(sourceB, '7px')],
-    ])
-    const at = (selector: string) => parse(css).nodes.find(node => node.type === 'rule' && node.selector === selector)!.toString()
-    expect(at('.Together')).toContain('--shared-address: 17px')
-    expect(at('.Together')).toContain('--shared-address: 29px')
-    expect(at('.LocalA')).toContain('var(--identity-source-a)')
-    expect(at('.LocalA')).not.toContain('var(--identity-source-b)')
-    expect(at('.LocalB')).toContain('var(--identity-source-b)')
-    expect(at('.LocalB')).not.toContain('var(--identity-source-a)')
   })
 
   test('普通转换函数返回依赖各自基础和共享强度的具体变量', () => {

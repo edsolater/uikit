@@ -1,5 +1,4 @@
 /** 内容生产函数只在编译时求值，输出协议不接受函数冒充文本。 */
-import { whenSettled } from './when-settled'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { condition, media, functionDefinition } from '../condition'
@@ -112,7 +111,7 @@ test.each(['media', 'functionDefinition', 'animationName'])('%s 的固定文本�
 
 test('状态回调收到默认生产函数求得的基础值，而不是函数本身', () => {
   const material = variable(() => '4px', {
-    name: 'producer-base-value',
+    name: 'producer-base-value', address: '.BaseValue',
     states: { '&:hover': base => `${Number.parseFloat(String(base)) * 2}px` },
   })
   const css = compileRules([[['.BaseValue'], 'width', material]])
@@ -141,14 +140,15 @@ test.each([false, true])('天然材料的 Key 输出函数时，值引用与注�
   expect(invalid).not.toHaveBeenCalled()
 })
 
-test('根默认生产函数独立提供基础，显式局部值及状态不被替换', () => {
+test('根据地的生产基础与状态不覆盖另一区域的显式局部值', () => {
   const material = variable(() => '4px', {
     name: 'expanded-unused-default', states: { '&:hover': base => `${parseFloat(String(base)) * 2}px` },
   })
   const css = compileRules([[['.Explicit'], ...declare(material, '6px')], [['.Explicit'], 'width', material]])
-  expect(css).toMatch(/:root\s*\{[^}]*--expanded-unused-default: 4px;/)
+  expect(css).toMatch(/:root\)?\s*\{[^}]*--expanded-unused-default: 4px;/)
   expect(css).toContain('--expanded-unused-default: 6px;')
-  expect(css).toContain('--expanded-unused-default: 12px;')
+  expect(css).toContain('--expanded-unused-default: 8px;')
+  expect(css).not.toContain('--expanded-unused-default: 12px;')
 })
 
 test('纯名称内容只输出引用，不建立具体对象的当地依赖', () => {
@@ -166,14 +166,14 @@ test('纯名称内容只输出引用，不建立具体对象的当地依赖', ()
   expect(css).not.toMatch(/\.Child\s*\{[^}]*--expanded-dependency-recipe:/)
 })
 
-test('同一显式声明的默认基础只展开一次，多个当地消费者沿用该基础', () => {
+test('根据地的生产基础只求值一次，多个消费者共享结果', () => {
   let available = true
   const material = variable(() => {
     if (!available) throw new Error('同一声明基础不应被消费入口重复求值')
     available = false
     return '4px'
-  }, { name: 'expanded-shared-default', states: { '&:hover': base => `${parseFloat(String(base)) * 2}px` } })
-  const css = compileRules([[['.SharedDefault'], ...declare(material)], [['.SharedDefault'], 'width', material], [['.SharedDefault'], 'height', material.name]])
+  }, { name: 'expanded-shared-default', address: '.SharedDefault', states: { '&:hover': base => `${parseFloat(String(base)) * 2}px` } })
+  const css = compileRules([[['.SharedDefault'], 'width', material], [['.SharedDefault'], 'height', material.name]])
   expect(css).toContain('--expanded-shared-default: 4px;')
   expect(css).toContain('--expanded-shared-default: 8px;')
   expect(css).toContain('width: var(--expanded-shared-default);')
@@ -199,97 +199,12 @@ test('编译波前访问过依赖后，onCompile 更新的依赖仍在完成阶�
   expect(compileRules([[['.ChangedDependencies'], 'color', input]])).toContain('color: red;')
 })
 
-test('明确的undefined局部基础不输出，根默认仍独立提供基础', () => {
+test('明确的undefined局部基础不输出，根根据地仍提供内容', () => {
   const material = variable(() => '4px', { name: 'expanded-explicit-empty' })
   const css = compileRules([[['.EmptyBase'], ...declare(material, undefined)], [['.EmptyBase'], 'width', material]])
   expect(css).toContain('width: var(--expanded-explicit-empty);')
-  expect(css).toMatch(/:root\s*\{[^}]*--expanded-explicit-empty: 4px;/)
+  expect(css).toMatch(/:root\)?\s*\{[^}]*--expanded-explicit-empty: 4px;/)
   expect(css.match(/\.EmptyBase\s*\{([^}]*)\}/)?.[1]).not.toContain('--expanded-explicit-empty:')
-})
-
-test('消费输入身份替换后，自动投影读取新的角色展开结果', () => {
-  let fresh = false
-  const material = variable(() => fresh ? '8px' : '4px', { name: 'expanded-input-replacement' })
-  const css = compileRules([[['.InputReplacement'], 'width', material], [[], undefined, whenSettled(controller => {
-    fresh = true
-    controller.search({ key: 'width' })[0].content = value(material)
-    return true
-  })]])
-  expect(css).toContain('--expanded-input-replacement: 8px;')
-  expect(css).not.toContain('--expanded-input-replacement: 4px;')
-})
-
-test.each(['基数', '另一个引用', '同址固定'])('原消费重访或显式接管后撤销旧联动与资源：%s', mode => {
-  let factor = 2
-  let childDone = false
-  const source = variable('1px', 'expanded-linked-refresh-source')
-  const another = variable('2px', 'expanded-linked-refresh-another')
-  let selected = source
-  const sourceDeclaration = declare(source, '7px')
-  const material = variable(() => ({
-    onActive: context => selected === source && context.conditionPath.targetConditionPath.some(item => item.header === '.RefreshChild')
-      ? [[['.StaleLinkedResource'], 'display', 'block']] : [],
-    onCompile(context, controller) {
-      controller.setContent(context, multiply(selected, factor))
-      if (context.conditionPath.targetConditionPath.some(item => item.header === '.RefreshChild')) childDone = true
-    } }), { name: 'expanded-linked-refresh-derived' })
-  const css = compileRules([
-    [['.RefreshParent'], 'width', material], [['.RefreshChild'], ...sourceDeclaration], [['.RefreshChild'], ...declare(another, '11px')],
-    [[], undefined, whenSettled(controller => {
-      if (!childDone) return false
-      if (mode === '同址固定') {
-        const anchor = controller.search({ key: source.key }).find(node => node.content === sourceDeclaration[1])!
-        controller.insert({ before: anchor, conditionPath: anchor.conditionPath }, declare(material, 20), { owner: anchor })
-        return true
-      }
-      factor = 3
-      if (mode === '另一个引用') selected = another
-      controller.search({ key: 'width' })[0].content = value(material)
-      return true
-    })],
-  ])
-  const child = css.match(/\.RefreshChild\s*\{([^}]*)\}/)?.[1]
-  if (mode === '同址固定') expect(child).toContain('--expanded-linked-refresh-derived: 20;')
-  else {
-    expect(css).not.toContain(' * 2)')
-    const formula = `--expanded-linked-refresh-derived: calc(var(${selected.toCSSString()}) * 3);`
-    expect(css.match(/:root\s*\{([^}]*)\}/)?.[1]).toContain(formula)
-    expect(child).toContain(formula)
-  }
-  if (mode !== '基数') expect(css).not.toContain('.StaleLinkedResource')
-  expect(css.match(/\.RefreshParent\s*\{([^}]*)\}/)?.[1]).not.toContain('--expanded-linked-refresh-derived:')
-})
-
-test('状态联动跟随其真实局部声明的基础重访，不借其他原生消费者代表来源', () => {
-  let fresh = false
-  let grandchildDone = false
-  const source = variable('1px', 'expanded-state-origin-source')
-  const material = variable('1px', { name: 'expanded-state-origin-derived', states: { '&[data-active]': base => multiply(source, parseFloat(String(base))) } })
-  /**
-   * 提供重访前后的当地基础，并在Grandchild实际编译后开放后续重访步骤。
-   */
-  const produceLocalBase = () => ({ onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) {
-    controller.setContent(context, fresh ? '6px' : '5px')
-    if (context.conditionPath.targetConditionPath.some(item => item.header === '.OriginGrandchild')) grandchildDone = true
-  } })
-  const declaration = declare(material, produceLocalBase)
-  const css = compileRules([
-    [['.OriginParent'], 'width', material], [['.OriginParent', '.OriginChild'], ...declaration],
-    [['.OriginParent', '.OriginChild'], 'width', material],
-    [['.OriginParent', '.OriginChild', '.OriginGrandchild'], ...declare(source, '11px')],
-    [[], undefined, whenSettled(controller => {
-      if (!grandchildDone) return false
-      fresh = true
-      controller.nodes().find(node => node.content === declaration[1])!.compileRevision++
-      return true
-    })],
-  ])
-  const grandchild = css.match(/\.OriginGrandchild\s*\{([\s\S]*?)\n\}/)?.[1]
-  expect(grandchild).toContain('--expanded-state-origin-derived: calc(var(--expanded-state-origin-source) * 6);')
-  expect(grandchild).not.toContain(' * 5)')
-  const parent = css.match(/\.OriginParent\s*\{([\s\S]*?)\n\}/)?.[1]
-  expect(parent).toContain('--expanded-state-origin-derived: calc(var(--expanded-state-origin-source) * 1);')
-  expect(css.match(/:root\s*\{([^}]*)\}/)?.[1]).toContain('--expanded-state-origin-derived: 1px;')
 })
 
 

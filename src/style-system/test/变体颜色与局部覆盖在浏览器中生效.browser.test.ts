@@ -36,7 +36,7 @@ function expectColor(actual: string, expected: string) {
 }
 
 test('正控制：普通Variable的颜色转换与真实hover得到0.3和0.26明度', async () => {
-  const content = variable(contentColor('oklch(0.6 0.1 240)'), { name: 'variant-color-control', states: { hover: hoverColor } })
+  const content = variable(contentColor('oklch(0.6 0.1 240)'), { name: 'variant-color-control', address: ".VariantControl", states: { hover: hoverColor } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([[['.VariantControl'], 'color', content]])
   const element = button('VariantControl')
   expectColor(getComputedStyle(element).color, 'oklch(0.3 0.1 240)')
@@ -47,7 +47,7 @@ test('正控制：普通Variable的颜色转换与真实hover得到0.3和0.26明
 })
 
 test('背景、内容与边线分别消费Variable，hover在变体新基础上只应用一次', async () => {
-  const surface = variable('oklch(0.6 0.1 240)', { name: 'variant-button-color', states: { hover: hoverColor }, variants: { content: contentColor, line: base => oklch(base, { lightness: current => multiply(current, 0.75) }) } })
+  const surface = variable('oklch(0.6 0.1 240)', { name: 'variant-button-color', address: ".VariantButton", states: { hover: hoverColor }, variants: { content: contentColor, line: base => oklch(base, { lightness: current => multiply(current, 0.75) }) } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [['.VariantButton'], 'background-color', surface], [['.VariantButton'], 'color', surface.variant('content')], [['.VariantButton'], 'border-color', surface.variant('line')],
   ])
@@ -62,7 +62,7 @@ test('背景、内容与边线分别消费Variable，hover在变体新基础上�
   await userEvent.unhover(element)
 })
 
-test.each(['普通Variable正控制', '变体'])('%s：真实共享引用响应全局及当地输入，单独覆盖内容不污染兄弟', mode => {
+test.each(['普通Variable正控制', '变体'])('%s：共享引用响应根输入，局部同名输入不重新绑定祖先公式', mode => {
   const shared = variable('oklch(0.6 0.1 240)', 'variant-global-color')
   const parent = variable(shared, { name: 'variant-shared-surface', variants: { content: contentColor } })
   const content = mode === '普通Variable正控制' ? variable(contentColor(shared), 'variant-shared-control') : parent.variant('content')
@@ -76,6 +76,6 @@ test.each(['普通Variable正控制', '变体'])('%s：真实共享引用响应�
   expectColor(getComputedStyle(second).color, 'oklch(0.4 0.1 240)')
   expectColor(getComputedStyle(first).color, 'oklch(0.8 0.1 80)')
   style.textContent = compileRules([[['.VariantShared'], 'color', content], [['.VariantLocal'], content, 'oklch(0.8 0.1 80)'], [[':root'], shared, 'oklch(0.8 0.1 240)'], [['.VariantSecond'], shared, 'oklch(0.4 0.1 240)']])
-  expectColor(getComputedStyle(second).color, 'oklch(0.2 0.1 240)')
+  expectColor(getComputedStyle(second).color, 'oklch(0.4 0.1 240)')
   expectColor(getComputedStyle(first).color, 'oklch(0.8 0.1 80)')
 })

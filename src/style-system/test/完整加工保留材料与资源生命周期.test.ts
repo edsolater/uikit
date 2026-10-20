@@ -1,8 +1,8 @@
-/** 独立变化与三者声明的流程验证。
+/** 完整加工的材料、共享资源与退出效果验证。
 
 核对配方转译、共享依赖、结构协议和生命周期的实际 CSS。
 
-断言公开声明与消费结果，浏览器中的局部覆盖另由流程测试验证。
+完整状态与变体结果由浏览器流程测试验证，不约束共同声明的数量或位置。
 */
 import { expect, test } from 'vitest'
 import { add } from '../pieces/contents/functions/calc'
@@ -33,59 +33,107 @@ test('不同描述可独立声明，颜色配方可直接引用且不绑定某�
   expect(compile(declare(generic))).toContain('--generic-description: 5;')
 })
 
-test('声明结果共同声明来源、变化与结果，两个来源共享同一变化声明', () => {
+test('不同来源可共享配方，直接使用结果即可取得完整加工表达式', () => {
   const first = variable(oklch({ lightness: 0.5, chroma: 0.1, hue: 240 }), 'source-first')
   const second = variable('red', 'source-second')
   const change = modification({ name: '--shared-change', type: 'color', detail: { lightness: 0.3 } })
   const firstResult = adjust(first, change), secondResult = adjust(second, change)
-  const css = compile(declare(firstResult), declare(secondResult))
-  expect(css).toContain('--source-first: oklch(0.5 0.1 240);')
-  expect(css).toContain('--source-second: red;')
-  expect(css.match(/\.Binding\s*\{([^}]*)\}/)?.[1].match(/--shared-change:/g)).toHaveLength(1)
-  expect(css.match(/:root\s*\{([^}]*)\}/)?.[1]).toContain('--shared-change:')
+  const css = compileRules([[['.First'], 'color', firstResult], [['.Second'], 'color', secondResult]])
+  expect(css).toContain('--shared-change: 0.3 c h / alpha;')
   expect(css).toContain(`${firstResult.toCSSString()}: oklch(from var(--source-first) var(--shared-change));`)
   expect(css).toContain(`${secondResult.toCSSString()}: oklch(from var(--source-second) var(--shared-change));`)
+  expect(compileRules([[['.Source'], 'color', second]])).toContain('--source-second: red;')
 })
 
-test('撤销一份绑定保留另一份的共享依赖，全部撤销后不泄漏声明或按需资源', () => {
+test('撤销一个消费者保留共享资源，全部撤销后释放自动资源', () => {
   for (const removeAll of [false, true]) {
     const source = { key: key('--owned-source'), content: value('red', { onActive: (): Rules => [[['.BindingResource'], 'opacity', 0.5]] }), registration: { syntax: '<color>', inherits: true, initialValue: 'black' } }
     const change = { type: 'color' as const, key: key('--owned-change'), content: 'l c h / 0.5', onActive: (): Rules => [[['.ChangeResource'], 'opacity', 0.5]] }
     const first = adjust(source, change), second = adjust(source, change)
-    const declarations = [declare(first), declare(second)]
+    const consumerKeys = [key('color'), key('background-color')]
     const css = compileRules([
-      ...declarations.map(entry => [['.Binding'], ...entry] as Rules[number]),
+      [['.Binding'], consumerKeys[0], first], [['.Binding'], consumerKeys[1], second],
       [[], 'order', { compileWaveIndex: 2, onCompile(context, controller) {
-        for (const entry of declarations.slice(0, removeAll ? 2 : 1)) {
-          const node = controller.search({ key: entry[0] }).find(node => node.content === entry[1])
-          if (node) controller.remove(node)
+        for (const consumerKey of consumerKeys.slice(0, removeAll ? 2 : 1)) {
+          for (const node of controller.search({ key: consumerKey })) controller.remove(node)
         }
         controller.setContent(context, 1)
       } }],
     ])
-    expect(css.includes('--owned-source:')).toBe(!removeAll)
     expect(css.includes('--owned-change:')).toBe(!removeAll)
     expect(css.includes('.BindingResource')).toBe(!removeAll)
     expect(css.includes('@property --owned-source')).toBe(!removeAll)
     expect(css.includes('.ChangeResource')).toBe(!removeAll)
-    expect(compile(declare(source), modify(source, change))).toContain('.ChangeResource')
   }
 })
 
-test.each(['explicit', 'natural', 'source', 'change'])('匿名绑定与显式、天然材料、预建名称及变化改名材料独立声明：%s', mode => {
-  const reserved = 'binding-source'
-  const source = mode === 'natural' ? { key: key(`--${reserved}`), content: 'red' } : variable('red', mode === 'source' ? { name: variables.variableName(reserved) } : mode === 'explicit' ? reserved : 'binding-other-source')
-  const change = modification({ type: 'color', name: mode === 'explicit' ? undefined : '--renamed-change', detail: { alpha: 0.5 } })
-  if (mode === 'change') change.name = `--${reserved}`
-  const merged = adjust(source, change)
-  const css = compile(declare(merged))
-  const names = [source.key.toCSSString(), change.toCSSString(), merged.toCSSString()]
-  expect(new Set(names).size).toBe(3)
-  for (const name of names) expect(css).toContain(`${name}:`)
-  expect(css).toContain(`${source.key.toCSSString()}: red;`)
-  expect(css).toContain(`${change.toCSSString()}: l c h / 0.5;`)
+test.each(['天然材料', 'Variable'])('调整保留%s来源的顶层资源，并随结果消费退出', kind => {
+  for (const removeAll of [false, true]) {
+    const onActive = (): Rules => [[['.SourceTopResource'], 'opacity', 0.5]]
+    const registration = { syntax: '<color>', inherits: false, initialValue: 'black' }
+    const source = kind === '天然材料'
+      ? { key: key('--top-resource-source'), content: 'red', onActive, registration }
+      : variable('red', { name: 'top-resource-source', onActive, registration })
+    const change = modification({ type: 'color', detail: { alpha: 0.5 } })
+    const first = adjust(source, change), second = adjust(source, change)
+    const consumerKeys = [key('color'), key('background-color')]
+    const css = compileRules([
+      [['.ResourceConsumer'], consumerKeys[0], first], [['.ResourceConsumer'], consumerKeys[1], second],
+      [[], 'order', { compileWaveIndex: 2, onCompile(context, controller) {
+        for (const consumerKey of consumerKeys.slice(0, removeAll ? 2 : 1)) {
+          for (const node of controller.search({ key: consumerKey })) controller.remove(node)
+        }
+        controller.setContent(context, 1)
+      } }],
+    ])
+    expect(css.includes('.SourceTopResource')).toBe(!removeAll)
+    expect(css.includes('@property --top-resource-source')).toBe(!removeAll)
+    expect(css).not.toContain(`@property ${second.toCSSString()}`)
+    if (!removeAll) {
+      expect(css).toContain('syntax: "<color>";')
+      expect(css).toContain('inherits: false;')
+      expect(css).toContain('initial-value: black;')
+    }
+  }
 })
 
+test('仅消费调整结果的多个变体仍保留来源资源，最后退出时释放', () => {
+  for (const removeAll of [false, true]) {
+    const source = variable('red', {
+      name: 'variant-resource-source', variants: { line: 'blue', content: 'green' },
+      registration: { syntax: '<color>', inherits: false, initialValue: 'black' },
+      onActive: (): Rules => [[['.VariantOnlyResource'], 'opacity', 0.5]],
+    })
+    const adjusted = adjust(source, modification({ type: 'color', detail: { alpha: 0.5 } }))
+    const line = adjusted.variant('line'), content = adjusted.variant('content')
+    const consumerKeys = [key('color'), key('background-color')]
+    const css = compileRules([
+      [['.VariantResource'], consumerKeys[0], line], [['.VariantResource'], consumerKeys[1], content],
+      [[], 'order', { compileWaveIndex: 2, onCompile(context, controller) {
+        for (const consumerKey of consumerKeys.slice(0, removeAll ? 2 : 1)) {
+          for (const node of controller.search({ key: consumerKey })) controller.remove(node)
+        }
+        controller.setContent(context, 1)
+      } }],
+    ])
+    expect(css.includes('.VariantOnlyResource')).toBe(!removeAll)
+    expect(css.includes('@property --variant-resource-source')).toBe(!removeAll)
+    expect(css).not.toContain(`@property ${line.toCSSString()}`)
+    expect(css).not.toContain(`@property ${content.toCSSString()}`)
+  }
+})
+
+test.each(['天然材料', 'Variable'])('匿名结果避让来源和配方名称，%s不需要补声明', mode => {
+  const source = mode === '天然材料' ? { key: key('--binding-source'), content: 'red' } : variable('red', { name: variables.variableName('binding-source') })
+  const change = modification({ type: 'color', name: '--initial-change', detail: { alpha: 0.5 } })
+  change.name = '--renamed-change'
+  const merged = adjust(source, change)
+  const css = compileRules([[['.Binding'], 'color', merged]])
+  const names = [source.key.toCSSString(), change.toCSSString(), merged.toCSSString()]
+  expect(new Set(names).size).toBe(3)
+  expect(css).toContain(`${merged.toCSSString()}: oklch(from var(--binding-source) var(--renamed-change));`)
+  expect(css).toContain('--renamed-change: l c h / 0.5;')
+})
 test('必要材料与内容领域不符时明确失败，完整CSS配方名直接保存', () => {
   const source = { key: key('--natural-source'), content: 'red' }
   for (const type of ['unknown', 'constructor', 'toString', '__proto__', new String('color')]) {

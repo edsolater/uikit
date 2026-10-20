@@ -20,15 +20,14 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     const styleSystem = await import(pathToFileURL(modulePath).href)
     const surfaceName = styleSystem.variableName('bundle-surface')
     const line = styleSystem.variable(() => surface, 'bundle-line')
-    const surface = styleSystem.variable('black', { name: surfaceName })
-    const opacity = styleSystem.variable(1, { name: 'bundle-opacity', states: { hover: 0.5 } })
+    const surface = styleSystem.variable('black', { name: surfaceName, address: '.Built' })
+    const opacity = styleSystem.variable(1, { name: 'bundle-opacity', address: '.Built', states: { hover: 0.5 } })
     styleSystem.rules('.Built', [
       [styleSystem.key('align-items'), 'center'], [styleSystem.key('margin-left'), '2px'],
       [styleSystem.key('color'), surface], [styleSystem.key('border-color'), line], [styleSystem.key('opacity'), opacity],
       [surface, 'blue'],
     ])
-    const count = styleSystem.variable(1, { name: 'bundle-modified-count' })
-    styleSystem.rules('.Built', [styleSystem.declare(count)])
+    const count = styleSystem.variable(1, { name: 'bundle-modified-count', address: '.Built' })
     styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, { type: 'expression', detail: currentExpression => styleSystem.add(currentExpression, 3) })])
     console.log(styleSystem.compileCSS())
     } finally {

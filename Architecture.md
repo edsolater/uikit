@@ -60,7 +60,7 @@ App 入口执行 cssRoot.mount()
   -> render() 开始组件渲染
 ```
 
-Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、登记句柄和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 选择规则留在 Button.style.ts；Button 自身差异在首次使用前定义为 Variable，通用 Variable 拥有共享状态，Mixin 翻译完整效果。完整链路见 [Style System 架构](src/style-system/architecture.md)。
+Button 静态导入自身样式模块，模块执行时只登记配置。CSSRoot 拥有内部账本、登记句柄和编译提交过程；应用提供 style#css-root，在所有静态样式登记后、render 前统一 mount。组件渲染不触发编译。字符串未变化时不改写节点，编译失败保留之前的成功结果；句柄修改后可以显式再次 mount。Button 的 selector、variant、tone、size 和 status 选择规则留在 Button.style.ts；Button 自身差异在首次使用前定义为 Variable，通用 Variable 拥有共享状态，组件显式指定反馈材料的address根据地，states只随根据地声明，非根据地显式赋值不发布状态；variableFrom复用定义，adjust/modify加工完整结果。AST保障指定地址存在声明，不再做局部依赖公式投影。Mixin 翻译完整效果。完整链路见 [Style System 架构](src/style-system/architecture.md)。
 
 Example 入口静态导入全部 Example，再统一挂载。Storybook preview 提前导入 Button 样式后挂载；缩略图 runner 在渲染前建立宿主并挂载。懒加载组件的样式必须由应用样式清单提前导入。package.json 保留 `.style.ts` 与产物 `.style.js` 的副作用，防止静态登记被打包器删除。
 

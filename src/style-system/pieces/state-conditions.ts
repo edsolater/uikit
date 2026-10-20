@@ -46,13 +46,6 @@ export function appendStateCondition(path: ConditionPath, state: StateCondition)
   const states = new Map(path.stateConditionPath.map((current) => [current.name, current]))
   states.set(state.name, state)
   return {
-    semanticPath: [
-      ...(path.semanticPath ?? [
-        ...path.targetConditionPath,
-        ...path.stateConditionPath.map((state) => state.name),
-      ]),
-      state.name,
-    ],
     targetConditionPath: [...path.targetConditionPath],
     stateConditionPath: [...states.values()].sort((left, right) => left.order - right.order),
   }

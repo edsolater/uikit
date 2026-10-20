@@ -9,7 +9,6 @@ import type { Rule, Rules } from '../../rule'
 import type { JSSContentContext, JSSContent } from '../../content'
 import { rulesToStyleNodes, type JSSStyleNode } from '../rules-to-style-nodes'
 import type { ASTSession } from '../ast-controller'
-import { resourceConditionPath } from '../resource-rule'
 import { condition, conditionAddressKey } from '../../condition'
 
 /** 内容的一次激活及其规则产物；同一 Rule 身份可被多个激活记录共享。 */
@@ -22,10 +21,9 @@ interface ActivationRecord {
 function ruleAddress(rule: Rule, identities: Map<string | symbol, number>): string {
   const [conditionPath, key, content] = rule
   const identity = content && typeof content === 'object' && 'resourceIdentity' in content ? content.resourceIdentity : undefined
-  const path = resourceConditionPath(rule)
   if (identity !== undefined && !identities.has(identity)) identities.set(identity, identities.size)
   return JSON.stringify([
-    conditionAddressKey(path ?? {
+    conditionAddressKey({
       targetConditionPath: (conditionPath ?? []).map((item) => typeof item === 'string' ? condition(item) : item),
       stateConditionPath: [],
     }),
@@ -39,6 +37,7 @@ export class ResourceCompilation {
   private resourceIdentities = new Map<string | symbol, number>()
   private pendingRules = new Map<string, { rule: Rule; owners: Set<JSSStyleNode>; records: Set<ActivationRecord> }>()
   private activatedContents = new Map<JSSContent, ActivationRecord>()
+  private consumers = new Map<JSSStyleNode, Map<'key' | 'content', Set<JSSContent>>>()
 
   /** 绑定当前编译的来源与输出队列，账本不跨编译共享。 */
   constructor(private session: ASTSession) {}
@@ -63,6 +62,32 @@ export class ResourceCompilation {
       pending.owners.add(owner)
     }
   }
+
+  /** 按实际访问收回旧激活；暂缓中的角色保留已取得的资源，直到产物完成。 */
+  updateConsumer(owner: JSSStyleNode, role: 'key' | 'content', contents: Set<JSSContent>, complete: boolean): void {
+    let roles = this.consumers.get(owner)
+    if (!roles) {
+      this.consumers.set(owner, roles = new Map())
+      this.session.onRemove(owner, () => this.consumers.delete(owner))
+    }
+    const previous = new Set([...roles.values()].flatMap(values => [...values]))
+    const current = complete ? contents : new Set([...(roles.get(role) ?? []), ...contents])
+    roles.set(role, current)
+    const retained = new Set([...roles.values()].flatMap(values => [...values]))
+    const retainedNodes = new Set([...retained].flatMap(value => this.activatedContents.get(value)?.nodes ?? []))
+    for (const value of previous) {
+      if (retained.has(value)) continue
+      for (const node of this.activatedContents.get(value)?.nodes ?? []) {
+        if (!retainedNodes.has(node)) this.session.release(owner, node)
+      }
+    }
+    // 本波尚未发布的资源也必须撤回失效来源，避免发布后再留下孤儿产物。
+    const retainedAddresses = new Set([...retained].flatMap(value =>
+      (this.activatedContents.get(value)?.rules ?? []).map(rule => ruleAddress(rule, this.resourceIdentities))))
+    for (const [address, pending] of this.pendingRules) {
+      if (!retainedAddresses.has(address)) pending.owners.delete(owner)
+    }
+  }
   /** 按需资源记录每一个消费者，改写撤销不影响其他消费者。 */
   private createDependencyNodes(): JSSStyleNode[] {
     const pending = [...this.pendingRules.entries()]
@@ -82,8 +107,6 @@ export class ResourceCompilation {
       const owners = [...entry.owners].filter((owner) => this.session.isAlive(owner))
       if (!owners.length) return []
       return rulesToStyleNodes([entry.rule]).map((node, index) => {
-        const path = resourceConditionPath(entry.rule)
-        if (path) node.conditionPath = path
         node.resourceAddress = address
         node.identity = `dependency/${address}/${index}`
         for (const owner of owners) this.session.own(owner, node)

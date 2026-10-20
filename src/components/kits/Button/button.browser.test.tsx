@@ -195,13 +195,13 @@ describe('Button styles', () => {
     expectSameAppearance(appearance(dynamic), appearance(outlined))
   })
 
-  test('普通按钮沿用局部墨色，嵌套语气内容色不改变其默认来源', async () => {
-    // 当地登记输入使派生基础联动；inherit继续接收祖先及自身inline控制。
-    handles.push(rules(['@layer uikit', '.Button'], [declare(inkColor, 'inherit')]))
+  test('普通按钮沿用区域内容色，嵌套语气内容色不改变其默认来源', async () => {
+    // 显式选择内容入口；不通过局部墨色触发祖先公式重新绑定。
+    handles.push(rules(['@layer uikit', '.Button'], [declare(globalColors.globalContentColor, 'inherit')]))
     const parent = document.body.appendChild(document.createElement('div'))
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
-    parent.style.setProperty(inkColor.key.toCSSString(), 'rgb(78, 90, 123)')
+    parent.style.setProperty(globalColors.globalContentColor.key.toCSSString(), 'rgb(78, 90, 123)')
     dispose = render(() => <Button>普通按钮</Button>, parent)
     const button = parent.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
@@ -209,7 +209,7 @@ describe('Button styles', () => {
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
     await userEvent.hover(button)
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
-    button.style.setProperty(inkColor.key.toCSSString(), 'rgb(123, 90, 78)')
+    button.style.setProperty(globalColors.globalContentColor.key.toCSSString(), 'rgb(123, 90, 78)')
     button.focus()
     await userEvent.keyboard('[Space>]')
     try {
@@ -648,7 +648,7 @@ describe('Button styles', () => {
     const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
     const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
     const reference = document.body.appendChild(document.createElement('div'))
-    handles.push(rule('.focus-reference-interactive', 'color', oklch(interactiveColor, { alpha: 0.44 })))
+    handles.push(rule('.focus-reference-interactive', 'color', oklch(interactiveColor.content, { alpha: 0.44 })))
     handles.push(rule('.focus-reference-bad', 'color', oklch(badColor, { alpha: 0.44 })))
     cssRoot.mount()
     reference.className = 'focus-reference-interactive'
@@ -656,6 +656,8 @@ describe('Button styles', () => {
     reference.className = 'focus-reference-bad'
     const badLine = getComputedStyle(reference).color
 
+    await userEvent.unhover(dangerButton)
+    await userEvent.unhover(defaultButton)
     await userEvent.tab()
     expect(document.activeElement).toBe(defaultButton)
     expect(defaultButton.matches(':focus-visible')).toBe(true)
@@ -683,8 +685,8 @@ describe('Button styles', () => {
     document.head.append(style)
     expect(style.sheet!.cssRules).toHaveLength(0)
 
-    // 首次挂载前登记当地输入，保留之后的inline变化及CSSRule身份断言。
-    handles.push(rules(['@layer uikit', '.Button'], [declare(paperColor, 'inherit')]))
+    // 明确采用可覆盖的全局表面入口，保留挂载后CSS变化及规则身份验证。
+    handles.push(rules(['@layer uikit', '.Button'], [declare(globalColors.globalSurfaceColor, 'inherit')]))
     handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', spaceSmall] })]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
@@ -791,7 +793,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(defaultBackground)
     await userEvent.unhover(getButton('default'))
 
-    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, variable('rgb(1, 2, 3)', { name: "browser-button-color", states: Object.fromEntries([['hover', 'rgb(4, 5, 6)']]) })))
+    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, variable('rgb(1, 2, 3)', { name: "browser-button-color", address: '.Button[data-testid="default"]', states: Object.fromEntries([['hover', 'rgb(4, 5, 6)']]) })))
     cssRoot.mount()
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')
@@ -806,7 +808,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(disabledButton).backgroundColor).toBe(disabledBackground)
 
     const originalBackground = getComputedStyle(getButton('default')).backgroundColor
-    getButton('default').style.setProperty('--paper-color', 'oklch(0.2 0.003 260)')
+    getButton('default').style.setProperty(globalColors.globalSurfaceColor.toCSSString(), 'oklch(0.2 0.003 260)')
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(originalBackground)
     const beforeMount = Array.from(style.sheet!.cssRules)
     cssRoot.mount()

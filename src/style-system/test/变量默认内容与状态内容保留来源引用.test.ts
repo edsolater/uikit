@@ -12,7 +12,7 @@ test('普通默认内容在根声明，使用处仅引用名称', () => {
   const paperColor = variable('white', 'contract-paper-color')
   const css = compileRules([[['.Paper'], 'color', paperColor]])
 
-  expect(css).toMatch(/:root\s*\{[^}]*--contract-paper-color:\s*white\s*;/)
+  expect(css).toMatch(/:root\)?\s*\{[^}]*--contract-paper-color:\s*white\s*;/)
   expect(css).toMatch(/color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
 })
 

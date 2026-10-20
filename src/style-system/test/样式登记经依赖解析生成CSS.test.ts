@@ -12,7 +12,7 @@ import { condition, media, type ConditionInput } from '../condition'
 import { key } from '../key'
 import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
-import { value, type ValueInput } from '../value'
+import { value } from '../value'
 import { valueSequence } from '../pieces/contents/atom-creators/list'
 import { variable } from '../variable'
 import { $margin, $marginLeft } from '../pieces/keys/margin'
@@ -20,18 +20,18 @@ import { $padding } from '../pieces/keys/padding'
 import { $border } from '../pieces/keys/border'
 import { $font } from '../pieces/keys/font'
 import { $color } from '../pieces/keys/color'
-import { $transition } from '../pieces/keys/transition'
+
 import { $boxShadow } from '../pieces/keys/box-shadow'
 import { shadowValue } from '../pieces/contents/atom-creators/shadow'
 import { multiply } from '../pieces/contents/functions/calc'
-import { colorMix } from '../pieces/contents/functions/color-mix'
+
 import { cssFunction } from '../css-function'
 import { animationName, animationValue } from '../pieces/contents/atom-creators/animation'
 import { fontValue } from '../pieces/contents/atom-creators/font'
-import { transitionValue } from '../pieces/contents/atom-creators/transition'
+
 import { contentLayout, innerText } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
-import { clickable } from '../pieces/mixins/interaction'
+
 import { durationFast } from '../pieces/contents/atoms/motion'
 import { lineColor } from '../pieces/contents/atoms/color/colors'
 
@@ -92,7 +92,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-test('Variable source 函数可以返回直接内容或 Variable，循环返回自身仍然终止编译', () => {
+test('Variable 生产函数可返回直接内容或另一 Variable，自身循环明确失败', () => {
   const baseSize = variable('8px', { name: 'base-size' })
   const directSize = variable(() => '12px', { name: 'direct-size' })
   const linkedSize = variable(() => baseSize, { name: 'linked-size' })
@@ -102,10 +102,12 @@ test('Variable source 函数可以返回直接内容或 Variable，循环返回�
   expect(css).toContain('width: var(--direct-size);')
   expect(css).toContain('height: var(--linked-size);')
 
-  let circularColor: ReturnType<typeof variable>
-  circularColor = variable(() => circularColor, { name: 'circular-color' })
-  keep(rule('.CircularVariableSource', 'color', circularColor))
+  let circular: ReturnType<typeof variable>
+  circular = variable(() => circular, 'direct-circular-source')
+  keep(rule('.CircularSource', 'color', circular))
   expect(() => compileCSS()).toThrow('循环引用')
+
+
 })
 
 test('三项 Rule 递归继承地址，普通 Rule 的重复条件原样保留', () => {
@@ -149,7 +151,9 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
 test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
   const content = variable('black', { name: 'local-content' })
   keep(rules('.example', [[content, 'red'], [$color, content]]))
-  expect(compileCSS()).toContain('--local-content: red;\ncolor: var(--local-content);')
+  const css = compileCSS()
+  expect(css).toContain('--local-content: red;')
+  expect(css).toContain('color: var(--local-content);')
 })
 
 test('声明名称指向明确属性，不猜测未知名称', () => {

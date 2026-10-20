@@ -4,8 +4,8 @@
  *
  * 内部声明归属、步骤和消费账本由领域成员自行维护，不随入口暴露。
  */
-export { variable, isVariable, referenceVariable, compileVariableContent } from './core'
-export type { Variable, VariableOptions, VariableDefaultValue, VariableStateRule, VariableVariantRule, VariableTarget } from './core'
+export { variable, variableFrom, isVariable, referenceVariable, compileVariableContent } from './core'
+export type { Variable, VariableOptions, VariableDefaultValue, VariableStateRule, VariableVariantRule, VariableTarget, VariableFromName, VariableAddress } from './core'
 export type { VariableStateValues } from './args-parser'
 export { declareVariable } from './declare'
 export { compileVariableModification } from './modify'

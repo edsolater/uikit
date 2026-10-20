@@ -1,10 +1,10 @@
 /** 样式中 Variable 的定义与消费主体。
 
-创建和引用变量，保存默认值、状态与变体，并支持独立声明、调整绑定及条件修改。
+创建和引用变量，保存根据地、状态与变体，并支持独立声明及完整结果加工。
 
-默认值、状态与变体由同一份创建配置保存，具体输出由样式中的使用位置决定。
+使用时保障根据地有定义；状态随根据地展开，消费位置只读取 CSS 引用。
 */
-import { condition } from '../condition'
+import { condition, type ConditionInput } from '../condition'
 import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import { propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
@@ -12,23 +12,50 @@ import type { ASTController } from '../compiler/ast-controller'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
 import { assert, hasProperty, isFunction, mapGet } from '@edsolater/fnkit'
-import { consumeDeclaration, findVariableDeclaration, joinVariableValues } from './declare'
-import { declare, type DeclareProtocol } from '../operations/declare'
+import { consumeDeclaration, declaredVariable, declareVariable, joinVariableValues } from './declare'
+import type { DeclareProtocol } from '../operations/declare'
 import { parseVariableArgs, type VariableStateValues } from './args-parser'
-import { observeVariable } from './dependency'
 import { getVariableNameAddress, type VariableName } from './name'
 
 /** 未命中状态时的声明内容；生产函数消费时无参执行。 */
 export type VariableDefaultValue = ValueInput
-/** 状态配方中的 base 是本次声明的基础内容，不是同名变量引用。 */
+/** 状态配方中的 base 是根据地声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
 /** 变体以默认表达式生成新基础；固定值原样保留。 */
 export type VariableVariantRule = ValueInput | ((base: ValueInput) => ValueInput)
+/** 定义的存在位置，复用 rules 的条件材料。 */
+export type VariableAddress = Exclude<ConditionInput, undefined>
+
+const variantSelections = new WeakMap<VariableTarget, Set<Variable>>()
+/** 同一来源的顶层资源保持一份内容身份，多个加工结果共享其生命周期。 */
+const variableActivations = new WeakMap<VariableTarget, JSSContent>()
+const adjustmentActivations = new WeakMap<VariableTarget, JSSContent>()
+/** 仅记录显式 variant 选择，不把任意内容引用变成加工关联。 */
+export const selectedVariableVariants = (source: VariableTarget): Set<Variable> | undefined => variantSelections.get(source)
+
+/** 保留原始定义，在声明结果处统一加工，状态与变体不重复执行。 */
+export function transformVariable(source: VariableTarget, apply: (content: ValueInput) => ValueInput, name: string): Variable {
+  const result = isVariable(source)
+    ? variableFrom(source, source.content, name)
+    : variable(source.content, {
+      name, address: source.address,
+      states: source.states && Object.fromEntries([...source.states].map(([state, rule]) => [state.name, rule])),
+    })
+  result.config.resultTransforms = [...source.resultTransforms ?? [], apply]
+  result.config.resultSource = source
+  result.config.resultSourceTransform = apply
+  return result
+}
+
+/** 显式加工绑定读取来源当前值；定义复用不会继承这条绑定。 */
+export const variableResultSource = (target: VariableTarget): VariableTarget | undefined => isVariable(target) ? target.config.resultSource : undefined
 
 /** 自定义属性材料；状态与注册仅在材料实际持有时参与。 */
 export interface VariableTarget extends DeclareProtocol, JSSContent {
   states?: Map<StateCondition, VariableStateRule>
   registration?: VariableOptions['registration']
+  address?: VariableAddress
+  resultTransforms?: ((content: ValueInput) => ValueInput)[]
 }
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
@@ -36,16 +63,18 @@ export interface Variable extends VariableTarget, JSSKeyObject {
   kind: 'variable'
   get name(): VariableName
   priority: number
-  /** 创建时原样复用状态与变体定义，随后差异只属于新定义。 */
-  derive(): Variable
-  derive(input: VariableDefaultValue | VariableStateValues, nameOrOptions?: VariableDeriveName | VariableOptions): Variable
   /** 选择变体，以新默认值生成保留状态的 Variable；结果不携带来源的变体定义。 */
   variant(name: string): Variable
   /** 这一个 Variable 的基础内容、状态、变体和可选行为。 */
   config: {
+    address: VariableAddress
+    resultTransforms: ((content: ValueInput) => ValueInput)[]
+    resultSource?: VariableTarget
+    resultSourceTransform?: (content: ValueInput) => ValueInput
+    resourceSource?: VariableTarget
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
     defaultValue: VariableDefaultValue
-    /** 条件按登记顺序保存，原始规则在每次声明时绑定当地基础内容。 */
+    /** 条件按登记顺序保存，原始规则只在根据地声明时绑定基础内容。 */
     states: Map<StateCondition, VariableStateRule>
     variants?: Record<string, VariableVariantRule>
     registration?: VariableOptions['registration']
@@ -64,16 +93,18 @@ export interface Variable extends VariableTarget, JSSKeyObject {
 
 /** 一个 Variable 的名称、状态与变体定义，以及可选注册。 */
 export interface VariableOptions {
-  /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，derive 可沿用来源身份。 */
+  /** 使用时保障这个地址存在声明；省略为 root，复用时沿用来源地址。 */
+  address?: VariableAddress
+  /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，variableFrom 可沿用来源身份。 */
   name?: string | VariableName
   /** 声明键等级；普通创建默认0，继承默认来源等级加一，显式0仍生效。 */
   priority?: number
   /**
    * 各 State Condition 下使用的基础内容；修改从选中的基础内容继续。
-   * 回调在声明展开时执行，收到本次声明基础内容；derive 保留规则并重新绑定。
+   * 回调在根据地展开时执行，收到该处声明基础内容；variableFrom 保留规则并重新绑定。
    */
   states?: Record<string, VariableStateRule>
-  /** 变体规则或固定基础；derive 按名称继承，显式同名项覆盖。 */
+  /** 变体规则或固定基础；variableFrom 按名称继承，显式同名项覆盖。 */
   variants?: Record<string, VariableVariantRule>
 
   /** 首次消费时提供按需 Rules；与普通 JSSContent.onActive 使用同一生命周期。 */
@@ -96,18 +127,30 @@ export interface VariableOptions {
   compileWaveIndex?: number
 }
 /** 派生定义可直接命名，也可按来源逻辑名计算新名称。 */
-export type VariableDeriveName = string | VariableName | ((name: VariableName) => string | VariableName)
+export type VariableFromName = string | VariableName | ((name: VariableName) => string | VariableName)
 
 /**
- * Variable，样式中的基本复用变量；默认值生产函数在编译消费时求值，状态规则随每次声明绑定。
+ * Variable，样式中的基本复用变量；默认值生产函数在编译消费时求值，状态规则只随根据地声明绑定。
  * 默认值也可写成 { default, ...states }，名称也可直接传字符串；两处简写可独立使用。
- * 普通创建必须提供默认内容及名称；derive 可继承这两项。
+ * 普通创建必须提供默认内容及名称；variableFrom 可沿用来源名称。
  */
 export function variable<DefaultValue extends VariableDefaultValue>(
   input: DefaultValue | VariableStateValues<DefaultValue>,
   options: string | (VariableOptions & { name: string | VariableName }),
 ): Variable {
   return createVariable(input, options)
+}
+
+/** 从来源创建独立定义；规则和固定值原样继承，显式配置只改变新定义。 */
+export function variableFrom<DefaultValue extends VariableDefaultValue>(
+  source: Variable,
+  input: DefaultValue | VariableStateValues<DefaultValue>,
+  nameOrOptions?: VariableFromName | VariableOptions,
+): Variable {
+  const options = typeof nameOrOptions === 'string' || isFunction(nameOrOptions) || hasProperty(nameOrOptions, 'kind', value => value === 'variable-name')
+    ? { name: isFunction(nameOrOptions) ? nameOrOptions(source.name) : nameOrOptions as string | VariableName }
+    : nameOrOptions ?? {}
+  return createVariable(input, options, source)
 }
 
 /**
@@ -127,21 +170,18 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
   const self: Variable = {
     kind: 'variable',
     priority: config.priority,
-    /**
-     * 以当前配置派生独立定义；默认内容、名称及未覆盖的状态与变体沿用来源。
-     */
-    derive(input?: VariableDefaultValue | VariableStateValues, naming?: VariableDeriveName | VariableOptions) {
-      const targetOptions = typeof naming === 'string' || isFunction(naming) || hasProperty(naming, 'kind', value => value === 'variable-name')
-          ? { name: isFunction(naming) ? naming(self.name) : naming as string | VariableName }
-          : naming ?? {}
-      return createVariable(arguments.length === 0 ? self.config.defaultValue : input, targetOptions, self)
-    },
     variant(variantName) {
       assert(self.config.variants && Object.hasOwn(self.config.variants, variantName), `Variable ${name} 未定义变体 ${variantName}。`)
       const rule = self.config.variants[variantName]
-      const content = isFunction(rule) && !isJSSContent(rule) ? rule(self.content) : rule
-      const result = self.derive(content, `${name}-${variantName}`)
+      const source = self.config.resultSource
+      const result = source && isVariable(source)
+        ? transformVariable(source.variant(variantName), self.config.resultSourceTransform!, `${name}-${variantName}`)
+        : variableFrom(self, isFunction(rule) && !isJSSContent(rule) ? rule(self.content) : rule, `${name}-${variantName}`)
       delete result.config.variants
+      if (source) result.config.resourceSource = self.config.resourceSource ?? source
+      let selections = variantSelections.get(self)
+      if (!selections) variantSelections.set(self, selections = new Set())
+      selections.add(result)
       return result
     },
     /**
@@ -149,6 +189,8 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
      */
     get name() { return name },
     config: {
+      address: config.address ?? ':where(:root)',
+      resultTransforms: [...source?.resultTransforms ?? []],
       defaultValue: config.defaultValue,
       states,
       variants: config.variants,
@@ -166,6 +208,8 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
     get key() { return self.config.definitionKey },
     get join() { return joinVariableValues },
     get content() { return self.config.defaultValue },
+    get address() { return self.config.address },
+    get resultTransforms() { return self.config.resultTransforms },
     get states() { return self.config.states },
     get registration() { return self.config.registration },
     /**
@@ -179,15 +223,18 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
   }
   // 同一份定义材料供当前对象引用和声明键消费，默认、状态仍从 self 读取。
   const definitionContent: JSSContent = {
-    onActive: config.onActive,
     compileWaveIndex: config.compileWaveIndex,
     /**
      * 消费当前定义的默认、状态及资源，不再次进入名称引用。
      */
     onCompile(context, controller) {
-      controller.setContent(context, { dependencies: consumeVariableDefinition(self, context, controller) })
+      const dependencies = consumeVariableDefinition(self, context, controller)
+      const activation = variableActivations.get(self)
+      if (activation) dependencies.push(activation)
+      controller.setContent(context, { dependencies })
     },
   }
+  if (config.onActive) variableActivations.set(self, { onActive: config.onActive })
   return self
 }
 
@@ -196,16 +243,6 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
  */
 export const isVariable = (input: unknown): input is Variable =>
   hasProperty(input, 'kind', (v) => v === 'variable')
-
-/** 天然材料引用保留其原对象身份，不按CSS名称猜测所属定义。 */
-const referenceTargets = new WeakMap<object, VariableTarget>()
-
-/**
- * 读取内容中的具体引用对象；这里只交付创建引用时已知的身份，不执行材料内容。
- */
-export function referencedVariable(input: object): VariableTarget | undefined {
-  return isVariable(input) ? input : referenceTargets.get(input)
-}
 
 /**
  * 将自定义属性材料作为内容引用；依赖原信息体，保留其资源激活关系。
@@ -223,7 +260,6 @@ export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyOb
      */
     onCompile: (context, controller) => compileVariableContent(target, context, controller),
   }
-  referenceTargets.set(reference, target)
   return reference
 }
 
@@ -241,24 +277,40 @@ export function compileVariableContent(target: VariableTarget, context: JSSCompi
  * 激活定义所需的共同声明与注册资源，记录实际默认配方并交付结构化依赖；不生成值引用。
  */
 function consumeVariableDefinition(target: VariableTarget, context: JSSCompileContext, controller: ASTController): unknown[] {
+  const resources: JSSContent[] = []
+  const resourceSource = isVariable(target) && target.config.resourceSource
+  if (resourceSource) {
+    let activation = adjustmentActivations.get(resourceSource)
+    if (!activation) {
+      let top = variableActivations.get(resourceSource)
+      if (!top && resourceSource.onActive) {
+        top = { onActive: resourceSource.onActive }
+        variableActivations.set(resourceSource, top)
+      }
+      activation = {
+        dependencies: top ? [top] : [],
+        onCompile(context, controller) { activateVariableResources(resourceSource, context, controller) },
+      }
+      adjustmentActivations.set(resourceSource, activation)
+    }
+    resources.push(activation)
+  }
   for (const dependency of target.declarations ?? []) {
-    const existing = findVariableDeclaration(controller, dependency, context.conditionPath)
-    if (existing) controller.depend(existing, { owner: context.node })
-    else controller.insert({ before: context.node, conditionPath: context.conditionPath }, declare(dependency), { owner: context.node })
+    consumeDeclaration(context, controller, dependency)
   }
   activateVariableResources(target, context, controller)
   if (context.role === 'declaration-key') {
-    // 独立声明也启动统一稳定核验；键访问不登记值消费。
-    observeVariable(target, undefined, context, controller)
-    return []
+    if (context.node.key === target && !declaredVariable(context.node)
+      && (context.node.content as { kind?: string } | undefined)?.kind !== 'variable-modification') {
+      context.node.content = declareVariable(target, context.node.content as ValueInput)[1]
+    }
+    return resources
   }
-  const definition = consumeDeclaration(context, controller, target)
-  const content = definition ? definition.baseContent : target.content
-  observeVariable(target, content, context, controller, definition?.baseNode, definition?.originNode)
-  return definition ? [] : [content]
+  consumeDeclaration(context, controller, target)
+  return resources
 }
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
-const registrationSessions = new WeakMap<object, Map<VariableTarget, Set<JSSStyleNode>>>()
+const registrationSessions = new WeakMap<object, Map<VariableTarget, Map<JSSStyleNode, Set<unknown>>>>()
 
 /**
  * 按 registration 登记 CSS @property；对象首次消费时替换同址资源，全部消费者撤销后可再次激活。
@@ -270,14 +322,29 @@ function activateVariableResources(variable: VariableTarget, context: JSSCompile
   let registrations = registrationSessions.get(context.session)
   if (!registrations) registrationSessions.set(context.session, registrations = new Map())
   const active = registrations.has(variable)
-  const consumers = mapGet(registrations, variable, () => new Set<JSSStyleNode>())
+  const consumers = mapGet(registrations, variable, () => new Map<JSSStyleNode, Set<unknown>>())
   if (!consumers.has(context.node)) {
-    consumers.add(context.node)
-    controller.onRemove(context.node, () => {
+    const inputs = new Set<unknown>()
+    consumers.set(context.node, inputs)
+    let consuming = true
+    const release = () => {
+      if (!consuming) return
+      consuming = false
       consumers.delete(context.node)
       if (!consumers.size) registrations.delete(variable)
+      for (const node of controller.search({ resourceAddress: address, productTag: variable }))
+        controller.release(node, { owner: context.node })
+    }
+    controller.onRemove(context.node, release)
+    controller.addSettlementCheck(() => {
+      if (!consuming) return false
+      for (const input of inputs) if (!controller.usesContent(context.node, input)) inputs.delete(input)
+      if (inputs.size) return false
+      release()
+      return true
     })
   }
+  consumers.get(context.node)!.add(context.input)
   if (active) {
     for (const node of controller.search({ resourceAddress: address, productTag: variable })) controller.depend(node, { owner: context.node })
     return

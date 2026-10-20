@@ -9,6 +9,14 @@
 - Variant 描述组件的分类选择，分组内单选，分组之间可以组合，例如 `danger` 与 `strong`。Status 独立描述当前成立的情况，多个状态可以叠加。两者都允许响应式变化。
 - `appearance` 表达外观形式，取值为 `filled`、`outlined`、`plain`。原始选择省略时仍为 `undefined`，由公开映射表转换成外观输出，初始映射为 `outlined`。
 
+## 颜色来源与组件控制
+
+Button画布引用globalSurfaceColor，普通内容引用globalContentColor；应用设置全局或区域主题时，实际引用这些来源的按钮随CSS更新。buttonSurfaceCanvas、buttonSurfaceSource、buttonContentColor等组件控制点独立保留，覆盖实际按钮只影响匹配范围。
+
+主题不是整颗按钮的单一染色开关：filled常态使用语气实底，强调实底的文字保留对比来源；危险语气、外观选择、hover/active与disabled继续各自有效。全局变化不能压掉区域或组件显式覆盖，也不能令危险filled回到普通来源。
+
+使用例见[按钮主题与局部控制](../../../style-system/doc/从按钮需求组合样式.md#共用主题来源还是只改这颗按钮)，结果边界见[共享主题与组件颜色控制](../../../style-system/doc/behaviors/共享主题与组件颜色控制.md)。
+
 ## 组件定义
 
 `Button` 表达“在当前上下文执行一个命令”。它不表达导航、值编辑、持续状态切换或状态展示。

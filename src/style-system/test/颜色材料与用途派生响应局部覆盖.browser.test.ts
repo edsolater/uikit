@@ -10,17 +10,18 @@ import { interactiveColor, highlightColor } from '../pieces/contents/atoms/color
 import { goodColor, badColor, warnColor, infoColor } from '../pieces/contents/atoms/color/ui-info-color'
 import { paper, ink, neutral, paperColor, inkColor, neutralColor } from '../pieces/contents/atoms/color/palette'
 import { interactiveColorStates } from '../pieces/contents/atoms/color/ui-variable-structure'
-import { variable } from '../variable'
+import { variable, variableFrom } from '../variable'
 import { declare } from '../operations/declare'
 import { readableContent } from '../pieces/contents/atoms/color/ui-color-structure'
 
-const surfaceColorInteractive = variable(interactiveColorStates({ base: paperColor }), 'purpose-surface')
+const surfaceColorInteractive = variable(interactiveColorStates({ base: paperColor }), { name: 'purpose-surface', address: '.interactive-purpose' })
 const handles: RulesHandle[] = []
 
 afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
   document.body.replaceChildren()
   document.body.style.removeProperty('color')
+  for (const source of [brandColor, paperColor]) document.documentElement.style.removeProperty(source.toCSSString())
 })
 
 /** 将本轮 JS 定义直接编译并挂载，不加载静态颜色 CSS。 */
@@ -55,7 +56,7 @@ test.each([
   { lightnessResponse: 2, chromaResponse: 0.5 },
 ])('交互颜色模板按明度 $lightnessResponse、彩度 $chromaResponse 倍率响应当前来源', async ({ lightnessResponse, chromaResponse }) => {
   const source = variable('oklch(0.6 0.15 140 / 0.4)', 'response-source')
-  const color = variable(interactiveColorStates({ base: source, lightnessResponse, chromaResponse }), 'response-color')
+  const color = variable(interactiveColorStates({ base: source, lightnessResponse, chromaResponse }), { name: 'response-color', address: '.response-swatch' })
   handles.push(rule('.response-swatch', 'color', color))
   const style = mountStyles()
   const originalCSS = style.textContent
@@ -115,8 +116,9 @@ test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后�
   expect(getComputedStyle(neighbor).color).not.toBe('rgb(4, 5, 6)')
 })
 
-test('纸色与品牌变量局部修改后，用途色和品牌变化自动更新而不重编译', () => {
-  handles.push(rules('.semantic', [declare(brandColor), declare(paperColor), color({ content: interactiveColor, background: paperColor })]))
+test('根上的纸色与品牌改变后，既有用途色共同更新而不重编译', () => {
+  const action = variableFrom(interactiveColor, interactiveColor.content, { address: '.semantic' })
+  handles.push(rules('.semantic', [color({ content: action, background: paperColor })]))
   handles.push(rule('.highlight', 'color', highlightColor))
   handles.push(rule('.canvas', 'background-color', paperColor))
   handles.push(rule('.text', 'color', inkColor))
@@ -134,19 +136,20 @@ test('纸色与品牌变量局部修改后，用途色和品牌变化自动更�
   neighbor.className = 'semantic'
   const before = { surface: getComputedStyle(sample).backgroundColor }
   expect(getComputedStyle(sample).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
-  sample.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 140 / 0.4)')
-  sample.style.setProperty(paperColor.key.toCSSString(), 'rgb(240, 241, 242)')
+  document.documentElement.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 140 / 0.4)')
+  document.documentElement.style.setProperty(paperColor.key.toCSSString(), 'rgb(240, 241, 242)')
   expectSameColor(getComputedStyle(sample).color, 'oklch(0.6 0.15 140 / 0.4)')
   expectSameColor(getComputedStyle(highlight).color, 'oklch(0.64 0.16 122 / 0.4)')
   expect(getComputedStyle(sample).backgroundColor).not.toBe(before.surface)
   expectSameColor(getComputedStyle(canvas).backgroundColor, 'rgb(240, 241, 242)')
   expect(getComputedStyle(text).color).not.toBe('rgba(0, 0, 0, 0)')
-  expect(getComputedStyle(neighbor).color).not.toBe(getComputedStyle(sample).color)
+  expect(getComputedStyle(neighbor).color).toBe(getComputedStyle(sample).color)
   expect(style.textContent).toBe(originalCSS)
 })
 
 test('交互状态的品牌变化仍引用局部品牌变量', async () => {
-  handles.push(rule('.interactive-swatch', 'color', interactiveColor))
+  const localColor = variableFrom(interactiveColor, interactiveColor.content, { address: '.interactive-swatch' })
+  handles.push(rule('.interactive-swatch', 'color', localColor))
   const style = mountStyles()
   const originalCSS = style.textContent
   const button = document.body.appendChild(document.createElement('button'))
@@ -227,9 +230,11 @@ test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有
 test('转换函数的两个基础分别响应当地表面与全局及局部线条强度', () => {
   const first = variable('red', 'line-first-surface')
   const second = variable('blue', 'line-second-surface')
-  const firstLine = lineColor(first)
-  const secondLine = lineColor(second)
-  handles.push(rules('.LineScope', [declare(first), declare(second), declare(lineStrength)]))
+  const firstDefinition = lineColor(first)
+  const secondDefinition = lineColor(second)
+  const firstLine = variableFrom(firstDefinition, firstDefinition.content, { address: '.FirstLine' })
+  const secondLine = variableFrom(secondDefinition, secondDefinition.content, { address: '.SecondLine' })
+
   handles.push(rule('.FirstLine', 'color', firstLine))
   handles.push(rule('.SecondLine', 'color', secondLine))
   handles.push(rules('.LocalLine', [declare(first, 'lime'), declare(lineStrength, 0.5)]))

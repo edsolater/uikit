@@ -8,7 +8,7 @@ import { compileCSS, cssRoot as root } from '../css-root'
 import { rule, rules, type RulesHandle, type Rules } from '../rule'
 import { condition, media } from '../condition'
 import { value } from '../value'
-import { variable } from '../variable'
+import { variable, variableFrom } from '../variable'
 import { declare } from '../operations/declare'
 import { $margin } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
@@ -65,8 +65,8 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
 })
 
 test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', async () => {
-  const distance = variable('2px', { name: "browser-distance-size", states: Object.fromEntries([['hover', '4px']]) })
-  const factor = variable(2, { name: "browser-distance-ratio", states: Object.fromEntries([['testLarge', 3]]) })
+  const distance = variable('2px', { name: "browser-distance-size", address: ".example", states: Object.fromEntries([['hover', '4px']]) })
+  const factor = variable(2, { name: "browser-distance-ratio", address: ".example", states: Object.fromEntries([['testLarge', 3]]) })
   handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
@@ -77,8 +77,8 @@ test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', a
 })
 
 test('同址 Variable 分支在浏览器中共同更新复合值', async () => {
-  const distance = variable('2px', { name: "browser-shared-size", states: Object.fromEntries([['hover', '4px']]) })
-  const factor = variable(2, { name: "browser-shared-ratio", states: Object.fromEntries([['hover', 3]]) })
+  const distance = variable('2px', { name: "browser-shared-size", address: ".example", states: Object.fromEntries([['hover', '4px']]) })
+  const factor = variable(2, { name: "browser-shared-ratio", address: ".example", states: Object.fromEntries([['hover', 3]]) })
   handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
@@ -91,7 +91,7 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
   button.className = 'subject-order'
   button.textContent = '条件顺序验证'
   document.body.append(button)
-  const handle = rule('.subject-order', 'margin-left', variable('1px', { name: "browser-ordered-size", states: Object.fromEntries([['hover', '2px'], ['active', '3px']]) }))
+  const handle = rule('.subject-order', 'margin-left', variable('1px', { name: "browser-ordered-size", address: ".subject-order", states: Object.fromEntries([['hover', '2px'], ['active', '3px']]) }))
   handles.push(handle)
   try {
     root.mount()
@@ -102,7 +102,7 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
     try {
       expect(button.matches(':hover:active')).toBe(true)
       expect(getComputedStyle(button).marginLeft).toBe('3px')
-      handle.replace(variable('1px', { name: "browser-ordered-size", states: Object.fromEntries([['active', '3px'], ['hover', '2px']]) }))
+      handle.replace(variable('1px', { name: "browser-ordered-size", address: ".subject-order", states: Object.fromEntries([['active', '3px'], ['hover', '2px']]) }))
       root.mount()
       expect(style.textContent).toBe(forwardCSS)
       expect(getComputedStyle(button).marginLeft).toBe('3px')
@@ -111,7 +111,7 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
 })
 
 test('Variable 比例在浏览器改变混色结果，消费函数只定义一次', async () => {
-  const ratio = variable(0.8, { name: 'surface-ratio', states: { hover: 0.6 } })
+  const ratio = variable(0.8, { name: 'surface-ratio', address: ".example", states: { hover: 0.6 } })
   handles.push(rule('.example', 'background-color', colorMix(['black', ratio], 'white')))
   root.mount()
   expect(style.textContent!.match(/background-color:/g)).toHaveLength(1)
@@ -185,8 +185,8 @@ test('未登记的主体条件实际叠加、读取来源当前值并退出恢�
   const before = style.textContent
   const danger = '&[data-tone="danger"]'
   const emphasis = '&[data-emphasis]'
-  const source = variable('green', { name: 'browser-raw-source', states: { [danger]: 'blue' } })
-  const color = variable('red', { name: 'browser-raw-color', states: { [danger]: source, [emphasis]: source } })
+  const source = variable('green', { name: 'browser-raw-source', address: ".example", states: { [danger]: 'blue' } })
+  const color = variable('red', { name: 'browser-raw-color', address: ".example", states: { [danger]: source, [emphasis]: source } })
   handles.push(rule('.example', 'color', color))
   root.mount()
   expect(style.textContent).not.toBe(before)
@@ -225,8 +225,8 @@ test('选择居中布局后内容实际位于容器中心', () => {
 })
 
 test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 55', () => {
-  const first = variable(1, { name: "browser-first-ratio", states: { browserA: 2, browserB: 5 } })
-  const second = variable(1, { name: "browser-second-ratio", states: { browserB: 11, browserA: 7 } })
+  const first = variable(1, { name: "browser-first-ratio", address: ".example", states: { browserA: 2, browserB: 5 } })
+  const second = variable(1, { name: "browser-second-ratio", address: ".example", states: { browserB: 11, browserA: 7 } })
   const width = rule('.example', 'width', multiply(multiply(first, second), '1px'))
   handles.push(width)
   root.mount()
@@ -241,14 +241,12 @@ test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 5
 })
 
 test('不同主体显式局部声明同名变量而互不污染', () => {
-  const first = variable('11px', { name: 'scoped-shared-size' })
+  const first = variable('11px', { name: 'scoped-shared-size', address: '.example' })
   const second = variable('23px', { name: 'scoped-shared-size' })
   const neighbor = document.body.appendChild(document.createElement('div'))
   neighbor.className = 'neighbor'
   handles.push(rule('.example', 'width', first))
   handles.push(rule('.neighbor', 'width', second))
-  handles.push(rules('.example', [declare(first)]))
-  handles.push(rules('.neighbor', [declare(second)]))
   try {
     root.mount()
     expect(getComputedStyle(element).width).toBe('11px')
@@ -325,10 +323,12 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
 
 test('动效保留根求值，分隔线按本地文字变量实时派生', async () => {
   const session = await cdp() as CDPSession
-  const lineBase = variable('black', 'mounted-line-base')
+  const lineBase = variable('blue', { name: 'mounted-line-base', address: '.example' })
+  const line = lineColor(lineBase)
+  const localLine = variableFrom(line, line.content, { address: '.example' })
   element.style.transitionProperty = 'opacity'
   handles.push(rule('.example', 'transition-duration', durationFast))
-  handles.push(rules('.example', [declare(lineBase, 'blue'), [key('border-color'), lineColor(lineBase)]]))
+  handles.push(rules('.example', [[key('border-color'), localLine]]))
   try {
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],

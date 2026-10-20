@@ -4,11 +4,11 @@
  *
  * 让编译行为共用显式位置和存活来源，保留输出退出的区别。
  */
-import { assert } from '@edsolater/fnkit'
+import { assert, isObjectLike } from '@edsolater/fnkit'
 import { createCompiledValue } from './compiled-value'
 import type { Value } from '../value'
 import { conditionAddressKey, type ConditionPath } from '../condition'
-import { propertyName, type JSSKey } from '../key'
+import { keyPriority, propertyName, type JSSKey } from '../key'
 import type { JSSStyleNode } from './rules-to-style-nodes'
 import type { JSSCompileContext } from '../content'
 
@@ -26,12 +26,14 @@ export interface ContentCompilationRecord {
 export interface RoleCompilationState {
   input: unknown
   contents: WeakMap<object, ContentCompilationRecord>
+  visitedContents: Set<object>
   complete: boolean
 }
 
 /** 本次会话中一个节点的两个角色及失效版本。 */
 export interface StyleNodeCompileState {
   version: number
+  address: string
   key: RoleCompilationState
   content: RoleCompilationState
 }
@@ -56,18 +58,20 @@ export interface ASTController {
   getCompiledValue(node: JSSStyleNode, input: unknown): Value
   /** 读取位置记录中的替代与实际依赖，不再触发业务 getter。 */
   getContentCompilation(node: JSSStyleNode, input: unknown): ContentCompilationRecord | undefined
+  /** 当前输入实际访问过此内容；历史替代记录不代表仍在消费。 */
+  usesContent(node: JSSStyleNode, input: unknown): boolean
   /** 当前输出队列的有序查询，没有副作用；Key 按属性名、条件路径按输出地址匹配。 */
   search(query: ASTQuery): JSSStyleNode[]
   /** 按同一查询语义判断是否存在节点。 */
   has(query: ASTQuery): boolean
+  /** 在指定地址选有效声明；根地址别名仍遵循原生CSS特异度。 */
+  findDeclaration(query: ASTQuery & { key: JSSKey; conditionPath: ConditionPath }, accept: (node: JSSStyleNode) => boolean): JSSStyleNode | undefined
   /** 内部逃生舱：取得输出队列快照；常规查询使用 search。 */
   nodes(): JSSStyleNode[]
   /** 订阅本次输出节点的加入、输入改写和退出；登记时按当前顺序交付已有节点。 */
   observeNodes(observe: (node: JSSStyleNode, present: boolean) => void): void
   /** 比较现存输出节点的书写顺序，不重新搜索队列。 */
   compareOrder(left: JSSStyleNode, right: JSSStyleNode): number
-  /** 取得当前首个输出节点，供根声明保持原有插入位置。 */
-  firstNode(): JSSStyleNode
   /** 位置、声明和来源分别传入；插入点紧邻锚点，不隐含当前编译位置。 */
   insert(position: { conditionPath: ConditionPath } & ASTPosition, declaration: [key: JSSKey | undefined, content: unknown], provenance: {
     owner: JSSStyleNode
@@ -83,6 +87,8 @@ export interface ASTController {
   remove(node: JSSStyleNode, options?: { from: 'output' }): void
   /** 显式来源节点依赖此产物；全部依赖者撤销后，非源产物才随之撤销。 */
   depend(node: JSSStyleNode, options: { owner: JSSStyleNode }): void
+  /** 解除指定来源的一条依赖；共享产物保留到最后一个来源退出。 */
+  release(node: JSSStyleNode, options: { owner: JSSStyleNode }): void
   /** 注册节点撤销时执行的清理；只退出输出不触发。 */
   onRemove(node: JSSStyleNode, cleanup: () => void): void
   /** 暂缓当前通知，等待后续波重试；不撤回已经执行的内容和队列操作，无进展时报告此原因。 */
@@ -99,9 +105,12 @@ export function createASTController(session: ASTSession): ASTController {
   const matching = (query: ASTQuery): (node: JSSStyleNode) => boolean => {
     const name = query.key === undefined ? undefined : propertyName(query.key)
     const address = query.conditionPath === undefined ? undefined : conditionAddressKey(query.conditionPath)
+    const root = (path: ConditionPath): boolean => !path.stateConditionPath.length && path.targetConditionPath.length === 1
+      && [':root', ':where(:root)'].includes(path.targetConditionPath[0].header)
     return (node) =>
       (name === undefined || (node.key !== undefined && propertyName(node.key) === name)) &&
-      (address === undefined || conditionAddressKey(node.conditionPath) === address) &&
+      (address === undefined || conditionAddressKey(node.conditionPath) === address
+        || query.conditionPath !== undefined && root(query.conditionPath) && root(node.conditionPath)) &&
       (query.productTag === undefined || node.productTag === query.productTag) &&
       (query.resourceAddress === undefined || node.resourceAddress === query.resourceAddress)
   }
@@ -114,21 +123,39 @@ export function createASTController(session: ASTSession): ASTController {
     },
     /** 读取角色访问已留下的事实，不触发新的内容求值。 */
     getCompiledContent: (node, input) => {
-      if (input === null || typeof input !== 'object' && typeof input !== 'function') return input
+      if (!isObjectLike(input)) return input
       const record = session.compilations.get(node)?.content.contents.get(input)
       return record ? record.content : input
     },
     /** 将当前位置已完成的记录交付给输出视图，不执行内容。 */
     getCompiledValue: (node, input) => createCompiledValue(input, session.compilations.get(node)!.content.contents),
     /** 只查询已有位置事实，供分析读取依赖及核对失效身份。 */
-    getContentCompilation: (node, input) => input !== null && (typeof input === 'object' || typeof input === 'function')
+    getContentCompilation: (node, input) => isObjectLike(input)
       ? session.compilations.get(node)?.content.contents.get(input) : undefined,
+    usesContent: (node, input) => {
+      if (!isObjectLike(input)) return false
+      const state = session.compilations.get(node)
+      return Boolean(state?.key.visitedContents.has(input) || state?.content.visitedContents.has(input))
+    },
     search: (query) => session.nodes.filter(matching(query)),
     has: (query) => session.nodes.some(matching(query)),
+    findDeclaration(query, accept) {
+      const matches = matching(query)
+      let selected: JSSStyleNode | undefined
+      for (const node of session.nodes) {
+        if (!matches(node) || !accept(node)) continue
+        if (!selected) { selected = node; continue }
+        const rootSpecificity = (node: JSSStyleNode) => node.conditionPath.targetConditionPath.length === 1
+          && node.conditionPath.targetConditionPath[0].header === ':root' ? 1 : 0
+        const rank = rootSpecificity(node) - rootSpecificity(selected)
+          || keyPriority(node.key!) - keyPriority(selected.key!) || session.compareOrder(node, selected)
+        if (rank > 0) selected = node
+      }
+      return selected
+    },
     nodes: () => session.nodes.slice(),
     observeNodes: observe => session.observeNodes(observe),
     compareOrder: (left, right) => session.compareOrder(left, right),
-    firstNode: () => session.nodes[0],
     insert(position, [key, content], provenance) {
       const direction = position.after ? 'after' : 'before'
       const anchor = position.before ?? position.after!
@@ -143,6 +170,7 @@ export function createASTController(session: ASTSession): ASTController {
     move: (node, position) => session.move(node, position.before ?? position.after!, position.after ? 'after' : 'before'),
     remove: (node, options) => options?.from === 'output' ? session.detach(node) : session.remove(node),
     depend: (node, options) => session.own(options.owner, node),
+    release: (node, options) => session.release(options.owner, node),
     onRemove: (node, cleanup) => session.onRemove(node, cleanup),
     defer: (node, message) => { node.deferredReason = new Error(message) },
     addSettlementCheck: check => session.settlementChecks.add(check),
@@ -261,6 +289,19 @@ export class ASTSession {
     products.add(node)
   }
 
+  /** 只解除一条来源边，不撤销仍有其他来源的产物或原始声明。 */
+  release(owner: JSSStyleNode, node: JSSStyleNode): void {
+    const products = this.products.get(owner)
+    products?.delete(node)
+    if (!products?.size) this.products.delete(owner)
+    const sources = this.owners.get(node)
+    if (!sources?.delete(owner)) return
+    if (!sources.size) {
+      this.owners.delete(node)
+      if (!this.roots.has(node)) this.remove(node)
+    }
+  }
+
   /** 展开入口不再输出，但它仍把祖先来源连接到产物。 */
   detach(node: JSSStyleNode): void {
     const index = this.nodes.indexOf(node)
@@ -316,7 +357,6 @@ export class ASTSession {
       identity,
       compileRevision: 0,
       conditionPath: {
-        semanticPath: path.semanticPath?.slice(),
         targetConditionPath: [...path.targetConditionPath],
         stateConditionPath: [...path.stateConditionPath],
       },

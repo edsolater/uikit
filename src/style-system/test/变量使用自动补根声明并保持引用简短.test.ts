@@ -20,7 +20,7 @@ test('root已有同CSS名声明时保留既有基础，不要求同Variable对�
 test('使用未声明变量时补根声明，引用没有默认内容参数', () => {
   const color = variable('white', 'root-contract-color')
   const css = compileRules([[['.Consumer'], 'color', color], [['.Other'], 'background-color', color]])
-  expect(css).toContain(':root {\n--root-contract-color: white;\n}')
+  expect(css).toContain(':where(:root) {\n--root-contract-color: white;\n}')
   expect(css).toContain('color: var(--root-contract-color);')
   expect(css).not.toContain('var(--root-contract-color,')
 })
@@ -32,7 +32,7 @@ test('多层引用各自声明一条关系，使用处不展开依赖链', () =>
   let unusedCalls = 0
   variable(() => { unusedCalls++; return 'red' }, 'root-chain-unused')
   const css = compileRules([[['.Consumer'], 'color', surface]])
-  const root = css.match(/:root\s*\{([^}]+)\}/)?.[1] ?? ''
+  const root = css.match(/:root\)?\s*\{([^}]+)\}/)?.[1] ?? ''
   expect(root).toContain('--root-chain-paper: white;')
   expect(root).toContain('--root-chain-canvas: var(--root-chain-paper);')
   expect(root).toContain('--root-chain-surface: var(--root-chain-canvas);')
@@ -57,7 +57,7 @@ test('同 CSS 名称的另一对象声明不替代被引用对象的根基础定
   const declared = variable('white', 'root-shared-name')
   const consumed = variable('blue', 'root-shared-name')
   const css = compileRules([[['.Other'], ...declare(declared, 'red')], [['.Consumer'], 'color', consumed]])
-  expect(css).toMatch(/:root\s*\{[^}]*--root-shared-name:\s*blue;/)
+  expect(css).toMatch(/:root\)?\s*\{[^}]*--root-shared-name:\s*blue;/)
   expect(css).toContain('--root-shared-name: red;')
   expect(css).toContain('color: var(--root-shared-name);')
   expect(css).not.toContain('white')
@@ -96,7 +96,7 @@ test('最后显式声明撤销后消费保留根默认', () => {
       controller.remove(context.node)
     } }],
   ])
-  expect(css).toContain(':root {\n--root-removed-definition: white;\n}')
+  expect(css).toContain(':where(:root) {\n--root-removed-definition: white;\n}')
   expect(css).not.toContain('red')
 })
 

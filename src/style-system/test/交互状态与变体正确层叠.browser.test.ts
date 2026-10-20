@@ -9,7 +9,7 @@ import { rules } from '../rule'
 afterEach(() => document.body.replaceChildren())
 
 test('hover 与 active 的交集不增加权重压过变体', async () => {
-  const base = rules('.interaction-probe', [[key('color'), variable('red', { name: "browser-interaction-color", states: { hover: 'blue', active: 'green' } })]])
+  const base = rules('.interaction-probe', [[key('color'), variable('red', { name: "browser-interaction-color", address: ".interaction-probe", states: { hover: 'blue', active: 'green' } })]])
   const variant = rules('.interaction-probe[data-variant="solid"]', [[key('color'), 'white']])
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileCSS()
@@ -34,7 +34,7 @@ test('hover 与 active 的交集不增加权重压过变体', async () => {
 
 test('禁用主体呈现禁用颜色，不重新获得悬停或按下颜色', async () => {
   const handle = rules('.disabled-probe', [[key('color'), variable('black', {
-    name: 'disabled-probe-color',
+    name: 'disabled-probe-color', address: ".disabled-probe",
     states: { hover: 'blue', active: 'green', disabled: 'gray' },
   })]])
   const style = document.head.appendChild(document.createElement('style'))

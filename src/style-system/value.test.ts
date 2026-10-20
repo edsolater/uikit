@@ -2,6 +2,7 @@
 import { expect, test } from 'vitest'
 import { condition } from './condition'
 import { compileRules } from './css-root'
+import type { Rules } from './rule'
 import { arraySequenceToCSSString, value, type ValueData } from './value'
 import { valueList, valueSequence } from './pieces/contents/atom-creators/list'
 
@@ -29,6 +30,29 @@ test('Value 的显式 dependencies 在当前声明位置编译', () => {
   })
   expect(output.dependencies).toEqual([nested])
   expect(compileRules([[[condition('.ExplicitDependencies')], 'width', output]])).toContain('width: 8px;')
+})
+
+test('withContent 沿用格式与显式资源，新包装独立消费也不丢激活配置', () => {
+  const dependency = value('dependency', {
+    onActive: () => [[['.DurationDependency'], 'display', 'block']],
+  })
+  const original = value<number>(200, {
+    toCSSString: milliseconds => `${milliseconds}ms`,
+    dependencies: [dependency],
+    onActive: () => [[['.DurationActivation'], 'visibility', 'visible']],
+  })
+  const changed = original.withContent(400)
+  for (const includeOriginal of [true, false]) {
+    const source: Rules = [[['.ChangedDuration'], 'transition-duration', changed]]
+    if (includeOriginal) source.push([['.OriginalDuration'], 'transition-duration', original])
+    const css = compileRules(source)
+    expect(css).toContain('transition-duration: 400ms;')
+    expect(css.includes('transition-duration: 200ms;')).toBe(includeOriginal)
+    expect(css).toContain('.DurationDependency')
+    expect(css).toContain('display: block;')
+    expect(css).toContain('.DurationActivation')
+    expect(css).toContain('visibility: visible;')
+  }
 })
 
 test('业务可给数值 Value 指定输出规则，数组规则保持输入形状', () => {

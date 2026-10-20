@@ -49,7 +49,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
         assert(ruleContent === undefined || isString(ruleContent) || isNumber(ruleContent) || isJSSContent(ruleContent) || isFunction(ruleContent), 'Rules 声明内容不是可编译的 CSS 内容。')
         styleNodes.push({
           compileRevision: 0,
-          conditionPath: { targetConditionPath, stateConditionPath: [], semanticPath: [...targetConditionPath] },
+          conditionPath: { targetConditionPath, stateConditionPath: [] },
           key,
           content: ruleContent,
         })

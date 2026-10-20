@@ -13,9 +13,9 @@ afterEach(() => document.body.replaceChildren())
 
 test('状态配方将来源的局部7px乘2，直接派生也读取局部值', () => {
   const source = variable('5px', 'current-local-source-size')
-  const direct = variable(source, 'current-local-direct-size')
+  const direct = variable(source, { name: 'current-local-direct-size', address: '.LocalContext' })
   const derived = variable('1px', {
-    name: 'current-local-derived-size',
+    name: 'current-local-derived-size', address: ".LocalContext",
     states: { currentHover: multiply(source, 2) },
   })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
@@ -33,9 +33,9 @@ test('状态配方将来源的局部7px乘2，直接派生也读取局部值', (
 })
 
 test('外层hover引用来源当前active值，来源独立按浏览器状态变化', () => {
-  const inner = variable('10px', { name: 'current-inner-size', states: { currentHover: '20px', currentActive: '30px' } })
-  const active = variable('1px', { name: 'current-active-size', states: { currentActive: inner } })
-  const hover = variable('2px', { name: 'current-hover-size', states: { currentHover: inner } })
+  const inner = variable('10px', { name: 'current-inner-size', address: ".Ordered", states: { currentHover: '20px', currentActive: '30px' } })
+  const active = variable('1px', { name: 'current-active-size', address: ".Ordered", states: { currentActive: inner } })
+  const hover = variable('2px', { name: 'current-hover-size', address: ".Ordered", states: { currentHover: inner } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.Ordered')], 'margin-left', active],
     [[condition('.Ordered')], 'margin-right', hover],
@@ -61,7 +61,7 @@ test('仅在状态配方中引用的来源保留注册初始值', () => {
     name: 'current-registered-source-size',
     registration: { syntax: '<length>', inherits: false, initialValue: '17px' },
   })
-  const target = variable('1px', { name: 'current-registered-target-size', states: { currentHover: multiply(source, 2) } })
+  const target = variable('1px', { name: 'current-registered-target-size', address: ".RegisteredContext", states: { currentHover: multiply(source, 2) } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.RegisteredContext')], 'width', target],
   ])

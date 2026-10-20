@@ -27,16 +27,15 @@ test('使用端直接消费变化描述，表达式变化不要求数值求值�
   expect(compileRules([row([button], declare(color)), row([button], modify(color, replacement))])).toContain('blue')
 })
 
-test('缺失局部声明或应用规则时给出明确诊断', () => {
+test('根据地自动提供修改基础，非法应用规则仍给出诊断', () => {
   const amount = variable(1, 'diagnostic-amount')
-  expect(() => compileRules([row([button], modify(amount, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 3) })))])).toThrow('找不到父路径定义')
+  expect(compileRules([row([button], modify(amount, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 3) })))])).toContain('+ 3)')
   expect(() => modify(amount, 3 as unknown as ExpressionModification)).toThrow('变化材料')
 })
 
-test('修改实例仍按对象归属，同一对象重复声明按原书写顺序取值', () => {
+test('同一目标多次主动声明按原书写顺序取值', () => {
   const first = variable(1, { name: 'same-name' })
   const second = variable(1, { name: 'same-name' })
-  expect(() => compileRules([row([button], declare(first)), row([button], modify(second, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 3) })))])).toThrow('找不到父路径定义')
   expect(compileRules([row([button], declare(first, 1)), row([button], declare(first, 2))])).toContain('--same-name: 2;')
 })
 

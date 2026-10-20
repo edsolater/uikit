@@ -1,5 +1,5 @@
 /** 点击交互 Mixin。 */
-import { variable } from '../../variable'
+import { variable, variableFrom, type VariableAddress } from '../../variable'
 import type { Declarations } from '../../rule'
 import { value, type ValueInput } from '../../value'
 import { $cursor, $userSelect } from '../keys/interaction'
@@ -18,18 +18,20 @@ import { focusOutline, focusOffset } from '../contents/atoms/focus'
 
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {
+  /** 明确交互变量的根据地，不从消费位置隐式推断。 */
+  address?: VariableAddress
   opacity?: ValueInput
   focusColor?: ValueInput
 }
 
 /** Mixin：可点击效果；可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。 */
 export const clickable = (options: ClickableMixinOptions = {}): Declarations => [
-  [$outline, focusOutline(options.focusColor)],
-  [$outlineOffset, focusOffset],
-  [$cursor, variable('pointer', { name: 'clickable-cursor', states: { disabled: 'not-allowed' } })],
-  [$opacity, options.opacity ?? variable(1, { name: 'clickable-opacity', states: { disabled: disabledFade } })],
+  [$outline, focusOutline(options.focusColor, options.address)],
+  [$outlineOffset, variableFrom(focusOffset, focusOffset.content, { address: options.address })],
+  [$cursor, variable('pointer', { name: 'clickable-cursor', address: options.address, states: { disabled: 'not-allowed' } })],
+  [$opacity, options.opacity ?? variable(1, { name: 'clickable-opacity', address: options.address, states: { disabled: disabledFade } })],
   [$transform, variable('none', {
-    name: 'clickable-transform', states: {
+    name: 'clickable-transform', address: options.address, states: {
       active: translateY('1px'),
       disabled: 'none',
     }

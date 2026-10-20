@@ -23,10 +23,8 @@ export type CSSConditionPath = Condition[]
 /** 当前目标状态条件；不修改目标地址身份。 */
 export type StateConditionPath = StateCondition[]
 
-/** 语义节点的完整地址，由目标位置与主体状态组成。 */
+/** 样式节点的完整地址，由目标位置与主体状态组成。 */
 export interface ConditionPath {
-  /** 未经状态排序的输入父链，用于语义归属；输出仍使用下列规范化地址。 */
-  semanticPath?: (Condition | string)[]
   targetConditionPath: TargetConditionPath
   stateConditionPath: StateConditionPath
 }
@@ -36,7 +34,7 @@ export function outputConditionPath(conditionPath: ConditionPath): CSSConditionP
   return [...conditionPath.targetConditionPath, ...conditionPath.stateConditionPath.map((state) => state.condition)]
 }
 
-/** 同一目标与规范化主体状态的输出地址；原始语义父链不参与。 */
+/** 同一目标与规范化主体状态的输出地址。 */
 export function conditionAddressKey(path: ConditionPath): string {
   return JSON.stringify([
     path.targetConditionPath.map((item) => item.header),
@@ -57,16 +55,4 @@ export function media(query: string): Condition {
 export function functionDefinition(signature: string): Condition {
   assert(isString(signature), 'functionDefinition 的签名必须是字符串。')
   return condition(`@function ${signature}`)
-}
-
-/** 返回可比较的语义路径片段；有原始语义地址时保留其输入顺序。 */
-export function semanticPathParts(path: ConditionPath): string[] {
-  return (path.semanticPath ?? [...path.targetConditionPath, ...path.stateConditionPath.map((state) => state.name)])
-    .map((item) => isString(item) ? `state:${item}` : `condition:${item.header}`)
-}
-/** 判断前一路径是否覆盖后一路径的起始片段；同一路径也成立。 */
-export function isSemanticPathPrefix(parent: ConditionPath, child: ConditionPath): boolean {
-  const prefix = semanticPathParts(parent)
-  const parts = semanticPathParts(child)
-  return prefix.length <= parts.length && prefix.every((item, index) => item === parts[index])
 }

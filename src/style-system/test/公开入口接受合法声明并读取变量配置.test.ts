@@ -1,8 +1,8 @@
 /** 公开类型保留目标与内容的关系，并直接提供 Variable 创建配置。 */
-import { declare } from '../operations/declare'
-import { modify } from '../operations/modify'
+
+
 import { expect, test, vi } from 'vitest'
-import { add, key, rules, variable } from '../index'
+import { variable } from '../index'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 

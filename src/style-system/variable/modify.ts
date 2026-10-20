@@ -1,4 +1,4 @@
-/** 已声明 Variable 的修改链编译。
+/** Variable 根据地定义的完整结果修改链。
  *
  * 消费已选应用，维护实例、步骤、当地结果及撤销。
  *
@@ -10,23 +10,49 @@ import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import { condition, conditionAddressKey, type ConditionPath } from '../condition'
 import { createJSSContent, type Expression, type JSSCompileContext } from '../content'
 import { keyPriority } from '../key'
-import { variableRegistrationDeclarations, type VariableTarget } from './core'
-import { consumeDeclaration, joinVariableValues, variableProductRoles, type VariableDefinition } from './declare'
+import { selectedVariableVariants, variableRegistrationDeclarations, type VariableTarget } from './core'
+import { automaticVariableDeclaration, consumeDeclaration, declaredVariable, joinVariableValues, variableDefinition, variableHomePath, variableProductRoles, type VariableDefinition } from './declare'
 
 /**
- * 按最近声明及书写顺序应用当前修改，维护消费链和撤销关系。
+ * 按根据地的有效声明及书写顺序应用修改，维护消费链和撤销关系。
  */
 export function compileVariableModification(context: JSSCompileContext, controller: ASTController, variable: VariableTarget,
-  apply: (current: Expression) => Expression, id?: string | symbol): void {
+  apply: (current: Expression) => Expression, id?: string | symbol, selectedDefinition?: VariableDefinition): void {
   variableProductRoles.set(context.node, 'control')
-  const definition = consumeDeclaration(context, controller, variable)
-  if (!definition) { controller.defer(context.node, `自定义属性 ${variable.key.toCSSString()} 的修改找不到父路径定义。`); return }
-  const instance = ensureModifyInstance(context, controller, definition)
+  const definition = selectedDefinition ?? consumeDeclaration(context, controller, variable)
   const old = steps.get(context.node)
-  if (old?.instance === instance) { refreshSteps(controller, instance); return }
+  // 同址后写的显式声明是新的绑定，先前修改不能越过它；子条件修改仍由 CSS 匹配。
+  if (definition.node.productTag !== automaticVariableDeclaration
+    && conditionAddressKey(context.conditionPath) === conditionAddressKey(definition.path)
+    && controller.compareOrder(context.node, definition.node) < 0) {
+    if (old) removeModification(controller, old, context.node)
+    variantModifications.get(context.node)?.()
+    variantModifications.delete(context.node)
+    return
+  }
+  const instance = ensureModifyInstance(context, controller, definition)
+  const previous = old?.members.get(context.node)
+  const invalidated = previous && (previous.input !== context.input || previous.revision !== context.node.compileRevision || old?.id !== id)
+  if (invalidated) {
+    variantModifications.get(context.node)?.()
+    variantModifications.delete(context.node)
+  }
+  includeSelectedVariants(context, controller, variable, apply, id)
+  if (old?.instance === instance && old.id === id) {
+    if (invalidated) {
+      previous.input = context.input
+      previous.revision = context.node.compileRevision
+      previous.output = apply(old.currentExpression)
+      previous.selection.content = candidateSelection(old, previous.gate, previous.output)
+    }
+    refreshSteps(controller, instance, invalidated ? old : undefined)
+    return
+  }
   if (old) removeModification(controller, old, context.node)
   if (!instance.steps.length) {
     instance.definition.baseName = `${variable.key.toCSSString().slice(2)}-modify-${instance.number}-base`
+    instance.definition.baseNode!.compileRevision++
+    for (const state of instance.definition.stateProducts.values()) state.compileRevision++
     publishResult(controller, instance, instance.definition.node)
     const alias = instance.results.get(conditionAddressKey(instance.definition.node.conditionPath))!.alias!
     registerInternalVariable(controller, instance, instance.definition.baseName, alias)
@@ -36,9 +62,9 @@ export function compileVariableModification(context: JSSCompileContext, controll
   const output = apply(step.currentExpression)
   const gate = `${step.name}-candidate-${++step.count}`
   const selection = controller.insert({ before: context.node, conditionPath: context.conditionPath },
-    [undefined, createJSSContent(resolve => resolve(output) === undefined ? undefined : selectionText(step, gate), [output])],
+    [undefined, candidateSelection(step, gate, output)],
     { owner: context.node, identity: 'modification' })
-  step.members.set(context.node, { gate, output, selection })
+  step.members.set(context.node, { gate, output, selection, input: context.input, revision: context.node.compileRevision })
   steps.set(context.node, step)
   publishResult(controller, instance, context.node)
   refreshSteps(controller, instance, step)
@@ -46,6 +72,51 @@ export function compileVariableModification(context: JSSCompileContext, controll
   controller.onRemove(context.node, () => {
     const current = steps.get(context.node)
     if (current) removeModification(controller, current, context.node)
+  })
+}
+
+const variantModifications = new WeakMap<JSSStyleNode, () => void>()
+/** 显式修改包含实际使用的变体；不激活只选择但未消费的成员。 */
+function includeSelectedVariants(context: JSSCompileContext, controller: ASTController, variable: VariableTarget,
+  apply: (current: Expression) => Expression, id?: string | symbol): void {
+  if (variantModifications.has(context.node)) return
+  const products = new Map<string, { node: JSSStyleNode; definition: VariableDefinition }>()
+  let active = true
+  const cleanup = () => {
+    active = false
+    for (const product of products.values()) controller.remove(product.node)
+    products.clear()
+  }
+  variantModifications.set(context.node, cleanup)
+  controller.onRemove(context.node, cleanup)
+  controller.addSettlementCheck(() => {
+    if (!active) return false
+    let changed = false
+    const wanted = new Set<string>()
+    for (const variant of selectedVariableVariants(variable) ?? []) {
+      // 加工该 CSS 地址已经存在的有效绑定；不因 JS 对象不同忽略更高等级覆盖。
+      const node = controller.findDeclaration({ key: variant.key, conditionPath: variableHomePath(variant) }, node =>
+        !node.aggregate && variableDefinition(node) !== undefined)
+      const definition = node && variableDefinition(node)
+      if (!definition) continue
+      const name = variant.toCSSString()
+      wanted.add(name)
+      const previous = products.get(name)
+      if (previous?.definition === definition) continue
+      if (previous) controller.remove(previous.node)
+      const product = controller.insert({ after: context.node, conditionPath: context.conditionPath },
+        [variant.key, { kind: 'variable-modification', onCompile(childContext, childController) {
+          compileVariableModification(childContext, childController, variant, apply, id, definition)
+        } }], { owner: context.node, initialize(node) { variableProductRoles.set(node, 'control') } })
+      products.set(name, { node: product, definition })
+      changed = true
+    }
+    for (const [name, product] of products) if (!wanted.has(name)) {
+      controller.remove(product.node)
+      products.delete(name)
+      changed = true
+    }
+    return changed
   })
 }
 
@@ -61,7 +132,7 @@ interface VariableStep {
   name: string
   anchor: JSSStyleNode
   fallback: JSSStyleNode
-  members: Map<JSSStyleNode, { gate: string; output: Expression; selection: JSSStyleNode }>
+  members: Map<JSSStyleNode, { gate: string; output: Expression; selection: JSSStyleNode; input: unknown; revision: number }>
   currentExpression: Expression
   count: number
   id?: string | symbol
@@ -107,6 +178,10 @@ const selectionText = (step: VariableStep, selected = `${step.name}-identity`): 
   [`${step.name}-identity`, ...[...step.members.values()].map(member => member.gate)]
     .map(name => `--${name}: ${name === selected ? 'initial' : ''};`).join('\n')
     + (step.instance.definition.variable!.registration?.inherits === false ? `\n--${step.name}-present: ;` : '')
+
+/** 更新同一候选的配方，不增加阶段或改变共享 ID 与源顺序。 */
+const candidateSelection = (step: VariableStep, gate: string, output: Expression): Expression =>
+  createJSSContent(resolve => resolve(output) === undefined ? undefined : selectionText(step, gate), [output])
 /**
  * 建立引用前序结果的新修改阶段，未命中时沿用前序值。
  */
