@@ -15,7 +15,7 @@ Button画布引用globalSurfaceColor，普通内容引用globalContentColor；�
 
 主题不是整颗按钮的单一染色开关：filled常态使用语气实底，强调实底的文字保留对比来源；危险语气、外观选择、hover/active与disabled继续各自有效。全局变化不能压掉区域或组件显式覆盖，也不能令危险filled回到普通来源。
 
-使用例见[按钮主题与局部控制](../../../style-system/doc/从按钮需求组合样式.md#共用主题来源还是只改这颗按钮)，结果边界见[共享主题与组件颜色控制](../../../style-system/doc/behaviors/共享主题与组件颜色控制.md)。
+使用例见[按钮主题与局部控制](../../../style-system/doc/从按钮需求组合样式.md#共用主题来源还是只改这颗按钮)，结果边界见[共享主题与组件颜色控制.md](../../../style-system/doc/behaviors/共享主题与组件颜色控制.md)。
 
 ## 组件定义
 

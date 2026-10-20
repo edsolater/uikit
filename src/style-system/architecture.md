@@ -86,7 +86,7 @@ Variable 的 options.variants 保存变体规则或固定值，参数解析与 s
 
 ## 内容扩展与位置记录
 
-公开扩展的输入、返回、同步位置、等待和撤销结果见[内容扩展与节点编辑](doc/behaviors/内容扩展与节点编辑.md)。本节记录当前机制，不将节点字段、内部数量或算法固定为对外承诺。
+公开扩展的输入、返回、同步位置、等待和撤销结果见[内容扩展与AST编辑.md](doc/behaviors/内容扩展与AST编辑.md)。本节记录当前机制，不将节点字段、内部数量或算法固定为对外承诺。
 
 ### 节点队列
 
@@ -129,7 +129,7 @@ onCompile(context, ast) {
 
 ## 节点查询编辑与撤销
 
-当前Controller把这些操作交给同一编译会话；公开参数及可观察效果由[节点编辑行为](doc/behaviors/内容扩展与节点编辑.md)负责：
+当前Controller把这些操作交给同一编译会话；公开参数及可观察效果由[内容扩展与AST编辑.md](doc/behaviors/内容扩展与AST编辑.md)负责：
 
 | 目的 | 调用 |
 | --- | --- |
@@ -152,7 +152,7 @@ onCompile(context, ast) {
 
 节点的内容身份未变但编译前提改变时，递增 `node.compileRevision` 使旧编译及同址聚合结果失效。无法继续时写入 `node.deferredReason`，或使用快捷方法 `defer(node, message)`；每次尝试前清除旧原因，后续波只重试未完成的通知，不重调前序成功通知，也不撤回已执行的内容设定或队列操作。队列无进展时报告原因。`setContent` 仅在对应同步通知内有效，旧上下文不能继续操作位置记录。内容对象的 `compileWaveIndex` 指定最早编译波；当前波次由编译器内部掌握，不进入上下文或 Controller。激活只由编译器内部处理，引用环和超过上限的内容链会明确失败。
 
-当前消费者用context.session作为私有WeakMap键，编译会话的身份与公开改写效果见[位置改写行为](doc/behaviors/内容扩展与节点编辑.md)。
+当前消费者用context.session作为私有WeakMap键，编译会话的身份与公开改写效果见[内容扩展与AST编辑.md](doc/behaviors/内容扩展与AST编辑.md)。
 
 ## 内容链与变量实现
 
@@ -176,13 +176,13 @@ Variable 的注册配方使用 `resourceAddress` 查找同址资源、`productTa
 
 ## 状态与变量接入
 
-当前快捷状态通过状态路径接入；直接条件随后使用配置书写次序。登记实现把主体附加条件包进:where()，以保留主体地址权重；已有:where()允许嵌套，不为消除包装引入选择器解析，At Rule保持原样。中央顺序及直接条件实际覆盖的公开结果由[状态行为](doc/behaviors/状态反馈与条件选择.md)负责，包装方式可以随核心调整。
+当前快捷状态通过状态路径接入；直接条件随后使用配置书写次序。登记实现把主体附加条件包进:where()，以保留主体地址权重；已有:where()允许嵌套，不为消除包装引入选择器解析，At Rule保持原样。中央顺序及直接条件实际覆盖的公开结果由[states与条件选择.md](doc/behaviors/states与条件选择.md)负责，包装方式可以随核心调整。
 
-当前Variable在指定根据地选择有效基础，修改链按声明位置连接。选择门保存原地址的条件选择，阶段结果引用前序CSS内容；现有颜色实现用完整Modification内容，不按每个通道建立业务控制对象。每步结果的辅助变量组织是当前实现成本，不构成对外固定数量。晚到内容顺序、局部基础和继承结果见[相对修改](doc/behaviors/完整结果调整与局部修改.md)。
+当前Variable在指定根据地选择有效基础，修改链按声明位置连接。选择门保存原地址的条件选择，阶段结果引用前序CSS内容；现有颜色实现用完整Modification内容，不按每个通道建立业务控制对象。每步结果的辅助变量组织是当前实现成本，不构成对外固定数量。晚到内容顺序、局部基础和继承结果见[adjust与modify.md](doc/behaviors/adjust与modify.md)。
 
-操作入口通过FNKit的DataShape/matchShape读取自然材料，modify按type选择应用，adjust构造来源与变化的结果材料；校验和转译留在操作领域。协议的公开输入与拒绝边界见[声明材料](doc/behaviors/声明登记与贡献撤销.md)，不要求信息体知道操作实现。
+操作入口通过FNKit的DataShape/matchShape读取自然材料，modify按type选择应用，adjust构造来源与变化的结果材料；校验和转译留在操作领域。协议的公开输入与拒绝边界见[rule与rules的登记和撤销.md](doc/behaviors/rule与rules的登记和撤销.md)，不要求信息体知道操作实现。
 
-当前同址聚合收集获选贡献的有序Value视图，保留输入Value时读取原位置已编译内容，改写content后由结果位置消费新内容。JSSContentNode输出只读已完成内容，不重新运行生产函数；位置视图与编译记录的共享方式是当前实现，join的外界扩展结果由[贡献组合](doc/behaviors/声明登记与贡献撤销.md)负责。
+当前同址聚合收集获选贡献的有序Value视图，保留输入Value时读取原位置已编译内容，改写content后由结果位置消费新内容。JSSContentNode输出只读已完成内容，不重新运行生产函数；位置视图与编译记录的共享方式是当前实现，join的外界扩展结果由[rule与rules的登记和撤销.md](doc/behaviors/rule与rules的登记和撤销.md)负责。
 
 ## Button 接入
 

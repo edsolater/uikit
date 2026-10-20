@@ -2,7 +2,7 @@
 
 # Value 状态移除与 Variable 创建、延伸及聚合改造 Plan
 
-当前成员状态继承由 `clusterFrom` 承担；下文的单 Variable 延伸保留为当时实施记录。现役契约见 [Variable](../../src/style-system/doc/behaviors/__spec.md)。
+当前成员状态继承由 `clusterFrom` 承担；下文的单 Variable 延伸保留为当时实施记录。现役契约见 [__spec.md](../../src/style-system/doc/behaviors/__spec.md)。
 
 后续裁决：本 Plan 的阶段记录保留；Cluster 同名匹配、focus 状态及自动状态交集的后续实施，以 [Variable Cluster 整组赋值与 focus 状态归属修正 Plan](VariableCluster整组赋值与Focus状态归属修正.md) 为准。旧完整匹配与 action 补齐选择已撤回。
 

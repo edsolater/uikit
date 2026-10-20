@@ -2,7 +2,7 @@
 
 # 修改目标
 
-状态：历史提案。本文保留当时的方案与调查；状态职责后续由 [按钮状态配方与规则条件职责归位](按钮状态配方与规则条件职责归位.md) 落实。调查中的同名状态读取已退出，来源 Variable 现通过 CSS 引用读取当前值，现役契约见 [变量定义与消费](../../src/style-system/doc/behaviors/__spec.md)。
+状态：历史提案。本文保留当时的方案与调查；状态职责后续由 [按钮状态配方与规则条件职责归位](按钮状态配方与规则条件职责归位.md) 落实。调查中的同名状态读取已退出，来源 Variable 现通过 CSS 引用读取当前值，现役契约见 [__spec.md](../../src/style-system/doc/behaviors/__spec.md)。
 
 把 Button 被移到逐状态 Rule 的效果迁回 Variable 的 `states`。组件选择配方，Mixin 消费 Variable，StateCondition 提供状态条件与中央顺序，编译器展开变量声明。组件不再为同一效果手工登记按钮 hover、按钮 active、按钮 disabled 的消费规则。
 
@@ -66,7 +66,7 @@ StateCondition 拥有“何时成立”，Variable 拥有“成立时取什么�
 
 # 验证与失败条件
 
-复用 [样式状态只由变量自身承担](../../src/style-system/doc/behaviors/状态反馈与条件选择.md) 的既有行为契约，以及 [状态名称登记测试](../../src/style-system/test/状态名称登记并用于变量编译.test.ts)、[状态顺序与来源链测试](../../src/style-system/test/状态顺序与变量来源链共同决定取值.test.ts)。新增验证应针对实际缺口，不另造状态测试入口。
+复用 [states与条件选择.md](../../src/style-system/doc/behaviors/states与条件选择.md) 的既有行为契约，以及 [状态名称登记测试](../../src/style-system/test/状态名称登记并用于变量编译.test.ts)、[状态顺序与来源链测试](../../src/style-system/test/状态顺序与变量来源链共同决定取值.test.ts)。新增验证应针对实际缺口，不另造状态测试入口。
 
 - 最小颜色案例：一个 Variable 默认红色、hover 蓝色、active 绿色，经 `color({ foreground })` 消费后，颜色属性只有一份消费声明，变量定义分别生成默认、hover、active 三份声明。若颜色属性为状态被重复输出，验收失败。
 - 中央顺序：调换 Variable 内 hover、active 的书写顺序不改变生成结果；同时命中时按已登记顺序取值，不能依赖 Button Rule 的书写先后。
