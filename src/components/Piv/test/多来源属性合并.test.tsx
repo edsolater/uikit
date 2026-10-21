@@ -2,7 +2,7 @@
 
 import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
-import { Piv } from './Piv'
+import { Piv } from '../Piv'
 
 describe('Piv shadowProps', () => {
   test('接收一维数组中的多个 props 来源', () => {

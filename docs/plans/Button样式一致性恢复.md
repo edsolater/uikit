@@ -163,7 +163,7 @@ Example 的 Accent、Danger 行实际是 `solid + tone`。因此截图中的浅�
 
 状态交集的优先级问题已在当前产物中复现，但本次没有对每次编译器历史提交做二分定位，不把它的首次引入时间归到某个未经验证的提交。
 
-[现有 Button 浏览器测试](../../src/components/kits/Button/button.browser.test.tsx) 主要证明“几类背景互不相同”“hover 会改变颜色”“禁用统一为 surface、opacity 0.48”。这些断言与当前实现一致，却不能证明与旧视觉一致，有的已经固定了本次要纠正的行为。
+[现有 Button 浏览器测试](../../src/components/kits/Button/Button.browser.test.tsx) 主要证明“几类背景互不相同”“hover 会改变颜色”“禁用统一为 surface、opacity 0.48”。这些断言与当前实现一致，却不能证明与旧视觉一致，有的已经固定了本次要纠正的行为。
 
 目前缺少四类验收：完整 variant × tone 的配对结果、启用态鼠标与键盘的交集一致性、品牌色覆盖路径、形状与外部布局约束。测试中检查到了 `border-radius: 999px`，却没有检查 `corner-shape`；检查到了 `min-height: 48px`，却没有检查在拉伸容器中的实际高度。测试通过不等于“骨架保住了”。
 

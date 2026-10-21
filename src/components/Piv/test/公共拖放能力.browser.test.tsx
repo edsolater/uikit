@@ -2,11 +2,11 @@ import { flush } from 'solid-js'
 import { render } from '@solidjs/web'
 import { afterEach, expect, test, vi } from 'vitest'
 import { createState, val } from '@/foundation'
-import { Piv } from './Piv'
-import { createInternalDrag, findInternalDropTarget } from '../plugins/kits/dragAndDrop'
+import { Piv } from '../Piv'
+import { createInternalDrag, findInternalDropTarget } from '../../plugins/kits/dragAndDrop'
 import { createToggle } from '@/hooks/value-state/toggle'
 import { mergeProps } from '@/foundation/render'
-import { Button } from '../kits/Button/Button'
+import { Button } from '../../kits/Button/Button'
 
 vi.mock('@/hooks/value-state/toggle', { spy: true })
 
