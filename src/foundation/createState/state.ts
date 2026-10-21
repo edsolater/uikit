@@ -4,9 +4,10 @@
  * 本文件定义可写 State，并负责创建与识别 State。
  * State 建立在 StateView 之上，但不负责 Source 的统一转换。
  */
-import { isFunction, isObject, result, type MayFn } from '@edsolater/fnkit'
+import { hasProperty, isFunction, isObject, isTrue, result, type MayFn, type MayPromise } from '@edsolater/fnkit'
 import { createMemo, createSignal } from 'solid-js'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
+import { createAsyncSignal } from './createAsyncSignal'
 
 export const stateBrand = Symbol('State')
 
@@ -25,7 +26,7 @@ export interface State<T = any> extends StateView<T> {
  * 判断一个值是否是我们创造的 state。
  */
 export function isState(value: unknown): value is State {
-  return isObject(value) && (value as any)?.[stateBrand] === true
+  return hasProperty(value, stateBrand, isTrue)
 }
 
 /**
@@ -45,29 +46,23 @@ export function isState(value: unknown): value is State {
  * @todo
  * 🤔 是不是搞成proxy效果更好，虽然看起来规模很小，还说其实并不重要？
  */
-export function createState<T = unknown>(): State<T | undefined>
-export function createState<T = unknown>(initialValue: MayFn<T>): State<T>
-export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
-  // 当前值由 UIKit 保存，Solid 仅追踪变更，避免函数值和 Promise 被当作派生来源。
-  let value = result(initialValue)
-  const [solidjsAccessor, solidjsSetSignal] = createSignal(0, { ownedWrite: true })
+export function createState<T = unknown>(): State<Awaited<T> | undefined>
+export function createState<T = unknown>(initialValue: MayFn<T>): State<Awaited<T>>
+export function createState(initialValue?: any): State<any> {
+  const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(initialValue)
+
   const thisState: State = {
     read() {
-      solidjsAccessor()
-      return value
+      return solidjsAccessor()
     },
-    
     [stateViewBrand]: true,
     [stateBrand]: true,
     [Symbol.dispose]() {
-      // 这里不需要做任何事情，因为我们没有在外部注册这个 state，也没有暴露任何取消订阅的接口。
+      // 这里不需要做任何事情，因为我们现在没有在外部注册这个 state，也没有暴露任何取消订阅的接口。
       // 只要这个 state 没有被外部引用了，它就会被垃圾回收掉，Solid 的 createEffect 也会自动清理对它的订阅。
     },
     set(newValue) {
-      const nextValue = isFunction(newValue) ? newValue(value) : newValue
-      if (nextValue === value) return thisState
-      value = nextValue
-      solidjsSetSignal(version => version + 1)
+      solidjsSetSignal(newValue)
       return thisState
     },
     map(toNew) {
@@ -82,10 +77,13 @@ export function createState<T = unknown>(initialValue?: MayFn<T>): State<any> {
  * 派生视图属于创建时的响应式作用域，作用域释放后停止跟随依赖。
  */
 function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<U> {
-  const read = createMemo(() => {
-    const mapped = mapper(view.read())
-    return { value: isStateView(mapped) ? mapped.read() : mapped }
-  }, { equals: (previous, next) => previous.value === next.value })
+  const read = createMemo(
+    () => {
+      const mapped = mapper(view.read())
+      return { value: isStateView(mapped) ? mapped.read() : mapped }
+    },
+    { equals: (previous, next) => previous.value === next.value },
+  )
   const mappedView: StateView<U> = {
     read: () => read().value,
     [stateViewBrand]: true,
