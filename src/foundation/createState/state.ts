@@ -4,10 +4,10 @@
  * 本文件定义可写 State，并负责创建与识别 State。
  * State 建立在 StateView 之上，但不负责 Source 的统一转换。
  */
-import { hasProperty, isFunction, isObject, isTrue, result, type MayFn, type MayPromise } from '@edsolater/fnkit'
-import { createMemo, createSignal } from 'solid-js'
+import { hasProperty, isTrue } from '@edsolater/fnkit'
+import { createMemo } from 'solid-js'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
-import { createAsyncSignal } from './createAsyncSignal'
+import { createAsyncSignal, type AsyncSignalOptions, type StateSource, type StateUpdate } from './createAsyncSignal'
 
 export const stateBrand = Symbol('State')
 
@@ -19,7 +19,7 @@ export interface State<T = any> extends StateView<T> {
   [Symbol.dispose](): void
 
   /* 虽然返回自身，但实际上只是改变这个state的值，这个state因为它是对象还是这个state */
-  set(newValue: T | ((prev: T) => T)): State<T>
+  set(newValue: StateUpdate<T>): State<T>
 }
 
 /**
@@ -30,11 +30,8 @@ export function isState(value: unknown): value is State {
 }
 
 /**
- * 创建一个代表状态的，可以读，可以follow的 state。
- *
- * 比 {@link state} 更强调操作行为，常用于组件的构建
- * @param initialValue 初始值
- * @returns 新创建的 state
+ * 创建可写状态，函数来源参与持续派生，同步值与 Promise 通过同一入口读取。
+ * 更新函数接收完成值；来源尚未完成时，更新会在其完成后依次执行。
  * @example
  * ```ts
  * function Component() {
@@ -42,14 +39,11 @@ export function isState(value: unknown): value is State {
  *   return <div>{val(count)}</div>
  * }
  * ```
- *
- * @todo
- * 🤔 是不是搞成proxy效果更好，虽然看起来规模很小，还说其实并不重要？
  */
 export function createState<T = unknown>(): State<Awaited<T> | undefined>
-export function createState<T = unknown>(initialValue: MayFn<T>): State<Awaited<T>>
-export function createState(initialValue?: any): State<any> {
-  const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(initialValue)
+export function createState<T>(initialValue: StateSource<T>, options?: AsyncSignalOptions<Awaited<T>>): State<Awaited<T>>
+export function createState(initialValue?: any, options?: AsyncSignalOptions<any>): State<any> {
+  const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(initialValue, options)
 
   const thisState: State = {
     read() {

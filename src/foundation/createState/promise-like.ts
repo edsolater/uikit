@@ -40,17 +40,17 @@ export function toStateViewFromPromiseLike<V>(promiseLike: PromiseLike<V>): Stat
 export function toStateViewFromPromiseLike<V, D, E>(
   promiseLike: PromiseLike<V>,
   options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
-): StateView<Awaited<V> | D | E>
+): StateView<Awaited<V | D | E>>
 export function toStateViewFromPromiseLike<V, D>(
   promiseLike: PromiseLike<V>,
   options: PromiseLikeStateViewOptions<D>,
-): StateView<Awaited<V> | D>
-export function toStateViewFromPromiseLike<V, D, E>(
-  promiseLike: PromiseLike<V>,
-  options?: PromiseLikeStateViewOptions<D, E>,
-): StateView<Awaited<V> | D | E | undefined> {
+): StateView<Awaited<V | D>>
+export function toStateViewFromPromiseLike(
+  promiseLike: PromiseLike<unknown>,
+  options?: PromiseLikeStateViewOptions<unknown>,
+): StateView<unknown> {
   if (!options) {
-    const stateView = createState<Awaited<V> | undefined>()
+    const stateView = createState<unknown>()
     void Promise.resolve(promiseLike).then(
       (value) => stateView.set(() => value),
       () => stateView.set(undefined),
@@ -60,8 +60,8 @@ export function toStateViewFromPromiseLike<V, D, E>(
   }
 
   const defaultValue = options.defaultValue
-  const errorValue = ('errorValue' in options ? options.errorValue : defaultValue) as D | E
-  const stateView = createState<Awaited<V> | D | E>(() => defaultValue)
+  const errorValue = ('errorValue' in options ? options.errorValue : defaultValue)
+  const stateView = createState<unknown>(() => defaultValue)
 
   void Promise.resolve(promiseLike).then(
     (value) => stateView.set(() => value),

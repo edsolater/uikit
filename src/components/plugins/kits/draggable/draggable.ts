@@ -3,7 +3,7 @@
  *
  * 【职责边界】公开启停与拖动状态；指针事务、来源元素位移和 Droppable 命中由内部设施完成。
  */
-import { onCleanup, type State } from '@/foundation'
+import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
@@ -35,7 +35,7 @@ const defaultActivationJump = true
 
 export const draggable = createPlugin<DraggableOptions, DraggableController, PivTag>((options) => {
   const [enabled, enabledControl] = createToggle(!(options?.disabled ?? false))
-  const [dragging, draggingControl] = createToggle(false)
+  const dragging = createState(false)
   let cancelDrag: (() => void) | undefined
 
   const controller: DraggableController = {
@@ -60,9 +60,8 @@ export const draggable = createPlugin<DraggableOptions, DraggableController, Piv
         ),
         activationJump: options?.activationJump ?? defaultActivationJump,
         enabled: enabled.read,
-        onDraggingChange(dragging) {
-          if (dragging) draggingControl.turnOn()
-          else draggingControl.turnOff()
+        onDraggingChange(isDragging) {
+          dragging.set(isDragging)
         },
       })
       cancelDrag = pointerDrag.cancel

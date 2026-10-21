@@ -1,12 +1,11 @@
-import { flush } from 'solid-js'
-import { createRoot } from 'solid-js'
+import { createRoot, flush } from 'solid-js'
 import { describe, expect, test, vi } from 'vitest'
 import { createState, val, type Source } from '@/foundation'
 import { createVariantPropsParser } from './parseVariantProps'
 
 describe('createVariantPropsParser', () => {
   test('已声明的不定字段 getter 持续更新，effect 持有稳定的结果 Source', () => {
-    createRoot(dispose => {
+    const { appearance, effect, details, variantShadowProps, dispose } = createRoot(dispose => {
       const appearance = createState<'filled' | 'plain' | undefined>('filled')
       const effect = vi.fn(() => undefined)
       const parser = createVariantPropsParser([
@@ -15,6 +14,9 @@ describe('createVariantPropsParser', () => {
       const { details, variantShadowProps } = parser({
         get appearance() { return val(appearance) },
       })
+      return { appearance, effect, details, variantShadowProps, dispose }
+    })
+    try {
       expect(val(details.appearance)).toBe('filled')
       appearance.set('plain')
       flush()
@@ -24,8 +26,9 @@ describe('createVariantPropsParser', () => {
       appearance.set(undefined)
       flush()
       expect(val(details.appearance)).toBeUndefined()
+    } finally {
       dispose()
-    })
+    }
   })
 
   test('没有自有转换表的分组不读取原型属性', () => {
@@ -36,7 +39,7 @@ describe('createVariantPropsParser', () => {
   })
 
   test('映射只转换 DOM Source，effect 保留稳定的原始选择 Source', () => {
-    createRoot((dispose) => {
+    const { appearance, mapping, effect, details, mapped, dispose } = createRoot(dispose => {
       const appearance = createState<'filled' | 'outlined' | 'plain' | undefined>()
       const mapping = { appearance: { undefined: 'outlined', plain: undefined } }
       Object.setPrototypeOf(mapping.appearance, { filled: 'outlined' })
@@ -44,6 +47,9 @@ describe('createVariantPropsParser', () => {
       const parser = createVariantPropsParser([{ groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'], effect }], mapping)
       const { details, variantShadowProps } = parser({ appearance })
       const mapped = variantShadowProps.htmlProps!['data-appearance'] as Source<string | undefined>
+      return { appearance, mapping, effect, details, mapped, dispose }
+    })
+    try {
       expect(val(details.appearance)).toBeUndefined()
       expect(effect).toHaveBeenCalledExactlyOnceWith(details.appearance)
       expect(val(mapped)).toBe('outlined')
@@ -59,12 +65,13 @@ describe('createVariantPropsParser', () => {
       flush()
       expect(val(mapped)).toBe('filled')
       expect(effect).toHaveBeenCalledOnce()
+    } finally {
       dispose()
-    })
+    }
   })
 
   test('effect 只运行一次，后续变化由同一个选中结果 Source 承载', () => {
-    createRoot((dispose) => {
+    const { large, effectVariant, effect, details, variantShadowProps, dispose } = createRoot(dispose => {
       const large = createState(false)
       let effectVariant: Source<string | undefined> | undefined
       const effect = vi.fn((selectedVariant: Source<string | undefined>) => {
@@ -77,6 +84,9 @@ describe('createVariantPropsParser', () => {
 
       const { details, variantShadowProps } = parseProps({ large })
 
+      return { large, effectVariant, effect, details, variantShadowProps, dispose }
+    })
+    try {
       expect(effect).toHaveBeenCalledOnce()
       expect(effectVariant).toBe(details.size)
       expect(variantShadowProps.htmlProps!['data-size']).toBe(details.size)
@@ -88,8 +98,8 @@ describe('createVariantPropsParser', () => {
       flush()
       expect(val(details.size)).toBe('large')
       expect(effect).toHaveBeenCalledOnce()
-
+    } finally {
       dispose()
-    })
+    }
   })
 })

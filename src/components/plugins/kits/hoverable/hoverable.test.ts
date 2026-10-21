@@ -3,18 +3,18 @@ import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { hoverable } from './hoverable'
 
-describe('hoverable controller', () => {
-  test('Controller 同时提供状态面板和 hover 操作', () => {
+describe('hoverable controller',  () => {
+  test('Controller 同时提供状态面板和 hover 操作', async () => {
     const [, controller] = usePlugin(hoverable)
 
     expect(val(controller.hovered)).toBe(false)
     controller.hover()
-    expect(val(controller.hovered)).toBe(true)
+    await expect.poll(() => val(controller.hovered)).toBe(true)
     controller.unhover()
-    expect(val(controller.hovered)).toBe(false)
+    await expect.poll(() => val(controller.hovered)).toBe(false)
   })
 
-  test('options 生效且两次 usePlugin 的状态互不关联', () => {
+  test('options 生效且两次 usePlugin 的状态互不关联', async () => {
     const [, firstController] = usePlugin(hoverable, { initialHovered: true })
     const [, secondController] = usePlugin(hoverable)
 
@@ -24,7 +24,7 @@ describe('hoverable controller', () => {
     expect(val(secondController.hovered)).toBe(false)
 
     firstController.unhover()
-    expect(val(firstController.hovered)).toBe(false)
+    await expect.poll(() => val(firstController.hovered)).toBe(false)
     expect(val(secondController.hovered)).toBe(false)
   })
 })

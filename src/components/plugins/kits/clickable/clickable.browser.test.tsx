@@ -15,7 +15,7 @@ afterEach(() => {
 })
 
 describe('clickable', () => {
-  test('真实 DOM 事件更新对应 Controller，且支持三种调用模式', () => {
+  test('真实 DOM 事件更新对应 Controller，且支持三种调用模式', async () => {
     let firstController!: ClickableController
     let secondController!: ClickableController
     const host = document.body.appendChild(document.createElement('div'))
@@ -47,20 +47,20 @@ describe('clickable', () => {
 
     first.dispatchEvent(new PointerEvent('pointerenter'))
     first.dispatchEvent(new PointerEvent('pointerdown'))
-    expect(val(firstController.hovered)).toBe(true)
+    await expect.poll(() => val(firstController.hovered)).toBe(true)
     expect(val(firstController.pressed)).toBe(true)
     expect(val(secondController.hovered)).toBe(false)
     expect(val(secondController.pressed)).toBe(false)
     expect(second.hasAttribute('data-pressed')).toBe(false)
 
     first.dispatchEvent(new PointerEvent('pointerup'))
-    expect(val(firstController.pressed)).toBe(false)
+    await expect.poll(() => val(firstController.pressed)).toBe(false)
 
     firstController.focus()
     expect(document.activeElement).toBe(first)
-    expect(val(firstController.focused)).toBe(true)
+    await expect.poll(() => val(firstController.focused)).toBe(true)
     firstController.blur()
-    expect(val(firstController.focused)).toBe(false)
+    await expect.poll(() => val(firstController.focused)).toBe(false)
 
     const onClick = vi.fn()
     first.addEventListener('click', onClick)

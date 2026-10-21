@@ -3,21 +3,21 @@ import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { clickable } from './clickable'
 
-describe('clickable controller', () => {
-  test('Controller 暴露 hover、focused、pressed 状态和对应操作', () => {
+describe('clickable controller',  () => {
+  test('Controller 暴露 hover、focused、pressed 状态和对应操作', async () => {
     const [, controller] = usePlugin(clickable)
 
     controller.hover()
     controller.press()
     controller.focus()
-    expect(val(controller.hovered)).toBe(true)
+    await expect.poll(() => val(controller.hovered)).toBe(true)
     expect(val(controller.pressed)).toBe(true)
     expect(val(controller.focused)).toBe(true)
 
     controller.unhover()
     controller.release()
     controller.blur()
-    expect(val(controller.hovered)).toBe(false)
+    await expect.poll(() => val(controller.hovered)).toBe(false)
     expect(val(controller.pressed)).toBe(false)
     expect(val(controller.focused)).toBe(false)
   })

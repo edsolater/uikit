@@ -4,8 +4,7 @@
  * 【职责边界】拥有一次提升的 Anchor、基础位置、尺寸、提升视觉和完整恢复；
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
  */
-import { onCleanup, onMount, type State } from '@/foundation'
-import { createToggle } from '@/hooks'
+import { createState, onMount, type State } from '@/foundation'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
@@ -52,7 +51,7 @@ const topLayerGeometryProperties = [
  */
 export function createTopLayerController(element: HTMLElement): TopLayerController {
 
-  const [active, activeControl] = createToggle(false)
+  const active = createState(false)
   let session: TopLayerSession | undefined
 
   return {
@@ -60,12 +59,12 @@ export function createTopLayerController(element: HTMLElement): TopLayerControll
     enter() {
       if (session) return
       session = startTopLayerSession(element)
-      activeControl.turnOn()
+      active.set(true)
     },
     leave() {
       session?.leave()
       session = undefined
-      activeControl.turnOff()
+      active.set(false)
     },
   }
 }
@@ -159,7 +158,7 @@ function restoreInlineDeclarations(
 }
 
 export const topLayer = createPlugin<undefined, TopLayerController, PivTag>(() => {
-  const [active, activeControl] = createToggle(false)
+  const active = createState(false)
   let elementController: TopLayerController | undefined
   let requested = true
 
@@ -171,27 +170,28 @@ export const topLayer = createPlugin<undefined, TopLayerController, PivTag>(() =
       requested = true
       if (!elementController) return
       elementController.enter()
-      activeControl.turnOn()
+      active.set(true)
     },
     leave() {
       requested = false
-      elementController?.leave()
-      activeControl.turnOff()
+      if (!elementController) return
+      elementController.leave()
+      active.set(false)
     },
   }
 
   return {
     controller,
     plugin: ({ element }) => {
+      const mountedController = createTopLayerController(element)
       onMount(() => {
-        elementController = createTopLayerController(element)
+        elementController = mountedController
         if (requested) controller.enter()
-      })
-
-      onCleanup(() => {
-        elementController?.leave()
-        elementController = undefined
-        activeControl.turnOff()
+        return () => {
+          elementController?.leave()
+          elementController = undefined
+          active.set(false)
+        }
       })
 
       return {

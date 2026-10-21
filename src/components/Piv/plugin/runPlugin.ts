@@ -5,13 +5,10 @@
  * plugin 的返回值只表达 prompt 类声明补丁；第二参数提供的结构工具会改变真实 DOM 附属结构，
  * 但不应改变调用方心智里的 Piv 主体层级。
  */
-import { onCleanup, onMount, type JSXElement, insert } from '@/foundation'
+import { children, createRenderEffect, onCleanup, type JSXElement, insert } from '@/foundation'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
-import {
-  createPluginInstanceSymbol,
-  type Plugin,
-} from '../../plugins/definePlugin'
+import { createPluginInstanceSymbol, type Plugin } from '../../plugins/definePlugin'
 
 /**
  * Piv plugin 是 Piv 的高权限增强入口。
@@ -47,9 +44,7 @@ export function runPlugin<Tag extends PivTag>(
 }
 
 /** Piv 只在消费入口识别由 Plugin 领域定义的高层 Plugin。 */
-function isDefinedPlugin<Tag extends PivTag>(
-  plugin: PivPlugin<Tag>,
-): plugin is Plugin<any, object, Tag> {
+function isDefinedPlugin<Tag extends PivTag>(plugin: PivPlugin<Tag>): plugin is Plugin<any, object, Tag> {
   return typeof plugin === 'function' && createPluginInstanceSymbol in plugin
 }
 
@@ -93,83 +88,78 @@ export interface PivPluginPayload<Tag extends PivTag> {
   wrapOutside: (wrapper: JSXElement) => void
 }
 
-/**
- * 创建当前 plugin 的运行上下文。
- * 上下文绑定到一个具体 Piv DOM，因此所有结构插线都围绕这个 DOM 的当前位置执行。
- */
+type StructurePosition = 'before' | 'after' | 'prepend' | 'append' | 'wrap'
+
+/** 创建当前 DOM 的结构插入工具；位置在提交时确定，内容交给 Solid 解析与更新。 */
 function createPivPluginContext<Tag extends PivTag>(element: PivHTMLElement<Tag>): PivPluginPayload<Tag> {
-  // 多次 after() 应按调用顺序继续向后追加，而不是每次都插到 Piv 紧后方倒序堆叠。
-  let afterTail: Node = element
-  let isMounted = false
-  const pendingOperations: (() => void)[] = []
-  const mountedRanges = new Set<MountedRange>()
+  // 多次 after 按声明顺序追加；其他位置均在提交时读取当前 DOM 关系。
+  let afterTail: ChildNode = element
 
-  // Piv 的 ref 会早于 DOM 挂到父节点执行，before/after/wrap 这类 sibling 操作必须等到 mount 后。
-  onMount(() => {
-    isMounted = true
-    for (const operation of pendingOperations) {
-      operation()
+  const insertContent = (position: StructurePosition, content: JSXElement) => {
+    const range: MountedRange = {
+      start: document.createComment('piv-structure:start'),
+      end: document.createComment('piv-structure:end'),
     }
-    pendingOperations.length = 0
-  })
+    // 单个 DOM 已经解析完成；只有 JSX 来源需要 children 持有条件和子作用域。
+    const resolved = content instanceof Node ? () => [content] : children(() => content).toArray
+    let previousNodes: Node[] = []
 
-  onCleanup(() => {
-    for (const range of mountedRanges) {
-      removeRange(range)
-    }
-    mountedRanges.clear()
-  })
-
-  const runAfterMounted = (operation: () => void) => {
-    if (isMounted) {
-      operation()
-      return
-    }
-
-    pendingOperations.push(operation)
-  }
-
-  const trackRange = (range: MountedRange) => {
-    mountedRanges.add(range)
-    return range
+    createRenderEffect(
+      () => {
+        const nodes: Node[] = []
+        for (const child of resolved()) {
+          // Fragment 插入后会被清空，提交与下一轮 diff 必须记录实际移出的子节点。
+          if (child instanceof DocumentFragment) nodes.push(...child.childNodes)
+          else if (child instanceof Node) nodes.push(child)
+          else if (typeof child === 'string' || typeof child === 'number') {
+            nodes.push(document.createTextNode(String(child)))
+          }
+        }
+        return nodes
+      },
+      (nodes) => {
+        if (!range.end.parentNode) {
+          switch (position) {
+            case 'before':
+            case 'wrap':
+              element.before(range.start, range.end)
+              break
+            case 'after':
+              afterTail.after(range.start, range.end)
+              if (range.end.parentNode) afterTail = range.end
+              break
+            case 'prepend':
+              element.prepend(range.start, range.end)
+              break
+            case 'append':
+              element.append(range.start, range.end)
+              break
+          }
+        }
+        const parent = range.end.parentNode
+        if (!parent) return
+        insert(parent, nodes, range.end, previousNodes)
+        previousNodes = nodes
+        if (position === 'wrap') {
+          const wrapper = nodes.find((node): node is Element => node instanceof Element)
+          if (wrapper) wrapper.moveBefore(element, null)
+        }
+      },
+      // 等整棵初始 DOM 建立后再提交，计算阶段只负责解析内容。
+      { schedule: true },
+    )
+    onCleanup(() => removeRange(range))
   }
 
   return {
     element,
-    insertBefore: (content) => {
-      runAfterMounted(() => {
-        trackRange(mountBefore(element, content))
-      })
-    },
-    insertAfter: (content) => {
-      runAfterMounted(() => {
-        const range = trackRange(mountAfter(afterTail, content))
-        afterTail = range.end
-      })
-    },
-    prependChild: (content) => {
-      runAfterMounted(() => {
-        trackRange(mountPrepend(element, content))
-      })
-    },
-    appendChild: (content) => {
-      runAfterMounted(() => {
-        trackRange(mountAppend(element, content))
-      })
-    },
-    wrapOutside: (wrapper) => {
-      // wrapper 先作为 JSX 挂到 Piv 原位置，再把 Piv 移入 wrapper。
-      // 这样 sibling1/Piv/sibling2 会变成 sibling1/wrapper(Piv)/sibling2。
-      runAfterMounted(() => {
-        const range = trackRange(mountBefore(element, wrapper))
-        const wrapperElement = findFirstElementBetween(range.start, range.end)
-        if (!wrapperElement) return
-        wrapperElement.moveBefore(element, null)
-      })
-    },
+    insertBefore: (content) => insertContent('before', content),
+    insertAfter: (content) => insertContent('after', content),
+    prependChild: (content) => insertContent('prepend', content),
+    appendChild: (content) => insertContent('append', content),
+    wrapOutside: (content) => insertContent('wrap', content),
   }
 }
-
 /**
  * 记录一次 JSX 挂载在真实 DOM 中占据的闭区间。
  * start/end 是内部哨兵节点，用于 cleanup 时精准移除 Solid 插入出来的一组节点。
@@ -180,80 +170,6 @@ type MountedRange = {
 
   /** 挂载范围结束哨兵，Solid insert 会把 JSX 内容插到它前面。 */
   end: Comment
-}
-
-/**
- * 把 JSX 挂载到 reference 前方。
- * 返回范围用于 wrap 查找 wrapper 元素，也用于 cleanup 清理插入内容。
- */
-function mountBefore(reference: Node, content: JSXElement): MountedRange {
-  const range = createMountedRange()
-  const parent = reference.parentNode
-  if (!parent) return range
-  parent.insertBefore(range.start, reference)
-  parent.insertBefore(range.end, reference)
-  mountContent(range, content)
-  return range
-}
-
-/**
- * 把 JSX 挂载到 reference 后方。
- * 这里使用 reference.nextSibling 定位，而不是依赖 ChildNode.after()，便于同时支持 Element 和 Comment 哨兵。
- */
-function mountAfter(reference: Node, content: JSXElement): MountedRange {
-  const range = createMountedRange()
-  const parent = reference.parentNode
-  if (!parent) return range
-  const nextSibling = reference.nextSibling
-  parent.insertBefore(range.start, nextSibling)
-  parent.insertBefore(range.end, nextSibling)
-  mountContent(range, content)
-  return range
-}
-
-/**
- * 把 JSX 挂载到 parent 的第一个 child 之前。
- * 这是 Piv 内部 child 端点插线，不改变 Piv 自身和 sibling 关系。
- */
-function mountPrepend(parent: Element, content: JSXElement): MountedRange {
-  const range = createMountedRange()
-  parent.prepend(range.start, range.end)
-  mountContent(range, content)
-  return range
-}
-
-/**
- * 把 JSX 挂载到 parent 的最后一个 child 之后。
- * 这是 Piv 内部 child 端点插线，不改变 Piv 自身和 sibling 关系。
- */
-function mountAppend(parent: Element, content: JSXElement): MountedRange {
-  const range = createMountedRange()
-  parent.append(range.start, range.end)
-  mountContent(range, content)
-  return range
-}
-
-/**
- * 创建一对挂载哨兵。
- * 哨兵让 JSX 可以是多个 sibling、文本或空内容，而 cleanup 仍然能知道要移除哪一段。
- */
-function createMountedRange(): MountedRange {
-  return {
-    start: document.createComment('piv-structure:start'),
-    end: document.createComment('piv-structure:end'),
-  }
-}
-
-/**
- * 在 range.end 前挂载 Solid JSX。
- * 这里不返回 DOM 节点，因为 JSX 可能展开成文本、多个节点或条件内容。
- * cleanup 由 createPivPluginContext 统一管理，避免延迟挂载后丢失 Piv 生命周期归属。
- */
-function mountContent(range: MountedRange, content: JSXElement) {
-  const parent = range.end.parentNode
-  if (!parent) return
-
-  insert(parent, () => content, range.end)
 }
 
 /**
@@ -271,17 +187,4 @@ function removeRange(range: MountedRange) {
     if (current === range.end) return
     current = next
   }
-}
-
-/**
- * 从一次 JSX 挂载范围里找到第一个 Element。
- * wrap 需要一个真实 Element 作为 wrapper；如果调用方传入文本或空内容，就不会接管 Piv。
- */
-function findFirstElementBetween(start: Node, end: Node): Element | undefined {
-  let current = start.nextSibling
-  while (current && current !== end) {
-    if (current instanceof Element) return current
-    current = current.nextSibling
-  }
-  return undefined
 }

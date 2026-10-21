@@ -1,4 +1,3 @@
-import { flush } from 'solid-js'
 /**
  * 匹配 StateView 的响应式行为验收。
  *
@@ -6,14 +5,14 @@ import { flush } from 'solid-js'
  *
  * 避免从原生 accessor 切换到 StateView 时丢失动态匹配能力。
  */
-import { createRoot } from 'solid-js'
+import { createRoot, flush } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createState, val, type StateView } from '@/foundation'
 import { createIdent } from './ident'
 import { createMatcher } from './matcher'
 
 test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', () => {
-  createRoot((dispose) => {
+  const { source, enabled, equalsOne, differsFromOne, matchesCondition, dispose } = createRoot(dispose => {
     const source = createState(1)
     const enabled = createState(true)
     const matcher = createMatcher(source)
@@ -21,6 +20,9 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
     const differsFromOne = matcher.notMatch(1)
     const matchesCondition = matcher.match((value) => value > 0 && val(enabled))
 
+    return { source, enabled, equalsOne, differsFromOne, matchesCondition, dispose }
+  })
+  try {
     expectTypeOf(equalsOne).toEqualTypeOf<StateView<boolean>>()
     expect(val(equalsOne)).toBe(true)
     expect(val(differsFromOne)).toBe(false)
@@ -39,16 +41,20 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
     source.set(0)
     flush()
     expect(val(matchesCondition)).toBe(false)
+  } finally {
     dispose()
-  })
+  }
 })
 
 test('标识循环的首尾匹配通过 StateView 跟随同一个标识状态', () => {
-  createRoot((dispose) => {
+  const { ident, operator, first, last, dispose } = createRoot(dispose => {
     const [ident, operator] = createIdent<'first' | 'last'>('first', { idents: ['first', 'last'] })
     const first = operator.matchFirst()
     const last = operator.matchLast()
 
+    return { ident, operator, first, last, dispose }
+  })
+  try {
     expectTypeOf(first).toEqualTypeOf<StateView<boolean>>()
     expect(val(first)).toBe(true)
     expect(val(last)).toBe(false)
@@ -61,6 +67,7 @@ test('标识循环的首尾匹配通过 StateView 跟随同一个标识状态', 
     flush()
     expect(val(first)).toBe(true)
     expect(val(last)).toBe(false)
+  } finally {
     dispose()
-  })
+  }
 })

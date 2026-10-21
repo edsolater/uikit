@@ -3,7 +3,7 @@
  *
  * 【职责边界】公开接收判断、放下回调和悬停状态；两类输入在内部归一为 DropContext。
  */
-import { onCleanup, type State } from '@/foundation'
+import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
@@ -35,17 +35,16 @@ export interface DroppableController {
 
 export const droppable = createPlugin<DroppableOptions, DroppableController, PivTag>((options) => {
   const [enabled, enabledControl] = createToggle(!(options?.disabled ?? false))
-  const [hovering, hoveringControl] = createToggle(false)
-  const [acceptable, acceptableControl] = createToggle(false)
+  const hovering = createState(false)
+  const acceptable = createState(false)
 
   const resetHover = () => {
-    hoveringControl.turnOff()
-    acceptableControl.turnOff()
+    hovering.set(false)
+    acceptable.set(false)
   }
   const showHover = (accepted: boolean) => {
-    hoveringControl.turnOn()
-    if (accepted) acceptableControl.turnOn()
-    else acceptableControl.turnOff()
+    hovering.set(true)
+    acceptable.set(accepted)
   }
   const acceptsDrop = (context: DropContext): boolean => (
     enabled.read() && (options?.accepts?.(context) ?? true)

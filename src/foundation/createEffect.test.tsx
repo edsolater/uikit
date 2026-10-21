@@ -1,12 +1,52 @@
-/** 验证挂载回调可继续建立响应式动作，并随组件卸载清理。 */
+/** 验证两阶段动作、挂载执行与卸载清理。 */
 // @vitest-environment jsdom
 import { render } from '@solidjs/web'
-import { createRoot, flush } from 'solid-js'
+import { createRoot, flush, mapArray } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
-import { createEffect, onMount } from './createEffect'
+import { createEffect, onCleanup, onMount } from './createEffect'
 import { createRenderEffect } from './render'
 import { createState } from './createState/state'
 import { val } from './createState/read'
+
+for (const { name, register } of [
+  { name: '作用域清理', register: onCleanup },
+  { name: '动作返回清理', register: (cleanup: () => void) => createRenderEffect(() => 0, () => cleanup) },
+  { name: '挂载返回清理', register: (cleanup: () => void) => onMount(() => cleanup) },
+]) {
+  test(`${name}：动态删除同步释放一次，旁读不订阅删除计算，普通计算仍禁止写入`, () => {
+    const shown = createState(true)
+    const incidental = createState(0)
+    const active = createState(true)
+    const events: string[] = []
+    let passes = 0
+    const scope = createRoot(dispose => {
+      const rows = mapArray(() => {
+        passes++
+        return val(shown) ? [1] : []
+      }, () => {
+        register(() => { events.push('先登记'); val(incidental); active.set(false) })
+        register(() => { events.push('后登记') })
+        return 1
+      })
+      createRenderEffect(rows, () => {})
+      expect(() => active.set(false)).toThrow('REACTIVE_WRITE_IN_OWNED_SCOPE')
+      return { dispose }
+    })
+    try {
+      flush()
+      shown.set(false)
+      flush()
+      expect(events).toEqual(['后登记', '先登记'])
+      expect(val(active)).toBe(false)
+      const deletedPasses = passes
+      incidental.set(1)
+      flush()
+      expect(passes).toBe(deletedPasses)
+      scope.dispose()
+      expect(events).toEqual(['后登记', '先登记'])
+    } finally { scope.dispose() }
+  })
+}
 
 for (const { name, create } of [
   { name: '普通 Effect', create: createEffect },
@@ -106,18 +146,21 @@ test('Render Effect 保留原生第三参数的初次排队控制', () => {
   dispose()
 })
 
-test('挂载后取得 DOM 并建立监听，卸载后监听停止', () => {
+test('挂载后取得 DOM，已建立的响应式动作持续更新并随卸载停止', () => {
   const host = document.createElement('div')
   const content = createState('before')
   const values: string[] = []
   const dispose = render(() => {
     let element!: HTMLDivElement
+    const mounted = createState(false)
+    createEffect([mounted, content], ([ready, value]) => {
+      if (!ready) return
+      values.push(value)
+      element.textContent = value
+    })
     onMount(() => {
       expect(element).toBe(host.firstElementChild)
-      createEffect(content, value => {
-        values.push(value)
-        element.textContent = value
-      })
+      mounted.set(true)
     })
     return <div ref={element} />
   }, host)
@@ -130,4 +173,23 @@ test('挂载后取得 DOM 并建立监听，卸载后监听停止', () => {
   content.set('disposed')
   flush()
   expect(values).toEqual(['before', 'after'])
+})
+
+test('挂载动作不收集旁读依赖，返回的清理在卸载时执行一次', () => {
+  const host = document.createElement('div')
+  const incidental = createState(0)
+  const events: string[] = []
+  const dispose = render(() => {
+    onMount(() => {
+      val(incidental)
+      events.push('挂载')
+      return () => { events.push('清理') }
+    })
+    return <div />
+  }, host)
+  incidental.set(1)
+  flush()
+  expect(events).toEqual(['挂载'])
+  dispose()
+  expect(events).toEqual(['挂载', '清理'])
 })

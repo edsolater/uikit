@@ -13,12 +13,21 @@ beforeEach(() => vi.mocked(getPublicPluginSources).mockReturnValue([]))
 
 describe('配置插件消费', () => {
   test('合并保留单来源身份与前导、后续 undefined 的不同位置', () => {
-    createRoot(dispose => {
+    const { missing, value, merged, trailing, literal, dispose } = createRoot(dispose => {
       const missing = createState<string | undefined>(undefined)
       const value = [['nested']]
       const merged = mergePivProps(document.createElement('div'), {
         class: value, shadowProps: { class: missing },
       })
+      const trailing = mergePivProps(document.createElement('div'), {
+        class: missing, shadowProps: { class: 'low' },
+      })
+      const literal = mergePivProps(document.createElement('div'), {
+        class: undefined, shadowProps: { class: 'low' },
+      })
+      return { missing, value, merged, trailing, literal, dispose }
+    })
+    try {
       expect(merged.class).toBe(value)
       missing.set('prefix')
       flush()
@@ -26,15 +35,11 @@ describe('配置插件消费', () => {
       missing.set(undefined)
       flush()
       expect(merged.class).toBe(value)
-      const trailing = mergePivProps(document.createElement('div'), {
-        class: missing, shadowProps: { class: 'low' },
-      })
       expect(trailing.class).toEqual(['low', undefined])
-      expect(mergePivProps(document.createElement('div'), {
-        class: undefined, shadowProps: { class: 'low' },
-      }).class).toBe('low')
+      expect(literal.class).toBe('low')
+    } finally {
       dispose()
-    })
+    }
   })
 
   test('多来源只展开顶层数组，稀疏洞消失但显式 undefined 和来源读取顺序保留', () => {

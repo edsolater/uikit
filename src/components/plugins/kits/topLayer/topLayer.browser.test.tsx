@@ -14,6 +14,42 @@ afterEach(() => {
 })
 
 describe('topLayer', () => {
+  test('挂载前只记录最后意图，挂载后建立提升资源，卸载释放 DOM 资源', async () => {
+    for (const requested of [false, true]) {
+      let controller!: TopLayerController
+      const host = document.body.appendChild(document.createElement('div'))
+
+      dispose = render(() => {
+        const [plugin, currentController] = usePlugin(topLayer)
+        controller = currentController
+        return <Piv htmlProps={{ 'data-testid': 'source' }} plugin={context => {
+          const props = plugin(context)
+          expect(context.element.isConnected).toBe(false)
+          controller.leave()
+          controller.enter()
+          if (!requested) controller.leave()
+          expect(context.element.hasAttribute('popover')).toBe(false)
+          expect(context.element.classList.contains('top-layer')).toBe(false)
+          expect(context.element.previousElementSibling).toBeNull()
+          expect(document.querySelector('.top-layer-anchor')).toBeNull()
+          return props
+        }} />
+      }, host)
+
+      const source = host.querySelector<HTMLElement>('[data-testid="source"]')!
+      expect(source.matches(':popover-open')).toBe(requested)
+      expect(source.classList.contains('top-layer')).toBe(requested)
+      expect(document.querySelectorAll('.top-layer-anchor')).toHaveLength(requested ? 1 : 0)
+      await expect.poll(() => val(controller.active)).toBe(requested)
+
+      dispose()
+      dispose = undefined
+      expect(source.matches(':popover-open')).toBe(false)
+      expect(document.querySelector('.top-layer-anchor')).toBeNull()
+      host.remove()
+    }
+  })
+
   test('直接安装 Plugin 时在组件挂载期间持续提升', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
@@ -34,7 +70,7 @@ describe('topLayer', () => {
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
   })
 
-  test('Plugin Controller 条件控制同一项提升能力', () => {
+  test('Plugin Controller 条件控制同一项提升能力', async () => {
     let controller!: TopLayerController
     const host = document.body.appendChild(document.createElement('div'))
 
@@ -50,23 +86,23 @@ describe('topLayer', () => {
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    expect(val(controller.active)).toBe(true)
+    await expect.poll(() => val(controller.active)).toBe(true)
 
     controller.leave()
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
-    expect(val(controller.active)).toBe(false)
+    await expect.poll(() => val(controller.active)).toBe(false)
 
     controller.enter()
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    expect(val(controller.active)).toBe(true)
+    await expect.poll(() => val(controller.active)).toBe(true)
   })
 
-  test('命令式提升维护原位置、尺寸、视觉和来源声明', () => {
+  test('命令式提升维护原位置、尺寸、视觉和来源声明', async () => {
     const host = document.body.appendChild(document.createElement('div'))
     host.style.setProperty('--color-line', 'rgb(12 34 56 / 28%)')
     host.style.setProperty('--color-surface-low', 'rgb(240 240 240)')
@@ -90,7 +126,7 @@ describe('topLayer', () => {
     const originalLayoutSize = { width: source.offsetWidth, height: source.offsetHeight }
     const originalVisualStyle = readVisualStyle(source)
     const controller = createTopLayerController(source)
-    expect(val(controller.active)).toBe(false)
+    await expect.poll(() => val(controller.active)).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
 
     controller.enter()
@@ -98,7 +134,7 @@ describe('topLayer', () => {
     const elevatedRect = source.getBoundingClientRect()
 
     expect(source.matches(':popover-open')).toBe(true)
-    expect(val(controller.active)).toBe(true)
+    await expect.poll(() => val(controller.active)).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(getComputedStyle(source).position).toBe('fixed')
     expect(getComputedStyle(source).boxShadow).not.toBe('none')
@@ -133,7 +169,7 @@ describe('topLayer', () => {
       .toBe(getComputedStyle(source).getPropertyValue('corner-top-left-shape'))
 
     controller.leave()
-    expect(val(controller.active)).toBe(false)
+    await expect.poll(() => val(controller.active)).toBe(false)
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()

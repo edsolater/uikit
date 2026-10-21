@@ -63,7 +63,7 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
     }
 
     themeSwitchingStyleRegisterer.register()
-    onCleanup(themeSwitchingStyleRegisterer.unregister)
+    return themeSwitchingStyleRegisterer.unregister
   })
 
   createEffect(themeMode, mode => {

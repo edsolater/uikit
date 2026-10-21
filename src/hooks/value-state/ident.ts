@@ -154,19 +154,19 @@ export function createIdent<T extends PresentIdentValue>(
     idents: [T, ...T[]]
   } & CreateIdentOptions<T>,
 ): [ident: State<T>, identifier: Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>]
-export function createIdent<T extends PresentIdentValue>(
-  initialIdent?: T,
-  options?: CreateIdentOptions<T>,
+export function createIdent(
+  initialIdent?: PresentIdentValue,
+  options?: CreateIdentOptions<PresentIdentValue>,
 ):
-  | [ident: State<T | undefined>, identifier: IdentOperator<T | undefined>]
-  | [ident: State<T>, identifier: Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>] {
-  const ident = createState<T | undefined>(initialIdent)
+  | [ident: State<PresentIdentValue | undefined>, identifier: IdentOperator<PresentIdentValue | undefined>]
+  | [ident: State<PresentIdentValue>, identifier: Omit<IdentOperator<PresentIdentValue>, 'set'> & Omit<CycleIdentOperator<PresentIdentValue>, keyof IdentOperator<PresentIdentValue>>] {
+  const ident = createState<PresentIdentValue | undefined>(initialIdent)
 
-  const set = (nextIdent: T | undefined) => {
+  const set = (nextIdent: PresentIdentValue | undefined) => {
     ident.set(nextIdent)
   }
 
-  const to = (nextIdent: T | undefined) => {
+  const to = (nextIdent: PresentIdentValue | undefined) => {
     set(nextIdent)
   }
 
@@ -182,7 +182,7 @@ export function createIdent<T extends PresentIdentValue>(
     to,
     ...matcher,
     reset,
-  } as IdentOperator<T | undefined> & { to: (ident: T | undefined) => void }
+  } as IdentOperator<PresentIdentValue | undefined> & { to: (ident: PresentIdentValue | undefined) => void }
 
   const idents = options?.idents
 
@@ -191,7 +191,7 @@ export function createIdent<T extends PresentIdentValue>(
   }
 
   const getCurrentIndex = () => {
-    return idents.indexOf(val(ident) as T)
+    return idents.indexOf(val(ident) as PresentIdentValue)
   }
 
   const setByIndex = (index: number) => {
@@ -245,7 +245,7 @@ export function createIdent<T extends PresentIdentValue>(
   }
 
   return [
-    ident as State<T>,
+    ident as State<PresentIdentValue>,
     {
       ...identifier,
       idents,
@@ -258,6 +258,6 @@ export function createIdent<T extends PresentIdentValue>(
       isLast,
       matchFirst,
       matchLast,
-    } as Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>,
-  ] as [State<T>, Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>]
+    } as Omit<IdentOperator<PresentIdentValue>, 'set'> & Omit<CycleIdentOperator<PresentIdentValue>, keyof IdentOperator<PresentIdentValue>>,
+  ] as [State<PresentIdentValue>, Omit<IdentOperator<PresentIdentValue>, 'set'> & Omit<CycleIdentOperator<PresentIdentValue>, keyof IdentOperator<PresentIdentValue>>]
 }

@@ -3,16 +3,16 @@ import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { droppable } from './droppable'
 
-describe('droppable controller', () => {
-  test('提供启用、悬停和接受状态面板', () => {
+describe('droppable controller',  () => {
+  test('提供启用、悬停和接受状态面板', async () => {
     const [, controller] = usePlugin(droppable)
 
     expect(val(controller.enabled)).toBe(true)
     expect(val(controller.hovering)).toBe(false)
     expect(val(controller.acceptable)).toBe(false)
     controller.disable()
-    expect(val(controller.enabled)).toBe(false)
+    await expect.poll(() => val(controller.enabled)).toBe(false)
     controller.enable()
-    expect(val(controller.enabled)).toBe(true)
+    await expect.poll(() => val(controller.enabled)).toBe(true)
   })
 })
