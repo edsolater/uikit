@@ -25,7 +25,7 @@ export interface StateView<T = any> {
   [stateViewBrand]: true
 
   /** 创建一个新的派生 StateView。 */
-  map<U>(toNew: (value: T) => U | StateView<U>): StateView<U>
+  map<U>(toNew: (value: T) => U | StateView<U>): StateView<Awaited<U>>
 }
 
 /**
@@ -64,39 +64,39 @@ export function stateView<R, D, E, U>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D, E>
     & { errorValue: E }
-    & StateViewOptions<Awaited<R> | D | E, U>,
-): StateView<U>
+    & StateViewOptions<Awaited<R | D | E>, U>,
+): StateView<Awaited<U>>
 export function stateView<R, D, U>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D>
-    & StateViewOptions<Awaited<R> | D, U>,
-): StateView<U>
+    & StateViewOptions<Awaited<R | D>, U>,
+): StateView<Awaited<U>>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   options: StateViewOptions<Awaited<R> | undefined, U>,
-): StateView<U>
+): StateView<Awaited<U>>
 export function stateView<R, D, E>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
-): StateView<Awaited<R> | D | E>
+): StateView<Awaited<R | D | E>>
 export function stateView<R, D>(
   sourceOrValue: PromiseLike<R>,
   options: PromiseLikeStateViewOptions<D>,
-): StateView<Awaited<R> | D>
+): StateView<Awaited<R | D>>
 export function stateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R> | undefined>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   map: (value: Awaited<R> | undefined) => U | StateView<U>,
-): StateView<U>
+): StateView<Awaited<U>>
 export function stateView<V>(sourceOrValue: Source<V>): StateView<V>
 export function stateView<V, U>(
   sourceOrValue: Source<V>,
   options: StateViewOptions<V, U>,
-): StateView<U>
+): StateView<Awaited<U>>
 export function stateView<V, U>(
   sourceOrValue: Source<V>,
   map: (value: V) => U | StateView<U>,
-): StateView<U>
+): StateView<Awaited<U>>
 export function stateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
   const options = isFunction(optionsOrMap) ? { map: optionsOrMap } : optionsOrMap
 

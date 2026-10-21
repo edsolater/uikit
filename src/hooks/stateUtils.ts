@@ -18,7 +18,7 @@ import { createReactionFn, val, type Val, type Source, type State, stateView, ty
 export function mapSource<T, U>(
   source: Source<T>,
   mapper: (value: T) => U | StateView<U>,
-): StateView<U> {
+): StateView<Awaited<U>> {
   return stateView(source).map(mapper)
 }
 
@@ -30,11 +30,11 @@ export function derive<T>(source: Source<T>): Source<T>
 export function derive<T, U>(
   source: Source<T>,
   mapper: (value: T) => U | StateView<U>,
-): StateView<U>
+): StateView<Awaited<U>>
 export function derive<T, U>(
   source: Source<T>,
   mapper?: (value: T) => U | StateView<U>,
-): Source<T> | StateView<U> {
+): Source<T> | StateView<Awaited<U>> {
   if (!mapper) return source
   return mapSource(source, mapper)
 }

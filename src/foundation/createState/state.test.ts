@@ -164,3 +164,122 @@ test('thenable 直接交付的嵌套 Promise 在读取与连续更新前完成�
     expect(scope.state.read()).toBe(6)
   } finally { scope.dispose() }
 })
+
+
+test('异步映射直接读取完成值，后续映射只接收完成结果', async () => {
+  const deferred = Promise.withResolvers<number>()
+  const scope = createRoot(dispose => {
+    const source = createState(1)
+    const mapped = source.map(() => deferred.promise)
+    return { mapped, chained: mapped.map(value => value * 2), dispose }
+  })
+  try {
+    expectTypeOf(scope.mapped.read).returns.toEqualTypeOf<number>()
+    deferred.resolve(5)
+    await Promise.resolve()
+    flush()
+    expect(scope.mapped.read()).toBe(5)
+    expect(scope.chained.read()).toBe(10)
+  } finally { scope.dispose() }
+})
+
+
+test('映射函数值保持身份，返回 StateView 随换源退订旧来源', () => {
+  const fn = () => 7
+  let runs = 0
+  const scope = createRoot(dispose => {
+    const chooseFirst = createState(true)
+    const first = createState(1)
+    const second = createState(2)
+    const selected = chooseFirst.map(enabled => {
+      runs += 1
+      return enabled ? first : second
+    })
+    return { chooseFirst, first, second, selected, functionValue: first.map(() => fn), dispose }
+  })
+  try {
+    expect(scope.functionValue.read()).toBe(fn)
+    expect(scope.selected.read()).toBe(1)
+    scope.chooseFirst.set(false)
+    flush()
+    expect(scope.selected.read()).toBe(2)
+    const switchedRuns = runs
+    scope.first.set(9)
+    flush()
+    expect(runs).toBe(switchedRuns)
+    expect(scope.selected.read()).toBe(2)
+    scope.second.set(3)
+    flush()
+    expect(scope.selected.read()).toBe(3)
+    const map = scope.selected.map
+    expect(map(value => value * 2).read()).toBe(6)
+  } finally { scope.dispose() }
+})
+
+test('映射 thenable 的嵌套 Promise 直接读取为完成值', async () => {
+  const inner = Promise.withResolvers<number>()
+  const thenable: PromiseLike<Promise<number>> = {
+    then(onfulfilled) {
+      if (!onfulfilled) return Promise.reject(new Error('测试来源需要完成回调'))
+      return Promise.resolve(onfulfilled(inner.promise))
+    },
+  }
+  const scope = createRoot(dispose => ({ view: createState(0).map(() => thenable), dispose }))
+  try {
+    expectTypeOf(scope.view.read).returns.toEqualTypeOf<number>()
+    inner.resolve(8)
+    await resolve(scope.view.read)
+    expect(scope.view.read()).toBe(8)
+  } finally { scope.dispose() }
+})
+
+test.each(['完成', '拒绝'])('异步映射忽略过期%s，当前错误由读取传播', async outcome => {
+  const stale = Promise.withResolvers<number>()
+  const current = Promise.withResolvers<number>()
+  const failure = Promise.withResolvers<number>()
+  const error = new Error('当前映射失败')
+  const scope = createRoot(dispose => {
+    const source = createState(0)
+    const view = source.map(index => index === 0 ? stale.promise : index === 1 ? current.promise : failure.promise)
+    return { source, view, dispose }
+  })
+  try {
+    scope.source.set(1)
+    flush()
+    current.resolve(6)
+    await resolve(scope.view.read)
+    expect(scope.view.read()).toBe(6)
+    if (outcome === '完成') stale.resolve(99)
+    else stale.reject(new Error('过期映射失败'))
+    await Promise.resolve()
+    flush()
+    expect(scope.view.read()).toBe(6)
+    scope.source.set(2)
+    flush()
+    const settled = resolve(scope.view.read)
+    failure.reject(error)
+    await expect(settled).rejects.toBe(error)
+    expect(scope.view.read).toThrow('当前映射失败')
+  } finally { scope.dispose() }
+})
+
+test('异步映射的作用域释放后停止跟随来源与迟到结果', async () => {
+  const deferred = Promise.withResolvers<number>()
+  const source = createState(0)
+  const actions: number[] = []
+  let runs = 0
+  const dispose = createRoot(dispose => {
+    const view = source.map(() => { runs += 1; return deferred.promise })
+    createEffect(view, value => { actions.push(value) })
+    return dispose
+  })
+  flush()
+  const beforeDispose = runs
+  dispose()
+  deferred.resolve(9)
+  source.set(1)
+  await Promise.resolve()
+  flush()
+  expect(runs).toBe(beforeDispose)
+  expect(actions).toEqual([])
+})

@@ -1,4 +1,4 @@
-import { flush } from 'solid-js'
+import { flush, resolve } from 'solid-js'
 /**
  * 本文件验证 stateView 的统一转换、身份复用、映射和 options 分派。
  * PromiseLike 领域自身只验证结算行为。
@@ -183,4 +183,20 @@ test('stateView 使用 errorValue 与 onRejected 定义 rejected 路径', async 
   expect(observedValues).toEqual([0, 'failed'])
   expect(rejectedReason).toBe(error)
   runner.dispose()
+})
+
+
+test('转换入口的映射选项与函数简写均输出异步完成类型', async () => {
+  const scope = createRoot(dispose => ({
+    option: stateView(createState(2), { map: value => Promise.resolve(value + 1) }),
+    shorthand: stateView(createState(2), value => Promise.resolve(value * 2)),
+    dispose,
+  }))
+  try {
+    expectTypeOf(scope.option).toEqualTypeOf<StateView<number>>()
+    expectTypeOf(scope.shorthand).toEqualTypeOf<StateView<number>>()
+    await Promise.all([resolve(scope.option.read), resolve(scope.shorthand.read)])
+    expect(scope.option.read()).toBe(3)
+    expect(scope.shorthand.read()).toBe(4)
+  } finally { scope.dispose() }
 })

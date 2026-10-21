@@ -15,7 +15,7 @@ Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、`followState`、
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 
-当前接入 Solid 2。State 的来源层以记录保存当前来源结果，避免提前解包 Promise 后丢失后续更新所需的来源；结果层负责计算、异步等待和错误传播。输入类型中的 Promise 统一展开为对外的 `Awaited<T>`；读取、更新函数参数和结果层选项均使用完成类型。写入、派生及 DOM 更新遵循 Solid 的提交时机。更新函数接收完成值，尚未完成的来源通过 Promise 链依次更新，无需使用方自行等待。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
+当前接入 Solid 2。State 的来源层以记录保存当前来源结果，避免提前解包 Promise 后丢失后续更新所需的来源；结果层负责计算、异步等待和错误传播。输入类型中的 Promise 统一展开为对外的 `Awaited<T>`；读取、更新函数参数和结果层选项均使用完成类型。StateView 的 `map` 将映射结果直接交给 Solid 计算，输出 `Awaited<U>`，后继映射接收完成值；返回 StateView 时跟随其当前来源。写入、派生及 DOM 更新遵循 Solid 的提交时机。更新函数接收完成值，尚未完成的来源通过 Promise 链依次更新，无需使用方自行等待。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
 
 `createEffect` 优先直接接收单个 Source，多个独立来源使用 tuple，无法自然表达时才使用 compute 函数。计算阶段读取依赖并产出数据，动作阶段的额外读取不增加依赖，动作返回的清理由 Solid 在下次动作前及卸载时执行。内部 DOM 监听同样采用原生两阶段；Piv 的 style 与 HTML 字段由原生 mapArray 按 key 保留作用域，换源时由同一监听清理后提交，字段退出时释放。
 

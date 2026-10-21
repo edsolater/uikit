@@ -7,6 +7,7 @@
 import { hasProperty, isTrue } from '@edsolater/fnkit'
 import { createMemo } from 'solid-js'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
+import { isPromiseLike } from './promise-like'
 import { createAsyncSignal, type AsyncSignalOptions, type StateSource, type StateUpdate } from './createAsyncSignal'
 
 export const stateBrand = Symbol('State')
@@ -41,14 +42,15 @@ export function isState(value: unknown): value is State {
  * ```
  */
 export function createState<T = unknown>(): State<Awaited<T> | undefined>
-export function createState<T>(initialValue: StateSource<T>, options?: AsyncSignalOptions<Awaited<T>>): State<Awaited<T>>
+export function createState<T>(
+  initialValue: StateSource<T>,
+  options?: AsyncSignalOptions<Awaited<T>>,
+): State<Awaited<T>>
 export function createState(initialValue?: any, options?: AsyncSignalOptions<any>): State<any> {
   const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(initialValue, options)
 
   const thisState: State = {
-    read() {
-      return solidjsAccessor()
-    },
+    read: solidjsAccessor,
     [stateViewBrand]: true,
     [stateBrand]: true,
     [Symbol.dispose]() {
@@ -70,20 +72,16 @@ export function createState(initialValue?: any, options?: AsyncSignalOptions<any
  * 创建缓存当前映射结果的 StateView，映射返回的 StateView 会继续跟随其当前值。
  * 派生视图属于创建时的响应式作用域，作用域释放后停止跟随依赖。
  */
-function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<U> {
-  const read = createMemo(
-    () => {
-      const mapped = mapper(view.read())
-      return { value: isStateView(mapped) ? mapped.read() : mapped }
-    },
-    { equals: (previous, next) => previous.value === next.value },
-  )
-  const mappedView: StateView<U> = {
-    read: () => read().value,
+function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<Awaited<U>> {
+  const read = createMemo<U>(() => {
+    const mapped = mapper(view.read())
+    const result = isStateView(mapped) ? mapped.read() : mapped
+    // 直接交给计算节点等待；标准 Promise 吸收 thenable 的嵌套结果。
+    return isPromiseLike(result) ? Promise.resolve(result) : result
+  })
+  const mappedView: StateView<any> = {
+    read,
     [stateViewBrand]: true,
-    /**
-     * 在当前视图之上继续创建派生视图。
-     */
     map(toNew) {
       return mapStateView(mappedView, toNew)
     },
