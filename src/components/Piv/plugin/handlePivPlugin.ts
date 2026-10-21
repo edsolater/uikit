@@ -10,7 +10,7 @@ import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import { runPlugin, type PivPlugin } from './runPlugin'
 import { getPublicPluginSources } from './publicCapabilities'
-import { mapArray } from '@/foundation/render'
+import { createMemo, mapArray } from '@/foundation/render'
 
 /** plugin 系统允许补充的 props；不包含决定 DOM 结构的 as、if、children。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'if' | 'children'>
@@ -28,14 +28,14 @@ export function mergePivProps<Tag extends PivTag>(
 ): MergedPivProps<Tag> {
   const rawPropsList = [rawProps, ...expandPlugins(getPluginFromShadowProps(rawProps), element)]
   const pluginSources = getPublicPluginSources(rawPropsList)
-  const injected = pluginSources.length
-    ? mapArray(
-      () => pluginSources.map(source => val(source))
-        .filter((plugin): plugin is PivPlugin<Tag> => plugin !== undefined),
-      plugin => expandPlugins([plugin], element),
-    )
-    : () => []
-  return createMergedProps(() => [...rawPropsList, ...injected().flat()])
+  const injected = mapArray(
+    () => pluginSources.map(source => val(source))
+      .filter((plugin): plugin is PivPlugin<Tag> => plugin !== undefined),
+    plugin => expandPlugins([plugin], element),
+  )
+  // 声明结构变化时才重新汇总；字段仍在消费时读取。
+  const declarations = createMemo(() => [...rawPropsList, ...injected().flat()])
+  return createMergedProps(declarations)
 }
 
 /** 插件展开共用同一执行栈，保持原顺序与返回协议。 */
@@ -97,16 +97,16 @@ function mergePivPropValue<Tag extends PivTag>(
   rawPropsList: ShadowProps<Tag>[],
   key: keyof ShadowProps<Tag>,
 ): unknown {
-  let mergedValue: unknown = undefined
+  let firstValue: unknown = undefined
+  let values: unknown[] | undefined
 
-  for (const rawProps of rawPropsList.toReversed()) {
-    const rawValue = rawProps[key]
+  for (let index = rawPropsList.length - 1; index >= 0; index--) {
+    const rawValue = rawPropsList[index][key]
     if (rawValue === undefined) continue
     const value: unknown = val(rawValue)
-    mergedValue = mergedValue === undefined
-      ? value
-      : mergeMayArray(mergedValue, value)
+    if (firstValue === undefined) firstValue = value
+    else (values ??= [firstValue]).push(value)
   }
 
-  return mergedValue
+  return values ? mergeMayArray(...values) : firstValue
 }

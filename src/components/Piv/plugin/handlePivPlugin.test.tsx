@@ -1,15 +1,62 @@
 // @vitest-environment jsdom
-import { flush } from 'solid-js'
+import { createRoot, flush } from 'solid-js'
 import { render } from '@solidjs/web'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { createState, onCleanup, val } from '@/foundation'
 import { derive } from '@/hooks/stateUtils'
 import { Piv } from '../Piv'
 import { getPublicPluginSources } from './publicCapabilities'
+import { mergePivProps } from './handlePivPlugin'
 
 vi.mock('./publicCapabilities', () => ({ getPublicPluginSources: vi.fn(() => []) }))
+beforeEach(() => vi.mocked(getPublicPluginSources).mockReturnValue([]))
 
 describe('配置插件消费', () => {
+  test('合并保留单来源身份与前导、后续 undefined 的不同位置', () => {
+    createRoot(dispose => {
+      const missing = createState<string | undefined>(undefined)
+      const value = [['nested']]
+      const merged = mergePivProps(document.createElement('div'), {
+        class: value, shadowProps: { class: missing },
+      })
+      expect(merged.class).toBe(value)
+      missing.set('prefix')
+      flush()
+      expect(merged.class).toEqual(['prefix', ['nested']])
+      missing.set(undefined)
+      flush()
+      expect(merged.class).toBe(value)
+      const trailing = mergePivProps(document.createElement('div'), {
+        class: missing, shadowProps: { class: 'low' },
+      })
+      expect(trailing.class).toEqual(['low', undefined])
+      expect(mergePivProps(document.createElement('div'), {
+        class: undefined, shadowProps: { class: 'low' },
+      }).class).toBe('low')
+      dispose()
+    })
+  })
+
+  test('多来源只展开顶层数组，稀疏洞消失但显式 undefined 和来源读取顺序保留', () => {
+    createRoot(dispose => {
+      const sparse = new Array<string | undefined>(4)
+      sparse[1] = 'low'
+      sparse[3] = undefined
+      const reads: string[] = []
+      const merged = mergePivProps(document.createElement('div'), {
+        get class() { reads.push('high'); return 'high' },
+        shadowProps: [
+          { get class() { reads.push('low'); return sparse } },
+          { get class() { reads.push('middle'); return [['nested'], 'middle'] } },
+        ],
+      })
+      reads.length = 0
+      expect(merged.class).toEqual(['low', undefined, ['nested'], 'middle', 'high'])
+      expect(reads).toEqual(['low', 'middle', 'high'])
+      dispose()
+    })
+  })
+
   test('完整声明进入原绑定链，同一配置的重复计算不重建实例', () => {
     const host = document.createElement('div')
     const enabled = createState(true)
