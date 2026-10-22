@@ -89,3 +89,24 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
   expect(output).toContain('bundle-combined-spacing: 2px 3px 4px;')
   expect(output.match(/bundle-combined-spacing:/g)).toHaveLength(1)
 })
+
+test('发布包根可以直接登记挂载并撤销样式，区分点击插件与样式', () => {
+  const probe = `
+    const { JSDOM } = await import('jsdom')
+    const { window } = new JSDOM('<!doctype html><style id="css-root"></style>')
+    Object.assign(globalThis, { window, document: window.document })
+    const uikit = await import('@edsolater/uikit')
+    const handle = uikit.rules('.PublishedProbe', [[uikit.key('width'), '17px']])
+    uikit.cssRoot.mount()
+    const mounted = document.querySelector('style').textContent.includes('width: 17px;')
+    handle.remove()
+    uikit.cssRoot.mount()
+    console.log(JSON.stringify({
+      mounted,
+      removed: !uikit.compileCSS().includes('.PublishedProbe'),
+      distinctClickable: typeof uikit.clickable === 'function' && typeof uikit.jssClickable === 'function' && uikit.clickable !== uikit.jssClickable,
+    }))
+  `
+  const output = execFileSync('bun', ['--conditions=browser', '-e', probe], { encoding: 'utf8' })
+  expect(JSON.parse(output)).toEqual({ mounted: true, removed: true, distinctClickable: true })
+})

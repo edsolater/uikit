@@ -22,7 +22,7 @@ export interface InnerTextMixinOptions {
 }
 
 /** Mixin：内部文字。 */
-export const innerText = (options: InnerTextMixinOptions = {}): Declarations => [
+export const jssInnerText = (options: InnerTextMixinOptions = {}): Declarations => [
   [$font, options.font && typeof options.font === 'object' && !isJSSContent(options.font) && 'family' in options.font ? fontValue(options.font) : options.font],
   [$fontSize, options.fontSize],
   [$fontWeight, options.emphasis],
@@ -50,7 +50,7 @@ export interface ContentLayoutMixinOptions {
 }
 
 /** Mixin：内容布局。 */
-export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarations => [
+export const jssContentLayout = (options: ContentLayoutMixinOptions = {}): Declarations => [
   options.mode === 'center'
     ? [[$display, 'inline-flex'], [$alignItems, 'center'], [$justifyContent, 'center']]
     : undefined,

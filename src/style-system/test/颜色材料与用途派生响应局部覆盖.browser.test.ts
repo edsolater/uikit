@@ -1,7 +1,7 @@
 /** 验证 JS 颜色材料独立供色，以及基础 Variable 覆盖沿用途规则传播。 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { color } from '../pieces/mixins/appearance'
+import { jssColor } from '../pieces/mixins/appearance'
 import { compileCSS } from '../css-root'
 import { rule, rules, type RulesHandle } from '../rule'
 import { lineColor, lineStrength } from '../pieces/contents/atoms/color/colors'
@@ -98,7 +98,7 @@ test('不加载 color.css 也能渲染纸色、墨色和中性材料', () => {
 test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后代', () => {
   const background = paperColor
   const content = inkColor
-  handles.push(rules('.sample', [color({ background, content })]))
+  handles.push(rules('.sample', [jssColor({ background, content })]))
   handles.push(rule('.local', background, 'rgb(1, 2, 3)'))
   handles.push(rule('.local', content, 'rgb(4, 5, 6)'))
   mountStyles()
@@ -118,7 +118,7 @@ test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后�
 
 test('根上的纸色与品牌改变后，既有用途色共同更新而不重编译', () => {
   const action = variableFrom(interactiveColor, interactiveColor.content, { address: '.semantic' })
-  handles.push(rules('.semantic', [color({ content: action, background: paperColor })]))
+  handles.push(rules('.semantic', [jssColor({ content: action, background: paperColor })]))
   handles.push(rule('.highlight', 'color', highlightColor))
   handles.push(rule('.canvas', 'background-color', paperColor))
   handles.push(rule('.text', 'color', inkColor))
@@ -174,7 +174,7 @@ test('交互状态的品牌变化仍引用局部品牌变量', async () => {
 })
 
 test('交互用途色的状态派生保留局部纸色与墨色覆盖', async () => {
-  handles.push(rules('.interactive-purpose', [color({ background: surfaceColorInteractive, content: inkColor })]))
+  handles.push(rules('.interactive-purpose', [jssColor({ background: surfaceColorInteractive, content: inkColor })]))
   const style = mountStyles()
   const originalCSS = style.textContent
   const button = document.body.appendChild(document.createElement('button'))
@@ -201,7 +201,7 @@ test('交互用途色的状态派生保留局部纸色与墨色覆盖', async ()
 test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有效渲染', () => {
   const statuses = [goodColor, badColor, warnColor, infoColor]
   const samples = statuses.map((status, index) => {
-    handles.push(rules(`.status-${index}`, [color({ background: status, content: index === 1 ? paperColor : readableContent(status) })]))
+    handles.push(rules(`.status-${index}`, [jssColor({ background: status, content: index === 1 ? paperColor : readableContent(status) })]))
     const sample = document.body.appendChild(document.createElement('div'))
     sample.className = `status-${index}`
     sample.textContent = '状态信息'

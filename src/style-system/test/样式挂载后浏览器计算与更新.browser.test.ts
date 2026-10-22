@@ -16,7 +16,7 @@ import { animationName, animationValue } from '../pieces/contents/atom-creators/
 import { multiply } from '../pieces/contents/functions/calc'
 import { cssFunction } from '../css-function'
 import { colorMix } from '../pieces/contents/functions/color-mix'
-import { contentLayout } from '../pieces/mixins/content'
+import { jssContentLayout } from '../pieces/mixins/content'
 import { durationFast } from '../pieces/contents/atoms/motion'
 import { lineColor } from '../pieces/contents/atoms/color/colors'
 
@@ -210,7 +210,7 @@ test('未登记的主体条件实际叠加、读取来源当前值并退出恢�
 })
 
 test('选择居中布局后内容实际位于容器中心', () => {
-  handles.push(rules('.example', [contentLayout({ mode: 'center' })]))
+  handles.push(rules('.example', [jssContentLayout({ mode: 'center' })]))
   element.style.width = '200px'
   element.style.height = '100px'
   element.textContent = ''

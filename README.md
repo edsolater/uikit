@@ -61,4 +61,4 @@ bun run build-storybook
 包名是 `@edsolater/uikit`。
 
 对外导出从 [src/index.ts](src/index.ts) 进入，组件和 hooks 分别由 `src/components`、`src/hooks` 汇总导出。
-包根同时导出 `cssRoot` 与 `compileCSS`。应用在组件渲染前统一挂载已登记的静态样式，接入方式见 [样式文件写法](docs/style/样式文件写法.md#启动挂载与控制)。
+Style System 也是 UIKit 的一部分，从 `@edsolater/uikit` 取得 `rules`、`key`、Variable、Mixin 和挂载能力；用法见 [样式文件写法](docs/style/样式文件写法.md#登记与挂载)。

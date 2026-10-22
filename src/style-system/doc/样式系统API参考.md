@@ -43,7 +43,7 @@ const change = modification({
   detail: { lightness: 0.3, chroma: current => add(current, 0.3) },
 })
 const merged = adjust(source, change)
-rules('.item', [color({ content: merged })])
+rules('.item', [jssColor({ content: merged })])
 ```
 
 本例把亮度设为0.3、彩度相对增加0.3，其余通道沿用来源。变化本身可以复用，默认、状态、变体及其状态都会加工。数值变化可写成`modify(target, { type: 'expression', detail: current => add(current, 2) })`；完整范围、当前基础、步骤累计与替换见[adjust与modify.md](behaviors/adjust与modify.md)。
@@ -60,7 +60,7 @@ rules('.item', [color({ content: merged })])
 rules(button, [
   [$alignSelf, 'center'],
   declare(surfaceColor, 'green'),
-  color({ background: surfaceColor }),
+  jssColor({ background: surfaceColor }),
 ])
 ```
 

@@ -7,7 +7,7 @@
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { add, multiply } from '../pieces/contents/functions/calc'
-import { color } from '../pieces/mixins/appearance'
+import { jssColor } from '../pieces/mixins/appearance'
 import { modification } from '../modification'
 import { cssRoot } from '../css-root'
 import { declare } from '../operations/declare'
@@ -45,7 +45,7 @@ test('完整规则一次设置四通道，再按顺序应用另一完整规则',
     hue: currentExpression => add(currentExpression, 30),
     alpha: currentExpression => add(currentExpression, -0.2),
   } })
-  handles.push(rules('.Combined', [declare(surface, 'red'), modify(surface, first), modify(surface, second), color({ background: surface })]))
+  handles.push(rules('.Combined', [declare(surface, 'red'), modify(surface, first), modify(surface, second), jssColor({ background: surface })]))
   mount()
   expect(getComputedStyle(element('Combined')).backgroundColor).toBe('oklch(0.5 0.15 150 / 0.6)')
 })
@@ -60,9 +60,9 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
     lightness: currentExpression => add(currentExpression, -0.1),
     chroma: currentExpression => multiply(currentExpression, 0.8), hue: currentExpression => add(currentExpression, 10), alpha: 0.7,
   } })
-  handles.push(rules('.First', [declare(surface, 'oklch(.6 .16 260)'), color({ background: surface })]))
+  handles.push(rules('.First', [declare(surface, 'oklch(.6 .16 260)'), jssColor({ background: surface })]))
   const otherSurface = variableFrom(surface, 'oklch(.4 .1 120)', { address: '.Second' })
-  handles.push(rules('.Second', [color({ background: otherSurface })]))
+  handles.push(rules('.Second', [jssColor({ background: otherSurface })]))
   for (const selector of ['.First', '.Second']) {
     handles.push(rules([selector, '&[data-hover]'], modify(selector === '.Second' ? otherSurface : surface, hoverChange)))
     handles.push(rules([selector, '&[data-active]'], modify(selector === '.Second' ? otherSurface : surface, activeChange)))
@@ -88,7 +88,7 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
 test('另一个普通Variable来源保留完整修改结果', () => {
   const source = configured('source-color', '.Source'), target = configured('target-color', ['.Source', '& .Target'])
   handles.push(rules('.Source', [declare(source, 'red'), modify(source, modification({ type: 'color', detail: { lightness: 0.5, chroma: 0.1, hue: 120 } }))]))
-  handles.push(rules(['.Source', '& .Target'], [declare(target, source), modify(target, modification({ type: 'color', detail: { alpha: 0.6 } })), color({ background: target })]))
+  handles.push(rules(['.Source', '& .Target'], [declare(target, source), modify(target, modification({ type: 'color', detail: { alpha: 0.6 } })), jssColor({ background: target })]))
   mount()
   expect(getComputedStyle(element('Target', element('Source'))).backgroundColor).toBe('oklch(0.5 0.1 120 / 0.6)')
 })
@@ -97,7 +97,7 @@ test('主题源更新和混色实时生效，规则无需重新编译', () => {
   const source = variable('var(--theme-source)', 'theme-source')
   const target = configured('theme-color', '.Theme')
   handles.push(rules('.Theme', [declare(target, colorMix([source, 0.5], 'white')),
-    modify(target, modification({ type: 'color', detail: { alpha: currentExpression => add(currentExpression, -0.1) } })), color({ background: target })]))
+    modify(target, modification({ type: 'color', detail: { alpha: currentExpression => add(currentExpression, -0.1) } })), jssColor({ background: target })]))
   mount()
   const targetElement = element('Theme'), reference = element('Reference')
   reference.style.backgroundColor = 'oklch(from color-mix(in oklab, var(--theme-source) 50%, white) l c h / calc(alpha - .1))'
@@ -111,7 +111,7 @@ test('主题源更新和混色实时生效，规则无需重新编译', () => {
 test('基础来源Variable状态进入与退出仍更新最终颜色', async () => {
   const source = variable('red', { name: 'state-source', address: '.State', states: { hover: 'blue' } })
   const target = configured('state-target', '.State')
-  handles.push(rules('.State', [declare(target, source), modify(target, modification({ type: 'color', detail: { alpha: 0.5 } })), color({ background: target })]))
+  handles.push(rules('.State', [declare(target, source), modify(target, modification({ type: 'color', detail: { alpha: 0.5 } })), jssColor({ background: target })]))
   mount()
   const targetElement = element('State'), reference = element('Reference')
   targetElement.style.width = targetElement.style.height = '20px'

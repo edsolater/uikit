@@ -12,6 +12,6 @@ export * from './components'
 export { isStateView, stateView, stateViewBrand, isStateViewable, isState, createState, stateBrand, val, Loading, Errored, createEffect, onCleanup, onMount, createContext, useContext } from './foundation'
 export type { StateView, StateViewOptions, StateViewable, Source, MayArraySource, State, Val, Context } from './foundation'
 export * from './hooks'
-export { cssRoot, compileCSS } from './style-system'
+export * from './style-system'
 
 
