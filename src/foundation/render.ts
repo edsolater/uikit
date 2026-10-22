@@ -3,7 +3,7 @@
  *
  * 保留底层的子树复用、DOM 提交时机和 props 惰性读取；上层不直接引用 Solid。
  *
- * 本入口不通过包根发布，组件与应用挂载实现按需使用。
+ * 包根选择公开 render、For、Show；其余接入供库内部组件使用。
  */
 import { createMemo, type Merge } from 'solid-js'
 import { isFunction } from '@edsolater/fnkit'

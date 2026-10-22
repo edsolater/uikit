@@ -10,6 +10,49 @@ import { createPivPlugin } from './plugin/helpers'
 import { mergePivProps } from './plugin/handlePivPlugin'
 
 describe('Piv 生命周期', () => {
+
+  test('option 随当前值更新选中项并发布 change，表头原生语义随状态更新', () => {
+    const host = document.createElement('div')
+    const selected = createState('second')
+    const direction = createState<'ascending' | 'descending'>('ascending')
+    const numeric = createState(true)
+    const changes: string[] = []
+    const dispose = render(() => <>
+      <Piv as="select" htmlProps={{ value: selected }}
+        on={{ change: ({ element }) => { const value = (element as HTMLSelectElement).value; changes.push(value); selected.set(value) } }}>
+        <Piv as="option" htmlProps={{ value: 'first', selected: () => val(selected) === 'first' }}>甲</Piv>
+        <Piv as="option" htmlProps={{ value: 'second', selected: () => val(selected) === 'second' }}>乙</Piv>
+      </Piv>
+      <Piv as="table"><Piv as="thead"><Piv as="tr">
+        <Piv as="th" htmlProps={{ scope: 'col', 'aria-sort': direction, 'data-numeric': () => val(numeric) ? 'true' : undefined }}>月租</Piv>
+      </Piv></Piv></Piv>
+    </>, host)
+    flush()
+    const select = host.querySelector('select')!
+    const header = host.querySelector('th')!
+    expect(select.value).toBe('second')
+    expect(select.options[1].selected).toBe(true)
+    expect(header.getAttribute('scope')).toBe('col')
+    selected.set('first')
+    direction.set('descending')
+    numeric.set(false)
+    flush()
+    expect(select.value).toBe('first')
+    expect(select.options[0].selected).toBe(true)
+    expect(select.options[1].selected).toBe(false)
+    expect(header.getAttribute('aria-sort')).toBe('descending')
+    expect(header.hasAttribute('data-numeric')).toBe(false)
+    select.value = 'second'
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+    flush()
+    expect(changes).toEqual(['second'])
+    expect(val(selected)).toBe('second')
+    selected.set('first')
+    flush()
+    expect(select.value).toBe('first')
+    dispose()
+  })
+
   test('插件和 ref 在子节点插入前初始化，mount 后可见子节点且旁读不重建分支', () => {
     const host = document.createElement('div')
     const visible = createState(true)

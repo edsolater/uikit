@@ -96,6 +96,10 @@ test('发布包根可以直接登记挂载并撤销样式，区分点击插件�
     const { window } = new JSDOM('<!doctype html><style id="css-root"></style>')
     Object.assign(globalThis, { window, document: window.document })
     const uikit = await import('@edsolater/uikit')
+    const host = document.createElement('div')
+    const unmount = uikit.render(() => uikit.Show({ when: true, children: () => uikit.For({ each: ['published'], children: text => document.createTextNode(text) }) }), host)
+    const rendered = host.textContent === 'published'
+    unmount()
     const handle = uikit.rules('.PublishedProbe', [[uikit.key('width'), '17px']])
     uikit.cssRoot.mount()
     const mounted = document.querySelector('style').textContent.includes('width: 17px;')
@@ -103,10 +107,11 @@ test('发布包根可以直接登记挂载并撤销样式，区分点击插件�
     uikit.cssRoot.mount()
     console.log(JSON.stringify({
       mounted,
+      rendered,
       removed: !uikit.compileCSS().includes('.PublishedProbe'),
       distinctClickable: typeof uikit.clickable === 'function' && typeof uikit.jssClickable === 'function' && uikit.clickable !== uikit.jssClickable,
     }))
   `
   const output = execFileSync('bun', ['--conditions=browser', '-e', probe], { encoding: 'utf8' })
-  expect(JSON.parse(output)).toEqual({ mounted: true, removed: true, distinctClickable: true })
+  expect(JSON.parse(output)).toEqual({ mounted: true, rendered: true, removed: true, distinctClickable: true })
 })

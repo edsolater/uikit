@@ -11,6 +11,7 @@ export const domMap = {
   input: () => <input /> as PivHTMLElement<'input'>,
   textarea: () => <textarea /> as PivHTMLElement<'textarea'>,
   select: () => <select /> as PivHTMLElement<'select'>,
+  option: () => <option /> as PivHTMLElement<'option'>,
   form: () => <form /> as PivHTMLElement<'form'>,
   section: () => <section /> as PivHTMLElement<'section'>,
   article: () => <article /> as PivHTMLElement<'article'>,

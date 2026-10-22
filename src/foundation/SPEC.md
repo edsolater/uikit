@@ -6,7 +6,7 @@
 - `createEffect.ts`：响应式动作、挂载和清理入口。
 - `render.ts`：内部渲染与 props 接入，保留底层调度、子树复用和惰性读取。
 - `types.ts`：当前渲染运行时的类型桥接；仍沿用 Solid 类型，尚未消除类型契约对运行时的依赖。
-- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；底层渲染接入不从包根发布。
+- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；包根公开 render、For、Show 与 JSX 类型供应用挂载和组合渲染，其余底层渲染接入仍留在内部。
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
