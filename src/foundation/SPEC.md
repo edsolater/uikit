@@ -11,19 +11,19 @@
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
-生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createState/createReactiveRunner.ts`、`createEffect.ts`、`createContext.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
+生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`createContext.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 
 当前接入 Solid 2。State 只有来源 Signal 与结果 Memo 两层：普通值和 Promise 由原生 Signal 保存，函数由原生可写计算跟随依赖；结果 Memo 统一展开 PromiseLike，交给 Solid 等待与传播错误。输入中的 Promise 展开为对外的 `Awaited<T>`，读取与结果层选项使用完成类型。StateView 的 `map` 直接将映射交给 Solid 计算，输出 `Awaited<U>`，后继映射接收完成值；返回 StateView 时跟随其当前来源。写入、派生及 DOM 更新遵循 Solid 的提交时机。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
+
+stateView 的普通值转换直接构造只读视图，不建立可写 State；函数来源使用一个原生 Memo 缓存计算与处理异步，函数结果中的函数保持数据。已有 StateView 原样返回，Promise 转换继续按身份复用；可选 map 在统一取得视图后应用。
 
 `createEffect` 优先直接接收单个 Source，多个独立来源使用 tuple，无法自然表达时才使用 compute 函数。计算阶段读取依赖并产出数据，动作阶段的额外读取不增加依赖，动作返回的清理由 Solid 在下次动作前及卸载时执行。内部 DOM 监听同样采用原生两阶段；Piv 的 style 与 HTML 字段由原生 mapArray 按 key 保留作用域，换源时由同一监听清理后提交，字段退出时释放。
 
 内部 `createRenderEffect` 使用相同三入口与优先级，共用一处来源归一化；默认首次动作同步完成，原有第三个原生选项参数继续透传。Piv 合并层复用 derive 输出稳定的 id Source，持续合并插件与直接声明；消费层直接传入该 Source，由 Effect 自动读取，不使用 getter/val 桥接。
 
 `onMount` 对接原生 `onSettled`，动作中的读取不建立依赖，返回的清理由 Solid 管理。响应式计算应在构建阶段登记，不在挂载动作内创建，也不保存和恢复构建阶段的 owner。三种入口登记的清理统一作为动作执行：原生运行时仍拥有清理的时机、顺序和次数，Foundation 只在执行回调时使用原生无 owner 上下文，避免清理旁读订阅触发销毁的计算，并允许公布资源已释放的状态。普通计算中的 State 写入限制不变；DOM ref 在构建阶段同步登记仍使用局部许可，保留 ref 先于 children/mount 的顺序。
-
-`createReactionFn(compute, action?)` 是需显式释放的独立运行器：原生计算拥有结果与异步传播，可选动作通过普通 Effect 执行；`getResult` 不维护另一份局部结果。`dispose` 停止跟随并保留最后完成结果，动作返回清理仍交给原生生命周期。
 
 Promise 的转换按来源身份缓存，固定 Promise 的计算不归首次消费者所有；原生可写计算只保留读取端，以保存最后完成值及失败。它没有业务响应式上游或外部资源，来源不可达时 WeakMap 与计算图可一同回收。不能把任意派生计算都当作这类固定数据缓存。stateView 的转换选项仅提供 map，不处理等待展示、错误替代或错误通知。
 

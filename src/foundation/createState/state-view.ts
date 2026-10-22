@@ -4,13 +4,10 @@
  * 本文件定义可读取、可映射的状态视图，以及 StateView 对外暴露的统一转换能力。
  */
 import { isFunction, isObject } from '@edsolater/fnkit'
-import { runWithOwner } from 'solid-js'
-import {
-  isPromiseLike,
-  toStateViewFromPromiseLike,
-} from './promise-like'
+import { createMemo, runWithOwner } from 'solid-js'
+import { isPromiseLike, toStateViewFromPromiseLike } from './promise-like'
 import type { Source } from './source'
-import { createState } from './state'
+import { mapStateView } from './state'
 
 export const stateViewBrand = Symbol('StateView')
 
@@ -51,8 +48,7 @@ export function isStateView(value: unknown): value is StateView {
 /**
  * 将可转换的数据格式统一转换成 StateView。
  *
- * 当前支持普通值、StateView 与 PromiseLike；以后新增可转换的数据格式时，
- * 也应在这里识别并分派到对应领域的转换函数。
+ * 普通值直接读取；函数来源由原生计算跟踪依赖与处理异步，已有 StateView 保留身份。
  *
  * PromiseLike 转换为 `StateView<Awaited<V>>`，等待和失败由 Solid 传播。
  *
@@ -68,13 +64,13 @@ export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   map: (value: Awaited<R>) => U | StateView<U>,
 ): StateView<Awaited<U>>
-export function stateView<V>(sourceOrValue: Source<V>): StateView<Awaited<V>>
+export function stateView<V>(sourceOrValue: Source<V> | (() => V)): StateView<Awaited<V>>
 export function stateView<V, U>(
-  sourceOrValue: Source<V>,
+  sourceOrValue: Source<V> | (() => V),
   options: StateViewOptions<Awaited<V>, U>,
 ): StateView<Awaited<U>>
 export function stateView<V, U>(
-  sourceOrValue: Source<V>,
+  sourceOrValue: Source<V> | (() => V),
   map: (value: Awaited<V>) => U | StateView<U>,
 ): StateView<Awaited<U>>
 export function stateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
@@ -90,8 +86,22 @@ export function stateView(sourceOrValue: any, optionsOrMap?: any): StateView<any
       view = runWithOwner(null, () => toStateViewFromPromiseLike(sourceOrValue))
       stateViewCache.set(sourceOrValue, view)
     }
+  } else if (isStateView(sourceOrValue)) {
+    view = sourceOrValue
   } else {
-    view = isStateView(sourceOrValue) ? sourceOrValue : createState(sourceOrValue)
+    const read = isFunction(sourceOrValue)
+      ? createMemo(() => {
+          const value = sourceOrValue()
+          return isPromiseLike(value) ? Promise.resolve(value) : value
+        })
+      : () => sourceOrValue
+    view = {
+      read,
+      [stateViewBrand]: true,
+      map(toNew) {
+        return mapStateView(view, toNew)
+      },
+    }
   }
   return options?.map ? view.map(options.map) : view
 }

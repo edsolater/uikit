@@ -1,11 +1,10 @@
-import { flush, resolve, NotReadyError, until, createRoot, createEffect } from 'solid-js'
+import { flush, resolve, NotReadyError, until, createRoot, createEffect, createMemo } from 'solid-js'
 /**
  * 本文件验证 Val 与 val 的最终读取协议。
  * 它不承担 Source 输入类型和 stateView 转换 options 的测试。
  */
 import { toPromiseResultProxy } from '@edsolater/fnkit'
 import { expect, expectTypeOf, test } from 'vitest'
-import { createReactionFn } from './createReactiveRunner'
 import { val, type Val } from './read'
 import type { Source } from './source'
 import { createState } from './state'
@@ -53,22 +52,25 @@ test('val 在 UIKit 读取边界递归解除内部包装', () => {
   const value = createState(1)
   const nestedSource = createState(value)
   const observedValues: number[] = []
-  const runner = createReactionFn(() => {
-    const currentValue = val(nestedSource)
-    observedValues.push(currentValue)
-    return currentValue
-  })
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => {
+      const currentValue = val(nestedSource)
+      observedValues.push(currentValue)
+      return currentValue
+    }),
+    dispose,
+  }))
 
   expectTypeOf(val(nestedSource)).toEqualTypeOf<number>()
-  expect(runner.getResult()).toBe(1)
+  expect(read()).toBe(1)
   expect(observedValues).toEqual([1])
 
   value.set(2)
   flush()
 
-  expect(runner.getResult()).toBe(2)
+  expect(read()).toBe(2)
   expect(observedValues).toEqual([1, 2])
-  runner.dispose()
+  dispose()
 })
 
 test('val 在 PromiseLike 完成前保留原生 pending', () => {
@@ -83,43 +85,49 @@ test('val 在 PromiseLike 完成前保留原生 pending', () => {
 test('PromiseLike 完成后更新 StateView 并重新运行响应式消费', async () => {
   const deferred = createDeferred<number>()
   const observedValues: (number | undefined)[] = []
-  const runner = createReactionFn(() => {
-    const value = val(deferred.promise)
-    observedValues.push(value)
-    return value
-  })
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => {
+      const value = val(deferred.promise)
+      observedValues.push(value)
+      return value
+    }),
+    dispose,
+  }))
 
-  expect(runner.getResult).toThrow(NotReadyError)
+  expect(read).toThrow(NotReadyError)
   expect(observedValues).toEqual([])
 
   deferred.resolve(8)
-  await until(() => runner.getResult() === 8)
+  await until(() => read() === 8)
 
-  expect(runner.getResult()).toBe(8)
+  expect(read()).toBe(8)
   expect(observedValues).toEqual([8])
-  runner.dispose()
+  dispose()
 })
 
 test('val 的默认值不截获 PromiseLike 等待，完成后响应式更新', async () => {
   const deferred = createDeferred<number>()
   const observedValues: number[] = []
-  const runner = createReactionFn(() => {
-    const value = val(deferred.promise, 0)
-    observedValues.push(value)
-    return value
-  })
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => {
+      const value = val(deferred.promise, 0)
+      observedValues.push(value)
+      return value
+    }),
+    dispose,
+  }))
 
   expectTypeOf(() => val(deferred.promise, 0)).returns.toEqualTypeOf<number>()
   expectTypeOf(() => val(deferred.promise, 'loading')).returns.toEqualTypeOf<number | 'loading'>()
   expect(observedValues).toEqual([])
-  expect(runner.getResult).toThrow(NotReadyError)
+  expect(read).toThrow(NotReadyError)
 
   deferred.resolve(8)
-  await until(() => runner.getResult() === 8)
+  await until(() => read() === 8)
 
-  expect(runner.getResult()).toBe(8)
+  expect(read()).toBe(8)
   expect(observedValues).toEqual([8])
-  runner.dispose()
+  dispose()
 })
 
 test('val 的默认值不截获 PromiseLike 失败', async () => {
@@ -138,52 +146,58 @@ test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
   const sourceFromProxy: Source<number | undefined> = promiseResultProxy
   const source = createState(2)
   const observedValues: number[] = []
-  const runner = createReactionFn(() => {
-    const value = val(promiseResultProxy, 0)
-    observedValues.push(value)
-    return value
-  })
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => {
+      const value = val(promiseResultProxy, 0)
+      observedValues.push(value)
+      return value
+    }),
+    dispose,
+  }))
 
   expect(sourceFromProxy).toBe(promiseResultProxy)
   expectTypeOf(() => val(promiseResultProxy, 0)).returns.toEqualTypeOf<number>()
   expect(observedValues).toEqual([])
-  expect(runner.getResult).toThrow(NotReadyError)
+  expect(read).toThrow(NotReadyError)
 
   deferred.resolve(source)
   await promiseResultProxy
-  await until(() => runner.getResult() === 2)
+  await until(() => read() === 2)
 
-  expect(runner.getResult()).toBe(2)
+  expect(read()).toBe(2)
   expect(observedValues).toEqual([2])
 
   source.set(4)
   flush()
 
-  expect(runner.getResult()).toBe(4)
+  expect(read()).toBe(4)
   expect(observedValues).toEqual([2, 4])
-  runner.dispose()
+  dispose()
 })
 
 test('PromiseResultProxy 作为 PromiseLike Source 自动转换为 StateView', async () => {
   const deferred = createDeferred<{ value: number }>()
   const promiseResultProxy = toPromiseResultProxy(deferred.promise)
   const observedValues: ({ value: number } | undefined)[] = []
-  const runner = createReactionFn(() => {
-    const value = val(promiseResultProxy)
-    observedValues.push(value)
-    return value
-  })
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => {
+      const value = val(promiseResultProxy)
+      observedValues.push(value)
+      return value
+    }),
+    dispose,
+  }))
 
-  expect(runner.getResult).toThrow(NotReadyError)
+  expect(read).toThrow(NotReadyError)
   expect(observedValues).toEqual([])
 
   const object = { value: 8 }
   deferred.resolve(object)
-  await resolve(runner.getResult)
+  await resolve(read)
 
-  expect(runner.getResult()).toBe(object)
+  expect(read()).toBe(object)
   expect(observedValues).toEqual([object])
-  runner.dispose()
+  dispose()
 })
 
 test('显式默认值反复消费完成 Promise，不重新退回等待值', async () => {
@@ -235,18 +249,21 @@ test('完成空值选中的异步默认来源仍由原生计算等待', async ()
   const request = Promise.withResolvers<null>()
   const fallback = Promise.withResolvers<number>()
   let calls = 0
-  const runner = createReactionFn(() => val(request.promise, () => { calls++; return fallback.promise }))
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => val(request.promise, () => { calls++; return fallback.promise })),
+    dispose,
+  }))
   try {
-    expect(runner.getResult).toThrow(NotReadyError)
+    expect(read).toThrow(NotReadyError)
     expect(calls).toBe(0)
     request.resolve(null)
     await request.promise
     await Promise.resolve()
-    expect(runner.getResult).toThrow(NotReadyError)
+    expect(read).toThrow(NotReadyError)
     fallback.resolve(3)
-    await until(() => runner.getResult() === 3)
-    expect(runner.getResult()).toBe(3)
-  } finally { runner.dispose() }
+    await until(() => read() === 3)
+    expect(read()).toBe(3)
+  } finally { dispose() }
 })
 
 test('完成空值使用默认函数时，默认函数自己的错误不被重新捕获执行', async () => {

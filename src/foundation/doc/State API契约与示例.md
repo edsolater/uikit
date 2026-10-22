@@ -83,7 +83,7 @@ handler.set(() => anotherOnClick)
 | --- | --- | --- |
 | `state.map(mapper)` | `count.map(n => n * 2)` | 返回 StateView，内部用 Solid memo 缓存结果 |
 | `.map()` 返回 StateView | `selected.map(id => states[id])` | 跟随所返回视图的当前值 |
-| `stateView(value)` | `stateView(10)` | 将普通值转换成 StateView；函数输入沿用 createState 的初始化处理 |
+| `stateView(value)` | `stateView(10)` | 普通值直接转换成只读 StateView；函数输入由原生计算跟踪依赖并等待异步 |
 | `stateView(view)` | `stateView(count)` | 返回原有视图 |
 | `stateView(source, mapper)` | `stateView(count, n => n * 2)` | 转换来源后派生 |
 | `stateView(source, { map })` | `stateView(count, { map: n => n * 2 })` | 上一行的 options 写法 |
@@ -91,6 +91,8 @@ handler.set(() => anotherOnClick)
 | `derive(source, mapper)` | `derive(count, n => n * 2)` | 当前调用 mapSource，行为相同 |
 | `derive(source)` | `derive(count)` | 原样返回 source，不建立新计算 |
 | `snapshot(tree)` | `snapshot({ count, values: [count] })` | 递归读取对象、数组中的 StateView，返回当前快照；不等待 Promise |
+
+函数来源的结果类型使用 `Awaited<T>`；需要把函数本身作为数据时，写成 `stateView(() => handler)`，返回的 handler 不会再次执行。
 
 已有 State 时，直接使用 `.map()`：
 
@@ -168,10 +170,7 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 | `stateBrand`、`stateViewBrand` | 包根／Foundation | 身份标记，业务通常不需要操作 |
 | `createMemo` | `@/foundation/render`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
 | `createRenderEffect` | Foundation 内部入口，参数形式与 createEffect 相同 | DOM 提交使用，未由包根公开 |
-| `createReactionFn` | Foundation 内部入口：`const runner = createReactionFn(() => work(val(count)))` | 独立响应式运行器，提供 getResult、dispose 和 Symbol.dispose；原生计算负责结果，可选第二回调在 Effect 阶段动作 |
 | `createStateWithPrev()` | 包根／Hooks | 已导出但尚未实现，调用会抛错 |
-
-`createReactionFn(compute, action?)` 需要显式释放；getResult 传播原生 pending/error，释放后保留最后完成结果。
 
 | 类型 | 表达什么 |
 | --- | --- |

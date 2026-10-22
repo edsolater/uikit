@@ -1,6 +1,37 @@
 # Foundation 异步链路改造 Plan
 
-## 当前轮：删除 followState（已完成）
+## 当前轮：删除独立 runner，StateView 直接构造只读能力（已完成）
+
+用户要求先删 createReactionFn，再简化 stateView 借道可写 State 的链路，不新增包装、不转移复杂度。行动前 HEAD 为 a8fe6aa，工作树与 index 均干净；本轮快照与验证保存在 agents/run/readonly-state-view，不改 index、不回退。
+
+### 范围与实施顺序
+
+1. 删除 createReactiveRunner.ts、唯一出口、3 项专属测试及现役文档说明；全 src 未发现生产消费者。read/state-view 的真实行为测试改用所在测试中的原生 createRoot/createMemo/resolve，不另建同形测试 runner。
+2. stateView 保持已存在 StateView 的身份与 Promise 身份缓存。普通非函数值直接构造 read/brand/map 只读对象，不建立 Signal、不生成 setter；函数输入保持现役文档规定的计算语义，用单一原生 Memo 缓存依赖及等待异步，函数结果中的函数仍作为数据。已有 mapStateView 与 options.map/函数 mapper 简写复用，不新增工厂。
+3. 同步 StateView 文档；旧函数输入的类型声明与实际计算结果不一致，需要按已成立运行语义核准最小类型修正，不改变 Source 协议或普通函数数据的其他入口。
+4. 保留 Promise 缓存、无 owner 固定计算、映射换源与作用域清理；不修改 createAsyncSignal、context、mergeProps、cleanupAction。重新按真实需求审查测试，unit/browser/type-check/build 全部验证，最后独立审查实际差异与逻辑链。
+
+### 行动前审查
+
+独立审核与原生复用核对已确认以上边界。函数是计算输入的依据来自现役 API 文档与运行，而非只由函数类型猜测；不得把函数直接作为常量返回。普通值没有写入职责，移除借道 createState 可同时减少两层响应式节点和写入接口。本轮只允许在 stateView 原分支直接构造协议对象，不将同一流程搬到新 helper。
+
+
+### 实施结果与审查依据
+
+- createReactionFn/ReactiveRunner 的实现、Foundation 出口、3 项专属测试及现役文档说明已删除，src 检索无残留。read/state-view 测试在各自用例中直接使用原生 root 与 memo，保留既有依赖、等待、错误、fallback、嵌套来源及身份断言，没有新建测试 runner。
+- stateView 普通值分支直接组装 read/brand/map 对象，普通非函数值只读闭包，不产生响应式节点。函数分支只有一个原生 Memo，thenable 通过标准 Promise.resolve 展开；已有视图、Promise 缓存与末尾可选 map 保持原位置。mapStateView 继续负责真正映射，未移动其实现或修改可写 State。
+- 修正函数输入的既有类型不一致：现有 3 个 Source 重载仅增加 `| (() => V)`，使已经成立的函数计算结果按 Awaited<V> 声明。没有改 Source 本体、增加泛型辅助层或改变函数结果作为数据的行为。
+- 读取链由 stateView → createState → createAsyncSignal → 来源 Signal/结果 Memo → 可写对象，收回 stateView → 普通值读取或原生 Memo → 只读对象。普通非函数值由 2 个响应式节点降到 0，函数计算由 2 个降到 1；setter 与 State 身份不再为只读转换创建。
+
+### 测试与验证结果
+
+- 3 项 runner 专属测试随已删除 API 退出；新增 3 项直接验证受影响契约：普通对象只读及身份、函数缓存/依赖/作用域释放与函数数据、异步与裸 thenable 完成类型/两种 mapper/原始错误传播。没有靠删断言保旧实现。
+- 原生测试迁移首次聚焦通过，随后补齐上述边界及正确缩进，聚焦与类型检查再次通过；没有失败后引入生产补偿。独立审查指出函数语义不能按旧错误类型改为数据，已按现役文档与原运行保留计算语义。
+- 最终 type-check、build、git diff --check 通过；unit 62 文件 482 项、browser 28 文件 211 项全部通过，3 个全量运行 .exit 均为 0。证据为 agents/run/readonly-state-view/types.log、unit.log、browser.log、build.log；浏览器日志的主动拒绝由原生 Errored 显示，未出现未处理测试失败。
+- 相对行动前，生产文件（含出口）净减少 21 行：runner -31、state-view +11、出口 -1。测试净增加 19 行：直接原生作用域迁移及新增必要边界 +83，删除 runner 测试 -64。代码和测试合计净减少 2 行；局部文件增长不等于复杂度转移，改善依据是可写中转链与节点实际退出。
+- index 与行动前二进制快照一致；没有 Git 回退、暂存或提交。仅保留基线与最终验证证据，清理重复的成功聚焦/类型中间日志。本轮未启动额外服务，无待清理原型。独立实际差异、最终 Plan 与证据复核均通过；主 Agent 已核全量日志、runner 零残留与 index 一致。无剩余实施项。
+
+## 前轮：删除 followState（已完成）
 
 用户明确授权删除 followState。原生计算在执行函数时读取来源便能建立动态依赖；现有 createState 计算来源与 map 已承担派生，检索没有 followState 业务调用。因此删除它独立创建运行器、向另一个 State 写值及返回停止函数的接口，不给派生再保留一条复制路径。函数壳本身不会使普通值响应式，本轮不改变 createAsyncSignal 的值/函数分流。
 

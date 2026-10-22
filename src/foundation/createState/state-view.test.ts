@@ -1,13 +1,12 @@
-import { flush, resolve, NotReadyError, createEffect, until } from 'solid-js'
+import { flush, resolve, NotReadyError, createEffect, until, createMemo } from 'solid-js'
 /**
  * 本文件验证 stateView 的统一转换、身份复用、映射和 options 分派。
  * PromiseLike 领域自身只验证结算行为。
  */
 import { expect, expectTypeOf, test } from 'vitest'
 import { createRoot } from 'solid-js'
-import { createReactionFn } from './createReactiveRunner'
 import { val } from './read'
-import { createState } from './state'
+import { createState, isState } from './state'
 import { stateView, type StateView } from './state-view'
 
 interface Deferred<V> {
@@ -112,23 +111,26 @@ test('stateView 在 PromiseLike 转换后应用 options.map', async () => {
     map: (value) => `value:${value}`,
   })
   const observedValues: string[] = []
-  const runner = createReactionFn(() => {
-    const value = val(view)
-    observedValues.push(value)
-    return value
-  })
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => {
+      const value = val(view)
+      observedValues.push(value)
+      return value
+    }),
+    dispose,
+  }))
 
   expectTypeOf(view).toEqualTypeOf<StateView<string>>()
   expect(observedValues).toEqual([])
-  expect(runner.getResult).toThrow(NotReadyError)
+  expect(read).toThrow(NotReadyError)
 
   deferred.resolve(8)
   await deferred.promise
   await Promise.resolve()
 
-  expect(runner.getResult()).toBe('value:8')
+  expect(read()).toBe('value:8')
   expect(observedValues).toEqual(['value:8'])
-  runner.dispose()
+  dispose()
 })
 
 test('转换入口的映射选项与函数简写均输出异步完成类型', async () => {
@@ -182,4 +184,68 @@ test('失败的共享 Promise 在失去全部观察后仍保留原始失败', as
   await expect(outcome).rejects.toBe(error)
   for (let index = 0; index < 3; index++) expect(view.read).toThrow('共享请求失败')
   await expect(resolve(stateView(request.promise).read)).rejects.toBe(error)
+})
+
+test('普通值转换只提供读取与映射，保留原值身份', () => {
+  const value = { count: 2 }
+  const view = stateView(value)
+  expectTypeOf(view).toEqualTypeOf<StateView<{ count: number }>>()
+  expect(view.read()).toBe(value)
+  expect(isState(view)).toBe(false)
+  expect('set' in view).toBe(false)
+  expect(view.map(value => value.count * 2).read()).toBe(4)
+})
+
+test('函数来源缓存计算并跟随依赖，函数结果保持数据，作用域释放停止计算', () => {
+  const source = createState(1)
+  const handler = () => 7
+  let computations = 0
+  const scope = createRoot(dispose => ({
+    view: stateView(() => { computations++; return val(source) * 2 }),
+    handler: stateView(() => handler),
+    dispose,
+  }))
+  try {
+    expectTypeOf(scope.view).toEqualTypeOf<StateView<number>>()
+    expectTypeOf(scope.handler).toEqualTypeOf<StateView<() => number>>()
+    expect(scope.view.read()).toBe(2)
+    expect(scope.view.read()).toBe(2)
+    expect(computations).toBe(1)
+    expect(scope.handler.read()).toBe(handler)
+    source.set(3)
+    flush()
+    expect(scope.view.read()).toBe(6)
+    expect(computations).toBe(2)
+    scope.dispose()
+    source.set(4)
+    flush()
+    expect(computations).toBe(2)
+  } finally { scope.dispose() }
+})
+
+test('函数来源展开 Promise 与嵌套 thenable，映射接收完成类型，失败由原生传播', async () => {
+  const request = Promise.withResolvers<number>()
+  const thenable = { then(deliver: (value: Promise<number>) => unknown) { deliver(request.promise) } }
+  const scope = createRoot(dispose => ({
+    view: stateView(() => thenable),
+    mapped: stateView(() => request.promise, { map(value) {
+      expectTypeOf(value).toEqualTypeOf<number>()
+      return value * 2
+    } }),
+    shorthand: stateView(() => request.promise, value => value + 1),
+    dispose,
+  }))
+  try {
+    expectTypeOf(scope.view).toEqualTypeOf<StateView<number>>()
+    expect(scope.view.read).toThrow(NotReadyError)
+    request.resolve(5)
+    await Promise.all([resolve(scope.view.read), resolve(scope.mapped.read), resolve(scope.shorthand.read)])
+    expect(scope.view.read()).toBe(5)
+    expect(scope.mapped.read()).toBe(10)
+    expect(scope.shorthand.read()).toBe(6)
+  } finally { scope.dispose() }
+  const error = new Error('计算来源失败')
+  const failure = createRoot(dispose => ({ view: stateView(() => Promise.reject<number>(error)), dispose }))
+  try { await expect(resolve(failure.view.read)).rejects.toBe(error) }
+  finally { failure.dispose() }
 })
