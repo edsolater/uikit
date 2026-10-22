@@ -14,18 +14,18 @@ describe('Piv 生命周期', () => {
     const host = document.createElement('div')
     const visible = createState(true)
     const incidental = createState('before')
-    const context = createContext('default')
+    const Context = createContext('default')
     const observations: string[] = []
     const plugin = createPivPlugin(({ element }) => {
       val(incidental)
-      observations.push(`plugin:${element.childElementCount}:${useContext(context)}`)
+      observations.push(`plugin:${element.childElementCount}:${useContext(Context)}`)
       onMount(() => { observations.push(`mount:${element.childElementCount}`) })
       return undefined
     })
-    const dispose = render(() => <context.Provider value="provided"><Piv if={visible} plugin={plugin}
+    const dispose = render(() => <Context value="provided"><Piv if={visible} plugin={plugin}
       ref={element => { val(incidental); observations.push(`ref:${element.childElementCount}`) }}>
       <span>child</span>
-    </Piv></context.Provider>, host)
+    </Piv></Context>, host)
     flush()
     const element = host.firstElementChild
     expect(observations).toEqual(['plugin:0:provided', 'ref:0', 'mount:1'])

@@ -4,14 +4,13 @@
 
 - `createState/`：定义 State、StateView、Source、读取与来源转换，以及内部响应式运行机制。
 - `createEffect.ts`：响应式动作、挂载和清理入口。
-- `createContext.ts`：上下文创建、读取及 Provider 契约。
 - `render.ts`：内部渲染与 props 接入，保留底层调度、子树复用和惰性读取。
 - `types.ts`：当前渲染运行时的类型桥接；仍沿用 Solid 类型，尚未消除类型契约对运行时的依赖。
 - `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；底层渲染接入不从包根发布。
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
-生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`createContext.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
+生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`index.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 
@@ -32,3 +31,7 @@ Promise 的转换按来源身份缓存，固定 Promise 的计算不归首次消
 `Loading` 与 `Errored` 直接使用原生 UI 边界。UI 在读取 State、StateView 或 Promise Source 时由最近的边界处理等待与失败；默认转换不吞错、不以 undefined 伪装已完成。实际异步示例及浏览器回归位于 `createState/AsyncState.example.tsx` 与同名测试。
 
 `val(source, defaultValue)` 先递归读取最终完成值，仅在 null/undefined 时选用默认值；未提供默认值则保留原值，包括 null。函数默认值只在选中时执行，其结果继续按同一读取协议处理。裸 Promise 与 StateView 的等待、失败都原样进入 Solid/UI 边界，val 不建立异步回退计算、捕获错误或切换 owner。
+
+## Context
+
+Foundation 直接导出 Solid 2 的 createContext、useContext 与 Context 类型。Context 自身是 JSX 提供组件，用 `<Context value={value}>` 包围子树；读取最近提供者，离开该子树恢复外层上下文。没有提供者时使用显式默认值，没有可用默认值则抛错；无 owner 的读取同样抛错，不静默返回默认值。KitContextRoot 是无默认值的原生 Context，直接保存节点。宿主 App 每次渲染提供自己的唯一根节点（isRoot: true），根无父级、业务名称或 payload；普通 KitContext 节点在初始化时连接父级。祖先查询遇根结束，未命中返回 undefined，缺少根提供者则由原生抛错。

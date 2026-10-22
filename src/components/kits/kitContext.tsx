@@ -1,96 +1,41 @@
-/**
- * 组件库上下文，提供组件拿到上级组件【可指定】给出的context的payloads之能力。
- * 组件库里有些能力需要通过context在组件树里传递， 这个文件提供了一个通用的KitContext来满足这个需求。
- */
+/** 在组件树中提供具名节点，供后代读取最近或指定祖先的数据。 */
 import type { AnyRecord } from '@edsolater/fnkit'
 import { createContext, useContext } from '@/foundation'
 
 type KitName = string
 
-const KitContextRoot = createContext<KitContextNode | undefined>(undefined, { name: 'KitContext' })
-
-type KitContextNode<Payloads = AnyRecord> = {
+export type KitContextNode = { isRoot: true } | {
+  isRoot: false
   name: KitName
-  parent?: KitContextNode
-  payloads: Payloads
+  parent: KitContextNode
+  payloads: AnyRecord
 }
 
+/** 宿主 App 直接提供自己的根节点；未提供时沿用原生 Context 错误。 */
+export const KitContextRoot = createContext<KitContextNode>()
+
 /**
- * ! 给父组件用
- *
- * 组件库上下文提供者。
- * 组件根context能力
- *
- * 假设此组件为 Card
- * @example
- *
- * function Card(props) {
- * const [title, setTitle] = createState('miss <Title>')
- * return (<KitContext name="Card" payloads={{ setTitle }}>
- *   <Piv class="card">
- *     {props.children}
- *   </Piv>
- * </KitContext>)
- * }
+ * 为后代提供当前组件节点，初始化时连接父级。
+ * 用法与设计见 [KitContext 规范](./kitContext.spec.md)。
  */
-export const KitContext = (props: { children?: any } & Omit<KitContextNode, 'parent'>) => {
+export const KitContext = (props: { children?: any; name: KitName; payloads: AnyRecord }) => {
   const parent = useContext(KitContextRoot)
-  return (
-    <KitContextRoot.Provider value={{ name: props.name, parent, payloads: props.payloads }}>
-      {props.children}
-    </KitContextRoot.Provider>
-  )
+  const node: KitContextNode = { isRoot: false, name: props.name, parent, payloads: props.payloads }
+  return <KitContextRoot value={node}>{props.children}</KitContextRoot>
 }
 
 /**
- * ! 给子组件用
- * 
- * 读取上层 context 的 payloads能力附加到父组件的上下文里。
- *
- * 假设此时父组件是Card，子组件是Title， 那么在Title里调用这个函数，传入自己的信息，就能让Card的上下文里感知到Title的存在。
- * 这样Card就能根据上下文里有没有Title，来决定要不要渲染一个Title的容器，或者给Title容器注入一个不同的样式。
- * @example 在子组件中使用
- * @param query
- *  1.     ：第一种情况：不提供任何信息。直接找最近的。
- *  2. target: 第二种情况：提供组件名字。可以通过这个名字来查询到这个context的payloads。
- *  3. payloadKey：第三种情况：提供一个方法。找到最近的满足这个方法的context的payloads。
- *
- *
- *
- * function Title(props: { children: string }) {
- *  const CardContextPayloads = useKitContext({target: 'Card'})
- *  const text = props.children.trim()
- * 
- *  createEffect(() => props.children.trim(), text => {
- *    card?.setTitle?.(text)
- *    return () => {
- *      card?.setTitle?.(undefined)
- *    }
- *  })
- *  return <Piv>Title here</Piv>
- * }
+ * 读取最近的匹配祖先；遇到 App 根时结束，未找到返回 undefined。
+ * 用法见 [祖先查询](./kitContext.spec.md#祖先查询)。
  */
 export function useKitContext<Payloads = AnyRecord>(
   query?: { target: KitName } | { payloadKey: string },
 ): Payloads | undefined {
-  let node: KitContextNode | undefined = useContext(KitContextRoot)
-
-  // 向上遍历 context 链，找到第一个满足条件的节点。
-  if (query && 'target' in query) {
-    while (node) {
-      if (node.name === query?.target) {
-        break
-      }
-      node = node.parent
+  let node = useContext(KitContextRoot)
+  while (!node.isRoot) {
+    if (!query || ('target' in query ? node.name === query.target : query.payloadKey in node.payloads)) {
+      return node.payloads
     }
-  } else if (query && 'payloadKey' in query) {
-    while (node) {
-      if (query.payloadKey in node.payloads) {
-        break
-      }
-      node = node.parent
-    }
+    node = node.parent
   }
-
-  return node?.payloads
 }

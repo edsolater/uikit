@@ -194,3 +194,39 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 - [stateUtils.ts](../../hooks/stateUtils.ts)：派生与跟随组合。
 - [snapshots.ts](../../hooks/snapshots.ts)：树形快照。
 - [index.ts](../../index.ts)：包根公开出口。
+
+## 组件树上下文
+
+UIKit 的 `createContext`、`useContext` 与 `Context` 类型直接使用 Solid 2 契约。Context 自身就是提供组件：
+
+```tsx
+interface Item { name: string }
+const CurrentItem = createContext<Item>()
+
+function ItemPanel(props: { item: Item }) {
+  return <CurrentItem value={props.item}><Details /></CurrentItem>
+}
+
+// 在后代组件中读取最近提供者。
+function Details() {
+  const currentItem = useContext(CurrentItem)
+  return <span>{currentItem.name}</span>
+}
+```
+
+未设置默认值的 Context 在缺少提供者时抛错。useContext 必须在组件或响应式作用域中读取；无 owner 时即使设置了默认值也抛错。undefined 表示缺少提供值；领域数据的可选结果仍使用 undefined，不主动引入 null。
+
+### KitContext 的应用根
+
+宿主 App 直接提供的节点就是根，没有额外内部 Root。每个应用实例创建自己的节点：
+
+```tsx
+import { KitContextRoot, type KitContextNode } from '@edsolater/uikit'
+
+function App() {
+  const rootNode: KitContextNode = { isRoot: true }
+  return <KitContextRoot value={rootNode}><Content /></KitContextRoot>
+}
+```
+
+普通 KitContext 初始化时连接当前父级并提供具名节点。useKitContext 读取最近或指定祖先的数据，遇根停止，未命中返回 undefined；未提供应用根时沿用原生 Context 错误，不自动创建根。

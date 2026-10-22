@@ -1,6 +1,65 @@
 # Foundation 异步链路改造 Plan
 
-## 当前轮：删除独立 runner，StateView 直接构造只读能力（已完成）
+## 当前轮：宿主 App 直接提供唯一 Context 根（已完成）
+
+用户授权先写 Plan 再实施：App 提供的节点自身就是 Root，不在其下额外创建 Root。上一轮 Context 改动已全部暂存，本轮快照保存在 agents/run/context-app-root；不改 Git index、不回退。
+
+1. KitContextRoot 改为无默认值的原生 Context，公开该提供入口及必要节点类型。宿主每次渲染创建唯一根节点并直接提供，不新增 UIKit App 包装、根工厂或模块单例。根与普通节点采用最小 isRoot union：根只有根身份，普通节点必须有 name、parent、payloads；不伪造根业务名称或空 payload。
+2. 普通 KitContext 初始化时直接读父节点、创建稳定子节点；退出 reader 默认值、函数 value 和读取后的额外调用。useKitContext 只在普通节点中查找，遇根终止，未命中返回 undefined；无提供者保持原生错误，不引入 null、catch、owner 分支或自动根。
+3. Example 应用、Storybook decorator、thumbnail 渲染入口各自直接提供根，保持应用实例隔离。仅 KitContext 真实消费者测试需要根，不为无关组件测试批量包装。原时序、最近祖先、指定查询保持，并验证同一根身份、实例隔离和无 Context 错误。
+4. 修正 kitContext 将读取误称为向父注册的注释，同步现役 SPEC/API 与必要出口。前轮 reader 方案由本轮显式根方案替代，历史保留。
+
+独立约束审核已通过。完整验证 type-check、unit/browser、build、build-storybook，必要实际页面/Story 验收后停止本轮服务；5174 原有服务保留。最后按《代码清洁》检查逻辑链与身份职责，核 index 一致。
+
+### 实施结果与验证
+
+KitContextRoot 直接使用无默认值原生 Context，公开入口与节点类型由 components 收口。宿主提供的 isRoot 节点就是唯一根，普通节点只在初始化时连接父级；reader 默认值和读后调用均已退出。单一 while 在普通节点中完成最近/名称/字段查询，遇根结束。原误称向父注册的注释已改为真实祖先读取职责。
+
+Example、Storybook decorator、thumbnail 在各自渲染实例内创建根，未新增 UIKit App、根工厂、模块单例或自动注册。Storybook preview 为 JSX 改用 .tsx。仅 KitContext 同名测试调整为真实根契约，直接验证根身份、普通父链、未命中、独立应用根及缺少提供者错误；其他组件测试没有新增包装。
+
+生产共净减少 47 行（KitContext -63、Storybook +5、Example +4、thumbnail +6、出口 +1），其中包含移除错误说明；逻辑改善依据是本地 reader 适配退出、完整节点分类和单一祖先查找链，不将删注释行数当作性能结论。本轮没有失败测试或为过测增加补偿。
+
+type-check、unit 63 文件 484 项、browser 28 文件 211 项、build、build-storybook 全部通过，五项运行退出码为 0。独立实际差异审查通过，index 与本轮基线逐字节相同，git diff --check 通过；日志在 agents/run/context-app-root。主 Agent 实际验收记录在 page-smoke.json：5173 Button Example 的 25 个按钮正常，hover/click 成功；6006 normal/filled/disabled 三个 Story 渲染及点击/禁用行为正确，pageerror 均为 0。本轮 5173 PID35712、6006 PID72492 已按命令身份核实后停止，工具 session 已退出；原 5174 PID67992 保留。主动停止导致进程退出 255，不是构建失败。
+
+Storybook 启动存在用户目录 settings/registry 的非致命 EPERM 提示，Story 运行有 Dode trait/shadowProps/plugin/plugins 的 STRICT_READ_UNTRACKED 诊断；本轮未改 Dode，保留实际诊断事实，不扩展为其他领域改造，也不声称运行无警告。独立审查与完整验证均已完成；除保留基线、日志与页面 JSON 证据外，无剩余实施项。
+
+## 前轮：Context 保持 undefined 的空值约定（已完成；reader 方案已被当前轮替代）
+
+用户纠正：不主动使用 null，恢复 undefined 约定。本轮保留上一轮未暂存的原生 Context 改造，不执行 Git 回退；快照与验证保存于 agents/run/context-undefined。
+
+原生 useContext 把 undefined 判为缺少提供值，直接将默认 null 换成 undefined 会让根查询抛错。原生没有 optional 读取入口；因此仅 KitContext 提供读取祖先的函数，函数本身始终存在，结果允许 undefined。创建稳定节点后提供 () => node，父关系初始化只读取一次，parent 恢复可选。该本地适配替代上一轮 null 父链，不新增 helper、sentinel、catch、owner 分支或全局兼容壳。
+
+先修改 KitContext，撤销本轮 Context 测试和文档中主动引入的 null；公共 API 示例使用必需的原生 Context，不将 reader 推广成通用要求。保留根、最近祖先与目标查询测试、Piv 时序、原生缺提供者及无 owner 错误断言。val 对输入 null 的已有兼容契约与其他领域不改。
+
+独立前置与原生能力审查通过。修改后完整运行 type-check、unit/browser、build，检查差异及 index，按代码清洁标准复核是否只有必要的本地表示适配。
+
+### 实施与验证
+
+KitContext 的父节点恢复可选 undefined，读取链为原生 useContext → 调用祖先读取函数 → 既有祖先查询；节点在提供者初始化时创建一次，读取不会重造节点。新增一层函数调用是表示可选领域结果的局部适配，没有恢复 Foundation 包装、错误兜底或哨兵。原生 Context 仍直接从 UIKit 入口导出。
+
+撤销上一轮 Context 领域新增的 null 默认值测试和文档建议，公共例子改为有提供者的必需 Context；既有 KitContext 根/最近/目标祖先查询与 Piv 时序断言全部保留，未修改 val 的 null 输入兼容。原生缺提供者和无 owner 错误仍由原生负责。
+
+type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 28 文件 211 项全部通过，四个运行退出码为 0。本轮无失败测试、额外服务或临时原型，index 与新轮基线逐字节相同，上一轮其他有效改动保留。验证证据位于 agents/run/context-undefined；独立实际差异与验证证据复核通过，无剩余实施项。
+
+## 前轮：Context 直接接入 Solid 2（已完成；空值约定已被当前轮替代）
+
+用户授权将 Context 改为原生能力。行动前 HEAD 为 ceb4bf9，index 与工作树干净；基线及验证放在 agents/run/native-context，不暂存、不回退。
+
+先删除 Foundation createContext 的自定义对象、Provider 字段、哨兵与无 owner 默认值分支；index 直接导出 Solid createContext/useContext/Context，退出无生产消费者的 ContextOptions。KitContext 使用原生组件自身提供上下文，根以 null 明确无父节点，parent 与遍历节点统一 Node|null。查询未命中仍返回 undefined，不改为兜底运行时错误。
+
+原生无默认值且缺提供者时抛错；无 owner 即使存在默认值也抛错。需要可空上下文时显式传 null。这是采用原生契约的行为变化，不为旧 undefined 策略另加兼容层。迁移 Piv JSX 为大写 Context 绑定并保留插件、ref、mount 时序断言。移除原同名测试后，将入口契约验证放到 foundation/test 中文领域测试；用必要 KitContext 测试确认根查询、最近与指定祖先查询。同步现役 SPEC/API 和 Solid 引用边界，历史记录保留。
+
+独立约束与原生源码审核已通过。实现后检查是否仍有对象重建、双入口或错误补偿；运行 type-check、全部 unit/browser、build 与差异检查，核对 index 快照。State/异步/映射机制不在本轮范围。
+
+### 实施结果与验证
+
+已删除 61 行 Context 兼容实现及 ContextOptions；生产净减少 60 行（含出口），没有迁移哨兵、owner 探查或对象转换到其他文件。读取链从 UIKit 包装对象 → owner 判断 → 重造 Solid Context → 哨兵还原，缩短为原生 useContext；KitContext 只保留具名祖先查询，null 直接表达父链终点。
+
+原 Context 相邻 2 项测试迁为领域 2 项测试，保留嵌套最近值及外层恢复断言，并按原生契约明确默认值、null、缺提供者及无 owner 行为；新增 1 项 KitContext 根与祖先查询回归。Piv 原插件/ref/mount 时序断言未改。独立审查通过生产与测试差异；发现 API 示例读取位置不明确，已改为 Details 组件内读取、ItemPanel 通过 props 提供数据，没有额外 API。
+
+type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 28 文件 211 项全部通过，四个 .exit 均为 0。日志保存在 agents/run/native-context。本轮没有失败测试或生产补偿；浏览器主动错误场景仍由原生边界展示。index 与行动前快照逐字节一致，没有暂存、提交或回退；未启动额外服务，无临时原型待清理。最终独立实际差异、Plan 与验证证据复核均通过，无剩余实施项。
+
+## 前轮：删除独立 runner，StateView 直接构造只读能力（已完成）
 
 用户要求先删 createReactionFn，再简化 stateView 借道可写 State 的链路，不新增包装、不转移复杂度。行动前 HEAD 为 a8fe6aa，工作树与 index 均干净；本轮快照与验证保存在 agents/run/readonly-state-view，不改 index、不回退。
 

@@ -4,8 +4,12 @@
  * 组件库发布入口始终是 src/index.ts。
  */
 import { render } from '@/foundation'
+import { KitContextRoot, type KitContextNode } from '@/components/kits/kitContext'
 import App from './pages/ExampleDashboard'
 import { cssRoot } from '@/style-system'
 
 cssRoot.mount()
-render(() => <App />, document.getElementById('root')!)
+render(() => {
+  const rootNode: KitContextNode = { isRoot: true }
+  return <KitContextRoot value={rootNode}><App /></KitContextRoot>
+}, document.getElementById('root')!)

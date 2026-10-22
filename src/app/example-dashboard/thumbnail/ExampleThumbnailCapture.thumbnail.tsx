@@ -17,6 +17,7 @@ import { ColorDashboardExample } from '@/css/ColorDashboardExample'
 import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleThumbnailCapture.css'
 import { cssRoot } from '@/style-system'
+import { KitContextRoot, type KitContextNode } from '@/components/kits/kitContext'
 
 let dispose: (() => void) | undefined
 const style = document.createElement('style')
@@ -32,7 +33,12 @@ const waitForLayout = () => new Promise(resolve => requestAnimationFrame(() => r
 async function captureThumbnail(name: string, Content: Component, prepare?: () => Promise<void>) {
   await page.viewport(960, 540)
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <div class="example-thumbnail-capture-stage"><Content /></div>, host)
+  dispose = render(() => {
+    const rootNode: KitContextNode = { isRoot: true }
+    return <KitContextRoot value={rootNode}>
+      <div class="example-thumbnail-capture-stage"><Content /></div>
+    </KitContextRoot>
+  }, host)
   await document.fonts.ready
   await waitForLayout()
   await prepare?.()
