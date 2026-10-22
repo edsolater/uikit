@@ -32,12 +32,15 @@ describe('ExampleDashboard', () => {
     dispose = render(() => <ExampleDashboard />, host)
 
     expect(document.querySelector('.example-home h1')?.textContent).toBe('Examples')
-    expect(document.querySelectorAll('.example-link')).toHaveLength(11)
-    expect(document.querySelectorAll('.example-link h2')).toHaveLength(11)
-    expect(document.querySelectorAll('.example-link p')).toHaveLength(11)
-    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(11)
-    expect(document.querySelectorAll('.example-link[data-thumbnail]')).toHaveLength(11)
-    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(11)
+    expect(document.querySelectorAll('.example-link')).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link h2')).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link p')).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link[data-thumbnail]')).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(12)
+    const asyncEntry = document.querySelector<HTMLAnchorElement>('a[href="/examples/async-state"]')!
+    expect(asyncEntry.querySelector('h2')?.textContent).toBe('异步状态')
+    expect(asyncEntry.querySelector('p')?.textContent).toBe('由界面处理请求等待、完成与失败。')
 
     const thumbnail = document.querySelector<HTMLElement>('.example-link-thumbnail')!
     const copy = document.querySelector<HTMLElement>('.example-link-copy')!

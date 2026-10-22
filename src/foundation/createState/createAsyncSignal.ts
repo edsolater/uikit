@@ -5,7 +5,6 @@ import {
   type SignalOptions,
   type MemoOptions,
   type SourceAccessor,
-  untrack,
 } from 'solid-js'
 import { isPromiseLike } from './promise-like'
 
@@ -13,15 +12,10 @@ export type AsyncValue<T> = T | PromiseLike<T>
 
 export type StateSource<T> = AsyncValue<T> | (() => AsyncValue<T>)
 
-/** 保存当前来源结果，待完成的 Promise 可继续接续更新。 */
-interface SourceResult<T> {
-  result: AsyncValue<T>
-}
-
-/** 更新函数始终接收完成值；异步来源通过 Promise 链依次转换。 */
+/** 相对更新以已有当前值为前提；已有 Promise 的等待由基础层接续。 */
 export type StateUpdate<T> = AsyncValue<T> | ((previous: T) => AsyncValue<T>)
 
-export type AsyncSignalSetter<T> = (value: StateUpdate<T>) => AsyncValue<T>
+export type AsyncSignalSetter<T> = (value: StateUpdate<T>) => void
 
 export interface AsyncSignalOptions<T> {
   /** 对外状态的调试名称；内部来源名称由此派生。 */
@@ -35,7 +29,7 @@ export interface AsyncSignalOptions<T> {
   equals?: MemoOptions<T>['equals']
 
   /**
-   * 首次读取或写入时开始计算。
+   * 首次读取时开始计算，写入遵循 Solid 的原生时序。
    * 无订阅时结果层可释放，写入来源仍保留；再次读取会重新计算结果。
    */
   lazy?: MemoOptions<T>['lazy']
@@ -72,44 +66,31 @@ export function createAsyncSignal<T>(
   options?: AsyncSignalOptions<T>,
 ): [SourceAccessor<T>, AsyncSignalSetter<T>] {
   const { ownedWrite, ...resultOptions } = options ?? {}
-  const sourceOptions: SignalOptions<SourceResult<T>> & MemoOptions<SourceResult<T>> = {
+
+  // 来源层保留原生可写计算与依赖关系，相等比较统一由结果层负责。
+  const sourceOptions = {
     name: options?.name === undefined ? undefined : `${options.name}:source`,
-    equals: false,
+    equals: false as const,
     lazy: options?.lazy,
     ownedWrite,
   }
-
-  // 来源层保存当前结果，更新函数才能等待 Promise 并接着转换完成值。
-  // 普通输入直接保存；计算来源交给 Solid 跟踪依赖及按需执行。
   const [readSource, setSource] = isFunction(initialSource)
-    ? createSignal<SourceResult<T>>(() => captureResult(initialSource()), sourceOptions)
-    : createSignal<SourceResult<T>>(captureResult(initialSource), sourceOptions)
+    ? createSignal<AsyncValue<T>>(initialSource, sourceOptions)
+    : createSignal<AsyncValue<T>>(initialSource as Exclude<AsyncValue<T>, Function>, sourceOptions)
 
-  // 后续写入可能直接保存 Promise，此计算将其交给 Solid 解包。
-  // equals、loadingValue 等选项统一针对外界读取的结果 T。
-  const accessor = createMemo<T>(() => readSource().result, resultOptions)
+  // 原生 setter 可以保存 Promise；结果层统一展开 thenable，交给 Solid 等待和传播错误。
+  const accessor = createMemo<T>(() => {
+    const source = readSource()
+    return isPromiseLike(source) ? Promise.resolve(source) : source
+  }, resultOptions)
 
   const setter: AsyncSignalSetter<T> = update => {
-    // 首次写入也会使用状态；先初始化 lazy 来源，避免首次派生覆盖这次写入。
-    untrack(readSource)
-    return setSource(previous => {
-      if (!isFunction(update)) return captureResult(update)
-      // 使用原生 setter 的待提交来源，连续更新不会重复读取旧的已提交结果。
-      const result = previous.result
-      const next = isPromiseLike(result) ? result.then(update) : update(result)
-      // 这里只转换值，不在 Promise 完成后另行写状态；等待和过期结果仍交给结果层管理。
-      return captureResult(next)
-    }).result
+    setSource(previous => {
+      if (!isFunction(update)) return update
+      // 只接续已经存在的异步值，不保存尚无初始结果时的更新命令。
+      return isPromiseLike(previous) ? Promise.resolve(previous).then(update) : update(previous)
+    })
   }
 
   return [accessor, setter]
-}
-
-/** 保存来源结果，并观察被替换而未进入结果层的 Promise 拒绝。 */
-function captureResult<T>(result: AsyncValue<T>): SourceResult<T> {
-  if (!isPromiseLike(result)) return { result }
-  // 标准 Promise 吸收 thenable 的嵌套结果，等待与失败传播仍由 Solid 负责。
-  const promise = Promise.resolve(result)
-  promise.then(undefined, () => {})
-  return { result: promise }
 }

@@ -1,4 +1,4 @@
-import { createEffect, createRoot, createSignal, flush, resolve, until } from 'solid-js'
+import { createEffect, createRoot, createSignal, flush, resolve, until, getOwner, runWithOwner } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createAsyncSignal } from './createAsyncSignal'
 
@@ -90,44 +90,6 @@ test('异步失败传播给消费者，直接赋值可以恢复', async () => {
   } finally { scope.dispose() }
 })
 
-test('同批次被覆盖的 Promise 及更新链拒绝后不产生全局未处理错误', async () => {
-  const deferred = Promise.withResolvers<number>()
-  const scope = createRoot(dispose => ({ state: createAsyncSignal(0), dispose }))
-  try {
-    scope.state[1](deferred.promise)
-    scope.state[1](value => value + 1)
-    scope.state[1](2)
-    flush()
-    deferred.reject(new Error('已被替换的请求'))
-    await new Promise(finish => setTimeout(finish, 0))
-    expect(scope.state[0]()).toBe(2)
-  } finally { scope.dispose() }
-})
-
-test('lazy 初始 Promise 被首次写入替换后，拒绝也不会成为全局未处理错误', async () => {
-  const deferred = Promise.withResolvers<number>()
-  const scope = createRoot(dispose => ({ state: createAsyncSignal(deferred.promise, { lazy: true }), dispose }))
-  try {
-    scope.state[1](2)
-    flush()
-    deferred.reject(new Error('已被替换的初始请求'))
-    await new Promise(finish => setTimeout(finish, 0))
-    expect(scope.state[0]()).toBe(2)
-  } finally { scope.dispose() }
-})
-
-test('lazy 接收现成 Promise 后即使不读不写，其拒绝也受到观察', async () => {
-  const deferred = Promise.withResolvers<number>()
-  const scope = createRoot(dispose => ({ state: createAsyncSignal(deferred.promise, { lazy: true }), dispose }))
-  try {
-    deferred.reject(new Error('未被读取的请求'))
-    await new Promise(finish => setTimeout(finish, 0))
-    scope.state[1](2)
-    flush()
-    expect(scope.state[0]()).toBe(2)
-  } finally { scope.dispose() }
-})
-
 test('unobserved 只在对外结果失去订阅时通知一次，lazy 重新读取保留写入来源', () => {
   let unobserved = 0
   const scope = createRoot(dispose => ({
@@ -177,7 +139,7 @@ test('equals:false 不被来源层截断，自定义相等判断只收到完成�
   } finally { compared.dispose() }
 })
 
-test('lazy 在首次读取或写入时初始化，首次计算不覆盖写入', () => {
+test('lazy 首次读取建立当前值，之后写入保留结果', () => {
   let initialized = 0
   const scope = createRoot(dispose => ({
     direct: createAsyncSignal(() => { initialized++; return 1 }, { lazy: true }),
@@ -186,10 +148,12 @@ test('lazy 在首次读取或写入时初始化，首次计算不覆盖写入', 
   }))
   try {
     expect(initialized).toBe(0)
+    expect(scope.direct[0]()).toBe(1)
     scope.direct[1](5)
     flush()
     expect(scope.direct[0]()).toBe(5)
     expect(initialized).toBe(1)
+    expect(scope.updated[0]()).toBe(2)
     scope.updated[1](value => value + 1)
     flush()
     expect(scope.updated[0]()).toBe(3)
@@ -237,7 +201,6 @@ test('泛型与函数值保留正确类型，函数数据不被当作来源再�
   } finally { scope.dispose() }
 })
 
-
 test('底层入口的显式异步泛型与泛型转发读取完成类型', async () => {
   function build<T>(source: T) { return createAsyncSignal(source) }
   const scope = createRoot(dispose => ({
@@ -258,5 +221,26 @@ test('底层入口的显式异步泛型与泛型转发读取完成类型', async
     expect(scope.explicit[0]()).toBe(3)
     expect(scope.generic[0]()).toBe(3)
     expect(scope.mixed[0]()).toBe(4)
+  } finally { scope.dispose() }
+})
+
+test('计算作用域仍拒绝写入', () => {
+  const scope = createRoot(dispose => ({ state: createAsyncSignal(() => 1), owner: getOwner(), dispose }))
+  try {
+    expect(() => runWithOwner(scope.owner, () => scope.state[1](7))).toThrow('REACTIVE_WRITE_IN_OWNED_SCOPE')
+  } finally { scope.dispose() }
+})
+test('上游变更即使产生同一派生值，也撤销手动覆盖', () => {
+  const scope = createRoot(dispose => {
+    const [read, write] = createSignal(1)
+    return { state: createAsyncSignal(() => { read(); return 2 }), write, dispose }
+  })
+  try {
+    scope.state[1](9)
+    flush()
+    expect(scope.state[0]()).toBe(9)
+    scope.write(2)
+    flush()
+    expect(scope.state[0]()).toBe(2)
   } finally { scope.dispose() }
 })

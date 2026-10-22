@@ -1,63 +1,31 @@
-import { createRenderEffect, createRoot, runWithOwner } from 'solid-js'
+/** 独立计算与可选动作的生命周期；结果读取直接接入 Solid 的异步计算。 */
+import { createMemo, createRoot, runWithOwner } from 'solid-js'
+import { createEffect } from '../createEffect'
+import { isPromiseLike } from './promise-like'
 
 export interface ReactiveRunner<T = void> {
-  /**
-   * 获取最近一次 action 的返回结果。
-   *
-   * createReactiveRunner 创建时会同步运行一次，
-   * 所以创建后通常可以立即读取。
-   */
+  /** 读取当前完成值；pending 和失败由 Solid 传播。 */
   getResult(): T
-
-  /**
-   * 释放这段响应式运行。
-   *
-   * 释放后：
-   * - 后续依赖变化不会再触发 action
-   * - getResult() 仍返回最后一次结果
-   * - 重复调用 dispose() 无副作用
-   */
+  /** 停止后续跟随，保留最后完成的结果；可以重复释放。 */
   dispose(): void
-
-  /** JS 显式资源释放协议 */
   [Symbol.dispose](): void
 }
 
-/**
- * 创建一个可手动释放的响应式 runner。
- * 只有：
- * - 脱离当前 owner 也能独立活着
- * - 或 显式拿到 dispose / getResult
- * 那它才有存在价值
- * ---
- * - 创建时同步运行一次
- * - action 中同步读取到的响应式值会成为依赖
- * - 依赖变化后重新运行 action
- * - dispose 后停止后续运行
- */
-export function createReactionFn<T>(action: () => T): ReactiveRunner<T> {
-  let result!: T
-  let disposed = false
-
-  const disposeRoot = runWithOwner(null, () => createRoot((dispose) => {
-    // runner 保留同步首跑与追踪整个 action 的独立契约；它不是两阶段 createEffect 的替代入口。
-    createRenderEffect(() => {
-      result = action()
-    }, () => {})
-
-    return dispose
+/** 计算跟踪依赖，动作在提交后执行；独立 runner 需要显式释放。 */
+export function createReactionFn<T>(
+  compute: () => T,
+  action?: (value: Awaited<T>) => void | (() => void),
+): ReactiveRunner<Awaited<T>>
+export function createReactionFn<T>(
+  compute: () => T,
+  action?: (value: T) => void | (() => void),
+): ReactiveRunner<T> {
+  return runWithOwner(null, () => createRoot(dispose => {
+    const read = createMemo<T>(() => {
+      const result = compute()
+      return isPromiseLike(result) ? Promise.resolve(result) : result
+    })
+    if (action) createEffect(read, action)
+    return { getResult: read, dispose, [Symbol.dispose]: dispose }
   }))
-
-  const dispose = (): void => {
-    if (disposed) return
-
-    disposed = true
-    disposeRoot()
-  }
-
-  return {
-    getResult: () => result,
-    dispose,
-    [Symbol.dispose]: dispose,
-  }
 }

@@ -193,3 +193,40 @@ test('挂载动作不收集旁读依赖，返回的清理在卸载时执行一�
   dispose()
   expect(events).toEqual(['挂载', '清理'])
 })
+
+
+test('Effect 的计算、单来源与 tuple 一致接收异步完成类型', async () => {
+  const request = Promise.withResolvers<number>()
+  const observations: number[][] = [[], [], []]
+  const stop = createRoot(dispose => {
+    createEffect<Promise<number>>(() => request.promise, value => {
+      expectTypeOf(value).toEqualTypeOf<number>()
+      observations[0].push(value)
+    })
+    createEffect(request.promise, value => {
+      expectTypeOf(value).toEqualTypeOf<number>()
+      observations[1].push(value)
+    })
+    createEffect([request.promise, '标识'], ([value, label]) => {
+      expectTypeOf(value).toEqualTypeOf<number>()
+      expect(label).toBe('标识')
+      observations[2].push(value)
+    })
+    return dispose
+  })
+  try {
+    expect(observations).toEqual([[], [], []])
+    request.resolve(7)
+    await expect.poll(() => observations).toEqual([[7], [7], [7]])
+  } finally { stop() }
+})
+
+test('Effect 计算归一裸 thenable 交付的内层 Promise', async () => {
+  const thenable = { then(resolve: (value: Promise<number>) => unknown) { resolve(Promise.resolve(5)) } }
+  const values: unknown[] = []
+  const stop = createRoot(dispose => {
+    createEffect(() => thenable, value => { values.push(value) })
+    return dispose
+  })
+  try { await expect.poll(() => values).toEqual([5]) } finally { stop() }
+})

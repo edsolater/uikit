@@ -3,6 +3,7 @@
  * Example 内容继续留在各自领域旁边，本文件只拥有目录和浏览历史。
  */
 import { onCleanup, onMount, createState, val, For, type Component } from '@/foundation'
+import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card } from '@/components'
 import { CardExample } from '@/components/kits/Card/Card.example'
@@ -42,6 +43,7 @@ const exampleCategories = {
 } satisfies Record<string, ExampleCategory>
 
 const exampleEntries: ExampleEntry[] = [
+  { id: 'async-state', title: '异步状态', category: exampleCategories.hook, summary: '由界面处理请求等待、完成与失败。', thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href, content: AsyncStateExample },
   { id: 'card', title: 'Card', category: exampleCategories.component, summary: '独立信息单元的声量、尺寸与主题材质。', thumbnail: new URL('../thumbnails/card.webp', import.meta.url).href, content: CardExample },
   { id: 'article', title: 'Article', category: exampleCategories.component, summary: '独立正文语义与透明视觉载体。', thumbnail: new URL('../thumbnails/article.webp', import.meta.url).href, content: ArticleExample },
   { id: 'button', title: 'Button', category: exampleCategories.component, summary: '动作声量、性质、状态与尺寸。', thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href, content: ButtonExample },

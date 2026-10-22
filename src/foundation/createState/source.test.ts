@@ -12,8 +12,8 @@ test('Source 接受普通值', () => {
   expectTypeOf<{ id: string }>().toExtend<Source<{ id: string }>>()
 })
 
-test('PromiseLike 只能直接成为允许 undefined 的 Source', () => {
-  expectTypeOf<Promise<number>>().not.toExtend<Source<number>>()
+test('PromiseLike 直接成为完成值的 Source', () => {
+  expectTypeOf<Promise<number>>().toExtend<Source<number>>()
   expectTypeOf<Promise<number>>().toExtend<Source<number | undefined>>()
 })
 

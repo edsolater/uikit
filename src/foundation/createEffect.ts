@@ -15,6 +15,7 @@ import {
 } from 'solid-js'
 import { isArray, isFunction } from '@edsolater/fnkit'
 import { val, type Val } from './createState/read'
+import { isPromiseLike } from './createState/promise-like'
 
 type EffectAction<T> = (value: T) => void | (() => void)
 type EffectValues<Sources extends unknown[]> = { [Index in keyof Sources]: Val<Sources[Index]> }
@@ -23,7 +24,7 @@ type EffectValues<Sources extends unknown[]> = { [Index in keyof Sources]: Val<S
  * 先读取来源并跟踪依赖，再执行不收集依赖的动作；动作返回的 cleanup 由 Solid 管理。
  * 优先传入单个来源，确需多个来源时传入 tuple，计算函数用于前两者不能自然表达的情况。
  */
-export function createEffect<T>(compute: () => T | PromiseLike<T>, action: EffectAction<T>): void
+export function createEffect<T>(compute: () => T | PromiseLike<T>, action: EffectAction<Awaited<T>>): void
 export function createEffect<const Sources extends unknown[]>(sources: Sources, action: EffectAction<EffectValues<Sources>>): void
 export function createEffect<Source>(source: Source, action: EffectAction<Val<Source>>): void
 export function createEffect(source: unknown, action: EffectAction<any>): void {
@@ -31,7 +32,7 @@ export function createEffect(source: unknown, action: EffectAction<any>): void {
 }
 
 /** 使用相同来源契约，默认首次同步提交，并透传原有原生选项。 */
-export function createRenderEffect<T>(compute: () => T | PromiseLike<T>, action: EffectAction<T>, options?: EffectOptions): void
+export function createRenderEffect<T>(compute: () => T | PromiseLike<T>, action: EffectAction<Awaited<T>>, options?: EffectOptions): void
 export function createRenderEffect<const Sources extends unknown[]>(sources: Sources, action: EffectAction<EffectValues<Sources>>, options?: EffectOptions): void
 export function createRenderEffect<Source>(source: Source, action: EffectAction<Val<Source>>, options?: EffectOptions): void
 export function createRenderEffect(source: unknown, action: EffectAction<any>, options?: EffectOptions): void {
@@ -40,7 +41,10 @@ export function createRenderEffect(source: unknown, action: EffectAction<any>, o
 
 function normalizeEffectSource(source: unknown): () => unknown {
   return isFunction(source)
-    ? source
+    ? () => {
+      const result = source()
+      return isPromiseLike(result) ? Promise.resolve(result) : result
+    }
     : isArray(source)
       ? () => source.map(item => val(item))
       : () => val(source)

@@ -5,7 +5,6 @@
  *
  * 让上层通过 UIKit 自有契约使用底层运行时。
  */
-export type { PromiseLikeStateViewOptions } from './createState/promise-like'
 export { isStateView, stateView, stateViewBrand } from './createState/state-view'
 export type { StateView, StateViewOptions } from './createState/state-view'
 export { isStateViewable } from './createState/source'
@@ -16,7 +15,7 @@ export { val } from './createState/read'
 export type { Val } from './createState/read'
 export * from './createEffect'
 export * from './createContext'
-export { render, For, mapArray, Show, createRenderEffect, children, insert, mergeProps } from './render'
+export { render, For, mapArray, Show, Loading, Errored, createRenderEffect, children, insert, mergeProps } from './render'
 export type { Component, Accessor, JSXElement } from './types'
 export type { JSX } from './types'
 export { createReactionFn } from './createState/createReactiveRunner'

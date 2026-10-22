@@ -16,9 +16,6 @@ export interface State<T = any> extends StateView<T> {
   /** 确定物种是个state，isState 使用 */
   [stateBrand]: true
 
-  /** 新JS语法， 销毁时自动调用 */
-  [Symbol.dispose](): void
-
   /* 虽然返回自身，但实际上只是改变这个state的值，这个state因为它是对象还是这个state */
   set(newValue: StateUpdate<T>): State<T>
 }
@@ -32,7 +29,7 @@ export function isState(value: unknown): value is State {
 
 /**
  * 创建可写状态，函数来源参与持续派生，同步值与 Promise 通过同一入口读取。
- * 更新函数接收完成值；来源尚未完成时，更新会在其完成后依次执行。
+ * 相对更新基于已有当前值，已有 Promise 由基础层接续；计算来源尚无初值时不预存更新命令。
  * @example
  * ```ts
  * function Component() {
@@ -53,10 +50,6 @@ export function createState(initialValue?: any, options?: AsyncSignalOptions<any
     read: solidjsAccessor,
     [stateViewBrand]: true,
     [stateBrand]: true,
-    [Symbol.dispose]() {
-      // 这里不需要做任何事情，因为我们现在没有在外部注册这个 state，也没有暴露任何取消订阅的接口。
-      // 只要这个 state 没有被外部引用了，它就会被垃圾回收掉，Solid 的 createEffect 也会自动清理对它的订阅。
-    },
     set(newValue) {
       solidjsSetSignal(newValue)
       return thisState
@@ -72,7 +65,7 @@ export function createState(initialValue?: any, options?: AsyncSignalOptions<any
  * 创建缓存当前映射结果的 StateView，映射返回的 StateView 会继续跟随其当前值。
  * 派生视图属于创建时的响应式作用域，作用域释放后停止跟随依赖。
  */
-function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<Awaited<U>> {
+export function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<Awaited<U>> {
   const read = createMemo<U>(() => {
     const mapped = mapper(view.read())
     const result = isStateView(mapped) ? mapped.read() : mapped

@@ -1,4 +1,4 @@
-本文整理 UIKit 当前 State 相关 API，供业务使用和后续契约修订。内容按 2026-10-21 的源码核对；“当前行为”记录已经实现的语义，不代表所有现状都应长期保留。异步目标与待裁决问题单独列出。
+本文整理 UIKit 当前 State 相关 API，供业务使用和后续契约修订。内容按 2026-10-22 的 Solid 2 异步链路核对。默认读取保留原生等待和失败，业务通过 UI 边界处理。
 
 # 基本概念与入口
 
@@ -12,11 +12,11 @@
 
 ```ts
 import { createState, val, stateView, createEffect } from '@/foundation'
-import { derive, mapSource, followState } from '@/hooks/stateUtils'
+import { derive, mapSource } from '@/hooks/stateUtils'
 import { snapshot } from '@/hooks/snapshots'
 ```
 
-来源需要继续传递时保留 Source，在最终消费处读取。读取只有发生在响应式计算中，才会建立相应依赖；在普通语句中保存 `val(source)` 的结果，只得到那一刻的值。
+来源需要继续传递时保留 Source，在最终消费处读取。读取发生在响应式计算中时，会建立该计算对来源的依赖；保存 `val(source)` 得到的值，不会让这个变量自动跟随来源变化。
 
 # 创建与读写
 
@@ -26,13 +26,47 @@ import { snapshot } from '@/hooks/snapshots'
 | --- | --- | --- |
 | `createState(value)` | `createState(1)` | 创建 `State<number>` |
 | `createState<T>()` | `createState<number>()` | 初始值为 `undefined`，返回 `State<number \| undefined>` |
-| `createState(() => value)` | `createState(() => expensiveInit())` | 初始化函数执行一次，不是持续派生计算 |
+| `createState(() => value)` | `createState(() => expensiveInit())` | 计算函数持续跟随同步读取的依赖，返回 Promise 时由 Solid 等待 |
 | `state.set(value)` | `count.set(3)` | 写入新值并返回 State 自身；与当前值严格相等时不通知变化 |
-| `state.set(previous => next)` | `count.set(n => n + 1)` | 根据旧值更新 |
-| `val(source)` | `val(count)` | 读取当前值，递归解除 StateView、PromiseLike 包装；当前空值读取为 `undefined` |
+| `state.set(previous => next)` | `count.set(n => n + 1)` | 基于已有当前值更新；已有 Promise 由基础层接续，回调接收完成值 |
+| `val(source)` | `val(count)` | 读取当前值，递归解除 StateView、PromiseLike 包装；等待和失败由 Solid 传播，真正完成的空值仍是空值 |
 | `val(source, fallback)` | `val(count, 0)` | 最终结果为 `null` 或 `undefined` 时使用 fallback；fallback 可以是函数 |
-| `state.read()` | `count.read()` | 读取自身直接保存的值，不继续递归解包；业务通常使用 `val()` |
-| `state[Symbol.dispose]()` | `count[Symbol.dispose]()` | 当前为空操作，不代表销毁状态或停止所有消费者 |
+| `state.read()` | `count.read()` | 读取完成结果；不继续解除结果内的 StateView，业务通常使用 `val()` |
+
+## 创建关联状态或独立状态
+
+需要关联，就把读取来源的计算交给 State；需要独立，优先提前取得当前值，再把这个值交给 State，让新状态的计算没有可追踪的来源。
+
+```ts
+const count = createState(1)
+
+// 在计算中读取 count，建立依赖。
+const linked = createState(() => val(count) * 2)
+
+// 先取得当前值，新 State 的创建过程不再读取 count。
+const initial = val(count)
+const independent = createState(initial * 2)
+```
+
+两者初始值都是 2。以后 count 改为 3，Solid 提交更新后，linked 变为 6，independent 仍为 2。independent 可以通过自己的 `.set()` 独立修改。
+
+独立状态从创建时就没有建立对 count 的计算依赖，不需要先联动再断开。即使写成 `createState(() => initial * 2)`，计算读取的也只是已取得的值，不会因此关联 count；依赖来自计算中对响应式来源的读取，而不是函数包装本身。
+
+这里的“先读取”是指在新 State 的计算函数之外读取。如果 `const initial = val(count)` 位于另一个响应式计算中，它仍会建立那个外层计算对 count 的依赖，外层重算也可能重新创建 independent；不能把“写在 createState 外面”等同于“处于所有追踪范围之外”。
+
+也可以用原生 `untrack` 显式禁止这次读取收集依赖，作为逃生写法：
+
+```ts
+import { untrack } from '@/foundation/render'
+
+const independent = createState(untrack(() => val(count) * 2))
+```
+
+`untrack` 先执行函数，createState 收到的是它返回的值。它在当前读取时就不建立依赖，不需要创建后再解除关联。这里的函数传给 untrack，没有作为 State 的计算函数保留下来。
+
+这段实现虽然短，但独立关系要通过理解 untrack 才能看清，因此优先使用前面的提前取值写法；untrack 只作为确有需要时的逃生口。它只控制依赖收集，异步等待和错误仍遵循 Solid 的机制。
+
+## 函数作为数据
 
 函数作为数据时，通过外层函数区分初始化／更新操作与函数值：
 
@@ -78,32 +112,36 @@ const total = derive([price, quantity], ([price, quantity]) =>
 )
 ```
 
-# 当前异步行为
+# 同步与异步使用同一读取链
 
 假设 `request` 是已经创建好的 `Promise<number>`。
 
-| 用法 | 当前行为 |
+| 用法 | 行为 |
 | --- | --- |
-| `stateView(request)` | 返回 `StateView<number \| undefined>`；等待时为 undefined，成功后更新，失败默认仍为 undefined |
-| `val(request)` | 通过缓存的 Promise 转换视图读取，等待／失败默认返回 undefined |
-| `val(request, 0)` | 等待／失败及最终空值使用 0 |
-| `stateView(request, { defaultValue: 0 })` | 提供默认值；当前这一分支也会把成功结果中的 undefined 替换为默认值 |
-| `stateView(request, { defaultValue: 0, errorValue: -1, onRejected })` | 等待用 0，失败用 -1，并调用错误回调；成功时写入实际结果 |
-| `createState(request)` | State 直接保存 Promise；`.read()` 返回 Promise，`val()` 才继续转换读取 |
-| `selected.map(id => loadItem(id))` | 派生视图保存返回的 Promise，尚未接入 Solid 原生异步派生语义 |
+| `createState(request)` | 返回 `State<number>`，`.read()` 和 `val()` 读取完成值 |
+| `createState(() => loadItem(val(selectedId)))` | 原生计算跟随依赖，等待本次请求；旧请求不会覆盖新的来源 |
+| `state.set(request)` | 替换来源，由结果计算等待；后续相对更新由基础层接续 |
+| `stateView(request)`、`val(request)` | 默认 pending/失败进入 Solid 机制，不附加 undefined 或吞错 |
+| `val(request, 0)` | 等待和失败交给 UI 边界，只有完成后的 null/undefined 使用 0 |
+| `selected.map(id => loadItem(id))` | mapper 的 Promise 由 Solid 等待，输出完成值，后继 map 也接收完成值 |
 
-同一个 Promise 的默认转换视图按对象身份缓存。不要在响应式读取中反复现场创建新 Promise，再交给 `val()`；每个新 Promise 都会建立新的转换关系。
+`createState<T>` 的输入可以是普通值、Promise 或计算函数，结果使用 `Awaited<T>`；`equals` 和 `loadingValue` 针对完成类型。相对更新要求来源已有当前值：已有 Promise 由基础层接续，previous 接收完成值；计算来源尚无初值时不预存更新命令。依赖初值的 UI 在 Loading 内读取，完成后提供更新交互，无需业务 await；Loading 不替任意命令排队。lazy 计算在首次读取后建立当前值。`options` 支持 name、equals、lazy、loadingValue、unobserved、ownedWrite；ownedWrite 仅在明确需要计算域写入时显式使用，默认不启用。
 
-当前实现中，以下两种读取有区别：
+val 的默认函数仅在最终完成空值时执行，返回稳定 Promise 时仍由 Solid 等待。stateView 的选项只提供 map；等待和失败展示由 Loading、Errored 负责。同一个 Promise 的转换视图按身份缓存，首消费者释放不会终止后续消费者。不要在响应式读取中每次创建新 Promise 再交给 val，包括默认函数每次返回新 Promise；需要异步计算时用 createState 的计算来源或 map 建立计算节点。
 
-```ts
+```tsx
+const selectedId = createState('A')
 const item = selectedId.map(id => loadItem(id))
+const title = item.map(item => item.title)
 
-item.read() // Promise 本身
-val(item)   // UIKit 转换后的当前结果；等待时通常是 undefined
+<Errored fallback={error => <p>失败：{String(error())}</p>}>
+  <Loading fallback={<p>读取中</p>}>
+    <h2>{val(title)}</h2>
+  </Loading>
+</Errored>
 ```
 
-继续调用 `item.map(...)`，mapper 收到的也是 Promise 本身，并不是已完成的对象。
+`Loading`、`Errored` 从包根或 Foundation 导入，直接对应 Solid 2 原生边界；异步完成后继续渲染，错误由最近的 Errored 展示。后续请求等待时，Loading 遵循原生语义，可能保留已显示内容，不等同于每次都强制显示 fallback。
 
 # 响应式动作与清理
 
@@ -115,7 +153,6 @@ val(item)   // UIKit 转换后的当前结果；等待时通常是 undefined
 | 异步计算形式 | `createEffect(() => loadItem(val(selectedId)), item => show(item))` | 计算函数直接交给 Solid，可进入原生异步计算路径 |
 | 动作返回清理函数 | `createEffect(source, value => subscribe(value))` | subscribe 若返回清理函数，由 Solid 管理本轮资源释放 |
 | `onCleanup(cleanup)` | `onCleanup(() => connection.close())` | 在当前响应式作用域登记清理 |
-| `followState(target, source, transform?)` | `const stop = followState(copy, count)` | 将来源变化持续写入目标 State；调用 stop 停止跟随 |
 
 Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要为了形式上采用单来源而制造无意义的派生状态。
 
@@ -131,46 +168,21 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 | `stateBrand`、`stateViewBrand` | 包根／Foundation | 身份标记，业务通常不需要操作 |
 | `createMemo` | `@/foundation/render`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
 | `createRenderEffect` | Foundation 内部入口，参数形式与 createEffect 相同 | DOM 提交使用，未由包根公开 |
-| `createReactionFn` | Foundation 内部入口：`const runner = createReactionFn(() => work(val(count)))` | 独立响应式运行器，提供 getResult、dispose 和 Symbol.dispose；首轮同步执行，跟踪动作内同步读取 |
+| `createReactionFn` | Foundation 内部入口：`const runner = createReactionFn(() => work(val(count)))` | 独立响应式运行器，提供 getResult、dispose 和 Symbol.dispose；原生计算负责结果，可选第二回调在 Effect 阶段动作 |
 | `createStateWithPrev()` | 包根／Hooks | 已导出但尚未实现，调用会抛错 |
 
-`createReactionFn` 需要显式释放，不是两阶段 Effect 的替代入口。`followState` 当前使用它实现持续跟随。
+`createReactionFn(compute, action?)` 需要显式释放；getResult 传播原生 pending/error，释放后保留最后完成结果。
 
 | 类型 | 表达什么 |
 | --- | --- |
 | `State<T>` | 可写状态 |
 | `StateView<T>` | 可读、可派生视图 |
-| `Source<T>` | 普通值或来源；当前 Promise 输入要求目标类型允许 undefined |
+| `Source<T>` | 普通值或来源；Source<number> 可接收 Promise<number> |
 | `StateViewable<T>` | StateView 或允许的 PromiseLike 来源 |
 | `MayArraySource<T>` | 单值或列表来源，列表中的项目也可以独立为来源 |
 | `Val<S>` | 对实际输入 S 递归解包后的读取类型 |
 | `Snapshot<T>` | 树形快照结果类型，从 Hooks 导出 |
 | `StateViewOptions<V, U>` | 转换后的映射配置 `{ map }` |
-| `PromiseLikeStateViewOptions<D, E>` | defaultValue、errorValue、onRejected 配置 |
-
-# 异步契约修订方向
-
-本节是待实现、待细化的方向，不是当前 API 承诺。
-
-目标是让同步与异步派生进入同一张 Solid 计算图，业务继续使用 StateView 和统一读取形式。业务可以不直接调用 createMemo，底层仍需要派生计算节点。
-
-期望的表达：
-
-```ts
-const selectedId = createState('A')
-const item = selectedId.map(id => loadItem(id))
-const title = item.map(item => item.title)
-```
-
-期望 item 未就绪时，依赖它的 title 等待；结果就绪后继续计算；失败进入错误处理边界。当前实现尚不满足这段异步链。
-
-修订时需要明确：
-
-- `.map()`／`derive()` 如何把异步结果直接接入 Solid，并在类型上表达完成值。
-- `val()` 如何区分未就绪、成功和失败；现有 defaultValue／errorValue 如何迁移。
-- 可写 State 保存 Promise 数据，与异步派生计算之间的语义边界。
-- UIKit 如何提供等待与错误展示边界；当前 Foundation 公开入口未提供 Loading、Errored。
-- 组件子级查询何时就绪：尚未登记完成与就绪后没有匹配项必须区分；查询等待不能阻止子级继续创建。
 
 # 源码依据
 

@@ -1,75 +1,22 @@
-/**
- * PromiseLike 的 StateView 转换领域。
- *
- * 本文件负责识别 PromiseLike，并将 fulfilled、pending 与 rejected 三条路径转换成 StateView。
- * 它不限定 StateView 的使用周期，也不负责最终读取。
- */
+/** PromiseLike 协议识别与原生计算转换；身份复用由 stateView 负责。 */
 import { hasProperty, isFunction } from '@edsolater/fnkit'
-import { createState } from './state'
-import type { StateView } from './state-view'
+import { createSignal } from 'solid-js'
+import { mapStateView } from './state'
+import { stateViewBrand, type StateView } from './state-view'
 
-export type PromiseLikeStateViewOptions<D, E = D> = {
-  /** pending 阶段写入 StateView 的值。 */
-  defaultValue: D
-
-  /** rejected 阶段写入 StateView 的值；未提供时使用 defaultValue。 */
-  errorValue?: E
-
-  /** rejected 时接收原始 reason。 */
-  onRejected?(reason: unknown): void
-}
-
-/**
- * 判断未知值是否实现 PromiseLike 的 thenable 协议。
- *
- * 直接依赖 fnkit 的 `hasProperty()` 与 `isFunction()`；业务对象一旦公开可调用的 `then`，即视为 PromiseLike。
- */
+/** 对象公开可调用的 then 时，按 PromiseLike 协议处理。 */
 export function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return hasProperty(value, 'then', isFunction)
 }
 
-/**
- * 将 PromiseLike 转换为 StateView。
- *
- * 未提供配置时，pending 与 rejected 阶段使用 undefined。
- * 提供配置时，pending 使用 defaultValue；rejected 优先使用 errorValue，并调用 onRejected。
- *
- * 直接依赖 UIKit 的 `createState()` 承载 Solid signal，并使用原生 Promise 统一展开 thenable。
- */
-export function toStateViewFromPromiseLike<V>(promiseLike: PromiseLike<V>): StateView<Awaited<V> | undefined>
-export function toStateViewFromPromiseLike<V, D, E>(
-  promiseLike: PromiseLike<V>,
-  options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
-): StateView<Awaited<V | D | E>>
-export function toStateViewFromPromiseLike<V, D>(
-  promiseLike: PromiseLike<V>,
-  options: PromiseLikeStateViewOptions<D>,
-): StateView<Awaited<V | D>>
-export function toStateViewFromPromiseLike(
-  promiseLike: PromiseLike<unknown>,
-  options?: PromiseLikeStateViewOptions<unknown>,
-): StateView<unknown> {
-  if (!options) {
-    const stateView = createState<unknown>()
-    void Promise.resolve(promiseLike).then(
-      (value) => stateView.set(() => value),
-      () => stateView.set(undefined),
-    )
-
-    return stateView
+/** 将固定 Promise 交给原生计算，等待和错误由消费者的 UI 边界承担。 */
+export function toStateViewFromPromiseLike<V>(promiseLike: PromiseLike<V>): StateView<Awaited<V>> {
+  // 固定来源保留完成与失败，避免失去订阅后复读又开始等待；不公开写入端。
+  const [read] = createSignal(() => Promise.resolve(promiseLike))
+  const view: StateView<Awaited<V>> = {
+    read,
+    [stateViewBrand]: true,
+    map(toNew) { return mapStateView(view, toNew) },
   }
-
-  const defaultValue = options.defaultValue
-  const errorValue = ('errorValue' in options ? options.errorValue : defaultValue)
-  const stateView = createState<unknown>(() => defaultValue)
-
-  void Promise.resolve(promiseLike).then(
-    (value) => stateView.set(() => value),
-    (reason) => {
-      stateView.set(() => errorValue)
-      options.onRejected?.(reason)
-    },
-  )
-
-  return stateView
+  return view
 }

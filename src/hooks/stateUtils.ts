@@ -1,23 +1,23 @@
 /**
- * 使用基础状态能力的派生与跟随组合。
+ * 使用基础状态能力的映射与派生组合。
  *
- * 组合 Foundation 的读取、映射和响应式运行能力，不定义 State 协议。
+ * 组合 Foundation 的来源转换和映射能力，不定义 State 协议。
  *
  * 让使用状态的组合与基础状态定义保持各自职责。
  */
-import { createReactionFn, val, type Val, type Source, type State, stateView, type StateView } from '@/foundation'
+import { type Source, stateView, type StateView } from '@/foundation'
 
 /**
  * 把一个 Source 映射成新的 StateView。
  *
- * PromiseLike Source 在完成前会把 undefined 交给 mapper；其他 Source 也统一通过 StateView 建立持续映射。
+ * PromiseLike Source 的等待与失败由 Solid 处理；mapper 只接收完成值。
  * 这个函数只公开映射结果，不公开内部写入口。
  *
  * 直接依赖 `stateView()` 统一普通值、StateView 与 PromiseLike，不自行管理 StateView 身份映射。
  */
 export function mapSource<T, U>(
   source: Source<T>,
-  mapper: (value: T) => U | StateView<U>,
+  mapper: (value: Awaited<T>) => U | StateView<U>,
 ): StateView<Awaited<U>> {
   return stateView(source).map(mapper)
 }
@@ -29,7 +29,7 @@ export function mapSource<T, U>(
 export function derive<T>(source: Source<T>): Source<T>
 export function derive<T, U>(
   source: Source<T>,
-  mapper: (value: T) => U | StateView<U>,
+  mapper: (value: Awaited<T>) => U | StateView<U>,
 ): StateView<Awaited<U>>
 export function derive<T, U>(
   source: Source<T>,
@@ -37,24 +37,4 @@ export function derive<T, U>(
 ): Source<T> | StateView<Awaited<U>> {
   if (!mapper) return source
   return mapSource(source, mapper)
-}
-
-/**
- * 数据源A **跟随** 数据源B的变化
- * @param thisState 数据源A
- * @param followTarget 数据源B
- * @param transform 经过转换默认直接输出
- * @return 函数：取消跟随
- */
-
-export function followState<T, U>(
-  thisState: State<T>,
-  followTarget: StateView<U>,
-  transform: (value: Val<U>) => T = (v) => v as unknown as T,
-): () => void {
-  const { dispose: unfollow } = createReactionFn(() => {
-    const newValue = transform(val(followTarget))
-    thisState.set(newValue)
-  })
-  return unfollow
 }

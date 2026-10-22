@@ -4,10 +4,10 @@
  * 本文件定义可读取、可映射的状态视图，以及 StateView 对外暴露的统一转换能力。
  */
 import { isFunction, isObject } from '@edsolater/fnkit'
+import { runWithOwner } from 'solid-js'
 import {
   isPromiseLike,
   toStateViewFromPromiseLike,
-  type PromiseLikeStateViewOptions,
 } from './promise-like'
 import type { Source } from './source'
 import { createState } from './state'
@@ -31,7 +31,7 @@ export interface StateView<T = any> {
 /**
  * 可转换来源与默认 StateView 的身份映射。
  *
- * WeakMap 不会保活来源；只要调用方仍能再次传入同一个来源，val() 与 stateView() 就会复用同一个 StateView。
+ * WeakMap 只按 Promise 身份复用只读视图，不把视图绑定在首次消费的作用域。
  * 来源不再可达后，映射及其 StateView 可以一同被垃圾回收。
  */
 const stateViewCache = new WeakMap<PromiseLike<unknown>, StateView<unknown>>()
@@ -54,73 +54,44 @@ export function isStateView(value: unknown): value is StateView {
  * 当前支持普通值、StateView 与 PromiseLike；以后新增可转换的数据格式时，
  * 也应在这里识别并分派到对应领域的转换函数。
  *
- * PromiseLike 未提供配置时转换为 `StateView<V | undefined>`。
- * 提供配置后，pending 使用 defaultValue；rejected 可通过 errorValue 与 onRejected 定义状态值和事件。
+ * PromiseLike 转换为 `StateView<Awaited<V>>`，等待和失败由 Solid 传播。
  *
  * 第二个参数统一表示转换 options；直接传入函数是 `{ map: fn }` 的简写。
  */
 export function stateView<V>(sourceOrValue: StateView<V>): StateView<V>
-export function stateView<R, D, E, U>(
-  sourceOrValue: PromiseLike<R>,
-  options: PromiseLikeStateViewOptions<D, E>
-    & { errorValue: E }
-    & StateViewOptions<Awaited<R | D | E>, U>,
-): StateView<Awaited<U>>
-export function stateView<R, D, U>(
-  sourceOrValue: PromiseLike<R>,
-  options: PromiseLikeStateViewOptions<D>
-    & StateViewOptions<Awaited<R | D>, U>,
-): StateView<Awaited<U>>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
-  options: StateViewOptions<Awaited<R> | undefined, U>,
+  options: StateViewOptions<Awaited<R>, U>,
 ): StateView<Awaited<U>>
-export function stateView<R, D, E>(
-  sourceOrValue: PromiseLike<R>,
-  options: PromiseLikeStateViewOptions<D, E> & { errorValue: E },
-): StateView<Awaited<R | D | E>>
-export function stateView<R, D>(
-  sourceOrValue: PromiseLike<R>,
-  options: PromiseLikeStateViewOptions<D>,
-): StateView<Awaited<R | D>>
-export function stateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R> | undefined>
+export function stateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R>>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
-  map: (value: Awaited<R> | undefined) => U | StateView<U>,
+  map: (value: Awaited<R>) => U | StateView<U>,
 ): StateView<Awaited<U>>
-export function stateView<V>(sourceOrValue: Source<V>): StateView<V>
+export function stateView<V>(sourceOrValue: Source<V>): StateView<Awaited<V>>
 export function stateView<V, U>(
   sourceOrValue: Source<V>,
-  options: StateViewOptions<V, U>,
+  options: StateViewOptions<Awaited<V>, U>,
 ): StateView<Awaited<U>>
 export function stateView<V, U>(
   sourceOrValue: Source<V>,
-  map: (value: V) => U | StateView<U>,
+  map: (value: Awaited<V>) => U | StateView<U>,
 ): StateView<Awaited<U>>
 export function stateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
   const options = isFunction(optionsOrMap) ? { map: optionsOrMap } : optionsOrMap
 
+  let view: StateView
   if (isPromiseLike(sourceOrValue)) {
-    let view: StateView
-    if (!options || !('defaultValue' in options)) {
-      const cachedStateView = stateViewCache.get(sourceOrValue)
-      if (cachedStateView) {
-        view = cachedStateView
-      } else {
-        view = toStateViewFromPromiseLike(sourceOrValue)
-        stateViewCache.set(sourceOrValue, view)
-      }
-    } else if (!('errorValue' in options) && !options.onRejected) {
-      view = toStateViewFromPromiseLike(sourceOrValue).map(
-        (value) => value === undefined ? options.defaultValue : value,
-      )
+    const cachedStateView = stateViewCache.get(sourceOrValue)
+    if (cachedStateView) {
+      view = cachedStateView
     } else {
-      view = toStateViewFromPromiseLike(sourceOrValue, options)
+      // 固定来源属于 Promise 身份，首消费者卸载不应销毁其他消费者共享的结果。
+      view = runWithOwner(null, () => toStateViewFromPromiseLike(sourceOrValue))
+      stateViewCache.set(sourceOrValue, view)
     }
-
-    return options?.map ? view.map(options.map) : view
+  } else {
+    view = isStateView(sourceOrValue) ? sourceOrValue : createState(sourceOrValue)
   }
-
-  const view = isStateView(sourceOrValue) ? sourceOrValue : createState(sourceOrValue)
   return options?.map ? view.map(options.map) : view
 }

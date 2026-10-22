@@ -7,7 +7,7 @@
  */
 import { createMemo, type Merge } from 'solid-js'
 import { isFunction } from '@edsolater/fnkit'
-export { For, Show, children, mapArray, createMemo } from 'solid-js'
+export { For, Show, Loading, Errored, children, mapArray, createMemo } from 'solid-js'
 export { createRenderEffect } from './createEffect'
 export { getOwner, runWithOwner, untrack } from 'solid-js'
 export { render, insert } from '@solidjs/web'

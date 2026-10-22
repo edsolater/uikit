@@ -2,9 +2,9 @@
  * 本文件验证 PromiseLike 转换产生的 StateView 结算行为。
  * StateView 身份复用由 state-view.test.ts 验证。
  */
-import { expect, expectTypeOf, test } from 'vitest'
+import { expect, test } from 'vitest'
+import { NotReadyError, resolve } from 'solid-js'
 import { toStateViewFromPromiseLike } from './promise-like'
-import type { StateView } from './state-view'
 
 interface Deferred<V> {
   promise: Promise<V>
@@ -31,65 +31,33 @@ test('PromiseLike 转换器不管理 StateView 身份', () => {
   expect(toStateViewFromPromiseLike(promise)).not.toBe(toStateViewFromPromiseLike(promise))
 })
 
-test('StateView 从 undefined 更新为 PromiseLike 的完成值', async () => {
+test('StateView 从原生 pending 进入 PromiseLike 完成值', async () => {
   const deferred = createDeferred<number>()
   const stateView = toStateViewFromPromiseLike(deferred.promise)
 
-  expect(stateView.read()).toBeUndefined()
+  expect(stateView.read).toThrow(NotReadyError)
 
   deferred.resolve(8)
-  await deferred.promise
-  await Promise.resolve()
+  await resolve(stateView.read)
 
   expect(stateView.read()).toBe(8)
 })
 
-test('PromiseLike 失败后 StateView 保持 undefined', async () => {
+test('默认 PromiseLike 失败由原生计算传播，不伪装为 undefined', async () => {
   const deferred = createDeferred<number>()
-  const stateView = toStateViewFromPromiseLike(deferred.promise)
-
-  deferred.reject(new Error('load failed'))
-  await deferred.promise.catch(() => undefined)
-  await Promise.resolve()
-
-  expect(stateView.read()).toBeUndefined()
-})
-
-test('未提供 errorValue 时，rejected 使用 defaultValue 并触发 onRejected', async () => {
-  const deferred = createDeferred<number>()
-  const error = new Error('load failed')
-  let rejectedReason: unknown
-  const stateView = toStateViewFromPromiseLike(deferred.promise, {
-    defaultValue: 0,
-    onRejected(reason) {
-      rejectedReason = reason
-    },
-  })
-
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number>>()
-  expect(stateView.read()).toBe(0)
-
+  const view = toStateViewFromPromiseLike(deferred.promise)
+  const error = new Error('读取失败')
+  const settled = resolve(view.read)
   deferred.reject(error)
-  await deferred.promise.catch(() => undefined)
-  await Promise.resolve()
-
-  expect(stateView.read()).toBe(0)
-  expect(rejectedReason).toBe(error)
+  await expect(settled).rejects.toBe(error)
+  expect(view.read).toThrow('读取失败')
 })
 
-test('errorValue 单独定义 rejected 阶段的状态值', async () => {
-  const deferred = createDeferred<number>()
-  const stateView = toStateViewFromPromiseLike(deferred.promise, {
-    defaultValue: 0,
-    errorValue: 'failed',
-  })
-
-  expectTypeOf(stateView).toEqualTypeOf<StateView<number | string>>()
-  expect(stateView.read()).toBe(0)
-
-  deferred.reject(new Error('load failed'))
-  await deferred.promise.catch(() => undefined)
-  await Promise.resolve()
-
-  expect(stateView.read()).toBe('failed')
+test('完成的 undefined 保持完成值', async () => {
+  const request = Promise.withResolvers<undefined>()
+  const view = toStateViewFromPromiseLike(request.promise)
+  expect(view.read).toThrow(NotReadyError)
+  request.resolve(undefined)
+  await expect(resolve(view.read)).resolves.toBeUndefined()
+  expect(view.read()).toBeUndefined()
 })

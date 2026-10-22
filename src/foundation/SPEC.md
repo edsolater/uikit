@@ -7,15 +7,15 @@
 - `createContext.ts`：上下文创建、读取及 Provider 契约。
 - `render.ts`：内部渲染与 props 接入，保留底层调度、子树复用和惰性读取。
 - `types.ts`：当前渲染运行时的类型桥接；仍沿用 Solid 类型，尚未消除类型契约对运行时的依赖。
-- `index.ts`：基础状态、Effect 和 Context 的公开出口；渲染接入不从包根发布。
+- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；底层渲染接入不从包根发布。
 
-Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、`followState`、快照与领域派生组合继续由 Hooks 提供。
+Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
-生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/createAsyncSignal.ts`、`createState/createReactiveRunner.ts`、`createEffect.ts`、`createContext.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
+生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createState/createReactiveRunner.ts`、`createEffect.ts`、`createContext.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 
-当前接入 Solid 2。State 的来源层以记录保存当前来源结果，避免提前解包 Promise 后丢失后续更新所需的来源；结果层负责计算、异步等待和错误传播。输入类型中的 Promise 统一展开为对外的 `Awaited<T>`；读取、更新函数参数和结果层选项均使用完成类型。StateView 的 `map` 将映射结果直接交给 Solid 计算，输出 `Awaited<U>`，后继映射接收完成值；返回 StateView 时跟随其当前来源。写入、派生及 DOM 更新遵循 Solid 的提交时机。更新函数接收完成值，尚未完成的来源通过 Promise 链依次更新，无需使用方自行等待。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
+当前接入 Solid 2。State 只有来源 Signal 与结果 Memo 两层：普通值和 Promise 由原生 Signal 保存，函数由原生可写计算跟随依赖；结果 Memo 统一展开 PromiseLike，交给 Solid 等待与传播错误。输入中的 Promise 展开为对外的 `Awaited<T>`，读取与结果层选项使用完成类型。StateView 的 `map` 直接将映射交给 Solid 计算，输出 `Awaited<U>`，后继映射接收完成值；返回 StateView 时跟随其当前来源。写入、派生及 DOM 更新遵循 Solid 的提交时机。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
 
 `createEffect` 优先直接接收单个 Source，多个独立来源使用 tuple，无法自然表达时才使用 compute 函数。计算阶段读取依赖并产出数据，动作阶段的额外读取不增加依赖，动作返回的清理由 Solid 在下次动作前及卸载时执行。内部 DOM 监听同样采用原生两阶段；Piv 的 style 与 HTML 字段由原生 mapArray 按 key 保留作用域，换源时由同一监听清理后提交，字段退出时释放。
 
@@ -23,4 +23,12 @@ JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与
 
 `onMount` 对接原生 `onSettled`，动作中的读取不建立依赖，返回的清理由 Solid 管理。响应式计算应在构建阶段登记，不在挂载动作内创建，也不保存和恢复构建阶段的 owner。三种入口登记的清理统一作为动作执行：原生运行时仍拥有清理的时机、顺序和次数，Foundation 只在执行回调时使用原生无 owner 上下文，避免清理旁读订阅触发销毁的计算，并允许公布资源已释放的状态。普通计算中的 State 写入限制不变；DOM ref 在构建阶段同步登记仍使用局部许可，保留 ref 先于 children/mount 的顺序。
 
-`createReactionFn` 是独立的旧 runner 契约：创建时同步运行并缓存结果，追踪整个 action，显式释放后保留最后结果。现有 `followState` 还在 action 内写入目标 State，因此这里保留计算阶段运行整个 action 的适配，不声称它是纯计算，也不将新的 Effect 调用转入该入口。它的进一步契约改造未在本轮获得授权。
+`createReactionFn(compute, action?)` 是需显式释放的独立运行器：原生计算拥有结果与异步传播，可选动作通过普通 Effect 执行；`getResult` 不维护另一份局部结果。`dispose` 停止跟随并保留最后完成结果，动作返回清理仍交给原生生命周期。
+
+Promise 的转换按来源身份缓存，固定 Promise 的计算不归首次消费者所有；原生可写计算只保留读取端，以保存最后完成值及失败。它没有业务响应式上游或外部资源，来源不可达时 WeakMap 与计算图可一同回收。不能把任意派生计算都当作这类固定数据缓存。stateView 的转换选项仅提供 map，不处理等待展示、错误替代或错误通知。
+
+相对更新以来源已有当前值为前提；当前值是 Promise 时，基础层接续更新，业务回调接收完成值。计算来源尚无初值、或 lazy 计算尚未读取时，不承诺保存更新命令；依赖初值的 UI 在 Loading 内读取，完成后再提供相对更新交互。Loading 管理渲染等待，不会替任意命令排队。计算来源的手动写入与重新派生沿用 Solid 原生时序，不另建初始计算、更新队列或 owner 初始化流程。
+
+`Loading` 与 `Errored` 直接使用原生 UI 边界。UI 在读取 State、StateView 或 Promise Source 时由最近的边界处理等待与失败；默认转换不吞错、不以 undefined 伪装已完成。实际异步示例及浏览器回归位于 `createState/AsyncState.example.tsx` 与同名测试。
+
+`val(source, defaultValue)` 先递归读取最终完成值，仅在 null/undefined 时选用默认值；未提供默认值则保留原值，包括 null。函数默认值只在选中时执行，其结果继续按同一读取协议处理。裸 Promise 与 StateView 的等待、失败都原样进入 Solid/UI 边界，val 不建立异步回退计算、捕获错误或切换 owner。

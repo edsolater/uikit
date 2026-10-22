@@ -17,5 +17,5 @@ export * from './useBrowserAnimationFrame' // Browser 领域的 animation frame 
 export * from './useDOMRegisterer' // DOM 领域的全局节点注册 / 卸载 primitive
 export * from './useUIThemeMode' // UI 领域的全局 light / dark / system 主题模式 hook
 export * from './createStateWithPrev' // 给state增加一个prev属性， 用于获取之前的值。
-export * from './stateUtils' // State 领域的状态派生与跟随组合
+export * from './stateUtils' // State 领域的映射与派生组合
 export * from './snapshots' // State 领域的树形状态快照读取
