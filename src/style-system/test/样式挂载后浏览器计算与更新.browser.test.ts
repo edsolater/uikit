@@ -17,7 +17,7 @@ import { multiply } from '../pieces/contents/functions/calc'
 import { cssFunction } from '../css-function'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
-import { durationFast } from '../pieces/contents/atoms/motion'
+import { motionDuration } from '../pieces/contents/atoms/motion'
 import { lineColor } from '../pieces/contents/atoms/color/colors'
 
 stateCondition('testLarge', condition('&[data-large]'))
@@ -321,13 +321,13 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
   }
 })
 
-test('动效保留根求值，分隔线按本地文字变量实时派生', async () => {
+test('动效消费统一基准的当前值，分隔线按本地文字变量实时派生', async () => {
   const session = await cdp() as CDPSession
   const lineBase = variable('blue', { name: 'mounted-line-base', address: '.example' })
   const line = lineColor(lineBase)
   const localLine = variableFrom(line, line.content, { address: '.example' })
   element.style.transitionProperty = 'opacity'
-  handles.push(rule('.example', 'transition-duration', durationFast))
+  handles.push(rule('.example', 'transition-duration', multiply(motionDuration, 2 / 3)))
   handles.push(rules('.example', [[key('border-color'), localLine]]))
   try {
     await session.send('Emulation.setEmulatedMedia', {
@@ -337,9 +337,10 @@ test('动效保留根求值，分隔线按本地文字变量实时派生', async
     const committed = style.textContent
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
-    element.style.setProperty('--motion-scale-ratio', '2')
+    element.style.setProperty(motionDuration.toCSSString(), '360ms')
     element.style.setProperty('--mounted-line-base', 'red')
-    expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
+    expect(getComputedStyle(element).transitionDuration).toBe('0.24s')
+    element.style.removeProperty(motionDuration.toCSSString())
     expect(getComputedStyle(element).borderTopColor).not.toBe(originalLine)
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],

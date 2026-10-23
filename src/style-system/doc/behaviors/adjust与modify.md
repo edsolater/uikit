@@ -2,18 +2,18 @@ adjust 和 modify 让业务对完整定义表达一次变化，无需枚举里�
 
 # Modification 作用于各自结果
 
-以下用算术伪代码说明结果关系，不是当前 adjust 的可执行参数示例：基础 10，hover 规则加 3，active 固定 12，wide 的 variant 规则乘 2，对每条结果应用乘 0.5 的 Modification。真实颜色 API 见下一节。
+以下用算术伪代码说明结果关系，不是当前 adjust 的可执行参数示例：基础 10，hover 规则加 3，active 固定 12，control 的 variant 规则乘 2，对每条结果应用乘 0.5 的 Modification。真实颜色 API 见下一节。
 
 | 路径 | 应用前 | 应用后 |
 | --- | --- | --- |
 | 普通 | 10px | 5px |
 | hover | 13px | 6.5px |
 | active | 12px | 6px |
-| wide 普通 | 20px | 10px |
-| wide hover | 23px | 11.5px |
-| wide active | 12px | 6px |
+| control 普通 | 20px | 10px |
+| control hover | 23px | 11.5px |
+| control active | 12px | 6px |
 
-伪代码是 `result = apply(modification, selectedValue)`。不能只加工普通值而漏掉固定 state；也不能先改基础，再把同一次加工对 state 结果重复执行。variant 的 state 顺序由 [Variable的创建与复用.md](Variable的创建与复用.md) 给出，所以 wide hover 不是 13px，也不是 23px 未加工。
+伪代码是 `result = apply(modification, selectedValue)`。不能只加工普通值而漏掉固定 state；也不能先改基础，再把同一次加工对 state 结果重复执行。variant 的 state 顺序由 [Variable的创建与复用.md](Variable的创建与复用.md) 给出，所以 control hover 不是 13px，也不是 23px 未加工。
 
 # 保留来源，还是改变目标
 

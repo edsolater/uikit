@@ -1,7 +1,7 @@
 import { flush } from 'solid-js'
 import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
-import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, interactiveColor, badColor, oklch, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
+import { declare, modify, variable, variableFrom, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, radius, space, multiply, interactiveColor, badColor, oklch, shadow, controlSize, textSize, opacity } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
@@ -36,7 +36,7 @@ function appearance(button: HTMLElement) {
 }
 
 /** 用浏览器转换到同一色空间再比较数值，容许 CSS 序列化的末位舍入。 */
-function expectSameColor(actual: string, expected: string) {
+function expectSameColor(actual: string, expected: string, tolerance = 0.00005) {
   const numbers = (content: string) => {
     const probe = document.body.appendChild(document.createElement('div'))
     probe.style.color = `color(from ${content} srgb r g b / alpha)`
@@ -48,7 +48,7 @@ function expectSameColor(actual: string, expected: string) {
   const actualNumbers = numbers(actual)
   const expectedNumbers = numbers(expected)
   expect(actualNumbers).toHaveLength(expectedNumbers.length)
-  actualNumbers.forEach((amount, index) => expect(amount).toBeCloseTo(expectedNumbers[index], 4))
+  actualNumbers.forEach((amount, index) => expect(Math.abs(amount - expectedNumbers[index])).toBeLessThanOrEqual(tolerance))
 }
 
 /** 读取感知色空间的色度，比较声量而不冻结旧混色数值。 */
@@ -118,7 +118,7 @@ describe('Button styles', () => {
       button.disabled = true
       await userEvent.hover(button)
       expectSameColors([getComputedStyle(button).backgroundColor, getComputedStyle(button).color], [normal['background-color'], normal.color])
-      expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
+      expect(Number(getComputedStyle(button).opacity)).toBe(0.48)
       await userEvent.unhover(button)
       button.disabled = false
       expectSameAppearance(appearance(button), normal)
@@ -165,7 +165,7 @@ describe('Button styles', () => {
       flush()
       for (const button of buttons) {
         await userEvent.hover(button)
-        expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
+        expect(Number(getComputedStyle(button).opacity)).toBe(0.48)
         expect(getComputedStyle(button).transform).toBe('none')
         await userEvent.unhover(button)
       }
@@ -340,8 +340,8 @@ describe('Button styles', () => {
     // 在已知外观的结构Address验证组合，不从平面选择器猜测DOM同时命中的分支。
     for (const [index, palette] of palettes.entries()) handles.push(rules(['@layer uikit', '.Button',
       ...(selectedAppearance ? [`&[data-appearance="${selectedAppearance}"]`] : []), `&[data-local-tone="${index}"]`], [
-      [buttonColorInput, palette.tone], [buttonColor.variant('soft'), palette.soft],
-      [buttonColor.variant('strong'), palette.strong], [buttonColor.variant('content'), palette.content], [buttonColor.variant('line'), palette.line],
+      [buttonColorInput, palette.tone], [buttonColor.variant('surface'), palette.soft],
+      [buttonColor.variant('text'), palette.strong], [buttonColor.variant('content'), palette.content], [buttonColor.variant('boundary'), palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -404,7 +404,7 @@ describe('Button styles', () => {
     button.disabled = true
     await userEvent.hover(button)
     expectSameColors(read(), normal)
-    expect(Number(getComputedStyle(button).opacity)).toBe(disabledFade.content)
+    expect(Number(getComputedStyle(button).opacity)).toBe(0.48)
     button.disabled = false
     button.dataset.status = 'disabled'
     button.focus()
@@ -446,7 +446,7 @@ describe('Button styles', () => {
       const normal = appearance(button)
       const selectedAppearance = appearances[Math.floor(index / 2)]
       if (selectedAppearance === 'plain') expectSameColor(normal['background-color'], 'transparent')
-      expect(Number(normal.opacity)).toBeGreaterThan(disabledFade.content)
+      expect(Number(normal.opacity)).toBeGreaterThan(0.48)
       expect(Number(normal.opacity)).toBeLessThanOrEqual(1)
       await userEvent.hover(button)
       const hover = appearance(button)
@@ -519,20 +519,20 @@ describe('Button styles', () => {
       const computed = getComputedStyle(button)
       expect(computed.boxShadow).toBe('none')
       expect(computed.cursor).toBe('not-allowed')
-      expect(Number(computed.opacity)).toBe(disabledFade.content)
+      expect(Number(computed.opacity)).toBe(0.48)
       expect(computed.transform).toBe('none')
       expect(computed.minHeight).toBe(entry.size === 'small' ? '32px' : entry.size === 'large' ? '64px' : entry.size === 'xlarge' ? '80px' : '48px')
     }
   })
 
   test('挂载 Button 样式保留其他组件的静态样式和阴影契约', () => {
-    const shadows: [typeof shadowFlat, string][] = [[shadowFlat, '--shadow-0'], [shadowLow, '--shadow-1'], [shadowRaised, '--shadow-2'], [shadowElevated, '--shadow-3']]
+    const shadows: [typeof shadow, string][] = [[shadow.variant('control'), '--shadow-1'], [shadow.variant('filledControl'), '--shadow-2'], [shadow.variant('card'), '--shadow-2']]
     const probes = shadows.map(([material, token], index) => {
       const reference = document.body.appendChild(document.createElement('div'))
       reference.style.boxShadow = `var(${token})`
       const actual = document.body.appendChild(document.createElement('div'))
       actual.className = `shadow-probe-${index}`
-      handles.push(rule(`.shadow-probe-${index}`, 'box-shadow', material))
+      handles.push(rule(`.shadow-probe-${index}`, 'box-shadow', variableFrom(material, material.content, { name: `shadow-probe-${index}`, address: `.shadow-probe-${index}` })))
       return { reference, actual }
     })
     const input = document.body.appendChild(document.createElement('input'))
@@ -547,7 +547,14 @@ describe('Button styles', () => {
       const before = nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))
       style.sheet!.disabled = false
       expect(nonButton.map(element => ({ ...appearance(element), outline: getComputedStyle(element).outlineColor }))).toEqual(before)
-      for (const { actual, reference } of probes) expect(getComputedStyle(actual).boxShadow).toBe(getComputedStyle(reference).boxShadow)
+      for (const { actual, reference } of probes) {
+        const actualShadow = getComputedStyle(actual).boxShadow
+        const expectedShadow = getComputedStyle(reference).boxShadow
+        const colors = /(?:rgba?|oklch)\([^)]*\)/g
+        expect(actualShadow.replace(colors, 'COLOR')).toBe(expectedShadow.replace(colors, 'COLOR'))
+        const expectedColors = expectedShadow.match(colors)!
+        actualShadow.match(colors)!.forEach((color, index) => expectSameColor(color, expectedColors[index], 1 / 255))
+      }
     }
   })
 
@@ -571,6 +578,26 @@ describe('Button styles', () => {
     expect(getComputedStyle(neighbor).backgroundColor).toBe(before)
     expect(style.textContent).toBe(originalCSS)
   })
+  test('修改公共基准后四尺寸与间距文字自然联动，不重新生成样式', () => {
+    const style = mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    const sizes: ButtonProps['size'][] = ['small', undefined, 'large', 'xlarge']
+    dispose = render(() => sizes.map(size => <Button size={size}>相对基准</Button>), host)
+    const buttons = [...host.querySelectorAll('button')]
+    const fields = ['min-height', 'column-gap', 'padding-block-start', 'padding-inline-start', 'font-size', 'opacity']
+    const read = () => buttons.map(button => fields.map(field => parseFloat(getComputedStyle(button).getPropertyValue(field))))
+    buttons.forEach(button => { button.style.transition = 'none' })
+    const before = read()
+    const css = style.textContent
+    const bases = [[controlSize, '72px'], [space, '16px'], [textSize, '24px'], [opacity, '0.5']] as const
+    try {
+      bases.forEach(([base, value]) => document.documentElement.style.setProperty(base.toCSSString(), value))
+      const ratios = [1.5, 2, 2, 2, 1.5, 0.5]
+      read().forEach((values, row) => values.forEach((value, column) => expect(value).toBeCloseTo(before[row][column] * ratios[column], 5)))
+      expect(style.textContent).toBe(css)
+    } finally { bases.forEach(([base]) => document.documentElement.style.removeProperty(base.toCSSString())) }
+  })
+
   test('四尺寸、方圆角、内容与拉伸容器保持旧布局，后置 layer 可覆盖', () => {
     mountButtonStyles()
     const sizes: ButtonProps['size'][] = ['small', undefined, 'large', 'xlarge']
@@ -700,7 +727,7 @@ describe('Button styles', () => {
 
     // 明确采用可覆盖的全局表面入口，保留挂载后CSS变化及规则身份验证。
     handles.push(rules(['@layer uikit', '.Button'], [declare(globalColors.globalSurfaceColor, 'inherit')]))
-    handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', spaceSmall] })]))
+    handles.push(rules('.shared-input', [[$borderRadius, radius], contentLayout({ padding: ['8px', multiply(space, 1 / 2)] })]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
     expect(beforeRender.length).toBeGreaterThan(0)
@@ -799,7 +826,7 @@ describe('Button styles', () => {
     expect(xlargeStyle.columnGap).toBe('16px')
     expect(getComputedStyle(getButton('loading')).cursor).toBe('progress')
     expect(disabledStyle.cursor).toBe('not-allowed')
-    expect(Number(disabledStyle.opacity)).toBe(disabledFade.content)
+    expect(Number(disabledStyle.opacity)).toBe(0.48)
 
     const defaultBackground = defaultStyle.backgroundColor
     await userEvent.hover(getButton('default'))
@@ -889,6 +916,6 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
   normal.disabled = true
   await userEvent.hover(normal)
   background(normal, 'rgb(200, 180, 230)')
-  expect(Number(getComputedStyle(normal).opacity)).toBe(disabledFade.content)
+  expect(Number(getComputedStyle(normal).opacity)).toBe(0.48)
   expect(style.textContent).toBe(cssBefore)
 })

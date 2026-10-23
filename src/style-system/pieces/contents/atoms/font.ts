@@ -1,24 +1,14 @@
-/** 字号、字重、行高的固定尺度与可覆盖取值。 */
-import { value } from '../../../value'
+/** 字号与字重基准；尺寸状态和消费处的相对取值直接从基准派生。 */
 import { variable } from '../../../variable'
+import { multiply } from '../functions/calc'
 
-/** 常规字重的固定 Value。 */
-export const regular = value(400)
+export const textSize = variable('16px', {
+  name: 'text-size',
+  states: {
+    '&[data-size="small"]': base => multiply(base, 7 / 8),
+    '&[data-size="large"]': base => multiply(base, 5 / 4),
+    '&[data-size="xlarge"]': base => multiply(base, 3 / 2),
+  },
+})
 
-/** 粗体字重的固定 Value。 */
-export const bold = value(700)
-
-/** 单倍行高的固定 Value；无单位，表示字号的一倍。 */
-export const singleLine = value(1)
-
-/** 可覆盖的常规字号 Variable。 */
-export const textSizeNormal = variable('14px', { name: 'text-size-normal' })
-
-/** 可覆盖的大档字号 Variable。 */
-export const textSizeLarge = variable('16px', { name: 'text-size-large' })
-
-/** 可覆盖的超大档字号 Variable。 */
-export const textSizeExtraLarge = variable('20px', { name: 'text-size-extra-large' })
-
-/** 可覆盖的超超大档字号 Variable。 */
-export const textSizeExtraExtraLarge = variable('24px', { name: 'text-size-extra-extra-large' })
+export const fontWeight = variable(400, 'font-weight')

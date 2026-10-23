@@ -25,7 +25,7 @@ export function toJSSColor(color: ColorMaterial, name: string): Variable {
 /**
  * 由当前底色求可读内容色，并按原配方保留少量底色气息。
  */
-export function readableContent(base: Variable) {
+export function readableContent(base: ValueInput) {
   const contrast = createJSSContent(
     (resolve) => {
       const source = resolve(base)

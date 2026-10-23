@@ -21,8 +21,8 @@ import { getVariableNameAddress, type VariableName } from './name'
 export type VariableDefaultValue = ValueInput
 /** 状态配方中的 base 是根据地声明的基础内容，不是同名变量引用。 */
 export type VariableStateRule = ValueInput | ((base: ValueInput) => ValueInput)
-/** 变体以默认表达式生成新基础；固定值原样保留。 */
-export type VariableVariantRule = ValueInput | ((base: ValueInput) => ValueInput)
+/** 用途变体生成新基础，也可用 default 简写补充该部分的状态；固定内容原样保留。 */
+export type VariableVariantRule = ValueInput | VariableStateValues | ((base: ValueInput) => ValueInput | VariableStateValues)
 /** 定义的存在位置，复用 rules 的条件材料。 */
 export type VariableAddress = Exclude<ConditionInput, undefined>
 

@@ -1,40 +1,148 @@
-/** 预定义阴影 Atom 与交互配方；阴影档位引用已加载的基础 CSS token，随主题改变几何与浓度。 */
-import { type ShadowShape } from '../atom-creators/shadow'
-import { value } from '../../../value'
+/** 阴影按实际场景组合主题几何，模糊半径由单一长度基准提供。 */
+import { shadowValue } from '../atom-creators/shadow'
+import { valueList } from '../atom-creators/list'
 import { variable } from '../../../variable'
+import { multiply } from '../functions/calc'
+import { oklch } from '../functions/oklch'
 
-/** 贴近表面的阴影几何：水平偏移、垂直偏移、模糊半径，长度单位为像素。 */
-export const contactShape: ShadowShape = { x: value(0), y: value('1px'), blur: value('2px') }
+/** 阴影与遮罩的根主题来源，不随场景的局部地址移动。 */
+export const shadowColor = variable({ default: 'rgb(0 0 0 / 4%)', '&[data-theme="dark"]': base => oklch(base, { alpha: current => multiply(current, 38 / 4) }) }, 'shadow-color')
+export const backdropColor = variable({ default: 'rgb(0 0 0 / 62%)', '&[data-theme="dark"]': base => oklch(base, { alpha: current => multiply(current, 72 / 62) }) }, 'backdrop-color')
 
-/** 抬升层阴影几何，偏移与模糊范围大于接触层，长度单位为像素。 */
-export const raisedShape: ShadowShape = { x: value(0), y: value('6px'), blur: value('18px') }
+/** 所有场景共用的几何长度基准；各层保持自身的位移与模糊比例。 */
+export const shadowDistance = variable('1px', 'shadow-distance')
 
-/** 亮色主题的阴影色。 */
-export const lightShade = value('rgb(0 0 0 / 4%)')
+const cardShadowSource = variable({
+  default: valueList(
+    shadowValue({
+      x: 0, y: shadowDistance,
+      blur: multiply(shadowDistance, 2),
+      color: oklch(shadowColor, { alpha: current => multiply(current, 3 / 4) }),
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 6),
+      blur: multiply(shadowDistance, 18),
+      color: shadowColor,
+    }),
+  ),
+  '&[data-theme="dark"]': valueList(
+    shadowValue({
+      x: 0, y: shadowDistance,
+      blur: multiply(shadowDistance, 2),
+      color: oklch(shadowColor, { alpha: current => multiply(current, 46 / 38) }),
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 12),
+      blur: multiply(shadowDistance, 28),
+      color: shadowColor,
+    }),
+  ),
+}, 'card-shadow-source')
 
-/** 暗色主题阴影色。 */
-export const darkShade = value('rgb(0 0 0 / 38%)')
+const popoverShadowSource = variable({
+  default: valueList(
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 4),
+      blur: multiply(shadowDistance, 8),
+      color: shadowColor,
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 18),
+      blur: multiply(shadowDistance, 40),
+      color: shadowColor,
+    }),
+  ),
+  '&[data-theme="dark"]': valueList(
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 4),
+      blur: multiply(shadowDistance, 8),
+      color: oklch(shadowColor, { alpha: current => multiply(current, 54 / 38) }),
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 24),
+      blur: multiply(shadowDistance, 56),
+      color: shadowColor,
+    }),
+  ),
+}, 'popover-shadow-source')
 
-/** 双重阴影中贴近表面的接触色。 */
-export const contactShade = value('rgb(0 0 0 / 3%)')
+const dialogShadowSource = variable({
+  default: valueList(
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 12),
+      blur: multiply(shadowDistance, 24),
+      color: shadowColor,
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 44),
+      blur: multiply(shadowDistance, 88),
+      color: shadowColor,
+    }),
+  ),
+  '&[data-theme="dark"]': valueList(
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 12),
+      blur: multiply(shadowDistance, 24),
+      color: oklch(shadowColor, { alpha: current => multiply(current, 60 / 38) }),
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 52),
+      blur: multiply(shadowDistance, 108),
+      color: shadowColor,
+    }),
+  ),
+}, 'dialog-shadow-source')
 
-/** 平面档，不产生阴影。 */
-export const shadowFlat = variable('var(--shadow-0)', { name: 'shadow-flat' })
+const controlShadowSource = variable({
+  default: shadowValue({
+    x: 0, y: shadowDistance,
+    blur: multiply(shadowDistance, 2),
+    color: shadowColor,
+  }),
+  '&[data-theme="dark"]': shadowValue({
+    x: 0, y: shadowDistance,
+    blur: multiply(shadowDistance, 2),
+    color: oklch(shadowColor, { alpha: current => multiply(current, 46 / 38) }),
+  }),
+}, 'control-shadow-source')
+const raisedCardShadowSource = variable({
+  default: valueList(
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 2),
+      blur: multiply(shadowDistance, 4),
+      color: oklch(shadowColor, { alpha: current => multiply(current, 3.5 / 4) }),
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 10),
+      blur: multiply(shadowDistance, 24),
+      color: shadowColor,
+    }),
+  ),
+  '&[data-theme="dark"]': valueList(
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 2),
+      blur: multiply(shadowDistance, 4),
+      color: oklch(shadowColor, { alpha: current => multiply(current, 50 / 38) }),
+    }),
+    shadowValue({
+      x: 0, y: multiply(shadowDistance, 16),
+      blur: multiply(shadowDistance, 36),
+      color: shadowColor,
+    }),
+  ),
+}, 'raised-card-shadow-source')
 
-/** 贴近表面的低层阴影。 */
-export const shadowLow = variable('var(--shadow-1)', { name: 'shadow-low' })
-
-/** 抬升档，组合接触与扩散两层阴影。 */
-export const shadowRaised = variable('var(--shadow-2)', { name: 'shadow-raised' })
-
-/** 强抬升档，使用基础 token 随主题选择的几何与浓度。 */
-export const shadowElevated = variable('var(--shadow-3)', { name: 'shadow-elevated' })
-
-/** 可交互主体的层级反馈；悬停时抬升，按下或禁用时回到平面。 */
-export const shadowInteractive = variable(shadowLow, {
-  name: 'shadow-interactive', states: {
-    hover: shadowRaised,
-    active: shadowFlat,
-    disabled: shadowFlat,
-  }
+/** 各场景有不同的多层几何；交互属于控制场景，主题条件始终留在根来源。 */
+export const shadow = variable(cardShadowSource, {
+  name: 'shadow',
+  variants: {
+    card: base => base,
+    popover: popoverShadowSource,
+    dialog: dialogShadowSource,
+    control: { default: controlShadowSource, hover: cardShadowSource, active: 'none', disabled: 'none' },
+    filledControl: { default: cardShadowSource, hover: raisedCardShadowSource, active: 'none', disabled: 'none' },
+  },
 })
+
+/** 消费处将此长度用于 blur()，较轻或较重的模糊直接相对它计算。 */
+export const blurRadius = variable('8px', 'blur-radius')

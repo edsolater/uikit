@@ -27,51 +27,37 @@ import {
   globalSurfaceColor,
   globalContentColor,
   interactiveColorStates,
-  pill,
-  spaceSmall,
-  spaceNormal,
-  spaceMedium,
-  spaceLarge,
-  spaceExtraLarge,
-  spaceWide,
-  spaceWidest,
-  boundaryWidthThin,
-  controlSizeSmall,
-  controlSizeNormal,
-  controlSizeLarge,
-  controlSizeExtraLarge,
-  bold,
-  singleLine,
-  textSizeNormal,
-  textSizeLarge,
-  textSizeExtraLarge,
-  textSizeExtraExtraLarge,
-  shadowFlat,
-  shadowRaised,
-  shadowElevated,
-  shadowInteractive,
-  disabledFade,
+  space,
+  boundaryWidth,
+  controlSize,
+  fontWeight,
+  textSize,
+  shadow,
+  opacity,
+  multiply,
 } from '@/style-system'
-import { $opacity } from '@/style-system/pieces/keys/opacity'
 
 const button = ['@layer uikit', `.Button`]
+const buttonSpacing = variableFrom(space, space, { name: 'button-space', address: button })
+const buttonTextSize = variableFrom(textSize, textSize, { name: 'button-text-size', address: button })
+const buttonSize = variableFrom(controlSize, controlSize, { name: 'button-size', address: button })
 
 /** 组件的局部颜色输入；变体保留真实引用，分类只需选择一次材料。 */
 export const buttonColorInput = variableFrom(interactiveColor, interactiveColor.content, { name: 'button-color-input', address: button })
-/** Button 的颜色定义；使用处按 soft、strong、line、content 选择变体。 */
+/** Button 的颜色定义；使用处按表面、内容、边界及实底内容选择变体。 */
 export const buttonColor = variable(buttonColorInput, {
   name: 'button-color',
   address: button,
   variants: {
-    soft: base => oklch(base, { alpha: 0.14 }),
-    strong: base => base,
-    line: base => oklch(base, { alpha: 0.44 }),
+    surface: base => oklch(base, { alpha: current => multiply(current, 0.14) }),
+    text: base => base,
+    boundary: base => oklch(base, { alpha: current => multiply(current, 0.44) }),
     content: paperColor,
   },
 })
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
-export const buttonSurfaceSource = variable(buttonColor.variant('soft'), { name: 'button-surface-source', address: button })
+export const buttonSurfaceSource = variable(buttonColor.variant('surface'), { name: 'button-surface-source', address: button })
 
 /** 混色的承载画布，默认沿用中性表面的交互状态。 */
 export const buttonSurfaceCanvas = variable(interactiveColorStates({ base: globalSurfaceColor }), { name: 'button-surface-canvas', address: button })
@@ -80,31 +66,35 @@ export const buttonSurfaceCanvas = variable(interactiveColorStates({ base: globa
 export const buttonSurfaceStrength = variable(0.18, {
   name: 'button-surface-strength',
   address: button,
-  states: { hover: 0.28, active: 0.38 },
+  states: { hover: base => multiply(base, 0.28 / 0.18), active: base => multiply(base, 0.38 / 0.18) },
 })
 
-/** 整体存在感的人工配方：普通 0.9，柔和 0.7，强调 1；禁用始终沿用统一淡化。 */
-const buttonOpacity = variable(0.9, {
-  name: 'button-opacity',
-  address: button,
-  states: { disabled: disabledFade },
+/** 默认存在感及强调/禁用都相对于同一输入；组件保留原来的四种比例。 */
+const buttonOpacity = variableFrom(opacity, multiply(opacity, 0.9), {
+  name: 'button-opacity', address: button,
+  states: {
+    disabled: base => multiply(base, 0.48 / 0.9),
+    '&[data-emphasis="soft"]:not(:disabled, [data-status~="disabled"])': base => multiply(base, 0.7 / 0.9),
+    '&[data-emphasis="strong"]:not(:disabled, [data-status~="disabled"])': base => multiply(base, 1 / 0.9),
+  },
 })
 
 /** Button当前承载面和内容色，外部可按作用域分别声明。 */
 export const buttonSurfaceColor = variable(colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas), { name: 'button-surface-color', address: button })
 export const buttonContentColor = variable(globalContentColor, { name: 'button-content-color', address: button })
-const buttonShadow = variableFrom(shadowInteractive, shadowInteractive.content, { name: 'button-shadow', address: button })
+const controlShadow = shadow.variant('control')
+const buttonShadow = variableFrom(controlShadow, controlShadow.content, { name: 'button-shadow', address: button })
 
 // 定义button的样式架构
 rules(button, [
-  innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
-  contentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
-  size({ minHeight: controlSizeNormal }),
-  boundary({ border: [boundaryWidthThin, 'solid', 'transparent'], radius: pill, cornerShape: 'squircle' }),
+  innerText({ font: 'inherit', fontSize: buttonTextSize, emphasis: multiply(fontWeight, 7 / 4), leading: 1 }),
+  contentLayout({ mode: 'center', alignSelf: 'center', gap: buttonSpacing.variant('gap'), padding: [buttonSpacing.variant('paddingBlock'), buttonSpacing.variant('paddingInline')] }),
+  size({ minHeight: buttonSize }),
+  boundary({ border: [boundaryWidth, 'solid', 'transparent'], radius: '999px', cornerShape: 'squircle' }),
   color({ background: buttonSurfaceColor, content: buttonContentColor }),
   elevation(buttonShadow),
 
-  clickable({ address: button, opacity: buttonOpacity, focusColor: buttonColor.variant('line') }),
+  clickable({ address: button, opacity: buttonOpacity, focusColor: buttonColor.variant('boundary') }),
 ])
 
 // =============================================================================
@@ -112,7 +102,7 @@ rules(button, [
 // =============================================================================
 
 // tone 只选择材料；声量与状态沿用各自的独立效果。
-rules([...button, '&[data-tone]'], [declare(buttonContentColor, buttonColor.variant('strong'))])
+rules([...button, '&[data-tone]'], [declare(buttonContentColor, buttonColor.variant('text'))])
 rules([...button, '&[data-tone="danger"]'], [declare(buttonColorInput, badColor)])
 
 // =============================================================================
@@ -121,14 +111,14 @@ rules([...button, '&[data-tone="danger"]'], [declare(buttonColorInput, badColor)
 
 // outlined 保留浅底，并用当前语气的线色形成可见轮廓。
 rules([...button, '&[data-appearance="outlined"]'], [
-  boundary({ border: [boundaryWidthThin, 'solid', buttonColor.variant('line')] }),
+  boundary({ border: [boundaryWidth, 'solid', buttonColor.variant('boundary')] }),
 ])
 
 // plain 保留透明常态与无边界，悬停和按下只增加轻量语气反馈。
 const plainStrength = variable(-0.18, {
   name: 'button-plain-strength',
   address: [...button, '&[data-appearance="plain"]'],
-  states: { hover: -0.2, active: -0.24 },
+  states: { hover: base => multiply(base, 0.2 / 0.18), active: base => multiply(base, 0.24 / 0.18) },
 })
 const plainButton = [...button, '&[data-appearance="plain"]']
 rules(plainButton, [
@@ -137,19 +127,18 @@ rules(plainButton, [
     detail: (currentExpression) => add(currentExpression, plainStrength),
   }),
   [buttonSurfaceCanvas, 'transparent'],
-  elevation(shadowFlat),
+  elevation('none'),
 ])
 
 // filled 使用语气实底；交互时少量露出画布，避免混色抵消交互色的明度变化。
 const filledStrength = variable(0.82, {
   name: 'button-filled-strength',
   address: [...button, '&[data-appearance="filled"]'],
-  states: { hover: 0.67, active: 0.52 },
+  states: { hover: base => multiply(base, 0.67 / 0.82), active: base => multiply(base, 0.52 / 0.82) },
 })
-const shadowFilled = variable(shadowRaised, {
-  name: 'button-shadow-filled',
-  address: [...button, '&[data-appearance="filled"]'],
-  states: { hover: shadowElevated, active: shadowFlat, disabled: shadowFlat },
+const filledControlShadow = shadow.variant('filledControl')
+const shadowFilled = variableFrom(filledControlShadow, filledControlShadow.content, {
+  name: 'button-shadow-filled', address: [...button, '&[data-appearance="filled"]'],
 })
 const filledButton = [...button, '&[data-appearance="filled"]']
 rules(filledButton, [
@@ -161,43 +150,6 @@ rules(filledButton, [
   declare(buttonContentColor, buttonColor.variant('content')),
   elevation(shadowFilled),
 ])
-
-// emphasis 只调整整体存在感，不改变外观、语气或尺寸；禁用状态由 Variable 保持。
-const softOpacity = variableFrom(buttonOpacity, 0.7, 'button-soft-opacity')
-rules([...button, '&[data-emphasis="soft"]'], [[$opacity, softOpacity]])
-const strongOpacity = variableFrom(buttonOpacity, 1, 'button-strong-opacity')
-rules([...button, '&[data-emphasis="strong"]'], [[$opacity, strongOpacity]])
-
-// =============================================================================
-// size 物理尺寸
-// =============================================================================
-
-rules(
-  [...button, '&[data-size="small"]'],
-  [
-    innerText({ fontSize: textSizeNormal }),
-    contentLayout({ gap: spaceSmall, padding: [spaceSmall, spaceMedium] }),
-    size({ minHeight: controlSizeSmall }),
-  ],
-)
-
-rules(
-  [...button, '&[data-size="large"]'],
-  [
-    innerText({ fontSize: textSizeExtraLarge }),
-    contentLayout({ gap: spaceMedium, padding: [spaceNormal, spaceWide] }),
-    size({ minHeight: controlSizeLarge }),
-  ],
-)
-
-rules(
-  [...button, '&[data-size="xlarge"]'],
-  [
-    innerText({ fontSize: textSizeExtraExtraLarge }),
-    contentLayout({ gap: spaceLarge, padding: [spaceMedium, spaceWidest] }),
-    size({ minHeight: controlSizeExtraLarge }),
-  ],
-)
 
 // =============================================================================
 // status 外部状态

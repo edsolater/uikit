@@ -84,3 +84,32 @@ test('表达式中的真实Variable引用仍进入变体依赖', () => {
   expect(css).toContain('var(--variant-shared-input)')
   expect(css).not.toContain('var(--variant-reference-parent)')
 })
+
+
+test('用途部分覆盖自身状态，局部派生保留地址和固定材料引用', () => {
+  const shared = variable(7, 'part-shared-source')
+  const source = variable(10, {
+    name: 'part-source',
+    states: { hover: 20 },
+    variants: {
+      content: base => ({ default: twice(base), hover: 30 }),
+      boundary: { default: shared, hover: 2 },
+      fixed: shared,
+    },
+  })
+  const local = variableFrom(source, 15, { name: 'part-local', address: '.LocalPart' })
+  const content = local.variant('content')
+  const boundary = local.variant('boundary')
+  const css = compileRules([
+    [['.Consumer'], 'width', content], [['.Consumer'], 'height', boundary],
+    [['.Consumer'], 'z-index', local.variant('fixed')],
+  ])
+  expect(content.address).toBe('.LocalPart')
+  expect(boundary.content).toBe(shared)
+  expect(local.variant('fixed').content).toBe(shared)
+  expect(css).toContain('.LocalPart')
+  expect(css).toMatch(/--part-local-content:\s*30\s*;/)
+  expect(css).toMatch(/--part-local-boundary:\s*2\s*;/)
+  expect(css).toContain('var(--part-shared-source)')
+  expect(css).not.toMatch(/--part-local-content:\s*20\s*;/)
+})

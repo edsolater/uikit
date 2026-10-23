@@ -1,5 +1,11 @@
-/** 零至一的透明度 Atom。 */
-import { value } from '../../../value'
+/** 不透明度基准及相对的强调、禁用状态。 */
+import { variable } from '../../../variable'
+import { multiply } from '../functions/calc'
 
-/** 不可用状态的淡化程度，取零至一的透明度比例。 */
-export const disabledFade = value(0.48)
+export const opacity = variable(1, {
+  name: 'opacity',
+  states: {
+    disabled: base => multiply(base, 0.48),
+    '&[data-emphasis="soft"]:not(:disabled, [data-status~="disabled"])': base => multiply(base, 0.72),
+  },
+})

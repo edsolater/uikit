@@ -32,7 +32,7 @@ import { fontValue } from '../pieces/contents/atom-creators/font'
 import { contentLayout, innerText } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
 
-import { durationFast } from '../pieces/contents/atoms/motion'
+import { motionDuration } from '../pieces/contents/atoms/motion'
 import { lineColor } from '../pieces/contents/atoms/color/colors'
 
 stateCondition('testHover', condition('&:hover'))
@@ -41,17 +41,16 @@ stateCondition('testMedia', media('(width > 1px)'))
 
 test('动效按需提供根规则，分隔线在消费者处引用文字变量，空输入不激活', () => {
   expect(compileRules([])).toBe('')
-  const motionCSS = compileRules([[[condition('.Motion')], 'transition-duration', durationFast]])
-  expect(motionCSS).toContain('--motion-scale-ratio: 1;')
+  const motionCSS = compileRules([[[condition('.Motion')], 'transition-duration', motionDuration]])
+  expect(motionCSS).toContain('--motion-duration: 180ms;')
   expect(motionCSS).toContain('@media (prefers-reduced-motion: reduce)')
-  expect(motionCSS).toContain('--motion-scale-ratio: 0;')
-  expect(motionCSS).toContain('--duration-fast: calc(120ms * var(--motion-scale-ratio));')
+  expect(motionCSS).toContain('--motion-duration: calc(180ms * 0);')
   expect(motionCSS).not.toContain('--line-color:')
   const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor(variable('black', 'local-line-base'))]])
   expect(lineCSS).toContain('border-color: var(--local-line-base-line);')
   expect(lineCSS).toContain('var(--local-line-base)')
   expect(lineCSS).toContain(':root')
-  expect(lineCSS).not.toContain('--motion-scale-ratio:')
+  expect(lineCSS).not.toContain('--motion-duration:')
 })
 
 test('Variable 创建时不激活，按需规则可引用自身与稍后创建的 Variable', () => {

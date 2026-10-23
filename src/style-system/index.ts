@@ -50,40 +50,24 @@ export * from './pieces/mixins/content'
 export * from './pieces/mixins/structure'
 export * from './pieces/mixins/appearance'
 export * from './pieces/mixins/interaction'
-export { disabledFade } from './pieces/contents/atoms/opacity'
 export { whenHover, whenActive, whenDisabled } from './pieces/conditions/interaction'
 export { $borderRadius } from './pieces/keys/border'
 export { $backgroundColor } from './pieces/keys/color'
-export { subtle, pill } from './pieces/contents/atoms/radius'
-export {
-  spaceSmall,
-  spaceNormal,
-  spaceMedium,
-  spaceLarge,
-  spaceExtraLarge,
-  spaceWide,
-  spaceWidest,
-  boundaryWidthThin,
-} from './pieces/contents/atoms/space'
 export { globalSurfaceColor, globalContentColor, lineColor, lineStrength } from './pieces/contents/atoms/color/colors'
 export { paperColor, inkColor } from './pieces/contents/atoms/color/palette'
 export { interactiveColor, highlightColor } from './pieces/contents/atoms/color/ui-action-colors'
 export { goodColor, badColor, warnColor, infoColor } from './pieces/contents/atoms/color/ui-info-color'
-export { shadowFlat, shadowLow, shadowRaised, shadowElevated, shadowInteractive } from './pieces/contents/atoms/shadow'
 export { $cursor } from './pieces/keys/interaction'
 export { colorMix } from './pieces/contents/functions/color-mix'
 export { interactiveColorStates } from './pieces/contents/atoms/color/ui-variable-structure'
-export {
-  controlSizeSmall,
-  controlSizeNormal,
-  controlSizeLarge,
-  controlSizeExtraLarge,
-} from './pieces/contents/atoms/size'
-export {
-  bold,
-  singleLine,
-  textSizeNormal,
-  textSizeLarge,
-  textSizeExtraLarge,
-  textSizeExtraExtraLarge,
-} from './pieces/contents/atoms/font'
+
+export * from './pieces/contents/atoms/space'
+export * from './pieces/contents/atoms/size'
+export * from './pieces/contents/atoms/radius'
+export * from './pieces/contents/atoms/boundary'
+export * from './pieces/contents/atoms/font'
+export * from './pieces/contents/atoms/shadow'
+export * from './pieces/contents/atoms/motion'
+export * from './pieces/contents/atoms/opacity'
+export * from './pieces/contents/atoms/color/seeds'
+export * from './pieces/contents/atoms/color/roles'

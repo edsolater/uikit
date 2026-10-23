@@ -82,7 +82,7 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 公共 `index` 公开 Variable 与独立 VariableName 创建、variableFrom定义复用、声明、编译和 Mixin。Key 和其他碎片从负责文件导入；Variable 类型直接包含创建配置 `config`，自动状态声明 Key 位于 `config.definitionKey`。
 
 
-Variable 的 options.variants 保存变体规则或固定值，参数解析与 states 一样合并创建时定义。variant 通过 variableFrom 创建普通 Variable，再去掉父层变体；结果继承来源根据地。Button 用途直接在使用处选择，输入与各结果在明确组件地址计算，无按名称建立的母子联动。
+Variable 的 options.variants 保存用途规则或固定值，也接收 {default,...states} 简写覆盖具体部分的状态，参数解析与 states 一样合并创建时定义。variant 通过 variableFrom 创建普通 Variable，再去掉父层变体；结果继承来源根据地。Button 用途直接在使用处选择，输入与各结果在明确组件地址计算，无按名称建立的母子联动。
 
 ## 内容扩展与位置记录
 
@@ -188,7 +188,7 @@ Variable 的注册配方使用 `resourceAddress` 查找同址资源、`productTa
 
 Button.style.ts拥有Button具体颜色、条件及公开控制点。基础纸色、墨色、品牌色等材料与普通转换留在Style System；组件不经全局中转角色取得自己的表面、内容和边线定义。lineColor(base)是普通函数，lineStrength是可全局/局部控制的Variable。
 
-buttonColor 将 soft、strong、line、content 定义保存在 variants，使用处直接选择，不再导出成员别名；危险语气只声明 buttonColorInput。原有浅底0.14、轮廓0.44和背景强度配方保留，plain/filled贡献继续用modify。Button表面、内容、来源、画布和强度均为具体对象，组件入口导出实际控制点。四条无值补偿声明已全部移除。颜色输入、各用途、画布、强度、透明度、阴影与反馈显式指定Button或外观地址，首次消费由根据地保障定义。
+buttonColor 将 surface、text、boundary、content 定义保存在 variants，使用处直接选择，不再导出成员别名；危险语气只声明 buttonColorInput。原有浅底0.14、轮廓0.44和背景强度配方保留，plain/filled贡献继续用modify。Button表面、内容、来源、画布和强度均为具体对象，组件入口导出实际控制点。四条无值补偿声明已全部移除。颜色输入、各用途、画布、强度、透明度、阴影与反馈显式指定Button或外观地址，首次消费由根据地保障定义。
 
 clickable显式接收Button地址，focusColor接收组件的具体边线；轮廓构造函数据所选内容创建有自身focus状态的Variable。布局、禁用淡化、按压和焦点仍由通用效果承担，不建立共享颜色组。Button静态导入样式，应用在render前统一mount。
 

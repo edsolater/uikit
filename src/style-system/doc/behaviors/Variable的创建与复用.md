@@ -8,7 +8,7 @@ Variable 是一份可复用的样式定义骨骼，包含基础内容、states �
 const size = variable('10px', {
   name: 'control-size', address: '.Control',
   states: { hover: base => add(base, '3px'), active: '12px' },
-  variants: { wide: base => multiply(base, 2), fixed: '7px' },
+  variants: { control: base => multiply(base, 2), indicator: '7px' },
 })
 rules('.Control', [[key('width'), size]])
 ```
@@ -36,8 +36,8 @@ rules('.LargeControl', [[key('width'), larger]])
 
 ```ts
 rules('.LargeControl', [
-  [key('width'), larger.variant('wide')],
-  [key('height'), larger.variant('fixed')],
+  [key('width'), larger.variant('control')],
+  [key('height'), larger.variant('indicator')],
 ])
 ```
 
@@ -46,8 +46,10 @@ rules('.LargeControl', [
 | 所选定义 | 普通 | hover | active |
 | --- | --- | --- | --- |
 | larger | 20px | 23px | 12px |
-| wide | 40px | 43px | 12px |
-| fixed | 7px | 10px | 12px |
+| control | 40px | 43px | 12px |
+| indicator | 7px | 10px | 12px |
+
+这里 control 与 indicator 表达控件本体和指示标记两个部分；尺寸大小或强调程度是对象状态，不作为用途名称。
 
 生成规则的伪代码：
 
@@ -56,9 +58,9 @@ variantBase = evaluate(variantDefinition, sourceBase)
 stateValue = evaluate(stateDefinition, variantBase)
 ```
 
-evaluate 对规则传入 base，对固定值原样返回。state 不先作用于 sourceBase 再传入 variant，因此 wide 的 hover 不是 46px。
+evaluate 对规则传入 base，对固定值原样返回。state 不先作用于 sourceBase 再传入 variant，因此 control 的 hover 不是 46px。
 
-variant 返回普通 Variable，继承根据地和 state，名称区分所选用途；消掉父层 variants，不把它们原样再挂回结果。它仍可作为 variableFrom 来源；例如 wide 换基础为 50px 后 hover 为 53px。嵌套用途保留为未来可能性，当前不提供；未知用途明确失败。
+variant 返回普通 Variable，继承根据地和 state，名称区分所选用途；消掉父层 variants，不把它们原样再挂回结果。它仍可作为 variableFrom 来源；例如 control 换基础为 50px 后 hover 为 53px。嵌套用途保留为未来可能性，当前不提供；未知用途明确失败。
 
 # 具体对象携带定义，名称只标识 CSS
 
@@ -67,3 +69,21 @@ variant 返回普通 Variable，继承根据地和 state，名称区分所选用
 VariableName 保留对象能力，也能字符串化供命名函数或模板使用。例如 String(v.name) 得到逻辑名称，VariableName 作为内容使用时表达 CSS 引用；两者都不查找或激活同名 Variable 定义。完整调用约定见 [当前协议](../当前接口与扩展协议.md#variable-输入命名与可选配置)。
 
 variableFrom 只关心传入的 Variable 定义，不区分它由 variable、variant 或 adjust 创建。新基础直接成为新 Variable 的基础；来源已有的 states、variants 按相同规则继承，不额外执行某段创建历史。adjust 怎样产生这份定义，见 [adjust与modify.md](adjust与modify.md)。
+
+
+用途需要自己的状态时，返回与 variable 相同的状态简写，不另建一份子材料再搬地址：
+
+```ts
+const panelColor = variable(sourceColor, {
+  name: 'panel-color', address: '.Panel',
+  states: { hover: base => oklch(base, { alpha: 0.8 }) },
+  variants: {
+    boundary: base => ({
+      default: oklch(base, { alpha: 0.44 }),
+      hover: boundary => oklch(boundary, { alpha: 0.6 }),
+    }),
+  },
+})
+```
+
+boundary 的 hover 覆盖主体同名状态，未覆盖的状态仍继承；address 同样沿用主体。根主题与局部交互应由各自来源负责，不能把根的 dark 条件搬成对局部元素 data-theme 的要求。

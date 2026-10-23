@@ -1,32 +1,28 @@
-/** 间距档位、边界尺寸及控件内部空间。 */
+/** 间距基准、控件尺寸状态，以及间隔和两向内边距的部分配方。 */
 import { variable } from '../../../variable'
+import { multiply } from '../functions/calc'
 
-/** 可覆盖的小档间距 Variable；可用于内外边距或内容间隔。 */
-export const spaceSmall = variable('4px', { name: 'space-small' })
+/** 每个状态相对于所选部分的基准计算，不保存另一套绝对档位。 */
+export const space = variable('8px', {
+  name: 'space',
+  states: {
+    '&[data-size="small"]': base => multiply(base, 1 / 2),
+    '&[data-size="large"]': base => multiply(base, 3 / 2),
+    '&[data-size="xlarge"]': base => multiply(base, 2),
+  },
+  variants: {
+    gap: base => base,
+    paddingBlock: base => ({
+      default: base,
+      '&[data-size="large"]': current => current,
+      '&[data-size="xlarge"]': current => multiply(current, 3 / 2),
+    }),
+    paddingInline: base => ({
+      default: multiply(base, 3),
+      '&[data-size="large"]': current => multiply(current, 4 / 3),
+    }),
+  },
+})
 
-/** 可覆盖的常规档间距 Variable。 */
-export const spaceNormal = variable('8px', { name: 'space-normal' })
-
-/** 可覆盖的中档间距 Variable。 */
-export const spaceMedium = variable('12px', { name: 'space-medium' })
-
-/** 可覆盖的大档间距 Variable。 */
-export const spaceLarge = variable('16px', { name: 'space-large' })
-
-/** 可覆盖的超大档间距 Variable。 */
-export const spaceExtraLarge = variable('24px', { name: 'space-extra-large' })
-
-/** 可覆盖的宽档间距 Variable。 */
-export const spaceWide = variable('32px', { name: 'space-wide' })
-
-/** 可覆盖的最宽档间距 Variable。 */
-export const spaceWidest = variable('48px', { name: 'space-widest' })
-
-/** 细边缘厚度；不与按压位移共享 Value。 */
-export const boundaryWidthThin = variable('1px', { name: 'boundary-width-thin' })
-
-/** 焦点轮廓宽度。 */
-export const focusStrokeWidth = variable('2px', { name: 'focus-stroke-width' })
-
-/** 焦点轮廓与控件之间的距离；与轮廓宽度独立。 */
-export const focusGapSize = variable('2px', { name: 'focus-gap-size' })
+/** 视口宽度在 360px 至 1440px 区间的进度。 */
+export const fluidProgress = variable('progress(100vw, 360px, 1440px)', 'fluid-progress')
