@@ -5,10 +5,11 @@
  * plugin 的返回值只表达 prompt 类声明补丁；第二参数提供的结构工具会改变真实 DOM 附属结构，
  * 但不应改变调用方心智里的 Piv 主体层级。
  */
+import { createPluginInstanceSymbol } from '../../plugins/plugin-instance'
 import { children, createRenderEffect, onCleanup, type JSXElement, insert } from '@/foundation'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
-import { createPluginInstanceSymbol, type Plugin } from '../../plugins/definePlugin'
+import type { Plugin } from '../../plugins/definePlugin'
 
 /**
  * Piv plugin 是 Piv 的高权限增强入口。

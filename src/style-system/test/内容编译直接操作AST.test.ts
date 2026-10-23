@@ -4,10 +4,9 @@ import { condition } from '../condition'
 import { createJSSContent, type JSSContent } from '../content'
 import { value } from '../value'
 import { variable, referenceVariable } from '../variable'
-import { key } from '../key'
+import { key, type JSSKeyObject } from '../key'
 import { compileRules } from '../css-root'
-import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import type { JSSKeyObject } from '../key'
+import type { JSSStyleNode } from '../compiler/contracts'
 
 it('当前操作立即改写，产物中的按需规则继续独立编译', () => {
   const path = condition('.rewriter-test')
@@ -147,7 +146,6 @@ it('展开入口脱离输出后仍保留来源链，撤销祖先时产物一并�
   expect(css).not.toContain('width:')
   expect(css).toContain('order: 1')
 })
-
 
 it.each(['output', 'session'])('当前位置退出后不再出现在查询结果中：%s', (from) => {
   const path = condition('.missing-position')

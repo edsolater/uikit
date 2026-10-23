@@ -8,8 +8,7 @@ import { add, multiply } from '../pieces/contents/functions/calc'
 import { variable, variableFrom } from '../variable'
 
 import { key } from '../key'
-import { type ValueInput } from '../value'
-
+import type { ValueInput } from '../value'
 
 afterEach(() => document.body.replaceChildren())
 

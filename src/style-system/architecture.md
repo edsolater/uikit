@@ -41,7 +41,9 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 | --- | --- |
 | condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份 |
 | pieces/state-conditions.ts | 主体状态名称、条件登记、中央顺序与状态路径追加 |
-| key.ts | JSSKey 的创建、聚合、识别与别名解析；共用 CSS 自定义属性名称分配，别名登记与名称避让分别保存 |
+| key.ts | JSSKey 的创建、识别与别名解析 |
+| custom-property-names.ts | Variable 与 Modification 共用的 CSS 自定义属性名称分配与避让 |
+| variable/variant-selections.ts | 内部显式用途选择关联，不进入聚合出口 |
 | variable/name.ts | CSS名称对象、逻辑名字符串化及纯CSS引用；不登记定义 |
 | variable/args-parser.ts | 默认/状态/名称简写归一，接收内部复用来源；等级为显式值、来源加一或0 |
 | operations/declare.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
@@ -56,7 +58,9 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 | operations/adjust.ts | Adjust 双方协议、统一加工完整结果、保留来源资源并创建结果 Variable |
 | modification.ts | Modification 的 type/detail 定义、内置颜色转译、独立声明与应用材料 |
 | css-function.ts | CSSFunction 定义主体、按需完整定义与调用 Expression |
-| css-root.ts | 源账本、三步编译调用和宿主提交 |
+| rule-registry.ts | 单一源规则账本与登记句柄，内部共享 |
+| css-root.ts | 三步编译调用和宿主提交 |
+| compiler/contracts.ts | 公开的节点、查询与内容访问协议；实现依赖这些声明 |
 | compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |
 | compiler/style-nodes-to-content-nodes/compilation.ts | 汇总公开编译函数与 JSSContentNode 结果类型 |
 | compiler/style-nodes-to-content-nodes/compilation.ts | 组合三项编译账本，编排访问、资源发布、波末核验、聚合和输出 |

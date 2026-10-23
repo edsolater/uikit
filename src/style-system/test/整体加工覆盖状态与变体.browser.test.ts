@@ -187,4 +187,3 @@ test('从已加工定义复用新基础时只加工一次，不保留来源当�
   expect(getComputedStyle(element).color).toBe('oklch(0.451981 0.31321 264.051 / 0.5)')
   await userEvent.unhover(element)
 })
-

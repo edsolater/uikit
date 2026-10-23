@@ -8,7 +8,7 @@ import { expect, test, vi } from 'vitest'
 import { compileRules } from '../../css-root'
 import { value } from '../../value'
 import type { JSSCompileContext, JSSContent } from '../../content'
-import type { ASTController } from '../ast-controller'
+import type { ASTController } from '../contracts'
 
 test('通知返回值不参与编译，自身输出保留而显式 undefined 抑制输出，旧上下文不能继续操作', () => {
   const unexpected = vi.fn()

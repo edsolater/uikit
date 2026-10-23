@@ -85,7 +85,6 @@ test('表达式中的真实Variable引用仍进入变体依赖', () => {
   expect(css).not.toContain('var(--variant-reference-parent)')
 })
 
-
 test('用途部分覆盖自身状态，局部派生保留地址和固定材料引用', () => {
   const shared = variable(7, 'part-shared-source')
   const source = variable(10, {

@@ -1,6 +1,5 @@
 /** 公开类型保留目标与内容的关系，并直接提供 Variable 创建配置。 */
 
-
 import { expect, test, vi } from 'vitest'
 import { variable } from '../index'
 import { condition } from '../condition'

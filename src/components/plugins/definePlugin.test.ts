@@ -1,5 +1,6 @@
+import { createPluginInstanceSymbol } from './plugin-instance'
 import { describe, expect, test } from 'vitest'
-import { createPlugin, createPluginInstanceSymbol } from './definePlugin'
+import { createPlugin } from './definePlugin'
 
 describe('Plugin 定义', () => {
   test('Plugin 本体和传入 options 后的返回值都保留实例协议', () => {

@@ -6,11 +6,9 @@ import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
 
-
 import { createJSSContent } from '../content'
 import { focusOutline } from '../pieces/contents/atoms/focus'
 import type { Rules } from '../rule'
-
 
 stateCondition('chainHover', condition('&:where([data-hover])'))
 stateCondition('chainActive', condition('&:where([data-active])'))

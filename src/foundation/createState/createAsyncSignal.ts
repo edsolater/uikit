@@ -1,11 +1,5 @@
 import { isFunction } from '@edsolater/fnkit'
-import {
-  createMemo,
-  createSignal,
-  type SignalOptions,
-  type MemoOptions,
-  type SourceAccessor,
-} from 'solid-js'
+import { createMemo, createSignal, type SignalOptions, type MemoOptions, type SourceAccessor } from 'solid-js'
 import { isPromiseLike } from './promise-like'
 
 export type AsyncValue<T> = T | PromiseLike<T>

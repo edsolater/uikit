@@ -300,7 +300,6 @@ test.each(['late-declare', 'removed-declare'])('普通颜色消费者在局部�
   expect(Number(getComputedStyle(element).backgroundColor.split(' ')[0].slice('oklch('.length))).toBeCloseTo(expected, 5)
 })
 
-
 test('不继承且无注册初值时不补普通引用回退，也不把默认内容伪装成初值', () => {
   const local = condition('&[data-local]')
   const n = variable(7, { name: 'universal-without-initial', address: ".Parent",

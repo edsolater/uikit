@@ -5,15 +5,7 @@
  */
 import { createRenderEffect, val, type MayArraySource, type Source } from '@/foundation'
 import { mapArray } from '@/foundation/render'
-import {
-  isObject,
-  isArray,
-  isTruthy,
-  type Booleanable,
-  type MayArray,
-  type Stringable,
-  toArray,
-} from '@edsolater/fnkit'
+import { isObject, isArray, isTruthy, type Booleanable, type MayArray, type Stringable, toArray } from '@edsolater/fnkit'
 
 /** 一条 class 声明，可以是 token、token 列表或按 Source 条件启用的 token 对象。 */
 export type ClassNameAtom = Stringable | MayArray<Stringable> | { [classname: string]: Source<Booleanable> }

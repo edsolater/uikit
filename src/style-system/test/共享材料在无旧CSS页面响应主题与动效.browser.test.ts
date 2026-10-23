@@ -80,7 +80,6 @@ test('用途阴影可独立覆盖，其他场景和来源保持原值', () => {
   }
 })
 
-
 test('局部用途在暗色、柔和及悬停同时成立时保留部分差异和来源覆盖', async () => {
   const source = variable(themeBrand, { name: 'local-material-source', address: '.MaterialParts' })
   const local = variableFrom(colorAction, source, { name: 'local-action', address: '.MaterialParts' })
@@ -158,7 +157,6 @@ test('局部用途在暗色、柔和及悬停同时成立时保留部分差异�
   }
 })
 
-
 test('中性材料的局部强调跟随根主题，邻居保持自己的状态', () => {
   const style = document.createElement('style')
   const content = variableFrom(colorContent, colorContent.content, { name: 'neutral-content', address: '.NeutralParts' })
@@ -190,7 +188,6 @@ test('中性材料的局部强调跟随根主题，邻居保持自己的状态',
     style.remove()
   }
 })
-
 
 test('替换主题主体的基础颜色后亮暗状态都从新基础计算', () => {
   const replacement = variableFrom(themeBrand, 'oklch(0.5 0.1 30)', { name: 'replacement-theme', address: '.ReplacementTheme' })

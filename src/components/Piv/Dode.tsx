@@ -3,9 +3,10 @@
  * 管理者在真实元素可用时提供最终绑定材料；所有绑定归属于当前元素分支，不增加 DOM 层。
  */
 import type { ID, MayArray } from '@edsolater/fnkit'
-import type { JSX, JSXElement, Source } from '@/foundation'
-import { children, insert, mapArray, untrack } from '@/foundation/render'
-import { createRenderEffect, val } from '@/foundation'
+import { type JSX, type JSXElement, type Source, createRenderEffect, val } from '@/foundation'
+import { children, insert, mapArray } from '@/foundation/render'
+import { untrack } from '@/foundation/reactivity'
+
 import { consumeClassName, type ClassNameList } from './className'
 import type { CreatePivElement, PivHTMLElement, PivTag } from './domMap'
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'

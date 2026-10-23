@@ -1,7 +1,6 @@
-import { flush } from 'solid-js'
+import { flush, createRoot, createSignal } from 'solid-js'
 // @vitest-environment jsdom
 
-import { createRoot, createSignal } from 'solid-js'
 import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
 import { createContext, createState, isStateView, onCleanup, onMount, useContext, val } from '@/foundation'

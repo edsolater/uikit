@@ -1,5 +1,5 @@
 import { flush } from 'solid-js'
-import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor } from './Button.style'
+import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
 import { declare, modify, variable, variableFrom, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, radius, space, multiply, interactiveColor, badColor, oklch, shadow, controlSize, textSize, opacity } from '@/style-system'
 import '../../../css/all-base.css'
@@ -9,7 +9,7 @@ import { userEvent } from 'vitest/browser'
 import { createState } from '@/foundation'
 import { Button, type ButtonProps, type ButtonAppearance } from './Button'
 import { buttonMapping } from './Button.mapping'
-import { buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength } from './Button.style'
+
 import './Button.style'
 import * as globalColors from '@/style-system/pieces/contents/atoms/color/colors'
 import { brandColor } from '@/style-system/pieces/contents/atoms/color/brand-color'
@@ -857,7 +857,6 @@ describe('Button styles', () => {
     for (let index = 0; index < beforeMount.length; index++) expect(afterMount[index]).toBe(beforeMount[index])
   })
 })
-
 
 test('危险Button只改一个语气输入，内容与边线一起采用当地颜色且不污染兄弟', () => {
   const selected = 'oklch(0.65 0.12 145)'

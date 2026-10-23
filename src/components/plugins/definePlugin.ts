@@ -7,8 +7,7 @@
 import type { PivTag } from '../Piv/domMap'
 import type { PivPluginFunction } from '../Piv/plugin/runPlugin'
 
-/** 仅供 usePlugin 与 Piv 识别并实例化 Plugin，不从领域入口公开。 */
-export const createPluginInstanceSymbol = Symbol('createPluginInstance')
+import { createPluginInstanceSymbol } from './plugin-instance'
 
 export interface PluginInstance<Controller extends object, Tag extends PivTag> {
   plugin: PivPluginFunction<Tag>

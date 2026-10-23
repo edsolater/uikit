@@ -57,7 +57,7 @@ const independent = createState(initial * 2)
 也可以用原生 `untrack` 显式禁止这次读取收集依赖，作为逃生写法：
 
 ```ts
-import { untrack } from '@/foundation/render'
+import { untrack } from '@/foundation/reactivity'
 
 const independent = createState(untrack(() => val(count) * 2))
 ```
@@ -168,7 +168,7 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 | `isStateView(value)` | 包根／Foundation | 判断 StateView，State 也属于 StateView |
 | `isStateViewable(value)` | 包根／Foundation | 判断 StateView 或 PromiseLike，不包含普通值 |
 | `stateBrand`、`stateViewBrand` | 包根／Foundation | 身份标记，业务通常不需要操作 |
-| `createMemo` | `@/foundation/render`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
+| `createMemo` | `@/foundation/reactivity`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
 | `createRenderEffect` | Foundation 内部入口，参数形式与 createEffect 相同 | DOM 提交使用，未由包根公开 |
 | `createStateWithPrev()` | 包根／Hooks | 已导出但尚未实现，调用会抛错 |
 

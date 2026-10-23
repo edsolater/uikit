@@ -56,7 +56,6 @@ export const info: ColorMaterial = {
   purpose: 'content',
 }
 
-
 // ------------ ui使用
 export const goodColor = toJSSColor(good, 'good-color')
 

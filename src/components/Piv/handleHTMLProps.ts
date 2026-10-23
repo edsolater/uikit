@@ -4,14 +4,11 @@
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
 import { type JSX, val, type MayArraySource } from '@/foundation'
-import { createMemo, mapArray } from '@/foundation/render'
+import { mapArray } from '@/foundation/render'
+import { createMemo } from '@/foundation/reactivity'
 import { isTruthy, toArray } from '@edsolater/fnkit'
 import type { PivHTMLElement, PivTag } from './domMap'
-import {
-  consumeHTMLProp,
-  type HTMLPropAtom,
-  type HTMLPropPrimitive,
-} from './handleHTMLPropsValue'
+import { consumeHTMLProp, type HTMLPropAtom, type HTMLPropPrimitive } from './handleHTMLPropsValue'
 
 /** 已有专用 Piv prop 的字段禁止从 htmlProps 重复进入 DOM。 */
 type ReservedHTMLPropKey = 'id' | 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`

@@ -15,7 +15,7 @@ import { oklch } from '../pieces/contents/functions/oklch'
 import { value } from '../value'
 import { variable } from '../variable'
 import * as variables from '../variable'
-import { type Rules } from '../rule'
+import type { Rules } from '../rule'
 import { compileRules } from '../css-root'
 
 /**
@@ -170,7 +170,6 @@ if (false) {
   // @ts-expect-error mutable已由CSS绑定取代，不保留平行JS调整语义。
   adjust('mutable', source, modification({ type: 'color', detail: {} }))
 }
-
 
 test('配方回调延迟到消费，通道可调用内容与alpha含义仍保留', () => {
   let delta = 0.1

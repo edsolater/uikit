@@ -8,10 +8,10 @@ import { createCompiledValue } from '../compiled-value'
 import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
 import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../../key'
-import type { JSSStyleNode } from '../rules-to-style-nodes'
-import type { ASTSession, ContentCompilationRecord } from '../ast-controller'
+import type { ASTSession } from '../ast-controller'
 import { contentToCSSString } from '../content-nodes-to-css-string'
 import { value } from '../../value'
+import type { JSSStyleNode, ContentCompilationRecord } from '../contracts'
 
 /** 业务连接回调前的一项声明输入；用于生成本次结果并核对后续失效。 */
 interface InputSnapshot {

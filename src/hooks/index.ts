@@ -5,7 +5,7 @@
  * 命名规则见 ./naming.md。
  * 写法约定见 ./writing.md。
  */
-export { useDocumentTitle } from './useDocumentTitle/useDocumentTitle' // Document 领域的浏览器标题同步 hook
+export * from './useDocumentTitle/useDocumentTitle' // Document 领域的浏览器标题同步 hook
 export * from './value-state/collection' // ValueState 领域的数据集合管理 hook
 export * from './value-state/count' // ValueState 领域的计数状态 hook
 export * from './value-state/ident' // ValueState 领域的标识符状态 hook

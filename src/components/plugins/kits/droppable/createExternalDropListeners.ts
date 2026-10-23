@@ -5,12 +5,8 @@
  * DropContext，并与页面内拖动共享接收判断和悬停状态。
  */
 import type { EventListeners } from '../../../Piv/on/handleOn'
-import { isWithinDropScope } from '../dragAndDrop'
-import {
-  createExternalDropContext,
-  type DropContext,
-  type ExternalDropContext,
-} from './dropContext'
+import { isWithinDropScope } from '../dragSession'
+import { createExternalDropContext, type DropContext, type ExternalDropContext } from './dropContext'
 
 export interface ExternalDropOptions {
   element: HTMLElement

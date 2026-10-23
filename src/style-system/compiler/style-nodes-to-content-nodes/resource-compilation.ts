@@ -7,9 +7,10 @@
 import { propertyName } from '../../key'
 import type { Rule, Rules } from '../../rule'
 import type { JSSContentContext, JSSContent } from '../../content'
-import { rulesToStyleNodes, type JSSStyleNode } from '../rules-to-style-nodes'
+import { rulesToStyleNodes } from '../rules-to-style-nodes'
 import type { ASTSession } from '../ast-controller'
 import { condition, conditionAddressKey } from '../../condition'
+import type { JSSStyleNode } from '../contracts'
 
 /** 内容的一次激活及其规则产物；同一 Rule 身份可被多个激活记录共享。 */
 interface ActivationRecord {

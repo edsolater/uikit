@@ -4,8 +4,9 @@
  *
  * 共享等待与重访控制，让各案例只描述需要发生的队列变化。
  */
-import type { ASTController } from '../compiler/ast-controller'
+
 import type { JSSContent } from '../content'
+import type { ASTController } from '../compiler/contracts'
 
 /**
  * 每次稳定核验尝试改写；change返回true才完成一次，false必须保持队列不变并继续等待。

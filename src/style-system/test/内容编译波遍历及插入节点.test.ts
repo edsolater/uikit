@@ -13,9 +13,8 @@ import { compileRules } from '../css-root'
 import { createJSSContent, type JSSCompileContext, type JSSContentContext, type JSSContent } from '../content'
 import { value } from '../value'
 import { variable } from '../variable'
-import type { ASTController } from '../compiler/ast-controller'
-
 import type { Rules } from '../rule'
+import type { ASTController } from '../compiler/contracts'
 
 test.each([['最早编译波', '撤销'], ['暂缓', '撤销'], ['最早编译波', '退出输出'], ['暂缓', '退出输出']])('本波%s等待的声明%s后，只按当前输出队列判断完成', (waiting, removal) => {
   let delayedCalls = 0

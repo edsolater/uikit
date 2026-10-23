@@ -19,10 +19,11 @@ import {
 } from '@edsolater/fnkit'
 import { isJSSContent, type JSSContent } from './content'
 import type { DeclareProtocol } from './operations/declare'
-import { allocateVariableName, key } from './key'
+import { key } from './key'
 import type { ValueInput } from './value'
 import { oklchChannels, type OKLCHChannelChange, type OKLCHChanges } from './pieces/contents/functions/oklch'
 import { compileVariableContent } from './variable'
+import { allocateVariableName } from './custom-property-names'
 
 /** 变化自身就是定义；Detail/Type 表达领域差异，key 与 CSS 目标始终跟随当前完整 name。 */
 export interface Modification<Detail = unknown, Type extends string = string> extends DeclareProtocol, JSSContent {

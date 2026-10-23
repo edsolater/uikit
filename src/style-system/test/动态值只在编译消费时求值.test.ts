@@ -181,7 +181,7 @@ test('根据地的生产基础只求值一次，多个消费者共享结果', ()
 })
 
 test.each(['函数', 'onCompile'])('展开成常量的%s内容不额外物化当地声明', entry => {
-  const content = entry === '函数' ? () => '4px' : { onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) { controller.setContent(context, '4px') } }
+  const content = entry === '函数' ? () => '4px' : { onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/contracts').ASTController) { controller.setContent(context, '4px') } }
   const material = variable(value(content), { name: `expanded-constant-${entry}` })
   const css = compileRules([[['.ConstantConsumer'], 'width', material]])
   expect(css).toContain(`--expanded-constant-${entry}: 4px;`)
@@ -207,7 +207,6 @@ test('明确的undefined局部基础不输出，根根据地仍提供内容', ()
   expect(css.match(/\.EmptyBase\s*\{([^}]*)\}/)?.[1]).not.toContain('--expanded-explicit-empty:')
 })
 
-
 test('可调用内容对象按内容协议消费，不调用函数体', () => {
   const callable = Object.assign(() => { throw new Error('不能执行内容对象') }, { toCSSString: () => '7px' })
   const css = compileRules([[['.Callable'], 'width', value(callable)]])
@@ -217,7 +216,6 @@ test('可调用内容对象按内容协议消费，不调用函数体', () => {
   expect(materialCSS).toContain('--producer-callable-material: 7px;')
   expect(materialCSS).toContain('&:hover {')
 })
-
 
 test('Modification领域拒绝函数键，诊断不执行或字符串化', () => {
   const invalid = vi.fn(() => { throw new Error('不应执行非法键') })

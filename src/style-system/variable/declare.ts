@@ -1,7 +1,5 @@
 /** 根据地声明、原始基础及自身状态的发布；存在查询统一交给 AST。 */
 import { assert, isFunction, pipe, result } from '@edsolater/fnkit'
-import type { ASTController } from '../compiler/ast-controller'
-import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import { condition, conditionAddressKey, type ConditionPath } from '../condition'
 import { isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { Declaration } from '../operations/declare'
@@ -9,6 +7,7 @@ import { keyPriority, propertyName, type JSSKey } from '../key'
 import { appendStateCondition } from '../pieces/state-conditions'
 import { value, type Value, type ValueInput } from '../value'
 import { isVariable, referenceVariable, variableResultSource, type VariableDefaultValue, type VariableTarget } from './core'
+import type { ASTController, JSSStyleNode } from '../compiler/contracts'
 
 /** 修改链绑定的真实声明及其结果；不持有局部依赖投影。 */
 export interface VariableDefinition {

@@ -26,7 +26,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 # 公开入口
 
 - `@edsolater/uikit` 从 `src/index.ts` 公开 components、foundation 和 hooks；`@edsolater/uikit/style-system` 独立公开完整样式 API 与类型。Mixin 直接使用效果名称，样式入口的 `clickable` 与包根组件插件分别导入。包根仍会加载 `src/css/all-base.css`。
-- `src/components/index.ts`、`src/components/kits/index.ts`、`src/components/plugins/index.ts`、`src/foundation/index.ts` 和 `src/hooks/index.ts` 分别收口所属领域的公开成员。
+- `src/components/index.ts`、`src/foundation/index.ts`、`src/hooks/index.ts` 与 `src/style-system/index.ts` 聚合所属领域的本地模块；具体实现负责公开能力与内部机制的边界。
 - Example、Story、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
 
 # 运行链

@@ -4,7 +4,7 @@
  * 它不负责排序、筛选、分页、虚拟滚动或业务数据解释，也不让业务组件手写表格 DOM 结构。
  * 调用方只提供已经整理好的同构数据；需要局部改写表头或单元格内容时，通过 renderParts 提供纯渲染器。
  */
-import { type Stringable } from '@edsolater/fnkit'
+import type { Stringable } from '@edsolater/fnkit'
 import { For, stateView, val, type Source } from '@/foundation'
 import { toJSX, type JSXable } from '../../utils/toJSX'
 import { Piv } from '../../Piv/Piv'

@@ -8,7 +8,7 @@ import { isJSSKey, type JSSKey } from '../key'
 import type { ValueInput } from '../value'
 import { assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
 import { isJSSContent } from '../content'
-import { declareVariable } from '../variable'
+import { declareVariable } from '../variable/declare'
 
 /** 一条 `[Key, content]` 声明；undefined content 表示无效。 */
 export type Declaration<C = ValueInput | undefined> = [key: Exclude<JSSKey, string>, content: C]

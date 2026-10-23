@@ -9,17 +9,9 @@ import { conditionAddressKey, outputConditionPath, type ConditionPath, type CSSC
 import type { JSSKey } from '../../key'
 import type { Rules } from '../../rule'
 import { isJSSContent, hasJSSContentOnActiveMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
-import type { JSSStyleNode } from '../rules-to-style-nodes'
-import type { ASTSession, ASTController, RoleCompilationState, ContentCompilationRecord } from '../ast-controller'
+import type { ASTSession, RoleCompilationState } from '../ast-controller'
 import type { ResourceCompilation } from './resource-compilation'
-
-/** 一项已完成编译的声明；保留内容对象和子内容的编译结果供输出阶段读取。 */
-export interface JSSContentNode {
-  conditionPath: CSSConditionPath
-  key: JSSKey | undefined
-  content: unknown
-  compiledContents: WeakMap<object, ContentCompilationRecord>
-}
+import type { JSSStyleNode, ASTController, ContentCompilationRecord, JSSContentNode } from '../contracts'
 
 /** 为当前输入建立未访问的角色；不含编译行为的 Key 可直接参与输出。 */
 const roleCompilationState = (input: unknown, role: JSSCompileContext['role']): RoleCompilationState => ({

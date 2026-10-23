@@ -5,10 +5,6 @@ import { condition } from '../condition'
 import { variable } from '../variable'
 import { compileRules } from '../css-root'
 
-
-
-
-
 stateCondition('compositionA', condition('&:where([data-a])'))
 stateCondition('compositionB', condition('&:where([data-b])'))
 

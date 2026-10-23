@@ -106,7 +106,6 @@ test('Variable 生产函数可返回直接内容或另一 Variable，自身循�
   keep(rule('.CircularSource', 'color', circular))
   expect(() => compileCSS()).toThrow('循环引用')
 
-
 })
 
 test('三项 Rule 递归继承地址，普通 Rule 的重复条件原样保留', () => {
@@ -361,7 +360,7 @@ test('Mixin 处理方向配置，Key 不解释对象', () => {
 
 test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () => {
   const activate = vi.fn((): Rules => [[[condition(':root')], '--padding-resource', '4px']])
-  const compileFont = vi.fn((context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) => {
+  const compileFont = vi.fn((context: import('../content').JSSCompileContext, controller: import('../compiler/contracts').ASTController) => {
     controller.setContent(context, 'italic 18px system-ui')
   })
   keep(rules('.ResourcePadding', [contentLayout({ padding: { onActive: activate } })]))

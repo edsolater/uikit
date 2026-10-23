@@ -116,7 +116,6 @@ test.each([false, true])('消费者撤销后清理自动根声明，其他消费
   if (!shared) expect(css).toBe('')
 })
 
-
 test('更窄条件覆盖不抑制普通派生默认，真正祖先覆盖继续生效', () => {
   const source = variable('blue', 'position-source')
   const surface = variable(source, 'position-surface')

@@ -6,11 +6,11 @@
  */
 import { assert } from '@edsolater/fnkit'
 import type { Rules } from '../../rule'
-import type { JSSStyleNode } from '../rules-to-style-nodes'
 import { createASTController, ASTSession } from '../ast-controller'
 import { ResourceCompilation } from './resource-compilation'
 import { Join } from './join'
-import { NodeCompilation, type JSSContentNode } from './node-compilation'
+import { NodeCompilation } from './node-compilation'
+import type { JSSStyleNode, JSSContentNode } from '../contracts'
 
 /** 逐波编译可改写队列；接入按需资源并稳定连接后交付有序内容节点。 */
 export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules: Rules): JSSContentNode[] {

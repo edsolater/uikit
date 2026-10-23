@@ -226,7 +226,6 @@ test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有
   }
 })
 
-
 test('转换函数的两个基础分别响应当地表面与全局及局部线条强度', () => {
   const first = variable('red', 'line-first-surface')
   const second = variable('blue', 'line-second-surface')

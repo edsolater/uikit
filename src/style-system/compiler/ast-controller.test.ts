@@ -8,7 +8,7 @@ import { expect, it } from 'vitest'
 import { condition } from '../condition'
 import { key } from '../key'
 import { ASTSession, createASTController } from './ast-controller'
-import type { JSSStyleNode } from './rules-to-style-nodes'
+import type { JSSStyleNode } from './contracts'
 
 /** 构造同一地址的测试节点，用名称区分声明目标。 */
 function node(name: string): JSSStyleNode {
@@ -31,7 +31,6 @@ it('查询字段取交集并按属性名与地址匹配，返回独立的有序�
   ast.nodes().pop()
   expect(ast.search(query)).toEqual([first, second])
 })
-
 
 it('插入位置与来源独立，只有来源撤销才清理产物', () => {
   const owner = node('owner')
@@ -149,7 +148,6 @@ it('仅退出输出保留来源与清理回调，之后撤销执行一次清理'
   expect(cleaned).toBe(1)
   expect(ast.has({ key: 'width' })).toBe(false)
 })
-
 
 it('同锚点后插每次紧邻锚点，外部移动不沿用旧插入游标', () => {
   const owner = node('owner')

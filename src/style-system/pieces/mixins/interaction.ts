@@ -1,7 +1,7 @@
 /** 点击交互 Mixin。 */
 import { variable, variableFrom, type VariableAddress } from '../../variable'
 import type { Declarations } from '../../rule'
-import { type ValueInput } from '../../value'
+import type { ValueInput } from '../../value'
 import { $cursor, $userSelect } from '../keys/interaction'
 import { $opacity } from '../keys/opacity'
 import { $transform } from '../keys/transform'

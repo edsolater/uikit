@@ -1,17 +1,18 @@
+import { variantSelections } from './variant-selections'
+import { mapGet } from '@edsolater/fnkit'
+import { condition, conditionAddressKey, type ConditionPath } from '../condition'
+import { createJSSContent, type Expression, type JSSCompileContext } from '../content'
+import { keyPriority } from '../key'
+import { variableRegistrationDeclarations, type VariableTarget } from './core'
+import { automaticVariableDeclaration, consumeDeclaration, declaredVariable, joinVariableValues, variableDefinition, variableHomePath, variableProductRoles, type VariableDefinition } from './declare'
+import type { ASTController, JSSStyleNode } from '../compiler/contracts'
+
 /** Variable 根据地定义的完整结果修改链。
  *
  * 消费已选应用，维护实例、步骤、当地结果及撤销。
  *
  * 操作材料不持有 AST 生命周期，修改链在编译会话中按声明归属连接。
  */
-import { mapGet } from '@edsolater/fnkit'
-import type { ASTController } from '../compiler/ast-controller'
-import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
-import { condition, conditionAddressKey, type ConditionPath } from '../condition'
-import { createJSSContent, type Expression, type JSSCompileContext } from '../content'
-import { keyPriority } from '../key'
-import { selectedVariableVariants, variableRegistrationDeclarations, type VariableTarget } from './core'
-import { automaticVariableDeclaration, consumeDeclaration, declaredVariable, joinVariableValues, variableDefinition, variableHomePath, variableProductRoles, type VariableDefinition } from './declare'
 
 /**
  * 按根据地的有效声明及书写顺序应用修改，维护消费链和撤销关系。
@@ -93,7 +94,7 @@ function includeSelectedVariants(context: JSSCompileContext, controller: ASTCont
     if (!active) return false
     let changed = false
     const wanted = new Set<string>()
-    for (const variant of selectedVariableVariants(variable) ?? []) {
+    for (const variant of variantSelections.get(variable) ?? []) {
       // 加工该 CSS 地址已经存在的有效绑定；不因 JS 对象不同忽略更高等级覆盖。
       const node = controller.findDeclaration({ key: variant.key, conditionPath: variableHomePath(variant) }, node =>
         !node.aggregate && variableDefinition(node) !== undefined)

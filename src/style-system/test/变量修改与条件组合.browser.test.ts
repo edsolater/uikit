@@ -126,7 +126,6 @@ test('先主动换值再修改时，在新绑定的基础上继续加工', () =>
   expect(getComputedStyle(element).zIndex).toBe('23')
 })
 
-
 test('declare 可给两个局部定义不同基础内容', () => {
   const n = variable(10, { name: 'explicit-base', address: '.ModifyButton' })
   const other = variableFrom(n, 20, { address: '.ModifyPanel' })
@@ -137,7 +136,7 @@ test('declare 可给两个局部定义不同基础内容', () => {
 
 test('晚编译的前置修改按源位置连接，编号和编译时机不决定非交换顺序', () => {
   const n = variable(1, { name: 'late-front' , address: '.ModifyButton'})
-  const delayed = { compileWaveIndex: 1, onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) {
+  const delayed = { compileWaveIndex: 1, onCompile(context: import('../content').JSSCompileContext, controller: import('../compiler/contracts').ASTController) {
     controller.insert({ before: context.node, conditionPath: context.conditionPath }, modify(n, { type: 'expression', detail: current => add(current, 2) }), { owner: context.node })
   } }
   const { element } = mount([[[button], 'order', delayed], row([button], modify(n, { type: 'expression', detail: current => multiply(current, 3) })), [[button], 'z-index', n]])

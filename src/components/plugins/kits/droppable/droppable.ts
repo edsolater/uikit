@@ -7,7 +7,7 @@ import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
-import { registerInternalDropTarget } from '../dragAndDrop'
+import { registerInternalDropTarget } from '../dragSession'
 import { createExternalDropListeners } from './createExternalDropListeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
 

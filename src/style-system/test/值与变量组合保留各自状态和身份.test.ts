@@ -11,9 +11,6 @@ import { colorMix } from '../pieces/contents/functions/color-mix'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
 
-
-
-
 import { cssFunction } from '../css-function'
 import type { Rules } from '../rule'
 

@@ -7,9 +7,9 @@ import type { DeclareProtocol } from './declare'
 import { colorModificationShape, type ColorModificationContent } from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
 import { referenceVariable, transformVariable, type Variable } from '../variable/core'
-import { allocateVariableName } from '../key'
 import { modifyTargetShape, type ModifyTargetProtocol } from './modify'
 import type { ValueInput } from '../value'
+import { allocateVariableName } from '../custom-property-names'
 
 /** 调整方交付可声明的配方，type 选择对应的来源组合。 */
 export interface AdjustProtocol<Type extends string = string> extends DeclareProtocol {

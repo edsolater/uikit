@@ -1,7 +1,7 @@
 /** CSS名称引用对象；字符串化用于命名组合，内容消费只输出CSS引用，不激活Variable定义。 */
 import { hasProperty } from '@edsolater/fnkit'
 import { createJSSContent, type JSSContent } from '../content'
-import { allocateVariableName } from '../key'
+import { allocateVariableName } from '../custom-property-names'
 
 /** 代表某个 CSS 名称的引用；自身不提供默认值或等级，具体定义由 Variable 提供。 */
 export interface VariableName extends JSSContent {

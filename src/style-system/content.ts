@@ -8,8 +8,7 @@ import { isObjectLike, isArray, isFunction } from '@edsolater/fnkit'
 import type { ConditionPath } from './condition'
 import type { JSSKey } from './key'
 import type { Rules } from './rule'
-import type { JSSStyleNode } from './compiler/rules-to-style-nodes'
-import type { ASTController } from './compiler/ast-controller'
+import type { JSSStyleNode, ASTController } from './compiler/contracts'
 
 /** 输出节点时取得已经编译的子内容。 */
 export type JSSContentResolver = (content: unknown) => string | undefined

@@ -123,7 +123,6 @@ test('相同派生值不重复触发消费者动作，作用域退出后停止�
   expect(actions).toEqual([1, 0])
 })
 
-
 test('泛型转发与混合来源统一声明完成类型', async () => {
   function build<T>(source: T) { return createState(source) }
   const scope = createRoot(dispose => ({
@@ -165,7 +164,6 @@ test('thenable 直接交付的嵌套 Promise 在读取与连续更新前完成�
   } finally { scope.dispose() }
 })
 
-
 test('异步映射直接读取完成值，后续映射只接收完成结果', async () => {
   const deferred = Promise.withResolvers<number>()
   const scope = createRoot(dispose => {
@@ -182,7 +180,6 @@ test('异步映射直接读取完成值，后续映射只接收完成结果', as
     expect(scope.chained.read()).toBe(10)
   } finally { scope.dispose() }
 })
-
 
 test('映射函数值保持身份，返回 StateView 随换源退订旧来源', () => {
   const fn = () => 7

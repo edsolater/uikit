@@ -4,7 +4,7 @@ import { condition, type Condition, type ConditionInput } from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './operations/declare'
 import type { ValueInput } from './value'
-import { registerRule } from './css-root'
+import { registerRule } from './rule-registry'
 
 /** 待编译内容或嵌套规则。 */
 export type RuleValue = ValueInput | Rules

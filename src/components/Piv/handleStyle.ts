@@ -4,7 +4,8 @@
  * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
  */
 import { createRenderEffect, type JSX, val, type MayArraySource, type Source } from '@/foundation'
-import { createMemo, mapArray } from '@/foundation/render'
+import { mapArray } from '@/foundation/render'
+import { createMemo } from '@/foundation/reactivity'
 import { isTruthy, toArray } from '@edsolater/fnkit'
 
 type StyleValueAtom = string | number | null | undefined

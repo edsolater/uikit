@@ -1,7 +1,7 @@
 /** 字体简写配置。 */
 
-import { type JSSContent, createJSSContent } from "../../../content"
-import type { ValueInput } from "../../../value"
+import { type JSSContent, createJSSContent } from '../../../content'
+import type { ValueInput } from '../../../value'
 
 export interface FontParts {
   style?: ValueInput

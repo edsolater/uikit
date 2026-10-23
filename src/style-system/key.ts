@@ -1,10 +1,10 @@
-/** JSS 声明目标与 CSS 自定义属性命名。
+/** JSS 声明目标。
 
-创建、识别和解析声明目标，统一分配自定义属性名称。
+创建、识别和解析声明目标。
 
-Variable、Modification 和绑定结果共享 CSS 名称空间，属性别名登记保持独立。
+属性别名由此模块统一登记。
 */
-import { assert, hasProperty, IdGenerator, isFunction, isString } from '@edsolater/fnkit'
+import { assert, hasProperty, isFunction, isString } from '@edsolater/fnkit'
 import type { Value, ValueInput } from './value'
 
 /** 原生属性名称。 */
@@ -83,20 +83,3 @@ export function propertyName(key: JSSKey): string {
  * 读取声明键的有效等级；字符串与普通 Key 默认使用999，内容对象同样读取自身等级。
  */
 export const keyPriority = (key: JSSKey | undefined): number => key !== undefined && typeof key !== 'string' ? key.priority ?? 999 : 999
-
-/** Variable 与 Modification 共用的临时名称序号，仅在缺少名称时分配。 */
-const nameGenerator = new IdGenerator('temp')
-/** 已用于变量或变化声明的名称；自动分配避让显式名称，显式同名仍允许 CSS 局部覆盖。 */
-const usedNames = new Set<string>()
-
-/**
- * 分配同一 CSS 自定义属性命名空间中的名称；匿名名称避让已登记的显式名称。
- * 显式同名保留，用于 CSS 局部覆盖；返回名称保留调用者传入的 -- 前缀。
- */
-export function allocateVariableName(name?: string): string {
-  if (name === undefined) {
-    do { name = `temp-${nameGenerator.genID()}` } while (usedNames.has(name))
-  }
-  usedNames.add(name.replace(/^--/, ''))
-  return name
-}

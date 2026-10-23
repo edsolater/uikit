@@ -5,12 +5,12 @@
  * 状态展开后仍保留颜色变量引用，使局部配色继续生效。
  */
 import { variable, type VariableAddress } from '../../../variable'
-import { allocateVariableName } from '../../../key'
 import type { ValueInput } from '../../../value'
 import { valueSequence } from '../atom-creators/list'
 import { space } from './space'
 import { boundaryWidth } from './boundary'
 import { multiply } from '../functions/calc'
+import { allocateVariableName } from '../../../custom-property-names'
 
 export const focusOutline = (color: ValueInput = 'currentColor', address?: VariableAddress) => variable('none', {
   name: allocateVariableName(),

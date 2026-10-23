@@ -14,7 +14,7 @@ import { stateCondition } from '../pieces/state-conditions'
 import { rule, rules, type Rules } from '../rule'
 import { arraySequenceToCSSString, value, type Value } from '../value'
 import type { JSSCompileContext } from '../content'
-import type { ASTController } from '../compiler/ast-controller'
+import type { ASTController } from '../compiler/contracts'
 
 stateCondition('aggregateHover', condition('&:where([data-aggregate-hover])'))
 stateCondition('aggregateFocus', condition('&:where([data-aggregate-focus])'))

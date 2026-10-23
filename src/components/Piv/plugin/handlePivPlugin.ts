@@ -10,7 +10,8 @@ import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import { runPlugin, type PivPlugin } from './runPlugin'
 import { getPublicPluginSources } from './publicCapabilities'
-import { createMemo, mapArray } from '@/foundation/render'
+import { mapArray } from '@/foundation/render'
+import { createMemo } from '@/foundation/reactivity'
 
 /** plugin 系统允许补充的 props；不包含决定 DOM 结构的 as、if、children。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'as' | 'if' | 'children'>

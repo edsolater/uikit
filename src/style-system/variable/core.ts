@@ -5,10 +5,8 @@
 使用时保障根据地有定义；状态随根据地展开，消费位置只读取 CSS 引用。
 */
 import { condition, type ConditionInput } from '../condition'
-import type { JSSStyleNode } from '../compiler/rules-to-style-nodes'
 import { propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
-import type { ASTController } from '../compiler/ast-controller'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
 import { assert, hasProperty, isFunction, mapGet } from '@edsolater/fnkit'
@@ -16,6 +14,8 @@ import { consumeDeclaration, declaredVariable, declareVariable, joinVariableValu
 import type { DeclareProtocol } from '../operations/declare'
 import { parseVariableArgs, type VariableStateValues } from './args-parser'
 import { getVariableNameAddress, type VariableName } from './name'
+import { variantSelections } from './variant-selections'
+import type { JSSStyleNode, ASTController } from '../compiler/contracts'
 
 /** 未命中状态时的声明内容；生产函数消费时无参执行。 */
 export type VariableDefaultValue = ValueInput
@@ -26,12 +26,9 @@ export type VariableVariantRule = ValueInput | VariableStateValues | ((base: Val
 /** 定义的存在位置，复用 rules 的条件材料。 */
 export type VariableAddress = Exclude<ConditionInput, undefined>
 
-const variantSelections = new WeakMap<VariableTarget, Set<Variable>>()
 /** 同一来源的顶层资源保持一份内容身份，多个加工结果共享其生命周期。 */
 const variableActivations = new WeakMap<VariableTarget, JSSContent>()
 const adjustmentActivations = new WeakMap<VariableTarget, JSSContent>()
-/** 仅记录显式 variant 选择，不把任意内容引用变成加工关联。 */
-export const selectedVariableVariants = (source: VariableTarget): Set<Variable> | undefined => variantSelections.get(source)
 
 /** 保留原始定义，在声明结果处统一加工，状态与变体不重复执行。 */
 export function transformVariable(source: VariableTarget, apply: (content: ValueInput) => ValueInput, name: string): Variable {

@@ -4,25 +4,7 @@ import { condition, type ConditionPath, type TargetConditionPath } from '../cond
 import type { JSSKey } from '../key'
 import type { Rules } from '../rule'
 import { isJSSContent } from '../content'
-
-/** 队列中一项可改写的样式内容；地址保留目标与状态，位置决定输出顺序。 */
-export interface JSSStyleNode {
-  /** 同址聚合结果不是新的业务声明来源。 */
-  aggregate?: boolean
-  /** 编译会话中的稳定位置身份。 */
-  identity?: string
-  /** 内容身份未变但编译前提改变时递增，使旧结果失效。 */
-  compileRevision: number
-  /** 当前尝试无法继续的原因；下次尝试前清除。 */
-  deferredReason?: Error
-  conditionPath: ConditionPath
-  key: JSSKey | undefined
-  content: unknown
-  /** 按需产生的资源用此身份替换同址旧资源；源规则不带此字段。 */
-  resourceAddress?: string
-  /** 生成产物的可选查询标识；不参与节点来源与资源替换。 */
-  productTag?: object
-}
+import type { JSSStyleNode } from './contracts'
 
 /** 将源 Rules 展开为有序节点；嵌套项继承外层地址与 Key，递归或无效内容时报错。 */
 export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {

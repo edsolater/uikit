@@ -4,13 +4,15 @@
 
 - `createState/`：定义 State、StateView、Source、读取与来源转换，以及内部响应式运行机制。
 - `createEffect.ts`：响应式动作、挂载和清理入口。
-- `render.ts`：内部渲染与 props 接入，保留底层调度、子树复用和惰性读取。
+- `context.ts`：原生 Context 提供与读取接入。
+- `reactivity.ts`：库内部计算与 owner 作用域接入，不进入公开聚合出口。
+- `render.ts`：渲染与 props 接入，保留底层调度、子树复用和惰性读取。
 - `types.ts`：当前渲染运行时的类型桥接；仍沿用 Solid 类型，尚未消除类型契约对运行时的依赖。
-- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；包根公开 render、For、Show 与 JSX 类型供应用挂载和组合渲染，其余底层渲染接入仍留在内部。
+- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；包根公开 render、For、Show 与 JSX 类型供应用挂载和组合渲染，渲染完整能力随所属模块导出，owner、untrack、createMemo 接入仅留在内部 reactivity.ts。
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
-生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`index.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
+生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`context.ts`、`reactivity.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 

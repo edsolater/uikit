@@ -28,7 +28,6 @@ test('自定义状态需要唯一名字', () => {
   expect(() => stateCondition('default', condition('&'))).toThrow('default')
 })
 
-
 test('公开、原始、嵌套和按需 Rules 的字符串不因状态登记改变含义', () => {
   const direct = rule(['.Literal', 'literalState'], 'color', 'red')
   const registered = rule(['.Literal', 'hover'], 'color', 'red')
@@ -52,7 +51,6 @@ test('公开、原始、嵌套和按需 Rules 的字符串不因状态登记改�
     expect(compileRules([[['.Unknown', 'unknownSelector'], 'color', 'red']])).toContain('unknownSelector {')
   } finally { direct.remove(); registered.remove(); unknown.remove() }
 })
-
 
 test('登记只影响之后创建的快捷匹配，不改变已有原始条件', () => {
   const options = { name: 'definition-time-color', states: { definitionTimeState: 'blue' } }

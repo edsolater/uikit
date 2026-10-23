@@ -1,10 +1,10 @@
-import { flush, resolve, NotReadyError, createEffect, until, createMemo } from 'solid-js'
+import { flush, resolve, NotReadyError, createEffect, until, createMemo, createRoot } from 'solid-js'
 /**
  * 本文件验证 stateView 的统一转换、身份复用、映射和 options 分派。
  * PromiseLike 领域自身只验证结算行为。
  */
 import { expect, expectTypeOf, test } from 'vitest'
-import { createRoot } from 'solid-js'
+
 import { val } from './read'
 import { createState, isState } from './state'
 import { stateView, type StateView } from './state-view'

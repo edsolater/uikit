@@ -3,8 +3,8 @@
 import { render } from '@solidjs/web'
 import { createRoot, flush, mapArray } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
-import { createEffect, onCleanup, onMount } from './createEffect'
-import { createRenderEffect } from './render'
+import { createEffect, onCleanup, onMount, createRenderEffect } from './createEffect'
+
 import { createState } from './createState/state'
 import { val } from './createState/read'
 
@@ -193,7 +193,6 @@ test('挂载动作不收集旁读依赖，返回的清理在卸载时执行一�
   dispose()
   expect(events).toEqual(['挂载', '清理'])
 })
-
 
 test('Effect 的计算、单来源与 tuple 一致接收异步完成类型', async () => {
   const request = Promise.withResolvers<number>()

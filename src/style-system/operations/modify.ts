@@ -4,12 +4,13 @@
 
 操作入口保存颜色与表达变化规则，实例、步骤和撤销由编译实现负责。
 */
+import { compileVariableModification } from '../variable/modify'
 import { assert, hasMethod, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, matchShape, optional, or, type DataShape } from '@edsolater/fnkit'
 import { isJSSContent, type Expression, type JSSContent } from '../content'
 import type { Declaration } from './declare'
 import { colorModificationShape, type ColorModificationContent } from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
-import { compileVariableModification, referenceVariable, type VariableTarget } from '../variable'
+import { referenceVariable, type VariableTarget } from '../variable'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
 export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]

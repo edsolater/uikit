@@ -5,10 +5,9 @@
  * 让输出保持编译位置与层级，不重新安排内容行为。
  */
 import { assert, isObjectLike, isString, isNumber, isFunction } from '@edsolater/fnkit'
-import type { JSSContentNode } from './style-nodes-to-content-nodes/node-compilation'
 import { hasJSSContentOutput, isJSSContent } from '../content'
 import { propertyName } from '../key'
-import type { ContentCompilationRecord } from './ast-controller'
+import type { JSSContentNode, ContentCompilationRecord } from './contracts'
 
 /** 读取已编译的内容链；编译阶段留下的替代结果在这里生效。 */
 export function contentToCSSString(input: unknown, compiledContents: WeakMap<object, ContentCompilationRecord>, reading = new Set<object>()): string | undefined {

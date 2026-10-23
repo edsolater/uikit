@@ -1,14 +1,15 @@
-/** CSSRoot 的源账本与编译入口。
+/** CSSRoot 的编译与宿主提交入口。
  *
  * 隔离每次编译的规则容器，将完整 CSS 提交到宿主。
  *
  * 让回调改写本次规则时不污染登记来源或直接输入。
  */
+import { registeredRules } from './rule-registry'
 import { assert } from '@edsolater/fnkit'
 import { rulesToStyleNodes } from './compiler/rules-to-style-nodes'
 import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-nodes/compilation'
 import { contentNodesToCSSString } from './compiler/content-nodes-to-css-string'
-import type { Rule, RuleHandle, Rules } from './rule'
+import type { Rules } from './rule'
 
 /** 依次将源 Rules 建为样式节点、已编译内容节点和 CSS 字符串。 */
 export function compileRules(sourceRules: Rules): string {
@@ -37,31 +38,13 @@ interface MountedRules {
   css: string
 }
 
-/** Style System 的唯一源账本。 */
+/** 宿主提交状态；编译始终读取共享源账本。 */
 class Root {
-  private source: Rules = []
   private hosts = new WeakMap<HTMLStyleElement, MountedRules>()
-
-  /** 按顺序登记；句柄只控制自己的声明，覆盖交给 CSS。 */
-  register(entry: Rule): RuleHandle {
-    this.source.push(entry)
-    return {
-      /** 删除本次登记。 */
-      remove: () => {
-        const index = this.source.indexOf(entry)
-        if (index !== -1) this.source.splice(index, 1)
-      },
-      /** 更新本次登记；删除后报错。 */
-      replace: (value) => {
-        assert(this.source.includes(entry), '当前句柄已删除。')
-        entry[2] = value
-      },
-    }
-  }
 
   /** 编译源账本快照，不提交 DOM。 */
   compile(): string {
-    return compileRules(this.source)
+    return compileRules(registeredRules)
   }
 
   /** 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。 */
@@ -88,11 +71,6 @@ export const cssRoot = {
     root.mount()
     return this
   },
-}
-
-/** 向源账本登记 Rule。 */
-export function registerRule(entry: Rule): RuleHandle {
-  return root.register(entry)
 }
 
 /** 生成当前源账本的 CSS string，不写 DOM。 */

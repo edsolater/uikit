@@ -94,8 +94,6 @@ function combineEnvironment(inputs: readonly EnvironmentInput[]): ColorEnvironme
   return result
 }
 
-
-
 // =============================================================================
 // 颜色计算
 // =============================================================================

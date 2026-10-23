@@ -4,13 +4,7 @@
  * 【职责边界】持有从按下到放下或取消的一次指针交互，移动来源元素并取得
  * Droppable 命中；系统外部材料由 Droppable 的原生事件入口接收。
  */
-import {
-  createInternalDrag,
-  findInternalDropTarget,
-  type DragPoint,
-  type InternalDrag,
-  type InternalDropMatch,
-} from '../dragAndDrop'
+import { createInternalDrag, findInternalDropTarget, type DragPoint, type InternalDrag, type InternalDropMatch } from '../dragSession'
 import { createTopLayerController, type TopLayerController } from '../topLayer/topLayer'
 
 export interface PointerDragOptions {
