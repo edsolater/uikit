@@ -11,13 +11,13 @@ import {
   add,
   variable,
   variableFrom,
-  jssInnerText,
-  jssContentLayout,
-  jssSize,
-  jssBoundary,
-  jssColor,
-  jssElevation,
-  jssClickable,
+  innerText,
+  contentLayout,
+  size,
+  boundary,
+  color,
+  elevation,
+  clickable,
   $cursor,
   colorMix,
   oklch,
@@ -97,14 +97,14 @@ const buttonShadow = variableFrom(shadowInteractive, shadowInteractive.content, 
 
 // 定义button的样式架构
 rules(button, [
-  jssInnerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
-  jssContentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
-  jssSize({ minHeight: controlSizeNormal }),
-  jssBoundary({ border: [boundaryWidthThin, 'solid', 'transparent'], radius: pill, cornerShape: 'squircle' }),
-  jssColor({ background: buttonSurfaceColor, content: buttonContentColor }),
-  jssElevation(buttonShadow),
+  innerText({ font: 'inherit', fontSize: textSizeLarge, emphasis: bold, leading: singleLine }),
+  contentLayout({ mode: 'center', alignSelf: 'center', gap: spaceNormal, padding: [spaceNormal, spaceExtraLarge] }),
+  size({ minHeight: controlSizeNormal }),
+  boundary({ border: [boundaryWidthThin, 'solid', 'transparent'], radius: pill, cornerShape: 'squircle' }),
+  color({ background: buttonSurfaceColor, content: buttonContentColor }),
+  elevation(buttonShadow),
 
-  jssClickable({ address: button, opacity: buttonOpacity, focusColor: buttonColor.variant('line') }),
+  clickable({ address: button, opacity: buttonOpacity, focusColor: buttonColor.variant('line') }),
 ])
 
 // =============================================================================
@@ -121,7 +121,7 @@ rules([...button, '&[data-tone="danger"]'], [declare(buttonColorInput, badColor)
 
 // outlined 保留浅底，并用当前语气的线色形成可见轮廓。
 rules([...button, '&[data-appearance="outlined"]'], [
-  jssBoundary({ border: [boundaryWidthThin, 'solid', buttonColor.variant('line')] }),
+  boundary({ border: [boundaryWidthThin, 'solid', buttonColor.variant('line')] }),
 ])
 
 // plain 保留透明常态与无边界，悬停和按下只增加轻量语气反馈。
@@ -137,7 +137,7 @@ rules(plainButton, [
     detail: (currentExpression) => add(currentExpression, plainStrength),
   }),
   [buttonSurfaceCanvas, 'transparent'],
-  jssElevation(shadowFlat),
+  elevation(shadowFlat),
 ])
 
 // filled 使用语气实底；交互时少量露出画布，避免混色抵消交互色的明度变化。
@@ -159,7 +159,7 @@ rules(filledButton, [
   }),
   [buttonSurfaceSource, buttonColorInput],
   declare(buttonContentColor, buttonColor.variant('content')),
-  jssElevation(shadowFilled),
+  elevation(shadowFilled),
 ])
 
 // emphasis 只调整整体存在感，不改变外观、语气或尺寸；禁用状态由 Variable 保持。
@@ -175,27 +175,27 @@ rules([...button, '&[data-emphasis="strong"]'], [[$opacity, strongOpacity]])
 rules(
   [...button, '&[data-size="small"]'],
   [
-    jssInnerText({ fontSize: textSizeNormal }),
-    jssContentLayout({ gap: spaceSmall, padding: [spaceSmall, spaceMedium] }),
-    jssSize({ minHeight: controlSizeSmall }),
+    innerText({ fontSize: textSizeNormal }),
+    contentLayout({ gap: spaceSmall, padding: [spaceSmall, spaceMedium] }),
+    size({ minHeight: controlSizeSmall }),
   ],
 )
 
 rules(
   [...button, '&[data-size="large"]'],
   [
-    jssInnerText({ fontSize: textSizeExtraLarge }),
-    jssContentLayout({ gap: spaceMedium, padding: [spaceNormal, spaceWide] }),
-    jssSize({ minHeight: controlSizeLarge }),
+    innerText({ fontSize: textSizeExtraLarge }),
+    contentLayout({ gap: spaceMedium, padding: [spaceNormal, spaceWide] }),
+    size({ minHeight: controlSizeLarge }),
   ],
 )
 
 rules(
   [...button, '&[data-size="xlarge"]'],
   [
-    jssInnerText({ fontSize: textSizeExtraExtraLarge }),
-    jssContentLayout({ gap: spaceLarge, padding: [spaceMedium, spaceWidest] }),
-    jssSize({ minHeight: controlSizeExtraLarge }),
+    innerText({ fontSize: textSizeExtraExtraLarge }),
+    contentLayout({ gap: spaceLarge, padding: [spaceMedium, spaceWidest] }),
+    size({ minHeight: controlSizeExtraLarge }),
   ],
 )
 

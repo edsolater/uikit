@@ -1,7 +1,7 @@
 import { flush } from 'solid-js'
 import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
-import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, jssContentLayout, subtle, spaceSmall, interactiveColor, badColor, oklch, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
+import { declare, modify, variable, disabledFade, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, subtle, spaceSmall, interactiveColor, badColor, oklch, shadowFlat, shadowLow, shadowRaised, shadowElevated } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
@@ -700,7 +700,7 @@ describe('Button styles', () => {
 
     // 明确采用可覆盖的全局表面入口，保留挂载后CSS变化及规则身份验证。
     handles.push(rules(['@layer uikit', '.Button'], [declare(globalColors.globalSurfaceColor, 'inherit')]))
-    handles.push(rules('.shared-input', [[$borderRadius, subtle], jssContentLayout({ padding: ['8px', spaceSmall] })]))
+    handles.push(rules('.shared-input', [[$borderRadius, subtle], contentLayout({ padding: ['8px', spaceSmall] })]))
     cssRoot.mount()
     const beforeRender = Array.from(style.sheet!.cssRules)
     expect(beforeRender.length).toBeGreaterThan(0)

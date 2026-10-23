@@ -90,28 +90,34 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
   expect(output.match(/bundle-combined-spacing:/g)).toHaveLength(1)
 })
 
-test('发布包根可以直接登记挂载并撤销样式，区分点击插件与样式', () => {
+test('发布包根与样式子路径独立消费，区分点击插件与样式', () => {
   const probe = `
     const { JSDOM } = await import('jsdom')
     const { window } = new JSDOM('<!doctype html><style id="css-root"></style>')
     Object.assign(globalThis, { window, document: window.document })
+    const styles = await import('@edsolater/uikit/style-system')
+    const passiveImport = styles.compileCSS() === '' && document.querySelector('style').textContent === ''
     const uikit = await import('@edsolater/uikit')
+    const sharedRegistry = styles.compileCSS().includes('.Button')
     const host = document.createElement('div')
     const unmount = uikit.render(() => uikit.Show({ when: true, children: () => uikit.For({ each: ['published'], children: text => document.createTextNode(text) }) }), host)
     const rendered = host.textContent === 'published'
     unmount()
-    const handle = uikit.rules('.PublishedProbe', [[uikit.key('width'), '17px']])
-    uikit.cssRoot.mount()
+    const handle = styles.rules('.PublishedProbe', [[styles.key('width'), '17px']])
+    styles.cssRoot.mount()
     const mounted = document.querySelector('style').textContent.includes('width: 17px;')
     handle.remove()
-    uikit.cssRoot.mount()
+    styles.cssRoot.mount()
     console.log(JSON.stringify({
       mounted,
       rendered,
-      removed: !uikit.compileCSS().includes('.PublishedProbe'),
-      distinctClickable: typeof uikit.clickable === 'function' && typeof uikit.jssClickable === 'function' && uikit.clickable !== uikit.jssClickable,
+      passiveImport,
+      sharedRegistry,
+      separate: !('rules' in uikit) && !('cssRoot' in uikit),
+      removed: !styles.compileCSS().includes('.PublishedProbe'),
+      distinctClickable: typeof uikit.clickable === 'function' && typeof styles.clickable === 'function' && uikit.clickable !== styles.clickable,
     }))
   `
   const output = execFileSync('bun', ['--conditions=browser', '-e', probe], { encoding: 'utf8' })
-  expect(JSON.parse(output)).toEqual({ mounted: true, rendered: true, removed: true, distinctClickable: true })
+  expect(JSON.parse(output)).toEqual({ mounted: true, rendered: true, passiveImport: true, sharedRegistry: true, separate: true, removed: true, distinctClickable: true })
 })

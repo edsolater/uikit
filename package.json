@@ -23,7 +23,12 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./css/*": "./dist/css/*"
+    "./css/*": "./dist/css/*",
+    "./style-system": {
+      "types": "./dist/style-system/index.d.ts",
+      "import": "./dist/style-system/index.js",
+      "default": "./dist/style-system/index.js"
+    }
   },
   "publishConfig": {
     "access": "public",

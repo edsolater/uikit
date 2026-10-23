@@ -29,8 +29,8 @@ import { cssFunction } from '../css-function'
 import { animationName, animationValue } from '../pieces/contents/atom-creators/animation'
 import { fontValue } from '../pieces/contents/atom-creators/font'
 
-import { jssContentLayout, jssInnerText } from '../pieces/mixins/content'
-import { jssBoundary } from '../pieces/mixins/structure'
+import { contentLayout, innerText } from '../pieces/mixins/content'
+import { boundary } from '../pieces/mixins/structure'
 
 import { durationFast } from '../pieces/contents/atoms/motion'
 import { lineColor } from '../pieces/contents/atoms/color/colors'
@@ -355,7 +355,7 @@ test('简写与详细属性保持相对顺序，同名声明在末项合并', ()
 })
 
 test('Mixin 处理方向配置，Key 不解释对象', () => {
-  handles.push(rules('.Layout', [jssContentLayout({ padding: { left: '4px' } })]))
+  handles.push(rules('.Layout', [contentLayout({ padding: { left: '4px' } })]))
   expect(compileCSS()).toContain('padding-left: 4px;')
   expect(compileCSS()).not.toContain('display:')
 })
@@ -365,11 +365,11 @@ test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () =
   const compileFont = vi.fn((context: import('../content').JSSCompileContext, controller: import('../compiler/ast-controller').ASTController) => {
     controller.setContent(context, 'italic 18px system-ui')
   })
-  keep(rules('.ResourcePadding', [jssContentLayout({ padding: { onActive: activate } })]))
-  keep(rules('.ContentFont', [jssInnerText({ font: { family: 'metadata', onCompile: compileFont } })]))
+  keep(rules('.ResourcePadding', [contentLayout({ padding: { onActive: activate } })]))
+  keep(rules('.ContentFont', [innerText({ font: { family: 'metadata', onCompile: compileFont } })]))
   keep(rules('.PlainConfig', [
-    jssContentLayout({ padding: { top: '2px', left: '4px' } }),
-    jssInnerText({ font: { size: '16px', family: 'serif' } }),
+    contentLayout({ padding: { top: '2px', left: '4px' } }),
+    innerText({ font: { size: '16px', family: 'serif' } }),
   ]))
   const css = compileCSS()
   expect(activate).toHaveBeenCalledTimes(1)
@@ -423,9 +423,9 @@ test('编译 root 的规则容器改写不污染登记账本或直接输入', ()
 })
 
 test('边界形状按需输出，省略时保留边框和焦点配置', () => {
-  keep(rules('.Shape', [jssBoundary({ radius: '999px', cornerShape: 'squircle' })]))
-  keep(rules('.Boundary', [jssBoundary({ border: ['1px', 'solid', 'transparent'], outline: { width: '2px', style: 'solid', color: 'blue', offset: '2px' } })]))
-  keep(rules('.EmptyBoundary', [jssBoundary()]))
+  keep(rules('.Shape', [boundary({ radius: '999px', cornerShape: 'squircle' })]))
+  keep(rules('.Boundary', [boundary({ border: ['1px', 'solid', 'transparent'], outline: { width: '2px', style: 'solid', color: 'blue', offset: '2px' } })]))
+  keep(rules('.EmptyBoundary', [boundary()]))
   const css = compileCSS()
   expect(css).toContain('.Shape {\nborder-radius: 999px;\ncorner-shape: squircle;')
   expect(css).toContain('.Boundary {\nborder: 1px solid transparent;\noutline-width: 2px;\noutline-style: solid;\noutline-color: blue;\noutline-offset: 2px;')
@@ -434,7 +434,7 @@ test('边界形状按需输出，省略时保留边框和焦点配置', () => {
 })
 
 test('独立空间配置不引入未选择的布局模式', () => {
-  keep(rules('.Space', [jssContentLayout({ gap: '8px', padding: ['4px', '12px'] })]))
+  keep(rules('.Space', [contentLayout({ gap: '8px', padding: ['4px', '12px'] })]))
   const css = compileCSS()
   expect(css).toContain('gap: 8px;')
   expect(css).toContain('padding: 4px 12px;')

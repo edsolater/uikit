@@ -1,6 +1,7 @@
 // 发布构建只负责生成类型声明产物。
 // 编辑器跳转能否从 dist 回到 src，取决于这里是否同时产出 declaration map。
 {
+  "tsc-alias": { "resolveFullPaths": true, "resolveFullExtension": ".js" },
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "./src",

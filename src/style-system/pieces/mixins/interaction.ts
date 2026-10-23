@@ -25,7 +25,7 @@ export interface ClickableMixinOptions {
 }
 
 /** Mixin：可点击效果；可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。 */
-export const jssClickable = (options: ClickableMixinOptions = {}): Declarations => [
+export const clickable = (options: ClickableMixinOptions = {}): Declarations => [
   [$outline, focusOutline(options.focusColor, options.address)],
   [$outlineOffset, variableFrom(focusOffset, focusOffset.content, { address: options.address })],
   [$cursor, variable('pointer', { name: 'clickable-cursor', address: options.address, states: { disabled: 'not-allowed' } })],

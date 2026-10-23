@@ -12,12 +12,12 @@ export interface ColorMixinOptions {
 }
 
 /** Mixin：主体颜色。 */
-export const jssColor = (options: ColorMixinOptions = {}): Declarations => [
+export const color = (options: ColorMixinOptions = {}): Declarations => [
   [$color, options.content],
   [$backgroundColor, options.background],
 ]
 
 /** Mixin：视觉层级。 */
-export const jssElevation = (level?: ValueInput | ValueInput[]): Declarations => [
+export const elevation = (level?: ValueInput | ValueInput[]): Declarations => [
   [$boxShadow, Array.isArray(level) ? valueList(...level) : level],
 ]

@@ -24,7 +24,7 @@ const surface = variable('red', {
 })
 const halfAlpha = modification({ type: 'color', detail: { alpha: 0.5 } })
 const faded = adjust(surface, halfAlpha)
-rules('.Button', [jssColor({ background: faded })])
+rules('.Button', [color({ background: faded })])
 ```
 
 颜色 Modification 中，固定通道值表示替换，通道回调表示相对变化，未指定的通道保留。此处 alpha:0.5 是将透明度设为 0.5，不是乘 0.5；对原透明度 0.8，设置得到 0.5，而相对减半得到 0.4。
@@ -34,7 +34,7 @@ adjust 返回普通 Variable，沿用来源 address；结果内容保留所需 C
 若希望目标自身在匹配范围改变，用下段替代上面的 adjust 使用：
 
 ```ts
-rules('.Button', [modify(surface, halfAlpha), jssColor({ background: surface })])
+rules('.Button', [modify(surface, halfAlpha), color({ background: surface })])
 ```
 
 modify 返回可登记的声明，仅在明确条件内加工目标全部结果；条件外保留原结果。它不要求业务先无值 declare、重传创建内容或手工铺设依赖。states 的归属仍是原根据地，不因当地 modify 自动移植到每个消费者。

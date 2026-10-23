@@ -12,7 +12,7 @@ export interface SizeMixinOptions {
 }
 
 /** Mixin：盒子尺寸。 */
-export const jssSize = (options: SizeMixinOptions = {}): Declarations => [
+export const size = (options: SizeMixinOptions = {}): Declarations => [
   [$minHeight, options.minHeight],
 ]
 
@@ -31,7 +31,7 @@ export interface BoundaryMixinOptions {
 }
 
 /** Mixin：空间边界。 */
-export const jssBoundary = (options: BoundaryMixinOptions = {}): Declarations => [
+export const boundary = (options: BoundaryMixinOptions = {}): Declarations => [
   [$border, Array.isArray(options.border) ? valueSequence(...options.border) : options.border],
   [$borderColor, options.borderColor],
   [$borderRadius, options.radius],

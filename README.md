@@ -61,4 +61,4 @@ bun run build-storybook
 包名是 `@edsolater/uikit`。
 
 对外导出从 [src/index.ts](src/index.ts) 进入，组件和 hooks 分别由 `src/components`、`src/hooks` 汇总导出。
-Style System 也是 UIKit 的一部分，从 `@edsolater/uikit` 取得 `rules`、`key`、Variable、Mixin 和挂载能力；用法见 [样式文件写法](docs/style/样式文件写法.md#登记与挂载)。
+Style System 使用独立入口 `@edsolater/uikit/style-system`，提供 `rules`、`key`、Variable、Mixin 和挂载能力；用法见 [样式文件写法](docs/style/样式文件写法.md#登记与挂载)。
