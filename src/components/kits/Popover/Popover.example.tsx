@@ -23,6 +23,10 @@ export function PopoverExample() {
           <p>当空间不够时，浏览器会按 `position-try` 自动尝试翻面。</p>
         </Popover>
 
+        <Popover top trigger="上方弹出" title="上方定位">
+          <p>这个例子验证上方锚定，以及再次点击触发器关闭浮层。</p>
+        </Popover>
+
         <Popover
           right
           trigger="Right popover"

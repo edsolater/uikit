@@ -19,5 +19,5 @@
     "jsx": "preserve",
     "jsxImportSource": "@solidjs/web"
   },
-  "include": ["src", ".storybook/**/*.ts", ".storybook/**/*.tsx"]
+  "include": ["src"]
 }

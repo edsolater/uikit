@@ -5,18 +5,24 @@ import './Article.example.css'
 
 export function ArticleExample() {
   return (
-    <Article as={Card} class="example-card">
-      <div class="example-card-head">
-        <span>Component</span>
-        <h2>Article</h2>
-      </div>
-      <p>Article 表达可独立理解的正文；Card 只是这篇正文当前采用的视觉形式。</p>
+    <>
+      <Article as={Card} class="example-card">
+        <div class="example-card-head">
+          <span>Component</span>
+          <h2>Article</h2>
+        </div>
+        <p>Article 表达可独立理解的正文；Card 只是这篇正文当前采用的视觉形式。</p>
 
-      <div class="article-example-contract">
-        <span>最终节点</span>
-        <code>&lt;article class=&quot;Card example-card&quot;&gt;</code>
-        <strong>正文语义优先，Card 提供视觉，不增加包裹层。</strong>
-      </div>
-    </Article>
+        <div class="article-example-contract">
+          <span>最终节点</span>
+          <code>&lt;article class=&quot;Card example-card&quot;&gt;</code>
+          <strong>正文语义优先，Card 提供视觉，不增加包裹层。</strong>
+        </div>
+      </Article>
+      <Article>
+        <h3>原生 Article 正文</h3>
+        <p>这篇正文直接使用原生 article，不由 Card 提供视觉形式。</p>
+      </Article>
+    </>
   )
 }

@@ -63,6 +63,7 @@ export function ButtonExample() {
         <div><Button plain>Plain</Button></div>
         <div><Button plain>Plain</Button></div>
         <div class="button-row">
+          <Button plain danger>移除</Button>
           <Button plain loading>Loading</Button>
           <Button plain disabled>Disabled</Button>
         </div>

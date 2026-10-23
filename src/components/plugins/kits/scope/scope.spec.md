@@ -25,7 +25,6 @@
 
 [scope.example.tsx](scope.example.tsx) 建立两个 Drag and Drop Scope：范围内允许放下，跨范围拒绝。
 
-[scope.stories.tsx](scope.stories.tsx) 提供同一范围协作的独立 Storybook 入口。
 
 ## 边界
 

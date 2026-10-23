@@ -77,7 +77,7 @@ describe('ExampleDashboard', () => {
     )
   })
 
-  test('Article 由 Card 透明承载，并保留唯一的 article 节点', () => {
+  test('Article 原生与 Card 承载场景各自保留单一节点', () => {
     window.history.replaceState(null, '', '/examples/article')
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
@@ -85,7 +85,13 @@ describe('ExampleDashboard', () => {
     const article = document.querySelector<HTMLElement>('.Card.example-card')!
     expect(article.tagName).toBe('ARTICLE')
     expect(article.querySelector('h2')?.textContent).toBe('Article')
-    expect(document.querySelectorAll('.example-detail article')).toHaveLength(1)
+    const articles = document.querySelectorAll('.example-detail article')
+    expect(articles).toHaveLength(2)
+    expect(article.querySelector('article')).toBeNull()
+    const nativeArticle = articles[1]
+    expect(nativeArticle.classList.contains('Card')).toBe(false)
+    expect(nativeArticle.querySelector('article')).toBeNull()
+    expect(nativeArticle.querySelector('h3')?.textContent).toBe('原生 Article 正文')
   })
   test('详情 URL 可以直接打开并跟随浏览历史变化', () => {
     window.history.replaceState(null, '', '/examples/droppable')

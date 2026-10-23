@@ -1,5 +1,7 @@
 # Foundation 异步链路改造 Plan
 
+> 历史入口说明（2026-10-23）：Storybook 已退出当前项目。本文相关配置路径、命令与验收结果保留为当时事实，不再作为现役执行指引；当前预览由既有 Example 承担。
+
 ## 当前轮：宿主 App 直接提供唯一 Context 根（已完成）
 
 用户授权先写 Plan 再实施：App 提供的节点自身就是 Root，不在其下额外创建 Root。上一轮 Context 改动已全部暂存，本轮快照保存在 agents/run/context-app-root；不改 Git index、不回退。

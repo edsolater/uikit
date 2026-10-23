@@ -48,7 +48,6 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 [draggable.example.tsx](draggable.example.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [Droppable Example](../droppable/droppable.example.tsx)。
 
-[draggable.stories.tsx](draggable.stories.tsx) 提供同一场景的独立 Storybook 入口。
 
 ## 边界
 
