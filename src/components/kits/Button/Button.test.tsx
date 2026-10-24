@@ -93,15 +93,27 @@ describe('Button', () => {
     expect(ref).toHaveBeenCalledWith(host.firstElementChild)
   })
 
-  test('把自身的 onClick 动作翻译成底层 click 事件', () => {
+  test('按钮保留点击、显式表单提交与禁用语义，默认不提交', () => {
     const host = document.body.appendChild(document.createElement('div'))
     const onClick = vi.fn()
-    dispose = render(() => <Button onClick={onClick}>确认</Button>, host)
-    const element = host.firstElementChild as HTMLButtonElement
-
-    element.click()
-
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault())
+    const disabled = createState(false)
+    dispose = render(() => (
+      <form onSubmit={onSubmit}>
+        <Button onClick={onClick}>普通</Button>
+        <Button disabled={disabled} htmlProps={{ type: 'submit' }}>提交</Button>
+      </form>
+    ), host)
+    const [ordinary, submit] = host.querySelectorAll('button')
+    ordinary.click()
     expect(onClick).toHaveBeenCalledOnce()
+    expect(onSubmit).not.toHaveBeenCalled()
+    submit.click()
+    expect(onSubmit).toHaveBeenCalledOnce()
+    disabled.set(true)
+    flush()
+    submit.click()
+    expect(onSubmit).toHaveBeenCalledOnce()
   })
 
   test('分组字段形成外观、强调、语气和尺寸描述，退出旧 variant 属性', () => {

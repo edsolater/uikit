@@ -41,6 +41,16 @@ export const domMap = {
   summary: () => <summary /> as PivHTMLElement<'summary'>,
   details: () => <details /> as PivHTMLElement<'details'>,
   dialog: () => <dialog /> as PivHTMLElement<'dialog'>,
+  canvas: () => <canvas /> as PivHTMLElement<'canvas'>,
+  fieldset: () => <fieldset /> as PivHTMLElement<'fieldset'>,
+  legend: () => <legend /> as PivHTMLElement<'legend'>,
+  small: () => <small /> as PivHTMLElement<'small'>,
+  strong: () => <strong /> as PivHTMLElement<'strong'>,
+  dl: () => <dl /> as PivHTMLElement<'dl'>,
+  dt: () => <dt /> as PivHTMLElement<'dt'>,
+  dd: () => <dd /> as PivHTMLElement<'dd'>,
+  ol: () => <ol /> as PivHTMLElement<'ol'>,
+  br: () => <br /> as PivHTMLElement<'br'>,
 }
 
 export type PivSupportedElementTag = keyof typeof domMap

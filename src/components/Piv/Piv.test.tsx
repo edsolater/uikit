@@ -9,6 +9,27 @@ import { createPivPlugin } from './plugin/helpers'
 import { mergePivProps } from './plugin/handlePivPlugin'
 
 describe('Piv 生命周期', () => {
+  test('研究图表和表单使用相同的 Piv 原生元素契约', () => {
+    const host = document.createElement('div')
+    let canvas: HTMLCanvasElement | undefined
+    const dispose = render(() => <>
+      <Piv as="canvas" ref={element => { canvas = element }} htmlProps={{ width: 320, height: 180 }} />
+      <Piv as="fieldset"><Piv as="legend">范围</Piv></Piv>
+      <Piv as="small">说明</Piv><Piv as="strong">成绩</Piv>
+      <Piv as="dl"><Piv as="dt">名称</Piv><Piv as="dd">内容</Piv></Piv>
+      <Piv as="ol"><Piv as="li">项目</Piv></Piv><Piv as="br" />
+    </>, host)
+    flush()
+    expect(canvas).toBe(host.querySelector('canvas'))
+    expect(canvas?.width).toBe(320)
+    expect(canvas?.height).toBe(180)
+    for (const tag of ['canvas', 'fieldset', 'legend', 'small', 'strong', 'dl', 'dt', 'dd', 'ol', 'br']) {
+      expect(host.querySelector(tag)?.localName).toBe(tag)
+    }
+    expect(host.querySelector('fieldset')?.querySelector('legend')?.textContent).toBe('范围')
+    dispose()
+    expect(host.childElementCount).toBe(0)
+  })
 
   test('option 随当前值更新选中项并发布 change，表头原生语义随状态更新', () => {
     const host = document.createElement('div')

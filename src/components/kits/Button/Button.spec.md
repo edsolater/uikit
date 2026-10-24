@@ -138,7 +138,7 @@ export const buttonMapping = {
 ## 原生能力与边界
 
 - Button 最终只输出一个原生 `button`。
-- 默认 `type="button"`；提交和重置通过 `htmlProps` 明确传入。
+- 默认 `type="button"`作为低优先级声明；提交和重置通过 `htmlProps` 明确传入，沿原生 HTML 字段的动态值语义消费。
 - 原生 button 的 `name` attribute 使用 `htmlProps.name`，不使用顶层 `name`。
 - 不提供 `variant`、`shape`、`href`、`target`、`icon`、`trailingIcon`、`enabled`、`validIf` 或 `validator`。
 - 图标属于 `children`；导航属于 Link；状态判断属于外部业务。
