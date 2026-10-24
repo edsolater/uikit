@@ -1,15 +1,15 @@
 /**
  * 结构覆盖层显示活组件的真实边界与用途。
  *
- * 单层内容淡化与独立标注共同覆盖当前像素，不修改组件样式或事件。
+ * 单层淡化与独立标注覆盖当前像素，隐藏选择不改写原样式来源或事件。
  *
  * 只在查看开启期间测量，避免普通界面承担持续绘制开销。
  */
-import { createState, onCleanup, onMount, val, For } from '@/foundation'
+import { createState, createRenderEffect, onCleanup, onMount, val, For } from '@/foundation'
 import { useBrowserAnimationFrame } from '@/hooks/useBrowserAnimationFrame'
 import { Piv } from '@/components/Piv/Piv'
 import { componentBoundaries, type ComponentBoundary } from './ComponentWrapper'
-import './StructureView.css'
+import './StructureView.style'
 
 /** 一帧中的真实边界，单位为视口像素。 */
 interface BoundaryFrame {
@@ -33,13 +33,39 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
   let canvas!: HTMLCanvasElement
   const frames = createState<BoundaryFrame[]>([])
   const animationFrame = useBrowserAnimationFrame()
+  const displayValues = new Map<ComponentBoundary, boolean>()
+  const hiddenElements = new Set<Element>()
+  const hiddenText = new Highlight()
 
   /**
    * 读取当前真实位置并安排下一帧，跟随滚动、布局与动态子树。
    */
   const updateFrame = () => {
     const currentFrames = readBoundaryFrames()
-    drawBoundaries(canvas, currentFrames, props.control)
+    const hiddenFrames = currentFrames.filter(frame => displayValues.get(frame.boundary) === false)
+    const nextHiddenElements = new Set<Element>()
+    hiddenText.clear()
+    for (const frame of hiddenFrames) {
+      for (const node of readBoundaryNodes(frame.boundary)) {
+        if (node instanceof Element) {
+          nextHiddenElements.add(node)
+          for (const surface of node.querySelectorAll('[popover]:popover-open,dialog:modal')) nextHiddenElements.add(surface)
+        } else if (node instanceof Text) {
+          const range = document.createRange()
+          range.selectNodeContents(node)
+          hiddenText.add(range)
+        }
+      }
+    }
+    for (const element of hiddenElements) {
+      if (!nextHiddenElements.has(element)) element.removeAttribute('data-structure-view-hidden')
+    }
+    hiddenElements.clear()
+    for (const element of nextHiddenElements) {
+      element.setAttribute('data-structure-view-hidden', '')
+      hiddenElements.add(element)
+    }
+    drawBoundaries(canvas, readDisplayedFrames(currentFrames, displayValues), props.control)
     frames.set(currentFrames)
     animationFrame.request(updateFrame)
   }
@@ -56,24 +82,45 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
 
   onMount(() => {
     surface.showPopover()
+    CSS.highlights.set('uikit-structure-view-hidden', hiddenText)
     document.addEventListener('toggle', followPopover, true)
     animationFrame.request(updateFrame)
   })
-  onCleanup(() => document.removeEventListener('toggle', followPopover, true))
+  onCleanup(() => {
+    document.removeEventListener('toggle', followPopover, true)
+    for (const element of hiddenElements) element.removeAttribute('data-structure-view-hidden')
+    if (CSS.highlights.get('uikit-structure-view-hidden') === hiddenText) CSS.highlights.delete('uikit-structure-view-hidden')
+  })
 
   return <Piv class="StructureViewOverlay" htmlProps={{ popover: 'manual', 'aria-hidden': 'true' }}
     ref={element => { surface = element }}>
     <Piv as="canvas" ref={element => { canvas = element }} />
-    <For each={groupBoundaryLabels(val(frames))}>{group => <Piv class="labels" style={{
+    <For each={val(frames).map(frame => frame.boundary)}>{boundary => {
+      createRenderEffect(boundary.readDescriptionDisplay, display => { displayValues.set(boundary, display) })
+      onCleanup(() => displayValues.delete(boundary))
+      return undefined
+    }}</For>
+    <For each={groupBoundaryLabels(readDisplayedFrames(val(frames), displayValues))}>{group => <Piv class="labels" style={{
       left: `${group.rectangle.left}px`, top: `${group.rectangle.top}px`,
       width: `${group.rectangle.width}px`, 'max-height': `${group.rectangle.height}px`,
     }}>
-      <For each={group.frames}>{frame => <Piv as="span" class="label"
-        style={{ 'border-color': boundaryColors[frame.boundary.colorIndex] }}>
+      <For each={group.frames}>{frame => <Piv as="span" class="label">
         {frame.boundary.readLabel()}
       </Piv>}</For>
     </Piv>}</For>
   </Piv>
+}
+
+/** false范围同时压住自身与其中的子组件；待定来源不绘制。 */
+function readDisplayedFrames(frames: BoundaryFrame[], displayValues: Map<ComponentBoundary, boolean>): BoundaryFrame[] {
+  const hiddenRanges = frames.filter(frame => displayValues.get(frame.boundary) === false).map(frame => {
+    const range = document.createRange()
+    range.setStartBefore(frame.boundary.start)
+    range.setEndAfter(frame.boundary.end)
+    return range
+  })
+  return frames.filter(frame => displayValues.get(frame.boundary) === true
+    && !hiddenRanges.some(range => range.comparePoint(frame.boundary.start, 0) === 0))
 }
 
 /**
@@ -121,12 +168,11 @@ function drawBoundaries(canvas: HTMLCanvasElement, frames: BoundaryFrame[], cont
 function readBoundaryFrames(): BoundaryFrame[] {
   const frames: BoundaryFrame[] = []
   for (const boundary of componentBoundaries) {
+    if (!boundary.start.isConnected || boundary.start.parentNode !== boundary.end.parentNode) continue
     const rectangles = readBoundaryRectangles(boundary)
       .filter(rectangle => rectangle.width > 0 && rectangle.height > 0
         && rectangle.bottom > 0 && rectangle.right > 0
         && rectangle.top < window.innerHeight && rectangle.left < window.innerWidth)
-    if (!rectangles.length) continue
-
     frames.push({ boundary, rectangles })
   }
   return frames
@@ -139,6 +185,7 @@ function groupBoundaryLabels(frames: BoundaryFrame[]): BoundaryLabels[] {
   const groups = new Map<string, BoundaryLabels>()
   for (const frame of frames) {
     const rectangle = frame.rectangles[0]
+    if (!rectangle) continue
     const key = `${rectangle.x},${rectangle.y},${rectangle.width},${rectangle.height}`
     const group = groups.get(key)
     if (group) group.frames.push(frame)
@@ -151,10 +198,8 @@ function groupBoundaryLabels(frames: BoundaryFrame[]): BoundaryLabels[] {
  * 读取哨兵间的元素与文本；原生浮层单独保留其视口位置。
  */
 function readBoundaryRectangles(boundary: ComponentBoundary): DOMRect[] {
-  if (!boundary.start.isConnected || boundary.start.parentNode !== boundary.end.parentNode) return []
   const rectangles: DOMRect[] = []
-  let current = boundary.start.nextSibling
-  while (current && current !== boundary.end) {
+  for (const current of readBoundaryNodes(boundary)) {
     if (current instanceof Element) {
       rectangles.push(...current.getClientRects())
       for (const popover of current.querySelectorAll('[popover]:popover-open')) {
@@ -165,7 +210,18 @@ function readBoundaryRectangles(boundary: ComponentBoundary): DOMRect[] {
       range.selectNodeContents(current)
       rectangles.push(...range.getClientRects())
     }
-    current = current.nextSibling
   }
   return rectangles
+}
+
+/** 只收集边界内的真实直接根，保留表格、选项和裸文本的原结构。 */
+function readBoundaryNodes(boundary: ComponentBoundary): Node[] {
+  if (!boundary.start.isConnected || boundary.start.parentNode !== boundary.end.parentNode) return []
+  const nodes: Node[] = []
+  let current = boundary.start.nextSibling
+  while (current && current !== boundary.end) {
+    nodes.push(current)
+    current = current.nextSibling
+  }
+  return nodes
 }

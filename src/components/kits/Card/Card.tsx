@@ -47,7 +47,7 @@ export function Card<Tag extends PivSupportedElementTag = 'div'>(props: CardProp
   const { variantShadowProps } = parseCardVariantProps(props)
 
   return (
-    <ComponentWrapper componentName="Card" description={props.description} defaultDescription="组织独立信息">
+    <ComponentWrapper componentName="Card" description={props.description} descriptionDisplay={props.descriptionDisplay} defaultDescription="组织独立信息">
       <Piv
         as={props.as}
         shadowProps={[props, variantShadowProps]}

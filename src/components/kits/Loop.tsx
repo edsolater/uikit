@@ -36,7 +36,7 @@ export function Each<T>(props: EachProps<T>) {
         },
   )
 
-  return <ComponentWrapper componentName="Each" description={props.description} defaultDescription="排列重复内容">
+  return <ComponentWrapper componentName="Each" description={props.description} descriptionDisplay={props.descriptionDisplay} defaultDescription="排列重复内容">
     <Piv class='Loop' ref={setDomRef}>{mapped()}</Piv>
   </ComponentWrapper>
 }

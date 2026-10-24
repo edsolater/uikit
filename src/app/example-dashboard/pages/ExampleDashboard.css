@@ -19,7 +19,7 @@
   gap: var(--space-1);
 }
 
-.example-card-head span {
+.example-card-head > span {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0.12em;

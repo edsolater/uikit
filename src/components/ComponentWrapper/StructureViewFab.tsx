@@ -9,7 +9,7 @@ import { createState, val, Show } from '@/foundation'
 import { Button } from '@/components/kits/Button/Button'
 import { StructureViewControl } from './ComponentWrapper'
 import { StructureViewOverlay } from './StructureViewOverlay'
-import './StructureView.css'
+import './StructureView.style'
 
 /**
  * 手动加载组件定位框开关，切换不重建原组件。

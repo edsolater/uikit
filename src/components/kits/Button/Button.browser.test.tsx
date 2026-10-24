@@ -8,6 +8,7 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { createState } from '@/foundation'
 import { Button, type ButtonProps, type ButtonAppearance } from './Button'
+import { Piv } from '@/components/Piv/Piv'
 import { buttonMapping } from './Button.mapping'
 
 import './Button.style'
@@ -84,6 +85,42 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
+  test('原生表单中默认不提交，外部type列表来源接管提交重置与禁用', () => {
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('main'))
+    const disabled = createState(false)
+    const type = createState<'submit' | 'reset'>('submit')
+    let clicks = 0
+    let submissions = 0
+    let resets = 0
+    dispose = render(() => <Piv as="form" on={{
+      submit: { passive: false, callback: ({ event }) => { event.preventDefault(); submissions++ } },
+      reset: { passive: false, callback: ({ event }) => { event.preventDefault(); resets++ } },
+    }}>
+      <Button onClick={() => { clicks++ }}>普通</Button>
+      <Button disabled={disabled} htmlProps={[{ type: 'reset' }, { type }]}>提交或重置</Button>
+    </Piv>, host)
+    const [ordinary, submit] = host.querySelectorAll('button')
+    expect(ordinary.type).toBe('button')
+    expect(submit.type).toBe('submit')
+    ordinary.click()
+    expect(clicks).toBe(1)
+    expect(submissions).toBe(0)
+    submit.click()
+    expect(submissions).toBe(1)
+    disabled.set(true)
+    flush()
+    submit.click()
+    expect(submissions).toBe(1)
+    disabled.set(false)
+    type.set('reset')
+    flush()
+    expect(submit.type).toBe('reset')
+    submit.click()
+    expect(resets).toBe(1)
+    expect(submissions).toBe(1)
+  })
+
   test.each([false, true])('真实 filled 按钮在悬停和按下时有可辨明度反馈，危险语气保持反馈并退出恢复：strong=%s', async (strong) => {
     document.documentElement.dataset.theme = 'light'
     mountButtonStyles()

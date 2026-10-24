@@ -68,7 +68,7 @@ export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   const columnKeys = stateView(props.data).map((data) => (props.keys ? val(props.keys) : pickTableColumnKeys(data)))
 
   return (
-    <ComponentWrapper componentName="Table" description={props.description} defaultDescription="按列展示记录">
+    <ComponentWrapper componentName="Table" description={props.description} descriptionDisplay={props.descriptionDisplay} defaultDescription="按列展示记录">
       <Piv as="table">
         <Piv as="thead">
           <Piv as="tr">

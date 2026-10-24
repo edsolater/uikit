@@ -7,16 +7,25 @@
  */
 import { render } from '@solidjs/web'
 import { flush } from 'solid-js'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { cssRoot } from '@/style-system'
 import { createState, Loading, Show } from '@/foundation'
 import { Article, Button, Card, ComponentWrapper, Each, Input, Piv, Popover, StructureViewFab, Table } from '@/components'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
+let styleHost: HTMLStyleElement
+
+beforeEach(() => {
+  styleHost = document.head.appendChild(document.createElement('style'))
+  styleHost.id = 'css-root'
+  cssRoot.mount()
+})
 
 afterEach(() => {
   dispose?.()
   dispose = undefined
+  styleHost.remove()
   document.body.replaceChildren()
 })
 
@@ -45,6 +54,68 @@ function readLabels() {
 }
 
 describe('组件结构查看', () => {
+  test('false隐藏实际多根及浮层并压住子框，裸文本不改节点且样式来源继续更新', async () => {
+    const display = createState(false)
+    const opacity = createState(0.8)
+    const content = createState('TRUE')
+    const host = createHost()
+    dispose = render(() => <>
+      <ComponentWrapper componentName="透明父" descriptionDisplay={display.read()}>
+        <Piv style={{ opacity }}>
+          <Button descriptionDisplay>子动作</Button>
+          <Popover trigger="原生浮层"><Piv>浮层内容</Piv></Popover>
+        </Piv>
+        <ComponentWrapper componentName="裸子" descriptionDisplay>{content.read()}</ComponentWrapper>
+        <Piv as="table"><Piv as="tbody"><Piv as="tr"><Piv as="td">原单元格</Piv></Piv></Piv></Piv>
+        <Piv as="select"><Piv as="option">原选项</Piv></Piv>
+      </ComponentWrapper>
+      <ComponentWrapper componentName="视口外父" descriptionDisplay={false}>
+        <Piv style={{ position: 'fixed', top: '-1000px', height: '0px' }}>
+          <Button style={{ position: 'fixed', top: '8px', left: '8px' }}>固定子动作</Button>
+        </Piv>
+      </ComponentWrapper>
+      <Button>外部动作</Button>
+      <StructureViewFab />
+    </>, host)
+    const root = host.firstElementChild as HTMLElement
+    const originalNodes = [...host.childNodes]
+    const originalBounds = root.getBoundingClientRect().toJSON()
+    const popover = root.querySelector<HTMLElement>('[popover]')!
+    expect(getComputedStyle(root).opacity).toBe('0.8')
+    toggleView()
+    await expect.poll(() => getComputedStyle(root).opacity).toBe('0')
+    await expect.poll(readLabels).toEqual(['Button · 执行动作'])
+    expect(root.getBoundingClientRect().toJSON()).toEqual(originalBounds)
+    expect([...host.childNodes].filter(node => !(node instanceof Element && node.matches('.StructureViewOverlay')))).toEqual(originalNodes)
+    expect(host.querySelector('table > tbody > tr > td')?.textContent).toBe('原单元格')
+    expect(host.querySelector('select > option')?.textContent).toBe('原选项')
+    const highlight = CSS.highlights.get('uikit-structure-view-hidden')!
+    expect([...highlight].some(range => range.toString() === 'TRUE')).toBe(true)
+    expect(getComputedStyle(host, '::highlight(uikit-structure-view-hidden)').color).toBe('rgba(0, 0, 0, 0)')
+    expect(popover.matches(':popover-open')).toBe(false)
+    root.querySelector<HTMLButtonElement>('.Popover > .trigger')!.click()
+    await expect.poll(() => popover.matches(':popover-open')).toBe(true)
+    await expect.poll(() => getComputedStyle(popover).opacity).toBe('0')
+    opacity.set(0.35)
+    content.set('FALSE')
+    flush()
+    await expect.poll(() => [...highlight].some(range => range.toString() === 'FALSE')).toBe(true)
+    expect(root.style.opacity).toBe('0.35')
+    display.set(true)
+    flush()
+    await expect.poll(() => getComputedStyle(root).opacity).toBe('0.35')
+    await expect.poll(readLabels).toContain('裸子')
+    await expect.poll(() => getComputedStyle(popover).opacity).toBe('1')
+    display.set(false)
+    flush()
+    await expect.poll(() => getComputedStyle(root).opacity).toBe('0')
+    toggleView()
+    expect(root.style.opacity).toBe('0.35')
+    await expect.poll(() => getComputedStyle(root).opacity).toBe('0.35')
+    expect(host.querySelector('[data-structure-view-hidden]')).toBeNull()
+    expect(CSS.highlights.has('uikit-structure-view-hidden')).toBe(false)
+  })
+
   test('未加载和加载未开启都保持内容，开启后外部说明覆盖默认且能响应更新', async () => {
     const description = createState<string | undefined>()
     const showFab = createState(false)
@@ -121,9 +192,9 @@ describe('组件结构查看', () => {
     action.click()
     disabled.click()
     expect(clicks).toHaveBeenCalledOnce()
-    const strokes = new Set([...document.querySelectorAll('.StructureViewOverlay .label')]
-      .map(element => (element as HTMLElement).style.borderColor))
-    expect(strokes.size).toBe(4)
+    const labelStyle = getComputedStyle(document.querySelector('.StructureViewOverlay .label')!)
+    expect(labelStyle.borderTopWidth).toBe('0px')
+    expect(labelStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)')
     expect(getComputedStyle(document.querySelector('.StructureViewOverlay')!).pointerEvents).toBe('none')
     toggleView()
     expect(input.value).toBe('用户继续输入')

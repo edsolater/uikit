@@ -49,11 +49,13 @@ kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期
 
 ## 组件定位框
 
-现有8种kit在定义处以ComponentWrapper声明静态身份及可选默认用途，使用处的description覆盖默认值。Wrapper用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
+现有9种kit在定义处以ComponentWrapper声明静态身份及可选默认用途，使用处的description覆盖默认值。Wrapper用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
 
 App手动放入StructureViewFab，它拥有初始关闭的本地状态；开启才挂载统一Overlay。Overlay通过Piv创建Canvas与标注，逐帧读取真实边界，用一次蒙层弱化内容后描边；标注位于框内左上角，受真实框宽高约束。FAB区域保持清晰，关闭即释放显示层与帧循环，不重建原组件或清空状态。Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
 
-Text只承载纯文字，通过自身相邻CSS感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即自然恢复最新内容。它不复制开关State，不让Overlay猜组件类型，也不缓存或改写DOM文字。Text原生节点仍交给Piv，定位框与标注继续交给Wrapper及统一Overlay；Text在定义处选择descriptionOnly格式，有说明时只标用途，无说明或空说明时回落Text，其它组件默认格式不变。
+共同descriptionDisplay布尔属性由Wrapper处理显式值与定义默认，普通组件缺省true，Text按外部description实际内容决定默认。仅在Overlay挂载的受管消费中归一显示值，帧循环不直接读取异步Source。false元素根及原生浮层根通过专属模式属性保持opacity为0；裸文字根以透明色Highlight保留原节点，Comment范围同时排除后代定位框。Overlay负责同步与清理，不另建开关、组件树或项目私有隐藏逻辑；普通样式及其Source持续更新，不用旧opacity快照覆盖。
+
+Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p分别选择div／p；Heading以必填level选择h1～h6。两者直接把原生节点交给Piv，纯文字Source持续下传，不通过嵌套彼此制造双重身份。各自的相邻.style.ts通过Style System感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即恢复最新内容。它们不复制开关State，也不缓存或改写DOM文字；Wrapper及统一Overlay继续负责定位框与标注。两者选择descriptionOnly格式，有说明时只标用途，无说明或空说明时回落各自组件名，其它组件默认格式不变。
 
 ## Button 样式
 

@@ -86,7 +86,12 @@ export function Popover(props: PopoverProps) {
   })
 
   return (
-    <ComponentWrapper componentName="Popover" description={props.description} defaultDescription="显示补充内容">
+    <ComponentWrapper
+      componentName="Popover"
+      description={props.description}
+      descriptionDisplay={props.descriptionDisplay}
+      defaultDescription="显示补充内容"
+    >
       <Piv
         shadowProps={[variantShadowProps, statusShadowProps]}
         class={joinClassName('Popover', mergedProps.class)}
@@ -99,12 +104,12 @@ export function Popover(props: PopoverProps) {
           style={mergedProps.triggerStyle}
           ref={controller.setTriggerElement}
           htmlProps={{
-            type: 'button',
+            'type': 'button',
             'aria-haspopup': 'dialog',
             'aria-controls': controller.popoverId,
-            'aria-expanded': controller.isOpen.map((isOpen) => isOpen ? 'true' : 'false'),
-            popovertarget: controller.popoverId,
-            popovertargetaction: mergedProps.triggerAction,
+            'aria-expanded': controller.isOpen.map((isOpen) => (isOpen ? 'true' : 'false')),
+            'popovertarget': controller.popoverId,
+            'popovertargetaction': mergedProps.triggerAction,
             ...mergedProps.triggerProps,
           }}
         >

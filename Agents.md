@@ -8,7 +8,7 @@
 
 ## 项目阅读顺序
 
-- 写或改组件的 `.style.ts` 时，再读本项目的 [样式文件写法](docs/style/样式文件写法.md)，并对照组件定义确认分类与状态。
+- 新增或修改组件及其样式前，先读本项目的 [样式文件写法](docs/style/样式文件写法.md)，再决定样式落点；组件样式只能写入 `.style.ts`，`.css` 仅限 App 背景、reset 等根级职责，不能承载组件规则。
 - 查当前仓库结构、模块边界和调用链时读 [Architecture.md](Architecture.md)。
 - 写 Guide 或 Plan 时读 [Guide 写法](docs/how-to-write-guide.md) 和 [Plan 写法](docs/how-to-write-plan.md)。
 

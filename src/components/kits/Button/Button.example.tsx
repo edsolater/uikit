@@ -7,6 +7,7 @@ import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
 import { StructureViewFab } from '@/components/ComponentWrapper/StructureViewFab'
 import { Text } from '@/components/kits/Text/Text'
+import { Heading } from '@/components/kits/Heading/Heading'
 
 export function ButtonExample() {
   return (
@@ -14,18 +15,18 @@ export function ButtonExample() {
       <Article as={Card} class="example-card" description="按钮外观与状态示例">
         <div class="example-card-head">
           <Text description="类别">Component</Text>
-          <Text as="h2" description="标题">Button</Text>
+          <Heading level={2} description="标题">Button</Heading>
         </div>
-        <Text as="p" description="描述">按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。</Text>
+        <Text p description="描述">按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。</Text>
 
         <div class="button-example-grid">
-          <Text as="div" class="button-example-head" description="列标题">类型</Text>
-          <Text as="div" class="button-example-head" description="列标题">默认</Text>
-          <Text as="div" class="button-example-head" description="列标题">悬停体验</Text>
-          <Text as="div" class="button-example-head" description="列标题">按下体验</Text>
-          <Text as="div" class="button-example-head" description="列标题">流程</Text>
+          <Text block class="button-example-head" description="列标题">类型</Text>
+          <Text block class="button-example-head" description="列标题">默认</Text>
+          <Text block class="button-example-head" description="列标题">悬停体验</Text>
+          <Text block class="button-example-head" description="列标题">按下体验</Text>
+          <Text block class="button-example-head" description="列标题">流程</Text>
 
-          <Text as="div" class="button-example-label" description="行标题">普通</Text>
+          <Text block class="button-example-label" description="行标题">普通</Text>
           <div><Button>Default</Button></div>
           <div><Button>Default</Button></div>
           <div><Button>Default</Button></div>
@@ -34,7 +35,7 @@ export function ButtonExample() {
             <Button disabled>Disabled</Button>
           </div>
 
-          <Text as="div" class="button-example-label" description="行标题">filled 外观</Text>
+          <Text block class="button-example-label" description="行标题">filled 外观</Text>
           <div><Button filled>Filled</Button></div>
           <div><Button filled>Filled</Button></div>
           <div><Button filled>Filled</Button></div>
@@ -43,7 +44,7 @@ export function ButtonExample() {
             <Button filled disabled>Disabled</Button>
           </div>
 
-          <Text as="div" class="button-example-label" description="行标题">较强强调</Text>
+          <Text block class="button-example-label" description="行标题">较强强调</Text>
           <div><Button strong filled>强调</Button></div>
           <div><Button strong filled>强调</Button></div>
           <div><Button strong filled>强调</Button></div>
@@ -52,7 +53,7 @@ export function ButtonExample() {
             <Button strong filled disabled>禁用</Button>
           </div>
 
-          <Text as="div" class="button-example-label" description="行标题">危险</Text>
+          <Text block class="button-example-label" description="行标题">危险</Text>
           <div><Button danger filled>Danger</Button></div>
           <div><Button danger filled>Danger</Button></div>
           <div><Button danger filled>Danger</Button></div>
@@ -61,7 +62,7 @@ export function ButtonExample() {
             <Button danger filled disabled>Disabled</Button>
           </div>
 
-          <Text as="div" class="button-example-label" description="行标题">plain 外观</Text>
+          <Text block class="button-example-label" description="行标题">plain 外观</Text>
           <div><Button plain>Plain</Button></div>
           <div><Button plain>Plain</Button></div>
           <div><Button plain>Plain</Button></div>
@@ -73,7 +74,7 @@ export function ButtonExample() {
         </div>
 
         <div class="button-size-stack">
-          <Text as="div" class="button-example-label" description="分组标题">尺寸</Text>
+          <Text block class="button-example-label" description="分组标题">尺寸</Text>
           <div class="button-row">
             <Button small>Small</Button>
             <Button>Medium</Button>

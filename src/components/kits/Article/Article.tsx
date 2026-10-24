@@ -28,7 +28,7 @@ interface ArticleComponent {
 
 export const Article: ArticleComponent = (rawProps) => {
   const Carrier = rawProps.as ?? Piv
-  return <ComponentWrapper componentName="Article" description={rawProps.description} defaultDescription="承载独立正文">
+  return <ComponentWrapper componentName="Article" description={rawProps.description} descriptionDisplay={rawProps.descriptionDisplay} defaultDescription="承载独立正文">
     <Carrier {...rawProps} as="article" />
   </ComponentWrapper>
 }

@@ -7,15 +7,19 @@
  */
 import { createContext, onCleanup, useContext, val, type JSX, type Source } from '@/foundation'
 
-/** 组件使用处提供的用途说明，不替代正常界面内容。 */
+/** 组件使用处提供用途及定位模式中的显示选择，不影响正常界面内容。 */
 export interface ComponentDescriptionProps {
   description?: Source<string | undefined>
+  /** false时定位模式隐藏本体与自身、子组件标注，保留原布局和来源。 */
+  descriptionDisplay?: boolean
 }
 
 /** 定义端提供身份与默认用途，使用处的说明优先。 */
 export interface ComponentWrapperProps extends ComponentDescriptionProps {
   componentName: string
   defaultDescription?: Source<string | undefined>
+  /** 定义端的显示默认值，由定位模式的受管消费者读取。 */
+  defaultDescriptionDisplay?: boolean
   /** 定义端选用纯用途标注；无用途时仍显示组件名。 */
   descriptionOnly?: boolean
   children?: JSX.Element
@@ -27,6 +31,7 @@ export interface ComponentBoundary {
   end: Comment
   colorIndex: number
   readLabel: () => string
+  readDescriptionDisplay: () => boolean
 }
 
 export const componentBoundaries = new Set<ComponentBoundary>()
@@ -44,6 +49,7 @@ export function ComponentWrapper(props: ComponentWrapperProps): JSX.Element {
     start: document.createComment('component:start'),
     end: document.createComment('component:end'),
     colorIndex: nextColorIndex++ % 4,
+    readDescriptionDisplay: () => props.descriptionDisplay ?? props.defaultDescriptionDisplay ?? true,
     readLabel: () => {
       const description = val(props.description) ?? val(props.defaultDescription)
       if (!description) return props.componentName

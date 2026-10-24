@@ -1,4 +1,0 @@
-/* 文字继续排版与更新，定位框开启时只隐藏真实文字像素。 */
-body:has(.StructureViewOverlay:popover-open) .Text {
-  visibility: hidden;
-}

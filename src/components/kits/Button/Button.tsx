@@ -114,14 +114,13 @@ export function Button(props: ButtonProps) {
   const { statusShadowProps } = parseButtonStatusProps(props)
 
   return (
-    <ComponentWrapper componentName="Button" description={props.description} defaultDescription="执行动作">
+    <ComponentWrapper componentName="Button" description={props.description} descriptionDisplay={props.descriptionDisplay} defaultDescription="执行动作">
       <Piv
         as="button"
-        shadowProps={[props, variantShadowProps, statusShadowProps]}
+        shadowProps={[{ htmlProps: { type: 'button' } }, props, variantShadowProps, statusShadowProps]}
         class="Button"
         plugins={[clickable({ componentName: 'Button' })]}
         htmlProps={{
-          'type': 'button',
           'aria-label': props.name,
         }}
         on={{ click: props.onClick }}

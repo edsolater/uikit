@@ -30,7 +30,7 @@ export function Input(props: InputProps) {
   const { statusShadowProps } = parseInputStatusProps({ invalid: isInvalid })
 
   return (
-    <ComponentWrapper componentName="Input" description={props.description} defaultDescription="编辑单行内容">
+    <ComponentWrapper componentName="Input" description={props.description} descriptionDisplay={props.descriptionDisplay} defaultDescription="编辑单行内容">
       <Piv
         as="input"
         shadowProps={[props, statusShadowProps]}
