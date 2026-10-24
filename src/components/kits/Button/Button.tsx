@@ -8,6 +8,7 @@
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
 import type { Source } from '@/foundation'
+import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
@@ -66,6 +67,7 @@ export type ButtonStatus = 'loading' | 'disabled'
 export interface ButtonProps
   extends
     PivProps<'button'>,
+    ComponentDescriptionProps,
     VariantProps<'appearance', ButtonAppearance>,
     VariantProps<'emphasis', ButtonEmphasis>,
     VariantProps<'tone', ButtonTone>,
@@ -112,18 +114,20 @@ export function Button(props: ButtonProps) {
   const { statusShadowProps } = parseButtonStatusProps(props)
 
   return (
-    <Piv
-      as="button"
-      shadowProps={[props, variantShadowProps, statusShadowProps]}
-      class="Button"
-      plugins={[clickable({ componentName: 'Button' })]}
-      htmlProps={{
-        'type': 'button',
-        'aria-label': props.name,
-      }}
-      on={{ click: props.onClick }}
-    >
-      {props.children}
-    </Piv>
+    <ComponentWrapper componentName="Button" description={props.description} defaultDescription="执行动作">
+      <Piv
+        as="button"
+        shadowProps={[props, variantShadowProps, statusShadowProps]}
+        class="Button"
+        plugins={[clickable({ componentName: 'Button' })]}
+        htmlProps={{
+          'type': 'button',
+          'aria-label': props.name,
+        }}
+        on={{ click: props.onClick }}
+      >
+        {props.children}
+      </Piv>
+    </ComponentWrapper>
   )
 }

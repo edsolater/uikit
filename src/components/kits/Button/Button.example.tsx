@@ -5,85 +5,90 @@
 import { Button } from './Button'
 import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
+import { StructureViewFab } from '@/components/ComponentWrapper/StructureViewFab'
+import { Text } from '@/components/kits/Text/Text'
 
 export function ButtonExample() {
   return (
-    <Article as={Card} class="example-card">
-      <div class="example-card-head">
-        <span>Component</span>
-        <h2>Button</h2>
-      </div>
-      <p>按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。</p>
+    <>
+      <Article as={Card} class="example-card" description="按钮外观与状态示例">
+        <div class="example-card-head">
+          <Text description="类别">Component</Text>
+          <Text as="h2" description="标题">Button</Text>
+        </div>
+        <Text as="p" description="描述">按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。</Text>
 
-      <div class="button-example-grid">
-        <div class="button-example-head">类型</div>
-        <div class="button-example-head">默认</div>
-        <div class="button-example-head">悬停体验</div>
-        <div class="button-example-head">按下体验</div>
-        <div class="button-example-head">流程</div>
+        <div class="button-example-grid">
+          <Text as="div" class="button-example-head" description="列标题">类型</Text>
+          <Text as="div" class="button-example-head" description="列标题">默认</Text>
+          <Text as="div" class="button-example-head" description="列标题">悬停体验</Text>
+          <Text as="div" class="button-example-head" description="列标题">按下体验</Text>
+          <Text as="div" class="button-example-head" description="列标题">流程</Text>
 
-        <div class="button-example-label">普通</div>
-        <div><Button>Default</Button></div>
-        <div><Button>Default</Button></div>
-        <div><Button>Default</Button></div>
-        <div class="button-row">
-          <Button loading>Loading</Button>
-          <Button disabled>Disabled</Button>
+          <Text as="div" class="button-example-label" description="行标题">普通</Text>
+          <div><Button>Default</Button></div>
+          <div><Button>Default</Button></div>
+          <div><Button>Default</Button></div>
+          <div class="button-row">
+            <Button loading>Loading</Button>
+            <Button disabled>Disabled</Button>
+          </div>
+
+          <Text as="div" class="button-example-label" description="行标题">filled 外观</Text>
+          <div><Button filled>Filled</Button></div>
+          <div><Button filled>Filled</Button></div>
+          <div><Button filled>Filled</Button></div>
+          <div class="button-row">
+            <Button filled loading>Loading</Button>
+            <Button filled disabled>Disabled</Button>
+          </div>
+
+          <Text as="div" class="button-example-label" description="行标题">较强强调</Text>
+          <div><Button strong filled>强调</Button></div>
+          <div><Button strong filled>强调</Button></div>
+          <div><Button strong filled>强调</Button></div>
+          <div class="button-row">
+            <Button strong filled loading>处理中</Button>
+            <Button strong filled disabled>禁用</Button>
+          </div>
+
+          <Text as="div" class="button-example-label" description="行标题">危险</Text>
+          <div><Button danger filled>Danger</Button></div>
+          <div><Button danger filled>Danger</Button></div>
+          <div><Button danger filled>Danger</Button></div>
+          <div class="button-row">
+            <Button danger filled loading>Loading</Button>
+            <Button danger filled disabled>Disabled</Button>
+          </div>
+
+          <Text as="div" class="button-example-label" description="行标题">plain 外观</Text>
+          <div><Button plain>Plain</Button></div>
+          <div><Button plain>Plain</Button></div>
+          <div><Button plain>Plain</Button></div>
+          <div class="button-row">
+            <Button plain danger>移除</Button>
+            <Button plain loading>Loading</Button>
+            <Button plain disabled>Disabled</Button>
+          </div>
         </div>
 
-        <div class="button-example-label">filled 外观</div>
-        <div><Button filled>Filled</Button></div>
-        <div><Button filled>Filled</Button></div>
-        <div><Button filled>Filled</Button></div>
-        <div class="button-row">
-          <Button filled loading>Loading</Button>
-          <Button filled disabled>Disabled</Button>
+        <div class="button-size-stack">
+          <Text as="div" class="button-example-label" description="分组标题">尺寸</Text>
+          <div class="button-row">
+            <Button small>Small</Button>
+            <Button>Medium</Button>
+            <Button large>Large</Button>
+            <Button xlarge>XLarge</Button>
+          </div>
+          <div class="button-row">
+            <Button small filled>Small</Button>
+            <Button filled>Medium</Button>
+            <Button large filled>Large</Button>
+            <Button xlarge filled>XLarge</Button>
+          </div>
         </div>
-
-        <div class="button-example-label">较强强调</div>
-        <div><Button strong filled>强调</Button></div>
-        <div><Button strong filled>强调</Button></div>
-        <div><Button strong filled>强调</Button></div>
-        <div class="button-row">
-          <Button strong filled loading>处理中</Button>
-          <Button strong filled disabled>禁用</Button>
-        </div>
-
-        <div class="button-example-label">危险</div>
-        <div><Button danger filled>Danger</Button></div>
-        <div><Button danger filled>Danger</Button></div>
-        <div><Button danger filled>Danger</Button></div>
-        <div class="button-row">
-          <Button danger filled loading>Loading</Button>
-          <Button danger filled disabled>Disabled</Button>
-        </div>
-
-        <div class="button-example-label">plain 外观</div>
-        <div><Button plain>Plain</Button></div>
-        <div><Button plain>Plain</Button></div>
-        <div><Button plain>Plain</Button></div>
-        <div class="button-row">
-          <Button plain danger>移除</Button>
-          <Button plain loading>Loading</Button>
-          <Button plain disabled>Disabled</Button>
-        </div>
-      </div>
-
-      <div class="button-size-stack">
-        <div class="button-example-label">尺寸</div>
-        <div class="button-row">
-          <Button small>Small</Button>
-          <Button>Medium</Button>
-          <Button large>Large</Button>
-          <Button xlarge>XLarge</Button>
-        </div>
-        <div class="button-row">
-          <Button small filled>Small</Button>
-          <Button filled>Medium</Button>
-          <Button large filled>Large</Button>
-          <Button xlarge filled>XLarge</Button>
-        </div>
-      </div>
-    </Article>
+      </Article>
+      <StructureViewFab />
+    </>
   )
 }

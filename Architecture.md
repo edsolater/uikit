@@ -12,6 +12,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、ref 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
 - `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
+- `src/components/ComponentWrapper`：Piv之上组件的透明边界与用途说明，以及手动FAB控制的结构显示；不改变原主体或自动挂载开关。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
 - `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
@@ -36,14 +37,23 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 ```txt
 调用方
   -> kit 组件
-    -> Piv 管理声明与 plugins
-      -> 内部 Dode 创建并绑定真实元素
-        -> Foundation 的运行时接入
-          -> SolidJS
-            -> DOM
+    -> ComponentWrapper 记录透明边界，保留原主体
+      -> Piv 管理声明与 plugins
+        -> 内部 Dode 创建并绑定真实元素
+          -> Foundation 的运行时接入
+            -> SolidJS
+              -> DOM
 ```
 
 kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期，Dode 执行 DOM 绑定。快捷 draggable/droppable 未声明或字面 false 不创建该快捷实例；动态 Source 关闭释放消费作用域，返回声明仍经过同一 DOM 绑定链。手动 plugin 独立沿原声明执行，同一能力选择一种接入方式；快捷 false 不撤销手动 plugin。显式 options.disabled 沿原插件禁用语义创建能力。组件可以使用 hooks、component utils 和 Style System；基础设施不反向依赖具体 kit。
+
+## 组件定位框
+
+现有8种kit在定义处以ComponentWrapper声明静态身份及可选默认用途，使用处的description覆盖默认值。Wrapper用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
+
+App手动放入StructureViewFab，它拥有初始关闭的本地状态；开启才挂载统一Overlay。Overlay通过Piv创建Canvas与标注，逐帧读取真实边界，用一次蒙层弱化内容后描边；标注位于框内左上角，受真实框宽高约束。FAB区域保持清晰，关闭即释放显示层与帧循环，不重建原组件或清空状态。Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
+
+Text只承载纯文字，通过自身相邻CSS感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即自然恢复最新内容。它不复制开关State，不让Overlay猜组件类型，也不缓存或改写DOM文字。Text原生节点仍交给Piv，定位框与标注继续交给Wrapper及统一Overlay；Text在定义处选择descriptionOnly格式，有说明时只标用途，无说明或空说明时回落Text，其它组件默认格式不变。
 
 ## Button 样式
 
@@ -99,6 +109,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 # 文档边界
 
 - 本文件记录当前可由代码验证的系统关系。
+- [组件结构查看](docs/guide/组件结构查看.md)负责用途说明、透明包裹、手动开关与显示边界；具体实施和验收保存在对应Plan及Run。
 - [Style System 架构](src/style-system/architecture.md) 和 [CSS 架构](src/css/architecture.md) 记录各自领域的当前文件职责与内部链路。
 - [JSS 样式系统历史记录](docs/plans/JSS样式系统.md) 仅保留已经退出的旧方案与验收证据，不作为当前模块、API 或实施计划。
 - 通用代码、命名、注释与 CSS 规则从 [AI Rules README](../ai-rules/README.md) 进入，不复制到当前仓库架构中。

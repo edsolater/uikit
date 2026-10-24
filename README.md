@@ -15,6 +15,10 @@ SolidJS 基础组件与 hooks 组件库。
 
 更细的职责边界写在对应源码文件的文件头注释里。README 只保留项目入口信息，不展开实现细节。
 
+## 组件结构查看
+
+- [组件定位框](docs/guide/组件结构查看.md)：组件以`ComponentWrapper`声明边界与用途，App手动放入`StructureViewFab`。开关初始关闭，开启后显示框内标注并弱化内容；现有8种kit已接入，Text的原文字显示为空但保留排版，自定义组件按Guide接入。Dev的`/examples/button`可直接体验。
+
 ## 项目结构
 
 ```txt

@@ -5,10 +5,11 @@
 import { mapArray, type Accessor, type JSX, createEffect, createState, val } from '@/foundation'
 import { createDomRef } from '@/hooks'
 import { Piv } from '../Piv/Piv'
+import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
 
 export type Read<T> = Accessor<T>
 
-export type EachProps<T> = {
+export type EachProps<T> = ComponentDescriptionProps & {
   each: Accessor<T[]>
   fallback?: JSX.Element
   children: (item: T, index: Accessor<number>) => JSX.Element
@@ -35,5 +36,7 @@ export function Each<T>(props: EachProps<T>) {
         },
   )
 
-  return <Piv class='Loop' ref={setDomRef}>{mapped()}</Piv>
+  return <ComponentWrapper componentName="Each" description={props.description} defaultDescription="排列重复内容">
+    <Piv class='Loop' ref={setDomRef}>{mapped()}</Piv>
+  </ComponentWrapper>
 }

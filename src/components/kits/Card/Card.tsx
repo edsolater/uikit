@@ -5,6 +5,7 @@
  * 组件选择与档位规则见 [Card 设计规格](./Card.spec.md)。
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
+import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
 import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
 import './Card.css'
@@ -35,7 +36,7 @@ export type CardVariantProps = VariantProps<'variant', 'soft' | 'solid'>
 export type CardSizeProps = VariantProps<'size', 'small' | 'large' | 'xlarge'>
 
 export interface CardProps<Tag extends PivSupportedElementTag = 'div'>
-  extends PivProps<Tag>, CardVariantProps, CardSizeProps {}
+  extends PivProps<Tag>, CardVariantProps, CardSizeProps, ComponentDescriptionProps {}
 
 const parseCardVariantProps = createVariantPropsParser([
   { groupName: 'variant', candidates: ['soft', 'solid'] },
@@ -46,12 +47,14 @@ export function Card<Tag extends PivSupportedElementTag = 'div'>(props: CardProp
   const { variantShadowProps } = parseCardVariantProps(props)
 
   return (
-    <Piv
-      as={props.as}
-      shadowProps={[props, variantShadowProps]}
-      class="Card"
-    >
-      {props.children}
-    </Piv>
+    <ComponentWrapper componentName="Card" description={props.description} defaultDescription="组织独立信息">
+      <Piv
+        as={props.as}
+        shadowProps={[props, variantShadowProps]}
+        class="Card"
+      >
+        {props.children}
+      </Piv>
+    </ComponentWrapper>
   )
 }

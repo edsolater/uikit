@@ -8,13 +8,14 @@ import type { Stringable } from '@edsolater/fnkit'
 import { For, stateView, val, type Source } from '@/foundation'
 import { toJSX, type JSXable } from '../../utils/toJSX'
 import { Piv } from '../../Piv/Piv'
+import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
 
 type TableDataRow = Record<string, Stringable>
 
 /**
  * Table 的输入数据与渲染部件配置。
  */
-export type TableProps<Row extends TableDataRow = TableDataRow> = {
+export type TableProps<Row extends TableDataRow = TableDataRow> = ComponentDescriptionProps & {
   /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */
   data: Source<Row[]>
 
@@ -67,30 +68,32 @@ export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   const columnKeys = stateView(props.data).map((data) => (props.keys ? val(props.keys) : pickTableColumnKeys(data)))
 
   return (
-    <Piv as="table">
-      <Piv as="thead">
-        <Piv as="tr">
-          <For each={val(columnKeys)}>
-            {(columnKey) => <Piv as="th">{toJSX(props.renderParts?.tableHead?.[columnKey]?.(columnKey) ?? columnKey)}</Piv>}
+    <ComponentWrapper componentName="Table" description={props.description} defaultDescription="按列展示记录">
+      <Piv as="table">
+        <Piv as="thead">
+          <Piv as="tr">
+            <For each={val(columnKeys)}>
+              {(columnKey) => <Piv as="th">{toJSX(props.renderParts?.tableHead?.[columnKey]?.(columnKey) ?? columnKey)}</Piv>}
+            </For>
+          </Piv>
+        </Piv>
+        <Piv as="tbody">
+          <For each={val(props.data)}>
+            {(row) => (
+              <Piv as="tr">
+                <For each={val(columnKeys)}>
+                  {(columnKey) => (
+                    <Piv as="td">
+                      {toJSX(props.renderParts?.tableCell?.[columnKey]?.(row[columnKey], columnKey) ?? row[columnKey])}
+                    </Piv>
+                  )}
+                </For>
+              </Piv>
+            )}
           </For>
         </Piv>
       </Piv>
-      <Piv as="tbody">
-        <For each={val(props.data)}>
-          {(row) => (
-            <Piv as="tr">
-              <For each={val(columnKeys)}>
-                {(columnKey) => (
-                  <Piv as="td">
-                    {toJSX(props.renderParts?.tableCell?.[columnKey]?.(row[columnKey], columnKey) ?? row[columnKey])}
-                  </Piv>
-                )}
-              </For>
-            </Piv>
-          )}
-        </For>
-      </Piv>
-    </Piv>
+    </ComponentWrapper>
   )
 }
 

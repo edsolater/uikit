@@ -5,14 +5,15 @@
  * 组件选择与透明承载协议见 [Article 设计规格](./Article.spec.md)。
  */
 import type { JSX } from '@/foundation'
+import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
 import { Piv, type PivProps } from '../../Piv/Piv'
 
 type ArticleCarrier = (props: PivProps<'article'>) => JSX.Element
 
 type ArticleCarrierProps<Carrier extends ArticleCarrier> =
-  Omit<Parameters<Carrier>[0], 'as'> & { as: Carrier }
+  Omit<Parameters<Carrier>[0], 'as'> & ComponentDescriptionProps & { as: Carrier }
 
-export type ArticleProps = Omit<PivProps<'article'>, 'as'> & {
+export type ArticleProps = Omit<PivProps<'article'>, 'as'> & ComponentDescriptionProps & {
   /**
    * 承载 Article 的表现组件。
    * Article 会消费这个属性，并把原生 article 身份交给承载组件，不增加额外 DOM。
@@ -27,5 +28,7 @@ interface ArticleComponent {
 
 export const Article: ArticleComponent = (rawProps) => {
   const Carrier = rawProps.as ?? Piv
-  return <Carrier {...rawProps} as="article" />
+  return <ComponentWrapper componentName="Article" description={rawProps.description} defaultDescription="承载独立正文">
+    <Carrier {...rawProps} as="article" />
+  </ComponentWrapper>
 }
