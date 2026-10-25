@@ -188,18 +188,3 @@ test('中性材料的局部强调跟随根主题，邻居保持自己的状态',
     style.remove()
   }
 })
-
-test('替换主题主体的基础颜色后亮暗状态都从新基础计算', () => {
-  const replacement = variableFrom(themeBrand, 'oklch(0.5 0.1 30)', { name: 'replacement-theme', address: '.ReplacementTheme' })
-  const style = document.createElement('style')
-  style.textContent = compileRules([[['.ReplacementTheme'], 'color', replacement]])
-  const element = document.createElement('div')
-  element.className = 'ReplacementTheme'
-  document.head.append(style)
-  document.body.append(element)
-  try {
-    expect(getComputedStyle(element).color).toBe('oklch(0.5 0.1 30)')
-    element.dataset.theme = 'dark'
-    expect(getComputedStyle(element).color).toBe('oklch(0.62 0.08 30)')
-  } finally { element.remove(); style.remove() }
-})

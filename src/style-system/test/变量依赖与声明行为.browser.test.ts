@@ -8,6 +8,7 @@ import { add, multiply } from '../pieces/contents/functions/calc'
 import { variable, variableFrom } from '../variable'
 
 import { key } from '../key'
+import { condition } from '../condition'
 import type { ValueInput } from '../value'
 
 afterEach(() => document.body.replaceChildren())
@@ -93,7 +94,7 @@ test('variableFrom 继承名称和默认内容，保留原始状态规则', () =
     name: 'base-inherited-size', address: ".Inherited", priority: 0,
     states: { '&[data-phase]': base => multiply(base, 2) },
   })
-  const inherited = variableFrom(source, source.content)
+  const inherited = variableFrom(source, {})
   expect(inherited.name).toBe(source.name)
   const css = compileRules([
         [['.Inherited'], 'width', inherited],
@@ -102,6 +103,40 @@ test('variableFrom 继承名称和默认内容，保留原始状态规则', () =
   expect(getComputedStyle(element).width).toBe('10px')
   element.dataset.phase = ''
   expect(getComputedStyle(element).width).toBe('20px')
+})
+
+test('取得组件定义在自身执行状态与用途，保留材料引用和配置资源', () => {
+  const material = variable('10px', 'instance-material')
+  const source = variable(material, {
+    name: 'instance-source', address: '.Source',
+    states: { '&[data-phase]': base => multiply(base, 2) },
+    variants: { part: base => multiply(base, 3) },
+  })
+  const instance = variableFrom(source, {
+    name: 'instance-local', address: '.Instance',
+    onActive: () => [[[condition('.Instance')], key('border-top-width'), '4px']],
+  })
+  const css = compileRules([
+    [['.Source'], 'width', source],
+    [['.Instance'], 'width', instance],
+    [['.Instance'], 'height', instance.variant('part')],
+    [['.Instance'], 'border-top-style', 'solid'],
+  ])
+  const parent = mountCSS(css, 'Source')
+  parent.dataset.phase = ''
+  const element = parent.appendChild(document.createElement('div'))
+  element.className = 'Instance'
+  expect(getComputedStyle(parent).width).toBe('20px')
+  expect(getComputedStyle(element).width).toBe('10px')
+  expect(getComputedStyle(element).height).toBe('30px')
+  expect(getComputedStyle(element).borderTopWidth).toBe('4px')
+  element.dataset.phase = ''
+  expect(getComputedStyle(element).width).toBe('20px')
+  expect(getComputedStyle(element).height).toBe('60px')
+  element.style.setProperty(material.toCSSString(), '7px')
+  expect(getComputedStyle(element).width).toBe('14px')
+  expect(getComputedStyle(element).height).toBe('42px')
+  expect(getComputedStyle(parent).width).toBe('20px')
 })
 
 test('variableFrom的新基础重绑继承规则，非根据地declare只赋当地值', () => {

@@ -80,7 +80,7 @@ describe('具体变量定义与名称分工', () => {
     expect(variableFrom(source, resource).content).toBe(resource)
     expect(variableFrom(source, waveOnly).content).toBe(waveOnly)
     expect(variableFrom(source, content).content).toBe(content)
-    const configured = variableFrom(source, source.content, { name: 'derive-active-config', onActive: resource.onActive })
+    const configured = variableFrom(source, { name: 'derive-active-config', onActive: resource.onActive })
     expect(compileRules([[['.Configured'], 'width', configured]])).toContain('--derive-active-config: 4px')
     expect(active).toBe(1)
     const empty = variableFrom(source, undefined, 'derive-empty')

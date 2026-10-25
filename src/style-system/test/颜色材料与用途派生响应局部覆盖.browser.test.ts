@@ -5,7 +5,6 @@ import { color } from '../pieces/mixins/appearance'
 import { compileCSS } from '../css-root'
 import { rule, rules, type RulesHandle } from '../rule'
 import { lineColor, lineStrength } from '../pieces/contents/atoms/color/colors'
-import { brandColor } from '../pieces/contents/atoms/color/brand-color'
 import { interactiveColor, highlightColor } from '../pieces/contents/atoms/color/ui-action-colors'
 import { goodColor, badColor, warnColor, infoColor } from '../pieces/contents/atoms/color/ui-info-color'
 import { paper, ink, neutral, paperColor, inkColor, neutralColor } from '../pieces/contents/atoms/color/palette'
@@ -14,6 +13,7 @@ import { variable, variableFrom } from '../variable'
 import { declare } from '../operations/declare'
 import { readableContent } from '../pieces/contents/atoms/color/ui-color-structure'
 import { colorMix } from '../pieces/contents/functions/color-mix'
+import { brandColor, themeBrand, themeAccent, themeGood, themeBad, themeWarn, themeInfo, themeSurface, colorBrand, colorAccent, colorGood, colorBad, colorWarn, colorInfo, colorSurface } from '../index'
 
 const surfaceColorInteractive = variable(interactiveColorStates({ base: paperColor }), { name: 'purpose-surface', address: '.interactive-purpose' })
 const handles: RulesHandle[] = []
@@ -22,7 +22,8 @@ afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
   document.body.replaceChildren()
   document.body.style.removeProperty('color')
-  for (const source of [brandColor, paperColor]) document.documentElement.style.removeProperty(source.toCSSString())
+  for (const source of [brandColor, goodColor, badColor, warnColor, infoColor, paperColor]) document.documentElement.style.removeProperty(source.toCSSString())
+  document.documentElement.removeAttribute('data-theme')
 })
 
 /** 将本轮 JS 定义直接编译并挂载，不加载静态颜色 CSS。 */
@@ -52,28 +53,32 @@ function expectSameColor(actual: string, expected: string) {
 }
 
 test.each([
-  { lightnessResponse: 0, chromaResponse: 0 },
-  { lightnessResponse: 0, chromaResponse: 1 },
-  { lightnessResponse: 2, chromaResponse: 0.5 },
-])('交互颜色模板按明度 $lightnessResponse、彩度 $chromaResponse 倍率响应当前来源', async ({ lightnessResponse, chromaResponse }) => {
-  const source = variable('oklch(0.6 0.15 140 / 0.4)', 'response-source')
-  const color = variable(interactiveColorStates({ base: source, lightnessResponse, chromaResponse }), { name: 'response-color', address: '.response-swatch' })
+  { lightnessResponse: 0, chromaResponse: 0, shared: false },
+  { lightnessResponse: 0, chromaResponse: 1, shared: false },
+  { lightnessResponse: 2, chromaResponse: 0.5, shared: false },
+  { lightnessResponse: 1, chromaResponse: 1, shared: true },
+])('交互颜色按明度 $lightnessResponse、彩度 $chromaResponse 倍率响应当前来源，正式材料=$shared', async ({ lightnessResponse, chromaResponse, shared }) => {
+  const color = shared ? variableFrom(interactiveColor, interactiveColor.content, { address: '.response-swatch' })
+    : variable(interactiveColorStates({ base: brandColor, lightnessResponse, chromaResponse }), { name: 'response-color', address: '.response-swatch' })
   handles.push(rule('.response-swatch', 'color', color))
   const style = mountStyles()
   const originalCSS = style.textContent
   const button = document.body.appendChild(document.createElement('button'))
   button.className = 'response-swatch'
   button.textContent = '响应倍率'
-  expectSameColor(getComputedStyle(button).color, 'oklch(0.6 0.15 140 / 0.4)')
+  button.style.setProperty(brandColor.toCSSString(), 'oklch(0.6 0.15 140)')
+  expectSameColor(getComputedStyle(button).color, 'oklch(0.6 0.15 140)')
   await userEvent.hover(button)
-  expectSameColor(getComputedStyle(button).color, `oklch(${0.6 - 0.04 * lightnessResponse} ${0.15 + 0.01 * chromaResponse} 140 / 0.4)`)
-  button.style.setProperty(source.key.toCSSString(), 'oklch(0.8 0.2 30 / 0.6)')
+  expectSameColor(getComputedStyle(button).color, `oklch(${0.6 - 0.04 * lightnessResponse} ${0.15 + 0.01 * chromaResponse} 140)`)
+  button.style.setProperty(brandColor.toCSSString(), 'oklch(0.8 0.2 30 / 0.6)')
   expectSameColor(getComputedStyle(button).color, `oklch(${0.8 - 0.04 * lightnessResponse} ${0.2 + 0.01 * chromaResponse} 30 / 0.6)`)
   button.focus()
   await userEvent.keyboard('[Space>]')
   try {
     expect(button.matches(':active')).toBe(true)
     expectSameColor(getComputedStyle(button).color, `oklch(${0.8 - 0.08 * lightnessResponse} ${0.2 - 0.01 * chromaResponse} 30 / 0.6)`)
+    button.style.setProperty(brandColor.toCSSString(), 'oklch(0.6 0.15 280)')
+    expectSameColor(getComputedStyle(button).color, `oklch(${0.6 - 0.08 * lightnessResponse} ${0.15 - 0.01 * chromaResponse} 280)`)
   } finally { await userEvent.keyboard('[/Space]') }
   expect(style.textContent).toBe(originalCSS)
 })
@@ -117,61 +122,38 @@ test('材料变量用于 Mixin 与局部赋值，覆盖只影响本地及其后�
   expect(getComputedStyle(neighbor).color).not.toBe('rgb(4, 5, 6)')
 })
 
-test('根上的纸色与品牌改变后，既有用途色共同更新而不重编译', () => {
-  const action = variableFrom(interactiveColor, interactiveColor.content, { address: '.semantic' })
-  handles.push(rules('.semantic', [color({ content: action, background: paperColor })]))
-  handles.push(rule('.highlight', 'color', highlightColor))
-  handles.push(rule('.canvas', 'background-color', paperColor))
-  handles.push(rule('.text', 'color', inkColor))
-  const style = mountStyles()
-  const originalCSS = style.textContent
-  const sample = document.body.appendChild(document.createElement('div'))
-  sample.className = 'semantic'
-  const highlight = sample.appendChild(document.createElement('div'))
-  highlight.className = 'highlight'
-  const canvas = sample.appendChild(document.createElement('div'))
-  canvas.className = 'canvas'
-  const text = sample.appendChild(document.createElement('div'))
-  text.className = 'text'
-  const neighbor = document.body.appendChild(document.createElement('div'))
-  neighbor.className = 'semantic'
-  const before = { surface: getComputedStyle(sample).backgroundColor }
-  expect(getComputedStyle(sample).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
-  document.documentElement.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 140 / 0.4)')
-  document.documentElement.style.setProperty(paperColor.key.toCSSString(), 'rgb(240, 241, 242)')
-  expectSameColor(getComputedStyle(sample).color, 'oklch(0.6 0.15 140 / 0.4)')
-  expectSameColor(getComputedStyle(highlight).color, 'oklch(0.64 0.16 122 / 0.4)')
-  expect(getComputedStyle(sample).backgroundColor).not.toBe(before.surface)
-  expectSameColor(getComputedStyle(canvas).backgroundColor, 'rgb(240, 241, 242)')
-  expect(getComputedStyle(text).color).not.toBe('rgba(0, 0, 0, 0)')
-  expect(getComputedStyle(neighbor).color).toBe(getComputedStyle(sample).color)
-  expect(style.textContent).toBe(originalCSS)
-})
-
-test('交互状态的品牌变化仍引用局部品牌变量', async () => {
-  const localColor = variableFrom(interactiveColor, interactiveColor.content, { address: '.interactive-swatch' })
-  handles.push(rule('.interactive-swatch', 'color', localColor))
-  const style = mountStyles()
-  const originalCSS = style.textContent
-  const button = document.body.appendChild(document.createElement('button'))
-  button.className = 'interactive-swatch'
-  button.textContent = '交互颜色'
-  button.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 140)')
-  await userEvent.hover(button)
-  const firstHover = getComputedStyle(button).color
-  button.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 30 / 0.4)')
-  expect(getComputedStyle(button).color).not.toBe(firstHover)
-  expectSameColor(getComputedStyle(button).color, 'oklch(0.56 0.16 30 / 0.4)')
-  button.focus()
-  await userEvent.keyboard('[Space>]')
-  try {
-    expect(button.matches(':active')).toBe(true)
-    const firstActive = getComputedStyle(button).color
-    button.style.setProperty(brandColor.key.toCSSString(), 'oklch(0.6 0.15 280)')
-    expect(getComputedStyle(button).color).not.toBe(firstActive)
-    expectSameColor(getComputedStyle(button).color, 'oklch(0.52 0.14 280)')
-  } finally { await userEvent.keyboard('[/Space]') }
-  expect(style.textContent).toBe(originalCSS)
+test.each([
+  { name: '品牌', source: brandColor, outputs: [themeBrand, colorBrand, themeAccent, colorAccent, interactiveColor, highlightColor, colorGood, colorBad, colorWarn, colorInfo], independent: colorSurface },
+  { name: '成功', source: goodColor, outputs: [themeGood, colorGood], independent: colorBad },
+  { name: '错误', source: badColor, outputs: [themeBad, colorBad], independent: colorWarn },
+  { name: '警告', source: warnColor, outputs: [themeWarn, colorWarn], independent: colorInfo },
+  { name: '信息', source: infoColor, outputs: [themeInfo, colorInfo], independent: colorGood },
+  { name: '纸面', source: paperColor, outputs: [themeSurface, colorSurface], independent: colorBad },
+])('$name 根来源在亮暗主题下控制主题与用途，独立用途保持原值', ({ source, outputs, independent }) => {
+  const readers = [...outputs, independent].map((target, index) => {
+    const local = target === interactiveColor ? variableFrom(target, target.content, { address: `.SourceColor${index}` }) : target
+    handles.push(rule(`.SourceColor${index}`, 'color', local))
+    const reader = document.body.appendChild(document.createElement('div'))
+    reader.className = `SourceColor${index}`
+    return reader
+  })
+  mountStyles()
+  const themeResults: string[][] = []
+  for (const mode of ['light', 'dark']) {
+    document.documentElement.dataset.theme = mode
+    document.documentElement.style.removeProperty(source.toCSSString())
+    const previous = readers.map(reader => getComputedStyle(reader).color)
+    document.documentElement.style.setProperty(source.toCSSString(), 'oklch(0.96 0.02 220 / 0.4)')
+    themeResults.push(readers.slice(0, 2).map(reader => getComputedStyle(reader).color))
+    readers.slice(0, -1).forEach((reader, index) => expect(getComputedStyle(reader).color).not.toBe(previous[index]))
+    expect(getComputedStyle(readers[0]).color).toBe(getComputedStyle(readers[1]).color)
+    expect(getComputedStyle(readers.at(-1)!).color).toBe(previous.at(-1))
+    if (source === brandColor) {
+      expectSameColor(getComputedStyle(readers[4]).color, 'oklch(0.96 0.02 220 / 0.4)')
+      expectSameColor(getComputedStyle(readers[5]).color, 'oklch(1 0.03 202 / 0.4)')
+    }
+  }
+  themeResults[1].forEach((actual, index) => expect(actual).not.toBe(themeResults[0][index]))
 })
 
 test('交互用途色的状态派生保留局部纸色与墨色覆盖', async () => {

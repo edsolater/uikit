@@ -21,6 +21,18 @@ Control 普通宽 10px，hover 为 13px，active 为 12px。若根据地已显�
 
 # 从已有定义复用规则
 
+组件用 `variableFrom(source, options)` 取得自己的完整定义，只指定名称、根据地与差异。省略基础内容表示继承来源配方，在新根据地执行：
+
+```ts
+const local = variableFrom(size, { name: 'local-size', address: '.LocalControl' })
+```
+
+LocalControl 普通为10px，hover为13px，active为12px。来源所在元素的hover不会再叠加到它上面。配方中对其他材料的引用继续有效；若要直接读取来源自己的当前CSS值，使用 `variableFrom(size, size, options)` 明示依赖。两种关系分别是定义继承与值引用。
+
+仅提供 onActive、compileWaveIndex 等内容协议字段的二参对象仍表示内容；配置这些项时同时指定 name、address 等配置字段，或使用三参数形式。
+
+需要更换基础时，继续使用三参数形式：
+
 ```ts
 const larger = variableFrom(size, '20px', {
   name: 'large-size', address: '.LargeControl',
@@ -30,7 +42,7 @@ rules('.LargeControl', [[key('width'), larger]])
 
 新定义普通为 20px，hover 为 23px，active 仍为 12px。因为 hover 是相对规则，active 是固定值；继承不自动把固定值改成相对关系。states 和 variants 原样按名称继承，明确提供同名项时覆盖，其余保留。
 
-`variableFrom(source, value, nameOrOptions?)` 只替换基础，后两项与 variable 的材料位置一致。未指定的公开配置全部沿用来源：name、address、priority、states、variants、registration、onActive 和 compileWaveIndex；显式配置只覆盖对应项。states 和 variants 按名称合并，名称也可用函数从来源名称生成。复用不改变来源，也不持续同步来源后来发生的 JS 配置变化。
+两种形式都继承未指定的公开配置：name、address、priority、states、variants、registration、onActive 和 compileWaveIndex；显式配置只覆盖对应项。states 和 variants 按名称合并，三参数形式的名称也可用函数从来源名称生成。复用不改变来源，也不持续同步来源后来发生的 JS 配置变化。
 
 # 映射各项最终取值
 

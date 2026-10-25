@@ -9,7 +9,7 @@ import { keyPriority, propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
-import { assert, hasProperty, isFunction, mapGet, result } from '@edsolater/fnkit'
+import { assert, containKey, hasProperty, isFunction, mapGet, result } from '@edsolater/fnkit'
 import { consumeDeclaration, declaredVariable, declareVariable, joinVariableValues } from './declare'
 import type { DeclareProtocol } from '../operations/declare'
 import { parseVariableArgs, type VariableStateValues } from './args-parser'
@@ -182,17 +182,33 @@ export function variable<DefaultValue extends VariableDefaultValue>(
 }
 
 /**
- * 从来源替换基础内容，继承未指定配置及状态、变体定义，保留来源本身。
+ * 取得来源的完整定义，只覆盖指定配置；基础配方在新根据地执行。
+ * 需要读取来源当前 CSS 值时，用三参数形式显式传入来源作为基础。
+ * 仅提供内容协议字段的对象仍按内容处理；配置资源或波次时同时指定 name 等配置字段，或使用三参数形式。
+ */
+export function variableFrom(source: Variable, options: VariableOptions): Variable
+/**
+ * 替换基础内容，继承未指定配置及状态、变体定义，保留来源本身。
  */
 export function variableFrom<DefaultValue extends VariableDefaultValue>(
   source: Variable,
   input: DefaultValue | VariableStateValues<DefaultValue>,
   nameOrOptions?: VariableReuseName | VariableOptions,
+): Variable
+export function variableFrom(
+  source: Variable,
+  input: VariableDefaultValue | VariableStateValues | VariableOptions,
+  nameOrOptions?: VariableReuseName | VariableOptions,
 ): Variable {
+  if (arguments.length === 2 && typeof input === 'object' && input !== null && !containKey(input, 'default')
+    && !('onCompile' in input || 'toCSSString' in input || 'dependencies' in input)
+    && (['name', 'address', 'priority', 'states', 'variants', 'registration'].some(key => containKey(input, key))
+      || !('onActive' in input || 'compileWaveIndex' in input || 'resourceIdentity' in input)))
+    return createVariable(source.content, input as VariableOptions, source)
   const options = typeof nameOrOptions === 'string' || isFunction(nameOrOptions) || hasProperty(nameOrOptions, 'kind', value => value === 'variable-name')
     ? { name: isFunction(nameOrOptions) ? nameOrOptions(source.name) : nameOrOptions as string | VariableName }
     : nameOrOptions ?? {}
-  return createVariable(input, options, source)
+  return createVariable(input as VariableDefaultValue | VariableStateValues, options, source)
 }
 
 /**

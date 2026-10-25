@@ -26,9 +26,9 @@ if (false) {
   // @ts-expect-error 普通创建不能省略内容。
   variable({ name: 'missing-default' })
   const source = variable(1, 'typed-extended-source')
-  // 复制内容必须显式提供，名称可以继承。
+  // 复制定义可只指定差异；替换基础内容保留独立入口。
   variableFrom(source, source.content)
-  // @ts-expect-error variableFrom 不接受省略内容的另一套重载。
+  // @ts-expect-error variableFrom 至少提供配置对象或基础内容。
   variableFrom(source)
   // @ts-expect-error derive 已由 variableFrom 替代，不保留兼容入口。
   source.derive(2)
@@ -38,8 +38,8 @@ if (false) {
   // @ts-expect-error 名称在注册时绑定，不能在之后赋入字符串改名。
   source.name = 'renamed-after-registration'
   variableFrom(source, source.content, { states: { hover: 2 }, priority: 0 })
-  // @ts-expect-error 单参是默认内容，配置差异必须放第二参，避免与内容对象混淆。
   variableFrom(source, { states: { hover: 2 } })
+  variableFrom(source, {})
   variableFrom(source, 2, name => `next-${name}`)
   variableFrom(source, { toCSSString: () => '2px' }, { name: 'content-object' })
   // @ts-expect-error 创建入口不再接收继承配置。

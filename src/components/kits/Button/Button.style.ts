@@ -9,7 +9,6 @@ import {
   modify,
   rules,
   add,
-  variable,
   variableFrom,
   innerText,
   contentLayout,
@@ -20,13 +19,14 @@ import {
   clickable,
   $cursor,
   colorMix,
-  oklch,
   interactiveColor,
+  controlColor,
+  interactiveSurfaceColor,
+  surfaceStrength,
   badColor,
-  paperColor,
   globalSurfaceColor,
   globalContentColor,
-  interactiveColorStates,
+  whenDisabled,
   space,
   boundaryWidth,
   controlSize,
@@ -43,31 +43,19 @@ const buttonTextSize = variableFrom(textSize, textSize, { name: 'button-text-siz
 const buttonSize = variableFrom(controlSize, controlSize, { name: 'button-size', address: button })
 
 /** 组件的局部颜色输入；变体保留真实引用，分类只需选择一次材料。 */
-export const buttonColorInput = variableFrom(interactiveColor, interactiveColor.content, { name: 'button-color-input', address: button })
+export const buttonColorInput = variableFrom(interactiveColor, { name: 'button-color-input', address: button })
 /** Button 的颜色定义；使用处按表面、内容、边界及实底内容选择变体。 */
-export const buttonColor = variable(buttonColorInput, {
-  name: 'button-color',
-  address: button,
-  variants: {
-    surface: base => oklch(base, { alpha: current => multiply(current, 0.14) }),
-    text: base => base,
-    boundary: base => oklch(base, { alpha: current => multiply(current, 0.44) }),
-    content: paperColor,
-  },
-})
+export const buttonColor = variableFrom(controlColor, buttonColorInput, { name: 'button-color', address: button })
 
 /** 混色的动作色来源，默认使用局部语气的柔和成员。 */
-export const buttonSurfaceSource = variable(buttonColor.variant('surface'), { name: 'button-surface-source', address: button })
+const surface = buttonColor.variant('surface')
+export const buttonSurfaceSource = variableFrom(surface, surface, { name: 'button-surface-source', address: button })
 
 /** 混色的承载画布，默认沿用中性表面的交互状态。 */
-export const buttonSurfaceCanvas = variable(interactiveColorStates({ base: globalSurfaceColor }), { name: 'button-surface-canvas', address: button })
+export const buttonSurfaceCanvas = variableFrom(interactiveSurfaceColor, { name: 'button-surface-canvas', address: button })
 
 /** 动作色在表面中的占比；分类和外部修改沿前序结果组合。 */
-export const buttonSurfaceStrength = variable(0.18, {
-  name: 'button-surface-strength',
-  address: button,
-  states: { hover: base => multiply(base, 0.28 / 0.18), active: base => multiply(base, 0.38 / 0.18) },
-})
+export const buttonSurfaceStrength = variableFrom(surfaceStrength, { name: 'button-surface-strength', address: button })
 
 /** 默认存在感及强调/禁用都相对于同一输入；组件保留原来的四种比例。 */
 const buttonOpacity = variableFrom(opacity, multiply(opacity, 0.9), {
@@ -80,10 +68,9 @@ const buttonOpacity = variableFrom(opacity, multiply(opacity, 0.9), {
 })
 
 /** Button当前承载面和内容色，外部可按作用域分别声明。 */
-export const buttonSurfaceColor = variable(colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas), { name: 'button-surface-color', address: button })
-export const buttonContentColor = variable(globalContentColor, { name: 'button-content-color', address: button })
-const controlShadow = shadow.variant('control')
-const buttonShadow = variableFrom(controlShadow, controlShadow.content, { name: 'button-shadow', address: button })
+export const buttonSurfaceColor = variableFrom(globalSurfaceColor, colorMix([buttonSurfaceSource, buttonSurfaceStrength], buttonSurfaceCanvas), { name: 'button-surface-color', address: button })
+export const buttonContentColor = variableFrom(globalContentColor, globalContentColor, { name: 'button-content-color', address: button })
+const buttonShadow = variableFrom(shadow.variant('control'), { name: 'button-shadow', address: button })
 
 // 定义button的样式架构
 rules(button, [
@@ -115,7 +102,7 @@ rules([...button, '&[data-appearance="outlined"]'], [
 ])
 
 // plain 保留透明常态与无边界，悬停和按下只增加轻量语气反馈。
-const plainStrength = variable(-0.18, {
+const plainStrength = variableFrom(surfaceStrength, -0.18, {
   name: 'button-plain-strength',
   address: [...button, '&[data-appearance="plain"]'],
   states: { hover: base => multiply(base, 0.2 / 0.18), active: base => multiply(base, 0.24 / 0.18) },
@@ -131,13 +118,12 @@ rules(plainButton, [
 ])
 
 // filled 使用语气实底；交互时少量露出画布，避免混色抵消交互色的明度变化。
-const filledStrength = variable(0.82, {
+const filledStrength = variableFrom(surfaceStrength, 0.82, {
   name: 'button-filled-strength',
   address: [...button, '&[data-appearance="filled"]'],
   states: { hover: base => multiply(base, 0.67 / 0.82), active: base => multiply(base, 0.52 / 0.82) },
 })
-const filledControlShadow = shadow.variant('filledControl')
-const shadowFilled = variableFrom(filledControlShadow, filledControlShadow.content, {
+const shadowFilled = variableFrom(shadow.variant('filledControl'), {
   name: 'button-shadow-filled', address: [...button, '&[data-appearance="filled"]'],
 })
 const filledButton = [...button, '&[data-appearance="filled"]']
@@ -155,10 +141,5 @@ rules(filledButton, [
 // status 外部状态
 // =============================================================================
 
-const cursorLoading = variable('progress', {
-  name: 'button-cursor-loading',
-  address: [...button, '&[data-status~="loading"]'],
-  states: { disabled: 'not-allowed' },
-})
-
-rules([...button, '&[data-status~="loading"]'], [[$cursor, cursorLoading]])
+rules([...button, '&[data-status~="loading"]'], [[$cursor, 'progress']])
+rules([...button, '&[data-status~="loading"]', whenDisabled], [[$cursor, 'not-allowed']])

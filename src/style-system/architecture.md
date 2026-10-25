@@ -23,7 +23,7 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 `operations/` 只按声明、修改、调整三个操作入口分组，不建立独立公共入口；Style System 的 index 直接公开各操作及其协议。Variable 的创建、声明发布、修改链和依赖协调归 `variable/` 领域；通用 AST 编译能力留在 `compiler/`，变化材料留在 `modification.ts`。
 
-Variable对象持有内容、states、variants与创建时确定的address根据地。值引用输出var()并保障根据地有声明；Name只表示CSS地址，字符串化返回不带--的逻辑名，作为内容只输出var()，不查找或激活同名JS定义。variableFrom(source, value, nameOrOptions)替换基础，mapVariableRules(source, mapResult, nameOrOptions)映射各项最终取值；两者都通过创建配置解析统一继承未指定的公开配置，显式项覆盖，priority沿用来源而不自动增加。states和variants按名称合并；variant选择后消掉父层variants。
+Variable对象持有内容、states、variants与创建时确定的address根据地。值引用输出var()并保障根据地有声明；Name只表示CSS地址，字符串化返回不带--的逻辑名，作为内容只输出var()，不查找或激活同名JS定义。variableFrom(source, options)取得来源基础配方，在新根据地执行；三参数形式显式替换基础，mapVariableRules(source, mapResult, nameOrOptions)映射各项最终取值；两者都通过创建配置解析统一继承未指定的公开配置，显式项覆盖，priority沿用来源而不自动增加。states和variants按名称合并；variant选择后消掉父层variants。
 
 variable/declare.ts通过ASTController.findDeclaration选择指定地址的有效声明，有则保留当前内容，缺失才发布创建内容。AST统一同名与条件路径查询、priority及源序；单层:root与:where(:root)按同一物理根匹配，并尊重这两者已知的特异度差异。显式undefined算已有声明，不被创建内容顶回。默认根使用:where(:root)，不增加通用选择器解析器或Variable私有声明树。
 
@@ -88,7 +88,7 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 公共 `index` 公开 Variable 与独立 VariableName 创建、variableFrom定义复用、声明、编译和 Mixin。Key 和其他碎片从负责文件导入；Variable 类型直接包含创建配置 `config`，自动状态声明 Key 位于 `config.definitionKey`。
 
 
-Variable 的 options.variants 保存用途规则或固定值，也接收 {default,...states} 简写覆盖具体部分的状态，参数解析与 states 一样合并创建时定义。variant 通过 variableFrom 创建普通 Variable，再去掉父层变体；结果继承来源根据地。Button 用途直接在使用处选择，输入与各结果在明确组件地址计算，无按名称建立的母子联动。
+Variable 的 options.variants 保存用途规则或固定值，也接收 {default,...states} 简写覆盖具体部分的状态，参数解析与 states 一样合并创建时定义。variant 通过 variableFrom 创建普通 Variable，再去掉父层变体；结果继承来源根据地。Button 通过variableFrom取得共享controlColor用途、interactiveColor交互、interactiveSurfaceColor画布与surfaceStrength占比定义，保留自己的分类差异与表面控点组装。用途直接在使用处选择，输入与各结果在明确组件地址计算，无按名称建立的母子联动。
 
 ## 内容扩展与位置记录
 
