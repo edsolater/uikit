@@ -273,9 +273,9 @@ describe('组件结构查看', () => {
     flush()
     resolveDescription('异步提供的用途')
     await expect.poll(readLabels).toContain('Button · 异步提供的用途')
-    const before = document.querySelector<HTMLElement>('.StructureViewOverlay > .labels')!.style.top
+    const before = document.querySelector<HTMLElement>('.StructureViewOverlay > .frame')!.style.top
     host.style.paddingTop = '80px'
-    await expect.poll(() => document.querySelector<HTMLElement>('.StructureViewOverlay > .labels')!.style.top).not.toBe(before)
+    await expect.poll(() => document.querySelector<HTMLElement>('.StructureViewOverlay > .frame')!.style.top).not.toBe(before)
   })
 
   test('长说明从真实框内部左上角换行，内容在框内裁切且不撑大原框', async () => {
@@ -290,7 +290,7 @@ describe('组件结构查看', () => {
     const before = content.getBoundingClientRect()
     toggleView()
     await expect.poll(readLabels).toContain('用途框 · 很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外')
-    const labels = document.querySelector<HTMLElement>('.StructureViewOverlay > .labels')!
+    const labels = document.querySelector<HTMLElement>('.StructureViewOverlay > .frame > .labels')!
     const label = labels.firstElementChild!
     const bounds = labels.getBoundingClientRect()
     expect(bounds.x).toBe(before.x)
@@ -331,9 +331,69 @@ describe('组件结构查看', () => {
       Math.round((content.x + 16 - bounds.x) * canvas.width / bounds.width),
       Math.round((content.y + 40 - bounds.y) * canvas.height / bounds.height), 1, 1,
     ).data[3]
-    expect(contentAlpha).toBeGreaterThan(180)
-    expect(contentAlpha).toBeLessThan(210)
+    expect(contentAlpha).toBe(0)
+    const frame = document.querySelector<HTMLElement>('.StructureViewOverlay > .frame')!
+    const frameBounds = frame.getBoundingClientRect()
+    const mask = getComputedStyle(frame, '::before')
+    expect(frameBounds.height).toBe(content.height)
+    expect(mask.clipPath).toContain('evenodd')
+    expect(mask.clipPath).toContain(`${control.left - 2 - frameBounds.left}px`)
+    expect(getComputedStyle(frame).clipPath).toBe('none')
+    expect(getComputedStyle(canvas).zIndex).toBe('1')
+    const controlElement = document.querySelector<HTMLElement>('.StructureViewFab')!
+    expect(document.elementFromPoint(control.x + control.width / 2, control.y + control.height / 2)).toBe(controlElement)
     toggleView()
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
+  })
+
+  test('每个真实矩形都有全框伪层，父子同原点按整体层叠且同框标注分行', async () => {
+    const host = createHost()
+    dispose = render(() => {
+      const child = <ComponentWrapper componentName="子框"><Piv style={{ width: '160px', height: '80px' }}>内容</Piv></ComponentWrapper>
+      return <>
+        <ComponentWrapper componentName="父框">
+          <Piv style={{ width: '220px', height: '160px' }}>
+            {child}
+          </Piv>
+        </ComponentWrapper>
+        <ComponentWrapper componentName="多根">
+          <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
+          <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
+        </ComponentWrapper>
+        <Article as={Card} style={{ width: '200px', height: '80px' }}>同框内容</Article>
+        <StructureViewFab />
+      </>
+    }, host)
+    const original = [...host.querySelectorAll<HTMLElement>('main > div, article')]
+    toggleView()
+    await expect.poll(readLabels).toContain('子框')
+    const frames = [...document.querySelectorAll<HTMLElement>('.StructureViewOverlay > .frame')]
+    expect(frames).toHaveLength(5)
+    const [parent, child, firstRoot, secondRoot, shared] = frames
+    expect(parent.getBoundingClientRect().x).toBe(child.getBoundingClientRect().x)
+    expect(parent.getBoundingClientRect().y).toBe(child.getBoundingClientRect().y)
+    expect(parent.getBoundingClientRect().height).toBe(160)
+    expect(child.getBoundingClientRect().height).toBe(80)
+    expect(parent.querySelector('.label')?.textContent).toBe('父框')
+    expect(child.querySelector('.label')?.textContent).toBe('子框')
+    expect(firstRoot.getBoundingClientRect().height).toBe(30)
+    expect(secondRoot.getBoundingClientRect().height).toBe(40)
+    expect(firstRoot.querySelectorAll('.label')).toHaveLength(1)
+    expect(secondRoot.querySelectorAll('.label')).toHaveLength(0)
+    expect(shared.querySelectorAll('.label')).toHaveLength(2)
+    for (const frame of frames) {
+      const mask = getComputedStyle(frame, '::before')
+      expect(getComputedStyle(frame).isolation).toBe('isolate')
+      expect(mask.zIndex).toBe('-1')
+      expect(mask.backgroundColor).toBe('rgba(255, 255, 255, 0.9)')
+      expect(mask.backdropFilter).toBe('blur(4px)')
+      expect(mask.width).toBe(getComputedStyle(frame).width)
+      expect(mask.height).toBe(getComputedStyle(frame).height)
+      expect(getComputedStyle(frame).clipPath).toBe('none')
+    }
+    expect([...shared.querySelectorAll('.label')].every(label => getComputedStyle(label).display === 'block')).toBe(true)
+    toggleView()
+    expect(document.querySelector('.StructureViewOverlay')).toBeNull()
+    expect(original.every(element => element.isConnected)).toBe(true)
   })
 })

@@ -37,6 +37,7 @@ rules(['.StructureViewOverlay::backdrop'], [[key('display'), 'none']])
 
 rules(['.StructureViewOverlay > canvas'], [
   [key('position'), 'absolute'],
+  [key('z-index'), 1],
   [key('inset'), 0],
   [key('width'), '100%'],
   [key('height'), '100%'],
@@ -44,8 +45,23 @@ rules(['.StructureViewOverlay > canvas'], [
   [key('max-height'), 'none'],
 ])
 
-rules(['.StructureViewOverlay > .labels'], [
+rules(['.StructureViewOverlay > .frame'], [
   [key('position'), 'absolute'],
+  [key('isolation'), 'isolate'],
+])
+
+rules(['.StructureViewOverlay > .frame::before'], [
+  [key('content'), '""'],
+  [key('position'), 'absolute'],
+  [key('inset'), 0],
+  [key('z-index'), -1],
+  [key('background'), 'rgb(255 255 255 / 90%)'],
+  [key('backdrop-filter'), 'blur(4px)'],
+  [key('clip-path'), 'var(--structure-view-mask-clip, none)'],
+])
+
+rules(['.StructureViewOverlay .labels'], [
+  [key('max-height'), '100%'],
   [key('overflow'), 'hidden'],
 ])
 

@@ -1,7 +1,7 @@
 /**
  * 结构覆盖层显示活组件的真实边界与用途。
  *
- * 单层淡化与独立标注覆盖当前像素，隐藏选择不改写原样式来源或事件。
+ * 逐框白色模糊遮罩承载标注，隐藏选择不改写原样式来源或事件。
  *
  * 只在查看开启期间测量，避免普通界面承担持续绘制开销。
  */
@@ -17,10 +17,10 @@ interface BoundaryFrame {
   rectangles: DOMRect[]
 }
 
-/** 共用同一真实框的组件标注，在框内依次排列。 */
-interface BoundaryLabels {
+/** 共用同一真实矩形的遮罩宿主，首矩形的组件标注在框内排列。 */
+interface BoundaryGroup {
   rectangle: DOMRect
-  frames: BoundaryFrame[]
+  labels: ComponentBoundary[]
 }
 
 const boundaryColors = ['#758c9f', '#72928e', '#8c829d', '#818b96']
@@ -31,7 +31,7 @@ const boundaryColors = ['#758c9f', '#72928e', '#8c829d', '#818b96']
 export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
   let surface!: HTMLDivElement
   let canvas!: HTMLCanvasElement
-  const frames = createState<BoundaryFrame[]>([])
+  const measurement = createState({ frames: [] as BoundaryFrame[], controlBounds: new DOMRect() })
   const animationFrame = useBrowserAnimationFrame()
   const displayValues = new Map<ComponentBoundary, boolean>()
   const hiddenElements = new Set<Element>()
@@ -65,8 +65,9 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
       element.setAttribute('data-structure-view-hidden', '')
       hiddenElements.add(element)
     }
-    drawBoundaries(canvas, readDisplayedFrames(currentFrames, displayValues), props.control)
-    frames.set(currentFrames)
+    const controlBounds = props.control.getBoundingClientRect()
+    drawBoundaries(canvas, readDisplayedFrames(currentFrames, displayValues), controlBounds)
+    measurement.set({ frames: currentFrames, controlBounds })
     animationFrame.request(updateFrame)
   }
 
@@ -95,18 +96,21 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
   return <Piv class="StructureViewOverlay" htmlProps={{ popover: 'manual', 'aria-hidden': 'true' }}
     ref={element => { surface = element }}>
     <Piv as="canvas" ref={element => { canvas = element }} />
-    <For each={val(frames).map(frame => frame.boundary)}>{boundary => {
+    <For each={val(measurement).frames.map(frame => frame.boundary)}>{boundary => {
       createRenderEffect(boundary.readDescriptionDisplay, display => { displayValues.set(boundary, display) })
       onCleanup(() => displayValues.delete(boundary))
       return undefined
     }}</For>
-    <For each={groupBoundaryLabels(readDisplayedFrames(val(frames), displayValues))}>{group => <Piv class="labels" style={{
+    <For each={groupBoundaryFrames(readDisplayedFrames(val(measurement).frames, displayValues))}>{group => <Piv class="frame" style={{
       left: `${group.rectangle.left}px`, top: `${group.rectangle.top}px`,
-      width: `${group.rectangle.width}px`, 'max-height': `${group.rectangle.height}px`,
+      width: `${group.rectangle.width}px`, height: `${group.rectangle.height}px`,
+      '--structure-view-mask-clip': readMaskClip(group.rectangle, val(measurement).controlBounds),
     }}>
-      <For each={group.frames}>{frame => <Piv as="span" class="label">
-        {frame.boundary.readLabel()}
-      </Piv>}</For>
+      <Piv class="labels">
+        <For each={group.labels}>{boundary => <Piv as="span" class="label">
+          {boundary.readLabel()}
+        </Piv>}</For>
+      </Piv>
     </Piv>}</For>
   </Piv>
 }
@@ -124,10 +128,10 @@ function readDisplayedFrames(frames: BoundaryFrame[], displayValues: Map<Compone
 }
 
 /**
- * 对所有真实范围统一淡化一次，再画清晰的冷灰描边。
- * 同一像素即使属于多个嵌套组件，也不会叠加透明度。
+ * 只绘制全部真实矩形的冷灰描边，白色模糊由逐框伪元素承担。
+ * Canvas位于遮罩上方，FAB区域继续留空。
  */
-function drawBoundaries(canvas: HTMLCanvasElement, frames: BoundaryFrame[], control: HTMLButtonElement) {
+function drawBoundaries(canvas: HTMLCanvasElement, frames: BoundaryFrame[], controlBounds: DOMRect) {
   const bounds = canvas.getBoundingClientRect()
   const pixelRatio = window.devicePixelRatio
   const width = Math.round(bounds.width * pixelRatio)
@@ -141,16 +145,6 @@ function drawBoundaries(canvas: HTMLCanvasElement, frames: BoundaryFrame[], cont
   const verticalScale = height / bounds.height
   context.setTransform(horizontalScale, 0, 0, verticalScale, -bounds.x * horizontalScale, -bounds.y * verticalScale)
   context.clearRect(bounds.x, bounds.y, bounds.width, bounds.height)
-  const contentPath = new Path2D()
-  for (const frame of frames) {
-    for (const rectangle of frame.rectangles) {
-      contentPath.rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
-    }
-  }
-  context.fillStyle = 'Canvas'
-  context.globalAlpha = 0.76
-  context.fill(contentPath)
-  context.globalAlpha = 1
   context.lineWidth = 1.5
   for (const frame of frames) {
     context.strokeStyle = boundaryColors[frame.boundary.colorIndex]
@@ -158,7 +152,6 @@ function drawBoundaries(canvas: HTMLCanvasElement, frames: BoundaryFrame[], cont
       context.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
     }
   }
-  const controlBounds = control.getBoundingClientRect()
   context.clearRect(controlBounds.x - 2, controlBounds.y - 2, controlBounds.width + 4, controlBounds.height + 4)
 }
 
@@ -175,23 +168,39 @@ function readBoundaryFrames(): BoundaryFrame[] {
         && rectangle.top < window.innerHeight && rectangle.left < window.innerWidth)
     frames.push({ boundary, rectangles })
   }
-  return frames
+  return frames.sort((first, second) =>
+    first.boundary.start.compareDocumentPosition(second.boundary.start) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)
 }
 
 /**
- * 将共根组件的标注放入同一框内排版，长说明换行并在真实框内裁切。
+ * 按真实矩形合并宿主并保留父到子的顺序，名称只出现在各组件的首矩形。
  */
-function groupBoundaryLabels(frames: BoundaryFrame[]): BoundaryLabels[] {
-  const groups = new Map<string, BoundaryLabels>()
+function groupBoundaryFrames(frames: BoundaryFrame[]): BoundaryGroup[] {
+  const groups = new Map<string, BoundaryGroup>()
   for (const frame of frames) {
-    const rectangle = frame.rectangles[0]
-    if (!rectangle) continue
-    const key = `${rectangle.x},${rectangle.y},${rectangle.width},${rectangle.height}`
-    const group = groups.get(key)
-    if (group) group.frames.push(frame)
-    else groups.set(key, { rectangle, frames: [frame] })
+    frame.rectangles.forEach((rectangle, index) => {
+      const key = `${rectangle.x},${rectangle.y},${rectangle.width},${rectangle.height}`
+      let group = groups.get(key)
+      if (!group) {
+        group = { rectangle, labels: [] }
+        groups.set(key, group)
+      }
+      if (index === 0) group.labels.push(frame.boundary)
+    })
   }
   return [...groups.values()]
+}
+
+/**
+ * 只在伪元素自身裁出FAB交集，保留宿主与Overlay的页面背景采样。
+ */
+function readMaskClip(rectangle: DOMRect, controlBounds: DOMRect): string {
+  const left = Math.max(0, controlBounds.left - 2 - rectangle.left)
+  const top = Math.max(0, controlBounds.top - 2 - rectangle.top)
+  const right = Math.min(rectangle.width, controlBounds.right + 2 - rectangle.left)
+  const bottom = Math.min(rectangle.height, controlBounds.bottom + 2 - rectangle.top)
+  if (left >= right || top >= bottom) return 'none'
+  return `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${left}px ${top}px, ${right}px ${top}px, ${right}px ${bottom}px, ${left}px ${bottom}px, ${left}px ${top}px)`
 }
 
 /**
