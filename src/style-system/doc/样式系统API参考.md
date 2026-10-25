@@ -28,11 +28,15 @@ variableFrom(source, source.content)
 source.variant('content')
 variableFrom(source, content, nameOrOptions)
 variableFrom(source, source.content, { name: 'new-name', states: { hover: hoverContent }, priority: 0 })
+mapVariableRules(source, result => multiply(result, 2))
+mapVariableRules(source, mapResult, { name: 'mapped-name', address: '.Mapped' })
 ```
 
-常见配置是name、address、states、variants、priority、registration、onActive和compileWaveIndex。address 是根据地，缺省root；states随根据地，variableFrom/variant/adjust未指定新地址时沿用来源地址。registration的syntax/inherits/initialValue分别有什么效果，见[按需资源与同名替换.md](behaviors/按需资源与同名替换.md)；配置创建与之后消费的区别见[Value与Expression.md](behaviors/Value与Expression.md)。Variable.name的字符串拼接和CSS引用使用[Variable的创建与复用.md](behaviors/Variable的创建与复用.md)。
+常见配置是name、address、states、variants、priority、registration、onActive和compileWaveIndex。variableFrom 与 mapVariableRules 未指定的配置都继承来源，显式配置覆盖对应项，名称也遵循同一规则。普通创建的 address 缺省root，states随根据地；variant与adjust沿用来源根据地。registration的syntax/inherits/initialValue分别有什么效果，见[按需资源与同名替换.md](behaviors/按需资源与同名替换.md)；配置创建与之后消费的区别见[Value与Expression.md](behaviors/Value与Expression.md)。Variable.name的字符串拼接和CSS引用使用[Variable的创建与复用.md](behaviors/Variable的创建与复用.md)。
 
 variants 按名称保存变体规则或固定值；`source.variant('content')` 返回保留状态的 Variable，结果不带父层变体。variableFrom 对所有 Variable 原样继承 states 和 variants，规则基于新基础计算，固定值保持原值。完整边界见[Variable的创建与复用.md](behaviors/Variable的创建与复用.md#选择一种用途)。
+
+mapVariableRules 对默认、state、variant 各自的最终值表达式映射一次；它接收普通映射函数，adjust 将领域 Modification 转为这种映射。两者返回的定义供后续 variableFrom、variant、declare 按普通规则使用，不携带待重放的加工命令。
 
 ## 独立变化与来源绑定
 

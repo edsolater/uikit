@@ -87,8 +87,7 @@ test.each(['天然材料', 'Variable'])('调整保留%s来源的顶层资源，�
       } }],
     ])
     expect(css.includes('.SourceTopResource')).toBe(!removeAll)
-    expect(css.includes('@property --top-resource-source')).toBe(!removeAll)
-    expect(css).not.toContain(`@property ${second.toCSSString()}`)
+    expect(css.includes(`@property ${second.toCSSString()}`)).toBe(!removeAll)
     if (!removeAll) {
       expect(css).toContain('syntax: "<color>";')
       expect(css).toContain('inherits: false;')
@@ -117,9 +116,8 @@ test('仅消费调整结果的多个变体仍保留来源资源，最后退出�
       } }],
     ])
     expect(css.includes('.VariantOnlyResource')).toBe(!removeAll)
-    expect(css.includes('@property --variant-resource-source')).toBe(!removeAll)
     expect(css).not.toContain(`@property ${line.toCSSString()}`)
-    expect(css).not.toContain(`@property ${content.toCSSString()}`)
+    expect(css.includes(`@property ${content.toCSSString()}`)).toBe(!removeAll)
   }
 })
 

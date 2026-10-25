@@ -30,7 +30,22 @@ rules('.LargeControl', [[key('width'), larger]])
 
 新定义普通为 20px，hover 为 23px，active 仍为 12px。因为 hover 是相对规则，active 是固定值；继承不自动把固定值改成相对关系。states 和 variants 原样按名称继承，明确提供同名项时覆盖，其余保留。
 
-`variableFrom(source, value, nameOrOptions?)` 后两项与 variable 的材料位置一致。名称可沿用、明确替换或用函数从来源名称生成；根据地省略时沿用来源，明确提供时只改变新定义。复用不改变来源，也不持续同步来源后来发生的 JS 配置变化。
+`variableFrom(source, value, nameOrOptions?)` 只替换基础，后两项与 variable 的材料位置一致。未指定的公开配置全部沿用来源：name、address、priority、states、variants、registration、onActive 和 compileWaveIndex；显式配置只覆盖对应项。states 和 variants 按名称合并，名称也可用函数从来源名称生成。复用不改变来源，也不持续同步来源后来发生的 JS 配置变化。
+
+# 映射各项最终取值
+
+`mapVariableRules(source, mapResult, nameOrOptions?)` 对默认、state、variant 各自的最终取值表达式应用一次 mapResult，返回普通 Variable。配置沿用相同的继承规则；显式给出的 state 或 variant 覆盖已映射的对应定义，不再额外经过这次映射。
+
+以基础 10、hover 为基础加 3、active 固定为 12 的定义为例：
+
+| 操作 | 普通 | hover | active |
+| --- | --- | --- | --- |
+| 替换基础为 5 | 5 | 8 | 12 |
+| 将各项结果乘 0.5 | 5 | 6.5 | 6 |
+
+映射先取得来源各项结果，再加工；不能把原 hover 规则套在已加工基础上。映射结果交付的是这份新定义，后续 variableFrom 或 declare 不对新基础重新执行旧映射。来源有真实表达式依赖时，结果继续保留这些依赖。
+
+省略 name 时沿用来源的 VariableName，不分配新名称。同名的来源与结果仍遵循普通 CSS 声明和层叠关系，不承诺两个同名值隔离；单独使用映射结果时不能生成对自身 CSS 名称的循环引用。
 
 # 选择一种用途
 

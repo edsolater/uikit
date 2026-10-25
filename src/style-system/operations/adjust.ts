@@ -6,7 +6,7 @@ import { assert, hasProperty, isString, matchShape } from '@edsolater/fnkit'
 import type { DeclareProtocol } from './declare'
 import { colorModificationShape, type ColorModificationContent } from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
-import { referenceVariable, transformVariable, type Variable } from '../variable/core'
+import { referenceVariable, mapVariableRules, type Variable } from '../variable/core'
 import { modifyTargetShape, type ModifyTargetProtocol } from './modify'
 import type { ValueInput } from '../value'
 import { allocateVariableName } from '../custom-property-names'
@@ -31,7 +31,7 @@ export function adjust(source: AdjustTargetProtocol, change: AdjustProtocol<keyo
   assert(combine !== undefined, 'adjust 需要已支持领域的配方材料。')
   assert(hasProperty(change, 'content') && matchShape(change, colorModificationShape), 'adjust 需要有效的 type/key/content 配方材料。')
   for (const target of [source, change]) allocateVariableName(target.key.toCSSString())
-  return transformVariable(source, current => combine(current, change), allocateVariableName())
+  return mapVariableRules(source, current => combine(current, change), allocateVariableName())
 }
 
 /** 当前支持的来源组合；领域细节不进入绑定与共同声明链。 */

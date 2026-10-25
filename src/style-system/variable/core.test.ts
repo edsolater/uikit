@@ -1,6 +1,6 @@
 /** Variable 显式命名，以及 variableFrom 创建时的公开参数契约。 */
 import { expect, test } from 'vitest'
-import { variable, variableFrom } from './core'
+import { variable, variableFrom, mapVariableRules } from './core'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import type { ValueInput } from '../value'
@@ -33,6 +33,8 @@ if (false) {
   // @ts-expect-error derive 已由 variableFrom 替代，不保留兼容入口。
   source.derive(2)
   variableFrom(source, 2, {})
+  mapVariableRules(source, current => current)
+  mapVariableRules(source, current => current, { name: undefined, registration: undefined })
   // @ts-expect-error 名称在注册时绑定，不能在之后赋入字符串改名。
   source.name = 'renamed-after-registration'
   variableFrom(source, source.content, { states: { hover: 2 }, priority: 0 })

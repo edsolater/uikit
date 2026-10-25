@@ -14,7 +14,7 @@ import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
 import { value } from '../value'
 import { valueSequence } from '../pieces/contents/atom-creators/list'
-import { variable } from '../variable'
+import { mapVariableRules, variable, variableFrom } from '../variable'
 import { $margin, $marginLeft } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
 import { $border } from '../pieces/keys/border'
@@ -51,6 +51,46 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(lineCSS).toContain('var(--local-line-base)')
   expect(lineCSS).toContain(':root')
   expect(lineCSS).not.toContain('--motion-duration:')
+})
+
+test('线条共享来源资源，最后消费者退出后释放', () => {
+  const active = vi.fn((): Rules => [[['.LineResource'], 'display', 'block']])
+  const base = variable('red', {
+    name: 'registered-line-source', address: '.RegisteredLine', onActive: active,
+  })
+  const line = lineColor(base)
+  expect(active).not.toHaveBeenCalled()
+  const sourceHandle = rule('.RegisteredLine', 'background-color', base)
+  const lineHandle = rule('.RegisteredLine', 'color', line)
+  try {
+    const css = compileCSS()
+    expect(css).toContain('.LineResource')
+    expect(active).toHaveBeenCalledTimes(1)
+    sourceHandle.remove()
+    expect(compileCSS()).toContain('.LineResource')
+    lineHandle.remove()
+    const released = compileCSS()
+    expect(released).not.toContain('.LineResource')
+  } finally {
+    sourceHandle.remove()
+    lineHandle.remove()
+  }
+})
+
+test.each(['复用', '映射'])('%s的激活资源支持继承、显式替换与清除', mode => {
+  const source = variable('red', { name: 'activation-source', onActive: () => [[['.InheritedResource'], 'opacity', 0.5]] })
+  const onActive = (): Rules => [[['.OverriddenResource'], 'opacity', 0.75]]
+  const inherited = mode === '复用' ? variableFrom(source, 'blue') : mapVariableRules(source, current => current)
+  const overridden = mode === '复用' ? variableFrom(source, 'blue', { onActive }) : mapVariableRules(source, current => current, { onActive })
+  const cleared = mode === '复用' ? variableFrom(source, 'blue', { onActive: undefined }) : mapVariableRules(source, current => current, { onActive: undefined })
+  const inheritedCSS = compileRules([[['.ActivationConsumer'], 'color', inherited]])
+  const overriddenCSS = compileRules([[['.ActivationConsumer'], 'color', overridden]])
+  const clearedCSS = compileRules([[['.ActivationConsumer'], 'color', cleared]])
+  expect(inheritedCSS).toContain('.InheritedResource')
+  expect(overriddenCSS).toContain('.OverriddenResource')
+  expect(overriddenCSS).not.toContain('.InheritedResource')
+  expect(clearedCSS).not.toContain('.InheritedResource')
+  expect(clearedCSS).not.toContain('.OverriddenResource')
 })
 
 test('Variable 创建时不激活，按需规则可引用自身与稍后创建的 Variable', () => {

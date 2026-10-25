@@ -35,7 +35,6 @@ describe('具体变量定义与名称分工', () => {
     const copied = variableFrom(source, source.content)
     const changed = variableFrom(source, '7px', { name: 'derive-changed', priority: 0 })
     expect(copied.name).toBe(source.name)
-    expect(copied.priority).toBe(4)
     const copiedCSS = compileRules([[['.Copied'], 'width', copied]])
     expect(copiedCSS).toContain('--derive-source: 4px')
     expect(copiedCSS).toContain('calc(4px * 2)')

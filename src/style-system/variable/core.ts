@@ -5,11 +5,11 @@
 使用时保障根据地有定义；状态随根据地展开，消费位置只读取 CSS 引用。
 */
 import { condition, type ConditionInput } from '../condition'
-import { propertyName, type JSSKeyObject } from '../key'
+import { keyPriority, propertyName, type JSSKeyObject } from '../key'
 import { createJSSContent, isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { ValueInput } from '../value'
 import { resolveStateConditions, type StateCondition } from '../pieces/state-conditions'
-import { assert, hasProperty, isFunction, mapGet } from '@edsolater/fnkit'
+import { assert, hasProperty, isFunction, mapGet, result } from '@edsolater/fnkit'
 import { consumeDeclaration, declaredVariable, declareVariable, joinVariableValues } from './declare'
 import type { DeclareProtocol } from '../operations/declare'
 import { parseVariableArgs, type VariableStateValues } from './args-parser'
@@ -28,23 +28,65 @@ export type VariableAddress = Exclude<ConditionInput, undefined>
 
 /** 同一来源的顶层资源保持一份内容身份，多个加工结果共享其生命周期。 */
 const variableActivations = new WeakMap<VariableTarget, JSSContent>()
-const adjustmentActivations = new WeakMap<VariableTarget, JSSContent>()
 
-/** 保留原始定义，在声明结果处统一加工，状态与变体不重复执行。 */
-export function transformVariable(source: VariableTarget, apply: (content: ValueInput) => ValueInput, name: string): Variable {
-  const result = isVariable(source)
-    ? variableFrom(source, source.content, name)
-    : variable(source.content, {
-      name, address: source.address,
-      states: source.states && Object.fromEntries([...source.states].map(([state, rule]) => [state.name, rule])),
-    })
-  result.config.resultTransforms = [...source.resultTransforms ?? [], apply]
-  result.config.resultSource = source
-  result.config.resultSourceTransform = apply
-  return result
+/**
+ * 映射默认、状态与变体的最终值，返回可独立替换基础的普通定义。
+ * 未指定配置继承来源；显式状态与变体覆盖已映射项，后续声明不重放本次映射。
+ */
+export function mapVariableRules(source: VariableTarget, apply: (content: ValueInput) => ValueInput,
+  nameOrOptions?: VariableReuseName | VariableOptions): Variable {
+  const template = isVariable(source) ? variableFrom(source, source.content) : variable(source.content, {
+    name: propertyName(source.key), address: source.address, priority: keyPriority(source.key), registration: source.registration,
+    onActive: source.onActive, compileWaveIndex: source.compileWaveIndex,
+    states: source.states && Object.fromEntries([...source.states].map(([state, rule]) => [state.name, rule])),
+  })
+  if (!isVariable(source) && source.onActive) variableActivations.set(template, source)
+  template.declarations = source.declarations
+  const base = template.content
+  const states = Object.fromEntries([...template.config.states].map(([state, rule]) => [state.name,
+    mappedVariableValue(base, current => apply(isJSSContent(rule) ? rule : result(rule, current))),
+  ]))
+  const variants: Record<string, VariableVariantRule> = Object.fromEntries(Object.keys(template.config.variants ?? {}).map(name => [name, () => {
+    const selected = template.variant(name)
+    const mapped = mapVariableRules(selected, apply, `${output.name}-${name}`)
+    return { default: mapped.content, ...Object.fromEntries([...mapped.config.states].map(([state, rule]) => [state.name, rule])) }
+  }]))
+  const mapped = createVariable(mappedVariableValue(base, apply), { states, variants }, template)
+  const output = variableFrom(mapped, mapped.content, nameOrOptions)
+  output.config.resultSource = source
+  output.config.resultSourceTransform = apply
+  const overrides = typeof nameOrOptions === 'object' && !('kind' in nameOrOptions) ? nameOrOptions.variants : undefined
+  output.config.resultSourceVariants = new Set(Object.keys(variants).filter(name => !Object.hasOwn(overrides ?? {}, name)))
+  const stateOverrides = typeof nameOrOptions === 'object' && !('kind' in nameOrOptions) ? nameOrOptions.states : undefined
+  output.config.resultSourceStates = new Set(Object.keys(stateOverrides ?? {}))
+  return output
 }
 
-/** 显式加工绑定读取来源当前值；定义复用不会继承这条绑定。 */
+/**
+ * 在来源内容完成编译后映射其值，生产函数和状态规则都不在创建时执行。
+ */
+function mappedVariableValue(input: ValueInput, apply: (content: ValueInput) => ValueInput): JSSContent {
+  const mapped: JSSContent = { onCompile(context, controller) {
+    let current = input
+    const seen = new Set<unknown>()
+    while (!seen.has(current)) {
+      seen.add(current)
+      const compiled = controller.getCompiledContent(context.node, current) as ValueInput
+      if (compiled === current) break
+      current = compiled
+    }
+    if (isFunction(current) && !isJSSContent(current)) {
+      controller.defer(context.node, '映射等待来源基础完成求值。')
+      return
+    }
+    controller.setContent(context, apply(current))
+  } }
+  return createJSSContent(resolve => resolve(mapped), [input, mapped])
+}
+
+/**
+ * 显式加工绑定读取来源当前值；定义复用不会继承这条绑定。
+ */
 export const variableResultSource = (target: VariableTarget): VariableTarget | undefined => isVariable(target) ? target.config.resultSource : undefined
 
 /** 自定义属性材料；状态与注册仅在材料实际持有时参与。 */
@@ -52,7 +94,6 @@ export interface VariableTarget extends DeclareProtocol, JSSContent {
   states?: Map<StateCondition, VariableStateRule>
   registration?: VariableOptions['registration']
   address?: VariableAddress
-  resultTransforms?: ((content: ValueInput) => ValueInput)[]
 }
 
 /** 样式中的可复用变量，可读取内容，也可建立局部基础值并继续修改。 */
@@ -65,16 +106,18 @@ export interface Variable extends VariableTarget, JSSKeyObject {
   /** 这一个 Variable 的基础内容、状态、变体和可选行为。 */
   config: {
     address: VariableAddress
-    resultTransforms: ((content: ValueInput) => ValueInput)[]
     resultSource?: VariableTarget
     resultSourceTransform?: (content: ValueInput) => ValueInput
-    resourceSource?: VariableTarget
+    resultSourceVariants?: Set<string>
+    resultSourceStates?: Set<string>
     /** 未命中状态时使用的内容；生产函数在消费时求值。 */
     defaultValue: VariableDefaultValue
     /** 条件按登记顺序保存，原始规则只在根据地声明时绑定基础内容。 */
     states: Map<StateCondition, VariableStateRule>
     variants?: Record<string, VariableVariantRule>
     registration?: VariableOptions['registration']
+    onActive?: VariableOptions['onActive']
+    compileWaveIndex?: VariableOptions['compileWaveIndex']
     /** 自动状态声明的目标 Key，指向注册时绑定的名称。 */
     definitionKey: JSSKeyObject
   }
@@ -94,7 +137,7 @@ export interface VariableOptions {
   address?: VariableAddress
   /** 独立 Name 或创建 Name 的字符串简写；字符串可带 --，variableFrom 可沿用来源身份。 */
   name?: string | VariableName
-  /** 声明键等级；普通创建默认0，继承默认来源等级加一，显式0仍生效。 */
+  /** 声明键等级；普通创建默认0，复用默认沿用来源，显式0仍生效。 */
   priority?: number
   /**
    * 各 State Condition 下使用的基础内容；修改从选中的基础内容继续。
@@ -124,7 +167,7 @@ export interface VariableOptions {
   compileWaveIndex?: number
 }
 /** 派生定义可直接命名，也可按来源逻辑名计算新名称。 */
-export type VariableFromName = string | VariableName | ((name: VariableName) => string | VariableName)
+export type VariableReuseName = string | VariableName | ((name: VariableName) => string | VariableName)
 
 /**
  * Variable，样式中的基本复用变量；默认值生产函数在编译消费时求值，状态规则只随根据地声明绑定。
@@ -138,11 +181,13 @@ export function variable<DefaultValue extends VariableDefaultValue>(
   return createVariable(input, options)
 }
 
-/** 从来源创建独立定义；规则和固定值原样继承，显式配置只改变新定义。 */
+/**
+ * 从来源替换基础内容，继承未指定配置及状态、变体定义，保留来源本身。
+ */
 export function variableFrom<DefaultValue extends VariableDefaultValue>(
   source: Variable,
   input: DefaultValue | VariableStateValues<DefaultValue>,
-  nameOrOptions?: VariableFromName | VariableOptions,
+  nameOrOptions?: VariableReuseName | VariableOptions,
 ): Variable {
   const options = typeof nameOrOptions === 'string' || isFunction(nameOrOptions) || hasProperty(nameOrOptions, 'kind', value => value === 'variable-name')
     ? { name: isFunction(nameOrOptions) ? nameOrOptions(source.name) : nameOrOptions as string | VariableName }
@@ -167,15 +212,19 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
   const self: Variable = {
     kind: 'variable',
     priority: config.priority,
+    declarations: source?.declarations,
     variant(variantName) {
       assert(self.config.variants && Object.hasOwn(self.config.variants, variantName), `Variable ${name} 未定义变体 ${variantName}。`)
       const rule = self.config.variants[variantName]
       const source = self.config.resultSource
-      const result = source && isVariable(source)
-        ? transformVariable(source.variant(variantName), self.config.resultSourceTransform!, `${name}-${variantName}`)
+      const result = source && isVariable(source) && self.config.resultSourceVariants?.has(variantName)
+        ? mapVariableRules(source.variant(variantName), self.config.resultSourceTransform!, {
+          ...parseVariableArgs(self.content, undefined, self), name: `${name}-${variantName}`,
+          states: Object.fromEntries([...self.config.states].filter(([state]) => self.config.resultSourceStates?.has(state.name)).map(([state, rule]) => [state.name, rule])),
+          variants: undefined,
+        })
         : variableFrom(self, isFunction(rule) && !isJSSContent(rule) ? rule(self.content) : rule, `${name}-${variantName}`)
       delete result.config.variants
-      if (source) result.config.resourceSource = self.config.resourceSource ?? source
       let selections = variantSelections.get(self)
       if (!selections) variantSelections.set(self, selections = new Set())
       selections.add(result)
@@ -187,11 +236,12 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
     get name() { return name },
     config: {
       address: config.address ?? ':where(:root)',
-      resultTransforms: [...source?.resultTransforms ?? []],
       defaultValue: config.defaultValue,
       states,
       variants: config.variants,
       registration: config.registration,
+      onActive: config.onActive,
+      compileWaveIndex: config.compileWaveIndex,
       get definitionKey() {
         return { toCSSString: self.toCSSString, priority: self.priority, join: joinVariableValues }
       },
@@ -206,7 +256,6 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
     get join() { return joinVariableValues },
     get content() { return self.config.defaultValue },
     get address() { return self.config.address },
-    get resultTransforms() { return self.config.resultTransforms },
     get states() { return self.config.states },
     get registration() { return self.config.registration },
     /**
@@ -225,13 +274,13 @@ function createVariable(input: VariableDefaultValue | VariableStateValues, optio
      * 消费当前定义的默认、状态及资源，不再次进入名称引用。
      */
     onCompile(context, controller) {
-      const dependencies = consumeVariableDefinition(self, context, controller)
+      consumeVariableDefinition(self, context, controller)
       const activation = variableActivations.get(self)
-      if (activation) dependencies.push(activation)
-      controller.setContent(context, { dependencies })
+      controller.setContent(context, { dependencies: activation ? [activation] : [] })
     },
   }
-  if (config.onActive) variableActivations.set(self, { onActive: config.onActive })
+  if (config.onActive) variableActivations.set(self,
+    source?.config.onActive === config.onActive ? variableActivations.get(source) ?? { onActive: config.onActive } : { onActive: config.onActive })
   return self
 }
 
@@ -264,34 +313,16 @@ export function referenceVariable(target: VariableTarget): JSSContent & JSSKeyOb
  * 编译天然自定义属性材料的声明或值引用；定义副作用与 Variable 共用，值位置仅输出一次引用。
  */
 export function compileVariableContent(target: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
-  const dependencies = consumeVariableDefinition(target, context, controller)
+  consumeVariableDefinition(target, context, controller)
   if (context.role === 'declaration-key') return
-  if (context.input !== target && isJSSContent(target)) dependencies.push(target)
-  controller.setContent(context, createJSSContent(() => `var(${propertyName(target.key)})`, dependencies))
+  controller.setContent(context, createJSSContent(() => `var(${propertyName(target.key)})`,
+    context.input !== target && isJSSContent(target) ? [target] : []))
 }
 
 /**
- * 激活定义所需的共同声明与注册资源，记录实际默认配方并交付结构化依赖；不生成值引用。
+ * 消费共同声明与根据地定义，按实际目标激活注册资源；不生成值引用。
  */
-function consumeVariableDefinition(target: VariableTarget, context: JSSCompileContext, controller: ASTController): unknown[] {
-  const resources: JSSContent[] = []
-  const resourceSource = isVariable(target) && target.config.resourceSource
-  if (resourceSource) {
-    let activation = adjustmentActivations.get(resourceSource)
-    if (!activation) {
-      let top = variableActivations.get(resourceSource)
-      if (!top && resourceSource.onActive) {
-        top = { onActive: resourceSource.onActive }
-        variableActivations.set(resourceSource, top)
-      }
-      activation = {
-        dependencies: top ? [top] : [],
-        onCompile(context, controller) { activateVariableResources(resourceSource, context, controller) },
-      }
-      adjustmentActivations.set(resourceSource, activation)
-    }
-    resources.push(activation)
-  }
+function consumeVariableDefinition(target: VariableTarget, context: JSSCompileContext, controller: ASTController): void {
   for (const dependency of target.declarations ?? []) {
     consumeDeclaration(context, controller, dependency)
   }
@@ -301,10 +332,9 @@ function consumeVariableDefinition(target: VariableTarget, context: JSSCompileCo
       && (context.node.content as { kind?: string } | undefined)?.kind !== 'variable-modification') {
       context.node.content = declareVariable(target, context.node.content as ValueInput)[1]
     }
-    return resources
+    return
   }
   consumeDeclaration(context, controller, target)
-  return resources
 }
 /** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
 const registrationSessions = new WeakMap<object, Map<VariableTarget, Map<JSSStyleNode, Set<unknown>>>>()

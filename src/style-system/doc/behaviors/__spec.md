@@ -10,10 +10,12 @@ CSS 接管已提交的引用、条件、层叠和继承。系统保留这份动�
 
 ```mermaid
 flowchart LR
-  V[Variable] --> F[variableFrom：复用定义]
+  V[Variable] --> F[variableFrom：替换基础并继承配置]
+  V --> Map[mapVariableRules：映射各项最终取值]
   V --> A[adjust：应用 Modification]
   V --> S[variant：选择用途]
   F --> N[新的普通 Variable]
+  Map --> N
   A --> N
   S --> N
   V --> R[rules：登记使用]
@@ -29,7 +31,7 @@ flowchart LR
 
 1. **Variable 与 VariableName 各负其责。** Variable 提供定义和使用行为，VariableName 标识 CSS 自定义属性。使用 Variable 时按其名称和 address 查询 declaration；同名查询不等于从另一 JS 对象借入 states、variants 或资源。
 2. **根据地同时决定存在与 state 归属。** 创建时指定地址，省略为根；使用时仅在根据地缺声明的情况下自动提供创建内容。已有声明保留，state 只随根据地展开。不存在独立于根据地的默认值兜底系统。
-3. **variableFrom 复用定义，不追踪创建历史。** 换基础时原样继承来源的 states 和 variants，规则作用于新基础，固定值保留。variant 选择一种用途并返回普通 Variable，保留 states、消掉父层 variants。
+3. **替换基础与映射取值分别表达两种变化。** variableFrom 换基础，原样继承来源的 states 和 variants；mapVariableRules 对默认、state、variant 各自的最终取值表达式映射一次。两者未指定的公开配置均继承来源，显式项覆盖；返回结果都是普通 Variable，不重放创建历史。variant 选择一种用途，保留 states、消掉父层 variants。
 4. **adjust 与 modify 的结果边界明确。** adjust 对来源的完整定义应用 Modification，返回普通 Variable，不改变来源；modify 返回 Declaration，在显式条件内修改目标。两者覆盖 default、state、variant 及 variant 的 state 结果，不能漏掉固定值。
 5. **求值位置遵循 CSS。** 保留 CSS 当前值引用；后代只读取祖先结果，不使祖先公式在当地重新绑定。另一处计算必须来自显式地址或当地 modify，不来自消费动作。
 6. **贡献有归属，资源按需要存在。** 一处退出不删除其他来源；内容替换撤回旧独占依赖。失败不留下半批贡献，也不损坏宿主或上次成功提交。

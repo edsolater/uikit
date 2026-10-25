@@ -325,10 +325,9 @@ test('动效消费统一基准的当前值，分隔线按本地文字变量实�
   const session = await cdp() as CDPSession
   const lineBase = variable('blue', { name: 'mounted-line-base', address: '.example' })
   const line = lineColor(lineBase)
-  const localLine = variableFrom(line, line.content, { address: '.example' })
   element.style.transitionProperty = 'opacity'
   handles.push(rule('.example', 'transition-duration', multiply(motionDuration, 2 / 3)))
-  handles.push(rules('.example', [[key('border-color'), localLine]]))
+  handles.push(rules('.example', [[key('border-color'), line]]))
   try {
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],

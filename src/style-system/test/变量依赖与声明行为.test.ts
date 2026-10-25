@@ -11,7 +11,7 @@ import { key } from '../key'
 import { multiply } from '../pieces/contents/functions/calc'
 import { appendStateCondition, resolveStateConditions } from '../pieces/state-conditions'
 import type { Rules } from '../rule'
-import { variable, variableFrom, type Variable } from '../variable'
+import { mapVariableRules, variable, variableFrom, type Variable } from '../variable'
 import { value } from '../value'
 import * as variables from '../variable'
 import * as styleSystem from '../index'
@@ -244,14 +244,14 @@ describe('声明优先级', () => {
     expect(declarationsAt(css, ['.Scope'])).toEqual([`${candidate.toCSSString()}: ${candidateLast ? 2 : 3};`])
   })
 
-  test.each([
-    { sourcePriority: undefined, expected: 1 },
-    { sourcePriority: 4, expected: 5 },
-  ])('variableFrom未指定priority时父级加一：父配置=$sourcePriority，结果=$expected', ({ sourcePriority, expected }) => {
+  test.each(['variableFrom', 'mapVariableRules'].flatMap(operation => [
+    { operation, sourcePriority: undefined, expected: 0 },
+    { operation, sourcePriority: 4, expected: 4 },
+  ]))('$operation未指定priority时沿用来源：父配置=$sourcePriority，结果=$expected', ({ operation, sourcePriority, expected }) => {
     const source = variable(1, {
       name: 'priority-derive-parent', ...(sourcePriority === undefined ? {} : { priority: sourcePriority }),
     })
-    const candidate = variableFrom(source, 2)
+    const candidate = operation === 'variableFrom' ? variableFrom(source, 2) : mapVariableRules(source, current => multiply(current, 2))
     // 用实际公开名称配对并显式给基础内容，避免名称/default缺口遮住等级行为。
     const lower = variable(3, { name: candidate.name, priority: expected - 1 })
     const tied = variable(4, { name: candidate.name, priority: expected })
@@ -265,7 +265,7 @@ describe('声明优先级', () => {
     expect(declarationsAt(css, ['.TiedAfter'])).toEqual([`${candidate.toCSSString()}: 2;`])
   })
 
-  test.each([0, 2])('variableFrom 显式指定 priority=%s，覆盖继承加一的5', (priority) => {
+  test.each([0, 2])('variableFrom 显式指定 priority=%s，覆盖来源的4', (priority) => {
     const source = variable(1, { name: 'priority-explicit-parent', priority: 4 })
     const candidate = variableFrom(source, 2, { priority })
     const lower = variable(3, { name: candidate.name, priority: priority - 1 })

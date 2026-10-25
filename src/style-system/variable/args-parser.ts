@@ -31,15 +31,20 @@ export function parseVariableArgs<DefaultValue extends VariableDefaultValue>(
   options?: string | VariableOptions,
   source?: Variable,
 ): VariableConfig<DefaultValue> {
-  const config: VariableOptions = isString(options) ? { name: options } : options ?? {}
+  const overrides: VariableOptions = isString(options) ? { name: options } : options ?? {}
+  const config: VariableOptions = {
+    name: source?.name, address: source?.address, priority: source?.priority,
+    registration: source?.registration, onActive: source?.config.onActive,
+    compileWaveIndex: source?.config.compileWaveIndex, ...overrides,
+  }
   const inputName = config.name ?? source!.name
   const name = isString(inputName) ? variableName(inputName) : inputName
-  const priority = config.priority ?? (source ? source.priority + 1 : 0)
+  const priority = config.priority ?? 0
   const shorthand = containKey(input, 'default') ? input as VariableStateValues<DefaultValue> : undefined
   const defaultValue = shorthand ? shorthand.default : input as DefaultValue
   const sourceStates = source ? Object.fromEntries([...source.config.states].map(([state, rule]) => [state.name, rule])) : undefined
   const inputStates = shorthand ? Object.fromEntries(Object.entries(shorthand).filter(([name]) => name !== 'default')) : undefined
-  const states = sourceStates || inputStates || config.states ? { ...sourceStates, ...inputStates, ...config.states } : undefined
-  const variants = source?.config.variants || config.variants ? { ...source?.config.variants, ...config.variants } : undefined
-  return { ...config, address: config.address ?? source?.address ?? ':where(:root)', name, priority, defaultValue, ...(states ? { states } : {}), ...(variants ? { variants } : {}) }
+  const states = sourceStates || inputStates || overrides.states ? { ...sourceStates, ...inputStates, ...overrides.states } : undefined
+  const variants = source?.config.variants || overrides.variants ? { ...source?.config.variants, ...overrides.variants } : undefined
+  return { ...config, address: config.address ?? ':where(:root)', name, priority, defaultValue, states, variants }
 }

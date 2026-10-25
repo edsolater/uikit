@@ -13,6 +13,7 @@ import { interactiveColorStates } from '../pieces/contents/atoms/color/ui-variab
 import { variable, variableFrom } from '../variable'
 import { declare } from '../operations/declare'
 import { readableContent } from '../pieces/contents/atoms/color/ui-color-structure'
+import { colorMix } from '../pieces/contents/functions/color-mix'
 
 const surfaceColorInteractive = variable(interactiveColorStates({ base: paperColor }), { name: 'purpose-surface', address: '.interactive-purpose' })
 const handles: RulesHandle[] = []
@@ -227,12 +228,13 @@ test('状态基色及其内容色与分隔用途在没有静态颜色 CSS 时有
 })
 
 test('转换函数的两个基础分别响应当地表面与全局及局部线条强度', () => {
-  const first = variable('red', 'line-first-surface')
-  const second = variable('blue', 'line-second-surface')
-  const firstDefinition = lineColor(first)
-  const secondDefinition = lineColor(second)
-  const firstLine = variableFrom(firstDefinition, firstDefinition.content, { address: '.FirstLine' })
-  const secondLine = variableFrom(secondDefinition, secondDefinition.content, { address: '.SecondLine' })
+  const first = variable('red', {
+    name: 'line-first-surface', address: '.FirstLine', priority: 4,
+    registration: { syntax: '<color>', inherits: true, initialValue: 'blue' },
+  })
+  const second = variable('blue', { name: 'line-second-surface', address: '.SecondLine' })
+  const firstLine = lineColor(first)
+  const secondLine = lineColor(second)
 
   handles.push(rule('.FirstLine', 'color', firstLine))
   handles.push(rule('.SecondLine', 'color', secondLine))
@@ -258,4 +260,57 @@ test('转换函数的两个基础分别响应当地表面与全局及局部线�
   expectSameColor(getComputedStyle(local).color, 'color-mix(in oklab, yellow 50%, transparent)')
   expectSameColor(getComputedStyle(normal).color, 'color-mix(in oklab, red 40%, transparent)')
   expect(style.textContent).toBe(originalCSS)
+  const competitor = variable('black', { name: firstLine.name, priority: 3 })
+  handles.push(rules('.FirstLine', [declare(firstLine, 'red'), declare(competitor, 'black')]))
+  style.textContent = compileCSS()
+  expectSameColor(getComputedStyle(normal).color, 'red')
+  const tied = variable('gold', { name: firstLine.name, priority: 4 })
+  handles.push(rule('.FirstLine', tied, 'gold'))
+  style.textContent = compileCSS()
+  expectSameColor(getComputedStyle(normal).color, 'gold')
+  normal.style.setProperty(firstLine.toCSSString(), 'invalid-color')
+  expectSameColor(getComputedStyle(normal).color, 'blue')
+})
+
+test('线条沿用基础根据地，各状态和用途的最终颜色只转换一次', () => {
+  const base = variable('red', {
+    name: 'line-state-surface', address: '.LineHome',
+    states: { '&[data-function]': current => colorMix([current, 0.5], 'blue'), '&[data-fixed]': 'lime' },
+    variants: {
+      fixed: 'gold',
+      mixed: current => colorMix([current, 0.5], 'white'),
+      own: { default: 'orange', '&[data-function]': 'purple', '&[data-fixed]': 'black' },
+    },
+  })
+  const line = lineColor(base)
+  const outputs = [line, line.variant('fixed'), line.variant('mixed'), line.variant('own')]
+  handles.push(rule(':root', base.toCSSString(), 'blue'))
+  handles.push(rule('.LineHome', 'background-color', base))
+  outputs.forEach((output, index) => handles.push(rule(`.LineOutput${index}`, 'color', output)))
+  const style = mountStyles()
+  const committed = style.textContent
+  const home = document.body.appendChild(document.createElement('section'))
+  home.className = 'LineHome'
+  const readers = outputs.map((_, index) => {
+    const reader = home.appendChild(document.createElement('div'))
+    reader.className = `LineOutput${index}`
+    return reader
+  })
+  const sibling = document.body.appendChild(document.createElement('div'))
+  sibling.className = 'LineOutput0'
+  const expected = [
+    ['red', 'gold', 'color-mix(in oklab, red 50%, white)', 'orange'],
+    ['color-mix(in oklab, red 50%, blue)', 'color-mix(in oklab, gold 50%, blue)', 'color-mix(in oklab, color-mix(in oklab, red 50%, white) 50%, blue)', 'purple'],
+    ['lime', 'lime', 'lime', 'black'],
+  ]
+  for (const [phase, colors] of expected.entries()) {
+    home.toggleAttribute('data-function', phase === 1)
+    home.toggleAttribute('data-fixed', phase === 2)
+    readers.forEach((reader, index) => expectSameColor(getComputedStyle(reader).color,
+      `color-mix(in oklab, ${colors[index]} 18%, transparent)`))
+    expectSameColor(getComputedStyle(home).backgroundColor, colors[0])
+    expect(getComputedStyle(sibling).getPropertyValue(line.toCSSString()).trim()).toBe('')
+  }
+  expect(getComputedStyle(document.documentElement).getPropertyValue(line.toCSSString()).trim()).toBe('')
+  expect(style.textContent).toBe(committed)
 })

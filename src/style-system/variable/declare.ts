@@ -1,12 +1,12 @@
 /** 根据地声明、原始基础及自身状态的发布；存在查询统一交给 AST。 */
-import { assert, isFunction, pipe, result } from '@edsolater/fnkit'
+import { assert, isFunction, result } from '@edsolater/fnkit'
 import { condition, conditionAddressKey, type ConditionPath } from '../condition'
 import { isJSSContent, type JSSCompileContext, type JSSContent } from '../content'
 import type { Declaration } from '../operations/declare'
 import { keyPriority, propertyName, type JSSKey } from '../key'
-import { appendStateCondition } from '../pieces/state-conditions'
+import { appendStateCondition, type StateCondition } from '../pieces/state-conditions'
 import { value, type Value, type ValueInput } from '../value'
-import { isVariable, referenceVariable, variableResultSource, type VariableDefaultValue, type VariableTarget } from './core'
+import { isVariable, referenceVariable, variableResultSource, type VariableDefaultValue, type VariableStateRule, type VariableTarget } from './core'
 import type { ASTController, JSSStyleNode } from '../compiler/contracts'
 
 /** 修改链绑定的真实声明及其结果；不持有局部依赖投影。 */
@@ -139,10 +139,12 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController, request
     stateProducts: new Map(),
   }
   definitions.set(node, { input: node.content, revision: node.compileRevision, signature, value: definition })
-  const resultSource = node.productTag === automaticVariableDeclaration && variableResultSource(variable)
+  const source = node.productTag === automaticVariableDeclaration && variableResultSource(variable)
+  const resultSource = source && propertyName(source.key) !== propertyName(variable.key)
+    && controller.search({ key: variable.key, conditionPath: variableHomePath(source) }).includes(node) ? source : undefined
   const content = resultSource && isVariable(variable)
     ? variable.config.resultSourceTransform!(referenceVariable(resultSource))
-    : transformed(variable, baseContent)
+    : baseContent
   definition.baseNode = controller.insert({ before: node, conditionPath: node.conditionPath }, [definition.baseKey, content], {
     owner: node, productTag: definition,
     initialize(product) {
@@ -151,8 +153,9 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController, request
     },
   })
   // 非根据地显式赋值只建立当地基础；状态发布属于根据地，同根别名由 AST 统一匹配。
-  if (!resultSource && controller.search({ key: variable.key, conditionPath: variableHomePath(variable) }).includes(node))
-    publishHomeStates(controller, definition, variable, baseContent)
+  if (controller.search({ key: variable.key, conditionPath: variableHomePath(variable) }).includes(node))
+    publishHomeStates(controller, definition, variable, resultSource ? content : baseContent,
+      resultSource && isVariable(variable) ? [...variable.states ?? []].filter(([state]) => variable.config.resultSourceStates?.has(state.name)) : variable.states)
   controller.onRemove(node, () => {
     for (const consumer of definition.consumers ?? []) if (consumer !== node) consumer.compileRevision++
   })
@@ -160,10 +163,11 @@ function ensureDefinition(node: JSSStyleNode, controller: ASTController, request
 }
 
 /** 将自身状态发布在根据地基础旁，保留声明键等级和撤销归属。 */
-function publishHomeStates(controller: ASTController, definition: VariableDefinition, variable: VariableTarget, baseContent: ValueInput): void {
+function publishHomeStates(controller: ASTController, definition: VariableDefinition, variable: VariableTarget, baseContent: ValueInput,
+  states: Iterable<[StateCondition, VariableStateRule]> = variable.states ?? []): void {
   const node = definition.node
   let anchor = definition.baseNode
-  for (const [state, rule] of variable.states ?? []) {
+  for (const [state, rule] of states ?? []) {
     const path = appendStateCondition(node.conditionPath, state)
     const content: JSSContent = { onCompile(context, controller) {
       let base = baseContent
@@ -178,7 +182,7 @@ function publishHomeStates(controller: ASTController, definition: VariableDefini
         controller.defer(context.node, '状态等待根据地基础完成求值。')
         return
       }
-      controller.setContent(context, transformed(variable, isJSSContent(rule) ? rule : result(rule, base)))
+      controller.setContent(context, isJSSContent(rule) ? rule : result(rule, base))
     } }
     const product = controller.insert({ after: anchor!, conditionPath: path }, [definition.baseKey, content], {
       owner: node, productTag: definition,
@@ -187,8 +191,4 @@ function publishHomeStates(controller: ASTController, definition: VariableDefini
     definition.stateProducts.set(conditionAddressKey(path), product)
     anchor = product
   }
-}
-
-function transformed(variable: VariableTarget, content: ValueInput): ValueInput {
-  return pipe(content, ...variable.resultTransforms ?? [])
 }

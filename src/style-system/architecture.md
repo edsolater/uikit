@@ -23,7 +23,7 @@ Expression 要求依赖与输出，禁止自身提供消费位置通知、AST �
 
 `operations/` 只按声明、修改、调整三个操作入口分组，不建立独立公共入口；Style System 的 index 直接公开各操作及其协议。Variable 的创建、声明发布、修改链和依赖协调归 `variable/` 领域；通用 AST 编译能力留在 `compiler/`，变化材料留在 `modification.ts`。
 
-Variable对象持有内容、states、variants与创建时确定的address根据地。值引用输出var()并保障根据地有声明；Name只表示CSS地址，字符串化返回不带--的逻辑名，作为内容只输出var()，不查找或激活同名JS定义。variableFrom(source, value, nameOrOptions)创建时复用状态和变体，名称默认沿用，priority默认来源加一；variant选择后消掉父层variants。from、variant与adjust未指定新地址时沿用来源根据地。
+Variable对象持有内容、states、variants与创建时确定的address根据地。值引用输出var()并保障根据地有声明；Name只表示CSS地址，字符串化返回不带--的逻辑名，作为内容只输出var()，不查找或激活同名JS定义。variableFrom(source, value, nameOrOptions)替换基础，mapVariableRules(source, mapResult, nameOrOptions)映射各项最终取值；两者都通过创建配置解析统一继承未指定的公开配置，显式项覆盖，priority沿用来源而不自动增加。states和variants按名称合并；variant选择后消掉父层variants。
 
 variable/declare.ts通过ASTController.findDeclaration选择指定地址的有效声明，有则保留当前内容，缺失才发布创建内容。AST统一同名与条件路径查询、priority及源序；单层:root与:where(:root)按同一物理根匹配，并尊重这两者已知的特异度差异。显式undefined算已有声明，不被创建内容顶回。默认根使用:where(:root)，不增加通用选择器解析器或Variable私有声明树。
 
@@ -31,7 +31,9 @@ variable/declare.ts通过ASTController.findDeclaration选择指定地址的有�
 
 普通无参内容函数沿内容编译链延迟执行，可调用JSSContent遵守自身协议。每个角色保存实际访问的依赖与替代记录；输入或revision改变时失效重建。状态与Join读取既有已编译位置视图，不反复执行生产函数；编译结束仅输出CSS。
 
-Adjust保留原始完整定义供variableFrom复用，同时显式引用来源当前CSS结果并加工；选择其variant时对应选择来源variant再加工，不重复展开已经生效的来源状态。连续adjust只对前一结果追加一层加工。Modify复用声明基础与条件步骤链，处理范围内完整结果；显式variant选择关系仅用于把同一步modify应用于实际使用的变体，不追踪任意内容输入。每阶段引用前序CSS结果，registration.inherits:false保留当地存在标记及注册初值边界。无值declare不作为加工或组件反馈的前提。
+mapVariableRules将默认、state与variant结果包装为惰性映射内容，生产函数仍由共同内容编译链求值；交付的内容可以作为普通定义继续替换基础或声明新值，不对新内容重放旧映射。同根据地且不同名的自动默认声明保留来源当前CSS引用；同名或明确换根据地时直接使用已映射定义，避免同名自引用，并在自己的根据地发布状态。显式state与variant覆盖映射结果。
+
+Adjust将领域Modification译为mapVariableRules使用的映射，默认、state与variant均得到加工，来源保持不变。继承的onActive沿用既有激活材料身份，配置显式覆盖后按实际依赖消费，避免同时引用来源与结果时重复执行同一激活。Modify复用声明基础与条件步骤链，处理范围内完整结果；显式variant选择关系仅用于把同一步modify应用于实际使用的变体，不追踪任意内容输入。每阶段引用前序CSS结果，registration.inherits:false保留当地存在标记及注册初值边界。无值declare不作为加工或组件反馈的前提。
 
 compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不重写，编译或提交失败保留此前成功结果。
 
@@ -45,7 +47,7 @@ compileCSS只返回字符串；cssRoot.mount保留宿主前缀，内容未变不
 | custom-property-names.ts | Variable 与 Modification 共用的 CSS 自定义属性名称分配与避让 |
 | variable/variant-selections.ts | 内部显式用途选择关联，不进入聚合出口 |
 | variable/name.ts | CSS名称对象、逻辑名字符串化及纯CSS引用；不登记定义 |
-| variable/args-parser.ts | 默认/状态/名称简写归一，接收内部复用来源；等级为显式值、来源加一或0 |
+| variable/args-parser.ts | 默认/状态/名称简写归一，统一公开配置的来源继承与显式覆盖；等级为显式值、来源值或普通创建0 |
 | operations/declare.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
 | rule.ts | 声明组合、Rules 登记与句柄 |
 | content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
