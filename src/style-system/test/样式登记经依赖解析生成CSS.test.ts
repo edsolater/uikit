@@ -15,6 +15,7 @@ import {
   type Rules,
   type RulesHandle,
   type Declarations,
+  type DeclarationItem,
 } from '../rule'
 import { condition, media, type ConditionInput } from '../condition'
 import { key } from '../key'
@@ -206,7 +207,7 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
   expect(css).toContain('&:where(:hover) {\ncolor: blue;')
 })
 
-test('声明二元数组只配对 Key 与 content，Token 可同时作为声明 Key 和引用 Token', () => {
+test('二元条目隐式声明 Token，并保留内容引用的同一目标身份', () => {
   const content = token('black', { name: 'local-content' })
   keep(
     rules('.example', [
@@ -218,6 +219,24 @@ test('声明二元数组只配对 Key 与 content，Token 可同时作为声明 
   expect(css).toContain('--local-content: red;')
   expect(css).toContain('color: var(--local-content);')
 })
+
+test.each(['css-declaration', 'css-modification'])(
+  '普通表达式的同名 kind=%s 字段不改变 Token 基础内容',
+  (kind) => {
+    const name = `entry-expression-${kind}`
+    const size = token('2px', { name, address: '.EntryExpression' })
+    const expression = Object.assign(createJSSContent(() => '11px'), { kind })
+    keep(
+      rules('.EntryExpression', [
+        [size, expression],
+        ['width', size],
+      ]),
+    )
+    const css = compileCSS()
+    expect(css).toContain(`--${name}: 11px;`)
+    expect(css).toContain(`width: var(--${name});`)
+  },
+)
 
 test('声明名称指向明确属性，不猜测未知名称', () => {
   keep(rule('.Names', 'alignItems', 'center'))
@@ -241,23 +260,26 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
   )
 })
 
-test('嵌套组合保留重复顺序、Token 目标、内容身份与 undefined', () => {
+test('对象与字符串条目混入嵌套 Iterable 后保留声明顺序和内容', () => {
   const local = token('black', { name: 'ordered-local' })
   const content = vi.fn(() => '4px')
   const nested: Declarations = [
-    [key('margin'), '1px'],
+    ['margin', '1px'],
     [
-      [key('margin-left'), '2px'],
-      [key('margin'), '3px'],
+      { marginLeft: '2px' },
+      ['margin', '3px'],
     ],
     undefined,
-    [
+    new Set<DeclarationItem>([
       [local, 'red'],
-      [key('padding'), createJSSContent(content)],
-      [key('color'), local],
-    ],
+      { padding: createJSSContent(content) },
+      ['color', local],
+    ]),
   ]
   keep(rules('.Ordered', nested))
+  key('padding-block')
+  keep(rules('.ObjectInput', { paddingBlock: '2px' }))
+  keep(rules('.SingleEntry', ['outline-offset', '3px']))
   expect(content).not.toHaveBeenCalled()
   const css = compileCSS()
   expect(
@@ -271,7 +293,48 @@ test('嵌套组合保留重复顺序、Token 目标、内容身份与 undefined'
   expect(css).toContain('--ordered-local: red;')
   expect(css).toContain('padding: 4px;')
   expect(css).toContain('color: var(--ordered-local);')
+  expect(css).toContain('padding-block: 2px;')
+  expect(css).toContain('outline-offset: 3px;')
   expect(content).toHaveBeenCalled()
+})
+
+test('二元组保留 Key 的组合协议和 Token 的资源身份，不使用 JS 字符串化', () => {
+  const baseline = compileCSS()
+  const total = Object.assign(
+    key('entry-total', {
+      join: (values) =>
+        values.reduce((sum, value) => sum + Number(value.content), 0),
+    }),
+    {
+      toString() {
+        throw new Error('声明目标不能经过 JS 字符串化。')
+      },
+    },
+  )
+  const size = Object.assign(
+    token('4px', {
+      name: 'entry-resource-size',
+      registration: { syntax: '<length>', inherits: true, initialValue: '1px' },
+      onFirstScan: () => [[['.EntryResource'], 'height', '2px']] as Rules,
+    }),
+    { toString: () => '业务标识而非属性名称' },
+  )
+  const batch = keep(
+    rules(':root', [
+      [total, 2],
+      { 'entry-total': 3 },
+      [size, '6px'],
+      ['width', size],
+    ]),
+  )
+  const css = compileCSS()
+  expect(css).toContain('entry-total: 5;')
+  expect(css).toContain('--entry-resource-size: 6px;')
+  expect(css).toContain('width: var(--entry-resource-size);')
+  expect(css).toContain('@property --entry-resource-size')
+  expect(css).toContain('.EntryResource')
+  batch.remove()
+  expect(compileCSS()).toBe(baseline)
 })
 
 test('嵌套批量声明与单项属性不会混淆', () => {

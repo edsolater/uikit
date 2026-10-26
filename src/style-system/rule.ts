@@ -1,4 +1,10 @@
-/** Rule 登记与声明组合。 */
+/**
+ * Rule 登记与声明组合。
+ *
+ * 将多种声明写法统一为有序声明，再交给源账本登记。
+ *
+ * 让对象和保留目标身份的条目共享相同声明语义。
+ */
 import {
   assert,
   isArray,
@@ -9,7 +15,7 @@ import {
 } from '@edsolater/fnkit'
 import { condition, type Condition, type ConditionInput } from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
-import { isCSSPair, type Declaration } from './operations/declare'
+import { declare, isCSSPair, type Declaration } from './operations/declare'
 import type { TokenInput } from './token/core'
 import { registerRule } from './rule-registry'
 
@@ -27,16 +33,19 @@ export type Rule = [
 export type Rules = Rule[]
 
 /** 以字符串名称表达的声明对象。 */
-type DeclarationObject = Record<string, RuleValue>
+export type DeclarationObject = Record<string, RuleValue>
 
-/** 声明序列中的单项；可继续嵌套声明 Iterable。 */
+/** 一条声明、名称对象或嵌套集合；undefined 表示空项。 */
 export type DeclarationItem =
-  Declaration<RuleValue> | DeclarationGroup | undefined
+  | Readonly<Declaration<RuleValue>>
+  | DeclarationObject
+  | DeclarationGroup
+  | undefined
 
 /** 按输入顺序提供声明条目的通用 Iterable。 */
 export type DeclarationGroup = object & Iterable<DeclarationItem>
 
-/** Mixin 与批量登记共用的声明输入。 */
+/** Mixin 提供的可迭代声明集合，可与其他声明输入组合。 */
 export type Declarations = DeclarationGroup
 
 /** 本次登记的删除入口。 */
@@ -127,11 +136,12 @@ function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
 }
 
 /**
- * 批量登记声明；无效输入整批拒绝，undefined 内容跳过。
+ * 展开对象与嵌套 Iterable，各条目隐式声明后整批登记；无效输入整批拒绝。
+ * 空项和普通属性的 undefined 跳过，Token 的显式 undefined 保留声明身份。
  */
 export function rules(
   path: ConditionInput,
-  declarations: Declaration<RuleValue> | Declarations,
+  declarations: DeclarationItem,
 ): RulesHandle {
   const conditionPath = rulePath(path)
   const entries: Rule[] = []
@@ -142,17 +152,14 @@ export function rules(
   const visit = (source: unknown): void => {
     if (source === undefined) return
     if (isCSSPair(source)) {
-      if (source[1] !== undefined)
-        entries.push([
-          conditionPath,
-          resolveJSSKey(source[0]),
-          source[1] as RuleValue,
-        ])
+      const [key, content] = declare(source[0], source[1])
+      if (content !== undefined)
+        entries.push([conditionPath, key, content as RuleValue])
       return
     }
     assert(
       isDeclarationObject(source) || isDeclarationIterable(source),
-      'rules() 只接受声明序列，条目为 Key／Token 元组或其 Iterable 组合。',
+      'rules() 只接受声明序列，条目为字符串／Key／Token 元组、名称对象或其 Iterable 组合。',
     )
     assert(!visiting.has(source), 'rules() 的声明输入存在递归引用。')
     visiting.add(source)

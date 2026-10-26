@@ -2,12 +2,94 @@
 import { token } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { compileRules } from '../css-root'
+import { compileCSS, compileRules } from '../css-root'
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
 import { add, multiply } from '../pieces/contents/functions/calc'
+import { rules } from '../rule'
 
 afterEach(() => document.body.replaceChildren())
+
+test.each([false, true])(
+  'rules 的 Token 条目与显式 declare 保留根据地、空基础和撤销，隐式=%s',
+  (implicit) => {
+    const size = token('4px', {
+      name: 'entry-home-size',
+      address: '.EntryHome',
+      state: { '&[data-phase]': (base) => multiply(base, 2) },
+    })
+    const empty = token('9px', {
+      name: 'entry-home-empty',
+      address: '.EntryHome',
+    })
+    const batch = rules('.EntryHome', [
+      implicit ? [size, '6px'] : declare(size, '6px'),
+      undefined,
+      implicit ? [empty, undefined] : declare(empty, undefined),
+    ])
+    const local = rules('.EntryLocal', [
+      implicit ? [size, '7px'] : declare(size, '7px'),
+    ])
+    const consumer = rules('.EntryConsumer', {
+      width: size,
+      height: empty,
+      'min-height': 'var(--entry-home-empty, 1px)',
+    })
+    const style = document.body.appendChild(document.createElement('style'))
+    const home = document.body.appendChild(document.createElement('div'))
+    home.className = 'EntryHome EntryConsumer'
+    const outside = home.appendChild(document.createElement('div'))
+    outside.className = 'EntryLocal EntryConsumer'
+    try {
+      style.textContent = compileCSS()
+      expect.soft(getComputedStyle(home).width).toBe('6px')
+      expect.soft(getComputedStyle(home).minHeight).toBe('1px')
+      expect.soft(getComputedStyle(outside).width).toBe('7px')
+      home.dataset.phase = outside.dataset.phase = ''
+      expect.soft(getComputedStyle(home).width).toBe('12px')
+      expect.soft(getComputedStyle(outside).width).toBe('7px')
+      batch.remove()
+      style.textContent = compileCSS()
+      expect.soft(getComputedStyle(home).width).toBe('8px')
+      expect.soft(getComputedStyle(home).minHeight).toBe('9px')
+      expect.soft(getComputedStyle(outside).width).toBe('7px')
+      local.remove()
+      style.textContent = compileCSS()
+      expect.soft(getComputedStyle(outside).width).toBe('8px')
+    } finally {
+      batch.remove()
+      local.remove()
+      consumer.remove()
+    }
+  },
+)
+
+test('rules 混合已有 declare 与 modify 时保留状态基础和修改效果', () => {
+  const size = token('4px', {
+    name: 'entry-explicit-modified',
+    address: '.EntryModified',
+    state: { '&[data-phase]': (base) => multiply(base, 2) },
+  })
+  const batch = rules('.EntryModified', [
+    declare(size, '6px'),
+    modify(size, {
+      type: 'expression',
+      detail: (current) => add(current, '3px'),
+    }),
+    ['width', size],
+  ])
+  try {
+    document.body.appendChild(document.createElement('style')).textContent =
+      compileCSS()
+    const element = document.body.appendChild(document.createElement('div'))
+    element.className = 'EntryModified'
+    expect(getComputedStyle(element).width).toBe('9px')
+    element.dataset.phase = ''
+    expect(getComputedStyle(element).width).toBe('15px')
+  } finally {
+    batch.remove()
+  }
+})
 
 test('根变量的状态只属于根，局部显式10px不会随自己的状态变成8px', () => {
   const size = token('4px', {

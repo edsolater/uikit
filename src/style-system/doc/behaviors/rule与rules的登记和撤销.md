@@ -17,11 +17,30 @@ width.remove()
 
 Key 表示普通 CSS 属性；具有 CSS variable 身份的 Token 可作为自定义属性赋值目标，Token 也可作为内容引用。Mixin 将一组业务效果作为一次选择，只提供明确选择的效果：仅要求 gap 时，不能附赠 display 或 alignment。固定属性内容可以直接书写，不要求额外创建命名对象。
 
+# 多种输入统一展开为声明
+
+rules 的第二参数可以是一个 `[目标, 内容]`、普通对象，或递归嵌套的数组及标准 Iterable。普通对象按自身可枚举字符串属性展开；二元组保留 Key／Token 目标对象及内容，不先做 JS 字符串化。
+
+```ts
+const ink = token('black', { name: 'probe-ink', address: '.Probe' })
+const batch = rules('.Probe', [
+  { padding: '2px', color: ink },
+  [ink, 'blue'],
+  new Set([['border-width', '1px'] as const]),
+])
+```
+
+每个 entry 都隐式经过 declare。上例的 Token 赋值与手写 declare(ink, 'blue') 使用相同声明含义；Key 的组合规则和 Token 的根据地、状态及资源身份都保留。字符串名称沿用既有 CSS 属性、已登记别名及自定义属性解析，不从未知简写推测属性含义。
+
+集合里的裸 undefined 作为空项跳过。普通属性 undefined 不输出；`[ink, undefined]` 等价于 declare(ink, undefined)，保留显式无基础声明，不自动退回 default。已有 declare、modify 及 Mixin 返回的条目可以继续混用，归一后不产生第二层普通基础包装。
+
+展开保持顺序；entry 的内容不会被误拆成外层声明集合。非法项、递归容器或迭代中断在整批登记前失败，batch.remove() 仍只撤销本批贡献。
+
 # 同址选择与跨地址层叠分开
 
-同一完整地址、同一 Token 目标的有效贡献按声明顺序处理；Token 不保存 priority。undefined 不能压过有效值。不同地址仍交给 CSS 层叠，内部处理不能跨选择器替代浏览器决定最终结果。
+同一完整地址、同一 Token 目标的有效贡献按声明顺序处理；Token 不保存 priority。未定义内容不输出 CSS 值，但“不输出”与“不登记”不同：Token 的 undefined entry 仍保留前述显式声明身份。不同地址仍交给 CSS 层叠，内部处理不能跨选择器替代浏览器决定最终结果。
 
-同址有效赋值依次为 4、7、9 时，取 9；撤销 9 后取 7；加入 undefined 仍取 7。其他选择器下的赋值需要按 CSS 特异度和源序判断，不能照搬同址结果。
+同址有效赋值依次为 4、7、9 时，取 9；撤销 9 后取 7。集合空项和普通属性 undefined 不增加输出；Token 的显式 undefined 不输出新值，也不强制清除此前有效的 CSS 贡献，但会阻止根据地缺值时自动补回 default。其他选择器下的赋值需要按 CSS 特异度和源序判断，不能照搬同址结果。
 
 普通 Key 可约定组合多份贡献。组合保留同完整地址内参与贡献的源序，不把其他条件的内容混入。例如阴影 A、B 按逗号组合；撤销 B 后只留下 A，而不是清空整组。关键字 none 不自动成为“删除其他贡献”的编译命令。
 

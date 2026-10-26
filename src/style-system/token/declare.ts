@@ -5,7 +5,7 @@
  *
  * 让局部赋值与根据地状态遵循原生 CSS 作用域。
  */
-import { assert, isFunction, result } from '@edsolater/fnkit'
+import { assert, hasProperty, isFunction, result } from '@edsolater/fnkit'
 import {
   condition,
   conditionAddressKey,
@@ -23,9 +23,9 @@ import {
   appendStateCondition,
   type StateCondition,
 } from '../pieces/state-conditions'
-import { token, type TokenInput, type TokenStateRule } from './core'
+import { isToken, token, type TokenInput, type TokenStateRule } from './core'
 import type { ContentView } from '../content'
-import { cssOperation, type CSSCustomProperty } from './css'
+import { cssCustomProperty, cssOperation, type CSSCustomProperty } from './css'
 
 import type { ASTController, JSSStyleNode } from '../compiler/contracts'
 
@@ -117,14 +117,25 @@ export const joinCSSPropertyValues = (values: ContentView[]): TokenInput =>
   )
 
 /**
+ * 识别持有真实 CSS 目标的声明，普通内容的同名字段不构成声明协议。
+ */
+export const isCSSDeclaration = (input: unknown): input is CSSDeclaration =>
+  hasProperty(input, 'kind', (kind) => kind === 'css-declaration') &&
+  hasProperty(
+    input,
+    'variable',
+    (variable) =>
+      hasProperty(variable, 'token', isToken) &&
+      cssCustomProperty(variable.token) === variable,
+  )
+
+/**
  * 读取显式声明绑定的 CSS 目标，不从名称借用另一份定义。
  */
 export const declaredCSSProperty = (
   node: JSSStyleNode,
 ): CSSCustomProperty | undefined =>
-  (node.content as CSSDeclaration | undefined)?.kind === 'css-declaration'
-    ? (node.content as CSSDeclaration).variable
-    : undefined
+  isCSSDeclaration(node.content) ? node.content.variable : undefined
 
 /**
  * 取得本次 AST 声明已经建立的基础和状态产物。
@@ -385,8 +396,7 @@ export function prepareCSSDeclaration(
   context: JSSCompileContext,
   controller: ASTController,
 ): unknown {
-  if ((input as CSSDeclaration).kind !== 'css-declaration') return input
-  const declaration = input as CSSDeclaration
-  ensureDefinition(context.node, controller, declaration.variable)
-  return declaration.content
+  if (!isCSSDeclaration(input)) return input
+  ensureDefinition(context.node, controller, input.variable)
+  return input.content
 }

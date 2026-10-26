@@ -5,43 +5,48 @@
  *
  * 声明目标的 CSS 名称由坍缩边界负责。
  */
-import { isArray, assert } from '@edsolater/fnkit'
-import { isJSSKey, type JSSKey } from '../key'
+import { isArray, assert, hasProperty } from '@edsolater/fnkit'
+import { isJSSKey, resolveJSSKey, type JSSKey } from '../key'
 import { isToken, type Token, type TokenInput } from '../token/core'
-import { cssCustomProperty } from '../token/css'
-import { declareCSSProperty } from '../token/declare'
+import { cssCustomProperty, cssPreparation } from '../token/css'
+import { declareCSSProperty, isCSSDeclaration } from '../token/declare'
 
 /** 一条目标与内容配对，未定义内容不输出 CSS。 */
-export type Declaration<C = TokenInput | undefined> = [
-  key: Exclude<JSSKey, string>,
-  content: C,
-]
+export type Declaration<C = TokenInput | undefined> = [key: JSSKey, content: C]
 
 /**
  * 识别二元声明，不解析或输出目标的内容。
  */
-export const isCSSPair = (input: unknown): input is [JSSKey, unknown] =>
+export const isCSSPair = (
+  input: unknown,
+): input is Readonly<Declaration<unknown>> =>
   isArray(input) && input.length === 2 && isJSSKey(input[0])
 
 /**
- * 声明 Token 的基础或替换值；普通属性直接配对指定内容。
+ * 声明 Token 的基础或替换值；普通属性解析名称后配对，现成声明与修改保留语义。
+ * Token 省略内容时采用自身基础；显式 undefined 保留无基础声明。
  */
 export function declare(target: Token, content?: TokenInput): Declaration
 export function declare<C = TokenInput | undefined>(
-  key: Exclude<JSSKey, string>,
+  key: JSSKey,
   content: C,
 ): Declaration<C>
 export function declare(
-  key: Exclude<JSSKey, string>,
+  key: JSSKey,
   ...contents: unknown[]
 ): Declaration<unknown> {
   assert(isJSSKey(key), 'declare 需要有效属性或 Token。')
+  key = resolveJSSKey(key)
   if (isToken(key)) {
     const target = cssCustomProperty(key)
-    const declaration = declareCSSProperty(
-      target,
-      (contents.length ? contents[0] : target.content) as TokenInput,
+    const content = contents.length ? contents[0] : target.content
+    if (
+      (isCSSDeclaration(content) && content.variable === target) ||
+      (hasProperty(content, 'kind', (kind) => kind === 'css-modification') &&
+        cssPreparation(content))
     )
+      return [key, content]
+    const declaration = declareCSSProperty(target, content as TokenInput)
     return [key, declaration[1]]
   }
   return [key, contents[0]]
