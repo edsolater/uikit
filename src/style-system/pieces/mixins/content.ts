@@ -9,21 +9,22 @@ import { isJSSContent } from '../../content'
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../contents/atom-creators/list'
-import { $font, $fontSize, $fontWeight, $lineHeight } from '../keys/font'
 import {
+  $font,
+  $fontSize,
+  $fontWeight,
+  $lineHeight,
   $gap,
   $display,
   $alignItems,
   $justifyContent,
   $alignSelf,
-} from '../keys/layout'
-import {
   $padding,
   $paddingTop,
   $paddingRight,
   $paddingBottom,
   $paddingLeft,
-} from '../keys/padding'
+} from '@/style-system/key-registry'
 import { fontValue, type FontParts } from '../contents/atom-creators/font'
 
 /** 内部文字配置。 */

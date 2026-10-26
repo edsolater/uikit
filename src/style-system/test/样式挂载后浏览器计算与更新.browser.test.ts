@@ -9,8 +9,8 @@ import { compileCSS, cssRoot as root } from '../css-root'
 import { rule, rules, type RulesHandle, type Rules } from '../rule'
 import { condition, media } from '../condition'
 import { declare } from '../operations/declare'
-import { $margin } from '../pieces/keys/margin'
-import { $padding } from '../pieces/keys/padding'
+import { $margin } from '../key-registry'
+import { $padding } from '../key-registry'
 import {
   animationName,
   animationValue,

@@ -2,19 +2,17 @@
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../contents/atom-creators/list'
-import { $minHeight } from '../keys/size'
 import {
+  $minHeight,
   $border,
   $borderColor,
   $borderRadius,
   $cornerShape,
-} from '../keys/border'
-import {
   $outlineColor,
   $outlineOffset,
   $outlineStyle,
   $outlineWidth,
-} from '../keys/outline'
+} from '@/style-system/key-registry'
 
 /** 盒子尺寸配置。 */
 export interface SizeMixinOptions {

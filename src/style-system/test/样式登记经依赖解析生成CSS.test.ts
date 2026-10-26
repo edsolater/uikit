@@ -18,17 +18,17 @@ import {
   type DeclarationItem,
 } from '../rule'
 import { condition, media, type ConditionInput } from '../condition'
-import { key } from '../key'
+import { key, registerGlobalJSSKeyInStorage } from '../key'
 import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
 import { valueSequence } from '../pieces/contents/atom-creators/list'
-import { $margin, $marginLeft } from '../pieces/keys/margin'
-import { $padding } from '../pieces/keys/padding'
-import { $border } from '../pieces/keys/border'
-import { $font } from '../pieces/keys/font'
-import { $color } from '../pieces/keys/color'
+import { $margin, $marginLeft } from '../key-registry'
+import { $padding } from '../key-registry'
+import { $border } from '../key-registry'
+import { $font } from '../key-registry'
+import { $color } from '../key-registry'
 
-import { $boxShadow } from '../pieces/keys/box-shadow'
+import { $boxShadow } from '../key-registry'
 import { shadowValue } from '../pieces/contents/atom-creators/shadow'
 import { multiply } from '../pieces/contents/functions/calc'
 
@@ -248,8 +248,8 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
   expect(css).toContain('future-property: native-value;')
   expect(css).toContain('--local-property: custom-value;')
   expect(css).toContain('justify-content: center;')
-  key('test-collision-target')
-  expect(() => key('testCollision-target')).toThrow(
+  registerGlobalJSSKeyInStorage(key('test-collision-target'))
+  expect(() => registerGlobalJSSKeyInStorage(key('testCollision-target'))).toThrow(
     'JSSKey 名称冲突：testCollisionTarget',
   )
   expect(() => rule('.PartialName', 'testCollision-target', 'value')).toThrow(
@@ -277,7 +277,6 @@ test('对象与字符串条目混入嵌套 Iterable 后保留声明顺序和内�
     ]),
   ]
   keep(rules('.Ordered', nested))
-  key('padding-block')
   keep(rules('.ObjectInput', { paddingBlock: '2px' }))
   keep(rules('.SingleEntry', ['outline-offset', '3px']))
   expect(content).not.toHaveBeenCalled()
@@ -311,6 +310,7 @@ test('二元组保留 Key 的组合协议和 Token 的资源身份，不使用 J
       },
     },
   )
+  registerGlobalJSSKeyInStorage(total)
   const size = Object.assign(
     token('4px', {
       name: 'entry-resource-size',

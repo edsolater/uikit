@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test } from 'vitest'
 import { condition } from '../condition'
 import { cssRoot } from '../css-root'
 import { key } from '../key'
-import { $boxShadow } from '../pieces/keys/box-shadow'
+import { $boxShadow } from '../key-registry'
 import { stateCondition } from '../pieces/state-conditions'
 import { rule, rules, type RulesHandle } from '../rule'
 

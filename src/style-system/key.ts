@@ -1,75 +1,43 @@
 /**
- * JSS 声明目标。
+ * JSS 声明目标的识别与名称解析。
  *
- * 创建、识别和解析声明目标。
+ * 从全局注册表解析属性名，并处理显式扩展登记。
  *
- * 属性别名由此模块统一登记。
+ * 让字符串声明使用明确的属性身份。
  */
 import { assert, hasProperty, isFunction, isString } from '@edsolater/fnkit'
-import type { ContentView } from './content'
-import { isToken, type Token, type TokenInput } from './token/core'
+import { keyRegistry } from '@/style-system/key-registry'
+import type { JSSKeyDefinition, JSSKeyObject } from './key-definition'
+import { isToken, type Token } from './token/core'
 import { cssTokenName } from './token/css'
 
-/** 原生属性名称。 */
-export interface JSSKeyObject {
-  toCSSString(): string
-  /** 同完整地址的声明等级；普通 Key 省略时为最高档 999。 */
-  priority?: number
-  /**
-   * 同 Target／State 地址、同属性名至少有两项声明时，
-   * 按声明顺序组合内容贡献；省略 join 时默认生成逗号数组。
-   *
-   * 保留输入视图时，沿用其原声明位置的编译结果；
-   * 改写 content 后，新内容在结果位置编译。
-   */
-  join?: (values: ContentView[]) => TokenInput
-}
-
-/** 原生属性名称与可输出的自定义 Key。 */
-export interface JSSKeyDefinition<
-  K extends string = string,
-> extends JSSKeyObject {
-  name: K
-}
+export { key, type JSSKeyDefinition, type JSSKeyObject } from './key-definition'
 
 /** 属性或变量声明目标。 */
 export type JSSKey = JSSKeyObject | Token | string
 
 /**
- * 创建属性 Key；name 是输出的 CSS 属性名，join 可改写重复声明的默认数组组合。
- * @example
- * const $stack = key('z-index', {
- *   join: values =>
- *     values.reduce((sum, item) => sum + Number(item.content), 0),
- * })
- * rules('.example', [[$stack, 2], [$stack, 3]])
- * compileCSS().includes('z-index: 5;') // true
- */
-export function key<K extends string>(
-  name: K,
-  options?: Pick<JSSKeyObject, 'join'>,
-): JSSKeyDefinition<K> {
-  const target: JSSKeyDefinition<K> = {
-    name,
-    toCSSString: () => name,
-    ...options,
-  }
-  registerJSSKey(target)
-  return target
-}
-
-/**
- * 识别声明目标。
+ * 识别字符串或具有 CSS 输出协议的声明目标。
  */
 export const isJSSKey = (input: unknown): input is JSSKey =>
   isString(input) || hasProperty(input, 'toCSSString', isFunction)
 
-const names = new Map<string, JSSKeyDefinition>()
+/**
+ * 按原名或已知 camelCase 别名查找目标；混合拼写不产生别名。
+ */
+function registeredKey(name: string): JSSKeyDefinition | undefined {
+  if (Object.hasOwn(keyRegistry, name)) return keyRegistry[name]
+  if (!/^[a-z][a-zA-Z0-9]*$/.test(name)) return undefined
+  const cssName = name.replace(/[A-Z]/g, (character) =>
+    '-' + character.toLowerCase(),
+  )
+  return Object.hasOwn(keyRegistry, cssName) ? keyRegistry[cssName] : undefined
+}
 
 /**
- * 登记属性原名与对象声明别名；同名目标不允许静默改指其他属性。
+ * 显式登记属性原名与别名；冲突时整体拒绝，同一原名保留首个对象。
  */
-export function registerJSSKey(target: JSSKeyDefinition): void {
+export function registerGlobalJSSKeyInStorage(target: JSSKeyDefinition): void {
   const aliases = target.name.startsWith('--')
     ? [target.name]
     : [
@@ -81,28 +49,30 @@ export function registerJSSKey(target: JSSKeyDefinition): void {
         ]),
       ]
   for (const name of aliases) {
-    const existing = names.get(name)
+    const existing = registeredKey(name)
     assert(
       !existing || existing.name === target.name,
-      `JSSKey 名称冲突：${name}。`,
+      'JSSKey 名称冲突：' + name + '。',
     )
   }
-  for (const name of aliases) if (!names.has(name)) names.set(name, target)
+  const registered = registeredKey(target.name) ?? target
+  for (const name of aliases)
+    if (!Object.hasOwn(keyRegistry, name)) keyRegistry[name] = registered
 }
 
 /**
- * 解析对象与字符串条目中的声明名称；原生属性和自定义属性保持字符串入口。
+ * 解析声明目标；未知合法原生名和自定义属性直通，未知别名报错。
  */
 export function resolveJSSKey(input: JSSKey): JSSKey {
   if (!isString(input)) return input
-  const registered = names.get(input)
+  const registered = registeredKey(input)
   if (registered) return registered
   if (
     (input.startsWith('--') && input.length > 2) ||
     /^-?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(input)
   )
     return input
-  throw new Error(`未知 JSSKey 名称：${input}。`)
+  throw new Error('未知 JSSKey 名称：' + input + '。')
 }
 
 /**

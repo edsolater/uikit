@@ -31,7 +31,8 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | condition.ts                                                  | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份     |
 | pieces/state-conditions.ts                                    | 主体状态名称、条件登记、中央顺序与状态路径追加                                     |
-| key.ts                                                        | JSSKey 的创建、识别与别名解析                                                      |
+| key-definition.ts                                             | JSSKey 定义类型及无登记副作用的纯构造                                               |
+| key.ts                                                        | 声明目标识别、原名与别名解析、显式登记自定义 Key                                   |
 | custom-property-names.ts                                      | Token 与 Modification 共用的 CSS 自定义属性名称分配与避让                          |
 | token/css.ts                                                  | CSS 名称、声明目标及编译准备操作；自动名称缓存不作为显式配置                       |
 | token/args-parser.ts                                          | 创建参数归一为七个固定 key                                                         |
@@ -58,7 +59,8 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | compiler/ast-controller.ts                                    | 节点变化与顺序事实、节点查询、实际内容记录与位置视图读取、声明编辑及撤销生命周期   |
 | compiler/compiled-content.ts                                  | Join 与状态配方读取的中性位置内容视图，不重新求值原内容                            |
 | compiler/content-nodes-to-css-string.ts                       | 惰性读取已编译内容，并按 JSSContentNode 队列顺序输出 CSS 字符串                    |
-| pieces/keys                                                   | 可复用的 JSSKey 定义；创建时由 key() 登记名称与别名                                |
+| key-registry                                                  | 按规范模块组织现成 Key 变量与分类字面量，主属性及其延伸族连续排列                  |
+| key-registry/index.ts                                         | 静态汇总唯一 keyRegistry；字符串查找直接依赖完整表，显式扩展写入同一表            |
 | pieces/conditions                                             | 可复用的普通 Condition；条件协议由 condition.ts 定义                               |
 | pieces/contents/atoms                                         | 按用途组织的现成 Token                                                             |
 | pieces/contents/functions                                     | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |

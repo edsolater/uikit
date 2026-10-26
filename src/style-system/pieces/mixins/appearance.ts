@@ -2,8 +2,11 @@
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
 import { valueList } from '../contents/atom-creators/list'
-import { $backgroundColor, $color } from '../keys/color'
-import { $boxShadow } from '../keys/box-shadow'
+import {
+  $backgroundColor,
+  $color,
+  $boxShadow,
+} from '@/style-system/key-registry'
 
 /** 内容色与背景颜色配置。 */
 export interface ColorMixinOptions {

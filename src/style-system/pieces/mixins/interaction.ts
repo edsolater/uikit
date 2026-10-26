@@ -2,19 +2,24 @@
 import { token, type TokenAddress } from '../../token'
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
-import { $cursor, $userSelect } from '../keys/interaction'
-import { $opacity } from '../keys/opacity'
-import { $transform } from '../keys/transform'
-import { $transition } from '../keys/transition'
-import { $backgroundColor, $color } from '../keys/color'
-import { $borderColor } from '../keys/border'
-import { $boxShadow } from '../keys/box-shadow'
+import {
+  $cursor,
+  $userSelect,
+  $opacity,
+  $transform,
+  $transition,
+  $backgroundColor,
+  $color,
+  $borderColor,
+  $boxShadow,
+  $outline,
+  $outlineOffset,
+} from '@/style-system/key-registry'
 import { translateY } from '../contents/functions/transform'
 import { opacity } from '../contents/atoms/opacity'
 import { multiply } from '../contents/functions/calc'
 import { motionDuration, motionEasing } from '../contents/atoms/motion'
 import { transitionValue } from '../contents/atom-creators/transition'
-import { $outline, $outlineOffset } from '../keys/outline'
 import { focusOutline, focusOffset } from '../contents/atoms/focus'
 
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */

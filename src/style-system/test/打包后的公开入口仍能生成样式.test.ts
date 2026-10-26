@@ -10,6 +10,68 @@
 import { execFileSync } from 'node:child_process'
 import { expect, test } from 'vitest'
 
+test('仅具名导入声明和编译入口，字符串属性无需 Key 初始化即可打包消费', () => {
+  const output = runBundledConsumer(`
+    import { rules, compileCSS } from './src/style-system/index.ts'
+    rules('.Camel', {
+      paddingTop: '7px',
+      lineHeight: 1.5,
+      scrollMarginBlockStart: '13px',
+    })
+    rules('.Kebab', [
+      ['padding-top', '7px'],
+      ['line-height', 1.5],
+      ['scroll-margin-block-start', '13px'],
+    ])
+    rules('.Shadow', [
+      ['boxShadow', '1px 2px red'],
+      ['box-shadow', '3px 4px blue'],
+    ])
+    export const css = compileCSS()
+  `)
+  expect(output.match(/padding-top: 7px;/g)).toHaveLength(2)
+  expect(output.match(/line-height: 1.5;/g)).toHaveLength(2)
+  expect(output.match(/scroll-margin-block-start: 13px;/g)).toHaveLength(2)
+  expect(output).toContain('box-shadow: 1px 2px red, 3px 4px blue;')
+  expect(output.match(/box-shadow:/g)).toHaveLength(1)
+})
+
+/**
+ * 打包并执行具名导入的消费者，返回其 CSS；构建或执行失败直接抛错。
+ */
+function runBundledConsumer(source: string): string {
+  const probe = `
+    const result = await Bun.build({
+      entrypoints: ['key-registry-consumer'],
+      target: 'browser', write: false, minify: true,
+      plugins: [{ name: '具名导入消费者', setup(build) {
+        build.onResolve({ filter: /^key-registry-consumer$/ }, () => ({
+          path: 'key-registry-consumer', namespace: 'consumer',
+        }))
+        build.onLoad({ filter: /.*/, namespace: 'consumer' }, () => ({
+          contents: ${JSON.stringify(source)},
+          loader: 'ts', resolveDir: process.cwd(),
+        }))
+      } }],
+    })
+    if (!result.success)
+      throw new Error(result.logs.map(log => log.message).join('\\n'))
+    const { mkdirSync, unlinkSync } = await import('node:fs')
+    const { pathToFileURL } = await import('node:url')
+    const directory = process.cwd() + '/agents/run/key-registry'
+    mkdirSync(directory, { recursive: true })
+    const modulePath = directory + '/consumer-' + crypto.randomUUID() + '.mjs'
+    await Bun.write(modulePath, await result.outputs[0].text())
+    try {
+      const consumer = await import(pathToFileURL(modulePath).href)
+      console.log(consumer.css)
+    } finally {
+      unlinkSync(modulePath)
+    }
+  `
+  return execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
+}
+
 test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
   const probe = `
     const result = await Bun.build({ entrypoints: ['./src/style-system/index.ts'], target: 'browser', write: false, minify: false })
@@ -58,44 +120,31 @@ test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
 })
 
 test('直接打包消费现成 Key，名称和别名保留同一定义及默认或显式组合', () => {
-  const probe = `
-    const result = await Bun.build({ entrypoints: ['bundle-key-probe'], target: 'browser', write: false, minify: true,
-      plugins: [{ name: '内存测试入口', setup(build) {
-        build.onResolve({ filter: /^bundle-key-probe$/ }, () => ({ path: 'bundle-key-probe', namespace: 'probe' }))
-        build.onLoad({ filter: /.*/, namespace: 'probe' }, () => ({
-          contents: "export * from './src/style-system/index.ts'; export { $boxShadow } from './src/style-system/pieces/keys/box-shadow.ts'",
-          loader: 'ts', resolveDir: process.cwd(),
-        }))
-      } }],
-    })
-    if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\\n'))
-    const source = await result.outputs[0].text()
-    const modulePath = process.cwd() + '/agents/run/bundle-keys-' + crypto.randomUUID() + '.mjs'
-    await Bun.write(modulePath, source)
-    try {
-    const { pathToFileURL } = await import('node:url')
-    const styleSystem = await import(pathToFileURL(modulePath).href)
-    const { $boxShadow, resolveJSSKey } = styleSystem
+  const output = runBundledConsumer(`
+    import {
+      $boxShadow, resolveJSSKey, key, token, rules, compileCSS,
+      registerGlobalJSSKeyInStorage,
+    } from './src/style-system/index.ts'
     if (resolveJSSKey('box-shadow') !== $boxShadow || resolveJSSKey('boxShadow') !== $boxShadow)
       throw new Error('现成 Key 的名称与别名没有解析到原定义。')
-    styleSystem.rules('.BundledMaterial', [[$boxShadow, '1px 2px red'], ['box-shadow', '3px 4px blue'], ['boxShadow', '5px 6px green']])
-    const spacing = styleSystem.key('bundle-combined-spacing', { join: items => styleSystem.token({ default: items }, { toCSSString: (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ') }) })
+    rules('.BundledMaterial', [[$boxShadow, '1px 2px red'], ['box-shadow', '3px 4px blue'], ['boxShadow', '5px 6px green']])
+    const spacing = key('bundle-combined-spacing', { join: items => token({ default: items }, { toCSSString: (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ') }) })
+    if (resolveJSSKey(spacing.name) !== spacing.name)
+      throw new Error('纯构造不得登记。')
+    rules('.Direct', [[spacing, '2px'], [spacing, '3px']])
+    registerGlobalJSSKeyInStorage(spacing)
     if (resolveJSSKey(spacing.name) !== spacing || resolveJSSKey('bundleCombinedSpacing') !== spacing)
-      throw new Error('新建 Key 的名称与别名没有解析到原定义。')
-    styleSystem.rules('.BundledCustomJoin', [[spacing, '2px'], [spacing.name, '3px'], ['bundleCombinedSpacing', '4px']])
-    console.log(styleSystem.compileCSS())
-    } finally {
-      const { unlinkSync } = await import('node:fs')
-      unlinkSync(modulePath)
-    }
-  `
-  const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
+      throw new Error('显式登记后名称与别名必须沿用原对象。')
+    rules('.BundledCustomJoin', [[spacing, '2px'], [spacing.name, '3px'], ['bundleCombinedSpacing', '4px']])
+    export const css = compileCSS()
+  `)
   expect(output).toContain(
     'box-shadow: 1px 2px red, 3px 4px blue, 5px 6px green;',
   )
   expect(output.match(/box-shadow:/g)).toHaveLength(1)
   expect(output).toContain('bundle-combined-spacing: 2px 3px 4px;')
-  expect(output.match(/bundle-combined-spacing:/g)).toHaveLength(1)
+  expect(output).toContain('.Direct {\nbundle-combined-spacing: 2px 3px;')
+  expect(output.match(/bundle-combined-spacing:/g)).toHaveLength(2)
 })
 
 test('发布包根与样式子路径独立消费，区分点击插件与样式', () => {
@@ -139,12 +188,3 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
     distinctClickable: true,
   })
 })
-
-/**
- * 本用例选择空格序列输出，空项不占位置。
- */
-const arraySequenceToCSSString = (items, resolve) =>
-  items
-    .map(resolve)
-    .filter((item) => item !== undefined)
-    .join(' ')
