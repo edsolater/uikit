@@ -27,6 +27,10 @@ test('仅具名导入声明和编译入口，字符串属性无需 Key 初始化
       ['boxShadow', '1px 2px red'],
       ['box-shadow', '3px 4px blue'],
     ])
+    rules('.Images', [
+      ['backgroundImage', 'url("a.png")'],
+      ['background-image', 'url("b.png")'],
+    ])
     export const css = compileCSS()
   `)
   expect(output.match(/padding-top: 7px;/g)).toHaveLength(2)
@@ -34,6 +38,7 @@ test('仅具名导入声明和编译入口，字符串属性无需 Key 初始化
   expect(output.match(/scroll-margin-block-start: 13px;/g)).toHaveLength(2)
   expect(output).toContain('box-shadow: 1px 2px red, 3px 4px blue;')
   expect(output.match(/box-shadow:/g)).toHaveLength(1)
+  expect(output).toContain('background-image: url("a.png"), url("b.png");')
 })
 
 /**

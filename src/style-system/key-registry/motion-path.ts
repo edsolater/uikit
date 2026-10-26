@@ -1,13 +1,11 @@
 /**
- * CSS motion-path 模块的属性目标。
+ * 运动路径的属性目标。
  *
- * 定义具名 Key 及 CSS 原名对应表。
+ * 定义沿路径定位时的路径、距离、锚点和朝向。
  *
- * 让字符串与具名声明共用同一属性身份。
+ * 让同一用途的声明在一处查找与维护。
  */
 import { key } from '@/style-system/key-definition'
-
-// --- offset 属性族 ---
 
 export const $offset = key('offset')
 
@@ -21,7 +19,7 @@ export const $offsetPosition = key('offset-position')
 
 export const $offsetRotate = key('offset-rotate')
 
-/** motion-path 模块的 CSS 原名与具名 Key 对应表。 */
+/** 运动路径的 CSS 原名与具名 Key 对应表。 */
 export const motionPathKeys = {
   'offset': $offset,
   'offset-anchor': $offsetAnchor,

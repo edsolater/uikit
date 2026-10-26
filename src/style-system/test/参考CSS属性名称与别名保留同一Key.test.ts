@@ -4,10 +4,11 @@
  * 验证完整参考清单、别名身份及显式登记后的组合效果。
  *
  * 防止漏表被字符串直通掩盖，或纯创建意外改变全局名称查找。
- * MDN Properties 2026-10-26 快照取自 Plan CSV，排除浏览器前缀。
+ * MDN Properties 2026-10-26 快照按用途与收录契约筛选，排除废弃与未获准项。
  */
 import { readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
+import * as styleSystem from '../index'
 import {
   $paddingTop,
   compileCSS,
@@ -26,6 +27,31 @@ const cssProperties = JSON.parse(
     'utf8',
   ),
 ) as string[]
+
+test('预置属性排除废弃和无支持证据项，保留用户自定义声明入口', () => {
+  const excluded = [
+    'box-align', 'box-direction', 'box-flex', 'box-flex-group', 'box-lines',
+    'box-ordinal-group', 'box-orient', 'box-pack', 'clip',
+    'page-break-after', 'page-break-before', 'page-break-inside',
+    'text-decoration-skip', 'user-modify', 'background-repeat-x',
+    'background-repeat-y', 'font-synthesis-position', 'link-parameters',
+    'path-length', 'speak-as', 'caret', 'image-resolution', 'line-height-step',
+    'font-smooth',
+  ]
+  for (const name of excluded) {
+    expect(Object.hasOwn(keyRegistry, name), name).toBe(false)
+    const variable = '$' + name.replace(/-([a-z0-9])/g, (_, character: string) =>
+      character.toUpperCase(),
+    )
+    expect(styleSystem, variable).not.toHaveProperty(variable)
+    expect(resolveJSSKey(name), name).toBe(name)
+  }
+  expect(Object.keys(keyRegistry).some(name => name.startsWith('-'))).toBe(false)
+  expect(typeof resolveJSSKey('font-stretch')).toBe('object')
+  expect(resolveJSSKey('--app-custom-color')).toBe('--app-custom-color')
+  const custom = key('app-custom-layout')
+  expect(resolveJSSKey(custom)).toBe(custom)
+})
 
 test('参考属性全集无需预热，原名与别名解析到同一个 Key', () => {
   expect(Object.keys(keyRegistry).sort()).toEqual([...cssProperties].sort())

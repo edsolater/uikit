@@ -1,31 +1,23 @@
 /**
- * CSS table 模块的属性目标。
+ * 表格网格的属性目标。
  *
- * 定义具名 Key 及 CSS 原名对应表。
+ * 组织表格布局、单元格间隔/边框合并、空单元格及标题位置；不接管普通盒子外框。
  *
- * 让字符串与具名声明共用同一属性身份。
+ * 让同一用途的声明在一处查找与维护。
  */
 import { key } from '@/style-system/key-definition'
-
-// --- border 属性族 ---
 
 export const $borderCollapse = key('border-collapse')
 
 export const $borderSpacing = key('border-spacing')
 
-// --- caption-side 属性族 ---
-
 export const $captionSide = key('caption-side')
-
-// --- empty-cells 属性族 ---
 
 export const $emptyCells = key('empty-cells')
 
-// --- table-layout 属性族 ---
-
 export const $tableLayout = key('table-layout')
 
-/** table 模块的 CSS 原名与具名 Key 对应表。 */
+/** 表格网格的 CSS 原名与具名 Key 对应表。 */
 export const tableKeys = {
   'border-collapse': $borderCollapse,
   'border-spacing': $borderSpacing,

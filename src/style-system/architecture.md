@@ -59,7 +59,7 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | compiler/ast-controller.ts                                    | 节点变化与顺序事实、节点查询、实际内容记录与位置视图读取、声明编辑及撤销生命周期   |
 | compiler/compiled-content.ts                                  | Join 与状态配方读取的中性位置内容视图，不重新求值原内容                            |
 | compiler/content-nodes-to-css-string.ts                       | 惰性读取已编译内容，并按 JSSContentNode 队列顺序输出 CSS 字符串                    |
-| key-registry                                                  | 按规范模块组织现成 Key 变量与分类字面量，主属性及其延伸族连续排列                  |
+| key-registry                                                  | 按直接用途组织现成 Key 与分类字面量；背景独立，边框/轮廓/盒阴影归统一外框          |
 | key-registry/index.ts                                         | 静态汇总唯一 keyRegistry；字符串查找直接依赖完整表，显式扩展写入同一表            |
 | pieces/conditions                                             | 可复用的普通 Condition；条件协议由 condition.ts 定义                               |
 | pieces/contents/atoms                                         | 按用途组织的现成 Token                                                             |
@@ -74,6 +74,10 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | doc                                                           | 面向使用和设计阅读的对象契约                                                       |
 
 Token 的公开接口见 [API 参考](doc/样式系统API参考.md)。上表列出当前源码的实际职责；对象定义见 [Token 设计](doc/Token设计.md)。
+
+Key 文件的用途边界与收录依据见 [Key 注册表文件职责](doc/Key注册表文件职责.md)。
+现役预置表包含 545 个属性、87 个用途文件；废弃、前缀及未满足收录证据的项不预置。
+这不限制调用方通过合法原生名称、自定义属性或显式登记扩展声明目标。
 
 ## 内容扩展与位置记录
 

@@ -1,178 +1,277 @@
 /**
- * JSS 属性名称的全局注册表。
+ * 按用途组织的 JSS 属性全局注册表。
  *
- * 静态汇总全部属性目标，并承接显式登记的自定义名称。
+ * 静态汇总预置属性目标，并承接显式登记的自定义名称。
  *
- * 保证字符串入口完整可用，不依赖具名 Key 的导入副作用。
+ * 让字符串声明直接取得属性身份，无需先导入具名 Key。
  */
 import type { JSSKeyDefinition } from '@/style-system/key-definition'
-import { anchorPositioningKeys } from './anchor-positioning'
-import { animationsKeys } from './animations'
-import { backgroundsAndBordersKeys } from './backgrounds-and-borders'
-import { basicUserInterfaceKeys } from './basic-user-interface'
-import { boxAlignmentKeys } from './box-alignment'
-import { boxModelKeys } from './box-model'
-import { boxSizingKeys } from './box-sizing'
-import { cascadingAndInheritanceKeys } from './cascading-and-inheritance'
+import { alignmentKeys } from './alignment'
+import { animationKeys } from './animation'
+import { appearanceKeys } from './appearance'
+import { backgroundKeys } from './background'
+import { baselineKeys } from './baseline'
+import { boundaryKeys } from './boundary'
+import { caretKeys } from './caret'
+import { colorAdjustmentKeys } from './color-adjustment'
 import { colorKeys } from './color'
-import { compositingAndBlendingKeys } from './compositing-and-blending'
-import { conditionalRulesKeys } from './conditional-rules'
+import { columnsKeys } from './columns'
+import { compositingKeys } from './compositing'
+import { containerKeys } from './container'
 import { containmentKeys } from './containment'
+import { contentKeys } from './content'
+import { counterKeys } from './counter'
+import { cursorKeys } from './cursor'
+import { decorationBreakKeys } from './decoration-break'
 import { displayKeys } from './display'
-import { filterEffectsKeys } from './filter-effects'
-import { flexibleBoxLayoutKeys } from './flexible-box-layout'
-import { fontsKeys } from './fonts'
+import { filterKeys } from './filter'
+import { flexKeys } from './flex'
+import { floatKeys } from './float'
+import { fontKeys } from './font'
 import { fragmentationKeys } from './fragmentation'
-import { gapsKeys } from './gaps'
-import { generatedContentKeys } from './generated-content'
-import { gridLayoutKeys } from './grid-layout'
-import { imagesKeys } from './images'
-import { inlineKeys } from './inline'
-import { listsAndCountersKeys } from './lists-and-counters'
-import { logicalPropertiesAndValuesKeys } from './logical-properties-and-values'
-import { maskingKeys } from './masking'
-import { mathmlKeys } from './mathml'
-import { mobileTextSizeAdjustmentKeys } from './mobile-text-size-adjustment'
+import { gapDecorationKeys } from './gap-decoration'
+import { gapKeys } from './gap'
+import { gridKeys } from './grid'
+import { hitTestingKeys } from './hit-testing'
+import { imageRenderingKeys } from './image-rendering'
+import { initialLetterKeys } from './initial-letter'
+import { interactivityKeys } from './interactivity'
+import { interestKeys } from './interest'
+import { lineBoxKeys } from './line-box'
+import { listKeys } from './list'
+import { marginKeys } from './margin'
+import { maskKeys } from './mask'
+import { mathKeys } from './math'
 import { motionPathKeys } from './motion-path'
-import { multiColumnLayoutKeys } from './multi-column-layout'
-import { nonStandardKeys } from './non-standard'
+import { objectFitKeys } from './object-fit'
+import { orderKeys } from './order'
 import { overflowKeys } from './overflow'
-import { overscrollBehaviorKeys } from './overscroll-behavior'
-import { pagedMediaKeys } from './paged-media'
-import { pointerEventsKeys } from './pointer-events'
-import { positionedLayoutKeys } from './positioned-layout'
-import { rhythmicSizingKeys } from './rhythmic-sizing'
+import { overscrollKeys } from './overscroll'
+import { paddingKeys } from './padding'
+import { pageKeys } from './page'
+import { positionKeys } from './position'
+import { readingOrderKeys } from './reading-order'
+import { resetKeys } from './reset'
+import { resizeKeys } from './resize'
 import { rubyKeys } from './ruby'
-import { scrollAnchoringKeys } from './scroll-anchoring'
-import { scrollDrivenAnimationsKeys } from './scroll-driven-animations'
+import { scrollAnchorKeys } from './scroll-anchor'
+import { scrollBehaviorKeys } from './scroll-behavior'
+import { scrollMarginKeys } from './scroll-margin'
+import { scrollNavigationKeys } from './scroll-navigation'
+import { scrollPaddingKeys } from './scroll-padding'
 import { scrollSnapKeys } from './scroll-snap'
-import { scrollbarsStylingKeys } from './scrollbars-styling'
-import { shapesKeys } from './shapes'
-import { speechKeys } from './speech'
-import { svgKeys } from './svg'
+import { scrollbarKeys } from './scrollbar'
+import { selectionKeys } from './selection'
+import { sizeInterpolationKeys } from './size-interpolation'
+import { sizeKeys } from './size'
+import { stackingKeys } from './stacking'
+import { svgColorKeys } from './svg-color'
+import { svgFillKeys } from './svg-fill'
+import { svgGeometryKeys } from './svg-geometry'
+import { svgGradientKeys } from './svg-gradient'
+import { svgMarkerKeys } from './svg-marker'
+import { svgPaintOrderKeys } from './svg-paint-order'
+import { svgRenderingKeys } from './svg-rendering'
+import { svgStrokeKeys } from './svg-stroke'
+import { svgTextKeys } from './svg-text'
 import { tableKeys } from './table'
-import { textKeys } from './text'
+import { textAlignKeys } from './text-align'
 import { textDecorationKeys } from './text-decoration'
-import { transformsKeys } from './transforms'
-import { transitionsKeys } from './transitions'
-import { valuesAndUnitsKeys } from './values-and-units'
-import { viewTransitionsKeys } from './view-transitions'
-import { viewportKeys } from './viewport'
+import { textEmphasisKeys } from './text-emphasis'
+import { textIndentKeys } from './text-indent'
+import { textOverflowKeys } from './text-overflow'
+import { textShadowKeys } from './text-shadow'
+import { textSizingKeys } from './text-sizing'
+import { textSpacingKeys } from './text-spacing'
+import { textTransformKeys } from './text-transform'
+import { textWrapKeys } from './text-wrap'
+import { touchActionKeys } from './touch-action'
+import { transformKeys } from './transform'
+import { transitionKeys } from './transition'
+import { viewTransitionKeys } from './view-transition'
+import { visibilityKeys } from './visibility'
 import { willChangeKeys } from './will-change'
-import { writingModesKeys } from './writing-modes'
+import { writingModeKeys } from './writing-mode'
+import { zoomKeys } from './zoom'
 
-export * from './anchor-positioning'
-export * from './animations'
-export * from './backgrounds-and-borders'
-export * from './basic-user-interface'
-export * from './box-alignment'
-export * from './box-model'
-export * from './box-sizing'
-export * from './cascading-and-inheritance'
+export * from './alignment'
+export * from './animation'
+export * from './appearance'
+export * from './background'
+export * from './baseline'
+export * from './boundary'
+export * from './caret'
+export * from './color-adjustment'
 export * from './color'
-export * from './compositing-and-blending'
-export * from './conditional-rules'
+export * from './columns'
+export * from './compositing'
+export * from './container'
 export * from './containment'
+export * from './content'
+export * from './counter'
+export * from './cursor'
+export * from './decoration-break'
 export * from './display'
-export * from './filter-effects'
-export * from './flexible-box-layout'
-export * from './fonts'
+export * from './filter'
+export * from './flex'
+export * from './float'
+export * from './font'
 export * from './fragmentation'
-export * from './gaps'
-export * from './generated-content'
-export * from './grid-layout'
-export * from './images'
-export * from './inline'
-export * from './lists-and-counters'
-export * from './logical-properties-and-values'
-export * from './masking'
-export * from './mathml'
-export * from './mobile-text-size-adjustment'
+export * from './gap-decoration'
+export * from './gap'
+export * from './grid'
+export * from './hit-testing'
+export * from './image-rendering'
+export * from './initial-letter'
+export * from './interactivity'
+export * from './interest'
+export * from './line-box'
+export * from './list'
+export * from './margin'
+export * from './mask'
+export * from './math'
 export * from './motion-path'
-export * from './multi-column-layout'
-export * from './non-standard'
+export * from './object-fit'
+export * from './order'
 export * from './overflow'
-export * from './overscroll-behavior'
-export * from './paged-media'
-export * from './pointer-events'
-export * from './positioned-layout'
-export * from './rhythmic-sizing'
+export * from './overscroll'
+export * from './padding'
+export * from './page'
+export * from './position'
+export * from './reading-order'
+export * from './reset'
+export * from './resize'
 export * from './ruby'
-export * from './scroll-anchoring'
-export * from './scroll-driven-animations'
+export * from './scroll-anchor'
+export * from './scroll-behavior'
+export * from './scroll-margin'
+export * from './scroll-navigation'
+export * from './scroll-padding'
 export * from './scroll-snap'
-export * from './scrollbars-styling'
-export * from './shapes'
-export * from './speech'
-export * from './svg'
+export * from './scrollbar'
+export * from './selection'
+export * from './size-interpolation'
+export * from './size'
+export * from './stacking'
+export * from './svg-color'
+export * from './svg-fill'
+export * from './svg-geometry'
+export * from './svg-gradient'
+export * from './svg-marker'
+export * from './svg-paint-order'
+export * from './svg-rendering'
+export * from './svg-stroke'
+export * from './svg-text'
 export * from './table'
-export * from './text'
+export * from './text-align'
 export * from './text-decoration'
-export * from './transforms'
-export * from './transitions'
-export * from './values-and-units'
-export * from './view-transitions'
-export * from './viewport'
+export * from './text-emphasis'
+export * from './text-indent'
+export * from './text-overflow'
+export * from './text-shadow'
+export * from './text-sizing'
+export * from './text-spacing'
+export * from './text-transform'
+export * from './text-wrap'
+export * from './touch-action'
+export * from './transform'
+export * from './transition'
+export * from './view-transition'
+export * from './visibility'
 export * from './will-change'
-export * from './writing-modes'
+export * from './writing-mode'
+export * from './zoom'
 
 /** CSS 原名及显式扩展名称共用的属性目标表。 */
 export const keyRegistry: Record<string, JSSKeyDefinition> = Object.assign(
   Object.create(null),
   {
-    ...anchorPositioningKeys,
-    ...animationsKeys,
-    ...backgroundsAndBordersKeys,
-    ...basicUserInterfaceKeys,
-    ...boxAlignmentKeys,
-    ...boxModelKeys,
-    ...boxSizingKeys,
-    ...cascadingAndInheritanceKeys,
+    ...alignmentKeys,
+    ...animationKeys,
+    ...appearanceKeys,
+    ...backgroundKeys,
+    ...baselineKeys,
+    ...boundaryKeys,
+    ...caretKeys,
+    ...colorAdjustmentKeys,
     ...colorKeys,
-    ...compositingAndBlendingKeys,
-    ...conditionalRulesKeys,
+    ...columnsKeys,
+    ...compositingKeys,
+    ...containerKeys,
     ...containmentKeys,
+    ...contentKeys,
+    ...counterKeys,
+    ...cursorKeys,
+    ...decorationBreakKeys,
     ...displayKeys,
-    ...filterEffectsKeys,
-    ...flexibleBoxLayoutKeys,
-    ...fontsKeys,
+    ...filterKeys,
+    ...flexKeys,
+    ...floatKeys,
+    ...fontKeys,
     ...fragmentationKeys,
-    ...gapsKeys,
-    ...generatedContentKeys,
-    ...gridLayoutKeys,
-    ...imagesKeys,
-    ...inlineKeys,
-    ...listsAndCountersKeys,
-    ...logicalPropertiesAndValuesKeys,
-    ...maskingKeys,
-    ...mathmlKeys,
-    ...mobileTextSizeAdjustmentKeys,
+    ...gapDecorationKeys,
+    ...gapKeys,
+    ...gridKeys,
+    ...hitTestingKeys,
+    ...imageRenderingKeys,
+    ...initialLetterKeys,
+    ...interactivityKeys,
+    ...interestKeys,
+    ...lineBoxKeys,
+    ...listKeys,
+    ...marginKeys,
+    ...maskKeys,
+    ...mathKeys,
     ...motionPathKeys,
-    ...multiColumnLayoutKeys,
-    ...nonStandardKeys,
+    ...objectFitKeys,
+    ...orderKeys,
     ...overflowKeys,
-    ...overscrollBehaviorKeys,
-    ...pagedMediaKeys,
-    ...pointerEventsKeys,
-    ...positionedLayoutKeys,
-    ...rhythmicSizingKeys,
+    ...overscrollKeys,
+    ...paddingKeys,
+    ...pageKeys,
+    ...positionKeys,
+    ...readingOrderKeys,
+    ...resetKeys,
+    ...resizeKeys,
     ...rubyKeys,
-    ...scrollAnchoringKeys,
-    ...scrollDrivenAnimationsKeys,
+    ...scrollAnchorKeys,
+    ...scrollBehaviorKeys,
+    ...scrollMarginKeys,
+    ...scrollNavigationKeys,
+    ...scrollPaddingKeys,
     ...scrollSnapKeys,
-    ...scrollbarsStylingKeys,
-    ...shapesKeys,
-    ...speechKeys,
-    ...svgKeys,
+    ...scrollbarKeys,
+    ...selectionKeys,
+    ...sizeInterpolationKeys,
+    ...sizeKeys,
+    ...stackingKeys,
+    ...svgColorKeys,
+    ...svgFillKeys,
+    ...svgGeometryKeys,
+    ...svgGradientKeys,
+    ...svgMarkerKeys,
+    ...svgPaintOrderKeys,
+    ...svgRenderingKeys,
+    ...svgStrokeKeys,
+    ...svgTextKeys,
     ...tableKeys,
-    ...textKeys,
+    ...textAlignKeys,
     ...textDecorationKeys,
-    ...transformsKeys,
-    ...transitionsKeys,
-    ...valuesAndUnitsKeys,
-    ...viewTransitionsKeys,
-    ...viewportKeys,
+    ...textEmphasisKeys,
+    ...textIndentKeys,
+    ...textOverflowKeys,
+    ...textShadowKeys,
+    ...textSizingKeys,
+    ...textSpacingKeys,
+    ...textTransformKeys,
+    ...textWrapKeys,
+    ...touchActionKeys,
+    ...transformKeys,
+    ...transitionKeys,
+    ...viewTransitionKeys,
+    ...visibilityKeys,
     ...willChangeKeys,
-    ...writingModesKeys,
+    ...writingModeKeys,
+    ...zoomKeys,
   },
 )
