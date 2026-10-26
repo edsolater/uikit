@@ -1,5 +1,5 @@
-import { token, type TokenInput } from '../token'
 /** 修改材料替换后采用当前规则，退出时恢复基础，不沿用旧结果或重复累计。 */
+import { token, type TokenInput } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { add, multiply } from '../pieces/contents/functions/calc'

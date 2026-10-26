@@ -8,7 +8,9 @@ export interface Condition {
   header: string
 }
 
-/** 创建一层 CSS 地址。 */
+/**
+ * 创建一层 CSS 地址。
+ */
 export function condition(header: string): Condition {
   assert(isString(header), 'Condition 的 header 必须是字符串。')
   return { header }
@@ -29,7 +31,9 @@ export interface ConditionPath {
   stateConditionPath: StateConditionPath
 }
 
-/** 将目标地址与主体状态按 CSS 嵌套顺序合成输出地址。 */
+/**
+ * 将目标地址与主体状态按 CSS 嵌套顺序合成输出地址。
+ */
 export function outputConditionPath(
   conditionPath: ConditionPath,
 ): CSSConditionPath {
@@ -39,7 +43,9 @@ export function outputConditionPath(
   ]
 }
 
-/** 同一目标与规范化主体状态的输出地址。 */
+/**
+ * 生成同一目标与规范化主体状态的输出地址标识。
+ */
 export function conditionAddressKey(path: ConditionPath): string {
   return JSON.stringify([
     path.targetConditionPath.map((item) => item.header),
@@ -51,13 +57,17 @@ export function conditionAddressKey(path: ConditionPath): string {
 export type ConditionInput =
   Condition | string | (Condition | string)[] | undefined
 
-/** 创建 `@media` Condition。 */
+/**
+ * 创建 `@media` Condition。
+ */
 export function media(query: string): Condition {
   assert(isString(query), 'media 的查询必须是字符串。')
   return condition(`@media ${query}`)
 }
 
-/** 创建 CSS `@function` Condition。 */
+/**
+ * 创建 CSS `@function` Condition。
+ */
 export function functionDefinition(signature: string): Condition {
   assert(isString(signature), 'functionDefinition 的签名必须是字符串。')
   return condition(`@function ${signature}`)

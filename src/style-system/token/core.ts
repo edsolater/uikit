@@ -1,4 +1,5 @@
-/** 样式值与状态的统一定义。
+/**
+ * 样式值与状态的统一定义。
  *
  * 保存规范化基础内容及其协议方法，供样式引用和编译消费。
  *
@@ -131,7 +132,7 @@ export function token<T extends TokenData>(
       return dependencies ?? contentDependencies(self.default)
     },
     /**
-     * 输出基础直接内容或特殊格式；子内容结果由编译器提供。
+     * 输出变量引用、基础内容或特殊格式；子内容结果由编译器提供。
      */
     toCSSString(resolve = primitiveToCSSString) {
       if (self._kind === 'css-variable') return `var(${cssTokenName(self)})`

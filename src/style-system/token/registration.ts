@@ -1,4 +1,5 @@
-/** CSS 自定义属性的按需注册。
+/**
+ * CSS 自定义属性的按需注册。
  *
  * 发布类型、继承和独立初值，并按实际消费者维护共享归属。
  *
@@ -11,14 +12,18 @@ import type { ASTController, JSSStyleNode } from '../compiler/contracts'
 import type { TokenInput, TokenOptions } from './core'
 import type { CSSCustomProperty } from './css'
 
-/** 同一对象的激活期消费者；资源被同名对象替换后，旧对象的重复引用不重新覆盖注册。 */
+/**
+ * 同一对象的激活期消费者；资源被同名对象替换后，
+ * 旧对象的重复引用不重新覆盖注册。
+ */
 const registrationSessions = new WeakMap<
   object,
   Map<CSSCustomProperty, Map<JSSStyleNode, Set<unknown>>>
 >()
 
 /**
- * 按 registration 登记 CSS @property；对象首次消费时替换同址资源，全部消费者撤销后可再次激活。
+ * 按 registration 登记 CSS @property；对象首次消费时替换同址资源。
+ * 全部消费者撤销后可再次激活。
  */
 export function activateCSSRegistration(
   variable: CSSCustomProperty,
@@ -101,7 +106,8 @@ export function activateCSSRegistration(
 }
 
 /**
- * 生成 @property 的字段内容；省略 initialValue 时不提供 initial-value，生命周期由消费方处理。
+ * 生成 @property 的字段内容；省略 initialValue 时不提供 initial-value。
+ * 生命周期由消费方处理。
  */
 export function cssRegistrationDeclarations(
   registration: NonNullable<TokenOptions['registration']>,

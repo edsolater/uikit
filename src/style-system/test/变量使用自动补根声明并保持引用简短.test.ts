@@ -1,5 +1,7 @@
+/**
+ * 含当前根发布方案的输出检查；默认可用、当地覆盖等可观察目的由浏览器案例验证。
+ */
 import { token } from '../token'
-/** 含当前根发布方案的输出检查；默认可用、当地覆盖等可观察目的由浏览器案例验证。 */
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { declare } from '../operations/declare'

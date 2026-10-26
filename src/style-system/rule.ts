@@ -51,7 +51,8 @@ export interface RuleHandle extends RulesHandle {
   replace(value: RuleValue): void
 }
 
-/** 把 CSS 地址字符串表示为 Condition，现成的 Condition 保留对象。
+/**
+ * 把 CSS 地址字符串表示为 Condition，现成的 Condition 保留对象。
  * `'.Button'` → `{ header: '.Button' }`。
  * `'hover'` → `{ header: 'hover' }`，不解释状态名称。
  * 传入 Condition → 原对象。
@@ -62,7 +63,8 @@ function resolvePathCondition(item: Condition | string): Condition {
   return condition(item)
 }
 
-/** 检查规则路径成员的形状；符合要求则不改输入，否则抛错。
+/**
+ * 检查规则路径成员的形状；符合要求则不改输入，否则抛错。
  * `['hover', condition('.Button')]` 通过，输入不变。
  * 运行时传入 `[undefined]` 会抛错。
  */
@@ -73,7 +75,8 @@ function assertValidConditionPath(path: (Condition | string)[]): void {
   )
 }
 
-/** 把单项或数组输入整理成普通规则地址，拒绝不合形状的成员。
+/**
+ * 把单项或数组输入整理成普通规则地址，拒绝不合形状的成员。
  * `['.Button', '&:hover']` → 两个普通 Condition。
  * 运行时传入 `[undefined]` 会抛错。
  * `undefined` 仍返回 `undefined`，表示沿用外层路径。
@@ -88,7 +91,9 @@ function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
   return path
 }
 
-/** 登记一条规则；undefined 内容不输出。 */
+/**
+ * 登记一条规则；undefined 内容不输出。
+ */
 export function rule(
   path: ConditionInput,
   key: JSSKey | undefined,
@@ -102,14 +107,18 @@ export function rule(
   ])
 }
 
-/** 识别名称声明对象，不把类实例误当声明集合。 */
+/**
+ * 识别名称声明对象，不把类实例误当声明集合。
+ */
 function isDeclarationObject(input: unknown): input is DeclarationObject {
   if (!isObject(input) || isDeclarationIterable(input)) return false
   const prototype = Object.getPrototypeOf(input)
   return prototype === Object.prototype || prototype === null
 }
 
-/** 识别标准 Iterable；字符串名称不能作为声明序列逐字展开。 */
+/**
+ * 识别标准 Iterable；字符串名称不能作为声明序列逐字展开。
+ */
 function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
   return (
     isObjectLike(input) &&
@@ -117,7 +126,9 @@ function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
   )
 }
 
-/** 批量登记声明；无效输入整批拒绝，undefined 内容跳过。 */
+/**
+ * 批量登记声明；无效输入整批拒绝，undefined 内容跳过。
+ */
 export function rules(
   path: ConditionInput,
   declarations: Declaration<RuleValue> | Declarations,
@@ -125,7 +136,9 @@ export function rules(
   const conditionPath = rulePath(path)
   const entries: Rule[] = []
   const visiting = new Set<object>()
-  /** 收集有效声明，拒绝递归输入。 */
+  /**
+   * 收集有效声明，拒绝递归输入。
+   */
   const visit = (source: unknown): void => {
     if (source === undefined) return
     if (isCSSPair(source)) {
@@ -156,7 +169,9 @@ export function rules(
   visit(declarations)
   const handles = entries.map((entry) => registerRule(entry))
   return {
-    /** 删除本批登记。 */
+    /**
+     * 删除本批登记。
+     */
     remove() {
       for (const handle of handles) handle.remove()
     },

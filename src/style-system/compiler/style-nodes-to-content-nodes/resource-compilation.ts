@@ -1,4 +1,5 @@
-/** 本次内容编译的按需资源账本。
+/**
+ * 本次内容编译的按需资源账本。
  *
  * 收集内容激活的 Rules，完整提交同址替换和新增资源节点。
  *
@@ -18,7 +19,9 @@ interface ActivationRecord {
   nodes: JSSStyleNode[]
 }
 
-/** 按条件地址与 Key 标识同址资源，让后激活的 Rules 替换旧资源。 */
+/**
+ * 按条件地址与 Key 标识同址资源，让后激活的 Rules 替换旧资源。
+ */
 function ruleAddress(
   rule: Rule,
   identities: Map<string | symbol, number>,
@@ -56,10 +59,14 @@ export class ResourceCompilation {
     Map<'key' | 'content', Set<JSSContent>>
   >()
 
-  /** 绑定当前编译的来源与输出队列，账本不跨编译共享。 */
+  /**
+   * 绑定当前编译的来源与输出队列，账本不跨编译共享。
+   */
   constructor(private session: ASTSession) {}
 
-  /** 通知实际消费的内容，并收集它按需提供的 Rules。 */
+  /**
+   * 通知实际消费的内容，并收集它按需提供的 Rules。
+   */
   activate(
     value: JSSContent,
     context: JSSContentContext,
@@ -86,7 +93,9 @@ export class ResourceCompilation {
     }
   }
 
-  /** 按实际访问收回旧激活；暂缓中的角色保留已取得的资源，直到产物完成。 */
+  /**
+   * 按实际访问收回旧激活；暂缓中的角色保留已取得的资源，直到产物完成。
+   */
   updateConsumer(
     owner: JSSStyleNode,
     role: 'key' | 'content',
@@ -129,7 +138,9 @@ export class ResourceCompilation {
       if (!retainedRules.has(rule)) pending.owners.delete(owner)
     }
   }
-  /** 按需资源记录每一个消费者，改写撤销不影响其他消费者。 */
+  /**
+   * 按需资源记录每一个消费者，改写撤销不影响其他消费者。
+   */
   private createDependencyNodes(): JSSStyleNode[] {
     const grouped = new Map<
       string,
@@ -192,7 +203,9 @@ export class ResourceCompilation {
     })
   }
 
-  /** 将本波按需 Rules 按当前记录关联生成、撤销同址旧资源并接入下一波。 */
+  /**
+   * 将本波按需 Rules 按当前记录关联生成、撤销同址旧资源并接入下一波。
+   */
   publish(): void {
     const dependencyStyleNodes = this.createDependencyNodes()
     const replacedResources = new Set(

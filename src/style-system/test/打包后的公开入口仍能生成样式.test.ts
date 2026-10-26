@@ -1,8 +1,10 @@
-/** 真实打包的 Style System 消费测试。
+/**
+ * 真实打包的 Style System 消费测试。
  *
  * 验证公开入口、现成 Key 与创建登记在打包后仍可生成样式。
  *
- * 防止模块裁剪使名称、别名或组合协议丢失。生成模块写入临时文件，避开 Windows 对超长 data URL 的路径限制。
+ * 防止模块裁剪使名称、别名或组合协议丢失。生成模块写入临时文件，
+ * 避开 Windows 对超长 data URL 的路径限制。
  */
 /// <reference types="node" />
 import { execFileSync } from 'node:child_process'
@@ -138,7 +140,9 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
   })
 })
 
-/** 本用例选择空格序列输出，空项不占位置。 */
+/**
+ * 本用例选择空格序列输出，空项不占位置。
+ */
 const arraySequenceToCSSString = (items, resolve) =>
   items
     .map(resolve)

@@ -16,12 +16,16 @@ import type { Rules } from '../rule'
 import { isJSSContent } from '../content'
 import type { JSSStyleNode } from './contracts'
 
-/** 将源 Rules 展开为有序节点；嵌套项继承外层地址与 Key，递归或无效内容时报错。 */
+/**
+ * 将源 Rules 展开为有序节点；嵌套项继承外层地址与 Key，递归或无效内容时报错。
+ */
 export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
   const styleNodes: JSSStyleNode[] = []
   const expandingRuleGroups = new Set<Rules>()
 
-  /** 将 Rules 接到当前节点队列；嵌套项沿用上层地址与 Key。 */
+  /**
+   * 将 Rules 接到当前节点队列；嵌套项沿用上层地址与 Key。
+   */
   const appendStyleNodes = (
     rules: Rules,
     parentPath: TargetConditionPath = [],

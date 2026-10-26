@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 在浏览器验证黑盒引用链、成员状态和局部声明。 */
+import { token } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { condition } from '../condition'

@@ -1,4 +1,5 @@
-/** JSS 内容与表达式的消费协议。
+/**
+ * JSS 内容与表达式的消费协议。
  *
  * 定义广义生命周期、子内容解析与纯内容表达式的输出边界。
  *
@@ -50,7 +51,10 @@ export interface JSSContentProtocol {
   onFirstScan?: (context: JSSContentContext) => Rules | void
   /** 最早执行 onCompile 的编译波，省略为第 0 波。 */
   compileWaveIndex?: number
-  /** 同一对象每次编译只通知一次；通过 Controller 操作内容与队列，不使用返回值。 */
+  /**
+   * 同一对象每次编译只通知一次；
+   * 通过 Controller 操作内容与队列，不使用返回值。
+   */
   onCompile?: (context: JSSCompileContext, ast: ASTController) => void
   /** 随本对象一起编译的依赖内容。 */
   dependencies?: unknown[]
@@ -67,7 +71,10 @@ export type JSSContent = JSSContentProtocol &
     | Required<Pick<JSSContentProtocol, 'dependencies'>>
   )
 
-/** 只组织自身依赖与 CSS 输出的表达式；自身不承担消费位置、AST 操作或资源定义。 */
+/**
+ * 只组织自身依赖与 CSS 输出的表达式；
+ * 不承担消费位置、AST 操作或资源定义。
+ */
 export interface Expression extends JSSContentProtocol {
   dependencies: unknown[]
   toCSSString(resolve?: JSSContentResolver): string | undefined
@@ -123,7 +130,10 @@ export const isJSSContent = (input: unknown): input is JSSContent =>
     isArray(input.dependencies)) ||
   hasJSSContentOnFirstScanMethod(input)
 
-/** 一项声明贡献及其原编译位置的内容视图；替换 content 后由组合结果消费新内容。 */
+/**
+ * 一项声明贡献及其原编译位置的内容视图；
+ * 替换 content 后由组合结果消费新内容。
+ */
 export interface ContentView extends JSSContentProtocol {
   content: unknown
   dependencies: unknown[]

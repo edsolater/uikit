@@ -1,4 +1,5 @@
-/** CSS 根据地的声明与状态发布。
+/**
+ * CSS 根据地的声明与状态发布。
  *
  * 保留原始基础、默认保障和状态产物，并通过 AST 查询有效声明。
  *
@@ -296,7 +297,8 @@ export function ensureDefinition(
       },
     },
   )
-  // 非根据地显式赋值只建立当地基础；状态发布属于根据地，同根别名由 AST 统一匹配。
+  // 非根据地显式赋值只建立当地基础；状态发布属于根据地。
+  // 同根别名由 AST 统一匹配。
   if (
     controller
       .search({ key: variable.key, conditionPath: cssHomePath(variable) })

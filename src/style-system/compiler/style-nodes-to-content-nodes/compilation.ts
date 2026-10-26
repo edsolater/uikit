@@ -1,4 +1,5 @@
-/** JSS 样式节点的内容编译流程。
+/**
+ * JSS 样式节点的内容编译流程。
  *
  * 逐波推进节点、资源与连接，交付可输出的内容节点。
  *
@@ -13,7 +14,9 @@ import { NodeCompilation } from './node-compilation'
 import type { JSSStyleNode, JSSContentNode } from '../contracts'
 import { TokenCompilation } from '../../token/compilation'
 
-/** 逐波编译可改写队列；接入按需资源并稳定连接后交付有序内容节点。 */
+/**
+ * 逐波编译可改写队列；接入按需资源并稳定连接后交付有序内容节点。
+ */
 export function styleNodesToContentNodes(
   styleNodes: JSSStyleNode[],
   sourceRules: Rules,

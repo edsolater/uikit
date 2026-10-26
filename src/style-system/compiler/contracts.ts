@@ -28,7 +28,10 @@ export type ASTPosition =
 
 /** 查询和改写本次编译的样式节点。 */
 export interface ASTController {
-  /** 改写本次对象通知的共享替代结果；不直接改写声明。显式 undefined 抑制该对象输出。 */
+  /**
+   * 改写本次对象通知的共享替代结果，不直接改写声明。
+   * 显式 undefined 抑制该对象输出。
+   */
   setContent(context: JSSCompileContext, content: unknown): void
   /** 读取当前声明中内容的已编译替代结果；未访问内容保持原输入。 */
   getCompiledContent(node: JSSStyleNode, input: unknown): unknown
@@ -41,11 +44,15 @@ export interface ASTController {
   ): ContentCompilationRecord | undefined
   /** 当前输入实际访问过此内容；历史替代记录不代表仍在消费。 */
   usesContent(node: JSSStyleNode, input: unknown): boolean
-  /** 当前输出队列的有序查询，没有副作用；Key 按属性名、条件路径按输出地址匹配。 */
+  /**
+   * 当前输出队列的有序查询，没有副作用；Key 按属性名、条件路径按输出地址匹配。
+   */
   search(query: ASTQuery): JSSStyleNode[]
   /** 按同一查询语义判断是否存在节点。 */
   has(query: ASTQuery): boolean
-  /** 在指定地址选有效声明；根地址别名仍遵循原生CSS特异度。 */
+  /**
+   * 在指定地址选有效声明；根地址别名仍遵循原生 CSS 特异度。
+   */
   findDeclaration(
     query: ASTQuery & { key: JSSKey; conditionPath: ConditionPath },
     accept: (node: JSSStyleNode) => boolean,
@@ -79,7 +86,10 @@ export interface ASTController {
   release(node: JSSStyleNode, options: { owner: JSSStyleNode }): void
   /** 注册节点撤销时执行的清理；只退出输出不触发。 */
   onRemove(node: JSSStyleNode, cleanup: () => void): void
-  /** 暂缓当前通知，等待后续波重试；不撤回已经执行的内容和队列操作，无进展时报告此原因。 */
+  /**
+   * 暂缓当前通知，等待后续波重试；不撤回已经执行的内容和队列操作。
+   * 无进展时报告此原因。
+   */
   defer(node: JSSStyleNode, message: string): void
   /** 登记队列稳定后的核对；改变队列时返回 true，继续普通编译波。 */
   addSettlementCheck(check: () => boolean): void

@@ -1,5 +1,5 @@
+/** 通过实际尺寸验证根据地保障、CSS 继承和显式修改，不固定编译步骤。 */
 import { token } from '../token'
-/** 通过实际尺寸验证根据地保障、CSS继承和显式修改，不固定编译步骤。 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileRules } from '../css-root'

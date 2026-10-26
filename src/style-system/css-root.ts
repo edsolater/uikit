@@ -1,4 +1,5 @@
-/** CSSRoot 的编译与宿主提交入口。
+/**
+ * CSSRoot 的编译与宿主提交入口。
  *
  * 隔离每次编译的规则容器，将完整 CSS 提交到宿主。
  *
@@ -11,7 +12,9 @@ import { styleNodesToContentNodes } from './compiler/style-nodes-to-content-node
 import { contentNodesToCSSString } from './compiler/content-nodes-to-css-string'
 import type { Rules } from './rule'
 
-/** 依次将源 Rules 建为样式节点、已编译内容节点和 CSS 字符串。 */
+/**
+ * 依次将源 Rules 建为样式节点、已编译内容节点和 CSS 字符串。
+ */
 export function compileRules(sourceRules: Rules): string {
   const styleNodes = rulesToStyleNodes(sourceRules)
   const snapshot = snapshotRules(sourceRules)
@@ -19,7 +22,9 @@ export function compileRules(sourceRules: Rules): string {
   return contentNodesToCSSString(contentNodes)
 }
 
-/** 只复制规则容器和路径数组；业务对象保留身份，循环嵌套明确拒绝。 */
+/**
+ * 只复制规则容器和路径数组；业务对象保留身份，循环嵌套明确拒绝。
+ */
 function snapshotRules(source: Rules, visiting = new Set<Rules>()): Rules {
   assert(!visiting.has(source), 'Rules 内容存在递归引用，无法生成 CSS。')
   visiting.add(source)
@@ -44,12 +49,16 @@ interface MountedRules {
 class Root {
   private hosts = new WeakMap<HTMLStyleElement, MountedRules>()
 
-  /** 编译源账本快照，不提交 DOM。 */
+  /**
+   * 编译源账本快照，不提交 DOM。
+   */
   compile(): string {
     return compileRules(registeredRules)
   }
 
-  /** 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。 */
+  /**
+   * 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。
+   */
   mount(): this {
     const style =
       typeof document === 'undefined'
@@ -74,14 +83,18 @@ const root = new Root()
 
 /** 应用启动入口。 */
 export const cssRoot = {
-  /** 在组件渲染前把已登记 Rules 提交到固定宿主。 */
+  /**
+   * 在组件渲染前把已登记 Rules 提交到固定宿主。
+   */
   mount() {
     root.mount()
     return this
   },
 }
 
-/** 生成当前源账本的 CSS string，不写 DOM。 */
+/**
+ * 生成当前源账本的 CSS string，不写 DOM。
+ */
 export function compileCSS(): string {
   return root.compile()
 }

@@ -1,10 +1,11 @@
-import { token } from '../token'
-/** 验证变量修改的声明归属、诊断与依赖生命周期。
+/**
+ * 验证变量修改的声明归属、诊断与依赖生命周期。
  *
  * 同一流程的浏览器数值与条件组合由相邻浏览器测试验证。
  *
  * 这里检查编译失败和资源输出，不绑定内部步骤名称或查询次数。
  */
+import { token } from '../token'
 import { expect, test } from 'vitest'
 import { add } from '../pieces/contents/functions/calc'
 import { condition } from '../condition'

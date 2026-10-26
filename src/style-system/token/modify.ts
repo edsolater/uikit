@@ -1,4 +1,5 @@
-/** CSS 自定义属性根据地定义的完整结果修改链。
+/**
+ * CSS 自定义属性根据地定义的完整结果修改链。
  *
  * 消费已选应用，维护实例、步骤、当地结果及撤销。
  *
@@ -212,7 +213,8 @@ function ensureModifyInstance(
 }
 
 /**
- * 输出当前步骤的候选选择声明；空 token 关闭候选，initial 使 var() 使用对应表达式。
+ * 输出当前步骤的候选选择声明；空 token 关闭候选，
+ * initial 使 var() 使用对应表达式。
  */
 const selectionText = (
   step: CSSModificationStep,
@@ -225,7 +227,9 @@ const selectionText = (
     .map((name) => `--${name}: ${name === selected ? 'initial' : ''};`)
     .join('\n') + (step.presenceName ? `\n--${step.presenceName}: ;` : '')
 
-/** 更新同一候选的配方，不增加阶段或改变共享 ID 与源顺序。 */
+/**
+ * 更新同一候选的配方，不增加阶段或改变共享 ID 与源顺序。
+ */
 const candidateSelection = (
   step: CSSModificationStep,
   gate: () => string,
@@ -355,7 +359,8 @@ function stageReference(
   return `var(--${name}${fallback})`
 }
 /**
- * 在消费地址发布当前步骤表达式；祖先传递候选选择，局部覆盖的依赖在当地重新计算。
+ * 在消费地址发布当前步骤表达式；祖先传递候选选择，
+ * 局部覆盖的依赖在当地重新计算。
  */
 function publishStep(
   controller: ASTController,
@@ -491,7 +496,8 @@ function removeModification(
   }
 }
 /**
- * 将公开 CSS 自定义属性 的 @property 约束应用到修改用的内部变量；未配置时不生成注册。
+ * 将公开 CSS 自定义属性的 @property 约束应用到修改用的内部变量；
+ * 未配置时不生成注册。
  */
 function registerInternalVariable(
   controller: ASTController,

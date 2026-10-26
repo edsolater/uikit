@@ -1,5 +1,5 @@
-import { token, type TokenData } from '../token'
 /** 验证 Token 的数组输出规则与可变内容。 */
+import { token, type TokenData } from '../token'
 import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
@@ -205,7 +205,9 @@ test('空数组与 null 不输出，空字符串作为现存内容输出，循�
   ).toThrow('循环')
 })
 
-/** 本用例选择空格序列输出，空项不占位置。 */
+/**
+ * 本用例选择空格序列输出，空项不占位置。
+ */
 const arraySequenceToCSSString = (items, resolve) =>
   items
     .map(resolve)

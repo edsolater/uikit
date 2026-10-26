@@ -11,13 +11,17 @@ export interface ColorMixinOptions {
   background?: TokenInput
 }
 
-/** Mixin：主体颜色。 */
+/**
+ * 生成主体颜色声明。
+ */
 export const color = (options: ColorMixinOptions = {}): Declarations => [
   [$color, options.content],
   [$backgroundColor, options.background],
 ]
 
-/** Mixin：视觉层级。 */
+/**
+ * 生成视觉层级的阴影声明。
+ */
 export const elevation = (level?: TokenInput | TokenInput[]): Declarations => [
   [$boxShadow, Array.isArray(level) ? valueList(...level) : level],
 ]

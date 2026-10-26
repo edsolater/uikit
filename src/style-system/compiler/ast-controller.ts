@@ -1,4 +1,5 @@
-/** 编译会话的 AST 控制器与节点来源管理。
+/**
+ * 编译会话的 AST 控制器与节点来源管理。
  *
  * 提供节点查询、输入变化通知、队列编辑与级联撤销。
  *
@@ -35,9 +36,13 @@ export interface StyleNodeCompileState {
 
 const maximumStyleNodeCount = 100_000
 
-/** 为本次编译建立无当前位置的队列控制器。 */
+/**
+ * 为本次编译建立无当前位置的队列控制器。
+ */
 export function createASTController(session: ASTSession): ASTController {
-  /** 固定本次查询的名称与地址，为收集与存在判断提供同一匹配规则。 */
+  /**
+   * 固定本次查询的名称与地址，为收集与存在判断提供同一匹配规则。
+   */
   const matching = (query: ASTQuery): ((node: JSSStyleNode) => boolean) => {
     const name = query.key === undefined ? undefined : propertyName(query.key)
     const address =
@@ -73,19 +78,25 @@ export function createASTController(session: ASTSession): ASTController {
       )
       record.content = content
     },
-    /** 读取角色访问已留下的事实，不触发新的内容求值。 */
+    /**
+     * 读取角色访问已留下的事实，不触发新的内容求值。
+     */
     getCompiledContent: (node, input) => {
       if (!isObjectLike(input)) return input
       const record = session.compilations.get(node)?.content.contents.get(input)
       return record ? record.content : input
     },
-    /** 将当前位置已完成的记录交付给输出视图，不执行内容。 */
+    /**
+     * 将当前位置已完成的记录交付给输出视图，不执行内容。
+     */
     getCompiledContentView: (node, input) =>
       createCompiledContent(
         input,
         () => session.compilations.get(node)?.content.contents ?? new WeakMap(),
       ),
-    /** 只查询已有位置事实，供分析读取依赖及核对失效身份。 */
+    /**
+     * 只查询已有位置事实，供分析读取依赖及核对失效身份。
+     */
     getContentCompilation: (node, input) =>
       isObjectLike(input)
         ? session.compilations.get(node)?.content.contents.get(input)
@@ -168,7 +179,10 @@ export function createASTController(session: ASTSession): ASTController {
 /** 保存一次编译中的节点来源和撤销生命周期。 */
 export class ASTSession {
   identity: object = {}
-  /** 本次节点编译的唯一位置账本；节点编译维护进度，Controller 操作其中的当前内容。 */
+  /**
+   * 本次节点编译的唯一位置账本；
+   * 节点编译维护进度，Controller 操作其中的当前内容。
+   */
   compilations = new WeakMap<JSSStyleNode, StyleNodeCompileState>()
   /** 对象生命周期每会话只执行一次；位置记录分别消费同一份替代结果。 */
   objectCompilations = new WeakMap<object, ContentCompilationRecord>()
@@ -199,7 +213,7 @@ export class ASTSession {
   }
 
   /**
-   * 按现有顺序交付节点并订阅后续改变；事实来自AST编辑和节点输入本身。
+   * 按现有顺序交付节点并订阅后续改变；事实来自 AST 编辑和节点输入本身。
    */
   observeNodes(observe: (node: JSSStyleNode, present: boolean) => void): void {
     this.nodeObservers.add(observe)
@@ -268,7 +282,9 @@ export class ASTSession {
       )
   }
 
-  /** 当前全部内容完成后核对队列；任何新增或撤销仍由同一编译流程处理。 */
+  /**
+   * 当前全部内容完成后核对队列；任何新增或撤销仍由同一编译流程处理。
+   */
   updateSettlement(): boolean {
     let changed = false
     for (const check of this.settlementChecks) {
@@ -278,14 +294,19 @@ export class ASTSession {
     return changed
   }
 
-  /** 给同一来源的连续插入分配不同身份，无需知道调用角色。 */
+  /**
+   * 给同一来源的连续插入分配不同身份，无需知道调用角色。
+   */
   insertionIdentity(owner: JSSStyleNode): string {
     const index = this.insertionCounts.get(owner) ?? 0
     this.insertionCounts.set(owner, index + 1)
     return `${owner.identity}/insert/${index}`
   }
 
-  /** 记录存活来源，拒绝已撤销来源；仅退出输出仍允许，非源产物失去全部来源后移除。 */
+  /**
+   * 记录存活来源，拒绝已撤销来源；仅退出输出的来源仍可登记。
+   * 非源产物失去全部来源后移除。
+   */
   own(owner: JSSStyleNode, node: JSSStyleNode): void {
     assert(this.isAlive(owner), '不能登记已撤销来源的依赖。')
     if (owner === node) return
@@ -297,7 +318,9 @@ export class ASTSession {
     products.add(node)
   }
 
-  /** 只解除一条来源边，不撤销仍有其他来源的产物或原始声明。 */
+  /**
+   * 只解除一条来源边，不撤销仍有其他来源的产物或原始声明。
+   */
   release(owner: JSSStyleNode, node: JSSStyleNode): void {
     const products = this.products.get(owner)
     products?.delete(node)
@@ -310,7 +333,9 @@ export class ASTSession {
     }
   }
 
-  /** 展开入口不再输出，但它仍把祖先来源连接到产物。 */
+  /**
+   * 展开入口不再输出，但它仍把祖先来源连接到产物。
+   */
   detach(node: JSSStyleNode): void {
     const index = this.nodes.indexOf(node)
     if (index < 0) return
@@ -320,17 +345,23 @@ export class ASTSession {
     delete node.deferredReason
   }
 
-  /** 已脱离输出的展开入口仍是有效来源，级联撤销后才失效。 */
+  /**
+   * 已脱离输出的展开入口仍是有效来源，级联撤销后才失效。
+   */
   isAlive(node: JSSStyleNode): boolean {
     return this.liveNodes.has(node)
   }
 
-  /** 判断节点是否仍在有序输出队列中；已退出输出的来源仍可存活。 */
+  /**
+   * 判断节点是否仍在有序输出队列中；已退出输出的来源仍可存活。
+   */
   hasOutput(node: JSSStyleNode): boolean {
     return this.outputNodes.has(node)
   }
 
-  /** 删除指定产物及失去全部存活来源的后继，保留共享消费者的依赖。 */
+  /**
+   * 删除指定产物及失去全部存活来源的后继，保留共享消费者的依赖。
+   */
   remove(node: JSSStyleNode): void {
     if (!this.isAlive(node)) return
     const index = this.hasOutput(node) ? this.nodes.indexOf(node) : -1
@@ -357,7 +388,9 @@ export class ASTSession {
     }
   }
 
-  /** 所有即时插入共用节点创建、来源登记和位置处理。 */
+  /**
+   * 所有即时插入共用节点创建、来源登记和位置处理。
+   */
   insert(
     owner: JSSStyleNode,
     identity: string,
@@ -391,7 +424,9 @@ export class ASTSession {
     return node
   }
 
-  /** 已展开的依赖节点也通过同一入口进入输出队列。 */
+  /**
+   * 已展开的依赖节点也通过同一入口进入输出队列。
+   */
   append(nodes: JSSStyleNode[], index = this.nodes.length): void {
     assert(
       this.nodes.length + nodes.length <= maximumStyleNodeCount,
@@ -407,7 +442,9 @@ export class ASTSession {
     }
   }
 
-  /** 将现存节点紧邻锚点放置，不改变地址或来源。 */
+  /**
+   * 将现存节点紧邻锚点放置，不改变地址或来源。
+   */
   move(
     node: JSSStyleNode,
     anchor: JSSStyleNode,
@@ -428,7 +465,9 @@ export class ASTSession {
     this.notify(node)
   }
 
-  /** 登记节点撤销时执行的清理函数。 */
+  /**
+   * 登记节点撤销时执行的清理函数。
+   */
   onRemove(node: JSSStyleNode, cleanup: () => void): void {
     let callbacks = this.removalCallbacks.get(node)
     if (!callbacks) this.removalCallbacks.set(node, (callbacks = new Set()))

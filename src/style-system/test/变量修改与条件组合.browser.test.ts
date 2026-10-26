@@ -1,10 +1,11 @@
+/**
+ * 变量修改的浏览器流程验证。
+ *
+ * 验证条件组合、顺序、继承和规则退出的实际结果。
+ *
+ * 用计算样式确认行为，不依赖内部步骤表示。
+ */
 import { token } from '../token'
-/** 变量修改的浏览器流程验证。
-
-验证条件组合、顺序、继承和规则退出的实际结果。
-
-用计算样式确认行为，不依赖内部步骤表示。
-*/
 
 import { modify } from '../operations/modify'
 import { afterEach, expect, test } from 'vitest'

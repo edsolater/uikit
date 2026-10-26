@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 内容自身处理当前操作；后续内容由普通编译队列推进。 */
+import { token } from '../token'
 import { expect, it } from 'vitest'
 import { condition } from '../condition'
 import { createJSSContent, type JSSContent } from '../content'

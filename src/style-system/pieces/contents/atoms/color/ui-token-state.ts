@@ -6,8 +6,14 @@ import { oklch } from '../../functions/oklch'
 /**
  * 返回默认颜色及 hover、active 配方，始终引用 base 的当前颜色。
  * 响应参数是变化量的无单位倍率：0 不变化，1 使用原幅度，2 使用两倍幅度。
- * 明度默认分别减 0.04、0.08；彩度默认不变，倍率 1 时分别加 0.01、减 0.01。
- * @example token(interactiveColorStates({ base: brandColor, chromaResponse: 1 }), 'action-color')
+ * 明度默认分别减 0.04、0.08。
+ * 彩度默认不变，倍率 1 时分别加 0.01、减 0.01。
+ *
+ * @example
+ * token(
+ *   interactiveColorStates({ base: brandColor, chromaResponse: 1 }),
+ *   'action-color',
+ * )
  */
 export function interactiveColorStates({
   base,

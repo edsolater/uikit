@@ -27,7 +27,10 @@ export interface ClickableMixinOptions {
 
 const quickDuration = multiply(motionDuration, 2 / 3)
 
-/** Mixin：可点击效果；可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。 */
+/**
+ * 生成可点击效果声明。
+ * 可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。
+ */
 export const clickable = (
   options: ClickableMixinOptions = {},
 ): Declarations => [

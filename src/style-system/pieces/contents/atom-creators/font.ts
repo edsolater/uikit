@@ -10,7 +10,9 @@ export interface FontParts {
   family: TokenInput
 }
 
-/** 延迟生成字体简写。 */
+/**
+ * 延迟生成字体简写。
+ */
 export function fontValue(parts: FontParts): Token<FontParts> {
   return token<FontParts>(
     { default: parts },

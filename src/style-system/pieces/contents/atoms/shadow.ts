@@ -198,7 +198,9 @@ export const shadow = token(cardShadowSource, {
   name: 'shadow',
 })
 
-/** 为具体场景创建独立 Token，交互状态留在场景定义，主题继续引用根来源。 */
+/**
+ * 为具体场景创建独立 Token，交互状态留在场景定义，主题继续引用根来源。
+ */
 export function shadowFor(
   purpose: 'card' | 'popover' | 'dialog' | 'control' | 'filledControl',
 ) {

@@ -21,7 +21,9 @@ export interface SizeMixinOptions {
   minHeight?: TokenInput
 }
 
-/** Mixin：盒子尺寸。 */
+/**
+ * 生成盒子尺寸声明。
+ */
 export const size = (options: SizeMixinOptions = {}): Declarations => [
   [$minHeight, options.minHeight],
 ]
@@ -40,7 +42,9 @@ export interface BoundaryMixinOptions {
   }
 }
 
-/** Mixin：空间边界。 */
+/**
+ * 生成空间边界声明。
+ */
 export const boundary = (options: BoundaryMixinOptions = {}): Declarations => [
   [
     $border,

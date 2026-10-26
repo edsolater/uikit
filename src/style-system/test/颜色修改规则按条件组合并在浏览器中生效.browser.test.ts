@@ -1,10 +1,11 @@
+/**
+ * 完整颜色修改规则的浏览器流程验证。
+ *
+ * 验证普通 Token 应用完整规则及多个状态同时生效。
+ *
+ * 规则由 CSS 动态解读，无需交互时重新编译。
+ */
 import { token, type TokenAddress } from '../token'
-/** 完整颜色修改规则的浏览器流程验证。
-
-验证普通 Token 应用完整规则及多个状态同时生效。
-
-规则由 CSS 动态解读，无需交互时重新编译。
-*/
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { add, multiply } from '../pieces/contents/functions/calc'

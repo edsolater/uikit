@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** State Condition 的名称与 Rule 地址。 */
+import { token } from '../token'
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
 import { rule } from '../rule'

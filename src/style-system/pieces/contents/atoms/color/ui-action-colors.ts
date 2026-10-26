@@ -1,4 +1,5 @@
-/** 动作用途的颜色变量与颜色族。
+/**
+ * 动作用途的颜色变量与颜色族。
  *
  * 交互状态和高亮变化引用当前品牌颜色，族成员由共享生成器提供。
  *
@@ -47,20 +48,31 @@ export const highlightColor = token(
   'highlight-color',
 )
 
-/** 承载面用途读取来源当前颜色并降低透明度，状态仍由来源控制。 */
+/**
+ * 承载面用途读取来源当前颜色并降低透明度，状态仍由来源控制。
+ */
 export const controlSurfaceColor = (base: Token<TokenInput> = controlColor) =>
   token(oklch(base, { alpha: (current) => multiply(current, 0.14) }), {
     name: `${base.name ?? 'control'}-surface`,
     address: base.address,
   })
-/** 文字用途直接引用来源当前颜色，沿用明确的计算地址。 */
+
+/**
+ * 文字用途直接引用来源当前颜色，沿用明确的计算地址。
+ */
 export const controlTextColor = (base: Token<TokenInput> = controlColor) =>
   token(base, { name: `${base.name ?? 'control'}-text`, address: base.address })
-/** 边线用途读取来源当前颜色，使用独立的透明度公式。 */
+
+/**
+ * 边线用途读取来源当前颜色，使用独立的透明度公式。
+ */
 export const controlLineColor = (base: Token<TokenInput> = controlColor) =>
   token(oklch(base, { alpha: (current) => multiply(current, 0.44) }), {
     name: `${base.name ?? 'control'}-boundary`,
     address: base.address,
   })
-/** 控件内容用途引用共享纸色，与控件的交互状态独立。 */
+
+/**
+ * 控件内容用途引用共享纸色，与控件的交互状态独立。
+ */
 export const controlContentColor = () => token(paperColor, 'control-content')

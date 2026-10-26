@@ -1,5 +1,5 @@
-import { token, type TokenInput } from '../token'
 /** 根据地状态使用该处基础；通过浏览器验证显式赋值与层叠。 */
+import { token, type TokenInput } from '../token'
 
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'

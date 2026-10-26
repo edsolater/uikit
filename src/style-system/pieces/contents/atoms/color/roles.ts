@@ -151,7 +151,9 @@ export const colorBoundary = token(themeBoundary, {
   },
 })
 
-/** 内容用途基于自己的可读基础，明确替换已存在的强调与动作状态。 */
+/**
+ * 内容用途基于自己的可读基础，明确替换已存在的强调与动作状态。
+ */
 export function colorRoleContent(base: Token<TokenInput> = colorAction) {
   const overrides: TokenState = {
     [soft]: (content) =>
@@ -177,7 +179,9 @@ export function colorRoleContent(base: Token<TokenInput> = colorAction) {
   })
 }
 
-/** 边界用途在独立基础上组合透明度，不将用途记录塞进来源 Token。 */
+/**
+ * 边界用途在独立基础上组合透明度，不将用途记录塞进来源 Token。
+ */
 export function colorRoleBoundary(base: Token<TokenInput> = colorAction) {
   const overrides: TokenState = {
     [soft]: (boundary) =>

@@ -1,4 +1,5 @@
-/** 内容排版 Mixin。
+/**
+ * 内容排版 Mixin。
  *
  * 将文字和布局配置转换为声明，完整内容保持原身份。
  *
@@ -33,7 +34,9 @@ export interface InnerTextMixinOptions {
   leading?: TokenInput
 }
 
-/** Mixin：内部文字。 */
+/**
+ * 生成内部文字的排版声明。
+ */
 export const innerText = (
   options: InnerTextMixinOptions = {},
 ): Declarations => [
@@ -71,7 +74,9 @@ export interface ContentLayoutMixinOptions {
   padding?: PaddingInput
 }
 
-/** Mixin：内容布局。 */
+/**
+ * 生成内容布局声明。
+ */
 export const contentLayout = (
   options: ContentLayoutMixinOptions = {},
 ): Declarations => [
@@ -87,7 +92,9 @@ export const contentLayout = (
   paddingDeclarations(options.padding),
 ]
 
-/** 内边距声明；未指定的方向不赋值。 */
+/**
+ * 内边距声明；未指定的方向不赋值。
+ */
 function paddingDeclarations(input: PaddingInput): Declarations {
   if (Array.isArray(input)) return [[$padding, valueSequence(...input)]]
   if (input && typeof input === 'object' && !isJSSContent(input)) {

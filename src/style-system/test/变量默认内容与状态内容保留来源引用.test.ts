@@ -1,10 +1,11 @@
-import { token } from '../token'
-/** Token 的 CSS 引用编译契约。
+/**
+ * Token 的 CSS 引用编译契约。
  *
  * 验证普通默认值、嵌套 Token 和状态内容遵循相同的引用规则。
  *
  * 即使显示颜色恰好相同，来源被替换为定义内容也必须使测试失败。
  */
+import { token } from '../token'
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 

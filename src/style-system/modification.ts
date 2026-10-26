@@ -1,4 +1,5 @@
-/** 可独立声明的颜色变化配方。
+/**
+ * 可独立声明的颜色变化配方。
  *
  * 将源无关通道保存为带名称的 Token，供修改操作和直接声明共同消费。
  *
@@ -20,7 +21,7 @@ export type ColorChannelModification = OKLCHChannelChange
 /** 可复用的 OKLCH 通道变化参数。 */
 export interface ColorModificationDetail extends OKLCHChanges {}
 
-/** 独立变化 Token；type/detail表达修改策略，基础内容按当前参数生成。 */
+/** 独立变化 Token；type/detail 表达修改策略，基础内容按当前参数生成。 */
 export interface Modification<
   Detail = ColorModificationDetail,
   Type extends string = 'color',

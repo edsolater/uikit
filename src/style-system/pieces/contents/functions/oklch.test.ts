@@ -1,5 +1,5 @@
-import { token } from '../../../token'
 /** 验证普通与相对 OKLCH 通道、依赖消费和缺失内容边界。 */
+import { token } from '../../../token'
 import { expect, test } from 'vitest'
 import { oklch, oklchChannels } from './oklch'
 import { condition } from '../../../condition'

@@ -1,10 +1,11 @@
-import { token } from '../token'
-/** 样式登记与内容依赖解析的流程测试。
+/**
+ * 样式登记与内容依赖解析的流程测试。
  *
  * 验证声明、Mixin、Token 和按需资源生成完整 CSS。
  *
  * 防止定义端组合在编译与资源退出时丢失原有语义。
  */
+import { token } from '../token'
 import { afterEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../pieces/state-conditions'
 import { compileCSS, compileRules } from '../css-root'
@@ -134,7 +135,9 @@ const runtimeRules = rules as (
 ) => RulesHandle
 
 const handles: RulesHandle[] = []
-/** 保留正式登记返回的句柄，交给 afterEach 清理；不改变句柄能力。 */
+/**
+ * 保留正式登记返回的句柄，交给 afterEach 清理；不改变句柄能力。
+ */
 function keep<T extends RulesHandle>(handle: T): T {
   handles.push(handle)
   return handle

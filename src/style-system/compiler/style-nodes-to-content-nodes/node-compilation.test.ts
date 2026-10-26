@@ -1,10 +1,11 @@
-import { token } from '../../token'
-/** 内容通知与位置操作的契约验证。
+/**
+ * 内容通知与位置操作的契约验证。
  *
  * 区分通知返回值、自身输出及显式内容操作，并检查跨波等待。
  *
  * 防止恢复旧返回协议或在重试时撤销已经生效的操作。
  */
+import { token } from '../../token'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../../css-root'
 import type { JSSCompileContext, JSSContent } from '../../content'

@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 从正式编译结果验证实际引用，不绑定声明位置或去重方式。 */
+import { token } from '../token'
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 

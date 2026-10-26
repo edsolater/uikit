@@ -1,4 +1,5 @@
-/** 本次内容编译的同址声明连接器。
+/**
+ * 本次内容编译的同址声明连接器。
  *
  * 核对有序输入快照、连接贡献并维护结果历史与输出选择。
  *
@@ -29,7 +30,10 @@ interface InputSnapshot {
   effective: boolean
 }
 
-/** 同址连接的输入快照与结果历史；输入 Map 保留贡献顺序，最后结果输出，旧结果保留依赖来源。 */
+/**
+ * 同址连接的输入快照与结果历史。
+ * 输入 Map 保留贡献顺序；最后结果输出，旧结果保留依赖来源。
+ */
 interface JoinRecord {
   inputs: Map<JSSStyleNode, InputSnapshot>
   anchor: JSSStyleNode
@@ -97,7 +101,9 @@ export class Join {
   private records = new Map<string, JoinRecord>()
   private recordOf = new WeakMap<JSSStyleNode, JoinRecord>()
 
-  /** 绑定当前队列及原贡献已经完成的解析结果，不接管内容编译进度。 */
+  /**
+   * 绑定当前队列及原贡献已经完成的解析结果，不接管内容编译进度。
+   */
   constructor(
     private session: ASTSession,
     private compiledContents: (
@@ -105,7 +111,9 @@ export class Join {
     ) => WeakMap<object, ContentCompilationRecord>,
   ) {}
 
-  /** 稳定队列中撤销失效历史或组合新增贡献；有变更时结果须进入后续编译波。 */
+  /**
+   * 稳定队列中撤销失效历史或组合新增贡献；有变更时结果须进入后续编译波。
+   */
   update(): boolean {
     const groups = this.collectGroups()
     if (this.invalidate(groups)) return true
@@ -115,13 +123,17 @@ export class Join {
     return changed
   }
 
-  /** 仅选择连接后的输出位置；存活与角色完成度仍由节点编译负责。 */
+  /**
+   * 仅选择连接后的输出位置；存活与角色完成度仍由节点编译负责。
+   */
   isOutput(node: JSSStyleNode): boolean {
     const record = this.recordOf.get(node)
     return !record || record.results.at(-1) === node
   }
 
-  /** 从当前输出队列收集原贡献及其顺序，不把历史结果再次算作输入。 */
+  /**
+   * 从当前输出队列收集原贡献及其顺序，不把历史结果再次算作输入。
+   */
   private collectGroups(): Map<string, Map<JSSStyleNode, number>> {
     const groups = new Map<string, Map<JSSStyleNode, number>>()
     for (const node of this.session.nodes) {
@@ -144,7 +156,9 @@ export class Join {
     return groups
   }
 
-  /** 核对本次输入位置、Key、join、Content 与 revision 是否仍保留原快照。 */
+  /**
+   * 核对本次输入位置、Key、join、Content 与 revision 是否仍保留原快照。
+   */
   private matches(
     record: JoinRecord,
     group: Map<JSSStyleNode, number> | undefined,
@@ -170,7 +184,9 @@ export class Join {
     return true
   }
 
-  /** 撤销全部失效历史和输入定位；清理可能编辑队列，之后必须重新分组。 */
+  /**
+   * 撤销全部失效历史和输入定位；清理可能编辑队列，之后必须重新分组。
+   */
   private invalidate(groups: Map<string, Map<JSSStyleNode, number>>): boolean {
     let changed = false
     for (const [address, record] of this.records) {
@@ -191,7 +207,9 @@ export class Join {
     return changed
   }
 
-  /** 为至少两项贡献连接一次结果；以业务回调前的实际输入登记快照与历史来源。 */
+  /**
+   * 为至少两项贡献连接一次结果；以业务回调前的实际输入登记快照与历史来源。
+   */
   private join(address: string, group: Map<JSSStyleNode, number>): boolean {
     if (group.size < 2) return false
     const previous = this.records.get(address)

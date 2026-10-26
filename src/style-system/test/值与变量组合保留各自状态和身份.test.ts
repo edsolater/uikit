@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 稳定组合不会传播 Token 的状态。 */
+import { token } from '../token'
 import { expect, test, vi } from 'vitest'
 
 import { condition, media } from '../condition'

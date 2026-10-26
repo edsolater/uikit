@@ -1,4 +1,5 @@
-/** CSS 函数定义主体。
+/**
+ * CSS 函数定义主体。
  *
  * 保存函数签名与定义体，并构造依赖该主体的调用 Token。
  *
@@ -19,7 +20,9 @@ export interface CSSFunction extends JSSContentProtocol {
 /**
  * 定义 CSS 函数；每次调用返回依赖同一主体的 Token，按需提供完整函数体。
  * @example
- * const double = cssFunction('--double(--n <number>)', [[[], 'result', 'calc(var(--n) * 2)']])
+ * const double = cssFunction('--double(--n <number>)', [
+ *   [[], 'result', 'calc(var(--n) * 2)'],
+ * ])
  * double(3) // 消费时提供 @function 定义，并输出 --double(3)。
  */
 export function cssFunction(signature: string, body: Rules): CSSFunction {

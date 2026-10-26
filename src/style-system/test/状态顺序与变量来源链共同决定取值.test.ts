@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 状态定义保持中央优先级，可调用内容遵守其公开协议。 */
+import { token } from '../token'
 import { expect, test, vi } from 'vitest'
 import { stateCondition } from '../pieces/state-conditions'
 import { condition } from '../condition'

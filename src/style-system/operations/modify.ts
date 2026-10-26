@@ -1,9 +1,10 @@
-/** 自定义属性的条件修改入口。
-
-验证双方材料、选择领域应用，构造供编译消费的修改内容。
-
-操作入口保存颜色与表达变化规则，实例、步骤和撤销由编译实现负责。
-*/
+/**
+ * 自定义属性的条件修改入口。
+ *
+ * 验证双方材料、选择领域应用，构造供编译消费的修改内容。
+ *
+ * 操作入口保存颜色与表达变化规则，实例、步骤和撤销由编译实现负责。
+ */
 import { compileCSSModification } from '../token/modify'
 import { cssCustomProperty, cssOperation } from '../token/css'
 import {
@@ -28,11 +29,16 @@ export type ModifyProtocol = Parameters<
 >[1]
 
 /**
- * 返回条件修改 Declaration；按 type 选择应用，编译消费时生成前序 Expression 的修改结果。
- * 修改以根据地的有效声明为基础；颜色材料保留配方 CSS 引用，生效条件由 CSS 决定。
+ * 返回条件修改 Declaration；按 type 选择应用，
+ * 编译消费时生成前序 Expression 的修改结果。
+ * 修改以根据地的有效声明为基础；颜色材料保留配方 CSS 引用，
+ * 生效条件由 CSS 决定。
  * 相同 id 在同一定义内共用一步；未指定 id 时每次调用形成独立步骤。
  * @example
- * const surfaceColor = token(baseColor, { name: 'button-surface', address: '.Button' })
+ * const surfaceColor = token(baseColor, {
+ *   name: 'button-surface',
+ *   address: '.Button',
+ * })
  * rules('.Button', [[key('background-color'), surfaceColor]])
  * rules(['.Button', '&:hover'], [modify(surfaceColor, hoverChange)])
  */

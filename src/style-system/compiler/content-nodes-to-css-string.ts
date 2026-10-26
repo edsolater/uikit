@@ -1,4 +1,5 @@
-/** 有序 JSS 内容节点的 CSS 输出器。
+/**
+ * 有序 JSS 内容节点的 CSS 输出器。
  *
  * 解析已完成的内容并按节点顺序交付 CSS 文本。
  *
@@ -15,7 +16,9 @@ import { hasJSSContentOutput, isJSSContent } from '../content'
 import { propertyName } from '../key'
 import type { JSSContentNode, ContentCompilationRecord } from './contracts'
 
-/** 读取已编译的内容链；编译阶段留下的替代结果在这里生效。 */
+/**
+ * 读取已编译的内容链；编译阶段留下的替代结果在这里生效。
+ */
 export function contentToCSSString(
   input: unknown,
   compiledContents: WeakMap<object, ContentCompilationRecord>,
@@ -49,7 +52,9 @@ export function contentToCSSString(
   }
 }
 
-/** 按节点地址输出 CSS 内容；同址组合已在编译队列完成。 */
+/**
+ * 按节点地址输出 CSS 内容；同址组合已在编译队列完成。
+ */
 export function contentNodesToCSSString(
   contentNodes: JSSContentNode[],
 ): string {

@@ -1,5 +1,5 @@
-import { token, type Token } from '../token'
 /** 具体 Token 的资源依赖、声明顺序与本次 AST 的撤销效果。 */
+import { token, type Token } from '../token'
 
 import { describe, expect, test } from 'vitest'
 import { whenSettled } from './when-settled'
@@ -108,7 +108,8 @@ function declarationsAt(css: string, path: string[]): string[] {
 }
 
 /**
- * 通过现役 AST 编辑接口把直接声明放到真正的 StateCondition 地址，不伪造领域行为。
+ * 通过现役 AST 编辑接口把直接声明放到真正的 StateCondition 地址，
+ * 不伪造领域行为。
  */
 function inPhase(target: Token, content: string): JSSContent {
   return {

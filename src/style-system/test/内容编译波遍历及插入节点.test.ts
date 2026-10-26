@@ -1,10 +1,11 @@
-import { token } from '../token'
-/** 内容编译波与节点插入的流程测试。
+/**
+ * 内容编译波与节点插入的流程测试。
  *
  * 通过正式 Rules 入口验证延后内容、替代链和插入节点的输出。
  *
  * 防止编译波推进时遗漏未完成内容或重复执行回调。
  */
+import { token } from '../token'
 import { expect, test } from 'vitest'
 import { Unresultable } from '@edsolater/fnkit'
 import { condition } from '../condition'
@@ -969,8 +970,8 @@ test.each([false, true])(
     expect(css).toContain('.LifecycleDependency')
     expect(css).toContain('color: red;')
     expect(css).not.toContain('display:')
-    // @ts-expect-error 空对象不是内容协议，运行时也须拒绝。
     expect(() =>
+      // @ts-expect-error 空对象不是内容协议，运行时也须拒绝。
       compileRules([[[condition('.Invalid')], 'color', {}]]),
     ).toThrow('不是可编译的 CSS 内容')
   },

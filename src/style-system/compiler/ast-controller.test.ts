@@ -1,4 +1,5 @@
-/** AST 控制器的行为契约测试。
+/**
+ * AST 控制器的行为契约测试。
  *
  * 验证查询、位置编辑与依赖来源的生命周期。
  *
@@ -10,7 +11,9 @@ import { key } from '../key'
 import { ASTSession, createASTController } from './ast-controller'
 import type { JSSStyleNode } from './contracts'
 
-/** 构造同一地址的测试节点，用名称区分声明目标。 */
+/**
+ * 构造同一地址的测试节点，用名称区分声明目标。
+ */
 function node(name: string): JSSStyleNode {
   return {
     conditionPath: {

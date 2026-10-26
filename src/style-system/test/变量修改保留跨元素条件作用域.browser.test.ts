@@ -1,10 +1,11 @@
-import { token, type TokenAddress } from '../token'
-/** 修改规则跨元素作用域的浏览器验证。
+/**
+ * 修改规则跨元素作用域的浏览器验证。
  *
  * 验证后代重算、状态宿主、共享步骤和条件层叠的实际结果。
  *
  * CSS 继承不能自动重算后代的前序规则，需要通过计算样式检验这些组合。
  */
+import { token, type TokenAddress } from '../token'
 import { afterEach, test, expect } from 'vitest'
 import { compileRules } from '../css-root'
 import { condition } from '../condition'

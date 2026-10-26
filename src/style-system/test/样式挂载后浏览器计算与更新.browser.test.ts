@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 在真实浏览器验证全局源规则、按需依赖、重新挂载与失败边界。 */
+import { token } from '../token'
 import { key } from '../key'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { stateCondition } from '../pieces/state-conditions'

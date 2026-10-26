@@ -1,9 +1,10 @@
-/** JSS 声明目标。
-
-创建、识别和解析声明目标。
-
-属性别名由此模块统一登记。
-*/
+/**
+ * JSS 声明目标。
+ *
+ * 创建、识别和解析声明目标。
+ *
+ * 属性别名由此模块统一登记。
+ */
 import { assert, hasProperty, isFunction, isString } from '@edsolater/fnkit'
 import type { ContentView } from './content'
 import { isToken, type Token, type TokenInput } from './token/core'
@@ -15,7 +16,11 @@ export interface JSSKeyObject {
   /** 同完整地址的声明等级；普通 Key 省略时为最高档 999。 */
   priority?: number
   /**
-   * 同 Target／State 地址、同属性名有至少两项时，按声明顺序连接内容贡献；省略时默认生成逗号数组。保留输入视图 即保留其声明位置的编译结果；改写 content 后新内容在结果位置编译。
+   * 同 Target／State 地址、同属性名至少有两项声明时，
+   * 按声明顺序组合内容贡献；省略 join 时默认生成逗号数组。
+   *
+   * 保留输入视图时，沿用其原声明位置的编译结果；
+   * 改写 content 后，新内容在结果位置编译。
    */
   join?: (values: ContentView[]) => TokenInput
 }
@@ -34,7 +39,8 @@ export type JSSKey = JSSKeyObject | Token | string
  * 创建属性 Key；name 是输出的 CSS 属性名，join 可改写重复声明的默认数组组合。
  * @example
  * const $stack = key('z-index', {
- *   join: values => values.reduce((sum, item) => sum + Number(item.content), 0),
+ *   join: values =>
+ *     values.reduce((sum, item) => sum + Number(item.content), 0),
  * })
  * rules('.example', [[$stack, 2], [$stack, 3]])
  * compileCSS().includes('z-index: 5;') // true
@@ -52,7 +58,9 @@ export function key<K extends string>(
   return target
 }
 
-/** 识别声明目标。 */
+/**
+ * 识别声明目标。
+ */
 export const isJSSKey = (input: unknown): input is JSSKey =>
   isString(input) || hasProperty(input, 'toCSSString', isFunction)
 
@@ -82,7 +90,9 @@ export function registerJSSKey(target: JSSKeyDefinition): void {
   for (const name of aliases) if (!names.has(name)) names.set(name, target)
 }
 
-/** 解析对象与字符串条目中的声明名称；原生属性和自定义属性保持字符串入口。 */
+/**
+ * 解析对象与字符串条目中的声明名称；原生属性和自定义属性保持字符串入口。
+ */
 export function resolveJSSKey(input: JSSKey): JSSKey {
   if (!isString(input)) return input
   const registered = names.get(input)
@@ -109,7 +119,8 @@ export function propertyName(key: JSSKey): string {
 }
 
 /**
- * 读取声明键的有效等级；字符串与普通 Key 默认使用999，内容对象同样读取自身等级。
+ * 读取声明键的有效等级；字符串与普通 Key 默认使用 999，
+ * 内容对象同样读取自身等级。
  */
 export const keyPriority = (key: JSSKey | undefined): number =>
   key !== undefined && typeof key !== 'string'

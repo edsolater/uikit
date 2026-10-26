@@ -10,7 +10,9 @@ export type Transition = [
   delay?: TokenInput,
 ]
 
-/** 延迟生成多项过渡。 */
+/**
+ * 延迟生成多项过渡。
+ */
 export function transitionValue(...items: Transition[]): Token<Transition[]> {
   return token<Transition[]>(
     { default: items },

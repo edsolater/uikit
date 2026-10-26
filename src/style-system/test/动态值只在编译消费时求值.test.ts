@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 内容生产函数只在编译时求值，输出协议不接受函数冒充文本。 */
+import { token } from '../token'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { condition, media, functionDefinition } from '../condition'
@@ -170,8 +170,8 @@ test.each(['media', 'functionDefinition', 'animationName'])(
         // @ts-expect-error 函数签名必须是固定文本。
         functionDefinition(invalid)
       } else {
-        // @ts-expect-error 动画名称必须是固定文本。
         compileRules([
+          // @ts-expect-error 动画名称必须是固定文本。
           [['.Animation'], 'animation-name', animationName(invalid, [])],
         ])
       }

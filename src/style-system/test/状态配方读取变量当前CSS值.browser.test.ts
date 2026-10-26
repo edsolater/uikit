@@ -1,5 +1,5 @@
-import { token } from '../token'
 /** 在浏览器验证状态配方引用当前 CSS 值及局部覆盖。 */
+import { token } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'

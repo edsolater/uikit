@@ -4,7 +4,9 @@ import { condition } from '../../../condition'
 import type { Rules } from '../../../rule'
 import { token, type Token, type TokenInput } from '../../../token/core'
 
-/** 动画名称；使用时提供帧定义。 */
+/**
+ * 动画名称；使用时提供帧定义。
+ */
 export function animationName(name: string, frames: Rules): Token {
   assert(isString(name), 'animationName 的名称必须是字符串。')
   return token(name, {
@@ -24,7 +26,9 @@ export interface AnimationParts {
   playState?: TokenInput
 }
 
-/** 延迟生成动画内容。 */
+/**
+ * 延迟生成动画内容。
+ */
 export function animationValue(parts: AnimationParts): Token {
   return token(
     { default: parts },

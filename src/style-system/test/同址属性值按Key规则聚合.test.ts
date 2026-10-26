@@ -1,10 +1,11 @@
-import { token, type Token } from '../token'
-/** 同址声明聚合的跨文件流程测试。
+/**
+ * 同址声明聚合的跨文件流程测试。
  *
  * 验证输入顺序、Key 组合、结果历史与依赖来源。
  *
  * 防止重建或隐藏结果时丢失真实贡献及存活资源。
  */
+import { token, type Token } from '../token'
 import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { compileCSS, compileRules } from '../css-root'
@@ -864,7 +865,9 @@ test.each(['content', 'replacement', 'join'])(
   },
 )
 
-/** 本用例选择空格序列输出，空项不占位置。 */
+/**
+ * 本用例选择空格序列输出，空项不占位置。
+ */
 const arraySequenceToCSSString = (items, resolve) =>
   items
     .map(resolve)

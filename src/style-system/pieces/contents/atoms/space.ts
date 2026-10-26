@@ -18,7 +18,9 @@ export const fluidProgress = token(
   'fluid-progress',
 )
 
-/** 间隔沿用来源基础和尺寸状态，地址由来源定义明确给出。 */
+/**
+ * 间隔沿用来源基础和尺寸状态，地址由来源定义明确给出。
+ */
 export const spaceGap = (base: Token<TokenInput> = space) =>
   token(base.default, {
     name: `${base.name ?? 'space'}-gap`,
@@ -26,7 +28,9 @@ export const spaceGap = (base: Token<TokenInput> = space) =>
     state: base.state,
   })
 
-/** 纵向内边距使用自身尺寸比例，较大档位不简单放大整个间距。 */
+/**
+ * 纵向内边距使用自身尺寸比例，较大档位不简单放大整个间距。
+ */
 export const spacePaddingBlock = (base: Token<TokenInput> = space) =>
   token(base.default, {
     name: `${base.name ?? 'space'}-padding-block`,
@@ -38,7 +42,9 @@ export const spacePaddingBlock = (base: Token<TokenInput> = space) =>
     },
   })
 
-/** 横向内边距从三倍基础开始，状态在该用途的新基础上计算。 */
+/**
+ * 横向内边距从三倍基础开始，状态在该用途的新基础上计算。
+ */
 export const spacePaddingInline = (base: Token<TokenInput> = space) =>
   token(multiply(base.default, 3), {
     name: `${base.name ?? 'space'}-padding-inline`,

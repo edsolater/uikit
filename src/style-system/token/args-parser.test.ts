@@ -103,8 +103,8 @@ if (false) {
   token(() => ({ size: '2px' }))
 
   const data = { duration: 200 }
-  // @ts-expect-error 基础数据的 formatter 不自动赋予状态普通对象相同的内容能力。
   token(
+    // @ts-expect-error 基础数据的 formatter 不会自动赋予状态对象内容能力。
     { default: data, hover: data },
     { toCSSString: (value) => `${value.duration}ms` },
   )

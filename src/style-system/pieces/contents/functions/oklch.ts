@@ -1,4 +1,5 @@
-/** 具名 OKLCH 通道的内容组织。
+/**
+ * 具名 OKLCH 通道的内容组织。
  *
  * 保留普通颜色的原始通道，或连接来源颜色与通道变化。
  *
@@ -43,7 +44,8 @@ export interface OKLCHChanges {
 export function oklch(channels: OKLCHChannels): Token<OKLCHChannels>
 
 /**
- * 根据来源当前颜色生成相对颜色 Token；固定通道设值，回调在编译消费时计算，省略通道保持来源。
+ * 根据来源当前颜色生成相对颜色 Token。
+ * 固定通道设值，回调在编译消费时计算，省略通道保持来源。
  * 也接受完整通道内容，以便独立配方保留 CSS 引用与局部覆盖。
  * @example oklch(base, { lightness: current => add(current, -0.04) })
  */
@@ -96,7 +98,8 @@ export function oklch(
 }
 
 /**
- * 将通道变化转为源无关的 l/c/h/alpha 内容；可调用 JSS 内容保留身份，普通回调收到当前通道表达式。
+ * 将通道变化转为源无关的 l/c/h/alpha 内容。
+ * 可调用 JSS 内容保留身份，普通回调收到当前通道表达式。
  */
 export function oklchChannels(changes: OKLCHChanges): Token {
   return token(produceChannels)

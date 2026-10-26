@@ -11,7 +11,9 @@ export interface ShadowShape {
   inset?: boolean
 }
 
-/** 延迟生成单层阴影。 */
+/**
+ * 延迟生成单层阴影。
+ */
 export function shadowValue(shape: ShadowShape): Token<ShadowShape> {
   return token<ShadowShape>(
     { default: shape },
