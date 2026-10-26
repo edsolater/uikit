@@ -31,8 +31,8 @@ test.each([false, true])(
       implicit ? [size, '7px'] : declare(size, '7px'),
     ])
     const consumer = rules('.EntryConsumer', {
-      width: size,
-      height: empty,
+      'width': size,
+      'height': empty,
       'min-height': 'var(--entry-home-empty, 1px)',
     })
     const style = document.body.appendChild(document.createElement('style'))

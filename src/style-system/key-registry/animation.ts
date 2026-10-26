@@ -39,17 +39,27 @@ export const $animationTrigger = key('animation-trigger')
 
 export const $timelineTrigger = key('timeline-trigger')
 
-export const $timelineTriggerActivationRange = key('timeline-trigger-activation-range')
+export const $timelineTriggerActivationRange = key(
+  'timeline-trigger-activation-range',
+)
 
-export const $timelineTriggerActivationRangeEnd = key('timeline-trigger-activation-range-end')
+export const $timelineTriggerActivationRangeEnd = key(
+  'timeline-trigger-activation-range-end',
+)
 
-export const $timelineTriggerActivationRangeStart = key('timeline-trigger-activation-range-start')
+export const $timelineTriggerActivationRangeStart = key(
+  'timeline-trigger-activation-range-start',
+)
 
 export const $timelineTriggerActiveRange = key('timeline-trigger-active-range')
 
-export const $timelineTriggerActiveRangeEnd = key('timeline-trigger-active-range-end')
+export const $timelineTriggerActiveRangeEnd = key(
+  'timeline-trigger-active-range-end',
+)
 
-export const $timelineTriggerActiveRangeStart = key('timeline-trigger-active-range-start')
+export const $timelineTriggerActiveRangeStart = key(
+  'timeline-trigger-active-range-start',
+)
 
 export const $timelineTriggerName = key('timeline-trigger-name')
 
@@ -93,7 +103,8 @@ export const animationKeys = {
   'timeline-trigger': $timelineTrigger,
   'timeline-trigger-activation-range': $timelineTriggerActivationRange,
   'timeline-trigger-activation-range-end': $timelineTriggerActivationRangeEnd,
-  'timeline-trigger-activation-range-start': $timelineTriggerActivationRangeStart,
+  'timeline-trigger-activation-range-start':
+    $timelineTriggerActivationRangeStart,
   'timeline-trigger-active-range': $timelineTriggerActiveRange,
   'timeline-trigger-active-range-end': $timelineTriggerActiveRangeEnd,
   'timeline-trigger-active-range-start': $timelineTriggerActiveRangeStart,

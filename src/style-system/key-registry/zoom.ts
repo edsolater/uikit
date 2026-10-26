@@ -11,5 +11,5 @@ export const $zoom = key('zoom')
 
 /** 元素缩放的 CSS 原名与具名 Key 对应表。 */
 export const zoomKeys = {
-  'zoom': $zoom,
+  zoom: $zoom,
 }

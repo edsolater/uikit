@@ -49,7 +49,7 @@ export default defineConfig({
     cssCodeSplit: true,
     lib: {
       entry: {
-        index: 'src/index.ts',
+        'index': 'src/index.ts',
         'style-system/index': 'src/style-system/index.ts',
       },
       formats: ['es'],

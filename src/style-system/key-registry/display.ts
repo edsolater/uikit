@@ -12,5 +12,5 @@ export const $display = key('display')
 
 /** 布局盒生成的 CSS 原名与具名 Key 对应表。 */
 export const displayKeys = {
-  'display': $display,
+  display: $display,
 }

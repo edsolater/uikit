@@ -12,5 +12,5 @@ export const $cursor = key('cursor')
 
 /** 指针外观的 CSS 原名与具名 Key 对应表。 */
 export const cursorKeys = {
-  'cursor': $cursor,
+  cursor: $cursor,
 }

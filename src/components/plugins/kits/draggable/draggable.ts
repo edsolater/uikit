@@ -76,7 +76,7 @@ export const draggable = createPlugin<
 
       return {
         htmlProps: {
-          draggable: false,
+          'draggable': false,
           'data-plugin': { mergable: 'draggable' },
         },
         on: {

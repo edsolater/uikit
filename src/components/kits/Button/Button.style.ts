@@ -114,7 +114,7 @@ const buttonOpacity = token(multiply(opacity, 0.9), {
   name: 'button-opacity',
   address: button,
   state: {
-    disabled: (base) => multiply(base, 0.48 / 0.9),
+    'disabled': (base) => multiply(base, 0.48 / 0.9),
     '&[data-emphasis="soft"]:not(:disabled, [data-status~="disabled"])': (
       base,
     ) => multiply(base, 0.7 / 0.9),

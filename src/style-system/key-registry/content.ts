@@ -13,6 +13,6 @@ export const $quotes = key('quotes')
 
 /** 生成内容的 CSS 原名与具名 Key 对应表。 */
 export const contentKeys = {
-  'content': $content,
-  'quotes': $quotes,
+  content: $content,
+  quotes: $quotes,
 }

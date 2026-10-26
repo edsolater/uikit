@@ -123,14 +123,14 @@ export function Popover(props: PopoverProps) {
           style={mergedProps.triggerStyle}
           ref={controller.setTriggerElement}
           htmlProps={{
-            type: 'button',
+            'type': 'button',
             'aria-haspopup': 'dialog',
             'aria-controls': controller.popoverId,
             'aria-expanded': controller.isOpen.map((isOpen) =>
               isOpen ? 'true' : 'false',
             ),
-            popovertarget: controller.popoverId,
-            popovertargetaction: mergedProps.triggerAction,
+            'popovertarget': controller.popoverId,
+            'popovertargetaction': mergedProps.triggerAction,
             ...mergedProps.triggerProps,
           }}
         >

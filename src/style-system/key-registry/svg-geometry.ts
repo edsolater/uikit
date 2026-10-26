@@ -25,12 +25,12 @@ export const $y = key('y')
 
 /** 矢量几何的 CSS 原名与具名 Key 对应表。 */
 export const svgGeometryKeys = {
-  'cx': $cx,
-  'cy': $cy,
-  'd': $d,
-  'r': $r,
-  'rx': $rx,
-  'ry': $ry,
-  'x': $x,
-  'y': $y,
+  cx: $cx,
+  cy: $cy,
+  d: $d,
+  r: $r,
+  rx: $rx,
+  ry: $ry,
+  x: $x,
+  y: $y,
 }

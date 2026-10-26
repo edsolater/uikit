@@ -119,7 +119,7 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
   return (
     <Piv
       class="StructureViewOverlay"
-      htmlProps={{ popover: 'manual', 'aria-hidden': 'true' }}
+      htmlProps={{ 'popover': 'manual', 'aria-hidden': 'true' }}
       ref={(element) => {
         surface = element
       }}
@@ -148,10 +148,10 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
           <Piv
             class="frame"
             style={{
-              left: `${group.rectangle.left}px`,
-              top: `${group.rectangle.top}px`,
-              width: `${group.rectangle.width}px`,
-              height: `${group.rectangle.height}px`,
+              'left': `${group.rectangle.left}px`,
+              'top': `${group.rectangle.top}px`,
+              'width': `${group.rectangle.width}px`,
+              'height': `${group.rectangle.height}px`,
               '--structure-view-mask-clip': readMaskClip(
                 group.rectangle,
                 val(measurement).controlBounds,

@@ -71,7 +71,7 @@ export const clickable = createPlugin<
       return {
         plugin: hoverPlugin,
         htmlProps: {
-          tabIndex: options?.tabIndex ?? 0,
+          'tabIndex': options?.tabIndex ?? 0,
           'data-plugin': {
             mergable: toPluginName(options?.componentName, 'clickable'),
           },

@@ -11,5 +11,5 @@ export const $interactivity = key('interactivity')
 
 /** 子树交互可用性的 CSS 原名与具名 Key 对应表。 */
 export const interactivityKeys = {
-  'interactivity': $interactivity,
+  interactivity: $interactivity,
 }

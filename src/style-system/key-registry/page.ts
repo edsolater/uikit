@@ -11,5 +11,5 @@ export const $page = key('page')
 
 /** 分页上下文的 CSS 原名与具名 Key 对应表。 */
 export const pageKeys = {
-  'page': $page,
+  page: $page,
 }

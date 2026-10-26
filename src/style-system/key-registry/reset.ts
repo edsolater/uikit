@@ -11,5 +11,5 @@ export const $all = key('all')
 
 /** 声明重置的 CSS 原名与具名 Key 对应表。 */
 export const resetKeys = {
-  'all': $all,
+  all: $all,
 }

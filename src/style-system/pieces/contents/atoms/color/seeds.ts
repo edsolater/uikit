@@ -9,7 +9,7 @@ import { paperColor } from './palette'
 
 export const themeBrand = token(
   {
-    default: brandColor,
+    'default': brandColor,
     '&[data-theme="dark"]': (base) =>
       oklch(base, {
         lightness: (current) => add(current, 0.12),
@@ -20,7 +20,7 @@ export const themeBrand = token(
 )
 export const themeAccent = token(
   {
-    default: oklch(themeBrand, {
+    'default': oklch(themeBrand, {
       hue: (current) => add(current, -18),
       lightness: (current) => add(current, 0.04),
       chroma: (current) => add(current, 0.01),
@@ -41,7 +41,7 @@ function createFeedbackTheme(
 ): Token {
   return token(
     {
-      default: colorMix(
+      'default': colorMix(
         [source, 0.94],
         [oklch(themeBrand, { lightness: 0.5, chroma: 0.018 }), 0.06],
       ),
@@ -71,7 +71,7 @@ export const themeInfo = createFeedbackTheme(infoColor, 'theme-info', {
 
 export const themeCanvas = token(
   {
-    default: oklch({ lightness: 0.945, chroma: 0.006, hue: 260 }),
+    'default': oklch({ lightness: 0.945, chroma: 0.006, hue: 260 }),
     '&[data-theme="dark"]': (base) =>
       oklch(base, {
         lightness: (current) => add(current, -0.815),
@@ -82,7 +82,7 @@ export const themeCanvas = token(
 )
 export const themeSurface = token(
   {
-    default: paperColor,
+    'default': paperColor,
     '&[data-theme="dark"]': (base) =>
       oklch(base, {
         lightness: (current) => add(current, -0.81),
@@ -93,7 +93,7 @@ export const themeSurface = token(
 )
 export const themeContent = token(
   {
-    default: oklch({ lightness: 0.26, chroma: 0.005, hue: 260 }),
+    'default': oklch({ lightness: 0.26, chroma: 0.005, hue: 260 }),
     '&[data-theme="dark"]': (base) =>
       oklch(base, {
         lightness: (current) => add(current, 0.61),
@@ -104,7 +104,7 @@ export const themeContent = token(
 )
 export const themeBoundary = token(
   {
-    default: oklch({ lightness: 0.42, chroma: 0.006, hue: 260, alpha: 0.18 }),
+    'default': oklch({ lightness: 0.42, chroma: 0.006, hue: 260, alpha: 0.18 }),
     '&[data-theme="dark"]': (base) =>
       oklch(base, {
         lightness: (current) => add(current, -0.11),
@@ -115,6 +115,6 @@ export const themeBoundary = token(
   'theme-boundary',
 )
 export const themeInk = token(
-  { default: 'black', '&[data-theme="dark"]': 'white' },
+  { 'default': 'black', '&[data-theme="dark"]': 'white' },
   'theme-ink',
 )

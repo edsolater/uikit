@@ -17,7 +17,7 @@ test('未登记的主体条件原样采用，快捷条件仍保留禁用守卫',
   const factory = vi.fn(() => 'blue')
   const color = token('red', {
     name: 'raw-color',
-    state: { hover: factory, '&[data-tone="danger"]': 'green' },
+    state: { 'hover': factory, '&[data-tone="danger"]': 'green' },
   })
   const css = compileRules([[['.RawState'], 'color', color]])
   expect(css).toContain('--raw-color: blue;')

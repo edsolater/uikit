@@ -12,5 +12,5 @@ export const $color = key('color')
 
 /** 前景颜色的 CSS 原名与具名 Key 对应表。 */
 export const colorKeys = {
-  'color': $color,
+  color: $color,
 }

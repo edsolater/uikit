@@ -11,5 +11,5 @@ export const $order = key('order')
 
 /** 视觉排列顺序的 CSS 原名与具名 Key 对应表。 */
 export const orderKeys = {
-  'order': $order,
+  order: $order,
 }

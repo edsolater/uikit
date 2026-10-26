@@ -30,23 +30,44 @@ const cssProperties = JSON.parse(
 
 test('预置属性排除废弃和无支持证据项，保留用户自定义声明入口', () => {
   const excluded = [
-    'box-align', 'box-direction', 'box-flex', 'box-flex-group', 'box-lines',
-    'box-ordinal-group', 'box-orient', 'box-pack', 'clip',
-    'page-break-after', 'page-break-before', 'page-break-inside',
-    'text-decoration-skip', 'user-modify', 'background-repeat-x',
-    'background-repeat-y', 'font-synthesis-position', 'link-parameters',
-    'path-length', 'speak-as', 'caret', 'image-resolution', 'line-height-step',
+    'box-align',
+    'box-direction',
+    'box-flex',
+    'box-flex-group',
+    'box-lines',
+    'box-ordinal-group',
+    'box-orient',
+    'box-pack',
+    'clip',
+    'page-break-after',
+    'page-break-before',
+    'page-break-inside',
+    'text-decoration-skip',
+    'user-modify',
+    'background-repeat-x',
+    'background-repeat-y',
+    'font-synthesis-position',
+    'link-parameters',
+    'path-length',
+    'speak-as',
+    'caret',
+    'image-resolution',
+    'line-height-step',
     'font-smooth',
   ]
   for (const name of excluded) {
     expect(Object.hasOwn(keyRegistry, name), name).toBe(false)
-    const variable = '$' + name.replace(/-([a-z0-9])/g, (_, character: string) =>
-      character.toUpperCase(),
-    )
+    const variable =
+      '$' +
+      name.replace(/-([a-z0-9])/g, (_, character: string) =>
+        character.toUpperCase(),
+      )
     expect(styleSystem, variable).not.toHaveProperty(variable)
     expect(resolveJSSKey(name), name).toBe(name)
   }
-  expect(Object.keys(keyRegistry).some(name => name.startsWith('-'))).toBe(false)
+  expect(Object.keys(keyRegistry).some((name) => name.startsWith('-'))).toBe(
+    false,
+  )
   expect(typeof resolveJSSKey('font-stretch')).toBe('object')
   expect(resolveJSSKey('--app-custom-color')).toBe('--app-custom-color')
   const custom = key('app-custom-layout')
@@ -78,18 +99,22 @@ test('对象身份与合法名称直通保留，未知和混合别名拒绝', ()
   expect(resolveJSSKey('constructor')).toBe('constructor')
   expect(() => resolveJSSKey('toString')).toThrow('未知 JSSKey 名称')
   expect(() => resolveJSSKey('padding-topColor')).toThrow('未知 JSSKey 名称')
-  expect(() => resolveJSSKey('unknownRegistryAlias')).toThrow('未知 JSSKey 名称')
+  expect(() => resolveJSSKey('unknownRegistryAlias')).toThrow(
+    '未知 JSSKey 名称',
+  )
 })
 
 test('纯创建不登记，直接目标和显式登记后的字符串共用组合规则', () => {
   const total = key('registry-custom-total', {
-    join: (items) =>
-      items.reduce((sum, item) => sum + Number(item.content), 0),
+    join: (items) => items.reduce((sum, item) => sum + Number(item.content), 0),
   })
   expect(resolveJSSKey(total.name)).toBe(total.name)
   expect(() => resolveJSSKey('registryCustomTotal')).toThrow('未知 JSSKey 名称')
   const baseline = compileCSS()
-  const direct = rules('.DirectTotal', [[total, 2], [total, 3]])
+  const direct = rules('.DirectTotal', [
+    [total, 2],
+    [total, 3],
+  ])
   try {
     expect(compileCSS()).toContain('registry-custom-total: 5;')
   } finally {

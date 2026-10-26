@@ -8,7 +8,7 @@ import { oklch } from '../functions/oklch'
 /** 阴影与遮罩的根主题来源，不随场景的局部地址移动。 */
 export const shadowColor = token(
   {
-    default: 'rgb(0 0 0 / 4%)',
+    'default': 'rgb(0 0 0 / 4%)',
     '&[data-theme="dark"]': (base) =>
       oklch(base, { alpha: (current) => multiply(current, 38 / 4) }),
   },
@@ -16,7 +16,7 @@ export const shadowColor = token(
 )
 export const backdropColor = token(
   {
-    default: 'rgb(0 0 0 / 62%)',
+    'default': 'rgb(0 0 0 / 62%)',
     '&[data-theme="dark"]': (base) =>
       oklch(base, { alpha: (current) => multiply(current, 72 / 62) }),
   },
@@ -28,7 +28,7 @@ export const shadowDistance = token('1px', 'shadow-distance')
 
 const cardShadowSource = token(
   {
-    default: valueList(
+    'default': valueList(
       shadowValue({
         x: 0,
         y: shadowDistance,
@@ -66,7 +66,7 @@ const cardShadowSource = token(
 
 const popoverShadowSource = token(
   {
-    default: valueList(
+    'default': valueList(
       shadowValue({
         x: 0,
         y: multiply(shadowDistance, 4),
@@ -102,7 +102,7 @@ const popoverShadowSource = token(
 
 const dialogShadowSource = token(
   {
-    default: valueList(
+    'default': valueList(
       shadowValue({
         x: 0,
         y: multiply(shadowDistance, 12),
@@ -138,7 +138,7 @@ const dialogShadowSource = token(
 
 const controlShadowSource = token(
   {
-    default: shadowValue({
+    'default': shadowValue({
       x: 0,
       y: shadowDistance,
       blur: multiply(shadowDistance, 2),
@@ -157,7 +157,7 @@ const controlShadowSource = token(
 )
 const raisedCardShadowSource = token(
   {
-    default: valueList(
+    'default': valueList(
       shadowValue({
         x: 0,
         y: multiply(shadowDistance, 2),

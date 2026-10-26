@@ -30,11 +30,11 @@ describe('clickable', () => {
         <>
           <Piv
             plugin={firstPlugin}
-            htmlProps={{ 'data-testid': 'first', role: 'button' }}
+            htmlProps={{ 'data-testid': 'first', 'role': 'button' }}
           />
           <Piv
             plugin={secondPlugin}
-            htmlProps={{ 'data-testid': 'second', role: 'button' }}
+            htmlProps={{ 'data-testid': 'second', 'role': 'button' }}
           />
           <Piv plugin={clickable} htmlProps={{ 'data-testid': 'direct' }} />
           <Piv

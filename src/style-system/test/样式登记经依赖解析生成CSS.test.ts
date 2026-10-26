@@ -225,7 +225,10 @@ test.each(['css-declaration', 'css-modification'])(
   (kind) => {
     const name = `entry-expression-${kind}`
     const size = token('2px', { name, address: '.EntryExpression' })
-    const expression = Object.assign(createJSSContent(() => '11px'), { kind })
+    const expression = Object.assign(
+      createJSSContent(() => '11px'),
+      { kind },
+    )
     keep(
       rules('.EntryExpression', [
         [size, expression],
@@ -249,9 +252,9 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
   expect(css).toContain('--local-property: custom-value;')
   expect(css).toContain('justify-content: center;')
   registerGlobalJSSKeyInStorage(key('test-collision-target'))
-  expect(() => registerGlobalJSSKeyInStorage(key('testCollision-target'))).toThrow(
-    'JSSKey 名称冲突：testCollisionTarget',
-  )
+  expect(() =>
+    registerGlobalJSSKeyInStorage(key('testCollision-target')),
+  ).toThrow('JSSKey 名称冲突：testCollisionTarget')
   expect(() => rule('.PartialName', 'testCollision-target', 'value')).toThrow(
     '未知 JSSKey 名称：testCollision-target',
   )
@@ -261,21 +264,21 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
 })
 
 test.each(
-  ([
-    { name: 'CSS 对象键', entry: { 'margin-left': '2px' } },
-    { name: 'Key 变量条目', entry: [$marginLeft, '2px'] },
-  ] satisfies { name: string; entry: DeclarationItem }[]).flatMap(
-    ({ name, entry: item }) => {
-      const forms: [string, DeclarationItem][] = [
-        ['直接传入', item],
-        ['数组内嵌套', [item]],
-        ['多层数组嵌套', [[[item]]]],
-        ['与其他声明混合', [{ color: 'red' }, [item, ['width', '3px']]]],
-        ['Set 与数组嵌套', new Set<DeclarationItem>([[item]])],
-      ]
-      return forms.map(([form, input]) => ({ name, form, input }))
-    },
-  ),
+  (
+    [
+      { name: 'CSS 对象键', entry: { 'margin-left': '2px' } },
+      { name: 'Key 变量条目', entry: [$marginLeft, '2px'] },
+    ] satisfies { name: string; entry: DeclarationItem }[]
+  ).flatMap(({ name, entry: item }) => {
+    const forms: [string, DeclarationItem][] = [
+      ['直接传入', item],
+      ['数组内嵌套', [item]],
+      ['多层数组嵌套', [[[item]]]],
+      ['与其他声明混合', [{ color: 'red' }, [item, ['width', '3px']]]],
+      ['Set 与数组嵌套', new Set<DeclarationItem>([[item]])],
+    ]
+    return forms.map(([form, input]) => ({ name, form, input }))
+  }),
 )('$name 的$form 输出同一 CSS 属性', ({ input }) => {
   const baseline = compileCSS()
   const handle = keep(rules('.Ordered', input))
@@ -292,10 +295,7 @@ test('对象与字符串条目混入嵌套 Iterable 后保留声明顺序和内�
   const content = vi.fn(() => '4px')
   const nested: Declarations = [
     ['margin', '1px'],
-    [
-      { marginLeft: '2px' },
-      ['margin', '3px'],
-    ],
+    [{ marginLeft: '2px' }, ['margin', '3px']],
     undefined,
     new Set<DeclarationItem>([
       [local, 'red'],

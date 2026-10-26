@@ -11,5 +11,5 @@ export const $visibility = key('visibility')
 
 /** 可见性的 CSS 原名与具名 Key 对应表。 */
 export const visibilityKeys = {
-  'visibility': $visibility,
+  visibility: $visibility,
 }

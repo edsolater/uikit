@@ -117,7 +117,7 @@ describe('Piv 生命周期', () => {
                 <Piv
                   as="th"
                   htmlProps={{
-                    scope: 'col',
+                    'scope': 'col',
                     'aria-sort': direction,
                     'data-numeric': () => (val(numeric) ? 'true' : undefined),
                   }}
@@ -683,7 +683,9 @@ describe('Piv style 属性', () => {
       const [color, updateColor] = createSignal('red')
       setColor = updateColor
       return (
-        <Piv style={{ color: color(), 'background-color': backgroundColor }} />
+        <Piv
+          style={{ 'color': color(), 'background-color': backgroundColor }}
+        />
       )
     }
 
@@ -708,10 +710,10 @@ describe('Piv style 属性', () => {
   test('plugin 与直接 props 各自提供 StateView 列表时仍按字段优先级合并', () => {
     const host = document.createElement('div')
     const pluginStyles = createState([
-      { color: 'green', 'background-color': 'black' },
+      { 'color': 'green', 'background-color': 'black' },
     ])
     const directStyles = createState<
-      Array<{ color?: string; 'border-color'?: string }>
+      Array<{ 'color'?: string; 'border-color'?: string }>
     >([{ color: 'red' }])
     const plugin = createPivPlugin(() => ({ style: pluginStyles }))
     const dispose = render(
