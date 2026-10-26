@@ -260,6 +260,33 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
   )
 })
 
+test.each(
+  ([
+    { name: 'CSS 对象键', entry: { 'margin-left': '2px' } },
+    { name: 'Key 变量条目', entry: [$marginLeft, '2px'] },
+  ] satisfies { name: string; entry: DeclarationItem }[]).flatMap(
+    ({ name, entry: item }) => {
+      const forms: [string, DeclarationItem][] = [
+        ['直接传入', item],
+        ['数组内嵌套', [item]],
+        ['多层数组嵌套', [[[item]]]],
+        ['与其他声明混合', [{ color: 'red' }, [item, ['width', '3px']]]],
+        ['Set 与数组嵌套', new Set<DeclarationItem>([[item]])],
+      ]
+      return forms.map(([form, input]) => ({ name, form, input }))
+    },
+  ),
+)('$name 的$form 输出同一 CSS 属性', ({ input }) => {
+  const baseline = compileCSS()
+  const handle = keep(rules('.Ordered', input))
+  const css = compileCSS()
+  expect(css).toContain('.Ordered')
+  expect(css.match(/margin-left: 2px;/g)).toHaveLength(1)
+  expect(css).not.toContain('marginLeft:')
+  handle.remove()
+  expect(compileCSS()).toBe(baseline)
+})
+
 test('对象与字符串条目混入嵌套 Iterable 后保留声明顺序和内容', () => {
   const local = token('black', { name: 'ordered-local' })
   const content = vi.fn(() => '4px')
