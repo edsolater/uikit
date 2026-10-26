@@ -1,3 +1,4 @@
+import { token } from '../token'
 /** 在真实浏览器验证全局源规则、按需依赖、重新挂载与失败边界。 */
 import { key } from '../key'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
@@ -7,8 +8,6 @@ import type { CDPSession } from '@vitest/browser-playwright'
 import { compileCSS, cssRoot as root } from '../css-root'
 import { rule, rules, type RulesHandle, type Rules } from '../rule'
 import { condition, media } from '../condition'
-import { value } from '../value'
-import { variable, variableFrom } from '../variable'
 import { declare } from '../operations/declare'
 import { $margin } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
@@ -49,7 +48,7 @@ afterEach(() => {
 })
 
 test('简写与长属性覆盖生效，变量注册与局部定义沿同一次编译', () => {
-  const gap = variable('4px', { name: '--space-example', registration: { syntax: '<length>', inherits: true, initialValue: '2px' } })
+  const gap = token('4px', { name: '--space-example', registration: { syntax: '<length>', inherits: true, initialValue: '2px' } })
   handles.push(rules('.example', [[$margin, '6px'], declare(key('margin-left'), '10px'), [$padding, gap]]))
   handles.push(rule('.example', gap, '20px'))
   const before = style.textContent
@@ -64,9 +63,9 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   expect(Array.from(style.sheet!.cssRules).filter((entry) => entry.cssText.startsWith('@property --space-example'))).toHaveLength(1)
 })
 
-test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', async () => {
-  const distance = variable('2px', { name: "browser-distance-size", address: ".example", states: Object.fromEntries([['hover', '4px']]) })
-  const factor = variable(2, { name: "browser-distance-ratio", address: ".example", states: Object.fromEntries([['testLarge', 3]]) })
+test('不同 Token 分支分别匹配，并由浏览器执行嵌套交集', async () => {
+  const distance = token('2px', { name: "browser-distance-size", address: ".example", state: Object.fromEntries([['hover', '4px']]) })
+  const factor = token(2, { name: "browser-distance-ratio", address: ".example", state: Object.fromEntries([['testLarge', 3]]) })
   handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
@@ -76,9 +75,9 @@ test('不同 Variable 分支分别匹配，并由浏览器执行嵌套交集', a
   expect(getComputedStyle(element).marginLeft).toBe('12px')
 })
 
-test('同址 Variable 分支在浏览器中共同更新复合值', async () => {
-  const distance = variable('2px', { name: "browser-shared-size", address: ".example", states: Object.fromEntries([['hover', '4px']]) })
-  const factor = variable(2, { name: "browser-shared-ratio", address: ".example", states: Object.fromEntries([['hover', 3]]) })
+test('同址 Token 分支在浏览器中共同更新复合值', async () => {
+  const distance = token('2px', { name: "browser-shared-size", address: ".example", state: Object.fromEntries([['hover', '4px']]) })
+  const factor = token(2, { name: "browser-shared-ratio", address: ".example", state: Object.fromEntries([['hover', 3]]) })
   handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
@@ -91,7 +90,7 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
   button.className = 'subject-order'
   button.textContent = '条件顺序验证'
   document.body.append(button)
-  const handle = rule('.subject-order', 'margin-left', variable('1px', { name: "browser-ordered-size", address: ".subject-order", states: Object.fromEntries([['hover', '2px'], ['active', '3px']]) }))
+  const handle = rule('.subject-order', 'margin-left', token('1px', { name: "browser-ordered-size", address: ".subject-order", state: Object.fromEntries([['hover', '2px'], ['active', '3px']]) }))
   handles.push(handle)
   try {
     root.mount()
@@ -102,7 +101,7 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
     try {
       expect(button.matches(':hover:active')).toBe(true)
       expect(getComputedStyle(button).marginLeft).toBe('3px')
-      handle.replace(variable('1px', { name: "browser-ordered-size", address: ".subject-order", states: Object.fromEntries([['active', '3px'], ['hover', '2px']]) }))
+      handle.replace(token('1px', { name: "browser-ordered-size", address: ".subject-order", state: Object.fromEntries([['active', '3px'], ['hover', '2px']]) }))
       root.mount()
       expect(style.textContent).toBe(forwardCSS)
       expect(getComputedStyle(button).marginLeft).toBe('3px')
@@ -110,8 +109,8 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
   } finally { button.remove() }
 })
 
-test('Variable 比例在浏览器改变混色结果，消费函数只定义一次', async () => {
-  const ratio = variable(0.8, { name: 'surface-ratio', address: ".example", states: { hover: 0.6 } })
+test('Token 比例在浏览器改变混色结果，消费函数只定义一次', async () => {
+  const ratio = token(0.8, { name: 'surface-ratio', address: ".example", state: { hover: 0.6 } })
   handles.push(rule('.example', 'background-color', colorMix(['black', ratio], 'white')))
   root.mount()
   expect(style.textContent!.match(/background-color:/g)).toHaveLength(1)
@@ -127,7 +126,7 @@ test('Variable 比例在浏览器改变混色结果，消费函数只定义一�
 })
 
 test('动画复合值激活帧定义，并继续编译帧内变量', () => {
-  const opacity = variable(0.7, { name: '--final-opacity' })
+  const opacity = token(0.7, { name: '--final-opacity' })
   const frames: Rules = [[[condition('from')], 'opacity', opacity], [[condition('to')], 'opacity', opacity]]
   const name = animationName('motion-appearance', frames)
   handles.push(rule('.example', 'animation', animationValue({ name, duration: '1s', playState: 'paused' })))
@@ -138,7 +137,7 @@ test('动画复合值激活帧定义，并继续编译帧内变量', () => {
 })
 
 test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的函数', () => {
-  const body: Rules = [[undefined, 'result', variable('16px', { name: "browser-function-size", states: Object.fromEntries([['testMedia', '20px']]) })]]
+  const body: Rules = [[undefined, 'result', token('16px', { name: "browser-function-size", state: Object.fromEntries([['testMedia', '20px']]) })]]
   const size = cssFunction('--example-size() returns <length>', body)
   handles.push(rule('.example', 'font-size', size()))
   root.mount()
@@ -146,7 +145,7 @@ test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的�
 })
 
 test('源 Rule 删除后重新挂载，派生依赖随可达性退出且既有宿主内容保留', () => {
-  const temporaryVariable = variable('12px', { name: '--temporary-reference' })
+  const temporaryVariable = token('12px', { name: '--temporary-reference' })
   const handle = rule('.example', 'margin-left', temporaryVariable)
   handles.push(handle)
   root.mount()
@@ -160,9 +159,9 @@ test('源 Rule 删除后重新挂载，派生依赖随可达性退出且既有�
   expect(style.textContent).toContain('.existing')
 })
 
-test('缺少宿主时不触发 Value；编译失败保留之前成功提交的 CSS', () => {
+test('缺少宿主时不触发 Token；编译失败保留之前成功提交的 CSS', () => {
   const active = vi.fn()
-  handles.push(rule('.example', 'margin-left', value('2px', { onActive: active })))
+  handles.push(rule('.example', 'margin-left', token('2px', { onFirstScan: active })))
   style.remove()
   expect(() => root.mount()).toThrow('缺少样式挂载节点')
   expect(active).not.toHaveBeenCalled()
@@ -172,7 +171,7 @@ test('缺少宿主时不触发 Value；编译失败保留之前成功提交的 C
   const beforeRules = Array.from(style.sheet!.cssRules)
   const invalid: Rules = []
   invalid.push([undefined, undefined, invalid])
-  handles.push(rule('.example', 'color', value('red', { onActive: () => invalid })))
+  handles.push(rule('.example', 'color', token('red', { onFirstScan: () => invalid })))
   expect(() => root.mount()).toThrow('递归引用')
   expect(style.textContent).toBe(before)
   expect(Array.from(style.sheet!.cssRules)).toEqual(beforeRules)
@@ -185,8 +184,8 @@ test('未登记的主体条件实际叠加、读取来源当前值并退出恢�
   const before = style.textContent
   const danger = '&[data-tone="danger"]'
   const emphasis = '&[data-emphasis]'
-  const source = variable('green', { name: 'browser-raw-source', address: ".example", states: { [danger]: 'blue' } })
-  const color = variable('red', { name: 'browser-raw-color', address: ".example", states: { [danger]: source, [emphasis]: source } })
+  const source = token('green', { name: 'browser-raw-source', address: ".example", state: { [danger]: 'blue' } })
+  const color = token('red', { name: 'browser-raw-color', address: ".example", state: { [danger]: source, [emphasis]: source } })
   handles.push(rule('.example', 'color', color))
   root.mount()
   expect(style.textContent).not.toBe(before)
@@ -224,9 +223,9 @@ test('选择居中布局后内容实际位于容器中心', () => {
   expect(Math.abs((inner.top + inner.bottom) / 2 - (outer.top + outer.bottom) / 2)).toBeLessThan(1)
 })
 
-test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 55', () => {
-  const first = variable(1, { name: "browser-first-ratio", address: ".example", states: { browserA: 2, browserB: 5 } })
-  const second = variable(1, { name: "browser-second-ratio", address: ".example", states: { browserB: 11, browserA: 7 } })
+test('AB 同时激活时两个 Token 都取 B，参数与分支反序仍为 55', () => {
+  const first = token(1, { name: "browser-first-ratio", address: ".example", state: { browserA: 2, browserB: 5 } })
+  const second = token(1, { name: "browser-second-ratio", address: ".example", state: { browserB: 11, browserA: 7 } })
   const width = rule('.example', 'width', multiply(multiply(first, second), '1px'))
   handles.push(width)
   root.mount()
@@ -241,8 +240,8 @@ test('AB 同时激活时两个 Variable 都取 B，参数与分支反序仍为 5
 })
 
 test('不同主体显式局部声明同名变量而互不污染', () => {
-  const first = variable('11px', { name: 'scoped-shared-size', address: '.example' })
-  const second = variable('23px', { name: 'scoped-shared-size' })
+  const first = token('11px', { name: 'scoped-shared-size', address: '.example' })
+  const second = token('23px', { name: 'scoped-shared-size' })
   const neighbor = document.body.appendChild(document.createElement('div'))
   neighbor.className = 'neighbor'
   handles.push(rule('.example', 'width', first))
@@ -286,9 +285,9 @@ test('同名函数的完整依赖由后一个定义接管，不残留旧局部�
 
 test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', async () => {
   const session = await cdp() as CDPSession
-  const size = variable('4px', {
+  const size = token('4px', {
     name: 'environment-size',
-    onActive: (): Rules => [
+    onFirstScan: (): Rules => [
       [[condition(':where(:root)')], size, '8px'],
       [[condition(':where(:root)'), condition('&:where([data-theme="dark"])')], size, '12px'],
       [[condition(':where(:root)'), media('(prefers-reduced-motion: reduce)'), condition('&')], size, '0px'],
@@ -323,7 +322,7 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
 
 test('动效消费统一基准的当前值，分隔线按本地文字变量实时派生', async () => {
   const session = await cdp() as CDPSession
-  const lineBase = variable('blue', { name: 'mounted-line-base', address: '.example' })
+  const lineBase = token('blue', { name: 'mounted-line-base', address: '.example' })
   const line = lineColor(lineBase)
   element.style.transitionProperty = 'opacity'
   handles.push(rule('.example', 'transition-duration', multiply(motionDuration, 2 / 3)))
@@ -336,10 +335,10 @@ test('动效消费统一基准的当前值，分隔线按本地文字变量实�
     const committed = style.textContent
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
-    element.style.setProperty(motionDuration.toCSSString(), '360ms')
+    element.style.setProperty(`--${motionDuration.name!.replace(/^--/, '')}`, '360ms')
     element.style.setProperty('--mounted-line-base', 'red')
     expect(getComputedStyle(element).transitionDuration).toBe('0.24s')
-    element.style.removeProperty(motionDuration.toCSSString())
+    element.style.removeProperty(`--${motionDuration.name!.replace(/^--/, '')}`)
     expect(getComputedStyle(element).borderTopColor).not.toBe(originalLine)
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],

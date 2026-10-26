@@ -1,4 +1,4 @@
-import { variable } from '../variable'
+import { token } from '../token'
 /** 验证共享组件颜色角色由各选择器声明，并按原生 CSS 作用域传给嵌套内容。 */
 import { declare } from '../operations/declare'
 import { key } from '../key'
@@ -6,8 +6,8 @@ import { afterEach, beforeEach, expect, test } from 'vitest'
 import { cssRoot } from '../css-root'
 import { rules, type RulesHandle } from '../rule'
 
-const surfaceColor = variable('white', 'nested-surface-color')
-const contentColor = variable('black', 'nested-content-color')
+const surfaceColor = token('white', 'nested-surface-color')
+const contentColor = token('black', 'nested-content-color')
 
 let style: HTMLStyleElement
 const handles: RulesHandle[] = []

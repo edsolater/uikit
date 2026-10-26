@@ -1,35 +1,31 @@
 /** CSS 动画内容与按需帧定义。 */
 import { assert, isString } from '@edsolater/fnkit'
-import { createJSSContent, type JSSContent } from '../../../content'
 import { condition } from '../../../condition'
 import type { Rules } from '../../../rule'
-import { value, type Value, type ValueInput } from '../../../value'
+import { token, type Token, type TokenInput } from '../../../token/core'
 
 /** 动画名称；使用时提供帧定义。 */
-export function animationName(name: string, frames: Rules): Value {
+export function animationName(name: string, frames: Rules): Token {
   assert(isString(name), 'animationName 的名称必须是字符串。')
-  return value(name, { onActive: () => [[[condition(`@keyframes ${name}`)], undefined, frames]] })
+  return token(name, { onFirstScan: () => [[[condition(`@keyframes ${name}`)], undefined, frames]] })
 }
 
 /** 单条动画配置。 */
 export interface AnimationParts {
-  name: ValueInput
-  duration: ValueInput
-  easing?: ValueInput
-  delay?: ValueInput
-  iterations?: ValueInput
-  direction?: ValueInput
-  fillMode?: ValueInput
-  playState?: ValueInput
+  name: TokenInput
+  duration: TokenInput
+  easing?: TokenInput
+  delay?: TokenInput
+  iterations?: TokenInput
+  direction?: TokenInput
+  fillMode?: TokenInput
+  playState?: TokenInput
 }
 
 /** 延迟生成动画内容。 */
-export function animationValue(parts: AnimationParts): JSSContent {
-  return createJSSContent((resolve) => [
-    resolve(parts.name), resolve(parts.duration), resolve(parts.easing), resolve(parts.delay),
-    resolve(parts.iterations), resolve(parts.direction), resolve(parts.fillMode), resolve(parts.playState),
-  ].filter((part) => part !== undefined).join(' '), [
-    parts.name, parts.duration, parts.easing, parts.delay,
-    parts.iterations, parts.direction, parts.fillMode, parts.playState,
-  ])
+export function animationValue(parts: AnimationParts): Token {
+  return token({ default: parts }, { dependencies: current => Object.values(current), toCSSString: (current, resolve) => [
+    resolve(current.name), resolve(current.duration), resolve(current.easing), resolve(current.delay),
+    resolve(current.iterations), resolve(current.direction), resolve(current.fillMode), resolve(current.playState),
+  ].filter((part) => part !== undefined).join(' ') })
 }

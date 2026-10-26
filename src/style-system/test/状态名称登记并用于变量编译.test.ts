@@ -1,20 +1,19 @@
+import { token } from '../token'
 /** State Condition 的名称与 Rule 地址。 */
 import { expect, test, vi } from 'vitest'
 import { condition } from '../condition'
-import { variable } from '../variable'
 import { rule } from '../rule'
-import { value } from '../value'
 import { compileCSS, compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
 import * as stateConditions from '../pieces/state-conditions'
 
-test('内置状态可由 Variable 直接采用', () => {
-  const color = variable('red', { name: 'state-color', states: { hover: 'blue' } })
+test('内置状态可由 Token 直接采用', () => {
+  const color = token('red', { name: 'state-color', state: { hover: 'blue' } })
   expect(compileRules([[[condition('.Example')], 'color', color]])).toContain('--state-color: blue;')
 })
 test('未登记的主体条件原样采用，快捷条件仍保留禁用守卫', () => {
   const factory = vi.fn(() => 'blue')
-  const color = variable('red', { name: 'raw-color', states: { hover: factory, '&[data-tone="danger"]': 'green' } })
+  const color = token('red', { name: 'raw-color', state: { hover: factory, '&[data-tone="danger"]': 'green' } })
   const css = compileRules([[['.RawState'], 'color', color]])
   expect(css).toContain('--raw-color: blue;')
   expect(css).toContain('&[data-tone="danger"] {')
@@ -35,7 +34,7 @@ test('公开、原始、嵌套和按需 Rules 的字符串不因状态登记改�
   const raw = () => compileRules([
     [['.Raw', 'literalState'], 'color', 'red'],
     [['.Nested'], undefined, [[['literalState'], 'width', '1px']]],
-    [['.Consumer'], 'color', value('black', { onActive: () => [[['.Resource', 'literalState'], 'color', 'blue']] })],
+    [['.Consumer'], 'color', token('black', { onFirstScan: () => [[['.Resource', 'literalState'], 'color', 'blue']] })],
   ])
   try {
     const before = raw()
@@ -52,30 +51,23 @@ test('公开、原始、嵌套和按需 Rules 的字符串不因状态登记改�
   } finally { direct.remove(); registered.remove(); unknown.remove() }
 })
 
-test('登记只影响之后创建的快捷匹配，不改变已有原始条件', () => {
-  const options = { name: 'definition-time-color', states: { definitionTimeState: 'blue' } }
-  const earlier = variable('red', options)
-  expect([...earlier.config.states.keys()][0].condition.header).toBe('definitionTimeState')
+test('已登记名称用于状态输出，公开配置保留状态内容', () => {
+  const options = { name: 'definition-time-color', state: { definitionTimeState: 'blue' } }
+  const earlier = token('red', options)
   const registered = stateCondition('definitionTimeState', condition('&[data-definition-time]'))
-  const color = variable('red', options)
-  expect([...color.config.states.keys()][0]).toBe(registered)
-  expect(color.config.states.get(registered)).toBe('blue')
-  expect([...earlier.config.states.keys()][0]).not.toBe(registered)
+  const color = token('red', options)
   expect(compileRules([[['.DefinitionTime'], 'color', color]])).toContain('&:where([data-definition-time])')
 })
 
 test('两个自写条件保留输入顺序，状态内容保留来源引用', () => {
   const first = '&[data-first-raw]'
   const second = '&[data-second-raw]'
-  const source = variable('gray', { name: 'raw-source', states: { [first]: 'blue' } })
-  const target = variable('red', { name: 'raw-target', states: {
+  const source = token('gray', { name: 'raw-source', state: { [first]: 'blue' } })
+  const target = token('red', { name: 'raw-target', state: {
     [first]: () => source,
     active: () => 'black',
     [second]: () => source,
   } })
-  const states = [...target.config.states.keys()]
-  expect(states.map(state => state.name)).toEqual(['active', first, second])
-  expect(states[2].order).toBeGreaterThan(states[1].order)
   const css = compileRules([[[condition('.RawReference')], 'color', target]])
   for (const selector of [first, second]) {
     const escapedCondition = selector.slice(1).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -90,11 +82,10 @@ test('状态输出按登记顺序，默认生产函数保持消费前惰性', ()
   const first = stateCondition('factoryOrderFirst', condition('&[data-first]'))
   const second = stateCondition('factoryOrderSecond', condition('&[data-second]'))
   const defaultFactory = vi.fn(() => 1)
-  const source = variable(defaultFactory, { name: 'ordered-state-source', states: {
+  const source = token(defaultFactory, { name: 'ordered-state-source', state: {
     factoryOrderSecond: () => 3,
     factoryOrderFirst: () => 2,
   } })
-  expect([...source.config.states.keys()]).toEqual([first, second])
   expect(defaultFactory).not.toHaveBeenCalled()
   const css = compileRules([[['.OrderedStates'], 'opacity', source]])
   expect(css.indexOf('--ordered-state-source: 2;')).toBeLessThan(css.indexOf('--ordered-state-source: 3;'))

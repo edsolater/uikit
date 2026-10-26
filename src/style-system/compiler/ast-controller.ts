@@ -5,8 +5,7 @@
  * 让编译行为共用显式位置和存活来源，保留输出退出的区别。
  */
 import { assert, isObjectLike } from '@edsolater/fnkit'
-import { createCompiledValue } from './compiled-value'
-import type { Value } from '../value'
+import { createCompiledContent } from './compiled-content'
 import { conditionAddressKey, type ConditionPath } from '../condition'
 import { keyPriority, propertyName, type JSSKey } from '../key'
 import type { JSSCompileContext } from '../content'
@@ -59,7 +58,7 @@ export function createASTController(session: ASTSession): ASTController {
       return record ? record.content : input
     },
     /** 将当前位置已完成的记录交付给输出视图，不执行内容。 */
-    getCompiledValue: (node, input) => createCompiledValue(input, session.compilations.get(node)!.content.contents),
+    getCompiledContentView: (node, input) => createCompiledContent(input, () => session.compilations.get(node)?.content.contents ?? new WeakMap()),
     /** 只查询已有位置事实，供分析读取依赖及核对失效身份。 */
     getContentCompilation: (node, input) => isObjectLike(input)
       ? session.compilations.get(node)?.content.contents.get(input) : undefined,
@@ -113,6 +112,8 @@ export class ASTSession {
   identity: object = {}
   /** 本次节点编译的唯一位置账本；节点编译维护进度，Controller 操作其中的当前内容。 */
   compilations = new WeakMap<JSSStyleNode, StyleNodeCompileState>()
+  /** 对象生命周期每会话只执行一次；位置记录分别消费同一份替代结果。 */
+  objectCompilations = new WeakMap<object, ContentCompilationRecord>()
   settlementChecks = new Set<() => boolean>()
   private owners = new Map<JSSStyleNode, Set<JSSStyleNode>>()
   private products = new Map<JSSStyleNode, Set<JSSStyleNode>>()

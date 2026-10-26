@@ -5,7 +5,9 @@
 属性别名由此模块统一登记。
 */
 import { assert, hasProperty, isFunction, isString } from '@edsolater/fnkit'
-import type { Value, ValueInput } from './value'
+import type { ContentView } from './content'
+import { isToken, type Token, type TokenInput } from './token/core'
+import { cssTokenName } from './token/css'
 
 /** 原生属性名称。 */
 export interface JSSKeyObject {
@@ -13,9 +15,9 @@ export interface JSSKeyObject {
   /** 同完整地址的声明等级；普通 Key 省略时为最高档 999。 */
   priority?: number
   /**
-   * 同 Target／State 地址、同属性名有至少两项时，按声明顺序连接 Value；省略时默认生成逗号数组。保留输入 Value 即保留其声明位置的编译结果；改写 content 后新内容在结果位置编译。
+   * 同 Target／State 地址、同属性名有至少两项时，按声明顺序连接内容贡献；省略时默认生成逗号数组。保留输入视图 即保留其声明位置的编译结果；改写 content 后新内容在结果位置编译。
    */
-  join?: (values: Value[]) => ValueInput
+  join?: (values: ContentView[]) => TokenInput
 }
 
 /** 原生属性名称与可输出的自定义 Key。 */
@@ -24,7 +26,7 @@ export interface JSSKeyDefinition<K extends string = string> extends JSSKeyObjec
 }
 
 /** 属性或变量声明目标。 */
-export type JSSKey = JSSKeyObject | string
+export type JSSKey = JSSKeyObject | Token | string
 
 /**
  * 创建属性 Key；name 是输出的 CSS 属性名，join 可改写重复声明的默认数组组合。
@@ -74,7 +76,7 @@ export function resolveJSSKey(input: JSSKey): JSSKey {
  * 读取并校验声明属性名，拒绝输出协议返回函数等非文本内容。
  */
 export function propertyName(key: JSSKey): string {
-  const name = isString(key) ? key : key.toCSSString()
+  const name = isString(key) ? key : isToken(key) ? cssTokenName(key) : key.toCSSString()
   assert(isString(name), 'JSSKey 的 toCSSString 必须返回属性名字符串。')
   return name
 }
@@ -82,4 +84,4 @@ export function propertyName(key: JSSKey): string {
 /**
  * 读取声明键的有效等级；字符串与普通 Key 默认使用999，内容对象同样读取自身等级。
  */
-export const keyPriority = (key: JSSKey | undefined): number => key !== undefined && typeof key !== 'string' ? key.priority ?? 999 : 999
+export const keyPriority = (key: JSSKey | undefined): number => key !== undefined && typeof key !== 'string' ? ('priority' in key ? key.priority : undefined) ?? 999 : 999

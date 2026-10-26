@@ -1,6 +1,6 @@
+import { token } from '../token'
 /** 在浏览器验证状态配方引用当前 CSS 值及局部覆盖。 */
 import { afterEach, expect, test } from 'vitest'
-import { variable } from '../variable'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
@@ -12,11 +12,11 @@ stateCondition('currentActive', condition('&:where([data-active])'))
 afterEach(() => document.body.replaceChildren())
 
 test('状态配方将来源的局部7px乘2，直接派生也读取局部值', () => {
-  const source = variable('5px', 'current-local-source-size')
-  const direct = variable(source, { name: 'current-local-direct-size', address: '.LocalContext' })
-  const derived = variable('1px', {
+  const source = token('5px', 'current-local-source-size')
+  const direct = token(source, { name: 'current-local-direct-size', address: '.LocalContext' })
+  const derived = token('1px', {
     name: 'current-local-derived-size', address: ".LocalContext",
-    states: { currentHover: multiply(source, 2) },
+    state: { currentHover: multiply(source, 2) },
   })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.LocalContext')], 'width', derived],
@@ -33,9 +33,9 @@ test('状态配方将来源的局部7px乘2，直接派生也读取局部值', (
 })
 
 test('外层hover引用来源当前active值，来源独立按浏览器状态变化', () => {
-  const inner = variable('10px', { name: 'current-inner-size', address: ".Ordered", states: { currentHover: '20px', currentActive: '30px' } })
-  const active = variable('1px', { name: 'current-active-size', address: ".Ordered", states: { currentActive: inner } })
-  const hover = variable('2px', { name: 'current-hover-size', address: ".Ordered", states: { currentHover: inner } })
+  const inner = token('10px', { name: 'current-inner-size', address: ".Ordered", state: { currentHover: '20px', currentActive: '30px' } })
+  const active = token('1px', { name: 'current-active-size', address: ".Ordered", state: { currentActive: inner } })
+  const hover = token('2px', { name: 'current-hover-size', address: ".Ordered", state: { currentHover: inner } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.Ordered')], 'margin-left', active],
     [[condition('.Ordered')], 'margin-right', hover],
@@ -57,11 +57,11 @@ test('外层hover引用来源当前active值，来源独立按浏览器状态变
 })
 
 test('仅在状态配方中引用的来源保留注册初始值', () => {
-  const source = variable('10px', {
+  const source = token('10px', {
     name: 'current-registered-source-size',
     registration: { syntax: '<length>', inherits: false, initialValue: '17px' },
   })
-  const target = variable('1px', { name: 'current-registered-target-size', address: ".RegisteredContext", states: { currentHover: multiply(source, 2) } })
+  const target = token('1px', { name: 'current-registered-target-size', address: ".RegisteredContext", state: { currentHover: multiply(source, 2) } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.RegisteredContext')], 'width', target],
   ])

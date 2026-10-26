@@ -1,7 +1,7 @@
+import { token } from '../token'
 /** 在浏览器验证黑盒引用链、成员状态和局部声明。 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { variable } from '../variable'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
@@ -19,8 +19,8 @@ stateCondition('laterState', condition('&:where([data-later])'))
 afterEach(() => document.body.replaceChildren())
 
 test('焦点轮廓读取调用者选择的具体颜色，局部声明保持独立', async () => {
-  const accent = variable('black', 'focus-accent')
-  const tone = variable('gray', 'focus-tone')
+  const accent = token('black', 'focus-accent')
+  const tone = token('gray', 'focus-tone')
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.AccentFocus')], 'outline', focusOutline(accent, '.AccentFocus')],
     [[condition('.AccentFocus')], accent, 'rgb(12, 34, 56)'],
@@ -40,9 +40,9 @@ test('焦点轮廓读取调用者选择的具体颜色，局部声明保持独�
 })
 
 test('真实 focusVisible 低于 hover 和 active，鼠标 focus 不等于 focusVisible', async () => {
-  const width = variable('10px', {
+  const width = token('10px', {
     name: 'focused-size', address: ".Focused",
-    states: { focus: '12px', hover: '20px', active: '30px' },
+    state: { focus: '12px', hover: '20px', active: '30px' },
   })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([[[condition('.Focused')], 'width', width]])
@@ -72,8 +72,8 @@ test('真实 focusVisible 低于 hover 和 active，鼠标 focus 不等于 focus
 })
 
 test.each([false, true])('首次状态内引用与普通消费的顺序不改变浏览器结果：%s', (ordinaryFirst) => {
-  const inner = variable('10px', { name: 'audit-inner-size', address: ".Audit", states: { chainHover: '20px' } })
-  const outer = variable('1px', { name: 'audit-outer-size', address: ".Audit", states: { chainHover: inner } })
+  const inner = token('10px', { name: 'audit-inner-size', address: ".Audit", state: { chainHover: '20px' } })
+  const outer = token('1px', { name: 'audit-outer-size', address: ".Audit", state: { chainHover: inner } })
   const rules: Rules = [
     [[condition('.Audit')], 'margin-left', outer],
     [[condition('.Audit')], 'width', inner],
@@ -93,7 +93,7 @@ test.each([false, true])('首次状态内引用与普通消费的顺序不改变
 })
 
 test('较早状态的高特异性不能压过较晚状态', () => {
-  const size = variable('10px', { name: 'priority-size', address: ".Priority", states: { specificState: '20px', laterState: '30px' } })
+  const size = token('10px', { name: 'priority-size', address: ".Priority", state: { specificState: '20px', laterState: '30px' } })
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileRules([[[condition('.Priority')], 'width', size]])
   const element = document.body.appendChild(document.createElement('div'))
@@ -104,14 +104,14 @@ test('较早状态的高特异性不能压过较晚状态', () => {
 })
 
 test('状态内容组合各来源当前 CSS 状态值', () => {
-  const palette = variable('gray', { name: 'context-palette-color', address: ".StateContext, .IndependentPalette", states: { chainHover: 'blue', chainActive: 'red' } })
-  const surface = variable('white', { name: 'context-surface-color', address: ".StateContext", states: { chainHover: palette } })
-  const first = variable('10px', { name: 'context-first-size', address: ".StateContext", states: { chainHover: '20px', chainActive: '30px' } })
-  const second = variable('1px', { name: 'context-second-size', address: ".StateContext", states: { chainHover: '3px', chainActive: '5px' } })
-  const missing = variable('7px', { name: 'context-missing-size', address: ".StateContext", states: { chainActive: '9px' } })
-  const combined = variable('1px', {
+  const palette = token('gray', { name: 'context-palette-color', address: ".StateContext, .IndependentPalette", state: { chainHover: 'blue', chainActive: 'red' } })
+  const surface = token('white', { name: 'context-surface-color', address: ".StateContext", state: { chainHover: palette } })
+  const first = token('10px', { name: 'context-first-size', address: ".StateContext", state: { chainHover: '20px', chainActive: '30px' } })
+  const second = token('1px', { name: 'context-second-size', address: ".StateContext", state: { chainHover: '3px', chainActive: '5px' } })
+  const missing = token('7px', { name: 'context-missing-size', address: ".StateContext", state: { chainActive: '9px' } })
+  const combined = token('1px', {
     name: 'context-combined-size', address: ".StateContext",
-    states: { chainHover: createJSSContent((resolve) => `calc(${resolve(first)} + ${resolve(second)} + ${resolve(missing)})`, [first, second, missing]) },
+    state: { chainHover: createJSSContent((resolve) => `calc(${resolve(first)} + ${resolve(second)} + ${resolve(missing)})`, [first, second, missing]) },
   })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.StateContext')], 'background-color', surface],
@@ -138,8 +138,8 @@ test('状态内容组合各来源当前 CSS 状态值', () => {
 })
 
 test('普通 hover 条件中的状态配方引用来源当前状态', () => {
-  const palette = variable('gray', { name: 'explicit-palette-color', address: ".ExplicitContext", states: { chainHover: 'blue', chainActive: 'red' } })
-  const surface = variable('white', { name: 'explicit-surface-color', address: ".ExplicitContext", states: { chainHover: palette } })
+  const palette = token('gray', { name: 'explicit-palette-color', address: ".ExplicitContext", state: { chainHover: 'blue', chainActive: 'red' } })
+  const surface = token('white', { name: 'explicit-surface-color', address: ".ExplicitContext", state: { chainHover: palette } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.ExplicitContext'), condition('&:where([data-hover])')], 'background-color', surface],
   ])
@@ -152,8 +152,8 @@ test('普通 hover 条件中的状态配方引用来源当前状态', () => {
 })
 
 test('普通 active 条件内的 hover 配方读取来源 active 值', () => {
-  const palette = variable('gray', { name: 'nested-palette-color', address: ".NestedContext", states: { chainHover: 'blue', chainActive: 'red' } })
-  const surface = variable('white', { name: 'nested-surface-color', address: ".NestedContext", states: { chainHover: palette } })
+  const palette = token('gray', { name: 'nested-palette-color', address: ".NestedContext", state: { chainHover: 'blue', chainActive: 'red' } })
+  const surface = token('white', { name: 'nested-surface-color', address: ".NestedContext", state: { chainHover: palette } })
   document.body.appendChild(document.createElement('style')).textContent = compileRules([
     [[condition('.NestedContext'), condition('&:where([data-active])')], 'background-color', surface],
   ])

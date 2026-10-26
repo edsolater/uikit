@@ -1,6 +1,7 @@
+import { token, type TokenAddress } from '../token'
 /** 完整颜色修改规则的浏览器流程验证。
 
-验证普通 Variable 应用完整规则及多个状态同时生效。
+验证普通 Token 应用完整规则及多个状态同时生效。
 
 规则由 CSS 动态解读，无需交互时重新编译。
 */
@@ -13,10 +14,8 @@ import { cssRoot } from '../css-root'
 import { declare } from '../operations/declare'
 import { key } from '../key'
 import { modify } from '../operations/modify'
-import { adjust } from '../operations/adjust'
 import { oklch } from '../pieces/contents/functions/oklch'
 import { rules, type RulesHandle } from '../rule'
-import { variable, variableFrom, referenceVariable, type VariableAddress } from '../variable'
 import { colorMix } from '../pieces/contents/functions/color-mix'
 
 const handles: RulesHandle[] = []
@@ -34,7 +33,7 @@ function element(className: string, parent: HTMLElement = document.body) {
   result.className = className
   return result
 }
-const configured = (name: string, address: VariableAddress = ':root') => variable('black', { name, address })
+const configured = (name: string, address: TokenAddress = ':root') => token('black', { name, address })
 
 test('完整规则一次设置四通道，再按顺序应用另一完整规则', () => {
   const surface = configured('whole-color')
@@ -61,7 +60,7 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
     chroma: currentExpression => multiply(currentExpression, 0.8), hue: currentExpression => add(currentExpression, 10), alpha: 0.7,
   } })
   handles.push(rules('.First', [declare(surface, 'oklch(.6 .16 260)'), color({ background: surface })]))
-  const otherSurface = variableFrom(surface, 'oklch(.4 .1 120)', { address: '.Second' })
+  const otherSurface = token('oklch(.4 .1 120)', { name: surface.name, state: surface.state, address: '.Second', registration: surface.registration })
   handles.push(rules('.Second', [color({ background: otherSurface })]))
   for (const selector of ['.First', '.Second']) {
     handles.push(rules([selector, '&[data-hover]'], modify(selector === '.Second' ? otherSurface : surface, hoverChange)))
@@ -85,7 +84,7 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
   expect(getComputedStyle(first).backgroundColor).toBe('oklch(0.6 0.16 260)')
 })
 
-test('另一个普通Variable来源保留完整修改结果', () => {
+test('另一个普通Token来源保留完整修改结果', () => {
   const source = configured('source-color', '.Source'), target = configured('target-color', ['.Source', '& .Target'])
   handles.push(rules('.Source', [declare(source, 'red'), modify(source, modification({ type: 'color', detail: { lightness: 0.5, chroma: 0.1, hue: 120 } }))]))
   handles.push(rules(['.Source', '& .Target'], [declare(target, source), modify(target, modification({ type: 'color', detail: { alpha: 0.6 } })), color({ background: target })]))
@@ -94,7 +93,7 @@ test('另一个普通Variable来源保留完整修改结果', () => {
 })
 
 test('主题源更新和混色实时生效，规则无需重新编译', () => {
-  const source = variable('var(--theme-source)', 'theme-source')
+  const source = token('var(--theme-source)', 'theme-source')
   const target = configured('theme-color', '.Theme')
   handles.push(rules('.Theme', [declare(target, colorMix([source, 0.5], 'white')),
     modify(target, modification({ type: 'color', detail: { alpha: currentExpression => add(currentExpression, -0.1) } })), color({ background: target })]))
@@ -108,8 +107,8 @@ test('主题源更新和混色实时生效，规则无需重新编译', () => {
   }
 })
 
-test('基础来源Variable状态进入与退出仍更新最终颜色', async () => {
-  const source = variable('red', { name: 'state-source', address: '.State', states: { hover: 'blue' } })
+test('基础来源Token状态进入与退出仍更新最终颜色', async () => {
+  const source = token('red', { name: 'state-source', address: '.State', state: { hover: 'blue' } })
   const target = configured('state-target', '.State')
   handles.push(rules('.State', [declare(target, source), modify(target, modification({ type: 'color', detail: { alpha: 0.5 } })), color({ background: target })]))
   mount()
@@ -124,12 +123,12 @@ test('基础来源Variable状态进入与退出仍更新最终颜色', async () 
   reference.style.backgroundColor = 'oklch(from red l c h / .5)'
   expect(getComputedStyle(targetElement).backgroundColor).toBe(getComputedStyle(reference).backgroundColor)
 })
-test('独立变化的条件修改与连续Adjust绑定得到同色，子元素局部覆盖配方生效', () => {
+test('独立变化按非交换顺序修改并得到规定颜色，子元素局部覆盖配方生效', () => {
   const base = oklch({ lightness: 0.4, chroma: 0.1, hue: 120, alpha: 0.8 })
-  const surface = variable(base, { name: 'dual-surface', address: '.Dual' })
+  const surface = token(base, { name: 'dual-surface', address: '.Dual' })
   const hover = modification({ name: '--dual-hover-rule', type: 'color', detail: { lightness: currentExpression => add(currentExpression, 0.1), chroma: currentExpression => multiply(currentExpression, 2) } })
   const active = modification({ type: 'color', detail: { hue: 150, alpha: currentExpression => add(currentExpression, -0.2) } })
-  const direct = adjust(adjust(variable(base, 'dual-direct'), hover), active)
+  const direct = token('oklch(0.5 0.2 150 / 0.6)')
   handles.push(rules('.Dual', [[key('background-color'), surface]]))
   handles.push(rules(['.Dual', '&[data-hover]'], modify(surface, hover)))
   handles.push(rules(['.Dual', '&[data-active]'], modify(surface, active)))
@@ -147,18 +146,4 @@ test('独立变化的条件修改与连续Adjust绑定得到同色，子元素�
   expect(getComputedStyle(target).backgroundColor).toBe('oklch(0.4 0.1 150 / 0.6)')
   delete target.dataset.active
   expect(getComputedStyle(target).backgroundColor).toBe('oklch(0.4 0.1 120 / 0.8)')
-})
-
-test('天然来源可独立修改，调整结果保持独立，可调用数值材料也按表达修改', () => {
-  const source = Object.create({ key: key('--natural-source'), content: 'oklch(.4 .1 120)' })
-  const change = Object.create({ type: 'color', key: key('--natural-alpha'), content: 'l c h / 0.5', description: '透明度' })
-  const merged = adjust(source, change)
-  const number = Object.assign(() => { throw new Error('信息体不能被调用') }, { key: key('--natural-number'), content: 2 })
-  handles.push(rules('.Natural', [modify(source, { type: 'color', key: key('--natural-lightness'), content: 'calc(l + 0.1) c h / alpha' }),
-    modify(number, { type: 'expression', detail: x => add(x, 3) }), [key('z-index'), 'var(--natural-number)'], [key('background-color'), merged], [key('border-color'), referenceVariable(source)]]))
-  mount()
-  const target = element('Natural')
-  expect(getComputedStyle(target).backgroundColor).toBe('oklch(0.4 0.1 120 / 0.5)')
-  expect(getComputedStyle(target).borderTopColor).toBe('oklch(0.5 0.1 120)')
-  expect(getComputedStyle(target).zIndex).toBe('5')
 })

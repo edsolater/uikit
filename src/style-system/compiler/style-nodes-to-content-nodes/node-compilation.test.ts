@@ -1,3 +1,4 @@
+import { token } from '../../token'
 /** 内容通知与位置操作的契约验证。
  *
  * 区分通知返回值、自身输出及显式内容操作，并检查跨波等待。
@@ -6,7 +7,6 @@
  */
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../../css-root'
-import { value } from '../../value'
 import type { JSSCompileContext, JSSContent } from '../../content'
 import type { ASTController } from '../contracts'
 
@@ -50,10 +50,14 @@ test('暂缓不撤回已设置内容，嵌套前序通知与插入只执行一�
       }
     },
   }
-  const activate: JSSContent = { onCompile() { ready = true } }
-  const css = compileRules([[[], 'width', value([{ onCompile: producer }, waiting])], [[], 'order', activate]])
+  const activate: JSSContent = { onCompile(_context, ast) {
+    ready = true
+    const target = ast.search({ key: 'width' })[0]
+    target.compileRevision++
+  } }
+  const css = compileRules([[[], 'width', token({ default: [{ onCompile: producer }, waiting] })], [[], 'order', activate]])
   expect(css).toContain('width: 1px;')
   expect(css.match(/--once: 7;/g)).toHaveLength(1)
   expect(producer).toHaveBeenCalledOnce()
-  expect(attempts).toBe(2)
+  expect(attempts).toBe(1)
 })

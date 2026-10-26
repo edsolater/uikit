@@ -1,9 +1,8 @@
+import { token } from '../token'
 /** 内容自身处理当前操作；后续内容由普通编译队列推进。 */
 import { expect, it } from 'vitest'
 import { condition } from '../condition'
 import { createJSSContent, type JSSContent } from '../content'
-import { value } from '../value'
-import { variable, referenceVariable } from '../variable'
 import { key, type JSSKeyObject } from '../key'
 import { compileRules } from '../css-root'
 import type { JSSStyleNode } from '../compiler/contracts'
@@ -15,7 +14,7 @@ it('当前操作立即改写，产物中的按需规则继续独立编译', () =
     return { onCompile(context, controller) {
       events.push(`rewrite-${amount}`)
       const content = amount === 1
-        ? value('1', { onActive: () => [[[path], 'height', operation(2)]] })
+        ? token('1', { onFirstScan: () => [[[path], 'height', operation(2)]] })
         : createJSSContent((resolve) => `calc(${resolve(2)} * 3px)`, [2])
       controller.insert({ before: context.node, conditionPath: context.conditionPath }, [amount === 1 ? 'opacity' : 'height', content], { owner: context.node, identity: 'output' })
     } }
@@ -39,10 +38,10 @@ it('即时改写可删除当前节点，不保留全局提交集等待收口', (
 
 it('删除首次消费位置不会撤销另一消费者共享的一次性注册产物', () => {
   const path = condition('.shared-registration')
-  const registered = variable(1, { name: 'shared-registration', registration: { syntax: '<number>', inherits: false, initialValue: 1 } })
+  const registered = token(1, { name: 'shared-registration', registration: { syntax: '<number>', inherits: false, initialValue: 1 } })
   const first: JSSContent = { onCompile(context, controller) {
     const target = context.node
-    controller.setContent(context, value(registered, { onActive: () => [[[path], 'display', { onCompile(_context, next) { next.remove(target) } }]] }))
+    controller.setContent(context, token(registered, { onFirstScan: () => [[[path], 'display', { onCompile(_context, next) { next.remove(target) } }]] }))
   } }
   const css = compileRules([[[path], 'z-index', first], [[path], 'order', registered]])
   expect(css).toContain('@property --shared-registration')
@@ -51,8 +50,8 @@ it('删除首次消费位置不会撤销另一消费者共享的一次性注册�
 })
 
 it('同名不同对象首次消费替换注册，旧对象再次消费不反向覆盖', () => {
-  const first = variable(1, { name: 'registration-order', registration: { syntax: '<number>', inherits: false } })
-  const second = variable('red', { name: 'registration-order', registration: { syntax: '<color>', inherits: true } })
+  const first = token(1, { name: 'registration-order', registration: { syntax: '<number>', inherits: false } })
+  const second = token('red', { name: 'registration-order', registration: { syntax: '<color>', inherits: true } })
   const css = compileRules([[[], 'width', first], [[], 'color', second], [[], 'height', first]])
   expect(css).toContain('syntax: "<color>"')
   expect(css).toContain('inherits: true')
@@ -60,14 +59,14 @@ it('同名不同对象首次消费替换注册，旧对象再次消费不反向�
 })
 
 it('天然材料同名资源替换后旧对象所有消费者撤销，再消费可重新注册', () => {
-  const first = { key: key('--registration-natural-restart'), content: 1, registration: { syntax: '<number>', inherits: false } }
-  const second = { key: key('--registration-natural-restart'), content: 'red', registration: { syntax: '<color>', inherits: true } }
+  const first = token(1, { name: 'registration-natural-restart', registration: { syntax: '<number>', inherits: false } })
+  const second = token('red', { name: 'registration-natural-restart', registration: { syntax: '<color>', inherits: true } })
   const remove: JSSContent = { onCompile(context, controller) {
     controller.remove(controller.search({ key: 'width' })[0])
     controller.remove(controller.search({ key: 'height' })[0])
-    controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['opacity', referenceVariable(first)], { owner: context.node })
+    controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['opacity', first], { owner: context.node })
   } }
-  const css = compileRules([[[], 'width', referenceVariable(first)], [[], 'color', referenceVariable(second)], [[], 'height', referenceVariable(first)], [[], 'display', remove]])
+  const css = compileRules([[[], 'width', first], [[], 'color', second], [[], 'height', first], [[], 'display', remove]])
   expect(css).toContain('syntax: "<number>"')
   expect(css).toContain('inherits: false')
   expect(css).not.toContain('syntax: "<color>"')
@@ -75,7 +74,7 @@ it('天然材料同名资源替换后旧对象所有消费者撤销，再消费�
 
 it.each([false, true])('同波删除消费者不会产生孤儿资源，共享消费者=%s', (shared) => {
   const path = condition('.pending-owner')
-  const dependency = value('1px', { onActive: () => [[[condition('.pending-resource')], 'color', 'red']] })
+  const dependency = token('1px', { onFirstScan: () => [[[condition('.pending-resource')], 'color', 'red']] })
   const removeFirst: JSSContent = { onCompile(context, controller) {
     const first = controller.search({ key: 'width' })[0]!
     controller.remove(first)
@@ -95,7 +94,7 @@ it('已暂缓节点收到显式重访后，继续编译而不误报无进展', (
     controller.setContent(context, '1px'); } }
   const second: JSSContent = { onCompile(context, controller) {
     ready = true
-    controller.search({ key: 'width' }).find(node => node.content === first)!.compileRevision++
+    const waiting = controller.search({ key: 'width' }).find(node => node.content === first)!; waiting.content = { onCompile(next, ast) { ast.setContent(next, '1px') } }; waiting.compileRevision++
     controller.setContent(context, '2px'); } }
   const css = compileRules([[[path], 'width', first], [[path], 'height', second]])
   expect(css).toContain('width: 1px')
@@ -110,14 +109,14 @@ it('声明目标暂缓后等待下一波重试，不因本波通知自身就提�
     onCompile(context, controller) {
       visits++
       if (visits === 1) {
-        controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['height', '2px'], { owner: context.node })
+        controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['height', { onCompile(_next, ast) { context.node.key = key('width'); context.node.compileRevision++ } , toCSSString: () => '2px' }], { owner: context.node })
         controller.defer(context.node, '等待下一波目标')
       }
 
     },
   }
   const css = compileRules([[[path], target, '1px']])
-  expect(visits).toBe(2)
+  expect(visits).toBe(1)
   expect(css).toContain('width: 1px')
   expect(css).toContain('height: 2px')
 })
@@ -141,7 +140,7 @@ it('展开入口脱离输出后仍保留来源链，撤销祖先时产物一并�
     original = context.node
     controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['height', child], { owner: context.node })
   } }
-  const removal = value('1', { onActive: () => [[[path], 'display', { onCompile(context, controller) { controller.remove(original); } }]] })
+  const removal = token('1', { onFirstScan: () => [[[path], 'display', { onCompile(context, controller) { controller.remove(original); } }]] })
   const css = compileRules([[[path], 'opacity', source], [[path], 'order', removal]])
   expect(css).not.toContain('width:')
   expect(css).toContain('order: 1')

@@ -36,7 +36,8 @@ function ruleAddress(rule: Rule, identities: Map<string | symbol, number>): stri
 /** 本次编译的按需资源账本；激活保留消费者，波末完整提交同址替换与新增节点。 */
 export class ResourceCompilation {
   private resourceIdentities = new Map<string | symbol, number>()
-  private pendingRules = new Map<string, { rule: Rule; owners: Set<JSSStyleNode>; records: Set<ActivationRecord> }>()
+  private pendingRules = new Map<Rule, { owners: Set<JSSStyleNode>; order: number }>()
+  private pendingOrder = 0
   private activatedContents = new Map<JSSContent, ActivationRecord>()
   private consumers = new Map<JSSStyleNode, Map<'key' | 'content', Set<JSSContent>>>()
 
@@ -47,7 +48,7 @@ export class ResourceCompilation {
   activate(value: JSSContent, context: JSSContentContext, owner: JSSStyleNode): void {
     let record = this.activatedContents.get(value)
     if (!record) {
-      record = { rules: value.onActive?.(context) ?? [], nodes: [] }
+      record = { rules: value.onFirstScan?.(context) ?? [], nodes: [] }
       this.activatedContents.set(value, record)
     }
     const surviving = record.nodes.filter((node) => this.session.hasOutput(node))
@@ -56,10 +57,9 @@ export class ResourceCompilation {
       return
     }
     for (const rule of record.rules) {
-      const address = ruleAddress(rule, this.resourceIdentities)
-      let pending = this.pendingRules.get(address)
-      if (!pending) this.pendingRules.set(address, pending = { rule, owners: new Set(), records: new Set() })
-      pending.rule = rule
+      let pending = this.pendingRules.get(rule)
+      if (!pending) this.pendingRules.set(rule, pending = { owners: new Set(), order: 0 })
+      pending.order = this.pendingOrder++
       pending.owners.add(owner)
     }
   }
@@ -83,16 +83,26 @@ export class ResourceCompilation {
       }
     }
     // 本波尚未发布的资源也必须撤回失效来源，避免发布后再留下孤儿产物。
-    const retainedAddresses = new Set([...retained].flatMap(value =>
-      (this.activatedContents.get(value)?.rules ?? []).map(rule => ruleAddress(rule, this.resourceIdentities))))
-    for (const [address, pending] of this.pendingRules) {
-      if (!retainedAddresses.has(address)) pending.owners.delete(owner)
+    const retainedRules = new Set([...retained].flatMap(value => this.activatedContents.get(value)?.rules ?? []))
+    for (const [rule, pending] of this.pendingRules) {
+      if (!retainedRules.has(rule)) pending.owners.delete(owner)
     }
   }
   /** 按需资源记录每一个消费者，改写撤销不影响其他消费者。 */
   private createDependencyNodes(): JSSStyleNode[] {
-    const pending = [...this.pendingRules.entries()]
+    const grouped = new Map<string, { rule: Rule; owners: Set<JSSStyleNode>; records: Set<ActivationRecord>; order: number }>()
+    for (const [rule, contribution] of this.pendingRules) {
+      const owners = [...contribution.owners].filter(owner => this.session.isAlive(owner))
+      if (!owners.length) continue
+      const address = ruleAddress(rule, this.resourceIdentities)
+      let entry = grouped.get(address)
+      if (!entry) grouped.set(address, entry = { rule, owners: new Set(), records: new Set(), order: contribution.order })
+      for (const owner of owners) entry.owners.add(owner)
+      if (contribution.order > entry.order) { entry.rule = rule; entry.order = contribution.order }
+    }
+    const pending = [...grouped.entries()]
     this.pendingRules.clear()
+    this.pendingOrder = 0
     if (!pending.length) return []
     const finalRules = new Map<Rule, Set<ActivationRecord>>()
     for (const [, entry] of pending) {
@@ -105,12 +115,11 @@ export class ResourceCompilation {
       for (const rule of record.rules) finalRules.get(rule)?.add(record)
     }
     return pending.flatMap(([address, entry]) => {
-      const owners = [...entry.owners].filter((owner) => this.session.isAlive(owner))
-      if (!owners.length) return []
       return rulesToStyleNodes([entry.rule]).map((node, index) => {
-        node.resourceAddress = address
+        Object.defineProperty(node, 'resourceAddress', { configurable: true, enumerable: true,
+          get: () => ruleAddress(entry.rule, this.resourceIdentities) })
         node.identity = `dependency/${address}/${index}`
-        for (const owner of owners) this.session.own(owner, node)
+        for (const owner of entry.owners) this.session.own(owner, node)
         for (const record of entry.records) record.nodes.push(node)
         return node
       })

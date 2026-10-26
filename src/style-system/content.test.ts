@@ -1,60 +1,25 @@
-/** 内容协议的类型边界验证。
- *
- * 验证广义内容识别与 Expression 的窄边界，纯 Value 替换后仍保持内容契约。
- *
- * 防止广义内容被无阻碍地当作 JSS 内容组织工具的产物。
- */
-import { expect, expectTypeOf, test } from 'vitest'
-import { createJSSContent, hasJSSContentOutput, hasJSSContentOnCompileMethod, isJSSContent, type Expression, type JSSContent } from './content'
-import { value, type ValueOptions } from './value'
-import { variable } from './variable'
-import { cssFunction } from './css-function'
-import { modification, type Modification } from './modification'
-import { oklch } from './pieces/contents/functions/oklch'
+/** 内容协议按能力识别，Token 的直接内容和引用共享消费过程。 */
+import { expect, test } from 'vitest'
+import { hasJSSContentOutput, hasJSSContentOnCompileMethod, isJSSContent } from './content'
+import { compileRules } from './css-root'
+import { token } from './token'
 
-test('继承的内容方法和可调用内容保留其行为', () => {
-  const inherited = Object.create({ onCompile: (context, controller) => { controller.setContent(context, 'compiled') } })
-  const callable = Object.assign(() => 'value', { toCSSString: () => 'css' })
-
+test('继承的方法和可调用内容对象保留协议，不执行函数体', () => {
+  const inherited = Object.create({ onCompile: (context, ast) => ast.setContent(context, '3px') })
+  const callable = Object.assign(() => { throw new Error('内容对象不能作为生产函数调用') }, { toCSSString: () => '4px' })
   expect(hasJSSContentOnCompileMethod(inherited)).toBe(true)
-  expect(isJSSContent(inherited)).toBe(true)
   expect(hasJSSContentOutput(callable)).toBe(true)
-  expect(isJSSContent(callable)).toBe(true)
+  const css = compileRules([[['.Inherited'], 'width', token(inherited)], [['.Callable'], 'height', token(callable)]])
+  expect(css).toContain('width: 3px;')
+  expect(css).toContain('height: 4px;')
 })
 
-test('只有符合内容协议的属性才标识内容', () => {
+test('只有符合协议的字段标识内容，缺失或非法方法不冒充协议', () => {
   expect(isJSSContent({ dependencies: [] })).toBe(true)
-  expect(isJSSContent({ contents: [] })).toBe(false)
-  expect(isJSSContent({ onActive: () => undefined })).toBe(true)
+  expect(isJSSContent({ onFirstScan: () => [] })).toBe(true)
   expect(hasJSSContentOnCompileMethod({ onCompile: undefined })).toBe(false)
   expect(hasJSSContentOutput({ toCSSString: 'css' })).toBe(false)
-  expect(isJSSContent({ dependencies: null, onActive: false })).toBe(false)
+  expect(isJSSContent({ dependencies: null, onFirstScan: false })).toBe(false)
   expect(isJSSContent(null)).toBe(false)
   expect(isJSSContent(undefined)).toBe(false)
-})
-
-test('广义内容和定义主体不属于Expression，其输出表达式属于Expression', () => {
-  expectTypeOf<JSSContent>().not.toExtend<Expression>()
-  expectTypeOf<Required<Pick<JSSContent, 'dependencies' | 'toCSSString' | 'onCompile'>>>().not.toExtend<Expression>()
-  expectTypeOf(variable(3, 'content-number')).not.toExtend<Expression>()
-  expectTypeOf(modification({ type: 'color', detail: {} })).not.toExtend<Expression>()
-  expectTypeOf<Modification>().toExtend<JSSContent>()
-  expectTypeOf(modification({ type: 'color', detail: {} })).toExtend<JSSContent>()
-  const custom = cssFunction('--identity(--n <number>)', [[[], 'result', 'var(--n)']])
-  expectTypeOf(custom).not.toExtend<Expression>()
-  expectTypeOf(custom(3)).toExtend<Expression>()
-  expectTypeOf(createJSSContent(() => '3')).toExtend<Expression>()
-})
-
-test('纯Value与OKLCH替换内容后保持Expression，宽选项保留广义内容契约', () => {
-  const plain = value<number>(3)
-  expectTypeOf(plain.withContent(4)).toExtend<Expression>()
-  const color = oklch({ lightness: 0.6, chroma: 0.1, hue: 240 })
-  expectTypeOf(color.withContent({ lightness: 0.5, chroma: 0.1, hue: 240 })).toExtend<Expression>()
-  const options: ValueOptions<number> = {}
-  expectTypeOf(value(3, options)).not.toExtend<Expression>()
-  const optionalOptions: ValueOptions<number> | undefined = options.onActive ? options : undefined
-  expectTypeOf(value(3, optionalOptions)).not.toExtend<Expression>()
-  expectTypeOf(value(3, { onActive: () => [] })).not.toExtend<Expression>()
-  expectTypeOf(value(3, { toCSSString: current => String(current) })).toExtend<Expression>()
 })

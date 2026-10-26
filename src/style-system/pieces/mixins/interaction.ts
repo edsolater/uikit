@@ -1,7 +1,7 @@
 /** 点击交互 Mixin。 */
-import { variable, variableFrom, type VariableAddress } from '../../variable'
+import { token, type TokenAddress } from '../../token'
 import type { Declarations } from '../../rule'
-import type { ValueInput } from '../../value'
+import type { TokenInput } from '../../token'
 import { $cursor, $userSelect } from '../keys/interaction'
 import { $opacity } from '../keys/opacity'
 import { $transform } from '../keys/transform'
@@ -20,9 +20,9 @@ import { focusOutline, focusOffset } from '../contents/atoms/focus'
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {
   /** 明确交互变量的根据地，不从消费位置隐式推断。 */
-  address?: VariableAddress
-  opacity?: ValueInput
-  focusColor?: ValueInput
+  address?: TokenAddress
+  opacity?: TokenInput
+  focusColor?: TokenInput
 }
 
 const quickDuration = multiply(motionDuration, 2 / 3)
@@ -30,11 +30,11 @@ const quickDuration = multiply(motionDuration, 2 / 3)
 /** Mixin：可点击效果；可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。 */
 export const clickable = (options: ClickableMixinOptions = {}): Declarations => [
   [$outline, focusOutline(options.focusColor, options.address)],
-  [$outlineOffset, variableFrom(focusOffset, focusOffset.content, { address: options.address })],
-  [$cursor, variable('pointer', { name: 'clickable-cursor', address: options.address, states: { disabled: 'not-allowed' } })],
-  [$opacity, options.opacity ?? variableFrom(opacity, opacity, { name: 'clickable-opacity', address: options.address })],
-  [$transform, variable('none', {
-    name: 'clickable-transform', address: options.address, states: {
+  [$outlineOffset, token(focusOffset.default, { name: focusOffset.name, state: focusOffset.state, address: options.address })],
+  [$cursor, token('pointer', { name: 'clickable-cursor', address: options.address, state: { disabled: 'not-allowed' } })],
+  [$opacity, options.opacity ?? token(opacity.default, { name: 'clickable-opacity', state: opacity.state, address: options.address })],
+  [$transform, token('none', {
+    name: 'clickable-transform', address: options.address, state: {
       active: translateY('1px'),
       disabled: 'none',
     }

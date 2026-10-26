@@ -1,14 +1,14 @@
 /** 颜色与层级 Mixin。 */
 import type { Declarations } from '../../rule'
-import type { ValueInput } from '../../value'
+import type { TokenInput } from '../../token'
 import { valueList } from '../contents/atom-creators/list'
 import { $backgroundColor, $color } from '../keys/color'
 import { $boxShadow } from '../keys/box-shadow'
 
 /** 内容色与背景颜色配置。 */
 export interface ColorMixinOptions {
-  content?: ValueInput
-  background?: ValueInput
+  content?: TokenInput
+  background?: TokenInput
 }
 
 /** Mixin：主体颜色。 */
@@ -18,6 +18,6 @@ export const color = (options: ColorMixinOptions = {}): Declarations => [
 ]
 
 /** Mixin：视觉层级。 */
-export const elevation = (level?: ValueInput | ValueInput[]): Declarations => [
+export const elevation = (level?: TokenInput | TokenInput[]): Declarations => [
   [$boxShadow, Array.isArray(level) ? valueList(...level) : level],
 ]

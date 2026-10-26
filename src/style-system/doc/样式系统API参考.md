@@ -1,79 +1,75 @@
-# 如何查API
+# Style System API 参考
 
-本文按用途展示仓库内Style System的公开调用形状和例子，帮助选择API；有效输入、返回、错误和生命周期见[__spec.md](behaviors/__spec.md)。完整业务写法先读[按钮教程](从按钮需求组合样式.md)或[使用入口](样式系统对象与行为.md)。
+本文按用途记录 Token 接口，完整定义见 [Token 设计](Token设计.md)。Token 迁移已实现并通过本轮验证；涉及 token 的代码使用当前公开入口。规则登记、CSS 读取与提交仍沿用现有入口。
 
 ## 对象与用途
 
 | 对象 | 用来表达什么 | 负责行为 |
 | --- | --- | --- |
-| Key、Declaration | 属性目标与内容的配对 | [rule与rules的登记和撤销.md](behaviors/rule与rules的登记和撤销.md) |
-| Value、withContent | 数据与格式复用 | [Value与Expression.md](behaviors/Value与Expression.md) |
-| Variable、VariableName | 可覆盖的具体内容、名称引用 | [Variable的创建与复用.md](behaviors/Variable的创建与复用.md) |
-| Condition、StateCondition | 适用位置或主体状态 | [CSS作用域与层叠.md](behaviors/CSS作用域与层叠.md)、[states与条件选择.md](behaviors/states与条件选择.md) |
-| Expression、CSSFunction | 内容组合与具名CSS函数调用 | [Value与Expression.md](behaviors/Value与Expression.md)、[内容扩展与AST编辑.md](behaviors/内容扩展与AST编辑.md) |
-| Modification、adjust、modify | 独立结果或指定范围内的完整结果加工 | [adjust与modify.md](behaviors/adjust与modify.md) |
-| Mixin | 布局、文字、边界等完整效果 | [rule与rules的登记和撤销.md](behaviors/rule与rules的登记和撤销.md) |
-| rule、rules、CSSRoot | 登记、更新、撤销、读取与提交 | [rule与rules的登记和撤销.md](behaviors/rule与rules的登记和撤销.md)、[Compile与挂载.md](behaviors/Compile与挂载.md) |
+| Token | 样式基础内容与可选状态；内容可以引用其他 Token 或计算表达式 | [Token 的创建与复用](behaviors/Token的创建与复用.md) |
+| State | 可单独复用或直接写进 Token 的状态取值规则 | [states 与条件选择](behaviors/states与条件选择.md) |
+| Key、Declaration | CSS 属性目标与内容的配对 | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md) |
+| Condition | 选择作用位置和环境条件 | [CSS 作用域与层叠](behaviors/CSS作用域与层叠.md) |
+| 普通函数 | 计算、格式化或组合定义后返回 Token | [Token 与表达式](behaviors/Token与表达式.md) |
+| modify | 在指定位置或条件下修改同一个 Token | [定义组合与 modify](behaviors/Token的定义组合与modify.md) |
+| Mixin | 布局、文字、边界等完整效果 | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md) |
+| rule、rules、CSSRoot | 登记、更新、撤销、读取与提交 | [编译与挂载](behaviors/Compile与挂载.md) |
 
-Pieces是这些可复用材料的统称；Atom是在组合中将Value或Variable当作一块内容使用的称呼。了解其目录职责或内部协议时再读[架构](../architecture.md)。
+Pieces 是可复用材料的统称；Atom 表示组合中一块具体材料。普通值、表达式与有状态的共享材料统一通过 Token 表达。
 
-## 创建与派生
-
-以下是调用形状示意，具体输入含义见[Variable的创建与复用.md](behaviors/Variable的创建与复用.md)。
+## 创建 Token
 
 ```ts
-variable(defaultContent, nameOrOptions)
-variable({ default: defaultContent, hover: hoverContent }, nameOrOptions)
-variableFrom(source, source.content)
-source.variant('content')
-variableFrom(source, content, nameOrOptions)
-variableFrom(source, source.content, { name: 'new-name', states: { hover: hoverContent }, priority: 0 })
-mapVariableRules(source, result => multiply(result, 2))
-mapVariableRules(source, mapResult, { name: 'mapped-name', address: '.Mapped' })
-```
-
-常见配置是name、address、states、variants、priority、registration、onActive和compileWaveIndex。variableFrom 与 mapVariableRules 未指定的配置都继承来源，显式配置覆盖对应项，名称也遵循同一规则。普通创建的 address 缺省root，states随根据地；variant与adjust沿用来源根据地。registration的syntax/inherits/initialValue分别有什么效果，见[按需资源与同名替换.md](behaviors/按需资源与同名替换.md)；配置创建与之后消费的区别见[Value与Expression.md](behaviors/Value与Expression.md)。Variable.name的字符串拼接和CSS引用使用[Variable的创建与复用.md](behaviors/Variable的创建与复用.md)。
-
-variants 按名称保存变体规则或固定值；`source.variant('content')` 返回保留状态的 Variable，结果不带父层变体。variableFrom 对所有 Variable 原样继承 states 和 variants，规则基于新基础计算，固定值保持原值。完整边界见[Variable的创建与复用.md](behaviors/Variable的创建与复用.md#选择一种用途)。
-
-mapVariableRules 对默认、state、variant 各自的最终值表达式映射一次；它接收普通映射函数，adjust 将领域 Modification 转为这种映射。两者返回的定义供后续 variableFrom、variant、declare 按普通规则使用，不携带待重放的加工命令。
-
-## 独立变化与来源绑定
-
-```ts
-const source = variable(oklch({ lightness: 0.5, chroma: 0.1, hue: 240 }), 'source')
-const change = modification({
-  name: '--change', type: 'color',
-  detail: { lightness: 0.3, chroma: current => add(current, 0.3) },
+token(value, name)
+token(value)
+token({ default: value })
+token({ default: value1, hover: base => multiply(base, 2), active: 4 })
+token(value, {
+  name: 'name',
+  state: { hover: base => multiply(base, 2), active: 4 },
 })
-const merged = adjust(source, change)
-rules('.item', [color({ content: merged })])
 ```
 
-本例把亮度设为0.3、彩度相对增加0.3，其余通道沿用来源。变化本身可以复用，默认、状态、变体及其状态都会加工。数值变化可写成`modify(target, { type: 'expression', detail: current => add(current, 2) })`；完整范围、当前基础、步骤累计与替换见[adjust与modify.md](behaviors/adjust与modify.md)。
-
-协议材料是操作读取的数据形状：DeclareProtocol展示key/content及可选declarations；Adjust/Modify目标材料展示key、可选states和registration；颜色变化材料展示type、key/content。接受与拒绝边界由[rule与rules的登记和撤销.md](behaviors/rule与rules的登记和撤销.md)负责，类型定义从[公开入口](../index.ts)查到对应文件。
-
-## 并列声明独立颜色
-
-页面需要协调多个独立颜色时，在同一rules里并列declare；完整使用例见[按钮教程](从按钮需求组合样式.md)。共享来源与组件控制如何配合见[共享主题与组件颜色控制.md](behaviors/共享主题与组件颜色控制.md)。公开能力范围不由本页额外扩展。
-
-## 声明与作用域
+Argument parser 返回固定的 default、name、state、address、registration、onFirstScan、compileWaveIndex 七个 key。可选项不要求由调用者全部填写。独立 State 可以通过配置中的 state 交给 Token。
 
 ```ts
-rules(button, [
-  [$alignSelf, 'center'],
-  declare(surfaceColor, 'green'),
-  color({ background: surfaceColor }),
+const source = token('2px')
+const target = token(source)
+```
+
+target 的基础内容就是可坍缩的 source，按普通表达式消费并自然形成引用，不复制 source 的定义，也不根据传入对象另作继承判定。
+
+## 定义组合与修改
+
+复用定义、选择用途及产生变化结果都用普通函数返回 Token。函数可读取来源的 default、state 等信息，组合后创建新 Token；不维护加工来源、历史或待重放的操作。
+
+```ts
+const doubled = base => token(multiply(base, 2))
+const amount = doubled(4)
+```
+
+modify 则表达对目标 Token 的条件修改，沿用当前条件声明形式：
+
+```ts
+rules(['.Item', '&[data-large]'], [
+  modify(amount, { type: 'expression', detail: current => multiply(current, 2) }),
 ])
 ```
 
-第二参数把属性、局部值和完整效果放在一起。声明输入、同址竞争与重复Key的join见[rule与rules的登记和撤销.md](behaviors/rule与rules的登记和撤销.md)。普通使用者可先看[Key求和例子](样式系统对象与行为.md#声明目标key)。
+被 modify 的 Token 需要 CSS variable 身份；没有 name 时自动命名。加工函数返回的新 Token 不因“被加工过”自动取得这种身份。
 
-## 状态与内容输出
+## CSS 坍缩与资源
 
-需要可复用反馈时，把状态写进Variable，再将该对象交给color、elevation等效果；用法见[状态专题](主体状态条件.md)。根据地主体、同时命中与禁用的结果见[states与条件选择.md](behaviors/states与条件选择.md)。焦点轮廓的用法见使用入口，生成路径留在架构。
+有 name、state、address、registration，或被 modify 的 Token，输出为 CSS variable；需要名称但未命名时自动分配。其余 Token 输出为 CSS value。内部 _kind 由系统决定，外界不能指定。
 
-## 内容扩展
+onFirstScan 可以返回包含 modify 的规则。系统在坍缩前必须完成能影响相关 Token 的修改读取，再确定最终输出；不限定激活波次。compileWaveIndex 只限制内容允许处理的最早时机。
 
-普通业务样式先用已有表达式和Mixin；确有新内容格式时，使用createJSSContent或JSSContent的公开能力。本次消费改写、显式位置与来源、等待及撤销见[内容扩展与AST编辑.md](behaviors/内容扩展与AST编辑.md)；节点、Controller和已编译读取的当前实现见[架构](../architecture.md#内容扩展与位置记录)。
+registration 提供 syntax、inherits 及可选 initialValue，分别对应 CSS @property 的语法、继承和注册初始值。initialValue 不从 default 自动推断。
+
+## 登记、读取与提交
+
+rules(path, declarations) 登记效果和声明。组件专属控制点通过同一个 Token 供样式消费与调用方操作；同一条件协调多个目标时并列 declare。
+
+compileCSS() 读取全局登记并返回 CSS 文本；compileRules(rules) 编译显式材料；cssRoot.mount() 提交到宿主提供的 style#css-root。规则句柄只更新或撤销自己的登记；需要页面更新时重新提交。失败构建不应提交半份结果。
+
+低层 AST 编辑与资源生命周期见 [接口与扩展协议](当前接口与扩展协议.md)。

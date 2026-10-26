@@ -1,9 +1,9 @@
 /**
- * 纸色、墨色与中性色的基础材料及对应 Variable。
+ * 纸色、墨色与中性色的基础材料及对应 Token。
  *
  * 定义颜色的 JS 源头，并由共用转换入口创建基础颜色变量。
  *
- * 材料可继续参与颜色计算，Variable 供用途配方直接引用。
+ * 材料可继续参与颜色计算，Token 供用途配方直接引用。
  */
 
 import type { ColorMaterial } from '@/color-system'

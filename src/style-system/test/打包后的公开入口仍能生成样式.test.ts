@@ -8,7 +8,7 @@
 import { execFileSync } from 'node:child_process'
 import { expect, test } from 'vitest'
 
-test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
+test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
   const probe = `
     const result = await Bun.build({ entrypoints: ['./src/style-system/index.ts'], target: 'browser', write: false, minify: false })
     if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\\n'))
@@ -18,16 +18,16 @@ test('打包后的公共入口直接使用 Key 与 Variable 声明', () => {
     try {
     const { pathToFileURL } = await import('node:url')
     const styleSystem = await import(pathToFileURL(modulePath).href)
-    const surfaceName = styleSystem.variableName('bundle-surface')
-    const line = styleSystem.variable(() => surface, 'bundle-line')
-    const surface = styleSystem.variable('black', { name: surfaceName, address: '.Built' })
-    const opacity = styleSystem.variable(1, { name: 'bundle-opacity', address: '.Built', states: { hover: 0.5 } })
+    const surfaceName = 'bundle-surface'
+    const line = styleSystem.token(() => surface, 'bundle-line')
+    const surface = styleSystem.token('black', { name: surfaceName, address: '.Built' })
+    const opacity = styleSystem.token(1, { name: 'bundle-opacity', address: '.Built', state: { hover: 0.5 } })
     styleSystem.rules('.Built', [
       [styleSystem.key('align-items'), 'center'], [styleSystem.key('margin-left'), '2px'],
       [styleSystem.key('color'), surface], [styleSystem.key('border-color'), line], [styleSystem.key('opacity'), opacity],
       [surface, 'blue'],
     ])
-    const count = styleSystem.variable(1, { name: 'bundle-modified-count', address: '.Built' })
+    const count = styleSystem.token(1, { name: 'bundle-modified-count', address: '.Built' })
     styleSystem.rules(['.Built', '&:hover'], [styleSystem.modify(count, { type: 'expression', detail: currentExpression => styleSystem.add(currentExpression, 3) })])
     console.log(styleSystem.compileCSS())
     } finally {
@@ -73,7 +73,7 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
     if (resolveJSSKey('box-shadow') !== $boxShadow || resolveJSSKey('boxShadow') !== $boxShadow)
       throw new Error('现成 Key 的名称与别名没有解析到原定义。')
     styleSystem.rules('.BundledMaterial', [[$boxShadow, '1px 2px red'], ['box-shadow', '3px 4px blue'], ['boxShadow', '5px 6px green']])
-    const spacing = styleSystem.key('bundle-combined-spacing', { join: items => styleSystem.value(items, { toCSSString: styleSystem.arraySequenceToCSSString }) })
+    const spacing = styleSystem.key('bundle-combined-spacing', { join: items => styleSystem.token({ default: items }, { toCSSString: (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ') }) })
     if (resolveJSSKey(spacing.name) !== spacing || resolveJSSKey('bundleCombinedSpacing') !== spacing)
       throw new Error('新建 Key 的名称与别名没有解析到原定义。')
     styleSystem.rules('.BundledCustomJoin', [[spacing, '2px'], [spacing.name, '3px'], ['bundleCombinedSpacing', '4px']])
@@ -121,3 +121,6 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
   const output = execFileSync('bun', ['--conditions=browser', '-e', probe], { encoding: 'utf8' })
   expect(JSON.parse(output)).toEqual({ mounted: true, rendered: true, passiveImport: true, sharedRegistry: true, separate: true, removed: true, distinctClickable: true })
 })
+
+/** 本用例选择空格序列输出，空项不占位置。 */
+const arraySequenceToCSSString = (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ')

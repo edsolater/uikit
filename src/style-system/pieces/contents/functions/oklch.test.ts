@@ -1,11 +1,10 @@
+import { token } from '../../../token'
 /** 验证普通与相对 OKLCH 通道、依赖消费和缺失内容边界。 */
 import { expect, test } from 'vitest'
 import { oklch, oklchChannels } from './oklch'
-import { variable } from '../../../variable'
 import { condition } from '../../../condition'
 import { compileRules } from '../../../css-root'
 import { add } from './calc'
-import { value } from '../../../value'
 
 test.each([undefined, 1, 0, 0.8])('普通颜色正确输出透明度 %s', (alpha) => {
   const css = compileRules([[[condition('.Swatch')], 'color', oklch({ lightness: 0.6, chroma: 0.12, hue: 250, alpha })]])
@@ -14,16 +13,17 @@ test.each([undefined, 1, 0, 0.8])('普通颜色正确输出透明度 %s', (alpha
   expect(css).not.toContain('oklch(from ')
 })
 
-test('通道 Variable 在编译时解析并保留其 CSS 引用', () => {
-  const lightness = variable(0.6, 'swatch-lightness')
+test('通道 Token 在编译时解析并保留其 CSS 引用', () => {
+  const lightness = token(0.6, 'swatch-lightness')
   const css = compileRules([[[condition('.Swatch')], 'color', oklch({ lightness, chroma: 0.12, hue: 250 })]])
   expect(css).toContain('color: oklch(var(--swatch-lightness) 0.12 250);')
 })
 
 test('替换普通颜色内容后沿用格式并解析新通道依赖', () => {
   const original = oklch({ lightness: 0.6, chroma: 0.12, hue: 250 })
-  const lightness = variable(0.4, 'replacement-lightness')
-  const next = original.withContent({ lightness, chroma: 0.08, hue: 30, alpha: 0 })
+  const lightness = token(0.4, 'replacement-lightness')
+  original.default = { lightness, chroma: 0.08, hue: 30, alpha: 0 }
+  const next = original
   const css = compileRules([[[condition('.Replaced')], 'color', next]])
   expect(css).toContain('color: oklch(var(--replacement-lightness) 0.08 30 / 0);')
 })
@@ -56,7 +56,7 @@ test('完整通道内容保留输出，来源或通道缺失时不产生颜色',
     [[condition('.Relative')], 'color', oklch('red', 'calc(l + 0.1) c h / alpha')],
     [[condition('.MissingChannels')], 'color', oklch('red', undefined)],
     [[condition('.MissingSource')], 'color', oklch(undefined, {})],
-    [[condition('.MissingChannel')], 'color', oklch('red', { lightness: value(undefined) })],
+    [[condition('.MissingChannel')], 'color', oklch('red', { lightness: token(undefined) })],
   ])
   expect(css).toContain('color: oklch(from red calc(l + 0.1) c h / alpha);')
   expect(css).not.toContain('.Missing')

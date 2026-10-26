@@ -3,11 +3,11 @@ import { assert, isArray, isFunction, isObject, isObjectLike, isString } from '@
 import { condition, type Condition, type ConditionInput } from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './operations/declare'
-import type { ValueInput } from './value'
+import type { TokenInput } from './token/core'
 import { registerRule } from './rule-registry'
 
 /** 待编译内容或嵌套规则。 */
-export type RuleValue = ValueInput | Rules
+export type RuleValue = TokenInput | Rules
 
 /** 路径、目标与内容；字符串是普通 CSS 条件，空项沿用外层。 */
 export type Rule = [path: (Condition | string)[] | undefined, key: JSSKey | undefined, content: RuleValue]
@@ -105,7 +105,7 @@ export function rules(path: ConditionInput, declarations: Declaration<RuleValue>
     }
     assert(
       isDeclarationObject(source) || isDeclarationIterable(source),
-      'rules() 只接受声明序列，条目为 Key／Variable 元组或其 Iterable 组合。',
+      'rules() 只接受声明序列，条目为 Key／Token 元组或其 Iterable 组合。',
     )
     assert(!visiting.has(source), 'rules() 的声明输入存在递归引用。')
     visiting.add(source)

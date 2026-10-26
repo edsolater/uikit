@@ -1,5 +1,5 @@
 /** 样式编译的节点、查询与内容访问协议；运行会话由编译实现持有。 */
-import type { Value } from '../value'
+import type { ContentView } from '../content'
 import type { ConditionPath, CSSConditionPath } from '../condition'
 import type { JSSKey } from '../key'
 import type { JSSCompileContext } from '../content'
@@ -26,12 +26,12 @@ export type ASTPosition = { before: JSSStyleNode; after?: never } | { after: JSS
 
 /** 查询和改写本次编译的样式节点。 */
 export interface ASTController {
-  /** 改写此次通知的内容位置；不改写整条声明，也不改变其他消费位置。显式 undefined 使此处不输出。 */
+  /** 改写本次对象通知的共享替代结果；不直接改写声明。显式 undefined 抑制该对象输出。 */
   setContent(context: JSSCompileContext, content: unknown): void
   /** 读取当前声明中内容的已编译替代结果；未访问内容保持原输入。 */
   getCompiledContent(node: JSSStyleNode, input: unknown): unknown
   /** 为同一位置的自动输出复用已编译内容，避免再次执行配方。 */
-  getCompiledValue(node: JSSStyleNode, input: unknown): Value
+  getCompiledContentView(node: JSSStyleNode, input: unknown): ContentView
   /** 读取位置记录中的替代与实际依赖，不再触发业务 getter。 */
   getContentCompilation(node: JSSStyleNode, input: unknown): ContentCompilationRecord | undefined
   /** 当前输入实际访问过此内容；历史替代记录不代表仍在消费。 */

@@ -1,53 +1,34 @@
-/** CSS Declaration 的声明入口。
-
-配对 Key 与内容，或消费信息体天然持有的声明材料。
-
-声明与修改使用同一目标身份，交给编译器按条件消费。
-*/
+/** CSS 声明的配对入口。
+ *
+ * 为属性或 Token 配对内容，并保留显式未定义基础的身份。
+ *
+ * 声明目标的 CSS 名称由坍缩边界负责。
+ */
+import { isArray, assert } from '@edsolater/fnkit'
 import { isJSSKey, type JSSKey } from '../key'
-import type { ValueInput } from '../value'
-import { assert, hasProperty, isArray, isFunction, isNumber, isString, isUndefined, matchShape, or, type DataShape } from '@edsolater/fnkit'
-import { isJSSContent } from '../content'
-import { declareVariable } from '../variable/declare'
+import { isToken, type Token, type TokenInput } from '../token/core'
+import { cssCustomProperty } from '../token/css'
+import { declareCSSProperty } from '../token/declare'
 
-/** 一条 `[Key, content]` 声明；undefined content 表示无效。 */
-export type Declaration<C = ValueInput | undefined> = [key: Exclude<JSSKey, string>, content: C]
-
-/** 声明操作需要的目标与内容；信息体无需实现声明操作。 */
-export interface DeclareProtocol {
-  key: Exclude<JSSKey, string>
-  /** 内容生产函数在编译消费时执行；undefined 表示不输出。 */
-  content: ValueInput
-  /** 共同声明的依赖材料；覆盖自身内容时仍保留这些关系。 */
-  declarations?: DeclareProtocol[]
-}
-
-/** 声明材料的字段形状；入口另检查 content 存在，显式 undefined 表示无输出。 */
-export const declareShape = {
-  key: { toCSSString: isFunction },
-  content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
-} satisfies DataShape
+/** 一条目标与内容配对，未定义内容不输出 CSS。 */
+export type Declaration<C = TokenInput | undefined> = [key: Exclude<JSSKey, string>, content: C]
 
 /**
- * 判断输入是否是 Declaration。
+ * 识别二元声明，不解析或输出目标的内容。
  */
-export const isCSSPair = (input: unknown): input is [JSSKey, unknown] =>
-  isArray(input) && input.length === 2 && isJSSKey(input[0])
+export const isCSSPair = (input: unknown): input is [JSSKey, unknown] => isArray(input) && input.length === 2 && isJSSKey(input[0])
 
 /**
- * 声明 key/content 材料或局部覆盖；自定义属性建立后续修改使用的基础声明。
- * 其他 Key 直接配对内容，不要求材料具有 Variable 身份。
+ * 声明 Token 的基础或替换值；普通属性直接配对指定内容。
  */
-export function declare(target: DeclareProtocol, content?: ValueInput): Declaration
-export function declare<C = ValueInput | undefined>(key: Exclude<JSSKey, string>, content: C): Declaration<C>
-export function declare(key: DeclareProtocol | Exclude<JSSKey, string>, ...contents: unknown[]): Declaration<unknown> {
-  if (hasProperty(key, 'content') && matchShape(key, declareShape)) {
-    const target = key as DeclareProtocol
-    const content = (contents.length ? contents[0] : target.content) as DeclareProtocol['content']
-    const name = target.key.toCSSString()
-    assert(isString(name), 'declare 的 CSS Key 需要输出字符串。')
-    return name.startsWith('--') ? declareVariable(target, content) : [target.key, content]
+export function declare(target: Token, content?: TokenInput): Declaration
+export function declare<C = TokenInput | undefined>(key: Exclude<JSSKey, string>, content: C): Declaration<C>
+export function declare(key: Exclude<JSSKey, string>, ...contents: unknown[]): Declaration<unknown> {
+  assert(isJSSKey(key), 'declare 需要有效属性或 Token。')
+  if (isToken(key)) {
+    const target = cssCustomProperty(key)
+    const declaration = declareCSSProperty(target, (contents.length ? contents[0] : target.content) as TokenInput)
+    return [key, declaration[1]]
   }
-  assert(isJSSKey(key), 'declare 需要 key/content 材料或有效 CSS Key。')
   return [key, contents[0]]
 }

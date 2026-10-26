@@ -1,6 +1,6 @@
 /** 主体尺寸与边界 Mixin。 */
 import type { Declarations } from '../../rule'
-import type { ValueInput } from '../../value'
+import type { TokenInput } from '../../token'
 import { valueSequence } from '../contents/atom-creators/list'
 import { $minHeight } from '../keys/size'
 import { $border, $borderColor, $borderRadius, $cornerShape } from '../keys/border'
@@ -8,7 +8,7 @@ import { $outlineColor, $outlineOffset, $outlineStyle, $outlineWidth } from '../
 
 /** 盒子尺寸配置。 */
 export interface SizeMixinOptions {
-  minHeight?: ValueInput
+  minHeight?: TokenInput
 }
 
 /** Mixin：盒子尺寸。 */
@@ -18,15 +18,15 @@ export const size = (options: SizeMixinOptions = {}): Declarations => [
 
 /** 空间边界配置。 */
 export interface BoundaryMixinOptions {
-  border?: ValueInput | ValueInput[]
-  borderColor?: ValueInput
-  radius?: ValueInput
-  cornerShape?: ValueInput
+  border?: TokenInput | TokenInput[]
+  borderColor?: TokenInput
+  radius?: TokenInput
+  cornerShape?: TokenInput
   outline?: {
-    width?: ValueInput
-    style?: ValueInput
-    color?: ValueInput
-    offset?: ValueInput
+    width?: TokenInput
+    style?: TokenInput
+    color?: TokenInput
+    offset?: TokenInput
   }
 }
 

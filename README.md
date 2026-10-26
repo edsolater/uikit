@@ -25,7 +25,7 @@ SolidJS 基础组件与 hooks 组件库。
 src/
   components/    Piv、kits、plugins 与组件共用能力
   hooks/         对外 hooks
-  style-system/  Rule 登记、Value 与静态样式编译
+  style-system/  Rule 登记、Token 与静态样式编译
   css/           当前仍在服役的静态 CSS
   app/           本地 Example 浏览应用
   types/         全局类型补丁
@@ -62,4 +62,4 @@ bun run build
 包名是 `@edsolater/uikit`。
 
 对外导出从 [src/index.ts](src/index.ts) 进入，组件和 hooks 分别由 `src/components`、`src/hooks` 汇总导出。
-Style System 使用独立入口 `@edsolater/uikit/style-system`，提供 `rules`、`key`、Variable、Mixin 和挂载能力；用法见 [样式文件写法](docs/style/样式文件写法.md#登记与挂载)。
+Style System 使用独立入口 `@edsolater/uikit/style-system`，提供 `rules`、`key`、Token 模型、Mixin 和挂载能力；用法见 [样式文件写法](docs/style/样式文件写法.md#登记与挂载)。

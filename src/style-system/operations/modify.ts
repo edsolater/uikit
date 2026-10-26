@@ -4,61 +4,42 @@
 
 操作入口保存颜色与表达变化规则，实例、步骤和撤销由编译实现负责。
 */
-import { compileVariableModification } from '../variable/modify'
-import { assert, hasMethod, hasProperty, isArray, isFunction, isMap, isNumber, isString, isUndefined, matchShape, optional, or, type DataShape } from '@edsolater/fnkit'
-import { isJSSContent, type Expression, type JSSContent } from '../content'
+import { compileCSSModification } from '../token/modify'
+import { cssCustomProperty, cssOperation } from '../token/css'
+import { assert, hasProperty, isFunction, isString, matchShape } from '@edsolater/fnkit'
+import { type Expression } from '../content'
 import type { Declaration } from './declare'
 import { colorModificationShape, type ColorModificationContent } from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
-import { referenceVariable, type VariableTarget } from '../variable'
+import { isToken, type Token, type TokenInput } from '../token/core'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
 export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]
-
-/** 修改目标使用公共声明材料，保留公开协议名称。 */
-export type ModifyTargetProtocol = VariableTarget
-
-/** 操作所需的自定义属性材料；继承字段和可调用对象按 FNKit 形状读取。 */
-export const modifyTargetShape = {
-  key: hasMethod('toCSSString', {
-    resultIs: [isString, name => /^--.+/.test(name as string)],
-  }),
-  content: or(isString, isNumber, isUndefined, isFunction, isJSSContent),
-  states: optional(isMap),
-  declarations: optional(isArray),
-} satisfies DataShape
 
 /**
  * 返回条件修改 Declaration；按 type 选择应用，编译消费时生成前序 Expression 的修改结果。
  * 修改以根据地的有效声明为基础；颜色材料保留配方 CSS 引用，生效条件由 CSS 决定。
  * 相同 id 在同一定义内共用一步；未指定 id 时每次调用形成独立步骤。
  * @example
- * const surfaceColor = variable(baseColor, { name: 'button-surface', address: '.Button' })
+ * const surfaceColor = token(baseColor, { name: 'button-surface', address: '.Button' })
  * rules('.Button', [[key('background-color'), surfaceColor]])
  * rules(['.Button', '&:hover'], [modify(surfaceColor, hoverChange)])
  */
-export function modify(variable: ModifyTargetProtocol, modification: ModifyProtocol, options?: { id?: string | symbol }): Declaration {
-  assert(hasProperty(variable, 'content') && matchShape(variable, modifyTargetShape), 'modify 需要自定义属性的 key/content 材料。')
+export function modify(target: Token, modification: ModifyProtocol, options?: { id?: string | symbol }): Declaration {
+  assert(isToken(target), 'modify 需要 Token 目标。')
   const strategy = hasProperty(modification, 'type', isString) && Object.hasOwn(modifyTypes, modification.type) ? modifyTypes[modification.type] : undefined
   assert(strategy && strategy.accepts(modification), 'modify 需要颜色配方或表达变化材料。')
-  const content: JSSContent & { kind: 'variable-modification' } = {
-    kind: 'variable-modification',
-    resourceIdentity: Symbol('variable-modification'),
-    /**
-     * 按根据地定义及书写顺序发布当前修改，维护消费链和撤销关系。
-     */
-    onCompile(context, controller) {
-      compileVariableModification(context, controller, variable, current =>
-        (strategy.apply as (current: Expression, change: ModifyProtocol) => Expression)(current, modification), options?.id)
-    },
-  }
-  return [variable.key, content]
+  const content = Object.assign(cssOperation((context, controller) => {
+    compileCSSModification(context, controller, cssCustomProperty(target), current =>
+      (strategy.apply as (current: Expression, change: ModifyProtocol) => TokenInput)(current, modification), options?.id)
+  }), { kind: 'css-modification' })
+  return [target, content]
 }
 
 /** 任意 CSS 表达变化的描述；回调由 Modify 使用端应用，不承诺可独立声明。 */
 export interface ExpressionModification {
   type: 'expression'
-  detail: (currentExpression: Expression) => Expression
+  detail: (currentExpression: Expression) => TokenInput
 }
 
 /** 各领域的材料检查及前序表达式应用；不介入通用步骤、归属和撤销。 */
@@ -67,11 +48,11 @@ const modifyTypes = {
     /**
      * 识别可独立声明的颜色配方，保持模块循环中的材料延迟读取。
      */
-    accepts: (change: unknown) => hasProperty(change, 'content') && matchShape(change, colorModificationShape),
+    accepts: (change: unknown) => isToken(change) && matchShape(change, colorModificationShape),
     /**
      * 以独立颜色配方的 CSS 引用改变前序结果。
      */
-    apply: (current: Expression, change: ColorModificationContent) => oklch(current, referenceVariable(change)),
+    apply: (current: Expression, change: ColorModificationContent) => oklch(current, change),
   },
   expression: {
     /**

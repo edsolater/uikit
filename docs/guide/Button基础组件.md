@@ -97,22 +97,26 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 Button.style.ts 消费 data-appearance、data-emphasis、data-tone 和 data-size。filled 使用填充背景，outlined 保留浅底及可见轮廓，plain 常态透明且无边界。soft、普通、strong 依次提高整颗按钮的存在感，文字和图形内容一起变化；强调不改变外观形式、语气或尺寸。当前视觉配方使用整体透明度 0.7、0.9、1，这些数值由组件样式定义，不属于 Props 固定契约。各档禁用时仍使用通用 disabledFade。
 
-Button 从组件及包入口公开三个 Variable，同一对象也由 Button 样式消费：
+Button 从组件及包入口公开以下 Token 控制对象，同一对象也由 Button 样式消费。本轮完成接口接入，不据此认定这些业务抽象已经完成设计验收：
 
 | 控制点 | 控制内容 | 当前操作 |
 | --- | --- | --- |
+| buttonColorInput | 组件颜色输入及交互基础 | declare、modify |
+| buttonColor | 用途颜色引用的基础 | declare、modify |
 | buttonSurfaceSource | 背景混色的色源 | declare |
 | buttonSurfaceCanvas | 背景混色的画布 | declare |
 | buttonSurfaceStrength | 色源参与背景的强度 | declare、modify；modify 为相对增量 |
+| buttonSurfaceColor | 最终背景色 | declare、modify |
+| buttonContentColor | 最终内容色 | declare、modify |
 
 ```mermaid
 flowchart LR
-  Caller[调用方局部声明] --> V[Button 公开 Variable 控制点]
+  Caller[调用方局部声明] --> V[Button 公开 Token 控制点]
   V --> R[Button 分类与状态规则]
   Tools[Style System 通用工具] --> R
   R --> CSS[编译与挂载 CSS]
 ```
 
-控制定义与分类组合都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 中；三个控制点以 export 定义，其他业务配方保持私有。相对修改遵守 Variable 的最近语义父定义契约；具体选择条件由调用方表达。内部分类贡献、阴影、光标与存在感材料没有因此成为新的公开控制点，常态透明度通过 clickable 的配置消费，禁用淡化复用通用 disabledFade。
+控制定义与分类组合都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 中；上述控制点以 export 定义，其他业务配方保持私有。相对修改遵守 Token 所在地址与声明顺序；具体选择条件由调用方表达。内部分类贡献、阴影、光标与存在感材料没有因此成为新的公开控制点，常态透明度通过 clickable 的配置消费。
 
-这些 Variable 已可用于 Rules 中的局部声明和组合。目前操作返回声明，由应用挂载 CSS；直接修改 JS 对象不会自动更新页面。未来动态控制沿用这些对象身份，本轮不增加自动插入 CSS 的运行机制。
+这些控制对象统一为 Token，用于 Rules 中的局部声明和组合。操作返回声明，由应用挂载 CSS；直接修改 JS 对象不会自动更新页面。本轮不增加自动插入 CSS 的运行机制。

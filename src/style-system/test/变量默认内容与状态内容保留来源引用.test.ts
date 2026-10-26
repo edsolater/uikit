@@ -1,24 +1,24 @@
-/** Variable 的 CSS 引用编译契约。
+import { token } from '../token'
+/** Token 的 CSS 引用编译契约。
  *
- * 验证普通默认值、嵌套 Variable 和状态内容遵循相同的引用规则。
+ * 验证普通默认值、嵌套 Token 和状态内容遵循相同的引用规则。
  *
  * 即使显示颜色恰好相同，来源被替换为定义内容也必须使测试失败。
  */
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
-import { variable } from '../variable'
 
 test('普通默认内容在根声明，使用处仅引用名称', () => {
-  const paperColor = variable('white', 'contract-paper-color')
+  const paperColor = token('white', 'contract-paper-color')
   const css = compileRules([[['.Paper'], 'color', paperColor]])
 
   expect(css).toMatch(/:root\)?\s*\{[^}]*--contract-paper-color:\s*white\s*;/)
   expect(css).toMatch(/color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
 })
 
-test('默认内容是另一 Variable 时声明保留来源引用，使用处不展开链', () => {
-  const paperColor = variable('white', 'contract-paper-color')
-  const canvasColor = variable(paperColor, 'contract-canvas-color')
+test('默认内容是另一 Token 时声明保留来源引用，使用处不展开链', () => {
+  const paperColor = token('white', 'contract-paper-color')
+  const canvasColor = token(paperColor, 'contract-canvas-color')
   const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 
   expect(css).toMatch(/--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
@@ -26,13 +26,13 @@ test('默认内容是另一 Variable 时声明保留来源引用，使用处不�
 })
 
 test.each([false, true])('状态内容保留来源引用，不替换为来源定义；来源有自身状态：%s', (sourceHasState) => {
-  const paperColor = variable('white', {
+  const paperColor = token('white', {
     name: 'contract-paper-color',
-    states: sourceHasState ? { hover: 'black' } : undefined,
+    state: sourceHasState ? { hover: 'black' } : undefined,
   })
-  const canvasColor = variable('gray', {
+  const canvasColor = token('gray', {
     name: 'contract-canvas-color',
-    states: { hover: paperColor },
+    state: { hover: paperColor },
   })
   const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 

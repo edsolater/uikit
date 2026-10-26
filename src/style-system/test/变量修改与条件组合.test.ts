@@ -1,3 +1,4 @@
+import { token } from '../token'
 /** 验证变量修改的声明归属、诊断与依赖生命周期。
  *
  * 同一流程的浏览器数值与条件组合由相邻浏览器测试验证。
@@ -10,8 +11,6 @@ import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { declare, type Declaration } from '../operations/declare'
 import { modify, type ExpressionModification } from '../operations/modify'
-import { value } from '../value'
-import { variable } from '../variable'
 import { compileRules } from '../css-root'
 import type { Rules } from '../rule'
 
@@ -19,37 +18,37 @@ const button = condition('.button'), hover = condition('&:hover')
 const row = (path: (ReturnType<typeof condition> | string)[], declaration: Declaration): Rules[number] => [path, ...declaration]
 
 test('使用端直接消费变化描述，表达式变化不要求数值求值或内容编译', () => {
-  const amount = variable(3, 'plain-rule')
+  const amount = token(3, 'plain-rule')
   const change: ExpressionModification = { type: 'expression', detail: current => add(current, 2) }
   expect(compileRules([row([button], declare(amount)), row([button], modify(amount, change))])).toContain('+ 2)')
-  const color = variable('red', 'expression-color')
-  const replacement = ({ type: 'expression' as const, detail: () => value('blue') })
+  const color = token('red', 'expression-color')
+  const replacement = ({ type: 'expression' as const, detail: () => token('blue') })
   expect(compileRules([row([button], declare(color)), row([button], modify(color, replacement))])).toContain('blue')
 })
 
 test('根据地自动提供修改基础，非法应用规则仍给出诊断', () => {
-  const amount = variable(1, 'diagnostic-amount')
+  const amount = token(1, 'diagnostic-amount')
   expect(compileRules([row([button], modify(amount, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 3) })))])).toContain('+ 3)')
   expect(() => modify(amount, 3 as unknown as ExpressionModification)).toThrow('变化材料')
 })
 
 test('同一目标多次主动声明按原书写顺序取值', () => {
-  const first = variable(1, { name: 'same-name' })
-  const second = variable(1, { name: 'same-name' })
+  const first = token(1, { name: 'same-name' })
+  const second = token(1, { name: 'same-name' })
   expect(compileRules([row([button], declare(first, 1)), row([button], declare(first, 2))])).toContain('--same-name: 2;')
 })
 
 test('递归修改表达式由普通内容编译诊断', () => {
   const recursive = createJSSContent(() => '1')
   recursive.dependencies = [recursive]
-  const amount = variable(1, { name: 'recursive-change' })
+  const amount = token(1, { name: 'recursive-change' })
   expect(() => compileRules([row([button], declare(amount)), row([button], modify(amount, ({ type: 'expression' as const, detail: currentExpression => recursive })))])).toThrow('循环引用')
 })
 
 test('删除修改消费者清理独占依赖，共享消费者仍保留资源', () => {
-  const resource = value(2, { onActive: () => [[[condition('.shared-resource')], 'color', 'red']] })
+  const resource = token(2, { onFirstScan: () => [[[condition('.shared-resource')], 'color', 'red']] })
   for (const shared of [false, true]) {
-    const amount = variable(1, { name: 'removed-change' })
+    const amount = token(1, { name: 'removed-change' })
     const operation = modify(amount, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, resource) }))
     const css = compileRules([
       row([button], declare(amount)), row([button, hover], operation),
@@ -63,9 +62,9 @@ test('删除修改消费者清理独占依赖，共享消费者仍保留资源',
   }
 })
 
-test('声明或修改激活Variable自身资源，撤销所有消费者后清理', () => {
-  const amount = variable(1, { name: 'own-resource',
-    onActive: () => [[[condition('.own-resource')], 'opacity', 0.4]],
+test('声明或修改激活Token自身资源，撤销所有消费者后清理', () => {
+  const amount = token(1, { name: 'own-resource',
+    onFirstScan: () => [[[condition('.own-resource')], 'opacity', 0.4]],
     registration: { syntax: '<number>', inherits: true, initialValue: 1 },
   })
   const declaration = declare(amount), operation = modify(amount, ({ type: 'expression' as const, detail: currentExpression => add(currentExpression, 2) }))

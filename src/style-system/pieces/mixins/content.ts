@@ -6,7 +6,7 @@
  */
 import { isJSSContent } from '../../content'
 import type { Declarations } from '../../rule'
-import type { ValueInput } from '../../value'
+import type { TokenInput } from '../../token'
 import { valueSequence } from '../contents/atom-creators/list'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../keys/font'
 import { $gap, $display, $alignItems, $justifyContent, $alignSelf } from '../keys/layout'
@@ -15,10 +15,10 @@ import { fontValue, type FontParts } from '../contents/atom-creators/font'
 
 /** 内部文字配置。 */
 export interface InnerTextMixinOptions {
-  font?: ValueInput | FontParts
-  fontSize?: ValueInput
-  emphasis?: ValueInput
-  leading?: ValueInput
+  font?: TokenInput | FontParts
+  fontSize?: TokenInput
+  emphasis?: TokenInput
+  leading?: TokenInput
 }
 
 /** Mixin：内部文字。 */
@@ -31,21 +31,21 @@ export const innerText = (options: InnerTextMixinOptions = {}): Declarations => 
 
 /** 内边距方向配置。 */
 export interface PaddingSides {
-  top?: ValueInput
-  right?: ValueInput
-  bottom?: ValueInput
-  left?: ValueInput
+  top?: TokenInput
+  right?: TokenInput
+  bottom?: TokenInput
+  left?: TokenInput
 }
 
 /** 内边距：完整值、CSS 顺序位置值或指定方向。 */
-export type PaddingInput = ValueInput | ValueInput[] | PaddingSides
+export type PaddingInput = TokenInput | TokenInput[] | PaddingSides
 
 /** 内容布局配置；center 负责选择实现并完成居中，省略 mode 不改变排列。 */
 export interface ContentLayoutMixinOptions {
   mode?: 'center'
   /** 主体在父容器中的自身对齐，不随 mode 隐式设置。 */
-  alignSelf?: ValueInput
-  gap?: ValueInput
+  alignSelf?: TokenInput
+  gap?: TokenInput
   padding?: PaddingInput
 }
 
@@ -66,5 +66,5 @@ function paddingDeclarations(input: PaddingInput): Declarations {
     const sides = input as PaddingSides
     return [[$paddingTop, sides.top], [$paddingRight, sides.right], [$paddingBottom, sides.bottom], [$paddingLeft, sides.left]]
   }
-  return [[$padding, input as ValueInput]]
+  return [[$padding, input as TokenInput]]
 }

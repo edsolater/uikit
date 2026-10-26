@@ -1,6 +1,7 @@
+import { token } from '../token'
 /** 样式登记与内容依赖解析的流程测试。
  *
- * 验证声明、Mixin、Variable 和按需资源生成完整 CSS。
+ * 验证声明、Mixin、Token 和按需资源生成完整 CSS。
  *
  * 防止定义端组合在编译与资源退出时丢失原有语义。
  */
@@ -12,9 +13,7 @@ import { condition, media, type ConditionInput } from '../condition'
 import { key } from '../key'
 import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
-import { value } from '../value'
 import { valueSequence } from '../pieces/contents/atom-creators/list'
-import { mapVariableRules, variable, variableFrom } from '../variable'
 import { $margin, $marginLeft } from '../pieces/keys/margin'
 import { $padding } from '../pieces/keys/padding'
 import { $border } from '../pieces/keys/border'
@@ -46,7 +45,7 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(motionCSS).toContain('@media (prefers-reduced-motion: reduce)')
   expect(motionCSS).toContain('--motion-duration: calc(180ms * 0);')
   expect(motionCSS).not.toContain('--line-color:')
-  const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor(variable('black', 'local-line-base'))]])
+  const lineCSS = compileRules([[[condition('.Line')], 'border-color', lineColor(token('black', 'local-line-base'))]])
   expect(lineCSS).toContain('border-color: var(--local-line-base-line);')
   expect(lineCSS).toContain('var(--local-line-base)')
   expect(lineCSS).toContain(':root')
@@ -55,8 +54,8 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
 
 test('线条共享来源资源，最后消费者退出后释放', () => {
   const active = vi.fn((): Rules => [[['.LineResource'], 'display', 'block']])
-  const base = variable('red', {
-    name: 'registered-line-source', address: '.RegisteredLine', onActive: active,
+  const base = token('red', {
+    name: 'registered-line-source', address: '.RegisteredLine', onFirstScan: active,
   })
   const line = lineColor(base)
   expect(active).not.toHaveBeenCalled()
@@ -77,31 +76,17 @@ test('线条共享来源资源，最后消费者退出后释放', () => {
   }
 })
 
-test.each(['复用', '映射'])('%s的激活资源支持继承、显式替换与清除', mode => {
-  const source = variable('red', { name: 'activation-source', onActive: () => [[['.InheritedResource'], 'opacity', 0.5]] })
-  const onActive = (): Rules => [[['.OverriddenResource'], 'opacity', 0.75]]
-  const inherited = mode === '复用' ? variableFrom(source, 'blue') : mapVariableRules(source, current => current)
-  const overridden = mode === '复用' ? variableFrom(source, 'blue', { onActive }) : mapVariableRules(source, current => current, { onActive })
-  const cleared = mode === '复用' ? variableFrom(source, 'blue', { onActive: undefined }) : mapVariableRules(source, current => current, { onActive: undefined })
-  const inheritedCSS = compileRules([[['.ActivationConsumer'], 'color', inherited]])
-  const overriddenCSS = compileRules([[['.ActivationConsumer'], 'color', overridden]])
-  const clearedCSS = compileRules([[['.ActivationConsumer'], 'color', cleared]])
-  expect(inheritedCSS).toContain('.InheritedResource')
-  expect(overriddenCSS).toContain('.OverriddenResource')
-  expect(overriddenCSS).not.toContain('.InheritedResource')
-  expect(clearedCSS).not.toContain('.InheritedResource')
-  expect(clearedCSS).not.toContain('.OverriddenResource')
-})
 
-test('Variable 创建时不激活，按需规则可引用自身与稍后创建的 Variable', () => {
+
+test('Token 创建时不激活，按需规则可引用自身与稍后创建的 Token', () => {
   const baseline = compileCSS()
   const firstActive = vi.fn((): Rules => [
     [[condition(':where(:root)')], first, 'red'],
     [[condition('.Linked')], 'color', second],
   ])
-  const first = variable('black', { name: 'linked-first-color', onActive: firstActive })
+  const first = token('black', { name: 'linked-first-color', onFirstScan: firstActive })
   const secondActive = vi.fn((): Rules => [[[condition(':where(:root)')], second, 'blue']])
-  const second = variable('navy', { name: 'linked-second-color', onActive: secondActive })
+  const second = token('navy', { name: 'linked-second-color', onFirstScan: secondActive })
   expect(firstActive).not.toHaveBeenCalled()
   expect(secondActive).not.toHaveBeenCalled()
   expect(compileCSS()).toBe(baseline)
@@ -131,18 +116,18 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-test('Variable 生产函数可返回直接内容或另一 Variable，自身循环明确失败', () => {
-  const baseSize = variable('8px', { name: 'base-size' })
-  const directSize = variable(() => '12px', { name: 'direct-size' })
-  const linkedSize = variable(() => baseSize, { name: 'linked-size' })
+test('Token 生产函数可返回直接内容或另一 Token，自身循环明确失败', () => {
+  const baseSize = token('8px', { name: 'base-size' })
+  const directSize = token(() => '12px', { name: 'direct-size' })
+  const linkedSize = token(() => baseSize, { name: 'linked-size' })
   keep(rule('.LazyVariableSource', 'width', directSize))
   keep(rule('.LazyVariableSource', 'height', linkedSize))
   const css = compileCSS()
   expect(css).toContain('width: var(--direct-size);')
   expect(css).toContain('height: var(--linked-size);')
 
-  let circular: ReturnType<typeof variable>
-  circular = variable(() => circular, 'direct-circular-source')
+  let circular: ReturnType<typeof token>
+  circular = token(() => circular, 'direct-circular-source')
   keep(rule('.CircularSource', 'color', circular))
   expect(() => compileCSS()).toThrow('循环引用')
 
@@ -171,7 +156,7 @@ test('同址声明在末项合并，删除句柄不影响其他登记', () => {
 })
 
 test('同一内容重复登记，旧句柄不能删除新登记', () => {
-  const content = value('red')
+  const content = token('red')
   const handle = keep(rule('.example', 'color', content))
   keep(rule('.example', 'color', content))
   handle.remove()
@@ -186,8 +171,8 @@ test('Condition header 决定真实地址，不同 CSS 条件分别保留', () =
   expect(css).toContain('&:where(:hover) {\ncolor: blue;')
 })
 
-test('声明二元数组只配对 Key 与 content，Variable 可同时作为声明 Key 和引用 Value', () => {
-  const content = variable('black', { name: 'local-content' })
+test('声明二元数组只配对 Key 与 content，Token 可同时作为声明 Key 和引用 Token', () => {
+  const content = token('black', { name: 'local-content' })
   keep(rules('.example', [[content, 'red'], [$color, content]]))
   const css = compileCSS()
   expect(css).toContain('--local-content: red;')
@@ -210,8 +195,8 @@ test('声明名称指向明确属性，不猜测未知名称', () => {
   expect(() => rule('.Unknown', 'unknownAlias', 'value')).toThrow('未知 JSSKey 名称：unknownAlias')
 })
 
-test('嵌套组合保留重复顺序、Variable 目标、内容身份与 undefined', () => {
-  const local = variable('black', { name: 'ordered-local' })
+test('嵌套组合保留重复顺序、Token 目标、内容身份与 undefined', () => {
+  const local = token('black', { name: 'ordered-local' })
   const content = vi.fn(() => '4px')
   const nested: Declarations = [
     [key('margin'), '1px'],
@@ -293,7 +278,7 @@ test('批量删除仅删除本批声明，重复声明在末项合并', () => {
   expect(compileCSS()).not.toContain('color: blue;')
 })
 
-test('普通 Rules 通过结构嵌套切换属性，不进入 Value', () => {
+test('普通 Rules 通过结构嵌套切换属性，不进入 Token', () => {
   const base: Rules = [[undefined, 'color', 'red'], [undefined, 'display', 'grid']]
   const matched: Rules = [[undefined, 'color', 'blue']]
   keep(rule('.example', undefined, base))
@@ -306,9 +291,9 @@ test('普通 Rules 通过结构嵌套切换属性，不进入 Value', () => {
 
 test('依赖只进入本次编译，删掉源条目后派生资源退出', () => {
   const nestedActive = vi.fn((): Rules => [[[condition(':root')], '--value-factor', 3]])
-  const nested = value('3px', { onActive: nestedActive })
+  const nested = token('3px', { onFirstScan: nestedActive })
   const active = vi.fn((): Rules => [[[condition(':root')], '--size-example', nested]])
-  const size = value('var(--size-example)', { onActive: active })
+  const size = token('var(--size-example)', { onFirstScan: active })
   const handle = keep(rule('.example', 'width', multiply(size, size)))
   expect(active).not.toHaveBeenCalled()
   expect(compileCSS()).toContain('--value-factor: 3')
@@ -322,10 +307,10 @@ test('依赖只进入本次编译，删掉源条目后派生资源退出', () =>
 
 test('根值、注册、函数与关键帧只随消费进入 CSS，撤销后全部退出', () => {
   const baseline = compileCSS()
-  const color = variable('red', {
+  const color = token('red', {
     name: 'resource-color',
     registration: { syntax: '<color>', inherits: true, initialValue: 'black' },
-    onActive: (): Rules => [[[condition(':where(:root)')], color, 'blue']],
+    onFirstScan: (): Rules => [[[condition(':where(:root)')], color, 'blue']],
   })
   const frames: Rules = [
     [[condition('from')], 'opacity', 0],
@@ -352,7 +337,7 @@ test('根值、注册、函数与关键帧只随消费进入 CSS，撤销后全�
 
 test('依赖回指同一集合终止，Rules 内容递归报错', () => {
   const dependency: Rules = []
-  dependency.push([[condition('.example')], 'color', value('red', { onActive: () => dependency })])
+  dependency.push([[condition('.example')], 'color', token('red', { onFirstScan: () => dependency })])
   const handle = keep(rule(undefined, undefined, dependency))
   expect(compileCSS()).toContain('color: red')
   handle.remove()
@@ -403,7 +388,7 @@ test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () =
   const compileFont = vi.fn((context: import('../content').JSSCompileContext, controller: import('../compiler/contracts').ASTController) => {
     controller.setContent(context, 'italic 18px system-ui')
   })
-  keep(rules('.ResourcePadding', [contentLayout({ padding: { onActive: activate } })]))
+  keep(rules('.ResourcePadding', [contentLayout({ padding: { onFirstScan: activate } })]))
   keep(rules('.ContentFont', [innerText({ font: { family: 'metadata', onCompile: compileFont } })]))
   keep(rules('.PlainConfig', [
     contentLayout({ padding: { top: '2px', left: '4px' } }),
@@ -423,20 +408,20 @@ test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () =
 test('编译 root 的规则容器改写不污染登记账本或直接输入', () => {
   const target = keep(rule('.SnapshotTarget', 'color', 'red'))
   const trigger = keep(rule('.SnapshotTrigger', undefined, {
-    onActive: ({ root }) => { root.find((entry) => entry[0]?.some((item) => typeof item !== 'string' && item.header === '.SnapshotTarget'))![2] = 'blue' },
+    onFirstScan: ({ root }) => { root.find((entry) => entry[0]?.some((item) => typeof item !== 'string' && item.header === '.SnapshotTarget'))![2] = 'blue' },
   }))
   expect(compileCSS()).toContain('color: red;')
   trigger.remove()
   expect(compileCSS()).toContain('color: red;')
   target.remove()
 
-  const shared = variable('green', { name: 'snapshot-shared-color' })
+  const shared = token('green', { name: 'snapshot-shared-color' })
   const childPath = [condition('& .Child')]
   const nested: Rules = [[childPath, 'color', shared]]
   const sourcePath = [condition('.SnapshotInput')]
   const source: Rules = [[sourcePath, undefined, nested]]
   source.push([[condition('.MutateSnapshot')], undefined, {
-    onActive: ({ root }) => {
+    onFirstScan: ({ root }) => {
       expect(root[0][2]).not.toBe(nested)
       const snapshot = root[0][2] as Rules
       expect(snapshot[0][2]).toBe(shared)
@@ -498,8 +483,8 @@ test('后续依赖提供同名函数时，也能替换已经解析过的旧定�
   const oldBody: Rules = [[undefined, 'result', '1px']]
   const newBody: Rules = [[undefined, 'result', '2px']]
   keep(rule('.Direct', 'width', cssFunction('--late-definition() returns <length>', oldBody)()))
-  keep(rule('.Indirect', 'width', value('1px', {
-    onActive: () => [
+  keep(rule('.Indirect', 'width', token('1px', {
+    onFirstScan: () => [
       [[condition('.Dependency')], 'width', cssFunction('--late-definition() returns <length>', newBody)()],
     ]
   })))
@@ -509,8 +494,8 @@ test('后续依赖提供同名函数时，也能替换已经解析过的旧定�
 })
 
 test('同名变量注册按完整定义替换，不混入旧 initial-value', () => {
-  const old = variable(undefined, { name: 'registration-replacement', registration: { syntax: '<length>', inherits: true, initialValue: '7px' } })
-  const next = variable(undefined, { name: 'registration-replacement', registration: { syntax: '*', inherits: false } })
+  const old = token(undefined, { name: 'registration-replacement', registration: { syntax: '<length>', inherits: true, initialValue: '7px' } })
+  const next = token(undefined, { name: 'registration-replacement', registration: { syntax: '*', inherits: false } })
   keep(rule('.OldRegistration', 'width', old))
   keep(rule('.NewRegistration', 'width', next))
   const css = compileCSS()
@@ -520,8 +505,8 @@ test('同名变量注册按完整定义替换，不混入旧 initial-value', () 
 })
 
 test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资源退出', () => {
-  const old = variable('red', { name: 'creator-old-color', registration: { syntax: '<color>', inherits: false, initialValue: 'red' } })
-  const next = variable('blue', { name: 'creator-new-color', registration: { syntax: '<color>', inherits: false, initialValue: 'blue' } })
+  const old = token('red', { name: 'creator-old-color', registration: { syntax: '<color>', inherits: false, initialValue: 'red' } })
+  const next = token('blue', { name: 'creator-new-color', registration: { syntax: '<color>', inherits: false, initialValue: 'blue' } })
   const handle = keep(rule('.CompleteCreator', $boxShadow, shadowValue({ x: '1px', y: '2px', color: old })))
   const first = compileCSS()
   expect(first).toContain('box-shadow: 1px 2px var(--creator-old-color);')
@@ -533,7 +518,7 @@ test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资�
   expect(second).not.toContain('--creator-old-color')
   let calls = 0
   const child = {
-    onActive: (): Rules => [[[condition('.CreatorNewDependency')], 'width', '7px']],
+    onFirstScan: (): Rules => [[[condition('.CreatorNewDependency')], 'width', '7px']],
     onCompile: (context, controller) => { calls++; controller.setContent(context, '9px'); },
   }
   handle.replace(shadowValue({ x: child, y: '4px', color: 'black' }))
@@ -549,8 +534,8 @@ test('完整 Creator 配置经句柄替换后编译新依赖，旧注册与资�
   expect(removed).not.toContain('.CreatorNewDependency')
 })
 
-test('结构嵌套可以继承 Variable 目标，不误判为局部分支数组', () => {
-  const nestedTargetVariable = variable(undefined, { name: 'nested-target' })
+test('结构嵌套可以继承 Token 目标，不误判为局部分支数组', () => {
+  const nestedTargetVariable = token(undefined, { name: 'nested-target' })
   const body: Rules = [[undefined, undefined, 1], [[condition('&:where(:hover)')], undefined, 2]]
   keep(rule('.NestedTarget', nestedTargetVariable, body))
   const css = compileCSS()

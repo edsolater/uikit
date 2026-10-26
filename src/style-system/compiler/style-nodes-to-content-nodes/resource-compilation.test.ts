@@ -7,11 +7,11 @@ import type { Rules } from '../../rule'
 test.each([false, true])('消费内容更换后旧资源仅在最后一个消费者退出时撤销，共享=%s', shared => {
   const old: JSSContent = {
     toCSSString: () => '1px',
-    onActive: () => [[['.OldResource'], 'opacity', 0.5]],
+    onFirstScan: () => [[['.OldResource'], 'opacity', 0.5]],
   }
   const next: JSSContent = {
     toCSSString: () => '2px',
-    onActive: () => [[['.NewResource'], 'opacity', 0.8]],
+    onFirstScan: () => [[['.NewResource'], 'opacity', 0.8]],
   }
   let changed = false
   const rules: Rules = [[['.Consumer'], 'width', old]]
@@ -36,7 +36,7 @@ test('同一声明的Key仍消费资源时，更换Content保留Key需要的资�
   const source: JSSKeyObject & JSSContent = {
     toCSSString: () => 'width',
     onCompile() {},
-    onActive: () => [[['.KeyResource'], 'opacity', 0.5]],
+    onFirstScan: () => [[['.KeyResource'], 'opacity', 0.5]],
   }
   let changed = false
   const css = compileRules([

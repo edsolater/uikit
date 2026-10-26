@@ -1,20 +1,20 @@
 /** 字体简写配置。 */
 
-import { type JSSContent, createJSSContent } from '../../../content'
-import type { ValueInput } from '../../../value'
+import { token, type Token, type TokenInput } from '../../../token'
 
 export interface FontParts {
-  style?: ValueInput
-  weight?: ValueInput
-  size: ValueInput
-  lineHeight?: ValueInput
-  family: ValueInput
+  style?: TokenInput
+  weight?: TokenInput
+  size: TokenInput
+  lineHeight?: TokenInput
+  family: TokenInput
 }
 
 /** 延迟生成字体简写。 */
-export function fontValue(parts: FontParts): JSSContent {
-  return createJSSContent(
-    (resolve) => {
+export function fontValue(parts: FontParts): Token<FontParts> {
+  return token<FontParts>({ default: parts }, {
+    dependencies: parts => [parts.style, parts.weight, parts.size, parts.lineHeight, parts.family],
+    toCSSString: (parts, resolve) => {
       const style = resolve(parts.style)
       const weight = resolve(parts.weight)
       const size = resolve(parts.size)
@@ -25,6 +25,5 @@ export function fontValue(parts: FontParts): JSSContent {
         .filter((part) => part !== undefined)
         .join(' ')
     },
-    [parts.style, parts.weight, parts.size, parts.lineHeight, parts.family],
-  )
+  })
 }

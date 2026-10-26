@@ -8,7 +8,11 @@ import { assert, isArray, isIndexNumber, isObjectLike, isString, isNumber, isUnd
 import { conditionAddressKey, outputConditionPath, type ConditionPath, type CSSConditionPath } from '../../condition'
 import type { JSSKey } from '../../key'
 import type { Rules } from '../../rule'
-import { isJSSContent, hasJSSContentOnActiveMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
+import { isJSSContent, hasJSSContentOnFirstScanMethod, hasJSSContentOnCompileMethod, hasJSSContentOutput, type JSSCompileContext, type JSSContent } from '../../content'
+import { isToken } from '../../token/core'
+import { cssPreparation } from '../../token/css'
+import { prepareCSSDeclaration, isCSSDefinitionControl } from '../../token/declare'
+import type { TokenCompilation } from '../../token/compilation'
 import type { ASTSession, RoleCompilationState } from '../ast-controller'
 import type { ResourceCompilation } from './resource-compilation'
 import type { JSSStyleNode, ASTController, ContentCompilationRecord, JSSContentNode } from '../contracts'
@@ -18,7 +22,7 @@ const roleCompilationState = (input: unknown, role: JSSCompileContext['role']): 
   input,
   contents: new WeakMap(),
   visitedContents: new Set(),
-  complete: role === 'declaration-key' && !hasJSSContentOnCompileMethod(input),
+  complete: role === 'declaration-key' && !hasJSSContentOnCompileMethod(input) && !isToken(input),
 })
 
 /** 本次编译允许调用 onCompile 的总次数。 */
@@ -37,6 +41,7 @@ function visitContent(
   state: RoleCompilationState,
   budget: CompileBudget,
   activate: (content: JSSContent) => void,
+  tokens: TokenCompilation,
 ): boolean {
   const activeObjects = new Set<object>()
   return visit(input)
@@ -57,11 +62,11 @@ function visitContent(
         if (!record.notified) { record.content = result(input); record.notified = true }
         return visit(record.content, depth + 1)
       }
-      if (hasJSSContentOnActiveMethod(input)) activate(input)
+      if (hasJSSContentOnFirstScanMethod(input)) activate(input)
 
       return hasJSSContentOnCompileMethod(input)
         ? compile(input, depth)
-        : visitChildren(input, depth)
+        : prepare(input, depth)
     } finally {
       activeObjects.delete(input)
     }
@@ -77,20 +82,48 @@ function visitContent(
       return false
     }
     if (!record.notified) {
-      budget.operations++
-      assert(budget.operations <= budget.maximumOperations, `AST 编译操作超过上限 ${budget.maximumOperations}，编译无法终止。`)
-      const notification: JSSCompileContext = { ...context, input }
-      const deferredReason = context.node.deferredReason
-      record.notifyingContext = notification
-      try { input.onCompile(notification, controller) }
-      finally { delete record.notifyingContext }
-      record.notified = context.node.deferredReason === deferredReason
-      // 波次门前访问的是输入依赖；编译完成后重新读取实际产物的依赖。
-      if (record.notified) delete record.dependencies
+      let shared = session.objectCompilations.get(input)
+      if (!shared) {
+        shared = { content: input, notified: false }
+        session.objectCompilations.set(input, shared)
+      }
+      if (!shared.notified) {
+        budget.operations++
+        assert(budget.operations <= budget.maximumOperations, `AST 编译操作超过上限 ${budget.maximumOperations}，编译无法终止。`)
+        const notification: JSSCompileContext = { ...context, input }
+        record.notifyingContext = notification
+        try { input.onCompile(notification, controller) }
+        finally { delete record.notifyingContext }
+        shared.content = record.content
+        shared.notified = true
+      }
+      record.content = shared.content
+      record.notified = true
+      delete record.dependencies
     }
-    if (!record.notified) return false
     if (!session.hasOutput(context.node)) return true
-    return record.content === input ? visitChildren(input, depth) : visit(record.content, depth + 1)
+    return record.content === input ? prepare(input, depth) : visit(record.content, depth + 1)
+  }
+
+  /** 在当前位置准备内部 CSS 操作；它不属于对象的 onCompile 生命周期。 */
+  function prepare(input: object, depth: number): boolean {
+    const record = state.contents.get(input)!
+    if (record.content !== input) return visit(record.content, depth + 1)
+    const notification: JSSCompileContext = { ...context, input: input as JSSContent }
+    const operation = cssPreparation(input)
+    if (operation && !record.notified) {
+      const before = context.node.deferredReason
+      record.notifyingContext = notification
+      try { operation(notification, controller) }
+      finally { delete record.notifyingContext }
+      record.notified = before === context.node.deferredReason
+      if (!record.notified) return false
+    }
+    const declaration = prepareCSSDeclaration(input, notification, controller)
+    if (declaration !== input) record.content = declaration
+    else if (isToken(input)) record.content = tokens.prepare(input, notification)
+    if (record.content !== input) return visit(record.content, depth + 1)
+    return visitChildren(input, depth)
   }
 
   /** 访问依赖并判断当前输出；无输出对象等待依赖完成后才从内容链消失。 */
@@ -107,7 +140,7 @@ function visitContent(
       complete &&= finished
     }
 
-    if (hasJSSContentOutput(input) || hasJSSContentOnCompileMethod(input) || dependencies || hasJSSContentOnActiveMethod(input)) return complete
+    if (hasJSSContentOutput(input) || hasJSSContentOnCompileMethod(input) || dependencies || hasJSSContentOnFirstScanMethod(input)) return complete
     throw new Error('无效的 CSS 内容。')
   }
 }
@@ -122,7 +155,7 @@ export class NodeCompilation {
   /**
    * 接收AST中新增或输入改变的位置；已完成且未改变的节点不进入下一波。
    */
-  constructor(private session: ASTSession, private controller: ASTController, private sourceRules: Rules, private resources: ResourceCompilation) {
+  constructor(private session: ASTSession, private controller: ASTController, private sourceRules: Rules, private resources: ResourceCompilation, private tokens: TokenCompilation) {
     controller.observeNodes((node, present) => {
       if (!present) { this.pending.delete(node); return }
       const state = session.compilations.get(node)
@@ -171,7 +204,7 @@ export class NodeCompilation {
   outputs(select: (node: JSSStyleNode) => boolean): JSSContentNode[] {
     return this.session.nodes.flatMap((node) => {
       const state = this.session.compilations.get(node)
-      if (!select(node) || !state?.key.complete || !state.content.complete) return []
+      if (!select(node) || isCSSDefinitionControl(node) || !state?.key.complete || !state.content.complete) return []
       return [{ conditionPath: outputConditionPath(node.conditionPath), key: node.key, content: node.content, compiledContents: state.content.contents }]
     })
   }
@@ -231,7 +264,7 @@ export class NodeCompilation {
         key: node.key,
       }, node)
     }
-    const complete = visitContent(context[name], context, this.controller, this.session, wave, state, this.budget, activate)
+    const complete = visitContent(context[name], context, this.controller, this.session, wave, state, this.budget, activate, this.tokens)
     state.complete = complete && node.deferredReason === undefined
     state.input = context[name]
     this.resources.updateConsumer(node, name, activatedContents, state.complete)

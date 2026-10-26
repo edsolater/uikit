@@ -1,32 +1,29 @@
 # JSS 内容组织工具公约
 
-`functions` 保存用已有输入组织 JSS 内容的工具，例如 `add`、`multiply`、`colorMix`、`oklch` 和 `translateY`。目录名保持 `functions`；“JSS 内容组织工具”说明这里的共同职责。
+functions 保存用已有输入组织内容的工具，例如 add、multiply、colorMix、oklch 和 translateY。内容模型统一为 [Token](../../../doc/Token设计.md)；源码已完成迁移，本文说明目标职责，公开计算工具已返回 Token。
 
 ## 组织自身内容
 
-工具保存输入与依赖，在输出时通过 `resolve` 取得已经编译的子内容，生成自身结果。工具不感知自己被哪个属性、选择器或声明消费，不读取消费位置，不改写 AST，不插入声明，不登记或提供额外资源定义。
+工具保存输入并组织结果，不感知自己被哪个属性、选择器或声明消费，不读取消费位置，不改写 AST，不主动插入声明或资源定义。
 
-子依赖可以是 Variable 或 CSSFunction 等主体。它们的状态和已编译结果可以影响工具输出；主体自己的定义、注册、条件与生命周期仍由主体和编译器负责。工具只使用依赖结果，不反向操作依赖或 AST。
+输入 Token 对外是可坍缩内容。工具消费输入的结果，不因输入对象位于某个参数就复制它的定义。输入的状态、注册和命名处理由相应 Token 的坍缩过程承担，表达式不反向操作来源。
 
-## 返回 Expression 
+## 计算与格式复用
 
-[content.ts](../../../content.ts) 中的 Expression 是只组织依赖与输出的窄内容契约，要求 `dependencies` 与 `toCSSString`，禁止自身携带 `onActive`、`onCompile`、编译波与资源身份。`createJSSContent` 直接构造这个契约，没有额外身份标签或编译分支。
+add、multiply 组织操作数，最终输出 CSS calc 表达式；数值与单位合法性由浏览器解释。oklch 保存颜色通道并生成颜色内容，oklch(source, changes) 根据来源组合相对颜色；未指定通道保留来源。colorMix 组合颜色和比例。
 
-```ts
-const content = createJSSContent(resolve => {
-  const source = resolve(amount)
-  return source === undefined ? undefined : `calc(${source} + 2px)`
-}, [amount])
-```
+这些工具产生的内容使用统一 Token 模型，不为格式化数据、颜色通道或一次计算建立另一种领域值对象。需要复用业务数据的输出方式时，用普通函数接收数据并返回 Token；列表的逗号或空格分隔、0 和空项处理仍是对应内容工具的行为，不添加到 parser 的固定配置中。
 
-类型限制的是表达式自身可提供的协议，无法证明任意闭包没有副作用。输出方法及其他内容计算仍须遵守上述行为公约，不能绕过类型从外部改写 AST 或状态。
+纯表达式能力与通用编译协议仍有区别。当前 [content.ts](../../../content.ts) 的纯表达式协议负责子内容读取与输出，广义内容协议允许激活与 AST 操作；这些是需要迁移对接的内部能力，不是要求调用方选择两套领域模型。
 
-`add`、`multiply` 保存操作数与依赖，输出 CSS calc 文本，数值与单位由浏览器解释。`oklch` 用 ExpressionValue 保存原始通道并输出颜色文本；Value 的 `withContent` 以新数据创建独立包装，沿用输出规则与依赖配置，ExpressionValue 替换内容后仍保留窄契约。这些内容能力不需要知道消费位置或修改 AST。
+## 定义组合与条件修改
 
-## 内容工具与修改规则、定义主体的边界
+根据已有材料生成新内容，使用普通函数组合并返回 Token。没有独立的定义调整操作、内置用途变体或用于重放加工的来源记录。需要独立复用颜色变化描述时，保留相应领域描述能力；不因保留变化描述就恢复被取消的加工入口。
 
-[modification.ts](../../../modification.ts) 的 `Modification<Detail, Type>` 表示通用变化定义，不依赖颜色父类型；通用生命周期按 type 选择源无关转译，Color 材料形状与策略连接集中在文件后段，通道配置与转译复用 `oklch.ts`。构造用单个配置保存变化的 `name/type/detail`，显式名称是完整 CSS 自定义属性名，内置转译在编译时生成与来源无关的颜色通道配方，并提供独立声明和应用材料。[operations/modify.ts](../../../operations/modify.ts) 通过 FNKit DataShape／`matchShape` 识别双方的自然材料并选择领域应用，[修改链编译](../../../variable/modify.ts) 负责条件步骤与撤销；[operations/adjust.ts](../../../operations/adjust.ts) 绑定 Source、Modification 与结果 Variable，使一次结果声明共同声明三者。来源与配方保留 CSS 引用，局部覆盖由浏览器作用域决定。`oklch(channels)` 生成普通颜色，`oklch(source, changes)` 直接接收通道变化并生成相对颜色；也可消费独立配方的完整通道内容引用。外层保持 Expression；配置依赖只在编译时将自身转为通道表达式，不读取选择器或目标，不插入声明或资源。
+modify 是使用端对目标 Token 的条件修改。AST 登记操作后，目标需要 CSS variable 身份，缺名自动生成。计算工具不能自行修改输入的 kind。onFirstScan 可以返回包含 modify 的规则，编译器必须在坍缩前读完相关修改，不限定激活波数。
 
-[css-function.ts](../../../css-function.ts) 中的 CSSFunction 与 Variable 同属 Style System 的定义主体。`cssFunction(signature, body)` 创建一个可调用主体，其调用返回 Expression，通过依赖引用主体与实参。按需函数定义属于主体，调用表达式不提供定义。主体的程序身份是对象本身；CSS 名字由签名决定，同名定义的作用域和完整接管由现有编译链处理。
+## CSS 函数与资源边界
 
-需要消费位置、AST 操作或资源定义的内容对象使用广义 JSSContent，归到负责这些行为的领域；条件应用由外部使用端组织。仅仅返回 JSSContent，不能作为放进 `functions` 的理由。
+CSSFunction 承担 CSS 具名函数的定义职责。调用表达式引用主体与实参，按需定义由相应激活能力提供；对象身份用于共享材料，CSS 名称与作用域决定浏览器中的定义关系。
+
+通用工具只组织计算；需要消费位置、AST 操作或资源定义的能力归相应领域及编译器。仅仅能返回通用内容对象，不能作为把有副作用的工具放进 functions 的理由。

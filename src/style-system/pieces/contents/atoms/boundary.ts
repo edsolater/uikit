@@ -1,4 +1,4 @@
 /** 边界厚度基准；焦点等具体部分按需要相对放大。 */
-import { variable } from '../../../variable'
+import { token } from '../../../token'
 
-export const boundaryWidth = variable('1px', 'boundary-width')
+export const boundaryWidth = token('1px', 'boundary-width')

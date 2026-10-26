@@ -1,3 +1,4 @@
+import { token, type TokenAddress } from '../token'
 /** 修改规则跨元素作用域的浏览器验证。
  *
  * 验证后代重算、状态宿主、共享步骤和条件层叠的实际结果。
@@ -9,7 +10,6 @@ import { compileRules } from '../css-root'
 import { condition } from '../condition'
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
-import { variable, variableFrom, type VariableAddress } from '../variable'
 import { createJSSContent } from '../content'
 afterEach(() => document.body.replaceChildren())
 
@@ -17,7 +17,7 @@ const parent = condition('.Parent')
 const child = condition('& .child')
 const grandchild = condition('& .grandchild')
 const sibling = condition('& .sibling')
-const amount = (name: string, address: VariableAddress = parent) => variable(1, { name, address })
+const amount = (name: string, address: TokenAddress = parent) => token(1, { name, address })
 const amountModification = (change: { operator: string; amount: number }) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent(resolve => `calc(${resolve(currentExpression)} ${change.operator} ${change.amount})`, [currentExpression]) })
 const read = (selector: string) => getComputedStyle(document.querySelector(selector)!).zIndex
 const mount = (css: string) => { document.body.innerHTML = `<style>${css}</style><div class="Parent"><div class="child"><span class="grandchild"></span><span class="child nested-child"></span></div><div class="sibling"><span class="child sibling-child"></span></div></div>` }
@@ -113,10 +113,10 @@ test('登记状态在父宿主命中时继续作用于子结果，退出时恢�
   expect({ before, after, exited }).toEqual({ before: '4', after: '8', exited: '4' })
 })
 
-test('函数声明与修改仍消费Variable自己的按需资源', () => {
+test('函数声明与修改仍消费Token自己的按需资源', () => {
   const resource = condition('.ActivationResource')
-  const n = variable(1, { name: 'activation-subject', address: parent,
-    onActive: () => [[[resource], 'opacity', 0.4]],
+  const n = token(1, { name: 'activation-subject', address: parent,
+    onFirstScan: () => [[[resource], 'opacity', 0.4]],
   })
   const nModification = (delta: number) => ({ type: 'expression' as const, detail: currentExpression => createJSSContent(resolve => `calc(${resolve(currentExpression)} + ${delta})`, [currentExpression]) })
   const css = compileRules([
@@ -219,7 +219,7 @@ test('同ID多条祖先规则的胜出条件在父元素与后代重算中一致
 // 旧颜色模型让祖先修改按 CSS 继承；只有显式 declare 建立新的基础与规则归属。
 test('显式后代声明隔离祖先规则，并从自己的基础继续修改', () => {
   const n = amount('explicit-descendant-boundary')
-  const inner = variableFrom(n, 5, { address: [parent, child, condition('& .nested-child')] })
+  const inner = token(5, { name: n.name, state: n.state, address: [parent, child, condition('& .nested-child')], registration: n.registration })
   const active = condition('&[data-active]')
   const nested = condition('& .nested-child')
   mount(compileRules([
@@ -234,7 +234,7 @@ test('显式后代声明隔离祖先规则，并从自己的基础继续修改',
 })
 
 test.each(['<number>', '*'])('不继承注册保持子元素初值，当地修改从初值继续，语法=%s', syntax => {
-  const n = variable(1, { name: `non-inheriting-${syntax === '*' ? 'any' : 'number'}`, address: '.Parent',
+  const n = token(1, { name: `non-inheriting-${syntax === '*' ? 'any' : 'number'}`, address: '.Parent',
     registration: { syntax, inherits: false, initialValue: 1 },
   })
   const local = condition('&[data-local]')
@@ -255,7 +255,7 @@ test('共享步骤保持选择器优先级，当地规则覆盖继承，空输�
   const active = condition('&[data-active]')
   const local = condition('&[data-local]')
   const empty = condition('&[data-local][data-empty]')
-  const n = variable(2, { name: 'shared-selection-contract', address: parent })
+  const n = token(2, { name: 'shared-selection-contract', address: parent })
   const nModification = (change: number | undefined) => ({ type: 'expression' as const, detail: currentExpression => change === undefined
       ? createJSSContent(() => undefined)
       : createJSSContent(resolve => `calc(${resolve(currentExpression)} ${change === 3 ? '*' : '+'} ${change})`, [currentExpression]) })
@@ -280,7 +280,7 @@ test.each(['late-declare', 'removed-declare'])('普通颜色消费者在局部�
   const { modification } = await import('../modification')
   const { add } = await import('../pieces/contents/functions/calc')
   const change = modification({ name: '--consumer-rule', type: 'color', detail: { lightness: currentExpression => add(currentExpression, 0.1) } })
-  const surface = variable('oklch(0.2 0.1 120)', { name: 'consumer-surface', address: parent })
+  const surface = token('oklch(0.2 0.1 120)', { name: 'consumer-surface', address: parent })
   const declaration = declare(surface, 'oklch(0.5 0.1 120)')
   const input: import('../rule').Rules = [
     [[parent], ...modify(surface, change)],
@@ -302,7 +302,7 @@ test.each(['late-declare', 'removed-declare'])('普通颜色消费者在局部�
 
 test('不继承且无注册初值时不补普通引用回退，也不把默认内容伪装成初值', () => {
   const local = condition('&[data-local]')
-  const n = variable(7, { name: 'universal-without-initial', address: ".Parent",
+  const n = token(7, { name: 'universal-without-initial', address: ".Parent",
     registration: { syntax: '*', inherits: false },
   })
   const nModification = (change: { fixed?: number; amount?: number }) => ({ type: 'expression' as const, detail: currentExpression => change.fixed === undefined

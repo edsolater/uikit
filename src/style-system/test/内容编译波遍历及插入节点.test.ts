@@ -1,3 +1,4 @@
+import { token } from '../token'
 /** 内容编译波与节点插入的流程测试。
  *
  * 通过正式 Rules 入口验证延后内容、替代链和插入节点的输出。
@@ -11,8 +12,6 @@ import { key, type JSSKeyObject } from '../key'
 import { stateCondition } from '../pieces/state-conditions'
 import { compileRules } from '../css-root'
 import { createJSSContent, type JSSCompileContext, type JSSContentContext, type JSSContent } from '../content'
-import { value } from '../value'
-import { variable } from '../variable'
 import type { Rules } from '../rule'
 import type { ASTController } from '../compiler/contracts'
 
@@ -36,7 +35,7 @@ test('Key 替换路径后，Content 激活仍复制节点访问开始时取得�
     context.node.conditionPath.targetConditionPath.push(condition('.ChangedBefore'))
     context.node.conditionPath = { targetConditionPath: [condition('.After')], stateConditionPath: [] }
   } }
-  const content: JSSContent = { onActive(context) {
+  const content: JSSContent = { onFirstScan(context) {
     observed = context.conditionPath.targetConditionPath.map(item => item.header)
     return []
   }, toCSSString: () => '7px' }
@@ -164,7 +163,7 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
     compileWaveIndex: 0,
     onCompile(context, controller) {
       events.push('nested')
-      controller.setContent(context, value('6px')); },
+      controller.setContent(context, token('6px')); },
   }
   let observedController: ASTController | undefined
   let observedCompileContext: JSSCompileContext | undefined
@@ -176,7 +175,7 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
       observedController = controller
       observedCompileContext = context
       controller.insert({ before: context.node, conditionPath: context.conditionPath }, [key('--wave-inserted-value'), '9px'], { owner: context.node })
-      controller.setContent(context, value(createJSSContent((resolve) => {
+      controller.setContent(context, token(createJSSContent((resolve) => {
         const input = resolve(nested)
         return input === undefined ? undefined : `calc(${input} * 2)`
       }, [nested]))); },
@@ -249,7 +248,7 @@ test('角色改写自身的内容或 Key 时，旧访问结果不归给新输入
   expect(css).not.toContain('--old-key')
 })
 
-test('统一失效在访问前、波末和 revision 改写时重新访问对应角色', () => {
+test('输入替换重新消费新对象，revision 改写不重调已有对象生命周期', () => {
   const calls = { original: 0, before: 0, after: 0, key: 0, revised: 0, stable: 0 }
   const original = { onCompile(context, controller) { calls.original++; controller.setContent(context, '1px'); } }
   const before = { onCompile(context, controller) { calls.before++; controller.setContent(context, '2px'); } }
@@ -275,12 +274,12 @@ test('统一失效在访问前、波末和 revision 改写时重新访问对应�
       }
       ast.setContent(context, '0px'); } }],
   ])
-  expect(calls).toEqual({ original: 1, before: 1, after: 1, key: 1, revised: 2, stable: 1 })
+  expect(calls).toEqual({ original: 1, before: 1, after: 1, key: 1, revised: 1, stable: 1 })
   expect(css).toContain('--changed-key: 2px;')
   expect(css).toContain('height: 4px;')
-  expect(css).toContain('margin: 6px;')
+  expect(css).toContain('margin: 5px;')
   expect(css).not.toContain('1px')
-  expect(css).not.toContain('5px')
+  expect(css).not.toContain('6px')
 })
 
 test('访问前失效本波重访已有缓存，波末失效重访被后项替换的 Key', () => {
@@ -322,10 +321,10 @@ test.each([20, 40])('按需资源完整输出，共享资源只激活及编译�
   const source: Rules = []
   for (let index = 0; index < count; index++) {
     const resources: Rules = [[[condition('.AssociatedResources')], `--resource-${index}`, index]]
-    source.push([[], `--consumer-${index}`, { onActive: () => resources }])
+    source.push([[], `--consumer-${index}`, { onFirstScan: () => resources }])
   }
   const repeated = {
-    onActive() {
+    onFirstScan() {
       repeatedActivations++
       return [[[condition('.RepeatedResource')], 'color', { onCompile(context, controller) { resourceVisits++; controller.setContent(context, 'blue'); } }]] as Rules
     },
@@ -342,9 +341,9 @@ test.each([20, 40])('按需资源完整输出，共享资源只激活及编译�
 test('同一 Rule 身份的多个激活记录均关联最后产物，不将不同 Rule 当成获胜记录', () => {
   let visits = 0
   const sharedRule: Rules[0] = [[condition('.SharedRuleIdentity')], 'color', { onCompile(context, controller) { visits++; controller.setContent(context, 'blue'); } }]
-  const first: JSSContent = { onActive: () => [sharedRule] }
-  const other: JSSContent = { onActive: () => [[[condition('.SharedRuleIdentity')], 'color', 'red']] }
-  const same: JSSContent = { onActive: () => [sharedRule] }
+  const first: JSSContent = { onFirstScan: () => [sharedRule] }
+  const other: JSSContent = { onFirstScan: () => [[[condition('.SharedRuleIdentity')], 'color', 'red']] }
+  const same: JSSContent = { onFirstScan: () => [sharedRule] }
   const css = compileRules([
     [[], 'width', first], [[], 'height', other], [[], 'margin', same],
     [[], 'padding', { compileWaveIndex: 2, onCompile(context, controller) { controller.setContent(context, first); } }],
@@ -356,7 +355,7 @@ test('同一 Rule 身份的多个激活记录均关联最后产物，不将不�
 
 test('再次消费激活内容时使用当前 Rules，并退出已经替换的 Rule 关联', () => {
   const resources: Rules = []
-  const content: JSSContent = { onActive: () => resources }
+  const content: JSSContent = { onFirstScan: () => resources }
   const css = compileRules([
     [[], 'width', content],
     [[], 'height', { compileWaveIndex: 1, onCompile(context, controller) {
@@ -370,7 +369,7 @@ test('再次消费激活内容时使用当前 Rules，并退出已经替换的 R
   const original: Rules[0] = [[condition('.ChangedActiveRules')], 'color', { onCompile(context, controller) { oldVisits++; controller.setContent(context, 'red'); } }]
   const replacement: Rules[0] = [[condition('.ChangedActiveRules')], 'color', { onCompile(context, controller) { newVisits++; controller.setContent(context, 'blue'); } }]
   const changed: Rules = [original]
-  const active: JSSContent = { onActive: () => changed }
+  const active: JSSContent = { onFirstScan: () => changed }
   const output = compileRules([
     [[], 'width', active],
     [[], 'height', { onCompile(context, controller) { changed.splice(0, 1, replacement); controller.setContent(context, active); } }],
@@ -388,8 +387,8 @@ test.each(['append', 'delete', 'replace'])('未再次消费的记录改写 Rules
   const original: Rules[0] = [[condition('.CurrentActiveRules')], 'color', { onCompile(context, controller) { originalVisits++; controller.setContent(context, 'red'); } }]
   const replacement: Rules[0] = [[condition('.CurrentActiveRules')], 'color', { onCompile(context, controller) { replacementVisits++; controller.setContent(context, 'blue'); } }]
   const resources: Rules = change === 'append' ? [] : [original]
-  const first: JSSContent = { onActive: () => resources }
-  const winner: JSSContent = { onActive: () => [original] }
+  const first: JSSContent = { onFirstScan: () => resources }
+  const winner: JSSContent = { onFirstScan: () => [original] }
   const css = compileRules([
     [[], 'width', first],
     [[], 'height', winner],
@@ -411,8 +410,8 @@ test.each(['append', 'delete', 'replace'])('未再次消费的记录改写 Rules
 
 test.each([false, true])('同址按需资源最后替换，多个消费者撤销仍保留共享=%s', (keepShared) => {
   let cleanups = 0
-  const old: JSSContent = { onActive: () => [[[condition('.SharedResource')], 'color', 'red']] }
-  const shared: JSSContent = { onActive: () => [[[condition('.SharedResource')], 'color', {
+  const old: JSSContent = { onFirstScan: () => [[[condition('.SharedResource')], 'color', 'red']] }
+  const shared: JSSContent = { onFirstScan: () => [[[condition('.SharedResource')], 'color', {
     onCompile(context: JSSCompileContext, ast: ASTController) { ast.onRemove(context.node, () => { cleanups++ }); ast.setContent(context, 'blue'); },
   }]] }
   const css = compileRules([
@@ -448,12 +447,12 @@ test('自定义 Key 只凭通用 onCompile 与输出能力插入节点', () => {
   expect(css).toContain('--custom-compiled-key: 5px;')
 })
 
-test.each([false, true])('onActive 内容生成按需 Rules，带空 dependencies=%s 时本声明不输出', (hasDependencies) => {
+test.each([false, true])('onFirstScan 内容生成按需 Rules，带空 dependencies=%s 时本声明不输出', (hasDependencies) => {
   let activations = 0
   let observedContext: JSSContentContext | undefined
   const lifecycleOnly = {
     ...(hasDependencies ? { dependencies: [] } : {}),
-    onActive(context: JSSContentContext) {
+    onFirstScan(context: JSSContentContext) {
       activations++
       observedContext = context
       return [[[condition('.LifecycleDependency')], 'color', 'red']] as Rules
@@ -469,6 +468,7 @@ test.each([false, true])('onActive 内容生成按需 Rules，带空 dependencie
   expect(css).toContain('.LifecycleDependency')
   expect(css).toContain('color: red;')
   expect(css).not.toContain('display:')
+  // @ts-expect-error 空对象不是内容协议，运行时也须拒绝。
   expect(() => compileRules([[[condition('.Invalid')], 'color', {}]])).toThrow('不是可编译的 CSS 内容')
 })
 
@@ -489,7 +489,7 @@ test('设定的无输出容器保留未完成依赖，完成后才退出当前�
     controller.setContent(context, '9px'); } }
   const container: JSSContent = {
     dependencies: [child],
-    onActive: () => [[[condition('.NoOutputResource')], 'color', 'red']],
+    onFirstScan: () => [[[condition('.NoOutputResource')], 'color', 'red']],
   }
   const source: JSSContent = { onCompile(context, controller) { events.push('source'); controller.setContent(context, container); } }
   const middle: JSSContent = { compileWaveIndex: 1, onCompile(context, controller) { events.push('middle'); controller.setContent(context, 1); } }
@@ -514,14 +514,14 @@ test('延后的动态依赖完成后输出 CSS，成功编译通知不重复', (
   expect(childCalls).toBe(1)
 })
 
-test('Variable Content 根通知设定内容进入正式 CSS 输出', () => {
-  const source = variable('red', { name: 'content-root-replacement' })
+test('Token Content 根通知设定内容进入正式 CSS 输出', () => {
+  const source = token('red', { name: 'content-root-replacement' })
   const css = compileRules([[[condition('.ContentRootReplacement')], 'color', source]])
 
   expect(css).toContain('color: var(--content-root-replacement);')
 })
 
-test('Variable source 与状态中的可调用内容按对象编译而非工厂调用', () => {
+test('Token source 与状态中的可调用内容按对象编译而非工厂调用', () => {
   let sourceFactoryCalls = 0
   const source = Object.assign(() => {
     sourceFactoryCalls++
@@ -543,7 +543,7 @@ test('Variable source 与状态中的可调用内容按对象编译而非工厂�
   const css = compileRules([[
     [condition('.CompilableFunction'), condition('&:where([data-wave-hover])')],
     'color',
-    variable(source, { name: 'compilable-function-color', states: { contentWaveHover: state } }),
+    token(source, { name: 'compilable-function-color', state: { contentWaveHover: state } }),
   ]])
 
   expect(sourceFactoryCalls).toBe(0)

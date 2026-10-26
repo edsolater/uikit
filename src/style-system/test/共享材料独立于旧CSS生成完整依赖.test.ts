@@ -5,7 +5,7 @@ import { shadow, backdropColor } from '../pieces/contents/atoms/shadow'
 import { motionDuration } from '../pieces/contents/atoms/motion'
 
 test('颜色对象、用途阴影和动效的引用均由自身依赖提供', () => {
-  const materials = [...Object.values(roles), shadow.variant('card'), shadow.variant('popover'), shadow.variant('dialog'), backdropColor,
+  const materials = [...Object.values(roles), shadow, backdropColor,
     motionDuration]
   const css = compileRules(materials.map((material, index) => [['.IndependentMaterials'], `--probe-${index}`, material]))
   const declared = new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map(match => match[1]))

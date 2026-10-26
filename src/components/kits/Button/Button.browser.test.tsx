@@ -1,7 +1,7 @@
 import { flush } from 'solid-js'
 import { buttonSurfaceColor, buttonContentColor, buttonColorInput, buttonColor, buttonSurfaceSource, buttonSurfaceCanvas, buttonSurfaceStrength } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
-import { declare, modify, variable, variableFrom, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, radius, space, multiply, interactiveColor, badColor, oklch, shadow, controlSize, textSize, opacity } from '@/style-system'
+import { declare, modify, token, key, add, cssRoot, rule, rules, type RulesHandle, whenHover, whenActive, whenDisabled, $borderRadius, $backgroundColor, contentLayout, radius, space, multiply, interactiveColor, badColor, oklch, shadowFor, controlSize, textSize, opacity } from '@/style-system'
 import '../../../css/all-base.css'
 import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
@@ -247,7 +247,7 @@ describe('Button styles', () => {
     const parent = document.body.appendChild(document.createElement('div'))
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
-    parent.style.setProperty(globalColors.globalContentColor.key.toCSSString(), 'rgb(78, 90, 123)')
+    parent.style.setProperty(`--${globalColors.globalContentColor.name!.replace(/^--/, '')}`, 'rgb(78, 90, 123)')
     dispose = render(() => <Button>普通按钮</Button>, parent)
     const button = parent.querySelector<HTMLButtonElement>('button')!
     button.style.transition = 'none'
@@ -255,7 +255,7 @@ describe('Button styles', () => {
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
     await userEvent.hover(button)
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
-    button.style.setProperty(globalColors.globalContentColor.key.toCSSString(), 'rgb(123, 90, 78)')
+    button.style.setProperty(`--${globalColors.globalContentColor.name!.replace(/^--/, '')}`, 'rgb(123, 90, 78)')
     button.focus()
     await userEvent.keyboard('[Space>]')
     try {
@@ -377,8 +377,8 @@ describe('Button styles', () => {
     // 在已知外观的结构Address验证组合，不从平面选择器猜测DOM同时命中的分支。
     for (const [index, palette] of palettes.entries()) handles.push(rules(['@layer uikit', '.Button',
       ...(selectedAppearance ? [`&[data-appearance="${selectedAppearance}"]`] : []), `&[data-local-tone="${index}"]`], [
-      [buttonColorInput, palette.tone], [buttonColor.variant('surface'), palette.soft],
-      [buttonColor.variant('text'), palette.strong], [buttonColor.variant('content'), palette.content], [buttonColor.variant('boundary'), palette.line],
+      [buttonColorInput, palette.tone], [key('--button-color-surface'), palette.soft],
+      [key('--button-color-text'), palette.strong], [key('--button-color-content'), palette.content], [key('--button-color-boundary'), palette.line],
     ]))
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
@@ -563,13 +563,13 @@ describe('Button styles', () => {
   })
 
   test('挂载 Button 样式保留其他组件的静态样式和阴影契约', () => {
-    const shadows: [typeof shadow, string][] = [[shadow.variant('control'), '--shadow-1'], [shadow.variant('filledControl'), '--shadow-2'], [shadow.variant('card'), '--shadow-2']]
-    const probes = shadows.map(([material, token], index) => {
+    const shadows = [[shadowFor('control'), '--shadow-1'], [shadowFor('filledControl'), '--shadow-2'], [shadowFor('card'), '--shadow-2']] as const
+    const probes = shadows.map(([material, cssName], index) => {
       const reference = document.body.appendChild(document.createElement('div'))
-      reference.style.boxShadow = `var(${token})`
+      reference.style.boxShadow = `var(${cssName})`
       const actual = document.body.appendChild(document.createElement('div'))
       actual.className = `shadow-probe-${index}`
-      handles.push(rule(`.shadow-probe-${index}`, 'box-shadow', variableFrom(material, material.content, { name: `shadow-probe-${index}`, address: `.shadow-probe-${index}` })))
+      handles.push(rule(`.shadow-probe-${index}`, 'box-shadow', token(material.default, { name: `shadow-probe-${index}`, address: `.shadow-probe-${index}`, state: material.state })))
       return { reference, actual }
     })
     const input = document.body.appendChild(document.createElement('input'))
@@ -628,11 +628,11 @@ describe('Button styles', () => {
     const css = style.textContent
     const bases = [[controlSize, '72px'], [space, '16px'], [textSize, '24px'], [opacity, '0.5']] as const
     try {
-      bases.forEach(([base, value]) => document.documentElement.style.setProperty(base.toCSSString(), value))
+      bases.forEach(([base, value]) => document.documentElement.style.setProperty(`--${base.name!.replace(/^--/, '')}`, value))
       const ratios = [1.5, 2, 2, 2, 1.5, 0.5]
       read().forEach((values, row) => values.forEach((value, column) => expect(value).toBeCloseTo(before[row][column] * ratios[column], 5)))
       expect(style.textContent).toBe(css)
-    } finally { bases.forEach(([base]) => document.documentElement.style.removeProperty(base.toCSSString())) }
+    } finally { bases.forEach(([base]) => document.documentElement.style.removeProperty(`--${base.name!.replace(/^--/, '')}`)) }
   })
 
   test('四尺寸、方圆角、内容与拉伸容器保持旧布局，后置 layer 可覆盖', () => {
@@ -725,7 +725,7 @@ describe('Button styles', () => {
     const defaultButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-default"]')!
     const dangerButton = host.querySelector<HTMLButtonElement>('[data-testid="focus-danger"]')!
     const reference = document.body.appendChild(document.createElement('div'))
-    handles.push(rule('.focus-reference-interactive', 'color', oklch(interactiveColor.content, { alpha: 0.44 })))
+    handles.push(rule('.focus-reference-interactive', 'color', oklch(interactiveColor.default, { alpha: 0.44 })))
     handles.push(rule('.focus-reference-bad', 'color', oklch(badColor, { alpha: 0.44 })))
     cssRoot.mount()
     reference.className = 'focus-reference-interactive'
@@ -870,7 +870,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(defaultBackground)
     await userEvent.unhover(getButton('default'))
 
-    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, variable('rgb(1, 2, 3)', { name: "browser-button-color", address: '.Button[data-testid="default"]', states: Object.fromEntries([['hover', 'rgb(4, 5, 6)']]) })))
+    handles.push(rule('.Button[data-testid="default"]', $backgroundColor, token('rgb(1, 2, 3)', { name: "browser-button-color", address: '.Button[data-testid="default"]', state: Object.fromEntries([['hover', 'rgb(4, 5, 6)']]) })))
     cssRoot.mount()
     await userEvent.hover(getButton('default'))
     expect(getComputedStyle(getButton('default')).backgroundColor).toBe('rgb(4, 5, 6)')
@@ -885,7 +885,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(disabledButton).backgroundColor).toBe(disabledBackground)
 
     const originalBackground = getComputedStyle(getButton('default')).backgroundColor
-    getButton('default').style.setProperty(globalColors.globalSurfaceColor.toCSSString(), 'oklch(0.2 0.003 260)')
+    getButton('default').style.setProperty(`--${globalColors.globalSurfaceColor.name!.replace(/^--/, '')}`, 'oklch(0.2 0.003 260)')
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(originalBackground)
     const beforeMount = Array.from(style.sheet!.cssRules)
     cssRoot.mount()
@@ -905,7 +905,7 @@ test('危险Button只改一个语气输入，内容与边线一起采用当地�
   for (const element of [local, sibling]) element.style.transition = 'none'
   expectSameColor(getComputedStyle(local).color, selected)
   expectSameColor(getComputedStyle(local).borderTopColor, `oklch(from ${selected} l c h / 0.44)`)
-  expectSameColor(getComputedStyle(sibling).color, getComputedStyle(document.documentElement).getPropertyValue(badColor.toCSSString()))
+  expectSameColor(getComputedStyle(sibling).color, getComputedStyle(document.documentElement).getPropertyValue(`--${badColor.name!.replace(/^--/, '')}`))
   expect(getComputedStyle(local).backgroundColor).not.toBe(getComputedStyle(sibling).backgroundColor)
 })
 
@@ -923,7 +923,7 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
   const [normal, local, own, danger] = Array.from(root.querySelectorAll<HTMLButtonElement>('button'))
   for (const button of [normal, local, own, danger]) button.style.transition = 'none'
   const background = (button: HTMLElement, canvas: string, strength = 0.18) => {
-    const source = getComputedStyle(button).getPropertyValue(buttonSurfaceSource.toCSSString())
+    const source = getComputedStyle(button).getPropertyValue(`--${buttonSurfaceSource.name!.replace(/^--/, '')}`)
     expectSameColor(getComputedStyle(button).backgroundColor, 'color-mix(in oklab, ' + source + ' ' + strength * 100 + '%, ' + canvas + ')')
   }
   background(normal, 'rgb(220, 230, 240)')
@@ -934,8 +934,8 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
   expectSameColor(getComputedStyle(own).color, 'rgb(90, 80, 70)')
   const dangerBefore = appearance(danger)
   const cssBefore = style.textContent
-  root.style.setProperty(globalSurfaceColor.toCSSString(), 'rgb(200, 180, 230)')
-  root.style.setProperty(globalContentColor.toCSSString(), 'rgb(100, 40, 60)')
+  root.style.setProperty(`--${globalSurfaceColor.name!.replace(/^--/, '')}`, 'rgb(200, 180, 230)')
+  root.style.setProperty(`--${globalContentColor.name!.replace(/^--/, '')}`, 'rgb(100, 40, 60)')
   background(normal, 'rgb(200, 180, 230)')
   background(local, 'rgb(180, 210, 190)')
   background(own, 'rgb(240, 200, 180)')

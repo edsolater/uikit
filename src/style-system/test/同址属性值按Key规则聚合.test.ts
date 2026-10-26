@@ -1,3 +1,4 @@
+import { token, type Token } from '../token'
 /** 同址声明聚合的跨文件流程测试。
  *
  * 验证输入顺序、Key 组合、结果历史与依赖来源。
@@ -12,7 +13,6 @@ import { valueList } from '../pieces/contents/atom-creators/list'
 import { $boxShadow } from '../pieces/keys/box-shadow'
 import { stateCondition } from '../pieces/state-conditions'
 import { rule, rules, type Rules } from '../rule'
-import { arraySequenceToCSSString, value, type Value } from '../value'
 import type { JSSCompileContext } from '../content'
 import type { ASTController } from '../compiler/contracts'
 
@@ -30,7 +30,7 @@ test('历史聚合结果提供新贡献与独占资源，隐藏结果后资源�
   let joins = 0
   const target = key('--historical-owner', { join(items) {
     joins++
-    return value(items, { toCSSString: arraySequenceToCSSString, onActive: joins === 1 ? () => [
+    return token({ default: items }, { toCSSString: arraySequenceToCSSString, onFirstScan: joins === 1 ? () => [
       [[condition('.HistoricalOwner')], target, 'c'],
       [[condition('.HistoricalResource')], 'color', 'red'],
     ] : undefined })
@@ -50,7 +50,7 @@ test('结果把新贡献插到原输入之前，快照顺序随本次完整分�
     const first = joins++ === 0
     return { onCompile(context: JSSCompileContext, ast: ASTController) {
       if (first) ast.insert({ before: ast.search({ key: target })[0], conditionPath: context.conditionPath }, [target, 'c'], { owner: context.node })
-      ast.setContent(context, value(items, { toCSSString: arraySequenceToCSSString })); } }
+      ast.setContent(context, token({ default: items }, { toCSSString: arraySequenceToCSSString })); } }
   } })
   const css = compileRules([
     [[condition('.FrontContribution')], target, 'a'],
@@ -66,7 +66,7 @@ test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也�
   const target = key('--revoked-history', { join(items) {
     const generation = ++joins
     return {
-      onActive: generation === 1 ? () => [
+      onFirstScan: generation === 1 ? () => [
         [[condition('.RevokedHistory')], target, 'c'],
         [[condition('.RevokedHistoryResource')], 'color', 'red'],
       ] : undefined,
@@ -74,7 +74,7 @@ test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也�
         registered.push(generation)
         ast.onRemove(context.node, () => cleaned.push(generation))
         if (generation === 2) ast.search({ key: target }).find((node) => node.content === 'a')!.content = 'x'
-        ast.setContent(context, value(items, { toCSSString: arraySequenceToCSSString })); },
+        ast.setContent(context, token({ default: items }, { toCSSString: arraySequenceToCSSString })); },
     }
   } })
   const css = compileRules([
@@ -87,7 +87,7 @@ test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也�
   expect(css).not.toContain('a b c')
 })
 
-test.each(['move', 'revision'])('聚合输入只改变 %s 时重新组合实际顺序与解析值', (change) => {
+test.each(['move', 'replacement'])('聚合输入发生 %s 时重新组合实际顺序与解析值，旧对象不重放', (change) => {
   let renders = 0
   let firstValue = 2
   let joins = 0
@@ -99,15 +99,15 @@ test.each(['move', 'revision'])('聚合输入只改变 %s 时重新组合实际�
         const nodes = ast.search({ key: target })
         const source = nodes.find((node) => node.content === first)!
         if (change === 'move') ast.move(nodes.find((node) => node.content === 3)!, { before: source })
-        else { firstValue = 7; source.compileRevision++ }
+        else { firstValue = 7; source.content = { onCompile(next, controller) { controller.setContent(next, firstValue) } }; source.compileRevision++ }
       }
-      ast.setContent(context, value(items, { toCSSString: arraySequenceToCSSString })); } }
+      ast.setContent(context, token({ default: items }, { toCSSString: arraySequenceToCSSString })); } }
   } })
   const css = compileRules([
     [[condition('.ChangedInput')], target, first],
     [[condition('.ChangedInput')], target, 3],
   ])
-  expect(renders).toBe(change === 'revision' ? 2 : 1)
+  expect(renders).toBe(1)
   expect(css).toContain(`${target.name}: ${change === 'move' ? '3 2' : '7 3'};`)
   expect(css.match(new RegExp(`${target.name}:`, 'g'))).toHaveLength(1)
 })
@@ -132,7 +132,7 @@ test('阴影层与已有完整列表按声明顺序保留重复项，结果落�
 })
 
 test('聚合按属性名与最终目标状态地址隔离，同名对象可共享同一规则', () => {
-  const join = (items: Value[]) => items.reduce((sum, item) => sum + Number(item.content), 0)
+  const join = (items) => items.reduce((sum, item) => sum + Number(item.content), 0)
   const first = key('--aggregate-sum', { join })
   const second = key('--aggregate-sum', { join })
   const css = compileRules([
@@ -177,7 +177,7 @@ test('聚合规则同时取得原对象身份与各项独立的解析读取结�
   const spacing = key('--aggregate-spacing', {
     join(items) {
       observed.push(...items.map((item) => item.content))
-      return value(items, { toCSSString: arraySequenceToCSSString })
+      return token({ default: items }, { toCSSString: arraySequenceToCSSString })
     },
   })
   const css = compileRules([
@@ -189,37 +189,36 @@ test('聚合规则同时取得原对象身份与各项独立的解析读取结�
   expect(css).toContain('--aggregate-spacing: 2px 3px;')
 })
 
-test('同一原对象在两个声明位置分别解析，Value 仍保留同一身份且不重复激活', () => {
+test('同一对象的两个位置视图保持独立，生命周期结果共享', () => {
   let compiles = 0
   let activations = 0
   const shared = {
-    onActive: () => { activations++; return [] },
+    onFirstScan: () => { activations++; return [] },
     onCompile: (context, controller) => { controller.setContent(context, `${++compiles}px`) },
   }
-  const observed: Value[] = []
+  const observed: { content: unknown }[] = []
   const spacing = key('--shared-content-spacing', {
     join(items) {
       observed.push(...items)
-      return value(items, { toCSSString: arraySequenceToCSSString })
+      return token({ default: items }, { toCSSString: arraySequenceToCSSString })
     },
   })
   const css = compileRules([
     [[condition('.SharedContent')], spacing, shared],
     [[condition('.SharedContent')], spacing, shared],
   ])
-  expect(observed[0].content).toBe(shared)
-  expect(observed[1].content).toBe(shared)
+  expect(observed.map(item => item.content)).toEqual([shared, shared])
   expect(observed[0]).not.toBe(observed[1])
-  expect(compiles).toBe(2)
+  expect(compiles).toBe(1)
   expect(activations).toBe(1)
-  expect(css).toContain('--shared-content-spacing: 1px 2px;')
+  expect(css).toContain('--shared-content-spacing: 1px 1px;')
 })
 
-test('聚合规则修改 Value 当前内容后按新值输出', () => {
+test('聚合规则修改 Token 当前内容后按新值输出', () => {
   const replacement = key('--replace-value-content', {
     join(items) {
       items[0].content = '9px'
-      return value(items, { toCSSString: arraySequenceToCSSString })
+      return token({ default: items }, { toCSSString: arraySequenceToCSSString })
     },
   })
   const css = compileRules([
@@ -229,11 +228,11 @@ test('聚合规则修改 Value 当前内容后按新值输出', () => {
   expect(css).toContain('--replace-value-content: 9px 2px;')
 })
 
-test('聚合规则把 Value 当前内容改成数组时仍按 Value 默认规则输出', () => {
+test('聚合规则把 Token 当前内容改成数组时仍按 Token 默认规则输出', () => {
   const replacement = key('--replace-value-array', {
     join(items) {
       items[0].content = [0, false]
-      return value(items)
+      return token({ default: items })
     },
   })
   const css = compileRules([
@@ -243,17 +242,17 @@ test('聚合规则把 Value 当前内容改成数组时仍按 Value 默认规则
   expect(css).toContain('--replace-value-array: 0, false, tail;')
 })
 
-test('join 修改 Value 内容为新解析对象时沿结果节点解析与激活', () => {
+test('join 修改 Token 内容为新解析对象时沿结果节点解析与激活', () => {
   let compiles = 0
   let activations = 0
   const child = {
-    onActive: () => { activations++; return [] },
+    onFirstScan: () => { activations++; return [] },
     onCompile: (context, controller) => { compiles++; controller.setContent(context, 'new'); },
   }
   const target = key('--replace-value-child', {
     join(items) {
       items[0].content = [child]
-      return value(items)
+      return token({ default: items })
     },
   })
   const css = compileRules([
@@ -265,50 +264,49 @@ test('join 修改 Value 内容为新解析对象时沿结果节点解析与激�
   expect(css).toContain('--replace-value-child: new, tail;')
 })
 
-test('嵌套同一原对象在两个声明位置各自解析成数组 Value', () => {
+test('嵌套同一对象的数组结果在两个声明位置复用', () => {
   let compiles = 0
   let activations = 0
   const shared = {
-    onActive: () => { activations++; return [] },
-    onCompile: (context, controller) => { controller.setContent(context, value([++compiles, false])) },
+    onFirstScan: () => { activations++; return [] },
+    onCompile: (context, controller) => { controller.setContent(context, token({ default: [++compiles, false] })) },
   }
-  const nested = value([[shared]])
-  const observed: Value[] = []
+  const nested = token({ default: [[shared]] })
+  const observed: { content: unknown }[] = []
   const target = key('--nested-shared', {
     join(items) {
       observed.push(...items)
-      return value(items)
+      return token({ default: items })
     },
   })
   const css = compileRules([
     [[condition('.NestedShared')], target, nested],
     [[condition('.NestedShared')], target, nested],
   ])
-  expect(observed[0].content).toBe(nested)
-  expect(observed[1].content).toBe(nested)
-  expect(compiles).toBe(2)
+  expect(observed.map(item => item.content)).toEqual([nested, nested])
+  expect(compiles).toBe(1)
   expect(activations).toBe(1)
-  expect(css).toContain('--nested-shared: 1, false, 2, false;')
+  expect(css).toContain('--nested-shared: 1, false, 1, false;')
 })
 
-test('join 保留输入 Value 对象时继续使用各声明位置的编译结果', () => {
+test('join 保留输入 Token 对象时继续使用各声明位置的编译结果', () => {
   let compiles = 0
   let activations = 0
   const shared = {
-    onActive: () => { activations++; return [] },
+    onFirstScan: () => { activations++; return [] },
     onCompile: (context, controller) => { controller.setContent(context, String(++compiles)) },
   }
   const fresh = { onCompile: (context, controller) => { controller.setContent(context, 'new') } }
   const target = key('--retain-source-view', {
-    join(items) { return value([valueList(items[0], fresh), items[1]]) },
+    join(items) { return token({ default: [valueList(items[0], fresh), items[1]] }) },
   })
   const css = compileRules([
     [[condition('.RetainView')], target, shared],
     [[condition('.RetainView')], target, shared],
   ])
-  expect(compiles).toBe(2)
+  expect(compiles).toBe(1)
   expect(activations).toBe(1)
-  expect(css).toContain('--retain-source-view: 1, new, 2;')
+  expect(css).toContain('--retain-source-view: 1, new, 1;')
 })
 
 test('第 2 波插入的同址声明参加聚合，原贡献的按需依赖仍保留', () => {
@@ -320,7 +318,7 @@ test('第 2 波插入的同址声明参加聚合，原贡献的按需依赖仍�
   }
   const dependency: Rules = [[[condition(':where(:root)')], '--shadow-scale', '1']]
   const css = compileRules([
-    [[condition('.Late')], $boxShadow, value('1px 2px red', { onActive: () => dependency })],
+    [[condition('.Late')], $boxShadow, token('1px 2px red', { onFirstScan: () => dependency })],
     [[condition('.Late')], 'width', late],
     [[condition('.Late')], $boxShadow, '5px 6px green'],
   ])
@@ -348,12 +346,12 @@ test('聚合产物返回待解析内容，新增同址贡献后重新收集全�
   expect(css.match(/--aggregate-reentry:/g)).toHaveLength(1)
 })
 
-test('聚合产物的 onActive 新增同址贡献时继续聚合到稳定结果', () => {
+test('聚合产物的 onFirstScan 新增同址贡献时继续聚合到稳定结果', () => {
   let activated = false
   const active = key('--aggregate-active', {
     join(items) {
-      return value(value(items, { toCSSString: arraySequenceToCSSString }), {
-        onActive: () => {
+      return token(token({ default: items }, { toCSSString: arraySequenceToCSSString }), {
+        onFirstScan: () => {
           if (activated) return []
           activated = true
           return [[[condition('.ActiveResult')], active, 'c']]
@@ -416,7 +414,7 @@ test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果',
 })
 
 test('同名声明中唯一显式规则接管默认 Key', () => {
-  const join = (items: Value[]) => items.length
+  const join = (items) => items.length
   const enabled = key('--mixed-aggregate', { join })
   const plain = key('--mixed-aggregate')
   expect(compileRules([
@@ -438,7 +436,7 @@ test('显式组合规则在结果解析中修改后重新计算', () => {
       onCompile(context, controller) {
         if (!switched) {
           switched = true
-          target.join = (items) => value(items)
+          target.join = (items) => token({ default: items })
         }
         controller.setContent(context, 'old'); },
     }),
@@ -592,18 +590,20 @@ test('公开 rules 声明序列重复普通 Key 自动聚合', () => {
   }
 })
 
-test.each(['content', 'revision', 'join'])('连接回调直接改写输入 %s 后，按真实生成快照重新连接', (change) => {
+test.each(['content', 'replacement', 'join'])('连接回调直接改写输入 %s 后，按真实生成快照重新连接', (change) => {
   let source: JSSCompileContext['node']
-  let input = 'a'
   let calls = 0
-  const first = { onCompile(context: JSSCompileContext, controller) { source = context.node; controller.setContent(context, input); } }
+  const first = { onCompile(context: JSSCompileContext, controller) { source = context.node; controller.setContent(context, 'a'); } }
   const target = key(`--join-callback-${change}`, { join(items) {
     if (calls++ === 0) {
       if (change === 'content') source.content = 'x'
-      if (change === 'revision') { input = 'x'; source.compileRevision++ }
-      if (change === 'join') target.join = (next) => { calls++; return value(next, { toCSSString: arraySequenceToCSSString }) }
+      if (change === 'replacement') {
+        source.content = { onCompile(context, controller) { controller.setContent(context, 'x') } }
+        source.compileRevision++
+      }
+      if (change === 'join') target.join = (next) => { calls++; return token({ default: next }, { toCSSString: arraySequenceToCSSString }) }
     }
-    return change === 'join' ? 'old' : value(items, { toCSSString: arraySequenceToCSSString })
+    return change === 'join' ? 'old' : token({ default: items }, { toCSSString: arraySequenceToCSSString })
   } })
   const css = compileRules([
     [[condition('.JoinCallback')], target, first],
@@ -612,3 +612,6 @@ test.each(['content', 'revision', 'join'])('连接回调直接改写输入 %s �
   expect(css).toContain(`${target.name}: ${change === 'join' ? 'a b' : 'x b'};`)
   expect(css).not.toContain('old')
 })
+
+/** 本用例选择空格序列输出，空项不占位置。 */
+const arraySequenceToCSSString = (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ')

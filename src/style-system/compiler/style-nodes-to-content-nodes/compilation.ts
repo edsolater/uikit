@@ -11,19 +11,22 @@ import { ResourceCompilation } from './resource-compilation'
 import { Join } from './join'
 import { NodeCompilation } from './node-compilation'
 import type { JSSStyleNode, JSSContentNode } from '../contracts'
+import { TokenCompilation } from '../../token/compilation'
 
 /** 逐波编译可改写队列；接入按需资源并稳定连接后交付有序内容节点。 */
 export function styleNodesToContentNodes(styleNodes: JSSStyleNode[], sourceRules: Rules): JSSContentNode[] {
   const session = new ASTSession(styleNodes)
   const controller = createASTController(session)
   const resources = new ResourceCompilation(session)
-  const nodes = new NodeCompilation(session, controller, sourceRules, resources)
+  const tokens = new TokenCompilation(controller)
+  const nodes = new NodeCompilation(session, controller, sourceRules, resources, tokens)
   const join = new Join(session, (node) => nodes.compiledContents(node))
   for (let wave = 0; ; wave++) {
     assert(wave <= 10_000, 'AST 编译波超过上限 10000，Content 仍未完成。')
     nodes.visit(wave)
     resources.publish()
     if (!nodes.settle()) continue
+    if (tokens.settle()) continue
     if (session.updateSettlement()) continue
     if (join.update()) continue
     return nodes.outputs((node) => join.isOutput(node))

@@ -4,13 +4,14 @@
  *
  * 让隐藏结果保留依赖来源，失效时完整撤销全部历史。
  */
-import { createCompiledValue } from '../compiled-value'
+import { createCompiledContent } from '../compiled-content'
 import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
 import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../../key'
 import type { ASTSession } from '../ast-controller'
 import { contentToCSSString } from '../content-nodes-to-css-string'
-import { value } from '../../value'
+import { token } from '../../token/core'
+import { isCSSDefinitionControl } from '../../token/declare'
 import type { JSSStyleNode, ContentCompilationRecord } from '../contracts'
 
 /** 业务连接回调前的一项声明输入；用于生成本次结果并核对后续失效。 */
@@ -44,7 +45,7 @@ function captureInputs(nodes: Iterable<JSSStyleNode>, compiledContents: (node: J
   for (const node of nodes) {
     inputs.set(node, {
       key: node.key,
-      join: typeof node.key === 'string' ? undefined : node.key?.join,
+      join: typeof node.key === 'string' || !node.key || !('join' in node.key) ? undefined : node.key.join,
       content: node.content,
       revision: node.compileRevision,
       priority: keyPriority(node.key),
@@ -87,7 +88,7 @@ export class Join {
     const groups = new Map<string, Map<JSSStyleNode, number>>()
     for (const node of this.session.nodes) {
       const record = this.recordOf.get(node)
-      if (node.key === undefined || (record && !record.inputs.has(node))) continue
+      if (node.key === undefined || isCSSDefinitionControl(node) || (record && !record.inputs.has(node))) continue
       const address = JSON.stringify([conditionAddressKey(node.conditionPath), propertyName(node.key)])
       let group = groups.get(address)
       if (!group) groups.set(address, group = new Map())
@@ -103,7 +104,7 @@ export class Join {
     for (const [node, snapshot] of record.inputs) {
       const position = group?.get(node)
       if (position === undefined || position <= previousPosition || node.key !== snapshot.key
-        || (typeof node.key === 'string' ? undefined : node.key?.join) !== snapshot.join
+        || (typeof node.key === 'string' || !node.key || !('join' in node.key) ? undefined : node.key.join) !== snapshot.join
         || node.content !== snapshot.content || node.compileRevision !== snapshot.revision || keyPriority(node.key) !== snapshot.priority) {
         return false
       }
@@ -145,11 +146,11 @@ export class Join {
   }
 
   /**
-   * 只为已选择的同级贡献建立位置 Value 视图，再调用原 Key.join 或默认数组聚合。
+   * 只为已选择的同级贡献建立位置内容视图，再调用原 Key.join 或默认数组聚合。
    */
   private createContent(selected: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
-    const values = Array.from(selected, ([node, input]) => createCompiledValue(input.content, this.compiledContents(node)))
-    return join ? join(values) : value(values)
+    const values = Array.from(selected, ([node, input]) => createCompiledContent(input.content, this.compiledContents(node)))
+    return join ? join(values) : token({ default: values })
   }
 
   /**
