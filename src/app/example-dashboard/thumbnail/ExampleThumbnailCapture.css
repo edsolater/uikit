@@ -4,8 +4,16 @@
   overflow: hidden;
   padding: 32px;
   background:
-    radial-gradient(circle at 12% 0%, oklch(74% 0.16 255 / 22%), transparent 46%),
-    radial-gradient(circle at 92% 12%, oklch(78% 0.12 315 / 16%), transparent 42%),
+    radial-gradient(
+      circle at 12% 0%,
+      oklch(74% 0.16 255 / 22%),
+      transparent 46%
+    ),
+    radial-gradient(
+      circle at 92% 12%,
+      oklch(78% 0.12 315 / 16%),
+      transparent 42%
+    ),
     oklch(95.5% 0.018 262);
 }
 

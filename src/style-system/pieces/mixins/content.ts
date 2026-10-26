@@ -9,8 +9,20 @@ import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../contents/atom-creators/list'
 import { $font, $fontSize, $fontWeight, $lineHeight } from '../keys/font'
-import { $gap, $display, $alignItems, $justifyContent, $alignSelf } from '../keys/layout'
-import { $padding, $paddingTop, $paddingRight, $paddingBottom, $paddingLeft } from '../keys/padding'
+import {
+  $gap,
+  $display,
+  $alignItems,
+  $justifyContent,
+  $alignSelf,
+} from '../keys/layout'
+import {
+  $padding,
+  $paddingTop,
+  $paddingRight,
+  $paddingBottom,
+  $paddingLeft,
+} from '../keys/padding'
 import { fontValue, type FontParts } from '../contents/atom-creators/font'
 
 /** 内部文字配置。 */
@@ -22,8 +34,18 @@ export interface InnerTextMixinOptions {
 }
 
 /** Mixin：内部文字。 */
-export const innerText = (options: InnerTextMixinOptions = {}): Declarations => [
-  [$font, options.font && typeof options.font === 'object' && !isJSSContent(options.font) && 'family' in options.font ? fontValue(options.font) : options.font],
+export const innerText = (
+  options: InnerTextMixinOptions = {},
+): Declarations => [
+  [
+    $font,
+    options.font &&
+    typeof options.font === 'object' &&
+    !isJSSContent(options.font) &&
+    'family' in options.font
+      ? fontValue(options.font)
+      : options.font,
+  ],
   [$fontSize, options.fontSize],
   [$fontWeight, options.emphasis],
   [$lineHeight, options.leading],
@@ -50,9 +72,15 @@ export interface ContentLayoutMixinOptions {
 }
 
 /** Mixin：内容布局。 */
-export const contentLayout = (options: ContentLayoutMixinOptions = {}): Declarations => [
+export const contentLayout = (
+  options: ContentLayoutMixinOptions = {},
+): Declarations => [
   options.mode === 'center'
-    ? [[$display, 'inline-flex'], [$alignItems, 'center'], [$justifyContent, 'center']]
+    ? [
+        [$display, 'inline-flex'],
+        [$alignItems, 'center'],
+        [$justifyContent, 'center'],
+      ]
     : undefined,
   [$alignSelf, options.alignSelf],
   [$gap, options.gap],
@@ -64,7 +92,12 @@ function paddingDeclarations(input: PaddingInput): Declarations {
   if (Array.isArray(input)) return [[$padding, valueSequence(...input)]]
   if (input && typeof input === 'object' && !isJSSContent(input)) {
     const sides = input as PaddingSides
-    return [[$paddingTop, sides.top], [$paddingRight, sides.right], [$paddingBottom, sides.bottom], [$paddingLeft, sides.left]]
+    return [
+      [$paddingTop, sides.top],
+      [$paddingRight, sides.right],
+      [$paddingBottom, sides.bottom],
+      [$paddingLeft, sides.left],
+    ]
   }
   return [[$padding, input as TokenInput]]
 }

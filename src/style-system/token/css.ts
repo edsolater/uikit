@@ -5,10 +5,22 @@
  * CSS 形态与编译操作留在这里，不进入 Token 的创建配置。
  */
 import { allocateVariableName } from '../custom-property-names'
-import { createJSSContent, type JSSCompileContext, type JSSContent } from '../content'
+import {
+  createJSSContent,
+  type JSSCompileContext,
+  type JSSContent,
+} from '../content'
 import type { ASTController } from '../compiler/contracts'
 import type { JSSKeyObject } from '../key'
-import { tokenBaseContent, tokenStateEntries, type Token, type TokenAddress, type TokenInput, type TokenOptions, type TokenStateRule } from './core'
+import {
+  tokenBaseContent,
+  tokenStateEntries,
+  type Token,
+  type TokenAddress,
+  type TokenInput,
+  type TokenOptions,
+  type TokenStateRule,
+} from './core'
 import type { StateCondition } from '../pieces/state-conditions'
 
 /** 已进入 CSS 声明路径的目标材料；状态和基础始终取自所属 Token。 */
@@ -23,13 +35,17 @@ export interface CSSCustomProperty {
 
 const names = new WeakMap<Token, string>()
 const properties = new WeakMap<Token, CSSCustomProperty>()
-const operations = new WeakMap<object, (context: JSSCompileContext, controller: ASTController) => void>()
+const operations = new WeakMap<
+  object,
+  (context: JSSCompileContext, controller: ASTController) => void
+>()
 
 /**
  * 取得稳定的完整 CSS 名称；缓存的自动名称不成为显式创建配置。
  */
 export function cssTokenName(token: Token): string {
-  if (token.name !== undefined) return `--${allocateVariableName(token.name).replace(/^--/, '')}`
+  if (token.name !== undefined)
+    return `--${allocateVariableName(token.name).replace(/^--/, '')}`
   const name = `--${allocateVariableName(undefined, names.get(token)).replace(/^--/, '')}`
   names.set(token, name)
   return name
@@ -43,11 +59,22 @@ export function cssCustomProperty(token: Token): CSSCustomProperty {
   if (!target) {
     target = {
       token,
-      key: { toCSSString: () => cssTokenName(token), join: values => values.at(-1) },
-      get content() { return tokenBaseContent(token) },
-      get address() { return token.address },
-      get states() { return tokenStateEntries(token) },
-      get registration() { return token.registration },
+      key: {
+        toCSSString: () => cssTokenName(token),
+        join: (values) => values.at(-1),
+      },
+      get content() {
+        return tokenBaseContent(token)
+      },
+      get address() {
+        return token.address
+      },
+      get states() {
+        return tokenStateEntries(token)
+      },
+      get registration() {
+        return token.registration
+      },
     }
     properties.set(token, target)
   }
@@ -57,7 +84,9 @@ export function cssCustomProperty(token: Token): CSSCustomProperty {
 /**
  * 创建由编译准备阶段推进的内部 AST 操作，不使用对象生命周期回调重试。
  */
-export function cssOperation(prepare: (context: JSSCompileContext, controller: ASTController) => void): JSSContent {
+export function cssOperation(
+  prepare: (context: JSSCompileContext, controller: ASTController) => void,
+): JSSContent {
   const operation = createJSSContent(() => undefined)
   operations.set(operation, prepare)
   return operation

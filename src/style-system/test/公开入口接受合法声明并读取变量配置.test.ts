@@ -6,15 +6,24 @@ import { condition } from '../condition'
 import { compileRules } from '../css-root'
 
 test('简写与完整参数生成同样的 CSS 并保留状态优先级', () => {
-  const shorthand = token({ default: 1, active: 3, hover: 2 }, '--public-shorthand')
-  const full = token(1, { name: 'public-shorthand', state: { hover: 2, active: 3 } })
-  const compile = (content: typeof shorthand) => compileRules([[[condition('.Shorthand')], 'opacity', content]])
+  const shorthand = token(
+    { default: 1, active: 3, hover: 2 },
+    '--public-shorthand',
+  )
+  const full = token(1, {
+    name: 'public-shorthand',
+    state: { hover: 2, active: 3 },
+  })
+  const compile = (content: typeof shorthand) =>
+    compileRules([[[condition('.Shorthand')], 'opacity', content]])
   const css = compile(shorthand)
   expect(css).toBe(compile(full))
   expect(css).toContain('--public-shorthand: 1;')
   expect(css).toContain('--public-shorthand: 2;')
   expect(css).toContain('--public-shorthand: 3;')
-  expect(css.indexOf('--public-shorthand: 2;')).toBeLessThan(css.indexOf('--public-shorthand: 3;'))
+  expect(css.indexOf('--public-shorthand: 2;')).toBeLessThan(
+    css.indexOf('--public-shorthand: 3;'),
+  )
 })
 
 test('简写默认生产函数在消费时求值，常量状态独立保留', () => {

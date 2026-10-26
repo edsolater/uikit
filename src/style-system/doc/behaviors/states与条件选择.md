@@ -6,8 +6,9 @@ state 将一份定义的反馈保存起来，使业务换基础时无需重写�
 
 ```ts
 const size = token('4px', {
-  name: 'feedback-size', address: '.Button',
-  state: { hover: base => add(base, '2px'), active: '12px', disabled: '0px' },
+  name: 'feedback-size',
+  address: '.Button',
+  state: { hover: (base) => add(base, '2px'), active: '12px', disabled: '0px' },
 })
 rules('.Button', [[key('width'), size]])
 ```

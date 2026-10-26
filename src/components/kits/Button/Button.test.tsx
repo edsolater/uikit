@@ -27,13 +27,17 @@ describe('Button', () => {
   test('省略外观保持原始 undefined，通过公开表生成 DOM 外观', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <Button>默认</Button>, host)
-    expect((host.firstElementChild as HTMLElement).dataset.appearance).toBe('outlined')
+    expect((host.firstElementChild as HTMLElement).dataset.appearance).toBe(
+      'outlined',
+    )
     dispose()
     host.replaceChildren()
     Object.assign(buttonMapping.appearance, { undefined: 'filled' })
     try {
       dispose = render(() => <Button>配置后</Button>, host)
-      expect((host.firstElementChild as HTMLElement).dataset.appearance).toBe('filled')
+      expect((host.firstElementChild as HTMLElement).dataset.appearance).toBe(
+        'filled',
+      )
     } finally {
       Object.assign(buttonMapping.appearance, { undefined: 'outlined' })
     }
@@ -43,7 +47,14 @@ describe('Button', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const appearance = createState<ButtonAppearance | undefined>()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button plain appearance={appearance}>确认</Button>, host)
+    dispose = render(
+      () => (
+        <Button plain appearance={appearance}>
+          确认
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLElement
     expect(element.dataset.appearance).toBe('outlined')
     appearance.set('filled')
@@ -61,7 +72,15 @@ describe('Button', () => {
   test('外观确定描述词为 false 时通过省略值映射，outlined 也可显式声明', () => {
     const filled = createState(false)
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <><Button filled={filled}>切换</Button><Button outlined>明确</Button></>, host)
+    dispose = render(
+      () => (
+        <>
+          <Button filled={filled}>切换</Button>
+          <Button outlined>明确</Button>
+        </>
+      ),
+      host,
+    )
     const [first, second] = host.querySelectorAll('button')
     expect(first.dataset.appearance).toBe('outlined')
     expect(second.dataset.appearance).toBe('outlined')
@@ -98,12 +117,17 @@ describe('Button', () => {
     const onClick = vi.fn()
     const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault())
     const disabled = createState(false)
-    dispose = render(() => (
-      <form onSubmit={onSubmit}>
-        <Button onClick={onClick}>普通</Button>
-        <Button disabled={disabled} htmlProps={{ type: 'submit' }}>提交</Button>
-      </form>
-    ), host)
+    dispose = render(
+      () => (
+        <form onSubmit={onSubmit}>
+          <Button onClick={onClick}>普通</Button>
+          <Button disabled={disabled} htmlProps={{ type: 'submit' }}>
+            提交
+          </Button>
+        </form>
+      ),
+      host,
+    )
     const [ordinary, submit] = host.querySelectorAll('button')
     ordinary.click()
     expect(onClick).toHaveBeenCalledOnce()
@@ -120,7 +144,12 @@ describe('Button', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(
       () => (
-        <Button size="small" appearance="filled" emphasis="strong" tone="danger">
+        <Button
+          size="small"
+          appearance="filled"
+          emphasis="strong"
+          tone="danger"
+        >
           保存
         </Button>
       ),
@@ -133,12 +162,20 @@ describe('Button', () => {
     expect(element.getAttribute('data-emphasis')).toBe('strong')
     expect(element.getAttribute('data-tone')).toBe('danger')
     expect(element.hasAttribute('data-variant')).toBe(false)
-    for (const name of ['appearance', 'emphasis', 'tone', 'strong', 'danger']) expect(element.hasAttribute(name)).toBe(false)
+    for (const name of ['appearance', 'emphasis', 'tone', 'strong', 'danger'])
+      expect(element.hasAttribute(name)).toBe(false)
   })
 
   test('确定描述词独立组合 danger 与 strong，并保留 plain 外观', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button plain danger strong>删除</Button>, host)
+    dispose = render(
+      () => (
+        <Button plain danger strong>
+          删除
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLButtonElement
     expect(element.dataset.appearance).toBe('plain')
     expect(element.dataset.emphasis).toBe('strong')
@@ -150,10 +187,19 @@ describe('Button', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const emphasis = createState<'soft' | 'strong' | undefined>()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Button soft emphasis={emphasis}>确认</Button>, host)
+    dispose = render(
+      () => (
+        <Button soft emphasis={emphasis}>
+          确认
+        </Button>
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLButtonElement
     expect(element.hasAttribute('data-emphasis')).toBe(false)
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“emphasis”接管整个分组'))
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('“emphasis”接管整个分组'),
+    )
     emphasis.set('strong')
     flush()
     expect(element.dataset.emphasis).toBe('strong')
@@ -181,7 +227,9 @@ describe('Button', () => {
 
     expect(element.hasAttribute('data-size')).toBe(false)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('不定字段“size”'))
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“size”接管整个分组'))
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('“size”接管整个分组'),
+    )
 
     size.set('large')
     flush()
@@ -202,7 +250,9 @@ describe('Button', () => {
     const element = host.firstElementChild as HTMLButtonElement
 
     expect(element.getAttribute('data-size')).toBe('small')
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“small”、“large”'))
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('“small”、“large”'),
+    )
   })
 
   test('确定描述词的响应式布尔值只改变它是否存在', () => {

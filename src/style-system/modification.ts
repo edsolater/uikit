@@ -7,7 +7,11 @@
 import { assert, isObject, isString } from '@edsolater/fnkit'
 import { token, type Token } from './token/core'
 import { allocateVariableName } from './custom-property-names'
-import { oklchChannels, type OKLCHChannelChange, type OKLCHChanges } from './pieces/contents/functions/oklch'
+import {
+  oklchChannels,
+  type OKLCHChannelChange,
+  type OKLCHChanges,
+} from './pieces/contents/functions/oklch'
 import { type JSSContent } from './content'
 
 /** 颜色变化的固定通道或相对当前通道的计算。 */
@@ -17,30 +21,51 @@ export type ColorChannelModification = OKLCHChannelChange
 export interface ColorModificationDetail extends OKLCHChanges {}
 
 /** 独立变化 Token；type/detail表达修改策略，基础内容按当前参数生成。 */
-export interface Modification<Detail = ColorModificationDetail, Type extends string = 'color'> extends Token {
+export interface Modification<
+  Detail = ColorModificationDetail,
+  Type extends string = 'color',
+> extends Token {
   type: Type
   detail: Detail
 }
 
 /** 颜色修改接受的配方 Token。 */
-export type ColorModificationContent = Modification<ColorModificationDetail, 'color'>
+export type ColorModificationContent = Modification<
+  ColorModificationDetail,
+  'color'
+>
 
 /** 颜色变化材料的策略标识；内容身份由 Token 创建入口保证。 */
-export const colorModificationShape = { type: (input: unknown) => input === 'color' }
+export const colorModificationShape = {
+  type: (input: unknown) => input === 'color',
+}
 
 /**
  * 创建源无关的颜色配方，显式名称可被 CSS 局部覆盖，省略名称时自动分配。
  * 通道参数在编译时读取，不冻结创建时的回调结果。
  */
-export function modification(definition: { type: 'color'; detail: ColorModificationDetail; name?: string }): ColorModificationContent {
+export function modification(definition: {
+  type: 'color'
+  detail: ColorModificationDetail
+  name?: string
+}): ColorModificationContent {
   assert(isString(definition.type), 'Modification type 必须是字符串。')
   assert(definition.type === 'color', 'Modification 尚未支持内容领域。')
   assert(isObject(definition.detail), 'Modification 需要有效 detail 材料。')
-  assert(definition.name === undefined || isString(definition.name) && /^--.+/.test(definition.name), 'Modification name 需要完整 CSS 自定义属性名。')
+  assert(
+    definition.name === undefined ||
+      (isString(definition.name) && /^--.+/.test(definition.name)),
+    'Modification name 需要完整 CSS 自定义属性名。',
+  )
   let self: ColorModificationContent
-  self = Object.assign(token(() => oklchChannels(self.detail), { name: definition.name ?? `--${allocateVariableName()}` }), {
-    type: definition.type,
-    detail: definition.detail,
-  }) as ColorModificationContent
+  self = Object.assign(
+    token(() => oklchChannels(self.detail), {
+      name: definition.name ?? `--${allocateVariableName()}`,
+    }),
+    {
+      type: definition.type,
+      detail: definition.detail,
+    },
+  ) as ColorModificationContent
   return self
 }

@@ -17,13 +17,28 @@ import './StructureView.style'
 export function StructureViewFab() {
   let control!: HTMLButtonElement
   const enabled = createState(false)
-  const pressed = enabled.map(current => current ? 'true' as const : 'false' as const)
-  return <StructureViewControl value={true}>
-    <Button class="StructureViewFab" filled name="切换组件定位框"
-      ref={element => { control = element }}
-      htmlProps={{ 'aria-pressed': pressed }} onClick={() => { enabled.set(current => !current) }}>
-      {val(enabled) ? '关闭组件定位框' : '打开组件定位框'}
-    </Button>
-    <Show when={val(enabled)}><StructureViewOverlay control={control} /></Show>
-  </StructureViewControl>
+  const pressed = enabled.map((current) =>
+    current ? ('true' as const) : ('false' as const),
+  )
+  return (
+    <StructureViewControl value={true}>
+      <Button
+        class="StructureViewFab"
+        filled
+        name="切换组件定位框"
+        ref={(element) => {
+          control = element
+        }}
+        htmlProps={{ 'aria-pressed': pressed }}
+        onClick={() => {
+          enabled.set((current) => !current)
+        }}
+      >
+        {val(enabled) ? '关闭组件定位框' : '打开组件定位框'}
+      </Button>
+      <Show when={val(enabled)}>
+        <StructureViewOverlay control={control} />
+      </Show>
+    </StructureViewControl>
+  )
 }

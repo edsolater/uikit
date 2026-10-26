@@ -10,13 +10,17 @@ export function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
 }
 
 /** 将固定 Promise 交给原生计算，等待和错误由消费者的 UI 边界承担。 */
-export function toStateViewFromPromiseLike<V>(promiseLike: PromiseLike<V>): StateView<Awaited<V>> {
+export function toStateViewFromPromiseLike<V>(
+  promiseLike: PromiseLike<V>,
+): StateView<Awaited<V>> {
   // 固定来源保留完成与失败，避免失去订阅后复读又开始等待；不公开写入端。
   const [read] = createSignal(() => Promise.resolve(promiseLike))
   const view: StateView<Awaited<V>> = {
     read,
     [stateViewBrand]: true,
-    map(toNew) { return mapStateView(view, toNew) },
+    map(toNew) {
+      return mapStateView(view, toNew)
+    },
   }
   return view
 }

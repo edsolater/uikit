@@ -31,23 +31,40 @@ afterEach(() => {
 })
 
 test('同址三层阴影按声明顺序计算，状态各自聚合且同时成立仍按层叠选值', () => {
-  handles.push(rules('.aggregate-shadow-example', [
-    [$boxShadow, '1px 2px red'],
-    [$boxShadow, '3px 4px blue, 5px 6px green'],
-  ]))
-  handles.push(rules(['.aggregate-shadow-example', condition('&:where([data-shadow-hover])')], [
-    [$boxShadow, '7px 8px purple'],
-    [$boxShadow, '9px 10px orange'],
-  ]))
-  handles.push(rule(['.aggregate-shadow-example', condition('&:where([data-shadow-active])')], $boxShadow, '11px 12px black'))
+  handles.push(
+    rules('.aggregate-shadow-example', [
+      [$boxShadow, '1px 2px red'],
+      [$boxShadow, '3px 4px blue, 5px 6px green'],
+    ]),
+  )
+  handles.push(
+    rules(
+      ['.aggregate-shadow-example', condition('&:where([data-shadow-hover])')],
+      [
+        [$boxShadow, '7px 8px purple'],
+        [$boxShadow, '9px 10px orange'],
+      ],
+    ),
+  )
+  handles.push(
+    rule(
+      ['.aggregate-shadow-example', condition('&:where([data-shadow-active])')],
+      $boxShadow,
+      '11px 12px black',
+    ),
+  )
   cssRoot.mount()
 
   const base = getComputedStyle(element).boxShadow
   expect(base).toContain('rgb(255, 0, 0)')
   expect(base).toContain('rgb(0, 0, 255)')
   expect(base).toContain('rgb(0, 128, 0)')
-  expect(base.indexOf('rgb(255, 0, 0)')).toBeLessThan(base.indexOf('rgb(0, 0, 255)'))
-  expect(base.indexOf('rgb(0, 0, 255)')).toBeLessThan(base.indexOf('rgb(0, 128, 0)'))
+  expect(base.indexOf('rgb(255, 0, 0)')).toBeLessThan(
+    base.indexOf('rgb(0, 0, 255)'),
+  )
+  expect(base.indexOf('rgb(0, 0, 255)')).toBeLessThan(
+    base.indexOf('rgb(0, 128, 0)'),
+  )
 
   element.dataset.shadowHover = ''
   const hover = getComputedStyle(element).boxShadow
@@ -85,7 +102,12 @@ test('替换和撤销一项贡献后重挂载，计算值与 CSS 都无旧阴影
 
 test('默认组合产生无效值时浏览器忽略整条声明', () => {
   const margin = key('margin-left')
-  handles.push(rules('.aggregate-shadow-example', [[margin, '7px'], [margin, '无效长度']]))
+  handles.push(
+    rules('.aggregate-shadow-example', [
+      [margin, '7px'],
+      [margin, '无效长度'],
+    ]),
+  )
   cssRoot.mount()
   expect(style.textContent).toContain('margin-left: 7px, 无效长度;')
   expect(getComputedStyle(element).marginLeft).toBe('0px')

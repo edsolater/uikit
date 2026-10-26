@@ -7,7 +7,7 @@
 import type { MayArray } from '@edsolater/fnkit'
 import type { Accessor } from '@/foundation'
 
-export type Accessable<T> = T | Accessor<T>/**
+export type Accessable<T> = T | Accessor<T> /**
 
  * T 是 content 的意思
  * 可订阅、可重叠。

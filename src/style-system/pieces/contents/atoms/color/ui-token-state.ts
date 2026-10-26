@@ -18,10 +18,17 @@ export function interactiveColorStates({
   lightnessResponse?: number
   chromaResponse?: number
 }): TokenStateValues<TokenInput> {
-  const state = (lightnessDelta: number, chromaDelta: number) => (currentBase: TokenInput) => oklch(currentBase, {
-    lightness: current => add(current, lightnessDelta * lightnessResponse),
-    chroma: chromaResponse === 0 ? undefined : current => add(current, chromaDelta * chromaResponse),
-  })
+  const state =
+    (lightnessDelta: number, chromaDelta: number) =>
+    (currentBase: TokenInput) =>
+      oklch(currentBase, {
+        lightness: (current) =>
+          add(current, lightnessDelta * lightnessResponse),
+        chroma:
+          chromaResponse === 0
+            ? undefined
+            : (current) => add(current, chromaDelta * chromaResponse),
+      })
   return {
     default: base,
     hover: state(-0.04, 0.01),

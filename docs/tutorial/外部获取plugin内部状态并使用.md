@@ -29,7 +29,7 @@ return <Piv plugins={miniMapPlugin}>...</Piv>
 - 这种绕路会让 Piv 同时承担 DOM 原子、plugin 运行器和状态总线三种职责。
 - 一旦 Piv 承担状态总线，后续就容易发展成通用 `innerController` 协议。
 - 通用 controller 协议会让 class、style、children、event 和 plugin 都被同一套隐式能力影响，整体会变重。
-  
+
 ## 插件工厂的职责
 
 - 插件工厂负责创建插件实例级状态。
@@ -43,16 +43,21 @@ return <Piv plugins={miniMapPlugin}>...</Piv>
 当插件需要先配置再创建实例时，可以再包一层 hook 工厂。
 
 ```tsx
-const createMiniMapPluginHook = createPluginHookCreator((options: MiniMapPluginOptions) => {
-  return () => {
-    const miniMapState = createMiniMapState(options)
-    const miniMapPlugin = createPivPlugin(({ element }) => {
-      miniMapState.setRootElement(element)
-    })
+const createMiniMapPluginHook = createPluginHookCreator(
+  (options: MiniMapPluginOptions) => {
+    return () => {
+      const miniMapState = createMiniMapState(options)
+      const miniMapPlugin = createPivPlugin(({ element }) => {
+        miniMapState.setRootElement(element)
+      })
 
-    return [miniMapState, miniMapPlugin] satisfies [typeof miniMapState, typeof miniMapPlugin]
-  }
-})
+      return [miniMapState, miniMapPlugin] satisfies [
+        typeof miniMapState,
+        typeof miniMapPlugin,
+      ]
+    }
+  },
+)
 
 const useMiniMapPlugin = createMiniMapPluginHook({
   placement: 'right-bottom',
@@ -94,10 +99,7 @@ function Editor() {
 const miniMapState = createMiniMapState()
 
 return (
-  <Piv
-    plugins={createMiniMapPlugin()}
-    innerController={miniMapState}
-  >
+  <Piv plugins={createMiniMapPlugin()} innerController={miniMapState}>
     ...
   </Piv>
 )

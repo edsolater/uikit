@@ -2,10 +2,22 @@
  * 这个文件定义 Piv 的 on 声明协议，并把 descriptor、pair、record 归一成统一事件声明。
  * 它只负责声明形状和复杂 on 输入管理，不负责真实 DOM listener 注册。
  */
-import { isArray, isFunction, isString, toArray, type MayArray } from '@edsolater/fnkit'
-import type { ListenerDiscriptor, EventCallback, EventKey } from './registerEventListeners'
+import {
+  isArray,
+  isFunction,
+  isString,
+  toArray,
+  type MayArray,
+} from '@edsolater/fnkit'
+import type {
+  ListenerDiscriptor,
+  EventCallback,
+  EventKey,
+} from './registerEventListeners'
 
-interface EventListenerDiscriptor<K extends EventKey = EventKey> extends ListenerDiscriptor<K> {
+interface EventListenerDiscriptor<
+  K extends EventKey = EventKey,
+> extends ListenerDiscriptor<K> {
   event: K
 }
 
@@ -33,11 +45,16 @@ export function createEventListenerDiscriptor<K extends EventKey>(
   }
 }
 
-function isEventListenerDiscriptor<K extends EventKey>(obj: any): obj is EventListenerDiscriptor<K> {
+function isEventListenerDiscriptor<K extends EventKey>(
+  obj: any,
+): obj is EventListenerDiscriptor<K> {
   return obj && isString(obj.event) && isFunction(obj.callback)
 }
 
-export type EventListenerPair<K extends EventKey = EventKey> = [event: K, eventDiscriptor: EventListenerInput<K>]
+export type EventListenerPair<K extends EventKey = EventKey> = [
+  event: K,
+  eventDiscriptor: EventListenerInput<K>,
+]
 
 export type EventListenerDiscriptorPair<K extends EventKey = EventKey> = [
   event: K,
@@ -61,10 +78,15 @@ function isListenerDiscriptorPair(value: any): value is EventListenerPair {
   return value && isArray(value) && value.length === 2 && isString(value[0])
 }
 
-export function toEventListenersList(eventListeners: EventListeners): NonNullable<EventListenerDeclaration>[] {
+export function toEventListenersList(
+  eventListeners: EventListeners,
+): NonNullable<EventListenerDeclaration>[] {
   if (!eventListeners) return []
   // 单体输入的情况；要做单独判断
-  if (isListenerDiscriptorPair(eventListeners) || isEventListenerDiscriptor(eventListeners)) {
+  if (
+    isListenerDiscriptorPair(eventListeners) ||
+    isEventListenerDiscriptor(eventListeners)
+  ) {
     return [eventListeners]
   } else {
     return toArray(eventListeners)
@@ -84,18 +106,25 @@ function toBaseListenerDiscriptor<K extends EventKey>(
 /**
  * 只做声明形状归一，不触碰 DOM，也不处理 cleanup。
  */
-export function toListenerDiscriptorPairs(eventListeners: EventListeners): EventListenerDiscriptorPair[] {
+export function toListenerDiscriptorPairs(
+  eventListeners: EventListeners,
+): EventListenerDiscriptorPair[] {
   const eventListenerList = toEventListenersList(eventListeners)
   const eventListenerPairs = eventListenerList.flatMap((eventListener) => {
     if (!eventListener) return []
     if (Array.isArray(eventListener)) {
       const [event, discriptorsOrCallbacks] = eventListener
-      return toArray(discriptorsOrCallbacks).map((v) => [event, toBaseListenerDiscriptor(v)]) // 咦？这里怎么没报错？
+      return toArray(discriptorsOrCallbacks).map((v) => [
+        event,
+        toBaseListenerDiscriptor(v),
+      ]) // 咦？这里怎么没报错？
     } else if (isEventListenerDiscriptor(eventListener)) {
       return [[eventListener.event, eventListener]]
     } else {
       const purePairs: EventListenerDiscriptorPair[] = []
-      for (const [event, discriptorsOrCallbacks] of Object.entries(eventListener) as EventListenerPair[]) {
+      for (const [event, discriptorsOrCallbacks] of Object.entries(
+        eventListener,
+      ) as EventListenerPair[]) {
         const pairs: EventListenerDiscriptorPair[] = []
         for (const discriptorOrCallback of toArray(discriptorsOrCallbacks)) {
           if (!discriptorOrCallback) continue

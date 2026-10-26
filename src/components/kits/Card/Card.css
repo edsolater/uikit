@@ -1,7 +1,8 @@
 @layer uikit {
   .Card {
     --Card-bg: color-mix(in oklab, var(--color-surface) 78%, transparent);
-    --Card-border: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 72%, transparent);
+    --Card-border: var(--boundary-1) solid
+      color-mix(in oklab, var(--color-line-soft) 72%, transparent);
     --Card-shadow: var(--shadow-card);
     --Card-padding: var(--space-6);
     --Card-gap: var(--space-5);
@@ -19,7 +20,8 @@
 
   .Card[data-variant='soft'] {
     --Card-bg: color-mix(in oklab, var(--color-surface) 58%, transparent);
-    --Card-border: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 48%, transparent);
+    --Card-border: var(--boundary-1) solid
+      color-mix(in oklab, var(--color-line-soft) 48%, transparent);
     --Card-shadow: var(--shadow-1);
   }
 

@@ -60,7 +60,9 @@ export type Toggle = State<boolean>
  * visibleToggle.toggle()
  * visibleToggle.reset()
  */
-export function createToggle(initialValue: boolean = false): [toggle: State<boolean>, toggleControl: ToggleControl] {
+export function createToggle(
+  initialValue: boolean = false,
+): [toggle: State<boolean>, toggleControl: ToggleControl] {
   const toggle = createState(initialValue)
 
   const turnOn = () => {

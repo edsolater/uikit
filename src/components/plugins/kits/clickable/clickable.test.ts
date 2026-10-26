@@ -3,7 +3,7 @@ import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { clickable } from './clickable'
 
-describe('clickable controller',  () => {
+describe('clickable controller', () => {
   test('Controller 暴露 hover、focused、pressed 状态和对应操作', async () => {
     const [, controller] = usePlugin(clickable)
 

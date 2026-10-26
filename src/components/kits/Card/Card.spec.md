@@ -79,39 +79,40 @@ Card = 一个独立信息单元 + variant + size
 
 ```ts
 interface CardProps<Tag extends PivSupportedElementTag = 'div'>
-  extends PivProps<Tag>,
+  extends
+    PivProps<Tag>,
     VariantProps<'variant', 'soft' | 'solid'>,
     VariantProps<'size', 'small' | 'large' | 'xlarge'> {}
 ```
 
 ### Card 自有属性
 
-| 属性 | 类型 | 默认值 | 含义 |
-| --- | --- | --- | --- |
-| `soft`、`solid` | `Source<boolean \| undefined>` | `undefined` | 确定的视觉声量描述词。 |
-| `variant` | `Source<'soft' \| 'solid' \| undefined>` | `undefined` | 视觉声量会变化时使用的不定字段。 |
-| `small`、`large`、`xlarge` | `Source<boolean \| undefined>` | `undefined` | 确定的物理尺度描述词。 |
-| `size` | `Source<'small' \| 'large' \| 'xlarge' \| undefined>` | `undefined` | 物理尺度会变化时使用的不定字段。 |
+| 属性                       | 类型                                                  | 默认值      | 含义                             |
+| -------------------------- | ----------------------------------------------------- | ----------- | -------------------------------- |
+| `soft`、`solid`            | `Source<boolean \| undefined>`                        | `undefined` | 确定的视觉声量描述词。           |
+| `variant`                  | `Source<'soft' \| 'solid' \| undefined>`              | `undefined` | 视觉声量会变化时使用的不定字段。 |
+| `small`、`large`、`xlarge` | `Source<boolean \| undefined>`                        | `undefined` | 确定的物理尺度描述词。           |
+| `size`                     | `Source<'small' \| 'large' \| 'xlarge' \| undefined>` | `undefined` | 物理尺度会变化时使用的不定字段。 |
 
 确定描述词和值字段都可以响应式变化。不定字段一旦声明便接管同组输入；同组冲突只警告，不中断运行。
 
 ### 从 Piv 继承的属性
 
-| 属性 | Card 中的含义 |
-| --- | --- |
-| `as` | 选择根原生元素，默认是 `div`；独立正文优先写成 `Article as={Card}`。 |
-| `children` | 提供属于同一个信息单元的完整内容。 |
-| `id` | 设置根元素原生 id。 |
-| `if` | 为 `false` 时 Card 与 children 都不进入 DOM。 |
-| `class` | 与根身份 `Card` 合并，用于业务身份或特殊表现。 |
-| `style` | 设置根元素行内样式或单实例 CSS 变量。 |
-| `htmlProps` | 设置原生 HTML、ARIA、`data-*` 或 DOM property。 |
-| `on` | 注册根元素原生事件；Card 本身不增加点击协议。 |
-| `ref` | 取得根 DOM，作为命令式逃生口。 |
-| `plugin` | 注入一个 Piv 底层能力。 |
-| `plugins` | 注入多个 Piv 底层能力。 |
-| `trait` | 注入稳定性质或能力。 |
-| `shadowProps` | 上层组件封装 Card 时转交低优先级 Piv props。 |
+| 属性          | Card 中的含义                                                        |
+| ------------- | -------------------------------------------------------------------- |
+| `as`          | 选择根原生元素，默认是 `div`；独立正文优先写成 `Article as={Card}`。 |
+| `children`    | 提供属于同一个信息单元的完整内容。                                   |
+| `id`          | 设置根元素原生 id。                                                  |
+| `if`          | 为 `false` 时 Card 与 children 都不进入 DOM。                        |
+| `class`       | 与根身份 `Card` 合并，用于业务身份或特殊表现。                       |
+| `style`       | 设置根元素行内样式或单实例 CSS 变量。                                |
+| `htmlProps`   | 设置原生 HTML、ARIA、`data-*` 或 DOM property。                      |
+| `on`          | 注册根元素原生事件；Card 本身不增加点击协议。                        |
+| `ref`         | 取得根 DOM，作为命令式逃生口。                                       |
+| `plugin`      | 注入一个 Piv 底层能力。                                              |
+| `plugins`     | 注入多个 Piv 底层能力。                                              |
+| `trait`       | 注入稳定性质或能力。                                                 |
+| `shadowProps` | 上层组件封装 Card 时转交低优先级 Piv props。                         |
 
 `as` 由 `PivSupportedElementTag` 约束，TypeScript 会根据所选标签检查 `htmlProps` 的原生属性类型。
 
@@ -119,11 +120,11 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 
 `variant` 只调整同一种 Card 的视觉声量，不表示业务种类、交互状态或 Top Layer 层级。
 
-| 写法 | 表现 | 适用场景 |
-| --- | --- | --- |
-| 省略 `variant` | 半透明主题背景、柔和边界、基础卡片阴影 | 普通信息卡片。 |
-| `soft` | 更透明的主题背景、更弱边界、更轻阴影 | 辅助信息、嵌套信息单元。 |
-| `solid` | 实体主题背景、完整柔和边界、基础卡片阴影 | 需要稳定文字对比的卡片。 |
+| 写法           | 表现                                     | 适用场景                 |
+| -------------- | ---------------------------------------- | ------------------------ |
+| 省略 `variant` | 半透明主题背景、柔和边界、基础卡片阴影   | 普通信息卡片。           |
+| `soft`         | 更透明的主题背景、更弱边界、更轻阴影     | 辅助信息、嵌套信息单元。 |
+| `solid`        | 实体主题背景、完整柔和边界、基础卡片阴影 | 需要稳定文字对比的卡片。 |
 
 - 默认 variant 通过省略表达，不提供 `normal`。
 - `soft` 不是 disabled，也不降低内容可读性。
@@ -133,12 +134,12 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 
 `size` 只调整 Card 内部容纳内容的物理尺度，不设置外部宽高或定位。
 
-| 写法 | Padding | Gap | Radius | 适用场景 |
-| --- | --- | --- | --- | --- |
-| `small` | `--space-4` | `--space-3` | `--radius-3` | 紧凑信息单元。 |
-| 省略 `size` | `--space-6` | `--space-5` | `--radius-4` | 普通信息单元。 |
-| `large` | `--space-7` | `--space-6` | `--radius-4` | 宽松信息单元。 |
-| `xlarge` | `--space-8` | `--space-7` | `--radius-4` | 内容较多的大尺寸信息单元。 |
+| 写法        | Padding     | Gap         | Radius       | 适用场景                   |
+| ----------- | ----------- | ----------- | ------------ | -------------------------- |
+| `small`     | `--space-4` | `--space-3` | `--radius-3` | 紧凑信息单元。             |
+| 省略 `size` | `--space-6` | `--space-5` | `--radius-4` | 普通信息单元。             |
+| `large`     | `--space-7` | `--space-6` | `--radius-4` | 宽松信息单元。             |
+| `xlarge`    | `--space-8` | `--space-7` | `--radius-4` | 内容较多的大尺寸信息单元。 |
 
 尺寸确定时优先写 `small`、`large` 或 `xlarge`。具体档位由现有界面状态决定时，使用 `size`；它的字段轮廓明确告诉阅读者该分类是不定的。
 
@@ -148,30 +149,30 @@ variant 与 size 的默认解析结果都是 `undefined`，没有额外的默认
 
 Card 公开以下六个 CSS 变量。它们只处理业务中的特殊表现，不是正常使用 Card 的前置条件。
 
-| 变量 | CSS 值类型 | 默认来源 | 影响属性 | 含义 |
-| --- | --- | --- | --- | --- |
-| `--Card-bg` | `<background>` | 当前 `variant` | `background` | Card 的完整背景。 |
-| `--Card-border` | `<border>` | 当前 `variant` | `border` | Card 的完整边框声明。 |
-| `--Card-shadow` | `<box-shadow>` | 当前 `variant` | `box-shadow` | 未提升状态的基础卡片阴影。 |
-| `--Card-padding` | `<length-percentage>{1,4}` | 当前 `size` | `padding` | Card 的内部内容空间。 |
-| `--Card-gap` | `<length-percentage>{1,2}` | 当前 `size` | `gap` | Card 直属内容之间的节奏。 |
-| `--Card-radius` | `<length-percentage>{1,4}` | 当前 `size` | `border-radius` | Card 的圆角形状。 |
+| 变量             | CSS 值类型                 | 默认来源       | 影响属性        | 含义                       |
+| ---------------- | -------------------------- | -------------- | --------------- | -------------------------- |
+| `--Card-bg`      | `<background>`             | 当前 `variant` | `background`    | Card 的完整背景。          |
+| `--Card-border`  | `<border>`                 | 当前 `variant` | `border`        | Card 的完整边框声明。      |
+| `--Card-shadow`  | `<box-shadow>`             | 当前 `variant` | `box-shadow`    | 未提升状态的基础卡片阴影。 |
+| `--Card-padding` | `<length-percentage>{1,4}` | 当前 `size`    | `padding`       | Card 的内部内容空间。      |
+| `--Card-gap`     | `<length-percentage>{1,2}` | 当前 `size`    | `gap`           | Card 直属内容之间的节奏。  |
+| `--Card-radius`  | `<length-percentage>{1,4}` | 当前 `size`    | `border-radius` | Card 的圆角形状。          |
 
 ### Variant 默认值
 
-| Variant | `--Card-bg` | `--Card-border` | `--Card-shadow` |
-| --- | --- | --- | --- |
-| 默认 | `color-mix(in oklab, var(--color-surface) 78%, transparent)` | `var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 72%, transparent)` | `var(--shadow-card)` |
-| `soft` | `color-mix(in oklab, var(--color-surface) 58%, transparent)` | `var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 48%, transparent)` | `var(--shadow-1)` |
-| `solid` | `var(--color-surface)` | `var(--boundary-1) solid var(--color-line-soft)` | `var(--shadow-card)` |
+| Variant | `--Card-bg`                                                  | `--Card-border`                                                                        | `--Card-shadow`      |
+| ------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------------------- |
+| 默认    | `color-mix(in oklab, var(--color-surface) 78%, transparent)` | `var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 72%, transparent)` | `var(--shadow-card)` |
+| `soft`  | `color-mix(in oklab, var(--color-surface) 58%, transparent)` | `var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 48%, transparent)` | `var(--shadow-1)`    |
+| `solid` | `var(--color-surface)`                                       | `var(--boundary-1) solid var(--color-line-soft)`                                       | `var(--shadow-card)` |
 
 ### Size 默认值
 
-| Size | `--Card-padding` | `--Card-gap` | `--Card-radius` |
-| --- | --- | --- | --- |
-| `small` | `var(--space-4)` | `var(--space-3)` | `var(--radius-3)` |
-| 默认 | `var(--space-6)` | `var(--space-5)` | `var(--radius-4)` |
-| `large` | `var(--space-7)` | `var(--space-6)` | `var(--radius-4)` |
+| Size     | `--Card-padding` | `--Card-gap`     | `--Card-radius`   |
+| -------- | ---------------- | ---------------- | ----------------- |
+| `small`  | `var(--space-4)` | `var(--space-3)` | `var(--radius-3)` |
+| 默认     | `var(--space-6)` | `var(--space-5)` | `var(--radius-4)` |
+| `large`  | `var(--space-7)` | `var(--space-6)` | `var(--radius-4)` |
 | `xlarge` | `var(--space-8)` | `var(--space-7)` | `var(--radius-4)` |
 
 ### 特殊覆盖

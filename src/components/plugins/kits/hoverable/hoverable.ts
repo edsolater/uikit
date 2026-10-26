@@ -23,8 +23,14 @@ export interface HoverableController {
   resetHover(): void
 }
 
-export const hoverable = createPlugin<HoverableOptions, HoverableController, PivTag>((options) => {
-  const [hovered, hoveredControl] = createToggle(options?.initialHovered ?? false)
+export const hoverable = createPlugin<
+  HoverableOptions,
+  HoverableController,
+  PivTag
+>((options) => {
+  const [hovered, hoveredControl] = createToggle(
+    options?.initialHovered ?? false,
+  )
   const controller: HoverableController = {
     hovered,
     hover: hoveredControl.turnOn,
@@ -37,7 +43,9 @@ export const hoverable = createPlugin<HoverableOptions, HoverableController, Piv
     controller,
     plugin: () => ({
       htmlProps: {
-        'data-plugin': { mergable: toPluginName(options?.componentName, 'hoverable') },
+        'data-plugin': {
+          mergable: toPluginName(options?.componentName, 'hoverable'),
+        },
         'data-hovered': hovered,
       },
       on: {

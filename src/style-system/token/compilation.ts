@@ -4,12 +4,20 @@
  *
  * 对象生命周期与每个声明位置的 CSS 接线分别处理。
  */
-import { createJSSContent, type JSSCompileContext, type JSSContent } from '../content'
+import {
+  createJSSContent,
+  type JSSCompileContext,
+  type JSSContent,
+} from '../content'
 import type { ASTController, JSSStyleNode } from '../compiler/contracts'
 import { isToken, type Token } from './core'
 import { cssCustomProperty, cssTokenName } from './css'
 import { activateCSSRegistration } from './registration'
-import { consumeDeclaration, declaredCSSProperty, ensureDefinition } from './declare'
+import {
+  consumeDeclaration,
+  declaredCSSProperty,
+  ensureDefinition,
+} from './declare'
 
 /** 本次编译实际访问的定义和位置；不跨会话保存消费关系。 */
 export class TokenCompilation {
@@ -23,7 +31,7 @@ export class TokenCompilation {
   prepare(token: Token, context: JSSCompileContext): JSSContent {
     let consumers = this.consumers.get(token)
     if (!consumers) {
-      this.consumers.set(token, consumers = new Map())
+      this.consumers.set(token, (consumers = new Map()))
       token._kind = undefined
     }
     const variable = this.needsProperty(token)
@@ -32,13 +40,21 @@ export class TokenCompilation {
       const target = cssCustomProperty(token)
       activateCSSRegistration(target, context, this.controller)
       if (context.role === 'declaration-key') {
-        if (context.node.key === token && !declaredCSSProperty(context.node)
-          && (context.node.content as { kind?: string } | undefined)?.kind !== 'css-modification') ensureDefinition(context.node, this.controller, target)
+        if (
+          context.node.key === token &&
+          !declaredCSSProperty(context.node) &&
+          (context.node.content as { kind?: string } | undefined)?.kind !==
+            'css-modification'
+        )
+          ensureDefinition(context.node, this.controller, target)
         return createJSSContent(() => cssTokenName(token))
       }
       consumeDeclaration(context, this.controller, target)
     }
-    return createJSSContent(resolve => token.toCSSString(resolve), variable ? [] : token.dependencies)
+    return createJSSContent(
+      (resolve) => token.toCSSString(resolve),
+      variable ? [] : token.dependencies,
+    )
   }
 
   /**
@@ -51,7 +67,10 @@ export class TokenCompilation {
       const variable = this.needsProperty(token)
       token._kind = variable ? 'css-variable' : 'css-value'
       for (const [node, previous] of consumers) {
-        if (!nodes.has(node) || !this.controller.usesContent(node, token)) { consumers.delete(node); continue }
+        if (!nodes.has(node) || !this.controller.usesContent(node, token)) {
+          consumers.delete(node)
+          continue
+        }
         if (previous !== variable) {
           consumers.set(node, variable)
           node.compileRevision++
@@ -66,7 +85,14 @@ export class TokenCompilation {
    * CSS 身份来自当前定义与当前 AST 的声明或修改使用，不读取过去的自动名称。
    */
   private needsProperty(token: Token): boolean {
-    return token.name !== undefined || token.state !== undefined || token.address !== undefined || token.registration !== undefined
-      || this.controller.nodes().some(node => isToken(node.key) && node.key === token)
+    return (
+      token.name !== undefined ||
+      token.state !== undefined ||
+      token.address !== undefined ||
+      token.registration !== undefined ||
+      this.controller
+        .nodes()
+        .some((node) => isToken(node.key) && node.key === token)
+    )
   }
 }

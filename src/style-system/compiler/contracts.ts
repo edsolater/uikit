@@ -22,7 +22,9 @@ export interface ASTQuery {
   resourceAddress?: string
 }
 /** 锚点与方向是互斥选择。 */
-export type ASTPosition = { before: JSSStyleNode; after?: never } | { after: JSSStyleNode; before?: never }
+export type ASTPosition =
+  | { before: JSSStyleNode; after?: never }
+  | { after: JSSStyleNode; before?: never }
 
 /** 查询和改写本次编译的样式节点。 */
 export interface ASTController {
@@ -33,7 +35,10 @@ export interface ASTController {
   /** 为同一位置的自动输出复用已编译内容，避免再次执行配方。 */
   getCompiledContentView(node: JSSStyleNode, input: unknown): ContentView
   /** 读取位置记录中的替代与实际依赖，不再触发业务 getter。 */
-  getContentCompilation(node: JSSStyleNode, input: unknown): ContentCompilationRecord | undefined
+  getContentCompilation(
+    node: JSSStyleNode,
+    input: unknown,
+  ): ContentCompilationRecord | undefined
   /** 当前输入实际访问过此内容；历史替代记录不代表仍在消费。 */
   usesContent(node: JSSStyleNode, input: unknown): boolean
   /** 当前输出队列的有序查询，没有副作用；Key 按属性名、条件路径按输出地址匹配。 */
@@ -41,7 +46,10 @@ export interface ASTController {
   /** 按同一查询语义判断是否存在节点。 */
   has(query: ASTQuery): boolean
   /** 在指定地址选有效声明；根地址别名仍遵循原生CSS特异度。 */
-  findDeclaration(query: ASTQuery & { key: JSSKey; conditionPath: ConditionPath }, accept: (node: JSSStyleNode) => boolean): JSSStyleNode | undefined
+  findDeclaration(
+    query: ASTQuery & { key: JSSKey; conditionPath: ConditionPath },
+    accept: (node: JSSStyleNode) => boolean,
+  ): JSSStyleNode | undefined
   /** 内部逃生舱：取得输出队列快照；常规查询使用 search。 */
   nodes(): JSSStyleNode[]
   /** 订阅本次输出节点的加入、输入改写和退出；登记时按当前顺序交付已有节点。 */
@@ -49,14 +57,18 @@ export interface ASTController {
   /** 比较现存输出节点的书写顺序，不重新搜索队列。 */
   compareOrder(left: JSSStyleNode, right: JSSStyleNode): number
   /** 位置、声明和来源分别传入；插入点紧邻锚点，不隐含当前编译位置。 */
-  insert(position: { conditionPath: ConditionPath } & ASTPosition, declaration: [key: JSSKey | undefined, content: unknown], provenance: {
-    owner: JSSStyleNode
-    identity?: string
-    productTag?: object
-    resourceAddress?: string
-    /** 发布前补齐领域归属；观察者只接收已经初始化的节点。 */
-    initialize?: (node: JSSStyleNode) => void
-  }): JSSStyleNode
+  insert(
+    position: { conditionPath: ConditionPath } & ASTPosition,
+    declaration: [key: JSSKey | undefined, content: unknown],
+    provenance: {
+      owner: JSSStyleNode
+      identity?: string
+      productTag?: object
+      resourceAddress?: string
+      /** 发布前补齐领域归属；观察者只接收已经初始化的节点。 */
+      initialize?: (node: JSSStyleNode) => void
+    },
+  ): JSSStyleNode
   /** 移到紧邻锚点的位置，不改变地址或来源。 */
   move(node: JSSStyleNode, position: ASTPosition): void
   /** 默认撤销及级联清理；from: output 仅退出输出，保留来源且不触发撤销清理。 */

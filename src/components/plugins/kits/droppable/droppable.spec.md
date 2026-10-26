@@ -30,7 +30,6 @@
 
 [droppable.example.tsx](droppable.example.tsx) 同时演示内部 Pointer payload 与系统外部文件。独立 draggable 见 [Draggable Example](../draggable/draggable.example.tsx)。
 
-
 ## 边界
 
 - 不发起拖动，不拥有 `payload`。

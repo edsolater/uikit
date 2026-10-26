@@ -1,8 +1,14 @@
 /** 公共能力只选择配置并注入插件声明，执行与清理由插件消费链负责。 */
 import { type Source, val } from '@/foundation'
 import { derive } from '@/hooks/stateUtils'
-import { draggable, type DraggableOptions } from '../../plugins/kits/draggable/draggable'
-import { droppable, type DroppableOptions } from '../../plugins/kits/droppable/droppable'
+import {
+  draggable,
+  type DraggableOptions,
+} from '../../plugins/kits/draggable/draggable'
+import {
+  droppable,
+  type DroppableOptions,
+} from '../../plugins/kits/droppable/droppable'
 import type { PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
 import type { PivPlugin } from './runPlugin'
@@ -17,23 +23,35 @@ export interface PublicCapabilityProps {
 
 type Capability = keyof PublicCapabilityProps
 
-export function getPublicPluginSources<Tag extends PivTag>(declarations: ShadowProps<Tag>[]) {
-  return (['draggable', 'droppable'] as const)
-    .flatMap(key => createPluginSource(declarations, key) ?? [])
+export function getPublicPluginSources<Tag extends PivTag>(
+  declarations: ShadowProps<Tag>[],
+) {
+  return (['draggable', 'droppable'] as const).flatMap(
+    (key) => createPluginSource(declarations, key) ?? [],
+  )
 }
 
 function createPluginSource<Tag extends PivTag>(
-  declarations: ShadowProps<Tag>[], key: Capability,
+  declarations: ShadowProps<Tag>[],
+  key: Capability,
 ): Source<PivPlugin<Tag> | undefined> | undefined {
-  const sources = declarations.filter(props => key in props)
+  const sources = declarations.filter((props) => key in props)
   if (!sources.length) return
-  const selection = derive(sources, declarations => {
+  const selection = derive(sources, (declarations) => {
     for (const props of declarations) {
       const selection = val(props[key])
       if (selection !== undefined) return selection
     }
   })
-  return selection.map(options => !options ? undefined : key === 'draggable'
-    ? draggable(options === true ? undefined : options as DraggableOptions)
-    : droppable(options === true ? undefined : options as DroppableOptions))
+  return selection.map((options) =>
+    !options
+      ? undefined
+      : key === 'draggable'
+        ? draggable(
+            options === true ? undefined : (options as DraggableOptions),
+          )
+        : droppable(
+            options === true ? undefined : (options as DroppableOptions),
+          ),
+  )
 }

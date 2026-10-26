@@ -5,7 +5,14 @@
  *
  * 包裹不增加原生元素，使表格、选项与多根内容保持原有关系。
  */
-import { createContext, onCleanup, useContext, val, type JSX, type Source } from '@/foundation'
+import {
+  createContext,
+  onCleanup,
+  useContext,
+  val,
+  type JSX,
+  type Source,
+} from '@/foundation'
 
 /** 组件使用处提供用途及定位模式中的显示选择，不影响正常界面内容。 */
 export interface ComponentDescriptionProps {
@@ -49,15 +56,25 @@ export function ComponentWrapper(props: ComponentWrapperProps): JSX.Element {
     start: document.createComment('component:start'),
     end: document.createComment('component:end'),
     colorIndex: nextColorIndex++ % 4,
-    readDescriptionDisplay: () => props.descriptionDisplay ?? props.defaultDescriptionDisplay ?? true,
+    readDescriptionDisplay: () =>
+      props.descriptionDisplay ?? props.defaultDescriptionDisplay ?? true,
     readLabel: () => {
-      const description = val(props.description) ?? val(props.defaultDescription)
+      const description =
+        val(props.description) ?? val(props.defaultDescription)
       if (!description) return props.componentName
-      return props.descriptionOnly ? description : `${props.componentName} · ${description}`
+      return props.descriptionOnly
+        ? description
+        : `${props.componentName} · ${description}`
     },
   }
   componentBoundaries.add(boundary)
   onCleanup(() => componentBoundaries.delete(boundary))
 
-  return <>{boundary.start}{props.children}{boundary.end}</>
+  return (
+    <>
+      {boundary.start}
+      {props.children}
+      {boundary.end}
+    </>
+  )
 }

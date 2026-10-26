@@ -27,7 +27,11 @@ function resolveUIThemeMode(mode: UIThemeMode, media: MediaQueryList) {
  * hook 内保留三态模式：light / dark / system。
  * DOM 只写解析后的 `data-theme`，CSS 通过选择器覆盖对应主题分支的 token。
  */
-function applyGlobalUIThemeMode(mode: UIThemeMode, root: HTMLHtmlElement, markThemeSwitching: () => void) {
+function applyGlobalUIThemeMode(
+  mode: UIThemeMode,
+  root: HTMLHtmlElement,
+  markThemeSwitching: () => void,
+) {
   const media = window.matchMedia('(prefers-color-scheme: dark)')
   const resolvedTheme = resolveUIThemeMode(mode, media)
 
@@ -38,7 +42,10 @@ function applyGlobalUIThemeMode(mode: UIThemeMode, root: HTMLHtmlElement, markTh
 
 export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
   const themeMode = createState<UIThemeMode>(initialMode)
-  const root = typeof document === 'undefined' ? undefined : (document.documentElement as HTMLHtmlElement)
+  const root =
+    typeof document === 'undefined'
+      ? undefined
+      : (document.documentElement as HTMLHtmlElement)
   const themeSwitchingMarker =
     root === undefined
       ? { mark: () => undefined, cleanup: () => undefined }
@@ -66,13 +73,14 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
     return themeSwitchingStyleRegisterer.unregister
   })
 
-  createEffect(themeMode, mode => {
+  createEffect(themeMode, (mode) => {
     if (typeof window === 'undefined' || root === undefined) {
       return
     }
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const applyTheme = () => applyGlobalUIThemeMode(mode, root, themeSwitchingMarker.mark)
+    const applyTheme = () =>
+      applyGlobalUIThemeMode(mode, root, themeSwitchingMarker.mark)
 
     applyTheme()
 

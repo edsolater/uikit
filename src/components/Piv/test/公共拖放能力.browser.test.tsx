@@ -3,7 +3,10 @@ import { render } from '@solidjs/web'
 import { afterEach, expect, test, vi } from 'vitest'
 import { createState, val } from '@/foundation'
 import { Piv } from '../Piv'
-import { createInternalDrag, findInternalDropTarget } from '../../plugins/kits/dragSession'
+import {
+  createInternalDrag,
+  findInternalDropTarget,
+} from '../../plugins/kits/dragSession'
 import { createToggle } from '@/hooks/value-state/toggle'
 import { mergeProps } from '@/foundation/render'
 import { Button } from '../../kits/Button/Button'
@@ -21,13 +24,24 @@ test('缺省与字面 false 不创建拖放监听，false 覆盖低层快捷字�
   vi.mocked(createToggle).mockClear()
   const listen = vi.spyOn(HTMLElement.prototype, 'addEventListener')
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <>
-    <Piv />
-    <Piv draggable={false} droppable={false} />
-    <Piv draggable={false} shadowProps={{ draggable: true }} />
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Piv />
+        <Piv draggable={false} droppable={false} />
+        <Piv draggable={false} shadowProps={{ draggable: true }} />
+      </>
+    ),
+    host,
+  )
   expect(host.childElementCount).toBe(3)
-  expect(listen.mock.calls.filter(([event]) => ['pointerdown', 'dragstart', 'dragenter', 'dragover', 'drop'].includes(event))).toHaveLength(0)
+  expect(
+    listen.mock.calls.filter(([event]) =>
+      ['pointerdown', 'dragstart', 'dragenter', 'dragover', 'drop'].includes(
+        event,
+      ),
+    ),
+  ).toHaveLength(0)
   expect(host.querySelector('[data-plugin]')).toBeNull()
   expect(createToggle).not.toHaveBeenCalled()
 })
@@ -38,8 +52,19 @@ test('真实快捷入口的 options 未变时不重建插件或中断拖动', ()
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => <Piv draggable={(val(incidental), options)} />, host)
   const element = host.firstElementChild as HTMLElement
-  Object.assign(element, { setPointerCapture() {}, releasePointerCapture() {}, hasPointerCapture: () => true })
-  element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 9, isPrimary: true, button: 0 }))
+  Object.assign(element, {
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    hasPointerCapture: () => true,
+  })
+  element.dispatchEvent(
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      pointerId: 9,
+      isPrimary: true,
+      button: 0,
+    }),
+  )
   expect(element.getAttribute('data-interacting')).toBe('true')
   const instanceStateCount = vi.mocked(createToggle).mock.calls.length
   incidental.set(1)
@@ -52,9 +77,21 @@ test('真实快捷入口的 options 未变时不重建插件或中断拖动', ()
 test('配置 disabled 沿原插件契约创建，普通 ref 读取已提交的能力字段', () => {
   const host = document.body.appendChild(document.createElement('div'))
   let initialDraggable: boolean | undefined
-  dispose = render(() => <Piv draggable={{ payload: 'item', disabled: true }} ref={element => { initialDraggable = element.draggable }} />, host)
+  dispose = render(
+    () => (
+      <Piv
+        draggable={{ payload: 'item', disabled: true }}
+        ref={(element) => {
+          initialDraggable = element.draggable
+        }}
+      />
+    ),
+    host,
+  )
   expect(initialDraggable).toBe(false)
-  expect((host.firstElementChild as HTMLElement).getAttribute('data-plugin')).toBe('draggable')
+  expect(
+    (host.firstElementChild as HTMLElement).getAttribute('data-plugin'),
+  ).toBe('draggable')
 })
 
 test('公共开关不重置未变化的 once 事件与注册级清理', () => {
@@ -62,7 +99,18 @@ test('公共开关不重置未变化的 once 事件与注册级清理', () => {
   const callback = vi.fn()
   const cleanup = vi.fn()
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <Piv draggable={enabled} on={{ click: { once: true, callback }, mouseenter: { callback() {}, cleanup } }} />, host)
+  dispose = render(
+    () => (
+      <Piv
+        draggable={enabled}
+        on={{
+          click: { once: true, callback },
+          mouseenter: { callback() {}, cleanup },
+        }}
+      />
+    ),
+    host,
+  )
   const element = host.firstElementChild as HTMLElement
   element.click()
   enabled.set(true)
@@ -81,7 +129,10 @@ test('两种公共能力同元素共存，drop 关闭注销并可重新接收外
   const enabled = createState(true)
   const onDrop = vi.fn()
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <Piv draggable droppable={val(enabled) ? { onDrop } : false} />, host)
+  dispose = render(
+    () => <Piv draggable droppable={val(enabled) ? { onDrop } : false} />,
+    host,
+  )
   const element = host.firstElementChild as HTMLElement
   const source = document.body.appendChild(document.createElement('div'))
   vi.spyOn(document, 'elementsFromPoint').mockReturnValue([element])
@@ -91,12 +142,35 @@ test('两种公共能力同元素共存，drop 关闭注销并可重新接收外
   const transfer = new DataTransfer()
   transfer.items.add(new File(['item'], 'item.txt'))
   const drop = () => {
-    element.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: transfer }))
-    element.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }))
+    element.dispatchEvent(
+      new DragEvent('dragenter', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      }),
+    )
+    element.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: transfer,
+      }),
+    )
   }
   expect(element.getAttribute('data-plugin')).toContain('draggable')
-  Object.assign(element, { setPointerCapture() {}, releasePointerCapture() {}, hasPointerCapture: () => true })
-  element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 3, isPrimary: true, button: 0 }))
+  Object.assign(element, {
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    hasPointerCapture: () => true,
+  })
+  element.dispatchEvent(
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      pointerId: 3,
+      isPrimary: true,
+      button: 0,
+    }),
+  )
   expect(element.getAttribute('data-interacting')).toBe('true')
   window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 3 }))
   expect(element.hasAttribute('data-interacting')).toBe(false)
@@ -120,7 +194,10 @@ test('快捷来源整体换源后退出旧订阅，undefined 回落而 false 覆
   const second = createState<boolean | undefined>(true)
   const selected = createState(first)
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <Piv draggable={val(selected)} shadowProps={{ draggable: true }} />, host)
+  dispose = render(
+    () => <Piv draggable={val(selected)} shadowProps={{ draggable: true }} />,
+    host,
+  )
   const element = host.firstElementChild as HTMLElement
   expect(element.getAttribute('data-plugin')).toBe('draggable')
   first.set(false)
@@ -143,16 +220,36 @@ test('合并代理与 Button 透传的初始 false getter 仍能启用', () => {
   const enabled = createState(false)
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => {
-    const props = mergeProps({ get draggable() { return val(enabled) } })
-    return <><Piv {...props} /><Button draggable={val(enabled)}>拖动</Button></>
+    const props = mergeProps({
+      get draggable() {
+        return val(enabled)
+      },
+    })
+    return (
+      <>
+        <Piv {...props} />
+        <Button draggable={val(enabled)}>拖动</Button>
+      </>
+    )
   }, host)
   expect(host.querySelectorAll('[data-plugin="draggable"]')).toHaveLength(0)
   enabled.set(true)
   flush()
   const elements = Array.from(host.children) as HTMLElement[]
   for (const element of elements) {
-    Object.assign(element, { setPointerCapture() {}, releasePointerCapture() {}, hasPointerCapture: () => true })
-    element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, isPrimary: true, pointerId: 4, button: 0 }))
+    Object.assign(element, {
+      setPointerCapture() {},
+      releasePointerCapture() {},
+      hasPointerCapture: () => true,
+    })
+    element.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        isPrimary: true,
+        pointerId: 4,
+        button: 0,
+      }),
+    )
     expect(element.getAttribute('data-interacting')).toBe('true')
     window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 4 }))
   }
@@ -166,7 +263,13 @@ test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => <Piv if={visible} draggable />, host)
   const oldElement = host.firstElementChild as HTMLElement
-  const pointer = () => new PointerEvent('pointerdown', { bubbles: true, pointerId: 2, isPrimary: true, button: 0 })
+  const pointer = () =>
+    new PointerEvent('pointerdown', {
+      bubbles: true,
+      pointerId: 2,
+      isPrimary: true,
+      button: 0,
+    })
   visible.set(false)
   flush()
   expect(host.childElementCount).toBe(0)
@@ -176,7 +279,11 @@ test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
   flush()
   const current = host.firstElementChild as HTMLElement
   expect(current).not.toBe(oldElement)
-  Object.assign(current, { setPointerCapture() {}, releasePointerCapture() {}, hasPointerCapture: () => true })
+  Object.assign(current, {
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    hasPointerCapture: () => true,
+  })
   current.dispatchEvent(pointer())
   expect(current.getAttribute('data-interacting')).toBe('true')
   dispose()
@@ -187,16 +294,34 @@ test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
 test('公共 draggable 从关闭开启并在关闭时取消原元素的拖动', () => {
   const enabled = createState(false)
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <Piv draggable={val(enabled) ? { payload: 'item', activationDistance: 0 } : false} />, host)
+  dispose = render(
+    () => (
+      <Piv
+        draggable={
+          val(enabled) ? { payload: 'item', activationDistance: 0 } : false
+        }
+      />
+    ),
+    host,
+  )
   const element = host.firstElementChild as HTMLElement
   Object.assign(element, {
     setPointerCapture() {},
     releasePointerCapture() {},
     hasPointerCapture: () => true,
   })
-  const start = () => element.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true, pointerId: 1, pointerType: 'mouse', isPrimary: true, button: 0, clientX: 10, clientY: 10,
-  }))
+  const start = () =>
+    element.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        button: 0,
+        clientX: 10,
+        clientY: 10,
+      }),
+    )
   start()
   expect(element.hasAttribute('data-interacting')).toBe(false)
   enabled.set(true)

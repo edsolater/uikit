@@ -34,17 +34,25 @@ test('红色在亮环境更亮、暗环境更深，蓝色环境不会把它变�
 
 test('所有色板材料响应亮暗和彩度环境，保留自身色相附近的颜色', () => {
   for (const material of [paper, ink, neutral, brand, good, bad, warn, info]) {
-    const original = { ...material, base: { ...material.base }, environmentSensitivities: { ...material.environmentSensitivities } }
+    const original = {
+      ...material,
+      base: { ...material.base },
+      environmentSensitivities: { ...material.environmentSensitivities },
+    }
     const bright = applyEnvironment(material, lightTheme)
     const dark = applyEnvironment(material, darkTheme)
     expect(bright.base.lightness).not.toBe(dark.base.lightness)
     for (const changed of [bright, dark]) {
       expect(changed.base.chroma).toBeLessThan(material.base.chroma)
       expect(changed.base.chroma).toBeGreaterThan(0)
-      const distance = Math.abs(((changed.base.hue - material.base.hue + 540) % 360) - 180)
+      const distance = Math.abs(
+        ((changed.base.hue - material.base.hue + 540) % 360) - 180,
+      )
       expect(distance).toBeGreaterThan(0)
       expect(distance).toBeLessThanOrEqual(8)
-      expect(changed.environmentSensitivities).toEqual(material.environmentSensitivities)
+      expect(changed.environmentSensitivities).toEqual(
+        material.environmentSensitivities,
+      )
     }
     expect(material).toEqual(original)
   }
@@ -62,7 +70,9 @@ test('纸面在暗环境接近黑色深灰，墨色按背景方向改变以保�
   expect(brightInk.base.lightness).toBeLessThan(0.4)
   expect(darkInk.base.lightness).toBeGreaterThan(0.8)
   expect(darkInk.base.lightness).toBeLessThan(0.95)
-  expect(brightPaper.base.lightness - brightInk.base.lightness).toBeGreaterThan(0.5)
+  expect(brightPaper.base.lightness - brightInk.base.lightness).toBeGreaterThan(
+    0.5,
+  )
   expect(darkInk.base.lightness - darkPaper.base.lightness).toBeGreaterThan(0.5)
 })
 
@@ -74,16 +84,27 @@ test('墨色负强调后继续应用暗环境时逐渐褪入背景，目标不�
   const moreFaded = applyEnvironment(farther, darkTheme)
   expect(faded.base.lightness).toBeLessThan(normal.base.lightness)
   expect(moreFaded.base.lightness).toBeLessThan(faded.base.lightness)
-  expect(applyEnvironment(emphasis(ink, darkTheme, -6), darkTheme).base.lightness).toBeLessThan(0.01)
-  expect(applyEnvironment(far, lightTheme).base.lightness).toBeGreaterThan(applyEnvironment(ink, lightTheme).base.lightness)
-  expect(applyEnvironment(emphasis(ink, darkTheme, 1), darkTheme).base.lightness).toBeGreaterThan(0.7)
+  expect(
+    applyEnvironment(emphasis(ink, darkTheme, -6), darkTheme).base.lightness,
+  ).toBeLessThan(0.01)
+  expect(applyEnvironment(far, lightTheme).base.lightness).toBeGreaterThan(
+    applyEnvironment(ink, lightTheme).base.lightness,
+  )
+  expect(
+    applyEnvironment(emphasis(ink, darkTheme, 1), darkTheme).base.lightness,
+  ).toBeGreaterThan(0.7)
   expect(emphasis(ink, darkTheme, 0)).toBe(ink)
-  expect(applyEnvironment(alpha(ink, 0.4), darkTheme).base.lightness).toBeGreaterThan(0.8)
+  expect(
+    applyEnvironment(alpha(ink, 0.4), darkTheme).base.lightness,
+  ).toBeGreaterThan(0.8)
 })
 
 test('显式正常环境强度下品牌仍保留红色色相', () => {
   const red = hue(brand, 30)
-  const changed = applyEnvironment(red, { tint: { hue: 210 }, influence: { hue: 1 } })
+  const changed = applyEnvironment(red, {
+    tint: { hue: 210 },
+    influence: { hue: 1 },
+  })
   expect(changed.base.hue).toBeGreaterThan(20)
   expect(changed.base.hue).toBeLessThan(40)
 })

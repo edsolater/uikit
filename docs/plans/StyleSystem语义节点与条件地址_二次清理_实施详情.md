@@ -11,13 +11,13 @@
 
 ## 施工阶段
 
-| 阶段 | Plan 责任 | 交付与证据 | 状态 |
-| --- | --- | --- | --- |
-| A. 节点协议与控制器 | 复合 `conditionPath`、有序节点、有限 `ASTController` | 正式入口自定义 parse 测试验证复合地址、定点插入、按 key 查询及后续对象可见修改 | 完成 |
-| B. 解析波与内容遍历 | Root/Content 共用波号、`parseWaveIndex`、复合内容连接、返回值接回、循环终止 | 自定义 parse 测试验证 0→2 波等待、嵌套 CSS 函数返回值；新对象无限链在深度 256 前明确失败 | 完成 |
-| C. 现役能力迁移 | 规则登记/更新/撤销、Value/Variable/Cluster、状态和局部声明、依赖、自动定义、未使用资源 | 现役单元测试与样式登记集成测试通过；按需依赖、同名完整定义替换及状态语义有覆盖 | 完成 |
-| D. 唯一输出链与旧路径退出 | 新增 CSS string 输出、移除旧编译载体、迁移 Architecture 与准确的活动文档引用 | 类型检查、全部单元/浏览器测试；CSSRoot 成功挂载和失败保留已有 CSS 有浏览器覆盖 | 完成 |
-| E. 独立审查与修正 | 反向核对原要求、完整差异、测试及未完成项 | Watchdog 核心验收与独立实施审查均通过；复审所提问题已修正并重验 | 完成 |
+| 阶段                      | Plan 责任                                                                              | 交付与证据                                                                               | 状态 |
+| ------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---- |
+| A. 节点协议与控制器       | 复合 `conditionPath`、有序节点、有限 `ASTController`                                   | 正式入口自定义 parse 测试验证复合地址、定点插入、按 key 查询及后续对象可见修改           | 完成 |
+| B. 解析波与内容遍历       | Root/Content 共用波号、`parseWaveIndex`、复合内容连接、返回值接回、循环终止            | 自定义 parse 测试验证 0→2 波等待、嵌套 CSS 函数返回值；新对象无限链在深度 256 前明确失败 | 完成 |
+| C. 现役能力迁移           | 规则登记/更新/撤销、Value/Variable/Cluster、状态和局部声明、依赖、自动定义、未使用资源 | 现役单元测试与样式登记集成测试通过；按需依赖、同名完整定义替换及状态语义有覆盖           | 完成 |
+| D. 唯一输出链与旧路径退出 | 新增 CSS string 输出、移除旧编译载体、迁移 Architecture 与准确的活动文档引用           | 类型检查、全部单元/浏览器测试；CSSRoot 成功挂载和失败保留已有 CSS 有浏览器覆盖           | 完成 |
+| E. 独立审查与修正         | 反向核对原要求、完整差异、测试及未完成项                                               | Watchdog 核心验收与独立实施审查均通过；复审所提问题已修正并重验                          | 完成 |
 
 ## 执行记录
 
@@ -35,16 +35,16 @@
 
 ## 最终验收
 
-| Plan 要求 | 结果 | 证据 |
-| --- | --- | --- |
-| Rules 建立有序语义队列，Root 波及 Content 次波遍历完整对象链 | 通过 | [内容解析波遍历及插入节点.test.ts](../../src/style-system/test/内容解析波遍历及插入节点.test.ts)；32 个单元测试文件通过 |
-| 复合 `conditionPath` 保留 target/state 区别；解析器只能经有限 Controller 操作当前队列 | 通过 | 正式入口测试断言 target/state，调用 `findByKey` 与 `insert`；[ASTController](../../src/style-system/compiler/ast-controller.ts) 不暴露底层队列 |
-| 纯值、可选 `parse`、最早解析波、等待高波、返回内容接回、循环终止 | 通过 | 0→2 波与嵌套 CSS 函数返回值测试；[内容解析新对象链达到深度上限.test.ts](../../src/style-system/test/内容解析新对象链达到深度上限.test.ts) 1/1 明确失败；值/变量循环单测 |
+| Plan 要求                                                                             | 结果 | 证据                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rules 建立有序语义队列，Root 波及 Content 次波遍历完整对象链                          | 通过 | [内容解析波遍历及插入节点.test.ts](../../src/style-system/test/内容解析波遍历及插入节点.test.ts)；32 个单元测试文件通过                                                                                                                                                   |
+| 复合 `conditionPath` 保留 target/state 区别；解析器只能经有限 Controller 操作当前队列 | 通过 | 正式入口测试断言 target/state，调用 `findByKey` 与 `insert`；[ASTController](../../src/style-system/compiler/ast-controller.ts) 不暴露底层队列                                                                                                                            |
+| 纯值、可选 `parse`、最早解析波、等待高波、返回内容接回、循环终止                      | 通过 | 0→2 波与嵌套 CSS 函数返回值测试；[内容解析新对象链达到深度上限.test.ts](../../src/style-system/test/内容解析新对象链达到深度上限.test.ts) 1/1 明确失败；值/变量循环单测                                                                                                   |
 | 每个 Content 位置的完整对象关系处理后才形成 parsed 内容；对象跨路径复用不混淆完成状态 | 通过 | [值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts) 验证共享 Value 两地址及两次编译；[内容解析波遍历及插入节点.test.ts](../../src/style-system/test/内容解析波遍历及插入节点.test.ts) 验证复合对象源链接不被改写 |
-| Variable 自身 parse 在 Root 插入 `@property` 并返回可输出 Value | 通过 | [variable/core.ts](../../src/style-system/variable/core.ts)；同名注册替换和 CSS `@function` 局部 Variable 单测通过 |
-| Rules 登记、替换、撤销及 Value／Variable／Cluster／局部状态语义保留 | 通过 | [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)、[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts) |
-| 按需依赖同链、循环终止、未使用资源不输出、状态优先级与显式覆盖 | 通过 | 上述单测与 [样式挂载后浏览器计算与更新.browser.test.ts](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts) |
-| 重复同址同 key 声明按队列顺序输出；不引入属性值聚合 | 通过 | 登记单测的简写/详细属性书写顺序断言；[css-string.ts](../../src/style-system/compiler/css-string.ts) 只输出完成节点 |
-| Button、浏览器层叠与实时状态、CSSRoot 完整成功提交和失败回退 | 通过 | `bun run test:browser --reporter=dot`：14 files、74 tests 通过；包含 Button、层叠以及 CSSRoot 编译失败保留旧 CSS |
-| 旧编译通路及旧改写协议退出，Architecture/活动材料如实更新 | 通过 | 旧编译文件删除；[Architecture](../../src/style-system/architecture.md)、[JSS 节点链 Guide](../../src/style-system/architecture.md#内容扩展与位置记录) 和活动行为文档已更新 |
-| 独立实施审查完成、问题修正并复验 | 通过 | 独立审查复验：既有节点后续修改输出 11px；callable Parseable 分类正确；A、B、A 地址严格按输入顺序输出；type-check、32/135 单测、14/74 浏览器测试与 diff --check 全通过 |
+| Variable 自身 parse 在 Root 插入 `@property` 并返回可输出 Value                       | 通过 | [variable/core.ts](../../src/style-system/variable/core.ts)；同名注册替换和 CSS `@function` 局部 Variable 单测通过                                                                                                                                                        |
+| Rules 登记、替换、撤销及 Value／Variable／Cluster／局部状态语义保留                   | 通过 | [样式登记经依赖解析生成CSS.test.ts](../../src/style-system/test/样式登记经依赖解析生成CSS.test.ts)、[值与变量组合保留各自状态和身份.test.ts](../../src/style-system/test/值与变量组合保留各自状态和身份.test.ts)                                                          |
+| 按需依赖同链、循环终止、未使用资源不输出、状态优先级与显式覆盖                        | 通过 | 上述单测与 [样式挂载后浏览器计算与更新.browser.test.ts](../../src/style-system/test/样式挂载后浏览器计算与更新.browser.test.ts)                                                                                                                                           |
+| 重复同址同 key 声明按队列顺序输出；不引入属性值聚合                                   | 通过 | 登记单测的简写/详细属性书写顺序断言；[css-string.ts](../../src/style-system/compiler/css-string.ts) 只输出完成节点                                                                                                                                                        |
+| Button、浏览器层叠与实时状态、CSSRoot 完整成功提交和失败回退                          | 通过 | `bun run test:browser --reporter=dot`：14 files、74 tests 通过；包含 Button、层叠以及 CSSRoot 编译失败保留旧 CSS                                                                                                                                                          |
+| 旧编译通路及旧改写协议退出，Architecture/活动材料如实更新                             | 通过 | 旧编译文件删除；[Architecture](../../src/style-system/architecture.md)、[JSS 节点链 Guide](../../src/style-system/architecture.md#内容扩展与位置记录) 和活动行为文档已更新                                                                                                |
+| 独立实施审查完成、问题修正并复验                                                      | 通过 | 独立审查复验：既有节点后续修改输出 11px；callable Parseable 分类正确；A、B、A 地址严格按输入顺序输出；type-check、32/135 单测、14/74 浏览器测试与 diff --check 全通过                                                                                                     |

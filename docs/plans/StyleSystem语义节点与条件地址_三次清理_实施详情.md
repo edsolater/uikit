@@ -25,30 +25,30 @@
 
 ## 验收矩阵
 
-| Plan 要求 | 行动前状态 | 完工证据与状态 |
-| --- | --- | --- |
-| Compiler 及内部辅助不按 Variable、Value、Cluster、CSS 函数身份选路；自定义对象与现役对象走同一通用协议 | `compiler/` 下无上述具体类型检查与导入；自定义 Key 通过通用 `parse`、输出能力插入节点 | 通过：`bun run test:unit` 139/139；独立结构复查 PASS |
-| `onActive` 与 `parse` 语义独立；仅有 `onActive` 的对象仍可提供按需 Rules | Valuable 继续提供 `onActive`，Parser 通用调用；生命周期内容可以提供依赖但不输出当前声明 | 通过：`内容解析波遍历及插入节点.test.ts` 6/6 含 lifecycle-only；`样式登记经依赖解析生成CSS.test.ts` 覆盖嵌套按需依赖；全单元 139/139、浏览器 74/74 |
-| Key 与 Content 均能解析通用对象；子内容链接、字面内容、直接 CSS 输出均可完成 | Key/Content 共用能力检测，内容 Reader 读取 parse 替换；Key 的最终名称来自通用 Key 输出能力 | 通过：`内容解析波遍历及插入节点.test.ts` 6/6 含自定义 Key 插入与 Variable 根 replacement；打包入口另验证 `color: variable()` 输出 `var(--bundle-surface, black)` |
-| 通用 Controller 完成插入、替换、查找与删除；不含 Variable 专名操作或标记 | 当前 Key/Content/role 只读视图及通用队列方法；自动定义区分留在 Variable 私有 Key 身份集合 | 通过：Compiler 无 Variable 专名字段/方法；定向状态 25/25 |
-| Parsed 队列顺序就是 CSS 输出顺序；不按来源或 Variable 定义做末尾分组、排序与过滤 | `rules.ts` 将完成节点直接交给 `toCSSString()` | 通过：公开入口顺序断言、`CSS字符串按parsed队列顺序输出.test.ts` 与全单元 139/139 |
-| Variable、Cluster、状态、局部赋值、按需依赖、未使用资源不输出、循环终止与重复声明层叠行为保留 | 状态回归查明为自动定义与显式 Key 识别过宽；通过 Variable 私有生成 Key WeakSet 区分后修复 | 通过：Variable 专项 25/25；全单元 139/139；浏览器 74/74 |
-| Button、CSSRoot 完整成功提交与失败保留行为通过正式入口 | 编译接口保持 `compileCSS(): string`；样式挂载及 Button 流程由浏览器测试覆盖 | 通过：`bun run test:browser` 14 文件、74/74；`bun run test:unit` 32 文件、139/139 |
-| Architecture 与现役样式节点 Guide 忠实记录实现，且命名不提前整体迁移到 JSS | 同步通用能力链、队列输出顺序及当前 ASTController Key/Content/role 视图；保留现有 CSS 命名 | 通过：独立结构复查确认文档与职责一致 |
-| 反向复查 Compiler 结构职责、阅读路径与修改成本；结构问题上报总监 | 执行负责人自查并接受只读 Watchdog 与独立实施复查 | 通过：未发现身份分支或尾部调度；type-only 协议循环作为明确取舍记录；`resourceAddress` 属通用同名依赖替换 |
-| 未写 Git 状态 | 未执行 stage、commit、checkout、reset、restore、clean 等 Git 写入命令 | 已核实仅 `git diff --check`、`git status`、只读 diff |
+| Plan 要求                                                                                              | 行动前状态                                                                                 | 完工证据与状态                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compiler 及内部辅助不按 Variable、Value、Cluster、CSS 函数身份选路；自定义对象与现役对象走同一通用协议 | `compiler/` 下无上述具体类型检查与导入；自定义 Key 通过通用 `parse`、输出能力插入节点      | 通过：`bun run test:unit` 139/139；独立结构复查 PASS                                                                                                             |
+| `onActive` 与 `parse` 语义独立；仅有 `onActive` 的对象仍可提供按需 Rules                               | Valuable 继续提供 `onActive`，Parser 通用调用；生命周期内容可以提供依赖但不输出当前声明    | 通过：`内容解析波遍历及插入节点.test.ts` 6/6 含 lifecycle-only；`样式登记经依赖解析生成CSS.test.ts` 覆盖嵌套按需依赖；全单元 139/139、浏览器 74/74               |
+| Key 与 Content 均能解析通用对象；子内容链接、字面内容、直接 CSS 输出均可完成                           | Key/Content 共用能力检测，内容 Reader 读取 parse 替换；Key 的最终名称来自通用 Key 输出能力 | 通过：`内容解析波遍历及插入节点.test.ts` 6/6 含自定义 Key 插入与 Variable 根 replacement；打包入口另验证 `color: variable()` 输出 `var(--bundle-surface, black)` |
+| 通用 Controller 完成插入、替换、查找与删除；不含 Variable 专名操作或标记                               | 当前 Key/Content/role 只读视图及通用队列方法；自动定义区分留在 Variable 私有 Key 身份集合  | 通过：Compiler 无 Variable 专名字段/方法；定向状态 25/25                                                                                                         |
+| Parsed 队列顺序就是 CSS 输出顺序；不按来源或 Variable 定义做末尾分组、排序与过滤                       | `rules.ts` 将完成节点直接交给 `toCSSString()`                                              | 通过：公开入口顺序断言、`CSS字符串按parsed队列顺序输出.test.ts` 与全单元 139/139                                                                                 |
+| Variable、Cluster、状态、局部赋值、按需依赖、未使用资源不输出、循环终止与重复声明层叠行为保留          | 状态回归查明为自动定义与显式 Key 识别过宽；通过 Variable 私有生成 Key WeakSet 区分后修复   | 通过：Variable 专项 25/25；全单元 139/139；浏览器 74/74                                                                                                          |
+| Button、CSSRoot 完整成功提交与失败保留行为通过正式入口                                                 | 编译接口保持 `compileCSS(): string`；样式挂载及 Button 流程由浏览器测试覆盖                | 通过：`bun run test:browser` 14 文件、74/74；`bun run test:unit` 32 文件、139/139                                                                                |
+| Architecture 与现役样式节点 Guide 忠实记录实现，且命名不提前整体迁移到 JSS                             | 同步通用能力链、队列输出顺序及当前 ASTController Key/Content/role 视图；保留现有 CSS 命名  | 通过：独立结构复查确认文档与职责一致                                                                                                                             |
+| 反向复查 Compiler 结构职责、阅读路径与修改成本；结构问题上报总监                                       | 执行负责人自查并接受只读 Watchdog 与独立实施复查                                           | 通过：未发现身份分支或尾部调度；type-only 协议循环作为明确取舍记录；`resourceAddress` 属通用同名依赖替换                                                         |
+| 未写 Git 状态                                                                                          | 未执行 stage、commit、checkout、reset、restore、clean 等 Git 写入命令                      | 已核实仅 `git diff --check`、`git status`、只读 diff                                                                                                             |
 
 ## 验证记录
 
-| 命令 | 结果 |
-| --- | --- |
+| 命令                                                                      | 结果                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `bun test 'src/style-system/test/值与变量组合保留各自状态和身份.test.ts'` | 退出码 0；最终 25/25，92 assertions。中途复现并修复两项状态差异：状态内容引用变量缺少常态定义；显式 active 分支泄漏 hover 定义。新增用例确认 Variable 与 Cluster 的 `onActive` 各由通用遍历调用一次。 |
-| `bun test 'src/style-system/test/内容解析波遍历及插入节点.test.ts'` | 退出码 0；6/6，29 assertions。含自定义 parseable Key 插入节点、lifecycle-only 无输出依赖及 Variable Content 根 replacement。 |
-| `bun run type-check` | 退出码 0；`tsc --noEmit`。 |
-| `bun run test:unit` | 退出码 0；32 文件、139 tests。 |
-| `bun run test:browser` | 退出码 0；14 文件、74 tests。 |
-| `bun run build` | 退出码 0；Vite production build 与 `tsc -p tsconfig.build.json` 均完成。 |
-| `git diff --check` | 退出码 0；仅有行尾转换提示，没有 whitespace 错误。 |
+| `bun test 'src/style-system/test/内容解析波遍历及插入节点.test.ts'`       | 退出码 0；6/6，29 assertions。含自定义 parseable Key 插入节点、lifecycle-only 无输出依赖及 Variable Content 根 replacement。                                                                          |
+| `bun run type-check`                                                      | 退出码 0；`tsc --noEmit`。                                                                                                                                                                            |
+| `bun run test:unit`                                                       | 退出码 0；32 文件、139 tests。                                                                                                                                                                        |
+| `bun run test:browser`                                                    | 退出码 0；14 文件、74 tests。                                                                                                                                                                         |
+| `bun run build`                                                           | 退出码 0；Vite production build 与 `tsc -p tsconfig.build.json` 均完成。                                                                                                                              |
+| `git diff --check`                                                        | 退出码 0；仅有行尾转换提示，没有 whitespace 错误。                                                                                                                                                    |
 
 Watchdog 独立复核 Variable/Value 状态专项，并通过独立 `color: variable('red')` 输出探针。完成结构复查后确认：没有 Compiler 身份分支或尾部调度；Controller 当前 Key/Content/role 已写入 Guide；无效 `keyReplacements` 状态已删除；lifecycle-only 与 Content 根 replacement 已留正式测试。其结论为整体职责切分合理；`ASTParseable` 对 `ASTController` 的 type-only 协议引用循环是可解释取舍，不建议本轮扩大范围。独立实施审查 PASS：审查者重跑 type-check、unit 32/138、browser 14/74、build 和 diff-check 均通过；执行负责人随后移除重复 Variable 激活并新增 Variable/Cluster 通用激活用例，最终全量 unit 为 32/139，相关类型及专项测试通过。独立审查者又复核收尾差异，独立重跑 Variable 专项 25/25，维持 PASS。`resourceAddress` 仅用于通用同名依赖替换，不参与结果分组排序，符合保留现役资源语义。技术总监最终验收通过，用户验收尚待进行。
 

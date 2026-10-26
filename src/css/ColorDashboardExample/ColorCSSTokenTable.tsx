@@ -13,15 +13,24 @@ const colorNumberFormatter = new Intl.NumberFormat('en-US', {
 /**
  * 判断当前规则是否直接承载了一组样式声明。
  */
-function hasStyleDeclaration(rule: CSSRule): rule is CSSRule & { style: CSSStyleDeclaration } {
+function hasStyleDeclaration(
+  rule: CSSRule,
+): rule is CSSRule & { style: CSSStyleDeclaration } {
   return 'style' in rule
 }
 
 /**
  * 从一组样式声明里提取 --color-* 变量名。
  */
-function collectColorVariableNamesFromStyleDeclaration(style: CSSStyleDeclaration, cssVariableNames: Set<string>) {
-  for (let propertyIndex = 0; propertyIndex < style.length; propertyIndex += 1) {
+function collectColorVariableNamesFromStyleDeclaration(
+  style: CSSStyleDeclaration,
+  cssVariableNames: Set<string>,
+) {
+  for (
+    let propertyIndex = 0;
+    propertyIndex < style.length;
+    propertyIndex += 1
+  ) {
     const name = style.item(propertyIndex)
     if (isCSSVariable(name)) {
       cssVariableNames.add(name)
@@ -32,25 +41,40 @@ function collectColorVariableNamesFromStyleDeclaration(style: CSSStyleDeclaratio
 /**
  * 判断当前规则是否还能继续向下读取子规则。
  */
-function hasNestedCssRules(rule: CSSRule): rule is CSSRule & { cssRules: CSSRuleList } {
+function hasNestedCssRules(
+  rule: CSSRule,
+): rule is CSSRule & { cssRules: CSSRuleList } {
   return 'cssRules' in rule
 }
 
 /**
  * 递归扫描样式规则，找出任意规则里声明的 --color-* 变量名。
  */
-function collectColorVariableNamesFromStylesheetRules(cssRules: CSSRuleList, cssVariableNames: Set<string>) {
+function collectColorVariableNamesFromStylesheetRules(
+  cssRules: CSSRuleList,
+  cssVariableNames: Set<string>,
+) {
   for (const rule of Array.from(cssRules)) {
     try {
       if (hasStyleDeclaration(rule)) {
-        collectColorVariableNamesFromStyleDeclaration(rule.style, cssVariableNames)
+        collectColorVariableNamesFromStyleDeclaration(
+          rule.style,
+          cssVariableNames,
+        )
       }
 
       if (hasNestedCssRules(rule)) {
-        collectColorVariableNamesFromStylesheetRules(rule.cssRules, cssVariableNames)
+        collectColorVariableNamesFromStylesheetRules(
+          rule.cssRules,
+          cssVariableNames,
+        )
       }
     } catch (error) {
-      console.log('Skip CSS rule while collecting color variables:', rule, error)
+      console.log(
+        'Skip CSS rule while collecting color variables:',
+        rule,
+        error,
+      )
     }
   }
 }
@@ -67,20 +91,28 @@ function extractColorVariableNamesFromCurrentStylesheet() {
 
   for (const styleSheet of Array.from(document.styleSheets)) {
     try {
-      collectColorVariableNamesFromStylesheetRules(styleSheet.cssRules, cssVariableNames)
+      collectColorVariableNamesFromStylesheetRules(
+        styleSheet.cssRules,
+        cssVariableNames,
+      )
     } catch {
       continue
     }
   }
 
-  return Array.from(cssVariableNames).sort((left, right) => left.localeCompare(right))
+  return Array.from(cssVariableNames).sort((left, right) =>
+    left.localeCompare(right),
+  )
 }
 
 /**
  * 读取 token 在根节点上的原始声明值，展示层不再改写颜色空间。
  */
 function readTokenRawValue(token: string) {
-  return getComputedStyle(document.documentElement).getPropertyValue(token).trim() || '未定义'
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue(token).trim() ||
+    '未定义'
+  )
 }
 
 /**

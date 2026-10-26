@@ -54,14 +54,22 @@ Button = action + content + Variant Props + Status Props
 确定描述词直接形成代码的阅读轮廓。只有具体值会变化时，才使用分组字段：
 
 ```tsx
-<Button size={buttonSize} appearance={buttonAppearance} tone={buttonTone} emphasis={buttonEmphasis}>动态按钮</Button>
+<Button
+  size={buttonSize}
+  appearance={buttonAppearance}
+  tone={buttonTone}
+  emphasis={buttonEmphasis}
+>
+  动态按钮
+</Button>
 ```
 
 ## Props 契约
 
 ```ts
 interface ButtonProps
-  extends PivProps<'button'>,
+  extends
+    PivProps<'button'>,
     VariantProps<'appearance', 'filled' | 'outlined' | 'plain'>,
     VariantProps<'tone', 'danger'>,
     VariantProps<'emphasis', 'soft' | 'strong'>,
@@ -74,12 +82,12 @@ interface ButtonProps
 
 ### Variant Props
 
-| 分组 | 确定描述词 | 不定字段 | 省略时 |
-| --- | --- | --- | --- |
+| 分组     | 确定描述词                    | 不定字段     | 省略时                                  |
+| -------- | ----------------------------- | ------------ | --------------------------------------- |
 | 外观形式 | `filled`、`outlined`、`plain` | `appearance` | 原始值 `undefined`；初始输出 `outlined` |
-| 语义基调 | `danger` | `tone` | 普通性质 |
-| 存在感 | `soft`、`strong` | `emphasis` | 普通表现 |
-| 物理尺寸 | `small`、`large`、`xlarge` | `size` | 默认尺寸 |
+| 语义基调 | `danger`                      | `tone`       | 普通性质                                |
+| 存在感   | `soft`、`strong`              | `emphasis`   | 普通表现                                |
+| 物理尺寸 | `small`、`large`、`xlarge`    | `size`       | 默认尺寸                                |
 
 - 确定描述词的值是 `Source<boolean | undefined>`，适合具体 Variant 已知、只需决定是否存在的场景。
 - 不定字段的值是对应候选的 `Source`，适合具体 Variant 会变化的场景。

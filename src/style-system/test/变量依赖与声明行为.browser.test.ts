@@ -23,11 +23,18 @@ function mountCSS(css: string, className: string, tag = 'div'): HTMLElement {
 }
 
 test('普通 Key 两次声明保留 join，状态不移到局部', () => {
-  const source = token('10px', { name: 'joined-key-state', state: { '&[data-phase]': base => multiply(base, 2) } })
-  const target = key('--joined-key-state', { join: values => values.reduce<TokenInput>((total, item) => add(total, item), '0px') })
+  const source = token('10px', {
+    name: 'joined-key-state',
+    state: { '&[data-phase]': (base) => multiply(base, 2) },
+  })
+  const target = key('--joined-key-state', {
+    join: (values) =>
+      values.reduce<TokenInput>((total, item) => add(total, item), '0px'),
+  })
   const css = compileRules([
     [['.Parent'], 'width', source],
-    [['.Child'], ...declare(target, '3px')], [['.Child'], ...declare(target, '4px')],
+    [['.Child'], ...declare(target, '3px')],
+    [['.Child'], ...declare(target, '4px')],
     [['.Child'], 'width', 'var(--joined-key-state)'],
   ])
   const element = mountCSS(css, 'Child')
@@ -36,29 +43,36 @@ test('普通 Key 两次声明保留 join，状态不移到局部', () => {
   expect(getComputedStyle(element).width).toBe('7px')
 })
 
-
-
-test.each(['Token', 'Key'])('同名%s declare 后，不借用另一对象状态，保持当地7px', (entry) => {
-  const source = token('10px', { name: 'shared-state-size',
-    state: { '&[data-phase]': base => multiply(base, 2) },
-  })
-  const local = entry === 'Key' ? key('--shared-state-size') : token('1px', { name: 'shared-state-size' })
-  const css = compileRules([
-    [['.Parent'], 'width', source], [['.Child'], ...declare(local, '7px')],
-    [['.Child'], 'width', 'var(--shared-state-size)'],
-  ])
-  const element = mountCSS(css, 'Child')
-  expect(getComputedStyle(element).width).toBe('7px')
-  element.dataset.phase = ''
-  expect(getComputedStyle(element).width).toBe('7px')
-  delete element.dataset.phase
-  expect(getComputedStyle(element).width).toBe('7px')
-})
+test.each(['Token', 'Key'])(
+  '同名%s declare 后，不借用另一对象状态，保持当地7px',
+  (entry) => {
+    const source = token('10px', {
+      name: 'shared-state-size',
+      state: { '&[data-phase]': (base) => multiply(base, 2) },
+    })
+    const local =
+      entry === 'Key'
+        ? key('--shared-state-size')
+        : token('1px', { name: 'shared-state-size' })
+    const css = compileRules([
+      [['.Parent'], 'width', source],
+      [['.Child'], ...declare(local, '7px')],
+      [['.Child'], 'width', 'var(--shared-state-size)'],
+    ])
+    const element = mountCSS(css, 'Child')
+    expect(getComputedStyle(element).width).toBe('7px')
+    element.dataset.phase = ''
+    expect(getComputedStyle(element).width).toBe('7px')
+    delete element.dataset.phase
+    expect(getComputedStyle(element).width).toBe('7px')
+  },
+)
 
 test('根据地只 declare 也展开自身states，显式7px基础在状态下得到14px', () => {
   const size = token('10px', {
-    name: 'base-local-size', address: '.Local',
-    state: { '&[data-phase]': base => multiply(base, 2) },
+    name: 'base-local-size',
+    address: '.Local',
+    state: { '&[data-phase]': (base) => multiply(base, 2) },
   })
   const css = compileRules([
     [['.Local'], ...declare(size, '7px')],

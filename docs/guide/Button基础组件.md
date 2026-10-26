@@ -40,13 +40,17 @@ Button 有四个 Variant 分组：
 具体 Variant 已知时优先使用确定描述词：
 
 ```tsx
-<Button strong filled large>保存</Button>
+<Button strong filled large>
+  保存
+</Button>
 ```
 
 具体 Variant 会变化时使用不定字段：
 
 ```tsx
-<Button appearance={appearance} tone={tone} emphasis={emphasis} size={size}>保存</Button>
+<Button appearance={appearance} tone={tone} emphasis={emphasis} size={size}>
+  保存
+</Button>
 ```
 
 确定描述词让阅读者直接看到选择结果；不定字段让阅读者先看到“这一分类是不定的”。两种输入都可以响应式变化。分组字段一旦声明便接管同组输入，即使当前值是 `undefined`。同组冲突只警告，不中断运行。
@@ -70,7 +74,9 @@ Status 独立描述组件当前成立的情况，`loading` 与 `disabled` 可以
 `loading` 和 `disabled` 是独立字段，可以同时成立：
 
 ```tsx
-<Button loading={isSaving} disabled={cannotSave}>保存</Button>
+<Button loading={isSaving} disabled={cannotSave}>
+  保存
+</Button>
 ```
 
 Status 是外部记录加内部管理能力。外部没有声明某字段时，组件内部可以改变它；外部一旦声明该字段，内部更改仍可调用，但不再改变该状态。Button 只接住状态波并翻译表现，不判断状态为什么成立。
@@ -99,15 +105,15 @@ Button.style.ts 消费 data-appearance、data-emphasis、data-tone 和 data-size
 
 Button 从组件及包入口公开以下 Token 控制对象，同一对象也由 Button 样式消费。本轮完成接口接入，不据此认定这些业务抽象已经完成设计验收：
 
-| 控制点 | 控制内容 | 当前操作 |
-| --- | --- | --- |
-| buttonColorInput | 组件颜色输入及交互基础 | declare、modify |
-| buttonColor | 用途颜色引用的基础 | declare、modify |
-| buttonSurfaceSource | 背景混色的色源 | declare |
-| buttonSurfaceCanvas | 背景混色的画布 | declare |
-| buttonSurfaceStrength | 色源参与背景的强度 | declare、modify；modify 为相对增量 |
-| buttonSurfaceColor | 最终背景色 | declare、modify |
-| buttonContentColor | 最终内容色 | declare、modify |
+| 控制点                | 控制内容               | 当前操作                           |
+| --------------------- | ---------------------- | ---------------------------------- |
+| buttonColorInput      | 组件颜色输入及交互基础 | declare、modify                    |
+| buttonColor           | 用途颜色引用的基础     | declare、modify                    |
+| buttonSurfaceSource   | 背景混色的色源         | declare                            |
+| buttonSurfaceCanvas   | 背景混色的画布         | declare                            |
+| buttonSurfaceStrength | 色源参与背景的强度     | declare、modify；modify 为相对增量 |
+| buttonSurfaceColor    | 最终背景色             | declare、modify                    |
+| buttonContentColor    | 最终内容色             | declare、modify                    |
 
 ```mermaid
 flowchart LR

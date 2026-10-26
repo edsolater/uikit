@@ -16,8 +16,10 @@ test('空默认来源不影响属性读取、成员判断和展开', () => {
 })
 
 test('函数默认来源持续跟随响应式变化，也可以暂时为空', () => {
-  const defaults = createState<{ label: string } | undefined>({ label: '初始默认值' })
-  const { props, dispose } = createRoot(dispose => ({
+  const defaults = createState<{ label: string } | undefined>({
+    label: '初始默认值',
+  })
+  const { props, dispose } = createRoot((dispose) => ({
     props: addDefaultProps({ label: undefined }, () => val(defaults)),
     dispose,
   }))
@@ -36,7 +38,10 @@ test('优先使用显式值，undefined 才读取对应默认字段', () => {
   let defaultReads = 0
   const input: { label: string | undefined } = { label: '显式值' }
   const props = addDefaultProps(input, {
-    get label() { defaultReads += 1; return '默认值' },
+    get label() {
+      defaultReads += 1
+      return '默认值'
+    },
   })
   expect(defaultReads).toBe(0)
   expect(props.label).toBe('显式值')

@@ -4,7 +4,13 @@
  *
  * 让编译器消费对象能力，同时让内容组织工具保持自身职责。
  */
-import { assert, isObjectLike, isArray, isFunction, isNullish } from '@edsolater/fnkit'
+import {
+  assert,
+  isObjectLike,
+  isArray,
+  isFunction,
+  isNullish,
+} from '@edsolater/fnkit'
 import type { ConditionPath } from './condition'
 import type { JSSKey } from './key'
 import type { Rules } from './rule'
@@ -53,10 +59,13 @@ export interface JSSContentProtocol {
 }
 
 /** 至少具有一种实际内容能力的对象；与 isJSSContent 的识别范围一致。 */
-export type JSSContent = JSSContentProtocol & (
-  Required<Pick<JSSContentProtocol, 'onCompile'>> | Required<Pick<JSSContentProtocol, 'onFirstScan'>>
-  | Required<Pick<JSSContentProtocol, 'toCSSString'>> | Required<Pick<JSSContentProtocol, 'dependencies'>>
-)
+export type JSSContent = JSSContentProtocol &
+  (
+    | Required<Pick<JSSContentProtocol, 'onCompile'>>
+    | Required<Pick<JSSContentProtocol, 'onFirstScan'>>
+    | Required<Pick<JSSContentProtocol, 'toCSSString'>>
+    | Required<Pick<JSSContentProtocol, 'dependencies'>>
+  )
 
 /** 只组织自身依赖与 CSS 输出的表达式；自身不承担消费位置、AST 操作或资源定义。 */
 export interface Expression extends JSSContentProtocol {
@@ -82,30 +91,37 @@ export const createJSSContent = (
 /**
  * 判断内容对象是否提供 onCompile 方法，接受继承方法及可调用内容对象。
  */
-export const hasJSSContentOnCompileMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onCompile'>> =>
+export const hasJSSContentOnCompileMethod = (
+  input: unknown,
+): input is JSSContent & Required<Pick<JSSContent, 'onCompile'>> =>
   isObjectLike(input) && 'onCompile' in input && isFunction(input.onCompile)
 
 /**
  * 判断内容对象是否公开 CSS 输出方法。
  */
-export const hasJSSContentOutput = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'toCSSString'>> =>
+export const hasJSSContentOutput = (
+  input: unknown,
+): input is JSSContent & Required<Pick<JSSContent, 'toCSSString'>> =>
   isObjectLike(input) && 'toCSSString' in input && isFunction(input.toCSSString)
 
 /**
  * 判断内容对象是否提供 onFirstScan 方法，不激活资源。
  */
-export const hasJSSContentOnFirstScanMethod = (input: unknown): input is JSSContent & Required<Pick<JSSContent, 'onFirstScan'>> =>
+export const hasJSSContentOnFirstScanMethod = (
+  input: unknown,
+): input is JSSContent & Required<Pick<JSSContent, 'onFirstScan'>> =>
   isObjectLike(input) && 'onFirstScan' in input && isFunction(input.onFirstScan)
 
 /**
  * 判断对象是否承担任一种 JSS 内容行为。
  */
-export const isJSSContent = (input: unknown): input is JSSContent => (
+export const isJSSContent = (input: unknown): input is JSSContent =>
   hasJSSContentOnCompileMethod(input) ||
   hasJSSContentOutput(input) ||
-  isObjectLike(input) && 'dependencies' in input && isArray(input.dependencies) ||
+  (isObjectLike(input) &&
+    'dependencies' in input &&
+    isArray(input.dependencies)) ||
   hasJSSContentOnFirstScanMethod(input)
-)
 
 /** 一项声明贡献及其原编译位置的内容视图；替换 content 后由组合结果消费新内容。 */
 export interface ContentView extends JSSContentProtocol {
@@ -117,33 +133,61 @@ export interface ContentView extends JSSContentProtocol {
 /**
  * 找出内容数据中的表达式与生产函数，嵌套数组保留原始顺序。
  */
-export function contentDependencies(content: unknown, active = new Set<object>(), depth = 0): unknown[] {
+export function contentDependencies(
+  content: unknown,
+  active = new Set<object>(),
+  depth = 0,
+): unknown[] {
   assert(depth <= 256, '内容数组嵌套超过上限 256。')
-  if (!isArray(content)) return isJSSContent(content) || isFunction(content) ? [content] : []
+  if (!isArray(content))
+    return isJSSContent(content) || isFunction(content) ? [content] : []
   assert(!active.has(content), '内容数组存在循环引用。')
   active.add(content)
-  try { return content.flatMap(item => contentDependencies(item, active, depth + 1)) }
-  finally { active.delete(content) }
+  try {
+    return content.flatMap((item) =>
+      contentDependencies(item, active, depth + 1),
+    )
+  } finally {
+    active.delete(content)
+  }
 }
 
 /**
  * 输出原始内容数据，数组按逗号连接；表达式及函数只读取编译结果。
  */
-export function contentDataToCSSString(content: unknown, resolve: JSSContentResolver, separator = ', ', active = new Set<object>(), depth = 0): string | undefined {
+export function contentDataToCSSString(
+  content: unknown,
+  resolve: JSSContentResolver,
+  separator = ', ',
+  active = new Set<object>(),
+  depth = 0,
+): string | undefined {
   assert(depth <= 256, '内容数组嵌套超过上限 256。')
   if (isNullish(content)) return undefined
-  if (!isArray(content)) return isJSSContent(content) || isFunction(content) ? resolve(content) : String(content)
+  if (!isArray(content))
+    return isJSSContent(content) || isFunction(content)
+      ? resolve(content)
+      : String(content)
   assert(!active.has(content), '内容数组存在循环引用。')
   active.add(content)
   try {
-    const parts = content.map(item => contentDataToCSSString(item, resolve, ', ', active, depth + 1)).filter(item => item !== undefined)
+    const parts = content
+      .map((item) =>
+        contentDataToCSSString(item, resolve, ', ', active, depth + 1),
+      )
+      .filter((item) => item !== undefined)
     return parts.length ? parts.join(separator) : undefined
-  } finally { active.delete(content) }
+  } finally {
+    active.delete(content)
+  }
 }
 
 /**
  * 按空格连接一组原始内容，嵌套数组继续使用自身的逗号含义。
  */
-export function arraySequenceToCSSString(content: unknown[], resolve: JSSContentResolver): string | undefined {
+export function arraySequenceToCSSString(
+  content: unknown[],
+  resolve: JSSContentResolver,
+): string | undefined {
   return contentDataToCSSString(content, resolve, ' ')
 }

@@ -31,23 +31,40 @@ describe('ExampleDashboard', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
 
-    expect(document.querySelector('.example-home h1')?.textContent).toBe('Examples')
+    expect(document.querySelector('.example-home h1')?.textContent).toBe(
+      'Examples',
+    )
     expect(document.querySelectorAll('.example-link')).toHaveLength(12)
     expect(document.querySelectorAll('.example-link h2')).toHaveLength(12)
     expect(document.querySelectorAll('.example-link p')).toHaveLength(12)
     expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(12)
-    expect(document.querySelectorAll('.example-link[data-thumbnail]')).toHaveLength(12)
-    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(12)
-    const asyncEntry = document.querySelector<HTMLAnchorElement>('a[href="/examples/async-state"]')!
+    expect(
+      document.querySelectorAll('.example-link[data-thumbnail]'),
+    ).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(
+      12,
+    )
+    const asyncEntry = document.querySelector<HTMLAnchorElement>(
+      'a[href="/examples/async-state"]',
+    )!
     expect(asyncEntry.querySelector('h2')?.textContent).toBe('异步状态')
-    expect(asyncEntry.querySelector('p')?.textContent).toBe('由界面处理请求等待、完成与失败。')
+    expect(asyncEntry.querySelector('p')?.textContent).toBe(
+      '由界面处理请求等待、完成与失败。',
+    )
 
-    const thumbnail = document.querySelector<HTMLElement>('.example-link-thumbnail')!
+    const thumbnail = document.querySelector<HTMLElement>(
+      '.example-link-thumbnail',
+    )!
     const copy = document.querySelector<HTMLElement>('.example-link-copy')!
-    const ribbons = [...document.querySelectorAll<HTMLElement>('.example-link-ribbon')]
+    const ribbons = [
+      ...document.querySelectorAll<HTMLElement>('.example-link-ribbon'),
+    ]
     expect(getComputedStyle(thumbnail).maskImage).toContain('linear-gradient')
     expect(getComputedStyle(copy).backgroundImage).toBe('none')
-    expect(new Set(ribbons.map(ribbon => getComputedStyle(ribbon).backgroundColor)).size).toBe(5)
+    expect(
+      new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor))
+        .size,
+    ).toBe(5)
 
     expect(document.querySelector('.example-home-head p')).toBeNull()
     expect(document.querySelector('.example-category-nav')).toBeNull()
@@ -55,23 +72,38 @@ describe('ExampleDashboard', () => {
     expect(document.querySelector('.example-detail')).toBeNull()
     expect(document.querySelector('.example-home article')).toBeNull()
 
-    document.querySelector<HTMLAnchorElement>('a[href="/examples/card"]')!.click()
+    document
+      .querySelector<HTMLAnchorElement>('a[href="/examples/card"]')!
+      .click()
     flush()
 
     expect(window.location.pathname).toBe('/examples/card')
-    expect(document.querySelector('.example-detail h2')?.textContent).toBe('Card')
+    expect(document.querySelector('.example-detail h2')?.textContent).toBe(
+      'Card',
+    )
     expect(document.querySelectorAll('.example-link')).toHaveLength(0)
 
-    const defaultCard = document.querySelector<HTMLElement>('.Card.example-card')!
-    const smallCard = document.querySelector<HTMLElement>('.card-example-item[data-size="small"]')!
-    const largeCard = document.querySelector<HTMLElement>('.card-example-item[data-size="large"]')!
-    const softCard = document.querySelector<HTMLElement>('.card-example-item[data-variant="soft"]')!
-    const solidCard = document.querySelector<HTMLElement>('.card-example-item[data-variant="solid"]')!
+    const defaultCard =
+      document.querySelector<HTMLElement>('.Card.example-card')!
+    const smallCard = document.querySelector<HTMLElement>(
+      '.card-example-item[data-size="small"]',
+    )!
+    const largeCard = document.querySelector<HTMLElement>(
+      '.card-example-item[data-size="large"]',
+    )!
+    const softCard = document.querySelector<HTMLElement>(
+      '.card-example-item[data-variant="soft"]',
+    )!
+    const solidCard = document.querySelector<HTMLElement>(
+      '.card-example-item[data-variant="solid"]',
+    )!
     expect(getComputedStyle(defaultCard).display).toBe('grid')
-    expect(Number.parseFloat(getComputedStyle(defaultCard).padding)).toBeGreaterThan(0)
-    expect(Number.parseFloat(getComputedStyle(largeCard).padding)).toBeGreaterThan(
-      Number.parseFloat(getComputedStyle(smallCard).padding),
-    )
+    expect(
+      Number.parseFloat(getComputedStyle(defaultCard).padding),
+    ).toBeGreaterThan(0)
+    expect(
+      Number.parseFloat(getComputedStyle(largeCard).padding),
+    ).toBeGreaterThan(Number.parseFloat(getComputedStyle(smallCard).padding))
     expect(getComputedStyle(softCard).backgroundColor).not.toBe(
       getComputedStyle(solidCard).backgroundColor,
     )
@@ -91,20 +123,26 @@ describe('ExampleDashboard', () => {
     const nativeArticle = articles[1]
     expect(nativeArticle.classList.contains('Card')).toBe(false)
     expect(nativeArticle.querySelector('article')).toBeNull()
-    expect(nativeArticle.querySelector('h3')?.textContent).toBe('原生 Article 正文')
+    expect(nativeArticle.querySelector('h3')?.textContent).toBe(
+      '原生 Article 正文',
+    )
   })
   test('详情 URL 可以直接打开并跟随浏览历史变化', () => {
     window.history.replaceState(null, '', '/examples/droppable')
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
 
-    expect(document.querySelector('.example-detail h2')?.textContent).toBe('Droppable')
+    expect(document.querySelector('.example-detail h2')?.textContent).toBe(
+      'Droppable',
+    )
 
     window.history.replaceState(null, '', '/examples/scope')
     window.dispatchEvent(new PopStateEvent('popstate'))
     flush()
 
-    expect(document.querySelector('.example-detail h2')?.textContent).toBe('Scope + Drag and Drop')
+    expect(document.querySelector('.example-detail h2')?.textContent).toBe(
+      'Scope + Drag and Drop',
+    )
   })
 
   test('Draggable 实际拖动期间 Card 始终不使用 Blur', () => {
@@ -114,7 +152,9 @@ describe('ExampleDashboard', () => {
 
     const shell = document.querySelector<HTMLElement>('.example-shell')!
     const card = document.querySelector<HTMLElement>('.Card.example-card')!
-    const source = document.querySelector<HTMLElement>('.drag-drop-example-card')!
+    const source = document.querySelector<HTMLElement>(
+      '.drag-drop-example-card',
+    )!
     Object.assign(source, {
       setPointerCapture: () => undefined,
       hasPointerCapture: () => true,

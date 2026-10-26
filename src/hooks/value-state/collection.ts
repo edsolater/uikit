@@ -7,6 +7,8 @@ import type { Collection } from '@edsolater/fnkit'
  * observer 模式：除非用函数消费，否则返回一个accessor 对象
  *
  */
-export function createCollection<InitialCollection extends Collection>(initial: InitialCollection) {
+export function createCollection<InitialCollection extends Collection>(
+  initial: InitialCollection,
+) {
   throw new Error('to impliment')
 }

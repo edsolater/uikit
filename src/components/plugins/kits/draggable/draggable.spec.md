@@ -48,7 +48,6 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 [draggable.example.tsx](draggable.example.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [Droppable Example](../droppable/droppable.example.tsx)。
 
-
 ## 边界
 
 - 不以原生 `draggable`、`dragstart`、`DataTransfer.setDragImage()` 或浏览器 ghost image 发起拖动；`dragstart` 监听只负责取消图片、链接等后代可能触发的原生 ghost drag。

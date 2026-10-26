@@ -59,20 +59,40 @@
      * hover 表示用户靠近，不是按下。
      * 亮色模式下主操作遵循 Fluent 式压实路径：rest -> hover -> active 逐步变深。
      */
-    --dye-action-hover: --color-adjust(var(--dye-action), darker, 4%, vivid, 0.01);
+    --dye-action-hover: --color-adjust(
+      var(--dye-action),
+      darker,
+      4%,
+      vivid,
+      0.01
+    );
 
     /*
      * action active dye：动作按下态色元。
      * active 应该比 hover 更压实。
      */
-    --dye-action-active: --color-adjust(var(--dye-action), darker, 8%, grayish, 0.01);
+    --dye-action-active: --color-adjust(
+      var(--dye-action),
+      darker,
+      8%,
+      grayish,
+      0.01
+    );
 
     /*
      * accent dye：系统强调色元。
      * accent 表示当前态、选中态、聚焦态和系统强调。
      * accent 不是 action，应该和 action 拉开一点色相。
      */
-    --dye-accent: --color-adjust(var(--dye-brand), hue-backward, 18deg, lighter, 4%, vivid, 0.01);
+    --dye-accent: --color-adjust(
+      var(--dye-brand),
+      hue-backward,
+      18deg,
+      lighter,
+      4%,
+      vivid,
+      0.01
+    );
 
     /*
      * accent soft dye：弱强调底色。
@@ -84,7 +104,13 @@
      * accent strong dye：强强调色元。
      * 用于少数需要更高存在感的 active indicator。
      */
-    --dye-accent-strong: --color-adjust(var(--dye-accent), lighter, 8%, vivid, 0.02);
+    --dye-accent-strong: --color-adjust(
+      var(--dye-accent),
+      lighter,
+      8%,
+      vivid,
+      0.02
+    );
 
     /*
      * ink / paper：亮色模式下的极性色元。
@@ -98,7 +124,13 @@
      * brand flavor：品牌气味。
      * 只取 brand hue 和极低 chroma，用于给状态色染一点系统气质。
      */
-    --dye-brand-flavor: --color-adjust(var(--dye-brand), lightness, 50%, chroma, 0.018);
+    --dye-brand-flavor: --color-adjust(
+      var(--dye-brand),
+      lightness,
+      50%,
+      chroma,
+      0.018
+    );
 
     /*
      * neutral dye：亮色模式的中性色阶。
@@ -184,7 +216,13 @@
      */
     --color-brand: var(--dye-brand);
     --color-brand-soft: --color-adjust(var(--dye-brand), opacity, 14%);
-    --color-brand-strong: --color-adjust(var(--dye-brand), darker, 6%, vivid, 0.02);
+    --color-brand-strong: --color-adjust(
+      var(--dye-brand),
+      darker,
+      6%,
+      vivid,
+      0.02
+    );
     --color-brand-fg: --content-on(var(--color-brand));
     --color-brand-line: --color-adjust(var(--dye-brand), opacity, 44%);
 
@@ -206,7 +244,13 @@
     --color-link: var(--color-action);
     --color-link-hover: var(--color-action-hover);
     --color-link-active: var(--color-action-active);
-    --color-link-visited: --color-adjust(var(--dye-action), hue-forward, 36deg, grayish, 0.02);
+    --color-link-visited: --color-adjust(
+      var(--dye-action),
+      hue-forward,
+      36deg,
+      grayish,
+      0.02
+    );
 
     /*
      * Accent：当前态、选中态、聚焦态和系统强调。

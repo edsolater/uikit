@@ -8,9 +8,21 @@
   padding: 24px clamp(var(--space-5), 5vw, 80px) 96px;
   /* 背景层是页面的底色，不跟随卡片滚动；卡片通过半透明材质吃到这层色温。 */
   background:
-    radial-gradient(circle at 14% -6%, color-mix(in oklab, var(--color-accent) 20%, transparent), transparent 38%),
-    radial-gradient(circle at 88% 8%, color-mix(in oklab, var(--color-brand) 14%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in oklab, var(--color-canvas) 90%, var(--color-accent-soft)), var(--color-canvas));
+    radial-gradient(
+      circle at 14% -6%,
+      color-mix(in oklab, var(--color-accent) 20%, transparent),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 88% 8%,
+      color-mix(in oklab, var(--color-brand) 14%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-canvas) 90%, var(--color-accent-soft)),
+      var(--color-canvas)
+    );
   background-attachment: fixed;
 }
 
@@ -87,7 +99,8 @@
   justify-content: space-between;
   gap: var(--space-5);
   padding: var(--space-4) 0;
-  border-block-start: var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 40%, transparent);
+  border-block-start: var(--boundary-1) solid
+    color-mix(in oklab, var(--color-line-soft) 40%, transparent);
 }
 
 .setting-row:first-child {

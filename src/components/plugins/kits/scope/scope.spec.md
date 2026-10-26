@@ -25,7 +25,6 @@
 
 [scope.example.tsx](scope.example.tsx) 建立两个 Drag and Drop Scope：范围内允许放下，跨范围拒绝。
 
-
 ## 边界
 
 - Scope 只判断范围，不替具体能力判断业务材料。

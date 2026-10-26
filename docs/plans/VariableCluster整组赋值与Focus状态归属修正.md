@@ -14,17 +14,11 @@
 完成后，Button 只需要选择一整组动作配色：
 
 ```ts
-rules([...button, '&[data-variant="solid"]'], [
-  [toneColor, actionColor],
-])
+rules([...button, '&[data-variant="solid"]'], [[toneColor, actionColor]])
 
-rules([...button, '&[data-tone="accent"]'], [
-  [toneColor, accentColor],
-])
+rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
 
-rules([...button, '&[data-tone="danger"]'], [
-  [toneColor, dangerColor],
-])
+rules([...button, '&[data-tone="danger"]'], [[toneColor, dangerColor]])
 ```
 
 来源与目标已有的同名成员在当前 CSS 选择器作用域内生成声明，不要求两组成员完全一致。背景、文字和焦点轮廓分别消费自己负责的成员，Button 不再为 focus 增加一条单独接线。
@@ -38,10 +32,9 @@ rules([...button, '&[data-tone="danger"]'], [
 第一层实现已经能直接消费 Cluster 的 default，也能通过 `cluster('soft')` 选择成员；但 Cluster 作为声明目标时仍然只代表 default。因此 Button 的 accent、danger 分支必须重复写：
 
 ```ts
-[toneColor, accentColor]
-[toneColor('soft'), accentColor('soft')]
-[toneColor('strong'), accentColor('strong')]
-[toneColor('foreground'), accentColor('foreground')]
+;[toneColor, accentColor][(toneColor('soft'), accentColor('soft'))][
+  (toneColor('strong'), accentColor('strong'))
+][(toneColor('foreground'), accentColor('foreground'))]
 ```
 
 这里表达的不是四个独立业务决定，而是同一组语气材料的结构对应。让 Button 展开这些成员，会把 Cluster 内部结构泄露给使用端，也会让新增成员时容易漏接。
@@ -51,9 +44,9 @@ rules([...button, '&[data-tone="danger"]'], [
 修正前的焦点轮廓通过 `focusVisible` 状态控制显示，`clickable` 也负责输出 outline 和 offset；但颜色仍经过独立 `focusColor`，由 Button 分支手工声明：
 
 ```ts
-[focusColor, actionColor('line')]
-[focusColor, accentColor('focus')]
-[focusColor, dangerColor('line')]
+;[focusColor, actionColor('line')][(focusColor, accentColor('focus'))][
+  (focusColor, dangerColor('line'))
+]
 ```
 
 这导致 focus 的最后一段责任仍留在组件。每增加一组配色，Button 都要记得再接一遍焦点颜色。
@@ -73,9 +66,11 @@ focus 归入 State Condition，并不表示把轮廓颜色塞进背景 Variable�
 Cluster 保留三种不同用法：
 
 ```ts
-toneColor                 // 普通值消费，代表 default
-toneColor('soft')         // 选择 soft 成员
-[toneColor, accentColor]  // 目标和内容都是 Cluster，整组声明
+toneColor // 普通值消费，代表 default
+toneColor(
+  'soft',
+) // 选择 soft 成员
+[(toneColor, accentColor)] // 目标和内容都是 Cluster，整组声明
 ```
 
 只有第三种情况触发整组赋值。普通 Variable 目标接收 Cluster 内容时仍然只消费来源 default，不把整组行为扩散到其他声明形式。
@@ -191,18 +186,18 @@ Button 继续拥有 variant、tone、size、status 的选择器及组件专属�
 
 ## 代码落点
 
-| 位置 | 职责与改动 |
-| --- | --- |
-| `src/style-system/variable-cluster.ts` | 保存内部成员关系，校验并形成一层同名成员声明；不公开成员反射 API |
-| `src/style-system/compiler/compile-css.ts` | 在当前 Rule 作用域展开 Cluster 声明，随后复用普通 Variable 编译链 |
-| `src/style-system/value-material/color/tone.ts` | tone 增加 line，accent 轮廓材料统一为 line；不强制各 Cluster 成员集合相同 |
-| `src/style-system/value-material/color/action.ts` | 保留动作基色状态与 foreground／line，移除仅为旧完整匹配限制增加的成员 |
-| `src/style-system/materials/state-conditions.ts` | 核对内部条件解析，使 Variable 上直接声明的 focus 对应 :focus-visible；不要求使用者调用额外注册函数 |
-| `src/style-system/value-material/focus.ts` | 由 focus 状态控制轮廓，并从 tone line 取得颜色 |
-| `src/style-system/component-handle-material/focus.ts` | 独立 focusColor 责任退出并删除 |
-| `src/style-system/mixins/interaction.ts` | 继续承担 outline 与 offset 到 CSS 属性的映射，不增加组件配色参数 |
-| `src/components/kits/Button/Button.style.ts` | 用整组声明选择 action／accent／danger，删除逐成员 tone 与 focusColor 协调 |
-| 对应测试和 Style System 文档 | 锁定整组赋值、状态优先级、真实 :focus-visible 和 Button 现有视觉 |
+| 位置                                                  | 职责与改动                                                                                         |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `src/style-system/variable-cluster.ts`                | 保存内部成员关系，校验并形成一层同名成员声明；不公开成员反射 API                                   |
+| `src/style-system/compiler/compile-css.ts`            | 在当前 Rule 作用域展开 Cluster 声明，随后复用普通 Variable 编译链                                  |
+| `src/style-system/value-material/color/tone.ts`       | tone 增加 line，accent 轮廓材料统一为 line；不强制各 Cluster 成员集合相同                          |
+| `src/style-system/value-material/color/action.ts`     | 保留动作基色状态与 foreground／line，移除仅为旧完整匹配限制增加的成员                              |
+| `src/style-system/materials/state-conditions.ts`      | 核对内部条件解析，使 Variable 上直接声明的 focus 对应 :focus-visible；不要求使用者调用额外注册函数 |
+| `src/style-system/value-material/focus.ts`            | 由 focus 状态控制轮廓，并从 tone line 取得颜色                                                     |
+| `src/style-system/component-handle-material/focus.ts` | 独立 focusColor 责任退出并删除                                                                     |
+| `src/style-system/mixins/interaction.ts`              | 继续承担 outline 与 offset 到 CSS 属性的映射，不增加组件配色参数                                   |
+| `src/components/kits/Button/Button.style.ts`          | 用整组声明选择 action／accent／danger，删除逐成员 tone 与 focusColor 协调                          |
+| 对应测试和 Style System 文档                          | 锁定整组赋值、状态优先级、真实 :focus-visible 和 Button 现有视觉                                   |
 
 ## 实施顺序
 
@@ -316,7 +311,6 @@ Variable 各自声明自己的状态；稳定 Value 表达式保留 Variable 引
 - 哪些候选方案被放弃，以及它们会怎样把 focus 协调责任重新留在 Button；
 - 每项结论属于用户明确裁决、已验证事实，还是本轮自主实现判断，供用户最终再次裁决。
 
-
 ## 本次实施记录
 
 职责仍按既有边界分工：Cluster 内部提供同名配对，编译器展开一层局部声明；Variable 编译负责自身状态，记录组织负责安全合并；焦点材料负责状态与 line 消费，clickable 输出轮廓，Button 选择整组配色。
@@ -331,7 +325,6 @@ Variable 各自声明自己的状态；稳定 Value 表达式保留 Variable 引
 - 测试判断：保留节点数量、无自动交集、实际焦点触发与 Button 视觉矩阵；旧缺键报错、幂集数量和选择器包装断言按新目的调整。求值次数上限与正则读取简单夹具仍只是诊断方法，不是新公共 API 契约。
 
 定向结果：编译相关 4 文件 64 项单元通过；CSSRoot、Variable 链与 Button 3 文件 35 项浏览器通过。最终全套结果由执行核验者记录。失败截图清理沿用已有安全限制，不绕过此前被拒绝的删除操作。
-
 
 ### 最终验收证据
 

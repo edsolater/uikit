@@ -28,17 +28,46 @@ export interface ClickableMixinOptions {
 const quickDuration = multiply(motionDuration, 2 / 3)
 
 /** Mixin：可点击效果；可用 opacity 选择本主体的透明度，省略时使用通用禁用淡化。 */
-export const clickable = (options: ClickableMixinOptions = {}): Declarations => [
+export const clickable = (
+  options: ClickableMixinOptions = {},
+): Declarations => [
   [$outline, focusOutline(options.focusColor, options.address)],
-  [$outlineOffset, token(focusOffset.default, { name: focusOffset.name, state: focusOffset.state, address: options.address })],
-  [$cursor, token('pointer', { name: 'clickable-cursor', address: options.address, state: { disabled: 'not-allowed' } })],
-  [$opacity, options.opacity ?? token(opacity.default, { name: 'clickable-opacity', state: opacity.state, address: options.address })],
-  [$transform, token('none', {
-    name: 'clickable-transform', address: options.address, state: {
-      active: translateY('1px'),
-      disabled: 'none',
-    }
-  })],
+  [
+    $outlineOffset,
+    token(focusOffset.default, {
+      name: focusOffset.name,
+      state: focusOffset.state,
+      address: options.address,
+    }),
+  ],
+  [
+    $cursor,
+    token('pointer', {
+      name: 'clickable-cursor',
+      address: options.address,
+      state: { disabled: 'not-allowed' },
+    }),
+  ],
+  [
+    $opacity,
+    options.opacity ??
+      token(opacity.default, {
+        name: 'clickable-opacity',
+        state: opacity.state,
+        address: options.address,
+      }),
+  ],
+  [
+    $transform,
+    token('none', {
+      name: 'clickable-transform',
+      address: options.address,
+      state: {
+        active: translateY('1px'),
+        disabled: 'none',
+      },
+    }),
+  ],
   [$userSelect, 'none'],
   [
     $transition,

@@ -90,7 +90,9 @@ function toInteger(value: number): number {
  * counter.set(10)
  * counter.reset()
  */
-export function createCounter(initialCount = 0): [count: State<number>, counter: CounterControl] {
+export function createCounter(
+  initialCount = 0,
+): [count: State<number>, counter: CounterControl] {
   const normalizedInitialCount = toInteger(initialCount)
 
   const count = createState(normalizedInitialCount)

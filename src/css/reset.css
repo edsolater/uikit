@@ -194,7 +194,8 @@
 
   [popover] {
     opacity: 0;
-    transform: translateY(var(--popover-translate-y-start)) scale(var(--popover-scale-start));
+    transform: translateY(var(--popover-translate-y-start))
+      scale(var(--popover-scale-start));
     transform-origin: var(--popover-transform-origin, top center);
     overscroll-behavior: contain; /* 阻止滚动链 */
     transition:
@@ -209,7 +210,8 @@
 
       @starting-style {
         opacity: 0;
-        transform: translateY(var(--popover-translate-y-start)) scale(var(--popover-scale-start));
+        transform: translateY(var(--popover-translate-y-start))
+          scale(var(--popover-scale-start));
       }
     }
   }
@@ -228,14 +230,18 @@
     border: 0;
 
     opacity: 0;
-    transform: translateY(var(--dialog-translate-y-start)) scale(var(--dialog-scale-start));
+    transform: translateY(var(--dialog-translate-y-start))
+      scale(var(--dialog-scale-start));
     overscroll-behavior: contain; /* 阻止滚动链 */
 
     transition:
       opacity var(--dialog-transition-duration) var(--dialog-transition-easing),
-      transform var(--dialog-transition-duration) var(--dialog-transition-easing),
-      display var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete,
-      overlay var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete;
+      transform var(--dialog-transition-duration)
+        var(--dialog-transition-easing),
+      display var(--dialog-transition-duration) var(--dialog-transition-easing)
+        allow-discrete,
+      overlay var(--dialog-transition-duration) var(--dialog-transition-easing)
+        allow-discrete;
 
     &[open] {
       opacity: 1;
@@ -243,7 +249,8 @@
 
       @starting-style {
         opacity: 0;
-        transform: translateY(var(--dialog-translate-y-start)) scale(var(--dialog-scale-start));
+        transform: translateY(var(--dialog-translate-y-start))
+          scale(var(--dialog-scale-start));
       }
     }
 
@@ -251,9 +258,12 @@
       background: rgb(0 0 0 / 0);
 
       transition:
-        background var(--dialog-transition-duration) var(--dialog-transition-easing),
-        display var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete,
-        overlay var(--dialog-transition-duration) var(--dialog-transition-easing) allow-discrete;
+        background var(--dialog-transition-duration)
+          var(--dialog-transition-easing),
+        display var(--dialog-transition-duration)
+          var(--dialog-transition-easing) allow-discrete,
+        overlay var(--dialog-transition-duration)
+          var(--dialog-transition-easing) allow-discrete;
     }
 
     &[open]::backdrop {
@@ -272,7 +282,10 @@
   }
 
   :root {
-    --scrollbar-thumb-color: light-dark(rgb(0 0 0 / 0.36), rgb(255 255 255 / 0.34));
+    --scrollbar-thumb-color: light-dark(
+      rgb(0 0 0 / 0.36),
+      rgb(255 255 255 / 0.34)
+    );
     --scrollbar-track-color: transparent;
 
     /* 预留滚动条槽位，避免页面从不可滚动变成可滚动时内容横向跳动。 */

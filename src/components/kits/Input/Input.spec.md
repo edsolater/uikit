@@ -56,26 +56,26 @@ validity status       = 当前值是否有效
 
 ## 使用场景
 
-| 场景 | 推荐写法 | 判断理由 |
-| --- | --- | --- |
-| 普通文本字段 | `<Input htmlProps={{ name: 'title' }} />` | 用户编辑一个单行值。 |
-| 邮箱字段 | `<Input htmlProps={{ type: 'email', name: 'email' }} />` | 输入行为交给原生 input type。 |
-| 密码字段 | `<Input htmlProps={{ type: 'password', name: 'password' }} />` | 密码是单行值，遮罩行为交给原生 input type。 |
-| 筛选关键字 | `<Input htmlProps={{ placeholder: '搜索关键字' }} />` | 筛选词仍是单行值。 |
-| 只读值展示 | `<Input htmlProps={{ readOnly: true, value: '只读值' }} />` | 只读是原生 input 状态。 |
-| 无效值 | `<Input invalid htmlProps={{ value: 'bad value' }} />` | invalid 只表达当前值无效。 |
+| 场景         | 推荐写法                                                       | 判断理由                                    |
+| ------------ | -------------------------------------------------------------- | ------------------------------------------- |
+| 普通文本字段 | `<Input htmlProps={{ name: 'title' }} />`                      | 用户编辑一个单行值。                        |
+| 邮箱字段     | `<Input htmlProps={{ type: 'email', name: 'email' }} />`       | 输入行为交给原生 input type。               |
+| 密码字段     | `<Input htmlProps={{ type: 'password', name: 'password' }} />` | 密码是单行值，遮罩行为交给原生 input type。 |
+| 筛选关键字   | `<Input htmlProps={{ placeholder: '搜索关键字' }} />`          | 筛选词仍是单行值。                          |
+| 只读值展示   | `<Input htmlProps={{ readOnly: true, value: '只读值' }} />`    | 只读是原生 input 状态。                     |
+| 无效值       | `<Input invalid htmlProps={{ value: 'bad value' }} />`         | invalid 只表达当前值无效。                  |
 
 ## 禁止场景
 
-| 场景 | 应使用 | 原因 |
-| --- | --- | --- |
-| 提交表单 | `Button` | 提交是动作，不是值编辑。 |
-| 清空输入值 | `Button` 或后续 InputGroup suffix action | 清空是动作。 |
-| 多行备注 | 后续 `Textarea` | 多行文本不是单行 input。 |
-| 下拉选择状态 | 后续 Select 类组件 | 这是离散选项选择。 |
-| 开关启用状态 | 后续 Switch/Checkbox 类组件 | 这是布尔状态选择。 |
-| 表格单元格内联编辑 | 后续 TableCellEditor/InlineInput | 这是专门交互场景。 |
-| 页面主搜索框整组 | 后续 SearchInput/InputGroup | 搜索框组合包含图标、动作和布局。 |
+| 场景               | 应使用                                   | 原因                             |
+| ------------------ | ---------------------------------------- | -------------------------------- |
+| 提交表单           | `Button`                                 | 提交是动作，不是值编辑。         |
+| 清空输入值         | `Button` 或后续 InputGroup suffix action | 清空是动作。                     |
+| 多行备注           | 后续 `Textarea`                          | 多行文本不是单行 input。         |
+| 下拉选择状态       | 后续 Select 类组件                       | 这是离散选项选择。               |
+| 开关启用状态       | 后续 Switch/Checkbox 类组件              | 这是布尔状态选择。               |
+| 表格单元格内联编辑 | 后续 TableCellEditor/InlineInput         | 这是专门交互场景。               |
+| 页面主搜索框整组   | 后续 SearchInput/InputGroup              | 搜索框组合包含图标、动作和布局。 |
 
 ## 默认形态
 
@@ -138,18 +138,18 @@ type ValidityOptions = {
 - 不提供 `suffix`。
 - 不提供 `icon`。
 
-| API       | 删除原因 |
-| --------- | -------- |
-| `variant` | 只说明视觉分支，不说明输入语义。 |
-| `ghost`   | 弱边界会降低可编辑区域识别度。 |
-| `bare`    | 内联编辑是专门场景，不属于普通 Input。 |
-| `solid`   | 强容器容易被误读成主操作入口。 |
-| `label`   | 字段名属于 Field 组合，不属于 input 本体。 |
-| `hint`    | 输入说明属于 Field 组合，不属于 input 本体。 |
-| `error`   | 错误文案属于 Field 组合，不属于 input 本体。 |
+| API       | 删除原因                                               |
+| --------- | ------------------------------------------------------ |
+| `variant` | 只说明视觉分支，不说明输入语义。                       |
+| `ghost`   | 弱边界会降低可编辑区域识别度。                         |
+| `bare`    | 内联编辑是专门场景，不属于普通 Input。                 |
+| `solid`   | 强容器容易被误读成主操作入口。                         |
+| `label`   | 字段名属于 Field 组合，不属于 input 本体。             |
+| `hint`    | 输入说明属于 Field 组合，不属于 input 本体。           |
+| `error`   | 错误文案属于 Field 组合，不属于 input 本体。           |
 | `prefix`  | 前后缀需要组合结构，后续由专门 Field/InputGroup 承载。 |
 | `suffix`  | 前后缀需要组合结构，后续由专门 Field/InputGroup 承载。 |
-| `icon`    | 图标不是单行值编辑本体。 |
+| `icon`    | 图标不是单行值编辑本体。                               |
 
 ## 定稿句
 

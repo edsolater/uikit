@@ -3,15 +3,30 @@
 import { render } from '@solidjs/web'
 import { createRoot, flush, mapArray } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
-import { createEffect, onCleanup, onMount, createRenderEffect } from './createEffect'
+import {
+  createEffect,
+  onCleanup,
+  onMount,
+  createRenderEffect,
+} from './createEffect'
 
 import { createState } from './createState/state'
 import { val } from './createState/read'
 
 for (const { name, register } of [
   { name: '作用域清理', register: onCleanup },
-  { name: '动作返回清理', register: (cleanup: () => void) => createRenderEffect(() => 0, () => cleanup) },
-  { name: '挂载返回清理', register: (cleanup: () => void) => onMount(() => cleanup) },
+  {
+    name: '动作返回清理',
+    register: (cleanup: () => void) =>
+      createRenderEffect(
+        () => 0,
+        () => cleanup,
+      ),
+  },
+  {
+    name: '挂载返回清理',
+    register: (cleanup: () => void) => onMount(() => cleanup),
+  },
 ]) {
   test(`${name}：动态删除同步释放一次，旁读不订阅删除计算，普通计算仍禁止写入`, () => {
     const shown = createState(true)
@@ -19,15 +34,24 @@ for (const { name, register } of [
     const active = createState(true)
     const events: string[] = []
     let passes = 0
-    const scope = createRoot(dispose => {
-      const rows = mapArray(() => {
-        passes++
-        return val(shown) ? [1] : []
-      }, () => {
-        register(() => { events.push('先登记'); val(incidental); active.set(false) })
-        register(() => { events.push('后登记') })
-        return 1
-      })
+    const scope = createRoot((dispose) => {
+      const rows = mapArray(
+        () => {
+          passes++
+          return val(shown) ? [1] : []
+        },
+        () => {
+          register(() => {
+            events.push('先登记')
+            val(incidental)
+            active.set(false)
+          })
+          register(() => {
+            events.push('后登记')
+          })
+          return 1
+        },
+      )
       createRenderEffect(rows, () => {})
       expect(() => active.set(false)).toThrow('REACTIVE_WRITE_IN_OWNED_SCOPE')
       return { dispose }
@@ -44,7 +68,9 @@ for (const { name, register } of [
       expect(passes).toBe(deletedPasses)
       scope.dispose()
       expect(events).toEqual(['后登记', '先登记'])
-    } finally { scope.dispose() }
+    } finally {
+      scope.dispose()
+    }
   })
 }
 
@@ -56,12 +82,14 @@ for (const { name, create } of [
     const source = createState(1)
     const incidental = createState('旁读')
     const events: string[] = []
-    const dispose = createRoot(dispose => {
-      create(source, value => {
+    const dispose = createRoot((dispose) => {
+      create(source, (value) => {
         expectTypeOf(value).toEqualTypeOf<number>()
         val(incidental)
         events.push(`执行${value}`)
-        return () => { events.push(`清理${value}`) }
+        return () => {
+          events.push(`清理${value}`)
+        }
       })
       return dispose
     })
@@ -81,8 +109,8 @@ for (const { name, create } of [
     const count = createState(1)
     const label = createState('按钮')
     const values: [number, string][] = []
-    const dispose = createRoot(dispose => {
-      create([count, label], pair => {
+    const dispose = createRoot((dispose) => {
+      create([count, label], (pair) => {
         expectTypeOf(pair).toEqualTypeOf<[number, string]>()
         values.push(pair)
       })
@@ -92,7 +120,10 @@ for (const { name, create } of [
     count.set(2)
     label.set('更新')
     flush()
-    expect(values).toEqual([[1, '按钮'], [2, '更新']])
+    expect(values).toEqual([
+      [1, '按钮'],
+      [2, '更新'],
+    ])
     dispose()
   })
 
@@ -100,12 +131,15 @@ for (const { name, create } of [
     const count = createState(1)
     const incidental = createState(0)
     const values: number[] = []
-    const dispose = createRoot(dispose => {
-      create(() => val(count) * 2, value => {
-        expectTypeOf(value).toEqualTypeOf<number>()
-        val(incidental)
-        values.push(value)
-      })
+    const dispose = createRoot((dispose) => {
+      create(
+        () => val(count) * 2,
+        (value) => {
+          expectTypeOf(value).toEqualTypeOf<number>()
+          val(incidental)
+          values.push(value)
+        },
+      )
       return dispose
     })
     flush()
@@ -122,8 +156,10 @@ for (const { name, create } of [
 test('Render Effect 的初次动作同步完成，数组值保持为单个 Source 的值', () => {
   const ids = createState(['first', 'second'])
   let current: string[] | undefined
-  const dispose = createRoot(dispose => {
-    createRenderEffect(ids, value => { current = value })
+  const dispose = createRoot((dispose) => {
+    createRenderEffect(ids, (value) => {
+      current = value
+    })
     expect(current).toBe(ids.read())
     return dispose
   })
@@ -136,8 +172,14 @@ test('Render Effect 的初次动作同步完成，数组值保持为单个 Sourc
 test('Render Effect 保留原生第三参数的初次排队控制', () => {
   const source = createState(1)
   const values: number[] = []
-  const dispose = createRoot(dispose => {
-    createRenderEffect(source, value => { values.push(value) }, { schedule: true })
+  const dispose = createRoot((dispose) => {
+    createRenderEffect(
+      source,
+      (value) => {
+        values.push(value)
+      },
+      { schedule: true },
+    )
     expect(values).toEqual([])
     return dispose
   })
@@ -183,7 +225,9 @@ test('挂载动作不收集旁读依赖，返回的清理在卸载时执行一�
     onMount(() => {
       val(incidental)
       events.push('挂载')
-      return () => { events.push('清理') }
+      return () => {
+        events.push('清理')
+      }
     })
     return <div />
   }, host)
@@ -197,12 +241,15 @@ test('挂载动作不收集旁读依赖，返回的清理在卸载时执行一�
 test('Effect 的计算、单来源与 tuple 一致接收异步完成类型', async () => {
   const request = Promise.withResolvers<number>()
   const observations: number[][] = [[], [], []]
-  const stop = createRoot(dispose => {
-    createEffect<Promise<number>>(() => request.promise, value => {
-      expectTypeOf(value).toEqualTypeOf<number>()
-      observations[0].push(value)
-    })
-    createEffect(request.promise, value => {
+  const stop = createRoot((dispose) => {
+    createEffect<Promise<number>>(
+      () => request.promise,
+      (value) => {
+        expectTypeOf(value).toEqualTypeOf<number>()
+        observations[0].push(value)
+      },
+    )
+    createEffect(request.promise, (value) => {
       expectTypeOf(value).toEqualTypeOf<number>()
       observations[1].push(value)
     })
@@ -217,15 +264,30 @@ test('Effect 的计算、单来源与 tuple 一致接收异步完成类型', asy
     expect(observations).toEqual([[], [], []])
     request.resolve(7)
     await expect.poll(() => observations).toEqual([[7], [7], [7]])
-  } finally { stop() }
+  } finally {
+    stop()
+  }
 })
 
 test('Effect 计算归一裸 thenable 交付的内层 Promise', async () => {
-  const thenable = { then(resolve: (value: Promise<number>) => unknown) { resolve(Promise.resolve(5)) } }
+  const thenable = {
+    then(resolve: (value: Promise<number>) => unknown) {
+      resolve(Promise.resolve(5))
+    },
+  }
   const values: unknown[] = []
-  const stop = createRoot(dispose => {
-    createEffect(() => thenable, value => { values.push(value) })
+  const stop = createRoot((dispose) => {
+    createEffect(
+      () => thenable,
+      (value) => {
+        values.push(value)
+      },
+    )
     return dispose
   })
-  try { await expect.poll(() => values).toEqual([5]) } finally { stop() }
+  try {
+    await expect.poll(() => values).toEqual([5])
+  } finally {
+    stop()
+  }
 })

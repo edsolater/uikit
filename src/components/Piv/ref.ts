@@ -3,12 +3,19 @@
  * ref 是命令式逃生口；声明式 DOM 能力应优先落到 class、style、htmlProps 或 on。
  */
 import { onCleanup } from '@/foundation'
-import { isFunction, toArray, type AnyFn, type MayArray } from '@edsolater/fnkit'
+import {
+  isFunction,
+  toArray,
+  type AnyFn,
+  type MayArray,
+} from '@edsolater/fnkit'
 import type { PivHTMLElement, PivTag } from './domMap'
 
 type RefFunction<T extends Element> = (element: T) => void
 
-export type PivRef<Tag extends PivTag = 'div'> = MayArray<RefFunction<PivHTMLElement<Tag>> | undefined>
+export type PivRef<Tag extends PivTag = 'div'> = MayArray<
+  RefFunction<PivHTMLElement<Tag>> | undefined
+>
 /**
  * 执行 ref 并统一回收 ref 返回的 cleanup。
  */
@@ -17,7 +24,9 @@ export function parseNormalRefs<T extends Element, Tag extends PivTag>(
   refList: PivRef<Tag>,
 ) {
   const refs = toArray(refList).filter(isFunction) as RefFunction<T>[]
-  const cleanups = refs.map((ref) => ref(element)).filter(isFunction) as unknown as AnyFn[]
+  const cleanups = refs
+    .map((ref) => ref(element))
+    .filter(isFunction) as unknown as AnyFn[]
   if (cleanups.length === 0) return
 
   onCleanup(() => {

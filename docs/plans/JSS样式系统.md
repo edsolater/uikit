@@ -18,14 +18,14 @@
 
 本轮由总监固定语义，调查员核查历史，实现工程师修复 core，总监整理 tokens 与 Button，独立审查员直接对照用户原要求审查。没有证据的满足按未满足处理。
 
-| 要求及责任主体 | 验收与证据位置 | 当前状态 |
-| --- | --- | --- |
-| Box 的 attach 连接真实生命周期；活根激活子内容，活 Box 追加内容继续输出；共享结果支持多父、多 Document | core/css-box.ts、core/css-stylesheet.ts；jss.test.ts 活追加、共享、重入及失败重试反例 | 满足 |
-| cssVariable 保存自身全局默认与状态配方，使用只触发注册，不改变 selector 作用范围 | core/css-variable.ts；jss.test.ts 同名注册/冲突，jss.browser.test.ts 全局消费者、局部覆盖、继承 | 满足 |
-| Value 与派生颜色保留对象和依赖，动态读取及字符串转换只发生在最终输出边界 | core/css-value.ts、parse-css 系列；jss.test.ts 动态返回、外部协议、嵌套派生；组合层无 parse/String | 满足 |
-| core、atoms、tokens 分清定义责任；tokens 包含实际默认与智能派生，不是字符串别名表 | tokens/color.ts 等材料；历史对照、独立审查、无静态 CSS 的 Button 和智能颜色浏览器用例 | 满足 |
-| Button 消费积木与 tokens，表达基础、solid、bare、tone、size、disabled | Button.style.ts、button.browser.test.ts；2048 单元/浏览器测试及构建 | 满足 |
-| 文件命名、注释、架构和包入口与实现一致；没有旧职责并存 | 独立规则审查、类型检查、构建、子路径实导入、旧入口搜索和架构文档核对 | 满足 |
+| 要求及责任主体                                                                                         | 验收与证据位置                                                                                     | 当前状态 |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------- |
+| Box 的 attach 连接真实生命周期；活根激活子内容，活 Box 追加内容继续输出；共享结果支持多父、多 Document | core/css-box.ts、core/css-stylesheet.ts；jss.test.ts 活追加、共享、重入及失败重试反例              | 满足     |
+| cssVariable 保存自身全局默认与状态配方，使用只触发注册，不改变 selector 作用范围                       | core/css-variable.ts；jss.test.ts 同名注册/冲突，jss.browser.test.ts 全局消费者、局部覆盖、继承    | 满足     |
+| Value 与派生颜色保留对象和依赖，动态读取及字符串转换只发生在最终输出边界                               | core/css-value.ts、parse-css 系列；jss.test.ts 动态返回、外部协议、嵌套派生；组合层无 parse/String | 满足     |
+| core、atoms、tokens 分清定义责任；tokens 包含实际默认与智能派生，不是字符串别名表                      | tokens/color.ts 等材料；历史对照、独立审查、无静态 CSS 的 Button 和智能颜色浏览器用例              | 满足     |
+| Button 消费积木与 tokens，表达基础、solid、bare、tone、size、disabled                                  | Button.style.ts、button.browser.test.ts；2048 单元/浏览器测试及构建                                | 满足     |
+| 文件命名、注释、架构和包入口与实现一致；没有旧职责并存                                                 | 独立规则审查、类型检查、构建、子路径实导入、旧入口搜索和架构文档核对                               | 满足     |
 
 发生循环引用或冲突注册时暴露错误，失败不能记为已成功。CSS 的原生覆盖是合法行为，不属于注册冲突。任一合同项缺少证据时继续施工，不以总测试数抵消。
 
@@ -61,7 +61,7 @@ cssVariable 是统一公开名称，不另外暴露 cssStateVariable 分类。�
 
 ```css
 @property --smart-color {
-  syntax: "<color>";
+  syntax: '<color>';
   inherits: true;
   initial-value: blue;
 }
@@ -87,8 +87,11 @@ property.initialValue 与根上的 value.default 是不同 CSS 位置；inherits
 
 ```ts
 selector('.Example', cssAtom.backgroundColor(cssBaseVariable.bg))
-selector('.Override', cssBaseVariable.bg.declaration('blue'),
-  cssAtom.backgroundColor(cssBaseVariable.bg))
+selector(
+  '.Override',
+  cssBaseVariable.bg.declaration('blue'),
+  cssAtom.backgroundColor(cssBaseVariable.bg),
+)
 ```
 
 第一个使用默认智能颜色；第二个有意指定局部背景值。declaration() 表达取得声明结果，不是立即执行 CSS 注册。custom property declaration 由变量提供，不通过 atom 再造入口。

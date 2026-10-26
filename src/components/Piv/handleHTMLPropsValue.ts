@@ -14,22 +14,32 @@ export type HTMLPropPrimitive = string | number | boolean | null | undefined
  * 一个 HTML 字段的单项声明。
  * 普通值直接覆盖；函数根据前一项结果计算；mergable 只有显式使用时才按空格拼接。
  */
-export type HTMLPropAtomValue<Raw = HTMLPropPrimitive> = Raw | ((prev?: Raw) => Raw) | { mergable: Raw }
+export type HTMLPropAtomValue<Raw = HTMLPropPrimitive> =
+  Raw | ((prev?: Raw) => Raw) | { mergable: Raw }
 
 /** 一个 HTML 字段的完整动态声明，支持整体 Source、值列表及列表内的单项 Source。 */
-export type HTMLPropAtom<Raw = HTMLPropPrimitive> = MayArraySource<HTMLPropAtomValue<Raw>>
+export type HTMLPropAtom<Raw = HTMLPropPrimitive> = MayArraySource<
+  HTMLPropAtomValue<Raw>
+>
 
 /**
  * 按 key 语义写入 DOM。
  * data-* 和 aria-* 固定走 attribute；其他普通 key 才允许 property 探测。
  * 动作阶段建立绑定，并返回恢复函数；新动作前或所属字段退出时恢复绑定前的 DOM 值。
  */
-export function consumeHTMLProp(element: HTMLElement, key: string, readAtom: () => HTMLPropAtom | undefined): void {
-  createRenderEffect(() => readHTMLPropAtom(readAtom()), htmlPropValue => {
-    const binding = createDOMPropBinding(element, key)
-    binding.writeValue(htmlPropValue)
-    return binding.restoreValue
-  })
+export function consumeHTMLProp(
+  element: HTMLElement,
+  key: string,
+  readAtom: () => HTMLPropAtom | undefined,
+): void {
+  createRenderEffect(
+    () => readHTMLPropAtom(readAtom()),
+    (htmlPropValue) => {
+      const binding = createDOMPropBinding(element, key)
+      binding.writeValue(htmlPropValue)
+      return binding.restoreValue
+    },
+  )
 }
 
 /**
@@ -78,7 +88,9 @@ function createAttributeBinding(element: HTMLElement, key: string) {
 
 /** property 清理时恢复绑定前由 DOM 提供的初始值。 */
 function createPropertyBinding(element: HTMLElement, key: string) {
-  const previousValue = (element as unknown as Record<string, HTMLPropPrimitive>)[key]
+  const previousValue = (
+    element as unknown as Record<string, HTMLPropPrimitive>
+  )[key]
   return {
     writeValue: (value: HTMLPropPrimitive) => {
       setPropertyValue(element, key, value)
@@ -107,10 +119,15 @@ function readHTMLPropAtom(atom: HTMLPropAtom | undefined): HTMLPropPrimitive {
  *
  * ** 不能要未申明的“智能”合并，因为按规则自动合并而非覆盖，会有额外的心智负担
  */
-function parseHTMLPropertyValue(newVal: HTMLPropAtomValue, oldPrimitive?: HTMLPropPrimitive): HTMLPropPrimitive {
+function parseHTMLPropertyValue(
+  newVal: HTMLPropAtomValue,
+  oldPrimitive?: HTMLPropPrimitive,
+): HTMLPropPrimitive {
   let newPrimitive: HTMLPropPrimitive
   if (isObject(newVal) && 'mergable' in newVal) {
-    newPrimitive = oldPrimitive ? `${oldPrimitive} ${newVal.mergable}` : newVal.mergable
+    newPrimitive = oldPrimitive
+      ? `${oldPrimitive} ${newVal.mergable}`
+      : newVal.mergable
   } else if (isFunction(newVal)) {
     newPrimitive = result(newVal, oldPrimitive)
   } else {
@@ -128,7 +145,11 @@ function isAttributeOnlyKey(key: string) {
 /**
  * attribute 的空值语义是移除，false 也按没有该 attribute 处理。
  */
-function setAttributeValue(element: HTMLElement, key: string, value: HTMLPropPrimitive) {
+function setAttributeValue(
+  element: HTMLElement,
+  key: string,
+  value: HTMLPropPrimitive,
+) {
   if (value == null || value === false) {
     element.removeAttribute(key)
     return
@@ -140,6 +161,10 @@ function setAttributeValue(element: HTMLElement, key: string, value: HTMLPropPri
 /**
  * property 空值语义交给 DOM 自身承接，不在这里模拟 attribute remove。
  */
-function setPropertyValue(element: HTMLElement, key: string, value: HTMLPropPrimitive) {
+function setPropertyValue(
+  element: HTMLElement,
+  key: string,
+  value: HTMLPropPrimitive,
+) {
   ;(element as unknown as Record<string, HTMLPropPrimitive>)[key] = value
 }

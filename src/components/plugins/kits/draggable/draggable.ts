@@ -33,7 +33,11 @@ export interface DraggableController {
 const defaultActivationDistance = 0
 const defaultActivationJump = true
 
-export const draggable = createPlugin<DraggableOptions, DraggableController, PivTag>((options) => {
+export const draggable = createPlugin<
+  DraggableOptions,
+  DraggableController,
+  PivTag
+>((options) => {
   const [enabled, enabledControl] = createToggle(!(options?.disabled ?? false))
   const dragging = createState(false)
   let cancelDrag: (() => void) | undefined

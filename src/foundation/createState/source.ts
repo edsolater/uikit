@@ -34,6 +34,8 @@ export type Source<V> = V | StateViewable<V>
 export type MayArraySource<V> = Source<MayArray<Source<V> | undefined>>
 
 /** 判断未知值是否能够稳定转换为 StateView。 */
-export function isStateViewable(value: unknown): value is StateViewable<unknown> {
+export function isStateViewable(
+  value: unknown,
+): value is StateViewable<unknown> {
   return isStateView(value) || isPromiseLike(value)
 }

@@ -4,7 +4,11 @@ import type { PivTag } from '../Piv/domMap'
 import type { PivPluginFunction } from '../Piv/plugin/runPlugin'
 import type { Plugin } from './definePlugin'
 
-export function usePlugin<Options, Controller extends object, Tag extends PivTag>(
+export function usePlugin<
+  Options,
+  Controller extends object,
+  Tag extends PivTag,
+>(
   plugin: Plugin<Options, Controller, Tag>,
   options?: Options,
 ): [plugin: PivPluginFunction<Tag>, controller: Controller] {

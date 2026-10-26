@@ -27,49 +27,49 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 
 ## 文件职责
 
-| 位置 | 职责 |
-| --- | --- |
-| condition.ts | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份 |
-| pieces/state-conditions.ts | 主体状态名称、条件登记、中央顺序与状态路径追加 |
-| key.ts | JSSKey 的创建、识别与别名解析 |
-| custom-property-names.ts | Token 与 Modification 共用的 CSS 自定义属性名称分配与避让 |
-| token/css.ts | CSS 名称、声明目标及编译准备操作；自动名称缓存不作为显式配置 |
-| token/args-parser.ts | 创建参数归一为七个固定 key |
-| operations/declare.ts | Declare 材料形状、declare 入口，Key 配对及自然材料声明 |
-| rule.ts | 声明组合、Rules 登记与句柄 |
-| content.ts | 广义 JSSContent、窄 Expression、子内容读取与表达式构造 |
-| token/index.ts | Token 创建、参数与类型的公开入口 |
-| token/core.ts | 统一定义、状态、引用和特殊输出协议 |
-| token/compilation.ts | 各位置的 CSS 准备、实际消费者及输出类别确定；与对象生命周期分离 |
-| token/declare.ts | 显式赋值基础、根据地状态发布、消费者改绑与精确撤销 |
-| token/registration.ts | CSS @property 的按需注册、替换与消费者退出 |
-| operations/modify.ts | Modify 双方协议、材料校验、领域应用策略与操作内容构造 |
-| token/modify.ts | 执行已选应用、按需修改步骤、结果消费与撤销；引用公共声明 |
-| modification.ts | Modification 的 type/detail 定义、内置颜色转译、独立声明与应用材料 |
-| css-function.ts | CSSFunction 定义主体、按需完整定义与调用 Token |
-| rule-registry.ts | 单一源规则账本与登记句柄，内部共享 |
-| css-root.ts | 三步编译调用和宿主提交 |
-| compiler/contracts.ts | 公开的节点、查询与内容访问协议；实现依赖这些声明 |
-| compiler/rules-to-style-nodes.ts | 将 Rules 展开为有序 JSSStyleNode 队列 |
-| compiler/style-nodes-to-content-nodes/compilation.ts | 组合三项编译账本，编排访问、资源发布、波末核验、聚合和输出 |
-| compiler/style-nodes-to-content-nodes/node-compilation.ts | 受影响节点队列、角色进度、输入失效、单次内容链访问、完成判断及内容节点结果 |
+| 位置                                                          | 职责                                                                               |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| condition.ts                                                  | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份     |
+| pieces/state-conditions.ts                                    | 主体状态名称、条件登记、中央顺序与状态路径追加                                     |
+| key.ts                                                        | JSSKey 的创建、识别与别名解析                                                      |
+| custom-property-names.ts                                      | Token 与 Modification 共用的 CSS 自定义属性名称分配与避让                          |
+| token/css.ts                                                  | CSS 名称、声明目标及编译准备操作；自动名称缓存不作为显式配置                       |
+| token/args-parser.ts                                          | 创建参数归一为七个固定 key                                                         |
+| operations/declare.ts                                         | Declare 材料形状、declare 入口，Key 配对及自然材料声明                             |
+| rule.ts                                                       | 声明组合、Rules 登记与句柄                                                         |
+| content.ts                                                    | 广义 JSSContent、窄 Expression、子内容读取与表达式构造                             |
+| token/index.ts                                                | Token 创建、参数与类型的公开入口                                                   |
+| token/core.ts                                                 | 统一定义、状态、引用和特殊输出协议                                                 |
+| token/compilation.ts                                          | 各位置的 CSS 准备、实际消费者及输出类别确定；与对象生命周期分离                    |
+| token/declare.ts                                              | 显式赋值基础、根据地状态发布、消费者改绑与精确撤销                                 |
+| token/registration.ts                                         | CSS @property 的按需注册、替换与消费者退出                                         |
+| operations/modify.ts                                          | Modify 双方协议、材料校验、领域应用策略与操作内容构造                              |
+| token/modify.ts                                               | 执行已选应用、按需修改步骤、结果消费与撤销；引用公共声明                           |
+| modification.ts                                               | Modification 的 type/detail 定义、内置颜色转译、独立声明与应用材料                 |
+| css-function.ts                                               | CSSFunction 定义主体、按需完整定义与调用 Token                                     |
+| rule-registry.ts                                              | 单一源规则账本与登记句柄，内部共享                                                 |
+| css-root.ts                                                   | 三步编译调用和宿主提交                                                             |
+| compiler/contracts.ts                                         | 公开的节点、查询与内容访问协议；实现依赖这些声明                                   |
+| compiler/rules-to-style-nodes.ts                              | 将 Rules 展开为有序 JSSStyleNode 队列                                              |
+| compiler/style-nodes-to-content-nodes/compilation.ts          | 组合三项编译账本，编排访问、资源发布、波末核验、聚合和输出                         |
+| compiler/style-nodes-to-content-nodes/node-compilation.ts     | 受影响节点队列、角色进度、输入失效、单次内容链访问、完成判断及内容节点结果         |
 | compiler/style-nodes-to-content-nodes/resource-compilation.ts | 内容激活、当前 Rules 身份关联、key/content实际消费合并、失效资源退出与同址完整提交 |
-| compiler/style-nodes-to-content-nodes/join.ts | 同址贡献收集、回调前输入快照、位置内容视图、连接、历史撤销与最新输出选择 |
-| compiler/ast-controller.ts | 节点变化与顺序事实、节点查询、实际内容记录与位置视图读取、声明编辑及撤销生命周期 |
-| compiler/compiled-content.ts | Join 与状态配方读取的中性位置内容视图，不重新求值原内容 |
-| compiler/content-nodes-to-css-string.ts | 惰性读取已编译内容，并按 JSSContentNode 队列顺序输出 CSS 字符串 |
-| pieces/keys | 可复用的 JSSKey 定义；创建时由 key() 登记名称与别名 |
-| pieces/conditions | 可复用的普通 Condition；条件协议由 condition.ts 定义 |
-| pieces/contents/atoms | 按用途组织的现成 Token |
-| pieces/contents/functions | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造 |
-| pieces/contents/functions/calc.ts | 保存操作数依赖，构造 CSS calc 算术 Token |
-| pieces/contents/functions/oklch.ts | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译 |
-| pieces/contents/functions/SPEC.md | JSS 内容组织工具公约与 Expression、规则及定义主体的边界 |
-| pieces/contents/atom-creators | 按结构生成阴影、动画等内容 |
-| pieces/roles | 供组件在自身选择器中赋值的共享角色 |
-| pieces/mixins | 把完整效果转换成声明组合 |
-| test | 验证 Style System 多文件协作与完整业务流程 |
-| doc | 面向使用和设计阅读的对象契约 |
+| compiler/style-nodes-to-content-nodes/join.ts                 | 同址贡献收集、回调前输入快照、位置内容视图、连接、历史撤销与最新输出选择           |
+| compiler/ast-controller.ts                                    | 节点变化与顺序事实、节点查询、实际内容记录与位置视图读取、声明编辑及撤销生命周期   |
+| compiler/compiled-content.ts                                  | Join 与状态配方读取的中性位置内容视图，不重新求值原内容                            |
+| compiler/content-nodes-to-css-string.ts                       | 惰性读取已编译内容，并按 JSSContentNode 队列顺序输出 CSS 字符串                    |
+| pieces/keys                                                   | 可复用的 JSSKey 定义；创建时由 key() 登记名称与别名                                |
+| pieces/conditions                                             | 可复用的普通 Condition；条件协议由 condition.ts 定义                               |
+| pieces/contents/atoms                                         | 按用途组织的现成 Token                                                             |
+| pieces/contents/functions                                     | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
+| pieces/contents/functions/calc.ts                             | 保存操作数依赖，构造 CSS calc 算术 Token                                           |
+| pieces/contents/functions/oklch.ts                            | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译                            |
+| pieces/contents/functions/SPEC.md                             | JSS 内容组织工具公约与 Expression、规则及定义主体的边界                            |
+| pieces/contents/atom-creators                                 | 按结构生成阴影、动画等内容                                                         |
+| pieces/roles                                                  | 供组件在自身选择器中赋值的共享角色                                                 |
+| pieces/mixins                                                 | 把完整效果转换成声明组合                                                           |
+| test                                                          | 验证 Style System 多文件协作与完整业务流程                                         |
+| doc                                                           | 面向使用和设计阅读的对象契约                                                       |
 
 Token 的公开接口见 [API 参考](doc/样式系统API参考.md)。上表列出当前源码的实际职责；对象定义见 [Token 设计](doc/Token设计.md)。
 
@@ -120,20 +120,20 @@ onCompile(context, ast) {
 
 当前Controller把这些操作交给同一编译会话；公开参数及可观察效果由[内容扩展与AST编辑.md](doc/behaviors/内容扩展与AST编辑.md)负责：
 
-| 目的 | 调用 |
-| --- | --- |
-| 设定当前内容 | `setContent(context, content)`；只改写本次通知的内容位置，不覆盖外层声明或其他消费位置；显式 undefined 使此处不输出 |
-| 查询有序节点 | `search({ key, conditionPath, productTag, resourceAddress })`；字段可省略，多个字段取交集 |
-| 判断节点存在 | `has(query)`；复用 `search` 的查询语义 |
-| 选择指定地址的声明 | `findDeclaration(query, accept)`；在可接受候选中选择有效项 |
-| 查询实际消费 | `usesContent(node, input)`；读取当前key/content实际访问，不把历史替代记录当存活消费 |
-| 插入声明 | `insert({ before, conditionPath }, [key, content], { owner, identity, productTag, resourceAddress })` |
-| 调整位置 | `move(node, { before: anchor })` 或 `move(node, { after: anchor })` |
-| 撤销节点 | `remove(node)`；失去全部来源的产物随之撤销 |
-| 只退出输出 | `remove(node, { from: 'output' })`；保留来源关系，不触发撤销清理 |
-| 登记依赖 | `depend(product, { owner })`；显式指定依赖者，成为产物来源 |
-| 解除单个依赖 | `release(product, { owner })`；只退出该来源，共享产物保留到最后来源退出 |
-| 注册撤销清理 | `onRemove(node, () => { ... })` |
+| 目的               | 调用                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| 设定当前内容       | `setContent(context, content)`；只改写本次通知的内容位置，不覆盖外层声明或其他消费位置；显式 undefined 使此处不输出 |
+| 查询有序节点       | `search({ key, conditionPath, productTag, resourceAddress })`；字段可省略，多个字段取交集                           |
+| 判断节点存在       | `has(query)`；复用 `search` 的查询语义                                                                              |
+| 选择指定地址的声明 | `findDeclaration(query, accept)`；在可接受候选中选择有效项                                                          |
+| 查询实际消费       | `usesContent(node, input)`；读取当前key/content实际访问，不把历史替代记录当存活消费                                 |
+| 插入声明           | `insert({ before, conditionPath }, [key, content], { owner, identity, productTag, resourceAddress })`               |
+| 调整位置           | `move(node, { before: anchor })` 或 `move(node, { after: anchor })`                                                 |
+| 撤销节点           | `remove(node)`；失去全部来源的产物随之撤销                                                                          |
+| 只退出输出         | `remove(node, { from: 'output' })`；保留来源关系，不触发撤销清理                                                    |
+| 登记依赖           | `depend(product, { owner })`；显式指定依赖者，成为产物来源                                                          |
+| 解除单个依赖       | `release(product, { owner })`；只退出该来源，共享产物保留到最后来源退出                                             |
+| 注册撤销清理       | `onRemove(node, () => { ... })`                                                                                     |
 
 `search` 按属性名匹配 Key、按规范化输出地址匹配条件路径；结果保持队列顺序，不改变来源。`nodes()` 是内部逃生舱，仅提供队列快照，常规查询使用 `search`。findDeclaration在指定地址按有效优先关系选择声明，可通过谓词排除加工产物。Token按指定根据地取得声明；修改步骤由Token组织。
 

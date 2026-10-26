@@ -65,18 +65,18 @@ Article 可以让另一个组件承载它的视觉形式：
 
 不传载体时，Article 接受除 `as` 之外的 `PivProps<'article'>`：
 
-| 属性 | 含义 |
-| --- | --- |
-| `children` | 正文的完整内容。 |
-| `id` | 原生 article 的 id。 |
-| `if` | 为 `false` 时正文不进入 DOM。 |
-| `class` | 附加正文的调用方身份。 |
-| `style` | 设置原生 article 的特殊样式。 |
-| `htmlProps` | 设置 article 可用的 HTML、ARIA、`data-*` 或 DOM property。 |
-| `on` | 注册原生事件；Article 本身不增加交互。 |
-| `ref` | 取得最终原生 article 节点。 |
-| `plugin`、`plugins`、`trait` | 注入 Piv 底层能力。 |
-| `shadowProps` | 上层组件转交低优先级 Piv props。 |
+| 属性                         | 含义                                                       |
+| ---------------------------- | ---------------------------------------------------------- |
+| `children`                   | 正文的完整内容。                                           |
+| `id`                         | 原生 article 的 id。                                       |
+| `if`                         | 为 `false` 时正文不进入 DOM。                              |
+| `class`                      | 附加正文的调用方身份。                                     |
+| `style`                      | 设置原生 article 的特殊样式。                              |
+| `htmlProps`                  | 设置 article 可用的 HTML、ARIA、`data-*` 或 DOM property。 |
+| `on`                         | 注册原生事件；Article 本身不增加交互。                     |
+| `ref`                        | 取得最终原生 article 节点。                                |
+| `plugin`、`plugins`、`trait` | 注入 Piv 底层能力。                                        |
+| `shadowProps`                | 上层组件转交低优先级 Piv props。                           |
 
 传入 `as={Card}` 后，Article 接受 Card 除 `as` 之外的公开属性，例如 `variant` 和 `size`。Article 占有最终原生语义，因此调用方不能再把载体改成其他标签。
 

@@ -25,10 +25,21 @@ export interface CSSFunction extends JSSContentProtocol {
 export function cssFunction(signature: string, body: Rules): CSSFunction {
   const name = signature.split('(')[0].trim()
   const definition: Rules = [[[functionDefinition(signature)], undefined, body]]
-  const subject: CSSFunction = Object.assign((...args: TokenInput[]) =>
-    token({ default: args }, { dependencies: current => [subject, ...current], toCSSString: (current, resolve) => {
-      const parts = current.map(resolve)
-      return parts.some((part) => part === undefined) ? undefined : `${name}(${parts.join(', ')})`
-    } }), { onFirstScan: () => definition })
+  const subject: CSSFunction = Object.assign(
+    (...args: TokenInput[]) =>
+      token(
+        { default: args },
+        {
+          dependencies: (current) => [subject, ...current],
+          toCSSString: (current, resolve) => {
+            const parts = current.map(resolve)
+            return parts.some((part) => part === undefined)
+              ? undefined
+              : `${name}(${parts.join(', ')})`
+          },
+        },
+      ),
+    { onFirstScan: () => definition },
+  )
   return subject
 }

@@ -3,12 +3,21 @@
  * 它负责触发器、原生 popover 容器和 anchor positioning 结构，不负责菜单协议、表单校验或业务弹层编排。
  */
 import { onMount, Show, type JSX } from '@/foundation'
-import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
+import {
+  ComponentWrapper,
+  type ComponentDescriptionProps,
+} from '@/components/ComponentWrapper/ComponentWrapper'
 import { Piv } from '../../Piv/Piv'
 import { addDefaultProps } from '../../utils/defaultProps'
-import { createVariantPropsParser, type VariantProps } from '../utils/parseVariantProps'
+import {
+  createVariantPropsParser,
+  type VariantProps,
+} from '../utils/parseVariantProps'
 import { createStatusPropsParser } from '../utils/parseStatusProps'
-import { createPopoverController, type PopoverToggleEvent } from './createPopoverController'
+import {
+  createPopoverController,
+  type PopoverToggleEvent,
+} from './createPopoverController'
 import './popover.css'
 
 /**
@@ -17,13 +26,18 @@ import './popover.css'
  * 位置确定时优先声明 top、right、bottom 或 left；只有位置会变化时才使用 placement。
  * 省略整个分组时默认显示在 bottom。
  */
-export type PopoverPlacementProps = VariantProps<'placement', 'top' | 'right' | 'bottom' | 'left'>
+export type PopoverPlacementProps = VariantProps<
+  'placement',
+  'top' | 'right' | 'bottom' | 'left'
+>
 
 export type PopoverMode = 'auto' | 'hint' | 'manual'
 export type PopoverAction = 'toggle' | 'show' | 'hide'
-type NativeHTMLPropKey = 'children' | 'class' | 'style' | 'ref' | `on${string}` | `on:${string}`
+type NativeHTMLPropKey =
+  'children' | 'class' | 'style' | 'ref' | `on${string}` | `on:${string}`
 
-export interface PopoverProps extends PopoverPlacementProps, ComponentDescriptionProps {
+export interface PopoverProps
+  extends PopoverPlacementProps, ComponentDescriptionProps {
   class?: string
   style?: JSX.CSSProperties
   trigger: JSX.Element
@@ -47,7 +61,10 @@ export interface PopoverProps extends PopoverPlacementProps, ComponentDescriptio
     | 'popovertarget'
     | 'popovertargetaction'
   >
-  surfaceProps?: Omit<JSX.HTMLAttributes<HTMLDivElement>, NativeHTMLPropKey | 'id' | 'popover'>
+  surfaceProps?: Omit<
+    JSX.HTMLAttributes<HTMLDivElement>,
+    NativeHTMLPropKey | 'id' | 'popover'
+  >
   onToggle?: (open: boolean, event: PopoverToggleEvent) => void
   onBeforeToggle?: (open: boolean, event: PopoverToggleEvent) => void
 }
@@ -77,7 +94,9 @@ export function Popover(props: PopoverProps) {
     onToggle: mergedProps.onToggle,
     onBeforeToggle: mergedProps.onBeforeToggle,
   })
-  const { statusShadowProps } = parsePopoverStatusProps({ open: controller.isOpen })
+  const { statusShadowProps } = parsePopoverStatusProps({
+    open: controller.isOpen,
+  })
 
   onMount(() => {
     if (mergedProps.defaultOpen) {
@@ -104,12 +123,14 @@ export function Popover(props: PopoverProps) {
           style={mergedProps.triggerStyle}
           ref={controller.setTriggerElement}
           htmlProps={{
-            'type': 'button',
+            type: 'button',
             'aria-haspopup': 'dialog',
             'aria-controls': controller.popoverId,
-            'aria-expanded': controller.isOpen.map((isOpen) => (isOpen ? 'true' : 'false')),
-            'popovertarget': controller.popoverId,
-            'popovertargetaction': mergedProps.triggerAction,
+            'aria-expanded': controller.isOpen.map((isOpen) =>
+              isOpen ? 'true' : 'false',
+            ),
+            popovertarget: controller.popoverId,
+            popovertargetaction: mergedProps.triggerAction,
             ...mergedProps.triggerProps,
           }}
         >
@@ -136,6 +157,8 @@ export function Popover(props: PopoverProps) {
   )
 }
 
-function joinClassName(...classNames: Array<string | false | null | undefined>) {
+function joinClassName(
+  ...classNames: Array<string | false | null | undefined>
+) {
   return classNames.filter(Boolean).join(' ')
 }

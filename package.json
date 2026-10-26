@@ -39,6 +39,7 @@
     "link:local": "bun link --no-save @edsolater/fnkit",
     "build": "vite build && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "preview": "vite preview",
+    "prettier": "bunx prettier --write .",
     "test": "bun run test:unit && bun run test:browser",
     "test:unit": "node ./node_modules/vitest/vitest.mjs run",
     "test:browser": "node ./node_modules/vitest/vitest.mjs run --config vitest.browser.config.ts",

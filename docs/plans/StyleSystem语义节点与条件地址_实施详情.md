@@ -10,14 +10,14 @@
 
 ## 实际修改
 
-| 位置 | 已落地责任 |
-| --- | --- |
-| `src/style-system/rule.ts`、`src/style-system/index.ts` | 现有登记入口接受内容对象提供的 `rewriteStyleNodes` 方法，并公开供 Rule 作者使用的类型。普通声明入口与句柄不变。 |
-| `src/style-system/compiler/style-nodes.ts` | 保存普通地址、当前受体状态、单项声明或特殊内容；定义状态已并入输出地址的 parsed 节点。 |
-| `src/style-system/compiler/compile-css.ts` | 先展开原始内容，再执行改写与 Value／Variable 求值；原特殊节点按来源身份各调度一次，执行位置取移除前的当前队列位置；残留特殊节点报错。自动定义、同址完整依赖替换和失败不返回部分字符串仍由本编译链承担。 |
-| `src/style-system/compiler/compile-variable.ts` | 局部 Variable 分支在形成单项 styleNodes 时展开，删除已无调用者的旧分支编译函数；Variable 引用、source 和状态定义仍由此文件读取。 |
-| `src/style-system/compiler/group-parsed-style-nodes.ts` | 对 parsed 节点作保守分组；旧 `records.ts` 文件名和转发入口退出。 |
-| `src/style-system/architecture.md` | 更新现役文件职责与实际编译链，不改变 Plan 或未来属性值聚合需求。 |
+| 位置                                                    | 已落地责任                                                                                                                                                                                              |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/style-system/rule.ts`、`src/style-system/index.ts` | 现有登记入口接受内容对象提供的 `rewriteStyleNodes` 方法，并公开供 Rule 作者使用的类型。普通声明入口与句柄不变。                                                                                         |
+| `src/style-system/compiler/style-nodes.ts`              | 保存普通地址、当前受体状态、单项声明或特殊内容；定义状态已并入输出地址的 parsed 节点。                                                                                                                  |
+| `src/style-system/compiler/compile-css.ts`              | 先展开原始内容，再执行改写与 Value／Variable 求值；原特殊节点按来源身份各调度一次，执行位置取移除前的当前队列位置；残留特殊节点报错。自动定义、同址完整依赖替换和失败不返回部分字符串仍由本编译链承担。 |
+| `src/style-system/compiler/compile-variable.ts`         | 局部 Variable 分支在形成单项 styleNodes 时展开，删除已无调用者的旧分支编译函数；Variable 引用、source 和状态定义仍由此文件读取。                                                                        |
+| `src/style-system/compiler/group-parsed-style-nodes.ts` | 对 parsed 节点作保守分组；旧 `records.ts` 文件名和转发入口退出。                                                                                                                                        |
+| `src/style-system/architecture.md`                      | 更新现役文件职责与实际编译链，不改变 Plan 或未来属性值聚合需求。                                                                                                                                        |
 
 `src/style-system/test/语义节点改写经正式登记输出CSS.test.ts` 验证正式 `rule()`／`rules()` 改写、多项声明单项修改、原始节点身份与当前 index、状态地址、parsed 对象输出、依赖再次进入 AST、特殊节点残留、已登记状态的空内容改写和空 Variable 分支。`src/style-system/test/语义节点改写后浏览器状态与挂载.browser.test.ts` 验证状态实时生效、普通同名声明层叠和改写失败时不提交部分 CSS。`compiler/group-parsed-style-nodes.test.ts` 验证 parsed 节点保守分组的顺序反例。
 

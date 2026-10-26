@@ -5,7 +5,12 @@
 import type { MayArray } from '@edsolater/fnkit'
 import { Show, type JSX, val, type Source } from '@/foundation'
 import { Dode, type DodeDOMProps } from './Dode'
-import { domMap, type CreatePivElement, type PivSupportedElementTag, type PivTag } from './domMap'
+import {
+  domMap,
+  type CreatePivElement,
+  type PivSupportedElementTag,
+  type PivTag,
+} from './domMap'
 import { mergePivProps, type ShadowProps } from './plugin/handlePivPlugin'
 import type { PivPlugin } from './plugin/runPlugin'
 import type { PublicCapabilityProps } from './plugin/publicCapabilities'
@@ -27,14 +32,20 @@ export interface PivProps<Tag extends PivTag = 'div'>
 }
 
 /** 对外管理入口；底层 DOM 属性契约由 Dode 提供。 */
-export function Piv<Tag extends PivSupportedElementTag = 'div'>(rawProps: PivProps<Tag>): JSX.Element {
+export function Piv<Tag extends PivSupportedElementTag = 'div'>(
+  rawProps: PivProps<Tag>,
+): JSX.Element {
   const jsxCreator = domMap[rawProps.as ?? 'div'] as CreatePivElement<Tag>
-  const createElement = () => <Dode
-    createElement={jsxCreator}
-    children={rawProps.children}
-    setup={element => mergePivProps(element, rawProps)}
-  />
-  return rawProps.if !== undefined
-    ? <Show when={val(rawProps.if)}>{createElement()}</Show>
-    : createElement()
+  const createElement = () => (
+    <Dode
+      createElement={jsxCreator}
+      children={rawProps.children}
+      setup={(element) => mergePivProps(element, rawProps)}
+    />
+  )
+  return rawProps.if !== undefined ? (
+    <Show when={val(rawProps.if)}>{createElement()}</Show>
+  ) : (
+    createElement()
+  )
 }

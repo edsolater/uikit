@@ -114,15 +114,20 @@ function preserveLayoutSize(
   anchor.style.containIntrinsicInlineSize = `${Math.max(0, naturalSize.inline - inlineEdges)}px`
   anchor.style.containIntrinsicBlockSize = `${Math.max(0, naturalSize.block - blockEdges)}px`
 
-  if (sizeChanged(sourceSize.inline, naturalSize.inline)) anchor.style.inlineSize = 'auto'
-  if (sizeChanged(sourceSize.block, naturalSize.block)) anchor.style.blockSize = 'auto'
+  if (sizeChanged(sourceSize.inline, naturalSize.inline))
+    anchor.style.inlineSize = 'auto'
+  if (sizeChanged(sourceSize.block, naturalSize.block))
+    anchor.style.blockSize = 'auto'
 }
 
 /**
  * 读取元素没有接受 Grid/Flex 剩余空间时的尺寸。
  * 测量只在当前同步任务中临时改变自身排布输入，浏览器绘制前即完整恢复。
  */
-function readNaturalSize(source: HTMLElement, sourceSize: LogicalSize): LogicalSize {
+function readNaturalSize(
+  source: HTMLElement,
+  sourceSize: LogicalSize,
+): LogicalSize {
   const ownerWindow = source.ownerDocument.defaultView!
   const parent = source.parentElement
   if (!parent) return sourceSize
@@ -156,7 +161,7 @@ function measureSize(
   source: HTMLElement,
   declarations: Record<string, string>,
 ): LogicalSize {
-  const previousDeclarations = Object.keys(declarations).map(property => ({
+  const previousDeclarations = Object.keys(declarations).map((property) => ({
     property,
     value: source.style.getPropertyValue(property),
     priority: source.style.getPropertyPriority(property),
@@ -222,7 +227,10 @@ function resolveBorderBoxSize(
 
 function addBoxEdges(size: number, boxSizing: string, edges: string[]): number {
   if (boxSizing === 'border-box') return size
-  return edges.reduce((total, edge) => total + (readResolvedSize(edge) ?? 0), size)
+  return edges.reduce(
+    (total, edge) => total + (readResolvedSize(edge) ?? 0),
+    size,
+  )
 }
 
 function readEdges(edges: string[]): number {

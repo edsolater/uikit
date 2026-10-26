@@ -22,7 +22,10 @@ export type VariantProps<GroupName extends string, Candidate extends string> = {
   [Name in GroupName]?: Source<Candidate | undefined>
 }
 
-export interface VariantPropsGroup<GroupName extends string = string, Candidate extends string = string> {
+export interface VariantPropsGroup<
+  GroupName extends string = string,
+  Candidate extends string = string,
+> {
   groupName: GroupName
   candidates: Candidate[]
 
@@ -30,11 +33,15 @@ export interface VariantPropsGroup<GroupName extends string = string, Candidate 
    * 根据解析结果补充当前 Variant 的 Piv props，只在解析组件 props 时执行一次。
    * 后续变化由传入的 Source 自身继续驱动，不会再次执行 effect。
    */
-  effect?: (selectedVariant: Source<Candidate | undefined>) => ShadowProps<any> | void
+  effect?: (
+    selectedVariant: Source<Candidate | undefined>,
+  ) => ShadowProps<any> | void
 }
 
 export type VariantDetails<Groups extends VariantPropsGroup[]> = {
-  [Group in Groups[number] as Group['groupName']]: Source<Group['candidates'][number] | undefined>
+  [Group in Groups[number] as Group['groupName']]: Source<
+    Group['candidates'][number] | undefined
+  >
 }
 
 /**
@@ -43,20 +50,30 @@ export type VariantDetails<Groups extends VariantPropsGroup[]> = {
  * 确定描述词优先用于阅读；不定字段一旦声明便接管整个分组，即使当前值是 undefined 也不会回落。
  * 每个分组最多产生一个 Variant；多个确定描述词同时声明时只警告，不中断组件运行。
  */
-export function createVariantPropsParser<const Groups extends VariantPropsGroup[]>(
+export function createVariantPropsParser<
+  const Groups extends VariantPropsGroup[],
+>(
   groups: Groups,
   mapping?: Record<string, Record<string, string | undefined>>,
 ) {
   return function parseVariantProps(props: object) {
     const detailsRecord: Record<string, Source<string | undefined>> = {}
-    const variantHTMLProps: Record<`data-${string}`, Source<string | undefined>> = {}
+    const variantHTMLProps: Record<
+      `data-${string}`,
+      Source<string | undefined>
+    > = {}
     const variantEffectShadowProps: ShadowProps<any>[] = []
 
     for (const group of groups) {
       const selectedVariant = parseVariantGroup(props, group)
       detailsRecord[group.groupName] = selectedVariant
-      const groupMapping = mapping && Object.hasOwn(mapping, group.groupName) ? mapping[group.groupName] : undefined
-      variantHTMLProps[`data-${group.groupName}`] = groupMapping ? mapVariantProps(selectedVariant, groupMapping) : selectedVariant
+      const groupMapping =
+        mapping && Object.hasOwn(mapping, group.groupName)
+          ? mapping[group.groupName]
+          : undefined
+      variantHTMLProps[`data-${group.groupName}`] = groupMapping
+        ? mapVariantProps(selectedVariant, groupMapping)
+        : selectedVariant
 
       // effect 只建立一次附加声明；返回 props 内的 Source 会由 Piv 持续消费。
       const effectShadowProps = group.effect?.(selectedVariant)
@@ -75,28 +92,37 @@ export function createVariantPropsParser<const Groups extends VariantPropsGroup[
   }
 }
 
-function parseVariantGroup(props: object, group: VariantPropsGroup): Source<string | undefined> {
+function parseVariantGroup(
+  props: object,
+  group: VariantPropsGroup,
+): Source<string | undefined> {
   const propRecord = props as Record<string, unknown>
   const hasGroupProp = group.groupName in props
-  const declaredCandidates = group.candidates.filter((candidate) => candidate in props)
+  const declaredCandidates = group.candidates.filter(
+    (candidate) => candidate in props,
+  )
 
   if (hasGroupProp && declaredCandidates.length > 0) {
     console.warn(
       `[UIKit/VariantProps] “${group.groupName}”分组输入冲突：同时声明了不定字段“${group.groupName}”和确定描述词` +
-      `${formatCandidates(declaredCandidates)}。“${group.groupName}”接管整个分组，确定描述词被忽略。`,
+        `${formatCandidates(declaredCandidates)}。“${group.groupName}”接管整个分组，确定描述词被忽略。`,
     )
   } else if (declaredCandidates.length > 1) {
     console.warn(
       `[UIKit/VariantProps] “${group.groupName}”分组输入冲突：同时声明了多个确定描述词${formatCandidates(declaredCandidates)}。` +
-      `解析器仍按 candidates 的定义顺序采用第一个当前成立的描述词，请只保留一个。`,
+        `解析器仍按 candidates 的定义顺序采用第一个当前成立的描述词，请只保留一个。`,
     )
   }
 
-  if (hasGroupProp) return derive(propRecord, () => val(propRecord[group.groupName] as Source<string | undefined>))
+  if (hasGroupProp)
+    return derive(propRecord, () =>
+      val(propRecord[group.groupName] as Source<string | undefined>),
+    )
 
   return derive(propRecord, () => {
     return group.candidates.find(
-      (candidate) => val(propRecord[candidate] as Source<boolean | undefined>) === true,
+      (candidate) =>
+        val(propRecord[candidate] as Source<boolean | undefined>) === true,
     )
   })
 }

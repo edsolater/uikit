@@ -3,8 +3,18 @@ import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../contents/atom-creators/list'
 import { $minHeight } from '../keys/size'
-import { $border, $borderColor, $borderRadius, $cornerShape } from '../keys/border'
-import { $outlineColor, $outlineOffset, $outlineStyle, $outlineWidth } from '../keys/outline'
+import {
+  $border,
+  $borderColor,
+  $borderRadius,
+  $cornerShape,
+} from '../keys/border'
+import {
+  $outlineColor,
+  $outlineOffset,
+  $outlineStyle,
+  $outlineWidth,
+} from '../keys/outline'
 
 /** 盒子尺寸配置。 */
 export interface SizeMixinOptions {
@@ -32,7 +42,12 @@ export interface BoundaryMixinOptions {
 
 /** Mixin：空间边界。 */
 export const boundary = (options: BoundaryMixinOptions = {}): Declarations => [
-  [$border, Array.isArray(options.border) ? valueSequence(...options.border) : options.border],
+  [
+    $border,
+    Array.isArray(options.border)
+      ? valueSequence(...options.border)
+      : options.border,
+  ],
   [$borderColor, options.borderColor],
   [$borderRadius, options.radius],
   [$cornerShape, options.cornerShape],

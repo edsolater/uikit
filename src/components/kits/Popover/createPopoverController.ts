@@ -43,7 +43,9 @@ function readPopoverOpenState(element?: HTMLDivElement) {
   return element?.matches(':popover-open') ?? false
 }
 
-export function createPopoverController(options: CreatePopoverControllerOptions = {}): PopoverController {
+export function createPopoverController(
+  options: CreatePopoverControllerOptions = {},
+): PopoverController {
   const { popoverId, triggerId } = createPopoverIdentity()
   const [isOpen, isOpenControl] = createToggle(false)
   const [popoverElement, setPopoverElement] = createDomRef<HTMLDivElement>()
@@ -58,7 +60,7 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
     isOpenControl.turnOff()
   }
 
-  createEffect(popoverElement, element => {
+  createEffect(popoverElement, (element) => {
     if (!element) {
       return
     }
@@ -67,7 +69,9 @@ export function createPopoverController(options: CreatePopoverControllerOptions 
 
     const handleToggle = (event: Event) => {
       const toggleEvent = event as PopoverToggleEvent
-      const nextOpen = toggleEvent.newState ? toggleEvent.newState === 'open' : readPopoverOpenState(element)
+      const nextOpen = toggleEvent.newState
+        ? toggleEvent.newState === 'open'
+        : readPopoverOpenState(element)
 
       syncOpenState(nextOpen)
       options.onToggle?.(nextOpen, toggleEvent)

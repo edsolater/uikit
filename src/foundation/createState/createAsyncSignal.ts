@@ -1,5 +1,11 @@
 import { isFunction } from '@edsolater/fnkit'
-import { createMemo, createSignal, type SignalOptions, type MemoOptions, type SourceAccessor } from 'solid-js'
+import {
+  createMemo,
+  createSignal,
+  type SignalOptions,
+  type MemoOptions,
+  type SourceAccessor,
+} from 'solid-js'
 import { isPromiseLike } from './promise-like'
 
 export type AsyncValue<T> = T | PromiseLike<T>
@@ -70,7 +76,10 @@ export function createAsyncSignal<T>(
   }
   const [readSource, setSource] = isFunction(initialSource)
     ? createSignal<AsyncValue<T>>(initialSource, sourceOptions)
-    : createSignal<AsyncValue<T>>(initialSource as Exclude<AsyncValue<T>, Function>, sourceOptions)
+    : createSignal<AsyncValue<T>>(
+        initialSource as Exclude<AsyncValue<T>, Function>,
+        sourceOptions,
+      )
 
   // 原生 setter 可以保存 Promise；结果层统一展开 thenable，交给 Solid 等待和传播错误。
   const accessor = createMemo<T>(() => {
@@ -78,11 +87,13 @@ export function createAsyncSignal<T>(
     return isPromiseLike(source) ? Promise.resolve(source) : source
   }, resultOptions)
 
-  const setter: AsyncSignalSetter<T> = update => {
-    setSource(previous => {
+  const setter: AsyncSignalSetter<T> = (update) => {
+    setSource((previous) => {
       if (!isFunction(update)) return update
       // 只接续已经存在的异步值，不保存尚无初始结果时的更新命令。
-      return isPromiseLike(previous) ? Promise.resolve(previous).then(update) : update(previous)
+      return isPromiseLike(previous)
+        ? Promise.resolve(previous).then(update)
+        : update(previous)
     })
   }
 

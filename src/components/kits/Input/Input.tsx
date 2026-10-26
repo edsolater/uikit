@@ -8,12 +8,19 @@
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
-import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
+import {
+  ComponentWrapper,
+  type ComponentDescriptionProps,
+} from '@/components/ComponentWrapper/ComponentWrapper'
 import { createStatusPropsParser } from '../utils/parseStatusProps'
 import './Input.css'
-import { createInputValidity, type InputValidityProps } from './createInputValidity'
+import {
+  createInputValidity,
+  type InputValidityProps,
+} from './createInputValidity'
 
-export interface InputProps extends PivProps<'input'>, InputValidityProps, ComponentDescriptionProps {}
+export interface InputProps
+  extends PivProps<'input'>, InputValidityProps, ComponentDescriptionProps {}
 
 const parseInputStatusProps = createStatusPropsParser({
   candidates: ['invalid'],
@@ -30,12 +37,23 @@ export function Input(props: InputProps) {
   const { statusShadowProps } = parseInputStatusProps({ invalid: isInvalid })
 
   return (
-    <ComponentWrapper componentName="Input" description={props.description} descriptionDisplay={props.descriptionDisplay} defaultDescription="编辑单行内容">
+    <ComponentWrapper
+      componentName="Input"
+      description={props.description}
+      descriptionDisplay={props.descriptionDisplay}
+      defaultDescription="编辑单行内容"
+    >
       <Piv
         as="input"
         shadowProps={[props, statusShadowProps]}
         class="Input"
-        htmlProps={{ type: 'text', autocorrect: 'off', spellcheck: 'false', autocomplete: 'off', autocapitalize: 'none' }}
+        htmlProps={{
+          type: 'text',
+          autocorrect: 'off',
+          spellcheck: 'false',
+          autocomplete: 'off',
+          autocapitalize: 'none',
+        }}
       />
     </ComponentWrapper>
   )

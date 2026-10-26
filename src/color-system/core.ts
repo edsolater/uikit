@@ -30,10 +30,13 @@ export interface ColorMaterial {
 }
 
 /** 固定比例，或根据材料自身色值与合成环境计算比例；结果须在 0～1。 */
-export type EnvironmentSensitivity = number | ((base: Readonly<OKLCH>, environment: Readonly<ColorEnvironment>) => number)
+export type EnvironmentSensitivity =
+  | number
+  | ((base: Readonly<OKLCH>, environment: Readonly<ColorEnvironment>) => number)
 
 /** 固定明度目标，或根据材料当前色值与本次环境求目标；结果须为有限数值。 */
-export type EnvironmentLightnessTarget = number | ((base: OKLCH, environment: ColorEnvironment) => number)
+export type EnvironmentLightnessTarget =
+  number | ((base: OKLCH, environment: ColorEnvironment) => number)
 
 /** 材料的环境感知规则；每个通道都可读取自身全部 OKLCH 信息。 */
 export interface ColorEnvironmentSensitive {
@@ -62,32 +65,57 @@ export interface WeightedEnvironment {
 export type EnvironmentInput = ColorEnvironment | WeightedEnvironment
 
 /** 合成指定通道的环境贡献，缺省通道不参与权重。 */
-function combineEnvironment(inputs: readonly EnvironmentInput[]): ColorEnvironment {
-  const contributions = inputs.map(input => 'environment' in input ? input : { environment: input, weight: 1 })
-  if (contributions.some(item => !Number.isFinite(item.weight) || item.weight < 0)) {
+function combineEnvironment(
+  inputs: readonly EnvironmentInput[],
+): ColorEnvironment {
+  const contributions = inputs.map((input) =>
+    'environment' in input ? input : { environment: input, weight: 1 },
+  )
+  if (
+    contributions.some(
+      (item) => !Number.isFinite(item.weight) || item.weight < 0,
+    )
+  ) {
     throw new RangeError('环境权重必须是非负有限数值')
   }
-  if (contributions.length > 0 && !contributions.some(item => item.weight > 0)) {
+  if (
+    contributions.length > 0 &&
+    !contributions.some((item) => item.weight > 0)
+  ) {
     throw new RangeError('本次环境至少需要一项正权重')
   }
   const result: ColorEnvironment = { tint: {}, influence: {} }
   for (const group of ['tint', 'influence'] as const) {
     for (const channel of ['lightness', 'chroma', 'hue'] as const) {
-      const provided = contributions.filter(item => item.environment[group]?.[channel] !== undefined && item.weight > 0)
+      const provided = contributions.filter(
+        (item) =>
+          item.environment[group]?.[channel] !== undefined && item.weight > 0,
+      )
       if (provided.length === 0) continue
-      const maximum = provided.reduce((maximum, item) => Math.max(maximum, item.weight), 0)
-      const weights = provided.map(item => item.weight / maximum)
+      const maximum = provided.reduce(
+        (maximum, item) => Math.max(maximum, item.weight),
+        0,
+      )
+      const weights = provided.map((item) => item.weight / maximum)
       const total = weights.reduce((sum, weight) => sum + weight, 0)
       if (group === 'tint' && channel === 'hue') {
         result.tint!.hue = mix({
-          colors: provided.map<ColorMaterial>(item => ({
-            base: { lightness: 0.5, chroma: 0.1, hue: item.environment.tint!.hue! },
+          colors: provided.map<ColorMaterial>((item) => ({
+            base: {
+              lightness: 0.5,
+              chroma: 0.1,
+              hue: item.environment.tint!.hue!,
+            },
             purpose: 'content',
           })),
           weights,
         }).base.hue
       } else {
-        result[group]![channel] = provided.reduce((sum, item, index) => sum + item.environment[group]![channel]! * (weights[index] / total), 0)
+        result[group]![channel] = provided.reduce(
+          (sum, item, index) =>
+            sum + item.environment[group]![channel]! * (weights[index] / total),
+          0,
+        )
       }
     }
   }
@@ -112,7 +140,10 @@ function combineEnvironment(inputs: readonly EnvironmentInput[]): ColorEnvironme
  * const changed = applyEnvironment(color, { environment: dark, weight: 3 }, { environment: warm, weight: 1 })
  * const changedAgain = applyEnvironment(changed, dark)
  */
-export function applyEnvironment<T extends ColorMaterial>(material: T, ...environments: EnvironmentInput[]): T {
+export function applyEnvironment<T extends ColorMaterial>(
+  material: T,
+  ...environments: EnvironmentInput[]
+): T {
   if (environments.length === 0) return material
   const { base, environmentSensitivities } = material
   const combined = combineEnvironment(environments)
@@ -120,14 +151,24 @@ export function applyEnvironment<T extends ColorMaterial>(material: T, ...enviro
   for (const channel of ['lightness', 'chroma', 'hue'] as const) {
     const environmentTarget = combined.tint?.[channel]
     if (environmentTarget === undefined) continue
-    const response = evaluateSensitivity(environmentSensitivities?.[channel], base, combined)
+    const response = evaluateSensitivity(
+      environmentSensitivities?.[channel],
+      base,
+      combined,
+    )
     if (response === 0) continue
-    const target = channel === 'lightness'
-      ? evaluateLightnessTarget(material.environmentTargets?.lightness, base, combined) ?? environmentTarget
-      : environmentTarget
+    const target =
+      channel === 'lightness'
+        ? (evaluateLightnessTarget(
+            material.environmentTargets?.lightness,
+            base,
+            combined,
+          ) ?? environmentTarget)
+        : environmentTarget
     let difference = target - base[channel]
-    if (channel === 'hue') difference = ((difference % 360 + 540) % 360) - 180
-    result[channel] += difference * (combined.influence?.[channel] ?? 1) * response
+    if (channel === 'hue') difference = (((difference % 360) + 540) % 360) - 180
+    result[channel] +=
+      difference * (combined.influence?.[channel] ?? 1) * response
   }
 
   return {
@@ -141,8 +182,13 @@ export function applyEnvironment<T extends ColorMaterial>(material: T, ...enviro
 }
 
 /** 根据材料自身色值与合成环境求感知比例；省略为 0，无效结果报错。 */
-export function evaluateSensitivity(rule: EnvironmentSensitivity | undefined, base: Readonly<OKLCH>, environment: Readonly<ColorEnvironment>): number {
-  const response = typeof rule === 'function' ? rule(base, environment) : rule ?? 0
+export function evaluateSensitivity(
+  rule: EnvironmentSensitivity | undefined,
+  base: Readonly<OKLCH>,
+  environment: Readonly<ColorEnvironment>,
+): number {
+  const response =
+    typeof rule === 'function' ? rule(base, environment) : (rule ?? 0)
   if (!Number.isFinite(response) || response < 0 || response > 1) {
     throw new RangeError('环境感知比例必须是 0～1 之间的有限数值')
   }
@@ -150,10 +196,17 @@ export function evaluateSensitivity(rule: EnvironmentSensitivity | undefined, ba
 }
 
 /** 读取本次环境明度与材料目标；缺环境明度时不调用规则，无效目标报错。 */
-export function evaluateLightnessTarget(rule: EnvironmentLightnessTarget | undefined,
-  base: OKLCH, environment: ColorEnvironment): number | undefined {
+export function evaluateLightnessTarget(
+  rule: EnvironmentLightnessTarget | undefined,
+  base: OKLCH,
+  environment: ColorEnvironment,
+): number | undefined {
   if (environment.tint?.lightness === undefined) return undefined
-  const target = typeof rule === 'function' ? rule(base, environment) : rule ?? environment.tint.lightness
-  if (!Number.isFinite(target)) throw new RangeError('材料环境明度目标必须是有限数值')
+  const target =
+    typeof rule === 'function'
+      ? rule(base, environment)
+      : (rule ?? environment.tint.lightness)
+  if (!Number.isFinite(target))
+    throw new RangeError('材料环境明度目标必须是有限数值')
   return target
 }

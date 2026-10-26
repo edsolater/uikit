@@ -13,7 +13,13 @@ const beforeLabelPlugin = createPivPlugin(({ insertBefore }) => {
 })
 
 const appendRedDotPlugin = createPivPlugin(({ appendChild }) => {
-  appendChild(<Piv as="span" class="structure-red-dot" htmlProps={{ 'aria-hidden': 'true' }} />)
+  appendChild(
+    <Piv
+      as="span"
+      class="structure-red-dot"
+      htmlProps={{ 'aria-hidden': 'true' }}
+    />,
+  )
 })
 
 const wrapManagerPlugin = createPivPlugin(({ wrapOutside }) => {
@@ -47,7 +53,9 @@ export function PivStructureExample() {
 
         <Piv class="structure-editor" plugins={wrapManagerPlugin}>
           <Piv class="structure-editor-title">wrap 管理器</Piv>
-          <Piv class="structure-editor-body">主体仍然是这个 Piv，外层由插件接管布局边界。</Piv>
+          <Piv class="structure-editor-body">
+            主体仍然是这个 Piv，外层由插件接管布局边界。
+          </Piv>
         </Piv>
 
         <Piv class="structure-case" plugins={selfMeasurePlugin}>

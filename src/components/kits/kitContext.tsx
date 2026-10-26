@@ -4,12 +4,14 @@ import { createContext, useContext } from '@/foundation'
 
 type KitName = string
 
-export type KitContextNode = { isRoot: true } | {
-  isRoot: false
-  name: KitName
-  parent: KitContextNode
-  payloads: AnyRecord
-}
+export type KitContextNode =
+  | { isRoot: true }
+  | {
+      isRoot: false
+      name: KitName
+      parent: KitContextNode
+      payloads: AnyRecord
+    }
 
 /** 宿主 App 直接提供自己的根节点；未提供时沿用原生 Context 错误。 */
 export const KitContextRoot = createContext<KitContextNode>()
@@ -18,9 +20,18 @@ export const KitContextRoot = createContext<KitContextNode>()
  * 为后代提供当前组件节点，初始化时连接父级。
  * 用法与设计见 [KitContext 规范](./kitContext.spec.md)。
  */
-export const KitContext = (props: { children?: any; name: KitName; payloads: AnyRecord }) => {
+export const KitContext = (props: {
+  children?: any
+  name: KitName
+  payloads: AnyRecord
+}) => {
   const parent = useContext(KitContextRoot)
-  const node: KitContextNode = { isRoot: false, name: props.name, parent, payloads: props.payloads }
+  const node: KitContextNode = {
+    isRoot: false,
+    name: props.name,
+    parent,
+    payloads: props.payloads,
+  }
   return <KitContextRoot value={node}>{props.children}</KitContextRoot>
 }
 
@@ -33,7 +44,12 @@ export function useKitContext<Payloads = AnyRecord>(
 ): Payloads | undefined {
   let node = useContext(KitContextRoot)
   while (!node.isRoot) {
-    if (!query || ('target' in query ? node.name === query.target : query.payloadKey in node.payloads)) {
+    if (
+      !query ||
+      ('target' in query
+        ? node.name === query.target
+        : query.payloadKey in node.payloads)
+    ) {
       return node.payloads
     }
     node = node.parent

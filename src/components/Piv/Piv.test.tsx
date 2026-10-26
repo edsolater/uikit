@@ -3,7 +3,15 @@ import { flush, createRoot, createSignal } from 'solid-js'
 
 import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
-import { createContext, createState, isStateView, onCleanup, onMount, useContext, val } from '@/foundation'
+import {
+  createContext,
+  createState,
+  isStateView,
+  onCleanup,
+  onMount,
+  useContext,
+  val,
+} from '@/foundation'
 import { Piv } from './Piv'
 import { createPivPlugin } from './plugin/helpers'
 import { mergePivProps } from './plugin/handlePivPlugin'
@@ -12,21 +20,54 @@ describe('Piv 生命周期', () => {
   test('研究图表和表单使用相同的 Piv 原生元素契约', () => {
     const host = document.createElement('div')
     let canvas: HTMLCanvasElement | undefined
-    const dispose = render(() => <>
-      <Piv as="canvas" ref={element => { canvas = element }} htmlProps={{ width: 320, height: 180 }} />
-      <Piv as="fieldset"><Piv as="legend">范围</Piv></Piv>
-      <Piv as="small">说明</Piv><Piv as="strong">成绩</Piv>
-      <Piv as="dl"><Piv as="dt">名称</Piv><Piv as="dd">内容</Piv></Piv>
-      <Piv as="ol"><Piv as="li">项目</Piv></Piv><Piv as="br" />
-    </>, host)
+    const dispose = render(
+      () => (
+        <>
+          <Piv
+            as="canvas"
+            ref={(element) => {
+              canvas = element
+            }}
+            htmlProps={{ width: 320, height: 180 }}
+          />
+          <Piv as="fieldset">
+            <Piv as="legend">范围</Piv>
+          </Piv>
+          <Piv as="small">说明</Piv>
+          <Piv as="strong">成绩</Piv>
+          <Piv as="dl">
+            <Piv as="dt">名称</Piv>
+            <Piv as="dd">内容</Piv>
+          </Piv>
+          <Piv as="ol">
+            <Piv as="li">项目</Piv>
+          </Piv>
+          <Piv as="br" />
+        </>
+      ),
+      host,
+    )
     flush()
     expect(canvas).toBe(host.querySelector('canvas'))
     expect(canvas?.width).toBe(320)
     expect(canvas?.height).toBe(180)
-    for (const tag of ['canvas', 'fieldset', 'legend', 'small', 'strong', 'dl', 'dt', 'dd', 'ol', 'br']) {
+    for (const tag of [
+      'canvas',
+      'fieldset',
+      'legend',
+      'small',
+      'strong',
+      'dl',
+      'dt',
+      'dd',
+      'ol',
+      'br',
+    ]) {
       expect(host.querySelector(tag)?.localName).toBe(tag)
     }
-    expect(host.querySelector('fieldset')?.querySelector('legend')?.textContent).toBe('范围')
+    expect(
+      host.querySelector('fieldset')?.querySelector('legend')?.textContent,
+    ).toBe('范围')
     dispose()
     expect(host.childElementCount).toBe(0)
   })
@@ -37,16 +78,59 @@ describe('Piv 生命周期', () => {
     const direction = createState<'ascending' | 'descending'>('ascending')
     const numeric = createState(true)
     const changes: string[] = []
-    const dispose = render(() => <>
-      <Piv as="select" htmlProps={{ value: selected }}
-        on={{ change: ({ element }) => { const value = (element as HTMLSelectElement).value; changes.push(value); selected.set(value) } }}>
-        <Piv as="option" htmlProps={{ value: 'first', selected: () => val(selected) === 'first' }}>甲</Piv>
-        <Piv as="option" htmlProps={{ value: 'second', selected: () => val(selected) === 'second' }}>乙</Piv>
-      </Piv>
-      <Piv as="table"><Piv as="thead"><Piv as="tr">
-        <Piv as="th" htmlProps={{ scope: 'col', 'aria-sort': direction, 'data-numeric': () => val(numeric) ? 'true' : undefined }}>月租</Piv>
-      </Piv></Piv></Piv>
-    </>, host)
+    const dispose = render(
+      () => (
+        <>
+          <Piv
+            as="select"
+            htmlProps={{ value: selected }}
+            on={{
+              change: ({ element }) => {
+                const value = (element as HTMLSelectElement).value
+                changes.push(value)
+                selected.set(value)
+              },
+            }}
+          >
+            <Piv
+              as="option"
+              htmlProps={{
+                value: 'first',
+                selected: () => val(selected) === 'first',
+              }}
+            >
+              甲
+            </Piv>
+            <Piv
+              as="option"
+              htmlProps={{
+                value: 'second',
+                selected: () => val(selected) === 'second',
+              }}
+            >
+              乙
+            </Piv>
+          </Piv>
+          <Piv as="table">
+            <Piv as="thead">
+              <Piv as="tr">
+                <Piv
+                  as="th"
+                  htmlProps={{
+                    scope: 'col',
+                    'aria-sort': direction,
+                    'data-numeric': () => (val(numeric) ? 'true' : undefined),
+                  }}
+                >
+                  月租
+                </Piv>
+              </Piv>
+            </Piv>
+          </Piv>
+        </>
+      ),
+      host,
+    )
     flush()
     const select = host.querySelector('select')!
     const header = host.querySelector('th')!
@@ -81,14 +165,31 @@ describe('Piv 生命周期', () => {
     const observations: string[] = []
     const plugin = createPivPlugin(({ element }) => {
       val(incidental)
-      observations.push(`plugin:${element.childElementCount}:${useContext(Context)}`)
-      onMount(() => { observations.push(`mount:${element.childElementCount}`) })
+      observations.push(
+        `plugin:${element.childElementCount}:${useContext(Context)}`,
+      )
+      onMount(() => {
+        observations.push(`mount:${element.childElementCount}`)
+      })
       return undefined
     })
-    const dispose = render(() => <Context value="provided"><Piv if={visible} plugin={plugin}
-      ref={element => { val(incidental); observations.push(`ref:${element.childElementCount}`) }}>
-      <span>child</span>
-    </Piv></Context>, host)
+    const dispose = render(
+      () => (
+        <Context value="provided">
+          <Piv
+            if={visible}
+            plugin={plugin}
+            ref={(element) => {
+              val(incidental)
+              observations.push(`ref:${element.childElementCount}`)
+            }}
+          >
+            <span>child</span>
+          </Piv>
+        </Context>
+      ),
+      host,
+    )
     flush()
     const element = host.firstElementChild
     expect(observations).toEqual(['plugin:0:provided', 'ref:0', 'mount:1'])
@@ -99,19 +200,40 @@ describe('Piv 生命周期', () => {
     dispose()
   })
 
-  test.each(['input', 'textarea', 'img', 'iframe'] as const)('%s 保留不插入 children 的模板契约', tag => {
-    const host = document.createElement('div')
-    const dispose = render(() => <Piv as={tag}><span>ignored</span></Piv>, host)
-    expect(host.firstElementChild?.localName).toBe(tag)
-    expect(host.firstElementChild?.childNodes).toHaveLength(0)
-    dispose()
-  })
+  test.each(['input', 'textarea', 'img', 'iframe'] as const)(
+    '%s 保留不插入 children 的模板契约',
+    (tag) => {
+      const host = document.createElement('div')
+      const dispose = render(
+        () => (
+          <Piv as={tag}>
+            <span>ignored</span>
+          </Piv>
+        ),
+        host,
+      )
+      expect(host.firstElementChild?.localName).toBe(tag)
+      expect(host.firstElementChild?.childNodes).toHaveLength(0)
+      dispose()
+    },
+  )
 
   test('外部 ref 拿到已提交初始字段的真实 DOM', () => {
     const host = document.createElement('div')
     let observed: unknown
-    const dispose = render(() => <Piv as="input" style={{ color: 'red' }} htmlProps={{ value: 'ready', disabled: true }}
-      ref={element => { observed = [element.style.color, element.value, element.disabled] }} />, host)
+    const dispose = render(
+      () => (
+        <Piv
+          as="input"
+          style={{ color: 'red' }}
+          htmlProps={{ value: 'ready', disabled: true }}
+          ref={(element) => {
+            observed = [element.style.color, element.value, element.disabled]
+          }}
+        />
+      ),
+      host,
+    )
     expect(observed).toEqual(['red', 'ready', true])
     dispose()
   })
@@ -121,10 +243,21 @@ describe('Piv 生命周期', () => {
     const oldValue = createState('red')
     const newValue = createState('red')
     const style = createState({ color: oldValue })
-    const htmlProps = createState<{ value?: typeof oldValue }>({ value: oldValue })
+    const htmlProps = createState<{ value?: typeof oldValue }>({
+      value: oldValue,
+    })
     const className = createState('shared old')
-    const dispose = render(() => <Piv as="input" style={style} htmlProps={htmlProps}
-      class={['shared', className]} />, host)
+    const dispose = render(
+      () => (
+        <Piv
+          as="input"
+          style={style}
+          htmlProps={htmlProps}
+          class={['shared', className]}
+        />
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLInputElement
     style.set({ color: newValue })
     htmlProps.set({ value: newValue })
@@ -162,10 +295,24 @@ describe('Piv 生命周期', () => {
       onCleanup(() => cleaned.push(element))
       return undefined
     })
-    const dispose = render(() => <Piv if={visible} class={className} plugin={plugin}
-      on={{ click: () => { clicks += 1 } }} ref={element => {
-        element.setAttribute('data-ref', 'ready')
-      }} />, host)
+    const dispose = render(
+      () => (
+        <Piv
+          if={visible}
+          class={className}
+          plugin={plugin}
+          on={{
+            click: () => {
+              clicks += 1
+            },
+          }}
+          ref={(element) => {
+            element.setAttribute('data-ref', 'ready')
+          }}
+        />
+      ),
+      host,
+    )
     const oldElement = host.firstElementChild as HTMLElement
     expect(initialized).toEqual([oldElement])
     expect(oldElement.dataset.ref).toBe('ready')
@@ -209,10 +356,19 @@ describe('Piv children', () => {
     let cleaned = 0
     function Child() {
       initialized += 1
-      onCleanup(() => { cleaned += 1 })
+      onCleanup(() => {
+        cleaned += 1
+      })
       return <span>child</span>
     }
-    const dispose = render(() => <Piv if={visible}><Child /></Piv>, host)
+    const dispose = render(
+      () => (
+        <Piv if={visible}>
+          <Child />
+        </Piv>
+      ),
+      host,
+    )
     expect([initialized, cleaned]).toEqual([0, 0])
     visible.set(true)
     flush()
@@ -295,9 +451,11 @@ describe('Piv Source 属性', () => {
     const previous = createState('direct')
     const next = createState('direct')
     const [readSource, setSource] = createSignal(previous)
-    const { merged, dispose } = createRoot(dispose => ({
+    const { merged, dispose } = createRoot((dispose) => ({
       merged: mergePivProps(document.createElement('div'), {
-        get id() { return readSource() },
+        get id() {
+          return readSource()
+        },
         shadowProps: { id: shadow },
         plugin: createPivPlugin(() => ({ id: pluginId })),
       }),
@@ -381,7 +539,9 @@ describe('Piv Source 属性', () => {
       ),
       host,
     )
-    const [pluginElement, shadowElement, directElement, arrayElement] = [...host.children] as HTMLElement[]
+    const [pluginElement, shadowElement, directElement, arrayElement] = [
+      ...host.children,
+    ] as HTMLElement[]
 
     expect(pluginElement.id).toBe('from-plugin')
     expect(shadowElement.id).toBe('from-shadow-props')
@@ -474,7 +634,9 @@ describe('Piv Source 属性', () => {
   test('嵌套 plugin、shadowProps 与直接动态 class 统一进入 class 消费层', () => {
     const host = document.createElement('div')
     let setValue!: (value: number) => void
-    const nestedPlugin = createPivPlugin(() => ({ class: 'from-nested-plugin' }))
+    const nestedPlugin = createPivPlugin(() => ({
+      class: 'from-nested-plugin',
+    }))
     const plugin = createPivPlugin(() => ({
       class: 'from-plugin',
       plugins: nestedPlugin,
@@ -520,7 +682,9 @@ describe('Piv style 属性', () => {
     function DynamicStyle() {
       const [color, updateColor] = createSignal('red')
       setColor = updateColor
-      return <Piv style={{ color: color(), 'background-color': backgroundColor }} />
+      return (
+        <Piv style={{ color: color(), 'background-color': backgroundColor }} />
+      )
     }
 
     const dispose = render(() => <DynamicStyle />, host)
@@ -543,10 +707,12 @@ describe('Piv style 属性', () => {
 
   test('plugin 与直接 props 各自提供 StateView 列表时仍按字段优先级合并', () => {
     const host = document.createElement('div')
-    const pluginStyles = createState([{ color: 'green', 'background-color': 'black' }])
-    const directStyles = createState<Array<{ color?: string; 'border-color'?: string }>>([
-      { color: 'red' },
+    const pluginStyles = createState([
+      { color: 'green', 'background-color': 'black' },
     ])
+    const directStyles = createState<
+      Array<{ color?: string; 'border-color'?: string }>
+    >([{ color: 'red' }])
     const plugin = createPivPlugin(() => ({ style: pluginStyles }))
     const dispose = render(
       () => <Piv plugins={plugin} style={directStyles} />,
@@ -578,9 +744,9 @@ describe('Piv htmlProps 属性', () => {
       setActive = updateActive
       return (
         <Piv
-          htmlProps={active()
-            ? { 'data-active': 'yes' }
-            : { 'data-id': 'base' }}
+          htmlProps={
+            active() ? { 'data-active': 'yes' } : { 'data-id': 'base' }
+          }
         />
       )
     }

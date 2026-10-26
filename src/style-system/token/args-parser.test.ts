@@ -3,12 +3,23 @@ import { expect, test, vi } from 'vitest'
 import { parseTokenArgs } from './args-parser'
 import { token, type TokenData } from './core'
 
-const keys = ['default', 'name', 'state', 'address', 'registration', 'onFirstScan', 'compileWaveIndex'].sort()
+const keys = [
+  'default',
+  'name',
+  'state',
+  'address',
+  'registration',
+  'onFirstScan',
+  'compileWaveIndex',
+].sort()
 
 test('五种创建写法使用同一七字段结果，缺省地址和名称不提前补齐', () => {
   const inputs = [
-    parseTokenArgs(2, 'amount'), parseTokenArgs(2), parseTokenArgs({ default: 2 }),
-    parseTokenArgs({ default: 2, hover: 4 }), parseTokenArgs(2, { name: 'amount', state: { hover: 4 } }),
+    parseTokenArgs(2, 'amount'),
+    parseTokenArgs(2),
+    parseTokenArgs({ default: 2 }),
+    parseTokenArgs({ default: 2, hover: 4 }),
+    parseTokenArgs(2, { name: 'amount', state: { hover: 4 } }),
   ]
   for (const parsed of inputs) {
     expect(Object.keys(parsed).sort()).toEqual(keys)
@@ -22,15 +33,22 @@ test('五种创建写法使用同一七字段结果，缺省地址和名称不�
   expect(inputs[3].state).toEqual(inputs[4].state)
 })
 
-test.each(['2px', 0, false, null, undefined])('无状态值 %s 的直接输入与 default 定义归一等价', value => {
-  const direct = parseTokenArgs(value)
-  const definition = parseTokenArgs({ default: value })
-  expect(definition).toEqual(direct)
-  expect(definition.state).toBeUndefined()
-})
+test.each(['2px', 0, false, null, undefined])(
+  '无状态值 %s 的直接输入与 default 定义归一等价',
+  (value) => {
+    const direct = parseTokenArgs(value)
+    const definition = parseTokenArgs({ default: value })
+    expect(definition).toEqual(direct)
+    expect(definition.state).toBeUndefined()
+  },
+)
 
 test('default 中的格式数据保留原对象，不再解析它自己的字段', () => {
-  const data = { duration: 200, default: '格式数据字段', state: { label: '数据内容' } }
+  const data = {
+    duration: 200,
+    default: '格式数据字段',
+    state: { label: '数据内容' },
+  }
   const parsed = parseTokenArgs({ default: data })
   expect(parsed.default).toBe(data)
   expect(parsed.state).toBeUndefined()
@@ -49,7 +67,9 @@ test('可坍缩协议对象和延迟生产器继续作为直接值，不按普�
   expect(producer).not.toHaveBeenCalled()
 })
 
-test.each([{ size: '2px' }, { hover: '4px' }, [], [1, 2]].map(input => ({ input })))('普通裸数据 $input 在参数入口拒绝，要求明确 default', ({ input }) => {
+test.each(
+  [{ size: '2px' }, { hover: '4px' }, [], [1, 2]].map((input) => ({ input })),
+)('普通裸数据 $input 在参数入口拒绝，要求明确 default', ({ input }) => {
   expect(() => parseTokenArgs(input as never)).toThrow('default')
   expect(() => token(input as never)).toThrow('default')
 })
@@ -84,20 +104,38 @@ if (false) {
 
   const data = { duration: 200 }
   // @ts-expect-error 基础数据的 formatter 不自动赋予状态普通对象相同的内容能力。
-  token({ default: data, hover: data }, { toCSSString: value => `${value.duration}ms` })
-  token({ default: data }, { toCSSString: value => `${value.duration}ms` })
+  token(
+    { default: data, hover: data },
+    { toCSSString: (value) => `${value.duration}ms` },
+  )
+  token({ default: data }, { toCSSString: (value) => `${value.duration}ms` })
   token({ default: ['2px', '4px'] })
   type Duration = { duration: number }
-  token<Duration>({ default: { duration: 200 }, hover: '400ms' }, { toCSSString: value => `${value.duration}ms` })
-  token<Duration>({ default: { duration: 200 } }, { state: { hover: '400ms' }, toCSSString: value => `${value.duration}ms` })
+  token<Duration>(
+    { default: { duration: 200 }, hover: '400ms' },
+    { toCSSString: (value) => `${value.duration}ms` },
+  )
+  token<Duration>(
+    { default: { duration: 200 } },
+    {
+      state: { hover: '400ms' },
+      toCSSString: (value) => `${value.duration}ms`,
+    },
+  )
   parseTokenArgs(2).default.toFixed()
   const protocolWithDefault = { default: '内部数据', toCSSString: () => '4px' }
   token(protocolWithDefault).default.toCSSString()
   parseTokenArgs(protocolWithDefault).default.toCSSString()
 
-  class Output { toCSSString() { return '2px' } }
+  class Output {
+    toCSSString() {
+      return '2px'
+    }
+  }
   class InheritedOutput extends Output {}
-  const callable = Object.assign(() => '未调用的函数体', { toCSSString: () => '4px' })
+  const callable = Object.assign(() => '未调用的函数体', {
+    toCSSString: () => '4px',
+  })
   token(new InheritedOutput())
   token(callable)
   token(() => token('2px'))
@@ -106,14 +144,29 @@ if (false) {
 test('配置状态覆盖简写同名项，显式 undefined 保留且不修改输入', () => {
   const input = { default: undefined, hover: 2, active: 3 }
   const state = { hover: undefined, focus: 4 }
-  expect(parseTokenArgs(input, { state })).toMatchObject({ default: undefined, state: { hover: undefined, active: 3, focus: 4 } })
+  expect(parseTokenArgs(input, { state })).toMatchObject({
+    default: undefined,
+    state: { hover: undefined, active: 3, focus: 4 },
+  })
   expect(input).toEqual({ default: undefined, hover: 2, active: 3 })
   expect(state).toEqual({ hover: undefined, focus: 4 })
 })
 
 test('特殊协议方法不进入七字段，基础与状态回调不提前执行', () => {
-  const base = vi.fn(() => 2), hover = vi.fn(() => 4), onFirstScan = vi.fn(), onCompile = vi.fn()
-  const parsed = parseTokenArgs({ default: base, hover }, { onFirstScan, onCompile, dependencies: [], toCSSString: () => '2', compileWaveIndex: 3 })
+  const base = vi.fn(() => 2),
+    hover = vi.fn(() => 4),
+    onFirstScan = vi.fn(),
+    onCompile = vi.fn()
+  const parsed = parseTokenArgs(
+    { default: base, hover },
+    {
+      onFirstScan,
+      onCompile,
+      dependencies: [],
+      toCSSString: () => '2',
+      compileWaveIndex: 3,
+    },
+  )
   expect(Object.keys(parsed).sort()).toEqual(keys)
   expect(parsed.default).toBe(base)
   expect(parsed.state?.hover).toBe(hover)
@@ -124,7 +177,12 @@ test('特殊协议方法不进入七字段，基础与状态回调不提前执�
 })
 
 test('嵌套 Token 是完整表达式引用，不被误认为 default 状态简写', () => {
-  const source = token(2, { name: 'source', address: '.Source', state: { hover: 4 }, registration: { syntax: '<number>', inherits: false, initialValue: 1 } })
+  const source = token(2, {
+    name: 'source',
+    address: '.Source',
+    state: { hover: 4 },
+    registration: { syntax: '<number>', inherits: false, initialValue: 1 },
+  })
   const nested = parseTokenArgs(source)
   expect(nested.default).toBe(source)
   expect(nested.name).toBeUndefined()

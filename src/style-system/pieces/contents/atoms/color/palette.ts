@@ -23,7 +23,10 @@ export const paper: ColorMaterial = {
     hue: 0.04,
   },
   // 亮环境接近白纸，暗环境保持接近黑色的深灰。
-  environmentTargets: { lightness: (_base, environment) => 0.18 + 0.8 * environment.tint!.lightness! },
+  environmentTargets: {
+    lightness: (_base, environment) =>
+      0.18 + 0.8 * environment.tint!.lightness!,
+  },
   purpose: 'surface',
 }
 
@@ -38,7 +41,10 @@ export const ink: ColorMaterial = {
     hue: 0.02,
   },
   // 亮环境用可辨识深灰，暗环境转为清晰浅色。
-  environmentTargets: { lightness: (_base, environment) => 0.88 - 0.56 * environment.tint!.lightness! },
+  environmentTargets: {
+    lightness: (_base, environment) =>
+      0.88 - 0.56 * environment.tint!.lightness!,
+  },
   purpose: 'content',
 }
 

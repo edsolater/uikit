@@ -59,12 +59,16 @@ export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   options: StateViewOptions<Awaited<R>, U>,
 ): StateView<Awaited<U>>
-export function stateView<R>(sourceOrValue: PromiseLike<R>): StateView<Awaited<R>>
+export function stateView<R>(
+  sourceOrValue: PromiseLike<R>,
+): StateView<Awaited<R>>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   map: (value: Awaited<R>) => U | StateView<U>,
 ): StateView<Awaited<U>>
-export function stateView<V>(sourceOrValue: Source<V> | (() => V)): StateView<Awaited<V>>
+export function stateView<V>(
+  sourceOrValue: Source<V> | (() => V),
+): StateView<Awaited<V>>
 export function stateView<V, U>(
   sourceOrValue: Source<V> | (() => V),
   options: StateViewOptions<Awaited<V>, U>,
@@ -73,8 +77,13 @@ export function stateView<V, U>(
   sourceOrValue: Source<V> | (() => V),
   map: (value: Awaited<V>) => U | StateView<U>,
 ): StateView<Awaited<U>>
-export function stateView(sourceOrValue: any, optionsOrMap?: any): StateView<any> {
-  const options = isFunction(optionsOrMap) ? { map: optionsOrMap } : optionsOrMap
+export function stateView(
+  sourceOrValue: any,
+  optionsOrMap?: any,
+): StateView<any> {
+  const options = isFunction(optionsOrMap)
+    ? { map: optionsOrMap }
+    : optionsOrMap
 
   let view: StateView
   if (isPromiseLike(sourceOrValue)) {

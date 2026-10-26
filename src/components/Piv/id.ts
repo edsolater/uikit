@@ -6,8 +6,11 @@ import type { MayArray, ID } from '@edsolater/fnkit'
 import { createRenderEffect, type Source } from '@/foundation'
 
 /** 响应式维护 Piv 根 DOM 的唯一 id；空值表示当前没有 id。 */
-export function consumeId(element: HTMLElement, idSource: Source<MayArray<ID> | undefined>) {
-  createRenderEffect(idSource, id => {
+export function consumeId(
+  element: HTMLElement,
+  idSource: Source<MayArray<ID> | undefined>,
+) {
+  createRenderEffect(idSource, (id) => {
     if (id === undefined) {
       element.removeAttribute('id')
     } else {

@@ -24,10 +24,10 @@ KitContext 初始化时读取当前父级、name 与 payloads 引用，创建稳
 
 useKitContext 从当前可见节点向上查询，返回第一个匹配节点的 payloads：
 
-| 调用 | 匹配条件 |
-| --- | --- |
-| `useKitContext()` | 最近的普通节点 |
-| `useKitContext({ target })` | name 与 target 相等 |
+| 调用                            | 匹配条件                      |
+| ------------------------------- | ----------------------------- |
+| `useKitContext()`               | 最近的普通节点                |
+| `useKitContext({ target })`     | name 与 target 相等           |
 | `useKitContext({ payloadKey })` | payloadKey 存在于 payloads 中 |
 
 查询到 App 根即停止；根不参与业务数据匹配，未找到返回 undefined。读取必须处于原生上下文作用域内；查询未命中与缺少提供者是不同情况。
@@ -38,8 +38,15 @@ useKitContext 从当前可见节点向上查询，返回第一个匹配节点的
 
 ```tsx
 import {
-  KitContext, KitContextRoot, Piv, createEffect, createState, useKitContext, val,
-  type KitContextNode, type StateView,
+  KitContext,
+  KitContextRoot,
+  Piv,
+  createEffect,
+  createState,
+  useKitContext,
+  val,
+  type KitContextNode,
+  type StateView,
 } from '@edsolater/uikit'
 
 interface CardPayloads {
@@ -49,27 +56,39 @@ interface CardPayloads {
 function App() {
   const rootNode: KitContextNode = { isRoot: true }
   const text = createState('账户')
-  return <KitContextRoot value={rootNode}>
-    <Card><Title text={text} /></Card>
-  </KitContextRoot>
+  return (
+    <KitContextRoot value={rootNode}>
+      <Card>
+        <Title text={text} />
+      </Card>
+    </KitContextRoot>
+  )
 }
 
 function Card(props: { children?: any }) {
   const title = createState<string | undefined>(undefined)
-  const payloads: CardPayloads = { setTitle: text => { title.set(text) } }
-  return <KitContext name="Card" payloads={payloads}>
-    <Piv class="card">
-      <h2>{val(title, '未设置标题')}</h2>
-      {props.children}
-    </Piv>
-  </KitContext>
+  const payloads: CardPayloads = {
+    setTitle: (text) => {
+      title.set(text)
+    },
+  }
+  return (
+    <KitContext name="Card" payloads={payloads}>
+      <Piv class="card">
+        <h2>{val(title, '未设置标题')}</h2>
+        {props.children}
+      </Piv>
+    </KitContext>
+  )
 }
 
 function Title(props: { text: StateView<string> }) {
   const card = useKitContext<CardPayloads>({ target: 'Card' })
-  createEffect(props.text, text => {
+  createEffect(props.text, (text) => {
     card?.setTitle(text.trim())
-    return () => { card?.setTitle(undefined) }
+    return () => {
+      card?.setTitle(undefined)
+    }
   })
   return <span>{val(props.text)}</span>
 }

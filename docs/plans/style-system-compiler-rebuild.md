@@ -18,17 +18,17 @@
 
 共享规则仍从 [AI Rules Agent 入口](../../../ai-rules/AGENTS.md)进入。以下是本任务采用的具体约束，不改变项目 AGENTS 的统一入口设计。
 
-| 依据 | 本次必须做到 | 验收证据 |
-| --- | --- | --- |
-| [AI Rules 执行](../../../ai-rules/rules/Agent-AI-Rules执行.md)、[理解监察](../../../ai-rules/rules/Agent-理解监察.md)、[禁止绕过需求](../../../ai-rules/rules/Agent-禁止绕过需求.md) | 完整需求逐项对应改动与检查；新纠正不能抹掉未冲突要求 | 本文验收表逐项有结果，不能只汇报最近改的 Key |
-| [第一性原理](../../../ai-rules/rules/Code-第一性原理.md)、[代码抽象](../../../ai-rules/rules/Code-代码抽象.md) | 增加机制前先证明必要；旧实现、旧测试和方便编程都不是需求 | 每项新增协议、类型、状态说明对应需求，以及直接做法为何不足 |
-| [领域边界](../../../ai-rules/rules/Code-领域边界.md)、[公共协议归属](../../../ai-rules/rules/Code-公共协议归属.md)、[代码结构划分](../../../ai-rules/archive/2026-09-20-code-split/Code-代码结构划分.md) | Key、Value、Variable、CSS Function、Rule 各负其责；先核对文件职责再改 | 文件头与真实依赖一致，无两套真相、重复入口 |
-| [代码编写](../../../ai-rules/rules/Code-代码编写.md)、[代码命名](../../../ai-rules/rules/Code-代码命名.md)、[readonly 约束](../../../ai-rules/rules/Code-readonly约束.md) | 英文代码标识符、中文说明；不新增 readonly、Readonly、ReadonlyArray 或 as const | 检查全部变更，而非只检查核心函数 |
-| [代码注释](../../../ai-rules/rules/Code-代码注释.md) | 文件职责、类型概念、函数黑盒说明简洁准确；不复述实现过程 | 逐项复查新增和修改的注释，如 `Mixin：盒子尺寸`；必要契约另写，不堆描述 |
-| [代码可读性](../../../ai-rules/rules/Code-代码可读性.md)、[阅读路径连续性](../../../ai-rules/rules/Code-代码阅读路径连续性.md)、[代码可维护性](../../../ai-rules/rules/Code-代码可维护性.md) | 主流程可顺读；不靠别名、转发层和迁移 switch 假装变清楚 | 对照改前与改后的实际调用链，说明减少了哪些跨层判断 |
-| [代码修改](../../../ai-rules/rules/Code-代码修改.md)、[代码维护](../../../ai-rules/rules/Code-代码维护.md)、[完整性判别](../../../ai-rules/rules/Code-代码完整性判别.md)、[修改验收](../../../ai-rules/rules/Code-代码修改验收.md) | 删除旧责任必须说明由谁接管；功能、质量、完整性分别验收 | 类型检查、相关测试、责任核对均通过；遗留问题单独列出 |
-| [让文本更易读](../../../ai-rules/rules/Document-让文本更易读.md)、[技术文档质量](../../../ai-rules/rules/Document-技术文档质量.md)、[设计文档内容](../../../ai-rules/rules/Agent-设计文档内容.md) | 结论、依据、建议、待验证项分开；文档不提前宣称落地 | 回读正文、核对链接与代码，不把计划写成完成报告 |
-| [Git 操作权限](../../../ai-rules/rules/Agent-Git操作权限.md) | 不提交；操作前区分用户修改、暂存草案与本次修改 | 最终说明实际 Git 操作与保留状态 |
+| 依据                                                                                                                                                                                                                               | 本次必须做到                                                                   | 验收证据                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [AI Rules 执行](../../../ai-rules/rules/Agent-AI-Rules执行.md)、[理解监察](../../../ai-rules/rules/Agent-理解监察.md)、[禁止绕过需求](../../../ai-rules/rules/Agent-禁止绕过需求.md)                                               | 完整需求逐项对应改动与检查；新纠正不能抹掉未冲突要求                           | 本文验收表逐项有结果，不能只汇报最近改的 Key                           |
+| [第一性原理](../../../ai-rules/rules/Code-第一性原理.md)、[代码抽象](../../../ai-rules/rules/Code-代码抽象.md)                                                                                                                     | 增加机制前先证明必要；旧实现、旧测试和方便编程都不是需求                       | 每项新增协议、类型、状态说明对应需求，以及直接做法为何不足             |
+| [领域边界](../../../ai-rules/rules/Code-领域边界.md)、[公共协议归属](../../../ai-rules/rules/Code-公共协议归属.md)、[代码结构划分](../../../ai-rules/archive/2026-09-20-code-split/Code-代码结构划分.md)                           | Key、Value、Variable、CSS Function、Rule 各负其责；先核对文件职责再改          | 文件头与真实依赖一致，无两套真相、重复入口                             |
+| [代码编写](../../../ai-rules/rules/Code-代码编写.md)、[代码命名](../../../ai-rules/rules/Code-代码命名.md)、[readonly 约束](../../../ai-rules/rules/Code-readonly约束.md)                                                          | 英文代码标识符、中文说明；不新增 readonly、Readonly、ReadonlyArray 或 as const | 检查全部变更，而非只检查核心函数                                       |
+| [代码注释](../../../ai-rules/rules/Code-代码注释.md)                                                                                                                                                                               | 文件职责、类型概念、函数黑盒说明简洁准确；不复述实现过程                       | 逐项复查新增和修改的注释，如 `Mixin：盒子尺寸`；必要契约另写，不堆描述 |
+| [代码可读性](../../../ai-rules/rules/Code-代码可读性.md)、[阅读路径连续性](../../../ai-rules/rules/Code-代码阅读路径连续性.md)、[代码可维护性](../../../ai-rules/rules/Code-代码可维护性.md)                                       | 主流程可顺读；不靠别名、转发层和迁移 switch 假装变清楚                         | 对照改前与改后的实际调用链，说明减少了哪些跨层判断                     |
+| [代码修改](../../../ai-rules/rules/Code-代码修改.md)、[代码维护](../../../ai-rules/rules/Code-代码维护.md)、[完整性判别](../../../ai-rules/rules/Code-代码完整性判别.md)、[修改验收](../../../ai-rules/rules/Code-代码修改验收.md) | 删除旧责任必须说明由谁接管；功能、质量、完整性分别验收                         | 类型检查、相关测试、责任核对均通过；遗留问题单独列出                   |
+| [让文本更易读](../../../ai-rules/rules/Document-让文本更易读.md)、[技术文档质量](../../../ai-rules/rules/Document-技术文档质量.md)、[设计文档内容](../../../ai-rules/rules/Agent-设计文档内容.md)                                  | 结论、依据、建议、待验证项分开；文档不提前宣称落地                             | 回读正文、核对链接与代码，不把计划写成完成报告                         |
+| [Git 操作权限](../../../ai-rules/rules/Agent-Git操作权限.md)                                                                                                                                                                       | 不提交；操作前区分用户修改、暂存草案与本次修改                                 | 最终说明实际 Git 操作与保留状态                                        |
 
 项目写作与实现还遵循 [Plan 写法](../how-to-write-plan.md)、[Guide 写法](../how-to-write-guide.md)。涉及 Button 时读取[样式文件写法](../style/样式文件写法.md)并对照组件定义；定位调用链时核对 [Architecture](../../Architecture.md)。
 
@@ -90,20 +90,20 @@ Variable 的自动默认定义、显式赋值、注册与依赖各确定一个�
 
 测试既检查必要的 CSS 输出，也用浏览器检查关键级联与变量行为。实际执行结果见文末。
 
-| 要求 | 必测案例与通过条件 | 实测结果与位置 |
-| --- | --- | --- |
-| 三项 Rule、Key 一份 | 单项、批量、嵌套登记采用同一表示；undefined 声明不产生内容 | 通过：compile-css 的三项 Rule、批量登记、缺省内容用例 |
-| Key 不管理 CSS 覆盖 | padding → padding-left → padding、重复同名属性及未知原生属性；原始顺序保留，浏览器结果符合 CSS 级联 | 通过：compile-css 的 Key 用例；Root 浏览器的简写、无效后值用例 |
-| 统一取值优先级 | A 先注册、B 后注册；两个 Value 为 `(1,A:2,B:5)`、`(1,A:7,B:11)`，AB 下乘积为 55；交换参数、反转分支书写顺序仍为 55 | 通过：compile-css 与 Root 浏览器的 AB 用例，计算结果 55 |
-| 缺分支与组合 | 某 Value 无 B 时保留已激活 A；无匹配才 default。AB、BA、AAB 同一组合；container 与交互条件可组合 | 通过：subject-condition-composition 的优先级、路径规范、容器组合用例 |
-| 任意嵌套智能值 | `colorMix(v1, colorMix(v2, v3))`，v1 无 active、v2/v3 有 active；再并列消费 v2/v3，不相互丢分支或污染地址 | 通过：compile-css 的缺 active 混色；compile-value 的嵌套与兄弟表达式用例 |
-| Variable 隔离 | 动态比例改变 Custom Property 的赋值；消费 colorMix 不因该变量多状态而复制。变量赋值内部的 Value 只展开变量声明 | 通过：compile-value、subject-condition-composition 与 Root 浏览器的动态比例用例 |
-| 自动定义克制 | 未使用不生成；重复使用、不同消费地址、默认与显式覆盖、注册、更新和卸载均保持正确；业务侧无需收集定义 | 通过：compile-css 的依赖、句柄、默认赋值用例；Root 浏览器的卸载用例 |
-| 真正延迟 | 构造 CSS Function 不调用生成方法；编译才解析、生成。嵌套函数、undefined、循环引用均有明确行为，不产生 NaN 或对象字符串 | 通过：compile-css 的调用计数、缺省输入、循环引用用例 |
-| 核心不知道具体语法 | colorMix、calc、字体、过渡、阴影、动画保留行为；新增一个测试用内容函数无需修改核心分支 | 通过：compile-css 的复合内容、匿名内容函数用例；语法仅在各定义处 |
-| 路径与依赖边界 | 普通路径有序且保留重复；Subject 去重排序后嵌套；Rules 定义体和按需资源可用，但 Value 不承载普通 Rules | 通过：subject-condition-composition 的路径用例；compile-css 的结构嵌套与完整依赖用例 |
-| 挂载与输出 | 同目标条件共享不产生不必要的重复层级；交错声明不被重排改变级联；挂载失败不损坏已有有效输出 | 通过：css-records 的相邻路径用例；Root 浏览器的交错顺序和失败保留用例 |
-| Button 回归 | 默认、tone、variant、size、hover、active、disabled、focus-visible；JS 配方意图保留，类型与实际样式均正确 | 通过：button.browser 的四项回归；Button.style.ts 未改 |
+| 要求                | 必测案例与通过条件                                                                                                     | 实测结果与位置                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 三项 Rule、Key 一份 | 单项、批量、嵌套登记采用同一表示；undefined 声明不产生内容                                                             | 通过：compile-css 的三项 Rule、批量登记、缺省内容用例                                |
+| Key 不管理 CSS 覆盖 | padding → padding-left → padding、重复同名属性及未知原生属性；原始顺序保留，浏览器结果符合 CSS 级联                    | 通过：compile-css 的 Key 用例；Root 浏览器的简写、无效后值用例                       |
+| 统一取值优先级      | A 先注册、B 后注册；两个 Value 为 `(1,A:2,B:5)`、`(1,A:7,B:11)`，AB 下乘积为 55；交换参数、反转分支书写顺序仍为 55     | 通过：compile-css 与 Root 浏览器的 AB 用例，计算结果 55                              |
+| 缺分支与组合        | 某 Value 无 B 时保留已激活 A；无匹配才 default。AB、BA、AAB 同一组合；container 与交互条件可组合                       | 通过：subject-condition-composition 的优先级、路径规范、容器组合用例                 |
+| 任意嵌套智能值      | `colorMix(v1, colorMix(v2, v3))`，v1 无 active、v2/v3 有 active；再并列消费 v2/v3，不相互丢分支或污染地址              | 通过：compile-css 的缺 active 混色；compile-value 的嵌套与兄弟表达式用例             |
+| Variable 隔离       | 动态比例改变 Custom Property 的赋值；消费 colorMix 不因该变量多状态而复制。变量赋值内部的 Value 只展开变量声明         | 通过：compile-value、subject-condition-composition 与 Root 浏览器的动态比例用例      |
+| 自动定义克制        | 未使用不生成；重复使用、不同消费地址、默认与显式覆盖、注册、更新和卸载均保持正确；业务侧无需收集定义                   | 通过：compile-css 的依赖、句柄、默认赋值用例；Root 浏览器的卸载用例                  |
+| 真正延迟            | 构造 CSS Function 不调用生成方法；编译才解析、生成。嵌套函数、undefined、循环引用均有明确行为，不产生 NaN 或对象字符串 | 通过：compile-css 的调用计数、缺省输入、循环引用用例                                 |
+| 核心不知道具体语法  | colorMix、calc、字体、过渡、阴影、动画保留行为；新增一个测试用内容函数无需修改核心分支                                 | 通过：compile-css 的复合内容、匿名内容函数用例；语法仅在各定义处                     |
+| 路径与依赖边界      | 普通路径有序且保留重复；Subject 去重排序后嵌套；Rules 定义体和按需资源可用，但 Value 不承载普通 Rules                  | 通过：subject-condition-composition 的路径用例；compile-css 的结构嵌套与完整依赖用例 |
+| 挂载与输出          | 同目标条件共享不产生不必要的重复层级；交错声明不被重排改变级联；挂载失败不损坏已有有效输出                             | 通过：css-records 的相邻路径用例；Root 浏览器的交错顺序和失败保留用例                |
+| Button 回归         | 默认、tone、variant、size、hover、active、disabled、focus-visible；JS 配方意图保留，类型与实际样式均正确               | 通过：button.browser 的四项回归；Button.style.ts 未改                                |
 
 ## 执行验证与完成门槛
 
@@ -142,14 +142,14 @@ git diff --cached --check
 
 ### 实际职责变化
 
-| 区域 | 原来的问题 | 当前责任与理解链 |
-| --- | --- | --- |
-| Rule / Root | 地址与内容重复 Key，按地址吞掉原生前声明 | 登记三项 Rule；句柄只操作自己的登记，原生覆盖交给 CSS |
-| Value / Variable | Variable 是 Value 的特殊 expression | 两者独立继承 Valuable；内容求值遇到变量，只交给变量编译取得引用与自身定义 |
-| CSS Function | 核心 switch 识别每种语法，输入拍平后重建 | 定义处保存输入并提供函数；Compiler 的 read 统一解析智能输入，不知道颜色、字体或阴影语法 |
-| 条件 | 先取候选再同址覆盖，出现 35 / 22；Rule 名称过早变成普通 header | 保留名称身份；普通路径与激活集合分开，每个集合下统一取值，AB 为 55 |
-| 挂载 | 为合并区域移动声明，扫描 header 判定资源种类 | 原生记录顺序输出；完整依赖按提供的 Rule 地址接管，不按语法种类猜测 |
-| Mixin | Key 解读 padding、字体、过渡等配置 | 效果配置归 Mixin；复合 CSS 内容归对应生成函数。Button 配方未改 |
+| 区域             | 原来的问题                                                     | 当前责任与理解链                                                                        |
+| ---------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Rule / Root      | 地址与内容重复 Key，按地址吞掉原生前声明                       | 登记三项 Rule；句柄只操作自己的登记，原生覆盖交给 CSS                                   |
+| Value / Variable | Variable 是 Value 的特殊 expression                            | 两者独立继承 Valuable；内容求值遇到变量，只交给变量编译取得引用与自身定义               |
+| CSS Function     | 核心 switch 识别每种语法，输入拍平后重建                       | 定义处保存输入并提供函数；Compiler 的 read 统一解析智能输入，不知道颜色、字体或阴影语法 |
+| 条件             | 先取候选再同址覆盖，出现 35 / 22；Rule 名称过早变成普通 header | 保留名称身份；普通路径与激活集合分开，每个集合下统一取值，AB 为 55                      |
+| 挂载             | 为合并区域移动声明，扫描 header 判定资源种类                   | 原生记录顺序输出；完整依赖按提供的 Rule 地址接管，不按语法种类猜测                      |
+| Mixin            | Key 解读 padding、字体、过渡等配置                             | 效果配置归 Mixin；复合 CSS 内容归对应生成函数。Button 配方未改                          |
 
 ### 第一性原理复查
 

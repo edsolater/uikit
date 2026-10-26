@@ -1,7 +1,13 @@
 /** 验证交互状态 Condition 的浏览器语义。 */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { whenFocus, whenFocusWithin, whenHover, whenActive, whenDisabled } from './interaction'
+import {
+  whenFocus,
+  whenFocusWithin,
+  whenHover,
+  whenActive,
+  whenDisabled,
+} from './interaction'
 
 afterEach(() => document.body.replaceChildren())
 
@@ -20,7 +26,9 @@ test('原生、标记与并存禁用均排除 hover 和 active', async () => {
     try {
       if (mode === 'status') expect(button.matches(':active')).toBe(true)
       expect(button.matches(whenActive.header.replace('&', ''))).toBe(false)
-    } finally { await userEvent.keyboard('[/Space]') }
+    } finally {
+      await userEvent.keyboard('[/Space]')
+    }
     button.remove()
   }
 })

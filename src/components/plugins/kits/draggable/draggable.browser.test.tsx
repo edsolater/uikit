@@ -28,7 +28,10 @@ describe('draggable', () => {
       activationJump: true,
       enabled: () => true,
       onDraggingChange(dragging) {
-        changes.push([dragging, source.getAttribute('data-interacting') === 'true'])
+        changes.push([
+          dragging,
+          source.getAttribute('data-interacting') === 'true',
+        ])
       },
     })
     dispose = pointerDrag.cancel
@@ -39,7 +42,12 @@ describe('draggable', () => {
     pointerDrag.start(pointerEvent('pointerdown', 21, 10, 10))
     pointerDrag.end(pointerEvent('pointerup', 21, 30, 30))
     expect(source.hasAttribute('data-interacting')).toBe(false)
-    expect(changes).toEqual([[true, true], [false, false], [true, true], [false, false]])
+    expect(changes).toEqual([
+      [true, true],
+      [false, false],
+      [true, true],
+      [false, false],
+    ])
   })
 
   test('在 Top Layer 基础位置上移动原始 source', () => {
@@ -66,7 +74,9 @@ describe('draggable', () => {
       )
     }, host)
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     const sourceIdentity = source
     const originalRect = source.getBoundingClientRect()
     stubPointerCapture(source)
@@ -79,7 +89,9 @@ describe('draggable', () => {
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
-    expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
+    expect(document.querySelector('[data-testid="source"]')).toBe(
+      sourceIdentity,
+    )
     expect(document.querySelectorAll('[data-testid="source"]')).toHaveLength(1)
     expect(source.style.getPropertyValue('--drag-x')).toBe('0px')
     expect(source.style.getPropertyValue('--drag-y')).toBe('0px')
@@ -100,7 +112,9 @@ describe('draggable', () => {
     expect(source.style.getPropertyValue('--drag-x')).toBe('32px')
     expect(source.style.getPropertyValue('--drag-y')).toBe('44px')
     expect(getComputedStyle(source).translate).toBe('32px 44px')
-    expect(document.querySelector('[data-testid="source"]')).toBe(sourceIdentity)
+    expect(document.querySelector('[data-testid="source"]')).toBe(
+      sourceIdentity,
+    )
 
     window.dispatchEvent(pointerEvent('pointerup', 7, 52, 74))
     flush()
@@ -117,14 +131,19 @@ describe('draggable', () => {
   test('默认在按下时立即开始拖动', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <Piv
-        plugin={draggable({ payload: 'weather' })}
-        htmlProps={{ 'data-testid': 'source' }}
-      />
-    ), host)
+    dispose = render(
+      () => (
+        <Piv
+          plugin={draggable({ payload: 'weather' })}
+          htmlProps={{ 'data-testid': 'source' }}
+        />
+      ),
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
     flush()
@@ -137,14 +156,19 @@ describe('draggable', () => {
   test('显式激活距离默认承接按下后的累计位移', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <Piv
-        plugin={draggable({ payload: 'weather', activationDistance: 6 })}
-        htmlProps={{ 'data-testid': 'source' }}
-      />
-    ), host)
+    dispose = render(
+      () => (
+        <Piv
+          plugin={draggable({ payload: 'weather', activationDistance: 6 })}
+          htmlProps={{ 'data-testid': 'source' }}
+        />
+      ),
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 8, 0, 0))
     flush()
@@ -164,18 +188,23 @@ describe('draggable', () => {
   test('可以消费激活距离后再开始移动 source', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <Piv
-        plugin={draggable({
-          payload: 'weather',
-          activationDistance: 6,
-          activationJump: false,
-        })}
-        htmlProps={{ 'data-testid': 'source' }}
-      />
-    ), host)
+    dispose = render(
+      () => (
+        <Piv
+          plugin={draggable({
+            payload: 'weather',
+            activationDistance: 6,
+            activationJump: false,
+          })}
+          htmlProps={{ 'data-testid': 'source' }}
+        />
+      ),
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 18, 0, 0))
     flush()
@@ -192,14 +221,19 @@ describe('draggable', () => {
   test('pointercancel 与 lostpointercapture 都会恢复 source', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <Piv
-        plugin={draggable({ payload: 'weather', activationDistance: 0 })}
-        htmlProps={{ 'data-testid': 'source' }}
-      />
-    ), host)
+    dispose = render(
+      () => (
+        <Piv
+          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+          htmlProps={{ 'data-testid': 'source' }}
+        />
+      ),
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     stubPointerCapture(source)
     source.dispatchEvent(pointerEvent('pointerdown', 9, 10, 10))
     flush()
@@ -233,8 +267,9 @@ describe('draggable', () => {
       onDraggingChange: () => undefined,
     })
 
-    expect(() => pointerDrag.start(pointerEvent('pointerdown', 12, 10, 10)))
-      .toThrowError('Draggable 来源元素不能预先占用 CSS translate')
+    expect(() =>
+      pointerDrag.start(pointerEvent('pointerdown', 12, 10, 10)),
+    ).toThrowError('Draggable 来源元素不能预先占用 CSS translate')
     expect(source.hasAttribute('data-interacting')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
   })
@@ -252,8 +287,9 @@ describe('draggable', () => {
       onDraggingChange: () => undefined,
     })
 
-    expect(() => pointerDrag.start(pointerEvent('pointerdown', 13, 10, 10)))
-      .toThrowError('Top Layer 元素不能同时承担 Popover')
+    expect(() =>
+      pointerDrag.start(pointerEvent('pointerdown', 13, 10, 10)),
+    ).toThrowError('Top Layer 元素不能同时承担 Popover')
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.classList.contains('top-layer')).toBe(false)
   })
@@ -268,7 +304,12 @@ function stubPointerCapture(element: HTMLElement): void {
 }
 
 function pointerEvent(
-  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel' | 'lostpointercapture',
+  type:
+    | 'pointerdown'
+    | 'pointermove'
+    | 'pointerup'
+    | 'pointercancel'
+    | 'lostpointercapture',
   pointerId: number,
   clientX: number,
   clientY: number,
@@ -278,9 +319,12 @@ function pointerEvent(
     cancelable: true,
     isPrimary: true,
     button: 0,
-    buttons: type === 'pointerup' || type === 'pointercancel' || type === 'lostpointercapture'
-      ? 0
-      : 1,
+    buttons:
+      type === 'pointerup' ||
+      type === 'pointercancel' ||
+      type === 'lostpointercapture'
+        ? 0
+        : 1,
     pointerId,
     clientX,
     clientY,

@@ -17,10 +17,24 @@ const color: ColorMaterial = {
 
 describe('颜色通道', () => {
   it('通道支持绝对值与更新函数，不改变未指定通道或原材料', () => {
-    expect(lightness(color, 0.8).base).toEqual({ lightness: 0.8, chroma: 0.1, hue: 350 })
-    expect(chroma(color, current => current * 2).base).toEqual({ lightness: 0.6, chroma: 0.2, hue: 350 })
-    expect(hue(color, current => current + 20).base).toEqual({ lightness: 0.6, chroma: 0.1, hue: 370 })
-    expect(lightness(color, current => current + 0.1).base.lightness).toBeCloseTo(0.7)
+    expect(lightness(color, 0.8).base).toEqual({
+      lightness: 0.8,
+      chroma: 0.1,
+      hue: 350,
+    })
+    expect(chroma(color, (current) => current * 2).base).toEqual({
+      lightness: 0.6,
+      chroma: 0.2,
+      hue: 350,
+    })
+    expect(hue(color, (current) => current + 20).base).toEqual({
+      lightness: 0.6,
+      chroma: 0.1,
+      hue: 370,
+    })
+    expect(
+      lightness(color, (current) => current + 0.1).base.lightness,
+    ).toBeCloseTo(0.7)
     expect(chroma(color, 0.04).base.chroma).toBe(0.04)
     expect(hue(color, 30).base.hue).toBe(30)
     expect(color.base).toEqual({ lightness: 0.6, chroma: 0.1, hue: 350 })
@@ -38,15 +52,17 @@ describe('颜色通道', () => {
     expect(result.base.chroma).toBeCloseTo(0.092)
     expect(result.alpha).toBe(0.4)
     expect(changed.purpose).toBe('content')
-    expect(applyEnvironment(original, environment).base.lightness).toBeCloseTo(0.52)
+    expect(applyEnvironment(original, environment).base.lightness).toBeCloseTo(
+      0.52,
+    )
   })
 
   it('Alpha 不改变自身颜色，默认完全不透明，设为 1 后恢复不透明', () => {
-    const transparent = alpha(color, current => current / 2)
+    const transparent = alpha(color, (current) => current / 2)
     expect(transparent.alpha).toBe(0.5)
     expect(transparent.base).toEqual(color.base)
     const opaque = alpha(transparent, 1)
-    expect(alpha(opaque, current => current / 2).alpha).toBe(0.5)
+    expect(alpha(opaque, (current) => current / 2).alpha).toBe(0.5)
     expect(alpha(color, 0).alpha).toBe(0)
     expect(() => alpha(color, -0.1)).toThrow(RangeError)
     expect(() => alpha(color, 1.1)).toThrow(RangeError)

@@ -29,7 +29,9 @@ function snapshotRules(source: Rules, visiting = new Set<Rules>()): Rules {
       key,
       Array.isArray(content) ? snapshotRules(content, visiting) : content,
     ])
-  } finally { visiting.delete(source) }
+  } finally {
+    visiting.delete(source)
+  }
 }
 
 /** 宿主已有内容与上次提交结果。 */
@@ -49,14 +51,20 @@ class Root {
 
   /** 提交到 `style#css-root`；保留宿主前缀，失败或未变化时不改 DOM。 */
   mount(): this {
-    const style = typeof document === 'undefined' ? null : document.querySelector<HTMLStyleElement>('style#css-root')
+    const style =
+      typeof document === 'undefined'
+        ? null
+        : document.querySelector<HTMLStyleElement>('style#css-root')
     assert(!!style?.sheet, '缺少样式挂载节点：<style id="css-root"></style>')
     const mounted = this.hosts.get(style) ?? {
-      prefix: Array.from(style.sheet.cssRules, (rule) => rule.cssText).join('\n'),
+      prefix: Array.from(style.sheet.cssRules, (rule) => rule.cssText).join(
+        '\n',
+      ),
       css: '',
     }
     const css = this.compile()
-    if (css !== mounted.css) style.textContent = [mounted.prefix, css].filter(Boolean).join('\n')
+    if (css !== mounted.css)
+      style.textContent = [mounted.prefix, css].filter(Boolean).join('\n')
     this.hosts.set(style, { prefix: mounted.prefix, css })
     return this
   }

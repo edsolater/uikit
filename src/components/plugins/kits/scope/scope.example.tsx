@@ -26,10 +26,11 @@ export function ScopeExample() {
       </Piv>
       <Piv
         plugin={droppable({
-          onDrop: ({ payload }) => results.set((current) => ({
-            ...current,
-            [name]: `${name} 接收到 ${String(payload)}`,
-          })),
+          onDrop: ({ payload }) =>
+            results.set((current) => ({
+              ...current,
+              [name]: `${name} 接收到 ${String(payload)}`,
+            })),
         })}
         class="drag-drop-example-target"
         htmlProps={val(results)[name] ? { 'data-drop-received': 'true' } : {}}
@@ -48,7 +49,10 @@ export function ScopeExample() {
         <span>Plugin</span>
         <h2>Scope + Drag and Drop</h2>
       </div>
-      <p>同一边界内显示绿色并允许放下；从 A 拖到 B 时显示拒绝状态且不触发 onDrop。</p>
+      <p>
+        同一边界内显示绿色并允许放下；从 A 拖到 B 时显示拒绝状态且不触发
+        onDrop。
+      </p>
 
       <div class="drag-drop-example-grid">
         {renderScope('A')}

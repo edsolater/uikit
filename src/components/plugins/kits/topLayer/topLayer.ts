@@ -49,8 +49,9 @@ const topLayerGeometryProperties = [
  * 控制器创建时不改变元素；调用 enter() 才开始完整提升事务。Drag 等原子
  * 能力直接使用此入口，Plugin 只在它外面增加 Piv 生命周期包装。
  */
-export function createTopLayerController(element: HTMLElement): TopLayerController {
-
+export function createTopLayerController(
+  element: HTMLElement,
+): TopLayerController {
   const active = createState(false)
   let session: TopLayerSession | undefined
 
@@ -139,8 +140,10 @@ function alignRenderedBox(element: HTMLElement, originalRect: DOMRect): void {
   element.style.top = `${originalRect.top * 2 - renderedRect.top}px`
 }
 
-function captureInlineDeclarations(style: CSSStyleDeclaration): InlineDeclaration[] {
-  return topLayerGeometryProperties.map(property => ({
+function captureInlineDeclarations(
+  style: CSSStyleDeclaration,
+): InlineDeclaration[] {
+  return topLayerGeometryProperties.map((property) => ({
     property,
     value: style.getPropertyValue(property),
     priority: style.getPropertyPriority(property),
@@ -157,48 +160,50 @@ function restoreInlineDeclarations(
   }
 }
 
-export const topLayer = createPlugin<undefined, TopLayerController, PivTag>(() => {
-  const active = createState(false)
-  let elementController: TopLayerController | undefined
-  let requested = true
+export const topLayer = createPlugin<undefined, TopLayerController, PivTag>(
+  () => {
+    const active = createState(false)
+    let elementController: TopLayerController | undefined
+    let requested = true
 
-  // Plugin Controller 是纯控制器的生命周期适配层。它只记住挂载前的调用意图，
-  // 元素可用后，所有实际提升操作都转发给 createTopLayerController() 的结果。
-  const controller: TopLayerController = {
-    active,
-    enter() {
-      requested = true
-      if (!elementController) return
-      elementController.enter()
-      active.set(true)
-    },
-    leave() {
-      requested = false
-      if (!elementController) return
-      elementController.leave()
-      active.set(false)
-    },
-  }
+    // Plugin Controller 是纯控制器的生命周期适配层。它只记住挂载前的调用意图，
+    // 元素可用后，所有实际提升操作都转发给 createTopLayerController() 的结果。
+    const controller: TopLayerController = {
+      active,
+      enter() {
+        requested = true
+        if (!elementController) return
+        elementController.enter()
+        active.set(true)
+      },
+      leave() {
+        requested = false
+        if (!elementController) return
+        elementController.leave()
+        active.set(false)
+      },
+    }
 
-  return {
-    controller,
-    plugin: ({ element }) => {
-      const mountedController = createTopLayerController(element)
-      onMount(() => {
-        elementController = mountedController
-        if (requested) controller.enter()
-        return () => {
-          elementController?.leave()
-          elementController = undefined
-          active.set(false)
+    return {
+      controller,
+      plugin: ({ element }) => {
+        const mountedController = createTopLayerController(element)
+        onMount(() => {
+          elementController = mountedController
+          if (requested) controller.enter()
+          return () => {
+            elementController?.leave()
+            elementController = undefined
+            active.set(false)
+          }
+        })
+
+        return {
+          htmlProps: {
+            'data-plugin': { mergable: 'top-layer' },
+          },
         }
-      })
-
-      return {
-        htmlProps: {
-          'data-plugin': { mergable: 'top-layer' },
-        },
-      }
-    },
-  }
-})
+      },
+    }
+  },
+)

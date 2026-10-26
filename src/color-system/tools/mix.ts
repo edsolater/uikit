@@ -5,10 +5,16 @@
  * 混合后仍是一份可继续处理、按本次环境求值的材料。
  */
 
-import { evaluateLightnessTarget, evaluateSensitivity, type ColorEnvironmentSensitive, type ColorMaterial } from '../core'
+import {
+  evaluateLightnessTarget,
+  evaluateSensitivity,
+  type ColorEnvironmentSensitive,
+  type ColorMaterial,
+} from '../core'
 
 /** 色相沿色环的混合方向；默认最短路径。 */
-export type HueInterpolation = 'shorter' | 'longer' | 'increasing' | 'decreasing'
+export type HueInterpolation =
+  'shorter' | 'longer' | 'increasing' | 'decreasing'
 
 /** 材料混合配置；权重按 colors 顺序对应，省略时等权。 */
 export interface MixOptions {
@@ -64,13 +70,17 @@ function wrapHue(hue: number): number {
  */
 export function mix(...colors: ColorMaterial[]): MixedColorMaterial
 export function mix(options: MixOptions): MixedColorMaterial
-export function mix(...args: ColorMaterial[] | [MixOptions]): MixedColorMaterial {
-  const options: MixOptions = args.length === 1 && 'colors' in args[0]
-    ? args[0]
-    : { colors: args as ColorMaterial[] }
+export function mix(
+  ...args: ColorMaterial[] | [MixOptions]
+): MixedColorMaterial {
+  const options: MixOptions =
+    args.length === 1 && 'colors' in args[0]
+      ? args[0]
+      : { colors: args as ColorMaterial[] }
   const { colors, weights, hue = 'shorter' } = options
   if (colors.length === 0) throw new RangeError('混合至少需要一种颜色')
-  if (weights && weights.length !== colors.length) throw new RangeError('权重数量必须与颜色数量一致')
+  if (weights && weights.length !== colors.length)
+    throw new RangeError('权重数量必须与颜色数量一致')
   if (!['shorter', 'longer', 'increasing', 'decreasing'].includes(hue)) {
     throw new RangeError('色相混合方向无效')
   }
@@ -78,17 +88,22 @@ export function mix(...args: ColorMaterial[] | [MixOptions]): MixedColorMaterial
   const rawWeights = colors.map((_, index) => weights?.[index] ?? 1)
   let maximum = 0
   for (const weight of rawWeights) {
-    if (!Number.isFinite(weight) || weight < 0) throw new RangeError('权重必须是有限的非负数')
+    if (!Number.isFinite(weight) || weight < 0)
+      throw new RangeError('权重必须是有限的非负数')
     maximum = Math.max(maximum, weight)
   }
   if (maximum === 0) throw new RangeError('至少一种颜色的权重须大于零')
-  const scaled = rawWeights.map(weight => weight / maximum)
+  const scaled = rawWeights.map((weight) => weight / maximum)
   const total = scaled.reduce((sum, weight) => sum + weight, 0)
-  const sources = colors.map((material, index) => ({ material, weight: scaled[index] / total }))
-    .filter(source => source.weight > 0)
+  const sources = colors
+    .map((material, index) => ({ material, weight: scaled[index] / total }))
+    .filter((source) => source.weight > 0)
   const first = sources[0].material
   const purpose = options.purpose ?? first.purpose
-  if (!options.purpose && sources.some(source => source.material.purpose !== purpose)) {
+  if (
+    !options.purpose &&
+    sources.some((source) => source.material.purpose !== purpose)
+  ) {
     throw new TypeError('混合不同用途的材料时须指定 purpose')
   }
 
@@ -96,13 +111,16 @@ export function mix(...args: ColorMaterial[] | [MixOptions]): MixedColorMaterial
   let lightness = first.base.lightness * mixedAlpha
   let chroma = first.base.chroma * mixedAlpha
   // CSS 将彩度极低的色相视为无作用；缺失色相由另一方补足。
-  let angle: number | undefined = first.base.chroma <= 0.000004 ? undefined : wrapHue(first.base.hue)
+  let angle: number | undefined =
+    first.base.chroma <= 0.000004 ? undefined : wrapHue(first.base.hue)
   let accumulated = sources[0].weight
   for (const { material, weight } of sources.slice(1)) {
     const t = weight / (accumulated + weight)
-    const next = material.base.chroma <= 0.000004 ? undefined : wrapHue(material.base.hue)
+    const next =
+      material.base.chroma <= 0.000004 ? undefined : wrapHue(material.base.hue)
     if (angle === undefined) angle = next
-    else if (next !== undefined) angle = wrapHue(angle + hueDifference(angle, next, hue) * t)
+    else if (next !== undefined)
+      angle = wrapHue(angle + hueDifference(angle, next, hue) * t)
     const nextAlpha = material.alpha ?? 1
     lightness += (material.base.lightness * nextAlpha - lightness) * t
     chroma += (material.base.chroma * nextAlpha - chroma) * t
@@ -112,32 +130,82 @@ export function mix(...args: ColorMaterial[] | [MixOptions]): MixedColorMaterial
 
   const environmentSensitivities: ColorEnvironmentSensitive = {}
   for (const channel of ['lightness', 'chroma', 'hue'] as const) {
-    if (!sources.some(source => source.material.environmentSensitivities?.[channel] !== undefined)) continue
-    if (sources.some(source => typeof source.material.environmentSensitivities?.[channel] === 'function')) {
-      environmentSensitivities[channel] = (base, environment) => sources.reduce((sum, { material, weight }) =>
-        sum + evaluateSensitivity(material.environmentSensitivities?.[channel], base, environment) * weight, 0)
+    if (
+      !sources.some(
+        (source) =>
+          source.material.environmentSensitivities?.[channel] !== undefined,
+      )
+    )
+      continue
+    if (
+      sources.some(
+        (source) =>
+          typeof source.material.environmentSensitivities?.[channel] ===
+          'function',
+      )
+    ) {
+      environmentSensitivities[channel] = (base, environment) =>
+        sources.reduce(
+          (sum, { material, weight }) =>
+            sum +
+            evaluateSensitivity(
+              material.environmentSensitivities?.[channel],
+              base,
+              environment,
+            ) *
+              weight,
+          0,
+        )
     } else {
-      environmentSensitivities[channel] = sources.reduce((sum, { material, weight }) =>
-        sum + evaluateSensitivity(material.environmentSensitivities?.[channel], material.base, {}) * weight, 0)
+      environmentSensitivities[channel] = sources.reduce(
+        (sum, { material, weight }) =>
+          sum +
+          evaluateSensitivity(
+            material.environmentSensitivities?.[channel],
+            material.base,
+            {},
+          ) *
+            weight,
+        0,
+      )
     }
   }
-  const environmentTargets: ColorMaterial['environmentTargets'] = sources.some(source => source.material.environmentTargets?.lightness !== undefined)
-    ? { lightness: (base, environment) => {
-      let totalResponse = 0
-      let weightedTarget = 0
-      for (const { material, weight } of sources) {
-        const response = evaluateSensitivity(material.environmentSensitivities?.lightness, base, environment) * weight
-        if (response === 0) continue
-        const target = evaluateLightnessTarget(material.environmentTargets?.lightness, base, environment)
-        if (target === undefined) continue
-        totalResponse += response
-        weightedTarget += target * response
+  const environmentTargets: ColorMaterial['environmentTargets'] = sources.some(
+    (source) => source.material.environmentTargets?.lightness !== undefined,
+  )
+    ? {
+        lightness: (base, environment) => {
+          let totalResponse = 0
+          let weightedTarget = 0
+          for (const { material, weight } of sources) {
+            const response =
+              evaluateSensitivity(
+                material.environmentSensitivities?.lightness,
+                base,
+                environment,
+              ) * weight
+            if (response === 0) continue
+            const target = evaluateLightnessTarget(
+              material.environmentTargets?.lightness,
+              base,
+              environment,
+            )
+            if (target === undefined) continue
+            totalResponse += response
+            weightedTarget += target * response
+          }
+          return totalResponse > 0
+            ? weightedTarget / totalResponse
+            : (environment.tint?.lightness ?? base.lightness)
+        },
       }
-      return totalResponse > 0 ? weightedTarget / totalResponse : environment.tint?.lightness ?? base.lightness
-    } }
     : undefined
   return {
-    base: { lightness: mixedAlpha > 0 ? lightness / mixedAlpha : lightness, chroma: mixedAlpha > 0 ? chroma / mixedAlpha : chroma, hue: angle ?? 0 },
+    base: {
+      lightness: mixedAlpha > 0 ? lightness / mixedAlpha : lightness,
+      chroma: mixedAlpha > 0 ? chroma / mixedAlpha : chroma,
+      hue: angle ?? 0,
+    },
     ...(mixedAlpha === 1 ? {} : { alpha: mixedAlpha }),
     environmentSensitivities,
     ...(environmentTargets ? { environmentTargets } : {}),

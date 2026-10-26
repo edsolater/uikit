@@ -7,7 +7,6 @@
 import { findScopeBoundary } from './scope/scope'
 import { dragAndDrop } from './dragAndDrop'
 
-
 export interface DragPoint {
   x: number
   y: number
@@ -36,7 +35,10 @@ export interface InternalDropMatch {
 
 const dropTargets = new WeakMap<HTMLElement, InternalDropTarget>()
 
-export function createInternalDrag(source: HTMLElement, payload: unknown): InternalDrag {
+export function createInternalDrag(
+  source: HTMLElement,
+  payload: unknown,
+): InternalDrag {
   return {
     payload,
     source,
@@ -44,11 +46,14 @@ export function createInternalDrag(source: HTMLElement, payload: unknown): Inter
   }
 }
 
-export function registerInternalDropTarget(target: InternalDropTarget): () => void {
+export function registerInternalDropTarget(
+  target: InternalDropTarget,
+): () => void {
   dropTargets.set(target.element, target)
 
   return () => {
-    if (dropTargets.get(target.element) === target) dropTargets.delete(target.element)
+    if (dropTargets.get(target.element) === target)
+      dropTargets.delete(target.element)
   }
 }
 
@@ -77,7 +82,9 @@ export function findInternalDropTarget(
 
       return {
         target,
-        acceptable: isWithinDropScope(drag.scope, target.element) && target.accepts(drag, event),
+        acceptable:
+          isWithinDropScope(drag.scope, target.element) &&
+          target.accepts(drag, event),
       }
     }
   }
@@ -86,7 +93,11 @@ export function findInternalDropTarget(
 }
 
 function isWithinSource(element: Element, source: HTMLElement): boolean {
-  for (let current: Element | null = element; current; current = getComposedParent(current)) {
+  for (
+    let current: Element | null = element;
+    current;
+    current = getComposedParent(current)
+  ) {
     if (current === source) return true
   }
   return false

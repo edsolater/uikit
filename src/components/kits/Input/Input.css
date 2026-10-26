@@ -5,7 +5,11 @@
     --Input-bg: var(--color-surface-low);
     --Input-bg-hover: var(--color-surface);
     --Input-bg-focus: var(--color-surface);
-    --Input-bg-disabled: color-mix(in oklab, var(--color-fg-strong) 5%, transparent);
+    --Input-bg-disabled: color-mix(
+      in oklab,
+      var(--color-fg-strong) 5%,
+      transparent
+    );
     --Input-fg: var(--color-fg-strong);
     --Input-fg-disabled: var(--color-fg-disabled);
     --Input-placeholder: var(--color-fg-soft);

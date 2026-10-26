@@ -14,10 +14,9 @@ export type Val<S> =
       ? Val<InnerS>
       : S
 
-type DefaultVal<S> =
-  S extends (...args: never[]) => infer ResultV
-    ? Val<ResultV>
-    : Val<S>
+type DefaultVal<S> = S extends (...args: never[]) => infer ResultV
+  ? Val<ResultV>
+  : Val<S>
 
 /**
  * 读取来源的当前完成值；在响应式计算中调用时跟踪相应依赖。
@@ -67,5 +66,7 @@ export function val<S, DefaultValue>(
 ): Exclude<Val<S>, null | undefined> | DefaultVal<DefaultValue>
 export function val(source: any, defaultValue?: any) {
   const value = isStateViewable(source) ? val(stateView(source).read()) : source
-  return !isExist(value) && arguments.length > 1 ? val(result(defaultValue)) : value
+  return !isExist(value) && arguments.length > 1
+    ? val(result(defaultValue))
+    : value
 }

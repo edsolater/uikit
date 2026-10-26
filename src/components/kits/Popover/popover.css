@@ -8,7 +8,8 @@
     gap: 8px;
     min-height: 42px;
     padding: 0 16px;
-    border: 1px solid color-mix(in oklab, var(--color-accent) 18%, var(--color-line));
+    border: 1px solid
+      color-mix(in oklab, var(--color-accent) 18%, var(--color-line));
     border-radius: 999px;
     background: color-mix(in oklab, var(--color-surface-low) 90%, white);
     color: var(--color-fg-strong);
@@ -22,7 +23,11 @@
 
     &:hover {
       transform: translateY(-1px);
-      border-color: color-mix(in oklab, var(--color-accent) 36%, var(--color-line));
+      border-color: color-mix(
+        in oklab,
+        var(--color-accent) 36%,
+        var(--color-line)
+      );
       box-shadow: 0 14px 28px rgba(31, 26, 23, 0.14);
     }
 
@@ -34,8 +39,16 @@
 
   &[data-status~='open'] {
     > .trigger {
-      border-color: color-mix(in oklab, var(--color-accent) 48%, var(--color-line));
-      background: color-mix(in oklab, var(--color-surface-low) 78%, var(--color-accent-soft));
+      border-color: color-mix(
+        in oklab,
+        var(--color-accent) 48%,
+        var(--color-line)
+      );
+      background: color-mix(
+        in oklab,
+        var(--color-surface-low) 78%,
+        var(--color-accent-soft)
+      );
       box-shadow: 0 16px 32px rgba(31, 26, 23, 0.16);
     }
   }
@@ -46,7 +59,11 @@
     border: 1px solid rgba(255, 248, 239, 0.14);
     border-radius: 22px;
     background:
-      radial-gradient(circle at top left, rgba(255, 174, 125, 0.18), transparent 34%),
+      radial-gradient(
+        circle at top left,
+        rgba(255, 174, 125, 0.18),
+        transparent 34%
+      ),
       linear-gradient(145deg, rgba(23, 28, 37, 0.98), rgba(16, 20, 29, 0.96));
     color: #f8f4ee;
     box-shadow: 0 24px 54px rgba(16, 20, 29, 0.32);
@@ -76,8 +93,7 @@
       height: 18px;
       border: 1px solid rgba(255, 248, 239, 0.14);
       background: rgba(24, 29, 38, 0.98);
-      border-shape:
-        polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)
+      border-shape: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)
         polygon(50% 14%, 86% 50%, 50% 86%, 14% 50%);
       box-shadow: 0 10px 24px rgba(16, 20, 29, 0.18);
     }

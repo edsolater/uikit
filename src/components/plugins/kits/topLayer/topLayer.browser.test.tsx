@@ -3,7 +3,11 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
 import { usePlugin } from '../../usePlugin'
-import { createTopLayerController, topLayer, type TopLayerController } from './topLayer'
+import {
+  createTopLayerController,
+  topLayer,
+  type TopLayerController,
+} from './topLayer'
 
 let dispose: (() => void) | undefined
 
@@ -22,24 +26,33 @@ describe('topLayer', () => {
       dispose = render(() => {
         const [plugin, currentController] = usePlugin(topLayer)
         controller = currentController
-        return <Piv htmlProps={{ 'data-testid': 'source' }} plugin={context => {
-          const props = plugin(context)
-          expect(context.element.isConnected).toBe(false)
-          controller.leave()
-          controller.enter()
-          if (!requested) controller.leave()
-          expect(context.element.hasAttribute('popover')).toBe(false)
-          expect(context.element.classList.contains('top-layer')).toBe(false)
-          expect(context.element.previousElementSibling).toBeNull()
-          expect(document.querySelector('.top-layer-anchor')).toBeNull()
-          return props
-        }} />
+        return (
+          <Piv
+            htmlProps={{ 'data-testid': 'source' }}
+            plugin={(context) => {
+              const props = plugin(context)
+              expect(context.element.isConnected).toBe(false)
+              controller.leave()
+              controller.enter()
+              if (!requested) controller.leave()
+              expect(context.element.hasAttribute('popover')).toBe(false)
+              expect(context.element.classList.contains('top-layer')).toBe(
+                false,
+              )
+              expect(context.element.previousElementSibling).toBeNull()
+              expect(document.querySelector('.top-layer-anchor')).toBeNull()
+              return props
+            }}
+          />
+        )
       }, host)
 
       const source = host.querySelector<HTMLElement>('[data-testid="source"]')!
       expect(source.matches(':popover-open')).toBe(requested)
       expect(source.classList.contains('top-layer')).toBe(requested)
-      expect(document.querySelectorAll('.top-layer-anchor')).toHaveLength(requested ? 1 : 0)
+      expect(document.querySelectorAll('.top-layer-anchor')).toHaveLength(
+        requested ? 1 : 0,
+      )
       await expect.poll(() => val(controller.active)).toBe(requested)
 
       dispose()
@@ -53,11 +66,14 @@ describe('topLayer', () => {
   test('直接安装 Plugin 时在组件挂载期间持续提升', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <Piv plugin={topLayer} htmlProps={{ 'data-testid': 'source' }} />
-    ), host)
+    dispose = render(
+      () => <Piv plugin={topLayer} htmlProps={{ 'data-testid': 'source' }} />,
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
@@ -80,7 +96,9 @@ describe('topLayer', () => {
       return <Piv plugin={plugin} htmlProps={{ 'data-testid': 'source' }} />
     }, host)
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
     expect(source.parentElement).toBe(host)
     expect(source.getAttribute('popover')).toBe('manual')
     expect(source.matches(':popover-open')).toBe(true)
@@ -123,7 +141,10 @@ describe('topLayer', () => {
     source.style.background = 'rgb(98 76 54)'
 
     const originalRect = source.getBoundingClientRect()
-    const originalLayoutSize = { width: source.offsetWidth, height: source.offsetHeight }
+    const originalLayoutSize = {
+      width: source.offsetWidth,
+      height: source.offsetHeight,
+    }
     const originalVisualStyle = readVisualStyle(source)
     const controller = createTopLayerController(source)
     await expect.poll(() => val(controller.active)).toBe(false)
@@ -152,21 +173,30 @@ describe('topLayer', () => {
     expect(Math.abs(elevatedRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.width - originalRect.width)).toBeLessThan(0.1)
-    expect(Math.abs(elevatedRect.height - originalRect.height)).toBeLessThan(0.1)
-    expect(Math.abs(anchor.getBoundingClientRect().width - originalLayoutSize.width))
-      .toBeLessThan(0.1)
-    expect(Math.abs(anchor.getBoundingClientRect().height - originalLayoutSize.height))
-      .toBeLessThan(0.1)
+    expect(Math.abs(elevatedRect.height - originalRect.height)).toBeLessThan(
+      0.1,
+    )
+    expect(
+      Math.abs(anchor.getBoundingClientRect().width - originalLayoutSize.width),
+    ).toBeLessThan(0.1)
+    expect(
+      Math.abs(
+        anchor.getBoundingClientRect().height - originalLayoutSize.height,
+      ),
+    ).toBeLessThan(0.1)
     const anchorName = anchor.style.getPropertyValue('anchor-name')
     expect(anchorName).toMatch(/^--uikit-top-layer-anchor-/)
-    expect(source.style.inlineSize).toBe(`anchor-size(${anchorName} self-inline)`)
+    expect(source.style.inlineSize).toBe(
+      `anchor-size(${anchorName} self-inline)`,
+    )
     expect(source.style.blockSize).toBe(`anchor-size(${anchorName} self-block)`)
     expect(anchor.style.borderTopLeftRadius).toBe('12px')
     expect(anchor.style.borderTopRightRadius).toBe('16px')
     expect(anchor.style.borderBottomRightRadius).toBe('20px')
     expect(anchor.style.borderBottomLeftRadius).toBe('24px')
-    expect(anchor.style.getPropertyValue('corner-top-left-shape'))
-      .toBe(getComputedStyle(source).getPropertyValue('corner-top-left-shape'))
+    expect(anchor.style.getPropertyValue('corner-top-left-shape')).toBe(
+      getComputedStyle(source).getPropertyValue('corner-top-left-shape'),
+    )
 
     controller.leave()
     await expect.poll(() => val(controller.active)).toBe(false)
@@ -199,9 +229,15 @@ describe('topLayer', () => {
     expect(Math.abs(elevatedRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.width - originalRect.width)).toBeLessThan(0.1)
-    expect(Math.abs(elevatedRect.height - originalRect.height)).toBeLessThan(0.1)
-    expect(Math.abs(anchor.getBoundingClientRect().width - originalRect.width)).toBeLessThan(0.1)
-    expect(Math.abs(anchor.getBoundingClientRect().height - originalRect.height)).toBeLessThan(0.1)
+    expect(Math.abs(elevatedRect.height - originalRect.height)).toBeLessThan(
+      0.1,
+    )
+    expect(
+      Math.abs(anchor.getBoundingClientRect().width - originalRect.width),
+    ).toBeLessThan(0.1)
+    expect(
+      Math.abs(anchor.getBoundingClientRect().height - originalRect.height),
+    ).toBeLessThan(0.1)
 
     controller.leave()
   })
@@ -232,10 +268,16 @@ describe('topLayer', () => {
     const elevatedPanelRect = panel.getBoundingClientRect()
     const anchorRect = anchor.getBoundingClientRect()
 
-    expect(Math.abs(elevatedPanelRect.top - originalPanelRect.top)).toBeLessThan(0.1)
-    expect(Math.abs(elevatedPanelRect.height - originalPanelRect.height)).toBeLessThan(0.1)
+    expect(
+      Math.abs(elevatedPanelRect.top - originalPanelRect.top),
+    ).toBeLessThan(0.1)
+    expect(
+      Math.abs(elevatedPanelRect.height - originalPanelRect.height),
+    ).toBeLessThan(0.1)
     expect(Math.abs(anchorRect.top - originalSourceRect.top)).toBeLessThan(0.1)
-    expect(Math.abs(anchorRect.height - originalSourceRect.height)).toBeLessThan(0.1)
+    expect(
+      Math.abs(anchorRect.height - originalSourceRect.height),
+    ).toBeLessThan(0.1)
 
     controller.leave()
   })
@@ -259,9 +301,15 @@ describe('topLayer', () => {
     const anchorRect = anchor.getBoundingClientRect()
     const currentPeerRect = peer.getBoundingClientRect()
 
-    expect(Math.abs(anchorRect.width - originalSourceRect.width)).toBeLessThan(0.1)
-    expect(Math.abs(currentPeerRect.left - originalPeerRect.left)).toBeLessThan(0.1)
-    expect(Math.abs(currentPeerRect.width - originalPeerRect.width)).toBeLessThan(0.1)
+    expect(Math.abs(anchorRect.width - originalSourceRect.width)).toBeLessThan(
+      0.1,
+    )
+    expect(Math.abs(currentPeerRect.left - originalPeerRect.left)).toBeLessThan(
+      0.1,
+    )
+    expect(
+      Math.abs(currentPeerRect.width - originalPeerRect.width),
+    ).toBeLessThan(0.1)
 
     controller.leave()
   })
@@ -286,8 +334,12 @@ describe('topLayer', () => {
     scroller.scrollTop = 40
     scroller.dispatchEvent(new Event('scroll'))
 
-    expect(Math.abs(source.getBoundingClientRect().top - sourceTop)).toBeLessThan(0.1)
-    expect(Math.abs(anchor.getBoundingClientRect().top - (anchorTop - 40))).toBeLessThan(0.1)
+    expect(
+      Math.abs(source.getBoundingClientRect().top - sourceTop),
+    ).toBeLessThan(0.1)
+    expect(
+      Math.abs(anchor.getBoundingClientRect().top - (anchorTop - 40)),
+    ).toBeLessThan(0.1)
 
     controller.leave()
   })
@@ -297,8 +349,9 @@ describe('topLayer', () => {
     source.setAttribute('popover', 'manual')
     const controller = createTopLayerController(source)
 
-    expect(() => controller.enter())
-      .toThrowError('Top Layer 元素不能同时承担 Popover')
+    expect(() => controller.enter()).toThrowError(
+      'Top Layer 元素不能同时承担 Popover',
+    )
     expect(val(controller.active)).toBe(false)
     expect(source.getAttribute('popover')).toBe('manual')
     expect(document.querySelector('.top-layer-anchor')).toBeNull()

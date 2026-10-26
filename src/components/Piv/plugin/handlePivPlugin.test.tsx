@@ -8,25 +8,32 @@ import { Piv } from '../Piv'
 import { getPublicPluginSources } from './publicCapabilities'
 import { mergePivProps } from './handlePivPlugin'
 
-vi.mock('./publicCapabilities', () => ({ getPublicPluginSources: vi.fn(() => []) }))
+vi.mock('./publicCapabilities', () => ({
+  getPublicPluginSources: vi.fn(() => []),
+}))
 beforeEach(() => vi.mocked(getPublicPluginSources).mockReturnValue([]))
 
 describe('配置插件消费', () => {
   test('合并保留单来源身份与前导、后续 undefined 的不同位置', () => {
-    const { missing, value, merged, trailing, literal, dispose } = createRoot(dispose => {
-      const missing = createState<string | undefined>(undefined)
-      const value = [['nested']]
-      const merged = mergePivProps(document.createElement('div'), {
-        class: value, shadowProps: { class: missing },
-      })
-      const trailing = mergePivProps(document.createElement('div'), {
-        class: missing, shadowProps: { class: 'low' },
-      })
-      const literal = mergePivProps(document.createElement('div'), {
-        class: undefined, shadowProps: { class: 'low' },
-      })
-      return { missing, value, merged, trailing, literal, dispose }
-    })
+    const { missing, value, merged, trailing, literal, dispose } = createRoot(
+      (dispose) => {
+        const missing = createState<string | undefined>(undefined)
+        const value = [['nested']]
+        const merged = mergePivProps(document.createElement('div'), {
+          class: value,
+          shadowProps: { class: missing },
+        })
+        const trailing = mergePivProps(document.createElement('div'), {
+          class: missing,
+          shadowProps: { class: 'low' },
+        })
+        const literal = mergePivProps(document.createElement('div'), {
+          class: undefined,
+          shadowProps: { class: 'low' },
+        })
+        return { missing, value, merged, trailing, literal, dispose }
+      },
+    )
     try {
       expect(merged.class).toBe(value)
       missing.set('prefix')
@@ -43,20 +50,39 @@ describe('配置插件消费', () => {
   })
 
   test('多来源只展开顶层数组，稀疏洞消失但显式 undefined 和来源读取顺序保留', () => {
-    createRoot(dispose => {
+    createRoot((dispose) => {
       const sparse = new Array<string | undefined>(4)
       sparse[1] = 'low'
       sparse[3] = undefined
       const reads: string[] = []
       const merged = mergePivProps(document.createElement('div'), {
-        get class() { reads.push('high'); return 'high' },
+        get class() {
+          reads.push('high')
+          return 'high'
+        },
         shadowProps: [
-          { get class() { reads.push('low'); return sparse } },
-          { get class() { reads.push('middle'); return [['nested'], 'middle'] } },
+          {
+            get class() {
+              reads.push('low')
+              return sparse
+            },
+          },
+          {
+            get class() {
+              reads.push('middle')
+              return [['nested'], 'middle']
+            },
+          },
         ],
       })
       reads.length = 0
-      expect(merged.class).toEqual(['low', undefined, ['nested'], 'middle', 'high'])
+      expect(merged.class).toEqual([
+        'low',
+        undefined,
+        ['nested'],
+        'middle',
+        'high',
+      ])
       expect(reads).toEqual(['low', 'middle', 'high'])
       dispose()
     })
@@ -76,29 +102,62 @@ describe('配置插件消费', () => {
     const plugin = () => {
       initialized += 1
       order.push('injected')
-      onCleanup(() => { cleaned += 1 })
+      onCleanup(() => {
+        cleaned += 1
+      })
       return {
-        id: 'complete', class: 'complete', style: { color: 'red' },
-        htmlProps: { title: 'complete' }, on: { click: () => { clicks += 1 } },
-        ref: () => { refs += 1 },
+        id: 'complete',
+        class: 'complete',
+        style: { color: 'red' },
+        htmlProps: { title: 'complete' },
+        on: {
+          click: () => {
+            clicks += 1
+          },
+        },
+        ref: () => {
+          refs += 1
+        },
         plugin: () => {
           order.push('nested')
-          onCleanup(() => { nestedCleaned += 1 })
+          onCleanup(() => {
+            nestedCleaned += 1
+          })
           return { shadowProps: { htmlProps: { 'data-nested': 'complete' } } }
         },
       }
     }
     vi.mocked(getPublicPluginSources).mockImplementation(() => [
-      derive([options], () => { val(incidental); return val(enabled) ? options : undefined })
-        .map(selection => selection ? plugin : undefined),
+      derive([options], () => {
+        val(incidental)
+        return val(enabled) ? options : undefined
+      }).map((selection) => (selection ? plugin : undefined)),
     ])
-    const dispose = render(() => <Piv plugin={[
-      () => { order.push('first'); return undefined },
-      () => { order.push('second'); return undefined },
-    ]} />, host)
+    const dispose = render(
+      () => (
+        <Piv
+          plugin={[
+            () => {
+              order.push('first')
+              return undefined
+            },
+            () => {
+              order.push('second')
+              return undefined
+            },
+          ]}
+        />
+      ),
+      host,
+    )
     const element = host.firstElementChild as HTMLElement
     expect(order).toEqual(['second', 'first', 'injected', 'nested'])
-    expect([element.id, element.className, element.style.color, element.title]).toEqual(['complete', 'complete', 'red', 'complete'])
+    expect([
+      element.id,
+      element.className,
+      element.style.color,
+      element.title,
+    ]).toEqual(['complete', 'complete', 'red', 'complete'])
     expect(refs).toBe(1)
     expect(element.dataset.nested).toBe('complete')
     element.click()
@@ -110,7 +169,12 @@ describe('配置插件消费', () => {
     flush()
     expect([initialized, cleaned]).toEqual([1, 1])
     expect(nestedCleaned).toBe(1)
-    expect([element.id, element.className, element.style.color, element.title]).toEqual(['', '', '', ''])
+    expect([
+      element.id,
+      element.className,
+      element.style.color,
+      element.title,
+    ]).toEqual(['', '', '', ''])
     expect(element.hasAttribute('data-nested')).toBe(false)
     element.click()
     expect(clicks).toBe(1)

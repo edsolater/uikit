@@ -10,7 +10,11 @@
  * 参数：(<length-percentage>, <length-percentage>, progress? <number>)。
  * 示例：width: --fluid(12rem, 24rem)。
  */
-@function --fluid(--from <length-percentage>, --to <length-percentage>, --progress <number>: var(--fluid-progress))
+@function --fluid(
+    --from <length-percentage>,
+    --to <length-percentage>,
+    --progress <number>: var(--fluid-progress)
+  )
   returns <length-percentage> {
   result: calc(var(--from) + (var(--to) - var(--from)) * var(--progress));
 }

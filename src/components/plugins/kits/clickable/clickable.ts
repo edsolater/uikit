@@ -28,13 +28,21 @@ export interface ClickableController extends HoverableController {
   click(): void
 }
 
-export const clickable = createPlugin<ClickableOptions, ClickableController, PivTag>((options) => {
+export const clickable = createPlugin<
+  ClickableOptions,
+  ClickableController,
+  PivTag
+>((options) => {
   const [hoverPlugin, hoverController] = usePlugin(hoverable, {
     componentName: options?.componentName,
     initialHovered: options?.initialHovered,
   })
-  const [focused, focusedControl] = createToggle(options?.initialFocused ?? false)
-  const [pressed, pressedControl] = createToggle(options?.initialPressed ?? false)
+  const [focused, focusedControl] = createToggle(
+    options?.initialFocused ?? false,
+  )
+  const [pressed, pressedControl] = createToggle(
+    options?.initialPressed ?? false,
+  )
   let element: HTMLElement | undefined
 
   const controller: ClickableController = {
@@ -64,7 +72,9 @@ export const clickable = createPlugin<ClickableOptions, ClickableController, Piv
         plugin: hoverPlugin,
         htmlProps: {
           tabIndex: options?.tabIndex ?? 0,
-          'data-plugin': { mergable: toPluginName(options?.componentName, 'clickable') },
+          'data-plugin': {
+            mergable: toPluginName(options?.componentName, 'clickable'),
+          },
           'data-focused': focused,
           'data-pressed': pressed,
         },

@@ -28,18 +28,33 @@ describe('clickable', () => {
 
       return (
         <>
-          <Piv plugin={firstPlugin} htmlProps={{ 'data-testid': 'first', role: 'button' }} />
-          <Piv plugin={secondPlugin} htmlProps={{ 'data-testid': 'second', role: 'button' }} />
+          <Piv
+            plugin={firstPlugin}
+            htmlProps={{ 'data-testid': 'first', role: 'button' }}
+          />
+          <Piv
+            plugin={secondPlugin}
+            htmlProps={{ 'data-testid': 'second', role: 'button' }}
+          />
           <Piv plugin={clickable} htmlProps={{ 'data-testid': 'direct' }} />
-          <Piv plugin={clickable({ tabIndex: 2 })} htmlProps={{ 'data-testid': 'configured' }} />
+          <Piv
+            plugin={clickable({ tabIndex: 2 })}
+            htmlProps={{ 'data-testid': 'configured' }}
+          />
         </>
       )
     }, host)
 
     const first = document.querySelector<HTMLElement>('[data-testid="first"]')!
-    const second = document.querySelector<HTMLElement>('[data-testid="second"]')!
-    const direct = document.querySelector<HTMLElement>('[data-testid="direct"]')!
-    const configured = document.querySelector<HTMLElement>('[data-testid="configured"]')!
+    const second = document.querySelector<HTMLElement>(
+      '[data-testid="second"]',
+    )!
+    const direct = document.querySelector<HTMLElement>(
+      '[data-testid="direct"]',
+    )!
+    const configured = document.querySelector<HTMLElement>(
+      '[data-testid="configured"]',
+    )!
 
     expect(first.tabIndex).toBe(0)
     expect(direct.tabIndex).toBe(0)
@@ -64,7 +79,9 @@ describe('clickable', () => {
 
     const onClick = vi.fn()
     first.addEventListener('click', onClick)
-    first.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }))
+    first.dispatchEvent(
+      new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }),
+    )
     expect(onClick).toHaveBeenCalledOnce()
   })
 })

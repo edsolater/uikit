@@ -21,7 +21,7 @@ describe('useDocumentTitle', () => {
     let currentTitle!: State<string>
     const host = document.createElement('div')
     const dispose = render(() => {
-      currentTitle = useDocumentTitle(derive(index, value => titles[value]))
+      currentTitle = useDocumentTitle(derive(index, (value) => titles[value]))
       return <span>{val(currentTitle)}</span>
     }, host)
 

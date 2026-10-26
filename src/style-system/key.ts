@@ -21,7 +21,9 @@ export interface JSSKeyObject {
 }
 
 /** 原生属性名称与可输出的自定义 Key。 */
-export interface JSSKeyDefinition<K extends string = string> extends JSSKeyObject {
+export interface JSSKeyDefinition<
+  K extends string = string,
+> extends JSSKeyObject {
   name: K
 }
 
@@ -37,8 +39,15 @@ export type JSSKey = JSSKeyObject | Token | string
  * rules('.example', [[$stack, 2], [$stack, 3]])
  * compileCSS().includes('z-index: 5;') // true
  */
-export function key<K extends string>(name: K, options?: Pick<JSSKeyObject, 'join'>): JSSKeyDefinition<K> {
-  const target: JSSKeyDefinition<K> = { name, toCSSString: () => name, ...options }
+export function key<K extends string>(
+  name: K,
+  options?: Pick<JSSKeyObject, 'join'>,
+): JSSKeyDefinition<K> {
+  const target: JSSKeyDefinition<K> = {
+    name,
+    toCSSString: () => name,
+    ...options,
+  }
   registerJSSKey(target)
   return target
 }
@@ -53,12 +62,22 @@ const names = new Map<string, JSSKeyDefinition>()
  * 登记属性原名与对象声明别名；同名目标不允许静默改指其他属性。
  */
 export function registerJSSKey(target: JSSKeyDefinition): void {
-  const aliases = target.name.startsWith('--') ? [target.name] : [...new Set([
-    target.name, target.name.replace(/-([a-z0-9])/g, (_, character: string) => character.toUpperCase()),
-  ])]
+  const aliases = target.name.startsWith('--')
+    ? [target.name]
+    : [
+        ...new Set([
+          target.name,
+          target.name.replace(/-([a-z0-9])/g, (_, character: string) =>
+            character.toUpperCase(),
+          ),
+        ]),
+      ]
   for (const name of aliases) {
     const existing = names.get(name)
-    assert(!existing || existing.name === target.name, `JSSKey 名称冲突：${name}。`)
+    assert(
+      !existing || existing.name === target.name,
+      `JSSKey 名称冲突：${name}。`,
+    )
   }
   for (const name of aliases) if (!names.has(name)) names.set(name, target)
 }
@@ -68,7 +87,11 @@ export function resolveJSSKey(input: JSSKey): JSSKey {
   if (!isString(input)) return input
   const registered = names.get(input)
   if (registered) return registered
-  if ((input.startsWith('--') && input.length > 2) || /^-?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(input)) return input
+  if (
+    (input.startsWith('--') && input.length > 2) ||
+    /^-?[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(input)
+  )
+    return input
   throw new Error(`未知 JSSKey 名称：${input}。`)
 }
 
@@ -76,7 +99,11 @@ export function resolveJSSKey(input: JSSKey): JSSKey {
  * 读取并校验声明属性名，拒绝输出协议返回函数等非文本内容。
  */
 export function propertyName(key: JSSKey): string {
-  const name = isString(key) ? key : isToken(key) ? cssTokenName(key) : key.toCSSString()
+  const name = isString(key)
+    ? key
+    : isToken(key)
+      ? cssTokenName(key)
+      : key.toCSSString()
   assert(isString(name), 'JSSKey 的 toCSSString 必须返回属性名字符串。')
   return name
 }
@@ -84,4 +111,7 @@ export function propertyName(key: JSSKey): string {
 /**
  * 读取声明键的有效等级；字符串与普通 Key 默认使用999，内容对象同样读取自身等级。
  */
-export const keyPriority = (key: JSSKey | undefined): number => key !== undefined && typeof key !== 'string' ? ('priority' in key ? key.priority : undefined) ?? 999 : 999
+export const keyPriority = (key: JSSKey | undefined): number =>
+  key !== undefined && typeof key !== 'string'
+    ? (('priority' in key ? key.priority : undefined) ?? 999)
+    : 999

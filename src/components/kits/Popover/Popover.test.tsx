@@ -17,7 +17,14 @@ afterEach(() => {
 describe('Popover', () => {
   test('确定位置描述词输出 data-placement', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Popover right trigger="打开">内容</Popover>, host)
+    dispose = render(
+      () => (
+        <Popover right trigger="打开">
+          内容
+        </Popover>
+      ),
+      host,
+    )
     const popover = host.firstElementChild as HTMLElement
 
     expect(popover.getAttribute('data-placement')).toBe('right')
@@ -25,9 +32,18 @@ describe('Popover', () => {
   })
 
   test('动态 placement 持续更新位置描述', () => {
-    const placement = createState<'top' | 'right' | 'bottom' | 'left' | undefined>()
+    const placement = createState<
+      'top' | 'right' | 'bottom' | 'left' | undefined
+    >()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Popover placement={placement} trigger="打开">内容</Popover>, host)
+    dispose = render(
+      () => (
+        <Popover placement={placement} trigger="打开">
+          内容
+        </Popover>
+      ),
+      host,
+    )
     const popover = host.firstElementChild as HTMLElement
 
     expect(popover.hasAttribute('data-placement')).toBe(false)
@@ -39,7 +55,14 @@ describe('Popover', () => {
 
   test('defaultOpen 通过内部状态输出 open Status 并更新 aria-expanded', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Popover defaultOpen trigger="打开">内容</Popover>, host)
+    dispose = render(
+      () => (
+        <Popover defaultOpen trigger="打开">
+          内容
+        </Popover>
+      ),
+      host,
+    )
     const popover = host.firstElementChild as HTMLElement
     const trigger = popover.querySelector<HTMLButtonElement>('.trigger')!
 

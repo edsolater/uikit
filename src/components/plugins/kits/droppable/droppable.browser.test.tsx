@@ -20,41 +20,60 @@ describe('droppable', () => {
     const host = document.body.appendChild(document.createElement('div'))
     let receivedPayload: unknown
 
-    dispose = render(() => (
-      <div style={{ display: 'grid', gap: '32px', padding: '20px' }}>
-        <Piv
-          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
-          style={{ width: '120px', height: '60px' }}
-          htmlProps={{ 'data-testid': 'source' }}
-        >
-          Weather
-        </Piv>
-        <Piv
-          plugin={droppable({ onDrop: ({ payload }) => { receivedPayload = payload } })}
-          style={{ width: '120px', height: '60px' }}
-          htmlProps={{ 'data-testid': 'target' }}
-        />
-      </div>
-    ), host)
+    dispose = render(
+      () => (
+        <div style={{ display: 'grid', gap: '32px', padding: '20px' }}>
+          <Piv
+            plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+            style={{ width: '120px', height: '60px' }}
+            htmlProps={{ 'data-testid': 'source' }}
+          >
+            Weather
+          </Piv>
+          <Piv
+            plugin={droppable({
+              onDrop: ({ payload }) => {
+                receivedPayload = payload
+              },
+            })}
+            style={{ width: '120px', height: '60px' }}
+            htmlProps={{ 'data-testid': 'target' }}
+          />
+        </div>
+      ),
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
-    const target = document.querySelector<HTMLElement>('[data-testid="target"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
+    const target = document.querySelector<HTMLElement>(
+      '[data-testid="target"]',
+    )!
     const sourceRect = source.getBoundingClientRect()
     const targetRect = target.getBoundingClientRect()
     const sourcePoint = centerOf(sourceRect)
     const targetPoint = centerOf(targetRect)
     stubPointerCapture(source)
 
-    source.dispatchEvent(pointerEvent('pointerdown', 5, sourcePoint.x, sourcePoint.y))
+    source.dispatchEvent(
+      pointerEvent('pointerdown', 5, sourcePoint.x, sourcePoint.y),
+    )
     flush()
-    window.dispatchEvent(pointerEvent('pointermove', 5, targetPoint.x, targetPoint.y))
+    window.dispatchEvent(
+      pointerEvent('pointermove', 5, targetPoint.x, targetPoint.y),
+    )
     flush()
 
     expect(getComputedStyle(source).translate).not.toBe('none')
-    expect(document.elementsFromPoint(targetPoint.x, targetPoint.y)).toContain(target)
+    expect(document.elementsFromPoint(targetPoint.x, targetPoint.y)).toContain(
+      target,
+    )
     expect(target.getAttribute('data-drop-acceptable')).toBe('true')
 
-    window.dispatchEvent(pointerEvent('pointerup', 5, targetPoint.x, targetPoint.y))
+    window.dispatchEvent(
+      pointerEvent('pointerup', 5, targetPoint.x, targetPoint.y),
+    )
     flush()
     expect(receivedPayload).toBe('weather')
   })
@@ -64,9 +83,15 @@ describe('droppable', () => {
 
     dispose = render(() => <DroppableExample />, host)
 
-    const source = document.querySelector<HTMLElement>('.drag-drop-example-card')!
-    const target = document.querySelector<HTMLElement>('.drag-drop-example-target')!
-    const result = target.querySelector<HTMLOutputElement>('.drag-drop-example-target-result')!
+    const source = document.querySelector<HTMLElement>(
+      '.drag-drop-example-card',
+    )!
+    const target = document.querySelector<HTMLElement>(
+      '.drag-drop-example-target',
+    )!
+    const result = target.querySelector<HTMLOutputElement>(
+      '.drag-drop-example-target-result',
+    )!
     stubPointerCapture(source)
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([target])
 
@@ -90,32 +115,46 @@ describe('droppable', () => {
     let receivedItems: DataTransferItem[] = []
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <>
-        <Piv
-          plugin={draggable({ payload, activationDistance: 0 })}
-          htmlProps={{ 'data-testid': 'source' }}
-        />
-        <Piv
-          plugin={droppable({ onDrop: (context) => { receivedPayload = context.payload } })}
-          htmlProps={{ 'data-testid': 'payload-target' }}
-        />
-        <Piv
-          plugin={droppable({
-            accepts: ({ kind, files }) => kind === 'external' && files.length > 0,
-            onDrop: (context) => {
-              receivedFiles = context.files
-              receivedItems = context.items
-            },
-          })}
-          htmlProps={{ 'data-testid': 'file-target' }}
-        />
-      </>
-    ), host)
+    dispose = render(
+      () => (
+        <>
+          <Piv
+            plugin={draggable({ payload, activationDistance: 0 })}
+            htmlProps={{ 'data-testid': 'source' }}
+          />
+          <Piv
+            plugin={droppable({
+              onDrop: (context) => {
+                receivedPayload = context.payload
+              },
+            })}
+            htmlProps={{ 'data-testid': 'payload-target' }}
+          />
+          <Piv
+            plugin={droppable({
+              accepts: ({ kind, files }) =>
+                kind === 'external' && files.length > 0,
+              onDrop: (context) => {
+                receivedFiles = context.files
+                receivedItems = context.items
+              },
+            })}
+            htmlProps={{ 'data-testid': 'file-target' }}
+          />
+        </>
+      ),
+      host,
+    )
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
-    const payloadTarget = document.querySelector<HTMLElement>('[data-testid="payload-target"]')!
-    const fileTarget = document.querySelector<HTMLElement>('[data-testid="file-target"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
+    const payloadTarget = document.querySelector<HTMLElement>(
+      '[data-testid="payload-target"]',
+    )!
+    const fileTarget = document.querySelector<HTMLElement>(
+      '[data-testid="file-target"]',
+    )!
     stubPointerCapture(source)
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([payloadTarget])
 
@@ -130,18 +169,24 @@ describe('droppable', () => {
     expect(payloadTarget.getAttribute('data-drop-hovering')).not.toBe('true')
 
     const externalTransfer = new DataTransfer()
-    externalTransfer.items.add(new File(['hello'], 'hello.txt', { type: 'text/plain' }))
-    fileTarget.dispatchEvent(new DragEvent('dragover', {
-      bubbles: true,
-      cancelable: true,
-      dataTransfer: externalTransfer,
-    }))
+    externalTransfer.items.add(
+      new File(['hello'], 'hello.txt', { type: 'text/plain' }),
+    )
+    fileTarget.dispatchEvent(
+      new DragEvent('dragover', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: externalTransfer,
+      }),
+    )
     flush()
-    fileTarget.dispatchEvent(new DragEvent('drop', {
-      bubbles: true,
-      cancelable: true,
-      dataTransfer: externalTransfer,
-    }))
+    fileTarget.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: externalTransfer,
+      }),
+    )
     flush()
     expect(receivedFiles.map((file) => file.name)).toEqual(['hello.txt'])
     expect(receivedItems.map((item) => item.kind)).toEqual(['file'])
@@ -152,33 +197,41 @@ describe('droppable', () => {
     let disposeTree!: () => void
     let cleanedBeforeDrop = false
 
-    disposeTree = render(() => (
-      <>
-        <Piv
-          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
-          htmlProps={{ 'data-testid': 'source' }}
-        />
-        <Piv
-          plugin={droppable({
-            accepts: ({ kind }) => kind === 'internal',
-            onDrop: (context) => {
-              if (context.kind !== 'internal') return
-              const { source } = context
-              cleanedBeforeDrop = !source.hasAttribute('data-interacting')
-                && getComputedStyle(source).translate === 'none'
-                && !source.classList.contains('top-layer')
-                && !source.matches(':popover-open')
-              disposeTree()
-            },
-          })}
-          htmlProps={{ 'data-testid': 'target' }}
-        />
-      </>
-    ), host)
+    disposeTree = render(
+      () => (
+        <>
+          <Piv
+            plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+            htmlProps={{ 'data-testid': 'source' }}
+          />
+          <Piv
+            plugin={droppable({
+              accepts: ({ kind }) => kind === 'internal',
+              onDrop: (context) => {
+                if (context.kind !== 'internal') return
+                const { source } = context
+                cleanedBeforeDrop =
+                  !source.hasAttribute('data-interacting') &&
+                  getComputedStyle(source).translate === 'none' &&
+                  !source.classList.contains('top-layer') &&
+                  !source.matches(':popover-open')
+                disposeTree()
+              },
+            })}
+            htmlProps={{ 'data-testid': 'target' }}
+          />
+        </>
+      ),
+      host,
+    )
     dispose = disposeTree
 
-    const source = document.querySelector<HTMLElement>('[data-testid="source"]')!
-    const target = document.querySelector<HTMLElement>('[data-testid="target"]')!
+    const source = document.querySelector<HTMLElement>(
+      '[data-testid="source"]',
+    )!
+    const target = document.querySelector<HTMLElement>(
+      '[data-testid="target"]',
+    )!
     stubPointerCapture(source)
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([target])
 

@@ -8,12 +8,27 @@ import { mapArray } from '@/foundation/render'
 import { createMemo } from '@/foundation/reactivity'
 import { isTruthy, toArray } from '@edsolater/fnkit'
 import type { PivHTMLElement, PivTag } from './domMap'
-import { consumeHTMLProp, type HTMLPropAtom, type HTMLPropPrimitive } from './handleHTMLPropsValue'
+import {
+  consumeHTMLProp,
+  type HTMLPropAtom,
+  type HTMLPropPrimitive,
+} from './handleHTMLPropsValue'
 
 /** 已有专用 Piv prop 的字段禁止从 htmlProps 重复进入 DOM。 */
-type ReservedHTMLPropKey = 'id' | 'class' | 'className' | 'style' | 'children' | 'ref' | `on${string}` | `on:${string}`
+type ReservedHTMLPropKey =
+  | 'id'
+  | 'class'
+  | 'className'
+  | 'style'
+  | 'children'
+  | 'ref'
+  | `on${string}`
+  | `on:${string}`
 
-type KnownHTMLPropKey<Tag extends PivTag> = Exclude<keyof JSX.IntrinsicElements[Tag], ReservedHTMLPropKey>
+type KnownHTMLPropKey<Tag extends PivTag> = Exclude<
+  keyof JSX.IntrinsicElements[Tag],
+  ReservedHTMLPropKey
+>
 
 type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
   [Key in KnownHTMLPropKey<Tag>]?: HTMLPropAtom<JSX.IntrinsicElements[Tag][Key]>
@@ -24,7 +39,9 @@ type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
 }
 
 /** 一份完整 HTML props 声明；外层 Source 可以整体替换记录或记录列表。 */
-export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArraySource<HTMLPropsRecord<Tag>>
+export type HTMLPropsList<Tag extends PivTag = 'div'> = MayArraySource<
+  HTMLPropsRecord<Tag>
+>
 
 /**
  * 消费整合后的普通 HTML props，选择同名字段的最终值并维护 DOM 清理。
@@ -37,25 +54,34 @@ export function consumeHTMLProps<Tag extends PivTag>(
     const htmlPropsList = toArray(val(readHTMLPropsList()))
       .map((htmlProps) => val(htmlProps))
       .filter(isTruthy)
-    return new Map(readActiveHTMLPropEntries(htmlPropsList).filter(([key]) => !isReservedHTMLPropKey(key)))
+    return new Map(
+      readActiveHTMLPropEntries(htmlPropsList).filter(
+        ([key]) => !isReservedHTMLPropKey(key),
+      ),
+    )
   })
 
   // 同 key 的监听随来源变化持续存在；字段退出时由原生列表作用域释放本轮绑定。
-  mapArray(() => Array.from(activeProps().keys()), key => {
-    consumeHTMLProp(element, key, () => activeProps().get(key))
-    return key
-  })
+  mapArray(
+    () => Array.from(activeProps().keys()),
+    (key) => {
+      consumeHTMLProp(element, key, () => activeProps().get(key))
+      return key
+    },
+  )
 }
 
 function isReservedHTMLPropKey(key: string) {
-  return key === 'id'
-    || key === 'class'
-    || key === 'className'
-    || key === 'style'
-    || key === 'children'
-    || key === 'ref'
-    || key.startsWith('on:')
-    || (key.startsWith('on') && key.length > 2)
+  return (
+    key === 'id' ||
+    key === 'class' ||
+    key === 'className' ||
+    key === 'style' ||
+    key === 'children' ||
+    key === 'ref' ||
+    key.startsWith('on:') ||
+    (key.startsWith('on') && key.length > 2)
+  )
 }
 
 /**
@@ -64,7 +90,9 @@ function isReservedHTMLPropKey(key: string) {
 function readActiveHTMLPropEntries<Tag extends PivTag>(
   htmlPropsList: HTMLPropsRecord<Tag>[],
 ): [key: string, atom: HTMLPropAtom][] {
-  const keys = new Set(htmlPropsList.flatMap((htmlProps) => Object.keys(htmlProps)))
+  const keys = new Set(
+    htmlPropsList.flatMap((htmlProps) => Object.keys(htmlProps)),
+  )
   const entries: [key: string, atom: HTMLPropAtom][] = []
 
   for (const key of keys) {

@@ -1,6 +1,5 @@
 /** 颜色工具函数，提供单源颜色派生和多颜色因素合成的能力。 */
 
-
 /* ========== 颜色调整工具函数 ========== */
 /*
  * ！【内部方法】组合用 color 基础工具函数，
@@ -12,48 +11,87 @@
 @function --shift-color-channel(
     --color <color>,
     --channel
-      type(lighter | darker | vivid | grayish | hue-forward | hue-backward | faded | lightness | chroma | hue | opacity),
+      type(
+        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded
+          | lightness | chroma | hue | opacity
+      ),
     --value type(<angle> | <percentage> | <number>)
   )
   returns <color> {
   result: if(
-    style(--channel: lighter): oklch(from var(--color) calc(l + (var(--value) / 100%)) c h / alpha) ;
-      style(--channel: darker): oklch(from var(--color) calc(l - (var(--value) / 100%)) c h / alpha) ;
-      style(--channel: vivid): oklch(from var(--color) l calc(c + var(--value)) h / alpha) ;
-      style(--channel: grayish): oklch(from var(--color) l calc(c - var(--value)) h / alpha) ;
-      style(--channel: hue-forward): oklch(from var(--color) l c calc(h + (var(--value) / 1deg)) / alpha) ;
-      style(--channel: hue-backward): oklch(from var(--color) l c calc(h - (var(--value) / 1deg)) / alpha) ;
-      style(--channel: faded): oklch(from var(--color) l c h / calc(alpha - (var(--value) / 100%))) ;
-      style(--channel: lightness): oklch(from var(--color) calc(var(--value) / 100%) c h / alpha) ;
-      style(--channel: chroma): oklch(from var(--color) l var(--value) h / alpha) ;
-      style(--channel: hue): oklch(from var(--color) l c calc(var(--value) / 1deg) / alpha) ;
-      style(--channel: opacity): oklch(from var(--color) l c h / calc(var(--value) / 100%)) ; else: var(--color)
+    style(--channel: lighter): oklch(
+        from var(--color) calc(l + (var(--value) / 100%)) c h / alpha
+      )
+      ;
+      style(--channel: darker): oklch(
+        from var(--color) calc(l - (var(--value) / 100%)) c h / alpha
+      )
+      ;
+      style(--channel: vivid): oklch(
+        from var(--color) l calc(c + var(--value)) h / alpha
+      )
+      ;
+      style(--channel: grayish): oklch(
+        from var(--color) l calc(c - var(--value)) h / alpha
+      )
+      ;
+      style(--channel: hue-forward): oklch(
+        from var(--color) l c calc(h + (var(--value) / 1deg)) / alpha
+      )
+      ;
+      style(--channel: hue-backward): oklch(
+        from var(--color) l c calc(h - (var(--value) / 1deg)) / alpha
+      )
+      ;
+      style(--channel: faded): oklch(
+        from var(--color) l c h / calc(alpha - (var(--value) / 100%))
+      )
+      ;
+      style(--channel: lightness): oklch(
+        from var(--color) calc(var(--value) / 100%) c h / alpha
+      )
+      ;
+      style(--channel: chroma): oklch(
+        from var(--color) l var(--value) h / alpha
+      )
+      ;
+      style(--channel: hue): oklch(
+        from var(--color) l c calc(var(--value) / 1deg) / alpha
+      )
+      ;
+      style(--channel: opacity): oklch(
+        from var(--color) l c h / calc(var(--value) / 100%)
+      )
+      ; else: var(--color)
   );
 }
 
 @function --color-adjust(
     --color <color>,
     --channel1
-      type(lighter | darker | vivid | grayish | hue-forward | hue-backward | faded | lightness | chroma | hue | opacity),
+      type(
+        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded
+          | lightness | chroma | hue | opacity
+      ),
     --value1 type(<angle> | <percentage> | <number>),
     --channel2
       type(
-        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded | lightness | chroma | hue | opacity |
-          none
+        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded
+          | lightness | chroma | hue | opacity | none
       ): none,
     --value2 type(<angle> | <percentage> | <number>): 0,
 
     --channel3
       type(
-        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded | lightness | chroma | hue | opacity |
-          none
+        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded
+          | lightness | chroma | hue | opacity | none
       ): none,
     --value3 type(<angle> | <percentage> | <number>): 0,
 
     --channel4
       type(
-        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded | lightness | chroma | hue | opacity |
-          none
+        lighter | darker | vivid | grayish | hue-forward | hue-backward | faded
+          | lightness | chroma | hue | opacity | none
       ): none,
     --value4 type(<angle> | <percentage> | <number>): 0
   )
@@ -64,39 +102,58 @@
       style(--channel1: lightness): calc(var(--value1) / 100%) ; else: l
   );
   --lightness-2: if(
-    style(--channel2: lighter): calc(var(--lightness-1) + (var(--value2) / 100%)) ;
-      style(--channel2: darker): calc(var(--lightness-1) - (var(--value2) / 100%)) ;
-      style(--channel2: lightness): calc(var(--value2) / 100%) ; else: var(--lightness-1)
+    style(--channel2: lighter): calc(
+        var(--lightness-1) + (var(--value2) / 100%)
+      )
+      ;
+      style(--channel2: darker): calc(
+        var(--lightness-1) - (var(--value2) / 100%)
+      )
+      ; style(--channel2: lightness): calc(var(--value2) / 100%) ;
+      else: var(--lightness-1)
   );
   --lightness-3: if(
-    style(--channel3: lighter): calc(var(--lightness-2) + (var(--value3) / 100%)) ;
-      style(--channel3: darker): calc(var(--lightness-2) - (var(--value3) / 100%)) ;
-      style(--channel3: lightness): calc(var(--value3) / 100%) ; else: var(--lightness-2)
+    style(--channel3: lighter): calc(
+        var(--lightness-2) + (var(--value3) / 100%)
+      )
+      ;
+      style(--channel3: darker): calc(
+        var(--lightness-2) - (var(--value3) / 100%)
+      )
+      ; style(--channel3: lightness): calc(var(--value3) / 100%) ;
+      else: var(--lightness-2)
   );
   --lightness-4: if(
-    style(--channel4: lighter): calc(var(--lightness-3) + (var(--value4) / 100%)) ;
-      style(--channel4: darker): calc(var(--lightness-3) - (var(--value4) / 100%)) ;
-      style(--channel4: lightness): calc(var(--value4) / 100%) ; else: var(--lightness-3)
+    style(--channel4: lighter): calc(
+        var(--lightness-3) + (var(--value4) / 100%)
+      )
+      ;
+      style(--channel4: darker): calc(
+        var(--lightness-3) - (var(--value4) / 100%)
+      )
+      ; style(--channel4: lightness): calc(var(--value4) / 100%) ;
+      else: var(--lightness-3)
   );
 
   --chroma-1: if(
-    style(--channel1: vivid): calc(c + var(--value1)) ; style(--channel1: grayish): calc(c - var(--value1)) ;
+    style(--channel1: vivid): calc(c + var(--value1)) ;
+      style(--channel1: grayish): calc(c - var(--value1)) ;
       style(--channel1: chroma): var(--value1) ; else: c
   );
   --chroma-2: if(
     style(--channel2: vivid): calc(var(--chroma-1) + var(--value2)) ;
-      style(--channel2: grayish): calc(var(--chroma-1) - var(--value2)) ; style(--channel2: chroma): var(--value2) ;
-      else: var(--chroma-1)
+      style(--channel2: grayish): calc(var(--chroma-1) - var(--value2)) ;
+      style(--channel2: chroma): var(--value2) ; else: var(--chroma-1)
   );
   --chroma-3: if(
     style(--channel3: vivid): calc(var(--chroma-2) + var(--value3)) ;
-      style(--channel3: grayish): calc(var(--chroma-2) - var(--value3)) ; style(--channel3: chroma): var(--value3) ;
-      else: var(--chroma-2)
+      style(--channel3: grayish): calc(var(--chroma-2) - var(--value3)) ;
+      style(--channel3: chroma): var(--value3) ; else: var(--chroma-2)
   );
   --chroma-4: if(
     style(--channel4: vivid): calc(var(--chroma-3) + var(--value4)) ;
-      style(--channel4: grayish): calc(var(--chroma-3) - var(--value4)) ; style(--channel4: chroma): var(--value4) ;
-      else: var(--chroma-3)
+      style(--channel4: grayish): calc(var(--chroma-3) - var(--value4)) ;
+      style(--channel4: chroma): var(--value4) ; else: var(--chroma-3)
   );
 
   --hue-1: if(
@@ -105,19 +162,28 @@
       style(--channel1: hue): calc(var(--value1) / 1deg) ; else: h
   );
   --hue-2: if(
-    style(--channel2: hue-forward): calc(var(--hue-1) + (var(--value2) / 1deg)) ;
-      style(--channel2: hue-backward): calc(var(--hue-1) - (var(--value2) / 1deg)) ;
-      style(--channel2: hue): calc(var(--value2) / 1deg) ; else: var(--hue-1)
+    style(--channel2: hue-forward): calc(var(--hue-1) + (var(--value2) / 1deg))
+      ;
+      style(--channel2: hue-backward): calc(
+        var(--hue-1) - (var(--value2) / 1deg)
+      )
+      ; style(--channel2: hue): calc(var(--value2) / 1deg) ; else: var(--hue-1)
   );
   --hue-3: if(
-    style(--channel3: hue-forward): calc(var(--hue-2) + (var(--value3) / 1deg)) ;
-      style(--channel3: hue-backward): calc(var(--hue-2) - (var(--value3) / 1deg)) ;
-      style(--channel3: hue): calc(var(--value3) / 1deg) ; else: var(--hue-2)
+    style(--channel3: hue-forward): calc(var(--hue-2) + (var(--value3) / 1deg))
+      ;
+      style(--channel3: hue-backward): calc(
+        var(--hue-2) - (var(--value3) / 1deg)
+      )
+      ; style(--channel3: hue): calc(var(--value3) / 1deg) ; else: var(--hue-2)
   );
   --hue-4: if(
-    style(--channel4: hue-forward): calc(var(--hue-3) + (var(--value4) / 1deg)) ;
-      style(--channel4: hue-backward): calc(var(--hue-3) - (var(--value4) / 1deg)) ;
-      style(--channel4: hue): calc(var(--value4) / 1deg) ; else: var(--hue-3)
+    style(--channel4: hue-forward): calc(var(--hue-3) + (var(--value4) / 1deg))
+      ;
+      style(--channel4: hue-backward): calc(
+        var(--hue-3) - (var(--value4) / 1deg)
+      )
+      ; style(--channel4: hue): calc(var(--value4) / 1deg) ; else: var(--hue-3)
   );
 
   --opacity-1: if(
@@ -126,18 +192,24 @@
   );
   --opacity-2: if(
     style(--channel2: faded): calc(var(--opacity-1) - (var(--value2) / 100%)) ;
-      style(--channel2: opacity): calc(var(--value2) / 100%) ; else: var(--opacity-1)
+      style(--channel2: opacity): calc(var(--value2) / 100%) ;
+      else: var(--opacity-1)
   );
   --opacity-3: if(
     style(--channel3: faded): calc(var(--opacity-2) - (var(--value3) / 100%)) ;
-      style(--channel3: opacity): calc(var(--value3) / 100%) ; else: var(--opacity-2)
+      style(--channel3: opacity): calc(var(--value3) / 100%) ;
+      else: var(--opacity-2)
   );
   --opacity-4: if(
     style(--channel4: faded): calc(var(--opacity-3) - (var(--value4) / 100%)) ;
-      style(--channel4: opacity): calc(var(--value4) / 100%) ; else: var(--opacity-3)
+      style(--channel4: opacity): calc(var(--value4) / 100%) ;
+      else: var(--opacity-3)
   );
 
-  result: oklch(from var(--color) var(--lightness-4) var(--chroma-4) var(--hue-4) / var(--opacity-4));
+  result: oklch(
+    from var(--color) var(--lightness-4) var(--chroma-4) var(--hue-4) /
+      var(--opacity-4)
+  );
 }
 
 /* ========== 颜色方言函数 ========== */
@@ -195,7 +267,6 @@
 @function --grayscale(--color <color>) returns <color> {
   result: oklch(from var(--color) l 0 h / alpha);
 }
-
 
 /* 透明化，默认虚化一半 */
 @function --alpha(--color <color>, --factor <percentage>: 50%) returns <color> {
@@ -264,7 +335,6 @@
   result: var(--mix1234);
 }
 
-
 /*
   * --soft-mix：柔和混色工具。
   * 它用当前颜色和一个目标颜色做混色，权重固定为 80% / 20%，创建一个更接近当前颜色的柔和新色。
@@ -273,7 +343,7 @@
   */
 @function --soft-mix(--color1 <color>, --color2 <color>) returns <color> {
   result: color-mix(in oklab, var(--color1) 80%, var(--color2) 20%);
-} 
+}
 
 /*
   * --equal-mix：等比例混色工具。
@@ -284,5 +354,3 @@
 @function --equal-mix(--color1 <color>, --color2 <color>) returns <color> {
   result: color-mix(in oklab, var(--color1) 50%, var(--color2) 50%);
 }
-
-

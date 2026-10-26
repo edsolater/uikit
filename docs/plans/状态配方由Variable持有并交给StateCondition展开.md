@@ -38,25 +38,25 @@ rules(solidButton, [
 
 # 哪些内容进入 state
 
-| 内容 | 归属与改动判断 |
-| --- | --- |
-| 同一背景、前景、阴影、透明度或光标在 hover、active、focus、disabled 下的不同取值 | 对应 Variable 的默认内容与 `states`；Mixin 消费该 Variable |
-| hover、active、focus、disabled 的名称、匹配条件与优先顺序 | 现有 StateCondition 登记；组件不复制 selector 或自行排列优先级 |
-| variant、tone、size 的分类与材料选择 | 组件 Rule 选择使用哪份配方；选中的配方自身携带状态 |
-| loading 等 status 下的专属效果 | 先保留组件的业务选择；其中光标遇到 disabled 的变化仍归光标 Variable。若需提升为通用 StateCondition，另以明确业务依据裁决 |
-| variant 与 tone 同时成立时的专属配方 | 先核实是否确有独立视觉意图；必要的分类选择可保留，但该配方的 hover／active 仍放入 Variable |
+| 内容                                                                             | 归属与改动判断                                                                                                           |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 同一背景、前景、阴影、透明度或光标在 hover、active、focus、disabled 下的不同取值 | 对应 Variable 的默认内容与 `states`；Mixin 消费该 Variable                                                               |
+| hover、active、focus、disabled 的名称、匹配条件与优先顺序                        | 现有 StateCondition 登记；组件不复制 selector 或自行排列优先级                                                           |
+| variant、tone、size 的分类与材料选择                                             | 组件 Rule 选择使用哪份配方；选中的配方自身携带状态                                                                       |
+| loading 等 status 下的专属效果                                                   | 先保留组件的业务选择；其中光标遇到 disabled 的变化仍归光标 Variable。若需提升为通用 StateCondition，另以明确业务依据裁决 |
+| variant 与 tone 同时成立时的专属配方                                             | 先核实是否确有独立视觉意图；必要的分类选择可保留，但该配方的 hover／active 仍放入 Variable                               |
 
 StateCondition 拥有“何时成立”，Variable 拥有“成立时取什么值”。Mixin 拥有效果到属性的映射，不识别 Button 分类、不读取状态图，也不增加状态分支。Variable 可由组件或通用 Pieces 定义，按配方的实际归属决定位置。
 
 # 代码落点与实施顺序
 
-| 落点 | 当前职责 | 计划处理与理由 |
-| --- | --- | --- |
-| [Button.style.ts](../../src/components/kits/Button/Button.style.ts) | 组件分类、材料选择与效果组装；颜色状态被拆成逐状态 Rule | 清点默认、bare、solid、tone 及必要组合配方，把同一效果的状态值收回 Variable，再交给 Mixin 消费 |
-| [variable/core.ts](../../src/style-system/variable/core.ts) | 保存状态内容；`declareVariableStates` 展开定义，`readState` 读取依赖的同名状态 | 优先复用现有展开链；若局部颜色来源无法正确接通，修复内容与声明的衔接，不让 Button 代替编译器展开 |
-| [state-conditions.ts](../../src/style-system/pieces/state-conditions.ts)、[interaction.ts](../../src/style-system/pieces/conditions/interaction.ts) | 中央名称、顺序、条件；hover／active 排除 disabled | 保留中央责任，核实生成结果符合已有条件；仅在验证发现实际缺口时修改，不新建平行登记表 |
-| [appearance.ts](../../src/style-system/pieces/mixins/appearance.ts)、[interaction Mixin](../../src/style-system/pieces/mixins/interaction.ts) | 接受内容并输出颜色、阴影、交互属性声明 | 直接接收携带状态的 Variable；不增加逐状态重发属性的能力 |
-| [变量定义与消费](../../src/style-system/doc/变量定义与消费.md)、[样式文件写法](../style/样式文件写法.md) | 目前包含普通状态 Rule 与前序修改的建议 | 实施时修正状态归属与示例；与另一篇 Plan 协调接口说明，不将状态职责混成默认颜色设置协议 |
+| 落点                                                                                                                                                | 当前职责                                                                       | 计划处理与理由                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [Button.style.ts](../../src/components/kits/Button/Button.style.ts)                                                                                 | 组件分类、材料选择与效果组装；颜色状态被拆成逐状态 Rule                        | 清点默认、bare、solid、tone 及必要组合配方，把同一效果的状态值收回 Variable，再交给 Mixin 消费   |
+| [variable/core.ts](../../src/style-system/variable/core.ts)                                                                                         | 保存状态内容；`declareVariableStates` 展开定义，`readState` 读取依赖的同名状态 | 优先复用现有展开链；若局部颜色来源无法正确接通，修复内容与声明的衔接，不让 Button 代替编译器展开 |
+| [state-conditions.ts](../../src/style-system/pieces/state-conditions.ts)、[interaction.ts](../../src/style-system/pieces/conditions/interaction.ts) | 中央名称、顺序、条件；hover／active 排除 disabled                              | 保留中央责任，核实生成结果符合已有条件；仅在验证发现实际缺口时修改，不新建平行登记表             |
+| [appearance.ts](../../src/style-system/pieces/mixins/appearance.ts)、[interaction Mixin](../../src/style-system/pieces/mixins/interaction.ts)       | 接受内容并输出颜色、阴影、交互属性声明                                         | 直接接收携带状态的 Variable；不增加逐状态重发属性的能力                                          |
+| [变量定义与消费](../../src/style-system/doc/变量定义与消费.md)、[样式文件写法](../style/样式文件写法.md)                                            | 目前包含普通状态 Rule 与前序修改的建议                                         | 实施时修正状态归属与示例；与另一篇 Plan 协调接口说明，不将状态职责混成默认颜色设置协议           |
 
 1. **清点状态配方。** 按效果列出每份 Button 配方的默认值与状态值，区分分类选择和状态变化。以用户指出的 solid 前景色作为第一条完整迁移链。
 2. **验证现有状态消费链。** 用 Variable → Mixin → 编译的最小案例确认状态声明生成、来源状态读取、中央顺序与消费位置。现有 `states` 已能表达时直接使用。

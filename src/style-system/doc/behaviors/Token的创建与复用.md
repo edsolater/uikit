@@ -10,8 +10,11 @@ Token 将基础内容和可选 state 作为一份定义。直接值、表达式�
 token('2px')
 token('2px', 'spacing')
 token({ default: '2px' })
-token({ default: 2, hover: base => multiply(base, 2), active: 4 })
-token(2, { name: 'strength', state: { hover: base => multiply(base, 2), active: 4 } })
+token({ default: 2, hover: (base) => multiply(base, 2), active: 4 })
+token(2, {
+  name: 'strength',
+  state: { hover: (base) => multiply(base, 2), active: 4 },
+})
 ```
 
 Argument parser 将不同写法归一为固定的七个 key：`default`、`name`、`state`、`address`、`registration`、`onFirstScan`、`compileWaveIndex`。可选项可以未提供，后续流程只处理统一结果。状态简写中的 default 是基础内容，其余项是状态定义；配置中的字段统一叫 state。

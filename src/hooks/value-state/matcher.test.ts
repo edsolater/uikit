@@ -12,7 +12,14 @@ import { createIdent } from './ident'
 import { createMatcher } from './matcher'
 
 test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', () => {
-  const { source, enabled, equalsOne, differsFromOne, matchesCondition, dispose } = createRoot(dispose => {
+  const {
+    source,
+    enabled,
+    equalsOne,
+    differsFromOne,
+    matchesCondition,
+    dispose,
+  } = createRoot((dispose) => {
     const source = createState(1)
     const enabled = createState(true)
     const matcher = createMatcher(source)
@@ -20,7 +27,14 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
     const differsFromOne = matcher.notMatch(1)
     const matchesCondition = matcher.match((value) => value > 0 && val(enabled))
 
-    return { source, enabled, equalsOne, differsFromOne, matchesCondition, dispose }
+    return {
+      source,
+      enabled,
+      equalsOne,
+      differsFromOne,
+      matchesCondition,
+      dispose,
+    }
   })
   try {
     expectTypeOf(equalsOne).toEqualTypeOf<StateView<boolean>>()
@@ -47,8 +61,10 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
 })
 
 test('标识循环的首尾匹配通过 StateView 跟随同一个标识状态', () => {
-  const { ident, operator, first, last, dispose } = createRoot(dispose => {
-    const [ident, operator] = createIdent<'first' | 'last'>('first', { idents: ['first', 'last'] })
+  const { ident, operator, first, last, dispose } = createRoot((dispose) => {
+    const [ident, operator] = createIdent<'first' | 'last'>('first', {
+      idents: ['first', 'last'],
+    })
     const first = operator.matchFirst()
     const last = operator.matchLast()
 

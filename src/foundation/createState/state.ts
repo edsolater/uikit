@@ -8,7 +8,12 @@ import { hasProperty, isTrue } from '@edsolater/fnkit'
 import { createMemo } from 'solid-js'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
 import { isPromiseLike } from './promise-like'
-import { createAsyncSignal, type AsyncSignalOptions, type StateSource, type StateUpdate } from './createAsyncSignal'
+import {
+  createAsyncSignal,
+  type AsyncSignalOptions,
+  type StateSource,
+  type StateUpdate,
+} from './createAsyncSignal'
 
 export const stateBrand = Symbol('State')
 
@@ -43,8 +48,14 @@ export function createState<T>(
   initialValue: StateSource<T>,
   options?: AsyncSignalOptions<Awaited<T>>,
 ): State<Awaited<T>>
-export function createState(initialValue?: any, options?: AsyncSignalOptions<any>): State<any> {
-  const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(initialValue, options)
+export function createState(
+  initialValue?: any,
+  options?: AsyncSignalOptions<any>,
+): State<any> {
+  const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(
+    initialValue,
+    options,
+  )
 
   const thisState: State = {
     read: solidjsAccessor,
@@ -65,7 +76,10 @@ export function createState(initialValue?: any, options?: AsyncSignalOptions<any
  * 创建缓存当前映射结果的 StateView，映射返回的 StateView 会继续跟随其当前值。
  * 派生视图属于创建时的响应式作用域，作用域释放后停止跟随依赖。
  */
-export function mapStateView<T, U>(view: StateView<T>, mapper: (value: T) => U | StateView<U>): StateView<Awaited<U>> {
+export function mapStateView<T, U>(
+  view: StateView<T>,
+  mapper: (value: T) => U | StateView<U>,
+): StateView<Awaited<U>> {
   const read = createMemo<U>(() => {
     const mapped = mapper(view.read())
     const result = isStateView(mapped) ? mapped.read() : mapped

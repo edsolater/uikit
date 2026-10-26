@@ -48,18 +48,18 @@ variable(source, {
   name: 'surface-color',
   states: {
     hover: hoverColor,
-    active: source => colorMix([source, 0.48], neutralColor(2)),
+    active: (source) => colorMix([source, 0.48], neutralColor(2)),
   },
 })
 ```
 
 这里的颜色和比例只演示接口，不规定 Theme 配方。
 
-| 输入 | 表达什么 |
-| --- | --- |
-| 第一个参数 `source` | 创建所用的值。它是什么对象或值，状态回调就收到什么，类型也随输入保留 |
-| `name` | 创建出的 Variable 的名字，供最终 CSS 变量命名使用；对应原来的 `Variable.name` |
-| `states` | 可选的状态配置。键是 State Condition，内容既可以直接指定，也可以用接收 source 的回调产生 |
+| 输入                | 表达什么                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| 第一个参数 `source` | 创建所用的值。它是什么对象或值，状态回调就收到什么，类型也随输入保留                     |
+| `name`              | 创建出的 Variable 的名字，供最终 CSS 变量命名使用；对应原来的 `Variable.name`            |
+| `states`            | 可选的状态配置。键是 State Condition，内容既可以直接指定，也可以用接收 source 的回调产生 |
 
 State Condition 描述主体自身状态，例如 hover、active、disabled、focusVisible。它承接原来 Subject Condition 的命名与状态职责，不表示语气。原 Value 中确实需要的状态适配迁到这里。
 
@@ -79,7 +79,7 @@ State Condition 描述主体自身状态，例如 hover、active、disabled、fo
 variableFrom(surfaceColor, {
   name: 'button-surface-color',
   states: {
-    active: source => colorMix([source, 0.48], neutralColor(2)),
+    active: (source) => colorMix([source, 0.48], neutralColor(2)),
   },
 })
 ```
@@ -139,9 +139,9 @@ const accentColor = variableCluster({
 使用方式：
 
 ```ts
-accentColor          // Cluster 直接作为 Variable 使用
-accentColor('soft')  // 选择 soft 成员，结果仍是 Variable
-neutralColor(2)      // 用数字选择成员，结果仍是 Variable
+accentColor // Cluster 直接作为 Variable 使用
+accentColor('soft') // 选择 soft 成员，结果仍是 Variable
+neutralColor(2) // 用数字选择成员，结果仍是 Variable
 ```
 
 Cluster 返回特殊的黑盒对象，它本身也是 Variable。直接使用 `accentColor`，表现为配置中的 `default` Variable；调用 `accentColor('soft')`，返回配置中的 `soft` Variable；`strong` 同理。参数是声明的成员键，不统一命名或解释成 level。像 `neutralColor(2)` 这样的数字选择也对应成员键，不把所有成员都设计成数字等级。
@@ -200,9 +200,7 @@ const loadingCursor = variable('progress', {
   states: { disabled: 'not-allowed' },
 })
 
-rules([...button, '&[data-status~="loading"]'], [
-  [$cursor, loadingCursor],
-])
+rules([...button, '&[data-status~="loading"]'], [[$cursor, loadingCursor]])
 ```
 
 被多处使用的定义也放在首次使用之前，后面继续复用，不重复创建，不设“通用定义集中放置”的例外。定义属于哪个模块，由上面的描述目标与领域判断；模块归属和模块内的阅读顺序分别处理。
@@ -254,18 +252,18 @@ rules(button, [
 
 ## 主要代码落点
 
-| 位置 | 需要承担的改动 |
-| --- | --- |
-| `src/style-system/core/css-value.ts`、`compiler/compile-value.ts` | 移除 Value 状态配置与扩散，保留稳定值的表达和组合 |
-| `src/style-system/core/css-variable.ts`、`compiler/compile-variable.ts` | 创建配置、引用链延伸、状态解析和最终 CSS 输出；自身定义优先，缺失时沿来源查找，内部结构不向使用者泄露 |
-| `src/style-system/values/functions/color-mix.ts`、内容协议及其编译入口 | 返回可识别且可调用的混色对象，接入 CSS 输出能力，和普通状态回调分别处理 |
-| Style System 的 Cluster 实现及导出入口 | 聚合 Variable，支持选择成员和直接使用；具体文件划分根据职责确定 |
-| `src/style-system/materials/state-conditions.ts` 及状态调用方 | 统一 State Condition 名称，保留主体状态含义 |
-| `core/css-rule.ts`、`compiler/compile-css.ts` | 让新 Variable / Cluster 正确参与声明与消费，保持对象关系直到需要输出 |
+| 位置                                                                        | 需要承担的改动                                                                                                                       |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/style-system/core/css-value.ts`、`compiler/compile-value.ts`           | 移除 Value 状态配置与扩散，保留稳定值的表达和组合                                                                                    |
+| `src/style-system/core/css-variable.ts`、`compiler/compile-variable.ts`     | 创建配置、引用链延伸、状态解析和最终 CSS 输出；自身定义优先，缺失时沿来源查找，内部结构不向使用者泄露                                |
+| `src/style-system/values/functions/color-mix.ts`、内容协议及其编译入口      | 返回可识别且可调用的混色对象，接入 CSS 输出能力，和普通状态回调分别处理                                                              |
+| Style System 的 Cluster 实现及导出入口                                      | 聚合 Variable，支持选择成员和直接使用；具体文件划分根据职责确定                                                                      |
+| `src/style-system/materials/state-conditions.ts` 及状态调用方               | 统一 State Condition 名称，保留主体状态含义                                                                                          |
+| `core/css-rule.ts`、`compiler/compile-css.ts`                               | 让新 Variable / Cluster 正确参与声明与消费，保持对象关系直到需要输出                                                                 |
 | `core/css-rule.ts`、`core/css-declaration.ts`、`core/css-key.ts` 及属性入口 | 收紧 rules 公开输入，使用 Key／Variable 元组，不接受普通声明对象和字符串属性键；直接对象路径不依赖名称预注册，不为此强删底层兼容处理 |
-| `value-material`、`component-handle-material`、`mixins` | 将通用材料的状态和配方放回正确的定义，接管现有需求 |
-| `src/components/kits/Button/Button.style.ts` | 使用和延伸材料，保留组件自身选择器与差异，去除通用细节协调 |
-| 对应测试、架构和样式说明 | 验证新行为；实现后同步真实 API 与职责 |
+| `value-material`、`component-handle-material`、`mixins`                     | 将通用材料的状态和配方放回正确的定义，接管现有需求                                                                                   |
+| `src/components/kits/Button/Button.style.ts`                                | 使用和延伸材料，保留组件自身选择器与差异，去除通用细节协调                                                                           |
+| 对应测试、架构和样式说明                                                    | 验证新行为；实现后同步真实 API 与职责                                                                                                |
 
 这些位置是责任导航，不要求每项都新建文件。拆分必须使创建、定义、选择、解析这条链更容易理解。
 
@@ -291,8 +289,8 @@ rules(button, [
 
 这些是实现前需要解决的具体问题，不是可以自行加入的新要求。
 
-| 问题 | 已明确的边界 |
-| --- | --- |
+| 问题                                             | 已明确的边界                                                     |
+| ------------------------------------------------ | ---------------------------------------------------------------- |
 | 某个已有视觉差异无法用这些接口直接表达时怎么办？ | 先指出具体差异及缺少的能力，不自行发明公共分类，也不悄悄改变效果 |
 
 技术事实能从代码和实验确认的，实施时自行查明。发现方案无法完整成立，或存在需要用户抉择的设计分叉时，必须向用户提问：用具体例子说明哪里接不上、有哪些选择、各自改变什么。得到答案前不实施依赖该选择的部分，不用自行补出的概念填空。

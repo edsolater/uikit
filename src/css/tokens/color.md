@@ -123,16 +123,14 @@ brand 也是 action / accent 的上游基础色元
 ```css
 --dye-action: var(--dye-brand);
 
---dye-action-hover: --color-adjust(
-  var(--dye-action),
-  darker, 4%,
-  vivid, 0.01
-);
+--dye-action-hover: --color-adjust(var(--dye-action), darker, 4%, vivid, 0.01);
 
 --dye-action-active: --color-adjust(
   var(--dye-action),
-  darker, 8%,
-  grayish, 0.01
+  darker,
+  8%,
+  grayish,
+  0.01
 );
 ```
 
@@ -150,20 +148,22 @@ active = 按下态 / 压实
 ```css
 --dye-accent: --color-adjust(
   var(--dye-brand),
-  hue-backward, 18deg,
-  lighter, 4%,
-  vivid, 0.01
+  hue-backward,
+  18deg,
+  lighter,
+  4%,
+  vivid,
+  0.01
 );
 
---dye-accent-soft: --color-adjust(
-  var(--dye-accent),
-  opacity, 14%
-);
+--dye-accent-soft: --color-adjust(var(--dye-accent), opacity, 14%);
 
 --dye-accent-strong: --color-adjust(
   var(--dye-accent),
-  lighter, 8%,
-  vivid, 0.02
+  lighter,
+  8%,
+  vivid,
+  0.02
 );
 ```
 

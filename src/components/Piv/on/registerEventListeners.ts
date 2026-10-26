@@ -2,7 +2,11 @@
  * 这个文件负责把已经归一好的 on 声明注册成真实 DOM listener。
  * 它只处理监听器生命周期、cleanup 时序和 Web API 桥接，不负责声明形状解析。
  */
-import { toListenerDiscriptorPairs, type EventListeners, type EventListenerDiscriptorPair } from './handleOn'
+import {
+  toListenerDiscriptorPairs,
+  type EventListeners,
+  type EventListenerDiscriptorPair,
+} from './handleOn'
 
 export type EventKey = keyof GlobalEventHandlersEventMap
 
@@ -79,10 +83,15 @@ function shouldAvoidCleanup(
 /**
  * 消费完整 on 声明，并逐条注册到目标 DOM。
  */
-export function consumeEventListeners(element: HTMLElement, eventListeners: EventListeners) {
+export function consumeEventListeners(
+  element: HTMLElement,
+  eventListeners: EventListeners,
+) {
   const discriptorPairs = toListenerDiscriptorPairs(eventListeners)
-  const cleanups = discriptorPairs.map(discriptor => registerAEventListener(element, discriptor))
-  return () => cleanups.forEach(cleanup => cleanup())
+  const cleanups = discriptorPairs.map((discriptor) =>
+    registerAEventListener(element, discriptor),
+  )
+  return () => cleanups.forEach((cleanup) => cleanup())
 }
 
 /**
@@ -126,8 +135,14 @@ function registerAEventListener<K extends EventKey>(
     if (!isListening) return
 
     // 这里先把“这一层要不要跳过”算成明确布尔值，后面只管按层执行。
-    const avoidGlobalCleanup = shouldAvoidCleanup(stopOptions?.avoidCleanup, 'global')
-    const avoidLocalCleanup = shouldAvoidCleanup(stopOptions?.avoidCleanup, 'local')
+    const avoidGlobalCleanup = shouldAvoidCleanup(
+      stopOptions?.avoidCleanup,
+      'global',
+    )
+    const avoidLocalCleanup = shouldAvoidCleanup(
+      stopOptions?.avoidCleanup,
+      'local',
+    )
 
     isListening = false
     element.removeEventListener(eventName, listener, options)
@@ -161,7 +176,10 @@ function registerAEventListener<K extends EventKey>(
       event: event as GlobalEventHandlersEventMap[K],
       element,
       cancel: (stopOptions) => {
-        avoidCurrentLocalCleanup = shouldAvoidCleanup(stopOptions?.avoidCleanup, 'local')
+        avoidCurrentLocalCleanup = shouldAvoidCleanup(
+          stopOptions?.avoidCleanup,
+          'local',
+        )
         stopListening(stopOptions)
       },
       preventDefault: () => event.preventDefault(),

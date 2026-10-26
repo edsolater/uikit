@@ -3,7 +3,7 @@ import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { hoverable } from './hoverable'
 
-describe('hoverable controller',  () => {
+describe('hoverable controller', () => {
   test('Controller 同时提供状态面板和 hover 操作', async () => {
     const [, controller] = usePlugin(hoverable)
 

@@ -6,7 +6,13 @@
  * 但不应改变调用方心智里的 Piv 主体层级。
  */
 import { createPluginInstanceSymbol } from '../../plugins/plugin-instance'
-import { children, createRenderEffect, onCleanup, type JSXElement, insert } from '@/foundation'
+import {
+  children,
+  createRenderEffect,
+  onCleanup,
+  type JSXElement,
+  insert,
+} from '@/foundation'
 import type { PivHTMLElement, PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
 import type { Plugin } from '../../plugins/definePlugin'
@@ -45,7 +51,9 @@ export function runPlugin<Tag extends PivTag>(
 }
 
 /** Piv 只在消费入口识别由 Plugin 领域定义的高层 Plugin。 */
-function isDefinedPlugin<Tag extends PivTag>(plugin: PivPlugin<Tag>): plugin is Plugin<any, object, Tag> {
+function isDefinedPlugin<Tag extends PivTag>(
+  plugin: PivPlugin<Tag>,
+): plugin is Plugin<any, object, Tag> {
   return typeof plugin === 'function' && createPluginInstanceSymbol in plugin
 }
 
@@ -92,7 +100,9 @@ export interface PivPluginPayload<Tag extends PivTag> {
 type StructurePosition = 'before' | 'after' | 'prepend' | 'append' | 'wrap'
 
 /** 创建当前 DOM 的结构插入工具；位置在提交时确定，内容交给 Solid 解析与更新。 */
-function createPivPluginContext<Tag extends PivTag>(element: PivHTMLElement<Tag>): PivPluginPayload<Tag> {
+function createPivPluginContext<Tag extends PivTag>(
+  element: PivHTMLElement<Tag>,
+): PivPluginPayload<Tag> {
   // 多次 after 按声明顺序追加；其他位置均在提交时读取当前 DOM 关系。
   let afterTail: ChildNode = element
 
@@ -102,7 +112,10 @@ function createPivPluginContext<Tag extends PivTag>(element: PivHTMLElement<Tag>
       end: document.createComment('piv-structure:end'),
     }
     // 单个 DOM 已经解析完成；只有 JSX 来源需要 children 持有条件和子作用域。
-    const resolved = content instanceof Node ? () => [content] : children(() => content).toArray
+    const resolved =
+      content instanceof Node
+        ? () => [content]
+        : children(() => content).toArray
     let previousNodes: Node[] = []
 
     createRenderEffect(
@@ -142,7 +155,9 @@ function createPivPluginContext<Tag extends PivTag>(element: PivHTMLElement<Tag>
         insert(parent, nodes, range.end, previousNodes)
         previousNodes = nodes
         if (position === 'wrap') {
-          const wrapper = nodes.find((node): node is Element => node instanceof Element)
+          const wrapper = nodes.find(
+            (node): node is Element => node instanceof Element,
+          )
           if (wrapper) wrapper.moveBefore(element, null)
         }
       },

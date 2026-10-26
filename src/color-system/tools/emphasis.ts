@@ -5,7 +5,14 @@
  *
  * 同步调整材料的环境感知，供后续颜色处理与环境求值使用。
  */
-import { evaluateLightnessTarget, evaluateSensitivity, type ColorEnvironment, type ColorEnvironmentSensitive, type ColorMaterial, type OKLCH } from '../core'
+import {
+  evaluateLightnessTarget,
+  evaluateSensitivity,
+  type ColorEnvironment,
+  type ColorEnvironmentSensitive,
+  type ColorMaterial,
+  type OKLCH,
+} from '../core'
 
 /**
  * emphasis:凸显颜色
@@ -19,35 +26,70 @@ import { evaluateLightnessTarget, evaluateSensitivity, type ColorEnvironment, ty
  * const near = emphasis(color, environment, 1)
  * const far = emphasis(color, environment, -1)
  */
-export function emphasis<T extends ColorMaterial>(color: T, environment: ColorEnvironment, level: number): T {
+export function emphasis<T extends ColorMaterial>(
+  color: T,
+  environment: ColorEnvironment,
+  level: number,
+): T {
   if (!Number.isFinite(level)) throw new RangeError('强调级数必须是有限数值')
   if (level === 0) return color
 
   const target = emphasisTarget(color.base, environment, level)
   const progress = emphasisProgress(level)
   const base = transitionColor(color.base, target, progress)
-  const environmentSensitivities = adjustEnvironmentSensitivities(color, environment, level, progress)
+  const environmentSensitivities = adjustEnvironmentSensitivities(
+    color,
+    environment,
+    level,
+    progress,
+  )
   const lightnessTarget = color.environmentTargets?.lightness
-  const environmentTargets = level < 0 && lightnessTarget !== undefined
-    ? { ...color.environmentTargets, lightness: (currentBase: OKLCH, currentEnvironment: ColorEnvironment) => {
-      const ambient = currentEnvironment.tint?.lightness ?? currentBase.lightness
-      const target = evaluateLightnessTarget(lightnessTarget, currentBase, currentEnvironment) ?? currentBase.lightness
-      return target + (ambient - target) * progress
-    } }
-    : color.environmentTargets
+  const environmentTargets =
+    level < 0 && lightnessTarget !== undefined
+      ? {
+          ...color.environmentTargets,
+          lightness: (
+            currentBase: OKLCH,
+            currentEnvironment: ColorEnvironment,
+          ) => {
+            const ambient =
+              currentEnvironment.tint?.lightness ?? currentBase.lightness
+            const target =
+              evaluateLightnessTarget(
+                lightnessTarget,
+                currentBase,
+                currentEnvironment,
+              ) ?? currentBase.lightness
+            return target + (ambient - target) * progress
+          },
+        }
+      : color.environmentTargets
 
-  return { ...color, base, environmentSensitivities, ...(environmentTargets ? { environmentTargets } : {}) }
+  return {
+    ...color,
+    base,
+    environmentSensitivities,
+    ...(environmentTargets ? { environmentTargets } : {}),
+  }
 }
 
 /** 确定清晰或褪色的目标：彩色正级增强自身，负级靠近环境，灰色正级增强明暗辨识。 */
-function emphasisTarget(base: OKLCH, environment: ColorEnvironment, level: number): OKLCH {
-  if (level < 0) return {
-    lightness: environment.tint?.lightness ?? base.lightness,
-    chroma: environment.tint?.chroma ?? base.chroma,
-    hue: environment.tint?.hue ?? base.hue,
-  }
+function emphasisTarget(
+  base: OKLCH,
+  environment: ColorEnvironment,
+  level: number,
+): OKLCH {
+  if (level < 0)
+    return {
+      lightness: environment.tint?.lightness ?? base.lightness,
+      chroma: environment.tint?.chroma ?? base.chroma,
+      hue: environment.tint?.hue ?? base.hue,
+    }
   if (base.chroma === 0) {
-    return { ...base, lightness: base.lightness >= (environment.tint?.lightness ?? 0.5) ? 1 : 0 }
+    return {
+      ...base,
+      lightness: base.lightness >= (environment.tint?.lightness ?? 0.5) ? 1 : 0,
+    }
   }
   return {
     // 增加自身明度的 15% × 剩余明度空间，暗部与亮部都少推，避免一路漂白。
@@ -66,31 +108,46 @@ function emphasisProgress(level: number): number {
 
 /** 联合过渡明度与彩色分量；色相由融合自然带出，无彩点不影响实际颜色的连续性。 */
 function transitionColor(base: OKLCH, target: OKLCH, progress: number): OKLCH {
-  const baseAngle = base.hue * Math.PI / 180
-  const targetAngle = target.hue * Math.PI / 180
-  const a = base.chroma * Math.cos(baseAngle) * (1 - progress) + target.chroma * Math.cos(targetAngle) * progress
-  const b = base.chroma * Math.sin(baseAngle) * (1 - progress) + target.chroma * Math.sin(targetAngle) * progress
+  const baseAngle = (base.hue * Math.PI) / 180
+  const targetAngle = (target.hue * Math.PI) / 180
+  const a =
+    base.chroma * Math.cos(baseAngle) * (1 - progress) +
+    target.chroma * Math.cos(targetAngle) * progress
+  const b =
+    base.chroma * Math.sin(baseAngle) * (1 - progress) +
+    target.chroma * Math.sin(targetAngle) * progress
   return {
     lightness: base.lightness + (target.lightness - base.lightness) * progress,
     chroma: Math.hypot(a, b),
-    hue: base.hue === target.hue || target.chroma === 0 ? base.hue : (Math.atan2(b, a) * 180 / Math.PI + 360) % 360,
+    hue:
+      base.hue === target.hue || target.chroma === 0
+        ? base.hue
+        : ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360,
   }
 }
 
 /** 近处减少环境牵引，远处增加；动态规则保留到求值时，仍读取材料自身当前色值。 */
-function adjustEnvironmentSensitivities(color: ColorMaterial, environment: ColorEnvironment, level: number, progress: number): ColorEnvironmentSensitive {
+function adjustEnvironmentSensitivities(
+  color: ColorMaterial,
+  environment: ColorEnvironment,
+  level: number,
+  progress: number,
+): ColorEnvironmentSensitive {
   const sensitivities: ColorEnvironmentSensitive = {}
 
   /** 将原感知比例向不受影响或完全受影响的一端平滑推进。 */
   function adjust(response: number): number {
-    return level < 0 ? response + (1 - response) * progress : response * (1 - progress)
+    return level < 0
+      ? response + (1 - response) * progress
+      : response * (1 - progress)
   }
 
   for (const channel of ['lightness', 'chroma', 'hue'] as const) {
     const rule = color.environmentSensitivities?.[channel]
-    sensitivities[channel] = typeof rule === 'function'
-      ? (base, combined) => adjust(evaluateSensitivity(rule, base, combined))
-      : adjust(evaluateSensitivity(rule, color.base, environment))
+    sensitivities[channel] =
+      typeof rule === 'function'
+        ? (base, combined) => adjust(evaluateSensitivity(rule, base, combined))
+        : adjust(evaluateSensitivity(rule, color.base, environment))
   }
   return sensitivities
 }

@@ -3,7 +3,7 @@ import { val } from '@/foundation'
 import { usePlugin } from '../../usePlugin'
 import { droppable } from './droppable'
 
-describe('droppable controller',  () => {
+describe('droppable controller', () => {
   test('提供启用、悬停和接受状态面板', async () => {
     const [, controller] = usePlugin(droppable)
 

@@ -20,10 +20,10 @@ Source 提供原始内容，Modification 提供变化描述及其表达能力，
 
 下表记录用户已明确的目标职责。协议名称用于区分参与位置，具体 TypeScript 接口与字段已在末尾落实。
 
-| 对象 | Declare 协议 | Adjust 中的协议 | Modify 中的协议 |
-| --- | --- | --- | --- |
-| `Modification` | 独立定义、声明自身的变化内容 | **Adjust 协议**：作为变化方参与应用 | **Modify 协议**：作为变化方参与应用 |
-| `Variable` | 独立定义、声明自身的内容 | **Adjust Target 协议**：作为调整目标 | **Modify Target 协议**：作为修改目标 |
+| 对象           | Declare 协议                 | Adjust 中的协议                      | Modify 中的协议                      |
+| -------------- | ---------------------------- | ------------------------------------ | ------------------------------------ |
+| `Modification` | 独立定义、声明自身的变化内容 | **Adjust 协议**：作为变化方参与应用  | **Modify 协议**：作为变化方参与应用  |
+| `Variable`     | 独立定义、声明自身的内容     | **Adjust Target 协议**：作为调整目标 | **Modify Target 协议**：作为修改目标 |
 
 声明和应用入口根据对象实现的协议判断能否参与，不限定为某个具体构造函数创建的对象。Adjust、Modify 根据双方协议组织应用：Modification 提供变化能力，目标提供目标侧能力；具体如何绑定、如何应用，由使用方控制。不能把 Modification 的 Modify 协议误解成“控制器修改 Modification 自身”，那是后续能力。
 
@@ -36,7 +36,7 @@ const change = modification({
   type: 'color',
   detail: {
     lightness: 0.3,
-    chroma: x => add(x, 0.3),
+    chroma: (x) => add(x, 0.3),
   },
 })
 
@@ -55,12 +55,12 @@ Color、Size 等是不同内容领域的转译规则，Modification 的职责不
 
 ## 目标关系与声明产物
 
-| 对象 | 内容与职责 | 依赖关系 |
-| --- | --- | --- |
-| `Source` | 保存原始内容的 Variable | 可独立声明和使用 |
-| `Modification` | 独立的变化对象，通过 Declare 协议输出自身的 CSS 配方声明 | 配方不固定到某一个 Source |
-| `mergedResult` | 保存组合表达式的 Variable | 引用 Source 和 Modification |
-| `Adjust` | 绑定三者关系，使一次声明包含三者 | 使用上述对象，负责组合关系 |
+| 对象           | 内容与职责                                               | 依赖关系                    |
+| -------------- | -------------------------------------------------------- | --------------------------- |
+| `Source`       | 保存原始内容的 Variable                                  | 可独立声明和使用            |
+| `Modification` | 独立的变化对象，通过 Declare 协议输出自身的 CSS 配方声明 | 配方不固定到某一个 Source   |
+| `mergedResult` | 保存组合表达式的 Variable                                | 引用 Source 和 Modification |
+| `Adjust`       | 绑定三者关系，使一次声明包含三者                         | 使用上述对象，负责组合关系  |
 
 目标关系为 `Source + Modification → mergedResult`。Modification 自身的声明输出变化配方；mergedResult 的声明引用它和 Source。具体组合写法由内容领域决定。
 
@@ -82,11 +82,11 @@ Color、Size 等是不同内容领域的转译规则，Modification 的职责不
 
 ## Adjust 与 Modify 的影响
 
-| 能力 | 实施前行为 | 本次修改目标 |
-| --- | --- | --- |
-| `declare` | 特判 Variable 的基础声明，其他 Key 配对内容 | 按 Declare 协议支持 Variable 与 Modification 的独立定义，并接入绑定关系的共同声明 |
-| `adjust` | 读取默认 JS 数据，计算新值；默认返回新 Variable，`'mutable'` 模式写回原 Variable | 使用 Adjust Target 与 Adjust 协议，绑定 Source、Modification、mergedResult，保留引用关系，并使一次声明覆盖三者 |
-| `modify` | 使用变化描述生成修改声明；颜色配方可经 Variable 引用，已有条件、顺序和局部声明处理 | 使用 Modify Target 与 Modify 协议，将变化应用于目标，保留独立配方引用，核对条件与修改顺序 |
+| 能力      | 实施前行为                                                                         | 本次修改目标                                                                                                   |
+| --------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `declare` | 特判 Variable 的基础声明，其他 Key 配对内容                                        | 按 Declare 协议支持 Variable 与 Modification 的独立定义，并接入绑定关系的共同声明                              |
+| `adjust`  | 读取默认 JS 数据，计算新值；默认返回新 Variable，`'mutable'` 模式写回原 Variable   | 使用 Adjust Target 与 Adjust 协议，绑定 Source、Modification、mergedResult，保留引用关系，并使一次声明覆盖三者 |
+| `modify`  | 使用变化描述生成修改声明；颜色配方可经 Variable 引用，已有条件、顺序和局部声明处理 | 使用 Modify Target 与 Modify 协议，将变化应用于目标，保留独立配方引用，核对条件与修改顺序                      |
 
 Adjust 的关系绑定与原 JS 值计算有不同的产物和生命周期。本次由 CSS 关系绑定替换原 JS 计算与 `'mutable'` 模式，依据见落实结果。
 
@@ -98,15 +98,15 @@ Modify 的目标方与变化方协议职责已接通，绑定结果作为普通 
 
 ## 修改顺序与代码落点
 
-| 顺序 | 修改内容 | 代码落点与归属理由 |
-| --- | --- | --- |
-| 1 | 确定双方协议的最少材料、声明身份、内容表示和三者声明入口 | 根据 Declare、Adjust、Modify 的实际需要定义契约，不要求 Modification 继承 Variable，不凭旧方法名恢复中间转换层 |
-| 2 | 实现 `type`、`detail` 入口、内置内容转译及 Modification 的三个协议 | [modification.ts](../../src/style-system/modification.ts) 承担 Modification 自身定义与协议；颜色规则作为内置实现，具体承载文件在职责核对后确定 |
-| 3 | 迁移颜色配方并退出原组合概念、入口和出口 | 原 `color-variable-modification.ts` 的颜色通道转译已迁入 Modification 内置能力；旧入口及文件已移除，必要表达行为保留 |
-| 4 | 为 Variable 接通 Declare、Adjust Target、Modify Target 协议 | [variable/core.ts](../../src/style-system/variable/core.ts) 提供对象自身及目标侧能力；声明机制由 [operations/declare.ts](../../src/style-system/operations/declare.ts) 消费 Declare 协议 |
-| 5 | 实现三者绑定及一次共同声明 | [operations/adjust.ts](../../src/style-system/operations/adjust.ts) 根据双方协议组织关系；[operations/declare.ts](../../src/style-system/operations/declare.ts) 与现有编译机制处理声明输出、依赖与作用域 |
-| 6 | 接通 Modify 的双方协议消费 | [operations/modify.ts](../../src/style-system/operations/modify.ts) 负责具体修改应用；[编译修改链](../../src/style-system/variable/modify.ts) 负责条件与顺序处理 |
-| 7 | 同步公开出口、调用、注释和验证 | 核对 [index.ts](../../src/style-system/index.ts)、调用方及生成产物，清理旧入口引用，按下列行为验收 |
+| 顺序 | 修改内容                                                           | 代码落点与归属理由                                                                                                                                                                                       |
+| ---- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | 确定双方协议的最少材料、声明身份、内容表示和三者声明入口           | 根据 Declare、Adjust、Modify 的实际需要定义契约，不要求 Modification 继承 Variable，不凭旧方法名恢复中间转换层                                                                                           |
+| 2    | 实现 `type`、`detail` 入口、内置内容转译及 Modification 的三个协议 | [modification.ts](../../src/style-system/modification.ts) 承担 Modification 自身定义与协议；颜色规则作为内置实现，具体承载文件在职责核对后确定                                                           |
+| 3    | 迁移颜色配方并退出原组合概念、入口和出口                           | 原 `color-variable-modification.ts` 的颜色通道转译已迁入 Modification 内置能力；旧入口及文件已移除，必要表达行为保留                                                                                     |
+| 4    | 为 Variable 接通 Declare、Adjust Target、Modify Target 协议        | [variable/core.ts](../../src/style-system/variable/core.ts) 提供对象自身及目标侧能力；声明机制由 [operations/declare.ts](../../src/style-system/operations/declare.ts) 消费 Declare 协议                 |
+| 5    | 实现三者绑定及一次共同声明                                         | [operations/adjust.ts](../../src/style-system/operations/adjust.ts) 根据双方协议组织关系；[operations/declare.ts](../../src/style-system/operations/declare.ts) 与现有编译机制处理声明输出、依赖与作用域 |
+| 6    | 接通 Modify 的双方协议消费                                         | [operations/modify.ts](../../src/style-system/operations/modify.ts) 负责具体修改应用；[编译修改链](../../src/style-system/variable/modify.ts) 负责条件与顺序处理                                         |
+| 7    | 同步公开出口、调用、注释和验证                                     | 核对 [index.ts](../../src/style-system/index.ts)、调用方及生成产物，清理旧入口引用，按下列行为验收                                                                                                       |
 
 实施前核对相关文件的开头职责注释。Modification 的自身描述、协议及内置转译归该主体；Variable 提供自身及目标侧协议；关系绑定与修改应用分别由 variable-adjust、modify 承担。颜色转译可以有内部实现文件，但不能据此重建 Color Variable Modification 独立领域。
 
@@ -127,32 +127,32 @@ Modify 的目标方与变化方协议职责已接通，绑定结果作为普通 
 
 用户已授权落实本计划、编写约束行为的测试，并要求交付时全部测试通过。可以从既定目标推导的实现细节由执行方解决；只有无法推导、必须由用户决定的逻辑缺口才交回裁决。下表已填写实际文件、行为用例和命令结果，完成状态以这些证据为依据。
 
-| 要求与负责主体 | 必须保留的材料、变换与交付 | 验收观察与证据位置 | 状态 |
-| --- | --- | --- | --- |
-| Modification 自身定义与协议 | `type + detail` 保存变化；内置转译；实现 Declare、Adjust、Modify；独立声明不需要 Variable 包装 | [modification.ts](../../src/style-system/modification.ts)；[调整绑定共同声明并保留内容引用.test.ts](../../src/style-system/test/调整绑定共同声明并保留内容引用.test.ts)的独立配方、延迟回调与可调用内容用例 | 满足 |
-| Variable 目标侧协议 | 实现 Declare、Adjust Target、Modify Target；应用入口按协议消费双方 | [variable/core.ts](../../src/style-system/variable/core.ts)、[operations/declare.ts](../../src/style-system/operations/declare.ts)；调整绑定流程的继承方法与自定义非颜色目标用例 | 满足 |
-| 颜色表达职责接管 | 颜色通道固定值、相对表达与未指定通道保留，由内置转译提供；退出旧组合概念和入口 | Modification 内置转译及 [colors.ts](../../src/style-system/pieces/contents/atoms/color/colors.ts) 迁移；源码、现役文档和重建 dist 中旧入口/旧求值链零残留 | 满足 |
-| Adjust 三者绑定 | Source、Modification、mergedResult 的身份及 CSS 引用关系；一次声明同时输出三者 | [operations/adjust.ts](../../src/style-system/operations/adjust.ts)；调整绑定流程的三者/共享/同址来源修改用例；[颜色修改规则按条件组合并在浏览器中生效.browser.test.ts](../../src/style-system/test/颜色修改规则按条件组合并在浏览器中生效.browser.test.ts)的来源与配方局部覆盖 | 满足 |
-| Modify 条件应用 | 目标与变化的协议材料；既有数字及颜色修改、条件、连续顺序、继承和撤销行为 | [operations/modify.ts](../../src/style-system/operations/modify.ts)、[编译修改链](../../src/style-system/variable/modify.ts)、Button 数字调用；原数值/颜色流程回归及新增绑定结果继承 Modify、子级重算、退出恢复浏览器用例 | 满足 |
-| 输入失败与迁移 | 无效内容或协议失败须明确暴露；现有 JS Adjust 的新语义及旧调用迁移须有依据 | 调整绑定流程的不支持内容领域失败、文件级公开类型拒绝；原 JS adjust/mutable 被 CSS 绑定替换，数字 Modify 转用 expression 材料 | 满足 |
-| 生命周期与资源 | 复用声明、依赖、条件与撤销机制，保留名称唯一性；不引入独立 Adapter 层 | 沿用 AST insert/depend/onRemove/remove 与真实 Variable 声明查询；共享依赖退出、按需资源、显式/改名避碰行为用例；独立复用审查原反例复验通过 | 满足 |
-| 代码质量与责任完整性 | 中文职责注释、英文代码命名、完整阅读路径；按五工具检查必要性；旧职责由新入口接管 | 同名 Modification 布局、Variable/Modify 全文件具名函数黑盒说明及使用方应用边界复核；五工具结果见下文；独立审查关闭全部发现 | 满足 |
-| 行为测试与全量验证 | 测试从需求结果推导，内部合法替换不应破坏断言；全部测试通过 | `bun run test`：49 文件 336 单元 + 18 文件 146 浏览器，全部通过；`bun run type-check`、`bun run build`、`git diff --check` 均通过 | 满足 |
-| 后续控制器修改 | 本次不实现控制器改值、通知及自动重编译 | 用户明确将修改能力留到以后；本轮完成条件不包含它 | 有依据不适用 |
-| Size 的具体转译实现 | 本次保持多内容领域的职责模型，不虚构 Size 参数与表达 | 用户以 Size 举例说明领域差异，尚未给出具体 Size 行为要求 | 有依据不适用 |
+| 要求与负责主体              | 必须保留的材料、变换与交付                                                                     | 验收观察与证据位置                                                                                                                                                                                                                                                              | 状态         |
+| --------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Modification 自身定义与协议 | `type + detail` 保存变化；内置转译；实现 Declare、Adjust、Modify；独立声明不需要 Variable 包装 | [modification.ts](../../src/style-system/modification.ts)；[调整绑定共同声明并保留内容引用.test.ts](../../src/style-system/test/调整绑定共同声明并保留内容引用.test.ts)的独立配方、延迟回调与可调用内容用例                                                                     | 满足         |
+| Variable 目标侧协议         | 实现 Declare、Adjust Target、Modify Target；应用入口按协议消费双方                             | [variable/core.ts](../../src/style-system/variable/core.ts)、[operations/declare.ts](../../src/style-system/operations/declare.ts)；调整绑定流程的继承方法与自定义非颜色目标用例                                                                                                | 满足         |
+| 颜色表达职责接管            | 颜色通道固定值、相对表达与未指定通道保留，由内置转译提供；退出旧组合概念和入口                 | Modification 内置转译及 [colors.ts](../../src/style-system/pieces/contents/atoms/color/colors.ts) 迁移；源码、现役文档和重建 dist 中旧入口/旧求值链零残留                                                                                                                       | 满足         |
+| Adjust 三者绑定             | Source、Modification、mergedResult 的身份及 CSS 引用关系；一次声明同时输出三者                 | [operations/adjust.ts](../../src/style-system/operations/adjust.ts)；调整绑定流程的三者/共享/同址来源修改用例；[颜色修改规则按条件组合并在浏览器中生效.browser.test.ts](../../src/style-system/test/颜色修改规则按条件组合并在浏览器中生效.browser.test.ts)的来源与配方局部覆盖 | 满足         |
+| Modify 条件应用             | 目标与变化的协议材料；既有数字及颜色修改、条件、连续顺序、继承和撤销行为                       | [operations/modify.ts](../../src/style-system/operations/modify.ts)、[编译修改链](../../src/style-system/variable/modify.ts)、Button 数字调用；原数值/颜色流程回归及新增绑定结果继承 Modify、子级重算、退出恢复浏览器用例                                                       | 满足         |
+| 输入失败与迁移              | 无效内容或协议失败须明确暴露；现有 JS Adjust 的新语义及旧调用迁移须有依据                      | 调整绑定流程的不支持内容领域失败、文件级公开类型拒绝；原 JS adjust/mutable 被 CSS 绑定替换，数字 Modify 转用 expression 材料                                                                                                                                                    | 满足         |
+| 生命周期与资源              | 复用声明、依赖、条件与撤销机制，保留名称唯一性；不引入独立 Adapter 层                          | 沿用 AST insert/depend/onRemove/remove 与真实 Variable 声明查询；共享依赖退出、按需资源、显式/改名避碰行为用例；独立复用审查原反例复验通过                                                                                                                                      | 满足         |
+| 代码质量与责任完整性        | 中文职责注释、英文代码命名、完整阅读路径；按五工具检查必要性；旧职责由新入口接管               | 同名 Modification 布局、Variable/Modify 全文件具名函数黑盒说明及使用方应用边界复核；五工具结果见下文；独立审查关闭全部发现                                                                                                                                                      | 满足         |
+| 行为测试与全量验证          | 测试从需求结果推导，内部合法替换不应破坏断言；全部测试通过                                     | `bun run test`：49 文件 336 单元 + 18 文件 146 浏览器，全部通过；`bun run type-check`、`bun run build`、`git diff --check` 均通过                                                                                                                                               | 满足         |
+| 后续控制器修改              | 本次不实现控制器改值、通知及自动重编译                                                         | 用户明确将修改能力留到以后；本轮完成条件不包含它                                                                                                                                                                                                                                | 有依据不适用 |
+| Size 的具体转译实现         | 本次保持多内容领域的职责模型，不虚构 Size 参数与表达                                           | 用户以 Size 举例说明领域差异，尚未给出具体 Size 行为要求                                                                                                                                                                                                                        | 有依据不适用 |
 
 教学、训练与校准材料在本次样式协议修改中没有对应主体，依据任务范围不适用。其余声明、应用、输出、失败、消费者及横切边界均按上述合同取得证据。
 
 ## 上一轮实施问题的落实结果（历史，方法协议已退出）
 
-| 问题 | 实际决定与依据 |
-| --- | --- |
-| 协议的具体接口 | Declare 提供 `toDeclaration`；Adjust 变化方交付自身可声明的源无关材料，目标提供 `adjustWith`；Modify 变化方交付颜色 `type/content` 或表达 `type/detail` 材料，目标提供 `modifyWith`。公开目标协议支持自定义材料，Variable 内置消费已定义的颜色/表达材料。入口从目标推导材料类型，拒绝缺少能力的输入。 |
-| Adjust 的调用与返回协议 | `adjust(source, change)` 返回 mergedResult Variable；其 `toDeclaration` 使用原 Variable 基础声明与 AST 依赖机制共同声明三者，其普通消费在当前地址重算绑定表达式。颜色来源组合由 Adjust 使用端执行。 |
-| 声明身份和作用域 | 来源使用真实 Variable 基础声明查询，不能把同 Key 修改误当定义；当前或祖先已有声明优先，并共享 owner 生命周期。Variable/Modification 共用直接名称分配，显式名称与现有可写 name 的新名称均被登记，匿名结果避让。 |
-| 现有 JS Adjust 的去向 | 新关系绑定直接替换旧 JS adjust 和 mutable，不留第二套同名语义。生产无旧 JS adjust 消费者；原仅服务该链且未公开的 readNumber/evaluateExpression/readJSValue/readVariableDefault 随责任退役。CSS add/multiply、Expression、Value.withContent 的独立契约保留。旧测试迁移到共同声明、CSS 运算、通道/状态/资源/失败行为。 |
-| Modification 的内容表示与内部落点 | 颜色内置配方转译归 Modification，输出独立 CSS 引用，固定/回调通道延迟编译；数值 Modify 消费者转为 `{ type: 'expression', detail: current => add(current, n) }`，无需独立声明 arbitrary callback。没有 Adapter 层或源相关中间应用方法。 |
-| Modify 与绑定关系的衔接 | 绑定结果是普通 Variable，可直接 declare/modify/消费；原条件、排序、共享 id、继承和撤销仍由 Variable Modify 使用端组织。颜色始终引用独立配方，子元素消费在当地重算完整链。 |
+| 问题                              | 实际决定与依据                                                                                                                                                                                                                                                                                                       |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 协议的具体接口                    | Declare 提供 `toDeclaration`；Adjust 变化方交付自身可声明的源无关材料，目标提供 `adjustWith`；Modify 变化方交付颜色 `type/content` 或表达 `type/detail` 材料，目标提供 `modifyWith`。公开目标协议支持自定义材料，Variable 内置消费已定义的颜色/表达材料。入口从目标推导材料类型，拒绝缺少能力的输入。                |
+| Adjust 的调用与返回协议           | `adjust(source, change)` 返回 mergedResult Variable；其 `toDeclaration` 使用原 Variable 基础声明与 AST 依赖机制共同声明三者，其普通消费在当前地址重算绑定表达式。颜色来源组合由 Adjust 使用端执行。                                                                                                                  |
+| 声明身份和作用域                  | 来源使用真实 Variable 基础声明查询，不能把同 Key 修改误当定义；当前或祖先已有声明优先，并共享 owner 生命周期。Variable/Modification 共用直接名称分配，显式名称与现有可写 name 的新名称均被登记，匿名结果避让。                                                                                                       |
+| 现有 JS Adjust 的去向             | 新关系绑定直接替换旧 JS adjust 和 mutable，不留第二套同名语义。生产无旧 JS adjust 消费者；原仅服务该链且未公开的 readNumber/evaluateExpression/readJSValue/readVariableDefault 随责任退役。CSS add/multiply、Expression、Value.withContent 的独立契约保留。旧测试迁移到共同声明、CSS 运算、通道/状态/资源/失败行为。 |
+| Modification 的内容表示与内部落点 | 颜色内置配方转译归 Modification，输出独立 CSS 引用，固定/回调通道延迟编译；数值 Modify 消费者转为 `{ type: 'expression', detail: current => add(current, n) }`，无需独立声明 arbitrary callback。没有 Adapter 层或源相关中间应用方法。                                                                               |
+| Modify 与绑定关系的衔接           | 绑定结果是普通 Variable，可直接 declare/modify/消费；原条件、排序、共享 id、继承和撤销仍由 Variable Modify 使用端组织。颜色始终引用独立配方，子元素消费在当地重算完整链。                                                                                                                                            |
 
 五工具已按实际节点收口：黑盒化核对 Modification、Variable、Adjust、Modify 的具名入口说明与输入/输出；逻辑链清晰化保持 `type/detail → 配方引用 → 使用端组合 → CSS` 的负责链；结构复用沿用 FNKit 能力判断/ID、JSSContent、relativeOKLCH、AST 生命周期和共享名称分配；多态前置收束由声明/目标协议统一入口，并从目标约束可消费材料；及时认知闭合把配方、配置及条件/资源生命周期说明放在对应类型和方法旁。旧包装、JS 求值链、冗余调用括号和未使用导入已清理，同名类型/构造阅读结构保留。独立审查复验了 Source 同址 Modify、改名避碰和类型拒绝反例，无须用户裁决的逻辑缺口。
 
@@ -162,20 +162,19 @@ Modify 的目标方与变化方协议职责已接通，绑定结果作为普通 
 
 用户明确将协议定义为操作所需的数据形状，由 FNKit 的 `DataShape` / `matchShape` 描述与判断。上一轮 `adjustWith`、`modifyWith` 及目标转发方案退出；`toDeclaration` 也不继续要求信息体执行外部声明操作。上一轮 336 单元与 146 浏览器通过结果仅作为本轮回归基线，不能替代此次验收。
 
-| 要求与负责位置 | 本轮变换与交付 | 验收观察 | 状态 |
-| --- | --- | --- | --- |
-| 操作所需材料形状 | Declare 使用 `key/content`；Adjust/Modify 目标沿同一自定义属性材料及实际需要的可选状态/注册信息消费，不要求品牌、构造器或动作方法；形状复用 FNKit | 天然双方对象、额外/继承/可调用对象实际声明及应用；缺必要材料明确拒绝 | 满足 |
-| 使用端直接应用 | 移除 `adjustWith`、`modifyWith` 与对应转发；声明和应用的正式下游都按材料处理；不恢复变化方源相关应用方法 | 原条件、顺序、共享 id、继承/撤销与子级重算回归 | 满足 |
-| Modification 单配置与完整名称 | 单个 `{ type, name, detail }` 配置；对象 name 保存完整 CSS 名称，声明与引用直接沿用；Variable 现有名称表达保持 | 两参数调用退出、完整名与当前实际双方名称避碰；匿名结果无自引用 | 满足 |
-| 共同声明和生命周期 | Source、独立配方及结果继续共同声明；共享 owner、真实定义查询和退出机制复用现 AST | 同址 Source 修改、共享撤销、资源和局部覆盖浏览器行为 | 满足 |
-| 责任接管及现役说明 | Variable 只投影既有材料，不复制第二套状态事实；Modification 提供自身配方；更新出口、调用、文档与生成产物 | 源码及 dist 旧方法和旧双参数形式无现役残留 | 满足 |
-| 维护与代码清洁 | 当前 dirty 工作树已固定到 `agents/run/20261008-material-protocol/code-baseline.json`；在同一责任范围比较生产+测试，要求净减少并缩短整体链 | 最终新增/删除/净变化及五工具实际判断，文档排除 | 满足 |
-| 完整验证 | 行为断言保留业务约束；正式 unit/browser/type-check/build 全部通过 | 本轮准确命令、计数、exit 0 和 diff check | 满足 |
+| 要求与负责位置                | 本轮变换与交付                                                                                                                                    | 验收观察                                                             | 状态 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---- |
+| 操作所需材料形状              | Declare 使用 `key/content`；Adjust/Modify 目标沿同一自定义属性材料及实际需要的可选状态/注册信息消费，不要求品牌、构造器或动作方法；形状复用 FNKit | 天然双方对象、额外/继承/可调用对象实际声明及应用；缺必要材料明确拒绝 | 满足 |
+| 使用端直接应用                | 移除 `adjustWith`、`modifyWith` 与对应转发；声明和应用的正式下游都按材料处理；不恢复变化方源相关应用方法                                          | 原条件、顺序、共享 id、继承/撤销与子级重算回归                       | 满足 |
+| Modification 单配置与完整名称 | 单个 `{ type, name, detail }` 配置；对象 name 保存完整 CSS 名称，声明与引用直接沿用；Variable 现有名称表达保持                                    | 两参数调用退出、完整名与当前实际双方名称避碰；匿名结果无自引用       | 满足 |
+| 共同声明和生命周期            | Source、独立配方及结果继续共同声明；共享 owner、真实定义查询和退出机制复用现 AST                                                                  | 同址 Source 修改、共享撤销、资源和局部覆盖浏览器行为                 | 满足 |
+| 责任接管及现役说明            | Variable 只投影既有材料，不复制第二套状态事实；Modification 提供自身配方；更新出口、调用、文档与生成产物                                          | 源码及 dist 旧方法和旧双参数形式无现役残留                           | 满足 |
+| 维护与代码清洁                | 当前 dirty 工作树已固定到 `agents/run/20261008-material-protocol/code-baseline.json`；在同一责任范围比较生产+测试，要求净减少并缩短整体链         | 最终新增/删除/净变化及五工具实际判断，文档排除                       | 满足 |
+| 完整验证                      | 行为断言保留业务约束；正式 unit/browser/type-check/build 全部通过                                                                                 | 本轮准确命令、计数、exit 0 和 diff check                             | 满足 |
 
 代码落点沿用既有职责：`declare.ts` 定义并消费声明材料；`variable-adjust.ts` 直接组织来源、变化、结果及共同声明；`modify.ts` 校验目标并选择应用，`variable/modify.ts` 从正式声明查询到修改账本均消费目标材料；`variable.ts` 提供自身数据及标准 JSS 内容表达；`modification.ts` 负责单配置变化及自身配方。不存在注册系统、独立 Adapter、新内容领域或控制器修改能力的需要。
 
 修改前问题已经具体确认：入口先调用目标动作再回到使用方应用，造成多余转发；仅入口结构识别不能让缺少 Variable 身份的材料进入正式声明/修改链；Modification 两参数与去前缀名称要求不符。最少方案及实际形状在独立前置审查后落实，接口细节按行为自行推断。
-
 
 ## 材料协议纠正：实施结果与证据
 
@@ -199,13 +198,13 @@ Adjust 只创建组合表达式、结果及 declarations 关系。引用编译�
 
 用户要求重新检查此前全部改动，已有通用能力能明显缩短逻辑链时直接复用。本轮不增加业务功能；当前暂存工作树固定为基线，生产及测试合计须净减少。原材料协议、颜色组合与数值修改行为继续作为回归约束。
 
-| 要求 | 负责位置与最少变换 | 验收观察 | 状态 |
-| --- | --- | --- | --- |
-| 明确复用映射 | Variable 注册消费者和 Modify 同址结果的 Map 复用 FNKit mapGet；先取得 active/existing，保留首次激活；WeakMap 保留原生 | 注册替换、共享引用、修改顺序与撤销回归 | 满足 |
+| 要求               | 负责位置与最少变换                                                                                                                            | 验收观察                                                      | 状态 |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---- |
+| 明确复用映射       | Variable 注册消费者和 Modify 同址结果的 Map 复用 FNKit mapGet；先取得 active/existing，保留首次激活；WeakMap 保留原生                         | 注册替换、共享引用、修改顺序与撤销回归                        | 满足 |
 | 去除中间材料与转发 | 直接用 FNKit find 查询 states Map；组合谓词保留函数类型，原回调保持跨模块懒读取，直接调用既有 Predicate，退出 matchShape 对已知函数的重复判别 | 命中 undefined 状态不求默认；缺材料及合法天然对象保持既有结果 | 满足 |
-| 完整能力复查 | 从 FNKit reference、公开 index 和对应源码契约核对；CSS calc、Key/JSS 生命周期、WeakMap、顺序与自有属性语义按实际差异保留 | 独立复用及约束审查，无新增包装、缓存或并行职责 | 满足 |
-| 维护与范围 | agents/run/20261008-fnkit-reuse/code-baseline.json 固定本轮前 22 个生产/测试文件；全部既有暂存与 Solid 胶水 Plan 保留 | 同一基线新增/删除/净变化及暂存区完整性证据 | 满足 |
-| 验证与产物 | 现有相关行为测试、正式 full test、type-check、build；重建 dist 与退役链扫描 | 全部测试通过、类型/构建/diff check exit 0，日志留在本轮目录 | 满足 |
+| 完整能力复查       | 从 FNKit reference、公开 index 和对应源码契约核对；CSS calc、Key/JSS 生命周期、WeakMap、顺序与自有属性语义按实际差异保留                      | 独立复用及约束审查，无新增包装、缓存或并行职责                | 满足 |
+| 维护与范围         | agents/run/20261008-fnkit-reuse/code-baseline.json 固定本轮前 22 个生产/测试文件；全部既有暂存与 Solid 胶水 Plan 保留                         | 同一基线新增/删除/净变化及暂存区完整性证据                    | 满足 |
+| 验证与产物         | 现有相关行为测试、正式 full test、type-check、build；重建 dist 与退役链扫描                                                                   | 全部测试通过、类型/构建/diff check exit 0，日志留在本轮目录   | 满足 |
 
 上述文件定位不变：Variable 编译消费已有状态并维护注册资源，Modify 维护局部修改结果，声明与颜色变化文件提供实际材料形状。通用集合与谓词能力直接取自 FNKit，不把 CSS 运算改成 Numberish 运算，不扩大组件样式或控制器职责。本轮不以 API 调用次数或内部 Map 布局编写镜像测试，沿用最终 CSS、浏览器值和资源退出行为验证。
 
@@ -233,14 +232,14 @@ TEMP/TMP 仅使用 agents/run/20261008-fnkit-reuse/temp，旧任务目录保持�
 
 用户明确 Modification 本身就是通用定义，不能依赖更细的 Color 或另设 ModificationDefinition；通用定义放前，Color 类型与实现整片放后。所谓可插拔只是多态设计思想，代码不建立 Plugin 实体；type 用于选择转译策略，name 继续保存完整 CSS 自定义属性名。单配置调用保持。
 
-| 要求 | 负责位置及变换 | 验收观察 | 状态 |
-| --- | --- | --- | --- |
-| 通用主体与依赖方向 | Modification<Detail,Type> 直接持有 type/name/detail 及 Declare/JSS 材料，不继承 Color 或 Definition | 公开泛型自然材料可以独立声明；Definition 类型/出口退出 | 满足 |
-| 按 type 多态转译 | 构造按静态私有策略表选择 detail 形状与内容转译；核心不含颜色字段/分支 | 未支持及原型成员 type 明确失败，detail 类型与 route 关联 | 满足 |
-| 前通用后 Color | 同名类型和构造/生命周期在前；Color 参数、消费形状、源无关转译及策略成员集中后部 | 完整文件阅读与独立职责审查；不建立外部安装/注册/装载入口 | 满足 |
-| 保留材料与消费 | name 完整 -- 名、独立引用、天然 type/key/content 参与；通道回调消费时执行；Source 组合仍归 Adjust/Modify | 既有三者声明、共享资源、局部重算、条件顺序继承撤销与回调行为通过 | 满足 |
-| 复用与最少范围 | 复用 FNKit DataShape/matchShape/isString/isObject 与既有 JSS/名称/声明生命周期；源码基线为本轮 3 文件 | PluginSystem 的同型管线与异型内容转译不适配；不用外部策略第二参数或未知 Size/Length 参数 | 满足 |
-| 完整验收及责任接管 | 同步公开出口、测试、现役说明、生成 dist 和本主题 Plan；同一基线生产+测试合计须净减少 | 所有 unit/browser/type/build/diff 通过，旧 Definition 零残留；准确代码+测试统计 | 满足 |
+| 要求               | 负责位置及变换                                                                                           | 验收观察                                                                                 | 状态 |
+| ------------------ | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---- |
+| 通用主体与依赖方向 | Modification<Detail,Type> 直接持有 type/name/detail 及 Declare/JSS 材料，不继承 Color 或 Definition      | 公开泛型自然材料可以独立声明；Definition 类型/出口退出                                   | 满足 |
+| 按 type 多态转译   | 构造按静态私有策略表选择 detail 形状与内容转译；核心不含颜色字段/分支                                    | 未支持及原型成员 type 明确失败，detail 类型与 route 关联                                 | 满足 |
+| 前通用后 Color     | 同名类型和构造/生命周期在前；Color 参数、消费形状、源无关转译及策略成员集中后部                          | 完整文件阅读与独立职责审查；不建立外部安装/注册/装载入口                                 | 满足 |
+| 保留材料与消费     | name 完整 -- 名、独立引用、天然 type/key/content 参与；通道回调消费时执行；Source 组合仍归 Adjust/Modify | 既有三者声明、共享资源、局部重算、条件顺序继承撤销与回调行为通过                         | 满足 |
+| 复用与最少范围     | 复用 FNKit DataShape/matchShape/isString/isObject 与既有 JSS/名称/声明生命周期；源码基线为本轮 3 文件    | PluginSystem 的同型管线与异型内容转译不适配；不用外部策略第二参数或未知 Size/Length 参数 | 满足 |
+| 完整验收及责任接管 | 同步公开出口、测试、现役说明、生成 dist 和本主题 Plan；同一基线生产+测试合计须净减少                     | 所有 unit/browser/type/build/diff 通过，旧 Definition 零残留；准确代码+测试统计          | 满足 |
 
 本轮修正既定通用概念的依赖方向与内部多态转译，不新增外部运行时安装能力或新的业务内容领域。未来实现另一 type 时应在后段加入对应 detail 转译与策略成员，通用名称、声明与 JSS 生命周期不改变。Adjust/Modify 当前已实现颜色应用及表达式修改，不能因 Modification 通用化声称其支持所有未来领域。基线与证据仅使用 agents/run/20261008-modification-polymorphism，旧任务目录及 Solid 胶水 Plan 保持。
 
@@ -250,7 +249,7 @@ TEMP/TMP 仅使用 agents/run/20261008-fnkit-reuse/temp，旧任务目录保持�
 
 类型映射从策略参数推导每个 type 对应的 detail，再以索引映射保持调用相关性，没有 any/unknown 双重断言。零落盘类型探针临时在编译视图增加独立数值描述转译，通用核心不变；合法数值 detail 通过，错误数值及颜色 detail 被静态拒绝，全部诊断为零，见 [type-route-probe.json](../../agents/run/20261008-modification-polymorphism/type-route-probe.json)。该探针不是新增生产领域或公开安装入口。现有绑定流程还以 `Modification<number, 'number'>` 天然材料实际独立声明，证明通用主体不以 Color 或构造来源作为前提。
 
-行为测试保留独立配方、消费前回调不执行、可调用内容保护、资源共享退出、共同声明、局部覆盖、条件顺序及继承撤销。未知 type、constructor/toString/__proto__ 和盒装字符串实际构造均明确失败，区分材料继承能力与策略表自有路由边界。测试观察公开声明及实际 CSS，不检查私有策略表布局。现役 architecture、对象与行为、变量定义与消费及 functions 说明已同步通用主体与当前颜色应用边界。
+行为测试保留独立配方、消费前回调不执行、可调用内容保护、资源共享退出、共同声明、局部覆盖、条件顺序及继承撤销。未知 type、constructor/toString/**proto** 和盒装字符串实际构造均明确失败，区分材料继承能力与策略表自有路由边界。测试观察公开声明及实际 CSS，不检查私有策略表布局。现役 architecture、对象与行为、变量定义与消费及 functions 说明已同步通用主体与当前颜色应用边界。
 
 五工具复核：黑盒化保留通用定义和单配置输入/产物契约，实例方法说明覆盖真实 Key 和编译时机；结构复用沿用 FNKit DataShape/matchShape/isString/isObject、共享名称分配与 JSS 编译，不造新生命周期；逻辑链清晰化让通用核心取得转译策略，退出重复 Definition 与 Color 父接口；及时认知闭合将 Color 参数、转译和成员集中后段；多态前置收束按 type→detail→内容对应，源相关应用仍在 Adjust/Modify。FNKit PluginSystem 的同型 pass/load 管线不符合 detail→CSS 异型转译及无 Plugin 实体要求；get 的继承查找和联合返回类型不适合自有路由及键值相关性，使用字符串、自有键检查和直接类型索引。result 不保护所有天然 callable 内容，通道继续沿用 JSSContent 与回调的既有区分。
 
@@ -274,14 +273,14 @@ TEMP/TMP 仅使用 agents/run/20261008-fnkit-reuse/temp，旧任务目录保持�
 
 上一节只完成 Shape 表达清理，未完成用户要求将 Modification 的通用职责与具体实现分离延伸到其他概念。本轮承接这个缺口；Shape 写法不作为依赖方向已经正确的依据。
 
-| 本轮要求 | 实际落实 | 状态 |
-| --- | --- | --- |
-| Adjust 的通用绑定与颜色组合分开 | 通用协议以 Type 为参数；入口按 type 选组合，再绑定三者。后部颜色函数验证配方并复用 relativeOKLCH，名称预留在验证之后 | 完成 |
-| Modify 的通用步骤与领域应用分开 | 入口取得具体应用，编译时交付前序 Expression；局部实例、步骤及撤销随后呈现，Color/Expression 实现最后集中。检查与应用分别发生在创建和编译时 | 完成 |
-| 名称分配归负责名称的主体 | 单份 IdGenerator/usedNames 移至 key.ts；Variable、Modification、Adjust 与参数解析直接复用。属性别名 names Map 独立；公共入口不扩大分配器出口 | 完成 |
-| 主体先于派生和实现 | Value、Condition、VariableCluster、Variable、Key 均先类型和构造，再判别、派生与配套细节；保留 Variable extends ModifyTargetProtocol | 完成 |
-| 退出真实中转与重复表达 | 退出 propertyAlias、isStateValues、createVariableInstance 单次中转；完整保留字段判断、实例事实和递归格式职责。聚合仍先正序消费所有项，再选最后有效结果；测试复用 add/multiply，不手写第二份 calc | 完成 |
-| 行为与维护验收 | 全部 334 单元、147 浏览器测试通过，类型、构建与 diff check 通过；生产和测试合计净减少 | 完成 |
+| 本轮要求                        | 实际落实                                                                                                                                                                                         | 状态 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| Adjust 的通用绑定与颜色组合分开 | 通用协议以 Type 为参数；入口按 type 选组合，再绑定三者。后部颜色函数验证配方并复用 relativeOKLCH，名称预留在验证之后                                                                             | 完成 |
+| Modify 的通用步骤与领域应用分开 | 入口取得具体应用，编译时交付前序 Expression；局部实例、步骤及撤销随后呈现，Color/Expression 实现最后集中。检查与应用分别发生在创建和编译时                                                       | 完成 |
+| 名称分配归负责名称的主体        | 单份 IdGenerator/usedNames 移至 key.ts；Variable、Modification、Adjust 与参数解析直接复用。属性别名 names Map 独立；公共入口不扩大分配器出口                                                     | 完成 |
+| 主体先于派生和实现              | Value、Condition、VariableCluster、Variable、Key 均先类型和构造，再判别、派生与配套细节；保留 Variable extends ModifyTargetProtocol                                                              | 完成 |
+| 退出真实中转与重复表达          | 退出 propertyAlias、isStateValues、createVariableInstance 单次中转；完整保留字段判断、实例事实和递归格式职责。聚合仍先正序消费所有项，再选最后有效结果；测试复用 add/multiply，不手写第二份 calc | 完成 |
+| 行为与维护验收                  | 全部 334 单元、147 浏览器测试通过，类型、构建与 diff check 通过；生产和测试合计净减少                                                                                                            | 完成 |
 
 本轮基线为开始时完整工作区文本，包含上一轮已有的未暂存改动；没有把索引版本用于本轮减量。生产新增 234 行、删除 237 行，净减少 3 行；测试新增 15 行、删除 18 行，净减少 3 行；合计新增 249 行、删除 255 行，净减少 6 行。重排也纳入同一责任范围；没有压缩语句、移走实现或删除必要断言。原暂存区和 HEAD 指纹未变。
 

@@ -11,7 +11,10 @@ import { sourceAlias } from './vite.shared'
 
 export default defineConfig({
   resolve: { alias: sourceAlias, conditions: ['browser'] },
-  ssr: { resolve: { conditions: ['browser'] }, noExternal: ['solid-js', '@solidjs/web'] },
+  ssr: {
+    resolve: { conditions: ['browser'] },
+    noExternal: ['solid-js', '@solidjs/web'],
+  },
   plugins: [solid()],
   test: {
     environment: 'node',

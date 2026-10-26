@@ -1,5 +1,12 @@
 /** Rule 登记与声明组合。 */
-import { assert, isArray, isFunction, isObject, isObjectLike, isString } from '@edsolater/fnkit'
+import {
+  assert,
+  isArray,
+  isFunction,
+  isObject,
+  isObjectLike,
+  isString,
+} from '@edsolater/fnkit'
 import { condition, type Condition, type ConditionInput } from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { isCSSPair, type Declaration } from './operations/declare'
@@ -10,7 +17,11 @@ import { registerRule } from './rule-registry'
 export type RuleValue = TokenInput | Rules
 
 /** 路径、目标与内容；字符串是普通 CSS 条件，空项沿用外层。 */
-export type Rule = [path: (Condition | string)[] | undefined, key: JSSKey | undefined, content: RuleValue]
+export type Rule = [
+  path: (Condition | string)[] | undefined,
+  key: JSSKey | undefined,
+  content: RuleValue,
+]
 
 /** 按声明顺序保存的规则。 */
 export type Rules = Rule[]
@@ -19,7 +30,8 @@ export type Rules = Rule[]
 type DeclarationObject = Record<string, RuleValue>
 
 /** 声明序列中的单项；可继续嵌套声明 Iterable。 */
-export type DeclarationItem = Declaration<RuleValue> | DeclarationGroup | undefined
+export type DeclarationItem =
+  Declaration<RuleValue> | DeclarationGroup | undefined
 
 /** 按输入顺序提供声明条目的通用 Iterable。 */
 export type DeclarationGroup = object & Iterable<DeclarationItem>
@@ -68,15 +80,26 @@ function assertValidConditionPath(path: (Condition | string)[]): void {
  */
 function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
   if (input === undefined) return undefined
-  const path = Array.from(isArray(input) ? input : [input], resolvePathCondition)
+  const path = Array.from(
+    isArray(input) ? input : [input],
+    resolvePathCondition,
+  )
   assertValidConditionPath(path)
   return path
 }
 
 /** 登记一条规则；undefined 内容不输出。 */
-export function rule(path: ConditionInput, key: JSSKey | undefined, input: RuleValue): RuleHandle {
+export function rule(
+  path: ConditionInput,
+  key: JSSKey | undefined,
+  input: RuleValue,
+): RuleHandle {
   assert(key === undefined || isJSSKey(key), 'rule() 必须提供有效 JSSKey。')
-  return registerRule([rulePath(path), key === undefined ? undefined : resolveJSSKey(key), input])
+  return registerRule([
+    rulePath(path),
+    key === undefined ? undefined : resolveJSSKey(key),
+    input,
+  ])
 }
 
 /** 识别名称声明对象，不把类实例误当声明集合。 */
@@ -88,11 +111,17 @@ function isDeclarationObject(input: unknown): input is DeclarationObject {
 
 /** 识别标准 Iterable；字符串名称不能作为声明序列逐字展开。 */
 function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
-  return isObjectLike(input) && isFunction((input as { [Symbol.iterator]?: unknown })[Symbol.iterator])
+  return (
+    isObjectLike(input) &&
+    isFunction((input as { [Symbol.iterator]?: unknown })[Symbol.iterator])
+  )
 }
 
 /** 批量登记声明；无效输入整批拒绝，undefined 内容跳过。 */
-export function rules(path: ConditionInput, declarations: Declaration<RuleValue> | Declarations): RulesHandle {
+export function rules(
+  path: ConditionInput,
+  declarations: Declaration<RuleValue> | Declarations,
+): RulesHandle {
   const conditionPath = rulePath(path)
   const entries: Rule[] = []
   const visiting = new Set<object>()
@@ -100,7 +129,12 @@ export function rules(path: ConditionInput, declarations: Declaration<RuleValue>
   const visit = (source: unknown): void => {
     if (source === undefined) return
     if (isCSSPair(source)) {
-      if (source[1] !== undefined) entries.push([conditionPath, resolveJSSKey(source[0]), source[1] as RuleValue])
+      if (source[1] !== undefined)
+        entries.push([
+          conditionPath,
+          resolveJSSKey(source[0]),
+          source[1] as RuleValue,
+        ])
       return
     }
     assert(
@@ -123,6 +157,8 @@ export function rules(path: ConditionInput, declarations: Declaration<RuleValue>
   const handles = entries.map((entry) => registerRule(entry))
   return {
     /** 删除本批登记。 */
-    remove() { for (const handle of handles) handle.remove() },
+    remove() {
+      for (const handle of handles) handle.remove()
+    },
   }
 }

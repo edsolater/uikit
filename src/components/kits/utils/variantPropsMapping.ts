@@ -6,5 +6,7 @@ export function mapVariantProps<Candidate extends string>(
   source: Source<Candidate | undefined>,
   mapping: Record<string, string | undefined>,
 ) {
-  return mapSource(source, (value) => Object.hasOwn(mapping, String(value)) ? mapping[String(value)] : value)
+  return mapSource(source, (value) =>
+    Object.hasOwn(mapping, String(value)) ? mapping[String(value)] : value,
+  )
 }

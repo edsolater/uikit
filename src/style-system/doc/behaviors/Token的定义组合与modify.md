@@ -8,10 +8,10 @@
 
 只改变基础值和加工每个状态结果，是不同的函数行为。基础 10、hover 为基础加 3、active 固定 12 时：
 
-| 函数表达的变化 | 普通 | hover | active |
-| --- | --- | --- | --- |
-| 基础换为 5，保留状态规则 | 5 | 8 | 12 |
-| 各项最终结果乘 0.5 | 5 | 6.5 | 6 |
+| 函数表达的变化           | 普通 | hover | active |
+| ------------------------ | ---- | ----- | ------ |
+| 基础换为 5，保留状态规则 | 5    | 8     | 12     |
+| 各项最终结果乘 0.5       | 5    | 6.5   | 6      |
 
 这两项都可以由普通函数读取定义并组合新 Token，不需要为每种加工增加对象种类。新 Token 保存已经组合好的定义；后续替换 default 不重放此前加工。需要继续读取来源当前 CSS 值时，直接把来源 Token 放进 default 的表达式中。
 
@@ -22,8 +22,14 @@
 ```ts
 const size = token('4px', { address: '.Meter' })
 rules('.Meter', [
-  modify(size, { type: 'expression', detail: current => add(current, '3px') }),
-  modify(size, { type: 'expression', detail: current => multiply(current, 2) }),
+  modify(size, {
+    type: 'expression',
+    detail: (current) => add(current, '3px'),
+  }),
+  modify(size, {
+    type: 'expression',
+    detail: (current) => multiply(current, 2),
+  }),
   [key('width'), size],
 ])
 ```
@@ -42,11 +48,11 @@ onFirstScan 可以返回包含 modify 的规则。系统需要继续读取这些
 
 若 size 在根定义普通 4px，根的 data-phase state 为 8px；Parent 明确 modify 加 3px，Child 位于 Parent 内且只读取 size，则 state 先在根选择，Parent 加工这个结果，Child 继承 Parent。
 
-| 条件 | Parent | Child |
-| --- | --- | --- |
-| 根无标记 | 7px | 7px |
-| 仅 Parent 或 Child 有 data-phase | 7px | 7px |
-| 根有 data-phase | 11px | 11px |
+| 条件                             | Parent | Child |
+| -------------------------------- | ------ | ----- |
+| 根无标记                         | 7px    | 7px   |
+| 仅 Parent 或 Child 有 data-phase | 7px    | 7px   |
+| 根有 data-phase                  | 11px   | 11px  |
 
 这不把根 state 搬到后代，也不要求复制状态定义。配方输入只在实际公式位置响应；边界见 [CSS作用域与层叠.md](CSS作用域与层叠.md)。
 

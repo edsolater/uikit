@@ -6,15 +6,26 @@
 */
 import { compileCSSModification } from '../token/modify'
 import { cssCustomProperty, cssOperation } from '../token/css'
-import { assert, hasProperty, isFunction, isString, matchShape } from '@edsolater/fnkit'
+import {
+  assert,
+  hasProperty,
+  isFunction,
+  isString,
+  matchShape,
+} from '@edsolater/fnkit'
 import { type Expression } from '../content'
 import type { Declaration } from './declare'
-import { colorModificationShape, type ColorModificationContent } from '../modification'
+import {
+  colorModificationShape,
+  type ColorModificationContent,
+} from '../modification'
 import { oklch } from '../pieces/contents/functions/oklch'
 import { isToken, type Token, type TokenInput } from '../token/core'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */
-export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modifyTypes]['apply']>[1]
+export type ModifyProtocol = Parameters<
+  (typeof modifyTypes)[keyof typeof modifyTypes]['apply']
+>[1]
 
 /**
  * 返回条件修改 Declaration；按 type 选择应用，编译消费时生成前序 Expression 的修改结果。
@@ -25,14 +36,39 @@ export type ModifyProtocol = Parameters<(typeof modifyTypes)[keyof typeof modify
  * rules('.Button', [[key('background-color'), surfaceColor]])
  * rules(['.Button', '&:hover'], [modify(surfaceColor, hoverChange)])
  */
-export function modify(target: Token, modification: ModifyProtocol, options?: { id?: string | symbol }): Declaration {
+export function modify(
+  target: Token,
+  modification: ModifyProtocol,
+  options?: { id?: string | symbol },
+): Declaration {
   assert(isToken(target), 'modify 需要 Token 目标。')
-  const strategy = hasProperty(modification, 'type', isString) && Object.hasOwn(modifyTypes, modification.type) ? modifyTypes[modification.type] : undefined
-  assert(strategy && strategy.accepts(modification), 'modify 需要颜色配方或表达变化材料。')
-  const content = Object.assign(cssOperation((context, controller) => {
-    compileCSSModification(context, controller, cssCustomProperty(target), current =>
-      (strategy.apply as (current: Expression, change: ModifyProtocol) => TokenInput)(current, modification), options?.id)
-  }), { kind: 'css-modification' })
+  const strategy =
+    hasProperty(modification, 'type', isString) &&
+    Object.hasOwn(modifyTypes, modification.type)
+      ? modifyTypes[modification.type]
+      : undefined
+  assert(
+    strategy && strategy.accepts(modification),
+    'modify 需要颜色配方或表达变化材料。',
+  )
+  const content = Object.assign(
+    cssOperation((context, controller) => {
+      compileCSSModification(
+        context,
+        controller,
+        cssCustomProperty(target),
+        (current) =>
+          (
+            strategy.apply as (
+              current: Expression,
+              change: ModifyProtocol,
+            ) => TokenInput
+          )(current, modification),
+        options?.id,
+      )
+    }),
+    { kind: 'css-modification' },
+  )
   return [target, content]
 }
 
@@ -48,11 +84,13 @@ const modifyTypes = {
     /**
      * 识别可独立声明的颜色配方，保持模块循环中的材料延迟读取。
      */
-    accepts: (change: unknown) => isToken(change) && matchShape(change, colorModificationShape),
+    accepts: (change: unknown) =>
+      isToken(change) && matchShape(change, colorModificationShape),
     /**
      * 以独立颜色配方的 CSS 引用改变前序结果。
      */
-    apply: (current: Expression, change: ColorModificationContent) => oklch(current, change),
+    apply: (current: Expression, change: ColorModificationContent) =>
+      oklch(current, change),
   },
   expression: {
     /**
@@ -62,6 +100,7 @@ const modifyTypes = {
     /**
      * 将前序表达式交给变化回调，保留它返回的内容与依赖。
      */
-    apply: (current: Expression, change: ExpressionModification) => change.detail(current),
+    apply: (current: Expression, change: ExpressionModification) =>
+      change.detail(current),
   },
 }

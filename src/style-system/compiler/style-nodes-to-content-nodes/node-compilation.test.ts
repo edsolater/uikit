@@ -25,10 +25,17 @@ test('通知返回值不参与编译，自身输出保留而显式 undefined 抑
     toCSSString: output,
   }
   const suppressed: JSSContent = {
-    onCompile(current, ast) { ast.setContent(current, undefined) },
+    onCompile(current, ast) {
+      ast.setContent(current, undefined)
+    },
     toCSSString: hidden,
   }
-  expect(compileRules([[[], 'width', content], [[], 'height', suppressed]])).toBe('width: self;')
+  expect(
+    compileRules([
+      [[], 'width', content],
+      [[], 'height', suppressed],
+    ]),
+  ).toBe('width: self;')
   expect(unexpected).not.toHaveBeenCalled()
   expect(output).toHaveBeenCalledOnce()
   expect(hidden).not.toHaveBeenCalled()
@@ -38,9 +45,17 @@ test('通知返回值不参与编译，自身输出保留而显式 undefined 抑
 test('暂缓不撤回已设置内容，嵌套前序通知与插入只执行一次', () => {
   let ready = false
   let attempts = 0
-  const producer = vi.fn((context: JSSCompileContext, controller: ASTController) => {
-    controller.insert({ before: context.node, conditionPath: context.conditionPath }, ['--once', 7], { owner: context.node })
-  })
+  const producer = vi.fn(
+    (context: JSSCompileContext, controller: ASTController) => {
+      controller.insert(
+        { before: context.node, conditionPath: context.conditionPath },
+        ['--once', 7],
+        {
+          owner: context.node,
+        },
+      )
+    },
+  )
   const waiting: JSSContent = {
     onCompile(context, controller) {
       attempts++
@@ -50,12 +65,17 @@ test('暂缓不撤回已设置内容，嵌套前序通知与插入只执行一�
       }
     },
   }
-  const activate: JSSContent = { onCompile(_context, ast) {
-    ready = true
-    const target = ast.search({ key: 'width' })[0]
-    target.compileRevision++
-  } }
-  const css = compileRules([[[], 'width', token({ default: [{ onCompile: producer }, waiting] })], [[], 'order', activate]])
+  const activate: JSSContent = {
+    onCompile(_context, ast) {
+      ready = true
+      const target = ast.search({ key: 'width' })[0]
+      target.compileRevision++
+    },
+  }
+  const css = compileRules([
+    [[], 'width', token({ default: [{ onCompile: producer }, waiting] })],
+    [[], 'order', activate],
+  ])
   expect(css).toContain('width: 1px;')
   expect(css.match(/--once: 7;/g)).toHaveLength(1)
   expect(producer).toHaveBeenCalledOnce()

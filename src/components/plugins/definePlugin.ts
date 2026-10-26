@@ -17,7 +17,11 @@ export interface PluginInstance<Controller extends object, Tag extends PivTag> {
 /**
  * Plugin 本身可以直接交给 Piv，也可以先传入 options 得到一份配置后的 Plugin。
  */
-export interface Plugin<Options = undefined, Controller extends object = object, Tag extends PivTag = PivTag> {
+export interface Plugin<
+  Options = undefined,
+  Controller extends object = object,
+  Tag extends PivTag = PivTag,
+> {
   (options?: Options): Plugin<Options, Controller, Tag>
   [createPluginInstanceSymbol](): PluginInstance<Controller, Tag>
 }
@@ -25,17 +29,30 @@ export interface Plugin<Options = undefined, Controller extends object = object,
 /**
  * 定义一个 Plugin。createInstance 只在 usePlugin 显式实例化或 Piv 消费时执行。
  */
-export function createPlugin<Options = undefined, Controller extends object = object, Tag extends PivTag = PivTag>(
-  createInstance: (options: Options | undefined) => PluginInstance<Controller, Tag>,
+export function createPlugin<
+  Options = undefined,
+  Controller extends object = object,
+  Tag extends PivTag = PivTag,
+>(
+  createInstance: (
+    options: Options | undefined,
+  ) => PluginInstance<Controller, Tag>,
 ): Plugin<Options, Controller, Tag> {
   return createConfiguredPlugin(createInstance, undefined)
 }
 
-function createConfiguredPlugin<Options, Controller extends object, Tag extends PivTag>(
-  createInstance: (options: Options | undefined) => PluginInstance<Controller, Tag>,
+function createConfiguredPlugin<
+  Options,
+  Controller extends object,
+  Tag extends PivTag,
+>(
+  createInstance: (
+    options: Options | undefined,
+  ) => PluginInstance<Controller, Tag>,
   configuredOptions: Options | undefined,
 ): Plugin<Options, Controller, Tag> {
-  const plugin = ((options?: Options) => createConfiguredPlugin(createInstance, options)) as Plugin<
+  const plugin = ((options?: Options) =>
+    createConfiguredPlugin(createInstance, options)) as Plugin<
     Options,
     Controller,
     Tag

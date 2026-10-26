@@ -2,7 +2,14 @@
  * Example 浏览入口：主页只负责发现，URL 选中具体条目后才渲染详情。
  * Example 内容继续留在各自领域旁边，本文件只拥有目录和浏览历史。
  */
-import { onCleanup, onMount, createState, val, For, type Component } from '@/foundation'
+import {
+  onCleanup,
+  onMount,
+  createState,
+  val,
+  For,
+  type Component,
+} from '@/foundation'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card } from '@/components'
@@ -43,18 +50,104 @@ const exampleCategories = {
 } satisfies Record<string, ExampleCategory>
 
 const exampleEntries: ExampleEntry[] = [
-  { id: 'async-state', title: '异步状态', category: exampleCategories.hook, summary: '由界面处理请求等待、完成与失败。', thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href, content: AsyncStateExample },
-  { id: 'card', title: 'Card', category: exampleCategories.component, summary: '独立信息单元的声量、尺寸与主题材质。', thumbnail: new URL('../thumbnails/card.webp', import.meta.url).href, content: CardExample },
-  { id: 'article', title: 'Article', category: exampleCategories.component, summary: '独立正文语义与透明视觉载体。', thumbnail: new URL('../thumbnails/article.webp', import.meta.url).href, content: ArticleExample },
-  { id: 'button', title: 'Button', category: exampleCategories.component, summary: '动作声量、性质、状态与尺寸。', thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href, content: ButtonExample },
-  { id: 'input', title: 'Input', category: exampleCategories.component, summary: '单行输入值与校验状态。', thumbnail: new URL('../thumbnails/input.webp', import.meta.url).href, content: InputExample },
-  { id: 'popover', title: 'Popover', category: exampleCategories.component, summary: '原生浮层、锚点定位与边框形状。', thumbnail: new URL('../thumbnails/popover.webp', import.meta.url).href, content: PopoverExample },
-  { id: 'draggable', title: 'Draggable', category: exampleCategories.plugin, summary: 'Top Layer 提升、Anchor 与指针拖动。', thumbnail: new URL('../thumbnails/draggable.webp', import.meta.url).href, content: DraggableExample },
-  { id: 'droppable', title: 'Droppable', category: exampleCategories.plugin, summary: '内部 payload 与系统文件接收。', thumbnail: new URL('../thumbnails/droppable.webp', import.meta.url).href, content: DroppableExample },
-  { id: 'scope', title: 'Scope', category: exampleCategories.plugin, summary: '能力组合的作用域边界。', thumbnail: new URL('../thumbnails/scope.webp', import.meta.url).href, content: ScopeExample },
-  { id: 'piv-structure', title: 'Piv Structure', category: exampleCategories.piv, summary: 'Plugin 对原始 DOM 结构的组合。', thumbnail: new URL('../thumbnails/piv-structure.webp', import.meta.url).href, content: PivStructureExample },
-  { id: 'color', title: 'Color', category: exampleCategories.css, summary: '主题模式与颜色 token。', thumbnail: new URL('../thumbnails/color.webp', import.meta.url).href, content: ColorDashboardExample },
-  { id: 'use-document-title', title: 'useDocumentTitle', category: exampleCategories.hook, summary: '浏览器标题的同步与读取。', thumbnail: new URL('../thumbnails/use-document-title.webp', import.meta.url).href, content: UseDocumentTitleExample },
+  {
+    id: 'async-state',
+    title: '异步状态',
+    category: exampleCategories.hook,
+    summary: '由界面处理请求等待、完成与失败。',
+    thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href,
+    content: AsyncStateExample,
+  },
+  {
+    id: 'card',
+    title: 'Card',
+    category: exampleCategories.component,
+    summary: '独立信息单元的声量、尺寸与主题材质。',
+    thumbnail: new URL('../thumbnails/card.webp', import.meta.url).href,
+    content: CardExample,
+  },
+  {
+    id: 'article',
+    title: 'Article',
+    category: exampleCategories.component,
+    summary: '独立正文语义与透明视觉载体。',
+    thumbnail: new URL('../thumbnails/article.webp', import.meta.url).href,
+    content: ArticleExample,
+  },
+  {
+    id: 'button',
+    title: 'Button',
+    category: exampleCategories.component,
+    summary: '动作声量、性质、状态与尺寸。',
+    thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href,
+    content: ButtonExample,
+  },
+  {
+    id: 'input',
+    title: 'Input',
+    category: exampleCategories.component,
+    summary: '单行输入值与校验状态。',
+    thumbnail: new URL('../thumbnails/input.webp', import.meta.url).href,
+    content: InputExample,
+  },
+  {
+    id: 'popover',
+    title: 'Popover',
+    category: exampleCategories.component,
+    summary: '原生浮层、锚点定位与边框形状。',
+    thumbnail: new URL('../thumbnails/popover.webp', import.meta.url).href,
+    content: PopoverExample,
+  },
+  {
+    id: 'draggable',
+    title: 'Draggable',
+    category: exampleCategories.plugin,
+    summary: 'Top Layer 提升、Anchor 与指针拖动。',
+    thumbnail: new URL('../thumbnails/draggable.webp', import.meta.url).href,
+    content: DraggableExample,
+  },
+  {
+    id: 'droppable',
+    title: 'Droppable',
+    category: exampleCategories.plugin,
+    summary: '内部 payload 与系统文件接收。',
+    thumbnail: new URL('../thumbnails/droppable.webp', import.meta.url).href,
+    content: DroppableExample,
+  },
+  {
+    id: 'scope',
+    title: 'Scope',
+    category: exampleCategories.plugin,
+    summary: '能力组合的作用域边界。',
+    thumbnail: new URL('../thumbnails/scope.webp', import.meta.url).href,
+    content: ScopeExample,
+  },
+  {
+    id: 'piv-structure',
+    title: 'Piv Structure',
+    category: exampleCategories.piv,
+    summary: 'Plugin 对原始 DOM 结构的组合。',
+    thumbnail: new URL('../thumbnails/piv-structure.webp', import.meta.url)
+      .href,
+    content: PivStructureExample,
+  },
+  {
+    id: 'color',
+    title: 'Color',
+    category: exampleCategories.css,
+    summary: '主题模式与颜色 token。',
+    thumbnail: new URL('../thumbnails/color.webp', import.meta.url).href,
+    content: ColorDashboardExample,
+  },
+  {
+    id: 'use-document-title',
+    title: 'useDocumentTitle',
+    category: exampleCategories.hook,
+    summary: '浏览器标题的同步与读取。',
+    thumbnail: new URL('../thumbnails/use-document-title.webp', import.meta.url)
+      .href,
+    content: UseDocumentTitleExample,
+  },
 ]
 
 export default function ExampleDashboard() {
@@ -66,7 +159,14 @@ export default function ExampleDashboard() {
   onCleanup(() => window.removeEventListener('popstate', syncLocation))
 
   const navigate = (event: MouseEvent) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return
 
     event.preventDefault()
     const nextPath = (event.currentTarget as HTMLAnchorElement).pathname
@@ -81,10 +181,12 @@ export default function ExampleDashboard() {
         const id = readExampleId(val(pathname))
         if (!id) return <ExampleHome onNavigate={navigate} />
 
-        const example = exampleEntries.find(entry => entry.id === id)
-        return example
-          ? <ExampleDetail entry={example} onNavigate={navigate} />
-          : <ExampleMissing id={id} onNavigate={navigate} />
+        const example = exampleEntries.find((entry) => entry.id === id)
+        return example ? (
+          <ExampleDetail entry={example} onNavigate={navigate} />
+        ) : (
+          <ExampleMissing id={id} onNavigate={navigate} />
+        )
       })()}
     </main>
   )
@@ -99,30 +201,32 @@ function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
       </header>
 
       <nav class="example-list" aria-label="Examples">
-        <For each={exampleEntries}>{entry => (
-          <a
-            class="example-link"
-            data-thumbnail
-            href={`/examples/${entry.id}`}
-            onClick={props.onNavigate}
-            style={{ '--example-category-color': entry.category.color }}
-          >
-            <img
-              class="example-link-thumbnail"
-              src={entry.thumbnail}
-              alt=""
-              width="800"
-              height="450"
-              loading="lazy"
-              decoding="async"
-            />
-            <span class="example-link-ribbon">{entry.category.label}</span>
-            <div class="example-link-copy">
-              <h2>{entry.title}</h2>
-              <p>{entry.summary}</p>
-            </div>
-          </a>
-        )}</For>
+        <For each={exampleEntries}>
+          {(entry) => (
+            <a
+              class="example-link"
+              data-thumbnail
+              href={`/examples/${entry.id}`}
+              onClick={props.onNavigate}
+              style={{ '--example-category-color': entry.category.color }}
+            >
+              <img
+                class="example-link-thumbnail"
+                src={entry.thumbnail}
+                alt=""
+                width="800"
+                height="450"
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="example-link-ribbon">{entry.category.label}</span>
+              <div class="example-link-copy">
+                <h2>{entry.title}</h2>
+                <p>{entry.summary}</p>
+              </div>
+            </a>
+          )}
+        </For>
       </nav>
     </section>
   )
@@ -136,13 +240,18 @@ function ExampleDetail(props: {
 
   return (
     <section class="example-detail">
-      <a class="example-back" href="/examples" onClick={props.onNavigate}>← 全部 Examples</a>
+      <a class="example-back" href="/examples" onClick={props.onNavigate}>
+        ← 全部 Examples
+      </a>
       <Content />
     </section>
   )
 }
 
-function ExampleMissing(props: { id: string; onNavigate: (event: MouseEvent) => void }) {
+function ExampleMissing(props: {
+  id: string
+  onNavigate: (event: MouseEvent) => void
+}) {
   return (
     <section class="example-missing">
       <Card class="example-card">
@@ -151,7 +260,9 @@ function ExampleMissing(props: { id: string; onNavigate: (event: MouseEvent) => 
           <h1>没有这个 Example</h1>
         </div>
         <p>URL 中的 Example 标识“{props.id}”不存在。</p>
-        <a class="example-back" href="/examples" onClick={props.onNavigate}>返回主页</a>
+        <a class="example-back" href="/examples" onClick={props.onNavigate}>
+          返回主页
+        </a>
       </Card>
     </section>
   )

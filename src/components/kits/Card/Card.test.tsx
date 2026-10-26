@@ -18,17 +18,20 @@ afterEach(() => {
 describe('Card', () => {
   test('保留原生元素语义、组合 class 并输出确定 Variant', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => (
-      <Card
-        as="article"
-        class="example-card"
-        solid
-        large
-        htmlProps={{ 'aria-label': 'Example detail', 'data-testid': 'card' }}
-      >
-        内容
-      </Card>
-    ), host)
+    dispose = render(
+      () => (
+        <Card
+          as="article"
+          class="example-card"
+          solid
+          large
+          htmlProps={{ 'aria-label': 'Example detail', 'data-testid': 'card' }}
+        >
+          内容
+        </Card>
+      ),
+      host,
+    )
 
     const card = document.querySelector<HTMLElement>('[data-testid="card"]')!
     expect(card.tagName).toBe('ARTICLE')
@@ -53,11 +56,20 @@ describe('Card', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const variant = createState<'soft' | 'solid' | undefined>()
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => <Card soft variant={variant}>动态卡片</Card>, host)
+    dispose = render(
+      () => (
+        <Card soft variant={variant}>
+          动态卡片
+        </Card>
+      ),
+      host,
+    )
     const card = host.firstElementChild as HTMLElement
 
     expect(card.hasAttribute('data-variant')).toBe(false)
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('“variant”接管整个分组'))
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('“variant”接管整个分组'),
+    )
 
     variant.set('solid')
     flush()

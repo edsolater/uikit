@@ -17,7 +17,10 @@ import { ColorDashboardExample } from '@/css/ColorDashboardExample'
 import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleThumbnailCapture.css'
 import { cssRoot } from '@/style-system'
-import { KitContextRoot, type KitContextNode } from '@/components/kits/kitContext'
+import {
+  KitContextRoot,
+  type KitContextNode,
+} from '@/components/kits/kitContext'
 
 let dispose: (() => void) | undefined
 const style = document.createElement('style')
@@ -26,18 +29,31 @@ beforeAll(() => {
   document.head.append(style)
   cssRoot.mount()
 })
-afterAll(() => { style.remove() })
+afterAll(() => {
+  style.remove()
+})
 
-const waitForLayout = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+const waitForLayout = () =>
+  new Promise((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(resolve)),
+  )
 
-async function captureThumbnail(name: string, Content: Component, prepare?: () => Promise<void>) {
+async function captureThumbnail(
+  name: string,
+  Content: Component,
+  prepare?: () => Promise<void>,
+) {
   await page.viewport(960, 540)
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => {
     const rootNode: KitContextNode = { isRoot: true }
-    return <KitContextRoot value={rootNode}>
-      <div class="example-thumbnail-capture-stage"><Content /></div>
-    </KitContextRoot>
+    return (
+      <KitContextRoot value={rootNode}>
+        <div class="example-thumbnail-capture-stage">
+          <Content />
+        </div>
+      </KitContextRoot>
+    )
   }, host)
   await document.fonts.ready
   await waitForLayout()
@@ -59,12 +75,20 @@ test('生成 Card 缩略图', () => captureThumbnail('card', CardExample))
 test('生成 Article 缩略图', () => captureThumbnail('article', ArticleExample))
 test('生成 Button 缩略图', () => captureThumbnail('button', ButtonExample))
 test('生成 Input 缩略图', () => captureThumbnail('input', InputExample))
-test('生成 Popover 缩略图', () => captureThumbnail('popover', PopoverExample, async () => {
-  await userEvent.click(document.querySelector<HTMLButtonElement>('.popover-row button')!)
-}))
-test('生成 Draggable 缩略图', () => captureThumbnail('draggable', DraggableExample))
-test('生成 Droppable 缩略图', () => captureThumbnail('droppable', DroppableExample))
+test('生成 Popover 缩略图', () =>
+  captureThumbnail('popover', PopoverExample, async () => {
+    await userEvent.click(
+      document.querySelector<HTMLButtonElement>('.popover-row button')!,
+    )
+  }))
+test('生成 Draggable 缩略图', () =>
+  captureThumbnail('draggable', DraggableExample))
+test('生成 Droppable 缩略图', () =>
+  captureThumbnail('droppable', DroppableExample))
 test('生成 Scope 缩略图', () => captureThumbnail('scope', ScopeExample))
-test('生成 Piv Structure 缩略图', () => captureThumbnail('piv-structure', PivStructureExample))
-test('生成 Color 缩略图', () => captureThumbnail('color', ColorDashboardExample))
-test('生成 useDocumentTitle 缩略图', () => captureThumbnail('use-document-title', UseDocumentTitleExample))
+test('生成 Piv Structure 缩略图', () =>
+  captureThumbnail('piv-structure', PivStructureExample))
+test('生成 Color 缩略图', () =>
+  captureThumbnail('color', ColorDashboardExample))
+test('生成 useDocumentTitle 缩略图', () =>
+  captureThumbnail('use-document-title', UseDocumentTitleExample))

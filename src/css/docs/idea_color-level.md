@@ -20,10 +20,10 @@
 --layer(color, level)
 ```
 
-| 函数          | 语义              | 类型       |
-| ----------- | --------------- | -------- |
-| `--raise()` | 基于当前颜色，让视觉层级上升  | 相对移动     |
-| `--sink()`  | 基于当前颜色，让视觉层级下降  | 相对移动     |
+| 函数        | 语义                           | 类型            |
+| ----------- | ------------------------------ | --------------- |
+| `--raise()` | 基于当前颜色，让视觉层级上升   | 相对移动        |
+| `--sink()`  | 基于当前颜色，让视觉层级下降   | 相对移动        |
 | `--layer()` | 基于当前颜色，设定目标视觉层级 | 绝对/半绝对设定 |
 
 ---
@@ -36,12 +36,12 @@
 oklch(from var(--color) l c h / alpha)
 ```
 
-| 通道              | 作用        | 是否修改 |
-| --------------- | --------- | ---- |
-| `L` / lightness | 明度、视觉层级主轴 | 修改   |
+| 通道            | 作用               | 是否修改 |
+| --------------- | ------------------ | -------- |
+| `L` / lightness | 明度、视觉层级主轴 | 修改     |
 | `C` / chroma    | 彩度、表达强度辅轴 | 小幅修改 |
-| `H` / hue       | 色相、颜色身份   | 不修改  |
-| `alpha`         | 透明度       | 不修改  |
+| `H` / hue       | 色相、颜色身份     | 不修改   |
+| `alpha`         | 透明度             | 不修改   |
 
 核心纪律：
 
@@ -112,18 +112,18 @@ sink:
 ## 推荐 lightness 层级
 
 ```css
---l-0:  0.06; /* near black */
---l-1:  0.10;
---l-2:  0.14;
---l-3:  0.18;
---l-4:  0.24;
---l-5:  0.32;
---l-6:  0.42;
---l-7:  0.54;
---l-8:  0.66;
---l-9:  0.76;
+--l-0: 0.06; /* near black */
+--l-1: 0.1;
+--l-2: 0.14;
+--l-3: 0.18;
+--l-4: 0.24;
+--l-5: 0.32;
+--l-6: 0.42;
+--l-7: 0.54;
+--l-8: 0.66;
+--l-9: 0.76;
 --l-10: 0.84;
---l-11: 0.90;
+--l-11: 0.9;
 --l-12: 0.94; /* near white */
 ```
 
@@ -144,14 +144,14 @@ L = 0.94 浅背景
 ## chroma 典型值
 
 ```css
---c-neutral: 0.00;
---c-soft:    0.02;
---c-tint:    0.04;
---c-weak:    0.06;
---c-normal:  0.10;
---c-strong:  0.15;
---c-vivid:   0.20;
---c-hot:     0.24;
+--c-neutral: 0;
+--c-soft: 0.02;
+--c-tint: 0.04;
+--c-weak: 0.06;
+--c-normal: 0.1;
+--c-strong: 0.15;
+--c-vivid: 0.2;
+--c-hot: 0.24;
 ```
 
 粗略理解：
@@ -202,18 +202,12 @@ sink:
 ### raise
 
 ```css
-@function --raise(
-  --color <color>,
-  --level <number>: 1
-) returns <color> {
+@function --raise(--color <color>, --level <number>: 1) returns <color> {
   --step: calc(0.06 * var(--level));
 
   result: oklch(
-    from var(--color)
-    clamp(0.06, calc(l + (1 - l) * var(--step)), 0.94)
-    clamp(0, calc(c + (1 - l) * var(--step) * 0.10), 0.28)
-    h
-    / alpha
+    from var(--color) clamp(0.06, calc(l + (1 - l) * var(--step)), 0.94)
+      clamp(0, calc(c + (1 - l) * var(--step) * 0.1), 0.28) h / alpha
   );
 }
 ```
@@ -221,18 +215,12 @@ sink:
 ### sink
 
 ```css
-@function --sink(
-  --color <color>,
-  --level <number>: 1
-) returns <color> {
+@function --sink(--color <color>, --level <number>: 1) returns <color> {
   --step: calc(0.06 * var(--level));
 
   result: oklch(
-    from var(--color)
-    clamp(0.06, calc(l - l * var(--step)), 0.94)
-    clamp(0, calc(c - l * var(--step) * 0.08), 0.28)
-    h
-    / alpha
+    from var(--color) clamp(0.06, calc(l - l * var(--step)), 0.94)
+      clamp(0, calc(c - l * var(--step) * 0.08), 0.28) h / alpha
   );
 }
 ```
@@ -240,10 +228,7 @@ sink:
 ### layer
 
 ```css
-@function --layer(
-  --color <color>,
-  --level <number>: 0
-) returns <color> {
+@function --layer(--color <color>, --level <number>: 0) returns <color> {
   --up: max(var(--level), 0);
   --down: max(calc(var(--level) * -1), 0);
 
@@ -252,18 +237,17 @@ sink:
 
   result: oklch(
     from var(--color)
-    clamp(0.06, calc(
-      l
-      + (1 - l) * var(--up-step)
-      - l * var(--down-step)
-    ), 0.94)
-    clamp(0, calc(
-      c
-      + (1 - l) * var(--up-step) * 0.10
-      - l * var(--down-step) * 0.08
-    ), 0.28)
-    h
-    / alpha
+      clamp(
+        0.06,
+        calc(l + (1 - l) * var(--up-step) - l * var(--down-step)),
+        0.94
+      )
+      clamp(
+        0,
+        calc(c + (1 - l) * var(--up-step) * 0.1 - l * var(--down-step) * 0.08),
+        0.28
+      )
+      h / alpha
   );
 }
 ```
@@ -312,4 +296,4 @@ raise / sink / layer 是基于 OKLCH 的前端视觉层级函数：
 它们替代传统 tint / shade，适配 light / dark / 智能颜色环境。
 ```
 
-::: 
+:::

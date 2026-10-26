@@ -32,15 +32,24 @@ describe('hoverable', () => {
           <Piv plugin={firstPlugin} htmlProps={{ 'data-testid': 'first' }} />
           <Piv plugin={secondPlugin} htmlProps={{ 'data-testid': 'second' }} />
           <Piv plugin={hoverable} htmlProps={{ 'data-testid': 'direct' }} />
-          <Piv plugin={hoverable({ initialHovered: true })} htmlProps={{ 'data-testid': 'configured' }} />
+          <Piv
+            plugin={hoverable({ initialHovered: true })}
+            htmlProps={{ 'data-testid': 'configured' }}
+          />
         </>
       )
     }, host)
 
     const first = document.querySelector<HTMLElement>('[data-testid="first"]')!
-    const second = document.querySelector<HTMLElement>('[data-testid="second"]')!
-    const direct = document.querySelector<HTMLElement>('[data-testid="direct"]')!
-    const configured = document.querySelector<HTMLElement>('[data-testid="configured"]')!
+    const second = document.querySelector<HTMLElement>(
+      '[data-testid="second"]',
+    )!
+    const direct = document.querySelector<HTMLElement>(
+      '[data-testid="direct"]',
+    )!
+    const configured = document.querySelector<HTMLElement>(
+      '[data-testid="configured"]',
+    )!
 
     expect(first.hasAttribute('data-hovered')).toBe(false)
     expect(direct.hasAttribute('data-hovered')).toBe(false)

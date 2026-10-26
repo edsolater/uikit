@@ -10,7 +10,8 @@
  * 参数：(base <length>, ratio <number>, n <number>)。
  * 示例：--step(var(--space-base), var(--space-ratio), 3)。
  */
-@function --step(--base <length>, --ratio <number>, --n <number>) returns <length> {
+@function --step(--base <length>, --ratio <number>, --n <number>) returns
+  <length> {
   result: calc(var(--base) * pow(var(--ratio), var(--n)));
 }
 

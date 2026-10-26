@@ -16,11 +16,14 @@ afterEach(() => {
 describe('Article', () => {
   test('默认直接输出原生 article', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => (
-      <Article htmlProps={{ 'data-testid': 'article' }}>正文</Article>
-    ), host)
+    dispose = render(
+      () => <Article htmlProps={{ 'data-testid': 'article' }}>正文</Article>,
+      host,
+    )
 
-    const article = document.querySelector<HTMLElement>('[data-testid="article"]')!
+    const article = document.querySelector<HTMLElement>(
+      '[data-testid="article"]',
+    )!
     expect(article.tagName).toBe('ARTICLE')
     expect(article.textContent).toBe('正文')
     expect(host.children).toHaveLength(1)
@@ -28,18 +31,23 @@ describe('Article', () => {
 
   test('由 Card 承载时不增加 DOM，并让 Card 使用 article 节点', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(() => (
-      <Article
-        as={Card}
-        class="example-card"
-        large
-        htmlProps={{ 'data-testid': 'card-article' }}
-      >
-        卡片正文
-      </Article>
-    ), host)
+    dispose = render(
+      () => (
+        <Article
+          as={Card}
+          class="example-card"
+          large
+          htmlProps={{ 'data-testid': 'card-article' }}
+        >
+          卡片正文
+        </Article>
+      ),
+      host,
+    )
 
-    const article = document.querySelector<HTMLElement>('[data-testid="card-article"]')!
+    const article = document.querySelector<HTMLElement>(
+      '[data-testid="card-article"]',
+    )!
     expect(article.tagName).toBe('ARTICLE')
     expect(article.classList.contains('Card')).toBe(true)
     expect(article.classList.contains('example-card')).toBe(true)

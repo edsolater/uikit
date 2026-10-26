@@ -16,14 +16,14 @@
 
 ## 文件责任
 
-| 文件 | 当前责任和变化 |
-| --- | --- |
-| [variable/core.ts](../../src/style-system/variable/core.ts) | 统一 Variable 创建、引用、declare/modify 调用入口、自身状态与注册；普通消费和自动状态声明留在此处 |
-| [variable/modify.ts](../../src/style-system/variable/modify.ts) | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态 |
-| [ast-controller.ts](../../src/style-system/compiler/ast-controller.ts) | 通用父节点/邻近节点定位、插入、移动、共享来源、撤销和重访；不包含修改专属概念 |
-| [condition.ts](../../src/style-system/condition.ts) | 提供原始语义路径比较；状态中央排序仅用于输出 |
-| [节点内容编译入口](../../src/style-system/compiler/style-nodes-to-content-nodes/node-compilation.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理 |
-| `variable-cluster.ts`（历史文件，现已删除） | 默认成员代理、同名成员配对和集合继承创建；无独立修改规则 |
+| 文件                                                                                                 | 当前责任和变化                                                                                    |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [variable/core.ts](../../src/style-system/variable/core.ts)                                          | 统一 Variable 创建、引用、declare/modify 调用入口、自身状态与注册；普通消费和自动状态声明留在此处 |
+| [variable/modify.ts](../../src/style-system/variable/modify.ts)                                      | 局部声明的基础值、修改步骤、相邻连接、重绑和撤销；声明与修改共用一份编译会话状态                  |
+| [ast-controller.ts](../../src/style-system/compiler/ast-controller.ts)                               | 通用父节点/邻近节点定位、插入、移动、共享来源、撤销和重访；不包含修改专属概念                     |
+| [condition.ts](../../src/style-system/condition.ts)                                                  | 提供原始语义路径比较；状态中央排序仅用于输出                                                      |
+| [节点内容编译入口](../../src/style-system/compiler/style-nodes-to-content-nodes/node-compilation.ts) | 保持普通待解析队列和完成判断；后续内容继续按既有生命周期处理                                      |
+| `variable-cluster.ts`（历史文件，现已删除）                                                          | 默认成员代理、同名成员配对和集合继承创建；无独立修改规则                                          |
 
 Variable 保留公开入口和普通消费；局部定义、单个步骤与相邻连接由 VariableModification 共同维护，因为它们共享作用域、覆盖、源顺序和撤销事实。AST 只拥有位置和来源。Compiler 继续消费内容，不识别 Variable。
 
@@ -65,14 +65,14 @@ Cluster 成员继承迁移后，Button 与 `foregroundColorInteractive` 的普�
 
 正式证据文件：[变量修改单元流程](../../src/style-system/test/变量修改与条件组合.test.ts)、[真实浏览器流程](../../src/style-system/test/变量修改与条件组合.browser.test.ts)、[内容编译波与 AST 操作](../../src/style-system/test/内容编译波遍历及插入节点.test.ts)。下表记录 2026-09-28 状态读取简化及 Button 配方修正后的验证范围：
 
-| 验证 | 结果 |
-| --- | --- |
-| bun run type-check | 通过；公开类型允许访问 config，顶层 definitionKey 仍不存在 |
-| bun run test:unit | 34 文件、177 项通过，含多层同状态读取、缺失状态取默认值与普通消费 |
+| 验证                 | 结果                                                                         |
+| -------------------- | ---------------------------------------------------------------------------- |
+| bun run type-check   | 通过；公开类型允许访问 config，顶层 definitionKey 仍不存在                   |
+| bun run test:unit    | 34 文件、177 项通过，含多层同状态读取、缺失状态取默认值与普通消费            |
 | bun run test:browser | 15 文件、95 项通过，含局部 CSS 引用、Button 全部视觉基线与焦点轮廓的逐层回退 |
-| bun run build | 通过；产物 Variable 声明包含 config.definitionKey |
-| git diff --check | 通过 |
-| 独立浏览器反例 | onActive 晚到前置乘法、既有加法和后置乘法得到 8，三个 apply 各执行一次 |
+| bun run build        | 通过；产物 Variable 声明包含 config.definitionKey                            |
+| git diff --check     | 通过                                                                         |
+| 独立浏览器反例       | onActive 晚到前置乘法、既有加法和后置乘法得到 8，三个 apply 各执行一次       |
 
 当前完整文件审查：Variable 沿创建/引用/局部定义/当前修改阅读，位置和来源操作归 AST；没有隐藏整组遍历到新文件。新增的输入引用和相邻元数据对应晚到前插与撤销时保持非交换语义的必要责任，不是表达式结果缓存。
 
@@ -81,18 +81,17 @@ Cluster 成员继承迁移后，Button 与 `foregroundColorInteractive` 的普�
 以下是当前局部连接实现的单次同进程采样，名字为 scale，包含建节点、解析与输出；不是统计基准。该表取代旧实现的输出规模，不能混用旧的每步骤节点数。仍有 AST 位置查询，不能据此宣称编译算法线性。
 
 | 修改数 | 无注册 ms | 内容节点 | CSS 字节 | number 注册 ms | 内容节点 | CSS 字节 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0 | 1.19 | 2 | 22 | 0.38 | 5 | 98 |
-| 20 | 1.65 | 83 | 4,011 | 0.54 | 149 | 6,259 |
-| 200 | 6.99 | 803 | 40,437 | 7.77 | 1,409 | 61,506 |
-| 1000 | 55.32 | 4,003 | 204,443 | 86.19 | 7,009 | 309,513 |
+| ------ | --------: | -------: | -------: | -------------: | -------: | -------: |
+| 0      |      1.19 |        2 |       22 |           0.38 |        5 |       98 |
+| 20     |      1.65 |       83 |    4,011 |           0.54 |      149 |    6,259 |
+| 200    |      6.99 |      803 |   40,437 |           7.77 |    1,409 |   61,506 |
+| 1000   |     55.32 |    4,003 |  204,443 |          86.19 |    7,009 |  309,513 |
 
 浏览器已确认已有 number 注册的 20、200、1000 项，length 与 color 各 200 项正确。没有类型注册时，嵌套表达式仍可能无效；syntax 为 * 不提供类型计算规范化。实现不凭 source 猜类型，也不新增业务必填类型配置。
 
 [CSS Values 的计算规模要求](https://www.w3.org/TR/css-values-4/#calc-syntax)允许实现有表达式上限；[注册属性的计算规则](https://www.w3.org/TR/css-properties-values-api-1/)规定类型化值的计算。这是浏览器边界，不是业务手工通道配额。
 
 没有改 Button 交集配方，没有 Git 写操作。目的文档、Plan、实施详情各自保留自身职责，现役架构同步实际调用链。
-
 
 # 变量修改与编译讨论历史原文
 

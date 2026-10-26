@@ -21,21 +21,30 @@ test('默认内容是另一 Token 时声明保留来源引用，使用处不展�
   const canvasColor = token(paperColor, 'contract-canvas-color')
   const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 
-  expect(css).toMatch(/--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
-  expect(css).toMatch(/background-color:\s*var\(\s*--contract-canvas-color\s*\)\s*;/)
+  expect(css).toMatch(
+    /--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/,
+  )
+  expect(css).toMatch(
+    /background-color:\s*var\(\s*--contract-canvas-color\s*\)\s*;/,
+  )
 })
 
-test.each([false, true])('状态内容保留来源引用，不替换为来源定义；来源有自身状态：%s', (sourceHasState) => {
-  const paperColor = token('white', {
-    name: 'contract-paper-color',
-    state: sourceHasState ? { hover: 'black' } : undefined,
-  })
-  const canvasColor = token('gray', {
-    name: 'contract-canvas-color',
-    state: { hover: paperColor },
-  })
-  const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
+test.each([false, true])(
+  '状态内容保留来源引用，不替换为来源定义；来源有自身状态：%s',
+  (sourceHasState) => {
+    const paperColor = token('white', {
+      name: 'contract-paper-color',
+      state: sourceHasState ? { hover: 'black' } : undefined,
+    })
+    const canvasColor = token('gray', {
+      name: 'contract-canvas-color',
+      state: { hover: paperColor },
+    })
+    const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 
-  expect(css).toMatch(/--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/)
-  expect(css).not.toMatch(/--contract-canvas-color:\s*(?:white|black)\s*;/)
-})
+    expect(css).toMatch(
+      /--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/,
+    )
+    expect(css).not.toMatch(/--contract-canvas-color:\s*(?:white|black)\s*;/)
+  },
+)

@@ -4,13 +4,23 @@
  *
  * 让输出保持编译位置与层级，不重新安排内容行为。
  */
-import { assert, isObjectLike, isString, isNumber, isFunction } from '@edsolater/fnkit'
+import {
+  assert,
+  isObjectLike,
+  isString,
+  isNumber,
+  isFunction,
+} from '@edsolater/fnkit'
 import { hasJSSContentOutput, isJSSContent } from '../content'
 import { propertyName } from '../key'
 import type { JSSContentNode, ContentCompilationRecord } from './contracts'
 
 /** 读取已编译的内容链；编译阶段留下的替代结果在这里生效。 */
-export function contentToCSSString(input: unknown, compiledContents: WeakMap<object, ContentCompilationRecord>, reading = new Set<object>()): string | undefined {
+export function contentToCSSString(
+  input: unknown,
+  compiledContents: WeakMap<object, ContentCompilationRecord>,
+  reading = new Set<object>(),
+): string | undefined {
   if (input === undefined) return undefined
   if (isString(input) || isNumber(input)) return String(input)
   assert(isObjectLike(input), '无效的 CSS 内容。')
@@ -21,10 +31,18 @@ export function contentToCSSString(input: unknown, compiledContents: WeakMap<obj
     if (compiled && compiled.content !== input) {
       return contentToCSSString(compiled.content, compiledContents, reading)
     }
-    assert(!isFunction(input) || isJSSContent(input), 'CSS 生产函数尚未编译，请通过 dependencies 声明依赖。')
+    assert(
+      !isFunction(input) || isJSSContent(input),
+      'CSS 生产函数尚未编译，请通过 dependencies 声明依赖。',
+    )
     if (!hasJSSContentOutput(input)) return undefined
-    const output = input.toCSSString((child) => contentToCSSString(child, compiledContents, reading))
-    assert(output === undefined || isString(output), 'CSS 内容的 toCSSString 必须返回字符串或 undefined。')
+    const output = input.toCSSString((child) =>
+      contentToCSSString(child, compiledContents, reading),
+    )
+    assert(
+      output === undefined || isString(output),
+      'CSS 内容的 toCSSString 必须返回字符串或 undefined。',
+    )
     return output
   } finally {
     reading.delete(input)
@@ -32,19 +50,37 @@ export function contentToCSSString(input: unknown, compiledContents: WeakMap<obj
 }
 
 /** 按节点地址输出 CSS 内容；同址组合已在编译队列完成。 */
-export function contentNodesToCSSString(contentNodes: JSSContentNode[]): string {
+export function contentNodesToCSSString(
+  contentNodes: JSSContentNode[],
+): string {
   let openHeaders: string[] = []
   const lines: string[] = []
   for (const node of contentNodes) {
     const content = contentToCSSString(node.content, node.compiledContents)
     if (content === undefined) continue
-    const nextHeaders = node.conditionPath.map((condition) => condition.header).filter((header) => header !== undefined)
-    assert(nextHeaders.every(isString), 'CSS Condition 的 header 必须是字符串。')
+    const nextHeaders = node.conditionPath
+      .map((condition) => condition.header)
+      .filter((header) => header !== undefined)
+    assert(
+      nextHeaders.every(isString),
+      'CSS Condition 的 header 必须是字符串。',
+    )
     let sharedDepth = 0
-    while (sharedDepth < openHeaders.length && sharedDepth < nextHeaders.length && openHeaders[sharedDepth] === nextHeaders[sharedDepth]) sharedDepth++
-    for (let index = openHeaders.length; index > sharedDepth; index--) lines.push('}')
-    for (const header of nextHeaders.slice(sharedDepth)) lines.push(`${header} {`)
-    lines.push(node.key === undefined ? content : `${propertyName(node.key)}: ${content};`)
+    while (
+      sharedDepth < openHeaders.length &&
+      sharedDepth < nextHeaders.length &&
+      openHeaders[sharedDepth] === nextHeaders[sharedDepth]
+    )
+      sharedDepth++
+    for (let index = openHeaders.length; index > sharedDepth; index--)
+      lines.push('}')
+    for (const header of nextHeaders.slice(sharedDepth))
+      lines.push(`${header} {`)
+    lines.push(
+      node.key === undefined
+        ? content
+        : `${propertyName(node.key)}: ${content};`,
+    )
     openHeaders = nextHeaders
   }
   for (let index = openHeaders.length; index > 0; index--) lines.push('}')

@@ -25,7 +25,10 @@ Button 宽 8px。根上的 width 在根计算，再向后代继承；Button 的 
 const size = token('4px', 'scope-size')
 const delta = token('1px', 'scope-delta')
 rules('.Parent', [
-  modify(size, { type: 'expression', detail: current => add(current, delta) }),
+  modify(size, {
+    type: 'expression',
+    detail: (current) => add(current, delta),
+  }),
   [key('width'), size],
 ])
 rules('.Child', [declare(delta, '10px'), [key('width'), size]])

@@ -33,7 +33,11 @@ export interface DroppableController {
   disable(): void
 }
 
-export const droppable = createPlugin<DroppableOptions, DroppableController, PivTag>((options) => {
+export const droppable = createPlugin<
+  DroppableOptions,
+  DroppableController,
+  PivTag
+>((options) => {
   const [enabled, enabledControl] = createToggle(!(options?.disabled ?? false))
   const hovering = createState(false)
   const acceptable = createState(false)
@@ -46,9 +50,8 @@ export const droppable = createPlugin<DroppableOptions, DroppableController, Piv
     hovering.set(true)
     acceptable.set(accepted)
   }
-  const acceptsDrop = (context: DropContext): boolean => (
+  const acceptsDrop = (context: DropContext): boolean =>
     enabled.read() && (options?.accepts?.(context) ?? true)
-  )
   const onDrop = (context: DropContext) => options?.onDrop?.(context)
   const controller: DroppableController = {
     enabled,
@@ -67,10 +70,12 @@ export const droppable = createPlugin<DroppableOptions, DroppableController, Piv
       const removeInternalTarget = registerInternalDropTarget({
         element,
         enabled: enabled.read,
-        accepts: (drag, event) => acceptsDrop(createInternalDropContext(drag, event, element)),
+        accepts: (drag, event) =>
+          acceptsDrop(createInternalDropContext(drag, event, element)),
         hover: showHover,
         leave: resetHover,
-        drop: (drag, event) => onDrop(createInternalDropContext(drag, event, element)),
+        drop: (drag, event) =>
+          onDrop(createInternalDropContext(drag, event, element)),
       })
       onCleanup(removeInternalTarget)
 

@@ -4,16 +4,16 @@
 
 ## 对象与用途
 
-| 对象 | 用来表达什么 | 负责行为 |
-| --- | --- | --- |
-| Token | 样式基础内容与可选状态；内容可以引用其他 Token 或计算表达式 | [Token 的创建与复用](behaviors/Token的创建与复用.md) |
-| State | 可单独复用或直接写进 Token 的状态取值规则 | [states 与条件选择](behaviors/states与条件选择.md) |
-| Key、Declaration | CSS 属性目标与内容的配对 | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md) |
-| Condition | 选择作用位置和环境条件 | [CSS 作用域与层叠](behaviors/CSS作用域与层叠.md) |
-| 普通函数 | 计算、格式化或组合定义后返回 Token | [Token 与表达式](behaviors/Token与表达式.md) |
-| modify | 在指定位置或条件下修改同一个 Token | [定义组合与 modify](behaviors/Token的定义组合与modify.md) |
-| Mixin | 布局、文字、边界等完整效果 | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md) |
-| rule、rules、CSSRoot | 登记、更新、撤销、读取与提交 | [编译与挂载](behaviors/Compile与挂载.md) |
+| 对象                 | 用来表达什么                                                | 负责行为                                                  |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+| Token                | 样式基础内容与可选状态；内容可以引用其他 Token 或计算表达式 | [Token 的创建与复用](behaviors/Token的创建与复用.md)      |
+| State                | 可单独复用或直接写进 Token 的状态取值规则                   | [states 与条件选择](behaviors/states与条件选择.md)        |
+| Key、Declaration     | CSS 属性目标与内容的配对                                    | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md)    |
+| Condition            | 选择作用位置和环境条件                                      | [CSS 作用域与层叠](behaviors/CSS作用域与层叠.md)          |
+| 普通函数             | 计算、格式化或组合定义后返回 Token                          | [Token 与表达式](behaviors/Token与表达式.md)              |
+| modify               | 在指定位置或条件下修改同一个 Token                          | [定义组合与 modify](behaviors/Token的定义组合与modify.md) |
+| Mixin                | 布局、文字、边界等完整效果                                  | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md)    |
+| rule、rules、CSSRoot | 登记、更新、撤销、读取与提交                                | [编译与挂载](behaviors/Compile与挂载.md)                  |
 
 Pieces 是可复用材料的统称；Atom 表示组合中一块具体材料。普通值、表达式与有状态的共享材料统一通过 Token 表达。
 
@@ -23,10 +23,10 @@ Pieces 是可复用材料的统称；Atom 表示组合中一块具体材料。�
 token(value, name)
 token(value)
 token({ default: value })
-token({ default: value1, hover: base => multiply(base, 2), active: 4 })
+token({ default: value1, hover: (base) => multiply(base, 2), active: 4 })
 token(value, {
   name: 'name',
-  state: { hover: base => multiply(base, 2), active: 4 },
+  state: { hover: (base) => multiply(base, 2), active: 4 },
 })
 ```
 
@@ -44,16 +44,22 @@ target 的基础内容就是可坍缩的 source，按普通表达式消费并自
 复用定义、选择用途及产生变化结果都用普通函数返回 Token。函数可读取来源的 default、state 等信息，组合后创建新 Token；不维护加工来源、历史或待重放的操作。
 
 ```ts
-const doubled = base => token(multiply(base, 2))
+const doubled = (base) => token(multiply(base, 2))
 const amount = doubled(4)
 ```
 
 modify 则表达对目标 Token 的条件修改，沿用当前条件声明形式：
 
 ```ts
-rules(['.Item', '&[data-large]'], [
-  modify(amount, { type: 'expression', detail: current => multiply(current, 2) }),
-])
+rules(
+  ['.Item', '&[data-large]'],
+  [
+    modify(amount, {
+      type: 'expression',
+      detail: (current) => multiply(current, 2),
+    }),
+  ],
+)
 ```
 
 被 modify 的 Token 需要 CSS variable 身份；没有 name 时自动命名。加工函数返回的新 Token 不因“被加工过”自动取得这种身份。

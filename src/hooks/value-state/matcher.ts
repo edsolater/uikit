@@ -32,14 +32,18 @@ export interface MatcherOperator<Value> {
    * - 传入普通值时，按 Object.is 进行等值匹配
    * - 传入函数时，按 predicate 进行条件匹配
    */
-  match: (targetValueOrPredicate: Value | MatcherPredicate<Value>) => StateView<boolean>
+  match: (
+    targetValueOrPredicate: Value | MatcherPredicate<Value>,
+  ) => StateView<boolean>
 
   /**
    * 创建一个响应式不匹配 StateView。
    *
    * 等价于响应式版本的 !val(match(targetValueOrPredicate))。
    */
-  notMatch: (targetValueOrPredicate: Value | MatcherPredicate<Value>) => StateView<boolean>
+  notMatch: (
+    targetValueOrPredicate: Value | MatcherPredicate<Value>,
+  ) => StateView<boolean>
 
   /**
    * 立即判断 source 当前值是否等于 targetValue。
@@ -66,7 +70,9 @@ export interface MatcherOperator<Value> {
  *
  * 该能力只包装读取，不接管状态写入。
  */
-export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Value> {
+export function createMatcher<Value>(
+  source: Source<Value>,
+): MatcherOperator<Value> {
   const isPredicate = (
     targetValueOrPredicate: Value | MatcherPredicate<Value>,
   ): targetValueOrPredicate is MatcherPredicate<Value> => {
@@ -91,7 +97,9 @@ export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Val
     })
   }
 
-  const notMatch = (targetValueOrPredicate: Value | MatcherPredicate<Value>) => {
+  const notMatch = (
+    targetValueOrPredicate: Value | MatcherPredicate<Value>,
+  ) => {
     return match(targetValueOrPredicate).map((matched) => !matched)
   }
 
@@ -108,6 +116,9 @@ export function createMatcher<Value>(source: Source<Value>): MatcherOperator<Val
  * @param source
  * @returns
  */
-export function createMatch<Value>(source: Source<Value>, matchFunction: (value: Value) => boolean): StateView<boolean> {
+export function createMatch<Value>(
+  source: Source<Value>,
+  matchFunction: (value: Value) => boolean,
+): StateView<boolean> {
   return createMatcher(source).match(matchFunction)
 }

@@ -13,7 +13,11 @@
     --widget-surface: color-mix(in oklab, Canvas 96%, var(--color-accent) 4%);
 
     /* [小空间材料] - 控件悬停底色略微提高强调色占比，让 hover 反馈存在但不抢注意力。 */
-    --widget-surface-hover: color-mix(in oklab, Canvas 92%, var(--color-accent) 8%);
+    --widget-surface-hover: color-mix(
+      in oklab,
+      Canvas 92%,
+      var(--color-accent) 8%
+    );
 
     /* [小空间材料] - 控件焦点色直接使用强调色，保证键盘和表单操作反馈清晰。 */
     --widget-focus: var(--color-accent);
@@ -109,7 +113,12 @@
   }
 
   /* 按钮保持最小控件外观，只给默认按钮一个清爽边界和底色，不把它变成组件按钮。 */
-  :where(button, input[type='button'], input[type='reset'], input[type='submit']) {
+  :where(
+    button,
+    input[type='button'],
+    input[type='reset'],
+    input[type='submit']
+  ) {
     border: 1px solid var(--widget-border);
     border-radius: 0.5em;
     padding: 0.5em 0.875em;
@@ -119,12 +128,22 @@
   }
 
   /* 按钮 hover 只提高底色的强调色比例，避免默认按钮看起来像强 CTA。 */
-  :where(button, input[type='button'], input[type='reset'], input[type='submit']):where(:hover) {
+  :where(
+    button,
+    input[type='button'],
+    input[type='reset'],
+    input[type='submit']
+  ):where(:hover) {
     background: var(--widget-surface-hover);
   }
 
   /* 按钮键盘焦点使用和输入框一致的焦点环，保持控件层交互反馈统一。 */
-  :where(button, input[type='button'], input[type='reset'], input[type='submit']):where(:focus-visible) {
+  :where(
+    button,
+    input[type='button'],
+    input[type='reset'],
+    input[type='submit']
+  ):where(:focus-visible) {
     outline: 2px solid color-mix(in oklab, var(--widget-focus) 32%, transparent);
     outline-offset: 2px;
   }

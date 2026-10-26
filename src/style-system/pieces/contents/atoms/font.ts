@@ -5,9 +5,9 @@ import { multiply } from '../functions/calc'
 export const textSize = token('16px', {
   name: 'text-size',
   state: {
-    '&[data-size="small"]': base => multiply(base, 7 / 8),
-    '&[data-size="large"]': base => multiply(base, 5 / 4),
-    '&[data-size="xlarge"]': base => multiply(base, 3 / 2),
+    '&[data-size="small"]': (base) => multiply(base, 7 / 8),
+    '&[data-size="large"]': (base) => multiply(base, 5 / 4),
+    '&[data-size="xlarge"]': (base) => multiply(base, 3 / 2),
   },
 })
 

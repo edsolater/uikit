@@ -38,12 +38,16 @@ test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
   expect(output).not.toContain(':where(:root) {\n--bundle-surface:')
   const declarationOrder = [
-    'align-items: center;', 'margin-left: 2px;',
-    'color: var(--bundle-surface);', 'opacity: var(--bundle-opacity);',
+    'align-items: center;',
+    'margin-left: 2px;',
+    'color: var(--bundle-surface);',
+    'opacity: var(--bundle-opacity);',
     '--bundle-surface: blue;',
   ].map((declaration) => output.indexOf(declaration))
   expect(declarationOrder.every((index) => index >= 0)).toBe(true)
-  expect(declarationOrder).toEqual([...declarationOrder].sort((left, right) => left - right))
+  expect(declarationOrder).toEqual(
+    [...declarationOrder].sort((left, right) => left - right),
+  )
   expect(output).toContain('--bundle-line: var(--bundle-surface);')
   expect(output).toContain('border-color: var(--bundle-line);')
   expect(output).toContain('--bundle-opacity: 0.5;')
@@ -84,7 +88,9 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
     }
   `
   const output = execFileSync('bun', ['-e', probe], { encoding: 'utf8' })
-  expect(output).toContain('box-shadow: 1px 2px red, 3px 4px blue, 5px 6px green;')
+  expect(output).toContain(
+    'box-shadow: 1px 2px red, 3px 4px blue, 5px 6px green;',
+  )
   expect(output.match(/box-shadow:/g)).toHaveLength(1)
   expect(output).toContain('bundle-combined-spacing: 2px 3px 4px;')
   expect(output.match(/bundle-combined-spacing:/g)).toHaveLength(1)
@@ -118,9 +124,23 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
       distinctClickable: typeof uikit.clickable === 'function' && typeof styles.clickable === 'function' && uikit.clickable !== styles.clickable,
     }))
   `
-  const output = execFileSync('bun', ['--conditions=browser', '-e', probe], { encoding: 'utf8' })
-  expect(JSON.parse(output)).toEqual({ mounted: true, rendered: true, passiveImport: true, sharedRegistry: true, separate: true, removed: true, distinctClickable: true })
+  const output = execFileSync('bun', ['--conditions=browser', '-e', probe], {
+    encoding: 'utf8',
+  })
+  expect(JSON.parse(output)).toEqual({
+    mounted: true,
+    rendered: true,
+    passiveImport: true,
+    sharedRegistry: true,
+    separate: true,
+    removed: true,
+    distinctClickable: true,
+  })
 })
 
 /** 本用例选择空格序列输出，空项不占位置。 */
-const arraySequenceToCSSString = (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ')
+const arraySequenceToCSSString = (items, resolve) =>
+  items
+    .map(resolve)
+    .filter((item) => item !== undefined)
+    .join(' ')

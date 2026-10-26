@@ -7,7 +7,12 @@
 import { createCompiledContent } from '../compiled-content'
 import { assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
-import { keyPriority, propertyName, type JSSKey, type JSSKeyObject } from '../../key'
+import {
+  keyPriority,
+  propertyName,
+  type JSSKey,
+  type JSSKeyObject,
+} from '../../key'
 import type { ASTSession } from '../ast-controller'
 import { contentToCSSString } from '../content-nodes-to-css-string'
 import { token } from '../../token/core'
@@ -35,7 +40,12 @@ interface JoinRecord {
  * 捕获有序输入，一次选择最高等级有效贡献、连接规则及其最后位置。
  * 输掉的贡献仍保留失效快照，不改变获选声明与状态之间的顺序。
  */
-function captureInputs(nodes: Iterable<JSSStyleNode>, compiledContents: (node: JSSStyleNode) => WeakMap<object, ContentCompilationRecord>): {
+function captureInputs(
+  nodes: Iterable<JSSStyleNode>,
+  compiledContents: (
+    node: JSSStyleNode,
+  ) => WeakMap<object, ContentCompilationRecord>,
+): {
   inputs: Map<JSSStyleNode, InputSnapshot>
   selected: Map<JSSStyleNode, InputSnapshot>
   anchor: JSSStyleNode
@@ -45,19 +55,41 @@ function captureInputs(nodes: Iterable<JSSStyleNode>, compiledContents: (node: J
   for (const node of nodes) {
     inputs.set(node, {
       key: node.key,
-      join: typeof node.key === 'string' || !node.key || !('join' in node.key) ? undefined : node.key.join,
+      join:
+        typeof node.key === 'string' || !node.key || !('join' in node.key)
+          ? undefined
+          : node.key.join,
       content: node.content,
       revision: node.compileRevision,
       priority: keyPriority(node.key),
-      effective: contentToCSSString(node.content, compiledContents(node)) !== undefined,
+      effective:
+        contentToCSSString(node.content, compiledContents(node)) !== undefined,
     })
   }
-  const priority = Math.max(...[...inputs.values()].filter(input => input.effective).map(input => input.priority))
-  const selected = new Map([...inputs].filter(([, input]) => input.effective && input.priority === priority))
-  const joiners = new Set([...selected.values()].flatMap(input => input.join ? [input.join] : []))
+  const priority = Math.max(
+    ...[...inputs.values()]
+      .filter((input) => input.effective)
+      .map((input) => input.priority),
+  )
+  const selected = new Map(
+    [...inputs].filter(
+      ([, input]) => input.effective && input.priority === priority,
+    ),
+  )
+  const joiners = new Set(
+    [...selected.values()].flatMap((input) => (input.join ? [input.join] : [])),
+  )
   const first = [...inputs.keys()][0]
-  assert(joiners.size <= 1, `同名 JSSKey 的组合规则冲突：${propertyName(inputs.get(first)!.key!)}。`)
-  return { inputs, selected, anchor: [...selected.keys()].at(-1) ?? [...inputs.keys()].at(-1)!, join: [...joiners][0] }
+  assert(
+    joiners.size <= 1,
+    `同名 JSSKey 的组合规则冲突：${propertyName(inputs.get(first)!.key!)}。`,
+  )
+  return {
+    inputs,
+    selected,
+    anchor: [...selected.keys()].at(-1) ?? [...inputs.keys()].at(-1)!,
+    join: [...joiners][0],
+  }
 }
 
 /** 本次编译的同址连接；拥有输入快照与历史来源，只选择最新结果输出。 */
@@ -66,14 +98,20 @@ export class Join {
   private recordOf = new WeakMap<JSSStyleNode, JoinRecord>()
 
   /** 绑定当前队列及原贡献已经完成的解析结果，不接管内容编译进度。 */
-  constructor(private session: ASTSession, private compiledContents: (node: JSSStyleNode) => WeakMap<object, ContentCompilationRecord>) {}
+  constructor(
+    private session: ASTSession,
+    private compiledContents: (
+      node: JSSStyleNode,
+    ) => WeakMap<object, ContentCompilationRecord>,
+  ) {}
 
   /** 稳定队列中撤销失效历史或组合新增贡献；有变更时结果须进入后续编译波。 */
   update(): boolean {
     const groups = this.collectGroups()
     if (this.invalidate(groups)) return true
     let changed = false
-    for (const [address, group] of groups) if (this.join(address, group)) changed = true
+    for (const [address, group] of groups)
+      if (this.join(address, group)) changed = true
     return changed
   }
 
@@ -88,10 +126,18 @@ export class Join {
     const groups = new Map<string, Map<JSSStyleNode, number>>()
     for (const node of this.session.nodes) {
       const record = this.recordOf.get(node)
-      if (node.key === undefined || isCSSDefinitionControl(node) || (record && !record.inputs.has(node))) continue
-      const address = JSON.stringify([conditionAddressKey(node.conditionPath), propertyName(node.key)])
+      if (
+        node.key === undefined ||
+        isCSSDefinitionControl(node) ||
+        (record && !record.inputs.has(node))
+      )
+        continue
+      const address = JSON.stringify([
+        conditionAddressKey(node.conditionPath),
+        propertyName(node.key),
+      ])
       let group = groups.get(address)
-      if (!group) groups.set(address, group = new Map())
+      if (!group) groups.set(address, (group = new Map()))
       group.set(node, group.size)
     }
 
@@ -99,13 +145,24 @@ export class Join {
   }
 
   /** 核对本次输入位置、Key、join、Content 与 revision 是否仍保留原快照。 */
-  private matches(record: JoinRecord, group: Map<JSSStyleNode, number> | undefined): boolean {
+  private matches(
+    record: JoinRecord,
+    group: Map<JSSStyleNode, number> | undefined,
+  ): boolean {
     let previousPosition = -1
     for (const [node, snapshot] of record.inputs) {
       const position = group?.get(node)
-      if (position === undefined || position <= previousPosition || node.key !== snapshot.key
-        || (typeof node.key === 'string' || !node.key || !('join' in node.key) ? undefined : node.key.join) !== snapshot.join
-        || node.content !== snapshot.content || node.compileRevision !== snapshot.revision || keyPriority(node.key) !== snapshot.priority) {
+      if (
+        position === undefined ||
+        position <= previousPosition ||
+        node.key !== snapshot.key ||
+        (typeof node.key === 'string' || !node.key || !('join' in node.key)
+          ? undefined
+          : node.key.join) !== snapshot.join ||
+        node.content !== snapshot.content ||
+        node.compileRevision !== snapshot.revision ||
+        keyPriority(node.key) !== snapshot.priority
+      ) {
         return false
       }
       previousPosition = position
@@ -139,7 +196,10 @@ export class Join {
     if (group.size < 2) return false
     const previous = this.records.get(address)
     if (previous && previous.inputs.size === group.size) return false
-    const { inputs, selected, anchor, join } = captureInputs(group.keys(), this.compiledContents)
+    const { inputs, selected, anchor, join } = captureInputs(
+      group.keys(),
+      this.compiledContents,
+    )
     const content = this.createContent(selected, join)
     this.publish(address, inputs, anchor, content, previous)
     return true
@@ -148,17 +208,39 @@ export class Join {
   /**
    * 只为已选择的同级贡献建立位置内容视图，再调用原 Key.join 或默认数组聚合。
    */
-  private createContent(selected: Map<JSSStyleNode, InputSnapshot>, join: JSSKeyObject['join']): unknown {
-    const values = Array.from(selected, ([node, input]) => createCompiledContent(input.content, this.compiledContents(node)))
+  private createContent(
+    selected: Map<JSSStyleNode, InputSnapshot>,
+    join: JSSKeyObject['join'],
+  ): unknown {
+    const values = Array.from(selected, ([node, input]) =>
+      createCompiledContent(input.content, this.compiledContents(node)),
+    )
     return join ? join(values) : token({ default: values })
   }
 
   /**
    * 将结果放在获选贡献的最后位置，全部输入继续作为来源参与撤销与恢复。
    */
-  private publish(address: string, inputs: Map<JSSStyleNode, InputSnapshot>, anchor: JSSStyleNode, content: unknown, previous: JoinRecord | undefined): void {
-    const result = this.session.insert(anchor, this.session.insertionIdentity(anchor), anchor.conditionPath, inputs.get(anchor)!.key, content, anchor, 'after', undefined,
-      node => { node.aggregate = true })
+  private publish(
+    address: string,
+    inputs: Map<JSSStyleNode, InputSnapshot>,
+    anchor: JSSStyleNode,
+    content: unknown,
+    previous: JoinRecord | undefined,
+  ): void {
+    const result = this.session.insert(
+      anchor,
+      this.session.insertionIdentity(anchor),
+      anchor.conditionPath,
+      inputs.get(anchor)!.key,
+      content,
+      anchor,
+      'after',
+      undefined,
+      (node) => {
+        node.aggregate = true
+      },
+    )
     const record = previous ?? { inputs, anchor, results: [] }
     record.inputs = inputs
     record.anchor = anchor
@@ -170,5 +252,4 @@ export class Join {
     this.recordOf.set(result, record)
     this.records.set(address, record)
   }
-
 }

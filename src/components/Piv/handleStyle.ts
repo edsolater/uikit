@@ -3,14 +3,22 @@
  * 它不负责 class、普通 HTML props、事件或 plugin 解析。
  * 字符串 style 会先转成字段对象，再和对象 style 按字段合并并订阅。
  */
-import { createRenderEffect, type JSX, val, type MayArraySource, type Source } from '@/foundation'
+import {
+  createRenderEffect,
+  type JSX,
+  val,
+  type MayArraySource,
+  type Source,
+} from '@/foundation'
 import { mapArray } from '@/foundation/render'
 import { createMemo } from '@/foundation/reactivity'
 import { isTruthy, toArray } from '@edsolater/fnkit'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleRecord = {
-  [Key in keyof JSX.CSSProperties]?: Source<JSX.CSSProperties[Key] | null | undefined>
+  [Key in keyof JSX.CSSProperties]?: Source<
+    JSX.CSSProperties[Key] | null | undefined
+  >
 }
 type StyleAtom = string | StyleRecord
 type ParsedStyleRecord = Record<string, Source<StyleValueAtom>>
@@ -33,13 +41,19 @@ export function consumeStyle(
   })
 
   // 字段按 key 复用所属作用域，换源时由同一 effect 先清理再提交，首次写入仍在 ref 前完成。
-  mapArray(() => Object.keys(styleRecord()), key => {
-    createRenderEffect(() => val(styleRecord()[key]), styleValue => {
-      setStyleProperty(element, key, styleValue)
-      return () => element.style.removeProperty(key)
-    })
-    return key
-  })
+  mapArray(
+    () => Object.keys(styleRecord()),
+    (key) => {
+      createRenderEffect(
+        () => val(styleRecord()[key]),
+        (styleValue) => {
+          setStyleProperty(element, key, styleValue)
+          return () => element.style.removeProperty(key)
+        },
+      )
+      return key
+    },
+  )
 }
 
 /**
@@ -47,7 +61,9 @@ export function consumeStyle(
  */
 function mergeStyleRecords(styles: StyleAtom[]): ParsedStyleRecord {
   const styleRecords = styles.map((style) => parseStyleRecord(style))
-  const styleKeys = new Set(styleRecords.flatMap((styleRecord) => Object.keys(styleRecord)))
+  const styleKeys = new Set(
+    styleRecords.flatMap((styleRecord) => Object.keys(styleRecord)),
+  )
   const styleRecord: ParsedStyleRecord = {}
 
   for (const key of styleKeys) {
@@ -87,7 +103,11 @@ function parseStyleRecord(style: StyleAtom): ParsedStyleRecord {
 /**
  * 单个 CSS 字段的空值语义是移除该字段。
  */
-function setStyleProperty(element: HTMLElement, key: string, value: StyleValueAtom) {
+function setStyleProperty(
+  element: HTMLElement,
+  key: string,
+  value: StyleValueAtom,
+) {
   if (value == null || value === '') {
     element.style.removeProperty(key)
     return

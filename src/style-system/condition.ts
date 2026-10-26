@@ -30,8 +30,13 @@ export interface ConditionPath {
 }
 
 /** 将目标地址与主体状态按 CSS 嵌套顺序合成输出地址。 */
-export function outputConditionPath(conditionPath: ConditionPath): CSSConditionPath {
-  return [...conditionPath.targetConditionPath, ...conditionPath.stateConditionPath.map((state) => state.condition)]
+export function outputConditionPath(
+  conditionPath: ConditionPath,
+): CSSConditionPath {
+  return [
+    ...conditionPath.targetConditionPath,
+    ...conditionPath.stateConditionPath.map((state) => state.condition),
+  ]
 }
 
 /** 同一目标与规范化主体状态的输出地址。 */
@@ -43,7 +48,8 @@ export function conditionAddressKey(path: ConditionPath): string {
 }
 
 /** Condition 地址输入；缺省表示当前位置。 */
-export type ConditionInput = Condition | string | (Condition | string)[] | undefined
+export type ConditionInput =
+  Condition | string | (Condition | string)[] | undefined
 
 /** 创建 `@media` Condition。 */
 export function media(query: string): Condition {

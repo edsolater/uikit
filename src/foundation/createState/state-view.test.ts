@@ -1,4 +1,12 @@
-import { flush, resolve, NotReadyError, createEffect, until, createMemo, createRoot } from 'solid-js'
+import {
+  flush,
+  resolve,
+  NotReadyError,
+  createEffect,
+  until,
+  createMemo,
+  createRoot,
+} from 'solid-js'
 /**
  * 本文件验证 stateView 的统一转换、身份复用、映射和 options 分派。
  * PromiseLike 领域自身只验证结算行为。
@@ -69,10 +77,12 @@ test('映射视图复用当前结果，切换分支后跟随新来源，并随�
   const second = createState(5)
   let mappingCount = 0
   const { view, dispose } = createRoot((dispose) => {
-    const view = source.map((enabled) => {
-      mappingCount += 1
-      return enabled ? first : second
-    }).map((value) => value * 2)
+    const view = source
+      .map((enabled) => {
+        mappingCount += 1
+        return enabled ? first : second
+      })
+      .map((value) => value * 2)
     return { view, dispose }
   })
 
@@ -111,7 +121,7 @@ test('stateView 在 PromiseLike 转换后应用 options.map', async () => {
     map: (value) => `value:${value}`,
   })
   const observedValues: string[] = []
-  const { read, dispose } = createRoot(dispose => ({
+  const { read, dispose } = createRoot((dispose) => ({
     read: createMemo(() => {
       const value = val(view)
       observedValues.push(value)
@@ -134,24 +144,31 @@ test('stateView 在 PromiseLike 转换后应用 options.map', async () => {
 })
 
 test('转换入口的映射选项与函数简写均输出异步完成类型', async () => {
-  const scope = createRoot(dispose => ({
-    option: stateView(createState(2), { map: value => Promise.resolve(value + 1) }),
-    shorthand: stateView(createState(2), value => Promise.resolve(value * 2)),
+  const scope = createRoot((dispose) => ({
+    option: stateView(createState(2), {
+      map: (value) => Promise.resolve(value + 1),
+    }),
+    shorthand: stateView(createState(2), (value) => Promise.resolve(value * 2)),
     dispose,
   }))
   try {
     expectTypeOf(scope.option).toEqualTypeOf<StateView<number>>()
     expectTypeOf(scope.shorthand).toEqualTypeOf<StateView<number>>()
-    await Promise.all([resolve(scope.option.read), resolve(scope.shorthand.read)])
+    await Promise.all([
+      resolve(scope.option.read),
+      resolve(scope.shorthand.read),
+    ])
     expect(scope.option.read()).toBe(3)
     expect(scope.shorthand.read()).toBe(4)
-  } finally { scope.dispose() }
+  } finally {
+    scope.dispose()
+  }
 })
 
 test('共享 Promise 视图跨 owner 复用，首消费者卸载不终止其他消费者', async () => {
   const request = Promise.withResolvers<number>()
   let first: StateView<number> | undefined
-  const stopFirst = createRoot(dispose => {
+  const stopFirst = createRoot((dispose) => {
     first = stateView(request.promise)
     createEffect(first.read, () => {})
     return dispose
@@ -159,9 +176,11 @@ test('共享 Promise 视图跨 owner 复用，首消费者卸载不终止其他�
   flush()
   stopFirst()
   const values: number[] = []
-  const second = createRoot(dispose => {
+  const second = createRoot((dispose) => {
     const view = stateView(request.promise)
-    createEffect(view.read, value => { values.push(value) })
+    createEffect(view.read, (value) => {
+      values.push(value)
+    })
     return { view, dispose }
   })
   try {
@@ -169,10 +188,20 @@ test('共享 Promise 视图跨 owner 复用，首消费者卸载不终止其他�
     request.resolve(7)
     await expect.poll(() => values).toEqual([7])
     second.dispose()
-    for (let index = 0; index < 3; index++) expect(stateView(request.promise).read()).toBe(7)
-    const third = createRoot(dispose => ({ view: stateView(request.promise), dispose }))
-    try { expect(third.view.read()).toBe(7) } finally { third.dispose() }
-  } finally { second.dispose() }
+    for (let index = 0; index < 3; index++)
+      expect(stateView(request.promise).read()).toBe(7)
+    const third = createRoot((dispose) => ({
+      view: stateView(request.promise),
+      dispose,
+    }))
+    try {
+      expect(third.view.read()).toBe(7)
+    } finally {
+      third.dispose()
+    }
+  } finally {
+    second.dispose()
+  }
 })
 
 test('失败的共享 Promise 在失去全部观察后仍保留原始失败', async () => {
@@ -182,7 +211,8 @@ test('失败的共享 Promise 在失去全部观察后仍保留原始失败', as
   const outcome = resolve(view.read)
   request.reject(error)
   await expect(outcome).rejects.toBe(error)
-  for (let index = 0; index < 3; index++) expect(view.read).toThrow('共享请求失败')
+  for (let index = 0; index < 3; index++)
+    expect(view.read).toThrow('共享请求失败')
   await expect(resolve(stateView(request.promise).read)).rejects.toBe(error)
 })
 
@@ -193,15 +223,18 @@ test('普通值转换只提供读取与映射，保留原值身份', () => {
   expect(view.read()).toBe(value)
   expect(isState(view)).toBe(false)
   expect('set' in view).toBe(false)
-  expect(view.map(value => value.count * 2).read()).toBe(4)
+  expect(view.map((value) => value.count * 2).read()).toBe(4)
 })
 
 test('函数来源缓存计算并跟随依赖，函数结果保持数据，作用域释放停止计算', () => {
   const source = createState(1)
   const handler = () => 7
   let computations = 0
-  const scope = createRoot(dispose => ({
-    view: stateView(() => { computations++; return val(source) * 2 }),
+  const scope = createRoot((dispose) => ({
+    view: stateView(() => {
+      computations++
+      return val(source) * 2
+    }),
     handler: stateView(() => handler),
     dispose,
   }))
@@ -220,32 +253,55 @@ test('函数来源缓存计算并跟随依赖，函数结果保持数据，作�
     source.set(4)
     flush()
     expect(computations).toBe(2)
-  } finally { scope.dispose() }
+  } finally {
+    scope.dispose()
+  }
 })
 
 test('函数来源展开 Promise 与嵌套 thenable，映射接收完成类型，失败由原生传播', async () => {
   const request = Promise.withResolvers<number>()
-  const thenable = { then(deliver: (value: Promise<number>) => unknown) { deliver(request.promise) } }
-  const scope = createRoot(dispose => ({
+  const thenable = {
+    then(deliver: (value: Promise<number>) => unknown) {
+      deliver(request.promise)
+    },
+  }
+  const scope = createRoot((dispose) => ({
     view: stateView(() => thenable),
-    mapped: stateView(() => request.promise, { map(value) {
-      expectTypeOf(value).toEqualTypeOf<number>()
-      return value * 2
-    } }),
-    shorthand: stateView(() => request.promise, value => value + 1),
+    mapped: stateView(() => request.promise, {
+      map(value) {
+        expectTypeOf(value).toEqualTypeOf<number>()
+        return value * 2
+      },
+    }),
+    shorthand: stateView(
+      () => request.promise,
+      (value) => value + 1,
+    ),
     dispose,
   }))
   try {
     expectTypeOf(scope.view).toEqualTypeOf<StateView<number>>()
     expect(scope.view.read).toThrow(NotReadyError)
     request.resolve(5)
-    await Promise.all([resolve(scope.view.read), resolve(scope.mapped.read), resolve(scope.shorthand.read)])
+    await Promise.all([
+      resolve(scope.view.read),
+      resolve(scope.mapped.read),
+      resolve(scope.shorthand.read),
+    ])
     expect(scope.view.read()).toBe(5)
     expect(scope.mapped.read()).toBe(10)
     expect(scope.shorthand.read()).toBe(6)
-  } finally { scope.dispose() }
+  } finally {
+    scope.dispose()
+  }
   const error = new Error('计算来源失败')
-  const failure = createRoot(dispose => ({ view: stateView(() => Promise.reject<number>(error)), dispose }))
-  try { await expect(resolve(failure.view.read)).rejects.toBe(error) }
-  finally { failure.dispose() }
+  const failure = createRoot((dispose) => ({
+    view: stateView(() => Promise.reject<number>(error)),
+    dispose,
+  }))
+  try {
+    await expect(resolve(failure.view.read)).rejects.toBe(error)
+  } finally {
+    failure.dispose()
+  }
 })

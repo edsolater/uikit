@@ -4,17 +4,17 @@
 
 ## 场景接管
 
-| Story | 现有 Example 与处理 |
-| --- | --- |
-| Article | 已有 Card 承载；补充裸 Article 正文，以便对照语义与视觉承载。 |
-| Button | 已有普通、filled+strong、plain、disabled；补充 plain+danger。 |
-| Card | 默认、soft、solid、small、large、xlarge 均已有，不重复。 |
-| Input | 普通与 invalid 均已有，不重复。 |
-| Popover | 已有 bottom/right；补充 top 触发与关闭交互。 |
-| draggable | Story 直接引用现有 Example，无迁移。 |
-| droppable | Story 直接引用现有 Example，无迁移。 |
-| scope | Story 直接引用现有 Example，无迁移。 |
-| useDocumentTitle | 已有按钮循环标题及即时显示，无迁移。 |
+| Story            | 现有 Example 与处理                                           |
+| ---------------- | ------------------------------------------------------------- |
+| Article          | 已有 Card 承载；补充裸 Article 正文，以便对照语义与视觉承载。 |
+| Button           | 已有普通、filled+strong、plain、disabled；补充 plain+danger。 |
+| Card             | 默认、soft、solid、small、large、xlarge 均已有，不重复。      |
+| Input            | 普通与 invalid 均已有，不重复。                               |
+| Popover          | 已有 bottom/right；补充 top 触发与关闭交互。                  |
+| draggable        | Story 直接引用现有 Example，无迁移。                          |
+| droppable        | Story 直接引用现有 Example，无迁移。                          |
+| scope            | Story 直接引用现有 Example，无迁移。                          |
+| useDocumentTitle | 已有按钮循环标题及即时显示，无迁移。                          |
 
 ## 实施与验证
 

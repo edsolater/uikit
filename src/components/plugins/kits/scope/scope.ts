@@ -36,40 +36,45 @@ export function createScopeCapability(name: string): ScopeCapability {
   return { key: Symbol(name), name }
 }
 
-export const scope = createPlugin<ScopeOptions, ScopeController, PivTag>((options) => {
-  const capabilities = options?.capabilities === undefined
-    ? []
-    : Array.from(options.capabilities)
-  const capabilityKeys = new Set(capabilities.map((capability) => capability.key))
-  const full = options?.capabilities === undefined
-  const controller: ScopeController = {
-    full,
-    capabilities,
-    includes: (capability) => full || capabilityKeys.has(capability.key),
-  }
-  const boundary: ScopeBoundary = { controller }
+export const scope = createPlugin<ScopeOptions, ScopeController, PivTag>(
+  (options) => {
+    const capabilities =
+      options?.capabilities === undefined
+        ? []
+        : Array.from(options.capabilities)
+    const capabilityKeys = new Set(
+      capabilities.map((capability) => capability.key),
+    )
+    const full = options?.capabilities === undefined
+    const controller: ScopeController = {
+      full,
+      capabilities,
+      includes: (capability) => full || capabilityKeys.has(capability.key),
+    }
+    const boundary: ScopeBoundary = { controller }
 
-  return {
-    controller,
-    plugin: ({ element }) => {
-      scopeBoundaries.set(element, boundary)
-      onCleanup(() => {
-        if (scopeBoundaries.get(element) === boundary) {
-          scopeBoundaries.delete(element)
+    return {
+      controller,
+      plugin: ({ element }) => {
+        scopeBoundaries.set(element, boundary)
+        onCleanup(() => {
+          if (scopeBoundaries.get(element) === boundary) {
+            scopeBoundaries.delete(element)
+          }
+        })
+
+        return {
+          htmlProps: {
+            'data-plugin': { mergable: 'scope' },
+            'data-scope': full
+              ? 'all'
+              : capabilities.map((capability) => capability.name).join(' '),
+          },
         }
-      })
-
-      return {
-        htmlProps: {
-          'data-plugin': { mergable: 'scope' },
-          'data-scope': full
-            ? 'all'
-            : capabilities.map((capability) => capability.name).join(' '),
-        },
-      }
-    },
-  }
-})
+      },
+    }
+  },
+)
 
 /** 找到当前元素自己或祖先中，距离最近且命中指定能力的 Scope。 */
 export function findScopeBoundary(

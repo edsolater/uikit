@@ -5,7 +5,7 @@ import { multiply } from '../functions/calc'
 export const motionDuration = token('180ms', {
   name: 'motion-duration',
   state: {
-    '@media (prefers-reduced-motion: reduce)': base => multiply(base, 0),
+    '@media (prefers-reduced-motion: reduce)': (base) => multiply(base, 0),
   },
 })
 

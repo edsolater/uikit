@@ -2,11 +2,11 @@
 
 # 基本概念与入口
 
-| 概念 | 含义 |
-| --- | --- |
-| `State<T>` | 可读取、可修改、可派生的状态 |
-| `StateView<T>` | 可读取、可派生的状态视图，接口不提供 `.set()` |
-| `Source<T>` | 接受普通值或状态来源的输入类型，供组件 props、函数参数使用 |
+| 概念           | 含义                                                       |
+| -------------- | ---------------------------------------------------------- |
+| `State<T>`     | 可读取、可修改、可派生的状态                               |
+| `StateView<T>` | 可读取、可派生的状态视图，接口不提供 `.set()`              |
+| `Source<T>`    | 接受普通值或状态来源的输入类型，供组件 props、函数参数使用 |
 
 业务常用 API 可从包根导入；仓库内部也可以从所属领域导入：
 
@@ -22,16 +22,16 @@ import { snapshot } from '@/hooks/snapshots'
 
 以下示例使用 `const count = createState(1)`。
 
-| API | 用法 | 当前行为 |
-| --- | --- | --- |
-| `createState(value)` | `createState(1)` | 创建 `State<number>` |
-| `createState<T>()` | `createState<number>()` | 初始值为 `undefined`，返回 `State<number \| undefined>` |
-| `createState(() => value)` | `createState(() => expensiveInit())` | 计算函数持续跟随同步读取的依赖，返回 Promise 时由 Solid 等待 |
-| `state.set(value)` | `count.set(3)` | 写入新值并返回 State 自身；与当前值严格相等时不通知变化 |
-| `state.set(previous => next)` | `count.set(n => n + 1)` | 基于已有当前值更新；已有 Promise 由基础层接续，回调接收完成值 |
-| `val(source)` | `val(count)` | 读取当前值，递归解除 StateView、PromiseLike 包装；等待和失败由 Solid 传播，真正完成的空值仍是空值 |
-| `val(source, fallback)` | `val(count, 0)` | 最终结果为 `null` 或 `undefined` 时使用 fallback；fallback 可以是函数 |
-| `state.read()` | `count.read()` | 读取完成结果；不继续解除结果内的 StateView，业务通常使用 `val()` |
+| API                           | 用法                                 | 当前行为                                                                                          |
+| ----------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `createState(value)`          | `createState(1)`                     | 创建 `State<number>`                                                                              |
+| `createState<T>()`            | `createState<number>()`              | 初始值为 `undefined`，返回 `State<number \| undefined>`                                           |
+| `createState(() => value)`    | `createState(() => expensiveInit())` | 计算函数持续跟随同步读取的依赖，返回 Promise 时由 Solid 等待                                      |
+| `state.set(value)`            | `count.set(3)`                       | 写入新值并返回 State 自身；与当前值严格相等时不通知变化                                           |
+| `state.set(previous => next)` | `count.set(n => n + 1)`              | 基于已有当前值更新；已有 Promise 由基础层接续，回调接收完成值                                     |
+| `val(source)`                 | `val(count)`                         | 读取当前值，递归解除 StateView、PromiseLike 包装；等待和失败由 Solid 传播，真正完成的空值仍是空值 |
+| `val(source, fallback)`       | `val(count, 0)`                      | 最终结果为 `null` 或 `undefined` 时使用 fallback；fallback 可以是函数                             |
+| `state.read()`                | `count.read()`                       | 读取完成结果；不继续解除结果内的 StateView，业务通常使用 `val()`                                  |
 
 ## 创建关联状态或独立状态
 
@@ -79,18 +79,18 @@ handler.set(() => anotherOnClick)
 
 # 派生与转换
 
-| API | 用法 | 当前行为 |
-| --- | --- | --- |
-| `state.map(mapper)` | `count.map(n => n * 2)` | 返回 StateView，内部用 Solid memo 缓存结果 |
-| `.map()` 返回 StateView | `selected.map(id => states[id])` | 跟随所返回视图的当前值 |
-| `stateView(value)` | `stateView(10)` | 普通值直接转换成只读 StateView；函数输入由原生计算跟踪依赖并等待异步 |
-| `stateView(view)` | `stateView(count)` | 返回原有视图 |
-| `stateView(source, mapper)` | `stateView(count, n => n * 2)` | 转换来源后派生 |
-| `stateView(source, { map })` | `stateView(count, { map: n => n * 2 })` | 上一行的 options 写法 |
-| `mapSource(source, mapper)` | `mapSource(count, n => n * 2)` | 执行 `stateView(source).map(mapper)` |
-| `derive(source, mapper)` | `derive(count, n => n * 2)` | 当前调用 mapSource，行为相同 |
-| `derive(source)` | `derive(count)` | 原样返回 source，不建立新计算 |
-| `snapshot(tree)` | `snapshot({ count, values: [count] })` | 递归读取对象、数组中的 StateView，返回当前快照；不等待 Promise |
+| API                          | 用法                                    | 当前行为                                                             |
+| ---------------------------- | --------------------------------------- | -------------------------------------------------------------------- |
+| `state.map(mapper)`          | `count.map(n => n * 2)`                 | 返回 StateView，内部用 Solid memo 缓存结果                           |
+| `.map()` 返回 StateView      | `selected.map(id => states[id])`        | 跟随所返回视图的当前值                                               |
+| `stateView(value)`           | `stateView(10)`                         | 普通值直接转换成只读 StateView；函数输入由原生计算跟踪依赖并等待异步 |
+| `stateView(view)`            | `stateView(count)`                      | 返回原有视图                                                         |
+| `stateView(source, mapper)`  | `stateView(count, n => n * 2)`          | 转换来源后派生                                                       |
+| `stateView(source, { map })` | `stateView(count, { map: n => n * 2 })` | 上一行的 options 写法                                                |
+| `mapSource(source, mapper)`  | `mapSource(count, n => n * 2)`          | 执行 `stateView(source).map(mapper)`                                 |
+| `derive(source, mapper)`     | `derive(count, n => n * 2)`             | 当前调用 mapSource，行为相同                                         |
+| `derive(source)`             | `derive(count)`                         | 原样返回 source，不建立新计算                                        |
+| `snapshot(tree)`             | `snapshot({ count, values: [count] })`  | 递归读取对象、数组中的 StateView，返回当前快照；不等待 Promise       |
 
 函数来源的结果类型使用 `Awaited<T>`；需要把函数本身作为数据时，写成 `stateView(() => handler)`，返回的 handler 不会再次执行。
 
@@ -98,8 +98,8 @@ handler.set(() => anotherOnClick)
 
 ```ts
 const count = createState(1)
-const doubled = count.map(n => n * 2)
-createEffect(doubled, value => console.log(value))
+const doubled = count.map((n) => n * 2)
+createEffect(doubled, (value) => console.log(value))
 ```
 
 派生视图属于创建时的响应式作用域。派生结果相等时，不重复通知消费者动作。
@@ -109,8 +109,9 @@ createEffect(doubled, value => console.log(value))
 ```ts
 const price = createState(10)
 const quantity = createState(2)
-const total = derive([price, quantity], ([price, quantity]) =>
-  val(price) * val(quantity),
+const total = derive(
+  [price, quantity],
+  ([price, quantity]) => val(price) * val(quantity),
 )
 ```
 
@@ -118,14 +119,14 @@ const total = derive([price, quantity], ([price, quantity]) =>
 
 假设 `request` 是已经创建好的 `Promise<number>`。
 
-| 用法 | 行为 |
-| --- | --- |
-| `createState(request)` | 返回 `State<number>`，`.read()` 和 `val()` 读取完成值 |
-| `createState(() => loadItem(val(selectedId)))` | 原生计算跟随依赖，等待本次请求；旧请求不会覆盖新的来源 |
-| `state.set(request)` | 替换来源，由结果计算等待；后续相对更新由基础层接续 |
-| `stateView(request)`、`val(request)` | 默认 pending/失败进入 Solid 机制，不附加 undefined 或吞错 |
-| `val(request, 0)` | 等待和失败交给 UI 边界，只有完成后的 null/undefined 使用 0 |
-| `selected.map(id => loadItem(id))` | mapper 的 Promise 由 Solid 等待，输出完成值，后继 map 也接收完成值 |
+| 用法                                           | 行为                                                               |
+| ---------------------------------------------- | ------------------------------------------------------------------ |
+| `createState(request)`                         | 返回 `State<number>`，`.read()` 和 `val()` 读取完成值              |
+| `createState(() => loadItem(val(selectedId)))` | 原生计算跟随依赖，等待本次请求；旧请求不会覆盖新的来源             |
+| `state.set(request)`                           | 替换来源，由结果计算等待；后续相对更新由基础层接续                 |
+| `stateView(request)`、`val(request)`           | 默认 pending/失败进入 Solid 机制，不附加 undefined 或吞错          |
+| `val(request, 0)`                              | 等待和失败交给 UI 边界，只有完成后的 null/undefined 使用 0         |
+| `selected.map(id => loadItem(id))`             | mapper 的 Promise 由 Solid 等待，输出完成值，后继 map 也接收完成值 |
 
 `createState<T>` 的输入可以是普通值、Promise 或计算函数，结果使用 `Awaited<T>`；`equals` 和 `loadingValue` 针对完成类型。相对更新要求来源已有当前值：已有 Promise 由基础层接续，previous 接收完成值；计算来源尚无初值时不预存更新命令。依赖初值的 UI 在 Loading 内读取，完成后提供更新交互，无需业务 await；Loading 不替任意命令排队。lazy 计算在首次读取后建立当前值。`options` 支持 name、equals、lazy、loadingValue、unobserved、ownedWrite；ownedWrite 仅在明确需要计算域写入时显式使用，默认不启用。
 
@@ -147,14 +148,14 @@ const title = item.map(item => item.title)
 
 # 响应式动作与清理
 
-| API | 用法 | 当前行为 |
-| --- | --- | --- |
-| `createEffect(source, action)` | `createEffect(count, n => update(n))` | 自动读取单个来源，再执行动作 |
-| `createEffect(sources, action)` | `createEffect([price, quantity], ([p, q]) => update(p, q))` | 自动读取每项来源，保留位置关系 |
-| `createEffect(compute, action)` | `createEffect(() => val(count) * 2, n => update(n))` | 第一阶段计算并跟踪依赖，第二阶段执行动作 |
-| 异步计算形式 | `createEffect(() => loadItem(val(selectedId)), item => show(item))` | 计算函数直接交给 Solid，可进入原生异步计算路径 |
-| 动作返回清理函数 | `createEffect(source, value => subscribe(value))` | subscribe 若返回清理函数，由 Solid 管理本轮资源释放 |
-| `onCleanup(cleanup)` | `onCleanup(() => connection.close())` | 在当前响应式作用域登记清理 |
+| API                             | 用法                                                                | 当前行为                                            |
+| ------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| `createEffect(source, action)`  | `createEffect(count, n => update(n))`                               | 自动读取单个来源，再执行动作                        |
+| `createEffect(sources, action)` | `createEffect([price, quantity], ([p, q]) => update(p, q))`         | 自动读取每项来源，保留位置关系                      |
+| `createEffect(compute, action)` | `createEffect(() => val(count) * 2, n => update(n))`                | 第一阶段计算并跟踪依赖，第二阶段执行动作            |
+| 异步计算形式                    | `createEffect(() => loadItem(val(selectedId)), item => show(item))` | 计算函数直接交给 Solid，可进入原生异步计算路径      |
+| 动作返回清理函数                | `createEffect(source, value => subscribe(value))`                   | subscribe 若返回清理函数，由 Solid 管理本轮资源释放 |
+| `onCleanup(cleanup)`            | `onCleanup(() => connection.close())`                               | 在当前响应式作用域登记清理                          |
 
 Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要为了形式上采用单来源而制造无意义的派生状态。
 
@@ -162,26 +163,26 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 
 # 辅助与内部能力
 
-| API | 入口与用法 | 当前状态 |
-| --- | --- | --- |
-| `isState(value)` | 包根／Foundation | 判断可写 State |
-| `isStateView(value)` | 包根／Foundation | 判断 StateView，State 也属于 StateView |
-| `isStateViewable(value)` | 包根／Foundation | 判断 StateView 或 PromiseLike，不包含普通值 |
-| `stateBrand`、`stateViewBrand` | 包根／Foundation | 身份标记，业务通常不需要操作 |
-| `createMemo` | `@/foundation/reactivity`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
-| `createRenderEffect` | Foundation 内部入口，参数形式与 createEffect 相同 | DOM 提交使用，未由包根公开 |
-| `createStateWithPrev()` | 包根／Hooks | 已导出但尚未实现，调用会抛错 |
+| API                            | 入口与用法                                                   | 当前状态                                      |
+| ------------------------------ | ------------------------------------------------------------ | --------------------------------------------- |
+| `isState(value)`               | 包根／Foundation                                             | 判断可写 State                                |
+| `isStateView(value)`           | 包根／Foundation                                             | 判断 StateView，State 也属于 StateView        |
+| `isStateViewable(value)`       | 包根／Foundation                                             | 判断 StateView 或 PromiseLike，不包含普通值   |
+| `stateBrand`、`stateViewBrand` | 包根／Foundation                                             | 身份标记，业务通常不需要操作                  |
+| `createMemo`                   | `@/foundation/reactivity`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
+| `createRenderEffect`           | Foundation 内部入口，参数形式与 createEffect 相同            | DOM 提交使用，未由包根公开                    |
+| `createStateWithPrev()`        | 包根／Hooks                                                  | 已导出但尚未实现，调用会抛错                  |
 
-| 类型 | 表达什么 |
-| --- | --- |
-| `State<T>` | 可写状态 |
-| `StateView<T>` | 可读、可派生视图 |
-| `Source<T>` | 普通值或来源；Source<number> 可接收 Promise<number> |
-| `StateViewable<T>` | StateView 或允许的 PromiseLike 来源 |
-| `MayArraySource<T>` | 单值或列表来源，列表中的项目也可以独立为来源 |
-| `Val<S>` | 对实际输入 S 递归解包后的读取类型 |
-| `Snapshot<T>` | 树形快照结果类型，从 Hooks 导出 |
-| `StateViewOptions<V, U>` | 转换后的映射配置 `{ map }` |
+| 类型                     | 表达什么                                            |
+| ------------------------ | --------------------------------------------------- |
+| `State<T>`               | 可写状态                                            |
+| `StateView<T>`           | 可读、可派生视图                                    |
+| `Source<T>`              | 普通值或来源；Source<number> 可接收 Promise<number> |
+| `StateViewable<T>`       | StateView 或允许的 PromiseLike 来源                 |
+| `MayArraySource<T>`      | 单值或列表来源，列表中的项目也可以独立为来源        |
+| `Val<S>`                 | 对实际输入 S 递归解包后的读取类型                   |
+| `Snapshot<T>`            | 树形快照结果类型，从 Hooks 导出                     |
+| `StateViewOptions<V, U>` | 转换后的映射配置 `{ map }`                          |
 
 # 源码依据
 
@@ -200,11 +201,17 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 UIKit 的 `createContext`、`useContext` 与 `Context` 类型直接使用 Solid 2 契约。Context 自身就是提供组件：
 
 ```tsx
-interface Item { name: string }
+interface Item {
+  name: string
+}
 const CurrentItem = createContext<Item>()
 
 function ItemPanel(props: { item: Item }) {
-  return <CurrentItem value={props.item}><Details /></CurrentItem>
+  return (
+    <CurrentItem value={props.item}>
+      <Details />
+    </CurrentItem>
+  )
 }
 
 // 在后代组件中读取最近提供者。
@@ -225,7 +232,11 @@ import { KitContextRoot, type KitContextNode } from '@edsolater/uikit'
 
 function App() {
   const rootNode: KitContextNode = { isRoot: true }
-  return <KitContextRoot value={rootNode}><Content /></KitContextRoot>
+  return (
+    <KitContextRoot value={rootNode}>
+      <Content />
+    </KitContextRoot>
+  )
 }
 ```
 

@@ -97,21 +97,21 @@ Variable 的局部声明继续持有自身基础值与状态；Modify 继续按�
 
 以下为实施范围。开始实施时先核对完整文件及文件开头职责注释；内部调用可为职责收口调整，但不能借此改变以上运行语义。
 
-| 文件或区域 | 当前职责与修改理由 | 计划修改 |
-| --- | --- | --- |
-| 新增 `src/style-system/variable/name.ts` | Name 是 Variable 领域的引用身份，不属于通用编译器 | 提供 `VariableName`、`variableName()`；管理名称规范化、定义绑定与查找接入，接入统一引用消费；内部识别和登记函数只按实际调用需要设置，不扩成公开注册框架 |
-| `src/style-system/variable/args-parser.ts` | 已有创建参数归一边界 | 接受 `string \| VariableName`；字符串快捷写法归一为 Name，已提供的 Name 保持原身份；extend 沿用来源 Name，保留默认内容、原始状态与现有 priority 规则 |
-| `src/style-system/variable/core.ts` | 保存定义并投影声明与引用材料 | 将 `Variable.name` 改为 VariableName；创建完成时绑定定义，移除动态字符串改名；普通值引用归一到 Name，保留定义侧配置、共同声明及资源能力，移出重复引用逻辑 |
-| `src/style-system/variable/dependency.ts` | 已有实际消费、默认请求和名称联动协调 | 将 Variable／Name 输入统一为名称依赖；按 Name 取得定义材料；改造 `observeVariable()`、`referencedVariables()` 对应职责，保留一套消费、联动、产物撤销与稳定核验账本 |
-| `src/style-system/variable/declare.ts` | 已有公共声明基础、状态及归属 | 从 Name 取得名称，保留具体声明对象；默认、显式、Key 和原始二元声明继续共享基础与状态发布，候选沿原 priority／顺序／join 选择 |
-| `src/style-system/variable/modify.ts` | 已有相对修改步骤及撤销 | 适配 Name 取得和引用生成，保留最近同对象声明归属、步骤选择及 AST 生命周期，不改成按名字跨对象修改 |
-| `src/style-system/operations/declare.ts`、`modify.ts`、`adjust.ts` | 输入协议、材料构造与领域应用入口 | 核对新名称类型和引用材料；复用统一引用链，保留天然 key/content 材料契约及 Adjust 共同声明，不增加 Name 专属操作分支 |
-| `src/style-system/key.ts` | 通用声明键、名称分配、priority 与 join | 继续复用 `allocateVariableName()` 和同一 CSS 名称空间；不把 Variable 定义注册搬进 Key，不另建名称生成器，清理不再需要的 Variable 字符串适配 |
-| `src/style-system/variable-cluster.ts` | 成员选择、default 代理、同名配对及继承 | 适配 `.name` 类型、同名比较和冲突信息；`clusterFrom` 沿新 Name 契约创建成员；Cluster 仍聚合 Variable，不新增自动把 default 注入派生成员的约定 |
-| `src/style-system/modification.ts` | 独立变化材料，当前使用公共 Variable 消费入口 | 核对公共入口改造后的引用、资源和 Adjust／Modify 接入；仅修改受影响部分，不顺带将整个 Modification 公共 name API 改为新对象模型 |
-| `src/style-system/pieces/contents/atoms/color/` 及其他名称消费处 | 颜色定义与用途派生，存在由 `base.name` 拼接成员名的调用 | 迁移 `.name` 字符串假设、名称派生及比较；允许颜色表达式直接引用 Name。保留现有颜色来源、混色系数、状态与显示结果，不借此将 lineColor 换成另一套用途设计 |
-| `src/style-system/variable/index.ts`、`src/style-system/index.ts` | 领域及样式系统出口 | 汇总 `variableName` 与 `VariableName`；内部账本、注册和查找不公开。领域内部直接引用定义文件，不把出口当逻辑中转 |
-| 现有测试、调用处、文档和构建产物 | 对外类型变化需要同步接管 | 全仓迁移 `.name` 拼接、比较、改名及类型断言；实施完成后更新架构与消费文档、构建 dist，删除旧字符串改名语义和残留路径 |
+| 文件或区域                                                         | 当前职责与修改理由                                      | 计划修改                                                                                                                                                           |
+| ------------------------------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 新增 `src/style-system/variable/name.ts`                           | Name 是 Variable 领域的引用身份，不属于通用编译器       | 提供 `VariableName`、`variableName()`；管理名称规范化、定义绑定与查找接入，接入统一引用消费；内部识别和登记函数只按实际调用需要设置，不扩成公开注册框架            |
+| `src/style-system/variable/args-parser.ts`                         | 已有创建参数归一边界                                    | 接受 `string \| VariableName`；字符串快捷写法归一为 Name，已提供的 Name 保持原身份；extend 沿用来源 Name，保留默认内容、原始状态与现有 priority 规则               |
+| `src/style-system/variable/core.ts`                                | 保存定义并投影声明与引用材料                            | 将 `Variable.name` 改为 VariableName；创建完成时绑定定义，移除动态字符串改名；普通值引用归一到 Name，保留定义侧配置、共同声明及资源能力，移出重复引用逻辑          |
+| `src/style-system/variable/dependency.ts`                          | 已有实际消费、默认请求和名称联动协调                    | 将 Variable／Name 输入统一为名称依赖；按 Name 取得定义材料；改造 `observeVariable()`、`referencedVariables()` 对应职责，保留一套消费、联动、产物撤销与稳定核验账本 |
+| `src/style-system/variable/declare.ts`                             | 已有公共声明基础、状态及归属                            | 从 Name 取得名称，保留具体声明对象；默认、显式、Key 和原始二元声明继续共享基础与状态发布，候选沿原 priority／顺序／join 选择                                       |
+| `src/style-system/variable/modify.ts`                              | 已有相对修改步骤及撤销                                  | 适配 Name 取得和引用生成，保留最近同对象声明归属、步骤选择及 AST 生命周期，不改成按名字跨对象修改                                                                  |
+| `src/style-system/operations/declare.ts`、`modify.ts`、`adjust.ts` | 输入协议、材料构造与领域应用入口                        | 核对新名称类型和引用材料；复用统一引用链，保留天然 key/content 材料契约及 Adjust 共同声明，不增加 Name 专属操作分支                                                |
+| `src/style-system/key.ts`                                          | 通用声明键、名称分配、priority 与 join                  | 继续复用 `allocateVariableName()` 和同一 CSS 名称空间；不把 Variable 定义注册搬进 Key，不另建名称生成器，清理不再需要的 Variable 字符串适配                        |
+| `src/style-system/variable-cluster.ts`                             | 成员选择、default 代理、同名配对及继承                  | 适配 `.name` 类型、同名比较和冲突信息；`clusterFrom` 沿新 Name 契约创建成员；Cluster 仍聚合 Variable，不新增自动把 default 注入派生成员的约定                      |
+| `src/style-system/modification.ts`                                 | 独立变化材料，当前使用公共 Variable 消费入口            | 核对公共入口改造后的引用、资源和 Adjust／Modify 接入；仅修改受影响部分，不顺带将整个 Modification 公共 name API 改为新对象模型                                     |
+| `src/style-system/pieces/contents/atoms/color/` 及其他名称消费处   | 颜色定义与用途派生，存在由 `base.name` 拼接成员名的调用 | 迁移 `.name` 字符串假设、名称派生及比较；允许颜色表达式直接引用 Name。保留现有颜色来源、混色系数、状态与显示结果，不借此将 lineColor 换成另一套用途设计            |
+| `src/style-system/variable/index.ts`、`src/style-system/index.ts`  | 领域及样式系统出口                                      | 汇总 `variableName` 与 `VariableName`；内部账本、注册和查找不公开。领域内部直接引用定义文件，不把出口当逻辑中转                                                    |
+| 现有测试、调用处、文档和构建产物                                   | 对外类型变化需要同步接管                                | 全仓迁移 `.name` 拼接、比较、改名及类型断言；实施完成后更新架构与消费文档、构建 dist，删除旧字符串改名语义和残留路径                                               |
 
 公开新增函数限于 `variableName()`，公开新增主体类型为 `VariableName`。内部需具备“识别 Name、绑定定义、查找定义、统一引用消费”的能力，函数名与拆分数量由实际责任决定；不预设额外 Controller、Manager、注入容器、通用 registry 或兼容包装。
 
@@ -127,14 +127,14 @@ Variable 的局部声明继续持有自身基础值与状态；Modify 继续按�
 
 ## 验证与完成条件
 
-| 验证对象 | 应证明的行为或实际失败方式 | 验证位置 |
-| --- | --- | --- |
-| Name 创建与绑定 | 独立 Name、快捷定义和 `.name` 获取一致；禁止后期替换绑定；同名不同包装不隔断依赖 | Name 多文件连接行为集中于 `test/变量依赖与声明行为.test.ts`，调整 `variable/core.test.ts` 与 `variable/args-parser.test.ts` 的公共契约断言 |
-| 前置引用与等效消费 | Name 先引用、Variable 后注册，在注册完成后编译；Variable／Name 直接及嵌套消费的声明、状态、资源相同，且没有重复资源 | 扩充 `test/变量依赖与声明行为.test.ts` 等现有流程测试；比较编译 AST／CSS，不断言私有 Map 或回调次数 |
-| 同名定义选择 | 不同 priority、同级不同书写顺序、同名不同对象／Name 包装、extend 和完整条件地址均保持旧规则；不能被注册顺序的额外规则覆盖 | 扩充现有同名声明流程场景，明确有效值及普通 Key.join 的结果 |
-| 激活与生命周期 | 仅创建／注册不输出 CSS；真实消费与资源生命周期仍分开；移除或改写消费后撤销旧产物，重复编译互不污染 | 复用并扩充依赖、挂载及资源流程测试 |
-| 局部覆盖与操作 | 子作用域覆盖来源后派生值更新；Name／Variable 消费效果一致；同名不同对象不串接 Modify 基础；Adjust 保留共同声明及资源 | `test/变量依赖与声明行为.browser.test.ts`、既有修改／调整流程和 Button 浏览器用例，验证静态 CSS 的实际结果 |
-| 调用迁移与完整性 | 没有残留动态改名、将 `.name` 当字符串的调用或两套引用／激活机制；旧类型与实现已退出，公共出口及文档一致 | 全仓引用扫描、类型检查、差异审查和构建产物核对 |
+| 验证对象           | 应证明的行为或实际失败方式                                                                                                | 验证位置                                                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name 创建与绑定    | 独立 Name、快捷定义和 `.name` 获取一致；禁止后期替换绑定；同名不同包装不隔断依赖                                          | Name 多文件连接行为集中于 `test/变量依赖与声明行为.test.ts`，调整 `variable/core.test.ts` 与 `variable/args-parser.test.ts` 的公共契约断言 |
+| 前置引用与等效消费 | Name 先引用、Variable 后注册，在注册完成后编译；Variable／Name 直接及嵌套消费的声明、状态、资源相同，且没有重复资源       | 扩充 `test/变量依赖与声明行为.test.ts` 等现有流程测试；比较编译 AST／CSS，不断言私有 Map 或回调次数                                        |
+| 同名定义选择       | 不同 priority、同级不同书写顺序、同名不同对象／Name 包装、extend 和完整条件地址均保持旧规则；不能被注册顺序的额外规则覆盖 | 扩充现有同名声明流程场景，明确有效值及普通 Key.join 的结果                                                                                 |
+| 激活与生命周期     | 仅创建／注册不输出 CSS；真实消费与资源生命周期仍分开；移除或改写消费后撤销旧产物，重复编译互不污染                        | 复用并扩充依赖、挂载及资源流程测试                                                                                                         |
+| 局部覆盖与操作     | 子作用域覆盖来源后派生值更新；Name／Variable 消费效果一致；同名不同对象不串接 Modify 基础；Adjust 保留共同声明及资源      | `test/变量依赖与声明行为.browser.test.ts`、既有修改／调整流程和 Button 浏览器用例，验证静态 CSS 的实际结果                                 |
+| 调用迁移与完整性   | 没有残留动态改名、将 `.name` 当字符串的调用或两套引用／激活机制；旧类型与实现已退出，公共出口及文档一致                   | 全仓引用扫描、类型检查、差异审查和构建产物核对                                                                                             |
 
 后续实施验收执行 `bun run test:unit`、`bun run test:browser`、`bun run type-check`、`bun run build` 与 `git diff --check`。测试按具体行为补足，不为每个内部函数机械增加用例。通过测试后仍需核对定义、引用、激活和声明的责任链是否唯一，新增机制是否具有实际用途。
 
@@ -159,11 +159,9 @@ Cluster 仍聚合 Variable，其同名检测和派生成员命名改从声明地
 
 需求测试阶段已取得 26 项单元及 4 项浏览器 RED。实施中修正前置 Name 测试的 CSS 规范化空格预期，并为独立参数用例隔离 CSS 名称，保留全部行为断言。原 Variable 同名资源重启测试的对象退出前提已被共同 Name 语义接管：天然材料继续验证完整退出后重新注册；Variable 则验证共同 Name 还有消费者时不会按对象重启。两种资源契约均有反证，未经修改实现绕过。
 
-
 首轮实施验收：单元测试 403 项、完整浏览器测试 175 项全部通过；最后颜色成员命名整理后定向复验颜色与 Button 浏览器 38 项通过。类型检查、正式 build、构建产物 Name 引用烟测及 `git diff --check` 通过。约束、复用、独立行为审查和精简复查均通过；现役契约已同步至 [__spec.md](../../src/style-system/doc/behaviors/__spec.md) 和 [Style System 架构](../../src/style-system/architecture.md)。构建后的 dist 已实际更新，沿仓库现有规则忽略，不改变跟踪配置。
 
 本阶段遗留的失败截图共 34 张已按实施前清单逐个识别、移入任务目录后清理；此前已有 44 张截图哈希保持一致。临时构建烟测脚本已清理，需求测试、Plan 和正式源码保留，运行日志及实施报告保存在 `agents/run/variable-name-implementation/`。
-
 
 ## 职责收拢与反例补验
 
@@ -175,6 +173,5 @@ Cluster 仍聚合 Variable，其同名检测和派生成员命名改从声明地
 时机只留在定义材料，保留普通 onActive 先访问、onCompile 再按波次运行的契约。`consumeVariableDefinition` 只处理定义副作用及结构化依赖；Name 负责唯一具名值引用。天然材料仍由原引用入口输出一次引用；已有 Variable 在 referenceVariable 处直接沿用自身内容协议，声明键与 Cluster 行为由完整回归验证。旧 createVariableReference 已退出。
 
 依赖图直接从 Name 地址收集边；旧 variableNameDefinitions 与 Variable[]→地址转换退出。Name 只关联定义材料，注册关系简化为地址到材料集合，不再保留已无查询用途的 Variable 键及反向类型依赖。原 priority／顺序、Modify 同对象归属和 AST／资源账本保留。
-
 
 职责收拢验收：两反例先取得单元 3 项及浏览器 2 项 RED，再实现；最终单元 406 项、浏览器 177 项全部通过，类型检查、正式 build、实际 dist 两反例烟测及 `git diff --check` 通过。独立行为、约束及精简复查均通过。原暂存差异指纹保持一致，本阶段只追加工作区变更；新产生的 2 张失败截图和一次性烟测脚本已精确清理，既有 50 张截图哈希不变。复核证据位于 `agents/run/variable-name-responsibility/`。

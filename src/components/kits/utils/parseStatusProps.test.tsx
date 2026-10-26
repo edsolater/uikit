@@ -5,15 +5,19 @@ import { createStatusPropsParser } from './parseStatusProps'
 
 describe('createStatusPropsParser', () => {
   test('已声明的外部 getter 字段持续更新，内部操作不接管它', () => {
-    const { disabled, details, statusActions, attribute, dispose } = createRoot(dispose => {
-      const disabled = createState(true)
-      const parser = createStatusPropsParser({ candidates: ['disabled'] })
-      const { details, statusActions, statusShadowProps } = parser({
-        get disabled() { return val(disabled) },
-      })
-      const attribute = statusShadowProps.htmlProps!['data-status']
-      return { disabled, details, statusActions, attribute, dispose }
-    })
+    const { disabled, details, statusActions, attribute, dispose } = createRoot(
+      (dispose) => {
+        const disabled = createState(true)
+        const parser = createStatusPropsParser({ candidates: ['disabled'] })
+        const { details, statusActions, statusShadowProps } = parser({
+          get disabled() {
+            return val(disabled)
+          },
+        })
+        const attribute = statusShadowProps.htmlProps!['data-status']
+        return { disabled, details, statusActions, attribute, dispose }
+      },
+    )
     try {
       expect(val(details.disabled)).toBe(true)
       expect(val(attribute)).toBe('disabled')
@@ -30,7 +34,14 @@ describe('createStatusPropsParser', () => {
   })
 
   test('外部声明拥有状态，未声明状态才接受内部修改', () => {
-    const { loading, effect, details, statusActions, statusShadowProps, dispose } = createRoot(dispose => {
+    const {
+      loading,
+      effect,
+      details,
+      statusActions,
+      statusShadowProps,
+      dispose,
+    } = createRoot((dispose) => {
       const loading = createState(false)
       const effect = vi.fn(({ disabled }) => ({
         htmlProps: { disabled },
@@ -40,9 +51,18 @@ describe('createStatusPropsParser', () => {
         effect,
       })
 
-      const { details, statusActions, statusShadowProps } = parseProps({ loading })
+      const { details, statusActions, statusShadowProps } = parseProps({
+        loading,
+      })
 
-      return { loading, effect, details, statusActions, statusShadowProps, dispose }
+      return {
+        loading,
+        effect,
+        details,
+        statusActions,
+        statusShadowProps,
+        dispose,
+      }
     })
     try {
       expect(effect).toHaveBeenCalledOnce()

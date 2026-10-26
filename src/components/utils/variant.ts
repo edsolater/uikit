@@ -24,9 +24,11 @@ export function createVariantManager<V extends Variant>(
   props: VariantManagerProps<V>,
   options?: { defaultVariant?: VariantInput<V> },
 ) {
-  const variant = stateView(props.variant).map((v) => v ?? options?.defaultVariant)
+  const variant = stateView(props.variant).map(
+    (v) => v ?? options?.defaultVariant,
+  )
   const variantPlugin = createPivPlugin(() => ({
     class: variant,
   }))
-  return [ { variant }, variantPlugin ] satisfies PluginManager
+  return [{ variant }, variantPlugin] satisfies PluginManager
 }

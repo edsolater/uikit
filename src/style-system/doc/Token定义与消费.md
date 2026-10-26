@@ -7,11 +7,14 @@
 ```ts
 const spacing = token('2px')
 const themeColor = token('red', 'theme-color')
-const feedbackColor = token({
-  default: 'red',
-  hover: 'pink',
-  active: 'darkred',
-}, { address: '.Feedback' })
+const feedbackColor = token(
+  {
+    default: 'red',
+    hover: 'pink',
+    active: 'darkred',
+  },
+  { address: '.Feedback' },
+)
 ```
 
 spacing 没有名称、状态、地址、注册，也没有被 modify，消费时直接输出 2px。themeColor 有名称，输出命名 CSS 声明及引用。feedbackColor 有状态和地址，自动取得名称，在指定位置输出默认值与状态规则。
@@ -36,7 +39,7 @@ const sharedSpacing = token(spacing)
 
 ```ts
 const feedback = {
-  hover: base => multiply(base, 2),
+  hover: (base) => multiply(base, 2),
   active: 4,
 }
 const buttonStrength = token(2, {

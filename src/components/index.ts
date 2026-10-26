@@ -4,7 +4,11 @@ export * from './Piv/plugin/helpers'
 export * from './Piv/plugin/runPlugin'
 export * from './Piv/Piv'
 export * from './Piv/type'
-export { ComponentWrapper, type ComponentWrapperProps, type ComponentDescriptionProps } from './ComponentWrapper/ComponentWrapper'
+export {
+  ComponentWrapper,
+  type ComponentWrapperProps,
+  type ComponentDescriptionProps,
+} from './ComponentWrapper/ComponentWrapper'
 export { StructureViewFab } from './ComponentWrapper/StructureViewFab'
 export * from './kits/Loop'
 export * from './kits/Button/Button.mapping'

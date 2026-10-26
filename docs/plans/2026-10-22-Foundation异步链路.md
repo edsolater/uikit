@@ -76,7 +76,6 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 
 独立审核与原生复用核对已确认以上边界。函数是计算输入的依据来自现役 API 文档与运行，而非只由函数类型猜测；不得把函数直接作为常量返回。普通值没有写入职责，移除借道 createState 可同时减少两层响应式节点和写入接口。本轮只允许在 stateView 原分支直接构造协议对象，不将同一流程搬到新 helper。
 
-
 ### 实施结果与审查依据
 
 - createReactionFn/ReactiveRunner 的实现、Foundation 出口、3 项专属测试及现役文档说明已删除，src 检索无残留。read/state-view 测试在各自用例中直接使用原生 root 与 memo，保留既有依赖、等待、错误、fallback、嵌套来源及身份断言，没有新建测试 runner。
@@ -102,7 +101,6 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 
 已删除函数及专用 imports、3 项专属测试和现役文档说明；src 检索无 followState 残留。stateUtils.ts 净减少 21 行，专属测试文件减少 56 行，mapSource/derive 代码及原生映射测试未改。type-check、build、差异检查通过；unit 63 文件 482 项、browser 28 文件 211 项全部通过，四项运行退出码为 0。index 指纹不变，独立实际差异与最终证据复核通过；本轮没有临时原型、服务或待清理附件。无剩余实施项。
 
-
 ## 前轮：删除 State 的空释放接口（已完成）
 
 用户明确授权删除 State 的空 Symbol.dispose；本轮只删 state.ts 接口声明与空实现，以及 API 文档对应一行。全 src 检索未发现使用该接口的消费者。ReactiveRunner 的真实 dispose/Symbol.dispose 保留；followState 仅作必要性评估，不修改。独立前置审核通过，保留全部暂存工作，不改 index、不回退。
@@ -110,7 +108,6 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 验证沿用用户的完整要求：type-check、unit、browser、build 与差异检查；不为删除空操作新增测试。证据保存在 agents/run/state-dispose，index 指纹和实际修改范围已核对。
 
 实际只删除 state.ts 7 行与 API 文档 1 行，测试和其他生产文件未改。type-check、build、git diff --check 通过；unit 64 文件 485 项、browser 28 文件 211 项全部通过，四个运行退出码均为 0。index 指纹与行动前一致；本轮仅保留基线指纹和验证日志，无临时原型或服务需要清理。
-
 
 ## 前轮：val、Promise 转换与 UI 边界各归其责（已完成）
 
@@ -154,7 +151,6 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 - 独立实际差异审查通过；index 指纹与行动前一致（integrity.json）。未操作 Git index、回退或启动开发服务。本轮只创建基线及验证证据，无临时原型需要删除。独立最终 Plan/证据复核通过；主 Agent 已核全量日志与 index 逐字节一致，新增浏览器用例完成实际 DOM 验收，无需额外启动开发服务。无剩余实施项。
 
 以下为已经完成的前轮记录；涉及旧 Promise fallback 契约的历史说明由本轮新裁决替代。
-
 
 ## 前轮：以 b0799cb 恢复原生两层职责（已完成）
 
@@ -204,20 +200,19 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 
 以下均为被本轮替代的历史实施记录。
 
-
 ## 前轮：误用已修改版本作为原版（结论已被替代）
 
 用户否定前轮补偿叠加，现以 HEAD `4225c00` 中被认可的 createAsyncSignal 两层“来源结果记录→原生结果计算”为结构基线，重做后来引入的机制。前轮全部 28 文件现已由用户暂存；本轮取新 index 快照，只改工作树，不操作 index、不 Git 回退。证据目录 agents/run/foundation-async-redo，历史验证不能替代本轮结果。
 
 ### 需求与裁决来源
 
-| 内容 | 权限与当前判断 |
-| --- | --- |
-| 普通值、Promise、计算函数统一输入，完成值类型，UI 负责等待/失败 | 用户原始契约，继续保留 |
-| set updater 接收完成值，Promise 连续更新、失效及清理、lazy/options/函数数据 | 用户原始契约与原版已成立行为，不得削弱 |
-| 首次派生 pending updater 消费一次，下一次恢复裸派生的具体机制 | 前轮 Agent 推导，不是用户指定队列；本轮重新比较原生表达，不默认保留 InitialSource 或独立 initial memo |
-| 原生 dev 计算域写限制、异步提交及原生错误边界 | 已核平台约束，不用全局 ownedWrite、flush 或手写调度规避 |
-| pending updater 旁读 factor 被订阅；已完成 Promise + fallback 每次建 7 节点 | 本轮已确认缺陷，正式回归并从责任主体修复 |
+| 内容                                                                        | 权限与当前判断                                                                                        |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 普通值、Promise、计算函数统一输入，完成值类型，UI 负责等待/失败             | 用户原始契约，继续保留                                                                                |
+| set updater 接收完成值，Promise 连续更新、失效及清理、lazy/options/函数数据 | 用户原始契约与原版已成立行为，不得削弱                                                                |
+| 首次派生 pending updater 消费一次，下一次恢复裸派生的具体机制               | 前轮 Agent 推导，不是用户指定队列；本轮重新比较原生表达，不默认保留 InitialSource 或独立 initial memo |
+| 原生 dev 计算域写限制、异步提交及原生错误边界                               | 已核平台约束，不用全局 ownedWrite、flush 或手写调度规避                                               |
+| pending updater 旁读 factor 被订阅；已完成 Promise + fallback 每次建 7 节点 | 本轮已确认缺陷，正式回归并从责任主体修复                                                              |
 
 ### 实施与验收顺序
 
@@ -260,15 +255,15 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 
 ## 文件职责与允许改动
 
-| 区域 | 当前问题 | 本轮职责与落点 |
-| --- | --- | --- |
-| createState/promise-like.ts | then(set)自行结算，吞错为undefined | Promise 转换直接进入 native 计算；显式fallback仅在明确配置下生效 |
-| createState/state-view.ts | 全局缓存复用第一owner创建的view | 缓存身份与消费者owner解耦，固定Promise结果由native计算保存；不自建队列或清理注册体系 |
-| createState/createAsyncSignal.ts | setter先读pending派生来源会抛NotReady，lazy首次write又可能被初始计算覆盖 | 选择native初始化/写入机制，同时保留pending updater、lazy及ownedWrite边界 |
-| createState/source.ts、read.ts、createEffect.ts | Promise类型人为附undefined，显式泛型可能把Promise交动作 | Source/Val/Effect统一完成值类型，tuple位置和函数数据语义保留 |
-| createState/createReactiveRunner.ts、hooks/stateUtils.ts | 动作在compute执行，结果只存local；followState在计算中写State | runner建立真实native结果，必要动作分compute/effect；followState读取和转换留compute，写入留effect |
-| foundation UI入口 | 尚无包根异步边界 | 只公开最小原生Loading/Errored，验证真实UI的pending/完成/失败/释放 |
-| SPEC.md、doc/State API契约与示例.md | 仍描述旧undefined及runner契约 | 同步成立的新契约、示例和native接入白名单 |
+| 区域                                                     | 当前问题                                                                 | 本轮职责与落点                                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| createState/promise-like.ts                              | then(set)自行结算，吞错为undefined                                       | Promise 转换直接进入 native 计算；显式fallback仅在明确配置下生效                                 |
+| createState/state-view.ts                                | 全局缓存复用第一owner创建的view                                          | 缓存身份与消费者owner解耦，固定Promise结果由native计算保存；不自建队列或清理注册体系             |
+| createState/createAsyncSignal.ts                         | setter先读pending派生来源会抛NotReady，lazy首次write又可能被初始计算覆盖 | 选择native初始化/写入机制，同时保留pending updater、lazy及ownedWrite边界                         |
+| createState/source.ts、read.ts、createEffect.ts          | Promise类型人为附undefined，显式泛型可能把Promise交动作                  | Source/Val/Effect统一完成值类型，tuple位置和函数数据语义保留                                     |
+| createState/createReactiveRunner.ts、hooks/stateUtils.ts | 动作在compute执行，结果只存local；followState在计算中写State             | runner建立真实native结果，必要动作分compute/effect；followState读取和转换留compute，写入留effect |
+| foundation UI入口                                        | 尚无包根异步边界                                                         | 只公开最小原生Loading/Errored，验证真实UI的pending/完成/失败/释放                                |
+| SPEC.md、doc/State API契约与示例.md                      | 仍描述旧undefined及runner契约                                            | 同步成立的新契约、示例和native接入白名单                                                         |
 
 ## 实施顺序与验证
 
@@ -308,8 +303,6 @@ type-check、build、git diff --check 通过；unit 63 文件 483 项、browser 
 - Button 与异步页面已由 root 实际浏览器核验：Button 外观/尺寸/disabled/loading 完整；异步页初始等待、完成点击显示请求已完成、刷新后拒绝显示原始失败，无白页。截图 button-actual.png、async-completed.png、async-rejected.png 保存在本轮运行目录；本轮 dev session10619 已停止，5173 无监听。
 - 独立约束与精简 actualdiff 复核通过：删除 then(set)、假同步 local result、compute 写状态，readDefault 的单次转换身份职责有正式回归，readError 冗余层已删除。暂存差异仍为空，SHA256 与基线一致；未执行 Git 回退、暂存、提交或配置。
 
-
 全量第一轮 unit 64 文件 498 项通过。browser 第一轮 207/208 通过，唯一失败是新增示例后首页条目数量从 11 变为 12，既有断言仍写 11；仅同步同名 Dashboard 浏览器测试的数量断言，原 DOM、样式、导航断言全部保留，重跑 browser 全量。
-
 
 最后补齐 followState 异步 transform 的既有运行能力声明（AsyncValue<T>），真实完成值回归由 498 增至 499；它是完成后独立写入，不把目标变成该异步计算源，失败仍按原生 Effect 错误机制上报。最终 type/unit/build 在该修改后重跑通过，browser 第三轮测试的实际运行机制与最终一致（后续仅类型与文案修改）。跨 Foundation 来源切换流程回归已移入 foundation/test 中文领域文件；相邻 AsyncState.example 测试只测试同名示例。无本轮剩余实施项。

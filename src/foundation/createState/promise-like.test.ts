@@ -28,7 +28,9 @@ function createDeferred<V>(): Deferred<V> {
 test('PromiseLike 转换器不管理 StateView 身份', () => {
   const promise = Promise.resolve(8)
 
-  expect(toStateViewFromPromiseLike(promise)).not.toBe(toStateViewFromPromiseLike(promise))
+  expect(toStateViewFromPromiseLike(promise)).not.toBe(
+    toStateViewFromPromiseLike(promise),
+  )
 })
 
 test('StateView 从原生 pending 进入 PromiseLike 完成值', async () => {

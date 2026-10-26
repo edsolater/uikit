@@ -26,7 +26,9 @@ import type { PresentPrimitive, Primitive } from '@edsolater/fnkit'
  * 它接近 CSS `<custom-ident>` 的心智模型：
  * 当前值不是业务模式，不是用户选择动作，而是一个当前落位的标识符。
  */
-export interface IdentOperator<Ident extends Primitive> extends MatcherOperator<Ident> {
+export interface IdentOperator<
+  Ident extends Primitive,
+> extends MatcherOperator<Ident> {
   /**
    * 初始 ident。
    *
@@ -48,7 +50,9 @@ export interface IdentOperator<Ident extends Primitive> extends MatcherOperator<
   reset: () => void
 }
 
-export interface CycleIdentOperator<Ident extends PresentPrimitive> extends IdentOperator<Ident> {
+export interface CycleIdentOperator<
+  Ident extends PresentPrimitive,
+> extends IdentOperator<Ident> {
   /**
    * 切换到指定 ident。
    *
@@ -146,20 +150,39 @@ export type CreateIdentOptions<T extends PresentIdentValue> = {
  * sizeIdentifier.isNot('sm')
  * sizeIdentifier.reset()
  */
-export function createIdent<T extends PresentIdentValue>(): [ident: State<T | undefined>, identifier: IdentOperator<T | undefined>]
-export function createIdent<T extends PresentIdentValue>(initialIdent: T): [ident: State<T>, identifier: IdentOperator<T>]
+export function createIdent<T extends PresentIdentValue>(): [
+  ident: State<T | undefined>,
+  identifier: IdentOperator<T | undefined>,
+]
+export function createIdent<T extends PresentIdentValue>(
+  initialIdent: T,
+): [ident: State<T>, identifier: IdentOperator<T>]
 export function createIdent<T extends PresentIdentValue>(
   initialIdent: T,
   options: {
     idents: [T, ...T[]]
   } & CreateIdentOptions<T>,
-): [ident: State<T>, identifier: Omit<IdentOperator<T>, 'set'> & Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>]
+): [
+  ident: State<T>,
+  identifier: Omit<IdentOperator<T>, 'set'> &
+    Omit<CycleIdentOperator<T>, keyof IdentOperator<T>>,
+]
 export function createIdent(
   initialIdent?: PresentIdentValue,
   options?: CreateIdentOptions<PresentIdentValue>,
 ):
-  | [ident: State<PresentIdentValue | undefined>, identifier: IdentOperator<PresentIdentValue | undefined>]
-  | [ident: State<PresentIdentValue>, identifier: Omit<IdentOperator<PresentIdentValue>, 'set'> & Omit<CycleIdentOperator<PresentIdentValue>, keyof IdentOperator<PresentIdentValue>>] {
+  | [
+      ident: State<PresentIdentValue | undefined>,
+      identifier: IdentOperator<PresentIdentValue | undefined>,
+    ]
+  | [
+      ident: State<PresentIdentValue>,
+      identifier: Omit<IdentOperator<PresentIdentValue>, 'set'> &
+        Omit<
+          CycleIdentOperator<PresentIdentValue>,
+          keyof IdentOperator<PresentIdentValue>
+        >,
+    ] {
   const ident = createState<PresentIdentValue | undefined>(initialIdent)
 
   const set = (nextIdent: PresentIdentValue | undefined) => {
@@ -182,7 +205,9 @@ export function createIdent(
     to,
     ...matcher,
     reset,
-  } as IdentOperator<PresentIdentValue | undefined> & { to: (ident: PresentIdentValue | undefined) => void }
+  } as IdentOperator<PresentIdentValue | undefined> & {
+    to: (ident: PresentIdentValue | undefined) => void
+  }
 
   const idents = options?.idents
 
@@ -195,7 +220,8 @@ export function createIdent(
   }
 
   const setByIndex = (index: number) => {
-    const normalizedIndex = ((index % idents.length) + idents.length) % idents.length
+    const normalizedIndex =
+      ((index % idents.length) + idents.length) % idents.length
 
     ident.set(idents[normalizedIndex])
   }
@@ -258,6 +284,17 @@ export function createIdent(
       isLast,
       matchFirst,
       matchLast,
-    } as Omit<IdentOperator<PresentIdentValue>, 'set'> & Omit<CycleIdentOperator<PresentIdentValue>, keyof IdentOperator<PresentIdentValue>>,
-  ] as [State<PresentIdentValue>, Omit<IdentOperator<PresentIdentValue>, 'set'> & Omit<CycleIdentOperator<PresentIdentValue>, keyof IdentOperator<PresentIdentValue>>]
+    } as Omit<IdentOperator<PresentIdentValue>, 'set'> &
+      Omit<
+        CycleIdentOperator<PresentIdentValue>,
+        keyof IdentOperator<PresentIdentValue>
+      >,
+  ] as [
+    State<PresentIdentValue>,
+    Omit<IdentOperator<PresentIdentValue>, 'set'> &
+      Omit<
+        CycleIdentOperator<PresentIdentValue>,
+        keyof IdentOperator<PresentIdentValue>
+      >,
+  ]
 }

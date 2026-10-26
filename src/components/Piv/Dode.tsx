@@ -3,7 +3,13 @@
  * 管理者在真实元素可用时提供最终绑定材料；所有绑定归属于当前元素分支，不增加 DOM 层。
  */
 import type { ID, MayArray } from '@edsolater/fnkit'
-import { type JSX, type JSXElement, type Source, createRenderEffect, val } from '@/foundation'
+import {
+  type JSX,
+  type JSXElement,
+  type Source,
+  createRenderEffect,
+  val,
+} from '@/foundation'
 import { children, insert, mapArray } from '@/foundation/render'
 import { untrack } from '@/foundation/reactivity'
 
@@ -48,10 +54,15 @@ export function Dode<Tag extends PivTag>(props: DodeProps<Tag>): JSX.Element {
   consumeClassName(element, () => bindings.class)
   consumeStyle(element, () => bindings.style)
   // 原始声明身份决定监听作用域，其他能力变化不会重置 once 或提前执行其 cleanup。
-  mapArray(() => toEventListenersList(bindings.on), declaration => {
-    createRenderEffect(declaration, eventDeclaration => consumeEventListeners(element, eventDeclaration))
-    return declaration
-  })
+  mapArray(
+    () => toEventListenersList(bindings.on),
+    (declaration) => {
+      createRenderEffect(declaration, (eventDeclaration) =>
+        consumeEventListeners(element, eventDeclaration),
+      )
+      return declaration
+    },
+  )
   consumeHTMLProps(element, () => bindings.htmlProps)
   // 普通 ref 只在元素初始化时读取，不随插件配置变化重复执行。
   const refs = untrack(() => bindings.ref)

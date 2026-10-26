@@ -39,10 +39,9 @@ const toneColor = variableCluster({
   soft: variable('lightblue', {
     name: 'tone-color-soft',
   }),
-  line: variable(
-    () => colorMix([toneColorDefault, 0.32], 'transparent'),
-    { name: 'tone-color-line' },
-  ),
+  line: variable(() => colorMix([toneColorDefault, 0.32], 'transparent'), {
+    name: 'tone-color-line',
+  }),
 })
 
 const accentColor = variableCluster({
@@ -58,13 +57,9 @@ const accentColor = variableCluster({
 Button 业务层只消费 line，并在嵌套 tone 条件中声明整组材料：
 
 ```ts
-rules(button, [
-  ['background', toneColor('line')],
-])
+rules(button, [['background', toneColor('line')]])
 
-rules([...button, '&[data-tone="accent"]'], [
-  [toneColor, accentColor],
-])
+rules([...button, '&[data-tone="accent"]'], [[toneColor, accentColor]])
 ```
 
 验收必须证明：
@@ -78,13 +73,13 @@ rules([...button, '&[data-tone="accent"]'], [
 
 ### 代码落点
 
-| 位置 | 第一阶段责任 |
-| --- | --- |
-| `src/style-system/core/css-variable.ts` | 定义 VariableSource，保存直接内容或 source 函数；保持 Variable 黑盒和现有 states 契约 |
-| `src/style-system/compiler/compile-variable.ts` | 在编译 Variable 引用时识别并执行 source 函数，再复用 readValue |
-| `src/style-system/index.ts` | 若公共类型需要使用 VariableSource，只导出类型，不增加新的运行入口 |
-| Compiler 单元测试 | 锁定延迟时机、返回内容种类、可调用对象区分、循环引用和用户指定的嵌套 CSS |
-| Browser 测试 | 验证同一 line 配方在普通与 accent Button 作用域读取不同 default |
+| 位置                                            | 第一阶段责任                                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `src/style-system/core/css-variable.ts`         | 定义 VariableSource，保存直接内容或 source 函数；保持 Variable 黑盒和现有 states 契约 |
+| `src/style-system/compiler/compile-variable.ts` | 在编译 Variable 引用时识别并执行 source 函数，再复用 readValue                        |
+| `src/style-system/index.ts`                     | 若公共类型需要使用 VariableSource，只导出类型，不增加新的运行入口                     |
+| Compiler 单元测试                               | 锁定延迟时机、返回内容种类、可调用对象区分、循环引用和用户指定的嵌套 CSS              |
+| Browser 测试                                    | 验证同一 line 配方在普通与 accent Button 作用域读取不同 default                       |
 
 ### 第一阶段验证
 
@@ -146,26 +141,26 @@ git diff --check
 
 Variable 的 CSS 名字保持相同顺序，并补足 CSS 独立作用域所需的领域前缀。例如 Button 文件中的普通变量可以省略 button，而 CSS 名字仍保留 `button-`。
 
-| 对象或系列 | 重命名前代码 | 重命名前 CSS | 实施结果 | 状态与依据 |
-| --- | --- | --- | --- | --- |
-| action 配色 | `actionColor`；default 成员内联 | `action-color` | 保持 | default 没有独立材料身份，不建立 `actionColorDefault` |
-| 间距档位 | `smallSpace`、`normalSpace`、`mediumSpace`、`largeSpace`、`extraLargeSpace`、`wideSpace`、`widestSpace` | `small-space` 等 | `spaceSmall`、`spaceNormal`、`spaceMedium`、`spaceLarge`、`spaceExtraLarge`、`spaceWide`、`spaceWidest`；CSS 同序 | 已实施；`space` 是稳定对象，档位后置 |
-| 边界宽度 | `thinBoundaryWidth` | `thin-boundary-width` | `boundaryWidthThin`；`boundary-width-thin` | 已实施；thin 是档位 |
-| 控件尺寸 | `smallControlSize`、`normalControlSize`、`largeControlSize`、`extraLargeControlSize` | `small-control-size` 等 | `controlSizeSmall`、`controlSizeNormal`、`controlSizeLarge`、`controlSizeExtraLarge`；CSS 同序 | 已实施；`controlSize` 是稳定对象 |
-| 文字尺寸前三档 | `normalTextSize`、`largeTextSize`、`extraLargeTextSize` | `normal-text-size` 等 | `textSizeNormal`、`textSizeLarge`、`textSizeExtraLarge`；CSS 同序 | 已实施；`textSize` 是稳定对象 |
-| 24px 文字尺寸 | `headingSize` | `heading-size` | `textSizeExtraExtraLarge`；`text-size-extra-extra-large` | 当前没有稳定 Heading 服务对象；唯一消费者是 xlarge Button，基础 CSS 对应 2xl 字号。若以后建立真正的 Heading 排版角色，才重新采用 `headingSize` |
-| 阴影档位 | `flatShadow`、`lowShadow`、`raisedShadow`、`elevatedShadow`、`interactiveShadow` | `flat-shadow` 等 | `shadowFlat`、`shadowLow`、`shadowRaised`、`shadowElevated`、`shadowInteractive`；CSS 同序 | 已实施；档位或配方后置 |
-| 动效材料 | `fastDuration`、`standardEasing` | `fast-duration`、`standard-easing` | `durationFast`、`easingStandard`；CSS 同序 | 已实施；fast、standard 是档位后缀 |
-| 中性色阶 0 | `neutralZeroColor` | `neutral-0-color` | `neutralColor0`；`neutral-color-0` | 已实施；数字直接作为后缀，不写 Zero |
-| danger strong 成员 | `dangerStrongColor` | `danger-strong-color` | `dangerColorStrong`；`danger-color-strong` | 已实施；`dangerColor` 是稳定身份，strong 是成员 |
-| Button 默认表面／前景 | `buttonSurfaceColor`、`buttonForegroundColor` | `button-surface-color`、`button-foreground-color` | `surfaceColorDefault`、`foregroundColorDefault`；CSS 为 `button-surface-color-default`、`button-foreground-color-default` | 已实施；Button 规格中需要与 bare、solid、tone 局部配方区分，JS 不重复文件已经提供的 button 主语 |
-| Button 通用透明度 | `buttonOpacity` | `button-opacity` | `opacity`；CSS 保持 `button-opacity` | 已实施；它适用于所有 variant，不是 default 成员 |
-| Button bare 表面 | `buttonBareSurfaceColor` | `button-bare-surface-color` | `surfaceColorBare`；`button-surface-color-bare` | 已确认理解；bare 是 `surfaceColor` 的延伸选择 |
-| Button solid 材料 | `buttonSolidSurfaceColor`、`buttonSolidForegroundColor`、`buttonSolidShadow` | `button-solid-*` | `surfaceColorSolid`、`foregroundColorSolid`、`shadowSolid`；CSS 将 solid 后置 | 已实施；solid 是对应稳定对象的延伸选择 |
-| Button tone 材料 | `buttonToneSurfaceColor`、`buttonToneForegroundColor` | `button-tone-*` | `surfaceColorTone`、`foregroundColorTone`；CSS 将 tone 后置 | 已实施；tone 表示存在动作语气时的配方 |
-| Button bare 与 tone 交集 | `buttonBareToneSurfaceColor` | `button-bare-tone-surface-color` | 临时 `surfaceColorBareTone`；`button-surface-color-bare-tone` | 已实施并加 `TODO`；显式交集配方不可组合，下一步改为运行结果组合并删除此 Variable |
-| Button solid 与 tone 交集 | `buttonSolidToneSurfaceColor`、`buttonSolidToneForegroundColor` | `button-solid-tone-*` | 临时 `surfaceColorSolidTone`、`foregroundColorSolidTone`；CSS 同序 | 已实施并逐项加 `TODO`；显式交集配方不可组合，下一步删除 |
-| Button loading 光标 | `buttonLoadingCursor` | `button-loading-cursor` | `cursorLoading`；`button-cursor-loading` | 已实施；loading 是 `cursor` 的状态选择 |
+| 对象或系列                | 重命名前代码                                                                                            | 重命名前 CSS                                      | 实施结果                                                                                                                  | 状态与依据                                                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| action 配色               | `actionColor`；default 成员内联                                                                         | `action-color`                                    | 保持                                                                                                                      | default 没有独立材料身份，不建立 `actionColorDefault`                                                                                          |
+| 间距档位                  | `smallSpace`、`normalSpace`、`mediumSpace`、`largeSpace`、`extraLargeSpace`、`wideSpace`、`widestSpace` | `small-space` 等                                  | `spaceSmall`、`spaceNormal`、`spaceMedium`、`spaceLarge`、`spaceExtraLarge`、`spaceWide`、`spaceWidest`；CSS 同序         | 已实施；`space` 是稳定对象，档位后置                                                                                                           |
+| 边界宽度                  | `thinBoundaryWidth`                                                                                     | `thin-boundary-width`                             | `boundaryWidthThin`；`boundary-width-thin`                                                                                | 已实施；thin 是档位                                                                                                                            |
+| 控件尺寸                  | `smallControlSize`、`normalControlSize`、`largeControlSize`、`extraLargeControlSize`                    | `small-control-size` 等                           | `controlSizeSmall`、`controlSizeNormal`、`controlSizeLarge`、`controlSizeExtraLarge`；CSS 同序                            | 已实施；`controlSize` 是稳定对象                                                                                                               |
+| 文字尺寸前三档            | `normalTextSize`、`largeTextSize`、`extraLargeTextSize`                                                 | `normal-text-size` 等                             | `textSizeNormal`、`textSizeLarge`、`textSizeExtraLarge`；CSS 同序                                                         | 已实施；`textSize` 是稳定对象                                                                                                                  |
+| 24px 文字尺寸             | `headingSize`                                                                                           | `heading-size`                                    | `textSizeExtraExtraLarge`；`text-size-extra-extra-large`                                                                  | 当前没有稳定 Heading 服务对象；唯一消费者是 xlarge Button，基础 CSS 对应 2xl 字号。若以后建立真正的 Heading 排版角色，才重新采用 `headingSize` |
+| 阴影档位                  | `flatShadow`、`lowShadow`、`raisedShadow`、`elevatedShadow`、`interactiveShadow`                        | `flat-shadow` 等                                  | `shadowFlat`、`shadowLow`、`shadowRaised`、`shadowElevated`、`shadowInteractive`；CSS 同序                                | 已实施；档位或配方后置                                                                                                                         |
+| 动效材料                  | `fastDuration`、`standardEasing`                                                                        | `fast-duration`、`standard-easing`                | `durationFast`、`easingStandard`；CSS 同序                                                                                | 已实施；fast、standard 是档位后缀                                                                                                              |
+| 中性色阶 0                | `neutralZeroColor`                                                                                      | `neutral-0-color`                                 | `neutralColor0`；`neutral-color-0`                                                                                        | 已实施；数字直接作为后缀，不写 Zero                                                                                                            |
+| danger strong 成员        | `dangerStrongColor`                                                                                     | `danger-strong-color`                             | `dangerColorStrong`；`danger-color-strong`                                                                                | 已实施；`dangerColor` 是稳定身份，strong 是成员                                                                                                |
+| Button 默认表面／前景     | `buttonSurfaceColor`、`buttonForegroundColor`                                                           | `button-surface-color`、`button-foreground-color` | `surfaceColorDefault`、`foregroundColorDefault`；CSS 为 `button-surface-color-default`、`button-foreground-color-default` | 已实施；Button 规格中需要与 bare、solid、tone 局部配方区分，JS 不重复文件已经提供的 button 主语                                                |
+| Button 通用透明度         | `buttonOpacity`                                                                                         | `button-opacity`                                  | `opacity`；CSS 保持 `button-opacity`                                                                                      | 已实施；它适用于所有 variant，不是 default 成员                                                                                                |
+| Button bare 表面          | `buttonBareSurfaceColor`                                                                                | `button-bare-surface-color`                       | `surfaceColorBare`；`button-surface-color-bare`                                                                           | 已确认理解；bare 是 `surfaceColor` 的延伸选择                                                                                                  |
+| Button solid 材料         | `buttonSolidSurfaceColor`、`buttonSolidForegroundColor`、`buttonSolidShadow`                            | `button-solid-*`                                  | `surfaceColorSolid`、`foregroundColorSolid`、`shadowSolid`；CSS 将 solid 后置                                             | 已实施；solid 是对应稳定对象的延伸选择                                                                                                         |
+| Button tone 材料          | `buttonToneSurfaceColor`、`buttonToneForegroundColor`                                                   | `button-tone-*`                                   | `surfaceColorTone`、`foregroundColorTone`；CSS 将 tone 后置                                                               | 已实施；tone 表示存在动作语气时的配方                                                                                                          |
+| Button bare 与 tone 交集  | `buttonBareToneSurfaceColor`                                                                            | `button-bare-tone-surface-color`                  | 临时 `surfaceColorBareTone`；`button-surface-color-bare-tone`                                                             | 已实施并加 `TODO`；显式交集配方不可组合，下一步改为运行结果组合并删除此 Variable                                                               |
+| Button solid 与 tone 交集 | `buttonSolidToneSurfaceColor`、`buttonSolidToneForegroundColor`                                         | `button-solid-tone-*`                             | 临时 `surfaceColorSolidTone`、`foregroundColorSolidTone`；CSS 同序                                                        | 已实施并逐项加 `TODO`；显式交集配方不可组合，下一步删除                                                                                        |
+| Button loading 光标       | `buttonLoadingCursor`                                                                                   | `button-loading-cursor`                           | `cursorLoading`；`button-cursor-loading`                                                                                  | 已实施；loading 是 `cursor` 的状态选择                                                                                                         |
 
 #### bare／solid 与 tone 交集的真实代码
 
@@ -181,9 +176,10 @@ const surfaceColorBareTone = variable(surfaceColor, {
   },
 })
 
-rules([...button, '&[data-variant="bare"][data-tone]'], [
-  color({ background: surfaceColorBareTone }),
-])
+rules(
+  [...button, '&[data-variant="bare"][data-tone]'],
+  [color({ background: surfaceColorBareTone })],
+)
 ```
 
 ```ts
@@ -196,9 +192,10 @@ const surfaceColorSolidTone = variable(surfaceColor, {
   },
 })
 
-rules([...button, '&[data-variant="solid"][data-tone]'], [
-  color({ background: surfaceColorSolidTone }),
-])
+rules(
+  [...button, '&[data-variant="solid"][data-tone]'],
+  [color({ background: surfaceColorSolidTone })],
+)
 ```
 
 这些定义当前只是保留视觉结果的临时实现，不代表认可显式交集建模。它们不是一棵 Variable 成员树，也不应长期存在；下一步计划要让 bare、solid、tone 的独立效果在运行结果中组合，并删除交集 Variable。

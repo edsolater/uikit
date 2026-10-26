@@ -13,8 +13,14 @@ const usedNames = new Map<string, 'explicit' | 'automatic'>()
  */
 export function allocateVariableName(name?: string, previous?: string): string {
   if (name === undefined) {
-    if (previous !== undefined && usedNames.get(previous.replace(/^--/, '')) === 'automatic') return previous
-    do { name = `temp-${nameGenerator.genID()}` } while (usedNames.has(name))
+    if (
+      previous !== undefined &&
+      usedNames.get(previous.replace(/^--/, '')) === 'automatic'
+    )
+      return previous
+    do {
+      name = `temp-${nameGenerator.genID()}`
+    } while (usedNames.has(name))
     usedNames.set(name, 'automatic')
   } else {
     usedNames.set(name.replace(/^--/, ''), 'explicit')

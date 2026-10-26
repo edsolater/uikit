@@ -20,17 +20,26 @@ describe('scope', () => {
   test('沿 composed tree 穿过 ShadowRoot 查找 Scope', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <Piv
-        plugin={scope({ capabilities: [dragAndDrop] })}
-        htmlProps={{ 'data-testid': 'scope-host' }}
-      />
-    ), host)
+    dispose = render(
+      () => (
+        <Piv
+          plugin={scope({ capabilities: [dragAndDrop] })}
+          htmlProps={{ 'data-testid': 'scope-host' }}
+        />
+      ),
+      host,
+    )
 
-    const scopeHost = document.querySelector<HTMLElement>('[data-testid="scope-host"]')!
-    const source = scopeHost.attachShadow({ mode: 'open' }).appendChild(document.createElement('div'))
+    const scopeHost = document.querySelector<HTMLElement>(
+      '[data-testid="scope-host"]',
+    )!
+    const source = scopeHost
+      .attachShadow({ mode: 'open' })
+      .appendChild(document.createElement('div'))
 
-    expect(findScopeBoundary(source, dragAndDrop)).toBe(findScopeBoundary(scopeHost, dragAndDrop))
+    expect(findScopeBoundary(source, dragAndDrop)).toBe(
+      findScopeBoundary(scopeHost, dragAndDrop),
+    )
   })
 
   test('允许同范围 Pointer Drag and Drop 并拒绝跨范围放下', () => {
@@ -38,30 +47,47 @@ describe('scope', () => {
     let bDrops = 0
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => (
-      <>
-        <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
-          <Piv
-            plugin={draggable({ payload: 'A', activationDistance: 0 })}
-            htmlProps={{ 'data-testid': 'source-a' }}
-          />
-          <Piv
-            plugin={droppable({ onDrop: () => { aDrops += 1 } })}
-            htmlProps={{ 'data-testid': 'target-a' }}
-          />
-        </Piv>
-        <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
-          <Piv
-            plugin={droppable({ onDrop: () => { bDrops += 1 } })}
-            htmlProps={{ 'data-testid': 'target-b' }}
-          />
-        </Piv>
-      </>
-    ), host)
+    dispose = render(
+      () => (
+        <>
+          <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
+            <Piv
+              plugin={draggable({ payload: 'A', activationDistance: 0 })}
+              htmlProps={{ 'data-testid': 'source-a' }}
+            />
+            <Piv
+              plugin={droppable({
+                onDrop: () => {
+                  aDrops += 1
+                },
+              })}
+              htmlProps={{ 'data-testid': 'target-a' }}
+            />
+          </Piv>
+          <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
+            <Piv
+              plugin={droppable({
+                onDrop: () => {
+                  bDrops += 1
+                },
+              })}
+              htmlProps={{ 'data-testid': 'target-b' }}
+            />
+          </Piv>
+        </>
+      ),
+      host,
+    )
 
-    const sourceA = document.querySelector<HTMLElement>('[data-testid="source-a"]')!
-    const targetA = document.querySelector<HTMLElement>('[data-testid="target-a"]')!
-    const targetB = document.querySelector<HTMLElement>('[data-testid="target-b"]')!
+    const sourceA = document.querySelector<HTMLElement>(
+      '[data-testid="source-a"]',
+    )!
+    const targetA = document.querySelector<HTMLElement>(
+      '[data-testid="target-a"]',
+    )!
+    const targetB = document.querySelector<HTMLElement>(
+      '[data-testid="target-b"]',
+    )!
     stubPointerCapture(sourceA)
 
     vi.spyOn(document, 'elementsFromPoint').mockReturnValue([targetA])

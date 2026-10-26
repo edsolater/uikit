@@ -9,7 +9,13 @@ import { createCompiledContent } from './compiled-content'
 import { conditionAddressKey, type ConditionPath } from '../condition'
 import { keyPriority, propertyName, type JSSKey } from '../key'
 import type { JSSCompileContext } from '../content'
-import type { JSSStyleNode, ASTController, ASTQuery, ASTPosition, ContentCompilationRecord } from './contracts'
+import type {
+  JSSStyleNode,
+  ASTController,
+  ASTQuery,
+  ASTPosition,
+  ContentCompilationRecord,
+} from './contracts'
 
 /** 一个声明角色的原输入与各嵌套内容记录。 */
 export interface RoleCompilationState {
@@ -32,23 +38,39 @@ const maximumStyleNodeCount = 100_000
 /** 为本次编译建立无当前位置的队列控制器。 */
 export function createASTController(session: ASTSession): ASTController {
   /** 固定本次查询的名称与地址，为收集与存在判断提供同一匹配规则。 */
-  const matching = (query: ASTQuery): (node: JSSStyleNode) => boolean => {
+  const matching = (query: ASTQuery): ((node: JSSStyleNode) => boolean) => {
     const name = query.key === undefined ? undefined : propertyName(query.key)
-    const address = query.conditionPath === undefined ? undefined : conditionAddressKey(query.conditionPath)
-    const root = (path: ConditionPath): boolean => !path.stateConditionPath.length && path.targetConditionPath.length === 1
-      && [':root', ':where(:root)'].includes(path.targetConditionPath[0].header)
+    const address =
+      query.conditionPath === undefined
+        ? undefined
+        : conditionAddressKey(query.conditionPath)
+    const root = (path: ConditionPath): boolean =>
+      !path.stateConditionPath.length &&
+      path.targetConditionPath.length === 1 &&
+      [':root', ':where(:root)'].includes(path.targetConditionPath[0].header)
     return (node) =>
-      (name === undefined || (node.key !== undefined && propertyName(node.key) === name)) &&
-      (address === undefined || conditionAddressKey(node.conditionPath) === address
-        || query.conditionPath !== undefined && root(query.conditionPath) && root(node.conditionPath)) &&
-      (query.productTag === undefined || node.productTag === query.productTag) &&
-      (query.resourceAddress === undefined || node.resourceAddress === query.resourceAddress)
+      (name === undefined ||
+        (node.key !== undefined && propertyName(node.key) === name)) &&
+      (address === undefined ||
+        conditionAddressKey(node.conditionPath) === address ||
+        (query.conditionPath !== undefined &&
+          root(query.conditionPath) &&
+          root(node.conditionPath))) &&
+      (query.productTag === undefined ||
+        node.productTag === query.productTag) &&
+      (query.resourceAddress === undefined ||
+        node.resourceAddress === query.resourceAddress)
   }
   return {
     setContent(context, content) {
       const role = context.role === 'declaration-key' ? 'key' : 'content'
-      const record = session.compilations.get(context.node)?.[role].contents.get(context.input)
-      assert(session.isAlive(context.node) && record?.notifyingContext === context, '只能操作当前通知的内容位置。')
+      const record = session.compilations
+        .get(context.node)
+        ?.[role].contents.get(context.input)
+      assert(
+        session.isAlive(context.node) && record?.notifyingContext === context,
+        '只能操作当前通知的内容位置。',
+      )
       record.content = content
     },
     /** 读取角色访问已留下的事实，不触发新的内容求值。 */
@@ -58,14 +80,23 @@ export function createASTController(session: ASTSession): ASTController {
       return record ? record.content : input
     },
     /** 将当前位置已完成的记录交付给输出视图，不执行内容。 */
-    getCompiledContentView: (node, input) => createCompiledContent(input, () => session.compilations.get(node)?.content.contents ?? new WeakMap()),
+    getCompiledContentView: (node, input) =>
+      createCompiledContent(
+        input,
+        () => session.compilations.get(node)?.content.contents ?? new WeakMap(),
+      ),
     /** 只查询已有位置事实，供分析读取依赖及核对失效身份。 */
-    getContentCompilation: (node, input) => isObjectLike(input)
-      ? session.compilations.get(node)?.content.contents.get(input) : undefined,
+    getContentCompilation: (node, input) =>
+      isObjectLike(input)
+        ? session.compilations.get(node)?.content.contents.get(input)
+        : undefined,
     usesContent: (node, input) => {
       if (!isObjectLike(input)) return false
       const state = session.compilations.get(node)
-      return Boolean(state?.key.visitedContents.has(input) || state?.content.visitedContents.has(input))
+      return Boolean(
+        state?.key.visitedContents.has(input) ||
+        state?.content.visitedContents.has(input),
+      )
     },
     search: (query) => session.nodes.filter(matching(query)),
     has: (query) => session.nodes.some(matching(query)),
@@ -74,36 +105,63 @@ export function createASTController(session: ASTSession): ASTController {
       let selected: JSSStyleNode | undefined
       for (const node of session.nodes) {
         if (!matches(node) || !accept(node)) continue
-        if (!selected) { selected = node; continue }
-        const rootSpecificity = (node: JSSStyleNode) => node.conditionPath.targetConditionPath.length === 1
-          && node.conditionPath.targetConditionPath[0].header === ':root' ? 1 : 0
-        const rank = rootSpecificity(node) - rootSpecificity(selected)
-          || keyPriority(node.key!) - keyPriority(selected.key!) || session.compareOrder(node, selected)
+        if (!selected) {
+          selected = node
+          continue
+        }
+        const rootSpecificity = (node: JSSStyleNode) =>
+          node.conditionPath.targetConditionPath.length === 1 &&
+          node.conditionPath.targetConditionPath[0].header === ':root'
+            ? 1
+            : 0
+        const rank =
+          rootSpecificity(node) - rootSpecificity(selected) ||
+          keyPriority(node.key!) - keyPriority(selected.key!) ||
+          session.compareOrder(node, selected)
         if (rank > 0) selected = node
       }
       return selected
     },
     nodes: () => session.nodes.slice(),
-    observeNodes: observe => session.observeNodes(observe),
+    observeNodes: (observe) => session.observeNodes(observe),
     compareOrder: (left, right) => session.compareOrder(left, right),
     insert(position, [key, content], provenance) {
       const direction = position.after ? 'after' : 'before'
       const anchor = position.before ?? position.after!
-      const identity = provenance.identity === undefined
-        ? session.insertionIdentity(provenance.owner)
-        : `${provenance.owner.identity}/rewrite/${provenance.identity}`
-      return session.insert(provenance.owner, identity, position.conditionPath, key, content, anchor, direction, provenance.productTag, node => {
-        node.resourceAddress = provenance.resourceAddress
-        provenance.initialize?.(node)
-      })
+      const identity =
+        provenance.identity === undefined
+          ? session.insertionIdentity(provenance.owner)
+          : `${provenance.owner.identity}/rewrite/${provenance.identity}`
+      return session.insert(
+        provenance.owner,
+        identity,
+        position.conditionPath,
+        key,
+        content,
+        anchor,
+        direction,
+        provenance.productTag,
+        (node) => {
+          node.resourceAddress = provenance.resourceAddress
+          provenance.initialize?.(node)
+        },
+      )
     },
-    move: (node, position) => session.move(node, position.before ?? position.after!, position.after ? 'after' : 'before'),
-    remove: (node, options) => options?.from === 'output' ? session.detach(node) : session.remove(node),
+    move: (node, position) =>
+      session.move(
+        node,
+        position.before ?? position.after!,
+        position.after ? 'after' : 'before',
+      ),
+    remove: (node, options) =>
+      options?.from === 'output' ? session.detach(node) : session.remove(node),
     depend: (node, options) => session.own(options.owner, node),
     release: (node, options) => session.release(options.owner, node),
     onRemove: (node, cleanup) => session.onRemove(node, cleanup),
-    defer: (node, message) => { node.deferredReason = new Error(message) },
-    addSettlementCheck: check => session.settlementChecks.add(check),
+    defer: (node, message) => {
+      node.deferredReason = new Error(message)
+    },
+    addSettlementCheck: (check) => session.settlementChecks.add(check),
   }
 }
 
@@ -122,7 +180,9 @@ export class ASTSession {
   private roots: Set<JSSStyleNode>
   private liveNodes: Set<JSSStyleNode>
   private outputNodes: Set<JSSStyleNode>
-  private nodeObservers = new Set<(node: JSSStyleNode, present: boolean) => void>()
+  private nodeObservers = new Set<
+    (node: JSSStyleNode, present: boolean) => void
+  >()
   private trackedNodes = new WeakSet<JSSStyleNode>()
   private order = new WeakMap<JSSStyleNode, number>()
 
@@ -159,11 +219,19 @@ export class ASTSession {
   private track(node: JSSStyleNode): void {
     if (this.trackedNodes.has(node)) return
     this.trackedNodes.add(node)
-    for (const field of ['key', 'content', 'compileRevision', 'conditionPath', 'aggregate'] as const) {
+    for (const field of [
+      'key',
+      'content',
+      'compileRevision',
+      'conditionPath',
+      'aggregate',
+    ] as const) {
       let input = node[field]
-      Object.defineProperty(node, field, { enumerable: true, configurable: true,
+      Object.defineProperty(node, field, {
+        enumerable: true,
+        configurable: true,
         get: () => input,
-        set: value => {
+        set: (value) => {
           if (input === value) return
           input = value
           delete node.deferredReason
@@ -177,19 +245,27 @@ export class ASTSession {
    * 向编译期受体交付节点当前存在状态；没有受体时不产生后续工作。
    */
   private notify(node: JSSStyleNode): void {
-    for (const observe of this.nodeObservers) observe(node, this.hasOutput(node))
+    for (const observe of this.nodeObservers)
+      observe(node, this.hasOutput(node))
   }
 
   /**
    * 为一段新位置保留相邻顺序；数字间距耗尽时统一重编号，不影响任何声明身份。
    */
   private position(nodes: JSSStyleNode[], index: number): void {
-    const before = this.order.get(this.nodes[index - 1]) ?? (this.order.get(this.nodes[index + nodes.length]) ?? 0) - 1
-    const after = this.order.get(this.nodes[index + nodes.length]) ?? before + nodes.length + 1
+    const before =
+      this.order.get(this.nodes[index - 1]) ??
+      (this.order.get(this.nodes[index + nodes.length]) ?? 0) - 1
+    const after =
+      this.order.get(this.nodes[index + nodes.length]) ??
+      before + nodes.length + 1
     const step = (after - before) / (nodes.length + 1)
     if (before + step === before || after - step === after) {
       this.nodes.forEach((node, order) => this.order.set(node, order))
-    } else nodes.forEach((node, offset) => this.order.set(node, before + step * (offset + 1)))
+    } else
+      nodes.forEach((node, offset) =>
+        this.order.set(node, before + step * (offset + 1)),
+      )
   }
 
   /** 当前全部内容完成后核对队列；任何新增或撤销仍由同一编译流程处理。 */
@@ -214,10 +290,10 @@ export class ASTSession {
     assert(this.isAlive(owner), '不能登记已撤销来源的依赖。')
     if (owner === node) return
     let sources = this.owners.get(node)
-    if (!sources) this.owners.set(node, sources = new Set())
+    if (!sources) this.owners.set(node, (sources = new Set()))
     sources.add(owner)
     let products = this.products.get(owner)
-    if (!products) this.products.set(owner, products = new Set())
+    if (!products) this.products.set(owner, (products = new Set()))
     products.add(node)
   }
 
@@ -282,9 +358,22 @@ export class ASTSession {
   }
 
   /** 所有即时插入共用节点创建、来源登记和位置处理。 */
-  insert(owner: JSSStyleNode, identity: string, path: ConditionPath, key: JSSKey | undefined, content: unknown, anchor = owner, position: 'before' | 'after' = 'before', productTag?: object, initialize?: (node: JSSStyleNode) => void): JSSStyleNode {
+  insert(
+    owner: JSSStyleNode,
+    identity: string,
+    path: ConditionPath,
+    key: JSSKey | undefined,
+    content: unknown,
+    anchor = owner,
+    position: 'before' | 'after' = 'before',
+    productTag?: object,
+    initialize?: (node: JSSStyleNode) => void,
+  ): JSSStyleNode {
     const index = this.nodes.indexOf(anchor)
-    assert(index >= 0 && this.isAlive(owner), '不能在已撤销或已脱离输出的节点位置生成内容。')
+    assert(
+      index >= 0 && this.isAlive(owner),
+      '不能在已撤销或已脱离输出的节点位置生成内容。',
+    )
     const node: JSSStyleNode = {
       identity,
       compileRevision: 0,
@@ -304,7 +393,10 @@ export class ASTSession {
 
   /** 已展开的依赖节点也通过同一入口进入输出队列。 */
   append(nodes: JSSStyleNode[], index = this.nodes.length): void {
-    assert(this.nodes.length + nodes.length <= maximumStyleNodeCount, `AST 节点超过上限 ${maximumStyleNodeCount}，编译无法终止。`)
+    assert(
+      this.nodes.length + nodes.length <= maximumStyleNodeCount,
+      `AST 节点超过上限 ${maximumStyleNodeCount}，编译无法终止。`,
+    )
     this.nodes.splice(index, 0, ...nodes)
     this.position(nodes, index)
     for (const node of nodes) {
@@ -316,10 +408,19 @@ export class ASTSession {
   }
 
   /** 将现存节点紧邻锚点放置，不改变地址或来源。 */
-  move(node: JSSStyleNode, anchor: JSSStyleNode, position: 'before' | 'after'): void {
-    if (node === anchor || !this.hasOutput(node) || !this.hasOutput(anchor)) return
+  move(
+    node: JSSStyleNode,
+    anchor: JSSStyleNode,
+    position: 'before' | 'after',
+  ): void {
+    if (node === anchor || !this.hasOutput(node) || !this.hasOutput(anchor))
+      return
     const previous = this.nodes.indexOf(node)
-    if (previous === this.nodes.indexOf(anchor) + (position === 'after' ? 1 : -1)) return
+    if (
+      previous ===
+      this.nodes.indexOf(anchor) + (position === 'after' ? 1 : -1)
+    )
+      return
     this.nodes.splice(previous, 1)
     const index = this.nodes.indexOf(anchor) + (position === 'after' ? 1 : 0)
     this.nodes.splice(index, 0, node)
@@ -330,7 +431,7 @@ export class ASTSession {
   /** 登记节点撤销时执行的清理函数。 */
   onRemove(node: JSSStyleNode, cleanup: () => void): void {
     let callbacks = this.removalCallbacks.get(node)
-    if (!callbacks) this.removalCallbacks.set(node, callbacks = new Set())
+    if (!callbacks) this.removalCallbacks.set(node, (callbacks = new Set()))
     callbacks.add(cleanup)
   }
 }

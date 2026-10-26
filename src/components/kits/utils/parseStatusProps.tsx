@@ -32,7 +32,9 @@ export interface StatusActions<StatusName extends string> {
  * Status 天然允许多个候选同时成立。外部一旦声明某个状态字段，该字段便始终跟随外部 Source；
  * 只有外部没有声明的状态才能由 statusActions 从组件内部改变。
  */
-export function createStatusPropsParser<const Candidates extends string[]>(options: {
+export function createStatusPropsParser<
+  const Candidates extends string[],
+>(options: {
   candidates: Candidates
 
   /**
@@ -50,14 +52,19 @@ export function createStatusPropsParser<const Candidates extends string[]>(optio
     const externalStatusNames = new Set(
       options.candidates.filter((statusName) => statusName in props),
     )
-    const internalStatusStates = {} as Record<StatusName, State<boolean | undefined>>
+    const internalStatusStates = {} as Record<
+      StatusName,
+      State<boolean | undefined>
+    >
     const statusDetails = {} as StatusDetails<StatusName>
 
     for (const statusName of options.candidates) {
       const internalStatus = createState<boolean | undefined>()
       internalStatusStates[statusName] = internalStatus
       statusDetails[statusName] = externalStatusNames.has(statusName)
-        ? derive(propRecord, () => val(propRecord[statusName] as Source<boolean | undefined>))
+        ? derive(propRecord, () =>
+            val(propRecord[statusName] as Source<boolean | undefined>),
+          )
         : internalStatus
     }
 

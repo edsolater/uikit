@@ -11,7 +11,9 @@ export function ArticleExample() {
           <span>Component</span>
           <h2>Article</h2>
         </div>
-        <p>Article 表达可独立理解的正文；Card 只是这篇正文当前采用的视觉形式。</p>
+        <p>
+          Article 表达可独立理解的正文；Card 只是这篇正文当前采用的视觉形式。
+        </p>
 
         <div class="article-example-contract">
           <span>最终节点</span>

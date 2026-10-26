@@ -24,10 +24,10 @@
 
 从任务目的推导最少必要职责，通用函数与基础能力优先复用 FNKit，前端组件、hooks、交互和样式能力优先复用 UI Kit。新增判断、抽象和测试必须说明它解决了什么实际问题；独立审查从用户原话出发，检查必要性，不只检查正确性。
 
-| 库 | 能力语义 | 本地源码与查证顺序 |
-| --- | --- | --- |
-| FNKit：`@edsolater/fnkit` | 通用 TypeScript 函数与基础能力，包括类型判断、集合、对象、异步任务、事件和数据流处理 | `D:/mycode/fnkit`；先读 [reference.md](D:/mycode/fnkit/reference.md)，再核对 [src/index.ts](D:/mycode/fnkit/src/index.ts) 的公开出口和对应源码契约 |
-| UI Kit：`@edsolater/uikit` | 基于 SolidJS 的前端基础能力，包括 UI 组件、hooks、交互和样式设施；即当前仓库 | `D:/mycode/uikit`；先读 [README.md](README.md)、[Architecture.md](Architecture.md)，再核对 [src/index.ts](src/index.ts) 的公开出口和对应源码契约 |
+| 库                         | 能力语义                                                                             | 本地源码与查证顺序                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FNKit：`@edsolater/fnkit`  | 通用 TypeScript 函数与基础能力，包括类型判断、集合、对象、异步任务、事件和数据流处理 | `D:/mycode/fnkit`；先读 [reference.md](D:/mycode/fnkit/reference.md)，再核对 [src/index.ts](D:/mycode/fnkit/src/index.ts) 的公开出口和对应源码契约 |
+| UI Kit：`@edsolater/uikit` | 基于 SolidJS 的前端基础能力，包括 UI 组件、hooks、交互和样式设施；即当前仓库         | `D:/mycode/uikit`；先读 [README.md](README.md)、[Architecture.md](Architecture.md)，再核对 [src/index.ts](src/index.ts) 的公开出口和对应源码契约   |
 
 优先复用须查证实际契约及框架是否适配；不能复用时说明实际差异。具体必要性判断、独立审查和验收仍从统一 AI Rules Agent 入口取得。
 

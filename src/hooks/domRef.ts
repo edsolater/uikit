@@ -12,7 +12,9 @@ export function createDomRef(): [
   loaded: StateView<boolean>,
 ] {
   // DOM ref 在组件构建阶段同步登记；此专用状态允许注册写入，保留 ref 先于 children/mount 的顺序。
-  const ref = createState<HTMLElement | undefined>(undefined, { ownedWrite: true })
+  const ref = createState<HTMLElement | undefined>(undefined, {
+    ownedWrite: true,
+  })
   const loaded = ref.map((element) => element !== undefined)
   return [ref, (element) => ref.set(element), loaded]
 }

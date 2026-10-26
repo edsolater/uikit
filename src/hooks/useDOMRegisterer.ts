@@ -4,7 +4,8 @@
  */
 import { result } from '@edsolater/fnkit'
 
-type DOMRegisterTarget = 'head' | 'body' | ParentNode | (() => ParentNode | null | undefined)
+type DOMRegisterTarget =
+  'head' | 'body' | ParentNode | (() => ParentNode | null | undefined)
 
 /**
  * registry 内部保存的挂载记录。
@@ -46,7 +47,9 @@ type UseDOMRegistererOptions<TagName extends keyof HTMLElementTagNameMap> = {
 // 全局 DOM 挂载天然是进程级共享状态，用模块级 registry 比 Context 更直接。
 const domRegisterRegistry = new Map<string, DOMRegisterEntry>()
 
-function resolveDOMRegisterTarget(target: DOMRegisterTarget | undefined): ParentNode | null {
+function resolveDOMRegisterTarget(
+  target: DOMRegisterTarget | undefined,
+): ParentNode | null {
   if (typeof document === 'undefined') {
     return null
   }
@@ -74,7 +77,8 @@ export function useDOMRegisterer<TagName extends keyof HTMLElementTagNameMap>({
   setup,
 }: UseDOMRegistererOptions<TagName>) {
   const register = () => {
-    const existingEntry = domRegisterRegistry.get(id) as DOMRegisterEntry | undefined
+    const existingEntry = domRegisterRegistry.get(id) as
+      DOMRegisterEntry | undefined
 
     if (existingEntry !== undefined) {
       existingEntry.consumers += 1

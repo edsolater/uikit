@@ -30,7 +30,8 @@
     --shadow-5: 0 4px 8px var(--color-shadow), 0 18px 40px var(--color-shadow);
     --shadow-6: 0 6px 12px var(--color-shadow), 0 24px 52px var(--color-shadow);
     --shadow-7: 0 8px 16px var(--color-shadow), 0 32px 68px var(--color-shadow);
-    --shadow-8: 0 12px 24px var(--color-shadow), 0 44px 88px var(--color-shadow);
+    --shadow-8:
+      0 12px 24px var(--color-shadow), 0 44px 88px var(--color-shadow);
 
     /*
      * 语义阴影。

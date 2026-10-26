@@ -97,13 +97,9 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 
 ```tsx
 <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
-  <Piv plugin={draggable({ payload: 'weather' })}>
-    Weather
-  </Piv>
+  <Piv plugin={draggable({ payload: 'weather' })}>Weather</Piv>
 
-  <Piv plugin={droppable({ onDrop })}>
-    Calendar
-  </Piv>
+  <Piv plugin={droppable({ onDrop })}>Calendar</Piv>
 </Piv>
 ```
 
@@ -111,11 +107,7 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 
 ```tsx
 <Piv
-  plugin={[
-    scope,
-    draggable({ payload: 'weather' }),
-    droppable({ onDrop }),
-  ]}
+  plugin={[scope, draggable({ payload: 'weather' }), droppable({ onDrop })]}
 />
 ```
 

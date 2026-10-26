@@ -26,8 +26,13 @@
 
 .drag-drop-example-card {
   cursor: grab;
-  border: var(--boundary-1) solid color-mix(in oklab, var(--color-accent) 45%, var(--color-line));
-  background: color-mix(in oklab, var(--color-accent) 12%, var(--color-surface));
+  border: var(--boundary-1) solid
+    color-mix(in oklab, var(--color-accent) 45%, var(--color-line));
+  background: color-mix(
+    in oklab,
+    var(--color-accent) 12%,
+    var(--color-surface)
+  );
   color: var(--color-fg-strong);
   font-weight: var(--font-weight-semibold);
   user-select: none;
@@ -78,7 +83,8 @@
   color: var(--color-fg-strong);
 }
 
-.drag-drop-example-target[data-drop-received='true'] .drag-drop-example-target-result {
+.drag-drop-example-target[data-drop-received='true']
+  .drag-drop-example-target-result {
   color: var(--color-good);
   font-weight: var(--font-weight-semibold);
 }

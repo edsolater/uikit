@@ -6,7 +6,11 @@
  */
 import type { EventListeners } from '../../../Piv/on/handleOn'
 import { isWithinDropScope } from '../dragSession'
-import { createExternalDropContext, type DropContext, type ExternalDropContext } from './dropContext'
+import {
+  createExternalDropContext,
+  type DropContext,
+  type ExternalDropContext,
+} from './dropContext'
 
 export interface ExternalDropOptions {
   element: HTMLElement
@@ -18,13 +22,14 @@ export interface ExternalDropOptions {
   resetHover(): void
 }
 
-export function createExternalDropListeners(options: ExternalDropOptions): EventListeners {
+export function createExternalDropListeners(
+  options: ExternalDropOptions,
+): EventListeners {
   // 原生 dragenter/dragleave 会在子元素间移动时反复触发；计数归零才真正离开目标。
   let enteredChildren = 0
 
-  const acceptsExternalDrop = (context: ExternalDropContext): boolean => (
+  const acceptsExternalDrop = (context: ExternalDropContext): boolean =>
     isWithinDropScope(undefined, options.element) && options.accepts(context)
-  )
 
   return {
     dragenter: ({ event }) => {
@@ -44,7 +49,8 @@ export function createExternalDropListeners(options: ExternalDropOptions): Event
 
         options.showHover(true)
         preventDefault()
-        if (options.dropEffect) context.dataTransfer.dropEffect = options.dropEffect
+        if (options.dropEffect)
+          context.dataTransfer.dropEffect = options.dropEffect
       },
     },
     dragleave: () => {

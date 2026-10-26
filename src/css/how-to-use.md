@@ -2,18 +2,18 @@
 
 `src/css` 存放可以被外部项目单独引入的原子化 CSS 文件。每个文件只负责一个稳定样式职责：
 
-| 文件 | 职责 |
-| --- | --- |
-| `all-base.css` | 基础 CSS 的整包入口，统一管理 layer 顺序 |
-| `reset.css` | 浏览器默认样式重置 |
-| `tokens/index.css` | 设计 token 的聚合入口 |
-| `tokens/color.css` | 颜色源参数、语义颜色变量和调色工具 |
-| `tokens/dimension.css` | 尺寸曲线参数、公开尺寸变量和数学工具 |
-| `tokens/typography.css` | 字号和字重 token |
-| `tokens/elevation.css` | 阴影、遮罩和层级材料 token |
-| `tokens/motion.css` | 动效时长、缓动和动效缩放 token |
-| `controls.css` | 浏览器内置 controls 的轻量外观清洗 |
-| `traits.css` | trait plugin 自动附加到 DOM 上的功能类 |
+| 文件                    | 职责                                     |
+| ----------------------- | ---------------------------------------- |
+| `all-base.css`          | 基础 CSS 的整包入口，统一管理 layer 顺序 |
+| `reset.css`             | 浏览器默认样式重置                       |
+| `tokens/index.css`      | 设计 token 的聚合入口                    |
+| `tokens/color.css`      | 颜色源参数、语义颜色变量和调色工具       |
+| `tokens/dimension.css`  | 尺寸曲线参数、公开尺寸变量和数学工具     |
+| `tokens/typography.css` | 字号和字重 token                         |
+| `tokens/elevation.css`  | 阴影、遮罩和层级材料 token               |
+| `tokens/motion.css`     | 动效时长、缓动和动效缩放 token           |
+| `controls.css`          | 浏览器内置 controls 的轻量外观清洗       |
+| `traits.css`            | trait plugin 自动附加到 DOM 上的功能类   |
 
 ## 安装包
 
@@ -94,7 +94,11 @@ import './app.css'
 ```css
 .button {
   color: var(--color-fg);
-  background: color-mix(in oklab, var(--color-fg-strong) 6%, var(--color-surface) 72%);
+  background: color-mix(
+    in oklab,
+    var(--color-fg-strong) 6%,
+    var(--color-surface) 72%
+  );
   border-color: var(--color-line);
 }
 

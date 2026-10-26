@@ -33,14 +33,21 @@ export function DroppableExample() {
           <Piv
             plugin={droppable({
               accepts: ({ kind }) => kind === 'internal',
-              onDrop: ({ payload }) => payloadResult.set(JSON.stringify(payload)),
+              onDrop: ({ payload }) =>
+                payloadResult.set(JSON.stringify(payload)),
             })}
             class="drag-drop-example-target"
-            htmlProps={val(payloadResult) ? { 'data-drop-received': 'true' } : {}}
+            htmlProps={
+              val(payloadResult) ? { 'data-drop-received': 'true' } : {}
+            }
           >
-            <span class="drag-drop-example-target-label">接收 UIKit payload</span>
+            <span class="drag-drop-example-target-label">
+              接收 UIKit payload
+            </span>
             <output class="drag-drop-example-target-result" aria-live="polite">
-              {val(payloadResult) ? `已接收：${val(payloadResult)}` : '等待放下'}
+              {val(payloadResult)
+                ? `已接收：${val(payloadResult)}`
+                : '等待放下'}
             </output>
           </Piv>
         </div>
@@ -48,20 +55,27 @@ export function DroppableExample() {
         <div class="drag-drop-example-stack">
           <Piv
             plugin={droppable({
-              accepts: ({ kind, files }) => kind === 'external' && files.length > 0,
+              accepts: ({ kind, files }) =>
+                kind === 'external' && files.length > 0,
               dropEffect: 'copy',
               onDrop: ({ files }) => {
-                fileResult.set(files.length > 0
-                  ? files.map((file) => file.name).join('、')
-                  : '浏览器没有公开文件名')
+                fileResult.set(
+                  files.length > 0
+                    ? files.map((file) => file.name).join('、')
+                    : '浏览器没有公开文件名',
+                )
               },
             })}
             class="drag-drop-example-target"
             htmlProps={val(fileResult) ? { 'data-drop-received': 'true' } : {}}
           >
-            <span class="drag-drop-example-target-label">把系统文件拖到这里</span>
+            <span class="drag-drop-example-target-label">
+              把系统文件拖到这里
+            </span>
             <output class="drag-drop-example-target-result" aria-live="polite">
-              {val(fileResult) ? `已接收：${val(fileResult)}` : '可以从桌面或文件管理器拖入文件'}
+              {val(fileResult)
+                ? `已接收：${val(fileResult)}`
+                : '可以从桌面或文件管理器拖入文件'}
             </output>
           </Piv>
         </div>
