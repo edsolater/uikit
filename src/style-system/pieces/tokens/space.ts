@@ -1,14 +1,15 @@
 /** 间距基准、控件尺寸状态，以及间隔和两向内边距的部分配方。 */
 import { token, type Token, type TokenInput } from '../../token'
 import { multiply } from '../functions/calc'
+import { whenSmall, whenLarge, whenXlarge } from '../conditions/profile'
 
 /** 每个状态相对于所选部分的基准计算，不保存另一套绝对档位。 */
 export const space = token('8px', {
   name: 'space',
   state: {
-    '&[data-size="small"]': (base) => multiply(base, 1 / 2),
-    '&[data-size="large"]': (base) => multiply(base, 3 / 2),
-    '&[data-size="xlarge"]': (base) => multiply(base, 2),
+    [whenSmall.header]: (base) => multiply(base, 1 / 2),
+    [whenLarge.header]: (base) => multiply(base, 3 / 2),
+    [whenXlarge.header]: (base) => multiply(base, 2),
   },
 })
 
@@ -37,8 +38,8 @@ export const spacePaddingBlock = (base: Token<TokenInput> = space) =>
     address: base.address,
     state: {
       ...base.state,
-      '&[data-size="large"]': (current) => current,
-      '&[data-size="xlarge"]': (current) => multiply(current, 3 / 2),
+      [whenLarge.header]: (current) => current,
+      [whenXlarge.header]: (current) => multiply(current, 3 / 2),
     },
   })
 
@@ -51,6 +52,6 @@ export const spacePaddingInline = (base: Token<TokenInput> = space) =>
     address: base.address,
     state: {
       ...base.state,
-      '&[data-size="large"]': (current) => multiply(current, 4 / 3),
+      [whenLarge.header]: (current) => multiply(current, 4 / 3),
     },
   })

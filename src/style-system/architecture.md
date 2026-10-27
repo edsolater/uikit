@@ -36,7 +36,7 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | custom-property-names.ts                                      | Token 与 Modification 共用的 CSS 自定义属性名称分配与避让                          |
 | token/css.ts                                                  | CSS 名称、声明目标及编译准备操作；自动名称缓存不作为显式配置                       |
 | token/args-parser.ts                                          | 创建参数归一为七个固定 key                                                         |
-| operations/declare.ts                                         | Declare 材料形状、declare 入口，Key 配对及自然材料声明                             |
+| operations/declare.ts                                         | 声明配对及危险手动入口；rules 内部复用，业务默认不手动调用                         |
 | rule.ts                                                       | 声明组合、Rules 登记与句柄                                                         |
 | content.ts                                                    | 广义 JSSContent、窄 Expression、子内容读取与表达式构造                             |
 | token/index.ts                                                | Token 创建、参数与类型的公开入口                                                   |
@@ -62,6 +62,8 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | key-registry                                                  | 按直接用途组织现成 Key 与分类字面量；背景独立，边框/轮廓/盒阴影归统一外框          |
 | key-registry/index.ts                                         | 静态汇总唯一 keyRegistry；字符串查找直接依赖完整表，显式扩展写入同一表             |
 | pieces/conditions                                             | 可复用的普通 Condition；条件协议由 condition.ts 定义                               |
+| pieces/conditions/profile.ts                                  | 共享外观、语气、存在感和尺寸条件，只匹配 data 属性，不携带组件配方                 |
+| pieces/conditions/interaction.ts                              | 焦点、悬停、按下、禁用、可用和加载条件                                             |
 | pieces/tokens                                                | 按用途组织的现成 Token                                                             |
 | pieces/functions                                             | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
 | pieces/functions/calc.ts                                     | 保存操作数依赖，构造 CSS calc 算术 Token                                           |

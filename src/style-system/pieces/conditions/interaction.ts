@@ -15,12 +15,16 @@ export const whenDisabled = condition(
   '&:is(:disabled, [data-status~="disabled"])',
 )
 
-/** 未禁用时悬停。 */
-export const whenHover = condition(
-  '&:where(:hover):where(:not(:disabled, [data-status~="disabled"]))',
+/** 未被原生或 UIKit 状态禁用。 */
+export const whenEnabled = condition(
+  '&:not(:disabled, [data-status~="disabled"])',
 )
 
+/** UIKit 状态集合中包含 loading。 */
+export const whenLoading = condition('&[data-status~="loading"]')
+
+/** 未禁用时悬停。 */
+export const whenHover = condition('&:where(:hover)')
+
 /** 未禁用时按下。 */
-export const whenActive = condition(
-  '&:where(:active):where(:not(:disabled, [data-status~="disabled"]))',
-)
+export const whenActive = condition('&:where(:active)')

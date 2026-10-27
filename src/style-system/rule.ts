@@ -138,6 +138,7 @@ function isDeclarationIterable(input: unknown): input is Iterable<unknown> {
 /**
  * 展开对象与嵌套 Iterable，各条目隐式声明后整批登记；无效输入整批拒绝。
  * 空项和普通属性的 undefined 跳过，Token 的显式 undefined 保留声明身份。
+ * 正常 entry 以 CSS 属性或 Key 为目标、Token 为内容；Token 目标仍允许但属于危险重声明。
  */
 export function rules(
   path: ConditionInput,

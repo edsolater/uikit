@@ -21,7 +21,7 @@ Button 普通为 4px、hover 为 6px、active 为 12px、disabled 为 0px。规�
 
 若根据地为根，state 也属于根；要让每颗 Button 响应自身交互，就显式指定 Button 地址。后代仅消费这份变量，得到的是 CSS 继承结果，而不是属于后代的一套新 state。
 
-反例：根定义普通 4px，标记对应的 state 为 8px；Box 在其他地址明确赋 10px。仅给 Box 加同名标记，Box 仍为 10px；给根加标记，无局部覆盖的消费者变为 8px，Box 仍为 10px。在 Box 需要另一套反馈时，必须创建该地址的定义或显式条件 modify。
+危险重声明的反例：根定义普通 4px，标记对应的 state 为 8px；Box 在其他地址明确赋 10px。仅给 Box 加同名标记，Box 仍为 10px；给根加标记，无局部覆盖的消费者变为 8px，Box 仍为 10px。这条低层能力仍允许，但不作为正常定义方式；Box 需要独立反馈时，创建该地址的新 Token 并接入属性，表达式加工仍可使用 modify。
 
 Token 嵌入其他 Token 或表达式时按普通可坍缩内容消费，不复制来源 state，不自动枚举多个来源的状态交集。表达式保留 CSS 引用，让浏览器在实际求值位置响应适用 state。
 

@@ -63,4 +63,6 @@ modify 表达使用位置或条件下对同一个目标的修改。原本只是�
 
 Token 的 address 是定义位置，不是附带声明列表。命名声明、条件修改和普通 CSS 属性声明最终都进入样式 AST。输出时需要 CSS variable 的 Token 提供声明及引用，其余 Token 提供 CSS value。
 
+正常编写直接把 Token 放入 rules 的属性内容，由架构自动定义；不手动补 declare。条件变化在自身 state 中表达，独立配置创建新 Token 并明确消费。手动 declare 或 [existingToken, value] 仍允许，但属于调用方承担后果的 dangerous 操作，不做运行时或类型拦截。
+
 规则登记和挂载保持各自职责：组件在自己的 .style.ts 中描述样式，应用统一提交 CSS。直接修改普通 JavaScript 配置不等于已经刷新页面；核心接口已通过本轮单元及浏览器验证；业务组件仅完成编译接入，不据此宣告抽象或视觉设计正确。

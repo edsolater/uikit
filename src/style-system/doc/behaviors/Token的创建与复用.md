@@ -39,7 +39,7 @@ name、state、address、registration 或 modify 使用，都会使 Token 需要
 
 address 指定定义的位置，state 属于这个地址。后代消费只读取 CSS 结果，不在每个消费者复制状态或搬运公式。需要另一处计算位置时，应明确创建该地址的定义或登记当地 modify，不能由消费动作隐式建立。
 
-需要 CSS variable 而未指定 address 时，默认根据地为 root；这一缺省不单独使普通直接值改变身份。根据地缺声明才补 default，已有显式基础声明保留，state 在选定基础上展开。
+需要 CSS variable 而未指定 address 时，默认根据地为 root；这一缺省不单独使普通直接值改变身份。正常消费由编译器按需建立自身 default 和 state，不要求先手动声明。主动采用 dangerous 重声明时，既有显式基础选择及层叠能力保留；这不是正常定义模板。
 
 同名对象也不相互借入 JS 定义、状态或资源；CSS 名称相同引起的覆盖仍遵循地址、书写顺序和浏览器层叠。Token 不保存 priority，内部也不维护独立 definitionKey 或 declarations 列表。
 

@@ -524,7 +524,70 @@ describe('Button styles', () => {
     }
   })
 
-  test('最终背景色支持局部声明和修改，撤销后恢复且不污染兄弟', async () => {
+  test('独立背景 Token 在局部按钮消费自身状态，禁用与撤销不改原定义', async () => {
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(
+      () => (
+        <>
+          <Button htmlProps={{ 'data-review': '' }}>审核</Button>
+          <Button>普通</Button>
+        </>
+      ),
+      host,
+    )
+    const [local, sibling] = host.querySelectorAll<HTMLButtonElement>('button')
+    for (const button of [local, sibling]) button.style.transition = 'none'
+    await userEvent.unhover(local)
+    const initial = appearance(local)
+    const path = ['@layer uikit', '.Button', '&[data-review]']
+    const surface = token(
+      {
+        default: 'rgb(210, 230, 250)',
+        hover: 'rgb(190, 215, 240)',
+        active: 'rgb(170, 200, 230)',
+      },
+      { address: path },
+    )
+    const consumer = rules(path, { 'background-color': surface })
+    handles.push(consumer)
+    cssRoot.mount()
+    expectSameColor(
+      getComputedStyle(local).backgroundColor,
+      'rgb(210, 230, 250)',
+    )
+    expectSameAppearance(appearance(sibling), initial)
+    await userEvent.hover(local)
+    expectSameColor(
+      getComputedStyle(local).backgroundColor,
+      'rgb(190, 215, 240)',
+    )
+    local.focus()
+    await userEvent.keyboard('[Space>]')
+    try {
+      expectSameColor(
+        getComputedStyle(local).backgroundColor,
+        'rgb(170, 200, 230)',
+      )
+    } finally {
+      await userEvent.keyboard('[/Space]')
+    }
+    local.blur()
+    local.disabled = true
+    expectSameColor(
+      getComputedStyle(local).backgroundColor,
+      'rgb(210, 230, 250)',
+    )
+    expectSameAppearance(appearance(sibling), initial)
+    local.disabled = false
+    await userEvent.unhover(local)
+    consumer.remove()
+    cssRoot.mount()
+    expectSameAppearance(appearance(local), initial)
+    expectSameAppearance(appearance(sibling), initial)
+  })
+
+  test('dangerous：最终背景色仍允许手动声明和修改，撤销后恢复且不污染兄弟', async () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(
@@ -573,7 +636,7 @@ describe('Button styles', () => {
   })
 
   test.each([undefined, 'plain', 'filled'] as const)(
-    '局部基色贯穿外观和交互，两个作用域保持隔离并退出恢复：%s',
+    'dangerous：局部基色重声明保留两个作用域隔离及状态退出：%s',
     async (selectedAppearance) => {
       const palettes = [
         {
@@ -684,7 +747,7 @@ describe('Button styles', () => {
   )
 
   test.each([undefined, 'plain', 'filled'] as const)(
-    '统一禁用降低整体声量并保留局部角色和恢复：%s',
+    'dangerous：手动覆盖最终角色后禁用仍降低整体声量并恢复：%s',
     async (selectedAppearance) => {
       const surface = 'rgb(12, 34, 56)'
       const content = 'rgb(78, 90, 123)'

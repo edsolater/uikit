@@ -74,9 +74,9 @@ registration 提供 syntax、inherits 及可选 initialValue，分别对应 CSS 
 
 ## 登记、读取与提交
 
-rules(path, declarations) 登记效果和声明。输入支持普通对象、单个 `[目标, 内容]` 及嵌套数组或标准 Iterable，按顺序展开 entry，再隐式经过 declare。对象适合字符串属性名；Key、Token 用二元组保留对象身份。显式 declare、modify 和 Mixin 的结果也可放进同一输入。
+rules(path, declarations) 登记属性和效果。输入支持普通对象、单个 `[属性或 Key, 内容]` 及嵌套数组或标准 Iterable，按顺序自动完成声明。对象键使用 CSS 原名；Key 通过二元组保留身份。Token 作为内容消费，由架构根据自身 default、state、address 自动建立定义，不需要手动补一条 Token 声明。
 
-组件专属控制点通过同一个 Token 供样式消费与调用方操作；同一条件协调多个目标时并列 entry 即可。裸 `[token, undefined]` 保留显式无基础声明，含义与手写 declare 相同；集合空项及普通属性 undefined 继续不输出。
+Token 的条件变化在自身 state 中表达；独立配置用新 Token，并在具体属性中明确消费，不自动替换旧引用。手动 declare、[token, value] 和 [token, undefined] 保留为 dangerous 操作，不作运行时或类型拦截；它们不属于推荐的组件编写方式。modify 的表达式加工及 Mixin 结果仍可作为输入，集合空项和普通属性 undefined 不输出。
 
 compileCSS() 读取全局登记并返回 CSS 文本；compileRules(rules) 编译显式材料；cssRoot.mount() 提交到宿主提供的 style#css-root。规则句柄只更新或撤销自己的登记；需要页面更新时重新提交。失败构建不应提交半份结果。
 

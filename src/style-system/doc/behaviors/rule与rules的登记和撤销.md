@@ -15,7 +15,7 @@ width.remove()
 
 即使两次登记的条件、目标、内容完全相同，它们仍属于不同来源。撤销第一个，不撤销第二个。批量 rules 返回的归属覆盖自己的一整批；中途无效或输入迭代失败时，不能遗留前半批，也不能伤害此前成功登记。
 
-Key 表示普通 CSS 属性；具有 CSS variable 身份的 Token 可作为自定义属性赋值目标，Token 也可作为内容引用。Mixin 将一组业务效果作为一次选择，只提供明确选择的效果：仅要求 gap 时，不能附赠 display 或 alignment。固定属性内容可以直接书写，不要求额外创建命名对象。
+Key 表示普通 CSS 属性，Token 正常作为内容引用并按自身 address 自动定义。Mixin 将一组业务效果作为一次选择，只提供明确选择的效果：仅要求 gap 时，不能附赠 display 或 alignment。固定属性内容可以直接书写，不要求额外创建命名对象。
 
 # 多种输入统一展开为声明
 
@@ -25,14 +25,20 @@ rules 的第二参数可以是一个 `[目标, 内容]`、普通对象，或递�
 const ink = token('black', { name: 'probe-ink', address: '.Probe' })
 const batch = rules('.Probe', [
   { padding: '2px', color: ink },
-  [ink, 'blue'],
+  ['border-color', ink],
   new Set([['border-width', '1px'] as const]),
 ])
 ```
 
-每个 entry 都隐式经过 declare。上例的 Token 赋值与手写 declare(ink, 'blue') 使用相同声明含义；Key 的组合规则和 Token 的根据地、状态及资源身份都保留。字符串名称沿用既有 CSS 属性、已登记别名及自定义属性解析，不从未知简写推测属性含义。
+每个属性 entry 由 rules 自动完成声明，Token 的默认及状态声明由编译器按自身定义建立；上例不需要再为 ink 手写 declare。Key 的组合规则和 Token 的根据地、状态及资源身份都保留。字符串名称沿用既有 CSS 属性、已登记别名及自定义属性解析，不从未知简写推测属性含义。
 
-集合里的裸 undefined 作为空项跳过。普通属性 undefined 不输出；`[ink, undefined]` 等价于 declare(ink, undefined)，保留显式无基础声明，不自动退回 default。已有 declare、modify 及 Mixin 返回的条目可以继续混用，归一后不产生第二层普通基础包装。
+集合里的裸 undefined 作为空项跳过，普通属性 undefined 不输出。modify 及 Mixin 返回的条目可以继续混用，归一后不产生第二层普通基础包装。
+
+# 危险的手动声明仍可使用
+
+手动 declare 及以已有 Token 为目标的 [token, value]、[token, undefined] 保留原能力；这是君子协定，不加运行时拒绝、警告或类型禁用。正常定义使用 Token 自身 default、state、address，独立配置则创建新 Token 并接入属性消费。
+
+主动使用危险入口时，[ink, undefined] 仍等价于 declare(ink, undefined)，保留显式无基础声明；调用方承担它影响状态基础、其他引用及 CSS 层叠的后果。下面的 Token 重声明顺序描述的是这条低层能力，不是推荐的业务模板。
 
 展开保持顺序；entry 的内容不会被误拆成外层声明集合。非法项、递归容器或迭代中断在整批登记前失败，batch.remove() 仍只撤销本批贡献。
 

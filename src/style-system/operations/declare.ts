@@ -1,7 +1,7 @@
 /**
  * CSS 声明的配对入口。
  *
- * 为属性或 Token 配对内容，并保留显式未定义基础的身份。
+ * 供规则归一和低层显式操作配对内容，保留显式未定义基础的身份。
  *
  * 声明目标的 CSS 名称由坍缩边界负责。
  */
@@ -25,6 +25,11 @@ export const isCSSPair = (
 /**
  * 声明 Token 的基础或替换值；普通属性解析名称后配对，现成声明与修改保留语义。
  * Token 省略内容时采用自身基础；显式 undefined 保留无基础声明。
+ *
+ * @remarks
+ * 手动调用属于 dangerous 操作，能力保留且不作额外拦截。
+ * 普通属性直接交给 rules；Token 正常取值在 default、state、address 中定义。
+ * 重声明 Token 可能改变其状态基础和其他引用，由调用方承担作用域及层叠后果。
  */
 export function declare(target: Token, content?: TokenInput): Declaration
 export function declare<C = TokenInput | undefined>(
