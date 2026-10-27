@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest'
 import { token, type Token, type TokenInput } from '../token'
 import { compileRules } from '../css-root'
-import { multiply, add } from '../pieces/contents/functions/calc'
+import { multiply, add } from '../pieces/functions/calc'
 
 test('普通函数换基础并显式复用 State，规则用新基础而固定状态保持原值', () => {
   const state = {

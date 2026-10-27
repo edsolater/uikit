@@ -2,7 +2,7 @@
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { token } from '../token'
-import { add } from '../pieces/contents/functions/calc'
+import { add } from '../pieces/functions/calc'
 import { modify } from '../operations/modify'
 import type { Rules } from '../rule'
 import { condition } from '../condition'

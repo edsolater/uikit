@@ -46,12 +46,12 @@ import { Piv } from '@/components/Piv/Piv'
 import { buttonMapping } from './Button.mapping'
 
 import './Button.style'
-import * as globalColors from '@/style-system/pieces/contents/atoms/color/colors'
-import { brandColor } from '@/style-system/pieces/contents/atoms/color/brand-color'
+import * as globalColors from '@/style-system/pieces/tokens/color/colors'
+import { brandColor } from '@/style-system/pieces/tokens/color/brand-color'
 import {
   inkColor,
   paperColor,
-} from '@/style-system/pieces/contents/atoms/color/palette'
+} from '@/style-system/pieces/tokens/color/palette'
 import '../../../components/kits/Input/Input.css'
 import '../../../components/kits/Popover/popover.css'
 

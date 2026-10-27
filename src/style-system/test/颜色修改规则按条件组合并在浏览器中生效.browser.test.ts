@@ -8,16 +8,16 @@
 import { token, type TokenAddress } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { add, multiply } from '../pieces/contents/functions/calc'
+import { add, multiply } from '../pieces/functions/calc'
 import { color } from '../pieces/mixins/appearance'
 import { modification } from '../modification'
 import { cssRoot } from '../css-root'
 import { declare } from '../operations/declare'
 import { key } from '../key'
 import { modify } from '../operations/modify'
-import { oklch } from '../pieces/contents/functions/oklch'
+import { oklch } from '../pieces/functions/oklch'
 import { rules, type RulesHandle } from '../rule'
-import { colorMix } from '../pieces/contents/functions/color-mix'
+import { colorMix } from '../pieces/functions/color-mix'
 
 const handles: RulesHandle[] = []
 afterEach(() => {

@@ -4,7 +4,7 @@ import { afterEach, expect, test } from 'vitest'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'
-import { multiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/functions/calc'
 
 stateCondition('currentHover', condition('&:where([data-hover])'))
 stateCondition('currentActive', condition('&:where([data-active])'))

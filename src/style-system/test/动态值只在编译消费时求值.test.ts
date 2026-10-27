@@ -4,12 +4,12 @@ import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { condition, media, functionDefinition } from '../condition'
 import { createJSSContent, type JSSContent } from '../content'
-import { valueList, valueSequence } from '../pieces/contents/atom-creators/list'
-import { multiply } from '../pieces/contents/functions/calc'
+import { valueList, valueSequence } from '../pieces/token-factory/list'
+import { multiply } from '../pieces/functions/calc'
 import { key } from '../key'
 import { declare } from '../operations/declare'
 import { modification } from '../modification'
-import { animationName } from '../pieces/contents/atom-creators/animation'
+import { animationName } from '../pieces/token-factory/animation'
 
 test('未被消费的动态 Token 不执行，消费后输出内容', () => {
   const serialize = vi.fn(() => 'red')

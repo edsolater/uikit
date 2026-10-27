@@ -21,7 +21,7 @@ import { condition, media, type ConditionInput } from '../condition'
 import { key, registerGlobalJSSKeyInStorage } from '../key'
 import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
-import { valueSequence } from '../pieces/contents/atom-creators/list'
+import { valueSequence } from '../pieces/token-factory/list'
 import { $margin, $marginLeft } from '../key-registry'
 import { $padding } from '../key-registry'
 import { $border } from '../key-registry'
@@ -29,21 +29,21 @@ import { $font } from '../key-registry'
 import { $color } from '../key-registry'
 
 import { $boxShadow } from '../key-registry'
-import { shadowValue } from '../pieces/contents/atom-creators/shadow'
-import { multiply } from '../pieces/contents/functions/calc'
+import { shadowValue } from '../pieces/token-factory/shadow'
+import { multiply } from '../pieces/functions/calc'
 
 import { cssFunction } from '../css-function'
 import {
   animationName,
   animationValue,
-} from '../pieces/contents/atom-creators/animation'
-import { fontValue } from '../pieces/contents/atom-creators/font'
+} from '../pieces/token-factory/animation'
+import { fontValue } from '../pieces/token-factory/font'
 
 import { contentLayout, innerText } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
 
-import { motionDuration } from '../pieces/contents/atoms/motion'
-import { lineColor } from '../pieces/contents/atoms/color/colors'
+import { motionDuration } from '../pieces/tokens/motion'
+import { lineColor } from '../pieces/tokens/color/colors'
 
 stateCondition('testHover', condition('&:hover'))
 stateCondition('testActive', condition('&:active'))

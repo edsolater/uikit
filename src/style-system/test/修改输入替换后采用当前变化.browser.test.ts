@@ -2,10 +2,10 @@
 import { token, type TokenInput } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { compileRules } from '../css-root'
-import { add, multiply } from '../pieces/contents/functions/calc'
+import { add, multiply } from '../pieces/functions/calc'
 import { modify } from '../operations/modify'
 import type { Rules } from '../rule'
-import { whenSettled } from './when-settled'
+import { whenSettled } from './helpers/when-settled'
 
 afterEach(() => document.body.replaceChildren())
 

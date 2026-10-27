@@ -5,7 +5,7 @@ import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { compileRules } from '../css-root'
 import { declare } from '../operations/declare'
-import { add, multiply } from '../pieces/contents/functions/calc'
+import { add, multiply } from '../pieces/functions/calc'
 
 import { key } from '../key'
 import { condition } from '../condition'

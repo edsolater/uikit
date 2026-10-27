@@ -3,7 +3,7 @@ import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { token } from './core'
 import { token as publicToken } from '../index'
-import { add } from '../pieces/contents/functions/calc'
+import { add } from '../pieces/functions/calc'
 
 test('聚合入口创建匿名直接值，编译为 CSS value 并暴露内部类别', () => {
   const size = publicToken('2px')

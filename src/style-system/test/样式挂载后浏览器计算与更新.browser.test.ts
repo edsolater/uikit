@@ -14,13 +14,13 @@ import { $padding } from '../key-registry'
 import {
   animationName,
   animationValue,
-} from '../pieces/contents/atom-creators/animation'
-import { multiply } from '../pieces/contents/functions/calc'
+} from '../pieces/token-factory/animation'
+import { multiply } from '../pieces/functions/calc'
 import { cssFunction } from '../css-function'
-import { colorMix } from '../pieces/contents/functions/color-mix'
+import { colorMix } from '../pieces/functions/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
-import { motionDuration } from '../pieces/contents/atoms/motion'
-import { lineColor } from '../pieces/contents/atoms/color/colors'
+import { motionDuration } from '../pieces/tokens/motion'
+import { lineColor } from '../pieces/tokens/color/colors'
 
 stateCondition('testLarge', condition('&[data-large]'))
 stateCondition('testMedia', media('(width > 1px)'))

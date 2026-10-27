@@ -5,7 +5,7 @@ import { userEvent } from 'vitest/browser'
 import { compileCSS, compileRules } from '../css-root'
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
-import { add, multiply } from '../pieces/contents/functions/calc'
+import { add, multiply } from '../pieces/functions/calc'
 import { rules } from '../rule'
 
 afterEach(() => document.body.replaceChildren())

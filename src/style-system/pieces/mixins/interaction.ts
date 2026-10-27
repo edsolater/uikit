@@ -15,12 +15,12 @@ import {
   $outline,
   $outlineOffset,
 } from '@/style-system/key-registry'
-import { translateY } from '../contents/functions/transform'
-import { opacity } from '../contents/atoms/opacity'
-import { multiply } from '../contents/functions/calc'
-import { motionDuration, motionEasing } from '../contents/atoms/motion'
-import { transitionValue } from '../contents/atom-creators/transition'
-import { focusOutline, focusOffset } from '../contents/atoms/focus'
+import { translateY } from '../functions/transform'
+import { opacity } from '../tokens/opacity'
+import { multiply } from '../functions/calc'
+import { motionDuration, motionEasing } from '../tokens/motion'
+import { transitionValue } from '../token-factory/transition'
+import { focusOutline, focusOffset } from '../tokens/focus'
 
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {

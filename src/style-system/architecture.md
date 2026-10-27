@@ -21,7 +21,7 @@ onFirstScan 可以返回包含 modify 的规则。编译必须先读完会影响
 
 state 的快捷条件和直接条件仍复用完整 ConditionPath。组件状态的地址由组件明确表达，跨地址仍遵循浏览器 CSS 层叠，不在每个消费位置重新展开来源公式。Token 不携带 priority，同址声明顺序交给声明系统。
 
-计算工具按 [工具公约](pieces/contents/functions/SPEC.md) 组织输入与结果，CSSFunction 保留独立的 CSS 函数定义职责。颜色变化可以通过 oklch(source, changes) 组合内容，通道与格式转换不增加另一种内容实体。modify 表达使用端对同一 Token 的条件修改，普通函数表达新定义的产生。
+计算工具按 [工具公约](pieces/functions/SPEC.md) 组织输入与结果，CSSFunction 保留独立的 CSS 函数定义职责。颜色变化可以通过 oklch(source, changes) 组合内容，通道与格式转换不增加另一种内容实体。modify 表达使用端对同一 Token 的条件修改，普通函数表达新定义的产生。
 
 compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变不重写，编译或提交失败保留此前成功结果。
 
@@ -62,15 +62,17 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | key-registry                                                  | 按直接用途组织现成 Key 与分类字面量；背景独立，边框/轮廓/盒阴影归统一外框          |
 | key-registry/index.ts                                         | 静态汇总唯一 keyRegistry；字符串查找直接依赖完整表，显式扩展写入同一表             |
 | pieces/conditions                                             | 可复用的普通 Condition；条件协议由 condition.ts 定义                               |
-| pieces/contents/atoms                                         | 按用途组织的现成 Token                                                             |
-| pieces/contents/functions                                     | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
-| pieces/contents/functions/calc.ts                             | 保存操作数依赖，构造 CSS calc 算术 Token                                           |
-| pieces/contents/functions/oklch.ts                            | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译                            |
-| pieces/contents/functions/SPEC.md                             | JSS 内容组织工具公约与 Expression、规则及定义主体的边界                            |
-| pieces/contents/atom-creators                                 | 按结构生成阴影、动画等内容                                                         |
+| pieces/tokens                                                | 按用途组织的现成 Token                                                             |
+| pieces/functions                                             | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
+| pieces/functions/calc.ts                                     | 保存操作数依赖，构造 CSS calc 算术 Token                                           |
+| pieces/functions/oklch.ts                                    | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译                            |
+| pieces/functions/SPEC.md                                     | JSS 内容组织工具公约与 Expression、规则及定义主体的边界                            |
+| pieces/token-factory                                         | 按结构生成阴影、动画等内容                                                         |
 | pieces/roles                                                  | 供组件在自身选择器中赋值的共享角色                                                 |
 | pieces/mixins                                                 | 把完整效果转换成声明组合                                                           |
 | test                                                          | 验证 Style System 多文件协作与完整业务流程                                         |
+| test/helpers                                                  | 流程测试复用的辅助代码，不进入生产导出                                             |
+| test/fixtures                                                 | 测试使用的固定参考数据                                                             |
 | doc                                                           | 面向使用和设计阅读的对象契约                                                       |
 
 Token 的公开接口见 [API 参考](doc/样式系统API参考.md)。上表列出当前源码的实际职责；对象定义见 [Token 设计](doc/Token设计.md)。

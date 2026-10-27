@@ -526,7 +526,7 @@ test.each(['late-declare', 'removed-declare'])(
   '普通颜色消费者在局部声明变化后重新确定归属，操作=%s',
   async (operation) => {
     const { modification } = await import('../modification')
-    const { add } = await import('../pieces/contents/functions/calc')
+    const { add } = await import('../pieces/functions/calc')
     const change = modification({
       name: '--consumer-rule',
       type: 'color',

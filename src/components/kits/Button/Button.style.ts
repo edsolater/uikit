@@ -194,7 +194,7 @@ rules(
 // outlined 保留浅底，并用当前语气的线色形成可见轮廓。
 rules(
   [...button, '&[data-appearance="outlined"]'],
-  [boundary({ border: [boundaryWidth, 'solid', boundaryColor] })],
+  boundary({ border: [boundaryWidth, 'solid', boundaryColor] }),
 )
 
 // plain 保留透明常态与无边界，悬停和按下只增加轻量语气反馈。

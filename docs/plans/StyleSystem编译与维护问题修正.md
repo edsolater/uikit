@@ -125,7 +125,7 @@
 
 # Creator：通过完整声明替换消费新配置
 
-**已确认事实：** [shadowValue](../../src/style-system/pieces/contents/atom-creators/shadow.ts) 在构造时用 shape 字段生成 dependencies 数组，输出闭包读取 shape。直接改写已经交给 Creator 的原配置，会使输出与依赖使用不同输入时点；font、animation、transition 和 colorMix 存在同类结构。该反例不能据此推出必须支持原配置的局部修改。
+**已确认事实：** [shadowValue](../../src/style-system/pieces/token-factory/shadow.ts) 在构造时用 shape 字段生成 dependencies 数组，输出闭包读取 shape。直接改写已经交给 Creator 的原配置，会使输出与依赖使用不同输入时点；font、animation、transition 和 colorMix 存在同类结构。该反例不能据此推出必须支持原配置的局部修改。
 
 **用户裁决：** 系统可以同时具有 Mutable 与 Immutable 方式，由业务选择，本次不裁决二者。Mutable 的局部替代由 Proxy 负责，在替换输入时同步维护依赖关系；Creator 当前未使用这一能力，本次不新增 Proxy、动态依赖或局部更新。现役路径是用整份新配置创建完整 Creator 内容，再通过现有 `RuleHandle.replace` 替换整条声明，重新编译新内容及新依赖。
 

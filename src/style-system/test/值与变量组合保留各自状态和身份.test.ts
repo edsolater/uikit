@@ -4,7 +4,7 @@ import { expect, test, vi } from 'vitest'
 
 import { condition, media } from '../condition'
 import { createJSSContent } from '../content'
-import { colorMix } from '../pieces/contents/functions/color-mix'
+import { colorMix } from '../pieces/functions/color-mix'
 
 import { compileRules } from '../css-root'
 import { stateCondition } from '../pieces/state-conditions'

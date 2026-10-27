@@ -1,7 +1,7 @@
 /** 主体尺寸与边界 Mixin。 */
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
-import { valueSequence } from '../contents/atom-creators/list'
+import { valueSequence } from '../token-factory/list'
 import {
   $minHeight,
   $border,

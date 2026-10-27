@@ -6,7 +6,7 @@ import { key } from '../key'
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
 import { modification } from '../modification'
-import { add } from '../pieces/contents/functions/calc'
+import { add } from '../pieces/functions/calc'
 
 test('配方可以独立声明与引用，未指定通道保留来源且 alpha=0 不丢失', () => {
   const recipe = modification({

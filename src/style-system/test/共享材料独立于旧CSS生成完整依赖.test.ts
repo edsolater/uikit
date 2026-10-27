@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
-import * as roles from '../pieces/contents/atoms/color/roles'
-import { shadow, backdropColor } from '../pieces/contents/atoms/shadow'
-import { motionDuration } from '../pieces/contents/atoms/motion'
+import * as roles from '../pieces/tokens/color/roles'
+import { shadow, backdropColor } from '../pieces/tokens/shadow'
+import { motionDuration } from '../pieces/tokens/motion'
 
 test('颜色对象、用途阴影和动效的引用均由自身依赖提供', () => {
   const materials = [

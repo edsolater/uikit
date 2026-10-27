@@ -8,7 +8,7 @@
 import { isJSSContent } from '../../content'
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
-import { valueSequence } from '../contents/atom-creators/list'
+import { valueSequence } from '../token-factory/list'
 import {
   $font,
   $fontSize,
@@ -25,7 +25,7 @@ import {
   $paddingBottom,
   $paddingLeft,
 } from '@/style-system/key-registry'
-import { fontValue, type FontParts } from '../contents/atom-creators/font'
+import { fontValue, type FontParts } from '../token-factory/font'
 
 /** 内部文字配置。 */
 export interface InnerTextMixinOptions {

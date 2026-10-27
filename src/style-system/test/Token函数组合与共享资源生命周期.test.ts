@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest'
 import { token, type Token } from '../token'
 import { compileRules } from '../css-root'
-import { multiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/functions/calc'
 import type { Rules } from '../rule'
 
 test.each([false, true])(

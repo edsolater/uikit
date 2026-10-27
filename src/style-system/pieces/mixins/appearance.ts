@@ -1,7 +1,7 @@
 /** 颜色与层级 Mixin。 */
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
-import { valueList } from '../contents/atom-creators/list'
+import { valueList } from '../token-factory/list'
 import {
   $backgroundColor,
   $color,

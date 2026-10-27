@@ -2,21 +2,21 @@
 import { token, type Token } from '../token'
 
 import { describe, expect, test } from 'vitest'
-import { whenSettled } from './when-settled'
+import { whenSettled } from './helpers/when-settled'
 import { parse, type AnyNode } from 'postcss'
 import { compileRules } from '../css-root'
 import { condition } from '../condition'
 import type { JSSContent } from '../content'
 import { declare } from '../operations/declare'
 import { key } from '../key'
-import { multiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/functions/calc'
 import {
   appendStateCondition,
   resolveStateConditions,
 } from '../pieces/state-conditions'
 import type { Rules } from '../rule'
 import * as styleSystem from '../index'
-import { colorMix } from '../pieces/contents/functions/color-mix'
+import { colorMix } from '../pieces/functions/color-mix'
 
 describe('具体定义消费与CSS同名层叠', () => {
   test('创建 Name、注册定义和保存配方不执行默认内容，也不发布资源', () => {

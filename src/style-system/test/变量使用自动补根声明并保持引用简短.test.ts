@@ -8,7 +8,7 @@ import { declare } from '../operations/declare'
 import type { JSSContent } from '../content'
 import { key } from '../key'
 import { condition } from '../condition'
-import { multiply } from '../pieces/contents/functions/calc'
+import { multiply } from '../pieces/functions/calc'
 
 test('root已有同CSS名声明时保留既有基础，不要求同Token对象', () => {
   const size = token('4px', 'root-existing-css-name')

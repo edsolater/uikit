@@ -36,7 +36,7 @@ rules(['.b', 'hover'], [[$boxShadow, C]])
 | 同址同名至少两项默认组合有序 `Value[]`，包括对象 Key 与字符串 Key；组内唯一显式 `join` 接管未设规则的 Key，多个不同显式规则报冲突。每个 Value 保留原内容身份和所属节点的解析映射，组合产物仍走普通内容链。                                            | 普通 Key、字符串 Key、自定义数值合并、同对象不同位置解析、显式与默认混用及多显式冲突反例；`key.ts`、编译器。                 | 未满足 | 已实施并通过全量测试，独立复查通过。             |
 | 组合结果位于组内最后声明位置；解析稳定后才收集，晚到节点、产物重入、改写和撤销会重算，不删除来源的依赖。                                                                                                                                              | 晚插入、依赖、重复、交错锚点、结果重入与撤销反例；解析器。                                                                   | 未满足 | 已实施并通过全量测试，独立复查通过。             |
 | Value 对字符串、数字、布尔值及纯数据对象默认使用 `String`，`null`／`undefined` 不输出；数组递归读取并用逗号加空格连接，跳过空项。JSSContent 对象继续走现有 `parse`、`onActive`、`dependencies`、`toCSSString` 链；用户传入的 `toCSSString` 规则优先。 | `value([valueList(...), [0, false, undefined]])`、自定义规则、纯对象、空数组、循环和原对象双节点测试；`value.ts`、编译输出。 | 未满足 | 已实施并通过全量测试，独立复查通过。             |
-| `valueList` 与 `valueSequence` 只装配 Value 的默认逗号或空格输出，不复制遍历和解析。现有消费者继续使用便捷入口。                                                                                                                                      | 四处生产调用、组合嵌套阴影和依赖测试；`pieces/contents/atom-creators/list.ts`。                                              | 未满足 | 已实施并通过全量测试，独立复查通过。             |
+| `valueList` 与 `valueSequence` 只装配 Value 的默认逗号或空格输出，不复制遍历和解析。现有消费者继续使用便捷入口。                                                                                                                                      | 四处生产调用、组合嵌套阴影和依赖测试；`pieces/token-factory/list.ts`。                                              | 未满足 | 已实施并通过全量测试，独立复查通过。             |
 | 删除或替换登记句柄后从当前源账本重编译；真实浏览器读取组合值。先前无规则重复声明依赖浏览器回退的效果在本轮裁决下退出，测试应明确显示新结果。                                                                                                          | `compileCSS`、`cssRoot.mount`、浏览器计算与替换撤销反例。                                                                    | 未满足 | 已实施并通过全量测试，独立复查通过。             |
 
 失败时抛错并保留 `cssRoot.mount()` 上次成功提交。本次不为其他 CSS 属性额外猜测专属语义，不增设贡献专用 Key 或声明入口。
@@ -52,7 +52,7 @@ AST Plan 已独立交付 `Rules → styleNodes → contentNodes → CSSString`�
 | 文件                                                | 本次职责与相邻关系                                                                                                    |
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `key.ts`                                            | Key 自身可选的 `join` 接收有序 `Value[]`；默认组合不依赖 Key 对象身份，唯一显式规则优先于默认，多个不同显式规则报冲突 |
-| `value.ts`、`pieces/contents/atom-creators/list.ts` | Value 保留原内容、子项解析和可选 `toCSSString` 规则；默认按类型输出，两个列表 helper 仅装配 Value                     |
+| `value.ts`、`pieces/token-factory/list.ts` | Value 保留原内容、子项解析和可选 `toCSSString` 规则；默认按类型输出，两个列表 helper 仅装配 Value                     |
 | `rule.ts`                                           | 继续登记有序 Rules；声明序列保留重复 Key，未增加贡献专用入口                                                          |
 | `condition.ts`、`compiler/ast-controller.ts`        | 共用最终 Target／State 地址身份；AST 查询与聚合不各自实现一套地址比较                                                 |
 | `pieces/keys/box-shadow.ts`                         | 作为普通 Key 使用默认组合，不判断各项阴影形状                                                                         |

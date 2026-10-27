@@ -12,7 +12,7 @@ import {
   oklchChannels,
   type OKLCHChannelChange,
   type OKLCHChanges,
-} from './pieces/contents/functions/oklch'
+} from './pieces/functions/oklch'
 import { type JSSContent } from './content'
 
 /** 颜色变化的固定通道或相对当前通道的计算。 */

@@ -20,7 +20,7 @@ import {
   colorModificationShape,
   type ColorModificationContent,
 } from '../modification'
-import { oklch } from '../pieces/contents/functions/oklch'
+import { oklch } from '../pieces/functions/oklch'
 import { isToken, type Token, type TokenInput } from '../token/core'
 
 /** 修改方交付的领域材料；各 type 的参数由其实际应用定义。 */

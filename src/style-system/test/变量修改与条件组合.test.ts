@@ -7,7 +7,7 @@
  */
 import { token } from '../token'
 import { expect, test } from 'vitest'
-import { add } from '../pieces/contents/functions/calc'
+import { add } from '../pieces/functions/calc'
 import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { declare, type Declaration } from '../operations/declare'

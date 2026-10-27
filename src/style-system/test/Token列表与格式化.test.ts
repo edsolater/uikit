@@ -4,7 +4,7 @@ import { expect, test } from 'vitest'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 import type { Rules } from '../rule'
-import { valueList, valueSequence } from '../pieces/contents/atom-creators/list'
+import { valueList, valueSequence } from '../pieces/token-factory/list'
 
 test('数组 Token 默认逗号输出，空项不占分隔位置，空格规则仍可选', () => {
   const css = compileRules([

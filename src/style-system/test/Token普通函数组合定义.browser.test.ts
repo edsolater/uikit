@@ -4,7 +4,7 @@ import { token, type Token, type TokenInput } from '../token'
 import { compileRules } from '../css-root'
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
-import { add, multiply } from '../pieces/contents/functions/calc'
+import { add, multiply } from '../pieces/functions/calc'
 
 afterEach(() => document.body.replaceChildren())
 
