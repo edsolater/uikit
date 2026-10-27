@@ -7,6 +7,7 @@
 import {
   rules,
   token,
+  tokenFrom,
   multiply,
   oklch,
   colorMix,
@@ -73,9 +74,9 @@ const buttonBoundaryColor = oklch(buttonColorSource, {
 })
 
 /** 几何状态在组件地址计算，保留对公共尺寸基准的引用。 */
-const buttonSpace = token(baseSpace, {
+const buttonSpace = tokenFrom(baseSpace, {
+  name: 'button-space',
   address: button,
-  state: baseSpace.state,
 })
 const buttonPaddingBlock = token(baseSpace, {
   address: button,
@@ -92,13 +93,13 @@ const buttonPaddingInline = token(multiply(baseSpace, 3), {
     xlarge: (base) => multiply(base, 2),
   },
 })
-const buttonTextSize = token(textSize, {
+const buttonTextSize = tokenFrom(textSize, {
+  name: 'button-text-size',
   address: button,
-  state: textSize.state,
 })
-const buttonSize = token(controlSize, {
+const buttonSize = tokenFrom(controlSize, {
+  name: 'button-size',
   address: button,
-  state: controlSize.state,
 })
 
 /** 强调程度决定基础透明度。 */

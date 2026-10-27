@@ -12,3 +12,4 @@ export type {
   TokenStateValues,
   TokenConfig,
 } from './args-parser'
+export { tokenFrom, type TokenFromOptions } from './tools/tokenFrom'

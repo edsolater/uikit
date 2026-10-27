@@ -234,6 +234,19 @@ const amount = doubled(4)
 
 加工已有 Token 同样使用普通函数：读取其 default、state 及其他规范化信息，组合需要继承或覆盖的部分，再创建一个新 Token。函数可以分别加工基础值和状态，也可以提供新的状态；具体组合由函数表达。
 
+tokenFrom 位于 token/tools/tokenFrom.ts，默认引用来源，并复用定义配置。它组合配置后调用 token，返回普通 Token；引擎按同一套规则解析和坍缩，无需识别它是否由 tokenFrom 创建。
+
+需要按既定规则复制定义时，使用 tokenFrom(source, additionalOptions)。它创建独立 Token，default 默认引用 source，name 留空并由既有自动命名生成独立身份；address、state、registration 和生命周期配置继承来源。追加配置覆盖相应顶层字段，显式 undefined 清除对应配置。default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态，不修改来源。
+
+```ts
+const panelSpace = tokenFrom(baseSpace, {
+  name: 'panel-space',
+  address: '.Panel',
+})
+```
+
+这里继承 baseSpace 的状态，并默认保留对来源当前值的引用；无需重复指定 default。name 不继承，避免引用和声明使用同名而形成自引用。它只浅复制公开的定义配置，不提取隐藏的输出格式与 dependencies；需要特殊输出方法时，通过 additionalOptions 显式提供。运行身份和已分配的自动名称不复制。
+
 不再提供独立的 `adjust` 操作。它原来承担的定义组合与加工，直接由这些普通函数完成。函数返回的新 Token 按自己的定义和使用情况确定坍缩方式；“经过某个加工函数”本身不是生成 CSS variable 的条件，也不需要记录“使用过 adjust”。
 
 新 Token 保存组合完成后的定义，不记录加工历史。不保留 `resultSource`、`resultSourceTransform`、`resultSourceStates` 或 `resultSourceVariants`，也不根据这些字段重放加工。新 default 如果需要读取原 Token 的当前值，直接在计算表达式中引用原 Token；这种值依赖不需要另一份来源记录。
@@ -247,7 +260,7 @@ const source = token({ default: 2, hover: (base) => multiply(base, 2) })
 const target = token(source)
 ```
 
-target 的基础内容包含 source。需要输出定义中的内容时，自然消费 source 的坍缩结果：source 需要 CSS variable 身份时提供对应引用，普通内容则提供 CSS value。这个过程不增加“来源是 Token 就复制定义”的判定，处理的是内容是否需要在此刻坍缩。显式复制或加工定义由普通函数读取规范化字段后组合。
+target 的基础内容包含 source。需要输出定义中的内容时，自然消费 source 的坍缩结果：source 需要 CSS variable 身份时提供对应引用，普通内容则提供 CSS value。这个过程不增加“来源是 Token 就复制定义”的判定，处理的是内容是否需要在此刻坍缩。token(source) 不继承来源 state 等配置，tokenFrom(source, additionalOptions) 则明确复制定义；二者各有用途，不互相替代，其他加工仍可由普通函数表达。
 
 两份具有独立职责的 Token 定义分别命名，再显式引用，例如 buttonOpacitySource → buttonOpacity；同一链条保留 Opacity 抓手，Source 放在最后，完整规则见[样式系统命名](样式系统命名.md)。不直接用 token(token(...)) 隐藏其中一份定义。multiply、oklch 等工具返回的 Token 仍可直接作为表达式组合，不要求为每个计算步骤增加中间变量。
 
