@@ -15,10 +15,10 @@ import { oklch } from '../../functions/oklch'
  * 将 Color System 的颜色创建为可声明、引用的 JSS Token。
  * @example
  * // 用纸色定义表面变量；样式可局部声明另一颜色。
- * const surface = toJSSColor(paper, 'example-surface')
+ * const surface = toColorToken(paper, 'example-surface')
  * declare(surface, 'white')
  */
-export function toJSSColor(color: ColorMaterial, name: string): Token {
+export function toColorToken(color: ColorMaterial, name: string): Token {
   return token(oklch({ ...color.base, alpha: color.alpha }), name)
 }
 

@@ -1,5 +1,5 @@
 import type { ColorMaterial } from '@/color-system'
-import { toJSSColor } from './ui-color-structure'
+import { toColorToken } from './ui-color-structure'
 
 /** 默认品牌材料及对应的可声明颜色变量。 */
 
@@ -17,4 +17,4 @@ export const brand: ColorMaterial = {
   },
   purpose: 'content',
 }
-export const brandColor = toJSSColor(brand, 'brand-color')
+export const brandColor = toColorToken(brand, 'brand-color')

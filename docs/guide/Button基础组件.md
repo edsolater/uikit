@@ -99,30 +99,27 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 - Button 不提供 icon props；图标属于 children。
 - Button 不因为视觉分类而建立运行时 Profile；分类由类型、解析器声明、注释和 DOM 属性共同表达。
 
-## 样式控制入口
+## 样式定义与局部消费
 
 Button.style.ts 消费 data-appearance、data-emphasis、data-tone 和 data-size。filled 使用填充背景，outlined 保留浅底及可见轮廓，plain 常态透明且无边界。soft、普通、strong 依次提高整颗按钮的存在感，文字和图形内容一起变化；强调不改变外观形式、语气或尺寸。当前视觉配方使用整体透明度 0.7、0.9、1，这些数值由组件样式定义，不属于 Props 固定契约。各档禁用时仍使用通用 disabledFade。
 
-Button 从组件及包入口公开以下 Token 控制对象，同一对象也由 Button 样式消费。本轮完成接口接入，不据此认定这些业务抽象已经完成设计验收：
+Button 从组件及包入口导出以下三个 Token，供内容引用或作为新定义的输入；它们由 Button 自身消费并在 address 自动定义：
 
-| 控制点                | 控制内容               | 当前操作                           |
+| Token                 | 定义内容               | 复用方式                           |
 | --------------------- | ---------------------- | ---------------------------------- |
-| buttonColorInput      | 组件颜色输入及交互基础 | declare、modify                    |
-| buttonColor           | 用途颜色引用的基础     | declare、modify                    |
-| buttonSurfaceSource   | 背景混色的色源         | declare                            |
-| buttonSurfaceCanvas   | 背景混色的画布         | declare                            |
-| buttonSurfaceStrength | 色源参与背景的强度     | declare、modify；modify 为相对增量 |
-| buttonSurfaceColor    | 最终背景色             | declare、modify                    |
-| buttonContentColor    | 最终内容色             | declare、modify                    |
+| buttonColor           | 背景、语气文字和边界共用的基色 | 内容引用、定义复用                  |
+| buttonSurfaceColor    | 最终背景色             | 内容引用、定义复用                  |
+| buttonContentColor    | 最终内容色             | 内容引用、定义复用                  |
 
 ```mermaid
 flowchart LR
-  Caller[调用方局部声明] --> V[Button 公开 Token 控制点]
-  V --> R[Button 分类与状态规则]
+  V[Button 自身 Token 定义] --> R[属性消费与自动状态发布]
+  Caller[调用方独立 Token] --> Local[明确选择属性消费]
   Tools[Style System 通用工具] --> R
   R --> CSS[编译与挂载 CSS]
+  Local --> CSS
 ```
 
-控制定义与分类组合都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 中；上述控制点以 export 定义，其他业务配方保持私有。相对修改遵守 Token 所在地址与声明顺序；具体选择条件由调用方表达。内部分类贡献、阴影、光标与存在感材料没有因此成为新的公开控制点，常态透明度通过 clickable 的配置消费。
+主体定义与分类交集都在 [Button.style.ts](../../src/components/kits/Button/Button.style.ts) 的 Token state 中，rules 不再给这些 Token 重新赋值。混色参数不分别包装成控制点；尺寸、间距、阴影和存在感也在组件地址处理自身状态。常态透明度通过 clickable 消费。
 
-这些控制对象统一为 Token，用于 Rules 中的局部声明和组合。操作返回声明，由应用挂载 CSS；直接修改 JS 对象不会自动更新页面。本轮不增加自动插入 CSS 的运行机制。
+局部定制创建新 Token，使用对象属性或 [Key, token] 明确接入按钮属性。直接创建新 Token 不会替换组件已有引用。手动 declare 和 [existingToken, value] 仍可执行，但属于 dangerous 操作，不作运行时或类型拦截，不作为正常定制模板。定义与消费登记后由应用挂载 CSS，不自动插入样式。

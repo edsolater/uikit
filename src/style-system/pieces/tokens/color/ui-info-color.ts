@@ -1,5 +1,5 @@
 import type { ColorMaterial } from '@/color-system'
-import { toJSSColor } from './ui-color-structure'
+import { toColorToken } from './ui-color-structure'
 
 /** 跨品牌稳定的状态材料；不在 CSS token 中保存颜色来源。 */
 
@@ -64,10 +64,10 @@ export const info: ColorMaterial = {
 }
 
 // --- UI 使用 ---
-export const goodColor = toJSSColor(good, 'good-color')
+export const goodColor = toColorToken(good, 'good-color')
 
-export const badColor = toJSSColor(bad, 'bad-color')
+export const badColor = toColorToken(bad, 'bad-color')
 
-export const warnColor = toJSSColor(warn, 'warn-color')
+export const warnColor = toColorToken(warn, 'warn-color')
 
-export const infoColor = toJSSColor(info, 'info-color')
+export const infoColor = toColorToken(info, 'info-color')

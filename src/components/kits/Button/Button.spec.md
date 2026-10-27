@@ -11,7 +11,7 @@
 
 ## 颜色来源与组件控制
 
-Button画布引用globalSurfaceColor，普通内容引用globalContentColor；应用设置全局或区域主题时，实际引用这些来源的按钮随CSS更新。buttonSurfaceCanvas、buttonSurfaceSource、buttonContentColor等组件控制点独立保留，覆盖实际按钮只影响匹配范围。
+Button 背景配方直接引用 globalSurfaceColor，普通内容引用 contentColor；应用设置全局或区域主题时，实际引用这些来源的按钮随 CSS 更新。组件只公开 buttonColor、buttonSurfaceColor、buttonContentColor，分别控制基色、最终背景与最终内容；混色的色源、画布和强度不另设组件控制点。
 
 主题不是整颗按钮的单一染色开关：filled常态使用语气实底，强调实底的文字保留对比来源；危险语气、外观选择、hover/active与disabled继续各自有效。全局变化不能压掉区域或组件显式覆盖，也不能令危险filled回到普通来源。
 

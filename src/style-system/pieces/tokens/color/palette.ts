@@ -7,7 +7,7 @@
  */
 
 import type { ColorMaterial } from '@/color-system'
-import { toJSSColor } from './ui-color-structure'
+import { toColorToken } from './ui-color-structure'
 
 // 各材料直接配置自身响应；下面说明每个比例的取舍意图，具体数值是人为配方，
 // 没有唯一的推导值。
@@ -70,6 +70,6 @@ export const neutral: ColorMaterial = {
   purpose: 'content',
 }
 
-export const paperColor = toJSSColor(paper, 'paper-color')
-export const inkColor = toJSSColor(ink, 'ink-color')
-export const neutralColor = toJSSColor(neutral, 'neutral-color')
+export const paperColor = toColorToken(paper, 'paper-color')
+export const inkColor = toColorToken(ink, 'ink-color')
+export const neutralColor = toColorToken(neutral, 'neutral-color')

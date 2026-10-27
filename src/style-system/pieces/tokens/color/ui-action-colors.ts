@@ -9,25 +9,12 @@ import { token, type Token, type TokenInput } from '../../../token'
 import { add, multiply } from '../../functions/calc'
 import { oklch } from '../../functions/oklch'
 import { brandColor } from './brand-color'
-import { interactiveColorStates } from './ui-token-state'
 import { paperColor } from './palette'
-import { globalSurfaceColor } from './colors'
 
 /** 控件颜色的用途配方；交互由输入拥有，各用途读取输入的最终颜色。 */
 export const controlColor = token(brandColor, {
   name: 'control-color',
 })
-
-export const interactiveColor = token(
-  interactiveColorStates({ base: brandColor, chromaResponse: 1 }),
-  'interactive-color',
-)
-
-/** 中性承载面的交互只改变明度，保持全局表面的彩度。 */
-export const interactiveSurfaceColor = token(
-  interactiveColorStates({ base: globalSurfaceColor }),
-  'interactive-surface-color',
-)
 
 /** 动作色混入承载面的占比；状态相对于组件实际选定的基础占比。 */
 export const surfaceStrength = token(0.18, {

@@ -2,19 +2,13 @@ import { flush } from 'solid-js'
 import {
   buttonSurfaceColor,
   buttonContentColor,
-  buttonColorInput,
   buttonColor,
-  buttonSurfaceSource,
-  buttonSurfaceCanvas,
-  buttonSurfaceStrength,
 } from './Button.style'
 /** 验证真实 Button 分类、交互状态与局部样式覆盖的浏览器行为。 */
 import {
   declare,
   modify,
   token,
-  key,
-  add,
   cssRoot,
   rule,
   rules,
@@ -28,7 +22,6 @@ import {
   radius,
   space,
   multiply,
-  interactiveColor,
   badColor,
   oklch,
   shadowFor,
@@ -437,14 +430,14 @@ describe('Button styles', () => {
     handles.push(
       rules(
         ['@layer uikit', '.Button'],
-        [declare(globalColors.globalContentColor, 'inherit')],
+        [declare(globalColors.contentColor, 'inherit')],
       ),
     )
     const parent = document.body.appendChild(document.createElement('div'))
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
     parent.style.setProperty(
-      `--${globalColors.globalContentColor.name!.replace(/^--/, '')}`,
+      `--${globalColors.contentColor.name!.replace(/^--/, '')}`,
       'rgb(78, 90, 123)',
     )
     dispose = render(() => <Button>普通按钮</Button>, parent)
@@ -455,7 +448,7 @@ describe('Button styles', () => {
     await userEvent.hover(button)
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
     button.style.setProperty(
-      `--${globalColors.globalContentColor.name!.replace(/^--/, '')}`,
+      `--${globalColors.contentColor.name!.replace(/^--/, '')}`,
       'rgb(123, 90, 78)',
     )
     button.focus()
@@ -531,125 +524,63 @@ describe('Button styles', () => {
     }
   })
 
-  test('公开表面控制点使用同一对象，局部声明与修改可组合且移除后恢复', async () => {
+  test('最终背景色支持局部声明和修改，撤销后恢复且不污染兄弟', async () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(
       () => (
         <>
-          <Button htmlProps={{ 'data-control': 'first' }}>第一作用域</Button>
-          <Button htmlProps={{ 'data-control': 'second' }}>第二作用域</Button>
-          <Button>未控制</Button>
+          <Button class="LocalSurface">局部</Button>
+          <Button>兄弟</Button>
         </>
       ),
       host,
     )
-    const [first, second, untouched] =
-      host.querySelectorAll<HTMLButtonElement>('button')
-    for (const button of [first, second, untouched])
-      button.style.transition = 'none'
-    await userEvent.unhover(first)
-    const initial = appearance(first)
-    expectSameAppearance(appearance(second), initial)
-    expectSameAppearance(appearance(untouched), initial)
-    const path = ['@layer uikit', '.Button', '&[data-control="first"]']
-    const source = rules(
-      path,
-      declare(buttonSurfaceSource, 'oklch(0.6 0.2 30)'),
-    )
-    handles.push(source)
+    const [local, sibling] = host.querySelectorAll<HTMLButtonElement>('button')
+    for (const button of [local, sibling]) button.style.transition = 'none'
+    await userEvent.unhover(local)
+    const initial = appearance(local)
+    const path = ['@layer uikit', '.Button', '&.LocalSurface']
+    const selected = rules(path, [[buttonSurfaceColor, 'oklch(0.6 0.1 30)']])
+    handles.push(selected)
     cssRoot.mount()
-    const sourceOnly = appearance(first)
-    expect(sourceOnly['background-color']).not.toBe(initial['background-color'])
-    const canvas = rules(
-      path,
-      declare(buttonSurfaceCanvas, 'oklch(0.9 0.02 120)'),
-    )
-    handles.push(canvas)
+    expectSameColor(appearance(local)['background-color'], 'oklch(0.6 0.1 30)')
+    expectSameAppearance(appearance(sibling), initial)
+    await userEvent.hover(local)
+    expectSameColor(appearance(local)['background-color'], 'oklch(0.6 0.1 30)')
+    await userEvent.unhover(local)
+    selected.remove()
     cssRoot.mount()
-    const selected = appearance(first)
-    expect(selected['background-color']).not.toBe(
-      sourceOnly['background-color'],
-    )
-    expect(selected['background-color']).not.toBe(initial['background-color'])
-    expectSameAppearance(appearance(second), initial)
-    const adjustment = rules(
+    expectSameAppearance(appearance(local), initial)
+    const adjusted = rules(
       path,
-      modify(buttonSurfaceStrength, {
-        type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 0.2),
+      modify(buttonSurfaceColor, {
+        type: 'expression',
+        detail: (current) => oklch(current, { chroma: 0.2 }),
       }),
     )
-    handles.push(adjustment)
+    handles.push(adjusted)
     cssRoot.mount()
-    const adjusted = appearance(first)
-    expect(chroma(adjusted['background-color'])).toBeGreaterThan(
-      chroma(selected['background-color']),
+    expectSameColor(
+      appearance(local)['background-color'],
+      `oklch(from ${initial['background-color']} l 0.2 h / alpha)`,
     )
-    expectSameAppearance(appearance(second), initial)
-    expectSameAppearance(appearance(untouched), initial)
-    await userEvent.hover(first)
-    const hovered = appearance(first)
-    expect(chroma(hovered['background-color'])).toBeGreaterThan(
-      chroma(adjusted['background-color']),
-    )
-    await userEvent.unhover(first)
-    expectSameAppearance(appearance(first), adjusted)
-    const otherPath = ['@layer uikit', '.Button', '&[data-control="second"]']
-    const other = rules(otherPath, [
-      declare(buttonSurfaceSource, 'oklch(0.6 0.2 260)'),
-      declare(buttonSurfaceCanvas, 'white'),
-    ])
-    handles.push(other)
+    expectSameAppearance(appearance(sibling), initial)
+    adjusted.remove()
     cssRoot.mount()
-    const otherMaterials = appearance(second)
-    const otherStrength = rules(otherPath, declare(buttonSurfaceStrength, 0.6))
-    handles.push(otherStrength)
-    cssRoot.mount()
-    expect(chroma(appearance(second)['background-color'])).toBeGreaterThan(
-      chroma(otherMaterials['background-color']),
-    )
-    expect(appearance(second)['background-color']).not.toBe(
-      initial['background-color'],
-    )
-    expect(appearance(second)['background-color']).not.toBe(
-      appearance(first)['background-color'],
-    )
-    expectSameAppearance(appearance(first), adjusted)
-    expectSameAppearance(appearance(untouched), initial)
-    adjustment.remove()
-    cssRoot.mount()
-    expectSameAppearance(appearance(first), selected)
-    source.remove()
-    cssRoot.mount()
-    expect(appearance(first)['background-color']).not.toBe(
-      selected['background-color'],
-    )
-    canvas.remove()
-    otherStrength.remove()
-    other.remove()
-    cssRoot.mount()
-    for (const button of [first, second, untouched])
-      expectSameAppearance(appearance(button), initial)
+    expectSameAppearance(appearance(local), initial)
+    expectSameAppearance(appearance(sibling), initial)
   })
 
   test.each([undefined, 'plain', 'filled'] as const)(
-    '局部语气成员在状态参数消费中保持隔离并退出恢复：%s',
+    '局部基色贯穿外观和交互，两个作用域保持隔离并退出恢复：%s',
     async (selectedAppearance) => {
       const palettes = [
         {
           tone: 'rgb(56, 120, 180)',
-          soft: 'rgb(12, 80, 140)',
-          strong: 'rgb(34, 100, 160)',
-          content: 'rgb(78, 140, 200)',
-          line: 'rgb(90, 20, 160)',
         },
         {
           tone: 'rgb(180, 56, 120)',
-          soft: 'rgb(140, 12, 80)',
-          strong: 'rgb(160, 34, 100)',
-          content: 'rgb(200, 78, 140)',
-          line: 'rgb(160, 90, 20)',
         },
       ]
       // 在已知外观的结构Address验证组合，不从平面选择器猜测DOM同时命中的分支。
@@ -664,13 +595,7 @@ describe('Button styles', () => {
                 : []),
               `&[data-local-tone="${index}"]`,
             ],
-            [
-              [buttonColorInput, palette.tone],
-              [key('--button-color-surface'), palette.soft],
-              [key('--button-color-text'), palette.strong],
-              [key('--button-color-content'), palette.content],
-              [key('--button-color-boundary'), palette.line],
-            ],
+            [[buttonColor, palette.tone]],
           ),
         )
       mountButtonStyles()
@@ -702,8 +627,10 @@ describe('Button styles', () => {
         expectSameColor(
           normal.color,
           selectedAppearance === 'filled'
-            ? palettes[index].content
-            : palettes[index].strong,
+            ? getComputedStyle(document.documentElement).getPropertyValue(
+                '--' + paperColor.name,
+              )
+            : palettes[index].tone,
         )
         if (selectedAppearance === 'filled')
           expectSameColor(normal['background-color'], palettes[index].tone)
@@ -714,7 +641,7 @@ describe('Button styles', () => {
         expect(button.matches(':focus-visible')).toBe(true)
         expectSameColor(
           getComputedStyle(button).outlineColor,
-          palettes[index].line,
+          `oklch(from ${palettes[index].tone} l c h / 0.44)`,
         )
         await userEvent.hover(button)
         const hover = appearance(button)
@@ -736,7 +663,8 @@ describe('Button styles', () => {
         samples.push({ normal, hover, active: active! })
       }
       for (const state of ['normal', 'hover', 'active'] as const) {
-        expect(samples[0][state].color).not.toBe(samples[1][state].color)
+        if (selectedAppearance !== 'filled')
+          expect(samples[0][state].color).not.toBe(samples[1][state].color)
         if (selectedAppearance !== 'plain' || state !== 'normal')
           expect(samples[0][state]['background-color']).not.toBe(
             samples[1][state]['background-color'],
@@ -1313,7 +1241,7 @@ describe('Button styles', () => {
       rule(
         '.focus-reference-interactive',
         'color',
-        oklch(interactiveColor.default, { alpha: 0.44 }),
+        oklch(brandColor, { alpha: 0.44 }),
       ),
     )
     handles.push(
@@ -1539,7 +1467,7 @@ describe('Button styles', () => {
 
 test('危险Button只改一个语气输入，内容与边线一起采用当地颜色且不污染兄弟', () => {
   const selected = 'oklch(0.65 0.12 145)'
-  handles.push(rule('.Button.LocalTone', buttonColorInput, selected))
+  handles.push(rule('.Button.LocalTone', buttonColor, selected))
   mountButtonStyles()
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(
@@ -1572,24 +1500,24 @@ test('危险Button只改一个语气输入，内容与边线一起采用当地�
 })
 
 test('全局表面和内容来源联动真实Button，区域及组件覆盖保持隔离', async () => {
-  const { globalSurfaceColor, globalContentColor } = globalColors
+  const { globalSurfaceColor, contentColor } = globalColors
   expect(globalSurfaceColor, '必须提供全局表面来源').toBeDefined()
-  expect(globalContentColor, '必须提供全局内容来源').toBeDefined()
+  expect(contentColor, '必须提供全局内容来源').toBeDefined()
   handles.push(
     rules('.ThemeRoot', [
       declare(globalSurfaceColor, 'rgb(220, 230, 240)'),
-      declare(globalContentColor, 'rgb(20, 30, 40)'),
+      declare(contentColor, 'rgb(20, 30, 40)'),
     ]),
   )
   handles.push(
     rules('.ThemeLocal', [
       declare(globalSurfaceColor, 'rgb(180, 210, 190)'),
-      declare(globalContentColor, 'rgb(60, 70, 80)'),
+      declare(contentColor, 'rgb(60, 70, 80)'),
     ]),
   )
   handles.push(
     rules('.ComponentLocal .Button', [
-      declare(buttonSurfaceCanvas, 'rgb(240, 200, 180)'),
+      declare(buttonSurfaceColor, 'rgb(240, 200, 180)'),
       declare(buttonContentColor, 'rgb(90, 80, 70)'),
     ]),
   )
@@ -1620,12 +1548,14 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
     button.style.transition = 'none'
   const background = (button: HTMLElement, canvas: string, strength = 0.18) => {
     const source = getComputedStyle(button).getPropertyValue(
-      `--${buttonSurfaceSource.name!.replace(/^--/, '')}`,
+      `--${buttonColor.name!.replace(/^--/, '')}`,
     )
     expectSameColor(
       getComputedStyle(button).backgroundColor,
       'color-mix(in oklab, ' +
+        'oklch(from ' +
         source +
+        ' l c h / calc(alpha * 0.14))' +
         ' ' +
         strength * 100 +
         '%, ' +
@@ -1635,7 +1565,7 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
   }
   background(normal, 'rgb(220, 230, 240)')
   background(local, 'rgb(180, 210, 190)')
-  background(own, 'rgb(240, 200, 180)')
+  expectSameColor(getComputedStyle(own).backgroundColor, 'rgb(240, 200, 180)')
   expectSameColor(getComputedStyle(normal).color, 'rgb(20, 30, 40)')
   expectSameColor(getComputedStyle(local).color, 'rgb(60, 70, 80)')
   expectSameColor(getComputedStyle(own).color, 'rgb(90, 80, 70)')
@@ -1646,12 +1576,12 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
     'rgb(200, 180, 230)',
   )
   root.style.setProperty(
-    `--${globalContentColor.name!.replace(/^--/, '')}`,
+    `--${contentColor.name!.replace(/^--/, '')}`,
     'rgb(100, 40, 60)',
   )
   background(normal, 'rgb(200, 180, 230)')
   background(local, 'rgb(180, 210, 190)')
-  background(own, 'rgb(240, 200, 180)')
+  expectSameColor(getComputedStyle(own).backgroundColor, 'rgb(240, 200, 180)')
   expectSameColor(getComputedStyle(normal).color, 'rgb(100, 40, 60)')
   expectSameAppearance(appearance(danger), dangerBefore)
   await userEvent.hover(normal)
