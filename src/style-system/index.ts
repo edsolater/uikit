@@ -8,7 +8,12 @@
 export * from './key'
 export * from './key-registry'
 export * from './condition'
-export * from './pieces/state-conditions'
+export {
+  stateCondition,
+  type StateCondition,
+  type StateConditionInput,
+} from './state-condition'
+export { stateConditionRegistry } from './state-condition-registry'
 export * from './operations/declare'
 export * from './rule'
 export * from './content'
@@ -26,6 +31,7 @@ export * from './pieces/mixins/appearance'
 export * from './pieces/mixins/interaction'
 export * from './pieces/conditions/interaction'
 export * from './pieces/conditions/profile'
+export * from './pieces/conditions/environment'
 export * from './pieces/tokens/color/colors'
 export * from './pieces/tokens/color/palette'
 export * from './pieces/tokens/color/brand-color'

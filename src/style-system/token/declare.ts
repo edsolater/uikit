@@ -7,8 +7,9 @@
  */
 import { assert, hasProperty, isFunction, result } from '@edsolater/fnkit'
 import {
-  condition,
+  resolveConditionPath,
   conditionAddressKey,
+  appendStateCondition,
   type ConditionPath,
 } from '../condition'
 import {
@@ -19,11 +20,7 @@ import {
 } from '../content'
 import type { Declaration } from '../operations/declare'
 import { keyPriority, propertyName, type JSSKey } from '../key'
-import {
-  appendStateCondition,
-  type StateCondition,
-} from '../pieces/state-conditions'
-import { isToken, token, type TokenInput, type TokenStateRule } from './core'
+import { isToken, token, type TokenInput, type TokenState } from './core'
 import type { ContentView } from '../content'
 import { cssCustomProperty, cssOperation, type CSSCustomProperty } from './css'
 
@@ -98,9 +95,7 @@ const findHomeDeclaration = (
  */
 export function cssHomePath(target: CSSCustomProperty): ConditionPath {
   const address = target.address ?? ':where(:root)'
-  const targetConditionPath = (
-    Array.isArray(address) ? address : [address]
-  ).map((item) => (typeof item === 'string' ? condition(item) : item))
+  const targetConditionPath = resolveConditionPath(address)!
   return { targetConditionPath, stateConditionPath: [] }
 }
 
@@ -318,7 +313,6 @@ export function ensureDefinition(
     publishHomeStates(
       controller,
       definition,
-      variable,
       baseContent === variable.content
         ? (variable.token.default as TokenInput)
         : baseContent,
@@ -337,9 +331,8 @@ export function ensureDefinition(
 function publishHomeStates(
   controller: ASTController,
   definition: CSSDefinition,
-  variable: CSSCustomProperty,
   baseContent: TokenInput,
-  states: Iterable<[StateCondition, TokenStateRule]> = variable.states ?? [],
+  states: TokenState | undefined,
 ): void {
   const node = definition.node
   let anchor = definition.node

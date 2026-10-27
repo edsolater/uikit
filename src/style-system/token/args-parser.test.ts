@@ -1,3 +1,4 @@
+import { resolveStateCondition } from '../state-condition-registry'
 /** 验证 Token 创建参数归一为公开七字段，不执行内容。 */
 import { expect, test, vi } from 'vitest'
 import { parseTokenArgs } from './args-parser'
@@ -31,6 +32,22 @@ test('五种创建写法使用同一七字段结果，缺省地址和名称不�
   expect(inputs[1].state).toBeUndefined()
   expect(inputs[2].state).toBeUndefined()
   expect(inputs[3].state).toEqual(inputs[4].state)
+})
+
+test('所有状态参数入口拒绝未登记快捷名和直接 CSS 字符串', () => {
+  for (const name of [
+    'unknownParserShortcut',
+    '&[data-unregistered]',
+    '@media (width > 1px)',
+  ]) {
+    const inputs = [
+      () => parseTokenArgs({ default: 1, [name]: 2 }),
+      () => parseTokenArgs(1, { state: { [name]: 2 } }),
+      () => parseTokenArgs(1, { state: [[name, 2]] }),
+      () => parseTokenArgs(1, { state: new Map([[name, 2]]) }),
+    ]
+    for (const input of inputs) expect(input).toThrow('未登记')
+  }
 })
 
 test.each(['2px', 0, false, null, undefined])(
@@ -144,10 +161,13 @@ if (false) {
 test('配置状态覆盖简写同名项，显式 undefined 保留且不修改输入', () => {
   const input = { default: undefined, hover: 2, active: 3 }
   const state = { hover: undefined, focus: 4 }
-  expect(parseTokenArgs(input, { state })).toMatchObject({
-    default: undefined,
-    state: { hover: undefined, active: 3, focus: 4 },
-  })
+  const parsed = parseTokenArgs(input, { state })
+  expect(parsed.default).toBeUndefined()
+  expect(parsed.state?.size).toBe(3)
+  expect(parsed.state?.has(resolveStateCondition('hover'))).toBe(true)
+  expect(parsed.state?.get(resolveStateCondition('hover'))).toBeUndefined()
+  expect(parsed.state?.get(resolveStateCondition('active'))).toBe(3)
+  expect(parsed.state?.get(resolveStateCondition('focus'))).toBe(4)
   expect(input).toEqual({ default: undefined, hover: 2, active: 3 })
   expect(state).toEqual({ hover: undefined, focus: 4 })
 })
@@ -169,7 +189,7 @@ test('特殊协议方法不进入七字段，基础与状态回调不提前执�
   )
   expect(Object.keys(parsed).sort()).toEqual(keys)
   expect(parsed.default).toBe(base)
-  expect(parsed.state?.hover).toBe(hover)
+  expect(parsed.state?.get(resolveStateCondition('hover'))).toBe(hover)
   expect(parsed.onFirstScan).toBe(onFirstScan)
   expect(parsed.compileWaveIndex).toBe(3)
   expect(base).not.toHaveBeenCalled()

@@ -12,13 +12,9 @@ import { compileCSS, compileRules } from '../css-root'
 import { key } from '../key'
 import { valueList } from '../pieces/token-factory/list'
 import { $boxShadow } from '../key-registry'
-import { stateCondition } from '../pieces/state-conditions'
 import { rule, rules, type Rules } from '../rule'
 import type { JSSCompileContext } from '../content'
 import type { ASTController } from '../compiler/contracts'
-
-stateCondition('aggregateHover', condition('&:where([data-aggregate-hover])'))
-stateCondition('aggregateFocus', condition('&:where([data-aggregate-focus])'))
 
 test.each([20, 40])('同组 %s 项聚合保留全部贡献的输入顺序', (count) => {
   const target = key(`--ordered-contributions-${count}`)

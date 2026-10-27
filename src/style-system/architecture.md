@@ -19,7 +19,7 @@ Token 的参数归一为 default、name、state、address、registration、onFir
 
 onFirstScan 可以返回包含 modify 的规则。编译必须先读完会影响目标的修改，再坍缩该 Token；不规定激活波次，不把第一次访问等同于最终输出。compileWaveIndex 继续表达内容的最早处理时机。通用 AST 的引用访问、资源归属与撤销仍是编译处理，不另建持续监听机制。
 
-state 的快捷条件和直接条件仍复用完整 ConditionPath。组件状态的地址由组件明确表达，跨地址仍遵循浏览器 CSS 层叠，不在每个消费位置重新展开来源公式。Token 不携带 priority，同址声明顺序交给声明系统。
+state 只接收静态预置字符串快捷名或 StateCondition；未定义字符串在参数入口立即报错，原始 CSS 必须先创建条件对象。StateCondition 直接沿用 Condition 的单个 { header } 对象；参数入口把快捷名换成静态表中的原对象，按 header 归一同条件规则并保留首次位置。最终 Map 直接进入编译，不附加身份元数据或另行排序。普通 rules 字符串仍是 CSS 地址。组件状态的地址由组件明确表达，跨地址仍遵循浏览器 CSS 层叠，不在每个消费位置重新展开来源公式。Token 不携带 priority，同址声明顺序交给声明系统。
 
 计算工具按 [工具公约](pieces/functions/SPEC.md) 组织输入与结果，CSSFunction 保留独立的 CSS 函数定义职责。颜色变化可以通过 oklch(source, changes) 组合内容，通道与格式转换不增加另一种内容实体。modify 表达使用端对同一 Token 的条件修改，普通函数表达新定义的产生。
 
@@ -29,8 +29,9 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 
 | 位置                                                          | 职责                                                                               |
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| condition.ts                                                  | Condition、完整 `conditionPath`、目标与状态子路径，以及 CSS 输出地址与地址身份     |
-| pieces/state-conditions.ts                                    | 主体状态名称、条件登记、中央顺序与状态路径追加                                     |
+| condition.ts                                                  | Condition、普通与主体状态地址展开、完整路径及 CSS 输出地址身份                     |
+| state-condition.ts                                            | StateCondition 类型、纯构造与识别；直接沿用单个 Condition 对象                     |
+| state-condition-registry.ts                                   | 汇总 Pieces 的静态快捷名表并严格查名，直接引用预置条件对象                         |
 | key-definition.ts                                             | JSSKey 定义类型及无登记副作用的纯构造                                              |
 | key.ts                                                        | 声明目标识别、原名与别名解析、显式登记自定义 Key                                   |
 | custom-property-names.ts                                      | Token 与 Modification 共用的 CSS 自定义属性名称分配与避让                          |
@@ -61,15 +62,16 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | compiler/content-nodes-to-css-string.ts                       | 惰性读取已编译内容，并按 JSSContentNode 队列顺序输出 CSS 字符串                    |
 | key-registry                                                  | 按直接用途组织现成 Key 与分类字面量；背景独立，边框/轮廓/盒阴影归统一外框          |
 | key-registry/index.ts                                         | 静态汇总唯一 keyRegistry；字符串查找直接依赖完整表，显式扩展写入同一表             |
-| pieces/conditions                                             | 可复用的普通 Condition；条件协议由 condition.ts 定义                               |
+| pieces/conditions                                             | 可复用的主体 StateCondition；组件可另行创建局部条件                                |
 | pieces/conditions/profile.ts                                  | 共享外观、语气、存在感和尺寸条件，只匹配 data 属性，不携带组件配方                 |
 | pieces/conditions/interaction.ts                              | 焦点、悬停、按下、禁用、可用和加载条件                                             |
-| pieces/tokens                                                | 按用途组织的现成 Token                                                             |
-| pieces/functions                                             | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
-| pieces/functions/calc.ts                                     | 保存操作数依赖，构造 CSS calc 算术 Token                                           |
-| pieces/functions/oklch.ts                                    | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译                            |
-| pieces/functions/SPEC.md                                     | JSS 内容组织工具公约与 Expression、规则及定义主体的边界                            |
-| pieces/token-factory                                         | 按结构生成阴影、动画等内容                                                         |
+| pieces/conditions/environment.ts                              | 暗色主题标记与减少动效偏好的共享 StateCondition                                    |
+| pieces/tokens                                                 | 描述自身视觉作用与尺度的现成 Token；组件选择材料，不由材料识别组件类型             |
+| pieces/functions                                              | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
+| pieces/functions/calc.ts                                      | 保存操作数依赖，构造 CSS calc 算术 Token                                           |
+| pieces/functions/oklch.ts                                     | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译                            |
+| pieces/functions/SPEC.md                                      | JSS 内容组织工具公约与 Expression、规则及定义主体的边界                            |
+| pieces/token-factory                                          | 按结构生成阴影、动画等内容                                                         |
 | pieces/roles                                                  | 供组件在自身选择器中赋值的共享角色                                                 |
 | pieces/mixins                                                 | 把完整效果转换成声明组合                                                           |
 | test                                                          | 验证 Style System 多文件协作与完整业务流程                                         |
@@ -104,7 +106,7 @@ interface JSSStyleNode {
 }
 ```
 
-队列位置决定 Rule 声明顺序。`targetConditionPath` 表示 `.button`、`@media` 等普通条件地址；`stateConditionPath` 使用已登记的状态身份表示受体状态，例如 `hover`。编译器只把值都带入完整身份，不从 CSS 字符串推断状态。
+队列位置决定 Rule 声明顺序。`targetConditionPath` 表示 `.button`、`@media` 等普通条件地址；`stateConditionPath` 直接保存当前主体的条件对象。快捷名只在 Token 参数入口查表，编译器读取对象的 header 合成输出地址，不再次解释名称或推断状态。
 
 每个 `JSSStyleNode` 的 Key 和 Content 都在其自身位置编译。Content 可以是字面值或 `JSSContent`；Token 在组合时统称 Atom，Atom 不增加对象类型。JSS 内容组织工具和 Atom Creator 也可构造作为一块使用的内容。通用对象生命周期读取 onFirstScan、onCompile(context, ast)、dependencies 和 toCSSString。Token 的每位置 CSS 声明与引用准备由独立的 CSS 边界接入，不借公开生命周期回调重复接线。`onCompile` 是返回 void 的生命周期通知，编译器不读取返回值；对象通过 Controller 插入后续节点或设定当前内容。未设定新内容的对象继续消费自身依赖及输出能力，没有输出能力则不输出当前声明。纯字符串、数字与已完成的对象链直接结束该位置。只有链上所有对象都已编译或无需编译后，节点才成为 `JSSContentNode`。
 
@@ -175,7 +177,7 @@ Token 的注册配方使用 `resourceAddress` 查找同址资源、`productTag` 
 
 ## 状态与变量接入
 
-当前快捷状态通过状态路径接入；直接条件随后使用配置书写次序。登记实现把主体附加条件包进:where()，以保留主体地址权重；已有:where()允许嵌套，不为消除包装引入选择器解析，At Rule保持原样。中央顺序及直接条件实际覆盖的公开结果由[states与条件选择.md](doc/behaviors/states与条件选择.md)负责，包装方式可以随核心调整。
+状态按 Token.state 的 Map 次序发布。快捷名映射不改写选择器，不添加 :where()，也不提供优先级；条件保留自身 CSS 特异度，同权重时按定义顺序层叠。可观察结果由[states与条件选择.md](doc/behaviors/states与条件选择.md)负责。
 
 Token 在指定根据地选择有效基础，修改链按声明位置连接。选择门保存原地址的条件选择，阶段结果引用前序CSS内容；现有颜色实现用完整Modification内容，不按每个通道建立业务控制对象。每步结果的辅助变量组织是当前实现成本，不构成对外固定数量。晚到内容顺序、局部基础和继承结果见[Token 的定义组合与 modify](doc/behaviors/Token的定义组合与modify.md)。
 
@@ -186,6 +188,8 @@ Token 在指定根据地选择有效基础，修改链按声明位置连接。�
 ## Button 接入
 
 Button.style.ts 拥有 Button 具体颜色、分类条件及公开控制点。共享基础材料和普通转换函数留在 Style System；组件选择来源、地址及自身差异。表面、内容、边线等用途通过普通函数与具体 Token 表达，不放进 Token 的内置用途成员表。
+
+阴影公共材料按几何尺度提供档位，Button 自己选择外观与交互所用阴影。Button 的 padding 比例同样属于组件布局，不由公共间距材料代管；独立 Token 定义分别命名并引用，计算表达式仍可直接组合。
 
 组件分类仍通过 appearance、tone、size、status 等协议表达；组件的 Variant Props 不等于 Token 内置变体。布局、禁用反馈、按压和焦点由通用效果解释，视觉策略仍由组件选择。Button 静态导入样式，应用在渲染前统一 mount。
 

@@ -2,12 +2,11 @@
  * 按钮的完整样式定义。
  *
  * Token 在按钮地址定义基础与状态，rules 只消费属性和效果。
- * 外观、语气和交互交集由组件明确选择，不在后续规则中重新赋值 Token。
+ * 外观、语气与交互分别匹配，不在后续规则中重新赋值 Token。
  */
 import {
   rules,
   token,
-  add,
   multiply,
   oklch,
   colorMix,
@@ -21,108 +20,77 @@ import {
   brandColor,
   badColor,
   contentColor,
-  globalSurfaceColor,
+  surfaceColor,
   paperColor,
   interactiveColorStates,
-  space,
+  baseSpace,
   textSize,
   controlSize,
   fontWeight,
   boundaryWidth,
-  opacity,
-  shadowFor,
-  spaceGap,
-  spacePaddingBlock,
-  spacePaddingInline,
-  whenHover,
-  whenActive,
-  whenDisabled,
-  whenEnabled,
-  whenLoading,
-  whenFilled,
-  whenOutlined,
-  whenPlain,
-  whenToned,
-  whenDanger,
-  whenSoft,
-  whenStrong,
+  baseOpacity,
+  baseShadow,
+  baseShadowSmall,
+  stateConditionRegistry,
 } from '@/style-system'
 
 const button = ['@layer uikit', '.Button']
 
-/** 选择材料并定义交互；危险语气的交集直接使用危险材料计算。 */
-export const buttonColor = token(
-  {
-    ...interactiveColorStates({ base: brandColor, chromaResponse: 1 }),
-    [whenDanger.header]: badColor,
-    [whenDanger.header + whenHover.header.slice(1)]: oklch(badColor, {
-      lightness: (current) => add(current, -0.04),
-      chroma: (current) => add(current, 0.01),
-    }),
-    [whenDanger.header + whenActive.header.slice(1)]: oklch(badColor, {
-      lightness: (current) => add(current, -0.08),
-      chroma: (current) => add(current, -0.01),
-    }),
+/** 语气与交互共同定义按钮的颜色来源，同属性由 CSS 层叠决定。 */
+export const buttonColorSource = token(brandColor, {
+  name: 'button-color-source',
+  address: button,
+  state: {
+    ...interactiveColorStates({ chromaResponse: 1 }),
+    danger: badColor,
   },
-  { name: 'button-color', address: button },
-)
+})
 
 /** 混合当前基色与主题表面，只产生计算表达式。 */
-function mixButtonSurface(strength: number, alpha: number, lightness = 0) {
-  return colorMix(
-    [
-      oklch(buttonColor, { alpha: (current) => multiply(current, alpha) }),
-      strength,
-    ],
-    oklch(globalSurfaceColor, {
-      lightness: (current) => add(current, lightness),
-    }),
-  )
+function mixButtonSurface(strength: number, alpha: number) {
+  const buttonColorSourceWithAlpha = oklch(buttonColorSource, {
+    alpha: (current) => multiply(current, alpha),
+  })
+  return colorMix([buttonColorSourceWithAlpha, strength], surfaceColor)
 }
 
-/** 背景的三种外观及交互全部在此定义，未禁用时才进入交互状态。 */
-export const buttonSurfaceColor = token(
-  {
-    default: mixButtonSurface(0.18, 0.14),
-    [whenHover.header]: () => mixButtonSurface(0.28, 0.14, -0.04),
-    [whenActive.header]: () => mixButtonSurface(0.38, 0.14, -0.08),
-    [whenPlain.header]: 'transparent',
-    [whenPlain.header + whenHover.header.slice(1)]: oklch(buttonColor, {
-      alpha: (current) => multiply(current, 0.14 * 0.08),
-    }),
-    [whenPlain.header + whenActive.header.slice(1)]: oklch(buttonColor, {
-      alpha: (current) => multiply(current, 0.14 * 0.14),
-    }),
-    [whenFilled.header]: mixButtonSurface(1, 1),
-    [whenFilled.header + whenHover.header.slice(1)]: mixButtonSurface(
-      0.95,
-      1,
-      -0.04,
-    ),
-    [whenFilled.header + whenActive.header.slice(1)]: mixButtonSurface(
-      0.9,
-      1,
-      -0.08,
-    ),
-  },
-  { name: 'button-surface-color', address: button },
-)
+/** 外观独立选择背景；交互继续由基色提供。 */
+export const buttonSurfaceColor = token(mixButtonSurface(0.18, 0.14), {
+  name: 'button-surface-color',
+  address: button,
+  state: { plain: 'transparent', filled: mixButtonSurface(1, 1) },
+})
 
 /** 普通内容沿用主题；语气内容读当前基色，填充外观保留纸色对比。 */
 export const buttonContentColor = token(contentColor, {
   name: 'button-content-color',
   address: button,
-  state: { [whenToned.header]: buttonColor, [whenFilled.header]: paperColor },
+  state: { toned: buttonColorSource, filled: paperColor },
 })
 
-const boundaryColor = oklch(buttonColor, {
+const buttonBoundaryColor = oklch(buttonColorSource, {
   alpha: (current) => multiply(current, 0.44),
 })
 
 /** 几何状态在组件地址计算，保留对公共尺寸基准的引用。 */
-const buttonSpacing = token(space, {
+const buttonSpace = token(baseSpace, {
   address: button,
-  state: space.state,
+  state: baseSpace.state,
+})
+const buttonPaddingBlock = token(baseSpace, {
+  address: button,
+  state: {
+    small: (base) => multiply(base, 1 / 2),
+    xlarge: (base) => multiply(base, 3 / 2),
+  },
+})
+const buttonPaddingInline = token(multiply(baseSpace, 3), {
+  address: button,
+  state: {
+    small: (base) => multiply(base, 1 / 2),
+    large: (base) => multiply(base, 4 / 3),
+    xlarge: (base) => multiply(base, 2),
+  },
 })
 const buttonTextSize = token(textSize, {
   address: button,
@@ -133,31 +101,28 @@ const buttonSize = token(controlSize, {
   state: controlSize.state,
 })
 
-/** 存在感与禁用共同作用于整颗按钮。 */
-const buttonOpacity = token(multiply(opacity, 0.9), {
+/** 强调程度决定基础透明度。 */
+const buttonOpacitySource = token(multiply(baseOpacity, 0.9), {
   address: button,
-  state: {
-    [whenDisabled.header]: (base) => multiply(base, 0.48 / 0.9),
-    [whenSoft.header + whenEnabled.header.slice(1)]: (base) =>
-      multiply(base, 0.7 / 0.9),
-    [whenStrong.header + whenEnabled.header.slice(1)]: (base) =>
-      multiply(base, 1 / 0.9),
-  },
+  state: { soft: multiply(baseOpacity, 0.7), strong: baseOpacity },
 })
 
-const controlShadow = shadowFor('control')
-const filledShadow = shadowFor('filledControl')
-/** 阴影与外观、交互和禁用的组合属于同一份定义。 */
-const buttonShadow = token(controlShadow.default, {
+/** 禁用比例继续读取当前强调后的透明度。 */
+const buttonOpacity = token(buttonOpacitySource, {
   address: button,
-  state: {
-    ...controlShadow.state,
-    [whenPlain.header]: 'none',
-    [whenFilled.header]: filledShadow.default,
-    [whenFilled.header + whenHover.header.slice(1)]: filledShadow.state!.hover,
-    [whenFilled.header + whenActive.header.slice(1)]: 'none',
-    [whenFilled.header + whenDisabled.header.slice(1)]: 'none',
-  },
+  state: { disabled: (base) => multiply(base, 0.48 / 0.9) },
+})
+
+/** 按钮外观选择基础阴影材料。 */
+const buttonShadowSource = token(baseShadowSmall, {
+  address: button,
+  state: { plain: 'none', filled: baseShadow },
+})
+
+/** 按钮决定交互与禁用时采用哪份阴影。 */
+const buttonShadow = token(buttonShadowSource, {
+  address: button,
+  state: { hover: baseShadow, active: 'none', disabled: 'none' },
 })
 
 rules(button, [
@@ -170,11 +135,8 @@ rules(button, [
   contentLayout({
     mode: 'center',
     alignSelf: 'center',
-    gap: spaceGap(buttonSpacing),
-    padding: [
-      spacePaddingBlock(buttonSpacing),
-      spacePaddingInline(buttonSpacing),
-    ],
+    gap: buttonSpace,
+    padding: [buttonPaddingBlock, buttonPaddingInline],
   }),
   size({ minHeight: buttonSize }),
   boundary({
@@ -187,15 +149,13 @@ rules(button, [
   clickable({
     address: button,
     opacity: buttonOpacity,
-    focusColor: boundaryColor,
+    focusColor: buttonBoundaryColor,
   }),
 ])
 
 // 普通属性的条件差异直接交给 rules，不重声明任何 Token。
-rules([...button, whenOutlined], {
-  'border-color': boundaryColor,
+rules([...button, stateConditionRegistry.outlined], {
+  'border-color': buttonBoundaryColor,
 })
-rules([...button, whenLoading], { cursor: 'progress' })
-rules([...button, whenLoading, whenDisabled], {
-  cursor: 'not-allowed',
-})
+rules([...button, stateConditionRegistry.loading], { cursor: 'progress' })
+rules([...button, stateConditionRegistry.disabled], { cursor: 'not-allowed' })

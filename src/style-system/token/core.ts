@@ -25,10 +25,7 @@ import {
   type TokenDefinitionInput,
   type TokenStateValues,
 } from './args-parser'
-import {
-  resolveStateConditions,
-  type StateCondition,
-} from '../pieces/state-conditions'
+import type { StateCondition, StateConditionInput } from '../state-condition'
 import { cssTokenName } from './css'
 import { allocateVariableName } from '../custom-property-names'
 
@@ -45,8 +42,13 @@ export type TokenData = TokenDirectInput | object
 /** 状态固定值或根据所属定义的基础内容产生结果的规则。 */
 export type TokenStateRule = TokenInput | ((base: TokenInput) => TokenInput)
 
-/** 可独立复用的状态规则；接收它的 Token 提供基础内容。 */
-export type TokenState = Record<string, TokenStateRule>
+/** 参数入口归一后的内部状态表；定义状态使用 TokenStateInput 对象或条目。 */
+export type TokenState = Map<StateCondition, TokenStateRule>
+
+/** 已登记快捷名的对象简写，或快捷名与 StateCondition 条目；入口统一为 Map。 */
+export type TokenStateInput =
+  | Record<string, TokenStateRule>
+  | Iterable<readonly [StateConditionInput, TokenStateRule]>
 
 /** 定义的明确根据地；缺省地址留待 CSS 坍缩时采用 root。 */
 export type TokenAddress = Exclude<ConditionInput, undefined>
@@ -54,7 +56,7 @@ export type TokenAddress = Exclude<ConditionInput, undefined>
 /** Token 基础配置及特殊内容的编译、输出协议。 */
 export interface TokenOptions<T extends TokenData = TokenData> {
   name?: string
-  state?: TokenState
+  state?: TokenStateInput
   address?: TokenAddress
   registration?: {
     syntax: string
@@ -84,7 +86,6 @@ export interface Token<T extends TokenData = TokenData>
 }
 
 const tokens = new WeakSet<object>()
-const tokenStates = new WeakMap<object, Map<string, StateCondition>>()
 const baseOutputs = new WeakMap<object, JSSContent>()
 const customOutputs = new WeakSet<object>()
 
@@ -150,15 +151,6 @@ export function token<T extends TokenData>(
   if (protocol?.toCSSString || protocol?.dependencies) customOutputs.add(self)
   if (self.name !== undefined) allocateVariableName(self.name)
   tokens.add(self)
-  tokenStates.set(
-    self,
-    new Map(
-      resolveStateConditions(Object.keys(self.state ?? {})).map((state) => [
-        state.name,
-        state,
-      ]),
-    ),
-  )
   return self
 
   /**
@@ -191,22 +183,6 @@ export const tokenBaseContent = (input: Token): TokenInput =>
   (typeof input.default === 'object' && !isJSSContent(input.default))
     ? baseOutputs.get(input)!
     : (input.default as TokenInput)
-
-/**
- * 取得创建时确定的状态条件，后续新增状态按登记事实补齐。
- */
-export function tokenStateEntries(
-  input: Token,
-): Map<StateCondition, TokenStateRule> {
-  const conditions = tokenStates.get(input)!
-  for (const state of resolveStateConditions(Object.keys(input.state ?? {})))
-    if (!conditions.has(state.name)) conditions.set(state.name, state)
-  return new Map(
-    Object.entries(input.state ?? {})
-      .map(([name, rule]) => [conditions.get(name)!, rule] as const)
-      .sort(([left], [right]) => left.order - right.order),
-  )
-}
 
 /**
  * 输出无需子内容编译的字符串和数值，其余内容等待编译器解析。

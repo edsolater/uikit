@@ -7,7 +7,6 @@
  */
 import { token } from '../token'
 import { afterEach, expect, test, vi } from 'vitest'
-import { stateCondition } from '../pieces/state-conditions'
 import { compileCSS, compileRules } from '../css-root'
 import {
   rule,
@@ -17,7 +16,7 @@ import {
   type Declarations,
   type DeclarationItem,
 } from '../rule'
-import { condition, media, type ConditionInput } from '../condition'
+import { condition, type ConditionInput } from '../condition'
 import { key, registerGlobalJSSKeyInStorage } from '../key'
 import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
@@ -44,10 +43,6 @@ import { boundary } from '../pieces/mixins/structure'
 
 import { motionDuration } from '../pieces/tokens/motion'
 import { lineColor } from '../pieces/tokens/color/colors'
-
-stateCondition('testHover', condition('&:hover'))
-stateCondition('testActive', condition('&:active'))
-stateCondition('testMedia', media('(width > 1px)'))
 
 test('动效按需提供根规则，分隔线在消费者处引用文字变量，空输入不激活', () => {
   expect(compileRules([])).toBe('')
@@ -127,9 +122,6 @@ test('Token 创建时不激活，按需规则可引用自身与稍后创建的 T
   handle.remove()
   expect(compileCSS()).toBe(baseline)
 })
-stateCondition('revisionA', condition('&[data-a]'))
-stateCondition('revisionB', condition('&[data-b]'))
-
 const runtimeRules = rules as (
   path: ConditionInput,
   declarations: unknown,

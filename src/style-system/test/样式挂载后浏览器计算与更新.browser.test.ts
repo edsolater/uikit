@@ -2,7 +2,7 @@
 import { token } from '../token'
 import { key } from '../key'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { stateCondition } from '../pieces/state-conditions'
+
 import { cdp, userEvent } from 'vitest/browser'
 import type { CDPSession } from '@vitest/browser-playwright'
 import { compileCSS, cssRoot as root } from '../css-root'
@@ -21,11 +21,12 @@ import { colorMix } from '../pieces/functions/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
 import { motionDuration } from '../pieces/tokens/motion'
 import { lineColor } from '../pieces/tokens/color/colors'
+import { stateCondition } from '../state-condition'
 
-stateCondition('testLarge', condition('&[data-large]'))
-stateCondition('testMedia', media('(width > 1px)'))
-stateCondition('browserA', condition('&:where([data-a])'))
-stateCondition('browserB', condition('&:where([data-b])'))
+const testLarge = stateCondition('&[data-large]')
+const testMedia = stateCondition('@media (width > 1px)')
+const browserA = stateCondition('&:where([data-a])')
+const browserB = stateCondition('&:where([data-b])')
 
 let style: HTMLStyleElement
 let element: HTMLDivElement
@@ -88,7 +89,7 @@ test('不同 Token 分支分别匹配，并由浏览器执行嵌套交集', asyn
   const factor = token(2, {
     name: 'browser-distance-ratio',
     address: '.example',
-    state: Object.fromEntries([['testLarge', 3]]),
+    state: [[testLarge, 3]],
   })
   handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
   root.mount()
@@ -117,7 +118,7 @@ test('同址 Token 分支在浏览器中共同更新复合值', async () => {
   expect(getComputedStyle(element).marginLeft).toBe('12px')
 })
 
-test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', async () => {
+test('同权 hover 与 active 同时匹配时，按定义顺序决定最终值', async () => {
   const button = document.createElement('button')
   button.className = 'subject-order'
   button.textContent = '条件顺序验证'
@@ -137,7 +138,6 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
   handles.push(handle)
   try {
     root.mount()
-    const forwardCSS = style.textContent
     await userEvent.hover(button)
     button.focus()
     await userEvent.keyboard('[Space>]')
@@ -155,8 +155,7 @@ test('hover 与 active 同时匹配时，分支书写顺序不改变最终值', 
         }),
       )
       root.mount()
-      expect(style.textContent).toBe(forwardCSS)
-      expect(getComputedStyle(button).marginLeft).toBe('3px')
+      expect(getComputedStyle(button).marginLeft).toBe('2px')
     } finally {
       await userEvent.keyboard('[/Space]')
     }
@@ -222,7 +221,7 @@ test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的�
       'result',
       token('16px', {
         name: 'browser-function-size',
-        state: Object.fromEntries([['testMedia', '20px']]),
+        state: [[testMedia, '20px']],
       }),
     ],
   ]
@@ -270,21 +269,24 @@ test('缺少宿主时不触发 Token；编译失败保留之前成功提交的 C
   expect(getComputedStyle(element).marginLeft).toBe('2px')
 })
 
-test('未登记的主体条件实际叠加、读取来源当前值并退出恢复', () => {
+test('局部 StateCondition 实际叠加、读取来源当前值并退出恢复', () => {
   handles.push(rule('.example', 'margin-left', '12px'))
   root.mount()
   const before = style.textContent
-  const danger = '&[data-tone="danger"]'
-  const emphasis = '&[data-emphasis]'
+  const danger = stateCondition('&[data-tone="danger"]')
+  const emphasis = stateCondition('&[data-emphasis]')
   const source = token('green', {
     name: 'browser-raw-source',
     address: '.example',
-    state: { [danger]: 'blue' },
+    state: [[danger, 'blue']],
   })
   const color = token('red', {
     name: 'browser-raw-color',
     address: '.example',
-    state: { [danger]: source, [emphasis]: source },
+    state: [
+      [danger, source],
+      [emphasis, source],
+    ],
   })
   handles.push(rule('.example', 'color', color))
   root.mount()
@@ -331,16 +333,22 @@ test('选择居中布局后内容实际位于容器中心', () => {
   ).toBeLessThan(1)
 })
 
-test('AB 同时激活时两个 Token 都取 B，参数与分支反序仍为 55', () => {
+test('多个 Token 按各自状态顺序取值，交换计算参数不改变结果', () => {
   const first = token(1, {
     name: 'browser-first-ratio',
     address: '.example',
-    state: { browserA: 2, browserB: 5 },
+    state: [
+      [browserA, 2],
+      [browserB, 5],
+    ],
   })
   const second = token(1, {
     name: 'browser-second-ratio',
     address: '.example',
-    state: { browserB: 11, browserA: 7 },
+    state: [
+      [browserB, 11],
+      [browserA, 7],
+    ],
   })
   const width = rule(
     '.example',
@@ -353,10 +361,10 @@ test('AB 同时激活时两个 Token 都取 B，参数与分支反序仍为 55',
   element.dataset.a = ''
   expect(getComputedStyle(element).width).toBe('14px')
   element.dataset.b = ''
-  expect(getComputedStyle(element).width).toBe('55px')
+  expect(getComputedStyle(element).width).toBe('35px')
   width.replace(multiply(multiply(second, first), '1px'))
   root.mount()
-  expect(getComputedStyle(element).width).toBe('55px')
+  expect(getComputedStyle(element).width).toBe('35px')
 })
 
 test('不同主体显式局部声明同名变量而互不污染', () => {

@@ -1,4 +1,5 @@
 /** 修改材料替换后采用当前规则，退出时恢复基础，不沿用旧结果或重复累计。 */
+import { stateCondition } from '../state-condition'
 import { token, type TokenInput } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { compileRules } from '../css-root'
@@ -20,7 +21,7 @@ test('替换修改材料后默认与固定状态更新，旧配方资源退出',
   const size = token('10px', {
     name: 'replace-modification-size',
     address: '.ReplacementBox',
-    state: { '&[data-phase]': '20px' },
+    state: [[stateCondition('&[data-phase]'), '20px']],
   })
   const oldAmount = token('3px', {
     onFirstScan: () => [[['.OldModificationResource'], 'display', 'block']],

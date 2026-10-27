@@ -11,11 +11,11 @@
 
 ## 颜色来源与组件控制
 
-Button 背景配方直接引用 globalSurfaceColor，普通内容引用 contentColor；主题来源的实际 CSS 变化继续传递给消费者。buttonColor、buttonSurfaceColor、buttonContentColor 分别完整定义基色、背景、内容及其 state，由 address 自动建立声明；rules 只消费属性，不再在其他位置给这些 Token 赋值。
+Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor；主题来源的实际 CSS 变化继续传递给消费者。buttonColorSource 提供基色，buttonSurfaceColor、buttonContentColor、buttonBoundaryColor 分别表达背景、内容和边界；需要声明的 Token 由 address 自动建立定义，表达式保留来源引用，rules 只消费属性，不再在其他位置给这些 Token 赋值。
 
 导出 Token 用于内容引用或新定义的输入。局部定制创建自己的 Token，在匹配按钮的 CSS 属性中消费；不推荐把原 Token 当成外部控制句柄。手动 declare 保留为 dangerous 操作，调用方自行承担层叠和状态交集后果。
 
-主题不是整颗按钮的单一染色开关：filled常态使用语气实底，强调实底的文字保留对比来源；危险语气、外观选择、hover/active与disabled继续各自有效。全局变化不能压掉区域或组件显式覆盖，也不能令危险filled回到普通来源。
+主题不是整颗按钮的单一染色开关：filled 常态使用语气实底，文字保留对比来源。危险语气使用固定的 badColor 引用，不另加工 hover、active 颜色；交互位移和禁用反馈仍各自生效。全局变化不能压掉区域或组件显式覆盖，也不能令危险 filled 回到普通来源。
 
 使用例见[按钮主题与局部控制](../../../style-system/doc/从按钮需求组合样式.md#共用主题来源还是只改这颗按钮)，结果边界见[共享主题与组件颜色控制.md](../../../style-system/doc/behaviors/共享主题与组件颜色控制.md)。
 

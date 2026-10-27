@@ -1,12 +1,13 @@
 /** 圆角基准及相对尺寸状态；具体组件的固定外形由组件定义。 */
 import { token } from '../../token'
 import { multiply } from '../functions/calc'
+import { whenSmall, whenLarge, whenXlarge } from '../conditions/profile'
 
-export const radius = token('4px', {
-  name: 'radius',
-  state: {
-    '&[data-size="small"]': (base) => multiply(base, 1 / 2),
-    '&[data-size="large"]': (base) => multiply(base, 2),
-    '&[data-size="xlarge"]': (base) => multiply(base, 3),
-  },
+export const baseRadius = token('4px', {
+  name: 'base-radius',
+  state: [
+    [whenSmall, (base) => multiply(base, 1 / 2)],
+    [whenLarge, (base) => multiply(base, 2)],
+    [whenXlarge, (base) => multiply(base, 3)],
+  ],
 })

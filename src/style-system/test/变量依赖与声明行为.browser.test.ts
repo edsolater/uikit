@@ -1,4 +1,5 @@
 /** 根据地状态使用该处基础；通过浏览器验证显式赋值与层叠。 */
+import { stateCondition } from '../state-condition'
 import { token, type TokenInput } from '../token'
 
 import { afterEach, expect, test } from 'vitest'
@@ -25,7 +26,7 @@ function mountCSS(css: string, className: string, tag = 'div'): HTMLElement {
 test('普通 Key 两次声明保留 join，状态不移到局部', () => {
   const source = token('10px', {
     name: 'joined-key-state',
-    state: { '&[data-phase]': (base) => multiply(base, 2) },
+    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
   })
   const target = key('--joined-key-state', {
     join: (values) =>
@@ -48,7 +49,7 @@ test.each(['Token', 'Key'])(
   (entry) => {
     const source = token('10px', {
       name: 'shared-state-size',
-      state: { '&[data-phase]': (base) => multiply(base, 2) },
+      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
     })
     const local =
       entry === 'Key'
@@ -72,7 +73,7 @@ test('根据地只 declare 也展开自身states，显式7px基础在状态下�
   const size = token('10px', {
     name: 'base-local-size',
     address: '.Local',
-    state: { '&[data-phase]': (base) => multiply(base, 2) },
+    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
   })
   const css = compileRules([
     [['.Local'], ...declare(size, '7px')],

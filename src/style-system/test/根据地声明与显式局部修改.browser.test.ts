@@ -1,4 +1,5 @@
 /** 通过实际尺寸验证根据地保障、CSS 继承和显式修改，不固定编译步骤。 */
+import { stateCondition } from '../state-condition'
 import { token } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
@@ -16,7 +17,7 @@ test.each([false, true])(
     const size = token('4px', {
       name: 'entry-home-size',
       address: '.EntryHome',
-      state: { '&[data-phase]': (base) => multiply(base, 2) },
+      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
     })
     const empty = token('9px', {
       name: 'entry-home-empty',
@@ -68,7 +69,7 @@ test('rules 混合已有 declare 与 modify 时保留状态基础和修改效果
   const size = token('4px', {
     name: 'entry-explicit-modified',
     address: '.EntryModified',
-    state: { '&[data-phase]': (base) => multiply(base, 2) },
+    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
   })
   const batch = rules('.EntryModified', [
     declare(size, '6px'),
@@ -94,7 +95,7 @@ test('rules 混合已有 declare 与 modify 时保留状态基础和修改效果
 test('根变量的状态只属于根，局部显式10px不会随自己的状态变成8px', () => {
   const size = token('4px', {
     name: 'home-only-root-state',
-    state: { '&[data-phase]': '8px' },
+    state: [[stateCondition('&[data-phase]'), '8px']],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
@@ -123,7 +124,7 @@ test.each([':root', ':where(:root)'])(
   (root) => {
     const size = token('4px', {
       name: 'home-root-alias-state',
-      state: { '&[data-phase]': (base) => multiply(base, 2) },
+      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
     })
     const empty = token('9px', 'home-root-alias-empty')
     const css = compileRules([
@@ -152,7 +153,7 @@ test('函数显式复用组件根据地，外部赋值只改变当地值', () =>
   const source = token('4px', {
     name: 'home-copy-source',
     address: '.CopyHome',
-    state: { '&[data-phase]': (base) => multiply(base, 2) },
+    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
   })
   const copied = token('5px', {
     name: 'home-copy-result',
@@ -162,7 +163,7 @@ test('函数显式复用组件根据地，外部赋值只改变当地值', () =>
   const wide = token(multiply(copied.default, 3), {
     name: 'home-copy-wide',
     address: copied.address,
-    state: { '&[data-phase]': (base) => multiply(base, 2) },
+    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
@@ -232,7 +233,9 @@ test('局部同名输入不搬运祖先公式，根输入变化仍正常计算',
 test('根声明的CSS优先关系同时决定当前值、状态基础与显式修改', () => {
   const size = token('4px', {
     name: 'home-root-priority',
-    state: { '&[data-root-phase]': (base) => multiply(base, 2) },
+    state: [
+      [stateCondition('&[data-root-phase]'), (base) => multiply(base, 2)],
+    ],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
@@ -289,7 +292,7 @@ test('显式修改无需手工基础声明，固定状态的实际结果也被�
   const size = token('10px', {
     name: 'home-modified-size',
     address: '.Modified',
-    state: { '&[data-phase]': '20px' },
+    state: [[stateCondition('&[data-phase]'), '20px']],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([

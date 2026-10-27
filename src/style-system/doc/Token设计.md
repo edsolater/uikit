@@ -103,18 +103,18 @@ const metadata = token(
 
 前七项是 argument parser 的固定输出字段；后三项是内部信息或编译协议，不增加 parser 的 key。
 
-| 属性或方法         | 所属与配置方式                                                       | 职能                                                                                                               | 生效时机与边界                                                                                                                                        |
-| ------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `default`          | Parser 字段；由创建参数提供                                          | 保存基础内容，承接位置参数 value 或对象简写的 default；可以是直接值、Token 引用或计算表达式                        | 作为自身定义的基础，不等待外部声明补齐或替换；state 以该基础及既定表达式加工结果展开。嵌入 Token 不复制其定义，提供内容不代表立即坍缩                   |
-| `name`             | Parser 字段；可显式提供，也可由系统生成                              | 提供 CSS 自定义属性的名称，使声明、引用和 modify 指向一致的 CSS 标识                                               | 显式命名使 Token 需要 CSS variable 身份；未命名但因其他条件需要该身份时，在坍缩过程中自动命名。不通过名称查找另一对象的定义                           |
-| `state`            | Parser 字段；可内联，也可传入独立 State                              | 保存条件到取值的映射；固定值指定该状态的结果，函数基于自身基础内容产生结果；同一 Token 的局部取值差异在这里表达    | 状态规则在定义地址表达，由 CSS 条件决定生效；条件可表达交互、主题、区域或组件分类。具有 state 就需要 CSS variable 身份，不是 JS 交互监听器              |
-| `address`          | Parser 字段；可选定义地址，未指定时默认根据地为 root                 | 确定默认声明及自身状态规则在哪里建立，表达计算与取值的位置                                                         | 显式提供就需要 CSS variable 身份；未提供时，需要建立 CSS variable 声明才采用 root，根据地缺省不应单独使普通直接值改变身份。不是扫描位置或附带声明列表 |
-| `registration`     | Parser 字段；可选 CSS 注册配置                                       | 描述 @property 的 syntax、inherits 及可选 initialValue，约束 CSS 自定义属性的类型、继承和初始值                    | 提供就需要 CSS variable 身份，并在 CSS 输出中建立所需注册；initialValue 独立于 default，不自动从 default 推断                                         |
-| `onFirstScan`      | Parser 字段；可选生命周期回调                                        | 同一对象在一次编译中首次被 AST 扫描到时提供附加规则，可以返回包含 modify 的规则                                    | 每对象每次编译只调用一次，后续位置或波次扫描复用其规则；不受 compileWaveIndex 门槛限制，也不代表已坍缩                                                |
-| `compileWaveIndex` | Parser 字段；可选非负整数，缺省为 0                                  | 指定 onCompile 最早允许执行的编译波次                                                                              | 是允许开始的门槛，不是必须完成的波次，不要求每波重复执行；不推迟首次扫描，也不绕过坍缩前读完相关修改的要求                                            |
-| `_kind`            | 内部字段；可对外读取，不由 parser 接收，调用方按约定不修改           | 表达系统根据定义及 AST 操作确定的 CSS 坍缩类别                                                                     | name、state、address、registration 或 modify 使其需要 CSS variable，否则输出 CSS value；修改读取完成后才能据此坍缩，不用于判断是否复制来源定义        |
-| `onCompile`        | 编译协议的生命周期方法；Token 实现可提供，特殊创建者也可在定义时提供 | 在编译阶段获得操作 AST 的机会，可以通过内部调用设置内容、插入或改写节点                                            | 按接受编译的对象身份，每对象每次编译调用一次，不因多个引用位置重复调用；受 compileWaveIndex 门槛约束，返回 void，不将返回值当作解析结果或操作描述     |
-| `toCSSString`      | 内容输出方法；不属于上述 parser 配置                                 | 描述自身内容怎样输出为 CSS 文本，需要输入时消费已准备好的子内容结果                                                | 在输出所需条件满足后表达坍缩结果；不负责调度扫描、决定波次或收集所有修改，不能在构造引用时提前冻结输出形式                                            |
+| 属性或方法         | 所属与配置方式                                                       | 职能                                                                                                                        | 生效时机与边界                                                                                                                                        |
+| ------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default`          | Parser 字段；由创建参数提供                                          | 保存基础内容，承接位置参数 value 或对象简写的 default；可以是直接值、Token 引用或计算表达式                                 | 作为自身定义的基础，不等待外部声明补齐或替换；state 以该基础及既定表达式加工结果展开。嵌入 Token 不复制其定义，提供内容不代表立即坍缩                 |
+| `name`             | Parser 字段；可显式提供，也可由系统生成                              | 提供 CSS 自定义属性的名称，使声明、引用和 modify 指向一致的 CSS 标识                                                        | 显式命名使 Token 需要 CSS variable 身份；未命名但因其他条件需要该身份时，在坍缩过程中自动命名。不通过名称查找另一对象的定义                           |
+| `state`            | Parser 字段；可内联，也可传入独立 State，解析后统一为 Map            | 保存 StateCondition 到取值的映射；固定值指定该状态的结果，函数基于自身基础内容产生结果；同一 Token 的局部取值差异在这里表达 | 状态规则在定义地址表达，由 CSS 条件决定生效；条件可表达交互、主题、区域或组件分类。具有 state 就需要 CSS variable 身份，不是 JS 交互监听器            |
+| `address`          | Parser 字段；可选定义地址，未指定时默认根据地为 root                 | 确定默认声明及自身状态规则在哪里建立，表达计算与取值的位置                                                                  | 显式提供就需要 CSS variable 身份；未提供时，需要建立 CSS variable 声明才采用 root，根据地缺省不应单独使普通直接值改变身份。不是扫描位置或附带声明列表 |
+| `registration`     | Parser 字段；可选 CSS 注册配置                                       | 描述 @property 的 syntax、inherits 及可选 initialValue，约束 CSS 自定义属性的类型、继承和初始值                             | 提供就需要 CSS variable 身份，并在 CSS 输出中建立所需注册；initialValue 独立于 default，不自动从 default 推断                                         |
+| `onFirstScan`      | Parser 字段；可选生命周期回调                                        | 同一对象在一次编译中首次被 AST 扫描到时提供附加规则，可以返回包含 modify 的规则                                             | 每对象每次编译只调用一次，后续位置或波次扫描复用其规则；不受 compileWaveIndex 门槛限制，也不代表已坍缩                                                |
+| `compileWaveIndex` | Parser 字段；可选非负整数，缺省为 0                                  | 指定 onCompile 最早允许执行的编译波次                                                                                       | 是允许开始的门槛，不是必须完成的波次，不要求每波重复执行；不推迟首次扫描，也不绕过坍缩前读完相关修改的要求                                            |
+| `_kind`            | 内部字段；可对外读取，不由 parser 接收，调用方按约定不修改           | 表达系统根据定义及 AST 操作确定的 CSS 坍缩类别                                                                              | name、state、address、registration 或 modify 使其需要 CSS variable，否则输出 CSS value；修改读取完成后才能据此坍缩，不用于判断是否复制来源定义        |
+| `onCompile`        | 编译协议的生命周期方法；Token 实现可提供，特殊创建者也可在定义时提供 | 在编译阶段获得操作 AST 的机会，可以通过内部调用设置内容、插入或改写节点                                                     | 按接受编译的对象身份，每对象每次编译调用一次，不因多个引用位置重复调用；受 compileWaveIndex 门槛约束，返回 void，不将返回值当作解析结果或操作描述     |
+| `toCSSString`      | 内容输出方法；不属于上述 parser 配置                                 | 描述自身内容怎样输出为 CSS 文本，需要输入时消费已准备好的子内容结果                                                         | 在输出所需条件满足后表达坍缩结果；不负责调度扫描、决定波次或收集所有修改，不能在构造引用时提前冻结输出形式                                            |
 
 固定 key 不意味着调用者必须提供全部配置。可选项的缺省表示由 parser 统一处理；自动名称仍按坍缩规则产生，不因统一结构中存在 name 这个 key 就提前生成。
 
@@ -150,12 +150,13 @@ rules('.Panel.Special', [foreground, undefined])
 同一主体在某个条件下取不同值，放入该 Token 的 state；条件不局限于 hover、active，也可以表达区域、主题和组件分类：
 
 ```ts
+const whenSpecial = stateCondition('&.Special')
 const foreground = token('black', {
   address: '.Panel',
-  state: {
-    '&.Special': 'blue',
-    hover: (base) => oklch(base, { alpha: 0.8 }),
-  },
+  state: [
+    [whenSpecial, 'blue'],
+    ['hover', (base) => oklch(base, { alpha: 0.8 })],
+  ],
 })
 rules('.Panel', [$color, foreground])
 ```
@@ -177,7 +178,7 @@ declare 及等价 Token entry 保留原能力，不加 assert、类型禁用或�
 
 default 是 Token 自身定义的基础，编译器按实际消费及坍缩需要在根据地生成声明，不等待调用方提供另一份声明。address 不等于创建时立即输出 CSS；未被消费的定义不因指定 address 就自行挂载。
 
-正常用法中，状态回调以所属 Token 的基础内容为 base，既定 modify 对表达式的加工仍按其契约处理。state 不是按对象书写顺序依次加工的流水线，某状态的固定值不会自动成为另一状态回调的基础；条件交集需要明确表达。后代消费引用不会把来源的状态和公式自动搬到当地重新展开；需要另一份局部定义时创建新 Token，并明确接入消费。
+正常用法中，状态回调以所属 Token 的基础内容为 base，既定 modify 对表达式的加工仍按其契约处理。state 不是按对象书写顺序依次加工的流水线，某状态的固定值不会自动成为另一状态回调的基础。后代消费引用不会把来源的状态和公式自动搬到当地重新展开；需要另一份局部定义时创建新 Token，并明确接入消费。
 
 危险重声明仍保留底层层叠和根据地选择行为。调用方自行承担它改变基础、遮蔽状态或影响其他引用的后果，不能把这些额外关系当成正常定义的必要步骤。
 
@@ -187,13 +188,14 @@ default 是 Token 自身定义的基础，编译器按实际消费及坍缩需�
 
 ## State 可以独立复用
 
-State 可以直接写在 Token 定义中，也可以独立定义后交给 Token。
+State 可以直接写在 Token 定义中，也可以独立定义后交给 Token。条件输入只接受静态预置的字符串快捷名或 StateCondition：字符串键对象与 entry 中的字符串都查同一张预置表，hover、active 等名称可直接使用。条件对象通过 entry 或 Map 保留身份，不隐式转成字符串。
 
 ```ts
-const emphasisState = {
-  hover: (base) => multiply(base, 2),
-  active: 4,
-}
+const whenCompact = stateCondition('&[data-density="compact"]')
+const emphasisState: TokenStateInput = [
+  [whenHover, (base) => multiply(base, 2)],
+  [whenCompact, 4],
+]
 
 const emphasis = token(2, {
   name: 'emphasis',
@@ -201,13 +203,25 @@ const emphasis = token(2, {
 })
 ```
 
-独立 State 保存可复用的状态规则；接收它的 Token 提供基础值。当前用 TokenState 类型的规则对象表达，不要求附着于某个 Token 才能存在，也不新增专门创建函数。
+独立 State 保存可复用的状态规则，接收它的 Token 提供基础值。提供新 State 定义时，优先返回方便调用者组合的对象简写或条件 entry；对象使用稳定快捷名，entry 保留条件变量，不要求辅助函数提前返回 Map。argument parser 一次归一为 `Map<StateCondition, TokenStateRule>`，后续流程不再识别输入写法。Map 仍是合法输入，已有 Token.state 可以完整复用；不能把新增定义的书写方式与解析后的结果混为一谈。
+
+StateCondition 直接使用单个 Condition 的 { header } 对象。参数入口将静态预置快捷名换成 stateConditionRegistry 中的原对象；同 header 的规则归一为一项，后值覆盖前值并保留首次插入位置，最终 Map 保留条件对象。编译直接消费该 Map，不增加解析结果包装、额外身份元数据或状态排序。
+
+组件级 state 优先使用稳定的静态预置快捷名，Style System 内部优先引用集中定义的 StateCondition 变量，便于复用和维护条件；这是写法约定，不限制另一种合法输入，见[主体状态条件](主体状态条件.md#token-提供状态反馈)。
+
+`stateCondition(input)` 从根入口创建一个局部主体条件，不登记名称。组件可直接将临时的 `whenComponentState = stateCondition(...)` 对象放入 state，无须也不应为它登记全局简写；hover、active 等常用稳定条件使用现成快捷名。快捷名映射只由 Style System 所属 Pieces 条件模块维护，由 stateConditionRegistry 汇总。共享和局部条件都可直接用于 state，不提供条件组合 API。映射保留原对象与 CSS，不包裹 :where()，也不决定排序；同一属性按原生特异度和定义顺序层叠。这是职责与编写约定，不增加冻结或运行时权限机制。
+
+未定义字符串在创建 Token 时立即报错，不回退为 CSS 条件。`'&[data-ready]'`、`'@media (...)'` 等原始 CSS 必须先交给 stateCondition，再以对象 entry 输入 state；没有原始字符串例外。普通 rules 的字符串仍表示 CSS 地址，不查状态快捷名表。
+
+`hover`、`active` 字符串与对应对象只判断交互状态；`whenEnabled`、`whenDisabled` 等条件独立匹配，不默认互相排除。不同属性的状态效果共同生效，同一属性按 CSS 层叠决定结果。独立复用和加工 `source.state` 使用 Map 迭代或条目展开，不使用 `Object.entries` 或对象展开。
 
 ## 产生 Token 的函数
 
 不建立 RuleToken 类型。需要接收输入再生成 Token 时，使用返回 Token 的普通函数。
 
-Token 也不再内置 `variants` 或 Variant 选择接口。不同用途由返回 Token 的函数表达，函数负责选择或计算该用途需要的值和状态。
+Token 也不再内置 `variants` 或 Variant 选择接口。普通函数可以根据输入计算或组合新 Token，但不根据组件类型替使用者选择材料。
+
+Token 描述自身的样式聚合，不认识使用它的组件。公共阴影可以按几何尺度提供不同材料，颜色可以表达 surface、content、boundary 等视觉作用；Button、Dialog 等组件自己选择材料，并在各自样式文件中定义状态差异。公共材料不持有组件用途分支，也不内置某个组件的布局比例。
 
 ```ts
 // 示意一个根据输入产生 Token 的普通函数，不新增工厂类型。
@@ -234,6 +248,8 @@ const target = token(source)
 ```
 
 target 的基础内容包含 source。需要输出定义中的内容时，自然消费 source 的坍缩结果：source 需要 CSS variable 身份时提供对应引用，普通内容则提供 CSS value。这个过程不增加“来源是 Token 就复制定义”的判定，处理的是内容是否需要在此刻坍缩。显式复制或加工定义由普通函数读取规范化字段后组合。
+
+两份具有独立职责的 Token 定义分别命名，再显式引用，例如 buttonOpacitySource → buttonOpacity；同一链条保留 Opacity 抓手，Source 放在最后，完整规则见[样式系统命名](样式系统命名.md)。不直接用 token(token(...)) 隐藏其中一份定义。multiply、oklch 等工具返回的 Token 仍可直接作为表达式组合，不要求为每个计算步骤增加中间变量。
 
 ## Modify 与内部类型
 
@@ -305,6 +321,8 @@ compileWaveIndex 是最早处理门槛，不表示指定波次必定完成，也
 - declare(token, value)、[token, value] 及 [token, undefined] 保留为 dangerous 操作，不作运行时或类型拦截；组件正常实现不依赖这些外部赋值入口。
 - 同一 Token 的条件取值差异写在 state；独立配置创建新 Token，并明确接入消费，不自动替换旧引用。
 - State 可以独立复用，也可以在创建 Token 时直接书写。
+- state 条件只接受静态预置字符串快捷名或 StateCondition；未定义字符串立即报错。原始 CSS 通过 stateCondition 对象的 entry/Map 输入，解析后统一为 Map；业务不读取 header 或裁剪选择器。
+- 共享快捷名在所属 Pieces 条件文件的映射中维护，局部条件直接使用 stateCondition 对象。hover、active、enabled、disabled 等条件独立匹配，不要求业务枚举交集。
 - 有状态但未命名的 Token 能自动取得名称；使用者不需要补写 name。
 - Token 不持有内置 Variant；按用途产生 Token 的能力通过普通函数表达。
 - 不再提供 adjust；定义加工直接使用返回 Token 的普通函数。

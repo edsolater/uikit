@@ -5,11 +5,11 @@ import { whenSmall, whenLarge, whenXlarge } from '../conditions/profile'
 
 export const textSize = token('16px', {
   name: 'text-size',
-  state: {
-    [whenSmall.header]: (base) => multiply(base, 7 / 8),
-    [whenLarge.header]: (base) => multiply(base, 5 / 4),
-    [whenXlarge.header]: (base) => multiply(base, 3 / 2),
-  },
+  state: [
+    [whenSmall, (base) => multiply(base, 7 / 8)],
+    [whenLarge, (base) => multiply(base, 5 / 4)],
+    [whenXlarge, (base) => multiply(base, 3 / 2)],
+  ],
 })
 
 export const fontWeight = token(400, 'font-weight')

@@ -19,6 +19,8 @@ token(2, {
 
 Argument parser 将不同写法归一为固定的七个 key：`default`、`name`、`state`、`address`、`registration`、`onFirstScan`、`compileWaveIndex`。可选项可以未提供，后续流程只处理统一结果。状态简写中的 default 是基础内容，其余项是状态定义；配置中的字段统一叫 state。
 
+state 条件只接受静态预置字符串快捷名或 StateCondition。hover、active 等名称可直接使用，未定义字符串立即报错。新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义及原始 CSS 通过 stateCondition 对象的 entry 传入；解析结果统一为 `Map<StateCondition, TokenStateRule>`，不把条件对象隐式转成字符串。
+
 只有 default 的定义与直接基础值形式等价，不生成隐式空 state。普通对象、数组数据通过 default 显式承载；已有 Token、表达式和延迟生产函数仍可直接作为基础值。输入分类与非法定义边界见 [Token 设计的参数入口](../Token设计.md#参数入口负责输入语法)。
 
 ## 使用另一个 Token 就是消费表达式
@@ -55,6 +57,8 @@ _kind 是系统内部处理信息，可对外读取，调用方按约定不修�
 
 用途选择和计算由返回 Token 的普通函数承担。Token 不内置 Variant，不保留 RuleToken 或独立 adjust。函数可以组合基础内容和状态，但结果不保存 resultSource 系列加工记录，也不在后续使用时重放历史。
 
-state 可以独立定义再交给 Token，也可以直接写入创建参数。状态回调读取所属 Token 的基础内容，固定值原样保留；详细结果见 [states与条件选择.md](states与条件选择.md)。
+state 可以独立定义再交给 Token，也可以直接写入创建参数。Token.state 已是 Map；复用时直接传入，组合时展开 [...source.state] 或迭代条目，不再使用对象展开或 Object.entries。状态回调读取所属 Token 的基础内容，固定值原样保留；详细结果见 [states与条件选择.md](states与条件选择.md)。
+
+局部条件通过根入口 stateCondition(input) 创建，直接作为对象复用。hover、active、enabled、disabled 等快捷名来自静态预置表，各自匹配，不自动互相排除，也不要求业务枚举交集。
 
 需要明确区分返回新定义和指定位置修改时，读 [Token的定义组合与modify.md](Token的定义组合与modify.md)。

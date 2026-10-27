@@ -1,6 +1,7 @@
 /**
  * 含当前根发布方案的输出检查；默认可用、当地覆盖等可观察目的由浏览器案例验证。
  */
+import { stateCondition } from '../state-condition'
 import { token } from '../token'
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
@@ -26,7 +27,9 @@ test.each(['before', 'after'] as const)(
   (position) => {
     const size = token('2px', {
       name: `late-root-${position}`,
-      state: { '&[data-late-state]': (base) => multiply(base, 2) },
+      state: [
+        [stateCondition('&[data-late-state]'), (base) => multiply(base, 2)],
+      ],
     })
     const trigger = token(1, {
       compileWaveIndex: 2,

@@ -1,4 +1,5 @@
 /** 浏览器确认匿名 Token 的变量需求、状态、注册与局部修改。 */
+import { stateCondition } from '../state-condition'
 import { afterEach, expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 import { token } from '../token'
@@ -23,7 +24,9 @@ test.each(
   ({ position, value }) => {
     const size = token('2px', {
       name: 'late-browser-size',
-      state: { '&[data-late-phase]': (base) => multiply(base, 2) },
+      state: [
+        [stateCondition('&[data-late-phase]'), (base) => multiply(base, 2)],
+      ],
     })
     const trigger = token(1, {
       compileWaveIndex: 2,
@@ -163,7 +166,9 @@ test('后创建的显式名称占用前次修改基础名时，重新编译仍�
 })
 
 test('后创建的显式名称占用匿名 Token 的前次名称时，重新编译仍保留双方值', () => {
-  const size = token('2px', { state: { '&[data-large]': '4px' } })
+  const size = token('2px', {
+    state: [[stateCondition('&[data-large]'), '4px']],
+  })
   const rules: import('../rule').Rules = [[['.CachedAnonymous'], 'width', size]]
   const firstCSS = compileRules(rules)
   const widthReference = firstCSS.match(/\bwidth:\s*var\((--[^,\s)]+)\)/)
@@ -275,7 +280,7 @@ test.each(['name', 'state', 'address', 'registration', 'modify'] as const)(
       kind === 'name'
         ? { name: 'explicit-size' }
         : kind === 'state'
-          ? { state: { '&[data-large]': '8px' } }
+          ? { state: [[stateCondition('&[data-large]'), '8px']] }
           : kind === 'address'
             ? { address: '.Target' }
             : kind === 'registration'

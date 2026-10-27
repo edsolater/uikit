@@ -16,11 +16,12 @@ import {
   $outlineOffset,
 } from '@/style-system/key-registry'
 import { translateY } from '../functions/transform'
-import { opacity } from '../tokens/opacity'
+import { baseOpacity } from '../tokens/opacity'
 import { multiply } from '../functions/calc'
 import { motionDuration, motionEasing } from '../tokens/motion'
 import { transitionValue } from '../token-factory/transition'
 import { focusOutline, focusOffset } from '../tokens/focus'
+import { whenActive, whenDisabled } from '../conditions/interaction'
 
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {
@@ -59,9 +60,9 @@ export const clickable = (
   [
     $opacity,
     options.opacity ??
-      token(opacity.default, {
+      token(baseOpacity.default, {
         name: 'clickable-opacity',
-        state: opacity.state,
+        state: baseOpacity.state,
         address: options.address,
       }),
   ],
@@ -70,10 +71,10 @@ export const clickable = (
     token('none', {
       name: 'clickable-transform',
       address: options.address,
-      state: {
-        active: translateY('1px'),
-        disabled: 'none',
-      },
+      state: [
+        [whenActive, translateY('1px')],
+        [whenDisabled, 'none'],
+      ],
     }),
   ],
   [$userSelect, 'none'],

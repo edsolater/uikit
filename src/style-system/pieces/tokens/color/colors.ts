@@ -4,10 +4,10 @@ import { colorMix } from '../../functions/color-mix'
 import { paperColor, inkColor } from './palette'
 
 /** 组件默认承载面的全局来源；组件可引用并保留自己的交互加工。 */
-export const globalSurfaceColor = token(paperColor, 'global-surface-color')
+export const surfaceColor = token(paperColor, 'surface-color')
 
 /** 普通文字与图标的全局内容来源；组件可在自身作用域覆盖。 */
-export const contentColor = token(inkColor, 'global-content-color')
+export const contentColor = token(inkColor, 'content-color')
 
 /** 多个线条共用的混合强度，可在全局或具体作用域声明。 */
 export const lineStrength = token(0.18, 'line-strength')

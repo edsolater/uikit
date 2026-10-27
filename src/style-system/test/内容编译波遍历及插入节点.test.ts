@@ -5,12 +5,13 @@
  *
  * 防止编译波推进时遗漏未完成内容或重复执行回调。
  */
+import { stateCondition } from '../state-condition'
 import { token } from '../token'
 import { expect, test } from 'vitest'
 import { Unresultable } from '@edsolater/fnkit'
 import { condition } from '../condition'
 import { key, type JSSKeyObject } from '../key'
-import { stateCondition } from '../pieces/state-conditions'
+
 import { compileRules } from '../css-root'
 import {
   createJSSContent,
@@ -61,7 +62,7 @@ test.each([
   expect(css).toBe('color: red;')
   expect(delayedCalls).toBe(waiting === '最早编译波' ? 0 : 1)
 })
-stateCondition('contentWaveHover', condition('&:where([data-wave-hover])'))
+const contentWaveHover = stateCondition('&:where([data-wave-hover])')
 
 test('Key 替换路径后，Content 激活仍复制节点访问开始时取得的路径引用', () => {
   let observed: string[] = []
@@ -384,7 +385,7 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
   ).toEqual(['.WaveContent', '&:where([data-wave-hover])'])
   expect(
     observedCompileContext?.conditionPath.stateConditionPath.map(
-      (item) => item.name,
+      (item) => item.header,
     ),
   ).toEqual([])
   expect(observedController?.search({ key: key('color') })[0]?.content).toBe(
@@ -964,7 +965,7 @@ test.each([false, true])(
     ).toEqual(['.LifecycleOnly', '&:where([data-wave-hover])'])
     expect(
       observedContext?.conditionPath.stateConditionPath.map(
-        (item) => item.name,
+        (item) => item.header,
       ),
     ).toEqual([])
     expect(css).toContain('.LifecycleDependency')
@@ -1096,7 +1097,7 @@ test('Token source 与状态中的可调用内容按对象编译而非工厂调�
       'color',
       token(source, {
         name: 'compilable-function-color',
-        state: { contentWaveHover: state },
+        state: [[contentWaveHover, state]],
       }),
     ],
   ])

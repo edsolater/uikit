@@ -20,7 +20,14 @@ import type {
   TokenOptions,
   TokenState,
   TokenStateRule,
+  TokenStateInput,
 } from './core'
+import {
+  isStateCondition,
+  type StateCondition,
+  type StateConditionInput,
+} from '../state-condition'
+import { resolveStateCondition } from '../state-condition-registry'
 
 /** 默认内容中的普通函数是生产器，只能返回内容链可消费的输入。 */
 export type TokenDefaultInput<T extends TokenData> = T extends JSSContent
@@ -31,14 +38,14 @@ export type TokenDefaultInput<T extends TokenData> = T extends JSSContent
       : never
     : T
 
-/** 按完整输入的实际字段推断：default 是数据，其余字段是状态规则。 */
+/** 按完整输入推断：default 是数据，其余字段是已登记快捷名的状态规则。 */
 export type TokenDefinitionInput<D extends { default: TokenData }> = D & {
   [K in keyof D]: K extends 'default'
     ? TokenDefaultInput<D['default']>
     : TokenStateRule
 }
 
-/** 显式选择默认数据类型的标注；状态的实际合法性仍由 parser 统一验证。 */
+/** 显式标注默认数据类型；状态快捷名是否登记由 parser 在运行时统一验证。 */
 export type TokenStateValues<T extends TokenData = TokenData> = {
   default: T
 } & Record<string, T | TokenStateRule>
@@ -87,12 +94,21 @@ export function parseTokenArgs<T extends TokenData>(
   const stateEntries = shorthand
     ? Object.entries(shorthand).filter(([name]) => name !== 'default')
     : []
-  const states = stateEntries.length
-    ? (Object.fromEntries(stateEntries) as TokenState)
-    : undefined
-  const state =
-    states || config.state ? { ...states, ...config.state } : undefined
-  for (const rule of Object.values(state ?? {}))
+  const states = new Map<string, [StateCondition, TokenStateRule]>()
+  const entriesOf = (
+    source: TokenStateInput,
+  ): Iterable<readonly [StateConditionInput, TokenStateRule]> =>
+    Symbol.iterator in source
+      ? (source as Iterable<readonly [StateConditionInput, TokenStateRule]>)
+      : Object.entries(source)
+  for (const [inputCondition, rule] of [
+    ...stateEntries,
+    ...entriesOf(config.state ?? {}),
+  ]) {
+    assert(
+      typeof inputCondition === 'string' || isStateCondition(inputCondition),
+      'Token 状态条件必须是已登记快捷名或 StateCondition。',
+    )
     assert(
       rule === undefined ||
         typeof rule === 'string' ||
@@ -101,10 +117,16 @@ export function parseTokenArgs<T extends TokenData>(
         isFunction(rule),
       'Token 状态必须是可编译内容或状态回调。',
     )
+    const resolved = resolveStateCondition(inputCondition)
+    states.set(resolved.header, [resolved, rule as TokenStateRule])
+  }
   return {
     default: shorthand ? shorthand.default : (input as T),
     name: config.name,
-    state,
+    state:
+      stateEntries.length || config.state !== undefined
+        ? new Map(states.values())
+        : undefined,
     address: config.address,
     registration: config.registration,
     onFirstScan: config.onFirstScan,

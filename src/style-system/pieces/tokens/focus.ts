@@ -8,7 +8,7 @@
 import { token, type TokenAddress } from '../../token'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../token-factory/list'
-import { space } from './space'
+import { baseSpace } from './space'
 import { boundaryWidth } from './boundary'
 import { multiply } from '../functions/calc'
 import { allocateVariableName } from '../../custom-property-names'
@@ -27,5 +27,5 @@ export const focusOutline = (
   })
 export const focusOffset = token('0px', {
   name: 'focus-offset',
-  state: { focus: multiply(space, 1 / 4) },
+  state: { focus: multiply(baseSpace, 1 / 4) },
 })

@@ -1,3 +1,4 @@
+import { stateCondition } from '../state-condition'
 /** 具体 Token 的资源依赖、声明顺序与本次 AST 的撤销效果。 */
 import { token, type Token } from '../token'
 
@@ -5,15 +6,11 @@ import { describe, expect, test } from 'vitest'
 import { whenSettled } from './helpers/when-settled'
 import { parse, type AnyNode } from 'postcss'
 import { compileRules } from '../css-root'
-import { condition } from '../condition'
+import { condition, appendStateCondition } from '../condition'
 import type { JSSContent } from '../content'
 import { declare } from '../operations/declare'
 import { key } from '../key'
 import { multiply } from '../pieces/functions/calc'
-import {
-  appendStateCondition,
-  resolveStateConditions,
-} from '../pieces/state-conditions'
 import type { Rules } from '../rule'
 import * as styleSystem from '../index'
 import { colorMix } from '../pieces/functions/color-mix'
@@ -119,7 +116,7 @@ function inPhase(target: Token, content: string): JSSContent {
           before: context.node,
           conditionPath: appendStateCondition(
             context.conditionPath,
-            resolveStateConditions(['&[data-phase]'])[0],
+            stateCondition('&[data-phase]'),
           ),
         },
         declare(target, content),
@@ -135,7 +132,7 @@ describe('实际引用与消费退出', () => {
     const source = token(10, {
       name: 'declaration-revision',
       address: '.Revision',
-      state: { '&[data-phase]': (base) => multiply(base, 2) },
+      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
     })
     const initial = declare(source, 7)
     const css = compileRules([
@@ -205,7 +202,7 @@ describe('实际引用与消费退出', () => {
       const size = token(5, {
         name: 'home-moved-before',
         address: '.MovedHome',
-        state: { '&[data-phase]': '11px' },
+        state: [[stateCondition('&[data-phase]'), '11px']],
       })
       const css = compileRules([
         [['.MovedHome'], '--home-moved-before', 9],

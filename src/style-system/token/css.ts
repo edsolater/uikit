@@ -15,14 +15,12 @@ import type { ASTController } from '../compiler/contracts'
 import type { JSSKeyObject } from '../key'
 import {
   tokenBaseContent,
-  tokenStateEntries,
   type Token,
   type TokenAddress,
   type TokenInput,
   type TokenOptions,
-  type TokenStateRule,
+  type TokenState,
 } from './core'
-import type { StateCondition } from '../pieces/state-conditions'
 
 /** 已进入 CSS 声明路径的目标材料；状态和基础始终取自所属 Token。 */
 export interface CSSCustomProperty {
@@ -30,7 +28,7 @@ export interface CSSCustomProperty {
   key: JSSKeyObject
   content: TokenInput
   address?: TokenAddress
-  states: Map<StateCondition, TokenStateRule>
+  states: TokenState | undefined
   registration?: TokenOptions['registration']
 }
 
@@ -71,7 +69,7 @@ export function cssCustomProperty(token: Token): CSSCustomProperty {
         return token.address
       },
       get states() {
-        return tokenStateEntries(token)
+        return token.state
       },
       get registration() {
         return token.registration

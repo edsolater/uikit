@@ -6,6 +6,17 @@
 
 函数可以读取来源 Token 的 default、state 及其他规范化信息，决定加工哪些值、继承哪些配置、覆盖哪些项，再返回一个 Token。需要沿用或改变状态的函数应直接表达该组合，不依赖内置 Variant 或结果来源记录。
 
+state 的创建输入接受静态预置快捷名的字符串对象或带 StateCondition 的 entry，解析后统一为 Map。未定义字符串立即报错，原始 CSS 先交给 stateCondition。加工已有定义时读取该 Map，不再按对象枚举或展开；条件对象继续作为键保留：
+
+```ts
+const compact = token(source.default, {
+  address: '.Compact',
+  state: [...(source.state ?? []), [whenHover, '6px']],
+})
+```
+
+stateCondition(input) 创建独立的局部主体条件。字符串 hover/active 与对应对象均只判断交互状态，enabled、disabled 等条件独立匹配；不同属性的效果共同生效，同一属性按 CSS 层叠决定结果。
+
 只改变基础值和加工每个状态结果，是不同的函数行为。基础 10、hover 为基础加 3、active 固定 12 时：
 
 | 函数表达的变化           | 普通 | hover | active |

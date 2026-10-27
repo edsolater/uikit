@@ -7,13 +7,16 @@
  */
 import {
   assert,
-  isArray,
   isFunction,
   isObject,
   isObjectLike,
   isString,
 } from '@edsolater/fnkit'
-import { condition, type Condition, type ConditionInput } from './condition'
+import {
+  resolveConditionPath,
+  type Condition,
+  type ConditionInput,
+} from './condition'
 import { isJSSKey, resolveJSSKey, type JSSKey } from './key'
 import { declare, isCSSPair, type Declaration } from './operations/declare'
 import type { TokenInput } from './token/core'
@@ -61,25 +64,13 @@ export interface RuleHandle extends RulesHandle {
 }
 
 /**
- * 把 CSS 地址字符串表示为 Condition，现成的 Condition 保留对象。
- * `'.Button'` → `{ header: '.Button' }`。
- * `'hover'` → `{ header: 'hover' }`，不解释状态名称。
- * 传入 Condition → 原对象。
- * 此处只区分路径成员，不校验路径是否有效。
- */
-function resolvePathCondition(item: Condition | string): Condition {
-  if (!isString(item)) return item
-  return condition(item)
-}
-
-/**
  * 检查规则路径成员的形状；符合要求则不改输入，否则抛错。
- * `['hover', condition('.Button')]` 通过，输入不变。
+ * Condition 已由地址入口归一；校验不改变输入。
  * 运行时传入 `[undefined]` 会抛错。
  */
-function assertValidConditionPath(path: (Condition | string)[]): void {
+function assertValidConditionPath(path: Condition[]): void {
   assert(
-    path.every((item) => item && (isString(item) || isString(item.header))),
+    path.every((item) => item && isString(item.header)),
     'Rule 的 Condition Path 必须由有效 Condition 组成。',
   )
 }
@@ -90,12 +81,9 @@ function assertValidConditionPath(path: (Condition | string)[]): void {
  * 运行时传入 `[undefined]` 会抛错。
  * `undefined` 仍返回 `undefined`，表示沿用外层路径。
  */
-function rulePath(input: ConditionInput): (Condition | string)[] | undefined {
+function rulePath(input: ConditionInput): Condition[] | undefined {
   if (input === undefined) return undefined
-  const path = Array.from(
-    isArray(input) ? input : [input],
-    resolvePathCondition,
-  )
+  const path = resolveConditionPath(input)!
   assertValidConditionPath(path)
   return path
 }

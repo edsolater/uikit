@@ -1,6 +1,6 @@
 本文按 Token 模型描述状态行为，源码已完成 Token 迁移。
 
-state 将一份定义的反馈保存起来，使业务换基础时无需重写每个 hover、active。state 属于明确主体，不因为 Token 被谁读取就自动改变归属。State 可以独立存在，也可以在创建 Token 时内联书写。
+state 将一份定义的反馈保存起来，使业务换基础时无需重写每个 hover、active。state 属于明确主体，不因为 Token 被谁读取就自动改变归属。输入条件只接受静态预置快捷名或 StateCondition：字符串对象简写使用预置名称，对象条件使用 entry 或 Map，解析后统一为 Map。State 可以独立存在，也可在创建 Token 时内联书写。
 
 # 规则读取基础，固定值保持固定
 
@@ -8,7 +8,11 @@ state 将一份定义的反馈保存起来，使业务换基础时无需重写�
 const size = token('4px', {
   name: 'feedback-size',
   address: '.Button',
-  state: { hover: (base) => add(base, '2px'), active: '12px', disabled: '0px' },
+  state: [
+    [whenHover, (base) => add(base, '2px')],
+    [whenActive, '12px'],
+    [whenDisabled, '0px'],
+  ],
 })
 rules('.Button', [[key('width'), size]])
 ```
@@ -27,8 +31,8 @@ Token 嵌入其他 Token 或表达式时按普通可坍缩内容消费，不复�
 
 # 多个条件同时成立
 
-同一主体同时 hover、active 时，需要稳定、可说明的选择规则。现有快捷约定继续保留：active 在 hover 后，disabled 排除快捷 hover/active 的交互反馈，因此同等适用情况下上述 Button 的 active 为 12px，禁用为 0px，不依赖 state 对象字段碰巧怎么排列。
+同一主体同时 hover、active 时，各状态按定义条目的 Map 插入顺序生成 CSS，条件保留自身特异度，不另设中央排序。上例的 active 定义在 hover 后，两者条件同权重，所以 active 覆盖 hover；disabled 保留自身选择器权重，其 0px 覆盖二者。
 
-直接 CSS 条件仍遵循自身特异度和源序；快捷 state 的排序不能变成忽略任意选择器权重的总开关。普通 Rules 中的 hover 字符串也不暗中解释成 state 快捷名。
+快捷名只在参数入口换成 stateConditionRegistry 中的原条件对象，不改写 CSS 或添加 :where()；后续直接编译 Token.state，不重复解析或排序。state 中未定义的字符串立即报错，原始 CSS 必须先创建 stateCondition 对象。普通 Rules 中的 hover 字符串仍是 CSS 地址，不暗中解释成 state 快捷名。
 
-原生 disabled 和项目的禁用标记都应阻止快捷交互外观；普通 &:hover 仍是原生 CSS，不自动加禁用过滤。样式 state 标记不替 DOM 承担事件禁用。快捷名登记、完整顺序及 focus 映射属于 [当前接口约定](../当前接口与扩展协议.md#状态快捷名与交互约定)。
+whenHover/whenActive 和同义字符串只判断交互状态，不过滤禁用。多个条件可以同时命中：不同属性共同生效，同一属性按 CSS 层叠决定结果。样式状态不替 DOM 承担事件禁用。预置快捷名在所属 Pieces 条件文件的静态映射中维护，临时自定义使用 stateCondition 对象；输入边界及 focus 映射见 [当前接口约定](../当前接口与扩展协议.md#状态快捷名与交互约定)。

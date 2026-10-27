@@ -1,5 +1,5 @@
 /** 创建 Condition，并表达目标、状态与 CSS 输出地址。 */
-import type { StateCondition } from './pieces/state-conditions'
+import type { StateCondition } from './state-condition'
 import { assert, isString } from '@edsolater/fnkit'
 
 /** 一层 CSS 地址；header 同时是身份和输出块头。 */
@@ -39,7 +39,7 @@ export function outputConditionPath(
 ): CSSConditionPath {
   return [
     ...conditionPath.targetConditionPath,
-    ...conditionPath.stateConditionPath.map((state) => state.condition),
+    ...conditionPath.stateConditionPath,
   ]
 }
 
@@ -49,13 +49,38 @@ export function outputConditionPath(
 export function conditionAddressKey(path: ConditionPath): string {
   return JSON.stringify([
     path.targetConditionPath.map((item) => item.header),
-    path.stateConditionPath.map((state) => state.name),
+    path.stateConditionPath.map((state) => state.header),
   ])
 }
 
 /** Condition 地址输入；缺省表示当前位置。 */
 export type ConditionInput =
   Condition | string | (Condition | string)[] | undefined
+
+/** 统一普通地址与结构化主体状态路径；不在消费处拼接 CSS。 */
+export function resolveConditionPath(
+  input: ConditionInput,
+): Condition[] | undefined {
+  if (input === undefined) return undefined
+  return Array.from(Array.isArray(input) ? input : [input]).map((item) =>
+    typeof item === 'string' ? condition(item) : item,
+  )
+}
+
+/** 按声明次序接入状态条件，不改变目标地址或重排已有条件。 */
+export function appendStateCondition(
+  path: ConditionPath,
+  state: StateCondition,
+): ConditionPath {
+  return {
+    targetConditionPath: [...path.targetConditionPath],
+    stateConditionPath: [
+      ...new Map(
+        [...path.stateConditionPath, state].map((item) => [item.header, item]),
+      ).values(),
+    ],
+  }
+}
 
 /**
  * 创建 `@media` Condition。

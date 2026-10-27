@@ -1,14 +1,15 @@
 /** 普通函数读取定义产生 Token，不依赖内置用途或加工历史。 */
+import { stateCondition } from '../state-condition'
 import { expect, test } from 'vitest'
 import { token, type Token, type TokenInput } from '../token'
 import { compileRules } from '../css-root'
 import { multiply, add } from '../pieces/functions/calc'
 
 test('普通函数换基础并显式复用 State，规则用新基础而固定状态保持原值', () => {
-  const state = {
-    '&[data-hover]': (base) => add(base, '3px'),
-    '&[data-active]': '12px',
-  }
+  const state = [
+    [stateCondition('&[data-hover]'), (base) => add(base, '3px')],
+    [stateCondition('&[data-active]'), '12px'],
+  ] as const
   const source = token('10px', {
     name: 'function-source',
     state,
@@ -39,8 +40,8 @@ test('逐项加工最终结果保存组合后的定义，后续换 default 不�
   const half = (input: Token<TokenInput>) =>
     token<TokenInput>(multiply(input.default, 0.5), {
       name: 'halved',
-      state: Object.fromEntries(
-        Object.entries(input.state ?? {}).map(([name, rule]) => [
+      state: new Map(
+        Array.from(input.state ?? []).map(([name, rule]) => [
           name,
           multiply(
             typeof rule === 'function' ? rule(input.default) : rule,
@@ -90,7 +91,9 @@ test('实际对象引用不激活另一个同名定义，CSS 引用字符串不�
 })
 
 test('独立 State 被多个基础值复用，状态不复制来源定义', () => {
-  const state = { '&[data-large]': (base) => multiply(base, 2) }
+  const state = [
+    [stateCondition('&[data-large]'), (base) => multiply(base, 2)],
+  ] as const
   const first = token('3px', { name: 'state-first', state })
   const second = token('7px', { name: 'state-second', state })
   const css = compileRules([

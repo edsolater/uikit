@@ -1,4 +1,5 @@
 /** 内容生产函数只在编译时求值，输出协议不接受函数冒充文本。 */
+import { stateCondition } from '../state-condition'
 import { token } from '../token'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
@@ -87,7 +88,7 @@ test.each([
 test('默认生产函数与状态 base 回调返回的生产内容保留资源和当地基础', () => {
   const source = token(() => token(() => '4px'), {
     name: 'producer-default-state',
-    state: { '&:hover': (base) => multiply(base, () => 2) },
+    state: [[stateCondition('&:hover'), (base) => multiply(base, () => 2)]],
     onFirstScan: () => [[['.ProducerResource'], 'color', () => 'red']],
     registration: {
       syntax: '<length>',
@@ -184,7 +185,12 @@ test('状态回调收到默认生产函数求得的基础值，而不是函数�
   const material = token(() => '4px', {
     name: 'producer-base-value',
     address: '.BaseValue',
-    state: { '&:hover': (base) => `${Number.parseFloat(String(base)) * 2}px` },
+    state: [
+      [
+        stateCondition('&:hover'),
+        (base) => `${Number.parseFloat(String(base)) * 2}px`,
+      ],
+    ],
   })
   const css = compileRules([[['.BaseValue'], 'width', material]])
   expect(css).toContain('--producer-base-value: 4px;')
@@ -194,7 +200,12 @@ test('状态回调收到默认生产函数求得的基础值，而不是函数�
 test('根据地的生产基础与状态不覆盖另一区域的显式局部值', () => {
   const material = token(() => '4px', {
     name: 'expanded-unused-default',
-    state: { '&:hover': (base) => `${parseFloat(String(base)) * 2}px` },
+    state: [
+      [
+        stateCondition('&:hover'),
+        (base) => `${parseFloat(String(base)) * 2}px`,
+      ],
+    ],
   })
   const css = compileRules([
     [['.Explicit'], ...declare(material, '6px')],
@@ -217,7 +228,12 @@ test('根据地的生产基础只求值一次，多个消费者共享结果', ()
     {
       name: 'expanded-shared-default',
       address: '.SharedDefault',
-      state: { '&:hover': (base) => `${parseFloat(String(base)) * 2}px` },
+      state: [
+        [
+          stateCondition('&:hover'),
+          (base) => `${parseFloat(String(base)) * 2}px`,
+        ],
+      ],
     },
   )
   const css = compileRules([
@@ -294,7 +310,7 @@ test('可调用内容对象按内容协议消费，不调用函数体', () => {
   expect(css).toContain('width: 7px;')
   const material = token(callable, {
     name: 'producer-callable-material',
-    state: { '&:hover': callable },
+    state: [[stateCondition('&:hover'), callable]],
   })
   const materialCSS = compileRules([[['.Callable'], 'width', material]])
   expect(materialCSS).toContain('--producer-callable-material: 7px;')

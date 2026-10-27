@@ -14,7 +14,7 @@ import { add, multiply } from '../pieces/functions/calc'
 import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { compileRules } from '../css-root'
-import { stateCondition } from '../pieces/state-conditions'
+
 import type { Rules } from '../rule'
 
 const row = (
@@ -25,7 +25,7 @@ const button = condition('.ModifyButton')
 const panel = condition('.ModifyPanel')
 const hover = condition('&[data-hover]')
 const focus = condition('&[data-focus]')
-stateCondition('modifierHover', hover)
+
 afterEach(() => document.body.replaceChildren())
 
 function mount(input: Rules) {
@@ -89,7 +89,7 @@ test.each([true, false])(
     const n = token(1, {
       name: 'state-count',
       address: '.ModifyButton',
-      state: { modifierHover: 10 },
+      state: [[hover, 10]],
     })
     const declarations: Rules = [
       row(

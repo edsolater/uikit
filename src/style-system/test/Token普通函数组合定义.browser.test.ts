@@ -1,4 +1,5 @@
 /** 浏览器确认普通定义组合、CSS 当前值和状态根据地。 */
+import { stateCondition } from '../state-condition'
 import { afterEach, expect, test } from 'vitest'
 import { token, type Token, type TokenInput } from '../token'
 import { compileRules } from '../css-root'
@@ -12,10 +13,10 @@ test('换基础与逐项加工是不同函数行为，来源保持原结果', ()
   const source = token('10px', {
     name: 'ordinary-source',
     address: '.Home',
-    state: {
-      '&[data-hover]': (base) => add(base, '3px'),
-      '&[data-active]': '12px',
-    },
+    state: [
+      [stateCondition('&[data-hover]'), (base) => add(base, '3px')],
+      [stateCondition('&[data-active]'), '12px'],
+    ],
   })
   const replaceBase = () =>
     token('5px', {
@@ -27,8 +28,8 @@ test('换基础与逐项加工是不同函数行为，来源保持原结果', ()
     token(multiply(input.default, 0.5), {
       name: 'ordinary-half',
       address: input.address,
-      state: Object.fromEntries(
-        Object.entries(input.state ?? {}).map(([name, rule]) => [
+      state: new Map(
+        Array.from(input.state ?? []).map(([name, rule]) => [
           name,
           multiply(
             typeof rule === 'function' ? rule(input.default) : rule,
@@ -106,12 +107,12 @@ test('两个同名定义分别按自己的地址与状态发布，不从消费�
   const first = token('3px', {
     name: 'shared-address-name',
     address: '.First',
-    state: { '&[data-change]': '5px' },
+    state: [[stateCondition('&[data-change]'), '5px']],
   })
   const second = token('7px', {
     name: 'shared-address-name',
     address: '.Second',
-    state: { '&[data-change]': '11px' },
+    state: [[stateCondition('&[data-change]'), '11px']],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([

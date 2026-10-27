@@ -1,9 +1,11 @@
 /** 验证共享分类条件跨主体复用，以及局部条件和交互标记的实际 CSS 效果。 */
 import { afterEach, expect, test } from 'vitest'
-import { condition } from '../../condition'
+import { stateCondition } from '../../state-condition'
 import { compileCSS } from '../../css-root'
 import { rules, type RulesHandle } from '../../rule'
 import { token } from '../../token'
+import { baseRadius } from '../tokens/radius'
+import { baseOpacity } from '../tokens/opacity'
 import {
   whenFilled,
   whenOutlined,
@@ -19,6 +21,45 @@ import {
 import { whenLoading, whenEnabled } from './interaction'
 
 const handles: RulesHandle[] = []
+
+test('材料复用尺寸与强调条件后保留实际倍率，并在退出状态时恢复基础', () => {
+  const address = '.ProfileMaterials'
+  handles.push(
+    rules(address, {
+      'border-radius': token(baseRadius, {
+        address,
+        state: baseRadius.state,
+      }),
+      'opacity': token(baseOpacity, {
+        address,
+        state: baseOpacity.state,
+      }),
+    }),
+  )
+  document.body.appendChild(document.createElement('style')).textContent =
+    compileCSS()
+  const button = document.body.appendChild(document.createElement('button'))
+  button.className = 'ProfileMaterials'
+  expect(getComputedStyle(button).borderTopLeftRadius).toBe('4px')
+  expect(getComputedStyle(button).opacity).toBe('1')
+  for (const [size, radius] of [
+    ['small', '2px'],
+    ['large', '8px'],
+    ['xlarge', '12px'],
+  ]) {
+    button.dataset.size = size
+    expect(getComputedStyle(button).borderTopLeftRadius).toBe(radius)
+  }
+  button.dataset.emphasis = 'soft'
+  expect(getComputedStyle(button).opacity).toBe('0.72')
+  delete button.dataset.emphasis
+  button.disabled = true
+  expect(getComputedStyle(button).opacity).toBe('0.48')
+  delete button.dataset.size
+  button.disabled = false
+  expect(getComputedStyle(button).borderTopLeftRadius).toBe('4px')
+  expect(getComputedStyle(button).opacity).toBe('1')
+})
 
 afterEach(() => {
   for (const handle of handles.splice(0)) handle.remove()
@@ -41,7 +82,7 @@ test.each([
   (_, profile, attribute, matching, other) => {
     const distance = token('10px', {
       address: '.ProfileSubject',
-      state: { [profile.header]: '12px' },
+      state: [[profile, '12px']],
     })
     handles.push(
       rules('.ProfileSubject', {
@@ -104,12 +145,15 @@ test('loading 只匹配状态集合成员，enabled 同时排除原生和标记�
   expect(getComputedStyle(action).paddingRight).toBe('8px')
 })
 
-test('局部 condition 无需注册，独立条件不改写共享分类的含义', () => {
-  const open = condition('&[data-local="open"]')
-  const closed = condition('&[data-local="closed"]')
+test('局部 StateCondition 无需注册，独立条件不改写共享分类的含义', () => {
+  const open = stateCondition('&[data-local="open"]')
+  const closed = stateCondition('&[data-local="closed"]')
   const distance = token('10px', {
     address: '.LocalProfile',
-    state: { [open.header]: '12px', [closed.header]: '14px' },
+    state: [
+      [open, '12px'],
+      [closed, '14px'],
+    ],
   })
   handles.push(
     rules('.LocalProfile', {

@@ -5,10 +5,11 @@
  *
  * CSS 继承不能自动重算后代的前序规则，需要通过计算样式检验这些组合。
  */
+import { stateCondition } from '../state-condition'
 import { token, type TokenAddress } from '../token'
 import { afterEach, test, expect } from 'vitest'
 import { compileRules } from '../css-root'
-import { condition } from '../condition'
+import { condition, appendStateCondition } from '../condition'
 import { declare } from '../operations/declare'
 import { modify } from '../operations/modify'
 import { createJSSContent } from '../content'
@@ -168,12 +169,7 @@ test('一个Condition包含两层后代时仍应用较浅宿主的后续状态�
 })
 
 test('登记状态在父宿主命中时继续作用于子结果，退出时恢复', async () => {
-  const { stateCondition, appendStateCondition } =
-    await import('../pieces/state-conditions')
-  const activeState = stateCondition(
-    'parent-modifier-active',
-    condition('&[data-active]'),
-  )
+  const activeState = stateCondition('&[data-active]')
   const n = amount('named-state-host')
   mount(
     compileRules([

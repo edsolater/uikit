@@ -4,11 +4,7 @@ import { condition } from '../condition'
 import { cssRoot } from '../css-root'
 import { key } from '../key'
 import { $boxShadow } from '../key-registry'
-import { stateCondition } from '../pieces/state-conditions'
 import { rule, rules, type RulesHandle } from '../rule'
-
-stateCondition('shadowHover', condition('&:where([data-shadow-hover])'))
-stateCondition('shadowActive', condition('&:where([data-shadow-active])'))
 
 let style: HTMLStyleElement
 let element: HTMLDivElement

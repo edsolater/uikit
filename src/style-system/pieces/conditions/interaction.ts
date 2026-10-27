@@ -1,30 +1,42 @@
 /** 交互状态 Condition。 */
-import { condition } from '../../condition'
+import { stateCondition } from '../../state-condition'
 
 /** 获得焦点。 */
-export const whenFocus = condition('&:focus')
+export const whenFocus = stateCondition('&:focus')
 
 /** 自身或后代获得焦点。 */
-export const whenFocusWithin = condition('&:focus-within')
+export const whenFocusWithin = stateCondition('&:focus-within')
 
 /** 浏览器显示焦点提示。 */
-export const whenFocusVisible = condition('&:focus-visible')
+export const whenFocusVisible = stateCondition('&:focus-visible')
 
 /** 原生或 UIKit 禁用。 */
-export const whenDisabled = condition(
+export const whenDisabled = stateCondition(
   '&:is(:disabled, [data-status~="disabled"])',
 )
 
 /** 未被原生或 UIKit 状态禁用。 */
-export const whenEnabled = condition(
+export const whenEnabled = stateCondition(
   '&:not(:disabled, [data-status~="disabled"])',
 )
 
 /** UIKit 状态集合中包含 loading。 */
-export const whenLoading = condition('&[data-status~="loading"]')
+export const whenLoading = stateCondition('&[data-status~="loading"]')
 
-/** 未禁用时悬停。 */
-export const whenHover = condition('&:where(:hover)')
+/** 当前主体悬停，不隐式排除其他状态。 */
+export const whenHover = stateCondition('&:where(:hover)')
 
-/** 未禁用时按下。 */
-export const whenActive = condition('&:where(:active)')
+/** 当前主体按下，不隐式排除其他状态。 */
+export const whenActive = stateCondition('&:where(:active)')
+
+/** 交互快捷名；focus 沿用既有的焦点提示含义。 */
+export const interactionStateConditions = {
+  focus: whenFocusVisible,
+  focusWithin: whenFocusWithin,
+  focusVisible: whenFocusVisible,
+  hover: whenHover,
+  active: whenActive,
+  disabled: whenDisabled,
+  enabled: whenEnabled,
+  loading: whenLoading,
+}

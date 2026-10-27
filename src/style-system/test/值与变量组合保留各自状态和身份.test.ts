@@ -2,30 +2,29 @@
 import { token } from '../token'
 import { expect, test, vi } from 'vitest'
 
-import { condition, media } from '../condition'
+import { condition } from '../condition'
 import { createJSSContent } from '../content'
 import { colorMix } from '../pieces/functions/color-mix'
 
 import { compileRules } from '../css-root'
-import { stateCondition } from '../pieces/state-conditions'
+import { stateCondition } from '../state-condition'
 
 import { cssFunction } from '../css-function'
 import type { Rules } from '../rule'
 
-stateCondition('functionMedia', media('(width > 1px)'))
+const functionMedia = stateCondition('@media (width > 1px)')
 
-const independentStates = Array.from(
-  { length: 10 },
-  (_, index) => `independentState${index}`,
+const independentStates = Array.from({ length: 10 }, (_, index) =>
+  stateCondition(`&[data-independentState${index}]`),
 )
-for (const name of independentStates)
-  stateCondition(name, condition(`&[data-${name}]`))
 
 test.each([2, 5, 10])(
   '两个变量各有 %i 个状态时，定义数量随状态数增长而不产生交集',
   (count) => {
-    const states = Object.fromEntries(
-      independentStates.slice(0, count).map((name) => [name, '2px']),
+    const states = new Map(
+      independentStates
+        .slice(0, count)
+        .map((condition) => [condition, '2px'] as const),
     )
     const first = token('1px', {
       name: 'independent-first-size',
@@ -71,7 +70,7 @@ test.each([false, true])(
 test('函数的局部 Token 与 result 留在同一份函数定义', () => {
   const size = token('16px', {
     name: 'function-size',
-    state: { functionMedia: '20px' },
+    state: [[functionMedia, '20px']],
   })
   const content = cssFunction('--measured-size() returns <length>', [
     [undefined, 'result', size],

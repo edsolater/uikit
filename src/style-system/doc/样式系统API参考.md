@@ -10,6 +10,7 @@
 | State                | 可单独复用或直接写进 Token 的状态取值规则                   | [states 与条件选择](behaviors/states与条件选择.md)        |
 | Key、Declaration     | CSS 属性目标与内容的配对                                    | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md)    |
 | Condition            | 选择作用位置和环境条件                                      | [CSS 作用域与层叠](behaviors/CSS作用域与层叠.md)          |
+| StateCondition       | 当前主体的分类或状态条件，可直接复用                        | [主体状态条件](主体状态条件.md)                           |
 | 普通函数             | 计算、格式化或组合定义后返回 Token                          | [Token 与表达式](behaviors/Token与表达式.md)              |
 | modify               | 在指定位置或条件下修改同一个 Token                          | [定义组合与 modify](behaviors/Token的定义组合与modify.md) |
 | Mixin                | 布局、文字、边界等完整效果                                  | [规则登记和撤销](behaviors/rule与rules的登记和撤销.md)    |
@@ -31,6 +32,23 @@ token(value, {
 ```
 
 Argument parser 返回固定的 default、name、state、address、registration、onFirstScan、compileWaveIndex 七个 key。可选项不要求由调用者全部填写。独立 State 可以通过配置中的 state 交给 Token。
+
+state 输入接受字符串键对象或 `Iterable<[string | StateCondition, TokenStateRule]>`，其中所有字符串条件必须是静态预置快捷名，解析后统一为 Map。hover、active 等名称可直接使用；新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义使用 `stateCondition(input)` 对象。未定义字符串立即报错，原始 CSS 只能通过对象 entry 输入。
+
+StateCondition 直接沿用 Condition 的单个 { header } 对象。stateConditionRegistry 汇总 Pieces 的预置快捷名表；Token 参数入口只查名并按 header 归一同条件规则，编译直接读取最终 Map。映射保留原对象和 CSS，不附加身份包装、:where() 或排序。
+
+```ts
+const whenCompact = stateCondition('&[data-density="compact"]')
+const spacing = token('8px', {
+  address: '.Panel',
+  state: [
+    [whenCompact, '4px'],
+    ['hover', '6px'],
+  ],
+})
+```
+
+hover/active 字符串与对应对象均只判断交互状态，禁用条件独立匹配。不同属性的反馈共同生效，同一属性按原 CSS 特异度和定义顺序层叠。组件 state 优先简写，rules 地址可传 stateConditionRegistry 中的对象，不读取 header。
 
 ```ts
 const source = token('2px')

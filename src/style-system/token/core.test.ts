@@ -1,4 +1,5 @@
 /** Token 的基础内容、嵌套引用与特殊输出协议。 */
+import { stateCondition } from '../state-condition'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
 import { token } from './core'
@@ -63,7 +64,7 @@ test('嵌套 Token 不继承来源配置，来源仍按自己的根据地发布�
   const source = token('2px', {
     name: 'nested-source',
     address: '.Source',
-    state: { '&[data-large]': '4px' },
+    state: [[stateCondition('&[data-large]'), '4px']],
     onFirstScan: activate,
   })
   const nested = token(source)
