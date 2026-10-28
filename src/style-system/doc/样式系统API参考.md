@@ -123,6 +123,8 @@ rules(path, declarations) 登记属性和效果。输入支持普通对象、单
 
 Token 的条件变化在自身 state 中表达；独立配置用新 Token，并在具体属性中明确消费，不自动替换旧引用。手动 declare、[token, value] 和 [token, undefined] 保留为 dangerous 操作，不作运行时或类型拦截；它们不属于推荐的组件编写方式。modify 的表达式加工及 Mixin 结果仍可作为输入，集合空项和普通属性 undefined 不输出。
 
+clickable({ cursor, opacity, focusColor, address }) 接受组件提供的光标、透明度和焦点颜色内容。cursor 可传入带 state 的 Token；省略时沿用 pointer 与禁用状态的 not-allowed 默认值，不额外叠加一份光标声明。
+
 compileCSS() 读取全局登记并返回 CSS 文本；compileRules(rules) 编译显式材料；cssRoot.mount() 提交到宿主提供的 style#css-root。规则句柄只更新或撤销自己的登记；需要页面更新时重新提交。失败构建不应提交半份结果。
 
 低层 AST 编辑与资源生命周期见 [接口与扩展协议](当前接口与扩展协议.md)。

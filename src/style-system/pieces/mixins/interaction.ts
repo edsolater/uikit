@@ -27,6 +27,7 @@ import { whenActive, whenDisabled } from '../conditions/interaction'
 export interface ClickableMixinOptions {
   /** 明确交互变量的根据地，不从消费位置隐式推断。 */
   address?: TokenAddress
+  cursor?: TokenInput
   opacity?: TokenInput
   focusColor?: TokenInput
 }
@@ -51,11 +52,12 @@ export const clickable = (
   ],
   [
     $cursor,
-    token('pointer', {
-      name: 'clickable-cursor',
-      address: options.address,
-      state: { disabled: 'not-allowed' },
-    }),
+    options.cursor ??
+      token('pointer', {
+        name: 'clickable-cursor',
+        address: options.address,
+        state: { disabled: 'not-allowed' },
+      }),
   ],
   [
     $opacity,

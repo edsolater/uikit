@@ -1294,6 +1294,12 @@ describe('Button styles', () => {
     } finally {
       await userEvent.keyboard('[/Space]')
     }
+    disabledButton.dataset.status = 'loading'
+    expect(getComputedStyle(disabledButton).cursor).toBe('progress')
+    disabledButton.dataset.status = ''
+    expect(getComputedStyle(disabledButton).cursor).toBe('pointer')
+    enabled.dataset.status = ''
+    expect(getComputedStyle(enabled).cursor).toBe('pointer')
   })
 
   test('focus-visible 建立完整边界，danger 只覆盖颜色', async () => {
