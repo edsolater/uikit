@@ -11,7 +11,11 @@ const usedNames = new Map<string, 'explicit' | 'automatic'>()
  * 显式同名保留，用于 CSS 局部覆盖；返回名称保留调用者传入的 -- 前缀。
  * 自动名称可提交旧候选复用；旧候选后来被显式占用时重新分配。
  */
-export function allocateVariableName(name?: string, previous?: string): string {
+export function allocateVariableName(
+  name?: string,
+  previous?: string,
+  prefixName = 'temp',
+): string {
   if (name === undefined) {
     if (
       previous !== undefined &&
@@ -19,9 +23,9 @@ export function allocateVariableName(name?: string, previous?: string): string {
     )
       return previous
     do {
-      name = `temp-${nameGenerator.genID()}`
-    } while (usedNames.has(name))
-    usedNames.set(name, 'automatic')
+      name = `${prefixName}-${nameGenerator.genID()}`
+    } while (usedNames.has(name.replace(/^--/, '')))
+    usedNames.set(name.replace(/^--/, ''), 'automatic')
   } else {
     usedNames.set(name.replace(/^--/, ''), 'explicit')
   }

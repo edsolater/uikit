@@ -17,13 +17,11 @@ test('前缀名称与共同根据地复用来源状态，默认值仍引用全�
   const local = panelToken(source)
   const css = compileRules([[['.Panel'], 'width', local]])
   expect(css).toContain('--generator-space: 8px;')
-  expect(css).toMatch(
-    /\.Panel\s*\{[^}]*--panel-generator-space: var\(--generator-space\);/,
-  )
-  expect(css).toContain(
-    '--panel-generator-space: calc(var(--generator-space) * 0.5);',
-  )
-  expect(css).toContain('width: var(--panel-generator-space);')
+  const panel = css.match(/\.Panel\s*\{([^}]*)\}/)?.[1]
+  expect(local.name).toMatch(/^panel-/)
+  expect(panel).toContain(`--${local.name}: var(--generator-space);`)
+  expect(css).toContain(`--${local.name}: calc(var(--generator-space) * 0.5);`)
+  expect(css).toContain(`width: var(--${local.name});`)
   expect(css).not.toContain('--generator-space: var(--generator-space);')
 })
 
@@ -49,7 +47,6 @@ test('逐项覆盖预设名称、根据地与状态，来源不被改写', () =>
   expect(css).toContain('--alternate-opacity: 0.4;')
   expect(css).toContain('--generator-opacity: 0.5;')
   expect(css).not.toContain('--generator-opacity: 0.8;')
-  expect(css).not.toContain('--panel-generator-opacity')
 })
 
 test('匿名来源使用现有名称分配能力，每个生成结果都有独立名称', () => {
@@ -64,10 +61,33 @@ test('匿名来源使用现有名称分配能力，每个生成结果都有独�
     [['.Anonymous'], 'width', first],
     [['.Anonymous'], 'height', second],
   ])
-  expect(first.name).toMatch(/^anonymous-temp-/)
+  expect(first.name).toMatch(/^anonymous-/)
   expect(first.name).not.toBe(second.name)
   expect(css).toContain(`--${first.name}: 2px;`)
   expect(css).toContain(`--${second.name}: 2px;`)
+})
+
+test('同一具名来源的不同状态定义拥有独立 CSS 身份，不互相覆盖', () => {
+  const source = token('8px', { name: 'shared-generator-source' })
+  const panelToken = createNewTokenGenerator({
+    prefixName: 'panel',
+    address: '.Independent',
+  })
+  const first = panelToken(source, { state: { hover: '12px' } })
+  const second = panelToken(source, { state: { hover: '16px' } })
+  const css = compileRules([
+    [['.Independent'], 'width', first],
+    [['.Independent'], 'height', second],
+  ])
+  expect(first.name).not.toBe(second.name)
+  expect(css).toContain(`width: var(--${first.name});`)
+  expect(css).toContain(`height: var(--${second.name});`)
+  expect(css).toContain(`--${first.name}: var(--shared-generator-source);`)
+  expect(css).toContain(`--${second.name}: var(--shared-generator-source);`)
+  expect(css).toContain(`--${first.name}: 12px;`)
+  expect(css).toContain(`--${second.name}: 16px;`)
+  expect(css).not.toContain(`--${first.name}: 16px;`)
+  expect(css).not.toContain(`--${second.name}: 12px;`)
 })
 
 test('单一入口保留创建形式与泛型，以及继承时 default 覆盖类型', () => {

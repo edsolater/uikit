@@ -80,7 +80,7 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-生成器只返回一个等效 token 的函数，预设前缀与 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有名称分配器的新名称。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
+生成器只返回一个等效 token 的函数，预设前缀与 address。每次调用均由现有名称分配器按前缀产生独立名称，在同一 CSS 命名空间避开已有名称；同一来源的不同用途不会因默认同名而相互覆盖。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
 
 已有 Token 直接传入，state 软合并业务差异；生产函数用于延迟计算或消费时读取数据等明确目的，不作为规避继承的写法。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
 

@@ -10,12 +10,7 @@ import {
   multiply,
   oklch,
   colorMix,
-  innerText,
   contentLayout,
-  size,
-  boundary,
-  color,
-  elevation,
   clickable,
   brandColor,
   badColor,
@@ -27,7 +22,7 @@ import {
   textSize,
   controlSize,
   fontWeight,
-  boundaryWidth,
+  buttonBorderWidth,
   baseOpacity,
   baseShadow,
   baseShadowSmall,
@@ -44,91 +39,119 @@ export const buttonColorSource = buttonToken(brandColor, {
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 
-function mixButtonSurface(strength: number, alpha: number) {
+function mixButtonSurface({
+  strength,
+  alpha,
+}: {
+  strength: number
+  alpha: number
+}) {
   const buttonColorSourceWithAlpha = oklch(buttonColorSource, {
     alpha: (current) => multiply(current, alpha),
   })
   return colorMix([buttonColorSourceWithAlpha, strength], surfaceColor)
 }
 
-export const buttonSurfaceColor = buttonToken(mixButtonSurface(0.18, 0.14), {
-  name: 'button-surface-color',
-  state: { plain: 'transparent', filled: mixButtonSurface(1, 1) },
-})
+export const buttonSurfaceColor = buttonToken(
+  mixButtonSurface({ strength: 0.18, alpha: 0.14 }),
+  {
+    name: 'button-surface-color',
+    state: {
+      plain: 'transparent',
+      filled: mixButtonSurface({ strength: 1, alpha: 1 }),
+    },
+  },
+)
 
 export const buttonContentColor = buttonToken(contentColor, {
   name: 'button-content-color',
   state: { toned: buttonColorSource, filled: paperColor },
 })
 
-const buttonBoundaryColor = oklch(buttonColorSource, {
-  alpha: (current) => multiply(current, 0.44),
-})
-const buttonBorderColor = buttonToken('transparent', {
+export const buttonBoundaryColor = buttonToken(
+  oklch(buttonColorSource, {
+    alpha: (current) => multiply(current, 0.44),
+  }),
+  { name: 'button-boundary-color' },
+)
+export const buttonBorderColor = buttonToken('transparent', {
+  name: 'button-border-color',
   state: { outlined: buttonBoundaryColor },
 })
 
-const buttonSpace = buttonToken(baseSpace)
-const buttonPaddingBlock = buttonToken(baseSpace, {
+export const buttonTextSize = buttonToken(textSize, {
+  name: 'button-text-size',
+})
+export const buttonFontWeight = buttonToken(multiply(fontWeight, 7 / 4), {
+  name: 'button-font-weight',
+})
+export const buttonMinHeight = buttonToken(controlSize, {
+  name: 'button-min-height',
+})
+export const buttonGap = buttonToken(baseSpace, { name: 'button-gap' })
+export const buttonPaddingBlock = buttonToken(baseSpace, {
   name: 'button-padding-block',
   state: {
     small: (base) => multiply(base, 1 / 2),
     xlarge: (base) => multiply(base, 3 / 2),
   },
 })
-const buttonPaddingInline = buttonToken(multiply(baseSpace, 3), {
+export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3), {
+  name: 'button-padding-inline',
   state: {
     small: (base) => multiply(base, 1 / 2),
     large: (base) => multiply(base, 4 / 3),
     xlarge: (base) => multiply(base, 2),
   },
 })
-const buttonTextSize = buttonToken(textSize)
-const buttonSize = buttonToken(controlSize)
 
-const buttonOpacitySource = buttonToken(multiply(baseOpacity, 0.9), {
+export const buttonBoxShadow = buttonToken(baseShadowSmall, {
+  name: 'button-shadow',
+  state: {
+    plain: 'none',
+    filled: baseShadow,
+    hover: baseShadow,
+    active: 'none',
+    disabled: 'none',
+  },
+})
+// 强调状态下、禁用缩放前的完整透明度，供读取并作为最终透明度的基准。
+export const buttonOpacitySource = buttonToken(multiply(baseOpacity, 0.9), {
+  name: 'button-opacity-source',
   state: { soft: multiply(baseOpacity, 0.7), strong: baseOpacity },
 })
-
-const buttonOpacity = buttonToken(buttonOpacitySource, {
+export const buttonOpacity = buttonToken(buttonOpacitySource, {
+  name: 'button-opacity',
   state: { disabled: (base) => multiply(base, 0.48 / 0.9) },
 })
 
-const buttonShadowSource = buttonToken(baseShadowSmall, {
-  state: { plain: 'none', filled: baseShadow },
-})
-
-const buttonShadow = buttonToken(buttonShadowSource, {
-  state: { hover: baseShadow, active: 'none', disabled: 'none' },
-})
-const buttonCursor = buttonToken('pointer', {
-  state: { loading: 'progress', disabled: 'not-allowed' },
-})
-
 rules(button, [
-  innerText({
-    font: 'inherit',
-    fontSize: buttonTextSize,
-    emphasis: multiply(fontWeight, 7 / 4),
-    leading: 1,
-  }),
+  {
+    'font': 'inherit',
+    'font-size': buttonTextSize,
+    'font-weight': buttonFontWeight,
+    'line-height': 1,
+    'min-height': buttonMinHeight,
+    'border-width': buttonBorderWidth,
+    'border-style': 'solid',
+    'border-color': buttonBorderColor,
+    'border-radius': '999px',
+    'corner-shape': 'squircle',
+    'background-color': buttonSurfaceColor,
+    'color': buttonContentColor,
+    'box-shadow': buttonBoxShadow,
+  },
   contentLayout({
     mode: 'center',
     alignSelf: 'center',
-    gap: buttonSpace,
+    gap: buttonGap,
     padding: [buttonPaddingBlock, buttonPaddingInline],
   }),
-  size({ minHeight: buttonSize }),
-  boundary({
-    border: [boundaryWidth, 'solid', buttonBorderColor],
-    radius: '999px',
-    cornerShape: 'squircle',
-  }),
-  color({ background: buttonSurfaceColor, content: buttonContentColor }),
-  elevation(buttonShadow),
   clickable({
     address: button,
-    cursor: buttonCursor,
+    cursor: buttonToken('pointer', {
+      state: { loading: 'progress', disabled: 'not-allowed' },
+    }),
     opacity: buttonOpacity,
     focusColor: buttonBoundaryColor,
   }),

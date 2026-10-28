@@ -9,11 +9,34 @@
 - Variant 描述组件的分类选择，分组内单选，分组之间可以组合，例如 `danger` 与 `strong`。Status 独立描述当前成立的情况，多个状态可以叠加。两者都允许响应式变化。
 - `appearance` 表达外观形式，取值为 `filled`、`outlined`、`plain`。原始选择省略时仍为 `undefined`，由公开映射表转换成外观输出，初始映射为 `outlined`。
 
-## 颜色来源与组件控制
+## 样式来源与公开控制点
 
 Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor；主题来源的实际 CSS 变化继续传递给消费者。buttonColorSource 提供基色，buttonSurfaceColor、buttonContentColor、buttonBoundaryColor 分别表达背景、内容和边界；需要声明的 Token 由 address 自动建立定义，表达式保留来源引用，rules 只消费属性，不再在其他位置给这些 Token 赋值。
 
-导出 Token 用于内容引用或新定义的输入。局部定制创建自己的 Token，在匹配按钮的 CSS 属性中消费；不推荐把原 Token 当成外部控制句柄。手动 declare 保留为 dangerous 操作，调用方自行承担层叠和状态交集后果。
+公开 Token 在 [Button.style.ts](./Button.style.ts) 独立命名并导出，外界可以读取定义、组合当前值引用、创建自己的派生定义，或通过 modify 在明确范围加工。控制包括读取和复用，不要求给 Token 增加可写接口，也不根据组件内部的消费次数决定是否公开。
+
+下表记录当前导出事实；现有导出不证明其长期公开必要性，也不是其他组件的模板，后续取舍依据[样式书写的一些权衡建议](../../../style-system/doc/样式书写的一些权衡建议.md)。
+
+| 导出 Token            | 职责与值来源                                           | 参与的 CSS 或后续定义                       |
+| --------------------- | ------------------------------------------------------ | ------------------------------------------- |
+| `buttonColorSource`   | brandColor 与危险语气的 badColor，包含交互颜色规则     | 背景、内容、边界和焦点颜色的来源            |
+| `buttonSurfaceColor`  | 基色与 surfaceColor 的混色，包含外观差异               | `background-color`                          |
+| `buttonContentColor`  | contentColor、语气基色与填充外观的 paperColor          | `color`                                     |
+| `buttonBoundaryColor` | 基色的边界颜色配方                                     | `outline` 的颜色及 buttonBorderColor 的材料 |
+| `buttonBorderColor`   | 普通透明边界，outlined 选择 buttonBoundaryColor        | `border-color`                              |
+| `buttonTextSize`      | textSize 及其尺寸状态                                  | `font-size`                                 |
+| `buttonFontWeight`    | 基于 fontWeight 的按钮字重                             | `font-weight`                               |
+| `buttonMinHeight`     | controlSize 及其尺寸状态                               | `min-height`                                |
+| `buttonGap`           | baseSpace 及其尺寸状态                                 | `gap`                                       |
+| `buttonPaddingBlock`  | 间距基准与组件尺寸差异                                 | `padding` 的上下值                          |
+| `buttonPaddingInline` | 间距基准的横向比例与组件尺寸差异                       | `padding` 的左右值                          |
+| `buttonShadow`        | 基础阴影材料与外观、交互、禁用差异                     | `box-shadow`                                |
+| `buttonOpacitySource` | baseOpacity 经强调状态选择后的透明度，尚未进行禁用缩放 | buttonOpacity 的基础内容，可独立读取        |
+| `buttonOpacity`       | 强调透明度与禁用缩放共同决定的有效透明度               | `opacity`                                   |
+
+这些控制点使 rules 直接表达属性与角色的对应。固定字体继承、行高、圆角、边框形式和光标反馈等内部规则仍可内联，不为每个常量另建公开 Token。
+
+局部独立定制也可以创建自己的 Token，在匹配按钮的 CSS 属性中消费。手动 declare 保留为 dangerous 操作，不是公开控制点的默认使用方式；调用方自行承担层叠和状态交集后果。
 
 主题不是整颗按钮的单一染色开关：filled 常态使用语气实底，文字保留对比来源。危险语气使用固定的 badColor 引用，不另加工 hover、active 颜色；交互位移和禁用反馈仍各自生效。全局变化不能压掉区域或组件显式覆盖，也不能令危险 filled 回到普通来源。
 

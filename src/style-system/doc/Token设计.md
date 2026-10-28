@@ -253,7 +253,7 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-生成器只返回一个等效 token 的函数，预设名称前缀与共同 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有分配器的新名称。逐项配置可以覆盖 name、address 等，名称字符串、state 组合、特殊格式和 default 覆盖都沿用 token 的接口。
+生成器只返回一个等效 token 的函数，预设名称前缀与共同 address。每次调用均由现有名称分配器按前缀生成独立名称，并在同一 CSS 命名空间内避开已占用名称；复用同一来源的不同用途不需要手动命名来避免相互覆盖。逐项配置可以覆盖 name、address 等，名称字符串、state 组合、特殊格式和 default 覆盖都沿用 token 的接口。
 
 不再提供独立的 `adjust` 操作。它原来承担的定义组合与加工，直接由这些普通函数完成。函数返回的新 Token 按自己的定义和使用情况确定坍缩方式；“经过某个加工函数”本身不是生成 CSS variable 的条件，也不需要记录“使用过 adjust”。
 

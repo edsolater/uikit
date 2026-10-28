@@ -1,5 +1,11 @@
 import { flush } from 'solid-js'
 import {
+  buttonTextSize,
+  buttonMinHeight,
+  buttonGap,
+  buttonPaddingBlock,
+} from '@/index'
+import {
   buttonSurfaceColor,
   buttonContentColor,
   buttonColorSource,
@@ -1122,6 +1128,108 @@ describe('Button styles', () => {
     expect(getComputedStyle(neighbor).backgroundColor).toBe(before)
     expect(style.textContent).toBe(originalCSS)
   })
+  test('公开控制点可在后代读取并复用状态，局部修改不影响相邻按钮和全局基准', () => {
+    const copiedTextState = token('10px', {
+      name: 'public-button-control-text-state',
+      address: '.Button .PublicControlProbe',
+      state: buttonTextSize.state,
+    })
+    handles.push(
+      rules('.Button .PublicControlProbe', {
+        'font-size': copiedTextState,
+        'letter-spacing': buttonTextSize,
+        'margin-left': buttonGap,
+        'min-height': buttonMinHeight,
+        'padding-right': buttonPaddingBlock,
+      }),
+      rules('.PublicGlobalControlProbe', {
+        'font-size': textSize,
+        'min-height': controlSize,
+      }),
+    )
+    mountButtonStyles()
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(
+      () => (
+        <>
+          <Button size="large" htmlProps={{ 'data-control': 'local' }}>
+            <span class="PublicControlProbe" data-size="large">
+              局部读取
+            </span>
+          </Button>
+          <Button size="large">
+            <span class="PublicControlProbe" data-size="large">
+              相邻读取
+            </span>
+          </Button>
+        </>
+      ),
+      host,
+    )
+    const global = host.appendChild(document.createElement('div'))
+    global.className = 'PublicGlobalControlProbe'
+    const [local, neighbor] = host.querySelectorAll('button')
+    const read = (button: HTMLButtonElement) => {
+      button.style.transition = 'none'
+      const own = getComputedStyle(button)
+      const child = getComputedStyle(
+        button.querySelector('.PublicControlProbe')!,
+      )
+      return [
+        own.fontSize,
+        own.minHeight,
+        own.columnGap,
+        child.letterSpacing,
+        child.minHeight,
+        child.paddingRight,
+        child.fontSize,
+        child.marginLeft,
+      ]
+    }
+    const baseline = [
+      '20px',
+      '64px',
+      '12px',
+      '20px',
+      '64px',
+      '12px',
+      '12.5px',
+      '12px',
+    ]
+    expect(read(local)).toEqual(baseline)
+    expect(read(neighbor)).toEqual(baseline)
+    const globalBefore = [
+      getComputedStyle(global).fontSize,
+      getComputedStyle(global).minHeight,
+    ]
+    expect(globalBefore).toEqual(['16px', '48px'])
+    handles.push(
+      rules(
+        ['@layer public-button-controls', '.Button[data-control="local"]'],
+        [
+          modify(buttonTextSize, { type: 'expression', detail: () => '28px' }),
+          modify(buttonMinHeight, { type: 'expression', detail: () => '90px' }),
+        ],
+      ),
+    )
+    cssRoot.mount()
+    expect(read(local)).toEqual([
+      '28px',
+      '90px',
+      '12px',
+      '28px',
+      '90px',
+      '12px',
+      '12.5px',
+      '12px',
+    ])
+    expect(read(neighbor)).toEqual(baseline)
+    expect([
+      getComputedStyle(global).fontSize,
+      getComputedStyle(global).minHeight,
+    ]).toEqual(globalBefore)
+  })
+
   test('修改公共基准后四尺寸与间距文字自然联动，不重新生成样式', () => {
     const style = mountButtonStyles()
     const host = document.body.appendChild(document.createElement('div'))
