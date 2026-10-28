@@ -21,17 +21,18 @@ spacing 没有名称、状态、地址、注册，也没有被 modify，消费�
 
 Token 对外都是可坍缩的内容，不要求调用者先区分直接值与 CSS variable 身份。最后的输出路径由内部 _kind 决定，_kind 可对外读取，调用方按约定不修改。
 
-## 引用与复制定义
+## 继承定义与引用内容
 
 ```ts
 const spacing = token('2px')
 const doubledSpacing = token(multiply(spacing, 2))
 const sharedSpacing = token(spacing)
+const referencedSpacing = token({ default: spacing })
 ```
 
-普通计算和嵌套 Token 通过同一内容消费过程引用输入。sharedSpacing 的基础内容是 spacing，不复制 spacing 的状态或其他字段；需要输出这份内容时，自然取得输入的坍缩结果。不能根据输入位于哪个参数位置，另外选择“复制来源定义”模式。
+sharedSpacing 继承直接传入的 spacing 的地址、状态和生命周期等定义配置，默认内容仍引用 spacing；追加配置覆盖同名字段，state 按条件软合并。名称不继承，需要时自动命名，避免同名自引用。
 
-如果要让新材料复用某些状态、地址或其他配置，由普通函数读取来源的规范化信息并明确组合，最后返回新 Token。没有内置用途变体，也没有独立的定义调整操作。
+referencedSpacing 只把 spacing 放在自己的 default 中，不继承来源配置。普通计算中的 Token 也只提供内容引用；消费时自然取得来源的 CSS 坍缩结果，不在消费端复制状态。其他加工仍由普通函数组合新 Token，没有内置用途变体或独立定义调整操作。
 
 ## State 与组件地址
 

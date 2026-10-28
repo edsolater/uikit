@@ -93,6 +93,14 @@ const customOutputs = new WeakSet<object>()
  * 将直接内容或 default 状态简写创建为独立 Token，不执行内容生产函数。
  * 特殊定义可以提供依赖、编译方法与格式器；基础配置统一由参数解析器取得。
  */
+export function token<T extends TokenData, U extends TokenData>(
+  input: Token<T>,
+  options: TokenOptions<U> & { default: U },
+): Token<U>
+export function token<T extends TokenData>(
+  input: Token<T>,
+  options?: string | TokenOptions<Token<T>>,
+): Token<Token<T>>
 export function token(
   input: number,
   options?: string | TokenOptions<number>,
@@ -121,11 +129,12 @@ export function token<T extends TokenData = never>(
 ): Token<T>
 export function token<T extends TokenData>(
   input: TokenDirectInput | TokenStateValues<T>,
-  options?: string | TokenOptions<T>,
+  options?: string | (TokenOptions<T> & { default?: T }),
 ): Token<T> {
-  const protocol = typeof options === 'string' ? undefined : options
+  if (isToken(input)) return tokenFrom<T>(input, options)
+  const protocol = typeof options === 'string' ? { name: options } : options
   const self: Token<T> = {
-    ...parseTokenArgs<T>(input, options),
+    ...parseTokenArgs<T>(input, protocol),
     onCompile: protocol?.onCompile,
     get dependencies() {
       const dependencies = protocol?.dependencies
@@ -163,6 +172,31 @@ export function token<T extends TokenData>(
         )
       : contentDataToCSSString(self.default, resolve)
   }
+}
+
+/** 复用来源配置并合并状态，再交统一入口创建新 Token。 */
+function tokenFrom<T extends TokenData>(
+  source: Token,
+  options?: string | (TokenOptions<T> & { default?: T }),
+): Token<T> {
+  const additional = typeof options === 'string' ? { name: options } : options
+  const definition = {
+    default: source,
+    address: source.address,
+    state: source.state,
+    registration: source.registration,
+    onFirstScan: source.onFirstScan,
+    compileWaveIndex: source.compileWaveIndex,
+    onCompile: source.onCompile,
+    ...additional,
+  }
+  const state = additional?.state
+  if (state !== undefined)
+    definition.state = [
+      ...(source.state ?? []),
+      ...(Symbol.iterator in state ? state : Object.entries(state)),
+    ]
+  return token<T>({ default: definition.default as T }, definition)
 }
 
 /**

@@ -55,18 +55,29 @@ const source = token('2px')
 const target = token(source)
 ```
 
-target 的基础内容就是可坍缩的 source，按普通表达式消费并自然形成引用，不复制 source 的定义，也不根据传入对象另作继承判定。
-
-tokenFrom(source, additionalOptions) 默认引用来源并复用定义配置，address、state、registration 和生命周期配置继承来源；default 默认引用 source，name 默认留空，使用既有自动命名产生独立身份。顶层字段由追加配置覆盖，显式 undefined 清除对应配置。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
+token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source，name 不继承，避免同名自引用。需要 CSS variable 身份且未指定新名时，由既有机制自动命名。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
 
 ```ts
-const panelSpace = tokenFrom(baseSpace, {
+const panelSpace = token(baseSpace, {
   name: 'panel-space',
   address: '.Panel',
 })
 ```
 
-token(source) 是值引用；tokenFrom 默认以 source 为输入并复用定义配置，名称独立生成，避免自引用；示例无需重复指定 default。default 可覆盖为不同类型；不提取隐藏的输出格式与 dependencies，需要特殊输出方法时在 additionalOptions 中显式提供。新 Token 不复制运行身份或来源已分配的自动名称，见 [Token 设计](Token设计.md#产生-token-的函数)。
+一组定义共享前缀与根据地时，用 createNewTokenGenerator 预设共性：
+
+```ts
+const panelToken = createNewTokenGenerator({
+  prefixName: 'panel',
+  address: panelConditionPath,
+})
+const panelSurface = panelToken({ default: surfaceColor, hover: paperColor })
+const panelSpace = panelToken(baseSpace)
+```
+
+生成器只返回一个等效 token 的函数，预设前缀与 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有名称分配器的新名称。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
+
+需要只引用来源而独立定义状态时，用 token({ default: source, ...states })；default 内部和计算表达式中的 Token 不继承配置，只消费来源结果。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
 
 ## 定义组合与修改
 

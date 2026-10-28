@@ -28,11 +28,9 @@ test('材料复用尺寸与强调条件后保留实际倍率，并在退出状�
     rules(address, {
       'border-radius': token(baseRadius, {
         address,
-        state: baseRadius.state,
       }),
       'opacity': token(baseOpacity, {
         address,
-        state: baseOpacity.state,
       }),
     }),
   )

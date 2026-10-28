@@ -21,19 +21,20 @@ Argument parser 将不同写法归一为固定的七个 key：`default`、`name`
 
 state 条件只接受静态预置字符串快捷名或 StateCondition。hover、active 等名称可直接使用，未定义字符串立即报错。新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义及原始 CSS 通过 stateCondition 对象的 entry 传入；解析结果统一为 `Map<StateCondition, TokenStateRule>`，不把条件对象隐式转成字符串。
 
-只有 default 的定义与直接基础值形式等价，不生成隐式空 state。普通对象、数组数据通过 default 显式承载；已有 Token、表达式和延迟生产函数仍可直接作为基础值。输入分类与非法定义边界见 [Token 设计的参数入口](../Token设计.md#参数入口负责输入语法)。
+对于原语、普通表达式和延迟生产函数，只有 default 的定义与直接基础值形式等价，不生成隐式空 state。普通对象、数组数据通过 default 显式承载；直接传入已有 Token 时继承定义配置，放入 default 时只作为基础内容引用。输入分类与非法定义边界见 [Token 设计的参数入口](../Token设计.md#参数入口负责输入语法)。
 
-## 使用另一个 Token 就是消费表达式
+## 直接传入 Token 继承定义，default 中保留内容引用
 
 ```ts
 const spacing = token('2px', 'spacing')
 const localSpacing = token(spacing)
+const referencedSpacing = token({ default: spacing })
 const doubled = token(multiply(spacing, 2))
 ```
 
-spacing 对外就是可坍缩的内容，与普通表达式按同一方式消费。localSpacing 不复制 spacing 的 state、address 或其他配置；其 default 保存对 spacing 的引用。坍缩时根据被引用对象的实际 _kind 自然取得对应 CSS 表达，不增加“传入 Token 就复制定义”的判断。
+localSpacing 是独立 Token，继承 spacing 的 address、state、registration 和生命周期配置，default 默认引用 spacing。追加配置覆盖同名顶层字段；state 同条件覆盖、新条件追加，显式 undefined 清除，空对象不删除已有条目。来源保持不变；新对象不继承 name、运行身份或自动名称，避免同名自引用。
 
-需要创建另一份定义时，普通函数读取来源的 default、state 等信息，明确组合继承项与覆盖项，再返回新 Token。引用已有值与组合已有定义各有明确动作，不在消费入口猜测调用者意图。
+referencedSpacing 只消费 default 中 spacing 的结果，不继承其状态、地址等配置。计算表达式内部的 Token 同样只是内容引用；创建入口完成定义继承后，坍缩不再复制配置。其他加工仍由普通函数表达，不保存创建历史。
 
 ## CSS 声明身份由定义与使用决定
 

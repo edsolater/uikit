@@ -113,7 +113,7 @@ test('共享 Token 在不同地址分别解析，重复编译不修改来源对�
     address: '.Audit',
     state: { hover: '4px' },
   })
-  const shared = token(source)
+  const shared = token({ default: source })
   const rules: Rules = [
     [[condition('.Audit .AuditA')], 'width', shared],
     [[condition('.Audit .AuditB')], 'width', shared],

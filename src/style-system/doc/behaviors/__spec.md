@@ -6,7 +6,7 @@ Style System 让业务定义、复用和组合样式，同时明确谁控制什�
 
 ## 一个 Token 统一内容与状态
 
-Token 保存基础内容及可选 state。创建参数经 parser 统一为 default、name、state、address、registration、onFirstScan、compileWaveIndex。消费已有 Token 时，它与普通表达式一样是可坍缩内容；自然引用，不复制定义，不通过旧对象分发处理。
+Token 保存基础内容及可选 state。直接 token(source) 创建新 Token 并继承来源配置，追加配置覆盖顶层字段、按条件软合并 state；default 默认引用 source，name 不继承以避免同名自引用。显式 default 和计算表达式内部的 Token 只作为内容引用。创建结果统一为 default、name、state、address、registration、onFirstScan、compileWaveIndex，消费端不再复制配置。
 
 组合定义由普通函数读取信息并返回新 Token。Token 不内置 Variant；用途函数同样返回 Token。没有 RuleToken、独立 adjust 或用于重放加工的来源记录。函数返回后，使用方只处理 Token 定义和实际引用，不识别它怎么创建。
 

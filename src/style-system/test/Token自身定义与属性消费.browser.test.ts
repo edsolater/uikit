@@ -56,8 +56,12 @@ test('匿名 Token 的地址与状态自动供多个属性消费，最后消费�
 
 test('分类和交互都由自身 state 表达，新 Token 只改变明确接入的属性', async () => {
   const filled = stateCondition('&[data-appearance="filled"]')
+  const material = token('10px', {
+    address: '.StateOwner',
+    state: [[filled, '20px']],
+  })
   const base = token(
-    token('10px', { address: '.StateOwner', state: [[filled, '20px']] }),
+    { default: material },
     {
       address: '.StateOwner',
       state: [

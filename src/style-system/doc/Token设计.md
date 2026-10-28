@@ -58,15 +58,16 @@ token(value, {
 
 参数写法由 argument parser 一次归一，Token 本体和 CSS 输出不根据原始写法补救。直接值形式与定义对象形式的边界如下：
 
-| 首参数                    | 解析方式                                                                        |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| 可直接消费的原语          | 作为基础内容，例如 token('2px')                                                 |
-| 已有 Token 或可坍缩表达式 | 作为值引用，不因 JS 类型是对象就拆解来源定义                                    |
-| 内容生产函数              | 作为延迟内容保存，创建时不执行                                                  |
-| 普通定义对象              | 必须明确提供 default；其他项按状态简写解析                                      |
-| 原始对象或数组数据        | 放在定义对象的 default 中，由普通格式或特殊输出方法解释，不再作为首参数直接包装 |
+| 首参数             | 解析方式                                                                        |
+| ------------------ | ------------------------------------------------------------------------------- |
+| 可直接消费的原语   | 作为基础内容，例如 token('2px')                                                 |
+| 已有 Token         | 创建独立 Token，继承来源配置并合并追加 state；default 默认引用来源              |
+| 其他可坍缩表达式   | 作为基础内容消费，不拆解表达式内部引用的 Token 定义                             |
+| 内容生产函数       | 作为延迟内容保存，创建时不执行                                                  |
+| 普通定义对象       | 必须明确提供 default；其他项按状态简写解析                                      |
+| 原始对象或数组数据 | 放在定义对象的 default 中，由普通格式或特殊输出方法解释，不再作为首参数直接包装 |
 
-token(v) 与 token({ default: v }) 在配置相同且没有状态项时，必须得到相同的规范化信息及消费效果。只有 default 不代表提供了 state，解析结果的 state 应为 undefined；不能产生空隐式 state，再要求 CSS 层识别并忽略它。显式 state 配置仍按已定规则处理。
+v 不是已有 Token 时，token(v) 与 token({ default: v }) 在配置相同且没有状态项时，必须得到相同的规范化信息及消费效果。v 是已有 Token 时，前者继承配置，后者只把 v 作为基础内容引用。只有 default 不代表提供了 state，解析结果的 state 应为 undefined；不能产生空隐式 state，再要求 CSS 层识别并忽略它。显式 state 配置仍按已定规则处理。
 
 ```ts
 const spacing = token({ default: '2px' })
@@ -234,33 +235,42 @@ const amount = doubled(4)
 
 加工已有 Token 同样使用普通函数：读取其 default、state 及其他规范化信息，组合需要继承或覆盖的部分，再创建一个新 Token。函数可以分别加工基础值和状态，也可以提供新的状态；具体组合由函数表达。
 
-tokenFrom 位于 token/tools/tokenFrom.ts，默认引用来源，并复用定义配置。它组合配置后调用 token，返回普通 Token；引擎按同一套规则解析和坍缩，无需识别它是否由 tokenFrom 创建。
-
-需要按既定规则复制定义时，使用 tokenFrom(source, additionalOptions)。它创建独立 Token，default 默认引用 source，name 留空并由既有自动命名生成独立身份；address、state、registration 和生命周期配置继承来源。追加配置覆盖相应顶层字段，显式 undefined 清除对应配置。default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态，不修改来源。
+直接传入已有 Token 时，token(source, options) 创建独立 Token 并继承其定义配置。default 默认引用 source，保留对来源当前 CSS 值的联动；name 不继承，避免声明引用自身，需要 CSS variable 身份且未指定新名时由既有机制自动命名。address、state、registration 和生命周期配置继承来源，追加配置覆盖相应顶层字段，显式 undefined 清除对应配置；default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态。整个过程不修改来源，也不复制运行身份、已分配的自动名称或隐藏的输出方法。
 
 ```ts
-const panelSpace = tokenFrom(baseSpace, {
+const panelSpace = token(baseSpace, {
   name: 'panel-space',
   address: '.Panel',
 })
 ```
 
-这里继承 baseSpace 的状态，并默认保留对来源当前值的引用；无需重复指定 default。name 不继承，避免引用和声明使用同名而形成自引用。它只浅复制公开的定义配置，不提取隐藏的输出格式与 dependencies；需要特殊输出方法时，通过 additionalOptions 显式提供。运行身份和已分配的自动名称不复制。
+一组定义共享前缀与根据地时，用 createNewTokenGenerator 预设共性：
+
+```ts
+const panelToken = createNewTokenGenerator({
+  prefixName: 'panel',
+  address: panelConditionPath,
+})
+const panelSurface = panelToken({ default: surfaceColor, hover: paperColor })
+const panelSpace = panelToken(baseSpace)
+```
+
+生成器只返回一个等效 token 的函数，预设名称前缀与共同 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有分配器的新名称。逐项配置可以覆盖 name、address 等，名称字符串、状态简写、特殊格式和 default 覆盖都沿用 token 的接口。
 
 不再提供独立的 `adjust` 操作。它原来承担的定义组合与加工，直接由这些普通函数完成。函数返回的新 Token 按自己的定义和使用情况确定坍缩方式；“经过某个加工函数”本身不是生成 CSS variable 的条件，也不需要记录“使用过 adjust”。
 
 新 Token 保存组合完成后的定义，不记录加工历史。不保留 `resultSource`、`resultSourceTransform`、`resultSourceStates` 或 `resultSourceVariants`，也不根据这些字段重放加工。新 default 如果需要读取原 Token 的当前值，直接在计算表达式中引用原 Token；这种值依赖不需要另一份来源记录。
 
-## 嵌套 Token 就是表达式引用
+## 基础内容中的 Token 就是表达式引用
 
-Token 对外是一份可被坍缩的内容，与普通表达式使用同一消费过程。token(existingToken) 将 existingToken 放进基础内容，不复制它的 default、state 或其他配置，也不根据对象放在什么位置来选择引用或继承模式。
+token(source) 明确继承直接传入的来源。需要定义自己的状态而只引用来源当前值时，将来源放入 default；这个已有定义形式不递归继承其基础内容的配置。
 
 ```ts
 const source = token({ default: 2, hover: (base) => multiply(base, 2) })
-const target = token(source)
+const target = token({ default: source, active: 4 })
 ```
 
-target 的基础内容包含 source。需要输出定义中的内容时，自然消费 source 的坍缩结果：source 需要 CSS variable 身份时提供对应引用，普通内容则提供 CSS value。这个过程不增加“来源是 Token 就复制定义”的判定，处理的是内容是否需要在此刻坍缩。token(source) 不继承来源 state 等配置，tokenFrom(source, additionalOptions) 则明确复制定义；二者各有用途，不互相替代，其他加工仍可由普通函数表达。
+target 只定义自己的 active，不继承 source 的 hover、地址或生命周期。其 default 和普通计算表达式中的 source 都按内容消费：source 需要 CSS variable 身份时提供对应引用，否则提供 CSS value。定义继承发生在 token 的直接参数入口，内容消费和 CSS 坍缩不再复制配置。
 
 两份具有独立职责的 Token 定义分别命名，再显式引用，例如 buttonOpacitySource → buttonOpacity；同一链条保留 Opacity 抓手，Source 放在最后，完整规则见[样式系统命名](样式系统命名.md)。不直接用 token(token(...)) 隐藏其中一份定义。multiply、oklch 等工具返回的 Token 仍可直接作为表达式组合，不要求为每个计算步骤增加中间变量。
 
@@ -341,7 +351,7 @@ compileWaveIndex 是最早处理门槛，不表示指定波次必定完成，也
 - 不再提供 adjust；定义加工直接使用返回 Token 的普通函数。
 - 非 CSS 坍缩部分不再保留原有 Variable、Value 抽象，也不引入 RuleToken 类型或包装旧模型的转交层。
 - Token 不保存 priority、definitionKey、declarations 或 resultSource 系列字段；加工由读取定义并返回新 Token 的普通函数完成。
-- 嵌套 Token 按普通可坍缩表达式引用，不复制来源配置，也不增加位置相关的引用与继承判定。
+- 直接 token(source) 继承来源配置并软合并 state；显式 default 或计算表达式内部的 Token 只作为内容引用，不递归继承配置。
 - 内部 _kind 由系统维护并可对外读取，调用方按约定不修改；不增加 parser 的固定 key，不要求 readonly 或运行时写保护。
 - 未提供 name、state、address、registration 且未被 modify 的 Token 直接输出 CSS value。
 - modify 在坍缩前参与类型确定；对同一 Token 的引用写在 modify 前后，均使用一致的 CSS variable 身份。
