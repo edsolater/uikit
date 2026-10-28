@@ -10,7 +10,7 @@ test('未实际引用的函数参数不激活', () => {
       throw new Error('未引用对象不应激活')
     },
   })
-  const select = (_input: typeof ignored) => token(() => 20)
+  const select = (_input: typeof ignored) => token(20)
   const fixed = token(select(ignored), 'actual-reference-fixed')
   const css = compileRules([
     [['.First'], 'z-index', fixed],

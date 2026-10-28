@@ -6,10 +6,5 @@
  * 让调用方从同一处取得样式值模型。
  */
 export * from './core'
-export type {
-  TokenDefaultInput,
-  TokenDefinitionInput,
-  TokenStateValues,
-  TokenConfig,
-} from './args-parser'
+export type { TokenDefaultInput, TokenConfig } from './args-parser'
 export { createNewTokenGenerator } from './tools/createNewTokenGenerator'

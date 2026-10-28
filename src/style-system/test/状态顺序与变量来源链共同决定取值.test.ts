@@ -7,7 +7,7 @@ import { condition } from '../condition'
 import { compileRules } from '../css-root'
 
 const compositionA = stateCondition('&:where([data-a])')
-test('已求值的可调用默认内容不会在状态缺项时再次调用', () => {
+test('生产器返回的可调用协议内容不会在状态缺项时再次调用', () => {
   const content = Object.assign(
     vi.fn(() => 'wrong'),
     { toCSSString: () => '10px' },

@@ -1,6 +1,6 @@
 本文按 Token 模型描述状态行为，源码已完成 Token 迁移。
 
-state 将一份定义的反馈保存起来，使业务换基础时无需重写每个 hover、active。state 属于明确主体，不因为 Token 被谁读取就自动改变归属。输入条件只接受静态预置快捷名或 StateCondition：字符串对象简写使用预置名称，对象条件使用 entry 或 Map，解析后统一为 Map。State 可以独立存在，也可在创建 Token 时内联书写。
+state 将一份定义的反馈保存起来，使业务换基础时无需重写每个 hover、active。state 属于明确主体，不因为 Token 被谁读取就自动改变归属。它放在 Token 的第二参数配置中，接受快捷名对象、Map、单个条件 entry 及其任意嵌套数组或 Iterable。入口按顺序展开容器，entry 的条件和值保持配对，同 header 后值覆盖前值并保留首次位置，结果统一为 Map。条件只接受静态预置快捷名或 StateCondition。State 可以独立存在，也可内联书写。
 
 # 规则读取基础，固定值保持固定
 

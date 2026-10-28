@@ -23,17 +23,22 @@ Pieces 是可复用材料的统称；Atom 表示组合中一块具体材料。�
 ```ts
 token(value, name)
 token(value)
-token({ default: value })
-token({ default: value1, hover: (base) => multiply(base, 2), active: 4 })
 token(value, {
   name: 'name',
   state: { hover: (base) => multiply(base, 2), active: 4 },
 })
 ```
 
-Argument parser 返回固定的 default、name、state、address、registration、onFirstScan、compileWaveIndex 七个 key。可选项不要求由调用者全部填写。独立 State 可以通过配置中的 state 交给 Token。
+第一个参数是基础内容，第二个参数是配置；普通对象和数组原样作为数据，即使含有 default、hover 等字段也不解析为配置。Argument parser 返回固定的 default、name、state、address、registration、onFirstScan、compileWaveIndex 七个 key。可选项不要求全部填写。
 
-state 输入接受字符串键对象或 `Iterable<[string | StateCondition, TokenStateRule]>`，其中所有字符串条件必须是静态预置快捷名，解析后统一为 Map。hover、active 等名称可直接使用；新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义使用 `stateCondition(input)` 对象。未定义字符串立即报错，原始 CSS 只能通过对象 entry 输入。
+state 输入接受快捷名对象、Map、单个条件 entry，以及这些形式的任意嵌套数组或 Iterable，按顺序展开且保留 entry 配对。所有字符串条件必须是静态预置快捷名，解析后统一为 Map。hover、active 等名称可直接使用；新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义使用 stateCondition(input) 对象。未定义字符串立即报错，原始 CSS 只能通过对象 entry 输入。
+
+```ts
+const buttonColorSource = buttonToken(brandColor, {
+  name: 'button-color-source',
+  state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
+})
+```
 
 StateCondition 直接沿用 Condition 的单个 { header } 对象。stateConditionRegistry 汇总 Pieces 的预置快捷名表；Token 参数入口只查名并按 header 归一同条件规则，编译直接读取最终 Map。映射保留原对象和 CSS，不附加身份包装、:where() 或排序。
 
@@ -71,13 +76,13 @@ const panelToken = createNewTokenGenerator({
   prefixName: 'panel',
   address: panelConditionPath,
 })
-const panelSurface = panelToken({ default: surfaceColor, hover: paperColor })
+const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
 生成器只返回一个等效 token 的函数，预设前缀与 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有名称分配器的新名称。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
 
-需要只引用来源而独立定义状态时，用 token({ default: source, ...states })；default 内部和计算表达式中的 Token 不继承配置，只消费来源结果。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
+已有 Token 直接传入，state 软合并业务差异；生产函数用于延迟计算或消费时读取数据等明确目的，不作为规避继承的写法。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
 
 ## 定义组合与修改
 

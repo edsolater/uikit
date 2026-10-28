@@ -34,19 +34,16 @@ test('历史聚合结果提供新贡献与独占资源，隐藏结果后资源�
   const target = key('--historical-owner', {
     join(items) {
       joins++
-      return token(
-        { default: items },
-        {
-          toCSSString: arraySequenceToCSSString,
-          onFirstScan:
-            joins === 1
-              ? () => [
-                  [[condition('.HistoricalOwner')], target, 'c'],
-                  [[condition('.HistoricalResource')], 'color', 'red'],
-                ]
-              : undefined,
-        },
-      )
+      return token(items, {
+        toCSSString: arraySequenceToCSSString,
+        onFirstScan:
+          joins === 1
+            ? () => [
+                [[condition('.HistoricalOwner')], target, 'c'],
+                [[condition('.HistoricalResource')], 'color', 'red'],
+              ]
+            : undefined,
+      })
     },
   })
   const css = compileRules([
@@ -76,10 +73,7 @@ test('结果把新贡献插到原输入之前，快照顺序随本次完整分�
             )
           ast.setContent(
             context,
-            token(
-              { default: items },
-              { toCSSString: arraySequenceToCSSString },
-            ),
+            token(items, { toCSSString: arraySequenceToCSSString }),
           )
         },
       }
@@ -116,10 +110,7 @@ test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也�
               .find((node) => node.content === 'a')!.content = 'x'
           ast.setContent(
             context,
-            token(
-              { default: items },
-              { toCSSString: arraySequenceToCSSString },
-            ),
+            token(items, { toCSSString: arraySequenceToCSSString }),
           )
         },
       }
@@ -172,10 +163,7 @@ test.each(['move', 'replacement'])(
             }
             ast.setContent(
               context,
-              token(
-                { default: items },
-                { toCSSString: arraySequenceToCSSString },
-              ),
+              token(items, { toCSSString: arraySequenceToCSSString }),
             )
           },
         }
@@ -277,10 +265,7 @@ test('聚合规则同时取得原对象身份与各项独立的解析读取结�
   const spacing = key('--aggregate-spacing', {
     join(items) {
       observed.push(...items.map((item) => item.content))
-      return token(
-        { default: items },
-        { toCSSString: arraySequenceToCSSString },
-      )
+      return token(items, { toCSSString: arraySequenceToCSSString })
     },
   })
   const css = compileRules([
@@ -308,10 +293,7 @@ test('同一对象的两个位置视图保持独立，生命周期结果共享',
   const spacing = key('--shared-content-spacing', {
     join(items) {
       observed.push(...items)
-      return token(
-        { default: items },
-        { toCSSString: arraySequenceToCSSString },
-      )
+      return token(items, { toCSSString: arraySequenceToCSSString })
     },
   })
   const css = compileRules([
@@ -329,10 +311,7 @@ test('聚合规则修改 Token 当前内容后按新值输出', () => {
   const replacement = key('--replace-value-content', {
     join(items) {
       items[0].content = '9px'
-      return token(
-        { default: items },
-        { toCSSString: arraySequenceToCSSString },
-      )
+      return token(items, { toCSSString: arraySequenceToCSSString })
     },
   })
   const css = compileRules([
@@ -346,7 +325,7 @@ test('聚合规则把 Token 当前内容改成数组时仍按 Token 默认规则
   const replacement = key('--replace-value-array', {
     join(items) {
       items[0].content = [0, false]
-      return token({ default: items })
+      return token(items)
     },
   })
   const css = compileRules([
@@ -372,7 +351,7 @@ test('join 修改 Token 内容为新解析对象时沿结果节点解析与激�
   const target = key('--replace-value-child', {
     join(items) {
       items[0].content = [child]
-      return token({ default: items })
+      return token(items)
     },
   })
   const css = compileRules([
@@ -393,15 +372,15 @@ test('嵌套同一对象的数组结果在两个声明位置复用', () => {
       return []
     },
     onCompile: (context, controller) => {
-      controller.setContent(context, token({ default: [++compiles, false] }))
+      controller.setContent(context, token([++compiles, false]))
     },
   }
-  const nested = token({ default: [[shared]] })
+  const nested = token([[shared]])
   const observed: { content: unknown }[] = []
   const target = key('--nested-shared', {
     join(items) {
       observed.push(...items)
-      return token({ default: items })
+      return token(items)
     },
   })
   const css = compileRules([
@@ -433,7 +412,7 @@ test('join 保留输入 Token 对象时继续使用各声明位置的编译结�
   }
   const target = key('--retain-source-view', {
     join(items) {
-      return token({ default: [valueList(items[0], fresh), items[1]] })
+      return token([valueList(items[0], fresh), items[1]])
     },
   })
   const css = compileRules([
@@ -510,16 +489,13 @@ test('聚合产物的 onFirstScan 新增同址贡献时继续聚合到稳定结�
   let activated = false
   const active = key('--aggregate-active', {
     join(items) {
-      return token(
-        token({ default: items }, { toCSSString: arraySequenceToCSSString }),
-        {
-          onFirstScan: () => {
-            if (activated) return []
-            activated = true
-            return [[[condition('.ActiveResult')], active, 'c']]
-          },
+      return token(token(items, { toCSSString: arraySequenceToCSSString }), {
+        onFirstScan: () => {
+          if (activated) return []
+          activated = true
+          return [[[condition('.ActiveResult')], active, 'c']]
         },
-      )
+      })
     },
   })
   const css = compileRules([
@@ -627,7 +603,7 @@ test('显式组合规则在结果解析中修改后重新计算', () => {
       onCompile(context, controller) {
         if (!switched) {
           switched = true
-          target.join = (items) => token({ default: items })
+          target.join = (items) => token(items)
         }
         controller.setContent(context, 'old')
       },
@@ -839,15 +815,12 @@ test.each(['content', 'replacement', 'join'])(
           if (change === 'join')
             target.join = (next) => {
               calls++
-              return token(
-                { default: next },
-                { toCSSString: arraySequenceToCSSString },
-              )
+              return token(next, { toCSSString: arraySequenceToCSSString })
             }
         }
         return change === 'join'
           ? 'old'
-          : token({ default: items }, { toCSSString: arraySequenceToCSSString })
+          : token(items, { toCSSString: arraySequenceToCSSString })
       },
     })
     const css = compileRules([

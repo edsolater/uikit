@@ -41,7 +41,7 @@ test.each([
   const contents = {
     直接内容: produce,
     Token: token(produce),
-    嵌套数组: token({ default: [['1px', produce]] }),
+    嵌套数组: token([['1px', produce]]),
     list: valueList('1px', produce),
     sequence: valueSequence('1px', produce),
     替换基础: (() => {
@@ -128,11 +128,12 @@ test.each([
     throw new Error('不应字符串化非法字段')
   }
   expect(() => {
-    // @ts-expect-error 静态注册字段拒绝函数，运行时同样应拒绝。
     const source = token('1px', {
       name: `invalid-function-${entry}`,
       registration: {
+        // @ts-expect-error 静态注册字段拒绝函数，运行时同样应拒绝。
         syntax: entry === 'syntax' ? invalid : '<length>',
+        // @ts-expect-error 静态注册字段拒绝函数，运行时同样应拒绝。
         inherits: entry === 'inherits' ? invalid : true,
       },
     })

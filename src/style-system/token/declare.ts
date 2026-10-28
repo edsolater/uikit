@@ -103,13 +103,10 @@ export function cssHomePath(target: CSSCustomProperty): ConditionPath {
  * 同一 CSS 自定义属性保留最后一个有效贡献，不将重复赋值连接为列表。
  */
 export const joinCSSPropertyValues = (values: ContentView[]): TokenInput =>
-  token(
-    { default: values },
-    {
-      toCSSString: (items, resolve) =>
-        items.map(resolve).findLast((output) => output !== undefined),
-    },
-  )
+  token(values, {
+    toCSSString: (items, resolve) =>
+      items.map(resolve).findLast((output) => output !== undefined),
+  })
 
 /**
  * 识别持有真实 CSS 目标的声明，普通内容的同名字段不构成声明协议。

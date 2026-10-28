@@ -14,28 +14,25 @@ export type MixColorInput = TokenInput | [color: TokenInput, weight: TokenInput]
  * 延迟生成 oklab 混色；比例换算为百分比。
  */
 export function colorMix(...colors: MixColorInput[]): Token<MixColorInput[]> {
-  return token<MixColorInput[]>(
-    { default: colors },
-    {
-      dependencies: (inputs) =>
-        inputs.flatMap((input) =>
-          Array.isArray(input) ? [input[0], input[1]] : [input],
-        ),
-      toCSSString: (colors, resolve) => {
-        const parts = colors.map((input) => {
-          if (!Array.isArray(input)) return resolve(input)
-          const color = resolve(input[0])
-          const weight = resolve(input[1])
-          if (color === undefined || weight === undefined) return undefined
-          const percentage = Number.isFinite(Number(weight))
-            ? `${Number(weight) * 100}%`
-            : `calc(${weight} * 100%)`
-          return `${color} ${percentage}`
-        })
-        return parts.some((part) => part === undefined)
-          ? undefined
-          : `color-mix(in oklab, ${parts.join(', ')})`
-      },
+  return token<MixColorInput[]>(colors, {
+    dependencies: (inputs) =>
+      inputs.flatMap((input) =>
+        Array.isArray(input) ? [input[0], input[1]] : [input],
+      ),
+    toCSSString: (colors, resolve) => {
+      const parts = colors.map((input) => {
+        if (!Array.isArray(input)) return resolve(input)
+        const color = resolve(input[0])
+        const weight = resolve(input[1])
+        if (color === undefined || weight === undefined) return undefined
+        const percentage = Number.isFinite(Number(weight))
+          ? `${Number(weight) * 100}%`
+          : `calc(${weight} * 100%)`
+        return `${color} ${percentage}`
+      })
+      return parts.some((part) => part === undefined)
+        ? undefined
+        : `color-mix(in oklab, ${parts.join(', ')})`
     },
-  )
+  })
 }

@@ -113,7 +113,7 @@ test('共享 Token 在不同地址分别解析，重复编译不修改来源对�
     address: '.Audit',
     state: { hover: '4px' },
   })
-  const shared = token({ default: source })
+  const shared = token(source, { name: 'shared-position-copy' })
   const rules: Rules = [
     [[condition('.Audit .AuditA')], 'width', shared],
     [[condition('.Audit .AuditB')], 'width', shared],
@@ -122,7 +122,11 @@ test('共享 Token 在不同地址分别解析，重复编译不修改来源对�
     const css = compileRules(rules)
     expect(css).toContain('--shared-position-size: 2px;')
     expect(css).toContain('--shared-position-size: 4px;')
-    expect(css).toContain('width: var(--shared-position-size);')
+    expect(css).toContain(
+      '--shared-position-copy: var(--shared-position-size);',
+    )
+    expect(css).toContain('--shared-position-copy: 4px;')
+    expect(css).toContain('width: var(--shared-position-copy);')
   }
 
   compileAndCheck()
@@ -155,7 +159,7 @@ test('稳定 Token 共享引用不误报循环，真实循环停止', () => {
   expect(
     compileRules([[[condition('.Shared')], 'color', colorMix(shared, shared)]]),
   ).toContain('color: color-mix(in oklab, red, red);')
-  const cycle = token<import('../token').TokenData>({ default: undefined })
+  const cycle = token<import('../token').TokenData>(undefined)
   cycle.default = cycle
   expect(() => compileRules([[[condition('.Cycle')], 'color', cycle]])).toThrow(
     '循环引用',

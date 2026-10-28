@@ -14,28 +14,21 @@ export type Transition = [
  * 延迟生成多项过渡。
  */
 export function transitionValue(...items: Transition[]): Token<Transition[]> {
-  return token<Transition[]>(
-    { default: items },
-    {
-      dependencies: (items) =>
-        items.flatMap(([, duration, easing, delay]) => [
-          duration,
-          easing,
-          delay,
-        ]),
-      toCSSString: (items, resolve) =>
-        items
-          .map(([key, duration, easing, delay]) =>
-            [
-              propertyName(key),
-              resolve(duration),
-              resolve(easing),
-              resolve(delay),
-            ]
-              .filter((part) => part !== undefined)
-              .join(' '),
-          )
-          .join(', '),
-    },
-  )
+  return token<Transition[]>(items, {
+    dependencies: (items) =>
+      items.flatMap(([, duration, easing, delay]) => [duration, easing, delay]),
+    toCSSString: (items, resolve) =>
+      items
+        .map(([key, duration, easing, delay]) =>
+          [
+            propertyName(key),
+            resolve(duration),
+            resolve(easing),
+            resolve(delay),
+          ]
+            .filter((part) => part !== undefined)
+            .join(' '),
+        )
+        .join(', '),
+  })
 }

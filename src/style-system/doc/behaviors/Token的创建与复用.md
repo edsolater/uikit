@@ -9,32 +9,29 @@ Token 将基础内容和可选 state 作为一份定义。直接值、表达式�
 ```ts
 token('2px')
 token('2px', 'spacing')
-token({ default: '2px' })
-token({ default: 2, hover: (base) => multiply(base, 2), active: 4 })
 token(2, {
   name: 'strength',
   state: { hover: (base) => multiply(base, 2), active: 4 },
 })
 ```
 
-Argument parser 将不同写法归一为固定的七个 key：`default`、`name`、`state`、`address`、`registration`、`onFirstScan`、`compileWaveIndex`。可选项可以未提供，后续流程只处理统一结果。状态简写中的 default 是基础内容，其余项是状态定义；配置中的字段统一叫 state。
+第一个参数是基础内容，第二个参数是配置；状态统一放在配置的 state 中。Argument parser 归一为固定的七个 key：`default`、`name`、`state`、`address`、`registration`、`onFirstScan`、`compileWaveIndex`。可选项可以未提供，后续流程只处理统一结果。
 
-state 条件只接受静态预置字符串快捷名或 StateCondition。hover、active 等名称可直接使用，未定义字符串立即报错。新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义及原始 CSS 通过 stateCondition 对象的 entry 传入；解析结果统一为 `Map<StateCondition, TokenStateRule>`，不把条件对象隐式转成字符串。
+state 接受快捷名对象、Map、单个条件 entry，以及这些形式的任意嵌套数组或 Iterable；按顺序展开容器，entry 的条件和值保持配对。条件只接受静态预置字符串快捷名或 StateCondition，未知字符串立即报错。新增共享预置在所属 Pieces 条件文件的映射中维护，临时自定义及原始 CSS 通过 stateCondition 对象 entry 传入；结果统一为 `Map<StateCondition, TokenStateRule>`，不把条件对象隐式转成字符串。
 
-对于原语、普通表达式和延迟生产函数，只有 default 的定义与直接基础值形式等价，不生成隐式空 state。普通对象、数组数据通过 default 显式承载；直接传入已有 Token 时继承定义配置，放入 default 时只作为基础内容引用。输入分类与非法定义边界见 [Token 设计的参数入口](../Token设计.md#参数入口负责输入语法)。
+普通对象和数组直接作为第一个参数传入，是原始数据；名为 default、hover 的字段也不作为配置解析。特殊格式通过第二参数提供。没有 state 配置时不生成隐式空状态，见 [Token 设计的参数入口](../Token设计.md#参数入口负责输入语法)。
 
-## 直接传入 Token 继承定义，default 中保留内容引用
+## 直接传入 Token 继承定义
 
 ```ts
 const spacing = token('2px', 'spacing')
 const localSpacing = token(spacing)
-const referencedSpacing = token({ default: spacing })
 const doubled = token(multiply(spacing, 2))
 ```
 
 localSpacing 是独立 Token，继承 spacing 的 address、state、registration 和生命周期配置，default 默认引用 spacing。追加配置覆盖同名顶层字段；state 同条件覆盖、新条件追加，显式 undefined 清除，空对象不删除已有条目。来源保持不变；新对象不继承 name、运行身份或自动名称，避免同名自引用。
 
-referencedSpacing 只消费 default 中 spacing 的结果，不继承其状态、地址等配置。计算表达式内部的 Token 同样只是内容引用；创建入口完成定义继承后，坍缩不再复制配置。其他加工仍由普通函数表达，不保存创建历史。
+已有 Token 直接传入，state 自然继承并软合并差异。生产函数用于延迟计算、消费时读取变化数据或等待内容可用等明确目的，不是继承开关。计算表达式内部的 Token 仍是内容引用；创建入口完成定义继承后，坍缩不再复制配置。其他加工由普通函数表达，不保存创建历史。
 
 ## CSS 声明身份由定义与使用决定
 
@@ -58,7 +55,7 @@ _kind 是系统内部处理信息，可对外读取，调用方按约定不修�
 
 用途选择和计算由返回 Token 的普通函数承担。Token 不内置 Variant，不保留 RuleToken 或独立 adjust。函数可以组合基础内容和状态，但结果不保存 resultSource 系列加工记录，也不在后续使用时重放历史。
 
-state 可以独立定义再交给 Token，也可以直接写入创建参数。Token.state 已是 Map；复用时直接传入，组合时展开 [...source.state] 或迭代条目，不再使用对象展开或 Object.entries。状态回调读取所属 Token 的基础内容，固定值原样保留；详细结果见 [states与条件选择.md](states与条件选择.md)。
+state 可以独立定义再交给 Token，也可以直接写入配置。已定义的 Token.state 是 Map，可以直接参与嵌套组合；手动读取它使用 Map 迭代，不使用对象展开或 Object.entries。状态回调读取所属 Token 的基础内容，固定值原样保留；详细结果见 [states与条件选择.md](states与条件选择.md)。
 
 局部条件通过根入口 stateCondition(input) 创建，直接作为对象复用。hover、active、enabled、disabled 等快捷名来自静态预置表，各自匹配，不自动互相排除，也不要求业务枚举交集。
 

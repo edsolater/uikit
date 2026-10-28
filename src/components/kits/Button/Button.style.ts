@@ -41,14 +41,10 @@ const buttonToken = createNewTokenGenerator({
 })
 
 /** 语气与交互共同定义按钮的颜色来源，同属性由 CSS 层叠决定。 */
-export const buttonColorSource = buttonToken(
-  {
-    default: brandColor,
-    ...interactiveColorStates({ chromaResponse: 1 }),
-    danger: badColor,
-  },
-  'button-color-source',
-)
+export const buttonColorSource = buttonToken(brandColor, {
+  name: 'button-color-source',
+  state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
+})
 
 /** 混合当前基色与主题表面，只产生计算表达式。 */
 function mixButtonSurface(strength: number, alpha: number) {
@@ -59,20 +55,16 @@ function mixButtonSurface(strength: number, alpha: number) {
 }
 
 /** 外观独立选择背景；交互继续由基色提供。 */
-export const buttonSurfaceColor = buttonToken(
-  {
-    default: mixButtonSurface(0.18, 0.14),
-    plain: 'transparent',
-    filled: mixButtonSurface(1, 1),
-  },
-  'button-surface-color',
-)
+export const buttonSurfaceColor = buttonToken(mixButtonSurface(0.18, 0.14), {
+  name: 'button-surface-color',
+  state: { plain: 'transparent', filled: mixButtonSurface(1, 1) },
+})
 
 /** 普通内容沿用主题；语气内容读当前基色，填充外观保留纸色对比。 */
-export const buttonContentColor = buttonToken(
-  { default: contentColor, toned: buttonColorSource, filled: paperColor },
-  'button-content-color',
-)
+export const buttonContentColor = buttonToken(contentColor, {
+  name: 'button-content-color',
+  state: { toned: buttonColorSource, filled: paperColor },
+})
 
 const buttonBoundaryColor = oklch(buttonColorSource, {
   alpha: (current) => multiply(current, 0.44),
@@ -80,46 +72,41 @@ const buttonBoundaryColor = oklch(buttonColorSource, {
 
 /** 几何状态在组件地址计算，保留对公共尺寸基准的引用。 */
 const buttonSpace = buttonToken(baseSpace)
-const buttonPaddingBlock = buttonToken({
-  default: baseSpace,
-  small: (base) => multiply(base, 1 / 2),
-  xlarge: (base) => multiply(base, 3 / 2),
+const buttonPaddingBlock = buttonToken(baseSpace, {
+  name: 'button-padding-block',
+  state: {
+    small: (base) => multiply(base, 1 / 2),
+    xlarge: (base) => multiply(base, 3 / 2),
+  },
 })
-const buttonPaddingInline = buttonToken({
-  default: multiply(baseSpace, 3),
-  small: (base) => multiply(base, 1 / 2),
-  large: (base) => multiply(base, 4 / 3),
-  xlarge: (base) => multiply(base, 2),
+const buttonPaddingInline = buttonToken(multiply(baseSpace, 3), {
+  state: {
+    small: (base) => multiply(base, 1 / 2),
+    large: (base) => multiply(base, 4 / 3),
+    xlarge: (base) => multiply(base, 2),
+  },
 })
 const buttonTextSize = buttonToken(textSize)
 const buttonSize = buttonToken(controlSize)
 
 /** 强调程度决定基础透明度。 */
-const buttonOpacitySource = buttonToken({
-  default: multiply(baseOpacity, 0.9),
-  soft: multiply(baseOpacity, 0.7),
-  strong: baseOpacity,
+const buttonOpacitySource = buttonToken(multiply(baseOpacity, 0.9), {
+  state: { soft: multiply(baseOpacity, 0.7), strong: baseOpacity },
 })
 
 /** 禁用比例继续读取当前强调后的透明度。 */
-const buttonOpacity = buttonToken({
-  default: buttonOpacitySource,
-  disabled: (base) => multiply(base, 0.48 / 0.9),
+const buttonOpacity = buttonToken(buttonOpacitySource, {
+  state: { disabled: (base) => multiply(base, 0.48 / 0.9) },
 })
 
 /** 按钮外观选择基础阴影材料。 */
-const buttonShadowSource = buttonToken({
-  default: baseShadowSmall,
-  plain: 'none',
-  filled: baseShadow,
+const buttonShadowSource = buttonToken(baseShadowSmall, {
+  state: { plain: 'none', filled: baseShadow },
 })
 
 /** 按钮决定交互与禁用时采用哪份阴影。 */
-const buttonShadow = buttonToken({
-  default: buttonShadowSource,
-  hover: baseShadow,
-  active: 'none',
-  disabled: 'none',
+const buttonShadow = buttonToken(buttonShadowSource, {
+  state: { hover: baseShadow, active: 'none', disabled: 'none' },
 })
 
 rules(button, [

@@ -12,41 +12,32 @@ test('聚合入口创建匿名直接值，编译为 CSS value 并暴露内部类
   expect(size._kind).toBe('css-value')
 })
 
-test('直接值与仅有 default 的定义输出相同 CSS 内容，不制造变量声明', () => {
+test('直接值与表达式按自身内容输出，不制造无必要的变量声明', () => {
   const source = token('2px', 'same-input-source')
-  const expression = add(source, '1px')
-  const direct = token(expression)
-  const definition = token({ default: expression })
-  const compile = (content: ReturnType<typeof token>) =>
-    compileRules([[['.Equivalent'], 'width', content]])
-  expect(compile(definition)).toBe(compile(direct))
-  expect(
-    compileRules([[['.Primitive'], 'width', token({ default: '2px' })]]),
-  ).toContain('width: 2px;')
-  expect(
-    compileRules([[['.Empty'], 'width', token({ default: undefined })]]),
-  ).toBe('')
+  const direct = token(add(source, '1px'))
+  expect(compileRules([[['.Expression'], 'width', direct]])).toContain(
+    'width: calc(var(--same-input-source) + 1px);',
+  )
+  expect(compileRules([[['.Primitive'], 'width', token('2px')]])).toContain(
+    'width: 2px;',
+  )
+  expect(compileRules([[['.Empty'], 'width', token(undefined)]])).toBe('')
 })
 
-test('两种输入形式都延迟生产函数，并在消费位置输出相同结果', () => {
+test('内容生产函数延迟到消费位置执行', () => {
   const produce = vi.fn(() => '6px')
   const direct = token(produce)
-  const definition = token({ default: produce })
   expect(produce).not.toHaveBeenCalled()
-  const css = compileRules([
-    [['.Producer'], 'width', direct],
-    [['.Producer'], 'height', definition],
-  ])
-  expect(css).toContain('width: 6px;')
-  expect(css).toContain('height: 6px;')
+  expect(compileRules([[['.Producer'], 'width', direct]])).toContain(
+    'width: 6px;',
+  )
 })
 
-test('显式 default 保留对象数据和格式器，替换当前基础后输出新数据', () => {
+test('原始对象数据由显式格式器解释，替换当前基础后输出新数据', () => {
   const source = { duration: 200, label: '基础数据' }
-  const duration = token(
-    { default: source },
-    { toCSSString: (data) => `${data.duration}ms` },
-  )
+  const duration = token(source, {
+    toCSSString: (data) => `${data.duration}ms`,
+  })
   expect(duration.default).toBe(source)
   expect(
     compileRules([[['.ObjectData'], 'transition-duration', duration]]),
@@ -55,28 +46,6 @@ test('显式 default 保留对象数据和格式器，替换当前基础后输�
   expect(
     compileRules([[['.ObjectData'], 'transition-duration', duration]]),
   ).toContain('transition-duration: 400ms;')
-})
-
-test('嵌套 Token 不继承来源配置，来源仍按自己的根据地发布状态', () => {
-  const activate = vi.fn(
-    () => [[['.NestedResource'], 'opacity', 0.5]] as import('../rule').Rules,
-  )
-  const source = token('2px', {
-    name: 'nested-source',
-    address: '.Source',
-    state: [[stateCondition('&[data-large]'), '4px']],
-    onFirstScan: activate,
-  })
-  const nested = token({ default: source })
-  expect(nested.default).toBe(source)
-  expect(nested.state).toBeUndefined()
-  expect(nested.address).toBeUndefined()
-  expect(nested.name).toBeUndefined()
-  const css = compileRules([[['.Target'], 'width', nested]])
-  expect(css).toContain('width: var(--nested-source);')
-  expect(css).toContain('--nested-source: 4px;')
-  expect(css).toContain('.NestedResource')
-  expect(activate).toHaveBeenCalledTimes(1)
 })
 
 test('特殊格式器读取已经编译的子内容，数值单位和输入替换保留', () => {
@@ -89,13 +58,10 @@ test('特殊格式器读取已经编译的子内容，数值单位和输入替�
     compileRules([[['.Duration'], 'transition-duration', milliseconds]]),
   ).toContain('transition-duration: 400ms;')
   const child = token('2px')
-  const sequence = token(
-    { default: [child, '3px'] },
-    {
-      dependencies: (items) => items,
-      toCSSString: (items, resolve) => items.map(resolve).join(' '),
-    },
-  )
+  const sequence = token([child, '3px'], {
+    dependencies: (items) => items,
+    toCSSString: (items, resolve) => items.map(resolve).join(' '),
+  })
   expect(compileRules([[['.Sequence'], 'padding', sequence]])).toContain(
     'padding: 2px 3px;',
   )
@@ -121,7 +87,7 @@ test('未消费内容不求值，合法共享完成而最终循环明确失败',
       [['.Other'], 'color', shared],
     ]),
   ).toContain('color: red;')
-  const cycle = token<import('./core').TokenData>({ default: undefined })
+  const cycle = token<import('./core').TokenData>(undefined)
   cycle.default = cycle
   expect(() => compileRules([[['.Cycle'], 'color', cycle]])).toThrow('循环')
 })

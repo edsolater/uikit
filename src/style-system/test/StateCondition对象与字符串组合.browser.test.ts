@@ -16,17 +16,14 @@ const handles: RulesHandle[] = []
 
 test('配置覆盖同义条件只替换值，不移动直接条件的原有顺序', () => {
   const first = stateCondition('&[data-first]')
-  const width = token(
-    { default: '4px' },
-    {
-      address: '.OverrideOrder',
-      state: [
-        [stateCondition('&[data-first]'), '8px'],
-        [stateCondition('&[data-second]'), '12px'],
-        [first, '16px'],
-      ],
-    },
-  )
+  const width = token('4px', {
+    address: '.OverrideOrder',
+    state: [
+      [stateCondition('&[data-first]'), '8px'],
+      [stateCondition('&[data-second]'), '12px'],
+      [first, '16px'],
+    ],
+  })
   handles.push(rules('.OverrideOrder', { 'padding-left': width }))
   const style = document.body.appendChild(document.createElement('style'))
   style.textContent = compileCSS()

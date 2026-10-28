@@ -88,8 +88,8 @@ test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
     const { pathToFileURL } = await import('node:url')
     const styleSystem = await import(pathToFileURL(modulePath).href)
     const surfaceName = 'bundle-surface'
-    const line = styleSystem.token(() => surface, 'bundle-line')
     const surface = styleSystem.token('black', { name: surfaceName, address: '.Built' })
+    const line = styleSystem.token(surface, 'bundle-line')
     const opacity = styleSystem.token(1, { name: 'bundle-opacity', address: '.Built', state: { hover: 0.5 } })
     styleSystem.rules('.Built', [
       [styleSystem.key('align-items'), 'center'], [styleSystem.key('margin-left'), '2px'],
@@ -133,7 +133,7 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
     if (resolveJSSKey('box-shadow') !== $boxShadow || resolveJSSKey('boxShadow') !== $boxShadow)
       throw new Error('现成 Key 的名称与别名没有解析到原定义。')
     rules('.BundledMaterial', [[$boxShadow, '1px 2px red'], ['box-shadow', '3px 4px blue'], ['boxShadow', '5px 6px green']])
-    const spacing = key('bundle-combined-spacing', { join: items => token({ default: items }, { toCSSString: (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ') }) })
+    const spacing = key('bundle-combined-spacing', { join: items => token(items, { toCSSString: (items, resolve) => items.map(resolve).filter(item => item !== undefined).join(' ') }) })
     if (resolveJSSKey(spacing.name) !== spacing.name)
       throw new Error('纯构造不得登记。')
     rules('.Direct', [[spacing, '2px'], [spacing, '3px']])

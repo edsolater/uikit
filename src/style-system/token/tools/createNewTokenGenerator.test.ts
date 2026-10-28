@@ -70,28 +70,6 @@ test('匿名来源使用现有名称分配能力，每个生成结果都有独�
   expect(css).toContain(`--${second.name}: 2px;`)
 })
 
-test('显式定义的同源引用保持独立，直接传入来源继承状态', () => {
-  const source = token(1, { name: 'creation-source', state: { large: 3 } })
-  const createToken = createNewTokenGenerator({
-    prefixName: 'created',
-    address: '.Created',
-  })
-  const first = createToken({ default: source })
-  const second = createToken({ default: source })
-  const inherited = createToken(source)
-  const css = compileRules([
-    [['.Created'], 'width', first],
-    [['.Created'], 'height', second],
-    [['.Created'], 'opacity', inherited],
-  ])
-  expect(first.name).not.toBe(second.name)
-  for (const own of [first, second]) {
-    expect(css).toContain(`--${own.name}: var(--creation-source);`)
-    expect(css).not.toContain(`--${own.name}: 3;`)
-  }
-  expect(css).toContain('--created-creation-source: 3;')
-})
-
 test('单一入口保留创建形式与泛型，以及继承时 default 覆盖类型', () => {
   const createToken = createNewTokenGenerator({
     prefixName: 'forms',
@@ -99,9 +77,9 @@ test('单一入口保留创建形式与泛型，以及继承时 default 覆盖�
   })
   const number = createToken(2, 'forms-number')
   const text = createToken('4px')
-  const states = createToken({ default: 1, hover: 0.5 })
+  const states = createToken(1, { state: { hover: 0.5 } })
   const structured = createToken(
-    { default: { amount: 7 } },
+    { amount: 7 },
     {
       name: 'forms-structured',
       address: '.AlternateForms',

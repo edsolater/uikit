@@ -11,15 +11,12 @@ test('数组 Token 默认逗号输出，空项不占分隔位置，空格规则�
     [
       [condition('.ArrayValue')],
       'box-shadow',
-      token({ default: ['1px 2px red', undefined, '3px 4px blue'] }),
+      token(['1px 2px red', undefined, '3px 4px blue']),
     ],
     [
       [condition('.ArrayValue')],
       'padding',
-      token(
-        { default: [1, undefined, 2] },
-        { toCSSString: arraySequenceToCSSString },
-      ),
+      token([1, undefined, 2], { toCSSString: arraySequenceToCSSString }),
     ],
   ])
   expect(css).toContain('box-shadow: 1px 2px red, 3px 4px blue;')
@@ -28,16 +25,14 @@ test('数组 Token 默认逗号输出，空项不占分隔位置，空格规则�
 
 test('数组 Token 的子内容逐项编译，修改 content 后按新内容遍历', () => {
   const output = token<TokenData[]>(
-    {
-      default: [
-        {
-          onCompile: (context, controller) => {
-            controller.setContent(context, '2px')
-          },
+    [
+      {
+        onCompile: (context, controller) => {
+          controller.setContent(context, '2px')
         },
-        '3px',
-      ],
-    },
+      },
+      '3px',
+    ],
     { toCSSString: arraySequenceToCSSString },
   )
   expect(
@@ -109,10 +104,9 @@ test('业务可给数值 Token 指定输出规则，数组规则保持输入形�
   expect(
     compileRules([[[condition('.NumericValue')], 'z-index', doubled]]),
   ).toContain('z-index: 6;')
-  const list = token<string[]>(
-    { default: ['1px'] },
-    { toCSSString: arraySequenceToCSSString },
-  )
+  const list = token<string[]>(['1px'], {
+    toCSSString: arraySequenceToCSSString,
+  })
   if (false) {
     // @ts-expect-error 数组输出规则绑定数组形状，不能替换成标量。
     list.default = '2px'
@@ -125,11 +119,7 @@ test('业务可给数值 Token 指定输出规则，数组规则保持输入形�
 
 test('数组输出规则没有可输出项时省略声明', () => {
   const css = compileRules([
-    [
-      [condition('.EmptyArray')],
-      'box-shadow',
-      token({ default: [undefined, undefined] }),
-    ],
+    [[condition('.EmptyArray')], 'box-shadow', token([undefined, undefined])],
   ])
   expect(css).not.toContain('box-shadow:')
 })
@@ -147,7 +137,7 @@ test('嵌套数组、列表 Token、零与 false 按层解析，null 和 undefin
     [
       [condition('.NestedValue')],
       '--nested',
-      token({ default: [0, false, undefined, null, ['a', 0]] }),
+      token([0, false, undefined, null, ['a', 0]]),
     ],
   ])
   expect(css).toContain('box-shadow: 1px 2px red, 3px 4px blue;')
@@ -159,28 +149,23 @@ test('嵌套 onCompile 结果按原位置读取，自定义输出规则也可读
     [
       [condition('.ReadValue')],
       '--compiled',
-      token({
-        default: [
-          'first',
-          [
-            {
-              onCompile: (context, controller) => {
-                controller.setContent(context, 'second')
-              },
+      token([
+        'first',
+        [
+          {
+            onCompile: (context, controller) => {
+              controller.setContent(context, 'second')
             },
-          ],
+          },
         ],
-      }),
+      ]),
     ],
     [
       [condition('.ReadValue')],
       '--custom',
-      token(
-        { default: [false, [1, 2], { label: 'plain' }] },
-        {
-          toCSSString: (items, resolve) => items.map(resolve).join(' | '),
-        },
-      ),
+      token([false, [1, 2], { label: 'plain' }], {
+        toCSSString: (items, resolve) => items.map(resolve).join(' | '),
+      }),
     ],
   ])
   expect(css).toContain('--compiled: first, second;')
@@ -189,9 +174,9 @@ test('嵌套 onCompile 结果按原位置读取，自定义输出规则也可读
 
 test('空数组与 null 不输出，空字符串作为现存内容输出，循环数组可控报错', () => {
   const css = compileRules([
-    [[condition('.EmptyKinds')], '--empty-array', token({ default: [] })],
+    [[condition('.EmptyKinds')], '--empty-array', token([])],
     [[condition('.EmptyKinds')], '--null', token(null)],
-    [[condition('.EmptyKinds')], '--empty-string', token({ default: [''] })],
+    [[condition('.EmptyKinds')], '--empty-string', token([''])],
   ])
   expect(css).not.toContain('--empty-array:')
   expect(css).not.toContain('--null:')
@@ -199,9 +184,7 @@ test('空数组与 null 不输出，空字符串作为现存内容输出，循�
   const cyclic: unknown[] = []
   cyclic.push(cyclic)
   expect(() =>
-    compileRules([
-      [[condition('.CycleValue')], '--cycle', token({ default: cyclic })],
-    ]),
+    compileRules([[[condition('.CycleValue')], '--cycle', token(cyclic)]]),
   ).toThrow('循环')
 })
 

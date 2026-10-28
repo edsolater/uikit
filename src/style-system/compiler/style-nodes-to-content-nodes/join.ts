@@ -233,7 +233,7 @@ export class Join {
     const values = Array.from(selected, ([node, input]) =>
       createCompiledContent(input.content, this.compiledContents(node)),
     )
-    return join ? join(values) : token({ default: values })
+    return join ? join(values) : token(values)
   }
 
   /**

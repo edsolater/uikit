@@ -1,8 +1,9 @@
-import { resolveStateCondition } from '../state-condition-registry'
-/** 验证 Token 创建参数归一为公开七字段，不执行内容。 */
+/** 验证基础内容与配置分界，状态组合只在参数入口归一。 */
 import { expect, test, vi } from 'vitest'
 import { parseTokenArgs } from './args-parser'
-import { token, type TokenData } from './core'
+import { token } from './core'
+import { resolveStateCondition } from '../state-condition-registry'
+import { stateCondition } from '../state-condition'
 
 const keys = [
   'default',
@@ -14,199 +15,133 @@ const keys = [
   'compileWaveIndex',
 ].sort()
 
-test('五种创建写法使用同一七字段结果，缺省地址和名称不提前补齐', () => {
-  const inputs = [
-    parseTokenArgs(2, 'amount'),
+test('基础内容和配置形成七字段结果，缺省地址与名称不提前补齐', () => {
+  for (const parsed of [
     parseTokenArgs(2),
-    parseTokenArgs({ default: 2 }),
-    parseTokenArgs({ default: 2, hover: 4 }),
-    parseTokenArgs(2, { name: 'amount', state: { hover: 4 } }),
-  ]
-  for (const parsed of inputs) {
+    parseTokenArgs(2, 'amount'),
+    parseTokenArgs(2, { state: { hover: 4 } }),
+  ]) {
     expect(Object.keys(parsed).sort()).toEqual(keys)
     expect(parsed.default).toBe(2)
     expect(parsed.address).toBeUndefined()
     expect(parsed.compileWaveIndex).toBe(0)
   }
-  expect(inputs[1].name).toBeUndefined()
-  expect(inputs[1].state).toBeUndefined()
-  expect(inputs[2].state).toBeUndefined()
-  expect(inputs[3].state).toEqual(inputs[4].state)
+  expect(parseTokenArgs(2).state).toBeUndefined()
 })
 
-test('所有状态参数入口拒绝未登记快捷名和直接 CSS 字符串', () => {
+test('状态对象和任意嵌套容器统一展开，条件条目不会被拆开', () => {
+  const local = stateCondition('&[data-local]')
+  const source = { hover: 2 }
+  const parsed = parseTokenArgs(1, {
+    state: [source, [[new Map([['active', 3]])]], [local, 4], { hover: 5 }],
+  })
+  expect([...parsed.state!.values()]).toEqual([5, 3, 4])
+  expect(parsed.state!.get(local)).toBe(4)
+  expect(source).toEqual({ hover: 2 })
+  expect(
+    parseTokenArgs(1, { state: ['hover', 7] }).state!.get(
+      resolveStateCondition('hover'),
+    ),
+  ).toBe(7)
+})
+
+test('StateCondition 同 header 的后项覆盖原位置，显式 undefined 不丢失', () => {
+  const local = stateCondition('&[data-local]')
+  const parsed = parseTokenArgs(1, {
+    state: [
+      [local, 2],
+      { hover: 3 },
+      [[stateCondition(local.header), undefined]],
+      { active: 4 },
+    ],
+  })
+  expect([...parsed.state!.values()]).toEqual([undefined, 3, 4])
+  expect(parsed.state!.size).toBe(3)
+})
+
+test('对象和数组始终是原始数据，default 和 state 字段不作为定义解析', () => {
+  const data = {
+    duration: 200,
+    default: '格式数据字段',
+    state: { label: '数据内容' },
+    hover: 4,
+  }
+  const values = [data, {}, ['2px', '4px'], []]
+  for (const value of values) {
+    const parsed = parseTokenArgs(value)
+    expect(parsed.default).toBe(value)
+    expect(parsed.state).toBeUndefined()
+  }
+  const formatted = token(data, {
+    toCSSString: (value) => `${value.duration}ms`,
+  })
+  expect(formatted.default).toBe(data)
+  expect(formatted.toCSSString()).toBe('200ms')
+})
+
+test.each(['2px', 0, false, null, undefined])(
+  '无状态值 %s 原样保留',
+  (value) => {
+    const parsed = parseTokenArgs(value)
+    expect(parsed.default).toBe(value)
+    expect(parsed.state).toBeUndefined()
+  },
+)
+
+test('所有状态组合入口拒绝未登记快捷名和直接 CSS 字符串', () => {
   for (const name of [
     'unknownParserShortcut',
     '&[data-unregistered]',
     '@media (width > 1px)',
   ]) {
-    const inputs = [
-      () => parseTokenArgs({ default: 1, [name]: 2 }),
-      () => parseTokenArgs(1, { state: { [name]: 2 } }),
-      () => parseTokenArgs(1, { state: [[name, 2]] }),
-      () => parseTokenArgs(1, { state: new Map([[name, 2]]) }),
-    ]
-    for (const input of inputs) expect(input).toThrow('未登记')
+    for (const state of [
+      { [name]: 2 },
+      [[name, 2]],
+      new Map([[name, 2]]),
+      [[{ [name]: 2 }]],
+    ])
+      expect(() => parseTokenArgs(1, { state: state as never })).toThrow(
+        '未登记',
+      )
   }
 })
 
-test.each(['2px', 0, false, null, undefined])(
-  '无状态值 %s 的直接输入与 default 定义归一等价',
-  (value) => {
-    const direct = parseTokenArgs(value)
-    const definition = parseTokenArgs({ default: value })
-    expect(definition).toEqual(direct)
-    expect(definition.state).toBeUndefined()
-  },
-)
-
-test('default 中的格式数据保留原对象，不再解析它自己的字段', () => {
-  const data = {
-    duration: 200,
-    default: '格式数据字段',
-    state: { label: '数据内容' },
-  }
-  const parsed = parseTokenArgs({ default: data })
-  expect(parsed.default).toBe(data)
-  expect(parsed.state).toBeUndefined()
-  expect(parsed.name).toBeUndefined()
-  expect(parseTokenArgs({ default: undefined }).default).toBeUndefined()
-})
-
-test('可坍缩协议对象和延迟生产器继续作为直接值，不按普通定义对象拆解', () => {
-  const output = vi.fn(() => '4px')
-  const expression = { default: '内部数据', toCSSString: output }
-  const producer = vi.fn(() => expression)
-  expect(parseTokenArgs(expression).default).toBe(expression)
-  expect(parseTokenArgs(producer).default).toBe(producer)
-  expect(parseTokenArgs({ default: producer }).default).toBe(producer)
-  expect(output).not.toHaveBeenCalled()
-  expect(producer).not.toHaveBeenCalled()
-})
-
-test.each(
-  [{ size: '2px' }, { hover: '4px' }, [], [1, 2]].map((input) => ({ input })),
-)('普通裸数据 $input 在参数入口拒绝，要求明确 default', ({ input }) => {
-  expect(() => parseTokenArgs(input as never)).toThrow('default')
-  expect(() => token(input as never)).toThrow('default')
-})
-
-if (false) {
-  // @ts-expect-error 空对象不具备实际内容协议，也没有定义 default。
-  token({})
-  // @ts-expect-error 普通数据对象必须放进定义的 default。
-  token({ size: '2px' })
-  // @ts-expect-error 数组数据必须放进定义的 default。
-  token(['2px', '4px'])
-  // @ts-expect-error 宽泛数据泛型不能重新放开裸对象。
-  token<TokenData>({ size: '2px' })
-  // @ts-expect-error 宽泛数据泛型不能重新放开裸数组。
-  token<TokenData>(['2px'])
-  // @ts-expect-error 定义中的生产器也只能返回内容链可消费的输入。
-  token({ default: () => false })
-  // @ts-expect-error null 不新增为生产器返回值。
-  token({ default: () => null })
-  // @ts-expect-error 生产器不能通过 default 返回未经内容协议表达的裸对象。
-  token({ default: () => ({ size: '2px' }) })
-  // @ts-expect-error 简写固定状态与显式 state 使用同一内容契约。
-  token({ default: false, hover: false })
-  // @ts-expect-error 显式状态同样不把 false 承诺为可编译状态值。
-  token(false, { state: { hover: false } })
-  // @ts-expect-error 直接生产器不能返回内容链拒绝的 false。
-  token(() => false)
-  // @ts-expect-error 直接生产器同样不新增 null 返回能力。
-  token(() => null)
-  // @ts-expect-error 直接生产器不能返回普通数据对象。
-  token(() => ({ size: '2px' }))
-
-  const data = { duration: 200 }
-  token(
-    // @ts-expect-error 基础数据的 formatter 不会自动赋予状态对象内容能力。
-    { default: data, hover: data },
-    { toCSSString: (value) => `${value.duration}ms` },
-  )
-  token({ default: data }, { toCSSString: (value) => `${value.duration}ms` })
-  token({ default: ['2px', '4px'] })
-  type Duration = { duration: number }
-  token<Duration>(
-    { default: { duration: 200 }, hover: '400ms' },
-    { toCSSString: (value) => `${value.duration}ms` },
-  )
-  token<Duration>(
-    { default: { duration: 200 } },
-    {
-      state: { hover: '400ms' },
-      toCSSString: (value) => `${value.duration}ms`,
-    },
-  )
-  parseTokenArgs(2).default.toFixed()
-  const protocolWithDefault = { default: '内部数据', toCSSString: () => '4px' }
-  token(protocolWithDefault).default.toCSSString()
-  parseTokenArgs(protocolWithDefault).default.toCSSString()
-
-  class Output {
-    toCSSString() {
-      return '2px'
-    }
-  }
-  class InheritedOutput extends Output {}
-  const callable = Object.assign(() => '未调用的函数体', {
-    toCSSString: () => '4px',
-  })
-  token(new InheritedOutput())
-  token(callable)
-  token(() => token('2px'))
-}
-
-test('配置状态覆盖简写同名项，显式 undefined 保留且不修改输入', () => {
-  const input = { default: undefined, hover: 2, active: 3 }
-  const state = { hover: undefined, focus: 4 }
-  const parsed = parseTokenArgs(input, { state })
-  expect(parsed.default).toBeUndefined()
-  expect(parsed.state?.size).toBe(3)
-  expect(parsed.state?.has(resolveStateCondition('hover'))).toBe(true)
-  expect(parsed.state?.get(resolveStateCondition('hover'))).toBeUndefined()
-  expect(parsed.state?.get(resolveStateCondition('active'))).toBe(3)
-  expect(parsed.state?.get(resolveStateCondition('focus'))).toBe(4)
-  expect(input).toEqual({ default: undefined, hover: 2, active: 3 })
-  expect(state).toEqual({ hover: undefined, focus: 4 })
-})
-
-test('特殊协议方法不进入七字段，基础与状态回调不提前执行', () => {
+test('状态与基础生产器、生命周期及特殊格式在解析时都不执行', () => {
   const base = vi.fn(() => 2),
     hover = vi.fn(() => 4),
     onFirstScan = vi.fn(),
-    onCompile = vi.fn()
-  const parsed = parseTokenArgs(
-    { default: base, hover },
-    {
-      onFirstScan,
-      onCompile,
-      dependencies: [],
-      toCSSString: () => '2',
-      compileWaveIndex: 3,
-    },
-  )
-  expect(Object.keys(parsed).sort()).toEqual(keys)
+    onCompile = vi.fn(),
+    toCSSString = vi.fn(() => '2')
+  const parsed = parseTokenArgs(base, {
+    state: [{ hover }],
+    onFirstScan,
+    onCompile,
+    toCSSString,
+    dependencies: [],
+    compileWaveIndex: 3,
+  })
   expect(parsed.default).toBe(base)
-  expect(parsed.state?.get(resolveStateCondition('hover'))).toBe(hover)
+  expect(parsed.state!.get(resolveStateCondition('hover'))).toBe(hover)
   expect(parsed.onFirstScan).toBe(onFirstScan)
   expect(parsed.compileWaveIndex).toBe(3)
-  expect(base).not.toHaveBeenCalled()
-  expect(hover).not.toHaveBeenCalled()
+  for (const callback of [base, hover, onFirstScan, onCompile, toCSSString])
+    expect(callback).not.toHaveBeenCalled()
 })
 
-test('嵌套 Token 是完整表达式引用，不被误认为 default 状态简写', () => {
-  const source = token(2, {
-    name: 'source',
-    address: '.Source',
-    state: { hover: 4 },
-    registration: { syntax: '<number>', inherits: false, initialValue: 1 },
-  })
-  const nested = parseTokenArgs(source)
-  expect(nested.default).toBe(source)
-  expect(nested.name).toBeUndefined()
-  expect(nested.state).toBeUndefined()
-  expect(nested.address).toBeUndefined()
-  expect(nested.registration).toBeUndefined()
-})
+if (false) {
+  token({})
+  token({ size: '2px' })
+  token(['2px', '4px'])
+  token<{ duration: number }>(
+    { duration: 200 },
+    { toCSSString: (value) => `${value.duration}ms` },
+  )
+  // @ts-expect-error 内容生产器不产生未经表达的普通对象。
+  token(() => ({ size: '2px' }))
+  // @ts-expect-error 内容生产器不产生 false。
+  token(() => false)
+  // @ts-expect-error 内容生产器不产生 null。
+  token(() => null)
+  // @ts-expect-error 状态规则不把 false 作为可编译状态值。
+  token(false, { state: { hover: false } })
+}

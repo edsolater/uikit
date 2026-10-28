@@ -7,14 +7,10 @@
 ```ts
 const spacing = token('2px')
 const themeColor = token('red', 'theme-color')
-const feedbackColor = token(
-  {
-    default: 'red',
-    hover: 'pink',
-    active: 'darkred',
-  },
-  { address: '.Feedback' },
-)
+const feedbackColor = token('red', {
+  address: '.Feedback',
+  state: { hover: 'pink', active: 'darkred' },
+})
 ```
 
 spacing 没有名称、状态、地址、注册，也没有被 modify，消费时直接输出 2px。themeColor 有名称，输出命名 CSS 声明及引用。feedbackColor 有状态和地址，自动取得名称，在指定位置输出默认值与状态规则。
@@ -27,16 +23,15 @@ Token 对外都是可坍缩的内容，不要求调用者先区分直接值与 C
 const spacing = token('2px')
 const doubledSpacing = token(multiply(spacing, 2))
 const sharedSpacing = token(spacing)
-const referencedSpacing = token({ default: spacing })
 ```
 
 sharedSpacing 继承直接传入的 spacing 的地址、状态和生命周期等定义配置，默认内容仍引用 spacing；追加配置覆盖同名字段，state 按条件软合并。名称不继承，需要时自动命名，避免同名自引用。
 
-referencedSpacing 只把 spacing 放在自己的 default 中，不继承来源配置。普通计算中的 Token 也只提供内容引用；消费时自然取得来源的 CSS 坍缩结果，不在消费端复制状态。其他加工仍由普通函数组合新 Token，没有内置用途变体或独立定义调整操作。
+普通计算中的 Token 提供内容引用，消费时取得来源的 CSS 坍缩结果，不在消费端复制状态。生产函数用于延迟计算或消费时读取数据等明确目的。其他加工仍由普通函数组合新 Token，没有内置用途变体或独立定义调整操作。
 
 ## State 与组件地址
 
-同一组状态可以独立定义，供多个 Token 使用；状态回调收到所属 Token 的基础值。固定状态值直接决定该状态下的结果。
+同一组状态可以独立定义，供多个 Token 使用；state 支持对象、Map、条件 entry 及其嵌套组合，按顺序展开并保留 entry 配对。状态回调收到所属 Token 的基础值，固定状态值直接决定该状态下的结果。
 
 ```ts
 const feedback = {

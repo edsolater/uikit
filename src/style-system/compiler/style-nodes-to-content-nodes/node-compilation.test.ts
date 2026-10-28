@@ -74,7 +74,7 @@ test('暂缓不撤回已设置内容，嵌套前序通知与插入只执行一�
     },
   }
   const css = compileRules([
-    [[], 'width', token({ default: [{ onCompile: producer }, waiting] })],
+    [[], 'width', token([{ onCompile: producer }, waiting])],
     [[], 'order', activate],
   ])
   expect(css).toContain('width: 1px;')

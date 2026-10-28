@@ -22,8 +22,7 @@ import type { Rules } from '../rule'
 import {
   parseTokenArgs,
   type TokenConfig,
-  type TokenDefinitionInput,
-  type TokenStateValues,
+  type TokenDefaultInput,
 } from './args-parser'
 import type { StateCondition, StateConditionInput } from '../state-condition'
 import { cssTokenName } from './css'
@@ -33,11 +32,8 @@ import { allocateVariableName } from '../custom-property-names'
 export type TokenInput =
   string | number | JSSContent | (() => TokenInput) | undefined
 
-/** 创建时可直接传入的内容；普通对象和数组数据由 default 明确承载。 */
-export type TokenDirectInput = TokenInput | boolean | null
-
-/** Token 保存的原始数据；对象数据由自身输出方法解释。 */
-export type TokenData = TokenDirectInput | object
+/** 创建时可直接传入的原始数据、表达式或内容生产器。 */
+export type TokenData = TokenInput | boolean | null | object
 
 /** 状态固定值或根据所属定义的基础内容产生结果的规则。 */
 export type TokenStateRule = TokenInput | ((base: TokenInput) => TokenInput)
@@ -45,10 +41,11 @@ export type TokenStateRule = TokenInput | ((base: TokenInput) => TokenInput)
 /** 参数入口归一后的内部状态表；定义状态使用 TokenStateInput 对象或条目。 */
 export type TokenState = Map<StateCondition, TokenStateRule>
 
-/** 已登记快捷名的对象简写，或快捷名与 StateCondition 条目；入口统一为 Map。 */
+/** 状态对象、条件条目及其任意层级的可迭代组合。 */
 export type TokenStateInput =
   | Record<string, TokenStateRule>
-  | Iterable<readonly [StateConditionInput, TokenStateRule]>
+  | readonly [StateConditionInput, TokenStateRule]
+  | Iterable<TokenStateInput>
 
 /** 定义的明确根据地；缺省地址留待 CSS 坍缩时采用 root。 */
 export type TokenAddress = Exclude<ConditionInput, undefined>
@@ -90,7 +87,7 @@ const baseOutputs = new WeakMap<object, JSSContent>()
 const customOutputs = new WeakSet<object>()
 
 /**
- * 将直接内容或 default 状态简写创建为独立 Token，不执行内容生产函数。
+ * 将原始内容创建为 Token；已有 Token 复用配置，不执行内容生产函数。
  * 特殊定义可以提供依赖、编译方法与格式器；基础配置统一由参数解析器取得。
  */
 export function token<T extends TokenData, U extends TokenData>(
@@ -109,29 +106,24 @@ export function token(
   input: string,
   options?: string | TokenOptions<string>,
 ): Token<string>
-export function token<T extends TokenDirectInput>(
-  input: T,
+export function token<T extends TokenData>(
+  input: T & TokenDefaultInput<T>,
   options?: string | TokenOptions<T>,
 ): Token<T>
-export function token<D extends { default: TokenData }>(
-  input: TokenDefinitionInput<D>,
-  options?: string | TokenOptions<D['default']>,
-): Token<
-  D['default'] extends number
-    ? number
-    : D['default'] extends string
-      ? string
-      : D['default']
->
-export function token<T extends TokenData = never>(
-  input: TokenStateValues<NoInfer<T>>,
-  options?: string | TokenOptions<NoInfer<T>>,
-): Token<T>
 export function token<T extends TokenData>(
-  input: TokenDirectInput | TokenStateValues<T>,
+  input: TokenData,
   options?: string | (TokenOptions<T> & { default?: T }),
 ): Token<T> {
-  if (isToken(input)) return tokenFrom<T>(input, options)
+  return isToken(input)
+    ? tokenFrom<T>(input, options)
+    : createToken(input as T, options)
+}
+
+/** 创建实际 Token 对象，基础内容始终按原始数据保存。 */
+function createToken<T extends TokenData>(
+  input: T,
+  options?: string | TokenOptions<T>,
+): Token<T> {
   const protocol = typeof options === 'string' ? { name: options } : options
   const self: Token<T> = {
     ...parseTokenArgs<T>(input, protocol),
@@ -191,12 +183,8 @@ function tokenFrom<T extends TokenData>(
     ...additional,
   }
   const state = additional?.state
-  if (state !== undefined)
-    definition.state = [
-      ...(source.state ?? []),
-      ...(Symbol.iterator in state ? state : Object.entries(state)),
-    ]
-  return token<T>({ default: definition.default as T }, definition)
+  if (state !== undefined) definition.state = [source.state ?? {}, state]
+  return createToken(definition.default as T, definition)
 }
 
 /**

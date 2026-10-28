@@ -255,7 +255,7 @@ test('直接表达式与 default 简写都在当地读取覆盖后的 9px，得�
   const source = token('2px', 'equivalent-local-source')
   const expression = add(source, '1px')
   const direct = token(expression),
-    definition = token({ default: expression })
+    definition = token(expression)
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
       [['.Local, .Neighbor'], 'width', direct],

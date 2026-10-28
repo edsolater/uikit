@@ -23,7 +23,7 @@ Token 的身份不取决于值从哪里产生。直接定义、引用其他 Toke
 
 ## 创建写法
 
-以下是确定支持的接口形式，代码展示目标 API，不表示当前源码已经提供这些入口。
+基础内容固定放在第一个参数，名称、状态和地址等配置放在第二个参数：
 
 ```ts
 // 基础值及名称。
@@ -32,17 +32,7 @@ token(value, name)
 // 仅提供基础值。
 token(value)
 
-// 用 default 字段提供基础值。
-token({ default: value })
-
-// 基础值与状态写在同一个对象中。
-token({
-  default: value1,
-  hover: (base) => multiply(base, 2),
-  active: 4,
-})
-
-// 基础值独立传入，状态与名称写在配置中。
+// 状态与名称写在配置中。
 token(value, {
   state: {
     hover: (base) => multiply(base, 2),
@@ -52,35 +42,34 @@ token(value, {
 })
 ```
 
-`default` 表示 Token 的基础值。简写对象中的其他项表示状态，与配置中 `state` 的写法表达相同的内容。
+第一个参数保存为 Token 的 default；如果它是已有 Token，则继承来源配置。普通对象和数组直接作为基础数据，不从其字段中提取 default、hover 或其他配置。
 
 ### 参数入口负责输入语法
 
-参数写法由 argument parser 一次归一，Token 本体和 CSS 输出不根据原始写法补救。直接值形式与定义对象形式的边界如下：
+创建入口处理来源继承，argument parser 归一基础内容和第二参数配置，CSS 输出不再判断原始写法：
 
-| 首参数             | 解析方式                                                                        |
-| ------------------ | ------------------------------------------------------------------------------- |
-| 可直接消费的原语   | 作为基础内容，例如 token('2px')                                                 |
-| 已有 Token         | 创建独立 Token，继承来源配置并合并追加 state；default 默认引用来源              |
-| 其他可坍缩表达式   | 作为基础内容消费，不拆解表达式内部引用的 Token 定义                             |
-| 内容生产函数       | 作为延迟内容保存，创建时不执行                                                  |
-| 普通定义对象       | 必须明确提供 default；其他项按状态简写解析                                      |
-| 原始对象或数组数据 | 放在定义对象的 default 中，由普通格式或特殊输出方法解释，不再作为首参数直接包装 |
+| 首参数             | 解析方式                                                           |
+| ------------------ | ------------------------------------------------------------------ |
+| 可直接消费的原语   | 作为基础内容，例如 token('2px')                                    |
+| 已有 Token         | 创建独立 Token，继承来源配置并合并追加 state；default 默认引用来源 |
+| 其他可坍缩表达式   | 作为基础内容消费，不拆解表达式内部引用的 Token 定义                |
+| 内容生产函数       | 作为延迟内容保存，创建时不执行                                     |
+| 普通对象或数组数据 | 原样保存为基础数据，由普通格式或第二参数中的特殊输出方法解释       |
 
-v 不是已有 Token 时，token(v) 与 token({ default: v }) 在配置相同且没有状态项时，必须得到相同的规范化信息及消费效果。v 是已有 Token 时，前者继承配置，后者只把 v 作为基础内容引用。只有 default 不代表提供了 state，解析结果的 state 应为 undefined；不能产生空隐式 state，再要求 CSS 层识别并忽略它。显式 state 配置仍按已定规则处理。
+不再从第一个参数解析状态简写；即使数据含有 default、hover 等字段，它们也只是数据。没有提供 state 时不生成隐式空状态。
 
 ```ts
-const spacing = token({ default: '2px' })
-const sequence = token({ default: ['2px', '4px'] })
+const spacing = token('2px')
+const sequence = token(['2px', '4px'])
 const metadata = token(
-  { default: { duration: 200 } },
+  { duration: 200 },
   {
     toCSSString: (data) => `${data.duration}ms`,
   },
 )
 ```
 
-格式化数据的能力保留，改变的是输入语法的明确性。缺少 default 的普通对象不是隐式基础数据，应在参数入口明确拒绝，不能到输出时变成 [object Object]。输入中 default 显式为 undefined 仍表示已提供字段。
+对象和数组无需额外包装；特殊格式通过第二参数提供 toCSSString 和 dependencies，不把基础数据当成定义配置。
 
 状态规则中的 `base` 是这个 Token 的基础值。例如基础值为 `2`，则 `hover: base => multiply(base, 2)` 表达悬停时使用基础值的两倍，`active: 4` 表达按下时直接使用固定值 `4`。这些规则描述条件下的取值，不要求 JavaScript 在每次交互时重新计算。
 
@@ -106,7 +95,7 @@ const metadata = token(
 
 | 属性或方法         | 所属与配置方式                                                       | 职能                                                                                                                        | 生效时机与边界                                                                                                                                        |
 | ------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `default`          | Parser 字段；由创建参数提供                                          | 保存基础内容，承接位置参数 value 或对象简写的 default；可以是直接值、Token 引用或计算表达式                                 | 作为自身定义的基础，不等待外部声明补齐或替换；state 以该基础及既定表达式加工结果展开。嵌入 Token 不复制其定义，提供内容不代表立即坍缩                 |
+| `default`          | Parser 字段；由第一个创建参数提供                                    | 保存基础内容，可以是直接值、对象、数组、Token 引用或计算表达式                                                              | 作为自身定义的基础，不等待外部声明补齐或替换；state 以该基础及既定表达式加工结果展开。数据字段不作配置解析，提供内容不代表立即坍缩                    |
 | `name`             | Parser 字段；可显式提供，也可由系统生成                              | 提供 CSS 自定义属性的名称，使声明、引用和 modify 指向一致的 CSS 标识                                                        | 显式命名使 Token 需要 CSS variable 身份；未命名但因其他条件需要该身份时，在坍缩过程中自动命名。不通过名称查找另一对象的定义                           |
 | `state`            | Parser 字段；可内联，也可传入独立 State，解析后统一为 Map            | 保存 StateCondition 到取值的映射；固定值指定该状态的结果，函数基于自身基础内容产生结果；同一 Token 的局部取值差异在这里表达 | 状态规则在定义地址表达，由 CSS 条件决定生效；条件可表达交互、主题、区域或组件分类。具有 state 就需要 CSS variable 身份，不是 JS 交互监听器            |
 | `address`          | Parser 字段；可选定义地址，未指定时默认根据地为 root                 | 确定默认声明及自身状态规则在哪里建立，表达计算与取值的位置                                                                  | 显式提供就需要 CSS variable 身份；未提供时，需要建立 CSS variable 声明才采用 root，根据地缺省不应单独使普通直接值改变身份。不是扫描位置或附带声明列表 |
@@ -189,7 +178,7 @@ default 是 Token 自身定义的基础，编译器按实际消费及坍缩需�
 
 ## State 可以独立复用
 
-State 可以直接写在 Token 定义中，也可以独立定义后交给 Token。条件输入只接受静态预置的字符串快捷名或 StateCondition：字符串键对象与 entry 中的字符串都查同一张预置表，hover、active 等名称可直接使用。条件对象通过 entry 或 Map 保留身份，不隐式转成字符串。
+State 放在第二参数的 state 中，可以直接定义，也可以独立复用。输入支持快捷名对象、Map、单个条件 entry，以及这些形式的任意嵌套数组或 Iterable。入口按顺序展开容器，entry 保持条件和值的配对。条件只接受静态预置快捷名或 StateCondition：字符串键与 entry 中的字符串都查同一张预置表，条件对象不隐式转成字符串。
 
 ```ts
 const whenCompact = stateCondition('&[data-density="compact"]')
@@ -204,7 +193,16 @@ const emphasis = token(2, {
 })
 ```
 
-独立 State 保存可复用的状态规则，接收它的 Token 提供基础值。提供新 State 定义时，优先返回方便调用者组合的对象简写或条件 entry；对象使用稳定快捷名，entry 保留条件变量，不要求辅助函数提前返回 Map。argument parser 一次归一为 `Map<StateCondition, TokenStateRule>`，后续流程不再识别输入写法。Map 仍是合法输入，已有 Token.state 可以完整复用；不能把新增定义的书写方式与解析后的结果混为一谈。
+独立 State 保存可复用的状态规则，接收它的 Token 提供基础值。辅助函数可以返回对象或条件 entry，调用方直接放进嵌套组合，不必先展开或转换为 Map：
+
+```ts
+const buttonColorSource = buttonToken(brandColor, {
+  name: 'button-color-source',
+  state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
+})
+```
+
+argument parser 一次归一为 `Map<StateCondition, TokenStateRule>`，后续流程不再识别容器写法。已定义的 Token.state 也可以直接参与组合，不使用对象展开或 Object.entries 读取 Map。
 
 StateCondition 直接使用单个 Condition 的 { header } 对象。参数入口将静态预置快捷名换成 stateConditionRegistry 中的原对象；同 header 的规则归一为一项，后值覆盖前值并保留首次插入位置，最终 Map 保留条件对象。编译直接消费该 Map，不增加解析结果包装、额外身份元数据或状态排序。
 
@@ -214,7 +212,7 @@ StateCondition 直接使用单个 Condition 的 { header } 对象。参数入口
 
 未定义字符串在创建 Token 时立即报错，不回退为 CSS 条件。`'&[data-ready]'`、`'@media (...)'` 等原始 CSS 必须先交给 stateCondition，再以对象 entry 输入 state；没有原始字符串例外。普通 rules 的字符串仍表示 CSS 地址，不查状态快捷名表。
 
-`hover`、`active` 字符串与对应对象只判断交互状态；`whenEnabled`、`whenDisabled` 等条件独立匹配，不默认互相排除。不同属性的状态效果共同生效，同一属性按 CSS 层叠决定结果。独立复用和加工 `source.state` 使用 Map 迭代或条目展开，不使用 `Object.entries` 或对象展开。
+`hover`、`active` 字符串与对应对象只判断交互状态；`whenEnabled`、`whenDisabled` 等条件独立匹配，不默认互相排除。不同属性的状态效果共同生效，同一属性按 CSS 层叠决定结果。Map 状态可以直接参与嵌套组合；手动读取它仍使用 Map 迭代，不使用 Object.entries 或对象展开。
 
 ## 产生 Token 的函数
 
@@ -251,26 +249,36 @@ const panelToken = createNewTokenGenerator({
   prefixName: 'panel',
   address: panelConditionPath,
 })
-const panelSurface = panelToken({ default: surfaceColor, hover: paperColor })
+const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-生成器只返回一个等效 token 的函数，预设名称前缀与共同 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有分配器的新名称。逐项配置可以覆盖 name、address 等，名称字符串、状态简写、特殊格式和 default 覆盖都沿用 token 的接口。
+生成器只返回一个等效 token 的函数，预设名称前缀与共同 address。直接传入具名 Token 时，名称取前缀加来源显式名称并去掉开头的 --，例如 base-space 生成 panel-base-space；其他输入使用前缀加现有分配器的新名称。逐项配置可以覆盖 name、address 等，名称字符串、state 组合、特殊格式和 default 覆盖都沿用 token 的接口。
 
 不再提供独立的 `adjust` 操作。它原来承担的定义组合与加工，直接由这些普通函数完成。函数返回的新 Token 按自己的定义和使用情况确定坍缩方式；“经过某个加工函数”本身不是生成 CSS variable 的条件，也不需要记录“使用过 adjust”。
 
 新 Token 保存组合完成后的定义，不记录加工历史。不保留 `resultSource`、`resultSourceTransform`、`resultSourceStates` 或 `resultSourceVariants`，也不根据这些字段重放加工。新 default 如果需要读取原 Token 的当前值，直接在计算表达式中引用原 Token；这种值依赖不需要另一份来源记录。
 
-## 基础内容中的 Token 就是表达式引用
+## 继承定义与延迟生产
 
-token(source) 明确继承直接传入的来源。需要定义自己的状态而只引用来源当前值时，将来源放入 default；这个已有定义形式不递归继承其基础内容的配置。
+已有 Token 直接传给 token，继承其定义并合并追加配置。来源已经可用时，无须再包装成返回它的函数。
 
 ```ts
-const source = token({ default: 2, hover: (base) => multiply(base, 2) })
-const target = token({ default: source, active: 4 })
+const source = token(2, { state: { hover: (base) => multiply(base, 2) } })
+const target = token(source, { state: { active: 4 } })
 ```
 
-target 只定义自己的 active，不继承 source 的 hover、地址或生命周期。其 default 和普通计算表达式中的 source 都按内容消费：source 需要 CSS variable 身份时提供对应引用，否则提供 CSS value。定义继承发生在 token 的直接参数入口，内容消费和 CSS 坍缩不再复制配置。
+target 继承 source 的 hover，并追加 active；来源不变。默认内容引用来源当前值，计算表达式内部的 Token 仍按内容消费，不在消费端复制配置。
+
+生产函数保留用于延迟计算、消费时读取变化数据或等待内容可用等明确目的，例如：
+
+```ts
+let currentWidth = '2px'
+const measuredWidth = token(() => currentWidth)
+currentWidth = '4px'
+```
+
+measuredWidth 在编译消费时读取 currentWidth，而不是在创建时固定为 2px。函数提供内容，不是选择是否继承的配置开关；返回 Token 时也按普通内容消费，不另建一种引用模式。
 
 两份具有独立职责的 Token 定义分别命名，再显式引用，例如 buttonOpacitySource → buttonOpacity；同一链条保留 Opacity 抓手，Source 放在最后，完整规则见[样式系统命名](样式系统命名.md)。不直接用 token(token(...)) 隐藏其中一份定义。multiply、oklch 等工具返回的 Token 仍可直接作为表达式组合，不要求为每个计算步骤增加中间变量。
 
@@ -334,9 +342,8 @@ compileWaveIndex 是最早处理门槛，不表示指定波次必定完成，也
 
 ## 实现时的验收依据
 
-- 五种创建写法表达的基础值与状态能够进入同一种 Token 模型。
-- 无状态的直接值与 default 定义对象归一结果、CSS 输出及相同消费条件下的计算效果一致；不由参数写法决定公式是否被搬到 root。
-- 普通对象和数组数据通过 default 明确承载；非法裸对象或数组在入口拒绝，格式器、依赖及当前 default 替换能力继续有效。
+- 基础内容固定为第一个参数，状态与其他配置放在第二个参数，不解析第一个参数中的 default、hover 等数据字段。
+- 对象和数组直接承载原始数据，格式器、依赖及当前 default 替换能力继续有效；数据形式不改变公式的定义位置。
 - Argument parser 返回固定的七个 key；后续流程不再根据原始参数写法分支。
 - 状态回调基于所属 Token 的基础值求值，固定状态值直接替换该状态下的取值。
 - rules 对普通 CSS 属性或 Key 的对象、entry 和嵌套集合自动完成声明，调用方不再手动调用 declare；Token 作为属性内容正常消费。
@@ -351,7 +358,7 @@ compileWaveIndex 是最早处理门槛，不表示指定波次必定完成，也
 - 不再提供 adjust；定义加工直接使用返回 Token 的普通函数。
 - 非 CSS 坍缩部分不再保留原有 Variable、Value 抽象，也不引入 RuleToken 类型或包装旧模型的转交层。
 - Token 不保存 priority、definitionKey、declarations 或 resultSource 系列字段；加工由读取定义并返回新 Token 的普通函数完成。
-- 直接 token(source) 继承来源配置并软合并 state；显式 default 或计算表达式内部的 Token 只作为内容引用，不递归继承配置。
+- 已有 Token 直接传入并继承来源配置，state 软合并差异；生产函数须有明确的延迟生产目的，不用于规避继承。
 - 内部 _kind 由系统维护并可对外读取，调用方按约定不修改；不增加 parser 的固定 key，不要求 readonly 或运行时写保护。
 - 未提供 name、state、address、registration 且未被 modify 的 Token 直接输出 CSS value。
 - modify 在坍缩前参与类型确定；对同一 Token 的引用写在 modify 前后，均使用一致的 CSS variable 身份。

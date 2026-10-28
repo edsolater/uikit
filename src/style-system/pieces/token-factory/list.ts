@@ -6,12 +6,12 @@ import { token, type TokenData } from '../../token/core'
  * 逗号分隔内容；沿用 Token 的默认数组输出。
  */
 export function valueList(...items: TokenData[]) {
-  return token({ default: items })
+  return token(items)
 }
 
 /**
  * 空格分隔内容。
  */
 export function valueSequence(...items: TokenData[]) {
-  return token({ default: items }, { toCSSString: arraySequenceToCSSString })
+  return token(items, { toCSSString: arraySequenceToCSSString })
 }

@@ -21,13 +21,10 @@ afterEach(() => {
 })
 
 test('匿名 Token 的地址与状态自动供多个属性消费，最后消费退出后释放定义', () => {
-  const dimension = token(
-    { default: '12px' },
-    {
-      address: '.OwnDefinition',
-      state: [[stateCondition('&[data-grown]'), '24px']],
-    },
-  )
+  const dimension = token('12px', {
+    address: '.OwnDefinition',
+    state: [[stateCondition('&[data-grown]'), '24px']],
+  })
   const width = rules('.OwnDefinition', {
     'width': dimension,
     'padding-left': token('2px'),
@@ -60,17 +57,14 @@ test('分类和交互都由自身 state 表达，新 Token 只改变明确接入
     address: '.StateOwner',
     state: [[filled, '20px']],
   })
-  const base = token(
-    { default: material },
-    {
-      address: '.StateOwner',
-      state: [
-        [whenHover, '12px'],
-        [whenActive, '14px'],
-        [whenDisabled, '8px'],
-      ],
-    },
-  )
+  const base = token(material, {
+    address: '.StateOwner',
+    state: [
+      [whenHover, '12px'],
+      [whenActive, '14px'],
+      [whenDisabled, '8px'],
+    ],
+  })
   const local = token('30px', {
     address: '.StateOwner.Local',
     state: { hover: '32px', active: '34px', disabled: '28px' },
@@ -90,7 +84,7 @@ test('分类和交互都由自身 state 表达，新 Token 只改变明确接入
     getComputedStyle(element).paddingLeft
   for (const [element, values] of [
     [ordinary, ['10px', '12px', '14px', '8px']],
-    [classified, ['20px', '12px', '14px', '8px']],
+    [classified, ['20px', '20px', '20px', '8px']],
     [own, ['30px', '32px', '34px', '28px']],
   ] as const) {
     expect(padding(element)).toBe(values[0])

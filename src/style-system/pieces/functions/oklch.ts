@@ -6,11 +6,7 @@
  * 通道数据供 JS 调整，JSS 依赖供编译输出。
  */
 import { isFunction, isObject } from '@edsolater/fnkit'
-import {
-  createJSSContent,
-  isJSSContent,
-  type Expression,
-} from '../../content'
+import { createJSSContent, isJSSContent, type Expression } from '../../content'
 import { token, type Token, type TokenInput } from '../../token/core'
 
 /** 普通 OKLCH 颜色通道；透明度省略时为完全不透明。 */
@@ -66,35 +62,29 @@ export function oklch(
       isObject(changes) && !isJSSContent(changes)
         ? oklchChannels(changes as OKLCHChanges)
         : changes
-    return token(
-      { default: [source, channels] },
-      {
-        toCSSString: (current, resolve) => {
-          const color = resolve(current[0])
-          const values = resolve(current[1])
-          return color === undefined || values === undefined
-            ? undefined
-            : `oklch(from ${color} ${values})`
-        },
+    return token([source, channels], {
+      toCSSString: (current, resolve) => {
+        const color = resolve(current[0])
+        const values = resolve(current[1])
+        return color === undefined || values === undefined
+          ? undefined
+          : `oklch(from ${color} ${values})`
       },
-    )
+    })
   }
-  return token(
-    { default: source as OKLCHChannels },
-    {
-      dependencies: (current) => Object.values(current),
-      toCSSString: ({ lightness, chroma, hue, alpha }, resolve) => {
-        const channels = [lightness, chroma, hue].map(resolve)
-        const opacity = resolve(alpha)
-        if (
-          channels.some((channel) => channel === undefined) ||
-          (alpha !== undefined && opacity === undefined)
-        )
-          return undefined
-        return `oklch(${channels.join(' ')}${opacity === undefined || opacity === '1' ? '' : ` / ${opacity}`})`
-      },
+  return token(source as OKLCHChannels, {
+    dependencies: (current) => Object.values(current),
+    toCSSString: ({ lightness, chroma, hue, alpha }, resolve) => {
+      const channels = [lightness, chroma, hue].map(resolve)
+      const opacity = resolve(alpha)
+      if (
+        channels.some((channel) => channel === undefined) ||
+        (alpha !== undefined && opacity === undefined)
+      )
+        return undefined
+      return `oklch(${channels.join(' ')}${opacity === undefined || opacity === '1' ? '' : ` / ${opacity}`})`
     },
-  )
+  })
 }
 
 /**
@@ -120,16 +110,13 @@ export function oklchChannels(changes: OKLCHChanges): Token {
           ? change(createJSSContent(() => symbol))
           : change,
     )
-    return token(
-      { default: inputs },
-      {
-        toCSSString: (current, resolve) => {
-          const values = current.map(resolve)
-          return values.some((channel) => channel === undefined)
-            ? undefined
-            : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
-        },
+    return token(inputs, {
+      toCSSString: (current, resolve) => {
+        const values = current.map(resolve)
+        return values.some((channel) => channel === undefined)
+          ? undefined
+          : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
       },
-    )
+    })
   }
 }

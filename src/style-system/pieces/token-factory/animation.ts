@@ -30,23 +30,20 @@ export interface AnimationParts {
  * 延迟生成动画内容。
  */
 export function animationValue(parts: AnimationParts): Token {
-  return token(
-    { default: parts },
-    {
-      dependencies: (current) => Object.values(current),
-      toCSSString: (current, resolve) =>
-        [
-          resolve(current.name),
-          resolve(current.duration),
-          resolve(current.easing),
-          resolve(current.delay),
-          resolve(current.iterations),
-          resolve(current.direction),
-          resolve(current.fillMode),
-          resolve(current.playState),
-        ]
-          .filter((part) => part !== undefined)
-          .join(' '),
-    },
-  )
+  return token(parts, {
+    dependencies: (current) => Object.values(current),
+    toCSSString: (current, resolve) =>
+      [
+        resolve(current.name),
+        resolve(current.duration),
+        resolve(current.easing),
+        resolve(current.delay),
+        resolve(current.iterations),
+        resolve(current.direction),
+        resolve(current.fillMode),
+        resolve(current.playState),
+      ]
+        .filter((part) => part !== undefined)
+        .join(' '),
+  })
 }
