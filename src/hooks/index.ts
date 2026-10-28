@@ -19,3 +19,4 @@ export * from './useUIThemeMode' // UI 领域的全局 light / dark / system 主
 export * from './createStateWithPrev' // 给state增加一个prev属性， 用于获取之前的值。
 export * from './stateUtils' // State 领域的映射与派生组合
 export * from './snapshots' // State 领域的树形状态快照读取
+export * from './useWebMCP' // WebMCP 领域的组件工具注册与作用域清理
