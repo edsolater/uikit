@@ -1,13 +1,22 @@
 /**
- * Solid 渲染与 props 接入。
+ * Solid 渲染、根作用域与 props 接入。
  *
  * 保留底层的子树复用、DOM 提交时机和 props 惰性读取；上层不直接引用 Solid。
  *
- * 统一公开渲染与 props 能力；内部计算和作用域接入另归 reactivity。
+ * 统一公开渲染、根作用域与 props 能力；内部计算和 owner 接入另归 reactivity。
  */
 import { createMemo, type Merge } from 'solid-js'
 import { isFunction } from '@edsolater/fnkit'
-export { For, Show, Loading, Errored, children, mapArray } from 'solid-js'
+export {
+  For,
+  Show,
+  Loading,
+  Errored,
+  children,
+  mapArray,
+  createComponent,
+  createRoot,
+} from 'solid-js'
 export { render, insert } from '@solidjs/web'
 
 /** 高优先级 undefined 继续回退默认值，保持现有 props 合并契约。 */

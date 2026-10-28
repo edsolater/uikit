@@ -17,6 +17,9 @@ import { isArray, isFunction } from '@edsolater/fnkit'
 import { val, type Val } from './createState/read'
 import { isPromiseLike } from './createState/promise-like'
 
+/** 显式提交沿用原生契约，供宿主或测试观察已经提交的响应式结果。 */
+export { flush } from 'solid-js'
+
 type EffectAction<T> = (value: T) => void | (() => void)
 type EffectValues<Sources extends unknown[]> = {
   [Index in keyof Sources]: Val<Sources[Index]>

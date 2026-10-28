@@ -1,14 +1,16 @@
 /** 验证两阶段动作、挂载执行与卸载清理。 */
 // @vitest-environment jsdom
 import { render } from '@solidjs/web'
-import { createRoot, flush, mapArray } from 'solid-js'
+import { mapArray } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
 import {
   createEffect,
   onCleanup,
   onMount,
   createRenderEffect,
+  flush,
 } from './createEffect'
+import { createRoot } from './render'
 
 import { createState } from './createState/state'
 import { val } from './createState/read'

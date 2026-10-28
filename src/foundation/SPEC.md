@@ -3,14 +3,16 @@
 本目录定义 UIKit 的基础状态、响应式动作、上下文契约，并接入当前 Solid 运行时。使用这些能力的 Hooks、组件和示例从 UIKit 的入口导入，不直接引用 Solid。
 
 - `createState/`：定义 State、StateView、Source、读取与来源转换，以及内部响应式运行机制。
-- `createEffect.ts`：响应式动作、挂载和清理入口。
+- `createEffect.ts`：响应式动作、挂载、清理与显式提交入口。
 - `context.ts`：原生 Context 提供与读取接入。
 - `reactivity.ts`：库内部计算与 owner 作用域接入，不进入公开聚合出口。
-- `render.ts`：渲染与 props 接入，保留底层调度、子树复用和惰性读取。
+- `render.ts`：渲染、根作用域、组件创建与 props 接入，保留底层调度、子树复用和惰性读取。
 - `types.ts`：当前渲染运行时的类型桥接；仍沿用 Solid 类型，尚未消除类型契约对运行时的依赖。
-- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；包根公开 render、For、Show 与 JSX 类型供应用挂载和组合渲染，渲染完整能力随所属模块导出，owner、untrack、createMemo 接入仅留在内部 reactivity.ts。
+- `index.ts`：基础状态、Effect、Context 与原生 Loading/Errored 的公开出口；包根公开 render、For、Show、createComponent 与 JSX 类型供应用挂载和组合渲染，渲染完整能力随所属模块导出，getOwner、runWithOwner、untrack、createMemo 接入仅留在内部 reactivity.ts。
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
+
+`createRoot` 从渲染入口公开，沿用原生根作用域契约；脱离组件生命周期管理资源时，调用方负责调用其 dispose。`flush` 留在响应式动作入口，测试或宿主需要观察已提交结果时可显式调用，不以此替代业务动作的正常调度。`createComponent` 同样从渲染入口公开，保留组件求值与作用域行为；不建立另一套组件或状态协议。
 
 生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`context.ts`、`reactivity.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
 
