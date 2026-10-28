@@ -2,7 +2,7 @@ import { flush } from 'solid-js'
 import { render } from '@solidjs/web'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import '../../../css/all-base.css'
-import ExampleDashboard from './ExampleDashboard'
+import ExampleDashboard, { exampleEntries } from './ExampleDashboard'
 import { cssRoot } from '@/style-system'
 
 const runnerPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
@@ -26,7 +26,7 @@ afterEach(() => {
 })
 
 describe('ExampleDashboard', () => {
-  test('主页不预选详情，选择条目后写入可直达 URL', () => {
+  test('主页不预选详情，选择条目后写入可直达 URL', async () => {
     window.history.replaceState(null, '', '/examples')
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
@@ -34,15 +34,34 @@ describe('ExampleDashboard', () => {
     expect(document.querySelector('.example-home h1')?.textContent).toBe(
       'Examples',
     )
-    expect(document.querySelectorAll('.example-link')).toHaveLength(12)
-    expect(document.querySelectorAll('.example-link h2')).toHaveLength(12)
-    expect(document.querySelectorAll('.example-link p')).toHaveLength(12)
-    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(12)
+    expect(document.querySelectorAll('.example-link')).toHaveLength(
+      exampleEntries.length,
+    )
+    expect(document.querySelectorAll('.example-link h2')).toHaveLength(
+      exampleEntries.length,
+    )
+    expect(document.querySelectorAll('.example-link p')).toHaveLength(
+      exampleEntries.length,
+    )
+    expect(document.querySelectorAll('.example-link-ribbon')).toHaveLength(
+      exampleEntries.length,
+    )
     expect(
       document.querySelectorAll('.example-link[data-thumbnail]'),
-    ).toHaveLength(12)
+    ).toHaveLength(exampleEntries.length)
     expect(document.querySelectorAll('.example-link-thumbnail')).toHaveLength(
-      12,
+      exampleEntries.length,
+    )
+    const images = [
+      ...document.querySelectorAll<HTMLImageElement>('.example-link-thumbnail'),
+    ]
+    for (const image of images) {
+      image.loading = 'eager'
+      await image.decode()
+      expect(image.naturalWidth).toBeGreaterThan(0)
+    }
+    expect(new Set(images.map((image) => image.src)).size).toBe(
+      exampleEntries.length,
     )
     const asyncEntry = document.querySelector<HTMLAnchorElement>(
       'a[href="/examples/async-state"]',
@@ -106,6 +125,57 @@ describe('ExampleDashboard', () => {
     ).toBeGreaterThan(Number.parseFloat(getComputedStyle(smallCard).padding))
     expect(getComputedStyle(softCard).backgroundColor).not.toBe(
       getComputedStyle(solidCard).backgroundColor,
+    )
+  })
+
+  test('新增组件详情可直达、返回目录，并保留单一主要区域', async () => {
+    const host = document.body.appendChild(document.createElement('div'))
+    window.history.replaceState(null, '', '/examples/flow')
+    dispose = render(() => <ExampleDashboard />, host)
+    for (const id of [
+      'flow',
+      'grid',
+      'field',
+      'navigation',
+      'link',
+      'page',
+      'text-area',
+      'select',
+      'checkbox',
+      'details',
+      'message-board',
+      'text',
+      'heading',
+      'label',
+      'table',
+      'loop',
+      'component-wrapper',
+      'structure-view-fab',
+    ]) {
+      window.history.replaceState(null, '', `/examples/${id}`)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      flush()
+      expect(
+        document.querySelector('.example-detail')?.textContent?.trim().length,
+      ).toBeGreaterThan(20)
+      expect(document.querySelector('.example-missing')).toBeNull()
+      expect(document.querySelectorAll('main, [role="main"]')).toHaveLength(1)
+      if (id === 'loop') {
+        await expect
+          .poll(() => document.querySelector('.Loop')?.textContent)
+          .toContain('核对结构')
+        await Promise.all(
+          document
+            .getAnimations()
+            .map((animation) => animation.finished.catch(() => {})),
+        )
+      }
+    }
+    document.querySelector<HTMLAnchorElement>('.example-back')!.click()
+    flush()
+    expect(window.location.pathname).toBe('/examples')
+    expect(document.querySelectorAll('.example-link')).toHaveLength(
+      exampleEntries.length,
     )
   })
 

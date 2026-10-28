@@ -15,7 +15,7 @@ import {
   Button,
   Card,
   ComponentWrapper,
-  Each,
+  Loop,
   Input,
   Piv,
   Popover,
@@ -227,7 +227,7 @@ describe('组件结构查看', () => {
             <Input htmlProps={{ value: '保留草稿' }} />
             <Table data={[{ 名称: '记录' }]} />
             <Popover trigger="补充">浮层正文</Popover>
-            <Each each={() => ['一项']}>{(item) => <p>{item}</p>}</Each>
+            <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
           </Article>
           <StructureViewFab />
         </>
@@ -263,7 +263,7 @@ describe('组件结构查看', () => {
           'Input · 编辑单行内容',
           'Table · 按列展示记录',
           'Popover · 显示补充内容',
-          'Each · 排列重复内容',
+          'Loop · 排列重复内容',
         ]),
       )
     expect(

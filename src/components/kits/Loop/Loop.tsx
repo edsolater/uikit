@@ -11,7 +11,7 @@ import {
   val,
 } from '@/foundation'
 import { createDomRef } from '@/hooks'
-import { Piv } from '../Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import {
   ComponentWrapper,
   type ComponentDescriptionProps,
@@ -19,13 +19,13 @@ import {
 
 export type Read<T> = Accessor<T>
 
-export type EachProps<T> = ComponentDescriptionProps & {
+export type LoopProps<T> = ComponentDescriptionProps & {
   each: Accessor<T[]>
   fallback?: JSX.Element
   children: (item: T, index: Accessor<number>) => JSX.Element
 }
 
-export function Each<T>(props: EachProps<T>) {
+export function Loop<T>(props: LoopProps<T>) {
   const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()
   const innerState = createState<T[]>([])
 
@@ -51,7 +51,7 @@ export function Each<T>(props: EachProps<T>) {
 
   return (
     <ComponentWrapper
-      componentName="Each"
+      componentName="Loop"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
       defaultDescription="排列重复内容"

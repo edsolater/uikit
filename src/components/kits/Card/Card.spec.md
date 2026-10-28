@@ -145,61 +145,11 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 
 variant 与 size 的默认解析结果都是 `undefined`，没有额外的默认候选。
 
-## CSS 变量
+## 与 Board 共用承载
 
-Card 公开以下六个 CSS 变量。它们只处理业务中的特殊表现，不是正常使用 Card 的前置条件。
+Card 是一级独立信息体；Board 是零点五级承载角色。二者调用同一渲染实现，分别登记 Card 或 Board 身份，只创建一个原生节点，不互相套壳。
 
-| 变量             | CSS 值类型                 | 默认来源       | 影响属性        | 含义                       |
-| ---------------- | -------------------------- | -------------- | --------------- | -------------------------- |
-| `--Card-bg`      | `<background>`             | 当前 `variant` | `background`    | Card 的完整背景。          |
-| `--Card-border`  | `<border>`                 | 当前 `variant` | `border`        | Card 的完整边框声明。      |
-| `--Card-shadow`  | `<box-shadow>`             | 当前 `variant` | `box-shadow`    | 未提升状态的基础卡片阴影。 |
-| `--Card-padding` | `<length-percentage>{1,4}` | 当前 `size`    | `padding`       | Card 的内部内容空间。      |
-| `--Card-gap`     | `<length-percentage>{1,2}` | 当前 `size`    | `gap`           | Card 直属内容之间的节奏。  |
-| `--Card-radius`  | `<length-percentage>{1,4}` | 当前 `size`    | `border-radius` | Card 的圆角形状。          |
-
-### Variant 默认值
-
-| Variant | `--Card-bg`                                                  | `--Card-border`                                                                        | `--Card-shadow`      |
-| ------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------------------- |
-| 默认    | `color-mix(in oklab, var(--color-surface) 78%, transparent)` | `var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 72%, transparent)` | `var(--shadow-card)` |
-| `soft`  | `color-mix(in oklab, var(--color-surface) 58%, transparent)` | `var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 48%, transparent)` | `var(--shadow-1)`    |
-| `solid` | `var(--color-surface)`                                       | `var(--boundary-1) solid var(--color-line-soft)`                                       | `var(--shadow-card)` |
-
-### Size 默认值
-
-| Size     | `--Card-padding` | `--Card-gap`     | `--Card-radius`   |
-| -------- | ---------------- | ---------------- | ----------------- |
-| `small`  | `var(--space-4)` | `var(--space-3)` | `var(--radius-3)` |
-| 默认     | `var(--space-6)` | `var(--space-5)` | `var(--radius-4)` |
-| `large`  | `var(--space-7)` | `var(--space-6)` | `var(--radius-4)` |
-| `xlarge` | `var(--space-8)` | `var(--space-7)` | `var(--radius-4)` |
-
-### 特殊覆盖
-
-当前需求能够由 `variant` 或 `size` 表达时，不覆盖变量。业务独有且不应成为通用档位的背景、边框或密度，可以通过业务 class 覆盖：
-
-```tsx
-<Card class="account-summary">账户摘要</Card>
-```
-
-```css
-.Card.account-summary {
-  --Card-bg: linear-gradient(
-    135deg,
-    color-mix(in oklab, var(--color-brand) 12%, var(--color-surface)),
-    var(--color-surface)
-  );
-}
-```
-
-单实例也可以通过 `style` 覆盖：
-
-```tsx
-<Card style={{ '--Card-shadow': 'none' }}>特殊实例</Card>
-```
-
-移除业务 class 或 style 后，Card 仍然必须是完整、可识别的信息卡片。
+材质唯一落在 `../Board/Board.style.ts`。背景、边界、阴影、内部空间按上述 variant 与 size 规则产生；不再维护旧 `--Card-*` CSS 变量。`boardBorder` 是可供信息主体派生的公开边界材料；MessageBoard 在同一承载根消费自己的反馈边界，不修改 Board 的后代或默认材质。业务调用方按公开组件协议组合，不传样式袋。
 
 ## 交互边界
 

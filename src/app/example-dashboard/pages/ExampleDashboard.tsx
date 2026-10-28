@@ -10,6 +10,24 @@ import {
   For,
   type Component,
 } from '@/foundation'
+import { FlowExample } from '@/components/kits/Flow/Flow.example'
+import { GridExample } from '@/components/kits/Grid/Grid.example'
+import { FieldExample } from '@/components/kits/Field/Field.example'
+import { NavigationExample } from '@/components/kits/Navigation/Navigation.example'
+import { LinkExample } from '@/components/kits/Link/Link.example'
+import { PageExample } from '@/components/kits/Page/Page.example'
+import { TextAreaExample } from '@/components/kits/TextArea/TextArea.example'
+import { SelectExample } from '@/components/kits/Select/Select.example'
+import { CheckboxExample } from '@/components/kits/Checkbox/Checkbox.example'
+import { DetailsExample } from '@/components/kits/Details/Details.example'
+import { MessageBoardExample } from '@/components/kits/MessageBoard/MessageBoard.example'
+import { TextExample } from '@/components/kits/Text/Text.example'
+import { HeadingExample } from '@/components/kits/Heading/Heading.example'
+import { LabelExample } from '@/components/kits/Label/Label.example'
+import { TableExample } from '@/components/kits/Table/Table.example'
+import { LoopExample } from '@/components/kits/Loop/Loop.example'
+import { ComponentWrapperExample } from '@/components/ComponentWrapper/ComponentWrapper.example'
+import { StructureViewFabExample } from '@/components/ComponentWrapper/StructureViewFab.example'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card } from '@/components'
@@ -30,6 +48,8 @@ interface ExampleEntry {
   id: string
   title: string
   category: ExampleCategory
+  /** 当前示例的信息意义层级，非 UI 机制条目不标组件层级。 */
+  level?: 0 | 0.5 | 1 | 2
   summary: string
   thumbnail: string
   content: Component
@@ -49,17 +69,19 @@ const exampleCategories = {
   hook: { label: 'Hook', color: 'oklch(75% 0.07 85 / .9)' },
 } satisfies Record<string, ExampleCategory>
 
-const exampleEntries: ExampleEntry[] = [
+/** 目录和截图共用的真实示例登记，图片只展示同一条目的内容。 */
+export const exampleEntries: ExampleEntry[] = [
   {
     id: 'async-state',
     title: '异步状态',
     category: exampleCategories.hook,
     summary: '由界面处理请求等待、完成与失败。',
-    thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href,
+    thumbnail: new URL('../thumbnails/async-state.webp', import.meta.url).href,
     content: AsyncStateExample,
   },
   {
     id: 'card',
+    level: 1,
     title: 'Card',
     category: exampleCategories.component,
     summary: '独立信息单元的声量、尺寸与主题材质。',
@@ -68,6 +90,7 @@ const exampleEntries: ExampleEntry[] = [
   },
   {
     id: 'article',
+    level: 1,
     title: 'Article',
     category: exampleCategories.component,
     summary: '独立正文语义与透明视觉载体。',
@@ -76,6 +99,7 @@ const exampleEntries: ExampleEntry[] = [
   },
   {
     id: 'button',
+    level: 0.5,
     title: 'Button',
     category: exampleCategories.component,
     summary: '动作声量、性质、状态与尺寸。',
@@ -84,6 +108,7 @@ const exampleEntries: ExampleEntry[] = [
   },
   {
     id: 'input',
+    level: 0.5,
     title: 'Input',
     category: exampleCategories.component,
     summary: '单行输入值与校验状态。',
@@ -92,6 +117,7 @@ const exampleEntries: ExampleEntry[] = [
   },
   {
     id: 'popover',
+    level: 0.5,
     title: 'Popover',
     category: exampleCategories.component,
     summary: '原生浮层、锚点定位与边框形状。',
@@ -124,6 +150,7 @@ const exampleEntries: ExampleEntry[] = [
   },
   {
     id: 'piv-structure',
+    level: 0,
     title: 'Piv Structure',
     category: exampleCategories.piv,
     summary: 'Plugin 对原始 DOM 结构的组合。',
@@ -147,6 +174,172 @@ const exampleEntries: ExampleEntry[] = [
     thumbnail: new URL('../thumbnails/use-document-title.webp', import.meta.url)
       .href,
     content: UseDocumentTitleExample,
+  },
+  {
+    id: 'flow',
+    level: 0.5,
+    title: 'Flow',
+    category: exampleCategories.component,
+    summary: '方向切换与顺序排列。',
+    thumbnail: new URL('../thumbnails/flow.webp', import.meta.url).href,
+    content: FlowExample,
+  },
+  {
+    id: 'grid',
+    level: 0.5,
+    title: 'Grid',
+    category: exampleCategories.component,
+    summary: '等宽分栏与窄屏单列。',
+    thumbnail: new URL('../thumbnails/grid.webp', import.meta.url).href,
+    content: GridExample,
+  },
+  {
+    id: 'field',
+    level: 0.5,
+    title: 'Field',
+    category: exampleCategories.component,
+    summary: '字段标题与控件身份关联。',
+    thumbnail: new URL('../thumbnails/field.webp', import.meta.url).href,
+    content: FieldExample,
+  },
+  {
+    id: 'navigation',
+    level: 0.5,
+    title: 'Navigation',
+    category: exampleCategories.component,
+    summary: '具名导航区域与章节链接。',
+    thumbnail: new URL('../thumbnails/navigation.webp', import.meta.url).href,
+    content: NavigationExample,
+  },
+  {
+    id: 'link',
+    level: 0.5,
+    title: 'Link',
+    category: exampleCategories.component,
+    summary: '当前链接和另开页面。',
+    thumbnail: new URL('../thumbnails/link.webp', import.meta.url).href,
+    content: LinkExample,
+  },
+  {
+    id: 'page',
+    level: 2,
+    title: 'Page',
+    category: exampleCategories.component,
+    summary: '页面标题、正文与动作组合。',
+    thumbnail: new URL('../thumbnails/page.webp', import.meta.url).href,
+    content: PageExample,
+  },
+
+  {
+    id: 'text-area',
+    level: 0.5,
+    title: 'TextArea',
+    category: exampleCategories.component,
+    summary: '多行编辑与即时字数。',
+    thumbnail: new URL('../thumbnails/text-area.webp', import.meta.url).href,
+    content: TextAreaExample,
+  },
+  {
+    id: 'select',
+    level: 0.5,
+    title: 'Select',
+    category: exampleCategories.component,
+    summary: '有限选项与当前选择。',
+    thumbnail: new URL('../thumbnails/select.webp', import.meta.url).href,
+    content: SelectExample,
+  },
+  {
+    id: 'checkbox',
+    level: 0.5,
+    title: 'Checkbox',
+    category: exampleCategories.component,
+    summary: '可点击的二态确认选项。',
+    thumbnail: new URL('../thumbnails/checkbox.webp', import.meta.url).href,
+    content: CheckboxExample,
+  },
+  {
+    id: 'details',
+    level: 0.5,
+    title: 'Details',
+    category: exampleCategories.component,
+    summary: '按需展开的阅读内容。',
+    thumbnail: new URL('../thumbnails/details.webp', import.meta.url).href,
+    content: DetailsExample,
+  },
+  {
+    id: 'message-board',
+    level: 1,
+    title: 'MessageBoard',
+    category: exampleCategories.component,
+    summary: '不同语气的状态反馈。',
+    thumbnail: new URL('../thumbnails/message-board.webp', import.meta.url)
+      .href,
+    content: MessageBoardExample,
+  },
+  {
+    id: 'text',
+    level: 1,
+    title: 'Text',
+    category: exampleCategories.component,
+    summary: '文字语义与动态阅读进度。',
+    thumbnail: new URL('../thumbnails/text.webp', import.meta.url).href,
+    content: TextExample,
+  },
+  {
+    id: 'heading',
+    level: 1,
+    title: 'Heading',
+    category: exampleCategories.component,
+    summary: '文档标题的层级关系。',
+    thumbnail: new URL('../thumbnails/heading.webp', import.meta.url).href,
+    content: HeadingExample,
+  },
+  {
+    id: 'label',
+    level: 1,
+    title: 'Label',
+    category: exampleCategories.component,
+    summary: '字段聚焦与帮助说明。',
+    thumbnail: new URL('../thumbnails/label.webp', import.meta.url).href,
+    content: LabelExample,
+  },
+  {
+    id: 'table',
+    level: 2,
+    title: 'Table',
+    category: exampleCategories.component,
+    summary: '记录、列顺序与中文表头。',
+    thumbnail: new URL('../thumbnails/table.webp', import.meta.url).href,
+    content: TableExample,
+  },
+  {
+    id: 'loop',
+    level: 0.5,
+    title: 'Loop',
+    category: exampleCategories.component,
+    summary: '动态重复内容与空列表。',
+    thumbnail: new URL('../thumbnails/loop.webp', import.meta.url).href,
+    content: LoopExample,
+  },
+  {
+    id: 'component-wrapper',
+    level: 0.5,
+    title: 'ComponentWrapper',
+    category: exampleCategories.component,
+    summary: '透明组件边界与用途说明。',
+    thumbnail: new URL('../thumbnails/component-wrapper.webp', import.meta.url)
+      .href,
+    content: ComponentWrapperExample,
+  },
+  {
+    id: 'structure-view-fab',
+    level: 0.5,
+    title: 'StructureViewFab',
+    category: exampleCategories.component,
+    summary: '手动查看组件结构与继续操作。',
+    thumbnail: new URL('../thumbnails/structure-view-fab.webp', import.meta.url)
+      .href,
+    content: StructureViewFabExample,
   },
 ]
 
@@ -176,7 +369,10 @@ export default function ExampleDashboard() {
   }
 
   return (
-    <main class="example-shell">
+    <div
+      class="example-shell"
+      role={readExampleId(val(pathname)) === 'page' ? undefined : 'main'}
+    >
       {(() => {
         const id = readExampleId(val(pathname))
         if (!id) return <ExampleHome onNavigate={navigate} />
@@ -188,7 +384,7 @@ export default function ExampleDashboard() {
           <ExampleMissing id={id} onNavigate={navigate} />
         )
       })()}
-    </main>
+    </div>
   )
 }
 
@@ -219,7 +415,11 @@ function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
                 loading="lazy"
                 decoding="async"
               />
-              <span class="example-link-ribbon">{entry.category.label}</span>
+              <span class="example-link-ribbon">
+                {entry.level === undefined
+                  ? entry.category.label
+                  : `${entry.category.label} · ${entry.level} 级`}
+              </span>
               <div class="example-link-copy">
                 <h2>{entry.title}</h2>
                 <p>{entry.summary}</p>

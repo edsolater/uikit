@@ -1,9 +1,14 @@
 /** 字段标题与可选悬停说明；输入值及编辑行为由独立控件拥有。 */
-import { onCleanup, Show, stateView, val, type Source } from '@/foundation'
-import { ComponentWrapper, type ComponentDescriptionProps } from '@/components/ComponentWrapper/ComponentWrapper'
+import { onCleanup, Show, val, type Source } from '@/foundation'
+import {
+  ComponentWrapper,
+  type ComponentDescriptionProps,
+} from '@/components/ComponentWrapper/ComponentWrapper'
 import { Piv } from '@/components/Piv/Piv'
 import { createPopoverController } from '../Popover/createPopoverController'
 import './Label.style'
+import { LabelHelpTrigger } from './LabelHelpTrigger'
+import { LabelHelpContent } from './LabelHelpContent'
 
 /** 通过 for 关联独立输入；help 为空时不创建问号。 */
 export type LabelProps = ComponentDescriptionProps & {
@@ -14,16 +19,29 @@ export type LabelProps = ComponentDescriptionProps & {
 
 /** 显示标题与说明，保持原生表单关联，浮层不参与字段布局。 */
 export function Label(props: LabelProps) {
-  return <ComponentWrapper componentName="Label" description={props.description} descriptionDisplay={props.descriptionDisplay}>
-    <Piv as="span" class="Label">
-      <Piv as="label" htmlProps={{ for: props.for }}>{props.children}</Piv>
-      <Show when={val(props.help)}>{help => <LabelHelp title={props.children} content={help()} />}</Show>
-    </Piv>
-  </ComponentWrapper>
+  return (
+    <ComponentWrapper
+      componentName="Label"
+      description={props.description}
+      descriptionDisplay={props.descriptionDisplay}
+    >
+      <Piv as="span" class="Label">
+        <Piv as="label" htmlProps={{ for: props.for }}>
+          {props.children}
+        </Piv>
+        <Show when={val(props.help)}>
+          {(help) => <LabelHelp title={props.children} content={help()} />}
+        </Show>
+      </Piv>
+    </ComponentWrapper>
+  )
 }
 
 /** 问号与说明共同持有悬停范围，短暂延迟关闭允许鼠标跨越定位间距。 */
-function LabelHelp(props: { title: Source<string>; content: Source<string | undefined> }) {
+function LabelHelp(props: {
+  title: Source<string>
+  content: Source<string | undefined>
+}) {
   const controller = createPopoverController()
   const anchor = '--' + controller.triggerId
   let hovered = false
@@ -42,7 +60,11 @@ function LabelHelp(props: { title: Source<string>; content: Source<string | unde
       closeTimer = setTimeout(() => controller.hidePopover(false), 150)
     }
   }
-  const enter = () => { hovered = true; dismissed = false; open() }
+  const enter = () => {
+    hovered = true
+    dismissed = false
+    open()
+  }
   const dismiss = () => {
     dismissed = true
     cancelClose()
@@ -50,23 +72,41 @@ function LabelHelp(props: { title: Source<string>; content: Source<string | unde
   }
   onCleanup(cancelClose)
 
-  return <>
-    <Piv as="button" class="help" id={controller.triggerId} ref={controller.setTriggerElement}
-      style={{ 'anchor-name': anchor }}
-      htmlProps={{ type: 'button', 'aria-label': stateView(() => val(props.title) + '说明'), 'aria-describedby': controller.popoverId }}
-      on={{
-        pointerenter: enter,
-        pointerleave: leave,
-        focus: () => { focused = true; open() },
-        blur: () => { focused = false; if (!hovered) leave() },
-        click: () => { dismissed = false; open() },
-        keydown: ({ event }) => { if (event.key === 'Escape') dismiss() },
-      }}>?</Piv>
-    <Piv class="help-content" id={controller.popoverId} ref={controller.setPopoverElement}
-      style={{ 'position-anchor': anchor }}
-      htmlProps={{ popover: 'hint', role: 'tooltip' }}
-      on={{ pointerenter: enter, pointerleave: leave }}>
-      {props.content}
-    </Piv>
-  </>
+  return (
+    <ComponentWrapper
+      componentName="LabelHelp"
+      defaultDescription="查看字段补充说明"
+    >
+      <LabelHelpTrigger
+        id={controller.triggerId}
+        anchor={anchor}
+        describedBy={controller.popoverId}
+        title={props.title}
+        ref={controller.setTriggerElement}
+        enter={enter}
+        leave={leave}
+        focus={() => {
+          focused = true
+          open()
+        }}
+        blur={() => {
+          focused = false
+          if (!hovered) leave()
+        }}
+        activate={() => {
+          dismissed = false
+          open()
+        }}
+        dismiss={dismiss}
+      />
+      <LabelHelpContent
+        id={controller.popoverId}
+        anchor={anchor}
+        content={props.content}
+        ref={controller.setPopoverElement}
+        enter={enter}
+        leave={leave}
+      />
+    </ComponentWrapper>
+  )
 }

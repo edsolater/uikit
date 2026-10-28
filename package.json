@@ -43,7 +43,7 @@
     "test": "bun run test:unit && bun run test:browser",
     "test:unit": "node ./node_modules/vitest/vitest.mjs run",
     "test:browser": "node ./node_modules/vitest/vitest.mjs run --config vitest.browser.config.ts",
-    "generate:example-thumbnails": "vitest run --config vitest.thumbnail.config.ts",
+    "generate:example-thumbnails": "node ./node_modules/vitest/vitest.mjs run --config vitest.thumbnail.config.ts",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },

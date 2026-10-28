@@ -16,7 +16,11 @@ import {
   type Declarations,
   type DeclarationItem,
 } from '../rule'
-import { condition, type ConditionInput } from '../condition'
+import {
+  condition,
+  resolveConditionPath,
+  type ConditionInput,
+} from '../condition'
 import { key, registerGlobalJSSKeyInStorage } from '../key'
 import { declare } from '../operations/declare'
 import { createJSSContent } from '../content'
@@ -354,6 +358,59 @@ test('二元组保留 Key 的组合协议和 Token 的资源身份，不使用 J
   expect(css).toContain('.EntryResource')
   batch.remove()
   expect(compileCSS()).toBe(baseline)
+})
+
+test('任意层路径组合与声明组合生成相同嵌套 CSS，Condition 保留身份', () => {
+  const root = condition('.NestedInput')
+  const path = [
+    root,
+    [['&:hover'], [[[], '.label']]],
+  ] as const satisfies ConditionInput
+  const resolved = resolveConditionPath(path)!
+  expect(resolved[0]).toBe(root)
+  expect(resolved.map((item) => item.header)).toEqual([
+    '.NestedInput',
+    '&:hover',
+    '.label',
+  ])
+  expect(resolveConditionPath(undefined)).toBeUndefined()
+  expect(resolveConditionPath([[[]]])).toEqual([])
+
+  const deep = rules(path, [
+    [[[{ color: 'red' }]], [[['padding', '3px']]], [[key('display'), 'grid']]],
+  ])
+  const deepCSS = compileCSS()
+  expect(deepCSS).toContain('.NestedInput')
+  expect(deepCSS).toContain('&:hover')
+  expect(deepCSS).toContain('.label')
+  expect(deepCSS).toContain('color: red;')
+  expect(deepCSS).toContain('padding: 3px;')
+  expect(deepCSS).toContain('display: grid;')
+  deep.remove()
+  keep(
+    rules([root, '&:hover', '.label'], {
+      color: 'red',
+      padding: '3px',
+      display: 'grid',
+    }),
+  )
+  expect(compileCSS()).toBe(deepCSS)
+})
+
+test('深路径中的缺失成员仍整批拒绝，不吞掉稀疏孔', () => {
+  const before = compileCSS()
+  for (const invalid of [undefined, null, 1, { header: 1 }]) {
+    expect(() =>
+      runtimeRules(
+        ['.InvalidNested', [[invalid]]] as unknown as ConditionInput,
+        { color: 'red' },
+      ),
+    ).toThrow('Condition Path')
+  }
+  expect(() =>
+    runtimeRules(['.InvalidNested', [new Array(1)]], { color: 'red' }),
+  ).toThrow('Condition Path')
+  expect(compileCSS()).toBe(before)
 })
 
 test('嵌套批量声明与单项属性不会混淆', () => {

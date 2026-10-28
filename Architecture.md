@@ -4,14 +4,14 @@
 
 # 当前系统组成
 
-`src/style-system` 已接管 Button 样式，其余组件目前仍使用各自的静态 CSS；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
+`src/style-system` 承接 Button、Board 及 Flow 等基础组件的样式登记，尚未迁移的组件继续使用原有静态 CSS；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
 
 组件样式文件的配置、命名、注释与组装约定见 [样式文件写法](docs/style/样式文件写法.md)。
 
 Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System 命名](src/style-system/doc/样式系统命名.md)。
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、ref 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
-- `src/components/kits`：对外 UI 组件。Button、Card、Input、Popover 等组件在各自目录内维护主体、样式、测试、Story 与 Example。
+- `src/components/kits`：对外 UI 组件。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
 - `src/components/ComponentWrapper`：Piv之上组件的透明边界与用途说明，以及手动FAB控制的结构显示；不改变原主体或自动挂载开关。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
@@ -28,7 +28,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 
 - `@edsolater/uikit` 从 `src/index.ts` 公开 components、foundation 和 hooks；`@edsolater/uikit/style-system` 独立公开完整样式 API 与类型。Mixin 直接使用效果名称，样式入口的 `clickable` 与包根组件插件分别导入。包根仍会加载 `src/css/all-base.css`。
 - `src/components/index.ts`、`src/foundation/index.ts`、`src/hooks/index.ts` 与 `src/style-system/index.ts` 聚合所属领域的本地模块；具体实现负责公开能力与内部机制的边界。
-- Example、Story、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
+- Example、测试和 spec 是相邻主体的验证或说明文件，不进入包发布入口。
 
 # 运行链
 
@@ -49,7 +49,7 @@ kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期
 
 ## 组件定位框
 
-现有9种kit在定义处以ComponentWrapper声明静态身份及可选默认用途，使用处的description覆盖默认值。Wrapper用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
+kit在定义处以ComponentWrapper声明静态身份及可选默认用途，使用处的description覆盖默认值。Wrapper用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
 
 App手动放入StructureViewFab，它拥有初始关闭的本地状态；开启才挂载统一Overlay。Overlay逐帧测量真实边界及FAB范围，通过Piv为每个实际矩形创建全尺寸显示宿主：负一级伪元素承载白色半透明和背景模糊，自身名称按父到子顺序绘制，Canvas仅在上层描边。同完整矩形的名称分行，多区域组件仅在首矩形标名；所有名称受所属框宽高约束。遮罩与描边共用本帧FAB范围保留透明洞，关闭即释放显示层与帧循环，不重建原组件或清空状态。Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
 
@@ -85,7 +85,7 @@ src/index.ts
     -> reset + tokens + controls + traits
 ```
 
-除 Button 外的多数组件和 plugins 目前仍各自 import CSS；`all-base.css` 和对应静态样式仍是现役实现。
+尚未迁移的组件和 plugins 继续各自 import CSS；`all-base.css` 和这些静态样式仍是现役实现。
 
 ## Example 浏览
 
@@ -96,7 +96,7 @@ src/app/example-dashboard/index.tsx
     -> /examples/<id> 对应的相邻 .example.tsx
 ```
 
-Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，不定义组件自身的业务能力。
+Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，不定义组件自身的业务能力。目录与截图生成共用示例登记；组件按零级、零点五级、一级和二级标识，不能通过依赖计数推算。Board 的承载角色在 MessageBoard 等消费示例中展示，不建立独立信息卡片入口。
 
 # 领域边界
 

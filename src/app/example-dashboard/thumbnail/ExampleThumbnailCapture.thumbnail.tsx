@@ -4,17 +4,7 @@ import { type Component, render } from '@/foundation'
 import { afterAll, afterEach, beforeAll, test } from 'vitest'
 import '../../../css/all-base.css'
 import '../pages/ExampleDashboard.css'
-import { ButtonExample } from '@/components/kits/Button/Button.example'
-import { CardExample } from '@/components/kits/Card/Card.example'
-import { ArticleExample } from '@/components/kits/Article/Article.example'
-import { InputExample } from '@/components/kits/Input/Input.example'
-import { PopoverExample } from '@/components/kits/Popover/Popover.example'
-import { DraggableExample } from '@/components/plugins/kits/draggable/draggable.example'
-import { DroppableExample } from '@/components/plugins/kits/droppable/droppable.example'
-import { ScopeExample } from '@/components/plugins/kits/scope/scope.example'
-import { PivStructureExample } from '@/components/Piv/PivStructure.example'
-import { ColorDashboardExample } from '@/css/ColorDashboardExample'
-import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
+import { exampleEntries } from '../pages/ExampleDashboard'
 import './ExampleThumbnailCapture.css'
 import { cssRoot } from '@/style-system'
 import {
@@ -59,8 +49,17 @@ async function captureThumbnail(
   await waitForLayout()
   await prepare?.()
   await waitForLayout()
+  await Promise.all(
+    document
+      .getAnimations()
+      .map((animation) => animation.finished.catch(() => {})),
+  )
   await page.screenshot({
-    element: document.querySelector('.example-thumbnail-capture-stage')!,
+    ...(name === 'component-wrapper' || name === 'structure-view-fab'
+      ? {}
+      : {
+          element: document.querySelector('.example-thumbnail-capture-stage')!,
+        }),
     path: `../thumbnails/${name}.webp`,
   })
 }
@@ -71,24 +70,21 @@ afterEach(() => {
   document.body.replaceChildren()
 })
 
-test('生成 Card 缩略图', () => captureThumbnail('card', CardExample))
-test('生成 Article 缩略图', () => captureThumbnail('article', ArticleExample))
-test('生成 Button 缩略图', () => captureThumbnail('button', ButtonExample))
-test('生成 Input 缩略图', () => captureThumbnail('input', InputExample))
-test('生成 Popover 缩略图', () =>
-  captureThumbnail('popover', PopoverExample, async () => {
-    await userEvent.click(
-      document.querySelector<HTMLButtonElement>('.popover-row button')!,
-    )
-  }))
-test('生成 Draggable 缩略图', () =>
-  captureThumbnail('draggable', DraggableExample))
-test('生成 Droppable 缩略图', () =>
-  captureThumbnail('droppable', DroppableExample))
-test('生成 Scope 缩略图', () => captureThumbnail('scope', ScopeExample))
-test('生成 Piv Structure 缩略图', () =>
-  captureThumbnail('piv-structure', PivStructureExample))
-test('生成 Color 缩略图', () =>
-  captureThumbnail('color', ColorDashboardExample))
-test('生成 useDocumentTitle 缩略图', () =>
-  captureThumbnail('use-document-title', UseDocumentTitleExample))
+for (const entry of exampleEntries) {
+  test(`生成 ${entry.title} 缩略图`, () =>
+    captureThumbnail(entry.id, entry.content, async () => {
+      if (entry.id === 'popover') {
+        await userEvent.click(
+          document.querySelector<HTMLButtonElement>('.popover-row button')!,
+        )
+      }
+      if (
+        entry.id === 'component-wrapper' ||
+        entry.id === 'structure-view-fab'
+      ) {
+        await userEvent.click(
+          document.querySelector<HTMLButtonElement>('.StructureViewFab')!,
+        )
+      }
+    }))
+}

@@ -53,18 +53,30 @@ export function conditionAddressKey(path: ConditionPath): string {
   ])
 }
 
-/** Condition 地址输入；缺省表示当前位置。 */
-export type ConditionInput =
-  Condition | string | (Condition | string)[] | undefined
+/** 路径片段可任意嵌套；数组只负责组合，不增加 CSS 地址层。 */
+type ConditionInputItem = Condition | string | readonly ConditionInputItem[]
+
+/** Condition 地址输入；仅顶层缺省表示当前位置。 */
+export type ConditionInput = ConditionInputItem | undefined
 
 /** 统一普通地址与结构化主体状态路径；不在消费处拼接 CSS。 */
 export function resolveConditionPath(
   input: ConditionInput,
 ): Condition[] | undefined {
   if (input === undefined) return undefined
-  return Array.from(Array.isArray(input) ? input : [input]).map((item) =>
-    typeof item === 'string' ? condition(item) : item,
-  )
+  const path: Condition[] = []
+  const visit = (item: ConditionInputItem): void => {
+    if (Array.isArray(item)) {
+      // for-of 保留稀疏孔为 undefined，交由规则入口既有校验拒绝。
+      for (const child of item) visit(child)
+    } else {
+      path.push(
+        typeof item === 'string' ? condition(item) : (item as Condition),
+      )
+    }
+  }
+  visit(input)
+  return path
 }
 
 /** 按声明次序接入状态条件，不改变目标地址或重排已有条件。 */
