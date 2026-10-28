@@ -10,7 +10,12 @@ import {
   multiply,
   oklch,
   colorMix,
+  contentText,
   contentLayout,
+  size,
+  boundary,
+  color,
+  elevation,
   clickable,
   brandColor,
   badColor,
@@ -126,27 +131,26 @@ export const buttonOpacity = buttonToken(buttonOpacitySource, {
 })
 
 rules(button, [
-  {
-    'font': 'inherit',
-    'font-size': buttonTextSize,
-    'font-weight': buttonFontWeight,
-    'line-height': 1,
-    'min-height': buttonMinHeight,
-    'border-width': buttonBorderWidth,
-    'border-style': 'solid',
-    'border-color': buttonBorderColor,
-    'border-radius': '999px',
-    'corner-shape': 'squircle',
-    'background-color': buttonSurfaceColor,
-    'color': buttonContentColor,
-    'box-shadow': buttonBoxShadow,
-  },
+  contentText({
+    font: 'inherit',
+    fontSize: buttonTextSize,
+    emphasis: buttonFontWeight,
+    leading: 1,
+  }),
   contentLayout({
     mode: 'center',
     alignSelf: 'center',
     gap: buttonGap,
     padding: [buttonPaddingBlock, buttonPaddingInline],
   }),
+  size({ minHeight: buttonMinHeight }),
+  boundary({
+    border: [buttonBorderWidth, 'solid', buttonBorderColor],
+    radius: '999px',
+    cornerShape: 'squircle',
+  }),
+  color({ background: buttonSurfaceColor, content: buttonContentColor }),
+  elevation(buttonBoxShadow),
   clickable({
     cursor: buttonToken('pointer', {
       state: { loading: 'progress', disabled: 'not-allowed' },

@@ -38,7 +38,7 @@ export interface InnerTextMixinOptions {
 /**
  * 生成内部文字的排版声明。
  */
-export const innerText = (
+export const contentText = (
   options: InnerTextMixinOptions = {},
 ): Declarations => [
   [

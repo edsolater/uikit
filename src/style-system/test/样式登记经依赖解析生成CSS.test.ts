@@ -38,7 +38,7 @@ import {
 } from '../pieces/token-factory/animation'
 import { fontValue } from '../pieces/token-factory/font'
 
-import { contentLayout, innerText } from '../pieces/mixins/content'
+import { contentLayout, contentText } from '../pieces/mixins/content'
 import { boundary } from '../pieces/mixins/structure'
 
 import { motionDuration } from '../pieces/tokens/motion'
@@ -621,13 +621,13 @@ test('内容 Mixin 先识别完整内容，再识别方向和字体配置', () =
   )
   keep(
     rules('.ContentFont', [
-      innerText({ font: { family: 'metadata', onCompile: compileFont } }),
+      contentText({ font: { family: 'metadata', onCompile: compileFont } }),
     ]),
   )
   keep(
     rules('.PlainConfig', [
       contentLayout({ padding: { top: '2px', left: '4px' } }),
-      innerText({ font: { size: '16px', family: 'serif' } }),
+      contentText({ font: { size: '16px', family: 'serif' } }),
     ]),
   )
   const css = compileCSS()
