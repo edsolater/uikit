@@ -6,8 +6,14 @@ import { afterEach, beforeEach, expect, test } from 'vitest'
 import { cssRoot } from '../css-root'
 import { rules, type RulesHandle } from '../rule'
 
-const surfaceColor = token('white', 'nested-surface-color')
-const contentColor = token('black', 'nested-content-color')
+const surfaceColor = token('white', {
+  name: 'nested-surface-color',
+  address: ':where(:root)',
+})
+const contentColor = token('black', {
+  name: 'nested-content-color',
+  address: ':where(:root)',
+})
 
 let style: HTMLStyleElement
 const handles: RulesHandle[] = []

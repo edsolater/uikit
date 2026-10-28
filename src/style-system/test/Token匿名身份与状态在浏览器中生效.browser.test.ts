@@ -24,6 +24,7 @@ test.each(
   ({ position, value }) => {
     const size = token('2px', {
       name: 'late-browser-size',
+      address: ':where(:root)',
       state: [
         [stateCondition('&[data-late-phase]'), (base) => multiply(base, 2)],
       ],
@@ -70,7 +71,10 @@ test.each(
 test.each([false, true])(
   '多个晚到显式声明仍按实际书写顺序取最后值，反序=%s',
   (reverse) => {
-    const size = token('2px', 'late-explicit-order')
+    const size = token('2px', {
+      name: 'late-explicit-order',
+      address: ':where(:root)',
+    })
     const trigger = token(1, {
       compileWaveIndex: 2,
       onCompile(context, ast) {
@@ -185,7 +189,7 @@ test('后创建的显式名称占用匿名 Token 的前次名称时，重新编�
   target.className = 'CachedAnonymous'
   expect(getComputedStyle(target).width).toBe('2px')
   expect(getComputedStyle(target).height).toBe('99px')
-  document.documentElement.dataset.large = ''
+  target.dataset.large = ''
   expect(getComputedStyle(target).width).toBe('4px')
   expect(getComputedStyle(target).height).toBe('99px')
 })
@@ -311,9 +315,9 @@ test.each(['name', 'state', 'address', 'registration', 'modify'] as const)(
     )
     expect(size._kind).toBe('css-variable')
     if (kind === 'state') {
-      document.documentElement.dataset.large = ''
+      target.dataset.large = ''
       expect(getComputedStyle(target).width).toBe('8px')
-      delete document.documentElement.dataset.large
+      delete target.dataset.large
       expect(getComputedStyle(target).width).toBe('4px')
     }
   },

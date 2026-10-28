@@ -65,7 +65,7 @@ describe('具体定义消费与CSS同名层叠', () => {
         declarationsAt(concrete, ['.Scope']),
       )
       expect(declarationsAt(named, [':root'])).toEqual([])
-      expect(declarationsAt(concrete, [':root'])).toContain('--name-tied: red;')
+      expect(declarationsAt(concrete, [':root'])).toEqual([])
       expect(declarationsAt(named, ['.Scope'])).toEqual([
         `--name-tied: ${reverseWriting ? 'red' : 'blue'};`,
         'color: var(--name-tied);',
@@ -257,9 +257,9 @@ describe('实际引用与消费退出', () => {
       [['@keyframes dependency-animation', 'to'], 'width', line],
       [['.Child'], ...declare(source, '7px')],
     ])
-    expect(declarationsAt(css, [':root'])).toContain(
-      '--dependency-frame-line: var(--dependency-frame-source);',
-    )
+    expect(
+      declarationsAt(css, ['@keyframes dependency-animation', 'to']),
+    ).toContain('--dependency-frame-line: var(--dependency-frame-source);')
   })
 
   test.each([false, true])(

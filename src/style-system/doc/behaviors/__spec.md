@@ -34,8 +34,8 @@ flowchart LR
 
 正常定义由 Token 自身 default、state、address 表达，rules 自动声明属性；手动 declare 与 Token 重声明保留为 dangerous 操作，不作运行时或类型拦截，也不作为业务默认模板。
 
-1. **地址明确计算位置。** state 属于 Token 的定义位置；消费不在每个后代复制状态或搬运公式。
-2. **CSS 决定提交后的动态结果。** 引用、条件、层叠和继承由浏览器执行，后代覆盖输入不使祖先公式在当地重新求值。
+1. **地址明确计算位置。** 显式 address 固定 default 与 state 的位置；未指定时，需要 CSS variable 的定义随每个 AST 消费地址建立，不锁定首次地址或写回配置。全局材料显式指定 root。
+2. **CSS 决定提交后的动态结果。** 引用、条件、层叠和继承由浏览器执行，后代覆盖输入不使显式固定在祖先的公式搬到当地重新求值。
 3. **定义组合与条件修改分开。** 普通函数创建新 Token；modify 在明确范围改变目标，并使其具有 CSS variable 身份。
 4. **Token 不储存声明处理账本。** 不保存 priority、definitionKey、declarations 或 resultSource 系列字段。声明顺序交给声明系统，实际依赖由内容引用表达，附加规则由 onFirstScan 表达。
 5. **贡献有归属，资源按需存在。** 一处退出不删除其他来源；替换撤回旧独占需求，保留共享需求。

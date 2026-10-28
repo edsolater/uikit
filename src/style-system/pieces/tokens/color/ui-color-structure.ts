@@ -1,5 +1,5 @@
 /** 将 Color System 颜色材料转换为可声明、引用的 Token。 */
-import { type Token, token } from '../../../token'
+import { type Token, type TokenAddress, token } from '../../../token'
 import type { ColorMaterial } from '@/color-system'
 import { oklch } from '../../functions/oklch'
 
@@ -10,6 +10,10 @@ import { oklch } from '../../functions/oklch'
  * const surface = toColorToken(paper, 'example-surface')
  * rules('.Paper', { 'background-color': surface })
  */
-export function toColorToken(color: ColorMaterial, name: string): Token {
-  return token(oklch({ ...color.base, alpha: color.alpha }), name)
+export function toColorToken(
+  color: ColorMaterial,
+  name: string,
+  address?: TokenAddress,
+): Token {
+  return token(oklch({ ...color.base, alpha: color.alpha }), { name, address })
 }

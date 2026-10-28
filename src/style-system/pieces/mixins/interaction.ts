@@ -25,7 +25,7 @@ import { whenActive, whenDisabled } from '../conditions/interaction'
 
 /** 可点击效果配置；省略透明度时保留通用禁用淡化策略。 */
 export interface ClickableMixinOptions {
-  /** 明确交互变量的根据地，不从消费位置隐式推断。 */
+  /** 可选的固定声明地址；省略时各交互值在实际使用处定义。 */
   address?: TokenAddress
   cursor?: TokenInput
   opacity?: TokenInput

@@ -69,7 +69,7 @@ const panelSpace = token(baseSpace, {
 })
 ```
 
-一组定义共享前缀与根据地时，用 createNewTokenGenerator 预设共性：
+一组定义共享名称前缀与固定位置时，用 createNewTokenGenerator 预设共性：
 
 ```ts
 const panelToken = createNewTokenGenerator({
@@ -80,7 +80,7 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-生成器只返回一个等效 token 的函数，预设前缀与 address。每次调用均由现有名称分配器按前缀产生独立名称，在同一 CSS 命名空间避开已有名称；同一来源的不同用途不会因默认同名而相互覆盖。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
+生成器只返回一个等效 token 的函数，预设前缀与实际提供的配置；address 可选，省略不清除来源固定地址，继承与覆盖后仍未指定地址的结果才在消费位置发布。每次调用均由现有名称分配器按前缀产生独立名称，在同一 CSS 命名空间避开已有名称；同一来源的不同用途不会因默认同名而相互覆盖。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
 
 已有 Token 直接传入，state 软合并业务差异；生产函数用于延迟计算或消费时读取数据等明确目的，不作为规避继承的写法。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
 
@@ -113,6 +113,8 @@ rules(
 
 有 name、state、address、registration，或被 modify 的 Token，输出为 CSS variable；需要名称但未命名时自动分配。其余 Token 输出为 CSS value。内部 _kind 由系统决定，外界不能指定。
 
+显式 address 固定 default 与 state 的发布位置；继承与覆盖后仍未指定时，需要 CSS variable 的 Token 在各 AST 消费地址分别定义，不锁定首次位置或写回 address。普通 token('2px') 仍直接输出。全局材料明确指定 address: ':root'；多处定义不会重复调用同一对象的 onFirstScan 或 onCompile。
+
 onFirstScan 可以返回包含 modify 的规则。系统在坍缩前必须完成能影响相关 Token 的修改读取，再确定最终输出；不限定激活波次。compileWaveIndex 只限制内容允许处理的最早时机。
 
 registration 提供 syntax、inherits 及可选 initialValue，分别对应 CSS @property 的语法、继承和注册初始值。initialValue 不从 default 自动推断。
@@ -123,7 +125,7 @@ rules(path, declarations) 登记属性和效果。输入支持普通对象、单
 
 Token 的条件变化在自身 state 中表达；独立配置用新 Token，并在具体属性中明确消费，不自动替换旧引用。手动 declare、[token, value] 和 [token, undefined] 保留为 dangerous 操作，不作运行时或类型拦截；它们不属于推荐的组件编写方式。modify 的表达式加工及 Mixin 结果仍可作为输入，集合空项和普通属性 undefined 不输出。
 
-clickable({ cursor, opacity, focusColor, address }) 接受组件提供的光标、透明度和焦点颜色内容。cursor 可传入带 state 的 Token；省略时沿用 pointer 与禁用状态的 not-allowed 默认值，不额外叠加一份光标声明。
+clickable({ cursor, opacity, focusColor, address }) 接受组件提供的光标、透明度和焦点颜色内容；address 可选，内部未固定位置的 Token 随实际消费地址发布。cursor 可传入带 state 的 Token；省略时沿用 pointer 与禁用状态的 not-allowed 默认值，不额外叠加一份光标声明。
 
 compileCSS() 读取全局登记并返回 CSS 文本；compileRules(rules) 编译显式材料；cssRoot.mount() 提交到宿主提供的 style#css-root。规则句柄只更新或撤销自己的登记；需要页面更新时重新提交。失败构建不应提交半份结果。
 

@@ -11,7 +11,7 @@
 
 ## 样式来源与公开控制点
 
-Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor；主题来源的实际 CSS 变化继续传递给消费者。buttonColorSource 提供基色，buttonSurfaceColor、buttonContentColor、buttonBoundaryColor 分别表达背景、内容和边界；需要声明的 Token 由 address 自动建立定义，表达式保留来源引用，rules 只消费属性，不再在其他位置给这些 Token 赋值。
+Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor；主题来源的实际 CSS 变化继续传递给消费者。buttonColorSource 提供基色，buttonSurfaceColor、buttonContentColor、buttonBoundaryColor 分别表达背景、内容和边界；需要声明的 Token 在显式 address 或当前 AST 消费地址建立定义，无须额外注入组件地址。表达式保留来源引用，rules 只消费属性，不再在其他位置给这些 Token 赋值。
 
 公开 Token 在 [Button.style.ts](./Button.style.ts) 独立命名并导出，外界可以读取定义、组合当前值引用、创建自己的派生定义，或通过 modify 在明确范围加工。控制包括读取和复用，不要求给 Token 增加可写接口，也不根据组件内部的消费次数决定是否公开。
 

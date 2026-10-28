@@ -5,6 +5,7 @@ import { whenSmall, whenLarge, whenXlarge } from '../conditions/profile'
 
 export const baseRadius = token('4px', {
   name: 'base-radius',
+  address: ':where(:root)',
   state: [
     [whenSmall, (base) => multiply(base, 1 / 2)],
     [whenLarge, (base) => multiply(base, 2)],

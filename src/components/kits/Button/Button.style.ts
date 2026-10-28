@@ -148,7 +148,6 @@ rules(button, [
     padding: [buttonPaddingBlock, buttonPaddingInline],
   }),
   clickable({
-    address: button,
     cursor: buttonToken('pointer', {
       state: { loading: 'progress', disabled: 'not-allowed' },
     }),

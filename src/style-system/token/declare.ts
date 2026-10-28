@@ -72,8 +72,9 @@ const declarationSignature = (node: JSSStyleNode) =>
 const findHomeDeclaration = (
   controller: ASTController,
   variable: CSSCustomProperty,
+  path: ConditionPath,
 ) => {
-  const query = { key: variable.key, conditionPath: cssHomePath(variable) }
+  const query = { key: variable.key, conditionPath: path }
   const eligible = (node: JSSStyleNode) =>
     !node.aggregate &&
     !cssProductRoles.has(node) &&
@@ -93,9 +94,12 @@ const findHomeDeclaration = (
 /**
  * 根据地使用与 rules 相同的条件输入，不推断 DOM 或选择器包含关系。
  */
-export function cssHomePath(target: CSSCustomProperty): ConditionPath {
-  const address = target.address ?? ':where(:root)'
-  const targetConditionPath = resolveConditionPath(address)!
+export function cssHomePath(
+  target: CSSCustomProperty,
+  usagePath: ConditionPath,
+): ConditionPath {
+  if (target.address === undefined) return usagePath
+  const targetConditionPath = resolveConditionPath(target.address)!
   return { targetConditionPath, stateConditionPath: [] }
 }
 
@@ -159,9 +163,9 @@ export function consumeDeclaration(
   controller: ASTController,
   variable: CSSCustomProperty,
 ): CSSDefinition {
-  const path = cssHomePath(variable)
+  const path = cssHomePath(variable, context.conditionPath)
   const node =
-    findHomeDeclaration(controller, variable) ??
+    findHomeDeclaration(controller, variable, path) ??
     controller.insert(
       { before: context.node, conditionPath: path },
       declareCSSProperty(variable, variable.content),
@@ -211,7 +215,13 @@ export function consumeDeclaration(
           ensureDefinition(bound.definition.node, controller, target)
           changed = true
         }
-        if (findHomeDeclaration(controller, target) !== bound.definition.node) {
+        if (
+          findHomeDeclaration(
+            controller,
+            target,
+            cssHomePath(target, context.node.conditionPath),
+          ) !== bound.definition.node
+        ) {
           context.node.compileRevision++
           changed = true
         }
@@ -304,7 +314,10 @@ export function ensureDefinition(
   // 同根别名由 AST 统一匹配。
   if (
     controller
-      .search({ key: variable.key, conditionPath: cssHomePath(variable) })
+      .search({
+        key: variable.key,
+        conditionPath: cssHomePath(variable, node.conditionPath),
+      })
       .includes(node)
   )
     publishHomeStates(

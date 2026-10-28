@@ -438,6 +438,7 @@ test('主题与减少动效变化后，同一份 CSS 给出对应的计算值', 
   const session = (await cdp()) as CDPSession
   const size = token('4px', {
     name: 'environment-size',
+    address: ':where(:root)',
     onFirstScan: (): Rules => [
       [[condition(':where(:root)')], size, '8px'],
       [

@@ -70,6 +70,10 @@ export const neutral: ColorMaterial = {
   purpose: 'content',
 }
 
-export const paperColor = toColorToken(paper, 'paper-color')
-export const inkColor = toColorToken(ink, 'ink-color')
-export const neutralColor = toColorToken(neutral, 'neutral-color')
+export const paperColor = toColorToken(paper, 'paper-color', ':where(:root)')
+export const inkColor = toColorToken(ink, 'ink-color', ':where(:root)')
+export const neutralColor = toColorToken(
+  neutral,
+  'neutral-color',
+  ':where(:root)',
+)

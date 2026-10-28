@@ -201,6 +201,7 @@ test('状态回调收到默认生产函数求得的基础值，而不是函数�
 test('根据地的生产基础与状态不覆盖另一区域的显式局部值', () => {
   const material = token(() => '4px', {
     name: 'expanded-unused-default',
+    address: ':where(:root)',
     state: [
       [
         stateCondition('&:hover'),
@@ -248,7 +249,7 @@ test('根据地的生产基础只求值一次，多个消费者共享结果', ()
 })
 
 test.each(['函数', 'onCompile'])(
-  '展开成常量的%s内容不额外物化当地声明',
+  '展开成常量的%s内容仍在实际使用地址发布命名声明',
   (entry) => {
     const content =
       entry === '函数'
@@ -268,7 +269,8 @@ test.each(['函数', 'onCompile'])(
     expect(css).toContain(`--expanded-constant-${entry}: 4px;`)
     const consumer = css.match(/\.ConstantConsumer\s*\{([^}]*)\}/)?.[1]
     expect(consumer).toContain(`width: var(--expanded-constant-${entry});`)
-    expect(consumer).not.toContain(`--expanded-constant-${entry}:`)
+    expect(consumer).toContain(`--expanded-constant-${entry}: 4px;`)
+    expect(css).not.toContain(':root')
   },
 )
 
@@ -288,7 +290,10 @@ test('编译波前访问过依赖后，onCompile 更新的依赖仍在完成阶�
 })
 
 test('明确的undefined局部基础不输出，根根据地仍提供内容', () => {
-  const material = token(() => '4px', { name: 'expanded-explicit-empty' })
+  const material = token(() => '4px', {
+    name: 'expanded-explicit-empty',
+    address: ':where(:root)',
+  })
   const css = compileRules([
     [['.EmptyBase'], ...declare(material, undefined)],
     [['.EmptyBase'], 'width', material],

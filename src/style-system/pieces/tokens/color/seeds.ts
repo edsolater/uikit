@@ -10,6 +10,7 @@ import { paperColor } from './palette'
 
 export const brandColorTheme = token(brandColor, {
   name: 'brand-color-theme',
+  address: ':where(:root)',
   state: [
     [
       whenDarkTheme,
@@ -29,6 +30,7 @@ export const accentColorTheme = token(
   }),
   {
     name: 'accent-color-theme',
+    address: ':where(:root)',
     state: [
       [
         whenDarkTheme,
@@ -53,6 +55,7 @@ function createFeedbackTheme(
     ),
     {
       name,
+      address: ':where(:root)',
       state: [[whenDarkTheme, (base) => oklch(base, darkChanges)]],
     },
   )
@@ -92,6 +95,7 @@ export const canvasColorTheme = token(
   oklch({ lightness: 0.945, chroma: 0.006, hue: 260 }),
   {
     name: 'canvas-color-theme',
+    address: ':where(:root)',
     state: [
       [
         whenDarkTheme,
@@ -106,6 +110,7 @@ export const canvasColorTheme = token(
 )
 export const surfaceColorTheme = token(paperColor, {
   name: 'surface-color-theme',
+  address: ':where(:root)',
   state: [
     [
       whenDarkTheme,
@@ -121,6 +126,7 @@ export const contentColorTheme = token(
   oklch({ lightness: 0.26, chroma: 0.005, hue: 260 }),
   {
     name: 'content-color-theme',
+    address: ':where(:root)',
     state: [
       [
         whenDarkTheme,
@@ -137,6 +143,7 @@ export const boundaryColorTheme = token(
   oklch({ lightness: 0.42, chroma: 0.006, hue: 260, alpha: 0.18 }),
   {
     name: 'boundary-color-theme',
+    address: ':where(:root)',
     state: [
       [
         whenDarkTheme,
@@ -152,5 +159,6 @@ export const boundaryColorTheme = token(
 )
 export const inkColorTheme = token('black', {
   name: 'ink-color-theme',
+  address: ':where(:root)',
   state: [[whenDarkTheme, 'white']],
 })

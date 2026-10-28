@@ -47,13 +47,18 @@ export type TokenStateInput =
   | readonly [StateConditionInput, TokenStateRule]
   | Iterable<TokenStateInput>
 
-/** 定义的明确根据地；缺省地址留待 CSS 坍缩时采用 root。 */
+/** 显式固定的声明地址；未指定时由各个使用位置提供。 */
 export type TokenAddress = Exclude<ConditionInput, undefined>
 
 /** Token 基础配置及特殊内容的编译、输出协议。 */
 export interface TokenOptions<T extends TokenData = TokenData> {
   name?: string
   state?: TokenStateInput
+  /**
+   * 指定时在固定地址发布；继承后仍未指定时，需 CSS variable 的 Token
+   * 在各个 AST 使用地址发布 default 和 state，不写回对象或锁定首处。
+   * 全局共享须显式指定 root；直接 CSS value 不受地址缺省规则影响。
+   */
   address?: TokenAddress
   registration?: {
     syntax: string

@@ -5,7 +5,11 @@ import { whenReducedMotion } from '../conditions/environment'
 
 export const motionDuration = token('180ms', {
   name: 'motion-duration',
+  address: ':where(:root)',
   state: [[whenReducedMotion, (base) => multiply(base, 0)]],
 })
 
-export const motionEasing = token('cubic-bezier(0.2, 0, 0, 1)', 'motion-easing')
+export const motionEasing = token('cubic-bezier(0.2, 0, 0, 1)', {
+  name: 'motion-easing',
+  address: ':where(:root)',
+})

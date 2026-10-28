@@ -4,7 +4,7 @@
 
 Style System 用 CSS 表达样式，因此保留 CSS 的求值位置、继承、层叠和环境条件。动态不是让任何地方的同名输入都能改变所有公式；控制范围必须能从声明位置和引用关系判断。
 
-# 继承结果，不隐式搬运公式
+# 显式地址保留 CSS 继承结果
 
 ```css
 :root {
@@ -19,13 +19,28 @@ Style System 用 CSS 表达样式，因此保留 CSS 的求值位置、继承、
 
 Button 宽 8px。根上的 width 在根计算，再向后代继承；Button 的 base 为 7px 不使它重新变成 14px。若根 base 改为 9px，则根公式响应，Button 宽变为 18px，无需重新编译 JS。
 
-需要在 Button 计算另一份公式，就显式指定 Token 的 Button 地址，或在 Button 条件下明确 modify。address 使 Token 具有 CSS variable 身份，坍缩层在指定位置生成声明；消费行为不新增计算位置。
+这份公式已经明确建立在 root，不会因消费位置改变而迁移。需要另一份 Button 公式时，可以显式指定 Button 地址，或让未指定地址的 Token 在 Button 消费处建立定义；对既有目标的条件加工仍使用 modify。
 
-# 同一边界也约束修改配方
+# 未指定地址的定义随使用位置建立
 
 ```ts
-const size = token('4px', 'scope-size')
-const delta = token('1px', 'scope-delta')
+const spacing = token('4px', {
+  name: 'local-spacing',
+  state: { hover: '6px' },
+})
+rules('.A', { width: spacing })
+rules('.B', { height: spacing })
+```
+
+spacing 需要 CSS variable 身份，但没有固定 address，因此在 A、B 各自建立默认值与 hover 状态。它不只属于先扫描到的 A，也不把 A 或 B 写回 spacing.address。onFirstScan、onCompile 仍按对象每次编译调用一次，每位置的定义准备交给既有 AST；toCSSString 只负责输出。
+
+无状态、无名称且没有其他变量需求的 token('2px') 仍直接输出 CSS value。全局材料使用显式 address: ':root'，不能因为某个 Token 被多处消费，就把它或其显式固定的依赖全部投影到每个位置。
+
+# 显式固定来源的修改仍继承结果
+
+```ts
+const size = token('4px', { name: 'scope-size', address: ':root' })
+const delta = token('1px', { name: 'scope-delta', address: ':root' })
 rules('.Parent', [
   modify(size, {
     type: 'expression',
@@ -38,7 +53,7 @@ rules('.Child', [declare(delta, '10px'), [key('width'), size]])
 
 Child 位于 Parent 内，只有 Parent 明确建立修改。Parent 为 5px，Child 继承同一 5px；Child 只读取 size，不应因当地 delta 为 10px 自动变成 14px。根 delta 改为 3px 时，Parent 与 Child 都为 7px。这里约束领域结果，不声称当前实现已符合。
 
-伪代码推导：`Parent结果 = Parent处的原结果4 + Parent处的delta1`；`Child结果 = 继承Parent结果`。只有在 Child 明确加入当地修改，才重新讨论 Child 的公式与修改顺序。普通表达式、定义组合函数和 modify 不得各自恢复“读取即当地重算”的例外。
+伪代码推导：`Parent结果 = Parent处的原结果4 + Parent处的delta1`；`Child结果 = 继承Parent结果`。这里的来源显式固定在 root，只有 Child 明确加入当地修改，才重新讨论 Child 的公式与修改顺序。普通表达式和 modify 不改变显式地址的 CSS 求值边界。
 
 # 局部换值与原生层叠
 

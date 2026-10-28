@@ -1,3 +1,4 @@
+import { parse, type Rule } from 'postcss'
 /** State Condition 的名称与 Rule 地址。 */
 import { stateCondition } from '../state-condition'
 import { token } from '../token'
@@ -78,15 +79,18 @@ test('两个自写条件保留输入顺序，状态内容保留来源引用', ()
     ],
   })
   const css = compileRules([[[condition('.RawReference')], 'color', target]])
+  const subject = parse(css).nodes.find(
+    (node) => node.type === 'rule' && node.selector === '.RawReference',
+  ) as Rule
   for (const selector of [first, second]) {
-    const escapedCondition = selector
-      .slice(1)
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    expect(css).toMatch(
-      new RegExp(
-        `${escapedCondition}[^{}]*\\{[^}]*--raw-target: var\\(--raw-source\\);`,
-      ),
-    )
+    const state = subject.nodes.find(
+      (node) => node.type === 'rule' && node.selector === selector,
+    ) as Rule
+    expect(
+      state.nodes
+        .filter((node) => node.type === 'decl' && node.prop === '--raw-target')
+        .map((node) => (node.type === 'decl' ? node.value : undefined)),
+    ).toEqual(['var(--raw-source)'])
   }
   expect(css).toContain('--raw-source: blue;')
   expect(css).not.toContain('--raw-target: gray;')

@@ -9,8 +9,11 @@ import { token } from '../token'
 import { expect, test } from 'vitest'
 import { compileRules } from '../css-root'
 
-test('普通默认内容在根声明，使用处仅引用名称', () => {
-  const paperColor = token('white', 'contract-paper-color')
+test('显式根地址的默认内容在根声明，使用处仅引用名称', () => {
+  const paperColor = token('white', {
+    name: 'contract-paper-color',
+    address: ':where(:root)',
+  })
   const css = compileRules([[['.Paper'], 'color', paperColor]])
 
   expect(css).toMatch(/:root\)?\s*\{[^}]*--contract-paper-color:\s*white\s*;/)

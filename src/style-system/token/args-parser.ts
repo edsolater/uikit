@@ -36,6 +36,11 @@ export interface TokenConfig<T extends TokenData = TokenData> {
   default: T
   name: string | undefined
   state: TokenState | undefined
+  /**
+   * 显式地址固定发布位置；继承后仍未指定时，需 CSS variable 的定义
+   * 在各 AST 使用地址发布 default 和 state。
+   * 不写回对象或锁定首处；全局共享须显式指定 root，直接 CSS value 不受影响。
+   */
   address: TokenOptions['address']
   registration: TokenOptions['registration']
   onFirstScan: TokenOptions['onFirstScan']

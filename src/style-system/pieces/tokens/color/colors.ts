@@ -10,7 +10,10 @@ export const surfaceColor = token(paperColor, 'surface-color')
 export const contentColor = token(inkColor, 'content-color')
 
 /** 多个线条共用的混合强度，可在全局或具体作用域声明。 */
-export const lineStrength = token(0.18, 'line-strength')
+export const lineStrength = token(0.18, {
+  name: 'line-strength',
+  address: ':where(:root)',
+})
 
 /**
  * 在基础颜色的根据地读取当前 CSS 值，并与共享强度组合为线条。

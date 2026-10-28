@@ -95,6 +95,7 @@ test('rules 混合已有 declare 与 modify 时保留状态基础和修改效果
 test('根变量的状态只属于根，局部显式10px不会随自己的状态变成8px', () => {
   const size = token('4px', {
     name: 'home-only-root-state',
+    address: ':where(:root)',
     state: [[stateCondition('&[data-phase]'), '8px']],
   })
   document.body.appendChild(document.createElement('style')).textContent =
@@ -124,9 +125,13 @@ test.each([':root', ':where(:root)'])(
   (root) => {
     const size = token('4px', {
       name: 'home-root-alias-state',
+      address: ':where(:root)',
       state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
     })
-    const empty = token('9px', 'home-root-alias-empty')
+    const empty = token('9px', {
+      name: 'home-root-alias-empty',
+      address: ':where(:root)',
+    })
     const css = compileRules([
       [[root], ...declare(size, '6px')],
       [[root], ...declare(empty, undefined)],
@@ -212,8 +217,11 @@ test('指定根据地才取得材料，那里已有新值时保留而不覆盖',
 })
 
 test('局部同名输入不搬运祖先公式，根输入变化仍正常计算', () => {
-  const base = token('4px', 'home-base')
-  const width = token(multiply(base, 2), 'home-width')
+  const base = token('4px', { name: 'home-base', address: ':where(:root)' })
+  const width = token(multiply(base, 2), {
+    name: 'home-width',
+    address: ':where(:root)',
+  })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
       [['.Consumer'], 'width', width],
@@ -233,6 +241,7 @@ test('局部同名输入不搬运祖先公式，根输入变化仍正常计算',
 test('根声明的CSS优先关系同时决定当前值、状态基础与显式修改', () => {
   const size = token('4px', {
     name: 'home-root-priority',
+    address: ':where(:root)',
     state: [
       [stateCondition('&[data-root-phase]'), (base) => multiply(base, 2)],
     ],

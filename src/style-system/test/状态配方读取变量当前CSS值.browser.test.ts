@@ -81,6 +81,7 @@ test('外层hover引用来源当前active值，来源独立按浏览器状态变
 test('仅在状态配方中引用的来源保留注册初始值', () => {
   const source = token('10px', {
     name: 'current-registered-source-size',
+    address: ':where(:root)',
     registration: { syntax: '<length>', inherits: false, initialValue: '17px' },
   })
   const target = token('1px', {

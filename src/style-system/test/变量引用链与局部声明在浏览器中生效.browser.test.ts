@@ -19,17 +19,16 @@ const laterState = stateCondition('&:where([data-later])')
 afterEach(() => document.body.replaceChildren())
 
 test('焦点轮廓读取调用者选择的具体颜色，局部声明保持独立', async () => {
-  const accent = token('black', 'focus-accent')
-  const tone = token('gray', 'focus-tone')
+  const accent = token('black', {
+    name: 'focus-accent',
+    address: '.AccentFocus',
+  })
+  const tone = token('gray', { name: 'focus-tone', address: '.ToneFocus' })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
-      [
-        [condition('.AccentFocus')],
-        'outline',
-        focusOutline(accent, '.AccentFocus'),
-      ],
+      [[condition('.AccentFocus')], 'outline', focusOutline(accent)],
       [[condition('.AccentFocus')], accent, 'rgb(12, 34, 56)'],
-      [[condition('.ToneFocus')], 'outline', focusOutline(tone, '.ToneFocus')],
+      [[condition('.ToneFocus')], 'outline', focusOutline(tone)],
       [[condition('.ToneFocus')], tone, 'rgb(56, 78, 90)'],
     ])
   const accentButton = document.body.appendChild(

@@ -15,11 +15,11 @@ Pieces 是可复用碎片的统称；Atom 表示可作为一块使用的 Token�
 
 Token 的参数归一为 default、name、state、address、registration、onFirstScan、compileWaveIndex 七项。内部 _kind 由系统确定，不是第八个公开配置。name、state、address、registration 或 modify 需要 CSS variable 身份，匿名时自动生成名称；其余直接输出 CSS value。
 
-嵌套 Token 是普通可坍缩表达式。它进入定义或计算时自然引用输入的坍缩结果，不判定是否复制来源。需要组合定义时，普通函数读取相应字段并返回新 Token；不保留内置用途变体、独立定义调整操作、加工来源记录、附带声明列表或额外声明目标键。
+直接 token(source) 继承来源配置并合并追加 state；计算表达式内部的 Token 按普通内容引用其坍缩结果。其他加工由普通函数返回新 Token，不保留内置用途变体、独立定义调整操作、加工来源记录、附带声明列表或额外声明目标键。
 
 onFirstScan 可以返回包含 modify 的规则。编译必须先读完会影响目标的修改，再坍缩该 Token；不规定激活波次，不把第一次访问等同于最终输出。compileWaveIndex 继续表达内容的最早处理时机。通用 AST 的引用访问、资源归属与撤销仍是编译处理，不另建持续监听机制。
 
-state 只接收静态预置字符串快捷名或 StateCondition；未定义字符串在参数入口立即报错，原始 CSS 必须先创建条件对象。StateCondition 直接沿用 Condition 的单个 { header } 对象；参数入口把快捷名换成静态表中的原对象，按 header 归一同条件规则并保留首次位置。最终 Map 直接进入编译，不附加身份元数据或另行排序。普通 rules 字符串仍是 CSS 地址。组件状态的地址由组件明确表达，跨地址仍遵循浏览器 CSS 层叠，不在每个消费位置重新展开来源公式。Token 不携带 priority，同址声明顺序交给声明系统。
+state 只接收静态预置字符串快捷名或 StateCondition；未定义字符串在参数入口立即报错，原始 CSS 必须先创建条件对象。StateCondition 直接沿用 Condition 的单个 { header } 对象；参数入口把快捷名换成静态表中的原对象，按 header 归一同条件规则并保留首次位置。最终 Map 直接进入编译，不附加身份元数据或另行排序。普通 rules 字符串仍是 CSS 地址。显式 Token.address 固定 default 与 state 的发布位置；未指定时，需要 CSS variable 的定义随每个 AST 消费地址建立，不锁定首次使用地或写回配置。全局材料显式指定 root，普通 CSS value 不因此生成变量；显式祖先公式仍遵循 CSS 继承。Token 不携带 priority，同址声明顺序交给声明系统。
 
 计算工具按 [工具公约](pieces/functions/SPEC.md) 组织输入与结果，CSSFunction 保留独立的 CSS 函数定义职责。颜色变化可以通过 oklch(source, changes) 组合内容，通道与格式转换不增加另一种内容实体。modify 表达使用端对同一 Token 的条件修改，普通函数表达新定义的产生。
 

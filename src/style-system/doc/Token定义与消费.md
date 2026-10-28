@@ -6,14 +6,14 @@
 
 ```ts
 const spacing = token('2px')
-const themeColor = token('red', 'theme-color')
+const themeColor = token('red', { name: 'theme-color', address: ':root' })
 const feedbackColor = token('red', {
   address: '.Feedback',
   state: { hover: 'pink', active: 'darkred' },
 })
 ```
 
-spacing 没有名称、状态、地址、注册，也没有被 modify，消费时直接输出 2px。themeColor 有名称，输出命名 CSS 声明及引用。feedbackColor 有状态和地址，自动取得名称，在指定位置输出默认值与状态规则。
+spacing 没有名称、状态、地址、注册，也没有被 modify，消费时直接输出 2px。themeColor 显式固定在 root，输出命名 CSS 声明及引用。feedbackColor 有状态和地址，自动取得名称，在指定位置输出默认值与状态规则。
 
 Token 对外都是可坍缩的内容，不要求调用者先区分直接值与 CSS variable 身份。最后的输出路径由内部 _kind 决定，_kind 可对外读取，调用方按约定不修改。
 
@@ -45,9 +45,9 @@ const buttonStrength = token(2, {
 })
 ```
 
-组件地址说明这些规则在哪里建立。全局材料负责共享值和规则，组件选择来源、地址及自身差异，业务再在明确范围使用这些对象。各层都使用 Token，不增加组件专用创建框架。
+显式地址固定 default 与 state 的位置；未指定地址时，需要 CSS variable 的定义随实际 AST 消费位置建立，同一 Token 在多处使用就分别发布，不写回 address。真正的全局材料明确指定 root，组件选择来源及自身差异。各层都使用 Token，不增加组件专用创建框架。
 
-CSS 变量身份不改变浏览器原生作用域：祖先声明中的计算不会因为后代覆盖某个输入就自动搬到后代重算。需要当地计算时，将相应定义放到当地 address。
+CSS 变量身份不改变浏览器原生作用域：显式固定在祖先地址的计算，不会因为后代覆盖某个输入就搬到后代重算。需要当地计算时，使用未指定地址的定义，或明确指定当地 address。
 
 ## Modify 改变输出需求
 

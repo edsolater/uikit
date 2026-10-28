@@ -37,9 +37,9 @@ localSpacing 是独立 Token，继承 spacing 的 address、state、registration
 
 name、state、address、registration 或 modify 使用，都会使 Token 需要 CSS variable 身份。没有这些需求的 Token 直接输出 CSS value；例如未命名、无状态、未被修改的 token('2px') 输出 2px。需要 CSS variable 而没有 name 时，系统自动生成名称，声明、引用和修改共用该名称。
 
-address 指定定义的位置，state 属于这个地址。后代消费只读取 CSS 结果，不在每个消费者复制状态或搬运公式。需要另一处计算位置时，应明确创建该地址的定义或登记当地 modify，不能由消费动作隐式建立。
+显式 address 固定 default 与 state 的定义位置，后代读取该位置的 CSS 结果，不搬运祖先公式。创建结果未指定 address 时，需要 CSS variable 的 Token 在每个 AST 消费地址分别建立自身 default 与 state；同一对象多处使用不锁定首次地址，也不写回 address。
 
-需要 CSS variable 而未指定 address 时，默认根据地为 root；这一缺省不单独使普通直接值改变身份。正常消费由编译器按需建立自身 default 和 state，不要求先手动声明。主动采用 dangerous 重声明时，既有显式基础选择及层叠能力保留；这不是正常定义模板。
+全局材料显式指定 address: ':root'。未指定地址不会使普通 token('2px') 改为 CSS variable；正常消费由编译器按需建立所需定义，不要求手动声明。每位置的定义准备与对象生命周期分开，onFirstScan、onCompile 仍按每对象每次编译调用一次。主动采用 dangerous 重声明时，既有显式基础选择及层叠能力保留；这不是正常定义模板。
 
 同名对象也不相互借入 JS 定义、状态或资源；CSS 名称相同引起的覆盖仍遵循地址、书写顺序和浏览器层叠。Token 不保存 priority，内部也不维护独立 definitionKey 或 declarations 列表。
 

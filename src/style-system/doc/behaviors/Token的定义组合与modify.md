@@ -47,7 +47,7 @@ rules('.Meter', [
 
 先加再乘为 14px，交换为 11px。current 表示当前 CSS 表达式，不要求 JavaScript 先读取浏览器算好的数值。modify 需要目标具有 CSS variable 身份，系统调整内部 _kind；缺名时自动分配，调用方不必先命名或补一条无值声明。
 
-修改只在明确的条件和位置生效，条件外保留原结果。state 的归属仍由定义地址决定，modify 不把整套状态移植到每个消费者。内部类型改变是本次 AST 的编译处理信息，_kind 可对外读取，调用方按约定不修改。
+修改只在明确的条件和位置生效，条件外保留原结果。显式 address 固定 state 的归属；未指定地址时，Token 的 default 与 state 随当前 AST 消费位置建立，不能把这一规则误认为 modify 搬运了状态。内部类型改变是本次 AST 的编译处理信息，_kind 可对外读取，调用方按约定不修改。
 
 ## 坍缩前读完会影响结果的修改
 
@@ -57,7 +57,7 @@ onFirstScan 可以返回包含 modify 的规则。系统需要继续读取这些
 
 ## 状态与 CSS 求值位置
 
-若 size 在根定义普通 4px，根的 data-phase state 为 8px；Parent 明确 modify 加 3px，Child 位于 Parent 内且只读取 size，则 state 先在根选择，Parent 加工这个结果，Child 继承 Parent。
+若 size 显式指定 address: ':root'，根定义普通 4px，根的 data-phase state 为 8px；Parent 明确 modify 加 3px，Child 位于 Parent 内且只读取 size，则 state 先在根选择，Parent 加工这个结果，Child 继承 Parent。
 
 | 条件                             | Parent | Child |
 | -------------------------------- | ------ | ----- |

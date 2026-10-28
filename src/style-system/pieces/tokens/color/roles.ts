@@ -29,6 +29,7 @@ const strong = stateCondition('&:where([data-emphasis="strong"])')
 /** 品牌及反馈颜色只表达强调程度，交互反馈由动作颜色拥有。 */
 export const brandColorEmphasis = token(brandColorTheme, {
   name: 'brand-color-emphasis',
+  address: undefined,
   state: [
     [
       soft,
@@ -48,6 +49,7 @@ export const brandColorEmphasis = token(brandColorTheme, {
 /** 动作的强调、交互和禁用各自独立匹配。 */
 export const actionColor = token(brandColorTheme, {
   name: 'action-color',
+  address: undefined,
   state: [
     ...(brandColorEmphasis.state ?? []),
     [
@@ -77,31 +79,32 @@ export const actionColor = token(brandColorTheme, {
 })
 export const accentColorEmphasis = token(accentColorTheme, {
   name: 'accent-color-emphasis',
+  address: undefined,
   state: brandColorEmphasis.state,
-  address: brandColorEmphasis.address,
 })
 export const goodColorEmphasis = token(goodColorTheme, {
   name: 'good-color-emphasis',
+  address: undefined,
   state: brandColorEmphasis.state,
-  address: brandColorEmphasis.address,
 })
 export const badColorEmphasis = token(badColorTheme, {
   name: 'bad-color-emphasis',
+  address: undefined,
   state: brandColorEmphasis.state,
-  address: brandColorEmphasis.address,
 })
 export const warnColorEmphasis = token(warnColorTheme, {
   name: 'warn-color-emphasis',
+  address: undefined,
   state: brandColorEmphasis.state,
-  address: brandColorEmphasis.address,
 })
 export const infoColorEmphasis = token(infoColorTheme, {
   name: 'info-color-emphasis',
+  address: undefined,
   state: brandColorEmphasis.state,
-  address: brandColorEmphasis.address,
 })
 export const linkColor = token(brandColorTheme, {
   name: 'link-color',
+  address: undefined,
   state: [
     ...(actionColor.state ?? []),
     [
@@ -121,6 +124,7 @@ export const canvasColor = canvasColorTheme
 /** 中性区域的强调保留各自用途；主题仍由根来源负责。 */
 export const surfaceColorEmphasis = token(surfaceColorTheme, {
   name: 'surface-color-emphasis',
+  address: undefined,
   state: [
     [soft, (base) => colorMix([base, 0.5], [canvasColorTheme, 0.5])],
     [strong, (base) => colorMix([base, 0.9], [inkColorTheme, 0.1])],
@@ -128,6 +132,7 @@ export const surfaceColorEmphasis = token(surfaceColorTheme, {
 })
 export const contentColorEmphasis = token(contentColorTheme, {
   name: 'content-color-emphasis',
+  address: undefined,
   state: [
     [soft, (base) => colorMix([base, 0.7], [surfaceColorTheme, 0.3])],
     [strong, (base) => colorMix([base, 0.4], [inkColorTheme, 0.6])],
@@ -135,6 +140,7 @@ export const contentColorEmphasis = token(contentColorTheme, {
 })
 export const boundaryColorEmphasis = token(boundaryColorTheme, {
   name: 'boundary-color-emphasis',
+  address: undefined,
   state: [
     [
       soft,

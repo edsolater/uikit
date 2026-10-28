@@ -130,3 +130,33 @@ test('单一入口保留创建形式与泛型，以及继承时 default 覆盖�
   expect(css).toMatch(/\.AlternateForms\s*\{[^}]*--forms-structured: 7px;/)
   expect(css).toContain('--forms-copy: 9;')
 })
+
+test('只预设前缀时原始值随使用地定义，来源已有地址时继续固定发布', () => {
+  const createToken = createNewTokenGenerator({ prefixName: 'only-prefix' })
+  const local = createToken('2px')
+  const source = token('8px', {
+    name: 'prefix-fixed-source',
+    address: ':where(:root)',
+  })
+  const fixed = createToken(source)
+  const css = compileRules([
+    [['.PrefixLocal'], 'width', local],
+    [['.PrefixFixed'], 'height', fixed],
+  ])
+  expect(css).toMatch(
+    new RegExp(`\\.PrefixLocal\\s*\\{[^}]*--${local.name}: 2px;`),
+  )
+  expect(css).toMatch(
+    new RegExp(
+      `:where\\(:root\\)\\s*\\{[^}]*--${fixed.name}: var\\(--prefix-fixed-source\\);`,
+    ),
+  )
+  expect(fixed.address).toBe(':where(:root)')
+  const cleared = createToken(source, { address: undefined })
+  const localCSS = compileRules([[['.PrefixCleared'], 'width', cleared]])
+  expect(localCSS).toMatch(
+    new RegExp(
+      `\\.PrefixCleared\\s*\\{[^}]*--${cleared.name}: var\\(--prefix-fixed-source\\);`,
+    ),
+  )
+})

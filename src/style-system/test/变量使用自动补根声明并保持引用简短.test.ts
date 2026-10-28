@@ -1,5 +1,5 @@
 /**
- * 含当前根发布方案的输出检查；默认可用、当地覆盖等可观察目的由浏览器案例验证。
+ * 显式根地址的自动声明、同名覆盖和撤销，消费处保持简短引用。
  */
 import { stateCondition } from '../state-condition'
 import { token } from '../token'
@@ -12,7 +12,10 @@ import { condition } from '../condition'
 import { multiply } from '../pieces/functions/calc'
 
 test('root已有同CSS名声明时保留既有基础，不要求同Token对象', () => {
-  const size = token('4px', 'root-existing-css-name')
+  const size = token('4px', {
+    name: 'root-existing-css-name',
+    address: ':where(:root)',
+  })
   const css = compileRules([
     [[':root'], ...declare(key('--root-existing-css-name'), '6px')],
     [['.Consumer'], 'width', size],
@@ -26,6 +29,7 @@ test.each(['before', 'after'] as const)(
   '晚到显式根声明插在自动保障的 %s，状态仍以显式 9px 为基础',
   (position) => {
     const size = token('2px', {
+      address: ':where(:root)',
       name: `late-root-${position}`,
       state: [
         [stateCondition('&[data-late-state]'), (base) => multiply(base, 2)],
@@ -63,8 +67,11 @@ test.each(['before', 'after'] as const)(
   },
 )
 
-test('使用未声明变量时补根声明，引用没有默认内容参数', () => {
-  const color = token('white', 'root-contract-color')
+test('显式指定 root 的变量缺少声明时补根声明，引用不带默认内容参数', () => {
+  const color = token('white', {
+    name: 'root-contract-color',
+    address: ':where(:root)',
+  })
   const css = compileRules([
     [['.Consumer'], 'color', color],
     [['.Other'], 'background-color', color],
@@ -75,14 +82,26 @@ test('使用未声明变量时补根声明，引用没有默认内容参数', ()
 })
 
 test('多层引用各自声明一条关系，使用处不展开依赖链', () => {
-  const paper = token('white', 'root-chain-paper')
-  const canvas = token(paper, 'root-chain-canvas')
-  const surface = token(canvas, 'root-chain-surface')
+  const paper = token('white', {
+    name: 'root-chain-paper',
+    address: ':where(:root)',
+  })
+  const canvas = token(paper, {
+    name: 'root-chain-canvas',
+    address: ':where(:root)',
+  })
+  const surface = token(canvas, {
+    name: 'root-chain-surface',
+    address: ':where(:root)',
+  })
   let unusedCalls = 0
-  token(() => {
-    unusedCalls++
-    return 'red'
-  }, 'root-chain-unused')
+  token(
+    () => {
+      unusedCalls++
+      return 'red'
+    },
+    { name: 'root-chain-unused', address: ':where(:root)' },
+  )
   const css = compileRules([[['.Consumer'], 'color', surface]])
   const root = css.match(/:root\)?\s*\{([^}]+)\}/)?.[1] ?? ''
   expect(root).toContain('--root-chain-paper: white;')
@@ -97,7 +116,10 @@ test('多层引用各自声明一条关系，使用处不展开依赖链', () =>
 test.each([false, true])(
   '无关位置的显式声明不抑制消费默认；声明在引用前=%s',
   (before) => {
-    const color = token('white', `root-explicit-color-${before}`)
+    const color = token('white', {
+      name: `root-explicit-color-${before}`,
+      address: ':where(:root)',
+    })
     const definition = [['.Other'], ...declare(color, 'red')] as Parameters<
       typeof compileRules
     >[0][number]
@@ -115,8 +137,14 @@ test.each([false, true])(
 )
 
 test('同 CSS 名称的另一对象声明不替代被引用对象的根基础定义', () => {
-  const declared = token('white', 'root-shared-name')
-  const consumed = token('blue', 'root-shared-name')
+  const declared = token('white', {
+    name: 'root-shared-name',
+    address: ':where(:root)',
+  })
+  const consumed = token('blue', {
+    name: 'root-shared-name',
+    address: ':where(:root)',
+  })
   const css = compileRules([
     [['.Other'], ...declare(declared, 'red')],
     [['.Consumer'], 'color', consumed],
@@ -128,7 +156,10 @@ test('同 CSS 名称的另一对象声明不替代被引用对象的根基础定
 })
 
 test('后续编译波生成无关位置声明时，消费默认仍保留', () => {
-  const color = token('white', 'root-late-color')
+  const color = token('white', {
+    name: 'root-late-color',
+    address: ':where(:root)',
+  })
   const later: JSSContent = {
     compileWaveIndex: 2,
     onCompile(context, controller) {
@@ -152,7 +183,10 @@ test('默认材料激活无关位置声明时，默认及显式产物同时存�
     toCSSString: () => 'white',
     onFirstScan: () => [[['.Other'], ...declare(color, 'red')]],
   }
-  const color = token(content, 'root-default-active-color')
+  const color = token(content, {
+    name: 'root-default-active-color',
+    address: ':where(:root)',
+  })
   const css = compileRules([[['.Consumer'], 'color', color]])
   expect(css).toContain('--root-default-active-color: red;')
   expect(css).toContain('white')
@@ -160,7 +194,10 @@ test('默认材料激活无关位置声明时，默认及显式产物同时存�
 })
 
 test('最后显式声明撤销后消费保留根默认', () => {
-  const color = token('white', 'root-removed-definition')
+  const color = token('white', {
+    name: 'root-removed-definition',
+    address: ':where(:root)',
+  })
   const definition = declare(color, 'red')
   const css = compileRules([
     [['.Consumer'], 'color', color],
@@ -188,8 +225,14 @@ test('最后显式声明撤销后消费保留根默认', () => {
 test.each([false, true])(
   '消费者撤销后清理自动根声明，其他消费者仍存在=%s',
   (shared) => {
-    const paper = token('white', 'root-shared-paper')
-    const canvas = token(paper, 'root-shared-canvas')
+    const paper = token('white', {
+      name: 'root-shared-paper',
+      address: ':where(:root)',
+    })
+    const canvas = token(paper, {
+      name: 'root-shared-canvas',
+      address: ':where(:root)',
+    })
     const rules: Parameters<typeof compileRules>[0] = [
       [['.Consumer'], 'color', canvas],
     ]
@@ -216,8 +259,14 @@ test.each([false, true])(
 )
 
 test('更窄条件覆盖不抑制普通派生默认，真正祖先覆盖继续生效', () => {
-  const source = token('blue', 'position-source')
-  const surface = token(source, 'position-surface')
+  const source = token('blue', {
+    name: 'position-source',
+    address: ':where(:root)',
+  })
+  const surface = token(source, {
+    name: 'position-surface',
+    address: ':where(:root)',
+  })
   const css = compileRules([
     [['.Button'], 'color', surface],
     [['.Button', '&[data-danger]'], ...declare(source, 'red')],
