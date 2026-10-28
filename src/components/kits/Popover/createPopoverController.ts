@@ -24,7 +24,7 @@ export type PopoverController = {
   setPopoverElement: (element: HTMLDivElement) => void
   setTriggerElement: (element: HTMLButtonElement) => void
   showPopover: () => void
-  hidePopover: () => void
+  hidePopover: (restoreFocus?: boolean) => void
   togglePopover: (force?: boolean) => void
 }
 
@@ -104,7 +104,8 @@ export function createPopoverController(
     isOpenControl.turnOn()
   }
 
-  function hidePopover() {
+  /** 关闭浮层；悬停说明关闭时可保留当前焦点。 */
+  function hidePopover(restoreFocus = true) {
     const element = val(popoverElement)
 
     if (!element) {
@@ -113,7 +114,7 @@ export function createPopoverController(
 
     element.hidePopover?.()
     isOpenControl.turnOff()
-    val(triggerElement)?.focus()
+    if (restoreFocus) val(triggerElement)?.focus()
   }
 
   function togglePopover(force?: boolean) {
