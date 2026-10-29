@@ -53,7 +53,7 @@ afterEach(() => {
 
 test('简写与长属性覆盖生效，变量注册与局部定义沿同一次编译', () => {
   const gap = token('4px', {
-    name: '--space-example',
+    name: 'space-example',
     registration: { syntax: '<length>', inherits: true, initialValue: '2px' },
   })
   handles.push(
@@ -191,7 +191,7 @@ test('Token 比例在浏览器改变混色结果，消费函数只定义一次',
 })
 
 test('动画复合值激活帧定义，并继续编译帧内变量', () => {
-  const opacity = token(0.7, { name: '--final-opacity' })
+  const opacity = token(0.7, { name: 'final-opacity' })
   const frames: Rules = [
     [[condition('from')], 'opacity', opacity],
     [[condition('to')], 'opacity', opacity],
@@ -232,7 +232,7 @@ test('完整函数定义作为依赖挂载，浏览器执行带媒体条件的�
 })
 
 test('源 Rule 删除后重新挂载，派生依赖随可达性退出且既有宿主内容保留', () => {
-  const temporaryVariable = token('12px', { name: '--temporary-reference' })
+  const temporaryVariable = token('12px', { name: 'temporary-reference' })
   const handle = rule('.example', 'margin-left', temporaryVariable)
   handles.push(handle)
   root.mount()
@@ -505,12 +505,12 @@ test('动效消费统一基准的当前值，分隔线按本地文字变量实�
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
     element.style.setProperty(
-      `--${motionDuration.name!.replace(/^--/, '')}`,
+      `--${motionDuration.name!}`,
       '360ms',
     )
     element.style.setProperty('--mounted-line-base', 'red')
     expect(getComputedStyle(element).transitionDuration).toBe('0.24s')
-    element.style.removeProperty(`--${motionDuration.name!.replace(/^--/, '')}`)
+    element.style.removeProperty(`--${motionDuration.name!}`)
     expect(getComputedStyle(element).borderTopColor).not.toBe(originalLine)
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],

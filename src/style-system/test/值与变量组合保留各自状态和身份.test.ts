@@ -123,10 +123,10 @@ test('共享 Token 在不同地址分别解析，重复编译不修改来源对�
     expect(css).toContain('--shared-position-size: 2px;')
     expect(css).toContain('--shared-position-size: 4px;')
     expect(css).toContain(
-      '--shared-position-copy: var(--shared-position-size);',
+      '--shared-position-size-shared-position-copy: var(--shared-position-size);',
     )
-    expect(css).toContain('--shared-position-copy: 4px;')
-    expect(css).toContain('width: var(--shared-position-copy);')
+    expect(css).toContain('--shared-position-size-shared-position-copy: 4px;')
+    expect(css).toContain('width: var(--shared-position-size-shared-position-copy);')
   }
 
   compileAndCheck()
@@ -139,7 +139,7 @@ test('零值不会沿来源链退回', () => {
   const source = token(1, { name: 'source-opacity', state: { disabled: 0.5 } })
   const next = token(source, { name: 'next-opacity', state: { disabled: 0 } })
   expect(compileRules([[[condition('.Example')], 'opacity', next]])).toContain(
-    '--next-opacity: 0;',
+    '--source-opacity-next-opacity: 0;',
   )
 })
 
@@ -150,9 +150,9 @@ test('延伸的注册使用新名字，来源默认值继续按需读取', () =>
     registration: { syntax: '<color>', inherits: true, initialValue: 'black' },
   })
   const css = compileRules([[[condition('.Example')], 'color', next]])
-  expect(css).toContain('@property --registered-next-color')
+  expect(css).toContain('@property --registered-source-color-registered-next-color')
   expect(css).toContain('var(--registered-source-color)')
-  expect(css).not.toContain('@property --registered-source-color')
+  expect(css).not.toContain('@property --registered-source-color {')
 })
 test('稳定 Token 共享引用不误报循环，真实循环停止', () => {
   const shared = token('red')

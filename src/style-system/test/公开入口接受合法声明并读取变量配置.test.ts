@@ -5,19 +5,15 @@ import { token } from '../index'
 import { condition } from '../condition'
 import { compileRules } from '../css-root'
 
-test('显式名称有无双连字符前缀时生成相同 CSS，保留状态顺序', () => {
+test('内部名称在 CSS 输出时添加双连字符，保留状态顺序', () => {
   const shorthand = token(1, {
-    name: '--public-shorthand',
-    state: { active: 3, hover: 2 },
-  })
-  const full = token(1, {
     name: 'public-shorthand',
     state: { active: 3, hover: 2 },
   })
   const compile = (content: typeof shorthand) =>
     compileRules([[[condition('.Shorthand')], 'opacity', content]])
   const css = compile(shorthand)
-  expect(css).toBe(compile(full))
+  expect(shorthand.name).toBe('public-shorthand')
   expect(css).toContain('--public-shorthand: 1;')
   expect(css).toContain('--public-shorthand: 2;')
   expect(css).toContain('--public-shorthand: 3;')

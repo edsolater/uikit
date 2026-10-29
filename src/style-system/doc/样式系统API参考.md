@@ -35,7 +35,6 @@ state 输入接受快捷名对象、Map、单个条件 entry，以及这些形�
 
 ```ts
 const buttonColorSource = buttonToken(brandColor, {
-  name: 'button-color-source',
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 ```
@@ -60,7 +59,7 @@ const source = token('2px')
 const target = token(source)
 ```
 
-token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source，name 不继承，避免同名自引用。需要 CSS variable 身份且未指定新名时，由既有机制自动命名。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
+token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source，完整名包含来源完整名这一引用部分，以及当前 Token 自身的实体标识。options.name 只指定实体，省略时自动生成，不复用来源完整身份。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
 
 ```ts
 const panelSpace = token(baseSpace, {
@@ -80,7 +79,11 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-生成器只返回一个等效 token 的函数，预设前缀与实际提供的配置；address 可选，省略不清除来源固定地址，继承与覆盖后仍未指定地址的结果才在消费位置发布。每次调用均由现有名称分配器按前缀产生独立名称，在同一 CSS 命名空间避开已有名称；同一来源的不同用途不会因默认同名而相互覆盖。逐项配置覆盖共性配置，其他输入和类型规则与 token 一致。
+完整 name 按“可选前缀-可选来源引用-自身实体标识”组合。普通 `token(value, { name: 'brand-color' })` 的完整名为 `brand-color`；`token(source, { name: 'local' })` 得到 `brand-color-local`，省略实体时得到 `brand-color-<自动标识>`。内部名称不含 CSS 双连字符，CSS 输出为 `--${name}`。
+
+生成器只提供统一前缀与定义地址，调用处不能传名称字符串或指定 `name`、`address`。`buttonToken(source)` 得到 `button-brand-color-<自动标识>`，直接 `buttonToken('red')` 得到 `button-<自动标识>`。前缀不改变实体；匿名 Token 来源也以稳定内部名参与引用，取得名称不改变来源的纯值身份。地址未配置时随消费位置发布，不继承来源地址。对应行为见 [Token 的创建与复用](behaviors/Token的创建与复用.md#完整名由前缀引用和实体组成)。
+
+业务含义由供人阅读的 JS 变量名表达；CSS 自定义属性名只是系统派生或自动生成的映射标识，具体拼写没有业务意义，主要用于测试定位和调试追溯。通过 Token 对象取得对应名称，无须手工维护两套语义名称。
 
 已有 Token 直接传入，state 软合并业务差异；生产函数用于延迟计算或消费时读取数据等明确目的，不作为规避继承的写法。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
 

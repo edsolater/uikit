@@ -57,14 +57,15 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(motionCSS).toContain('@media (prefers-reduced-motion: reduce)')
   expect(motionCSS).toContain('--motion-duration: calc(180ms * 0);')
   expect(motionCSS).not.toContain('--line-color:')
+  const localLine = lineColor(token('black', 'local-line-base'))
   const lineCSS = compileRules([
     [
       [condition('.Line')],
       'border-color',
-      lineColor(token('black', 'local-line-base')),
+      localLine,
     ],
   ])
-  expect(lineCSS).toContain('border-color: var(--local-line-base-line);')
+  expect(lineCSS).toContain(`border-color: var(--${localLine.name});`)
   expect(lineCSS).toContain('var(--local-line-base)')
   expect(lineCSS).toContain(':root')
   expect(lineCSS).not.toContain('--motion-duration:')

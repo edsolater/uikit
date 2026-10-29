@@ -266,10 +266,10 @@ test.each(['函数', 'onCompile'])(
       name: `expanded-constant-${entry}`,
     })
     const css = compileRules([[['.ConstantConsumer'], 'width', material]])
-    expect(css).toContain(`--expanded-constant-${entry}: 4px;`)
+    expect(css).toContain(`--${material.name}: 4px;`)
     const consumer = css.match(/\.ConstantConsumer\s*\{([^}]*)\}/)?.[1]
-    expect(consumer).toContain(`width: var(--expanded-constant-${entry});`)
-    expect(consumer).toContain(`--expanded-constant-${entry}: 4px;`)
+    expect(consumer).toContain(`width: var(--${material.name});`)
+    expect(consumer).toContain(`--${material.name}: 4px;`)
     expect(css).not.toContain(':root')
   },
 )

@@ -2,9 +2,10 @@
 import { stateCondition } from '../state-condition'
 import { expect, test, vi } from 'vitest'
 import { compileRules } from '../css-root'
-import { token } from './core'
+import { token, createTokenDefinition } from './core'
 import { token as publicToken } from '../index'
 import { add } from '../pieces/functions/calc'
+import { cssTokenName, resolveTokenName } from './css'
 
 test('聚合入口创建匿名直接值，编译为 CSS value 并暴露内部类别', () => {
   const size = publicToken('2px')
@@ -12,11 +13,42 @@ test('聚合入口创建匿名直接值，编译为 CSS value 并暴露内部类
   expect(size._kind).toBe('css-value')
 })
 
-test('直接值与表达式按自身内容输出，不制造无必要的变量声明', () => {
+test('完整名由来源引用和自身实体组成，多级引用保留每层身份', () => {
+  const source = token('red', { name: 'brand-color' })
+  const local = token(source, { name: 'local' })
+  const nested = token(local, { name: 'nested' })
+  const automatic = token(source)
+  const another = token(source)
+  const prefixed = createTokenDefinition(source, { name: 'local' }, 'button')
+  expect(source.name).toBe('brand-color')
+  expect(local.name).toBe('brand-color-local')
+  expect(prefixed.name).toBe('button-brand-color-local')
+  expect(nested.name).toBe('brand-color-local-nested')
+  expect(automatic.name).toMatch(/^brand-color-.+/)
+  expect(automatic.name).not.toBe(another.name)
+  expect(local.default).toBe(source)
+  expect(cssTokenName(local)).toBe('--brand-color-local')
+})
+
+test('匿名来源取得稳定引用名，派生与编译不升级来源的纯值身份', () => {
+  const source = token('2px')
+  const reference = resolveTokenName(source)
+  const local = token(source, { name: 'local' })
+  expect(local.name).toBe(`${reference}-local`)
+  expect(source.name).toBeUndefined()
+  expect(compileRules([[['.Anonymous'], 'width', source]])).toContain(
+    'width: 2px;',
+  )
+  expect(source._kind).toBe('css-value')
+  expect(resolveTokenName(source)).toBe(reference)
+  expect(token(source, { name: 'later' }).name).toBe(`${reference}-later`)
+})
+
+test('普通匿名值直接输出，引用创建保留表达式与独立身份', () => {
   const source = token('2px', 'same-input-source')
   const direct = token(add(source, '1px'))
   expect(compileRules([[['.Expression'], 'width', direct]])).toContain(
-    'width: calc(var(--same-input-source) + 1px);',
+    `--${direct.name}: calc(var(--same-input-source) + 1px);`,
   )
   expect(compileRules([[['.Primitive'], 'width', token('2px')]])).toContain(
     'width: 2px;',
@@ -92,14 +124,14 @@ test('未消费内容不求值，合法共享完成而最终循环明确失败',
   expect(() => compileRules([[['.Cycle'], 'color', cycle]])).toThrow('循环')
 })
 
-test('继承根据地和注册定义，明确覆盖名称与默认值不改变来源', () => {
+test('引用名与显式实体组合，继承注册和默认值覆盖不改变来源', () => {
   const source = token(2, {
     name: 'from-registered',
     address: '.Source',
     registration: { syntax: '<number>', inherits: false, initialValue: 1 },
   })
   const copy = token(source, {
-    name: source.name,
+    name: 'local',
     address: '.Copy',
     default: 4,
   })
@@ -111,7 +143,8 @@ test('继承根据地和注册定义，明确覆盖名称与默认值不改变�
   expect(css).toContain('syntax: "<number>";')
   expect(css).toContain('inherits: false;')
   expect(css).toMatch(/\.Source\s*\{[^}]*--from-registered: 2;/)
-  expect(css).toMatch(/\.Copy\s*\{[^}]*--from-registered: 4;/)
+  expect(copy.name).toBe('from-registered-local')
+  expect(css).toMatch(/\.Copy\s*\{[^}]*--from-registered-local: 4;/)
   expect(copy).not.toBe(source)
 })
 
@@ -141,17 +174,17 @@ test('同条件覆盖保持原位置，新条件追加，来源状态不变', ()
   expect(css).toContain('--from-state-source: 3;')
   expect(css).not.toContain('--from-state-source: 5;')
   for (const value of [1, 2, 5, 6])
-    expect(css).toContain(`--from-state-copy: ${value};`)
-  expect(css).not.toContain('--from-state-copy: 3;')
-  expect(css.indexOf('--from-state-copy: 2;')).toBeLessThan(
-    css.indexOf('--from-state-copy: 5;'),
+    expect(css).toContain(`--${copy.name}: ${value};`)
+  expect(css).not.toContain(`--${copy.name}: 3;`)
+  expect(css.indexOf(`--${copy.name}: 2;`)).toBeLessThan(
+    css.indexOf(`--${copy.name}: 5;`),
   )
-  expect(css.indexOf('--from-state-copy: 5;')).toBeLessThan(
-    css.indexOf('--from-state-copy: 6;'),
+  expect(css.indexOf(`--${copy.name}: 5;`)).toBeLessThan(
+    css.indexOf(`--${copy.name}: 6;`),
   )
 })
 
-test('空状态覆盖保留来源，显式 undefined 清除状态和名称', () => {
+test('空状态保留来源，清除状态和缺省实体不丢失引用身份', () => {
   const source = token(1, { name: 'from-clear-source', state: { hover: 2 } })
   const inherited = token(source, { name: 'from-empty-state', state: {} })
   const cleared = token(source, {
@@ -163,10 +196,12 @@ test('空状态覆盖保留来源，显式 undefined 清除状态和名称', () 
     [['.Inherited'], 'opacity', inherited],
     [['.Cleared'], 'opacity', cleared],
   ])
-  expect(css).toContain('--from-empty-state: 2;')
-  expect(css).toMatch(/\.Cleared\s*\{\s*opacity: 1;/)
+  expect(inherited.name).toBe('from-clear-source-from-empty-state')
+  expect(css).toContain(`--${inherited.name}: 2;`)
+  expect(cleared.name).toMatch(/^from-clear-source-.+/)
+  expect(css).toContain(`--${cleared.name}: 1;`)
   expect(compileRules([[['.ClearedOnly'], 'opacity', cleared]])).not.toContain(
-    'from-clear-source',
+    'var(--from-clear-source)',
   )
 })
 
@@ -180,7 +215,7 @@ test('追加的特殊输出方法由普通 Token 创建入口处理', () => {
   })
   const css = compileRules([[['.ExplicitOutput'], 'width', copy]])
   expect(css).toContain('--from-explicit-part: 7px;')
-  expect(css).toContain('--from-explicit-output: var(--from-explicit-part);')
+  expect(css).toContain(`--${copy.name}: var(--from-explicit-part);`)
 })
 
 test('继承编译波和生命周期，并允许新定义覆盖回调', () => {

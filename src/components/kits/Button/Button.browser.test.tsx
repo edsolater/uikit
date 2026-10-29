@@ -464,7 +464,7 @@ describe('Button styles', () => {
     parent.className = 'Button'
     parent.dataset.tone = 'danger'
     parent.style.setProperty(
-      `--${globalColors.contentColor.name!.replace(/^--/, '')}`,
+      `--${globalColors.contentColor.name!}`,
       'rgb(78, 90, 123)',
     )
     dispose = render(() => <Button>普通按钮</Button>, parent)
@@ -475,7 +475,7 @@ describe('Button styles', () => {
     await userEvent.hover(button)
     expectSameColor(getComputedStyle(button).color, 'rgb(78, 90, 123)')
     button.style.setProperty(
-      `--${globalColors.contentColor.name!.replace(/^--/, '')}`,
+      `--${globalColors.contentColor.name!}`,
       'rgb(123, 90, 78)',
     )
     button.focus()
@@ -1123,7 +1123,7 @@ describe('Button styles', () => {
     neighbor.style.transition = 'none'
     const before = getComputedStyle(neighbor).backgroundColor
     const originalCSS = style.textContent
-    button.style.setProperty('--brand-color', 'oklch(60% 0.15 140)')
+    button.style.setProperty(`--${brandColor.name}`, 'oklch(60% 0.15 140)')
     expect(getComputedStyle(button).backgroundColor).not.toBe(before)
     expect(getComputedStyle(neighbor).backgroundColor).toBe(before)
     expect(style.textContent).toBe(originalCSS)
@@ -1267,7 +1267,7 @@ describe('Button styles', () => {
     try {
       bases.forEach(([base, value]) =>
         document.documentElement.style.setProperty(
-          `--${base.name!.replace(/^--/, '')}`,
+          `--${base.name!}`,
           value,
         ),
       )
@@ -1281,7 +1281,7 @@ describe('Button styles', () => {
     } finally {
       bases.forEach(([base]) =>
         document.documentElement.style.removeProperty(
-          `--${base.name!.replace(/^--/, '')}`,
+          `--${base.name!}`,
         ),
       )
     }
@@ -1651,7 +1651,7 @@ describe('Button styles', () => {
       getButton('default'),
     ).backgroundColor
     getButton('default').style.setProperty(
-      `--${globalColors.surfaceColor.name!.replace(/^--/, '')}`,
+      `--${globalColors.surfaceColor.name!}`,
       'oklch(0.2 0.003 260)',
     )
     expect(getComputedStyle(getButton('default')).backgroundColor).not.toBe(
@@ -1692,7 +1692,7 @@ test('危险Button只改一个语气输入，内容与边线一起采用当地�
   expectSameColor(
     getComputedStyle(sibling).color,
     getComputedStyle(document.documentElement).getPropertyValue(
-      `--${badColor.name!.replace(/^--/, '')}`,
+      `--${badColor.name!}`,
     ),
   )
   expect(getComputedStyle(local).backgroundColor).not.toBe(
@@ -1749,7 +1749,7 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
     button.style.transition = 'none'
   const background = (button: HTMLElement, canvas: string, strength = 0.18) => {
     const source = getComputedStyle(button).getPropertyValue(
-      `--${buttonColorSource.name!.replace(/^--/, '')}`,
+      `--${buttonColorSource.name!}`,
     )
     expectSameColor(
       getComputedStyle(button).backgroundColor,
@@ -1773,11 +1773,11 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
   const dangerBefore = appearance(danger)
   const cssBefore = style.textContent
   root.style.setProperty(
-    `--${surfaceColor.name!.replace(/^--/, '')}`,
+    `--${surfaceColor.name!}`,
     'rgb(200, 180, 230)',
   )
   root.style.setProperty(
-    `--${contentColor.name!.replace(/^--/, '')}`,
+    `--${contentColor.name!}`,
     'rgb(100, 40, 60)',
   )
   background(normal, 'rgb(200, 180, 230)')

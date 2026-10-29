@@ -197,7 +197,6 @@ const emphasis = token(2, {
 
 ```ts
 const buttonColorSource = buttonToken(brandColor, {
-  name: 'button-color-source',
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 ```
@@ -233,7 +232,7 @@ const amount = doubled(4)
 
 加工已有 Token 同样使用普通函数：读取其 default、state 及其他规范化信息，组合需要继承或覆盖的部分，再创建一个新 Token。函数可以分别加工基础值和状态，也可以提供新的状态；具体组合由函数表达。
 
-直接传入已有 Token 时，token(source, options) 创建独立 Token 并继承其定义配置。default 默认引用 source，保留对来源当前 CSS 值的联动；name 不继承，避免声明引用自身，需要 CSS variable 身份且未指定新名时由既有机制自动命名。address、state、registration 和生命周期配置继承来源，追加配置覆盖相应顶层字段，显式 undefined 清除对应配置；default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态。整个过程不修改来源，也不复制运行身份、已分配的自动名称或隐藏的输出方法。
+直接传入已有 Token 时，token(source, options) 创建独立 Token 并继承其定义配置。default 默认引用 source，保留对来源当前 CSS 值的联动；完整名保留来源完整名作为引用部分，并为新 Token 确定自身实体标识；options.name 只指定实体，省略时自动生成，因此不会复用来源的完整身份。address、state、registration 和生命周期配置继承来源，追加配置覆盖相应顶层字段，显式 undefined 清除对应配置；default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态。整个过程不修改来源，也不复制运行身份、已分配的自动名称或隐藏的输出方法。
 
 ```ts
 const panelSpace = token(baseSpace, {
@@ -253,7 +252,13 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-生成器只返回一个等效 token 的函数，预设名称前缀与实际提供的配置；address 可选，省略不会清除来源的固定地址，继承与覆盖后仍未指定地址的结果才随消费位置发布。每次调用均由现有名称分配器按前缀生成独立名称，并在同一 CSS 命名空间内避开已占用名称；复用同一来源的不同用途不需要手动命名来避免相互覆盖。逐项配置可以覆盖 name、address 等，名称字符串、state 组合、特殊格式和 default 覆盖都沿用 token 的接口。
+完整 name 由可选前缀、可选来源引用和自身实体标识组成，以连字符连接。普通 `token(value, { name: 'brand-color' })` 没有前缀或引用，完整名就是 `brand-color`；`token(source, { name: 'local' })` 把来源完整名作为引用，得到 `brand-color-local`；省略实体时生成 `brand-color-<自动标识>`。前缀只参与组合，不改变实体标识。普通匿名直接值仍按需要输出 CSS value，自动实体只在需要内部名称时分配。
+
+生成器统一管理定义地址，只为同一创建模型提供前缀；调用处不能传名称字符串或指定 `name`、`address`。例如 `buttonToken(brandColor)` 得到 `button-brand-color-<自动标识>`；直接 `buttonToken('red')` 没有来源引用，得到 `button-<自动标识>`。无显式名称的 Token 来源也有稳定的内部完整名，派生时仍保留这一引用；取得引用名不会使来源从 CSS value 升级为 CSS variable。地址由生成器配置决定；未配置时随消费位置发布，不继承来源地址。其余配置继续沿用 Token 契约。
+
+内部名称不含 CSS 的双连字符，CSS variable 输出只添加 `--`，即 `--${name}`。自动实体由现有标识生成器产生，不按名称分类、不登记显式名称或管理占用状态，也不约定自动标识的具体格式。
+
+JS 变量名表达业务含义，供人阅读。CSS 自定义属性名只是映射标识，由系统自动生成，具体拼写没有业务意义；测试定位和调试追溯时，通过 Token 对象取得名称并找到对应 CSS，无须手工维护两套语义名称。
 
 不再提供独立的 `adjust` 操作。它原来承担的定义组合与加工，直接由这些普通函数完成。函数返回的新 Token 按自己的定义和使用情况确定坍缩方式；“经过某个加工函数”本身不是生成 CSS variable 的条件，也不需要记录“使用过 adjust”。
 

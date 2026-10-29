@@ -502,7 +502,9 @@ test('聚合产物的 onFirstScan 新增同址贡献时继续聚合到稳定结�
     [[condition('.ActiveResult')], active, 'a'],
     [[condition('.ActiveResult')], active, 'b'],
   ])
-  expect(css).toContain('--aggregate-active: a b c;')
+  const resultName = css.match(/--aggregate-active: var\((--[\w-]+)\);/)?.[1]
+  expect(resultName).toBeDefined()
+  expect(css).toContain(`${resultName}: a b c;`)
   expect(css.match(/--aggregate-active:/g)).toHaveLength(1)
 })
 

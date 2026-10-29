@@ -524,7 +524,7 @@ test.each(['late-declare', 'removed-declare'])(
     const { modification } = await import('../modification')
     const { add } = await import('../pieces/functions/calc')
     const change = modification({
-      name: '--consumer-rule',
+      name: 'consumer-rule',
       type: 'color',
       detail: { lightness: (currentExpression) => add(currentExpression, 0.1) },
     })

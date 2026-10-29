@@ -173,7 +173,7 @@ function internalVariableName(
   let names = internalNames.get(token)
   if (!names) internalNames.set(token, (names = new Map()))
   const key = `${conditionAddressKey(instance.definition.path)}/${role}`
-  const name = allocateVariableName(undefined, names.get(key))
+  const name = names.get(key) ?? allocateVariableName()
   names.set(key, name)
   return name
 }

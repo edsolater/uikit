@@ -69,7 +69,7 @@ test('完整规则一次设置四通道，再按顺序应用另一完整规则',
 test('单一规则变量复用于两个颜色，hover与active同时应用并在退出后恢复', () => {
   const surface = configured('state-color', '.First')
   const hoverChange = modification({
-    name: '--hover-change',
+    name: 'hover-change',
     type: 'color',
     detail: {
       lightness: (currentExpression) => add(currentExpression, 0.05),
@@ -77,7 +77,7 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
     },
   })
   const activeChange = modification({
-    name: '--active-change',
+    name: 'active-change',
     type: 'color',
     detail: {
       lightness: (currentExpression) => add(currentExpression, -0.1),
@@ -242,7 +242,7 @@ test('独立变化按非交换顺序修改并得到规定颜色，子元素局�
   const base = oklch({ lightness: 0.4, chroma: 0.1, hue: 120, alpha: 0.8 })
   const surface = token(base, { name: 'dual-surface', address: '.Dual' })
   const hover = modification({
-    name: '--dual-hover-rule',
+    name: 'dual-hover-rule',
     type: 'color',
     detail: {
       lightness: (currentExpression) => add(currentExpression, 0.1),

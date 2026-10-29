@@ -56,7 +56,7 @@ test('逐项加工最终结果保存组合后的定义，后续换 default 不�
   )
   result.default = '7px'
   const css = compileRules([[['.Result'], 'width', result]])
-  expect(css).toContain('--halved: 7px;')
+  expect(css).toContain(`--${result.name}: 7px;`)
   expect(css).toContain('calc(12px * 0.5)')
   expect(css).not.toContain('calc(7px * 0.5)')
 })
@@ -71,7 +71,7 @@ test('用途由普通函数产生独立 Token，定义基础为零时不退回�
   const result = quiet(source)
   const css = compileRules([[['.Quiet'], 'opacity', result]])
   expect(css).toContain('var(--purpose-source)')
-  expect(css).toContain('--purpose-quiet: 0;')
+  expect(css).toContain(`--${result.name}: 0;`)
 })
 
 test('实际对象引用不激活另一个同名定义，CSS 引用字符串不借用对象资源', () => {

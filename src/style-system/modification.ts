@@ -53,15 +53,10 @@ export function modification(definition: {
   assert(isString(definition.type), 'Modification type 必须是字符串。')
   assert(definition.type === 'color', 'Modification 尚未支持内容领域。')
   assert(isObject(definition.detail), 'Modification 需要有效 detail 材料。')
-  assert(
-    definition.name === undefined ||
-      (isString(definition.name) && /^--.+/.test(definition.name)),
-    'Modification name 需要完整 CSS 自定义属性名。',
-  )
   let self: ColorModificationContent
   self = Object.assign(
     token(() => oklchChannels(self.detail), {
-      name: definition.name ?? `--${allocateVariableName()}`,
+      name: definition.name ?? allocateVariableName(),
     }),
     {
       type: definition.type,

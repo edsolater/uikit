@@ -10,7 +10,7 @@ import { add } from '../pieces/functions/calc'
 
 test('配方可以独立声明与引用，未指定通道保留来源且 alpha=0 不丢失', () => {
   const recipe = modification({
-    name: '--independent-recipe',
+    name: 'independent-recipe',
     type: 'color',
     detail: { lightness: 0.3, alpha: 0 },
   })
@@ -26,7 +26,7 @@ test('配方可以独立声明与引用，未指定通道保留来源且 alpha=0
         ['.KeepAlpha'],
         ...declare(
           modification({
-            name: '--keep-recipe-alpha',
+            name: 'keep-recipe-alpha',
             type: 'color',
             detail: {},
           }),
@@ -41,7 +41,7 @@ test.each([false, true])(
   (removeAll) => {
     const recipe = Object.assign(
       modification({
-        name: '--shared-recipe',
+        name: 'shared-recipe',
         type: 'color',
         detail: { alpha: 0.5 },
       }),
@@ -86,7 +86,7 @@ test('配方通道回调延迟到消费，采用当前闭包且未指定 alpha �
   let delta = 0.1
   const chroma = vi.fn((current) => add(current, delta))
   const recipe = modification({
-    name: '--lazy-recipe',
+    name: 'lazy-recipe',
     type: 'color',
     detail: { chroma },
   })
@@ -96,7 +96,7 @@ test('配方通道回调延迟到消费，采用当前闭包且未指定 alpha �
   expect(css).toContain('--lazy-recipe: l calc(c + 0.2) h / alpha;')
 })
 
-test('未知内容领域、非法 detail 和不完整配方名明确拒绝', () => {
+test('未知内容领域和非法 detail 明确拒绝', () => {
   for (const type of ['unknown', 'constructor', 'toString', '__proto__']) {
     expect(() => modification({ type, detail: {} } as never)).toThrow(
       '尚未支持内容领域',
@@ -105,7 +105,4 @@ test('未知内容领域、非法 detail 和不完整配方名明确拒绝', () 
   expect(() =>
     modification({ type: 'color', detail: undefined } as never),
   ).toThrow('detail')
-  expect(() =>
-    modification({ type: 'color', name: 'bare-name', detail: {} }),
-  ).toThrow('完整 CSS')
 })

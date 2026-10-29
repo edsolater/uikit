@@ -26,10 +26,10 @@ test('默认内容是另一 Token 时声明保留来源引用，使用处不展�
   const css = compileRules([[['.Canvas'], 'background-color', canvasColor]])
 
   expect(css).toMatch(
-    /--contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/,
+    /--contract-paper-color-contract-canvas-color:\s*var\(\s*--contract-paper-color\s*\)\s*;/,
   )
   expect(css).toMatch(
-    /background-color:\s*var\(\s*--contract-canvas-color\s*\)\s*;/,
+    /background-color:\s*var\(\s*--contract-paper-color-contract-canvas-color\s*\)\s*;/,
   )
 })
 

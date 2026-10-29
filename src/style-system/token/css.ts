@@ -40,14 +40,20 @@ const operations = new WeakMap<
 >()
 
 /**
- * 取得稳定的完整 CSS 名称；缓存的自动名称不成为显式创建配置。
+ * 取得稳定的内部完整名；缓存的自动实体不改变 Token 的 CSS 身份。
  */
-export function cssTokenName(token: Token): string {
-  if (token.name !== undefined)
-    return `--${allocateVariableName(token.name).replace(/^--/, '')}`
-  const name = `--${allocateVariableName(undefined, names.get(token)).replace(/^--/, '')}`
+export function resolveTokenName(token: Token): string {
+  if (token.name !== undefined) return token.name
+  const name = names.get(token) ?? allocateVariableName()
   names.set(token, name)
   return name
+}
+
+/**
+ * 将内部完整名映射为 CSS 自定义属性名。
+ */
+export function cssTokenName(token: Token): string {
+  return `--${resolveTokenName(token)}`
 }
 
 /**

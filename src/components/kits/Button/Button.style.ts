@@ -40,7 +40,6 @@ const buttonToken = createNewTokenGenerator({
 })
 
 export const buttonColorSource = buttonToken(brandColor, {
-  name: 'button-color-source',
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 
@@ -60,7 +59,6 @@ function mixButtonSurface({
 export const buttonSurfaceColor = buttonToken(
   mixButtonSurface({ strength: 0.18, alpha: 0.14 }),
   {
-    name: 'button-surface-color',
     state: {
       plain: 'transparent',
       filled: mixButtonSurface({ strength: 1, alpha: 1 }),
@@ -69,7 +67,6 @@ export const buttonSurfaceColor = buttonToken(
 )
 
 export const buttonContentColor = buttonToken(contentColor, {
-  name: 'button-content-color',
   state: { toned: buttonColorSource, filled: paperColor },
 })
 
@@ -77,32 +74,22 @@ export const buttonBoundaryColor = buttonToken(
   oklch(buttonColorSource, {
     alpha: (current) => multiply(current, 0.44),
   }),
-  { name: 'button-boundary-color' },
 )
 export const buttonBorderColor = buttonToken('transparent', {
-  name: 'button-border-color',
   state: { outlined: buttonBoundaryColor },
 })
 
-export const buttonTextSize = buttonToken(textSize, {
-  name: 'button-text-size',
-})
-export const buttonFontWeight = buttonToken(multiply(fontWeight, 7 / 4), {
-  name: 'button-font-weight',
-})
-export const buttonMinHeight = buttonToken(controlSize, {
-  name: 'button-min-height',
-})
-export const buttonGap = buttonToken(baseSpace, { name: 'button-gap' })
+export const buttonTextSize = buttonToken(textSize)
+export const buttonFontWeight = buttonToken(multiply(fontWeight, 7 / 4))
+export const buttonMinHeight = buttonToken(controlSize)
+export const buttonGap = buttonToken(baseSpace)
 export const buttonPaddingBlock = buttonToken(baseSpace, {
-  name: 'button-padding-block',
   state: {
     small: (base) => multiply(base, 1 / 2),
     xlarge: (base) => multiply(base, 3 / 2),
   },
 })
 export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3), {
-  name: 'button-padding-inline',
   state: {
     small: (base) => multiply(base, 1 / 2),
     large: (base) => multiply(base, 4 / 3),
@@ -111,7 +98,6 @@ export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3), {
 })
 
 export const buttonBoxShadow = buttonToken(baseShadowSmall, {
-  name: 'button-shadow',
   state: {
     plain: 'none',
     filled: baseShadow,
@@ -122,11 +108,9 @@ export const buttonBoxShadow = buttonToken(baseShadowSmall, {
 })
 // 强调状态下、禁用缩放前的完整透明度，供读取并作为最终透明度的基准。
 export const buttonOpacitySource = buttonToken(multiply(baseOpacity, 0.9), {
-  name: 'button-opacity-source',
   state: { soft: multiply(baseOpacity, 0.7), strong: baseOpacity },
 })
 export const buttonOpacity = buttonToken(buttonOpacitySource, {
-  name: 'button-opacity',
   state: { disabled: (base) => multiply(base, 0.48 / 0.9) },
 })
 

@@ -25,7 +25,7 @@ import {
   type TokenDefaultInput,
 } from './args-parser'
 import type { StateCondition, StateConditionInput } from '../state-condition'
-import { cssTokenName } from './css'
+import { cssTokenName, resolveTokenName } from './css'
 import { allocateVariableName } from '../custom-property-names'
 
 /** 样式直接内容、表达式或延迟提供的内容。 */
@@ -52,6 +52,7 @@ export type TokenAddress = Exclude<ConditionInput, undefined>
 
 /** Token 基础配置及特殊内容的编译、输出协议。 */
 export interface TokenOptions<T extends TokenData = TokenData> {
+  /** 当前 Token 自身的实体标识；完整名还会组合来源引用和生成器前缀。 */
   name?: string
   state?: TokenStateInput
   /**
@@ -119,19 +120,44 @@ export function token<T extends TokenData>(
   input: TokenData,
   options?: string | (TokenOptions<T> & { default?: T }),
 ): Token<T> {
+  return createTokenDefinition<T>(input, options)
+}
+
+/**
+ * 统一创建 Token 定义，生成器只在此提供额外名称前缀。
+ */
+export function createTokenDefinition<T extends TokenData>(
+  input: TokenData,
+  options?: string | (TokenOptions<T> & { default?: T }),
+  prefixName?: string,
+): Token<T> {
   return isToken(input)
-    ? tokenFrom<T>(input, options)
-    : createToken(input as T, options)
+    ? tokenFrom<T>(input, options, prefixName)
+    : createToken(input as T, options, undefined, prefixName)
 }
 
 /** 创建实际 Token 对象，基础内容始终按原始数据保存。 */
 function createToken<T extends TokenData>(
   input: T,
   options?: string | TokenOptions<T>,
+  source?: Token,
+  prefixName?: string,
 ): Token<T> {
   const protocol = typeof options === 'string' ? { name: options } : options
+  const entityName =
+    protocol?.name ??
+    (source !== undefined || prefixName !== undefined
+      ? allocateVariableName()
+      : undefined)
+  const name =
+    entityName === undefined
+      ? undefined
+      : [prefixName, source && resolveTokenName(source), entityName]
+          .filter((part) => part !== undefined)
+          .join('-')
   const self: Token<T> = {
     ...parseTokenArgs<T>(input, protocol),
+    name,
     onCompile: protocol?.onCompile,
     get dependencies() {
       const dependencies = protocol?.dependencies
@@ -155,7 +181,6 @@ function createToken<T extends TokenData>(
     },
   })
   if (protocol?.toCSSString || protocol?.dependencies) customOutputs.add(self)
-  if (self.name !== undefined) allocateVariableName(self.name)
   tokens.add(self)
   return self
 
@@ -175,6 +200,7 @@ function createToken<T extends TokenData>(
 function tokenFrom<T extends TokenData>(
   source: Token,
   options?: string | (TokenOptions<T> & { default?: T }),
+  prefixName?: string,
 ): Token<T> {
   const additional = typeof options === 'string' ? { name: options } : options
   const definition = {
@@ -189,7 +215,7 @@ function tokenFrom<T extends TokenData>(
   }
   const state = additional?.state
   if (state !== undefined) definition.state = [source.state ?? {}, state]
-  return createToken(definition.default as T, definition)
+  return createToken(definition.default as T, definition, source, prefixName)
 }
 
 /**

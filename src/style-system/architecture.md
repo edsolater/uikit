@@ -34,7 +34,7 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | state-condition-registry.ts                                   | 汇总 Pieces 的静态快捷名表并严格查名，直接引用预置条件对象                         |
 | key-definition.ts                                             | JSSKey 定义类型及无登记副作用的纯构造                                              |
 | key.ts                                                        | 声明目标识别、原名与别名解析、显式登记自定义 Key                                   |
-| custom-property-names.ts                                      | Token 与 Modification 共用的 CSS 自定义属性名称分配与避让                          |
+| custom-property-names.ts                                      | Token 与 Modification 共用的自动实体标识生成，可附加前缀                          |
 | token/css.ts                                                  | CSS 名称、声明目标及编译准备操作；自动名称缓存不作为显式配置                       |
 | token/args-parser.ts                                          | 创建参数归一为七个固定 key                                                         |
 | operations/declare.ts                                         | 声明配对及危险手动入口；rules 内部复用，业务默认不手动调用                         |
