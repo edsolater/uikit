@@ -8,9 +8,9 @@
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import {
   createVariantPropsParser,
   type VariantProps,
@@ -52,7 +52,7 @@ export function renderBoard<Tag extends PivSupportedElementTag>(
 ) {
   const { variantShadowProps } = parseBoardVariantProps(props)
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName={identity}
       defaultDescription={
         identity === 'Card' ? '组织独立信息' : '承载上层信息主体'
@@ -67,6 +67,6 @@ export function renderBoard<Tag extends PivSupportedElementTag>(
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

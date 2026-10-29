@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Checkbox.style'
@@ -18,7 +18,7 @@ export function Checkbox(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Checkbox"
       defaultDescription="切换二态选项"
       description={props.description}
@@ -43,6 +43,6 @@ export function Checkbox(
         />
         <Piv as="span">{props.label}</Piv>
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

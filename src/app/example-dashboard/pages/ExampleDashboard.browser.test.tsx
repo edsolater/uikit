@@ -149,8 +149,8 @@ describe('ExampleDashboard', () => {
       'label',
       'table',
       'loop',
-      'component-wrapper',
-      'structure-view-fab',
+      'component-marker',
+      'component-marker-structure-view-trigger',
     ]) {
       window.history.replaceState(null, '', `/examples/${id}`)
       window.dispatchEvent(new PopStateEvent('popstate'))

@@ -7,9 +7,9 @@
  */
 import type { Source } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import './Heading.style'
 
@@ -28,7 +28,7 @@ export type HeadingProps = Omit<PivProps<HeadingTag>, 'as' | 'children'> &
  */
 export function Heading(props: HeadingProps) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Heading"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -41,6 +41,6 @@ export function Heading(props: HeadingProps) {
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

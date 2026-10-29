@@ -1,8 +1,8 @@
 import { Show, val, type Source, type JSX } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '@/components/Piv/Piv'
 import { Heading } from '../Heading/Heading'
 import { Text } from '../Text/Text'
@@ -19,7 +19,7 @@ export function Page(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Page"
       defaultDescription="组织页面标题、说明、动作与内容"
       description={props.description}
@@ -35,6 +35,6 @@ export function Page(
         </Flow>
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

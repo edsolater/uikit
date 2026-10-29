@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Flow } from '../Flow/Flow'
 import { Label } from '../Label/Label'
@@ -14,7 +14,7 @@ export function Field(
 ) {
   const id = crypto.randomUUID()
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Field"
       defaultDescription="关联字段标题与单个控件"
       description={props.description}
@@ -24,6 +24,6 @@ export function Field(
         <Label for={id}>{props.label}</Label>
         {props.children(id)}
       </Flow>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

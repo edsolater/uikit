@@ -4,9 +4,9 @@
  */
 import { onMount, Show, type JSX } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '../../Piv/Piv'
 import { addDefaultProps } from '../../utils/defaultProps'
 import {
@@ -105,7 +105,7 @@ export function Popover(props: PopoverProps) {
   })
 
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Popover"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -153,7 +153,7 @@ export function Popover(props: PopoverProps) {
           <div class="body">{mergedProps.children}</div>
         </Piv>
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }
 

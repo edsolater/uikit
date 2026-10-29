@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { derive } from '@/hooks/stateUtils'
 import { For, val, type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
@@ -18,7 +18,7 @@ export type SelectProps = ComponentDescriptionProps & {
 /** 有限选项的原生单选字段，持续消费值和选项来源。 */
 export function Select(props: SelectProps) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Select"
       defaultDescription="从有限选项中选择"
       description={props.description}
@@ -57,6 +57,6 @@ export function Select(props: SelectProps) {
           )}
         </For>
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

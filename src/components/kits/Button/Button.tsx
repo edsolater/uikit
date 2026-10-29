@@ -9,9 +9,9 @@
  */
 import type { Source } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
@@ -123,7 +123,7 @@ export function Button(props: ButtonProps) {
   const { statusShadowProps } = parseButtonStatusProps(props)
 
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Button"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -146,6 +146,6 @@ export function Button(props: ButtonProps) {
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

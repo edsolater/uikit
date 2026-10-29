@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Navigation.style'
@@ -13,7 +13,7 @@ export function Navigation(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Navigation"
       defaultDescription="组织具名导航区域"
       description={props.description}
@@ -26,6 +26,6 @@ export function Navigation(
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

@@ -13,9 +13,9 @@ import {
 import { createDomRef } from '@/hooks'
 import { Piv } from '../../Piv/Piv'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 
 export type Read<T> = Accessor<T>
 
@@ -50,7 +50,7 @@ export function Loop<T>(props: LoopProps<T>) {
   )
 
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Loop"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -59,6 +59,6 @@ export function Loop<T>(props: LoopProps<T>) {
       <Piv class="Loop" ref={setDomRef}>
         {mapped()}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

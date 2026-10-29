@@ -6,9 +6,9 @@
  * 让导航机制与调用方的链接内容各自独立。
  */
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { derive } from '@/hooks/stateUtils'
 import { type JSX, type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
@@ -25,7 +25,7 @@ export function Link(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Link"
       defaultDescription="导航到目标页面"
       description={props.description}
@@ -45,6 +45,6 @@ export function Link(
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

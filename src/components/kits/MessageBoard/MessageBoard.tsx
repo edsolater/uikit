@@ -6,9 +6,9 @@
  * 消息意义与底层材质分离，不复制承载实现。
  */
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { derive } from '@/hooks/stateUtils'
 import { type Source, type JSX } from '@/foundation'
 import { Board } from '../Board/Board'
@@ -23,7 +23,7 @@ export function MessageBoard(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="MessageBoard"
       defaultDescription="呈现操作结果反馈"
       description={props.description}
@@ -41,6 +41,6 @@ export function MessageBoard(
       >
         {props.children}
       </Board>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

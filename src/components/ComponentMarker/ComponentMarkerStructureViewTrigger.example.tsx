@@ -1,5 +1,5 @@
 /**
- * 结构查看开关示例。
+ * ComponentMarker 结构查看激活器的使用示例。
  *
  * 提供可手动开启、关闭的组件身份与用途标注。
  *
@@ -10,7 +10,7 @@ import {
   Card,
   Flow,
   Heading,
-  StructureViewFab,
+  ComponentMarkerStructureViewTrigger,
   Text,
 } from '@/components'
 import { createState, val } from '@/foundation'
@@ -18,11 +18,11 @@ import { createState, val } from '@/foundation'
 /**
  * 显示可操作的计数卡片；查看模式关闭后继续保留当前计数。
  */
-export function StructureViewFabExample() {
+export function ComponentMarkerStructureViewTriggerExample() {
   const count = createState(0)
   return (
     <Flow>
-      <Heading level={2}>StructureViewFab · 组件结构查看</Heading>
+      <Heading level={2}>ComponentMarkerStructureViewTrigger · 组件结构查看</Heading>
       <Text p>点击右下角开关检查组件边界，再关闭查看以继续操作。</Text>
       <Card description="记录本次操作次数">
         <Flow>
@@ -36,7 +36,7 @@ export function StructureViewFabExample() {
           </Button>
         </Flow>
       </Card>
-      <StructureViewFab />
+      <ComponentMarkerStructureViewTrigger />
     </Flow>
   )
 }

@@ -17,7 +17,7 @@ import {
 } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { createState, For } from '@/foundation'
-import { Heading, StructureViewFab, type HeadingProps } from '@/components'
+import { Heading, ComponentMarkerStructureViewTrigger, type HeadingProps } from '@/components'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -60,7 +60,7 @@ describe('Heading', () => {
               </Heading>
             )}
           </For>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -83,7 +83,7 @@ describe('Heading', () => {
     const before = headings.map((element) =>
       element.getBoundingClientRect().toJSON(),
     )
-    const control = host.querySelector<HTMLButtonElement>('.StructureViewFab')!
+    const control = host.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
     control.click()
     flush()
     await expect

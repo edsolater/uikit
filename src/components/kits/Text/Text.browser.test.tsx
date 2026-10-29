@@ -20,7 +20,7 @@ import { createState, Show } from '@/foundation'
 import {
   Button,
   Piv,
-  StructureViewFab,
+  ComponentMarkerStructureViewTrigger,
   Text,
   type TextProps,
 } from '@/components'
@@ -46,7 +46,7 @@ afterEach(() => {
  * 点击正式的组件定位框开关。
  */
 function toggleView() {
-  document.querySelector<HTMLButtonElement>('.StructureViewFab')!.click()
+  document.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!.click()
   flush()
 }
 
@@ -66,7 +66,7 @@ describe('Text', () => {
           </Piv>
           <Button>按钮原文字</Button>
           <Show when={showFab.read()}>
-            <StructureViewFab />
+            <ComponentMarkerStructureViewTrigger />
           </Show>
         </>
       ),
@@ -140,7 +140,7 @@ describe('Text', () => {
           <Text p descriptionDisplay>
             {42}
           </Text>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -219,7 +219,7 @@ describe('Text', () => {
           >
             无需等待的文字
           </Text>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,

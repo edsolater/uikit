@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Flow.style'
@@ -13,7 +13,7 @@ export function Flow(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Flow"
       defaultDescription="组织内容方向"
       description={props.description}
@@ -27,6 +27,6 @@ export function Flow(
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

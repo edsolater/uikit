@@ -6,5 +6,5 @@
 - 鼠标悬停问号或键盘聚焦问号时显示说明；鼠标可以移入说明继续阅读，离开问号与说明且不再聚焦时关闭。Escape 关闭后，保持当前焦点而不立即重新打开；移出后再次进入可重新打开。
 - 说明以原生 Popover API 显示在 top layer，通过 CSS Anchor Positioning 优先放在问号上方，空间不足时由浏览器换边。说明不撑开布局，不覆盖其关联输入；问号与输入各自可操作。
 - 问号提供说明用途的无障碍名称，并以 `aria-describedby` 关联 `role="tooltip"` 的说明。Label 的 `for` 只关联输入，不把问号纳入原生 label。
-- 所有 DOM 通过 Piv 创建；透明组件边界交给 ComponentWrapper；样式静态登记在同目录的 `Label.style.ts`。组件定位框开启时隐藏原文字，保留排版。
+- 所有 DOM 通过 Piv 创建；透明组件边界交给 ComponentMarker；样式静态登记在同目录的 `Label.style.ts`。组件定位框开启时隐藏原文字，保留排版。
 - Label 不解释业务文案，不访问业务数据，也不感知 NumberInput、控制参数、拖动或输入有效性。

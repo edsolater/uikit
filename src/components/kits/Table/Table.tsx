@@ -9,9 +9,9 @@ import { For, stateView, val, type Source } from '@/foundation'
 import { toJSX, type JSXable } from '../../utils/toJSX'
 import { Piv } from '../../Piv/Piv'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 
 type TableDataRow = Record<string, Stringable>
 
@@ -76,7 +76,7 @@ export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   )
 
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Table"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -118,7 +118,7 @@ export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
           </For>
         </Piv>
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }
 

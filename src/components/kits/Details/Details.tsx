@@ -6,9 +6,9 @@
  * 调用方决定正文的信息意义及其布局。
  */
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 /**
@@ -22,7 +22,7 @@ export function Details(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Details"
       defaultDescription="按需展开内容"
       description={props.description}
@@ -32,6 +32,6 @@ export function Details(
         <Piv as="summary">{props.summary}</Piv>
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

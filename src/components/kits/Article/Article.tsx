@@ -6,9 +6,9 @@
  */
 import type { JSX } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { Piv, type PivProps } from '../../Piv/Piv'
 
 type ArticleCarrier = (props: PivProps<'article'>) => JSX.Element
@@ -38,13 +38,13 @@ interface ArticleComponent {
 export const Article: ArticleComponent = (rawProps) => {
   const Carrier = rawProps.as ?? Piv
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Article"
       description={rawProps.description}
       descriptionDisplay={rawProps.descriptionDisplay}
       defaultDescription="承载独立正文"
     >
       <Carrier {...rawProps} as="article" />
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

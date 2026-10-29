@@ -5,7 +5,7 @@
 import { Button } from './Button'
 import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
-import { StructureViewFab } from '@/components/ComponentWrapper/StructureViewFab'
+import { ComponentMarkerStructureViewTrigger } from '@/components/ComponentMarker/ComponentMarkerStructureViewTrigger'
 import { Text } from '@/components/kits/Text/Text'
 import { Heading } from '@/components/kits/Heading/Heading'
 
@@ -181,7 +181,7 @@ export function ButtonExample() {
           </div>
         </div>
       </Article>
-      <StructureViewFab />
+      <ComponentMarkerStructureViewTrigger />
     </>
   )
 }

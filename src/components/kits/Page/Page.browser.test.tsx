@@ -3,7 +3,7 @@ import { Field } from '../Field/Field'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { createState, flush, Loading, render } from '@/foundation'
 import { cssRoot } from '@/style-system'
-import { componentBoundaries } from '@/components/ComponentWrapper/ComponentWrapper'
+import { componentBoundaries } from '@/components/ComponentMarker/ComponentMarker'
 import {
   Page,
   Flow,
@@ -17,7 +17,7 @@ import {
   Heading,
   Label,
   Piv,
-  StructureViewFab,
+  ComponentMarkerStructureViewTrigger,
 } from '@/components'
 import '@/css/all-base.css'
 
@@ -40,7 +40,7 @@ afterEach(() => {
 })
 
 function toggleView() {
-  host.querySelector<HTMLButtonElement>('.StructureViewFab')!.click()
+  host.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!.click()
   flush()
 }
 
@@ -77,7 +77,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
             </Label>
           </Flow>
         </Page>
-        <StructureViewFab />
+        <ComponentMarkerStructureViewTrigger />
       </>
     ),
     host,

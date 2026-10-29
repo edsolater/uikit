@@ -1,6 +1,6 @@
 /** 字段帮助入口：提供可聚焦问号、说明关联与开启/退出动作。 */
 import { stateView, val, type Source } from '@/foundation'
-import { ComponentWrapper } from '@/components/ComponentWrapper/ComponentWrapper'
+import { ComponentMarker } from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '@/components/Piv/Piv'
 import './LabelHelpTrigger.style'
 export function LabelHelpTrigger(props: {
@@ -17,7 +17,7 @@ export function LabelHelpTrigger(props: {
   dismiss: () => void
 }) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="LabelHelpTrigger"
       defaultDescription="打开字段帮助"
     >
@@ -45,6 +45,6 @@ export function LabelHelpTrigger(props: {
       >
         ?
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

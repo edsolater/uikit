@@ -7,9 +7,9 @@
  */
 import { val, type Source } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import './Text.style'
 
@@ -28,7 +28,7 @@ export type TextProps = Omit<
  */
 export function Text(props: TextProps) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Text"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -42,6 +42,6 @@ export function Text(props: TextProps) {
       >
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

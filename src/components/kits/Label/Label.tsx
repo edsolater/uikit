@@ -1,9 +1,9 @@
 /** 字段标题与可选悬停说明；输入值及编辑行为由独立控件拥有。 */
 import { onCleanup, Show, val, type Source } from '@/foundation'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '@/components/Piv/Piv'
 import { createPopoverController } from '../Popover/createPopoverController'
 import './Label.style'
@@ -20,7 +20,7 @@ export type LabelProps = ComponentDescriptionProps & {
 /** 显示标题与说明，保持原生表单关联，浮层不参与字段布局。 */
 export function Label(props: LabelProps) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Label"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -33,7 +33,7 @@ export function Label(props: LabelProps) {
           {(help) => <LabelHelp title={props.children} content={help()} />}
         </Show>
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }
 
@@ -73,7 +73,7 @@ function LabelHelp(props: {
   onCleanup(cancelClose)
 
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="LabelHelp"
       defaultDescription="查看字段补充说明"
     >
@@ -107,6 +107,6 @@ function LabelHelp(props: {
         enter={enter}
         leave={leave}
       />
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

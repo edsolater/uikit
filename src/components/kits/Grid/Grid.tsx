@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Grid.style'
@@ -13,7 +13,7 @@ export function Grid(
   },
 ) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Grid"
       defaultDescription="以等宽列组织内容"
       description={props.description}
@@ -22,6 +22,6 @@ export function Grid(
       <Piv class="Grid" htmlProps={{ 'data-columns': props.columns ?? 1 }}>
         {props.children}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

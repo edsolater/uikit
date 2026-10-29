@@ -26,8 +26,8 @@ import { HeadingExample } from '@/components/kits/Heading/Heading.example'
 import { LabelExample } from '@/components/kits/Label/Label.example'
 import { TableExample } from '@/components/kits/Table/Table.example'
 import { LoopExample } from '@/components/kits/Loop/Loop.example'
-import { ComponentWrapperExample } from '@/components/ComponentWrapper/ComponentWrapper.example'
-import { StructureViewFabExample } from '@/components/ComponentWrapper/StructureViewFab.example'
+import { ComponentMarkerExample } from '@/components/ComponentMarker/ComponentMarker.example'
+import { ComponentMarkerStructureViewTriggerExample } from '@/components/ComponentMarker/ComponentMarkerStructureViewTrigger.example'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card } from '@/components'
@@ -322,24 +322,24 @@ export const exampleEntries: ExampleEntry[] = [
     content: LoopExample,
   },
   {
-    id: 'component-wrapper',
+    id: 'component-marker',
     level: 0.5,
-    title: 'ComponentWrapper',
+    title: 'ComponentMarker',
     category: exampleCategories.component,
     summary: '透明组件边界与用途说明。',
-    thumbnail: new URL('../thumbnails/component-wrapper.webp', import.meta.url)
+    thumbnail: new URL('../thumbnails/component-marker.webp', import.meta.url)
       .href,
-    content: ComponentWrapperExample,
+    content: ComponentMarkerExample,
   },
   {
-    id: 'structure-view-fab',
+    id: 'component-marker-structure-view-trigger',
     level: 0.5,
-    title: 'StructureViewFab',
+    title: 'ComponentMarkerStructureViewTrigger',
     category: exampleCategories.component,
     summary: '手动查看组件结构与继续操作。',
-    thumbnail: new URL('../thumbnails/structure-view-fab.webp', import.meta.url)
+    thumbnail: new URL('../thumbnails/component-marker-structure-view-trigger.webp', import.meta.url)
       .href,
-    content: StructureViewFabExample,
+    content: ComponentMarkerStructureViewTriggerExample,
   },
 ]
 

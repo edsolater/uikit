@@ -1,6 +1,6 @@
 /** 锚定帮助入口的非模态说明浮层；跨入口与内容的关闭策略交给组合者。 */
 import type { Source } from '@/foundation'
-import { ComponentWrapper } from '@/components/ComponentWrapper/ComponentWrapper'
+import { ComponentMarker } from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '@/components/Piv/Piv'
 import './LabelHelpContent.style'
 export function LabelHelpContent(props: {
@@ -12,7 +12,7 @@ export function LabelHelpContent(props: {
   leave: () => void
 }) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="LabelHelpContent"
       defaultDescription="阅读字段帮助内容"
     >
@@ -30,6 +30,6 @@ export function LabelHelpContent(props: {
       >
         {props.content}
       </Piv>
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

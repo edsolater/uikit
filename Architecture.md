@@ -12,7 +12,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、ref 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
 - `src/components/kits`：对外 UI 组件。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
-- `src/components/ComponentWrapper`：Piv之上组件的透明边界与用途说明，以及手动FAB控制的结构显示；不改变原主体或自动挂载开关。
+- `src/components/ComponentMarker`：Piv之上组件的透明边界与用途说明，以及手动FAB控制的结构显示；不改变原主体或自动挂载开关。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
 - `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
 - `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
@@ -37,7 +37,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 ```txt
 调用方
   -> kit 组件
-    -> ComponentWrapper 记录透明边界，保留原主体
+    -> ComponentMarker 记录透明边界，保留原主体
       -> Piv 管理声明与 plugins
         -> 内部 Dode 创建并绑定真实元素
           -> Foundation 的运行时接入
@@ -49,13 +49,13 @@ kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期
 
 ## 组件定位框
 
-kit在定义处以ComponentWrapper声明静态身份及可选默认用途，使用处的description覆盖默认值。Wrapper用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
+kit在定义处以ComponentMarker声明静态身份及可选默认用途，使用处的description覆盖默认值。Marker用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
 
-App手动放入StructureViewFab，它拥有初始关闭的本地状态；开启才挂载统一Overlay。Overlay逐帧测量真实边界及FAB范围，通过Piv为每个实际矩形创建全尺寸显示宿主：负一级伪元素承载白色半透明和背景模糊，自身名称按父到子顺序绘制，Canvas仅在上层描边。同完整矩形的名称分行，多区域组件仅在首矩形标名；所有名称受所属框宽高约束。遮罩与描边共用本帧FAB范围保留透明洞，关闭即释放显示层与帧循环，不重建原组件或清空状态。Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
+App手动放入ComponentMarkerStructureViewTrigger，作为ComponentMarker结构查看模式的激活器。它拥有初始关闭的本地状态；开启才挂载内部Overlay。Overlay逐帧测量真实边界及激活器范围，通过Piv为每个实际矩形创建全尺寸显示宿主：负一级伪元素承载白色半透明和背景模糊，自身名称按父到子顺序绘制，Canvas仅在上层描边。同完整矩形的名称分行，多区域组件仅在首矩形标名；所有名称受所属框宽高约束。遮罩与描边共用本帧激活器范围保留透明洞，关闭即释放显示层与帧循环，不重建原组件或清空状态。激活器与内部覆盖层各自拥有同名.style.ts；Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
 
-共同descriptionDisplay布尔属性由Wrapper处理显式值与定义默认，普通组件缺省true，Text按外部description实际内容决定默认。仅在Overlay挂载的受管消费中归一显示值，帧循环不直接读取异步Source。false元素根及原生浮层根通过专属模式属性保持opacity为0；裸文字根以透明色Highlight保留原节点，Comment范围同时排除后代定位框。Overlay负责同步与清理，不另建开关、组件树或项目私有隐藏逻辑；普通样式及其Source持续更新，不用旧opacity快照覆盖。
+共同descriptionDisplay布尔属性由Marker处理显式值与定义默认，普通组件缺省true，Text按外部description实际内容决定默认。仅在Overlay挂载的受管消费中归一显示值，帧循环不直接读取异步Source。false元素根及原生浮层根通过专属模式属性保持opacity为0；裸文字根以透明色Highlight保留原节点，Comment范围同时排除后代定位框。Overlay负责同步与清理，不另建开关、组件树或项目私有隐藏逻辑；普通样式及其Source持续更新，不用旧opacity快照覆盖。
 
-Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p分别选择div／p；Heading以必填level选择h1～h6。两者直接把原生节点交给Piv，纯文字Source持续下传，不通过嵌套彼此制造双重身份。各自的相邻.style.ts通过Style System感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即恢复最新内容。它们不复制开关State，也不缓存或改写DOM文字；Wrapper及统一Overlay继续负责定位框与标注。两者选择descriptionOnly格式，有说明时只标用途，无说明或空说明时回落各自组件名，其它组件默认格式不变。
+Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p分别选择div／p；Heading以必填level选择h1～h6。两者直接把原生节点交给Piv，纯文字Source持续下传，不通过嵌套彼此制造双重身份。各自的相邻.style.ts通过Style System感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即恢复最新内容。它们不复制开关State，也不缓存或改写DOM文字；Marker及统一Overlay继续负责定位框与标注。两者选择descriptionOnly格式，有说明时只标用途，无说明或空说明时回落各自组件名，其它组件默认格式不变。
 
 ## Button 样式
 

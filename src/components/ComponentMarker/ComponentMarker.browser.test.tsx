@@ -14,12 +14,12 @@ import {
   Article,
   Button,
   Card,
-  ComponentWrapper,
+  ComponentMarker,
   Loop,
   Input,
   Piv,
   Popover,
-  StructureViewFab,
+  ComponentMarkerStructureViewTrigger,
   Table,
 } from '@/components'
 import '@/css/all-base.css'
@@ -53,7 +53,7 @@ function createHost() {
  * 点击应用手动加载的浮动开关。
  */
 function toggleView() {
-  document.querySelector<HTMLButtonElement>('.StructureViewFab')!.click()
+  document.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!.click()
   flush()
 }
 
@@ -75,7 +75,7 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentWrapper
+          <ComponentMarker
             componentName="透明父"
             descriptionDisplay={display.read()}
           >
@@ -85,9 +85,9 @@ describe('组件结构查看', () => {
                 <Piv>浮层内容</Piv>
               </Popover>
             </Piv>
-            <ComponentWrapper componentName="裸子" descriptionDisplay>
+            <ComponentMarker componentName="裸子" descriptionDisplay>
               {content.read()}
-            </ComponentWrapper>
+            </ComponentMarker>
             <Piv as="table">
               <Piv as="tbody">
                 <Piv as="tr">
@@ -98,16 +98,16 @@ describe('组件结构查看', () => {
             <Piv as="select">
               <Piv as="option">原选项</Piv>
             </Piv>
-          </ComponentWrapper>
-          <ComponentWrapper componentName="视口外父" descriptionDisplay={false}>
+          </ComponentMarker>
+          <ComponentMarker componentName="视口外父" descriptionDisplay={false}>
             <Piv style={{ position: 'fixed', top: '-1000px', height: '0px' }}>
               <Button style={{ position: 'fixed', top: '8px', left: '8px' }}>
                 固定子动作
               </Button>
             </Piv>
-          </ComponentWrapper>
+          </ComponentMarker>
           <Button>外部动作</Button>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -173,7 +173,7 @@ describe('组件结构查看', () => {
         <>
           <Button description={description}>确认</Button>
           <Show when={showFab.read()}>
-            <StructureViewFab />
+            <ComponentMarkerStructureViewTrigger />
           </Show>
         </>
       ),
@@ -181,12 +181,12 @@ describe('组件结构查看', () => {
     )
     const button = host.querySelector('button')!
     const before = button.getBoundingClientRect().toJSON()
-    expect(document.querySelector('.StructureViewFab')).toBeNull()
+    expect(document.querySelector('.ComponentMarkerStructureViewTrigger')).toBeNull()
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
     showFab.set(true)
     flush()
     expect(
-      document.querySelector('.StructureViewFab')?.getAttribute('aria-pressed'),
+      document.querySelector('.ComponentMarkerStructureViewTrigger')?.getAttribute('aria-pressed'),
     ).toBe('false')
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
     expect(button.getBoundingClientRect().toJSON()).toEqual(before)
@@ -229,7 +229,7 @@ describe('组件结构查看', () => {
             <Popover trigger="补充">浮层正文</Popover>
             <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
           </Article>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -269,7 +269,7 @@ describe('组件结构查看', () => {
     expect(
       readLabels().some(
         (label) =>
-          label?.startsWith('Piv') || label?.startsWith('ComponentWrapper'),
+          label?.startsWith('Piv') || label?.startsWith('ComponentMarker'),
       ),
     ).toBe(false)
     expect([...article.querySelectorAll('*')]).toEqual(originalElements)
@@ -299,19 +299,19 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentWrapper componentName="多根" description="文本和兄弟节点">
+          <ComponentMarker componentName="多根" description="文本和兄弟节点">
             文本根<span>元素根</span>
             <Show when={visible.read()}>
               <Button>动态动作</Button>
             </Show>
-          </ComponentWrapper>
+          </ComponentMarker>
           <select>
-            <ComponentWrapper componentName="选项组">
+            <ComponentMarker componentName="选项组">
               <option>甲</option>
               <option>乙</option>
-            </ComponentWrapper>
+            </ComponentMarker>
           </select>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -345,7 +345,7 @@ describe('组件结构查看', () => {
           <Popover trigger="打开补充" description="原生浮层">
             真实浮层内容
           </Popover>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -395,7 +395,7 @@ describe('组件结构查看', () => {
         <>
           <Button description={description}>确认</Button>
           <Loading fallback={<p>读取用途说明</p>}>
-            <StructureViewFab />
+            <ComponentMarkerStructureViewTrigger />
           </Loading>
         </>
       ),
@@ -425,13 +425,13 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentWrapper
+          <ComponentMarker
             componentName="用途框"
             description="很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外"
           >
             <Piv style={{ width: '96px', height: '42px' }}>真实内容</Piv>
-          </ComponentWrapper>
-          <StructureViewFab />
+          </ComponentMarker>
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -466,10 +466,10 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentWrapper componentName="整页内容">
+          <ComponentMarker componentName="整页内容">
             <Piv style={{ width: '100vw', height: '100vh' }}>真实页面</Piv>
-          </ComponentWrapper>
-          <StructureViewFab />
+          </ComponentMarker>
+          <ComponentMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -488,7 +488,7 @@ describe('组件结构查看', () => {
     )
     const context = canvas.getContext('2d')!
     const control = document
-      .querySelector<HTMLElement>('.StructureViewFab')!
+      .querySelector<HTMLElement>('.ComponentMarkerStructureViewTrigger')!
       .getBoundingClientRect()
     const controlAlpha = context.getImageData(
       Math.round(
@@ -522,7 +522,7 @@ describe('组件结构查看', () => {
     expect(getComputedStyle(frame).clipPath).toBe('none')
     expect(getComputedStyle(canvas).zIndex).toBe('1')
     const controlElement =
-      document.querySelector<HTMLElement>('.StructureViewFab')!
+      document.querySelector<HTMLElement>('.ComponentMarkerStructureViewTrigger')!
     expect(
       document.elementFromPoint(
         control.x + control.width / 2,
@@ -537,23 +537,23 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(() => {
       const child = (
-        <ComponentWrapper componentName="子框">
+        <ComponentMarker componentName="子框">
           <Piv style={{ width: '160px', height: '80px' }}>内容</Piv>
-        </ComponentWrapper>
+        </ComponentMarker>
       )
       return (
         <>
-          <ComponentWrapper componentName="父框">
+          <ComponentMarker componentName="父框">
             <Piv style={{ width: '220px', height: '160px' }}>{child}</Piv>
-          </ComponentWrapper>
-          <ComponentWrapper componentName="多根">
+          </ComponentMarker>
+          <ComponentMarker componentName="多根">
             <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
             <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
-          </ComponentWrapper>
+          </ComponentMarker>
           <Article as={Card} style={{ width: '200px', height: '80px' }}>
             同框内容
           </Article>
-          <StructureViewFab />
+          <ComponentMarkerStructureViewTrigger />
         </>
       )
     }, host)

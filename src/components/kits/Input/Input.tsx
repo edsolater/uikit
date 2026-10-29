@@ -9,9 +9,9 @@
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { createStatusPropsParser } from '../utils/parseStatusProps'
 import './Input.css'
 import {
@@ -37,7 +37,7 @@ export function Input(props: InputProps) {
   const { statusShadowProps } = parseInputStatusProps({ invalid: isInvalid })
 
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="Input"
       description={props.description}
       descriptionDisplay={props.descriptionDisplay}
@@ -55,6 +55,6 @@ export function Input(props: InputProps) {
           autocapitalize: 'none',
         }}
       />
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

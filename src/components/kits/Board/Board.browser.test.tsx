@@ -11,7 +11,7 @@ import { Card } from '../Card/Card'
 import { MessageBoard } from '../MessageBoard/MessageBoard'
 import { createState, render } from '@/foundation'
 import { cssRoot } from '@/style-system'
-import { componentBoundaries } from '@/components/ComponentWrapper/ComponentWrapper'
+import { componentBoundaries } from '@/components/ComponentMarker/ComponentMarker'
 import '@/css/all-base.css'
 
 test('两种方言保持单节点同材质，反馈语气更新不污染旁边的承载', async () => {

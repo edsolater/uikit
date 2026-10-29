@@ -1,7 +1,7 @@
 import {
-  ComponentWrapper,
+  ComponentMarker,
   type ComponentDescriptionProps,
-} from '@/components/ComponentWrapper/ComponentWrapper'
+} from '@/components/ComponentMarker/ComponentMarker'
 import { type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './TextArea.style'
@@ -18,7 +18,7 @@ export type TextAreaProps = ComponentDescriptionProps & {
 /** 带原生字段身份的多行编辑，保留受控值与表单校验。 */
 export function TextArea(props: TextAreaProps) {
   return (
-    <ComponentWrapper
+    <ComponentMarker
       componentName="TextArea"
       defaultDescription="编辑多行文字"
       description={props.description}
@@ -42,6 +42,6 @@ export function TextArea(props: TextAreaProps) {
           },
         }}
       />
-    </ComponentWrapper>
+    </ComponentMarker>
   )
 }

@@ -5,11 +5,17 @@ export * from './Piv/plugin/runPlugin'
 export * from './Piv/Piv'
 export * from './Piv/type'
 export {
-  ComponentWrapper,
-  type ComponentWrapperProps,
+  ComponentMarker,
+  type ComponentMarkerProps,
   type ComponentDescriptionProps,
-} from './ComponentWrapper/ComponentWrapper'
-export { StructureViewFab } from './ComponentWrapper/StructureViewFab'
+} from './ComponentMarker/ComponentMarker'
+export { ComponentMarkerStructureViewTrigger } from './ComponentMarker/ComponentMarkerStructureViewTrigger'
+export { componentMarkerStructureViewTriggerOffset } from './ComponentMarker/ComponentMarkerStructureViewTrigger.style'
+export {
+  componentMarkerStructureViewMaskColor,
+  componentMarkerStructureViewMaskBlur,
+  componentMarkerStructureViewLabelColor,
+} from './ComponentMarker/StructureViewOverlay.style'
 export * from './kits/Loop/Loop'
 export * from './kits/Flow/Flow'
 export * from './kits/Page/Page'
