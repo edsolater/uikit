@@ -8,13 +8,13 @@ import {
   rules,
   createNewTokenGenerator,
   multiply,
-  oklch,
   colorMix,
   contentText,
   contentLayout,
   size,
   boundary,
   color,
+  paint,
   elevation,
   clickable,
   brandColor,
@@ -43,31 +43,30 @@ export const buttonColorSource = buttonToken(brandColor, {
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 
-export const buttonSurfaceColor = buttonToken(
-  colorMix(
-    {
-      color: {
-        base: buttonColorSource,
-        alpha: (current) => multiply(current, 0.14),
-      },
-      weight: 0.18,
-    },
-    surfaceColor,
-  ),
+const colorSource = colorMix(
   {
-    state: {
-      plain: 'transparent',
-      filled: buttonColorSource,
+    color: {
+      base: buttonColorSource,
+      alpha: (current) => multiply(current, 0.14),
     },
+    weight: 0.18,
   },
+  surfaceColor,
 )
+export const buttonSurfaceColor = buttonToken(colorSource, {
+  state: {
+    plain: 'transparent',
+    filled: buttonColorSource,
+  },
+})
 
 export const buttonContentColor = buttonToken(contentColor, {
   state: { toned: buttonColorSource, filled: paperColor },
 })
 
 export const buttonBoundaryColor = buttonToken(
-  oklch(buttonColorSource, {
+  color({
+    base: buttonColorSource,
     alpha: (current) => multiply(current, 0.44),
   }),
 )
@@ -129,7 +128,7 @@ rules(button, [
     radius: '999px',
     cornerShape: 'squircle',
   }),
-  color({ background: buttonSurfaceColor, content: buttonContentColor }),
+  paint({ background: buttonSurfaceColor, content: buttonContentColor }),
   elevation(buttonBoxShadow),
   clickable({
     cursor: buttonToken('pointer', {

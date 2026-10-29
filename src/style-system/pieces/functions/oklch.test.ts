@@ -78,6 +78,9 @@ test('通道回调在编译消费时取得当前表达式，并保留内容对�
 })
 
 test('完整通道内容保留输出，来源或通道缺失时不产生颜色', () => {
+  expect(oklch('red', 'l c h / 0.4').toCSSString()).toBe(
+    'oklch(from red l c h / 0.4)',
+  )
   const css = compileRules([
     [
       [condition('.Relative')],

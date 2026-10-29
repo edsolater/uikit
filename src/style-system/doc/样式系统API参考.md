@@ -112,6 +112,40 @@ rules(
 
 被 modify 的 Token 需要 CSS variable 身份；没有 name 时自动命名。加工函数返回的新 Token 不因“被加工过”自动取得这种身份。
 
+## 独立颜色与着色声明
+
+`color(input, options?)` 始终返回颜色 Token，不生成 CSS 属性声明。已有 Token 在未传配置时复用身份，
+其他直接颜色内容交给 `token`，`undefined` 得到无内容的 Token；颜色描述直接交给 `oklch(description)`，
+可用于边界、混色或其他接受颜色值的位置。描述由 `ColorDescription` 定义，
+统一输入类型为 `ColorInput`。`oklch` 自身处理来源描述、原双参形式与普通通道，
+共用通道计算和最终颜色输出，不在完整颜色 Token 外再包一层。
+
+第二项沿用 `token` 的名称字符串或 `TokenOptions`，例如 `color('red', 'accent-color')`
+和 `color({ base: brandColor, alpha: 0.8 }, { name: 'accent-color', state: { hover: 'blue' } })`。
+已有 Token 带配置时交给 `token(source, options)`，继承、状态合并及 `{ default: value }`
+替换规则与 Token 一致。描述配置直接由 `oklch(description, options)` 应用到最终颜色 Token；
+其中 `dependencies`、`toCSSString` 等自定义协议覆盖颜色的默认协议。第二项是否为配置由第一项
+是否为颜色描述决定，原 `oklch(source, changes)` 的通道语义保持不变。
+
+```ts
+const boundaryColor = color({
+  base: buttonColorSource,
+  alpha: (current) => multiply(current, 0.44),
+})
+
+rules('.Panel', [
+  paint({
+    background: { base: surfaceColor, alpha: 0.8 },
+    content: contentColor,
+  }),
+  { 'border-color': boundaryColor },
+])
+```
+
+`paint({ content?, background? })` 生成文字与背景颜色声明，两项都接受 `ColorInput`，
+内部复用 `color`。未指定的项不产生属性声明；旧的颜色声明 Mixin `color` 已改名为 `paint`，
+颜色值与着色声明分别使用独立入口。
+
 ## 混色与颜色调整
 
 `colorMix` 接受直接颜色、`[color, weight]` 元组和具名的 `{ color, weight? }`。

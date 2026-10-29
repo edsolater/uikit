@@ -21,7 +21,7 @@ onFirstScan 可以返回包含 modify 的规则。编译必须先读完会影响
 
 state 只接收静态预置字符串快捷名或 StateCondition；未定义字符串在参数入口立即报错，原始 CSS 必须先创建条件对象。StateCondition 直接沿用 Condition 的单个 { header } 对象；参数入口把快捷名换成静态表中的原对象，按 header 归一同条件规则并保留首次位置。最终 Map 直接进入编译，不附加身份元数据或另行排序。普通 rules 字符串仍是 CSS 地址。显式 Token.address 固定 default 与 state 的发布位置；未指定时，需要 CSS variable 的定义随每个 AST 消费地址建立，不锁定首次使用地或写回配置。全局材料显式指定 root，普通 CSS value 不因此生成变量；显式祖先公式仍遵循 CSS 继承。Token 不携带 priority，同址声明顺序交给声明系统。
 
-计算工具按 [工具公约](pieces/functions/SPEC.md) 组织输入与结果，CSSFunction 保留独立的 CSS 函数定义职责。颜色变化可以通过 oklch(source, changes) 组合内容，通道与格式转换不增加另一种内容实体。modify 表达使用端对同一 Token 的条件修改，普通函数表达新定义的产生。
+计算工具按 [工具公约](pieces/functions/SPEC.md) 组织输入与结果，CSSFunction 保留独立的 CSS 函数定义职责。color 统一返回颜色 Token，colorMix 和着色 Mixin paint 复用这一入口；颜色描述直接交给 oklch，由其解释输入并构造最终颜色 Token，通道与格式转换不增加另一种内容实体。modify 表达使用端对同一 Token 的条件修改，普通函数表达新定义的产生。
 
 compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变不重写，编译或提交失败保留此前成功结果。
 
@@ -70,6 +70,7 @@ compileCSS 只返回字符串；cssRoot.mount 保留宿主前缀，内容未变�
 | pieces/functions                                              | 遵守内容工具公约的混色、计算和相对颜色等 Token 构造                                |
 | pieces/functions/calc.ts                                      | 保存操作数依赖，构造 CSS calc 算术 Token                                           |
 | pieces/functions/oklch.ts                                     | 普通与相对 OKLCH 表达式、通道配置及共享的源无关通道转译                            |
+| pieces/functions/color.ts                                     | 统一返回颜色 Token，描述直接交给 oklch；供混色和着色声明复用                       |
 | pieces/functions/SPEC.md                                      | JSS 内容组织工具公约与 Expression、规则及定义主体的边界                            |
 | pieces/token-factory                                          | 按结构生成阴影、动画等内容                                                         |
 | pieces/roles                                                  | 供组件在自身选择器中赋值的共享角色                                                 |

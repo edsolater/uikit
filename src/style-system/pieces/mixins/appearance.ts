@@ -1,6 +1,7 @@
 /** 颜色与层级 Mixin。 */
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
+import { color, type ColorInput } from '../functions/color'
 import { valueList } from '../token-factory/list'
 import {
   $backgroundColor,
@@ -10,16 +11,19 @@ import {
 
 /** 内容色与背景颜色配置。 */
 export interface ColorMixinOptions {
-  content?: TokenInput
-  background?: TokenInput
+  content?: ColorInput
+  background?: ColorInput
 }
 
 /**
  * 生成主体颜色声明。
  */
-export const color = (options: ColorMixinOptions = {}): Declarations => [
-  [$color, options.content],
-  [$backgroundColor, options.background],
+export const paint = (options: ColorMixinOptions = {}): Declarations => [
+  [$color, options.content === undefined ? undefined : color(options.content)],
+  [
+    $backgroundColor,
+    options.background === undefined ? undefined : color(options.background),
+  ],
 ]
 
 /**

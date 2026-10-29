@@ -1,6 +1,6 @@
 # JSS 内容组织工具公约
 
-functions 保存用已有输入组织内容的工具，例如 add、multiply、colorMix、oklch 和 translateY。内容模型统一为 [Token](../../doc/Token%E8%AE%BE%E8%AE%A1.md)；源码已完成迁移，本文说明目标职责，公开计算工具已返回 Token。
+functions 保存用已有输入组织内容的工具，例如 add、multiply、color、colorMix、oklch 和 translateY。内容模型统一为 [Token](../../doc/Token%E8%AE%BE%E8%AE%A1.md)；color 始终返回 Token，已有 Token 复用身份，其他值由现有构造入口承接。
 
 ## 组织自身内容
 
@@ -10,7 +10,7 @@ functions 保存用已有输入组织内容的工具，例如 add、multiply、c
 
 ## 计算与格式复用
 
-add、multiply 组织操作数，最终输出 CSS calc 表达式；数值与单位合法性由浏览器解释。oklch 保存颜色通道并生成颜色内容，oklch(source, changes) 根据来源组合相对颜色；未指定通道保留来源。colorMix 组合颜色和比例。
+add、multiply 组织操作数，最终输出 CSS calc 表达式；数值与单位合法性由浏览器解释。oklch 保存颜色通道并生成颜色内容，同时接受来源描述和原双参形式；未指定通道保留来源。color 直接把 ColorDescription 交给 oklch，不再包裹另一份完整颜色 Token；colorMix 与着色 Mixin paint 消费同一份 ColorInput 契约。混色 Token 自己输出最终颜色，参数 Expression 仅准备各颜色、权重的依赖和参数列表。
 
 这些工具产生的内容使用统一 Token 模型，不为格式化数据、颜色通道或一次计算建立另一种领域值对象。需要复用业务数据的输出方式时，用普通函数接收数据并返回 Token；列表的逗号或空格分隔、0 和空项处理仍是对应内容工具的行为，不添加到 parser 的固定配置中。
 

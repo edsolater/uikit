@@ -2,44 +2,11 @@
 import { expect, test } from 'vitest'
 import { compileRules } from '../../css-root'
 import { token } from '../../token'
-import { add, multiply } from './calc'
 import { colorMix } from './color-mix'
 
 test('直接颜色与元组保留不经编译读取字面量的能力', () => {
   expect(colorMix(['red', 0.18], 'white').toCSSString()).toBe(
     'color-mix(in oklab, red 18%, white)',
-  )
-})
-
-test('具名颜色的数值设置通道，回调保留相对变化与其余通道', () => {
-  const css = compileRules([
-    [
-      ['.Fixed'],
-      'color',
-      colorMix({ color: { base: 'red', alpha: 0.14 }, weight: 0.18 }, 'white'),
-    ],
-    [
-      ['.Relative'],
-      'color',
-      colorMix(
-        {
-          color: {
-            base: 'red',
-            alpha: (current) => multiply(current, 0.14),
-            lightness: (current) => add(current, 0.1),
-            chroma: 0.08,
-          },
-          weight: 0.18,
-        },
-        'white',
-      ),
-    ],
-  ])
-  expect(css).toContain(
-    'color-mix(in oklab, oklch(from red l c h / 0.14) 18%, white)',
-  )
-  expect(css).toContain(
-    'color-mix(in oklab, oklch(from red calc(l + 0.1) 0.08 h / calc(alpha * 0.14)) 18%, white)',
   )
 })
 

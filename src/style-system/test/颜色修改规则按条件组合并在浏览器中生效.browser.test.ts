@@ -9,7 +9,7 @@ import { token, type TokenAddress } from '../token'
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { add, multiply } from '../pieces/functions/calc'
-import { color } from '../pieces/mixins/appearance'
+import { paint } from '../pieces/mixins/appearance'
 import { modification } from '../modification'
 import { cssRoot } from '../css-root'
 import { declare } from '../operations/declare'
@@ -57,7 +57,7 @@ test('完整规则一次设置四通道，再按顺序应用另一完整规则',
       declare(surface, 'red'),
       modify(surface, first),
       modify(surface, second),
-      color({ background: surface }),
+      paint({ background: surface }),
     ]),
   )
   mount()
@@ -89,7 +89,7 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
   handles.push(
     rules('.First', [
       declare(surface, 'oklch(.6 .16 260)'),
-      color({ background: surface }),
+      paint({ background: surface }),
     ]),
   )
   const otherSurface = token('oklch(.4 .1 120)', {
@@ -98,7 +98,7 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
     address: '.Second',
     registration: surface.registration,
   })
-  handles.push(rules('.Second', [color({ background: otherSurface })]))
+  handles.push(rules('.Second', [paint({ background: otherSurface })]))
   for (const selector of ['.First', '.Second']) {
     handles.push(
       rules(
@@ -163,7 +163,7 @@ test('另一个普通Token来源保留完整修改结果', () => {
       [
         declare(target, source),
         modify(target, modification({ type: 'color', detail: { alpha: 0.6 } })),
-        color({ background: target }),
+        paint({ background: target }),
       ],
     ),
   )
@@ -188,7 +188,7 @@ test('主题源更新和混色实时生效，规则无需重新编译', () => {
           },
         }),
       ),
-      color({ background: target }),
+      paint({ background: target }),
     ]),
   )
   mount()
@@ -216,7 +216,7 @@ test('基础来源Token状态进入与退出仍更新最终颜色', async () => 
     rules('.State', [
       declare(target, source),
       modify(target, modification({ type: 'color', detail: { alpha: 0.5 } })),
-      color({ background: target }),
+      paint({ background: target }),
     ]),
   )
   mount()
