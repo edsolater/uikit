@@ -43,25 +43,21 @@ export const buttonColorSource = buttonToken(brandColor, {
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 
-function mixButtonSurface({
-  strength,
-  alpha,
-}: {
-  strength: number
-  alpha: number
-}) {
-  const buttonColorSourceWithAlpha = oklch(buttonColorSource, {
-    alpha: (current) => multiply(current, alpha),
-  })
-  return colorMix([buttonColorSourceWithAlpha, strength], surfaceColor)
-}
-
 export const buttonSurfaceColor = buttonToken(
-  mixButtonSurface({ strength: 0.18, alpha: 0.14 }),
+  colorMix(
+    {
+      color: {
+        base: buttonColorSource,
+        alpha: (current) => multiply(current, 0.14),
+      },
+      weight: 0.18,
+    },
+    surfaceColor,
+  ),
   {
     state: {
       plain: 'transparent',
-      filled: mixButtonSurface({ strength: 1, alpha: 1 }),
+      filled: buttonColorSource,
     },
   },
 )

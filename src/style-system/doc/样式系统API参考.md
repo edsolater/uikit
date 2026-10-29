@@ -112,6 +112,27 @@ rules(
 
 被 modify 的 Token 需要 CSS variable 身份；没有 name 时自动命名。加工函数返回的新 Token 不因“被加工过”自动取得这种身份。
 
+## 混色与颜色调整
+
+`colorMix` 接受直接颜色、`[color, weight]` 元组和具名的 `{ color, weight? }`。
+`weight` 使用零至一比例，省略时采用 CSS 默认比例。
+
+```ts
+colorMix(
+  {
+    color: { base: buttonColorSource, alpha: 0.14 },
+    weight: 0.18,
+  },
+  surfaceColor,
+)
+```
+
+`color` 可以直接引用颜色，也可以用 `{ base, lightness?, chroma?, hue?, alpha? }`
+描述来源及 OKLCH 通道变化。数值或 Token 直接设置通道；回调接收当前通道表达式，
+例如 `alpha: (current) => multiply(current, 0.14)` 表示将来源透明度乘以 0.14。
+省略的通道保留来源值，调整完成后再按权重参与混色；混色空间仍为 Oklab。
+来源、通道和权重中的 Token 引用保留到 CSS，继续响应状态与局部覆盖。
+
 ## CSS 坍缩与资源
 
 有 name、state、address、registration，或被 modify 的 Token，输出为 CSS variable；需要名称但未命名时自动分配。其余 Token 输出为 CSS value。内部 _kind 由系统决定，外界不能指定。
