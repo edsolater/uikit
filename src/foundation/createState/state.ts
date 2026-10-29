@@ -36,12 +36,10 @@ export function isState(value: unknown): value is State {
  * 创建可写状态，函数来源参与持续派生，同步值与 Promise 通过同一入口读取。
  * 相对更新基于已有当前值，已有 Promise 由基础层接续；计算来源尚无初值时不预存更新命令。
  * @example
- * ```ts
  * function Component() {
  *   const count = createState(0) // count 是一个 State<number>
  *   return <div>{val(count)}</div>
  * }
- * ```
  */
 export function createState<T = unknown>(): State<Awaited<T> | undefined>
 export function createState<T>(

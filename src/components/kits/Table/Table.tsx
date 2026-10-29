@@ -50,7 +50,6 @@ export type TableProps<Row extends TableDataRow = TableDataRow> =
  * `data` 和 `keys` 可以是普通值，也可以是继续传递的动态值，Table 会在最终渲染位置消费当前值。
  *
  * @example
- * ```tsx
  * <Table
  *   data={[
  *     { name: '--color-action', preview: 'var(--color-action)' },
@@ -67,7 +66,6 @@ export type TableProps<Row extends TableDataRow = TableDataRow> =
  *     },
  *   }}
  * />
- * ```
  */
 export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
   // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。

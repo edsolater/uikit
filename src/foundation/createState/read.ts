@@ -29,7 +29,6 @@ type DefaultVal<S> = S extends (...args: never[]) => infer ResultV
  * 需要持续异步计算时，使用 createState 的计算来源或 map。
  *
  * @example 组件中使用
- * ```ts
  * const visible = createState(true)
  * const label = 'Submit'
  *
@@ -47,7 +46,6 @@ type DefaultVal<S> = S extends (...args: never[]) => infer ResultV
  *
  * // good: 继续传递动态来源
  * Button({ visible })
- * ```
  *
  */
 

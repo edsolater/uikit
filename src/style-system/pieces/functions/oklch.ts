@@ -54,23 +54,18 @@ type RelativeColorInput =
  * 调用只返回 Token，实际颜色声明由 `rules` 等消费者生成。
  *
  * @example 只设置透明度，保留来源的明度、彩度和色相
- * ```ts
  * import { oklch } from '@edsolater/uikit/style-system'
  *
  * const background = oklch({ base: 'royalblue', alpha: 0.14 })
- * ```
  *
  * @example 设值与相对变化：来源透明度为 0.5 时，结果透明度分别为 0.14 和 0.07
- * ```ts
  * import { oklch, multiply } from '@edsolater/uikit/style-system'
  *
  * const base = 'oklch(0.6 0.12 250 / 0.5)'
  * const fixed = oklch({ base, alpha: 0.14 })
  * const relative = oklch({ base, alpha: (current) => multiply(current, 0.14) })
- * ```
  *
  * @example 同时使用来源 Token、固定值、通道 Token 和回调
- * ```ts
  * import { oklch, token, brandColor, add } from '@edsolater/uikit/style-system'
  *
  * const opacity = token(0.8, 'swatch-opacity')
@@ -81,10 +76,8 @@ type RelativeColorInput =
  *   alpha: opacity,
  * })
  * // 色相未指定，仍跟随 brandColor；透明度跟随 opacity 的 CSS 值。
- * ```
  *
  * @example 配置名称、作用位置和状态；名称字符串是第二项的简写
- * ```ts
  * import { oklch, brandColor } from '@edsolater/uikit/style-system'
  *
  * const named = oklch({ base: brandColor, alpha: 0.4 }, 'swatch-color')
@@ -93,16 +86,13 @@ type RelativeColorInput =
  *   address: '.Swatch',
  *   state: { hover: 'tomato', disabled: 'gray' },
  * })
- * ```
  *
  * @example 将颜色 Token 用于着色声明，也可以继续参与混色
- * ```ts
  * import { oklch, colorMix, rules, paint } from '@edsolater/uikit/style-system'
  *
  * const tint = oklch({ base: 'royalblue', alpha: 0.4 })
  * const background = colorMix({ color: tint, weight: 0.18 }, 'white')
  * rules('.Swatch', paint({ background, content: 'black' }))
- * ```
  */
 export function oklch(
   description: ColorDescription,
@@ -116,21 +106,17 @@ export function oklch(
  * 此形式没有来源通道，因此不接收相对调整回调，也没有第二项配置参数。
  *
  * @example 定义新颜色；省略透明度时完全不透明，也可以显式设置透明度
- * ```ts
  * import { oklch } from '@edsolater/uikit/style-system'
  *
  * const solid = oklch({ lightness: 0.6, chroma: 0.12, hue: 250 })
  * const translucent = oklch({ lightness: 0.6, chroma: 0.12, hue: 250, alpha: 0.8 })
- * ```
  *
  * @example 普通通道也可以混用固定值和 Token
- * ```ts
  * import { oklch, token } from '@edsolater/uikit/style-system'
  *
  * const lightness = token(0.6, 'swatch-lightness')
  * const background = oklch({ lightness, chroma: 0.02, hue: 250 })
  * // background 的明度保留对 swatch-lightness 的引用。
- * ```
  */
 export function oklch(channels: OKLCHChannels): Token<OKLCHChannels>
 
@@ -143,15 +129,12 @@ export function oklch(channels: OKLCHChannels): Token<OKLCHChannels>
  * 来源或显式提供的通道内容未解析时，不输出不完整颜色。
  *
  * @example 字符串来源与通道设值；空对象表示保持全部来源通道
- * ```ts
  * import { oklch } from '@edsolater/uikit/style-system'
  *
  * const translucent = oklch('royalblue', { alpha: 0.6 })
  * const unchanged = oklch('royalblue', {})
- * ```
  *
  * @example Token 来源与相对回调，也支持在编译时读取来源函数
- * ```ts
  * import { oklch, brandColor, add, multiply } from '@edsolater/uikit/style-system'
  *
  * const pressed = oklch(brandColor, {
@@ -161,10 +144,8 @@ export function oklch(channels: OKLCHChannels): Token<OKLCHChannels>
  * let selected = 'royalblue'
  * const selection = oklch(() => selected, { alpha: 0.6 })
  * selected = 'tomato' // 下次编译消费 selection 时使用 tomato。
- * ```
  *
  * @example 完整通道文本与通道 Token；第二项不是另一份颜色
- * ```ts
  * import { oklch, oklchChannels, brandColor, add } from '@edsolater/uikit/style-system'
  *
  * const brighter = oklch(brandColor, 'calc(l + 0.04) c h / alpha')
@@ -173,7 +154,6 @@ export function oklch(channels: OKLCHChannels): Token<OKLCHChannels>
  *   alpha: 0.8,
  * })
  * const translucent = oklch(brandColor, channels)
- * ```
  */
 export function oklch(
   source: TokenInput,
