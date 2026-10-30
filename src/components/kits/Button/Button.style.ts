@@ -89,11 +89,11 @@ export const buttonPaddingBlock = buttonToken(baseSpace, {
 export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3))
 export const buttonBoxShadow = buttonToken(baseShadowSmall, {
   state: {
-    plain: 'none',
-    filled: baseShadow,
     hover: baseShadow,
     active: 'none',
     disabled: 'none',
+    filled: baseShadow,
+    plain: 'none',
   },
 })
 // 强调选择后、禁用缩放前的独立透明度阶段，供外部引用与最终计算。

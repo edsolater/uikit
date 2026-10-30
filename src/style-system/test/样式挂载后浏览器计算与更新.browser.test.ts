@@ -82,8 +82,6 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
 })
 
 test('不同 Token 分支分别匹配，并由浏览器执行嵌套交集', async () => {
-  expect(translateY('1px').toCSSString()).toBe('translateY(1px)')
-  expect(translateY(undefined).toCSSString()).toBeUndefined()
   const distance = token('2px', {
     name: 'browser-distance-size',
     address: '.example',

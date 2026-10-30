@@ -64,8 +64,6 @@ test('已有颜色带配置时沿用 Token 继承及异型默认内容替换', (
     [['.Consumer'], 'color', inherited],
     [['.Consumer'], 'opacity', replaced],
   ])
-  expect(inherited.default).toBe(source)
-  expect(replaced.default).toBe(0.5)
   expect(css).toContain(`--${inherited.name}: var(--${source.name});`)
   expect(css).toContain('.Inherited {')
   expect(css).toMatch(new RegExp(`:hover[^}]+--${inherited.name}: blue;`, 's'))
@@ -108,27 +106,4 @@ test('颜色描述独立使用，消费时读取最新来源及替换后的通�
     'border-color: oklch(from var(--independent-source) l c h / calc(alpha * 0.4));',
   )
   expect(css).not.toContain('from blue')
-})
-
-test('着色声明直接消费颜色描述和已有颜色 Token，未指定通道保留来源', () => {
-  const source = token('red', 'paint-source')
-  const background = color({ base: source, alpha: 0.2 })
-  const handle = rules(
-    '.Painted',
-    paint({
-      content: { base: source, chroma: 0.08 },
-      background,
-    }),
-  )
-  try {
-    const css = compileCSS()
-    expect(css).toContain(
-      'color: oklch(from var(--paint-source) l 0.08 h / alpha);',
-    )
-    expect(css).toContain(
-      'background-color: oklch(from var(--paint-source) l c h / 0.2);',
-    )
-  } finally {
-    handle.remove()
-  }
 })

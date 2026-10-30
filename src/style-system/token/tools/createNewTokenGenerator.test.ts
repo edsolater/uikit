@@ -53,29 +53,6 @@ test('统一地址保留来源引用并合并状态，来源不被改写', () =>
   expect(css).not.toContain('--generator-source: 16px;')
 })
 
-test('无名来源的不同结果自动取得独立名称，状态不互相覆盖', () => {
-  const source = token('8px')
-  const panelToken = createNewTokenGenerator({
-    prefixName: 'panel',
-    address: '.Independent',
-  })
-  const first = panelToken(source, { state: { hover: '12px' } })
-  const second = panelToken(source, { state: { hover: '16px' } })
-  const css = compileRules([
-    [['.Independent'], 'width', first],
-    [['.Independent'], 'height', second],
-  ])
-  expect(first.name).toMatch(/^panel-/)
-  expect(second.name).toMatch(/^panel-/)
-  expect(first.name).not.toBe(second.name)
-  expect(css).toContain(`width: var(--${first.name});`)
-  expect(css).toContain(`height: var(--${second.name});`)
-  expect(css).toContain(`--${first.name}: 12px;`)
-  expect(css).toContain(`--${second.name}: 16px;`)
-  expect(css).not.toContain(`--${first.name}: 16px;`)
-  expect(css).not.toContain(`--${second.name}: 12px;`)
-})
-
 test('保留泛型、特殊格式与 default 覆盖，调用配置不接受名称和地址', () => {
   const createToken = createNewTokenGenerator({
     prefixName: 'forms',

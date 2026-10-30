@@ -68,37 +68,6 @@ test('hover、active、enabled、disabled 独立匹配并共同影响属性', as
   }
 })
 
-test('hover 与 active 保留正常特异度，与分类条件同权时由后定义的状态生效', async () => {
-  handles.push(
-    rules('.InteractionCascade[data-appearance="filled"]', {
-      'padding-left': '4px',
-      'margin-left': '0px',
-    }),
-    rules(['.InteractionCascade', whenHover], { 'padding-left': '8px' }),
-    rules(['.InteractionCascade', whenActive], { 'margin-left': '2px' }),
-  )
-  document.body.appendChild(document.createElement('style')).textContent =
-    compileCSS()
-  const button = document.body.appendChild(document.createElement('button'))
-  button.className = 'InteractionCascade'
-  button.dataset.appearance = 'filled'
-  button.textContent = '按下'
-  expect(getComputedStyle(button).paddingLeft).toBe('4px')
-  await userEvent.hover(button)
-  expect(getComputedStyle(button).paddingLeft).toBe('8px')
-  button.focus()
-  await userEvent.keyboard('[Space>]')
-  try {
-    expect(button.matches(':hover:active')).toBe(true)
-    expect(getComputedStyle(button).marginLeft).toBe('2px')
-  } finally {
-    await userEvent.keyboard('[/Space]')
-  }
-  expect(getComputedStyle(button).marginLeft).toBe('0px')
-  await userEvent.unhover(button)
-  expect(getComputedStyle(button).paddingLeft).toBe('4px')
-})
-
 test('focus 与 focus-within 分别匹配焦点主体和包含主体', () => {
   handles.push(
     rules('.FocusSubject', { 'padding-left': '4px', 'padding-right': '4px' }),

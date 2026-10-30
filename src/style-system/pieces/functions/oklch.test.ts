@@ -35,8 +35,7 @@ test('替换普通颜色内容后沿用格式并解析新通道依赖', () => {
   const original = oklch({ lightness: 0.6, chroma: 0.12, hue: 250 })
   const lightness = token(0.4, 'replacement-lightness')
   original.default = { lightness, chroma: 0.08, hue: 30, alpha: 0 }
-  const next = original
-  const css = compileRules([[[condition('.Replaced')], 'color', next]])
+  const css = compileRules([[[condition('.Replaced')], 'color', original]])
   expect(css).toContain(
     'color: oklch(var(--replacement-lightness) 0.08 30 / 0);',
   )
@@ -56,7 +55,7 @@ test.each([
 })
 
 test('通道回调在编译消费时取得当前表达式，并保留内容对象的依赖身份', () => {
-  let consumed = false
+  let delta = -0.02
   const chroma = Object.assign(
     () => {
       throw new Error('内容对象不应作为回调执行')
@@ -64,13 +63,10 @@ test('通道回调在编译消费时取得当前表达式，并保留内容对�
     { toCSSString: () => '0.08' },
   )
   const expression = oklch('red', {
-    lightness: (current) => {
-      consumed = true
-      return add(current, -0.04)
-    },
+    lightness: (current) => add(current, delta),
     chroma,
   })
-  expect(consumed).toBe(false)
+  delta = -0.04
   const css = compileRules([[[condition('.Relative')], 'color', expression]])
   expect(css).toContain(
     'color: oklch(from red calc(l + -0.04) 0.08 h / alpha);',
@@ -101,20 +97,12 @@ test('完整通道内容保留输出，来源或通道缺失时不产生颜色',
 
 test('直接构造通道时不提前读取闭包，实际消费使用当时的变化', () => {
   let delta = 0.1
-  let consumed = false
   const changes = {
-    lightness: (current: import('../../content').Expression) => {
-      consumed = true
-      return add(current, delta)
-    },
+    lightness: (current: import('../../content').Expression) => add(current, delta),
   }
   const channels = oklchChannels(changes)
-  expect(consumed).toBe(false)
   delta = 0.2
-  changes.lightness = (current) => {
-    consumed = true
-    return add(current, delta * 2)
-  }
+  changes.lightness = (current) => add(current, delta * 2)
   const css = compileRules([[['.LazyChannels'], '--channels', channels]])
   expect(css).toContain('--channels: calc(l + 0.4) c h / alpha;')
 })

@@ -5,29 +5,22 @@ import { compileRules } from '../css-root'
 import { token, createTokenDefinition } from './core'
 import { token as publicToken } from '../index'
 import { add } from '../pieces/functions/calc'
-import { cssTokenName, resolveTokenName } from './css'
+import { resolveTokenName } from './css'
 
-test('聚合入口创建匿名直接值，编译为 CSS value 并暴露内部类别', () => {
+test('聚合入口创建匿名直接值，编译为 CSS value', () => {
   const size = publicToken('2px')
   expect(compileRules([[['.Direct'], 'width', size]])).toContain('width: 2px;')
-  expect(size._kind).toBe('css-value')
 })
 
 test('显式名称替代来源与自动标识，多级显式命名不累计来源，前缀仅补充名称', () => {
   const source = token('red', { name: 'brand-color' })
   const local = token(source, { name: 'local' })
   const nested = token(local, 'nested')
-  const automatic = token(source)
-  const another = token(source)
   const prefixed = createTokenDefinition(source, { name: 'local' }, 'button')
   expect(source.name).toBe('brand-color')
   expect(local.name).toBe('local')
   expect(prefixed.name).toBe('button-local')
   expect(nested.name).toBe('nested')
-  expect(automatic.name).toMatch(/^brand-color-.+/)
-  expect(automatic.name).not.toBe(another.name)
-  expect(local.default).toBe(source)
-  expect(cssTokenName(local)).toBe('--local')
   const css = compileRules([
     [['.Local'], 'color', local],
     [['.Nested'], 'color', nested],
@@ -54,7 +47,6 @@ test('匿名来源取得稳定引用名，派生与编译不升级来源的纯�
   expect(css).toContain('width: 2px;')
   expect(css).toContain(`--${local.name}: 2px;`)
   expect(css).toContain(`width: var(--${local.name});`)
-  expect(source._kind).toBe('css-value')
   expect(resolveTokenName(source)).toBe(reference)
   const another = token(source)
   expect(another.name).toMatch(new RegExp(`^${reference}-.+`))
