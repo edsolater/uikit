@@ -34,7 +34,12 @@ export type PopoverPlacementProps = VariantProps<
 export type PopoverMode = 'auto' | 'hint' | 'manual'
 export type PopoverAction = 'toggle' | 'show' | 'hide'
 type NativeHTMLPropKey =
-  'children' | 'class' | 'style' | 'ref' | `on${string}` | `on:${string}`
+  | keyof JSX.IntrinsicAttributes
+  | 'children'
+  | 'class'
+  | 'style'
+  | `on${string}`
+  | `on:${string}`
 
 export interface PopoverProps
   extends PopoverPlacementProps, ComponentDescriptionProps {
@@ -90,7 +95,7 @@ const parsePopoverStatusProps = createStatusPropsParser({
 export function Popover(props: PopoverProps) {
   const mergedProps = addDefaultProps(props, defaultPopoverProps)
   const { variantShadowProps } = parsePopoverVariantProps(props)
-  const controller = createPopoverController({
+  const [controller, controllerBindings] = createPopoverController({
     onToggle: mergedProps.onToggle,
     onBeforeToggle: mergedProps.onBeforeToggle,
   })
@@ -121,7 +126,7 @@ export function Popover(props: PopoverProps) {
           id={controller.triggerId}
           class={joinClassName('trigger', mergedProps.triggerClass)}
           style={mergedProps.triggerStyle}
-          ref={controller.setTriggerElement}
+          domRef={controllerBindings.triggerDomRef}
           htmlProps={{
             'type': 'button',
             'aria-haspopup': 'dialog',
@@ -141,7 +146,7 @@ export function Popover(props: PopoverProps) {
           id={controller.popoverId}
           class={joinClassName('surface', mergedProps.surfaceClass)}
           style={mergedProps.surfaceStyle}
-          ref={controller.setPopoverElement}
+          domRef={controllerBindings.popoverDomRef}
           htmlProps={{
             popover: mergedProps.popover as any,
             ...mergedProps.surfaceProps,

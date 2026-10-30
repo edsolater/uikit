@@ -120,13 +120,13 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
     <Piv
       class="StructureViewOverlay"
       htmlProps={{ 'popover': 'manual', 'aria-hidden': 'true' }}
-      ref={(element) => {
+      domRef={(element) => {
         surface = element
       }}
     >
       <Piv
         as="canvas"
-        ref={(element) => {
+        domRef={(element) => {
           canvas = element
         }}
       />

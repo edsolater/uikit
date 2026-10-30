@@ -2,7 +2,9 @@
  * Button 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
-import { Button } from './Button'
+import { allButton, Button, type ButtonController } from './Button'
+import { createRef } from '@/hooks/createRef'
+import { createDomRef } from '@/hooks/createDomRef'
 import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
 import { ComponentMarkerStructureViewTrigger } from '@/components/ComponentMarker/ComponentMarkerStructureViewTrigger'
@@ -10,6 +12,9 @@ import { Text } from '@/components/kits/Text/Text'
 import { Heading } from '@/components/kits/Heading/Heading'
 
 export function ButtonExample() {
+  const [button, receiveButton] = createRef<ButtonController>()
+  const [buttonElement, receiveButtonElement] =
+    createDomRef<HTMLButtonElement>()
   return (
     <>
       <Article as={Card} class="example-card" description="按钮外观与状态示例">
@@ -22,6 +27,22 @@ export function ButtonExample() {
         <Text p description="描述">
           按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。
         </Text>
+
+        <div class="button-row">
+          <Button ref={receiveButton} domRef={receiveButtonElement}>
+            被控制的按钮
+          </Button>
+          <Button onClick={() => button.setStatus?.('loading', true)}>
+            此按钮加载
+          </Button>
+          <Button onClick={() => buttonElement.focus?.()}>聚焦此按钮</Button>
+          <Button onClick={() => allButton.setStatus('loading', true)}>
+            全部加载
+          </Button>
+          <Button onClick={() => allButton.setStatus('loading', false)}>
+            结束全部加载
+          </Button>
+        </div>
 
         <div class="button-example-grid">
           <Text block class="button-example-head" description="列标题">

@@ -20,7 +20,7 @@ import { consumeStyle, type StyleList } from './handleStyle'
 import { consumeId } from './id'
 import { toEventListenersList, type EventListeners } from './on/handleOn'
 import { consumeEventListeners } from './on/registerEventListeners'
-import { parseNormalRefs, type PivRef } from './ref'
+import { consumeDomRefs, type PivDomRef } from './domRef'
 
 /** 底层 DOM 声明契约；Piv 组合该契约，不重复定义或解析字段。 */
 export type DodeDOMProps<Tag extends PivTag = 'div'> = {
@@ -30,12 +30,12 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
   class?: ClassNameList
   /** 普通 style、列表或整体 Source，按 CSS 字段订阅。 */
   style?: StyleList
-  /** 原生 HTML 字段和 attr:/prop:；不接管专用 class/style/on/ref/children。 */
+  /** 原生 HTML 字段和 attr:/prop:；不接管专用 class/style/on/domRef/children。 */
   htmlProps?: HTMLPropsList<Tag>
   /** DOM 事件声明，按原始声明身份拥有监听生命周期。 */
   on?: EventListeners
   /** 初始化字段后取得真实 DOM 的命令式入口。 */
-  ref?: PivRef<Tag>
+  domRef?: PivDomRef<Tag>
   /** 普通 JSX 或整体可替换的 Source。 */
   children?: Source<JSXElement>
 }
@@ -64,9 +64,9 @@ export function Dode<Tag extends PivTag>(props: DodeProps<Tag>): JSX.Element {
     },
   )
   consumeHTMLProps(element, () => bindings.htmlProps)
-  // 普通 ref 只在元素初始化时读取，不随插件配置变化重复执行。
-  const refs = untrack(() => bindings.ref)
-  if (refs) parseNormalRefs(element, refs)
+  // domRef 只在元素初始化时读取，不随插件配置变化重复执行。
+  const refs = untrack(() => bindings.domRef)
+  if (refs) consumeDomRefs(element, refs)
   // 四种模板原本不消费 children，保持既有行为，包括 textarea 与 iframe。
   if (!['input', 'textarea', 'img', 'iframe'].includes(element.localName)) {
     insert(element, resolvedChildren)

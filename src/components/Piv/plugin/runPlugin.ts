@@ -1,7 +1,7 @@
 /**
  * 这个文件负责执行单个 Piv plugin，并给 plugin 提供受控的结构插线工具。
  * 它处在 plugin 队列展开之后、shadow props 合并之前：上游已经决定要运行哪个 plugin，下游只消费 plugin 返回的 shadow props。
- * 它不负责合并 shadow props，不负责消费 class/style/htmlProps/on/ref，也不负责把结构能力暴露成普通 Piv props。
+ * 它不负责合并 shadow props，不负责消费 class/style/htmlProps/on/domRef，也不负责把结构能力暴露成普通 Piv props。
  * plugin 的返回值只表达 prompt 类声明补丁；第二参数提供的结构工具会改变真实 DOM 附属结构，
  * 但不应改变调用方心智里的 Piv 主体层级。
  */

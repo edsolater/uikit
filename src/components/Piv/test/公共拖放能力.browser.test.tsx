@@ -74,14 +74,14 @@ test('真实快捷入口的 options 未变时不重建插件或中断拖动', ()
   window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 9 }))
 })
 
-test('配置 disabled 沿原插件契约创建，普通 ref 读取已提交的能力字段', () => {
+test('配置 disabled 沿原插件契约创建，普通 domRef 读取已提交的能力字段', () => {
   const host = document.body.appendChild(document.createElement('div'))
   let initialDraggable: boolean | undefined
   dispose = render(
     () => (
       <Piv
         draggable={{ payload: 'item', disabled: true }}
-        ref={(element) => {
+        domRef={(element) => {
           initialDraggable = element.draggable
         }}
       />

@@ -40,7 +40,7 @@ export function consumeStyle(
     return mergeStyleRecords(styles)
   })
 
-  // 字段按 key 复用所属作用域，换源时由同一 effect 先清理再提交，首次写入仍在 ref 前完成。
+  // 字段按 key 复用所属作用域，换源时由同一 effect 先清理再提交，首次写入仍在 domRef 前完成。
   mapArray(
     () => Object.keys(styleRecord()),
     (key) => {

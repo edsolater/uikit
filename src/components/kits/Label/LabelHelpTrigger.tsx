@@ -8,7 +8,7 @@ export function LabelHelpTrigger(props: {
   anchor: string
   describedBy: string
   title: Source<string>
-  ref: (element: HTMLButtonElement) => void
+  domRef: (element: HTMLButtonElement) => void
   enter: () => void
   leave: () => void
   focus: () => void
@@ -25,7 +25,7 @@ export function LabelHelpTrigger(props: {
         as="button"
         class="LabelHelpTrigger"
         id={props.id}
-        ref={props.ref}
+        domRef={props.domRef}
         htmlProps={{
           type: 'button',
           'data-anchor': props.anchor,

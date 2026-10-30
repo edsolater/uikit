@@ -1,5 +1,13 @@
 # Button 设计规格
 
+## 实例与整体控制
+
+`ref` 接收 `ButtonController`，`domRef` 独立接收真实 button，Controller 不包含 DOM。`createRef<ButtonController>()` 与 `ref` 配对，直接使用 `button.setStatus?.('loading', true)`；`createDomRef<HTMLButtonElement>()` 与 `domRef` 配对，直接使用 `buttonElement.focus?.()`。两者都返回稳定的 Partial 引用和接收器，未接入或退出后各属性为 undefined；方法及 getter 保留当前接收对象的 this。接收器可返回清理函数，元素退出时执行。
+
+Controller 公开既有 `setStatus`、`hasStatus`。外部已声明的 loading、disabled 始终由外部 Source 控制，setStatus 不覆盖它。原生聚焦、点击等操作通过独立的 DOM 引用使用。
+
+`allButton.setStatus` 将命令转发到当前接入的全部按钮，不保存给未来实例。if 关闭时退出整体控制，重新显示仍保留该 Button 自己此前的内部状态。`allButton.style` 直接提供本文件下文列出的原有 Token，保留 Token 身份和独立 Source 阶段；不为每个实例重复应用同一 Token。整体入口不提供实例查询或原生元素引用。
+
 ## 分类契约与样式
 
 组件 API 使用 appearance、tone、emphasis、size 四组分类。Button.style.ts 消费这些分类：filled 使用填充背景及对应内容色，outlined 保留浅底和可见轮廓，plain 常态透明且无边界；danger 选择危险配色。emphasis 调整整颗按钮的存在感，包含文字与图形内容，不改变外观形式和尺寸。

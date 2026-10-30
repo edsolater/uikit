@@ -42,7 +42,7 @@ function LabelHelp(props: {
   title: Source<string>
   content: Source<string | undefined>
 }) {
-  const controller = createPopoverController()
+  const [controller, controllerBindings] = createPopoverController()
   const anchor = '--' + controller.triggerId
   let hovered = false
   let focused = false
@@ -82,7 +82,7 @@ function LabelHelp(props: {
         anchor={anchor}
         describedBy={controller.popoverId}
         title={props.title}
-        ref={controller.setTriggerElement}
+        domRef={controllerBindings.triggerDomRef}
         enter={enter}
         leave={leave}
         focus={() => {
@@ -103,7 +103,7 @@ function LabelHelp(props: {
         id={controller.popoverId}
         anchor={anchor}
         content={props.content}
-        ref={controller.setPopoverElement}
+        domRef={controllerBindings.popoverDomRef}
         enter={enter}
         leave={leave}
       />

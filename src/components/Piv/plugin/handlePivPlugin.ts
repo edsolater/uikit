@@ -1,7 +1,7 @@
 /**
  * 这个文件定义 Piv plugin 的展开和合并规则。
  * plugin 可以返回低优先级 shadow props；用户直接传入的 props 始终覆盖 plugin 结果。
- * 它只产出声明数据，不消费 class、style、HTML props、事件或 ref。
+ * 它只产出声明数据，不消费 class、style、HTML props、事件或 domRef。
  */
 import {
   mayMap,

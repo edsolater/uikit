@@ -12,7 +12,8 @@ export * from './value-state/ident' // ValueState 领域的标识符状态 hook
 export * from './value-state/matcher' // ValueState 领域的匹配状态 hook
 export * from './value-state/toggle' // ValueState 领域的布尔切换状态 hook
 export * from './createElementAttributeMarker' // Element 领域的 attribute marker primitive
-export * from './domRef' // DOM 领域的元素引用 hook
+export * from './createDomRef' // DOM 领域的元素引用 hook
+export * from './createRef' // 组件公开对象的引用接收与释放
 export * from './useBrowserAnimationFrame' // Browser 领域的 animation frame 调度 primitive
 export * from './useDOMRegisterer' // DOM 领域的全局节点注册 / 卸载 primitive
 export * from './useUIThemeMode' // UI 领域的全局 light / dark / system 主题模式 hook

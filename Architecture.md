@@ -10,7 +10,7 @@
 
 Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System 命名](src/style-system/doc/样式系统命名.md)。
 
-- `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、ref 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
+- `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、domRef 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
 - `src/components/kits`：对外 UI 组件。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
 - `src/components/ComponentMarker`：Piv之上组件的透明边界与用途说明，以及手动FAB控制的结构显示；不改变原主体或自动挂载开关。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
@@ -57,7 +57,13 @@ App手动放入ComponentMarkerStructureViewTrigger，作为ComponentMarker结构
 
 Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p分别选择div／p；Heading以必填level选择h1～h6。两者直接把原生节点交给Piv，纯文字Source持续下传，不通过嵌套彼此制造双重身份。各自的相邻.style.ts通过Style System感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即恢复最新内容。它们不复制开关State，也不缓存或改写DOM文字；Marker及统一Overlay继续负责定位框与标注。两者选择descriptionOnly格式，有说明时只标用途，无说明或空说明时回落各自组件名，其它组件默认格式不变。
 
-## Button 样式
+## Popover 控制与接入
+
+`createPopoverController` 返回 `[controller, controllerBindings]`。Controller 承载可对外关联的 popoverId／triggerId、只读 isOpen 视图及显示、隐藏、切换操作；身份即使在组件内部使用，仍属于 Controller。controllerBindings 由组件定义端消费，通过 popoverDomRef／triggerDomRef 将内部对象接入 Controller，并建立、释放原生监听连接。Popover 与 LabelHelp 分别使用两者，不把内部对象接入方法公开为业务操作。只读视图继续跟随同一内部状态，不创建另一套可写状态。
+
+## Button 控制与样式
+
+Button 的 `ref` 公开 `ButtonController`，通过既有 StatusActions 操作内部状态；`domRef` 独立公开真实 button，Controller 不包含 DOM。Piv 仅提供 `domRef`，Dode 在字段初始化后执行接收器并管理清理。Button 借真实元素接入时向 Controller 注册器登记同一对象，退出时注销并释放引用。`allButton` 用 Proxy 把明确的状态命令转发到当前实例，`style` 直接公开 Button 原有 Token；整体命令不重放到未来实例，外部声明状态继续由外部 Source 控制。`createRef` 对应组件 ref，`createDomRef` 对应 domRef，后者复用前者的稳定 Partial 代理与接收清理能力；使用者直接访问对象方法，私有 State 不暴露。
 
 ```txt
 导入 Button.style.ts

@@ -12,7 +12,7 @@ Dode 是本目录内部的 DOM 实现，定义并消费底层属性。
 | plugin、plugins、trait、shadowProps | Piv      | 组织并执行插件，展开声明来源，保留原有执行顺序和合并关系。                   |
 | draggable、droppable                | Piv      | 选择有效快捷配置，创建和释放对应插件消费作用域。                             |
 | id、class、style、htmlProps         | Dode     | 将组织后的声明交给专用字段消费者，订阅 Source 并维护 DOM。                   |
-| on、ref                             | Dode     | 拥有事件绑定生命周期，完成字段绑定后调用普通 ref。                           |
+| on、domRef                             | Dode     | 拥有事件绑定生命周期，完成字段绑定后调用普通 domRef。                           |
 | children                            | Dode     | 懒读取子内容 Source，规范化后插入已初始化的元素。                            |
 
 PivProps 组合 Dode 的 DOM 属性契约与管理字段，不重复维护底层属性定义。
@@ -26,7 +26,7 @@ Piv 在真实元素可用后运行 setup，得到插件与直接声明共同形�
 
 快捷入口只选择配置并注入插件声明，实例执行与释放由插件消费链负责。
 有效配置先派生，再映射为插件 Source；配置身份未变时保持插件身份，消费链统一读取 Source。
-插件返回的 DOM 声明完整进入来源合并，不在快捷入口只提取 htmlProps/on；具体字段仍沿原生命周期处理，普通 ref 只读取初始化快照，不因配置切换重跑。
+插件返回的 DOM 声明完整进入来源合并，不在快捷入口只提取 htmlProps/on；具体字段仍沿原生命周期处理，普通 domRef 只读取初始化快照，不因配置切换重跑。
 
 id 的稳定 Source 在合并层形成，持续跟随来源替换和多声明合并。
 这属于来源管理，不是 DOM 解析；Dode 将该 Source 直接交给 Effect 自动读取。
@@ -66,10 +66,10 @@ if 接受可解析的 Source，包括 State。输入形式与使用意图分开�
 ## 当前实现的创建与清理（尚待迁移）
 
 Piv 通过真实的 JSX 组件入口创建 Dode，使初始化自然处于当前显示分支的组件作用域。
-插件或 ref 的初始化旁读不成为 Show 的结构依赖，不保存、恢复或额外包装 owner。
+插件或 domRef 的初始化旁读不成为 Show 的结构依赖，不保存、恢复或额外包装 owner。
 
-初始化顺序为：创建裸元素 → Piv setup 组织插件与声明 → Dode 绑定字段和事件 → 调用普通 ref → 插入 children。
-普通 ref 取得已提交初始字段的真实元素；mount 后可以观察已插入的子节点。
+初始化顺序为：创建裸元素 → Piv setup 组织插件与声明 → Dode 绑定字段和事件 → 调用普通 domRef → 插入 children。
+普通 domRef 取得已提交初始字段的真实元素；mount 后可以观察已插入的子节点。
 
 当前 if 使用 Show 分支：初始 if=false 不创建子组件；变为 true 时创建；再次变为 false 时移除节点并释放分支资源；之后变为 true 会重新创建节点和子组件。**这是“释放后重建”，不是上面的“脱离后重新挂载”。现有测试证明的是当前行为，不能据此声称目标契约已经实现。**
 
@@ -104,6 +104,6 @@ droppable 关闭时注销内部目标并移除外部事件，外部 DataTransfer
 - [domMap.tsx](domMap.tsx)：受支持 tag 的裸 JSX 工厂。
 - [handlePivPlugin.ts](plugin/handlePivPlugin.ts)：插件展开与来源合并。
 - [publicCapabilities.ts](plugin/publicCapabilities.ts)：快捷配置选择与插件注入。
-- className、handleStyle、handleHTMLProps、on、ref：各底层声明的专用消费者。
+- className、handleStyle、handleHTMLProps、on、domRef：各底层声明的专用消费者。
 
 领域测试验证 DOM、事件、Source 换源、分支和卸载行为，不以 owner API 调用次数或文件位置代替行为验收。

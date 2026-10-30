@@ -115,7 +115,7 @@ describe('配置插件消费', () => {
             clicks += 1
           },
         },
-        ref: () => {
+        domRef: () => {
           refs += 1
         },
         plugin: () => {

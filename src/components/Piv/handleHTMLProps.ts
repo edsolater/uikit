@@ -1,6 +1,6 @@
 /**
  * 这个文件消费 Piv 的普通 HTML props。
- * class、style、事件、children 和 ref 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
+ * class、style、事件、children 和 domRef 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
  * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
  */
 import { type JSX, val, type MayArraySource } from '@/foundation'
@@ -21,13 +21,13 @@ type ReservedHTMLPropKey =
   | 'className'
   | 'style'
   | 'children'
-  | 'ref'
+  | 'domRef'
   | `on${string}`
   | `on:${string}`
 
 type KnownHTMLPropKey<Tag extends PivTag> = Exclude<
   keyof JSX.IntrinsicElements[Tag],
-  ReservedHTMLPropKey
+  keyof JSX.IntrinsicAttributes | ReservedHTMLPropKey
 >
 
 type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
@@ -78,7 +78,7 @@ function isReservedHTMLPropKey(key: string) {
     key === 'className' ||
     key === 'style' ||
     key === 'children' ||
-    key === 'ref' ||
+    key === 'domRef' ||
     key.startsWith('on:') ||
     (key.startsWith('on') && key.length > 2)
   )

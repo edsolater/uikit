@@ -30,9 +30,12 @@ export function Loop<T>(props: LoopProps<T>) {
   const innerState = createState<T[]>([])
 
   createEffect(
-    () => ({ items: props.each(), container: val(loopContainer) }),
-    ({ items, container }) => {
-      container?.startViewTransition(() => {
+    () => ({
+      items: props.each(),
+      startViewTransition: loopContainer.startViewTransition,
+    }),
+    ({ items, startViewTransition }) => {
+      startViewTransition?.(() => {
         // 这里才会有 viewTransition 的动画，所以外部数据也要在这里提交。
         innerState.set(items)
       })
@@ -56,7 +59,7 @@ export function Loop<T>(props: LoopProps<T>) {
       descriptionDisplay={props.descriptionDisplay}
       defaultDescription="排列重复内容"
     >
-      <Piv class="Loop" ref={setDomRef}>
+      <Piv class="Loop" domRef={setDomRef}>
         {mapped()}
       </Piv>
     </ComponentMarker>

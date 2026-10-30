@@ -7,7 +7,7 @@ export function LabelHelpContent(props: {
   id: string
   anchor: string
   content: Source<string | undefined>
-  ref: (element: HTMLDivElement) => void
+  domRef: (element: HTMLDivElement) => void
   enter: () => void
   leave: () => void
 }) {
@@ -20,7 +20,7 @@ export function LabelHelpContent(props: {
         as="div"
         class="LabelHelpContent"
         id={props.id}
-        ref={props.ref}
+        domRef={props.domRef}
         htmlProps={{
           popover: 'hint',
           role: 'tooltip',

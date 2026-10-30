@@ -108,7 +108,7 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 | `style`       | 设置根元素行内样式或单实例 CSS 变量。                                |
 | `htmlProps`   | 设置原生 HTML、ARIA、`data-*` 或 DOM property。                      |
 | `on`          | 注册根元素原生事件；Card 本身不增加点击协议。                        |
-| `ref`         | 取得根 DOM，作为命令式逃生口。                                       |
+| `domRef`         | 取得根 DOM，作为命令式逃生口。                                       |
 | `plugin`      | 注入一个 Piv 底层能力。                                              |
 | `plugins`     | 注入多个 Piv 底层能力。                                              |
 | `trait`       | 注入稳定性质或能力。                                                 |

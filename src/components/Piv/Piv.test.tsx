@@ -25,7 +25,7 @@ describe('Piv 生命周期', () => {
         <>
           <Piv
             as="canvas"
-            ref={(element) => {
+            domRef={(element) => {
               canvas = element
             }}
             htmlProps={{ width: 320, height: 180 }}
@@ -157,7 +157,7 @@ describe('Piv 生命周期', () => {
     dispose()
   })
 
-  test('插件和 ref 在子节点插入前初始化，mount 后可见子节点且旁读不重建分支', () => {
+  test('插件和 domRef 在子节点插入前初始化，mount 后可见子节点且旁读不重建分支', () => {
     const host = document.createElement('div')
     const visible = createState(true)
     const incidental = createState('before')
@@ -179,9 +179,9 @@ describe('Piv 生命周期', () => {
           <Piv
             if={visible}
             plugin={plugin}
-            ref={(element) => {
+            domRef={(element) => {
               val(incidental)
-              observations.push(`ref:${element.childElementCount}`)
+              observations.push(`domRef:${element.childElementCount}`)
             }}
           >
             <span>child</span>
@@ -192,7 +192,7 @@ describe('Piv 生命周期', () => {
     )
     flush()
     const element = host.firstElementChild
-    expect(observations).toEqual(['plugin:0:provided', 'ref:0', 'mount:1'])
+    expect(observations).toEqual(['plugin:0:provided', 'domRef:0', 'mount:1'])
     incidental.set('after')
     flush()
     expect(host.firstElementChild).toBe(element)
@@ -218,7 +218,7 @@ describe('Piv 生命周期', () => {
     },
   )
 
-  test('外部 ref 拿到已提交初始字段的真实 DOM', () => {
+  test('外部 domRef 拿到已提交初始字段的真实 DOM', () => {
     const host = document.createElement('div')
     let observed: unknown
     const dispose = render(
@@ -227,7 +227,7 @@ describe('Piv 生命周期', () => {
           as="input"
           style={{ color: 'red' }}
           htmlProps={{ value: 'ready', disabled: true }}
-          ref={(element) => {
+          domRef={(element) => {
             observed = [element.style.color, element.value, element.disabled]
           }}
         />
@@ -306,7 +306,7 @@ describe('Piv 生命周期', () => {
               clicks += 1
             },
           }}
-          ref={(element) => {
+          domRef={(element) => {
             element.setAttribute('data-ref', 'ready')
           }}
         />

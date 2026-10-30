@@ -8,6 +8,8 @@
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
 import type { Source } from '@/foundation'
+import type { RefReceiver } from '@/hooks/createRef'
+import { createControllerRegistry } from '@/components/utils/controllerRegistry'
 import {
   ComponentMarker,
   type ComponentDescriptionProps,
@@ -22,9 +24,10 @@ import {
 import {
   createStatusPropsParser,
   type StatusProps,
+  type StatusActions,
 } from '../utils/parseStatusProps'
 import { buttonMapping } from './Button.mapping'
-import './Button.style'
+import * as buttonStyle from './Button.style'
 
 /**
  * 按钮的外观 Variant Props。
@@ -73,6 +76,19 @@ export type ButtonSize = 'small' | 'large' | 'xlarge'
  */
 export type ButtonStatus = 'loading' | 'disabled'
 
+/** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
+export type ButtonController = StatusActions<ButtonStatus>
+
+const buttonControllers = createControllerRegistry<
+  ButtonController,
+  'setStatus'
+>(['setStatus'])
+
+/** 对当前存活按钮转发命令；style 直接公开原有 Token，命令不保留给未来实例。 */
+export const allButton = Object.assign(buttonControllers.all, {
+  style: buttonStyle,
+})
+
 export interface ButtonProps
   extends
     PivProps<'button'>,
@@ -82,6 +98,8 @@ export interface ButtonProps
     VariantProps<'tone', ButtonTone>,
     VariantProps<'size', ButtonSize>,
     StatusProps<ButtonStatus> {
+  /** 接收此实例的 Controller，可返回元素退出时的清理动作。 */
+  ref?: RefReceiver<ButtonController>
   /**
    * 动作名。
    *
@@ -120,7 +138,8 @@ const parseButtonStatusProps = createStatusPropsParser({
 // 实际核心定义代码
 export function Button(props: ButtonProps) {
   const { variantShadowProps } = parseButtonVariantProps(props)
-  const { statusShadowProps } = parseButtonStatusProps(props)
+  const { statusShadowProps, statusActions } = parseButtonStatusProps(props)
+  const controller: ButtonController = statusActions
 
   return (
     <ComponentMarker
@@ -131,6 +150,7 @@ export function Button(props: ButtonProps) {
     >
       <Piv
         as="button"
+        if={props.if}
         shadowProps={[
           { htmlProps: { type: 'button' } },
           props,
@@ -138,6 +158,14 @@ export function Button(props: ButtonProps) {
           statusShadowProps,
         ]}
         class="Button"
+        domRef={() => {
+          const unregister = buttonControllers.register(controller)
+          const releaseRef = props.ref?.(controller)
+          return () => {
+            unregister()
+            releaseRef?.()
+          }
+        }}
         plugins={[clickable({ componentName: 'Button' })]}
         htmlProps={{
           'aria-label': props.name,

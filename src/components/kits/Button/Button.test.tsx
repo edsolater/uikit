@@ -92,14 +92,13 @@ describe('Button', () => {
     expect(first.dataset.appearance).toBe('outlined')
   })
 
-  test('组件渲染与 ref 回调不触发全局样式编译挂载', () => {
+  test('组件渲染不触发全局样式编译挂载', () => {
     const host = document.body.appendChild(document.createElement('div'))
-    const ref = vi.fn()
 
     dispose = render(
       () => (
         <>
-          <Button ref={ref}>一</Button>
+          <Button>一</Button>
           <Button>二</Button>
           <Button>三</Button>
         </>
@@ -108,8 +107,6 @@ describe('Button', () => {
     )
 
     expect(cssRoot.mount).not.toHaveBeenCalled()
-    expect(ref).toHaveBeenCalledOnce()
-    expect(ref).toHaveBeenCalledWith(host.firstElementChild)
   })
 
   test('按钮保留点击、显式表单提交与禁用语义，默认不提交', () => {

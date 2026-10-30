@@ -26,7 +26,7 @@ export function ComponentMarkerStructureViewTrigger() {
         class="ComponentMarkerStructureViewTrigger"
         filled
         name="切换组件定位框"
-        ref={(element) => {
+        domRef={(element) => {
           control = element
         }}
         htmlProps={{ 'aria-pressed': pressed }}
