@@ -8,6 +8,7 @@ import {
   whenActive,
   whenDisabled,
 } from '../../conditions/interaction'
+import { whenSoft, whenStrong } from '../../conditions/profile'
 import { colorMix } from '../../functions/color-mix'
 import {
   brandColorTheme,
@@ -23,20 +24,17 @@ import {
   inkColorTheme,
 } from './seeds'
 
-const soft = stateCondition('&:where([data-emphasis="soft"])')
-const strong = stateCondition('&:where([data-emphasis="strong"])')
-
 /** 品牌及反馈颜色只表达强调程度，交互反馈由动作颜色拥有。 */
 export const brandColorEmphasis = token(brandColorTheme, {
   name: 'brand-color-emphasis',
   address: undefined,
   state: [
     [
-      soft,
+      whenSoft,
       (base) => oklch(base, { alpha: (current) => multiply(current, 0.14) }),
     ],
     [
-      strong,
+      whenStrong,
       (base) =>
         oklch(base, {
           lightness: (current) => add(current, 0.08),
@@ -108,7 +106,7 @@ export const linkColor = token(brandColorTheme, {
   state: [
     ...(actionColor.state ?? []),
     [
-      stateCondition('&:where(:visited)'),
+      stateCondition('&:visited'),
       (base) =>
         oklch(base, {
           hue: (current) => add(current, 36),
@@ -126,16 +124,16 @@ export const surfaceColorEmphasis = token(surfaceColorTheme, {
   name: 'surface-color-emphasis',
   address: undefined,
   state: [
-    [soft, (base) => colorMix([base, 0.5], [canvasColorTheme, 0.5])],
-    [strong, (base) => colorMix([base, 0.9], [inkColorTheme, 0.1])],
+    [whenSoft, (base) => colorMix([base, 0.5], [canvasColorTheme, 0.5])],
+    [whenStrong, (base) => colorMix([base, 0.9], [inkColorTheme, 0.1])],
   ],
 })
 export const contentColorEmphasis = token(contentColorTheme, {
   name: 'content-color-emphasis',
   address: undefined,
   state: [
-    [soft, (base) => colorMix([base, 0.7], [surfaceColorTheme, 0.3])],
-    [strong, (base) => colorMix([base, 0.4], [inkColorTheme, 0.6])],
+    [whenSoft, (base) => colorMix([base, 0.7], [surfaceColorTheme, 0.3])],
+    [whenStrong, (base) => colorMix([base, 0.4], [inkColorTheme, 0.6])],
   ],
 })
 export const boundaryColorEmphasis = token(boundaryColorTheme, {
@@ -143,11 +141,11 @@ export const boundaryColorEmphasis = token(boundaryColorTheme, {
   address: undefined,
   state: [
     [
-      soft,
+      whenSoft,
       (base) => oklch(base, { alpha: (current) => multiply(current, 0.5) }),
     ],
     [
-      strong,
+      whenStrong,
       (base) => oklch(base, { alpha: (current) => multiply(current, 1.6) }),
     ],
   ],

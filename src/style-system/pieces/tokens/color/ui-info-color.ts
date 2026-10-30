@@ -64,10 +64,10 @@ export const info: ColorMaterial = {
 }
 
 // --- UI 使用 ---
-export const goodColor = toColorToken(good, 'good-color', ':where(:root)')
+export const goodColor = toColorToken(good, 'good-color', ':root')
 
-export const badColor = toColorToken(bad, 'bad-color', ':where(:root)')
+export const badColor = toColorToken(bad, 'bad-color', ':root')
 
-export const warnColor = toColorToken(warn, 'warn-color', ':where(:root)')
+export const warnColor = toColorToken(warn, 'warn-color', ':root')
 
-export const infoColor = toColorToken(info, 'info-color', ':where(:root)')
+export const infoColor = toColorToken(info, 'info-color', ':root')

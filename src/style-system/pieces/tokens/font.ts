@@ -5,7 +5,7 @@ import { whenSmall, whenLarge, whenXlarge } from '../conditions/profile'
 
 export const textSize = token('16px', {
   name: 'text-size',
-  address: ':where(:root)',
+  address: ':root',
   state: [
     [whenSmall, (base) => multiply(base, 7 / 8)],
     [whenLarge, (base) => multiply(base, 5 / 4)],
@@ -15,5 +15,5 @@ export const textSize = token('16px', {
 
 export const fontWeight = token(400, {
   name: 'font-weight',
-  address: ':where(:root)',
+  address: ':root',
 })

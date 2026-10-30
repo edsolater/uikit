@@ -17,4 +17,4 @@ export const brand: ColorMaterial = {
   },
   purpose: 'content',
 }
-export const brandColor = toColorToken(brand, 'brand-color', ':where(:root)')
+export const brandColor = toColorToken(brand, 'brand-color', ':root')

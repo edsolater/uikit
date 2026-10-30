@@ -6,7 +6,7 @@ import { whenSoft } from '../conditions/profile'
 
 export const baseOpacity = token(1, {
   name: 'base-opacity',
-  address: ':where(:root)',
+  address: ':root',
   state: [
     [whenDisabled, (base) => multiply(base, 0.48)],
     [whenSoft, (base) => multiply(base, 0.72)],

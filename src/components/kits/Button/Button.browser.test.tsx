@@ -211,7 +211,7 @@ describe('Button styles', () => {
   })
 
   test.each([false, true])(
-    'filled 普通语气保留明度反馈，危险材料遵循层叠，交互退出恢复：strong=%s',
+    'filled 按下时移除阴影，普通语气保留明度反馈，危险材料遵循层叠，退出恢复：strong=%s',
     async (strong) => {
       document.documentElement.dataset.theme = 'light'
       mountButtonStyles()
@@ -261,6 +261,7 @@ describe('Button styles', () => {
         await userEvent.keyboard('[Space>]')
         try {
           expect(button.matches(':hover:active')).toBe(true)
+          expect(appearance(button)['box-shadow']).toBe('none')
           if (danger)
             expectSameColor(
               appearance(button)['background-color'],

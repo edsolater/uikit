@@ -86,14 +86,7 @@ export const buttonPaddingBlock = buttonToken(baseSpace, {
     xlarge: (base) => multiply(base, 3 / 2),
   },
 })
-export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3), {
-  state: {
-    small: (base) => multiply(base, 1 / 2),
-    large: (base) => multiply(base, 4 / 3),
-    xlarge: (base) => multiply(base, 2),
-  },
-})
-
+export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3))
 export const buttonBoxShadow = buttonToken(baseShadowSmall, {
   state: {
     plain: 'none',

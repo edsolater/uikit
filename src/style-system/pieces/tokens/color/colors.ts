@@ -12,7 +12,7 @@ export const contentColor = token(inkColor, 'content-color')
 /** 多个线条共用的混合强度，可在全局或具体作用域声明。 */
 export const lineStrength = token(0.18, {
   name: 'line-strength',
-  address: ':where(:root)',
+  address: ':root',
 })
 
 /**

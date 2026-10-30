@@ -24,10 +24,10 @@ export const whenEnabled = stateCondition(
 export const whenLoading = stateCondition('&[data-status~="loading"]')
 
 /** 当前主体悬停，不隐式排除其他状态。 */
-export const whenHover = stateCondition('&:where(:hover)')
+export const whenHover = stateCondition('&:hover')
 
 /** 当前主体按下，不隐式排除其他状态。 */
-export const whenActive = stateCondition('&:where(:active)')
+export const whenActive = stateCondition('&:active')
 
 /** 交互快捷名；focus 沿用既有的焦点提示含义。 */
 export const interactionStateConditions = {

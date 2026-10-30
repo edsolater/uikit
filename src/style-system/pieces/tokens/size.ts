@@ -5,7 +5,7 @@ import { whenSmall, whenLarge, whenXlarge } from '../conditions/profile'
 
 export const controlSize = token('48px', {
   name: 'control-size',
-  address: ':where(:root)',
+  address: ':root',
   state: [
     [whenSmall, (base) => multiply(base, 2 / 3)],
     [whenLarge, (base) => multiply(base, 4 / 3)],

@@ -9,7 +9,7 @@ import { oklch } from '../functions/oklch'
 /** 阴影与遮罩的根主题来源，不随消费处的局部地址移动。 */
 export const shadowColor = token('rgb(0 0 0 / 4%)', {
   name: 'shadow-color',
-  address: ':where(:root)',
+  address: ':root',
   state: [
     [
       whenDarkTheme,
@@ -19,7 +19,7 @@ export const shadowColor = token('rgb(0 0 0 / 4%)', {
 })
 export const backdropColor = token('rgb(0 0 0 / 62%)', {
   name: 'backdrop-color',
-  address: ':where(:root)',
+  address: ':root',
   state: [
     [
       whenDarkTheme,
@@ -31,7 +31,7 @@ export const backdropColor = token('rgb(0 0 0 / 62%)', {
 /** 所有阴影共用的几何长度基准；各层保持自身的位移与模糊比例。 */
 export const shadowDistance = token('1px', {
   name: 'shadow-distance',
-  address: ':where(:root)',
+  address: ':root',
 })
 
 /** 小位移、短模糊的单层阴影。 */
@@ -44,7 +44,7 @@ export const baseShadowSmall = token(
   }),
   {
     name: 'base-shadow-small',
-    address: ':where(:root)',
+    address: ':root',
     state: [
       [
         whenDarkTheme,
@@ -80,7 +80,7 @@ export const baseShadow = token(
   ),
   {
     name: 'base-shadow',
-    address: ':where(:root)',
+    address: ':root',
     state: [
       [
         whenDarkTheme,
@@ -125,7 +125,7 @@ export const baseShadowLarge = token(
   ),
   {
     name: 'base-shadow-large',
-    address: ':where(:root)',
+    address: ':root',
     state: [
       [
         whenDarkTheme,
@@ -168,7 +168,7 @@ export const baseShadowLarger = token(
   ),
   {
     name: 'base-shadow-larger',
-    address: ':where(:root)',
+    address: ':root',
     state: [
       [
         whenDarkTheme,
@@ -211,7 +211,7 @@ export const baseShadowLargest = token(
   ),
   {
     name: 'base-shadow-largest',
-    address: ':where(:root)',
+    address: ':root',
     state: [
       [
         whenDarkTheme,
@@ -239,5 +239,5 @@ export const baseShadowLargest = token(
 /** 消费处将此长度用于 blur()，较轻或较重的模糊直接相对它计算。 */
 export const blurRadius = token('8px', {
   name: 'blur-radius',
-  address: ':where(:root)',
+  address: ':root',
 })
