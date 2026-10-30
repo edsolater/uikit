@@ -5,7 +5,13 @@
  *
  * 让直接值、计算和状态使用同一对象表达。
  */
-import { isFunction } from '@edsolater/fnkit'
+import {
+  isBoolean,
+  isString,
+  isFunction,
+  isObject,
+  isObjectLike,
+} from '@edsolater/fnkit'
 import {
   isJSSContent,
   contentDataToCSSString,
@@ -146,7 +152,7 @@ function createToken<T extends TokenData>(
   source?: Token,
   prefixName?: string,
 ): Token<T> {
-  const protocol = typeof options === 'string' ? { name: options } : options
+  const protocol = isString(options) ? { name: options } : options
   const entityName =
     protocol?.name ??
     (source !== undefined || prefixName !== undefined
@@ -211,7 +217,7 @@ function tokenFrom<T extends TokenData>(
   options?: string | (TokenOptions<T> & { default?: T }),
   prefixName?: string,
 ): Token<T> {
-  const additional = typeof options === 'string' ? { name: options } : options
+  const additional = isString(options) ? { name: options } : options
   const definition = {
     default: source,
     address: source.address,
@@ -231,9 +237,7 @@ function tokenFrom<T extends TokenData>(
  * 识别由统一创建入口建立的 Token，不读取内容或执行函数。
  */
 export const isToken = (input: unknown): input is Token =>
-  ((typeof input === 'object' && input !== null) ||
-    typeof input === 'function') &&
-  tokens.has(input as object)
+  isObjectLike(input) && tokens.has(input)
 
 /**
  * 提供定义基础的实际 CSS 内容，保留特殊格式与依赖而不读取自身变量引用。
@@ -241,8 +245,8 @@ export const isToken = (input: unknown): input is Token =>
 export const tokenBaseContent = (input: Token): TokenInput =>
   customOutputs.has(input) ||
   input.default === null ||
-  typeof input.default === 'boolean' ||
-  (typeof input.default === 'object' && !isJSSContent(input.default))
+  isBoolean(input.default) ||
+  (isObject(input.default) && !isJSSContent(input.default))
     ? baseOutputs.get(input)!
     : (input.default as TokenInput)
 
@@ -250,7 +254,7 @@ export const tokenBaseContent = (input: Token): TokenInput =>
  * 输出无需子内容编译的字符串和数值，其余内容等待编译器解析。
  */
 function primitiveToCSSString(input: unknown): string | undefined {
-  return typeof input === 'string' || typeof input === 'number'
+  return isString(input) || typeof input === 'number'
     ? String(input)
     : undefined
 }

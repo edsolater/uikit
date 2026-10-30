@@ -4,6 +4,7 @@
  *
  * 材料保存颜色规则，环境只参与本次计算，不写入材料历史。
  */
+import { isFunction } from '@edsolater/fnkit'
 import { mix } from './tools/mix'
 
 export interface OKLCH {
@@ -187,8 +188,7 @@ export function evaluateSensitivity(
   base: Readonly<OKLCH>,
   environment: Readonly<ColorEnvironment>,
 ): number {
-  const response =
-    typeof rule === 'function' ? rule(base, environment) : (rule ?? 0)
+  const response = isFunction(rule) ? rule(base, environment) : (rule ?? 0)
   if (!Number.isFinite(response) || response < 0 || response > 1) {
     throw new RangeError('环境感知比例必须是 0～1 之间的有限数值')
   }
@@ -202,10 +202,9 @@ export function evaluateLightnessTarget(
   environment: ColorEnvironment,
 ): number | undefined {
   if (environment.tint?.lightness === undefined) return undefined
-  const target =
-    typeof rule === 'function'
-      ? rule(base, environment)
-      : (rule ?? environment.tint.lightness)
+  const target = isFunction(rule)
+    ? rule(base, environment)
+    : (rule ?? environment.tint.lightness)
   if (!Number.isFinite(target))
     throw new RangeError('材料环境明度目标必须是有限数值')
   return target

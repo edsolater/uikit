@@ -3,6 +3,7 @@
  * 它不负责路由标题规则、页面元信息管理或服务端文档头生成。
  * 调用方传入标题语义，这里只消费并镜像浏览器当前标题状态。
  */
+import { isString } from '@edsolater/fnkit'
 import {
   createEffect,
   onCleanup,
@@ -49,7 +50,7 @@ export function useDocumentTitle(
   createEffect(nextTitle, (title) => {
     if (
       typeof document === 'undefined' ||
-      typeof title !== 'string' ||
+      !isString(title) ||
       title.length === 0
     ) {
       return

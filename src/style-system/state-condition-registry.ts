@@ -1,5 +1,5 @@
 /** 状态快捷名静态对应现成条件，查找不改变 CSS 或声明顺序。 */
-import { assert } from '@edsolater/fnkit'
+import { isString, assert } from '@edsolater/fnkit'
 import type { StateCondition, StateConditionInput } from './state-condition'
 import { interactionStateConditions } from './pieces/conditions/interaction'
 import { profileStateConditions } from './pieces/conditions/profile'
@@ -17,7 +17,7 @@ export const stateConditionRegistry: Record<string, StateCondition> =
 export function resolveStateCondition(
   input: StateConditionInput,
 ): StateCondition {
-  if (typeof input !== 'string') return input
+  if (!isString(input)) return input
   assert(
     Object.hasOwn(stateConditionRegistry, input),
     'State Condition 快捷名未登记：' + input + '。',

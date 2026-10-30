@@ -3,7 +3,7 @@ import { flush } from 'solid-js'
 import { afterEach, expect, test } from 'vitest'
 import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
-import { createState, render } from '@/foundation'
+import { createState, render, val } from '@/foundation'
 import { allButton, Button, type ButtonController } from './Button'
 
 let dispose: (() => void) | undefined
@@ -42,10 +42,17 @@ test('组件引用控制状态，DOM 引用聚焦按钮，整体命令保留外�
   expect(first.getAttribute('aria-busy')).toBe('true')
   expect(second.getAttribute('aria-busy')).not.toBe('true')
 
-  allButton.setStatus('disabled', true)
+  const results = allButton.setStatus('disabled', true)
   flush()
+  expect(Array.from(results)).toEqual([undefined, undefined])
   expect(first.disabled).toBe(true)
   expect(second.disabled).toBe(false)
+  expect(
+    allButton
+      .hasStatus('disabled')
+      .map((status) => val(status))
+      .join(','),
+  ).toBe('true,false')
   externallyDisabled.set(true)
   flush()
   allButton.setStatus('disabled', false)

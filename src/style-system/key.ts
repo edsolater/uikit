@@ -94,6 +94,6 @@ export function propertyName(key: JSSKey): string {
  * 内容对象同样读取自身等级。
  */
 export const keyPriority = (key: JSSKey | undefined): number =>
-  key !== undefined && typeof key !== 'string'
+  key !== undefined && !isString(key)
     ? (('priority' in key ? key.priority : undefined) ?? 999)
     : 999

@@ -5,7 +5,7 @@
  *
  * 让注册与普通 AST 资源共用撤销机制。
  */
-import { assert, mapGet } from '@edsolater/fnkit'
+import { isBoolean, isString, assert, mapGet } from '@edsolater/fnkit'
 import { propertyName } from '../key'
 import type { JSSCompileContext } from '../content'
 import type { ASTController, JSSStyleNode } from '../compiler/contracts'
@@ -113,11 +113,11 @@ export function cssRegistrationDeclarations(
   registration: NonNullable<TokenOptions['registration']>,
 ): [key: string, content: TokenInput][] {
   assert(
-    typeof registration.syntax === 'string',
+    isString(registration.syntax),
     'Token registration.syntax 必须是字符串。',
   )
   assert(
-    typeof registration.inherits === 'boolean',
+    isBoolean(registration.inherits),
     'Token registration.inherits 必须是 boolean。',
   )
   const declarations: [key: string, content: TokenInput][] = [

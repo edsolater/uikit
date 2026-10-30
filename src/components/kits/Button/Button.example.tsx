@@ -36,10 +36,18 @@ export function ButtonExample() {
             此按钮加载
           </Button>
           <Button onClick={() => buttonElement.focus?.()}>聚焦此按钮</Button>
-          <Button onClick={() => allButton.setStatus('loading', true)}>
+          <Button
+            onClick={() => {
+              allButton.setStatus('loading', true)
+            }}
+          >
             全部加载
           </Button>
-          <Button onClick={() => allButton.setStatus('loading', false)}>
+          <Button
+            onClick={() => {
+              allButton.setStatus('loading', false)
+            }}
+          >
             结束全部加载
           </Button>
         </div>

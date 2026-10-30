@@ -1,5 +1,6 @@
 /** 保存组件公开对象的引用，接收器返回的清理函数在实例退出时释放引用。 */
 import { createState } from '@/foundation'
+import { bindThisIfFunction } from '@edsolater/fnkit'
 
 /** 组件通过 ref 交付公开对象；接收方可返回实例退出时的清理动作。 */
 export type RefReceiver<T> = (value: T) => void | (() => void)
@@ -24,7 +25,7 @@ export function createRef<T extends object>(): [
       const controller = reference.read() as T | undefined
       if (!controller) return undefined
       const value = Reflect.get(controller, key, controller)
-      return typeof value === 'function' ? value.bind(controller) : value
+      return bindThisIfFunction(value, controller)
     },
     set(_, key, value) {
       const controller = reference.read() as T | undefined

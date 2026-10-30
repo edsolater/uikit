@@ -6,7 +6,9 @@
 
 Controller 公开既有 `setStatus`、`hasStatus`。外部已声明的 loading、disabled 始终由外部 Source 控制，setStatus 不覆盖它。原生聚焦、点击等操作通过独立的 DOM 引用使用。
 
-`allButton.setStatus` 将命令转发到当前接入的全部按钮，不保存给未来实例。if 关闭时退出整体控制，重新显示仍保留该 Button 自己此前的内部状态。`allButton.style` 直接提供本文件下文列出的原有 Token，保留 Token 身份和独立 Source 阶段；不为每个实例重复应用同一 Token。整体入口不提供实例查询或原生元素引用。
+`allButton` 将当前实例的属性与方法统一映射为集合代理，不设置方法白名单。例如 `allButton.setStatus('loading', true)` 立即逐个操作并返回该次结果集合，`allButton.hasStatus('disabled')` 返回各实例的状态来源集合，不自动解包。深层路径可继续读取与调用；预取路径仍跟随当前实例，空集合继续得到空集合代理，调用结果则固定为该次结果，不因再次读取而重复操作。
+
+FNKit 的 `createVirtualBatchAccessor(controllers)` 直接接收 Controller 集合，创建以函数为 target、Array.prototype 为原型的批量访问器，支持 Array.from、length、数字索引及数组操作；FNKit isArray 返回 true，原生 Array.isArray 返回 false。数组固有成员优先于同名实例成员，直接绑定本次映射快照，保留原生参数和原生返回值；例如 map 返回普通数组，不继续包装批量访问器。数组操作不登记、注销或回写 Controller。`allButton.style` 是静态扩展，直接提供原有 Token，保留身份和独立 Source 阶段。if 关闭时退出整体控制，重新显示保留实例自己的内部状态；整体操作不保存给未来实例。
 
 ## 分类契约与样式
 

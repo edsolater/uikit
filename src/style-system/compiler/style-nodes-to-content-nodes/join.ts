@@ -6,7 +6,7 @@
  * 让隐藏结果保留依赖来源，失效时完整撤销全部历史。
  */
 import { createCompiledContent } from '../compiled-content'
-import { assert } from '@edsolater/fnkit'
+import { isString, assert } from '@edsolater/fnkit'
 import { conditionAddressKey } from '../../condition'
 import {
   keyPriority,
@@ -60,7 +60,7 @@ function captureInputs(
     inputs.set(node, {
       key: node.key,
       join:
-        typeof node.key === 'string' || !node.key || !('join' in node.key)
+        isString(node.key) || !node.key || !('join' in node.key)
           ? undefined
           : node.key.join,
       content: node.content,
@@ -170,7 +170,7 @@ export class Join {
         position === undefined ||
         position <= previousPosition ||
         node.key !== snapshot.key ||
-        (typeof node.key === 'string' || !node.key || !('join' in node.key)
+        (isString(node.key) || !node.key || !('join' in node.key)
           ? undefined
           : node.key.join) !== snapshot.join ||
         node.content !== snapshot.content ||

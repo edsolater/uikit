@@ -12,7 +12,7 @@ import {
 } from '@/foundation'
 import { mapArray } from '@/foundation/render'
 import { createMemo } from '@/foundation/reactivity'
-import { isTruthy, toArray } from '@edsolater/fnkit'
+import { isString, isTruthy, toArray } from '@edsolater/fnkit'
 
 type StyleValueAtom = string | number | null | undefined
 type StyleRecord = {
@@ -86,7 +86,7 @@ function parseStyleRecord(style: StyleAtom): ParsedStyleRecord {
     return {}
   }
 
-  if (typeof style !== 'string') {
+  if (!isString(style)) {
     return style as ParsedStyleRecord
   }
 

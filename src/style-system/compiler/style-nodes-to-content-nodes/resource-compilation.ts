@@ -5,6 +5,7 @@
  *
  * 让共享资源保留全部存活消费者，并按生成时的规则身份关联。
  */
+import { isObject, isString } from '@edsolater/fnkit'
 import { propertyName } from '../../key'
 import type { Rule, Rules } from '../../rule'
 import type { JSSContentContext, JSSContent } from '../../content'
@@ -28,7 +29,7 @@ function ruleAddress(
 ): string {
   const [conditionPath, key, content] = rule
   const identity =
-    content && typeof content === 'object' && 'resourceIdentity' in content
+    isObject(content) && 'resourceIdentity' in content
       ? content.resourceIdentity
       : undefined
   if (identity !== undefined && !identities.has(identity))
@@ -36,7 +37,7 @@ function ruleAddress(
   return JSON.stringify([
     conditionAddressKey({
       targetConditionPath: (conditionPath ?? []).map((item) =>
-        typeof item === 'string' ? condition(item) : item,
+        isString(item) ? condition(item) : item,
       ),
       stateConditionPath: [],
     }),

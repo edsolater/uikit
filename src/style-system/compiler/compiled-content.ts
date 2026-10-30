@@ -5,6 +5,7 @@
  *
  * 避免格式化或连接再次运行已经完成的生产函数。
  */
+import { isFunction } from '@edsolater/fnkit'
 import {
   contentDataToCSSString,
   contentDependencies,
@@ -31,7 +32,7 @@ export function createCompiledContent(
       return view.content === content
         ? contentToCSSString(
             content,
-            typeof compiledContents === 'function'
+            isFunction(compiledContents)
               ? compiledContents()
               : compiledContents,
           )

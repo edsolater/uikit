@@ -1,5 +1,5 @@
+import { isBigInt, isSymbol, type Stringable } from '@edsolater/fnkit'
 import type { JSX } from '@/foundation'
-import type { Stringable } from '@edsolater/fnkit'
 
 export type JSXable = JSX.Element | Stringable
 
@@ -12,7 +12,7 @@ export function toJSX(value: JSXable): JSX.Element {
     return ''
   }
 
-  if (typeof value === 'bigint' || typeof value === 'symbol') {
+  if (isBigInt(value) || isSymbol(value)) {
     return String(value)
   }
 

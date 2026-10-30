@@ -6,6 +6,7 @@
  * 让配方复用内容协议，避免将内容行为误当配置字段。
  */
 import { isJSSContent } from '../../content'
+import { isObject } from '@edsolater/fnkit'
 import type { Declarations } from '../../rule'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../token-factory/list'
@@ -43,8 +44,7 @@ export const contentText = (
 ): Declarations => [
   [
     $font,
-    options.font &&
-    typeof options.font === 'object' &&
+    isObject(options.font) &&
     !isJSSContent(options.font) &&
     'family' in options.font
       ? fontValue(options.font)
@@ -98,7 +98,7 @@ export const contentLayout = (
  */
 function paddingDeclarations(input: PaddingInput): Declarations {
   if (Array.isArray(input)) return [[$padding, valueSequence(...input)]]
-  if (input && typeof input === 'object' && !isJSSContent(input)) {
+  if (isObject(input) && !isJSSContent(input)) {
     const sides = input as PaddingSides
     return [
       [$paddingTop, sides.top],

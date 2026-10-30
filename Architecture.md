@@ -63,7 +63,11 @@ Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p�
 
 ## Button 控制与样式
 
-Button 的 `ref` 公开 `ButtonController`，通过既有 StatusActions 操作内部状态；`domRef` 独立公开真实 button，Controller 不包含 DOM。Piv 仅提供 `domRef`，Dode 在字段初始化后执行接收器并管理清理。Button 借真实元素接入时向 Controller 注册器登记同一对象，退出时注销并释放引用。`allButton` 用 Proxy 把明确的状态命令转发到当前实例，`style` 直接公开 Button 原有 Token；整体命令不重放到未来实例，外部声明状态继续由外部 Source 控制。`createRef` 对应组件 ref，`createDomRef` 对应 domRef，后者复用前者的稳定 Partial 代理与接收清理能力；使用者直接访问对象方法，私有 State 不暴露。
+Button 的 `ref` 公开 `ButtonController`，通过既有 StatusActions 操作内部状态；`domRef` 独立公开真实 button，Controller 不包含 DOM。Piv 仅提供 `domRef`，Dode 在字段初始化后执行接收器并管理清理。Button 借真实元素接入时向 Controller 注册器登记同一对象，退出时注销并释放引用。注册器仅保存 Set，并用通用集合代理提供 `allButton`；成员路径实时读取当前实例，方法调用保留所属对象的 this，返回固定的当次结果集合，不重放调用或解包异步／状态。空集合仍可继续深层访问与调用。`style` 是静态扩展，直接公开原有 Token；操作不保留给未来实例，外部状态归属不变。`createRef` 对应组件 ref，`createDomRef` 对应 domRef，后者复用前者的稳定 Partial 代理与接收清理能力。
+
+FNKit 的 [createPathCollector](../fnkit/src/structure-path-collector.ts) 单独负责无限路径收集及读取、调用委托，不保存业务节点数据。[createVirtualBatchAccessor](../fnkit/src/collection-virtual-batch-accessor.ts) 直接接收 Iterable 集合，消费路径并通过 getByPath 读取成员，负责数组接口、所属对象的 this 及固定调用结果。UIKit 从 `@edsolater/fnkit` 公开入口导入，注册器直接传入当前 Controller 的 Set；不维护临时副本或 getter 适配。
+
+批量访问器以函数为 target、Array.prototype 为原型；FNKit 的 isArray 识别它，原生 Array.isArray 仍为 false。数组固有成员与数字索引优先，map 等直接绑定本次映射快照，保留原生参数和返回值，不增加数组结果包装。只有成员路径及成员方法的调用结果继续保持批量访问能力。数组操作不改变注册集合。
 
 ```txt
 导入 Button.style.ts

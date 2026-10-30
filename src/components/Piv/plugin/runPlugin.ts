@@ -5,6 +5,7 @@
  * plugin 的返回值只表达 prompt 类声明补丁；第二参数提供的结构工具会改变真实 DOM 附属结构，
  * 但不应改变调用方心智里的 Piv 主体层级。
  */
+import { hasProperty, isFunction, isString } from '@edsolater/fnkit'
 import { createPluginInstanceSymbol } from '../../plugins/plugin-instance'
 import {
   children,
@@ -43,7 +44,7 @@ export function runPlugin<Tag extends PivTag>(
     const pluginInstance = plugin[createPluginInstanceSymbol]()
     return pluginInstance.plugin(createPivPluginContext(element))
   }
-  if (typeof plugin === 'function') {
+  if (isFunction(plugin)) {
     return (plugin as PivPluginFunction<Tag>)(createPivPluginContext(element))
   } else {
     return plugin.plugin(createPivPluginContext(element))
@@ -54,7 +55,7 @@ export function runPlugin<Tag extends PivTag>(
 function isDefinedPlugin<Tag extends PivTag>(
   plugin: PivPlugin<Tag>,
 ): plugin is Plugin<any, object, Tag> {
-  return typeof plugin === 'function' && createPluginInstanceSymbol in plugin
+  return isFunction(plugin) && hasProperty(plugin, createPluginInstanceSymbol)
 }
 
 /**
@@ -125,7 +126,7 @@ function createPivPluginContext<Tag extends PivTag>(
           // Fragment 插入后会被清空，提交与下一轮 diff 必须记录实际移出的子节点。
           if (child instanceof DocumentFragment) nodes.push(...child.childNodes)
           else if (child instanceof Node) nodes.push(child)
-          else if (typeof child === 'string' || typeof child === 'number') {
+          else if (isString(child) || typeof child === 'number') {
             nodes.push(document.createTextNode(String(child)))
           }
         }

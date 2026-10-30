@@ -70,9 +70,7 @@ export function resolveConditionPath(
       // for-of 保留稀疏孔为 undefined，交由规则入口既有校验拒绝。
       for (const child of item) visit(child)
     } else {
-      path.push(
-        typeof item === 'string' ? condition(item) : (item as Condition),
-      )
+      path.push(isString(item) ? condition(item) : (item as Condition))
     }
   }
   visit(input)

@@ -5,7 +5,13 @@
  *
  * 后续定义处理不再识别原始调用形式。
  */
-import { assert, isArray, isFunction, isString } from '@edsolater/fnkit'
+import {
+  assert,
+  hasProperty,
+  isArray,
+  isFunction,
+  isString,
+} from '@edsolater/fnkit'
 import { isJSSContent, type JSSContent } from '../content'
 import type {
   TokenData,
@@ -62,12 +68,12 @@ export function parseTokenArgs<T extends TokenData>(
   if (config.state !== undefined)
     for (const [inputCondition, rule] of stateEntries(config.state)) {
       assert(
-        typeof inputCondition === 'string' || isStateCondition(inputCondition),
+        isString(inputCondition) || isStateCondition(inputCondition),
         'Token 状态条件必须是已登记快捷名或 StateCondition。',
       )
       assert(
         rule === undefined ||
-          typeof rule === 'string' ||
+          isString(rule) ||
           typeof rule === 'number' ||
           isJSSContent(rule) ||
           isFunction(rule),
@@ -94,10 +100,10 @@ function* stateEntries(
   if (
     isArray(source) &&
     source.length === 2 &&
-    (typeof source[0] === 'string' || isStateCondition(source[0]))
+    (isString(source[0]) || isStateCondition(source[0]))
   ) {
     yield [source[0], source[1]]
-  } else if (Symbol.iterator in source) {
+  } else if (hasProperty(source, Symbol.iterator)) {
     for (const child of source as Iterable<TokenStateInput>)
       yield* stateEntries(child)
   } else {

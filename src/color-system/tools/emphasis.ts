@@ -5,6 +5,7 @@
  *
  * 同步调整材料的环境感知，供后续颜色处理与环境求值使用。
  */
+import { isFunction } from '@edsolater/fnkit'
 import {
   evaluateLightnessTarget,
   evaluateSensitivity,
@@ -144,10 +145,9 @@ function adjustEnvironmentSensitivities(
 
   for (const channel of ['lightness', 'chroma', 'hue'] as const) {
     const rule = color.environmentSensitivities?.[channel]
-    sensitivities[channel] =
-      typeof rule === 'function'
-        ? (base, combined) => adjust(evaluateSensitivity(rule, base, combined))
-        : adjust(evaluateSensitivity(rule, color.base, environment))
+    sensitivities[channel] = isFunction(rule)
+      ? (base, combined) => adjust(evaluateSensitivity(rule, base, combined))
+      : adjust(evaluateSensitivity(rule, color.base, environment))
   }
   return sensitivities
 }

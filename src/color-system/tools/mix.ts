@@ -5,6 +5,7 @@
  * 混合后仍是一份可继续处理、按本次环境求值的材料。
  */
 
+import { isFunction } from '@edsolater/fnkit'
 import {
   evaluateLightnessTarget,
   evaluateSensitivity,
@@ -138,10 +139,8 @@ export function mix(
     )
       continue
     if (
-      sources.some(
-        (source) =>
-          typeof source.material.environmentSensitivities?.[channel] ===
-          'function',
+      sources.some((source) =>
+        isFunction(source.material.environmentSensitivities?.[channel]),
       )
     ) {
       environmentSensitivities[channel] = (base, environment) =>

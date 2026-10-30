@@ -79,12 +79,9 @@ export type ButtonStatus = 'loading' | 'disabled'
 /** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
 export type ButtonController = StatusActions<ButtonStatus>
 
-const buttonControllers = createControllerRegistry<
-  ButtonController,
-  'setStatus'
->(['setStatus'])
+const buttonControllers = createControllerRegistry<ButtonController>()
 
-/** 对当前存活按钮转发命令；style 直接公开原有 Token，命令不保留给未来实例。 */
+/** 当前按钮的统一集合映射；style 直接公开原有 Token，调用不保留给未来实例。 */
 export const allButton = Object.assign(buttonControllers.all, {
   style: buttonStyle,
 })
