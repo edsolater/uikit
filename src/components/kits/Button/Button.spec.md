@@ -4,9 +4,9 @@
 
 `ref` 接收 `ButtonController`，`domRef` 独立接收真实 button，Controller 不包含 DOM。`createRef<ButtonController>()` 与 `ref` 配对，直接使用 `button.setStatus?.('loading', true)`；`createDomRef<HTMLButtonElement>()` 与 `domRef` 配对，直接使用 `buttonElement.focus?.()`。两者都返回稳定的 Partial 引用和接收器，未接入或退出后各属性为 undefined；方法及 getter 保留当前接收对象的 this。接收器可返回清理函数；组件 ref 随 Button 作用域销毁清理，domRef 随原生元素销毁清理。
 
-Controller 公开既有 `setStatus`、`hasStatus`。外部已声明的 loading、disabled 始终由外部 Source 控制，setStatus 不覆盖它。原生聚焦、点击等操作通过独立的 DOM 引用使用。
+ButtonController 直接使用 StatusController，按候选原名公开 `loading`、`disabled` 只读状态视图，通过 `val(button.loading)` 直接读取；`hasStatus` 复用对应的同一视图，`setStatus` 保留原操作。外部已声明的 loading、disabled 始终由外部 Source 控制，setStatus 不覆盖它。原生聚焦、点击等操作通过独立的 DOM 引用使用。
 
-`allButtons` 将当前实例的属性与方法统一映射为集合代理，不设置方法白名单。例如 `allButtons.setStatus('loading', true)` 立即逐个操作并返回该次结果集合，`allButtons.hasStatus('disabled')` 返回各实例的状态来源集合，不自动解包。深层路径可继续读取与调用；预取路径仍跟随当前实例，空集合继续得到空集合代理，调用结果则固定为该次结果，不因再次读取而重复操作。
+`allButtons` 将当前实例的属性与方法统一映射为集合代理，不设置方法白名单。例如 `allButtons.setStatus('loading', true)` 立即逐个操作并返回该次结果集合，`allButtons.hasStatus('disabled')` 返回各实例的状态来源集合，不自动解包；`allButtons.loading.map((loading) => val(loading))` 可读取每个实例的 loading 状态。深层路径可继续读取与调用；预取路径仍跟随当前实例，空集合继续得到空集合代理，调用结果则固定为该次结果，不因再次读取而重复操作。
 
 FNKit 的 `createVirtualBatchAccessor(controllers)` 直接接收 Controller 集合，创建以函数为 target、Array.prototype 为原型的批量访问器，支持 Array.from、length、数字索引及数组操作；FNKit isArray 返回 true，原生 Array.isArray 返回 false。数组固有成员优先于同名实例成员，直接绑定本次映射快照，保留原生参数和原生返回值；例如 map 返回普通数组，不继续包装批量访问器。数组操作不登记、注销或回写 Controller。注册器空创建 `[accessor, registry]`，分别提供集合访问与登记能力。Button 将第一项直接导出为 `allButtons`，用第二项 `buttonRegistry.addStyleTokens(buttonStyle)` 完成样式登记，登记方法不返回入口；创建只需 ButtonController 类型，`allButtons.style` 直接提供原样式 Token 集合，保留身份和独立 Source 阶段。Controller 创建后即登记并交付组件 ref，register 返回注销动作，由 Button 作用域的 onCleanup 执行。if 关闭只清理 DOM 引用，组件 ref 与整体控制继续有效，隐藏期间的状态操作在重新显示时体现；Button 真正销毁才注销并释放组件引用。整体操作不保存给未来实例。
 

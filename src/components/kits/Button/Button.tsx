@@ -24,7 +24,7 @@ import {
 import {
   createStatusPropsParser,
   type StatusProps,
-  type StatusActions,
+  type StatusController,
 } from '../utils/parseStatusProps'
 import { buttonMapping } from './Button.mapping'
 import * as buttonStyle from './Button.style'
@@ -77,7 +77,7 @@ export type ButtonSize = 'small' | 'large' | 'xlarge'
 export type ButtonStatus = 'loading' | 'disabled'
 
 /** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
-export type ButtonController = StatusActions<ButtonStatus>
+export type ButtonController = StatusController<ButtonStatus>
 
 /** 当前按钮的统一集合映射；style 直接公开原有 Token，调用不保留给未来实例。 */
 const [allButtons, buttonRegistry] =
@@ -136,8 +136,8 @@ const parseButtonStatusProps = createStatusPropsParser({
 // 实际核心定义代码
 export function Button(props: ButtonProps) {
   const { variantShadowProps } = parseButtonVariantProps(props)
-  const { statusShadowProps, statusActions } = parseButtonStatusProps(props)
-  const controller: ButtonController = statusActions
+  const { statusShadowProps, statusController } = parseButtonStatusProps(props)
+  const controller: ButtonController = statusController
   const unregister = buttonRegistry.register(controller)
   const cleanupRef = props.ref?.(controller)
   onCleanup(() => {

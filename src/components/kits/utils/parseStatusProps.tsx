@@ -5,7 +5,15 @@
  *
  * 让多个可同时成立的状态保持为统一的 Source。
  */
-import { createState, val, type Source, type State } from '@/foundation'
+import {
+  createState,
+  stateView,
+  val,
+  type Source,
+  type State,
+  type StateView,
+} from '@/foundation'
+import { toRecord } from '@edsolater/fnkit'
 import { derive } from '@/hooks'
 import type { ShadowProps } from '../../Piv/plugin/handlePivPlugin'
 
@@ -18,7 +26,11 @@ export type StatusDetails<StatusName extends string> = {
   [Name in StatusName]: Source<boolean | undefined>
 }
 
-export interface StatusActions<StatusName extends string> {
+/** 按候选原名直接读取状态，不添加前缀或改变大小写。 */
+export type StatusController<StatusName extends string> = Record<
+  StatusName,
+  StateView<boolean>
+> & {
   /** 外部没有声明该状态时，从组件内部改变它；外部已声明时调用保持无效且不报错。 */
   setStatus(status: StatusName, value: boolean | undefined): void
 
@@ -30,7 +42,7 @@ export interface StatusActions<StatusName extends string> {
  * 创建组件专用的 Status Props 解析器。
  *
  * Status 天然允许多个候选同时成立。外部一旦声明某个状态字段，该字段便始终跟随外部 Source；
- * 只有外部没有声明的状态才能由 statusActions 从组件内部改变。
+ * 只有外部没有声明的状态才能由 statusController 从组件内部改变。
  */
 export function createStatusPropsParser<
   const Candidates extends string[],
@@ -48,6 +60,7 @@ export function createStatusPropsParser<
   type StatusName = Candidates[number]
 
   return function parseStatusProps(props: StatusProps<StatusName>) {
+    const candidates: StatusName[] = options.candidates
     const propRecord = props as Record<string, unknown>
     const externalStatusNames = new Set(
       options.candidates.filter((statusName) => statusName in props),
@@ -68,13 +81,19 @@ export function createStatusPropsParser<
         : internalStatus
     }
 
-    const statusActions: StatusActions<StatusName> = {
+    const statusViews = toRecord(
+      candidates,
+      (statusName) => statusName,
+      (statusName) => stateView(() => Boolean(val(statusDetails[statusName]))),
+    )
+    const statusController: StatusController<StatusName> = {
+      ...statusViews,
       setStatus(status, value) {
         if (externalStatusNames.has(status)) return
         internalStatusStates[status].set(value)
       },
       hasStatus(status) {
-        return derive(statusDetails[status], Boolean)
+        return statusViews[status]
       },
     }
 
@@ -95,7 +114,7 @@ export function createStatusPropsParser<
 
     return {
       details: statusDetails,
-      statusActions,
+      statusController,
       statusShadowProps,
     }
   }

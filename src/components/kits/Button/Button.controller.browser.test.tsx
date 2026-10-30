@@ -43,12 +43,14 @@ test('组件引用控制状态，DOM 引用聚焦按钮，整体命令保留外�
   flush()
   expect(first.getAttribute('aria-busy')).toBe('true')
   expect(second.getAttribute('aria-busy')).not.toBe('true')
+  expect(val(button.loading)).toBe(true)
 
   const results = allButtons.setStatus('disabled', true)
   flush()
   expect(Array.from(results)).toEqual([undefined, undefined])
   expect(first.disabled).toBe(true)
   expect(second.disabled).toBe(false)
+  expect(allButtons.loading.map((status) => val(status))).toEqual([true, false])
   expect(
     allButtons
       .hasStatus('disabled')
