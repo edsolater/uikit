@@ -6,7 +6,7 @@ Style System 让业务定义、复用和组合样式，同时明确谁控制什�
 
 ## 一个 Token 统一内容与状态
 
-Token 的第一个参数是基础内容，第二个参数是配置；普通对象和数组作为原始数据，不解析其 default、hover 等字段。直接 token(source) 创建新 Token 并继承来源配置，追加配置覆盖顶层字段、按条件软合并 state；default 默认引用 source，完整名保留来源引用并组合当前实体，缺省实体自动生成。state 支持对象、Map、条件 entry 及其嵌套组合，按顺序展开容器并保留 entry 配对。生产函数只为明确的延迟生产目的提供，不能用作继承开关；计算表达式内部的 Token 按内容消费。创建结果统一为 default、name、state、address、registration、onFirstScan、compileWaveIndex，消费端不再复制配置。
+Token 的第一个参数是基础内容，第二个参数是配置；普通对象和数组作为原始数据，不解析其 default、hover 等字段。直接 token(source) 创建新 Token 并继承来源配置，追加配置覆盖顶层字段、按条件软合并 state；default 默认引用 source。未指定 name 时保留来源名并追加自动标识，显式 name 替代这整个自动组合，prefix 仅补充在名称之前。state 支持对象、Map、条件 entry 及其嵌套组合，按顺序展开容器并保留 entry 配对。生产函数只为明确的延迟生产目的提供，不能用作继承开关；计算表达式内部的 Token 按内容消费。创建结果统一为 default、name、state、address、registration、onFirstScan、compileWaveIndex，消费端不再复制配置。
 
 组合定义由普通函数读取信息并返回新 Token。Token 不内置 Variant；用途函数同样返回 Token。没有 RuleToken、独立 adjust 或用于重放加工的来源记录。函数返回后，使用方只处理 Token 定义和实际引用，不识别它怎么创建。
 

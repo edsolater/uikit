@@ -251,7 +251,7 @@ describe('实际引用与消费退出', () => {
       [['.Child'], ...declare(source, '7px')],
     ])
     expect(declarationsAt(resource, ['.Child'])).not.toContain(
-      '--dependency-frame-source-dependency-frame-line: var(--dependency-frame-source);',
+      '--dependency-frame-line: var(--dependency-frame-source);',
     )
     const css = compileRules([
       [['@keyframes dependency-animation', 'to'], 'width', line],
@@ -259,7 +259,7 @@ describe('实际引用与消费退出', () => {
     ])
     expect(
       declarationsAt(css, ['@keyframes dependency-animation', 'to']),
-    ).toContain('--dependency-frame-source-dependency-frame-line: var(--dependency-frame-source);')
+    ).toContain('--dependency-frame-line: var(--dependency-frame-source);')
   })
 
   test.each([false, true])(
@@ -287,12 +287,12 @@ describe('实际引用与消费退出', () => {
       const css = compileRules(rules)
       expect(
         css.includes(
-          '--dependency-lifetime-source-dependency-lifetime-line: var(--dependency-lifetime-source);',
+          '--dependency-lifetime-line: var(--dependency-lifetime-source);',
         ),
       ).toBe(shared)
       expect(css).not.toContain('border-color:')
       const next = compileRules([[['.Child'], ...declare(source, 'blue')]])
-      expect(next).not.toContain('--dependency-lifetime-source-dependency-lifetime-line:')
+      expect(next).not.toContain('--dependency-lifetime-line:')
       expect(next).toContain('--dependency-lifetime-source: blue;')
     },
   )

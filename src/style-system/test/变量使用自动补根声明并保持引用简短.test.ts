@@ -105,9 +105,9 @@ test('多层引用各自声明一条关系，使用处不展开依赖链', () =>
   const css = compileRules([[['.Consumer'], 'color', surface]])
   const root = css.match(/:root\)?\s*\{([^}]+)\}/)?.[1] ?? ''
   expect(root).toContain('--root-chain-paper: white;')
-  expect(root).toContain('--root-chain-paper-root-chain-canvas: var(--root-chain-paper);')
-  expect(root).toContain('--root-chain-paper-root-chain-canvas-root-chain-surface: var(--root-chain-paper-root-chain-canvas);')
-  expect(css).toContain('color: var(--root-chain-paper-root-chain-canvas-root-chain-surface);')
+  expect(root).toContain('--root-chain-canvas: var(--root-chain-paper);')
+  expect(root).toContain('--root-chain-surface: var(--root-chain-canvas);')
+  expect(css).toContain('color: var(--root-chain-surface);')
   expect(css).not.toMatch(/var\([^)]*,/)
   expect(css).not.toContain('root-chain-unused')
   expect(unusedCalls).toBe(0)
@@ -251,9 +251,9 @@ test.each([false, true])(
     const css = compileRules(rules)
     expect(css.includes('--root-shared-paper: white;')).toBe(shared)
     expect(
-      css.includes('--root-shared-paper-root-shared-canvas: var(--root-shared-paper);'),
+      css.includes('--root-shared-canvas: var(--root-shared-paper);'),
     ).toBe(shared)
-    expect(css).not.toMatch(/(?:^|\n)color: var\(--root-shared-paper-root-shared-canvas\);/)
+    expect(css).not.toMatch(/(?:^|\n)color: var\(--root-shared-canvas\);/)
     if (!shared) expect(css).toBe('')
   },
 )
@@ -273,7 +273,7 @@ test('更窄条件覆盖不抑制普通派生默认，真正祖先覆盖继续�
   ])
   expect(css).toContain('--position-source: blue;')
   expect(css).toContain('--position-source: red;')
-  expect(css).toContain('--position-source-position-surface: var(--position-source);')
+  expect(css).toContain('--position-surface: var(--position-source);')
   const scoped = compileRules([
     [['.Panel'], ...declare(source, 'green')],
     [['.Panel', '.Child'], 'color', surface],

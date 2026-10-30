@@ -4,7 +4,7 @@ import { compileRules } from '../../css-root'
 import { token } from '../core'
 import { createNewTokenGenerator } from './createNewTokenGenerator'
 
-test('具名来源保留可追溯前缀，每次派生自动唯一且状态独立', () => {
+test('未指定名称时生成器补充前缀并保留来源名，多个派生名称唯一且状态独立', () => {
   const buttonToken = createNewTokenGenerator({
     prefixName: 'button',
     address: '.NamedButton',

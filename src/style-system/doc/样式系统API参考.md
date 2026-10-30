@@ -59,7 +59,7 @@ const source = token('2px')
 const target = token(source)
 ```
 
-token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source，完整名包含来源完整名这一引用部分，以及当前 Token 自身的实体标识。options.name 只指定实体，省略时自动生成，不复用来源完整身份。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
+token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source。未指定 name 时保留来源名并追加自动标识，显式 name 替代这整个自动组合，不再累计来源名。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
 
 ```ts
 const panelSpace = token(baseSpace, {
@@ -79,9 +79,9 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-完整 name 按“可选前缀-可选来源引用-自身实体标识”组合。普通 `token(value, { name: 'brand-color' })` 的完整名为 `brand-color`；`token(source, { name: 'local' })` 得到 `brand-color-local`，省略实体时得到 `brand-color-<自动标识>`。内部名称不含 CSS 双连字符，CSS 输出为 `--${name}`。
+未指定 name 时，名称按“可选前缀-可用来源名-自动标识”组合；显式 name 替代“来源名-自动标识”整体。来源名为 `brand-color` 时，`token(source, { name: 'local' })` 得到 `local`，多级显式命名也不累计来源。前缀始终只是名称的补充，因此前缀为 `button`、显式 name 为 `gap` 时，最终为 `button-gap`。内部名称不含 CSS 双连字符，CSS 输出为 `--${name}`。
 
-生成器只提供统一前缀与定义地址，调用处不能传名称字符串或指定 `name`、`address`。`buttonToken(source)` 得到 `button-brand-color-<自动标识>`，直接 `buttonToken('red')` 得到 `button-<自动标识>`。前缀不改变实体；匿名 Token 来源也以稳定内部名参与引用，取得名称不改变来源的纯值身份。地址未配置时随消费位置发布，不继承来源地址。对应行为见 [Token 的创建与复用](behaviors/Token的创建与复用.md#完整名由前缀引用和实体组成)。
+生成器只提供统一前缀与定义地址，调用处不能传名称字符串或指定 `name`、`address`。`buttonToken(source)` 得到 `button-brand-color-<自动标识>`，直接 `buttonToken('red')` 得到 `button-<自动标识>`。匿名 Token 来源也以稳定内部名参与自动名称组合，取得名称不改变来源的纯值身份。地址未配置时随消费位置发布，不继承来源地址。对应行为见 [Token 的创建与复用](behaviors/Token的创建与复用.md#显式名称与自动名称)。
 
 业务含义由供人阅读的 JS 变量名表达；CSS 自定义属性名只是系统派生或自动生成的映射标识，具体拼写没有业务意义，主要用于测试定位和调试追溯。通过 Token 对象取得对应名称，无须手工维护两套语义名称。
 

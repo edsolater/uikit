@@ -1,4 +1,4 @@
-/** 按来源派生 Token 的 CSS 名称，并统一管理定义地址。 */
+/** 为 Token 名称补充前缀，并统一管理定义地址。 */
 import {
   token,
   createTokenDefinition,
@@ -38,6 +38,7 @@ interface ManagedTokenGenerator {
  * 未配置地址时随消费位置发布，不继承来源地址。
  */
 export function createNewTokenGenerator(config: {
+  /** 仅附在名称之前；显式 name 替代来源名与自动标识时，前缀仍保留。 */
   prefixName: string
   address?: TokenAddress
 }): ManagedTokenGenerator {

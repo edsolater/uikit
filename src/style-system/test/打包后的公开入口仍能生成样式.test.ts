@@ -117,8 +117,8 @@ test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
   expect(declarationOrder).toEqual(
     [...declarationOrder].sort((left, right) => left - right),
   )
-  expect(output).toContain('--bundle-surface-bundle-line: var(--bundle-surface);')
-  expect(output).toContain('border-color: var(--bundle-surface-bundle-line);')
+  expect(output).toContain('--bundle-line: var(--bundle-surface);')
+  expect(output).toContain('border-color: var(--bundle-line);')
   expect(output).toContain('--bundle-opacity: 0.5;')
   expect(output).toContain('--bundle-surface: blue;')
   expect(output).toMatch(/calc\(var\(--[^)]+\) \+ 3\)/)

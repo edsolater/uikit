@@ -13,35 +13,52 @@ test('聚合入口创建匿名直接值，编译为 CSS value 并暴露内部类
   expect(size._kind).toBe('css-value')
 })
 
-test('完整名由来源引用和自身实体组成，多级引用保留每层身份', () => {
+test('显式名称替代来源与自动标识，多级显式命名不累计来源，前缀仅补充名称', () => {
   const source = token('red', { name: 'brand-color' })
   const local = token(source, { name: 'local' })
-  const nested = token(local, { name: 'nested' })
+  const nested = token(local, 'nested')
   const automatic = token(source)
   const another = token(source)
   const prefixed = createTokenDefinition(source, { name: 'local' }, 'button')
   expect(source.name).toBe('brand-color')
-  expect(local.name).toBe('brand-color-local')
-  expect(prefixed.name).toBe('button-brand-color-local')
-  expect(nested.name).toBe('brand-color-local-nested')
+  expect(local.name).toBe('local')
+  expect(prefixed.name).toBe('button-local')
+  expect(nested.name).toBe('nested')
   expect(automatic.name).toMatch(/^brand-color-.+/)
   expect(automatic.name).not.toBe(another.name)
   expect(local.default).toBe(source)
-  expect(cssTokenName(local)).toBe('--brand-color-local')
+  expect(cssTokenName(local)).toBe('--local')
+  const css = compileRules([
+    [['.Local'], 'color', local],
+    [['.Nested'], 'color', nested],
+    [['.Prefixed'], 'color', prefixed],
+  ])
+  expect(css).toContain('--local: var(--brand-color);')
+  expect(css).toContain('--nested: var(--local);')
+  expect(css).toContain('--button-local: var(--brand-color);')
+  expect(css).toContain('color: var(--local);')
+  expect(css).toContain('color: var(--nested);')
+  expect(css).toContain('color: var(--button-local);')
 })
 
 test('匿名来源取得稳定引用名，派生与编译不升级来源的纯值身份', () => {
   const source = token('2px')
   const reference = resolveTokenName(source)
-  const local = token(source, { name: 'local' })
-  expect(local.name).toBe(`${reference}-local`)
+  const local = token(source)
+  expect(local.name).toMatch(new RegExp(`^${reference}-.+`))
   expect(source.name).toBeUndefined()
-  expect(compileRules([[['.Anonymous'], 'width', source]])).toContain(
-    'width: 2px;',
-  )
+  const css = compileRules([
+    [['.Anonymous'], 'width', source],
+    [['.Derived'], 'width', local],
+  ])
+  expect(css).toContain('width: 2px;')
+  expect(css).toContain(`--${local.name}: 2px;`)
+  expect(css).toContain(`width: var(--${local.name});`)
   expect(source._kind).toBe('css-value')
   expect(resolveTokenName(source)).toBe(reference)
-  expect(token(source, { name: 'later' }).name).toBe(`${reference}-later`)
+  const another = token(source)
+  expect(another.name).toMatch(new RegExp(`^${reference}-.+`))
+  expect(another.name).not.toBe(local.name)
 })
 
 test('普通匿名值直接输出，引用创建保留表达式与独立身份', () => {
@@ -124,7 +141,7 @@ test('未消费内容不求值，合法共享完成而最终循环明确失败',
   expect(() => compileRules([[['.Cycle'], 'color', cycle]])).toThrow('循环')
 })
 
-test('引用名与显式实体组合，继承注册和默认值覆盖不改变来源', () => {
+test('显式命名不影响注册继承，覆盖基础值不改写来源', () => {
   const source = token(2, {
     name: 'from-registered',
     address: '.Source',
@@ -143,8 +160,8 @@ test('引用名与显式实体组合，继承注册和默认值覆盖不改变�
   expect(css).toContain('syntax: "<number>";')
   expect(css).toContain('inherits: false;')
   expect(css).toMatch(/\.Source\s*\{[^}]*--from-registered: 2;/)
-  expect(copy.name).toBe('from-registered-local')
-  expect(css).toMatch(/\.Copy\s*\{[^}]*--from-registered-local: 4;/)
+  expect(copy.name).toBe('local')
+  expect(css).toMatch(/\.Copy\s*\{[^}]*--local: 4;/)
   expect(copy).not.toBe(source)
 })
 
@@ -184,7 +201,7 @@ test('同条件覆盖保持原位置，新条件追加，来源状态不变', ()
   )
 })
 
-test('空状态保留来源，清除状态和缺省实体不丢失引用身份', () => {
+test('空状态保留继承规则，清除状态且省略名称时仍自动命名', () => {
   const source = token(1, { name: 'from-clear-source', state: { hover: 2 } })
   const inherited = token(source, { name: 'from-empty-state', state: {} })
   const cleared = token(source, {
@@ -196,7 +213,7 @@ test('空状态保留来源，清除状态和缺省实体不丢失引用身份',
     [['.Inherited'], 'opacity', inherited],
     [['.Cleared'], 'opacity', cleared],
   ])
-  expect(inherited.name).toBe('from-clear-source-from-empty-state')
+  expect(inherited.name).toBe('from-empty-state')
   expect(css).toContain(`--${inherited.name}: 2;`)
   expect(cleared.name).toMatch(/^from-clear-source-.+/)
   expect(css).toContain(`--${cleared.name}: 1;`)

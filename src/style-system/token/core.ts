@@ -52,7 +52,10 @@ export type TokenAddress = Exclude<ConditionInput, undefined>
 
 /** Token 基础配置及特殊内容的编译、输出协议。 */
 export interface TokenOptions<T extends TokenData = TokenData> {
-  /** 当前 Token 自身的实体标识；完整名还会组合来源引用和生成器前缀。 */
+  /**
+   * 显式名称替代默认的“来源名-自动标识”整体，前缀仍补充在名称之前。
+   * 省略时保留来源名并分配独立标识；普通匿名直接值仍按需命名。
+   */
   name?: string
   state?: TokenStateInput
   /**
@@ -152,7 +155,13 @@ function createToken<T extends TokenData>(
   const name =
     entityName === undefined
       ? undefined
-      : [prefixName, source && resolveTokenName(source), entityName]
+      : [
+          prefixName,
+          protocol?.name === undefined && source
+            ? resolveTokenName(source)
+            : undefined,
+          entityName,
+        ]
           .filter((part) => part !== undefined)
           .join('-')
   const self: Token<T> = {

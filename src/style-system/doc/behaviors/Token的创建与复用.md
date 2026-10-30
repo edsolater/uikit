@@ -29,18 +29,20 @@ const localSpacing = token(spacing)
 const doubled = token(multiply(spacing, 2))
 ```
 
-localSpacing 是独立 Token，继承 spacing 的 address、state、registration 和生命周期配置，default 默认引用 spacing。追加配置覆盖同名顶层字段；state 同条件覆盖、新条件追加，显式 undefined 清除，空对象不删除已有条目。来源保持不变；新对象保留来源完整名作为引用部分，并使用自身实体标识，不复用来源身份。
+localSpacing 是独立 Token，继承 spacing 的 address、state、registration 和生命周期配置，default 默认引用 spacing。追加配置覆盖同名顶层字段；state 同条件覆盖、新条件追加，显式 undefined 清除，空对象不删除已有条目。来源保持不变；未指定 name 的新对象保留来源名并追加自动标识，显式 name 则替代这整个自动组合。
 
 已有 Token 直接传入，state 自然继承并软合并差异。生产函数用于延迟计算、消费时读取变化数据或等待内容可用等明确目的，不是继承开关。计算表达式内部的 Token 仍是内容引用；创建入口完成定义继承后，坍缩不再复制配置。其他加工由普通函数表达，不保存创建历史。
 
-## 完整名由前缀引用和实体组成
+## 显式名称与自动名称
 
-完整 name 以连字符连接可选前缀、可选来源引用和自身实体标识。`token()` 的 name 配置只指定实体；未指定时由系统自动分配。前缀和引用只参与组合，不改变实体。
+未指定 name 时，名称以连字符连接可选前缀、可用来源名和自动标识。显式 name 替代“来源名与自动标识”整体；前缀始终在名称前补充，不因显式 name 消失，也不再把来源名拼入显式名称。
 
 ```ts
 const source = token('red', { name: 'brand-color' })
 const local = token(source, { name: 'local' })
-// 完整名为 brand-color-local。
+// 完整名为 local。
+const nested = token(local, 'nested')
+// 完整名为 nested，不累计 brand-color 或 local。
 const automatic = token(source)
 // 完整名为 brand-color-<自动标识>。
 const buttonToken = createNewTokenGenerator({ prefixName: 'button', address: '.Button' })
@@ -50,7 +52,7 @@ const rawColor = buttonToken('blue')
 // 没有来源引用，完整名为 button-<自动标识>。
 ```
 
-普通创建没有前缀和引用；引用创建把来源完整名作为引用；生成器只增加统一前缀。无显式名称的 Token 来源也使用稳定内部名作为引用，取得名称不会升级来源的 CSS 身份；普通 `token('blue')` 仍可直接输出 blue。同一来源的自动派生拥有各自实体，状态不会因同名互相覆盖。内部名称不含 CSS 双连字符，CSS variable 输出只是 `--${name}`；不约定自动实体的格式，不维护显式与自动名称分类或占用登记。
+底层创建规则中，前缀为 button、显式 name 为 gap 时，最终名称为 button-gap；没有显式 name 时仍为 button-来源名-自动标识。匿名来源使用稳定内部名参与自动组合，取得名称不会升级来源的 CSS 身份；普通 `token('blue')` 仍可直接输出 blue。同一来源的自动派生名称各自唯一，状态不会因同名互相覆盖。内部名称不含 CSS 双连字符，CSS variable 输出只是 `--${name}`；不约定自动标识的格式，不维护显式与自动名称分类或占用登记。
 
 生成器调用处不能传名称字符串或指定 name、address；地址只由生成器配置决定，未配置时随消费位置发布，不继承来源地址。JS 变量名表达业务含义供人阅读，CSS 名称用于映射、测试定位和调试追溯。验证见 [Token 创建行为](../../token/core.test.ts) 与 [生成器行为](../../token/tools/createNewTokenGenerator.test.ts)。
 

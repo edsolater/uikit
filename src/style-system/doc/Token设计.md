@@ -232,7 +232,7 @@ const amount = doubled(4)
 
 加工已有 Token 同样使用普通函数：读取其 default、state 及其他规范化信息，组合需要继承或覆盖的部分，再创建一个新 Token。函数可以分别加工基础值和状态，也可以提供新的状态；具体组合由函数表达。
 
-直接传入已有 Token 时，token(source, options) 创建独立 Token 并继承其定义配置。default 默认引用 source，保留对来源当前 CSS 值的联动；完整名保留来源完整名作为引用部分，并为新 Token 确定自身实体标识；options.name 只指定实体，省略时自动生成，因此不会复用来源的完整身份。address、state、registration 和生命周期配置继承来源，追加配置覆盖相应顶层字段，显式 undefined 清除对应配置；default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态。整个过程不修改来源，也不复制运行身份、已分配的自动名称或隐藏的输出方法。
+直接传入已有 Token 时，token(source, options) 创建独立 Token 并继承其定义配置。default 默认引用 source，保留对来源当前 CSS 值的联动；未指定 name 时，名称保留来源完整名并追加自动标识；显式 name 替代这整个自动组合，不再累计来源名。address、state、registration 和生命周期配置继承来源，追加配置覆盖相应顶层字段，显式 undefined 清除对应配置；default 可以覆盖为不同类型。state 按条件合并，同 header 的规则覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清除整份状态。整个过程不修改来源，也不复制运行身份、已分配的自动名称或隐藏的输出方法。
 
 ```ts
 const panelSpace = token(baseSpace, {
@@ -252,7 +252,7 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-完整 name 由可选前缀、可选来源引用和自身实体标识组成，以连字符连接。普通 `token(value, { name: 'brand-color' })` 没有前缀或引用，完整名就是 `brand-color`；`token(source, { name: 'local' })` 把来源完整名作为引用，得到 `brand-color-local`；省略实体时生成 `brand-color-<自动标识>`。前缀只参与组合，不改变实体标识。普通匿名直接值仍按需要输出 CSS value，自动实体只在需要内部名称时分配。
+未指定 name 时，完整名称以连字符连接可选前缀、可用来源名和自动标识；显式 name 替代“来源名与自动标识”整体，前缀始终只在名称前补充。来源名为 `brand-color` 时，`token(source, { name: 'local' })` 得到 `local`，继续 `token(local, 'nested')` 得到 `nested`；省略 name 则生成 `brand-color-<自动标识>`。底层创建规则中，前缀为 `button`、显式 name 为 `gap` 时，最终名称为 `button-gap`。普通匿名直接值仍按需要输出 CSS value，自动标识只在需要内部名称时分配。
 
 生成器统一管理定义地址，只为同一创建模型提供前缀；调用处不能传名称字符串或指定 `name`、`address`。例如 `buttonToken(brandColor)` 得到 `button-brand-color-<自动标识>`；直接 `buttonToken('red')` 没有来源引用，得到 `button-<自动标识>`。无显式名称的 Token 来源也有稳定的内部完整名，派生时仍保留这一引用；取得引用名不会使来源从 CSS value 升级为 CSS variable。地址由生成器配置决定；未配置时随消费位置发布，不继承来源地址。其余配置继续沿用 Token 契约。
 
