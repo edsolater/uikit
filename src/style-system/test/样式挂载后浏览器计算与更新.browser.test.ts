@@ -16,6 +16,7 @@ import {
   animationValue,
 } from '../pieces/token-factory/animation'
 import { multiply } from '../pieces/functions/calc'
+import { translateY } from '../pieces/functions/transform'
 import { cssFunction } from '../css-function'
 import { colorMix } from '../pieces/functions/color-mix'
 import { contentLayout } from '../pieces/mixins/content'
@@ -81,6 +82,8 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
 })
 
 test('不同 Token 分支分别匹配，并由浏览器执行嵌套交集', async () => {
+  expect(translateY('1px').toCSSString()).toBe('translateY(1px)')
+  expect(translateY(undefined).toCSSString()).toBeUndefined()
   const distance = token('2px', {
     name: 'browser-distance-size',
     address: '.example',
@@ -92,12 +95,17 @@ test('不同 Token 分支分别匹配，并由浏览器执行嵌套交集', asyn
     state: [[testLarge, 3]],
   })
   handles.push(rule('.example', 'margin-left', multiply(distance, factor)))
+  handles.push(rule('.example', 'transform', translateY(distance)))
   root.mount()
   expect(getComputedStyle(element).marginLeft).toBe('4px')
+  expect(getComputedStyle(element).transform).toBe('matrix(1, 0, 0, 1, 0, 2)')
   element.dataset.large = ''
   expect(getComputedStyle(element).marginLeft).toBe('6px')
   await userEvent.hover(element)
   expect(getComputedStyle(element).marginLeft).toBe('12px')
+  expect(getComputedStyle(element).transform).toBe('matrix(1, 0, 0, 1, 0, 4)')
+  element.style.setProperty('--browser-distance-size', '6px')
+  expect(getComputedStyle(element).transform).toBe('matrix(1, 0, 0, 1, 0, 6)')
 })
 
 test('同址 Token 分支在浏览器中共同更新复合值', async () => {

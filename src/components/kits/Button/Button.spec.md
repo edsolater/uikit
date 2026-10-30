@@ -15,7 +15,7 @@ Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor�
 
 公开 Token 在 [Button.style.ts](./Button.style.ts) 独立命名并导出，外界可以读取定义、组合当前值引用、创建自己的派生定义，或通过 modify 在明确范围加工。控制包括读取和复用，不要求给 Token 增加可写接口，也不根据组件内部的消费次数决定是否公开。
 
-下表记录当前导出事实；现有导出不证明其长期公开必要性，也不是其他组件的模板，后续取舍依据[样式书写的一些权衡建议](../../../style-system/doc/样式书写的一些权衡建议.md)。
+组件独有且具有稳定视觉含义的控制量独立命名并公开，包括颜色、字号、字重、尺度、内容间隔、两向 padding、阴影和透明度。Source 表达独立来源阶段，不能与最终结果混同。取舍依据见[样式书写的一些权衡建议](../../../style-system/doc/样式书写的一些权衡建议.md)。
 
 | 导出 Token            | 职责与值来源                                           | 参与的 CSS 或后续定义                       |
 | --------------------- | ------------------------------------------------------ | ------------------------------------------- |
@@ -30,11 +30,13 @@ Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor�
 | `buttonGap`           | baseSpace 及其尺寸状态                                 | `gap`                                       |
 | `buttonPaddingBlock`  | 间距基准与组件尺寸差异                                 | `padding` 的上下值                          |
 | `buttonPaddingInline` | 间距基准的横向比例与组件尺寸差异                       | `padding` 的左右值                          |
-| `buttonShadow`        | 基础阴影材料与外观、交互、禁用差异                     | `box-shadow`                                |
-| `buttonOpacitySource` | baseOpacity 经强调状态选择后的透明度，尚未进行禁用缩放 | buttonOpacity 的基础内容，可独立读取        |
+| `buttonBoxShadow`     | 基础阴影材料与外观、交互、禁用差异                     | `box-shadow`                                |
+| `buttonOpacitySource` | 强调选择后、禁用缩放前的独立透明度阶段                 | 外部引用及 buttonOpacity 的基础内容         |
 | `buttonOpacity`       | 强调透明度与禁用缩放共同决定的有效透明度               | `opacity`                                   |
 
 这些控制点使 rules 直接表达属性与角色的对应。固定字体继承、行高、圆角、边框形式和光标反馈等内部规则仍可内联，不为每个常量另建公开 Token。
+
+控制量统一先定义导出，再在 rules 中引用；默认比例由组件维护，不取消外部独立控制。间隔与两向 padding 在按钮地址接收尺寸状态，上下 padding 仅覆盖与共享间距不同的超大档。buttonOpacitySource 保留强调选择后的完整阶段，buttonOpacity 在此基础上处理禁用缩放，两者均可独立引用。
 
 局部独立定制也可以创建自己的 Token，在匹配按钮的 CSS 属性中消费。手动 declare 保留为 dangerous 操作，不是公开控制点的默认使用方式；调用方自行承担层叠和状态交集后果。
 

@@ -32,7 +32,6 @@ const calculate = (
   operator: '+' | '*',
 ): Token<[TokenInput, TokenInput]> =>
   token<[TokenInput, TokenInput]>([amount, change], {
-    dependencies: (inputs) => inputs,
     toCSSString: ([amount, change], resolve) => {
       const left = resolve(amount)
       const right = resolve(change)

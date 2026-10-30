@@ -43,22 +43,24 @@ export const buttonColorSource = buttonToken(brandColor, {
   state: [interactiveColorStates({ chromaResponse: 1 }), { danger: badColor }],
 })
 
-const colorSource = colorMix(
-  {
-    color: {
-      base: buttonColorSource,
-      alpha: (current) => multiply(current, 0.14),
+export const buttonSurfaceColor = buttonToken(
+  colorMix(
+    {
+      color: {
+        base: buttonColorSource,
+        alpha: (current) => multiply(current, 0.14),
+      },
+      weight: 0.18,
     },
-    weight: 0.18,
+    surfaceColor,
+  ),
+  {
+    state: {
+      plain: 'transparent',
+      filled: buttonColorSource,
+    },
   },
-  surfaceColor,
 )
-export const buttonSurfaceColor = buttonToken(colorSource, {
-  state: {
-    plain: 'transparent',
-    filled: buttonColorSource,
-  },
-})
 
 export const buttonContentColor = buttonToken(contentColor, {
   state: { toned: buttonColorSource, filled: paperColor },
@@ -101,7 +103,7 @@ export const buttonBoxShadow = buttonToken(baseShadowSmall, {
     disabled: 'none',
   },
 })
-// 强调状态下、禁用缩放前的完整透明度，供读取并作为最终透明度的基准。
+// 强调选择后、禁用缩放前的独立透明度阶段，供外部引用与最终计算。
 export const buttonOpacitySource = buttonToken(multiply(baseOpacity, 0.9), {
   state: { soft: multiply(baseOpacity, 0.7), strong: baseOpacity },
 })
@@ -110,6 +112,14 @@ export const buttonOpacity = buttonToken(buttonOpacitySource, {
 })
 
 rules(button, [
+  paint({ background: buttonSurfaceColor, content: buttonContentColor }),
+  boundary({
+    border: [buttonBorderWidth, 'solid', buttonBorderColor],
+    radius: '999px',
+    cornerShape: 'squircle',
+  }),
+  size({ minHeight: buttonMinHeight }),
+
   contentText({
     font: 'inherit',
     fontSize: buttonTextSize,
@@ -122,13 +132,6 @@ rules(button, [
     gap: buttonGap,
     padding: [buttonPaddingBlock, buttonPaddingInline],
   }),
-  size({ minHeight: buttonMinHeight }),
-  boundary({
-    border: [buttonBorderWidth, 'solid', buttonBorderColor],
-    radius: '999px',
-    cornerShape: 'squircle',
-  }),
-  paint({ background: buttonSurfaceColor, content: buttonContentColor }),
   elevation(buttonBoxShadow),
   clickable({
     cursor: buttonToken('pointer', {

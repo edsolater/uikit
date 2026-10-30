@@ -1,6 +1,6 @@
 # JSS 内容组织工具公约
 
-functions 保存用已有输入组织内容的工具，例如 add、multiply、color、colorMix、oklch 和 translateY。内容模型统一为 [Token](../../doc/Token%E8%AE%BE%E8%AE%A1.md)；color 始终返回 Token，已有 Token 复用身份，其他值由现有构造入口承接。
+functions 保存用已有输入组织内容的工具，例如 add、multiply、color、colorMix、oklch 和 translateY。内容模型统一为 [Token](../../doc/Token%E8%AE%BE%E8%AE%A1.md)；color 始终返回 Token，已有 Token 无配置时复用身份，显式配置沿用 token 定义语义。
 
 ## 组织自身内容
 

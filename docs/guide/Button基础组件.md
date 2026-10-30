@@ -103,11 +103,11 @@ Status 是外部记录加内部管理能力。外部没有声明某字段时，�
 
 Button.style.ts 消费 data-appearance、data-emphasis、data-tone 和 data-size。filled 使用填充背景，outlined 保留浅底及可见轮廓，plain 常态透明且无边界。soft、普通、strong 依次提高整颗按钮的存在感，文字和图形内容一起变化；强调不改变外观形式、语气或尺寸。当前视觉配方使用整体透明度 0.7、0.9、1，这些数值由组件样式定义，不属于 Props 固定契约。各档禁用时仍使用通用 disabledFade。
 
-Button 从组件及包入口导出以下三个 Token，供内容引用或作为新定义的输入；它们由 Button 自身消费并在 address 自动定义：
+以下列出公开颜色 Token 的复用示例，供内容引用或作为新定义的输入；完整公开清单见 [Button 设计规格](../../src/components/kits/Button/Button.spec.md)。这些 Token 由 Button 自身消费并在 address 自动定义：
 
 | Token                 | 定义内容               | 复用方式                           |
 | --------------------- | ---------------------- | ---------------------------------- |
-| buttonColor           | 背景、语气文字和边界共用的基色 | 内容引用、定义复用                  |
+| buttonColorSource     | 背景、语气文字和边界共用的基色 | 内容引用、定义复用                  |
 | buttonSurfaceColor    | 最终背景色             | 内容引用、定义复用                  |
 | buttonContentColor    | 最终内容色             | 内容引用、定义复用                  |
 
