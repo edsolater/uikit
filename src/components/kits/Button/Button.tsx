@@ -7,7 +7,7 @@
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
-import type { Source } from '@/foundation'
+import { onCleanup, type Source } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
 import { createControllerRegistry } from '@/components/utils/controllerRegistry'
 import {
@@ -79,12 +79,13 @@ export type ButtonStatus = 'loading' | 'disabled'
 /** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
 export type ButtonController = StatusActions<ButtonStatus>
 
-const buttonControllers = createControllerRegistry<ButtonController>()
-
 /** 当前按钮的统一集合映射；style 直接公开原有 Token，调用不保留给未来实例。 */
-export const allButton = Object.assign(buttonControllers.all, {
-  style: buttonStyle,
-})
+const [allButtons, buttonRegistry] =
+  createControllerRegistry<ButtonController>()
+
+buttonRegistry.addStyleTokens(buttonStyle)
+
+export { allButtons }
 
 export interface ButtonProps
   extends
@@ -95,7 +96,7 @@ export interface ButtonProps
     VariantProps<'tone', ButtonTone>,
     VariantProps<'size', ButtonSize>,
     StatusProps<ButtonStatus> {
-  /** 接收此实例的 Controller，可返回元素退出时的清理动作。 */
+  /** 接收此实例的 Controller，可返回组件销毁时的清理动作。 */
   ref?: RefReceiver<ButtonController>
   /**
    * 动作名。
@@ -137,6 +138,12 @@ export function Button(props: ButtonProps) {
   const { variantShadowProps } = parseButtonVariantProps(props)
   const { statusShadowProps, statusActions } = parseButtonStatusProps(props)
   const controller: ButtonController = statusActions
+  const unregister = buttonRegistry.register(controller)
+  const cleanupRef = props.ref?.(controller)
+  onCleanup(() => {
+    unregister()
+    cleanupRef?.()
+  })
 
   return (
     <ComponentMarker
@@ -155,14 +162,6 @@ export function Button(props: ButtonProps) {
           statusShadowProps,
         ]}
         class="Button"
-        domRef={() => {
-          const unregister = buttonControllers.register(controller)
-          const releaseRef = props.ref?.(controller)
-          return () => {
-            unregister()
-            releaseRef?.()
-          }
-        }}
         plugins={[clickable({ componentName: 'Button' })]}
         htmlProps={{
           'aria-label': props.name,

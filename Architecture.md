@@ -63,7 +63,7 @@ Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p�
 
 ## Button 控制与样式
 
-Button 的 `ref` 公开 `ButtonController`，通过既有 StatusActions 操作内部状态；`domRef` 独立公开真实 button，Controller 不包含 DOM。Piv 仅提供 `domRef`，Dode 在字段初始化后执行接收器并管理清理。Button 借真实元素接入时向 Controller 注册器登记同一对象，退出时注销并释放引用。注册器仅保存 Set，并用通用集合代理提供 `allButton`；成员路径实时读取当前实例，方法调用保留所属对象的 this，返回固定的当次结果集合，不重放调用或解包异步／状态。空集合仍可继续深层访问与调用。`style` 是静态扩展，直接公开原有 Token；操作不保留给未来实例，外部状态归属不变。`createRef` 对应组件 ref，`createDomRef` 对应 domRef，后者复用前者的稳定 Partial 代理与接收清理能力。
+Button 的 `ref` 公开 `ButtonController`，通过既有 StatusActions 操作内部状态；`domRef` 独立公开真实 button，Controller 不包含 DOM。Piv 仅提供 `domRef`，Dode 在字段初始化后执行接收器并管理清理。Button 在自身作用域创建 Controller 后登记并交付组件 ref，onCleanup 在组件作用域销毁时注销并释放引用。Piv 的 if 隐藏只销毁原生元素并清理 domRef，Controller 与组件 ref 继续有效；重新显示时 DOM 使用当前状态。createControllerRegistry 空创建 `[accessor, registry]`：accessor 提供集合访问，registry 负责登记存活实例和样式 Token。Button 将 tuple 第一项直接导出为 `allButtons`，第二项 `buttonRegistry` 通过 `addStyleTokens(buttonStyle)` 完成样式登记。创建仅声明 Controller 类型，组件在公开使用 style 前完成登记；成员路径实时读取当前实例，方法调用保留所属对象的 this，返回固定的当次结果集合，不重放调用或解包异步／状态。空集合仍可继续深层访问与调用。`style` 是静态扩展，直接公开原有 Token；操作不保留给未来实例，外部状态归属不变。`createRef` 对应组件 ref，`createDomRef` 对应 domRef，后者复用前者的稳定 Partial 代理与接收清理能力。
 
 FNKit 的 [createPathCollector](../fnkit/src/structure-path-collector.ts) 单独负责无限路径收集及读取、调用委托，不保存业务节点数据。[createVirtualBatchAccessor](../fnkit/src/collection-virtual-batch-accessor.ts) 直接接收 Iterable 集合，消费路径并通过 getByPath 读取成员，负责数组接口、所属对象的 this 及固定调用结果。UIKit 从 `@edsolater/fnkit` 公开入口导入，注册器直接传入当前 Controller 的 Set；不维护临时副本或 getter 适配。
 
