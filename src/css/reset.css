@@ -183,37 +183,9 @@
     display: none !important;
   }
 
-  /* ========== popover ============ */
-
-  /* Popover 组件的样式重置和过渡效果定义。 */
-  :root {
-    --popover-transition-duration: 160ms;
-    --popover-scale-start: 0.96;
-    --popover-translate-y-start: 6px;
-  }
-
-  [popover] {
-    opacity: 0;
-    transform: translateY(var(--popover-translate-y-start))
-      scale(var(--popover-scale-start));
-    transform-origin: var(--popover-transform-origin, top center);
-    overscroll-behavior: contain; /* 阻止滚动链 */
-    transition:
-      opacity var(--popover-transition-duration) ease,
-      transform var(--popover-transition-duration) ease,
-      display var(--popover-transition-duration) ease allow-discrete,
-      overlay var(--popover-transition-duration) ease allow-discrete;
-
-    &:popover-open {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-
-      @starting-style {
-        opacity: 0;
-        transform: translateY(var(--popover-translate-y-start))
-          scale(var(--popover-scale-start));
-      }
-    }
+  /* 原生浮层阻止滚动链；组件装饰由各自显示主体拥有。 */
+  :where([popover]) {
+    overscroll-behavior: contain;
   }
 
   /* ========== dialog ========= */

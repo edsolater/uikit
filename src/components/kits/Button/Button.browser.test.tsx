@@ -53,7 +53,8 @@ import {
   paperColor,
 } from '@/style-system/pieces/tokens/color/palette'
 import '../../../components/kits/Input/Input.css'
-import '../../../components/kits/Popover/popover.css'
+import '@/components/Popover/PopoverSurface.style'
+import '@/components/kits/Popover/Popover.style'
 
 let dispose: (() => void) | undefined
 const handles: RulesHandle[] = []

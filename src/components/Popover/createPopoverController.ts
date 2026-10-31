@@ -1,16 +1,15 @@
 /**
- * 这个文件负责 Popover 的本地控制能力。
+ * Popover 的本地控制能力。
  * Controller 承载可对外公开的身份、可观察状态与业务操作；controllerBindings 负责内部对象的接入和连接生命周期。
  */
-import { stateView, val, type StateView } from '@/foundation'
-import { createToggle } from '@/hooks'
+import { createState, stateView, val, type StateView } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
 
 export type PopoverToggleState = 'open' | 'closed'
 
 export type PopoverToggleEvent = Event & {
-  newState?: PopoverToggleState
-  oldState?: PopoverToggleState
+  newState: PopoverToggleState
+  oldState: PopoverToggleState
 }
 
 type CreatePopoverControllerOptions = {
@@ -31,7 +30,7 @@ export type PopoverController = {
 /** 组件定义端将内部触发器和浮层接入 Controller，建立连接并在退出时释放。 */
 export type PopoverControllerBindings = {
   popoverDomRef: RefReceiver<HTMLDivElement>
-  triggerDomRef: RefReceiver<HTMLButtonElement>
+  triggerDomRef: RefReceiver<HTMLElement>
 }
 
 let popoverSequence = 0
@@ -43,10 +42,6 @@ function createPopoverIdentity() {
     popoverId: `popover-${popoverSequence}`,
     triggerId: `popover-trigger-${popoverSequence}`,
   }
-}
-
-function readPopoverOpenState(element?: HTMLDivElement) {
-  return element?.matches(':popover-open') ?? false
 }
 
 /**
@@ -64,35 +59,23 @@ export function createPopoverController(
   controllerBindings: PopoverControllerBindings,
 ] {
   const { popoverId, triggerId } = createPopoverIdentity()
-  const [isOpen, isOpenControl] = createToggle(false)
+  const isOpen = createState(false)
   let popoverElement: HTMLDivElement | undefined
-  let triggerElement: HTMLButtonElement | undefined
+  let triggerElement: HTMLElement | undefined
 
-  function triggerDomRef(element: HTMLButtonElement) {
+  function triggerDomRef(element: HTMLElement) {
     triggerElement = element
     return () => {
       triggerElement = undefined
     }
   }
 
-  function syncOpenState(nextOpen: boolean) {
-    if (nextOpen) {
-      isOpenControl.turnOn()
-      return
-    }
-
-    isOpenControl.turnOff()
-  }
-
   function popoverDomRef(element: HTMLDivElement) {
     popoverElement = element
     const handleToggle = (event: Event) => {
       const toggleEvent = event as PopoverToggleEvent
-      const nextOpen = toggleEvent.newState
-        ? toggleEvent.newState === 'open'
-        : readPopoverOpenState(element)
-
-      syncOpenState(nextOpen)
+      const nextOpen = element.matches(':popover-open')
+      isOpen.set(nextOpen)
       options.onToggle?.(nextOpen, toggleEvent)
     }
 
@@ -110,20 +93,21 @@ export function createPopoverController(
       element.removeEventListener('toggle', handleToggle)
       element.removeEventListener('beforetoggle', handleBeforeToggle)
       popoverElement = undefined
+      isOpen.set(false)
     }
   }
 
   function showPopover() {
     if (!popoverElement) return
-    popoverElement.showPopover?.()
-    isOpenControl.turnOn()
+    popoverElement.showPopover()
+    isOpen.set(popoverElement.matches(':popover-open'))
   }
 
   /** 关闭浮层；悬停说明关闭时可保留当前焦点。 */
   function hidePopover(restoreFocus = true) {
     if (!popoverElement) return
-    popoverElement.hidePopover?.()
-    isOpenControl.turnOff()
+    popoverElement.hidePopover()
+    isOpen.set(popoverElement.matches(':popover-open'))
     if (restoreFocus) triggerElement?.focus()
   }
 
@@ -139,8 +123,8 @@ export function createPopoverController(
     }
 
     if (!popoverElement) return
-    popoverElement.togglePopover?.()
-    syncOpenState(readPopoverOpenState(popoverElement))
+    popoverElement.togglePopover()
+    isOpen.set(popoverElement.matches(':popover-open'))
   }
 
   return [

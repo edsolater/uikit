@@ -78,6 +78,16 @@ for (const entry of exampleEntries) {
           document.querySelector<HTMLButtonElement>('.popover-row button')!,
         )
       }
+      if (entry.id === 'popover-surface') {
+        await userEvent.click(
+          document.querySelector<HTMLButtonElement>('[popovertarget]')!,
+        )
+      }
+      if (entry.id === 'label') {
+        await userEvent.hover(
+          document.querySelector<HTMLButtonElement>('.Label button')!,
+        )
+      }
       if (
         entry.id === 'component-marker' ||
         entry.id === 'component-marker-structure-view-trigger'

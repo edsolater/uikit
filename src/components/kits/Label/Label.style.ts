@@ -1,5 +1,5 @@
 /** 标题与问号在行内排布；原生浮层独立定位，不占用字段高度。 */
-import { rules } from '@/style-system'
+import { rules, token } from '@/style-system'
 
 rules('.Label', {
   display: 'inline-flex',
@@ -12,6 +12,28 @@ rules('.Label', {
   'min-width': 0,
 })
 rules(['.Label', '> label'], { cursor: 'pointer' })
+rules('.Label > .tooltipTrigger', {
+  'display': 'inline-grid',
+  'place-items': 'center',
+  'width': '15px',
+  'height': '15px',
+  'padding': 0,
+  'flex': 'none',
+  'border': '1px solid currentColor',
+  'border-radius': '50%',
+  'background': 'transparent',
+  'color': 'inherit',
+  'font': '11px system-ui',
+  'cursor': 'help',
+  'outline': token('none', {
+    name: 'label-tooltip-outline',
+    state: { focus: '2px solid #93c5fd' },
+  }),
+  'outline-offset': token('0', {
+    name: 'label-tooltip-outline-offset',
+    state: { focus: '2px' },
+  }),
+})
 rules('body:has(.StructureViewOverlay:popover-open) .Label > label', {
   visibility: 'hidden',
 })

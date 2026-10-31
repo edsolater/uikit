@@ -8,17 +8,18 @@ import {
   type ComponentDescriptionProps,
 } from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '../../Piv/Piv'
+import { Button } from '../Button/Button'
 import { addDefaultProps } from '../../utils/defaultProps'
 import {
   createVariantPropsParser,
   type VariantProps,
 } from '../utils/parseVariantProps'
-import { createStatusPropsParser } from '../utils/parseStatusProps'
 import {
   createPopoverController,
   type PopoverToggleEvent,
-} from './createPopoverController'
-import './popover.css'
+} from '@/components/Popover/createPopoverController'
+import { PopoverSurface } from '@/components/Popover/PopoverSurface'
+import './Popover.style'
 
 /**
  * Popover 相对触发器的位置 Variant Props。
@@ -51,6 +52,7 @@ export interface PopoverProps
   triggerClass?: string
   triggerStyle?: JSX.CSSProperties
   surfaceClass?: string
+  /** 原生浮层宿主的布局与DOM样式；完整轮廓材质使用Popover公开Token。 */
   surfaceStyle?: JSX.CSSProperties
   popover?: PopoverMode
   triggerAction?: PopoverAction
@@ -88,19 +90,12 @@ const parsePopoverVariantProps = createVariantPropsParser([
   { groupName: 'placement', candidates: ['top', 'right', 'bottom', 'left'] },
 ])
 
-const parsePopoverStatusProps = createStatusPropsParser({
-  candidates: ['open'],
-})
-
 export function Popover(props: PopoverProps) {
   const mergedProps = addDefaultProps(props, defaultPopoverProps)
-  const { variantShadowProps } = parsePopoverVariantProps(props)
+  const { variantShadowProps, details } = parsePopoverVariantProps(props)
   const [controller, controllerBindings] = createPopoverController({
     onToggle: mergedProps.onToggle,
     onBeforeToggle: mergedProps.onBeforeToggle,
-  })
-  const { statusShadowProps } = parsePopoverStatusProps({
-    open: controller.isOpen,
   })
 
   onMount(() => {
@@ -117,15 +112,22 @@ export function Popover(props: PopoverProps) {
       defaultDescription="显示补充内容"
     >
       <Piv
-        shadowProps={[variantShadowProps, statusShadowProps]}
-        class={joinClassName('Popover', mergedProps.class)}
+        shadowProps={variantShadowProps}
+        class={['Popover', mergedProps.class]}
         style={mergedProps.style}
       >
-        <Piv
-          as="button"
+        <Button
           id={controller.triggerId}
-          class={joinClassName('trigger', mergedProps.triggerClass)}
-          style={mergedProps.triggerStyle}
+          class={['trigger', mergedProps.triggerClass]}
+          disabled={
+            mergedProps.triggerProps?.disabled === '' ||
+            mergedProps.triggerProps?.disabled
+          }
+          loading={mergedProps.triggerProps?.['aria-busy'] === 'true'}
+          style={{
+            ...mergedProps.triggerStyle,
+            'anchor-name': `--${controller.triggerId}`,
+          }}
           domRef={controllerBindings.triggerDomRef}
           htmlProps={{
             'type': 'button',
@@ -140,30 +142,24 @@ export function Popover(props: PopoverProps) {
           }}
         >
           {mergedProps.trigger}
-        </Piv>
+        </Button>
 
-        <Piv
+        <PopoverSurface
           id={controller.popoverId}
-          class={joinClassName('surface', mergedProps.surfaceClass)}
+          anchor={`--${controller.triggerId}`}
+          placement={details.placement}
+          popover={mergedProps.popover}
+          class={['surface', mergedProps.surfaceClass]}
           style={mergedProps.surfaceStyle}
           domRef={controllerBindings.popoverDomRef}
-          htmlProps={{
-            popover: mergedProps.popover as any,
-            ...mergedProps.surfaceProps,
-          }}
+          htmlProps={mergedProps.surfaceProps}
         >
           <Show when={mergedProps.title}>
-            <div class="header">{mergedProps.title}</div>
+            <Piv class="header">{mergedProps.title}</Piv>
           </Show>
-          <div class="body">{mergedProps.children}</div>
-        </Piv>
+          <Piv class="body">{mergedProps.children}</Piv>
+        </PopoverSurface>
       </Piv>
     </ComponentMarker>
   )
-}
-
-function joinClassName(
-  ...classNames: Array<string | false | null | undefined>
-) {
-  return classNames.filter(Boolean).join(' ')
 }

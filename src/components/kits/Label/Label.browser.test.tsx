@@ -1,7 +1,7 @@
 /** 在真实浏览器验证字段关联、悬停阅读和键盘退出，不绑定内部状态。 */
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { render, createState } from '@/foundation'
+import { render, createState, val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import { cssRoot } from '@/style-system'
 import { Label } from './Label'
@@ -50,7 +50,7 @@ test('悬停浮层在上方且不改变输入排版，可以移入说明继续�
   dispose = render(
     () => (
       <>
-        <Label for="help-input" help="完整说明内容">
+        <Label for="help-input" tooltip="完整说明内容">
           字段
         </Label>
         <Piv as="input" id="help-input" />
@@ -75,9 +75,6 @@ test('悬停浮层在上方且不改变输入排版，可以移入说明继续�
   ).toBe('trim-both')
   await userEvent.hover(trigger)
   await expect.poll(() => surface.matches(':popover-open')).toBe(true)
-  expect(getComputedStyle(trigger).anchorName).toBe(
-    trigger.getAttribute('data-anchor'),
-  )
   expect(getComputedStyle(surface).positionAnchor).toBe(
     getComputedStyle(trigger).anchorName,
   )
@@ -97,7 +94,7 @@ test('键盘聚焦显示，Escape关闭不抢焦点，重新移入可再次查�
   dispose = render(
     () => (
       <>
-        <Label for="keyboard-input" help="键盘说明">
+        <Label for="keyboard-input" tooltip="键盘说明">
           字段
         </Label>
         <Piv as="input" id="keyboard-input" />
@@ -115,4 +112,43 @@ test('键盘聚焦显示，Escape关闭不抢焦点，重新移入可再次查�
   await userEvent.hover(host.querySelector('input')!)
   await userEvent.hover(trigger)
   await expect.poll(() => surface.matches(':popover-open')).toBe(true)
+})
+
+test('自定义触发内容与JSX段落复用同插件，Source清空回到问号', async () => {
+  const triggerContent = createState<string | undefined>('i')
+  const value = createState(129)
+  dispose = render(() => (
+    <>
+      <Label
+        for="template-input"
+        tooltipTrigger={triggerContent}
+        tooltip={<>
+          <Piv as="strong">命中{val(value)}</Piv>
+          <Piv as="p">共同有效域</Piv>
+        </>}
+      >
+        字段
+      </Label>
+      <Piv as="input" id="template-input" />
+    </>
+  ), host)
+  const trigger = host.querySelector('button')!
+  expect(trigger.textContent).toBe('i')
+  expect(trigger.querySelector('button')).toBeNull()
+  await userEvent.hover(trigger)
+  const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
+  await expect.poll(() => surface.matches(':popover-open')).toBe(true)
+  expect(surface.querySelector('p')?.textContent).toBe('共同有效域')
+  value.set(130)
+  await expect
+    .poll(() => surface.querySelector('strong')?.textContent)
+    .toBe('命中130')
+  triggerContent.set(undefined)
+  await expect.poll(() => trigger.textContent).toBe('?')
+  host.style.minHeight = '200vh'
+  window.scrollTo(0, 40)
+  await expect.poll(() =>
+    surface.getBoundingClientRect().bottom <= trigger.getBoundingClientRect().top,
+  ).toBe(true)
+  window.scrollTo(0, 0)
 })

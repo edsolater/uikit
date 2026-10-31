@@ -27,7 +27,7 @@ import {
   textSize,
   controlSize,
   fontWeight,
-  buttonBorderWidth,
+  baseBorderWidth,
   baseOpacity,
   baseShadow,
   baseShadowSmall,
@@ -75,6 +75,10 @@ export const buttonBoundaryColor = buttonToken(
 export const buttonBorderColor = buttonToken('transparent', {
   state: { outlined: buttonBoundaryColor },
 })
+export const buttonBorderWidth = buttonToken(baseBorderWidth, {
+  state: { plain: 0 },
+})
+export const buttonRadius = buttonToken('999px', { state: { plain: 0 } })
 
 export const buttonTextSize = buttonToken(textSize)
 export const buttonFontWeight = buttonToken(multiply(fontWeight, 7 / 4))
@@ -108,7 +112,7 @@ rules(button, [
   paint({ background: buttonSurfaceColor, content: buttonContentColor }),
   boundary({
     border: [buttonBorderWidth, 'solid', buttonBorderColor],
-    radius: '999px',
+    radius: buttonRadius,
     cornerShape: 'squircle',
   }),
   size({ minHeight: buttonMinHeight }),

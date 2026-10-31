@@ -35,6 +35,7 @@ import { CardExample } from '@/components/kits/Card/Card.example'
 import { ArticleExample } from '@/components/kits/Article/Article.example'
 import { InputExample } from '@/components/kits/Input/Input.example'
 import { PopoverExample } from '@/components/kits/Popover/Popover.example'
+import { PopoverSurfaceExample } from '@/components/Popover/PopoverSurface.example'
 import { PivStructureExample } from '@/components/Piv/PivStructure.example'
 import { DraggableExample } from '@/components/plugins/kits/draggable/draggable.example'
 import { DroppableExample } from '@/components/plugins/kits/droppable/droppable.example'
@@ -293,6 +294,15 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '文档标题的层级关系。',
     thumbnail: new URL('../thumbnails/heading.webp', import.meta.url).href,
     content: HeadingExample,
+  },
+  {
+    id: 'popover-surface',
+    level: 0.5,
+    title: 'PopoverSurface',
+    category: exampleCategories.component,
+    summary: '外部目标锚定与独立浮层。',
+    thumbnail: new URL('../thumbnails/popover-surface.webp', import.meta.url).href,
+    content: PopoverSurfaceExample,
   },
   {
     id: 'label',

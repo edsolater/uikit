@@ -9,7 +9,7 @@ import { hasProperty, isFunction, isString } from '@edsolater/fnkit'
 import { createPluginInstanceSymbol } from '../../plugins/plugin-instance'
 import {
   children,
-  createRenderEffect,
+  createEffect,
   onCleanup,
   type JSXElement,
   insert,
@@ -119,52 +119,52 @@ function createPivPluginContext<Tag extends PivTag>(
         : children(() => content).toArray
     let previousNodes: Node[] = []
 
-    createRenderEffect(
-      () => {
-        const nodes: Node[] = []
-        for (const child of resolved()) {
-          // Fragment 插入后会被清空，提交与下一轮 diff 必须记录实际移出的子节点。
-          if (child instanceof DocumentFragment) nodes.push(...child.childNodes)
-          else if (child instanceof Node) nodes.push(child)
-          else if (isString(child) || typeof child === 'number') {
-            nodes.push(document.createTextNode(String(child)))
-          }
+    /**
+     * 将最新附属节点提交到宿主当前位置，保留范围身份和多次after顺序。
+     */
+    const commit = (nodes: Node[]) => {
+      if (!range.end.parentNode) {
+        switch (position) {
+          case 'before':
+          case 'wrap':
+            element.before(range.start, range.end)
+            break
+          case 'after':
+            afterTail.after(range.start, range.end)
+            if (range.end.parentNode) afterTail = range.end
+            break
+          case 'prepend':
+            element.prepend(range.start, range.end)
+            break
+          case 'append':
+            element.append(range.start, range.end)
+            break
         }
-        return nodes
-      },
-      (nodes) => {
-        if (!range.end.parentNode) {
-          switch (position) {
-            case 'before':
-            case 'wrap':
-              element.before(range.start, range.end)
-              break
-            case 'after':
-              afterTail.after(range.start, range.end)
-              if (range.end.parentNode) afterTail = range.end
-              break
-            case 'prepend':
-              element.prepend(range.start, range.end)
-              break
-            case 'append':
-              element.append(range.start, range.end)
-              break
-          }
+      }
+      const parent = range.end.parentNode
+      if (!parent) return
+      insert(parent, nodes, range.end, previousNodes)
+      previousNodes = nodes
+      if (position === 'wrap') {
+        const wrapper = nodes.find(
+          (node): node is Element => node instanceof Element,
+        )
+        if (wrapper) wrapper.moveBefore(element, null)
+      }
+    }
+
+    createEffect(() => {
+      const nodes: Node[] = []
+      for (const child of resolved()) {
+        // Fragment 插入后会被清空，提交与下一轮 diff 必须记录实际移出的子节点。
+        if (child instanceof DocumentFragment) nodes.push(...child.childNodes)
+        else if (child instanceof Node) nodes.push(child)
+        else if (isString(child) || typeof child === 'number') {
+          nodes.push(document.createTextNode(String(child)))
         }
-        const parent = range.end.parentNode
-        if (!parent) return
-        insert(parent, nodes, range.end, previousNodes)
-        previousNodes = nodes
-        if (position === 'wrap') {
-          const wrapper = nodes.find(
-            (node): node is Element => node instanceof Element,
-          )
-          if (wrapper) wrapper.moveBefore(element, null)
-        }
-      },
-      // 等整棵初始 DOM 建立后再提交，计算阶段只负责解析内容。
-      { schedule: true },
-    )
+      }
+      return nodes
+    }, commit)
     onCleanup(() => removeRange(range))
   }
 

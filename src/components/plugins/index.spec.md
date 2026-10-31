@@ -22,9 +22,13 @@ const [plugin, controller] = usePlugin(hoverable)
 - `usePlugin.ts` 显式创建一份 Plugin 实例，把 Piv plugin 和 Controller 交给调用方。
 - `kits/` 只分组可用的具体 Plugin，不形成新的领域入口。
 - `utils/` 只分组 Plugins 领域内部的辅助代码，不形成新的领域入口。
-- `index.ts` 是 Plugins 领域的公开入口，只导出定义、显式实例化能力和具体 Plugin。
+- `../index.ts` 通过组件公开入口导出定义、显式实例化能力和具体 Plugin。
 
-当前具体 Plugin 包括 `clickable`、`hoverable`、`scope`、`topLayer`、`draggable` 与 `droppable`。Top Layer 同时公开纯 `createTopLayerController(element)` 和 `topLayer` Plugin；Plugin 只给同一控制能力增加 Piv 生命周期包装，其他原子能力可以直接使用控制器。二者共享包含 Anchor、几何保持、提升视觉和恢复在内的完整提升事务。`dragAndDrop` 是供 Scope 识别 Draggable/Droppable 协作的能力身份，不是第四个 Plugin。页面内拖动由 Pointer Events 驱动原始 source；原生 DragEvent 只服务系统外部材料进入 droppable。
+当前具体 Plugin 包括 `clickable`、`hoverable`、`scope`、`topLayer`、`draggable`、`droppable` 与 `tooltip`。
+
+tooltip通过Piv附属结构挂载中性Popover域的同一Surface与Controller，拥有辅助信息的悬停／焦点／Escape及延迟关闭。定位与箭头由PopoverSurface统一负责；Label.tooltip是末尾问号的快捷接入。
+
+Top Layer 同时公开纯 `createTopLayerController(element)` 和 `topLayer` Plugin；Plugin 只给同一控制能力增加 Piv 生命周期包装，其他原子能力可以直接使用控制器。二者共享包含 Anchor、几何保持、提升视觉和恢复在内的完整提升事务。`dragAndDrop` 是供 Scope 识别 Draggable/Droppable 协作的能力身份，不是第四个 Plugin。页面内拖动由 Pointer Events 驱动原始 source；原生 DragEvent 只服务系统外部材料进入 droppable。
 
 ## 为什么没有 Consume
 

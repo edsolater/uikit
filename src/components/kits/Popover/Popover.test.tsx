@@ -53,20 +53,4 @@ describe('Popover', () => {
     expect(popover.getAttribute('data-placement')).toBe('top')
   })
 
-  test('defaultOpen 通过内部状态输出 open Status 并更新 aria-expanded', () => {
-    const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(
-      () => (
-        <Popover defaultOpen trigger="打开">
-          内容
-        </Popover>
-      ),
-      host,
-    )
-    const popover = host.firstElementChild as HTMLElement
-    const trigger = popover.querySelector<HTMLButtonElement>('.trigger')!
-
-    expect(popover.getAttribute('data-status')).toBe('open')
-    expect(trigger.getAttribute('aria-expanded')).toBe('true')
-  })
 })

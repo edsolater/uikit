@@ -33,7 +33,9 @@ export * from './kits/Text/Text'
 export * from './kits/Label/Label'
 export * from './kits/Heading/Heading'
 export * from './kits/Popover/Popover'
-export * from './kits/Popover/createPopoverController'
+export * from './Popover/createPopoverController'
+export * from './Popover/PopoverSurface'
+export * from './Popover/PopoverSurface.style'
 export * from './kits/Card/Card'
 export {
   Board,
@@ -58,6 +60,11 @@ export * from './plugins/kits/hoverable/hoverable'
 export * from './plugins/kits/scope/scope'
 export * from './plugins/kits/tabular-num/tabular-num'
 export * from './plugins/kits/topLayer/topLayer'
+export {
+  tooltip,
+  type TooltipOptions,
+  type TooltipController,
+} from './plugins/kits/tooltip/tooltip'
 export * from './utils/defaultProps'
 export * from './utils/toJSX'
 export * from './utils/type'

@@ -9,7 +9,7 @@ import { token, type TokenAddress } from '../../token'
 import type { TokenInput } from '../../token'
 import { valueSequence } from '../token-factory/list'
 import { baseSpace } from './space'
-import { buttonBorderWidth } from './boundary'
+import { baseBorderWidth } from './boundary'
 import { multiply } from '../functions/calc'
 import { allocateVariableName } from '../../custom-property-names'
 
@@ -18,11 +18,11 @@ export const focusOutline = (
   address?: TokenAddress,
 ) =>
   token('none', {
-    name: allocateVariableName(),
+    name: allocateVariableName({ prefixName: 'focus-outline' }),
     address,
     // 轮廓读取调用者选择的轮廓颜色，使 danger 等局部声明继续生效。
     state: {
-      focus: valueSequence(multiply(buttonBorderWidth, 2), 'solid', color),
+      focus: valueSequence(multiply(baseBorderWidth, 2), 'solid', color),
     },
   })
 export const focusOffset = token('0px', {

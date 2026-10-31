@@ -72,7 +72,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
             <Details summary="详情">正文</Details>
             <MessageBoard>反馈</MessageBoard>
             <Link href="/target">目标 链接正文说明</Link>
-            <Label for="help-target" help="字段帮助">
+            <Label for="help-target" tooltip="字段帮助">
               字段
             </Label>
           </Flow>
@@ -115,9 +115,8 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
     'Details',
     'MessageBoard',
     'Link',
-    'LabelHelp',
-    'LabelHelpTrigger',
-    'LabelHelpContent',
+    'Label',
+    'PopoverSurface',
   ])
     expect(names).toContain(name)
   expect(names).not.toContain('Piv')

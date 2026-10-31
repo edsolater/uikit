@@ -59,7 +59,11 @@ Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p�
 
 ## Popover 控制与接入
 
-`createPopoverController` 返回 `[controller, controllerBindings]`。Controller 承载可对外关联的 popoverId／triggerId、只读 isOpen 视图及显示、隐藏、切换操作；身份即使在组件内部使用，仍属于 Controller。controllerBindings 由组件定义端消费，通过 popoverDomRef／triggerDomRef 将内部对象接入 Controller，并建立、释放原生监听连接。Popover 与 LabelHelp 分别使用两者，不把内部对象接入方法公开为业务操作。只读视图继续跟随同一内部状态，不创建另一套可写状态。
+`src/components/Popover` 拥有通用浮层实体 `PopoverSurface` 与 `createPopoverController`。Surface统一原生popover、可选外部锚点、四向定位与完整border-shape轮廓。Geometry通过锚点inset与容器尺寸把目标中心转换为局部坐标，Paint一次绘制圆角主体、箭头、背景、边框和阴影。回退查询翻向，边缘处箭头基点避开圆角并斜指目标；绘制层不撑内容布局，命中沿同一Surface接入阅读交互。无锚点时显示圆角矩形。
+
+按钮组合 `kits/Popover` 复用Button触发动作，拥有标题与正文编排。tooltip插件负责简短辅助信息的悬停／焦点／Escape、延迟关闭与描述关联，不依赖具体kit。两者消费同一Surface及其公开材料Token，tooltip仅在当前浮层的局部类地址选择紧凑暗色材料。Label.tooltip将同一插件挂在末尾问号，tooltipTrigger替换按钮内的显示内容。字符串、数字0、组件与JSX模板持续更新，空值或空字符串不创建提示。
+
+Controller返回 `[controller, controllerBindings]`：前者拥有身份、只读isOpen及显示操作，后者建立并释放触发目标与浮层的DOM连接。isOpen由原生浮层的实际打开状态更新，取消beforetoggle不会被报告为成功打开。
 
 ## Button 控制与样式
 

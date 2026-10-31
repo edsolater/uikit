@@ -1,7 +1,29 @@
 import { createRoot } from 'solid-js'
 import { expect, test } from 'vitest'
-import { createState, Show, val } from '@/foundation'
+import { createState, Show, val, render } from '@/foundation'
+import { Piv } from '../Piv'
 import { runPlugin } from './runPlugin'
+
+test('Piv作为渲染根时同层附属节点进入实际宿主，卸载同步释放', async () => {
+  const host = document.body.appendChild(document.createElement('main'))
+  const dispose = render(() => (
+    <Piv as="button" plugin={({ insertAfter }) => {
+      insertAfter(<Piv htmlProps={{ 'data-adjacent': true }}>附属内容</Piv>)
+      return undefined
+    }}>
+      主体
+    </Piv>
+  ), host)
+  try {
+    await expect
+      .poll(() => host.querySelector('[data-adjacent]')?.textContent)
+      .toBe('附属内容')
+  } finally {
+    dispose()
+    host.remove()
+  }
+  expect(host.childNodes).toHaveLength(0)
+})
 
 test('结构插入按调用顺序挂载，内容持续响应并在作用域释放后清理', async () => {
   const host = document.createElement('div')

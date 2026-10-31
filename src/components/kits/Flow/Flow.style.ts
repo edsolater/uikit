@@ -1,8 +1,8 @@
 import { rules, stateCondition, token } from '@/style-system'
 const row = stateCondition('&[data-direction="row"]')
-const direction = token('column', { state: [[row, 'row']] })
-const wrap = token('nowrap', { state: [[row, 'wrap']] })
-const alignment = token('normal', { state: [[row, 'center']] })
+const direction = token('column', { name: 'flow-direction', state: [[row, 'row']] })
+const wrap = token('nowrap', { name: 'flow-wrap', state: [[row, 'wrap']] })
+const alignment = token('normal', { name: 'flow-alignment', state: [[row, 'center']] })
 rules('.Flow', {
   display: 'flex',
   'flex-direction': direction,

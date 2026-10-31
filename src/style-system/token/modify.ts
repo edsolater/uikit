@@ -17,6 +17,7 @@ import { cssRegistrationDeclarations } from './registration'
 import type { CSSCustomProperty } from './css'
 import type { Token, TokenInput } from './core'
 import { allocateVariableName } from '../custom-property-names'
+import { resolveTokenName } from './css'
 import {
   automaticCSSDeclaration,
   consumeDeclaration,
@@ -173,7 +174,9 @@ function internalVariableName(
   let names = internalNames.get(token)
   if (!names) internalNames.set(token, (names = new Map()))
   const key = `${conditionAddressKey(instance.definition.path)}/${role}`
-  const name = names.get(key) ?? allocateVariableName()
+  const name = names.get(key) ?? allocateVariableName({
+    prefixName: `${resolveTokenName(token)}-${role.replaceAll('/', '-')}`,
+  })
   names.set(key, name)
   return name
 }

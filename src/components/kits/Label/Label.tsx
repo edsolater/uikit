@@ -1,23 +1,28 @@
-/** 字段标题与可选悬停说明；输入值及编辑行为由独立控件拥有。 */
-import { onCleanup, Show, val, type Source } from '@/foundation'
+/** 字段标题通过for关联独立控件，tooltip将辅助提示挂在末尾问号。 */
+import { Show, stateView, val, type Source } from '@/foundation'
+import {
+  hasTooltipContent,
+  tooltip,
+} from '@/components/plugins/kits/tooltip/tooltip'
 import {
   ComponentMarker,
   type ComponentDescriptionProps,
 } from '@/components/ComponentMarker/ComponentMarker'
-import { Piv } from '@/components/Piv/Piv'
-import { createPopoverController } from '../Popover/createPopoverController'
+import { Piv, type PivProps } from '@/components/Piv/Piv'
 import './Label.style'
-import { LabelHelpTrigger } from './LabelHelpTrigger'
-import { LabelHelpContent } from './LabelHelpContent'
 
-/** 通过 for 关联独立输入；help 为空时不创建问号。 */
+/** 通过 for 关联独立输入；tooltip 为空时不创建问号。 */
 export type LabelProps = ComponentDescriptionProps & {
   for: Source<string>
   children: Source<string>
-  help?: Source<string | undefined>
+  tooltip?: PivProps['children']
+  /** 替换默认问号的显示内容，不嵌入另一个交互控件。 */
+  tooltipTrigger?: PivProps['children']
 }
 
-/** 显示标题与说明，保持原生表单关联，浮层不参与字段布局。 */
+/**
+ * 显示标题与说明，保持原生表单关联，浮层不参与字段布局。
+ */
 export function Label(props: LabelProps) {
   return (
     <ComponentMarker
@@ -29,84 +34,22 @@ export function Label(props: LabelProps) {
         <Piv as="label" htmlProps={{ for: props.for }}>
           {props.children}
         </Piv>
-        <Show when={val(props.help)}>
-          {(help) => <LabelHelp title={props.children} content={help()} />}
+        <Show when={hasTooltipContent(props.tooltip)}>
+          <Piv
+            as="button"
+            class="tooltipTrigger"
+            plugin={tooltip({
+              get content() { return props.tooltip },
+            })}
+            htmlProps={{
+              'type': 'button',
+              'aria-label': stateView(() => val(props.children) + '说明'),
+            }}
+          >
+            {val(props.tooltipTrigger) ?? '?'}
+          </Piv>
         </Show>
       </Piv>
-    </ComponentMarker>
-  )
-}
-
-/** 问号与说明共同持有悬停范围，短暂延迟关闭允许鼠标跨越定位间距。 */
-function LabelHelp(props: {
-  title: Source<string>
-  content: Source<string | undefined>
-}) {
-  const [controller, controllerBindings] = createPopoverController()
-  const anchor = '--' + controller.triggerId
-  let hovered = false
-  let focused = false
-  let dismissed = false
-  let closeTimer: ReturnType<typeof setTimeout> | undefined
-  const cancelClose = () => clearTimeout(closeTimer)
-  const open = () => {
-    cancelClose()
-    if (!dismissed) controller.showPopover()
-  }
-  const leave = () => {
-    hovered = false
-    if (!focused) {
-      dismissed = false
-      closeTimer = setTimeout(() => controller.hidePopover(false), 150)
-    }
-  }
-  const enter = () => {
-    hovered = true
-    dismissed = false
-    open()
-  }
-  const dismiss = () => {
-    dismissed = true
-    cancelClose()
-    controller.hidePopover(false)
-  }
-  onCleanup(cancelClose)
-
-  return (
-    <ComponentMarker
-      componentName="LabelHelp"
-      defaultDescription="查看字段补充说明"
-    >
-      <LabelHelpTrigger
-        id={controller.triggerId}
-        anchor={anchor}
-        describedBy={controller.popoverId}
-        title={props.title}
-        domRef={controllerBindings.triggerDomRef}
-        enter={enter}
-        leave={leave}
-        focus={() => {
-          focused = true
-          open()
-        }}
-        blur={() => {
-          focused = false
-          if (!hovered) leave()
-        }}
-        activate={() => {
-          dismissed = false
-          open()
-        }}
-        dismiss={dismiss}
-      />
-      <LabelHelpContent
-        id={controller.popoverId}
-        anchor={anchor}
-        content={props.content}
-        domRef={controllerBindings.popoverDomRef}
-        enter={enter}
-        leave={leave}
-      />
     </ComponentMarker>
   )
 }
