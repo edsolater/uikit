@@ -32,23 +32,23 @@ export function ButtonExample() {
           <Button ref={receiveButton} domRef={receiveButtonElement}>
             被控制的按钮
           </Button>
-          <Button onClick={() => button.setStatus?.('loading', true)}>
+          <Button onClick={() => { button.loading?.set(true) }}>
             此按钮加载
           </Button>
           <Button onClick={() => buttonElement.focus?.()}>聚焦此按钮</Button>
           <Button
             onClick={() => {
-              allButtons.setStatus('loading', true)
+              allButtons.loading.set(true)
             }}
           >
-            全部加载
+            已接入控制的按钮加载
           </Button>
           <Button
             onClick={() => {
-              allButtons.setStatus('loading', false)
+              allButtons.loading.set(false)
             }}
           >
-            结束全部加载
+            结束已接入按钮加载
           </Button>
         </div>
 

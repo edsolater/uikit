@@ -67,7 +67,7 @@ Controller返回 `[controller, controllerBindings]`：前者拥有身份、只�
 
 ## Button 控制与样式
 
-上游 Props → 可干预 Props 夹层 → 原核心的目标见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。Controller 只操作夹层，核心继续原 Props 协议。当前工作区先前改造核心消费的实现方向需要重写，不能据已有行为检查将它列为目标架构已经落地。
+组件 ref 未接入时直接执行原 Button 核心；接入时才走通用 Component Props Director，关系见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。`components/utils/componentPropsDirector.ts` 按运行时定义在首次读取时缓存字段State，工厂与State统一归组件作用域；按state-source-view/state-value-view/state-untracked三种视图输出；only-through-prop字段直接读取上游，不创建State或Controller字段，ref采用此模式。字段描述与类型同归属：Dode提供DOM字段、公共能力提供快捷字段与默认入口、Piv组合自身来源描述、ComponentMarker提供说明描述；Button.prop.ts按继承层次spread组成完整字段表，只定义自身字段及分组/状态默认来源；原核心及Piv/Dode、解析器的运行函数体不变。外层 ButtonPropsDirector 管理组件 ref 与登记，allButtons 仅含已接入的实例。
 
 夹层方案状态见[Button 实例与整体控制入口](docs/plans/261030_Button实例与整体控制入口.md)。纯 shadowProps 的 as／if 结构声明是独立需求，目标与当前阶段限制见 [Piv SPEC](src/components/Piv/SPEC.md#声明与来源)，不属于夹层改造的前置条件。
 

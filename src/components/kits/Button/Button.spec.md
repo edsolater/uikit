@@ -2,11 +2,13 @@
 
 ## 实例与整体控制
 
-`ref` 接收 `ButtonController`，`domRef` 独立接收真实 button，Controller 不包含 DOM。`createRef<ButtonController>()` 与 `ref` 配对，直接使用 `button.setStatus?.('loading', true)`；`createDomRef<HTMLButtonElement>()` 与 `domRef` 配对，直接使用 `buttonElement.focus?.()`。两者都返回稳定的 Partial 引用和接收器，未接入或退出后各属性为 undefined；方法及 getter 保留当前接收对象的 this。接收器可返回清理函数；组件 ref 随 Button 作用域销毁清理，domRef 随原生元素销毁清理。
+只有创建时提供有效组件 `ref` 接收器，才启用通用 Component Props Director、创建字段 State 并登记到 allButtons；无 ref、ref 实际为 undefined、只有 domRef 时直接执行原 Button 核心。`ref` 接收 ButtonController，`domRef` 独立接收真实 button，不触发控制层。
 
-ButtonController 直接使用 StatusController，按候选原名公开 `loading`、`disabled` 只读状态视图，通过 `val(button.loading)` 直接读取；`hasStatus` 复用对应的同一视图，`setStatus` 保留原操作。外部已声明的 loading、disabled 始终由外部 Source 控制，setStatus 不覆盖它。原生聚焦、点击等操作通过独立的 DOM 引用使用。
+35个支持Prop中，ref为only-through-prop，只从上游读取且不进入Controller；其余字段按原名提供按需建立的可写State，运行时描述由Button.prop.ts按Props继承层次组合，Dode/Piv/公共能力/ComponentMarker各自拥有其字段描述，Button只定义自身字段。构建和初始状态必须使用 Props；特殊运行期回调中通过 `button.loading?.set(true)` 指令写入，读取用 `val(button.loading)`；不保留 setStatus/hasStatus 别名。上游 Source 与指令使用同一 State，指令不回写上游，后续来源更新仍遵循原生可写计算。函数值更新用 `button.onClick?.set(() => nextCallback)`。
 
-`allButtons` 将当前实例的属性与方法统一映射为集合代理，不设置方法白名单。例如 `allButtons.setStatus('loading', true)` 立即逐个操作并返回该次结果集合，`allButtons.hasStatus('disabled')` 返回各实例的状态来源集合，不自动解包；`allButtons.loading.map((loading) => val(loading))` 可读取每个实例的 loading 状态。深层路径可继续读取与调用；预取路径仍跟随当前实例，空集合继续得到空集合代理，调用结果则固定为该次结果，不因再次读取而重复操作。
+缺省状态、分类、确定描述词及持续响应字段也可运行写入。缺省分组工厂复用原VariantParser语义details，构建时建立并保留分组Source以保持声明诊断，核心执行映射一次；原 Piv/Dode 和解析器不改变。as 固定、if 初始存在性、插件与 domRef 等按原创建阶段消费，不因写 State 重放已经执行的动作。组件 ref 接收器替换则由外层清理旧引用并交付同一 Controller。
+
+`allButtons.loading.set(true)` 只操作已启用组件 ref 的当前实例；普通按钮不进入集合。`allButtons.loading.map(state => val(state))` 读取当前受控集合的状态。整体命令不保留给未来实例，style 仍公开同一 Token 集合。
 
 FNKit 的 `createVirtualBatchAccessor(controllers)` 直接接收 Controller 集合，创建以函数为 target、Array.prototype 为原型的批量访问器，支持 Array.from、length、数字索引及数组操作；FNKit isArray 返回 true，原生 Array.isArray 返回 false。数组固有成员优先于同名实例成员，直接绑定本次映射快照，保留原生参数和原生返回值；例如 map 返回普通数组，不继续包装批量访问器。数组操作不登记、注销或回写 Controller。注册器空创建 `[accessor, registry]`，分别提供集合访问与登记能力。Button 将第一项直接导出为 `allButtons`，用第二项 `buttonRegistry.addStyleTokens(buttonStyle)` 完成样式登记，登记方法不返回入口；创建只需 ButtonController 类型，`allButtons.style` 直接提供原样式 Token 集合，保留身份和独立 Source 阶段。Controller 创建后即登记并交付组件 ref，register 返回注销动作，由 Button 作用域的 onCleanup 执行。if 关闭只清理 DOM 引用，组件 ref 与整体控制继续有效，隐藏期间的状态操作在重新显示时体现；Button 真正销毁才注销并释放组件引用。整体操作不保存给未来实例。
 

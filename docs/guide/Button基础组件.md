@@ -79,7 +79,9 @@ Status 独立描述组件当前成立的情况，`loading` 与 `disabled` 可以
 </Button>
 ```
 
-Status 是外部记录加内部管理能力。外部没有声明某字段时，组件内部可以改变它；外部一旦声明该字段，内部更改仍可调用，但不再改变该状态。Button 只接住状态波并翻译表现，不判断状态为什么成立。
+Status 的初始声明来自 Props；只有提供有效组件 ref 才启用通用 Component Props Director，未传字段也可以在运行期特殊需要下通过 `button.loading?.set(true)` 或 `button.disabled?.set(true)` 临时干预。Controller 写入不因外部已声明而拒绝，也不回写上游；后续来源变化沿原生可写计算继续到达缓冲。Button 只翻译状态表现，不判断状态为什么成立。
+
+构建时必须通过 Props 表达初始界面，Controller 用于回调、生命周期中的特殊情况，或 Props 表达非常迂回的复杂需求。字段按原名公开 State，读取用 `val(button.loading)`，整体命令可用 `allButtons.loading.set(true)`，只包含启用组件 ref 的当前实例；不再提供 Button 的 setStatus/hasStatus 别名。
 
 ## 稳定输出
 

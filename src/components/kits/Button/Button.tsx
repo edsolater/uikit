@@ -7,7 +7,9 @@
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
-import { onCleanup, type Source } from '@/foundation'
+import { createRenderEffect, onCleanup, type Source } from '@/foundation'
+import { untrack } from '@/foundation/reactivity'
+import { createComponentPropsDirector, type PropsController } from '../../utils/componentPropsDirector'
 import type { RefReceiver } from '@/hooks/createRef'
 import { createControllerRegistry } from '@/components/utils/controllerRegistry'
 import {
@@ -24,8 +26,13 @@ import {
 import {
   createStatusPropsParser,
   type StatusProps,
-  type StatusController,
 } from '../utils/parseStatusProps'
+import {
+  buttonPropsDefinition,
+  buttonStatusCandidates,
+  buttonVariantGroups,
+  getButtonPropsDirectorOptions,
+} from './Button.prop'
 import { buttonMapping } from './Button.mapping'
 import * as buttonStyle from './Button.style'
 
@@ -72,12 +79,12 @@ export type ButtonSize = 'small' | 'large' | 'xlarge'
 
 /**
  * 按钮可以同时处于 loading 和 disabled 状态。
- * 外部一旦声明某个状态字段，该字段始终跟随外部 Source；否则允许 Button 内部通过 Status Actions 改变。
+ * 声明阶段使用 Props；启用组件 ref 后，特殊运行场景可通过同一字段 State 改变。
  */
 export type ButtonStatus = 'loading' | 'disabled'
 
 /** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
-export type ButtonController = StatusController<ButtonStatus>
+export type ButtonController = PropsController<ButtonProps, typeof buttonPropsDefinition>
 
 /** 当前按钮的统一集合映射；style 直接公开原有 Token，调用不保留给未来实例。 */
 const [allButtons, buttonRegistry] =
@@ -114,17 +121,12 @@ export interface ButtonProps
 }
 
 const parseButtonVariantProps = createVariantPropsParser(
-  [
-    { groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'] },
-    { groupName: 'emphasis', candidates: ['soft', 'strong'] },
-    { groupName: 'tone', candidates: ['danger'] },
-    { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
-  ],
+  buttonVariantGroups,
   buttonMapping,
 )
 
 const parseButtonStatusProps = createStatusPropsParser({
-  candidates: ['loading', 'disabled'],
+  candidates: [...buttonStatusCandidates],
   effect: ({ loading, disabled }) => ({
     htmlProps: {
       disabled,
@@ -133,17 +135,26 @@ const parseButtonStatusProps = createStatusPropsParser({
   }),
 })
 
-// 实际核心定义代码
-export function Button(props: ButtonProps) {
+/** 组件 ref 是可控能力的创建入口；普通按钮直接执行原业务核心。 */
+function ButtonPropsDirector(props: ButtonProps) {
+  if (!untrack(() => props.ref)) return Button(props)
+  const directed = createComponentPropsDirector(props, buttonPropsDefinition, getButtonPropsDirectorOptions(props))
+  // 分类声明诊断属于构建阶段；保留并复用分组来源，不提前读取其值。
+  for (const { groupName } of buttonVariantGroups) Reflect.get(directed.props, groupName)
+  onCleanup(buttonRegistry.register(directed.controller))
+  createRenderEffect(
+    () => directed.props.ref,
+    receive => receive?.(directed.controller),
+  )
+  return Button(directed.props)
+}
+
+export { ButtonPropsDirector as Button }
+
+/** 业务核心只消费原 Props 协议，不参与控制器管理。 */
+function Button(props: ButtonProps) {
   const { variantShadowProps } = parseButtonVariantProps(props)
-  const { statusShadowProps, statusController } = parseButtonStatusProps(props)
-  const controller: ButtonController = statusController
-  const unregister = buttonRegistry.register(controller)
-  const cleanupRef = props.ref?.(controller)
-  onCleanup(() => {
-    unregister()
-    cleanupRef?.()
-  })
+  const { statusShadowProps } = parseButtonStatusProps(props)
 
   return (
     <ComponentMarker
