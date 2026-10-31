@@ -19,11 +19,68 @@ import { getPublicPluginSources } from './publicCapabilities'
 import { mapArray } from '@/foundation/render'
 import { createMemo } from '@/foundation/reactivity'
 
-/** plugin 系统允许补充的 props；不包含决定 DOM 结构的 as、if、children。 */
+/** 创建前可转交的声明，包含 as/if；children 仍由直接 Props 提供。 */
+export type PivShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'children'>
+
+/** DOM 创建后插件可补充的声明，不反向控制 as、if 或 children。 */
 export type ShadowProps<Tag extends PivTag> = Omit<
   PivProps<Tag>,
-  'as' | 'if' | 'children'
->
+  'as' | 'if' | 'children' | 'shadowProps'
+> & {
+  shadowProps?: MayArray<ShadowProps<Tag>>
+}
+
+/**
+ * 组织创建前可用的纯 shadowProps，只保留结构字段的惰性读取。
+ * shadowProps 没有结构字段时复用原声明；直接来源优先，shadow 数组后项优先。
+ */
+export function getPivStructureProps<Tag extends PivTag>(rawProps: PivProps<Tag>) {
+  const shadows = rawProps.shadowProps
+  if (!shadows) return rawProps
+  const sources = collectStructureSources(shadows)
+  if (!sources) return rawProps
+  sources.unshift(rawProps)
+  const structure: Pick<PivProps<Tag>, 'as' | 'if' | 'children'> = {
+    get as() {
+      for (const source of sources) {
+        const tag = source.as
+        if (tag !== undefined) return tag
+      }
+      return undefined
+    },
+    get children() {
+      return rawProps.children
+    },
+  }
+  const condition = sources.find((source) => 'if' in source)
+  if (condition) {
+    Object.defineProperty(structure, 'if', {
+      enumerable: true,
+      get: () => condition.if,
+    })
+  }
+  return structure
+}
+
+/**
+ * 按现有优先关系收集具有 as/if 的来源，仅实际遇到结构字段时建立列表。
+ * 不读取字段值或执行插件，数组空位与缺省来源不参与。
+ */
+function collectStructureSources<Tag extends PivTag>(
+  props: MayArray<PivShadowProps<Tag>> | undefined,
+  sources?: PivShadowProps<Tag>[],
+) {
+  if (Array.isArray(props)) {
+    for (let index = props.length - 1; index >= 0; index--) {
+      sources = collectStructureSources(props[index], sources)
+    }
+  } else if (props) {
+    if ('as' in props || 'if' in props) (sources ??= []).push(props)
+    const shadows = props.shadowProps
+    if (shadows) sources = collectStructureSources(shadows, sources)
+  }
+  return sources
+}
 
 /** id 是持续合并声明的稳定派生来源，其余字段保持原有输入契约。 */
 type MergedPivProps<Tag extends PivTag> = Omit<ShadowProps<Tag>, 'id'> & {

@@ -1,6 +1,9 @@
 /**
- * Dode 执行已经确定的元素创建与 DOM 绑定，不解释 Piv 的 if/as、来源优先级或插件能力。
- * 管理者在真实元素可用时提供最终绑定材料；所有绑定归属于当前元素分支，不增加 DOM 层。
+ * Dode 是元素声明的执行者。
+ *
+ * 处理创建时的 as、按需启用的 if，以及 DOM 字段绑定。
+ *
+ * 来源和插件仍由 Piv 组织，所有绑定归当前元素分支，不增加 DOM 层。
  */
 import type { ID, MayArray } from '@edsolater/fnkit'
 import {
@@ -8,13 +11,20 @@ import {
   type JSXElement,
   type Source,
   createRenderEffect,
+  Show,
   val,
 } from '@/foundation'
 import { children, insert, mapArray } from '@/foundation/render'
 import { untrack } from '@/foundation/reactivity'
 
 import { consumeClassName, type ClassNameList } from './className'
-import type { CreatePivElement, PivHTMLElement, PivTag } from './domMap'
+import {
+  domMap,
+  type CreatePivElement,
+  type PivHTMLElement,
+  type PivSupportedElementTag,
+  type PivTag,
+} from './domMap'
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
 import { consumeStyle, type StyleList } from './handleStyle'
 import { consumeId } from './id'
@@ -24,6 +34,10 @@ import { consumeDomRefs, type PivDomRef } from './domRef'
 
 /** 底层 DOM 声明契约；Piv 组合该契约，不重复定义或解析字段。 */
 export type DodeDOMProps<Tag extends PivTag = 'div'> = {
+  /** 首次创建时确定元素类型，默认 div；之后保持固定。 */
+  as?: Tag
+  /** 属性存在时启用 Show；undefined 也表示条件不满足。 */
+  if?: Source<boolean>
   /** 全局身份，支持 Source 与列表，并沿来源合并规则形成稳定 Source。 */
   id?: Source<MayArray<ID> | undefined>
   /** 字符串、列表、条件 token 对象或整体 Source。 */
@@ -41,14 +55,58 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
 }
 
 type DodeProps<Tag extends PivTag> = {
-  createElement: CreatePivElement<Tag>
-  children: DodeDOMProps<Tag>['children']
+  structure: Pick<DodeDOMProps<Tag>, 'as' | 'if' | 'children'>
   setup: (element: PivHTMLElement<Tag>) => Omit<DodeDOMProps<Tag>, 'children'>
 }
 
+/**
+ * 按 if 是否声明选择条件分支，首次实际创建时固定元素类型。
+ */
 export function Dode<Tag extends PivTag>(props: DodeProps<Tag>): JSX.Element {
-  const resolvedChildren = children(() => val(props.children))
-  const element = props.createElement()
+  if (!('if' in props.structure)) {
+    return createDodeElement(
+      domMap[
+        (props.structure.as ?? 'div') as PivSupportedElementTag
+      ] as CreatePivElement<Tag>,
+      props,
+    )
+  }
+  let jsxCreator: CreatePivElement<Tag> | undefined
+  /**
+   * 保留首次实际创建的元素类型，条件重开时使用同一工厂。
+   */
+  const createElement = () => {
+    jsxCreator ??= domMap[
+      (props.structure.as ?? 'div') as PivSupportedElementTag
+    ] as CreatePivElement<Tag>
+    return jsxCreator()
+  }
+  return (
+    <Show when={val(props.structure.if)}>
+      <DodeElement createElement={createElement} props={props} />
+    </Show>
+  )
+}
+
+/**
+ * 为条件分支提供自然组件边界，隔离插件和引用初始化的旁读。
+ */
+function DodeElement<Tag extends PivTag>(input: {
+  createElement: CreatePivElement<Tag>
+  props: DodeProps<Tag>
+}): JSX.Element {
+  return createDodeElement(input.createElement, input.props)
+}
+
+/**
+ * 创建裸元素，接回管理层声明并完成字段、引用和子内容的初始化。
+ */
+function createDodeElement<Tag extends PivTag>(
+  createElement: CreatePivElement<Tag>,
+  props: DodeProps<Tag>,
+): JSX.Element {
+  const resolvedChildren = children(() => val(props.structure.children))
+  const element = createElement()
   const bindings = props.setup(element)
   consumeId(element, bindings.id)
   consumeClassName(element, () => bindings.class)

@@ -154,9 +154,7 @@ export function Button(props: ButtonProps) {
     >
       <Piv
         as="button"
-        if={props.if}
         shadowProps={[
-          { htmlProps: { type: 'button' } },
           props,
           variantShadowProps,
           statusShadowProps,
@@ -164,6 +162,7 @@ export function Button(props: ButtonProps) {
         class="Button"
         plugins={[clickable({ componentName: 'Button' })]}
         htmlProps={{
+          type: 'button',
           'aria-label': props.name,
         }}
         on={{ click: props.onClick }}

@@ -17,6 +17,77 @@ import { createPivPlugin } from './plugin/helpers'
 import { mergePivProps } from './plugin/handlePivPlugin'
 
 describe('Piv 生命周期', () => {
+  test('shadowProps 的 as 按来源优先级确定，首次创建后标签保持固定', () => {
+    const host = document.createElement('div')
+    const tag = createState<'button' | 'a' | undefined>(undefined)
+    const visible = createState(false)
+    const dispose = render(
+      () => (
+        <>
+          <Piv shadowProps={[
+            { as: 'span' },
+            {
+              as: undefined,
+              shadowProps: {
+                get as() { return val(tag) },
+                if: visible,
+              },
+            },
+          ]} />
+          <Piv as="section" shadowProps={{ as: 'span' }} />
+        </>
+      ),
+      host,
+    )
+    expect(host.querySelector('button')).toBeNull()
+    expect(host.querySelector('section')).not.toBeNull()
+    tag.set('button')
+    visible.set(true)
+    flush()
+    const first = host.querySelector('button')
+    expect(first).not.toBeNull()
+    tag.set('a')
+    flush()
+    expect(host.querySelector('button')).toBe(first)
+    visible.set(false)
+    flush()
+    visible.set(true)
+    flush()
+    expect(host.querySelector('button')).not.toBeNull()
+    expect(host.querySelector('button')).not.toBe(first)
+    expect(host.querySelector('a')).toBeNull()
+    dispose()
+  })
+
+  test('显式 undefined 的 if 保留空分支，隐藏时不读取内部字段或初始化插件', () => {
+    const host = document.createElement('div')
+    const hidden = {
+      get as(): 'button' {
+        throw new Error('不应读取隐藏元素类型')
+      },
+      get class(): string {
+        throw new Error('不应解析隐藏字段')
+      },
+      plugin: () => {
+        throw new Error('不应初始化隐藏插件')
+      },
+    }
+    const dispose = render(
+      () => (
+        <>
+          <Piv if={undefined} shadowProps={{ shadowProps: hidden, if: true }} />
+          <Piv shadowProps={[{ if: true }, { if: undefined, shadowProps: hidden }]} />
+          <Piv shadowProps={{ if: false, shadowProps: hidden }} />
+          <Piv class="visible" />
+        </>
+      ),
+      host,
+    )
+    expect(host.childElementCount).toBe(1)
+    expect(host.firstElementChild?.className).toBe('visible')
+    dispose()
+  })
+
   test('研究图表和表单使用相同的 Piv 原生元素契约', () => {
     const host = document.createElement('div')
     let canvas: HTMLCanvasElement | undefined
@@ -283,7 +354,7 @@ describe('Piv 生命周期', () => {
     expect(element.className).toBe('')
   })
 
-  test('自身隐藏后释放旧元素资源，重建和卸载分别清理当前元素', async () => {
+  test('shadowProps 条件隐藏后释放旧元素资源，重建和卸载分别清理当前元素', async () => {
     const host = document.createElement('div')
     const visible = createState(true)
     const className = createState('before')
@@ -298,7 +369,7 @@ describe('Piv 生命周期', () => {
     const dispose = render(
       () => (
         <Piv
-          if={visible}
+          shadowProps={{ if: visible }}
           class={className}
           plugin={plugin}
           on={{
