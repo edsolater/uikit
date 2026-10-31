@@ -34,11 +34,11 @@ interface ManagedTokenGenerator {
 }
 
 /**
- * 创建统一定义地址的 Token 生成器；名称保留前缀和可用来源名，末尾自动分配唯一标识。
+ * 创建统一定义地址的 Token 生成器；名称由语义前缀和自动分配的唯一标识组成。
  * 未配置地址时随消费位置发布，不继承来源地址。
  */
 export function createNewTokenGenerator(config: {
-  /** 仅附在名称之前；显式 name 替代来源名与自动标识时，前缀仍保留。 */
+  /** 为每个生成结果提供可辨认用途的名称前缀。 */
   prefixName: string
   address?: TokenAddress
 }): ManagedTokenGenerator {

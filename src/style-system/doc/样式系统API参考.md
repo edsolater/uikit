@@ -55,11 +55,11 @@ const spacing = token('8px', {
 hover/active 字符串与对应对象均只判断交互状态，禁用条件独立匹配。不同属性的反馈共同生效，同一属性按原 CSS 特异度和定义顺序层叠。组件 state 优先简写，rules 地址可传 stateConditionRegistry 中的对象，不读取 header。
 
 ```ts
-const source = token('2px')
-const target = token(source)
+const source = token('2px', { name: 'source-spacing' })
+const target = token(source, { name: 'target-spacing' })
 ```
 
-token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source。未指定 name 时保留来源名并追加自动标识，显式 name 替代这整个自动组合，不再累计来源名。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
+token(source, options) 创建独立 Token，继承直接传入的 source 的 address、state、registration 和生命周期配置；default 默认引用 source。名称由新定义自身提供，不继承来源名称。追加配置覆盖顶层字段，显式 undefined 清除对应配置；default 可覆盖为不同类型。state 按条件合并：同 header 后值覆盖且保留原位置，新条件追加；state: {} 不删除已有状态条目，state: undefined 清空整份状态，来源不变。
 
 ```ts
 const panelSpace = token(baseSpace, {
@@ -79,11 +79,11 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-未指定 name 时，名称按“可选前缀-可用来源名-自动标识”组合；显式 name 替代“来源名-自动标识”整体。来源名为 `brand-color` 时，`token(source, { name: 'local' })` 得到 `local`，多级显式命名也不累计来源。前缀始终只是名称的补充，因此前缀为 `button`、显式 name 为 `gap` 时，最终为 `button-gap`。内部名称不含 CSS 双连字符，CSS 输出为 `--${name}`。
+普通 Token 定义须提供语义 name；已有语义 prefixName 的生成器调用可省略 name，详见[命名约定](样式系统命名.md#token-定义必须提供语义名称)。引用 Token 不继承来源名称。内部名称不含 CSS 双连字符，CSS 输出为 `--${name}`。
 
-生成器只提供统一前缀与定义地址，调用处不能传名称字符串或指定 `name`、`address`。`buttonToken(source)` 得到 `button-brand-color-<自动标识>`，直接 `buttonToken('red')` 得到 `button-<自动标识>`。匿名 Token 来源也以稳定内部名参与自动名称组合，取得名称不改变来源的纯值身份。地址未配置时随消费位置发布，不继承来源地址。对应行为见 [Token 的创建与复用](behaviors/Token的创建与复用.md#显式名称与自动名称)。
+生成器只提供统一前缀与定义地址，调用处不能传名称字符串或指定 `name`、`address`。`buttonToken(source)` 和 `buttonToken('red')` 均得到各自唯一的 `button-<自动标识>`，不拼接来源名称。地址未配置时随消费位置发布，不继承来源地址。对应行为见 [Token 的创建与复用](behaviors/Token的创建与复用.md#显式名称与自动名称)。
 
-业务含义由供人阅读的 JS 变量名表达；CSS 自定义属性名只是系统派生或自动生成的映射标识，具体拼写没有业务意义，主要用于测试定位和调试追溯。通过 Token 对象取得对应名称，无须手工维护两套语义名称。
+JS 变量名服务源码阅读；Token 的语义 name 或生成器前缀同时为 CSS 调试提供用途锚点。
 
 已有 Token 直接传入，state 软合并业务差异；生产函数用于延迟计算或消费时读取数据等明确目的，不作为规避继承的写法。继承不复制运行身份、自动名称或隐藏的输出方法，详细规则见 [Token 设计](Token设计.md#产生-token-的函数)。
 

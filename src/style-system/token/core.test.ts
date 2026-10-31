@@ -12,7 +12,7 @@ test('聚合入口创建匿名直接值，编译为 CSS value', () => {
   expect(compileRules([[['.Direct'], 'width', size]])).toContain('width: 2px;')
 })
 
-test('显式名称替代来源与自动标识，多级显式命名不累计来源，前缀仅补充名称', () => {
+test('显式名称属于当前定义，多级引用不累计来源，前缀仅补充名称', () => {
   const source = token('red', { name: 'brand-color' })
   const local = token(source, { name: 'local' })
   const nested = token(local, 'nested')
@@ -34,28 +34,24 @@ test('显式名称替代来源与自动标识，多级显式命名不累计来�
   expect(css).toContain('color: var(--button-local);')
 })
 
-test('匿名来源取得稳定引用名，派生与编译不升级来源的纯值身份', () => {
+test('引用内容不继承来源名称，匿名来源仍保持纯值输出', () => {
   const source = token('2px')
   const reference = resolveTokenName(source)
-  const local = token(source)
-  expect(local.name).toMatch(new RegExp(`^${reference}-.+`))
-  expect(source.name).toBeUndefined()
+  const local = token(source, { name: 'derived-spacing' })
   const css = compileRules([
     [['.Anonymous'], 'width', source],
     [['.Derived'], 'width', local],
   ])
   expect(css).toContain('width: 2px;')
-  expect(css).toContain(`--${local.name}: 2px;`)
-  expect(css).toContain(`width: var(--${local.name});`)
+  expect(css).toContain('--derived-spacing: 2px;')
+  expect(css).toContain('width: var(--derived-spacing);')
   expect(resolveTokenName(source)).toBe(reference)
-  const another = token(source)
-  expect(another.name).toMatch(new RegExp(`^${reference}-.+`))
-  expect(another.name).not.toBe(local.name)
+  expect(css).not.toContain(`--derived-spacing-${reference}`)
 })
 
 test('普通匿名值直接输出，引用创建保留表达式与独立身份', () => {
   const source = token('2px', 'same-input-source')
-  const direct = token(add(source, '1px'))
+  const direct = token(add(source, '1px'), { name: 'expression-spacing' })
   expect(compileRules([[['.Expression'], 'width', direct]])).toContain(
     `--${direct.name}: calc(var(--same-input-source) + 1px);`,
   )
@@ -193,7 +189,7 @@ test('同条件覆盖保持原位置，新条件追加，来源状态不变', ()
   )
 })
 
-test('空状态保留继承规则，清除状态且省略名称时仍自动命名', () => {
+test('空状态保留继承规则，清除状态不继承来源名称', () => {
   const source = token(1, { name: 'from-clear-source', state: { hover: 2 } })
   const inherited = token(source, { name: 'from-empty-state', state: {} })
   const cleared = token(source, {
@@ -207,8 +203,8 @@ test('空状态保留继承规则，清除状态且省略名称时仍自动命�
   ])
   expect(inherited.name).toBe('from-empty-state')
   expect(css).toContain(`--${inherited.name}: 2;`)
-  expect(cleared.name).toMatch(/^from-clear-source-.+/)
-  expect(css).toContain(`--${cleared.name}: 1;`)
+  expect(cleared.name).toBeUndefined()
+  expect(css).toContain('opacity: 1;')
   expect(compileRules([[['.ClearedOnly'], 'opacity', cleared]])).not.toContain(
     'var(--from-clear-source)',
   )
@@ -251,7 +247,7 @@ test('继承编译波和生命周期，并允许新定义覆盖回调', () => {
   expect(overriddenCSS).toContain('width: 12px;')
 })
 
-test('默认引用来源且自动使用独立名称，显式 default 保留真实类型', () => {
+test('默认内容引用来源且没有同名自引用，显式 default 保留真实类型', () => {
   const source = token('8px', { name: 'from-global-space' })
   const local = token(source, { address: '.LocalSpace' })
   const overridden = token(source, { default: 3 })

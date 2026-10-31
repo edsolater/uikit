@@ -571,6 +571,7 @@ describe('Button styles', () => {
     const initial = appearance(local)
     const path = ['@layer uikit', '.Button', '&[data-review]']
     const surface = token('rgb(210, 230, 250)', {
+      name: 'button-review-surface',
       address: path,
       state: [
         [whenHover, 'rgb(190, 215, 240)'],

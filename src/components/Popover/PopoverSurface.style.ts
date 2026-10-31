@@ -49,6 +49,7 @@ function createPopoverOutline(
   side: 'top' | 'right' | 'bottom' | 'left' | 'none',
 ) {
   return token('', {
+    name: `popover-outline-${side}`,
     dependencies: [popoverRadius, arrowHalfSize],
     toCSSString: (_value, resolve) => {
       const radius = resolve(popoverRadius)

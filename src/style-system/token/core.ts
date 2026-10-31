@@ -31,7 +31,7 @@ import {
   type TokenDefaultInput,
 } from './args-parser'
 import type { StateCondition, StateConditionInput } from '../state-condition'
-import { cssTokenName, resolveTokenName } from './css'
+import { cssTokenName } from './css'
 import { allocateVariableName } from '../custom-property-names'
 
 /** 样式直接内容、表达式或延迟提供的内容。 */
@@ -59,8 +59,8 @@ export type TokenAddress = Exclude<ConditionInput, undefined>
 /** Token 基础配置及特殊内容的编译、输出协议。 */
 export interface TokenOptions<T extends TokenData = TokenData> {
   /**
-   * 显式名称替代默认的“来源名-自动标识”整体，前缀仍补充在名称之前。
-   * 省略时保留来源名并分配独立标识；普通匿名直接值仍按需命名。
+   * 普通定义按约定提供语义名称；生成器已有语义前缀时可省略。
+   * 引用已有 Token 不继承其名称，前缀仍补充在自身名称之前。
    */
   name?: string
   state?: TokenStateInput
@@ -142,32 +142,23 @@ export function createTokenDefinition<T extends TokenData>(
 ): Token<T> {
   return isToken(input)
     ? tokenFrom<T>(input, options, prefixName)
-    : createToken(input as T, options, undefined, prefixName)
+    : createToken(input as T, options, prefixName)
 }
 
 /** 创建实际 Token 对象，基础内容始终按原始数据保存。 */
 function createToken<T extends TokenData>(
   input: T,
   options?: string | TokenOptions<T>,
-  source?: Token,
   prefixName?: string,
 ): Token<T> {
   const protocol = isString(options) ? { name: options } : options
   const entityName =
     protocol?.name ??
-    (source !== undefined || prefixName !== undefined
-      ? allocateVariableName()
-      : undefined)
+    (prefixName !== undefined ? allocateVariableName() : undefined)
   const name =
     entityName === undefined
       ? undefined
-      : [
-          prefixName,
-          protocol?.name === undefined && source
-            ? resolveTokenName(source)
-            : undefined,
-          entityName,
-        ]
+      : [prefixName, entityName]
           .filter((part) => part !== undefined)
           .join('-')
   const self: Token<T> = {
@@ -230,7 +221,7 @@ function tokenFrom<T extends TokenData>(
   }
   const state = additional?.state
   if (state !== undefined) definition.state = [source.state ?? {}, state]
-  return createToken(definition.default as T, definition, source, prefixName)
+  return createToken(definition.default as T, definition, prefixName)
 }
 
 /**

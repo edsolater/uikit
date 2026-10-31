@@ -4,7 +4,7 @@ import { compileRules } from '../../css-root'
 import { token } from '../core'
 import { createNewTokenGenerator } from './createNewTokenGenerator'
 
-test('未指定名称时生成器补充前缀并保留来源名，多个派生名称唯一且状态独立', () => {
+test('生成器以前缀和独立编号命名，不继承来源名称且状态独立', () => {
   const buttonToken = createNewTokenGenerator({
     prefixName: 'button',
     address: '.NamedButton',
@@ -12,8 +12,10 @@ test('未指定名称时生成器补充前缀并保留来源名，多个派生�
   const source = token('red', { name: 'brand-color', address: ':root' })
   const first = buttonToken(source, { state: { hover: 'blue' } })
   const second = buttonToken(source, { state: { hover: 'green' } })
-  expect(first.name).toMatch(/^button-brand-color-.+/)
-  expect(second.name).toMatch(/^button-brand-color-.+/)
+  expect(first.name).toMatch(/^button-.+/)
+  expect(first.name).not.toContain('brand-color')
+  expect(second.name).toMatch(/^button-.+/)
+  expect(second.name).not.toContain('brand-color')
   expect(new Set([first.name, second.name]).size).toBe(2)
   const css = compileRules([
     [['.NamedButton'], 'color', first],

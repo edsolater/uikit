@@ -42,7 +42,7 @@ export interface TokenConfig<T extends TokenData = TokenData> {
   default: T
   /**
    * 创建完成后的最终名称：可选前缀与名称以连字符连接。
-   * 显式 name 替代默认的“来源名-自动标识”整体，前缀只作补充。
+   * 自身显式 name 或生成器的自动标识，不继承来源名称。
    * 普通匿名直接值仍可为 undefined；输出 CSS variable 时另加 --。
    */
   name: string | undefined

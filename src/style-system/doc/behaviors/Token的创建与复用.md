@@ -25,34 +25,29 @@ state 接受快捷名对象、Map、单个条件 entry，以及这些形式的�
 
 ```ts
 const spacing = token('2px', 'spacing')
-const localSpacing = token(spacing)
-const doubled = token(multiply(spacing, 2))
+const localSpacing = token(spacing, { name: 'local-spacing' })
+const doubled = token(multiply(spacing, 2), { name: 'doubled-spacing' })
 ```
 
-localSpacing 是独立 Token，继承 spacing 的 address、state、registration 和生命周期配置，default 默认引用 spacing。追加配置覆盖同名顶层字段；state 同条件覆盖、新条件追加，显式 undefined 清除，空对象不删除已有条目。来源保持不变；未指定 name 的新对象保留来源名并追加自动标识，显式 name 则替代这整个自动组合。
+localSpacing 是独立 Token，继承 spacing 的 address、state、registration 和生命周期配置，default 默认引用 spacing。追加配置覆盖同名顶层字段；state 同条件覆盖、新条件追加，显式 undefined 清除，空对象不删除已有条目。来源保持不变；名称由新对象自身提供，不继承来源名称。
 
 已有 Token 直接传入，state 自然继承并软合并差异。生产函数用于延迟计算、消费时读取变化数据或等待内容可用等明确目的，不是继承开关。计算表达式内部的 Token 仍是内容引用；创建入口完成定义继承后，坍缩不再复制配置。其他加工由普通函数表达，不保存创建历史。
 
 ## 显式名称与自动名称
 
-未指定 name 时，名称以连字符连接可选前缀、可用来源名和自动标识。显式 name 替代“来源名与自动标识”整体；前缀始终在名称前补充，不因显式 name 消失，也不再把来源名拼入显式名称。
+普通 Token 定义按[命名约定](../样式系统命名.md#token-定义必须提供语义名称)显式提供语义 name，生成器已有语义 prefixName 时，调用处省略 name，由前缀与自动编号组成名称。引用 Token 不继承或拼接来源名称。
 
 ```ts
 const source = token('red', { name: 'brand-color' })
 const local = token(source, { name: 'local' })
-// 完整名为 local。
-const nested = token(local, 'nested')
-// 完整名为 nested，不累计 brand-color 或 local。
-const automatic = token(source)
-// 完整名为 brand-color-<自动标识>。
+// 完整名为 local，内容继续引用 brand-color。
 const buttonToken = createNewTokenGenerator({ prefixName: 'button', address: '.Button' })
 const buttonColor = buttonToken(source)
-// 完整名为 button-brand-color-<自动标识>。
 const rawColor = buttonToken('blue')
-// 没有来源引用，完整名为 button-<自动标识>。
+// 两个生成结果各自名为 button-<自动编号>，不拼接 brand-color。
 ```
 
-底层创建规则中，前缀为 button、显式 name 为 gap 时，最终名称为 button-gap；没有显式 name 时仍为 button-来源名-自动标识。匿名来源使用稳定内部名参与自动组合，取得名称不会升级来源的 CSS 身份；普通 `token('blue')` 仍可直接输出 blue。同一来源的自动派生名称各自唯一，状态不会因同名互相覆盖。内部名称不含 CSS 双连字符，CSS variable 输出只是 `--${name}`；不约定自动标识的格式，不维护显式与自动名称分类或占用登记。
+自动编号机制保留；内部名称不含 CSS 双连字符，CSS variable 输出为 `--${name}`，不约定自动编号格式。
 
 生成器调用处不能传名称字符串或指定 name、address；地址只由生成器配置决定，未配置时随消费位置发布，不继承来源地址。JS 变量名表达业务含义供人阅读，CSS 名称用于映射、测试定位和调试追溯。验证见 [Token 创建行为](../../token/core.test.ts) 与 [生成器行为](../../token/tools/createNewTokenGenerator.test.ts)。
 

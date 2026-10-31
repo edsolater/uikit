@@ -20,12 +20,12 @@ Token 对外都是可坍缩的内容，不要求调用者先区分直接值与 C
 ## 继承定义与引用内容
 
 ```ts
-const spacing = token('2px')
-const doubledSpacing = token(multiply(spacing, 2))
-const sharedSpacing = token(spacing)
+const spacing = token('2px', { name: 'spacing' })
+const doubledSpacing = token(multiply(spacing, 2), { name: 'doubled-spacing' })
+const sharedSpacing = token(spacing, { name: 'shared-spacing' })
 ```
 
-sharedSpacing 继承直接传入的 spacing 的地址、状态和生命周期等定义配置，默认内容仍引用 spacing；追加配置覆盖同名字段，state 按条件软合并。名称不继承，需要时自动命名，避免同名自引用。
+sharedSpacing 继承直接传入的 spacing 的地址、状态和生命周期等定义配置，默认内容仍引用 spacing；追加配置覆盖同名字段，state 按条件软合并。名称不继承；普通定义显式提供自身语义 name，已有语义前缀的生成器使用前缀与自动编号，见[命名约定](样式系统命名.md#token-定义必须提供语义名称)。
 
 普通计算中的 Token 提供内容引用，消费时取得来源的 CSS 坍缩结果，不在消费端复制状态。生产函数用于延迟计算或消费时读取数据等明确目的。其他加工仍由普通函数组合新 Token，没有内置用途变体或独立定义调整操作。
 
