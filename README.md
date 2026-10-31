@@ -17,6 +17,8 @@ SolidJS 基础组件与 hooks 组件库。
 
 创建组件或安排样式前，读 [组件职责与样式归属](docs/guide/组件职责与样式归属.md)：先确定领域与文件落点，再区分组织、信息展示和 UIKit 基础能力。
 
+Props 与 Controller 的夹层约定见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)：Controller 操作可干预 Props，向原核心保持原 Props 协议；方案待重写。
+
 ## 组件结构查看
 
 - [组件定位框](docs/guide/组件结构查看.md)：组件以`ComponentMarker`声明边界与用途，App手动放入`ComponentMarkerStructureViewTrigger`。开关初始关闭，开启后显示框内标注并弱化内容；Text与Heading的原文字显示为空但保留排版，自定义组件按Guide接入。Dev的`/examples/button`可直接体验。
