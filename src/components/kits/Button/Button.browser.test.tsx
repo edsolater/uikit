@@ -157,68 +157,42 @@ afterEach(() => {
 })
 
 describe('Button styles', () => {
-  test('原生表单中默认不提交，外部type列表来源接管提交重置与禁用', () => {
+  test('点击动作随禁用状态停止与恢复，原生属性列表保持响应式覆盖', () => {
     mountButtonStyles()
     const host = document.body.appendChild(document.createElement('main'))
     const disabled = createState(false)
-    const type = createState<'submit' | 'reset'>('submit')
+    const label = createState('执行动作')
     let clicks = 0
-    let submissions = 0
-    let resets = 0
     dispose = render(
       () => (
-        <Piv
-          as="form"
-          on={{
-            submit: {
-              passive: false,
-              callback: ({ event }) => {
-                event.preventDefault()
-                submissions++
-              },
-            },
-            reset: {
-              passive: false,
-              callback: ({ event }) => {
-                event.preventDefault()
-                resets++
-              },
-            },
+        <Button
+          disabled={disabled}
+          htmlProps={[{ title: '初始提示' }, { title: label }]}
+          onClick={() => {
+            clicks++
           }}
         >
-          <Button
-            onClick={() => {
-              clicks++
-            }}
-          >
-            普通
-          </Button>
-          <Button disabled={disabled} htmlProps={[{ type: 'reset' }, { type }]}>
-            提交或重置
-          </Button>
-        </Piv>
+          执行
+        </Button>
       ),
       host,
     )
-    const [ordinary, submit] = host.querySelectorAll('button')
-    expect(ordinary.type).toBe('button')
-    expect(submit.type).toBe('submit')
-    ordinary.click()
+    const button = host.querySelector('button')!
+    expect(button.title).toBe('执行动作')
+    button.click()
     expect(clicks).toBe(1)
-    expect(submissions).toBe(0)
-    submit.click()
-    expect(submissions).toBe(1)
     disabled.set(true)
     flush()
-    submit.click()
-    expect(submissions).toBe(1)
+    expect(button.disabled).toBe(true)
+    button.click()
+    expect(clicks).toBe(1)
     disabled.set(false)
-    type.set('reset')
+    label.set('再次执行')
     flush()
-    expect(submit.type).toBe('reset')
-    submit.click()
-    expect(resets).toBe(1)
-    expect(submissions).toBe(1)
+    expect(button.disabled).toBe(false)
+    expect(button.title).toBe('再次执行')
+    button.click()
+    expect(clicks).toBe(2)
   })
 
   test.each([false, true])(

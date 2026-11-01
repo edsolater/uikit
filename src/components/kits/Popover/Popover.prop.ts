@@ -43,7 +43,10 @@ export const popoverPropsDefinition = {
 
 const parsePlacement = createVariantPropsParser(popoverVariantGroups)
 const popoverDefaultSources = {
-  placement: input => parsePlacement(input).details.placement,
+  placement: input => {
+    const { details } = parsePlacement(input)
+    return details.placement
+  },
 } satisfies DefaultPropSources<PopoverProps, typeof popoverPropsDefinition>
 
 /**

@@ -38,11 +38,36 @@ export type StatusController<StatusName extends string> = Record<
   hasStatus(status: StatusName): Source<boolean>
 }
 
+/** 状态解析结果；效果属性交给 Piv，状态来源与控制器供组件按需使用。 */
+export type StatusPropsParseResult<StatusName extends string> = {
+  readonly effect: ShadowProps<any>[]
+  readonly details: StatusDetails<StatusName>
+  readonly controller: StatusController<StatusName>
+}
+
 /**
  * 创建组件专用的 Status Props 解析器。
  *
  * Status 天然允许多个候选同时成立。外部一旦声明某个状态字段，该字段便始终跟随外部 Source；
- * 只有外部没有声明的状态才能由 statusController 从组件内部改变。
+ * 只有外部没有声明的状态才能由返回的 controller 从组件内部改变。
+ *
+ * @param options 状态候选及可选的附加效果属性生成函数。
+ * @returns 解析函数，接收状态 Props 并返回 { effect, details, controller }：
+ * - effect 是可展开到 Piv shadowProps 的属性列表；先放 effect 返回的属性，
+ *   再放自动生成的 data-status 属性，同名字段由后者覆盖，不额外嵌套 shadowProps。
+ * - details 按候选原名提供响应式状态 Source；多个状态可以同时成立。
+ * - controller 提供状态读取与内部状态操作，不能接管已由外部声明的状态。
+ * 每次解析只执行一次 effect；后续变化由返回属性中的 Source 驱动。
+ *
+ * @example
+ * ```tsx
+ * const parseStatusProps = createStatusPropsParser({ candidates: ['loading'] })
+ * const { effect: effectProps, details, controller: statusController } = parseStatusProps({})
+ * statusController.setStatus('loading', true)
+ * val(details.loading) // true
+ * // effectProps 中的 data-status 属性来源随状态变化，当前值为 'loading'。
+ * const element = <Piv shadowProps={effectProps} />
+ * ```
  */
 export function createStatusPropsParser<
   const Candidates extends string[],
@@ -56,10 +81,10 @@ export function createStatusPropsParser<
   effect?: (
     status: StatusDetails<Candidates[number]>,
   ) => ShadowProps<any> | void
-}) {
+}): (props: StatusProps<Candidates[number]>) => StatusPropsParseResult<Candidates[number]> {
   type StatusName = Candidates[number]
 
-  return function parseStatusProps(props: StatusProps<StatusName>) {
+  return function parseStatusProps(props: StatusProps<StatusName>): StatusPropsParseResult<StatusName> {
     const candidates: StatusName[] = options.candidates
     const propRecord = props as Record<string, unknown>
     const externalStatusNames = new Set(
@@ -104,18 +129,13 @@ export function createStatusPropsParser<
       return activeStatuses.length > 0 ? activeStatuses.join(' ') : undefined
     })
 
-    const statusShadowProps: ShadowProps<any> = {
-      htmlProps: { 'data-status': statusAttribute },
-    }
+    const effectProps: ShadowProps<any>[] = []
 
     // effect 只建立一次附加声明；返回 props 内的 Source 会由 Piv 持续消费。
-    const effectShadowProps = options.effect?.(statusDetails)
-    if (effectShadowProps) statusShadowProps.shadowProps = effectShadowProps
+    const statusEffectProps = options.effect?.(statusDetails)
+    if (statusEffectProps) effectProps.push(statusEffectProps)
+    effectProps.push({ htmlProps: { 'data-status': statusAttribute } })
 
-    return {
-      details: statusDetails,
-      statusController,
-      statusShadowProps,
-    }
+    return { effect: effectProps, details: statusDetails, controller: statusController }
   }
 }

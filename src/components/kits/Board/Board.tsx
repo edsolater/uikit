@@ -69,11 +69,11 @@ export function renderBoard<Tag extends PivSupportedElementTag>(
   props: BoardProps<Tag>,
   identity: 'Board' | 'Card',
 ) {
-  const { variantShadowProps } = parseBoardVariantProps(props)
+  const { effect: variantEffectProps } = parseBoardVariantProps(props)
   return (
     <Piv
       as={props.as}
-      shadowProps={[props, variantShadowProps]}
+      shadowProps={[props, ...variantEffectProps]}
       class={identity === 'Card' ? 'Board Card' : 'Board'}
     >
       {props.children}

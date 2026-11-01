@@ -5,26 +5,26 @@ import { createVariantPropsParser } from './parseVariantProps'
 
 describe('createVariantPropsParser', () => {
   test('已声明的不定字段 getter 持续更新，effect 持有稳定的结果 Source', () => {
-    const { appearance, effect, details, variantShadowProps, dispose } =
+    const { appearance, effect, details, variantEffectProps, dispose } =
       createRoot((dispose) => {
         const appearance = createState<'filled' | 'plain' | undefined>('filled')
         const effect = vi.fn(() => undefined)
         const parser = createVariantPropsParser([
           { groupName: 'appearance', candidates: ['filled', 'plain'], effect },
         ])
-        const { details, variantShadowProps } = parser({
+        const { effect: variantEffectProps, details } = parser({
           get appearance() {
             return val(appearance)
           },
         })
-        return { appearance, effect, details, variantShadowProps, dispose }
+        return { appearance, effect, details, variantEffectProps, dispose }
       })
     try {
       expect(val(details.appearance)).toBe('filled')
       appearance.set('plain')
       flush()
       expect(val(details.appearance)).toBe('plain')
-      expect(val(variantShadowProps.htmlProps!['data-appearance'])).toBe(
+      expect(val(variantEffectProps[0].htmlProps!['data-appearance'])).toBe(
         'plain',
       )
       expect(effect).toHaveBeenCalledExactlyOnceWith(details.appearance)
@@ -43,9 +43,9 @@ describe('createVariantPropsParser', () => {
         appearance: { undefined: 'outlined' },
       },
     )
-    const { details, variantShadowProps } = parser({ constructor: 'length' })
+    const { effect: variantEffectProps, details } = parser({ constructor: 'length' })
     expect(val(details.constructor)).toBe('length')
-    expect(variantShadowProps.htmlProps!['data-constructor']).toBe(
+    expect(variantEffectProps[0].htmlProps!['data-constructor']).toBe(
       details.constructor,
     )
   })
@@ -71,8 +71,8 @@ describe('createVariantPropsParser', () => {
           ],
           mapping,
         )
-        const { details, variantShadowProps } = parser({ appearance })
-        const mapped = variantShadowProps.htmlProps![
+        const { effect: variantEffectProps, details } = parser({ appearance })
+        const mapped = variantEffectProps[0].htmlProps![
           'data-appearance'
         ] as Source<string | undefined>
         return { appearance, mapping, effect, details, mapped, dispose }
@@ -104,7 +104,7 @@ describe('createVariantPropsParser', () => {
       effectVariant,
       effect,
       details,
-      variantShadowProps,
+      variantEffectProps,
       dispose,
     } = createRoot((dispose) => {
       const large = createState(false)
@@ -117,23 +117,24 @@ describe('createVariantPropsParser', () => {
         { groupName: 'size', candidates: ['small', 'large'], effect },
       ])
 
-      const { details, variantShadowProps } = parseProps({ large })
+      const { effect: variantEffectProps, details } = parseProps({ large })
 
       return {
         large,
         effectVariant,
         effect,
         details,
-        variantShadowProps,
+        variantEffectProps,
         dispose,
       }
     })
     try {
       expect(effect).toHaveBeenCalledOnce()
       expect(effectVariant).toBe(details.size)
-      expect(variantShadowProps.htmlProps!['data-size']).toBe(details.size)
-      expect(Array.isArray(variantShadowProps)).toBe(false)
-      expect(variantShadowProps.shadowProps).toHaveLength(1)
+      expect(variantEffectProps).toHaveLength(2)
+      expect(variantEffectProps[0].htmlProps!['data-effect-brand']).toBe(details.size)
+      expect(variantEffectProps[1].htmlProps!['data-size']).toBe(details.size)
+      expect(variantEffectProps.every(props => !('shadowProps' in props))).toBe(true)
       expect(val(details.size)).toBeUndefined()
 
       large.set(true)

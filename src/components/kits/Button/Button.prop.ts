@@ -41,7 +41,10 @@ export const buttonPropsDefinition = {
 
 const variantSources = toRecord(buttonVariantGroups, group => group.groupName, group => {
   const parse = createVariantPropsParser([group])
-  return (input: ButtonProps) => parse(input).details[group.groupName]
+  return (input: ButtonProps) => {
+    const { details } = parse(input)
+    return details[group.groupName]
+  }
 })
 const emptySource = () => undefined
 

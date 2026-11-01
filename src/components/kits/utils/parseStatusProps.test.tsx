@@ -9,12 +9,12 @@ describe('createStatusPropsParser', () => {
       createRoot((dispose) => {
         const isLoading = createState(true)
         const parser = createStatusPropsParser({ candidates: ['isLoading'] })
-        const { details, statusController, statusShadowProps } = parser({
+        const { effect: statusEffectProps, details, controller: statusController } = parser({
           get isLoading() {
             return val(isLoading)
           },
         })
-        const attribute = statusShadowProps.htmlProps!['data-status']
+        const attribute = statusEffectProps[0].htmlProps!['data-status']
         return { isLoading, details, statusController, attribute, dispose }
       })
     try {
@@ -41,7 +41,7 @@ describe('createStatusPropsParser', () => {
       effect,
       details,
       statusController,
-      statusShadowProps,
+      statusEffectProps,
       dispose,
     } = createRoot((dispose) => {
       const loading = createState(false)
@@ -53,7 +53,7 @@ describe('createStatusPropsParser', () => {
         effect,
       })
 
-      const { details, statusController, statusShadowProps } = parseProps({
+      const { effect: statusEffectProps, details, controller: statusController } = parseProps({
         loading,
       })
 
@@ -62,15 +62,16 @@ describe('createStatusPropsParser', () => {
         effect,
         details,
         statusController,
-        statusShadowProps,
+        statusEffectProps,
         dispose,
       }
     })
     try {
       expect(effect).toHaveBeenCalledOnce()
-      expect(Array.isArray(statusShadowProps)).toBe(false)
-      expect(statusShadowProps.shadowProps).toBeDefined()
-      const statusAttribute = statusShadowProps.htmlProps!['data-status']
+      expect(statusEffectProps).toHaveLength(2)
+      expect(statusEffectProps[0]).toEqual({ htmlProps: { disabled: details.disabled } })
+      expect(statusEffectProps.every(props => !('shadowProps' in props))).toBe(true)
+      const statusAttribute = statusEffectProps[1].htmlProps!['data-status']
       expect(val(statusAttribute)).toBeUndefined()
       expect(val(statusController.loading)).toBe(false)
 

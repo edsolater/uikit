@@ -51,12 +51,12 @@ export const Input = kit(
   (props: InputProps) => {
     const validity = createInputValidity(props)
     const isInvalid = validity.isValid.map((isValid) => !isValid)
-    const { statusShadowProps } = parseInputStatusProps({ invalid: isInvalid })
+    const { effect: statusEffectProps } = parseInputStatusProps({ invalid: isInvalid })
 
     return (
       <Piv
         as="input"
-        shadowProps={[props, statusShadowProps]}
+        shadowProps={[props, ...statusEffectProps]}
         class="Input"
         htmlProps={{
           type: 'text',

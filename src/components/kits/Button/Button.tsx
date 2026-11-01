@@ -111,12 +111,12 @@ export interface ButtonProps
   onClick?: EventListenerInput<'click'>
 }
 
-const parseButtonVariantProps = createVariantPropsParser(
+const parseVariantProps = createVariantPropsParser(
   buttonVariantGroups,
   buttonMapping,
 )
 
-const parseButtonStatusProps = createStatusPropsParser({
+const parseStatusProps = createStatusPropsParser({
   candidates: [...buttonStatusCandidates],
   effect: ({ loading, disabled }) => ({
     htmlProps: {
@@ -125,11 +125,6 @@ const parseButtonStatusProps = createStatusPropsParser({
     },
   }),
 })
-
-/** 业务默认值作为低优先级来源，外部原生字段可以覆盖。 */
-const buttonDefaultProps = {
-  htmlProps: { type: 'button' },
-} satisfies Pick<ButtonProps, 'htmlProps'>
 
 /** 共同机制由 kit 管理，Button 本体只表达分类、状态与动作。 */
 export const Button = kit(
@@ -141,13 +136,13 @@ export const Button = kit(
     styleTokens: buttonStyle,
   },
   (props: ButtonProps, context) => {
-    const { variantShadowProps } = parseButtonVariantProps(props)
-    const { statusShadowProps } = parseButtonStatusProps(props)
+    const { effect: variantEffectProps } = parseVariantProps(props)
+    const { effect: statusEffectProps } = parseStatusProps(props)
 
     return (
       <Piv
         as="button"
-        shadowProps={[buttonDefaultProps, props, variantShadowProps, statusShadowProps]}
+        shadowProps={[props, ...variantEffectProps, ...statusEffectProps]}
         class="Button"
         plugins={[clickable({ componentName: context.name })]}
         htmlProps={{

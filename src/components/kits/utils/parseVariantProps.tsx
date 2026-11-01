@@ -44,25 +44,50 @@ export type VariantDetails<Groups extends VariantPropsGroup[]> = {
   >
 }
 
+/** 分类解析结果；选中值保留原始语义，效果属性用于交给 Piv 渲染。 */
+export type VariantPropsParseResult<Groups extends VariantPropsGroup[]> = {
+  readonly effect: ShadowProps<any>[]
+  readonly details: VariantDetails<Groups>
+}
+
 /**
  * 为组件声明的互斥 Variant 分组创建解析器。
  *
  * 确定描述词优先用于阅读；不定字段一旦声明便接管整个分组，即使当前值是 undefined 也不会回落。
  * 每个分组最多产生一个 Variant；多个确定描述词同时声明时只警告，不中断组件运行。
+ *
+ * @param groups 分类分组、各组选项，以及可选的附加效果属性生成函数。
+ * @param mapping 按分组转换 data-* 属性值；不改变 details 中的原始选中值。
+ * @returns 解析函数，接收组件 Props 并返回 { effect, details }：
+ * - effect 是可展开到 Piv shadowProps 的属性列表；先放各组 effect 返回的属性，
+ *   再放自动生成的 data-* 属性，同名字段由后者覆盖，不额外嵌套 shadowProps。
+ * - details 按分组名提供响应式选中值 Source，未选中时读取为 undefined。
+ * 每次解析只执行一次各组 effect；后续变化由返回属性中的 Source 驱动。
+ *
+ * @example
+ * ```tsx
+ * const parseVariantProps = createVariantPropsParser([
+ *   { groupName: 'appearance', candidates: ['filled', 'outlined'] },
+ * ])
+ * const { effect: effectProps, details } = parseVariantProps({ outlined: true })
+ * val(details.appearance) // 'outlined'
+ * // effectProps 中的 htmlProps['data-appearance'] 是当前值为 'outlined' 的 Source。
+ * const element = <Piv shadowProps={effectProps} />
+ * ```
  */
 export function createVariantPropsParser<
   const Groups extends VariantPropsGroup[],
 >(
   groups: Groups,
   mapping?: Record<string, Record<string, string | undefined>>,
-) {
-  return function parseVariantProps(props: object) {
+): (props: object) => VariantPropsParseResult<Groups> {
+  return function parseVariantProps(props: object): VariantPropsParseResult<Groups> {
     const detailsRecord: Record<string, Source<string | undefined>> = {}
     const variantHTMLProps: Record<
       `data-${string}`,
       Source<string | undefined>
     > = {}
-    const variantEffectShadowProps: ShadowProps<any>[] = []
+    const effectProps: ShadowProps<any>[] = []
 
     for (const group of groups) {
       const selectedVariant = parseVariantGroup(props, group)
@@ -76,19 +101,12 @@ export function createVariantPropsParser<
         : selectedVariant
 
       // effect 只建立一次附加声明；返回 props 内的 Source 会由 Piv 持续消费。
-      const effectShadowProps = group.effect?.(selectedVariant)
-      if (effectShadowProps) variantEffectShadowProps.push(effectShadowProps)
+      const groupEffectProps = group.effect?.(selectedVariant)
+      if (groupEffectProps) effectProps.push(groupEffectProps)
     }
 
-    const variantShadowProps: ShadowProps<any> = { htmlProps: variantHTMLProps }
-    if (variantEffectShadowProps.length > 0) {
-      variantShadowProps.shadowProps = variantEffectShadowProps
-    }
-
-    return {
-      details: detailsRecord as VariantDetails<Groups>,
-      variantShadowProps,
-    }
+    effectProps.push({ htmlProps: variantHTMLProps })
+    return { effect: effectProps, details: detailsRecord as VariantDetails<Groups> }
   }
 }
 

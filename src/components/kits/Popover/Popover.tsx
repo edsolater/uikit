@@ -105,7 +105,7 @@ export const Popover = kit(
   },
   (props: PopoverProps) => {
     const mergedProps = addDefaultProps(props, defaultPopoverProps)
-    const { variantShadowProps, details } = parsePopoverVariantProps(props)
+    const { effect: variantEffectProps, details } = parsePopoverVariantProps(props)
     // 事件发生时读取最新回调，保留原监听器的生命周期。
     const [controller, controllerBindings] = createPopoverVisibilityController({
       get onToggle() { return mergedProps.onToggle },
@@ -120,7 +120,7 @@ export const Popover = kit(
 
     return (
       <Piv
-        shadowProps={variantShadowProps}
+        shadowProps={variantEffectProps}
         class={['Popover', mergedProps.class]}
         style={mergedProps.style}
       >

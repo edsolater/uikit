@@ -34,8 +34,14 @@ const parseVariant = createVariantPropsParser([boardVariantGroups[0]])
 const parseSize = createVariantPropsParser([boardVariantGroups[1]])
 const boardDefaultSources = {
   ...pivDefaultSources,
-  variant: input => parseVariant(input).details.variant,
-  size: input => parseSize(input).details.size,
+  variant: input => {
+    const { details } = parseVariant(input)
+    return details.variant
+  },
+  size: input => {
+    const { details } = parseSize(input)
+    return details.size
+  },
 } satisfies DefaultPropSources<BoardProps<PivSupportedElementTag>, typeof boardPropsDefinition>
 
 /**
