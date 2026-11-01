@@ -1,7 +1,15 @@
+/**
+ * 共享排列、导航与反馈的浏览器行为验证。
+ *
+ * 检查来源更新、实际布局与链接状态，不绑定样式编译的内部表示。
+ *
+ * 保护组合时的原生语义和各实例之间的隔离。
+ */
 import { Grid } from '../Grid/Grid'
 import { Navigation } from '../Navigation/Navigation'
 import { afterEach, expect, test } from 'vitest'
-import { page } from 'vitest/browser'
+import { page, userEvent } from 'vitest/browser'
+import '../../../css/all-base.css'
 import { createState, render } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { Flow } from './Flow'
@@ -130,4 +138,60 @@ test('反馈语气动态更换边框颜色，内层默认反馈不继承外层�
   await expect
     .poll(() => getComputedStyle(outer!).borderTopColor)
     .toBe(initialColor)
+})
+
+test('固定列、内容列和自动填充持续消费来源，内层布局不继承宿主宽度与列数', async () => {
+  await page.viewport(1024, 768)
+  style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  host = document.body.appendChild(document.createElement('main'))
+  const width = createState<string | undefined>('420px')
+  const grow = createState(false)
+  const label = createState('固定分栏')
+  const columns = createState<number | string>(3)
+  dispose = render(() => <Flow direction="row">
+    <Flow width={width} grow={grow} label={label}>
+      <Grid columns={columns} responsive={false} label="内容列">
+        <Grid><Flow>嵌套一列</Flow></Grid><Flow>第二项</Flow><Flow>第三项</Flow>
+      </Grid>
+    </Flow>
+  </Flow>, host)
+  const [outer, container, inner] = host.querySelectorAll<HTMLElement>('.Flow')
+  const [grid, nested] = host.querySelectorAll<HTMLElement>('.Grid')
+  expect(getComputedStyle(container!).width).toBe('420px')
+  expect(getComputedStyle(nested!).gridTemplateColumns.split(' ')).toHaveLength(1)
+  expect(getComputedStyle(inner!).width).not.toBe('420px')
+  width.set('360px'); label.set('已更新')
+  await expect.poll(() => getComputedStyle(container!).width).toBe('360px')
+  await expect.poll(() => container!.getAttribute('aria-label')).toBe('已更新')
+  await page.viewport(390, 844)
+  await expect.poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(3)
+  columns.set('repeat(8, max-content)')
+  await expect.poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(8)
+  columns.set('repeat(auto-fit, minmax(100px, 1fr))')
+  await expect.poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(3)
+  width.set(undefined); grow.set(true)
+  await expect.poll(() => getComputedStyle(container!).flexGrow).toBe('1')
+  expect(getComputedStyle(outer!).flexWrap).toBe('wrap')
+  await page.viewport(1024, 768)
+})
+
+test('主题链接有可辨颜色，默认无线，悬停与当前项提供下划线反馈', async () => {
+  style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  host = document.body.appendChild(document.createElement('main'))
+  const href = createState('/first')
+  dispose = render(() => <Link href={href}>读取结果</Link>, host)
+  const link = host.querySelector<HTMLAnchorElement>('a')!
+  const plain = getComputedStyle(link)
+  expect(plain.textDecorationLine).toBe('none')
+  expect(plain.color).not.toBe(getComputedStyle(host).color)
+  expect(CSS.supports('color', plain.color)).toBe(true)
+  href.set('/second')
+  await expect.poll(() => link.getAttribute('href')).toBe('/second')
+  await userEvent.hover(link)
+  await expect.poll(() => getComputedStyle(link).textDecorationLine).toBe('underline')
+  expect(CSS.supports('color', getComputedStyle(link).color)).toBe(true)
 })

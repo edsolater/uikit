@@ -1,9 +1,7 @@
 /** 字段标题通过for关联独立控件，tooltip将辅助提示挂在末尾问号。 */
 import { Show, stateView, val, type Source } from '@/foundation'
-import {
-  hasTooltipContent,
-  tooltip,
-} from '@/components/plugins/kits/tooltip/tooltip'
+import { hasTooltipContent } from '@/components/plugins/kits/tooltip/tooltip'
+import { Help } from '../Help/Help'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import type { RefReceiver } from '@/hooks/createRef'
 import { kit, type KitController } from '@/components/utils/kit'
@@ -23,7 +21,10 @@ export type LabelProps = ComponentDescriptionProps & {
 }
 
 /** 字段关联、标题与辅助说明的指令式入口，不拥有被关联控件的状态。 */
-export type LabelController = KitController<LabelProps, typeof labelPropsDefinition>
+export type LabelController = KitController<
+  LabelProps,
+  typeof labelPropsDefinition
+>
 
 /**
  * 显示标题与说明，保持原生表单关联，浮层不参与字段布局。
@@ -36,19 +37,11 @@ export const Label = kit(
         {props.children}
       </Piv>
       <Show when={hasTooltipContent(props.tooltip)}>
-        <Piv
-          as="button"
-          class="tooltipTrigger"
-          plugin={tooltip({
-            get content() { return props.tooltip },
-          })}
-          htmlProps={{
-            'type': 'button',
-            'aria-label': stateView(() => val(props.children) + '说明'),
-          }}
-        >
-          {val(props.tooltipTrigger) ?? '?'}
-        </Piv>
+        <Help
+          tooltip={props.tooltip}
+          trigger={props.tooltipTrigger}
+          name={stateView(() => val(props.children) + '说明')}
+        />
       </Show>
     </Piv>
   ),

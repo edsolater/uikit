@@ -9,13 +9,18 @@ import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { flowPropsDefinition } from './Flow.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import { type Source, type JSX } from '@/foundation'
+import { type Source, type JSX, val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Flow.style'
 /** Flow 的声明输入；初始状态通过 Props 表达。 */
 export type FlowProps = ComponentDescriptionProps & {
   ref?: RefReceiver<FlowController>
   direction?: Source<'row' | 'column' | undefined>
+  /** 容器自身的 CSS 宽度，未指定时由父布局决定。 */
+  width?: Source<string | undefined>
+  /** 作为父布局的子项占用剩余空间。 */
+  grow?: Source<boolean | undefined>
+  label?: Source<string | undefined>
   children?: JSX.Element
 }
 
@@ -35,8 +40,11 @@ export const Flow = kit(
     return (
       <Piv
         class="Flow"
+        style={{ '--flow-width': val(props.width) ?? 'auto' }}
         htmlProps={{
           'data-direction': props.direction,
+          'data-grow': String(val(props.grow) ?? false),
+          'aria-label': props.label,
         }}
       >
         {props.children}

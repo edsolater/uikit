@@ -13,7 +13,7 @@ const decoration = token('none', {
   ],
 })
 rules('.Link', {
-  color: 'var(--color-accent)',
+  color: token('var(--color-link)', { state: [[stateCondition('&:hover'), 'var(--color-link-hover)']] }),
   'text-decoration': decoration,
   'text-underline-offset': '.2em',
 })

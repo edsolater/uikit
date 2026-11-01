@@ -88,6 +88,11 @@ for (const entry of exampleEntries) {
           document.querySelector<HTMLButtonElement>('.Label button')!,
         )
       }
+      if (entry.id === 'help') {
+        await userEvent.hover(
+          document.querySelector<HTMLButtonElement>('.Help')!,
+        )
+      }
       if (
         entry.id === 'component-marker' ||
         entry.id === 'component-marker-structure-view-trigger'

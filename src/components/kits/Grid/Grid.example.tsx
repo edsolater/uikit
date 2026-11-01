@@ -1,7 +1,7 @@
 /**
- * Grid 的等宽分栏示例。
+ * Grid 的列结构示例。
  *
- * 组合三张信息卡，切换一列、两列和三列。
+ * 组合信息卡，切换等宽列并展示固定列与自动填充。
  *
  * 让使用者观察列数与窄屏退列的实际效果。
  */
@@ -51,6 +51,13 @@ export function GridExample() {
           <Heading level={3}>已完成</Heading>
           <Text>整理结果与依据。</Text>
         </Card>
+      </Grid>
+      <Text>固定三列不随窄屏退列；自动填充列按可用空间排列。</Text>
+      <Grid columns={3} responsive={false} label="固定三列">
+        <Text>第一列</Text><Text>第二列</Text><Text>第三列</Text>
+      </Grid>
+      <Grid columns="repeat(auto-fit, minmax(8rem, 1fr))" responsive={false} label="自动填充">
+        <Text>自动填充一</Text><Text>自动填充二</Text><Text>自动填充三</Text>
       </Grid>
     </Flow>
   )

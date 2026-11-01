@@ -24,6 +24,7 @@ import { MessageBoardExample } from '@/components/kits/MessageBoard/MessageBoard
 import { TextExample } from '@/components/kits/Text/Text.example'
 import { HeadingExample } from '@/components/kits/Heading/Heading.example'
 import { LabelExample } from '@/components/kits/Label/Label.example'
+import { HelpExample } from '@/components/kits/Help/Help.example'
 import { TableExample } from '@/components/kits/Table/Table.example'
 import { LoopExample } from '@/components/kits/Loop/Loop.example'
 import { ComponentMarkerExample } from '@/components/ComponentMarker/ComponentMarker.example'
@@ -303,6 +304,15 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '外部目标锚定与独立浮层。',
     thumbnail: new URL('../thumbnails/popover-surface.webp', import.meta.url).href,
     content: PopoverSurfaceExample,
+  },
+  {
+    id: 'help',
+    level: 1,
+    title: 'Help',
+    category: exampleCategories.component,
+    summary: '独立帮助入口与模板说明。',
+    thumbnail: new URL('../thumbnails/help.webp', import.meta.url).href,
+    content: HelpExample,
   },
   {
     id: 'label',
