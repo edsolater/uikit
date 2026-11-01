@@ -19,16 +19,17 @@ export function createRef<T extends object>(): [
   reference: Partial<T>,
   receive: RefReceiver<T>,
 ] {
-  const reference = createState<T | undefined>(undefined, { ownedWrite: true })
+  // 引用保存的是原对象本身；显式装入字段，避免把 StateView 对象当作值来源展开。
+  const reference = createState<{ controller: T } | undefined>(undefined, { ownedWrite: true })
   const proxy = new Proxy({} as Partial<T>, {
     get(_, key) {
-      const controller = reference.read() as T | undefined
+      const controller = reference.read()?.controller
       if (!controller) return undefined
       const value = Reflect.get(controller, key, controller)
       return bindThisIfFunction(value, controller)
     },
     set(_, key, value) {
-      const controller = reference.read() as T | undefined
+      const controller = reference.read()?.controller
       return controller
         ? Reflect.set(controller, key, value, controller)
         : false
@@ -37,7 +38,7 @@ export function createRef<T extends object>(): [
   return [
     proxy,
     (value) => {
-      reference.set(() => value as Awaited<T>)
+      reference.set({ controller: value })
       return () => {
         reference.set(undefined)
       }

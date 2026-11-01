@@ -3,6 +3,164 @@ import { createRoot, flush, resolve, until } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createEffect } from '../createEffect'
 import { createState, type State } from './state'
+import type { Source } from './source'
+
+test('直接接收上游State，读取值且独立写入，后续上游变化继续传入', () => {
+  const scope = createRoot(dispose => {
+    const outside = createState(false)
+    return { outside, inside: createState(outside), dispose }
+  })
+  try {
+    expectTypeOf(scope.inside).toEqualTypeOf<State<boolean>>()
+    expect(scope.inside.read()).toBe(false)
+    scope.inside.set(true)
+    flush()
+    expect(scope.inside.read()).toBe(true)
+    expect(scope.outside.read()).toBe(false)
+    scope.outside.set(true)
+    flush()
+    scope.outside.set(false)
+    flush()
+    expect(scope.inside.read()).toBe(false)
+  } finally {
+    scope.dispose()
+  }
+})
+
+test('StateView及Source泛型直接作为来源，选项与相对更新使用内容值类型', () => {
+  function build<T>(source: Source<T>) { return createState(source) }
+  const scope = createRoot(dispose => {
+    const outside = createState(2)
+    const inside = createState<number>(outside.map(value => value * 2), {
+      equals(previous, next) {
+        expectTypeOf(previous).toEqualTypeOf<number>()
+        expectTypeOf(next).toEqualTypeOf<number>()
+        return previous === next
+      },
+    })
+    return { outside, inside, forwarded: build(outside), dispose }
+  })
+  try {
+    expectTypeOf(scope.inside).toEqualTypeOf<State<number>>()
+    expectTypeOf(scope.forwarded).toEqualTypeOf<State<number>>()
+    expect(scope.inside.read()).toBe(4)
+    scope.inside.set(previous => {
+      expectTypeOf(previous).toEqualTypeOf<number>()
+      return previous + 1
+    })
+    flush()
+    expect(scope.inside.read()).toBe(5)
+    expect(scope.outside.read()).toBe(2)
+    scope.outside.set(3)
+    flush()
+    expect(scope.inside.read()).toBe(6)
+    expect(scope.forwarded.read()).toBe(3)
+  } finally {
+    scope.dispose()
+  }
+})
+
+test('计算来源可直接返回State，选择变化后跟随新来源并停止响应旧来源', () => {
+  const scope = createRoot(dispose => {
+    const chooseFirst = createState(true)
+    const first = createState(1)
+    const second = createState(2)
+    const selected = createState(() => chooseFirst.read() ? first : second)
+    return { chooseFirst, first, second, selected, dispose }
+  })
+  try {
+    expectTypeOf(scope.selected).toEqualTypeOf<State<number>>()
+    expect(scope.selected.read()).toBe(1)
+    scope.first.set(3)
+    flush()
+    expect(scope.selected.read()).toBe(3)
+    scope.chooseFirst.set(false)
+    flush()
+    expect(scope.selected.read()).toBe(2)
+    scope.first.set(9)
+    flush()
+    expect(scope.selected.read()).toBe(2)
+    scope.second.set(4)
+    flush()
+    expect(scope.selected.read()).toBe(4)
+  } finally {
+    scope.dispose()
+  }
+})
+
+test('Promise完成后得到State来源，直接读取值并持续跟随其更新', async () => {
+  const deferred = Promise.withResolvers<State<number>>()
+  const scope = createRoot(dispose => {
+    const outside = createState(3)
+    return { outside, inside: createState(deferred.promise), dispose }
+  })
+  try {
+    expectTypeOf(scope.inside).toEqualTypeOf<State<number>>()
+    deferred.resolve(scope.outside)
+    expect(await resolve(scope.inside.read)).toBe(3)
+    scope.outside.set(7)
+    flush()
+    expect(scope.inside.read()).toBe(7)
+    scope.inside.set(previous => previous + 1)
+    await until(() => scope.inside.read() === 8)
+    expect(scope.outside.read()).toBe(7)
+  } finally {
+    scope.dispose()
+  }
+})
+
+test('异步来源尚未完成时，相对更新等待State中的内容值', async () => {
+  const deferred = Promise.withResolvers<State<number>>()
+  const scope = createRoot(dispose => ({ inside: createState(deferred.promise), dispose }))
+  try {
+    scope.inside.set(previous => {
+      expectTypeOf(previous).toEqualTypeOf<number>()
+      expect(previous).toBe(4)
+      return previous + 1
+    })
+    deferred.resolve(createState(4))
+    expect(await resolve(scope.inside.read)).toBe(5)
+  } finally {
+    scope.dispose()
+  }
+})
+
+test('Promise中的State仍在等待时，相对更新等待最终内容值', async () => {
+  const deferred = Promise.withResolvers<number>()
+  const scope = createRoot(dispose => {
+    const outside = createState(deferred.promise)
+    return { inside: createState(Promise.resolve(outside)), dispose }
+  })
+  try {
+    scope.inside.set(previous => previous + 1)
+    await Promise.resolve()
+    await Promise.resolve()
+    deferred.resolve(5)
+    expect(await resolve(scope.inside.read)).toBe(6)
+  } finally {
+    scope.dispose()
+  }
+})
+
+test('后续赋值也接受State来源，直接读取内容并跟随该来源更新', () => {
+  const scope = createRoot(dispose => ({
+    outside: createState(2), inside: createState(0), dispose,
+  }))
+  try {
+    scope.inside.set(scope.outside)
+    flush()
+    expect(scope.inside.read()).toBe(2)
+    scope.outside.set(4)
+    flush()
+    expect(scope.inside.read()).toBe(4)
+    scope.inside.set(previous => previous + 1)
+    flush()
+    expect(scope.inside.read()).toBe(5)
+    expect(scope.outside.read()).toBe(4)
+  } finally {
+    scope.dispose()
+  }
+})
 
 test('无依赖初始化只执行一次，函数值保持身份，写入随 Solid 提交', () => {
   let initialized = 0

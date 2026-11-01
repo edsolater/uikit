@@ -8,6 +8,7 @@ import { hasProperty, isTrue } from '@edsolater/fnkit'
 import { createMemo } from 'solid-js'
 import { isStateView, stateViewBrand, type StateView } from './state-view'
 import { isPromiseLike } from './promise-like'
+import type { Val } from './read'
 import {
   createAsyncSignal,
   type AsyncSignalOptions,
@@ -33,19 +34,25 @@ export function isState(value: unknown): value is State {
 }
 
 /**
- * 创建可写状态，函数来源参与持续派生，同步值与 Promise 通过同一入口读取。
+ * 从完整来源创建可写值状态，直接接收普通值、PromiseLike、State、StateView 及计算来源。
+ * StateView 来源参与持续派生，Promise 完成后继续读取其中的来源；调用方不必先用 val 解包。
+ * 写入只改变当前状态，不回写上游；后续上游变化继续驱动计算来源。
  * 相对更新基于已有当前值，已有 Promise 由基础层接续；计算来源尚无初值时不预存更新命令。
  * @example
  * function Component() {
  *   const count = createState(0) // count 是一个 State<number>
  *   return <div>{val(count)}</div>
  * }
+ * @example
+ * const outside = createState(false)
+ * const inside = createState(outside) // State<boolean>，不需要 () => val(outside)
+ * inside.set(true) // 不回写 outside
  */
-export function createState<T = unknown>(): State<Awaited<T> | undefined>
+export function createState<T = unknown>(): State<Val<T> | undefined>
 export function createState<T>(
   initialValue: StateSource<T>,
-  options?: AsyncSignalOptions<Awaited<T>>,
-): State<Awaited<T>>
+  options?: AsyncSignalOptions<Val<T>>,
+): State<Val<T>>
 export function createState(
   initialValue?: any,
   options?: AsyncSignalOptions<any>,

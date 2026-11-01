@@ -192,10 +192,11 @@ test('两种公共能力同元素共存，drop 关闭注销并可重新接收外
 test('快捷来源整体换源后退出旧订阅，undefined 回落而 false 覆盖', () => {
   const first = createState<boolean | undefined>(undefined)
   const second = createState<boolean | undefined>(true)
-  const selected = createState(first)
+  // 这里切换的是来源对象本身，显式放入字段，不把它作为子 State 的计算来源。
+  const selected = createState({ source: first })
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(
-    () => <Piv draggable={val(selected)} shadowProps={{ draggable: true }} />,
+    () => <Piv draggable={val(selected).source} shadowProps={{ draggable: true }} />,
     host,
   )
   const element = host.firstElementChild as HTMLElement
@@ -203,7 +204,7 @@ test('快捷来源整体换源后退出旧订阅，undefined 回落而 false 覆
   first.set(false)
   flush()
   expect(element.hasAttribute('data-plugin')).toBe(false)
-  selected.set(second)
+  selected.set({ source: second })
   flush()
   expect(element.getAttribute('data-plugin')).toBe('draggable')
   first.set(true)

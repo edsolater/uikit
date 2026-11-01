@@ -2,18 +2,22 @@ import { isFunction } from '@edsolater/fnkit'
 import {
   createMemo,
   createSignal,
+  resolve,
   type SignalOptions,
   type MemoOptions,
   type SourceAccessor,
 } from 'solid-js'
 import { isPromiseLike } from './promise-like'
+import { isStateView } from './state-view'
+import type { Source } from './source'
+import { val, type Val } from './read'
 
 export type AsyncValue<T> = T | PromiseLike<T>
 
-export type StateSource<T> = AsyncValue<T> | (() => AsyncValue<T>)
+export type StateSource<T> = Source<T> | (() => Source<T>)
 
 /** 相对更新以已有当前值为前提；已有 Promise 的等待由基础层接续。 */
-export type StateUpdate<T> = AsyncValue<T> | ((previous: T) => AsyncValue<T>)
+export type StateUpdate<T> = Source<T> | ((previous: T) => Source<T>)
 
 export type AsyncSignalSetter<T> = (value: StateUpdate<T>) => void
 
@@ -59,12 +63,12 @@ export interface AsyncSignalOptions<T> {
  */
 export function createAsyncSignal<T>(
   initialSource: StateSource<T>,
-  options?: AsyncSignalOptions<Awaited<T>>,
-): [SourceAccessor<Awaited<T>>, AsyncSignalSetter<Awaited<T>>]
-export function createAsyncSignal<T>(
-  initialSource: StateSource<T>,
-  options?: AsyncSignalOptions<T>,
-): [SourceAccessor<T>, AsyncSignalSetter<T>] {
+  options?: AsyncSignalOptions<Val<T>>,
+): [SourceAccessor<Val<T>>, AsyncSignalSetter<Val<T>>]
+export function createAsyncSignal(
+  initialSource: StateSource<any>,
+  options?: AsyncSignalOptions<any>,
+): [SourceAccessor<any>, AsyncSignalSetter<any>] {
   const { ownedWrite, ...resultOptions } = options ?? {}
 
   // 来源层保留原生可写计算与依赖关系，相等比较统一由结果层负责。
@@ -74,26 +78,28 @@ export function createAsyncSignal<T>(
     lazy: options?.lazy,
     ownedWrite,
   }
-  const [readSource, setSource] = isFunction(initialSource)
-    ? createSignal<AsyncValue<T>>(initialSource, sourceOptions)
-    : createSignal<AsyncValue<T>>(
-        initialSource as Exclude<AsyncValue<T>, Function>,
+  const [readSource, setSource] = isFunction(initialSource) || isStateView(initialSource)
+    ? createSignal(() => {
+        const source = isFunction(initialSource) ? initialSource() : initialSource
+        return isStateView(source) ? val(source) : source
+      }, sourceOptions)
+    : createSignal(
+        initialSource,
         sourceOptions,
       )
 
-  // 原生 setter 可以保存 Promise；结果层统一展开 thenable，交给 Solid 等待和传播错误。
-  const accessor = createMemo<T>(() => {
-    const source = readSource()
-    return isPromiseLike(source) ? Promise.resolve(source) : source
-  }, resultOptions)
+  // 结果层统一读取完整来源；Promise 完成后的 StateView 也参与同一依赖图。
+  const accessor = createMemo(() => val(readSource()), resultOptions)
 
-  const setter: AsyncSignalSetter<T> = (update) => {
+  const setter: AsyncSignalSetter<any> = (update) => {
     setSource((previous) => {
       if (!isFunction(update)) return update
       // 只接续已经存在的异步值，不保存尚无初始结果时的更新命令。
       return isPromiseLike(previous)
-        ? Promise.resolve(previous).then(update)
-        : update(previous)
+        ? Promise.resolve(previous).then(value => isStateView(value)
+            ? resolve(() => val(value)).then(update)
+            : update(value))
+        : update(val(previous))
     })
   }
 
