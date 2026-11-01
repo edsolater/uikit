@@ -14,6 +14,10 @@ export function InputExample() {
         <h2>Input</h2>
       </div>
       <p>Input 承载一个单行可编辑值；字段名、说明和错误文案放到更上层组件。</p>
+      <Input
+        type="color"
+        htmlProps={{ 'aria-label': '示例颜色', 'value': '#496a91' }}
+      />
       <div class="setting-list">
         <div class="setting-row field-row">
           <div class="field-copy">

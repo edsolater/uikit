@@ -1,7 +1,7 @@
 import { Field } from '../Field/Field'
 /** 公开组件在结构查看中有真实身份，二级组合不接管子组件样式。 */
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { createState, flush, Loading, render } from '@/foundation'
+import { createState, flush, Loading, render, val } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { componentBoundaries } from '@/components/ComponentMarker/ComponentMarker'
 import {
@@ -16,6 +16,8 @@ import {
   Button,
   Heading,
   Label,
+  Input,
+  Text,
   Piv,
   ComponentMarkerStructureViewTrigger,
 } from '@/components'
@@ -40,9 +42,87 @@ afterEach(() => {
 })
 
 function toggleView() {
-  host.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!.click()
+  host
+    .querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
+    .click()
   flush()
 }
+
+test('无附加标题的页面保留正文，字段颜色输入、勾选帮助和折叠通知可用', async () => {
+  const value = createState('#123456'),
+    checked = createState(false),
+    message = createState('第一条')
+  let detail: HTMLDetailsElement | undefined,
+    toggled = false
+  dispose = render(
+    () => (
+      <Page>
+        <Heading level={1}>原有标题</Heading>
+        <Text p>{message}</Text>
+        <Field label="颜色" tooltip="颜色说明">
+          {(id) => (
+            <Input
+              id={id}
+              type="color"
+              htmlProps={{ value }}
+              on={{
+                input: ({ element }) => {
+                  value.set((element as HTMLInputElement).value)
+                },
+              }}
+            />
+          )}
+        </Field>
+        <Checkbox
+          label="确认"
+          checked={checked}
+          tooltip="确认说明"
+          onChange={checked.set}
+        />
+        <Details
+          summary={<Text emphasis>摘要模板</Text>}
+          domRef={(element) => {
+            detail = element as HTMLDetailsElement
+          }}
+          onToggle={(open) => {
+            toggled = open
+          }}
+        >
+          正文
+        </Details>
+      </Page>
+    ),
+    host,
+  )
+  expect(host.querySelectorAll('h1')).toHaveLength(1)
+  const input = host.querySelector<HTMLInputElement>('input[type="color"]')!
+  expect(input.type).toBe('color')
+  expect(host.querySelector<HTMLLabelElement>('label')!.htmlFor).toBe(input.id)
+  input.value = '#445566'
+  input.dispatchEvent(new Event('input', { bubbles: true }))
+  await expect.poll(() => input.value).toBe('#445566')
+  expect(val(value)).toBe('#445566')
+  value.set('#778899')
+  await expect.poll(() => input.value).toBe('#778899')
+  const check = host.querySelector<HTMLInputElement>('input[type="checkbox"]')!
+  host.querySelector<HTMLLabelElement>(`label[for="${check.id}"]`)!.click()
+  await expect.poll(() => check.checked).toBe(true)
+  expect(val(checked)).toBe(true)
+  checked.set(false)
+  await expect.poll(() => check.checked).toBe(false)
+  expect(host.querySelectorAll('.Help')).toHaveLength(2)
+  expect(detail!.open).toBe(false)
+  detail!.open = true
+  await expect.poll(() => toggled).toBe(true)
+  message.set('更新后的文字')
+  await expect
+    .poll(() => host.querySelector('p.Text')!.textContent)
+    .toBe('更新后的文字')
+  host.style.visibility = 'hidden'
+  expect(getComputedStyle(host.querySelector('p.Text')!).visibility).toBe(
+    'hidden',
+  )
+})
 
 test('零级不重复登记，一二级均有边界，查看关闭后保持节点与布局并清理边界', async () => {
   dispose = render(

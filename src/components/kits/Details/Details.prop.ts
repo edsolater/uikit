@@ -5,8 +5,10 @@ import type { DetailsProps } from './Details'
 
 export const detailsPropsDefinition = {
   ...componentDescriptionPropsDefinition,
-  summary: 'state-source-view',
+  summary: 'state-value-view',
   open: 'state-source-view',
   children: 'state-value-view',
+  domRef: 'only-through-prop',
+  onToggle: 'state-value-view',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<DetailsProps>

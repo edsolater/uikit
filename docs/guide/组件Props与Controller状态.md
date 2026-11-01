@@ -36,7 +36,7 @@ Button.controllers 只收集启用组件 ref 的实例，普通按钮不因全�
 
 ## Text 与 Label 的字段边界
 
-Text 复用 Piv 的运行时字段与默认能力来源，移除 as 并收窄 children；block/p 仍互斥，只在创建时选择标签。Text.controllers 只包含已接入 ref 的文字实例。说明真值的动态默认与 descriptionOnly 仍由原 Marker 协议解释。
+Text 复用 Piv 的运行时字段与默认能力来源，移除 as 并收窄为纯文字；block／p／emphasis互斥，只在创建时选择标签。tone表达文字自身语气，不接管业务状态。Text.controllers只包含已接入ref的文字实例，说明真值的动态默认与descriptionOnly仍由原Marker协议解释。
 
 Label 只公开 for、children、tooltip、tooltipTrigger、组件说明与 ref，不因接入 kit 增加 Piv 字段。可在特殊回调中通过 `LabelController.props` 改变标题、目标控件与说明；原来未传 tooltip 也能在运行期添加并清空，不需要额外默认来源。提示的创建、显示和清理由原 Show 与 tooltip 插件承担。Label.controllers 与其他组件集合独立；两组件均不接管样式或手写登记。
 

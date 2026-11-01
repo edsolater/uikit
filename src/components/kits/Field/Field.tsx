@@ -11,16 +11,20 @@ import { fieldPropsDefinition } from './Field.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Flow } from '../Flow/Flow'
-import { Label } from '../Label/Label'
+import { Label, type LabelProps } from '../Label/Label'
 /** Field 的声明输入；初始状态通过 Props 表达。 */
 export type FieldProps = ComponentDescriptionProps & {
   ref?: RefReceiver<FieldController>
   label: Source<string>
+  tooltip?: LabelProps['tooltip']
   children: (id: string) => JSX.Element
 }
 
 /** Field 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type FieldController = KitController<FieldProps, typeof fieldPropsDefinition>
+export type FieldController = KitController<
+  FieldProps,
+  typeof fieldPropsDefinition
+>
 
 /**
  * 关联字段标题与单个控件。
@@ -35,7 +39,9 @@ export const Field = kit(
     const id = crypto.randomUUID()
     return (
       <Flow>
-        <Label for={id}>{props.label}</Label>
+        <Label for={id} tooltip={props.tooltip}>
+          {props.label}
+        </Label>
         {props.children(id)}
       </Flow>
     )

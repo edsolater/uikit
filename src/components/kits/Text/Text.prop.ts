@@ -18,6 +18,8 @@ export const textPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   block: 'state-untracked',
   p: 'state-untracked',
+  emphasis: 'state-untracked',
+  tone: 'state-source-view',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<TextProps>
 

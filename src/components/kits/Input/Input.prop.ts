@@ -9,5 +9,6 @@ export const inputPropsDefinition = {
   ...pivPropsDefinition,
   ...componentDescriptionPropsDefinition,
   ...inputValidityPropsDefinition,
+  type: 'state-value-view',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<InputProps>

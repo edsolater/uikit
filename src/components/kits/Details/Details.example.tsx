@@ -11,7 +11,7 @@ import { Details, Flow, Text } from '@/components'
  */
 export function DetailsExample() {
   return (
-    <Details summary="展开检查说明">
+    <Details summary={<Text emphasis>展开检查说明</Text>}>
       <Flow>
         <Text>先检查输入是否完整。</Text>
         <Text>再核对输出与验证依据。</Text>

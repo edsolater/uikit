@@ -18,7 +18,7 @@ import './Page.style'
 /** Page 的声明输入；初始状态通过 Props 表达。 */
 export type PageProps = ComponentDescriptionProps & {
   ref?: RefReceiver<PageController>
-  title: Source<string>
+  title?: Source<string | undefined>
   /** 可见副标题，保持正文语义，不用作结构查看元数据。 */
   subtitle?: Source<string | undefined>
   actions?: JSX.Element
@@ -26,10 +26,13 @@ export type PageProps = ComponentDescriptionProps & {
 }
 
 /** Page 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type PageController = KitController<PageProps, typeof pagePropsDefinition>
+export type PageController = KitController<
+  PageProps,
+  typeof pagePropsDefinition
+>
 
 /**
- * 页面根负责阅读范围；标题、说明与动作通过基础内容流组合。
+ * 页面根负责阅读范围；标题、说明与动作可省略，没有这些内容时保留原正文顺序。
  */
 export const Page = kit(
   {
@@ -40,13 +43,17 @@ export const Page = kit(
   (props: PageProps) => {
     return (
       <Piv as="main" class="Page">
-        <Flow>
-          <Heading level={1}>{props.title}</Heading>
-          <Show when={val(props.subtitle)}>
-            <Text p>{props.subtitle}</Text>
-          </Show>
-          <Flow direction="row">{props.actions}</Flow>
-        </Flow>
+        <Show when={val(props.title) || val(props.subtitle) || props.actions}>
+          <Flow>
+            <Show when={val(props.title)}>
+              <Heading level={1}>{props.title}</Heading>
+            </Show>
+            <Show when={val(props.subtitle)}>
+              <Text p>{props.subtitle}</Text>
+            </Show>
+            <Flow direction="row">{props.actions}</Flow>
+          </Flow>
+        </Show>
         {props.children}
       </Piv>
     )

@@ -9,6 +9,7 @@ export const checkboxPropsDefinition = {
   name: 'state-value-view',
   checked: 'state-source-view',
   label: 'state-source-view',
+  tooltip: 'state-value-view',
   disabled: 'state-source-view',
   required: 'state-value-view',
   onChange: 'state-value-view',

@@ -13,7 +13,7 @@ export function FieldExample() {
   return (
     <Flow>
       <Text>点击任意“联系人”标题，会聚焦它对应的输入框。</Text>
-      <Field label="联系人">
+      <Field label="联系人" tooltip="每项标题只关联自己的输入框。">
         {(id) => <Input id={id} htmlProps={{ placeholder: '项目负责人' }} />}
       </Field>
       <Field label="联系人">

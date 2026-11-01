@@ -6,6 +6,7 @@ import type { FieldProps } from './Field'
 export const fieldPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   label: 'state-source-view',
+  tooltip: 'state-value-view',
   children: 'only-through-prop',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<FieldProps>

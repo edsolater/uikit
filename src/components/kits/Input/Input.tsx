@@ -13,8 +13,12 @@ import { inputPropsDefinition } from './Input.prop'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import { createStatusPropsParser, type StatusController } from '../utils/parseStatusProps'
+import {
+  createStatusPropsParser,
+  type StatusController,
+} from '../utils/parseStatusProps'
 import './Input.css'
+import { type Source, val } from '@/foundation'
 import {
   createInputValidity,
   type InputValidityProps,
@@ -23,6 +27,8 @@ import {
 export interface InputProps
   extends PivProps<'input'>, InputValidityProps, ComponentDescriptionProps {
   ref?: RefReceiver<InputController>
+  /** 原生输入类型；省略时为单行文字。 */
+  type?: Source<'text' | 'color' | undefined>
 }
 
 const parseInputStatusProps = createStatusPropsParser({
@@ -35,7 +41,11 @@ const parseInputStatusProps = createStatusPropsParser({
 })
 
 /** 顶层公开输入有效性状态，props 提供通用输入干预；ref 只从上游交付。 */
-export type InputController = KitController<InputProps, typeof inputPropsDefinition, StatusController<'invalid'>>
+export type InputController = KitController<
+  InputProps,
+  typeof inputPropsDefinition,
+  StatusController<'invalid'>
+>
 
 /**
  * 编辑单行内容，保留原有效性计算与状态映射。
@@ -50,7 +60,9 @@ export const Input = kit<InputProps, typeof inputPropsDefinition>(
   (props: InputProps, context) => {
     const validity = createInputValidity(props)
     const isInvalid = validity.isValid.map((isValid) => !isValid)
-    const { effect: statusEffectProps, controller } = parseInputStatusProps({ invalid: isInvalid })
+    const { effect: statusEffectProps, controller } = parseInputStatusProps({
+      invalid: isInvalid,
+    })
     context.exposeController(controller)
 
     return (
@@ -59,7 +71,7 @@ export const Input = kit<InputProps, typeof inputPropsDefinition>(
         shadowProps={[props, ...statusEffectProps]}
         class="Input"
         htmlProps={{
-          type: 'text',
+          type: val(props.type) ?? 'text',
           autocorrect: 'off',
           spellcheck: 'false',
           autocomplete: 'off',

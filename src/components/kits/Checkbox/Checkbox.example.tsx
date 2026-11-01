@@ -16,6 +16,7 @@ export function CheckboxExample() {
     <Flow>
       <Checkbox
         label="已核对原始资料"
+        tooltip="核对完成后勾选；标题与方框属于同一个选项。"
         checked={checked}
         onChange={(value) => {
           checked.set(value)

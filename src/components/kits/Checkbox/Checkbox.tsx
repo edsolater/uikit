@@ -9,7 +9,8 @@ import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { checkboxPropsDefinition } from './Checkbox.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import { type Source } from '@/foundation'
+import { stateView, val, type Source } from '@/foundation'
+import { Label, type LabelProps } from '../Label/Label'
 import { Piv } from '@/components/Piv/Piv'
 import './Checkbox.style'
 /** Checkbox 的声明输入；初始状态通过 Props 表达。 */
@@ -19,13 +20,17 @@ export type CheckboxProps = ComponentDescriptionProps & {
   name?: string
   checked: Source<boolean>
   label: Source<string>
+  tooltip?: LabelProps['tooltip']
   disabled?: Source<boolean | undefined>
   required?: boolean
   onChange?: (checked: boolean) => void
 }
 
 /** Checkbox 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type CheckboxController = KitController<CheckboxProps, typeof checkboxPropsDefinition>
+export type CheckboxController = KitController<
+  CheckboxProps,
+  typeof checkboxPropsDefinition
+>
 
 /**
  * 带可点击标题的二态表单选择。
@@ -37,11 +42,13 @@ export const Checkbox = kit(
     availableProps: checkboxPropsDefinition,
   },
   (props: CheckboxProps) => {
+    const generatedId = crypto.randomUUID()
+    const id = stateView(() => val(props.id) ?? generatedId)
     return (
-      <Piv as="label" class="Checkbox">
+      <Piv class="Checkbox">
         <Piv
           as="input"
-          id={props.id}
+          id={id}
           htmlProps={{
             type: 'checkbox',
             name: props.name,
@@ -55,7 +62,9 @@ export const Checkbox = kit(
             },
           }}
         />
-        <Piv as="span">{props.label}</Piv>
+        <Label for={id} tooltip={props.tooltip}>
+          {props.label}
+        </Label>
       </Piv>
     )
   },
