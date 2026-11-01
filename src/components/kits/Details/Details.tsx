@@ -5,8 +5,7 @@
  *
  * 调用方决定正文的信息意义及其布局。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { detailsPropsDefinition } from './Details.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -21,7 +20,7 @@ export type DetailsProps = ComponentDescriptionProps & {
 }
 
 /** Details 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type DetailsController = PropsController<DetailsProps, typeof detailsPropsDefinition>
+export type DetailsController = KitController<DetailsProps, typeof detailsPropsDefinition>
 
 /**
  * 保留原生键盘与展开语义的按需阅读区域。

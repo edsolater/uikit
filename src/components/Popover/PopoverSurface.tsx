@@ -5,8 +5,7 @@
  *
  * 让提示与按钮浮层共享同一个显示实体。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { popoverSurfacePropsDefinition } from './PopoverSurface.prop'
 import { val, type Source, type JSX } from '@/foundation'
@@ -26,8 +25,8 @@ export type PopoverSurfaceProps = Pick<
   popover: 'auto' | 'hint' | 'manual'
 }
 
-/** PopoverSurface 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type PopoverSurfaceController = PropsController<PopoverSurfaceProps, typeof popoverSurfacePropsDefinition>
+/** 通过 props 提供浮层输入干预；ref 只从上游交付。 */
+export type PopoverSurfaceController = KitController<PopoverSurfaceProps, typeof popoverSurfacePropsDefinition>
 
 /**
  * 呈现锚定目标的浮层；调用方负责将domRef接入同一Popover Controller。

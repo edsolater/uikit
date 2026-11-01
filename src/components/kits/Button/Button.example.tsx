@@ -32,20 +32,26 @@ export function ButtonExample() {
           <Button ref={receiveButton} domRef={receiveButtonElement}>
             被控制的按钮
           </Button>
-          <Button onClick={() => { button.loading?.set(true) }}>
-            此按钮加载
+          <Button onClick={() => { button.props?.loading.set(true) }}>
+            通过输入干预加载
+          </Button>
+          <Button onClick={() => { button.setStatus?.('loading', true) }}>
+            通过按钮能力加载
+          </Button>
+          <Button onClick={() => { button.setStatus?.('loading', false) }}>
+            通过按钮能力结束加载
           </Button>
           <Button onClick={() => buttonElement.focus?.()}>聚焦此按钮</Button>
           <Button
             onClick={() => {
-              Button.controllers.loading.set(true)
+              Button.controllers.props.loading.set(true)
             }}
           >
             已接入控制的按钮加载
           </Button>
           <Button
             onClick={() => {
-              Button.controllers.loading.set(false)
+              Button.controllers.props.loading.set(false)
             }}
           >
             结束已接入按钮加载

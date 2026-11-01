@@ -5,8 +5,7 @@
  *
  * 字段关联与编排留在组件，输入值仍由调用方拥有。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { fieldPropsDefinition } from './Field.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -21,7 +20,7 @@ export type FieldProps = ComponentDescriptionProps & {
 }
 
 /** Field 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type FieldController = PropsController<FieldProps, typeof fieldPropsDefinition>
+export type FieldController = KitController<FieldProps, typeof fieldPropsDefinition>
 
 /**
  * 关联字段标题与单个控件。

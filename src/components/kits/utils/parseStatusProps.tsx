@@ -10,7 +10,6 @@ import {
   stateView,
   val,
   type Source,
-  type State,
   type StateView,
 } from '@/foundation'
 import { toRecord } from '@edsolater/fnkit'
@@ -50,6 +49,7 @@ export type StatusPropsParseResult<StatusName extends string> = {
  *
  * Status 天然允许多个候选同时成立。外部一旦声明某个状态字段，该字段便始终跟随外部 Source；
  * 只有外部没有声明的状态才能由返回的 controller 从组件内部改变。
+ * 每个状态在创建 State 时连接属性来源，持续跟随 getter 和 Source，不使用 Effect 复制值。
  *
  * @param options 状态候选及可选的附加效果属性生成函数。
  * @returns 解析函数，接收状态 Props 并返回 { effect, details, controller }：
@@ -86,25 +86,16 @@ export function createStatusPropsParser<
 
   return function parseStatusProps(props: StatusProps<StatusName>): StatusPropsParseResult<StatusName> {
     const candidates: StatusName[] = options.candidates
-    const propRecord = props as Record<string, unknown>
     const externalStatusNames = new Set(
       options.candidates.filter((statusName) => statusName in props),
     )
-    const internalStatusStates = {} as Record<
-      StatusName,
-      State<boolean | undefined>
-    >
-    const statusDetails = {} as StatusDetails<StatusName>
-
-    for (const statusName of options.candidates) {
-      const internalStatus = createState<boolean | undefined>()
-      internalStatusStates[statusName] = internalStatus
-      statusDetails[statusName] = externalStatusNames.has(statusName)
-        ? derive(propRecord, () =>
-            val(propRecord[statusName] as Source<boolean | undefined>),
-          )
-        : internalStatus
-    }
+    // 计算来源同时保留属性读取和 Source 链，状态写入不会回写输入。
+    const statusStates = toRecord(
+      candidates,
+      statusName => statusName,
+      statusName => createState(() => props[statusName]),
+    )
+    const statusDetails: StatusDetails<StatusName> = statusStates
 
     const statusViews = toRecord(
       candidates,
@@ -115,7 +106,7 @@ export function createStatusPropsParser<
       ...statusViews,
       setStatus(status, value) {
         if (externalStatusNames.has(status)) return
-        internalStatusStates[status].set(value)
+        statusStates[status].set(value)
       },
       hasStatus(status) {
         return statusViews[status]

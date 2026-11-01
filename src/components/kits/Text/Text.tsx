@@ -7,9 +7,8 @@
  */
 import { val, type Source } from '@/foundation'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
 import type { RefReceiver } from '@/hooks/createRef'
-import { kit } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/utils/kit'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { textPropsDefinition } from './Text.prop'
@@ -27,7 +26,7 @@ export type TextProps = Omit<
   } & ({ block?: boolean; p?: never } | { p?: boolean; block?: never })
 
 /** 文字与继承字段的指令式入口；标签选择只在组件创建时生效。 */
-export type TextController = PropsController<TextProps, typeof textPropsDefinition>
+export type TextController = KitController<TextProps, typeof textPropsDefinition>
 
 /**
  * 显示纯文字，缺省使用span，block使用div，p使用段落。

@@ -5,8 +5,7 @@
  *
  * 消息意义与底层材质分离，不复制承载实现。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { messageBoardPropsDefinition } from './MessageBoard.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -22,7 +21,7 @@ export type MessageBoardProps = ComponentDescriptionProps & {
 }
 
 /** MessageBoard 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type MessageBoardController = PropsController<MessageBoardProps, typeof messageBoardPropsDefinition>
+export type MessageBoardController = KitController<MessageBoardProps, typeof messageBoardPropsDefinition>
 
 /**
  * 面向操作结果的可访问反馈，不承担普通内容卡片职责。

@@ -8,10 +8,9 @@
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
 import type { Source } from '@/foundation'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
 import type { RefReceiver } from '@/hooks/createRef'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import { kit } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/utils/kit'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
@@ -22,6 +21,7 @@ import {
 import {
   createStatusPropsParser,
   type StatusProps,
+  type StatusController,
 } from '../utils/parseStatusProps'
 import {
   buttonPropsDefinition,
@@ -75,14 +75,15 @@ export type ButtonSize = 'small' | 'large' | 'xlarge'
 
 /**
  * 按钮可以同时处于 loading 和 disabled 状态。
- * 声明阶段使用 Props；启用组件 ref 后，特殊运行场景可通过同一字段 State 改变。
+ * 输入通过 Props 声明；运行期可通过 Controller.props 干预输入，或使用顶层组件状态操作。
  */
 export type ButtonStatus = 'loading' | 'disabled'
 
-/** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
-export type ButtonController = PropsController<
+/** 顶层公开按钮状态能力，props 提供通用输入干预；原生元素通过独立的 domRef 取得。 */
+export type ButtonController = KitController<
   ButtonProps,
-  typeof buttonPropsDefinition
+  typeof buttonPropsDefinition,
+  StatusController<ButtonStatus>
 >
 
 export interface ButtonProps
@@ -137,7 +138,8 @@ export const Button = kit(
   },
   (props: ButtonProps, context) => {
     const { effect: variantEffectProps } = parseVariantProps(props)
-    const { effect: statusEffectProps } = parseStatusProps(props)
+    const { effect: statusEffectProps, controller } = parseStatusProps(props)
+    context.exposeController(controller)
 
     return (
       <Piv

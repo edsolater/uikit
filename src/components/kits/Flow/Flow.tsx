@@ -5,8 +5,7 @@
  *
  * 排列关系由组件表达，子组件继续拥有自己的外观。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { flowPropsDefinition } from './Flow.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -21,7 +20,7 @@ export type FlowProps = ComponentDescriptionProps & {
 }
 
 /** Flow 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type FlowController = PropsController<FlowProps, typeof flowPropsDefinition>
+export type FlowController = KitController<FlowProps, typeof flowPropsDefinition>
 
 /**
  * 默认纵向排列，固定间隔 1rem；横向排列自动换行并在交叉轴居中，不接管子组件外观。

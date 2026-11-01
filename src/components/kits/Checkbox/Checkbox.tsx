@@ -5,8 +5,7 @@
  *
  * 选项标题与字段状态属于组件，业务选择规则留给调用方。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { checkboxPropsDefinition } from './Checkbox.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -26,7 +25,7 @@ export type CheckboxProps = ComponentDescriptionProps & {
 }
 
 /** Checkbox 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type CheckboxController = PropsController<CheckboxProps, typeof checkboxPropsDefinition>
+export type CheckboxController = KitController<CheckboxProps, typeof checkboxPropsDefinition>
 
 /**
  * 带可点击标题的二态表单选择。

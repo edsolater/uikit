@@ -46,12 +46,10 @@ const variantSources = toRecord(buttonVariantGroups, group => group.groupName, g
     return details[group.groupName]
   }
 })
-const emptySource = () => undefined
 
 /** 每个缺省分组只建立自己的语义 Source；原核心仍执行一次最终映射。 */
 export const buttonDefaultSources = {
   ...variantSources,
-  ...toRecord(buttonStatusCandidates, key => key, () => emptySource),
   ...pivDefaultSources,
 } as DefaultPropSources<ButtonProps, typeof buttonPropsDefinition>
 

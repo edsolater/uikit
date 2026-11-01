@@ -7,14 +7,13 @@
  * 组件选择规则见 [Input 设计规格](./Input.spec.md)。
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { inputPropsDefinition } from './Input.prop'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import { createStatusPropsParser } from '../utils/parseStatusProps'
+import { createStatusPropsParser, type StatusController } from '../utils/parseStatusProps'
 import './Input.css'
 import {
   createInputValidity,
@@ -35,23 +34,24 @@ const parseInputStatusProps = createStatusPropsParser({
   }),
 })
 
-/** Input 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type InputController = PropsController<InputProps, typeof inputPropsDefinition>
+/** 顶层公开输入有效性状态，props 提供通用输入干预；ref 只从上游交付。 */
+export type InputController = KitController<InputProps, typeof inputPropsDefinition, StatusController<'invalid'>>
 
 /**
  * 编辑单行内容，保留原有效性计算与状态映射。
  */
-export const Input = kit(
+export const Input = kit<InputProps, typeof inputPropsDefinition>(
   {
     name: 'Input',
     description: '编辑单行内容',
     availableProps: inputPropsDefinition,
     directorOptions: () => ({ defaultSources: pivDefaultSources }),
   },
-  (props: InputProps) => {
+  (props: InputProps, context) => {
     const validity = createInputValidity(props)
     const isInvalid = validity.isValid.map((isValid) => !isValid)
-    const { effect: statusEffectProps } = parseInputStatusProps({ invalid: isInvalid })
+    const { effect: statusEffectProps, controller } = parseInputStatusProps({ invalid: isInvalid })
+    context.exposeController(controller)
 
     return (
       <Piv

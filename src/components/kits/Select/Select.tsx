@@ -5,8 +5,7 @@
  *
  * 调用方提供选项和数据，组件保留原生选择语义。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { selectPropsDefinition } from './Select.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -25,7 +24,7 @@ export type SelectProps = ComponentDescriptionProps & {
   onChange?: (value: string) => void
 }
 /** Select 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type SelectController = PropsController<SelectProps, typeof selectPropsDefinition>
+export type SelectController = KitController<SelectProps, typeof selectPropsDefinition>
 
 /**
  * 有限选项的原生单选字段，持续消费值和选项来源。

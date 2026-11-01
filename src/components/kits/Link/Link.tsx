@@ -5,8 +5,7 @@
  *
  * 让导航机制与调用方的链接内容各自独立。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { linkPropsDefinition } from './Link.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -24,7 +23,7 @@ export type LinkProps = ComponentDescriptionProps & {
 }
 
 /** Link 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type LinkController = PropsController<LinkProps, typeof linkPropsDefinition>
+export type LinkController = KitController<LinkProps, typeof linkPropsDefinition>
 
 /**
  * 保留原生导航、另开页面与当前项语义的链接。

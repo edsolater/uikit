@@ -2,8 +2,7 @@
  * 这个文件定义基础 Popover 组件。
  * 它负责触发器、原生 popover 容器和 anchor positioning 结构，不负责菜单协议、表单校验或业务弹层编排。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { popoverPropsDefinition, popoverVariantGroups, getPopoverPropsDirectorOptions } from './Popover.prop'
 import { onMount, Show, type JSX } from '@/foundation'
@@ -18,6 +17,7 @@ import {
 import {
   createPopoverVisibilityController,
   type PopoverToggleEvent,
+  type PopoverVisibilityController,
 } from '@/components/Popover/createPopoverVisibilityController'
 import { PopoverSurface } from '@/components/Popover/PopoverSurface'
 import './Popover.style'
@@ -88,8 +88,8 @@ const defaultPopoverProps: {
   defaultOpen: false,
 }
 
-/** Props 状态的指令式入口；PopoverVisibilityController 继续拥有浮层操作。 */
-export type PopoverController = PropsController<PopoverProps, typeof popoverPropsDefinition>
+/** 顶层公开浮层身份、状态与操作，props 提供独立的通用输入干预。 */
+export type PopoverController = KitController<PopoverProps, typeof popoverPropsDefinition, PopoverVisibilityController>
 
 const parsePopoverVariantProps = createVariantPropsParser(popoverVariantGroups)
 
@@ -103,7 +103,7 @@ export const Popover = kit(
     availableProps: popoverPropsDefinition,
     directorOptions: getPopoverPropsDirectorOptions,
   },
-  (props: PopoverProps) => {
+  (props: PopoverProps, context) => {
     const mergedProps = addDefaultProps(props, defaultPopoverProps)
     const { effect: variantEffectProps, details } = parsePopoverVariantProps(props)
     // 事件发生时读取最新回调，保留原监听器的生命周期。
@@ -111,6 +111,7 @@ export const Popover = kit(
       get onToggle() { return mergedProps.onToggle },
       get onBeforeToggle() { return mergedProps.onBeforeToggle },
     })
+    context.exposeController(controller)
 
     onMount(() => {
       if (mergedProps.defaultOpen) {

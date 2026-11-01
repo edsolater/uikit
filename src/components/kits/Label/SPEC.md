@@ -11,4 +11,4 @@
 - 所有 DOM 通过 Piv 创建，透明组件边界交给ComponentMarker。标题与问号样式归Label目录；PopoverSurface统一浮层、锚定定位与箭头，tooltip只选择提示材料和阅读交互。组件定位框开启时隐藏原文字，保留排版。
 - Label 不解释业务文案，不访问业务数据，也不感知 NumberInput、控制参数、拖动或输入有效性。
 
-- Label 通过 kit 管理透明边界与可选组件 ref。初始状态用 Props；特殊运行期需求可接收 LabelController，按原字段 State 修改标题、关联目标与说明，包括原来未声明的 tooltip。Label.controllers 仅收集接入 ref 的当前实例，销毁后移除；ref 不属于可写字段。
+- Label 通过 kit 管理透明边界与可选组件 ref。初始状态用 Props；特殊运行期需求可接收 LabelController，通过其 `.props` 下的原字段 State 修改标题、关联目标与说明，包括原来未声明的 tooltip。Label.controllers 仅收集接入 ref 的当前实例，销毁后移除；ref 不属于可写字段。

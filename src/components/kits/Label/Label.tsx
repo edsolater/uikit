@@ -5,9 +5,8 @@ import {
   tooltip,
 } from '@/components/plugins/kits/tooltip/tooltip'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
 import type { RefReceiver } from '@/hooks/createRef'
-import { kit } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/utils/kit'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import { labelPropsDefinition } from './Label.prop'
 import './Label.style'
@@ -24,7 +23,7 @@ export type LabelProps = ComponentDescriptionProps & {
 }
 
 /** 字段关联、标题与辅助说明的指令式入口，不拥有被关联控件的状态。 */
-export type LabelController = PropsController<LabelProps, typeof labelPropsDefinition>
+export type LabelController = KitController<LabelProps, typeof labelPropsDefinition>
 
 /**
  * 显示标题与说明，保持原生表单关联，浮层不参与字段布局。

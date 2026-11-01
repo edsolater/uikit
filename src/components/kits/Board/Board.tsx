@@ -12,8 +12,7 @@ import {
   createVariantPropsParser,
   type VariantProps,
 } from '../utils/parseVariantProps'
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { ControllerCollection } from '@/components/utils/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import type { JSX } from '@/foundation'
@@ -35,11 +34,13 @@ export interface BoardProps<Tag extends PivSupportedElementTag = 'div'>
 }
 
 /** 原生节点类型与对应 Props 的指令式入口。 */
-export type BoardController<Tag extends PivSupportedElementTag = 'div'> = PropsController<BoardProps<Tag>, typeof boardPropsDefinition>
+export type BoardController<Tag extends PivSupportedElementTag = 'div'> = KitController<BoardProps<Tag>, typeof boardPropsDefinition>
 
 /** 异构原生节点只公开共同安全字段，Card 复用同一类型规则。 */
-export type BoardControllerCollection = ControllerCollection<Omit<BoardController<PivSupportedElementTag>,
-  'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'plugin' | 'plugins' | 'trait'>>
+export type BoardControllerCollection = ControllerCollection<{
+  readonly props: Omit<BoardController<PivSupportedElementTag>['props'],
+    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'plugin' | 'plugins' | 'trait'>
+}>
 
 interface BoardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>): JSX.Element

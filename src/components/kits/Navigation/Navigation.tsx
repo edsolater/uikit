@@ -5,8 +5,7 @@
  *
  * 具体链接与导航内容由调用方组合。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { navigationPropsDefinition } from './Navigation.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -21,7 +20,7 @@ export type NavigationProps = ComponentDescriptionProps & {
 }
 
 /** Navigation 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type NavigationController = PropsController<NavigationProps, typeof navigationPropsDefinition>
+export type NavigationController = KitController<NavigationProps, typeof navigationPropsDefinition>
 
 /**
  * 组织具名导航区域。

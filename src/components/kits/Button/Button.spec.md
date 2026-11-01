@@ -4,11 +4,13 @@
 
 只有创建时提供有效组件 `ref` 接收器，才启用通用 Component Props Director、创建字段 State 并登记到 Button.controllers；无 ref、ref 实际为 undefined、只有 domRef 时直接执行原 Button 核心。`ref` 接收 ButtonController，`domRef` 独立接收真实 button，不触发控制层。
 
-35个支持Prop中，ref为only-through-prop，只从上游读取且不进入Controller；其余字段按原名提供可写State，缺省来源在构建时建立，其余字段按需建立，运行时描述由Button.prop.ts按Props继承层次组合，Dode/Piv/公共能力/ComponentMarker各自拥有其字段描述，Button只定义自身字段。构建和初始状态必须使用 Props；特殊运行期回调中通过 `button.loading?.set(true)` 指令写入，读取用 `val(button.loading)`；不保留 setStatus/hasStatus 别名。上游 Source 与指令使用同一 State，指令不回写上游，后续来源更新仍遵循原生可写计算。函数值更新用 `button.onClick?.set(() => nextCallback)`。
+Controller 的 `props` 是 Kit 提供的通用输入干预入口；顶层的 `loading`、`disabled`、`setStatus` 和 `hasStatus` 是 Button 公开的组件能力。二者是不同机制，Kit 不根据同名字段建立联系。状态解析器在创建 State 时连接输入来源，组件状态操作不回写 `props`，Button 不通过 Effect 复制状态。
 
-缺省状态、分类、确定描述词及持续响应字段也可运行写入。缺省分组工厂复用原VariantParser语义details，构建时建立并保留分组Source以保持声明诊断，核心执行映射一次；原 Piv/Dode 和解析器不改变。as 固定、if 初始存在性、插件与 domRef 等按原创建阶段消费，不因写 State 重放已经执行的动作。组件 ref 接收器替换则由外层清理旧引用并交付同一 Controller。
+`ref` 为 only-through-prop，只从上游读取且不进入可写字段；其余可干预字段在 `controller.props` 中按原名提供 State。构建和初始输入使用 Props；特殊运行期回调通过 `button.props?.loading.set(true)` 干预输入，通过 `button.setStatus?.('loading', true)` 操作组件内部状态，通过 `val(button.loading)` 读取组件状态。已由外部声明的状态不接受 `setStatus` 接管，但通用 Props 入口仍可干预其输入；干预不回写上游，后续上游变化仍会传入。函数输入更新使用 `button.props?.onClick.set(() => nextCallback)`。
 
-`Button.controllers.loading.set(true)` 只操作已启用组件 ref 的当前实例；普通按钮不进入集合。`Button.controllers.loading.map(state => val(state))` 读取当前受控集合的状态。整体命令不保留给未来实例，style 仍公开同一 Token 集合。
+缺省状态、分类、确定描述词及持续响应字段也可运行写入。缺省分组工厂复用原VariantParser语义details，构建时建立并保留分组Source以保持声明诊断，核心执行映射一次，并继续按原 Props 协议消费输入。as 固定、if 初始存在性、插件与 domRef 等按原创建阶段消费，不因写 State 重放已经执行的动作。组件 ref 接收器替换则由外层清理旧引用并交付同一 Controller。
+
+`Button.controllers.props.loading.set(true)` 干预已启用组件 ref 的当前实例输入，`Button.controllers.setStatus('loading', true)` 使用各实例的组件状态操作；普通按钮不进入集合。`Button.controllers.loading.map(state => val(state))` 读取组件状态，`Button.controllers.props.loading.map(state => val(state))` 读取被干预的输入。整体命令不保留给未来实例，style 仍公开同一 Token 集合。
 
 FNKit 的 `createVirtualBatchAccessor(controllers)` 直接接收 Controller 集合，创建以函数为 target、Array.prototype 为原型的批量访问器，支持 Array.from、length、数字索引及数组操作；FNKit isArray 返回 true，原生 Array.isArray 返回 false。数组固有成员优先于同名实例成员，直接绑定本次映射快照，保留原生参数和原生返回值；例如 map 返回普通数组，不继续包装批量访问器。数组操作不登记、注销或回写 Controller。kit 定义入口创建组件专属 registry，统一登记原 buttonStyle；Button.controllers.style 直接提供原样式 Token 集合，保留身份和独立 Source 阶段。业务核心不管理 registry 或 Marker。Controller 创建后即登记并交付组件 ref，register 返回注销动作，由 kit 在组件作用域登记 onCleanup 执行。if 关闭只清理 DOM 引用，组件 ref 与整体控制继续有效，隐藏期间的状态操作在重新显示时体现；Button 真正销毁才注销并释放组件引用。整体操作不保存给未来实例。
 

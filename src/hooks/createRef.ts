@@ -12,7 +12,8 @@ export type RefReceiver<T> = (value: T) => void | (() => void)
  * @example
  * const [button, receiveButton] = createRef<ButtonController>()
  * // <Button ref={receiveButton}>保存</Button>
- * // 在事件中调用：button.loading?.set(true)
+ * // 在事件中干预输入：button.props?.loading.set(true)
+ * // 或使用组件能力：button.setStatus?.('loading', true)
  * // 原生元素使用独立的 createDomRef 与 domRef 属性。
  */
 export function createRef<T extends object>(): [

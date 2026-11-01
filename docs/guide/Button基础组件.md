@@ -79,9 +79,9 @@ Status 独立描述组件当前成立的情况，`loading` 与 `disabled` 可以
 </Button>
 ```
 
-Status 的初始声明来自 Props；只有提供有效组件 ref 才启用通用 Component Props Director，未传字段也可以在运行期特殊需要下通过 `button.loading?.set(true)` 或 `button.disabled?.set(true)` 临时干预。Controller 写入不因外部已声明而拒绝，也不回写上游；后续来源变化沿原生可写计算继续到达缓冲。Button 只翻译状态表现，不判断状态为什么成立。
+Status 的初始声明来自 Props；只有提供有效组件 ref 才启用通用 Component Props Director，未传字段也可以在运行期特殊需要下通过 `button.props?.loading.set(true)` 或 `button.props?.disabled.set(true)` 临时干预。通用输入干预不因外部已声明而拒绝，也不回写上游；后续来源变化沿原生可写计算继续到达缓冲。Button 只翻译状态表现，不判断状态为什么成立。
 
-构建时必须通过 Props 表达初始界面，Controller 用于回调、生命周期中的特殊情况，或 Props 表达非常迂回的复杂需求。字段按原名公开 State，读取用 `val(button.loading)`，整体命令可用 `Button.controllers.loading.set(true)`，只包含启用组件 ref 的当前实例；不再提供 Button 的 setStatus/hasStatus 别名。
+构建时必须通过 Props 表达初始界面，Controller 用于回调、生命周期中的特殊情况，或 Props 表达非常迂回的复杂需求。通用输入字段在 `.props` 下按原名公开 State，整体干预使用 `Button.controllers.props.loading.set(true)`。顶层 `loading`、`disabled` 提供组件状态读取，`setStatus` 和 `hasStatus` 提供组件自己的状态操作与判断；只有未由外部声明的状态接受 `setStatus` 修改。这两种机制彼此独立，输入来源通过计算图驱动状态，状态操作不回写输入。集合只包含启用组件 ref 的当前实例。
 
 ## 稳定输出
 
@@ -90,7 +90,6 @@ Status 的初始声明来自 Props；只有提供有效组件 ref 才启用通�
 - loading 同步到 `aria-busy`。
 - disabled 同步到原生 `disabled`。
 - `name` 同步到 `aria-label`。
-- 默认原生 `type` 是 `button`。
 
 ## 边界
 

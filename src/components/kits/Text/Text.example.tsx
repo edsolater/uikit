@@ -32,7 +32,7 @@ export function TextExample() {
       </Button>
       <Button
         // 演示特殊命令对当前显示的干预；日常进度仍通过 count 来源更新。
-        onClick={() => { progress.children?.set('本次阅读完成') }}
+        onClick={() => { progress.props?.children.set('本次阅读完成') }}
       >
         标记本次完成
       </Button>

@@ -5,8 +5,7 @@
  *
  * 不嵌套Text，不改变浏览器或调用方已提供的标题排版。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { headingPropsDefinition } from './Heading.prop'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
@@ -27,7 +26,7 @@ export type HeadingProps = Omit<PivProps<HeadingTag>, 'as' | 'children'> &
   }
 
 /** Heading 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type HeadingController = PropsController<HeadingProps, typeof headingPropsDefinition>
+export type HeadingController = KitController<HeadingProps, typeof headingPropsDefinition>
 
 /**
  * 按明确层级显示标题，开启定位框时隐藏文字并保留标题自身的边界与说明。

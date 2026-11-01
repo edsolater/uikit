@@ -6,10 +6,9 @@
  */
 import { createComponent, mergeProps, omitProps, type JSX } from '@/foundation'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
 import type { ControllerCollection } from '@/components/utils/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
-import { kit } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/utils/kit'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { articlePropsDefinition } from './Article.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
@@ -45,7 +44,7 @@ interface ArticleComponent {
 }
 
 /** 只操作 Article 自有字段；表现组件在构建时选择，不属于可写状态。 */
-export type ArticleController = PropsController<ArticleProps, typeof articlePropsDefinition>
+export type ArticleController = KitController<ArticleProps, typeof articlePropsDefinition>
 
 /**
  * 按原承载协议呈现 article，保留自有 ref 而不把它交给承载组件。

@@ -5,8 +5,7 @@
  *
  * 把字段编辑与上层标题、校验编排分开。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { textAreaPropsDefinition } from './TextArea.prop'
 import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
@@ -25,7 +24,7 @@ export type TextAreaProps = ComponentDescriptionProps & {
   onInput?: (value: string) => void
 }
 /** TextArea 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type TextAreaController = PropsController<TextAreaProps, typeof textAreaPropsDefinition>
+export type TextAreaController = KitController<TextAreaProps, typeof textAreaPropsDefinition>
 
 /**
  * 带原生字段身份的多行编辑，保留受控值与表单校验。

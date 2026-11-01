@@ -15,7 +15,7 @@ import {
   type PivProps,
 } from '@/index'
 import { kit } from './kit'
-import type { PropsController } from './componentPropsDirector'
+import type { KitController } from './kit'
 
 const availableProps = {
   description: 'state-source-view',
@@ -25,7 +25,7 @@ const availableProps = {
 } as const
 interface FixtureProps extends ComponentDescriptionProps {
   value?: Source<string | undefined>
-  ref?: RefReceiver<PropsController<FixtureProps, typeof availableProps>>
+  ref?: RefReceiver<KitController<FixtureProps, typeof availableProps>>
 }
 const Fixture = kit(
   { name: 'Fixture', availableProps },
@@ -41,7 +41,7 @@ test('集合保留数组与成员方法协议，Button 样式命名空间保留�
     ButtonController[]
   >()
   expectTypeOf(
-    Button.controllers.loading.set(true).map((value) => value),
+    Button.controllers.props.loading.set(true).map((value) => value),
   ).toEqualTypeOf<State<boolean | undefined>[]>()
 })
 
@@ -50,7 +50,7 @@ function verifyRejectedDefinitions() {
   // @ts-expect-error 无样式定义不公开根 style 命名空间。
   Fixture.controllers.style
   // @ts-expect-error ref 只通过 Props，不能在 Controller 中写入。
-  Button.controllers[0].ref.set(() => {})
+  Button.controllers[0].props.ref.set(() => {})
   kit(
     // @ts-expect-error 错误 ref 接收器不能作为定义的 Props。
     { name: 'WrongRef', availableProps },
@@ -69,18 +69,16 @@ function verifyRejectedDefinitions() {
     },
     (_props: FixtureProps) => null,
   )
-  kit(
-    // @ts-expect-error 接收器要求 Controller 没有提供的字段时也必须拒绝。
+  interface CustomFixtureProps extends Omit<FixtureProps, 'ref'> {
+    ref?: RefReceiver<KitController<CustomFixtureProps, typeof availableProps, { missing: string }>>
+  }
+  kit<CustomFixtureProps, typeof availableProps>(
     { name: 'ExtraRefField', availableProps },
-    (
-      _props: Omit<FixtureProps, 'ref'> & {
-        ref?: RefReceiver<
-          PropsController<FixtureProps, typeof availableProps> & {
-            missing: string
-          }
-        >
-      },
-    ) => null,
+    (_props, context) => {
+      // @ts-expect-error 组件声明的顶层能力必须在公开对象中完整提供。
+      context.exposeController({})
+      return null
+    },
   )
 }
 void verifyRejectedDefinitions
@@ -93,7 +91,7 @@ function verifyPublicDefinition() {
     ref: 'only-through-prop',
   } as const
   interface PublicProps extends PivProps, ComponentDescriptionProps {
-    ref?: RefReceiver<PropsController<PublicProps, typeof availableProps>>
+    ref?: RefReceiver<KitController<PublicProps, typeof availableProps>>
   }
   return kit(
     {

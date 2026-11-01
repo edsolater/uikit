@@ -2,8 +2,7 @@
  * 响应式列表组件。
  * 它基于 Solid 的 mapArray 维护子树复用，只负责列表结构，不解包 item 内部字段。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { ControllerCollection } from '@/components/utils/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import { loopPropsDefinition } from './Loop.prop'
@@ -27,11 +26,11 @@ export type LoopProps<T> = ComponentDescriptionProps & {
 }
 
 /** 列表来源与可干预展示字段。 */
-export type LoopController<T> = PropsController<LoopProps<T>, typeof loopPropsDefinition>
+export type LoopController<T> = KitController<LoopProps<T>, typeof loopPropsDefinition>
 
 interface LoopComponent {
   <T>(props: LoopProps<T>): JSX.Element
-  controllers: ControllerCollection<Omit<LoopController<unknown>, 'each'>>
+  controllers: ControllerCollection<{ readonly props: Omit<LoopController<unknown>['props'], 'each'> }>
 }
 
 /**

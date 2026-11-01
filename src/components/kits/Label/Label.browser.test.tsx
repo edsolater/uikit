@@ -34,10 +34,10 @@ test('组件ref可改变字段关联并添加和移除缺省提示，集合随�
   expect(Label.controllers.length).toBe(1)
   expect('ref' in Label.controllers[0]).toBe(false)
   expect(host.querySelector('button')).toBeNull()
-  label.for?.set('next-input')
-  label.children?.set('新标题')
-  label.tooltip?.set('运行期说明')
-  label.tooltipTrigger?.set('i')
+  label.props!.for.set('next-input')
+  label.props!.children.set('新标题')
+  label.props!.tooltip.set('运行期说明')
+  label.props!.tooltipTrigger.set('i')
   flush()
   const title = host.querySelector('label')!
   const trigger = host.querySelector('button')!
@@ -50,7 +50,7 @@ test('组件ref可改变字段关联并添加和移除缺省提示，集合随�
   const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => surface.matches(':popover-open')).toBe(true)
   expect(surface.textContent).toBe('运行期说明')
-  label.tooltip?.set(undefined)
+  label.props!.tooltip.set(undefined)
   flush()
   expect(host.querySelector('button')).toBeNull()
   expect(host.querySelector('[role="tooltip"]')).toBeNull()

@@ -4,8 +4,7 @@
  * 它不负责排序、筛选、分页、虚拟滚动或业务数据解释，也不让业务组件手写表格 DOM 结构。
  * 调用方只提供已经整理好的同构数据；需要局部改写表头或单元格内容时，通过 renderParts 提供纯渲染器。
  */
-import { kit } from '@/components/utils/kit'
-import type { PropsController } from '@/components/utils/componentPropsDirector'
+import { kit, type KitController } from '@/components/utils/kit'
 import type { ControllerCollection } from '@/components/utils/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import { tablePropsDefinition } from './Table.prop'
@@ -47,11 +46,11 @@ export type TableProps<Row extends TableDataRow = TableDataRow> =
   }
 
 /** 精确 Row 的数据、列与渲染部件指令入口。 */
-export type TableController<Row extends TableDataRow = TableDataRow> = PropsController<TableProps<Row>, typeof tablePropsDefinition>
+export type TableController<Row extends TableDataRow = TableDataRow> = KitController<TableProps<Row>, typeof tablePropsDefinition>
 
 interface TableComponent {
   <Row extends TableDataRow>(props: TableProps<Row>): JSX.Element
-  controllers: ControllerCollection<Omit<TableController<TableDataRow>, 'data' | 'keys' | 'renderParts'>>
+  controllers: ControllerCollection<{ readonly props: Omit<TableController<TableDataRow>['props'], 'data' | 'keys' | 'renderParts'> }>
 }
 
 /**

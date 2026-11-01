@@ -7,7 +7,7 @@ import {
   componentBoundaries,
   type ComponentDescriptionProps,
 } from '@/components/ComponentMarker/ComponentMarker'
-import type { PropsController } from './componentPropsDirector'
+import type { KitController } from './kit'
 import { kit, type KitComponentContext } from './kit'
 
 const availableProps = {
@@ -18,9 +18,9 @@ const availableProps = {
 } as const
 interface FixtureProps extends ComponentDescriptionProps {
   value?: Source<string | undefined>
-  ref?: RefReceiver<PropsController<FixtureProps, typeof availableProps>>
+  ref?: RefReceiver<KitController<FixtureProps, typeof availableProps>>
 }
-type FixtureController = PropsController<FixtureProps, typeof availableProps>
+type FixtureController = KitController<FixtureProps, typeof availableProps>
 let dispose: (() => void) | undefined
 afterEach(() => {
   dispose?.()
@@ -35,7 +35,7 @@ test('无祖先根时核心只创建一次，多根范围透明，实例能力�
   const cleanup = vi.fn()
   let context: KitComponentContext
   let creations = 0
-  const Fixture = kit(
+  const Fixture = kit<FixtureProps, typeof availableProps>(
     { name: 'Fixture', description: '默认用途', availableProps },
     (props: FixtureProps, capabilities) => {
       creations++
@@ -120,7 +120,7 @@ test('有效初始 ref 才启用控制，换接复用实例，两个定义的集
   )
   expect(First.controllers.length).toBe(1)
   expect(Second.controllers.length).toBe(1)
-  firstController!.value.set('缺省字段可写')
+  firstController!.props.value.set('缺省字段可写')
   flush()
   expect(host.firstElementChild!.textContent).toBe('缺省字段可写')
   receiver.set(() => (controller) => {
