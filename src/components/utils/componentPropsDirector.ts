@@ -22,6 +22,13 @@ export type DefaultPropSources<Props, Definition extends PropsDefinition<Props>>
   [Key in keyof Props as Definition[Key] extends 'only-through-prop' ? never : Key]?: (input: DirectedProps<Props, Definition>) => Props[Key]
 }
 
+/** 定义端提供缺省来源与输出字段选择，沿用同一字段协议。 */
+export type PropsDirectorOptions<Props, Definition extends PropsDefinition<Props>> = {
+  /** 创建时为未声明字段建立默认来源；Source 的值仍按需读取，普通返回值不是持续计算。 */
+  defaultSources?: DefaultPropSources<Props, Definition>
+  omit?: readonly (keyof Props)[]
+}
+
 /** 只改变输出 Props 的来源和形状，不改写上游对象，也不重放组件的创建动作。 */
 export function createComponentPropsDirector<
   Props extends object,
@@ -29,11 +36,7 @@ export function createComponentPropsDirector<
 >(
   rawProps: Props,
   definition: Definition,
-  options?: {
-    /** 缺省字段首次建立时只调用一次取得来源；普通返回值不是持续计算。 */
-    defaultSources?: DefaultPropSources<Props, Definition>
-    omit?: readonly (keyof Props)[]
-  },
+  options?: PropsDirectorOptions<Props, Definition>,
 ) {
   const owner = getOwner()
   const defaultSources = options?.defaultSources
@@ -83,6 +86,8 @@ export function createComponentPropsDirector<
   const controller = {} as PropsController<Props, Definition>
   for (const key of Reflect.ownKeys(definition)) {
     if (Reflect.get(definition, key) === 'only-through-prop') continue
+    // 默认来源属于 Props 的构建；只建立 Source，不读取其值或感知来源内部的业务规则。
+    if (!(key in rawProps) && defaultSources && Object.hasOwn(defaultSources, key)) getState(key)
     Object.defineProperty(controller, key, {
       enumerable: true,
       get() {

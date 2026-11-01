@@ -7,15 +7,11 @@
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
-import { createRenderEffect, onCleanup, type Source } from '@/foundation'
-import { untrack } from '@/foundation/reactivity'
-import { createComponentPropsDirector, type PropsController } from '../../utils/componentPropsDirector'
+import type { Source } from '@/foundation'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
 import type { RefReceiver } from '@/hooks/createRef'
-import { createControllerRegistry } from '@/components/utils/controllerRegistry'
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import { kit } from '@/components/utils/kit'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'
@@ -84,15 +80,10 @@ export type ButtonSize = 'small' | 'large' | 'xlarge'
 export type ButtonStatus = 'loading' | 'disabled'
 
 /** 一个 Button 实例公开的状态操作；原生元素通过独立的 domRef 取得。 */
-export type ButtonController = PropsController<ButtonProps, typeof buttonPropsDefinition>
-
-/** 当前按钮的统一集合映射；style 直接公开原有 Token，调用不保留给未来实例。 */
-const [allButtons, buttonRegistry] =
-  createControllerRegistry<ButtonController>()
-
-buttonRegistry.addStyleTokens(buttonStyle)
-
-export { allButtons }
+export type ButtonController = PropsController<
+  ButtonProps,
+  typeof buttonPropsDefinition
+>
 
 export interface ButtonProps
   extends
@@ -135,51 +126,33 @@ const parseButtonStatusProps = createStatusPropsParser({
   }),
 })
 
-/** 组件 ref 是可控能力的创建入口；普通按钮直接执行原业务核心。 */
-function ButtonPropsDirector(props: ButtonProps) {
-  if (!untrack(() => props.ref)) return Button(props)
-  const directed = createComponentPropsDirector(props, buttonPropsDefinition, getButtonPropsDirectorOptions(props))
-  // 分类声明诊断属于构建阶段；保留并复用分组来源，不提前读取其值。
-  for (const { groupName } of buttonVariantGroups) Reflect.get(directed.props, groupName)
-  onCleanup(buttonRegistry.register(directed.controller))
-  createRenderEffect(
-    () => directed.props.ref,
-    receive => receive?.(directed.controller),
-  )
-  return Button(directed.props)
-}
+/** 共同机制由 kit 管理，Button 本体只表达分类、状态与动作。 */
+export const Button = kit(
+  {
+    name: 'Button',
+    description: '执行动作',
+    availableProps: buttonPropsDefinition,
+    directorOptions: getButtonPropsDirectorOptions,
+    styleTokens: buttonStyle,
+  },
+  (props: ButtonProps, context) => {
+    const { variantShadowProps } = parseButtonVariantProps(props)
+    const { statusShadowProps } = parseButtonStatusProps(props)
 
-export { ButtonPropsDirector as Button }
-
-/** 业务核心只消费原 Props 协议，不参与控制器管理。 */
-function Button(props: ButtonProps) {
-  const { variantShadowProps } = parseButtonVariantProps(props)
-  const { statusShadowProps } = parseButtonStatusProps(props)
-
-  return (
-    <ComponentMarker
-      componentName="Button"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-      defaultDescription="执行动作"
-    >
+    return (
       <Piv
         as="button"
-        shadowProps={[
-          props,
-          variantShadowProps,
-          statusShadowProps,
-        ]}
+        shadowProps={[props, variantShadowProps, statusShadowProps]}
         class="Button"
-        plugins={[clickable({ componentName: 'Button' })]}
+        plugins={[clickable({ componentName: context.name })]}
         htmlProps={{
-          type: 'button',
+          'type': 'button',
           'aria-label': props.name,
         }}
         on={{ click: props.onClick }}
       >
         {props.children}
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+)

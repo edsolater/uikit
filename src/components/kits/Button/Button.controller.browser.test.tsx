@@ -4,7 +4,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
 import { createState, render, Show, val } from '@/foundation'
-import { allButtons, Button, type ButtonController } from './Button'
+import { Button, type ButtonController } from './Button'
 import * as buttonStyle from './Button.style'
 
 let dispose: (() => void) | undefined
@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 test('组件引用控制状态，DOM 引用聚焦按钮，整体命令只包含主动接入的实例', () => {
-  expect(allButtons.style).toBe(buttonStyle)
+  expect(Button.controllers.style).toBe(buttonStyle)
   const host = document.body.appendChild(document.createElement('div'))
   const [button, receiveButton] = createRef<ButtonController>()
   const [buttonElement, receiveButtonElement] =
@@ -45,21 +45,21 @@ test('组件引用控制状态，DOM 引用聚焦按钮，整体命令只包含�
   expect(second.getAttribute('aria-busy')).not.toBe('true')
   expect(val(button.loading)).toBe(true)
 
-  const results = allButtons.disabled.set(true)
+  const results = Button.controllers.disabled.set(true)
   flush()
   expect(Array.from(results)).toHaveLength(1)
   expect(first.disabled).toBe(true)
   expect(second.disabled).toBe(false)
-  expect(allButtons.loading.map((status) => val(status))).toEqual([true])
+  expect(Button.controllers.loading.map((status) => val(status))).toEqual([true])
   expect(
-    allButtons
+    Button.controllers
       .disabled
       .map((status) => val(status))
       .join(','),
   ).toBe('true')
   externallyDisabled.set(true)
   flush()
-  allButtons.disabled.set(false)
+  Button.controllers.disabled.set(false)
   flush()
   expect(first.disabled).toBe(false)
   expect(second.disabled).toBe(true)
@@ -82,7 +82,7 @@ test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例
     ),
     host,
   )
-  allButtons.loading.set(true)
+  Button.controllers.loading.set(true)
   flush()
   expect(buttonElement.getAttribute?.('aria-busy')).toBe('true')
 
@@ -92,9 +92,9 @@ test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例
   expect(host.querySelector('button')).toBeNull()
   button.disabled?.set(true)
   button.class?.set('隐藏期间的类名')
-  allButtons.loading.set(false)
+  Button.controllers.loading.set(false)
   flush()
-  expect(allButtons.loading.map((status) => val(status))).toEqual([
+  expect(Button.controllers.loading.map((status) => val(status))).toEqual([
     false,
   ])
 
@@ -108,9 +108,9 @@ test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例
   flush()
   expect(button.loading).toBeUndefined()
   expect(buttonElement.focus).toBeUndefined()
-  expect(allButtons.loading.length).toBe(0)
+  expect(Button.controllers.loading.length).toBe(0)
 
-  allButtons.loading.set(true)
+  Button.controllers.loading.set(true)
   mounted.set(true)
   flush()
   expect(host.querySelector('button')!.getAttribute('aria-busy')).not.toBe(
@@ -150,7 +150,7 @@ test('组件ref才启用控制层，单独domRef与undefined组件ref仍是普�
   </>, host)
   expect(receive).toHaveBeenCalledOnce()
   expect(host.querySelectorAll('button')).toHaveLength(2)
-  expect(Array.from(allButtons)).toHaveLength(0)
+  expect(Array.from(Button.controllers)).toHaveLength(0)
 })
 
 test('缺省分类与状态可在运行时指令修改，确定描述词和回调复用原消费链', () => {
@@ -208,7 +208,7 @@ test('上游状态仍跟随原Source，ref只能由Prop换接并释放接收器'
   dispose()
   dispose = undefined
   expect(cleanupNext).toHaveBeenCalledOnce()
-  expect(Array.from(allButtons)).toHaveLength(0)
+  expect(Array.from(Button.controllers)).toHaveLength(0)
 })
 
 test('原未声明的内容和DOM响应字段通过同一Props链更新', () => {

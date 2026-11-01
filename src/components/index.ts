@@ -73,3 +73,15 @@ export * from './utils/variant'
 export * from './kits/Grid/Grid'
 export * from './kits/Field/Field'
 export * from './kits/Navigation/Navigation'
+
+export * from './utils/kit'
+export type {
+  PropsReadMode,
+  PropsDefinition,
+  DirectedProps,
+  PropsController,
+  DefaultPropSources,
+  PropsDirectorOptions,
+} from './utils/componentPropsDirector'
+export { pivPropsDefinition, pivDefaultSources } from './Piv/Piv.prop'
+export { componentDescriptionPropsDefinition } from './ComponentMarker/ComponentMarker.prop'

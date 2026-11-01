@@ -2,7 +2,7 @@
  * Button 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
-import { allButtons, Button, type ButtonController } from './Button'
+import { Button, type ButtonController } from './Button'
 import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
 import { Card } from '../Card/Card'
@@ -38,14 +38,14 @@ export function ButtonExample() {
           <Button onClick={() => buttonElement.focus?.()}>聚焦此按钮</Button>
           <Button
             onClick={() => {
-              allButtons.loading.set(true)
+              Button.controllers.loading.set(true)
             }}
           >
             已接入控制的按钮加载
           </Button>
           <Button
             onClick={() => {
-              allButtons.loading.set(false)
+              Button.controllers.loading.set(false)
             }}
           >
             结束已接入按钮加载

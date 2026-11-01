@@ -11,13 +11,13 @@ SolidJS 基础组件与 hooks 组件库。
 - [Architecture.md](Architecture.md)：项目架构入口，先用它理解层次、目录职责、模块边界和调用链。
 - [AI Rules README](../ai-rules/README.md)：AI 写法约束入口，先读它来理解规则体系，再按领域进入具体规则文件。
 - [src/components/Piv/Piv.tsx](src/components/Piv/Piv.tsx)：当前最核心的 DOM 原子，理解 class、style、htmlProps、on、domRef 和 plugins 的消费顺序。
-- [src/components/kits/Button/Button.tsx](src/components/kits/Button/Button.tsx)：当前最小组件示例，展示上层组件如何使用 `Piv`。
+- [src/components/kits/Button/Button.tsx](src/components/kits/Button/Button.tsx)：当前组件定义示例，展示 `kit(definition, core)` 如何集中共同机制，让本体直接表达分类、状态和 `Piv`。
 
 更细的职责边界写在对应源码文件的文件头注释里。README 只保留项目入口信息，不展开实现细节。
 
 创建组件或安排样式前，读 [组件职责与样式归属](docs/guide/组件职责与样式归属.md)：先确定领域与文件落点，再区分组织、信息展示和 UIKit 基础能力。
 
-Props 与 Controller 的缓冲层约定见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)：构建使用 Props，特殊运行期需求通过 Controller 操作同一字段 State；仅注入有效组件 ref 时启用通用 Component Props Director，普通按钮直接执行原核心；allButtons 仅含已接入实例。
+Props 与 Controller 的缓冲层约定见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)：构建使用 Props，特殊运行期需求通过 Controller 操作同一字段 State；仅注入有效组件 ref 时启用通用 Component Props Director，普通按钮直接执行原核心；Button.controllers 仅含已接入实例。
 
 ## 组件结构查看
 
