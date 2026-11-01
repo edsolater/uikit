@@ -84,7 +84,7 @@ test('分类和交互都由自身 state 表达，新 Token 只改变明确接入
     getComputedStyle(element).paddingLeft
   for (const [element, values] of [
     [ordinary, ['10px', '12px', '14px', '8px']],
-    [classified, ['20px', '20px', '20px', '8px']],
+    [classified, ['20px', '12px', '14px', '8px']],
     [own, ['30px', '32px', '34px', '28px']],
   ] as const) {
     expect(padding(element)).toBe(values[0])

@@ -7,14 +7,17 @@
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import {
   createVariantPropsParser,
   type VariantProps,
 } from '../utils/parseVariantProps'
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import type { RefReceiver } from '@/hooks/createRef'
+import type { JSX } from '@/foundation'
+import { boardPropsDefinition, boardVariantGroups, getBoardPropsDirectorOptions } from './Board.prop'
 import './Board.style'
 
 /** 材质声量；动态 variant 优先于确定描述词。 */
@@ -27,21 +30,37 @@ export interface BoardProps<Tag extends PivSupportedElementTag = 'div'>
     PivProps<Tag>,
     BoardVariantProps,
     BoardSizeProps,
-    ComponentDescriptionProps {}
+    ComponentDescriptionProps {
+  ref?: RefReceiver<BoardController<Tag>>
+}
 
-const parseBoardVariantProps = createVariantPropsParser([
-  { groupName: 'variant', candidates: ['soft', 'solid'] },
-  { groupName: 'size', candidates: ['small', 'large', 'xlarge'] },
-])
+/** 原生节点类型与对应 Props 的指令式入口。 */
+export type BoardController<Tag extends PivSupportedElementTag = 'div'> = PropsController<BoardProps<Tag>, typeof boardPropsDefinition>
+
+/** 异构原生节点只公开共同安全字段，Card 复用同一类型规则。 */
+export type BoardControllerCollection = ControllerCollection<Omit<BoardController<PivSupportedElementTag>,
+  'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'plugin' | 'plugins' | 'trait'>>
+
+interface BoardComponent {
+  <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>): JSX.Element
+  controllers: BoardControllerCollection
+}
+
+const parseBoardVariantProps = createVariantPropsParser(boardVariantGroups)
 
 /**
  * 为上层信息主体提供有边界的承载，不自行声明独立信息意义。
  */
-export function Board<Tag extends PivSupportedElementTag = 'div'>(
-  props: BoardProps<Tag>,
-) {
-  return renderBoard(props, 'Board')
-}
+// kit 原样包装泛型核心；这里恢复 TypeScript 在包装返回值中丢失的 Tag 调用关联。
+export const Board = kit<BoardProps<PivSupportedElementTag>, typeof boardPropsDefinition>(
+  {
+    name: 'Board',
+    description: '承载上层信息主体',
+    availableProps: boardPropsDefinition,
+    directorOptions: getBoardPropsDirectorOptions,
+  },
+  <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>) => renderBoard(props, 'Board'),
+) as BoardComponent
 
 /**
  * 按指定语义身份呈现同一个承载节点；只供 Board 与 Card 定义端共享。
@@ -52,21 +71,12 @@ export function renderBoard<Tag extends PivSupportedElementTag>(
 ) {
   const { variantShadowProps } = parseBoardVariantProps(props)
   return (
-    <ComponentMarker
-      componentName={identity}
-      defaultDescription={
-        identity === 'Card' ? '组织独立信息' : '承载上层信息主体'
-      }
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
+    <Piv
+      as={props.as}
+      shadowProps={[props, variantShadowProps]}
+      class={identity === 'Card' ? 'Board Card' : 'Board'}
     >
-      <Piv
-        as={props.as}
-        shadowProps={[props, variantShadowProps]}
-        class={identity === 'Card' ? 'Board Card' : 'Board'}
-      >
-        {props.children}
-      </Piv>
-    </ComponentMarker>
+      {props.children}
+    </Piv>
   )
 }

@@ -126,6 +126,11 @@ const parseButtonStatusProps = createStatusPropsParser({
   }),
 })
 
+/** 业务默认值作为低优先级来源，外部原生字段可以覆盖。 */
+const buttonDefaultProps = {
+  htmlProps: { type: 'button' },
+} satisfies Pick<ButtonProps, 'htmlProps'>
+
 /** 共同机制由 kit 管理，Button 本体只表达分类、状态与动作。 */
 export const Button = kit(
   {
@@ -142,11 +147,10 @@ export const Button = kit(
     return (
       <Piv
         as="button"
-        shadowProps={[props, variantShadowProps, statusShadowProps]}
+        shadowProps={[buttonDefaultProps, props, variantShadowProps, statusShadowProps]}
         class="Button"
         plugins={[clickable({ componentName: context.name })]}
         htmlProps={{
-          'type': 'button',
           'aria-label': props.name,
         }}
         on={{ click: props.onClick }}

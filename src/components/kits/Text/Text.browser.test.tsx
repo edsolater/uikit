@@ -17,12 +17,14 @@ import {
 } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { createState, Show } from '@/foundation'
+import { createRef } from '@/hooks/createRef'
 import {
   Button,
   Piv,
   ComponentMarkerStructureViewTrigger,
   Text,
   type TextProps,
+  type TextController,
 } from '@/components'
 import '@/css/all-base.css'
 
@@ -51,6 +53,37 @@ function toggleView() {
 }
 
 describe('Text', () => {
+  test('组件ref可修改缺省文字和用途，集合只收集受控实例，标签不重建', async () => {
+    const [text, receive] = createRef<TextController>()
+    const host = document.body.appendChild(document.createElement('main'))
+    dispose = render(() => <>
+      <Text block ref={receive} />
+      <Text>普通文字</Text>
+      <ComponentMarkerStructureViewTrigger />
+    </>, host)
+    const element = host.querySelector<HTMLElement>('.Text')!
+    expect(Text.controllers.length).toBe(1)
+    expect('ref' in Text.controllers[0]).toBe(false)
+    text.children?.set('运行期文字')
+    text.class?.set('updated-text')
+    flush()
+    expect(element.textContent).toBe('运行期文字')
+    expect(element.classList.contains('updated-text')).toBe(true)
+    expect(element.tagName).toBe('DIV')
+    expect(host.querySelector('.Text')).toBe(element)
+    toggleView()
+    text.description?.set('运行期用途')
+    flush()
+    await expect.poll(() => [...document.querySelectorAll('.StructureViewOverlay .label')]
+      .some(label => label.textContent === '运行期用途')).toBe(true)
+    text.description?.set('')
+    flush()
+    await expect.poll(() => getComputedStyle(element).opacity).toBe('0')
+    dispose()
+    dispose = undefined
+    expect(Text.controllers.length).toBe(0)
+  })
+
   test('定位框隐藏文字但保留尺寸与节点，隐藏期间继续更新并恢复最新内容', async () => {
     const content = createState('原文字')
     const showFab = createState(false)

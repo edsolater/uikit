@@ -67,13 +67,13 @@ test('焦点提示保留 CSS 特异性，鼠标 focus 不等于 focusVisible', a
   expect(element.matches(':focus-visible')).toBe(true)
   expect(getComputedStyle(element).width).toBe('12px')
   await userEvent.hover(element)
-  expect(getComputedStyle(element).width).toBe('12px')
+  expect(getComputedStyle(element).width).toBe('20px')
   await userEvent.keyboard('[Space>]')
   try {
     expect(element.matches(':focus-visible:hover:active')).toBe(true)
-    expect(getComputedStyle(element).width).toBe('12px')
+    expect(getComputedStyle(element).width).toBe('30px')
     await userEvent.unhover(element)
-    expect(getComputedStyle(element).width).toBe('12px')
+    expect(getComputedStyle(element).width).toBe('30px')
   } finally {
     await userEvent.keyboard('[/Space]')
   }

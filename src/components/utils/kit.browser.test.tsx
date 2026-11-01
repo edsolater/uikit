@@ -8,7 +8,7 @@ import {
   type ComponentDescriptionProps,
 } from '@/components/ComponentMarker/ComponentMarker'
 import type { PropsController } from './componentPropsDirector'
-import { kit, type KitRenderContext } from './kit'
+import { kit, type KitComponentContext } from './kit'
 
 const availableProps = {
   description: 'state-source-view',
@@ -33,7 +33,7 @@ test('无祖先根时核心只创建一次，多根范围透明，实例能力�
   const initialBoundaries = componentBoundaries.size
   const value = createState('初值')
   const cleanup = vi.fn()
-  let context: KitRenderContext
+  let context: KitComponentContext
   let creations = 0
   const Fixture = kit(
     { name: 'Fixture', description: '默认用途', availableProps },

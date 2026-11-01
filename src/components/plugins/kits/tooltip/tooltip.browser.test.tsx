@@ -9,9 +9,9 @@ import { tooltip, type TooltipController } from './tooltip'
 import { Popover } from '@/components/kits/Popover/Popover'
 import { PopoverSurface } from '@/components/Popover/PopoverSurface'
 import {
-  createPopoverController,
-  type PopoverController,
-} from '@/components/Popover/createPopoverController'
+  createPopoverVisibilityController,
+  type PopoverVisibilityController,
+} from '@/components/Popover/createPopoverVisibilityController'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -45,10 +45,10 @@ function readOutlineTip(surface: HTMLElement) {
 }
 
 test('默认打开反映原生状态，取消打开不伪报成功，强制切换及关闭恢复焦点', async () => {
-  let controller!: PopoverController
+  let controller!: PopoverVisibilityController
   let cancel = true
   dispose = render(() => {
-    const [current, bindings] = createPopoverController({
+    const [current, bindings] = createPopoverVisibilityController({
       onBeforeToggle: (open, event) => {
         if (open && cancel) event.preventDefault()
       },

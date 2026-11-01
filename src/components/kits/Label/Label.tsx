@@ -4,15 +4,18 @@ import {
   hasTooltipContent,
   tooltip,
 } from '@/components/plugins/kits/tooltip/tooltip'
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { RefReceiver } from '@/hooks/createRef'
+import { kit } from '@/components/utils/kit'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
+import { labelPropsDefinition } from './Label.prop'
 import './Label.style'
 
 /** 通过 for 关联独立输入；tooltip 为空时不创建问号。 */
 export type LabelProps = ComponentDescriptionProps & {
+  /** 特殊运行期需求下接收本实例 Controller，初始界面仍由 Props 表达。 */
+  ref?: RefReceiver<LabelController>
   for: Source<string>
   children: Source<string>
   tooltip?: PivProps['children']
@@ -20,36 +23,34 @@ export type LabelProps = ComponentDescriptionProps & {
   tooltipTrigger?: PivProps['children']
 }
 
+/** 字段关联、标题与辅助说明的指令式入口，不拥有被关联控件的状态。 */
+export type LabelController = PropsController<LabelProps, typeof labelPropsDefinition>
+
 /**
  * 显示标题与说明，保持原生表单关联，浮层不参与字段布局。
  */
-export function Label(props: LabelProps) {
-  return (
-    <ComponentMarker
-      componentName="Label"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-    >
-      <Piv as="span" class="Label">
-        <Piv as="label" htmlProps={{ for: props.for }}>
-          {props.children}
-        </Piv>
-        <Show when={hasTooltipContent(props.tooltip)}>
-          <Piv
-            as="button"
-            class="tooltipTrigger"
-            plugin={tooltip({
-              get content() { return props.tooltip },
-            })}
-            htmlProps={{
-              'type': 'button',
-              'aria-label': stateView(() => val(props.children) + '说明'),
-            }}
-          >
-            {val(props.tooltipTrigger) ?? '?'}
-          </Piv>
-        </Show>
+export const Label = kit(
+  { name: 'Label', availableProps: labelPropsDefinition },
+  (props: LabelProps) => (
+    <Piv as="span" class="Label">
+      <Piv as="label" htmlProps={{ for: props.for }}>
+        {props.children}
       </Piv>
-    </ComponentMarker>
-  )
-}
+      <Show when={hasTooltipContent(props.tooltip)}>
+        <Piv
+          as="button"
+          class="tooltipTrigger"
+          plugin={tooltip({
+            get content() { return props.tooltip },
+          })}
+          htmlProps={{
+            'type': 'button',
+            'aria-label': stateView(() => val(props.children) + '说明'),
+          }}
+        >
+          {val(props.tooltipTrigger) ?? '?'}
+        </Piv>
+      </Show>
+    </Piv>
+  ),
+)

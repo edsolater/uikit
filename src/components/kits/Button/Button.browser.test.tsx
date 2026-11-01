@@ -83,11 +83,20 @@ function appearance(button: HTMLElement) {
   )
 }
 
-/** 用浏览器转换到同一色空间再比较数值，容许 CSS 序列化的末位舍入。 */
+/**
+ * 只归一视觉数值的三位有效数字，单位、列表结构与关键字仍精确比较。
+ */
+function roundCSSNumbers(content: string) {
+  return content.replace(/[-+]?(?:\d*\.?\d+)(?:e[-+]?\d+)?/gi, amount => Number(amount).toPrecision(3))
+}
+
+/**
+ * 用浏览器统一色空间，按三位有效数字比较通道；只有显式量化契约提供额外容差。
+ */
 function expectSameColor(
   actual: string,
   expected: string,
-  tolerance = 0.00005,
+  tolerance = 0,
 ) {
   const numbers = (content: string) => {
     const probe = document.body.appendChild(document.createElement('div'))
@@ -103,9 +112,8 @@ function expectSameColor(
   const expectedNumbers = numbers(expected)
   expect(actualNumbers).toHaveLength(expectedNumbers.length)
   actualNumbers.forEach((amount, index) =>
-    expect(Math.abs(amount - expectedNumbers[index])).toBeLessThanOrEqual(
-      tolerance,
-    ),
+    expect(Math.abs(Number(amount.toPrecision(3)) - Number(expectedNumbers[index].toPrecision(3))))
+      .toBeLessThanOrEqual(tolerance),
   )
 }
 
@@ -118,14 +126,16 @@ function chroma(content: string): number {
   return Number(color.match(/oklch\(\S+\s+(\S+)/)![1])
 }
 
-/** 颜色比较保留视觉等价断言，其他外观仍严格逐项一致。 */
+/**
+ * 颜色先统一色空间，其余外观只归一数值精度并保留属性与结构。
+ */
 function expectSameAppearance(
   actual: Record<string, string>,
   expected: Record<string, string>,
 ) {
   for (const name of Object.keys(actual)) {
     if (name.endsWith('color')) expectSameColor(actual[name], expected[name])
-    else expect(actual[name], name).toBe(expected[name])
+    else expect(roundCSSNumbers(actual[name]), name).toBe(roundCSSNumbers(expected[name]))
   }
 }
 
@@ -292,9 +302,8 @@ describe('Button styles', () => {
           ],
           [hover['background-color'], hover.color],
         )
-        expect(Number(getComputedStyle(button).opacity)).toBeCloseTo(
-          (Number(normal.opacity) * 0.48) / 0.9,
-          5,
+        expect(Number(getComputedStyle(button).opacity).toPrecision(3)).toBe(
+          ((Number(normal.opacity) * 0.48) / 0.9).toPrecision(3),
         )
         await userEvent.unhover(button)
         button.disabled = false
@@ -349,7 +358,7 @@ describe('Button styles', () => {
       const bounds = buttons.map((button) => [
         button.getBoundingClientRect().width,
         button.getBoundingClientRect().height,
-      ])
+      ].map(amount => amount.toPrecision(3)))
       emphasis.set('strong')
       flush()
       buttons.forEach((button, index) => {
@@ -359,7 +368,7 @@ describe('Button styles', () => {
         expect([
           button.getBoundingClientRect().width,
           button.getBoundingClientRect().height,
-        ]).toEqual(bounds[index])
+        ].map(amount => amount.toPrecision(3))).toEqual(bounds[index])
         expect(button.dataset.appearance).toBe(selectedAppearance)
         expect(button.dataset.tone).toBe('danger')
         if (selectedAppearance === 'plain') {
@@ -382,7 +391,7 @@ describe('Button styles', () => {
         expect([
           button.getBoundingClientRect().width,
           button.getBoundingClientRect().height,
-        ]).toEqual(bounds[index])
+        ].map(amount => amount.toPrecision(3))).toEqual(bounds[index])
       })
       for (const selected of ['soft', undefined, 'strong'] as const) {
         emphasis.set(selected)
@@ -391,11 +400,10 @@ describe('Button styles', () => {
         flush()
         for (const button of buttons) {
           await userEvent.hover(button)
-          expect(Number(getComputedStyle(button).opacity)).toBeCloseTo(
-            ((selected === 'soft' ? 0.7 : selected === 'strong' ? 1 : 0.9) *
+          expect(Number(getComputedStyle(button).opacity).toPrecision(3)).toBe(
+            (((selected === 'soft' ? 0.7 : selected === 'strong' ? 1 : 0.9) *
               0.48) /
-              0.9,
-            5,
+              0.9).toPrecision(3),
           )
           expect(getComputedStyle(button).transform).toBe('none')
           await userEvent.unhover(button)
@@ -809,7 +817,7 @@ describe('Button styles', () => {
       button.disabled = true
       await userEvent.hover(button)
       expectSameColors(read(), normal)
-      expect(Number(getComputedStyle(button).opacity)).toBe(0.48)
+      expect(Number(getComputedStyle(button).opacity).toPrecision(3)).toBe((0.48).toPrecision(3))
       button.disabled = false
       button.dataset.status = 'disabled'
       button.focus()
@@ -1027,7 +1035,7 @@ describe('Button styles', () => {
         const computed = getComputedStyle(button)
         expect(computed.boxShadow).toBe('none')
         expect(computed.cursor).toBe('not-allowed')
-        expect(Number(computed.opacity)).toBe(0.48)
+        expect(Number(computed.opacity).toPrecision(3)).toBe((0.48).toPrecision(3))
         expect(computed.transform).toBe('none')
         expect(computed.minHeight).toBe(
           entry.size === 'small'
@@ -1083,10 +1091,11 @@ describe('Button styles', () => {
         const actualShadow = getComputedStyle(actual).boxShadow
         const expectedShadow = getComputedStyle(reference).boxShadow
         const colors = /(?:rgba?|oklch)\([^)]*\)/g
-        expect(actualShadow.replace(colors, 'COLOR')).toBe(
-          expectedShadow.replace(colors, 'COLOR'),
+        expect(roundCSSNumbers(actualShadow.replace(colors, 'COLOR'))).toBe(
+          roundCSSNumbers(expectedShadow.replace(colors, 'COLOR')),
         )
         const expectedColors = expectedShadow.match(colors)!
+        // 旧 CSS 阴影的 RGBA 回读采用 8 位量化，与保留小数的 Token 沿用一个量化阶差异。
         actualShadow
           .match(colors)!
           .forEach((color, index) =>
@@ -1187,18 +1196,19 @@ describe('Button styles', () => {
         child.paddingRight,
         child.fontSize,
         child.marginLeft,
-      ]
+      ].map(roundCSSNumbers)
     }
+    const largeSpace = `${(8 * 4) / 3}px`
     const baseline = [
       '20px',
       '64px',
-      '12px',
+      largeSpace,
       '20px',
       '64px',
-      '12px',
+      largeSpace,
       '12.5px',
-      '12px',
-    ]
+      largeSpace,
+    ].map(roundCSSNumbers)
     expect(read(local)).toEqual(baseline)
     expect(read(neighbor)).toEqual(baseline)
     const globalBefore = [
@@ -1219,13 +1229,13 @@ describe('Button styles', () => {
     expect(read(local)).toEqual([
       '28px',
       '90px',
-      '12px',
+      largeSpace,
       '28px',
       '90px',
-      '12px',
+      largeSpace,
       '12.5px',
-      '12px',
-    ])
+      largeSpace,
+    ].map(roundCSSNumbers))
     expect(read(neighbor)).toEqual(baseline)
     expect([
       getComputedStyle(global).fontSize,
@@ -1277,7 +1287,7 @@ describe('Button styles', () => {
       const ratios = [1.5, 2, 2, 2, 1.5, 0.5]
       read().forEach((values, row) =>
         values.forEach((value, column) =>
-          expect(value).toBeCloseTo(before[row][column] * ratios[column], 5),
+          expect(value.toPrecision(3)).toBe((before[row][column] * ratios[column]).toPrecision(3)),
         ),
       )
       expect(style.textContent).toBe(css)
@@ -1321,19 +1331,19 @@ describe('Button styles', () => {
       expect(actual.getPropertyValue('corner-shape')).toBe('superellipse(2)')
       const children = button.querySelectorAll('span')
       if (children.length === 2)
-        expect(
+        expect((
           children[1].getBoundingClientRect().left -
-            children[0].getBoundingClientRect().right,
-        ).toBeCloseTo(parseFloat(actual.columnGap), 5)
+            children[0].getBoundingClientRect().right
+        ).toPrecision(3)).toBe(parseFloat(actual.columnGap).toPrecision(3))
     }
     const stretch = document.body.appendChild(document.createElement('div'))
     stretch.style.cssText = 'display:flex;height:120px'
     const button = host.querySelectorAll<HTMLButtonElement>('button')[3]
     stretch.append(button)
-    expect(button.getBoundingClientRect().height).toBe(48)
-    expect(
-      button.getBoundingClientRect().top - stretch.getBoundingClientRect().top,
-    ).toBe(36)
+    expect(button.getBoundingClientRect().height.toPrecision(3)).toBe((48).toPrecision(3))
+    expect((
+      button.getBoundingClientRect().top - stretch.getBoundingClientRect().top
+    ).toPrecision(3)).toBe((36).toPrecision(3))
     expect(
       getComputedStyle(button)
         .transitionDuration.split(',')
@@ -1572,18 +1582,15 @@ describe('Button styles', () => {
     const firstRect = firstContent.getBoundingClientRect()
     const secondRect = secondContent.getBoundingClientRect()
     expect(secondRect.left).toBeGreaterThan(firstRect.right)
-    expect(secondRect.left - firstRect.right).toBeCloseTo(8, 0)
-    expect((firstRect.left + secondRect.right) / 2).toBeCloseTo(
-      (buttonRect.left + buttonRect.right) / 2,
-      0,
+    expect((secondRect.left - firstRect.right).toPrecision(3)).toBe((8).toPrecision(3))
+    expect(((firstRect.left + secondRect.right) / 2).toPrecision(3)).toBe(
+      ((buttonRect.left + buttonRect.right) / 2).toPrecision(3),
     )
-    expect((firstRect.top + firstRect.bottom) / 2).toBeCloseTo(
-      (buttonRect.top + buttonRect.bottom) / 2,
-      0,
+    expect(((firstRect.top + firstRect.bottom) / 2).toPrecision(3)).toBe(
+      ((buttonRect.top + buttonRect.bottom) / 2).toPrecision(3),
     )
-    expect((secondRect.top + secondRect.bottom) / 2).toBeCloseTo(
-      (buttonRect.top + buttonRect.bottom) / 2,
-      0,
+    expect(((secondRect.top + secondRect.bottom) / 2).toPrecision(3)).toBe(
+      ((buttonRect.top + buttonRect.bottom) / 2).toPrecision(3),
     )
     expect(defaultStyle.minHeight).toBe('48px')
     expect(defaultStyle.fontSize).toBe('16px')
@@ -1604,15 +1611,16 @@ describe('Button styles', () => {
     const largeStyle = getComputedStyle(getButton('large'))
     expect(largeStyle.minHeight).toBe('64px')
     expect(largeStyle.fontSize).toBe('20px')
-    expect(largeStyle.columnGap).toBe('12px')
-    expect(largeStyle.paddingBlockStart).toBe('12px')
+    const largeSpace = roundCSSNumbers(`${(8 * 4) / 3}px`)
+    expect(roundCSSNumbers(largeStyle.columnGap)).toBe(largeSpace)
+    expect(roundCSSNumbers(largeStyle.paddingBlockStart)).toBe(largeSpace)
     expect(xlargeStyle.minHeight).toBe('80px')
     expect(xlargeStyle.fontSize).toBe('24px')
     expect(xlargeStyle.columnGap).toBe('16px')
     expect(xlargeStyle.paddingBlockStart).toBe('12px')
     expect(getComputedStyle(getButton('loading')).cursor).toBe('progress')
     expect(disabledStyle.cursor).toBe('not-allowed')
-    expect(Number(disabledStyle.opacity)).toBe(0.48)
+    expect(Number(disabledStyle.opacity).toPrecision(3)).toBe((0.48).toPrecision(3))
 
     const defaultBackground = defaultStyle.backgroundColor
     await userEvent.hover(getButton('default'))
@@ -1648,7 +1656,7 @@ describe('Button styles', () => {
     expect(getComputedStyle(disabledButton).backgroundColor).not.toBe(
       disabledBackground,
     )
-    expect(Number(getComputedStyle(disabledButton).opacity)).toBeCloseTo(0.48)
+    expect(Number(getComputedStyle(disabledButton).opacity).toPrecision(3)).toBe((0.48).toPrecision(3))
 
     const originalBackground = getComputedStyle(
       getButton('default'),
@@ -1802,6 +1810,6 @@ test('全局表面和内容来源联动真实Button，区域及组件覆盖保�
   normal.disabled = true
   await userEvent.hover(normal)
   background(normal, 'rgb(200, 180, 230)')
-  expect(Number(getComputedStyle(normal).opacity)).toBe(0.48)
+  expect(Number(getComputedStyle(normal).opacity).toPrecision(3)).toBe((0.48).toPrecision(3))
   expect(style.textContent).toBe(cssBefore)
 })

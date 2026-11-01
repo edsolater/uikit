@@ -5,32 +5,38 @@
  *
  * 让导航机制与调用方的链接内容各自独立。
  */
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { RefReceiver } from '@/hooks/createRef'
+import { linkPropsDefinition } from './Link.prop'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import { derive } from '@/hooks/stateUtils'
 import { type JSX, type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Link.style'
+/** Link 的声明输入；初始状态通过 Props 表达。 */
+export type LinkProps = ComponentDescriptionProps & {
+  ref?: RefReceiver<LinkController>
+  href: Source<string>
+  children?: JSX.Element
+  current?: Source<boolean | undefined>
+  newTab?: boolean
+}
+
+/** Link 自有 Props 的指令式入口；ref 只从上游交付。 */
+export type LinkController = PropsController<LinkProps, typeof linkPropsDefinition>
+
 /**
  * 保留原生导航、另开页面与当前项语义的链接。
  */
-export function Link(
-  props: ComponentDescriptionProps & {
-    href: Source<string>
-    children?: JSX.Element
-    current?: Source<boolean>
-    newTab?: boolean
+export const Link = kit(
+  {
+    name: 'Link',
+    description: '导航到目标页面',
+    availableProps: linkPropsDefinition,
   },
-) {
-  return (
-    <ComponentMarker
-      componentName="Link"
-      defaultDescription="导航到目标页面"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-    >
+  (props: LinkProps) => {
+    return (
       <Piv
         as="a"
         class="Link"
@@ -45,6 +51,6 @@ export function Link(
       >
         {props.children}
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+)

@@ -33,7 +33,7 @@ export * from './kits/Text/Text'
 export * from './kits/Label/Label'
 export * from './kits/Heading/Heading'
 export * from './kits/Popover/Popover'
-export * from './Popover/createPopoverController'
+export * from './Popover/createPopoverVisibilityController'
 export * from './Popover/PopoverSurface'
 export * from './Popover/PopoverSurface.style'
 export * from './kits/Card/Card'
@@ -42,9 +42,11 @@ export {
   type BoardProps,
   type BoardVariantProps,
   type BoardSizeProps,
+  type BoardController,
+  type BoardControllerCollection,
 } from './kits/Board/Board'
 export { boardBorder } from './kits/Board/Board.style'
-export * from './kits/Article/Article'
+export { Article, type ArticleProps, type ArticleDefaultProps, type ArticleController } from './kits/Article/Article'
 export * from './kits/Table/Table'
 export * from './kits/kitContext'
 export * from './kits/utils/parseVariantProps'

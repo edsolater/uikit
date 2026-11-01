@@ -93,10 +93,10 @@ export const buttonPaddingBlock = buttonToken(baseSpace, {
 export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3))
 export const buttonBoxShadow = buttonToken(baseShadowSmall, {
   state: {
+    filled: baseShadow,
     hover: baseShadow,
     active: 'none',
     disabled: 'none',
-    filled: baseShadow,
     plain: 'none',
   },
 })

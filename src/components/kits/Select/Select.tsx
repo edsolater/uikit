@@ -1,29 +1,43 @@
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+/**
+ * Select 表达有限选项中的单项选择。
+ *
+ * 保留原生字段身份，持续消费值与选项来源。
+ *
+ * 调用方提供选项和数据，组件保留原生选择语义。
+ */
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { RefReceiver } from '@/hooks/createRef'
+import { selectPropsDefinition } from './Select.prop'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import { derive } from '@/hooks/stateUtils'
 import { For, val, type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Select.style'
 export type SelectProps = ComponentDescriptionProps & {
-  id?: Source<string>
+  ref?: RefReceiver<SelectController>
+  id?: Source<string | undefined>
   name?: string
   value: Source<string>
   options: Source<{ value: string; label: string }[]>
-  disabled?: Source<boolean>
+  disabled?: Source<boolean | undefined>
   required?: boolean
   onChange?: (value: string) => void
 }
-/** 有限选项的原生单选字段，持续消费值和选项来源。 */
-export function Select(props: SelectProps) {
-  return (
-    <ComponentMarker
-      componentName="Select"
-      defaultDescription="从有限选项中选择"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-    >
+/** Select 自有 Props 的指令式入口；ref 只从上游交付。 */
+export type SelectController = PropsController<SelectProps, typeof selectPropsDefinition>
+
+/**
+ * 有限选项的原生单选字段，持续消费值和选项来源。
+ */
+export const Select = kit(
+  {
+    name: 'Select',
+    description: '从有限选项中选择',
+    availableProps: selectPropsDefinition,
+  },
+  (props: SelectProps) => {
+    return (
       <Piv
         as="select"
         class="Select"
@@ -57,6 +71,6 @@ export function Select(props: SelectProps) {
           )}
         </For>
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+)

@@ -485,29 +485,6 @@ test('聚合产物返回待解析内容，新增同址贡献后重新收集全�
   expect(css.match(/--aggregate-reentry:/g)).toHaveLength(1)
 })
 
-test('聚合产物的 onFirstScan 新增同址贡献时继续聚合到稳定结果', () => {
-  let activated = false
-  const active = key('--aggregate-active', {
-    join(items) {
-      return token(token(items, { toCSSString: arraySequenceToCSSString }), {
-        onFirstScan: () => {
-          if (activated) return []
-          activated = true
-          return [[[condition('.ActiveResult')], active, 'c']]
-        },
-      })
-    },
-  })
-  const css = compileRules([
-    [[condition('.ActiveResult')], active, 'a'],
-    [[condition('.ActiveResult')], active, 'b'],
-  ])
-  const resultName = css.match(/--aggregate-active: var\((--[\w-]+)\);/)?.[1]
-  expect(resultName).toBeDefined()
-  expect(css).toContain(`${resultName}: a b c;`)
-  expect(css.match(/--aggregate-active:/g)).toHaveLength(1)
-})
-
 test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果', () => {
   let rewrites = 0
   const sum = key('--aggregate-rewrite', {

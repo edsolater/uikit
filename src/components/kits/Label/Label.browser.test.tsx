@@ -1,10 +1,11 @@
 /** 在真实浏览器验证字段关联、悬停阅读和键盘退出，不绑定内部状态。 */
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { render, createState, val } from '@/foundation'
+import { render, createState, flush, val } from '@/foundation'
+import { createRef } from '@/hooks/createRef'
 import { Piv } from '@/components/Piv/Piv'
 import { cssRoot } from '@/style-system'
-import { Label } from './Label'
+import { Label, type LabelController } from './Label'
 
 let dispose: (() => void) | undefined
 let host: HTMLElement
@@ -20,6 +21,42 @@ afterEach(() => {
   dispose?.()
   host.remove()
   style.remove()
+})
+
+test('组件ref可改变字段关联并添加和移除缺省提示，集合随实例清理', async () => {
+  const [label, receive] = createRef<LabelController>()
+  dispose = render(() => <>
+    <Label for="first-input" ref={receive}>原标题</Label>
+    <Label for="first-input">普通标题</Label>
+    <Piv as="input" id="first-input" />
+    <Piv as="input" id="next-input" />
+  </>, host)
+  expect(Label.controllers.length).toBe(1)
+  expect('ref' in Label.controllers[0]).toBe(false)
+  expect(host.querySelector('button')).toBeNull()
+  label.for?.set('next-input')
+  label.children?.set('新标题')
+  label.tooltip?.set('运行期说明')
+  label.tooltipTrigger?.set('i')
+  flush()
+  const title = host.querySelector('label')!
+  const trigger = host.querySelector('button')!
+  expect(title.textContent).toBe('新标题')
+  await userEvent.click(title)
+  expect(document.activeElement).toBe(host.querySelector('#next-input'))
+  expect(trigger.textContent).toBe('i')
+  expect(trigger.getAttribute('aria-label')).toBe('新标题说明')
+  await userEvent.hover(trigger)
+  const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
+  await expect.poll(() => surface.matches(':popover-open')).toBe(true)
+  expect(surface.textContent).toBe('运行期说明')
+  label.tooltip?.set(undefined)
+  flush()
+  expect(host.querySelector('button')).toBeNull()
+  expect(host.querySelector('[role="tooltip"]')).toBeNull()
+  dispose()
+  dispose = undefined
+  expect(Label.controllers.length).toBe(0)
 })
 
 test('标题聚焦独立输入，空说明不生成问号，动态标题持续更新', async () => {

@@ -10,9 +10,9 @@ import { createPlugin } from '../../definePlugin'
 import type { PivTag } from '../../../Piv/domMap'
 import type { PivProps } from '../../../Piv/Piv'
 import {
-  createPopoverController,
-  type PopoverController,
-} from '@/components/Popover/createPopoverController'
+  createPopoverVisibilityController,
+  type PopoverVisibilityController,
+} from '@/components/Popover/createPopoverVisibilityController'
 import { PopoverSurface } from '@/components/Popover/PopoverSurface'
 import './tooltip.style'
 
@@ -20,7 +20,7 @@ import './tooltip.style'
 export type TooltipOptions = { content: PivProps['children'] }
 /** 仅公开打开状态与显示关闭操作，不冒充宿主的DOM身份。 */
 export type TooltipController = {
-  isOpen: PopoverController['isOpen']
+  isOpen: PopoverVisibilityController['isOpen']
   showPopover: () => void
   hidePopover: () => void
 }
@@ -43,7 +43,7 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
  */
 export const tooltip = createPlugin<TooltipOptions, TooltipController, PivTag>(
   (options) => {
-    const [controller, bindings] = createPopoverController()
+    const [controller, bindings] = createPopoverVisibilityController()
     const anchor = '--' + controller.triggerId
     let hovered = false
     let focused = false

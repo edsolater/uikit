@@ -2,11 +2,12 @@
  * 这个文件定义基础 Popover 组件。
  * 它负责触发器、原生 popover 容器和 anchor positioning 结构，不负责菜单协议、表单校验或业务弹层编排。
  */
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { RefReceiver } from '@/hooks/createRef'
+import { popoverPropsDefinition, popoverVariantGroups, getPopoverPropsDirectorOptions } from './Popover.prop'
 import { onMount, Show, type JSX } from '@/foundation'
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import { Piv } from '../../Piv/Piv'
 import { Button } from '../Button/Button'
 import { addDefaultProps } from '../../utils/defaultProps'
@@ -15,9 +16,9 @@ import {
   type VariantProps,
 } from '../utils/parseVariantProps'
 import {
-  createPopoverController,
+  createPopoverVisibilityController,
   type PopoverToggleEvent,
-} from '@/components/Popover/createPopoverController'
+} from '@/components/Popover/createPopoverVisibilityController'
 import { PopoverSurface } from '@/components/Popover/PopoverSurface'
 import './Popover.style'
 
@@ -44,6 +45,7 @@ type NativeHTMLPropKey =
 
 export interface PopoverProps
   extends PopoverPlacementProps, ComponentDescriptionProps {
+  ref?: RefReceiver<PopoverController>
   class?: string
   style?: JSX.CSSProperties
   trigger: JSX.Element
@@ -86,31 +88,37 @@ const defaultPopoverProps: {
   defaultOpen: false,
 }
 
-const parsePopoverVariantProps = createVariantPropsParser([
-  { groupName: 'placement', candidates: ['top', 'right', 'bottom', 'left'] },
-])
+/** Props 状态的指令式入口；PopoverVisibilityController 继续拥有浮层操作。 */
+export type PopoverController = PropsController<PopoverProps, typeof popoverPropsDefinition>
 
-export function Popover(props: PopoverProps) {
-  const mergedProps = addDefaultProps(props, defaultPopoverProps)
-  const { variantShadowProps, details } = parsePopoverVariantProps(props)
-  const [controller, controllerBindings] = createPopoverController({
-    onToggle: mergedProps.onToggle,
-    onBeforeToggle: mergedProps.onBeforeToggle,
-  })
+const parsePopoverVariantProps = createVariantPropsParser(popoverVariantGroups)
 
-  onMount(() => {
-    if (mergedProps.defaultOpen) {
-      controller.showPopover()
-    }
-  })
+/**
+ * 组合触发器与浮层；挂载后的默认打开仍属于 Popover 自身业务。
+ */
+export const Popover = kit(
+  {
+    name: 'Popover',
+    description: '显示补充内容',
+    availableProps: popoverPropsDefinition,
+    directorOptions: getPopoverPropsDirectorOptions,
+  },
+  (props: PopoverProps) => {
+    const mergedProps = addDefaultProps(props, defaultPopoverProps)
+    const { variantShadowProps, details } = parsePopoverVariantProps(props)
+    // 事件发生时读取最新回调，保留原监听器的生命周期。
+    const [controller, controllerBindings] = createPopoverVisibilityController({
+      get onToggle() { return mergedProps.onToggle },
+      get onBeforeToggle() { return mergedProps.onBeforeToggle },
+    })
 
-  return (
-    <ComponentMarker
-      componentName="Popover"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-      defaultDescription="显示补充内容"
-    >
+    onMount(() => {
+      if (mergedProps.defaultOpen) {
+        controller.showPopover()
+      }
+    })
+
+    return (
       <Piv
         shadowProps={variantShadowProps}
         class={['Popover', mergedProps.class]}
@@ -160,6 +168,6 @@ export function Popover(props: PopoverProps) {
           <Piv class="body">{mergedProps.children}</Piv>
         </PopoverSurface>
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+)

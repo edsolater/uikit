@@ -5,8 +5,12 @@
  *
  * 让提示与按钮浮层共享同一个显示实体。
  */
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { RefReceiver } from '@/hooks/createRef'
+import { popoverSurfacePropsDefinition } from './PopoverSurface.prop'
 import { val, type Source, type JSX } from '@/foundation'
-import { ComponentMarker } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import './PopoverSurface.style'
 
@@ -14,22 +18,28 @@ import './PopoverSurface.style'
 export type PopoverSurfaceProps = Pick<
   PivProps,
   'id' | 'class' | 'style' | 'domRef' | 'on' | 'children'
-> & {
+> & ComponentDescriptionProps & {
+  ref?: RefReceiver<PopoverSurfaceController>
   htmlProps?: JSX.HTMLAttributes<HTMLDivElement>
   anchor?: Source<string | undefined>
   placement?: Source<string | undefined>
   popover: 'auto' | 'hint' | 'manual'
 }
 
+/** PopoverSurface 自有 Props 的指令式入口；ref 只从上游交付。 */
+export type PopoverSurfaceController = PropsController<PopoverSurfaceProps, typeof popoverSurfacePropsDefinition>
+
 /**
  * 呈现锚定目标的浮层；调用方负责将domRef接入同一Popover Controller。
  */
-export function PopoverSurface(props: PopoverSurfaceProps) {
-  return (
-    <ComponentMarker
-      componentName="PopoverSurface"
-      defaultDescription="显示目标的浮层内容"
-    >
+export const PopoverSurface = kit(
+  {
+    name: 'PopoverSurface',
+    description: '显示目标的浮层内容',
+    availableProps: popoverSurfacePropsDefinition,
+  },
+  (props: PopoverSurfaceProps) => {
+    return (
       <Piv
         id={props.id}
         class={['PopoverSurface', props.class]}
@@ -48,6 +58,6 @@ export function PopoverSurface(props: PopoverSurfaceProps) {
         </Piv>
         {val(props.children)}
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+)

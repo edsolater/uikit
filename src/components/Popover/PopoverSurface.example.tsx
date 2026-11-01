@@ -9,15 +9,15 @@ import { Flow } from '@/components/kits/Flow/Flow'
 import { Text } from '@/components/kits/Text/Text'
 import { Button } from '@/components/kits/Button/Button'
 import { PopoverSurface } from './PopoverSurface'
-import { createPopoverController } from './createPopoverController'
+import { createPopoverVisibilityController } from './createPopoverVisibilityController'
 import { createState, val } from '@/foundation'
 
 /**
  * 展示锚定外部目标与独立显示的同一个浮层实体。
  */
 export function PopoverSurfaceExample() {
-  const [anchored, anchoredBindings] = createPopoverController()
-  const [standalone, standaloneBindings] = createPopoverController()
+  const [anchored, anchoredBindings] = createPopoverVisibilityController()
+  const [standalone, standaloneBindings] = createPopoverVisibilityController()
   const offset = createState(0)
   return (
     <Flow>

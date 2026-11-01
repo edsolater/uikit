@@ -17,7 +17,7 @@ flowchart LR
   K --> D[原消费链与界面]
 ```
 
-层能力是通用的，Button 先接入，未来 Text/Card 可复用。支持字段必须有运行时 JS 定义，不能只依赖 TypeScript 或某实例的 Object.keys。各字段拥有者在相邻Owner.prop.ts定义自己的描述与默认入口，类型接口留在原模块，组件按Props继承关系组合，另定义自身业务规则；通用层不认识具体组件、状态、分类、ref 或 DOM。
+层能力是通用的，现有公开界面组件已统一接入；渲染、标记与控制基础设施不递归套用 kit。支持字段必须有运行时 JS 定义，不能只依赖 TypeScript 或某实例的 Object.keys。各字段拥有者在相邻Owner.prop.ts定义自己的描述与默认入口，类型接口留在原模块，组件按Props继承关系组合，另定义自身业务规则；Director 不解释具体组件的业务规则；kit 负责组件 ref 与实例集合，Piv/Dode 继续消费 DOM 声明。
 
 ## 同一字段与原 Props 协议
 
@@ -32,6 +32,30 @@ flowchart LR
 Button组合完整字段描述，只维护自身字段和分类/状态候选。DOM字段归Dode、公共快捷字段及其默认入口归能力领域、来源字段归Piv、说明字段归ComponentMarker；描述与类型extends层次一致，不改变运行算法。受控分支为loading/disabled提供默认入口；每个缺省group的工厂复用原VariantParser语义details，把同一候选States的结果作为初始Source。输出只省略原缺省group的候选；原已声明group保留候选，让原核心报告冲突并映射一次。Button构建时建立分组Source但不val，保持原诊断时机，来源随后实际消费。显式group包括undefined优先，运行期指令仍在同一数据流。
 
 Button.controllers 只收集启用组件 ref 的实例，普通按钮不因全局访问器自动承担控制成本。`kit(definition, core)` 统一管理 ref 接收器交付、替换清理、集合登记和唯一 ComponentMarker；业务核心处理原分类、状态和 JSX。Button.controllers.style 保留原 Button Token 集合。第一个参数是供通用层消费的固定配置，包括 name、默认 description、availableProps、默认来源和样式；第二个参数是具体组件的业务函数。代码按服务对象归属：注册和注销 Controller 属于 kit，组件自身的资源属于业务函数；onMount、onCleanup 只决定执行时机。通用层不感知默认来源内部的分类、候选或状态规则；core 可选接收普通 Context 能力对象，name 与 Marker 共用身份，onCleanup 可解构且绑定该实例 owner，不需要 KitContextRoot。
+
+## Text 与 Label 的字段边界
+
+Text 复用 Piv 的运行时字段与默认能力来源，移除 as 并收窄 children；block/p 仍互斥，只在创建时选择标签。Text.controllers 只包含已接入 ref 的文字实例。说明真值的动态默认与 descriptionOnly 仍由原 Marker 协议解释。
+
+Label 只公开 for、children、tooltip、tooltipTrigger、组件说明与 ref，不因接入 kit 增加 Piv 字段。可在特殊回调中通过 LabelController 改变标题、目标控件与说明；原来未传 tooltip 也能在运行期添加并清空，不需要额外默认来源。提示的创建、显示和清理由原 Show 与 tooltip 插件承担。Label.controllers 与其他组件集合独立；两组件均不接管样式或手写登记。
+
+## 其余组件与泛型集合
+
+Flow、Grid、Field、Page 等组织组件只声明原来拥有的内容与布局字段；不因接入 kit 获得 Piv 的整袋 Props。Heading、Input、Board 则按原继承关系组合字段。可省略且需要保留来源身份的字段明确允许 Source 的完成值为 undefined，这与原缺省表现一致，让未声明字段也能沿同一 State 接受指令。Grid.columns 的 ?? 默认值、Table.keys 的缺省列选择按当前值消费，不用 State 对象的真值改变原分支。
+
+Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card 不复制字段表；两个入口分别有自己的 .controllers，共同安全字段规则由 BoardControllerCollection 定义，Card 复用。Popover 的位置来源归自身，挂载时默认打开、浮层事件与资源清理继续留在其业务核心。它的 Props ref 类型是 PopoverController，PopoverVisibilityController 仍用于浮层的显示、隐藏与身份，不改变旧协议。
+
+泛型实例通过 ref 保留精确类型。各 .controllers 可同时包含不同 Tag、列表项或 Row，因此集合只提供安全的共同字段：
+
+| 组件集合 | 留给精确实例 ref 的字段 |
+| --- | --- |
+| Board / Card | as、htmlProps、on、domRef、shadowProps、plugin、plugins、trait |
+| Loop | each |
+| Table | data、keys、renderParts |
+
+Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供；Article.as 只在构建时选择承载组件，Popover.defaultOpen 只配置初始打开状态。这四个字段不进入 Controller。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的事件回调在真实事件发生时读取最新值，保留原监听器生命周期。
+
+这只是公开集合类型的边界，不增加另一层运行过滤或状态。ArticleProps 表示包含可选 as 的完整自有输入，ArticleDefaultProps 表示不指定承载组件的调用分支。ArticleController 只表示 Article 自有可写字段；as 指定的承载组件额外字段仍按原契约透传，不虚构运行时字段表。Article 会消费自己的 ref，不把它当作承载组件 ref 交付；先合并固定 article 身份，再通过 getter 形式的原生 omitProps 排除 ref，保留完整视图并直接转交承载组件，因此原未声明的 children/class/id/htmlProps 等也能指令更新。原 Carrier 约束未放宽为必须额外提供字段的组件。
 
 ## 使用与生命周期
 

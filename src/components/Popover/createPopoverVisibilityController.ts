@@ -12,13 +12,13 @@ export type PopoverToggleEvent = Event & {
   oldState: PopoverToggleState
 }
 
-type CreatePopoverControllerOptions = {
+type CreatePopoverVisibilityControllerOptions = {
   onToggle?: (open: boolean, event: PopoverToggleEvent) => void
   onBeforeToggle?: (open: boolean, event: PopoverToggleEvent) => void
 }
 
 /** 身份可用于外部关联，即使组件内部也使用它，仍属于 Controller。 */
-export type PopoverController = {
+export type PopoverVisibilityController = {
   popoverId: string
   triggerId: string
   isOpen: StateView<boolean>
@@ -28,7 +28,7 @@ export type PopoverController = {
 }
 
 /** 组件定义端将内部触发器和浮层接入 Controller，建立连接并在退出时释放。 */
-export type PopoverControllerBindings = {
+export type PopoverVisibilityControllerBindings = {
   popoverDomRef: RefReceiver<HTMLDivElement>
   triggerDomRef: RefReceiver<HTMLElement>
 }
@@ -48,15 +48,15 @@ function createPopoverIdentity() {
  * 创建包含身份、状态与操作的 Controller，以及内部对象的接入能力 controllerBindings。
  * isOpen 提供只读视图，状态修改由浮层操作及原生 toggle 事件负责。
  * @example
- * const [controller, controllerBindings] = createPopoverController()
+ * const [controller, controllerBindings] = createPopoverVisibilityController()
  * // 组件定义端：<Piv id={controller.popoverId} domRef={controllerBindings.popoverDomRef} htmlProps={{ popover: 'auto' }} />
  * // 事件中调用：controller.showPopover()
  */
-export function createPopoverController(
-  options: CreatePopoverControllerOptions = {},
+export function createPopoverVisibilityController(
+  options: CreatePopoverVisibilityControllerOptions = {},
 ): [
-  controller: PopoverController,
-  controllerBindings: PopoverControllerBindings,
+  controller: PopoverVisibilityController,
+  controllerBindings: PopoverVisibilityControllerBindings,
 ] {
   const { popoverId, triggerId } = createPopoverIdentity()
   const isOpen = createState(false)

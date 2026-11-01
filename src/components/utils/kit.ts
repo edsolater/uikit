@@ -32,7 +32,7 @@ import {
 } from './controllerRegistry'
 
 /** 每个实例的通用能力；函数已绑定实例作用域，可以直接解构。 */
-export interface KitRenderContext {
+export interface KitComponentContext {
   readonly name: string
   /** 将资源清理登记到当前组件实例，包括后续事件中创建的资源。 */
   readonly onCleanup: (cleanup: () => void) => void
@@ -41,7 +41,7 @@ export interface KitRenderContext {
 /** 具体组件的业务函数：消费 Props 与可选能力，定义自身行为并返回界面。 */
 export type KitCore<Props> = (
   props: Props,
-  context: KitRenderContext,
+  context: KitComponentContext,
 ) => JSX.Element
 
 /** 固定的通用层配置；其中的工厂描述通用层如何取值，不承载组件业务流程。 */
@@ -106,7 +106,7 @@ export function kit<
 
   const Component = (input: Props) => {
     const owner = getOwner()
-    const context: KitRenderContext = {
+    const context: KitComponentContext = {
       name: definition.name,
       onCleanup: (cleanup) => runWithOwner(owner, () => onCleanup(cleanup)),
     }

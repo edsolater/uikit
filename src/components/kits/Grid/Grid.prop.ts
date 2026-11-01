@@ -1,0 +1,11 @@
+/** Grid：按当前列数取值，保留未声明时的一列默认值。 */
+import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
+import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import type { GridProps } from './Grid'
+
+export const gridPropsDefinition = {
+  ...componentDescriptionPropsDefinition,
+  columns: 'state-value-view',
+  children: 'state-value-view',
+  ref: 'only-through-prop',
+} satisfies PropsDefinition<GridProps>

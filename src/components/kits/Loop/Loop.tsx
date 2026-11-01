@@ -2,6 +2,11 @@
  * 响应式列表组件。
  * 它基于 Solid 的 mapArray 维护子树复用，只负责列表结构，不解包 item 内部字段。
  */
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import type { RefReceiver } from '@/hooks/createRef'
+import { loopPropsDefinition } from './Loop.prop'
 import {
   mapArray,
   type Accessor,
@@ -12,56 +17,60 @@ import {
 } from '@/foundation'
 import { createDomRef } from '@/hooks'
 import { Piv } from '../../Piv/Piv'
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
-
-export type Read<T> = Accessor<T>
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 
 export type LoopProps<T> = ComponentDescriptionProps & {
+  ref?: RefReceiver<LoopController<T>>
   each: Accessor<T[]>
   fallback?: JSX.Element
   children: (item: T, index: Accessor<number>) => JSX.Element
 }
 
-export function Loop<T>(props: LoopProps<T>) {
-  const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()
-  const innerState = createState<T[]>([])
+/** 列表来源与可干预展示字段。 */
+export type LoopController<T> = PropsController<LoopProps<T>, typeof loopPropsDefinition>
 
-  createEffect(
-    () => ({
-      items: props.each(),
-      startViewTransition: loopContainer.startViewTransition,
-    }),
-    ({ items, startViewTransition }) => {
-      startViewTransition?.(() => {
-        // 这里才会有 viewTransition 的动画，所以外部数据也要在这里提交。
-        innerState.set(items)
-      })
-    },
-  )
+interface LoopComponent {
+  <T>(props: LoopProps<T>): JSX.Element
+  controllers: ControllerCollection<Omit<LoopController<unknown>, 'each'>>
+}
 
-  const mapped = mapArray(
-    () => val(innerState),
-    props.children,
-    props.fallback === undefined
-      ? undefined
-      : {
-          fallback: () => props.fallback,
-        },
-  )
+/**
+ * 按原映射器维护列表子树，保留每项与 index 的泛型关联。
+ */
+// kit 原样包装泛型核心；这里恢复列表项与渲染回调的调用关联。
+export const Loop = kit<LoopProps<unknown>, typeof loopPropsDefinition>(
+  { name: 'Loop', description: '排列重复内容', availableProps: loopPropsDefinition },
+  <T,>(props: LoopProps<T>) => {
+    const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()
+    const innerState = createState<T[]>([])
 
-  return (
-    <ComponentMarker
-      componentName="Loop"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-      defaultDescription="排列重复内容"
-    >
+    createEffect(
+      () => ({
+        items: props.each(),
+        startViewTransition: loopContainer.startViewTransition,
+      }),
+      ({ items, startViewTransition }) => {
+        startViewTransition?.(() => {
+          // 这里才会有 viewTransition 的动画，所以外部数据也要在这里提交。
+          innerState.set(items)
+        })
+      },
+    )
+
+    const mapped = mapArray(
+      () => val(innerState),
+      props.children,
+      props.fallback === undefined
+        ? undefined
+        : {
+            fallback: () => props.fallback,
+          },
+    )
+
+    return (
       <Piv class="Loop" domRef={setDomRef}>
         {mapped()}
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+) as LoopComponent

@@ -1,29 +1,44 @@
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+/**
+ * Checkbox 表达带可点击标题的二态选择。
+ *
+ * 消费选中状态并传回原生交互结果。
+ *
+ * 选项标题与字段状态属于组件，业务选择规则留给调用方。
+ */
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { RefReceiver } from '@/hooks/createRef'
+import { checkboxPropsDefinition } from './Checkbox.prop'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 import { type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Checkbox.style'
-/** 带可点击标题的二态表单选择。 */
-export function Checkbox(
-  props: ComponentDescriptionProps & {
-    id?: Source<string>
-    name?: string
-    checked: Source<boolean>
-    label: Source<string>
-    disabled?: Source<boolean>
-    required?: boolean
-    onChange?: (checked: boolean) => void
+/** Checkbox 的声明输入；初始状态通过 Props 表达。 */
+export type CheckboxProps = ComponentDescriptionProps & {
+  ref?: RefReceiver<CheckboxController>
+  id?: Source<string | undefined>
+  name?: string
+  checked: Source<boolean>
+  label: Source<string>
+  disabled?: Source<boolean | undefined>
+  required?: boolean
+  onChange?: (checked: boolean) => void
+}
+
+/** Checkbox 自有 Props 的指令式入口；ref 只从上游交付。 */
+export type CheckboxController = PropsController<CheckboxProps, typeof checkboxPropsDefinition>
+
+/**
+ * 带可点击标题的二态表单选择。
+ */
+export const Checkbox = kit(
+  {
+    name: 'Checkbox',
+    description: '切换二态选项',
+    availableProps: checkboxPropsDefinition,
   },
-) {
-  return (
-    <ComponentMarker
-      componentName="Checkbox"
-      defaultDescription="切换二态选项"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-    >
+  (props: CheckboxProps) => {
+    return (
       <Piv as="label" class="Checkbox">
         <Piv
           as="input"
@@ -43,6 +58,6 @@ export function Checkbox(
         />
         <Piv as="span">{props.label}</Piv>
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+)

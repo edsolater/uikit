@@ -4,14 +4,16 @@
  * 它不负责排序、筛选、分页、虚拟滚动或业务数据解释，也不让业务组件手写表格 DOM 结构。
  * 调用方只提供已经整理好的同构数据；需要局部改写表头或单元格内容时，通过 renderParts 提供纯渲染器。
  */
+import { kit } from '@/components/utils/kit'
+import type { PropsController } from '@/components/utils/componentPropsDirector'
+import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import type { RefReceiver } from '@/hooks/createRef'
+import { tablePropsDefinition } from './Table.prop'
 import type { Stringable } from '@edsolater/fnkit'
-import { For, stateView, val, type Source } from '@/foundation'
+import { For, stateView, val, type Source, type JSX } from '@/foundation'
 import { toJSX, type JSXable } from '../../utils/toJSX'
 import { Piv } from '../../Piv/Piv'
-import {
-  ComponentMarker,
-  type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
 
 type TableDataRow = Record<string, Stringable>
 
@@ -20,6 +22,7 @@ type TableDataRow = Record<string, Stringable>
  */
 export type TableProps<Row extends TableDataRow = TableDataRow> =
   ComponentDescriptionProps & {
+  ref?: RefReceiver<TableController<Row>>
     /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */
     data: Source<Row[]>
 
@@ -42,6 +45,14 @@ export type TableProps<Row extends TableDataRow = TableDataRow> =
       }
     }
   }
+
+/** 精确 Row 的数据、列与渲染部件指令入口。 */
+export type TableController<Row extends TableDataRow = TableDataRow> = PropsController<TableProps<Row>, typeof tablePropsDefinition>
+
+interface TableComponent {
+  <Row extends TableDataRow>(props: TableProps<Row>): JSX.Element
+  controllers: ControllerCollection<Omit<TableController<TableDataRow>, 'data' | 'keys' | 'renderParts'>>
+}
 
 /**
  * Table 是 UIKit 里“对象队列 -> 语义化表格结构”的基础组件节点。
@@ -67,19 +78,16 @@ export type TableProps<Row extends TableDataRow = TableDataRow> =
  *   }}
  * />
  */
-export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
-  // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-  const columnKeys = stateView(props.data).map((data) =>
-    props.keys ? val(props.keys) : pickTableColumnKeys(data),
-  )
+// kit 原样包装泛型核心；这里恢复Row 与列及渲染器的调用关联。
+export const Table = kit<TableProps<TableDataRow>, typeof tablePropsDefinition>(
+  { name: 'Table', description: '按列展示记录', availableProps: tablePropsDefinition },
+  <Row extends TableDataRow>(props: TableProps<Row>) => {
+    // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
+    const columnKeys = stateView(props.data).map((data) =>
+      props.keys ? val(props.keys) : pickTableColumnKeys(data),
+    )
 
-  return (
-    <ComponentMarker
-      componentName="Table"
-      description={props.description}
-      descriptionDisplay={props.descriptionDisplay}
-      defaultDescription="按列展示记录"
-    >
+    return (
       <Piv as="table">
         <Piv as="thead">
           <Piv as="tr">
@@ -116,9 +124,9 @@ export function Table<Row extends TableDataRow>(props: TableProps<Row>) {
           </For>
         </Piv>
       </Piv>
-    </ComponentMarker>
-  )
-}
+    )
+  },
+) as TableComponent
 
 /**
  * 从第一行对象读取列 key。
