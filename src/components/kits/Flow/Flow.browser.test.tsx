@@ -6,7 +6,7 @@
  * 保护组合时的原生语义和各实例之间的隔离。
  */
 import { Grid } from '../Grid/Grid'
-import { Navigation } from '../Navigation/Navigation'
+import { NavigationRegion } from '../NavigationRegion/NavigationRegion'
 import { afterEach, expect, test } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import '../../../css/all-base.css'
@@ -35,14 +35,14 @@ test('导航地标、当前链接和反馈语义持续反映来源，列数确�
   const columns = createState<1 | 2 | 3>(1)
   dispose = render(
     () => (
-      <Navigation label="应用切换">
+      <NavigationRegion label="应用切换">
         <Grid columns={columns}>
           <Link href="/target" current={current} newTab>
             目标
           </Link>
           <MessageBoard tone={tone}>反馈</MessageBoard>
         </Grid>
-      </Navigation>
+      </NavigationRegion>
     ),
     host,
   )

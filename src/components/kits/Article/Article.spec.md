@@ -2,7 +2,7 @@
 
 ## 组件定义
 
-`Article` 表达一份能够脱离当前页面结构、仍可独立理解的正文内容。它是语义组件，不提供背景、间距、边框或其他视觉。
+`Article` 表达一份能够脱离当前页面结构、仍可独立理解的正文内容。它是语义组件，不提供背景、内边距或边框；组件自身通过`.Article`默认裁剪内容首尾块外边距，保留中间内容间距。这不改变所有原生article标签的行为。
 
 ```txt
 Article = 独立正文语义
@@ -36,7 +36,7 @@ Article 可以让另一个组件承载它的视觉形式：
 最终只生成一个节点：
 
 ```html
-<article class="Card example-card">正文内容</article>
+<article class="Article Board Card example-card">正文内容</article>
 ```
 
 `as={Card}` 在 Article 中具有明确协议：
@@ -53,13 +53,13 @@ Article 可以让另一个组件承载它的视觉形式：
 <Article as={Card} {...props} />
 ```
 
-在最终 DOM 和属性转交上等价于：
+在单节点原生语义和载体属性转交上等价于：
 
 ```tsx
 <Card as="article" {...props} />
 ```
 
-前一种写法优先表达“这是一篇正文”，更适合正文详情调用处。
+前一种写法优先表达“这是一篇正文”，更适合正文详情调用处。Article仍保留自身`.Article`类与正文边界裁剪，因此不表示两种写法的最终class完全相同。
 
 ## Props
 
@@ -92,4 +92,4 @@ Card 的默认 variant 已经是完整可用的半透明主题卡片。Article �
 
 ## CSS 变量
 
-Article 不提供 CSS 变量，也不拥有视觉样式。使用 `as={Card}` 时，可使用 Card 已公开的 CSS 变量；这些变量仍然属于 Card。
+Article只拥有正文边界的首尾外边距裁剪，不提供皮肤或CSS变量。使用`as={Card}`时，可使用Card已公开的样式控制点；这些材料仍然属于Card。

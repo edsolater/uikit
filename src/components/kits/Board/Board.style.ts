@@ -1,5 +1,5 @@
 /**
- * Board 与 Card 共用的承载材质。
+ * Board的网格承载材质。
  *
  * 按声量与容纳尺度定义背景、边界和内部空间。
  *
@@ -54,6 +54,7 @@ const gap = token('var(--space-5)', {
 const radius = token('var(--radius-4)', { state: [[small, 'var(--radius-3)']] })
 rules('.Board', {
   display: 'grid',
+  'margin-trim': 'none',
   gap,
   padding,
   border: boardBorder,

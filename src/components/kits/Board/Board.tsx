@@ -1,9 +1,9 @@
 /**
  * 信息主体的底层承载能力。
  *
- * 统一提供材质、尺寸与原生节点声明，供 Board 和 Card 两种语义入口复用。
+ * 提供网格承载、材质、尺寸与原生节点声明，供上层主体复用。
  *
- * 承载实现保持一份，身份差异不增加 DOM 或重复结构边界。
+ * 通用节点实现不解释调用方的语义身份，不增加额外DOM。
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
@@ -36,7 +36,7 @@ export interface BoardProps<Tag extends PivSupportedElementTag = 'div'>
 /** 原生节点类型与对应 Props 的指令式入口。 */
 export type BoardController<Tag extends PivSupportedElementTag = 'div'> = KitController<BoardProps<Tag>, typeof boardPropsDefinition>
 
-/** 异构原生节点只公开共同安全字段，Card 复用同一类型规则。 */
+/** 异构原生节点只公开共同安全字段。 */
 export type BoardControllerCollection = ControllerCollection<{
   readonly props: Omit<BoardController<PivSupportedElementTag>['props'],
     'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'plugin' | 'plugins' | 'trait'>
@@ -64,18 +64,18 @@ export const Board = kit<BoardProps<PivSupportedElementTag>, typeof boardPropsDe
 ) as BoardComponent
 
 /**
- * 按指定语义身份呈现同一个承载节点；只供 Board 与 Card 定义端共享。
+ * 按调用方选择的样式类呈现承载节点，保留原生字段及动态材质、尺寸。
  */
 export function renderBoard<Tag extends PivSupportedElementTag>(
   props: BoardProps<Tag>,
-  identity: 'Board' | 'Card',
+  className: string,
 ) {
   const { effect: variantEffectProps } = parseBoardVariantProps(props)
   return (
     <Piv
       as={props.as}
       shadowProps={[props, ...variantEffectProps]}
-      class={identity === 'Card' ? 'Board Card' : 'Board'}
+      class={className}
     >
       {props.children}
     </Piv>

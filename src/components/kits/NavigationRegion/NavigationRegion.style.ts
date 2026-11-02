@@ -1,5 +1,5 @@
 import { rules } from '@/style-system'
-rules('.Navigation', {
+rules('.NavigationRegion', {
   display: 'flex',
   'flex-direction': 'column',
   gap: '1rem',

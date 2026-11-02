@@ -1,9 +1,9 @@
 /**
  * 可独立理解的信息体入口。
  *
- * 为同一对象或主题的内容声明 Card 身份，并复用 Board 的完整承载能力。
+ * 为同一主题声明Card身份，复用Board材质，默认块排版并裁剪内容首尾外边距。
  *
- * 两种方言共享实现，不通过额外容器模拟语义差异。
+ * 默认布局由Card自身维护，内部排列由调用方组合Flow或Grid。
  */
 import { kit } from '@/components/utils/kit'
 import type { JSX } from '@/foundation'
@@ -17,6 +17,7 @@ import {
   type BoardController,
   type BoardControllerCollection,
 } from '../Board/Board'
+import './Card.style'
 /** 独立信息体的材质声量。 */
 export type CardVariantProps = BoardVariantProps
 /** 独立信息体的内部容纳尺度。 */
@@ -43,5 +44,5 @@ export const Card = kit<CardProps<PivSupportedElementTag>, typeof boardPropsDefi
     availableProps: boardPropsDefinition,
     directorOptions: getBoardPropsDirectorOptions,
   },
-  <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>) => renderBoard(props, 'Card'),
+  <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>) => renderBoard(props, 'Board Card'),
 ) as CardComponent

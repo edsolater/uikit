@@ -13,7 +13,7 @@ import {
 import { FlowExample } from '@/components/kits/Flow/Flow.example'
 import { GridExample } from '@/components/kits/Grid/Grid.example'
 import { FieldExample } from '@/components/kits/Field/Field.example'
-import { NavigationExample } from '@/components/kits/Navigation/Navigation.example'
+import { NavigationRegionExample } from '@/components/kits/NavigationRegion/NavigationRegion.example'
 import { LinkExample } from '@/components/kits/Link/Link.example'
 import { PageExample } from '@/components/kits/Page/Page.example'
 import { TextAreaExample } from '@/components/kits/TextArea/TextArea.example'
@@ -31,7 +31,7 @@ import { ComponentMarkerExample } from '@/components/ComponentMarker/ComponentMa
 import { ComponentMarkerStructureViewTriggerExample } from '@/components/ComponentMarker/ComponentMarkerStructureViewTrigger.example'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
-import { Card } from '@/components'
+import { Card, Flow } from '@/components'
 import { CardExample } from '@/components/kits/Card/Card.example'
 import { ArticleExample } from '@/components/kits/Article/Article.example'
 import { InputExample } from '@/components/kits/Input/Input.example'
@@ -205,13 +205,13 @@ export const exampleEntries: ExampleEntry[] = [
     content: FieldExample,
   },
   {
-    id: 'navigation',
+    id: 'navigation-region',
     level: 0.5,
-    title: 'Navigation',
+    title: 'NavigationRegion',
     category: exampleCategories.component,
     summary: '具名导航区域与章节链接。',
-    thumbnail: new URL('../thumbnails/navigation.webp', import.meta.url).href,
-    content: NavigationExample,
+    thumbnail: new URL('../thumbnails/navigation-region.webp', import.meta.url).href,
+    content: NavigationRegionExample,
   },
   {
     id: 'link',
@@ -475,14 +475,16 @@ function ExampleMissing(props: {
   return (
     <section class="example-missing">
       <Card class="example-card">
-        <div class="example-card-head">
-          <span>Not Found</span>
-          <h1>没有这个 Example</h1>
-        </div>
-        <p>URL 中的 Example 标识“{props.id}”不存在。</p>
-        <a class="example-back" href="/examples" onClick={props.onNavigate}>
-          返回主页
-        </a>
+        <Flow>
+          <div class="example-card-head">
+            <span>Not Found</span>
+            <h1>没有这个 Example</h1>
+          </div>
+          <p>URL 中的 Example 标识“{props.id}”不存在。</p>
+          <a class="example-back" href="/examples" onClick={props.onNavigate}>
+            返回主页
+          </a>
+        </Flow>
       </Card>
     </section>
   )

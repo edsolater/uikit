@@ -1,7 +1,17 @@
-/** 定位框开启时只隐藏标题文字，保留原生排版与来源更新。 */
-import { key, rules } from '@/style-system'
+/** 标题按文档层级留出上下空间，定位框只隐藏文字而保留排版。 */
+import { rules, token, stateCondition } from '@/style-system'
 
-rules(
-  ['body:has(.StructureViewOverlay:popover-open) .Heading'],
-  [[key('visibility'), 'hidden']],
-)
+const headingBlockMargin = token('2.4em 1.2em', {
+  state: [
+    [stateCondition('&:is(h2)'), '2em 1em'],
+    [stateCondition('&:is(h3)'), '1.6em .8em'],
+    [stateCondition('&:is(h4)'), '1.4em .7em'],
+  ],
+})
+
+rules('.Heading', {
+  'margin-block': headingBlockMargin,
+  visibility: token('inherit', {
+    state: [[stateCondition('body:has(.StructureViewOverlay:popover-open) &'), 'hidden']],
+  }),
+})

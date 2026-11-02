@@ -4,7 +4,7 @@ import { componentDescriptionPropsDefinition } from '@/components/ComponentMarke
 import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
 import type { HeadingProps } from './Heading'
 
-const { as: _as, ...headingPivPropsDefinition } = pivPropsDefinition
+const { as: _as, id: _id, ...headingPivPropsDefinition } = pivPropsDefinition
 
 export const headingPropsDefinition = {
   ...headingPivPropsDefinition,

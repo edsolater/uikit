@@ -75,7 +75,7 @@ export * from './utils/variant'
 
 export * from './kits/Grid/Grid'
 export * from './kits/Field/Field'
-export * from './kits/Navigation/Navigation'
+export * from './kits/NavigationRegion/NavigationRegion'
 
 export * from './utils/kit'
 export type {

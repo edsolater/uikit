@@ -22,7 +22,7 @@ Card = 一个独立信息单元 + variant + size
 </Card>
 ```
 
-调用方不需要先写 class、padding、gap、圆角、背景、边框或阴影，才能让 Card 成立。
+调用方不需要先写 class、padding、圆角、背景、边框或阴影，才能让 Card 成立。Card默认块排版并裁剪内容首尾块外边距；需要固定间隔、顺序流或分栏时，在内容处组合Flow或Grid，不由Card隐式排列。
 
 ## 什么时候使用
 
@@ -134,12 +134,12 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 
 `size` 只调整 Card 内部容纳内容的物理尺度，不设置外部宽高或定位。
 
-| 写法        | Padding     | Gap         | Radius       | 适用场景                   |
-| ----------- | ----------- | ----------- | ------------ | -------------------------- |
-| `small`     | `--space-4` | `--space-3` | `--radius-3` | 紧凑信息单元。             |
-| 省略 `size` | `--space-6` | `--space-5` | `--radius-4` | 普通信息单元。             |
-| `large`     | `--space-7` | `--space-6` | `--radius-4` | 宽松信息单元。             |
-| `xlarge`    | `--space-8` | `--space-7` | `--radius-4` | 内容较多的大尺寸信息单元。 |
+| 写法        | Padding     | Radius       | 适用场景                   |
+| ----------- | ----------- | ------------ | -------------------------- |
+| `small`     | `--space-4` | `--radius-3` | 紧凑信息单元。             |
+| 省略 `size` | `--space-6` | `--radius-4` | 普通信息单元。             |
+| `large`     | `--space-7` | `--radius-4` | 宽松信息单元。             |
+| `xlarge`    | `--space-8` | `--radius-4` | 内容较多的大尺寸信息单元。 |
 
 尺寸确定时优先写 `small`、`large` 或 `xlarge`。具体档位由现有界面状态决定时，使用 `size`；它的字段轮廓明确告诉阅读者该分类是不定的。
 
@@ -147,9 +147,9 @@ variant 与 size 的默认解析结果都是 `undefined`，没有额外的默认
 
 ## 与 Board 共用承载
 
-Card 是一级独立信息体；Board 是零点五级承载角色。二者调用同一渲染实现，分别登记 Card 或 Board 身份，只创建一个原生节点，不互相套壳。
+Card 是一级独立信息体；Board 是零点五级承载角色。二者调用同一渲染实现，分别登记 Card 或 Board 身份，只创建一个原生节点，不互相套壳。Card默认块排版，Board保留网格和按尺寸变化的gap；margin trim只负责Card自己的块边界，不跨越内部Flow或Grid递归裁剪。
 
-材质唯一落在 `../Board/Board.style.ts`。背景、边界、阴影、内部空间按上述 variant 与 size 规则产生；不再维护旧 `--Card-*` CSS 变量。`boardBorder` 是可供信息主体派生的公开边界材料；MessageBoard 在同一承载根消费自己的反馈边界，不修改 Board 的后代或默认材质。业务调用方按公开组件协议组合，不传样式袋。
+材质唯一落在 `../Board/Board.style.ts`，Card自身的块排版与首尾裁剪归`Card.style.ts`。Card入口选择自己的身份样式类，共享节点本体只转交调用方的class，不识别Card语义或分支。背景、边界、阴影、内部空间按上述 variant 与 size 规则产生；不再维护旧 `--Card-*` CSS 变量。`boardBorder` 是可供信息主体派生的公开边界材料；MessageBoard 在同一承载根消费自己的反馈边界，不修改 Board 的后代或默认材质。业务调用方按公开组件协议组合，不传样式袋。
 
 ## 交互边界
 

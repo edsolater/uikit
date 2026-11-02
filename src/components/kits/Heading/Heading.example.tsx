@@ -14,11 +14,13 @@ export function HeadingExample() {
   return (
     <Flow>
       <Heading level={1}>Heading · 使用指南</Heading>
-      <Text p>一级标题说明整篇文档的主题。</Text>
-      <Heading level={2}>开始使用</Heading>
-      <Text p>二级标题划分主要章节。</Text>
-      <Heading level={3}>准备工作</Heading>
-      <Text p>三级标题说明章节中的具体步骤。</Text>
+      <Text p>H1是整篇页面或文档的主题总入口。</Text>
+      <Heading level={2}>标题结构</Heading>
+      <Text p>H2划分主要职责或领域。</Text>
+      <Heading level={3}>层级选择</Heading>
+      <Text p>H3定位一个可以独立讨论的具体议题。</Text>
+      <Heading level={4}>最小子主题</Heading>
+      <Text p>H4是最小可定位引用的子主题；更细内容使用正文、列表或表格，不为字号继续加深。</Text>
     </Flow>
   )
 }

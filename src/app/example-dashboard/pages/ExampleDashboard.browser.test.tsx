@@ -116,7 +116,9 @@ describe('ExampleDashboard', () => {
     const solidCard = document.querySelector<HTMLElement>(
       '.card-example-item[data-variant="solid"]',
     )!
-    expect(getComputedStyle(defaultCard).display).toBe('grid')
+    expect(['block', 'flow-root']).toContain(getComputedStyle(defaultCard).display)
+    const firstItem = smallCard.querySelector('strong')!, nextItem = smallCard.querySelector('span')!
+    expect(nextItem.getBoundingClientRect().top - firstItem.getBoundingClientRect().bottom).toBeGreaterThan(0)
     expect(
       Number.parseFloat(getComputedStyle(defaultCard).padding),
     ).toBeGreaterThan(0)
@@ -136,7 +138,7 @@ describe('ExampleDashboard', () => {
       'flow',
       'grid',
       'field',
-      'navigation',
+      'navigation-region',
       'link',
       'page',
       'text-area',
