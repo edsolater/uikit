@@ -36,32 +36,34 @@ const selfMeasurePlugin = createPivPlugin(({ element, insertAfter }) => {
 
 export function PivStructureExample() {
   return (
-    <Article as={Card} class="example-card">
-      <div class="example-card-head">
-        <span>BasicPiv</span>
-        <h2>Structure plugin</h2>
-      </div>
+    <Card class="example-card">
+      <Article>
+        <div class="example-card-head">
+          <span>BasicPiv</span>
+          <h2>Structure plugin</h2>
+        </div>
 
-      <div class="example-stack">
-        <Piv class="structure-case" plugins={beforeLabelPlugin}>
-          before 用于在主体前方挂辅助标记。
-        </Piv>
-
-        <Piv as="button" class="structure-button" plugins={appendRedDotPlugin}>
-          appendChild 红点
-        </Piv>
-
-        <Piv class="structure-editor" plugins={wrapManagerPlugin}>
-          <Piv class="structure-editor-title">wrap 管理器</Piv>
-          <Piv class="structure-editor-body">
-            主体仍然是这个 Piv，外层由插件接管布局边界。
+        <div class="example-stack">
+          <Piv class="structure-case" plugins={beforeLabelPlugin}>
+            before 用于在主体前方挂辅助标记。
           </Piv>
-        </Piv>
 
-        <Piv class="structure-case" plugins={selfMeasurePlugin}>
-          element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
-        </Piv>
-      </div>
-    </Article>
+          <Piv as="button" class="structure-button" plugins={appendRedDotPlugin}>
+            appendChild 红点
+          </Piv>
+
+          <Piv class="structure-editor" plugins={wrapManagerPlugin}>
+            <Piv class="structure-editor-title">wrap 管理器</Piv>
+            <Piv class="structure-editor-body">
+              主体仍然是这个 Piv，外层由插件接管布局边界。
+            </Piv>
+          </Piv>
+
+          <Piv class="structure-case" plugins={selfMeasurePlugin}>
+            element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
+          </Piv>
+        </div>
+      </Article>
+    </Card>
   )
 }

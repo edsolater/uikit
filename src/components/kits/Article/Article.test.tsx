@@ -29,18 +29,13 @@ describe('Article', () => {
     expect(host.children).toHaveLength(1)
   })
 
-  test('由 Card 承载时不增加 DOM，并让 Card 使用 article 节点', () => {
+  test('Card 在外承载 Article，保留各自容器与语义边界', () => {
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(
       () => (
-        <Article
-          as={Card}
-          class="example-card"
-          large
-          htmlProps={{ 'data-testid': 'card-article' }}
-        >
-          卡片正文
-        </Article>
+        <Card class="example-card" large>
+          <Article htmlProps={{ 'data-testid': 'card-article' }}>卡片正文</Article>
+        </Card>
       ),
       host,
     )
@@ -49,9 +44,14 @@ describe('Article', () => {
       '[data-testid="card-article"]',
     )!
     expect(article.tagName).toBe('ARTICLE')
-    expect(article.classList.contains('Card')).toBe(true)
-    expect(article.classList.contains('example-card')).toBe(true)
-    expect(article.getAttribute('data-size')).toBe('large')
+    expect(article.classList.contains('Card')).toBe(false)
+    expect(article.hasAttribute('data-size')).toBe(false)
+    const card = article.parentElement!
+    expect(host.firstElementChild).toBe(card)
+    expect(card.tagName).toBe('DIV')
+    expect(card.classList.contains('Card')).toBe(true)
+    expect(card.classList.contains('example-card')).toBe(true)
+    expect(card.getAttribute('data-size')).toBe('large')
     expect(article.hasAttribute('data-variant')).toBe(false)
     expect(article.textContent).toBe('卡片正文')
     expect(host.children).toHaveLength(1)

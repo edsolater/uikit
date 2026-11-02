@@ -44,20 +44,22 @@ export function ScopeExample() {
   )
 
   return (
-    <Article as={Card} class="example-card">
-      <div class="example-card-head">
-        <span>Plugin</span>
-        <h2>Scope + Drag and Drop</h2>
-      </div>
-      <p>
-        同一边界内显示绿色并允许放下；从 A 拖到 B 时显示拒绝状态且不触发
-        onDrop。
-      </p>
+    <Card class="example-card">
+      <Article>
+        <div class="example-card-head">
+          <span>Plugin</span>
+          <h2>Scope + Drag and Drop</h2>
+        </div>
+        <p>
+          同一边界内显示绿色并允许放下；从 A 拖到 B 时显示拒绝状态且不触发
+          onDrop。
+        </p>
 
-      <div class="drag-drop-example-grid">
-        {renderScope('A')}
-        {renderScope('B')}
-      </div>
-    </Article>
+        <div class="drag-drop-example-grid">
+          {renderScope('A')}
+          {renderScope('B')}
+        </div>
+      </Article>
+    </Card>
   )
 }

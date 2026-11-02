@@ -64,6 +64,7 @@ interface ExampleCategory {
 
 /** 类别的识别色属于 Example Home 条目信息；CSS 只消费颜色，不推断业务类别。 */
 const exampleCategories = {
+  semantic: { label: '语义组件', color: 'oklch(75% 0.07 225 / .9)' },
   component: { label: 'Component', color: 'oklch(75% 0.07 110 / .9)' },
   plugin: { label: 'Plugin', color: 'oklch(75% 0.07 100 / .9)' },
   piv: { label: 'Piv', color: 'oklch(75% 0.07 55 / .9)' },
@@ -94,8 +95,8 @@ export const exampleEntries: ExampleEntry[] = [
     id: 'article',
     level: 1,
     title: 'Article',
-    category: exampleCategories.component,
-    summary: '独立正文语义与透明视觉载体。',
+    category: exampleCategories.semantic,
+    summary: '无容器皮肤的独立正文语义。',
     thumbnail: new URL('../thumbnails/article.webp', import.meta.url).href,
     content: ArticleExample,
   },

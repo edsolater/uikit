@@ -1,13 +1,13 @@
 /**
  * kit 接入后的组件职责边界验收。
  *
- * 验证承载组件不接收外层 ref，以及共享材质组件仍保留候选来源与独立集合。
+ * 验证语义组件与嵌套容器的独立输入，以及共享材质组件的候选来源与集合。
  *
  * 从实际节点和引用交付观察结果，不绑定包装内部步骤。
  */
 import { afterEach, expect, test, vi } from 'vitest'
 import { createState, flush, render, val } from '@/foundation'
-import { Article, Board, Card, Field, Loop, Piv, type BoardController, type CardController, type ArticleController, type CardProps, type FieldController, type LoopController } from '@/components'
+import { Article, Board, Card, Field, Loop, Piv, type BoardController, type CardController, type ArticleController, type FieldController, type LoopController } from '@/components'
 import { createRef } from '@/hooks/createRef'
 
 let dispose: (() => void) | undefined
@@ -17,7 +17,7 @@ afterEach(() => {
   document.body.replaceChildren()
 })
 
-test('kit 接入的 Article ref 不交给承载 Card，自有字段沿原节点更新', () => {
+test('Card 承载独立 Article，引用与输入各归自身节点', () => {
   const [article, receive] = createRef<ArticleController>()
   const receiver = vi.fn(receive)
   const host = document.body.appendChild(document.createElement('main'))
@@ -25,12 +25,18 @@ test('kit 接入的 Article ref 不交给承载 Card，自有字段沿原节点�
   const conditional = createState(true)
   const classes = createState(['initial-article', { conditional }])
   const size = createState<'small' | 'large'>('large')
-  const Carrier = (props: CardProps<'article'>) => <Card {...props} />
-  dispose = render(() => <Article {...refProps} as={Carrier} class={classes} shadowProps={{ class: 'shadow-article' }} size={size} />, host)
-  const element = host.firstElementChild!
+  let card!: CardController
+  dispose = render(() => (
+    <Card size={size} ref={controller => { card = controller }}>
+      <Article {...refProps} class={classes} shadowProps={{ class: 'shadow-article' }} />
+    </Card>
+  ), host)
+  const element = host.querySelector('article')!
   expect(element.tagName).toBe('ARTICLE')
-  expect(element.getAttribute('data-size')).toBe('large')
-  expect(element.classList.contains('Card')).toBe(true)
+  const visual = host.firstElementChild!
+  expect(element.parentElement).toBe(visual)
+  expect(visual.getAttribute('data-size')).toBe('large')
+  expect(element.classList.contains('Card')).toBe(false)
   expect(element.classList.contains('Article')).toBe(true)
   expect(element.classList.contains('shadow-article')).toBe(true)
   expect(element.classList.contains('initial-article')).toBe(true)
@@ -44,10 +50,11 @@ test('kit 接入的 Article ref 不交给承载 Card，自有字段沿原节点�
   expect(element.classList.contains('conditional')).toBe(false)
   size.set('small')
   flush()
-  expect(element.getAttribute('data-size')).toBe('small')
+  expect(visual.getAttribute('data-size')).toBe('small')
+  expect(val(card.props.size)).toBe('small')
   expect(receiver).toHaveBeenCalledOnce()
   expect(Article.controllers.length).toBe(1)
-  expect(Card.controllers.length).toBe(0)
+  expect(Card.controllers.length).toBe(1)
   expect('size' in Article.controllers[0].props).toBe(false)
   expect('as' in Article.controllers[0].props).toBe(false)
   const click = vi.fn()
@@ -59,8 +66,11 @@ test('kit 接入的 Article ref 不交给承载 Card，自有字段沿原节点�
   article.props!.on.set({ click })
   flush()
   expect(host.children).toHaveLength(1)
-  expect(host.firstElementChild).toBe(element)
+  expect(host.firstElementChild).toBe(visual)
+  expect(element.parentElement).toBe(visual)
   expect(element.textContent).toBe('更新后的正文')
+  expect(Card.controllers.length).toBe(1)
+  expect(visual.isConnected).toBe(true)
   expect(element.classList.contains('updated-article')).toBe(true)
   expect(element.classList.contains('Article')).toBe(true)
   expect(element.classList.contains('shadow-article')).toBe(true)

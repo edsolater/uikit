@@ -29,15 +29,24 @@ test('Article和Card裁剪自身边界，不改裸标签和Board网格', () => {
   const dispose = render(() => <>
     <Article style={{ display: 'flow-root' }}>{children()}</Article>
     <Card>{children()}</Card>
-    <Article as={Card}>{children()}</Article>
+    <Card><Article>{children()}</Article></Card>
     <Board as="section">{children()}</Board>
     <article style={{ display: 'flow-root' }}>{children()}</article>
     <section style={{ display: 'flow-root' }}>{children()}</section>
     <div style={{ display: 'flow-root' }}>{children()}</div>
   </>, host)
   try {
-    expect([...host.children].map(element => element.tagName)).toEqual(['ARTICLE', 'DIV', 'ARTICLE', 'SECTION', 'ARTICLE', 'SECTION', 'DIV'])
-    for (const container of [...host.children].slice(0, 3) as HTMLElement[]) {
+    expect([...host.children].map(element => element.tagName)).toEqual(['ARTICLE', 'DIV', 'DIV', 'SECTION', 'ARTICLE', 'SECTION', 'DIV'])
+    const nestedCard = host.children[2]!
+    const nestedArticle = nestedCard.firstElementChild!
+    expect(nestedArticle.classList.contains('Card')).toBe(false)
+    expect(nestedCard.classList.contains('Card')).toBe(true)
+    expect(getComputedStyle(nestedArticle).padding).toBe('0px')
+    expect(getComputedStyle(nestedArticle).backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    expect(getComputedStyle(nestedArticle).borderTopWidth).toBe('0px')
+    expect(getComputedStyle(nestedArticle).boxShadow).toBe('none')
+    expect(getComputedStyle(nestedCard).padding).toBe(getComputedStyle(host.children[1]!).padding)
+    for (const container of [host.children[0], host.children[1], nestedArticle] as HTMLElement[]) {
       const first = container.firstElementChild!, last = container.lastElementChild!
       const content = first.nextElementSibling!
       const computed = getComputedStyle(container), rect = container.getBoundingClientRect()

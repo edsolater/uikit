@@ -6,7 +6,7 @@
  * 保证应用使用公开输入即可替换自己的表格结构。
  */
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { createState, flush, render } from '@/foundation'
+import { createState, flush, render, val } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { Table } from './Table'
 import { TableExample } from './Table.example'
@@ -121,6 +121,61 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
   flush()
   expect(host.querySelectorAll('th')).toHaveLength(1)
   expect(host.querySelector('tbody td')!.textContent).toBe('name:乙')
+})
+
+test('可选单元格提示未提供或清空时没有原生title，提示随原始行和索引更新', () => {
+  const rows = createState([
+    { name: '甲', p95: 0.499 },
+    { name: '乙', p95: 0.5 },
+  ])
+  const hint = createState<string | undefined>(undefined)
+  dispose = render(
+    () => (
+      <Table
+        data={rows}
+        keys={['p95', 'summary']}
+        cellTitle={{
+          summary: (row, index) =>
+            val(hint) === undefined
+              ? undefined
+              : `${val(hint)}:${row.name}:${index}`,
+        }}
+        renderParts={{
+          tableCell: {
+            p95: (value) => `${value * 100}%`,
+            summary: (_value, _key, row) => row.name,
+          },
+        }}
+      />
+    ),
+    host,
+  )
+  expect(
+    [...host.querySelectorAll('td')].every(
+      (cell) => !cell.hasAttribute('title'),
+    ),
+  ).toBe(true)
+  hint.set('说明')
+  flush()
+  expect(host.querySelectorAll('td')[1]!.getAttribute('title')).toBe(
+    '说明:甲:0',
+  )
+  expect(host.querySelector('td')!.hasAttribute('title')).toBe(false)
+  rows.set([
+    { name: '乙', p95: 0.5 },
+    { name: '甲', p95: 0.499 },
+  ])
+  flush()
+  expect(host.querySelectorAll('td')[1]!.getAttribute('title')).toBe(
+    '说明:乙:0',
+  )
+  hint.set(undefined)
+  flush()
+  expect(
+    [...host.querySelectorAll('td')].every(
+      (cell) => !cell.hasAttribute('title'),
+    ),
+  ).toBe(true)
 })
 
 test('默认列来自当前首行，示例实际呈现普通与合成列内容', () => {

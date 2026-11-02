@@ -54,9 +54,9 @@ Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card
 | Loop | each |
 | Table | data、keys、renderParts |
 
-Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供；Article.as 只在构建时选择承载组件，Popover.defaultOpen 只配置初始打开状态。这四个字段不进入 `Controller.props`。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的事件回调在真实事件发生时读取最新值，保留原监听器生命周期。
+Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供；Popover.defaultOpen 只配置初始打开状态。这三个字段不进入 `Controller.props`。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的事件回调在真实事件发生时读取最新值，保留原监听器生命周期。
 
-这只是公开集合类型的边界，不增加另一层运行过滤或状态。ArticleProps 表示包含可选 as 的完整自有输入，ArticleDefaultProps 表示不指定承载组件的调用分支。`ArticleController.props` 只表示 Article 自有可写字段；as 指定的承载组件额外字段仍按原契约透传，不虚构运行时字段表。Article 会消费自己的 ref，不把它当作承载组件 ref 交付；先合并固定 article 身份，再通过 getter 形式的原生 omitProps 排除 ref，保留完整视图并直接转交承载组件，因此原未声明的 children/class/id/htmlProps 等也能指令更新。原 Carrier 约束未放宽为必须额外提供字段的组件。
+这只是公开集合类型的边界，不增加另一层运行过滤或状态。Article 固定原生 `article`，Props 与 Controller 均不提供 `as`；Card 不提供 `is` 模式。普通阅读卡片的 `<Card><Article>正文</Article></Card>` 保留两个独立实例，外层引用操作 Card 容器，内层引用操作正文节点。资料卡片作为正文组成部分时也可反向组合，两种方向都不互相接管实例职责。
 
 ## 使用与生命周期
 

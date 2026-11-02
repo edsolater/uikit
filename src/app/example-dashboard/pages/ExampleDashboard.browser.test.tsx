@@ -83,7 +83,7 @@ describe('ExampleDashboard', () => {
     expect(
       new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor))
         .size,
-    ).toBe(5)
+    ).toBe(6)
 
     expect(document.querySelector('.example-home-head p')).toBeNull()
     expect(document.querySelector('.example-category-nav')).toBeNull()
@@ -181,18 +181,37 @@ describe('ExampleDashboard', () => {
     )
   })
 
-  test('Article 原生与 Card 承载场景各自保留单一节点', () => {
+  test('语义组件导航只列出 Article', () => {
+    window.history.replaceState(null, '', '/examples')
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <ExampleDashboard />, host)
+    expect(host.querySelector('a[href="/examples/article"] .example-link-ribbon')?.textContent).toContain('语义组件')
+    const semanticLinks = [...host.querySelectorAll('.example-link')].filter(link => link.querySelector('.example-link-ribbon')?.textContent?.startsWith('语义组件'))
+    expect(semanticLinks.map(link => link.querySelector('h2')?.textContent)).toEqual(['Article'])
+  })
+
+  test('Article 示例由外层 Card 承载，皮肤与正文语义各归自身', () => {
     window.history.replaceState(null, '', '/examples/article')
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
 
-    const article = document.querySelector<HTMLElement>('.Card.example-card')!
+    const card = document.querySelector<HTMLElement>('.Card.example-card')!
+    const article = card.firstElementChild!
     expect(article.tagName).toBe('ARTICLE')
     expect(article.querySelector('h2')?.textContent).toBe('Article')
+    expect(article.classList.contains('Card')).toBe(false)
+    expect(article.parentElement).toBe(card)
+    expect(card.tagName).toBe('DIV')
+    const articleStyle = getComputedStyle(article)
+    expect(articleStyle.padding).toBe('0px')
+    expect(articleStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    expect(articleStyle.borderTopStyle).toBe('none')
+    expect(articleStyle.borderRadius).toBe('0px')
+    expect(parseFloat(getComputedStyle(card).padding)).toBeGreaterThan(0)
     const articles = document.querySelectorAll('.example-detail article')
     expect(articles).toHaveLength(2)
     expect(article.querySelector('article')).toBeNull()
-    const nativeArticle = articles[1]
+    const nativeArticle = articles[0]
     expect(nativeArticle.classList.contains('Card')).toBe(false)
     expect(nativeArticle.querySelector('article')).toBeNull()
     expect(nativeArticle.querySelector('h3')?.textContent).toBe(

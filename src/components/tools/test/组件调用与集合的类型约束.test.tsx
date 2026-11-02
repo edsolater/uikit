@@ -7,10 +7,9 @@
  */
 import { expectTypeOf, test } from 'vitest'
 import type { State } from '@/foundation'
-import type { PivProps } from '@/components/Piv/Piv'
 import {
   Article, Board, Card, Field, Loop, Table, Piv,
-  type ArticleController, type ArticleProps, type ArticleDefaultProps,
+  type ArticleController, type ArticleProps,
   type BoardController, type CardController, type PopoverController,
 } from '@/components'
 
@@ -55,21 +54,21 @@ function verifyGenericCalls() {
   // @ts-expect-error 单元格渲染器必须接收该列的 number。
   Table<{ amount: number }>({ data: [{ amount: 1 }], renderParts: { tableCell: { amount: (value: string) => value } } })
 
-  const Carrier = (props: PivProps<'article'> & { heading?: string }) => <Piv as="article">{props.heading}</Piv>
-  const article = <Article as={Carrier} heading="正文" ref={controller => {
+  const article = <Article ref={controller => {
     expectTypeOf(controller).toEqualTypeOf<ArticleController>()
-    // @ts-expect-error 表现组件只在构建时选择，不公开伪可写字段。
-    controller.props.as.set(() => Carrier)
+    // @ts-expect-error Article 不提供根节点选择或承载组件状态。
+    controller.props.as.set('section')
   }} />
-  const ownProps: ArticleProps = { as: Carrier }
-  // @ts-expect-error 无 as 分支不能接收表现组件。
-  const defaultProps: ArticleDefaultProps = { as: Carrier }
-  const RequiredCarrier = (props: PivProps<'article'> & { heading: string }) => <Piv as="article">{props.heading}</Piv>
-  // @ts-expect-error 原承载约束要求组件可直接接收 PivProps，不放宽为额外必填字段。
-  Article({ as: RequiredCarrier, heading: '正文' })
-  // @ts-expect-error Article 不接受错误的承载字段类型。
-  Article({ as: Carrier, heading: 1 })
-  // @ts-expect-error Article ref 接收自有 Controller，不接收任意值。
+  const ownProps: ArticleProps = { children: '独立正文' }
+  // @ts-expect-error 语义根固定，不接收 Card 承载协议。
+  Article({ as: Card })
+  // @ts-expect-error Article 不允许改为其他原生标签。
+  Article({ as: 'section' })
+  // @ts-expect-error Article 不接收 Card 的视觉分类。
+  Article({ solid: true })
+  // @ts-expect-error Card 不提供内容身份模式。
+  Card({ is: 'article' })
+  // @ts-expect-error Article ref 接收自有 Controller。
   Article({ ref: (_controller: number) => {} })
 
   // @ts-expect-error 混合列表集合不承诺统一的项类型，each 只在精确实例 ref 中操作。
@@ -92,7 +91,7 @@ function verifyGenericCalls() {
     // @ts-expect-error 挂载时初始打开配置只能通过 Props 提供。
     _controller.props.defaultOpen.set(true)
   }
-  void [board, card, field, loop, table, article, ownProps, defaultProps, popover]
+  void [board, card, field, loop, table, article, ownProps, popover]
 }
 void verifyGenericCalls
 

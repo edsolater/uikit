@@ -1,18 +1,17 @@
 /**
  * Article 自身拥有的运行时字段协议。
  *
- * 组合正文原生字段与用途说明，as 只在创建时选择承载组件。
- *
- * 承载组件额外字段原样透传，不虚构 Article 不拥有的 Controller 字段。
+ * 组合固定 article 根的原生字段与用途说明，不提供载体选择协议。
  */
 import { pivPropsDefinition } from '@/components/Piv/Piv.prop'
 import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
 import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { ArticleProps } from './Article'
 
+const { as: _as, ...articleDOMPropsDefinition } = pivPropsDefinition
+
 export const articlePropsDefinition = {
-  ...pivPropsDefinition,
+  ...articleDOMPropsDefinition,
   ...componentDescriptionPropsDefinition,
-  as: 'only-through-prop',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<ArticleProps>

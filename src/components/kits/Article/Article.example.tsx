@@ -7,27 +7,29 @@ import './Article.example.css'
 export function ArticleExample() {
   return (
     <>
-      <Article as={Card} class="example-card">
-        <Flow>
-          <div class="example-card-head">
-            <span>Component</span>
-            <h2>Article</h2>
-          </div>
-          <p>
-            Article 表达可独立理解的正文；Card 只是这篇正文当前采用的视觉形式。
-          </p>
-
-          <div class="article-example-contract">
-            <span>最终节点</span>
-            <code>&lt;article class=&quot;Card example-card&quot;&gt;</code>
-            <strong>正文语义优先，Card 提供视觉，不增加包裹层。</strong>
-          </div>
-        </Flow>
-      </Article>
       <Article>
         <h3>原生 Article 正文</h3>
-        <p>这篇正文直接使用原生 article，不由 Card 提供视觉形式。</p>
+        <p>语义组件固定使用 article，只裁剪首尾块外边距；默认没有背景、内边距或边框。</p>
       </Article>
+      <Card class="example-card">
+        <Article>
+          <Flow>
+            <div class="example-card-head">
+              <span>语义组件</span>
+              <h2>Article</h2>
+            </div>
+            <p>
+              Card 承载这篇独立正文；内部 Article 声明正文身份，不自带容器皮肤。
+            </p>
+
+            <div class="article-example-contract">
+              <span>独立边界</span>
+              <code>&lt;Card&gt;&lt;Article&gt;正文&lt;/Article&gt;&lt;/Card&gt;</code>
+              <strong>外层 Card 承载正文，内层 Article 声明正文语义。</strong>
+            </div>
+          </Flow>
+        </Article>
+      </Card>
     </>
   )
 }

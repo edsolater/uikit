@@ -47,7 +47,7 @@ export {
   type BoardControllerCollection,
 } from './kits/Board/Board'
 export { boardBorder } from './kits/Board/Board.style'
-export { Article, type ArticleProps, type ArticleDefaultProps, type ArticleController } from './kits/Article/Article'
+export { Article, type ArticleProps, type ArticleController } from './kits/Article/Article'
 export * from './kits/Table/Table'
 export * from './kits/kitContext'
 export * from './kits/utils/parseVariantProps'

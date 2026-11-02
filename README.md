@@ -19,6 +19,10 @@ SolidJS 基础组件与 hooks 组件库。
 
 Props 与 Controller 的缓冲层约定见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)：构建使用 Props，特殊运行期需求通过 Controller 操作同一字段 State；仅注入有效组件 ref 时启用通用 Component Props Director，普通组件直接执行原核心；公开界面组件统一经 kit 接入，各自的 .controllers 仅含已接入实例，底层渲染与 kit 自身基础设施保持原职责。
 
+## 语义组件
+
+当前列表与组合方式见 [语义组件](docs/guide/语义组件.md)。目前只有 Article：声明独立正文，默认无容器皮肤；普通阅读卡片由外层 Card 承载 Article。其他组合先按 [组件嵌套](docs/guide/组件嵌套.md) 说明这次界面的实际关系。
+
 ## 组件结构查看
 
 - [组件定位框](docs/guide/组件结构查看.md)：组件以`KitMarker`声明边界与用途，App手动放入`KitMarkerStructureViewTrigger`。开关初始关闭，开启后显示框内标注并弱化内容；Text与Heading的原文字显示为空但保留排版，自定义组件按Guide接入。Dev的`/examples/button`可直接体验。

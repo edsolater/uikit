@@ -221,14 +221,16 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <Article as={Card}>
-            <Button onClick={clicks}>执行</Button>
-            <Button disabled>禁止</Button>
-            <Input htmlProps={{ value: '保留草稿' }} />
-            <Table data={[{ 名称: '记录' }]} />
-            <Popover trigger="补充">浮层正文</Popover>
-            <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
-          </Article>
+          <Card>
+            <Article>
+              <Button onClick={clicks}>执行</Button>
+              <Button disabled>禁止</Button>
+              <Input htmlProps={{ value: '保留草稿' }} />
+              <Table data={[{ 名称: '记录' }]} />
+              <Popover trigger="补充">浮层正文</Popover>
+              <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
+            </Article>
+          </Card>
           <KitMarkerStructureViewTrigger />
         </>
       ),
@@ -550,9 +552,9 @@ describe('组件结构查看', () => {
             <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
             <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
           </KitMarker>
-          <Article as={Card} style={{ width: '200px', height: '80px' }}>
+          <KitMarker componentName="ReadingSummary"><Card style={{ width: '200px', height: '80px' }}>
             同框内容
-          </Article>
+          </Card></KitMarker>
           <KitMarkerStructureViewTrigger />
         </>
       )

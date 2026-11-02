@@ -48,13 +48,15 @@ Card = 一个独立信息单元 + variant + size
 
 ### 与正文语义组合
 
-当 Card 表现的是一篇可独立理解的正文时，让 Article 成为调用主体，Card 只提供视觉形式：
+Card 为一篇独立正文提供视觉承载时，在内部组合无皮肤的 Article：
 
 ```tsx
-<Article as={Card}>可独立理解的正文</Article>
+<Card>
+  <Article>可独立理解的正文</Article>
+</Card>
 ```
 
-普通 Card 不需要为了补充弱结构信息而指定 `as="section"`。只有原生语义本身能够显著帮助阅读时，才把它提升成明确的语义组件。
+外层 Card 保留容器根节点与材质，内层 Article 固定原生 `article`；两者各自拥有实例。若 Card 是正文中的资料卡片，也可以放在 Article 内。嵌套顺序按实际含义决定，见 [组件嵌套](../../../../docs/guide/组件嵌套.md)。Card 不提供 `is` 内容模式；语义组件当前列表见 [语义组件](../../../../docs/guide/语义组件.md)。
 
 ### 选择视觉声量
 
@@ -100,7 +102,7 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 
 | 属性          | Card 中的含义                                                        |
 | ------------- | -------------------------------------------------------------------- |
-| `as`          | 选择根原生元素，默认是 `div`；独立正文优先写成 `Article as={Card}`。 |
+| `as`          | 选择 Card 根原生元素，默认是 `div`；不替代独立 Article 语义组件。 |
 | `children`    | 提供属于同一个信息单元的完整内容。                                   |
 | `id`          | 设置根元素原生 id。                                                  |
 | `if`          | 为 `false` 时 Card 与 children 都不进入 DOM。                        |

@@ -175,7 +175,7 @@ export const Table = kit<
                         <Piv
                           as="td"
                           htmlProps={{
-                            'title': () =>
+                            'attr:title': () =>
                               props.cellTitle?.[columnKey]?.(row, index()),
                             'data-intensity':
                               !!props.cellIntensity?.[columnKey],

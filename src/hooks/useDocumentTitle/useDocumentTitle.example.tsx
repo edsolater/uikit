@@ -15,23 +15,25 @@ export function UseDocumentTitleExample() {
   )
 
   return (
-    <Article as={Card} class="example-card">
-      <div class="example-card-head">
-        <span>Hook</span>
-        <h2>useDocumentTitle</h2>
-      </div>
-      <p>当前浏览器标题会随按钮切换，并实时返回。</p>
-      <div class="title-card">
-        <strong>{val(currentTitle)}</strong>
-        <Button
-          plain
-          onClick={() => {
-            titleIndex.set((index) => (index + 1) % titles.length)
-          }}
-        >
-          Switch title
-        </Button>
-      </div>
-    </Article>
+    <Card class="example-card">
+      <Article>
+        <div class="example-card-head">
+          <span>Hook</span>
+          <h2>useDocumentTitle</h2>
+        </div>
+        <p>当前浏览器标题会随按钮切换，并实时返回。</p>
+        <div class="title-card">
+          <strong>{val(currentTitle)}</strong>
+          <Button
+            plain
+            onClick={() => {
+              titleIndex.set((index) => (index + 1) % titles.length)
+            }}
+          >
+            Switch title
+          </Button>
+        </div>
+      </Article>
+    </Card>
   )
 }
