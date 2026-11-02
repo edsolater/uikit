@@ -27,8 +27,8 @@ import { LabelExample } from '@/components/kits/Label/Label.example'
 import { HelpExample } from '@/components/kits/Help/Help.example'
 import { TableExample } from '@/components/kits/Table/Table.example'
 import { LoopExample } from '@/components/kits/Loop/Loop.example'
-import { ComponentMarkerExample } from '@/components/ComponentMarker/ComponentMarker.example'
-import { ComponentMarkerStructureViewTriggerExample } from '@/components/ComponentMarker/ComponentMarkerStructureViewTrigger.example'
+import { KitMarkerExample } from '@/components/tools/KitMarker/KitMarker.example'
+import { KitMarkerStructureViewTriggerExample } from '@/components/tools/KitMarker/KitMarkerStructureViewTrigger.example'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card, Flow } from '@/components'
@@ -36,7 +36,7 @@ import { CardExample } from '@/components/kits/Card/Card.example'
 import { ArticleExample } from '@/components/kits/Article/Article.example'
 import { InputExample } from '@/components/kits/Input/Input.example'
 import { PopoverExample } from '@/components/kits/Popover/Popover.example'
-import { PopoverSurfaceExample } from '@/components/Popover/PopoverSurface.example'
+import { PopoverSurfaceExample } from '@/components/kits/Popover/PopoverSurface.example'
 import { PivStructureExample } from '@/components/Piv/PivStructure.example'
 import { DraggableExample } from '@/components/plugins/kits/draggable/draggable.example'
 import { DroppableExample } from '@/components/plugins/kits/droppable/droppable.example'
@@ -349,7 +349,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '透明组件边界与用途说明。',
     thumbnail: new URL('../thumbnails/component-marker.webp', import.meta.url)
       .href,
-    content: ComponentMarkerExample,
+    content: KitMarkerExample,
   },
   {
     id: 'component-marker-structure-view-trigger',
@@ -359,7 +359,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '手动查看组件结构与继续操作。',
     thumbnail: new URL('../thumbnails/component-marker-structure-view-trigger.webp', import.meta.url)
       .href,
-    content: ComponentMarkerStructureViewTriggerExample,
+    content: KitMarkerStructureViewTriggerExample,
   },
 ]
 

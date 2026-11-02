@@ -1,5 +1,5 @@
 /**
- * ComponentMarker 为组件提供透明的结构查看边界。
+ * KitMarker 为组件提供透明的结构查看边界。
  *
  * 统一选择用途说明并保留真实节点范围，组件卸载时释放边界。
  *
@@ -22,7 +22,7 @@ export interface ComponentDescriptionProps {
 }
 
 /** 定义端提供身份与默认用途，使用处的说明优先。 */
-export interface ComponentMarkerProps extends ComponentDescriptionProps {
+export interface KitMarkerProps extends ComponentDescriptionProps {
   componentName: string
   defaultDescription?: Source<string | undefined>
   /** 定义端的显示默认值，由定位模式的受管消费者读取。 */
@@ -49,7 +49,7 @@ let nextColorIndex = 0
  * 保留主体与响应式子树，只为结构查看提供组件身份、用途和节点范围。
  * 未提供 description 时才采用默认说明；空字符串只显示组件名。
  */
-export function ComponentMarker(props: ComponentMarkerProps): JSX.Element {
+export function KitMarker(props: KitMarkerProps): JSX.Element {
   if (useContext(StructureViewControl)) return props.children
 
   const boundary: ComponentBoundary = {

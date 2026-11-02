@@ -7,24 +7,24 @@
  */
 import {
   Card,
-  ComponentMarker,
+  KitMarker,
   Flow,
   Heading,
-  ComponentMarkerStructureViewTrigger,
+  KitMarkerStructureViewTrigger,
   Text,
 } from '@/components'
 
 /**
  * 呈现带自定义组件身份的信息组，查看开关初始关闭。
  */
-export function ComponentMarkerExample() {
+export function KitMarkerExample() {
   return (
     <Flow>
       <Heading level={2}>ComponentMarker · 透明边界</Heading>
       <Text p>
         点击右下角“打开组件定位框”可看到阅读摘要的共同边界；关闭后恢复正常内容。
       </Text>
-      <ComponentMarker
+      <KitMarker
         componentName="ReadingSummary"
         description="概括本次阅读进度"
       >
@@ -34,8 +34,8 @@ export function ComponentMarkerExample() {
             <Text>已阅读 3 章，剩余 2 章。</Text>
           </Flow>
         </Card>
-      </ComponentMarker>
-      <ComponentMarkerStructureViewTrigger />
+      </KitMarker>
+      <KitMarkerStructureViewTrigger />
     </Flow>
   )
 }

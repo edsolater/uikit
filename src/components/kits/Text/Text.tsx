@@ -6,9 +6,9 @@
  * 共同接线交给 kit，不复制查看状态或修改原文字。
  */
 import { val, type Source } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import type { RefReceiver } from '@/hooks/createRef'
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { textPropsDefinition } from './Text.prop'

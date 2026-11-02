@@ -1,5 +1,5 @@
 /**
- * ComponentMarker 结构查看模式的内部呈现。
+ * KitMarker 结构查看模式的内部呈现。
  *
  * 分别声明顶层宿主、画布、逐框遮罩和说明文字；不接管原组件布局。
  * 模式内透明元素与裸文字规则也由此统一承接。
@@ -41,11 +41,11 @@ rules('.StructureViewOverlay > .frame', {
   isolation: 'isolate',
 })
 
-export const componentMarkerStructureViewMaskColor = token(
+export const kitMarkerStructureViewMaskColor = token(
   'rgb(255 255 255 / 90%)',
   { name: 'component-marker-structure-view-mask-color' },
 )
-export const componentMarkerStructureViewMaskBlur = token('4px', {
+export const kitMarkerStructureViewMaskBlur = token('4px', {
   name: 'component-marker-structure-view-mask-blur',
 })
 
@@ -54,8 +54,8 @@ rules('.StructureViewOverlay > .frame::before', {
   position: 'absolute',
   inset: 0,
   'z-index': -1,
-  background: componentMarkerStructureViewMaskColor,
-  'backdrop-filter': token(componentMarkerStructureViewMaskBlur, {
+  background: kitMarkerStructureViewMaskColor,
+  'backdrop-filter': token(kitMarkerStructureViewMaskBlur, {
     toCSSString: (value, resolve) => `blur(${resolve(value)})`,
   }),
   // 每个框的逐帧几何数据由其宿主单独传入，不作为全局视觉状态。
@@ -67,7 +67,7 @@ rules('.StructureViewOverlay .labels', {
   overflow: 'hidden',
 })
 
-export const componentMarkerStructureViewLabelColor = token('#263645', {
+export const kitMarkerStructureViewLabelColor = token('#263645', {
   name: 'component-marker-structure-view-label-color',
 })
 
@@ -76,7 +76,7 @@ rules('.StructureViewOverlay .label', {
   'box-sizing': 'border-box',
   'max-width': '100%',
   padding: '1px 6px',
-  color: componentMarkerStructureViewLabelColor,
+  color: kitMarkerStructureViewLabelColor,
   font: '11px/16px system-ui, sans-serif',
   'white-space': 'normal',
   'overflow-wrap': 'anywhere',

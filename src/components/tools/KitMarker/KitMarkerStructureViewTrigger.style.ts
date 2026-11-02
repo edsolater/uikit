@@ -2,14 +2,14 @@
 import { rules, token } from '@/style-system'
 
 /** 激活器距视口右侧和底部的共同距离。 */
-export const componentMarkerStructureViewTriggerOffset = token('24px', {
+export const kitMarkerStructureViewTriggerOffset = token('24px', {
   name: 'component-marker-structure-view-trigger-offset',
 })
 
 rules('.ComponentMarkerStructureViewTrigger', {
   position: 'fixed',
-  right: componentMarkerStructureViewTriggerOffset,
-  bottom: componentMarkerStructureViewTriggerOffset,
+  right: kitMarkerStructureViewTriggerOffset,
+  bottom: kitMarkerStructureViewTriggerOffset,
   'z-index': 2147483647,
   'border-radius': '999px',
   'min-height': '44px',

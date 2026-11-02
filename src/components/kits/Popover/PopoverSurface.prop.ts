@@ -1,8 +1,8 @@
 /** PopoverSurface：复用已有宿主字段，锚点和位置保留来源。 */
 import { pick } from '@edsolater/fnkit'
 import { pivPropsDefinition } from '@/components/Piv/Piv.prop'
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { PopoverSurfaceProps } from './PopoverSurface'
 
 export const popoverSurfacePropsDefinition = {

@@ -2,8 +2,8 @@
  * 响应式列表组件。
  * 它基于 Solid 的 mapArray 维护子树复用，只负责列表结构，不解包 item 内部字段。
  */
-import { kit, type KitController } from '@/components/utils/kit'
-import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import { kit, type KitController } from '@/components/tools/kit'
+import type { ControllerCollection } from '@/components/tools/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import { loopPropsDefinition } from './Loop.prop'
 import {
@@ -16,7 +16,7 @@ import {
 } from '@/foundation'
 import { createDomRef } from '@/hooks'
 import { Piv } from '../../Piv/Piv'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 
 export type LoopProps<T> = ComponentDescriptionProps & {
   ref?: RefReceiver<LoopController<T>>

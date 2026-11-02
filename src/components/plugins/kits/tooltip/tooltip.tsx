@@ -12,8 +12,8 @@ import type { PivProps } from '../../../Piv/Piv'
 import {
   createPopoverVisibilityController,
   type PopoverVisibilityController,
-} from '@/components/Popover/createPopoverVisibilityController'
-import { PopoverSurface } from '@/components/Popover/PopoverSurface'
+} from '@/components/kits/Popover/createPopoverVisibilityController'
+import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
 import './tooltip.style'
 
 /** 字符串或组件模板及其Source；内容含义由调用方决定。 */

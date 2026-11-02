@@ -5,10 +5,10 @@
  *
  * 字段关联与编排留在组件，输入值仍由调用方拥有。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { fieldPropsDefinition } from './Field.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Flow } from '../Flow/Flow'
 import { Label, type LabelProps } from '../Label/Label'

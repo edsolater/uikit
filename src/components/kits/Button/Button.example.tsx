@@ -7,7 +7,7 @@ import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
 import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
-import { ComponentMarkerStructureViewTrigger } from '@/components/ComponentMarker/ComponentMarkerStructureViewTrigger'
+import { KitMarkerStructureViewTrigger } from '@/components/tools/KitMarker/KitMarkerStructureViewTrigger'
 import { Text } from '@/components/kits/Text/Text'
 import { Heading } from '@/components/kits/Heading/Heading'
 
@@ -216,7 +216,7 @@ export function ButtonExample() {
           </div>
         </div>
       </Article>
-      <ComponentMarkerStructureViewTrigger />
+      <KitMarkerStructureViewTrigger />
     </>
   )
 }

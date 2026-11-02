@@ -14,12 +14,12 @@ import {
   Article,
   Button,
   Card,
-  ComponentMarker,
+  KitMarker,
   Loop,
   Input,
   Piv,
   Popover,
-  ComponentMarkerStructureViewTrigger,
+  KitMarkerStructureViewTrigger,
   Table,
 } from '@/components'
 import '@/css/all-base.css'
@@ -75,7 +75,7 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentMarker
+          <KitMarker
             componentName="透明父"
             descriptionDisplay={display.read()}
           >
@@ -85,9 +85,9 @@ describe('组件结构查看', () => {
                 <Piv>浮层内容</Piv>
               </Popover>
             </Piv>
-            <ComponentMarker componentName="裸子" descriptionDisplay>
+            <KitMarker componentName="裸子" descriptionDisplay>
               {content.read()}
-            </ComponentMarker>
+            </KitMarker>
             <Piv as="table">
               <Piv as="tbody">
                 <Piv as="tr">
@@ -98,16 +98,16 @@ describe('组件结构查看', () => {
             <Piv as="select">
               <Piv as="option">原选项</Piv>
             </Piv>
-          </ComponentMarker>
-          <ComponentMarker componentName="视口外父" descriptionDisplay={false}>
+          </KitMarker>
+          <KitMarker componentName="视口外父" descriptionDisplay={false}>
             <Piv style={{ position: 'fixed', top: '-1000px', height: '0px' }}>
               <Button style={{ position: 'fixed', top: '8px', left: '8px' }}>
                 固定子动作
               </Button>
             </Piv>
-          </ComponentMarker>
+          </KitMarker>
           <Button>外部动作</Button>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -173,7 +173,7 @@ describe('组件结构查看', () => {
         <>
           <Button description={description}>确认</Button>
           <Show when={showFab.read()}>
-            <ComponentMarkerStructureViewTrigger />
+            <KitMarkerStructureViewTrigger />
           </Show>
         </>
       ),
@@ -229,7 +229,7 @@ describe('组件结构查看', () => {
             <Popover trigger="补充">浮层正文</Popover>
             <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
           </Article>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -299,19 +299,19 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentMarker componentName="多根" description="文本和兄弟节点">
+          <KitMarker componentName="多根" description="文本和兄弟节点">
             文本根<span>元素根</span>
             <Show when={visible.read()}>
               <Button>动态动作</Button>
             </Show>
-          </ComponentMarker>
+          </KitMarker>
           <select>
-            <ComponentMarker componentName="选项组">
+            <KitMarker componentName="选项组">
               <option>甲</option>
               <option>乙</option>
-            </ComponentMarker>
+            </KitMarker>
           </select>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -345,7 +345,7 @@ describe('组件结构查看', () => {
           <Popover trigger="打开补充" description="原生浮层">
             真实浮层内容
           </Popover>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -395,7 +395,7 @@ describe('组件结构查看', () => {
         <>
           <Button description={description}>确认</Button>
           <Loading fallback={<p>读取用途说明</p>}>
-            <ComponentMarkerStructureViewTrigger />
+            <KitMarkerStructureViewTrigger />
           </Loading>
         </>
       ),
@@ -425,13 +425,13 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentMarker
+          <KitMarker
             componentName="用途框"
             description="很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外"
           >
             <Piv style={{ width: '96px', height: '42px' }}>真实内容</Piv>
-          </ComponentMarker>
-          <ComponentMarkerStructureViewTrigger />
+          </KitMarker>
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -466,10 +466,10 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentMarker componentName="整页内容">
+          <KitMarker componentName="整页内容">
             <Piv style={{ width: '100vw', height: '100vh' }}>真实页面</Piv>
-          </ComponentMarker>
-          <ComponentMarkerStructureViewTrigger />
+          </KitMarker>
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -537,23 +537,23 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(() => {
       const child = (
-        <ComponentMarker componentName="子框">
+        <KitMarker componentName="子框">
           <Piv style={{ width: '160px', height: '80px' }}>内容</Piv>
-        </ComponentMarker>
+        </KitMarker>
       )
       return (
         <>
-          <ComponentMarker componentName="父框">
+          <KitMarker componentName="父框">
             <Piv style={{ width: '220px', height: '160px' }}>{child}</Piv>
-          </ComponentMarker>
-          <ComponentMarker componentName="多根">
+          </KitMarker>
+          <KitMarker componentName="多根">
             <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
             <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
-          </ComponentMarker>
+          </KitMarker>
           <Article as={Card} style={{ width: '200px', height: '80px' }}>
             同框内容
           </Article>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       )
     }, host)

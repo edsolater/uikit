@@ -7,11 +7,11 @@ import { Piv } from '../../../Piv/Piv'
 import { usePlugin } from '../../usePlugin'
 import { tooltip, type TooltipController } from './tooltip'
 import { Popover } from '@/components/kits/Popover/Popover'
-import { PopoverSurface } from '@/components/Popover/PopoverSurface'
+import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
 import {
   createPopoverVisibilityController,
   type PopoverVisibilityController,
-} from '@/components/Popover/createPopoverVisibilityController'
+} from '@/components/kits/Popover/createPopoverVisibilityController'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined

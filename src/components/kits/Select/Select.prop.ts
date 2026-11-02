@@ -1,6 +1,6 @@
 /** Select：值与选项保留来源，回调由原生 change 事件读取。 */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { SelectProps } from './Select'
 
 export const selectPropsDefinition = {

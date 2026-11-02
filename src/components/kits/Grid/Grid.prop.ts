@@ -1,6 +1,6 @@
 /** Grid：按当前列数取值，保留未声明时的一列默认值。 */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { GridProps } from './Grid'
 
 export const gridPropsDefinition = {

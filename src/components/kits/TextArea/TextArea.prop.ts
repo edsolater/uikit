@@ -1,6 +1,6 @@
 /** TextArea：保留文本、提示与禁用来源，原生字段和回调按当前值消费。 */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { TextAreaProps } from './TextArea'
 
 export const textAreaPropsDefinition = {

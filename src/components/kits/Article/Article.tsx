@@ -3,10 +3,10 @@
  */
 import { toArray } from '@edsolater/fnkit'
 import { createComponent, mergeProps, omitProps, type JSX } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ControllerCollection } from '@/components/tools/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { articlePropsDefinition } from './Article.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'

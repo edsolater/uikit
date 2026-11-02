@@ -9,7 +9,7 @@
 ## 项目阅读顺序
 
 - 新增或修改组件及其样式前，先读本项目的 [样式文件写法](docs/style/样式文件写法.md)，再决定样式落点；组件样式只能写入 `.style.ts`，`.css` 仅限 App 背景、reset 等根级职责，不能承载组件规则。
-- 新增或修改 UI 组件前，同时读 [组件职责与样式归属](docs/guide/组件职责与样式归属.md) 和 [组件结构查看](docs/guide/组件结构查看.md)。验收必须核对各层组件的 `ComponentMarker`、实际组件依赖与样式所有权，不能以类型或页面运行通过代替。
+- 新增或修改 UI 组件前，同时读 [组件职责与样式归属](docs/guide/组件职责与样式归属.md) 和 [组件结构查看](docs/guide/组件结构查看.md)。验收必须核对各层组件的 `KitMarker`、实际组件依赖与样式所有权，不能以类型或页面运行通过代替。
 - 查当前仓库结构、模块边界和调用链时读 [Architecture.md](Architecture.md)。
 - 写 Guide 或 Plan 时读 [Guide 写法](docs/how-to-write-guide.md) 和 [Plan 写法](docs/how-to-write-plan.md)。
 

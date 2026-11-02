@@ -21,7 +21,7 @@ Props 与 Controller 的缓冲层约定见[组件 Props 与 Controller 状态](d
 
 ## 组件结构查看
 
-- [组件定位框](docs/guide/组件结构查看.md)：组件以`ComponentMarker`声明边界与用途，App手动放入`ComponentMarkerStructureViewTrigger`。开关初始关闭，开启后显示框内标注并弱化内容；Text与Heading的原文字显示为空但保留排版，自定义组件按Guide接入。Dev的`/examples/button`可直接体验。
+- [组件定位框](docs/guide/组件结构查看.md)：组件以`KitMarker`声明边界与用途，App手动放入`KitMarkerStructureViewTrigger`。开关初始关闭，开启后显示框内标注并弱化内容；Text与Heading的原文字显示为空但保留排版，自定义组件按Guide接入。Dev的`/examples/button`可直接体验。
 
 ## 项目结构
 

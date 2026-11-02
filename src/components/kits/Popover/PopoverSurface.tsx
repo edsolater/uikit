@@ -5,11 +5,11 @@
  *
  * 让提示与按钮浮层共享同一个显示实体。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { popoverSurfacePropsDefinition } from './PopoverSurface.prop'
 import { val, type Source, type JSX } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import './PopoverSurface.style'
 

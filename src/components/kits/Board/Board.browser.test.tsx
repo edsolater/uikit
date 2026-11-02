@@ -13,7 +13,7 @@ import { Heading } from '../Heading/Heading'
 import { MessageBoard } from '../MessageBoard/MessageBoard'
 import { createState, render } from '@/foundation'
 import { cssRoot } from '@/style-system'
-import { componentBoundaries } from '@/components/ComponentMarker/ComponentMarker'
+import { componentBoundaries } from '@/components/tools/KitMarker/KitMarker'
 import '@/css/all-base.css'
 
 test('Article和Card裁剪自身边界，不改裸标签和Board网格', () => {

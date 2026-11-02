@@ -5,10 +5,10 @@
  *
  * 统一内容空间，不接管子组件的样式。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { gridPropsDefinition } from './Grid.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { type Source, type JSX, val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Grid.style'

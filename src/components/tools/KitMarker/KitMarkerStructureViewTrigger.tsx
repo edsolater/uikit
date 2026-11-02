@@ -1,5 +1,5 @@
 /**
- * ComponentMarkerStructureViewTrigger 是 ComponentMarker 结构查看模式的激活器。
+ * KitMarkerStructureViewTrigger 是 KitMarker 结构查看模式的激活器。
  *
  * 初始关闭，点击后才显示覆盖层；卸载时释放本次查看。
  *
@@ -7,14 +7,14 @@
  */
 import { createState, val, Show } from '@/foundation'
 import { Button } from '@/components/kits/Button/Button'
-import { StructureViewControl } from './ComponentMarker'
+import { StructureViewControl } from './KitMarker'
 import { StructureViewOverlay } from './StructureViewOverlay'
-import './ComponentMarkerStructureViewTrigger.style'
+import './KitMarkerStructureViewTrigger.style'
 
 /**
  * 手动加载组件定位框开关，切换不重建原组件。
  */
-export function ComponentMarkerStructureViewTrigger() {
+export function KitMarkerStructureViewTrigger() {
   let control!: HTMLButtonElement
   const enabled = createState(false)
   const pressed = enabled.map((current) =>

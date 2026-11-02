@@ -15,10 +15,10 @@ import { getOwner, runWithOwner, untrack } from '@/foundation/reactivity'
 import type { RefReceiver } from '@/hooks/createRef'
 import type { Token } from '@/style-system'
 import {
-  ComponentMarker,
+  KitMarker,
   type ComponentDescriptionProps,
-  type ComponentMarkerProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+  type KitMarkerProps,
+} from '@/components/tools/KitMarker/KitMarker'
 import {
   createComponentPropsDirector,
   type DirectedProps,
@@ -72,7 +72,7 @@ export interface KitDefinition<
   marker?: (
     props: Props,
   ) => Pick<
-    ComponentMarkerProps,
+    KitMarkerProps,
     'defaultDescriptionDisplay' | 'descriptionOnly'
   >
   directorOptions?: (input: Props) => PropsDirectorOptions<Props, Definition>
@@ -144,7 +144,7 @@ export function kit<
       props = directed.props as Props
     }
     const marker = definition.marker?.(props)
-    return createComponent(ComponentMarker, {
+    return createComponent(KitMarker, {
       componentName: definition.name,
       get description() {
         return props.description

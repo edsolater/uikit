@@ -6,10 +6,10 @@
  * 让字段标题和其他界面都能组合相同的帮助组件。
  */
 import { val, type Source } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import { tooltip } from '@/components/plugins/kits/tooltip/tooltip'
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { helpPropsDefinition } from './Help.prop'
 import './Help.style'

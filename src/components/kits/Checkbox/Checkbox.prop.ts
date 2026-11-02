@@ -1,6 +1,6 @@
 /** Checkbox：勾选与标题保留来源，onChange 保留回调身份。 */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { CheckboxProps } from './Checkbox'
 
 export const checkboxPropsDefinition = {

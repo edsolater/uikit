@@ -6,8 +6,8 @@
  * 让可选 Controller 沿用原 Props 消费链，不给 Text 增加 as 入口。
  */
 import { pivPropsDefinition } from '@/components/Piv/Piv.prop'
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { TextProps } from './Text'
 
 const { as: _as, ...textPivPropsDefinition } = pivPropsDefinition

@@ -15,7 +15,7 @@ import {
 } from '@/foundation'
 import { useBrowserAnimationFrame } from '@/hooks/useBrowserAnimationFrame'
 import { Piv } from '@/components/Piv/Piv'
-import { componentBoundaries, type ComponentBoundary } from './ComponentMarker'
+import { componentBoundaries, type ComponentBoundary } from './KitMarker'
 import './StructureViewOverlay.style'
 
 /** 一帧中的真实边界，单位为视口像素。 */

@@ -11,10 +11,9 @@
 Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System 命名](src/style-system/doc/样式系统命名.md)。
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、domRef 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
-- `src/components/kits`：对外 UI 组件。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
-- `src/components/ComponentMarker`：Piv之上组件的透明边界与用途说明，以及手动FAB控制的结构显示；不改变原主体或自动挂载开关。
+- `src/components/kits`：可供组合的界面构件，包括基础承载与完整用途组件。Popover 的共享浮层、显隐控制与触发组合共同归属 `kits/Popover`。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
 - `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
-- `src/components/utils`：多个组件共同使用、但不具有独立组件或 plugin 身份的辅助能力。
+- `src/components/tools`：服务构件定义、控制与检查的工具，包括 `kit` 创建入口、Props 干预、Controller 登记与 `KitMarker`。`tools/KitMarker` 为 Kit 构件及使用方组合提供透明边界、用途说明和手动结构查看，不改变原主体或自动挂载开关。
 - `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
 - `src/hooks`：使用 Foundation 的派生组合与浏览器协作能力。领域入口和内部阅读路线见 [hooks SPEC](src/hooks/SPEC.md)。
 - `src/color-system`：颜色信息与 JS 数值计算。材料先经过层级变换，再应用环境得到最终颜色；不依赖 JSS 或生成 CSS。
@@ -37,7 +36,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 ```txt
 调用方
   -> kit 组件
-    -> ComponentMarker 记录透明边界，保留原主体
+    -> KitMarker 记录透明边界，保留原主体
       -> Piv 管理声明与 plugins
         -> 内部 Dode 创建并绑定真实元素
           -> Foundation 的运行时接入
@@ -45,13 +44,13 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
               -> DOM
 ```
 
-kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期，Dode 执行 DOM 绑定。快捷 draggable/droppable 未声明或字面 false 不创建该快捷实例；动态 Source 关闭释放消费作用域，返回声明仍经过同一 DOM 绑定链。手动 plugin 独立沿原声明执行，同一能力选择一种接入方式；快捷 false 不撤销手动 plugin。显式 options.disabled 沿原插件禁用语义创建能力。组件可以使用 hooks、component utils 和 Style System；基础设施不反向依赖具体 kit。
+kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期，Dode 执行 DOM 绑定。快捷 draggable/droppable 未声明或字面 false 不创建该快捷实例；动态 Source 关闭释放消费作用域，返回声明仍经过同一 DOM 绑定链。手动 plugin 独立沿原声明执行，同一能力选择一种接入方式；快捷 false 不撤销手动 plugin。显式 options.disabled 沿原插件禁用语义创建能力。组件可以使用 hooks、构件工具 和 Style System；渲染基础设施与插件运行机制不依赖具体用途组件；tooltip 等具体插件可消费共享浮层。
 
 ## 组件定位框
 
-kit在定义处以ComponentMarker声明静态身份及可选默认用途，使用处的description覆盖默认值。Marker用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
+kit在定义处以KitMarker声明静态身份及可选默认用途，使用处的description覆盖默认值。Marker用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
 
-App手动放入ComponentMarkerStructureViewTrigger，作为ComponentMarker结构查看模式的激活器。它拥有初始关闭的本地状态；开启才挂载内部Overlay。Overlay逐帧测量真实边界及激活器范围，通过Piv为每个实际矩形创建全尺寸显示宿主：负一级伪元素承载白色半透明和背景模糊，自身名称按父到子顺序绘制，Canvas仅在上层描边。同完整矩形的名称分行，多区域组件仅在首矩形标名；所有名称受所属框宽高约束。遮罩与描边共用本帧激活器范围保留透明洞，关闭即释放显示层与帧循环，不重建原组件或清空状态。激活器与内部覆盖层各自拥有同名.style.ts；Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
+App手动放入KitMarkerStructureViewTrigger，作为KitMarker结构查看模式的激活器。它拥有初始关闭的本地状态；开启才挂载内部Overlay。Overlay逐帧测量真实边界及激活器范围，通过Piv为每个实际矩形创建全尺寸显示宿主：负一级伪元素承载白色半透明和背景模糊，自身名称按父到子顺序绘制，Canvas仅在上层描边。同完整矩形的名称分行，多区域组件仅在首矩形标名；所有名称受所属框宽高约束。遮罩与描边共用本帧激活器范围保留透明洞，关闭即释放显示层与帧循环，不重建原组件或清空状态。激活器与内部覆盖层各自拥有同名.style.ts；Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
 
 共同descriptionDisplay布尔属性由Marker处理显式值与定义默认，普通组件缺省true，Text按外部description实际内容决定默认。仅在Overlay挂载的受管消费中归一显示值，帧循环不直接读取异步Source。false元素根及原生浮层根通过专属模式属性保持opacity为0；裸文字根以透明色Highlight保留原节点，Comment范围同时排除后代定位框。Overlay负责同步与清理，不另建开关、组件树或项目私有隐藏逻辑；普通样式及其Source持续更新，不用旧opacity快照覆盖。
 
@@ -59,19 +58,19 @@ Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p�
 
 ## Popover 控制与接入
 
-`src/components/Popover` 拥有通用浮层实体 `PopoverSurface` 与 `createPopoverVisibilityController`。Surface统一原生popover、可选外部锚点、四向定位与完整border-shape轮廓。Geometry通过锚点inset与容器尺寸把目标中心转换为局部坐标，Paint一次绘制圆角主体、箭头、背景、边框和阴影。回退查询翻向，边缘处箭头基点避开圆角并斜指目标；绘制层不撑内容布局，命中沿同一Surface接入阅读交互。无锚点时显示圆角矩形。
+`src/components/kits/Popover` 拥有通用浮层实体 `PopoverSurface` 与 `createPopoverVisibilityController`。Surface统一原生popover、可选外部锚点、四向定位与完整border-shape轮廓。Geometry通过锚点inset与容器尺寸把目标中心转换为局部坐标，Paint一次绘制圆角主体、箭头、背景、边框和阴影。回退查询翻向，边缘处箭头基点避开圆角并斜指目标；绘制层不撑内容布局，命中沿同一Surface接入阅读交互。无锚点时显示圆角矩形。
 
-按钮组合 `kits/Popover` 复用Button触发动作，拥有标题与正文编排。tooltip插件负责简短辅助信息的悬停／焦点／Escape、延迟关闭与描述关联，不依赖具体kit。两者消费同一Surface及其公开材料Token，tooltip仅在当前浮层的局部类地址选择紧凑暗色材料。`kits/Help` 声明即呈现独立帮助入口，通过自己的 tooltip 属性使用同一插件；Label 判断 tooltip 非空时才在标题末尾组合 Help，tooltipTrigger 传给 Help.trigger 替换问号内的显示内容。字符串、数字0、组件与JSX模板持续更新，空值或空字符串不创建浮层。
+按钮组合 `kits/Popover/Popover.tsx` 复用Button触发动作，拥有标题与正文编排。tooltip插件负责简短辅助信息的悬停／焦点／Escape、延迟关闭与描述关联，不依赖带触发入口的 Popover 组合。两者消费同一Surface及其公开材料Token，tooltip仅在当前浮层的局部类地址选择紧凑暗色材料。`kits/Help` 声明即呈现独立帮助入口，通过自己的 tooltip 属性使用同一插件；Label 判断 tooltip 非空时才在标题末尾组合 Help，tooltipTrigger 传给 Help.trigger 替换问号内的显示内容。字符串、数字0、组件与JSX模板持续更新，空值或空字符串不创建浮层。
 
 Controller返回 `[controller, controllerBindings]`：前者拥有身份、只读isOpen及显示操作，后者建立并释放触发目标与浮层的DOM连接。isOpen由原生浮层的实际打开状态更新，取消beforetoggle不会被报告为成功打开。
 
 ## kit 组件控制与样式
 
-组件 ref 未接入时直接执行原 Button 核心；接入时才走通用 Component Props Director，关系见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。`components/utils/componentPropsDirector.ts` 按运行时定义为缺省来源在构建时建立字段State，其余字段首次读取时缓存State，工厂与State统一归组件作用域；按state-source-view/state-value-view/state-untracked三种视图输出；only-through-prop字段直接读取上游，不创建State或Controller字段，ref采用此模式。字段描述与类型同归属：Dode提供DOM字段、公共能力提供快捷字段与默认入口、Piv组合自身来源描述、ComponentMarker提供说明描述；Button.prop.ts按继承层次spread组成完整字段表，只定义自身字段及分组默认来源；状态解析器通过 `createState(() => props[statusName])` 在创建时连接来源，不用 Effect 复制状态。`components/utils/kit.ts` 用 `kit(definition, core)` 统一定义入口，name 是 Marker 与核心 Context 的共同身份，description 提供默认说明，availableProps 复用完整字段定义。kit 管理 ref 门控、原 Director、登记、换接及唯一透明 Marker；Button 核心只保留分类、状态和 Piv JSX，Button.controllers 提供当前受控实例集合。所有组件 Controller 的 `.props` 统一提供输入干预；Context 的 `exposeController` 接入组件自己的顶层能力，没有自定义能力时无需公开空对象。Context 的 name 与可解构 onCleanup 属于实例能力，清理绑定原 owner；它不参与既有 KitContext 祖先数据，也不要求 App 根。
+组件 ref 未接入时直接执行原 Button 核心；接入时才走通用 Component Props Director，关系见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。`components/tools/componentPropsDirector.ts` 按运行时定义为缺省来源在构建时建立字段State，其余字段首次读取时缓存State，工厂与State统一归组件作用域；按state-source-view/state-value-view/state-untracked三种视图输出；only-through-prop字段直接读取上游，不创建State或Controller字段，ref采用此模式。字段描述与类型同归属：Dode提供DOM字段、公共能力提供快捷字段与默认入口、Piv组合自身来源描述、KitMarker提供说明描述；Button.prop.ts按继承层次spread组成完整字段表，只定义自身字段及分组默认来源；状态解析器通过 `createState(() => props[statusName])` 在创建时连接来源，不用 Effect 复制状态。`components/tools/kit.ts` 用 `kit(definition, core)` 统一定义入口，name 是 Marker 与核心 Context 的共同身份，description 提供默认说明，availableProps 复用完整字段定义。kit 管理 ref 门控、原 Director、登记、换接及唯一透明 Marker；Button 核心只保留分类、状态和 Piv JSX，Button.controllers 提供当前受控实例集合。所有组件 Controller 的 `.props` 统一提供输入干预；Context 的 `exposeController` 接入组件自己的顶层能力，没有自定义能力时无需公开空对象。Context 的 name 与可解构 onCleanup 属于实例能力，清理绑定原 owner；它不参与既有 KitContext 祖先数据，也不要求 App 根。
 
 Text、Label 与 Help 通过 kit 创建，分别公开自身 Controller 和 .controllers。Text.prop.ts 复用 Piv 与说明定义，移除 as，block/p 保留创建时选择；Text 的 marker getter 保留说明真值控制和 descriptionOnly。Label.prop.ts 只定义关联目标、标题、提示内容与说明字段，不继承 Piv 的额外能力。Label 核心拥有字段标题与 Help 组合，Help 拥有问号及其样式，提示插件继续管理浮层生命周期。各组件的样式归同名 .style.ts，不提供额外 Token 集合。
 
-公开的 kits 组件与 PopoverSurface 已统一通过 kit 创建；Piv、Dode、ComponentMarker、StructureViewOverlay 及定位开关属于渲染或控制基础设施，不递归接入。定位开关继续使用 StructureViewControl 跳过自身标注。组件的 .prop.ts 描述原 Props，按继承关系复用拥有者字段；Card 直接复用 Board 的字段表与承载 renderer，两者分别拥有 kit 身份与实例集合。InputValidity 的字段描述与原有效性能力同归属，Input 的旧 CSS 保持原样，本次不迁移样式。
+公开的 kits 组件与 PopoverSurface 已统一通过 kit 创建；Piv、Dode、KitMarker、StructureViewOverlay 及定位开关属于渲染或控制基础设施，不递归接入。定位开关继续使用 StructureViewControl 跳过自身标注。组件的 .prop.ts 描述原 Props，按继承关系复用拥有者字段；Card 直接复用 Board 的字段表与承载 renderer，两者分别拥有 kit 身份与实例集合。InputValidity 的字段描述与原有效性能力同归属，Input 的旧 CSS 保持原样，本次不迁移样式。
 
 Board、Card、Loop、Table、Article 保留原泛型调用及精确实例 ref。TypeScript 包装丢失的调用关联只在组件定义处作一次类型连接，不增加运行包装。异构实例的 `.controllers.props` 集合只公开共同安全字段：Board/Card 集合不暴露 Tag 相关节点与插件输入，Loop 集合不暴露 each，Table 集合不暴露 data/keys/renderParts；这些字段通过精确实例 ref 操作；Loop.children 与 Field.children 仅由 Props 提供构建工厂，不属于 Controller。Article 的 ref 归自身，先用现有 mergeProps 固定 article 身份，再由 getter 形式的原生 omitProps 排除自身 ref，直接 createComponent 转交完整字段视图；缺省字段也保留读取通路，承载组件额外字段只透传。foundation/render.ts 以同一函数身份接出 Solid 原生 omit 为 omitProps，只补齐原生已支持的 getter 输入重载，不实现过滤算法。PopoverController 顶层公开 PopoverVisibilityController 的身份、isOpen 与浮层操作，`.props` 提供通用输入干预；两种机制不因字段同名而自动关联。Input 顶层公开最终 invalid 状态，输入干预继续经过原有效性规则。
 
@@ -124,7 +123,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 
 - 碎片的领域发生在定义端。通用 Mixin 不感知 Button；可复用 Pieces 按描述目标和领域归属抽象层，Button 专属定义保留在 Button.style.ts；Token 的创建参数归一为七个固定 key；源码迁移已完成。
 - `src/style-system` 提供 Rule 登记、Condition 寻址、声明输入转换、统一 Token 模型、编译和挂载能力，以及可复用 Pieces 和 Theme 配方；具体组件 selector 与业务分类留在组件自己的 style 文件。
-- `src/components/Piv`、`src/components/plugins`、`src/hooks` 和 `src/style-system` 都不能反向依赖具体 kit。
+- `src/components/Piv`、插件运行机制、`src/hooks` 和 `src/style-system` 不反向依赖具体用途 kit。tooltip 等具体插件可消费 `kits/Popover` 的共享 Surface、显隐 Controller 与公开 Token，不依赖组合 Button 的 `Popover`。
 - `.example.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
 - `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。
 - `src/index.ts` 和各目录 `index.ts` 只表达公开契约，不承载 demo、测试或新的业务实现。

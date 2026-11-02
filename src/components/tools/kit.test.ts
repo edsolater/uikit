@@ -2,7 +2,7 @@
 import { expect, expectTypeOf, test } from 'vitest'
 import type { Source, State } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import {
   Button,
   type ButtonController,

@@ -7,13 +7,13 @@
  */
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import {
   createVariantPropsParser,
   type VariantProps,
 } from '../utils/parseVariantProps'
-import { kit, type KitController } from '@/components/utils/kit'
-import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import { kit, type KitController } from '@/components/tools/kit'
+import type { ControllerCollection } from '@/components/tools/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import type { JSX } from '@/foundation'
 import { boardPropsDefinition, boardVariantGroups, getBoardPropsDirectorOptions } from './Board.prop'

@@ -1,10 +1,10 @@
 /** Button 的运行时字段协议与候选定义；只有启用组件 ref 才使用可写 Props 准备。 */
 import { createVariantPropsParser } from '../utils/parseVariantProps'
-import type { DefaultPropSources, PropsDefinition } from '../../utils/componentPropsDirector'
+import type { DefaultPropSources, PropsDefinition } from '../../tools/componentPropsDirector'
 import type { ButtonProps } from './Button'
 import { toRecord } from '@edsolater/fnkit'
 import { pivDefaultSources, pivPropsDefinition } from '../../Piv/Piv.prop'
-import { componentDescriptionPropsDefinition } from '../../ComponentMarker/ComponentMarker.prop'
+import { componentDescriptionPropsDefinition } from '../../tools/KitMarker/KitMarker.prop'
 
 export const buttonVariantGroups = [
   { groupName: 'appearance', candidates: ['filled', 'outlined', 'plain'] },

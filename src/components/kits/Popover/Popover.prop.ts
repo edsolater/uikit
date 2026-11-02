@@ -5,8 +5,8 @@
  *
  * 通用 Props Controller 不冒充原有的浮层操作 Controller。
  */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition, DefaultPropSources } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition, DefaultPropSources } from '@/components/tools/componentPropsDirector'
 import { createVariantPropsParser } from '../utils/parseVariantProps'
 import type { PopoverProps } from './Popover'
 

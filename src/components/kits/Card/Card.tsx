@@ -5,7 +5,7 @@
  *
  * 默认布局由Card自身维护，内部排列由调用方组合Flow或Grid。
  */
-import { kit } from '@/components/utils/kit'
+import { kit } from '@/components/tools/kit'
 import type { JSX } from '@/foundation'
 import { boardPropsDefinition, getBoardPropsDirectorOptions } from '../Board/Board.prop'
 import type { PivSupportedElementTag } from '../../Piv/domMap'

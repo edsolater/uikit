@@ -5,10 +5,10 @@
  *
  * 调用方决定正文的信息意义及其布局。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { detailsPropsDefinition } from './Details.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 /** Details 的声明输入；初始状态通过 Props 表达。 */

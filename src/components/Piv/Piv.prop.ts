@@ -1,5 +1,5 @@
 import type { PivProps } from './Piv'
-import type { DefaultPropSources, PropsDefinition } from '../utils/componentPropsDirector'
+import type { DefaultPropSources, PropsDefinition } from '../tools/componentPropsDirector'
 import { dodeDOMPropsDefinition } from './Dode.prop'
 import { publicCapabilityDefaultSources, publicCapabilityPropsDefinition } from './plugin/publicCapabilities.prop'
 

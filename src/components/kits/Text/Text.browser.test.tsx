@@ -21,7 +21,7 @@ import { createRef } from '@/hooks/createRef'
 import {
   Button,
   Piv,
-  ComponentMarkerStructureViewTrigger,
+  KitMarkerStructureViewTrigger,
   Text,
   type TextProps,
   type TextController,
@@ -59,7 +59,7 @@ describe('Text', () => {
     dispose = render(() => <>
       <Text block ref={receive} />
       <Text>普通文字</Text>
-      <ComponentMarkerStructureViewTrigger />
+      <KitMarkerStructureViewTrigger />
     </>, host)
     const element = host.querySelector<HTMLElement>('.Text')!
     expect(Text.controllers.length).toBe(1)
@@ -99,7 +99,7 @@ describe('Text', () => {
           </Piv>
           <Button>按钮原文字</Button>
           <Show when={showFab.read()}>
-            <ComponentMarkerStructureViewTrigger />
+            <KitMarkerStructureViewTrigger />
           </Show>
         </>
       ),
@@ -173,7 +173,7 @@ describe('Text', () => {
           <Text p descriptionDisplay>
             {42}
           </Text>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -252,7 +252,7 @@ describe('Text', () => {
           >
             无需等待的文字
           </Text>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,

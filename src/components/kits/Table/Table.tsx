@@ -5,14 +5,14 @@
  *
  * 调用方提供内容与比例，不接管表格 DOM；排序、筛选和分页由外部负责。
  */
-import { kit, type KitController } from '@/components/utils/kit'
-import type { ControllerCollection } from '@/components/utils/controllerRegistry'
+import { kit, type KitController } from '@/components/tools/kit'
+import type { ControllerCollection } from '@/components/tools/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import { tablePropsDefinition } from './Table.prop'
 import { For, stateView, val, type Source, type JSX } from '@/foundation'
-import { toJSX, type JSXable } from '../../utils/toJSX'
+import { toJSX, type JSXable } from '../../tools/toJSX'
 import { Piv } from '../../Piv/Piv'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import './Table.style'
 
 type TableDataRow = Record<PropertyKey, unknown>

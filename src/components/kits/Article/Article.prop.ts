@@ -6,8 +6,8 @@
  * 承载组件额外字段原样透传，不虚构 Article 不拥有的 Controller 字段。
  */
 import { pivPropsDefinition } from '@/components/Piv/Piv.prop'
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { ArticleProps } from './Article'
 
 export const articlePropsDefinition = {

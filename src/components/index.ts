@@ -5,17 +5,17 @@ export * from './Piv/plugin/runPlugin'
 export * from './Piv/Piv'
 export * from './Piv/type'
 export {
-  ComponentMarker,
-  type ComponentMarkerProps,
+  KitMarker,
+  type KitMarkerProps,
   type ComponentDescriptionProps,
-} from './ComponentMarker/ComponentMarker'
-export { ComponentMarkerStructureViewTrigger } from './ComponentMarker/ComponentMarkerStructureViewTrigger'
-export { componentMarkerStructureViewTriggerOffset } from './ComponentMarker/ComponentMarkerStructureViewTrigger.style'
+} from './tools/KitMarker/KitMarker'
+export { KitMarkerStructureViewTrigger } from './tools/KitMarker/KitMarkerStructureViewTrigger'
+export { kitMarkerStructureViewTriggerOffset } from './tools/KitMarker/KitMarkerStructureViewTrigger.style'
 export {
-  componentMarkerStructureViewMaskColor,
-  componentMarkerStructureViewMaskBlur,
-  componentMarkerStructureViewLabelColor,
-} from './ComponentMarker/StructureViewOverlay.style'
+  kitMarkerStructureViewMaskColor,
+  kitMarkerStructureViewMaskBlur,
+  kitMarkerStructureViewLabelColor,
+} from './tools/KitMarker/StructureViewOverlay.style'
 export * from './kits/Loop/Loop'
 export * from './kits/Flow/Flow'
 export * from './kits/Page/Page'
@@ -34,9 +34,9 @@ export * from './kits/Label/Label'
 export * from './kits/Help/Help'
 export * from './kits/Heading/Heading'
 export * from './kits/Popover/Popover'
-export * from './Popover/createPopoverVisibilityController'
-export * from './Popover/PopoverSurface'
-export * from './Popover/PopoverSurface.style'
+export * from './kits/Popover/createPopoverVisibilityController'
+export * from './kits/Popover/PopoverSurface'
+export * from './kits/Popover/PopoverSurface.style'
 export * from './kits/Card/Card'
 export {
   Board,
@@ -68,16 +68,16 @@ export {
   type TooltipOptions,
   type TooltipController,
 } from './plugins/kits/tooltip/tooltip'
-export * from './utils/defaultProps'
-export * from './utils/toJSX'
-export * from './utils/type'
-export * from './utils/variant'
+export * from './tools/defaultProps'
+export * from './tools/toJSX'
+export * from './tools/type'
+export * from './tools/variant'
 
 export * from './kits/Grid/Grid'
 export * from './kits/Field/Field'
 export * from './kits/NavigationRegion/NavigationRegion'
 
-export * from './utils/kit'
+export * from './tools/kit'
 export type {
   PropsReadMode,
   PropsDefinition,
@@ -85,6 +85,6 @@ export type {
   PropsController,
   DefaultPropSources,
   PropsDirectorOptions,
-} from './utils/componentPropsDirector'
+} from './tools/componentPropsDirector'
 export { pivPropsDefinition, pivDefaultSources } from './Piv/Piv.prop'
-export { componentDescriptionPropsDefinition } from './ComponentMarker/ComponentMarker.prop'
+export { componentDescriptionPropsDefinition } from './tools/KitMarker/KitMarker.prop'

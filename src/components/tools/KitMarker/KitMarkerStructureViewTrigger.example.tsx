@@ -1,5 +1,5 @@
 /**
- * ComponentMarker 结构查看激活器的使用示例。
+ * KitMarker 结构查看激活器的使用示例。
  *
  * 提供可手动开启、关闭的组件身份与用途标注。
  *
@@ -10,7 +10,7 @@ import {
   Card,
   Flow,
   Heading,
-  ComponentMarkerStructureViewTrigger,
+  KitMarkerStructureViewTrigger,
   Text,
 } from '@/components'
 import { createState, val } from '@/foundation'
@@ -18,7 +18,7 @@ import { createState, val } from '@/foundation'
 /**
  * 显示可操作的计数卡片；查看模式关闭后继续保留当前计数。
  */
-export function ComponentMarkerStructureViewTriggerExample() {
+export function KitMarkerStructureViewTriggerExample() {
   const count = createState(0)
   return (
     <Flow>
@@ -36,7 +36,7 @@ export function ComponentMarkerStructureViewTriggerExample() {
           </Button>
         </Flow>
       </Card>
-      <ComponentMarkerStructureViewTrigger />
+      <KitMarkerStructureViewTrigger />
     </Flow>
   )
 }

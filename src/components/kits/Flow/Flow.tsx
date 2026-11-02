@@ -5,10 +5,10 @@
  *
  * 排列关系由组件表达，子组件继续拥有自己的外观。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { flowPropsDefinition } from './Flow.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { type Source, type JSX, val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Flow.style'

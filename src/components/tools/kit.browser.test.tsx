@@ -6,7 +6,7 @@ import { Piv } from '@/components/Piv/Piv'
 import {
   componentBoundaries,
   type ComponentDescriptionProps,
-} from '@/components/ComponentMarker/ComponentMarker'
+} from '@/components/tools/KitMarker/KitMarker'
 import type { KitController } from './kit'
 import { kit, type KitComponentContext } from './kit'
 

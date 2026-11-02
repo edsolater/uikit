@@ -2,14 +2,14 @@
  * 这个文件定义基础 Popover 组件。
  * 它负责触发器、原生 popover 容器和 anchor positioning 结构，不负责菜单协议、表单校验或业务弹层编排。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { popoverPropsDefinition, popoverVariantGroups, getPopoverPropsDirectorOptions } from './Popover.prop'
 import { onMount, Show, type JSX } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { Piv } from '../../Piv/Piv'
 import { Button } from '../Button/Button'
-import { addDefaultProps } from '../../utils/defaultProps'
+import { addDefaultProps } from '../../tools/defaultProps'
 import {
   createVariantPropsParser,
   type VariantProps,
@@ -18,8 +18,8 @@ import {
   createPopoverVisibilityController,
   type PopoverToggleEvent,
   type PopoverVisibilityController,
-} from '@/components/Popover/createPopoverVisibilityController'
-import { PopoverSurface } from '@/components/Popover/PopoverSurface'
+} from '@/components/kits/Popover/createPopoverVisibilityController'
+import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
 import './Popover.style'
 
 /**

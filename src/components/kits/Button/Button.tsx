@@ -9,8 +9,8 @@
  */
 import type { Source } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
-import { kit, type KitController } from '@/components/utils/kit'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import { kit, type KitController } from '@/components/tools/kit'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { EventListenerInput } from '../../Piv/on/handleOn'

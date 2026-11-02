@@ -1,6 +1,6 @@
 /** Details：摘要与开关保留来源，正文沿原生 details 交互消费。 */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { DetailsProps } from './Details'
 
 export const detailsPropsDefinition = {

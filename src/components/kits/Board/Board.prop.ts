@@ -6,8 +6,8 @@
  * 通用 Director 只消费来源，不感知分组规则。
  */
 import { pivDefaultSources, pivPropsDefinition } from '@/components/Piv/Piv.prop'
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition, DefaultPropSources } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition, DefaultPropSources } from '@/components/tools/componentPropsDirector'
 import type { PivSupportedElementTag } from '@/components/Piv/domMap'
 import { createVariantPropsParser } from '../utils/parseVariantProps'
 import type { BoardProps } from './Board'

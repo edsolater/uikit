@@ -5,10 +5,10 @@
  *
  * 消息意义与底层材质分离，不复制承载实现。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { messageBoardPropsDefinition } from './MessageBoard.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { derive } from '@/hooks/stateUtils'
 import { type Source, type JSX } from '@/foundation'
 import { Board } from '../Board/Board'

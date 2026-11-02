@@ -5,8 +5,8 @@
  *
  * 让可选 Controller 复用原 Label 逻辑，不引入 Piv 的额外公开字段。
  */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { LabelProps } from './Label'
 
 /** 内容保持 Source，由原 label 与提示逻辑消费；ref 只从上游交付。 */

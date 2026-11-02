@@ -5,7 +5,7 @@
  *
  * 字段定义与 InputValidityProps 同归属，不在 Input 重复维护。
  */
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { InputValidityProps } from './createInputValidity'
 
 export const inputValidityPropsDefinition = {

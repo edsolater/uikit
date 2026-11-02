@@ -5,10 +5,10 @@
  *
  * 具体链接与导航内容由调用方组合。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { navigationRegionPropsDefinition } from './NavigationRegion.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { type Source, type JSX } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './NavigationRegion.style'

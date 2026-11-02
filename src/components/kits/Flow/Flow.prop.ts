@@ -1,6 +1,6 @@
 /** Flow：方向持续作为 Source 交给布局节点，内容保持 JSX 语义。 */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { FlowProps } from './Flow'
 
 export const flowPropsDefinition = {

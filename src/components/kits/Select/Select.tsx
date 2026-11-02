@@ -5,10 +5,10 @@
  *
  * 调用方提供选项和数据，组件保留原生选择语义。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { selectPropsDefinition } from './Select.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { derive } from '@/hooks/stateUtils'
 import { For, val, type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'

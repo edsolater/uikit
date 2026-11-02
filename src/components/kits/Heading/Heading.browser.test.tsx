@@ -17,7 +17,7 @@ import {
 } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { createState, For, Show } from '@/foundation'
-import { Heading, ComponentMarkerStructureViewTrigger, type HeadingProps, type HeadingController } from '@/components'
+import { Heading, KitMarkerStructureViewTrigger, type HeadingProps, type HeadingController } from '@/components'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -134,7 +134,7 @@ describe('Heading', () => {
               </Heading>
             )}
           </For>
-          <ComponentMarkerStructureViewTrigger />
+          <KitMarkerStructureViewTrigger />
         </>
       ),
       host,

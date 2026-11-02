@@ -30,9 +30,9 @@ flowchart LR
 
 ## Button 的业务准备
 
-Button 组合完整字段描述，只维护自身字段和分类／状态候选。DOM字段归Dode、公共快捷字段及其默认入口归能力领域、来源字段归Piv、说明字段归ComponentMarker；描述与类型extends层次一致，不改变运行算法。状态解析器通过 `createState(() => props[statusName])` 建立来源关系，不在 Button 中用 Effect 同步；每个缺省group的工厂复用原VariantParser语义details，把同一候选States的结果作为初始Source。输出只省略原缺省group的候选；原已声明group保留候选，让原核心报告冲突并映射一次。Button构建时建立分组Source但不val，保持原诊断时机，来源随后实际消费。显式group包括undefined优先，运行期指令仍在同一数据流。
+Button 组合完整字段描述，只维护自身字段和分类／状态候选。DOM字段归Dode、公共快捷字段及其默认入口归能力领域、来源字段归Piv、说明字段归KitMarker；描述与类型extends层次一致，不改变运行算法。状态解析器通过 `createState(() => props[statusName])` 建立来源关系，不在 Button 中用 Effect 同步；每个缺省group的工厂复用原VariantParser语义details，把同一候选States的结果作为初始Source。输出只省略原缺省group的候选；原已声明group保留候选，让原核心报告冲突并映射一次。Button构建时建立分组Source但不val，保持原诊断时机，来源随后实际消费。显式group包括undefined优先，运行期指令仍在同一数据流。
 
-Button.controllers 只收集启用组件 ref 的实例，普通按钮不因全局访问器自动承担控制成本。`kit(definition, core)` 统一管理 ref 接收器交付、替换清理、集合登记和唯一 ComponentMarker；业务核心处理原分类、状态和 JSX。Button.controllers.style 保留原 Button Token 集合。第一个参数是供通用层消费的固定配置，包括 name、默认 description、availableProps、默认来源和样式；第二个参数是具体组件的业务函数。代码按服务对象归属：注册和注销 Controller 属于 kit，组件自身的资源属于业务函数；onMount、onCleanup 只决定执行时机。通用层不感知默认来源内部的分类、候选或状态规则；core 可选接收普通 Context 能力对象，name 与 Marker 共用身份，onCleanup 可解构且绑定该实例 owner，不需要 KitContextRoot。组件通过 `context.exposeController` 公开自己的能力，Kit 为最终 Controller 注入 `.props`；没有自定义能力的组件只公开 `.props`，不需要声明空能力对象。
+Button.controllers 只收集启用组件 ref 的实例，普通按钮不因全局访问器自动承担控制成本。`kit(definition, core)` 统一管理 ref 接收器交付、替换清理、集合登记和唯一 KitMarker；业务核心处理原分类、状态和 JSX。Button.controllers.style 保留原 Button Token 集合。第一个参数是供通用层消费的固定配置，包括 name、默认 description、availableProps、默认来源和样式；第二个参数是具体组件的业务函数。代码按服务对象归属：注册和注销 Controller 属于 kit，组件自身的资源属于业务函数；onMount、onCleanup 只决定执行时机。通用层不感知默认来源内部的分类、候选或状态规则；core 可选接收普通 Context 能力对象，name 与 Marker 共用身份，onCleanup 可解构且绑定该实例 owner，不需要 KitContextRoot。组件通过 `context.exposeController` 公开自己的能力，Kit 为最终 Controller 注入 `.props`；没有自定义能力的组件只公开 `.props`，不需要声明空能力对象。
 
 ## Text 与 Label 的字段边界
 

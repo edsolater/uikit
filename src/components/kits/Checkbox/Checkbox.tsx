@@ -5,10 +5,10 @@
  *
  * 选项标题与字段状态属于组件，业务选择规则留给调用方。
  */
-import { kit, type KitController } from '@/components/utils/kit'
+import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { checkboxPropsDefinition } from './Checkbox.prop'
-import type { ComponentDescriptionProps } from '@/components/ComponentMarker/ComponentMarker'
+import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { stateView, val, type Source } from '@/foundation'
 import { Label, type LabelProps } from '../Label/Label'
 import { Piv } from '@/components/Piv/Piv'

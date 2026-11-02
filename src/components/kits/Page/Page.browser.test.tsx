@@ -3,7 +3,7 @@ import { Field } from '../Field/Field'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { createState, flush, Loading, render, val } from '@/foundation'
 import { cssRoot } from '@/style-system'
-import { componentBoundaries } from '@/components/ComponentMarker/ComponentMarker'
+import { componentBoundaries } from '@/components/tools/KitMarker/KitMarker'
 import {
   Page,
   Flow,
@@ -19,7 +19,7 @@ import {
   Input,
   Text,
   Piv,
-  ComponentMarkerStructureViewTrigger,
+  KitMarkerStructureViewTrigger,
 } from '@/components'
 import '@/css/all-base.css'
 
@@ -157,7 +157,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
             </Label>
           </Flow>
         </Page>
-        <ComponentMarkerStructureViewTrigger />
+        <KitMarkerStructureViewTrigger />
       </>
     ),
     host,

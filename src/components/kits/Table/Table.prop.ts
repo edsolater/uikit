@@ -5,8 +5,8 @@
  *
  * 行与渲染器的泛型关联保留在组件类型，不引入新的列系统。
  */
-import { componentDescriptionPropsDefinition } from '@/components/ComponentMarker/ComponentMarker.prop'
-import type { PropsDefinition } from '@/components/utils/componentPropsDirector'
+import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
 import type { TableProps } from './Table'
 
 export const tablePropsDefinition = {

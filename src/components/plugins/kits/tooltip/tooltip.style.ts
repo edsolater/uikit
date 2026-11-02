@@ -18,7 +18,7 @@ import {
   popoverArrowSize,
   popoverShadow,
   popoverFont,
-} from '@/components/Popover/PopoverSurface.style'
+} from '@/components/kits/Popover/PopoverSurface.style'
 
 const materials: [Token, string][] = [
   [popoverBackground, '#1e293b'],

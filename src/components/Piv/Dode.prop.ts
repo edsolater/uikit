@@ -1,5 +1,5 @@
 import type { DodeDOMProps } from './Dode'
-import type { PropsDefinition } from '../utils/componentPropsDirector'
+import type { PropsDefinition } from '../tools/componentPropsDirector'
 
 /** DOM 字段的运行时读取描述，与本层拥有的 Props 契约保持同一归属。 */
 export const dodeDOMPropsDefinition = {
