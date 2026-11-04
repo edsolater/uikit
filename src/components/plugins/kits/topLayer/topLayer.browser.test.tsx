@@ -1,5 +1,6 @@
 import { render } from '@solidjs/web'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { cssRoot } from '@/style-system'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
 import { usePlugin } from '../../usePlugin'
@@ -10,14 +11,75 @@ import {
 } from './topLayer'
 
 let dispose: (() => void) | undefined
+let styleHost: HTMLStyleElement
+
+beforeEach(() => {
+  styleHost = document.head.appendChild(document.createElement('style'))
+  styleHost.id = 'css-root'
+  cssRoot.mount()
+})
 
 afterEach(() => {
   dispose?.()
   dispose = undefined
   document.body.replaceChildren()
+  styleHost.remove()
 })
 
 describe('topLayer', () => {
+  test('定位框边界使用响应浅深主题的材料', () => {
+    const root = document.documentElement
+    const previous = root.getAttribute('data-theme')
+    const source = document.body.appendChild(document.createElement('div'))
+    source.style.cssText = 'width:40px;height:40px'
+    const controller = createTopLayerController(source)
+    try {
+      root.dataset.theme = 'light'
+      controller.enter()
+      const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
+      const light = getComputedStyle(anchor, '::after').borderTopColor
+      root.dataset.theme = 'dark'
+      expect(getComputedStyle(anchor, '::after').borderTopColor).not.toBe(light)
+    } finally {
+      controller.leave()
+      if (previous === null) root.removeAttribute('data-theme')
+      else root.setAttribute('data-theme', previous)
+    }
+  })
+
+  test('定位框边界保留不同定位方式的几何与圆角', () => {
+    for (const position of ['static', 'relative', 'absolute', 'fixed']) {
+      const host = document.body.appendChild(document.createElement('div'))
+      host.style.cssText = 'position:relative;width:300px;height:150px'
+      const source = host.appendChild(document.createElement('div'))
+      source.style.cssText = `position:${position};width:80px;height:40px;border-radius:12px;left:10px;top:7px`
+      const before = source.getBoundingClientRect()
+      const controller = createTopLayerController(source)
+      controller.enter()
+      const anchor = host.querySelector<HTMLElement>('.top-layer-anchor')!
+      const after = anchor.getBoundingClientRect()
+      const outline = getComputedStyle(anchor, '::after')
+      expect(Math.abs(after.left - before.left), position).toBeLessThan(0.1)
+      expect(Math.abs(after.top - before.top), position).toBeLessThan(0.1)
+      expect(Math.abs(after.width - before.width), position).toBeLessThan(0.1)
+      expect(Math.abs(after.height - before.height), position).toBeLessThan(0.1)
+      expect(outline.borderStyle).toBe('dashed')
+      expect(outline.borderWidth).toBe('2px')
+      expect(outline.borderRadius).toBe('12px')
+      controller.leave()
+      host.remove()
+    }
+  })
+
+  test('提升阴影继承祖先配置，缺省时使用共享初值', () => {
+    const host = document.body.appendChild(document.createElement('div'))
+    const source = host.appendChild(document.createElement('div'))
+    source.className = 'top-layer'
+    expect(getComputedStyle(source).boxShadow).toContain('16px 32px')
+    host.style.setProperty('--top-layer-shadow', 'rgb(1, 2, 3) 1px 2px 3px')
+    expect(getComputedStyle(source).boxShadow).toBe('rgb(1, 2, 3) 1px 2px 3px 0px')
+  })
+
   test('挂载前只记录最后意图，挂载后建立提升资源，卸载释放 DOM 资源', async () => {
     for (const requested of [false, true]) {
       let controller!: TopLayerController
@@ -169,7 +231,8 @@ describe('topLayer', () => {
     expect(anchor.nextElementSibling).toBe(source)
     expect(anchor.childElementCount).toBe(0)
     expect(anchor.textContent).toBe('')
-    expect(getComputedStyle(anchor).borderStyle).toBe('dashed')
+    expect(getComputedStyle(anchor, '::after').borderStyle).toBe('dashed')
+    expect(getComputedStyle(anchor, '::after').borderRadius).toBe(getComputedStyle(anchor).borderRadius)
     expect(Math.abs(elevatedRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.width - originalRect.width)).toBeLessThan(0.1)

@@ -161,6 +161,7 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
     const passiveImport = styles.compileCSS() === '' && document.querySelector('style').textContent === ''
     const uikit = await import('@edsolater/uikit')
     const sharedRegistry = styles.compileCSS().includes('.Button')
+    const globalStyles = styles.compileCSS()
     const host = document.createElement('div')
     const unmount = uikit.render(() => uikit.Show({ when: true, children: () => uikit.For({ each: ['published'], children: text => document.createTextNode(text) }) }), host)
     const rendered = host.textContent === 'published'
@@ -175,6 +176,9 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
       rendered,
       passiveImport,
       sharedRegistry,
+      nativeControls: globalStyles.includes('--native-control-border'),
+      documentStyles: globalStyles.includes('text-autospace: ideograph-alpha ideograph-numeric'),
+      traits: globalStyles.includes('--trait-scroll-area-overflow'),
       separate: !('rules' in uikit) && !('cssRoot' in uikit),
       removed: !styles.compileCSS().includes('.PublishedProbe'),
       distinctClickable: typeof uikit.clickable === 'function' && typeof styles.clickable === 'function' && uikit.clickable !== styles.clickable,
@@ -188,6 +192,9 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
     rendered: true,
     passiveImport: true,
     sharedRegistry: true,
+    nativeControls: true,
+    documentStyles: true,
+    traits: true,
     separate: true,
     removed: true,
     distinctClickable: true,

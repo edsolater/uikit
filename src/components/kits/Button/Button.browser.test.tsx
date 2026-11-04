@@ -52,7 +52,7 @@ import {
   inkColor,
   paperColor,
 } from '@/style-system/pieces/tokens/color/palette'
-import '../../../components/kits/Input/Input.css'
+import '../../../components/kits/Input/Input.style'
 import '@/components/kits/Popover/PopoverSurface.style'
 import '@/components/kits/Popover/Popover.style'
 
@@ -1024,58 +1024,30 @@ describe('Button styles', () => {
     },
   )
 
-  test('挂载 Button 样式保留其他组件的静态样式和阴影契约', () => {
-    const shadows = [
-      [baseShadowSmall, '--shadow-1'],
-      [baseShadow, '--shadow-2'],
-    ] as const
-    const probes = shadows.map(([material, cssName], index) => {
-      const reference = document.body.appendChild(document.createElement('div'))
-      reference.style.boxShadow = `var(${cssName})`
-      const actual = document.body.appendChild(document.createElement('div'))
-      actual.className = `shadow-probe-${index}`
+  test('重复挂载保留 Input、Popover 与系统阴影的主题行为', () => {
+    const probes = [baseShadowSmall, baseShadow].map((material, index) => {
+      const element = document.body.appendChild(document.createElement('div'))
+      element.className = `shadow-probe-${index}`
       handles.push(rule(`.shadow-probe-${index}`, 'box-shadow', material))
-      return { reference, actual }
+      return element
     })
     const input = document.body.appendChild(document.createElement('input'))
     input.className = 'Input'
     const popover = document.body.appendChild(document.createElement('div'))
     popover.className = 'Popover'
-    const nonButton = [
-      ...probes.map((probe) => probe.reference),
-      input,
-      popover,
-    ]
-    const style = mountButtonStyles()
+    mountButtonStyles()
+    const lightShadows: string[] = []
     for (const theme of ['light', 'dark']) {
       document.documentElement.dataset.theme = theme
-      style.sheet!.disabled = true
-      const before = nonButton.map((element) => ({
-        ...appearance(element),
-        outline: getComputedStyle(element).outlineColor,
-      }))
-      style.sheet!.disabled = false
-      expect(
-        nonButton.map((element) => ({
-          ...appearance(element),
-          outline: getComputedStyle(element).outlineColor,
-        })),
-      ).toEqual(before)
-      for (const { actual, reference } of probes) {
-        const actualShadow = getComputedStyle(actual).boxShadow
-        const expectedShadow = getComputedStyle(reference).boxShadow
-        const colors = /(?:rgba?|oklch)\([^)]*\)/g
-        expect(roundCSSNumbers(actualShadow.replace(colors, 'COLOR'))).toBe(
-          roundCSSNumbers(expectedShadow.replace(colors, 'COLOR')),
-        )
-        const expectedColors = expectedShadow.match(colors)!
-        // 旧 CSS 阴影的 RGBA 回读采用 8 位量化，与保留小数的 Token 沿用一个量化阶差异。
-        actualShadow
-          .match(colors)!
-          .forEach((color, index) =>
-            expectSameColor(color, expectedColors[index], 1 / 255),
-          )
-      }
+      const before = [input, popover, ...probes].map(appearance)
+      const shadows = probes.map((probe) => getComputedStyle(probe).boxShadow)
+      expect(shadows.every((shadow) => shadow !== 'none')).toBe(true)
+      expect(shadows[0]).not.toBe(shadows[1])
+      if (theme === 'light') lightShadows.push(...shadows)
+      else expect(shadows).not.toEqual(lightShadows)
+      cssRoot.mount()
+      expect([input, popover, ...probes].map(appearance)).toEqual(before)
+      expect(getComputedStyle(input).minHeight).toBe('40px')
     }
   })
 

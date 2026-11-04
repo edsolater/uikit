@@ -1,17 +1,26 @@
 import { flush } from 'solid-js'
 import { render } from '@solidjs/web'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { cssRoot } from '@/style-system'
 import { Piv } from '../../../Piv/Piv'
 import { draggable } from '../draggable/draggable'
 import { DroppableExample } from './droppable.example'
 import { droppable } from './droppable'
 
 let dispose: (() => void) | undefined
+let styleHost: HTMLStyleElement
+
+beforeEach(() => {
+  styleHost = document.head.appendChild(document.createElement('style'))
+  styleHost.id = 'css-root'
+  cssRoot.mount()
+})
 
 afterEach(() => {
   dispose?.()
   dispose = undefined
   document.body.replaceChildren()
+  styleHost.remove()
   vi.restoreAllMocks()
 })
 

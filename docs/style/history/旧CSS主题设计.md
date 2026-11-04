@@ -1,5 +1,7 @@
 # 主题颜色系统
 
+本文保留旧 CSS 主题系统的历史设计；其中的变量、函数和“当前”描述不再是现役组件契约。现役颜色材料及其引用由 [Style System](../../../src/style-system/architecture.md) 提供。
+
 ## 一句话
 
 ```txt

@@ -1,12 +1,10 @@
-import { rules } from '@/style-system'
-rules('.Select', {
+import { rules, baseSpace, baseRadius, baseBorderWidth, contentColorTheme, surfaceColorTheme, boundaryColorTheme, multiply, boundary } from '@/style-system'
+rules('.Select', [{
   'box-sizing': 'border-box',
   width: '100%',
   'min-width': '0',
   font: 'inherit',
-  padding: 'var(--space-3)',
-  color: 'var(--color-fg-strong)',
-  background: 'var(--color-surface-low)',
-  border: '1px solid var(--color-line)',
-  'border-radius': 'var(--radius-3)',
-})
+  padding: baseSpace,
+  color: contentColorTheme,
+  background: surfaceColorTheme,
+}, boundary({ border: [baseBorderWidth, 'solid', boundaryColorTheme], radius: multiply(baseRadius, 2) })])

@@ -7,6 +7,9 @@
 
 // 只要使用项目的本体，它就会引用CSS。也就是说，如果要单独使用，请使用这包下面的单独的CSS。
 import './css/all-base.css'
+import './style-system/pieces/native-controls.style'
+import './style-system/pieces/document.style'
+import './components/plugins/traits.style'
 
 export * from './components'
 export * from './foundation'

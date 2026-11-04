@@ -2,7 +2,7 @@
 import { Card } from '../Card/Card'
 import { Article } from './Article'
 import { Flow } from '../Flow/Flow'
-import './Article.example.css'
+import './Article.example.style'
 
 export function ArticleExample() {
   return (

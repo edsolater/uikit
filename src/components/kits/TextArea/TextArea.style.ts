@@ -1,14 +1,12 @@
-import { rules } from '@/style-system'
-rules('.TextArea', {
+import { rules, baseSpace, baseRadius, baseBorderWidth, contentColorTheme, surfaceColorTheme, boundaryColorTheme, multiply, boundary } from '@/style-system'
+rules('.TextArea', [{
   'box-sizing': 'border-box',
   width: '100%',
   'min-width': '0',
   font: 'inherit',
-  padding: 'var(--space-3)',
-  color: 'var(--color-fg-strong)',
-  background: 'var(--color-surface-low)',
-  border: '1px solid var(--color-line)',
-  'border-radius': 'var(--radius-3)',
+  padding: baseSpace,
+  color: contentColorTheme,
+  background: surfaceColorTheme,
   'min-height': '5rem',
   resize: 'vertical',
-})
+}, boundary({ border: [baseBorderWidth, 'solid', boundaryColorTheme], radius: multiply(baseRadius, 2) })])

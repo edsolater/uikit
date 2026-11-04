@@ -8,7 +8,7 @@ import { createState, onMount, type State } from '@/foundation'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
-import './topLayer.css'
+import './topLayer.style'
 
 const topLayerClass = 'top-layer'
 

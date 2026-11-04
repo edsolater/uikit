@@ -17,7 +17,7 @@ import {
   createStatusPropsParser,
   type StatusController,
 } from '../utils/parseStatusProps'
-import './Input.css'
+import './Input.style'
 import { type Source, val } from '@/foundation'
 import {
   createInputValidity,

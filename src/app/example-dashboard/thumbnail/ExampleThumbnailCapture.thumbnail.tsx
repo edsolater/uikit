@@ -3,9 +3,9 @@ import { page, userEvent } from 'vitest/browser'
 import { type Component, render } from '@/foundation'
 import { afterAll, afterEach, beforeAll, test } from 'vitest'
 import '../../../css/all-base.css'
-import '../pages/ExampleDashboard.css'
+import '../pages/ExampleDashboard.style'
 import { exampleEntries } from '../pages/ExampleDashboard'
-import './ExampleThumbnailCapture.css'
+import './ExampleThumbnailCapture.style'
 import { cssRoot } from '@/style-system'
 import {
   KitContextRoot,

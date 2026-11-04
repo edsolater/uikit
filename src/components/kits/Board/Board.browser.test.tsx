@@ -16,6 +16,31 @@ import { cssRoot } from '@/style-system'
 import { componentBoundaries } from '@/components/tools/KitMarker/KitMarker'
 import '@/css/all-base.css'
 
+test('Board 使用系统材料并响应根主题', () => {
+  const host = document.body.appendChild(document.createElement('div'))
+  const style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  const root = document.documentElement
+  const previousTheme = root.getAttribute('data-theme')
+  root.removeAttribute('data-theme')
+  cssRoot.mount()
+  const dispose = render(() => <Board>内容</Board>, host)
+  try {
+    const board = host.firstElementChild!
+    const light = getComputedStyle(board).backgroundColor
+    expect(style.textContent).toContain('--surface-color-theme')
+    expect(style.textContent).not.toContain('var(--color-surface)')
+    root.setAttribute('data-theme', 'dark')
+    expect(getComputedStyle(board).backgroundColor).not.toBe(light)
+  } finally {
+    if (previousTheme === null) root.removeAttribute('data-theme')
+    else root.setAttribute('data-theme', previousTheme)
+    dispose()
+    host.remove()
+    style.remove()
+  }
+})
+
 test('Article和Card裁剪自身边界，不改裸标签和Board网格', () => {
   const host = document.body.appendChild(document.createElement('div'))
   const style = document.head.appendChild(document.createElement('style'))
@@ -120,6 +145,7 @@ test('两种方言保持单节点同材质，反馈语气更新不污染旁边�
       )
     const originalBackground = getComputedStyle(card).backgroundColor
     const originalPadding = parseFloat(getComputedStyle(card).padding)
+    const originalShadow = getComputedStyle(card).boxShadow
     variant.set('solid')
     size.set('large')
     await expect
@@ -128,6 +154,8 @@ test('两种方言保持单节点同材质，反馈语气更新不污染旁边�
     expect(parseFloat(getComputedStyle(card).padding)).toBeGreaterThan(
       originalPadding,
     )
+    variant.set('soft')
+    await expect.poll(() => getComputedStyle(card).boxShadow).not.toBe(originalShadow)
     expect(getComputedStyle(card).padding).toBe(getComputedStyle(board).padding)
     const border = getComputedStyle(card).borderTopColor
     tone.set('error')

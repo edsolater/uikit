@@ -1,3 +1,6 @@
+import '@/style-system/pieces/native-controls.style'
+import '@/style-system/pieces/document.style'
+
 export * from './Piv/on/handleOn'
 export * from './Piv/plugin/handlePivPlugin'
 export * from './Piv/plugin/helpers'
@@ -88,3 +91,4 @@ export type {
 } from './tools/componentPropsDirector'
 export { pivPropsDefinition, pivDefaultSources } from './Piv/Piv.prop'
 export { componentDescriptionPropsDefinition } from './tools/KitMarker/KitMarker.prop'
+import './plugins/traits.style'

@@ -6,7 +6,7 @@ import { createState, val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
 import { Card } from '../../../kits/Card/Card'
 import { Article } from '../../../kits/Article/Article'
-import '../../DragAndDrop.example.css'
+import '../../DragAndDrop.example.style'
 import { draggable } from '../draggable/draggable'
 import { droppable } from './droppable'
 

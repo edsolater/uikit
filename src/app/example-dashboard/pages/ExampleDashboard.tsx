@@ -41,10 +41,10 @@ import { PivStructureExample } from '@/components/Piv/PivStructure.example'
 import { DraggableExample } from '@/components/plugins/kits/draggable/draggable.example'
 import { DroppableExample } from '@/components/plugins/kits/droppable/droppable.example'
 import { ScopeExample } from '@/components/plugins/kits/scope/scope.example'
-import { ColorDashboardExample } from '@/css/ColorDashboardExample'
+import { ColorShowcase } from '@/style-system/pieces/tokens/color/ColorShowcase/ColorShowcase.example'
 import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
-import './ExampleDashboard.css'
-import './ExampleHome.css'
+import './ExampleDashboard.style'
+import './ExampleHome.style'
 
 interface ExampleEntry {
   id: string
@@ -68,7 +68,7 @@ const exampleCategories = {
   component: { label: 'Component', color: 'oklch(75% 0.07 110 / .9)' },
   plugin: { label: 'Plugin', color: 'oklch(75% 0.07 100 / .9)' },
   piv: { label: 'Piv', color: 'oklch(75% 0.07 55 / .9)' },
-  css: { label: 'CSS', color: 'oklch(75% 0.07 330 / .9)' },
+  styleSystem: { label: 'Style System', color: 'oklch(75% 0.07 330 / .9)' },
   hook: { label: 'Hook', color: 'oklch(75% 0.07 85 / .9)' },
 } satisfies Record<string, ExampleCategory>
 
@@ -163,11 +163,11 @@ export const exampleEntries: ExampleEntry[] = [
   },
   {
     id: 'color',
-    title: 'Color',
-    category: exampleCategories.css,
+    title: 'ColorShowcase',
+    category: exampleCategories.styleSystem,
     summary: '主题模式与颜色 token。',
     thumbnail: new URL('../thumbnails/color.webp', import.meta.url).href,
-    content: ColorDashboardExample,
+    content: ColorShowcase,
   },
   {
     id: 'use-document-title',
@@ -425,7 +425,6 @@ function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
               data-thumbnail
               href={`/examples/${entry.id}`}
               onClick={props.onNavigate}
-              style={{ '--example-category-color': entry.category.color }}
             >
               <img
                 class="example-link-thumbnail"
@@ -436,7 +435,7 @@ function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
                 loading="lazy"
                 decoding="async"
               />
-              <span class="example-link-ribbon">
+              <span class="example-link-ribbon" style={{ '--example-category-color': entry.category.color }}>
                 {entry.level === undefined
                   ? entry.category.label
                   : `${entry.category.label} · ${entry.level} 级`}

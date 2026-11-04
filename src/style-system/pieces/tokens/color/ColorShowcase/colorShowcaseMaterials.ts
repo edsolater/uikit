@@ -1,0 +1,12 @@
+/** 颜色材料展柜 展示的 Style System 公共颜色材料与主题来源。 */
+import {
+  paperColor, inkColor, neutralColor, brandColor, goodColor, badColor, warnColor, infoColor,
+  canvasColorTheme, surfaceColorTheme, contentColorTheme, boundaryColorTheme,
+  brandColorTheme, accentColorTheme, goodColorTheme, badColorTheme, warnColorTheme, infoColorTheme,
+} from '@/style-system'
+
+export const colorShowcaseMaterials = [
+  paperColor, inkColor, neutralColor, brandColor, goodColor, badColor, warnColor, infoColor,
+  canvasColorTheme, surfaceColorTheme, contentColorTheme, boundaryColorTheme,
+  brandColorTheme, accentColorTheme, goodColorTheme, badColorTheme, warnColorTheme, infoColorTheme,
+]

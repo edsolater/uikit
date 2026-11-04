@@ -3,7 +3,9 @@ import { render } from '@solidjs/web'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import '../../../css/all-base.css'
 import ExampleDashboard, { exampleEntries } from './ExampleDashboard'
-import { cssRoot } from '@/style-system'
+import { cssRoot, accentColorTheme } from '@/style-system'
+import { cssTokenName } from '@/style-system/token/css'
+import { page } from 'vitest/browser'
 
 const runnerPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
 let dispose: (() => void) | undefined
@@ -26,6 +28,26 @@ afterEach(() => {
 })
 
 describe('ExampleDashboard', () => {
+  test('主页的列数与类别颜色由系统样式和实例数据共同决定', async () => {
+    window.history.replaceState(null, '', '/examples')
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <ExampleDashboard />, host)
+    const list = document.querySelector<HTMLElement>('.example-list')!
+    const shell = document.querySelector<HTMLElement>('.example-shell')!
+    const ribbons = [...document.querySelectorAll<HTMLElement>('.example-link-ribbon')]
+    await page.viewport(1200, 800)
+    expect(getComputedStyle(list).gridTemplateColumns.split(' ')).toHaveLength(6)
+    expect(new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor)).size).toBeGreaterThan(1)
+    const initialBackground = getComputedStyle(shell).backgroundImage
+    const accentName = cssTokenName(accentColorTheme)
+    document.documentElement.style.setProperty(accentName, 'red')
+    expect(getComputedStyle(shell).backgroundImage).not.toBe(initialBackground)
+    document.documentElement.style.removeProperty(accentName)
+    await page.viewport(500, 800)
+    expect(getComputedStyle(list).gridTemplateColumns.split(' ')).toHaveLength(2)
+    await page.viewport(1280, 720)
+  })
+
   test('主页不预选详情，选择条目后写入可直达 URL', async () => {
     window.history.replaceState(null, '', '/examples')
     const host = document.body.appendChild(document.createElement('div'))

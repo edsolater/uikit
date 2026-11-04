@@ -4,7 +4,7 @@
 
 # 当前系统组成
 
-`src/style-system` 承接 Button、Board 及 Flow 等基础组件的样式登记，尚未迁移的组件继续使用原有静态 CSS；当前文件职责与根挂载边界见 [Style System 架构](src/style-system/architecture.md)。
+`src/style-system` 接管组件样式及其材料，组件改造参照 Button；`reset.css` 只重置浏览器默认行为，`APP.css` 只定义作用于 App 全局或根节点的样式。组件内样式必须通过自身 `.style.ts` 接入 Style System，不能因首屏加载而改用组件 CSS；具体边界见[样式文件写法](docs/style/样式文件写法.md)。当前运行链见 [Style System 架构](src/style-system/architecture.md)。
 
 组件样式文件的配置、命名、注释与组装约定见 [样式文件写法](docs/style/样式文件写法.md)。
 
@@ -18,7 +18,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 - `src/hooks`：使用 Foundation 的派生组合与浏览器协作能力。领域入口和内部阅读路线见 [hooks SPEC](src/hooks/SPEC.md)。
 - `src/color-system`：颜色信息与 JS 数值计算。材料先经过层级变换，再应用环境得到最终颜色；不依赖 JSS 或生成 CSS。
 - `src/style-system`：Rule、Token 样式定义领域（Token 为现役统一内容模型）。`rules()` 将 Key／Token 声明序列和 Mixin 组合转换为有序 Declaration，CSSRoot 持有源账本，编译器展开声明、状态与依赖，应用统一提交 CSS string；文件职责见 [Style System 架构](src/style-system/architecture.md)。
-- `src/css`：仍在服役的静态 CSS 领域。当前继续提供 reset、tokens、controls、traits 与尚未迁移的 CSS 工具；当前结构见 [CSS 架构](src/css/architecture.md)。
+- `src/css`：浏览器默认行为重置及 CSS 入口；原生控件、文档视觉策略与功能类由 Style System 登记，当前结构见 [CSS 架构](docs/style/CSS架构.md)。
 - `src/app/example-dashboard`：本地 Example 浏览与浏览器验收入口，不是正式业务应用。
 - `src/types`：没有单一源码主体可归属的浏览器与 JSX 全局类型补丁。
 - `src/index.ts`：包根发布入口，只汇总现役公开能力和当前基础 CSS 入口。
@@ -70,7 +70,7 @@ Controller返回 `[controller, controllerBindings]`：前者拥有身份、只�
 
 Text、Label 与 Help 通过 kit 创建，分别公开自身 Controller 和 .controllers。Text.prop.ts 复用 Piv 与说明定义，移除 as，block/p 保留创建时选择；Text 的 marker getter 保留说明真值控制和 descriptionOnly。Label.prop.ts 只定义关联目标、标题、提示内容与说明字段，不继承 Piv 的额外能力。Label 核心拥有字段标题与 Help 组合，Help 拥有问号及其样式，提示插件继续管理浮层生命周期。各组件的样式归同名 .style.ts，不提供额外 Token 集合。
 
-公开的 kits 组件与 PopoverSurface 已统一通过 kit 创建；Piv、Dode、KitMarker、StructureViewOverlay 及定位开关属于渲染或控制基础设施，不递归接入。定位开关继续使用 StructureViewControl 跳过自身标注。组件的 .prop.ts 描述原 Props，按继承关系复用拥有者字段；Card 直接复用 Board 的字段表与承载 renderer，两者分别拥有 kit 身份与实例集合。InputValidity 的字段描述与原有效性能力同归属，Input 的旧 CSS 保持原样，本次不迁移样式。
+公开的 kits 组件与 PopoverSurface 已统一通过 kit 创建；Piv、Dode、KitMarker、StructureViewOverlay 及定位开关属于渲染或控制基础设施，不递归接入。定位开关继续使用 StructureViewControl 跳过自身标注。组件的 .prop.ts 描述原 Props，按继承关系复用拥有者字段；Card 直接复用 Board 的字段表与承载 renderer，两者分别拥有 kit 身份与实例集合。InputValidity 的字段描述与原有效性能力同归属，Input 样式由自身 Style System 定义承接。
 
 Board、Card、Loop、Table 保留泛型调用及精确实例 ref；Article 固定原生 article，保留自身精确实例 ref。TypeScript 包装丢失的调用关联只在组件定义处作一次类型连接，不增加运行包装。异构实例的 `.controllers.props` 集合只公开共同安全字段：Board/Card 集合不暴露 Tag 相关节点与插件输入，Loop 集合不暴露 each，Table 集合不暴露 data/keys/renderParts；这些字段通过精确实例 ref 操作；Loop.children 与 Field.children 仅由 Props 提供构建工厂，不属于 Controller。Article 属于[语义组件](docs/guide/语义组件.md)，仅提供独立正文身份与首尾块外边距裁剪，不提供容器皮肤、as 或 Carrier 透传。核心直接使用固定 as 的 Piv，字段表移除继承的 as。普通阅读卡片用 `<Card><Article>正文</Article></Card>` 表达视觉容器承载独立正文；正文内的资料卡片也可反向组合，含义判断见[组件嵌套](docs/guide/组件嵌套.md)。两个节点各自拥有 Marker、样式和实例引用；Card 不提供 is 内容模式。PopoverController 顶层公开 PopoverVisibilityController 的身份、isOpen 与浮层操作，`.props` 提供通用输入干预；两种机制不因字段同名而自动关联。Input 顶层公开最终 invalid 状态，输入干预继续经过原有效性规则。
 
@@ -103,10 +103,10 @@ Example 入口静态导入全部 Example，再统一挂载。缩略图 runner �
 ```txt
 src/index.ts
   -> src/css/all-base.css
-    -> reset + tokens + controls + traits
+    -> reset
 ```
 
-尚未迁移的组件和 plugins 继续各自 import CSS；`all-base.css` 和这些静态样式仍是现役实现。
+组件和插件样式通过 Style System 登记；原生控件与文档视觉策略由组件聚合入口登记。`APP.css` 只用于作用于 App 全局或根节点的样式。
 
 ## Example 浏览
 
@@ -133,6 +133,6 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 
 - 本文件记录当前可由代码验证的系统关系。
 - [组件结构查看](docs/guide/组件结构查看.md)负责用途说明、透明包裹、手动开关与显示边界；具体实施和验收保存在对应Plan及Run。
-- [Style System 架构](src/style-system/architecture.md) 和 [CSS 架构](src/css/architecture.md) 记录各自领域的当前文件职责与内部链路。
+- [Style System 架构](src/style-system/architecture.md) 和 [CSS 架构](docs/style/CSS架构.md) 记录各自领域的当前文件职责与内部链路。
 - [JSS 样式系统历史记录](docs/plans/JSS样式系统.md) 仅保留已经退出的旧方案与验收证据，不作为当前模块、API 或实施计划。
 - 通用代码、命名、注释与 CSS 规则从 [AI Rules README](../ai-rules/README.md) 进入，不复制到当前仓库架构中。

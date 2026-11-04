@@ -5,7 +5,7 @@
  *
  * 导航反馈无需额外卡片皮肤。
  */
-import { rules, stateCondition, token } from '@/style-system'
+import { rules, stateCondition, token, brandColorTheme, oklch, add } from '@/style-system'
 const decoration = token('none', {
   name: 'link-decoration',
   state: [
@@ -14,7 +14,13 @@ const decoration = token('none', {
   ],
 })
 rules('.Link', {
-  color: token('var(--color-link)', { name: 'link-color', state: [[stateCondition('&:hover'), 'var(--color-link-hover)']] }),
+  color: token(() => brandColorTheme, {
+    name: 'link-content-color',
+    state: [[stateCondition('&:hover'), oklch(brandColorTheme, {
+      lightness: (current) => add(current, -0.04),
+      chroma: (current) => add(current, 0.01),
+    })]],
+  }),
   'text-decoration': decoration,
   'text-underline-offset': '.2em',
 })

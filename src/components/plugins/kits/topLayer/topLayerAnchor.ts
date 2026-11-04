@@ -71,6 +71,11 @@ export function createTopLayerAnchor(source: HTMLElement): TopLayerAnchor {
   anchor.inert = true
   anchor.style.setProperty('anchor-name', name)
   copyComputedProperties(sourceStyle, anchor.style, layoutProperties)
+  // 非定位元素以 relative 建立绘制参考，保留原布局位置。
+  if (sourceStyle.position === 'static') {
+    anchor.style.position = 'relative'
+    anchor.style.inset = 'auto'
+  }
   anchor.style.boxSizing = 'border-box'
   anchor.style.inlineSize = `${sourceSize.inline}px`
   anchor.style.blockSize = `${sourceSize.block}px`

@@ -5,57 +5,59 @@
  *
  * 语义身份不复制视觉实现，上层主体可消费公开边界材料形成自身反馈。
  */
-import { rules, token, stateCondition } from '@/style-system'
+import { rules, token, stateCondition, color, colorMix, surfaceColorTheme, boundaryColorTheme, baseBorderWidth, baseSpace, baseRadius, baseShadow, baseShadowSmall, multiply } from '@/style-system'
+import { valueSequence } from '@/style-system/pieces/token-factory/list'
 const soft = stateCondition('&[data-variant="soft"]')
 const solid = stateCondition('&[data-variant="solid"]')
 const small = stateCondition('&[data-size="small"]')
 const large = stateCondition('&[data-size="large"]')
 const xlarge = stateCondition('&[data-size="xlarge"]')
+const boardLineColor = color({ base: boundaryColorTheme, alpha: (alpha) => multiply(alpha, 0.5) })
 const background = token(
-  'color-mix(in oklab, var(--color-surface) 78%, transparent)',
+  colorMix([surfaceColorTheme, 0.78], 'transparent'),
   {
     name: 'board-background',
     state: [
-      [soft, 'color-mix(in oklab, var(--color-surface) 58%, transparent)'],
-      [solid, 'var(--color-surface)'],
+      [soft, colorMix([surfaceColorTheme, 0.58], 'transparent')],
+      [solid, surfaceColorTheme],
     ],
   },
 )
 /** 完整边界材料，允许信息主体派生自己的语义差异。 */
 export const boardBorder = token(
-  'var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 72%, transparent)',
+  valueSequence(baseBorderWidth, 'solid', colorMix([boardLineColor, 0.72], 'transparent')),
   {
     name: 'board-border',
     state: [
       [
         soft,
-        'var(--boundary-1) solid color-mix(in oklab, var(--color-line-soft) 48%, transparent)',
+        valueSequence(baseBorderWidth, 'solid', colorMix([boardLineColor, 0.48], 'transparent')),
       ],
-      [solid, 'var(--boundary-1) solid var(--color-line-soft)'],
+      [solid, valueSequence(baseBorderWidth, 'solid', boardLineColor)],
     ],
   },
 )
-const shadow = token('var(--shadow-card)', {
+const shadow = token(() => baseShadow, {
   name: 'board-shadow',
-  state: [[soft, 'var(--shadow-1)']],
+  state: [[soft, baseShadowSmall]],
 })
-const padding = token('var(--space-6)', {
+const padding = token(multiply(baseSpace, 3), {
   name: 'board-padding',
   state: [
-    [small, 'var(--space-4)'],
-    [large, 'var(--space-7)'],
-    [xlarge, 'var(--space-8)'],
+    [small, multiply(baseSpace, 1.5)],
+    [large, multiply(baseSpace, 4)],
+    [xlarge, multiply(baseSpace, 6)],
   ],
 })
-const gap = token('var(--space-5)', {
+const gap = token(multiply(baseSpace, 2), {
   name: 'board-gap',
   state: [
-    [small, 'var(--space-3)'],
-    [large, 'var(--space-6)'],
-    [xlarge, 'var(--space-7)'],
+    [small, baseSpace],
+    [large, multiply(baseSpace, 3)],
+    [xlarge, multiply(baseSpace, 4)],
   ],
 })
-const radius = token('var(--radius-4)', { name: 'board-radius', state: [[small, 'var(--radius-3)']] })
+const radius = token(multiply(baseRadius, 3), { name: 'board-radius', state: [[small, multiply(baseRadius, 2)]] })
 rules('.Board', {
   display: 'grid',
   'margin-trim': 'none',

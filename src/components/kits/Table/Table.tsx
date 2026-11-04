@@ -100,8 +100,8 @@ interface TableComponent {
  * @example
  * <Table
  *   data={[
- *     { name: '--color-action', preview: 'var(--color-action)' },
- *     { name: '--color-surface-low', preview: 'var(--color-surface-low)' },
+ *     { name: '蓝色', preview: 'oklch(60% 0.15 250)' },
+ *     { name: '暖灰', preview: 'oklch(80% 0.02 60)' },
  *   ]}
  *   keys={['name', 'preview']}
  *   renderParts={{

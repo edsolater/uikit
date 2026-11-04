@@ -8,7 +8,7 @@ import { createToggle } from '@/hooks'
 import type { PivTag } from '../../../Piv/domMap'
 import { createPlugin } from '../../definePlugin'
 import { createPointerDrag } from './createPointerDrag'
-import './draggable.css'
+import './draggable.style'
 
 export interface DraggableOptions {
   /** 当前拖动携带的数据包。 */

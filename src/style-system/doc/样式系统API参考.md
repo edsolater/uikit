@@ -79,7 +79,7 @@ const panelSurface = panelToken(surfaceColor, { state: { hover: paperColor } })
 const panelSpace = panelToken(baseSpace)
 ```
 
-普通 Token 定义须提供语义 name；已有语义 prefixName 的生成器调用可省略 name，详见[命名约定](样式系统命名.md#token-定义必须提供语义名称)。引用 Token 不继承来源名称。内部名称不含 CSS 双连字符，CSS 输出为 `--${name}`。
+普通 Token 定义须提供语义 name；已有语义 prefixName 的生成器调用可省略 name，详见[命名约定](样式系统命名.md#token-定义必须提供语义名称)。引用 Token 不继承来源名称。内部名称不含 CSS 双连字符。独立的运行时数据可以直接通过 CSS variable 传入系统登记的样式，不要求为消除 `var()` 新增 Token；见[样式文件写法](../../../docs/style/样式文件写法.md#文件边界)。
 
 生成器只提供统一前缀与定义地址，调用处不能传名称字符串或指定 `name`、`address`。`buttonToken(source)` 和 `buttonToken('red')` 均得到各自唯一的 `button-<自动标识>`，不拼接来源名称。地址未配置时随消费位置发布，不继承来源地址。对应行为见 [Token 的创建与复用](behaviors/Token的创建与复用.md#显式名称与自动名称)。
 
