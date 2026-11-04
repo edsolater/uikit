@@ -53,6 +53,10 @@ function toggleView() {
 }
 
 describe('Text', () => {
+  test('已登记的组件样式不输出纯数字 CSS 变量名', () => {
+    expect(styleHost.textContent).not.toMatch(/--\d+(?=\s*[:)])/)
+  })
+
   test('组件ref可修改缺省文字和用途，集合只收集受控实例，标签不重建', async () => {
     const [text, receive] = createRef<TextController>()
     const host = document.body.appendChild(document.createElement('main'))

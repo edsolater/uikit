@@ -63,6 +63,7 @@ export interface TokenOptions<T extends TokenData = TokenData> {
    * 引用已有 Token 不继承其名称，前缀仍补充在自身名称之前。
    */
   name?: string
+  $warnIfMissTokenName?: boolean
   state?: TokenStateInput
   /**
    * 指定时在固定地址发布；继承后仍未指定时，需 CSS variable 的 Token
@@ -93,6 +94,7 @@ export interface Token<T extends TokenData = TokenData>
     TokenConfig<T> {
   /** CSS 坍缩产生的内部类别；调用方按约定不修改。 */
   _kind?: 'css-value' | 'css-variable'
+  $warnIfMissTokenName: boolean
   dependencies: unknown[]
   toCSSString(resolve?: JSSContentResolver): string | undefined
 }
@@ -100,6 +102,7 @@ export interface Token<T extends TokenData = TokenData>
 const tokens = new WeakSet<object>()
 const baseOutputs = new WeakMap<object, JSSContent>()
 const customOutputs = new WeakSet<object>()
+const warnedTokens = new WeakSet<object>()
 
 /**
  * 将原始内容创建为 Token；已有 Token 复用配置，不执行内容生产函数。
@@ -164,6 +167,7 @@ function createToken<T extends TokenData>(
   const self: Token<T> = {
     ...parseTokenArgs<T>(input, protocol),
     name,
+    $warnIfMissTokenName: protocol?.$warnIfMissTokenName ?? true,
     onCompile: protocol?.onCompile,
     get dependencies() {
       const dependencies = protocol?.dependencies
@@ -174,7 +178,14 @@ function createToken<T extends TokenData>(
      * 输出变量引用、基础内容或特殊格式；子内容结果由编译器提供。
      */
     toCSSString(resolve = primitiveToCSSString) {
-      if (self._kind === 'css-variable') return `var(${cssTokenName(self)})`
+      if (self._kind === 'css-variable') {
+        const cssName = cssTokenName(self)
+        if (self.name === undefined && self.$warnIfMissTokenName && !warnedTokens.has(self)) {
+          warnedTokens.add(self)
+          console.warn('Token 坍缩为 CSS variable 时未指定名称：', cssName, self)
+        }
+        return `var(${cssName})`
+      }
       return outputBase(resolve)
     },
   }

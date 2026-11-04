@@ -7,13 +7,14 @@
  */
 import { rules, stateCondition, token } from '@/style-system'
 const decoration = token('none', {
+  name: 'link-decoration',
   state: [
     [stateCondition('&:hover'), 'underline'],
     [stateCondition('&[aria-current="page"]'), 'underline'],
   ],
 })
 rules('.Link', {
-  color: token('var(--color-link)', { state: [[stateCondition('&:hover'), 'var(--color-link-hover)']] }),
+  color: token('var(--color-link)', { name: 'link-color', state: [[stateCondition('&:hover'), 'var(--color-link-hover)']] }),
   'text-decoration': decoration,
   'text-underline-offset': '.2em',
 })

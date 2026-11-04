@@ -6,6 +6,29 @@ import { token, createTokenDefinition } from './core'
 import { token as publicToken } from '../index'
 import { add } from '../pieces/functions/calc'
 import { resolveTokenName } from './css'
+import { createNewTokenGenerator } from './tools/createNewTokenGenerator'
+
+test('仅对坍缩为变量的无名 Token 提示，并允许生成器关闭提示', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    const direct = token('2px')
+    const missing = token('inherit', { state: { hover: 'hidden' } })
+    const disabled = token('inherit', { state: { hover: 'hidden' }, $warnIfMissTokenName: false })
+    const generated = createNewTokenGenerator({ prefixName: 'button' })('red', { state: { hover: 'blue' } })
+    expect(generated.$warnIfMissTokenName).toBe(false)
+    const css = compileRules([
+      [['.Direct'], 'width', direct],
+      [['.Missing'], 'visibility', missing],
+      [['.Disabled'], 'visibility', disabled],
+      [['.Generated'], 'color', generated],
+    ])
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith(expect.any(String), expect.stringMatching(/^--/), missing)
+    expect(css).toContain(`var(--${resolveTokenName(missing)})`)
+  } finally {
+    warn.mockRestore()
+  }
+})
 
 test('聚合入口创建匿名直接值，编译为 CSS value', () => {
   const size = publicToken('2px')

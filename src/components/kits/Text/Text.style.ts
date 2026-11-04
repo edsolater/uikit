@@ -2,8 +2,8 @@
 import { rules, token, stateCondition } from '@/style-system'
 
 rules('.Text', {
-  visibility: token('inherit', { state: [[stateCondition('body:has(.StructureViewOverlay:popover-open) &'), 'hidden']] }),
-  color: token('inherit', { state: [
+  visibility: token('inherit', { name: 'text-visibility', state: [[stateCondition('body:has(.StructureViewOverlay:popover-open) &'), 'hidden']] }),
+  color: token('inherit', { name: 'text-color', state: [
     [stateCondition('&[data-tone="muted"]'), 'var(--color-fg-soft)'],
     [stateCondition('&[data-tone="warning"]'), 'var(--color-warn)'],
     [stateCondition('&[data-tone="result"]'), 'var(--color-fg-strong)'],

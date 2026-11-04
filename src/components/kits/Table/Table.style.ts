@@ -11,9 +11,9 @@ rules('.Table', { 'overflow-x': 'auto' })
 rules('.Table > table', { width: '100%', 'border-collapse': 'collapse', background: 'var(--color-surface)', color: 'var(--color-fg)' })
 
 const compact = stateCondition('&[data-compact="true"]')
-const padding = token('12px', { state: [[compact, '10px 8px']] })
-const whiteSpace = token('normal', { state: [[compact, 'nowrap']] })
-const fontSize = token('inherit', { state: [[compact, '13px']] })
+const padding = token('12px', { name: 'table-cell-padding', state: [[compact, '10px 8px']] })
+const whiteSpace = token('normal', { name: 'table-cell-white-space', state: [[compact, 'nowrap']] })
+const fontSize = token('inherit', { name: 'table-cell-font-size', state: [[compact, '13px']] })
 rules('.Table > table > :is(thead,tbody) > tr > :is(th,td)', {
   padding,
   'white-space': whiteSpace,
@@ -26,7 +26,7 @@ rules('.Table > table > :is(thead,tbody) > tr > :is(th,td)', {
 
 rules('.Table > table > thead > tr > th', { background: 'var(--color-surface-low)', 'white-space': 'nowrap' })
 const intensity = stateCondition('&[data-intensity="true"]')
-const background = token('transparent', { state: [[intensity, 'rgb(from var(--color-accent) r g b / calc(0.04 + var(--table-cell-intensity) * 0.23))']] })
-const weight = token('normal', { state: [[intensity, '650']] })
-const color = token('inherit', { state: [[intensity, 'var(--color-fg-strong)']] })
+const background = token('transparent', { name: 'table-cell-background', state: [[intensity, 'rgb(from var(--color-accent) r g b / calc(0.04 + var(--table-cell-intensity) * 0.23))']] })
+const weight = token('normal', { name: 'table-cell-font-weight', state: [[intensity, '650']] })
+const color = token('inherit', { name: 'table-cell-color', state: [[intensity, 'var(--color-fg-strong)']] })
 rules('.Table > table > tbody > tr > td', { 'background-color': background, 'font-weight': weight, color })

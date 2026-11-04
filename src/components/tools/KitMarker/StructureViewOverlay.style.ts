@@ -56,6 +56,7 @@ rules('.StructureViewOverlay > .frame::before', {
   'z-index': -1,
   background: kitMarkerStructureViewMaskColor,
   'backdrop-filter': token(kitMarkerStructureViewMaskBlur, {
+    name: 'component-marker-structure-view-mask-filter',
     toCSSString: (value, resolve) => `blur(${resolve(value)})`,
   }),
   // 每个框的逐帧几何数据由其宿主单独传入，不作为全局视觉状态。

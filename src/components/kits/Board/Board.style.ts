@@ -14,6 +14,7 @@ const xlarge = stateCondition('&[data-size="xlarge"]')
 const background = token(
   'color-mix(in oklab, var(--color-surface) 78%, transparent)',
   {
+    name: 'board-background',
     state: [
       [soft, 'color-mix(in oklab, var(--color-surface) 58%, transparent)'],
       [solid, 'var(--color-surface)'],
@@ -35,9 +36,11 @@ export const boardBorder = token(
   },
 )
 const shadow = token('var(--shadow-card)', {
+  name: 'board-shadow',
   state: [[soft, 'var(--shadow-1)']],
 })
 const padding = token('var(--space-6)', {
+  name: 'board-padding',
   state: [
     [small, 'var(--space-4)'],
     [large, 'var(--space-7)'],
@@ -45,13 +48,14 @@ const padding = token('var(--space-6)', {
   ],
 })
 const gap = token('var(--space-5)', {
+  name: 'board-gap',
   state: [
     [small, 'var(--space-3)'],
     [large, 'var(--space-6)'],
     [xlarge, 'var(--space-7)'],
   ],
 })
-const radius = token('var(--radius-4)', { state: [[small, 'var(--radius-3)']] })
+const radius = token('var(--radius-4)', { name: 'board-radius', state: [[small, 'var(--radius-3)']] })
 rules('.Board', {
   display: 'grid',
   'margin-trim': 'none',
