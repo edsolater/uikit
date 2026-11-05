@@ -5,8 +5,7 @@
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
  */
 import { createState, onMount, type State } from '@/foundation'
-import type { PivTag } from '../../../Piv/domMap'
-import { createPlugin } from '../../definePlugin'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
 import './topLayer.style'
 
@@ -160,50 +159,15 @@ function restoreInlineDeclarations(
   }
 }
 
-export const topLayer = createPlugin<undefined, TopLayerController, PivTag>(
-  () => {
-    const active = createState(false)
-    let elementController: TopLayerController | undefined
-    let requested = true
-
-    // Plugin Controller 是纯控制器的生命周期适配层。它只记住挂载前的调用意图，
-    // 元素可用后，所有实际提升操作都转发给 createTopLayerController() 的结果。
-    const controller: TopLayerController = {
-      active,
-      enter() {
-        requested = true
-        if (!elementController) return
-        elementController.enter()
-        active.set(true)
-      },
-      leave() {
-        requested = false
-        if (!elementController) return
-        elementController.leave()
-        active.set(false)
-      },
-    }
-
-    return {
-      controller,
-      plugin: ({ element }) => {
-        const mountedController = createTopLayerController(element)
-        onMount(() => {
-          elementController = mountedController
-          if (requested) controller.enter()
-          return () => {
-            elementController?.leave()
-            elementController = undefined
-            active.set(false)
-          }
-        })
-
-        return {
-          htmlProps: {
-            'data-plugin': { mergable: 'top-layer' },
-          },
-        }
-      },
-    }
+export const topLayer = defineInactivePlugin({
+  name: 'topLayer',
+  pluginCore({ element, addProps }): TopLayerController {
+    const controller = createTopLayerController(element)
+    onMount(() => {
+      controller.enter()
+      return () => controller.leave()
+    })
+    addProps({ htmlProps: { 'data-plugin': { mergable: 'top-layer' } } })
+    return controller
   },
-)
+})

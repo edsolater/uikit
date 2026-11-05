@@ -18,6 +18,7 @@ import {
 
 export interface PointerDragOptions {
   source: HTMLElement
+  id?: object
   payload: unknown
   activationDistance: number
   activationJump: boolean
@@ -147,7 +148,7 @@ class PointerDragSession implements PointerDrag {
     }
 
     interaction.active = {
-      drag: createInternalDrag(this.options.source, this.options.payload),
+      drag: createInternalDrag(this.options.source, this.options.payload, this.options.id),
       topLayer,
       compensation: this.options.activationJump
         ? { x: 0, y: 0 }

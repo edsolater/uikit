@@ -13,7 +13,9 @@ import {
   val,
 } from '@/foundation'
 import { Piv } from './Piv'
-import { createPivPlugin } from './plugin/helpers'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import type { ShadowProps } from './plugin/handlePivPlugin'
+import type { PivTag } from './domMap'
 import { mergePivProps } from './plugin/handlePivPlugin'
 
 describe('Piv 生命周期', () => {
@@ -68,9 +70,7 @@ describe('Piv 生命周期', () => {
       get class(): string {
         throw new Error('不应解析隐藏字段')
       },
-      is: () => {
-        throw new Error('不应初始化隐藏插件')
-      },
+      is: testPlugin(() => { throw new Error('不应初始化隐藏插件') }),
     }
     const dispose = render(
       () => (
@@ -234,7 +234,7 @@ describe('Piv 生命周期', () => {
     const incidental = createState('before')
     const Context = createContext('default')
     const observations: string[] = []
-    const plugin = createPivPlugin(({ element }) => {
+    const plugin = testPlugin(({ element }) => {
       val(incidental)
       observations.push(
         `plugin:${element.childElementCount}:${useContext(Context)}`,
@@ -361,7 +361,7 @@ describe('Piv 生命周期', () => {
     const initialized: Element[] = []
     const cleaned: Element[] = []
     let clicks = 0
-    const plugin = createPivPlugin(({ element }) => {
+    const plugin = testPlugin(({ element }) => {
       initialized.push(element)
       onCleanup(() => cleaned.push(element))
       return undefined
@@ -528,7 +528,7 @@ describe('Piv Source 属性', () => {
           return readSource()
         },
         shadowProps: { id: shadow },
-        is: createPivPlugin(() => ({ id: pluginId })),
+        is: testPlugin(() => ({ id: pluginId })),
       }),
       dispose,
     }))
@@ -594,7 +594,7 @@ describe('Piv Source 属性', () => {
 
   test('id 可由 shadowProps 或 plugin 提供，多个来源沿用普通数组合并', () => {
     const host = document.createElement('div')
-    const plugin = createPivPlugin(() => ({ id: 'from-plugin' }))
+    const plugin = testPlugin(() => ({ id: 'from-plugin' }))
     const dispose = render(
       () => (
         <>
@@ -705,10 +705,10 @@ describe('Piv Source 属性', () => {
   test('嵌套 plugin、shadowProps 与直接动态 class 统一进入 class 消费层', () => {
     const host = document.createElement('div')
     let setValue!: (value: number) => void
-    const nestedPlugin = createPivPlugin(() => ({
+    const nestedPlugin = testPlugin(() => ({
       class: 'from-nested-plugin',
     }))
-    const plugin = createPivPlugin(() => ({
+    const plugin = testPlugin(() => ({
       class: 'from-plugin',
       is: nestedPlugin,
     }))
@@ -786,7 +786,7 @@ describe('Piv style 属性', () => {
     const directStyles = createState<
       Array<{ 'color'?: string; 'border-color'?: string }>
     >([{ color: 'red' }])
-    const plugin = createPivPlugin(() => ({ style: pluginStyles }))
+    const plugin = testPlugin(() => ({ style: pluginStyles }))
     const dispose = render(
       () => <Piv is={plugin} style={directStyles} />,
       host,
@@ -845,7 +845,7 @@ describe('Piv htmlProps 属性', () => {
     const pluginValue = createState('plugin-before')
     const directValue = createState('direct-before')
     let pluginValueReadCount = 0
-    const plugin = createPivPlugin(() => ({
+    const plugin = testPlugin(() => ({
       htmlProps: {
         get 'data-value'() {
           pluginValueReadCount += 1
@@ -904,3 +904,9 @@ describe('Piv htmlProps 属性', () => {
     dispose()
   })
 })
+
+function testPlugin(core: (payload: { element: HTMLElement }) => ShadowProps<PivTag> | undefined) {
+  return defineInactivePlugin({ name: 'test', pluginCore({ element, addProps }) {
+    const result = core({ element }); if (result) addProps(result); return {}
+  } })()
+}

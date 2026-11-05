@@ -249,12 +249,12 @@ describe('ExampleDashboard', () => {
       'Droppable',
     )
 
-    window.history.replaceState(null, '', '/examples/scope')
+    window.history.replaceState(null, '', '/examples/drag-and-drop')
     window.dispatchEvent(new PopStateEvent('popstate'))
     flush()
 
     expect(document.querySelector('.example-detail h2')?.textContent).toBe(
-      'Scope + Drag and Drop',
+      'Drag and Drop 分组',
     )
   })
 

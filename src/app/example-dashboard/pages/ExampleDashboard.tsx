@@ -40,7 +40,7 @@ import { PopoverSurfaceExample } from '@/components/kits/Popover/PopoverSurface.
 import { PivStructureExample } from '@/components/Piv/PivStructure.example'
 import { DraggableExample } from '@/components/plugins/kits/draggable/draggable.example'
 import { DroppableExample } from '@/components/plugins/kits/droppable/droppable.example'
-import { ScopeExample } from '@/components/plugins/kits/scope/scope.example'
+import { DragAndDropExample } from '@/components/plugins/kits/dragAndDrop/dragAndDrop.example'
 import { ColorShowcase } from '@/style-system/pieces/tokens/color/ColorShowcase/ColorShowcase.example'
 import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleDashboard.style'
@@ -144,12 +144,12 @@ export const exampleEntries: ExampleEntry[] = [
     content: DroppableExample,
   },
   {
-    id: 'scope',
-    title: 'Scope',
+    id: 'drag-and-drop',
+    title: 'Drag and Drop',
     category: exampleCategories.plugin,
-    summary: '能力组合的作用域边界。',
-    thumbnail: new URL('../thumbnails/scope.webp', import.meta.url).href,
-    content: ScopeExample,
+    summary: '按共享标识分组的拖放协作。',
+    thumbnail: new URL('../thumbnails/drag-and-drop.webp', import.meta.url).href,
+    content: DragAndDropExample,
   },
   {
     id: 'piv-structure',

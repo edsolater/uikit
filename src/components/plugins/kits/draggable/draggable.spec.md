@@ -2,7 +2,7 @@
 
 ## 目标
 
-`draggable` 使用 Pointer Events 建立页面内拖动。它拥有当前元素是否可拖、是否正在拖动、本次携带的 `payload`，以及原始元素的跟随位移；不依赖 `droppable` 或 `scope` 才能成立。
+`draggable` 使用 Pointer Events 建立页面内拖动。它拥有当前元素是否可拖、是否正在拖动、本次携带的 `payload`，以及原始元素的跟随位移；不依赖 `droppable` 才能成立。
 
 ```tsx
 <Piv is={draggable({ payload: weather })}>Weather</Piv>
@@ -56,6 +56,6 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 - 不读取或维护 source 的基础位置、尺寸与提升阴影；这些由 Top Layer 提升事务负责。
 - source 自身已经承担 Popover 时不开始拖动；第一版不让两个能力共享同一个 Popover 状态。
 - 不判断放下后的业务结果。
-- 不拥有 Scope。
+- 不负责目标节点的接收逻辑。
 - 不拥有 Top Layer 的影子 Anchor、进入、退出和恢复协议，只决定本次 Drag 何时使用它。
 - 不实现排序插入位、before/after indicator 或集合写入；Top Layer Anchor 只表示提升前的原位置。

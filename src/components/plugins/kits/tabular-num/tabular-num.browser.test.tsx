@@ -9,7 +9,7 @@ test('数字等宽插件登记并应用排版样式', () => {
   style.id = 'css-root'
   cssRoot.mount()
   const host = document.body.appendChild(document.createElement('div'))
-  const dispose = render(() => <Piv is={tabularNum}>123</Piv>, host)
+  const dispose = render(() => <Piv is={tabularNum()}>123</Piv>, host)
   try {
     const element = host.querySelector<HTMLElement>('.is\\:tabular-num')!
     expect(element).not.toBeNull()

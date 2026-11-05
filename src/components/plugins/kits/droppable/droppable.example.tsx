@@ -6,9 +6,9 @@ import { createState, val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
 import { Card } from '../../../kits/Card/Card'
 import { Article } from '../../../kits/Article/Article'
-import '../../DragAndDrop.example.style'
-import { draggable } from '../draggable/draggable'
-import { droppable } from './droppable'
+import '@/components/plugins/kits/dragAndDrop/dragAndDrop.example.style'
+import { dragAndDrop } from '@/components/plugins/kits/dragAndDrop/dragAndDrop'
+const { draggable, droppable } = dragAndDrop
 
 export function DroppableExample() {
   const payloadResult = createState<string>()

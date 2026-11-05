@@ -60,7 +60,7 @@ describe('draggable', () => {
   })
 
   test('在 Top Layer 基础位置上移动原始 source', () => {
-    let controller!: DraggableController
+    let controller!: Partial<DraggableController>
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
@@ -114,7 +114,7 @@ describe('draggable', () => {
     expect(Math.abs(sourceRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.width - originalRect.width)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.height - originalRect.height)).toBeLessThan(0.1)
-    expect(val(controller.dragging)).toBe(true)
+    expect(val(controller.dragging!)).toBe(true)
 
     window.dispatchEvent(pointerEvent('pointermove', 7, 52, 74))
     flush()
@@ -134,7 +134,7 @@ describe('draggable', () => {
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
-    expect(val(controller.dragging)).toBe(false)
+    expect(val(controller.dragging!)).toBe(false)
   })
 
   test('默认在按下时立即开始拖动', () => {

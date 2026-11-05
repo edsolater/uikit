@@ -78,25 +78,25 @@ test('默认打开反映原生状态，取消打开不伪报成功，强制切�
   await expect
     .poll(() => defaultTrigger.getAttribute('aria-expanded'))
     .toBe('true')
-  controller.showPopover()
-  expect(val(controller.isOpen)).toBe(false)
+  controller.showPopover!()
+  expect(val(controller.isOpen!)).toBe(false)
   controller.togglePopover(true)
-  expect(val(controller.isOpen)).toBe(false)
+  expect(val(controller.isOpen!)).toBe(false)
   cancel = false
   controller.togglePopover()
   expect(
     host.querySelectorAll('.PopoverSurface')[1].matches(':popover-open'),
   ).toBe(true)
-  await expect.poll(() => val(controller.isOpen)).toBe(true)
+  await expect.poll(() => val(controller.isOpen!)).toBe(true)
   controller.togglePopover(false)
-  await expect.poll(() => val(controller.isOpen)).toBe(false)
+  await expect.poll(() => val(controller.isOpen!)).toBe(false)
   expect(document.activeElement?.textContent).toBe('控制目标')
 })
 
 test('非Label宿主保留id与自有描述，模板动态更新且实例互不影响', async () => {
   const value = createState(1)
-  let first!: TooltipController
-  let second!: TooltipController
+  let first!: Partial<TooltipController>
+  let second!: Partial<TooltipController>
   dispose = render(() => {
     const [one, firstController] = usePlugin(tooltip, {
       content: <Piv as="strong">当前{val(value)}</Piv>,
@@ -128,8 +128,8 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
   const trigger = host.querySelector<HTMLElement>('#own-id')!
   expect(trigger.getAttribute('aria-describedby')).toBe('existing-description')
   await userEvent.hover(trigger)
-  await expect.poll(() => val(first.isOpen)).toBe(true)
-  expect(val(second.isOpen)).toBe(false)
+  await expect.poll(() => val(first.isOpen!)).toBe(true)
+  expect(val(second.isOpen!)).toBe(false)
   const surface = host.querySelector<HTMLElement>(':popover-open')!
   expect(surface.querySelector('strong')?.textContent).toBe('当前1')
   value.set(2)
@@ -145,7 +145,7 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
 
 test('内容清空移除浮层并关闭状态，卸载释放附属结构和延迟关闭', async () => {
   const content = createState<JSXElement>('初始说明')
-  let controller!: TooltipController
+  let controller!: Partial<TooltipController>
   dispose = render(() => {
     const [plugin, current] = usePlugin(tooltip, { content })
     controller = current
@@ -156,10 +156,10 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
     )
   }, host)
   await userEvent.hover(host.querySelector('button')!)
-  await expect.poll(() => val(controller.isOpen)).toBe(true)
+  await expect.poll(() => val(controller.isOpen!)).toBe(true)
   content.set(undefined)
   await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
-  expect(val(controller.isOpen)).toBe(false)
+  expect(val(controller.isOpen!)).toBe(false)
   content.set('再次出现')
   await expect
     .poll(() => host.querySelector('[role="tooltip"]')?.textContent)
@@ -172,7 +172,7 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
 })
 
 test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧关闭计时', async () => {
-  let controller!: TooltipController
+  let controller!: Partial<TooltipController>
   dispose = render(() => {
     const [plugin, current] = usePlugin(tooltip, { content: 0 })
     controller = current
@@ -211,13 +211,13 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
         surface.querySelector('.PopoverPaint')!.getBoundingClientRect().top,
     ),
   ).toBeLessThan(2)
-  controller.hidePopover()
+  controller.hidePopover!()
   await expect.poll(() => surface.matches(':popover-open')).toBe(false)
   expect(document.activeElement).toBe(trigger)
   trigger.blur()
   await userEvent.hover(trigger)
   await userEvent.unhover(trigger)
-  controller.showPopover()
+  controller.showPopover!()
   await new Promise((resolve) => setTimeout(resolve, 180))
   expect(surface.matches(':popover-open')).toBe(true)
 })

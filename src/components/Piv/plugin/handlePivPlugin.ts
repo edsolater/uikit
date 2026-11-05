@@ -4,17 +4,16 @@
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 domRef。
  */
 import {
-  mayMap,
   mergeMayArray,
   toArray,
   type ID,
   type MayArray,
 } from '@edsolater/fnkit'
-import { val, type StateView } from '@/foundation'
+import { onCleanup, val, type StateView } from '@/foundation'
 import { derive } from '@/hooks/stateUtils'
 import type { PivProps } from '../Piv'
 import type { PivHTMLElement, PivTag } from '../domMap'
-import { runPlugin, type PivPlugin } from './runPlugin'
+import type { Plugin } from '@/components/plugins/defineInactivePlugin'
 import { getPublicPluginSources } from './publicCapabilities'
 import { mapArray } from '@/foundation/render'
 import { createMemo } from '@/foundation/reactivity'
@@ -104,7 +103,7 @@ export function mergePivProps<Tag extends PivTag>(
     () =>
       pluginSources
         .map((source) => val(source))
-        .filter((plugin): plugin is PivPlugin<Tag> => plugin !== undefined),
+        .filter((plugin): plugin is Plugin => plugin !== undefined),
     (plugin) => expandPlugins([plugin], element),
   )
   // 声明结构变化时才重新汇总；字段仍在消费时读取。
@@ -114,7 +113,7 @@ export function mergePivProps<Tag extends PivTag>(
 
 /** 插件展开共用同一执行栈，保持原顺序与返回协议。 */
 function expandPlugins<Tag extends PivTag>(
-  plugins: PivPlugin<Tag>[],
+  plugins: (Plugin | ShadowProps<Tag>)[],
   element: PivHTMLElement<Tag>,
 ) {
   const declarations: ShadowProps<Tag>[] = []
@@ -123,11 +122,18 @@ function expandPlugins<Tag extends PivTag>(
   while (pluginsQueue.length > 0) {
     const plugin = pluginsQueue.pop()
     if (!plugin) continue
-    const result = runPlugin(plugin, element)
-    if (result) {
-      const newDeepQueueFromResult = getPluginFromShadowProps(result)
+    const submitted: ShadowProps<Tag>[] = []
+    if (typeof plugin === 'function') {
+      plugin({
+        element,
+        onCleanup,
+        addProps: (declaration) => submitted.push(declaration as ShadowProps<Tag>),
+      })
+    } else submitted.push(plugin)
+    for (const declaration of submitted.reverse()) {
+      const newDeepQueueFromResult = getPluginFromShadowProps(declaration)
       pluginsQueue.push(...newDeepQueueFromResult)
-      declarations.push(result)
+      declarations.push(declaration)
     }
   }
 
@@ -137,9 +143,9 @@ function expandPlugins<Tag extends PivTag>(
 /** 把一份 raw props 携带的 is 和 shadowProps 归一成待执行 plugin 队列。 */
 function getPluginFromShadowProps<Tag extends PivTag>(
   props: ShadowProps<Tag>,
-): PivPlugin<Tag>[] {
-  return toArray(
-    mayMap(props.shadowProps, (shadow) => () => shadow),
+): (Plugin | ShadowProps<Tag>)[] {
+  return toArray<Plugin | ShadowProps<Tag>>(
+    props.shadowProps,
     props.is,
   )
 }

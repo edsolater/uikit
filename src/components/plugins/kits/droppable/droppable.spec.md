@@ -8,7 +8,7 @@
 <Piv is={droppable({ onDrop })}>Drop here</Piv>
 ```
 
-`accepts()` 先判断当前材料，返回 true 后才能放下。Scope 检查先于 `accepts()`；通过 Scope 只表示没有越界，不代表接收端一定接受。
+页面内拖动先比较两端 `id`，再用 `accepts()` 判断材料；外部文件只由启用状态和 `accepts()` 决定。
 
 ## DropContext
 
@@ -23,7 +23,7 @@
 
 - `enabled`：当前是否允许接收。
 - `hovering`：拖动是否正在接收区域上方。
-- `acceptable`：当前拖动是否同时通过 Scope 与 `accepts()`。
+- `acceptable`：当前材料是否可接收；页面内材料还须匹配 id。
 - `enable()`、`disable()`：控制接收能力。
 
 ## Example

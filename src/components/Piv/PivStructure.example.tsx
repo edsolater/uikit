@@ -6,32 +6,53 @@
 import { Piv } from './Piv'
 import { Card } from '../kits/Card/Card'
 import { Article } from '../kits/Article/Article'
-import { createPivPlugin } from './plugin/helpers'
+import { createPivStructure } from './plugin/helpers'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 
-const beforeLabelPlugin = createPivPlugin(({ insertBefore }) => {
-  insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)
+const beforeLabelPlugin = defineInactivePlugin({
+  name: 'beforeLabel',
+  pluginCore({ element }) {
+    const { insertBefore } = createPivStructure(element)
+    insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)
+    return {}
+  },
 })
 
-const appendRedDotPlugin = createPivPlugin(({ appendChild }) => {
-  appendChild(
-    <Piv
-      as="span"
-      class="structure-red-dot"
-      htmlProps={{ 'aria-hidden': 'true' }}
-    />,
-  )
+const appendRedDotPlugin = defineInactivePlugin({
+  name: 'appendRedDot',
+  pluginCore({ element }) {
+    const { appendChild } = createPivStructure(element)
+    appendChild(
+      <Piv
+        as="span"
+        class="structure-red-dot"
+        htmlProps={{ 'aria-hidden': 'true' }}
+      />,
+    )
+    return {}
+  },
 })
 
-const wrapManagerPlugin = createPivPlugin(({ wrapOutside }) => {
-  wrapOutside(<Piv class="structure-manager" />)
+const wrapManagerPlugin = defineInactivePlugin({
+  name: 'wrapManager',
+  pluginCore({ element }) {
+    const { wrapOutside } = createPivStructure(element)
+    wrapOutside(<Piv class="structure-manager" />)
+    return {}
+  },
 })
 
-const selfMeasurePlugin = createPivPlugin(({ element, insertAfter }) => {
-  insertAfter(
-    <Piv class="structure-note">
-      element 参数适合读取当前 DOM 信息：{element.tagName.toLowerCase()}
-    </Piv>,
-  )
+const selfMeasurePlugin = defineInactivePlugin({
+  name: 'selfMeasure',
+  pluginCore({ element }) {
+    const { insertAfter } = createPivStructure(element)
+    insertAfter(
+      <Piv class="structure-note">
+        element 参数适合读取当前 DOM 信息：{element.tagName.toLowerCase()}
+      </Piv>,
+    )
+    return {}
+  },
 })
 
 export function PivStructureExample() {
@@ -44,22 +65,22 @@ export function PivStructureExample() {
         </div>
 
         <div class="example-stack">
-          <Piv class="structure-case" is={beforeLabelPlugin}>
+          <Piv class="structure-case" is={beforeLabelPlugin()}>
             before 用于在主体前方挂辅助标记。
           </Piv>
 
-          <Piv as="button" class="structure-button" is={appendRedDotPlugin}>
+          <Piv as="button" class="structure-button" is={appendRedDotPlugin()}>
             appendChild 红点
           </Piv>
 
-          <Piv class="structure-editor" is={wrapManagerPlugin}>
+          <Piv class="structure-editor" is={wrapManagerPlugin()}>
             <Piv class="structure-editor-title">wrap 管理器</Piv>
             <Piv class="structure-editor-body">
               主体仍然是这个 Piv，外层由插件接管布局边界。
             </Piv>
           </Piv>
 
-          <Piv class="structure-case" is={selfMeasurePlugin}>
+          <Piv class="structure-case" is={selfMeasurePlugin()}>
             element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
           </Piv>
         </div>

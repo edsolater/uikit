@@ -27,7 +27,7 @@ Piv 在创建前组织直接声明与纯 shadowProps 的 as/if 来源，不读�
 as 选择最高优先级的非 undefined 值；if 选择最高优先级存在该属性的来源，保留显式 undefined。
 
 真实元素可用后，Piv 运行 setup，得到插件与直接声明共同形成的 DOM 字段声明。
-直接声明保留高优先级位置，plugin 返回值和 shadowProps 作为低优先级来源；各字段继续使用原有合并规则，不统一改成覆盖或拼接。
+直接声明保留高优先级位置，Plugin 通过 `addProps` 提交的声明和 shadowProps 作为低优先级来源；各字段继续使用原有合并规则，不统一改成覆盖或拼接。
 纯 shadowProps 的 PivShadowProps 契约包含 as/if；DOM 插件返回的 ShadowProps 契约不包含 as/if/children，不能反向控制元素创建或建立反馈重建。
 
 快捷入口只选择配置并注入插件声明，实例执行与释放由插件消费链负责。
@@ -86,7 +86,7 @@ true 使用原插件默认配置，options 沿原插件配置契约；options.di
 `is` 声明的 Plugin 独立运行，快捷 false 不撤销其资源或接管 usePlugin 创建的 controller。
 
 页内拖动复用现有 Pointer 会话、原元素与 translate，关闭时取消当前拖动并恢复原元素状态。
-droppable 关闭时注销内部目标并移除外部事件，外部 DataTransfer 接收、Scope 和占用保护沿现有插件契约。
+droppable 关闭时注销内部目标并移除外部事件；页面内拖放按共享 id 引用匹配，外部 DataTransfer 由目标的启用状态与 accepts 判断，占用保护沿现有插件契约。
 不启用原生 HTML 拖动，也不在 Dode 复制拖放算法。
 
 ## 代码落点

@@ -5,9 +5,9 @@
  *
  * 使Label问号及其他宿主共用同一提示能力。
  */
-import { onCleanup, Show, val } from '@/foundation'
-import { createPlugin } from '../../definePlugin'
-import type { PivTag } from '../../../Piv/domMap'
+import { onCleanup as solidOnCleanup, Show, val } from '@/foundation'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { createPivStructure } from '@/components/Piv/plugin/helpers'
 import type { PivProps } from '../../../Piv/Piv'
 import {
   createPopoverVisibilityController,
@@ -41,8 +41,15 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
 /**
  * 沿Piv实例挂载附属浮层，保留宿主原有id与声明优先级。
  */
-export const tooltip = createPlugin<TooltipOptions, TooltipController, PivTag>(
-  (options) => {
+export const tooltip = defineInactivePlugin<TooltipOptions, TooltipController>({
+  name: 'tooltip',
+  pluginCore({
+    pluginOptions: options,
+    element,
+    onCleanup,
+    addProps,
+  }): TooltipController {
+    const { insertAfter } = createPivStructure(element)
     const [controller, bindings] = createPopoverVisibilityController()
     const anchor = '--' + controller.triggerId
     let hovered = false
@@ -83,59 +90,55 @@ export const tooltip = createPlugin<TooltipOptions, TooltipController, PivTag>(
       controller.hidePopover(false)
     }
     onCleanup(cancelClose)
+    insertAfter(
+      <Show when={hasTooltipContent(options?.content)}>
+        {(_visible) => {
+          solidOnCleanup(() => {
+            cancelClose()
+            controller.hidePopover(false)
+          })
+          return (
+            <PopoverSurface
+              id={controller.popoverId}
+              anchor={anchor}
+              placement="top"
+              popover="hint"
+              class="Tooltip"
+              domRef={bindings.popoverDomRef}
+              htmlProps={{ role: 'tooltip' }}
+              on={{ pointerenter: enter, pointerleave: leave }}
+            >
+              {options?.content}
+            </PopoverSurface>
+          )
+        }}
+      </Show>,
+    )
+    addProps({
+      domRef: bindings.triggerDomRef,
+      style: { 'anchor-name': anchor },
+      htmlProps: { 'aria-describedby': controller.popoverId },
+      on: {
+        pointerenter: enter,
+        pointerleave: leave,
+        focusin: () => {
+          focused = true
+          open()
+        },
+        focusout: () => {
+          focused = false
+          if (!hovered) leave()
+        },
+        click: open,
+        keydown: ({ event }) => {
+          if (event.key === 'Escape') dismiss()
+        },
+      },
+    })
     return {
-      controller: {
-        isOpen: controller.isOpen,
-        showPopover: open,
-        hidePopover: dismiss,
-      },
-      plugin: ({ insertAfter }) => {
-        insertAfter(
-          <Show when={hasTooltipContent(options?.content)}>
-            {(_visible) => {
-              onCleanup(() => {
-                cancelClose()
-                controller.hidePopover(false)
-              })
-              return (
-                <PopoverSurface
-                  id={controller.popoverId}
-                  anchor={anchor}
-                  placement="top"
-                  popover="hint"
-                  class="Tooltip"
-                  domRef={bindings.popoverDomRef}
-                  htmlProps={{ role: 'tooltip' }}
-                  on={{ pointerenter: enter, pointerleave: leave }}
-                >
-                  {options?.content}
-                </PopoverSurface>
-              )
-            }}
-          </Show>,
-        )
-        return {
-          domRef: bindings.triggerDomRef,
-          style: { 'anchor-name': anchor },
-          htmlProps: { 'aria-describedby': controller.popoverId },
-          on: {
-            pointerenter: enter,
-            pointerleave: leave,
-            focusin: () => {
-              focused = true
-              open()
-            },
-            focusout: () => {
-              focused = false
-              if (!hovered) leave()
-            },
-            click: open,
-            keydown: ({ event }) => {
-              if (event.key === 'Escape') dismiss()
-            },
-          },
-        }
-      },
+      isOpen: controller.isOpen,
+      showPopover: open,
+      hidePopover: dismiss,
     }
   },
-)
+})

@@ -2,9 +2,12 @@
 import { Card } from './Card'
 import { Article } from '../Article/Article'
 import { Flow } from '../Flow/Flow'
+import { usePlugin } from '@/components/plugins/usePlugin'
+import { clickable } from '@/components/plugins/kits/clickable/clickable'
 import './Card.example.style'
 
 export function CardExample() {
+  const [cardClickable] = usePlugin(clickable)
   return (
     <Card class="example-card">
       <Article>
@@ -19,7 +22,7 @@ export function CardExample() {
           </p>
 
           <div class="card-example-grid">
-            <Card class="card-example-item" small>
+            <Card class="card-example-item" small is={cardClickable}>
               <Flow>
                 <strong>Small</strong>
                 <span>紧凑信息单元</span>

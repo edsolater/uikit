@@ -35,13 +35,13 @@ describe('topLayer', () => {
     const controller = createTopLayerController(source)
     try {
       root.dataset.theme = 'light'
-      controller.enter()
+      controller.enter!()
       const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
       const light = getComputedStyle(anchor, '::after').borderTopColor
       root.dataset.theme = 'dark'
       expect(getComputedStyle(anchor, '::after').borderTopColor).not.toBe(light)
     } finally {
-      controller.leave()
+      controller.leave!()
       if (previous === null) root.removeAttribute('data-theme')
       else root.setAttribute('data-theme', previous)
     }
@@ -55,7 +55,7 @@ describe('topLayer', () => {
       source.style.cssText = `position:${position};width:80px;height:40px;border-radius:12px;left:10px;top:7px`
       const before = source.getBoundingClientRect()
       const controller = createTopLayerController(source)
-      controller.enter()
+      controller.enter!()
       const anchor = host.querySelector<HTMLElement>('.top-layer-anchor')!
       const after = anchor.getBoundingClientRect()
       const outline = getComputedStyle(anchor, '::after')
@@ -66,7 +66,7 @@ describe('topLayer', () => {
       expect(outline.borderStyle).toBe('dashed')
       expect(outline.borderWidth).toBe('2px')
       expect(outline.borderRadius).toBe('12px')
-      controller.leave()
+      controller.leave!()
       host.remove()
     }
   })
@@ -80,56 +80,29 @@ describe('topLayer', () => {
     expect(getComputedStyle(source).boxShadow).toBe('rgb(1, 2, 3) 1px 2px 3px 0px')
   })
 
-  test('挂载前只记录最后意图，挂载后建立提升资源，卸载释放 DOM 资源', async () => {
-    for (const requested of [false, true]) {
-      let controller!: TopLayerController
-      const host = document.body.appendChild(document.createElement('div'))
-
-      dispose = render(() => {
-        const [plugin, currentController] = usePlugin(topLayer)
-        controller = currentController
-        return (
-          <Piv
-            htmlProps={{ 'data-testid': 'source' }}
-            is={(context) => {
-              const props = plugin(context)
-              expect(context.element.isConnected).toBe(false)
-              controller.leave()
-              controller.enter()
-              if (!requested) controller.leave()
-              expect(context.element.hasAttribute('popover')).toBe(false)
-              expect(context.element.classList.contains('top-layer')).toBe(
-                false,
-              )
-              expect(context.element.previousElementSibling).toBeNull()
-              expect(document.querySelector('.top-layer-anchor')).toBeNull()
-              return props
-            }}
-          />
-        )
-      }, host)
-
-      const source = host.querySelector<HTMLElement>('[data-testid="source"]')!
-      expect(source.matches(':popover-open')).toBe(requested)
-      expect(source.classList.contains('top-layer')).toBe(requested)
-      expect(document.querySelectorAll('.top-layer-anchor')).toHaveLength(
-        requested ? 1 : 0,
-      )
-      await expect.poll(() => val(controller.active)).toBe(requested)
-
-      dispose()
-      dispose = undefined
-      expect(source.matches(':popover-open')).toBe(false)
-      expect(document.querySelector('.top-layer-anchor')).toBeNull()
-      host.remove()
-    }
+  test('节点安装后提供控制，卸载释放 DOM 资源', async () => {
+    let controller: Partial<TopLayerController> = {}
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => {
+      const [plugin, current] = usePlugin(topLayer)
+      controller = current
+      expect(controller.enter).toBeUndefined()
+      return <Piv is={plugin} htmlProps={{ 'data-testid': 'source' }} />
+    }, host)
+    const source = host.querySelector<HTMLElement>('[data-testid="source"]')!
+    expect(source.matches(':popover-open')).toBe(true)
+    await expect.poll(() => controller.enter).toBeDefined()
+    dispose(); dispose = undefined
+    expect(source.matches(':popover-open')).toBe(false)
+    expect(document.querySelector('.top-layer-anchor')).toBeNull()
+    await expect.poll(() => controller.enter).toBeUndefined()
   })
 
   test('直接安装 Plugin 时在组件挂载期间持续提升', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(
-      () => <Piv is={topLayer} htmlProps={{ 'data-testid': 'source' }} />,
+      () => <Piv is={topLayer()} htmlProps={{ 'data-testid': 'source' }} />,
       host,
     )
 
@@ -149,7 +122,7 @@ describe('topLayer', () => {
   })
 
   test('Plugin Controller 条件控制同一项提升能力', async () => {
-    let controller!: TopLayerController
+    let controller!: Partial<TopLayerController>
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
@@ -166,20 +139,20 @@ describe('topLayer', () => {
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    await expect.poll(() => val(controller.active)).toBe(true)
+    await expect.poll(() => val(controller.active!)).toBe(true)
 
-    controller.leave()
+    controller.leave!()
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
-    await expect.poll(() => val(controller.active)).toBe(false)
+    await expect.poll(() => val(controller.active!)).toBe(false)
 
-    controller.enter()
+    controller.enter!()
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    await expect.poll(() => val(controller.active)).toBe(true)
+    await expect.poll(() => val(controller.active!)).toBe(true)
   })
 
   test('命令式提升维护原位置、尺寸、视觉和来源声明', async () => {
@@ -209,15 +182,15 @@ describe('topLayer', () => {
     }
     const originalVisualStyle = readVisualStyle(source)
     const controller = createTopLayerController(source)
-    await expect.poll(() => val(controller.active)).toBe(false)
+    await expect.poll(() => val(controller.active!)).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
 
-    controller.enter()
+    controller.enter!()
     const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
     const elevatedRect = source.getBoundingClientRect()
 
     expect(source.matches(':popover-open')).toBe(true)
-    await expect.poll(() => val(controller.active)).toBe(true)
+    await expect.poll(() => val(controller.active!)).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(getComputedStyle(source).position).toBe('fixed')
     expect(getComputedStyle(source).boxShadow).not.toBe('none')
@@ -261,8 +234,8 @@ describe('topLayer', () => {
       getComputedStyle(source).getPropertyValue('corner-top-left-shape'),
     )
 
-    controller.leave()
-    await expect.poll(() => val(controller.active)).toBe(false)
+    controller.leave!()
+    await expect.poll(() => val(controller.active!)).toBe(false)
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
@@ -285,7 +258,7 @@ describe('topLayer', () => {
     const originalRect = source.getBoundingClientRect()
 
     const controller = createTopLayerController(source)
-    controller.enter()
+    controller.enter!()
     const elevatedRect = source.getBoundingClientRect()
     const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
 
@@ -302,7 +275,7 @@ describe('topLayer', () => {
       Math.abs(anchor.getBoundingClientRect().height - originalRect.height),
     ).toBeLessThan(0.1)
 
-    controller.leave()
+    controller.leave!()
   })
 
   test('Anchor 不把 Grid stretch 的结果固化成下一轮轨道输入', () => {
@@ -326,7 +299,7 @@ describe('topLayer', () => {
     const originalPanelRect = panel.getBoundingClientRect()
     const originalSourceRect = source.getBoundingClientRect()
     const controller = createTopLayerController(source)
-    controller.enter()
+    controller.enter!()
     const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
     const elevatedPanelRect = panel.getBoundingClientRect()
     const anchorRect = anchor.getBoundingClientRect()
@@ -342,7 +315,7 @@ describe('topLayer', () => {
       Math.abs(anchorRect.height - originalSourceRect.height),
     ).toBeLessThan(0.1)
 
-    controller.leave()
+    controller.leave!()
   })
 
   test('Anchor 继续按照原 flex 参数分配主轴空间', () => {
@@ -359,7 +332,7 @@ describe('topLayer', () => {
     const originalSourceRect = source.getBoundingClientRect()
     const originalPeerRect = peer.getBoundingClientRect()
     const controller = createTopLayerController(source)
-    controller.enter()
+    controller.enter!()
     const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
     const anchorRect = anchor.getBoundingClientRect()
     const currentPeerRect = peer.getBoundingClientRect()
@@ -374,7 +347,7 @@ describe('topLayer', () => {
       Math.abs(currentPeerRect.width - originalPeerRect.width),
     ).toBeLessThan(0.1)
 
-    controller.leave()
+    controller.leave!()
   })
 
   test('滚动时 Anchor 跟随原布局，提升元素留在视口坐标', () => {
@@ -389,7 +362,7 @@ describe('topLayer', () => {
     source.style.height = '40px'
 
     const controller = createTopLayerController(source)
-    controller.enter()
+    controller.enter!()
     const anchor = document.querySelector<HTMLElement>('.top-layer-anchor')!
     const sourceTop = source.getBoundingClientRect().top
     const anchorTop = anchor.getBoundingClientRect().top
@@ -404,7 +377,7 @@ describe('topLayer', () => {
       Math.abs(anchor.getBoundingClientRect().top - (anchorTop - 40)),
     ).toBeLessThan(0.1)
 
-    controller.leave()
+    controller.leave!()
   })
 
   test('纯控制器不覆盖已有 Popover', () => {
@@ -412,10 +385,10 @@ describe('topLayer', () => {
     source.setAttribute('popover', 'manual')
     const controller = createTopLayerController(source)
 
-    expect(() => controller.enter()).toThrowError(
+    expect(() => controller.enter!()).toThrowError(
       'Top Layer 元素不能同时承担 Popover',
     )
-    expect(val(controller.active)).toBe(false)
+    expect(val(controller.active!)).toBe(false)
     expect(source.getAttribute('popover')).toBe('manual')
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
   })

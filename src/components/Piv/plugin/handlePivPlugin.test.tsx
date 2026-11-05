@@ -7,6 +7,7 @@ import { derive } from '@/hooks/stateUtils'
 import { Piv } from '../Piv'
 import { getPublicPluginSources } from './publicCapabilities'
 import { mergePivProps } from './handlePivPlugin'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 
 vi.mock('./publicCapabilities', () => ({
   getPublicPluginSources: vi.fn(() => []),
@@ -99,13 +100,19 @@ describe('配置插件消费', () => {
     let refs = 0
     let nestedCleaned = 0
     const order: string[] = []
-    const plugin = () => {
+    const nested = defineInactivePlugin({ name: 'nested', pluginCore({ addProps }) {
+      order.push('nested')
+      onCleanup(() => { nestedCleaned += 1 })
+      addProps({ shadowProps: { htmlProps: { 'data-nested': 'complete' } } })
+      return {}
+    } })()
+    const plugin = defineInactivePlugin({ name: 'injected', pluginCore({ addProps }) {
       initialized += 1
       order.push('injected')
       onCleanup(() => {
         cleaned += 1
       })
-      return {
+      addProps({
         id: 'complete',
         class: 'complete',
         style: { color: 'red' },
@@ -118,15 +125,10 @@ describe('配置插件消费', () => {
         domRef: () => {
           refs += 1
         },
-        is: () => {
-          order.push('nested')
-          onCleanup(() => {
-            nestedCleaned += 1
-          })
-          return { shadowProps: { htmlProps: { 'data-nested': 'complete' } } }
-        },
-      }
-    }
+        is: nested,
+      })
+      return {}
+    } })()
     vi.mocked(getPublicPluginSources).mockImplementation(() => [
       derive([options], () => {
         val(incidental)
@@ -137,14 +139,14 @@ describe('配置插件消费', () => {
       () => (
         <Piv
           is={[
-            () => {
+            defineInactivePlugin({ name: 'first', pluginCore() {
               order.push('first')
-              return undefined
-            },
-            () => {
+              return {}
+            } })(),
+            defineInactivePlugin({ name: 'second', pluginCore() {
               order.push('second')
-              return undefined
-            },
+              return {}
+            } })(),
           ]}
         />
       ),

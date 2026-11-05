@@ -7,6 +7,7 @@
  */
 import { expectTypeOf, test } from 'vitest'
 import type { State } from '@/foundation'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 import {
   Article, Board, Card, Field, Loop, Table, Piv,
   type ArticleController, type ArticleProps,
@@ -17,9 +18,14 @@ import {
  * 编译期检查组件调用；不运行这些 JSX，避免给类型验收创建 DOM。
  */
 function verifyGenericCalls() {
-  const capability = () => ({ class: 'capability' })
+  const capability = defineInactivePlugin({ name: 'capability', pluginCore({ addProps }) {
+    addProps({ class: 'capability' })
+    return {}
+  } })()
   Piv({ is: capability })
-  Piv({ is: [capability, { plugin: capability }] })
+  Piv({ is: [capability, capability] })
+  // @ts-expect-error 未调用的定义不能作为 Plugin。
+  Piv({ is: defineInactivePlugin })
   // @ts-expect-error 原 trait 入口已经退出。
   Piv({ trait: capability })
   // @ts-expect-error plugin 不再作为 Props。

@@ -17,8 +17,8 @@ afterEach(() => {
 
 describe('hoverable', () => {
   test('支持三种调用模式，并让显式实例的 hover 状态相互隔离', () => {
-    let firstController!: HoverableController
-    let secondController!: HoverableController
+    let firstController!: Partial<HoverableController>
+    let secondController!: Partial<HoverableController>
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
@@ -31,7 +31,7 @@ describe('hoverable', () => {
         <>
           <Piv is={firstPlugin} htmlProps={{ 'data-testid': 'first' }} />
           <Piv is={secondPlugin} htmlProps={{ 'data-testid': 'second' }} />
-          <Piv is={hoverable} htmlProps={{ 'data-testid': 'direct' }} />
+          <Piv is={hoverable()} htmlProps={{ 'data-testid': 'direct' }} />
           <Piv
             is={hoverable({ initialHovered: true })}
             htmlProps={{ 'data-testid': 'configured' }}
@@ -59,8 +59,8 @@ describe('hoverable', () => {
     flush()
     expect(first.getAttribute('data-hovered')).toBe('true')
     expect(second.hasAttribute('data-hovered')).toBe(false)
-    expect(val(firstController.hovered)).toBe(true)
-    expect(val(secondController.hovered)).toBe(false)
+    expect(val(firstController.hovered!)).toBe(true)
+    expect(val(secondController.hovered!)).toBe(false)
 
     first.dispatchEvent(new PointerEvent('pointerleave'))
     flush()

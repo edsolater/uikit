@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { cssRoot } from '@/style-system'
-import './DragAndDrop.example.style'
+import './dragAndDrop.example.style'
 
 test('拖拽示例接收区域表达悬停、可接收和已接收状态', () => {
   const style = document.head.appendChild(document.createElement('style'))

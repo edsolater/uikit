@@ -12,7 +12,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、domRef 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
 - `src/components/kits`：可供组合的界面构件，包括基础承载与完整用途组件。Popover 的共享浮层、显隐控制与触发组合共同归属 `kits/Popover`。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
-- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。plugin 定义、plugin 运行机制与各 plugin kit 都属于这一领域。
+- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。inactivePlugin 配置产生节点 Plugin；`usePlugin` 返回 Plugin 与节点控制入口，Piv 执行算法并接入声明和清理。拖放组合能力及其示例归 `plugins/kits/dragAndDrop`。
 - `src/components/tools`：服务构件定义、控制与检查的工具，包括 `kit` 创建入口、Props 干预、Controller 登记与 `KitMarker`。`tools/KitMarker` 为 Kit 构件及使用方组合提供透明边界、用途说明和手动结构查看，不改变原主体或自动挂载开关。
 - `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
 - `src/hooks`：使用 Foundation 的派生组合与浏览器协作能力。领域入口和内部阅读路线见 [hooks SPEC](src/hooks/SPEC.md)。

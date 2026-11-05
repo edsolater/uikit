@@ -7,14 +7,14 @@
 ## 调用方式
 
 ```tsx
-<Piv is={clickable} />
+<Piv is={clickable()} />
 <Piv is={clickable({ tabIndex: 0 })} />
 
 const [plugin, controller] = usePlugin(clickable)
 <Piv is={plugin} />
 ```
 
-Plugin 本体和传入 options 后的返回值都仍然是 Plugin。`usePlugin()` 用于显式取得某一次实例的 Controller。
+调用工厂后得到 Plugin；`usePlugin()` 返回 Plugin 与该节点的可选 Controller，节点安装后成员才可使用。
 
 ## Controller
 
@@ -26,4 +26,4 @@ Plugin 本体和传入 options 后的返回值都仍然是 Plugin。`usePlugin()
 ## 验证
 
 - 单元测试验证 Controller、options 与实例隔离。
-- 浏览器测试验证真实焦点、PointerEvent、键盘触发和三种调用方式。
+- 浏览器测试验证真实焦点、PointerEvent、键盘触发和直接与受控调用方式。

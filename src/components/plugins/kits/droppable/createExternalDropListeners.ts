@@ -5,12 +5,7 @@
  * DropContext，并与页面内拖动共享接收判断和悬停状态。
  */
 import type { EventListeners } from '../../../Piv/on/handleOn'
-import { isWithinDropScope } from '../dragSession'
-import {
-  createExternalDropContext,
-  type DropContext,
-  type ExternalDropContext,
-} from './dropContext'
+import { createExternalDropContext, type DropContext } from './dropContext'
 
 export interface ExternalDropOptions {
   element: HTMLElement
@@ -28,21 +23,18 @@ export function createExternalDropListeners(
   // 原生 dragenter/dragleave 会在子元素间移动时反复触发；计数归零才真正离开目标。
   let enteredChildren = 0
 
-  const acceptsExternalDrop = (context: ExternalDropContext): boolean =>
-    isWithinDropScope(undefined, options.element) && options.accepts(context)
-
   return {
     dragenter: ({ event }) => {
       if (!options.enabled()) return
       enteredChildren += 1
       const context = createExternalDropContext(event, options.element)
-      options.showHover(context ? acceptsExternalDrop(context) : false)
+      options.showHover(context ? options.accepts(context) : false)
     },
     dragover: {
       passive: false,
       callback: ({ event, preventDefault }) => {
         const context = createExternalDropContext(event, options.element)
-        if (!context || !acceptsExternalDrop(context)) {
+        if (!context || !options.accepts(context)) {
           options.showHover(false)
           return
         }
@@ -61,7 +53,7 @@ export function createExternalDropListeners(
       passive: false,
       callback: ({ event, preventDefault }) => {
         const context = createExternalDropContext(event, options.element)
-        const accepted = context ? acceptsExternalDrop(context) : false
+        const accepted = context ? options.accepts(context) : false
         enteredChildren = 0
         options.resetHover()
         if (!context || !accepted) return

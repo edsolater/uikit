@@ -1,8 +1,7 @@
 /** Hoverable Plugin：感知并控制一个 Piv 的 hover 状态。 */
 import { createToggle } from '@/hooks'
 import type { State } from '@/foundation'
-import type { PivTag } from '../../../Piv/domMap'
-import { createPlugin } from '../../definePlugin'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 
 export interface HoverableOptions {
   componentName?: string
@@ -23,37 +22,33 @@ export interface HoverableController {
   resetHover(): void
 }
 
-export const hoverable = createPlugin<
+export const hoverable = defineInactivePlugin<
   HoverableOptions,
-  HoverableController,
-  PivTag
->((options) => {
-  const [hovered, hoveredControl] = createToggle(
-    options?.initialHovered ?? false,
-  )
-  const controller: HoverableController = {
-    hovered,
-    hover: hoveredControl.turnOn,
-    unhover: hoveredControl.turnOff,
-    toggleHover: hoveredControl.toggle,
-    resetHover: hoveredControl.reset,
-  }
-
-  return {
-    controller,
-    plugin: () => ({
+  HoverableController
+>({
+  name: 'hoverable',
+  pluginCore({ pluginOptions: options, addProps }): HoverableController {
+    const [hovered, hoveredControl] = createToggle(
+      options.initialHovered ?? false,
+    )
+    const controller: HoverableController = {
+      hovered,
+      hover: hoveredControl.turnOn,
+      unhover: hoveredControl.turnOff,
+      toggleHover: hoveredControl.toggle,
+      resetHover: hoveredControl.reset,
+    }
+    addProps({
       htmlProps: {
         'data-plugin': {
-          mergable: toPluginName(options?.componentName, 'hoverable'),
+          mergable: toPluginName(options.componentName, 'hoverable'),
         },
         'data-hovered': hovered,
       },
-      on: {
-        pointerenter: controller.hover,
-        pointerleave: controller.unhover,
-      },
-    }),
-  }
+      on: { pointerenter: controller.hover, pointerleave: controller.unhover },
+    })
+    return controller
+  },
 })
 
 function toPluginName(componentName: string | undefined, pluginName: string) {

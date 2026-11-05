@@ -11,7 +11,7 @@ import {
 } from '../../plugins/kits/droppable/droppable'
 import type { PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
-import type { PivPlugin } from './runPlugin'
+import type { Plugin } from '@/components/plugins/defineInactivePlugin'
 
 /** 同一能力选择快捷属性或 is 一种入口；false 只释放快捷路径的实例。 */
 export interface PublicCapabilityProps {
@@ -34,7 +34,7 @@ export function getPublicPluginSources<Tag extends PivTag>(
 function createPluginSource<Tag extends PivTag>(
   declarations: ShadowProps<Tag>[],
   key: Capability,
-): Source<PivPlugin<Tag> | undefined> | undefined {
+): Source<Plugin | undefined> | undefined {
   const sources = declarations.filter((props) => key in props)
   if (!sources.length) return
   const selection = derive(sources, (declarations) => {
@@ -48,7 +48,7 @@ function createPluginSource<Tag extends PivTag>(
       ? undefined
       : key === 'draggable'
         ? draggable(
-            options === true ? undefined : (options as DraggableOptions),
+            options === true ? { payload: undefined } : (options as DraggableOptions),
           )
         : droppable(
             options === true ? undefined : (options as DroppableOptions),

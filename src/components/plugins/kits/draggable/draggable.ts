@@ -1,16 +1,19 @@
-/**
- * Draggable Plugin：把 Piv 接入页面内 Pointer 拖动。
+/** 拖动节点的节点算法。
  *
- * 【职责边界】公开启停与拖动状态；指针事务、来源元素位移和 Droppable 命中由内部设施完成。
+ * 在当前节点安装 Pointer 拖动，并返回该节点的拖动功能。
+ *
+ * 复用已有拖动事务，按共享 id 匹配接收目标。
  */
-import { createState, onCleanup, type State } from '@/foundation'
+import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
-import type { PivTag } from '../../../Piv/domMap'
-import { createPlugin } from '../../definePlugin'
+import type { PluginContext } from '@/components/plugins/defineInactivePlugin'
 import { createPointerDrag } from './createPointerDrag'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 import './draggable.style'
 
 export interface DraggableOptions {
+  /** 与接收节点共享的组标识；双方未提供时也可协作。 */
+  id?: object
   /** 当前拖动携带的数据包。 */
   payload: unknown
   disabled?: boolean
@@ -30,66 +33,55 @@ export interface DraggableController {
   disable(): void
 }
 
-const defaultActivationDistance = 0
-const defaultActivationJump = true
-
-export const draggable = createPlugin<
-  DraggableOptions,
-  DraggableController,
-  PivTag
->((options) => {
-  const [enabled, enabledControl] = createToggle(!(options?.disabled ?? false))
+/**
+ * 给当前节点安装拖动；关闭能力会取消进行中的拖动。
+ */
+export function draggablePluginCore({
+  pluginOptions,
+  element,
+  onCleanup,
+  addProps,
+}: PluginContext & { pluginOptions: DraggableOptions }): DraggableController {
+  const [enabled, enabledControl] = createToggle(
+    !(pluginOptions.disabled ?? false),
+  )
   const dragging = createState(false)
-  let cancelDrag: (() => void) | undefined
-
-  const controller: DraggableController = {
+  const pointerDrag = createPointerDrag({
+    source: element,
+    id: pluginOptions.id,
+    payload: pluginOptions.payload,
+    activationDistance: Math.max(0, pluginOptions.activationDistance ?? 0),
+    activationJump: pluginOptions.activationJump ?? true,
+    enabled: enabled.read,
+    onDraggingChange: (value) => dragging.set(value),
+  })
+  onCleanup(pointerDrag.cancel)
+  addProps({
+    htmlProps: { 'draggable': false, 'data-plugin': { mergable: 'draggable' } },
+    on: {
+      dragstart: {
+        passive: false,
+        callback: ({ preventDefault }) => preventDefault(),
+      },
+      pointerdown: {
+        passive: false,
+        callback: ({ event }) => pointerDrag.start(event),
+      },
+    },
+  })
+  return {
     enabled,
     dragging,
     enable: enabledControl.turnOn,
     disable() {
       enabledControl.turnOff()
-      cancelDrag?.()
+      pointerDrag.cancel()
     },
   }
+}
 
-  return {
-    controller,
-    plugin: ({ element }) => {
-      const pointerDrag = createPointerDrag({
-        source: element,
-        payload: options?.payload,
-        activationDistance: Math.max(
-          0,
-          options?.activationDistance ?? defaultActivationDistance,
-        ),
-        activationJump: options?.activationJump ?? defaultActivationJump,
-        enabled: enabled.read,
-        onDraggingChange(isDragging) {
-          dragging.set(isDragging)
-        },
-      })
-      cancelDrag = pointerDrag.cancel
-      onCleanup(() => {
-        pointerDrag.cancel()
-        if (cancelDrag === pointerDrag.cancel) cancelDrag = undefined
-      })
-
-      return {
-        htmlProps: {
-          'draggable': false,
-          'data-plugin': { mergable: 'draggable' },
-        },
-        on: {
-          dragstart: {
-            passive: false,
-            callback: ({ preventDefault }) => preventDefault(),
-          },
-          pointerdown: {
-            passive: false,
-            callback: ({ event }) => pointerDrag.start(event),
-          },
-        },
-      }
-    },
-  }
+/** 创建供节点执行的拖动 Plugin。 */
+export const draggable = defineInactivePlugin({
+  name: 'draggable',
+  pluginCore: draggablePluginCore,
 })

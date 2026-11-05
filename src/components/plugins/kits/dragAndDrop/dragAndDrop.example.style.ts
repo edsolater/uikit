@@ -64,5 +64,5 @@ rules(target, {
 rules('.drag-drop-example-target-label', { color: 'inherit' })
 rules('.drag-drop-example-target-result', { 'max-inline-size': '100%', color: resultColor, 'font-size': multiply(textSize, 0.75), 'font-weight': resultWeight, 'overflow-wrap': 'anywhere' })
 rules('.drag-drop-example-result', { 'min-block-size': '24px', margin: 0, color: contentColorTheme, 'font-size': multiply(textSize, 0.75) })
-rules('.scope-example-boundary', { display: 'grid', gap: baseSpace, padding: multiply(baseSpace, 1.5), 'border-width': baseBorderWidth, 'border-style': 'solid', 'border-color': boundaryColorTheme, 'border-radius': multiply(baseRadius, 3), background: colorMix([surfaceColorTheme, 0.72], 'transparent') })
-rules('.scope-example-boundary > strong', { color: contentColorTheme })
+rules('.drag-drop-example-group', { display: 'grid', gap: baseSpace, padding: multiply(baseSpace, 1.5), 'border-width': baseBorderWidth, 'border-style': 'solid', 'border-color': boundaryColorTheme, 'border-radius': multiply(baseRadius, 3), background: colorMix([surfaceColorTheme, 0.72], 'transparent') })
+rules('.drag-drop-example-group > strong', { color: contentColorTheme })

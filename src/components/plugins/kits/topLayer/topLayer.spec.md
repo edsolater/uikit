@@ -5,7 +5,7 @@
 Top Layer 把原始 DOM 提升到浏览器 Top Layer，同时维持提升前的基础位置和 border-box 尺寸。领域公开纯控制器和 Plugin 两种载体，两者共享同一套提升事务。
 
 ```tsx
-<Piv is={topLayer}>始终位于 Top Layer</Piv>
+<Piv is={topLayer()}>始终位于 Top Layer</Piv>
 
 const [plugin, controller] = usePlugin(topLayer)
 <Piv is={plugin}>由 Controller 控制</Piv>
@@ -15,9 +15,9 @@ controller.enter()
 controller.leave()
 ```
 
-`createTopLayerController(element)` 是不依赖 Piv 的原子入口，供 Draggable 等能力直接控制一个已经取得的元素。创建时只确保元素所属文档已经注册 Top Layer CSS；只有调用 `enter()` 才改变目标元素。
+`createTopLayerController(element)` 是不依赖 Piv 的原子入口，供 Draggable 等能力直接控制一个已经取得的元素。领域模块静态导入 `topLayer.style`，只有调用 `enter()` 才改变目标元素。
 
-`topLayer` 是同一能力的 Piv Plugin 包装。直接安装 `<Piv is={topLayer}>` 时，元素从挂载到清理始终位于 Top Layer；通过 `usePlugin(topLayer)` 取得 Controller 时，可以有条件地调用 `enter()` 和 `leave()`。Plugin 不重新实现提升，只处理元素何时可用以及组件清理。
+`topLayer` 是同一能力的 Piv Plugin 包装。直接安装 `<Piv is={topLayer()}>` 时，元素从挂载到清理始终位于 Top Layer；通过 `usePlugin(topLayer)` 取得 Controller 时，可以有条件地调用 `enter()` 和 `leave()`。Plugin 不重新实现提升，只处理元素何时可用以及组件清理。
 
 ## 提升事务
 
@@ -42,8 +42,7 @@ controller.leave()
 ## 边界
 
 - 拥有原位影子 Anchor、基础位置、border-box 尺寸、Popover 状态、提升元素阴影和完整恢复。
-- 自己绑定 `top-layer` class 并注册精简的全局 CSS；调用能力不导入样式，也不操作内部 selector。
-- `cssRegisterer` 只按源码路径注册 CSS，是 `plugins/utils` 下的工具，不拥有 Top Layer 或其他视觉领域。
+- 自己绑定 `top-layer` class；样式由同领域 `topLayer.style.ts` 登记，调用方不操作内部 selector。
 - `createTopLayerController()` 是原子控制入口，`topLayer` 是它的 Piv 生命周期包装；二者不得分叉实现。
 - 不决定元素为何提升，也不解释提升后的业务位移、动画或交互。
 - 原位影子自动成为 Anchor；Top Layer 独占它的创建、几何、视觉和删除，调用能力不认识其 DOM 或样式。

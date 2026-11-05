@@ -14,7 +14,7 @@ import {
   mergePivProps,
   type PivShadowProps,
 } from './plugin/handlePivPlugin'
-import type { PivPlugin } from './plugin/runPlugin'
+import type { Plugin } from '@/components/plugins/defineInactivePlugin'
 import type { PublicCapabilityProps } from './plugin/publicCapabilities'
 
 export interface PivProps<Tag extends PivTag = 'div'>
@@ -22,7 +22,7 @@ export interface PivProps<Tag extends PivTag = 'div'>
   /** 上层组件转交的低优先级声明，接受一份或一维数组。 */
   shadowProps?: MayArray<PivShadowProps<Tag>>
   /** 声明附加到节点的能力，接受单个 Plugin 或数组。 */
-  is?: MayArray<PivPlugin<Tag>>
+  is?: MayArray<Plugin>
 }
 
 /**

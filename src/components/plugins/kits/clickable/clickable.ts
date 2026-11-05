@@ -1,26 +1,31 @@
-/** Clickable Plugin：为一个 Piv 提供 hover、focus、pressed 与键盘点击能力。 */
+/** 点击节点的交互算法。
+ *
+ * 在当前节点组合 hover、焦点、按压与键盘点击。
+ *
+ * 每个实际节点独立拥有状态和功能成员。
+ */
 import { createToggle } from '@/hooks'
 import type { State } from '@/foundation'
-import type { PivTag } from '../../../Piv/domMap'
-import { hoverable, type HoverableController } from '../hoverable/hoverable'
-import { createPlugin } from '../../definePlugin'
-import { usePlugin } from '../../usePlugin'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import {
+  hoverable,
+  type HoverableController,
+} from '@/components/plugins/kits/hoverable/hoverable'
 
+/** 点击能力的配置。 */
 export interface ClickableOptions {
   componentName?: string
   tabIndex?: number
   initialHovered?: boolean
   initialFocused?: boolean
   initialPressed?: boolean
+  onClick?: (event: MouseEvent) => void
 }
 
+/** 节点点击功能。 */
 export interface ClickableController extends HoverableController {
-  /** Controller 面板：当前是否拥有焦点。 */
   focused: State<boolean>
-
-  /** Controller 面板：当前是否处于按压阶段。 */
   pressed: State<boolean>
-
   focus(): void
   blur(): void
   press(): void
@@ -28,74 +33,75 @@ export interface ClickableController extends HoverableController {
   click(): void
 }
 
-export const clickable = createPlugin<
+/**
+ * 配置点击能力；悬停子能力在同一节点执行并提供同一份功能成员。
+ */
+export const clickable = defineInactivePlugin<
   ClickableOptions,
-  ClickableController,
-  PivTag
->((options) => {
-  const [hoverPlugin, hoverController] = usePlugin(hoverable, {
-    componentName: options?.componentName,
-    initialHovered: options?.initialHovered,
-  })
-  const [focused, focusedControl] = createToggle(
-    options?.initialFocused ?? false,
-  )
-  const [pressed, pressedControl] = createToggle(
-    options?.initialPressed ?? false,
-  )
-  let element: HTMLElement | undefined
-
-  const controller: ClickableController = {
-    ...hoverController,
-    focused,
-    pressed,
-    focus() {
-      focusedControl.turnOn()
-      element?.focus()
-    },
-    blur() {
-      focusedControl.turnOff()
-      element?.blur()
-    },
-    press: pressedControl.turnOn,
-    release: pressedControl.turnOff,
-    click() {
-      element?.click()
-    },
-  }
-
-  return {
-    controller,
-    plugin: (payload) => {
-      element = payload.element
-      return {
-        is: hoverPlugin,
-        htmlProps: {
-          'tabIndex': options?.tabIndex ?? 0,
-          'data-plugin': {
-            mergable: toPluginName(options?.componentName, 'clickable'),
-          },
-          'data-focused': focused,
-          'data-pressed': pressed,
+  ClickableController
+>({
+  name: 'clickable',
+  pluginCore({
+    pluginOptions,
+    element,
+    onCleanup,
+    addProps,
+  }): ClickableController {
+    const hover = hoverable({
+      componentName: pluginOptions.componentName,
+      initialHovered: pluginOptions.initialHovered,
+    })({ element, onCleanup, addProps })
+    const [focused, focusControl] = createToggle(
+      pluginOptions.initialFocused ?? false,
+    )
+    const [pressed, pressControl] = createToggle(
+      pluginOptions.initialPressed ?? false,
+    )
+    const members: ClickableController = {
+      ...hover,
+      focused,
+      pressed,
+      focus() {
+        focusControl.turnOn()
+        element.focus()
+      },
+      blur() {
+        focusControl.turnOff()
+        element.blur()
+      },
+      press: pressControl.turnOn,
+      release: pressControl.turnOff,
+      click() {
+        element.click()
+      },
+    }
+    addProps({
+      htmlProps: {
+        'tabIndex': pluginOptions.tabIndex ?? 0,
+        'data-plugin': {
+          mergable: pluginOptions.componentName
+            ? `${pluginOptions.componentName}:clickable`
+            : 'clickable',
         },
-        on: {
-          focusin: focusedControl.turnOn,
-          focusout: focusedControl.turnOff,
-          pointerdown: controller.press,
-          pointerup: controller.release,
-          pointercancel: controller.release,
-          keyup: ({ event, element: currentElement }) => {
-            if (currentElement.nodeName === 'BUTTON') return
-            if (event.key === 'Enter' || event.key === ' ') {
-              currentElement.click()
-            }
-          },
+        'data-focused': focused,
+        'data-pressed': pressed,
+      },
+      on: {
+        click: ({ event }) => pluginOptions.onClick?.(event),
+        focusin: focusControl.turnOn,
+        focusout: focusControl.turnOff,
+        pointerdown: members.press,
+        pointerup: members.release,
+        pointercancel: members.release,
+        keyup: ({ event, element: current }) => {
+          if (
+            current.nodeName !== 'BUTTON' &&
+            (event.key === 'Enter' || event.key === ' ')
+          )
+            current.click()
         },
-      }
-    },
-  }
+      },
+    })
+    return members
+  },
 })
-
-function toPluginName(componentName: string | undefined, pluginName: string) {
-  return componentName ? `${componentName}:${pluginName}` : pluginName
-}

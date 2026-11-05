@@ -10,7 +10,7 @@
  * ```tsx
  * import { Piv, tabularNum } from '@edsolater/uikit'
  *
- * <Piv class="timer" is={tabularNum}>
+ * <Piv class="timer" is={tabularNum()}>
  *   {elapsedTime()}
  * </Piv>
  *
@@ -18,10 +18,13 @@
  * Plugin 负责把语义能力翻译成真实 DOM class。
  * ```
  */
-import type { PivTag } from '../../../Piv/domMap'
-import type { PivPlugin } from '../../../Piv/plugin/runPlugin'
+import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
 import './tabular-num.style'
 
-export const tabularNum: PivPlugin<PivTag> = () => ({
-  class: 'is:tabular-num',
+export const tabularNum = defineInactivePlugin({
+  name: 'tabularNum',
+  pluginCore({ addProps }) {
+    addProps({ class: 'is:tabular-num' })
+    return {}
+  },
 })
