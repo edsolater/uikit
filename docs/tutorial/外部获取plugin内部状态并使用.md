@@ -1,110 +1,36 @@
-# Plugin 如果外部获取内部状态并使用
+# Plugin 的状态与控制能力怎样交给外部
 
-## 结论
+单节点 Plugin 和多角色能力都可以有 Controller。需要在外部持有功能及其控制入口时，使用 `usePlugin`，直接取得统一二元返回值；不经过宿主组件的 ref 回流。
 
-- 外部需要读取 plugin 内部状态时，优先让 plugin 工厂直接返回状态和 plugin。
-- 不通过 Piv 注入 `innerController` 再从 Piv 回流状态。
-- Piv 只接收最终要注入的 plugin，不承担插件状态管道。
-- plugin 状态的创建、持有和暴露归属于 plugin 工厂。
-- Piv 负责运行 plugin，调用方负责消费工厂返回的状态。
+本文记录目标契约，迁移尚未实施。入口选择的原因与直接调用用法见[使用 Tutorial](什么时候应该使用hooks什么时候应该使用plugin.md)。
 
-## 推荐形状
+## 单节点返回 Plugin 与 Controller
 
-```tsx
-const [miniMapState, miniMapPlugin] = createMiniMapPlugin()
+单节点遵循 `const [plugin, controller] = usePlugin(definition, options)`：第一项是已经创建的 Plugin 对象，第二项是该功能的 Controller。`is` 只接第一项；既不接整个二元结果，也不再次调用这个对象。具体示例见[直接调用与提前创建的对照](什么时候应该使用hooks什么时候应该使用plugin.md#直接调用与提前创建的效果等价)。
 
-return <Piv plugins={miniMapPlugin}>...</Piv>
-```
+如果只需要就地声明功能，可以直接使用 `is={focusable(options)}`。两种入口表达相同功能；`usePlugin` 让调用者可以提前持有实例和控制能力，不以多节点连接为前提。
 
-- `miniMapState` 用于让外部读取或监听插件内部状态。
-- `miniMapPlugin` 用于注入 Piv，让插件参与 Piv 的 DOM 能力流程。
-- 两者来自同一次工厂调用，因此天然属于同一个插件实例。
-- 外部不需要知道 Piv 内部如何运行 plugin。
-- Piv 不需要新增一个通用 controller 注入协议。
+## 多角色返回两组对应对象
 
-## 为什么不走 Piv 回流
+Popover 的二元返回形状是 `[{ popoverTrigger, popoverBody }, { popoverTriggerController, popoverBodyController }]`，由 `usePlugin(popover, options)` 创建。完整配对示例见[使用 Tutorial](什么时候应该使用hooks什么时候应该使用plugin.md#统一二元返回结构)。
 
-- plugin 本身已经是能力注入入口。
-- 如果先把状态注入 Piv，再让外部从 Piv 取回状态，会形成绕路。
-- 这种绕路会让 Piv 同时承担 DOM 原子、plugin 运行器和状态总线三种职责。
-- 一旦 Piv 承担状态总线，后续就容易发展成通用 `innerController` 协议。
-- 通用 controller 协议会让 class、style、children、event 和 plugin 都被同一套隐式能力影响，整体会变重。
+| 控制入口 | 归属 |
+| --- | --- |
+| `popoverTriggerController` | 入口侧控制及宿主引用，可注入入口所属业务组件的 Controller |
+| `popoverBodyController` | 主体侧控制、宿主引用与实际状态，可注入另一个业务组件的 Controller |
 
-## 插件工厂的职责
+拆分的是控制职责和交付入口，不是复制两份浮层或显隐状态再同步。具体方法与引用字段以能力契约为准，不为形式对称复制整张方法表。
 
-- 插件工厂负责创建插件实例级状态。
-- 插件工厂负责创建能读写这份状态的 plugin。
-- 插件工厂负责决定哪些状态允许外部读取。
-- 插件工厂不应把所有内部细节都暴露给外部。
-- 插件工厂返回的状态应服务外部监控、联动或调试，不应让外部接管插件内部流程。
+## 不通过宿主回流
 
-## Hook 工厂形状
+宿主负责承载内容和接受功能；Plugin 负责自己的状态及控制出口。先把控制对象注入宿主，再从宿主的组件 Controller 取回，会把宿主变成功能状态的中转站。
 
-当插件需要先配置再创建实例时，可以再包一层 hook 工厂。
+因此，`usePlugin` 创建功能后直接交付 Controller，不新增通用 `innerController` 管道，不要求调用者接线两次。普通组件 ref 与 Plugin Controller 保持各自职责。
 
-```tsx
-const createMiniMapPluginHook = createPluginHookCreator(
-  (options: MiniMapPluginOptions) => {
-    return () => {
-      const miniMapState = createMiniMapState(options)
-      const miniMapPlugin = createPivPlugin(({ element }) => {
-        miniMapState.setRootElement(element)
-      })
+## 有 Controller 不等于暴露全部内部状态
 
-      return [miniMapState, miniMapPlugin] satisfies [
-        typeof miniMapState,
-        typeof miniMapPlugin,
-      ]
-    }
-  },
-)
+Controller 提供有意开放的读取与操作能力。内部状态仍由功能管理，不把所有细节交给外部，也不把普通内部状态都包装成新的公共对象。
 
-const useMiniMapPlugin = createMiniMapPluginHook({
-  placement: 'right-bottom',
-})
+现在已经明确统一 `usePlugin` 的二元顺序：第一项是 Plugin 对象或角色对象集合，第二项是 Controller 或控制集合。旧的“不规定返回 tuple”“只有连接才使用 use”“返回工厂再调用”等推荐不再适用。直接调用 `focusable(options)` 的使用结果仍是可放进 `is` 的 Plugin 对象，不要把它和 `usePlugin` 的二元结果混为一谈。
 
-function Editor() {
-  const [miniMapState, miniMapPlugin] = useMiniMapPlugin()
-
-  return <Piv plugins={miniMapPlugin}>...</Piv>
-}
-```
-
-- `createPluginHookCreator()` 只固定工厂形状，不创建状态，不运行 plugin。
-- `createMiniMapPluginHook()` 返回一个插件实例创建函数。
-- `useMiniMapPlugin()` 在组件运行期创建状态和 plugin。
-- 最终仍然返回 `[state, plugin]`。
-- 配置属于工厂层，实例状态属于 hook 返回值。
-- 这种形状适合需要复用同一套插件配置，但每个组件实例都有独立状态的场景。
-
-## 命名建议
-
-- 直接创建插件实例时，使用 `createXPlugin()`。
-- 先创建可复用的插件 hook 时，使用 `createXPluginHook()`。
-- 返回的状态命名为 `xState`。
-- 返回的 plugin 命名为 `xPlugin`。
-- 不使用 `controller` 命名承载普通插件状态，除非它确实提供主动控制方法。
-
-## 边界
-
-- plugin context 仍然只表达 Piv 当前运行时能力，例如当前 DOM 和结构插线工具。
-- plugin 工厂返回的 state 表达插件实例状态。
-- Piv props 不新增 `innerController`。
-- 外部组件不通过 Piv 查询插件状态。
-- 业务组件如果需要开放能力，应优先设计受限的业务 prop，而不是透传 Piv plugin 状态。
-
-## 不推荐写法
-
-```tsx
-const miniMapState = createMiniMapState()
-
-return (
-  <Piv plugins={createMiniMapPlugin()} innerController={miniMapState}>
-    ...
-  </Piv>
-)
-```
-
-- 这会让 Piv 变成状态中转层。
-- 这会让 plugin 状态和 Piv controller 协议纠缠。
-- 这会让调用方误以为所有插件状态都应该通过 Piv 暴露。
+相关具体契约见[Popover Doc](../../src/components/kits/Popover/Doc.md)，旧接口退出事项见[迁移计划](../plans/261105_Plugin能力声明与Popover连接API迁移.md)。

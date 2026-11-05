@@ -11,5 +11,5 @@
 
 ## File Map
 
-- `什么时候应该使用hooks什么时候应该使用plugin.md`：说明 plugin 和 hook 的认知模型、选择边界和当前待讨论问题。
-- `外部获取plugin内部状态并使用.md`：说明外部需要读取 plugin 内部状态时，应由 plugin 工厂直接返回 `[state, plugin]`，不通过 Piv 的 controller 管道回流。
+- [什么时候应该使用hooks什么时候应该使用plugin.md](什么时候应该使用hooks什么时候应该使用plugin.md)：说明组件与 Plugin 的区别、直接调用和 `usePlugin` 创建的选择，以及返回对象、一次配置与二元返回契约。
+- [外部获取plugin内部状态并使用.md](外部获取plugin内部状态并使用.md)：说明单节点和多角色能力如何通过 `usePlugin` 直接取得 Controller，不经宿主 ref 回流。
