@@ -2,7 +2,7 @@
 import { Card } from './Card'
 import { Article } from '../Article/Article'
 import { Flow } from '../Flow/Flow'
-import { usePlugin } from '@/components/plugins/usePlugin'
+import { usePlugin } from '@/components/plugins/tools/usePlugin'
 import { clickable } from '@/components/plugins/kits/clickable/clickable'
 import './Card.example.style'
 

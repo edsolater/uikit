@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../usePlugin'
+import { usePlugin } from '../../tools/usePlugin'
 import {
   createTopLayerController,
   topLayer,

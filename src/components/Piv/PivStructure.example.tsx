@@ -7,7 +7,7 @@ import { Piv } from './Piv'
 import { Card } from '../kits/Card/Card'
 import { Article } from '../kits/Article/Article'
 import { createPivStructure } from './plugin/helpers'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 const beforeLabelPlugin = defineInactivePlugin({
   name: 'beforeLabel',

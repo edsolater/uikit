@@ -27,4 +27,4 @@ const id = {}
 
 `draggable` 使用 Pointer Events 移动原始节点，Top Layer 负责原位 Anchor、提升和恢复。`activationDistance` 决定启动距离，`activationJump` 决定是否承接阈值前位移。`droppable` 在 id 与 `accepts` 通过后调用 `onDrop`；外部材料没有来源 id，只按目标的启用状态和 `accepts` 判断。`DropContext.kind` 区分页面内材料和外部材料：前者提供 source、payload 与 PointerEvent，后者提供 files、items、types、dataTransfer 与 DragEvent。
 
-拖动不负责排序或集合写入，接收不将文件转成业务对象。页面内拖动不使用原生 ghost image；外部文件继续使用原生 DataTransfer。参见 [Draggable 示例](../../src/components/plugins/kits/draggable/draggable.example.tsx)、[Droppable 示例](../../src/components/plugins/kits/droppable/droppable.example.tsx) 和 [分组示例](../../src/components/plugins/kits/dragAndDrop/dragAndDrop.example.tsx)。
+拖动不负责排序或集合写入，接收不将文件转成业务对象。页面内拖动不使用原生 ghost image；外部文件继续使用原生 DataTransfer。参见 [Draggable 示例](../../src/components/plugins/kits/dragAndDrop/draggable/draggable.example.tsx)、[Droppable 示例](../../src/components/plugins/kits/dragAndDrop/droppable/droppable.example.tsx) 和 [分组示例](../../src/components/plugins/kits/dragAndDrop/dragAndDrop.example.tsx)。

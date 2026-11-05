@@ -4,7 +4,7 @@
  * 页面内 Pointer 拖动提供 payload 与来源元素；系统外部拖放提供 DataTransfer、文件和
  * 原生 DragEvent。kind 让接收端先辨别来源，再读取该来源成立的材料。
  */
-import type { InternalDrag } from '../dragSession'
+import type { InternalDrag } from '@/components/plugins/kits/dragSession'
 
 interface DropContextBase {
   files: File[]

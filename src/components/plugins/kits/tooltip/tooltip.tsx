@@ -6,7 +6,7 @@
  * 使Label问号及其他宿主共用同一提示能力。
  */
 import { onCleanup as solidOnCleanup, Show, val } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import { createPivStructure } from '@/components/Piv/plugin/helpers'
 import type { PivProps } from '../../../Piv/Piv'
 import {

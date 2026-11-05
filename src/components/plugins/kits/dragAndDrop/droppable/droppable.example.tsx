@@ -3,9 +3,9 @@
  * 内置拖动源只负责配合验收；draggable 的独立用法见 ../draggable/draggable.example.tsx。
  */
 import { createState, val } from '@/foundation'
-import { Piv } from '../../../Piv/Piv'
-import { Card } from '../../../kits/Card/Card'
-import { Article } from '../../../kits/Article/Article'
+import { Piv } from '@/components/Piv/Piv'
+import { Card } from '@/components/kits/Card/Card'
+import { Article } from '@/components/kits/Article/Article'
 import '@/components/plugins/kits/dragAndDrop/dragAndDrop.example.style'
 import { dragAndDrop } from '@/components/plugins/kits/dragAndDrop/dragAndDrop'
 const { draggable, droppable } = dragAndDrop

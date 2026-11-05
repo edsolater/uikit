@@ -7,7 +7,7 @@ import { derive } from '@/hooks/stateUtils'
 import { Piv } from '../Piv'
 import { getPublicPluginSources } from './publicCapabilities'
 import { mergePivProps } from './handlePivPlugin'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 vi.mock('./publicCapabilities', () => ({
   getPublicPluginSources: vi.fn(() => []),

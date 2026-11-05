@@ -6,11 +6,11 @@
  */
 import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
-import type { PluginContext } from '@/components/plugins/defineInactivePlugin'
+import type { PluginContext } from '@/components/plugins/tools/defineInactivePlugin'
 import { registerInternalDropTarget } from '@/components/plugins/kits/dragSession'
 import { createExternalDropListeners } from './createExternalDropListeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 export interface DroppableOptions {
   /** 与拖动节点共享的组标识。 */

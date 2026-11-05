@@ -13,7 +13,7 @@ import {
   val,
 } from '@/foundation'
 import { Piv } from './Piv'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import type { ShadowProps } from './plugin/handlePivPlugin'
 import type { PivTag } from './domMap'
 import { mergePivProps } from './plugin/handlePivPlugin'

@@ -6,9 +6,9 @@
  */
 import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
-import type { PluginContext } from '@/components/plugins/defineInactivePlugin'
+import type { PluginContext } from '@/components/plugins/tools/defineInactivePlugin'
 import { createPointerDrag } from './createPointerDrag'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import './draggable.style'
 
 export interface DraggableOptions {

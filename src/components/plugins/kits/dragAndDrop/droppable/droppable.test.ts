@@ -1,10 +1,10 @@
-import type { Plugin } from '@/components/plugins/defineInactivePlugin'
+import type { Plugin } from '@/components/plugins/tools/defineInactivePlugin'
 // @vitest-environment jsdom
 import { createRoot, flush } from 'solid-js'
 import { onCleanup } from '@/foundation'
 import { afterEach, describe, expect, test } from 'vitest'
 import { val } from '@/foundation'
-import { usePlugin } from '../../usePlugin'
+import { usePlugin } from '@/components/plugins/tools/usePlugin'
 import { droppable } from './droppable'
 
 describe('droppable controller', () => {

@@ -14,7 +14,7 @@ import {
   mergePivProps,
   type PivShadowProps,
 } from './plugin/handlePivPlugin'
-import type { Plugin } from '@/components/plugins/defineInactivePlugin'
+import type { Plugin } from '@/components/plugins/tools/defineInactivePlugin'
 import type { PublicCapabilityProps } from './plugin/publicCapabilities'
 
 export interface PivProps<Tag extends PivTag = 'div'>

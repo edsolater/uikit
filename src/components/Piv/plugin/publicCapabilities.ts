@@ -4,14 +4,14 @@ import { derive } from '@/hooks/stateUtils'
 import {
   draggable,
   type DraggableOptions,
-} from '../../plugins/kits/draggable/draggable'
+} from '../../plugins/kits/dragAndDrop/draggable/draggable'
 import {
   droppable,
   type DroppableOptions,
-} from '../../plugins/kits/droppable/droppable'
+} from '../../plugins/kits/dragAndDrop/droppable/droppable'
 import type { PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
-import type { Plugin } from '@/components/plugins/defineInactivePlugin'
+import type { Plugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 /** 同一能力选择快捷属性或 is 一种入口；false 只释放快捷路径的实例。 */
 export interface PublicCapabilityProps {

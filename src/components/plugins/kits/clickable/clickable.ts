@@ -6,7 +6,7 @@
  */
 import { createToggle } from '@/hooks'
 import type { State } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import {
   hoverable,
   type HoverableController,

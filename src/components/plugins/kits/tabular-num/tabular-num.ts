@@ -18,7 +18,7 @@
  * Plugin 负责把语义能力翻译成真实 DOM class。
  * ```
  */
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import './tabular-num.style'
 
 export const tabularNum = defineInactivePlugin({

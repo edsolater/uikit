@@ -3,9 +3,9 @@ import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createState, val } from '@/foundation'
 import { Card } from '@/components/kits/Card/Card'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../usePlugin'
+import { usePlugin } from '../../tools/usePlugin'
 import { clickable, type ClickableController } from './clickable'
 
 let dispose: (() => void) | undefined

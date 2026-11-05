@@ -1,7 +1,7 @@
 /** Hoverable Plugin：感知并控制一个 Piv 的 hover 状态。 */
 import { createToggle } from '@/hooks'
 import type { State } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 export interface HoverableOptions {
   componentName?: string

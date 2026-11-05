@@ -5,7 +5,7 @@
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
  */
 import { createState, onMount, type State } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
 import './topLayer.style'
 

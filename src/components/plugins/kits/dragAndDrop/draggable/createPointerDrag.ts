@@ -10,11 +10,11 @@ import {
   type DragPoint,
   type InternalDrag,
   type InternalDropMatch,
-} from '../dragSession'
+} from '@/components/plugins/kits/dragSession'
 import {
   createTopLayerController,
   type TopLayerController,
-} from '../topLayer/topLayer'
+} from '@/components/plugins/kits/topLayer/topLayer'
 
 export interface PointerDragOptions {
   source: HTMLElement

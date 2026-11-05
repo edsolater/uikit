@@ -7,7 +7,7 @@
  */
 import { expectTypeOf, test } from 'vitest'
 import type { State } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import {
   Article, Board, Card, Field, Loop, Table, Piv,
   type ArticleController, type ArticleProps,

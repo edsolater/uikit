@@ -4,8 +4,8 @@ import { Piv } from '@/components/Piv/Piv'
 import { Card } from '@/components/kits/Card/Card'
 import { Article } from '@/components/kits/Article/Article'
 import './dragAndDrop.example.style'
-import { draggable } from '@/components/plugins/kits/draggable/draggable'
-import { droppable } from '@/components/plugins/kits/droppable/droppable'
+import { draggable } from '@/components/plugins/kits/dragAndDrop/draggable/draggable'
+import { droppable } from '@/components/plugins/kits/dragAndDrop/droppable/droppable'
 
 export function DragAndDropExample() {
   const results = createState<Record<string, string>>({})

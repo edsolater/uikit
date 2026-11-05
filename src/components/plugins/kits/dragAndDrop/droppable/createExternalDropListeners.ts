@@ -4,7 +4,7 @@
  * 原生 Drag and Drop 只负责接收浏览器外部的 DataTransfer；这里把它归一为
  * DropContext，并与页面内拖动共享接收判断和悬停状态。
  */
-import type { EventListeners } from '../../../Piv/on/handleOn'
+import type { EventListeners } from '@/components/Piv/on/handleOn'
 import { createExternalDropContext, type DropContext } from './dropContext'
 
 export interface ExternalDropOptions {

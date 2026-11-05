@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import { createState, Show, val, render } from '@/foundation'
 import { Piv } from '../Piv'
 import { createPivStructure } from './helpers'
-import { defineInactivePlugin } from '@/components/plugins/defineInactivePlugin'
+import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 test('Piv作为渲染根时同层附属节点进入实际宿主，卸载同步释放', async () => {
   const host = document.body.appendChild(document.createElement('main'))

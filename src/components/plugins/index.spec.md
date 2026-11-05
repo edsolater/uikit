@@ -1,6 +1,6 @@
 # Plugins
 
-Plugin 为 Piv 节点声明交互或结构能力。`defineInactivePlugin` 定义单个节点算法，`defineInactivePlugins` 按名称组合多个算法；工厂接受配置后得到可直接交给 `is` 的 Plugin。
+Plugin 为 Piv 节点声明交互或结构能力。`tools` 提供定义与控制入口：`defineInactivePlugin` 定义单个节点算法，`defineInactivePlugins` 按名称组合多个算法；工厂接受配置后得到可直接交给 `is` 的 Plugin。拖放相关能力及示例归 `kits/dragAndDrop`。
 
 ```tsx
 <Piv is={hoverable()} />

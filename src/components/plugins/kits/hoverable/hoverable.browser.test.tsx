@@ -4,7 +4,7 @@ import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../usePlugin'
+import { usePlugin } from '../../tools/usePlugin'
 import { hoverable, type HoverableController } from './hoverable'
 
 let dispose: (() => void) | undefined
