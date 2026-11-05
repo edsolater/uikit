@@ -7,11 +7,11 @@
 ## 调用方式
 
 ```tsx
-<Piv plugin={clickable} />
-<Piv plugin={clickable({ tabIndex: 0 })} />
+<Piv is={clickable} />
+<Piv is={clickable({ tabIndex: 0 })} />
 
 const [plugin, controller] = usePlugin(clickable)
-<Piv plugin={plugin} />
+<Piv is={plugin} />
 ```
 
 Plugin 本体和传入 options 后的返回值都仍然是 Plugin。`usePlugin()` 用于显式取得某一次实例的 Controller。

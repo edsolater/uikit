@@ -23,7 +23,7 @@ describe('scope', () => {
     dispose = render(
       () => (
         <Piv
-          plugin={scope({ capabilities: [dragAndDrop] })}
+          is={scope({ capabilities: [dragAndDrop] })}
           htmlProps={{ 'data-testid': 'scope-host' }}
         />
       ),
@@ -50,13 +50,13 @@ describe('scope', () => {
     dispose = render(
       () => (
         <>
-          <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
+          <Piv is={scope({ capabilities: [dragAndDrop] })}>
             <Piv
-              plugin={draggable({ payload: 'A', activationDistance: 0 })}
+              is={draggable({ payload: 'A', activationDistance: 0 })}
               htmlProps={{ 'data-testid': 'source-a' }}
             />
             <Piv
-              plugin={droppable({
+              is={droppable({
                 onDrop: () => {
                   aDrops += 1
                 },
@@ -64,9 +64,9 @@ describe('scope', () => {
               htmlProps={{ 'data-testid': 'target-a' }}
             />
           </Piv>
-          <Piv plugin={scope({ capabilities: [dragAndDrop] })}>
+          <Piv is={scope({ capabilities: [dragAndDrop] })}>
             <Piv
-              plugin={droppable({
+              is={droppable({
                 onDrop: () => {
                   bDrops += 1
                 },

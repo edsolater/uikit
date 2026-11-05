@@ -44,22 +44,22 @@ export function PivStructureExample() {
         </div>
 
         <div class="example-stack">
-          <Piv class="structure-case" plugins={beforeLabelPlugin}>
+          <Piv class="structure-case" is={beforeLabelPlugin}>
             before 用于在主体前方挂辅助标记。
           </Piv>
 
-          <Piv as="button" class="structure-button" plugins={appendRedDotPlugin}>
+          <Piv as="button" class="structure-button" is={appendRedDotPlugin}>
             appendChild 红点
           </Piv>
 
-          <Piv class="structure-editor" plugins={wrapManagerPlugin}>
+          <Piv class="structure-editor" is={wrapManagerPlugin}>
             <Piv class="structure-editor-title">wrap 管理器</Piv>
             <Piv class="structure-editor-body">
               主体仍然是这个 Piv，外层由插件接管布局边界。
             </Piv>
           </Piv>
 
-          <Piv class="structure-case" plugins={selfMeasurePlugin}>
+          <Piv class="structure-case" is={selfMeasurePlugin}>
             element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
           </Piv>
         </div>

@@ -111,9 +111,7 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 | `htmlProps`   | 设置原生 HTML、ARIA、`data-*` 或 DOM property。                      |
 | `on`          | 注册根元素原生事件；Card 本身不增加点击协议。                        |
 | `domRef`         | 取得根 DOM，作为命令式逃生口。                                       |
-| `plugin`      | 注入一个 Piv 底层能力。                                              |
-| `plugins`     | 注入多个 Piv 底层能力。                                              |
-| `trait`       | 注入稳定性质或能力。                                                 |
+| `is`       | 注入稳定性质或能力。                                                 |
 | `shadowProps` | 上层组件封装 Card 时转交低优先级 Piv props。                         |
 
 `as` 由 `PivSupportedElementTag` 约束，TypeScript 会根据所选标签检查 `htmlProps` 的原生属性类型。

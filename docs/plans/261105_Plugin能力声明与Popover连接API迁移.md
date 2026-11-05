@@ -1,6 +1,6 @@
 # Plugin 能力声明与 Popover 连接 API 迁移
 
-状态：文档归位及迁移审阅稿，尚未开始代码迁移。用户已确定目标表达，本轮仅授权整理文档；此前“先不要急着实现”的边界继续有效。
+状态：按用户最新裁决分三阶段推进。本轮第一阶段将 Plugin 的公开 Props 统一为唯一的 `is`，同步统一样式命名；第二阶段 usePlugin 须等用户认可第一阶段后再开始，Popover/Tooltip 及其目录迁移属于第三阶段。
 
 本 Plan 负责[全局图](#全局图与本轮位置)中的公共能力声明及调用迁移：把已确定的 Tutorial 原则转成待实施的入口、消费者和出口变更。通用原理只维护在 Tutorial，Popover 自身 API 只维护在 Doc，本篇不重复维护第二份定义。
 
@@ -25,11 +25,12 @@ flowchart LR
     V --> R[新入口唯一，旧入口退出]
 ```
 
-本轮已整理 Tutorial 与 Doc；公共入口和消费者迁移仅形成计划，验证与最终清理均未发生。几何修复由[背板与内容统一定位 Plan](261104_Popover背板与内容统一定位.md)负责，本篇接收它的整体定位要求，不把全局 API 改名塞入该 Plan，也不转移其原定 Rule Detail 验收。
+Tutorial、Doc 及下文目标记录整份迁移的最终方向，本轮只落实公共 prop 改名与 UIKit 内的相关消费者，保留现有输入契约、运行顺序、创建协议和可见效果。几何修复由[背板与内容统一定位 Plan](261104_Popover背板与内容统一定位.md)负责，本篇接收它的整体定位要求，不把全局 API 改名塞入该 Plan，也不转移其原定 Rule Detail 验收。
 
 ## 已确定的目标
 
-- 既有公共 `trait` 能力入口及其直接契约、类型、调用和说明统一迁移到 `is`，不新增长期并行别名。
+- Plugin 的公开 Props 只保留 `is`：现有 `trait`、`plugin`、`plugins` 的直接契约、类型、调用和说明统一迁移，不保留兼容别名。源码未发现 `pluginIs` 入口，不为它新增或保留协议。
+- 样式功能类的 `trait:` 前缀、样式层、相关 Token 和文件命名同步统一为 `is`，登记入口和真实消费一起迁移，样式效果不变。Plugin 仍是能力概念名；定义与实例中的执行字段不因为公开 prop 统一而机械改名。
 - 可以直接通过 `is={focusable(options)}` 创建并附加功能；需要提前持有实例或取得 Controller 时，使用 `const [plugin, controller] = usePlugin(focusable, options)`，再将第一项对象放入 `is`。同样配置和宿主下功能等价，不表示执行两次创建共享同一实例。
 - `usePlugin(popover, options)` 返回 `[{ popoverTrigger, popoverBody }, { popoverTriggerController, popoverBodyController }]`；角色是已创建对象，直接使用 `is={popoverTrigger}`、`is={popoverBody}`，不再调用。两侧 Controller 可分别注入不同业务组件，仍共享一组关系。
 - `is` 接受 Plugin 对象或对象数组，例如 `is={[popoverBody, focusable(options)]}`；不能接整个二元结果或 Controller。
@@ -38,7 +39,7 @@ flowchart LR
 - 公共内容组件不再替调用者制造入口、Card、标题或正文；复杂内容保持在正常 JSX 中。
 - Popover 唯一领域目录确定为 `src/components/plugins/kits/Popover/`，保留用户指定的大小写。旧 `src/components/kits/Popover/` 不需要且不应该继续存在，完成接管后整目录删除，不保留私有实现、转发、兼容别名或空目录。
 
-全局 `trait → is` 是迁移事项，不能只更新 Tutorial 示例就报告完成。内部“Plugin”领域名不因公开 prop 改名就机械替换成 `is`；现有其他公开入口的合并或退出需在施工盘点时明确，不能借全局改名扩大为无依据的全库词语替换。
+公开能力入口统一为 `is` 是迁移事项，不能只更新 Tutorial 示例就报告完成。内部“Plugin”领域名不因公开 prop 改名就机械替换成 `is`；`PluginInstance.plugin` 等执行协议仍按能力概念保留，和待退出的组件 Props 区分。
 
 ## 改前与目标职责
 
@@ -97,7 +98,8 @@ Popover 使用外层通用设施，外层不依赖某个具体 Popover。Button�
 
 | 对象 | 待更新或删除 | 接管者及理由 |
 | --- | --- | --- |
-| 节点能力声明中的 `trait` | 更新所属 Props、运行接线、类型、示例、测试和已知消费者；完成后删除旧入口、旧出口及兼容别名 | `is` 接管同一能力入口。改名本身不创造第二条插件运行通道 |
+| 节点能力声明中的 `trait`、`plugin`、`plugins` | 更新所属 Props、运行接线、类型、示例、测试、嵌套声明和已知消费者；完成后删除旧 prop 入口及兼容别名 | `is` 接管唯一公开能力入口，复用现有插件运行通道；Plugin 对象内部执行字段不属于此处删除对象 |
+| `trait:` 样式类及其登记 | 同步更新类名、样式层、Token、样式文件和测试，以及包根/组件根注册和基础 layer 顺序；删除未使用且未公开的 TraitName 空类型文件 | `is` 命名承接相同样式职责，声明值和实际外观不变，不保留旧样式别名 |
 | 通用 Plugin 创建入口 | 核对并更新既有 `usePlugin` 的公开协议、类型及消费者，统一为二元返回，第一项为已创建对象或角色集合 | 单节点和多角色共同使用一条创建协议，不额外保留专属的 usePopoverPlugin 创建语法；此名称若仅存在于旧文档，撤销提案，不虚构源码删除 |
 | 通用 Plugin 解析与创建设施 | 核对定义、解析及 usePlugin 的实际职责，通用设施归 `src/components/plugins/` 外层 | 为不同能力服务；具体 Popover 只消费这些设施，不把它们复制进自己的 kits 目录 |
 | Popover 能力定义 | 在 `src/components/plugins/kits/Popover/` 定义传给 `usePlugin` 的 `popover`，创建配对角色对象与分离 Controller | 该目录是能力个体，拥有连接和配对生命周期；通用 usePlugin 留在外层负责创建及控制出口 |
@@ -114,20 +116,23 @@ Popover 使用外层通用设施，外层不依赖某个具体 Popover。Button�
 
 ## 实施顺序与停止边界
 
-1. **冻结具体接口与盘点旧责任。** 从 Tutorial 和 Doc 接收已定思想；核对 `trait` 的全部直接入口、usePlugin 协议与消费者，以及旧 `src/components/kits/Popover/` 的所有文件、出口、导入和现役文档链接。交付精确接管与删除表；未确定的配置字段和 Controller 成员不得靠批量搬运旧 Props 决定。
-2. **迁移统一能力入口。** 在同一条运行链上完成 `trait → is`，迁移示例和已知消费者，退出旧别名。不能以示例读起来正确代替真实运行链完成。
-3. **统一创建协议并在新目录接管 Popover。** 完成外层 usePlugin 与 `src/components/plugins/kits/Popover/` 的能力实现、角色对象及两个 Controller；配置只在创建时提供。迁移调用、Tooltip 内部接入、验证与说明材料后，删除旧公共组件链及整个旧目录，不先破坏尚未接管的消费者。
-4. **按原效果验证并清理。** 验证回退、箭头、整体滚动、内容变化、原生开闭、宿主引用清理及真实消费者；核对旧目录实际不存在、活动导入与文档链接不再指向旧路径。同步实际架构，清除本轮临时文件后结束。
+1. **第一阶段：统一为 is。** Piv Props 与属性登记只保留 `is`，旧 `trait`、`plugin`、`plugins` 退出；消费仍沿现有展开、shadowProps 合并和清理链。迁移内部嵌套声明、组件及示例，保持数组顺序、声明优先级和功能效果，同步 Board 类型、测试和当前 API 说明。`trait:…` 功能类、样式层、Token 及注册文件统一为 `is`，删除旧名字，不做样式效果调整。现有 `createPlugin`、`usePlugin`、`runPlugin` 协议不变，不新增 focusable，不改 Popover/Tooltip 功能与目录。通过类型、构建、相关行为与真实浏览器样式验证后交给用户验收，并停止。
+2. **第二阶段：统一创建协议。** 用户认可 is 并明确继续后，再调整通用 Plugin 定义、已创建对象和 usePlugin 二元返回。具体 Plugin 自己声明子 Plugin、角色 key 和内部连接；usePlugin 只调用定义并交付结果，不猜测具体能力的关系。单节点能力同样可以取得 Controller，返回对象不再二次配置。按实际消费者验证创建与控制契约。
+3. **第三阶段：Popover/Tooltip 接管。** 后续授权后，在 `src/components/plugins/kits/Popover/` 完成角色对象及两个 Controller，迁移调用、Tooltip 内部接入及说明材料，删除旧公共组件链与整个旧目录。验证回退、箭头、整体滚动、内容变化、原生开闭、宿主引用清理及真实消费者，核对旧目录实际不存在。第三阶段之前旧目录保留，不视为第一阶段未完成，也不把目录要求取消。
 
-代码实施和运行目前暂停。本轮不会因文档归位顺带执行全局改名、改导出、重启服务或再次验证 UI。恢复施工后按[统一任务分工](../../../ai-rules/rules/Agent-任务分工.md)确定执行和审查，临时文件只放 `agents/run/`。
+第一阶段的单入口排序沿实际消费者确定：直接 `is` 占原 `plugin`/`plugins` 相对 `shadowProps` 的执行位置，保留 Button 以及既有来源合并测试的顺序和预期；数组内部仍按原执行栈处理。原 `trait` 只有不与 shadowProps 混用的数字排版消费，不为无人使用的旧槽位增加兼容标记或第二通道。
+
+本轮仅修改 UIKit。按[统一任务分工](../../../ai-rules/rules/Agent-任务分工.md)由独立实施实例施工、独立约束检查实例审查；实施记录与临时文件按仓库入口只放 `agents/run/`。用户回退后的干净工作区作为重新实施的基线，不能沿用上次中断前的改动或验证结论。
 
 ## 验收与清理终态
+
+下表是整份 Plan 的最终验收，不表示第一阶段要提前改动 usePlugin 或 Popover/Tooltip。第一阶段仅验收 is 的真实接入、旧 prop 退出及原效果保持；通过后等待用户认可。
 
 | 检查 | 拒绝的失败方式 |
 | --- | --- |
 | 调用层次 | 又引入一个替调用者制造内容的公共 Popover 包装层 |
 | 能力目录归属 | 具体 Popover 未归入 `src/components/plugins/kits/Popover/`，或在其内部复制通用解析体/usePlugin；外层通用设施反向依赖具体能力 |
-| 入口唯一 | `is` 只是新别名，旧 `trait` 仍被公开推荐或继续参与同一条输入链 |
+| 入口唯一 | `is` 只是新别名，旧 `trait`、`plugin`、`plugins` 仍是公开 Props 或参与旧 prop 输入链；样式登记或消费者残留旧 trait 名称 |
 | 一次创建与配置 | 返回角色仍是需再次调用的工厂，或继续保留父默认值与角色二次配置层 |
 | 单节点 Controller | 单节点必须借宿主回流控制能力，或 usePlugin 仍只允许处理多节点连接 |
 | 两侧 Controller | 必须经宿主 ref 回流，或两端复制状态再同步 |
@@ -140,12 +145,12 @@ Popover 使用外层通用设施，外层不依赖某个具体 Popover。Button�
 
 迁移后，现役 API 文档、生产导入和正式出口不得继续指向旧目录；本 Plan 的改前说明与明确标注的历史记录可以保留旧路径，不能把历史文字引用误当成运行依赖，也不能借此保留旧目录。
 
-具体字段尚未确定不代表上述思想未决；代码未迁移也不能冒充契约未确定。本轮文档可以交付，代码计划仍为审阅稿。不得报告接口已可导入使用或全局改名已完成。
+具体字段尚未确定不代表上述思想未决；代码未迁移也不能冒充契约未确定。各阶段分别报告实际完成与验证结果，不把第一阶段改名通过宣称为最终对象协议或 Popover 角色能力已经实现。
 
 ## 依据与审查
 
 遵循[仓库入口](../../AGENTS.md)、[Tutorial 目录职责](../tutorial/SPEC.md)、[Guide 写法](../how-to-write-guide.md)、[Plan 撰写契约](../how-to-write-plan.md)，并按[理解意图](../../../ai-rules/rules/Agent-理解意图.md)、[处理需求](../../../ai-rules/rules/Agent-处理需求.md)、[AI Rules 执行](../../../ai-rules/rules/Agent-AI-Rules执行.md)区分用户已定思想、当前实现与迁移步骤。
 
-前轮五篇文档由主 Agent 编写，`/root/plan_review` 核对来源与归属，`/root/simplicity_review` 检查必要性和重复。本轮只更新本篇 Plan，由主 Agent 自查，原 `/root/plan_review` 按 Plan 的单篇特化要求核对全文并复述，不另开其他审查角色。恢复代码实施时重新按任务分工选角色；文档审查不替代源码与运行验收。
+前轮五篇文档由主 Agent 编写，`/root/plan_review` 核对来源与归属，`/root/simplicity_review` 检查必要性和重复。本轮主 Agent 维护阶段边界并组织验收，`/root/plugin_architecture` 实施第一阶段，原 `/root/plan_review` 独立检查约束、实际差异和行为证据，并阅读全文复述 Plan。此次只作改名、不新增或重组能力逻辑，不额外启动能力抽取或精简角色；若范围变化则重新检查。
 
-状态记录：前轮统一 usePlugin 二元返回的文档已完成审查。本轮将用户明确的能力目录和通用层分工写入目标树、接管清单及整目录退出验收；目录边界与接管要求已核对，最终全文由原实例复述。本次未搬代码、未搬 Doc，也未运行程序，代码计划仍为审阅稿。
+状态记录：前轮完成目标 API 与能力目录的文档审查。用户中断并回退后，本轮明确恢复第一阶段；随后进一步裁决公开 Props 只留 is，样式命名也统一。该新裁决覆盖此前保留 plugin/plugins Props 与 trait 样式名的范围判断；创建协议、Popover/Tooltip 功能及目录仍保持现状。后续两阶段以用户后续认可和授权为前提，本轮验证不能代替该认可。

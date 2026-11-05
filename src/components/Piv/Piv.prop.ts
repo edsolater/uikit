@@ -8,9 +8,7 @@ export const pivPropsDefinition = {
   ...dodeDOMPropsDefinition,
   ...publicCapabilityPropsDefinition,
   shadowProps: 'state-untracked',
-  plugin: 'state-untracked',
-  plugins: 'state-untracked',
-  trait: 'state-untracked',
+  is: 'state-untracked',
 } satisfies PropsDefinition<PivProps>
 
 export const pivDefaultSources = publicCapabilityDefaultSources satisfies DefaultPropSources<

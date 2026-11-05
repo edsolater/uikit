@@ -5,8 +5,8 @@
 `scope` 为主动支持它的能力建立范围。它是通用 Plugin，不拥有 Drag and Drop；`dragAndDrop` 只是当前使用 Scope 的一个能力身份。
 
 ```tsx
-<Piv plugin={scope}>...</Piv>
-<Piv plugin={scope({ capabilities: [dragAndDrop] })}>...</Piv>
+<Piv is={scope}>...</Piv>
+<Piv is={scope({ capabilities: [dragAndDrop] })}>...</Piv>
 ```
 
 - 无 options 或未提供 `capabilities` 时是全量 Scope，命中所有 Scope-aware 能力。

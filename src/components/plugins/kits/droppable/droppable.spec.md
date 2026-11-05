@@ -5,7 +5,7 @@
 `droppable` 同时接收两种材料：UIKit `draggable` 发起的页面内 Pointer 拖动，以及系统文件等浏览器外部原生拖放。
 
 ```tsx
-<Piv plugin={droppable({ onDrop })}>Drop here</Piv>
+<Piv is={droppable({ onDrop })}>Drop here</Piv>
 ```
 
 `accepts()` 先判断当前材料，返回 true 后才能放下。Scope 检查先于 `accepts()`；通过 Scope 只表示没有越界，不代表接收端一定接受。

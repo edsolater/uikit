@@ -43,7 +43,7 @@ export const Help = kit(
     <Piv
       as="button"
       class="Help"
-      plugin={tooltip({
+      is={tooltip({
         get content() {
           return props.tooltip
         },

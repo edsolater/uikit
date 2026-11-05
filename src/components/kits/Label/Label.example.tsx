@@ -33,7 +33,7 @@ export function LabelExample() {
         模板说明
       </Label>
       <Button
-        plugin={tooltip({ content: '保存当前项目名称。' })}
+        is={tooltip({ content: '保存当前项目名称。' })}
         // 演示特殊回调中的指令入口；初始界面仍在 Label Props 中声明。
         onClick={() => { label.props?.tooltip.set('名称已确认，可以继续编辑。') }}
       >

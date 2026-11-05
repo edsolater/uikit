@@ -34,7 +34,7 @@ export function createPivPlugin<Tag extends PivTag>(
  * // ----------  hooks 在组件中使用  ----------
  * function FooComponent() {
  *   const [miniMapState, miniMapPlugin] = createMiniMapPlugin({ initZoom: 0.5 })
- *   return <Piv plugins={miniMapPlugin}>...</Piv>
+ *   return <Piv is={miniMapPlugin}>...</Piv>
  * }
  */
 export function createPluginHookCreator<

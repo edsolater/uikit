@@ -5,10 +5,10 @@
 `draggable` 使用 Pointer Events 建立页面内拖动。它拥有当前元素是否可拖、是否正在拖动、本次携带的 `payload`，以及原始元素的跟随位移；不依赖 `droppable` 或 `scope` 才能成立。
 
 ```tsx
-<Piv plugin={draggable({ payload: weather })}>Weather</Piv>
+<Piv is={draggable({ payload: weather })}>Weather</Piv>
 
 const [plugin, controller] = usePlugin(draggable, { payload: weather })
-<Piv plugin={plugin}>Weather</Piv>
+<Piv is={plugin}>Weather</Piv>
 ```
 
 开始拖动后，`draggable` 使用独立 `topLayer` 领域的命令式入口。Top Layer 建立原布局 Anchor，并维护来源 DOM 提升前的基础位置、border-box 尺寸和提升阴影；`draggable` 只在这个基础位置上使用 individual `translate` 跟随指针。source 的 DOM 父子关系、组件身份、Plugin、Controller 和状态都不迁移。
@@ -28,7 +28,7 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 ```tsx
 <Piv
-  plugin={draggable({
+  is={draggable({
     payload: weather,
     activationDistance: 6,
     activationJump: false,

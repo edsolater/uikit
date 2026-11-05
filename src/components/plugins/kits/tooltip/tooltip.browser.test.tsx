@@ -111,7 +111,7 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
         <Piv
           as="span"
           id="own-id"
-          plugin={one}
+          is={one}
           htmlProps={{
             'tabIndex': 0,
             'aria-describedby': 'existing-description',
@@ -119,7 +119,7 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
         >
           任意宿主
         </Piv>
-        <Piv as="span" id="another" plugin={two} htmlProps={{ tabIndex: 0 }}>
+        <Piv as="span" id="another" is={two} htmlProps={{ tabIndex: 0 }}>
           另一个
         </Piv>
       </>
@@ -150,7 +150,7 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
     const [plugin, current] = usePlugin(tooltip, { content })
     controller = current
     return (
-      <Piv as="button" plugin={plugin}>
+      <Piv as="button" is={plugin}>
         宿主
       </Piv>
     )
@@ -179,7 +179,7 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
     return (
       <Piv
         as="button"
-        plugin={plugin}
+        is={plugin}
         style={{ position: 'fixed', top: '8px', left: '200px' }}
       >
         零值说明
@@ -230,7 +230,7 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
           triggerProps={{ 'aria-busy': 'true' }}>
           原浮层正文
         </Popover>
-        <Piv as="button" plugin={tooltip({ content: '简短提示' })}>
+        <Piv as="button" is={tooltip({ content: '简短提示' })}>
           提示目标
         </Piv>
       </>

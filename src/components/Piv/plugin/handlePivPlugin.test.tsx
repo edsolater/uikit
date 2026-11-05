@@ -118,7 +118,7 @@ describe('配置插件消费', () => {
         domRef: () => {
           refs += 1
         },
-        plugin: () => {
+        is: () => {
           order.push('nested')
           onCleanup(() => {
             nestedCleaned += 1
@@ -136,7 +136,7 @@ describe('配置插件消费', () => {
     const dispose = render(
       () => (
         <Piv
-          plugin={[
+          is={[
             () => {
               order.push('first')
               return undefined

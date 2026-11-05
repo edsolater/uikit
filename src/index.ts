@@ -9,7 +9,7 @@
 import './css/all-base.css'
 import './style-system/pieces/native-controls.style'
 import './style-system/pieces/document.style'
-import './components/plugins/traits.style'
+import './components/plugins/is.style'
 
 export * from './components'
 export * from './foundation'

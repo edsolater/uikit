@@ -88,7 +88,7 @@ type MergedPivProps<Tag extends PivTag> = Omit<ShadowProps<Tag>, 'id'> & {
 }
 
 /**
- * 把直接 props、shadowProps、trait 和 plugin 返回值整合成 Piv 最终消费的 props。
+ * 把直接 props、shadowProps、is 和 plugin 返回值整合成 Piv 最终消费的 props。
  * id 输出稳定的合并 Source；class、style、htmlProps 保留用于声明解析和字段作用域的惰性读取。
  */
 export function mergePivProps<Tag extends PivTag>(
@@ -134,15 +134,13 @@ function expandPlugins<Tag extends PivTag>(
   return declarations
 }
 
-/** 把一份 raw props 携带的 trait、shadowProps、plugin 和 plugins 归一成待执行 plugin 队列。 */
+/** 把一份 raw props 携带的 is 和 shadowProps 归一成待执行 plugin 队列。 */
 function getPluginFromShadowProps<Tag extends PivTag>(
   props: ShadowProps<Tag>,
 ): PivPlugin<Tag>[] {
   return toArray(
-    props.trait,
     mayMap(props.shadowProps, (shadow) => () => shadow),
-    props.plugin,
-    props.plugins,
+    props.is,
   )
 }
 

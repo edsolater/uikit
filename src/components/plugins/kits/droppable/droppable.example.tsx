@@ -26,13 +26,13 @@ export function DroppableExample() {
         <div class="drag-drop-example-grid">
           <div class="drag-drop-example-stack">
             <Piv
-              plugin={draggable({ payload: { widget: 'weather' } })}
+              is={draggable({ payload: { widget: 'weather' } })}
               class="drag-drop-example-card"
             >
               拖动 Widget payload
             </Piv>
             <Piv
-              plugin={droppable({
+              is={droppable({
                 accepts: ({ kind }) => kind === 'internal',
                 onDrop: ({ payload }) =>
                   payloadResult.set(JSON.stringify(payload)),
@@ -55,7 +55,7 @@ export function DroppableExample() {
 
           <div class="drag-drop-example-stack">
             <Piv
-              plugin={droppable({
+              is={droppable({
                 accepts: ({ kind, files }) =>
                   kind === 'external' && files.length > 0,
                 dropEffect: 'copy',

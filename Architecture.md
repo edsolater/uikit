@@ -44,7 +44,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
               -> DOM
 ```
 
-kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期，Dode 执行 DOM 绑定。快捷 draggable/droppable 未声明或字面 false 不创建该快捷实例；动态 Source 关闭释放消费作用域，返回声明仍经过同一 DOM 绑定链。手动 plugin 独立沿原声明执行，同一能力选择一种接入方式；快捷 false 不撤销手动 plugin。显式 options.disabled 沿原插件禁用语义创建能力。组件可以使用 hooks、构件工具 和 Style System；渲染基础设施与插件运行机制不依赖具体用途组件；tooltip 等具体插件可消费共享浮层。
+kit 负责组件语义，Piv 决定 if/as、来源优先级及能力生命周期，Dode 执行 DOM 绑定。快捷 draggable/droppable 未声明或字面 false 不创建该快捷实例；动态 Source 关闭释放消费作用域，返回声明仍经过同一 DOM 绑定链。`is` 声明的 Plugin 独立执行，同一能力选择一种接入方式；快捷 false 不撤销 `is` 声明的 Plugin。显式 options.disabled 沿原插件禁用语义创建能力。组件可以使用 hooks、构件工具 和 Style System；渲染基础设施与插件运行机制不依赖具体用途组件；tooltip 等具体插件可消费共享浮层。
 
 ## 组件定位框
 

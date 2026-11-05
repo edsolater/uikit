@@ -29,16 +29,16 @@ describe('clickable', () => {
       return (
         <>
           <Piv
-            plugin={firstPlugin}
+            is={firstPlugin}
             htmlProps={{ 'data-testid': 'first', 'role': 'button' }}
           />
           <Piv
-            plugin={secondPlugin}
+            is={secondPlugin}
             htmlProps={{ 'data-testid': 'second', 'role': 'button' }}
           />
-          <Piv plugin={clickable} htmlProps={{ 'data-testid': 'direct' }} />
+          <Piv is={clickable} htmlProps={{ 'data-testid': 'direct' }} />
           <Piv
-            plugin={clickable({ tabIndex: 2 })}
+            is={clickable({ tabIndex: 2 })}
             htmlProps={{ 'data-testid': 'configured' }}
           />
         </>

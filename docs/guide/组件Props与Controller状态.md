@@ -50,7 +50,7 @@ Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card
 
 | 组件集合 | 留给精确实例 ref 的字段 |
 | --- | --- |
-| Board / Card | as、htmlProps、on、domRef、shadowProps、plugin、plugins、trait |
+| Board / Card | as、htmlProps、on、domRef、shadowProps、is |
 | Loop | each |
 | Table | data、keys、renderParts |
 

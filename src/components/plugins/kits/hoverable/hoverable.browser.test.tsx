@@ -29,11 +29,11 @@ describe('hoverable', () => {
 
       return (
         <>
-          <Piv plugin={firstPlugin} htmlProps={{ 'data-testid': 'first' }} />
-          <Piv plugin={secondPlugin} htmlProps={{ 'data-testid': 'second' }} />
-          <Piv plugin={hoverable} htmlProps={{ 'data-testid': 'direct' }} />
+          <Piv is={firstPlugin} htmlProps={{ 'data-testid': 'first' }} />
+          <Piv is={secondPlugin} htmlProps={{ 'data-testid': 'second' }} />
+          <Piv is={hoverable} htmlProps={{ 'data-testid': 'direct' }} />
           <Piv
-            plugin={hoverable({ initialHovered: true })}
+            is={hoverable({ initialHovered: true })}
             htmlProps={{ 'data-testid': 'configured' }}
           />
         </>

@@ -71,10 +71,10 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 
 ```tsx
 // 全量 Scope：所有支持 Scope 的能力都不能越过
-<Piv plugin={scope}>...</Piv>
+<Piv is={scope}>...</Piv>
 
 // 选择性 Scope：这里只限制 Drag and Drop，不限制拖拽排序等其他能力
-<Piv plugin={scope({ capabilities: [dragAndDrop] })}>...</Piv>
+<Piv is={scope({ capabilities: [dragAndDrop] })}>...</Piv>
 ```
 
 这里的 `dragAndDrop` 是供 Scope 识别能力的标识，不是第四个 Plugin，也不拥有 `draggable` 或 `droppable`。
@@ -84,11 +84,11 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 默认没有 Scope，最小调用只表达当前元素拥有的能力：
 
 ```tsx
-<Piv plugin={draggable({ payload: 'weather' })}>
+<Piv is={draggable({ payload: 'weather' })}>
   Weather
 </Piv>
 
-<Piv plugin={droppable({ onDrop })}>
+<Piv is={droppable({ onDrop })}>
   Calendar
 </Piv>
 ```
@@ -96,10 +96,10 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 需要限制配对范围时，在共同祖先上增加 Scope，不创建业务专用的 Drag and Drop 对象：
 
 ```tsx
-<Piv plugin={scope({ capabilities: [dragAndDrop] })}>
-  <Piv plugin={draggable({ payload: 'weather' })}>Weather</Piv>
+<Piv is={scope({ capabilities: [dragAndDrop] })}>
+  <Piv is={draggable({ payload: 'weather' })}>Weather</Piv>
 
-  <Piv plugin={droppable({ onDrop })}>Calendar</Piv>
+  <Piv is={droppable({ onDrop })}>Calendar</Piv>
 </Piv>
 ```
 
@@ -107,7 +107,7 @@ Scope 是通用范围能力，不属于 Drag and Drop，也不内建排序、选
 
 ```tsx
 <Piv
-  plugin={[scope, draggable({ payload: 'weather' }), droppable({ onDrop })]}
+  is={[scope, draggable({ payload: 'weather' }), droppable({ onDrop })]}
 />
 ```
 

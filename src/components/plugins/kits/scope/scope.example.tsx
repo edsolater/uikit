@@ -14,18 +14,18 @@ export function ScopeExample() {
 
   const renderScope = (name: string) => (
     <Piv
-      plugin={scope({ capabilities: [dragAndDrop] })}
+      is={scope({ capabilities: [dragAndDrop] })}
       class="scope-example-boundary"
     >
       <strong>Scope {name}</strong>
       <Piv
-        plugin={draggable({ payload: `${name} payload` })}
+        is={draggable({ payload: `${name} payload` })}
         class="drag-drop-example-card"
       >
         拖动 {name}
       </Piv>
       <Piv
-        plugin={droppable({
+        is={droppable({
           onDrop: ({ payload }) =>
             results.set((current) => ({
               ...current,

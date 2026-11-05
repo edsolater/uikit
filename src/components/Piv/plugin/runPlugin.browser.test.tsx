@@ -7,7 +7,7 @@ import { runPlugin } from './runPlugin'
 test('Piv作为渲染根时同层附属节点进入实际宿主，卸载同步释放', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   const dispose = render(() => (
-    <Piv as="button" plugin={({ insertAfter }) => {
+    <Piv as="button" is={({ insertAfter }) => {
       insertAfter(<Piv htmlProps={{ 'data-adjacent': true }}>附属内容</Piv>)
       return undefined
     }}>

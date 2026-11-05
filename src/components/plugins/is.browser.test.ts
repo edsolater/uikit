@@ -2,12 +2,12 @@ import { expect, test } from 'vitest'
 import { cssRoot } from '@/style-system'
 import '@/components'
 
-test('组件入口登记三项 trait 能力及滚动条样式', () => {
+test('组件入口登记三项 is 能力及滚动条样式', () => {
   const style = document.head.appendChild(document.createElement('style'))
   style.id = 'css-root'
   cssRoot.mount()
   const host = document.body.appendChild(document.createElement('div'))
-  host.className = 'trait:backdrop-root trait:scroll-area trait:self-host-scroll-behavior'
+  host.className = 'is:backdrop-root is:scroll-area is:self-host-scroll-behavior'
   try {
     const computed = getComputedStyle(host)
     expect(computed.clipPath).toBe('inset(0px)')

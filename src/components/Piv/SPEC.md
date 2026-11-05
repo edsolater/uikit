@@ -9,7 +9,7 @@ Dode 是本目录内部的元素实现，定义并消费 as、if 与底层 DOM �
 | 内容                                | 负责主体 | 处理方式                                                                     |
 | ----------------------------------- | -------- | ---------------------------------------------------------------------------- |
 | as、if                              | Dode     | as 在首次实际创建时固定元素类型；if 按属性存在性启用 Show。 |
-| plugin、plugins、trait、shadowProps | Piv      | 组织并执行插件，展开声明来源，保留原有执行顺序和合并关系。                   |
+| is、shadowProps | Piv      | 组织并执行插件，展开声明来源，保留原有执行顺序和合并关系。                   |
 | draggable、droppable                | Piv      | 选择有效快捷配置，创建和释放对应插件消费作用域。                             |
 | id、class、style、htmlProps         | Dode     | 将组织后的声明交给专用字段消费者，订阅 Source 并维护 DOM。                   |
 | on、domRef                             | Dode     | 拥有事件绑定生命周期，完成字段绑定后调用普通 domRef。                           |
@@ -82,8 +82,8 @@ true 使用原插件默认配置，options 沿原插件配置契约；options.di
 缺省或 false 不创建对应快捷插件实例及其运行状态、DOM 监听或目标注册；显式 false 可以保留配置派生观察，不承诺零全部状态。
 动态 Source 具有观察开关所需的控制订阅，关闭时释放插件实例和 DOM 资源，重开仍使用同一个元素。
 
-同一能力选择快捷属性或显式 plugin 一种接入方式。
-显式 plugin 沿原声明独立运行，快捷 false 不撤销其资源或接管 usePlugin 创建的 controller。
+同一能力选择快捷属性或 `is` 一种接入方式。
+`is` 声明的 Plugin 独立运行，快捷 false 不撤销其资源或接管 usePlugin 创建的 controller。
 
 页内拖动复用现有 Pointer 会话、原元素与 translate，关闭时取消当前拖动并恢复原元素状态。
 droppable 关闭时注销内部目标并移除外部事件，外部 DataTransfer 接收、Scope 和占用保护沿现有插件契约。

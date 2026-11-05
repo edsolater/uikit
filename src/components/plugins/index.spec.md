@@ -7,11 +7,11 @@ Plugins 定义能够交给 Piv 的可实例化能力。一个 Plugin 可以携�
 Plugin 本体和传入 options 后的返回值都仍然是 Plugin：
 
 ```tsx
-<Piv plugin={hoverable} />
-<Piv plugin={hoverable({ initialHovered: true })} />
+<Piv is={hoverable} />
+<Piv is={hoverable({ initialHovered: true })} />
 
 const [plugin, controller] = usePlugin(hoverable)
-<Piv plugin={plugin} />
+<Piv is={plugin} />
 ```
 
 前两种写法由 Piv 在消费时实例化。`usePlugin()` 只在调用方需要 Controller 时提前实例化；它不取得 DOM，也不运行 Plugin，因此不是 Plugin Consumer。

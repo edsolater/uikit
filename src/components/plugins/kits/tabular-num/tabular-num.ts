@@ -1,7 +1,7 @@
 /**
  * tabularNum 让动态数字使用等宽数字。
  *
- * 能力：给 Piv 自动补充 `trait:tabular-num` 功能类，并登记对应样式。
+ * 能力：给 Piv 自动补充 `is:tabular-num` 功能类，并登记对应样式。
  *
  * 适用场景：计时器、计数器、价格、百分比、比分和实时数据这类会更新的数字。
  *
@@ -10,12 +10,12 @@
  * ```tsx
  * import { Piv, tabularNum } from '@edsolater/uikit'
  *
- * <Piv class="timer" trait={tabularNum}>
+ * <Piv class="timer" is={tabularNum}>
  *   {elapsedTime()}
  * </Piv>
  *
- * 业务层不应手写 `<Piv class="timer trait:tabular-num">`；
- * trait plugin 负责把语义能力翻译成真实 DOM class。
+ * 业务层不应手写 `<Piv class="timer is:tabular-num">`；
+ * Plugin 负责把语义能力翻译成真实 DOM class。
  * ```
  */
 import type { PivTag } from '../../../Piv/domMap'
@@ -23,5 +23,5 @@ import type { PivPlugin } from '../../../Piv/plugin/runPlugin'
 import './tabular-num.style'
 
 export const tabularNum: PivPlugin<PivTag> = () => ({
-  class: 'trait:tabular-num',
+  class: 'is:tabular-num',
 })

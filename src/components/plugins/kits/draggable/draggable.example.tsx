@@ -19,7 +19,7 @@ export function DraggableExample() {
         </p>
 
         <Piv
-          plugin={draggable({ payload: 'Weather payload' })}
+          is={draggable({ payload: 'Weather payload' })}
           class="drag-drop-example-card"
         >
           拖动 Weather

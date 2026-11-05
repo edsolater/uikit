@@ -32,7 +32,7 @@ Article 内也可以包含作为正文组成部分的资料卡片。两种方向
 | `description`、`descriptionDisplay` | 用途说明及结构查看中的显示选择 |
 | `id`、`class`、`style` | 正文根的身份与调用方必要布局 |
 | `htmlProps`、`on`、`domRef` | 原生 article 的属性、事件与 DOM 引用 |
-| `if`、`shadowProps`、`plugin`、`plugins`、`trait` | 既有显示、低优先级来源与附加能力 |
+| `if`、`shadowProps`、`is` | 既有显示、低优先级来源与附加能力 |
 | `ref` | 接收 Article 自己的 Controller，不替代组合中 Card 的实例引用 |
 
 `ArticleController.props` 通过既有字段状态干预正文输入，不包含 `as` 或 Card 的 `size`、`variant`。嵌套 Card 的引用只操作该 Card。

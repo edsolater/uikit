@@ -33,14 +33,14 @@ describe('droppable', () => {
       () => (
         <div style={{ display: 'grid', gap: '32px', padding: '20px' }}>
           <Piv
-            plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+            is={draggable({ payload: 'weather', activationDistance: 0 })}
             style={{ width: '120px', height: '60px' }}
             htmlProps={{ 'data-testid': 'source' }}
           >
             Weather
           </Piv>
           <Piv
-            plugin={droppable({
+            is={droppable({
               onDrop: ({ payload }) => {
                 receivedPayload = payload
               },
@@ -128,11 +128,11 @@ describe('droppable', () => {
       () => (
         <>
           <Piv
-            plugin={draggable({ payload, activationDistance: 0 })}
+            is={draggable({ payload, activationDistance: 0 })}
             htmlProps={{ 'data-testid': 'source' }}
           />
           <Piv
-            plugin={droppable({
+            is={droppable({
               onDrop: (context) => {
                 receivedPayload = context.payload
               },
@@ -140,7 +140,7 @@ describe('droppable', () => {
             htmlProps={{ 'data-testid': 'payload-target' }}
           />
           <Piv
-            plugin={droppable({
+            is={droppable({
               accepts: ({ kind, files }) =>
                 kind === 'external' && files.length > 0,
               onDrop: (context) => {
@@ -210,11 +210,11 @@ describe('droppable', () => {
       () => (
         <>
           <Piv
-            plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+            is={draggable({ payload: 'weather', activationDistance: 0 })}
             htmlProps={{ 'data-testid': 'source' }}
           />
           <Piv
-            plugin={droppable({
+            is={droppable({
               accepts: ({ kind }) => kind === 'internal',
               onDrop: (context) => {
                 if (context.kind !== 'internal') return

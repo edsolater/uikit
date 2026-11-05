@@ -69,7 +69,7 @@ export const clickable = createPlugin<
     plugin: (payload) => {
       element = payload.element
       return {
-        plugin: hoverPlugin,
+        is: hoverPlugin,
         htmlProps: {
           'tabIndex': options?.tabIndex ?? 0,
           'data-plugin': {

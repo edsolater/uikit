@@ -70,7 +70,7 @@ describe('draggable', () => {
       controller = currentController
       return (
         <Piv
-          plugin={plugin}
+          is={plugin}
           style={{
             width: '160px',
             height: '80px',
@@ -143,7 +143,7 @@ describe('draggable', () => {
     dispose = render(
       () => (
         <Piv
-          plugin={draggable({ payload: 'weather' })}
+          is={draggable({ payload: 'weather' })}
           htmlProps={{ 'data-testid': 'source' }}
         />
       ),
@@ -168,7 +168,7 @@ describe('draggable', () => {
     dispose = render(
       () => (
         <Piv
-          plugin={draggable({ payload: 'weather', activationDistance: 6 })}
+          is={draggable({ payload: 'weather', activationDistance: 6 })}
           htmlProps={{ 'data-testid': 'source' }}
         />
       ),
@@ -200,7 +200,7 @@ describe('draggable', () => {
     dispose = render(
       () => (
         <Piv
-          plugin={draggable({
+          is={draggable({
             payload: 'weather',
             activationDistance: 6,
             activationJump: false,
@@ -233,7 +233,7 @@ describe('draggable', () => {
     dispose = render(
       () => (
         <Piv
-          plugin={draggable({ payload: 'weather', activationDistance: 0 })}
+          is={draggable({ payload: 'weather', activationDistance: 0 })}
           htmlProps={{ 'data-testid': 'source' }}
         />
       ),

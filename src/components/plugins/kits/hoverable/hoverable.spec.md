@@ -7,11 +7,11 @@
 ## 调用方式
 
 ```tsx
-<Piv plugin={hoverable} />
-<Piv plugin={hoverable({ initialHovered: true })} />
+<Piv is={hoverable} />
+<Piv is={hoverable({ initialHovered: true })} />
 
 const [plugin, controller] = usePlugin(hoverable)
-<Piv plugin={plugin} />
+<Piv is={plugin} />
 ```
 
 直接使用和配置后使用都由 Piv 在消费时实例化。只有调用方需要读取状态或执行操作时，才使用 `usePlugin()` 取得 Controller。

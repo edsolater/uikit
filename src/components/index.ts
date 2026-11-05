@@ -91,4 +91,4 @@ export type {
 } from './tools/componentPropsDirector'
 export { pivPropsDefinition, pivDefaultSources } from './Piv/Piv.prop'
 export { componentDescriptionPropsDefinition } from './tools/KitMarker/KitMarker.prop'
-import './plugins/traits.style'
+import './plugins/is.style'

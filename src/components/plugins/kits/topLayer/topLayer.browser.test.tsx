@@ -91,7 +91,7 @@ describe('topLayer', () => {
         return (
           <Piv
             htmlProps={{ 'data-testid': 'source' }}
-            plugin={(context) => {
+            is={(context) => {
               const props = plugin(context)
               expect(context.element.isConnected).toBe(false)
               controller.leave()
@@ -129,7 +129,7 @@ describe('topLayer', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(
-      () => <Piv plugin={topLayer} htmlProps={{ 'data-testid': 'source' }} />,
+      () => <Piv is={topLayer} htmlProps={{ 'data-testid': 'source' }} />,
       host,
     )
 
@@ -155,7 +155,7 @@ describe('topLayer', () => {
     dispose = render(() => {
       const [plugin, currentController] = usePlugin(topLayer)
       controller = currentController
-      return <Piv plugin={plugin} htmlProps={{ 'data-testid': 'source' }} />
+      return <Piv is={plugin} htmlProps={{ 'data-testid': 'source' }} />
     }, host)
 
     const source = document.querySelector<HTMLElement>(

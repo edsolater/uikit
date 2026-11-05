@@ -146,7 +146,7 @@ export const Button = kit(
         as="button"
         shadowProps={[props, ...variantEffectProps, ...statusEffectProps]}
         class="Button"
-        plugins={[clickable({ componentName: context.name })]}
+        is={[clickable({ componentName: context.name })]}
         htmlProps={{
           'aria-label': props.name,
         }}

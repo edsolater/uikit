@@ -39,7 +39,7 @@ export type BoardController<Tag extends PivSupportedElementTag = 'div'> = KitCon
 /** 异构原生节点只公开共同安全字段。 */
 export type BoardControllerCollection = ControllerCollection<{
   readonly props: Omit<BoardController<PivSupportedElementTag>['props'],
-    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'plugin' | 'plugins' | 'trait'>
+    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'>
 }>
 
 interface BoardComponent {

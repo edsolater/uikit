@@ -21,12 +21,8 @@ export interface PivProps<Tag extends PivTag = 'div'>
   extends DodeDOMProps<Tag>, PublicCapabilityProps {
   /** 上层组件转交的低优先级声明，接受一份或一维数组。 */
   shadowProps?: MayArray<PivShadowProps<Tag>>
-  /** 使用真实 DOM 的扩展入口；可以返回低优先级声明或仅执行结构能力。 */
-  plugin?: MayArray<PivPlugin<Tag>>
-  /** 多插件的兼容入口；单个能力优先使用 plugin。 */
-  plugins?: MayArray<PivPlugin<Tag>>
-  /** plugin 的语义化别名，表达稳定能力或性质。 */
-  trait?: MayArray<PivPlugin<Tag>>
+  /** 声明附加到节点的能力，接受单个 Plugin 或数组。 */
+  is?: MayArray<PivPlugin<Tag>>
 }
 
 /**

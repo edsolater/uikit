@@ -17,6 +17,17 @@ import {
  * 编译期检查组件调用；不运行这些 JSX，避免给类型验收创建 DOM。
  */
 function verifyGenericCalls() {
+  const capability = () => ({ class: 'capability' })
+  Piv({ is: capability })
+  Piv({ is: [capability, { plugin: capability }] })
+  // @ts-expect-error 原 trait 入口已经退出。
+  Piv({ trait: capability })
+  // @ts-expect-error plugin 不再作为 Props。
+  Piv({ plugin: capability })
+  // @ts-expect-error plugins 不再作为 Props。
+  Piv({ plugins: capability })
+  // @ts-expect-error 没有 pluginIs Props。
+  Piv({ pluginIs: capability })
   const board = <Board<'button'> as="button" ref={controller => {
     expectTypeOf(controller).toEqualTypeOf<BoardController<'button'>>()
   }} domRef={element => { expectTypeOf(element).toEqualTypeOf<HTMLButtonElement>() }} />

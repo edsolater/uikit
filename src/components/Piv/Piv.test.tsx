@@ -68,7 +68,7 @@ describe('Piv 生命周期', () => {
       get class(): string {
         throw new Error('不应解析隐藏字段')
       },
-      plugin: () => {
+      is: () => {
         throw new Error('不应初始化隐藏插件')
       },
     }
@@ -249,7 +249,7 @@ describe('Piv 生命周期', () => {
         <Context value="provided">
           <Piv
             if={visible}
-            plugin={plugin}
+            is={plugin}
             domRef={(element) => {
               val(incidental)
               observations.push(`domRef:${element.childElementCount}`)
@@ -371,7 +371,7 @@ describe('Piv 生命周期', () => {
         <Piv
           shadowProps={{ if: visible }}
           class={className}
-          plugin={plugin}
+          is={plugin}
           on={{
             click: () => {
               clicks += 1
@@ -528,7 +528,7 @@ describe('Piv Source 属性', () => {
           return readSource()
         },
         shadowProps: { id: shadow },
-        plugin: createPivPlugin(() => ({ id: pluginId })),
+        is: createPivPlugin(() => ({ id: pluginId })),
       }),
       dispose,
     }))
@@ -598,12 +598,12 @@ describe('Piv Source 属性', () => {
     const dispose = render(
       () => (
         <>
-          <Piv plugins={plugin} />
+          <Piv is={plugin} />
           <Piv shadowProps={{ id: 'from-shadow-props' }} />
           <Piv
             id="from-direct"
             shadowProps={{ id: 'from-shadow-props' }}
-            plugins={plugin}
+            is={plugin}
           />
           <Piv id={['first', 'second']} />
         </>
@@ -710,7 +710,7 @@ describe('Piv Source 属性', () => {
     }))
     const plugin = createPivPlugin(() => ({
       class: 'from-plugin',
-      plugins: nestedPlugin,
+      is: nestedPlugin,
     }))
 
     function LayeredClass() {
@@ -718,7 +718,7 @@ describe('Piv Source 属性', () => {
       setValue = updateValue
       return (
         <Piv
-          plugins={plugin}
+          is={plugin}
           shadowProps={{ class: 'from-shadow-props' }}
           class={`direct-${value()}`}
         />
@@ -788,7 +788,7 @@ describe('Piv style 属性', () => {
     >([{ color: 'red' }])
     const plugin = createPivPlugin(() => ({ style: pluginStyles }))
     const dispose = render(
-      () => <Piv plugins={plugin} style={directStyles} />,
+      () => <Piv is={plugin} style={directStyles} />,
       host,
     )
     const element = host.firstElementChild as HTMLElement
@@ -854,7 +854,7 @@ describe('Piv htmlProps 属性', () => {
       },
     }))
     const dispose = render(
-      () => <Piv plugins={plugin} htmlProps={{ 'data-value': directValue }} />,
+      () => <Piv is={plugin} htmlProps={{ 'data-value': directValue }} />,
       host,
     )
     const element = host.firstElementChild!

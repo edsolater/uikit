@@ -13,11 +13,11 @@ import type { PivTag } from '../domMap'
 import type { ShadowProps } from './handlePivPlugin'
 import type { PivPlugin } from './runPlugin'
 
-/** 同一能力选择快捷属性或显式 plugin 一种入口；false 只释放快捷路径的实例。 */
+/** 同一能力选择快捷属性或 is 一种入口；false 只释放快捷路径的实例。 */
 export interface PublicCapabilityProps {
   /** 快捷拖动入口；false 释放快捷实例，options.disabled 沿原插件契约创建后禁用。 */
   draggable?: Source<boolean | DraggableOptions | undefined>
-  /** 快捷接收入口；同一能力在快捷属性和 plugin 两种方式中选择一种。 */
+  /** 快捷接收入口；同一能力在快捷属性和 is 两种方式中选择一种。 */
   droppable?: Source<boolean | DroppableOptions | undefined>
 }
 
