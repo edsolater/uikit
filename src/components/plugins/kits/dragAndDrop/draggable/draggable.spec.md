@@ -5,11 +5,20 @@
 `draggable` 使用 Pointer Events 建立页面内拖动。它拥有当前元素是否可拖、是否正在拖动、本次携带的 `payload`，以及原始元素的跟随位移；不依赖 `droppable` 才能成立。
 
 ```tsx
-<Piv is={draggable({ payload: weather })}>Weather</Piv>
-
-const [plugin, controller] = usePlugin(draggable, { payload: weather })
-<Piv is={plugin}>Weather</Piv>
+function Example() {
+  const capability = draggable({ payload: weather })
+  return (
+    <>
+      <Piv is={draggable({ payload: weather })}>Weather</Piv>
+      <Piv is={capability} on={{ click: () => capability.controller.disable() }}>
+        由 Controller 控制
+      </Piv>
+    </>
+  )
+}
 ```
+
+配置调用在组件内完成并立即构建状态与 Controller；Pointer 拖动事务在元素接入时建立，节点退出时取消并释放资源。
 
 开始拖动后，`draggable` 使用独立 `topLayer` 领域的命令式入口。Top Layer 建立原布局 Anchor，并维护来源 DOM 提升前的基础位置、border-box 尺寸和提升阴影；`draggable` 只在这个基础位置上使用 individual `translate` 跟随指针。source 的 DOM 父子关系、组件身份、Plugin、Controller 和状态都不迁移。
 
@@ -50,6 +59,7 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 ## 边界
 
+- 组身份只由 `dragAndDrop` 组合调用在内部创建并注入，公开 `DraggableOptions` 不接受 `id`；独立调用时内部身份为 `undefined`。
 - 不以原生 `draggable`、`dragstart`、`DataTransfer.setDragImage()` 或浏览器 ghost image 发起拖动；`dragstart` 监听只负责取消图片、链接等后代可能触发的原生 ghost drag。
 - 不创建或管理原位影子；影子 Anchor 是 Top Layer 提升事务的一部分。
 - 不把 source 搬到 `body` 或 Portal；Popover API 只把原 source 的渲染 box 提升到 Top Layer，从而越过祖先 `overflow` 和 stacking context。

@@ -7,7 +7,7 @@
  */
 import { derive } from '@/hooks'
 import { val, type Source } from '@/foundation'
-import type { ShadowProps } from '../../Piv/plugin/handlePivPlugin'
+import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 import { mapVariantProps } from './variantPropsMapping'
 
 /**

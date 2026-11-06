@@ -1,35 +1,33 @@
-import type { Plugin } from '@/components/plugins/tools/defineInactivePlugin'
 // @vitest-environment jsdom
-import { createRoot, flush } from 'solid-js'
-import { onCleanup } from '@/foundation'
+import { createRoot } from 'solid-js'
 import { afterEach, describe, expect, test } from 'vitest'
 import { val } from '@/foundation'
-import { usePlugin } from '@/components/plugins/tools/usePlugin'
 import { draggable } from './draggable'
 
-describe('draggable controller', () => {
-  test('提供启用状态且每次实例化相互隔离', async () => {
-    const [firstPlugin, first] = usePlugin(draggable, { payload: 'first' })
-    const [secondPlugin, second] = usePlugin(draggable, {
-      payload: 'second',
-      disabled: true,
-    })
-    mount(firstPlugin); mount(secondPlugin)
+const disposers: (() => void)[] = []
+afterEach(() => disposers.splice(0).forEach((dispose) => dispose()))
 
-    expect(val(first.enabled)).toBe(true)
-    expect(val(second.enabled)).toBe(false)
-    first.disable!()
-    await expect.poll(() => val(first.enabled)).toBe(false)
-    expect(val(second.enabled)).toBe(false)
-    second.enable!()
-    await expect.poll(() => val(second.enabled)).toBe(true)
+/** 能力构建需要组件作用域；Controller 在构建返回时即可使用。 */
+function build<T>(factory: () => T): T {
+  return createRoot((dispose) => {
+    disposers.push(dispose)
+    return factory()
+  })
+}
+
+describe('draggable controller', () => {
+  test('提供启用状态且每次构建相互隔离', async () => {
+    const first = build(() => draggable({ payload: 'first' }))
+    const second = build(() =>
+      draggable({ payload: 'second', disabled: true }),
+    )
+
+    expect(val(first.controller.enabled)).toBe(true)
+    expect(val(second.controller.enabled)).toBe(false)
+    first.controller.disable()
+    await expect.poll(() => val(first.controller.enabled)).toBe(false)
+    expect(val(second.controller.enabled)).toBe(false)
+    second.controller.enable()
+    await expect.poll(() => val(second.controller.enabled)).toBe(true)
   })
 })
-
-const disposers: (() => void)[] = []
-afterEach(() => disposers.splice(0).forEach(dispose => dispose()))
-
-function mount(plugin: Plugin) {
-  createRoot(dispose => { disposers.push(dispose); plugin({ element: document.createElement('div'), onCleanup, addProps: () => {} }) })
-  flush()
-}

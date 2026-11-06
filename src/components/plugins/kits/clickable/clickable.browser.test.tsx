@@ -5,7 +5,6 @@ import { createState, val } from '@/foundation'
 import { Card } from '@/components/kits/Card/Card'
 import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../tools/usePlugin'
 import { clickable, type ClickableController } from './clickable'
 
 let dispose: (() => void) | undefined
@@ -18,24 +17,24 @@ afterEach(() => {
 
 describe('clickable', () => {
   test('真实 DOM 事件更新对应 Controller，且支持三种调用模式', async () => {
-    let firstController!: Partial<ClickableController>
-    let secondController!: Partial<ClickableController>
+    let firstController!: ClickableController
+    let secondController!: ClickableController
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
-      const [firstPlugin, first] = usePlugin(clickable)
-      const [secondPlugin, second] = usePlugin(clickable)
-      firstController = first
-      secondController = second
+      const first = clickable()
+      const second = clickable()
+      firstController = first.controller
+      secondController = second.controller
 
       return (
         <>
           <Piv
-            is={firstPlugin}
+            is={first}
             htmlProps={{ 'data-testid': 'first', 'role': 'button' }}
           />
           <Piv
-            is={secondPlugin}
+            is={second}
             htmlProps={{ 'data-testid': 'second', 'role': 'button' }}
           />
           <Piv is={clickable()} htmlProps={{ 'data-testid': 'direct' }} />
@@ -64,20 +63,20 @@ describe('clickable', () => {
 
     first.dispatchEvent(new PointerEvent('pointerenter'))
     first.dispatchEvent(new PointerEvent('pointerdown'))
-    await expect.poll(() => val(firstController.hovered!)).toBe(true)
-    expect(val(firstController.pressed!)).toBe(true)
-    expect(val(secondController.hovered!)).toBe(false)
-    expect(val(secondController.pressed!)).toBe(false)
+    await expect.poll(() => val(firstController.hovered)).toBe(true)
+    expect(val(firstController.pressed)).toBe(true)
+    expect(val(secondController.hovered)).toBe(false)
+    expect(val(secondController.pressed)).toBe(false)
     expect(second.hasAttribute('data-pressed')).toBe(false)
 
     first.dispatchEvent(new PointerEvent('pointerup'))
-    await expect.poll(() => val(firstController.pressed!)).toBe(false)
+    await expect.poll(() => val(firstController.pressed)).toBe(false)
 
-    firstController.focus!()
+    firstController.focus()
     expect(document.activeElement).toBe(first)
-    await expect.poll(() => val(firstController.focused!)).toBe(true)
-    firstController.blur!()
-    await expect.poll(() => val(firstController.focused!)).toBe(false)
+    await expect.poll(() => val(firstController.focused)).toBe(true)
+    firstController.blur()
+    await expect.poll(() => val(firstController.focused)).toBe(false)
 
     const onClick = vi.fn()
     first.addEventListener('click', onClick)
@@ -97,8 +96,8 @@ const child = defineInactivePlugin({
 })
 const parent = defineInactivePlugin({
   name: 'parent',
-  pluginCore({ element, onCleanup, addProps }) {
-    child()({ element, onCleanup, addProps })
+  pluginCore({ addProps }) {
+    addProps({ is: child() })
     addProps({ htmlProps: { title: '父声明' } })
     return {}
   },
@@ -120,59 +119,70 @@ test('用户声明优先于父能力，父能力优先于子能力', () => {
   expect(cards[1].getAttribute('title')).toBe('用户声明')
 })
 
-test('受控 Plugin 直接使用，控制独立节点并在卸载后释放', async () => {
+test('能力结果直接使用，控制独立节点，卸载后控制器仍存在且元素方法不再生效', async () => {
   const host = document.body.appendChild(document.createElement('div'))
-  let first: Partial<ClickableController> = {}
-  let second: Partial<ClickableController> = {}
+  let first!: ClickableController
+  let second!: ClickableController
   const onClick = vi.fn()
   dispose = render(() => {
-    const [firstPlugin, firstController] = usePlugin(clickable, {
-      tabIndex: 2,
-      onClick,
-    })
-    const [secondPlugin, secondController] = usePlugin(clickable)
-    first = firstController
-    second = secondController
+    const firstCapability = clickable({ tabIndex: 2, onClick })
+    const secondCapability = clickable()
+    first = firstCapability.controller
+    second = secondCapability.controller
     return (
       <>
         <Card
-          is={firstPlugin}
+          is={firstCapability}
           htmlProps={{ 'data-testid': 'first', 'tabIndex': 7 }}
         />
-        <Card is={secondPlugin} htmlProps={{ 'data-testid': 'second' }} />
+        <Card is={secondCapability} htmlProps={{ 'data-testid': 'second' }} />
         <Card is={clickable()} htmlProps={{ 'data-testid': 'raw' }} />
       </>
     )
   }, host)
-  await expect.poll(() => first.focus).toBeDefined()
+  expect(first.focus).toBeDefined()
   const firstElement = host.querySelector<HTMLElement>('[data-testid="first"]')!
   expect(firstElement.tabIndex).toBe(7)
   firstElement.dispatchEvent(new PointerEvent('pointerenter'))
-  await expect.poll(() => val(first.hovered!)).toBe(true)
-  expect(val(second.hovered!)).toBe(false)
+  await expect.poll(() => val(first.hovered)).toBe(true)
+  expect(val(second.hovered)).toBe(false)
   firstElement.dispatchEvent(
     new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }),
   )
   expect(onClick).toHaveBeenCalledOnce()
-  first.focus?.()
+  first.focus()
   expect(document.activeElement).toBe(firstElement)
+
   dispose()
   dispose = undefined
-  await expect.poll(() => first.focus).toBeUndefined()
+  expect(first.focus).toBeDefined()
+  expect(first.click).toBeDefined()
+  first.focus()
+  expect(document.activeElement).not.toBe(firstElement)
 })
 
-test('条件隐藏时不安装 Plugin，出现与消失对应控制入口', async () => {
+test('条件隐藏时 Controller 仍完整，元素方法在无节点时不生效，出现后恢复', async () => {
   const host = document.body.appendChild(document.createElement('div'))
   const visible = createState(false)
-  let controller: Partial<ClickableController> = {}
+  let controller!: ClickableController
   dispose = render(() => {
-    const [plugin, control] = usePlugin(clickable)
-    controller = control
-    return <Card if={visible} is={plugin} />
+    const capability = clickable()
+    controller = capability.controller
+    return <Card if={visible} is={capability} />
   }, host)
-  expect(controller.focus).toBeUndefined()
+  expect(controller.focus).toBeDefined()
+  controller.focus()
+  expect(document.activeElement).not.toBe(host.firstElementChild)
+
   visible.set(true)
-  await expect.poll(() => controller.focus).toBeDefined()
+  await expect.poll(() => host.querySelector('.Card')).not.toBeNull()
+  const element = host.querySelector<HTMLElement>('.Card')!
+  controller.focus()
+  expect(document.activeElement).toBe(element)
+
   visible.set(false)
-  await expect.poll(() => controller.focus).toBeUndefined()
+  await expect.poll(() => host.querySelector('.Card')).toBeNull()
+  expect(controller.focus).toBeDefined()
+  controller.focus()
+  expect(document.activeElement).not.toBe(element)
 })

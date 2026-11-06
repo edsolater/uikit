@@ -14,7 +14,7 @@ import {
 } from '@/foundation'
 import { toRecord } from '@edsolater/fnkit'
 import { derive } from '@/hooks'
-import type { ShadowProps } from '../../Piv/plugin/handlePivPlugin'
+import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 
 /** Status Props 中的每一个字段都是可以独立存在、也可以同时成立的状态来源。 */
 export type StatusProps<StatusName extends string> = {

@@ -318,31 +318,5 @@ test('原未声明的内容和DOM响应字段通过同一Props链更新', () => 
   expect(element.dataset.probe).toBe('完成')
   expect(element.getAttribute('aria-label')).toBe('运行时动作')
   expect(element.textContent).toBe('运行时内容')
-  button.props!.draggable.set(true)
-  const onDrop = vi.fn()
-  button.props!.droppable.set({ onDrop })
-  flush()
-  Object.assign(element, {
-    setPointerCapture() {}, releasePointerCapture() {}, hasPointerCapture: () => true,
-  })
-  element.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true, isPrimary: true, pointerId: 4, button: 0,
-  }))
-  expect(element.getAttribute('data-interacting')).toBe('true')
-  window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 4 }))
-  const transfer = new DataTransfer()
-  transfer.items.add(new File(['内容'], 'probe.txt'))
-  const drop = () => {
-    for (const type of ['dragenter', 'drop']) element.dispatchEvent(new DragEvent(type, {
-      bubbles: true, cancelable: true, dataTransfer: transfer,
-    }))
-  }
-  drop()
-  expect(onDrop).toHaveBeenCalledOnce()
-  button.props!.draggable.set(false)
-  button.props!.droppable.set(false)
-  flush()
-  expect(element.getAttribute('data-interacting')).not.toBe('true')
-  drop()
-  expect(onDrop).toHaveBeenCalledOnce()
+
 })

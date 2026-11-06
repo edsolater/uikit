@@ -4,7 +4,6 @@ import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../tools/usePlugin'
 import { hoverable, type HoverableController } from './hoverable'
 
 let dispose: (() => void) | undefined
@@ -17,20 +16,20 @@ afterEach(() => {
 
 describe('hoverable', () => {
   test('支持三种调用模式，并让显式实例的 hover 状态相互隔离', () => {
-    let firstController!: Partial<HoverableController>
-    let secondController!: Partial<HoverableController>
+    let firstController!: HoverableController
+    let secondController!: HoverableController
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
-      const [firstPlugin, first] = usePlugin(hoverable)
-      const [secondPlugin, second] = usePlugin(hoverable)
-      firstController = first
-      secondController = second
+      const first = hoverable()
+      const second = hoverable()
+      firstController = first.controller
+      secondController = second.controller
 
       return (
         <>
-          <Piv is={firstPlugin} htmlProps={{ 'data-testid': 'first' }} />
-          <Piv is={secondPlugin} htmlProps={{ 'data-testid': 'second' }} />
+          <Piv is={first} htmlProps={{ 'data-testid': 'first' }} />
+          <Piv is={second} htmlProps={{ 'data-testid': 'second' }} />
           <Piv is={hoverable()} htmlProps={{ 'data-testid': 'direct' }} />
           <Piv
             is={hoverable({ initialHovered: true })}
@@ -59,8 +58,8 @@ describe('hoverable', () => {
     flush()
     expect(first.getAttribute('data-hovered')).toBe('true')
     expect(second.hasAttribute('data-hovered')).toBe(false)
-    expect(val(firstController.hovered!)).toBe(true)
-    expect(val(secondController.hovered!)).toBe(false)
+    expect(val(firstController.hovered)).toBe(true)
+    expect(val(secondController.hovered)).toBe(false)
 
     first.dispatchEvent(new PointerEvent('pointerleave'))
     flush()

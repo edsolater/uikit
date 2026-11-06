@@ -8,11 +8,30 @@ import { Card } from '@/components/kits/Card/Card'
 import { Article } from '@/components/kits/Article/Article'
 import '@/components/plugins/kits/dragAndDrop/dragAndDrop.example.style'
 import { dragAndDrop } from '@/components/plugins/kits/dragAndDrop/dragAndDrop'
-const { draggable, droppable } = dragAndDrop
+import { droppable as createDroppable } from '@/components/plugins/kits/dragAndDrop/droppable/droppable'
 
 export function DroppableExample() {
   const payloadResult = createState<string>()
   const fileResult = createState<string>()
+
+  const { draggable, droppable } = dragAndDrop({
+    draggable: { payload: { widget: 'weather' } },
+    droppable: {
+      accepts: ({ kind }) => kind === 'internal',
+      onDrop: ({ payload }) => payloadResult.set(JSON.stringify(payload)),
+    },
+  })
+  const fileDroppable = createDroppable({
+    accepts: ({ kind, files }) => kind === 'external' && files.length > 0,
+    dropEffect: 'copy',
+    onDrop: ({ files }) => {
+      fileResult.set(
+        files.length > 0
+          ? files.map((file) => file.name).join('、')
+          : '浏览器没有公开文件名',
+      )
+    },
+  })
 
   return (
     <Card class="example-card">
@@ -25,18 +44,11 @@ export function DroppableExample() {
 
         <div class="drag-drop-example-grid">
           <div class="drag-drop-example-stack">
-            <Piv
-              is={draggable({ payload: { widget: 'weather' } })}
-              class="drag-drop-example-card"
-            >
+            <Piv is={draggable} class="drag-drop-example-card">
               拖动 Widget payload
             </Piv>
             <Piv
-              is={droppable({
-                accepts: ({ kind }) => kind === 'internal',
-                onDrop: ({ payload }) =>
-                  payloadResult.set(JSON.stringify(payload)),
-              })}
+              is={droppable}
               class="drag-drop-example-target"
               htmlProps={
                 val(payloadResult) ? { 'data-drop-received': 'true' } : {}
@@ -55,18 +67,7 @@ export function DroppableExample() {
 
           <div class="drag-drop-example-stack">
             <Piv
-              is={droppable({
-                accepts: ({ kind, files }) =>
-                  kind === 'external' && files.length > 0,
-                dropEffect: 'copy',
-                onDrop: ({ files }) => {
-                  fileResult.set(
-                    files.length > 0
-                      ? files.map((file) => file.name).join('、')
-                      : '浏览器没有公开文件名',
-                  )
-                },
-              })}
+              is={fileDroppable}
               class="drag-drop-example-target"
               htmlProps={val(fileResult) ? { 'data-drop-received': 'true' } : {}}
             >

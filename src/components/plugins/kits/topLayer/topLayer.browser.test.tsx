@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { val } from '@/foundation'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../tools/usePlugin'
 import {
   createTopLayerController,
   topLayer,
@@ -80,22 +79,26 @@ describe('topLayer', () => {
     expect(getComputedStyle(source).boxShadow).toBe('rgb(1, 2, 3) 1px 2px 3px 0px')
   })
 
-  test('节点安装后提供控制，卸载释放 DOM 资源', async () => {
-    let controller: Partial<TopLayerController> = {}
+  test('节点安装后提供控制，卸载释放 DOM 资源且控制器仍存在', async () => {
+    let controller!: TopLayerController
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => {
-      const [plugin, current] = usePlugin(topLayer)
-      controller = current
-      expect(controller.enter).toBeUndefined()
-      return <Piv is={plugin} htmlProps={{ 'data-testid': 'source' }} />
+      const capability = topLayer()
+      controller = capability.controller
+      expect(controller.enter).toBeDefined()
+      return <Piv is={capability} htmlProps={{ 'data-testid': 'source' }} />
     }, host)
     const source = host.querySelector<HTMLElement>('[data-testid="source"]')!
     expect(source.matches(':popover-open')).toBe(true)
-    await expect.poll(() => controller.enter).toBeDefined()
+    // 状态随构建 owner 存活；卸载后不再读取它的当前值。
+    expect(val(controller.active)).toBe(true)
+
     dispose(); dispose = undefined
     expect(source.matches(':popover-open')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
-    await expect.poll(() => controller.enter).toBeUndefined()
+    expect(controller.enter).toBeDefined()
+    expect(() => controller.enter()).not.toThrow()
+    expect(source.matches(':popover-open')).toBe(false)
   })
 
   test('直接安装 Plugin 时在组件挂载期间持续提升', () => {
@@ -122,13 +125,13 @@ describe('topLayer', () => {
   })
 
   test('Plugin Controller 条件控制同一项提升能力', async () => {
-    let controller!: Partial<TopLayerController>
+    let controller!: TopLayerController
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
-      const [plugin, currentController] = usePlugin(topLayer)
-      controller = currentController
-      return <Piv is={plugin} htmlProps={{ 'data-testid': 'source' }} />
+      const capability = topLayer()
+      controller = capability.controller
+      return <Piv is={capability} htmlProps={{ 'data-testid': 'source' }} />
     }, host)
 
     const source = document.querySelector<HTMLElement>(
@@ -139,20 +142,20 @@ describe('topLayer', () => {
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    await expect.poll(() => val(controller.active!)).toBe(true)
+    await expect.poll(() => val(controller.active)).toBe(true)
 
-    controller.leave!()
+    controller.leave()
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
-    await expect.poll(() => val(controller.active!)).toBe(false)
+    await expect.poll(() => val(controller.active)).toBe(false)
 
-    controller.enter!()
+    controller.enter()
     expect(source.matches(':popover-open')).toBe(true)
     expect(source.classList.contains('top-layer')).toBe(true)
     expect(document.querySelector('.top-layer-anchor')).not.toBeNull()
-    await expect.poll(() => val(controller.active!)).toBe(true)
+    await expect.poll(() => val(controller.active)).toBe(true)
   })
 
   test('命令式提升维护原位置、尺寸、视觉和来源声明', async () => {

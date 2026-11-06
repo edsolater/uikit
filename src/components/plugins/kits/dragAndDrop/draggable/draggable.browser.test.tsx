@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
-import { usePlugin } from '@/components/plugins/tools/usePlugin'
 import { createPointerDrag } from './createPointerDrag'
 import { draggable, type DraggableController } from './draggable'
 
@@ -60,17 +59,15 @@ describe('draggable', () => {
   })
 
   test('在 Top Layer 基础位置上移动原始 source', () => {
-    let controller!: Partial<DraggableController>
+    let controller!: DraggableController
     const host = document.body.appendChild(document.createElement('div'))
 
     dispose = render(() => {
-      const [plugin, currentController] = usePlugin(draggable, {
-        payload: 'weather',
-      })
-      controller = currentController
+      const capability = draggable({ payload: 'weather' })
+      controller = capability.controller
       return (
         <Piv
-          is={plugin}
+          is={capability}
           style={{
             width: '160px',
             height: '80px',
@@ -114,7 +111,7 @@ describe('draggable', () => {
     expect(Math.abs(sourceRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.width - originalRect.width)).toBeLessThan(0.1)
     expect(Math.abs(sourceRect.height - originalRect.height)).toBeLessThan(0.1)
-    expect(val(controller.dragging!)).toBe(true)
+    expect(val(controller.dragging)).toBe(true)
 
     window.dispatchEvent(pointerEvent('pointermove', 7, 52, 74))
     flush()
@@ -134,7 +131,7 @@ describe('draggable', () => {
     expect(source.hasAttribute('popover')).toBe(false)
     expect(source.classList.contains('top-layer')).toBe(false)
     expect(source.matches(':popover-open')).toBe(false)
-    expect(val(controller.dragging!)).toBe(false)
+    expect(val(controller.dragging)).toBe(false)
   })
 
   test('默认在按下时立即开始拖动', () => {

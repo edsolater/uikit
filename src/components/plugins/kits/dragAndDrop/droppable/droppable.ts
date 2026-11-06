@@ -1,26 +1,26 @@
 /** 接收节点的节点算法。
  *
- * 接入现有内部拖放与外部文件监听，并返回节点接收功能。
+ * 配置时准备接收状态与完整控制入口；元素接入时登记内部目标并接入外部材料监听。
  *
- * 页面内材料按共享 id 配对，外部材料由目标的启用状态和 accepts 判断。
+ * 页面内材料按组合构建的内部身份配对，外部材料由目标的启用状态和 accepts 判断。
  */
 import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
-import type { PluginContext } from '@/components/plugins/tools/defineInactivePlugin'
+import {
+  defineInactivePlugin,
+  type PluginCoreContext,
+} from '@/components/plugins/tools/defineInactivePlugin'
 import { registerInternalDropTarget } from '@/components/plugins/kits/dragSession'
 import { createExternalDropListeners } from './createExternalDropListeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 
 export interface DroppableOptions {
-  /** 与拖动节点共享的组标识。 */
-  id?: object
   disabled?: boolean
   /** 只作用于系统外部原生拖放。 */
   dropEffect?: DataTransfer['dropEffect']
   /** 判断当前内部材料或外部 DataTransfer 是否可以放下。 */
   accepts?: (context: DropContext) => boolean
-  /** 目标启用且 accepts 通过后调用；页面内材料还须匹配 id。 */
+  /** 目标启用且 accepts 通过后调用；页面内材料还须匹配内部组身份。 */
   onDrop?: (context: DropContext) => void
 }
 
@@ -29,7 +29,7 @@ export interface DroppableController {
   enabled: State<boolean>
   /** 指针或外部材料当前位于目标上方，包括不可接收的情况。 */
   hovering: State<boolean>
-  /** 当前悬停材料是否可接收；页面内材料还须匹配 id。 */
+  /** 当前悬停材料是否可接收；页面内材料还须匹配内部组身份。 */
   acceptable: State<boolean>
   enable(): void
   /** 停止接收，并清除当前悬停状态。 */
@@ -37,14 +37,14 @@ export interface DroppableController {
 }
 
 /**
- * 给当前节点安装接收行为，并在节点退出时释放登记。
+ * 配置接收能力；内部目标登记随元素接入建立，节点退出时释放。
  */
 export function droppablePluginCore({
   pluginOptions,
-  element,
-  onCleanup,
   addProps,
-}: PluginContext & { pluginOptions: DroppableOptions }): DroppableController {
+  withDom,
+  id,
+}: PluginCoreContext<DroppableOptions>): DroppableController {
   const [enabled, enabledControl] = createToggle(
     !(pluginOptions.disabled ?? false),
   )
@@ -61,19 +61,21 @@ export function droppablePluginCore({
   const acceptsDrop = (context: DropContext) =>
     enabled.read() && (pluginOptions.accepts?.(context) ?? true)
   const onDrop = (context: DropContext) => pluginOptions.onDrop?.(context)
-  onCleanup(
+
+  withDom((el) =>
     registerInternalDropTarget({
-      element,
-      id: pluginOptions.id,
+      element: el,
+      id,
       enabled: enabled.read,
       accepts: (drag, event) =>
-        acceptsDrop(createInternalDropContext(drag, event, element)),
+        acceptsDrop(createInternalDropContext(drag, event, el)),
       hover: showHover,
       leave: resetHover,
       drop: (drag, event) =>
-        onDrop(createInternalDropContext(drag, event, element)),
+        onDrop(createInternalDropContext(drag, event, el)),
     }),
   )
+
   addProps({
     htmlProps: {
       'data-plugin': { mergable: 'droppable' },
@@ -81,7 +83,6 @@ export function droppablePluginCore({
       'data-drop-acceptable': acceptable,
     },
     on: createExternalDropListeners({
-      element,
       dropEffect: pluginOptions.dropEffect,
       enabled: enabled.read,
       accepts: acceptsDrop,
@@ -102,7 +103,7 @@ export function droppablePluginCore({
   }
 }
 
-/** 创建供节点执行的接收 Plugin。 */
+/** 接收能力的单元定义；在组件内配置调用时构建一份能力结果。 */
 export const droppable = defineInactivePlugin({
   name: 'droppable',
   pluginCore: droppablePluginCore,

@@ -4,11 +4,11 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { val } from '@/foundation'
 import { Card } from '@/components/kits/Card/Card'
-import { usePlugin } from '@/components/plugins/tools/usePlugin'
 import type { DraggableController } from '@/components/plugins/kits/dragAndDrop/draggable/draggable'
 import type { DroppableController } from './droppable'
 import { Piv } from '@/components/Piv/Piv'
 import { draggable } from '../draggable/draggable'
+import { dragAndDrop } from '../dragAndDrop'
 import { DroppableExample } from './droppable.example'
 import { droppable } from './droppable'
 
@@ -124,7 +124,6 @@ describe('droppable', () => {
 
   test('接收内部 Pointer payload 与系统外部文件', () => {
     const payload = { widget: 'weather' }
-    const fileGroup = {}
     let receivedPayload: unknown
     let receivedFiles: File[] = []
     let receivedItems: DataTransferItem[] = []
@@ -147,7 +146,6 @@ describe('droppable', () => {
           />
           <Piv
             is={droppable({
-              id: fileGroup,
               accepts: ({ kind, files }) =>
                 kind === 'external' && files.length > 0,
               onDrop: (context) => {
@@ -208,54 +206,58 @@ describe('droppable', () => {
     expect(receivedItems.map((item) => item.kind)).toEqual(['file'])
   })
 
-  test('共享 id 跨容器协作，不同 id 在同容器内拒绝且来源移动不改变分组', () => {
-    const groupA = {}
-    const groupB = {}
+  test('同次组合跨容器协作，不同组合与独立能力在同容器内拒绝且来源移动不改变分组', () => {
     let receivedA = 0
     let receivedB = 0
     let receivedUngrouped = 0
     const host = document.body.appendChild(document.createElement('div'))
-    dispose = render(
-      () => (
+    dispose = render(() => {
+      const groupA = dragAndDrop({
+        draggable: { payload: '材料' },
+        droppable: {
+          onDrop: () => {
+            receivedA++
+          },
+        },
+      })
+      const groupB = dragAndDrop({
+        draggable: { payload: '材料' },
+        droppable: {
+          onDrop: () => {
+            receivedB++
+          },
+        },
+      })
+      const ungroupedTarget = droppable({
+        onDrop: () => {
+          receivedUngrouped++
+        },
+      })
+      return (
         <>
           <div data-testid="container-a">
             <Piv
-              is={draggable({ id: groupA, payload: '材料' })}
+              is={groupA.draggable}
               htmlProps={{ 'data-testid': 'group-source' }}
             />
             <Piv
-              is={droppable({
-                id: groupB,
-                onDrop: () => {
-                  receivedB++
-                },
-              })}
+              is={groupB.droppable}
               htmlProps={{ 'data-testid': 'group-b' }}
             />
             <Piv
-              is={droppable({
-                onDrop: () => {
-                  receivedUngrouped++
-                },
-              })}
+              is={ungroupedTarget}
               htmlProps={{ 'data-testid': 'ungrouped' }}
             />
           </div>
           <div data-testid="container-b">
             <Piv
-              is={droppable({
-                id: groupA,
-                onDrop: () => {
-                  receivedA++
-                },
-              })}
+              is={groupA.droppable}
               htmlProps={{ 'data-testid': 'group-a' }}
             />
           </div>
         </>
-      ),
-      host,
-    )
+      )
+    }, host)
     const source = host.querySelector<HTMLElement>(
       '[data-testid="group-source"]',
     )!
@@ -292,18 +294,18 @@ describe('droppable', () => {
     expect(receivedA).toBe(2)
   })
 
-  test('外部文件不比较 id，目标禁用或拒绝材料时不接收', () => {
+  test('外部文件不比较组身份，目标禁用或拒绝材料时不接收', () => {
     const host = document.body.appendChild(document.createElement('div'))
     const onDrop = vi.fn()
     dispose = render(
       () => (
         <>
           <Piv
-            is={droppable({ id: {}, disabled: true, onDrop })}
+            is={droppable({ disabled: true, onDrop })}
             htmlProps={{ 'data-testid': 'disabled-file' }}
           />
           <Piv
-            is={droppable({ id: {}, accepts: () => false, onDrop })}
+            is={droppable({ accepts: () => false, onDrop })}
             htmlProps={{ 'data-testid': 'rejected-file' }}
           />
         </>
@@ -411,36 +413,36 @@ function centerOf(rect: DOMRect): { x: number; y: number } {
   }
 }
 
-test('相同角色分别调用后，两个宿主的成员和启停状态独立', async () => {
+test('相同角色分别构建后，两个宿主的成员和启停状态独立', async () => {
   const host = document.body.appendChild(document.createElement('div'))
-  let first: Partial<DroppableController> = {}
-  let second: Partial<DroppableController> = {}
+  let first!: DroppableController
+  let second!: DroppableController
   dispose = render(() => {
-    const [firstPlugin, firstController] = usePlugin(droppable)
-    const [secondPlugin, secondController] = usePlugin(droppable)
-    first = firstController
-    second = secondController
+    const firstCapability = droppable()
+    const secondCapability = droppable()
+    first = firstCapability.controller
+    second = secondCapability.controller
     return (
       <>
-        <Card is={firstPlugin} />
-        <Card is={secondPlugin} />
+        <Card is={firstCapability} />
+        <Card is={secondCapability} />
       </>
     )
   }, host)
-  await expect.poll(() => first.enabled).toBeDefined()
-  expect(first!.enabled).not.toBe(second!.enabled)
-  first.disable?.()
-  await expect.poll(() => val(first.enabled!)).toBe(false)
-  expect(val(second.enabled!)).toBe(true)
+  expect(first.enabled).toBeDefined()
+  expect(first.enabled).not.toBe(second.enabled)
+  first.disable()
+  await expect.poll(() => val(first.enabled)).toBe(false)
+  expect(val(second.enabled)).toBe(true)
 })
 
 test('拖动控制影响真实拖动并能取消正在进行的拖动', () => {
   const host = document.body.appendChild(document.createElement('div'))
-  let members: Partial<DraggableController> = {}
+  let members!: DraggableController
   dispose = render(() => {
-    const [plugin, controller] = usePlugin(draggable, { payload: '材料' })
-    members = controller
-    return <Card is={plugin} />
+    const capability = draggable({ payload: '材料' })
+    members = capability.controller
+    return <Card is={capability} />
   }, host)
   const source = host.firstElementChild as HTMLElement
   expect(getComputedStyle(source).touchAction).toBe('none')
@@ -460,22 +462,22 @@ test('拖动控制影响真实拖动并能取消正在进行的拖动', () => {
       clientX: x,
       clientY: x,
     })
-  members.disable!()
+  members.disable()
   flush()
   source.dispatchEvent(pointer('pointerdown', 10))
   window.dispatchEvent(pointer('pointermove', 30))
   flush()
-  expect(val(members.dragging!)).toBe(false)
-  members.enable!()
+  expect(val(members.dragging)).toBe(false)
+  members.enable()
   flush()
   source.dispatchEvent(pointer('pointerdown', 10))
   window.dispatchEvent(pointer('pointermove', 30))
   flush()
-  expect(val(members.dragging!)).toBe(true)
+  expect(val(members.dragging)).toBe(true)
   expect(source.getAttribute('data-interacting')).toBe('true')
   expect(getComputedStyle(source).translate).not.toBe('none')
-  members.disable!()
+  members.disable()
   expect(source.hasAttribute('data-interacting')).toBe(false)
   flush()
-  expect(val(members.dragging!)).toBe(false)
+  expect(val(members.dragging)).toBe(false)
 })

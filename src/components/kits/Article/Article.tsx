@@ -4,7 +4,6 @@
 import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import type { RefReceiver } from '@/hooks/createRef'
 import { kit, type KitController } from '@/components/tools/kit'
-import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { articlePropsDefinition } from './Article.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import './Article.style'
@@ -28,7 +27,6 @@ export const Article = kit(
     name: 'Article',
     description: '承载独立正文',
     availableProps: articlePropsDefinition,
-    directorOptions: () => ({ defaultSources: pivDefaultSources }),
   },
   (props: ArticleProps) => <Piv as="article" shadowProps={props} class="Article">{props.children}</Piv>,
 )

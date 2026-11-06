@@ -1,7 +1,7 @@
 /**
  * Piv structure plugin 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
- * 这里用可运行示例展示 insertBefore、appendChild、wrapOutside 和 element 参数的使用边界。
+ * 这里用可运行示例展示 insertBefore、appendChild、wrapOutside 和元素接入回调的使用边界。
  */
 import { Piv } from './Piv'
 import { Card } from '../kits/Card/Card'
@@ -11,51 +11,63 @@ import { defineInactivePlugin } from '@/components/plugins/tools/defineInactiveP
 
 const beforeLabelPlugin = defineInactivePlugin({
   name: 'beforeLabel',
-  pluginCore({ element }) {
-    const { insertBefore } = createPivStructure(element)
-    insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)
+  pluginCore({ withDom }) {
+    withDom((el) => {
+      const { insertBefore } = createPivStructure(el)
+      insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)
+    })
     return {}
   },
 })
 
 const appendRedDotPlugin = defineInactivePlugin({
   name: 'appendRedDot',
-  pluginCore({ element }) {
-    const { appendChild } = createPivStructure(element)
-    appendChild(
-      <Piv
-        as="span"
-        class="structure-red-dot"
-        htmlProps={{ 'aria-hidden': 'true' }}
-      />,
-    )
+  pluginCore({ withDom }) {
+    withDom((el) => {
+      const { appendChild } = createPivStructure(el)
+      appendChild(
+        <Piv
+          as="span"
+          class="structure-red-dot"
+          htmlProps={{ 'aria-hidden': 'true' }}
+        />,
+      )
+    })
     return {}
   },
 })
 
 const wrapManagerPlugin = defineInactivePlugin({
   name: 'wrapManager',
-  pluginCore({ element }) {
-    const { wrapOutside } = createPivStructure(element)
-    wrapOutside(<Piv class="structure-manager" />)
+  pluginCore({ withDom }) {
+    withDom((el) => {
+      const { wrapOutside } = createPivStructure(el)
+      wrapOutside(<Piv class="structure-manager" />)
+    })
     return {}
   },
 })
 
 const selfMeasurePlugin = defineInactivePlugin({
   name: 'selfMeasure',
-  pluginCore({ element }) {
-    const { insertAfter } = createPivStructure(element)
-    insertAfter(
-      <Piv class="structure-note">
-        element 参数适合读取当前 DOM 信息：{element.tagName.toLowerCase()}
-      </Piv>,
-    )
+  pluginCore({ withDom }) {
+    withDom((el) => {
+      const { insertAfter } = createPivStructure(el)
+      insertAfter(
+        <Piv class="structure-note">
+          el 参数适合读取当前 DOM 信息：{el.tagName.toLowerCase()}
+        </Piv>,
+      )
+    })
     return {}
   },
 })
 
 export function PivStructureExample() {
+  const beforeLabel = beforeLabelPlugin()
+  const appendRedDot = appendRedDotPlugin()
+  const wrapManager = wrapManagerPlugin()
+  const selfMeasure = selfMeasurePlugin()
   return (
     <Card class="example-card">
       <Article>
@@ -65,22 +77,22 @@ export function PivStructureExample() {
         </div>
 
         <div class="example-stack">
-          <Piv class="structure-case" is={beforeLabelPlugin()}>
+          <Piv class="structure-case" is={beforeLabel}>
             before 用于在主体前方挂辅助标记。
           </Piv>
 
-          <Piv as="button" class="structure-button" is={appendRedDotPlugin()}>
+          <Piv as="button" class="structure-button" is={appendRedDot}>
             appendChild 红点
           </Piv>
 
-          <Piv class="structure-editor" is={wrapManagerPlugin()}>
+          <Piv class="structure-editor" is={wrapManager}>
             <Piv class="structure-editor-title">wrap 管理器</Piv>
             <Piv class="structure-editor-body">
               主体仍然是这个 Piv，外层由插件接管布局边界。
             </Piv>
           </Piv>
 
-          <Piv class="structure-case" is={selfMeasurePlugin()}>
+          <Piv class="structure-case" is={selfMeasure}>
             element 参数用在插件需要读取当前 DOM 或继续组合端点 API 时。
           </Piv>
         </div>

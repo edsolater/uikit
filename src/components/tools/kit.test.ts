@@ -10,7 +10,6 @@ import {
 import * as buttonStyle from '@/components/kits/Button/Button.style'
 import {
   pivPropsDefinition,
-  pivDefaultSources,
   componentDescriptionPropsDefinition,
   type PivProps,
 } from '@/index'
@@ -97,7 +96,6 @@ function verifyPublicDefinition() {
     {
       name: 'PublicFixture',
       availableProps,
-      directorOptions: () => ({ defaultSources: pivDefaultSources }),
     },
     (_props: PublicProps) => null,
   )

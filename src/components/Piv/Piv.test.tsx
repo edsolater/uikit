@@ -14,9 +14,9 @@ import {
 } from '@/foundation'
 import { Piv } from './Piv'
 import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
-import type { ShadowProps } from './plugin/handlePivPlugin'
+import type { ShadowProps } from './plugin/mergePivProps'
 import type { PivTag } from './domMap'
-import { mergePivProps } from './plugin/handlePivPlugin'
+import { mergePivProps } from './plugin/mergePivProps'
 
 describe('Piv 生命周期', () => {
   test('shadowProps 的 as 按来源优先级确定，首次创建后标签保持固定', () => {
@@ -26,16 +26,20 @@ describe('Piv 生命周期', () => {
     const dispose = render(
       () => (
         <>
-          <Piv shadowProps={[
-            { as: 'span' },
-            {
-              as: undefined,
-              shadowProps: {
-                get as() { return val(tag) },
-                if: visible,
+          <Piv
+            shadowProps={[
+              { as: 'span' },
+              {
+                as: undefined,
+                shadowProps: {
+                  get as() {
+                    return val(tag)
+                  },
+                  if: visible,
+                },
               },
-            },
-          ]} />
+            ]}
+          />
           <Piv as="section" shadowProps={{ as: 'span' }} />
         </>
       ),
@@ -70,13 +74,19 @@ describe('Piv 生命周期', () => {
       get class(): string {
         throw new Error('不应解析隐藏字段')
       },
-      is: testPlugin(() => { throw new Error('不应初始化隐藏插件') }),
+      is: testPlugin({
+        onElement: () => {
+          throw new Error('不应接入隐藏插件元素')
+        },
+      }),
     }
     const dispose = render(
       () => (
         <>
           <Piv if={undefined} shadowProps={{ shadowProps: hidden, if: true }} />
-          <Piv shadowProps={[{ if: true }, { if: undefined, shadowProps: hidden }]} />
+          <Piv
+            shadowProps={[{ if: true }, { if: undefined, shadowProps: hidden }]}
+          />
           <Piv shadowProps={{ if: false, shadowProps: hidden }} />
           <Piv class="visible" />
         </>
@@ -228,24 +238,31 @@ describe('Piv 生命周期', () => {
     dispose()
   })
 
-  test('插件和 domRef 在子节点插入前初始化，mount 后可见子节点且旁读不重建分支', () => {
+  test('能力构建早于节点创建，withDom 与 domRef 在子节点插入前接入，mount 后可见子节点且旁读不重建分支', () => {
     const host = document.createElement('div')
     const visible = createState(true)
     const incidental = createState('before')
     const Context = createContext('default')
     const observations: string[] = []
-    const plugin = testPlugin(({ element }) => {
-      val(incidental)
-      observations.push(
-        `plugin:${element.childElementCount}:${useContext(Context)}`,
-      )
-      onMount(() => {
-        observations.push(`mount:${element.childElementCount}`)
-      })
-      return undefined
-    })
-    const dispose = render(
-      () => (
+    let builds = 0
+    const dispose = render(() => {
+      const plugin = defineInactivePlugin({
+        name: 'observation',
+        pluginCore({ withDom }) {
+          builds += 1
+          withDom((el) => {
+            val(incidental)
+            observations.push(
+              `element:${el.childElementCount}:${useContext(Context)}`,
+            )
+            onMount(() => {
+              observations.push(`mount:${el.childElementCount}`)
+            })
+          })
+          return {}
+        },
+      })()
+      return (
         <Context value="provided">
           <Piv
             if={visible}
@@ -258,15 +275,16 @@ describe('Piv 生命周期', () => {
             <span>child</span>
           </Piv>
         </Context>
-      ),
-      host,
-    )
+      )
+    }, host)
     flush()
     const element = host.firstElementChild
-    expect(observations).toEqual(['plugin:0:provided', 'domRef:0', 'mount:1'])
+    expect(builds).toBe(1)
+    expect(observations).toEqual(['element:0:provided', 'domRef:0', 'mount:1'])
     incidental.set('after')
     flush()
     expect(host.firstElementChild).toBe(element)
+    expect(builds).toBe(1)
     expect(observations).toHaveLength(3)
     dispose()
   })
@@ -361,10 +379,11 @@ describe('Piv 生命周期', () => {
     const initialized: Element[] = []
     const cleaned: Element[] = []
     let clicks = 0
-    const plugin = testPlugin(({ element }) => {
-      initialized.push(element)
-      onCleanup(() => cleaned.push(element))
-      return undefined
+    const plugin = testPlugin({
+      onElement: ({ element }) => {
+        initialized.push(element)
+        return () => cleaned.push(element)
+      },
     })
     const dispose = render(
       () => (
@@ -523,12 +542,12 @@ describe('Piv Source 属性', () => {
     const next = createState('direct')
     const [readSource, setSource] = createSignal(previous)
     const { merged, dispose } = createRoot((dispose) => ({
-      merged: mergePivProps(document.createElement('div'), {
+      merged: mergePivProps({
         get id() {
           return readSource()
         },
         shadowProps: { id: shadow },
-        is: testPlugin(() => ({ id: pluginId })),
+        is: testPlugin({ declarations: [{ id: pluginId }] }),
       }),
       dispose,
     }))
@@ -594,7 +613,7 @@ describe('Piv Source 属性', () => {
 
   test('id 可由 shadowProps 或 plugin 提供，多个来源沿用普通数组合并', () => {
     const host = document.createElement('div')
-    const plugin = testPlugin(() => ({ id: 'from-plugin' }))
+    const plugin = testPlugin({ declarations: [{ id: 'from-plugin' }] })
     const dispose = render(
       () => (
         <>
@@ -705,13 +724,12 @@ describe('Piv Source 属性', () => {
   test('嵌套 plugin、shadowProps 与直接动态 class 统一进入 class 消费层', () => {
     const host = document.createElement('div')
     let setValue!: (value: number) => void
-    const nestedPlugin = testPlugin(() => ({
-      class: 'from-nested-plugin',
-    }))
-    const plugin = testPlugin(() => ({
-      class: 'from-plugin',
-      is: nestedPlugin,
-    }))
+    const nestedPlugin = testPlugin({
+      declarations: [{ class: 'from-nested-plugin' }],
+    })
+    const plugin = testPlugin({
+      declarations: [{ class: 'from-plugin', is: nestedPlugin }],
+    })
 
     function LayeredClass() {
       const [value, updateValue] = createSignal(2)
@@ -786,11 +804,8 @@ describe('Piv style 属性', () => {
     const directStyles = createState<
       Array<{ 'color'?: string; 'border-color'?: string }>
     >([{ color: 'red' }])
-    const plugin = testPlugin(() => ({ style: pluginStyles }))
-    const dispose = render(
-      () => <Piv is={plugin} style={directStyles} />,
-      host,
-    )
+    const plugin = testPlugin({ declarations: [{ style: pluginStyles }] })
+    const dispose = render(() => <Piv is={plugin} style={directStyles} />, host)
     const element = host.firstElementChild as HTMLElement
 
     expect(element.style.color).toBe('red')
@@ -808,6 +823,109 @@ describe('Piv style 属性', () => {
 })
 
 describe('Piv htmlProps 属性', () => {
+  test('跨来源的 mergable 与函数按优先级接收前值', () => {
+    const host = document.createElement('div')
+    const dispose = render(
+      () => (
+        <Piv
+          shadowProps={{ htmlProps: { 'data-value': { mergable: 'first' } } }}
+          htmlProps={{
+            'data-value': [
+              { mergable: 'second' },
+              (previous) => `${previous} third`,
+            ],
+          }}
+        />
+      ),
+      host,
+    )
+    expect(host.firstElementChild?.getAttribute('data-value')).toBe(
+      'first second third',
+    )
+    dispose()
+  })
+
+  test('普通值覆盖低来源，改为 mergable 后跟随低来源更新', () => {
+    const host = document.createElement('div')
+    const low = createState('first')
+    const merge = createState(false)
+    let reads = 0
+    const dispose = render(
+      () => (
+        <Piv
+          shadowProps={{
+            htmlProps: {
+              get 'data-value'() {
+                reads++
+                return val(low)
+              },
+            },
+          }}
+          htmlProps={{
+            get 'data-value'() {
+              return val(merge) ? { mergable: 'last' } : 'override'
+            },
+          }}
+        />
+      ),
+      host,
+    )
+    const element = host.firstElementChild!
+    expect(element.getAttribute('data-value')).toBe('override')
+    expect(reads).toBe(0)
+    low.set('changed')
+    flush()
+    expect(reads).toBe(0)
+    merge.set(true)
+    flush()
+    expect(element.getAttribute('data-value')).toBe('changed last')
+    low.set('next')
+    flush()
+    expect(element.getAttribute('data-value')).toBe('next last')
+    dispose()
+  })
+
+  test('高优先级 Source 的 undefined 仍覆盖低来源', () => {
+    const host = document.createElement('div')
+    const value = createState<string | undefined>(undefined)
+    const dispose = render(
+      () => (
+        <Piv
+          shadowProps={{ htmlProps: { 'data-value': 'low' } }}
+          htmlProps={{ 'data-value': value }}
+        />
+      ),
+      host,
+    )
+    const element = host.firstElementChild!
+    expect(element.hasAttribute('data-value')).toBe(false)
+    value.set('high')
+    flush()
+    expect(element.getAttribute('data-value')).toBe('high')
+    value.set(undefined)
+    flush()
+    expect(element.hasAttribute('data-value')).toBe(false)
+    dispose()
+  })
+
+  test('高优先级空列表及 Source 空列表仍覆盖低来源', () => {
+    const host = document.createElement('div')
+    const value = createState<string[]>([])
+    const dispose = render(() => (
+      <>
+        <Piv shadowProps={{ htmlProps: { 'data-value': 'low' } }} htmlProps={{ 'data-value': [] }} />
+        <Piv shadowProps={{ htmlProps: { 'data-value': 'low' } }} htmlProps={{ 'data-value': value }} />
+      </>
+    ), host)
+    expect([...host.children].map((element) => element.getAttribute('data-value'))).toEqual([null, null])
+    value.set(['high'])
+    flush()
+    expect(host.children[1].getAttribute('data-value')).toBe('high')
+    value.set([])
+    flush()
+    expect(host.children[1].getAttribute('data-value')).toBeNull()
+    dispose()
+  })
   test('Solid 动态 htmlProps 更新时会清除旧字段并写入新字段', () => {
     const host = document.createElement('div')
     let setActive!: (active: boolean) => void
@@ -845,14 +963,18 @@ describe('Piv htmlProps 属性', () => {
     const pluginValue = createState('plugin-before')
     const directValue = createState('direct-before')
     let pluginValueReadCount = 0
-    const plugin = testPlugin(() => ({
-      htmlProps: {
-        get 'data-value'() {
-          pluginValueReadCount += 1
-          return pluginValue
+    const plugin = testPlugin({
+      declarations: [
+        {
+          htmlProps: {
+            get 'data-value'() {
+              pluginValueReadCount += 1
+              return pluginValue
+            },
+          },
         },
-      },
-    }))
+      ],
+    })
     const dispose = render(
       () => <Piv is={plugin} htmlProps={{ 'data-value': directValue }} />,
       host,
@@ -905,8 +1027,20 @@ describe('Piv htmlProps 属性', () => {
   })
 })
 
-function testPlugin(core: (payload: { element: HTMLElement }) => ShadowProps<PivTag> | undefined) {
-  return defineInactivePlugin({ name: 'test', pluginCore({ element, addProps }) {
-    const result = core({ element }); if (result) addProps(result); return {}
-  } })()
+function testPlugin(
+  options: {
+    declarations?: ShadowProps<PivTag>[]
+    onElement?: (payload: { element: HTMLElement }) => void | (() => void)
+  } = {},
+) {
+  return defineInactivePlugin({
+    name: 'test',
+    pluginCore({ addProps, withDom }) {
+      for (const declaration of options.declarations ?? [])
+        addProps(declaration)
+      if (options.onElement)
+        withDom((el) => options.onElement?.({ element: el }))
+      return {}
+    },
+  })()
 }

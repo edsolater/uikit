@@ -18,7 +18,7 @@ export type RefReceiver<T> = (value: T) => void | (() => void)
  */
 export function createRef<T extends object>(): [
   reference: Partial<T>,
-  receive: RefReceiver<T>,
+  receive: RefReceiver<any>,
 ] {
   // 引用保存的是原对象本身；显式装入字段，避免把 StateView 对象当作值来源展开。
   const reference = createState<{ controller: T } | undefined>(undefined, { ownedWrite: true })

@@ -5,11 +5,22 @@
 Top Layer 把原始 DOM 提升到浏览器 Top Layer，同时维持提升前的基础位置和 border-box 尺寸。领域公开纯控制器和 Plugin 两种载体，两者共享同一套提升事务。
 
 ```tsx
-<Piv is={topLayer()}>始终位于 Top Layer</Piv>
+function Example() {
+  const capability = topLayer()
+  return (
+    <>
+      <Piv is={topLayer()}>始终位于 Top Layer</Piv>
+      <Piv
+        is={capability}
+        on={{ click: () => capability.controller.leave() }}
+      >
+        由 Controller 控制
+      </Piv>
+    </>
+  )
+}
 
-const [plugin, controller] = usePlugin(topLayer)
-<Piv is={plugin}>由 Controller 控制</Piv>
-
+// createTopLayerController 是元素级入口，不经过组件激活；element 由调用方提供。
 const controller = createTopLayerController(element)
 controller.enter()
 controller.leave()
@@ -17,7 +28,7 @@ controller.leave()
 
 `createTopLayerController(element)` 是不依赖 Piv 的原子入口，供 Draggable 等能力直接控制一个已经取得的元素。领域模块静态导入 `topLayer.style`，只有调用 `enter()` 才改变目标元素。
 
-`topLayer` 是同一能力的 Piv Plugin 包装。直接安装 `<Piv is={topLayer()}>` 时，元素从挂载到清理始终位于 Top Layer；通过 `usePlugin(topLayer)` 取得 Controller 时，可以有条件地调用 `enter()` 和 `leave()`。Plugin 不重新实现提升，只处理元素何时可用以及组件清理。
+`topLayer` 是同一能力的 Piv Plugin 包装。直接安装 `<Piv is={topLayer()}>` 时，元素从挂载到清理始终位于 Top Layer；使用能力结果的 `controller` 时，可以有条件地调用 `enter()` 和 `leave()`。Plugin 在配置时创建状态与 Controller，在元素接入后建立提升事务；节点卸载后方法保留但为 no-op。Plugin 不重新实现提升，只处理元素何时可用以及组件清理。
 
 ## 提升事务
 

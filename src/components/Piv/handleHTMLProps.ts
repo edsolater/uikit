@@ -1,7 +1,7 @@
 /**
  * 这个文件消费 Piv 的普通 HTML props。
  * class、style、事件、children 和 domRef 都有专用入口；这里保留的是原生 HTML 字段与 attr: / prop: 逃生口。
- * 同名 key 按后声明覆盖，避免被覆盖来源继续参与响应式订阅。
+ * 同名 key 按声明顺序处理；普通值覆盖，显式合并和函数可读取前值。
  */
 import { type JSX, val, type MayArraySource } from '@/foundation'
 import { mapArray } from '@/foundation/render'
@@ -54,18 +54,30 @@ export function consumeHTMLProps<Tag extends PivTag>(
     const htmlPropsList = toArray(val(readHTMLPropsList()))
       .map((htmlProps) => val(htmlProps))
       .filter(isTruthy)
-    return new Map(
-      readActiveHTMLPropEntries(htmlPropsList).filter(
-        ([key]) => !isReservedHTMLPropKey(key),
-      ),
-    )
+    return htmlPropsList
   })
 
   // 同 key 的监听随来源变化持续存在；字段退出时由原生列表作用域释放本轮绑定。
   mapArray(
-    () => Array.from(activeProps().keys()),
+    () => {
+      const sources = activeProps()
+      return [
+        ...new Set(sources.flatMap((props) => Object.keys(props))),
+      ].filter(
+        (key) =>
+          !isReservedHTMLPropKey(key) &&
+          sources.some(
+            (_, index) =>
+              sources[sources.length - index - 1][key] !== undefined,
+          ),
+      )
+    },
     (key) => {
-      consumeHTMLProp(element, key, () => activeProps().get(key))
+      consumeHTMLProp(element, key, () =>
+        activeProps().map(
+          (props) => () => props[key] as HTMLPropAtom | undefined,
+        ),
+      )
       return key
     },
   )
@@ -82,27 +94,4 @@ function isReservedHTMLPropKey(key: string) {
     key.startsWith('on:') ||
     (key.startsWith('on') && key.length > 2)
   )
-}
-
-/**
- * 从高优先级记录开始寻找每个字段的有效声明，被覆盖的字段值不会被读取或订阅。
- */
-function readActiveHTMLPropEntries<Tag extends PivTag>(
-  htmlPropsList: HTMLPropsRecord<Tag>[],
-): [key: string, atom: HTMLPropAtom][] {
-  const keys = new Set(
-    htmlPropsList.flatMap((htmlProps) => Object.keys(htmlProps)),
-  )
-  const entries: [key: string, atom: HTMLPropAtom][] = []
-
-  for (const key of keys) {
-    for (let index = htmlPropsList.length - 1; index >= 0; index--) {
-      const atom = htmlPropsList[index][key]
-      if (atom === undefined) continue
-      entries.push([key, atom as HTMLPropAtom])
-      break
-    }
-  }
-
-  return entries
 }

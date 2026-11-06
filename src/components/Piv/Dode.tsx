@@ -3,7 +3,7 @@
  *
  * 处理创建时的 as、按需启用的 if，以及 DOM 字段绑定。
  *
- * 来源和插件仍由 Piv 组织，所有绑定归当前元素分支，不增加 DOM 层。
+ * 来源和插件已由 Piv 在创建前组织，所有绑定归当前元素分支，不增加 DOM 层。
  */
 import type { ID, MayArray } from '@edsolater/fnkit'
 import {
@@ -21,7 +21,6 @@ import { consumeClassName, type ClassNameList } from './className'
 import {
   domMap,
   type CreatePivElement,
-  type PivHTMLElement,
   type PivSupportedElementTag,
   type PivTag,
 } from './domMap'
@@ -54,19 +53,16 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
   children?: Source<JSXElement>
 }
 
-type DodeProps<Tag extends PivTag> = {
-  structure: Pick<DodeDOMProps<Tag>, 'as' | 'if' | 'children'>
-  setup: (element: PivHTMLElement<Tag>) => Omit<DodeDOMProps<Tag>, 'children'>
-}
-
 /**
  * 按 if 是否声明选择条件分支，首次实际创建时固定元素类型。
  */
-export function Dode<Tag extends PivTag>(props: DodeProps<Tag>): JSX.Element {
-  if (!('if' in props.structure)) {
+export function Dode<Tag extends PivTag>(
+  props: DodeDOMProps<Tag>,
+): JSX.Element {
+  if (!untrack(() => 'if' in props)) {
     return createDodeElement(
       domMap[
-        (props.structure.as ?? 'div') as PivSupportedElementTag
+        untrack(() => props.as ?? 'div') as PivSupportedElementTag
       ] as CreatePivElement<Tag>,
       props,
     )
@@ -77,23 +73,23 @@ export function Dode<Tag extends PivTag>(props: DodeProps<Tag>): JSX.Element {
    */
   const createElement = () => {
     jsxCreator ??= domMap[
-      (props.structure.as ?? 'div') as PivSupportedElementTag
+      untrack(() => props.as ?? 'div') as PivSupportedElementTag
     ] as CreatePivElement<Tag>
     return jsxCreator()
   }
   return (
-    <Show when={val(props.structure.if)}>
+    <Show when={val(props.if)}>
       <DodeElement createElement={createElement} props={props} />
     </Show>
   )
 }
 
 /**
- * 为条件分支提供自然组件边界，隔离插件和引用初始化的旁读。
+ * 为条件分支提供自然组件边界，隔离绑定初始化的旁读。
  */
 function DodeElement<Tag extends PivTag>(input: {
   createElement: CreatePivElement<Tag>
-  props: DodeProps<Tag>
+  props: DodeDOMProps<Tag>
 }): JSX.Element {
   return createDodeElement(input.createElement, input.props)
 }
@@ -103,17 +99,19 @@ function DodeElement<Tag extends PivTag>(input: {
  */
 function createDodeElement<Tag extends PivTag>(
   createElement: CreatePivElement<Tag>,
-  props: DodeProps<Tag>,
+  props: DodeDOMProps<Tag>,
 ): JSX.Element {
-  const resolvedChildren = children(() => val(props.structure.children))
+  const resolvedChildren = children(() => val(props.children))
   const element = createElement()
-  const bindings = props.setup(element)
-  consumeId(element, bindings.id)
-  consumeClassName(element, () => bindings.class)
-  consumeStyle(element, () => bindings.style)
+  consumeId(
+    element,
+    untrack(() => props.id),
+  )
+  consumeClassName(element, () => props.class)
+  consumeStyle(element, () => props.style)
   // 原始声明身份决定监听作用域，其他能力变化不会重置 once 或提前执行其 cleanup。
   mapArray(
-    () => toEventListenersList(bindings.on),
+    () => toEventListenersList(props.on),
     (declaration) => {
       createRenderEffect(declaration, (eventDeclaration) =>
         consumeEventListeners(element, eventDeclaration),
@@ -121,10 +119,9 @@ function createDodeElement<Tag extends PivTag>(
       return declaration
     },
   )
-  consumeHTMLProps(element, () => bindings.htmlProps)
-  // domRef 只在元素初始化时读取，不随插件配置变化重复执行。
-  const refs = untrack(() => bindings.domRef)
-  if (refs) consumeDomRefs(element, refs)
+  consumeHTMLProps(element, () => props.htmlProps)
+  // domRef 按声明身份接入；相同声明不因旁读重跑，插件声明变化时接入新项并释放旧项。
+  consumeDomRefs(element, () => props.domRef)
   // 四种模板原本不消费 children，保持既有行为，包括 textarea 与 iframe。
   if (!['input', 'textarea', 'img', 'iframe'].includes(element.localName)) {
     insert(element, resolvedChildren)

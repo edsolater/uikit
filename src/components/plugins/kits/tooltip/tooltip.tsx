@@ -5,7 +5,7 @@
  *
  * 使Label问号及其他宿主共用同一提示能力。
  */
-import { onCleanup as solidOnCleanup, Show, val } from '@/foundation'
+import { onCleanup, Show, val } from '@/foundation'
 import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import { createPivStructure } from '@/components/Piv/plugin/helpers'
 import type { PivProps } from '../../../Piv/Piv'
@@ -40,16 +40,16 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
 
 /**
  * 沿Piv实例挂载附属浮层，保留宿主原有id与声明优先级。
+ *
+ * 附属结构与离开关闭计时归元素接入作用域；浮层内容仍由原Source持续更新。
  */
 export const tooltip = defineInactivePlugin<TooltipOptions, TooltipController>({
   name: 'tooltip',
   pluginCore({
     pluginOptions: options,
-    element,
-    onCleanup,
     addProps,
+    withDom,
   }): TooltipController {
-    const { insertAfter } = createPivStructure(element)
     const [controller, bindings] = createPopoverVisibilityController()
     const anchor = '--' + controller.triggerId
     let hovered = false
@@ -89,31 +89,34 @@ export const tooltip = defineInactivePlugin<TooltipOptions, TooltipController>({
       cancelClose()
       controller.hidePopover(false)
     }
-    onCleanup(cancelClose)
-    insertAfter(
-      <Show when={hasTooltipContent(options?.content)}>
-        {(_visible) => {
-          solidOnCleanup(() => {
-            cancelClose()
-            controller.hidePopover(false)
-          })
-          return (
-            <PopoverSurface
-              id={controller.popoverId}
-              anchor={anchor}
-              placement="top"
-              popover="hint"
-              class="Tooltip"
-              domRef={bindings.popoverDomRef}
-              htmlProps={{ role: 'tooltip' }}
-              on={{ pointerenter: enter, pointerleave: leave }}
-            >
-              {options?.content}
-            </PopoverSurface>
-          )
-        }}
-      </Show>,
-    )
+    withDom((el) => {
+      onCleanup(cancelClose)
+      const { insertAfter } = createPivStructure(el)
+      insertAfter(
+        <Show when={hasTooltipContent(options?.content)}>
+          {(_visible) => {
+            onCleanup(() => {
+              cancelClose()
+              controller.hidePopover(false)
+            })
+            return (
+              <PopoverSurface
+                id={controller.popoverId}
+                anchor={anchor}
+                placement="top"
+                popover="hint"
+                class="Tooltip"
+                domRef={bindings.popoverDomRef}
+                htmlProps={{ role: 'tooltip' }}
+                on={{ pointerenter: enter, pointerleave: leave }}
+              >
+                {options?.content}
+              </PopoverSurface>
+            )
+          }}
+        </Show>,
+      )
+    })
     addProps({
       domRef: bindings.triggerDomRef,
       style: { 'anchor-name': anchor },

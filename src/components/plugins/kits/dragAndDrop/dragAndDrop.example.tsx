@@ -1,35 +1,45 @@
-/** Drag and Drop Example：共享 id 的节点协作，不同组拒绝。 */
+/** Drag and Drop Example：同一次组合共享内部身份，不同组拒绝。 */
 import { createState, val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import { Card } from '@/components/kits/Card/Card'
 import { Article } from '@/components/kits/Article/Article'
 import './dragAndDrop.example.style'
-import { draggable } from '@/components/plugins/kits/dragAndDrop/draggable/draggable'
-import { droppable } from '@/components/plugins/kits/dragAndDrop/droppable/droppable'
+import { dragAndDrop } from '@/components/plugins/kits/dragAndDrop/dragAndDrop'
+
+type ExampleGroup = ReturnType<typeof dragAndDrop>
 
 export function DragAndDropExample() {
   const results = createState<Record<string, string>>({})
 
-  const idA = {}
-  const idB = {}
-  const renderGroup = (name: string, id: object) => (
+  const groupA = dragAndDrop({
+    draggable: { payload: 'A payload' },
+    droppable: {
+      onDrop: ({ payload }) =>
+        results.set((current) => ({
+          ...current,
+          A: `A 接收到 ${String(payload)}`,
+        })),
+    },
+  })
+  const groupB = dragAndDrop({
+    draggable: { payload: 'B payload' },
+    droppable: {
+      onDrop: ({ payload }) =>
+        results.set((current) => ({
+          ...current,
+          B: `B 接收到 ${String(payload)}`,
+        })),
+    },
+  })
+
+  const renderGroup = (name: 'A' | 'B', group: ExampleGroup) => (
     <Piv class="drag-drop-example-group">
       <strong>组 {name}</strong>
-      <Piv
-        is={draggable({ id, payload: `${name} payload` })}
-        class="drag-drop-example-card"
-      >
+      <Piv is={group.draggable} class="drag-drop-example-card">
         拖动 {name}
       </Piv>
       <Piv
-        is={droppable({
-          id,
-          onDrop: ({ payload }) =>
-            results.set((current) => ({
-              ...current,
-              [name]: `${name} 接收到 ${String(payload)}`,
-            })),
-        })}
+        is={group.droppable}
         class="drag-drop-example-target"
         htmlProps={val(results)[name] ? { 'data-drop-received': 'true' } : {}}
       >
@@ -53,8 +63,8 @@ export function DragAndDropExample() {
         </p>
 
         <div class="drag-drop-example-grid">
-          {renderGroup('A', idA)}
-          {renderGroup('B', idB)}
+          {renderGroup('A', groupA)}
+          {renderGroup('B', groupB)}
         </div>
       </Article>
     </Card>

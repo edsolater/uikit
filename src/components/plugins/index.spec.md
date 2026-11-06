@@ -1,14 +1,21 @@
 # Plugins
 
-Plugin 为 Piv 节点声明交互或结构能力。`tools` 提供定义与控制入口：`defineInactivePlugin` 定义单个节点算法，`defineInactivePlugins` 按名称组合多个算法；工厂接受配置后得到可直接交给 `is` 的 Plugin。拖放相关能力及示例归 `kits/dragAndDrop`。
+Plugin 为 Piv 节点声明交互或结构能力。`tools` 提供定义入口：`defineInactivePlugin` 定义单个节点算法，`defineInactivePlugins` 按名称组合多个算法。定义可以放模块顶层；每次在组件内调用 `inactivePlugin(pluginOptions)` 或组合调用会运行一次 core，返回 `{ plugin, controller }`，`plugin` 交给 `is`，`controller` 直接使用。拖放相关能力及示例归 `kits/dragAndDrop`。
 
 ```tsx
-<Piv is={hoverable()} />
-<Piv is={hoverable({ initialHovered: true })} />
-const [plugin, controller] = usePlugin(hoverable)
-<Piv is={plugin} />
+function Example() {
+  const capability = clickable({ onClick: save })
+  return (
+    <>
+      <Piv is={hoverable()} />
+      <Piv is={hoverable({ initialHovered: true })} />
+      <Card is={capability}>信息</Card>
+      <Button on={{ click: () => capability.controller.focus() }}>聚焦卡片</Button>
+    </>
+  )
+}
 ```
 
-`usePlugin` 返回当前节点的控制入口；节点未安装或已卸载时成员缺席。每个受控 Plugin 同时只安装一个节点，卸载后可重挂；不同节点使用各自的 Plugin。节点声明和清理由 Piv 的运行链接管。
+能力结果返回时 Controller 已完整，节点接入与退出不使方法消失；依赖 DOM 的方法在无节点时为 no-op。同一结果可以交给多个节点，各自按既有契约自然产生结果。Plugin 是带标识的 ShadowProps 容器，Piv 在创建前直接展开其中声明；节点资源由 `domRef`／`withDom` 承担，元素接入时执行 domRef 并登记清理。
 
-当前能力包括 clickable、hoverable、topLayer、draggable、droppable、tooltip 和 tabularNum。`dragAndDrop` 组织拖动与接收工厂，同组使用共享的 `id` 对象。页面内拖放使用 Pointer Events，浏览器外部材料由 droppable 接收。tooltip 沿 Piv 结构工具挂载现有 PopoverSurface，沿用现有交互与定位。
+当前能力包括 clickable、hoverable、topLayer、draggable、droppable、tooltip 和 tabularNum。`dragAndDrop` 返回可调用组合，每次调用在内部创建共享身份，同次组合的拖动与接收角色协作；公开配置不再要求 `id`。页面内拖放使用 Pointer Events，浏览器外部材料由 droppable 接收。tooltip 沿 Piv 结构工具挂载现有 PopoverSurface，沿用现有交互与定位。

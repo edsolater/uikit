@@ -10,7 +10,6 @@ import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/Kit
 import type { RefReceiver } from '@/hooks/createRef'
 import { kit, type KitController } from '@/components/tools/kit'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
-import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { textPropsDefinition } from './Text.prop'
 import './Text.style'
 
@@ -45,7 +44,6 @@ export const Text = kit(
   {
     name: 'Text',
     availableProps: textPropsDefinition,
-    directorOptions: () => ({ defaultSources: pivDefaultSources }),
     marker: (props) => ({
       descriptionOnly: true,
       get defaultDescriptionDisplay() {

@@ -2,7 +2,7 @@
 
 ## 状态、授权与交接闸门
 
-本轮只更新本 Plan，不修改生产源码，不运行实现、测试或浏览器实验。本文是基础协议统一的唯一现役 Plan，当前待实施；历史试点证据不等于新协议已经实现。原合并 Plan 已由本文及 [Popover 与 Tooltip 能力重构](261106_Popover与Tooltip能力重构.md) 接管并退出，不保留第三份现役计划。
+本 Plan 是基础协议统一的唯一现役 Plan；生产源码已按本文实施，当前状态为“已交付，等待用户检验”，实现、偏差与当次验证证据见[实施详情](../../agents/run/261105-is-plugin-protocol/实施详情.md)。历史试点证据不等于新协议已经实现。原合并 Plan 已由本文及 [Popover 与 Tooltip 能力重构](261106_Popover与Tooltip能力重构.md) 接管并退出，不保留第三份现役计划。
 
 本 Plan 从创建前声明解析入手，统一 is／Plugin／shadowProps，再完成完整 Controller、能力结果、组合身份及 usePlugin 退出。不能继续保留“先创建 DOM、后执行 Plugin”的旧前提，否则 addProps 的 as／if 无法参与结构选择。
 
@@ -26,7 +26,7 @@ flowchart TD
   E --> F[创建前展开已构建声明及嵌套 is]
   F --> G[addProps 提交 shadowProps 并统一解析]
   G --> O[按最终 as 与 if 创建节点并绑定声明]
-  O --> H[domRef／withElement 回调接入与清理]
+  O --> H[domRef／withDom 回调接入与清理]
   O --> I[基础协议 Plan 交付]
   H --> I
   I --> J{用户检验并明确许可}
@@ -36,7 +36,7 @@ flowchart TD
   M --> N[UIKit 与真实 RuleDetail 验收]
 ```
 
-当前源码仍然是旧的中间状态，不能作为目标协议的限制：
+改造前的源码处于旧的中间状态，以下事实不能作为目标协议的限制：
 
 - `plugins/tools/defineInactivePlugin.ts` 的调用产物仍是 Plugin 函数；Controller 由 `usePlugin` 另行提供。
 - `plugins/tools/defineInactivePlugins.ts` 仍返回静态角色工厂集合，没有“每次组合调用”的内部共享身份。
@@ -52,9 +52,9 @@ flowchart TD
 
 ### 0. 声明与节点接入的职责
 
-用户已明确：Plugin 就是注入 Props；addProps 直接提交 shadowProps，二者是同一套声明契约；Plugin 的解析在 shadowProps 的统一解析之前。Plugin 不接收 element，接入真实节点使用声明中的 domRef；withElement 只是注册该声明的快捷方式。
+用户已明确：Plugin 就是注入 Props；addProps 直接提交 shadowProps，二者是同一套声明契约；Plugin 的解析在 shadowProps 的统一解析之前。Plugin 不接收 element，接入真实节点使用声明中的 domRef；withDom 只是注册该声明的快捷方式。
 
-本文的“构建”专指每次调用 `inactivePlugin(pluginOptions)` 创建一份能力结果，不是 TypeScript 编译，也不是调用 `defineInactivePlugin` 注册定义。每份结果只在这次构建运行一次业务 `pluginCore`，准备完整 Controller 并注册 addProps／withElement 声明。is 解析、DOM 挂载或重挂、状态更新都不得重新运行这份结果的 core；再次显式调用 inactivePlugin 才是另一次构建。
+本文的“构建”专指每次调用 `inactivePlugin(pluginOptions)` 创建一份能力结果，不是 TypeScript 编译，也不是调用 `defineInactivePlugin` 注册定义。每份结果只在这次构建运行一次业务 `pluginCore`，准备完整 Controller 并注册 addProps／withDom 声明。is 解析、DOM 挂载或重挂、状态更新都不得重新运行这份结果的 core；再次显式调用 inactivePlugin 才是另一次构建。
 
 **激活位置是 API 调用契约：defineInactivePlugin／defineInactivePlugins 的定义可以放模块顶层；调用它们返回的 inactivePlugin／inactivePlugins 激活能力，必须在组件之中，组件内的 JSX 内联调用合法。** 禁止在模块顶层执行 `const capability = clickable()` 或组合调用。不增加 getOwner 检查、运行时守卫、自动 root 或 owner 兼容层。
 
@@ -77,20 +77,22 @@ const capability = clickable()
 
 ```text
 能力配置：inactivePlugin(pluginOptions)
-  → pluginCore 运行一次，准备完整 Controller，收集 addProps／withElement 声明
+  → pluginCore 运行一次，准备完整 Controller，收集 addProps／withDom 声明
   → 返回 { plugin, controller }
 
 节点渲染：Piv 收到直接 Props、shadowProps 和 is
-  → 识别 is，通过纯提交协议展开已构建声明，加入 shadowProps 来源
+  → 识别 is，将 Plugin 作为 shadowProps 来源展开
   → 对声明中的 is 继续展开，保留所在来源的优先级
-  → 统一解析 shadowProps 与直接 Props，得到 as／if 等最终声明
-  → Dode 按结构声明创建节点并绑定属性、事件和内容
-  → 消费最终 domRef（含 withElement 注册项），接入真实元素；退出时执行对应清理
+  → 合并 shadowProps 与直接 Props，形成单一 Props 读取视图
+  → Dode 读取 as／if 创建节点，并绑定属性、事件和内容
+  → 消费最终 domRef（含 withDom 注册项），接入真实元素；退出时执行对应清理
 ```
 
 “先解析 Plugin”不表示不查看 shadowProps：为了找到其中的 is，允许遍历声明来源；不能在其中的 Plugin 尚未展开时，就先确定最终 as／if 或创建 DOM。父声明携带子能力仍走同一入口，不另建子 Plugin 执行系统。直接 Props 的既有优先级、shadowProps 的数组／嵌套优先级保持，不因先收集 Plugin 就把全部产物简单追加到最高或最低位置。
 
 目标中只保留一套补充声明契约，使用 ShadowProps 承载；它包含 as、if、domRef、is 及既有其他补充属性，children 仍由直接 Props 提供。PivShadowProps 的有效结构能力由统一契约接管，删除重复定义、旧导出与旧说明，不保留同义别名。addProps 是提交动作，不拥有另一套删减后的类型。
+
+Piv 不提供 draggable／droppable 快捷属性，也不依赖具体 Plugin；拖放能力在组件内构建后通过 is 声明。原公共能力快捷层及其空默认来源退出，原生 HTML draggable 仍由 htmlProps 提供。
 
 ```tsx
 // 两个入口提交的都是同一类补充声明。
@@ -110,44 +112,37 @@ addProps({
 
 `visible`、`childCapability`、`bindExistingBehavior` 仅表示业务值、子能力结果和既有接入函数，不是新增公共 API。DOM 读写、监听、观察器和附属结构的 createPivStructure 调用均移到 domRef 接入；优先复用声明式 on、style 等既有字段，不把所有属性绑定重写进 domRef。多个 domRef 仍由现有消费者统一执行和登记清理。
 
-withElement 的唯一语义是 `withElement(callback)` 等价于 `addProps({ domRef: callback })`，不创建 ElementContext、额外注册器或另一套生命周期。callback 仅接收 element 一个参数，返回 void 或清理函数；实际节点接入时调用，退出时由现有 domRef 消费者执行返回的清理。if=false 没有节点就不调用；重挂时对新节点重新调用同一回调，不重新运行 core 或重新构建 Controller。
+withDom 的唯一语义是 `withDom(callback)` 等价于 `addProps({ domRef: callback })`，不创建 ElementContext、额外注册器或另一套生命周期。callback 仅接收 element 一个参数，返回 void 或清理函数；实际节点接入时调用，退出时由现有 domRef 消费者执行返回的清理。if=false 没有节点就不调用；重挂时对新节点重新调用同一回调，不重新运行 core 或重新构建 Controller。
 
 ```ts
 // 以下两种写法语义等效。
 addProps({ domRef: callback })
-withElement(callback)
+withDom(callback)
 
 // callback 只接收实际节点；清理由现有 domRef 链消费。
-function callback(element) {
-  return bindExistingBehavior(element)
+function callback(el) {
+  return bindExistingBehavior(el)
 }
 ```
 
 core 只构建一次不表示把响应式声明求值为快照。收集时保留 Source、getter、on 回调及 Controller 的既有动态语义，属性更新和事件执行仍由原声明消费者处理；不能通过重跑 core 刷新，也不能为“只构建一次”冻结原本可更新的状态或回调。
 
-if 的 Source、缺省 if 与显式 if=undefined 的区别，以及 as 的选择时机、动态快捷能力和动态 is 的声明消费，都沿用既有契约；前移解析不冻结配置，不另设节点重建、优先级或清理排序机制。
+if 的 Source、缺省 if 与显式 if=undefined 的区别，以及 as 的选择时机、动态 is 的声明消费，都沿用既有契约；前移解析不冻结配置，不另设节点重建、优先级或清理排序机制。
 
 ### 1. 主体和最小类型
 
-下面定义的是目标协议，不是当前代码已经具备的能力。
+以下为本 Plan 固定协议，实现状态见实施详情，仍待用户检验。
 
 ```ts
-// Plugin 是带协议标识的声明提交能力，不执行节点接入。
-// 参数仍是具名对象；不含 element 或节点 onCleanup。
-type Plugin = {
-  (context: PluginContext): void
+// Plugin 是带协议标识的补充声明，不执行节点接入。
+type Plugin = ShadowProps<PivTag> & {
   readonly [pluginMarker]: string
 }
 
-type PluginContext = {
-  /** 解析器内部提交已构建的声明；不运行业务 core。 */
-  addProps: (props: ShadowProps<PivTag>) => void
-}
-
 /** 节点接入回调；唯一参数是实际元素，返回 void 或节点退出时的清理。 */
-type PluginElementCallback = (element: HTMLElement) => void | (() => void)
+type PluginElementCallback = RefReceiver<HTMLElement>
 
-// core 在配置时使用的上下文；与 Plugin 的提交上下文不是同一职责。
+// core 在配置时使用的上下文。
 type PluginCoreContext<Options extends object> = {
   /** 本次能力构建的配置；声明消费时保留其动态读取契约。 */
   pluginOptions: Options
@@ -158,7 +153,7 @@ type PluginCoreContext<Options extends object> = {
    * 有节点时接入，退出时执行其清理；无节点不调用，重挂重新调用。
    * callback 仅接收 element，返回 void 或清理函数。
    */
-  withElement: (callback: PluginElementCallback) => void
+  withDom: (callback: PluginElementCallback) => void
   /** 组合构建内部共享身份，不是公开配置。 */
   id?: object
 }
@@ -188,8 +183,8 @@ type InactivePlugin<Options extends object, Members extends object> =
 
 - `defineInactivePlugin(buildTimeDefinitions)` 仍接收一个 `{ name, pluginCore }` 对象，返回一个 inactivePlugin 函数。
 - `inactivePlugin(pluginOptions)` 返回普通对象，至少包含 `plugin` 和 `controller`。不能返回 tuple，不能让这个对象再承担一次配置调用。
-- `pluginCore({ pluginOptions, addProps, withElement, id })` 在每次 inactivePlugin 构建时只运行一次，准备功能状态、提交声明并返回完整 Controller；不接收 element 或节点 onCleanup，不得再返回一层 `{ plugin, controller }`。id 是可选内部组身份，只由组合包装传入，不加入公开 Options。
-- 返回的 Plugin 在 is 解析时仅提交本次收集的声明，不再次执行 core 或重建 Controller；保留的 Plugin 函数只是内部纯提交协议，不是第二次业务逻辑运行。PluginContext 只需要 addProps。节点接入与清理由声明的 domRef 承担，不恢复位置参数、Provider、祖先 Context 或全局管理器。
+- `pluginCore({ pluginOptions, addProps, withDom, id })` 在每次 inactivePlugin 构建时只运行一次，准备功能状态、提交声明并返回完整 Controller；不接收 element 或节点 onCleanup，不得再返回一层 `{ plugin, controller }`。id 是可选内部组身份，只由组合包装传入，不加入公开 Options。
+- 返回的 Plugin 是带标识的 ShadowProps 容器，is 解析时直接展开其中已收集的声明，不再次执行 core 或重建 Controller。节点接入与清理由声明的 domRef 承担，不恢复位置参数、Provider、祖先 Context 或全局管理器。
 - `PluginResult.controller` 是完整、稳定的功能控制入口，类型为 `Members`，不是 `Partial<Members>`。从能力调用返回起，约定的方法和状态就存在；未安装或卸载只影响节点接入，不使方法消失。`is` 不读取它，不将它挂到组件 Controller。
 - `PluginInput` 必须允许能力结果中的 `controller` 及未来附加字段，不能因为额外属性而拒绝一个有效的结果对象。
 
@@ -200,22 +195,18 @@ type InactivePlugin<Options extends object, Members extends object> =
 ```ts
 function defineInactivePlugin({ name, pluginCore }) {
   return function inactivePlugin(pluginOptions) {
-    const declarations = []
-    const addProps = props => declarations.push(props)
-    const withElement = callback => addProps({ domRef: callback })
-    const controller = pluginCore({ pluginOptions, addProps, withElement })
+    const shadowProps = []
+    const plugin = { [pluginMarker]: name, shadowProps }
+    const addProps = props => shadowProps.push(props)
+    const withDom = callback => addProps({ domRef: callback })
+    const controller = pluginCore({ pluginOptions, addProps, withDom })
 
-    // 此函数只向解析器提交声明；不是第二次业务 Plugin 运行。
-    const plugin = Object.assign(
-      ({ addProps: submit }) => declarations.forEach(props => submit(props)),
-      { [pluginMarker]: name },
-    )
     return { plugin, controller }
   }
 }
 ```
 
-组合构建按下文 core 包装注入 id；不把 id 或 withElement 放到解析器的 PluginContext。declarations 保留原声明引用及动态读取，不在收集时提前 val／展开 getter。字段 withElement、callback 唯一参数与清理返回、addProps 的创建前语义都须在定义处写 JSDoc，并在解构及调用位置验证 hover 可见。
+组合构建按下文 core 包装注入 id；解析器直接展开 Plugin 声明。shadowProps 保留原声明引用及动态读取，不在收集时提前 val／展开 getter。字段 withDom、callback 唯一参数与清理返回、addProps 的创建前语义都须在定义处写 JSDoc，并在解构及调用位置验证 hover 可见。
 
 ### 2. 单元的外部调用
 
@@ -318,7 +309,7 @@ function defineInactivePlugins(buildTimeDefinitions) {
 }
 ```
 
-伪代码中的 `pluginCore(context)` 是配置时执行的 core 包装，context 属于 PluginCoreContext；只在这里补入本组 id，不把 id 加到 PluginContext，也不让 Plugin 再执行 core。
+伪代码中的 `pluginCore(context)` 是配置时执行的 core 包装，context 属于 PluginCoreContext；只在这里补入本组 id，也不让 Plugin 再执行 core。
 
 - 继续复用 FNKit `map`，不再手写 entries／map／fromEntries。
 - 每次组合调用生成新的内部对象身份；本组各角色共享此身份，其他组不共享。
@@ -341,7 +332,7 @@ function readPlugin(input) {
 }
 ```
 
-`isPlugin` 根据既有 `pluginMarker` 和可执行协议识别。沿用 FNKit 的实际检查工具，不增加另一套品牌、解析器、反射注册或按函数返回值猜测类型的机制。
+`isPlugin` 根据既有 `pluginMarker` 识别 Plugin 对象。沿用 FNKit 的实际检查工具，不增加另一套品牌、解析器、反射注册或按函数返回值猜测类型的机制。
 
 数组中的每一项遵守同一协议；内联激活同样位于组件内：
 
@@ -359,23 +350,23 @@ function CombinedExample() {
 
 | 文件或范围 | 要更新／删除什么 | 由谁接管与完成状态 |
 | --- | --- | --- |
-| `src/components/plugins/tools/defineInactivePlugin.ts` | 每次构建执行 core 一次，收集声明并返回完整结果；新增 withElement 快捷字段与回调 JSDoc，说明组件内激活契约；Plugin 仅提交声明；移除 element／节点 onCleanup 参数 | core 在配置时准备完整 Controller，Plugin 提交 shadowProps，domRef 接入资源；不搬入旧 usePlugin 的 Partial／卸载后方法缺席语义 |
+| `src/components/plugins/tools/defineInactivePlugin.ts` | 每次构建执行 core 一次，收集声明并返回完整结果；新增 withDom 快捷字段与回调 JSDoc，说明组件内激活契约；Plugin 仅提交声明；移除 element／节点 onCleanup 参数 | core 在配置时准备完整 Controller，Plugin 提交 shadowProps，domRef 接入资源；不搬入旧 usePlugin 的 Partial／卸载后方法缺席语义 |
 | `src/hooks/createRef.ts` | 仅将 createRef 返回的 Receiver 输入放宽为 any，保留外部引用 Partial 与清理约定 | 调用者用泛型指定引用类型；组件继续提供自己的完整 Controller，不改组件声明，不扩大通用 RefReceiver 的输入协议 |
 | `src/components/plugins/tools/defineInactivePlugins.ts` | 静态 map 改为返回可调用组合；内部每次准备共享 id | FNKit map 逐项委托单数构造；不另造组执行器或全局身份表 |
 | `src/components/plugins/tools/usePlugin.ts` | 删除函数、文件与公开出口 | 已由单元／组合调用接管，不保留别名、弃用壳、包装器或另一份同义 hook |
 | `src/components/plugins/tools/usePlugin.test.ts` | 有效行为测试转到定义工具的相邻测试，再删除旧主体测试文件 | 可重命名为 `defineInactivePlugin.test.ts`；组合与输入验证放对应既有测试位置，不复制同样断言 |
-| `src/components/Piv/Piv.tsx`、`plugin/handlePivPlugin.ts`、`plugin/publicCapabilities.ts` | 将 Plugin 展开前移到结构选择前；统一 ShadowProps 并删除 PivShadowProps；同步所有公开 is 类型、快捷入口、相关类型出口和说明；删除不再需要的重复类型 | Piv 收集／组织声明，Dode 创建／绑定节点；保既有来源优先级，不重建 runPlugin，不扩组件泛型 |
-| `src/components/Piv/Dode.tsx`、`domRef.ts` | Dode 接收创建前已准备的结构与声明，不再通过拿到 element 的 setup 才求出 Plugin 产物；domRef 消费 withElement 的等效声明并沿用现有清理 | 消除结构选择与晚到补充声明的割裂；不复制 DOM 绑定器，不新增节点重建系统 |
-| `clickable` 及父子能力组合、其余 Plugin core | 将 element 使用和节点资源迁入 domRef／等效 withElement；状态和 Controller 在构建时一次准备；子能力声明通过 is 提交 | `const child = hoverable(options)`，`addProps({ is: child })`，通过 child.controller 使用成员；不再直接执行 child.plugin(context) 获取成员 |
+| `src/components/Piv/Piv.tsx`、`plugin/mergePivProps.ts` | 将 Plugin 展开前移到结构选择前；统一 ShadowProps 并删除 PivShadowProps；同步所有公开 is 类型、相关类型出口和说明；删除不再需要的重复类型 | Piv 收集／组织声明，Dode 创建／绑定节点；保既有来源优先级，不重建 runPlugin，不扩组件泛型 |
+| `src/components/Piv/Dode.tsx`、`domRef.ts` | Dode 接收创建前已准备的结构与声明，不再通过拿到 element 的 setup 才求出 Plugin 产物；domRef 消费 withDom 的等效声明并沿用现有清理 | 消除结构选择与晚到补充声明的割裂；不复制 DOM 绑定器，不新增节点重建系统 |
+| `clickable` 及父子能力组合、其余 Plugin core | 将 element 使用和节点资源迁入 domRef／等效 withDom；状态和 Controller 在构建时一次准备；子能力声明通过 is 提交 | `const child = hoverable(options)`，`addProps({ is: child })`，通过 child.controller 使用成员；不再直接执行 child.plugin(context) 获取成员 |
 | `plugins/kits/dragAndDrop/` | 组合调用、内部 id、示例和类型／浏览器断言同步 | 公开配置不再要求 id；保留真实命中、Pointer、TopLayer、取消及外部文件处理 |
-| Card Example、Button 内置 clickable、Help／Label 的 tooltip、topLayer、tabularNum、Piv 结构示例和测试 | 全部现役消费迁移；原 usePlugin tuple 改为能力结果的 `.controller` | 信息、功能及组件 Marker 保持；父子调用、快捷 Props、条件节点也必须实际可用 |
+| Card Example、Button 内置 clickable、Help／Label 的 tooltip、topLayer、tabularNum、Piv 结构示例和测试 | 全部现役消费迁移；原 usePlugin tuple 改为能力结果的 `.controller` | 信息、功能及组件 Marker 保持；父子调用、动态 is、条件节点也必须实际可用 |
 | 当前 Tooltip 与旧 Popover 目录 | 本 Plan 只做新产物协议所必需的调用适配，复用已有验证检查实际回归 | 保持 Tooltip 的 hover／focus、150ms 离开关闭、数字 0 与动态内容；不改 Surface／Geometry／Paint 或提前创建新角色，视觉重构留后续 Plan |
 | `src/components/index.ts`、Architecture、Plugin SPEC、Tutorial、Guide | 新出口和例子同步；现役使用说明删除 usePlugin 调用 | 不重写旧 Run／历史 Plan 的事实，不在文档中继续推荐旧入口 |
 
 ### 6. 实施顺序与交付验收
 
-1. 先落实统一 ShadowProps 及创建前的 Plugin 展开：core 配置时准备状态／完整 Controller 与声明，Plugin 只提交声明，domRef 负责节点接入；贯通 Piv／Dode 的结构选择和绑定。先用 as／if、domRef／withElement 等效性及构建一次的实际行为验证职责，不只改类型。
-2. 完成单元结果、PluginInput、数组、嵌套 is 及快捷入口，迁父子能力；删除 element／节点 onCleanup 与 Partial Controller 暴露方式。createRef 只按上文放宽 Receiver 输入，组件声明保持不变。
+1. 先落实统一 ShadowProps 及创建前的 Plugin 展开：core 配置时准备状态／完整 Controller 与声明，Plugin 只提交声明，domRef 负责节点接入；贯通 Piv／Dode 的结构选择和绑定。先用 as／if、domRef／withDom 等效性及构建一次的实际行为验证职责，不只改类型。
+2. 完成单元结果、PluginInput、数组及嵌套 is，迁父子能力；删除 element／节点 onCleanup 与 Partial Controller 暴露方式。createRef 只按上文放宽 Receiver 输入，组件声明保持不变。
 3. 完成可调用组合与内部身份，迁移拖放例子、匹配与测试。不得把公开 id 换一个名称继续要求调用者传。
 4. 迁完所有现役消费及说明，删除 usePlugin 文件／测试旧主体／出口。清理临时兼容代码，按最终 API 做验证。
 5. 向用户交付最少可读示例：单元内联、单元带 Controller、组合一对节点、两次组合互相隔离。列出真实改动、旧设施退出结果、测试证据和任何受阻项，然后停止。
@@ -384,9 +375,9 @@ function CombinedExample() {
 
 - 定义允许模块顶层；单元与组合的激活示例、现役调用和说明均在组件内，JSX 内联合法。模块顶层激活只作为非法用法说明，不为位置契约新增运行时检查或 owner 兼容设施。
 
-- 每次 inactivePlugin 构建仅运行一次 core；defineInactivePlugin 定义阶段不运行，is 展开、挂载／重挂和状态更新不重跑。分别构建的结果独立，不能把重挂调用 withElement 回调误判成 core 重跑。
-- withElement 与 addProps({domRef: callback}) 行为等效：callback 仅收到 element，void 返回可用，清理由既有 domRef 流程消费；if=false 不调用，节点接入时调用。
-- Source 与 on 回调更新、Controller 状态仍有效，不通过重跑 core 更新，也不因构建一次冻结；定义处与解构／调用处的 withElement、callback 清理及 addProps hover 说明可读。
+- 每次 inactivePlugin 构建仅运行一次 core；defineInactivePlugin 定义阶段不运行，is 展开、挂载／重挂和状态更新不重跑。分别构建的结果独立，不能把重挂调用 withDom 回调误判成 core 重跑。
+- withDom 与 addProps({domRef: callback}) 行为等效：callback 仅收到 element，void 返回可用，清理由既有 domRef 流程消费；if=false 不调用，节点接入时调用。
+- Source 与 on 回调更新、Controller 状态仍有效，不通过重跑 core 更新，也不因构建一次冻结；定义处与解构／调用处的 withDom、callback 清理及 addProps hover 说明可读。
 - 能力结果返回时 Controller 已完整，公开方法可直接调用；节点接入与退出不使方法消失。核对实际成员与已有行为，不能只靠类型断言。
 - createRef 的 Receiver 能接收 any，调用方引用类型仍由泛型指定，原清理行为保持；Button／Card 等仍只提供自身 Controller，无新增 Plugin 推导或注入。
 - `is={result}`、`is={result.plugin}` 和混合数组都有效；额外字段不影响识别，也不会进入 DOM。
@@ -394,19 +385,19 @@ function CombinedExample() {
 - addProps 与 shadowProps 能提交相同的 as／if；在 DOM 创建前完成来源优先级解析，实际标签正确，if=false 不创建宿主或运行 domRef，随后变真时正确接入，变假时释放节点资源。
 - 嵌套 shadowProps／is 的声明全部参与同一解析链，直接 Props 与数组优先级保持；不存在已构建声明展开后 as／if 被悄悄丢弃的路径。
 - Plugin 参数没有 element；节点接入通过 domRef，声明的消费时机与顺序沿用既有契约，退出时释放其登记的资源。
-- 父子能力、内部 ShadowProps、用户 Props 优先级、动态快捷能力和清理不回归；复用既有 Tooltip 验证检查 hover／focus、150ms 关闭、数字 0 与动态内容，不提前重构或另造测试体系。`addProps` 在解构与调用处的 hover 说明保持可见。
+- 父子能力、内部 ShadowProps、用户 Props 优先级、动态 is 和清理不回归；复用既有 Tooltip 验证检查 hover／focus、150ms 关闭、数字 0 与动态内容，不提前重构或另造测试体系。`addProps` 在解构与调用处的 hover 说明保持可见。
 - 同次组合的内部拖放允许，不同调用的组合拒绝；跨 DOM 容器不影响组身份。未组合和外部文件行为符合上文。
 - 缺失 payload、角色名拼错、Controller 方法拼错和过期的 tuple／二次角色调用应得到类型错误，不能靠类型逃逸通过。
 
 从仓库根目录执行 `bun run type-check`、相邻定义工具与 Piv 的相关单测、迁移后的 draggable／droppable 和 Dashboard 浏览器测试，以及 `bun run build`。以当次文件与日志为准，不能引用旧协议的通过数量冒充本次结果。测试验证实际行为，不锁定临时函数或 CSS 字符串形状。
 
-退出检查至少覆盖生产源码、出口、Examples、现役 Tutorial／Guide／SPEC 与发布声明：不应残留 usePlugin／useNewPlugin／useLegacyPlugin 的定义、调用、导出或兼容文件；不应残留公开传组 id 或模块顶层激活能力的推荐用法；不应残留 is／挂载／更新重新执行业务 core 的链路、旧 element／节点 onCleanup 参数或 withElement 独立生命周期设施。允许历史记录准确保留旧名字；不能用全局文本替换改坏 TS `declare`、HTML `scope` 或无关领域。
+退出检查至少覆盖生产源码、出口、Examples、现役 Tutorial／Guide／SPEC 与发布声明：不应残留 usePlugin／useNewPlugin／useLegacyPlugin 的定义、调用、导出或兼容文件；不应残留公开传组 id 或模块顶层激活能力的推荐用法；不应残留 is／挂载／更新重新执行业务 core 的链路、旧 element／节点 onCleanup 参数或 withDom 独立生命周期设施。允许历史记录准确保留旧名字；不能用全局文本替换改坏 TS `declare`、HTML `scope` 或无关领域。
 
 **本 Plan 的最终状态只能先标为“已交付，等待用户检验”。不得自行写成“用户已认可”。用户明确指出不认可时继续修本 Plan；未获得明确许可时，不开始后续 [Popover 与 Tooltip 能力重构](261106_Popover与Tooltip能力重构.md)。**
 
 ## 未决、交接与完成判定
 
-本轮没有实施任何目标协议。构建、声明提交、解析与节点消费按本文职责和既有契约落实。实现若出现具体错误，再依据实际源码与框架契约处理；不增加公开定义字段，不靠类型断言伪造完整方法。
+本轮已按本文实施基础协议；构建、声明提交、解析与节点消费按本文职责和既有契约落实，实现、偏差、当次验证与未完成项见[实施详情](../../agents/run/261105-is-plugin-protocol/实施详情.md)。后续若出现具体错误，再依据实际源码与框架契约修正；不增加公开定义字段，不靠类型断言伪造完整方法。
 
 下一执行程序先完成本文；按当时真实 Git 状态保护用户修改，不自动暂存、回退或整理无关文件。修改、删除接管、当次验证和偏差按有效仓库入口记录。历史[实施记录](../../agents/run/261105-inactive-plugin-pilot/实施记录.md)只作事实参考，不代替本文验收。
 

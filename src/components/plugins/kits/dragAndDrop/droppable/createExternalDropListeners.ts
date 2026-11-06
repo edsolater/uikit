@@ -8,7 +8,6 @@ import type { EventListeners } from '@/components/Piv/on/handleOn'
 import { createExternalDropContext, type DropContext } from './dropContext'
 
 export interface ExternalDropOptions {
-  element: HTMLElement
   dropEffect: DataTransfer['dropEffect'] | undefined
   enabled(): boolean
   accepts(context: DropContext): boolean
@@ -24,16 +23,16 @@ export function createExternalDropListeners(
   let enteredChildren = 0
 
   return {
-    dragenter: ({ event }) => {
+    dragenter: ({ event, element }) => {
       if (!options.enabled()) return
       enteredChildren += 1
-      const context = createExternalDropContext(event, options.element)
+      const context = createExternalDropContext(event, element)
       options.showHover(context ? options.accepts(context) : false)
     },
     dragover: {
       passive: false,
-      callback: ({ event, preventDefault }) => {
-        const context = createExternalDropContext(event, options.element)
+      callback: ({ event, element, preventDefault }) => {
+        const context = createExternalDropContext(event, element)
         if (!context || !options.accepts(context)) {
           options.showHover(false)
           return
@@ -51,8 +50,8 @@ export function createExternalDropListeners(
     },
     drop: {
       passive: false,
-      callback: ({ event, preventDefault }) => {
-        const context = createExternalDropContext(event, options.element)
+      callback: ({ event, element, preventDefault }) => {
+        const context = createExternalDropContext(event, element)
         const accepted = context ? options.accepts(context) : false
         enteredChildren = 0
         options.resetHover()

@@ -5,7 +5,7 @@
  *
  * 通用 Director 只消费来源，不感知分组规则。
  */
-import { pivDefaultSources, pivPropsDefinition } from '@/components/Piv/Piv.prop'
+import { pivPropsDefinition } from '@/components/Piv/Piv.prop'
 import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
 import type { PropsDefinition, DefaultPropSources } from '@/components/tools/componentPropsDirector'
 import type { PivSupportedElementTag } from '@/components/Piv/domMap'
@@ -33,7 +33,6 @@ export const boardPropsDefinition = {
 const parseVariant = createVariantPropsParser([boardVariantGroups[0]])
 const parseSize = createVariantPropsParser([boardVariantGroups[1]])
 const boardDefaultSources = {
-  ...pivDefaultSources,
   variant: input => {
     const { details } = parseVariant(input)
     return details.variant

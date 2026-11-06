@@ -3,15 +3,12 @@ import { render } from '@solidjs/web'
 import { afterEach, expect, test, vi } from 'vitest'
 import { createState, val } from '@/foundation'
 import { Piv } from '../Piv'
+import { draggable } from '../../plugins/kits/dragAndDrop/draggable/draggable'
+import { droppable } from '../../plugins/kits/dragAndDrop/droppable/droppable'
 import {
   createInternalDrag,
   findInternalDropTarget,
 } from '../../plugins/kits/dragSession'
-import { createToggle } from '@/hooks/value-state/toggle'
-import { mergeProps } from '@/foundation/render'
-import { Button } from '../../kits/Button/Button'
-
-vi.mock('@/hooks/value-state/toggle', { spy: true })
 
 let dispose: (() => void) | undefined
 afterEach(() => {
@@ -20,37 +17,14 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-test('缺省与字面 false 不创建拖放监听，false 覆盖低层快捷字段', () => {
-  vi.mocked(createToggle).mockClear()
-  const listen = vi.spyOn(HTMLElement.prototype, 'addEventListener')
-  const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(
-    () => (
-      <>
-        <Piv />
-        <Piv draggable={false} droppable={false} />
-        <Piv draggable={false} shadowProps={{ draggable: true }} />
-      </>
-    ),
-    host,
-  )
-  expect(host.childElementCount).toBe(3)
-  expect(
-    listen.mock.calls.filter(([event]) =>
-      ['pointerdown', 'dragstart', 'dragenter', 'dragover', 'drop'].includes(
-        event,
-      ),
-    ),
-  ).toHaveLength(0)
-  expect(host.querySelector('[data-plugin]')).toBeNull()
-  expect(createToggle).not.toHaveBeenCalled()
-})
-
-test('真实快捷入口的 options 未变时不重建插件或中断拖动', () => {
+test('is 的能力未变时不重建插件或中断拖动', () => {
   const incidental = createState(0)
   const options = { payload: 'stable' }
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <Piv draggable={(val(incidental), options)} />, host)
+  dispose = render(() => {
+    const capability = draggable(options)
+    return <Piv is={(val(incidental), capability)} />
+  }, host)
   const element = host.firstElementChild as HTMLElement
   Object.assign(element, {
     setPointerCapture() {},
@@ -66,51 +40,49 @@ test('真实快捷入口的 options 未变时不重建插件或中断拖动', ()
     }),
   )
   expect(element.getAttribute('data-interacting')).toBe('true')
-  const instanceStateCount = vi.mocked(createToggle).mock.calls.length
   incidental.set(1)
   flush()
   expect(element.getAttribute('data-interacting')).toBe('true')
-  expect(vi.mocked(createToggle).mock.calls.length).toBe(instanceStateCount)
   window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 9 }))
 })
 
 test('配置 disabled 沿原插件契约创建，普通 domRef 读取已提交的能力字段', () => {
   const host = document.body.appendChild(document.createElement('div'))
   let initialDraggable: boolean | undefined
-  dispose = render(
-    () => (
+  dispose = render(() => {
+    const capability = draggable({ payload: 'item', disabled: true })
+    return (
       <Piv
-        draggable={{ payload: 'item', disabled: true }}
+        is={capability}
         domRef={(element) => {
           initialDraggable = element.draggable
         }}
       />
-    ),
-    host,
-  )
+    )
+  }, host)
   expect(initialDraggable).toBe(false)
   expect(
     (host.firstElementChild as HTMLElement).getAttribute('data-plugin'),
   ).toBe('draggable')
 })
 
-test('公共开关不重置未变化的 once 事件与注册级清理', () => {
+test('动态 is 不重置未变化的 once 事件与注册级清理', () => {
   const enabled = createState(false)
   const callback = vi.fn()
   const cleanup = vi.fn()
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(
-    () => (
+  dispose = render(() => {
+    const capability = draggable({ payload: undefined })
+    return (
       <Piv
-        draggable={enabled}
+        is={val(enabled) ? capability : []}
         on={{
           click: { once: true, callback },
           mouseenter: { callback() {}, cleanup },
         }}
       />
-    ),
-    host,
-  )
+    )
+  }, host)
   const element = host.firstElementChild as HTMLElement
   element.click()
   enabled.set(true)
@@ -125,14 +97,15 @@ test('公共开关不重置未变化的 once 事件与注册级清理', () => {
   expect(cleanup).toHaveBeenCalledTimes(1)
 })
 
-test('两种公共能力同元素共存，drop 关闭注销并可重新接收外部文件', () => {
+test('两种能力同元素共存，drop 关闭注销并可重新接收外部文件', () => {
   const enabled = createState(true)
   const onDrop = vi.fn()
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(
-    () => <Piv draggable droppable={val(enabled) ? { onDrop } : false} />,
-    host,
-  )
+  dispose = render(() => {
+    const drag = draggable({ payload: undefined })
+    const drop = droppable({ onDrop })
+    return <Piv is={val(enabled) ? [drag, drop] : [drag]} />
+  }, host)
   const element = host.firstElementChild as HTMLElement
   const source = document.body.appendChild(document.createElement('div'))
   vi.spyOn(document, 'elementsFromPoint').mockReturnValue([element])
@@ -157,7 +130,7 @@ test('两种公共能力同元素共存，drop 关闭注销并可重新接收外
       }),
     )
   }
-  expect(element.getAttribute('data-plugin')).toContain('draggable')
+  expect(element.getAttribute('data-plugin')?.split(' ')).toContain('draggable')
   Object.assign(element, {
     setPointerCapture() {},
     releasePointerCapture() {},
@@ -189,80 +162,13 @@ test('两种公共能力同元素共存，drop 关闭注销并可重新接收外
   expect(host.firstElementChild).toBe(element)
 })
 
-test('快捷来源整体换源后退出旧订阅，undefined 回落而 false 覆盖', () => {
-  const first = createState<boolean | undefined>(undefined)
-  const second = createState<boolean | undefined>(true)
-  // 这里切换的是来源对象本身，显式放入字段，不把它作为子 State 的计算来源。
-  const selected = createState({ source: first })
-  const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(
-    () => <Piv draggable={val(selected).source} shadowProps={{ draggable: true }} />,
-    host,
-  )
-  const element = host.firstElementChild as HTMLElement
-  expect(element.getAttribute('data-plugin')).toBe('draggable')
-  first.set(false)
-  flush()
-  expect(element.hasAttribute('data-plugin')).toBe(false)
-  selected.set({ source: second })
-  flush()
-  expect(element.getAttribute('data-plugin')).toBe('draggable')
-  first.set(true)
-  flush()
-  second.set(false)
-  flush()
-  expect(element.hasAttribute('data-plugin')).toBe(false)
-  first.set(undefined)
-  flush()
-  expect(element.hasAttribute('data-plugin')).toBe(false)
-})
-
-test('合并代理与 Button 透传的初始 false getter 仍能启用', () => {
-  const enabled = createState(false)
-  const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => {
-    const props = mergeProps({
-      get draggable() {
-        return val(enabled)
-      },
-    })
-    return (
-      <>
-        <Piv {...props} />
-        <Button draggable={val(enabled)}>拖动</Button>
-      </>
-    )
-  }, host)
-  expect(host.querySelectorAll('[data-plugin="draggable"]')).toHaveLength(0)
-  enabled.set(true)
-  flush()
-  const elements = Array.from(host.children) as HTMLElement[]
-  for (const element of elements) {
-    Object.assign(element, {
-      setPointerCapture() {},
-      releasePointerCapture() {},
-      hasPointerCapture: () => true,
-    })
-    element.dispatchEvent(
-      new PointerEvent('pointerdown', {
-        bubbles: true,
-        isPrimary: true,
-        pointerId: 4,
-        button: 0,
-      }),
-    )
-    expect(element.getAttribute('data-interacting')).toBe('true')
-    window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 4 }))
-  }
-  enabled.set(false)
-  flush()
-  expect(host.querySelectorAll('[data-plugin="draggable"]')).toHaveLength(0)
-})
-
 test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
   const visible = createState(true)
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <Piv if={visible} draggable />, host)
+  dispose = render(() => {
+    const capability = draggable({ payload: undefined })
+    return <Piv if={visible} is={capability} />
+  }, host)
   const oldElement = host.firstElementChild as HTMLElement
   const pointer = () =>
     new PointerEvent('pointerdown', {
@@ -292,19 +198,13 @@ test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
   expect(current.hasAttribute('data-interacting')).toBe(false)
 })
 
-test('公共 draggable 从关闭开启并在关闭时取消原元素的拖动', () => {
+test('动态 is 中的 draggable 从关闭开启并在关闭时取消原元素的拖动', () => {
   const enabled = createState(false)
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(
-    () => (
-      <Piv
-        draggable={
-          val(enabled) ? { payload: 'item', activationDistance: 0 } : false
-        }
-      />
-    ),
-    host,
-  )
+  dispose = render(() => {
+    const capability = draggable({ payload: 'item', activationDistance: 0 })
+    return <Piv is={val(enabled) ? capability : []} />
+  }, host)
   const element = host.firstElementChild as HTMLElement
   Object.assign(element, {
     setPointerCapture() {},

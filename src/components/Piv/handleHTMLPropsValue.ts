@@ -1,6 +1,6 @@
 /**
  * 这个文件定义普通 HTML prop 的单字段写入规则。
- * 上游已经选出每个字段的有效声明；这里读取字段 Source，并决定 attribute、property、attr:*、prop:* 的落点。
+ * 这里读取各来源的字段 Source，并决定 attribute、property、attr:*、prop:* 的落点。
  * class、style 和事件不进入这个通道。
  */
 
@@ -30,10 +30,10 @@ export type HTMLPropAtom<Raw = HTMLPropPrimitive> = MayArraySource<
 export function consumeHTMLProp(
   element: HTMLElement,
   key: string,
-  readAtom: () => HTMLPropAtom | undefined,
+  readAtoms: () => Array<() => HTMLPropAtom | undefined>,
 ): void {
   createRenderEffect(
-    () => readHTMLPropAtom(readAtom()),
+    () => readHTMLPropAtom(readAtoms()),
     (htmlPropValue) => {
       const binding = createDOMPropBinding(element, key)
       binding.writeValue(htmlPropValue)
@@ -102,12 +102,31 @@ function createPropertyBinding(element: HTMLElement, key: string) {
 }
 
 /** 响应式读取单字段声明，并把归一后的终端值交给对应 DOM 写入函数。 */
-function readHTMLPropAtom(atom: HTMLPropAtom | undefined): HTMLPropPrimitive {
-  const values = val(atom)
+function readHTMLPropAtom(
+  readAtoms: Array<() => HTMLPropAtom | undefined>,
+): HTMLPropPrimitive {
+  const values: HTMLPropAtomValue[] = []
+  for (let index = readAtoms.length - 1; index >= 0; index--) {
+    const atom = readAtoms[index]()
+    if (atom === undefined) continue
+    const value = val(atom)
+    const items = isArray(value) ? value : [value]
+    if (items.length === 0) break
+    let replaced = false
+    for (let itemIndex = items.length - 1; itemIndex >= 0; itemIndex--) {
+      const item = val(items[itemIndex])
+      values.unshift(item)
+      if (!isFunction(item) && !(isObject(item) && 'mergable' in item)) {
+        replaced = true
+        break
+      }
+    }
+    if (replaced) break
+  }
   let activePrimitive: HTMLPropPrimitive
 
-  for (const htmlValue of isArray(values) ? values : [values]) {
-    activePrimitive = parseHTMLPropertyValue(val(htmlValue), activePrimitive)
+  for (const htmlValue of values) {
+    activePrimitive = parseHTMLPropertyValue(htmlValue, activePrimitive)
   }
 
   return activePrimitive

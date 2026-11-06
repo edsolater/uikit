@@ -5,10 +5,24 @@
 `droppable` 同时接收两种材料：UIKit `draggable` 发起的页面内 Pointer 拖动，以及系统文件等浏览器外部原生拖放。
 
 ```tsx
-<Piv is={droppable({ onDrop })}>Drop here</Piv>
+function Example() {
+  const { draggable, droppable } = dragAndDrop({
+    draggable: { payload: item },
+    droppable: { onDrop: receive },
+  })
+  return (
+    <>
+      <Piv is={draggable}>拖动材料</Piv>
+      <Piv is={droppable}>接收材料</Piv>
+      <Piv is={droppable({ onDrop: receive })}>独立接收</Piv>
+    </>
+  )
+}
 ```
 
-页面内拖动先比较两端 `id`，再用 `accepts()` 判断材料；外部文件只由启用状态和 `accepts()` 决定。
+配置调用在组件内完成并立即构建状态与 Controller；元素接入时登记内部目标并接入外部材料监听，节点退出时释放。
+
+页面内拖动先比较两端由同次组合共享的内部身份，再用 `accepts()` 判断材料；独立调用两端的内部身份都是 `undefined`，可以协作。外部文件只由启用状态和 `accepts()` 决定。
 
 ## DropContext
 
@@ -23,7 +37,7 @@
 
 - `enabled`：当前是否允许接收。
 - `hovering`：拖动是否正在接收区域上方。
-- `acceptable`：当前材料是否可接收；页面内材料还须匹配 id。
+- `acceptable`：当前材料是否可接收；页面内材料还须匹配同次组合的内部身份。
 - `enable()`、`disable()`：控制接收能力。
 
 ## Example

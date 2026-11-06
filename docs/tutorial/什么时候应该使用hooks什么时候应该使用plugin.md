@@ -6,39 +6,60 @@ Hook 在组件作用域组织状态或逻辑；Plugin 把交互或结构行为�
 
 | 调用 | 得到什么 |
 | --- | --- |
-| `clickable(options)` | 可直接交给 `is` 的 Plugin |
-| `usePlugin(clickable, options)` | Plugin 与该节点的控制入口二元组 |
+| `clickable(options)` | `{ plugin, controller }`；`plugin` 交给 `is`，`controller` 直接使用 |
 
 ## 定义和使用单个能力
 
 ```tsx
 const highlight = defineInactivePlugin({
   name: 'highlight',
-  pluginCore({ pluginOptions: options, element, addProps }: PluginContext & { pluginOptions: { color?: string } }) {
+  pluginCore({ pluginOptions: options, addProps, withDom }) {
+    let element: HTMLElement | undefined
     addProps({ style: { color: options.color } })
-    return { focus: () => element.focus() }
+    withDom((el) => {
+      element = el
+      return () => {
+        element = undefined
+      }
+    })
+    return { focus: () => element?.focus() }
   },
 })
 
-<Piv is={highlight({ color: 'red' })} />
-const [plugin, controller] = usePlugin(highlight, { color: 'red' })
-<Piv is={plugin} />
-controller.focus?.()
+function Example() {
+  const capability = highlight({ color: 'red' })
+  return <Piv is={capability} />
+}
 ```
 
-定义与配置不执行节点算法；Piv 安装 Plugin 时才执行 `pluginCore`，并通过 `addProps` 进入原声明合并链。节点未安装或已卸载时控制成员不可用。一个受控 Plugin 同时只属于一个节点；不同节点分别调用 `usePlugin`。原始 Plugin 可在多个节点执行，每次节点执行各自创建状态。
+定义可以放模块顶层，但不运行 `pluginCore`。每次在组件内调用 `highlight({ color: 'red' })` 才构建一次：准备状态与完整 Controller，收集 `addProps`／`withDom` 声明，并返回 `{ plugin, controller }`。`is` 解析直接展开这些已准备的声明，不重新运行 `pluginCore`，也不重建 Controller。配置调用因此必须在组件内完成，组件内的 JSX 内联调用合法。
 
 ## 组织多个能力
 
 ```ts
-const controls = defineInactivePlugins({ draggable: draggablePluginCore, droppable: droppablePluginCore })
-const { draggable, droppable } = controls
+const dragAndDrop = defineInactivePlugins({
+  draggable: draggablePluginCore,
+  droppable: droppablePluginCore,
+})
+
+function Transfer() {
+  const { draggable, droppable } = dragAndDrop({
+    draggable: { payload: item },
+    droppable: { onDrop: receive },
+  })
+  return <>
+    <Card is={draggable}>拖动材料</Card>
+    <Card is={droppable}>接收材料</Card>
+  </>
+}
 ```
 
-每一项仍是独立配置工厂；没有角色控制器集合或额外的配置层。拖放两端通过相同 `id` 对象分组，双方不提供时也可协作。
+组合定义可以放模块顶层，组合调用必须在组件内。每次调用在内部创建一份共享身份并交给本组所有角色；该身份不返回给调用者，也不进入公开 Options。各角色仍按单元构建流程准备自己的状态与 Controller。
 
 ## 组合和清理
 
-父 `pluginCore` 可在当前节点调用子 Plugin，使用其返回成员；节点声明由同一合并链处理。通过传入的 `onCleanup` 登记的资源在失败安装与卸载时释放；Foundation 与结构资源沿节点 owner 生命周期清理。需要在元素前后插入内容时，节点算法调用 Piv 现有结构工具，避免自行管理附属 DOM。
+父 `pluginCore` 可以构建子能力并通过 `is` 提交子声明，再通过 `child.controller` 使用其成员；节点声明由同一合并链处理。
+
+节点资源在 `domRef`／`withDom` 回调中接入：回调只接收实际元素，返回 void 或该元素退出时的清理。需要声明就能表达的字段优先使用 `on`、`style` 等既有字段，不把所有属性绑定重写进 domRef。`withDom` 等价于 `addProps({ domRef: callback })`，不创建额外生命周期设施。
 
 具体状态获取和条件节点见[控制入口](外部获取plugin内部状态并使用.md)。Popover 与 Tooltip 的后续领域改造不由这套通用协议自动完成。

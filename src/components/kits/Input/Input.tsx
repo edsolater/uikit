@@ -10,7 +10,6 @@
 import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { inputPropsDefinition } from './Input.prop'
-import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import {
@@ -55,7 +54,6 @@ export const Input = kit<InputProps, typeof inputPropsDefinition>(
     name: 'Input',
     description: '编辑单行内容',
     availableProps: inputPropsDefinition,
-    directorOptions: () => ({ defaultSources: pivDefaultSources }),
   },
   (props: InputProps, context) => {
     const validity = createInputValidity(props)

@@ -4,7 +4,6 @@ import { userEvent } from 'vitest/browser'
 import { createState, render, val, type JSXElement } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { Piv } from '../../../Piv/Piv'
-import { usePlugin } from '../../tools/usePlugin'
 import { tooltip, type TooltipController } from './tooltip'
 import { Popover } from '@/components/kits/Popover/Popover'
 import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
@@ -95,17 +94,17 @@ test('默认打开反映原生状态，取消打开不伪报成功，强制切�
 
 test('非Label宿主保留id与自有描述，模板动态更新且实例互不影响', async () => {
   const value = createState(1)
-  let first!: Partial<TooltipController>
-  let second!: Partial<TooltipController>
+  let first!: TooltipController
+  let second!: TooltipController
   dispose = render(() => {
-    const [one, firstController] = usePlugin(tooltip, {
+    const one = tooltip({
       content: <Piv as="strong">当前{val(value)}</Piv>,
     })
-    const [two, secondController] = usePlugin(tooltip, {
+    const two = tooltip({
       content: '第二个宿主',
     })
-    first = firstController
-    second = secondController
+    first = one.controller
+    second = two.controller
     return (
       <>
         <Piv
@@ -128,8 +127,8 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
   const trigger = host.querySelector<HTMLElement>('#own-id')!
   expect(trigger.getAttribute('aria-describedby')).toBe('existing-description')
   await userEvent.hover(trigger)
-  await expect.poll(() => val(first.isOpen!)).toBe(true)
-  expect(val(second.isOpen!)).toBe(false)
+  await expect.poll(() => val(first.isOpen)).toBe(true)
+  expect(val(second.isOpen)).toBe(false)
   const surface = host.querySelector<HTMLElement>(':popover-open')!
   expect(surface.querySelector('strong')?.textContent).toBe('当前1')
   value.set(2)
@@ -145,21 +144,21 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
 
 test('内容清空移除浮层并关闭状态，卸载释放附属结构和延迟关闭', async () => {
   const content = createState<JSXElement>('初始说明')
-  let controller!: Partial<TooltipController>
+  let controller!: TooltipController
   dispose = render(() => {
-    const [plugin, current] = usePlugin(tooltip, { content })
-    controller = current
+    const capability = tooltip({ content })
+    controller = capability.controller
     return (
-      <Piv as="button" is={plugin}>
+      <Piv as="button" is={capability}>
         宿主
       </Piv>
     )
   }, host)
   await userEvent.hover(host.querySelector('button')!)
-  await expect.poll(() => val(controller.isOpen!)).toBe(true)
+  await expect.poll(() => val(controller.isOpen)).toBe(true)
   content.set(undefined)
   await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
-  expect(val(controller.isOpen!)).toBe(false)
+  expect(val(controller.isOpen)).toBe(false)
   content.set('再次出现')
   await expect
     .poll(() => host.querySelector('[role="tooltip"]')?.textContent)
@@ -172,14 +171,14 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
 })
 
 test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧关闭计时', async () => {
-  let controller!: Partial<TooltipController>
+  let controller!: TooltipController
   dispose = render(() => {
-    const [plugin, current] = usePlugin(tooltip, { content: 0 })
-    controller = current
+    const capability = tooltip({ content: 0 })
+    controller = capability.controller
     return (
       <Piv
         as="button"
-        is={plugin}
+        is={capability}
         style={{ position: 'fixed', top: '8px', left: '200px' }}
       >
         零值说明
@@ -211,13 +210,13 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
         surface.querySelector('.PopoverPaint')!.getBoundingClientRect().top,
     ),
   ).toBeLessThan(2)
-  controller.hidePopover!()
+  controller.hidePopover()
   await expect.poll(() => surface.matches(':popover-open')).toBe(false)
   expect(document.activeElement).toBe(trigger)
   trigger.blur()
   await userEvent.hover(trigger)
   await userEvent.unhover(trigger)
-  controller.showPopover!()
+  controller.showPopover()
   await new Promise((resolve) => setTimeout(resolve, 180))
   expect(surface.matches(':popover-open')).toBe(true)
 })

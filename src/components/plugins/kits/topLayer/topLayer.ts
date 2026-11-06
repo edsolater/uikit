@@ -50,8 +50,8 @@ const topLayerGeometryProperties = [
  */
 export function createTopLayerController(
   element: HTMLElement,
+  active: State<boolean> = createState(false),
 ): TopLayerController {
-  const active = createState(false)
   let session: TopLayerSession | undefined
 
   return {
@@ -159,13 +159,31 @@ function restoreInlineDeclarations(
   }
 }
 
+/** 插件状态在构建时创建；元素接入后才建立可提升会话。 */
 export const topLayer = defineInactivePlugin({
   name: 'topLayer',
-  pluginCore({ element, addProps }): TopLayerController {
-    const controller = createTopLayerController(element)
-    onMount(() => {
-      controller.enter()
-      return () => controller.leave()
+  pluginCore({ addProps, withDom }): TopLayerController {
+    const active = createState(false)
+    let session: TopLayerController | undefined
+    const controller: TopLayerController = {
+      active,
+      enter() {
+        session?.enter()
+      },
+      leave() {
+        session?.leave()
+      },
+    }
+    withDom((el) => {
+      const mounted = createTopLayerController(el, active)
+      session = mounted
+      onMount(() => {
+        mounted.enter()
+      })
+      return () => {
+        if (session === mounted) session = undefined
+        mounted.leave()
+      }
     })
     addProps({ htmlProps: { 'data-plugin': { mergable: 'top-layer' } } })
     return controller

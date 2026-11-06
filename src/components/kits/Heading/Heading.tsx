@@ -4,7 +4,6 @@
 import { kit, type KitController } from '@/components/tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { headingPropsDefinition } from './Heading.prop'
-import { pivDefaultSources } from '@/components/Piv/Piv.prop'
 import { onMount } from '@/foundation'
 import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
@@ -43,7 +42,6 @@ export const Heading = kit(
   {
     name: 'Heading',
     availableProps: headingPropsDefinition,
-    directorOptions: () => ({ defaultSources: pivDefaultSources }),
     marker: () => ({ descriptionOnly: true }),
   },
   (props: HeadingProps) => {

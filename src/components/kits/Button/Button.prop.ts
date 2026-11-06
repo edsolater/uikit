@@ -3,7 +3,7 @@ import { createVariantPropsParser } from '../utils/parseVariantProps'
 import type { DefaultPropSources, PropsDefinition } from '../../tools/componentPropsDirector'
 import type { ButtonProps } from './Button'
 import { toRecord } from '@edsolater/fnkit'
-import { pivDefaultSources, pivPropsDefinition } from '../../Piv/Piv.prop'
+import { pivPropsDefinition } from '../../Piv/Piv.prop'
 import { componentDescriptionPropsDefinition } from '../../tools/KitMarker/KitMarker.prop'
 
 export const buttonVariantGroups = [
@@ -39,19 +39,14 @@ export const buttonPropsDefinition = {
   onClick: 'state-value-view',
 } satisfies PropsDefinition<ButtonProps>
 
-const variantSources = toRecord(buttonVariantGroups, group => group.groupName, group => {
+/** 每个缺省分组只建立自己的语义 Source；原核心仍执行一次最终映射。 */
+export const buttonDefaultSources = toRecord(buttonVariantGroups, group => group.groupName, group => {
   const parse = createVariantPropsParser([group])
   return (input: ButtonProps) => {
     const { details } = parse(input)
     return details[group.groupName]
   }
-})
-
-/** 每个缺省分组只建立自己的语义 Source；原核心仍执行一次最终映射。 */
-export const buttonDefaultSources = {
-  ...variantSources,
-  ...pivDefaultSources,
-} as DefaultPropSources<ButtonProps, typeof buttonPropsDefinition>
+}) as DefaultPropSources<ButtonProps, typeof buttonPropsDefinition>
 
 /** 只有缺省分组改用同 State 的默认 Source；显式分组保留原核心的冲突报告。 */
 export function getButtonPropsDirectorOptions(input: ButtonProps) {

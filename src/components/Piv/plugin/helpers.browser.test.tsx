@@ -7,8 +7,10 @@ import { defineInactivePlugin } from '@/components/plugins/tools/defineInactiveP
 
 test('Piv作为渲染根时同层附属节点进入实际宿主，卸载同步释放', async () => {
   const host = document.body.appendChild(document.createElement('main'))
-  const adjacent = defineInactivePlugin({ name: 'adjacent', pluginCore({ element }) {
-    createPivStructure(element).insertAfter(<Piv htmlProps={{ 'data-adjacent': true }}>附属内容</Piv>)
+  const adjacent = defineInactivePlugin({ name: 'adjacent', pluginCore({ withDom }) {
+    withDom((el) => {
+      createPivStructure(el).insertAfter(<Piv htmlProps={{ 'data-adjacent': true }}>附属内容</Piv>)
+    })
     return {}
   } })
   const dispose = render(() => (
