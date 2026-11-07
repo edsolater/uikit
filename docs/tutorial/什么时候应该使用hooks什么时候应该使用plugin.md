@@ -1,42 +1,90 @@
 # 什么时候使用 Hook，什么时候使用 Plugin
 
-Hook 在组件作用域组织状态或逻辑；Plugin 把交互或结构行为接到一个 Piv 节点。需要多个组件共享计算而不依赖具体节点时使用 Hook；需要当前节点事件、状态、DOM 或附属结构时使用 Plugin。
+先判断要表达的是界面节点、组件逻辑，还是已有节点的能力：
 
-组件描述自己承载或组织什么内容；Plugin 描述附着在节点上的交互能力。例如 Card 提供独立信息体，`<Card is={clickable()}>信息</Card>` 为这个 Card 增加点击能力。仅需变化布局或表达内容时，优先使用组件；需要给节点安装可复用交互时使用 Plugin。
+| 形式 | 承担什么 | 典型情境 |
+| --- | --- | --- |
+| 组件 | 承担界面中的节点身份，组织内容与层次。 | Card 承载一份信息，Button 表达一个操作入口。 |
+| Hook | 在组件作用域中组织状态、计算或共享逻辑。 | 多处使用同一份状态，或组合一段不直接注入节点声明的逻辑。 |
+| Plugin | 描述宿主节点自身具有什么功能，通过 `is` 给它增加能力。 | 这个 Card 可点击、可拖动，或附有 Tooltip 说明。 |
 
-| 调用 | 得到什么 |
-| --- | --- |
-| `clickable(options)` | `{ plugin, controller }`；`plugin` 交给 `is`，`controller` 直接使用 |
-
-## 定义和使用单个能力
+Plugin 不作为业务内容提供商。业务内容仍由调用者写在组件层次中：
 
 ```tsx
+<Card is={clickable({ tabIndex: 0 })}>
+  <Text>卡片自己的业务内容</Text>
+</Card>
+```
+
+这里的界面节点是 Card、Text；clickable 描述 Card 的能力，不另占一个业务界面节点。实现能力时可以使用附属 DOM 或结构，例如 Tooltip 的浮层；这不意味着 Plugin 要替调用者承载业务内容。
+
+## 先定义能力，再在组件中构建
+
+下面省略 import；`defineInactivePlugin` 与 `PluginCoreContext` 对应 [Plugin 构建工具](../../src/components/plugins/tools/defineInactivePlugin.ts)。
+
+```tsx
+interface HighlightOptions {
+  color: string
+}
+
+// 模块级定义：返回 inactivePlugin 函数，不运行 pluginCore。
 const highlight = defineInactivePlugin({
   name: 'highlight',
-  pluginCore({ pluginOptions: options, addProps, withDom }) {
-    let element: HTMLElement | undefined
-    addProps({ style: { color: options.color } })
-    withDom((el) => {
-      element = el
-      return () => {
-        element = undefined
-      }
-    })
-    return { focus: () => element?.focus() }
+  pluginCore({
+    pluginOptions,
+    addProps,
+    domProxy,
+  }: PluginCoreContext<HighlightOptions>) {
+    addProps({ style: { color: pluginOptions.color } })
+    return { focus: () => domProxy.focus() }
   },
 })
 
 function Example() {
+  // 组件内调用：立即运行一次 core，得到完整能力结果。
   const capability = highlight({ color: 'red' })
-  return <Piv is={capability} />
+  return <Card is={capability}>需要高亮的信息</Card>
 }
 ```
 
-定义可以放模块顶层，但不运行 `pluginCore`。每次在组件内调用 `highlight({ color: 'red' })` 才构建一次：准备状态与完整 Controller，收集 `addProps`／`withDom` 声明，并返回 `{ plugin, controller }`。`is` 解析直接展开这些已准备的声明，不重新运行 `pluginCore`，也不重建 Controller。配置调用因此必须在组件内完成，组件内的 JSX 内联调用合法。
+完整过程是：
 
-## 组织多个能力
+```text
+defineInactivePlugin({ name, pluginCore })
+  → inactivePlugin 函数
+  → 组件内 inactivePlugin(pluginOptions)，执行一次 core
+  → 同步得到 { plugin, controller }
+  → is 展开 plugin 中已构建的声明，不重跑 core
+```
 
-```ts
+定义可以放在模块顶层；配置调用必须在组件作用域中完成，JSX 内联调用也可以。`addProps` 直接提交统一的 ShadowProps；样式、事件和子能力优先用声明表达。需要 DOM 操作时使用缓存的 `domProxy`，不必在每个能力中另存元素引用。
+
+## is 接受什么
+
+`is` 接受 Plugin 本身，或者 `plugin` 字段为有效 Plugin 的对象。能力结果 `{ plugin, controller }` 正好属于后一种形式：
+
+```tsx
+<Card is={capability}>信息</Card>
+<Card is={capability.plugin}>信息</Card>
+
+// highlight 是 inactivePlugin 函数，必须先调用。
+<Card is={highlight({ color: 'red' })}>信息</Card>
+// is={highlight} 不是有效 Plugin 输入。
+```
+
+以上展示等效输入形式，不表示同一份能力需要安装到多处。需要各节点拥有独立状态和控制入口时，分别调用 inactivePlugin。
+
+同一个节点需要多个能力时，使用数组：
+
+```tsx
+<Card is={[clickable(), tabularNum()]}>可点击并使用等宽数字</Card>
+```
+
+## 多个节点需要配合时，定义组合能力
+
+单元描述各节点自己的能力；[defineInactivePlugins](../../src/components/plugins/tools/defineInactivePlugins.ts) 将多个单元 core 组织成一次联合构建，内部仍逐项复用 `defineInactivePlugin`。
+
+```tsx
 const dragAndDrop = defineInactivePlugins({
   draggable: draggablePluginCore,
   droppable: droppablePluginCore,
@@ -44,9 +92,10 @@ const dragAndDrop = defineInactivePlugins({
 
 function Transfer() {
   const { draggable, droppable } = dragAndDrop({
-    draggable: { payload: item },
-    droppable: { onDrop: receive },
+    draggable: { payload: '一份材料' },
+    droppable: { onDrop: context => 接收材料(context) },
   })
+
   return <>
     <Card is={draggable}>拖动材料</Card>
     <Card is={droppable}>接收材料</Card>
@@ -54,12 +103,18 @@ function Transfer() {
 }
 ```
 
-组合定义可以放模块顶层，组合调用必须在组件内。每次调用在内部创建一份共享身份并交给本组所有角色；该身份不返回给调用者，也不进入公开 Options。各角色仍按单元构建流程准备自己的状态与 Controller。
+组合定义可以放模块顶层；组合调用在组件内完成。返回的 `draggable`、`droppable` 已是各自的 `{ plugin, controller }`，交给 `is` 时不再调用，也各自拥有完整 Controller。
 
-## 组合和清理
+同次组合调用在内部共享一份身份，不同调用各自隔离。调用者不需要传 `id`、使用 Scope 或再经 `usePlugin` 连接。
 
-父 `pluginCore` 可以构建子能力并通过 `is` 提交子声明，再通过 `child.controller` 使用其成员；节点声明由同一合并链处理。
+## 能力可以继续组合能力
 
-节点资源在 `domRef`／`withDom` 回调中接入：回调只接收实际元素，返回 void 或该元素退出时的清理。需要声明就能表达的字段优先使用 `on`、`style` 等既有字段，不把所有属性绑定重写进 domRef。`withDom` 等价于 `addProps({ domRef: callback })`，不创建额外生命周期设施。
+父 core 可以构建子能力，将子能力的声明交回同一条 `is` 解析链，并直接使用它的 Controller：
 
-具体状态获取和条件节点见[控制入口](外部获取plugin内部状态并使用.md)。Popover 与 Tooltip 的后续领域改造不由这套通用协议自动完成。
+```ts
+const child = hoverable({})
+addProps({ is: child })
+const hovered = child.controller.hovered
+```
+
+`domProxy` 支持首次节点的异步取得，但不自动保证节点已接入文档或操作成功。Controller、资源清理及当前边界见[怎样使用 Plugin 的控制入口](外部获取plugin内部状态并使用.md)；后续能力仍按对应 TODO 推进，不作为当前已成立的保证。

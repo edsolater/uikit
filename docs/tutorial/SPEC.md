@@ -11,5 +11,5 @@
 
 ## File Map
 
-- [什么时候应该使用hooks什么时候应该使用plugin.md](什么时候应该使用hooks什么时候应该使用plugin.md)：说明 defineInactivePlugin、defineInactivePlugins、inactivePlugin(pluginOptions)、pluginCore、能力结果、Controller、withDom 与节点接入清理。
-- [外部获取plugin内部状态并使用.md](外部获取plugin内部状态并使用.md)：说明能力结果返回的完整 Controller、无节点时的方法行为，以及结果与组件 ref 的边界。
+- [什么时候应该使用hooks什么时候应该使用plugin.md](什么时候应该使用hooks什么时候应该使用plugin.md)：区分组件、Hook 与宿主能力，说明单元与组合的构建调用、is 输入、声明展开及 domProxy 使用。
+- [外部获取plugin内部状态并使用.md](外部获取plugin内部状态并使用.md)：说明完整 Controller 的直接使用、状态与异步命令、节点就绪边界，以及尚未实现的后续能力。
