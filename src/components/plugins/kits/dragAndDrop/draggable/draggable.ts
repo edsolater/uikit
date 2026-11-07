@@ -4,13 +4,13 @@
  *
  * 页面内匹配使用组合构建的内部身份；独立调用时内部身份为 undefined。
  */
-import { createState, type State } from '@/foundation'
+import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
   defineInactivePlugin,
   type PluginCoreContext,
 } from '@/components/plugins/tools/defineInactivePlugin'
-import { createPointerDrag, type PointerDrag } from './createPointerDrag'
+import { createPointerDrag } from './createPointerDrag'
 import './draggable.style'
 
 export interface DraggableOptions {
@@ -26,44 +26,48 @@ export interface DraggableOptions {
 export interface DraggableController {
   /** 当前是否允许开始新的拖动。 */
   enabled: State<boolean>
-  /** 已越过激活距离，并且本次拖动尚未结束或取消。 */
+  /** 正在拖动 */
   dragging: State<boolean>
   enable(): void
-  /** 禁止新的拖动，并立即取消正在进行的拖动。 */
+  /** 禁用拖动 */
   disable(): void
 }
 
 /**
- * 配置拖动能力；Pointer 事务在元素接入时建立，节点退出时取消并释放。
+ * 配置拖动能力；首次取得节点后建立 Pointer 事务，构建作用域退出时取消并释放。
  */
 export function draggablePluginCore({
   pluginOptions,
   addProps,
-  withDom,
+  domProxy,
   id,
 }: PluginCoreContext<DraggableOptions>): DraggableController {
+  // 准备启用开关与拖动状态，供交互判断和外部 Controller 共用。
   const [enabled, enabledControl] = createToggle(
     !(pluginOptions.disabled ?? false),
   )
-  const dragging = createState(false)
-  let pointerDrag: PointerDrag | undefined
 
-  withDom((el) => {
-    pointerDrag = createPointerDrag({
-      source: el,
-      id,
-      payload: pluginOptions.payload,
-      activationDistance: Math.max(0, pluginOptions.activationDistance ?? 0),
-      activationJump: pluginOptions.activationJump ?? true,
-      enabled: enabled.read,
-      onDraggingChange: (value) => dragging.set(value),
-    })
-    return () => {
-      pointerDrag?.cancel()
-      pointerDrag = undefined
-    }
+  // 状态记录:正在拖动
+  const dragging = createState(false)
+
+  // 创建拖动操作
+  const pointerDrag = createPointerDrag({
+    target: domProxy,
+    id,
+    payload: pluginOptions.payload,
+    activationDistance: Math.max(0, pluginOptions.activationDistance ?? 0),
+    activationJump: pluginOptions.activationJump ?? true,
+    enabled: enabled.read,
+    onDraggingChange: (value) => dragging.set(value),
   })
 
+  // 退出时请求取消拖动，释放交互资源（如监听器）。
+  onCleanup(() => {
+    // low-todo：如需对象永久退出，再评估 dispose；当前保留 cancel。
+    pointerDrag.cancel()
+  })
+
+  // 触发交给 浏览器DOM，但关闭浏览器原生拖放。
   addProps({
     htmlProps: { 'draggable': false, 'data-plugin': { mergable: 'draggable' } },
     on: {
@@ -73,18 +77,21 @@ export function draggablePluginCore({
       },
       pointerdown: {
         passive: false,
-        callback: ({ event }) => pointerDrag?.start(event),
+        callback: ({ event }) => {
+          pointerDrag.start(event)
+        },
       },
     },
   })
 
+  // 暴露出：状态感知器、能力
   return {
     enabled,
     dragging,
     enable: enabledControl.turnOn,
     disable() {
       enabledControl.turnOff()
-      pointerDrag?.cancel()
+      pointerDrag.cancel()
     },
   }
 }

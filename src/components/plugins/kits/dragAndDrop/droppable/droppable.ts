@@ -4,7 +4,7 @@
  *
  * 页面内材料按组合构建的内部身份配对，外部材料由目标的启用状态和 accepts 判断。
  */
-import { createState, type State } from '@/foundation'
+import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
   defineInactivePlugin,
@@ -37,12 +37,12 @@ export interface DroppableController {
 }
 
 /**
- * 配置接收能力；内部目标登记随元素接入建立，节点退出时释放。
+ * 配置接收能力；内部目标在元素就绪后登记，构建作用域退出时释放。
  */
 export function droppablePluginCore({
   pluginOptions,
   addProps,
-  withDom,
+  domProxy,
   id,
 }: PluginCoreContext<DroppableOptions>): DroppableController {
   const [enabled, enabledControl] = createToggle(
@@ -62,20 +62,25 @@ export function droppablePluginCore({
     enabled.read() && (pluginOptions.accepts?.(context) ?? true)
   const onDrop = (context: DropContext) => pluginOptions.onDrop?.(context)
 
-  withDom((el) =>
-    registerInternalDropTarget({
-      element: el,
-      id,
-      enabled: enabled.read,
-      accepts: (drag, event) =>
-        acceptsDrop(createInternalDropContext(drag, event, el)),
-      hover: showHover,
-      leave: resetHover,
-      drop: (drag, event) =>
-        onDrop(createInternalDropContext(drag, event, el)),
-    }),
-  )
+  // 登记内部目标并在作用域退出时注销。
+  const unregister = registerInternalDropTarget({
+    target: domProxy,
+    id,
+    enabled: enabled.read,
+    accepts(drag, event) {
+      return acceptsDrop(createInternalDropContext(drag, event, this.target))
+    },
+    hover: showHover,
+    leave: resetHover,
+    drop(drag, event) {
+      onDrop(createInternalDropContext(drag, event, this.target))
+    },
+  })
+  onCleanup(() => {
+    unregister()
+  })
 
+  // 声明外部拖放监听与状态。
   addProps({
     htmlProps: {
       'data-plugin': { mergable: 'droppable' },

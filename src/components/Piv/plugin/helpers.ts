@@ -1,22 +1,26 @@
-/** Piv 实际节点的结构插入工具，附属内容随节点清理。 */
+/** Piv 实际节点的结构插入工具，附属内容随所属作用域清理。 */
 import { isString } from '@edsolater/fnkit'
 import {
   children,
   createEffect,
   onCleanup,
   insert,
+  val,
   type JSXElement,
 } from '@/foundation'
 import type { PivHTMLElement, PivTag } from '../domMap'
 
 type StructurePosition = 'before' | 'after' | 'prepend' | 'append' | 'wrap'
 
-/** 创建当前 DOM 的结构插入工具；位置在提交时确定，内容交给 Solid 解析与更新。 */
+/**
+ * 创建目标元素的结构插入工具，支持等待异步目标。
+ * 位置在提交时确定，内容交给 Solid 解析与更新。
+ */
 export function createPivStructure<Tag extends PivTag>(
-  element: PivHTMLElement<Tag>,
+  target: PivHTMLElement<Tag> | PromiseLike<PivHTMLElement<Tag>>,
 ) {
   // 多次 after 按声明顺序追加；其他位置均在提交时读取当前 DOM 关系。
-  let afterTail: ChildNode = element
+  let afterTail: ChildNode | undefined
 
   const insertContent = (position: StructurePosition, content: JSXElement) => {
     const range: MountedRange = {
@@ -33,7 +37,10 @@ export function createPivStructure<Tag extends PivTag>(
     /**
      * 将最新附属节点提交到宿主当前位置，保留范围身份和多次after顺序。
      */
-    const commit = (nodes: Node[]) => {
+    const commit = ({
+      element,
+      nodes,
+    }: { element: PivHTMLElement<Tag>; nodes: Node[] }) => {
       if (!range.end.parentNode) {
         switch (position) {
           case 'before':
@@ -41,6 +48,7 @@ export function createPivStructure<Tag extends PivTag>(
             element.before(range.start, range.end)
             break
           case 'after':
+            if (!afterTail) afterTail = element
             afterTail.after(range.start, range.end)
             if (range.end.parentNode) afterTail = range.end
             break
@@ -65,6 +73,7 @@ export function createPivStructure<Tag extends PivTag>(
     }
 
     createEffect(() => {
+      const element = val(target)
       const nodes: Node[] = []
       for (const child of resolved()) {
         // Fragment 插入后会被清空，提交与下一轮 diff 必须记录实际移出的子节点。
@@ -74,7 +83,7 @@ export function createPivStructure<Tag extends PivTag>(
           nodes.push(document.createTextNode(String(child)))
         }
       }
-      return nodes
+      return { element, nodes }
     }, commit)
     onCleanup(() => removeRange(range))
   }

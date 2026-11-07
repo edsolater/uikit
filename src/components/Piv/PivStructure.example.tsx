@@ -3,6 +3,7 @@
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  * 这里用可运行示例展示 insertBefore、appendChild、wrapOutside 和元素接入回调的使用边界。
  */
+import { Loading, val } from '@/foundation'
 import { Piv } from './Piv'
 import { Card } from '../kits/Card/Card'
 import { Article } from '../kits/Article/Article'
@@ -11,54 +12,47 @@ import { defineInactivePlugin } from '@/components/plugins/tools/defineInactiveP
 
 const beforeLabelPlugin = defineInactivePlugin({
   name: 'beforeLabel',
-  pluginCore({ withDom }) {
-    withDom((el) => {
-      const { insertBefore } = createPivStructure(el)
-      insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)
-    })
+  pluginCore({ domProxy }) {
+    const { insertBefore } = createPivStructure(domProxy)
+    insertBefore(<Piv class="structure-tag">insertBefore 插入</Piv>)
     return {}
   },
 })
 
 const appendRedDotPlugin = defineInactivePlugin({
   name: 'appendRedDot',
-  pluginCore({ withDom }) {
-    withDom((el) => {
-      const { appendChild } = createPivStructure(el)
-      appendChild(
-        <Piv
-          as="span"
-          class="structure-red-dot"
-          htmlProps={{ 'aria-hidden': 'true' }}
-        />,
-      )
-    })
+  pluginCore({ domProxy }) {
+    const { appendChild } = createPivStructure(domProxy)
+    appendChild(
+      <Piv
+        as="span"
+        class="structure-red-dot"
+        htmlProps={{ 'aria-hidden': 'true' }}
+      />,
+    )
     return {}
   },
 })
 
 const wrapManagerPlugin = defineInactivePlugin({
   name: 'wrapManager',
-  pluginCore({ withDom }) {
-    withDom((el) => {
-      const { wrapOutside } = createPivStructure(el)
-      wrapOutside(<Piv class="structure-manager" />)
-    })
+  pluginCore({ domProxy }) {
+    const { wrapOutside } = createPivStructure(domProxy)
+    wrapOutside(<Piv class="structure-manager" />)
     return {}
   },
 })
 
 const selfMeasurePlugin = defineInactivePlugin({
   name: 'selfMeasure',
-  pluginCore({ withDom }) {
-    withDom((el) => {
-      const { insertAfter } = createPivStructure(el)
-      insertAfter(
-        <Piv class="structure-note">
-          el 参数适合读取当前 DOM 信息：{el.tagName.toLowerCase()}
-        </Piv>,
-      )
-    })
+  pluginCore({ domProxy }) {
+    const { insertAfter } = createPivStructure(domProxy)
+    insertAfter(
+      <Piv class="structure-note">
+        domProxy 适合读取当前 DOM 信息：
+        <Loading>{val(domProxy).tagName.toLowerCase()}</Loading>
+      </Piv>,
+    )
     return {}
   },
 })

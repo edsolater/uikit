@@ -30,7 +30,7 @@ describe('draggable', () => {
     stubPointerCapture(source)
     const changes: [boolean, boolean][] = []
     const pointerDrag = createPointerDrag({
-      source,
+      target: source,
       payload: 'weather',
       activationDistance: 0,
       activationJump: true,
@@ -265,7 +265,7 @@ describe('draggable', () => {
     source.style.translate = '3px 4px'
     stubPointerCapture(source)
     const pointerDrag = createPointerDrag({
-      source,
+      target: source,
       payload: 'weather',
       activationDistance: 0,
       activationJump: true,
@@ -285,7 +285,7 @@ describe('draggable', () => {
     source.setAttribute('popover', 'manual')
     stubPointerCapture(source)
     const pointerDrag = createPointerDrag({
-      source,
+      target: source,
       payload: 'weather',
       activationDistance: 0,
       activationJump: true,

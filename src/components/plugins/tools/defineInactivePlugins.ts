@@ -74,11 +74,13 @@ export function defineInactivePlugins<
   ) => {
     // 只属于这一次组合调用，不返回给调用者。
     const id = {}
-    return map(definitions, (pluginCore, name) => {
+    return map(definitions, (roleCore, name) => {
       const inactivePlugin = defineInactivePlugin({
         name,
-        pluginCore: (context: PluginCoreContext<object>) =>
-          pluginCore({ ...context, id }),
+        pluginCore(context: PluginCoreContext<object>) {
+          context.id = id
+          return roleCore(context)
+        },
       })
       return inactivePlugin(pluginOptions[name])
     })

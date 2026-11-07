@@ -93,7 +93,7 @@ describe('配置插件消费', () => {
     const dispose = render(() => {
       const nested = defineInactivePlugin({
         name: 'nested',
-        pluginCore({ addProps, withDom }) {
+        pluginCore({ addProps }) {
           nestedBuilds += 1
           addProps({
             htmlProps: { 'data-nested': 'complete' },
@@ -103,15 +103,17 @@ describe('配置插件消费', () => {
               }
             },
           })
-          withDom(() => () => {
-            nestedCleaned += 1
+          addProps({
+            domRef: () => () => {
+              nestedCleaned += 1
+            },
           })
           return {}
         },
       })()
       const injected = defineInactivePlugin({
         name: 'injected',
-        pluginCore({ addProps, withDom }) {
+        pluginCore({ addProps }) {
           builds += 1
           addProps({
             id: 'complete',
@@ -125,11 +127,13 @@ describe('配置插件消费', () => {
             },
             is: nested,
           })
-          withDom(() => {
-            refs += 1
-            return () => {
-              cleaned += 1
-            }
+          addProps({
+            domRef: () => {
+              refs += 1
+              return () => {
+                cleaned += 1
+              }
+            },
           })
           return {}
         },
@@ -160,11 +164,13 @@ describe('配置插件消费', () => {
     const dispose = render(() => {
       const capability = defineInactivePlugin({
         name: 'structural',
-        pluginCore({ addProps, withDom }) {
+        pluginCore({ addProps }) {
           addProps({ as: 'button', if: visible })
-          withDom((el) => {
-            attached.push(el)
-            return () => released.push(el)
+          addProps({
+            domRef: (el) => {
+              attached.push(el)
+              return () => released.push(el)
+            },
           })
           return {}
         },

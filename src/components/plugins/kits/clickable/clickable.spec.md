@@ -19,7 +19,7 @@ function Example() {
 }
 ```
 
-配置调用在组件内完成并立即构建状态与 Controller；`plugin` 交给 `is`，`controller` 直接使用。依赖元素的方法在节点未接入或已退出时只保留状态操作，不抛错。
+配置调用在组件内完成并立即构建状态与 Controller；`plugin` 交给 `is`，`controller` 直接使用。`focus`、`blur` 同步更新状态；`focus`、`blur`、`click` 的 DOM 操作返回可等待结果，节点未接入时等待首次接入，后续节点更换暂不支持。
 
 ## Controller
 

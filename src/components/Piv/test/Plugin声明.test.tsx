@@ -61,7 +61,7 @@ test('droppable 随 is 动态登记与注销内部接收目标', () => {
     expect(findInternalDropTarget(drag, pointer)).toBeUndefined()
     enabled.set(true)
     flush()
-    expect(findInternalDropTarget(drag, pointer)?.target.element).toBe(element)
+    expect(findInternalDropTarget(drag, pointer)?.target.target).toBe(element)
     enabled.set(false)
     flush()
     expect(findInternalDropTarget(drag, pointer)).toBeUndefined()
@@ -80,11 +80,13 @@ test('同一能力结果可交给多个节点，各节点接入自己的元素�
   dispose = render(() => {
     const capability = defineInactivePlugin({
       name: 'sharedResult',
-      pluginCore({ withDom }) {
-        withDom((el) => {
-          attached.push(el)
-          onCleanup(() => innerCleaned.push(el))
-          return () => detached.push(el)
+      pluginCore({ addProps }) {
+        addProps({
+          domRef: (el) => {
+            attached.push(el)
+            onCleanup(() => innerCleaned.push(el))
+            return () => detached.push(el)
+          },
         })
         return {}
       },
@@ -111,10 +113,12 @@ test('两次构建的 Controller 状态独立，节点接入各自元素', () =>
   const build = () =>
     defineInactivePlugin({
       name: 'independent',
-      pluginCore({ withDom }) {
+      pluginCore({ addProps }) {
         const [hovered, control] = createToggle(false)
-        withDom((el) => {
-          attached.push(el)
+        addProps({
+          domRef: (el) => {
+            attached.push(el)
+          },
         })
         return { hovered, toggle: control.toggle }
       },
@@ -166,12 +170,14 @@ test('动态 is 按声明接入和释放，重复引用各执行一次，旁读�
   dispose = render(() => {
     const capability = defineInactivePlugin({
       name: 'dynamic',
-      pluginCore({ withDom }) {
+      pluginCore({ addProps }) {
         builds++
-        withDom(() => {
-          events.push(`接入${val(incidental)}`)
-          onCleanup(() => events.push('内部清理'))
-          return () => events.push('清理')
+        addProps({
+          domRef: () => {
+            events.push(`接入${val(incidental)}`)
+            onCleanup(() => events.push('内部清理'))
+            return () => events.push('清理')
+          },
         })
         return {}
       },

@@ -72,10 +72,10 @@ describe('clickable', () => {
     first.dispatchEvent(new PointerEvent('pointerup'))
     await expect.poll(() => val(firstController.pressed)).toBe(false)
 
-    firstController.focus()
+    await firstController.focus()
     expect(document.activeElement).toBe(first)
     await expect.poll(() => val(firstController.focused)).toBe(true)
-    firstController.blur()
+    await firstController.blur()
     await expect.poll(() => val(firstController.focused)).toBe(false)
 
     const onClick = vi.fn()
@@ -119,7 +119,7 @@ test('用户声明优先于父能力，父能力优先于子能力', () => {
   expect(cards[1].getAttribute('title')).toBe('用户声明')
 })
 
-test('能力结果直接使用，控制独立节点，卸载后控制器仍存在且元素方法不再生效', async () => {
+test('能力结果直接使用，控制独立节点，卸载后清理声明事件', async () => {
   const host = document.body.appendChild(document.createElement('div'))
   let first!: ClickableController
   let second!: ClickableController
@@ -150,39 +150,39 @@ test('能力结果直接使用，控制独立节点，卸载后控制器仍存�
     new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }),
   )
   expect(onClick).toHaveBeenCalledOnce()
-  first.focus()
+  await first.focus()
   expect(document.activeElement).toBe(firstElement)
 
   dispose()
   dispose = undefined
   expect(first.focus).toBeDefined()
   expect(first.click).toBeDefined()
-  first.focus()
+  await first.click()
+  expect(onClick).toHaveBeenCalledOnce()
+  await first.focus()
   expect(document.activeElement).not.toBe(firstElement)
 })
 
-test('条件隐藏时 Controller 仍完整，元素方法在无节点时不生效，出现后恢复', async () => {
+test('条件隐藏时元素方法等待首次接入', async () => {
   const host = document.body.appendChild(document.createElement('div'))
   const visible = createState(false)
+  const onClick = vi.fn()
   let controller!: ClickableController
   dispose = render(() => {
-    const capability = clickable()
+    const capability = clickable({ onClick })
     controller = capability.controller
     return <Card if={visible} is={capability} />
   }, host)
   expect(controller.focus).toBeDefined()
-  controller.focus()
+  const pending = controller.focus()
   expect(document.activeElement).not.toBe(host.firstElementChild)
 
   visible.set(true)
   await expect.poll(() => host.querySelector('.Card')).not.toBeNull()
   const element = host.querySelector<HTMLElement>('.Card')!
-  controller.focus()
+  await pending
+  await controller.focus()
   expect(document.activeElement).toBe(element)
-
-  visible.set(false)
-  await expect.poll(() => host.querySelector('.Card')).toBeNull()
-  expect(controller.focus).toBeDefined()
-  controller.focus()
-  expect(document.activeElement).not.toBe(element)
+  await controller.click()
+  expect(onClick).toHaveBeenCalledOnce()
 })

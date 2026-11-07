@@ -7,10 +7,15 @@
  * 定义可以放模块顶层；配置调用会立即执行 core 并创建状态，因此必须在组件内完成，
  * 组件内的 JSX 内联调用合法。
  */
-import { hasProperty, isObject, isString } from '@edsolater/fnkit'
+import {
+  hasProperty,
+  isObject,
+  isString,
+  toPromiseResultProxy,
+  type PromiseResultProxy,
+} from '@edsolater/fnkit'
 import type { ShadowProps } from '@/components/Piv/plugin/mergePivProps'
 import type { PivTag } from '@/components/Piv/domMap'
-import type { RefReceiver } from '@/hooks/createRef'
 
 /** 识别 Plugin 声明，不参与节点状态存储。 */
 export const pluginMarker = Symbol('nodePlugin')
@@ -22,14 +27,6 @@ export const pluginMarker = Symbol('nodePlugin')
  * 调用者直接提供的 Props 优先。children 仍由直接 Props 提供。
  */
 export type PluginAddProps = (props: ShadowProps<PivTag>) => void
-
-/**
- * 节点接入回调；唯一参数是实际元素，返回 void 或节点退出时的清理函数。
- *
- * 回调只在真实元素接入时调用：if=false 没有节点时不调用；节点重挂时对新节点再次调用，
- * 不重新构建 Controller。
- */
-export type PluginElementCallback = RefReceiver<HTMLElement>
 
 /** 带标识的补充声明；不接收元素，也不执行节点接入。 */
 export type Plugin = ShadowProps<PivTag> & {
@@ -44,13 +41,8 @@ export type PluginCoreContext<Options extends object> = {
   /** 收集统一 ShadowProps；包含 as、if、domRef 和 is。 */
   addProps: PluginAddProps
 
-  /**
-   * 等价于 `addProps({ domRef: callback })`，不立即调用 callback。
-   *
-   * 有节点时接入，退出时执行 callback 返回的清理；无节点不调用，重挂重新调用。
-   * callback 仅接收 element，返回 void 或清理函数。
-   */
-  withDom: (callback: PluginElementCallback) => void
+  /** 同步构建时读取以准备首次节点获取；重复读取返回同一代理。 */
+  readonly domProxy: PromiseResultProxy<HTMLElement>
 
   /** 组合构建内部共享身份，不是公开配置。 */
   id?: object
@@ -119,9 +111,20 @@ export function defineInactivePlugin<
     const shadowProps: ShadowProps<PivTag>[] = []
     const plugin: Plugin = { [pluginMarker]: name, shadowProps }
     const addProps: PluginAddProps = (props) => shadowProps.push(props)
-    const withDom = (callback: PluginElementCallback) =>
-      addProps({ domRef: callback })
-    const controller = pluginCore({ pluginOptions, addProps, withDom })
+    let cachedDomProxy: PromiseResultProxy<HTMLElement> | undefined
+    const controller = pluginCore({
+      pluginOptions,
+      addProps,
+      get domProxy() {
+        if (!cachedDomProxy) {
+          const first = Promise.withResolvers<HTMLElement>()
+          // TODO：支持 if 重建或宿主更换后的节点来源。
+          addProps({ domRef: (el) => first.resolve(el) })
+          cachedDomProxy = toPromiseResultProxy(first.promise)
+        }
+        return cachedDomProxy
+      },
+    })
 
     return { plugin, controller }
   }) as InactivePlugin<Options, Members>

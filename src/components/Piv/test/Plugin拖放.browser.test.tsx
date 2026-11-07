@@ -111,7 +111,7 @@ test('两种能力同元素共存，drop 关闭注销并可重新接收外部文
   vi.spyOn(document, 'elementsFromPoint').mockReturnValue([element])
   const drag = createInternalDrag(source, 'item')
   const pointer = new PointerEvent('pointermove', { clientX: 10, clientY: 10 })
-  expect(findInternalDropTarget(drag, pointer)?.target.element).toBe(element)
+  expect(findInternalDropTarget(drag, pointer)?.target.target).toBe(element)
   const transfer = new DataTransfer()
   transfer.items.add(new File(['item'], 'item.txt'))
   const drop = () => {
@@ -156,7 +156,7 @@ test('两种能力同元素共存，drop 关闭注销并可重新接收外部文
   expect(onDrop).toHaveBeenCalledTimes(1)
   enabled.set(true)
   flush()
-  expect(findInternalDropTarget(drag, pointer)?.target.element).toBe(element)
+  expect(findInternalDropTarget(drag, pointer)?.target.target).toBe(element)
   drop()
   expect(onDrop).toHaveBeenCalledTimes(2)
   expect(host.firstElementChild).toBe(element)

@@ -10,7 +10,6 @@ import {
   isPlugin,
   pluginMarker,
   readPlugin,
-  type PluginElementCallback,
 } from './defineInactivePlugin'
 
 test('定义不运行 core；每次配置构建运行一次 core 并返回完整结果', () => {
@@ -43,16 +42,16 @@ test('定义不运行 core；每次配置构建运行一次 core 并返回完整
   })
 })
 
-test('withDom 与 addProps({domRef}) 等效，且接入前不调用 callback', () => {
+test('addProps 提交的 domRef 在节点接入前不调用', () => {
   createRoot((dispose) => {
     const received: HTMLElement[] = []
-    const callback: PluginElementCallback = (el) => {
+    const callback = (el: HTMLElement) => {
       received.push(el)
     }
     const inactive = defineInactivePlugin({
       name: 'dom',
-      pluginCore({ addProps, withDom }) {
-        withDom(callback)
+      pluginCore({ addProps }) {
+        addProps({ domRef: callback })
         addProps({ class: 'sample' })
         return { ready: true }
       },

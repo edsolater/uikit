@@ -4,7 +4,7 @@
  * 【职责边界】拥有一次提升的 Anchor、基础位置、尺寸、提升视觉和完整恢复；
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
  */
-import { createState, onMount, type State } from '@/foundation'
+import { createState, onCleanup, onMount, type State } from '@/foundation'
 import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
 import './topLayer.style'
@@ -162,7 +162,7 @@ function restoreInlineDeclarations(
 /** 插件状态在构建时创建；元素接入后才建立可提升会话。 */
 export const topLayer = defineInactivePlugin({
   name: 'topLayer',
-  pluginCore({ addProps, withDom }): TopLayerController {
+  pluginCore({ addProps, domProxy }): TopLayerController {
     const active = createState(false)
     let session: TopLayerController | undefined
     const controller: TopLayerController = {
@@ -174,16 +174,16 @@ export const topLayer = defineInactivePlugin({
         session?.leave()
       },
     }
-    withDom((el) => {
-      const mounted = createTopLayerController(el, active)
-      session = mounted
-      onMount(() => {
-        mounted.enter()
+    onMount(() => {
+      // TODO：节点迟于清理时可能错位；交由 [Task](../../../../../docs/todo/261107_Task与TaskResult异步操作.md) 管理等待与取消。
+      domProxy.then((el) => {
+        session = createTopLayerController(el, active)
+        session.enter()
       })
-      return () => {
-        if (session === mounted) session = undefined
-        mounted.leave()
-      }
+    })
+    onCleanup(() => {
+      session?.leave()
+      session = undefined
     })
     addProps({ htmlProps: { 'data-plugin': { mergable: 'top-layer' } } })
     return controller

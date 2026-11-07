@@ -3,6 +3,7 @@
  *
  * 【职责边界】登记 Droppable、沿 composed tree 命中指针下的目标，并比较组标识。
  */
+import { toPromiseResultProxy, type PromiseResultProxy } from '@edsolater/fnkit'
 
 export interface DragPoint {
   x: number
@@ -17,7 +18,7 @@ export interface InternalDrag {
 }
 
 export interface InternalDropTarget {
-  element: HTMLElement
+  target: HTMLElement
   id?: object
   enabled(): boolean
   accepts(drag: InternalDrag, event: PointerEvent): boolean
@@ -45,15 +46,24 @@ export function createInternalDrag(
   }
 }
 
+/**
+ * 目标元素就绪后登记，返回可等待的注销操作。
+ * 回调中的 this.target 为已解析的真实元素。
+ */
 export function registerInternalDropTarget(
-  target: InternalDropTarget,
-): () => void {
-  dropTargets.set(target.element, target)
-
-  return () => {
-    if (dropTargets.get(target.element) === target)
-      dropTargets.delete(target.element)
-  }
+  options: Omit<InternalDropTarget, 'target'> & {
+    target: HTMLElement | PromiseLike<HTMLElement>
+  } & ThisType<InternalDropTarget>,
+): PromiseResultProxy<() => void> {
+  return toPromiseResultProxy(
+    Promise.resolve(options.target).then((target) => {
+      const resolvedTarget = { ...options, target }
+      dropTargets.set(target, resolvedTarget)
+      return () => {
+        if (dropTargets.get(target) === resolvedTarget) dropTargets.delete(target)
+      }
+    }),
+  )
 }
 
 export function findInternalDropTarget(

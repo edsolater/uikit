@@ -238,7 +238,7 @@ describe('Piv 生命周期', () => {
     dispose()
   })
 
-  test('能力构建早于节点创建，withDom 与 domRef 在子节点插入前接入，mount 后可见子节点且旁读不重建分支', () => {
+  test('能力构建早于节点创建，Plugin 的 domRef 与直接 domRef 在子节点插入前接入，mount 后可见子节点且旁读不重建分支', () => {
     const host = document.createElement('div')
     const visible = createState(true)
     const incidental = createState('before')
@@ -248,16 +248,18 @@ describe('Piv 生命周期', () => {
     const dispose = render(() => {
       const plugin = defineInactivePlugin({
         name: 'observation',
-        pluginCore({ withDom }) {
+        pluginCore({ addProps }) {
           builds += 1
-          withDom((el) => {
-            val(incidental)
-            observations.push(
-              `element:${el.childElementCount}:${useContext(Context)}`,
-            )
-            onMount(() => {
-              observations.push(`mount:${el.childElementCount}`)
-            })
+          addProps({
+            domRef: (el) => {
+              val(incidental)
+              observations.push(
+                `element:${el.childElementCount}:${useContext(Context)}`,
+              )
+              onMount(() => {
+                observations.push(`mount:${el.childElementCount}`)
+              })
+            },
           })
           return {}
         },
@@ -1035,11 +1037,11 @@ function testPlugin(
 ) {
   return defineInactivePlugin({
     name: 'test',
-    pluginCore({ addProps, withDom }) {
+    pluginCore({ addProps }) {
       for (const declaration of options.declarations ?? [])
         addProps(declaration)
       if (options.onElement)
-        withDom((el) => options.onElement?.({ element: el }))
+        addProps({ domRef: (el) => options.onElement?.({ element: el }) })
       return {}
     },
   })()
