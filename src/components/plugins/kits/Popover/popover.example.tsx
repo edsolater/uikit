@@ -14,7 +14,7 @@ import { popover } from './popover'
  */
 export function PopoverExample() {
   const { popoverTrigger, popoverBody } = popover({
-    popoverBody: { anchorPosition: 'top', triggerMargin: '4px' },
+    popoverBody: { $anchorPosition: 'top', $anchorGap: 'md' },
   })
   return (
     <Card class="example-card">

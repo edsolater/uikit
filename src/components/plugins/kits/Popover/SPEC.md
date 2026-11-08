@@ -11,8 +11,8 @@ function Example() {
   const [initialFocus, receiveInitialFocus] = createDomRef<HTMLButtonElement>()
   const { popoverTrigger, popoverBody } = popover({
     popoverBody: {
-      anchorPosition: 'top',
-      triggerMargin: '4px',
+      $anchorPosition: 'top',
+      $anchorGap: 'md',
       autoFocus: initialFocus,
     },
   })
@@ -38,13 +38,15 @@ function Example() {
 | 配置位置 | 字段 | 行为与默认值 |
 | --- | --- | --- |
 | `popoverTrigger` | `triggerAction` | `'toggle'`／`'show'`／`'hide'`，默认 `'toggle'`；键盘使用实际按钮的原生行为 |
-| `popoverBody` | `anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'bottom'`；按来源更新定位 |
-| `popoverBody` | `triggerMargin` | `Source<string \| undefined>`，默认 `'4px'`；锚点边缘到实际 body 边缘的 CSS 长度 |
+| `popoverBody` | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'bottom'`；按来源更新定位 |
+| `popoverBody` | `$anchorGap` | `Source<'sm' \| 'md' \| 'lg' \| undefined>`，默认 `'md'`；指定锚点与主体的间距档位，实际距离由 `popover.style.ts` 映射 |
 | `popoverBody` | `popover` | `'auto'`／`'hint'`／`'manual'`，默认 `'auto'`；外部点击、Escape 等关闭行为沿对应原生模式 |
 | `popoverBody` | `defaultOpen` | `Source<boolean \| undefined>`，默认 false；只用于首次挂载的初始化判断，不随来源后续变化持续开关 |
 | `popoverBody` | `autoFocus` | `Partial<HTMLElement>`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素 |
 
 `defaultOpen` 读取的是 Source 的完成值，不能把 State／Promise 对象本身的真值当成 true。位置与间距是持续来源，默认打开是一次初始化，两者用途不同。
+
+`$` 前缀表示调用者明确指定系统选择，不表示 CSS 变量。间距只使用 `sm`／`md`／`lg` 关键字，调用者无需指定像素，也不使用 `var()`。
 
 # 初始焦点与原生恢复
 

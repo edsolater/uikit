@@ -250,7 +250,7 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
 
 test('横向浮层在右边缘翻到左侧', async () => {
   dispose = render(() => {
-    const { popoverTrigger, popoverBody } = popover({ popoverBody: { anchorPosition: 'right' } })
+    const { popoverTrigger, popoverBody } = popover({ popoverBody: { $anchorPosition: 'right' } })
     return <>
       <Button is={popoverTrigger} style={{ position: 'fixed', right: '8px', top: '180px' }}>边缘目标</Button>
       <Card is={popoverBody}>横向补充说明</Card>

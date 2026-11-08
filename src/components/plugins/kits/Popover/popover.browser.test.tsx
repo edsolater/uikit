@@ -11,7 +11,7 @@ import { Card } from '@/components/kits/Card/Card'
 import { cssRoot, rules, whenPopoverFlip } from '@/style-system'
 import { createDomRef } from '@/hooks/createDomRef'
 import { popover } from './popover'
-import type { AnchorPosition } from './popover'
+import type { AnchorGap, AnchorPosition } from './popover'
 
 let dispose: (() => void) | undefined
 beforeEach(() => {
@@ -82,25 +82,29 @@ test('不同组合不串联，取消打开保持关闭', async () => {
 test('动态方向和间距读取当前值并在空值时回退', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   const position = createState<AnchorPosition | undefined>(undefined)
-  const margin = createState<string | undefined>(undefined)
+  const gap = createState<AnchorGap | undefined>(undefined)
   dispose = render(() => {
     const { popoverTrigger, popoverBody } = popover({
-      popoverBody: { anchorPosition: position, triggerMargin: margin },
+      popoverBody: { $anchorPosition: position, $anchorGap: gap },
     })
     return <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => body.style.positionArea).toBe('bottom')
-  await expect.poll(() => body.style.margin).toBe('4px')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
   position.set('left')
-  margin.set('12px')
+  gap.set('lg')
   await expect.poll(() => body.style.positionArea).toBe('left')
-  await expect.poll(() => body.style.margin).toBe('12px')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('8px')
   await expect.poll(() => getComputedStyle(body).positionTryFallbacks).toBe('flip-inline')
+  gap.set('sm')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('2px')
+  gap.set('md')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
   position.set(undefined)
-  margin.set(undefined)
+  gap.set(undefined)
   await expect.poll(() => body.style.positionArea).toBe('bottom')
-  await expect.poll(() => body.style.margin).toBe('4px')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
 })
 
 test('触发节点移动时，浮层跟随锚点', async () => {
@@ -181,7 +185,7 @@ test('翻向条件作用于正文后代和伪元素，不作用于容器自身',
   const left = createState(250)
   try {
     dispose = render(() => {
-      const { popoverTrigger, popoverBody } = popover({ popoverBody: { anchorPosition: position } })
+      const { popoverTrigger, popoverBody } = popover({ popoverBody: { $anchorPosition: position } })
       return <>
         <Button is={popoverTrigger} style={{ position: 'fixed', get top() { return `${val(top)}px` }, get left() { return `${val(left)}px` } }}>目标</Button>
         <Card is={popoverBody} class="FlipBody" style={{ width: '120px' }}><span class="FlipChild">正文</span></Card>

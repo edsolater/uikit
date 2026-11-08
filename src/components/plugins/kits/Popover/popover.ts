@@ -21,6 +21,7 @@ import type { PluginCoreContext } from '@/components/plugins/tools/defineInactiv
 import './popover.style'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
+export type AnchorGap = 'sm' | 'md' | 'lg'
 export type PopoverToggleEvent = Event & {
   oldState: 'open' | 'closed'
   newState: 'open' | 'closed'
@@ -32,9 +33,9 @@ export interface PopoverTriggerOptions {
 
 export interface PopoverBodyOptions {
   /** 主体相对锚点的方向，默认 bottom。 */
-  anchorPosition?: Source<AnchorPosition | undefined>
-  /** 锚点边缘到主体边缘的 CSS 长度，默认 4px。 */
-  triggerMargin?: Source<string | undefined>
+  $anchorPosition?: Source<AnchorPosition | undefined>
+  /** 指定锚点与主体的间距档位，默认 md；实际距离由样式定义。 */
+  $anchorGap?: Source<AnchorGap | undefined>
   popover?: 'auto' | 'hint' | 'manual'
   /** 首个完成的值决定是否默认打开一次；后续变化不重新初始化。 */
   defaultOpen?: Source<boolean | undefined>
@@ -171,11 +172,8 @@ function popoverBodyCore({
   group.bodyTarget = domProxy
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
-  const position = stateView(pluginOptions.anchorPosition).map(
+  const position = stateView(pluginOptions.$anchorPosition).map(
     (value) => value ?? 'bottom',
-  )
-  const margin = stateView(pluginOptions.triggerMargin).map(
-    (value) => value ?? '4px',
   )
   // TODO：慢节点或作用域退出后关联可能晚执行，由 [Task](../../../../../docs/todo/261107_Task与TaskResult异步操作.md) 接管就绪与取消。
   Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
@@ -186,12 +184,12 @@ function popoverBodyCore({
     style: {
       'position-anchor': group.anchor,
       'position-area': position,
-      'margin': margin,
     },
     htmlProps: {
       'popover': pluginOptions.popover ?? 'auto',
       'data-plugin': { mergable: 'popover-body' },
       'data-placement': position,
+      'data-anchor-gap': pluginOptions.$anchorGap,
     },
     on: {
       beforetoggle: {

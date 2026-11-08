@@ -6,7 +6,7 @@
 
 **用户本轮已明确授权先实施 UIKit 的 Popover，Tooltip 能力重构留待后续。** 用户随后进一步明确：Popover 只承担功能；样式只服务浮层定位、锚点关联和显隐，不承担内容布局或绘制。这条新边界覆盖此前把背景、箭头和材质归给 Plugin 的方案，不是将这些工作另列为 Plugin 未完成项。
 
-本次文档修订记录新认可的打开／关闭过程生命周期，不修改源码。当前原生状态回调与后文尚未实现的 Start／End／Progress／Cancel 目标分别说明；Popover 讨论和相应实现尚未结束前，不转入 Tooltip 施工。原有三篇 TODO 全部保留，不以生命周期小节替代 Task 机制。
+打开／关闭过程生命周期目前只记录方案，尚未实施。当前原生状态回调与后文尚未实现的 Start／End／Progress／Cancel 目标分别说明；Popover 讨论和相应实现尚未结束前，不转入 Tooltip 施工。原有三篇 TODO 全部保留，不以生命周期小节替代 Task 机制。
 
 | 阶段 | 当前状态与交付 |
 | --- | --- |
@@ -42,8 +42,8 @@
 function PopoverExample() {
   const { popoverTrigger, popoverBody } = popover({
     popoverBody: {
-      anchorPosition: 'top',
-      triggerMargin: '4px',
+      $anchorPosition: 'top',
+      $anchorGap: 'md',
     },
   })
 
@@ -64,7 +64,7 @@ function PopoverExample() {
 
 Popover 是成对能力，不是负责生成 Button、标题或正文的内容组件。Button／Card／Piv 等实际节点保持界面层次；Card 或调用者的 `.style.ts` 负责内容布局和外观。Plugin 只让这个实际 body 成为可定位、可显隐的原生浮层，不生成背板或新的外观组件。`popover` 由 `defineInactivePlugins` 定义，调用一次在内部配对两端；用户不传共享 id，也不获取一个全组 Controller。
 
-以下代码块记录当前已实现的 API。现有 `onOpen`／`onClose` 是原生 toggle 后的状态通知，不是 CSS 过程开始或结束；目标生命周期在下一小节单独定义。`Source`、`StateView` 和 `PivProps` 使用现有 UIKit 类型，不另造同义类型。
+以下代码块记录当前已实现的 API。现有 `onOpen`／`onClose` 是原生 toggle 后的状态通知，不是 CSS 过程开始或结束；目标生命周期在下一小节单独定义。`Source`、`State` 和 `PivProps` 使用现有 UIKit 类型，不另造同义类型。
 
 ```ts
 type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -72,8 +72,8 @@ type PopoverTriggerOptions = {
   triggerAction?: 'toggle' | 'show' | 'hide'
 }
 type PopoverBodyOptions = {
-  anchorPosition?: Source<AnchorPosition | undefined>
-  triggerMargin?: Source<string | undefined>
+  $anchorPosition?: Source<AnchorPosition | undefined>
+  $anchorGap?: Source<'sm' | 'md' | 'lg' | undefined>
   popover?: 'auto' | 'hint' | 'manual'
   defaultOpen?: Source<boolean | undefined>
   autoFocus?: Partial<HTMLElement>
@@ -92,7 +92,7 @@ type TooltipOptions = {
   triggerMargin?: Source<string | undefined>
 }
 type PopoverNodeController = {
-  isOpen: StateView<boolean>
+  isOpen: State<boolean>
   showPopover(): void
   hidePopover(): void
   togglePopover(options?: { force?: boolean }): void
@@ -105,8 +105,8 @@ type PopoverNodeController = {
 | --- | --- |
 | `popover(...)` | 返回 `{ popoverTrigger, popoverBody }`，两项各为 PluginResult；每次调用的两端独立于其他组 |
 | `popoverTrigger` 配置 | 只表达触发节点特性；默认点击切换，保留 show／hide／toggle 动作选择。键盘使用实际按钮语义，不能再加一套导致双触发的处理 |
-| `popoverBody.anchorPosition` | `'top' \| 'right' \| 'bottom' \| 'left'`，默认 bottom；这是 body 定位特性，不放到 trigger 或工具层 |
-| `popoverBody.triggerMargin` | CSS 长度，默认 4px；表示锚点边缘到实际 body 边缘的功能定位间距，不包含箭头绘制语义 |
+| `popoverBody.$anchorPosition` | `'top' \| 'right' \| 'bottom' \| 'left'`，默认 bottom；这是 body 定位特性，不放到 trigger 或工具层 |
+| `popoverBody.$anchorGap` | `'sm' \| 'md' \| 'lg'`，默认 md；指定锚点到实际 body 的间距档位，实际距离由 `popover.style.ts` 映射，不包含箭头绘制语义 |
 | `popoverBody.popover`、`defaultOpen` | 原生模式默认 auto；defaultOpen 是默认 false 的 Source，只对首次挂载初始化读取完成值一次，后续来源变化不持续控制显隐，不增加缺端队列或重试策略 |
 | `popoverBody.autoFocus` | 接受实际 DOM 或既有 createDomRef 的 Partial<HTMLElement> 引用；目标须在 body 范围内且可聚焦，省略时选择 body 内首个可聚焦元素；不接组件 Controller 或 Component 类型 |
 | body 的事件配置 | 原生前／后事件各先调用通用 Toggle 回调，再调用同方向的 Open／Close 专用回调；先按原生事实写入打开状态再分发后置回调，取消打开不能报告成功 |
@@ -252,7 +252,7 @@ Start／End 使用 `onOpenStart`、`onOpenEnd`、`onCloseStart`、`onCloseEnd`�
 | 原生 Popover API | top layer、显隐、外部点击／Escape 和原生事件 | [Chrome Popover](https://developer.chrome.com/blog/introducing-popover-api)；不用另一套 Portal／render 管理器 |
 | `anchor-name`、`position-anchor` | 将本组 body 关联实际 trigger；不同组的名称不串联 | [Chrome Anchor Positioning](https://developer.chrome.com/docs/css-ui/anchor-positioning-api) |
 | `position-area`、`position-try-fallbacks` | 实际 body 的四向位置与空间不足翻向 | 浏览器负责定位；不增加 scroll／resize 测量循环，也不接管宿主内容布局 |
-| 定位所需的 inset／margin | 解除原生默认居中约束，表达 triggerMargin | 只为位置与锚点到 body 的间距服务，不扩成通用布局样式 |
+| 定位所需的 inset／margin | 解除原生默认居中约束，由 `.style.ts` 映射 `$anchorGap` 档位 | 只为位置与锚点到 body 的间距服务，不扩成通用布局样式 |
 | 原生 position-visibility | 处理锚点滚出其滚动容器时的显示 | 执行时验证目标 Chrome 实际支持的语法，不照抄过时拼写，不做生产兼容分支 |
 
 功能验证针对实际宿主：原生打开／关闭、滚动跟随、四向定位、空间不足翻向、间距和锚点离开可见区域后的显示。沿现有浏览器测试取得证据；不再把箭头连体、材质绘制或此前的最小箭头 CSS 实验作为 Plugin 源码与交付闸门。
@@ -336,7 +336,7 @@ popover = defineInactivePlugins({ popoverTrigger: 触发端core, popoverBody: �
 
 1. 依据本次 Popover 授权核对前述实际清单与基础 API；保护已有 Git 修改，不自动暂存或回退。约束检查者先交付适用约束，执行者必须遵从 [Plan 撰写](../how-to-write-plan.md) 与 [Plan 落地](../how-to-apply-plan.md) 的实际要求，不能只记录已读。
 2. 在独立审查通过后完成阶段 A 的 `popover`、两端 core、完整 Controller、示例、导出及调用迁移，退出旧 Popover 内容组件；复用原生属性和事件，验证点击／键盘只触发一次、原生状态、取消打开、焦点与 defaultOpen。没有新的 Tooltip 施工许可时，不迁其产品组装链。
-3. 实现仅服务功能的定位样式，并在实际宿主上验证滚动、翻向、triggerMargin 与锚点可见性。背景、内容布局、阴影和箭头绘制不进入 Plugin，也不以额外绘制实验作为功能实施前置。
+3. 实现仅服务功能的定位样式，并在实际宿主上验证滚动、翻向、`$anchorGap` 与锚点可见性。`$` 表示明确指定系统选择，间距只接受 sm／md／lg 关键字，不要求调用者提供像素。背景、内容布局、阴影和箭头绘制不进入 Plugin，也不以额外绘制实验作为功能实施前置。
 4. 交付阶段 A 的协议、消费迁移和功能验证，注明旧 Tooltip 仍依赖的文件。界面节点和样式归属须按现有 KitMarker、真实依赖与样式责任检查，不能只凭类型通过。
 5. 用户随后允许阶段 B 时，迁移 Tooltip 的 body／显隐／定位，保留 hover、focus、150ms 关闭、跨区域阅读和动态内容；接管全部旧共享消费后删除旧 Surface、Controller、Geometry／Paint、旧出口和余下目录。
 6. 完成各阶段 UIKit 验收后，在获得外部项目授权时适配并验证真实 RuleDetail。任一部分未完成均如实标出，不将 UIKit 通过当成最终页完成。
