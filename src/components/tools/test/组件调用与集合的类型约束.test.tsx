@@ -7,11 +7,12 @@
  */
 import { expectTypeOf, test } from 'vitest'
 import type { State } from '@/foundation'
+import { popover } from '@/components/plugins/kits/Popover/popover'
 import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
 import {
-  Article, Board, Card, Field, Loop, Table, Piv,
+  Article, Board, Button, Card, Field, Loop, Table, Piv,
   type ArticleController, type ArticleProps,
-  type BoardController, type CardController, type PopoverController,
+  type BoardController, type CardController,
 } from '@/components'
 
 /**
@@ -104,11 +105,11 @@ function verifyGenericCalls() {
   Card.controllers.props.htmlProps.set({ type: 'submit' })
   // @ts-expect-error 插件也绑定原生节点类型，只通过精确实例 ref 操作。
   Board.controllers.props.plugin.set(() => {})
-  const popover = (_controller: PopoverController) => {
-    // @ts-expect-error 挂载时初始打开配置只能通过 Props 提供。
-    _controller.props.defaultOpen.set(true)
-  }
-  void [board, card, field, loop, table, article, ownProps, popover]
+  const { popoverTrigger, popoverBody } = popover({ popoverBody: { defaultOpen: true } })
+  const floating = <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>正文</Card></>
+  popoverBody.controller.togglePopover({ force: true })
+
+  void [board, card, field, loop, table, article, ownProps, floating]
 }
 void verifyGenericCalls
 

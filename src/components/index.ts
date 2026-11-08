@@ -35,10 +35,10 @@ export * from './kits/Text/Text'
 export * from './kits/Label/Label'
 export * from './kits/Help/Help'
 export * from './kits/Heading/Heading'
-export * from './kits/Popover/Popover'
 export * from './kits/Popover/createPopoverVisibilityController'
 export * from './kits/Popover/PopoverSurface'
 export * from './kits/Popover/PopoverSurface.style'
+export { popover, type AnchorPosition, type PopoverTriggerOptions, type PopoverBodyOptions, type PopoverNodeController } from './plugins/kits/Popover/popover'
 export * from './kits/Card/Card'
 export {
   Board,

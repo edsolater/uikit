@@ -54,7 +54,7 @@ import {
 } from '@/style-system/pieces/tokens/color/palette'
 import '../../../components/kits/Input/Input.style'
 import '@/components/kits/Popover/PopoverSurface.style'
-import '@/components/kits/Popover/Popover.style'
+import '@/components/plugins/kits/Popover/popover.style'
 
 let dispose: (() => void) | undefined
 const handles: RulesHandle[] = []
@@ -1034,7 +1034,7 @@ describe('Button styles', () => {
     const input = document.body.appendChild(document.createElement('input'))
     input.className = 'Input'
     const popover = document.body.appendChild(document.createElement('div'))
-    popover.className = 'Popover'
+    popover.dataset.plugin = 'popover-body'
     mountButtonStyles()
     const lightShadows: string[] = []
     for (const theme of ['light', 'dark']) {

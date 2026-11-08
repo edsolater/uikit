@@ -5,7 +5,9 @@ import { createState, render, val, type JSXElement } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { Piv } from '../../../Piv/Piv'
 import { tooltip, type TooltipController } from './tooltip'
-import { Popover } from '@/components/kits/Popover/Popover'
+import { popover } from '@/components/plugins/kits/Popover/popover'
+import { Button } from '@/components/kits/Button/Button'
+import { Card } from '@/components/kits/Card/Card'
 import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
 import {
   createPopoverVisibilityController,
@@ -53,12 +55,11 @@ test('默认打开反映原生状态，取消打开不伪报成功，强制切�
       },
     })
     controller = current
+    const { popoverTrigger, popoverBody } = popover({ popoverBody: { defaultOpen: true } })
     return (
       <>
-        <Popover defaultOpen trigger="默认打开"
-          triggerProps={{ disabled: '', 'aria-busy': 'false' }}>
-          默认正文
-        </Popover>
+        <Button is={popoverTrigger} disabled htmlProps={{ 'aria-busy': 'false' }}>默认打开</Button>
+        <Card is={popoverBody}>默认正文</Card>
         <Piv as="button" domRef={bindings.triggerDomRef}>控制目标</Piv>
         <PopoverSurface popover="manual" domRef={bindings.popoverDomRef}>
           受控正文
@@ -66,13 +67,13 @@ test('默认打开反映原生状态，取消打开不伪报成功，强制切�
       </>
     )
   }, host)
-  const defaultPopover = host.querySelector<HTMLElement>('.Popover')!
-  const defaultTrigger = defaultPopover.querySelector('button')!
+  const defaultPopover = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
+  const defaultTrigger = host.querySelector<HTMLButtonElement>('button')!
   expect(defaultTrigger.disabled).toBe(true)
   // aria-busy缺省与false都表示当前未忙碌。
   expect(defaultTrigger.getAttribute('aria-busy') ?? 'false').toBe('false')
   await expect
-    .poll(() => defaultPopover.querySelector('.surface')!.matches(':popover-open'))
+    .poll(() => defaultPopover.matches(':popover-open'))
     .toBe(true)
   await expect
     .poll(() => defaultTrigger.getAttribute('aria-expanded'))
@@ -84,7 +85,7 @@ test('默认打开反映原生状态，取消打开不伪报成功，强制切�
   cancel = false
   controller.togglePopover()
   expect(
-    host.querySelectorAll('.PopoverSurface')[1].matches(':popover-open'),
+    host.querySelector('.PopoverSurface')!.matches(':popover-open'),
   ).toBe(true)
   await expect.poll(() => val(controller.isOpen!)).toBe(true)
   controller.togglePopover(false)
@@ -222,121 +223,62 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
 })
 
 test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作', async () => {
-  dispose = render(
-    () => (
-      <>
-        <Popover trigger="打开补充内容" title="标题"
-          triggerProps={{ 'aria-busy': 'true' }}>
-          原浮层正文
-        </Popover>
-        <Piv as="button" is={tooltip({ content: '简短提示' })}>
-          提示目标
-        </Piv>
-      </>
-    ),
-    host,
-  )
-  const trigger = host.querySelector<HTMLButtonElement>('.Popover .trigger')!
-  expect(trigger.getAttribute('aria-busy')).toBe('true')
+  dispose = render(() => {
+    const { popoverTrigger, popoverBody } = popover({})
+    return <>
+      <Button is={popoverTrigger} htmlProps={{ 'data-purpose': '补充' }}>打开补充内容</Button>
+      <Card is={popoverBody}><h2>标题</h2>原浮层正文</Card>
+      <Piv as="button" is={tooltip({ content: '简短提示' })}>提示目标</Piv>
+    </>
+  }, host)
+  const trigger = [...host.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '打开补充内容')!
+  const original = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
+  await expect.poll(() => trigger.popoverTargetElement).toBe(original)
+  expect(trigger.getAttribute('data-purpose')).toBe('补充')
   expect(trigger.disabled).toBe(false)
   await userEvent.click(trigger)
-  const original = host.querySelector<HTMLElement>('.Popover .surface')!
   await expect.poll(() => original.matches(':popover-open')).toBe(true)
   expect(trigger.getAttribute('aria-expanded')).toBe('true')
   expect(original.textContent).toBe('标题原浮层正文')
-  const originalPaint = original.querySelector<HTMLElement>('.PopoverPaint')!
-  const background = getComputedStyle(originalPaint).backgroundImage
-  expect(background).toContain('linear-gradient')
-  await userEvent.hover(
-    host.querySelector<HTMLElement>('button:not(.trigger)')!,
-  )
+  await userEvent.hover([...host.querySelectorAll<HTMLElement>('button')].find((button) => button.textContent === '提示目标')!)
   const hint = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => hint.matches(':popover-open')).toBe(true)
-  expect(
-    getComputedStyle(hint.querySelector('.PopoverPaint')!).backgroundColor,
-  ).toBe('rgb(30, 41, 59)')
-  expect(getComputedStyle(originalPaint).backgroundImage).toBe(background)
+  expect(getComputedStyle(hint.querySelector('.PopoverPaint')!).backgroundColor).toBe('rgb(30, 41, 59)')
   await userEvent.click(trigger)
   await expect.poll(() => original.matches(':popover-open')).toBe(false)
 })
 
-test('横向浮层在右边缘翻到左侧，箭头仍指向目标', async () => {
-  dispose = render(
-    () => (
-      <Popover
-        right
-        trigger="边缘目标"
-        triggerStyle={{ position: 'fixed', right: '8px', top: '180px' }}
-      >
-        横向补充说明
-      </Popover>
-    ),
-    host,
-  )
+test('横向浮层在右边缘翻到左侧', async () => {
+  dispose = render(() => {
+    const { popoverTrigger, popoverBody } = popover({ popoverBody: { anchorPosition: 'right' } })
+    return <>
+      <Button is={popoverTrigger} style={{ position: 'fixed', right: '8px', top: '180px' }}>边缘目标</Button>
+      <Card is={popoverBody}>横向补充说明</Card>
+    </>
+  }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   await userEvent.click(trigger)
-  const surface = host.querySelector<HTMLElement>('.surface')!
-  await expect
-    .poll(
-      () =>
-        surface.getBoundingClientRect().right <
-        trigger.getBoundingClientRect().left,
-    )
-    .toBe(true)
-  const tip = readOutlineTip(surface)
-  expect(
-    Math.abs(
-      tip.x -
-        surface.querySelector('.PopoverPaint')!.getBoundingClientRect().right,
-    ),
-  ).toBeLessThan(2)
-  expect(
-    Math.abs(
-      tip.y - (trigger.getBoundingClientRect().top + trigger.offsetHeight / 2),
-    ),
-  ).toBeLessThan(2)
+  const surface = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
+  await expect.poll(() => surface.getBoundingClientRect().right < trigger.getBoundingClientRect().left).toBe(true)
 })
 
-test('边缘目标移动后完整轮廓的尖端跟随，绘制层保留同主体命中', async () => {
-  const offset = createState(8)
-  dispose = render(
-    () => (
-      <Popover
-        trigger="目标"
-        triggerStyle={{
-          position: 'fixed',
-          left: `${val(offset)}px`,
-          top: '140px',
-        }}
-      >
-        渐变背景、圆角和箭头属于同一条闭合轮廓。
-      </Popover>
-    ),
-    host,
-  )
+test('目标移动后浮层跟随，主体保留命中', async () => {
+  const offset = createState(200)
+  dispose = render(() => {
+    const { popoverTrigger, popoverBody } = popover({})
+    return <>
+      <Button is={popoverTrigger} style={{ position: 'fixed', get left() { return `${val(offset)}px` }, top: '140px' }}>目标</Button>
+      <Card is={popoverBody} style={{ width: '120px' }}>浮层内容</Card>
+    </>
+  }, host)
   const target = host.querySelector<HTMLButtonElement>('button')!
   await userEvent.click(target)
-  const surface = host.querySelector<HTMLElement>('.surface')!
-  const paint = surface.querySelector<HTMLElement>('.PopoverPaint')!
-  const readTargetCenter = () =>
-    target.getBoundingClientRect().left + target.offsetWidth / 2
-  await expect
-    .poll(() => Math.abs(readOutlineTip(surface).x - readTargetCenter()))
-    .toBeLessThan(2)
-  const before = readOutlineTip(surface).x
-  offset.set(60)
-  await expect
-    .poll(() => Math.abs(readOutlineTip(surface).x - readTargetCenter()))
-    .toBeLessThan(2)
-  const tip = readOutlineTip(surface)
-  expect(tip.x).toBeGreaterThan(before + 40)
-  const midpoint = {
-    x: tip.x,
-    y: (tip.y + surface.getBoundingClientRect().top) / 2,
-  }
-  expect(document.elementFromPoint(midpoint.x, midpoint.y)).toBe(paint)
-  expect(getComputedStyle(paint).getPropertyValue('border-shape')).toContain(
-    'curve to',
-  )
-  expect(getComputedStyle(paint).backgroundImage).toContain('linear-gradient')
+  const surface = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
+  await expect.poll(() => surface.matches(':popover-open')).toBe(true)
+  const before = surface.getBoundingClientRect().left
+  offset.set(300)
+  await expect.poll(() => target.getBoundingClientRect().left).toBe(300)
+  await expect.poll(() => surface.getBoundingClientRect().left).toBeGreaterThan(before + 40)
+  const bounds = surface.getBoundingClientRect()
+  expect(surface.contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2))).toBe(true)
 })

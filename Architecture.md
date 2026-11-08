@@ -11,8 +11,8 @@
 Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System 命名](src/style-system/doc/样式系统命名.md)。
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、domRef 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
-- `src/components/kits`：可供组合的界面构件，包括基础承载与完整用途组件。Popover 的共享浮层、显隐控制与触发组合共同归属 `kits/Popover`。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
-- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。`plugins/tools` 负责 Plugin 定义入口；每次在组件内调用 inactivePlugin 只构建一次，返回 `{ plugin, controller }`，`plugin` 在创建前提交已准备声明，`controller` 直接使用。拖放组合能力、draggable、droppable 及其示例归 `plugins/kits/dragAndDrop`。
+- `src/components/kits`：可供组合的界面构件，包括基础承载与完整用途组件。`kits/Popover` 当前只保留旧 Tooltip 仍需的 Surface、显隐工具和材料，不再提供 Popover 内容组件。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
+- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。`plugins/tools` 负责 Plugin 定义入口；每次在组件内调用 inactivePlugin 只构建一次，返回 `{ plugin, controller }`，`plugin` 在创建前提交已准备声明，`controller` 直接使用。拖放组合能力、draggable、droppable 及其示例归 `plugins/kits/dragAndDrop`；成对浮层能力 `popover` 归 `plugins/kits/Popover`，只处理显隐、关联、状态和功能定位。
 - `src/components/tools`：服务构件定义、控制与检查的工具，包括 `kit` 创建入口、Props 干预、Controller 登记与 `KitMarker`。`tools/KitMarker` 为 Kit 构件及使用方组合提供透明边界、用途说明和手动结构查看，不改变原主体或自动挂载开关。
 - `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
 - `src/hooks`：使用 Foundation 的派生组合与浏览器协作能力。领域入口和内部阅读路线见 [hooks SPEC](src/hooks/SPEC.md)。
@@ -58,11 +58,13 @@ Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p�
 
 ## Popover 控制与接入
 
-`src/components/kits/Popover` 拥有通用浮层实体 `PopoverSurface` 与 `createPopoverVisibilityController`。Surface统一原生popover、可选外部锚点、四向定位与完整border-shape轮廓。Geometry通过锚点inset与容器尺寸把目标中心转换为局部坐标，Paint一次绘制圆角主体、箭头、背景、边框和阴影。回退查询翻向，边缘处箭头基点避开圆角并斜指目标；绘制层不撑内容布局，命中沿同一Surface接入阅读交互。无锚点时显示圆角矩形。
+`src/components/plugins/kits/Popover` 提供组合能力 `popover`。一次调用返回 `popoverTrigger`、`popoverBody` 两份能力结果，各自的 `plugin` 交给实际 Button／Card 等宿主，各自的 `controller` 直接使用。内部身份关联本组两端，打开状态以原生 toggle 为事实来源；默认打开、原生事件和焦点操作属于这项功能，不通过旧 Popover 组件 ref 或 `Controller.props` 接入。
 
-按钮组合 `kits/Popover/Popover.tsx` 复用Button触发动作，拥有标题与正文编排。tooltip插件负责简短辅助信息的悬停／焦点／Escape、延迟关闭与描述关联，不依赖带触发入口的 Popover 组合。两者消费同一Surface及其公开材料Token，tooltip仅在当前浮层的局部类地址选择紧凑暗色材料。`kits/Help` 声明即呈现独立帮助入口，通过自己的 tooltip 属性使用同一插件；Label 判断 tooltip 非空时才在标题末尾组合 Help，tooltipTrigger 传给 Help.trigger 替换问号内的显示内容。字符串、数字0、组件与JSX模板持续更新，空值或空字符串不创建浮层。
+`popover.style.ts` 只提供锚定、定位、翻向、间距和锚点可见性等功能规则；实际 Card 或业务 `.style.ts` 负责内容布局和绘制。Plugin 不生成背板、箭头或内容容器，也没有额外 KitMarker；组件结构查看展示实际 Button／Card 的身份与边界。
 
-Controller返回 `[controller, controllerBindings]`：前者拥有身份、只读isOpen及显示操作，后者建立并释放触发目标与浮层的DOM连接。isOpen由原生浮层的实际打开状态更新，取消beforetoggle不会被报告为成功打开。
+旧 Tooltip 尚未迁移，仍使用 `kits/Popover/PopoverSurface`、其材料样式和 `createPopoverVisibilityController`。该旧显隐工具返回 `[controller, controllerBindings]`，分别提供状态／操作和 DOM 接入；这不是新 `popover` 的返回结构。旧 Surface 仍包含 Geometry／Paint，它们的暂留用于现有 Tooltip，不表示新 Plugin 接管这些绘制职责。
+
+tooltip 插件继续负责简短辅助信息的悬停／焦点／Escape、延迟关闭与描述关联。`kits/Help` 声明即呈现独立帮助入口，通过自己的 tooltip 属性使用同一插件；Label 判断 tooltip 非空时才在标题末尾组合 Help，tooltipTrigger 传给 Help.trigger 替换问号内的显示内容。字符串、数字0、组件与JSX模板持续更新，空值或空字符串不创建浮层。
 
 ## kit 组件控制与样式
 
@@ -72,7 +74,7 @@ Text、Label 与 Help 通过 kit 创建，分别公开自身 Controller 和 .con
 
 公开的 kits 组件与 PopoverSurface 已统一通过 kit 创建；Piv、Dode、KitMarker、StructureViewOverlay 及定位开关属于渲染或控制基础设施，不递归接入。定位开关继续使用 StructureViewControl 跳过自身标注。组件的 .prop.ts 描述原 Props，按继承关系复用拥有者字段；Card 直接复用 Board 的字段表与承载 renderer，两者分别拥有 kit 身份与实例集合。InputValidity 的字段描述与原有效性能力同归属，Input 样式由自身 Style System 定义承接。
 
-Board、Card、Loop、Table 保留泛型调用及精确实例 ref；Article 固定原生 article，保留自身精确实例 ref。TypeScript 包装丢失的调用关联只在组件定义处作一次类型连接，不增加运行包装。异构实例的 `.controllers.props` 集合只公开共同安全字段：Board/Card 集合不暴露 Tag 相关节点与插件输入，Loop 集合不暴露 each，Table 集合不暴露 data/keys/renderParts；这些字段通过精确实例 ref 操作；Loop.children 与 Field.children 仅由 Props 提供构建工厂，不属于 Controller。Article 属于[语义组件](docs/guide/语义组件.md)，仅提供独立正文身份与首尾块外边距裁剪，不提供容器皮肤、as 或 Carrier 透传。核心直接使用固定 as 的 Piv，字段表移除继承的 as。普通阅读卡片用 `<Card><Article>正文</Article></Card>` 表达视觉容器承载独立正文；正文内的资料卡片也可反向组合，含义判断见[组件嵌套](docs/guide/组件嵌套.md)。两个节点各自拥有 Marker、样式和实例引用；Card 不提供 is 内容模式。PopoverController 顶层公开 PopoverVisibilityController 的身份、isOpen 与浮层操作，`.props` 提供通用输入干预；两种机制不因字段同名而自动关联。Input 顶层公开最终 invalid 状态，输入干预继续经过原有效性规则。
+Board、Card、Loop、Table 保留泛型调用及精确实例 ref；Article 固定原生 article，保留自身精确实例 ref。TypeScript 包装丢失的调用关联只在组件定义处作一次类型连接，不增加运行包装。异构实例的 `.controllers.props` 集合只公开共同安全字段：Board/Card 集合不暴露 Tag 相关节点与插件输入，Loop 集合不暴露 each，Table 集合不暴露 data/keys/renderParts；这些字段通过精确实例 ref 操作；Loop.children 与 Field.children 仅由 Props 提供构建工厂，不属于 Controller。Article 属于[语义组件](docs/guide/语义组件.md)，仅提供独立正文身份与首尾块外边距裁剪，不提供容器皮肤、as 或 Carrier 透传。核心直接使用固定 as 的 Piv，字段表移除继承的 as。普通阅读卡片用 `<Card><Article>正文</Article></Card>` 表达视觉容器承载独立正文；正文内的资料卡片也可反向组合，含义判断见[组件嵌套](docs/guide/组件嵌套.md)。两个节点各自拥有 Marker、样式和实例引用；Card 不提供 is 内容模式。Popover 的两个角色从能力结果取得 `PopoverNodeController`，不属于 kit 组件的 `.props` 输入干预协议。Input 顶层公开最终 invalid 状态，输入干预继续经过原有效性规则。
 
 夹层方案状态见[Button 实例与整体控制入口](docs/plans/261030_Button实例与整体控制入口.md)。统一 ShadowProps 与创建前 Plugin 展开已由 [is 声明解析与 Plugin 调用协议统一](docs/plans/261105_is声明解析与Plugin调用协议统一.md) 落实，Piv 的结构声明与字段声明使用同一套补充声明契约。
 

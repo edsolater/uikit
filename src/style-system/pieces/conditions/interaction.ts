@@ -29,6 +29,15 @@ export const whenHover = stateCondition('&:hover')
 /** 当前主体按下，不隐式排除其他状态。 */
 export const whenActive = stateCondition('&:active')
 
+/**
+ * Popover 采用 block 或 inline 翻向时仅匹配后代和伪元素。
+ * 容器需设置 container-type: anchored；条件不能查询并修改该容器自身。
+ * @example rules(['.PopoverContent', whenPopoverFlip], { color: 'red' })
+ */
+export const whenPopoverFlip = stateCondition(
+  '@container anchored((fallback: flip-block) or (fallback: flip-inline))',
+)
+
 /** 交互快捷名；focus 沿用既有的焦点提示含义。 */
 export const interactionStateConditions = {
   focus: whenFocusVisible,

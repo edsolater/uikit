@@ -18,10 +18,10 @@ import {
   Loop,
   Input,
   Piv,
-  Popover,
   KitMarkerStructureViewTrigger,
   Table,
 } from '@/components'
+import { popover as createPopover } from '@/components/plugins/kits/Popover/popover'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -73,17 +73,17 @@ describe('组件结构查看', () => {
     const content = createState('TRUE')
     const host = createHost()
     dispose = render(
-      () => (
-        <>
+      () => {
+        const { popoverTrigger, popoverBody } = createPopover({})
+        return <>
           <KitMarker
             componentName="透明父"
             descriptionDisplay={display.read()}
           >
             <Piv style={{ opacity }}>
               <Button descriptionDisplay>子动作</Button>
-              <Popover trigger="原生浮层">
-                <Piv>浮层内容</Piv>
-              </Popover>
+              <Button is={popoverTrigger}>原生浮层</Button>
+              <Card is={popoverBody}>浮层内容</Card>
             </Piv>
             <KitMarker componentName="裸子" descriptionDisplay>
               {content.read()}
@@ -109,7 +109,7 @@ describe('组件结构查看', () => {
           <Button>外部动作</Button>
           <KitMarkerStructureViewTrigger />
         </>
-      ),
+      },
       host,
     )
     const root = host.firstElementChild as HTMLElement
@@ -139,7 +139,7 @@ describe('组件结构查看', () => {
       getComputedStyle(host, '::highlight(uikit-structure-view-hidden)').color,
     ).toBe('rgba(0, 0, 0, 0)')
     expect(popover.matches(':popover-open')).toBe(false)
-    root.querySelector<HTMLButtonElement>('.Popover > .trigger')!.click()
+    ;[...root.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '原生浮层')!.click()
     await expect.poll(() => popover.matches(':popover-open')).toBe(true)
     await expect.poll(() => getComputedStyle(popover).opacity).toBe('0')
     opacity.set(0.35)
@@ -219,21 +219,23 @@ describe('组件结构查看', () => {
     const clicks = vi.fn()
     const host = createHost()
     dispose = render(
-      () => (
-        <>
+      () => {
+        const { popoverTrigger, popoverBody } = createPopover({})
+        return <>
           <Card>
             <Article>
               <Button onClick={clicks}>执行</Button>
               <Button disabled>禁止</Button>
               <Input htmlProps={{ value: '保留草稿' }} />
               <Table data={[{ 名称: '记录' }]} />
-              <Popover trigger="补充">浮层正文</Popover>
+              <Button is={popoverTrigger}>补充</Button>
+              <Card is={popoverBody}>浮层正文</Card>
               <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
             </Article>
           </Card>
           <KitMarkerStructureViewTrigger />
         </>
-      ),
+      },
       host,
     )
     const article = host.querySelector('article')!
@@ -264,7 +266,6 @@ describe('组件结构查看', () => {
           'Button · 执行动作',
           'Input · 编辑单行内容',
           'Table · 按列展示记录',
-          'Popover · 显示补充内容',
           'Loop · 排列重复内容',
         ]),
       )
@@ -342,24 +343,25 @@ describe('组件结构查看', () => {
   test('开启期间原生Popover仍可开关，覆盖层在新开的顶层surface上可见', async () => {
     const host = createHost()
     dispose = render(
-      () => (
-        <>
-          <Popover trigger="打开补充" description="原生浮层">
-            真实浮层内容
-          </Popover>
+      () => {
+        const { popoverTrigger, popoverBody } = createPopover({})
+        return <>
+          <Button is={popoverTrigger}>打开补充</Button>
+          <Card is={popoverBody} description="原生浮层">真实浮层内容</Card>
           <KitMarkerStructureViewTrigger />
         </>
-      ),
+      },
       host,
     )
     toggleView()
     const trigger = host.querySelector<HTMLButtonElement>(
-      '.Popover > .trigger',
+      'button[data-plugin~=\"Button:clickable\"]',
     )!
-    trigger.click()
     const popover = host.querySelector<HTMLElement>('[popover]')!
+    await expect.poll(() => trigger.popoverTargetElement).toBe(popover)
+    trigger.click()
     await expect.poll(() => popover.matches(':popover-open')).toBe(true)
-    await expect.poll(readLabels).toContain('Popover · 原生浮层')
+    await expect.poll(readLabels).toContain('Card · 原生浮层')
     const overlay = document.querySelector<HTMLElement>(
       '.StructureViewOverlay',
     )!
