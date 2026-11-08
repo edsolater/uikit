@@ -28,6 +28,7 @@ afterEach(() => {
 
 test('触发与正文使用实际节点，正文自定义 id 仍可关联', async () => {
   const host = document.body.appendChild(document.createElement('main'))
+  host.style.padding = '180px 40px'
   let capability!: ReturnType<typeof createPopoverPlugins>
   dispose = render(() => {
     capability = createPopoverPlugins()
@@ -51,6 +52,7 @@ test('触发与正文使用实际节点，正文自定义 id 仍可关联', asyn
   await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('false')
   await userEvent.click(trigger)
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
+  expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(trigger.getBoundingClientRect().top)
   await expect.poll(() => val(capability.controller.trigger.isOpen)).toBe(true)
   await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('true')
   expect(val(capability.controller.body.isOpen)).toBe(true)
@@ -98,7 +100,7 @@ test('动态方向和间距读取当前值并在空值时回退', async () => {
     return <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
-  await expect.poll(() => body.style.positionArea).toBe('bottom')
+  await expect.poll(() => body.style.positionArea).toBe('top')
   await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
   position.set('left')
   gap.set('lg')
@@ -109,9 +111,11 @@ test('动态方向和间距读取当前值并在空值时回退', async () => {
   await expect.poll(() => getComputedStyle(body).margin).toBe('2px')
   gap.set('md')
   await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
+  position.set('bottom')
+  await expect.poll(() => body.style.positionArea).toBe('bottom')
   position.set(undefined)
   gap.set(undefined)
-  await expect.poll(() => body.style.positionArea).toBe('bottom')
+  await expect.poll(() => body.style.positionArea).toBe('top')
   await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
 })
 

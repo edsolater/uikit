@@ -53,7 +53,6 @@ import {
   paperColor,
 } from '@/style-system/pieces/tokens/color/palette'
 import '../../../components/kits/Input/Input.style'
-import '@/components/kits/Popover/PopoverSurface.style'
 import '@/components/plugins/kits/Popover/popover.style'
 
 let dispose: (() => void) | undefined

@@ -180,6 +180,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
   expect(page.textContent).toContain('链接正文说明')
   expect(page.querySelector('button')?.textContent).toBe('页面动作')
   expect(page.children).toHaveLength(2)
+  await expect.poll(() => page.querySelector('[role="tooltip"]')).not.toBeNull()
   const originalNodes = [...page.querySelectorAll('*')]
   const bounds = page.getBoundingClientRect().toJSON()
   const names = [...componentBoundaries].map(
@@ -196,7 +197,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
     'MessageBoard',
     'Link',
     'Label',
-    'PopoverSurface',
+    'Help',
   ])
     expect(names).toContain(name)
   expect(names).not.toContain('Piv')

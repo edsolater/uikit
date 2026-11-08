@@ -37,12 +37,12 @@ function Example() {
 
 | 配置位置 | 字段 | 行为与默认值 |
 | --- | --- | --- |
-| `trigger` | `triggerAction` | `'toggle'`／`'show'`／`'hide'`，默认 `'toggle'`；键盘使用实际按钮的原生行为 |
-| `body` | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'bottom'`；按来源更新定位 |
+| `trigger` | `triggerAction` | `'toggle'`／`'show'`／`'hide'`／false，默认 `'toggle'`；键盘使用实际按钮的原生行为。false 只保留锚定，不注入按钮 target 关联和 dialog／expanded 语义 |
+| `body` | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'top'`；按来源更新定位，空间不足时由浏览器原生翻向 |
 | `body` | `$anchorGap` | `Source<'sm' \| 'md' \| 'lg' \| undefined>`，默认 `'md'`；指定锚点与主体的间距档位，实际距离由 `popover.style.ts` 映射 |
 | `body` | `popover` | `'auto'`／`'hint'`／`'manual'`，默认 `'auto'`；外部点击、Escape 等关闭行为沿对应原生模式 |
 | `body` | `defaultOpen` | `Source<boolean \| undefined>`，默认 false；只用于首次挂载的初始化判断，不随来源后续变化持续开关 |
-| `body` | `autoFocus` | `Partial<HTMLElement>`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素 |
+| `body` | `autoFocus` | `Partial<HTMLElement> \| false`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素，false 禁用这份自动聚焦声明 |
 
 `defaultOpen` 读取的是 Source 的完成值，不能把 State／Promise 对象本身的真值当成 true。位置与间距是持续来源，默认打开是一次初始化，两者用途不同。
 
@@ -54,7 +54,7 @@ function Example() {
 
 `autofocus` 声明由能力作用域持有：每次打开前先恢复上一选择的原属性，再按当前目标和内容建立本次标记并排除冲突；正常开关或取消不撤销声明，能力退出时恢复原属性。聚焦仍由浏览器在实际打开时执行，保留声明不会主动调用 focus，取消也不移动焦点；关闭后的焦点恢复完全原生，Plugin 不额外聚焦 trigger。
 
-当前只支持 DOM 引用；`Partial<HTMLElement>` 用于兼容既有元素引用，不是 Partial Controller。以组件 Controller 或 Component 类型指定目标仍为 TODO，尚无统一 DOM 入口，不在本轮新增。
+传入 false 时，不选择或声明默认聚焦目标，适用于只提供额外信息的 Tooltip。当前指定目标只支持 DOM 引用；`Partial<HTMLElement>` 用于兼容既有元素引用，不是 Partial Controller。以组件 Controller 或 Component 类型指定目标仍为 TODO，尚无统一 DOM 入口，不在本轮新增。
 
 # 原生事件与回调
 
@@ -110,4 +110,16 @@ Controller 完整不代表元素已经就绪。当前 `domProxy` 缓存首次 DO
 - [if 显隐复用 DOM](../../../../../docs/todo/261107_if显隐复用DOM.md)：当前不能假定条件重建已经复用原节点。
 - [PromiseResultProxy 兼容 Promise 协议](../../../../../docs/todo/261107_PromiseResultProxy兼容Promise协议.md)：可等待不等于已完整兼容 Promise。
 
-旧 Tooltip 仍使用旧 Surface 和显隐工具，本能力不表示 Tooltip 已迁移。
+# Tooltip 的复用
+
+`tooltip` 仍是一元自身能力：
+
+```tsx
+<Text is={tooltip({ content: '补充说明', $anchorPosition: 'top', $anchorGap: 'md' })}>
+  正文
+</Text>
+```
+
+它的配置为 `Pick<PopoverBodyOptions, '$anchorPosition' | '$anchorGap'> & { content: PivProps['children'] }`。位置默认 top、间距默认 md，Source 完成值为 null／undefined 时也回落这些默认值；Popover 与 Tooltip 的默认位置／间距均为 top／md。
+
+Tooltip 内部一次构建 `createPopoverPlugins`，使用 `triggerAction:false`、`popover:'hint'` 和 `autoFocus:false`；通过同一 Piv body 复用原生定位、显隐及打开状态，自身拥有阅读事件、aria 描述与提示材料，不再使用 Surface 或旧 VisibilityController。内容清空会关闭、清计时并移除正文，再次有内容时复用同一节点；数字 0 有效。Tooltip Controller 仍只提供 `isOpen`、`showPopover()`、`hidePopover()`，不扩大调用方接口。

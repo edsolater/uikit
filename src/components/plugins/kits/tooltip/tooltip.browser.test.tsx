@@ -6,13 +6,9 @@ import { cssRoot } from '@/style-system'
 import { Piv } from '../../../Piv/Piv'
 import { tooltip, type TooltipController } from './tooltip'
 import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
+import type { AnchorGap, AnchorPosition } from '@/components/plugins/kits/Popover/popover'
 import { Button } from '@/components/kits/Button/Button'
 import { Card } from '@/components/kits/Card/Card'
-import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
-import {
-  createPopoverVisibilityController,
-  type PopoverVisibilityController,
-} from '@/components/kits/Popover/createPopoverVisibilityController'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -29,68 +25,6 @@ afterEach(() => {
   dispose?.()
   host.remove()
   style.remove()
-})
-
-/**
- * 从浏览器实际闭合轮廓读取第一个箭头尖端，返回其视口坐标。
- */
-function readOutlineTip(surface: HTMLElement) {
-  const paint = surface.querySelector<HTMLElement>('.PopoverPaint')!
-  const shape = getComputedStyle(paint).getPropertyValue('border-shape')
-  const tip = shape.match(/,\s*line to ([-\d.]+)(px|%) ([-\d.]+)(px|%)/)!
-  const rect = paint.getBoundingClientRect()
-  return {
-    x: rect.left + parseFloat(tip[1]) * (tip[2] === '%' ? rect.width / 100 : 1),
-    y: rect.top + parseFloat(tip[3]) * (tip[4] === '%' ? rect.height / 100 : 1),
-  }
-}
-
-test('默认打开反映原生状态，取消打开不伪报成功，强制切换及关闭恢复焦点', async () => {
-  let controller!: PopoverVisibilityController
-  let cancel = true
-  dispose = render(() => {
-    const [current, bindings] = createPopoverVisibilityController({
-      onBeforeToggle: (open, event) => {
-        if (open && cancel) event.preventDefault()
-      },
-    })
-    controller = current
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { defaultOpen: true } })
-    return (
-      <>
-        <Button is={popoverTrigger} disabled htmlProps={{ 'aria-busy': 'false' }}>默认打开</Button>
-        <Card is={popoverBody}>默认正文</Card>
-        <Piv as="button" domRef={bindings.triggerDomRef}>控制目标</Piv>
-        <PopoverSurface popover="manual" domRef={bindings.popoverDomRef}>
-          受控正文
-        </PopoverSurface>
-      </>
-    )
-  }, host)
-  const defaultPopover = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
-  const defaultTrigger = host.querySelector<HTMLButtonElement>('button')!
-  expect(defaultTrigger.disabled).toBe(true)
-  // aria-busy缺省与false都表示当前未忙碌。
-  expect(defaultTrigger.getAttribute('aria-busy') ?? 'false').toBe('false')
-  await expect
-    .poll(() => defaultPopover.matches(':popover-open'))
-    .toBe(true)
-  await expect
-    .poll(() => defaultTrigger.getAttribute('aria-expanded'))
-    .toBe('true')
-  controller.showPopover!()
-  expect(val(controller.isOpen!)).toBe(false)
-  controller.togglePopover(true)
-  expect(val(controller.isOpen!)).toBe(false)
-  cancel = false
-  controller.togglePopover()
-  expect(
-    host.querySelector('.PopoverSurface')!.matches(':popover-open'),
-  ).toBe(true)
-  await expect.poll(() => val(controller.isOpen!)).toBe(true)
-  controller.togglePopover(false)
-  await expect.poll(() => val(controller.isOpen!)).toBe(false)
-  expect(document.activeElement?.textContent).toBe('控制目标')
 })
 
 test('非Label宿主保留id与自有描述，模板动态更新且实例互不影响', async () => {
@@ -131,6 +65,7 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
   await expect.poll(() => val(first.isOpen)).toBe(true)
   expect(val(second.isOpen)).toBe(false)
   const surface = host.querySelector<HTMLElement>(':popover-open')!
+  expect(getComputedStyle(surface).margin).toBe('4px')
   expect(surface.querySelector('strong')?.textContent).toBe('当前1')
   value.set(2)
   await expect
@@ -157,13 +92,17 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
   }, host)
   await userEvent.hover(host.querySelector('button')!)
   await expect.poll(() => val(controller.isOpen)).toBe(true)
+  const originalBody = host.querySelector<HTMLElement>('[role="tooltip"]')!
   content.set(undefined)
   await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
-  expect(val(controller.isOpen)).toBe(false)
+  await expect.poll(() => val(controller.isOpen)).toBe(false)
   content.set('再次出现')
   await expect
     .poll(() => host.querySelector('[role="tooltip"]')?.textContent)
     .toBe('再次出现')
+  expect(host.querySelector('[role="tooltip"]')).toBe(originalBody)
+  controller.showPopover()
+  await expect.poll(() => originalBody.matches(':popover-open')).toBe(true)
   await userEvent.hover(host)
   dispose?.()
   dispose = undefined
@@ -187,6 +126,7 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
     )
   }, host)
   const trigger = host.querySelector('button')!
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   trigger.focus()
   await expect
     .poll(() => host.querySelector(':popover-open')?.textContent)
@@ -199,18 +139,6 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
         trigger.getBoundingClientRect().bottom,
     )
     .toBe(true)
-  const tip = readOutlineTip(surface)
-  expect(
-    Math.abs(
-      tip.x - (trigger.getBoundingClientRect().left + trigger.offsetWidth / 2),
-    ),
-  ).toBeLessThan(2)
-  expect(
-    Math.abs(
-      tip.y -
-        surface.querySelector('.PopoverPaint')!.getBoundingClientRect().top,
-    ),
-  ).toBeLessThan(2)
   controller.hidePopover()
   await expect.poll(() => surface.matches(':popover-open')).toBe(false)
   expect(document.activeElement).toBe(trigger)
@@ -243,7 +171,7 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
   await userEvent.hover([...host.querySelectorAll<HTMLElement>('button')].find((button) => button.textContent === '提示目标')!)
   const hint = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => hint.matches(':popover-open')).toBe(true)
-  expect(getComputedStyle(hint.querySelector('.PopoverPaint')!).backgroundColor).toBe('rgb(30, 41, 59)')
+  expect(getComputedStyle(hint).backgroundColor).toBe('rgb(30, 41, 59)')
   await userEvent.click(trigger)
   await expect.poll(() => original.matches(':popover-open')).toBe(false)
 })
@@ -262,23 +190,64 @@ test('横向浮层在右边缘翻到左侧', async () => {
   await expect.poll(() => surface.getBoundingClientRect().right < trigger.getBoundingClientRect().left).toBe(true)
 })
 
-test('目标移动后浮层跟随，主体保留命中', async () => {
-  const offset = createState(200)
-  dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
-    return <>
-      <Button is={popoverTrigger} style={{ position: 'fixed', get left() { return `${val(offset)}px` }, top: '140px' }}>目标</Button>
-      <Card is={popoverBody} style={{ width: '120px' }}>浮层内容</Card>
-    </>
-  }, host)
-  const target = host.querySelector<HTMLButtonElement>('button')!
-  await userEvent.click(target)
-  const surface = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
-  await expect.poll(() => surface.matches(':popover-open')).toBe(true)
-  const before = surface.getBoundingClientRect().left
-  offset.set(300)
-  await expect.poll(() => target.getBoundingClientRect().left).toBe(300)
-  await expect.poll(() => surface.getBoundingClientRect().left).toBeGreaterThan(before + 40)
-  const bounds = surface.getBoundingClientRect()
-  expect(surface.contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2))).toBe(true)
+test('滚动时提示正文与背景随同一浮层跟随锚点', async () => {
+  dispose = render(() => (
+    <div data-scroller style={{ height: '180px', overflow: 'auto' }}>
+      <div style={{ height: '600px', padding: '100px 20px' }}>
+        <Piv as="button" is={tooltip({ content: <strong>完整提示正文</strong> })}>目标</Piv>
+      </div>
+    </div>
+  ), host)
+  const scroller = host.querySelector<HTMLElement>('[data-scroller]')!
+  const trigger = host.querySelector<HTMLButtonElement>('button')!
+  await userEvent.hover(trigger)
+  const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
+  await expect.poll(() => body.matches(':popover-open')).toBe(true)
+  const content = body.querySelector('strong')!
+  const before = body.getBoundingClientRect().top
+  const contentOffset = content.getBoundingClientRect().top - before
+  expect(getComputedStyle(body).backgroundColor).toBe('rgb(30, 41, 59)')
+  scroller.scrollTop = 40
+  await expect.poll(() => body.getBoundingClientRect().top).toBeLessThan(before - 30)
+  expect(content.getBoundingClientRect().top - body.getBoundingClientRect().top).toBeCloseTo(contentOffset, 0)
+})
+
+test('提示按钮不接入原生点击切换，也不把焦点移入提示正文', async () => {
+  dispose = render(() => (
+    <Button is={tooltip({ content: <a href="#details">补充说明</a> })}>查看</Button>
+  ), host)
+  const trigger = host.querySelector<HTMLButtonElement>('button')!
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
+  const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
+  expect(trigger.popoverTargetElement).toBeNull()
+  expect(trigger.hasAttribute('popovertargetaction')).toBe(false)
+  expect(trigger.hasAttribute('aria-haspopup')).toBe(false)
+  expect(trigger.hasAttribute('aria-expanded')).toBe(false)
+  trigger.focus()
+  await expect.poll(() => body.matches(':popover-open')).toBe(true)
+  expect(document.activeElement).toBe(trigger)
+  expect(body.querySelector('[autofocus]')).toBeNull()
+  await userEvent.click(trigger)
+  expect(body.matches(':popover-open')).toBe(true)
+})
+
+test('定位来源持续更新，完成值为空时回到 top 与 md 默认值', async () => {
+  const position = createState<AnchorPosition | undefined>(undefined)
+  const gap = createState<AnchorGap | undefined>(undefined)
+  dispose = render(() => (
+    <Button is={tooltip({ content: '说明', $anchorPosition: position, $anchorGap: gap })}>目标</Button>
+  ), host)
+  await userEvent.hover(host.querySelector('button')!)
+  const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
+  await expect.poll(() => body.matches(':popover-open')).toBe(true)
+  expect(getComputedStyle(body).positionArea).toBe('top')
+  expect(getComputedStyle(body).margin).toBe('4px')
+  position.set('right')
+  gap.set('lg')
+  await expect.poll(() => getComputedStyle(body).positionArea).toBe('right')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('8px')
+  position.set(undefined)
+  gap.set(undefined)
+  await expect.poll(() => getComputedStyle(body).positionArea).toBe('top')
+  await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
 })

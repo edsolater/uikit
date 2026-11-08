@@ -8,7 +8,7 @@
 - 内容可为字符串、组件或小文章，形式自由；语义是简短补充说明，不代替正文。不设字数校验或内容解析协议。
 - 说明以原生 Popover API 显示在 top layer，通过 CSS Anchor Positioning 优先放在问号上方，空间不足时由浏览器换边。说明不撑开布局，不覆盖其关联输入；问号与输入各自可操作。
 - 问号提供说明用途的无障碍名称，并以 `aria-describedby` 关联 `role="tooltip"` 的说明。Label 的 `for` 只关联输入，不把问号纳入原生 label。
-- 所有 DOM 通过 Piv 创建，Label 与 Help 分别通过 kit 声明透明组件边界。Label 拥有字段标题与排列，Help 拥有问号及其样式；PopoverSurface统一浮层、锚定定位与箭头，tooltip只选择提示材料和阅读交互。组件定位框开启时隐藏原文字，保留排版。
+- 所有 DOM 通过 Piv 创建，Label 与 Help 分别通过 kit 声明透明组件边界。Label 拥有字段标题与排列，Help 拥有问号及其样式；tooltip 复用 createPopoverPlugins 的原生显隐与定位，并拥有单一 Piv 提示正文、提示材料和阅读交互，不增加独立 Surface 组件身份。组件定位框开启时隐藏原文字，保留排版。
 - Label 不解释业务文案，不访问业务数据，也不感知 NumberInput、控制参数、拖动或输入有效性。
 
 - Label 通过 kit 管理透明边界与可选组件 ref。初始状态用 Props；特殊运行期需求可接收 LabelController，通过其 `.props` 下的原字段 State 修改标题、关联目标与说明，包括原来未声明的 tooltip。Label.controllers 仅收集接入 ref 的当前实例，销毁后移除；ref 不属于可写字段。

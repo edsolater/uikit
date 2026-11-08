@@ -9,7 +9,7 @@ import {
   createEffect,
   createState,
   onCleanup,
-  stateView,
+  withDefault,
   toStateString,
   val,
   type Source,
@@ -27,19 +27,20 @@ export type PopoverToggleEvent = Event & {
 }
 
 export interface PopoverTriggerOptions {
-  triggerAction?: 'toggle' | 'show' | 'hide'
+  /** 原生按钮动作，默认 toggle；false 仅建立锚点，不接入按钮触发与展开语义。 */
+  triggerAction?: 'toggle' | 'show' | 'hide' | false
 }
 
 export interface PopoverBodyOptions {
-  /** 主体相对锚点的方向，默认 bottom。 */
+  /** 主体相对锚点的方向，默认 top。 */
   $anchorPosition?: Source<AnchorPosition | undefined>
   /** 指定锚点与主体的间距档位，默认 md；实际距离由样式定义。 */
   $anchorGap?: Source<AnchorGap | undefined>
   popover?: 'auto' | 'hint' | 'manual'
   /** 首个完成的值决定是否默认打开一次；后续变化不重新初始化。 */
   defaultOpen?: Source<boolean | undefined>
-  /** 打开时优先聚焦的 DOM 引用；省略时使用正文内首个可聚焦节点。Controller 和组件目标尚未支持。 */
-  autoFocus?: Partial<HTMLElement>
+  /** 打开时优先聚焦的 DOM 引用；省略时使用正文首个可聚焦节点，false 不注入自动聚焦。Controller 和组件目标尚未支持。 */
+  autoFocus?: Partial<HTMLElement> | false
 
   /** 浮层打开(后) */
   onOpen?: (event: PopoverToggleEvent) => void
@@ -189,15 +190,16 @@ function createPopoverGroup() {
   const name = `uikit-popover-${popoverIdGenerator.genID()}`
   const isOpen = createState(false)
   return {
-    anchor: name, // 使用时再坍缩成 --popover-anchor
+    anchor: `--${name}`,
     isOpen: isOpen,
+    nativeTrigger: true,
     triggerTarget: undefined as PromiseResultProxy<HTMLElement> | undefined,
     bodyTarget: undefined as PromiseResultProxy<HTMLElement> | undefined,
   }
 }
 
 /**
- * 为单个角色提供完整显隐入口；打开状态由原生 toggle 更新。
+ * 为单个角色提供完整显隐入口；原生 toggle 更新状态，关闭操作另读实际结果以覆盖节点移除不派事件的情况。
  */
 function createPopoverActions(
   group: ReturnType<typeof createPopoverGroup>,
@@ -211,10 +213,13 @@ function createPopoverActions(
       group.bodyTarget?.showPopover()
     },
     /**
-     * 请求关闭本组浮层。
+     * 请求关闭本组浮层并读取实际关闭结果。
      */
     hidePopover() {
-      group.bodyTarget?.hidePopover()
+      group.bodyTarget?.then((body) => {
+        if (body.matches(':popover-open')) body.hidePopover()
+        group.isOpen.set(body.matches(':popover-open'))
+      })
     },
     /**
      * 切换或指定打开状态。
@@ -226,7 +231,7 @@ function createPopoverActions(
 }
 
 /**
- * 触发节点声明原生按钮行为和本组锚点。
+ * 触发节点声明本组锚点，按配置接入原生按钮行为。
  * 内容及按钮身份由使用方提供。
  */
 function popoverTriggerCore({
@@ -237,8 +242,9 @@ function popoverTriggerCore({
 }: PluginCoreContext<PopoverTriggerOptions>): PopoverTriggerController {
   const group = popoverGroups.getOrInsertComputed(id!, createPopoverGroup)
   group.triggerTarget = domProxy
-  addProps({
-    style: { 'anchor-name': group.anchor },
+  group.nativeTrigger = pluginOptions.triggerAction !== false
+  addProps({ style: { 'anchor-name': group.anchor } })
+  if (group.nativeTrigger) addProps({
     htmlProps: {
       'popovertargetaction': pluginOptions.triggerAction ?? 'toggle',
       'aria-expanded': toStateString(group.isOpen),
@@ -262,11 +268,9 @@ function popoverBodyCore({
   group.bodyTarget = domProxy
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
-  const position = stateView(pluginOptions.$anchorPosition).map(
-    (value) => value ?? 'bottom',
-  )
+  const position = withDefault(pluginOptions.$anchorPosition, 'top')
   // TODO：慢节点或作用域退出后关联可能晚执行，由 [Task](../../../../../docs/todo/261107_Task与TaskResult异步操作.md) 接管就绪与取消。
-  Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
+  if (group.nativeTrigger) Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
     const button = trigger as HTMLButtonElement
     button.popoverTargetElement = body
   })
@@ -292,10 +296,9 @@ function popoverBodyCore({
           else pluginOptions.onBeforeClose?.(toggle)
           if (open && !toggle.defaultPrevented) {
             restoreAutoFocus?.()
-            restoreAutoFocus = preparePopoverAutoFocus(
-              element,
-              pluginOptions.autoFocus,
-            )
+            restoreAutoFocus = pluginOptions.autoFocus === false
+              ? undefined
+              : preparePopoverAutoFocus(element, pluginOptions.autoFocus)
           }
         },
       },

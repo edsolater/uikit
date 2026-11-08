@@ -1,39 +1,35 @@
 /**
- * 辅助提示的紧凑暗色材料。
+ * 辅助提示正文的紧凑暗色材料。
  *
- * 仅在当前浮层选择Popover公开Token，不重复定位和箭头。
+ * 背景与文字直接绘制在同一个正文节点，定位由 Popover 能力负责。
  *
- * 保留提示外观，并使其他Popover继续使用自身材料。
+ * 提示拥有自己的外观，不改写其他浮层的材料。
  */
-import { rules, modify, type Token } from '@/style-system'
-import {
-  popoverBackground,
-  popoverContentColor,
-  popoverBorder,
-  popoverRadius,
-  popoverPadding,
-  popoverMinWidth,
-  popoverMaxWidth,
-  popoverGap,
-  popoverArrowSize,
-  popoverShadow,
-  popoverFont,
-} from '@/components/kits/Popover/PopoverSurface.style'
+import { baseRadius, createNewTokenGenerator, multiply, rules } from '@/style-system'
 
-const materials: [Token, string][] = [
-  [popoverBackground, '#1e293b'],
-  [popoverContentColor, '#f8fafc'],
-  [popoverBorder, '1px solid #334155'],
-  [popoverRadius, '8px'],
-  [popoverPadding, '10px 12px'],
-  [popoverMinWidth, '0'],
-  [popoverMaxWidth, 'min(320px, calc(100vw - 24px))'],
-  [popoverGap, '8px'],
-  [popoverArrowSize, '10px'],
-  [popoverShadow, '0 6px 20px #0f172a26'],
-  [popoverFont, '13px/1.6 system-ui'],
-]
+const tooltipToken = createNewTokenGenerator({
+  prefixName: 'tooltip',
+  address: '.Tooltip',
+})
 
-rules('.PopoverSurface.Tooltip', materials.map(([target, value]) =>
-  modify(target, { type: 'expression', detail: () => value }),
-))
+export const tooltipBackground = tooltipToken('#1e293b')
+export const tooltipContentColor = tooltipToken('#f8fafc')
+export const tooltipBorder = tooltipToken('1px solid #334155')
+export const tooltipRadius = tooltipToken(multiply(baseRadius, 2))
+export const tooltipPadding = tooltipToken('10px 12px')
+export const tooltipMaxWidth = tooltipToken('min(320px, calc(100vw - 24px))')
+export const tooltipShadow = tooltipToken('0 6px 20px #0f172a26')
+export const tooltipFont = tooltipToken('13px/1.6 system-ui')
+
+rules('.Tooltip', {
+  'background': tooltipBackground,
+  'color': tooltipContentColor,
+  'border': tooltipBorder,
+  'border-radius': tooltipRadius,
+  'padding': tooltipPadding,
+  'width': 'max-content',
+  'max-width': tooltipMaxWidth,
+  'box-shadow': tooltipShadow,
+  'font': tooltipFont,
+  'white-space': 'normal',
+})

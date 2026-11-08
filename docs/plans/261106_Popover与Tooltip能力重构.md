@@ -4,14 +4,14 @@
 
 本文是 Popover／Tooltip 能力改造的唯一现役 Plan。基础协议由 [is 声明解析与 Plugin 调用协议统一](261105_is声明解析与Plugin调用协议统一.md) 接管；现有 `domProxy` 与单元／组合构建工具已经可用，本文不重新设计这些工具。
 
-**用户本轮已明确授权先实施 UIKit 的 Popover，Tooltip 能力重构留待后续。** 用户随后进一步明确：Popover 只承担功能；样式只服务浮层定位、锚点关联和显隐，不承担内容布局或绘制。这条新边界覆盖此前把背景、箭头和材质归给 Plugin 的方案，不是将这些工作另列为 Plugin 未完成项。
+**阶段 A 的 UIKit Popover 能力已完成；用户本轮已授权实施阶段 B 的 Tooltip 能力迁移。** 用户随后进一步明确：Popover 只承担功能；样式只服务浮层定位、锚点关联和显隐，不承担内容布局或绘制。这条新边界覆盖此前把背景、箭头和材质归给 Plugin 的方案，不是将这些工作另列为 Plugin 未完成项。
 
-打开／关闭过程生命周期目前只记录方案，尚未实施。当前原生状态回调与后文尚未实现的 Start／End／Progress／Cancel 目标分别说明；Popover 讨论和相应实现尚未结束前，不转入 Tooltip 施工。原有三篇 TODO 全部保留，不以生命周期小节替代 Task 机制。
+打开／关闭过程生命周期目前只记录方案，尚未实施。当前原生状态回调与后文尚未实现的 Start／End／Progress／Cancel 目标分别说明；本轮只迁移 Tooltip 所需的现有能力，不顺带实施这些生命周期。原有三篇 TODO 全部保留，不以生命周期小节替代 Task 机制。
 
 | 阶段 | 当前状态与交付 |
 | --- | --- |
-| A：Popover | 本轮获准；交付实际 Button／Card 的双端能力、原生显隐与定位、Popover 消费迁移和 UIKit 验证 |
-| B：Tooltip | 后续尚未施工；在 A 的能力上迁移提示交互，并退出旧 Tooltip 仍依赖的 Surface／Controller／样式 |
+| A：Popover | 已完成双端能力、原生显隐与定位及 UIKit 消费迁移；B 仅为 Tooltip 补充必要的原生触发／聚焦关闭选项 |
+| B：Tooltip | 本轮获准；复用 A 的能力迁移提示交互，接管并删除旧 Surface／Controller／样式及旧目录全部消费 |
 | 真实 RuleDetail | 保留最终验收，当前没有外部项目修改授权，不随 UIKit 施工自动启动 |
 
 本文引用前置 Plan 唯一维护的[全局运行图](261105_is声明解析与Plugin调用协议统一.md#全局运行图与本-plan-定位)：接收 I 的基础协议交付及 J 的用户明确许可，负责 L 至 N 的双端能力、原生浮层功能及 UIKit／RuleDetail 验证。其样式责任按本次用户裁决收敛为功能定位，不再把整体外观绘制当作本环节交付。前置负责 A 至 I；本 Plan 不反向重做其 API，也不另建总图。
@@ -30,7 +30,7 @@
 - [Task 与 TaskResult](../todo/261107_Task与TaskResult异步操作.md)：慢 DOM、浮层尚未就绪及等待后晚执行的问题仍按已知缺口记录，不在本 Plan 实现任务队列、abort 或失效控制。
 - [PromiseResultProxy 兼容 Promise 协议](../todo/261107_PromiseResultProxy兼容Promise协议.md)：当前可等待不等于完整 Promise，也不伪造操作成功 boolean。
 
-当前源码已有成对 Popover 能力，旧 Surface 与 Tooltip 组装链仍暂留。新生命周期是后续目标，不能据已有原生状态事件宣布它已实现；旧共享设施也不能在 Tooltip 接管前强删。
+阶段 A 已有成对 Popover 能力；阶段 B 接管当前仍沿旧 Surface 的 Tooltip 组装链。新生命周期是后续目标，不能据已有原生状态事件宣布它已实现；旧共享设施也不能在 Tooltip 接管前强删。
 
 ## 调用、效果与职责
 
@@ -59,25 +59,25 @@ function PopoverExample() {
   </>
 }
 
-// 阶段 B 的目标，本轮不施工：Tooltip 描述自身，不要求另一端或关闭按钮。
+// 阶段 B：Tooltip 描述自身，不要求调用者提供另一端或关闭按钮。
 <Text is={tooltip({ content: <Text>补充说明</Text> })}>正文</Text>
 ```
 
 Popover 是成对能力，不是负责生成 Button、标题或正文的内容组件。Button／Card／Piv 等实际节点保持界面层次；Card 或调用者的 `.style.ts` 负责内容布局和外观。Plugin 只让这个实际 body 成为可定位、可显隐的原生浮层，不生成背板或新的外观组件。`createInactivePlugins` 统一汇集角色结果与 Controller，`createPopoverPlugins` 直接由工具定义 trigger／body core，并在第二参数的 controller 回调中声明本领域快捷引用，一次调用内部配对两端；用户不传共享 id。返回对象的 `plugins` 保留两端原始能力结果，`controller` 只引用角色 Controller 和常用操作，不新建状态或生命周期。
 
-以下代码块记录当前已实现的 API。现有 `onOpen`／`onClose` 是原生 toggle 后的状态通知，不是 CSS 过程开始或结束；目标生命周期在下一小节单独定义。`Source`、`State` 和 `PivProps` 使用现有 UIKit 类型，不另造同义类型。
+以下代码块记录本阶段的 API；`triggerAction: false` 与 `autoFocus: false` 是 B 为 Tooltip 在 Popover 责任层补充的最小选项，其余沿阶段 A 的现有协议。现有 `onOpen`／`onClose` 是原生 toggle 后的状态通知，不是 CSS 过程开始或结束；目标生命周期在下一小节单独定义。`Source`、`State` 和 `PivProps` 使用现有 UIKit 类型，不另造同义类型。
 
 ```ts
 type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
 type PopoverTriggerOptions = {
-  triggerAction?: 'toggle' | 'show' | 'hide'
+  triggerAction?: 'toggle' | 'show' | 'hide' | false
 }
 type PopoverBodyOptions = {
   $anchorPosition?: Source<AnchorPosition | undefined>
   $anchorGap?: Source<'sm' | 'md' | 'lg' | undefined>
   popover?: 'auto' | 'hint' | 'manual'
   defaultOpen?: Source<boolean | undefined>
-  autoFocus?: Partial<HTMLElement>
+  autoFocus?: Partial<HTMLElement> | false
   onOpen?: (event: PopoverToggleEvent) => void
   onBeforeOpen?: (event: PopoverToggleEvent) => void
   onClose?: (event: PopoverToggleEvent) => void
@@ -89,8 +89,8 @@ type PopoverBodyOptions = {
 }
 type TooltipOptions = {
   content: PivProps['children']
-  anchorPosition?: Source<AnchorPosition | undefined>
-  triggerMargin?: Source<string | undefined>
+  $anchorPosition?: Source<AnchorPosition | undefined>
+  $anchorGap?: Source<'sm' | 'md' | 'lg' | undefined>
 }
 type PopoverTriggerController = {
   isOpen: State<boolean>
@@ -129,11 +129,11 @@ type PopoverPlugins = {
 | API | 固定含义 |
 | --- | --- |
 | `createPopoverPlugins(...)` | 返回 `{ plugins, controller }`；`plugins` 保留两端原始能力结果，`controller` 为两端控制入口及快捷引用；每次调用的两端独立于其他组。输入配置使用 trigger／body |
-| `trigger` 配置 | 只表达触发节点特性；默认点击切换，保留 show／hide／toggle 动作选择。键盘使用实际按钮语义，不能再加一套导致双触发的处理 |
-| `body.$anchorPosition` | `'top' \| 'right' \| 'bottom' \| 'left'`，默认 bottom；这是 body 定位特性，不放到 trigger 或工具层 |
+| `trigger` 配置 | 只表达触发节点特性；默认点击切换，保留 show／hide／toggle 动作选择；false 仍建立锚定，但不注入按钮的原生 target 关联及 dialog／expanded 语义。键盘使用实际按钮语义，不能再加一套导致双触发的处理 |
+| `body.$anchorPosition` | `'top' \| 'right' \| 'bottom' \| 'left'`，默认 top，空间不足时由浏览器原生翻向；这是 body 定位特性，不放到 trigger 或工具层 |
 | `body.$anchorGap` | `'sm' \| 'md' \| 'lg'`，默认 md；指定锚点到实际 body 的间距档位，实际距离由 `popover.style.ts` 映射，不包含箭头绘制语义 |
 | `body.popover`、`defaultOpen` | 原生模式默认 auto；defaultOpen 是默认 false 的 Source，只对首次挂载初始化读取完成值一次，后续来源变化不持续控制显隐，不增加缺端队列或重试策略 |
-| `body.autoFocus` | 接受实际 DOM 或既有 createDomRef 的 Partial<HTMLElement> 引用；目标须在 body 范围内且可聚焦，省略时选择 body 内首个可聚焦元素；不接组件 Controller 或 Component 类型 |
+| `body.autoFocus` | 接受实际 DOM 或既有 createDomRef 的 Partial<HTMLElement> 引用；目标须在 body 范围内且可聚焦，省略时选择 body 内首个可聚焦元素；false 不设置默认聚焦；不接组件 Controller 或 Component 类型 |
 | body 的事件配置 | 原生前／后事件各先调用通用 Toggle 回调，再调用同方向的 Open／Close 专用回调；先按原生事实写入打开状态再分发后置回调，取消打开不能报告成功 |
 | `onPopoverFlip` | 表达定位翻面，不是开关切换；本轮只保留预留声明，不触发，方向事件类型后续确定 |
 | 两端的 Controller | 经 `controller.trigger`／`controller.body` 访问，提供 `isOpen`、`showPopover`、`hidePopover`、`togglePopover`，操作同一组 body；整体快捷操作只引用现有函数 |
@@ -147,15 +147,15 @@ type PopoverPlugins = {
 
 打开状态以 body 的原生 `:popover-open`／toggle 为事实来源。Escape、点击外部和程序关闭都更新同一状态；程序打开不能伪造布尔状态，也不能在被取消时留下 aria-expanded=true。
 
-本次焦点裁决只增加 body 的初始目标选择。`autoFocus` 可传实际元素或 `createDomRef` 的原生元素引用；后者的 Partial 类型不代表 Controller，运行时沿原生节点身份取得实际目标。指定目标须在本组 body 范围内，body 自身已经可聚焦时也可指定；省略时查找 body 内首个可聚焦元素，跳过 disabled、hidden、inert 等不可用项，无候选不强行聚焦 body。
+本次焦点裁决只增加 body 的初始目标选择。`autoFocus` 可传实际元素或 `createDomRef` 的原生元素引用；后者的 Partial 类型不代表 Controller，运行时沿原生节点身份取得实际目标。指定目标须在本组 body 范围内，body 自身已经可聚焦时也可指定；省略时查找 body 内首个可聚焦元素，跳过 disabled、hidden、inert 等不可用项，无候选不强行聚焦 body；false 禁用这份默认聚焦声明，供 Tooltip 保持阅读焦点。
 
 `autofocus` 是由能力作用域持有的原生焦点声明：每次打开前先恢复上一选择的原属性，再按当前目标和内容建立标记并排除冲突；正常开关或取消不撤销声明，能力退出时恢复原属性。浏览器在实际打开时执行聚焦，声明仍存在不表示 Plugin 主动调用 focus，取消也不移动焦点；不再要求事件分发后立即恢复，不增加计时器、常驻监听或全局焦点栈。关闭只调用原生关闭，`hidePopover()` 无参数，`togglePopover({ force })` 只选择开关方向，焦点恢复完全交给浏览器，不额外执行 trigger.focus()。
 
 `resolveFocusTarget(body, requested)` 独立负责将输入解析成 body 范围内的实际元素，当前只支持 DOM 引用；未指定时由 `findFirstFocusableElement(body)` 查找首项，临时属性交给 `preparePopoverAutoFocus`。Controller／Component 输入支持仍为本 Plan 的 TODO，未来只增强同一解析函数，后续焦点流程和调用方式保持，不在本轮新增共享 DOM 入口，也不改变生命周期未实现状态。
 
-关闭模式仍按原生 auto／hint／manual 处理，manual 不新增外部点击关闭；不同组隔离不取消 auto 模式自身的原生互斥。旧 Tooltip 的焦点与关闭 API 不随本次 Popover 修改扩张施工。
+关闭模式仍按原生 auto／hint／manual 处理，manual 不新增外部点击关闭；不同组隔离不取消 auto 模式自身的原生互斥。Tooltip 使用 hint 模式与 autoFocus:false，避免提示出现时改变当前焦点；关闭仍完全遵循浏览器原生行为。
 
-Tooltip 保留现有真实用途：hover／键盘焦点显示、Escape 退出、从宿主跨到提示正文继续阅读，以及当前 150ms 离开关闭与取消计时。内容清空时关闭并移除附属 body、释放定时器；数字 0 是有效内容，JSX／Source 更新不能重建错误的宿主身份或冻结旧值。无需为 Tooltip 设计可见关闭按钮；交互表单等复杂用途使用 Popover body。
+Tooltip 保留现有真实用途：hover／键盘焦点显示、Escape 退出、从宿主跨到提示正文继续阅读，以及当前 150ms 离开关闭与取消计时。内容清空时在常规内容来源 Effect 中清计时并请求关闭，再移除同一附属 body；不能依赖移出 document 派发 toggle 更新状态。数字 0 是有效内容，JSX／Source 更新不能重建错误的宿主身份或冻结旧值。无需为 Tooltip 设计可见关闭按钮；交互表单等复杂用途使用 Popover body。
 
 Tooltip 内部 body 使用原生 hint 模式及 `role="tooltip"`，宿主保持描述关系；不能套用普通 Popover 的点击切换或 dialog 宣告而造成双触发。它复用同一配对、显隐与 body 定位职责，自身仍负责阅读触发和 aria 描述。宿主已有 id／aria 及调用者的声明优先级保持，不强行覆盖。
 
@@ -286,6 +286,8 @@ Start／End 使用 `onOpenStart`、`onOpenEnd`、`onCloseStart`、`onCloseEnd`�
 
 ### 3. 文件、函数与阶段接管
 
+下方阶段 A 表保留已完成的接管范围；本轮实际施工以紧接其后的阶段 B 清单为准。表中 A 暂留的旧设施，现在由 B 完整接管后删除。
+
 ```text
 src/components/plugins/
   tools/                         保留前置基础协议 Plan 已认可的基础协议
@@ -297,13 +299,13 @@ src/components/plugins/
       popover.browser.test.tsx   A 新增：成对交互、定位与锚点可见性
     tooltip/
       tooltip.tsx                B 更新：一元自身能力，复用 Popover body／显隐
-      tooltip.style.ts           B 后续：按 Tooltip 自身职责核对，A 不改产品
+      tooltip.style.ts           B 更新：提示自有单body材料，复用Popover定位
       tooltip.browser.test.tsx   B 更新：自身交互、动态内容、清理与滚动回归
 ```
 
-这是一组最少载体，不为图再拆 manager、instance、geometry、paint、host 等模块。必要的组事实归 `popover.ts`；若需要按内部身份共享数据，复用组合提供的身份，不扩大为所有插件共享的注册中心。
+这是一组最少载体，不为图再拆 manager、instance、geometry、paint、host 等模块。必要组事实由既有组合构建传入，不恢复已退出的全局身份注册表。
 
-本轮关键 core 的责任是：
+阶段 A 既有 core 的责任是：
 
 ```text
 createPopoverPlugins = createInactivePlugins(
@@ -319,9 +321,9 @@ createPopoverPlugins = createInactivePlugins(
 
 字段经 `addProps` 进入已有合并链，命令使用 `domProxy`；不为了取 DOM 再包一层内容组件。新 Plugin 直接定位实际正文宿主，布局和绘制继续由该宿主承担。方法、状态与功能定位效果分别验收，不能只改调用名称，也不能把能力接入变成外观接管。
 
-以下是本次真实调用盘点形成的施工清单，路径均以 `src/` 为根：
+以下是阶段 A 的接管清单，路径均以 `src/` 为根；其中暂留项目由本轮 B 清单继续接管：
 
-| 文件与关键声明 | 阶段 A：本轮改什么、删什么 | 接管与阶段 B 边界 |
+| 文件与关键声明 | 阶段 A：已完成的修改与删除 | 接管与阶段 B 边界 |
 | --- | --- | --- |
 | `components/plugins/kits/Popover/popover.ts` | 新增 `createPopoverPlugins`、`popoverTriggerCore`、`popoverBodyCore` 及前述 Options／Controller／事件类型；构建两端声明和同组打开事实 | 只用既有单元／组合工具，不修改组件 Props 或 Controller 类型推导 |
 | `components/plugins/kits/Popover/popover.style.ts` | 新增实际 body 的定位、间距、原生翻向和锚点可见性规则；不生成独立背板 | 不导入旧材质 Token，不设置背景、箭头、阴影、padding、尺寸或普通 overflow；旧材料只随真实旧 Tooltip 依赖保留 |
@@ -330,7 +332,7 @@ createPopoverPlugins = createInactivePlugins(
 | `components/kits/Popover/Popover.prop.ts`、`Popover.style.ts` | 删除组件专属 `popoverPropsDefinition`、`popoverVariantGroups`、`getPopoverPropsDirectorOptions` 与外壳样式 | 不将旧 Props Director／变体壳复制到 Plugin，不保组件别名 |
 | `components/kits/Popover/Popover.example.tsx`、`Popover.test.tsx`、`Popover.browser.test.tsx` | 迁移有效 Popover 功能用途和断言后退出旧文件 | 改验实际交互、关联和定位，不要求新 API 维持旧内容编排或外观结构 |
 | `app/example-dashboard/pages/ExampleDashboard.tsx` | `popover` 项改载新能力示例，移除旧 `PopoverExample` 导入 | `popover-surface` 项暂保其真实旧 Surface 示例，B 再退出，不顺带改 Tooltip 示例 |
-| `components/index.ts`（由根 `index.ts` 汇出） | 删除旧 `Popover` 导出，公开新 `createPopoverPlugins` 及必要类型 | Surface、旧显隐 Controller 和材质仍有真实依赖，本轮保留；无现有 plugins/index.ts，不为此另造聚合层 |
+| `components/index.ts`（由根 `index.ts` 汇出） | 删除旧 `Popover` 导出，公开新 `createPopoverPlugins` 及必要类型 | Surface、旧显隐 Controller 和材质在 A 仍有真实依赖而暂保，B 按下表退出；无现有 plugins/index.ts，不为此另造聚合层 |
 | `Architecture.md`、`docs/guide/组件Props与Controller状态.md`、`docs/guide/组件结构查看.md`、`components/plugins/index.spec.md` | 跟随说明 Popover 的 Plugin 归属、各端 Controller、实际宿主 Marker 和功能样式边界，退出旧组件 ref／`.props` 描述 | 只更新 Popover 相关现役事实，不重写其他组件契约，不把旧 Tooltip 暂留写成迁移完成 |
 | `components/tools/test/组件调用与集合的类型约束.test.tsx` | 旧 Popover 调用改为实际组件配合 plugins 两端能力结果与 controller 的调用 | 不扩张 Card／Button 泛型，不加入自动 Controller 注入 |
 | `components/tools/KitMarker/KitMarker.browser.test.tsx` | 迁移旧 Popover 专属场景，核对实际 Button／Card 的 KitMarker 与能力行为 | 旧 Tooltip／Surface 场景保留；Plugin 不新增业务组件身份 |
@@ -340,6 +342,53 @@ createPopoverPlugins = createInactivePlugins(
 | `components/plugins/kits/tooltip/tooltip.tsx`、`.style.ts` 及 Help／Label／Field 消费 | A 不修改产品行为或改组装链 | B 复用新 body／定位与显隐能力，保留帮助入口、内容、Marker 和各自样式；更新 Help／Label 的 SPEC |
 
 最终 `src/components/kits/Popover/` 仍须完整退出，不保转发、组件别名或兼容 Surface。**阶段 A 结束时目录内仍可能有 Tooltip 使用的共享设施，属于尚待 B 接管的实际责任，不得宣称目录已经清空。** B 完成时逐项核对生产、导出、示例和测试均无旧路径，才删除余下目录。
+
+#### 阶段 B：本轮施工、删除与责任接管
+
+Tooltip 是描述宿主自身的一元能力：调用者仍写 `is={tooltip({ content })}`，不接触组 id、trigger／body 或额外内容组件。`TooltipOptions` 的位置／间距采用 `$anchorPosition`、`$anchorGap`（sm／md／lg），默认 top／md；本轮用户新裁决以 md 覆盖此前保留旧 8px 的 lg 方案。Source 完成值为 null／undefined 时回落默认，使用 createState/tools 的 withDefault 保留响应更新，不镜像 State。内部按 `trigger`／`body` 配置复用 `createPopoverPlugins`，不自行复制定位、原生显隐或打开状态。
+
+```tsx
+pluginCore({ pluginOptions, addProps, domProxy }) {
+  const { plugins, controller } = createPopoverPlugins({
+    trigger: { triggerAction: false },
+    body: {
+      popover: 'hint', autoFocus: false,
+      $anchorPosition: withDefault(pluginOptions.$anchorPosition, 'top'),
+      $anchorGap: withDefault(pluginOptions.$anchorGap, 'md'),
+    },
+  })
+  const body = createComponent(Piv, {
+    is: plugins.body, class: 'Tooltip', htmlProps: { role: 'tooltip' },
+    children: pluginOptions.content,
+  }) // 构建一次；不经临时 JSX memo／children 快照，正文持续读取原 Source。
+  createEffect(内容是否存在的来源, (present) => {
+    if (!present) { cancelClose(); controller.hidePopover() }
+  }) // 常规内容响应；不是 Show／owner 退出清理。
+  addProps({ is: plugins.trigger, htmlProps: 描述此body的aria关系, on: 阅读事件 })
+  createPivStructure(domProxy).insertAfter(
+    <Show when={hasTooltipContent(pluginOptions.content)}>{body}</Show>,
+  ) // 只接入／移除同一节点；不在分支里重新构建body或能力。
+  return { isOpen: controller.isOpen, showPopover: open, hidePopover: dismiss }
+}
+```
+
+这是职责伪代码，不要求新增同名 helper。`open`／`enter` 取消离开计时并显示有内容的提示；`leave` 在宿主和正文均无阅读状态时沿现有 150ms 关闭；`dismiss` 取消计时再关闭。内容变空时由常规内容来源 Effect 清计时并调用现有 hidePopover，再移除同一附属 body；Show／owner 退出只清计时，不在退出清理中提交 DOM 命令。浏览器移出 document 虽会关闭，却不保证派发 toggle，不能依赖它同步状态。数字 0 必须保留。重新有内容时接回同一 body／pair，不借此实现全库 if 复用或代理换源。共享 `isOpen` 直接取 Popover Controller，不再维护第二份状态。
+
+| 文件／关键函数 | 本轮修改或删除 | 责任由谁接管、清理到什么状态 |
+| --- | --- | --- |
+| `src/components/plugins/kits/Popover/popover.ts`：`PopoverTriggerOptions`、`PopoverBodyOptions`、`popoverTriggerCore`、`popoverBodyCore`、`createPopoverGroup` | 增加 `triggerAction:false` 与 `autoFocus:false`；修正组 anchor 名必须带 --，避免依赖按钮隐式锚定掩盖无效 CSS；hidePopover 对已就绪的实际 body 仅在原生仍打开时 hide，再从 matches 读回同一共享状态；不伪造 false 或另建 State | Popover 自己关闭不适合 Tooltip 的按钮关联／dialog／expanded 与自动聚焦；Tooltip 不剥改内部 shadowProps |
+| `src/components/plugins/kits/tooltip/tooltip.tsx`：`TooltipOptions`、`TooltipController`、`pluginCore`、`hasTooltipContent`、`open`／`enter`／`leave`／`dismiss` | 用现有组合构建一次两端和实际 Piv body；保留阅读与内容更新，删除旧 VisibilityController／Surface 导入 | Popover 接管定位显隐与状态，Tooltip 只负责附属内容、阅读事件、描述关系及计时清理；调用方接口保持一元能力 |
+| `src/components/plugins/kits/tooltip/tooltip.style.ts` | 退出旧 Surface Token 依赖，把提示所需暗色材料直接声明在同一 `.Tooltip` body 上 | Tooltip 自有背景、文字、边框、圆角、padding、尺寸与阴影；定位间距由 Popover 管，不新建 Geometry／Paint／Outline 或箭头系统 |
+| `src/components/plugins/kits/tooltip/tooltip.browser.test.tsx` | 旧 helper／Surface 组装改实际能力；退出私有双绘制层与箭头字符串断言 | 验真实 hover／focus／跨提示阅读／Escape／150ms取消、动态内容0及空值、同body复用、焦点不被提示夺走和滚动整体 |
+| `src/components/index.ts` | 删除旧 Surface、旧材料与 VisibilityController 出口 | 现有 `createPopoverPlugins`、tooltip 及必要类型保留，不增兼容别名 |
+| `src/app/example-dashboard/pages/ExampleDashboard.tsx`、`thumbnail/ExampleThumbnailCapture.thumbnail.tsx` | 删除旧 surface 示例入口、导入与专用截图分支 | 现有 Popover／Tooltip 示例承担真实展示，不保只能指向已删除设施的入口 |
+| `src/components/kits/Page/Page.browser.test.tsx`、`Button/Button.browser.test.tsx` | Page 旧 Surface Marker 样本改真实 Help；Button 删除旧材料导入 | 检查实际组件身份与现有按钮效果，不把 Tooltip 伪造成新 Kit |
+| `src/components/kits/Popover/` 的 `PopoverSurface.tsx`、`PopoverSurface.prop.ts`、`PopoverSurface.style.ts`、`PopoverSurface.example.tsx`、`createPopoverVisibilityController.ts` | 全部删除，旧目录退出 | 原生功能由新 Popover、提示材料／阅读由 Tooltip、内容由实际 Piv 接管；没有转发壳或兼容出口 |
+| `Architecture.md`、`src/components/plugins/index.spec.md`、Popover／Help／Label 的相邻 SPEC 及真实旧引用说明 | 只跟随说明 Tooltip 新依赖及旧设施退出 | Help／Label／Field 生产已通过 tooltip 使用，无旧直接依赖则不改产品；保留 Marker、业务内容和样式所有权 |
+
+旧目录删除前，以仓库检索核对生产、公开出口、示例、截图入口、测试与现役说明全部不再依赖旧设施；历史记录不改写。Tooltip 内容外观由 Tooltip 自己承担，不回填到 Popover 功能样式。
+
+Task 的慢 DOM／晚执行缺口仍是已接受的未实现项；这不能免除当前可正常挂载场景的真实交互回归，也不能成为本轮重启异步任务系统或给消费者增加等待适配的理由。生命周期 Start／End／Progress／Cancel、if 全库复用与 Promise 完整协议仍按原文边界留后续。
 
 ### 4. 验收及外部交接
 
@@ -354,19 +403,19 @@ createPopoverPlugins = createInactivePlugins(
 | 职责与优先级 | Plugin 不接管宿主的内容布局、绘制或普通 overflow；调用者原 Props／id／aria 的优先关系不被隐式覆盖 |
 | 旧设施退出 | A 退出旧 Popover 组件及其消费；B 接管 Tooltip 仍需的共享设施后，才达到旧目录、双绘制层和旧函数全部退出 |
 
-几何与截图读取可以用于功能验收，不能移进生产作为定位补偿。新 Popover 测试不继承依赖 `.PopoverPaint`／border-shape 字符串的绘制断言；旧 Tooltip 自身仍使用它们的测试，在本阶段保留，不借重构 Popover 顺带删改。
+几何与截图读取可以用于功能验收，不能移进生产作为定位补偿。阶段 B 退出旧 `.PopoverPaint`、Geometry、Outline／border-shape 私有结构断言，改验同一实际 body 的内容、材料、几何与阅读交互，不为保留旧断言重造背板或箭头系统。
 
-阶段 A 在 UIKit 内验证新组合示例、实际 body 的功能定位、组件结构和样式边界，以及旧 Tooltip／Help／Label 没有因共享依赖退出而被破坏；不把回归测试当成已经实施 Tooltip 重构。阶段 B 再验提示新链路。各阶段完成相应类型检查、构建和适当单元／浏览器验证，记录实际浏览器与观察结果，不宣称控制台没有未检查的警告。已明确接受的 Task／首次节点缺口单独标记，不为取得全绿引入新机制。
+阶段 A 在 UIKit 内验证新组合示例、实际 body 的功能定位、组件结构和样式边界，以及旧 Tooltip／Help／Label 没有因共享依赖退出而被破坏；不把回归测试当成已经实施 Tooltip 重构。本轮阶段 B 验证提示新链路与旧设施完整退出。各阶段完成相应类型检查、构建和适当单元／浏览器验证，记录实际浏览器与观察结果，不宣称控制台没有未检查的警告。已明确接受的 Task／首次节点缺口单独标记，不为取得全绿引入新机制。
 
 原始问题的最终验收仍包括 bcoin StrategyView 的 RuleDetail。外部接口和实际源码状态在获得对应项目授权后核实，不能把历史旧接口记录直接当成当前事实，也不能只构建 UIKit 就称真实页通过。届时完成适配与关联构建，在真实页打开 Tooltip，滚动、切换指标／天数，检查实际宿主内容与定位没有独立背板脱节；不把业务外观重新归给 Plugin。当前明确保留“RuleDetail 验收未完成”，不删除该验收、不靠 UIKit 旧别名绕过，也不自行修改外部项目。
 
 ## 实施顺序、未决与完成判定
 
-1. 依据本次 Popover 授权核对前述实际清单与基础 API；保护已有 Git 修改，不自动暂存或回退。约束检查者先交付适用约束，执行者必须遵从 [Plan 撰写](../how-to-write-plan.md) 与 [Plan 落地](../how-to-apply-plan.md) 的实际要求，不能只记录已读。
-2. 在独立审查通过后完成阶段 A 的 `createPopoverPlugins`、两端 core、完整 Controller、示例、导出及调用迁移，退出旧 Popover 内容组件；复用原生属性和事件，验证点击／键盘只触发一次、原生状态、取消打开、焦点与 defaultOpen。没有新的 Tooltip 施工许可时，不迁其产品组装链。
-3. 实现仅服务功能的定位样式，并在实际宿主上验证滚动、翻向、`$anchorGap` 与锚点可见性。`$` 表示明确指定系统选择，间距只接受 sm／md／lg 关键字，不要求调用者提供像素。背景、内容布局、阴影和箭头绘制不进入 Plugin，也不以额外绘制实验作为功能实施前置。
-4. 交付阶段 A 的协议、消费迁移和功能验证，注明旧 Tooltip 仍依赖的文件。界面节点和样式归属须按现有 KitMarker、真实依赖与样式责任检查，不能只凭类型通过。
-5. 用户随后允许阶段 B 时，迁移 Tooltip 的 body／显隐／定位，保留 hover、focus、150ms 关闭、跨区域阅读和动态内容；接管全部旧共享消费后删除旧 Surface、Controller、Geometry／Paint、旧出口和余下目录。
+1. 依据本轮 Tooltip 授权核对阶段 B 清单与既有基础 API；保护已有 Git 修改，不自动暂存或回退。约束检查者先交付适用约束，执行者必须遵从 [Plan 撰写](../how-to-write-plan.md) 与 [Plan 落地](../how-to-apply-plan.md) 的实际要求，不能只记录已读。
+2. 阶段 A 已交付 `createPopoverPlugins`、双端能力与实际宿主迁移；本轮只补阶段 B 必需的两个 false 选项，确认普通点击／键盘、原生状态、取消打开、焦点与 defaultOpen 不回归。
+3. 复用已有功能定位样式，在 Tooltip 实际单body上验证滚动、翻向、`$anchorGap` 与锚点可见性。`$` 表示明确指定系统选择，间距只接受 sm／md／lg 关键字，不要求调用者提供像素。背景、内容布局、阴影和箭头绘制不进入 Popover 功能 Plugin；Tooltip 的提示材料由自身 .style.ts 承担，不因此新增箭头系统或绘制实验。
+4. 完成 Tooltip 单元内部配对、同body复用、阅读交互和材料接管，按 B 清单迁移剩余旧消费者。界面节点和样式归属须按现有 KitMarker、真实依赖与样式责任检查，不能只凭类型通过。
+5. 按本轮已获许可实施阶段 B：迁移 Tooltip 的 body／显隐／定位，保留 hover、focus、150ms 关闭、跨区域阅读和动态内容；接管全部旧共享消费后删除旧 Surface、Controller、Geometry／Paint、旧出口和余下目录。
 6. 完成各阶段 UIKit 验收后，在获得外部项目授权时适配并验证真实 RuleDetail。任一部分未完成均如实标出，不将 UIKit 通过当成最终页完成。
 
 此前箭头和材质实验不再构成本 Plan 的技术未决或施工阻断，也不另列为 Plugin 的后续任务。Task、Promise 兼容与 if 复用分别沿已链接 TODO，当前不实现；外部 RuleDetail 修改与运行权限仍需另获授权。

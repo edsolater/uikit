@@ -47,6 +47,7 @@ test('组件ref可改变字段关联并添加和移除缺省提示，集合随�
   expect(trigger.textContent).toBe('i')
   expect(trigger.getAttribute('aria-label')).toBe('新标题说明')
   await userEvent.hover(trigger)
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => surface.matches(':popover-open')).toBe(true)
   expect(surface.textContent).toBe('运行期说明')
@@ -98,6 +99,7 @@ test('悬停浮层在上方且不改变输入排版，可以移入说明继续�
     host,
   )
   const trigger = host.querySelector('button')!
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
   const input = host.querySelector('input')!
   const before = input.getBoundingClientRect().toJSON()
@@ -140,6 +142,7 @@ test('键盘聚焦显示，Escape关闭不抢焦点，重新移入可再次查�
     host,
   )
   const trigger = host.querySelector('button')!
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
   trigger.focus()
   await expect.poll(() => surface.matches(':popover-open')).toBe(true)
@@ -173,6 +176,7 @@ test('自定义触发内容与JSX段落复用同插件，Source清空回到问�
   expect(trigger.textContent).toBe('i')
   expect(trigger.querySelector('button')).toBeNull()
   await userEvent.hover(trigger)
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const surface = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => surface.matches(':popover-open')).toBe(true)
   expect(surface.querySelector('p')?.textContent).toBe('共同有效域')
