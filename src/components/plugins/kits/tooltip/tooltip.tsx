@@ -6,7 +6,7 @@
  * 使Label问号及其他宿主共用同一提示能力。
  */
 import { onCleanup, Show, val } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import { createPivStructure } from '@/components/Piv/plugin/helpers'
 import type { PivProps } from '../../../Piv/Piv'
 import {
@@ -43,7 +43,7 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
  *
  * 附属结构与离开关闭计时归构建作用域；浮层内容仍由原Source持续更新。
  */
-export const tooltip = defineInactivePlugin<TooltipOptions, TooltipController>({
+export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
   name: 'tooltip',
   pluginCore({
     pluginOptions: options,

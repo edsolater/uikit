@@ -7,8 +7,8 @@
  */
 import { expectTypeOf, test } from 'vitest'
 import type { State } from '@/foundation'
-import { popover } from '@/components/plugins/kits/Popover/popover'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import {
   Article, Board, Button, Card, Field, Loop, Table, Piv,
   type ArticleController, type ArticleProps,
@@ -19,14 +19,14 @@ import {
  * 编译期检查组件调用；不运行这些 JSX，避免给类型验收创建 DOM。
  */
 function verifyGenericCalls() {
-  const capability = defineInactivePlugin({ name: 'capability', pluginCore({ addProps }) {
+  const capability = createInactivePlugin({ name: 'capability', pluginCore({ addProps }) {
     addProps({ class: 'capability' })
     return {}
   } })()
   Piv({ is: capability })
   Piv({ is: [capability, capability] })
   // @ts-expect-error 未调用的定义不能作为 Plugin。
-  Piv({ is: defineInactivePlugin })
+  Piv({ is: createInactivePlugin })
   // @ts-expect-error 原 trait 入口已经退出。
   Piv({ trait: capability })
   // @ts-expect-error plugin 不再作为 Props。
@@ -105,9 +105,9 @@ function verifyGenericCalls() {
   Card.controllers.props.htmlProps.set({ type: 'submit' })
   // @ts-expect-error 插件也绑定原生节点类型，只通过精确实例 ref 操作。
   Board.controllers.props.plugin.set(() => {})
-  const { popoverTrigger, popoverBody } = popover({ popoverBody: { defaultOpen: true } })
+  const { plugins: { trigger: popoverTrigger, body: popoverBody }, controller: popoverController } = createPopoverPlugins({ body: { defaultOpen: true } })
   const floating = <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>正文</Card></>
-  popoverBody.controller.togglePopover({ force: true })
+  popoverController.body.togglePopover({ force: true })
 
   void [board, card, field, loop, table, article, ownProps, floating]
 }

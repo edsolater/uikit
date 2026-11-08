@@ -8,9 +8,9 @@ import { Piv } from './Piv'
 import { Card } from '../kits/Card/Card'
 import { Article } from '../kits/Article/Article'
 import { createPivStructure } from './plugin/helpers'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 
-const beforeLabelPlugin = defineInactivePlugin({
+const beforeLabelPlugin = createInactivePlugin({
   name: 'beforeLabel',
   pluginCore({ domProxy }) {
     const { insertBefore } = createPivStructure(domProxy)
@@ -19,7 +19,7 @@ const beforeLabelPlugin = defineInactivePlugin({
   },
 })
 
-const appendRedDotPlugin = defineInactivePlugin({
+const appendRedDotPlugin = createInactivePlugin({
   name: 'appendRedDot',
   pluginCore({ domProxy }) {
     const { appendChild } = createPivStructure(domProxy)
@@ -34,7 +34,7 @@ const appendRedDotPlugin = defineInactivePlugin({
   },
 })
 
-const wrapManagerPlugin = defineInactivePlugin({
+const wrapManagerPlugin = createInactivePlugin({
   name: 'wrapManager',
   pluginCore({ domProxy }) {
     const { wrapOutside } = createPivStructure(domProxy)
@@ -43,7 +43,7 @@ const wrapManagerPlugin = defineInactivePlugin({
   },
 })
 
-const selfMeasurePlugin = defineInactivePlugin({
+const selfMeasurePlugin = createInactivePlugin({
   name: 'selfMeasure',
   pluginCore({ domProxy }) {
     const { insertAfter } = createPivStructure(domProxy)

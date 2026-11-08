@@ -35,11 +35,11 @@ export function DragAndDropExample() {
   const renderGroup = (name: 'A' | 'B', group: ExampleGroup) => (
     <Piv class="drag-drop-example-group">
       <strong>组 {name}</strong>
-      <Piv is={group.draggable} class="drag-drop-example-card">
+      <Piv is={group.plugins.draggable} class="drag-drop-example-card">
         拖动 {name}
       </Piv>
       <Piv
-        is={group.droppable}
+        is={group.plugins.droppable}
         class="drag-drop-example-target"
         htmlProps={val(results)[name] ? { 'data-drop-received': 'true' } : {}}
       >

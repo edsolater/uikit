@@ -1,16 +1,16 @@
 # 职责
 
-`popover` 为实际节点提供成对浮层能力：关联触发端与正文端，处理原生显隐、状态、事件和锚点定位。正文、内容布局与外观仍由 Button／Card 等宿主或业务样式负责；Plugin 不创建内容外壳，也不绘制背景、箭头或阴影。
+`createPopoverPlugins` 为实际节点提供成对浮层能力：关联触发端与正文端，处理原生显隐、状态、事件和锚点定位。正文、内容布局与外观仍由 Button／Card 等宿主或业务样式负责；Plugin 不创建内容外壳，也不绘制背景、箭头或阴影。
 
 # 构建与使用
 
-在组件内调用一次 `popover`，得到两个已构建的能力结果；直接交给 `is`，不再调用，也不需要外传共享 id、Scope 或组件 ref：
+组合工具统一汇集两端的能力结果和 Controller；Popover 直接声明两端 core，并通过组合工具的 controller 配置补充快捷操作。在组件内调用一次 `createPopoverPlugins`，得到 `{ plugins, controller }`。`plugins` 的 `trigger`、`body` 是保留自身 `plugin` 和 `controller` 的原始能力结果，可直接交给 `is`；`controller` 集中提供两端控制入口。集合 `plugins` 本身不交给 `is`。无需外传共享 id、Scope 或组件 ref：
 
 ```tsx
 function Example() {
   const [initialFocus, receiveInitialFocus] = createDomRef<HTMLButtonElement>()
-  const { popoverTrigger, popoverBody } = popover({
-    popoverBody: {
+  const { plugins: popoverPlugins, controller: popoverController } = createPopoverPlugins({
+    body: {
       $anchorPosition: 'top',
       $anchorGap: 'md',
       autoFocus: initialFocus,
@@ -18,18 +18,18 @@ function Example() {
   })
 
   return <>
-    <Button is={popoverTrigger}>打开说明</Button>
-    <Card is={popoverBody}>
+    <Button is={popoverPlugins.trigger}>打开说明</Button>
+    <Card is={popoverPlugins.body}>
       <Text>正文由调用者提供。</Text>
       <Button domRef={receiveInitialFocus} on={{ click() {
-        popoverBody.controller.hidePopover()
+        popoverController.body.hidePopover()
       } }}>关闭说明</Button>
     </Card>
   </>
 }
 ```
 
-两端各有完整 Controller，直接通过各自的 `.controller` 使用，读取同组 `isOpen`。不同组合调用相互独立。组件结构查看展示实际 Button／Card，不新增 Popover 的组件 Marker。
+`controller` 的 `trigger`、`body` 分别是完整的 `PopoverTriggerController`、`PopoverBodyController`，与整体入口共享同一个 `isOpen`。不同组合调用相互独立。组件结构查看展示实际 Button／Card，不新增 Popover 的组件 Marker。输入配置使用 `trigger`、`body` 字段。
 
 示例中的 `createDomRef` 取得原生元素引用，传给 Button 的是 `domRef`，不是组件 Controller 的 `ref`。
 
@@ -37,12 +37,12 @@ function Example() {
 
 | 配置位置 | 字段 | 行为与默认值 |
 | --- | --- | --- |
-| `popoverTrigger` | `triggerAction` | `'toggle'`／`'show'`／`'hide'`，默认 `'toggle'`；键盘使用实际按钮的原生行为 |
-| `popoverBody` | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'bottom'`；按来源更新定位 |
-| `popoverBody` | `$anchorGap` | `Source<'sm' \| 'md' \| 'lg' \| undefined>`，默认 `'md'`；指定锚点与主体的间距档位，实际距离由 `popover.style.ts` 映射 |
-| `popoverBody` | `popover` | `'auto'`／`'hint'`／`'manual'`，默认 `'auto'`；外部点击、Escape 等关闭行为沿对应原生模式 |
-| `popoverBody` | `defaultOpen` | `Source<boolean \| undefined>`，默认 false；只用于首次挂载的初始化判断，不随来源后续变化持续开关 |
-| `popoverBody` | `autoFocus` | `Partial<HTMLElement>`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素 |
+| `trigger` | `triggerAction` | `'toggle'`／`'show'`／`'hide'`，默认 `'toggle'`；键盘使用实际按钮的原生行为 |
+| `body` | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'bottom'`；按来源更新定位 |
+| `body` | `$anchorGap` | `Source<'sm' \| 'md' \| 'lg' \| undefined>`，默认 `'md'`；指定锚点与主体的间距档位，实际距离由 `popover.style.ts` 映射 |
+| `body` | `popover` | `'auto'`／`'hint'`／`'manual'`，默认 `'auto'`；外部点击、Escape 等关闭行为沿对应原生模式 |
+| `body` | `defaultOpen` | `Source<boolean \| undefined>`，默认 false；只用于首次挂载的初始化判断，不随来源后续变化持续开关 |
+| `body` | `autoFocus` | `Partial<HTMLElement>`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素 |
 
 `defaultOpen` 读取的是 Source 的完成值，不能把 State／Promise 对象本身的真值当成 true。位置与间距是持续来源，默认打开是一次初始化，两者用途不同。
 
@@ -58,7 +58,7 @@ function Example() {
 
 # 原生事件与回调
 
-回调配置在 `popoverBody`。`PopoverToggleEvent` 是实际原生事件，提供 `oldState`、`newState` 和 `preventDefault()`，状态值为 `'open'`／`'closed'`。
+回调配置在 `body`。`PopoverToggleEvent` 是实际原生事件，提供 `oldState`、`newState` 和 `preventDefault()`，状态值为 `'open'`／`'closed'`。
 
 此处记录当前已实现的原生状态回调；Start／End／Progress／Cancel 生命周期仍是[现役 Plan 中的后续目标](../../../../../docs/plans/261106_Popover与Tooltip能力重构.md#后续生命周期已定名称尚未实现)，当前 `onOpen`／`onClose` 不表示 CSS 过渡完成。
 
@@ -75,10 +75,15 @@ function Example() {
 
 # Controller 操作
 
-两个角色提供相同的方法，操作同组 body；方法从构建返回时就存在，无需可选调用。
+两个角色提供相同的方法，操作同组 body；方法从构建返回时就存在，无需可选调用。整体入口另提供常用操作的直接函数引用，不包装转发：
 
 ```ts
-const controller = popoverBody.controller
+const { trigger: triggerController, body: bodyController } = popoverController
+const controller = popoverController
+
+controller.showPopover === triggerController.showPopover // true
+controller.hidePopover === bodyController.hidePopover   // true
+controller.togglePopover === triggerController.togglePopover // true
 
 controller.showPopover()
 controller.hidePopover()

@@ -237,11 +237,11 @@ describe('droppable', () => {
         <>
           <div data-testid="container-a">
             <Piv
-              is={groupA.draggable}
+              is={groupA.plugins.draggable}
               htmlProps={{ 'data-testid': 'group-source' }}
             />
             <Piv
-              is={groupB.droppable}
+              is={groupB.plugins.droppable}
               htmlProps={{ 'data-testid': 'group-b' }}
             />
             <Piv
@@ -251,7 +251,7 @@ describe('droppable', () => {
           </div>
           <div data-testid="container-b">
             <Piv
-              is={groupA.droppable}
+              is={groupA.plugins.droppable}
               htmlProps={{ 'data-testid': 'group-a' }}
             />
           </div>

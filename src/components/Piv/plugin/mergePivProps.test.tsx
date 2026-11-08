@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest'
 import { createState } from '@/foundation'
 import { Piv } from '../Piv'
 import { mergePivProps } from './mergePivProps'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 
 describe('配置插件消费', () => {
   test('合并保留单来源身份与前导、后续 undefined 的不同位置', () => {
@@ -91,7 +91,7 @@ describe('配置插件消费', () => {
     let nestedCleaned = 0
     let clicks = 0
     const dispose = render(() => {
-      const nested = defineInactivePlugin({
+      const nested = createInactivePlugin({
         name: 'nested',
         pluginCore({ addProps }) {
           nestedBuilds += 1
@@ -111,7 +111,7 @@ describe('配置插件消费', () => {
           return {}
         },
       })()
-      const injected = defineInactivePlugin({
+      const injected = createInactivePlugin({
         name: 'injected',
         pluginCore({ addProps }) {
           builds += 1
@@ -162,7 +162,7 @@ describe('配置插件消费', () => {
     const attached: HTMLElement[] = []
     const released: HTMLElement[] = []
     const dispose = render(() => {
-      const capability = defineInactivePlugin({
+      const capability = createInactivePlugin({
         name: 'structural',
         pluginCore({ addProps }) {
           addProps({ as: 'button', if: visible })
@@ -202,14 +202,14 @@ describe('配置插件消费', () => {
 
   test('is 数组后项优先，与 shadowProps 数组后项优先一致', () => {
     const host = document.createElement('div')
-    const first = defineInactivePlugin({
+    const first = createInactivePlugin({
       name: 'first',
       pluginCore({ addProps }) {
         addProps({ as: 'button' })
         return {}
       },
     })
-    const second = defineInactivePlugin({
+    const second = createInactivePlugin({
       name: 'second',
       pluginCore({ addProps }) {
         addProps({ as: 'a' })
@@ -234,7 +234,7 @@ describe('配置插件消费', () => {
 
   test('普通回调与缺少有效 plugin 的对象被拒绝，能力结果与 plugin 均可使用', () => {
     createRoot((dispose) => {
-      const capability = defineInactivePlugin({
+      const capability = createInactivePlugin({
         name: 'valid',
         pluginCore({ addProps }) {
           addProps({ htmlProps: { title: 'valid' } })
@@ -261,7 +261,7 @@ describe('配置插件消费', () => {
     const dispose = render(() => {
       const first = { shadowProps: { as: 'button' as const } }
       const second = { shadowProps: { as: 'a' as const } }
-      const capability = defineInactivePlugin({
+      const capability = createInactivePlugin({
         name: 'nestedPriority',
         pluginCore({ addProps }) {
           addProps(first)

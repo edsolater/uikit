@@ -6,14 +6,14 @@
 
 ```tsx
 function Example() {
-  const { draggable, droppable } = dragAndDrop({
+  const { plugins: dragAndDropPlugins } = dragAndDrop({
     draggable: { payload: item },
     droppable: { onDrop: receive },
   })
   return (
     <>
-      <Piv is={draggable}>拖动材料</Piv>
-      <Piv is={droppable}>接收材料</Piv>
+      <Piv is={dragAndDropPlugins.draggable}>拖动材料</Piv>
+      <Piv is={dragAndDropPlugins.droppable}>接收材料</Piv>
       <Piv is={droppable({ onDrop: receive })}>独立接收</Piv>
     </>
   )

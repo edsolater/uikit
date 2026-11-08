@@ -5,7 +5,7 @@ import { createState, render, val, type JSXElement } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { Piv } from '../../../Piv/Piv'
 import { tooltip, type TooltipController } from './tooltip'
-import { popover } from '@/components/plugins/kits/Popover/popover'
+import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
 import { Button } from '@/components/kits/Button/Button'
 import { Card } from '@/components/kits/Card/Card'
 import { PopoverSurface } from '@/components/kits/Popover/PopoverSurface'
@@ -55,7 +55,7 @@ test('默认打开反映原生状态，取消打开不伪报成功，强制切�
       },
     })
     controller = current
-    const { popoverTrigger, popoverBody } = popover({ popoverBody: { defaultOpen: true } })
+    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { defaultOpen: true } })
     return (
       <>
         <Button is={popoverTrigger} disabled htmlProps={{ 'aria-busy': 'false' }}>默认打开</Button>
@@ -224,7 +224,7 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
 
 test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作', async () => {
   dispose = render(() => {
-    const { popoverTrigger, popoverBody } = popover({})
+    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
     return <>
       <Button is={popoverTrigger} htmlProps={{ 'data-purpose': '补充' }}>打开补充内容</Button>
       <Card is={popoverBody}><h2>标题</h2>原浮层正文</Card>
@@ -250,7 +250,7 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
 
 test('横向浮层在右边缘翻到左侧', async () => {
   dispose = render(() => {
-    const { popoverTrigger, popoverBody } = popover({ popoverBody: { $anchorPosition: 'right' } })
+    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { $anchorPosition: 'right' } })
     return <>
       <Button is={popoverTrigger} style={{ position: 'fixed', right: '8px', top: '180px' }}>边缘目标</Button>
       <Card is={popoverBody}>横向补充说明</Card>
@@ -265,7 +265,7 @@ test('横向浮层在右边缘翻到左侧', async () => {
 test('目标移动后浮层跟随，主体保留命中', async () => {
   const offset = createState(200)
   dispose = render(() => {
-    const { popoverTrigger, popoverBody } = popover({})
+    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
     return <>
       <Button is={popoverTrigger} style={{ position: 'fixed', get left() { return `${val(offset)}px` }, top: '140px' }}>目标</Button>
       <Card is={popoverBody} style={{ width: '120px' }}>浮层内容</Card>

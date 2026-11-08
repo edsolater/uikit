@@ -7,9 +7,9 @@
 import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
-  defineInactivePlugin,
+  createInactivePlugin,
   type PluginCoreContext,
-} from '@/components/plugins/tools/defineInactivePlugin'
+} from '@/components/plugins/tools/createInactivePlugin'
 import { registerInternalDropTarget } from '@/components/plugins/kits/dragSession'
 import { createExternalDropListeners } from './createExternalDropListeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
@@ -109,7 +109,7 @@ export function droppablePluginCore({
 }
 
 /** 接收能力的单元定义；在组件内配置调用时构建一份能力结果。 */
-export const droppable = defineInactivePlugin({
+export const droppable = createInactivePlugin({
   name: 'droppable',
   pluginCore: droppablePluginCore,
 })

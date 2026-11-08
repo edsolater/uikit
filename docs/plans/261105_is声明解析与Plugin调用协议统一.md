@@ -38,8 +38,8 @@ flowchart TD
 
 改造前的源码处于旧的中间状态，以下事实不能作为目标协议的限制：
 
-- `plugins/tools/defineInactivePlugin.ts` 的调用产物仍是 Plugin 函数；Controller 由 `usePlugin` 另行提供。
-- `plugins/tools/defineInactivePlugins.ts` 仍返回静态角色工厂集合，没有“每次组合调用”的内部共享身份。
+- `plugins/tools/createInactivePlugin.ts` 的调用产物仍是 Plugin 函数；Controller 由 `usePlugin` 另行提供。
+- `plugins/tools/createInactivePlugins.ts` 仍返回静态角色工厂集合，没有“每次组合调用”的内部共享身份。
 - Piv 当前执行队列通过函数与普通对象分支区分 Plugin／内部补充声明，尚不支持新的能力结果对象。
 - 当前 PivShadowProps 包含 as／if，插件 addProps 使用的 ShadowProps 却排除它们；PluginContext 又直接传 element，实际执行位于 DOM 创建后。这是本次要退出的处理顺序与双类型限制，不能当成目标设计。
 - 拖放已移除 Scope 活动源码，但 `DraggableOptions`、`DroppableOptions` 仍要求调用者自行传递组 `id`。
@@ -54,13 +54,13 @@ flowchart TD
 
 用户已明确：Plugin 就是注入 Props；addProps 直接提交 shadowProps，二者是同一套声明契约；Plugin 的解析在 shadowProps 的统一解析之前。Plugin 不接收 element，接入真实节点使用声明中的 domRef；withDom 只是注册该声明的快捷方式。
 
-本文的“构建”专指每次调用 `inactivePlugin(pluginOptions)` 创建一份能力结果，不是 TypeScript 编译，也不是调用 `defineInactivePlugin` 注册定义。每份结果只在这次构建运行一次业务 `pluginCore`，准备完整 Controller 并注册 addProps／withDom 声明。is 解析、DOM 挂载或重挂、状态更新都不得重新运行这份结果的 core；再次显式调用 inactivePlugin 才是另一次构建。
+本文的“构建”专指每次调用 `inactivePlugin(pluginOptions)` 创建一份能力结果，不是 TypeScript 编译，也不是调用 `createInactivePlugin` 注册定义。每份结果只在这次构建运行一次业务 `pluginCore`，准备完整 Controller 并注册 addProps／withDom 声明。is 解析、DOM 挂载或重挂、状态更新都不得重新运行这份结果的 core；再次显式调用 inactivePlugin 才是另一次构建。
 
-**激活位置是 API 调用契约：defineInactivePlugin／defineInactivePlugins 的定义可以放模块顶层；调用它们返回的 inactivePlugin／inactivePlugins 激活能力，必须在组件之中，组件内的 JSX 内联调用合法。** 禁止在模块顶层执行 `const capability = clickable()` 或组合调用。不增加 getOwner 检查、运行时守卫、自动 root 或 owner 兼容层。
+**激活位置是 API 调用契约：createInactivePlugin／createInactivePlugins 的定义可以放模块顶层；调用它们返回的 inactivePlugin／inactivePlugins 激活能力，必须在组件之中，组件内的 JSX 内联调用合法。** 禁止在模块顶层执行 `const capability = clickable()` 或组合调用。不增加 getOwner 检查、运行时守卫、自动 root 或 owner 兼容层。
 
 ```tsx
 // 合法：模块顶层只定义能力，不激活。
-const clickable = defineInactivePlugin({ name: 'clickable', pluginCore })
+const clickable = createInactivePlugin({ name: 'clickable', pluginCore })
 
 function Example() {
   const capability = clickable()
@@ -181,7 +181,7 @@ type InactivePlugin<Options extends object, Members extends object> =
 
 固定含义：
 
-- `defineInactivePlugin(buildTimeDefinitions)` 仍接收一个 `{ name, pluginCore }` 对象，返回一个 inactivePlugin 函数。
+- `createInactivePlugin(buildTimeDefinitions)` 仍接收一个 `{ name, pluginCore }` 对象，返回一个 inactivePlugin 函数。
 - `inactivePlugin(pluginOptions)` 返回普通对象，至少包含 `plugin` 和 `controller`。不能返回 tuple，不能让这个对象再承担一次配置调用。
 - `pluginCore({ pluginOptions, addProps, withDom, id })` 在每次 inactivePlugin 构建时只运行一次，准备功能状态、提交声明并返回完整 Controller；不接收 element 或节点 onCleanup，不得再返回一层 `{ plugin, controller }`。id 是可选内部组身份，只由组合包装传入，不加入公开 Options。
 - 返回的 Plugin 是带标识的 ShadowProps 容器，is 解析时直接展开其中已收集的声明，不再次执行 core 或重建 Controller。节点接入与清理由声明的 domRef 承担，不恢复位置参数、Provider、祖先 Context 或全局管理器。
@@ -193,7 +193,7 @@ type InactivePlugin<Options extends object, Members extends object> =
 下面只表达业务 core 的唯一执行位置、声明收集及快捷方式；声明提交后由既有解析和 domRef 消费流程处理。
 
 ```ts
-function defineInactivePlugin({ name, pluginCore }) {
+function createInactivePlugin({ name, pluginCore }) {
   return function inactivePlugin(pluginOptions) {
     const shadowProps = []
     const plugin = { [pluginMarker]: name, shadowProps }
@@ -261,21 +261,21 @@ function RefExample() {
 
 ### 3. 组合能力的定义、配置和返回值
 
-`defineInactivePlugins(buildTimeDefinitions)` 的输入仍按角色名组织 core，内部仍委托单数构造；**返回值改为可调用的 inactivePlugins 函数，不能继续返回模块级静态角色集合。**
+`createInactivePlugins(buildTimeDefinitions, options?)` 的第一参数仍按角色名组织 core，内部仍委托单数构造；**返回值改为可调用的 inactivePlugins 函数，不能继续返回模块级静态角色集合。**
 
 ```ts
-const dragAndDrop = defineInactivePlugins({
+const dragAndDrop = createInactivePlugins({
   draggable: draggablePluginCore,
   droppable: droppablePluginCore,
 })
 
 ```
 
-组合定义可位于模块顶层；下面的组合激活必须在组件内。返回的 `draggable`／`droppable` 各自已是结果，可读取其 `.plugin`、`.controller`，不能再调用 `draggable()`。
+组合定义可位于模块顶层；下面的组合激活必须在组件内。组合调用统一返回 `{ plugins, controller }`。`plugins.draggable`／`plugins.droppable` 保留原始能力结果；`controller.draggable`／`controller.droppable` 直接引用各端的 `.controller`。不能再调用 `draggable()`，角色集合本身不交给 `is`。
 
 ```tsx
 function TransferExample() {
-  const { draggable, droppable } = dragAndDrop({
+  const { plugins: { draggable, droppable } } = dragAndDrop({
     draggable: { payload: item },
     droppable: { onDrop: receive },
   })
@@ -287,17 +287,19 @@ function TransferExample() {
 }
 ```
 
+第二参数可用 `controller(controllers)` 返回组合专属快捷成员；回调只在各端构建并汇集完成后运行一次，已有角色 Controller 原样保留，快捷状态与方法直接引用现有成员。单元 core、DOM 生命周期和角色配置不归该回调。未提供第二参数的组合继续只提供各端控制入口。
+
 这份角色配置形状是本文对已确定职责的具体化：角色名对应角色 Options，不添加 `defaults`、覆盖策略、第二次角色调用或 merge 配置层。角色 Options 的必填字段保持必填：例如 draggable 的 payload 不可因组合包装而变成可省略。所有角色均可缺省配置时，组合才允许无参数调用。
 
 内部准备过程必须能对应到以下伪代码；类型推导按实际 Options 和 core 返回成员保留，不能用公开 `any` 抹掉角色差异：
 
 ```ts
-function defineInactivePlugins(buildTimeDefinitions) {
+function createInactivePlugins(buildTimeDefinitions, options) {
   return function inactivePlugins(pluginOptions = {}) {
     const id = {} // 只属于这一次组合调用，不返回给调用者。
 
-    return map(buildTimeDefinitions, (pluginCore, name) => {
-      const inactivePlugin = defineInactivePlugin({
+    const plugins = map(buildTimeDefinitions, (pluginCore, name) => {
+      const inactivePlugin = createInactivePlugin({
         name,
         pluginCore(context) {
           return pluginCore({ ...context, id })
@@ -305,6 +307,8 @@ function defineInactivePlugins(buildTimeDefinitions) {
       })
       return inactivePlugin(pluginOptions[name])
     })
+    const controller = map(plugins, role => role.controller)
+    return { plugins, controller: { ...controller, ...options?.controller?.(controller) } }
   }
 }
 ```
@@ -350,11 +354,11 @@ function CombinedExample() {
 
 | 文件或范围 | 要更新／删除什么 | 由谁接管与完成状态 |
 | --- | --- | --- |
-| `src/components/plugins/tools/defineInactivePlugin.ts` | 每次构建执行 core 一次，收集声明并返回完整结果；新增 withDom 快捷字段与回调 JSDoc，说明组件内激活契约；Plugin 仅提交声明；移除 element／节点 onCleanup 参数 | core 在配置时准备完整 Controller，Plugin 提交 shadowProps，domRef 接入资源；不搬入旧 usePlugin 的 Partial／卸载后方法缺席语义 |
+| `src/components/plugins/tools/createInactivePlugin.ts` | 每次构建执行 core 一次，收集声明并返回完整结果；新增 withDom 快捷字段与回调 JSDoc，说明组件内激活契约；Plugin 仅提交声明；移除 element／节点 onCleanup 参数 | core 在配置时准备完整 Controller，Plugin 提交 shadowProps，domRef 接入资源；不搬入旧 usePlugin 的 Partial／卸载后方法缺席语义 |
 | `src/hooks/createRef.ts` | 仅将 createRef 返回的 Receiver 输入放宽为 any，保留外部引用 Partial 与清理约定 | 调用者用泛型指定引用类型；组件继续提供自己的完整 Controller，不改组件声明，不扩大通用 RefReceiver 的输入协议 |
-| `src/components/plugins/tools/defineInactivePlugins.ts` | 静态 map 改为返回可调用组合；内部每次准备共享 id | FNKit map 逐项委托单数构造；不另造组执行器或全局身份表 |
+| `src/components/plugins/tools/createInactivePlugins.ts` | 静态 map 改为返回可调用组合；内部每次准备共享 id | FNKit map 逐项委托单数构造；不另造组执行器或全局身份表 |
 | `src/components/plugins/tools/usePlugin.ts` | 删除函数、文件与公开出口 | 已由单元／组合调用接管，不保留别名、弃用壳、包装器或另一份同义 hook |
-| `src/components/plugins/tools/usePlugin.test.ts` | 有效行为测试转到定义工具的相邻测试，再删除旧主体测试文件 | 可重命名为 `defineInactivePlugin.test.ts`；组合与输入验证放对应既有测试位置，不复制同样断言 |
+| `src/components/plugins/tools/usePlugin.test.ts` | 有效行为测试转到定义工具的相邻测试，再删除旧主体测试文件 | 可重命名为 `createInactivePlugin.test.ts`；组合与输入验证放对应既有测试位置，不复制同样断言 |
 | `src/components/Piv/Piv.tsx`、`plugin/mergePivProps.ts` | 将 Plugin 展开前移到结构选择前；统一 ShadowProps 并删除 PivShadowProps；同步所有公开 is 类型、相关类型出口和说明；删除不再需要的重复类型 | Piv 收集／组织声明，Dode 创建／绑定节点；保既有来源优先级，不重建 runPlugin，不扩组件泛型 |
 | `src/components/Piv/Dode.tsx`、`domRef.ts` | Dode 接收创建前已准备的结构与声明，不再通过拿到 element 的 setup 才求出 Plugin 产物；domRef 消费 withDom 的等效声明并沿用现有清理 | 消除结构选择与晚到补充声明的割裂；不复制 DOM 绑定器，不新增节点重建系统 |
 | `clickable` 及父子能力组合、其余 Plugin core | 将 element 使用和节点资源迁入 domRef／等效 withDom；状态和 Controller 在构建时一次准备；子能力声明通过 is 提交 | `const child = hoverable(options)`，`addProps({ is: child })`，通过 child.controller 使用成员；不再直接执行 child.plugin(context) 获取成员 |
@@ -375,7 +379,7 @@ function CombinedExample() {
 
 - 定义允许模块顶层；单元与组合的激活示例、现役调用和说明均在组件内，JSX 内联合法。模块顶层激活只作为非法用法说明，不为位置契约新增运行时检查或 owner 兼容设施。
 
-- 每次 inactivePlugin 构建仅运行一次 core；defineInactivePlugin 定义阶段不运行，is 展开、挂载／重挂和状态更新不重跑。分别构建的结果独立，不能把重挂调用 withDom 回调误判成 core 重跑。
+- 每次 inactivePlugin 构建仅运行一次 core；createInactivePlugin 定义阶段不运行，is 展开、挂载／重挂和状态更新不重跑。分别构建的结果独立，不能把重挂调用 withDom 回调误判成 core 重跑。
 - withDom 与 addProps({domRef: callback}) 行为等效：callback 仅收到 element，void 返回可用，清理由既有 domRef 流程消费；if=false 不调用，节点接入时调用。
 - Source 与 on 回调更新、Controller 状态仍有效，不通过重跑 core 更新，也不因构建一次冻结；定义处与解构／调用处的 withDom、callback 清理及 addProps hover 说明可读。
 - 能力结果返回时 Controller 已完整，公开方法可直接调用；节点接入与退出不使方法消失。核对实际成员与已有行为，不能只靠类型断言。

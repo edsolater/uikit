@@ -21,7 +21,7 @@ import {
   KitMarkerStructureViewTrigger,
   Table,
 } from '@/components'
-import { popover as createPopover } from '@/components/plugins/kits/Popover/popover'
+import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -74,7 +74,7 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(
       () => {
-        const { popoverTrigger, popoverBody } = createPopover({})
+        const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
         return <>
           <KitMarker
             componentName="透明父"
@@ -220,7 +220,7 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(
       () => {
-        const { popoverTrigger, popoverBody } = createPopover({})
+        const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
         return <>
           <Card>
             <Article>
@@ -344,7 +344,7 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(
       () => {
-        const { popoverTrigger, popoverBody } = createPopover({})
+        const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
         return <>
           <Button is={popoverTrigger}>打开补充</Button>
           <Card is={popoverBody} description="原生浮层">真实浮层内容</Card>

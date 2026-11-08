@@ -5,10 +5,10 @@ import { createComponent } from '@/foundation/render'
 import { Piv } from '@/components/Piv/Piv'
 import { isPromiseResultProxy } from '@edsolater/fnkit'
 import {
-  defineInactivePlugin,
+  createInactivePlugin,
   type PluginCoreContext,
-} from './defineInactivePlugin'
-import { defineInactivePlugins } from './defineInactivePlugins'
+} from './createInactivePlugin'
+import { createInactivePlugins } from './createInactivePlugins'
 
 test('同步读取时准备一次代理，节点接入后执行此前的命令', async () => {
   const host = document.body.appendChild(document.createElement('div'))
@@ -18,7 +18,7 @@ test('同步读取时准备一次代理，节点接入后执行此前的命令',
   try {
     const capability = createRoot((dispose) => {
       release = dispose
-      return defineInactivePlugin({
+      return createInactivePlugin({
         name: 'domProxy',
         pluginCore(context) {
           const first = context.domProxy
@@ -48,7 +48,7 @@ test('同步读取时准备一次代理，节点接入后执行此前的命令',
 
 test('组合角色未读取 domProxy 时不准备；读取后保持角色间独立', () => {
   createRoot((dispose) => {
-    const group = defineInactivePlugins({
+    const group = createInactivePlugins({
       unused: (_context: PluginCoreContext<Record<string, never>>) => ({}),
       first: (context: PluginCoreContext<Record<string, never>>) => ({
         proxy: context.domProxy,
@@ -58,11 +58,11 @@ test('组合角色未读取 domProxy 时不准备；读取后保持角色间独�
       }),
     })
     const result = group()
-    expect(result.unused.plugin.shadowProps).toEqual([])
-    expect(result.first.plugin.shadowProps).toHaveLength(1)
-    expect(result.second.plugin.shadowProps).toHaveLength(1)
-    expect(result.first.controller.proxy).not.toBe(
-      result.second.controller.proxy,
+    expect(result.plugins.unused.plugin.shadowProps).toEqual([])
+    expect(result.plugins.first.plugin.shadowProps).toHaveLength(1)
+    expect(result.plugins.second.plugin.shadowProps).toHaveLength(1)
+    expect(result.controller.first.proxy).not.toBe(
+      result.controller.second.proxy,
     )
     dispose()
   })

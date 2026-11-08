@@ -48,7 +48,7 @@ Controller 的方法和状态在构建返回时已经存在，不使用 `Partial
 多个节点需要独立状态时分别调用 inactivePlugin；联合能力的角色从组合结果中分别取得 Controller：
 
 ```ts
-const { draggable, droppable } = dragAndDrop({
+const { plugins: { draggable, droppable } } = dragAndDrop({
   draggable: { payload: item },
   droppable: { onDrop: receive },
 })
@@ -58,6 +58,24 @@ droppable.controller.enable()
 ```
 
 不需要控制时直接写 `is={clickable(options)}`。父 Plugin 也可以通过 `child.controller` 使用子能力，组件自身的 ref 继续只承担组件原有的控制协议。
+
+## Popover 分开返回节点能力与控制入口
+
+组合工具统一返回 `{ plugins, controller }`，Popover 直接声明两端 core，通过工具第二参数的 controller 回调补充本领域快捷操作。`plugins` 包含两端原始能力结果，`controller` 包含两端完整 Controller，并提供常用操作的直接引用：
+
+```tsx
+const { plugins: popoverPlugins, controller: popoverController } = createPopoverPlugins()
+const { trigger: popoverTrigger, body: popoverBody } = popoverPlugins
+const { trigger: triggerController, body: bodyController } = popoverController
+
+<><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>正文</Card></>
+
+popoverController.showPopover === triggerController.showPopover // true
+popoverController.hidePopover === bodyController.hidePopover   // true
+popoverController.togglePopover === triggerController.togglePopover // true
+```
+
+两端和整体入口的 `isOpen` 是同一个 State。快捷方法只复用已有函数，不包装转发；两端能力结果仍保留各自的 `plugin` 与 `controller`，整体入口只是直接引用同一个 Controller。组合的角色能力结果与 Controller 由工具统一汇集；Popover 不重复汇集。单元能力仍按原协议返回自身的 `{ plugin, controller }`。配置按 `trigger`、`body` 传入，见 [Popover SPEC](../../src/components/plugins/kits/Popover/SPEC.md)。
 
 ## 尚未实现的能力
 

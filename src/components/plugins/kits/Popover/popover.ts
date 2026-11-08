@@ -14,10 +14,9 @@ import {
   val,
   type Source,
   type State,
-  type StateView,
 } from '@/foundation'
-import { defineInactivePlugins } from '@/components/plugins/tools/defineInactivePlugins'
-import type { PluginCoreContext } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugins } from '@/components/plugins/tools/createInactivePlugins'
+import type { PluginCoreContext, PluginResult } from '@/components/plugins/tools/createInactivePlugin'
 import './popover.style'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -65,24 +64,115 @@ export interface PopoverBodyOptions {
   onPopoverFlip?: (event: PopoverToggleEvent) => void
 }
 
-export interface PopoverNodeController {
+/**
+ * 触发端的显隐操作与本组打开状态。
+ */
+export interface PopoverTriggerController {
+  /**
+   * 与正文端共享的原生打开状态。
+   */
   isOpen: State<boolean>
   /**
    * 显示本组浮层；操作配置尚待确定。
    * TODO: 操作结果未来由 Task Result 表达，目前尚未实现。
-   * @example controller.showPopover()
    */
   showPopover(): void
   /**
    * 关闭本组浮层；焦点恢复遵循浏览器原生行为。
-   * @example controller.hidePopover()
    */
   hidePopover(): void
   /**
    * 切换浮层；force 可指定打开或关闭。
-   * @example controller.togglePopover({ force: false })
    */
   togglePopover(options?: { force?: boolean }): void
+}
+
+/**
+ * 正文端的显隐操作与本组打开状态。
+ */
+export interface PopoverBodyController {
+  /**
+   * 与触发端共享的原生打开状态。
+   */
+  isOpen: State<boolean>
+  /**
+   * 请求显示本组正文，打开配置由正文端决定。
+   */
+  showPopover(): void
+  /**
+   * 请求关闭本组正文，焦点恢复遵循浏览器原生行为。
+   */
+  hidePopover(): void
+  /**
+   * 切换正文；force 可指定打开或关闭。
+   */
+  togglePopover(options?: { force?: boolean }): void
+}
+
+/**
+ * 本组两端的控制入口，以及常用显隐操作的快捷引用。
+ */
+export interface PopoverController {
+  /**
+   * 触发端的完整控制入口。
+   */
+  trigger: PopoverTriggerController
+  /**
+   * 正文端的完整控制入口。
+   */
+  body: PopoverBodyController
+  /**
+   * 两端共享的同一个打开状态。
+   */
+  isOpen: State<boolean>
+  /**
+   * trigger.showPopover 的直接引用，不另外包装操作。
+   */
+  showPopover: PopoverTriggerController['showPopover']
+  /**
+   * body.hidePopover 的直接引用，不另外包装操作。
+   */
+  hidePopover: PopoverBodyController['hidePopover']
+  /**
+   * trigger.togglePopover 的直接引用，force 可指定打开或关闭。
+   */
+  togglePopover: PopoverTriggerController['togglePopover']
+}
+
+/** 两端的构建配置；字段继续对应各自负责的节点。 */
+export interface PopoverOptions {
+  /**
+   * 触发节点的原生动作配置。
+   */
+  trigger?: PopoverTriggerOptions
+  /**
+   * 正文节点的定位、打开与事件配置。
+   */
+  body?: PopoverBodyOptions
+}
+
+/** 两端的能力结果集合；各端可直接交给实际节点的 is。 */
+export interface PopoverPlugins {
+  /**
+   * 安装到触发节点的能力声明。
+   */
+  trigger: PluginResult<PopoverTriggerController>
+  /**
+   * 安装到正文节点的能力声明。
+   */
+  body: PluginResult<PopoverBodyController>
+}
+
+/** 成对能力及其控制入口；集合本身不作为单个 Plugin 交给 is。 */
+export interface PopoverResult {
+  /**
+   * 两端的能力结果，分别安装到实际节点。
+   */
+  plugins: PopoverPlugins
+  /**
+   * 两端的完整 Controller 与常用操作快捷引用。
+   */
+  controller: PopoverController
 }
 
 const popoverIdGenerator = new IdGenerator('uikit-popover')
@@ -109,9 +199,9 @@ function createPopoverGroup() {
 /**
  * 为单个角色提供完整显隐入口；打开状态由原生 toggle 更新。
  */
-function createPopoverNodeController(
+function createPopoverActions(
   group: ReturnType<typeof createPopoverGroup>,
-): PopoverNodeController {
+) {
   return {
     isOpen: group.isOpen,
     /**
@@ -129,7 +219,7 @@ function createPopoverNodeController(
     /**
      * 切换或指定打开状态。
      */
-    togglePopover(options) {
+    togglePopover(options?: { force?: boolean }) {
       group.bodyTarget?.togglePopover(options?.force)
     },
   }
@@ -144,7 +234,7 @@ function popoverTriggerCore({
   addProps,
   domProxy,
   id,
-}: PluginCoreContext<PopoverTriggerOptions>): PopoverNodeController {
+}: PluginCoreContext<PopoverTriggerOptions>): PopoverTriggerController {
   const group = popoverGroups.getOrInsertComputed(id!, createPopoverGroup)
   group.triggerTarget = domProxy
   addProps({
@@ -155,7 +245,7 @@ function popoverTriggerCore({
       'aria-haspopup': 'dialog',
     },
   })
-  return createPopoverNodeController(group)
+  return createPopoverActions(group)
 }
 
 /**
@@ -167,7 +257,7 @@ function popoverBodyCore({
   addProps,
   domProxy,
   id,
-}: PluginCoreContext<PopoverBodyOptions>): PopoverNodeController {
+}: PluginCoreContext<PopoverBodyOptions>): PopoverBodyController {
   const group = popoverGroups.getOrInsertComputed(id!, createPopoverGroup)
   group.bodyTarget = domProxy
   let restoreAutoFocus: (() => void) | undefined
@@ -219,7 +309,7 @@ function popoverBodyCore({
       },
     },
   })
-  const controller = createPopoverNodeController(group)
+  const controller = createPopoverActions(group)
   // 首个完成的来源值只决定一次初始状态，不响应后续变化。
   let initialized = false
   createEffect(
@@ -307,13 +397,31 @@ function findFirstFocusableElement(body: HTMLElement): HTMLElement | undefined {
 }
 
 /**
- * 构建成对的触发与浮层能力。
+ * 在组件内构建成对浮层能力；plugins 中的两端交给节点，controller 提供控制入口。
+ * 配置分别作用于触发端和正文端；每次调用创建独立的一组。
  * @see ./SPEC.md
  * @example
- * const { popoverTrigger, popoverBody } = popover()
+ * const { plugins: popoverPlugins, controller: popoverController } = createPopoverPlugins()
+ * const { trigger: popoverTrigger, body: popoverBody } = popoverPlugins
+ * const { trigger: triggerController, body: bodyController } = popoverController
  * <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
+ * popoverController.hidePopover() // 与 bodyController.hidePopover 是同一个函数
  */
-export const popover = defineInactivePlugins({
-  popoverTrigger: popoverTriggerCore,
-  popoverBody: popoverBodyCore,
-})
+export const createPopoverPlugins: (
+  pluginOptions?: PopoverOptions,
+) => PopoverResult = createInactivePlugins(
+  { trigger: popoverTriggerCore, body: popoverBodyCore },
+  {
+    /**
+     * 为本组提供共享打开状态和常用显隐方法的直接引用。
+     */
+    controller({ trigger, body }) {
+      return {
+        isOpen: trigger.isOpen,
+        showPopover: trigger.showPopover,
+        hidePopover: body.hidePopover,
+        togglePopover: trigger.togglePopover,
+      }
+    },
+  },
+)

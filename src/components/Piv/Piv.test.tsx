@@ -13,7 +13,7 @@ import {
   val,
 } from '@/foundation'
 import { Piv } from './Piv'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import type { ShadowProps } from './plugin/mergePivProps'
 import type { PivTag } from './domMap'
 import { mergePivProps } from './plugin/mergePivProps'
@@ -246,7 +246,7 @@ describe('Piv 生命周期', () => {
     const observations: string[] = []
     let builds = 0
     const dispose = render(() => {
-      const plugin = defineInactivePlugin({
+      const plugin = createInactivePlugin({
         name: 'observation',
         pluginCore({ addProps }) {
           builds += 1
@@ -1035,7 +1035,7 @@ function testPlugin(
     onElement?: (payload: { element: HTMLElement }) => void | (() => void)
   } = {},
 ) {
-  return defineInactivePlugin({
+  return createInactivePlugin({
     name: 'test',
     pluginCore({ addProps }) {
       for (const declaration of options.declarations ?? [])

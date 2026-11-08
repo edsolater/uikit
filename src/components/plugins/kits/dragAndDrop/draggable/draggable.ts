@@ -7,9 +7,9 @@
 import { createState, onCleanup, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
-  defineInactivePlugin,
+  createInactivePlugin,
   type PluginCoreContext,
-} from '@/components/plugins/tools/defineInactivePlugin'
+} from '@/components/plugins/tools/createInactivePlugin'
 import { createPointerDrag } from './createPointerDrag'
 import './draggable.style'
 
@@ -97,7 +97,7 @@ export function draggablePluginCore({
 }
 
 /** 拖动能力的单元定义；在组件内配置调用时构建一份能力结果。 */
-export const draggable = defineInactivePlugin({
+export const draggable = createInactivePlugin({
   name: 'draggable',
   pluginCore: draggablePluginCore,
 })

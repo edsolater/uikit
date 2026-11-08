@@ -49,9 +49,9 @@ callback({ event, element }) {
 
 | 对象 | 当前事实与处理 |
 | --- | --- |
-| defineInactivePlugin 的 domProxy | 按需缓存 FNKit 代理与首次节点来源；根内部接通已有 Source 视图，并在节点退出时更新当前可用性，换源仍为 TODO |
+| createInactivePlugin 的 domProxy | 按需缓存 FNKit 代理与首次节点来源；根内部接通已有 Source 视图，并在节点退出时更新当前可用性，换源仍为 TODO |
 | clickable | 已用 domProxy 代替保存元素；当前 Controller 返回 PromiseResultProxy<void>，首次前等待，后续换源不承诺 |
-| defineInactivePlugins | 已直接转交同一 context 并补内部 id，避免展开时触发 getter；保持现有配对语义 |
+| createInactivePlugins | 已直接转交同一 context 并补内部 id，避免展开时触发 getter；保持现有配对语义 |
 | draggable、droppable、topLayer core | 已采用事件、声明及普通 Source 分别承担自身业务；本次实现仍待独立审查 |
 | createPointerDrag、dragSession、createTopLayerController | PointerDrag 保留真实 HTMLElement 输入；drop 目标改由节点属性承载；TopLayer 接收普通 Source。不使用 domProxy 专用分支或 Controller 转发 |
 | Piv 的 consumeDomRefs | 既有 ShadowProps／domRef 消费者随声明项和节点退出执行清理，是保留行为的事实依据 |
@@ -109,8 +109,8 @@ Plan 中已有及后续 Agent 自行提出的方法，都须在采用前按[Plan
 
 | 位置 | 已明确可做／待闭合的责任 | 退出或完成状态 |
 | --- | --- | --- |
-| plugins/tools/defineInactivePlugin.ts 的 domProxy getter | 单一首次 Promise、现有 addProps、FNKit 代理和根 Source 可用性；说明接入时机与换源 TODO | 退出额外 Proxy 和重置链；core 仍一次、Controller 完整、同 getter 复用 |
-| plugins/tools/defineInactivePlugins.ts | 检查现有直接 context 转交与共享 id；无新责任时保持 | 不因组合展开提前激活 getter，不另造连接系统 |
+| plugins/tools/createInactivePlugin.ts 的 domProxy getter | 单一首次 Promise、现有 addProps、FNKit 代理和根 Source 可用性；说明接入时机与换源 TODO | 退出额外 Proxy 和重置链；core 仍一次、Controller 完整、同 getter 复用 |
+| plugins/tools/createInactivePlugins.ts | 检查现有直接 context 转交与共享 id；无新责任时保持 | 不因组合展开提前激活 getter，不另造连接系统 |
 | clickable.ts、相邻 SPEC 与测试 | 保留 focus／blur／click 代理调用及状态动作；修正退出后等待新节点的过期承诺，在责任处记 Promise<boolean> 后续项 | 保留首次接入前等待与真实调用，不将重建换源冒称完成 |
 | draggablePluginCore、droppablePluginCore、topLayer 的 pluginCore | 退出节点获取的 withDom 包装；分别使用已有事件、节点属性和普通 Source | 拖动事务正常取消、目标随声明恢复、TopLayer 自动进入与退出仍须验收 |
 | createPointerDrag、dragSession、createTopLayerController | 保持 PointerDrag 真实元素 API；目标登记交给节点属性；TopLayer 使用普通 Source 与单个 Controller | 不新增识别代理、节点镜像或方法转发；目标 WeakMap／register 退出 |

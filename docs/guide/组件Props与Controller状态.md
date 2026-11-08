@@ -44,7 +44,7 @@ Label 只公开 for、children、tooltip、tooltipTrigger、组件说明与 ref�
 
 Flow、Grid、Field、Page 等组织组件只声明原来拥有的内容与布局字段；不因接入 kit 获得 Piv 的整袋 Props。Heading、Input、Board 则按原继承关系组合字段。可省略且需要保留来源身份的字段明确允许 Source 的完成值为 undefined，这与原缺省表现一致，让未声明字段也能沿同一 State 接受指令。Grid.columns 的 ?? 默认值、Table.keys 的缺省列选择按当前值消费，不用 State 对象的真值改变原分支。
 
-Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card 不复制字段表；两个入口分别有自己的 .controllers，共同安全字段规则由 BoardControllerCollection 定义，Card 复用。Popover 已由 `plugins/kits/Popover` 的成对能力提供；各角色从能力结果直接取得完整的 `PopoverNodeController`，不再通过 Popover 组件 ref 或 `.props` 接入。实际 Button／Card 继续拥有自己的组件 Controller、Marker 和样式，Plugin 只承担浮层功能。Input 顶层公开最终 invalid 状态；`.props.invalid`、`.props.validIf` 仍通过原有效性规则产生最终状态，顶层状态操作不绕过该规则。
+Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card 不复制字段表；两个入口分别有自己的 .controllers，共同安全字段规则由 BoardControllerCollection 定义，Card 复用。Popover 已由 `plugins/kits/Popover` 的成对能力提供；返回对象的 `controller: PopoverController` 提供两端完整的 `PopoverTriggerController`／`PopoverBodyController` 及常用显隐操作的直接引用，不再通过 Popover 组件 ref 或 `.props` 接入。实际 Button／Card 继续拥有自己的组件 Controller、Marker 和样式，Plugin 只承担浮层功能。Input 顶层公开最终 invalid 状态；`.props.invalid`、`.props.validIf` 仍通过原有效性规则产生最终状态，顶层状态操作不绕过该规则。
 
 泛型实例通过 ref 保留精确类型。各 `.controllers.props` 可同时包含不同 Tag、列表项或 Row，因此输入集合只提供安全的共同字段：
 
@@ -54,13 +54,13 @@ Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card
 | Loop | each |
 | Table | data、keys、renderParts |
 
-Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供，不进入 `Controller.props`。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的 `defaultOpen` 属于 `popoverBody` 的 Plugin 配置，只用于默认打开，不是组件 `Controller.props` 字段；其事件回调在真实事件发生时读取当前配置。
+Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供，不进入 `Controller.props`。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的 `defaultOpen` 属于 `body` 的 Plugin 配置，只用于默认打开，不是组件 `Controller.props` 字段；其事件回调在真实事件发生时读取当前配置。
 
 这只是公开集合类型的边界，不增加另一层运行过滤或状态。Article 固定原生 `article`，Props 与 Controller 均不提供 `as`；Card 不提供 `is` 模式。普通阅读卡片的 `<Card><Article>正文</Article></Card>` 保留两个独立实例，外层引用操作 Card 容器，内层引用操作正文节点。资料卡片作为正文组成部分时也可反向组合，两种方向都不互相接管实例职责。
 
 ## 使用与生命周期
 
-构建时必须用 Props 表达初始界面。只有回调、生命周期中的特殊需要，或 Props 表达非常迂回的复杂场景，才使用 Controller。通用输入干预使用 `button.props?.loading.set(true)`，集合入口为 `Button.controllers.props.loading.set(true)`。组件自定义能力在顶层：`val(button.loading)` 读取按钮状态，`button.setStatus?.('loading', true)` 操作未由外部声明的状态；Plugin 操作则直接使用其能力结果，例如 `popoverBody.controller.showPopover()`。状态来源通过 State 计算图跟随输入，不回写 `.props`。
+构建时必须用 Props 表达初始界面。只有回调、生命周期中的特殊需要，或 Props 表达非常迂回的复杂场景，才使用 Controller。通用输入干预使用 `button.props?.loading.set(true)`，集合入口为 `Button.controllers.props.loading.set(true)`。组件自定义能力在顶层：`val(button.loading)` 读取按钮状态，`button.setStatus?.('loading', true)` 操作未由外部声明的状态；Plugin 操作则直接使用其能力结果，例如 `popoverController.showPopover()`。状态来源通过 State 计算图跟随输入，不回写 `.props`。
 
 onClick以state-value-view读取函数，不因读取而执行；替换沿用原State协议 `field.set(() => nextCallback)`。ref为only-through-prop，只能通过上游Props提供，不公开 `controller.props.ref` 或 `ref.set`，也不创建缓冲State。外部已声明字段仍可指令写入，来源重新计算与指令的关系遵循原生可写计算，不另建拒写、权限或优先级系统。
 

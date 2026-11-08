@@ -16,7 +16,7 @@ flowchart LR
 
 ```tsx
 function TransferExample() {
-  const { draggable, droppable } = dragAndDrop({
+  const { plugins: { draggable, droppable } } = dragAndDrop({
     draggable: { payload: item },
     droppable: { onDrop: receive },
   })
@@ -27,7 +27,7 @@ function TransferExample() {
 }
 ```
 
-`dragAndDrop` 返回可调用组合；组合定义可放模块顶层，组合调用必须在组件内。每次调用在内部创建一份共享身份，本次返回的拖动与接收角色据此协作。内部身份不返回给调用者，公开 Options 不再要求 `id`。独立调用 `draggable({ payload })`、`droppable({ onDrop })` 时内部身份为 `undefined`，两端都未组合时仍可协作。节点所在容器不影响分组，拖动激活时使用的身份在本次拖动期间保持不变。
+`dragAndDrop` 返回可调用组合；每次调用取得 `{ plugins, controller }`，`plugins.draggable`／`plugins.droppable` 为原能力结果，`controller.draggable`／`controller.droppable` 引用两端原 Controller。组合定义可放模块顶层，组合调用必须在组件内。每次调用在内部创建一份共享身份，本次返回的拖动与接收角色据此协作。内部身份不返回给调用者，公开 Options 不再要求 `id`。独立调用 `draggable({ payload })`、`droppable({ onDrop })` 时内部身份为 `undefined`，两端都未组合时仍可协作。节点所在容器不影响分组，拖动激活时使用的身份在本次拖动期间保持不变。
 
 需要控制某个节点时，直接使用能力结果的 `controller`：
 

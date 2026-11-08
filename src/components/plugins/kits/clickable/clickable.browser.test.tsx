@@ -3,7 +3,7 @@ import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createState, val } from '@/foundation'
 import { Card } from '@/components/kits/Card/Card'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import { Piv } from '../../../Piv/Piv'
 import { clickable, type ClickableController } from './clickable'
 
@@ -87,14 +87,14 @@ describe('clickable', () => {
   })
 })
 
-const child = defineInactivePlugin({
+const child = createInactivePlugin({
   name: 'child',
   pluginCore({ addProps }) {
     addProps({ htmlProps: { title: '子声明' } })
     return {}
   },
 })
-const parent = defineInactivePlugin({
+const parent = createInactivePlugin({
   name: 'parent',
   pluginCore({ addProps }) {
     addProps({ is: child() })

@@ -7,7 +7,7 @@
 import { createToggle } from '@/hooks'
 import type { State } from '@/foundation'
 import type { PromiseResultProxy } from '@edsolater/fnkit'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import {
   hoverable,
   type HoverableController,
@@ -40,7 +40,7 @@ export interface ClickableController extends HoverableController {
  * 元素方法可等待；节点尚未接入时等待首次接入，后续节点更换暂不支持。
  * TODO：公开操作的返回值改为 Promise<boolean>。
  */
-export const clickable = defineInactivePlugin<
+export const clickable = createInactivePlugin<
   ClickableOptions,
   ClickableController
 >({

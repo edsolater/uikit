@@ -5,7 +5,7 @@
  * 不解释调用方为何提升，也不拥有提升后的业务位移。
  */
 import { createState, onCleanup, onMount, type State } from '@/foundation'
-import { defineInactivePlugin } from '@/components/plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
 import './topLayer.style'
 
@@ -160,7 +160,7 @@ function restoreInlineDeclarations(
 }
 
 /** 插件状态在构建时创建；元素接入后才建立可提升会话。 */
-export const topLayer = defineInactivePlugin({
+export const topLayer = createInactivePlugin({
   name: 'topLayer',
   pluginCore({ addProps, domProxy }): TopLayerController {
     const active = createState(false)

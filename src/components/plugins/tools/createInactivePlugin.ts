@@ -99,7 +99,7 @@ export function readPlugin(input: PluginInput): Plugin {
  * 定义阶段不运行 core；每次调用 inactivePlugin 构建一次结果，运行一次 core，
  * 返回完整 Controller 和保存本次声明的 Plugin。
  */
-export function defineInactivePlugin<
+export function createInactivePlugin<
   Options extends object,
   Members extends object,
 >(buildTimeDefinitions: {

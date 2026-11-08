@@ -5,7 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { createState, onCleanup, val } from '@/foundation'
 import { Piv } from '../Piv'
 import { createToggle } from '@/hooks'
-import { defineInactivePlugin } from '../../plugins/tools/defineInactivePlugin'
+import { createInactivePlugin } from '../../plugins/tools/createInactivePlugin'
 import {
   createInternalDrag,
   findInternalDropTarget,
@@ -78,7 +78,7 @@ test('同一能力结果可交给多个节点，各节点接入自己的元素�
   const detached: HTMLElement[] = []
   const innerCleaned: HTMLElement[] = []
   dispose = render(() => {
-    const capability = defineInactivePlugin({
+    const capability = createInactivePlugin({
       name: 'sharedResult',
       pluginCore({ addProps }) {
         addProps({
@@ -111,7 +111,7 @@ test('两次构建的 Controller 状态独立，节点接入各自元素', () =>
   const host = document.body.appendChild(document.createElement('div'))
   const attached: HTMLElement[] = []
   const build = () =>
-    defineInactivePlugin({
+    createInactivePlugin({
       name: 'independent',
       pluginCore({ addProps }) {
         const [hovered, control] = createToggle(false)
@@ -168,7 +168,7 @@ test('动态 is 按声明接入和释放，重复引用各执行一次，旁读�
   const events: string[] = []
   let builds = 0
   dispose = render(() => {
-    const capability = defineInactivePlugin({
+    const capability = createInactivePlugin({
       name: 'dynamic',
       pluginCore({ addProps }) {
         builds++
@@ -211,14 +211,14 @@ test('直接 is 与 Plugin 提交的嵌套 is 随来源变化', () => {
   const host = document.body.appendChild(document.createElement('div'))
   const enabled = createState(true)
   dispose = render(() => {
-    const child = defineInactivePlugin({
+    const child = createInactivePlugin({
       name: 'child',
       pluginCore({ addProps }) {
         addProps({ htmlProps: { title: '已接入' } })
         return {}
       },
     })()
-    const parent = defineInactivePlugin({
+    const parent = createInactivePlugin({
       name: 'parent',
       pluginCore({ addProps }) {
         addProps({

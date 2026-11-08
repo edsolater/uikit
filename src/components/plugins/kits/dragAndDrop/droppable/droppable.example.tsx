@@ -14,7 +14,7 @@ export function DroppableExample() {
   const payloadResult = createState<string>()
   const fileResult = createState<string>()
 
-  const { draggable, droppable } = dragAndDrop({
+  const { plugins: { draggable, droppable } } = dragAndDrop({
     draggable: { payload: { widget: 'weather' } },
     droppable: {
       accepts: ({ kind }) => kind === 'internal',

@@ -20,7 +20,7 @@ Plugin 不作为业务内容提供商。业务内容仍由调用者写在组件�
 
 ## 先定义能力，再在组件中构建
 
-下面省略 import；`defineInactivePlugin` 与 `PluginCoreContext` 对应 [Plugin 构建工具](../../src/components/plugins/tools/defineInactivePlugin.ts)。
+下面省略 import；`createInactivePlugin` 与 `PluginCoreContext` 对应 [Plugin 构建工具](../../src/components/plugins/tools/createInactivePlugin.ts)。
 
 ```tsx
 interface HighlightOptions {
@@ -28,7 +28,7 @@ interface HighlightOptions {
 }
 
 // 模块级定义：返回 inactivePlugin 函数，不运行 pluginCore。
-const highlight = defineInactivePlugin({
+const highlight = createInactivePlugin({
   name: 'highlight',
   pluginCore({
     pluginOptions,
@@ -50,7 +50,7 @@ function Example() {
 完整过程是：
 
 ```text
-defineInactivePlugin({ name, pluginCore })
+createInactivePlugin({ name, pluginCore })
   → inactivePlugin 函数
   → 组件内 inactivePlugin(pluginOptions)，执行一次 core
   → 同步得到 { plugin, controller }
@@ -82,16 +82,16 @@ defineInactivePlugin({ name, pluginCore })
 
 ## 多个节点需要配合时，定义组合能力
 
-单元描述各节点自己的能力；[defineInactivePlugins](../../src/components/plugins/tools/defineInactivePlugins.ts) 将多个单元 core 组织成一次联合构建，内部仍逐项复用 `defineInactivePlugin`。
+单元描述各节点自己的能力；[createInactivePlugins](../../src/components/plugins/tools/createInactivePlugins.ts) 将多个单元 core 组织成一次联合构建，内部仍逐项复用 `createInactivePlugin`。
 
 ```tsx
-const dragAndDrop = defineInactivePlugins({
+const dragAndDrop = createInactivePlugins({
   draggable: draggablePluginCore,
   droppable: droppablePluginCore,
 })
 
 function Transfer() {
-  const { draggable, droppable } = dragAndDrop({
+  const { plugins: { draggable, droppable } } = dragAndDrop({
     draggable: { payload: '一份材料' },
     droppable: { onDrop: context => 接收材料(context) },
   })
@@ -103,7 +103,7 @@ function Transfer() {
 }
 ```
 
-组合定义可以放模块顶层；组合调用在组件内完成。返回的 `draggable`、`droppable` 已是各自的 `{ plugin, controller }`，交给 `is` 时不再调用，也各自拥有完整 Controller。
+组合定义可以放模块顶层；组合调用在组件内完成。组合返回 `{ plugins, controller }`；`plugins.draggable`、`plugins.droppable` 保留各自完整的能力结果，交给 `is` 时不再调用。`controller.draggable`、`controller.droppable` 直接引用对应能力结果的 Controller。角色集合 `plugins` 本身不交给 `is`。
 
 同次组合调用在内部共享一份身份，不同调用各自隔离。调用者不需要传 `id`、使用 Scope 或再经 `usePlugin` 连接。
 

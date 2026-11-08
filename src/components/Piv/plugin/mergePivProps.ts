@@ -19,7 +19,7 @@ import type { PivTag } from '../domMap'
 import {
   readPlugin,
   type PluginInput,
-} from '@/components/plugins/tools/defineInactivePlugin'
+} from '@/components/plugins/tools/createInactivePlugin'
 
 /** 创建前可转交的统一补充声明，包含 as、if、domRef、is；children 仍由直接 Props 提供。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'children'>
