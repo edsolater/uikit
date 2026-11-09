@@ -75,7 +75,7 @@ function Example() {
 
 # Controller 操作
 
-两个角色提供相同的方法，操作同组 body；方法从构建返回时就存在，无需可选调用。整体入口另提供常用操作的直接函数引用，不包装转发：
+两个角色提供相同的 Task，操作同组 body；Task 从构建返回时就存在，无需可选调用。整体入口另提供常用操作的直接引用，不包装转发：
 
 ```ts
 const { trigger: triggerController, body: bodyController } = popoverController
@@ -98,15 +98,28 @@ controller.togglePopover({ force: false })
 | `hidePopover()` | 请求原生关闭；Plugin 不再额外恢复触发端焦点 |
 | `togglePopover(options?)` | `force` 省略时切换，true 请求打开，false 请求关闭；焦点遵守上述打开配置和原生关闭行为 |
 
-方法当前不返回 TaskResult 或成功 boolean；原生状态仍以 `isOpen` 和实际事件为准。
+每个指令入口声明为 `Task`，每次调用同步返回独立的 `TaskResult<void>`。可以忽略结果，也可以 `await` 等待正文 DOM 取得、取消检查和原生操作完成；这不表示原生 `toggle` 事件已送达或 CSS 过渡已结束。原生状态仍以 `isOpen` 和实际事件为准，不新增成功 boolean。
+
+```ts
+await popoverController.showPopover()
+await popoverController.togglePopover({ force: false })
+
+const execution = popoverController.showPopover()
+execution.unsubscribe() // 取消尚未执行的原生操作。
+await execution.catch(() => undefined) // 取消以 AbortError 拒绝。
+
+await popoverController.hidePopover.result // 无参数 Task 的 result 也会发起一次执行。
+```
+
+取消检查发现本次已取消时，不再执行后续原生操作；取消不撤销已经完成的显隐。每次调用彼此独立，不自动取消前一次命令。
 
 # 功能定位与当前边界
 
 `popover.style.ts` 只控制浮层的 position、inset、margin、anchor 关联、四向位置、fallback 和锚点可见性；不接管 padding、尺寸排版、材料或普通 overflow 裁剪。
 
-Controller 完整不代表元素已经就绪。当前 `domProxy` 缓存首次 DOM；慢节点、未插入文档时的操作及清理后晚执行仍有已知时序缺口，不能把当前命令当成已具备可靠任务取消或成功判定。
+Controller 完整不代表元素已经插入文档。显隐 Task 会等待 `domProxy`，并在原生操作前检查本次取消；当前 `domProxy` 仍缓存首次 DOM。取得 DOM 不代表已连接 document，未插入文档、作用域退出后仍未取消的命令，以及 if 重建均保留既有时序缺口。Task 不额外轮询挂载，不自动管理组件作用域，也不新增成功判定。
 
-- [Task 与 TaskResult 异步操作](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md)：后续统一就绪、结果与取消。
+- [Task 与 TaskResult 异步操作](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md)：提供本次执行的结果与取消；文档挂载时序仍待后续处理。
 - [if 显隐复用 DOM](../../../../../docs/todo/261107_if显隐复用DOM.md)：当前不能假定条件重建已经复用原节点。
 - [PromiseResultProxy 统一 Plan](../../../../../../fnkit/docs/plans/261108_PromiseResultProxy完整Promise与惰性计算.md)：完整 Promise 兼容与惰性计算已完成；操作成功 boolean 属于尚未实施的第二阶段。
 
@@ -123,3 +136,5 @@ Controller 完整不代表元素已经就绪。当前 `domProxy` 缓存首次 DO
 它的配置为 `Pick<PopoverBodyOptions, '$anchorPosition' | '$anchorGap'> & { content: PivProps['children'] }`。位置默认 top、间距默认 md，Source 完成值为 null／undefined 时也回落这些默认值；Popover 与 Tooltip 的默认位置／间距均为 top／md。
 
 Tooltip 内部一次构建 `createPopoverPlugins`，使用 `triggerAction:false`、`popover:'hint'` 和 `autoFocus:false`；通过同一 Piv body 复用原生定位、显隐及打开状态，自身拥有阅读事件、aria 描述与提示材料，不再使用 Surface 或旧 VisibilityController。内容清空会关闭、清计时并移除正文，再次有内容时复用同一节点；数字 0 有效。Tooltip Controller 仍只提供 `isOpen`、`showPopover()`、`hidePopover()`，不扩大调用方接口。
+
+Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<[], void>`；有内容时直接采用内部 Popover 的本次 TaskResult，因此等待和取消沿同一次执行生效。空内容的显示请求仍返回 TaskResult，完成后没有显示副作用。hover、focus、150ms 离开关闭等阅读行为不变，内部进入／离开和计时辅助函数仍只负责各自交互。

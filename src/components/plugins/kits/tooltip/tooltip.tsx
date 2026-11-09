@@ -5,7 +5,7 @@
  *
  * 使Label问号及其他宿主共用同一提示能力。
  */
-import { IdGenerator } from '@edsolater/fnkit'
+import { IdGenerator, task, type Task } from '@edsolater/fnkit'
 import { createComponent, createEffect, onCleanup, Show, withDefault, val } from '@/foundation'
 import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import { createPivStructure } from '@/components/Piv/plugin/helpers'
@@ -30,13 +30,13 @@ export type TooltipController = {
   /** Popover 的原生打开状态。 */
   isOpen: PopoverController['isOpen']
   /**
-   * 显示现有内容并取消延迟关闭。
+   * 显示现有内容并取消延迟关闭；返回可等待、可取消的本次 TaskResult。
    */
-  showPopover: () => void
+  showPopover: Task<[], void>
   /**
-   * 关闭提示并取消延迟关闭，不主动移动焦点。
+   * 关闭提示并取消延迟关闭，不主动移动焦点；await 等待原生关闭操作执行。
    */
-  hidePopover: () => void
+  hidePopover: Task<[], void>
 }
 
 const tooltipIdGenerator = new IdGenerator('uikit-tooltip')
@@ -87,11 +87,11 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     /**
      * 当前仍有提示内容时显示，同时取消旧关闭动作。
      */
-    const open = () => {
+    const open = task(() => {
       cancelClose()
-      // TODO：浮层未插入时 showPopover 可能失败；交由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 等待就绪并支持取消。
-      if (hasTooltipContent(options.content)) controller.showPopover()
-    }
+      // TODO：DOM 已取得不代表已插入 document；慢节点挂载时序仍待处理。
+      if (hasTooltipContent(options.content)) return controller.showPopover()
+    })
     /**
      * 离开阅读区域后延迟关闭，保留跨越浮层间距的机会。
      */
@@ -112,10 +112,10 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     /**
      * 关闭并保留焦点，取消尚未执行的离开动作。
      */
-    const dismiss = () => {
+    const dismiss = task(() => {
       cancelClose()
-      controller.hidePopover()
-    }
+      return controller.hidePopover()
+    })
     onCleanup(cancelClose)
     // 内容清空时读取原生关闭结果；移出 document 本身不一定派发 toggle。
     createEffect(() => hasTooltipContent(options.content), (present) => {
@@ -148,7 +148,7 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
           focused = false
           if (!hovered) leave()
         },
-        click: open,
+        click: () => { open() },
         keydown: ({ event }) => {
           if (event.key === 'Escape') dismiss()
         },

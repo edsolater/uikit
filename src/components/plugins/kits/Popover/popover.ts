@@ -4,7 +4,7 @@
  * 负责连接触发节点与原生浮层，声明定位、显隐操作和状态；不提供正文或材料。
  * 使用方在实际按钮和内容节点上分别安装两个角色。
  */
-import { IdGenerator, type PromiseResultProxy } from '@edsolater/fnkit'
+import { IdGenerator, task, type Task, type PromiseResultProxy } from '@edsolater/fnkit'
 import {
   createEffect,
   createState,
@@ -75,17 +75,17 @@ export interface PopoverTriggerController {
   isOpen: State<boolean>
   /**
    * 显示本组浮层；操作配置尚待确定。
-   * TODO: 操作结果未来由 Task Result 表达，目前尚未实现。
+   * 同步返回本次 TaskResult；await 等待原生操作执行，unsubscribe 可取消尚未执行的操作。
    */
-  showPopover(): void
+  showPopover: Task<[], void>
   /**
    * 关闭本组浮层；焦点恢复遵循浏览器原生行为。
    */
-  hidePopover(): void
+  hidePopover: Task<[], void>
   /**
    * 切换浮层；force 可指定打开或关闭。
    */
-  togglePopover(options?: { force?: boolean }): void
+  togglePopover: Task<[options?: { force?: boolean }], void>
 }
 
 /**
@@ -99,15 +99,15 @@ export interface PopoverBodyController {
   /**
    * 请求显示本组正文，打开配置由正文端决定。
    */
-  showPopover(): void
+  showPopover: Task<[], void>
   /**
    * 请求关闭本组正文，焦点恢复遵循浏览器原生行为。
    */
-  hidePopover(): void
+  hidePopover: Task<[], void>
   /**
    * 切换正文；force 可指定打开或关闭。
    */
-  togglePopover(options?: { force?: boolean }): void
+  togglePopover: Task<[options?: { force?: boolean }], void>
 }
 
 /**
@@ -199,7 +199,8 @@ function createPopoverGroup() {
 }
 
 /**
- * 为单个角色提供完整显隐入口；原生 toggle 更新状态，关闭操作另读实际结果以覆盖节点移除不派事件的情况。
+ * 为单个角色提供显隐 Task；等待正文 DOM 后检查取消，再执行原生操作。
+ * 原生 toggle 更新状态，关闭操作另读实际结果以覆盖节点移除不派事件的情况。
  */
 function createPopoverActions(
   group: ReturnType<typeof createPopoverGroup>,
@@ -209,24 +210,28 @@ function createPopoverActions(
     /**
      * 请求显示本组浮层。
      */
-    showPopover() {
-      group.bodyTarget?.showPopover()
-    },
+    showPopover: task(async ({ canContinue }) => {
+      const body = await group.bodyTarget!
+      await canContinue()
+      body.showPopover()
+    }),
     /**
      * 请求关闭本组浮层并读取实际关闭结果。
      */
-    hidePopover() {
-      group.bodyTarget?.then((body) => {
-        if (body.matches(':popover-open')) body.hidePopover()
-        group.isOpen.set(body.matches(':popover-open'))
-      })
-    },
+    hidePopover: task(async ({ canContinue }) => {
+      const body = await group.bodyTarget!
+      await canContinue()
+      if (body.matches(':popover-open')) body.hidePopover()
+      group.isOpen.set(body.matches(':popover-open'))
+    }),
     /**
      * 切换或指定打开状态。
      */
-    togglePopover(options?: { force?: boolean }) {
-      group.bodyTarget?.togglePopover(options?.force)
-    },
+    togglePopover: task(async ({ canContinue }, options?: { force?: boolean }) => {
+      const body = await group.bodyTarget!
+      await canContinue()
+      body.togglePopover(options?.force)
+    }),
   }
 }
 
@@ -408,7 +413,7 @@ function findFirstFocusableElement(body: HTMLElement): HTMLElement | undefined {
  * const { trigger: popoverTrigger, body: popoverBody } = popoverPlugins
  * const { trigger: triggerController, body: bodyController } = popoverController
  * <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
- * popoverController.hidePopover() // 与 bodyController.hidePopover 是同一个函数
+ * await popoverController.hidePopover() // 与 bodyController.hidePopover 是同一个 Task
  */
 export const createPopoverPlugins: (
   pluginOptions?: PopoverOptions,

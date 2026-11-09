@@ -460,3 +460,28 @@ test('后续监听取消打开不移动焦点，卸载时恢复原有 autofocus'
   expect(existing.getAttribute('autofocus')).toBe('original')
   expect(body.querySelector('button')!.hasAttribute('autofocus')).toBe(false)
 })
+
+test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操作', async () => {
+  const host = document.body.appendChild(document.createElement('main'))
+  let capability!: ReturnType<typeof createPopoverPlugins>
+  dispose = render(() => {
+    capability = createPopoverPlugins()
+    return <><Button is={capability.plugins.trigger}>打开</Button><Card is={capability.plugins.body}>说明</Card></>
+  }, host)
+  const body = host.querySelector<HTMLElement>('[popover]')!
+  const controller = capability.controller
+  const canceled = controller.showPopover()
+  expect(typeof canceled.unsubscribe).toBe('function')
+  const rejected = canceled.catch(error => error)
+  canceled.unsubscribe()
+  expect((await rejected).name).toBe('AbortError')
+  expect(body.matches(':popover-open')).toBe(false)
+  expect(await controller.showPopover()).toBeUndefined()
+  expect(body.matches(':popover-open')).toBe(true)
+  await controller.togglePopover({ force: false })
+  expect(body.matches(':popover-open')).toBe(false)
+  await controller.togglePopover()
+  expect(body.matches(':popover-open')).toBe(true)
+  await controller.hidePopover.result
+  expect(body.matches(':popover-open')).toBe(false)
+})

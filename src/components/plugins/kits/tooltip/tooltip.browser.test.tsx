@@ -251,3 +251,28 @@ test('定位来源持续更新，完成值为空时回到 top 与 md 默认值',
   await expect.poll(() => getComputedStyle(body).positionArea).toBe('top')
   await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
 })
+
+test('提示的显示关闭保留 Task 等待与取消，空内容不显示', async () => {
+  const content = createState<JSXElement>('说明')
+  let controller!: TooltipController
+  dispose = render(() => {
+    const capability = tooltip({ content })
+    controller = capability.controller
+    return <Piv as="button" is={capability}>宿主</Piv>
+  }, host)
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
+  const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
+  const canceled = controller.showPopover()
+  const rejected = canceled.catch(error => error)
+  canceled.unsubscribe()
+  expect((await rejected).name).toBe('AbortError')
+  expect(body.matches(':popover-open')).toBe(false)
+  await controller.showPopover.result
+  expect(body.matches(':popover-open')).toBe(true)
+  await controller.hidePopover()
+  expect(body.matches(':popover-open')).toBe(false)
+  content.set('')
+  await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
+  await controller.showPopover()
+  expect(body.matches(':popover-open')).toBe(false)
+})
