@@ -147,10 +147,8 @@ function parseHTMLPropertyValue(
     newPrimitive = oldPrimitive
       ? `${oldPrimitive} ${newVal.mergable}`
       : newVal.mergable
-  } else if (isFunction(newVal)) {
-    newPrimitive = result(newVal, oldPrimitive)
   } else {
-    newPrimitive = newVal
+    newPrimitive = result(newVal, oldPrimitive)
   }
   return newPrimitive
 }

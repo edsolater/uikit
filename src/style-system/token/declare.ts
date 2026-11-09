@@ -366,7 +366,7 @@ function publishHomeStates(
       }
       controller.setContent(
         context,
-        isJSSContent(rule) ? rule : result(rule, base),
+        isJSSContent(rule) ? rule : result<unknown>(rule, base),
       )
     })
     const product = controller.insert(

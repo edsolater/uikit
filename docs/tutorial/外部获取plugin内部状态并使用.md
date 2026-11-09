@@ -79,6 +79,6 @@ popoverController.togglePopover === triggerController.togglePopover // true
 
 ## 尚未实现的能力
 
-- [Task 与 TaskResult 异步操作](../todo/261107_Task与TaskResult异步操作.md)：统一就绪等待、一次执行的结果和取消；当前没有提供这套 API。
+- [Task 与 TaskResult 异步操作](../../../fnkit/docs/plans/261108_Task与Result执行.md)：统一就绪等待、一次执行的结果和取消；当前没有提供这套 API。
 - [if 显隐复用 DOM](../todo/261107_if显隐复用DOM.md)：显隐时复用同一元素尚未实现，当前不能假定已经做到。
-- [PromiseResultProxy 兼容 Promise 协议](../todo/261107_PromiseResultProxy兼容Promise协议.md)：当前可等待不等于已完整兼容原生 Promise。
+- [操作成功 boolean](../../../fnkit/docs/plans/261108_PromiseResultProxy完整Promise与惰性计算.md)：底层完整 Promise 兼容与惰性计算已完成；业务操作返回 `Promise<boolean>` 属于尚未实施的第二阶段。

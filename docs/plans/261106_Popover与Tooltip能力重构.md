@@ -27,8 +27,8 @@
 当前代理只缓存首次 DOM，本轮保持这一妥协。以下能力尚未实现，不能重新引入 State／Source 换源机制，也不能因它们未完成而强迫每个消费者添加等待、重试或生命周期桥：
 
 - [if 显隐复用 DOM](../todo/261107_if显隐复用DOM.md)：当前不能假定条件重建已复用原对象。
-- [Task 与 TaskResult](../todo/261107_Task与TaskResult异步操作.md)：慢 DOM、浮层尚未就绪及等待后晚执行的问题仍按已知缺口记录，不在本 Plan 实现任务队列、abort 或失效控制。
-- [PromiseResultProxy 兼容 Promise 协议](../todo/261107_PromiseResultProxy兼容Promise协议.md)：当前可等待不等于完整 Promise，也不伪造操作成功 boolean。
+- [Task 与 TaskResult](../../../fnkit/docs/plans/261108_Task与Result执行.md)：慢 DOM、浮层尚未就绪及等待后晚执行的问题仍按已知缺口记录，不在本 Plan 实现任务队列、abort 或失效控制。
+- [操作成功 boolean](../../../fnkit/docs/plans/261108_PromiseResultProxy完整Promise与惰性计算.md)：完整 Promise 兼容与惰性计算已完成；业务操作的 `Promise<boolean>` 属于尚未实施的第二阶段，不伪造成功值。
 
 阶段 A 已有成对 Popover 能力；阶段 B 接管当前仍沿旧 Surface 的 Tooltip 组装链。新生命周期是后续目标，不能据已有原生状态事件宣布它已实现；旧共享设施也不能在 Tooltip 接管前强删。
 
@@ -194,7 +194,7 @@ createPopoverPlugins({ body: {
 } })
 ```
 
-`onCancel` 是已开始过程被中断后的通知，不等同于 [TaskResult.abort](../todo/261107_Task与TaskResult异步操作.md) 取消异步任务的操作；本节不因此实现 Task 机制。
+`onCancel` 是已开始过程被中断后的通知，不等同于 [TaskResult.abort](../../../fnkit/docs/plans/261108_Task与Result执行.md) 取消异步任务的操作；本节不因此实现 Task 机制。
 
 这不是浏览器事件的逐项映射，也不承诺 Progress 的次数。当前 `onOpen`／`onClose` 将退出旧命名，由新生命周期及保留的 `onToggle` 接管；不能简单改名为 Start，就把原生状态通知伪装成 CSS 已开始。具体映射需随下面的未决项明确后再施工，不保留一组同义旧别名。
 

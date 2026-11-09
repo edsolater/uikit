@@ -2,7 +2,7 @@
  * Source 的最终读取边界：递归读取 StateView 与 PromiseLike，普通值原样返回。
  * 来源身份与转换由 stateView 负责；val 只在消费点取得当前值。
  */
-import { isExist, result, type Primitive } from '@edsolater/fnkit'
+import { isExist, result, type ResultValue, type Primitive } from '@edsolater/fnkit'
 import { isStateViewable, type Source } from './source'
 import { stateView, type StateView } from './state-view'
 
@@ -13,10 +13,6 @@ export type Val<S> =
     : S extends StateView<infer InnerS>
       ? Val<InnerS>
       : S
-
-type DefaultVal<S> = S extends (...args: never[]) => infer ResultV
-  ? Val<ResultV>
-  : Val<S>
 
 /**
  * 读取来源的当前完成值；在响应式计算中调用时跟踪相应依赖。
@@ -58,10 +54,10 @@ export function val<V>(source: StateView<V>): Val<StateView<V>>
  */
 export function val<V>(source: Source<V>): Awaited<V>
 export function val<S>(source: S): Val<S>
-export function val<S, DefaultValue>(
+export function val<S, const DefaultValue>(
   source: S,
   defaultValue: DefaultValue,
-): Exclude<Val<S>, null | undefined> | DefaultVal<DefaultValue>
+): Exclude<Val<S>, null | undefined> | Val<ResultValue<DefaultValue>>
 export function val(source: any, defaultValue?: any) {
   const value = isStateViewable(source) ? val(stateView(source).read()) : source
   return !isExist(value) && arguments.length > 1

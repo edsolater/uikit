@@ -56,6 +56,26 @@ test('Val 递归解除 StateView 与 PromiseLike 包装', () => {
   expectTypeOf<Val<Promise<StateView<number>>>>().toEqualTypeOf<number>()
 })
 
+test('默认值先按 result 递归求值，代理仍按 Source 读取', async () => {
+  const business = { result: () => 3 }
+  expect(val(undefined, business)).toBe(3)
+  expect(val(undefined, () => business)).toBe(3)
+  expectTypeOf(val(undefined, () => business)).toEqualTypeOf<number>()
+  const proxy = toPromiseResultProxy(Promise.resolve(business))
+  await proxy
+  expect(await resolve(() => val(undefined, proxy))).toBe(business)
+  const handler = () => 7
+  const callableProxy = toPromiseResultProxy(Promise.resolve(handler))
+  expectTypeOf(() => val(undefined, callableProxy)).returns.toEqualTypeOf<typeof handler>()
+  const { read, dispose } = createRoot(dispose => ({
+    read: createMemo(() => val(undefined, callableProxy)),
+    dispose,
+  }))
+  await resolve(read)
+  expect(read()).toBe(handler)
+  dispose()
+})
+
 test('val 在 UIKit 读取边界递归解除内部包装', () => {
   const value = createState(1)
   const nestedSource = createState(value)

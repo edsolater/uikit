@@ -175,7 +175,7 @@ export const topLayer = createInactivePlugin({
       },
     }
     onMount(() => {
-      // TODO：节点迟于清理时可能错位；交由 [Task](../../../../../docs/todo/261107_Task与TaskResult异步操作.md) 管理等待与取消。
+      // TODO：节点迟于清理时可能错位；交由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 管理等待与取消。
       domProxy.then((el) => {
         session = createTopLayerController(el, active)
         session.enter()

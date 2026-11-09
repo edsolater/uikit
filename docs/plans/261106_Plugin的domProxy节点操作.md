@@ -2,6 +2,8 @@
 
 ## 当前状态与全局位置
 
+本文记录的 `Promise<boolean>` 后续目标已由 [PromiseResultProxy 完整 Promise 与惰性计算](../../../fnkit/docs/plans/261108_PromiseResultProxy完整Promise与惰性计算.md) 的第二阶段统一接管。先完成 FNKit 代理能力与现有消费者兼容验证，再明确各操作的真实成功条件；本篇其余历史施工说明不据此改写。
+
 **实施中：用户已授权继续完成剩余 Plugin。** 此前资源迁移的两个缺口已按下述责任路径落实，实际结果仍须独立审查和验收；不能把方案写入 Plan 当作完成证据。
 
 本文对应[基础协议全局运行图](261105_is声明解析与Plugin调用协议统一.md#全局运行图与本-plan-定位)的 B、C、H：能力构建时准备完整 Controller 和声明，节点接入仍经统一 ShadowProps／domRef；本文在此基础上提供可等待的 DOM 操作入口。基础协议的其余责任继续由原 Plan 承担。[Popover 与 Tooltip 能力重构](261106_Popover与Tooltip能力重构.md)保持原有用户许可闸门。

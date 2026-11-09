@@ -89,7 +89,7 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
      */
     const open = () => {
       cancelClose()
-      // TODO：浮层未插入时 showPopover 可能失败；交由 [Task](../../../../../docs/todo/261107_Task与TaskResult异步操作.md) 等待就绪并支持取消。
+      // TODO：浮层未插入时 showPopover 可能失败；交由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 等待就绪并支持取消。
       if (hasTooltipContent(options.content)) controller.showPopover()
     }
     /**

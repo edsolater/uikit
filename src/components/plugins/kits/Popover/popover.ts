@@ -269,7 +269,7 @@ function popoverBodyCore({
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
   const position = withDefault(pluginOptions.$anchorPosition, 'top')
-  // TODO：慢节点或作用域退出后关联可能晚执行，由 [Task](../../../../../docs/todo/261107_Task与TaskResult异步操作.md) 接管就绪与取消。
+  // TODO：慢节点或作用域退出后关联可能晚执行，由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 接管就绪与取消。
   if (group.nativeTrigger) Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
     const button = trigger as HTMLButtonElement
     button.popoverTargetElement = body

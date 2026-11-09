@@ -107,7 +107,7 @@ function visitContent(
       }
       if (isFunction(input) && !isJSSContent(input)) {
         if (!record.notified) {
-          record.content = result(input)
+          record.content = result<unknown>(input)
           record.notified = true
         }
         return visit(record.content, depth + 1)

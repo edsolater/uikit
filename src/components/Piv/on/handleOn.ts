@@ -4,7 +4,7 @@
  */
 import {
   isArray,
-  isFunction,
+  isCallable,
   isString,
   toArray,
   type MayArray,
@@ -48,7 +48,7 @@ export function createEventListenerDiscriptor<K extends EventKey>(
 function isEventListenerDiscriptor<K extends EventKey>(
   obj: any,
 ): obj is EventListenerDiscriptor<K> {
-  return obj && isString(obj.event) && isFunction(obj.callback)
+  return obj && isString(obj.event) && isCallable(obj.callback)
 }
 
 export type EventListenerPair<K extends EventKey = EventKey> = [
@@ -96,7 +96,7 @@ export function toEventListenersList(
 function toBaseListenerDiscriptor<K extends EventKey>(
   discriptorOrCallback: ListenerDiscriptor<K> | EventCallback<K>,
 ): ListenerDiscriptor<K> {
-  if (isFunction(discriptorOrCallback)) {
+  if (isCallable(discriptorOrCallback)) {
     return { callback: discriptorOrCallback }
   } else {
     return discriptorOrCallback

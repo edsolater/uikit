@@ -65,7 +65,7 @@ domRef 的初始化旁读不成为 Show 的结构依赖，不保存、恢复或�
 初始化顺序为：创建裸元素 → 绑定字段和事件 → 调用 domRef → 插入 children。
 domRef 取得已提交初始字段的真实元素；mount 后可以观察已插入的子节点。
 domRef 在节点接入时调用，并在节点作用域退出时执行回调返回的清理。
-`domProxy` 消费者在首次节点就绪后接入资源，按各自所属作用域清理；操作晚于清理的时序缺口见 [Task 异步操作 TODO](../../../docs/todo/261107_Task与TaskResult异步操作.md)。
+`domProxy` 消费者在首次节点就绪后接入资源，按各自所属作用域清理；操作晚于清理的时序缺口见 [Task 与 result Plan](../../../../fnkit/docs/plans/261108_Task与Result执行.md)。
 
 当前 children 懒求值。
 整体可替换的 children Source 保持响应式更新。

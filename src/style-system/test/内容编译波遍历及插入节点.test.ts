@@ -8,7 +8,6 @@
 import { stateCondition } from '../state-condition'
 import { token } from '../token'
 import { expect, test } from 'vitest'
-import { Unresultable } from '@edsolater/fnkit'
 import { condition } from '../condition'
 import { key, type JSSKeyObject } from '../key'
 
@@ -1069,7 +1068,6 @@ test('Token source 与状态中的可调用内容按对象编译而非工厂调�
       return 'green'
     },
     {
-      [Unresultable]: true,
       onCompile(context, controller) {
         controller.setContent(context, 'red')
       },
@@ -1082,7 +1080,6 @@ test('Token source 与状态中的可调用内容按对象编译而非工厂调�
       return 'yellow'
     },
     {
-      [Unresultable]: true,
       onCompile(context, controller) {
         controller.setContent(context, 'blue')
       },
