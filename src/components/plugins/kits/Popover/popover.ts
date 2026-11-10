@@ -75,17 +75,17 @@ export interface PopoverTriggerController {
   isOpen: State<boolean>
   /**
    * 显示本组浮层；操作配置尚待确定。
-   * 同步返回本次 TaskResult；await 等待原生操作执行，unsubscribe 可取消尚未执行的操作。
+   * 同步返回本次 TaskResult；await execution.result 等待原生操作执行，execution.cancel() 可取消尚未执行的操作。
    */
-  showPopover: Task<[], void>
+  showPopover: Task<void>
   /**
    * 关闭本组浮层；焦点恢复遵循浏览器原生行为。
    */
-  hidePopover: Task<[], void>
+  hidePopover: Task<void>
   /**
    * 切换浮层；force 可指定打开或关闭。
    */
-  togglePopover: Task<[options?: { force?: boolean }], void>
+  togglePopover: Task<void, [options?: { force?: boolean }]>
 }
 
 /**
@@ -99,15 +99,15 @@ export interface PopoverBodyController {
   /**
    * 请求显示本组正文，打开配置由正文端决定。
    */
-  showPopover: Task<[], void>
+  showPopover: Task<void>
   /**
    * 请求关闭本组正文，焦点恢复遵循浏览器原生行为。
    */
-  hidePopover: Task<[], void>
+  hidePopover: Task<void>
   /**
    * 切换正文；force 可指定打开或关闭。
    */
-  togglePopover: Task<[options?: { force?: boolean }], void>
+  togglePopover: Task<void, [options?: { force?: boolean }]>
 }
 
 /**
@@ -413,7 +413,7 @@ function findFirstFocusableElement(body: HTMLElement): HTMLElement | undefined {
  * const { trigger: popoverTrigger, body: popoverBody } = popoverPlugins
  * const { trigger: triggerController, body: bodyController } = popoverController
  * <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
- * await popoverController.hidePopover() // 与 bodyController.hidePopover 是同一个 Task
+ * await popoverController.hidePopover().result // 与 bodyController.hidePopover 是同一个 Task
  */
 export const createPopoverPlugins: (
   pluginOptions?: PopoverOptions,

@@ -98,17 +98,17 @@ controller.togglePopover({ force: false })
 | `hidePopover()` | 请求原生关闭；Plugin 不再额外恢复触发端焦点 |
 | `togglePopover(options?)` | `force` 省略时切换，true 请求打开，false 请求关闭；焦点遵守上述打开配置和原生关闭行为 |
 
-每个指令入口声明为 `Task`，每次调用同步返回独立的 `TaskResult<void>`。可以忽略结果，也可以 `await` 等待正文 DOM 取得、取消检查和原生操作完成；这不表示原生 `toggle` 事件已送达或 CSS 过渡已结束。原生状态仍以 `isOpen` 和实际事件为准，不新增成功 boolean。
+每个指令入口声明为 `Task`，每次调用同步返回独立的 `TaskResult<void>`。可以忽略结果，也可以等待 `execution.result`，直到正文 DOM 取得、取消检查和原生操作完成；这不表示原生 `toggle` 事件已送达或 CSS 过渡已结束。原生状态仍以 `isOpen` 和实际事件为准，不新增成功 boolean。
 
 ```ts
-await popoverController.showPopover()
-await popoverController.togglePopover({ force: false })
+await popoverController.showPopover().result
+await popoverController.togglePopover({ force: false }).result
 
-const execution = popoverController.showPopover()
-execution.unsubscribe() // 取消尚未执行的原生操作。
-await execution.catch(() => undefined) // 取消以 AbortError 拒绝。
+const execution = popoverController.showPopover.lazyExec()
+execution.cancel() // 取消尚未执行的原生操作。
+await execution.result.catch(() => undefined) // 取消以 AbortError 拒绝。
 
-await popoverController.hidePopover.result // 无参数 Task 的 result 也会发起一次执行。
+await popoverController.hidePopover().result
 ```
 
 取消检查发现本次已取消时，不再执行后续原生操作；取消不撤销已经完成的显隐。每次调用彼此独立，不自动取消前一次命令。
@@ -137,4 +137,4 @@ Controller 完整不代表元素已经插入文档。显隐 Task 会等待 `domP
 
 Tooltip 内部一次构建 `createPopoverPlugins`，使用 `triggerAction:false`、`popover:'hint'` 和 `autoFocus:false`；通过同一 Piv body 复用原生定位、显隐及打开状态，自身拥有阅读事件、aria 描述与提示材料，不再使用 Surface 或旧 VisibilityController。内容清空会关闭、清计时并移除正文，再次有内容时复用同一节点；数字 0 有效。Tooltip Controller 仍只提供 `isOpen`、`showPopover()`、`hidePopover()`，不扩大调用方接口。
 
-Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<[], void>`；有内容时直接采用内部 Popover 的本次 TaskResult，因此等待和取消沿同一次执行生效。空内容的显示请求仍返回 TaskResult，完成后没有显示副作用。hover、focus、150ms 离开关闭等阅读行为不变，内部进入／离开和计时辅助函数仍只负责各自交互。
+Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<void>`；有内容时转发内部 Popover 的业务结果；外层取消不接管内部执行。空内容的显示请求仍返回 TaskResult，完成后没有显示副作用。hover、focus、150ms 离开关闭等阅读行为不变，内部进入／离开和计时辅助函数仍只负责各自交互。

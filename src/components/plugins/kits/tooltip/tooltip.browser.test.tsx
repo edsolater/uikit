@@ -262,17 +262,17 @@ test('提示的显示关闭保留 Task 等待与取消，空内容不显示', as
   }, host)
   await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
-  const canceled = controller.showPopover()
-  const rejected = canceled.catch(error => error)
-  canceled.unsubscribe()
+  const canceled = controller.showPopover.lazyExec()
+  canceled.cancel()
+  const rejected = canceled.result.catch(error => error)
   expect((await rejected).name).toBe('AbortError')
   expect(body.matches(':popover-open')).toBe(false)
-  await controller.showPopover.result
+  await controller.showPopover().result
   expect(body.matches(':popover-open')).toBe(true)
-  await controller.hidePopover()
+  await controller.hidePopover().result
   expect(body.matches(':popover-open')).toBe(false)
   content.set('')
   await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
-  await controller.showPopover()
+  await controller.showPopover().result
   expect(body.matches(':popover-open')).toBe(false)
 })

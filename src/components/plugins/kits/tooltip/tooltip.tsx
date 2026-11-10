@@ -30,13 +30,13 @@ export type TooltipController = {
   /** Popover 的原生打开状态。 */
   isOpen: PopoverController['isOpen']
   /**
-   * 显示现有内容并取消延迟关闭；返回可等待、可取消的本次 TaskResult。
+   * 显示现有内容并取消延迟关闭；通过 execution.result 等待，通过 execution.cancel() 取消本次执行。
    */
-  showPopover: Task<[], void>
+  showPopover: Task<void>
   /**
-   * 关闭提示并取消延迟关闭，不主动移动焦点；await 等待原生关闭操作执行。
+   * 关闭提示并取消延迟关闭，不主动移动焦点；通过 execution.result 等待原生关闭操作执行。
    */
-  hidePopover: Task<[], void>
+  hidePopover: Task<void>
 }
 
 const tooltipIdGenerator = new IdGenerator('uikit-tooltip')
@@ -90,7 +90,7 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     const open = task(() => {
       cancelClose()
       // TODO：DOM 已取得不代表已插入 document；慢节点挂载时序仍待处理。
-      if (hasTooltipContent(options.content)) return controller.showPopover()
+      if (hasTooltipContent(options.content)) return controller.showPopover().result
     })
     /**
      * 离开阅读区域后延迟关闭，保留跨越浮层间距的机会。
@@ -114,7 +114,7 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
      */
     const dismiss = task(() => {
       cancelClose()
-      return controller.hidePopover()
+      return controller.hidePopover().result
     })
     onCleanup(cancelClose)
     // 内容清空时读取原生关闭结果；移出 document 本身不一定派发 toggle。

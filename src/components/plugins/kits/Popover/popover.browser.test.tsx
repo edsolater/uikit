@@ -470,18 +470,18 @@ test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   const controller = capability.controller
-  const canceled = controller.showPopover()
-  expect(typeof canceled.unsubscribe).toBe('function')
-  const rejected = canceled.catch(error => error)
-  canceled.unsubscribe()
+  const canceled = controller.showPopover.lazyExec()
+  expect(typeof canceled.cancel).toBe('function')
+  canceled.cancel()
+  const rejected = canceled.result.catch(error => error)
   expect((await rejected).name).toBe('AbortError')
   expect(body.matches(':popover-open')).toBe(false)
-  expect(await controller.showPopover()).toBeUndefined()
+  expect(await controller.showPopover().result).toBeUndefined()
   expect(body.matches(':popover-open')).toBe(true)
-  await controller.togglePopover({ force: false })
+  await controller.togglePopover({ force: false }).result
   expect(body.matches(':popover-open')).toBe(false)
-  await controller.togglePopover()
+  await controller.togglePopover().result
   expect(body.matches(':popover-open')).toBe(true)
-  await controller.hidePopover.result
+  await controller.hidePopover().result
   expect(body.matches(':popover-open')).toBe(false)
 })
