@@ -20,10 +20,10 @@ import {
 import { valueSequence } from '@/style-system/pieces/token-factory/list'
 import { transitionValue } from '@/style-system/pieces/token-factory/transition'
 
-const input = ['@layer uikit', '.Input']
+const inputAddress = ['@layer uikit', '.Input']
 const inputToken = createNewTokenGenerator({
   prefixName: 'input',
-  address: input,
+  address: inputAddress,
 })
 const hoverEnabled = stateCondition('&:hover:not(:disabled)')
 const hoverValid = stateCondition(
@@ -94,7 +94,7 @@ export const inputCursor = inputToken('inherit', {
   state: { disabled: 'not-allowed' },
 })
 
-rules(input, [
+rules(inputAddress, [
   {
     'width': '100%',
     'min-height': inputMinHeight,

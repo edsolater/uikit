@@ -21,6 +21,7 @@ export type SelectInputOption = {
 }
 export type SelectInputTag = {
   label: string
+  /** 标签的补充说明，可以是结构化内容。 */
   tooltip: TooltipOptions['content']
 }
 export type SelectInputProps = ComponentDescriptionProps & {
@@ -28,13 +29,14 @@ export type SelectInputProps = ComponentDescriptionProps & {
   id?: Source<string | undefined>
   value: Source<string>
   options: Source<SelectInputOption[]>
+  /** 已选值的附加说明，最多显示前三项。 */
   tags?: Source<SelectInputTag[] | undefined>
   message?: Source<string | undefined>
   onQuery: (query: string) => void
   onSelect: (option: SelectInputOption) => void
   onClose?: () => void
 }
-const definition = {
+const selectInputPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   id: 'state-source-view',
   value: 'state-source-view',
@@ -48,56 +50,70 @@ const definition = {
 } as const satisfies PropsDefinition<SelectInputProps>
 export type SelectInputController = KitController<
   SelectInputProps,
-  typeof definition
+  typeof selectInputPropsDefinition
 >
 
-/** 点击输入框打开候选；输入时查询，方向键和 Enter 选择，Escape 恢复已选值。 */
-export const SelectInput = kit<SelectInputProps, typeof definition>(
+/**
+ * 搜索并选择一项；输入时调用 onQuery，选择时交付选项。
+ * 点击输入框展开候选；方向键和 Enter 选择，Escape 恢复 value。
+ * 未编辑时显示 value 和最多三个标签；关闭候选时调用 onClose。
+ */
+export const SelectInput = kit<
+  SelectInputProps,
+  typeof selectInputPropsDefinition
+>(
   {
     name: 'SelectInput',
     description: '搜索并选择一项',
-    availableProps: definition,
+    availableProps: selectInputPropsDefinition,
   },
   (props: SelectInputProps) => {
     const fieldId = useFormFieldId(),
-      listId = crypto.randomUUID()
-    const query = createState(''),
-      editing = createState(false),
-      active = createState(0)
-    let input: HTMLInputElement
-    const { plugins, controller } = createPopoverPlugins({
-      trigger: { triggerAction: false },
-      body: {
-        $anchorPosition: 'bottom',
-        $anchorGap: 'sm',
-        autoFocus: false,
-        onClose: () => {
-          editing.set(false)
-          props.onClose?.()
+      optionsId = crypto.randomUUID()
+    const searchText = createState(''),
+      isEditing = createState(false),
+      activeOptionIndex = createState(0)
+    let inputElement: HTMLInputElement
+    const { plugins: popoverPlugins, controller: popoverController } =
+      createPopoverPlugins({
+        trigger: { triggerAction: false },
+        body: {
+          $anchorPosition: 'bottom',
+          $anchorGap: 'sm',
+          autoFocus: false,
+          onClose: () => {
+            isEditing.set(false)
+            props.onClose?.()
+          },
         },
-      },
-    })
-    const open = () => {
-      if (!val(controller.isOpen)) {
-        active.set(0)
+      })
+    /**
+     * 展开候选时请求完整列表。
+     */
+    const openOptions = () => {
+      if (!val(popoverController.isOpen)) {
+        activeOptionIndex.set(0)
         props.onQuery('')
-        controller.showPopover()
+        popoverController.showPopover()
       }
     }
-    const choose = (option: SelectInputOption) => {
-      editing.set(false)
+    /**
+     * 提交所选项并关闭候选。
+     */
+    const selectOption = (option: SelectInputOption) => {
+      isEditing.set(false)
       props.onSelect(option)
-      controller.hidePopover()
+      popoverController.hidePopover()
     }
     return (
       <>
         <Piv
           class="SelectInput"
-          is={plugins.trigger}
+          is={popoverPlugins.trigger}
           on={{
             click: () => {
-              input.focus()
-              open()
+              inputElement.focus()
+              openOptions()
             },
           }}
         >
@@ -106,57 +122,60 @@ export const SelectInput = kit<SelectInputProps, typeof definition>(
             class="SelectInput-input"
             id={val(props.id) ?? fieldId ?? undefined}
             domRef={(element) => {
-              input = element as HTMLInputElement
+              inputElement = element as HTMLInputElement
             }}
             htmlProps={{
-              'value': val(editing) ? val(query) : val(props.value),
+              'value': val(isEditing) ? val(searchText) : val(props.value),
               'role': 'combobox',
               'aria-autocomplete': 'list',
-              'aria-controls': listId,
-              'aria-expanded': val(controller.isOpen) ? 'true' : 'false',
+              'aria-controls': optionsId,
+              'aria-expanded': val(popoverController.isOpen) ? 'true' : 'false',
               'aria-activedescendant':
-                val(controller.isOpen) && val(props.options).length
-                  ? `${listId}-${val(active)}`
+                val(popoverController.isOpen) && val(props.options).length
+                  ? `${optionsId}-${val(activeOptionIndex)}`
                   : undefined,
             }}
             on={{
               input: ({ element }) => {
                 const value = (element as HTMLInputElement).value
-                query.set(value)
-                editing.set(true)
-                active.set(0)
+                searchText.set(value)
+                isEditing.set(true)
+                activeOptionIndex.set(0)
                 props.onQuery(value)
-                if (!val(controller.isOpen)) controller.showPopover()
+                if (!val(popoverController.isOpen))
+                  popoverController.showPopover()
               },
               keydown: ({ event }) => {
                 const key = (event as KeyboardEvent).key,
                   options = val(props.options)
                 if (key === 'ArrowDown') {
                   event.preventDefault()
-                  if (!val(controller.isOpen)) open()
+                  if (!val(popoverController.isOpen)) openOptions()
                   else if (options.length)
-                    active.set(Math.min(val(active) + 1, options.length - 1))
+                    activeOptionIndex.set(
+                      Math.min(val(activeOptionIndex) + 1, options.length - 1),
+                    )
                 }
                 if (key === 'ArrowUp') {
                   event.preventDefault()
-                  active.set(Math.max(val(active) - 1, 0))
+                  activeOptionIndex.set(Math.max(val(activeOptionIndex) - 1, 0))
                 }
                 if (
                   key === 'Enter' &&
-                  val(controller.isOpen) &&
-                  options[val(active)]
+                  val(popoverController.isOpen) &&
+                  options[val(activeOptionIndex)]
                 ) {
                   event.preventDefault()
-                  choose(options[val(active)]!)
+                  selectOption(options[val(activeOptionIndex)]!)
                 }
                 if (key === 'Escape') {
-                  editing.set(false)
-                  controller.hidePopover()
+                  isEditing.set(false)
+                  popoverController.hidePopover()
                 }
               },
             }}
           />
-          <Show when={!val(editing)}>
+          <Show when={!val(isEditing)}>
             <For each={(val(props.tags) ?? []).slice(0, 3)}>
               {(tag) => (
                 <Piv
@@ -172,8 +191,8 @@ export const SelectInput = kit<SelectInputProps, typeof definition>(
         </Piv>
         <Piv
           class="SelectInput-options"
-          is={plugins.body}
-          htmlProps={{ id: listId, role: 'listbox' }}
+          is={popoverPlugins.body}
+          htmlProps={{ id: optionsId, role: 'listbox' }}
         >
           <Show when={val(props.message)}>
             {(message) => <Piv class="SelectInput-message">{message()}</Piv>}
@@ -185,12 +204,13 @@ export const SelectInput = kit<SelectInputProps, typeof definition>(
                 class="SelectInput-option"
                 htmlProps={{
                   'type': 'button',
-                  'id': `${listId}-${index()}`,
+                  'id': `${optionsId}-${index()}`,
                   'role': 'option',
-                  'aria-selected': index() === val(active) ? 'true' : 'false',
+                  'aria-selected':
+                    index() === val(activeOptionIndex) ? 'true' : 'false',
                   'title': option.detail,
                 }}
-                on={{ click: () => choose(option) }}
+                on={{ click: () => selectOption(option) }}
               >
                 {option.label}
               </Piv>

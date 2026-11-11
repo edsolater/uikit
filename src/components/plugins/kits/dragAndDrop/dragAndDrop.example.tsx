@@ -8,6 +8,9 @@ import { dragAndDrop } from '@/components/plugins/kits/dragAndDrop/dragAndDrop'
 
 type ExampleGroup = ReturnType<typeof dragAndDrop>
 
+/**
+ * 展示两组相互独立的拖放；只有同组接收后更新结果。
+ */
 export function DragAndDropExample() {
   const results = createState<Record<string, string>>({})
 
@@ -32,6 +35,9 @@ export function DragAndDropExample() {
     },
   })
 
+  /**
+   * 呈现一组拖动源、接收区及其结果。
+   */
   const renderGroup = (name: 'A' | 'B', group: ExampleGroup) => (
     <Piv class="drag-drop-example-group">
       <strong>组 {name}</strong>

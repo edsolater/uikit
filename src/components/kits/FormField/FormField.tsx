@@ -12,10 +12,12 @@ import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarke
 import type { RefReceiver } from '@/hooks/createRef'
 import { Flow } from '../Flow/Flow'
 
-const FieldIdentity = createContext<string | null>(null)
-/** 取得最近字段身份；字段外返回空值。 */
+const FormFieldIdContext = createContext<string | null>(null)
+/**
+ * 取得最近 FormField 的控件 ID；字段外返回 null。
+ */
 export function useFormFieldId() {
-  return useContext(FieldIdentity)
+  return useContext(FormFieldIdContext)
 }
 
 export type FormFieldProps = ComponentDescriptionProps & {
@@ -23,7 +25,7 @@ export type FormFieldProps = ComponentDescriptionProps & {
   id?: Source<string | undefined>
   children?: JSX.Element
 }
-const definition = {
+const formFieldPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   id: 'state-source-view',
   children: 'only-through-prop',
@@ -31,22 +33,25 @@ const definition = {
 } as const
 export type FormFieldController = KitController<
   FormFieldProps,
-  typeof definition
+  typeof formFieldPropsDefinition
 >
 
-/** 组合一个 Label 和一个控件；自定义身份应在此提供。 */
+/**
+ * 组合一个 Label 和一个控件，让两者共享字段 ID。
+ * 需要自定义身份时，在 FormField 提供 id。
+ */
 export const FormField = kit(
   {
     name: 'FormField',
     description: '组合字段标题与控件',
-    availableProps: definition,
+    availableProps: formFieldPropsDefinition,
   },
   (props: FormFieldProps) => {
     const id = val(props.id) ?? crypto.randomUUID()
     return (
-      <FieldIdentity value={id}>
+      <FormFieldIdContext value={id}>
         <Flow>{props.children}</Flow>
-      </FieldIdentity>
+      </FormFieldIdContext>
     )
   },
 )

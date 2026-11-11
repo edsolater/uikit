@@ -21,7 +21,7 @@ rules(['@layer is', '.is\\:scroll-area::-webkit-scrollbar-track'], {
 })
 const scrollbarThumbColor = token('rgb(255 255 255 / 0.22)', {
   name: 'is-scroll-area-thumb-color',
-  state: [[stateCondition('&:hover'), 'rgb(255 255 255 / 0.34)']],
+  state: { hover: 'rgb(255 255 255 / 0.34)' },
 })
 rules(['@layer is', '.is\\:scroll-area::-webkit-scrollbar-thumb'], {
   'border': '3px solid transparent',

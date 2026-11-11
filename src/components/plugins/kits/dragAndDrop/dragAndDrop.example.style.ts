@@ -21,11 +21,11 @@ import {
   motionEasing,
 } from '@/style-system'
 
-const card = '.drag-drop-example-card'
-const target = '.drag-drop-example-target'
+const cardAddress = '.drag-drop-example-card'
+const targetAddress = '.drag-drop-example-target'
 const targetToken = createNewTokenGenerator({
   prefixName: 'drag-example-target',
-  address: target,
+  address: targetAddress,
 })
 const hovering = stateCondition('&[data-drop-hovering="true"]')
 const acceptable = stateCondition('&[data-drop-acceptable="true"]')
@@ -54,7 +54,7 @@ const targetBorderStyle = targetToken('dashed', {
 const cardCursor = createNewTokenGenerator({ prefixName: 'drag-example-card' })(
   'grab',
   {
-    state: [[stateCondition('&:active'), 'grabbing']],
+    state: { active: 'grabbing' },
   },
 )
 const cardOpacity = createNewTokenGenerator({
@@ -105,7 +105,7 @@ const shared = {
   'text-align': 'center',
   transition,
 } as const
-rules(card, {
+rules(cardAddress, {
   ...shared,
   'cursor': cardCursor,
   'opacity': cardOpacity,
@@ -117,7 +117,7 @@ rules(card, {
   'font-weight': multiply(fontWeight, 1.25),
   'user-select': 'none',
 })
-rules(target, {
+rules(targetAddress, {
   ...shared,
   'align-content': 'center',
   'gap': multiply(baseSpace, 0.5),

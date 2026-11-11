@@ -33,10 +33,10 @@ import {
   baseShadowSmall,
 } from '@/style-system'
 
-const button = ['@layer uikit', '.Button']
+const buttonAddress = ['@layer uikit', '.Button']
 const buttonToken = createNewTokenGenerator({
   prefixName: 'button',
-  address: button,
+  address: buttonAddress,
 })
 
 export const buttonColorSource = buttonToken(brandColor, {
@@ -108,7 +108,7 @@ export const buttonOpacity = buttonToken(buttonOpacitySource, {
   state: { disabled: (base) => multiply(base, 0.48 / 0.9) },
 })
 
-rules(button, [
+rules(buttonAddress, [
   paint({ background: buttonSurfaceColor, content: buttonContentColor }),
   boundary({
     border: [buttonBorderWidth, 'solid', buttonBorderColor],

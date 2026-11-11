@@ -16,7 +16,7 @@ import {
 const decoration = token('none', {
   name: 'link-decoration',
   state: [
-    [stateCondition('&:hover'), 'underline'],
+    ['hover', 'underline'],
     [stateCondition('&[aria-current="page"]'), 'underline'],
   ],
 })
@@ -25,7 +25,7 @@ rules('.Link', {
     name: 'link-content-color',
     state: [
       [
-        stateCondition('&:hover'),
+        'hover',
         oklch(brandColorTheme, {
           lightness: (current) => add(current, -0.04),
           chroma: (current) => add(current, 0.01),

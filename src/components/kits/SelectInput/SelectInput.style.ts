@@ -15,45 +15,28 @@ import {
 } from '@/style-system'
 import { valueSequence } from '@/style-system/pieces/token-factory/list'
 
-const frame = ['@layer uikit', '.SelectInput']
-const frameToken = createNewTokenGenerator({
+// 输入框及焦点反馈
+const selectInputAddress = ['@layer uikit', '.SelectInput']
+const selectInputToken = createNewTokenGenerator({
   prefixName: 'select-input',
-  address: frame,
+  address: selectInputAddress,
 })
-const focus = stateCondition('&:focus-within')
-const frameBorder = frameToken(
+const selectInputBorderColor = selectInputToken(
   colorMix([contentColorTheme, 0.18], 'transparent'),
-  { state: [[focus, brandColorTheme]] },
+  { state: { focusWithin: brandColorTheme } },
 )
-const frameShadow = frameToken('none', {
-  state: [
-    [
-      focus,
-      valueSequence(
-        0,
-        0,
-        0,
-        '0.2em',
-        colorMix([brandColorTheme, 0.25], 'transparent'),
-      ),
-    ],
-  ],
+const selectInputShadow = selectInputToken('none', {
+  state: {
+    focusWithin: valueSequence(
+      0,
+      0,
+      0,
+      '0.2em',
+      colorMix([brandColorTheme, 0.25], 'transparent'),
+    ),
+  },
 })
-const option = ['@layer uikit', '.SelectInput-option']
-const optionToken = createNewTokenGenerator({
-  prefixName: 'select-input-option',
-  address: option,
-})
-const optionBackground = optionToken('transparent', {
-  state: [
-    [
-      stateCondition('&[aria-selected="true"]'),
-      colorMix([brandColorTheme, 0.12], surfaceColorTheme),
-    ],
-  ],
-})
-
-rules(frame, {
+rules(selectInputAddress, {
   'display': 'flex',
   'align-items': 'center',
   'gap': multiply(baseSpace, 0.35),
@@ -63,10 +46,11 @@ rules(frame, {
   'padding-inline': baseSpace,
   'border-radius': multiply(baseRadius, 2),
   'border': '1px solid',
-  'border-color': frameBorder,
-  'box-shadow': frameShadow,
+  'border-color': selectInputBorderColor,
+  'box-shadow': selectInputShadow,
   'background-color': colorMix([contentColorTheme, 0.03], surfaceColorTheme),
 })
+// 输入文字与已选标签
 rules(['@layer uikit', '.SelectInput-input'], {
   'field-sizing': 'content',
   'min-width': '5ch',
@@ -83,6 +67,7 @@ rules(['@layer uikit', '.SelectInput-tag'], {
   'color': colorMix([contentColorTheme, 0.65], 'transparent'),
   'white-space': 'nowrap',
 })
+// 候选列表与选中状态
 rules(['@layer uikit', '.SelectInput-options'], {
   'max-height': '50vh',
   'max-width': 'min(48rem, 90vw)',
@@ -91,12 +76,25 @@ rules(['@layer uikit', '.SelectInput-options'], {
   'background-color': oklch({ base: surfaceColorTheme, alpha: 1 }),
   'color': contentColorTheme,
 })
-rules(option, {
+const selectInputOptionAddress = ['@layer uikit', '.SelectInput-option']
+const selectInputOptionToken = createNewTokenGenerator({
+  prefixName: 'select-input-option',
+  address: selectInputOptionAddress,
+})
+const selectInputOptionBackground = selectInputOptionToken('transparent', {
+  state: [
+    [
+      stateCondition('&[aria-selected="true"]'),
+      colorMix([brandColorTheme, 0.12], surfaceColorTheme),
+    ],
+  ],
+})
+rules(selectInputOptionAddress, {
   'display': 'block',
   'width': '100%',
   'padding': '0.4em 0.75em',
   'border': 'none',
-  'background': optionBackground,
+  'background': selectInputOptionBackground,
   'color': contentColorTheme,
   'text-align': 'left',
   'font': 'inherit',

@@ -23,9 +23,6 @@ import {
 import { valueSequence } from '@/style-system/pieces/token-factory/list'
 const soft = stateCondition('&[data-variant="soft"]')
 const solid = stateCondition('&[data-variant="solid"]')
-const small = stateCondition('&[data-size="small"]')
-const large = stateCondition('&[data-size="large"]')
-const xlarge = stateCondition('&[data-size="xlarge"]')
 const boardLineColor = color({
   base: boundaryColorTheme,
   alpha: (alpha) => multiply(alpha, 0.5),
@@ -65,23 +62,23 @@ const shadow = token(() => baseShadow, {
 })
 const padding = token(multiply(baseSpace, 3), {
   name: 'board-padding',
-  state: [
-    [small, multiply(baseSpace, 1.5)],
-    [large, multiply(baseSpace, 4)],
-    [xlarge, multiply(baseSpace, 6)],
-  ],
+  state: {
+    small: multiply(baseSpace, 1.5),
+    large: multiply(baseSpace, 4),
+    xlarge: multiply(baseSpace, 6),
+  },
 })
 const gap = token(multiply(baseSpace, 2), {
   name: 'board-gap',
-  state: [
-    [small, baseSpace],
-    [large, multiply(baseSpace, 3)],
-    [xlarge, multiply(baseSpace, 4)],
-  ],
+  state: {
+    small: baseSpace,
+    large: multiply(baseSpace, 3),
+    xlarge: multiply(baseSpace, 4),
+  },
 })
 const radius = token(multiply(baseRadius, 3), {
   name: 'board-radius',
-  state: [[small, multiply(baseRadius, 2)]],
+  state: { small: multiply(baseRadius, 2) },
 })
 rules('.Board', {
   'display': 'grid',
