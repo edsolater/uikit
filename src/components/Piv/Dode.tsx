@@ -3,7 +3,7 @@
  *
  * 处理创建时的 as、按需启用的 if，以及 DOM 字段绑定。
  *
- * 来源和插件已由 Piv 在创建前组织，所有绑定归当前元素分支，不增加 DOM 层。
+ * 来源和插件已由 Piv 在创建前组织，绑定归所属存活作用域，显隐不增加 DOM 层。
  */
 import type { ID, MayArray } from '@edsolater/fnkit'
 import {
@@ -11,11 +11,10 @@ import {
   type JSXElement,
   type Source,
   createRenderEffect,
-  Show,
   val,
 } from '@/foundation'
 import { children, insert, mapArray } from '@/foundation/render'
-import { untrack } from '@/foundation/reactivity'
+import { getOwner, runWithOwner, untrack } from '@/foundation/reactivity'
 
 import { consumeClassName, type ClassNameList } from './className'
 import {
@@ -35,7 +34,7 @@ import { consumeDomRefs, type PivDomRef } from './domRef'
 export type DodeDOMProps<Tag extends PivTag = 'div'> = {
   /** 首次创建时确定元素类型，默认 div；之后保持固定。 */
   as?: Tag
-  /** 属性存在时启用 Show；undefined 也表示条件不满足。 */
+  /** 属性存在时启用条件显隐；首次显示创建一次，之后复用同一元素。 */
   if?: Source<boolean>
   /** 全局身份，支持 Source 与列表，并沿来源合并规则形成稳定 Source。 */
   id?: Source<MayArray<ID> | undefined>
@@ -67,31 +66,19 @@ export function Dode<Tag extends PivTag>(
       props,
     )
   }
-  let jsxCreator: CreatePivElement<Tag> | undefined
+  const owner = getOwner()
+  let element: JSX.Element
   /**
-   * 保留首次实际创建的元素类型，条件重开时使用同一工厂。
+   * 首次显示时将元素和绑定归入 Dode 的存活作用域，显隐不重建或清理它们。
    */
-  const createElement = () => {
-    jsxCreator ??= domMap[
-      untrack(() => props.as ?? 'div') as PivSupportedElementTag
-    ] as CreatePivElement<Tag>
-    return jsxCreator()
-  }
-  return (
-    <Show when={val(props.if)}>
-      <DodeElement createElement={createElement} props={props} />
-    </Show>
-  )
-}
-
-/**
- * 为条件分支提供自然组件边界，隔离绑定初始化的旁读。
- */
-function DodeElement<Tag extends PivTag>(input: {
-  createElement: CreatePivElement<Tag>
-  props: DodeDOMProps<Tag>
-}): JSX.Element {
-  return createDodeElement(input.createElement, input.props)
+  const getOrCreateElement = () =>
+    (element ??= runWithOwner(owner, () =>
+      createDodeElement(
+        domMap[(props.as ?? 'div') as PivSupportedElementTag] as CreatePivElement<Tag>,
+        props,
+      ),
+    ))
+  return <>{val(props.if) ? getOrCreateElement() : null}</>
 }
 
 /**
@@ -103,10 +90,7 @@ function createDodeElement<Tag extends PivTag>(
 ): JSX.Element {
   const resolvedChildren = children(() => val(props.children))
   const element = createElement()
-  consumeId(
-    element,
-    untrack(() => props.id),
-  )
+  consumeId(element, props.id)
   consumeClassName(element, () => props.class)
   consumeStyle(element, () => props.style)
   // 原始声明身份决定监听作用域，其他能力变化不会重置 once 或提前执行其 cleanup。

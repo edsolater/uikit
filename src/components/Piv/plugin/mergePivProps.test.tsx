@@ -156,7 +156,7 @@ describe('配置插件消费', () => {
     expect([cleaned, nestedCleaned]).toEqual([1, 2])
   })
 
-  test('addProps 提交的 as 与 if 参与创建前结构选择，隐藏时不接元素', () => {
+  test('addProps 提交的 as 与 if 参与结构选择，首次隐藏不创建，之后显隐复用元素', () => {
     const host = document.createElement('div')
     const visible = createState(false)
     const attached: HTMLElement[] = []
@@ -189,15 +189,15 @@ describe('配置插件消费', () => {
     visible.set(false)
     flush()
     expect(host.firstElementChild).toBeNull()
-    expect(released).toEqual([button])
+    expect(released).toEqual([])
 
     visible.set(true)
     flush()
     const next = host.querySelector('button')!
-    expect(next).not.toBe(button)
-    expect(attached).toEqual([button, next])
+    expect(next).toBe(button)
+    expect(attached).toEqual([button])
     dispose()
-    expect(released).toEqual([button, next])
+    expect(released).toEqual([button])
   })
 
   test('is 数组后项优先，与 shadowProps 数组后项优先一致', () => {

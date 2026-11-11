@@ -118,7 +118,7 @@ export function createInactivePlugin<
       get domProxy() {
         if (!cachedDomProxy) {
           const first = Promise.withResolvers<HTMLElement>()
-          // TODO：支持 if 重建或宿主更换后的节点来源。
+          // 固定首次 DOM；if 显隐复用该元素，不追踪宿主替换。
           addProps({ domRef: (el) => first.resolve(el) })
           cachedDomProxy = toPromiseResultProxy(first.promise)
         }

@@ -60,7 +60,7 @@ describe('Piv 生命周期', () => {
     visible.set(true)
     flush()
     expect(host.querySelector('button')).not.toBeNull()
-    expect(host.querySelector('button')).not.toBe(first)
+    expect(host.querySelector('button')).toBe(first)
     expect(host.querySelector('a')).toBeNull()
     dispose()
   })
@@ -374,7 +374,7 @@ describe('Piv 生命周期', () => {
     expect(element.className).toBe('')
   })
 
-  test('shadowProps 条件隐藏后释放旧元素资源，重建和卸载分别清理当前元素', async () => {
+  test('shadowProps 条件显隐保留元素绑定，最终卸载才清理', async () => {
     const host = document.createElement('div')
     const visible = createState(true)
     const className = createState('before')
@@ -415,33 +415,32 @@ describe('Piv 生命周期', () => {
     flush()
     await Promise.resolve()
     expect(host.firstElementChild).toBeNull()
-    expect(cleaned).toEqual([oldElement])
-    const disposedClassName = oldElement.className
+    expect(cleaned).toEqual([])
     className.set('after')
     flush()
     await Promise.resolve()
-    expect(oldElement.className).toBe(disposedClassName)
+    expect(oldElement.className).toBe('after')
     oldElement.click()
-    expect(clicks).toBe(1)
+    expect(clicks).toBe(2)
 
     visible.set(true)
     flush()
     await Promise.resolve()
     const newElement = host.firstElementChild as HTMLElement
-    expect(newElement).not.toBe(oldElement)
+    expect(newElement).toBe(oldElement)
     expect(newElement.className).toBe('after')
-    expect(initialized).toEqual([oldElement, newElement])
+    expect(initialized).toEqual([oldElement])
     newElement.click()
-    expect(clicks).toBe(2)
+    expect(clicks).toBe(3)
     dispose()
-    expect(cleaned).toEqual([oldElement, newElement])
+    expect(cleaned).toEqual([oldElement])
     newElement.click()
-    expect(clicks).toBe(2)
+    expect(clicks).toBe(3)
   })
 })
 
 describe('Piv children', () => {
-  test('if 隐藏时不首次求值，children 随显示分支清理与重建', () => {
+  test('if 首次隐藏不求值，已创建 children 跨显隐保留到最终卸载', () => {
     const host = document.createElement('div')
     const visible = createState(false)
     let initialized = 0
@@ -469,13 +468,13 @@ describe('Piv children', () => {
     visible.set(false)
     flush()
     expect(host.firstElementChild).toBeNull()
-    expect([initialized, cleaned]).toEqual([1, 1])
+    expect([initialized, cleaned]).toEqual([1, 0])
     visible.set(true)
     flush()
-    expect(host.querySelector('span')).not.toBe(child)
-    expect([initialized, cleaned]).toEqual([2, 1])
+    expect(host.querySelector('span')).toBe(child)
+    expect([initialized, cleaned]).toEqual([1, 0])
     dispose()
-    expect([initialized, cleaned]).toEqual([2, 2])
+    expect([initialized, cleaned]).toEqual([1, 1])
   })
 
   test('StateView 可以作为 children 直接传入并持续更新', () => {
