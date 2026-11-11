@@ -13,6 +13,7 @@ import { derive } from '@/hooks/stateUtils'
 import { For, val, type Source } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
 import './Select.style'
+import { useFormFieldId } from '../FormField/FormField'
 export type SelectProps = ComponentDescriptionProps & {
   ref?: RefReceiver<SelectController>
   id?: Source<string | undefined>
@@ -36,11 +37,12 @@ export const Select = kit(
     availableProps: selectPropsDefinition,
   },
   (props: SelectProps) => {
+    const fieldId = useFormFieldId()
     return (
       <Piv
         as="select"
         class="Select"
-        id={props.id}
+        id={val(props.id) ?? fieldId ?? undefined}
         htmlProps={{
           name: props.name,
           value: props.value,

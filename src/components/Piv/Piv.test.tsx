@@ -999,6 +999,7 @@ describe('Piv htmlProps 属性', () => {
 
   test('动态 property 声明消失时恢复 DOM 初始值', () => {
     const host = document.createElement('div')
+    const value = createState('已填写')
     let setActive!: (active: boolean) => void
 
     function DynamicInputProps() {
@@ -1007,7 +1008,7 @@ describe('Piv htmlProps 属性', () => {
       return (
         <Piv
           as="input"
-          htmlProps={active() ? { value: '已填写', checked: true } : {}}
+          htmlProps={active() ? { value, checked: true, 'data-value': value } : {}}
         />
       )
     }
@@ -1017,14 +1018,29 @@ describe('Piv htmlProps 属性', () => {
 
     expect(element.value).toBe('已填写')
     expect(element.checked).toBe(true)
+    value.set('第二次')
+    flush()
+    expect(element.value).toBe('第二次')
+    expect(element.getAttribute('data-value')).toBe('第二次')
+    value.set('第三次')
+    flush()
+    expect(element.value).toBe('第三次')
+    expect(element.getAttribute('data-value')).toBe('第三次')
 
     setActive(false)
     flush()
 
     expect(element.value).toBe('')
     expect(element.checked).toBe(false)
+    expect(element.hasAttribute('data-value')).toBe(false)
+
+    setActive(true)
+    flush()
+    expect(element.value).toBe('第三次')
 
     dispose()
+    expect(element.value).toBe('')
+    expect(element.hasAttribute('data-value')).toBe(false)
   })
 })
 

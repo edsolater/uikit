@@ -17,6 +17,7 @@ import {
   type StatusController,
 } from '../utils/parseStatusProps'
 import './Input.style'
+import { useFormFieldId } from '../FormField/FormField'
 import { type Source, val } from '@/foundation'
 import {
   createInputValidity,
@@ -56,6 +57,7 @@ export const Input = kit<InputProps, typeof inputPropsDefinition>(
     availableProps: inputPropsDefinition,
   },
   (props: InputProps, context) => {
+    const fieldId = useFormFieldId()
     const validity = createInputValidity(props)
     const isInvalid = validity.isValid.map((isValid) => !isValid)
     const { effect: statusEffectProps, controller } = parseInputStatusProps({
@@ -68,6 +70,7 @@ export const Input = kit<InputProps, typeof inputPropsDefinition>(
         as="input"
         shadowProps={[props, ...statusEffectProps]}
         class="Input"
+        id={val(props.id) ?? fieldId ?? undefined}
         htmlProps={{
           type: val(props.type) ?? 'text',
           autocorrect: 'off',

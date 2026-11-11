@@ -102,7 +102,7 @@ const modifyTypes = {
     /**
      * 识别持有表达式变化回调的材料。
      */
-    accepts: (change: unknown) => hasProperty(change, 'detail', isFunction),
+    accepts: (change: unknown): boolean => hasProperty(change, 'detail', isFunction),
     /**
      * 将前序表达式交给变化回调，保留它返回的内容与依赖。
      */

@@ -8,12 +8,13 @@ import { kit, type KitController } from '@/components/tools/kit'
 import { Piv, type PivProps } from '@/components/Piv/Piv'
 import { labelPropsDefinition } from './Label.prop'
 import './Label.style'
+import { useFormFieldId } from '../FormField/FormField'
 
 /** 通过 for 关联独立输入；tooltip 为空时不创建问号。 */
 export type LabelProps = ComponentDescriptionProps & {
   /** 特殊运行期需求下接收本实例 Controller，初始界面仍由 Props 表达。 */
   ref?: RefReceiver<LabelController>
-  for: Source<string>
+  for?: Source<string | undefined>
   children: Source<string>
   tooltip?: PivProps['children']
   /** 替换默认问号的显示内容，不嵌入另一个交互控件。 */
@@ -31,9 +32,11 @@ export type LabelController = KitController<
  */
 export const Label = kit(
   { name: 'Label', availableProps: labelPropsDefinition },
-  (props: LabelProps) => (
+  (props: LabelProps) => {
+    const fieldId = useFormFieldId()
+    return (
     <Piv as="span" class="Label">
-      <Piv as="label" htmlProps={{ for: props.for }}>
+      <Piv as="label" htmlProps={{ for: val(props.for) ?? fieldId ?? undefined }}>
         {props.children}
       </Piv>
       <Show when={hasTooltipContent(props.tooltip)}>
@@ -44,5 +47,6 @@ export const Label = kit(
         />
       </Show>
     </Piv>
-  ),
+    )
+  },
 )

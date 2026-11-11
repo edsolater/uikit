@@ -30,3 +30,4 @@ rules('[data-plugin~="popover-body"]', {
   }),
   'position-visibility': 'anchors-visible',
 })
+rules('[data-plugin~="popover-body"]:not(:popover-open)', { display: 'none' })
