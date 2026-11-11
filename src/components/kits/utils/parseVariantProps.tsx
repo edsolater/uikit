@@ -81,7 +81,9 @@ export function createVariantPropsParser<
   groups: Groups,
   mapping?: Record<string, Record<string, string | undefined>>,
 ): (props: object) => VariantPropsParseResult<Groups> {
-  return function parseVariantProps(props: object): VariantPropsParseResult<Groups> {
+  return function parseVariantProps(
+    props: object,
+  ): VariantPropsParseResult<Groups> {
     const detailsRecord: Record<string, Source<string | undefined>> = {}
     const variantHTMLProps: Record<
       `data-${string}`,
@@ -106,7 +108,10 @@ export function createVariantPropsParser<
     }
 
     effectProps.push({ htmlProps: variantHTMLProps })
-    return { effect: effectProps, details: detailsRecord as VariantDetails<Groups> }
+    return {
+      effect: effectProps,
+      details: detailsRecord as VariantDetails<Groups>,
+    }
   }
 }
 

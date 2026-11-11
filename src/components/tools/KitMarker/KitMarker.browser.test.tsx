@@ -53,7 +53,9 @@ function createHost() {
  * 点击应用手动加载的浮动开关。
  */
 function toggleView() {
-  document.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!.click()
+  document
+    .querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
+    .click()
   flush()
 }
 
@@ -72,14 +74,13 @@ describe('组件结构查看', () => {
     const opacity = createState(0.8)
     const content = createState('TRUE')
     const host = createHost()
-    dispose = render(
-      () => {
-        const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
-        return <>
-          <KitMarker
-            componentName="透明父"
-            descriptionDisplay={display.read()}
-          >
+    dispose = render(() => {
+      const {
+        plugins: { trigger: popoverTrigger, body: popoverBody },
+      } = createPopoverPlugins({})
+      return (
+        <>
+          <KitMarker componentName="透明父" descriptionDisplay={display.read()}>
             <Piv style={{ opacity }}>
               <Button descriptionDisplay>子动作</Button>
               <Button is={popoverTrigger}>原生浮层</Button>
@@ -109,9 +110,8 @@ describe('组件结构查看', () => {
           <Button>外部动作</Button>
           <KitMarkerStructureViewTrigger />
         </>
-      },
-      host,
-    )
+      )
+    }, host)
     const root = host.firstElementChild as HTMLElement
     const originalNodes = [...host.childNodes]
     const originalBounds = root.getBoundingClientRect().toJSON()
@@ -139,7 +139,9 @@ describe('组件结构查看', () => {
       getComputedStyle(host, '::highlight(uikit-structure-view-hidden)').color,
     ).toBe('rgba(0, 0, 0, 0)')
     expect(popover.matches(':popover-open')).toBe(false)
-    ;[...root.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '原生浮层')!.click()
+    ;[...root.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent === '原生浮层')!
+      .click()
     await expect.poll(() => popover.matches(':popover-open')).toBe(true)
     await expect.poll(() => getComputedStyle(popover).opacity).toBe('0')
     opacity.set(0.35)
@@ -181,12 +183,16 @@ describe('组件结构查看', () => {
     )
     const button = host.querySelector('button')!
     const before = button.getBoundingClientRect().toJSON()
-    expect(document.querySelector('.ComponentMarkerStructureViewTrigger')).toBeNull()
+    expect(
+      document.querySelector('.ComponentMarkerStructureViewTrigger'),
+    ).toBeNull()
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
     showFab.set(true)
     flush()
     expect(
-      document.querySelector('.ComponentMarkerStructureViewTrigger')?.getAttribute('aria-pressed'),
+      document
+        .querySelector('.ComponentMarkerStructureViewTrigger')
+        ?.getAttribute('aria-pressed'),
     ).toBe('false')
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
     expect(button.getBoundingClientRect().toJSON()).toEqual(before)
@@ -218,10 +224,12 @@ describe('组件结构查看', () => {
   test('所有现役组件显示真实身份，同根组合及原生结构不增加元素并保持交互状态', async () => {
     const clicks = vi.fn()
     const host = createHost()
-    dispose = render(
-      () => {
-        const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
-        return <>
+    dispose = render(() => {
+      const {
+        plugins: { trigger: popoverTrigger, body: popoverBody },
+      } = createPopoverPlugins({})
+      return (
+        <>
           <Card>
             <Article>
               <Button onClick={clicks}>执行</Button>
@@ -235,9 +243,8 @@ describe('组件结构查看', () => {
           </Card>
           <KitMarkerStructureViewTrigger />
         </>
-      },
-      host,
-    )
+      )
+    }, host)
     const article = host.querySelector('article')!
     const input = host.querySelector('input')!
     const action = article.querySelector('button')!
@@ -342,17 +349,20 @@ describe('组件结构查看', () => {
 
   test('开启期间原生Popover仍可开关，覆盖层在新开的顶层surface上可见', async () => {
     const host = createHost()
-    dispose = render(
-      () => {
-        const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
-        return <>
+    dispose = render(() => {
+      const {
+        plugins: { trigger: popoverTrigger, body: popoverBody },
+      } = createPopoverPlugins({})
+      return (
+        <>
           <Button is={popoverTrigger}>打开补充</Button>
-          <Card is={popoverBody} description="原生浮层">真实浮层内容</Card>
+          <Card is={popoverBody} description="原生浮层">
+            真实浮层内容
+          </Card>
           <KitMarkerStructureViewTrigger />
         </>
-      },
-      host,
-    )
+      )
+    }, host)
     toggleView()
     const trigger = host.querySelector<HTMLButtonElement>(
       'button[data-plugin~=\"Button:clickable\"]',
@@ -525,8 +535,9 @@ describe('组件结构查看', () => {
     expect(mask.clipPath).toContain(`${control.left - 2 - frameBounds.left}px`)
     expect(getComputedStyle(frame).clipPath).toBe('none')
     expect(getComputedStyle(canvas).zIndex).toBe('1')
-    const controlElement =
-      document.querySelector<HTMLElement>('.ComponentMarkerStructureViewTrigger')!
+    const controlElement = document.querySelector<HTMLElement>(
+      '.ComponentMarkerStructureViewTrigger',
+    )!
     expect(
       document.elementFromPoint(
         control.x + control.width / 2,
@@ -554,9 +565,9 @@ describe('组件结构查看', () => {
             <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
             <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
           </KitMarker>
-          <KitMarker componentName="ReadingSummary"><Card style={{ width: '200px', height: '80px' }}>
-            同框内容
-          </Card></KitMarker>
+          <KitMarker componentName="ReadingSummary">
+            <Card style={{ width: '200px', height: '80px' }}>同框内容</Card>
+          </KitMarker>
           <KitMarkerStructureViewTrigger />
         </>
       )

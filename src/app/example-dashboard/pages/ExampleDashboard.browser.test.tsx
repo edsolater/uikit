@@ -34,17 +34,26 @@ describe('ExampleDashboard', () => {
     dispose = render(() => <ExampleDashboard />, host)
     const list = document.querySelector<HTMLElement>('.example-list')!
     const shell = document.querySelector<HTMLElement>('.example-shell')!
-    const ribbons = [...document.querySelectorAll<HTMLElement>('.example-link-ribbon')]
+    const ribbons = [
+      ...document.querySelectorAll<HTMLElement>('.example-link-ribbon'),
+    ]
     await page.viewport(1200, 800)
-    expect(getComputedStyle(list).gridTemplateColumns.split(' ')).toHaveLength(6)
-    expect(new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor)).size).toBeGreaterThan(1)
+    expect(getComputedStyle(list).gridTemplateColumns.split(' ')).toHaveLength(
+      6,
+    )
+    expect(
+      new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor))
+        .size,
+    ).toBeGreaterThan(1)
     const initialBackground = getComputedStyle(shell).backgroundImage
     const accentName = cssTokenName(accentColorTheme)
     document.documentElement.style.setProperty(accentName, 'red')
     expect(getComputedStyle(shell).backgroundImage).not.toBe(initialBackground)
     document.documentElement.style.removeProperty(accentName)
     await page.viewport(500, 800)
-    expect(getComputedStyle(list).gridTemplateColumns.split(' ')).toHaveLength(2)
+    expect(getComputedStyle(list).gridTemplateColumns.split(' ')).toHaveLength(
+      2,
+    )
     await page.viewport(1280, 720)
   })
 
@@ -138,9 +147,15 @@ describe('ExampleDashboard', () => {
     const solidCard = document.querySelector<HTMLElement>(
       '.card-example-item[data-variant="solid"]',
     )!
-    expect(['block', 'flow-root']).toContain(getComputedStyle(defaultCard).display)
-    const firstItem = smallCard.querySelector('strong')!, nextItem = smallCard.querySelector('span')!
-    expect(nextItem.getBoundingClientRect().top - firstItem.getBoundingClientRect().bottom).toBeGreaterThan(0)
+    expect(['block', 'flow-root']).toContain(
+      getComputedStyle(defaultCard).display,
+    )
+    const firstItem = smallCard.querySelector('strong')!,
+      nextItem = smallCard.querySelector('span')!
+    expect(
+      nextItem.getBoundingClientRect().top -
+        firstItem.getBoundingClientRect().bottom,
+    ).toBeGreaterThan(0)
     expect(
       Number.parseFloat(getComputedStyle(defaultCard).padding),
     ).toBeGreaterThan(0)
@@ -207,9 +222,19 @@ describe('ExampleDashboard', () => {
     window.history.replaceState(null, '', '/examples')
     const host = document.body.appendChild(document.createElement('div'))
     dispose = render(() => <ExampleDashboard />, host)
-    expect(host.querySelector('a[href="/examples/article"] .example-link-ribbon')?.textContent).toContain('语义组件')
-    const semanticLinks = [...host.querySelectorAll('.example-link')].filter(link => link.querySelector('.example-link-ribbon')?.textContent?.startsWith('语义组件'))
-    expect(semanticLinks.map(link => link.querySelector('h2')?.textContent)).toEqual(['Article'])
+    expect(
+      host.querySelector('a[href="/examples/article"] .example-link-ribbon')
+        ?.textContent,
+    ).toContain('语义组件')
+    const semanticLinks = [...host.querySelectorAll('.example-link')].filter(
+      (link) =>
+        link
+          .querySelector('.example-link-ribbon')
+          ?.textContent?.startsWith('语义组件'),
+    )
+    expect(
+      semanticLinks.map((link) => link.querySelector('h2')?.textContent),
+    ).toEqual(['Article'])
   })
 
   test('Article 示例由外层 Card 承载，皮肤与正文语义各归自身', () => {

@@ -98,7 +98,8 @@ test('完整通道内容保留输出，来源或通道缺失时不产生颜色',
 test('直接构造通道时不提前读取闭包，实际消费使用当时的变化', () => {
   let delta = 0.1
   const changes = {
-    lightness: (current: import('../../content').Expression) => add(current, delta),
+    lightness: (current: import('../../content').Expression) =>
+      add(current, delta),
   }
   const channels = oklchChannels(changes)
   delta = 0.2

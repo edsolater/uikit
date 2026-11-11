@@ -21,7 +21,9 @@ export function createRef<T extends object>(): [
   receive: RefReceiver<any>,
 ] {
   // 引用保存的是原对象本身；显式装入字段，避免把 StateView 对象当作值来源展开。
-  const reference = createState<{ controller: T } | undefined>(undefined, { ownedWrite: true })
+  const reference = createState<{ controller: T } | undefined>(undefined, {
+    ownedWrite: true,
+  })
   const proxy = new Proxy({} as Partial<T>, {
     get(_, key) {
       const controller = reference.read()?.controller

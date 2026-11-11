@@ -161,9 +161,7 @@ function createToken<T extends TokenData>(
   const name =
     entityName === undefined
       ? undefined
-      : [prefixName, entityName]
-          .filter((part) => part !== undefined)
-          .join('-')
+      : [prefixName, entityName].filter((part) => part !== undefined).join('-')
   const self: Token<T> = {
     ...parseTokenArgs<T>(input, protocol),
     name,
@@ -180,9 +178,17 @@ function createToken<T extends TokenData>(
     toCSSString(resolve = primitiveToCSSString) {
       if (self._kind === 'css-variable') {
         const cssName = cssTokenName(self)
-        if (self.name === undefined && self.$warnIfMissTokenName && !warnedTokens.has(self)) {
+        if (
+          self.name === undefined &&
+          self.$warnIfMissTokenName &&
+          !warnedTokens.has(self)
+        ) {
           warnedTokens.add(self)
-          console.warn('Token 坍缩为 CSS variable 时未指定名称：', cssName, self)
+          console.warn(
+            'Token 坍缩为 CSS variable 时未指定名称：',
+            cssName,
+            self,
+          )
         }
         return `var(${cssName})`
       }

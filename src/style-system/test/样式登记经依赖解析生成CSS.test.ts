@@ -59,11 +59,7 @@ test('动效按需提供根规则，分隔线在消费者处引用文字变量�
   expect(motionCSS).not.toContain('--line-color:')
   const localLine = lineColor(token('black', 'local-line-base'))
   const lineCSS = compileRules([
-    [
-      [condition('.Line')],
-      'border-color',
-      localLine,
-    ],
+    [[condition('.Line')], 'border-color', localLine],
   ])
   expect(lineCSS).toContain(`border-color: var(--${localLine.name});`)
   expect(lineCSS).toContain('var(--local-line-base)')

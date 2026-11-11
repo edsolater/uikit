@@ -7,7 +7,10 @@
  */
 import { kit } from '@/components/tools/kit'
 import type { JSX } from '@/foundation'
-import { boardPropsDefinition, getBoardPropsDirectorOptions } from '../Board/Board.prop'
+import {
+  boardPropsDefinition,
+  getBoardPropsDirectorOptions,
+} from '../Board/Board.prop'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
 import {
   renderBoard,
@@ -26,10 +29,13 @@ export type CardSizeProps = BoardSizeProps
 export type CardProps<Tag extends PivSupportedElementTag = 'div'> =
   BoardProps<Tag>
 /** Card 自有集合中的实例控制入口，字段契约复用 Board。 */
-export type CardController<Tag extends PivSupportedElementTag = 'div'> = BoardController<Tag>
+export type CardController<Tag extends PivSupportedElementTag = 'div'> =
+  BoardController<Tag>
 
 interface CardComponent {
-  <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>): JSX.Element
+  <Tag extends PivSupportedElementTag = 'div'>(
+    props: CardProps<Tag>,
+  ): JSX.Element
   controllers: BoardControllerCollection
 }
 
@@ -37,12 +43,16 @@ interface CardComponent {
  * 将同一主题的内容呈现为独立信息体，保留动态材质、尺寸与原生节点能力。
  */
 // kit 原样包装泛型核心；这里只恢复原 Card 的 Tag 与 Props 调用关联。
-export const Card = kit<CardProps<PivSupportedElementTag>, typeof boardPropsDefinition>(
+export const Card = kit<
+  CardProps<PivSupportedElementTag>,
+  typeof boardPropsDefinition
+>(
   {
     name: 'Card',
     description: '组织独立信息',
     availableProps: boardPropsDefinition,
     directorOptions: getBoardPropsDirectorOptions,
   },
-  <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>) => renderBoard(props, 'Board Card'),
+  <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>) =>
+    renderBoard(props, 'Board Card'),
 ) as CardComponent

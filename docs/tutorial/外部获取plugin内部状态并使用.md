@@ -11,7 +11,15 @@ function Example() {
     <>
       <Card is={capability}>信息</Card>
       <Text>{val(controller.focused) ? '已聚焦' : '未聚焦'}</Text>
-      <Button on={{ click() { controller.focus() } }}>聚焦</Button>
+      <Button
+        on={{
+          click() {
+            controller.focus()
+          },
+        }}
+      >
+        聚焦
+      </Button>
     </>
   )
 }
@@ -48,7 +56,9 @@ Controller 的方法和状态在构建返回时已经存在，不使用 `Partial
 多个节点需要独立状态时分别调用 inactivePlugin；联合能力的角色从组合结果中分别取得 Controller：
 
 ```ts
-const { plugins: { draggable, droppable } } = dragAndDrop({
+const {
+  plugins: { draggable, droppable },
+} = dragAndDrop({
   draggable: { payload: item },
   droppable: { onDrop: receive },
 })

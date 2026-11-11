@@ -26,14 +26,14 @@ Article 内也可以包含作为正文组成部分的资料卡片。两种方向
 
 `ArticleProps` 复用除 `as` 之外的 `PivProps<'article'>`，加上用途说明与自身 `ref`：
 
-| 属性 | 用途 |
-| --- | --- |
-| `children` | 完整正文，可组合文字、标题或视觉容器，保留来源更新 |
-| `description`、`descriptionDisplay` | 用途说明及结构查看中的显示选择 |
-| `id`、`class`、`style` | 正文根的身份与调用方必要布局 |
-| `htmlProps`、`on`、`domRef` | 原生 article 的属性、事件与 DOM 引用 |
-| `if`、`shadowProps`、`is` | 既有显示、低优先级来源与附加能力 |
-| `ref` | 接收 Article 自己的 Controller，不替代组合中 Card 的实例引用 |
+| 属性                                | 用途                                                         |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `children`                          | 完整正文，可组合文字、标题或视觉容器，保留来源更新           |
+| `description`、`descriptionDisplay` | 用途说明及结构查看中的显示选择                               |
+| `id`、`class`、`style`              | 正文根的身份与调用方必要布局                                 |
+| `htmlProps`、`on`、`domRef`         | 原生 article 的属性、事件与 DOM 引用                         |
+| `if`、`shadowProps`、`is`           | 既有显示、低优先级来源与附加能力                             |
+| `ref`                               | 接收 Article 自己的 Controller，不替代组合中 Card 的实例引用 |
 
 `ArticleController.props` 通过既有字段状态干预正文输入，不包含 `as` 或 Card 的 `size`、`variant`。嵌套 Card 的引用只操作该 Card。
 

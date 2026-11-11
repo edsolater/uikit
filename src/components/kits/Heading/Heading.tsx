@@ -20,7 +20,10 @@ export type HeadingProps = Omit<PivProps<HeadingTag>, 'as' | 'id'> &
   }
 
 /** Heading 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type HeadingController = KitController<HeadingProps, typeof headingPropsDefinition>
+export type HeadingController = KitController<
+  HeadingProps,
+  typeof headingPropsDefinition
+>
 
 /**
  * Heading是H1至H4的结构与导航定位节点，不是自动Link。
@@ -54,9 +57,15 @@ export const Heading = kit(
           /**
            * 从真实文字取得定位身份，不预设children的组成或来源类型。
            */
-          const syncId = () => { element.id = element.textContent ?? '' }
+          const syncId = () => {
+            element.id = element.textContent ?? ''
+          }
           const observer = new MutationObserver(syncId)
-          observer.observe(element, { childList: true, subtree: true, characterData: true })
+          observer.observe(element, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+          })
           onMount(syncId)
           return () => observer.disconnect()
         }}

@@ -17,7 +17,12 @@ import {
 } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { createState, For, Show } from '@/foundation'
-import { Heading, KitMarkerStructureViewTrigger, type HeadingProps, type HeadingController } from '@/components'
+import {
+  Heading,
+  KitMarkerStructureViewTrigger,
+  type HeadingProps,
+  type HeadingController,
+} from '@/components'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined
@@ -38,17 +43,44 @@ afterEach(() => {
 
 describe('Heading', () => {
   test('组合与动态文字决定id，保留两类ref并在退出后停止同步', async () => {
-    const visible = createState(true), hasContent = createState(true), content = createState('内容')
+    const visible = createState(true),
+      hasContent = createState(true),
+      content = createState('内容')
     let element!: HTMLHeadingElement, controller: HeadingController | undefined
-    let domReceives = 0, controllerReceives = 0, domCleanups = 0, controllerCleanups = 0
+    let domReceives = 0,
+      controllerReceives = 0,
+      domCleanups = 0,
+      controllerCleanups = 0
     const host = document.body.appendChild(document.createElement('main'))
-    dispose = render(() => <Show when={visible.read()}>
-      <Heading level={2}
-        ref={value => { controller = value; controllerReceives++; return () => { controllerCleanups++ } }}
-        domRef={value => { element = value; domReceives++; return () => { domCleanups++ } }}>
-        <Show when={hasContent.read()}><strong>组合 </strong><span>{content.read()}</span></Show>
-      </Heading>
-    </Show>, host)
+    dispose = render(
+      () => (
+        <Show when={visible.read()}>
+          <Heading
+            level={2}
+            ref={(value) => {
+              controller = value
+              controllerReceives++
+              return () => {
+                controllerCleanups++
+              }
+            }}
+            domRef={(value) => {
+              element = value
+              domReceives++
+              return () => {
+                domCleanups++
+              }
+            }}
+          >
+            <Show when={hasContent.read()}>
+              <strong>组合 </strong>
+              <span>{content.read()}</span>
+            </Show>
+          </Heading>
+        </Show>
+      ),
+      host,
+    )
     await expect.poll(() => element.id).toBe('组合 内容')
     expect(controller).toBeDefined()
     expect(controller).not.toBe(element)
@@ -71,40 +103,61 @@ describe('Heading', () => {
     expect(domCleanups).toBe(1)
     expect(controllerCleanups).toBe(1)
     element.textContent = '退出后的文字'
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(element.id).toBe('')
   })
 
   test('四级标题有递减的上下留白并允许调用方覆盖', () => {
     const levels: HeadingProps['level'][] = [1, 2, 3, 4]
     const host = document.body.appendChild(document.createElement('main'))
-    dispose = render(() => <>
-      <For each={levels}>{level => <section>
-        <p>标题前内容</p>
-        <Heading level={level}>分级标题</Heading>
-        <p>标题后内容</p>
-      </section>}</For>
-      <Heading level={2} style={{ 'margin-block-start': '7px', 'margin-block-end': '9px' }}>
-        调用方留白
-      </Heading>
-    </>, host)
+    dispose = render(
+      () => (
+        <>
+          <For each={levels}>
+            {(level) => (
+              <section>
+                <p>标题前内容</p>
+                <Heading level={level}>分级标题</Heading>
+                <p>标题后内容</p>
+              </section>
+            )}
+          </For>
+          <Heading
+            level={2}
+            style={{ 'margin-block-start': '7px', 'margin-block-end': '9px' }}
+          >
+            调用方留白
+          </Heading>
+        </>
+      ),
+      host,
+    )
 
     const headings = [...host.querySelectorAll<HTMLElement>('section .Heading')]
-    let previousStart = Infinity, previousEnd = Infinity
+    let previousStart = Infinity,
+      previousEnd = Infinity
     for (const heading of headings) {
       const computed = getComputedStyle(heading)
-      const start = parseFloat(computed.marginBlockStart), end = parseFloat(computed.marginBlockEnd)
+      const start = parseFloat(computed.marginBlockStart),
+        end = parseFloat(computed.marginBlockEnd)
       expect(start).toBeGreaterThan(0)
       expect(end).toBeGreaterThan(0)
       expect(start).toBeLessThan(previousStart)
       expect(end).toBeLessThan(previousEnd)
       const rect = heading.getBoundingClientRect()
-      expect(rect.top - heading.previousElementSibling!.getBoundingClientRect().bottom).toBeGreaterThan(0)
-      expect(heading.nextElementSibling!.getBoundingClientRect().top - rect.bottom).toBeGreaterThan(0)
+      expect(
+        rect.top -
+          heading.previousElementSibling!.getBoundingClientRect().bottom,
+      ).toBeGreaterThan(0)
+      expect(
+        heading.nextElementSibling!.getBoundingClientRect().top - rect.bottom,
+      ).toBeGreaterThan(0)
       previousStart = start
       previousEnd = end
     }
-    const overridden = getComputedStyle(host.querySelector<HTMLElement>(':scope > .Heading')!)
+    const overridden = getComputedStyle(
+      host.querySelector<HTMLElement>(':scope > .Heading')!,
+    )
     expect(overridden.marginBlockStart).toBe('7px')
     expect(overridden.marginBlockEnd).toBe('9px')
   })
@@ -155,7 +208,9 @@ describe('Heading', () => {
     const before = headings.map((element) =>
       element.getBoundingClientRect().toJSON(),
     )
-    const control = host.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
+    const control = host.querySelector<HTMLButtonElement>(
+      '.ComponentMarkerStructureViewTrigger',
+    )!
     control.click()
     flush()
     await expect
@@ -187,7 +242,9 @@ describe('Heading', () => {
     expect(
       headings.every((element) => element.textContent === '更新后的标题'),
     ).toBe(true)
-    await expect.poll(() => headings.every(element => element.id === '更新后的标题')).toBe(true)
+    await expect
+      .poll(() => headings.every((element) => element.id === '更新后的标题'))
+      .toBe(true)
     display.set(false)
     flush()
     await expect

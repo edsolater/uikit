@@ -54,10 +54,18 @@ export function GridExample() {
       </Grid>
       <Text>固定三列不随窄屏退列；自动填充列按可用空间排列。</Text>
       <Grid columns={3} responsive={false} label="固定三列">
-        <Text>第一列</Text><Text>第二列</Text><Text>第三列</Text>
+        <Text>第一列</Text>
+        <Text>第二列</Text>
+        <Text>第三列</Text>
       </Grid>
-      <Grid columns="repeat(auto-fit, minmax(8rem, 1fr))" responsive={false} label="自动填充">
-        <Text>自动填充一</Text><Text>自动填充二</Text><Text>自动填充三</Text>
+      <Grid
+        columns="repeat(auto-fit, minmax(8rem, 1fr))"
+        responsive={false}
+        label="自动填充"
+      >
+        <Text>自动填充一</Text>
+        <Text>自动填充二</Text>
+        <Text>自动填充三</Text>
       </Grid>
     </Flow>
   )

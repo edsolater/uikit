@@ -24,7 +24,10 @@ export type TextAreaProps = ComponentDescriptionProps & {
   onInput?: (value: string) => void
 }
 /** TextArea 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type TextAreaController = KitController<TextAreaProps, typeof textAreaPropsDefinition>
+export type TextAreaController = KitController<
+  TextAreaProps,
+  typeof textAreaPropsDefinition
+>
 
 /**
  * 带原生字段身份的多行编辑，保留受控值与表单校验。

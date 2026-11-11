@@ -109,7 +109,7 @@ Variable 的局部声明继续持有自身基础值与状态；Modify 继续按�
 | `src/style-system/key.ts`                                          | 通用声明键、名称分配、priority 与 join                  | 继续复用 `allocateVariableName()` 和同一 CSS 名称空间；不把 Variable 定义注册搬进 Key，不另建名称生成器，清理不再需要的 Variable 字符串适配                        |
 | `src/style-system/variable-cluster.ts`                             | 成员选择、default 代理、同名配对及继承                  | 适配 `.name` 类型、同名比较和冲突信息；`clusterFrom` 沿新 Name 契约创建成员；Cluster 仍聚合 Variable，不新增自动把 default 注入派生成员的约定                      |
 | `src/style-system/modification.ts`                                 | 独立变化材料，当前使用公共 Variable 消费入口            | 核对公共入口改造后的引用、资源和 Adjust／Modify 接入；仅修改受影响部分，不顺带将整个 Modification 公共 name API 改为新对象模型                                     |
-| `src/style-system/pieces/tokens/color/` 及其他名称消费处   | 颜色定义与用途派生，存在由 `base.name` 拼接成员名的调用 | 迁移 `.name` 字符串假设、名称派生及比较；允许颜色表达式直接引用 Name。保留现有颜色来源、混色系数、状态与显示结果，不借此将 lineColor 换成另一套用途设计            |
+| `src/style-system/pieces/tokens/color/` 及其他名称消费处           | 颜色定义与用途派生，存在由 `base.name` 拼接成员名的调用 | 迁移 `.name` 字符串假设、名称派生及比较；允许颜色表达式直接引用 Name。保留现有颜色来源、混色系数、状态与显示结果，不借此将 lineColor 换成另一套用途设计            |
 | `src/style-system/variable/index.ts`、`src/style-system/index.ts`  | 领域及样式系统出口                                      | 汇总 `variableName` 与 `VariableName`；内部账本、注册和查找不公开。领域内部直接引用定义文件，不把出口当逻辑中转                                                    |
 | 现有测试、调用处、文档和构建产物                                   | 对外类型变化需要同步接管                                | 全仓迁移 `.name` 拼接、比较、改名及类型断言；实施完成后更新架构与消费文档、构建 dist，删除旧字符串改名语义和残留路径                                               |
 

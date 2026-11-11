@@ -52,7 +52,9 @@ export type KitController<
 /** 从组件 ref 声明取得最终公开协议。 */
 type KitPublicController<Props> = Props extends {
   ref?: RefReceiver<infer Controller extends object>
-} ? Controller : never
+}
+  ? Controller
+  : never
 
 /** 具体组件的业务函数：消费 Props 与可选能力，定义自身行为并返回界面。 */
 export type KitCore<Props> = (
@@ -71,10 +73,7 @@ export interface KitDefinition<
   availableProps: Definition
   marker?: (
     props: Props,
-  ) => Pick<
-    KitMarkerProps,
-    'defaultDescriptionDisplay' | 'descriptionOnly'
-  >
+  ) => Pick<KitMarkerProps, 'defaultDescriptionDisplay' | 'descriptionOnly'>
   directorOptions?: (input: Props) => PropsDirectorOptions<Props, Definition>
   styleTokens?: Style
 }
@@ -90,12 +89,14 @@ type ValidKitDefinition<
   Definition extends PropsDefinition<Props>,
 > = Definition extends { ref: 'only-through-prop' }
   ? DirectedProps<Props, Definition> extends Props
-      ? [KitPublicController<Props>] extends [never]
-        ? never
-        : KitPublicController<Props> extends { readonly props: PropsController<Props, Definition> }
-          ? unknown
-          : never
-      : never
+    ? [KitPublicController<Props>] extends [never]
+      ? never
+      : KitPublicController<Props> extends {
+            readonly props: PropsController<Props, Definition>
+          }
+        ? unknown
+        : never
+    : never
   : never
 
 /**
@@ -123,21 +124,25 @@ export function kit<
 
   const Component = (inputProps: Props) => {
     // 定义入口已验证 ref 协议；在实现体内补回条件类型不能保留的字段关联。
-    const input = inputProps as Props & { ref?: RefReceiver<KitPublicController<Props>> }
+    const input = inputProps as Props & {
+      ref?: RefReceiver<KitPublicController<Props>>
+    }
     const owner = getOwner()
     let customController: Omit<KitPublicController<Props>, 'props'> | undefined
     const context: KitComponentContext<KitPublicController<Props>> = {
       name: definition.name,
       onCleanup: (cleanup) => runWithOwner(owner, () => onCleanup(cleanup)),
-      exposeController: (controller) => { customController = controller },
+      exposeController: (controller) => {
+        customController = controller
+      },
     }
     let props: Props = input
     const directed = untrack(() => input.ref)
       ? createComponentPropsDirector(
-        input,
-        definition.availableProps,
-        definition.directorOptions?.(input),
-      )
+          input,
+          definition.availableProps,
+          definition.directorOptions?.(input),
+        )
       : undefined
     if (directed) {
       // 入口已验证 DirectedProps 可赋给 Props；泛型函数体不能保留条件类型证明。
@@ -165,13 +170,19 @@ export function kit<
         return createComponent(() => {
           const result = core(props, context)
           if (directed) {
-            const controller = Object.defineProperty(customController ?? {}, 'props', {
-              value: directed.controller,
-              enumerable: true,
-            }) as KitPublicController<Props>
+            const controller = Object.defineProperty(
+              customController ?? {},
+              'props',
+              {
+                value: directed.controller,
+                enumerable: true,
+              },
+            ) as KitPublicController<Props>
             onCleanup(registry.register(controller))
             createRenderEffect(
-              () => input.ref as RefReceiver<KitPublicController<Props>> | undefined,
+              () =>
+                input.ref as
+                  RefReceiver<KitPublicController<Props>> | undefined,
               (receive) => receive?.(controller),
             )
           }

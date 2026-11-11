@@ -2,7 +2,12 @@
  * Source 的最终读取边界：递归读取 StateView 与 PromiseLike，普通值原样返回。
  * 来源身份与转换由 stateView 负责；val 只在消费点取得当前值。
  */
-import { isExist, result, type ResultValue, type Primitive } from '@edsolater/fnkit'
+import {
+  isExist,
+  result,
+  type ResultValue,
+  type Primitive,
+} from '@edsolater/fnkit'
 import { isStateViewable, type Source } from './source'
 import { stateView, type StateView } from './state-view'
 

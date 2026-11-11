@@ -28,12 +28,19 @@ test('父级分支卸载时清理隐藏节点，应用存活且旧节点不会�
     onCleanup(childDisposed)
     return <span>内容</span>
   }
-  dispose = render(() => <>
-    <div data-app="alive">应用仍在</div>
-    <Show when={val(mounted)}>
-      <Piv if={visible} domRef={() => detached}><Child /></Piv>
-    </Show>
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <div data-app="alive">应用仍在</div>
+        <Show when={val(mounted)}>
+          <Piv if={visible} domRef={() => detached}>
+            <Child />
+          </Piv>
+        </Show>
+      </>
+    ),
+    host,
+  )
   const sentinel = host.querySelector('[data-app]')!
   const element = host.querySelector('span')!.parentElement!
 
@@ -67,9 +74,18 @@ test('列表重排时显隐节点跟随数据项，隐藏后重排再显示仍�
   const items = createState([a, b])
   const visible = createState(true)
   const host = document.body.appendChild(document.createElement('main'))
-  dispose = render(() => <For each={val(items)}>{item =>
-    <Piv if={visible} htmlProps={{ 'data-name': item.name }}>{item.name}</Piv>
-  }</For>, host)
+  dispose = render(
+    () => (
+      <For each={val(items)}>
+        {(item) => (
+          <Piv if={visible} htmlProps={{ 'data-name': item.name }}>
+            {item.name}
+          </Piv>
+        )}
+      </For>
+    ),
+    host,
+  )
   const first = host.querySelector('[data-name="A"]')!
   const second = host.querySelector('[data-name="B"]')!
   expect([...host.children]).toEqual([first, second])
@@ -106,7 +122,9 @@ test('条件显隐保留同一节点、响应更新和资源，卸载时清理�
   host.style.cssText = 'display:flex;gap:10px;align-items:flex-start'
   const capability = createInactivePlugin({
     name: 'visibility-test',
-    pluginCore({ domProxy }) { return { domProxy } },
+    pluginCore({ domProxy }) {
+      return { domProxy }
+    },
   })
   let proxy!: ReturnType<typeof capability>['controller']['domProxy']
   const Child = () => {
@@ -117,17 +135,25 @@ test('条件显隐保留同一节点、响应更新和资源，卸载时清理�
   dispose = render(() => {
     const instance = capability()
     proxy = instance.controller.domProxy
-    return <>
-      <div style={{ width: '20px', height: '20px' }}>前</div>
-      <Piv as="div" if={visible} is={instance} htmlProps={{ 'data-state': val(text) }} domRef={(element) => {
-        attached(element)
-        return detached
-      }}>
-        <input />
-        <Child />
-      </Piv>
-      <div style={{ width: '20px', height: '20px' }}>后</div>
-    </>
+    return (
+      <>
+        <div style={{ width: '20px', height: '20px' }}>前</div>
+        <Piv
+          as="div"
+          if={visible}
+          is={instance}
+          htmlProps={{ 'data-state': val(text) }}
+          domRef={(element) => {
+            attached(element)
+            return detached
+          }}
+        >
+          <input />
+          <Child />
+        </Piv>
+        <div style={{ width: '20px', height: '20px' }}>后</div>
+      </>
+    )
   }, host)
 
   expect(host.childElementCount).toBe(2)
@@ -135,7 +161,9 @@ test('条件显隐保留同一节点、响应更新和资源，卸载时清理�
   expect(childCreated).not.toHaveBeenCalled()
   const before = host.children[0] as HTMLElement
   const after = host.children[1] as HTMLElement
-  expect(after.getBoundingClientRect().left - before.getBoundingClientRect().right).toBe(10)
+  expect(
+    after.getBoundingClientRect().left - before.getBoundingClientRect().right,
+  ).toBe(10)
 
   visible.set(true)
   flush()
@@ -151,7 +179,9 @@ test('条件显隐保留同一节点、响应更新和资源，卸载时清理�
   flush()
   expect(element.isConnected).toBe(false)
   expect(host.childElementCount).toBe(2)
-  expect(after.getBoundingClientRect().left - before.getBoundingClientRect().right).toBe(10)
+  expect(
+    after.getBoundingClientRect().left - before.getBoundingClientRect().right,
+  ).toBe(10)
   expect(detached).not.toHaveBeenCalled()
   expect(childDisposed).not.toHaveBeenCalled()
   text.set('隐藏期间更新')

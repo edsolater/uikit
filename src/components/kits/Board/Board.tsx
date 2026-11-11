@@ -16,7 +16,11 @@ import { kit, type KitController } from '@/components/tools/kit'
 import type { ControllerCollection } from '@/components/tools/controllerRegistry'
 import type { RefReceiver } from '@/hooks/createRef'
 import type { JSX } from '@/foundation'
-import { boardPropsDefinition, boardVariantGroups, getBoardPropsDirectorOptions } from './Board.prop'
+import {
+  boardPropsDefinition,
+  boardVariantGroups,
+  getBoardPropsDirectorOptions,
+} from './Board.prop'
 import './Board.style'
 
 /** 材质声量；动态 variant 优先于确定描述词。 */
@@ -34,16 +38,21 @@ export interface BoardProps<Tag extends PivSupportedElementTag = 'div'>
 }
 
 /** 原生节点类型与对应 Props 的指令式入口。 */
-export type BoardController<Tag extends PivSupportedElementTag = 'div'> = KitController<BoardProps<Tag>, typeof boardPropsDefinition>
+export type BoardController<Tag extends PivSupportedElementTag = 'div'> =
+  KitController<BoardProps<Tag>, typeof boardPropsDefinition>
 
 /** 异构原生节点只公开共同安全字段。 */
 export type BoardControllerCollection = ControllerCollection<{
-  readonly props: Omit<BoardController<PivSupportedElementTag>['props'],
-    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'>
+  readonly props: Omit<
+    BoardController<PivSupportedElementTag>['props'],
+    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
+  >
 }>
 
 interface BoardComponent {
-  <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>): JSX.Element
+  <Tag extends PivSupportedElementTag = 'div'>(
+    props: BoardProps<Tag>,
+  ): JSX.Element
   controllers: BoardControllerCollection
 }
 
@@ -53,14 +62,18 @@ const parseBoardVariantProps = createVariantPropsParser(boardVariantGroups)
  * 为上层信息主体提供有边界的承载，不自行声明独立信息意义。
  */
 // kit 原样包装泛型核心；这里恢复 TypeScript 在包装返回值中丢失的 Tag 调用关联。
-export const Board = kit<BoardProps<PivSupportedElementTag>, typeof boardPropsDefinition>(
+export const Board = kit<
+  BoardProps<PivSupportedElementTag>,
+  typeof boardPropsDefinition
+>(
   {
     name: 'Board',
     description: '承载上层信息主体',
     availableProps: boardPropsDefinition,
     directorOptions: getBoardPropsDirectorOptions,
   },
-  <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>) => renderBoard(props, 'Board'),
+  <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>) =>
+    renderBoard(props, 'Board'),
 ) as BoardComponent
 
 /**

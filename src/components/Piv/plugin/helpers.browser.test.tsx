@@ -11,12 +11,23 @@ test('能力通过异步目标读取节点，按顺序插入并在释放时清�
     name: 'asyncStructure',
     pluginCore({ domProxy }) {
       const { insertAfter } = createPivStructure(domProxy)
-      insertAfter(<span data-position="first"><Loading>{val(domProxy).tagName}</Loading></span>)
+      insertAfter(
+        <span data-position="first">
+          <Loading>{val(domProxy).tagName}</Loading>
+        </span>,
+      )
       insertAfter(<span data-position="second">后乙</span>)
       return {}
     },
   })
-  const dispose = render(() => <Piv as="button" is={adjacent()}>主体</Piv>, host)
+  const dispose = render(
+    () => (
+      <Piv as="button" is={adjacent()}>
+        主体
+      </Piv>
+    ),
+    host,
+  )
   try {
     expect(host.querySelector('[data-position]')).toBeNull()
     await expect
@@ -30,15 +41,23 @@ test('能力通过异步目标读取节点，按顺序插入并在释放时清�
 
 test('Piv作为渲染根时同层附属节点进入实际宿主，卸载同步释放', async () => {
   const host = document.body.appendChild(document.createElement('main'))
-  const adjacent = createInactivePlugin({ name: 'adjacent', pluginCore({ domProxy }) {
-    createPivStructure(domProxy).insertAfter(<Piv htmlProps={{ 'data-adjacent': true }}>附属内容</Piv>)
-    return {}
-  } })
-  const dispose = render(() => (
-    <Piv as="button" is={adjacent()}>
-      主体
-    </Piv>
-  ), host)
+  const adjacent = createInactivePlugin({
+    name: 'adjacent',
+    pluginCore({ domProxy }) {
+      createPivStructure(domProxy).insertAfter(
+        <Piv htmlProps={{ 'data-adjacent': true }}>附属内容</Piv>,
+      )
+      return {}
+    },
+  })
+  const dispose = render(
+    () => (
+      <Piv as="button" is={adjacent()}>
+        主体
+      </Piv>
+    ),
+    host,
+  )
   try {
     await expect
       .poll(() => host.querySelector('[data-adjacent]')?.textContent)
@@ -57,7 +76,8 @@ test('结构插入按调用顺序挂载，内容持续响应并在作用域释�
   const text = createState('初始')
   const dispose = createRoot((dispose) => {
     {
-      const { insertBefore, insertAfter, prependChild, appendChild } = createPivStructure(element)
+      const { insertBefore, insertAfter, prependChild, appendChild } =
+        createPivStructure(element)
       insertBefore(<span data-position="before">{val(text)}</span>)
       insertAfter(<span data-position="after-first">后甲</span>)
       insertAfter(<span data-position="after-second">后乙</span>)

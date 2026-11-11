@@ -7,7 +7,19 @@
  */
 import { afterEach, expect, test, vi } from 'vitest'
 import { createState, flush, render, val } from '@/foundation'
-import { Article, Board, Card, Field, Loop, Piv, type BoardController, type CardController, type ArticleController, type FieldController, type LoopController } from '@/components'
+import {
+  Article,
+  Board,
+  Card,
+  Field,
+  Loop,
+  Piv,
+  type BoardController,
+  type CardController,
+  type ArticleController,
+  type FieldController,
+  type LoopController,
+} from '@/components'
 import { createRef } from '@/hooks/createRef'
 
 let dispose: (() => void) | undefined
@@ -26,11 +38,23 @@ test('Card 承载独立 Article，引用与输入各归自身节点', () => {
   const classes = createState(['initial-article', { conditional }])
   const size = createState<'small' | 'large'>('large')
   let card!: CardController
-  dispose = render(() => (
-    <Card size={size} ref={controller => { card = controller }}>
-      <Article {...refProps} class={classes} shadowProps={{ class: 'shadow-article' }} />
-    </Card>
-  ), host)
+  dispose = render(
+    () => (
+      <Card
+        size={size}
+        ref={(controller) => {
+          card = controller
+        }}
+      >
+        <Article
+          {...refProps}
+          class={classes}
+          shadowProps={{ class: 'shadow-article' }}
+        />
+      </Card>
+    ),
+    host,
+  )
   const element = host.querySelector('article')!
   expect(element.tagName).toBe('ARTICLE')
   const visual = host.firstElementChild!
@@ -92,11 +116,33 @@ test('构建工厂只通过 Props 提供，普通状态更新不重放，已有 
   const items = createState([1])
   const createField = vi.fn((id: string) => <Piv as="input" id={id} />)
   const createItem = vi.fn((item: number) => <Piv>{`项目${item}`}</Piv>)
-  dispose = render(() => <>
-    <Field label="原标题" ref={controller => { field = controller }}>{createField}</Field>
-    <Loop each={() => val(items)} fallback="原占位" ref={controller => { loop = controller }}>{createItem}</Loop>
-  </>, host)
-  await expect.poll(() => host.querySelector('.Loop')?.textContent).toBe('项目1')
+  dispose = render(
+    () => (
+      <>
+        <Field
+          label="原标题"
+          ref={(controller) => {
+            field = controller
+          }}
+        >
+          {createField}
+        </Field>
+        <Loop
+          each={() => val(items)}
+          fallback="原占位"
+          ref={(controller) => {
+            loop = controller
+          }}
+        >
+          {createItem}
+        </Loop>
+      </>
+    ),
+    host,
+  )
+  await expect
+    .poll(() => host.querySelector('.Loop')?.textContent)
+    .toBe('项目1')
   const input = host.querySelector('input')!
   expect('children' in field.props).toBe(false)
   expect('children' in loop.props).toBe(false)
@@ -110,7 +156,9 @@ test('构建工厂只通过 Props 提供，普通状态更新不重放，已有 
   loop.props!.fallback.set('更新占位')
   items.set([])
   flush()
-  await expect.poll(() => host.querySelector('.Loop')?.textContent).toBe('更新占位')
+  await expect
+    .poll(() => host.querySelector('.Loop')?.textContent)
+    .toBe('更新占位')
   expect(createField).toHaveBeenCalledOnce()
   expect(createItem).toHaveBeenCalledOnce()
 })
@@ -119,10 +167,19 @@ test('kit 接入的 Board 与 Card 保留缺省候选来源和独立集合', () 
   const [board, receiveBoard] = createRef<BoardController>()
   const [card, receiveCard] = createRef<CardController>()
   const host = document.body.appendChild(document.createElement('main'))
-  dispose = render(() => <>
-    <Board soft ref={receiveBoard}>承载</Board>
-    <Card solid ref={receiveCard}>卡片</Card>
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Board soft ref={receiveBoard}>
+          承载
+        </Board>
+        <Card solid ref={receiveCard}>
+          卡片
+        </Card>
+      </>
+    ),
+    host,
+  )
   const [first, second] = [...host.children]
   expect(first.getAttribute('data-variant')).toBe('soft')
   expect(second.getAttribute('data-variant')).toBe('solid')

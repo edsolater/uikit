@@ -34,7 +34,9 @@ describe('Article', () => {
     dispose = render(
       () => (
         <Card class="example-card" large>
-          <Article htmlProps={{ 'data-testid': 'card-article' }}>卡片正文</Article>
+          <Article htmlProps={{ 'data-testid': 'card-article' }}>
+            卡片正文
+          </Article>
         </Card>
       ),
       host,

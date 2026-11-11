@@ -7,31 +7,31 @@
 import { rules, token } from '@/style-system'
 
 rules('.StructureViewOverlay', {
-  position: 'fixed',
-  inset: 0,
-  width: '100vw',
-  height: '100vh',
+  'position': 'fixed',
+  'inset': 0,
+  'width': '100vw',
+  'height': '100vh',
   'max-width': 'none',
   'max-height': 'none',
-  margin: 0,
-  padding: 0,
-  border: 0,
-  background: 'transparent',
-  opacity: 1,
-  transform: 'none',
-  transition: 'none',
-  overflow: 'hidden',
+  'margin': 0,
+  'padding': 0,
+  'border': 0,
+  'background': 'transparent',
+  'opacity': 1,
+  'transform': 'none',
+  'transition': 'none',
+  'overflow': 'hidden',
   'pointer-events': 'none',
 })
 
 rules('.StructureViewOverlay::backdrop', { display: 'none' })
 
 rules('.StructureViewOverlay > canvas', {
-  position: 'absolute',
+  'position': 'absolute',
   'z-index': 1,
-  inset: 0,
-  width: '100%',
-  height: '100%',
+  'inset': 0,
+  'width': '100%',
+  'height': '100%',
   'max-width': 'none',
   'max-height': 'none',
 })
@@ -41,20 +41,19 @@ rules('.StructureViewOverlay > .frame', {
   isolation: 'isolate',
 })
 
-export const kitMarkerStructureViewMaskColor = token(
-  'rgb(255 255 255 / 90%)',
-  { name: 'component-marker-structure-view-mask-color' },
-)
+export const kitMarkerStructureViewMaskColor = token('rgb(255 255 255 / 90%)', {
+  name: 'component-marker-structure-view-mask-color',
+})
 export const kitMarkerStructureViewMaskBlur = token('4px', {
   name: 'component-marker-structure-view-mask-blur',
 })
 
 rules('.StructureViewOverlay > .frame::before', {
-  content: '""',
-  position: 'absolute',
-  inset: 0,
+  'content': '""',
+  'position': 'absolute',
+  'inset': 0,
   'z-index': -1,
-  background: kitMarkerStructureViewMaskColor,
+  'background': kitMarkerStructureViewMaskColor,
   'backdrop-filter': token(kitMarkerStructureViewMaskBlur, {
     name: 'component-marker-structure-view-mask-filter',
     toCSSString: (value, resolve) => `blur(${resolve(value)})`,
@@ -65,7 +64,7 @@ rules('.StructureViewOverlay > .frame::before', {
 
 rules('.StructureViewOverlay .labels', {
   'max-height': '100%',
-  overflow: 'hidden',
+  'overflow': 'hidden',
 })
 
 export const kitMarkerStructureViewLabelColor = token('#263645', {
@@ -73,15 +72,15 @@ export const kitMarkerStructureViewLabelColor = token('#263645', {
 })
 
 rules('.StructureViewOverlay .label', {
-  display: 'block',
+  'display': 'block',
   'box-sizing': 'border-box',
   'max-width': '100%',
-  padding: '1px 6px',
-  color: kitMarkerStructureViewLabelColor,
-  font: '11px/16px system-ui, sans-serif',
+  'padding': '1px 6px',
+  'color': kitMarkerStructureViewLabelColor,
+  'font': '11px/16px system-ui, sans-serif',
   'white-space': 'normal',
   'overflow-wrap': 'anywhere',
-  overflow: 'hidden',
+  'overflow': 'hidden',
 })
 
 rules('[data-structure-view-hidden]', { opacity: '0 !important' })

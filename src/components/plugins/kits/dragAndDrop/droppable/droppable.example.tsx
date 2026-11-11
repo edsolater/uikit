@@ -14,7 +14,9 @@ export function DroppableExample() {
   const payloadResult = createState<string>()
   const fileResult = createState<string>()
 
-  const { plugins: { draggable, droppable } } = dragAndDrop({
+  const {
+    plugins: { draggable, droppable },
+  } = dragAndDrop({
     draggable: { payload: { widget: 'weather' } },
     droppable: {
       accepts: ({ kind }) => kind === 'internal',
@@ -57,7 +59,10 @@ export function DroppableExample() {
               <span class="drag-drop-example-target-label">
                 接收 UIKit payload
               </span>
-              <output class="drag-drop-example-target-result" aria-live="polite">
+              <output
+                class="drag-drop-example-target-result"
+                aria-live="polite"
+              >
                 {val(payloadResult)
                   ? `已接收：${val(payloadResult)}`
                   : '等待放下'}
@@ -69,12 +74,17 @@ export function DroppableExample() {
             <Piv
               is={fileDroppable}
               class="drag-drop-example-target"
-              htmlProps={val(fileResult) ? { 'data-drop-received': 'true' } : {}}
+              htmlProps={
+                val(fileResult) ? { 'data-drop-received': 'true' } : {}
+              }
             >
               <span class="drag-drop-example-target-label">
                 把系统文件拖到这里
               </span>
-              <output class="drag-drop-example-target-result" aria-live="polite">
+              <output
+                class="drag-drop-example-target-result"
+                aria-live="polite"
+              >
                 {val(fileResult)
                   ? `已接收：${val(fileResult)}`
                   : '可以从桌面或文件管理器拖入文件'}

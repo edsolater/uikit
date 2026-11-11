@@ -16,14 +16,18 @@ flowchart LR
 
 ```tsx
 function TransferExample() {
-  const { plugins: { draggable, droppable } } = dragAndDrop({
+  const {
+    plugins: { draggable, droppable },
+  } = dragAndDrop({
     draggable: { payload: item },
     droppable: { onDrop: receive },
   })
-  return <>
-    <Card is={draggable}>拖动材料</Card>
-    <Card is={droppable}>接收材料</Card>
-  </>
+  return (
+    <>
+      <Card is={draggable}>拖动材料</Card>
+      <Card is={droppable}>接收材料</Card>
+    </>
+  )
 }
 ```
 
@@ -35,10 +39,7 @@ function TransferExample() {
 function ControlledDraggableExample() {
   const capability = draggable({ payload: item })
   return (
-    <Card
-      is={capability}
-      on={{ click: () => capability.controller.disable() }}
-    >
+    <Card is={capability} on={{ click: () => capability.controller.disable() }}>
       拖动材料
     </Card>
   )

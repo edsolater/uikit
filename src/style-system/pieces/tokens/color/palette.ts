@@ -72,8 +72,4 @@ export const neutral: ColorMaterial = {
 
 export const paperColor = toColorToken(paper, 'paper-color', ':root')
 export const inkColor = toColorToken(ink, 'ink-color', ':root')
-export const neutralColor = toColorToken(
-  neutral,
-  'neutral-color',
-  ':root',
-)
+export const neutralColor = toColorToken(neutral, 'neutral-color', ':root')

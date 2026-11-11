@@ -96,7 +96,7 @@ Piv 不提供 draggable／droppable 快捷属性，也不依赖具体 Plugin；�
 
 ```tsx
 // 两个入口提交的都是同一类补充声明。
-<Piv shadowProps={{ as: 'button', if: visible }} />
+;<Piv shadowProps={{ as: 'button', if: visible }} />
 
 // pluginCore 内部：不需要 element 或单独的节点执行参数。
 addProps({
@@ -158,14 +158,17 @@ type PluginCoreContext<Options extends object> = {
   id?: object
 }
 
-type PluginCore<Options extends object, Members extends object> =
-  (context: PluginCoreContext<Options>) => Members
+type PluginCore<Options extends object, Members extends object> = (
+  context: PluginCoreContext<Options>,
+) => Members
 
 // is 只关心 plugin；附加字段不参加节点属性合并。
-type PluginInput = Plugin | {
-  readonly plugin: Plugin
-  [extra: string]: unknown
-}
+type PluginInput =
+  | Plugin
+  | {
+      readonly plugin: Plugin
+      [extra: string]: unknown
+    }
 
 // 单元能力每次调用至少返回这两个字段，未来可增加字段。
 type PluginResult<Members extends object> = {
@@ -173,10 +176,12 @@ type PluginResult<Members extends object> = {
   readonly controller: Members
 }
 
-type InactivePlugin<Options extends object, Members extends object> =
-  {} extends Options
-    ? (pluginOptions?: Options) => PluginResult<Members>
-    : (pluginOptions: Options) => PluginResult<Members>
+type InactivePlugin<
+  Options extends object,
+  Members extends object,
+> = {} extends Options
+  ? (pluginOptions?: Options) => PluginResult<Members>
+  : (pluginOptions: Options) => PluginResult<Members>
 ```
 
 固定含义：
@@ -197,8 +202,8 @@ function createInactivePlugin({ name, pluginCore }) {
   return function inactivePlugin(pluginOptions) {
     const shadowProps = []
     const plugin = { [pluginMarker]: name, shadowProps }
-    const addProps = props => shadowProps.push(props)
-    const withDom = callback => addProps({ domRef: callback })
+    const addProps = (props) => shadowProps.push(props)
+    const withDom = (callback) => addProps({ domRef: callback })
     const controller = pluginCore({ pluginOptions, addProps, withDom })
 
     return { plugin, controller }
@@ -217,15 +222,17 @@ function Example() {
   const cardClickable = clickable({ onClick: save })
   const capability = clickable({ onClick: save })
 
-  return <>
-    <Card is={cardClickable}>信息</Card>
-    <Button on={{ click: () => cardClickable.controller.focus() }}>
-      聚焦卡片
-    </Button>
-    {/* 组件内可以内联激活，也可以只传已激活结果的 Plugin。 */}
-    <Card is={clickable({ onClick: save })}>内联能力</Card>
-    <Card is={capability.plugin}>直接传 Plugin</Card>
-  </>
+  return (
+    <>
+      <Card is={cardClickable}>信息</Card>
+      <Button on={{ click: () => cardClickable.controller.focus() }}>
+        聚焦卡片
+      </Button>
+      {/* 组件内可以内联激活，也可以只传已激活结果的 Plugin。 */}
+      <Card is={clickable({ onClick: save })}>内联能力</Card>
+      <Card is={capability.plugin}>直接传 Plugin</Card>
+    </>
+  )
 }
 ```
 
@@ -268,22 +275,25 @@ const dragAndDrop = createInactivePlugins({
   draggable: draggablePluginCore,
   droppable: droppablePluginCore,
 })
-
 ```
 
 组合定义可位于模块顶层；下面的组合激活必须在组件内。组合调用统一返回 `{ plugins, controller }`。`plugins.draggable`／`plugins.droppable` 保留原始能力结果；`controller.draggable`／`controller.droppable` 直接引用各端的 `.controller`。不能再调用 `draggable()`，角色集合本身不交给 `is`。
 
 ```tsx
 function TransferExample() {
-  const { plugins: { draggable, droppable } } = dragAndDrop({
+  const {
+    plugins: { draggable, droppable },
+  } = dragAndDrop({
     draggable: { payload: item },
     droppable: { onDrop: receive },
   })
 
-  return <>
-    <Card is={draggable}>拖动材料</Card>
-    <Card is={droppable}>接收材料</Card>
-  </>
+  return (
+    <>
+      <Card is={draggable}>拖动材料</Card>
+      <Card is={droppable}>接收材料</Card>
+    </>
+  )
 }
 ```
 
@@ -307,8 +317,11 @@ function createInactivePlugins(buildTimeDefinitions, options) {
       })
       return inactivePlugin(pluginOptions[name])
     })
-    const controller = map(plugins, role => role.controller)
-    return { plugins, controller: { ...controller, ...options?.controller?.(controller) } }
+    const controller = map(plugins, (role) => role.controller)
+    return {
+      plugins,
+      controller: { ...controller, ...options?.controller?.(controller) },
+    }
   }
 }
 ```
@@ -352,20 +365,20 @@ function CombinedExample() {
 
 ### 5. 文件与职责接管表
 
-| 文件或范围 | 要更新／删除什么 | 由谁接管与完成状态 |
-| --- | --- | --- |
-| `src/components/plugins/tools/createInactivePlugin.ts` | 每次构建执行 core 一次，收集声明并返回完整结果；新增 withDom 快捷字段与回调 JSDoc，说明组件内激活契约；Plugin 仅提交声明；移除 element／节点 onCleanup 参数 | core 在配置时准备完整 Controller，Plugin 提交 shadowProps，domRef 接入资源；不搬入旧 usePlugin 的 Partial／卸载后方法缺席语义 |
-| `src/hooks/createRef.ts` | 仅将 createRef 返回的 Receiver 输入放宽为 any，保留外部引用 Partial 与清理约定 | 调用者用泛型指定引用类型；组件继续提供自己的完整 Controller，不改组件声明，不扩大通用 RefReceiver 的输入协议 |
-| `src/components/plugins/tools/createInactivePlugins.ts` | 静态 map 改为返回可调用组合；内部每次准备共享 id | FNKit map 逐项委托单数构造；不另造组执行器或全局身份表 |
-| `src/components/plugins/tools/usePlugin.ts` | 删除函数、文件与公开出口 | 已由单元／组合调用接管，不保留别名、弃用壳、包装器或另一份同义 hook |
-| `src/components/plugins/tools/usePlugin.test.ts` | 有效行为测试转到定义工具的相邻测试，再删除旧主体测试文件 | 可重命名为 `createInactivePlugin.test.ts`；组合与输入验证放对应既有测试位置，不复制同样断言 |
-| `src/components/Piv/Piv.tsx`、`plugin/mergePivProps.ts` | 将 Plugin 展开前移到结构选择前；统一 ShadowProps 并删除 PivShadowProps；同步所有公开 is 类型、相关类型出口和说明；删除不再需要的重复类型 | Piv 收集／组织声明，Dode 创建／绑定节点；保既有来源优先级，不重建 runPlugin，不扩组件泛型 |
-| `src/components/Piv/Dode.tsx`、`domRef.ts` | Dode 接收创建前已准备的结构与声明，不再通过拿到 element 的 setup 才求出 Plugin 产物；domRef 消费 withDom 的等效声明并沿用现有清理 | 消除结构选择与晚到补充声明的割裂；不复制 DOM 绑定器，不新增节点重建系统 |
-| `clickable` 及父子能力组合、其余 Plugin core | 将 element 使用和节点资源迁入 domRef／等效 withDom；状态和 Controller 在构建时一次准备；子能力声明通过 is 提交 | `const child = hoverable(options)`，`addProps({ is: child })`，通过 child.controller 使用成员；不再直接执行 child.plugin(context) 获取成员 |
-| `plugins/kits/dragAndDrop/` | 组合调用、内部 id、示例和类型／浏览器断言同步 | 公开配置不再要求 id；保留真实命中、Pointer、TopLayer、取消及外部文件处理 |
-| Card Example、Button 内置 clickable、Help／Label 的 tooltip、topLayer、tabularNum、Piv 结构示例和测试 | 全部现役消费迁移；原 usePlugin tuple 改为能力结果的 `.controller` | 信息、功能及组件 Marker 保持；父子调用、动态 is、条件节点也必须实际可用 |
-| 当前 Tooltip 与旧 Popover 目录 | 本 Plan 只做新产物协议所必需的调用适配，复用已有验证检查实际回归 | 保持 Tooltip 的 hover／focus、150ms 离开关闭、数字 0 与动态内容；不改 Surface／Geometry／Paint 或提前创建新角色，视觉重构留后续 Plan |
-| `src/components/index.ts`、Architecture、Plugin SPEC、Tutorial、Guide | 新出口和例子同步；现役使用说明删除 usePlugin 调用 | 不重写旧 Run／历史 Plan 的事实，不在文档中继续推荐旧入口 |
+| 文件或范围                                                                                            | 要更新／删除什么                                                                                                                                            | 由谁接管与完成状态                                                                                                                         |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/components/plugins/tools/createInactivePlugin.ts`                                                | 每次构建执行 core 一次，收集声明并返回完整结果；新增 withDom 快捷字段与回调 JSDoc，说明组件内激活契约；Plugin 仅提交声明；移除 element／节点 onCleanup 参数 | core 在配置时准备完整 Controller，Plugin 提交 shadowProps，domRef 接入资源；不搬入旧 usePlugin 的 Partial／卸载后方法缺席语义              |
+| `src/hooks/createRef.ts`                                                                              | 仅将 createRef 返回的 Receiver 输入放宽为 any，保留外部引用 Partial 与清理约定                                                                              | 调用者用泛型指定引用类型；组件继续提供自己的完整 Controller，不改组件声明，不扩大通用 RefReceiver 的输入协议                               |
+| `src/components/plugins/tools/createInactivePlugins.ts`                                               | 静态 map 改为返回可调用组合；内部每次准备共享 id                                                                                                            | FNKit map 逐项委托单数构造；不另造组执行器或全局身份表                                                                                     |
+| `src/components/plugins/tools/usePlugin.ts`                                                           | 删除函数、文件与公开出口                                                                                                                                    | 已由单元／组合调用接管，不保留别名、弃用壳、包装器或另一份同义 hook                                                                        |
+| `src/components/plugins/tools/usePlugin.test.ts`                                                      | 有效行为测试转到定义工具的相邻测试，再删除旧主体测试文件                                                                                                    | 可重命名为 `createInactivePlugin.test.ts`；组合与输入验证放对应既有测试位置，不复制同样断言                                                |
+| `src/components/Piv/Piv.tsx`、`plugin/mergePivProps.ts`                                               | 将 Plugin 展开前移到结构选择前；统一 ShadowProps 并删除 PivShadowProps；同步所有公开 is 类型、相关类型出口和说明；删除不再需要的重复类型                    | Piv 收集／组织声明，Dode 创建／绑定节点；保既有来源优先级，不重建 runPlugin，不扩组件泛型                                                  |
+| `src/components/Piv/Dode.tsx`、`domRef.ts`                                                            | Dode 接收创建前已准备的结构与声明，不再通过拿到 element 的 setup 才求出 Plugin 产物；domRef 消费 withDom 的等效声明并沿用现有清理                           | 消除结构选择与晚到补充声明的割裂；不复制 DOM 绑定器，不新增节点重建系统                                                                    |
+| `clickable` 及父子能力组合、其余 Plugin core                                                          | 将 element 使用和节点资源迁入 domRef／等效 withDom；状态和 Controller 在构建时一次准备；子能力声明通过 is 提交                                              | `const child = hoverable(options)`，`addProps({ is: child })`，通过 child.controller 使用成员；不再直接执行 child.plugin(context) 获取成员 |
+| `plugins/kits/dragAndDrop/`                                                                           | 组合调用、内部 id、示例和类型／浏览器断言同步                                                                                                               | 公开配置不再要求 id；保留真实命中、Pointer、TopLayer、取消及外部文件处理                                                                   |
+| Card Example、Button 内置 clickable、Help／Label 的 tooltip、topLayer、tabularNum、Piv 结构示例和测试 | 全部现役消费迁移；原 usePlugin tuple 改为能力结果的 `.controller`                                                                                           | 信息、功能及组件 Marker 保持；父子调用、动态 is、条件节点也必须实际可用                                                                    |
+| 当前 Tooltip 与旧 Popover 目录                                                                        | 本 Plan 只做新产物协议所必需的调用适配，复用已有验证检查实际回归                                                                                            | 保持 Tooltip 的 hover／focus、150ms 离开关闭、数字 0 与动态内容；不改 Surface／Geometry／Paint 或提前创建新角色，视觉重构留后续 Plan       |
+| `src/components/index.ts`、Architecture、Plugin SPEC、Tutorial、Guide                                 | 新出口和例子同步；现役使用说明删除 usePlugin 调用                                                                                                           | 不重写旧 Run／历史 Plan 的事实，不在文档中继续推荐旧入口                                                                                   |
 
 ### 6. 实施顺序与交付验收
 

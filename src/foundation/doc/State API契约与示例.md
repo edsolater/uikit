@@ -119,16 +119,16 @@ const total = derive(
 
 假设 `request` 是已经创建好的 `Promise<number>`。
 
-| 用法                                           | 行为                                                               |
-| ---------------------------------------------- | ------------------------------------------------------------------ |
-| `createState(request)`                         | 返回 `State<number>`，`.read()` 和 `val()` 读取完成值              |
-| `createState(outsideState)`、`createState(outsideView)` | 返回内容值的可写 State，持续跟随上游，无需先调用 val |
-| `createState(() => outsideState)`              | 计算可直接返回来源，由基础层读取内容并建立依赖 |
-| `createState(() => loadItem(val(selectedId)))` | 原生计算跟随依赖，等待本次请求；旧请求不会覆盖新的来源             |
-| `state.set(request)`                           | 替换来源，由结果计算等待；后续相对更新由基础层接续                 |
-| `stateView(request)`、`val(request)`           | 默认 pending/失败进入 Solid 机制，不附加 undefined 或吞错          |
-| `val(request, 0)`                              | 等待和失败交给 UI 边界，只有完成后的 null/undefined 使用 0         |
-| `selected.map(id => loadItem(id))`             | mapper 的 Promise 由 Solid 等待，输出完成值，后继 map 也接收完成值 |
+| 用法                                                    | 行为                                                               |
+| ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `createState(request)`                                  | 返回 `State<number>`，`.read()` 和 `val()` 读取完成值              |
+| `createState(outsideState)`、`createState(outsideView)` | 返回内容值的可写 State，持续跟随上游，无需先调用 val               |
+| `createState(() => outsideState)`                       | 计算可直接返回来源，由基础层读取内容并建立依赖                     |
+| `createState(() => loadItem(val(selectedId)))`          | 原生计算跟随依赖，等待本次请求；旧请求不会覆盖新的来源             |
+| `state.set(request)`                                    | 替换来源，由结果计算等待；后续相对更新由基础层接续                 |
+| `stateView(request)`、`val(request)`                    | 默认 pending/失败进入 Solid 机制，不附加 undefined 或吞错          |
+| `val(request, 0)`                                       | 等待和失败交给 UI 边界，只有完成后的 null/undefined 使用 0         |
+| `selected.map(id => loadItem(id))`                      | mapper 的 Promise 由 Solid 等待，输出完成值，后继 map 也接收完成值 |
 
 `createState<T>` 接受完整来源，包括普通值、PromiseLike、State、StateView 以及返回这些来源的计算函数，结果使用递归展开后的 `Val<T>`；`equals`、`loadingValue` 和相对更新的 previous 均针对内容值类型。Promise 完成后得到的 StateView 也会继续跟随其变化。直接传入 StateView 或计算来源时，下游可独立写入而不回写上游，后续上游变化继续驱动下游；无需在业务层用 Effect 搬运值。
 

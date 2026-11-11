@@ -24,10 +24,7 @@ export function KitMarkerExample() {
       <Text p>
         点击右下角“打开组件定位框”可看到阅读摘要的共同边界；关闭后恢复正常内容。
       </Text>
-      <KitMarker
-        componentName="ReadingSummary"
-        description="概括本次阅读进度"
-      >
+      <KitMarker componentName="ReadingSummary" description="概括本次阅读进度">
         <Card>
           <Flow>
             <Heading level={3}>阅读摘要</Heading>

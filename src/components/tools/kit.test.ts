@@ -3,10 +3,7 @@ import { expect, expectTypeOf, test } from 'vitest'
 import type { Source, State } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
 import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import {
-  Button,
-  type ButtonController,
-} from '@/components/kits/Button/Button'
+import { Button, type ButtonController } from '@/components/kits/Button/Button'
 import * as buttonStyle from '@/components/kits/Button/Button.style'
 import {
   pivPropsDefinition,
@@ -36,9 +33,9 @@ test('集合保留数组与成员方法协议，Button 样式命名空间保留�
   expect(Object.hasOwn(Fixture.controllers, 'style')).toBe(false)
   expectTypeOf(Button.controllers.style).toEqualTypeOf<typeof buttonStyle>()
   expectTypeOf(Button.controllers[0]).toEqualTypeOf<ButtonController>()
-  expectTypeOf(Button.controllers.map((controller) => controller)).toEqualTypeOf<
-    ButtonController[]
-  >()
+  expectTypeOf(
+    Button.controllers.map((controller) => controller),
+  ).toEqualTypeOf<ButtonController[]>()
   expectTypeOf(
     Button.controllers.props.loading.set(true).map((value) => value),
   ).toEqualTypeOf<State<boolean | undefined>[]>()
@@ -69,7 +66,13 @@ function verifyRejectedDefinitions() {
     (_props: FixtureProps) => null,
   )
   interface CustomFixtureProps extends Omit<FixtureProps, 'ref'> {
-    ref?: RefReceiver<KitController<CustomFixtureProps, typeof availableProps, { missing: string }>>
+    ref?: RefReceiver<
+      KitController<
+        CustomFixtureProps,
+        typeof availableProps,
+        { missing: string }
+      >
+    >
   }
   kit<CustomFixtureProps, typeof availableProps>(
     { name: 'ExtraRefField', availableProps },

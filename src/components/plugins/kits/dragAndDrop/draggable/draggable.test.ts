@@ -18,9 +18,7 @@ function build<T>(factory: () => T): T {
 describe('draggable controller', () => {
   test('提供启用状态且每次构建相互隔离', async () => {
     const first = build(() => draggable({ payload: 'first' }))
-    const second = build(() =>
-      draggable({ payload: 'second', disabled: true }),
-    )
+    const second = build(() => draggable({ payload: 'second', disabled: true }))
 
     expect(val(first.controller.enabled)).toBe(true)
     expect(val(second.controller.enabled)).toBe(false)

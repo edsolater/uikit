@@ -9,7 +9,11 @@ describe('createStatusPropsParser', () => {
       createRoot((dispose) => {
         const isLoading = createState(true)
         const parser = createStatusPropsParser({ candidates: ['isLoading'] })
-        const { effect: statusEffectProps, details, controller: statusController } = parser({
+        const {
+          effect: statusEffectProps,
+          details,
+          controller: statusController,
+        } = parser({
           get isLoading() {
             return val(isLoading)
           },
@@ -53,7 +57,11 @@ describe('createStatusPropsParser', () => {
         effect,
       })
 
-      const { effect: statusEffectProps, details, controller: statusController } = parseProps({
+      const {
+        effect: statusEffectProps,
+        details,
+        controller: statusController,
+      } = parseProps({
         loading,
       })
 
@@ -69,8 +77,12 @@ describe('createStatusPropsParser', () => {
     try {
       expect(effect).toHaveBeenCalledOnce()
       expect(statusEffectProps).toHaveLength(2)
-      expect(statusEffectProps[0]).toEqual({ htmlProps: { disabled: details.disabled } })
-      expect(statusEffectProps.every(props => !('shadowProps' in props))).toBe(true)
+      expect(statusEffectProps[0]).toEqual({
+        htmlProps: { disabled: details.disabled },
+      })
+      expect(
+        statusEffectProps.every((props) => !('shadowProps' in props)),
+      ).toBe(true)
       const statusAttribute = statusEffectProps[1].htmlProps!['data-status']
       expect(val(statusAttribute)).toBeUndefined()
       expect(val(statusController.loading)).toBe(false)

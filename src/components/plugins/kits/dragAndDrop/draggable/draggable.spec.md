@@ -10,7 +10,10 @@ function Example() {
   return (
     <>
       <Piv is={draggable({ payload: weather })}>Weather</Piv>
-      <Piv is={capability} on={{ click: () => capability.controller.disable() }}>
+      <Piv
+        is={capability}
+        on={{ click: () => capability.controller.disable() }}
+      >
         由 Controller 控制
       </Piv>
     </>

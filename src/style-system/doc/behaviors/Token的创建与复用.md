@@ -41,7 +41,10 @@ localSpacing 是独立 Token，继承 spacing 的 address、state、registration
 const source = token('red', { name: 'brand-color' })
 const local = token(source, { name: 'local' })
 // 完整名为 local，内容继续引用 brand-color。
-const buttonToken = createNewTokenGenerator({ prefixName: 'button', address: '.Button' })
+const buttonToken = createNewTokenGenerator({
+  prefixName: 'button',
+  address: '.Button',
+})
 const buttonColor = buttonToken(source)
 const rawColor = buttonToken('blue')
 // 两个生成结果各自名为 button-<自动编号>，不拼接 brand-color。

@@ -7,7 +7,10 @@
  */
 import { pivPropsDefinition } from '@/components/Piv/Piv.prop'
 import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
-import type { PropsDefinition, DefaultPropSources } from '@/components/tools/componentPropsDirector'
+import type {
+  PropsDefinition,
+  DefaultPropSources,
+} from '@/components/tools/componentPropsDirector'
 import type { PivSupportedElementTag } from '@/components/Piv/domMap'
 import { createVariantPropsParser } from '../utils/parseVariantProps'
 import type { BoardProps } from './Board'
@@ -33,22 +36,29 @@ export const boardPropsDefinition = {
 const parseVariant = createVariantPropsParser([boardVariantGroups[0]])
 const parseSize = createVariantPropsParser([boardVariantGroups[1]])
 const boardDefaultSources = {
-  variant: input => {
+  variant: (input) => {
     const { details } = parseVariant(input)
     return details.variant
   },
-  size: input => {
+  size: (input) => {
     const { details } = parseSize(input)
     return details.size
   },
-} satisfies DefaultPropSources<BoardProps<PivSupportedElementTag>, typeof boardPropsDefinition>
+} satisfies DefaultPropSources<
+  BoardProps<PivSupportedElementTag>,
+  typeof boardPropsDefinition
+>
 
 /**
  * 缺省分组由同一候选 State 推导；显式分组保留原声明诊断。
  */
-export function getBoardPropsDirectorOptions(input: BoardProps<PivSupportedElementTag>) {
+export function getBoardPropsDirectorOptions(
+  input: BoardProps<PivSupportedElementTag>,
+) {
   return {
     defaultSources: boardDefaultSources,
-    omit: boardVariantGroups.flatMap(group => group.groupName in input ? [] : group.candidates),
+    omit: boardVariantGroups.flatMap((group) =>
+      group.groupName in input ? [] : group.candidates,
+    ),
   }
 }

@@ -6,7 +6,10 @@ import { cssRoot } from '@/style-system'
 import { Piv } from '../../../Piv/Piv'
 import { tooltip, type TooltipController } from './tooltip'
 import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
-import type { AnchorGap, AnchorPosition } from '@/components/plugins/kits/Popover/popover'
+import type {
+  AnchorGap,
+  AnchorPosition,
+} from '@/components/plugins/kits/Popover/popover'
 import { Button } from '@/components/kits/Button/Button'
 import { Card } from '@/components/kits/Card/Card'
 import '@/css/all-base.css'
@@ -152,15 +155,29 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
 
 test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作', async () => {
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({})
-    return <>
-      <Button is={popoverTrigger} htmlProps={{ 'data-purpose': '补充' }}>打开补充内容</Button>
-      <Card is={popoverBody}><h2>标题</h2>原浮层正文</Card>
-      <Piv as="button" is={tooltip({ content: '简短提示' })}>提示目标</Piv>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({})
+    return (
+      <>
+        <Button is={popoverTrigger} htmlProps={{ 'data-purpose': '补充' }}>
+          打开补充内容
+        </Button>
+        <Card is={popoverBody}>
+          <h2>标题</h2>原浮层正文
+        </Card>
+        <Piv as="button" is={tooltip({ content: '简短提示' })}>
+          提示目标
+        </Piv>
+      </>
+    )
   }, host)
-  const trigger = [...host.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === '打开补充内容')!
-  const original = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
+  const trigger = [...host.querySelectorAll<HTMLButtonElement>('button')].find(
+    (button) => button.textContent === '打开补充内容',
+  )!
+  const original = host.querySelector<HTMLElement>(
+    '[data-plugin~=popover-body]',
+  )!
   await expect.poll(() => trigger.popoverTargetElement).toBe(original)
   expect(trigger.getAttribute('data-purpose')).toBe('补充')
   expect(trigger.disabled).toBe(false)
@@ -168,7 +185,11 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
   await expect.poll(() => original.matches(':popover-open')).toBe(true)
   expect(trigger.getAttribute('aria-expanded')).toBe('true')
   expect(original.textContent).toBe('标题原浮层正文')
-  await userEvent.hover([...host.querySelectorAll<HTMLElement>('button')].find((button) => button.textContent === '提示目标')!)
+  await userEvent.hover(
+    [...host.querySelectorAll<HTMLElement>('button')].find(
+      (button) => button.textContent === '提示目标',
+    )!,
+  )
   const hint = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => hint.matches(':popover-open')).toBe(true)
   expect(getComputedStyle(hint).backgroundColor).toBe('rgb(30, 41, 59)')
@@ -178,26 +199,51 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
 
 test('横向浮层在右边缘翻到左侧', async () => {
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { $anchorPosition: 'right' } })
-    return <>
-      <Button is={popoverTrigger} style={{ position: 'fixed', right: '8px', top: '180px' }}>边缘目标</Button>
-      <Card is={popoverBody}>横向补充说明</Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({ body: { $anchorPosition: 'right' } })
+    return (
+      <>
+        <Button
+          is={popoverTrigger}
+          style={{ position: 'fixed', right: '8px', top: '180px' }}
+        >
+          边缘目标
+        </Button>
+        <Card is={popoverBody}>横向补充说明</Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   await userEvent.click(trigger)
-  const surface = host.querySelector<HTMLElement>('[data-plugin~=popover-body]')!
-  await expect.poll(() => surface.getBoundingClientRect().right < trigger.getBoundingClientRect().left).toBe(true)
+  const surface = host.querySelector<HTMLElement>(
+    '[data-plugin~=popover-body]',
+  )!
+  await expect
+    .poll(
+      () =>
+        surface.getBoundingClientRect().right <
+        trigger.getBoundingClientRect().left,
+    )
+    .toBe(true)
 })
 
 test('滚动时提示正文与背景随同一浮层跟随锚点', async () => {
-  dispose = render(() => (
-    <div data-scroller style={{ height: '180px', overflow: 'auto' }}>
-      <div style={{ height: '600px', padding: '100px 20px' }}>
-        <Piv as="button" is={tooltip({ content: <strong>完整提示正文</strong> })}>目标</Piv>
+  dispose = render(
+    () => (
+      <div data-scroller style={{ height: '180px', overflow: 'auto' }}>
+        <div style={{ height: '600px', padding: '100px 20px' }}>
+          <Piv
+            as="button"
+            is={tooltip({ content: <strong>完整提示正文</strong> })}
+          >
+            目标
+          </Piv>
+        </div>
       </div>
-    </div>
-  ), host)
+    ),
+    host,
+  )
   const scroller = host.querySelector<HTMLElement>('[data-scroller]')!
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   await userEvent.hover(trigger)
@@ -208,14 +254,23 @@ test('滚动时提示正文与背景随同一浮层跟随锚点', async () => {
   const contentOffset = content.getBoundingClientRect().top - before
   expect(getComputedStyle(body).backgroundColor).toBe('rgb(30, 41, 59)')
   scroller.scrollTop = 40
-  await expect.poll(() => body.getBoundingClientRect().top).toBeLessThan(before - 30)
-  expect(content.getBoundingClientRect().top - body.getBoundingClientRect().top).toBeCloseTo(contentOffset, 0)
+  await expect
+    .poll(() => body.getBoundingClientRect().top)
+    .toBeLessThan(before - 30)
+  expect(
+    content.getBoundingClientRect().top - body.getBoundingClientRect().top,
+  ).toBeCloseTo(contentOffset, 0)
 })
 
 test('提示按钮不接入原生点击切换，也不把焦点移入提示正文', async () => {
-  dispose = render(() => (
-    <Button is={tooltip({ content: <a href="#details">补充说明</a> })}>查看</Button>
-  ), host)
+  dispose = render(
+    () => (
+      <Button is={tooltip({ content: <a href="#details">补充说明</a> })}>
+        查看
+      </Button>
+    ),
+    host,
+  )
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
@@ -234,9 +289,20 @@ test('提示按钮不接入原生点击切换，也不把焦点移入提示正�
 test('定位来源持续更新，完成值为空时回到 top 与 md 默认值', async () => {
   const position = createState<AnchorPosition | undefined>(undefined)
   const gap = createState<AnchorGap | undefined>(undefined)
-  dispose = render(() => (
-    <Button is={tooltip({ content: '说明', $anchorPosition: position, $anchorGap: gap })}>目标</Button>
-  ), host)
+  dispose = render(
+    () => (
+      <Button
+        is={tooltip({
+          content: '说明',
+          $anchorPosition: position,
+          $anchorGap: gap,
+        })}
+      >
+        目标
+      </Button>
+    ),
+    host,
+  )
   await userEvent.hover(host.querySelector('button')!)
   const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
@@ -258,13 +324,17 @@ test('提示的显示关闭保留 Task 等待与取消，空内容不显示', as
   dispose = render(() => {
     const capability = tooltip({ content })
     controller = capability.controller
-    return <Piv as="button" is={capability}>宿主</Piv>
+    return (
+      <Piv as="button" is={capability}>
+        宿主
+      </Piv>
+    )
   }, host)
   await expect.poll(() => host.querySelector('[role="tooltip"]')).not.toBeNull()
   const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
   const canceled = controller.showPopover.lazyExec()
   canceled.cancel()
-  const rejected = canceled.result.catch(error => error)
+  const rejected = canceled.result.catch((error) => error)
   expect((await rejected).name).toBe('AbortError')
   expect(body.matches(':popover-open')).toBe(false)
   await controller.showPopover().result

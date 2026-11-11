@@ -12,8 +12,9 @@ import type { PivSupportedElementTag, PivTag } from './domMap'
 import { mergePivProps, type ShadowProps } from './plugin/mergePivProps'
 import type { PluginInput } from '@/components/plugins/tools/createInactivePlugin'
 
-export interface PivProps<Tag extends PivTag = 'div'>
-  extends DodeDOMProps<Tag> {
+export interface PivProps<
+  Tag extends PivTag = 'div',
+> extends DodeDOMProps<Tag> {
   /** 上层组件转交的低优先级声明，接受一份或一维数组。 */
   shadowProps?: MayArray<ShadowProps<Tag>>
   /** 声明附加到节点的能力，接受 Plugin、能力结果或数组。 */

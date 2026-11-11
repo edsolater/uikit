@@ -6,7 +6,14 @@
  * 使Label问号及其他宿主共用同一提示能力。
  */
 import { IdGenerator, task, type Task } from '@edsolater/fnkit'
-import { createComponent, createEffect, onCleanup, Show, withDefault, val } from '@/foundation'
+import {
+  createComponent,
+  createEffect,
+  onCleanup,
+  Show,
+  withDefault,
+  val,
+} from '@/foundation'
 import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import { createPivStructure } from '@/components/Piv/plugin/helpers'
 import { Piv, type PivProps } from '../../../Piv/Piv'
@@ -90,7 +97,8 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     const open = task(() => {
       cancelClose()
       // TODO：DOM 已取得不代表已插入 document；慢节点挂载时序仍待处理。
-      if (hasTooltipContent(options.content)) return controller.showPopover().result
+      if (hasTooltipContent(options.content))
+        return controller.showPopover().result
     })
     /**
      * 离开阅读区域后延迟关闭，保留跨越浮层间距的机会。
@@ -118,9 +126,12 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     })
     onCleanup(cancelClose)
     // 内容清空时读取原生关闭结果；移出 document 本身不一定派发 toggle。
-    createEffect(() => hasTooltipContent(options.content), (present) => {
-      if (!present) dismiss()
-    })
+    createEffect(
+      () => hasTooltipContent(options.content),
+      (present) => {
+        if (!present) dismiss()
+      },
+    )
     // 一次构建同一正文节点，内容清空只移出 document，恢复时仍使用原配对。
     const body = createComponent<PivProps>(Piv, {
       is: plugins.body,
@@ -128,12 +139,12 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
       class: 'Tooltip',
       htmlProps: { role: 'tooltip' },
       on: { pointerenter: enter, pointerleave: leave },
-      get children() { return options.content },
+      get children() {
+        return options.content
+      },
     })
     const { insertAfter } = createPivStructure(domProxy)
-    insertAfter(
-      <Show when={hasTooltipContent(options.content)}>{body}</Show>,
-    )
+    insertAfter(<Show when={hasTooltipContent(options.content)}>{body}</Show>)
     addProps({
       is: plugins.trigger,
       htmlProps: { 'aria-describedby': tooltipId },
@@ -148,7 +159,9 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
           focused = false
           if (!hovered) leave()
         },
-        click: () => { open() },
+        click: () => {
+          open()
+        },
         keydown: ({ event }) => {
           if (event.key === 'Escape') dismiss()
         },

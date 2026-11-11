@@ -7,9 +7,9 @@ export const kitMarkerStructureViewTriggerOffset = token('24px', {
 })
 
 rules('.ComponentMarkerStructureViewTrigger', {
-  position: 'fixed',
-  right: kitMarkerStructureViewTriggerOffset,
-  bottom: kitMarkerStructureViewTriggerOffset,
+  'position': 'fixed',
+  'right': kitMarkerStructureViewTriggerOffset,
+  'bottom': kitMarkerStructureViewTriggerOffset,
   'z-index': 2147483647,
   'border-radius': '999px',
   'min-height': '44px',

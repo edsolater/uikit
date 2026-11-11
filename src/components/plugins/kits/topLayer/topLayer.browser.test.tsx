@@ -76,7 +76,9 @@ describe('topLayer', () => {
     source.className = 'top-layer'
     expect(getComputedStyle(source).boxShadow).toContain('16px 32px')
     host.style.setProperty('--top-layer-shadow', 'rgb(1, 2, 3) 1px 2px 3px')
-    expect(getComputedStyle(source).boxShadow).toBe('rgb(1, 2, 3) 1px 2px 3px 0px')
+    expect(getComputedStyle(source).boxShadow).toBe(
+      'rgb(1, 2, 3) 1px 2px 3px 0px',
+    )
   })
 
   test('节点安装后提供控制，卸载释放 DOM 资源且控制器仍存在', async () => {
@@ -93,7 +95,8 @@ describe('topLayer', () => {
     // 状态随构建 owner 存活；卸载后不再读取它的当前值。
     expect(val(controller.active)).toBe(true)
 
-    dispose(); dispose = undefined
+    dispose()
+    dispose = undefined
     expect(source.matches(':popover-open')).toBe(false)
     expect(document.querySelector('.top-layer-anchor')).toBeNull()
     expect(controller.enter).toBeDefined()
@@ -208,7 +211,9 @@ describe('topLayer', () => {
     expect(anchor.childElementCount).toBe(0)
     expect(anchor.textContent).toBe('')
     expect(getComputedStyle(anchor, '::after').borderStyle).toBe('dashed')
-    expect(getComputedStyle(anchor, '::after').borderRadius).toBe(getComputedStyle(anchor).borderRadius)
+    expect(getComputedStyle(anchor, '::after').borderRadius).toBe(
+      getComputedStyle(anchor).borderRadius,
+    )
     expect(Math.abs(elevatedRect.left - originalRect.left)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.top - originalRect.top)).toBeLessThan(0.1)
     expect(Math.abs(elevatedRect.width - originalRect.width)).toBeLessThan(0.1)

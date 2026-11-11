@@ -20,7 +20,9 @@ export function HeadingExample() {
       <Heading level={3}>层级选择</Heading>
       <Text p>H3定位一个可以独立讨论的具体议题。</Text>
       <Heading level={4}>最小子主题</Heading>
-      <Text p>H4是最小可定位引用的子主题；更细内容使用正文、列表或表格，不为字号继续加深。</Text>
+      <Text p>
+        H4是最小可定位引用的子主题；更细内容使用正文、列表或表格，不为字号继续加深。
+      </Text>
     </Flow>
   )
 }

@@ -2,11 +2,11 @@
 
 先判断要表达的是界面节点、组件逻辑，还是已有节点的能力：
 
-| 形式 | 承担什么 | 典型情境 |
-| --- | --- | --- |
-| 组件 | 承担界面中的节点身份，组织内容与层次。 | Card 承载一份信息，Button 表达一个操作入口。 |
-| Hook | 在组件作用域中组织状态、计算或共享逻辑。 | 多处使用同一份状态，或组合一段不直接注入节点声明的逻辑。 |
-| Plugin | 描述宿主节点自身具有什么功能，通过 `is` 给它增加能力。 | 这个 Card 可点击、可拖动，或附有 Tooltip 说明。 |
+| 形式   | 承担什么                                               | 典型情境                                                 |
+| ------ | ------------------------------------------------------ | -------------------------------------------------------- |
+| 组件   | 承担界面中的节点身份，组织内容与层次。                 | Card 承载一份信息，Button 表达一个操作入口。             |
+| Hook   | 在组件作用域中组织状态、计算或共享逻辑。               | 多处使用同一份状态，或组合一段不直接注入节点声明的逻辑。 |
+| Plugin | 描述宿主节点自身具有什么功能，通过 `is` 给它增加能力。 | 这个 Card 可点击、可拖动，或附有 Tooltip 说明。          |
 
 Plugin 不作为业务内容提供商。业务内容仍由调用者写在组件层次中：
 
@@ -91,15 +91,19 @@ const dragAndDrop = createInactivePlugins({
 })
 
 function Transfer() {
-  const { plugins: { draggable, droppable } } = dragAndDrop({
+  const {
+    plugins: { draggable, droppable },
+  } = dragAndDrop({
     draggable: { payload: '一份材料' },
-    droppable: { onDrop: context => 接收材料(context) },
+    droppable: { onDrop: (context) => 接收材料(context) },
   })
 
-  return <>
-    <Card is={draggable}>拖动材料</Card>
-    <Card is={droppable}>接收材料</Card>
-  </>
+  return (
+    <>
+      <Card is={draggable}>拖动材料</Card>
+      <Card is={droppable}>接收材料</Card>
+    </>
+  )
 }
 ```
 

@@ -10,19 +10,31 @@ import type { State } from '@/foundation'
 import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
 import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import {
-  Article, Board, Button, Card, Field, Loop, Table, Piv,
-  type ArticleController, type ArticleProps,
-  type BoardController, type CardController,
+  Article,
+  Board,
+  Button,
+  Card,
+  Field,
+  Loop,
+  Table,
+  Piv,
+  type ArticleController,
+  type ArticleProps,
+  type BoardController,
+  type CardController,
 } from '@/components'
 
 /**
  * 编译期检查组件调用；不运行这些 JSX，避免给类型验收创建 DOM。
  */
 function verifyGenericCalls() {
-  const capability = createInactivePlugin({ name: 'capability', pluginCore({ addProps }) {
-    addProps({ class: 'capability' })
-    return {}
-  } })()
+  const capability = createInactivePlugin({
+    name: 'capability',
+    pluginCore({ addProps }) {
+      addProps({ class: 'capability' })
+      return {}
+    },
+  })()
   Piv({ is: capability })
   Piv({ is: [capability, capability] })
   // @ts-expect-error 未调用的定义不能作为 Plugin。
@@ -35,48 +47,97 @@ function verifyGenericCalls() {
   Piv({ plugins: capability })
   // @ts-expect-error 没有 pluginIs Props。
   Piv({ pluginIs: capability })
-  const board = <Board<'button'> as="button" ref={controller => {
-    expectTypeOf(controller).toEqualTypeOf<BoardController<'button'>>()
-  }} domRef={element => { expectTypeOf(element).toEqualTypeOf<HTMLButtonElement>() }} />
-  const card = <Card<'section'> as="section" ref={controller => {
-    expectTypeOf(controller).toEqualTypeOf<CardController<'section'>>()
-  }} />
+  const board = (
+    <Board<'button'>
+      as="button"
+      ref={(controller) => {
+        expectTypeOf(controller).toEqualTypeOf<BoardController<'button'>>()
+      }}
+      domRef={(element) => {
+        expectTypeOf(element).toEqualTypeOf<HTMLButtonElement>()
+      }}
+    />
+  )
+  const card = (
+    <Card<'section'>
+      as="section"
+      ref={(controller) => {
+        expectTypeOf(controller).toEqualTypeOf<CardController<'section'>>()
+      }}
+    />
+  )
   // @ts-expect-error 原生节点泛型与 as 必须一致。
   Board<'button'>({ as: 'a' })
   // @ts-expect-error Card 同样保留原生节点泛型约束。
   Card<'section'>({ as: 'button' })
 
-  const loop = <Loop each={() => [{ name: '项' }]} ref={controller => {
-    expectTypeOf(controller.props.each).toEqualTypeOf<State<() => { name: string }[]>>()
-    // @ts-expect-error 列表内容工厂只由 Props 提供，不能通过实例 Controller 重放。
-    controller.props.children.set(() => (_item: unknown) => null)
-  }}>{(item, index) => {
-    expectTypeOf(item).toEqualTypeOf<{ name: string }>()
-    expectTypeOf(index()).toEqualTypeOf<number>()
-    return item.name
-  }}</Loop>
+  const loop = (
+    <Loop
+      each={() => [{ name: '项' }]}
+      ref={(controller) => {
+        expectTypeOf(controller.props.each).toEqualTypeOf<
+          State<() => { name: string }[]>
+        >()
+        // @ts-expect-error 列表内容工厂只由 Props 提供，不能通过实例 Controller 重放。
+        controller.props.children.set(() => (_item: unknown) => null)
+      }}
+    >
+      {(item, index) => {
+        expectTypeOf(item).toEqualTypeOf<{ name: string }>()
+        expectTypeOf(index()).toEqualTypeOf<number>()
+        return item.name
+      }}
+    </Loop>
+  )
   // @ts-expect-error 列表项必须符合明确指定的 number。
-  Loop<number>({ each: () => ['错误'], children: item => item })
-  const field = <Field label="字段" ref={controller => {
-    // @ts-expect-error Field 内容工厂同样不是可写状态。
-    controller.props.children.set(() => (_id: string) => null)
-  }}>{id => <Piv as="input" id={id} />}</Field>
+  Loop<number>({ each: () => ['错误'], children: (item) => item })
+  const field = (
+    <Field
+      label="字段"
+      ref={(controller) => {
+        // @ts-expect-error Field 内容工厂同样不是可写状态。
+        controller.props.children.set(() => (_id: string) => null)
+      }}
+    >
+      {(id) => <Piv as="input" id={id} />}
+    </Field>
+  )
 
-  const table = <Table data={[{ amount: 1, title: '项' }]} renderParts={{ tableCell: {
-    amount: value => { expectTypeOf(value).toEqualTypeOf<number>(); return value },
-  } }} ref={controller => {
-    expectTypeOf(controller.props.data).toEqualTypeOf<State<{ amount: number; title: string }[]>>()
-  }} />
+  const table = (
+    <Table
+      data={[{ amount: 1, title: '项' }]}
+      renderParts={{
+        tableCell: {
+          amount: (value) => {
+            expectTypeOf(value).toEqualTypeOf<number>()
+            return value
+          },
+        },
+      }}
+      ref={(controller) => {
+        expectTypeOf(controller.props.data).toEqualTypeOf<
+          State<{ amount: number; title: string }[]>
+        >()
+      }}
+    />
+  )
   // @ts-expect-error 列选择必须来自 Row 的 key。
   Table<{ amount: number }>({ data: [{ amount: 1 }], keys: ['missing'] })
   // @ts-expect-error 单元格渲染器必须接收该列的 number。
-  Table<{ amount: number }>({ data: [{ amount: 1 }], renderParts: { tableCell: { amount: (value: string) => value } } })
+  Table<{ amount: number }>({
+    data: [{ amount: 1 }],
+    renderParts: { tableCell: { amount: (value: string) => value } },
+  })
 
-  const article = <Article ref={controller => {
-    expectTypeOf(controller).toEqualTypeOf<ArticleController>()
-    // @ts-expect-error Article 不提供根节点选择或承载组件状态。
-    controller.props.as.set('section')
-  }} />
+  const article = (
+    <Article
+      ref={(controller) => {
+        expectTypeOf(controller).toEqualTypeOf<ArticleController>()
+        // @ts-expect-error Article 不提供根节点选择或承载组件状态。
+        controller.props.as.set('section')
+      }}
+    />
+  )
   const ownProps: ArticleProps = { children: '独立正文' }
   // @ts-expect-error 语义根固定，不接收 Card 承载协议。
   Article({ as: Card })
@@ -105,8 +166,16 @@ function verifyGenericCalls() {
   Card.controllers.props.htmlProps.set({ type: 'submit' })
   // @ts-expect-error 插件也绑定原生节点类型，只通过精确实例 ref 操作。
   Board.controllers.props.plugin.set(() => {})
-  const { plugins: { trigger: popoverTrigger, body: popoverBody }, controller: popoverController } = createPopoverPlugins({ body: { defaultOpen: true } })
-  const floating = <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>正文</Card></>
+  const {
+    plugins: { trigger: popoverTrigger, body: popoverBody },
+    controller: popoverController,
+  } = createPopoverPlugins({ body: { defaultOpen: true } })
+  const floating = (
+    <>
+      <Button is={popoverTrigger}>打开</Button>
+      <Card is={popoverBody}>正文</Card>
+    </>
+  )
   popoverController.body.togglePopover({ force: true })
 
   void [board, card, field, loop, table, article, ownProps, floating]

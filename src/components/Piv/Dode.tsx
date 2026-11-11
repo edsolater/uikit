@@ -74,7 +74,9 @@ export function Dode<Tag extends PivTag>(
   const getOrCreateElement = () =>
     (element ??= runWithOwner(owner, () =>
       createDodeElement(
-        domMap[(props.as ?? 'div') as PivSupportedElementTag] as CreatePivElement<Tag>,
+        domMap[
+          (props.as ?? 'div') as PivSupportedElementTag
+        ] as CreatePivElement<Tag>,
         props,
       ),
     ))

@@ -912,13 +912,24 @@ describe('Piv htmlProps 属性', () => {
   test('高优先级空列表及 Source 空列表仍覆盖低来源', () => {
     const host = document.createElement('div')
     const value = createState<string[]>([])
-    const dispose = render(() => (
-      <>
-        <Piv shadowProps={{ htmlProps: { 'data-value': 'low' } }} htmlProps={{ 'data-value': [] }} />
-        <Piv shadowProps={{ htmlProps: { 'data-value': 'low' } }} htmlProps={{ 'data-value': value }} />
-      </>
-    ), host)
-    expect([...host.children].map((element) => element.getAttribute('data-value'))).toEqual([null, null])
+    const dispose = render(
+      () => (
+        <>
+          <Piv
+            shadowProps={{ htmlProps: { 'data-value': 'low' } }}
+            htmlProps={{ 'data-value': [] }}
+          />
+          <Piv
+            shadowProps={{ htmlProps: { 'data-value': 'low' } }}
+            htmlProps={{ 'data-value': value }}
+          />
+        </>
+      ),
+      host,
+    )
+    expect(
+      [...host.children].map((element) => element.getAttribute('data-value')),
+    ).toEqual([null, null])
     value.set(['high'])
     flush()
     expect(host.children[1].getAttribute('data-value')).toBe('high')
@@ -1008,7 +1019,9 @@ describe('Piv htmlProps 属性', () => {
       return (
         <Piv
           as="input"
-          htmlProps={active() ? { value, checked: true, 'data-value': value } : {}}
+          htmlProps={
+            active() ? { value, 'checked': true, 'data-value': value } : {}
+          }
         />
       )
     }

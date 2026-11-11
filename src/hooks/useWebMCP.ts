@@ -23,14 +23,19 @@ export type WebMCPTool<Input extends object = Record<string, unknown>> = {
  * 内部组件不自行注册工具，应用的对外能力由 App 集中掌控。
  * 在 App 构建期间调用；浏览器不支持 WebMCP 时跳过注册并返回已完成 Promise，否则返回原生注册完成 Promise。
  */
-export function useWebMCP<Input extends object>(tool: WebMCPTool<Input>): Promise<void> {
+export function useWebMCP<Input extends object>(
+  tool: WebMCPTool<Input>,
+): Promise<void> {
   if (!('modelContext' in document)) return Promise.resolve()
   const controller = new AbortController()
   onCleanup(() => controller.abort())
 
   const { modelContext } = document as Document & {
     modelContext: {
-      registerTool: (tool: WebMCPTool<Input>, options: { signal: AbortSignal }) => Promise<void>
+      registerTool: (
+        tool: WebMCPTool<Input>,
+        options: { signal: AbortSignal },
+      ) => Promise<void>
     }
   }
 

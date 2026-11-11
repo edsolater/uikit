@@ -15,7 +15,7 @@ export function PageExample() {
   const showTitle = createState(true)
   return (
     <Page
-      title={showTitle.map(show => show ? '项目概览' : undefined)}
+      title={showTitle.map((show) => (show ? '项目概览' : undefined))}
       subtitle="查看当前工作的目标与进展。"
       actions={
         <Button
@@ -28,7 +28,11 @@ export function PageExample() {
       }
     >
       <Flow>
-        <Checkbox label="显示内建页标题" checked={showTitle} onChange={showTitle.set} />
+        <Checkbox
+          label="显示内建页标题"
+          checked={showTitle}
+          onChange={showTitle.set}
+        />
         <Text>{count.map((value) => '已刷新 ' + value + ' 次')}</Text>
         <Card>
           <Flow>

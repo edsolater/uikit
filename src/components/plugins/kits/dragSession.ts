@@ -60,7 +60,8 @@ export function registerInternalDropTarget(
       const resolvedTarget = { ...options, target }
       dropTargets.set(target, resolvedTarget)
       return () => {
-        if (dropTargets.get(target) === resolvedTarget) dropTargets.delete(target)
+        if (dropTargets.get(target) === resolvedTarget)
+          dropTargets.delete(target)
       }
     }),
   )

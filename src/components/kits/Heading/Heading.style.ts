@@ -12,8 +12,13 @@ const headingBlockMargin = token('2.4em 1.2em', {
 
 rules('.Heading', {
   'margin-block': headingBlockMargin,
-  visibility: token('inherit', {
+  'visibility': token('inherit', {
     name: 'heading-visibility',
-    state: [[stateCondition('body:has(.StructureViewOverlay:popover-open) &'), 'hidden']],
+    state: [
+      [
+        stateCondition('body:has(.StructureViewOverlay:popover-open) &'),
+        'hidden',
+      ],
+    ],
   }),
 })

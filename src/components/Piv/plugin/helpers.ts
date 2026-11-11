@@ -40,7 +40,10 @@ export function createPivStructure<Tag extends PivTag>(
     const commit = ({
       element,
       nodes,
-    }: { element: PivHTMLElement<Tag>; nodes: Node[] }) => {
+    }: {
+      element: PivHTMLElement<Tag>
+      nodes: Node[]
+    }) => {
       if (!range.end.parentNode) {
         switch (position) {
           case 'before':

@@ -5,7 +5,12 @@
  *
  * 提示拥有自己的外观，不改写其他浮层的材料。
  */
-import { baseRadius, createNewTokenGenerator, multiply, rules } from '@/style-system'
+import {
+  baseRadius,
+  createNewTokenGenerator,
+  multiply,
+  rules,
+} from '@/style-system'
 
 const tooltipToken = createNewTokenGenerator({
   prefixName: 'tooltip',

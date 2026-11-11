@@ -5,7 +5,7 @@ import { createState, type State } from '@/foundation'
 import { createRef } from './createRef'
 
 test('引用可接收State对象并操作原对象，释放接收器后清除能力', () => {
-  const scope = createRoot(dispose => {
+  const scope = createRoot((dispose) => {
     const source = createState(2)
     const [reference, receive] = createRef<State<number>>()
     return { source, reference, release: receive(source), dispose }

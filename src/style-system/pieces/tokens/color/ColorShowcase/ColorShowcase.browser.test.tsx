@@ -12,31 +12,47 @@ test('颜色展示读取 Style System 材料并随主题切换更新', async () 
   const previous = document.documentElement.getAttribute('data-theme')
   const dispose = render(() => <ColorShowcase />, host)
   try {
-    await expect.poll(() => host.querySelectorAll('.ColorShowcasePreview').length).toBeGreaterThan(0)
+    await expect
+      .poll(() => host.querySelectorAll('.ColorShowcasePreview').length)
+      .toBeGreaterThan(0)
     const expectPreviews = () => {
-      for (const element of host.querySelectorAll<HTMLElement>('.ColorShowcasePreview')) {
+      for (const element of host.querySelectorAll<HTMLElement>(
+        '.ColorShowcasePreview',
+      )) {
         const image = getComputedStyle(element).backgroundImage
         expect(image).toContain('linear-gradient')
         expect(image).toContain('conic-gradient')
       }
     }
     expectPreviews()
-    const preview = host.querySelector<HTMLElement>('[data-color-material="surface-color-theme"]')!
+    const preview = host.querySelector<HTMLElement>(
+      '[data-color-material="surface-color-theme"]',
+    )!
     const row = preview.closest('tr')!
     await expect.poll(() => row.textContent).toContain('--surface-color-theme')
     const light = row.cells[1].textContent
     const lightPreview = getComputedStyle(preview).backgroundImage
     expect(lightPreview).toContain('linear-gradient')
     expect(lightPreview).toContain('conic-gradient')
-    const dark = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
-      .find((input) => input.parentElement?.textContent?.includes('深色'))!
+    const dark = [
+      ...host.querySelectorAll<HTMLInputElement>('input[type="radio"]'),
+    ].find((input) => input.parentElement?.textContent?.includes('深色'))!
     dark.click()
     flush()
     await expect.poll(() => document.documentElement.dataset.theme).toBe('dark')
     expectPreviews()
-    const currentRow = () => host.querySelector<HTMLElement>('[data-color-material="surface-color-theme"]')!.closest('tr')!
+    const currentRow = () =>
+      host
+        .querySelector<HTMLElement>(
+          '[data-color-material="surface-color-theme"]',
+        )!
+        .closest('tr')!
     await expect.poll(() => currentRow().cells[1].textContent).not.toBe(light)
-    const darkPreview = getComputedStyle(host.querySelector<HTMLElement>('[data-color-material="surface-color-theme"]')!).backgroundImage
+    const darkPreview = getComputedStyle(
+      host.querySelector<HTMLElement>(
+        '[data-color-material="surface-color-theme"]',
+      )!,
+    ).backgroundImage
     expect(darkPreview).toContain('linear-gradient')
     expect(darkPreview).toContain('conic-gradient')
     expect(darkPreview).not.toBe(lightPreview)
@@ -45,7 +61,8 @@ test('颜色展示读取 Style System 材料并随主题切换更新', async () 
     dispose()
     host.remove()
     style.remove()
-    if (previous === null) document.documentElement.removeAttribute('data-theme')
+    if (previous === null)
+      document.documentElement.removeAttribute('data-theme')
     else document.documentElement.setAttribute('data-theme', previous)
   }
 })

@@ -25,12 +25,19 @@ afterEach(() => {
 
 test('组件ref可改变字段关联并添加和移除缺省提示，集合随实例清理', async () => {
   const [label, receive] = createRef<LabelController>()
-  dispose = render(() => <>
-    <Label for="first-input" ref={receive}>原标题</Label>
-    <Label for="first-input">普通标题</Label>
-    <Piv as="input" id="first-input" />
-    <Piv as="input" id="next-input" />
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Label for="first-input" ref={receive}>
+          原标题
+        </Label>
+        <Label for="first-input">普通标题</Label>
+        <Piv as="input" id="first-input" />
+        <Piv as="input" id="next-input" />
+      </>
+    ),
+    host,
+  )
   expect(Label.controllers.length).toBe(1)
   expect('ref' in Label.controllers[0]).toBe(false)
   expect(host.querySelector('button')).toBeNull()
@@ -157,21 +164,26 @@ test('键盘聚焦显示，Escape关闭不抢焦点，重新移入可再次查�
 test('自定义触发内容与JSX段落复用同插件，Source清空回到问号', async () => {
   const triggerContent = createState<string | undefined>('i')
   const value = createState(129)
-  dispose = render(() => (
-    <>
-      <Label
-        for="template-input"
-        tooltipTrigger={triggerContent}
-        tooltip={<>
-          <Piv as="strong">命中{val(value)}</Piv>
-          <Piv as="p">共同有效域</Piv>
-        </>}
-      >
-        字段
-      </Label>
-      <Piv as="input" id="template-input" />
-    </>
-  ), host)
+  dispose = render(
+    () => (
+      <>
+        <Label
+          for="template-input"
+          tooltipTrigger={triggerContent}
+          tooltip={
+            <>
+              <Piv as="strong">命中{val(value)}</Piv>
+              <Piv as="p">共同有效域</Piv>
+            </>
+          }
+        >
+          字段
+        </Label>
+        <Piv as="input" id="template-input" />
+      </>
+    ),
+    host,
+  )
   const trigger = host.querySelector('button')!
   expect(trigger.textContent).toBe('i')
   expect(trigger.querySelector('button')).toBeNull()
@@ -188,8 +200,12 @@ test('自定义触发内容与JSX段落复用同插件，Source清空回到问�
   await expect.poll(() => trigger.textContent).toBe('?')
   host.style.minHeight = '200vh'
   window.scrollTo(0, 40)
-  await expect.poll(() =>
-    surface.getBoundingClientRect().bottom <= trigger.getBoundingClientRect().top,
-  ).toBe(true)
+  await expect
+    .poll(
+      () =>
+        surface.getBoundingClientRect().bottom <=
+        trigger.getBoundingClientRect().top,
+    )
+    .toBe(true)
   window.scrollTo(0, 0)
 })

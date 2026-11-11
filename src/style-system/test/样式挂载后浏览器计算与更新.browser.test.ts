@@ -510,10 +510,7 @@ test('动效消费统一基准的当前值，分隔线按本地文字变量实�
     const committed = style.textContent
     const originalLine = getComputedStyle(element).borderTopColor
     expect(getComputedStyle(element).transitionDuration).toBe('0.12s')
-    element.style.setProperty(
-      `--${motionDuration.name!}`,
-      '360ms',
-    )
+    element.style.setProperty(`--${motionDuration.name!}`, '360ms')
     element.style.setProperty('--mounted-line-base', 'red')
     expect(getComputedStyle(element).transitionDuration).toBe('0.24s')
     element.style.removeProperty(`--${motionDuration.name!}`)

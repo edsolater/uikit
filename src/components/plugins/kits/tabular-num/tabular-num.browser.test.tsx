@@ -13,7 +13,9 @@ test('数字等宽插件登记并应用排版样式', () => {
   try {
     const element = host.querySelector<HTMLElement>('.is\\:tabular-num')!
     expect(element).not.toBeNull()
-    expect(getComputedStyle(element).fontVariantNumeric).toContain('tabular-nums')
+    expect(getComputedStyle(element).fontVariantNumeric).toContain(
+      'tabular-nums',
+    )
   } finally {
     dispose()
     host.remove()

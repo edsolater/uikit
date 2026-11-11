@@ -15,7 +15,10 @@ export type ArticleProps = Omit<PivProps<'article'>, 'as'> &
   }
 
 /** 只操作正文自身字段，不接管组合中 Card 的实例或视觉属性。 */
-export type ArticleController = KitController<ArticleProps, typeof articlePropsDefinition>
+export type ArticleController = KitController<
+  ArticleProps,
+  typeof articlePropsDefinition
+>
 
 /**
  * 语义组件：以原生 article 表达独立正文，默认无容器皮肤，仅裁剪自身首尾块外边距。
@@ -28,5 +31,9 @@ export const Article = kit(
     description: '承载独立正文',
     availableProps: articlePropsDefinition,
   },
-  (props: ArticleProps) => <Piv as="article" shadowProps={props} class="Article">{props.children}</Piv>,
+  (props: ArticleProps) => (
+    <Piv as="article" shadowProps={props} class="Article">
+      {props.children}
+    </Piv>
+  ),
 )

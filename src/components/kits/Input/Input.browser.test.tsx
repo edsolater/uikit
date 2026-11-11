@@ -38,17 +38,26 @@ test('输入框材料随明暗主题变化', () => {
 })
 
 test('输入框的焦点、禁用与无效反馈来自已挂载的样式', async () => {
-  dispose = render(() => <>
-    <Input htmlProps={{ placeholder: '请输入' }} />
-    <Input invalid />
-    <Input htmlProps={{ disabled: true }} />
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Input htmlProps={{ placeholder: '请输入' }} />
+        <Input invalid />
+        <Input htmlProps={{ disabled: true }} />
+      </>
+    ),
+    host,
+  )
   const [normal, invalid, disabled] = host.querySelectorAll('input')
   expect(style.textContent).not.toContain('var(--Input-')
   expect(getComputedStyle(normal).minHeight).not.toBe('0px')
   expect(getComputedStyle(disabled).cursor).toBe('not-allowed')
-  expect(getComputedStyle(invalid).borderColor).not.toBe(getComputedStyle(normal).borderColor)
-  expect(getComputedStyle(normal, '::placeholder').color).not.toBe(getComputedStyle(normal).color)
+  expect(getComputedStyle(invalid).borderColor).not.toBe(
+    getComputedStyle(normal).borderColor,
+  )
+  expect(getComputedStyle(normal, '::placeholder').color).not.toBe(
+    getComputedStyle(normal).color,
+  )
   await userEvent.tab()
   expect(document.activeElement).toBe(normal)
   await expect.poll(() => getComputedStyle(normal).boxShadow).not.toBe('none')
@@ -58,10 +67,15 @@ test('输入框的焦点、禁用与无效反馈来自已挂载的样式', async
 })
 
 test('无效输入悬停时保留错误边界，普通输入继承调用方的光标', async () => {
-  dispose = render(() => <div style={{ cursor: 'crosshair' }}>
-    <Input type="color" />
-    <Input invalid />
-  </div>, host)
+  dispose = render(
+    () => (
+      <div style={{ cursor: 'crosshair' }}>
+        <Input type="color" />
+        <Input invalid />
+      </div>
+    ),
+    host,
+  )
   const [color, invalid] = host.querySelectorAll('input')
   invalid.style.transition = 'none'
   expect(getComputedStyle(color).cursor).toBe('crosshair')
@@ -72,10 +86,15 @@ test('无效输入悬停时保留错误边界，普通输入继承调用方的�
 
 test('根主题已经生效时局部同名标记不重复套用主题材料', () => {
   document.documentElement.dataset.theme = 'dark'
-  dispose = render(() => <>
-    <Input />
-    <Input htmlProps={{ 'data-theme': 'dark' }} />
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Input />
+        <Input htmlProps={{ 'data-theme': 'dark' }} />
+      </>
+    ),
+    host,
+  )
   const [normal, marked] = host.querySelectorAll('input')
   expect(getComputedStyle(marked).color).toBe(getComputedStyle(normal).color)
 })
@@ -85,12 +104,19 @@ test('根间距已适配尺寸时输入框不会重复应用根材料的尺寸�
   const previous = root.getAttribute('data-size')
   root.dataset.size = 'small'
   try {
-    dispose = render(() => <>
-      <Input />
-      <Input htmlProps={{ 'data-size': 'small' }} />
-    </>, host)
+    dispose = render(
+      () => (
+        <>
+          <Input />
+          <Input htmlProps={{ 'data-size': 'small' }} />
+        </>
+      ),
+      host,
+    )
     const [normal, marked] = host.querySelectorAll('input')
-    expect(getComputedStyle(marked).paddingInline).toBe(getComputedStyle(normal).paddingInline)
+    expect(getComputedStyle(marked).paddingInline).toBe(
+      getComputedStyle(normal).paddingInline,
+    )
   } finally {
     if (previous === null) root.removeAttribute('data-size')
     else root.setAttribute('data-size', previous)

@@ -81,10 +81,14 @@ export function createStatusPropsParser<
   effect?: (
     status: StatusDetails<Candidates[number]>,
   ) => ShadowProps<any> | void
-}): (props: StatusProps<Candidates[number]>) => StatusPropsParseResult<Candidates[number]> {
+}): (
+  props: StatusProps<Candidates[number]>,
+) => StatusPropsParseResult<Candidates[number]> {
   type StatusName = Candidates[number]
 
-  return function parseStatusProps(props: StatusProps<StatusName>): StatusPropsParseResult<StatusName> {
+  return function parseStatusProps(
+    props: StatusProps<StatusName>,
+  ): StatusPropsParseResult<StatusName> {
     const candidates: StatusName[] = options.candidates
     const externalStatusNames = new Set(
       options.candidates.filter((statusName) => statusName in props),
@@ -92,8 +96,8 @@ export function createStatusPropsParser<
     // 计算来源同时保留属性读取和 Source 链，状态写入不会回写输入。
     const statusStates = toRecord(
       candidates,
-      statusName => statusName,
-      statusName => createState(() => props[statusName]),
+      (statusName) => statusName,
+      (statusName) => createState(() => props[statusName]),
     )
     const statusDetails: StatusDetails<StatusName> = statusStates
 
@@ -127,6 +131,10 @@ export function createStatusPropsParser<
     if (statusEffectProps) effectProps.push(statusEffectProps)
     effectProps.push({ htmlProps: { 'data-status': statusAttribute } })
 
-    return { effect: effectProps, details: statusDetails, controller: statusController }
+    return {
+      effect: effectProps,
+      details: statusDetails,
+      controller: statusController,
+    }
   }
 }

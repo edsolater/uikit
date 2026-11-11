@@ -114,7 +114,11 @@ describe('Button', () => {
     const onClick = vi.fn()
     const disabled = createState(false)
     dispose = render(
-      () => <Button onClick={onClick} disabled={disabled}>执行</Button>,
+      () => (
+        <Button onClick={onClick} disabled={disabled}>
+          执行
+        </Button>
+      ),
       host,
     )
     const button = host.querySelector('button')!

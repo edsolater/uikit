@@ -48,7 +48,9 @@ afterEach(() => {
  * 点击正式的组件定位框开关。
  */
 function toggleView() {
-  document.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!.click()
+  document
+    .querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
+    .click()
   flush()
 }
 
@@ -60,11 +62,16 @@ describe('Text', () => {
   test('组件ref可修改缺省文字和用途，集合只收集受控实例，标签不重建', async () => {
     const [text, receive] = createRef<TextController>()
     const host = document.body.appendChild(document.createElement('main'))
-    dispose = render(() => <>
-      <Text block ref={receive} />
-      <Text>普通文字</Text>
-      <KitMarkerStructureViewTrigger />
-    </>, host)
+    dispose = render(
+      () => (
+        <>
+          <Text block ref={receive} />
+          <Text>普通文字</Text>
+          <KitMarkerStructureViewTrigger />
+        </>
+      ),
+      host,
+    )
     const element = host.querySelector<HTMLElement>('.Text')!
     expect(Text.controllers.length).toBe(1)
     expect('ref' in Text.controllers[0]).toBe(false)
@@ -78,8 +85,13 @@ describe('Text', () => {
     toggleView()
     text.props!.description.set('运行期用途')
     flush()
-    await expect.poll(() => [...document.querySelectorAll('.StructureViewOverlay .label')]
-      .some(label => label.textContent === '运行期用途')).toBe(true)
+    await expect
+      .poll(() =>
+        [...document.querySelectorAll('.StructureViewOverlay .label')].some(
+          (label) => label.textContent === '运行期用途',
+        ),
+      )
+      .toBe(true)
     text.props!.description.set('')
     flush()
     await expect.poll(() => getComputedStyle(element).opacity).toBe('0')

@@ -12,7 +12,9 @@ import { Flow, MessageBoard, Text } from '@/components'
 export function MessageBoardExample() {
   return (
     <Flow>
-      <Text>一级消息信息体由零点五级 Board 承载；Board 提供材质，不另立信息单元。</Text>
+      <Text>
+        一级消息信息体由零点五级 Board 承载；Board 提供材质，不另立信息单元。
+      </Text>
       <MessageBoard>正在读取当前记录。</MessageBoard>
       <MessageBoard tone="success">记录已保存。</MessageBoard>
       <MessageBoard tone="warning">资料尚未核对完整。</MessageBoard>

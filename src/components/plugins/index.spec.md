@@ -10,7 +10,9 @@ function Example() {
       <Piv is={hoverable()} />
       <Piv is={hoverable({ initialHovered: true })} />
       <Card is={capability}>信息</Card>
-      <Button on={{ click: () => capability.controller.focus() }}>聚焦卡片</Button>
+      <Button on={{ click: () => capability.controller.focus() }}>
+        聚焦卡片
+      </Button>
     </>
   )
 }

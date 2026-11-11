@@ -19,9 +19,7 @@ export function LinkExample() {
       <Link href="https://example.com" newTab>
         在新页面打开示例网站
       </Link>
-      <Heading level={3}>
-        {target}
-      </Heading>
+      <Heading level={3}>{target}</Heading>
       <Text>链接内容由调用方组合，不自带卡片皮肤。</Text>
     </Flow>
   )

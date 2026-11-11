@@ -25,7 +25,10 @@ export type FlowProps = ComponentDescriptionProps & {
 }
 
 /** Flow 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type FlowController = KitController<FlowProps, typeof flowPropsDefinition>
+export type FlowController = KitController<
+  FlowProps,
+  typeof flowPropsDefinition
+>
 
 /**
  * 默认纵向排列，固定间隔 1rem；横向排列自动换行并在交叉轴居中，不接管子组件外观。

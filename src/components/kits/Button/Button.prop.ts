@@ -1,6 +1,9 @@
 /** Button 的运行时字段协议与候选定义；只有启用组件 ref 才使用可写 Props 准备。 */
 import { createVariantPropsParser } from '../utils/parseVariantProps'
-import type { DefaultPropSources, PropsDefinition } from '../../tools/componentPropsDirector'
+import type {
+  DefaultPropSources,
+  PropsDefinition,
+} from '../../tools/componentPropsDirector'
 import type { ButtonProps } from './Button'
 import { toRecord } from '@edsolater/fnkit'
 import { pivPropsDefinition } from '../../Piv/Piv.prop'
@@ -40,18 +43,24 @@ export const buttonPropsDefinition = {
 } satisfies PropsDefinition<ButtonProps>
 
 /** 每个缺省分组只建立自己的语义 Source；原核心仍执行一次最终映射。 */
-export const buttonDefaultSources = toRecord(buttonVariantGroups, group => group.groupName, group => {
-  const parse = createVariantPropsParser([group])
-  return (input: ButtonProps) => {
-    const { details } = parse(input)
-    return details[group.groupName]
-  }
-}) as DefaultPropSources<ButtonProps, typeof buttonPropsDefinition>
+export const buttonDefaultSources = toRecord(
+  buttonVariantGroups,
+  (group) => group.groupName,
+  (group) => {
+    const parse = createVariantPropsParser([group])
+    return (input: ButtonProps) => {
+      const { details } = parse(input)
+      return details[group.groupName]
+    }
+  },
+) as DefaultPropSources<ButtonProps, typeof buttonPropsDefinition>
 
 /** 只有缺省分组改用同 State 的默认 Source；显式分组保留原核心的冲突报告。 */
 export function getButtonPropsDirectorOptions(input: ButtonProps) {
   return {
     defaultSources: buttonDefaultSources,
-    omit: buttonVariantGroups.flatMap(group => group.groupName in input ? [] : group.candidates),
+    omit: buttonVariantGroups.flatMap((group) =>
+      group.groupName in input ? [] : group.candidates,
+    ),
   }
 }

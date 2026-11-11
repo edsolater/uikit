@@ -32,12 +32,19 @@ test('触发与正文使用实际节点，正文自定义 id 仍可关联', asyn
   let capability!: ReturnType<typeof createPopoverPlugins>
   dispose = render(() => {
     capability = createPopoverPlugins()
-    return <>
-      <Button is={capability.plugins.trigger}>打开</Button>
-      <Card id="自定义浮层" is={capability.plugins.body}>说明</Card>
-    </>
+    return (
+      <>
+        <Button is={capability.plugins.trigger}>打开</Button>
+        <Card id="自定义浮层" is={capability.plugins.body}>
+          说明
+        </Card>
+      </>
+    )
   }, host)
-  const { plugins: { trigger: triggerPlugin, body: bodyPlugin }, controller } = capability
+  const {
+    plugins: { trigger: triggerPlugin, body: bodyPlugin },
+    controller,
+  } = capability
   expect(controller.trigger).toBe(triggerPlugin.controller)
   expect(controller.body).toBe(bodyPlugin.controller)
   expect(controller.trigger.isOpen).toBe(controller.body.isOpen)
@@ -54,7 +61,9 @@ test('触发与正文使用实际节点，正文自定义 id 仍可关联', asyn
   await userEvent.click(trigger)
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
   expect(getComputedStyle(body).display).not.toBe('none')
-  expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(trigger.getBoundingClientRect().top)
+  expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    trigger.getBoundingClientRect().top,
+  )
   await expect.poll(() => val(capability.controller.trigger.isOpen)).toBe(true)
   await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('true')
   expect(val(capability.controller.body.isOpen)).toBe(true)
@@ -71,16 +80,24 @@ test('触发与正文使用实际节点，正文自定义 id 仍可关联', asyn
 
 test('不同组合不串联，取消打开保持关闭', async () => {
   const host = document.body.appendChild(document.createElement('main'))
-  const cancel = vi.fn((open: boolean, event: Event) => { if (open) event.preventDefault() })
+  const cancel = vi.fn((open: boolean, event: Event) => {
+    if (open) event.preventDefault()
+  })
   let first!: ReturnType<typeof createPopoverPlugins>
   let second!: ReturnType<typeof createPopoverPlugins>
   dispose = render(() => {
     first = createPopoverPlugins({ body: { popover: 'manual' } })
-    second = createPopoverPlugins({ body: { popover: 'manual', onBeforeToggle: cancel } })
-    return <>
-      <Button is={first.plugins.trigger}>第一项</Button><Card is={first.plugins.body}>第一正文</Card>
-      <Button is={second.plugins.trigger}>第二项</Button><Card is={second.plugins.body}>第二正文</Card>
-    </>
+    second = createPopoverPlugins({
+      body: { popover: 'manual', onBeforeToggle: cancel },
+    })
+    return (
+      <>
+        <Button is={first.plugins.trigger}>第一项</Button>
+        <Card is={first.plugins.body}>第一正文</Card>
+        <Button is={second.plugins.trigger}>第二项</Button>
+        <Card is={second.plugins.body}>第二正文</Card>
+      </>
+    )
   }, host)
   const bodies = host.querySelectorAll<HTMLElement>('[popover]')
   first.controller.trigger.showPopover()
@@ -97,10 +114,17 @@ test('动态方向和间距读取当前值并在空值时回退', async () => {
   const position = createState<AnchorPosition | undefined>(undefined)
   const gap = createState<AnchorGap | undefined>(undefined)
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({
       body: { $anchorPosition: position, $anchorGap: gap },
     })
-    return <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
+    return (
+      <>
+        <Button is={popoverTrigger}>打开</Button>
+        <Card is={popoverBody}>说明</Card>
+      </>
+    )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => body.style.positionArea).toBe('top')
@@ -109,7 +133,9 @@ test('动态方向和间距读取当前值并在空值时回退', async () => {
   gap.set('lg')
   await expect.poll(() => body.style.positionArea).toBe('left')
   await expect.poll(() => getComputedStyle(body).margin).toBe('8px')
-  await expect.poll(() => getComputedStyle(body).positionTryFallbacks).toBe('flip-inline')
+  await expect
+    .poll(() => getComputedStyle(body).positionTryFallbacks)
+    .toBe('flip-inline')
   gap.set('sm')
   await expect.poll(() => getComputedStyle(body).margin).toBe('2px')
   gap.set('md')
@@ -126,11 +152,26 @@ test('触发节点移动时，浮层跟随锚点', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   const left = createState(200)
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins()
-    return <>
-      <Button is={popoverTrigger} style={{ position: 'fixed', get left() { return `${val(left)}px` }, top: '140px' }}>目标</Button>
-      <Card is={popoverBody}>内容</Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins()
+    return (
+      <>
+        <Button
+          is={popoverTrigger}
+          style={{
+            position: 'fixed',
+            get left() {
+              return `${val(left)}px`
+            },
+            top: '140px',
+          }}
+        >
+          目标
+        </Button>
+        <Card is={popoverBody}>内容</Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
@@ -140,21 +181,37 @@ test('触发节点移动时，浮层跟随锚点', async () => {
   const before = body.getBoundingClientRect().left
   left.set(300)
   await expect.poll(() => trigger.getBoundingClientRect().left).toBe(300)
-  await expect.poll(() => body.getBoundingClientRect().left).toBeGreaterThan(before + 40)
+  await expect
+    .poll(() => body.getBoundingClientRect().left)
+    .toBeGreaterThan(before + 40)
 })
 
 test('滚动时浮层跟随锚点，锚点离开滚动区域后隐藏', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins()
-    return <>
-      <div data-scroller style={{ width: '300px', height: '180px', overflow: 'auto', 'margin-top': '180px' }}>
-        <div style={{ height: '600px', padding: '100px 20px' }}>
-          <Button is={popoverTrigger}>目标</Button>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins()
+    return (
+      <>
+        <div
+          data-scroller
+          style={{
+            'width': '300px',
+            'height': '180px',
+            'overflow': 'auto',
+            'margin-top': '180px',
+          }}
+        >
+          <div style={{ height: '600px', padding: '100px 20px' }}>
+            <Button is={popoverTrigger}>目标</Button>
+          </div>
         </div>
-      </div>
-      <Card is={popoverBody} style={{ width: '120px' }}>正文</Card>
-    </>
+        <Card is={popoverBody} style={{ width: '120px' }}>
+          正文
+        </Card>
+      </>
+    )
   }, host)
   const scroller = host.querySelector<HTMLElement>('[data-scroller]')!
   const trigger = host.querySelector<HTMLButtonElement>('button')!
@@ -164,9 +221,17 @@ test('滚动时浮层跟随锚点，锚点离开滚动区域后隐藏', async ()
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
   const before = body.getBoundingClientRect().top
   scroller.scrollTop = 50
-  await expect.poll(() => body.getBoundingClientRect().top).toBeLessThan(before - 40)
+  await expect
+    .poll(() => body.getBoundingClientRect().top)
+    .toBeLessThan(before - 40)
   scroller.scrollTop = 220
-  await expect.poll(() => trigger.getBoundingClientRect().bottom < scroller.getBoundingClientRect().top).toBe(true)
+  await expect
+    .poll(
+      () =>
+        trigger.getBoundingClientRect().bottom <
+        scroller.getBoundingClientRect().top,
+    )
+    .toBe(true)
   const rect = body.getBoundingClientRect()
   const centerX = rect.x + rect.width / 2
   const centerY = rect.y + rect.height / 2
@@ -174,15 +239,24 @@ test('滚动时浮层跟随锚点，锚点离开滚动区域后隐藏', async ()
   expect(centerX).toBeLessThan(window.innerWidth)
   expect(centerY).toBeGreaterThan(0)
   expect(centerY).toBeLessThan(window.innerHeight)
-  await expect.poll(() => {
-    return body.contains(document.elementFromPoint(centerX, centerY))
-  }).toBe(false)
+  await expect
+    .poll(() => {
+      return body.contains(document.elementFromPoint(centerX, centerY))
+    })
+    .toBe(false)
   expect(body.matches(':popover-open')).toBe(true)
   scroller.scrollTop = 50
-  await expect.poll(() => {
-    const current = body.getBoundingClientRect()
-    return body.contains(document.elementFromPoint(current.x + current.width / 2, current.y + current.height / 2))
-  }).toBe(true)
+  await expect
+    .poll(() => {
+      const current = body.getBoundingClientRect()
+      return body.contains(
+        document.elementFromPoint(
+          current.x + current.width / 2,
+          current.y + current.height / 2,
+        ),
+      )
+    })
+    .toBe(true)
 })
 
 test('翻向条件作用于正文后代和伪元素，不作用于容器自身', async () => {
@@ -200,11 +274,30 @@ test('翻向条件作用于正文后代和伪元素，不作用于容器自身',
   const left = createState(250)
   try {
     dispose = render(() => {
-      const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { $anchorPosition: position } })
-      return <>
-        <Button is={popoverTrigger} style={{ position: 'fixed', get top() { return `${val(top)}px` }, get left() { return `${val(left)}px` } }}>目标</Button>
-        <Card is={popoverBody} class="FlipBody" style={{ width: '120px' }}><span class="FlipChild">正文</span></Card>
-      </>
+      const {
+        plugins: { trigger: popoverTrigger, body: popoverBody },
+      } = createPopoverPlugins({ body: { $anchorPosition: position } })
+      return (
+        <>
+          <Button
+            is={popoverTrigger}
+            style={{
+              position: 'fixed',
+              get top() {
+                return `${val(top)}px`
+              },
+              get left() {
+                return `${val(left)}px`
+              },
+            }}
+          >
+            目标
+          </Button>
+          <Card is={popoverBody} class="FlipBody" style={{ width: '120px' }}>
+            <span class="FlipChild">正文</span>
+          </Card>
+        </>
+      )
     }, host)
     const trigger = host.querySelector<HTMLButtonElement>('button')!
     const body = host.querySelector<HTMLElement>('[popover]')!
@@ -214,14 +307,24 @@ test('翻向条件作用于正文后代和伪元素，不作用于容器自身',
     await expect.poll(() => body.matches(':popover-open')).toBe(true)
     expect(getComputedStyle(child).color).toBe('rgb(100, 0, 0)')
     top.set(4)
-    await expect.poll(() => getComputedStyle(child).color).toBe('rgb(0, 0, 200)')
+    await expect
+      .poll(() => getComputedStyle(child).color)
+      .toBe('rgb(0, 0, 200)')
     expect(getComputedStyle(child, '::before').content).toBe('"翻向"')
     expect(getComputedStyle(body).color).toBe('rgb(10, 20, 30)')
     position.set('right')
     top.set(220)
     left.set(window.innerWidth - 40)
-    await expect.poll(() => body.getBoundingClientRect().right < trigger.getBoundingClientRect().left).toBe(true)
-    await expect.poll(() => getComputedStyle(child).color).toBe('rgb(0, 0, 200)')
+    await expect
+      .poll(
+        () =>
+          body.getBoundingClientRect().right <
+          trigger.getBoundingClientRect().left,
+      )
+      .toBe(true)
+    await expect
+      .poll(() => getComputedStyle(child).color)
+      .toBe('rgb(0, 0, 200)')
     expect(getComputedStyle(body).color).toBe('rgb(10, 20, 30)')
   } finally {
     handles.forEach((handle) => handle.remove())
@@ -231,18 +334,35 @@ test('翻向条件作用于正文后代和伪元素，不作用于容器自身',
 test('Popover 不改变调用者的内容与材料样式', () => {
   const host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins()
-    const style = { width: '180px', padding: '7px', background: 'rgb(20, 30, 40)', border: '3px solid rgb(60, 70, 80)' }
-    return <>
-      <Button is={popoverTrigger}>目标</Button>
-      <Card is={popoverBody} style={style}>正文</Card>
-      <Card style={style}>对照</Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins()
+    const style = {
+      width: '180px',
+      padding: '7px',
+      background: 'rgb(20, 30, 40)',
+      border: '3px solid rgb(60, 70, 80)',
+    }
+    return (
+      <>
+        <Button is={popoverTrigger}>目标</Button>
+        <Card is={popoverBody} style={style}>
+          正文
+        </Card>
+        <Card style={style}>对照</Card>
+      </>
+    )
   }, host)
   const [body, baseline] = host.querySelectorAll<HTMLElement>('.Card')
   const read = (element: HTMLElement) => {
     const style = getComputedStyle(element)
-    return [style.width, style.padding, style.backgroundColor, style.borderTopWidth, style.borderTopColor]
+    return [
+      style.width,
+      style.padding,
+      style.backgroundColor,
+      style.borderTopWidth,
+      style.borderTopColor,
+    ]
   }
   expect(read(body)).toEqual(read(baseline))
 })
@@ -253,10 +373,12 @@ test('默认打开与原生 toggle 事件共享打开状态', async () => {
   let capability!: ReturnType<typeof createPopoverPlugins>
   dispose = render(() => {
     capability = createPopoverPlugins({ body: { defaultOpen: true, onToggle } })
-    return <>
-      <Button is={capability.plugins.trigger}>目标</Button>
-      <Card is={capability.plugins.body}>正文</Card>
-    </>
+    return (
+      <>
+        <Button is={capability.plugins.trigger}>目标</Button>
+        <Card is={capability.plugins.body}>正文</Card>
+      </>
+    )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
@@ -272,8 +394,15 @@ test('默认打开只读取首次完成值，后续状态改变不再打开', as
   const host = document.body.appendChild(document.createElement('main'))
   const initial = createState(false)
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { defaultOpen: initial } })
-    return <><Button is={popoverTrigger}>目标</Button><Card is={popoverBody}>正文</Card></>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({ body: { defaultOpen: initial } })
+    return (
+      <>
+        <Button is={popoverTrigger}>目标</Button>
+        <Card is={popoverBody}>正文</Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
@@ -288,8 +417,15 @@ test('默认打开等待异步来源的首次值', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   const initial = Promise.withResolvers<boolean>()
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { defaultOpen: initial.promise } })
-    return <><Button is={popoverTrigger}>目标</Button><Card is={popoverBody}>正文</Card></>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({ body: { defaultOpen: initial.promise } })
+    return (
+      <>
+        <Button is={popoverTrigger}>目标</Button>
+        <Card is={popoverBody}>正文</Card>
+      </>
+    )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   expect(body.matches(':popover-open')).toBe(false)
@@ -303,15 +439,35 @@ test('通用事件先于打开关闭事件，取消打开不触发 onOpen', asyn
   let cancel = true
   let capability!: ReturnType<typeof createPopoverPlugins>
   dispose = render(() => {
-    capability = createPopoverPlugins({ body: {
-      onBeforeToggle(open) { calls.push(`before:${open}`) },
-      onBeforeOpen(event) { calls.push('beforeOpen'); if (cancel) event.preventDefault() },
-      onBeforeClose() { calls.push('beforeClose') },
-      onToggle(open) { calls.push(`toggle:${open}`) },
-      onOpen() { calls.push('open') },
-      onClose() { calls.push('close') },
-    } })
-    return <><Button is={capability.plugins.trigger}>目标</Button><Card is={capability.plugins.body}>正文</Card></>
+    capability = createPopoverPlugins({
+      body: {
+        onBeforeToggle(open) {
+          calls.push(`before:${open}`)
+        },
+        onBeforeOpen(event) {
+          calls.push('beforeOpen')
+          if (cancel) event.preventDefault()
+        },
+        onBeforeClose() {
+          calls.push('beforeClose')
+        },
+        onToggle(open) {
+          calls.push(`toggle:${open}`)
+        },
+        onOpen() {
+          calls.push('open')
+        },
+        onClose() {
+          calls.push('close')
+        },
+      },
+    })
+    return (
+      <>
+        <Button is={capability.plugins.trigger}>目标</Button>
+        <Card is={capability.plugins.body}>正文</Card>
+      </>
+    )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   capability.controller.body.showPopover()
@@ -319,26 +475,56 @@ test('通用事件先于打开关闭事件，取消打开不触发 onOpen', asyn
   expect(body.matches(':popover-open')).toBe(false)
   cancel = false
   capability.controller.body.showPopover()
-  await expect.poll(() => calls).toEqual(['before:true', 'beforeOpen', 'before:true', 'beforeOpen', 'toggle:true', 'open'])
+  await expect
+    .poll(() => calls)
+    .toEqual([
+      'before:true',
+      'beforeOpen',
+      'before:true',
+      'beforeOpen',
+      'toggle:true',
+      'open',
+    ])
   capability.controller.body.hidePopover()
-  await expect.poll(() => calls).toEqual(['before:true', 'beforeOpen', 'before:true', 'beforeOpen', 'toggle:true', 'open', 'before:false', 'beforeClose', 'toggle:false', 'close'])
+  await expect
+    .poll(() => calls)
+    .toEqual([
+      'before:true',
+      'beforeOpen',
+      'before:true',
+      'beforeOpen',
+      'toggle:true',
+      'open',
+      'before:false',
+      'beforeClose',
+      'toggle:false',
+      'close',
+    ])
 })
 
 test('默认聚焦正文内第一个可聚焦节点，卸载时恢复原有 autofocus', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins()
-    return <>
-      <Button is={popoverTrigger}>目标</Button>
-      <Card is={popoverBody}>
-        <button disabled>禁用</button>
-        <div hidden><button>隐藏</button></div>
-        <div style={{ display: 'none' }}><button>样式隐藏</button></div>
-        <input type="hidden" />
-        <input data-first tabindex={-1} />
-        <button autofocus>原有自动聚焦</button>
-      </Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins()
+    return (
+      <>
+        <Button is={popoverTrigger}>目标</Button>
+        <Card is={popoverBody}>
+          <button disabled>禁用</button>
+          <div hidden>
+            <button>隐藏</button>
+          </div>
+          <div style={{ display: 'none' }}>
+            <button>样式隐藏</button>
+          </div>
+          <input type="hidden" />
+          <input data-first tabindex={-1} />
+          <button autofocus>原有自动聚焦</button>
+        </Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
@@ -347,12 +533,18 @@ test('默认聚焦正文内第一个可聚焦节点，卸载时恢复原有 auto
   await userEvent.click(trigger)
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
   expect(document.activeElement).toBe(body.querySelector('[data-first]'))
-  expect(body.querySelector('[data-first]')?.hasAttribute('autofocus')).toBe(true)
-  const existing = [...body.querySelectorAll('button')].find((node) => node.textContent === '原有自动聚焦')!
+  expect(body.querySelector('[data-first]')?.hasAttribute('autofocus')).toBe(
+    true,
+  )
+  const existing = [...body.querySelectorAll('button')].find(
+    (node) => node.textContent === '原有自动聚焦',
+  )!
   expect(existing.hasAttribute('autofocus')).toBe(false)
   dispose?.()
   dispose = undefined
-  expect(body.querySelector('[data-first]')?.hasAttribute('autofocus')).toBe(false)
+  expect(body.querySelector('[data-first]')?.hasAttribute('autofocus')).toBe(
+    false,
+  )
   expect(existing.getAttribute('autofocus')).toBe('original')
 })
 
@@ -362,13 +554,15 @@ test('createDomRef 指定正文中的焦点目标，关闭由浏览器恢复焦�
   dispose = render(() => {
     const [focusTarget, receiveTarget] = createDomRef<HTMLButtonElement>()
     capability = createPopoverPlugins({ body: { autoFocus: focusTarget } })
-    return <>
-      <Button is={capability.plugins.trigger}>打开</Button>
-      <Card is={capability.plugins.body}>
-        <button autofocus>第一项</button>
-        <Button domRef={receiveTarget}>指定目标</Button>
-      </Card>
-    </>
+    return (
+      <>
+        <Button is={capability.plugins.trigger}>打开</Button>
+        <Card is={capability.plugins.body}>
+          <button autofocus>第一项</button>
+          <Button domRef={receiveTarget}>指定目标</Button>
+        </Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
@@ -377,7 +571,9 @@ test('createDomRef 指定正文中的焦点目标，关闭由浏览器恢复焦�
   const focus = vi.spyOn(trigger, 'focus')
   await userEvent.click(trigger)
   await expect.poll(() => document.activeElement?.textContent).toBe('指定目标')
-  const existing = [...body.querySelectorAll('button')].find((node) => node.textContent === '第一项')!
+  const existing = [...body.querySelectorAll('button')].find(
+    (node) => node.textContent === '第一项',
+  )!
   expect(existing.hasAttribute('autofocus')).toBe(false)
   capability.controller.body.hidePopover()
   await expect.poll(() => body.matches(':popover-open')).toBe(false)
@@ -392,8 +588,18 @@ test('可以直接指定正文内的 HTMLElement 作为焦点目标', async () =
   const host = document.body.appendChild(document.createElement('main'))
   const target = document.createElement('input')
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { autoFocus: target } })
-    return <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}><button>首项</button>{target}</Card></>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({ body: { autoFocus: target } })
+    return (
+      <>
+        <Button is={popoverTrigger}>打开</Button>
+        <Card is={popoverBody}>
+          <button>首项</button>
+          {target}
+        </Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
@@ -405,34 +611,50 @@ test('可以直接指定正文内的 HTMLElement 作为焦点目标', async () =
 test('默认焦点跳过关闭 details 的内容，并允许子节点恢复可见性', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins()
-    return <>
-      <Button is={popoverTrigger}>打开</Button>
-      <Card is={popoverBody}>
-        <details><summary hidden>折叠标题</summary><input data-closed /></details>
-        <div style={{ visibility: 'hidden' }}>
-          <button style={{ visibility: 'visible' }}>可见焦点</button>
-        </div>
-        <button>后项</button>
-      </Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins()
+    return (
+      <>
+        <Button is={popoverTrigger}>打开</Button>
+        <Card is={popoverBody}>
+          <details>
+            <summary hidden>折叠标题</summary>
+            <input data-closed />
+          </details>
+          <div style={{ visibility: 'hidden' }}>
+            <button style={{ visibility: 'visible' }}>可见焦点</button>
+          </div>
+          <button>后项</button>
+        </Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => trigger.popoverTargetElement).toBe(body)
   await userEvent.click(trigger)
   expect(document.activeElement?.textContent).toBe('可见焦点')
-  expect(body.querySelector('[data-closed]')?.hasAttribute('autofocus')).toBe(false)
+  expect(body.querySelector('[data-closed]')?.hasAttribute('autofocus')).toBe(
+    false,
+  )
 })
 
 test('默认打开同样聚焦正文首项', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins({ body: { defaultOpen: true } })
-    return <>
-      <Button is={popoverTrigger}>打开</Button>
-      <Card is={popoverBody}><button>首项</button><button>后项</button></Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins({ body: { defaultOpen: true } })
+    return (
+      <>
+        <Button is={popoverTrigger}>打开</Button>
+        <Card is={popoverBody}>
+          <button>首项</button>
+          <button>后项</button>
+        </Card>
+      </>
+    )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
@@ -442,18 +664,27 @@ test('默认打开同样聚焦正文首项', async () => {
 test('后续监听取消打开不移动焦点，卸载时恢复原有 autofocus', async () => {
   const host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => {
-    const { plugins: { trigger: popoverTrigger, body: popoverBody } } = createPopoverPlugins()
-    return <>
-      <Button is={popoverTrigger}>打开</Button>
-      <Card is={popoverBody}><button>首项</button><button autofocus>原目标</button></Card>
-    </>
+    const {
+      plugins: { trigger: popoverTrigger, body: popoverBody },
+    } = createPopoverPlugins()
+    return (
+      <>
+        <Button is={popoverTrigger}>打开</Button>
+        <Card is={popoverBody}>
+          <button>首项</button>
+          <button autofocus>原目标</button>
+        </Card>
+      </>
+    )
   }, host)
   const trigger = host.querySelector<HTMLButtonElement>('button')!
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => trigger.popoverTargetElement).toBe(body)
   const existing = body.querySelector<HTMLElement>('[autofocus]')!
   existing.setAttribute('autofocus', 'original')
-  body.addEventListener('beforetoggle', (event) => event.preventDefault(), { once: true })
+  body.addEventListener('beforetoggle', (event) => event.preventDefault(), {
+    once: true,
+  })
   await userEvent.click(trigger)
   expect(body.matches(':popover-open')).toBe(false)
   expect(document.activeElement).toBe(trigger)
@@ -469,14 +700,19 @@ test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操
   let capability!: ReturnType<typeof createPopoverPlugins>
   dispose = render(() => {
     capability = createPopoverPlugins()
-    return <><Button is={capability.plugins.trigger}>打开</Button><Card is={capability.plugins.body}>说明</Card></>
+    return (
+      <>
+        <Button is={capability.plugins.trigger}>打开</Button>
+        <Card is={capability.plugins.body}>说明</Card>
+      </>
+    )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   const controller = capability.controller
   const canceled = controller.showPopover.lazyExec()
   expect(typeof canceled.cancel).toBe('function')
   canceled.cancel()
-  const rejected = canceled.result.catch(error => error)
+  const rejected = canceled.result.catch((error) => error)
   expect((await rejected).name).toBe('AbortError')
   expect(body.matches(':popover-open')).toBe(false)
   expect(await controller.showPopover().result).toBeUndefined()

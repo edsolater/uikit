@@ -100,19 +100,19 @@ interface CardProps<Tag extends PivSupportedElementTag = 'div'>
 
 ### 从 Piv 继承的属性
 
-| 属性          | Card 中的含义                                                        |
-| ------------- | -------------------------------------------------------------------- |
+| 属性          | Card 中的含义                                                     |
+| ------------- | ----------------------------------------------------------------- |
 | `as`          | 选择 Card 根原生元素，默认是 `div`；不替代独立 Article 语义组件。 |
-| `children`    | 提供属于同一个信息单元的完整内容。                                   |
-| `id`          | 设置根元素原生 id。                                                  |
-| `if`          | 为 `false` 时 Card 与 children 都不进入 DOM。                        |
-| `class`       | 与根身份 `Card` 合并，用于业务身份或特殊表现。                       |
-| `style`       | 设置根元素行内样式或单实例 CSS 变量。                                |
-| `htmlProps`   | 设置原生 HTML、ARIA、`data-*` 或 DOM property。                      |
-| `on`          | 注册根元素原生事件；Card 本身不增加点击协议。                        |
-| `domRef`         | 取得根 DOM，作为命令式逃生口。                                       |
-| `is`       | 注入稳定性质或能力。                                                 |
-| `shadowProps` | 上层组件封装 Card 时转交低优先级 Piv props。                         |
+| `children`    | 提供属于同一个信息单元的完整内容。                                |
+| `id`          | 设置根元素原生 id。                                               |
+| `if`          | 为 `false` 时 Card 与 children 都不进入 DOM。                     |
+| `class`       | 与根身份 `Card` 合并，用于业务身份或特殊表现。                    |
+| `style`       | 设置根元素行内样式或单实例 CSS 变量。                             |
+| `htmlProps`   | 设置原生 HTML、ARIA、`data-*` 或 DOM property。                   |
+| `on`          | 注册根元素原生事件；Card 本身不增加点击协议。                     |
+| `domRef`      | 取得根 DOM，作为命令式逃生口。                                    |
+| `is`          | 注入稳定性质或能力。                                              |
+| `shadowProps` | 上层组件封装 Card 时转交低优先级 Piv props。                      |
 
 `as` 由 `PivSupportedElementTag` 约束，TypeScript 会根据所选标签检查 `htmlProps` 的原生属性类型。
 

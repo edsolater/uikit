@@ -106,11 +106,11 @@ Button.style.ts 消费 data-appearance、data-emphasis、data-tone 和 data-size
 
 以下列出公开颜色 Token 的复用示例，供内容引用或作为新定义的输入；完整公开清单见 [Button 设计规格](../../src/components/kits/Button/Button.spec.md)。这些 Token 由 Button 自身消费并在 address 自动定义：
 
-| Token                 | 定义内容               | 复用方式                           |
-| --------------------- | ---------------------- | ---------------------------------- |
-| buttonColorSource     | 背景、语气文字和边界共用的基色 | 内容引用、定义复用                  |
-| buttonSurfaceColor    | 最终背景色             | 内容引用、定义复用                  |
-| buttonContentColor    | 最终内容色             | 内容引用、定义复用                  |
+| Token              | 定义内容                       | 复用方式           |
+| ------------------ | ------------------------------ | ------------------ |
+| buttonColorSource  | 背景、语气文字和边界共用的基色 | 内容引用、定义复用 |
+| buttonSurfaceColor | 最终背景色                     | 内容引用、定义复用 |
+| buttonContentColor | 最终内容色                     | 内容引用、定义复用 |
 
 ```mermaid
 flowchart LR

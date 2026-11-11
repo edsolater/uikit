@@ -55,7 +55,8 @@ async function captureThumbnail(
       .map((animation) => animation.finished.catch(() => {})),
   )
   await page.screenshot({
-    ...(name === 'component-marker' || name === 'component-marker-structure-view-trigger'
+    ...(name === 'component-marker' ||
+    name === 'component-marker-structure-view-trigger'
       ? {}
       : {
           element: document.querySelector('.example-thumbnail-capture-stage')!,
@@ -93,7 +94,9 @@ for (const entry of exampleEntries) {
         entry.id === 'component-marker-structure-view-trigger'
       ) {
         await userEvent.click(
-          document.querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!,
+          document.querySelector<HTMLButtonElement>(
+            '.ComponentMarkerStructureViewTrigger',
+          )!,
         )
       }
     }))

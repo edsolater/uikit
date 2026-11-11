@@ -19,7 +19,17 @@ describe('Input', () => {
     const invalid = createState(false)
     const host = document.body.appendChild(document.createElement('div'))
     let controller!: InputController
-    dispose = render(() => <Input invalid={invalid} ref={current => { controller = current }} />, host)
+    dispose = render(
+      () => (
+        <Input
+          invalid={invalid}
+          ref={(current) => {
+            controller = current
+          }}
+        />
+      ),
+      host,
+    )
     const input = host.querySelector('input')!
     expect(val(controller.invalid)).toBe(false)
 

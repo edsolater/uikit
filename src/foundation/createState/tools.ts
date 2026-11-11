@@ -12,7 +12,9 @@ import { val } from './read'
  * const text = toStateString(createState(false))
  * val(text) // 'false'
  */
-export function toStateString(state: StateView<boolean>): StateView<'true' | 'false'>
+export function toStateString(
+  state: StateView<boolean>,
+): StateView<'true' | 'false'>
 export function toStateString<T>(state: StateView<T>): StateView<string>
 export function toStateString<T>(state: StateView<T>): StateView<string> {
   return state.map(String)

@@ -14,7 +14,8 @@ test('裸控件的输入、焦点、禁用、选项和弹窗样式由挂载结�
   const sheet = document.head.appendChild(document.createElement('style'))
   sheet.id = 'css-root'
   cssRoot.mount()
-  document.body.innerHTML = '<input placeholder="请输入"><button>确认</button><button disabled>禁用</button><select><option selected>选项</option></select><dialog>内容</dialog>'
+  document.body.innerHTML =
+    '<input placeholder="请输入"><button>确认</button><button disabled>禁用</button><select><option selected>选项</option></select><dialog>内容</dialog>'
   const input = document.querySelector('input')!
   const [button, disabled] = document.querySelectorAll('button')
   const select = document.querySelector('select')!
@@ -31,6 +32,8 @@ test('裸控件的输入、焦点、禁用、选项和弹窗样式由挂载结�
   expect(getComputedStyle(input).outlineStyle).toBe('solid')
   if (CSS.supports('appearance', 'base-select')) {
     expect(getComputedStyle(select).appearance).toBe('base-select')
-    expect(getComputedStyle(select, '::picker(select)').appearance).toBe('base-select')
+    expect(getComputedStyle(select, '::picker(select)').appearance).toBe(
+      'base-select',
+    )
   }
 })

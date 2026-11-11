@@ -21,7 +21,10 @@ export type MessageBoardProps = ComponentDescriptionProps & {
 }
 
 /** MessageBoard 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type MessageBoardController = KitController<MessageBoardProps, typeof messageBoardPropsDefinition>
+export type MessageBoardController = KitController<
+  MessageBoardProps,
+  typeof messageBoardPropsDefinition
+>
 
 /**
  * 面向操作结果的可访问反馈，不承担普通内容卡片职责。
@@ -39,7 +42,7 @@ export const MessageBoard = kit(
         class="MessageBoard"
         htmlProps={{
           'data-tone': props.tone,
-          role: derive(props.tone, (tone) =>
+          'role': derive(props.tone, (tone) =>
             tone === 'error' ? 'alert' : 'status',
           ),
         }}

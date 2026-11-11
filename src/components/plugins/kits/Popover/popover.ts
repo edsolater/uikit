@@ -4,7 +4,13 @@
  * 负责连接触发节点与原生浮层，声明定位、显隐操作和状态；不提供正文或材料。
  * 使用方在实际按钮和内容节点上分别安装两个角色。
  */
-import { getOrInsert, IdGenerator, task, type Task, type PromiseResultProxy } from '@edsolater/fnkit'
+import {
+  getOrInsert,
+  IdGenerator,
+  task,
+  type Task,
+  type PromiseResultProxy,
+} from '@edsolater/fnkit'
 import {
   createEffect,
   createState,
@@ -16,7 +22,10 @@ import {
   type State,
 } from '@/foundation'
 import { createInactivePlugins } from '@/components/plugins/tools/createInactivePlugins'
-import type { PluginCoreContext, PluginResult } from '@/components/plugins/tools/createInactivePlugin'
+import type {
+  PluginCoreContext,
+  PluginResult,
+} from '@/components/plugins/tools/createInactivePlugin'
 import './popover.style'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -201,9 +210,7 @@ function createPopoverGroup() {
  * 为单个角色提供显隐 Task；等待正文 DOM 后检查取消，再执行原生操作。
  * 原生 toggle 更新状态，关闭操作另读实际结果以覆盖节点移除不派事件的情况。
  */
-function createPopoverActions(
-  group: ReturnType<typeof createPopoverGroup>,
-) {
+function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
   return {
     isOpen: group.isOpen,
     /**
@@ -226,11 +233,13 @@ function createPopoverActions(
     /**
      * 切换或指定打开状态。
      */
-    togglePopover: task(async ({ canContinue }, options?: { force?: boolean }) => {
-      const body = await group.bodyTarget!
-      await canContinue()
-      body.togglePopover(options?.force)
-    }),
+    togglePopover: task(
+      async ({ canContinue }, options?: { force?: boolean }) => {
+        const body = await group.bodyTarget!
+        await canContinue()
+        body.togglePopover(options?.force)
+      },
+    ),
   }
 }
 
@@ -248,13 +257,14 @@ function popoverTriggerCore({
   group.triggerTarget = domProxy
   group.nativeTrigger = pluginOptions.triggerAction !== false
   addProps({ style: { 'anchor-name': group.anchor } })
-  if (group.nativeTrigger) addProps({
-    htmlProps: {
-      'popovertargetaction': pluginOptions.triggerAction ?? 'toggle',
-      'aria-expanded': toStateString(group.isOpen),
-      'aria-haspopup': 'dialog',
-    },
-  })
+  if (group.nativeTrigger)
+    addProps({
+      htmlProps: {
+        'popovertargetaction': pluginOptions.triggerAction ?? 'toggle',
+        'aria-expanded': toStateString(group.isOpen),
+        'aria-haspopup': 'dialog',
+      },
+    })
   return createPopoverActions(group)
 }
 
@@ -274,10 +284,11 @@ function popoverBodyCore({
   onCleanup(() => restoreAutoFocus?.())
   const position = withDefault(pluginOptions.$anchorPosition, 'top')
   // TODO：慢节点或作用域退出后关联可能晚执行，由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 接管就绪与取消。
-  if (group.nativeTrigger) Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
-    const button = trigger as HTMLButtonElement
-    button.popoverTargetElement = body
-  })
+  if (group.nativeTrigger)
+    Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
+      const button = trigger as HTMLButtonElement
+      button.popoverTargetElement = body
+    })
   addProps({
     style: {
       'position-anchor': group.anchor,
@@ -300,9 +311,10 @@ function popoverBodyCore({
           else pluginOptions.onBeforeClose?.(toggle)
           if (open && !toggle.defaultPrevented) {
             restoreAutoFocus?.()
-            restoreAutoFocus = pluginOptions.autoFocus === false
-              ? undefined
-              : preparePopoverAutoFocus(element, pluginOptions.autoFocus)
+            restoreAutoFocus =
+              pluginOptions.autoFocus === false
+                ? undefined
+                : preparePopoverAutoFocus(element, pluginOptions.autoFocus)
           }
         },
       },

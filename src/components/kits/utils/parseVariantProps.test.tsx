@@ -43,7 +43,9 @@ describe('createVariantPropsParser', () => {
         appearance: { undefined: 'outlined' },
       },
     )
-    const { effect: variantEffectProps, details } = parser({ constructor: 'length' })
+    const { effect: variantEffectProps, details } = parser({
+      constructor: 'length',
+    })
     expect(val(details.constructor)).toBe('length')
     expect(variantEffectProps[0].htmlProps!['data-constructor']).toBe(
       details.constructor,
@@ -132,9 +134,13 @@ describe('createVariantPropsParser', () => {
       expect(effect).toHaveBeenCalledOnce()
       expect(effectVariant).toBe(details.size)
       expect(variantEffectProps).toHaveLength(2)
-      expect(variantEffectProps[0].htmlProps!['data-effect-brand']).toBe(details.size)
+      expect(variantEffectProps[0].htmlProps!['data-effect-brand']).toBe(
+        details.size,
+      )
       expect(variantEffectProps[1].htmlProps!['data-size']).toBe(details.size)
-      expect(variantEffectProps.every(props => !('shadowProps' in props))).toBe(true)
+      expect(
+        variantEffectProps.every((props) => !('shadowProps' in props)),
+      ).toBe(true)
       expect(val(details.size)).toBeUndefined()
 
       large.set(true)

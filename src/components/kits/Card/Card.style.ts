@@ -7,4 +7,4 @@
  */
 import { rules } from '@/style-system'
 
-rules('.Card', { display: 'flow-root', 'margin-trim': 'block' })
+rules('.Card', { 'display': 'flow-root', 'margin-trim': 'block' })

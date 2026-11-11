@@ -65,7 +65,7 @@ export function createPointerDrag(
   )
 }
 
-/** 
+/**
  * 每个 Draggable 独占一个会话，同一时刻最多持有一次指针交互。
  * 一个实例代表一次完整拖动
  */
@@ -73,7 +73,9 @@ class PointerDragSession implements PointerDrag {
   private interaction: PointerInteraction | undefined
 
   constructor(
-    private options: Omit<PointerDragOptions, 'target'> & { target: HTMLElement },
+    private options: Omit<PointerDragOptions, 'target'> & {
+      target: HTMLElement
+    },
   ) {}
 
   start = (event: PointerEvent): void => {
@@ -161,7 +163,11 @@ class PointerDragSession implements PointerDrag {
     }
 
     interaction.active = {
-      drag: createInternalDrag(this.options.target, this.options.payload, this.options.id),
+      drag: createInternalDrag(
+        this.options.target,
+        this.options.payload,
+        this.options.id,
+      ),
       topLayer,
       compensation: this.options.activationJump
         ? { x: 0, y: 0 }

@@ -46,55 +46,112 @@ test('Article和Card裁剪自身边界，不改裸标签和Board网格', () => {
   const style = document.head.appendChild(document.createElement('style'))
   style.id = 'css-root'
   cssRoot.mount()
-  const children = () => <>
-    <Heading level={2}>首标题</Heading>
-    <p>中间正文</p>
-    <Heading level={2}>末标题</Heading>
-  </>
-  const dispose = render(() => <>
-    <Article style={{ display: 'flow-root' }}>{children()}</Article>
-    <Card>{children()}</Card>
-    <Card><Article>{children()}</Article></Card>
-    <Board as="section">{children()}</Board>
-    <article style={{ display: 'flow-root' }}>{children()}</article>
-    <section style={{ display: 'flow-root' }}>{children()}</section>
-    <div style={{ display: 'flow-root' }}>{children()}</div>
-  </>, host)
+  const children = () => (
+    <>
+      <Heading level={2}>首标题</Heading>
+      <p>中间正文</p>
+      <Heading level={2}>末标题</Heading>
+    </>
+  )
+  const dispose = render(
+    () => (
+      <>
+        <Article style={{ display: 'flow-root' }}>{children()}</Article>
+        <Card>{children()}</Card>
+        <Card>
+          <Article>{children()}</Article>
+        </Card>
+        <Board as="section">{children()}</Board>
+        <article style={{ display: 'flow-root' }}>{children()}</article>
+        <section style={{ display: 'flow-root' }}>{children()}</section>
+        <div style={{ display: 'flow-root' }}>{children()}</div>
+      </>
+    ),
+    host,
+  )
   try {
-    expect([...host.children].map(element => element.tagName)).toEqual(['ARTICLE', 'DIV', 'DIV', 'SECTION', 'ARTICLE', 'SECTION', 'DIV'])
+    expect([...host.children].map((element) => element.tagName)).toEqual([
+      'ARTICLE',
+      'DIV',
+      'DIV',
+      'SECTION',
+      'ARTICLE',
+      'SECTION',
+      'DIV',
+    ])
     const nestedCard = host.children[2]!
     const nestedArticle = nestedCard.firstElementChild!
     expect(nestedArticle.classList.contains('Card')).toBe(false)
     expect(nestedCard.classList.contains('Card')).toBe(true)
     expect(getComputedStyle(nestedArticle).padding).toBe('0px')
-    expect(getComputedStyle(nestedArticle).backgroundColor).toBe('rgba(0, 0, 0, 0)')
+    expect(getComputedStyle(nestedArticle).backgroundColor).toBe(
+      'rgba(0, 0, 0, 0)',
+    )
     expect(getComputedStyle(nestedArticle).borderTopWidth).toBe('0px')
     expect(getComputedStyle(nestedArticle).boxShadow).toBe('none')
-    expect(getComputedStyle(nestedCard).padding).toBe(getComputedStyle(host.children[1]!).padding)
-    for (const container of [host.children[0], host.children[1], nestedArticle] as HTMLElement[]) {
-      const first = container.firstElementChild!, last = container.lastElementChild!
+    expect(getComputedStyle(nestedCard).padding).toBe(
+      getComputedStyle(host.children[1]!).padding,
+    )
+    for (const container of [
+      host.children[0],
+      host.children[1],
+      nestedArticle,
+    ] as HTMLElement[]) {
+      const first = container.firstElementChild!,
+        last = container.lastElementChild!
       const content = first.nextElementSibling!
-      const computed = getComputedStyle(container), rect = container.getBoundingClientRect()
-      const innerTop = rect.top + parseFloat(computed.paddingTop) + parseFloat(computed.borderTopWidth)
-      const innerBottom = rect.bottom - parseFloat(computed.paddingBottom) - parseFloat(computed.borderBottomWidth)
-      expect(getComputedStyle(container).getPropertyValue('margin-trim')).toBe('block')
-      expect(first.getBoundingClientRect().top - innerTop, `${container.tagName}.${container.className}首边界`).toBeCloseTo(0, 2)
-      expect(innerBottom - last.getBoundingClientRect().bottom, `${container.tagName}.${container.className}末边界`).toBeCloseTo(0, 2)
-      const firstBottomMargin = parseFloat(getComputedStyle(first).marginBlockEnd)
+      const computed = getComputedStyle(container),
+        rect = container.getBoundingClientRect()
+      const innerTop =
+        rect.top +
+        parseFloat(computed.paddingTop) +
+        parseFloat(computed.borderTopWidth)
+      const innerBottom =
+        rect.bottom -
+        parseFloat(computed.paddingBottom) -
+        parseFloat(computed.borderBottomWidth)
+      expect(getComputedStyle(container).getPropertyValue('margin-trim')).toBe(
+        'block',
+      )
+      expect(
+        first.getBoundingClientRect().top - innerTop,
+        `${container.tagName}.${container.className}首边界`,
+      ).toBeCloseTo(0, 2)
+      expect(
+        innerBottom - last.getBoundingClientRect().bottom,
+        `${container.tagName}.${container.className}末边界`,
+      ).toBeCloseTo(0, 2)
+      const firstBottomMargin = parseFloat(
+        getComputedStyle(first).marginBlockEnd,
+      )
       const lastTopMargin = parseFloat(getComputedStyle(last).marginBlockStart)
       expect(firstBottomMargin).toBeGreaterThan(0)
       expect(lastTopMargin).toBeGreaterThan(0)
-      expect(content.getBoundingClientRect().top - first.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(firstBottomMargin)
-      expect(last.getBoundingClientRect().top - content.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(lastTopMargin)
+      expect(
+        content.getBoundingClientRect().top -
+          first.getBoundingClientRect().bottom,
+      ).toBeGreaterThanOrEqual(firstBottomMargin)
+      expect(
+        last.getBoundingClientRect().top -
+          content.getBoundingClientRect().bottom,
+      ).toBeGreaterThanOrEqual(lastTopMargin)
     }
     const board = host.children[3]!
     expect(getComputedStyle(board).display).toBe('grid')
     expect(getComputedStyle(board).getPropertyValue('margin-trim')).toBe('none')
     expect(parseFloat(getComputedStyle(board).gap)).toBeGreaterThan(0)
     for (const plain of [...host.children].slice(4)) {
-      expect(getComputedStyle(plain).getPropertyValue('margin-trim')).toBe('none')
-      expect(plain.firstElementChild!.getBoundingClientRect().top - plain.getBoundingClientRect().top).toBeGreaterThan(0)
-      expect(plain.getBoundingClientRect().bottom - plain.lastElementChild!.getBoundingClientRect().bottom).toBeGreaterThan(0)
+      expect(getComputedStyle(plain).getPropertyValue('margin-trim')).toBe(
+        'none',
+      )
+      expect(
+        plain.firstElementChild!.getBoundingClientRect().top -
+          plain.getBoundingClientRect().top,
+      ).toBeGreaterThan(0)
+      expect(
+        plain.getBoundingClientRect().bottom -
+          plain.lastElementChild!.getBoundingClientRect().bottom,
+      ).toBeGreaterThan(0)
     }
   } finally {
     dispose()
@@ -155,7 +212,9 @@ test('两种方言保持单节点同材质，反馈语气更新不污染旁边�
       originalPadding,
     )
     variant.set('soft')
-    await expect.poll(() => getComputedStyle(card).boxShadow).not.toBe(originalShadow)
+    await expect
+      .poll(() => getComputedStyle(card).boxShadow)
+      .not.toBe(originalShadow)
     expect(getComputedStyle(card).padding).toBe(getComputedStyle(board).padding)
     const border = getComputedStyle(card).borderTopColor
     tone.set('error')

@@ -26,11 +26,16 @@ export type LoopProps<T> = ComponentDescriptionProps & {
 }
 
 /** 列表来源与可干预展示字段。 */
-export type LoopController<T> = KitController<LoopProps<T>, typeof loopPropsDefinition>
+export type LoopController<T> = KitController<
+  LoopProps<T>,
+  typeof loopPropsDefinition
+>
 
 interface LoopComponent {
   <T>(props: LoopProps<T>): JSX.Element
-  controllers: ControllerCollection<{ readonly props: Omit<LoopController<unknown>['props'], 'each'> }>
+  controllers: ControllerCollection<{
+    readonly props: Omit<LoopController<unknown>['props'], 'each'>
+  }>
 }
 
 /**
@@ -38,7 +43,11 @@ interface LoopComponent {
  */
 // kit 原样包装泛型核心；这里恢复列表项与渲染回调的调用关联。
 export const Loop = kit<LoopProps<unknown>, typeof loopPropsDefinition>(
-  { name: 'Loop', description: '排列重复内容', availableProps: loopPropsDefinition },
+  {
+    name: 'Loop',
+    description: '排列重复内容',
+    availableProps: loopPropsDefinition,
+  },
   <T,>(props: LoopProps<T>) => {
     const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()
     const innerState = createState<T[]>([])

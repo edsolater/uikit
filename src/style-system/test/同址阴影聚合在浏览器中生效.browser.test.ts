@@ -42,9 +42,16 @@ test('聚合产物的 onFirstScan 新增同址贡献时继续聚合到稳定结�
     },
   })
   element.className = 'ActiveResult'
-  handles.push(rules('.ActiveResult', [[active, 'a'], [active, 'b']]))
+  handles.push(
+    rules('.ActiveResult', [
+      [active, 'a'],
+      [active, 'b'],
+    ]),
+  )
   cssRoot.mount()
-  expect(getComputedStyle(element).getPropertyValue('--aggregate-active').trim()).toBe('a b c')
+  expect(
+    getComputedStyle(element).getPropertyValue('--aggregate-active').trim(),
+  ).toBe('a b c')
 })
 
 test('同址三层阴影按声明顺序计算，状态各自聚合且同时成立仍按层叠选值', () => {

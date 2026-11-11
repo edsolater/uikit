@@ -31,15 +31,20 @@ type ControllersOf<Definitions extends Record<string, AnyPluginCore>> = {
 }
 
 /** 每个角色对应的配置；必填字段保持必填。 */
-export type PluginsOptions<Definitions extends Record<string, AnyPluginCore>> = {
-  [Name in keyof Definitions as {} extends OptionsOf<Definitions[Name]>
-    ? never
-    : Name]: OptionsOf<Definitions[Name]>
-} & {
-  [Name in keyof Definitions as {} extends OptionsOf<Definitions[Name]>
-    ? Name
-    : never]?: OptionsOf<Definitions[Name]>
-}
+export type PluginsOptions<Definitions extends Record<string, AnyPluginCore>> =
+  {
+    [
+      Name in keyof Definitions as {} extends OptionsOf<Definitions[Name]>
+        ? never
+        : Name
+    ]: OptionsOf<Definitions[Name]>
+  } & {
+    [
+      Name in keyof Definitions as {} extends OptionsOf<Definitions[Name]>
+        ? Name
+        : never
+    ]?: OptionsOf<Definitions[Name]>
+  }
 
 /** 全部角色都可缺省时组合调用允许无参数。 */
 type PluginsCallParameters<Definitions extends Record<string, AnyPluginCore>> =
@@ -51,9 +56,7 @@ type PluginsCallParameters<Definitions extends Record<string, AnyPluginCore>> =
 export type InactivePlugins<
   Definitions extends Record<string, AnyPluginCore>,
   Extra extends object = {},
-> = (
-  ...options: PluginsCallParameters<Definitions>
-) => {
+> = (...options: PluginsCallParameters<Definitions>) => {
   plugins: {
     [Name in keyof Definitions]: PluginResult<MembersOf<Definitions[Name]>>
   }
@@ -91,9 +94,7 @@ export function createInactivePlugins<
   },
 ): InactivePlugins<Definitions, Extra> {
   const definitions = buildTimeDefinitions as Definitions
-  return ((
-    pluginOptions: Record<string, object | undefined> = {},
-  ) => {
+  return ((pluginOptions: Record<string, object | undefined> = {}) => {
     // 只属于这一次组合调用，不返回给调用者。
     const id = {}
     const plugins = map(definitions, (roleCore, name) => {
@@ -106,7 +107,10 @@ export function createInactivePlugins<
       })
       return inactivePlugin(pluginOptions[name])
     })
-    const controller = map(plugins, (role) => role.controller) as ControllersOf<Definitions>
+    const controller = map(
+      plugins,
+      (role) => role.controller,
+    ) as ControllersOf<Definitions>
     return {
       plugins,
       controller: { ...controller, ...options?.controller?.(controller) },

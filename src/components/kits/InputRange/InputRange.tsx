@@ -9,13 +9,35 @@ import './InputRange.style'
 import { useFormFieldId } from '../FormField/FormField'
 import { val } from '@/foundation'
 
-export type InputRangeProps = PivProps<'input'> & ComponentDescriptionProps & { ref?: RefReceiver<InputRangeController> }
-const inputRangePropsDefinition = { ...pivPropsDefinition, ...componentDescriptionPropsDefinition, ref: 'only-through-prop' } as const
-export type InputRangeController = KitController<InputRangeProps, typeof inputRangePropsDefinition>
+export type InputRangeProps = PivProps<'input'> &
+  ComponentDescriptionProps & { ref?: RefReceiver<InputRangeController> }
+const inputRangePropsDefinition = {
+  ...pivPropsDefinition,
+  ...componentDescriptionPropsDefinition,
+  ref: 'only-through-prop',
+} as const
+export type InputRangeController = KitController<
+  InputRangeProps,
+  typeof inputRangePropsDefinition
+>
 
 /** 使用原生 min、max、step 和 value 调整连续数值。 */
-export const InputRange = kit({ name: 'InputRange', description: '调整范围内的数值', availableProps: inputRangePropsDefinition },
+export const InputRange = kit(
+  {
+    name: 'InputRange',
+    description: '调整范围内的数值',
+    availableProps: inputRangePropsDefinition,
+  },
   (props: InputRangeProps) => {
     const fieldId = useFormFieldId()
-    return <Piv as="input" shadowProps={props} id={val(props.id) ?? fieldId ?? undefined} class="InputRange" htmlProps={{ type: 'range' }} />
-  })
+    return (
+      <Piv
+        as="input"
+        shadowProps={props}
+        id={val(props.id) ?? fieldId ?? undefined}
+        class="InputRange"
+        htmlProps={{ type: 'range' }}
+      />
+    )
+  },
+)

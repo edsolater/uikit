@@ -22,4 +22,3 @@ export const textPropsDefinition = {
   tone: 'state-source-view',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<TextProps>
-

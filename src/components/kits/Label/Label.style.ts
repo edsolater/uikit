@@ -2,13 +2,13 @@
 import { rules } from '@/style-system'
 
 rules('.Label', {
-  display: 'inline-flex',
+  'display': 'inline-flex',
   'align-items': 'center',
-  gap: '4px',
+  'gap': '4px',
   'font-size': '13px',
   'line-height': 1.2,
   'min-block-size': '1lh',
-  color: '#64748b',
+  'color': '#64748b',
   'min-width': 0,
 })
 rules(['.Label', '> label'], { cursor: 'pointer' })

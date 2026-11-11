@@ -28,8 +28,12 @@ export function FlowExample() {
         <Button plain>取消</Button>
       </Flow>
       <Flow direction="row" label="可伸展的内容区">
-        <Flow width="10rem"><Text>固定宽度</Text></Flow>
-        <Flow grow><Text>占用剩余空间</Text></Flow>
+        <Flow width="10rem">
+          <Text>固定宽度</Text>
+        </Flow>
+        <Flow grow>
+          <Text>占用剩余空间</Text>
+        </Flow>
       </Flow>
     </Flow>
   )

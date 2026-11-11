@@ -10,10 +10,7 @@ function Example() {
   return (
     <>
       <Piv is={topLayer()}>始终位于 Top Layer</Piv>
-      <Piv
-        is={capability}
-        on={{ click: () => capability.controller.leave() }}
-      >
+      <Piv is={capability} on={{ click: () => capability.controller.leave() }}>
         由 Controller 控制
       </Piv>
     </>

@@ -150,28 +150,47 @@ test('固定列、内容列和自动填充持续消费来源，内层布局不�
   const grow = createState(false)
   const label = createState('固定分栏')
   const columns = createState<number | string>(3)
-  dispose = render(() => <Flow direction="row">
-    <Flow width={width} grow={grow} label={label}>
-      <Grid columns={columns} responsive={false} label="内容列">
-        <Grid><Flow>嵌套一列</Flow></Grid><Flow>第二项</Flow><Flow>第三项</Flow>
-      </Grid>
-    </Flow>
-  </Flow>, host)
+  dispose = render(
+    () => (
+      <Flow direction="row">
+        <Flow width={width} grow={grow} label={label}>
+          <Grid columns={columns} responsive={false} label="内容列">
+            <Grid>
+              <Flow>嵌套一列</Flow>
+            </Grid>
+            <Flow>第二项</Flow>
+            <Flow>第三项</Flow>
+          </Grid>
+        </Flow>
+      </Flow>
+    ),
+    host,
+  )
   const [outer, container, inner] = host.querySelectorAll<HTMLElement>('.Flow')
   const [grid, nested] = host.querySelectorAll<HTMLElement>('.Grid')
   expect(getComputedStyle(container!).width).toBe('420px')
-  expect(getComputedStyle(nested!).gridTemplateColumns.split(' ')).toHaveLength(1)
+  expect(getComputedStyle(nested!).gridTemplateColumns.split(' ')).toHaveLength(
+    1,
+  )
   expect(getComputedStyle(inner!).width).not.toBe('420px')
-  width.set('360px'); label.set('已更新')
+  width.set('360px')
+  label.set('已更新')
   await expect.poll(() => getComputedStyle(container!).width).toBe('360px')
   await expect.poll(() => container!.getAttribute('aria-label')).toBe('已更新')
   await page.viewport(390, 844)
-  await expect.poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(3)
+  await expect
+    .poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length)
+    .toBe(3)
   columns.set('repeat(8, max-content)')
-  await expect.poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(8)
+  await expect
+    .poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length)
+    .toBe(8)
   columns.set('repeat(auto-fit, minmax(100px, 1fr))')
-  await expect.poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length).toBe(3)
-  width.set(undefined); grow.set(true)
+  await expect
+    .poll(() => getComputedStyle(grid!).gridTemplateColumns.split(' ').length)
+    .toBe(3)
+  width.set(undefined)
+  grow.set(true)
   await expect.poll(() => getComputedStyle(container!).flexGrow).toBe('1')
   expect(getComputedStyle(outer!).flexWrap).toBe('wrap')
   await page.viewport(1024, 768)
@@ -192,6 +211,8 @@ test('主题链接有可辨颜色，默认无线，悬停与当前项提供下�
   href.set('/second')
   await expect.poll(() => link.getAttribute('href')).toBe('/second')
   await userEvent.hover(link)
-  await expect.poll(() => getComputedStyle(link).textDecorationLine).toBe('underline')
+  await expect
+    .poll(() => getComputedStyle(link).textDecorationLine)
+    .toBe('underline')
   expect(CSS.supports('color', getComputedStyle(link).color)).toBe(true)
 })

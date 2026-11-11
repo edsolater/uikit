@@ -147,7 +147,8 @@ export const exampleEntries: ExampleEntry[] = [
     title: 'Drag and Drop',
     category: exampleCategories.plugin,
     summary: '按共享标识分组的拖放协作。',
-    thumbnail: new URL('../thumbnails/drag-and-drop.webp', import.meta.url).href,
+    thumbnail: new URL('../thumbnails/drag-and-drop.webp', import.meta.url)
+      .href,
     content: DragAndDropExample,
   },
   {
@@ -210,7 +211,8 @@ export const exampleEntries: ExampleEntry[] = [
     title: 'NavigationRegion',
     category: exampleCategories.component,
     summary: '具名导航区域与章节链接。',
-    thumbnail: new URL('../thumbnails/navigation-region.webp', import.meta.url).href,
+    thumbnail: new URL('../thumbnails/navigation-region.webp', import.meta.url)
+      .href,
     content: NavigationRegionExample,
   },
   {
@@ -348,8 +350,10 @@ export const exampleEntries: ExampleEntry[] = [
     title: 'ComponentMarkerStructureViewTrigger',
     category: exampleCategories.component,
     summary: '手动查看组件结构与继续操作。',
-    thumbnail: new URL('../thumbnails/component-marker-structure-view-trigger.webp', import.meta.url)
-      .href,
+    thumbnail: new URL(
+      '../thumbnails/component-marker-structure-view-trigger.webp',
+      import.meta.url,
+    ).href,
     content: KitMarkerStructureViewTriggerExample,
   },
 ]
@@ -425,7 +429,10 @@ function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
                 loading="lazy"
                 decoding="async"
               />
-              <span class="example-link-ribbon" style={{ '--example-category-color': entry.category.color }}>
+              <span
+                class="example-link-ribbon"
+                style={{ '--example-category-color': entry.category.color }}
+              >
                 {entry.level === undefined
                   ? entry.category.label
                   : `${entry.category.label} · ${entry.level} 级`}

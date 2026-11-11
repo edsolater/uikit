@@ -13,7 +13,9 @@ function Example() {
     <>
       <Piv is={hoverable({ initialHovered: true })} />
       <Piv is={capability}>受控 hover</Piv>
-      <Button on={{ click: () => capability.controller.hover() }}>进入 hover</Button>
+      <Button on={{ click: () => capability.controller.hover() }}>
+        进入 hover
+      </Button>
     </>
   )
 }

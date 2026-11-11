@@ -6,7 +6,7 @@ import { createState, type State } from './state'
 import type { Source } from './source'
 
 test('直接接收上游State，读取值且独立写入，后续上游变化继续传入', () => {
-  const scope = createRoot(dispose => {
+  const scope = createRoot((dispose) => {
     const outside = createState(false)
     return { outside, inside: createState(outside), dispose }
   })
@@ -28,23 +28,28 @@ test('直接接收上游State，读取值且独立写入，后续上游变化继
 })
 
 test('StateView及Source泛型直接作为来源，选项与相对更新使用内容值类型', () => {
-  function build<T>(source: Source<T>) { return createState(source) }
-  const scope = createRoot(dispose => {
+  function build<T>(source: Source<T>) {
+    return createState(source)
+  }
+  const scope = createRoot((dispose) => {
     const outside = createState(2)
-    const inside = createState<number>(outside.map(value => value * 2), {
-      equals(previous, next) {
-        expectTypeOf(previous).toEqualTypeOf<number>()
-        expectTypeOf(next).toEqualTypeOf<number>()
-        return previous === next
+    const inside = createState<number>(
+      outside.map((value) => value * 2),
+      {
+        equals(previous, next) {
+          expectTypeOf(previous).toEqualTypeOf<number>()
+          expectTypeOf(next).toEqualTypeOf<number>()
+          return previous === next
+        },
       },
-    })
+    )
     return { outside, inside, forwarded: build(outside), dispose }
   })
   try {
     expectTypeOf(scope.inside).toEqualTypeOf<State<number>>()
     expectTypeOf(scope.forwarded).toEqualTypeOf<State<number>>()
     expect(scope.inside.read()).toBe(4)
-    scope.inside.set(previous => {
+    scope.inside.set((previous) => {
       expectTypeOf(previous).toEqualTypeOf<number>()
       return previous + 1
     })
@@ -61,11 +66,11 @@ test('StateView及Source泛型直接作为来源，选项与相对更新使用�
 })
 
 test('计算来源可直接返回State，选择变化后跟随新来源并停止响应旧来源', () => {
-  const scope = createRoot(dispose => {
+  const scope = createRoot((dispose) => {
     const chooseFirst = createState(true)
     const first = createState(1)
     const second = createState(2)
-    const selected = createState(() => chooseFirst.read() ? first : second)
+    const selected = createState(() => (chooseFirst.read() ? first : second))
     return { chooseFirst, first, second, selected, dispose }
   })
   try {
@@ -90,7 +95,7 @@ test('计算来源可直接返回State，选择变化后跟随新来源并停止
 
 test('Promise完成后得到State来源，直接读取值并持续跟随其更新', async () => {
   const deferred = Promise.withResolvers<State<number>>()
-  const scope = createRoot(dispose => {
+  const scope = createRoot((dispose) => {
     const outside = createState(3)
     return { outside, inside: createState(deferred.promise), dispose }
   })
@@ -101,7 +106,7 @@ test('Promise完成后得到State来源，直接读取值并持续跟随其更�
     scope.outside.set(7)
     flush()
     expect(scope.inside.read()).toBe(7)
-    scope.inside.set(previous => previous + 1)
+    scope.inside.set((previous) => previous + 1)
     await until(() => scope.inside.read() === 8)
     expect(scope.outside.read()).toBe(7)
   } finally {
@@ -111,9 +116,12 @@ test('Promise完成后得到State来源，直接读取值并持续跟随其更�
 
 test('异步来源尚未完成时，相对更新等待State中的内容值', async () => {
   const deferred = Promise.withResolvers<State<number>>()
-  const scope = createRoot(dispose => ({ inside: createState(deferred.promise), dispose }))
+  const scope = createRoot((dispose) => ({
+    inside: createState(deferred.promise),
+    dispose,
+  }))
   try {
-    scope.inside.set(previous => {
+    scope.inside.set((previous) => {
       expectTypeOf(previous).toEqualTypeOf<number>()
       expect(previous).toBe(4)
       return previous + 1
@@ -127,12 +135,12 @@ test('异步来源尚未完成时，相对更新等待State中的内容值', asy
 
 test('Promise中的State仍在等待时，相对更新等待最终内容值', async () => {
   const deferred = Promise.withResolvers<number>()
-  const scope = createRoot(dispose => {
+  const scope = createRoot((dispose) => {
     const outside = createState(deferred.promise)
     return { inside: createState(Promise.resolve(outside)), dispose }
   })
   try {
-    scope.inside.set(previous => previous + 1)
+    scope.inside.set((previous) => previous + 1)
     await Promise.resolve()
     await Promise.resolve()
     deferred.resolve(5)
@@ -143,8 +151,10 @@ test('Promise中的State仍在等待时，相对更新等待最终内容值', as
 })
 
 test('后续赋值也接受State来源，直接读取内容并跟随该来源更新', () => {
-  const scope = createRoot(dispose => ({
-    outside: createState(2), inside: createState(0), dispose,
+  const scope = createRoot((dispose) => ({
+    outside: createState(2),
+    inside: createState(0),
+    dispose,
   }))
   try {
     scope.inside.set(scope.outside)
@@ -153,7 +163,7 @@ test('后续赋值也接受State来源，直接读取内容并跟随该来源更
     scope.outside.set(4)
     flush()
     expect(scope.inside.read()).toBe(4)
-    scope.inside.set(previous => previous + 1)
+    scope.inside.set((previous) => previous + 1)
     flush()
     expect(scope.inside.read()).toBe(5)
     expect(scope.outside.read()).toBe(4)

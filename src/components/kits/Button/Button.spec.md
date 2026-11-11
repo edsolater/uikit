@@ -31,22 +31,22 @@ Button 背景配方直接引用 surfaceColor，普通内容引用 contentColor�
 
 组件独有且具有稳定视觉含义的控制量独立命名并公开，包括颜色、字号、字重、尺度、内容间隔、两向 padding、阴影和透明度。Source 表达独立来源阶段，不能与最终结果混同。取舍依据见[样式书写的一些权衡建议](../../../style-system/doc/样式书写的一些权衡建议.md)。
 
-| 导出 Token            | 职责与值来源                                           | 参与的 CSS 或后续定义                       |
-| --------------------- | ------------------------------------------------------ | ------------------------------------------- |
-| `buttonColorSource`   | brandColor 与危险语气的 badColor，包含交互颜色规则     | 背景、内容、边界和焦点颜色的来源            |
-| `buttonSurfaceColor`  | 基色与 surfaceColor 的混色，包含外观差异               | `background-color`                          |
-| `buttonContentColor`  | contentColor、语气基色与填充外观的 paperColor          | `color`                                     |
-| `buttonBoundaryColor` | 基色的边界颜色配方                                     | `outline` 的颜色及 buttonBorderColor 的材料 |
-| `buttonBorderColor`   | 普通透明边界，outlined 选择 buttonBoundaryColor        | `border-color`                              |
-| `buttonTextSize`      | textSize 及其尺寸状态                                  | `font-size`                                 |
-| `buttonFontWeight`    | 基于 fontWeight 的按钮字重                             | `font-weight`                               |
-| `buttonMinHeight`     | controlSize 及其尺寸状态                               | `min-height`                                |
-| `buttonGap`           | baseSpace 及其尺寸状态                                 | `gap`                                       |
-| `buttonPaddingBlock`  | 间距基准与组件尺寸差异                                 | `padding` 的上下值                          |
-| `buttonPaddingInline` | 间距基准的横向比例与组件尺寸差异                       | `padding` 的左右值                          |
-| `buttonBoxShadow`     | 基础阴影材料与外观、交互、禁用差异                     | `box-shadow`                                |
-| `buttonOpacitySource` | 强调选择后、禁用缩放前的独立透明度阶段                 | 外部引用及 buttonOpacity 的基础内容         |
-| `buttonOpacity`       | 强调透明度与禁用缩放共同决定的有效透明度               | `opacity`                                   |
+| 导出 Token            | 职责与值来源                                       | 参与的 CSS 或后续定义                       |
+| --------------------- | -------------------------------------------------- | ------------------------------------------- |
+| `buttonColorSource`   | brandColor 与危险语气的 badColor，包含交互颜色规则 | 背景、内容、边界和焦点颜色的来源            |
+| `buttonSurfaceColor`  | 基色与 surfaceColor 的混色，包含外观差异           | `background-color`                          |
+| `buttonContentColor`  | contentColor、语气基色与填充外观的 paperColor      | `color`                                     |
+| `buttonBoundaryColor` | 基色的边界颜色配方                                 | `outline` 的颜色及 buttonBorderColor 的材料 |
+| `buttonBorderColor`   | 普通透明边界，outlined 选择 buttonBoundaryColor    | `border-color`                              |
+| `buttonTextSize`      | textSize 及其尺寸状态                              | `font-size`                                 |
+| `buttonFontWeight`    | 基于 fontWeight 的按钮字重                         | `font-weight`                               |
+| `buttonMinHeight`     | controlSize 及其尺寸状态                           | `min-height`                                |
+| `buttonGap`           | baseSpace 及其尺寸状态                             | `gap`                                       |
+| `buttonPaddingBlock`  | 间距基准与组件尺寸差异                             | `padding` 的上下值                          |
+| `buttonPaddingInline` | 间距基准的横向比例与组件尺寸差异                   | `padding` 的左右值                          |
+| `buttonBoxShadow`     | 基础阴影材料与外观、交互、禁用差异                 | `box-shadow`                                |
+| `buttonOpacitySource` | 强调选择后、禁用缩放前的独立透明度阶段             | 外部引用及 buttonOpacity 的基础内容         |
+| `buttonOpacity`       | 强调透明度与禁用缩放共同决定的有效透明度           | `opacity`                                   |
 
 这些控制点使 rules 直接表达属性与角色的对应。固定字体继承、行高、圆角、边框形式和光标反馈等内部规则仍可内联，不为每个常量另建公开 Token。
 

@@ -22,7 +22,9 @@ export function KitMarkerStructureViewTriggerExample() {
   const count = createState(0)
   return (
     <Flow>
-      <Heading level={2}>ComponentMarkerStructureViewTrigger · 组件结构查看</Heading>
+      <Heading level={2}>
+        ComponentMarkerStructureViewTrigger · 组件结构查看
+      </Heading>
       <Text p>点击右下角开关检查组件边界，再关闭查看以继续操作。</Text>
       <Card description="记录本次操作次数">
         <Flow>

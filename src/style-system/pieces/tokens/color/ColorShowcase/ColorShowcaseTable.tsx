@@ -21,7 +21,9 @@ function readColorRows() {
   const rootStyle = getComputedStyle(document.documentElement)
   return colorShowcaseMaterials.map((material) => ({
     name: cssTokenName(material),
-    value: formatColorText(rootStyle.getPropertyValue(cssTokenName(material)).trim() || '未定义'),
+    value: formatColorText(
+      rootStyle.getPropertyValue(cssTokenName(material)).trim() || '未定义',
+    ),
     preview: material.name!,
   }))
 }
@@ -31,7 +33,10 @@ export function ColorShowcaseTable() {
   onMount(() => {
     const refresh = () => rows.set(readColorRows())
     const observer = new MutationObserver(refresh)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] })
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'style'],
+    })
     refresh()
     return () => observer.disconnect()
   })
@@ -43,7 +48,10 @@ export function ColorShowcaseTable() {
       renderParts={{
         tableCell: {
           preview: (value) => (
-            <Piv class="ColorShowcasePreview" htmlProps={{ 'data-color-material': String(value) }} />
+            <Piv
+              class="ColorShowcasePreview"
+              htmlProps={{ 'data-color-material': String(value) }}
+            />
           ),
         },
       }}

@@ -35,18 +35,21 @@ export const Label = kit(
   (props: LabelProps) => {
     const fieldId = useFormFieldId()
     return (
-    <Piv as="span" class="Label">
-      <Piv as="label" htmlProps={{ for: val(props.for) ?? fieldId ?? undefined }}>
-        {props.children}
+      <Piv as="span" class="Label">
+        <Piv
+          as="label"
+          htmlProps={{ for: val(props.for) ?? fieldId ?? undefined }}
+        >
+          {props.children}
+        </Piv>
+        <Show when={hasTooltipContent(props.tooltip)}>
+          <Help
+            tooltip={props.tooltip}
+            trigger={props.tooltipTrigger}
+            name={stateView(() => val(props.children) + '说明')}
+          />
+        </Show>
       </Piv>
-      <Show when={hasTooltipContent(props.tooltip)}>
-        <Help
-          tooltip={props.tooltip}
-          trigger={props.tooltipTrigger}
-          name={stateView(() => val(props.children) + '说明')}
-        />
-      </Show>
-    </Piv>
     )
   },
 )

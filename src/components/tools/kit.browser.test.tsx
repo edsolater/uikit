@@ -80,10 +80,7 @@ test('有效初始 ref 才启用控制，换接复用实例，两个定义的集
     creations++
     return <Piv>{props.value}</Piv>
   }
-  const First = kit(
-    { name: 'First', availableProps },
-    core,
-  )
+  const First = kit({ name: 'First', availableProps }, core)
   const Second = kit({ name: 'Second', availableProps }, core)
   let firstController: FixtureController
   let replacementController: FixtureController

@@ -66,8 +66,10 @@ test('默认值先按 result 递归求值，代理仍按 Source 读取', async (
   expect(await resolve(() => val(undefined, proxy))).toBe(business)
   const handler = () => 7
   const callableProxy = toPromiseResultProxy(Promise.resolve(handler))
-  expectTypeOf(() => val(undefined, callableProxy)).returns.toEqualTypeOf<typeof handler>()
-  const { read, dispose } = createRoot(dispose => ({
+  expectTypeOf(() => val(undefined, callableProxy)).returns.toEqualTypeOf<
+    typeof handler
+  >()
+  const { read, dispose } = createRoot((dispose) => ({
     read: createMemo(() => val(undefined, callableProxy)),
     dispose,
   }))

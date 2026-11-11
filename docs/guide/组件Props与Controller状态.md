@@ -48,11 +48,11 @@ Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card
 
 泛型实例通过 ref 保留精确类型。各 `.controllers.props` 可同时包含不同 Tag、列表项或 Row，因此输入集合只提供安全的共同字段：
 
-| 组件集合 | 留给精确实例 ref 的字段 |
-| --- | --- |
+| 组件集合     | 留给精确实例 ref 的字段                    |
+| ------------ | ------------------------------------------ |
 | Board / Card | as、htmlProps、on、domRef、shadowProps、is |
-| Loop | each |
-| Table | data、keys、renderParts |
+| Loop         | each                                       |
+| Table        | data、keys、renderParts                    |
 
 Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供，不进入 `Controller.props`。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的 `defaultOpen` 属于 `body` 的 Plugin 配置，只用于默认打开，不是组件 `Controller.props` 字段；其事件回调在真实事件发生时读取当前配置。
 

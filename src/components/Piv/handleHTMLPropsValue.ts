@@ -5,7 +5,12 @@
  */
 
 import { isArray, isFunction, isObject, result } from '@edsolater/fnkit'
-import { createRenderEffect, onCleanup, val, type MayArraySource } from '@/foundation'
+import {
+  createRenderEffect,
+  onCleanup,
+  val,
+  type MayArraySource,
+} from '@/foundation'
 
 // 已经进入 DOM 写入边界的终端值，不再在这里做业务类型细分。
 export type HTMLPropPrimitive = string | number | boolean | null | undefined

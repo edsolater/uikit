@@ -246,7 +246,9 @@ describe('配置插件消费', () => {
         render(() => <Piv is={is} />, document.createElement('div'))
 
       expect(() => mount(plainCallback as never)).toThrow('需要 Plugin')
-      expect(() => mount({ plugin: plainCallback } as never)).toThrow('需要 Plugin')
+      expect(() => mount({ plugin: plainCallback } as never)).toThrow(
+        '需要 Plugin',
+      )
       expect(() => mount({} as never)).toThrow('需要 Plugin')
 
       mount(capability)()

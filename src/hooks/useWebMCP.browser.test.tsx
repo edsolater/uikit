@@ -22,12 +22,18 @@ afterEach(() => {
 test('工具读取组件上下文与最新状态，并随组件卸载注销', async () => {
   const tools = new Map<string, WebMCPTool<{ increment: number }>>()
   const modelContext = {
-    registerTool: async (tool: WebMCPTool<{ increment: number }>, options: { signal: AbortSignal }) => {
+    registerTool: async (
+      tool: WebMCPTool<{ increment: number }>,
+      options: { signal: AbortSignal },
+    ) => {
       tools.set(tool.name, tool)
       options.signal.addEventListener('abort', () => tools.delete(tool.name))
     },
   }
-  Object.defineProperty(document, 'modelContext', { configurable: true, value: modelContext })
+  Object.defineProperty(document, 'modelContext', {
+    configurable: true,
+    value: modelContext,
+  })
 
   const Context = createContext<string>()
   const count = createState(0)
@@ -41,7 +47,10 @@ test('工具读取组件上下文与最新状态，并随组件卸载注销', as
     registered = useWebMCP<{ increment: number }>({
       name: 'increment',
       description: '增加计数并返回所属页面与更新前计数',
-      inputSchema: { type: 'object', properties: { increment: { type: 'number' } } },
+      inputSchema: {
+        type: 'object',
+        properties: { increment: { type: 'number' } },
+      },
       execute: ({ increment }, { signal }) => {
         const previousCount = count.read()
         count.set(previousCount + increment)
@@ -52,15 +61,23 @@ test('工具读取组件上下文与最新状态，并随组件卸载注销', as
   }
 
   const host = document.body.appendChild(document.createElement('main'))
-  dispose = render(() => <Context value="当前页面"><Counter /></Context>, host)
+  dispose = render(
+    () => (
+      <Context value="当前页面">
+        <Counter />
+      </Context>
+    ),
+    host,
+  )
   await registered!
   expect([...tools.keys()]).toEqual(['increment'])
 
   count.set(7)
   flush()
   const signal = new AbortController().signal
-  expect(await tools.get('increment')!.execute({ increment: 2 }, { signal }))
-    .toEqual({ label: '当前页面', previousCount: 7, signal })
+  expect(
+    await tools.get('increment')!.execute({ increment: 2 }, { signal }),
+  ).toEqual({ label: '当前页面', previousCount: 7, signal })
   flush()
   expect(host.textContent).toBe('9')
 

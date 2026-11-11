@@ -19,8 +19,10 @@ afterEach(() => {
 test('本地示例可分别使用输入干预和组件能力控制同一按钮', () => {
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => <ButtonExample />, host)
-  const findButton = (text: string) => [...host.querySelectorAll('button')]
-    .find(button => button.textContent?.trim() === text)!
+  const findButton = (text: string) =>
+    [...host.querySelectorAll('button')].find(
+      (button) => button.textContent?.trim() === text,
+    )!
   const target = findButton('被控制的按钮')
 
   findButton('通过输入干预加载').click()
@@ -37,7 +39,18 @@ test('本地示例可分别使用输入干预和组件能力控制同一按钮',
 test('组件自定义状态操作位于顶层，改变状态和界面而不回写同名输入', () => {
   const host = document.body.appendChild(document.createElement('div'))
   let button!: ButtonController
-  dispose = render(() => <Button ref={controller => { button = controller }}>保存</Button>, host)
+  dispose = render(
+    () => (
+      <Button
+        ref={(controller) => {
+          button = controller
+        }}
+      >
+        保存
+      </Button>
+    ),
+    host,
+  )
   const element = host.querySelector('button')!
 
   expect(val(button.loading)).toBe(false)
@@ -60,7 +73,19 @@ test('组件自定义状态操作位于顶层，改变状态和界面而不回�
 test('通用输入干预可修改状态和普通内容，组件能力仍按自身规则读取状态', () => {
   const host = document.body.appendChild(document.createElement('div'))
   let button!: ButtonController
-  dispose = render(() => <Button loading={false} ref={controller => { button = controller }}>保存</Button>, host)
+  dispose = render(
+    () => (
+      <Button
+        loading={false}
+        ref={(controller) => {
+          button = controller
+        }}
+      >
+        保存
+      </Button>
+    ),
+    host,
+  )
   const element = host.querySelector('button')!
 
   button.props.loading.set(true)
@@ -82,7 +107,19 @@ test('顶层状态操作尊重外部声明，props逃生入口仍可干预并继
   const host = document.body.appendChild(document.createElement('div'))
   const loading = createState(false)
   let button!: ButtonController
-  dispose = render(() => <Button loading={loading} ref={controller => { button = controller }}>保存</Button>, host)
+  dispose = render(
+    () => (
+      <Button
+        loading={loading}
+        ref={(controller) => {
+          button = controller
+        }}
+      >
+        保存
+      </Button>
+    ),
+    host,
+  )
   const element = host.querySelector('button')!
 
   button.setStatus('loading', true)
@@ -140,12 +177,11 @@ test('组件引用控制状态，DOM 引用聚焦按钮，整体命令只包含�
   expect(Array.from(results)).toHaveLength(1)
   expect(first.disabled).toBe(true)
   expect(second.disabled).toBe(false)
-  expect(Button.controllers.props.loading.map((status) => val(status))).toEqual([true])
+  expect(Button.controllers.props.loading.map((status) => val(status))).toEqual(
+    [true],
+  )
   expect(
-    Button.controllers
-      .props.disabled
-      .map((status) => val(status))
-      .join(','),
+    Button.controllers.props.disabled.map((status) => val(status)).join(','),
   ).toBe('true')
   externallyDisabled.set(true)
   flush()
@@ -184,15 +220,17 @@ test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例
   button.props!.class.set('隐藏期间的类名')
   Button.controllers.props.loading.set(false)
   flush()
-  expect(Button.controllers.props.loading.map((status) => val(status))).toEqual([
-    false,
-  ])
+  expect(Button.controllers.props.loading.map((status) => val(status))).toEqual(
+    [false],
+  )
 
   visible.set(true)
   flush()
   expect(buttonElement.getAttribute?.('aria-busy')).not.toBe('true')
   expect(host.querySelector('button')!.disabled).toBe(true)
-  expect(host.querySelector('button')!.classList.contains('隐藏期间的类名')).toBe(true)
+  expect(
+    host.querySelector('button')!.classList.contains('隐藏期间的类名'),
+  ).toBe(true)
 
   mounted.set(false)
   flush()
@@ -214,10 +252,25 @@ test('隐藏按钮仍在构建时报告原分类冲突，显示后消费同一�
   const [button, receive] = createRef<ButtonController>()
   const visible = createState(false)
   const receiveExplicit = vi.fn()
-  dispose = render(() => <>
-    <Button if={visible} ref={receive} filled outlined>动作</Button>
-    <Button if={visible} ref={receiveExplicit} appearance={undefined} filled outlined>显式组</Button>
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Button if={visible} ref={receive} filled outlined>
+          动作
+        </Button>
+        <Button
+          if={visible}
+          ref={receiveExplicit}
+          appearance={undefined}
+          filled
+          outlined
+        >
+          显式组
+        </Button>
+      </>
+    ),
+    host,
+  )
   expect(host.querySelector('button')).toBeNull()
   expect(warning).toHaveBeenCalledTimes(2)
   visible.set(true)
@@ -234,10 +287,15 @@ test('隐藏按钮仍在构建时报告原分类冲突，显示后消费同一�
 test('组件ref才启用控制层，单独domRef与undefined组件ref仍是普通按钮', () => {
   const host = document.body.appendChild(document.createElement('div'))
   const receive = vi.fn()
-  dispose = render(() => <>
-    <Button domRef={receive}>普通</Button>
-    <Button {...{ ref: undefined }}>未接入</Button>
-  </>, host)
+  dispose = render(
+    () => (
+      <>
+        <Button domRef={receive}>普通</Button>
+        <Button {...{ ref: undefined }}>未接入</Button>
+      </>
+    ),
+    host,
+  )
   expect(receive).toHaveBeenCalledOnce()
   expect(host.querySelectorAll('button')).toHaveLength(2)
   expect(Array.from(Button.controllers)).toHaveLength(0)
@@ -248,7 +306,14 @@ test('缺省分类与状态可在运行时指令修改，确定描述词和回�
   const [button, receive] = createRef<ButtonController>()
   const first = vi.fn()
   const next = vi.fn()
-  dispose = render(() => <Button ref={receive} onClick={first}>动作</Button>, host)
+  dispose = render(
+    () => (
+      <Button ref={receive} onClick={first}>
+        动作
+      </Button>
+    ),
+    host,
+  )
   const element = host.querySelector('button')!
   expect(element.dataset.appearance).toBe('outlined')
   button.props!.filled.set(true)
@@ -279,7 +344,12 @@ test('上游状态仍跟随原Source，ref只能由Prop换接并释放接收器'
   const next = vi.fn((_controller: ButtonController) => cleanupNext)
   const receive = createState(() => first)
   let controller!: ButtonController
-  const props = { disabled: external, get ref() { return val(receive) } }
+  const props = {
+    disabled: external,
+    get ref() {
+      return val(receive)
+    },
+  }
   dispose = render(() => <Button {...props}>动作</Button>, host)
   controller = first.mock.calls[0][0]
   expect('ref' in controller).toBe(false)
@@ -308,7 +378,7 @@ test('原未声明的内容和DOM响应字段通过同一Props链更新', () => 
   const element = host.querySelector('button')!
   button.props!.class.set('运行时类名')
   button.props!.id.set('runtime-button')
-  button.props!.htmlProps.set({ title: '运行时标题', 'data-probe': '完成' })
+  button.props!.htmlProps.set({ 'title': '运行时标题', 'data-probe': '完成' })
   button.props!.name.set('运行时动作')
   button.props!.children.set('运行时内容')
   flush()
@@ -318,5 +388,4 @@ test('原未声明的内容和DOM响应字段通过同一Props链更新', () => 
   expect(element.dataset.probe).toBe('完成')
   expect(element.getAttribute('aria-label')).toBe('运行时动作')
   expect(element.textContent).toBe('运行时内容')
-
 })

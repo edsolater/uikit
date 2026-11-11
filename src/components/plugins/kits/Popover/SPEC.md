@@ -9,23 +9,33 @@
 ```tsx
 function Example() {
   const [initialFocus, receiveInitialFocus] = createDomRef<HTMLButtonElement>()
-  const { plugins: popoverPlugins, controller: popoverController } = createPopoverPlugins({
-    body: {
-      $anchorPosition: 'top',
-      $anchorGap: 'md',
-      autoFocus: initialFocus,
-    },
-  })
+  const { plugins: popoverPlugins, controller: popoverController } =
+    createPopoverPlugins({
+      body: {
+        $anchorPosition: 'top',
+        $anchorGap: 'md',
+        autoFocus: initialFocus,
+      },
+    })
 
-  return <>
-    <Button is={popoverPlugins.trigger}>打开说明</Button>
-    <Card is={popoverPlugins.body}>
-      <Text>正文由调用者提供。</Text>
-      <Button domRef={receiveInitialFocus} on={{ click() {
-        popoverController.body.hidePopover()
-      } }}>关闭说明</Button>
-    </Card>
-  </>
+  return (
+    <>
+      <Button is={popoverPlugins.trigger}>打开说明</Button>
+      <Card is={popoverPlugins.body}>
+        <Text>正文由调用者提供。</Text>
+        <Button
+          domRef={receiveInitialFocus}
+          on={{
+            click() {
+              popoverController.body.hidePopover()
+            },
+          }}
+        >
+          关闭说明
+        </Button>
+      </Card>
+    </>
+  )
 }
 ```
 
@@ -35,14 +45,14 @@ function Example() {
 
 # 配置
 
-| 配置位置 | 字段 | 行为与默认值 |
-| --- | --- | --- |
-| `trigger` | `triggerAction` | `'toggle'`／`'show'`／`'hide'`／false，默认 `'toggle'`；键盘使用实际按钮的原生行为。false 只保留锚定，不注入按钮 target 关联和 dialog／expanded 语义 |
-| `body` | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'top'`；按来源更新定位，空间不足时由浏览器原生翻向 |
-| `body` | `$anchorGap` | `Source<'sm' \| 'md' \| 'lg' \| undefined>`，默认 `'md'`；指定锚点与主体的间距档位，实际距离由 `popover.style.ts` 映射 |
-| `body` | `popover` | `'auto'`／`'hint'`／`'manual'`，默认 `'auto'`；外部点击、Escape 等关闭行为沿对应原生模式 |
-| `body` | `defaultOpen` | `Source<boolean \| undefined>`，默认 false；只用于首次挂载的初始化判断，不随来源后续变化持续开关 |
-| `body` | `autoFocus` | `Partial<HTMLElement> \| false`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素，false 禁用这份自动聚焦声明 |
+| 配置位置  | 字段              | 行为与默认值                                                                                                                                         |
+| --------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trigger` | `triggerAction`   | `'toggle'`／`'show'`／`'hide'`／false，默认 `'toggle'`；键盘使用实际按钮的原生行为。false 只保留锚定，不注入按钮 target 关联和 dialog／expanded 语义 |
+| `body`    | `$anchorPosition` | `Source<'top' \| 'right' \| 'bottom' \| 'left' \| undefined>`，默认 `'top'`；按来源更新定位，空间不足时由浏览器原生翻向                              |
+| `body`    | `$anchorGap`      | `Source<'sm' \| 'md' \| 'lg' \| undefined>`，默认 `'md'`；指定锚点与主体的间距档位，实际距离由 `popover.style.ts` 映射                               |
+| `body`    | `popover`         | `'auto'`／`'hint'`／`'manual'`，默认 `'auto'`；外部点击、Escape 等关闭行为沿对应原生模式                                                             |
+| `body`    | `defaultOpen`     | `Source<boolean \| undefined>`，默认 false；只用于首次挂载的初始化判断，不随来源后续变化持续开关                                                     |
+| `body`    | `autoFocus`       | `Partial<HTMLElement> \| false`，接受实际 DOM 元素或既有 `createDomRef` 的元素引用；省略时选择 body 内第一个可聚焦元素，false 禁用这份自动聚焦声明   |
 
 `defaultOpen` 读取的是 Source 的完成值，不能把 State／Promise 对象本身的真值当成 true。位置与间距是持续来源，默认打开是一次初始化，两者用途不同。
 
@@ -62,12 +72,12 @@ function Example() {
 
 此处记录当前已实现的原生状态回调；Start／End／Progress／Cancel 生命周期仍是[现役 Plan 中的后续目标](../../../../../docs/plans/261106_Popover与Tooltip能力重构.md#后续生命周期已定名称尚未实现)，当前 `onOpen`／`onClose` 不表示 CSS 过渡完成。
 
-| 原生阶段 | 回调顺序 |
-| --- | --- |
-| `beforetoggle`，即将打开 | `onBeforeToggle(true, event)` → `onBeforeOpen(event)` |
-| `beforetoggle`，即将关闭 | `onBeforeToggle(false, event)` → `onBeforeClose(event)` |
-| `toggle`，实际打开 | 先按 `:popover-open` 写入同组状态，再 `onToggle(true, event)` → `onOpen(event)` |
-| `toggle`，实际关闭 | 先按 `:popover-open` 写入同组状态，再 `onToggle(false, event)` → `onClose(event)` |
+| 原生阶段                 | 回调顺序                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `beforetoggle`，即将打开 | `onBeforeToggle(true, event)` → `onBeforeOpen(event)`                             |
+| `beforetoggle`，即将关闭 | `onBeforeToggle(false, event)` → `onBeforeClose(event)`                           |
+| `toggle`，实际打开       | 先按 `:popover-open` 写入同组状态，再 `onToggle(true, event)` → `onOpen(event)`   |
+| `toggle`，实际关闭       | 先按 `:popover-open` 写入同组状态，再 `onToggle(false, event)` → `onClose(event)` |
 
 同一阶段转交同一个原生事件，事件发生时读取当前回调。打开前可以在前置回调中调用 `event.preventDefault()`；取消后不能报告已经打开，也不会因此触发打开后的回调。能否取消由原生事件的 `cancelable` 决定，不能承诺用它阻止原生关闭。
 
@@ -82,7 +92,7 @@ const { trigger: triggerController, body: bodyController } = popoverController
 const controller = popoverController
 
 controller.showPopover === triggerController.showPopover // true
-controller.hidePopover === bodyController.hidePopover   // true
+controller.hidePopover === bodyController.hidePopover // true
 controller.togglePopover === triggerController.togglePopover // true
 
 controller.showPopover()
@@ -92,10 +102,10 @@ controller.togglePopover({ force: true })
 controller.togglePopover({ force: false })
 ```
 
-| 方法 | 行为 |
-| --- | --- |
-| `showPopover()` | 请求原生打开，初始焦点由 body 的 `autoFocus` 配置决定 |
-| `hidePopover()` | 请求原生关闭；Plugin 不再额外恢复触发端焦点 |
+| 方法                      | 行为                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| `showPopover()`           | 请求原生打开，初始焦点由 body 的 `autoFocus` 配置决定                                 |
+| `hidePopover()`           | 请求原生关闭；Plugin 不再额外恢复触发端焦点                                           |
 | `togglePopover(options?)` | `force` 省略时切换，true 请求打开，false 请求关闭；焦点遵守上述打开配置和原生关闭行为 |
 
 每个指令入口声明为 `Task`，每次调用同步返回独立的 `TaskResult<void>`。可以忽略结果，也可以等待 `execution.result`，直到正文 DOM 取得、取消检查和原生操作完成；这不表示原生 `toggle` 事件已送达或 CSS 过渡已结束。原生状态仍以 `isOpen` 和实际事件为准，不新增成功 boolean。
@@ -128,7 +138,13 @@ Controller 完整不代表元素已经插入文档。显隐 Task 会等待 `domP
 `tooltip` 仍是一元自身能力：
 
 ```tsx
-<Text is={tooltip({ content: '补充说明', $anchorPosition: 'top', $anchorGap: 'md' })}>
+<Text
+  is={tooltip({
+    content: '补充说明',
+    $anchorPosition: 'top',
+    $anchorGap: 'md',
+  })}
+>
   正文
 </Text>
 ```

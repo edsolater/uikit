@@ -7,7 +7,8 @@ test('组件入口登记三项 is 能力及滚动条样式', () => {
   style.id = 'css-root'
   cssRoot.mount()
   const host = document.body.appendChild(document.createElement('div'))
-  host.className = 'is:backdrop-root is:scroll-area is:self-host-scroll-behavior'
+  host.className =
+    'is:backdrop-root is:scroll-area is:self-host-scroll-behavior'
   try {
     const computed = getComputedStyle(host)
     expect(computed.clipPath).toBe('inset(0px)')

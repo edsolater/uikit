@@ -10,18 +10,36 @@ import { Select } from '../Select/Select'
 
 test('各字段自动关联，点击标题聚焦自己的控件', async () => {
   const host = document.body.appendChild(document.createElement('main'))
-  const dispose = render(() => <>
-    <FormField><Label>文字</Label><Input /></FormField>
-    <FormField><Label>范围</Label><InputRange /></FormField>
-    <FormField><Label>选项</Label><Select value="a" options={[{ value: 'a', label: '甲' }]} /></FormField>
-  </>, host)
+  const dispose = render(
+    () => (
+      <>
+        <FormField>
+          <Label>文字</Label>
+          <Input />
+        </FormField>
+        <FormField>
+          <Label>范围</Label>
+          <InputRange />
+        </FormField>
+        <FormField>
+          <Label>选项</Label>
+          <Select value="a" options={[{ value: 'a', label: '甲' }]} />
+        </FormField>
+      </>
+    ),
+    host,
+  )
   try {
-    const labels = [...host.querySelectorAll('label')], controls = [...host.querySelectorAll('input,select')]
-    expect(new Set(controls.map(control => control.id)).size).toBe(3)
+    const labels = [...host.querySelectorAll('label')],
+      controls = [...host.querySelectorAll('input,select')]
+    expect(new Set(controls.map((control) => control.id)).size).toBe(3)
     for (let i = 0; i < labels.length; i++) {
       expect(labels[i]!.htmlFor).toBe(controls[i]!.id)
       await userEvent.click(labels[i]!)
       expect(document.activeElement).toBe(controls[i])
     }
-  } finally { dispose(); host.remove() }
+  } finally {
+    dispose()
+    host.remove()
+  }
 })

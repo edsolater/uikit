@@ -23,7 +23,10 @@ export type LinkProps = ComponentDescriptionProps & {
 }
 
 /** Link 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type LinkController = KitController<LinkProps, typeof linkPropsDefinition>
+export type LinkController = KitController<
+  LinkProps,
+  typeof linkPropsDefinition
+>
 
 /**
  * 保留原生导航、另开页面与当前项语义的链接。
@@ -40,12 +43,12 @@ export const Link = kit(
         as="a"
         class="Link"
         htmlProps={{
-          href: props.href,
+          'href': props.href,
           'aria-current': derive(props.current, (current) =>
             current ? 'page' : undefined,
           ),
-          target: props.newTab ? '_blank' : undefined,
-          rel: props.newTab ? 'noopener noreferrer' : undefined,
+          'target': props.newTab ? '_blank' : undefined,
+          'rel': props.newTab ? 'noopener noreferrer' : undefined,
         }}
       >
         {props.children}

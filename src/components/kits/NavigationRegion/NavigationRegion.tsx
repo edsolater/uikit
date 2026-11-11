@@ -20,7 +20,10 @@ export type NavigationRegionProps = ComponentDescriptionProps & {
 }
 
 /** NavigationRegion 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type NavigationRegionController = KitController<NavigationRegionProps, typeof navigationRegionPropsDefinition>
+export type NavigationRegionController = KitController<
+  NavigationRegionProps,
+  typeof navigationRegionPropsDefinition
+>
 
 /**
  * 组织具名导航区域。

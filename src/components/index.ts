@@ -36,7 +36,19 @@ export * from './kits/Text/Text'
 export * from './kits/Label/Label'
 export * from './kits/Help/Help'
 export * from './kits/Heading/Heading'
-export { createPopoverPlugins, type AnchorPosition, type PopoverTriggerOptions, type PopoverBodyOptions, type AnchorGap, type PopoverOptions, type PopoverPlugins, type PopoverResult, type PopoverController, type PopoverTriggerController, type PopoverBodyController } from './plugins/kits/Popover/popover'
+export {
+  createPopoverPlugins,
+  type AnchorPosition,
+  type PopoverTriggerOptions,
+  type PopoverBodyOptions,
+  type AnchorGap,
+  type PopoverOptions,
+  type PopoverPlugins,
+  type PopoverResult,
+  type PopoverController,
+  type PopoverTriggerController,
+  type PopoverBodyController,
+} from './plugins/kits/Popover/popover'
 export * from './kits/Card/Card'
 export {
   Board,
@@ -47,7 +59,11 @@ export {
   type BoardControllerCollection,
 } from './kits/Board/Board'
 export { boardBorder } from './kits/Board/Board.style'
-export { Article, type ArticleProps, type ArticleController } from './kits/Article/Article'
+export {
+  Article,
+  type ArticleProps,
+  type ArticleController,
+} from './kits/Article/Article'
 export * from './kits/Table/Table'
 export * from './kits/kitContext'
 export * from './kits/utils/parseVariantProps'
