@@ -4,7 +4,7 @@
  * 负责连接触发节点与原生浮层，声明定位、显隐操作和状态；不提供正文或材料。
  * 使用方在实际按钮和内容节点上分别安装两个角色。
  */
-import { IdGenerator, task, type Task, type PromiseResultProxy } from '@edsolater/fnkit'
+import { getOrInsert, IdGenerator, task, type Task, type PromiseResultProxy } from '@edsolater/fnkit'
 import {
   createEffect,
   createState,
@@ -177,7 +177,6 @@ export interface PopoverResult {
 }
 
 const popoverIdGenerator = new IdGenerator('uikit-popover')
-// TODO：跨项目统一将 FNKit 的 mapGet 更名为 getOrInsert。
 const popoverGroups = new WeakMap<
   object,
   ReturnType<typeof createPopoverGroup>
@@ -245,7 +244,7 @@ function popoverTriggerCore({
   domProxy,
   id,
 }: PluginCoreContext<PopoverTriggerOptions>): PopoverTriggerController {
-  const group = popoverGroups.getOrInsertComputed(id!, createPopoverGroup)
+  const group = getOrInsert(popoverGroups, id!, createPopoverGroup)
   group.triggerTarget = domProxy
   group.nativeTrigger = pluginOptions.triggerAction !== false
   addProps({ style: { 'anchor-name': group.anchor } })
@@ -269,7 +268,7 @@ function popoverBodyCore({
   domProxy,
   id,
 }: PluginCoreContext<PopoverBodyOptions>): PopoverBodyController {
-  const group = popoverGroups.getOrInsertComputed(id!, createPopoverGroup)
+  const group = getOrInsert(popoverGroups, id!, createPopoverGroup)
   group.bodyTarget = domProxy
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
