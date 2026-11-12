@@ -59,7 +59,7 @@ type ConditionInputItem = Condition | string | readonly ConditionInputItem[]
 /** Condition 地址输入；仅顶层缺省表示当前位置。 */
 export type ConditionInput = ConditionInputItem | undefined
 
-/** 统一普通地址与结构化主体状态路径；不在消费处拼接 CSS。 */
+/** 统一类名、复合 CSS 与显式 Condition；状态或伪元素可作为独立地址层。 */
 export function resolveConditionPath(
   input: ConditionInput,
 ): Condition[] | undefined {
@@ -69,9 +69,16 @@ export function resolveConditionPath(
     if (Array.isArray(item)) {
       // for-of 保留稀疏孔为 undefined，交由规则入口既有校验拒绝。
       for (const child of item) visit(child)
-    } else {
-      path.push(isString(item) ? condition(item) : (item as Condition))
-    }
+    } else if (isString(item)) {
+      // 单类地址的冒号属于类名；复合 CSS 与显式 Condition 原样保留。
+      path.push(
+        condition(
+          /^\.[^\s.#[\]>+~,()]+$/.test(item)
+            ? item.replaceAll(':', '\\:')
+            : item,
+        ),
+      )
+    } else path.push(item as Condition)
   }
   visit(input)
   return path

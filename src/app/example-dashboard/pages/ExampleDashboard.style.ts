@@ -231,7 +231,7 @@ rules('.structure-manager', {
   'border-radius': multiply(baseRadius, 3),
   'background': '#fff5f5',
 })
-rules('.structure-manager::before', {
+rules(['.structure-manager', '&::before'], {
   'content': '"wrapper from plugin"',
   'color': 'red',
   'font-size': smallText,

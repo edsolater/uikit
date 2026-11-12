@@ -18,6 +18,18 @@
 
 Pieces 是可复用材料的统称；Atom 表示组合中一块具体材料。普通值、表达式与有状态的共享材料统一通过 Token 表达。
 
+## 类名选择器
+
+点开头的单个类名地址（如 `.is:scroll-area`）表达完整真实类名，冒号属于类名；地址入口将其转义为 CSS 类选择器。它可与层级地址及伪元素组合：
+
+```ts
+rules(['@layer is', '.is:scroll-area', '&::-webkit-scrollbar-track'], {
+  background: 'transparent',
+})
+```
+
+伪类或伪元素应写在独立地址层，例如 `['.Item', '&:hover']`；需要完整原始 CSS 时使用 `condition('.Item:hover')`。复合 CSS 地址保留原样；地址归一不依赖浏览器 DOM，可在 Node 和 Bun 中使用。
+
 ## 创建 Token
 
 ```ts

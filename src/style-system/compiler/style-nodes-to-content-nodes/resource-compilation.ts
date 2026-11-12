@@ -5,13 +5,13 @@
  *
  * 让共享资源保留全部存活消费者，并按生成时的规则身份关联。
  */
-import { isObject, isString } from '@edsolater/fnkit'
+import { isObject } from '@edsolater/fnkit'
 import { propertyName } from '../../key'
 import type { Rule, Rules } from '../../rule'
 import type { JSSContentContext, JSSContent } from '../../content'
 import { rulesToStyleNodes } from '../rules-to-style-nodes'
 import type { ASTSession } from '../ast-controller'
-import { condition, conditionAddressKey } from '../../condition'
+import { resolveConditionPath, conditionAddressKey } from '../../condition'
 import type { JSSStyleNode } from '../contracts'
 
 /** 内容的一次激活及其规则产物；同一 Rule 身份可被多个激活记录共享。 */
@@ -36,9 +36,7 @@ function ruleAddress(
     identities.set(identity, identities.size)
   return JSON.stringify([
     conditionAddressKey({
-      targetConditionPath: (conditionPath ?? []).map((item) =>
-        isString(item) ? condition(item) : item,
-      ),
+      targetConditionPath: resolveConditionPath(conditionPath) ?? [],
       stateConditionPath: [],
     }),
     key === undefined ? undefined : propertyName(key),

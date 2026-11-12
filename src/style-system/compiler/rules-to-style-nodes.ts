@@ -7,7 +7,7 @@ import {
   isString,
 } from '@edsolater/fnkit'
 import {
-  condition,
+  resolveConditionPath,
   type ConditionPath,
   type TargetConditionPath,
 } from '../condition'
@@ -40,9 +40,7 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
       for (const [relativePath, ruleKey, ruleContent] of rules) {
         const targetConditionPath = [
           ...parentPath,
-          ...(relativePath ?? []).map((item) =>
-            isString(item) ? condition(item) : item,
-          ),
+          ...(resolveConditionPath(relativePath) ?? []),
         ]
         assert(
           targetConditionPath.every((item) => isString(item.header)),

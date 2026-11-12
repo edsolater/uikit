@@ -14,7 +14,7 @@ rules(['@layer reset', ':where(.top-layer)'], {
 })
 rules(['@layer uikit', '.top-layer'], { 'box-shadow': topLayerShadow })
 rules(['@layer uikit', '.top-layer-anchor'], { 'pointer-events': 'none' })
-rules(['@layer uikit', '.top-layer-anchor::after'], {
+rules(['@layer uikit', '.top-layer-anchor', '&::after'], {
   'content': '""',
   'position': 'absolute',
   'inset': 0,

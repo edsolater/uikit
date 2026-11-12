@@ -24,7 +24,7 @@ rules('.StructureViewOverlay', {
   'pointer-events': 'none',
 })
 
-rules('.StructureViewOverlay::backdrop', { display: 'none' })
+rules(['.StructureViewOverlay', '&::backdrop'], { display: 'none' })
 
 rules('.StructureViewOverlay > canvas', {
   'position': 'absolute',

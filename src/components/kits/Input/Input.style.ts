@@ -116,4 +116,6 @@ rules(inputAddress, [
     radius: inputRadius,
   }),
 ])
-rules(['@layer uikit', '.Input::placeholder'], { color: inputPlaceholderColor })
+rules(['@layer uikit', '.Input', '&::placeholder'], {
+  color: inputPlaceholderColor,
+})

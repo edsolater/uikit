@@ -265,7 +265,7 @@ test('翻向条件作用于正文后代和伪元素，不作用于容器自身',
     rules(['.FlipBody', whenPopoverFlip], { color: 'rgb(40, 50, 60)' }),
     rules('.FlipChild', { color: 'rgb(100, 0, 0)' }),
     rules(['.FlipChild', whenPopoverFlip], { color: 'rgb(0, 0, 200)' }),
-    rules(['.FlipChild::before', whenPopoverFlip], { content: '"翻向"' }),
+    rules(['.FlipChild', '&::before', whenPopoverFlip], { content: '"翻向"' }),
   ]
   cssRoot.mount()
   const host = document.body.appendChild(document.createElement('main'))
