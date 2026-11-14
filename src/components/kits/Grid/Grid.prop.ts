@@ -6,7 +6,11 @@ import type { GridProps } from './Grid'
 export const gridPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   columns: 'state-value-view',
+  columnSpan: 'state-value-view',
   responsive: 'state-value-view',
+  gap: 'state-value-view',
+  columnRule: 'state-value-view',
+  rowRule: 'state-value-view',
   grow: 'state-value-view',
   label: 'state-source-view',
   children: 'state-value-view',

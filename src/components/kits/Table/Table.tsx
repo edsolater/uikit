@@ -40,6 +40,8 @@ export type TableProps<
   compact?: Source<boolean | undefined>
   /** 各列的最小宽度，单位为 px。 */
   columnMinWidths?: Partial<Record<ColumnKey, number>>
+  /** 各列的原生CSS首选宽度；默认auto，内容最小宽度仍由表格布局负责。 */
+  columnWidths?: Partial<Record<ColumnKey, string>>
   /** 各列的原生单元格提示，读取原始行和零基行号。 */
   cellTitle?: Partial<
     Record<ColumnKey, (row: Row, index: number) => string | undefined>
@@ -85,6 +87,7 @@ interface TableComponent {
       | 'keys'
       | 'renderParts'
       | 'columnMinWidths'
+      | 'columnWidths'
       | 'cellTitle'
       | 'cellIntensity'
     >
@@ -146,6 +149,8 @@ export const Table = kit<
                     as="th"
                     htmlProps={{ 'data-compact': props.compact }}
                     style={{
+                      '--table-column-width':
+                        props.columnWidths?.[columnKey] ?? 'auto',
                       '--table-column-min-width':
                         props.columnMinWidths?.[columnKey] === undefined
                           ? '0px'
@@ -182,6 +187,8 @@ export const Table = kit<
                             'data-compact': props.compact,
                           }}
                           style={{
+                            '--table-column-width':
+                              props.columnWidths?.[columnKey] ?? 'auto',
                             '--table-column-min-width':
                               props.columnMinWidths?.[columnKey] === undefined
                                 ? '0px'

@@ -16,6 +16,7 @@ export const tablePropsDefinition = {
   renderParts: 'state-value-view',
   compact: 'state-source-view',
   columnMinWidths: 'state-value-view',
+  columnWidths: 'state-value-view',
   cellTitle: 'state-value-view',
   cellIntensity: 'state-value-view',
   ref: 'only-through-prop',

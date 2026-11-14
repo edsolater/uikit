@@ -1,7 +1,7 @@
 /**
  * 顺序内容流的排列样式。
  *
- * 保持固定间距，按自身方向与伸展状态安排空间。
+ * 保持实例指定间距，按自身方向与伸展状态安排空间。
  *
  * 分栏和子组件外观由各自主体负责。
  */
@@ -25,7 +25,7 @@ rules('.Flow', {
   'flex-direction': direction,
   'flex-wrap': wrap,
   'align-items': alignment,
-  'gap': '1rem',
+  'gap': 'var(--flow-gap)',
   'min-width': '0',
   'width': 'var(--flow-width)',
   flex,

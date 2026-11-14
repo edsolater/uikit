@@ -50,6 +50,7 @@ rules('.Table > table > :is(thead,tbody) > tr > :is(th,td)', {
   'white-space': whiteSpace,
   'font-size': fontSize,
   'min-width': 'var(--table-column-min-width)',
+  'width': 'var(--table-column-width)',
   'border-bottom': valueSequence('1px', 'solid', lineColor(contentColor)),
   'text-align': 'left',
   'vertical-align': 'top',

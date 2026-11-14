@@ -17,8 +17,15 @@ export type GridProps = ComponentDescriptionProps & {
   ref?: RefReceiver<GridController>
   /** 数字表示等宽列数；字符串直接表示 CSS 列模板，例如 repeat(auto-fit, minmax(12rem, 1fr))。 */
   columns?: Source<number | string>
+  /** 作为父网格子项跨越的列数；未设置时由原生自动放置。 */
+  columnSpan?: Source<number | undefined>
   /** 默认窄于 48rem 时收为单列；false 保持指定列结构。 */
   responsive?: Source<boolean>
+  /** 子项间距，使用原生CSS gap值，默认1rem。 */
+  gap?: Source<string | undefined>
+  /** 原生列／行间隙装饰，不绘制子项外框；默认无装饰。 */
+  columnRule?: Source<string | undefined>
+  rowRule?: Source<string | undefined>
   grow?: Source<boolean | undefined>
   label?: Source<string | undefined>
   children?: JSX.Element
@@ -31,7 +38,7 @@ export type GridController = KitController<
 >
 
 /**
- * 按列数或列模板分栏，固定间隔 1rem；默认一列且窄屏收为单列，responsive=false 时保持列结构。
+ * 按列数或列模板分栏，默认间隔 1rem；默认一列且窄屏收为单列，responsive=false 时保持列结构。
  */
 export const Grid = kit(
   {
@@ -44,6 +51,13 @@ export const Grid = kit(
       <Piv
         class="Grid"
         style={{
+          '--grid-column':
+            val(props.columnSpan) === undefined
+              ? 'auto'
+              : `span ${val(props.columnSpan)}`,
+          '--grid-gap': val(props.gap) ?? '1rem',
+          '--grid-column-rule': val(props.columnRule) ?? 'none',
+          '--grid-row-rule': val(props.rowRule) ?? 'none',
           '--grid-columns':
             typeof val(props.columns) === 'string'
               ? val(props.columns)

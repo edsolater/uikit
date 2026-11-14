@@ -20,5 +20,6 @@ export const textPropsDefinition = {
   p: 'state-untracked',
   emphasis: 'state-untracked',
   tone: 'state-source-view',
+  small: 'state-source-view',
   ref: 'only-through-prop',
 } satisfies PropsDefinition<TextProps>

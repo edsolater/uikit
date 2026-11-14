@@ -6,6 +6,7 @@ import type { FlowProps } from './Flow'
 export const flowPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   direction: 'state-source-view',
+  gap: 'state-value-view',
   width: 'state-value-view',
   grow: 'state-value-view',
   label: 'state-source-view',

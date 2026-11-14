@@ -30,6 +30,10 @@ rules('.Text', {
       [stateCondition('&[data-tone="result"]'), contentColorTheme],
     ],
   }),
+  'font-size': token('inherit', {
+    name: 'text-font-size',
+    state: [[stateCondition('&[data-small="true"]'), '0.8em']],
+  }),
   'white-space': 'normal',
   'overflow-wrap': 'anywhere',
 })

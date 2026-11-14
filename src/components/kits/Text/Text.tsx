@@ -20,6 +20,8 @@ export type TextProps = Omit<
 > &
   ComponentDescriptionProps & {
     children?: Source<string | number | undefined>
+    /** 使用父级字号的80%，保持原文字语气。 */
+    small?: Source<boolean | undefined>
     /** 特殊运行期需求下接收本实例 Controller，初始界面仍由 Props 表达。 */
     ref?: RefReceiver<TextController>
     /** 文字自身的语气，不改变其内容或字段状态。 */
@@ -58,7 +60,7 @@ export const Text = kit(
       }
       shadowProps={props}
       class="Text"
-      htmlProps={{ 'data-tone': props.tone }}
+      htmlProps={{ 'data-tone': props.tone, 'data-small': props.small }}
     >
       {props.children}
     </Piv>
