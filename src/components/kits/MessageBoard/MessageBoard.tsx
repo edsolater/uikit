@@ -33,7 +33,7 @@ export const MessageBoard = kit(
   {
     name: 'MessageBoard',
     description: '呈现操作结果反馈',
-    availableProps: messageBoardPropsDefinition,
+    propsDefinition: messageBoardPropsDefinition,
   },
   (props: MessageBoardProps) => {
     return (

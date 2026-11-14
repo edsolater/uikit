@@ -54,7 +54,7 @@ export const Input = kit<InputProps, typeof inputPropsDefinition>(
   {
     name: 'Input',
     description: '编辑单行内容',
-    availableProps: inputPropsDefinition,
+    propsDefinition: inputPropsDefinition,
   },
   (props: InputProps, context) => {
     const fieldId = useFormFieldId()

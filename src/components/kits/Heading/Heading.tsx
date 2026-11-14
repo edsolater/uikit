@@ -44,7 +44,7 @@ export type HeadingController = KitController<
 export const Heading = kit(
   {
     name: 'Heading',
-    availableProps: headingPropsDefinition,
+    propsDefinition: headingPropsDefinition,
     marker: () => ({ descriptionOnly: true }),
   },
   (props: HeadingProps) => {

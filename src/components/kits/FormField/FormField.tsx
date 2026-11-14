@@ -44,7 +44,7 @@ export const FormField = kit(
   {
     name: 'FormField',
     description: '组合字段标题与控件',
-    availableProps: formFieldPropsDefinition,
+    propsDefinition: formFieldPropsDefinition,
   },
   (props: FormFieldProps) => {
     const id = val(props.id) ?? crypto.randomUUID()

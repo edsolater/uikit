@@ -36,7 +36,7 @@ export const TextArea = kit(
   {
     name: 'TextArea',
     description: '编辑多行文字',
-    availableProps: textAreaPropsDefinition,
+    propsDefinition: textAreaPropsDefinition,
   },
   (props: TextAreaProps) => {
     return (

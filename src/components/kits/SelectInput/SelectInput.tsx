@@ -65,7 +65,7 @@ export const SelectInput = kit<
   {
     name: 'SelectInput',
     description: '搜索并选择一项',
-    availableProps: selectInputPropsDefinition,
+    propsDefinition: selectInputPropsDefinition,
   },
   (props: SelectInputProps) => {
     const fieldId = useFormFieldId(),

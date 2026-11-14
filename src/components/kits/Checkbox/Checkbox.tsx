@@ -39,7 +39,7 @@ export const Checkbox = kit(
   {
     name: 'Checkbox',
     description: '切换二态选项',
-    availableProps: checkboxPropsDefinition,
+    propsDefinition: checkboxPropsDefinition,
   },
   (props: CheckboxProps) => {
     const generatedId = crypto.randomUUID()

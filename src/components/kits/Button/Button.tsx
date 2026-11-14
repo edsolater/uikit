@@ -132,7 +132,7 @@ export const Button = kit(
   {
     name: 'Button',
     description: '执行动作',
-    availableProps: buttonPropsDefinition,
+    propsDefinition: buttonPropsDefinition,
     directorOptions: getButtonPropsDirectorOptions,
     styleTokens: buttonStyle,
   },

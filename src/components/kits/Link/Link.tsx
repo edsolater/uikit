@@ -35,7 +35,7 @@ export const Link = kit(
   {
     name: 'Link',
     description: '导航到目标页面',
-    availableProps: linkPropsDefinition,
+    propsDefinition: linkPropsDefinition,
   },
   (props: LinkProps) => {
     return (

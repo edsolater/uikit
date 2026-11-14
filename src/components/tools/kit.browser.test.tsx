@@ -10,7 +10,7 @@ import {
 import type { KitController } from './kit'
 import { kit, type KitComponentContext } from './kit'
 
-const availableProps = {
+const propsDefinition = {
   description: 'state-source-view',
   descriptionDisplay: 'state-value-view',
   value: 'state-source-view',
@@ -18,9 +18,9 @@ const availableProps = {
 } as const
 interface FixtureProps extends ComponentDescriptionProps {
   value?: Source<string | undefined>
-  ref?: RefReceiver<KitController<FixtureProps, typeof availableProps>>
+  ref?: RefReceiver<KitController<FixtureProps, typeof propsDefinition>>
 }
-type FixtureController = KitController<FixtureProps, typeof availableProps>
+type FixtureController = KitController<FixtureProps, typeof propsDefinition>
 let dispose: (() => void) | undefined
 afterEach(() => {
   dispose?.()
@@ -35,8 +35,8 @@ test('无祖先根时核心只创建一次，多根范围透明，实例能力�
   const cleanup = vi.fn()
   let context: KitComponentContext
   let creations = 0
-  const Fixture = kit<FixtureProps, typeof availableProps>(
-    { name: 'Fixture', description: '默认用途', availableProps },
+  const Fixture = kit<FixtureProps, typeof propsDefinition>(
+    { name: 'Fixture', description: '默认用途', propsDefinition },
     (props: FixtureProps, capabilities) => {
       creations++
       context = capabilities
@@ -80,8 +80,8 @@ test('有效初始 ref 才启用控制，换接复用实例，两个定义的集
     creations++
     return <Piv>{props.value}</Piv>
   }
-  const First = kit({ name: 'First', availableProps }, core)
-  const Second = kit({ name: 'Second', availableProps }, core)
+  const First = kit({ name: 'First', propsDefinition }, core)
+  const Second = kit({ name: 'Second', propsDefinition }, core)
   let firstController: FixtureController
   let replacementController: FixtureController
   const cleanup = vi.fn()
@@ -145,7 +145,7 @@ test('用途覆盖与 marker 动态默认选择保持惰性，通用能力不要
     {
       name: 'Fixture',
       description: '默认用途',
-      availableProps,
+      propsDefinition,
       marker: () => ({
         descriptionOnly: true,
         get defaultDescriptionDisplay() {

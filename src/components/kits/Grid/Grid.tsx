@@ -44,7 +44,7 @@ export const Grid = kit(
   {
     name: 'Grid',
     description: '按列结构组织内容',
-    availableProps: gridPropsDefinition,
+    propsDefinition: gridPropsDefinition,
   },
   (props: GridProps) => {
     return (

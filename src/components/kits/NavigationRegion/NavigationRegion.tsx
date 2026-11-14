@@ -32,7 +32,7 @@ export const NavigationRegion = kit(
   {
     name: 'NavigationRegion',
     description: '组织具名导航区域',
-    availableProps: navigationRegionPropsDefinition,
+    propsDefinition: navigationRegionPropsDefinition,
   },
   (props: NavigationRegionProps) => {
     return (

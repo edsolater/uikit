@@ -38,7 +38,7 @@ export const Page = kit(
   {
     name: 'Page',
     description: '组织页面标题、说明、动作与内容',
-    availableProps: pagePropsDefinition,
+    propsDefinition: pagePropsDefinition,
   },
   (props: PageProps) => {
     return (

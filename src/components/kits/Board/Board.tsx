@@ -69,7 +69,7 @@ export const Board = kit<
   {
     name: 'Board',
     description: '承载上层信息主体',
-    availableProps: boardPropsDefinition,
+    propsDefinition: boardPropsDefinition,
     directorOptions: getBoardPropsDirectorOptions,
   },
   <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>) =>

@@ -39,7 +39,7 @@ export const Flow = kit(
   {
     name: 'Flow',
     description: '组织内容方向',
-    availableProps: flowPropsDefinition,
+    propsDefinition: flowPropsDefinition,
   },
   (props: FlowProps) => {
     return (

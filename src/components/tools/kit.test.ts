@@ -13,7 +13,7 @@ import {
 import { kit } from './kit'
 import type { KitController } from './kit'
 
-const availableProps = {
+const propsDefinition = {
   description: 'state-source-view',
   descriptionDisplay: 'state-value-view',
   value: 'state-source-view',
@@ -21,10 +21,10 @@ const availableProps = {
 } as const
 interface FixtureProps extends ComponentDescriptionProps {
   value?: Source<string | undefined>
-  ref?: RefReceiver<KitController<FixtureProps, typeof availableProps>>
+  ref?: RefReceiver<KitController<FixtureProps, typeof propsDefinition>>
 }
 const Fixture = kit(
-  { name: 'Fixture', availableProps },
+  { name: 'Fixture', propsDefinition },
   (_props: FixtureProps) => null,
 )
 
@@ -49,19 +49,19 @@ function verifyRejectedDefinitions() {
   Button.controllers[0].props.ref.set(() => {})
   kit(
     // @ts-expect-error 错误 ref 接收器不能作为定义的 Props。
-    { name: 'WrongRef', availableProps },
+    { name: 'WrongRef', propsDefinition },
     (_props: Omit<FixtureProps, 'ref'> & { ref?: RefReceiver<number> }) => null,
   )
   kit(
     // @ts-expect-error 把 Source 视图交给只接受普通字符串的核心不兼容。
-    { name: 'WrongMode', availableProps },
+    { name: 'WrongMode', propsDefinition },
     (_props: Omit<FixtureProps, 'value'> & { value?: string }) => null,
   )
   kit(
     // @ts-expect-error ref 不允许进入 Controller。
     {
       name: 'WritableRef',
-      availableProps: { ...availableProps, ref: 'state-value-view' },
+      propsDefinition: { ...propsDefinition, ref: 'state-value-view' },
     },
     (_props: FixtureProps) => null,
   )
@@ -69,13 +69,13 @@ function verifyRejectedDefinitions() {
     ref?: RefReceiver<
       KitController<
         CustomFixtureProps,
-        typeof availableProps,
+        typeof propsDefinition,
         { missing: string }
       >
     >
   }
-  kit<CustomFixtureProps, typeof availableProps>(
-    { name: 'ExtraRefField', availableProps },
+  kit<CustomFixtureProps, typeof propsDefinition>(
+    { name: 'ExtraRefField', propsDefinition },
     (_props, context) => {
       // @ts-expect-error 组件声明的顶层能力必须在公开对象中完整提供。
       context.exposeController({})
@@ -87,18 +87,18 @@ void verifyRejectedDefinitions
 
 /** 包根调用方可从原拥有者组合完整协议，不需要深导或复制字段表。 */
 function verifyPublicDefinition() {
-  const availableProps = {
+  const propsDefinition = {
     ...pivPropsDefinition,
     ...componentDescriptionPropsDefinition,
     ref: 'only-through-prop',
   } as const
   interface PublicProps extends PivProps, ComponentDescriptionProps {
-    ref?: RefReceiver<KitController<PublicProps, typeof availableProps>>
+    ref?: RefReceiver<KitController<PublicProps, typeof propsDefinition>>
   }
   return kit(
     {
       name: 'PublicFixture',
-      availableProps,
+      propsDefinition,
     },
     (_props: PublicProps) => null,
   )

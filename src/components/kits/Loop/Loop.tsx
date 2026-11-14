@@ -46,7 +46,7 @@ export const Loop = kit<LoopProps<unknown>, typeof loopPropsDefinition>(
   {
     name: 'Loop',
     description: '排列重复内容',
-    availableProps: loopPropsDefinition,
+    propsDefinition: loopPropsDefinition,
   },
   <T,>(props: LoopProps<T>) => {
     const [loopContainer, setDomRef] = createDomRef<HTMLDivElement>()

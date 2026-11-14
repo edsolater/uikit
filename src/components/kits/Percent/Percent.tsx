@@ -21,7 +21,7 @@ export type PercentController = KitController<
 
 /** 内部计算分子/分母×100并加百分号；缺值、非有限数或零分母整项显示斜杠。 */
 export const Percent = kit(
-  { name: 'Percent', availableProps: percentPropsDefinition },
+  { name: 'Percent', propsDefinition: percentPropsDefinition },
   (props: PercentProps) => {
     const percentage = stateView(() => {
       const numerator = val(props.numerator),

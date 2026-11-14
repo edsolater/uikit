@@ -29,7 +29,7 @@ export const Article = kit(
   {
     name: 'Article',
     description: '承载独立正文',
-    availableProps: articlePropsDefinition,
+    propsDefinition: articlePropsDefinition,
   },
   (props: ArticleProps) => (
     <Piv as="article" shadowProps={props} class="Article">

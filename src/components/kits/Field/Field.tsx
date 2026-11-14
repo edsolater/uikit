@@ -33,7 +33,7 @@ export const Field = kit(
   {
     name: 'Field',
     description: '关联字段标题与单个控件',
-    availableProps: fieldPropsDefinition,
+    propsDefinition: fieldPropsDefinition,
   },
   (props: FieldProps) => {
     const id = crypto.randomUUID()

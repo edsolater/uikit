@@ -50,7 +50,7 @@ export const Card = kit<
   {
     name: 'Card',
     description: '组织独立信息',
-    availableProps: boardPropsDefinition,
+    propsDefinition: boardPropsDefinition,
     directorOptions: getBoardPropsDirectorOptions,
   },
   <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>) =>

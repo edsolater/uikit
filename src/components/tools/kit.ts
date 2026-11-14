@@ -70,7 +70,7 @@ export interface KitDefinition<
 > {
   name: string
   description?: ComponentDescriptionProps['description']
-  availableProps: Definition
+  propsDefinition: Definition
   marker?: (
     props: Props,
   ) => Pick<KitMarkerProps, 'defaultDescriptionDisplay' | 'descriptionOnly'>
@@ -140,7 +140,7 @@ export function kit<
     const directed = untrack(() => input.ref)
       ? createComponentPropsDirector(
           input,
-          definition.availableProps,
+          definition.propsDefinition,
           definition.directorOptions?.(input),
         )
       : undefined

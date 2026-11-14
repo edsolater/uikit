@@ -126,7 +126,7 @@ export const Table = kit<
   {
     name: 'Table',
     description: '按列展示记录',
-    availableProps: tablePropsDefinition,
+    propsDefinition: tablePropsDefinition,
   },
   <Row, ColumnKey extends PropertyKey = keyof Row>(
     props: TableProps<Row, ColumnKey>,

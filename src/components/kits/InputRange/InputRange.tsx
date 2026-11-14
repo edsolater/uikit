@@ -26,7 +26,7 @@ export const InputRange = kit(
   {
     name: 'InputRange',
     description: '调整范围内的数值',
-    availableProps: inputRangePropsDefinition,
+    propsDefinition: inputRangePropsDefinition,
   },
   (props: InputRangeProps) => {
     const fieldId = useFormFieldId()

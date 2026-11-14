@@ -37,7 +37,7 @@ export const Select = kit(
   {
     name: 'Select',
     description: '从有限选项中选择',
-    availableProps: selectPropsDefinition,
+    propsDefinition: selectPropsDefinition,
   },
   (props: SelectProps) => {
     const fieldId = useFormFieldId()

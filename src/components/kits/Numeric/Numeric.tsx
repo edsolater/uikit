@@ -19,7 +19,7 @@ export type NumericController = KitController<
 
 /** 固定显示指定有效位数（默认3）；缺值与非有限数显示斜杠，输入变化持续更新。 */
 export const Numeric = kit(
-  { name: 'Numeric', availableProps: numericPropsDefinition },
+  { name: 'Numeric', propsDefinition: numericPropsDefinition },
   (props: NumericProps) => {
     const text = stateView(() => {
       const value = val(props.value),

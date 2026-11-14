@@ -34,7 +34,7 @@ export const Details = kit(
   {
     name: 'Details',
     description: '按需展开内容',
-    availableProps: detailsPropsDefinition,
+    propsDefinition: detailsPropsDefinition,
   },
   (props: DetailsProps) => {
     return (

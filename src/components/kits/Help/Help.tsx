@@ -37,7 +37,7 @@ export const Help = kit(
   {
     name: 'Help',
     description: '查看补充说明',
-    availableProps: helpPropsDefinition,
+    propsDefinition: helpPropsDefinition,
   },
   (props: HelpProps) => (
     <Piv

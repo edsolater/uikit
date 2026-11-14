@@ -45,7 +45,7 @@ export type TextController = KitController<
 export const Text = kit(
   {
     name: 'Text',
-    availableProps: textPropsDefinition,
+    propsDefinition: textPropsDefinition,
     marker: (props) => ({
       descriptionOnly: true,
       get defaultDescriptionDisplay() {
