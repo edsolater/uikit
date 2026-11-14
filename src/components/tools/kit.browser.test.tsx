@@ -2,11 +2,11 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { createState, flush, render, val, type Source } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../Piv/Piv'
 import {
   componentBoundaries,
   type ComponentDescriptionProps,
-} from '@/components/tools/KitMarker/KitMarker'
+} from './KitMarker/KitMarker'
 import type { KitController } from './kit'
 import { kit, type KitComponentContext } from './kit'
 

@@ -5,12 +5,12 @@
  *
  * 排列关系由组件表达，子组件继续拥有自己的外观。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { flowPropsDefinition } from './Flow.prop'
 import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
 import { type Source, type JSX, val } from '@/foundation'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import './Flow.style'
 /** Flow 的声明输入；初始状态通过 Props 表达。 */
 export type FlowProps = ComponentDescriptionProps & {

@@ -5,13 +5,13 @@
  *
  * 让导航机制与调用方的链接内容各自独立。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { linkPropsDefinition } from './Link.prop'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import { derive } from '@/hooks/stateUtils'
 import { type JSX, type Source } from '@/foundation'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import './Link.style'
 /** Link 的声明输入；初始状态通过 Props 表达。 */
 export type LinkProps = ComponentDescriptionProps & {

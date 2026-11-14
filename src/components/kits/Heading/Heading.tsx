@@ -1,12 +1,12 @@
 /**
  * 文档标题结构与内容定位组件的实现。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { headingPropsDefinition } from './Heading.prop'
 import { onMount } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import { Piv, type PivProps } from '@/components/Piv/Piv'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { Piv, type PivProps } from '../../Piv/Piv'
 import './Heading.style'
 
 type HeadingLevel = 1 | 2 | 3 | 4

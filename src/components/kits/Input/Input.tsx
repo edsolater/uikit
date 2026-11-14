@@ -7,11 +7,11 @@
  * 组件选择规则见 [Input 设计规格](./Input.spec.md)。
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { inputPropsDefinition } from './Input.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import {
   createStatusPropsParser,
   type StatusController,

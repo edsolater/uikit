@@ -1,10 +1,10 @@
 /** 数值展示：由原值和有效位数生成文本，不改写输入。 */
 import { stateView, val, type Source } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import { kit, type KitController } from '@/components/tools/kit'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { Text } from '../Text/Text'
-import { tabularNum } from '@/components/plugins/kits/tabular-num/tabular-num'
+import { tabularNum } from '../../plugins/kits/tabular-num/tabular-num'
 import { numericPropsDefinition } from './Numeric.prop'
 
 export type NumericProps = ComponentDescriptionProps & {

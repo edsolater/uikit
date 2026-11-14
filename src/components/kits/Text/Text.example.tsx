@@ -5,7 +5,7 @@
  *
  * 让使用者比较文字语义并观察来源更新。
  */
-import { Button, Flow, Heading, Text, type TextController } from '@/components'
+import { Button, Flow, Heading, Text, type TextController } from '../..'
 import { createState, val } from '@/foundation'
 import { createRef } from '@/hooks/createRef'
 

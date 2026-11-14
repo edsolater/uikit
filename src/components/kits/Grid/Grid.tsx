@@ -5,12 +5,12 @@
  *
  * 统一内容空间，不接管子组件的样式。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { gridPropsDefinition } from './Grid.prop'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import { type Source, type JSX, val } from '@/foundation'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import './Grid.style'
 /** Grid 的声明输入；初始状态通过 Props 表达。 */
 export type GridProps = ComponentDescriptionProps & {

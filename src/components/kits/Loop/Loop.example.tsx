@@ -5,7 +5,7 @@
  *
  * 让使用者直接观察 Loop 对重复内容的维护。
  */
-import { Button, Loop, Flow, Heading, Text } from '@/components'
+import { Button, Loop, Flow, Heading, Text } from '../..'
 import { createState, val } from '@/foundation'
 
 /**

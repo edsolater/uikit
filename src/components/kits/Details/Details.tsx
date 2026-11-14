@@ -5,12 +5,12 @@
  *
  * 调用方决定正文的信息意义及其布局。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { detailsPropsDefinition } from './Details.prop'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import { type Source, type JSX } from '@/foundation'
-import { Piv, type PivProps } from '@/components/Piv/Piv'
+import { Piv, type PivProps } from '../../Piv/Piv'
 /** Details 的声明输入；初始状态通过 Props 表达。 */
 export type DetailsProps = ComponentDescriptionProps & {
   ref?: RefReceiver<DetailsController>

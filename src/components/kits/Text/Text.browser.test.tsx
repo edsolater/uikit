@@ -25,7 +25,7 @@ import {
   Text,
   type TextProps,
   type TextController,
-} from '@/components'
+} from '../..'
 import '@/css/all-base.css'
 
 let dispose: (() => void) | undefined

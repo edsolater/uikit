@@ -5,7 +5,7 @@
  *
  * 让使用者直接比较方向改变后的动作布局。
  */
-import { Button, Flow, Text } from '@/components'
+import { Button, Flow, Text } from '../..'
 import { createState } from '@/foundation'
 /**
  * 切换方向，比较同组动作的横向与纵向排列。

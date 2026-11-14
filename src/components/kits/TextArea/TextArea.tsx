@@ -5,12 +5,12 @@
  *
  * 把字段编辑与上层标题、校验编排分开。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { textAreaPropsDefinition } from './TextArea.prop'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import { type Source } from '@/foundation'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import './TextArea.style'
 export type TextAreaProps = ComponentDescriptionProps & {
   ref?: RefReceiver<TextAreaController>

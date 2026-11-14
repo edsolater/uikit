@@ -18,7 +18,7 @@ import {
   KitMarker,
   type ComponentDescriptionProps,
   type KitMarkerProps,
-} from '@/components/tools/KitMarker/KitMarker'
+} from './KitMarker/KitMarker'
 import {
   createComponentPropsDirector,
   type DirectedProps,

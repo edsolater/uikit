@@ -5,7 +5,7 @@
  *
  * 让使用者观察列数与窄屏退列的实际效果。
  */
-import { Button, Card, Flow, Grid, Heading, Text } from '@/components'
+import { Button, Card, Flow, Grid, Heading, Text } from '../..'
 import { createState } from '@/foundation'
 /**
  * 选择列数，观察等宽分栏及窄屏自动收为单列。

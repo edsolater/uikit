@@ -1,11 +1,11 @@
 /** 将分子与分母作为百分比展示；比值计算归组件，数值格式归Numeric。 */
 import { Show, stateView, val, type Source } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import { kit, type KitController } from '@/components/tools/kit'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { Numeric } from '../Numeric/Numeric'
 import { Text } from '../Text/Text'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import { percentPropsDefinition } from './Percent.prop'
 
 export type PercentProps = ComponentDescriptionProps & {

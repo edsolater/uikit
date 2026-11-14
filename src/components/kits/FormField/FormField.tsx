@@ -6,9 +6,9 @@ import {
   type JSX,
   type Source,
 } from '@/foundation'
-import { kit, type KitController } from '@/components/tools/kit'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
+import { kit, type KitController } from '../../tools/kit'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { componentDescriptionPropsDefinition } from '../../tools/KitMarker/KitMarker.prop'
 import type { RefReceiver } from '@/hooks/createRef'
 import { Flow } from '../Flow/Flow'
 

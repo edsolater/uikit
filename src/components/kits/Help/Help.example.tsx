@@ -1,5 +1,5 @@
 /** 独立帮助入口及结构化说明的可运行示例。 */
-import { Flow, Heading, Help, Text } from '@/components'
+import { Flow, Heading, Help, Text } from '../..'
 
 /**
  * 展示不依附字段的问号入口，以及可替换的触发文字和模板说明。

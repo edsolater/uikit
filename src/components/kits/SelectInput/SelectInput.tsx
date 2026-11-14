@@ -1,16 +1,16 @@
 /** 可输入搜索的单项选择，候选由调用方提供。 */
 import { createState, For, Show, val, type Source } from '@/foundation'
-import { kit, type KitController } from '@/components/tools/kit'
-import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import { kit, type KitController } from '../../tools/kit'
+import { componentDescriptionPropsDefinition } from '../../tools/KitMarker/KitMarker.prop'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import type { RefReceiver } from '@/hooks/createRef'
-import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
-import { Piv } from '@/components/Piv/Piv'
-import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
+import type { PropsDefinition } from '../../tools/componentPropsDirector'
+import { Piv } from '../../Piv/Piv'
+import { createPopoverPlugins } from '../../plugins/kits/Popover/popover'
 import {
   tooltip,
   type TooltipOptions,
-} from '@/components/plugins/kits/tooltip/tooltip'
+} from '../../plugins/kits/tooltip/tooltip'
 import { useFormFieldId } from '../FormField/FormField'
 import './SelectInput.style'
 

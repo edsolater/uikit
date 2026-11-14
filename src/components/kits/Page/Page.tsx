@@ -5,12 +5,12 @@
  *
  * 页面编排使用基础组件，不接管它们的内部样式。
  */
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'
 import { pagePropsDefinition } from './Page.prop'
 import { Show, val, type Source, type JSX } from '@/foundation'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import { Piv } from '@/components/Piv/Piv'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { Piv } from '../../Piv/Piv'
 import { Heading } from '../Heading/Heading'
 import { Text } from '../Text/Text'
 import { Flow } from '../Flow/Flow'

@@ -1,9 +1,9 @@
 /**
  * Article 是语义组件：固定独立正文身份，不提供容器皮肤。
  */
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
+import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import type { RefReceiver } from '@/hooks/createRef'
-import { kit, type KitController } from '@/components/tools/kit'
+import { kit, type KitController } from '../../tools/kit'
 import { articlePropsDefinition } from './Article.prop'
 import { Piv, type PivProps } from '../../Piv/Piv'
 import './Article.style'
