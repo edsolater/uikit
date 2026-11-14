@@ -53,7 +53,7 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
 }
 
 /**
- * 按 if 是否声明选择条件分支，首次实际创建时固定元素类型。
+ * 按显示来源创建并切换节点，首次显示后保持同一真实元素及其类型。
  */
 export function Dode<Tag extends PivTag>(
   props: DodeDOMProps<Tag>,

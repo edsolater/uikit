@@ -126,7 +126,7 @@ test('反馈语气动态更换边框颜色，内层默认反馈不继承外层�
     ['error', 'rgb(220, 38, 38)'],
     ['success', 'rgb(22, 163, 74)'],
     ['warning', 'rgb(217, 119, 6)'],
-  ] as const) {
+  ] satisfies Array<['error' | 'success' | 'warning', string]>) {
     tone.set(next)
     await expect
       .poll(() => getComputedStyle(outer!).borderTopColor)

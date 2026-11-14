@@ -1,5 +1,9 @@
 /**
- * Article 是语义组件：固定独立正文身份，不提供容器皮肤。
+ * Article 是独立正文的语义组件。
+ *
+ * 固定原生 article 身份并保留正文内容和节点声明。
+ *
+ * 让正文语义独立于 Card 等承载组件的外观。
  */
 import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import type { RefReceiver } from '@/hooks/createRef'

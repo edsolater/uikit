@@ -1,3 +1,10 @@
+/**
+ * UIKit 组件、交互与构件工具的公开入口。
+ *
+ * 汇总所属领域的公开契约，并加载共同的原生控件和文档样式。
+ *
+ * 让使用方从稳定入口取得能力，内部实现仍直接引用负责文件。
+ */
 import '@/style-system/pieces/native-controls.style'
 import '@/style-system/pieces/document.style'
 

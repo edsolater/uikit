@@ -1,5 +1,9 @@
 /**
- * 文档标题结构与内容定位组件的实现。
+ * Heading 是文档标题和内容定位组件。
+ *
+ * 按指定层级呈现标题，并将最终文字同步为定位 ID。
+ *
+ * 让文档层级和导航位置由同一份标题内容表达。
  */
 import { kit, type KitController } from '../../tools/kit'
 import type { RefReceiver } from '@/hooks/createRef'

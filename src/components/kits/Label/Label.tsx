@@ -1,4 +1,10 @@
-/** 字段标题通过for关联独立控件，tooltip将辅助提示挂在末尾问号。 */
+/**
+ * Label 是独立控件的可见字段标题。
+ *
+ * 通过 for 关联控件，并在需要时提供辅助说明入口。
+ *
+ * 让标题、控件和说明各自保持职责，通过字段身份协作。
+ */
 import { Show, stateView, val, type Source } from '@/foundation'
 import { hasTooltipContent } from '../../plugins/kits/tooltip/tooltip'
 import { Help } from '../Help/Help'

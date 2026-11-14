@@ -1,4 +1,10 @@
-/** 可输入搜索的单项选择，候选由调用方提供。 */
+/**
+ * SelectInput 是可搜索的单项选择控件。
+ *
+ * 呈现输入、候选和已选说明，将查询与选择动作交给调用方。
+ *
+ * 让业务拥有数据来源，组件统一维护候选交互和原生选择语义。
+ */
 import { createState, For, Show, val, type Source } from '@/foundation'
 import { kit, type KitController } from '../../tools/kit'
 import { componentDescriptionPropsDefinition } from '../../tools/KitMarker/KitMarker.prop'
@@ -14,16 +20,19 @@ import {
 import { useFormFieldId } from '../FormField/FormField'
 import './SelectInput.style'
 
+/** 候选项以 value 标识选择，label 和 detail 分别呈现主名称与补充内容。 */
 export type SelectInputOption = {
   value: string
   label: string
   detail?: string
 }
+/** 已选值的补充标签及对应说明内容。 */
 export type SelectInputTag = {
   label: string
   /** 标签的补充说明，可以是结构化内容。 */
   tooltip: TooltipOptions['content']
 }
+/** 选值、候选和业务动作协议；组件管理编辑过程，调用方处理查询与选择。 */
 export type SelectInputProps = ComponentDescriptionProps & {
   ref?: RefReceiver<SelectInputController>
   id?: Source<string | undefined>
@@ -36,6 +45,7 @@ export type SelectInputProps = ComponentDescriptionProps & {
   onSelect: (option: SelectInputOption) => void
   onClose?: () => void
 }
+/** 动态显示字段持续保留来源，业务动作只从上游交付。 */
 const selectInputPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   id: 'state-source-view',
@@ -47,7 +57,8 @@ const selectInputPropsDefinition = {
   onSelect: 'only-through-prop',
   onClose: 'only-through-prop',
   ref: 'only-through-prop',
-} as const satisfies PropsDefinition<SelectInputProps>
+} satisfies PropsDefinition<SelectInputProps>
+/** 搜索选择控件自身输入的运行期控制入口。 */
 export type SelectInputController = KitController<
   SelectInputProps,
   typeof selectInputPropsDefinition

@@ -43,12 +43,13 @@ export type BoardController<Tag extends PivSupportedElementTag = 'div'> =
 
 /** 异构原生节点只公开共同安全字段。 */
 export type BoardControllerCollection = ControllerCollection<{
-  readonly props: Omit<
+  props: Omit<
     BoardController<PivSupportedElementTag>['props'],
     'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
   >
 }>
 
+/** 保留原生节点泛型与共同安全控制字段的承载入口。 */
 interface BoardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(
     props: BoardProps<Tag>,
@@ -56,6 +57,9 @@ interface BoardComponent {
   controllers: BoardControllerCollection
 }
 
+/**
+ * 将承载组件的外观描述转换为对应节点声明，保留各分组的互斥规则。
+ */
 const parseBoardVariantProps = createVariantPropsParser(boardVariantGroups)
 
 /**

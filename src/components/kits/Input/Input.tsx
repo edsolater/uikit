@@ -1,8 +1,9 @@
 /**
- * 这个文件定义基础输入组件 Input。
- * Input 承载一个单行可编辑值，适合普通表单字段、筛选条件和设置项。
- * label、说明文案、错误文案和字段布局属于更上层的 Field 组合，不塞进 Input 本体。
- * Input 当前只有默认形态；视觉强弱不通过 variant、ghost、bare 或 solid 表达。
+ * Input 是承载单行可编辑值的基础控件。
+ *
+ * 呈现输入值和字段状态，保留默认视觉形态及原生编辑行为。
+ *
+ * 将字段编辑与上层标题、说明、错误提示和布局分开。
  *
  * 组件选择规则见 [Input 设计规格](./Input.spec.md)。
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
@@ -24,6 +25,7 @@ import {
   type InputValidityProps,
 } from './createInputValidity'
 
+/** 单行编辑的原生声明与有效性输入，组件只额外限定输入类型。 */
 export interface InputProps
   extends PivProps<'input'>, InputValidityProps, ComponentDescriptionProps {
   ref?: RefReceiver<InputController>
@@ -31,6 +33,9 @@ export interface InputProps
   type?: Source<'text' | 'color' | undefined>
 }
 
+/**
+ * 将输入有效性映射为节点的无障碍状态，不改写字段值。
+ */
 const parseInputStatusProps = createStatusPropsParser({
   candidates: ['invalid'],
   effect: ({ invalid }) => ({
@@ -48,7 +53,7 @@ export type InputController = KitController<
 >
 
 /**
- * 编辑单行内容，保留原有效性计算与状态映射。
+ * 编辑单行内容并呈现字段有效性，保持输入值与状态来源持续更新。
  */
 export const Input = kit<InputProps, typeof inputPropsDefinition>(
   {

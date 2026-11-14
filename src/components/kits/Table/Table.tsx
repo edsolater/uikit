@@ -76,12 +76,13 @@ export type TableController<
   ColumnKey extends PropertyKey = keyof Row,
 > = KitController<TableProps<Row, ColumnKey>, typeof tablePropsDefinition>
 
+/** 保留行与列的渲染泛型，集合仅公开与具体行类型无关的字段。 */
 interface TableComponent {
   <Row, ColumnKey extends PropertyKey = keyof Row>(
     props: TableProps<Row, ColumnKey>,
   ): JSX.Element
   controllers: ControllerCollection<{
-    readonly props: Omit<
+    props: Omit<
       TableController<TableDataRow, PropertyKey>['props'],
       | 'data'
       | 'keys'
@@ -109,8 +110,8 @@ interface TableComponent {
  *   keys={['name', 'preview']}
  *   renderParts={{
  *     tableHead: {
- *       name: () => 'Token',
- *       preview: () => 'Preview',
+ *       name: () => '名称',
+ *       preview: () => '预览',
  *     },
  *     tableCell: {
  *       preview: (value) => <Piv style={{ background: String(value) }} />,

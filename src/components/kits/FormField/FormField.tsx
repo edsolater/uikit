@@ -1,4 +1,11 @@
-/** 显式字段组合：为标题和单个控件提供同一个原生身份。 */
+/**
+ * FormField 是标题与单个控件的字段组合。
+ *
+ * 为组合内的标题和控件提供同一个稳定字段 ID。
+ *
+ * 将原生关联身份集中在组合处，控件仍各自拥有输入状态。
+ */
+import type { PropsReadMode } from '../../tools/componentPropsDirector'
 import {
   createContext,
   useContext,
@@ -20,17 +27,20 @@ export function useFormFieldId() {
   return useContext(FormFieldIdContext)
 }
 
+/** 字段身份与组合内容；未提供 id 时，每个实例生成稳定身份。 */
 export type FormFieldProps = ComponentDescriptionProps & {
   ref?: RefReceiver<FormFieldController>
   id?: Source<string | undefined>
   children?: JSX.Element
 }
+/** 字段输入保留 ID 来源，组合内容只通过声明传入。 */
 const formFieldPropsDefinition = {
   ...componentDescriptionPropsDefinition,
   id: 'state-source-view',
   children: 'only-through-prop',
   ref: 'only-through-prop',
-} as const
+} satisfies Record<string, PropsReadMode>
+/** 字段自身输入的控制入口，不接管内部控件值。 */
 export type FormFieldController = KitController<
   FormFieldProps,
   typeof formFieldPropsDefinition

@@ -32,6 +32,7 @@ export type CardProps<Tag extends PivSupportedElementTag = 'div'> =
 export type CardController<Tag extends PivSupportedElementTag = 'div'> =
   BoardController<Tag>
 
+/** 独立信息体的泛型节点入口及其共同安全控制字段。 */
 interface CardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(
     props: CardProps<Tag>,

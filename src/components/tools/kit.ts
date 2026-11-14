@@ -33,9 +33,9 @@ import {
 
 /** 每个实例的通用能力；函数已绑定实例作用域，可以直接解构。 */
 export interface KitComponentContext<Controller extends object = object> {
-  readonly name: string
+  name: string
   /** 将资源清理登记到当前组件实例，包括后续事件中创建的资源。 */
-  readonly onCleanup: (cleanup: () => void) => void
+  onCleanup: (cleanup: () => void) => void
   /** 在核心创建期间公开组件自定义能力；Kit 将通用输入干预放到最终 Controller.props。 */
   exposeController(controller: Omit<Controller, 'props'>): void
 }
@@ -46,7 +46,7 @@ export type KitController<
   Definition extends PropsDefinition<Props>,
   Capabilities extends object = object,
 > = Omit<Capabilities, 'props'> & {
-  readonly props: PropsController<Props, Definition>
+  props: PropsController<Props, Definition>
 }
 
 /** 从组件 ref 声明取得最终公开协议。 */
@@ -80,7 +80,7 @@ export interface KitDefinition<
 
 export type KitComponent<Props, Controller, Style = undefined> = {
   (props: Props): JSX.Element
-  readonly controllers: ControllerCollection<Controller, Style>
+  controllers: ControllerCollection<Controller, Style>
 }
 
 /** 完整字段协议必须保留原 Props 形状，并将 ref 排除于可写 Controller。 */
@@ -92,7 +92,7 @@ type ValidKitDefinition<
     ? [KitPublicController<Props>] extends [never]
       ? never
       : KitPublicController<Props> extends {
-            readonly props: PropsController<Props, Definition>
+            props: PropsController<Props, Definition>
           }
         ? unknown
         : never
@@ -109,8 +109,8 @@ type ValidKitDefinition<
  */
 export function kit<
   Props extends ComponentDescriptionProps,
-  const Definition extends PropsDefinition<Props>,
-  const Style extends Record<string, Token> | undefined = undefined,
+  Definition extends PropsDefinition<Props>,
+  Style extends Record<string, Token> | undefined = undefined,
 >(
   definition: KitDefinition<Props, Definition, Style> &
     ValidKitDefinition<Props, Definition>,

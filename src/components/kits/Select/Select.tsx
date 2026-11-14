@@ -14,6 +14,7 @@ import { For, val, type Source } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import './Select.style'
 import { useFormFieldId } from '../FormField/FormField'
+/** 当前选值与有限候选，选项标签供显示，选项值参与选择和变更通知。 */
 export type SelectProps = ComponentDescriptionProps & {
   ref?: RefReceiver<SelectController>
   id?: Source<string | undefined>

@@ -1,4 +1,10 @@
-/** 将分子与分母作为百分比展示；比值计算归组件，数值格式归Numeric。 */
+/**
+ * Percent 是分子与分母的百分比展示组件。
+ *
+ * 计算比值并组合 Numeric 显示数字和百分号，无有效比值时显示斜杠。
+ *
+ * 将比值语义与数字格式分别交给负责的组件。
+ */
 import { Show, stateView, val, type Source } from '@/foundation'
 import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import { kit, type KitController } from '../../tools/kit'
@@ -8,18 +14,22 @@ import { Text } from '../Text/Text'
 import { Piv } from '../../Piv/Piv'
 import { percentPropsDefinition } from './Percent.prop'
 
+/** 比例的分子、分母及数字有效位数；组件负责将比值换算为百分数。 */
 export type PercentProps = ComponentDescriptionProps & {
   numerator?: Source<number | null | undefined>
   denominator?: Source<number | null | undefined>
   significantDigits?: Source<number | undefined>
   ref?: RefReceiver<PercentController>
 }
+/** 比例及数字格式输入的控制入口。 */
 export type PercentController = KitController<
   PercentProps,
   typeof percentPropsDefinition
 >
 
-/** 内部计算分子/分母×100并加百分号；缺值、非有限数或零分母整项显示斜杠。 */
+/**
+ * 将分子与分母的比值呈现为百分数；缺值、非有限数或零分母整项显示斜杠。
+ */
 export const Percent = kit(
   { name: 'Percent', propsDefinition: percentPropsDefinition },
   (props: PercentProps) => {

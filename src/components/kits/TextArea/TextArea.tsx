@@ -12,6 +12,7 @@ import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 import { type Source } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import './TextArea.style'
+/** 多行文本值、字段状态与输入通知，标题和辅助说明由上层组合提供。 */
 export type TextAreaProps = ComponentDescriptionProps & {
   ref?: RefReceiver<TextAreaController>
   id?: Source<string | undefined>

@@ -1,6 +1,9 @@
 /**
- * 响应式列表组件。
- * 它基于 Solid 的 mapArray 维护子树复用，只负责列表结构，不解包 item 内部字段。
+ * Loop 是响应式重复内容的组织组件。
+ *
+ * 按列表来源维护条目子树和索引，不解包条目内部字段。
+ *
+ * 让重复内容保留条目身份，具体内容与行为由调用方决定。
  */
 import { kit, type KitController } from '../../tools/kit'
 import type { ControllerCollection } from '../../tools/controllerRegistry'
@@ -18,6 +21,7 @@ import { createDomRef } from '@/hooks'
 import { Piv } from '../../Piv/Piv'
 import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
 
+/** 列表来源与条目渲染关系，索引来源随条目位置持续更新。 */
 export type LoopProps<T> = ComponentDescriptionProps & {
   ref?: RefReceiver<LoopController<T>>
   each: Accessor<T[]>
@@ -31,15 +35,16 @@ export type LoopController<T> = KitController<
   typeof loopPropsDefinition
 >
 
+/** 保留条目与渲染回调的泛型关联，集合只公开与条目类型无关的字段。 */
 interface LoopComponent {
   <T>(props: LoopProps<T>): JSX.Element
   controllers: ControllerCollection<{
-    readonly props: Omit<LoopController<unknown>['props'], 'each'>
+    props: Omit<LoopController<unknown>['props'], 'each'>
   }>
 }
 
 /**
- * 按原映射器维护列表子树，保留每项与 index 的泛型关联。
+ * 按列表来源维护条目子树，保留条目与动态索引的对应关系。
  */
 // kit 原样包装泛型核心；这里恢复列表项与渲染回调的调用关联。
 export const Loop = kit<LoopProps<unknown>, typeof loopPropsDefinition>(

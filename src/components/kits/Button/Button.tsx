@@ -1,8 +1,9 @@
 /**
- * 这个文件定义基础按钮组件 Button。
- * Button 承载当前界面里的一个可执行动作，适合保存、确认、取消、清除、删除这类命令。
- * 会改变位置的交互应使用 Link；业务流程判断、表单编排和状态来源不塞进 Button 本体。
- * Button 只把动作内容、外观、强调程度、动作语气、按钮尺寸和外部状态翻译成原生 button。
+ * Button 是执行单个界面动作的基础按钮。
+ *
+ * 呈现动作内容、外观、强调程度、语气、尺寸与外部状态，并保留原生按钮行为。
+ *
+ * 让动作触发与业务流程、表单编排和状态来源分开；导航交给 Link。
  *
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
@@ -86,6 +87,7 @@ export type ButtonController = KitController<
   StatusController<ButtonStatus>
 >
 
+/** 动作内容、外观分类和状态输入，原生节点声明沿用 Piv 契约。 */
 export interface ButtonProps
   extends
     PivProps<'button'>,
@@ -112,11 +114,17 @@ export interface ButtonProps
   onClick?: EventListenerInput<'click'>
 }
 
+/**
+ * 将按钮的外观分类转换为节点声明，保留同组描述的互斥关系。
+ */
 const parseVariantProps = createVariantPropsParser(
   buttonVariantGroups,
   buttonMapping,
 )
 
+/**
+ * 将按钮状态映射为禁用和忙碌属性，并保留可操作的状态协议。
+ */
 const parseStatusProps = createStatusPropsParser({
   candidates: [...buttonStatusCandidates],
   effect: ({ loading, disabled }) => ({
@@ -127,7 +135,10 @@ const parseStatusProps = createStatusPropsParser({
   }),
 })
 
-/** 共同机制由 kit 管理，Button 本体只表达分类、状态与动作。 */
+/**
+ * 呈现可执行动作，按外观和状态输入更新按钮。
+ * 用户执行动作时交付 onClick，原生节点声明沿用 Piv 契约。
+ */
 export const Button = kit(
   {
     name: 'Button',
