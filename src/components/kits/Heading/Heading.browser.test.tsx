@@ -19,7 +19,7 @@ import { cssRoot } from '@/style-system'
 import { createState, For, Show } from '@/foundation'
 import {
   Heading,
-  KitMarkerStructureViewTrigger,
+  ComponentIdentityMarkerStructureViewTrigger,
   type HeadingProps,
   type HeadingController,
 } from '@/components'
@@ -180,14 +180,14 @@ describe('Heading', () => {
             {(level) => (
               <Heading
                 level={level}
-                description={level === 2 ? description : undefined}
+                label={level === 2 ? description : undefined}
                 descriptionDisplay={display.read()}
               >
                 {content}
               </Heading>
             )}
           </For>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -209,7 +209,7 @@ describe('Heading', () => {
       element.getBoundingClientRect().toJSON(),
     )
     const control = host.querySelector<HTMLButtonElement>(
-      '.ComponentMarkerStructureViewTrigger',
+      '.ComponentIdentityMarkerStructureViewTrigger',
     )!
     control.click()
     flush()

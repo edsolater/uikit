@@ -5,7 +5,6 @@
  *
  * 子内容的外观和业务状态仍归各自组件。
  */
-import type { Source } from '@/foundation'
 import {
   kitPropDefinition,
   type KitProps,
@@ -22,18 +21,15 @@ export type GridProps = KitProps<{
   styleConfig: GridStyleConfig
   controller: GridController
 }> & {
-  label?: Source<string | undefined>
+  // 自有输入。
 }
 
 /** 区域名称保持来源，由真实根元素消费。 */
-export type GridPropDefinition = KitPropDefinition<{
-  label: 'state-source-view'
-}>
+export type GridPropDefinition = KitPropDefinition<{}>
 
 /** 公开字段与公共节点协议的完整定义。 */
 export const gridPropDefinition: GridPropDefinition = {
   ...kitPropDefinition,
-  label: 'state-source-view',
 }
 
 /** 网格实例的输入控制，样式差异通过 props.styleConfig 干预。 */

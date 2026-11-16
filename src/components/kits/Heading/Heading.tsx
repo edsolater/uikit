@@ -41,7 +41,7 @@ export const Heading: KitComponent<{
   {
     name: componentName,
     propDefinition: headingPropDefinition,
-    marker: () => ({ descriptionOnly: true }),
+    marker: () => ({ labelOnly: true }),
   },
   (props, { name }) => {
     return (

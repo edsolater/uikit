@@ -147,7 +147,7 @@ test('构建工厂只通过 Props 提供，普通状态更新不重放，已有 
   expect('children' in field.props).toBe(false)
   expect('children' in loop.props).toBe(false)
   field.props!.label.set('更新标题')
-  loop.props!.description.set('更新用途')
+  loop.props!.label.set('更新用途')
   flush()
   expect(host.querySelector('label')?.textContent).toBe('更新标题')
   expect(host.querySelector('input')).toBe(input)

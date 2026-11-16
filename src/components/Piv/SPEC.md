@@ -9,6 +9,7 @@ Dode 是本目录内部的元素实现，定义并消费 as、if 与底层 DOM �
 | 内容                        | 负责主体 | 处理方式                                                                       |
 | --------------------------- | -------- | ------------------------------------------------------------------------------ |
 | as、if                      | Dode     | as 在首次实际创建时固定元素类型；if 按属性存在性启用显隐，同一元素跨显隐复用。 |
+| label                       | Piv      | 按来源优先级选择实例名称，转换为低优先级 aria-label，不传入 Dode。             |
 | is、shadowProps             | Piv      | 在创建前展开已构建 Plugin 的声明，统一组织来源并交给 Dode。                    |
 | id、class、style、htmlProps | Dode     | 将组织后的声明交给专用字段消费者，订阅 Source 并维护 DOM。                     |
 | on、domRef                  | Dode     | 拥有事件绑定生命周期，完成字段绑定后按声明身份接入 domRef。                    |
@@ -16,7 +17,7 @@ Dode 是本目录内部的元素实现，定义并消费 as、if 与底层 DOM �
 
 PivProps 组合 Dode 的 DOM 属性契约与管理字段，不重复维护底层属性定义。
 Piv 可以展开声明、组织 Plugin 来源，不承担 class token、CSS 字段、HTML 落点或事件描述符的解析。
-Dode 不解释 shadowProps 来源容器或 plugin。
+Dode 不解释 label、shadowProps 来源容器或 plugin；label 只在 PivProps 声明。
 
 ## 声明与来源
 
@@ -24,7 +25,7 @@ Piv 在创建前组织直接声明、纯 shadowProps 与 is 中的已构建 Plug
 Dode 从中读取 as、if 和 DOM 字段。创建前直接展开 Plugin 的补充声明，不运行业务 core，
 因此 `addProps` 提交的 as/if 与 shadowProps 一样参与结构选择。
 直接声明优先；shadowProps／is 数组后项优先，每份声明先于其嵌套 shadowProps。
-as 选择最高优先级的非 undefined 值；if 选择最高优先级存在该属性的来源，保留显式 undefined。
+as 与 label 选择最高优先级的非 undefined 值；label 不参与数组拼接，来源变化持续更新原生名称。if 选择最高优先级存在该属性的来源，保留显式 undefined。
 
 `ShadowProps` 是唯一的补充声明契约，包含 as、if、domRef、is 及既有其他补充属性；children 仍由直接 Props 提供。
 `addProps` 直接提交 shadowProps，不拥有另一套删减后的类型；Plugin 不接收元素。

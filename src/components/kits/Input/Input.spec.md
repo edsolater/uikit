@@ -126,13 +126,14 @@ type ValidityOptions = {
 }
 ```
 
+Input 支持公共 `label`，由 Piv 将实例名称转为节点语义；它不创建可见字段标题，可见标题由 Field 组合。
+
 ## 不提供的 API
 
 - 不提供 `variant`。
 - 不提供 `ghost`。
 - 不提供 `bare`。
 - 不提供 `solid`。
-- 不提供 `label`。
 - 不提供 `hint`。
 - 不提供 `error`。
 - 不提供 `prefix`。
@@ -145,7 +146,6 @@ type ValidityOptions = {
 | `ghost`   | 弱边界会降低可编辑区域识别度。                         |
 | `bare`    | 内联编辑是专门场景，不属于普通 Input。                 |
 | `solid`   | 强容器容易被误读成主操作入口。                         |
-| `label`   | 字段名属于 Field 组合，不属于 input 本体。             |
 | `hint`    | 输入说明属于 Field 组合，不属于 input 本体。           |
 | `error`   | 错误文案属于 Field 组合，不属于 input 本体。           |
 | `prefix`  | 前后缀需要组合结构，后续由专门 Field/InputGroup 承载。 |

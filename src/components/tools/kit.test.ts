@@ -217,7 +217,8 @@ test('完整公共定义复用各拥有者事实，Flow空自有槽不改变读�
   expect(kitPropDefinition.children).toBe('state-source-view')
   expect(kitPropDefinition.as).toBe('state-untracked')
   expect(kitPropDefinition.ref).toBe('only-through-prop')
-  expect(kitPropDefinition.description).toBe('state-source-view')
+  expect(kitPropDefinition.label).toBe('state-source-view')
+  expect(Object.hasOwn(kitPropDefinition, 'description')).toBe(false)
   expect(kitPropDefinition.styleConfig).toBe('state-value-view')
 })
 
@@ -347,8 +348,8 @@ function verifyContextualRender() {
     () => null,
   )
   interface NarrowController {
-    props: Omit<FlowController['props'], 'description'> & {
-      description: State<'fixed'>
+    props: Omit<FlowController['props'], 'label'> & {
+      label: State<'fixed'>
     }
   }
   const RenderNarrow: KitComponent<{

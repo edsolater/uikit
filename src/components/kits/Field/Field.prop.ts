@@ -21,7 +21,7 @@ export const componentName = 'Field'
 /** Field 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
 export type FieldProps = Omit<
   KitProps<{ controller: FieldController }>,
-  'children'
+  'children' | 'label'
 > & {
   label: Source<string>
   tooltip?: LabelProps['tooltip']
@@ -30,7 +30,6 @@ export type FieldProps = Omit<
 
 /** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
 const fieldOwnPropDefinition = {
-  label: 'state-source-view',
   tooltip: 'state-value-view',
   children: 'only-through-prop',
 } as const

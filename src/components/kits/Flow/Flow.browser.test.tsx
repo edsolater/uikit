@@ -170,7 +170,7 @@ test('固定列、内容列和自动填充持续消费来源，内层布局不�
     () => (
       <Flow>
         <Flow
-          description={label}
+          label={label}
           styleConfig={{ direction: 'column', width: width, grow: grow }}
         >
           <Grid

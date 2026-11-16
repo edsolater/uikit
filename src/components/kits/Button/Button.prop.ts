@@ -5,7 +5,6 @@
  *
  * 动作执行与状态能力由同名组件实现，样式配置由样式文件拥有。
  */
-import type { Source } from '@/foundation'
 import {
   kitPropDefinition,
   type KitController,
@@ -101,17 +100,6 @@ export type ButtonProps = KitProps<{
   VariantProps<'tone', ButtonTone> &
   VariantProps<'size', ButtonSize> &
   StatusProps<ButtonStatus> & {
-    /**
-     * 动作名。
-     *
-     * name 描述“这个按钮动作是什么”，用于可访问性、调试和纯图形按钮的动作识别。
-     * 这个字段站在界面动作语义上，不兼容原生表单 name 语义。
-     * 它不替代 children，也不表示可见文案；普通文本按钮应优先把可见内容写进 children。
-     * 当 children 只有图标或其他非文本内容时，用 name 提供 aria-label。
-     * 原生 button 的 name attribute 通过 htmlProps.name 传入，不使用这个字段。
-     */
-    name?: Source<string | undefined>
-
     /** 用户执行这个按钮动作时触发。Button 在内部把它翻译成 Piv 的 click 事件声明。 */
     onClick?: EventListenerInput<'click'>
   }
@@ -133,7 +121,6 @@ const buttonOwnPropDefinition = {
   xlarge: 'state-source-view',
   loading: 'state-source-view',
   disabled: 'state-source-view',
-  name: 'state-source-view',
   onClick: 'state-value-view',
 } as const
 

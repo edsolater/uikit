@@ -6,7 +6,6 @@
  * 网格负责排列，子组件保留自己的外观和交互。
  */
 import { Piv } from '../../Piv/Piv'
-import { val } from '@/foundation'
 import { kit, type KitComponent } from '../../tools/kit'
 
 import {
@@ -31,15 +30,7 @@ export const Grid: KitComponent<{
     styleConfig: gridStyleConfig,
   },
   (props, { name }) => (
-    <Piv
-      shadowProps={props}
-      class={name}
-      htmlProps={{
-        get 'aria-label'() {
-          return val(props.label)
-        },
-      }}
-    >
+    <Piv shadowProps={props} class={name}>
       {props.children}
     </Piv>
   ),

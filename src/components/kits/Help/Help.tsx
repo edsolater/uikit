@@ -40,10 +40,8 @@ export const Help: KitComponent<{
           return props.tooltip
         },
       })}
-      htmlProps={{
-        'type': 'button',
-        'aria-label': val(props.name) ?? '帮助说明',
-      }}
+      label={val(props.label) ?? '帮助说明'}
+      htmlProps={{ type: 'button' }}
     >
       {val(props.trigger) ?? '?'}
     </Piv>

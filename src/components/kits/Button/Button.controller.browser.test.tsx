@@ -385,7 +385,7 @@ test('原未声明的内容和DOM响应字段通过同一Props链更新', () => 
   button.props!.class.set('运行时类名')
   button.props!.id.set('runtime-button')
   button.props!.htmlProps.set({ 'title': '运行时标题', 'data-probe': '完成' })
-  button.props!.name.set('运行时动作')
+  button.props!.label.set('运行时动作')
   button.props!.children.set('运行时内容')
   flush()
   expect(element.classList.contains('运行时类名')).toBe(true)

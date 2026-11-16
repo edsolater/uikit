@@ -18,7 +18,10 @@ import type { LabelProps } from '../Label/Label.prop'
 export const componentName = 'Checkbox'
 
 /** Checkbox 的公共声明与自有业务输入。 */
-export type CheckboxProps = KitProps<{ controller: CheckboxController }> & {
+export type CheckboxProps = Omit<
+  KitProps<{ controller: CheckboxController }>,
+  'label'
+> & {
   name?: string
   checked: Source<boolean>
   label: Source<string>
@@ -32,7 +35,6 @@ export type CheckboxProps = KitProps<{ controller: CheckboxController }> & {
 const checkboxOwnPropDefinition = {
   name: 'state-value-view',
   checked: 'state-source-view',
-  label: 'state-source-view',
   tooltip: 'state-value-view',
   disabled: 'state-source-view',
   required: 'state-value-view',

@@ -314,7 +314,7 @@ describe('Button styles', () => {
               emphasis={emphasis}
               disabled={disabled}
               danger
-              name="添加"
+              label="添加"
             >
               <svg
                 width="20"

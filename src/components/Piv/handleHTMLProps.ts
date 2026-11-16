@@ -30,7 +30,8 @@ type KnownHTMLPropKey<Tag extends PivTag> = Exclude<
   keyof JSX.IntrinsicAttributes | ReservedHTMLPropKey
 >
 
-type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
+/** 一份原生字段声明，按标签约束已知属性，并保留自定义字段与专用入口边界。 */
+export type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
   [Key in KnownHTMLPropKey<Tag>]?: HTMLPropAtom<JSX.IntrinsicElements[Tag][Key]>
 } & {
   [key: `attr:${string}`]: HTMLPropAtom<HTMLPropPrimitive> | undefined

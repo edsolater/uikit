@@ -30,12 +30,7 @@ export const NavigationRegion: KitComponent<{
   },
   (props, { name }) => {
     return (
-      <Piv
-        shadowProps={props}
-        as="nav"
-        class={name}
-        htmlProps={{ 'aria-label': props.label }}
-      >
+      <Piv shadowProps={props} as="nav" class={name}>
         {props.children}
       </Piv>
     )

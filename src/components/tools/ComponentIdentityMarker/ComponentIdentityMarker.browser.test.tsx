@@ -1,5 +1,5 @@
 /**
- * 结构查看的真实浏览器验收。
+ * 组件身份结构查看的真实浏览器验收。
  *
  * 从公开组件与手动FAB验证用途、真实边界和原界面保持。
  *
@@ -14,11 +14,11 @@ import {
   Article,
   Button,
   Card,
-  KitMarker,
+  ComponentIdentityMarker,
   Loop,
   Input,
   Piv,
-  KitMarkerStructureViewTrigger,
+  ComponentIdentityMarkerStructureViewTrigger,
   Table,
 } from '@/components'
 import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
@@ -54,7 +54,7 @@ function createHost() {
  */
 function toggleView() {
   document
-    .querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
+    .querySelector<HTMLButtonElement>('.ComponentIdentityMarkerStructureViewTrigger')!
     .click()
   flush()
 }
@@ -80,15 +80,15 @@ describe('组件结构查看', () => {
       } = createPopoverPlugins({})
       return (
         <>
-          <KitMarker componentName="透明父" descriptionDisplay={display.read()}>
+          <ComponentIdentityMarker componentName="透明父" descriptionDisplay={display.read()}>
             <Piv style={{ opacity }}>
               <Button descriptionDisplay>子动作</Button>
               <Button is={popoverTrigger}>原生浮层</Button>
               <Card is={popoverBody}>浮层内容</Card>
             </Piv>
-            <KitMarker componentName="裸子" descriptionDisplay>
+            <ComponentIdentityMarker componentName="裸子" descriptionDisplay>
               {content.read()}
-            </KitMarker>
+            </ComponentIdentityMarker>
             <Piv as="table">
               <Piv as="tbody">
                 <Piv as="tr">
@@ -99,16 +99,16 @@ describe('组件结构查看', () => {
             <Piv as="select">
               <Piv as="option">原选项</Piv>
             </Piv>
-          </KitMarker>
-          <KitMarker componentName="视口外父" descriptionDisplay={false}>
+          </ComponentIdentityMarker>
+          <ComponentIdentityMarker componentName="视口外父" descriptionDisplay={false}>
             <Piv style={{ position: 'fixed', top: '-1000px', height: '0px' }}>
               <Button style={{ position: 'fixed', top: '8px', left: '8px' }}>
                 固定子动作
               </Button>
             </Piv>
-          </KitMarker>
+          </ComponentIdentityMarker>
           <Button>外部动作</Button>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       )
     }, host)
@@ -166,16 +166,16 @@ describe('组件结构查看', () => {
     expect(CSS.highlights.has('uikit-structure-view-hidden')).toBe(false)
   })
 
-  test('未加载和加载未开启都保持内容，开启后外部说明覆盖默认且能响应更新', async () => {
+  test('未加载和加载未开启都保持内容，开启后定义职责与实例标签独立呈现并响应更新', async () => {
     const description = createState<string | undefined>()
     const showFab = createState(false)
     const host = createHost()
     dispose = render(
       () => (
         <>
-          <Button description={description}>确认</Button>
+          <Button label={description}>确认</Button>
           <Show when={showFab.read()}>
-            <KitMarkerStructureViewTrigger />
+            <ComponentIdentityMarkerStructureViewTrigger />
           </Show>
         </>
       ),
@@ -184,14 +184,14 @@ describe('组件结构查看', () => {
     const button = host.querySelector('button')!
     const before = button.getBoundingClientRect().toJSON()
     expect(
-      document.querySelector('.ComponentMarkerStructureViewTrigger'),
+      document.querySelector('.ComponentIdentityMarkerStructureViewTrigger'),
     ).toBeNull()
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
     showFab.set(true)
     flush()
     expect(
       document
-        .querySelector('.ComponentMarkerStructureViewTrigger')
+        .querySelector('.ComponentIdentityMarkerStructureViewTrigger')
         ?.getAttribute('aria-pressed'),
     ).toBe('false')
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
@@ -207,11 +207,11 @@ describe('组件结构查看', () => {
     ).toBe(overlay.getBoundingClientRect().height)
     description.set('保存当前选择')
     flush()
-    await expect.poll(readLabels).toContain('Button · 保存当前选择')
+    await expect.poll(readLabels).toContain('Button · 执行动作 · 保存当前选择')
     description.set('')
     flush()
-    await expect.poll(readLabels).toContain('Button')
-    expect(readLabels()).not.toContain('Button · 执行动作')
+    await expect.poll(readLabels).toContain('Button · 执行动作')
+    expect(readLabels()).not.toContain('Button · 执行动作 · 保存当前选择')
     description.set(undefined)
     flush()
     await expect.poll(readLabels).toContain('Button · 执行动作')
@@ -241,7 +241,7 @@ describe('组件结构查看', () => {
               <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
             </Article>
           </Card>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       )
     }, host)
@@ -279,7 +279,7 @@ describe('组件结构查看', () => {
     expect(
       readLabels().some(
         (label) =>
-          label?.startsWith('Piv') || label?.startsWith('ComponentMarker'),
+          label?.startsWith('Piv') || label?.startsWith('ComponentIdentityMarker'),
       ),
     ).toBe(false)
     expect([...article.querySelectorAll('*')]).toEqual(originalElements)
@@ -309,19 +309,19 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <KitMarker componentName="多根" description="文本和兄弟节点">
+          <ComponentIdentityMarker componentName="多根" label="文本和兄弟节点">
             文本根<span>元素根</span>
             <Show when={visible.read()}>
               <Button>动态动作</Button>
             </Show>
-          </KitMarker>
+          </ComponentIdentityMarker>
           <select>
-            <KitMarker componentName="选项组">
+            <ComponentIdentityMarker componentName="选项组">
               <option>甲</option>
               <option>乙</option>
-            </KitMarker>
+            </ComponentIdentityMarker>
           </select>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -356,10 +356,10 @@ describe('组件结构查看', () => {
       return (
         <>
           <Button is={popoverTrigger}>打开补充</Button>
-          <Card is={popoverBody} description="原生浮层">
+          <Card is={popoverBody} label="原生浮层">
             真实浮层内容
           </Card>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       )
     }, host)
@@ -371,7 +371,7 @@ describe('组件结构查看', () => {
     await expect.poll(() => trigger.popoverTargetElement).toBe(popover)
     trigger.click()
     await expect.poll(() => popover.matches(':popover-open')).toBe(true)
-    await expect.poll(readLabels).toContain('Card · 原生浮层')
+    await expect.poll(readLabels).toContain('Card · 组织独立信息 · 原生浮层')
     const overlay = document.querySelector<HTMLElement>(
       '.StructureViewOverlay',
     )!
@@ -407,9 +407,9 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <Button description={description}>确认</Button>
+          <Button label={description}>确认</Button>
           <Loading fallback={<p>读取用途说明</p>}>
-            <KitMarkerStructureViewTrigger />
+            <ComponentIdentityMarkerStructureViewTrigger />
           </Loading>
         </>
       ),
@@ -420,7 +420,9 @@ describe('组件结构查看', () => {
     description.set(pendingDescription)
     flush()
     resolveDescription('异步提供的用途')
-    await expect.poll(readLabels).toContain('Button · 异步提供的用途')
+    await expect
+      .poll(readLabels)
+      .toContain('Button · 执行动作 · 异步提供的用途')
     const before = document.querySelector<HTMLElement>(
       '.StructureViewOverlay > .frame',
     )!.style.top
@@ -439,13 +441,13 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <KitMarker
+          <ComponentIdentityMarker
             componentName="用途框"
-            description="很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外"
+            label="很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外"
           >
             <Piv style={{ width: '96px', height: '42px' }}>真实内容</Piv>
-          </KitMarker>
-          <KitMarkerStructureViewTrigger />
+          </ComponentIdentityMarker>
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -480,10 +482,10 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <KitMarker componentName="整页内容">
+          <ComponentIdentityMarker componentName="整页内容">
             <Piv style={{ width: '100vw', height: '100vh' }}>真实页面</Piv>
-          </KitMarker>
-          <KitMarkerStructureViewTrigger />
+          </ComponentIdentityMarker>
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -502,7 +504,7 @@ describe('组件结构查看', () => {
     )
     const context = canvas.getContext('2d')!
     const control = document
-      .querySelector<HTMLElement>('.ComponentMarkerStructureViewTrigger')!
+      .querySelector<HTMLElement>('.ComponentIdentityMarkerStructureViewTrigger')!
       .getBoundingClientRect()
     const controlAlpha = context.getImageData(
       Math.round(
@@ -536,7 +538,7 @@ describe('组件结构查看', () => {
     expect(getComputedStyle(frame).clipPath).toBe('none')
     expect(getComputedStyle(canvas).zIndex).toBe('1')
     const controlElement = document.querySelector<HTMLElement>(
-      '.ComponentMarkerStructureViewTrigger',
+      '.ComponentIdentityMarkerStructureViewTrigger',
     )!
     expect(
       document.elementFromPoint(
@@ -552,23 +554,23 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(() => {
       const child = (
-        <KitMarker componentName="子框">
+        <ComponentIdentityMarker componentName="子框">
           <Piv style={{ width: '160px', height: '80px' }}>内容</Piv>
-        </KitMarker>
+        </ComponentIdentityMarker>
       )
       return (
         <>
-          <KitMarker componentName="父框">
+          <ComponentIdentityMarker componentName="父框">
             <Piv style={{ width: '220px', height: '160px' }}>{child}</Piv>
-          </KitMarker>
-          <KitMarker componentName="多根">
+          </ComponentIdentityMarker>
+          <ComponentIdentityMarker componentName="多根">
             <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
             <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
-          </KitMarker>
-          <KitMarker componentName="ReadingSummary">
+          </ComponentIdentityMarker>
+          <ComponentIdentityMarker componentName="ReadingSummary">
             <Card style={{ width: '200px', height: '80px' }}>同框内容</Card>
-          </KitMarker>
-          <KitMarkerStructureViewTrigger />
+          </ComponentIdentityMarker>
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       )
     }, host)

@@ -1,7 +1,7 @@
 /**
  * kit 是组件的统一创建入口。
  *
- * 根据定义接入身份标记、根样式、无障碍说明及可选的输入控制与实例集合。
+ * 根据定义接入身份标记、根样式、结构查看及可选的输入控制与实例集合。
  *
  * 共同接线由通用层承担，让组件函数集中表达自身业务。
  */
@@ -25,15 +25,15 @@ import {
 } from '../kits/utils/parseVariantProps'
 import { bindStyleConfig, type StyleConfig } from './styleConfig'
 import {
-  componentDescriptionPropsDefinition,
-  type ComponentDescriptionPropDefinition,
-} from './KitMarker/KitMarker.prop'
+  componentIdentityMarkerDisplayPropsDefinition,
+  type ComponentIdentityMarkerDisplayPropDefinition,
+} from './ComponentIdentityMarker/ComponentIdentityMarker.prop'
 import { ElementDeclarationsContext } from '../Piv/elementDeclarations'
-import { KitMarker } from './KitMarker/KitMarker'
+import { ComponentIdentityMarker } from './ComponentIdentityMarker/ComponentIdentityMarker'
 import type {
-  ComponentDescriptionProps,
-  KitMarkerProps,
-} from './KitMarker/KitMarker'
+  ComponentIdentityMarkerDisplayProps,
+  ComponentIdentityMarkerProps,
+} from './ComponentIdentityMarker/ComponentIdentityMarker'
 import {
   createComponentPropsDirector,
   type DirectedProps,
@@ -90,7 +90,7 @@ export type KitProps<Config extends KitPropsConfig = {}> = PivProps<
       : NonNullable<Config['domTag']>
     : KitPropsDefaults['domTag']
 > &
-  ComponentDescriptionProps &
+  ComponentIdentityMarkerDisplayProps &
   KitStyleConfigProps<
     'styleConfig' extends keyof Config
       ? NonNullable<Config['styleConfig']> extends never
@@ -106,7 +106,7 @@ export type KitProps<Config extends KitPropsConfig = {}> = PivProps<
       : KitPropsDefaults['controller']
   >
 
-/** Kit 自己拥有的读取规则；不包含 Piv 或用途说明字段。 */
+/** Kit 自己拥有的读取规则；不包含 Piv 或结构查看显示字段。 */
 const kitCommonPropDefinition = {
   ref: 'only-through-prop',
   styleConfig: 'state-value-view',
@@ -114,7 +114,7 @@ const kitCommonPropDefinition = {
 
 /** 公共字段协议的基础形状，与下方运行时公共定义对应。 */
 type KitBasePropDefinition = PivPropDefinition &
-  ComponentDescriptionPropDefinition &
+  ComponentIdentityMarkerDisplayPropDefinition &
   typeof kitCommonPropDefinition
 
 /**
@@ -130,7 +130,7 @@ export type KitPropDefinition<
 /** Kit 聚合契约的完整公共字段协议，各拥有者只声明自己的事实。 */
 export const kitPropDefinition: KitPropDefinition<{}> = {
   ...pivPropsDefinition,
-  ...componentDescriptionPropsDefinition,
+  ...componentIdentityMarkerDisplayPropsDefinition,
   ...kitCommonPropDefinition,
 }
 
@@ -168,7 +168,7 @@ export type KitController<
 export interface KitComponentContext<
   ControllerMembers extends object = object,
 > {
-  /** 与 KitMarker 共用的组件身份，核心可用它声明根元素的 class。 */
+  /** 与 ComponentIdentityMarker 共用的组件身份，核心可用它声明根元素的 class。 */
   name: string
   /**
    * 将清理动作绑定到当前实例，卸载时执行。
@@ -217,12 +217,15 @@ export type KitOptions<
   propDefinition: Config['propDefinition']
   /** 所有实例共用的组件身份，同时交给 Marker 与核心上下文。 */
   name: string
-  /** 实例没有提供说明时，由 Marker 使用的默认用途说明。 */
-  description?: ComponentDescriptionProps['description']
+  /**
+   * Component 本身使用的职责说明，属于 KitOptions；具体实例的 label 属于 PivProps。
+   * 交给 ComponentIdentityMarker 呈现，与实例名称独立，不参与原生无障碍命名。
+   */
+  description?: string
   /** 按实例输入决定说明呈现方式；在实例创建时求值。 */
   marker?: (
     props: Config['props'],
-  ) => Pick<KitMarkerProps, 'defaultDescriptionDisplay' | 'descriptionOnly'>
+  ) => Pick<ComponentIdentityMarkerProps, 'defaultDescriptionDisplay' | 'labelOnly'>
   /** 互斥分组及候选字段；启用输入控制时，为未声明的分组建立默认来源。 */
   variantGroups?: readonly Pick<
     VariantPropsGroup<
@@ -247,7 +250,7 @@ export type KitOptions<
  * 只有创建时提供 ref 的实例才启用输入控制并进入 controllers。
  * 之后替换 ref 会取得同一个 Controller；移除 ref 不退出受控模式，卸载才退出集合。
  * render 在实例创建时执行一次，动态输入由实际消费点读取，不通过重跑 render 更新。
- * 样式配置和用途说明作为根声明交给内部真实元素，kit 与 Marker 不增加容器 DOM。
+ * 样式配置作为根声明交给内部真实元素；实例名称由 Piv 负责节点语义，kit 与 Marker 不增加容器 DOM。
  *
  * @example
  * type FlowProps = KitProps<{ styleConfig: FlowStyleConfig; controller: FlowController }> & {
@@ -266,7 +269,7 @@ export type KitOptions<
  * )
  */
 export function kit<
-  Props extends ComponentDescriptionProps,
+  Props extends ComponentIdentityMarkerDisplayProps & Pick<PivProps, 'label'>,
   Controller extends { props: object },
   PropDefinition extends PropsDefinition<Props> & { ref: 'only-through-prop' },
   StyleTokens extends Record<string, Token> | undefined = undefined,
@@ -348,22 +351,22 @@ export function kit<
     }
     // Marker 只建立组件身份和说明边界；children 延迟创建，使核心处于此身份的作用域内。
     const marker = options.marker?.(renderProps)
-    return createComponent(KitMarker, {
+    return createComponent(ComponentIdentityMarker, {
       componentName: options.name,
-      get description() {
-        return renderProps.description
+      get label() {
+        return renderProps.label
       },
       get descriptionDisplay() {
         return renderProps.descriptionDisplay
       },
-      get defaultDescription() {
+      get description() {
         return options.description
       },
       get defaultDescriptionDisplay() {
         return marker?.defaultDescriptionDisplay
       },
-      get descriptionOnly() {
-        return marker?.descriptionOnly
+      get labelOnly() {
+        return marker?.labelOnly
       },
       get children() {
         return createComponent(renderRoot, {})
@@ -385,13 +388,6 @@ export function kit<
             },
           ),
         )
-      declarations.push({
-        htmlProps: {
-          get 'aria-label'() {
-            return renderProps.description
-          },
-        },
-      })
       return createComponent(ElementDeclarationsContext, {
         value: declarations,
         get children() {

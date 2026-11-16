@@ -24,7 +24,7 @@ import {
 /** 创建前可转交的统一补充声明，包含 as、if、domRef、is；children 仍由直接 Props 提供。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'children'>
 
-/** 合并后的字段声明；id 输出稳定 Source，其余字段保持原有输入契约。 */
+/** 合并后的字段声明；id 与 label 输出稳定 Source，其余字段保持原有输入契约。 */
 export type MergedPivProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'id'> & {
   id?: StateView<MayArray<ID> | undefined>
 }
@@ -75,7 +75,7 @@ export function mergePivProps<Tag extends PivTag>(
 }
 
 /**
- * 为整合后的声明建立 id 来源与其他字段的 getter。
+ * 为整合后的声明建立 id、label 来源与其他字段的 getter。
  * 读取最新完整声明，字段合并仍沿低优先级到高优先级的原顺序。
  */
 function createMergedProps<Tag extends PivTag>(
@@ -83,6 +83,14 @@ function createMergedProps<Tag extends PivTag>(
   readSources: () => ShadowProps<Tag>[],
 ): MergedPivProps<Tag> {
   const id = derive([readSources], ([read]) => mergePivPropValue(read(), 'id'))
+  // 名称在原生字段实际消费时才取值，保持异步来源的等待与更新作用域。
+  const label = derive([readSources], ([read]) => {
+    for (const source of read()) {
+      const value = val(source.label)
+      if (value !== undefined) return value
+    }
+    return undefined
+  })
   const readProperty = (key: keyof PivProps<Tag>) => {
     if (key === 'id') return id
     if (key === 'children') return props.children
@@ -93,6 +101,7 @@ function createMergedProps<Tag extends PivTag>(
       }
       return undefined
     }
+    if (key === 'label') return label
     if (key === 'if') return readSources().find((source) => 'if' in source)?.if
     return mergePivPropValue(readSources(), key)
   }

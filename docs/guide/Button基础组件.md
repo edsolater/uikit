@@ -12,7 +12,7 @@
 
 ```txt
 调用方
-  ├─ children / name：动作信息
+  ├─ children / label：动作信息
   ├─ appearance / tone / emphasis / size：Variant 分类
   └─ loading / disabled：外部状态波
           ↓
@@ -26,7 +26,7 @@
 - 保存、确认、取消、清除、删除、重试等当前位置命令使用 Button。
 - 改变 URL 或页面位置时使用 Link。
 - 输入值使用 Input；切换持续状态使用对应表单控件。
-- `children` 承载可见动作内容；纯图形内容通过 `name` 提供动作名。
+- `children` 承载可见动作内容；纯图形内容通过 `label` 提供动作名。
 
 ## Variant 输入轮廓
 
@@ -89,7 +89,7 @@ Status 的初始声明来自 Props；只有提供有效组件 ref 才启用通�
 - 当前 Status 合并到 `data-status`。
 - loading 同步到 `aria-busy`。
 - disabled 同步到原生 `disabled`。
-- `name` 同步到 `aria-label`。
+- `label` 同步到 `aria-label`。
 
 ## 边界
 

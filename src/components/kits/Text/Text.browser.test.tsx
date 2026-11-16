@@ -21,7 +21,7 @@ import { createRef } from '@/hooks/createRef'
 import {
   Button,
   Piv,
-  KitMarkerStructureViewTrigger,
+  ComponentIdentityMarkerStructureViewTrigger,
   Text,
   type TextProps,
   type TextController,
@@ -49,7 +49,7 @@ afterEach(() => {
  */
 function toggleView() {
   document
-    .querySelector<HTMLButtonElement>('.ComponentMarkerStructureViewTrigger')!
+    .querySelector<HTMLButtonElement>('.ComponentIdentityMarkerStructureViewTrigger')!
     .click()
   flush()
 }
@@ -67,7 +67,7 @@ describe('Text', () => {
         <>
           <Text block ref={receive} />
           <Text>普通文字</Text>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -83,7 +83,7 @@ describe('Text', () => {
     expect(element.tagName).toBe('DIV')
     expect(host.querySelector('.Text')).toBe(element)
     toggleView()
-    text.props!.description.set('运行期用途')
+    text.props!.label.set('运行期用途')
     flush()
     await expect
       .poll(() =>
@@ -92,7 +92,7 @@ describe('Text', () => {
         ),
       )
       .toBe(true)
-    text.props!.description.set('')
+    text.props!.label.set('')
     flush()
     await expect.poll(() => getComputedStyle(element).opacity).toBe('0')
     dispose()
@@ -115,7 +115,7 @@ describe('Text', () => {
           </Piv>
           <Button>按钮原文字</Button>
           <Show when={showFab.read()}>
-            <KitMarkerStructureViewTrigger />
+            <ComponentIdentityMarkerStructureViewTrigger />
           </Show>
         </>
       ),
@@ -183,13 +183,13 @@ describe('Text', () => {
           <Text p={false} descriptionDisplay>
             行内段落说明
           </Text>
-          <Text block description={description}>
+          <Text block label={description}>
             说明
           </Text>
           <Text p descriptionDisplay>
             {42}
           </Text>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -259,10 +259,10 @@ describe('Text', () => {
     dispose = render(
       () => (
         <>
-          <Text description={description} descriptionDisplay={display.read()}>
+          <Text label={description} descriptionDisplay={display.read()}>
             动态说明文字
           </Text>
-          <KitMarkerStructureViewTrigger />
+          <ComponentIdentityMarkerStructureViewTrigger />
         </>
       ),
       host,
@@ -328,7 +328,7 @@ test('关闭定位框显示仍等待异步用途，并在完成后绑定无障�
   dispose = render(
     () => (
       <Loading fallback={<Piv>等待用途</Piv>}>
-        <Text description={description} descriptionDisplay={false}>
+        <Text label={description} descriptionDisplay={false}>
           异步内容
         </Text>
       </Loading>

@@ -1,5 +1,5 @@
 /**
- * 结构覆盖层显示活组件的真实边界与用途。
+ * 结构覆盖层显示存活组件的真实边界与用途。
  *
  * 逐框白色模糊遮罩承载标注，隐藏选择不改写原样式来源或事件。
  *
@@ -15,7 +15,7 @@ import {
 } from '@/foundation'
 import { useBrowserAnimationFrame } from '@/hooks/useBrowserAnimationFrame'
 import { Piv } from '../../Piv/Piv'
-import { componentBoundaries, type ComponentBoundary } from './KitMarker'
+import { componentBoundaries, type ComponentBoundary } from './ComponentIdentityMarker'
 import './StructureViewOverlay.style'
 
 /** 一帧中的真实边界，单位为视口像素。 */

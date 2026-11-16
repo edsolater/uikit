@@ -29,9 +29,9 @@ export const Text: KitComponent<{
     name: componentName,
     propDefinition: textPropDefinition,
     marker: (props) => ({
-      descriptionOnly: true,
+      labelOnly: true,
       get defaultDescriptionDisplay() {
-        return Boolean(val(props.description))
+        return Boolean(val(props.label))
       },
     }),
   },

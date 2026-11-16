@@ -8,7 +8,7 @@ import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
 import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
-import { KitMarkerStructureViewTrigger } from '../../tools/KitMarker/KitMarkerStructureViewTrigger'
+import { ComponentIdentityMarkerStructureViewTrigger } from '../../tools/ComponentIdentityMarker/ComponentIdentityMarkerStructureViewTrigger'
 import { Text } from '../Text/Text'
 import { Heading } from '../Heading/Heading'
 
@@ -19,14 +19,14 @@ export function ButtonExample() {
   return (
     <>
       <Card class="example-card">
-        <Article description="按钮外观与状态示例">
+        <Article label="按钮外观与状态示例">
           <div class="example-card-head">
-            <Text description="类别">Component</Text>
-            <Heading level={2} description="标题">
+            <Text label="类别">Component</Text>
+            <Heading level={2} label="标题">
               Button
             </Heading>
           </div>
-          <Text p description="描述">
+          <Text p label="描述">
             按钮分别描述填充、轮廓或无边界外观、整体强调程度、动作语气和尺寸，不承载导航语义。
           </Text>
 
@@ -73,23 +73,23 @@ export function ButtonExample() {
           </div>
 
           <div class="button-example-grid">
-            <Text block class="button-example-head" description="列标题">
+            <Text block class="button-example-head" label="列标题">
               类型
             </Text>
-            <Text block class="button-example-head" description="列标题">
+            <Text block class="button-example-head" label="列标题">
               默认
             </Text>
-            <Text block class="button-example-head" description="列标题">
+            <Text block class="button-example-head" label="列标题">
               悬停体验
             </Text>
-            <Text block class="button-example-head" description="列标题">
+            <Text block class="button-example-head" label="列标题">
               按下体验
             </Text>
-            <Text block class="button-example-head" description="列标题">
+            <Text block class="button-example-head" label="列标题">
               流程
             </Text>
 
-            <Text block class="button-example-label" description="行标题">
+            <Text block class="button-example-label" label="行标题">
               普通
             </Text>
             <div>
@@ -106,7 +106,7 @@ export function ButtonExample() {
               <Button disabled>Disabled</Button>
             </div>
 
-            <Text block class="button-example-label" description="行标题">
+            <Text block class="button-example-label" label="行标题">
               filled 外观
             </Text>
             <div>
@@ -127,7 +127,7 @@ export function ButtonExample() {
               </Button>
             </div>
 
-            <Text block class="button-example-label" description="行标题">
+            <Text block class="button-example-label" label="行标题">
               较强强调
             </Text>
             <div>
@@ -154,7 +154,7 @@ export function ButtonExample() {
               </Button>
             </div>
 
-            <Text block class="button-example-label" description="行标题">
+            <Text block class="button-example-label" label="行标题">
               危险
             </Text>
             <div>
@@ -181,7 +181,7 @@ export function ButtonExample() {
               </Button>
             </div>
 
-            <Text block class="button-example-label" description="行标题">
+            <Text block class="button-example-label" label="行标题">
               plain 外观
             </Text>
             <div>
@@ -207,7 +207,7 @@ export function ButtonExample() {
           </div>
 
           <div class="button-size-stack">
-            <Text block class="button-example-label" description="分组标题">
+            <Text block class="button-example-label" label="分组标题">
               尺寸
             </Text>
             <div class="button-row">
@@ -231,7 +231,7 @@ export function ButtonExample() {
           </div>
         </Article>
       </Card>
-      <KitMarkerStructureViewTrigger />
+      <ComponentIdentityMarkerStructureViewTrigger />
     </>
   )
 }

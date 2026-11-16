@@ -18,7 +18,7 @@ import {
   type KitController,
   type KitComponent,
 } from './kit'
-import { componentBoundaries } from './KitMarker/KitMarker'
+import { componentBoundaries } from './ComponentIdentityMarker/ComponentIdentityMarker'
 import type { StyleConfig } from './styleConfig'
 import { Flow } from '../kits/Flow/Flow'
 import type { FlowController } from '../kits/Flow/Flow.prop'
@@ -94,25 +94,25 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
   expect(host.firstElementChild).toBe(element)
 })
 
-test('可选动作名和区域标签缺省时，受控模式保留相同的用途说明名称', () => {
+test('实例标签在受控与非受控模式中一致更新，清空后不回退定义职责', () => {
   const host = document.body.appendChild(document.createElement('main'))
   let button!: ButtonController
   let grid!: GridController
   dispose = render(
     () => (
       <>
-        <Button description="保存当前内容">保存</Button>
+        <Button label="保存当前内容">保存</Button>
         <Button
-          description="保存当前内容"
+          label="保存当前内容"
           ref={(current) => {
             button = current
           }}
         >
           保存
         </Button>
-        <Grid description="主要内容区域" />
+        <Grid label="主要内容区域" />
         <Grid
-          description="主要内容区域"
+          label="主要内容区域"
           ref={(current) => {
             grid = current
           }}
@@ -127,16 +127,16 @@ test('可选动作名和区域标签缺省时，受控模式保留相同的用�
   expect(buttons[1]!.getAttribute('aria-label')).toBe('保存当前内容')
   expect(grids[0]!.getAttribute('aria-label')).toBe('主要内容区域')
   expect(grids[1]!.getAttribute('aria-label')).toBe('主要内容区域')
-  button.props.name.set('另存为')
+  button.props.label.set('另存为')
   grid.props.label.set('次要内容区域')
   flush()
   expect(buttons[1]!.getAttribute('aria-label')).toBe('另存为')
   expect(grids[1]!.getAttribute('aria-label')).toBe('次要内容区域')
-  button.props.name.set(undefined)
+  button.props.label.set(undefined)
   grid.props.label.set(undefined)
   flush()
-  expect(buttons[1]!.getAttribute('aria-label')).toBe('保存当前内容')
-  expect(grids[1]!.getAttribute('aria-label')).toBe('主要内容区域')
+  expect(buttons[1]!.hasAttribute('aria-label')).toBe(false)
+  expect(grids[1]!.hasAttribute('aria-label')).toBe(false)
 })
 
 test('受控实例持续消费补充声明、能力和DOM引用换接，根元素不重建', () => {

@@ -13,7 +13,7 @@ import { Heading } from '../Heading/Heading'
 import { MessageBoard } from '../MessageBoard/MessageBoard'
 import { createState, render } from '@/foundation'
 import { cssRoot } from '@/style-system'
-import { componentBoundaries } from '@/components/tools/KitMarker/KitMarker'
+import { componentBoundaries } from '@/components/tools/ComponentIdentityMarker/ComponentIdentityMarker'
 import '@/css/all-base.css'
 
 test('Board 使用系统材料并响应根主题', () => {

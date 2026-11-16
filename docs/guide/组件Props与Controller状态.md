@@ -93,13 +93,13 @@ flowchart LR
   R -->|后续输入干预| H
 ```
 
-kit 负责同一个 Controller 的组装、登记、ref 换接和透明 KitMarker；Piv/Dode 负责真实节点及原生声明的消费。样式和组件用途说明通过根声明上下文传递，在真实根处消费后停止向子内容传递，不增加容器 DOM。
+kit 负责同一个 Controller 的组装、登记、ref 换接和透明 ComponentIdentityMarker；Piv/Dode 负责真实节点及原生声明的消费。样式和组件用途说明通过根声明上下文传递，在真实根处消费后停止向子内容传递，不增加容器 DOM。
 
 受控模式在实例存活期间保持不变。替换 ref 会向新接收器交付同一个 Controller，移除 ref 不注销实例，卸载才退出 `.controllers` 集合。组件 ref 与原生 domRef 各自独立。
 
 ## 字段协议决定读取与控制入口
 
-可干预字段在 `Controller.props` 下按原名提供可写 State。原生字段由 Dode 声明，来源与节点能力由 Piv 组合，用途说明由 KitMarker 提供，组件只补充自有字段及确有不同语义的覆盖。
+可干预字段在 `Controller.props` 下按原名提供可写 State。原生字段由 Dode 声明，来源与节点能力由 Piv 组合，用途说明由 ComponentIdentityMarker 提供，组件只补充自有字段及确有不同语义的覆盖。
 
 | 读取模式            | 核心取得的内容                                       | Controller.props |
 | ------------------- | ---------------------------------------------------- | ---------------- |

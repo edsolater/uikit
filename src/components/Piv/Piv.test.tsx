@@ -1,3 +1,10 @@
+/**
+ * Piv 声明组织与节点语义验证。
+ *
+ * 检查来源优先级、实例名称、动态绑定及组件生命周期。
+ *
+ * 保证管理层声明正确交给底层真实元素，不复制节点或改变声明所有权。
+ */
 import { flush, createRoot, createSignal } from 'solid-js'
 // @vitest-environment jsdom
 
@@ -13,6 +20,7 @@ import {
   val,
 } from '@/foundation'
 import { Piv } from './Piv'
+import { ElementDeclarationsContext } from './elementDeclarations'
 import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
 import type { ShadowProps } from './plugin/mergePivProps'
 import type { PivTag } from './domMap'
@@ -1074,3 +1082,55 @@ function testPlugin(
     },
   })()
 }
+
+test('实例label选择单一来源并转换根ARIA，显式原生名称优先且子节点不继承', () => {
+  const host = document.createElement('main')
+  const label = createState<string | undefined>('保存草稿')
+  const nativeLabel = createState<string | undefined>('原生名称')
+  const dispose = render(
+    () => (
+      <>
+        <Piv
+          label={label}
+          shadowProps={[{ label: '低优先级' }, { label: '补充名称' }]}
+        >
+          <Piv class="child" />
+        </Piv>
+        <Piv label={label} htmlProps={{ 'aria-label': nativeLabel }} />
+        <Piv label={label} />
+        <ElementDeclarationsContext
+          value={[{ htmlProps: { 'aria-label': '继承原生名称' } }]}
+        >
+          <Piv label={label} />
+        </ElementDeclarationsContext>
+      </>
+    ),
+    host,
+  )
+  try {
+    const [first, second, third, inherited] = [...host.children]
+    expect(first.getAttribute('aria-label')).toBe('保存草稿')
+    expect(second.getAttribute('aria-label')).toBe('原生名称')
+    expect(third.getAttribute('aria-label')).toBe('保存草稿')
+    expect(inherited.getAttribute('aria-label')).toBe('保存草稿')
+    expect(first.querySelector('.child')!.hasAttribute('aria-label')).toBe(
+      false,
+    )
+    label.set('提交草稿')
+    flush()
+    expect(first.getAttribute('aria-label')).toBe('提交草稿')
+    expect(third.getAttribute('aria-label')).toBe('提交草稿')
+    nativeLabel.set(undefined)
+    flush()
+    expect(second.hasAttribute('aria-label')).toBe(false)
+    label.set(undefined)
+    flush()
+    expect(first.getAttribute('aria-label')).toBe('补充名称')
+    expect(second.hasAttribute('aria-label')).toBe(false)
+    expect(third.hasAttribute('aria-label')).toBe(false)
+    expect(inherited.hasAttribute('aria-label')).toBe(false)
+    expect(host.firstElementChild).toBe(first)
+  } finally {
+    dispose()
+  }
+})

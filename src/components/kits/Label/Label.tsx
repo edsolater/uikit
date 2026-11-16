@@ -44,7 +44,7 @@ export const Label: KitComponent<{
           <Help
             tooltip={props.tooltip}
             trigger={props.tooltipTrigger}
-            name={stateView(() => val(props.children) + '说明')}
+            label={stateView(() => val(props.children) + '说明')}
           />
         </Show>
       </Piv>

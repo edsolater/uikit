@@ -17,7 +17,7 @@ export function HelpExample() {
       <Flow>
         <Text>悬停或聚焦问号查看帮助</Text>
         <Help
-          name="统计口径说明"
+          label="统计口径说明"
           tooltip={
             <Flow styleConfig={{ direction: 'column' }}>
               <Text p>成立率＝成立点数 ÷ 有效点数。</Text>
@@ -29,7 +29,7 @@ export function HelpExample() {
       <Flow>
         <Text>入口内容也可以替换</Text>
         <Help
-          name="自定义入口说明"
+          label="自定义入口说明"
           trigger="i"
           tooltip="说明入口可以独立用于任何需要补充解释的位置。"
         />

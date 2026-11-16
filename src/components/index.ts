@@ -14,17 +14,17 @@ export * from './Piv/plugin/helpers'
 export * from './Piv/Piv'
 export * from './Piv/type'
 export {
-  KitMarker,
-  type KitMarkerProps,
-  type ComponentDescriptionProps,
-} from './tools/KitMarker/KitMarker'
-export { KitMarkerStructureViewTrigger } from './tools/KitMarker/KitMarkerStructureViewTrigger'
-export { kitMarkerStructureViewTriggerOffset } from './tools/KitMarker/KitMarkerStructureViewTrigger.style'
+  ComponentIdentityMarker,
+  type ComponentIdentityMarkerProps,
+  type ComponentIdentityMarkerDisplayProps,
+} from './tools/ComponentIdentityMarker/ComponentIdentityMarker'
+export { ComponentIdentityMarkerStructureViewTrigger } from './tools/ComponentIdentityMarker/ComponentIdentityMarkerStructureViewTrigger'
+export { componentIdentityMarkerStructureViewTriggerOffset } from './tools/ComponentIdentityMarker/ComponentIdentityMarkerStructureViewTrigger.style'
 export {
-  kitMarkerStructureViewMaskColor,
-  kitMarkerStructureViewMaskBlur,
-  kitMarkerStructureViewLabelColor,
-} from './tools/KitMarker/StructureViewOverlay.style'
+  componentIdentityMarkerStructureViewMaskColor,
+  componentIdentityMarkerStructureViewMaskBlur,
+  componentIdentityMarkerStructureViewLabelColor,
+} from './tools/ComponentIdentityMarker/StructureViewOverlay.style'
 export { Loop } from './kits/Loop/Loop'
 export type { LoopProps, LoopController } from './kits/Loop/Loop.prop'
 export { Flow } from './kits/Flow/Flow'
@@ -220,7 +220,7 @@ export type {
   PropsDirectorOptions,
 } from './tools/componentPropsDirector'
 export { pivPropsDefinition } from './Piv/Piv.prop'
-export { componentDescriptionPropsDefinition } from './tools/KitMarker/KitMarker.prop'
+export { componentIdentityMarkerDisplayPropsDefinition } from './tools/ComponentIdentityMarker/ComponentIdentityMarker.prop'
 import './plugins/is.style'
 
 export type { StyleConfig, StyleConfigHandler } from './tools/styleConfig'

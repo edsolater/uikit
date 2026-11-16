@@ -9,7 +9,6 @@
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
 import { kit, type KitComponent } from '../../tools/kit'
-import { val } from '@/foundation'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { Piv } from '../../Piv/Piv'
 import { createVariantPropsParser } from '../utils/parseVariantProps'
@@ -76,11 +75,6 @@ export const Button: KitComponent<{
         shadowProps={[props, ...variantEffectProps, ...statusEffectProps]}
         class={name}
         is={[clickable({ componentName: name })]}
-        htmlProps={{
-          get 'aria-label'() {
-            return val(props.name)
-          },
-        }}
         on={{ click: props.onClick }}
       >
         {props.children}

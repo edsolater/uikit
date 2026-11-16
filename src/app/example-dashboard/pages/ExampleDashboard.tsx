@@ -27,8 +27,8 @@ import { LabelExample } from '@/components/kits/Label/Label.example'
 import { HelpExample } from '@/components/kits/Help/Help.example'
 import { TableExample } from '@/components/kits/Table/Table.example'
 import { LoopExample } from '@/components/kits/Loop/Loop.example'
-import { KitMarkerExample } from '@/components/tools/KitMarker/KitMarker.example'
-import { KitMarkerStructureViewTriggerExample } from '@/components/tools/KitMarker/KitMarkerStructureViewTrigger.example'
+import { ComponentIdentityMarkerExample } from '@/components/tools/ComponentIdentityMarker/ComponentIdentityMarker.example'
+import { ComponentIdentityMarkerStructureViewTriggerExample } from '@/components/tools/ComponentIdentityMarker/ComponentIdentityMarkerStructureViewTrigger.example'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
 import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card, Flow } from '@/components'
@@ -335,26 +335,26 @@ export const exampleEntries: ExampleEntry[] = [
     content: LoopExample,
   },
   {
-    id: 'component-marker',
+    id: 'component-identity-marker',
     level: 0.5,
-    title: 'ComponentMarker',
+    title: 'ComponentIdentityMarker',
     category: exampleCategories.component,
     summary: '透明组件边界与用途说明。',
-    thumbnail: new URL('../thumbnails/component-marker.webp', import.meta.url)
+    thumbnail: new URL('../thumbnails/component-identity-marker.webp', import.meta.url)
       .href,
-    content: KitMarkerExample,
+    content: ComponentIdentityMarkerExample,
   },
   {
-    id: 'component-marker-structure-view-trigger',
+    id: 'component-identity-marker-structure-view-trigger',
     level: 0.5,
-    title: 'ComponentMarkerStructureViewTrigger',
+    title: 'ComponentIdentityMarkerStructureViewTrigger',
     category: exampleCategories.component,
     summary: '手动查看组件结构与继续操作。',
     thumbnail: new URL(
-      '../thumbnails/component-marker-structure-view-trigger.webp',
+      '../thumbnails/component-identity-marker-structure-view-trigger.webp',
       import.meta.url,
     ).href,
-    content: KitMarkerStructureViewTriggerExample,
+    content: ComponentIdentityMarkerStructureViewTriggerExample,
   },
 ]
 

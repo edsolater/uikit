@@ -28,7 +28,7 @@ test('独立使用默认圆圈问号，模板持续更新，清空内容保留�
   dispose = render(
     () => (
       <Help
-        name="样本说明"
+        label="样本说明"
         tooltip={
           val(visible) ? <Piv as="strong">成立{val(count)}次</Piv> : undefined
         }

@@ -18,17 +18,19 @@ import {
 export const componentName = 'NavigationRegion'
 
 /** NavigationRegion 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type NavigationRegionProps = KitProps<{
-  controller: NavigationRegionController
-  domTag: 'nav'
-}> & {
+export type NavigationRegionProps = Omit<
+  KitProps<{
+    controller: NavigationRegionController
+    domTag: 'nav'
+  }>,
+  'label'
+> & {
   label: Source<string>
   children?: JSX.Element
 }
 
 /** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
 const navigationRegionOwnPropDefinition = {
-  label: 'state-source-view',
   children: 'state-value-view',
 } as const
 

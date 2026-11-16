@@ -67,7 +67,7 @@ Button = action + content + Variant Props + Status Props
 ```
 
 - `children` 是用户看到的动作内容。
-- `name` 是动作名；纯图形按钮必须提供，最终映射到 `aria-label`。
+- `label` 是动作名；纯图形按钮必须提供，最终映射到 `aria-label`。
 - appearance、tone、emphasis、size 是四个独立的 Variant 分组。
 - loading、disabled 是可以同时成立的 Status。
 
@@ -89,7 +89,7 @@ Button = action + content + Variant Props + Status Props
 <Button danger strong filled>确认删除</Button>
 <Button loading>提交</Button>
 <Button disabled>提交</Button>
-<Button name="关闭"><CloseIcon /></Button>
+<Button label="关闭"><CloseIcon /></Button>
 ```
 
 确定描述词直接形成代码的阅读轮廓。只有具体值会变化时，才使用分组字段：
@@ -116,7 +116,7 @@ interface ButtonProps
     VariantProps<'emphasis', 'soft' | 'strong'>,
     VariantProps<'size', 'small' | 'large' | 'xlarge'>,
     StatusProps<'loading' | 'disabled'> {
-  name?: Source<string | undefined>
+  label?: Source<string | undefined>
   onClick?: EventListenerInput<'click'>
 }
 ```
@@ -188,7 +188,7 @@ export const buttonMapping = {
 
 - Button 最终只输出一个原生 `button`。
 - 默认 `type="button"`作为低优先级声明；提交和重置通过 `htmlProps` 明确传入，沿原生 HTML 字段的动态值语义消费。
-- 原生 button 的 `name` attribute 使用 `htmlProps.name`，不使用顶层 `name`。
+- 原生 button 的 `name` attribute 使用 `htmlProps.name`，不使用顶层 `label`。
 - 不提供 `variant`、`shape`、`href`、`target`、`icon`、`trailingIcon`、`enabled`、`validIf` 或 `validator`。
 - 图标属于 `children`；导航属于 Link；状态判断属于外部业务。
 
