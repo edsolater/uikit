@@ -42,7 +42,7 @@ function Example() {
 
 ## Example
 
-[droppable.example.tsx](droppable.example.tsx) 同时演示内部 Pointer payload 与系统外部文件。独立 draggable 见 [Draggable Example](../draggable/draggable.example.tsx)。
+[内部数据与文件接收示例](./examples/internal-and-file-drop.tsx) 同时演示内部 Pointer payload 与系统外部文件。独立 draggable 见 [指针拖动示例](../draggable/examples/pointer-dragging.tsx)。
 
 ## 边界
 

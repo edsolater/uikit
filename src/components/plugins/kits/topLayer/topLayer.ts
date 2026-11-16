@@ -7,7 +7,7 @@
  */
 import { createState, onMount, type State } from '@/foundation'
 import { createInactivePlugin } from '../../tools/createInactivePlugin'
-import { createTopLayerAnchor } from './topLayerAnchor'
+import { createTopLayerAnchor } from './anchor'
 import './topLayer.style'
 
 const topLayerClass = 'top-layer'

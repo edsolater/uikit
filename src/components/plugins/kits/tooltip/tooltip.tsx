@@ -15,7 +15,7 @@ import {
   val,
 } from '@/foundation'
 import { createInactivePlugin } from '../../tools/createInactivePlugin'
-import { createPivStructure } from '../../../Piv/plugin/helpers'
+import { createPivStructure } from '../../../Piv/plugin/structure'
 import { Piv } from '../../../Piv/Piv'
 import type { PivProps } from '../../../Piv/Piv'
 import {

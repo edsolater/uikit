@@ -6,7 +6,7 @@ import { createDomRef } from '@/hooks/createDomRef'
 import { createState, render, Show, val } from '@/foundation'
 import { Button } from './Button'
 import type { ButtonController } from './Button.prop'
-import { ButtonExample } from './Button.example'
+import { AppearanceAndStateExample } from './examples/appearance-and-state'
 import * as buttonStyle from './Button.style'
 
 const { buttonStyleConfig, ...buttonStyleTokens } = buttonStyle
@@ -21,7 +21,7 @@ afterEach(() => {
 
 test('本地示例可分别使用输入干预和组件能力控制同一按钮', () => {
   const host = document.body.appendChild(document.createElement('div'))
-  dispose = render(() => <ButtonExample />, host)
+  dispose = render(() => <AppearanceAndStateExample />, host)
   const findButton = (text: string) =>
     [...host.querySelectorAll('button')].find(
       (button) => button.textContent?.trim() === text,

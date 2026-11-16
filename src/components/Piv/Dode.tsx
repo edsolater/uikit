@@ -26,12 +26,12 @@ import {
   type PivSupportedElementTag,
   type PivTag,
 } from './domMap'
-import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
-import { consumeStyle, type StyleList } from './handleStyle'
+import { consumeHTMLProps, type HTMLPropsList } from './html-props'
+import { consumeStyle, type StyleList } from './style-binding'
 import { consumeId } from './id'
 import { ElementDeclarationsContext } from './elementDeclarations'
-import { toEventListenersList, type EventListeners } from './on/handleOn'
-import { consumeEventListeners } from './on/registerEventListeners'
+import { toEventListenersList, type EventListeners } from './on/event-declarations'
+import { consumeEventListeners } from './on/event-listeners'
 import { consumeDomRefs, type PivDomRef } from './domRef'
 
 /** 底层 DOM 声明契约；Piv 组合该契约，不重复定义或解析字段。 */

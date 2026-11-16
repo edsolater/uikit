@@ -15,7 +15,7 @@ import type { Source } from '@/foundation'
 import {
   inputValidityPropDefinition,
   type InputValidityProps,
-} from './createInputValidity.prop'
+} from './validity.prop'
 import type { StatusController } from '../utils/parseStatusProps'
 
 /** 组件统一身份，供创建声明和样式关联引用。 */

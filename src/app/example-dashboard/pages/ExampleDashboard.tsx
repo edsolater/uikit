@@ -10,37 +10,37 @@ import {
   For,
   type Component,
 } from '@/foundation'
-import { FlowExample } from '@/components/kits/Flow/Flow.example'
-import { GridExample } from '@/components/kits/Grid/Grid.example'
-import { FieldExample } from '@/components/kits/Field/Field.example'
-import { NavigationRegionExample } from '@/components/kits/NavigationRegion/NavigationRegion.example'
-import { LinkExample } from '@/components/kits/Link/Link.example'
-import { PageExample } from '@/components/kits/Page/Page.example'
-import { TextAreaExample } from '@/components/kits/TextArea/TextArea.example'
-import { SelectExample } from '@/components/kits/Select/Select.example'
-import { CheckboxExample } from '@/components/kits/Checkbox/Checkbox.example'
-import { DetailsExample } from '@/components/kits/Details/Details.example'
-import { MessageBoardExample } from '@/components/kits/MessageBoard/MessageBoard.example'
-import { TextExample } from '@/components/kits/Text/Text.example'
-import { HeadingExample } from '@/components/kits/Heading/Heading.example'
-import { LabelExample } from '@/components/kits/Label/Label.example'
-import { HelpExample } from '@/components/kits/Help/Help.example'
-import { TableExample } from '@/components/kits/Table/Table.example'
-import { LoopExample } from '@/components/kits/Loop/Loop.example'
-import { ComponentIdentityMarkerExample } from '@/components/tools/ComponentIdentityMarker/ComponentIdentityMarker.example'
-import { ComponentIdentityMarkerStructureViewTriggerExample } from '@/components/tools/ComponentIdentityMarker/ComponentIdentityMarkerStructureViewTrigger.example'
+import { DirectionSwitchingExample } from '@/components/kits/Flow/examples/direction-switching'
+import { ColumnLayoutExample } from '@/components/kits/Grid/examples/column-layout'
+import { FieldAssociationExample } from '@/components/kits/Field/examples/field-association'
+import { SectionNavigationExample } from '@/components/kits/NavigationRegion/examples/section-navigation'
+import { NavigationTargetsExample } from '@/components/kits/Link/examples/navigation-targets'
+import { PageCompositionExample } from '@/components/kits/Page/examples/page-composition'
+import { MultilineEditingExample } from '@/components/kits/TextArea/examples/multiline-editing'
+import { OptionSelectionExample } from '@/components/kits/Select/examples/option-selection'
+import { LabeledSelectionExample } from '@/components/kits/Checkbox/examples/labeled-selection'
+import { DisclosureExample } from '@/components/kits/Details/examples/disclosure'
+import { FeedbackStatesExample } from '@/components/kits/MessageBoard/examples/feedback-states'
+import { TextSourcesExample } from '@/components/kits/Text/examples/text-sources'
+import { HeadingLevelsExample } from '@/components/kits/Heading/examples/heading-levels'
+import { FieldLabelExample } from '@/components/kits/Label/examples/field-label'
+import { ContextualHelpExample } from '@/components/kits/Help/examples/contextual-help'
+import { RecordTableExample } from '@/components/kits/Table/examples/record-table'
+import { ReactiveListExample } from '@/components/kits/Loop/examples/reactive-list'
+import { BoundaryRegistrationExample } from '@/components/tools/ComponentIdentityMarker/examples/boundary-registration'
+import { StructureViewExample } from '@/components/tools/ComponentIdentityMarker/examples/structure-view'
 import { AsyncStateExample } from '@/foundation/createState/AsyncState.example'
-import { ButtonExample } from '@/components/kits/Button/Button.example'
+import { AppearanceAndStateExample } from '@/components/kits/Button/examples/appearance-and-state'
 import { Card, Flow } from '@/components'
-import { CardExample } from '@/components/kits/Card/Card.example'
-import { ArticleExample } from '@/components/kits/Article/Article.example'
+import { AppearanceAndSizeExample } from '@/components/kits/Card/examples/appearance-and-size'
+import { ContentBoundaryExample } from '@/components/kits/Article/examples/content-boundary'
 import { MarkdownExamples } from '@/components/kits/Markdown/examples/showcase'
-import { InputExample } from '@/components/kits/Input/Input.example'
-import { PopoverExample } from '@/components/plugins/kits/Popover/popover.example'
-import { PivStructureExample } from '@/components/Piv/PivStructure.example'
-import { DraggableExample } from '@/components/plugins/kits/dragAndDrop/draggable/draggable.example'
-import { DroppableExample } from '@/components/plugins/kits/dragAndDrop/droppable/droppable.example'
-import { DragAndDropExample } from '@/components/plugins/kits/dragAndDrop/dragAndDrop.example'
+import { BasicUsageExample } from '@/components/kits/Input/examples/basic-usage'
+import { PairedRolesExample } from '@/components/plugins/kits/Popover/examples/paired-roles'
+import { StructurePluginsExample } from '@/components/Piv/examples/structure-plugins'
+import { PointerDraggingExample } from '@/components/plugins/kits/dragAndDrop/draggable/examples/pointer-dragging'
+import { InternalAndFileDropExample } from '@/components/plugins/kits/dragAndDrop/droppable/examples/internal-and-file-drop'
+import { GroupedDragAndDropExample } from '@/components/plugins/kits/dragAndDrop/examples/grouped-drag-and-drop'
 import { ColorShowcase } from '@/style-system/pieces/tokens/color/ColorShowcase/ColorShowcase.example'
 import { UseDocumentTitleExample } from '@/hooks/useDocumentTitle/useDocumentTitle.example'
 import './ExampleDashboard.style'
@@ -98,7 +98,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '独立信息单元的声量、尺寸与主题材质。',
     thumbnail: new URL('../thumbnails/card.webp', import.meta.url).href,
-    content: CardExample,
+    content: AppearanceAndSizeExample,
   },
   {
     id: 'article',
@@ -107,7 +107,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.semantic,
     summary: '无容器皮肤的独立正文语义。',
     thumbnail: new URL('../thumbnails/article.webp', import.meta.url).href,
-    content: ArticleExample,
+    content: ContentBoundaryExample,
   },
   {
     id: 'button',
@@ -116,7 +116,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '动作声量、性质、状态与尺寸。',
     thumbnail: new URL('../thumbnails/button.webp', import.meta.url).href,
-    content: ButtonExample,
+    content: AppearanceAndStateExample,
   },
   {
     id: 'input',
@@ -125,7 +125,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '单行输入值与校验状态。',
     thumbnail: new URL('../thumbnails/input.webp', import.meta.url).href,
-    content: InputExample,
+    content: BasicUsageExample,
   },
   {
     id: 'popover',
@@ -134,7 +134,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '原生浮层、锚点定位与边框形状。',
     thumbnail: new URL('../thumbnails/popover.webp', import.meta.url).href,
-    content: PopoverExample,
+    content: PairedRolesExample,
   },
   {
     id: 'draggable',
@@ -142,7 +142,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.plugin,
     summary: 'Top Layer 提升、Anchor 与指针拖动。',
     thumbnail: new URL('../thumbnails/draggable.webp', import.meta.url).href,
-    content: DraggableExample,
+    content: PointerDraggingExample,
   },
   {
     id: 'droppable',
@@ -150,7 +150,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.plugin,
     summary: '内部 payload 与系统文件接收。',
     thumbnail: new URL('../thumbnails/droppable.webp', import.meta.url).href,
-    content: DroppableExample,
+    content: InternalAndFileDropExample,
   },
   {
     id: 'drag-and-drop',
@@ -159,7 +159,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '按共享标识分组的拖放协作。',
     thumbnail: new URL('../thumbnails/drag-and-drop.webp', import.meta.url)
       .href,
-    content: DragAndDropExample,
+    content: GroupedDragAndDropExample,
   },
   {
     id: 'piv-structure',
@@ -169,7 +169,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: 'Plugin 对原始 DOM 结构的组合。',
     thumbnail: new URL('../thumbnails/piv-structure.webp', import.meta.url)
       .href,
-    content: PivStructureExample,
+    content: StructurePluginsExample,
   },
   {
     id: 'color',
@@ -195,7 +195,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '方向切换与顺序排列。',
     thumbnail: new URL('../thumbnails/flow.webp', import.meta.url).href,
-    content: FlowExample,
+    content: DirectionSwitchingExample,
   },
   {
     id: 'grid',
@@ -204,7 +204,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '等宽分栏与窄屏单列。',
     thumbnail: new URL('../thumbnails/grid.webp', import.meta.url).href,
-    content: GridExample,
+    content: ColumnLayoutExample,
   },
   {
     id: 'field',
@@ -213,7 +213,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '字段标题与控件身份关联。',
     thumbnail: new URL('../thumbnails/field.webp', import.meta.url).href,
-    content: FieldExample,
+    content: FieldAssociationExample,
   },
   {
     id: 'navigation-region',
@@ -223,7 +223,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '具名导航区域与章节链接。',
     thumbnail: new URL('../thumbnails/navigation-region.webp', import.meta.url)
       .href,
-    content: NavigationRegionExample,
+    content: SectionNavigationExample,
   },
   {
     id: 'link',
@@ -232,7 +232,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '当前链接和另开页面。',
     thumbnail: new URL('../thumbnails/link.webp', import.meta.url).href,
-    content: LinkExample,
+    content: NavigationTargetsExample,
   },
   {
     id: 'page',
@@ -241,7 +241,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '页面标题、正文与动作组合。',
     thumbnail: new URL('../thumbnails/page.webp', import.meta.url).href,
-    content: PageExample,
+    content: PageCompositionExample,
   },
 
   {
@@ -251,7 +251,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '多行编辑与即时字数。',
     thumbnail: new URL('../thumbnails/text-area.webp', import.meta.url).href,
-    content: TextAreaExample,
+    content: MultilineEditingExample,
   },
   {
     id: 'select',
@@ -260,7 +260,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '有限选项与当前选择。',
     thumbnail: new URL('../thumbnails/select.webp', import.meta.url).href,
-    content: SelectExample,
+    content: OptionSelectionExample,
   },
   {
     id: 'checkbox',
@@ -269,7 +269,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '可点击的二态确认选项。',
     thumbnail: new URL('../thumbnails/checkbox.webp', import.meta.url).href,
-    content: CheckboxExample,
+    content: LabeledSelectionExample,
   },
   {
     id: 'details',
@@ -278,7 +278,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '按需展开的阅读内容。',
     thumbnail: new URL('../thumbnails/details.webp', import.meta.url).href,
-    content: DetailsExample,
+    content: DisclosureExample,
   },
   {
     id: 'message-board',
@@ -288,7 +288,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '不同语气的状态反馈。',
     thumbnail: new URL('../thumbnails/message-board.webp', import.meta.url)
       .href,
-    content: MessageBoardExample,
+    content: FeedbackStatesExample,
   },
   {
     id: 'text',
@@ -297,7 +297,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '文字语义与动态阅读进度。',
     thumbnail: new URL('../thumbnails/text.webp', import.meta.url).href,
-    content: TextExample,
+    content: TextSourcesExample,
   },
   {
     id: 'heading',
@@ -306,7 +306,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '文档标题的层级关系。',
     thumbnail: new URL('../thumbnails/heading.webp', import.meta.url).href,
-    content: HeadingExample,
+    content: HeadingLevelsExample,
   },
   {
     id: 'help',
@@ -315,7 +315,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '独立帮助入口与模板说明。',
     thumbnail: new URL('../thumbnails/help.webp', import.meta.url).href,
-    content: HelpExample,
+    content: ContextualHelpExample,
   },
   {
     id: 'label',
@@ -324,7 +324,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '字段聚焦与帮助说明。',
     thumbnail: new URL('../thumbnails/label.webp', import.meta.url).href,
-    content: LabelExample,
+    content: FieldLabelExample,
   },
   {
     id: 'table',
@@ -333,7 +333,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '记录、列顺序与中文表头。',
     thumbnail: new URL('../thumbnails/table.webp', import.meta.url).href,
-    content: TableExample,
+    content: RecordTableExample,
   },
   {
     id: 'loop',
@@ -342,7 +342,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '动态重复内容与空列表。',
     thumbnail: new URL('../thumbnails/loop.webp', import.meta.url).href,
-    content: LoopExample,
+    content: ReactiveListExample,
   },
   {
     id: 'component-identity-marker',
@@ -352,7 +352,7 @@ export const exampleEntries: ExampleEntry[] = [
     summary: '透明组件边界与用途说明。',
     thumbnail: new URL('../thumbnails/component-identity-marker.webp', import.meta.url)
       .href,
-    content: ComponentIdentityMarkerExample,
+    content: BoundaryRegistrationExample,
   },
   {
     id: 'component-identity-marker-structure-view-trigger',
@@ -364,7 +364,7 @@ export const exampleEntries: ExampleEntry[] = [
       '../thumbnails/component-identity-marker-structure-view-trigger.webp',
       import.meta.url,
     ).href,
-    content: ComponentIdentityMarkerStructureViewTriggerExample,
+    content: StructureViewExample,
   },
 ]
 

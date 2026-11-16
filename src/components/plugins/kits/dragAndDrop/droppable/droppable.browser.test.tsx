@@ -9,7 +9,7 @@ import type { DroppableController } from './droppable'
 import { Piv } from '@/components/Piv/Piv'
 import { draggable } from '../draggable/draggable'
 import { dragAndDrop } from '../dragAndDrop'
-import { DroppableExample } from './droppable.example'
+import { InternalAndFileDropExample } from './examples/internal-and-file-drop'
 import { droppable } from './droppable'
 
 let dispose: (() => void) | undefined
@@ -95,7 +95,7 @@ describe('droppable', () => {
   test('Example 在接收框内持续显示成功结果', () => {
     const host = document.body.appendChild(document.createElement('div'))
 
-    dispose = render(() => <DroppableExample />, host)
+    dispose = render(() => <InternalAndFileDropExample />, host)
 
     const source = document.querySelector<HTMLElement>(
       '.drag-drop-example-card',

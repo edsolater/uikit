@@ -20,7 +20,7 @@ import { createStatusPropsParser } from '../utils/parseStatusProps'
 import './Input.style'
 import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
 import { val } from '@/foundation'
-import { createInputValidity } from './createInputValidity'
+import { createInputValidity } from './validity'
 
 /**
  * 将输入有效性映射为节点的无障碍状态，不改写字段值。

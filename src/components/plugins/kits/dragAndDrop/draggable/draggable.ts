@@ -10,7 +10,7 @@ import {
   createInactivePlugin,
   type PluginCoreContext,
 } from '../../../tools/createInactivePlugin'
-import { createPointerDrag, type PointerDrag } from './createPointerDrag'
+import { createPointerDrag, type PointerDrag } from './pointer-drag'
 import './draggable.style'
 
 export interface DraggableOptions {

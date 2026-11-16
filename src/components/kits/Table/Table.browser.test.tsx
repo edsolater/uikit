@@ -12,7 +12,7 @@ import { cssTokenName } from '@/style-system/token/css'
 import { Table } from './Table'
 import type { TableController, TableProps } from './Table.prop'
 import { tableColumnWidth, tableColumnMinWidth } from './Table.style'
-import { TableExample } from './Table.example'
+import { RecordTableExample } from './examples/record-table'
 import '@/css/all-base.css'
 
 let host: HTMLElement
@@ -268,7 +268,7 @@ test('默认列来自当前首行，示例实际呈现普通与合成列内容',
   )
   expect(getComputedStyle(host.querySelector('td td')!).minWidth).toBe('0px')
   dispose()
-  dispose = render(() => <TableExample />, host)
+  dispose = render(() => <RecordTableExample />, host)
   expect(host.querySelectorAll('table')).toHaveLength(2)
   expect(host.textContent).toContain('1. 接口整理 · 小林')
   expect(host.textContent).toContain('50%')

@@ -97,6 +97,6 @@ style/HTML 按字段 key 保留作用域，同 key 换来源由原生 Effect 清
 - [domMap.tsx](domMap.tsx)：受支持 tag 的裸 JSX 工厂。
 - [mergePivProps.ts](plugin/mergePivProps.ts)：创建前插件展开、结构解析与来源合并。
 - [domRef.ts](domRef.ts)：按声明身份接入 domRef 并登记清理。
-- className、handleStyle、handleHTMLProps、on：各底层声明的专用消费者。
+- [className.ts](className.ts)、[style-binding.ts](style-binding.ts)、[html-props.ts](html-props.ts) 与 [event-declarations.ts](on/event-declarations.ts)：各底层声明的专用消费者。
 
 领域测试验证 DOM、事件、Source 换源、分支和卸载行为，不以 owner API 调用次数或文件位置代替行为验收。

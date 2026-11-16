@@ -11,7 +11,7 @@ import {
   type PluginCoreContext,
 } from '../../../tools/createInactivePlugin'
 import { registerInternalDropTarget } from '../../dragSession'
-import { createExternalDropListeners } from './createExternalDropListeners'
+import { createExternalDropListeners } from './external-drop-listeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
 
 export interface DroppableOptions {

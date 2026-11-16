@@ -11,7 +11,7 @@ import {
   type KitPropDefinition,
   type KitProps,
 } from '../../tools/kit'
-import type { EventListenerInput } from '../../Piv/on/handleOn'
+import type { EventListenerInput } from '../../Piv/on/event-declarations'
 import type { VariantProps } from '../utils/parseVariantProps'
 import type { StatusProps, StatusController } from '../utils/parseStatusProps'
 import type { ButtonStyleConfig } from './Button.style'

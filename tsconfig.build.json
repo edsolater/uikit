@@ -27,6 +27,7 @@
     "src/style-system/**/*.ts"
   ],
   "exclude": [
+    "src/components/**/examples/**",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "src/**/*.demo.tsx",

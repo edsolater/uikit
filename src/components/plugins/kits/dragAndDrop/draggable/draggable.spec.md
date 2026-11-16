@@ -58,7 +58,7 @@ source 位于 Top Layer，Anchor 留在普通页面层；二者不再依靠 `z-i
 
 ## Example
 
-[draggable.example.tsx](draggable.example.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [Droppable Example](../droppable/droppable.example.tsx)。
+[指针拖动示例](./examples/pointer-dragging.tsx) 验收原始 source 的跟手位移及 Top Layer 自动留下的原位影子。与接收端的组合及系统文件拖入见 [内部数据与文件接收示例](../droppable/examples/internal-and-file-drop.tsx)。
 
 ## 边界
 

@@ -6,8 +6,8 @@
  * 让无额外 DOM 的组件组合共用既有绑定能力，同时保持后代声明独立。
  */
 import { createContext } from '@/foundation'
-import type { HTMLPropsList } from './handleHTMLProps'
-import type { StyleList } from './handleStyle'
+import type { HTMLPropsList } from './html-props'
+import type { StyleList } from './style-binding'
 
 /** 上层提供的根声明，复用既有 DOM 字段消费链。 */
 export interface ElementDeclarations {

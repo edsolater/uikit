@@ -8,9 +8,9 @@
 import '@/style-system/pieces/native-controls.style'
 import '@/style-system/pieces/document.style'
 
-export * from './Piv/on/handleOn'
+export * from './Piv/on/event-declarations'
 export * from './Piv/plugin/mergePivProps'
-export * from './Piv/plugin/helpers'
+export * from './Piv/plugin/structure'
 export * from './Piv/Piv'
 export * from './Piv/type'
 export {

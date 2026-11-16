@@ -134,7 +134,7 @@ src/index.ts
 src/app/example-dashboard/index.tsx
   -> pages/ExampleDashboard.tsx
     -> /examples 索引
-    -> /examples/<id> 对应的相邻 .example.tsx
+    -> /examples/<id> 对应的使用场景（组件场景位于自身 examples/）
 ```
 
 Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，不定义组件自身的业务能力。目录与截图生成共用示例登记；组件按零级、零点五级、一级和二级标识，不能通过依赖计数推算。Board 的承载角色在 MessageBoard 等消费示例中展示，不建立独立信息卡片入口。
@@ -144,7 +144,7 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 - 碎片的领域发生在定义端。通用 Mixin 不感知 Button；可复用 Pieces 按描述目标和领域归属抽象层，Button 专属定义保留在 Button.style.ts；Token 的创建参数归一为七个固定 key；源码迁移已完成。
 - `src/style-system` 提供 Rule 登记、Condition 寻址、声明输入转换、统一 Token 模型、编译和挂载能力，以及可复用 Pieces 和 Theme 配方；具体组件 selector 与业务分类留在组件自己的 style 文件。
 - `src/components/Piv`、插件运行机制、`src/hooks` 和 `src/style-system` 不反向依赖具体用途 kit。tooltip 等具体插件复用 `plugins/kits/Popover` 的成对功能能力；附属正文通过 Piv 创建，提示材料在 tooltip.style.ts，不反向依赖用途 kit 或旧 Surface。
-- `.example.tsx`、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。
+- 组件 `examples/` 内的场景、`.test.tsx`、`.browser.test.tsx` 和 `.spec.md` 是角色文件，不因拥有独立文件而成为新领域。非组件领域的示例仍沿用各自现有组织。
 - `src/app/example-dashboard` 不能成为绕过组件库、直接堆叠正式业务视觉的页面层。
 - `src/index.ts` 和各目录 `index.ts` 只表达公开契约，不承载 demo、测试或新的业务实现。
 - `src/types` 只承载无法就近归属到单一主体的全局补丁。

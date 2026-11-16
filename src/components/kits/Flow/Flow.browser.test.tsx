@@ -17,7 +17,7 @@ import '../../../css/all-base.css'
 import { createState, render, type Val } from '@/foundation'
 import { clickable } from '../../plugins/kits/clickable/clickable'
 import { cssRoot } from '@/style-system'
-import { FlowExample } from './Flow.example'
+import { DirectionSwitchingExample } from './examples/direction-switching'
 import { Flow } from './Flow'
 import type { FlowController, FlowProps } from './Flow.prop'
 import { MessageBoard } from '../MessageBoard/MessageBoard'
@@ -323,7 +323,7 @@ test('示例切换动作方向并保留原有组件节点', async () => {
   style.id = 'css-root'
   cssRoot.mount()
   host = document.body.appendChild(document.createElement('main'))
-  dispose = render(() => <FlowExample />, host)
+  dispose = render(() => <DirectionSwitchingExample />, host)
   const actions = host.querySelectorAll<HTMLElement>('.Flow')[1]!
   const button = actions.querySelector('button')
   expect(getComputedStyle(actions).flexDirection).toBe('row')

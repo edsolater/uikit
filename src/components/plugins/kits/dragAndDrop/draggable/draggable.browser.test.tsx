@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { cssRoot } from '@/style-system'
 import { val } from '@/foundation'
 import { Piv } from '@/components/Piv/Piv'
-import { createPointerDrag } from './createPointerDrag'
+import { createPointerDrag } from './pointer-drag'
 import { draggable, type DraggableController } from './draggable'
 
 let dispose: (() => void) | undefined
