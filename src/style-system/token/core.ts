@@ -64,7 +64,7 @@ export interface TokenOptions<T extends TokenData = TokenData> {
    * 引用已有 Token 不继承其名称，前缀仍补充在自身名称之前。
    */
   name?: string
-  $warnIfMissTokenName?: boolean
+  _warnIfMissTokenName?: boolean
   state?: TokenStateInput
   /**
    * 指定时在固定地址发布；继承后仍未指定时，需 CSS variable 的 Token
@@ -95,7 +95,7 @@ export interface Token<T extends TokenData = TokenData>
     TokenConfig<T> {
   /** CSS 坍缩产生的内部类别；调用方按约定不修改。 */
   _kind?: 'css-value' | 'css-variable'
-  $warnIfMissTokenName: boolean
+  _warnIfMissTokenName: boolean
   dependencies: unknown[]
   /**
    * 在当前实例的同步样式解释中覆盖已具名并由规则消费的 CSS 变量 Token。
@@ -172,7 +172,7 @@ function createToken<T extends TokenData>(
   const self: Token<T> = {
     ...parseTokenArgs<T>(input, protocol),
     name,
-    $warnIfMissTokenName: protocol?.$warnIfMissTokenName ?? true,
+    _warnIfMissTokenName: protocol?._warnIfMissTokenName ?? true,
     onCompile: protocol?.onCompile,
     get dependencies() {
       const dependencies = protocol?.dependencies
@@ -193,7 +193,7 @@ function createToken<T extends TokenData>(
         const cssName = cssTokenName(self)
         if (
           self.name === undefined &&
-          self.$warnIfMissTokenName &&
+          self._warnIfMissTokenName &&
           !warnedTokens.has(self)
         ) {
           warnedTokens.add(self)

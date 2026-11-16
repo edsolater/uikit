@@ -49,7 +49,7 @@ export function createNewTokenGenerator(config: {
   ) =>
     createTokenDefinition<TokenData>(
       input,
-      { ...options, address, $warnIfMissTokenName: false },
+      { ...options, address, _warnIfMissTokenName: false },
       prefixName,
     )) as ManagedTokenGenerator
 }

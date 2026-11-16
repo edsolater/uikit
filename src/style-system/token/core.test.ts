@@ -15,12 +15,12 @@ test('仅对坍缩为变量的无名 Token 提示，并允许生成器关闭提�
     const missing = token('inherit', { state: { hover: 'hidden' } })
     const disabled = token('inherit', {
       state: { hover: 'hidden' },
-      $warnIfMissTokenName: false,
+      _warnIfMissTokenName: false,
     })
     const generated = createNewTokenGenerator({ prefixName: 'button' })('red', {
       state: { hover: 'blue' },
     })
-    expect(generated.$warnIfMissTokenName).toBe(false)
+    expect(generated._warnIfMissTokenName).toBe(false)
     const css = compileRules([
       [['.Direct'], 'width', direct],
       [['.Missing'], 'visibility', missing],
