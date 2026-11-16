@@ -27,7 +27,7 @@ export const Select: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '从有限选项中选择',
+    componentDescription: '从有限选项中选择',
     propDefinition: selectPropDefinition,
   },
   (props, { name }) => {

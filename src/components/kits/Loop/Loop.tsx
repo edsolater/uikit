@@ -27,7 +27,7 @@ const loopComponent: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '排列重复内容',
+    componentDescription: '排列重复内容',
     propDefinition: loopPropDefinition,
   },
   (props, { name }) => {

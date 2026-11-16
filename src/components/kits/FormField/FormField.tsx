@@ -59,7 +59,7 @@ export const FormField: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '组合字段标题与控件',
+    componentDescription: '组合字段标题与控件',
     propDefinition: formFieldPropDefinition,
   },
   (props, { name }) => {

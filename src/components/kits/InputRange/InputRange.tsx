@@ -25,7 +25,7 @@ export const InputRange: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '调整范围内的数值',
+    componentDescription: '调整范围内的数值',
     propDefinition: inputRangePropDefinition,
   },
   (props, { name }) => {

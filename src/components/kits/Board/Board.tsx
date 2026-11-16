@@ -34,7 +34,7 @@ const boardComponent: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '承载上层信息主体',
+    componentDescription: '承载上层信息主体',
     propDefinition: boardPropDefinition,
     variantGroups: boardVariantGroups,
   },

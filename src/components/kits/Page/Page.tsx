@@ -29,7 +29,7 @@ export const Page: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '组织页面标题、说明、动作与内容',
+    componentDescription: '组织页面标题、说明、动作与内容',
     propDefinition: pagePropDefinition,
   },
   (props, { name }) => {

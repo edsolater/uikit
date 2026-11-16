@@ -27,7 +27,7 @@ const cardComponent: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '组织独立信息',
+    componentDescription: '组织独立信息',
     propDefinition: cardPropDefinition,
     variantGroups: boardVariantGroups,
   },

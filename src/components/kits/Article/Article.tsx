@@ -27,7 +27,7 @@ export const Article: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '承载独立正文',
+    componentDescription: '承载独立正文',
     propDefinition: articlePropDefinition,
   },
   (props, { name }) => (

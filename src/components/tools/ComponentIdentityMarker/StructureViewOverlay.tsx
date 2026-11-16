@@ -15,7 +15,10 @@ import {
 } from '@/foundation'
 import { useBrowserAnimationFrame } from '@/hooks/useBrowserAnimationFrame'
 import { Piv } from '../../Piv/Piv'
-import { componentBoundaries, type ComponentBoundary } from './ComponentIdentityMarker'
+import {
+  componentBoundaries,
+  type ComponentBoundary,
+} from './ComponentIdentityMarker'
 import './StructureViewOverlay.style'
 
 /** 一帧中的真实边界，单位为视口像素。 */
@@ -43,7 +46,7 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
     controlBounds: new DOMRect(),
   })
   const animationFrame = useBrowserAnimationFrame()
-  const displayValues = new Map<ComponentBoundary, boolean>()
+  const displayValues = new Map<ComponentBoundary, boolean | undefined>()
   const hiddenElements = new Set<Element>()
   const hiddenText = new Highlight()
 
@@ -174,10 +177,13 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
   )
 }
 
-/** false范围同时压住自身与其中的子组件；待定来源不绘制。 */
+/**
+ * 显式 false 隐藏自身及后代；undefined 表示暂无标注或来源待定，只跳过自身。
+ * 因此无说明的组织组件不会挡住其中已命名的组件。
+ */
 function readDisplayedFrames(
   frames: BoundaryFrame[],
-  displayValues: Map<ComponentBoundary, boolean>,
+  displayValues: Map<ComponentBoundary, boolean | undefined>,
 ): BoundaryFrame[] {
   const hiddenRanges = frames
     .filter((frame) => displayValues.get(frame.boundary) === false)

@@ -30,10 +30,7 @@ import {
 } from './ComponentIdentityMarker/ComponentIdentityMarker.prop'
 import { ElementDeclarationsContext } from '../Piv/elementDeclarations'
 import { ComponentIdentityMarker } from './ComponentIdentityMarker/ComponentIdentityMarker'
-import type {
-  ComponentIdentityMarkerDisplayProps,
-  ComponentIdentityMarkerProps,
-} from './ComponentIdentityMarker/ComponentIdentityMarker'
+import type { ComponentIdentityMarkerDisplayProps } from './ComponentIdentityMarker/ComponentIdentityMarker'
 import {
   createComponentPropsDirector,
   type DirectedProps,
@@ -218,14 +215,10 @@ export type KitOptions<
   /** 所有实例共用的组件身份，同时交给 Marker 与核心上下文。 */
   name: string
   /**
-   * Component 本身使用的职责说明，属于 KitOptions；具体实例的 label 属于 PivProps。
+   * Component 本身使用的职责说明 componentDescription，属于 KitOptions；具体实例的 label 属于 PivProps。
    * 交给 ComponentIdentityMarker 呈现，与实例名称独立，不参与原生无障碍命名。
    */
-  description?: string
-  /** 按实例输入决定说明呈现方式；在实例创建时求值。 */
-  marker?: (
-    props: Config['props'],
-  ) => Pick<ComponentIdentityMarkerProps, 'defaultDescriptionDisplay' | 'labelOnly'>
+  componentDescription?: string
   /** 互斥分组及候选字段；启用输入控制时，为未声明的分组建立默认来源。 */
   variantGroups?: readonly Pick<
     VariantPropsGroup<
@@ -350,7 +343,6 @@ export function kit<
       renderProps = propDirector.props as Omit<Props, 'ref'>
     }
     // Marker 只建立组件身份和说明边界；children 延迟创建，使核心处于此身份的作用域内。
-    const marker = options.marker?.(renderProps)
     return createComponent(ComponentIdentityMarker, {
       componentName: options.name,
       get label() {
@@ -359,15 +351,7 @@ export function kit<
       get descriptionDisplay() {
         return renderProps.descriptionDisplay
       },
-      get description() {
-        return options.description
-      },
-      get defaultDescriptionDisplay() {
-        return marker?.defaultDescriptionDisplay
-      },
-      get labelOnly() {
-        return marker?.labelOnly
-      },
+      componentDescription: options.componentDescription,
       get children() {
         return createComponent(renderRoot, {})
       },

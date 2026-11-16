@@ -31,7 +31,7 @@ export const SelectInput: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '搜索并选择一项',
+    componentDescription: '搜索并选择一项',
     propDefinition: selectInputPropDefinition,
   },
   (props, { name }) => {

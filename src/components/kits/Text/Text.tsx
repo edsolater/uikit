@@ -6,7 +6,6 @@
  * 共同接线交给 kit，不复制查看状态或修改原文字。
  */
 import { Piv } from '../../Piv/Piv'
-import { val } from '@/foundation'
 import { kit, type KitComponent } from '../../tools/kit'
 
 import {
@@ -28,12 +27,6 @@ export const Text: KitComponent<{
   {
     name: componentName,
     propDefinition: textPropDefinition,
-    marker: (props) => ({
-      labelOnly: true,
-      get defaultDescriptionDisplay() {
-        return Boolean(val(props.label))
-      },
-    }),
   },
   (props, { name }) => (
     <Piv<'span' | 'div' | 'p' | 'strong'>

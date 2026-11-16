@@ -82,10 +82,6 @@ function mergeStyleRecords(styles: StyleAtom[]): ParsedStyleRecord {
  * 字符串 style 交给浏览器 CSSStyleDeclaration 解析，再转回字段对象。
  */
 function parseStyleRecord(style: StyleAtom): ParsedStyleRecord {
-  if (!style) {
-    return {}
-  }
-
   if (!isString(style)) {
     return style as ParsedStyleRecord
   }

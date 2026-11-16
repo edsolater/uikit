@@ -7,6 +7,7 @@
  */
 import { Piv } from '../../Piv/Piv'
 import { val } from '@/foundation'
+import { omitProps } from '@/foundation/render'
 
 import { tooltip } from '../../plugins/kits/tooltip/tooltip'
 import { kit, type KitComponent } from '../../tools/kit'
@@ -27,12 +28,12 @@ export const Help: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '查看补充说明',
+    componentDescription: '查看补充说明',
     propDefinition: helpPropDefinition,
   },
   (props, { name }) => (
     <Piv
-      shadowProps={props}
+      shadowProps={omitProps(() => props, 'label')}
       as="button"
       class={name}
       is={tooltip({

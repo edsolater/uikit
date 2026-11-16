@@ -25,7 +25,7 @@ export const Grid: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '按列结构组织内容',
+    componentDescription: '按列结构组织内容',
     propDefinition: gridPropDefinition,
     styleConfig: gridStyleConfig,
   },

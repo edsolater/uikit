@@ -33,7 +33,7 @@ const tableComponent: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '按列展示记录',
+    componentDescription: '按列展示记录',
     propDefinition: tablePropDefinition,
     styleConfig: tableStyleConfig,
   },

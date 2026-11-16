@@ -25,7 +25,7 @@ export const Flow: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '组织内容方向',
+    componentDescription: '组织内容方向',
     propDefinition: flowPropDefinition,
     styleConfig: flowStyleConfig,
   },

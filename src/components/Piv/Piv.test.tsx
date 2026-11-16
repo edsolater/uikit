@@ -9,7 +9,17 @@ import { flush, createRoot, createSignal } from 'solid-js'
 // @vitest-environment jsdom
 
 import { render } from '@solidjs/web'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+import * as idBinding from './id'
+import * as classBinding from './className'
+import * as styleBinding from './handleStyle'
+import * as htmlBinding from './handleHTMLProps'
+import * as refBinding from './domRef'
+import * as eventBinding from './on/handleOn'
+import type { PivProps } from './Piv'
+import { bindStyleConfig } from '../tools/styleConfig'
+import { createComponentPropsDirector } from '../tools/componentPropsDirector'
+import { pivPropsDefinition } from './Piv.prop'
 import {
   createContext,
   createState,
@@ -544,7 +554,7 @@ describe('Piv children', () => {
 })
 
 describe('Piv Source 属性', () => {
-  test('合并层输出稳定 id Source，持续跟随声明换源及各来源合并', () => {
+  test('合并字段在消费时读取最新 id 来源及各来源合并', () => {
     const shadow = createState('shadow')
     const pluginId = createState('plugin')
     const previous = createState('direct')
@@ -560,19 +570,19 @@ describe('Piv Source 属性', () => {
       }),
       dispose,
     }))
-    const source = merged.id
-    expect(isStateView(source)).toBe(true)
-    expect(val(source)).toEqual(['shadow', 'plugin', 'direct'])
+    expect(val(merged.id)).toEqual(['shadow', 'plugin', 'direct'])
     setSource(next)
     flush()
-    expect(merged.id).toBe(source)
     previous.set('旧来源退出')
     shadow.set('shadow-next')
     pluginId.set('plugin-next')
     next.set('direct-next')
     flush()
-    expect(merged.id).toBe(source)
-    expect(val(source)).toEqual(['shadow-next', 'plugin-next', 'direct-next'])
+    expect(val(merged.id)).toEqual([
+      'shadow-next',
+      'plugin-next',
+      'direct-next',
+    ])
     dispose()
   })
 
@@ -1083,7 +1093,7 @@ function testPlugin(
   })()
 }
 
-test('实例label选择单一来源并转换根ARIA，显式原生名称优先且子节点不继承', () => {
+test('实例label沿来源合并并转换根ARIA，显式原生名称优先且子节点不继承', () => {
   const host = document.createElement('main')
   const label = createState<string | undefined>('保存草稿')
   const nativeLabel = createState<string | undefined>('原生名称')
@@ -1109,7 +1119,7 @@ test('实例label选择单一来源并转换根ARIA，显式原生名称优先�
   )
   try {
     const [first, second, third, inherited] = [...host.children]
-    expect(first.getAttribute('aria-label')).toBe('保存草稿')
+    expect(first.getAttribute('aria-label')).toBe('低优先级 补充名称 保存草稿')
     expect(second.getAttribute('aria-label')).toBe('原生名称')
     expect(third.getAttribute('aria-label')).toBe('保存草稿')
     expect(inherited.getAttribute('aria-label')).toBe('保存草稿')
@@ -1118,18 +1128,248 @@ test('实例label选择单一来源并转换根ARIA，显式原生名称优先�
     )
     label.set('提交草稿')
     flush()
-    expect(first.getAttribute('aria-label')).toBe('提交草稿')
+    expect(first.getAttribute('aria-label')).toBe('低优先级 补充名称 提交草稿')
     expect(third.getAttribute('aria-label')).toBe('提交草稿')
     nativeLabel.set(undefined)
     flush()
     expect(second.hasAttribute('aria-label')).toBe(false)
     label.set(undefined)
     flush()
-    expect(first.getAttribute('aria-label')).toBe('补充名称')
+    expect(first.getAttribute('aria-label')).toBe('低优先级 补充名称')
     expect(second.hasAttribute('aria-label')).toBe(false)
     expect(third.hasAttribute('aria-label')).toBe(false)
     expect(inherited.hasAttribute('aria-label')).toBe(false)
     expect(host.firstElementChild).toBe(first)
+  } finally {
+    dispose()
+  }
+})
+
+test('未声明能力不建立消费链，动态声明逐项接入并在退出时撤销节点结果', () => {
+  const bindings = [
+    vi.spyOn(idBinding, 'consumeId'),
+    vi.spyOn(classBinding, 'consumeClassName'),
+    vi.spyOn(styleBinding, 'consumeStyle'),
+    vi.spyOn(htmlBinding, 'consumeHTMLProps'),
+    vi.spyOn(refBinding, 'consumeDomRefs'),
+    vi.spyOn(eventBinding, 'toEventListenersList'),
+  ]
+  const host = document.createElement('main')
+  const [readProps, setProps] = createSignal<PivProps>({})
+  const props = new Proxy<PivProps>(
+    {},
+    {
+      get: (_, key) => Reflect.get(readProps(), key),
+      has: (_, key) => key in readProps(),
+      ownKeys: () => Reflect.ownKeys(readProps()),
+      getOwnPropertyDescriptor: (_, key) =>
+        key in readProps()
+          ? { enumerable: true, configurable: true }
+          : undefined,
+    },
+  )
+  const dispose = render(() => Piv(props), host)
+  try {
+    for (const binding of bindings) expect(binding).not.toHaveBeenCalled()
+    const element = host.firstElementChild!
+    const label = createState<string | undefined>(undefined)
+    const item = createState('收货地址')
+    const refCleanup = vi.fn()
+    const ref = vi.fn(() => refCleanup)
+    const onClick = vi.fn()
+    setProps({
+      id: 'active',
+      class: 'active',
+      style: { color: 'red' },
+      label: [label, item],
+      on: { click: onClick },
+      domRef: ref,
+      children: '已加入',
+    })
+    flush()
+    expect(element.getAttribute('aria-label')).toBe('收货地址')
+    label.set('筛选条件')
+    item.set('配送地址')
+    flush()
+    expect(element.getAttribute('aria-label')).toBe('筛选条件 配送地址')
+    expect(element.textContent).toBe('已加入')
+    expect(element.id).toBe('active')
+    element.dispatchEvent(new MouseEvent('click'))
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(ref).toHaveBeenCalledTimes(1)
+    for (const binding of bindings) expect(binding).toHaveBeenCalledTimes(1)
+    setProps({})
+    flush()
+    expect(element.hasAttribute('id')).toBe(false)
+    expect(element.className).toBe('')
+    expect(element.getAttribute('aria-label')).toBeNull()
+    expect(element.textContent).toBe('')
+    expect((element as HTMLElement).style.color).toBe('')
+    expect(refCleanup).toHaveBeenCalledTimes(1)
+    element.dispatchEvent(new MouseEvent('click'))
+    expect(onClick).toHaveBeenCalledTimes(1)
+    setProps({ id: 'again', label: '' })
+    flush()
+    expect(element.id).toBe('again')
+    expect(element.getAttribute('aria-label')).toBe('')
+    expect(host.firstElementChild).toBe(element)
+  } finally {
+    dispose()
+    for (const binding of bindings) binding.mockRestore()
+  }
+})
+
+test('控制入口只在显式写入后声明字段，空Source和晚加入结构来源保持响应', () => {
+  const host = document.createElement('main')
+  let controller!: ReturnType<
+    typeof createComponentPropsDirector<PivProps, typeof pivPropsDefinition>
+  >['controller']
+  const html = vi.spyOn(htmlBinding, 'consumeHTMLProps')
+  const dispose = render(() => {
+    const directed = createComponentPropsDirector<
+      PivProps,
+      typeof pivPropsDefinition
+    >({}, pivPropsDefinition)
+    controller = directed.controller
+    // 结构查看的只读访问不等于声明。
+    val(directed.props.label)
+    return Piv(directed.props)
+  }, host)
+  try {
+    expect(html).not.toHaveBeenCalled()
+    controller.label.set(undefined)
+    flush()
+    expect(html).toHaveBeenCalledTimes(1)
+    controller.label.set(['筛选条件', createState('收货地址')])
+    flush()
+    expect(host.firstElementChild!.getAttribute('aria-label')).toBe(
+      '筛选条件 收货地址',
+    )
+    controller.shadowProps.set({ class: 'late-shadow' })
+    flush()
+    expect(host.firstElementChild!.className).toBe('late-shadow')
+    controller.shadowProps.set(undefined)
+    flush()
+    expect(host.firstElementChild!.className).toBe('')
+  } finally {
+    dispose()
+    html.mockRestore()
+  }
+})
+
+test('样式配置定义不制造实例style声明，动态配置形状接入与退出实际消费', () => {
+  const host = document.createElement('main')
+  const [readProps, setProps] = createSignal<{
+    styleConfig?: { gap?: string }
+  }>({})
+  const props = new Proxy(
+    {},
+    {
+      has: (_, key) => key in readProps(),
+      get: (_, key) => Reflect.get(readProps(), key),
+    },
+  )
+  const style = vi.spyOn(styleBinding, 'consumeStyle')
+  const dispose = render(
+    () => (
+      <ElementDeclarationsContext value={[bindStyleConfig({}, props)]}>
+        <Piv />
+      </ElementDeclarationsContext>
+    ),
+    host,
+  )
+  try {
+    expect(style).not.toHaveBeenCalled()
+    setProps({ styleConfig: undefined })
+    flush()
+    expect(style).toHaveBeenCalledTimes(1)
+    setProps({})
+    flush()
+    setProps({ styleConfig: {} })
+    flush()
+    expect(style).toHaveBeenCalledTimes(2)
+  } finally {
+    dispose()
+    style.mockRestore()
+  }
+})
+
+test('继承声明参与固定字段入口，插件动态退出且无关字段更新不重置once与domRef', () => {
+  const host = document.createElement('main')
+  const onClick = vi.fn()
+  const released = vi.fn()
+  const attached = vi.fn(() => released)
+  const on = { click: { callback: onClick, once: true } }
+  const [active, setActive] = createSignal(false)
+  const [style, setStyle] = createSignal('red')
+  const props: PivProps = {
+    get is() {
+      return active()
+        ? testPlugin({
+            declarations: [{ label: '插件实例', domRef: attached }],
+          })
+        : undefined
+    },
+    get style() {
+      return { color: style() }
+    },
+    on,
+  }
+  Object.setPrototypeOf(props, { id: 'inherited-id', class: 'inherited-class' })
+  const dispose = render(() => Piv(props), host)
+  try {
+    const element = host.firstElementChild!
+    expect(element.id).toBe('inherited-id')
+    expect(element.className).toBe('inherited-class')
+    setActive(true)
+    flush()
+    expect(element.getAttribute('aria-label')).toBe('插件实例')
+    expect(attached).toHaveBeenCalledTimes(1)
+    element.dispatchEvent(new MouseEvent('click'))
+    setStyle('blue')
+    flush()
+    element.dispatchEvent(new MouseEvent('click'))
+    expect(onClick).toHaveBeenCalledTimes(1)
+    expect(attached).toHaveBeenCalledTimes(1)
+    setActive(false)
+    flush()
+    expect(released).toHaveBeenCalledTimes(1)
+    expect(element.hasAttribute('aria-label')).toBe(false)
+    expect(host.firstElementChild).toBe(element)
+  } finally {
+    dispose()
+  }
+})
+
+test('共同合并只读取每份来源实际声明的字段，不激活其它来源的同名getter', () => {
+  const absentRead = vi.fn()
+  const source = new Proxy<PivProps<'section'>>(
+    {},
+    {
+      has: () => false,
+      get: () => {
+        absentRead()
+        throw new Error('未声明字段不应读取')
+      },
+    },
+  )
+  const host = document.createElement('main')
+  const dispose = render(
+    () => (
+      <Piv<'section'>
+        shadowProps={[
+          source,
+          { as: 'section', id: 'present', class: 'present', label: '实际声明' },
+        ]}
+      />
+    ),
+    host,
+  )
+  try {
+    expect(absentRead).not.toHaveBeenCalled()
+    expect(host.firstElementChild!.localName).toBe('section')
+    expect(host.firstElementChild!.id).toBe('present')
+    expect(host.firstElementChild!.getAttribute('aria-label')).toBe('实际声明')
   } finally {
     dispose()
   }

@@ -54,7 +54,9 @@ function createHost() {
  */
 function toggleView() {
   document
-    .querySelector<HTMLButtonElement>('.ComponentIdentityMarkerStructureViewTrigger')!
+    .querySelector<HTMLButtonElement>(
+      '.ComponentIdentityMarkerStructureViewTrigger',
+    )!
     .click()
   flush()
 }
@@ -80,13 +82,20 @@ describe('组件结构查看', () => {
       } = createPopoverPlugins({})
       return (
         <>
-          <ComponentIdentityMarker componentName="透明父" descriptionDisplay={display.read()}>
+          <ComponentIdentityMarker
+            componentName="透明父"
+            descriptionDisplay={display.read()}
+          >
             <Piv style={{ opacity }}>
               <Button descriptionDisplay>子动作</Button>
               <Button is={popoverTrigger}>原生浮层</Button>
               <Card is={popoverBody}>浮层内容</Card>
             </Piv>
-            <ComponentIdentityMarker componentName="裸子" descriptionDisplay>
+            <ComponentIdentityMarker
+              componentName="裸子"
+              componentDescription="承载裸文字"
+              descriptionDisplay
+            >
               {content.read()}
             </ComponentIdentityMarker>
             <Piv as="table">
@@ -100,7 +109,10 @@ describe('组件结构查看', () => {
               <Piv as="option">原选项</Piv>
             </Piv>
           </ComponentIdentityMarker>
-          <ComponentIdentityMarker componentName="视口外父" descriptionDisplay={false}>
+          <ComponentIdentityMarker
+            componentName="视口外父"
+            descriptionDisplay={false}
+          >
             <Piv style={{ position: 'fixed', top: '-1000px', height: '0px' }}>
               <Button style={{ position: 'fixed', top: '8px', left: '8px' }}>
                 固定子动作
@@ -119,7 +131,7 @@ describe('组件结构查看', () => {
     expect(getComputedStyle(root).opacity).toBe('0.8')
     toggleView()
     await expect.poll(() => getComputedStyle(root).opacity).toBe('0')
-    await expect.poll(readLabels).toEqual(['Button · 执行动作'])
+    await expect.poll(readLabels).toEqual(['执行动作'])
     expect(root.getBoundingClientRect().toJSON()).toEqual(originalBounds)
     expect(
       [...host.childNodes].filter(
@@ -154,7 +166,7 @@ describe('组件结构查看', () => {
     display.set(true)
     flush()
     await expect.poll(() => getComputedStyle(root).opacity).toBe('0.35')
-    await expect.poll(readLabels).toContain('裸子')
+    await expect.poll(readLabels).toContain('承载裸文字')
     await expect.poll(() => getComputedStyle(popover).opacity).toBe('1')
     display.set(false)
     flush()
@@ -166,7 +178,7 @@ describe('组件结构查看', () => {
     expect(CSS.highlights.has('uikit-structure-view-hidden')).toBe(false)
   })
 
-  test('未加载和加载未开启都保持内容，开启后定义职责与实例标签独立呈现并响应更新', async () => {
+  test('未加载和加载未开启都保持内容，开启后实例标签优先且清空后回到组件职责', async () => {
     const description = createState<string | undefined>()
     const showFab = createState(false)
     const host = createHost()
@@ -198,7 +210,7 @@ describe('组件结构查看', () => {
     expect(button.getBoundingClientRect().toJSON()).toEqual(before)
 
     toggleView()
-    await expect.poll(readLabels).toContain('Button · 执行动作')
+    await expect.poll(readLabels).toContain('执行动作')
     const overlay = document.querySelector<HTMLElement>(
       '.StructureViewOverlay',
     )!
@@ -207,14 +219,14 @@ describe('组件结构查看', () => {
     ).toBe(overlay.getBoundingClientRect().height)
     description.set('保存当前选择')
     flush()
-    await expect.poll(readLabels).toContain('Button · 执行动作 · 保存当前选择')
+    await expect.poll(readLabels).toContain('保存当前选择')
     description.set('')
     flush()
-    await expect.poll(readLabels).toContain('Button · 执行动作')
-    expect(readLabels()).not.toContain('Button · 执行动作 · 保存当前选择')
+    await expect.poll(readLabels).toContain('执行动作')
+    expect(readLabels()).not.toContain('保存当前选择')
     description.set(undefined)
     flush()
-    await expect.poll(readLabels).toContain('Button · 执行动作')
+    await expect.poll(readLabels).toContain('执行动作')
     expect(button.getBoundingClientRect().toJSON()).toEqual(before)
     toggleView()
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
@@ -268,18 +280,19 @@ describe('组件结构查看', () => {
       .poll(readLabels)
       .toEqual(
         expect.arrayContaining([
-          'Article · 承载独立正文',
-          'Card · 组织独立信息',
-          'Button · 执行动作',
-          'Input · 编辑单行内容',
-          'Table · 按列展示记录',
-          'Loop · 排列重复内容',
+          '承载独立正文',
+          '组织独立信息',
+          '执行动作',
+          '编辑单行内容',
+          '按列展示记录',
+          '排列重复内容',
         ]),
       )
     expect(
       readLabels().some(
         (label) =>
-          label?.startsWith('Piv') || label?.startsWith('ComponentIdentityMarker'),
+          label?.startsWith('Piv') ||
+          label?.startsWith('ComponentIdentityMarker'),
       ),
     ).toBe(false)
     expect([...article.querySelectorAll('*')]).toEqual(originalElements)
@@ -331,17 +344,15 @@ describe('组件结构查看', () => {
     expect(select.options).toHaveLength(2)
     expect(host.children).toHaveLength(4)
     toggleView()
-    await expect.poll(readLabels).toContain('多根 · 文本和兄弟节点')
-    await expect.poll(readLabels).toContain('Button · 执行动作')
+    await expect.poll(readLabels).toContain('文本和兄弟节点')
+    await expect.poll(readLabels).toContain('执行动作')
     visible.set(false)
     flush()
-    await expect
-      .poll(() => readLabels().includes('Button · 执行动作'))
-      .toBe(false)
+    await expect.poll(() => readLabels().includes('执行动作')).toBe(false)
     expect(host.querySelector('span')?.textContent).toBe('元素根')
     visible.set(true)
     flush()
-    await expect.poll(readLabels).toContain('Button · 执行动作')
+    await expect.poll(readLabels).toContain('执行动作')
     dispose?.()
     dispose = undefined
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
@@ -371,7 +382,7 @@ describe('组件结构查看', () => {
     await expect.poll(() => trigger.popoverTargetElement).toBe(popover)
     trigger.click()
     await expect.poll(() => popover.matches(':popover-open')).toBe(true)
-    await expect.poll(readLabels).toContain('Card · 组织独立信息 · 原生浮层')
+    await expect.poll(readLabels).toContain('原生浮层')
     const overlay = document.querySelector<HTMLElement>(
       '.StructureViewOverlay',
     )!
@@ -416,13 +427,11 @@ describe('组件结构查看', () => {
       host,
     )
     toggleView()
-    await expect.poll(readLabels).toContain('Button · 执行动作')
+    await expect.poll(readLabels).toContain('执行动作')
     description.set(pendingDescription)
     flush()
     resolveDescription('异步提供的用途')
-    await expect
-      .poll(readLabels)
-      .toContain('Button · 执行动作 · 异步提供的用途')
+    await expect.poll(readLabels).toContain('异步提供的用途')
     const before = document.querySelector<HTMLElement>(
       '.StructureViewOverlay > .frame',
     )!.style.top
@@ -458,7 +467,7 @@ describe('组件结构查看', () => {
     await expect
       .poll(readLabels)
       .toContain(
-        '用途框 · 很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外',
+        '很长的说明应当换行并留在原框范围内，不因为标注而改变主体尺寸或把文字放到框外',
       )
     const labels = document.querySelector<HTMLElement>(
       '.StructureViewOverlay > .frame > .labels',
@@ -482,7 +491,10 @@ describe('组件结构查看', () => {
     dispose = render(
       () => (
         <>
-          <ComponentIdentityMarker componentName="整页内容">
+          <ComponentIdentityMarker
+            componentName="整页内容"
+            componentDescription="承载整页内容"
+          >
             <Piv style={{ width: '100vw', height: '100vh' }}>真实页面</Piv>
           </ComponentIdentityMarker>
           <ComponentIdentityMarkerStructureViewTrigger />
@@ -491,7 +503,7 @@ describe('组件结构查看', () => {
       host,
     )
     toggleView()
-    await expect.poll(readLabels).toContain('整页内容')
+    await expect.poll(readLabels).toContain('承载整页内容')
     const canvas = document.querySelector<HTMLCanvasElement>(
       '.StructureViewOverlay > canvas',
     )!
@@ -504,7 +516,9 @@ describe('组件结构查看', () => {
     )
     const context = canvas.getContext('2d')!
     const control = document
-      .querySelector<HTMLElement>('.ComponentIdentityMarkerStructureViewTrigger')!
+      .querySelector<HTMLElement>(
+        '.ComponentIdentityMarkerStructureViewTrigger',
+      )!
       .getBoundingClientRect()
     const controlAlpha = context.getImageData(
       Math.round(
@@ -554,20 +568,32 @@ describe('组件结构查看', () => {
     const host = createHost()
     dispose = render(() => {
       const child = (
-        <ComponentIdentityMarker componentName="子框">
+        <ComponentIdentityMarker
+          componentName="子框"
+          componentDescription="呈现子级内容"
+        >
           <Piv style={{ width: '160px', height: '80px' }}>内容</Piv>
         </ComponentIdentityMarker>
       )
       return (
         <>
-          <ComponentIdentityMarker componentName="父框">
+          <ComponentIdentityMarker
+            componentName="父框"
+            componentDescription="组织父级区域"
+          >
             <Piv style={{ width: '220px', height: '160px' }}>{child}</Piv>
           </ComponentIdentityMarker>
-          <ComponentIdentityMarker componentName="多根">
+          <ComponentIdentityMarker
+            componentName="多根"
+            componentDescription="组织多根内容"
+          >
             <Piv style={{ width: '100px', height: '30px' }}>第一根</Piv>
             <Piv style={{ width: '80px', height: '40px' }}>第二根</Piv>
           </ComponentIdentityMarker>
-          <ComponentIdentityMarker componentName="ReadingSummary">
+          <ComponentIdentityMarker
+            componentName="ReadingSummary"
+            componentDescription="汇总阅读信息"
+          >
             <Card style={{ width: '200px', height: '80px' }}>同框内容</Card>
           </ComponentIdentityMarker>
           <ComponentIdentityMarkerStructureViewTrigger />
@@ -578,7 +604,7 @@ describe('组件结构查看', () => {
       ...host.querySelectorAll<HTMLElement>('main > div, article'),
     ]
     toggleView()
-    await expect.poll(readLabels).toContain('子框')
+    await expect.poll(readLabels).toContain('呈现子级内容')
     const frames = [
       ...document.querySelectorAll<HTMLElement>(
         '.StructureViewOverlay > .frame',
@@ -594,8 +620,8 @@ describe('组件结构查看', () => {
     )
     expect(parent.getBoundingClientRect().height).toBe(160)
     expect(child.getBoundingClientRect().height).toBe(80)
-    expect(parent.querySelector('.label')?.textContent).toBe('父框')
-    expect(child.querySelector('.label')?.textContent).toBe('子框')
+    expect(parent.querySelector('.label')?.textContent).toBe('组织父级区域')
+    expect(child.querySelector('.label')?.textContent).toBe('呈现子级内容')
     expect(firstRoot.getBoundingClientRect().height).toBe(30)
     expect(secondRoot.getBoundingClientRect().height).toBe(40)
     expect(firstRoot.querySelectorAll('.label')).toHaveLength(1)
@@ -620,4 +646,66 @@ describe('组件结构查看', () => {
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
     expect(original.every((element) => element.isConnected)).toBe(true)
   })
+})
+
+/** 默认无说明只跳过自身，实例名称与定义职责的回退不改变原生名称。 */
+test('无说明的父范围不遮挡命名子组件，列表实例名优先于组件职责', async () => {
+  const first = createState<string | undefined>()
+  const second = createState<string | undefined>()
+  const display = createState<boolean | undefined>()
+  const label = [first, second]
+  const host = createHost()
+  dispose = render(
+    () => (
+      <>
+        <ComponentIdentityMarker componentName="UnnamedParent">
+          <Piv class="unnamed-parent">
+            <Button>子动作</Button>
+          </Piv>
+        </ComponentIdentityMarker>
+        <ComponentIdentityMarker
+          componentName="NamedRegion"
+          componentDescription="展示结果"
+          label={label}
+          descriptionDisplay={display.read()}
+        >
+          <Piv class="named-region" label={label}>
+            结果内容
+          </Piv>
+        </ComponentIdentityMarker>
+        <ComponentIdentityMarkerStructureViewTrigger />
+      </>
+    ),
+    host,
+  )
+  const parent = host.querySelector<HTMLElement>('.unnamed-parent')!
+  const region = host.querySelector<HTMLElement>('.named-region')!
+  const child = parent.querySelector('button')!
+  const childOpacity = getComputedStyle(child).opacity
+  const regionOpacity = getComputedStyle(region).opacity
+  toggleView()
+  await expect.poll(readLabels).toEqual(['执行动作', '展示结果'])
+  expect(parent.hasAttribute('data-structure-view-hidden')).toBe(false)
+  expect(getComputedStyle(child).opacity).toBe(childOpacity)
+  expect(readLabels()).not.toContain('UnnamedParent')
+  second.set('子项')
+  flush()
+  await expect.poll(readLabels).toContain('子项')
+  first.set('主要')
+  flush()
+  await expect.poll(readLabels).toContain('主要 子项')
+  expect(region.getAttribute('aria-label')).toBe('主要 子项')
+  first.set('')
+  second.set(undefined)
+  flush()
+  await expect.poll(readLabels).toEqual(['执行动作', '展示结果'])
+  expect(region.getAttribute('aria-label')).toBe('')
+  display.set(false)
+  flush()
+  await expect.poll(readLabels).toEqual(['执行动作'])
+  await expect.poll(() => getComputedStyle(region).opacity).toBe('0')
+  display.set(undefined)
+  flush()
+  await expect.poll(readLabels).toEqual(['执行动作', '展示结果'])
+  await expect.poll(() => getComputedStyle(region).opacity).toBe(regionOpacity)
 })

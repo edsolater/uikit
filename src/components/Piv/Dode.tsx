@@ -11,6 +11,7 @@ import {
   type JSXElement,
   type Source,
   createRenderEffect,
+  onCleanup,
   createComponent,
   useContext,
   val,
@@ -39,7 +40,7 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
   as?: Tag
   /** 属性存在时启用条件显隐；首次显示创建一次，之后复用同一元素。 */
   if?: Source<boolean>
-  /** 全局身份，支持 Source 与列表，并沿来源合并规则形成稳定 Source。 */
+  /** 全局身份，支持 Source 与列表，沿来源合并规则消费。 */
   id?: Source<MayArray<ID> | undefined>
   /** 字符串、列表、条件 token 对象或整体 Source。 */
   class?: ClassNameList
@@ -90,6 +91,19 @@ export function Dode<Tag extends PivTag>(
   return <>{val(props.if) ? getOrCreateElement() : null}</>
 }
 
+/** 字段绑定顺序先完成原生状态，再交付引用，最后插入子内容。 */
+const domFields = [
+  'id',
+  'class',
+  'style',
+  'on',
+  'htmlProps',
+  'domRef',
+  'children',
+] as const
+// 这四种模板沿原契约不消费 children，标签固定后无需重复判断。
+const ignoredChildrenTags = ['input', 'textarea', 'img', 'iframe']
+
 /**
  * 创建裸元素，接回管理层声明并完成字段、引用和子内容的初始化。
  */
@@ -98,43 +112,75 @@ function createDodeElement<Tag extends PivTag>(
   props: DodeDOMProps<Tag>,
 ): JSX.Element {
   const declarations = useContext(ElementDeclarationsContext)
-  // 根声明在真实元素处消费，子内容只接收自己所属组件的声明。
-  const resolvedChildren = children(() =>
-    createComponent(ElementDeclarationsContext, {
-      value: [],
-      get children() {
-        return val(props.children)
-      },
-    }),
-  )
   const element = createElement()
-  consumeId(element, props.id)
-  consumeClassName(element, () => props.class)
-  consumeStyle(element, () => [
-    ...declarations.flatMap((declaration) => toArray(val(declaration.style))),
-    ...toArray(val(props.style)),
-  ])
-  // 原始声明身份决定监听作用域，其他能力变化不会重置 once 或提前执行其 cleanup。
+  // 管理层声明在前、节点声明在后；消费时逐源检查字段，避免读取未声明的受控或 Token getter。
+  const rootSources = [...declarations, props]
+  const consumesChildren = !ignoredChildrenTags.includes(element.localName)
+  // 空输入仍会创建消费者的 memo／列表作用域；在共同入口按声明筛选，才能真正省去整条绑定链。
   mapArray(
-    () => toEventListenersList(props.on),
-    (declaration) => {
-      createRenderEffect(declaration, (eventDeclaration) =>
-        consumeEventListeners(element, eventDeclaration),
-      )
-      return declaration
+    () =>
+      domFields.filter((field) => {
+        if (field === 'children' && !consumesChildren) return false
+        return (
+          field in props ||
+          ((field === 'style' || field === 'htmlProps') &&
+            declarations.some((declaration) => field in declaration))
+        )
+      }),
+    (field) => {
+      switch (field) {
+        case 'id':
+          consumeId(element, () => props.id)
+          break
+        case 'class':
+          consumeClassName(element, () => props.class)
+          break
+        case 'style':
+          consumeStyle(element, () =>
+            rootSources.flatMap((source) =>
+              'style' in source ? toArray(val(source.style)) : [],
+            ),
+          )
+          break
+        case 'on':
+          // 原始声明身份拥有监听作用域，其他字段变化不重置 once 或提前清理监听。
+          mapArray(
+            () => toEventListenersList(props.on),
+            (declaration) => {
+              createRenderEffect(declaration, (eventDeclaration) =>
+                consumeEventListeners(element, eventDeclaration),
+              )
+              return declaration
+            },
+          )
+          break
+        case 'htmlProps':
+          consumeHTMLProps<Tag>(element, () =>
+            rootSources.flatMap((source) =>
+              'htmlProps' in source ? toArray(val(source.htmlProps)) : [],
+            ),
+          )
+          break
+        case 'domRef':
+          consumeDomRefs(element, () => props.domRef)
+          break
+        case 'children': {
+          // 根声明止于真实元素；子内容使用自己的声明，字段退出时同时撤下已插入节点。
+          const resolved = children(() =>
+            createComponent(ElementDeclarationsContext, {
+              value: [],
+              get children() {
+                return val(props.children)
+              },
+            }),
+          )
+          onCleanup(() => element.replaceChildren())
+          insert(element, resolved)
+          break
+        }
+      }
+      return field
     },
   )
-  consumeHTMLProps<Tag>(element, () => [
-    ...declarations.flatMap((declaration) =>
-      toArray(val(declaration.htmlProps)),
-    ),
-    ...toArray(val(props.htmlProps)),
-  ])
-  // domRef 按声明身份接入；相同声明不因旁读重跑，插件声明变化时接入新项并释放旧项。
-  consumeDomRefs(element, () => props.domRef)
-  // 四种模板原本不消费 children，保持既有行为，包括 textarea 与 iframe。
-  if (!['input', 'textarea', 'img', 'iframe'].includes(element.localName)) {
-    insert(element, resolvedChildren)
-  }
   return element
 }

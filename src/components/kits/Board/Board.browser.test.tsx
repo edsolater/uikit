@@ -188,7 +188,7 @@ test('两种方言保持单节点同材质，反馈语气更新不污染旁边�
     const [board, card, message] = [...host.children] as HTMLElement[]
     const names = [...componentBoundaries]
       .slice(before)
-      .map((boundary) => boundary.readLabel().split(' · ')[0])
+      .map((boundary) => boundary.componentName)
     expect(names).toEqual(['Board', 'Card', 'MessageBoard', 'Board'])
     for (const property of [
       'background-color',

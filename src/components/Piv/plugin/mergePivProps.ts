@@ -5,29 +5,15 @@
  * 直接 Props 优先，shadowProps 数组后项优先，每份声明先于其嵌套 shadowProps。
  * 它只产出声明数据，不消费 class、style、HTML props、事件或 domRef。
  */
-import {
-  mergeMayArray,
-  toArray,
-  type ID,
-  type MayArray,
-} from '@edsolater/fnkit'
-import { val, type StateView } from '@/foundation'
-import { derive } from '@/hooks/stateUtils'
+import { mergeMayArray, toArray, type MayArray } from '@edsolater/fnkit'
+import { val } from '@/foundation'
 import { createMemo } from '@/foundation/reactivity'
 import type { PivProps } from '../Piv'
 import type { PivTag } from '../domMap'
-import {
-  readPlugin,
-  type PluginInput,
-} from '../../plugins/tools/createInactivePlugin'
+import { readPlugin } from '../../plugins/tools/createInactivePlugin'
 
 /** 创建前可转交的统一补充声明，包含 as、if、domRef、is；children 仍由直接 Props 提供。 */
 export type ShadowProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'children'>
-
-/** 合并后的字段声明；id 与 label 输出稳定 Source，其余字段保持原有输入契约。 */
-export type MergedPivProps<Tag extends PivTag> = Omit<PivProps<Tag>, 'id'> & {
-  id?: StateView<MayArray<ID> | undefined>
-}
 
 /**
  * 在创建宿主之前收集 Props 中的补充声明，不包含传入的 Props 自身。
@@ -49,16 +35,22 @@ export function collectShadowProps<Tag extends PivTag>(
   return declarations
 }
 
-/** 一份声明携带的嵌套 shadowProps 与 is；is 按 PluginInput 严格识别。 */
+/**
+ * 收集一份声明携带的嵌套 shadowProps 与 is，保持原声明顺序。
+ * is 按 PluginInput 识别后转成补充声明，不在这里消费节点能力。
+ */
 function readNestedShadowProps<Tag extends PivTag>(
   props: ShadowProps<Tag>,
 ): ShadowProps<Tag>[] {
-  return [
-    ...toArray(props.shadowProps as MayArray<ShadowProps<Tag>> | undefined),
-    ...toArray(props.is as MayArray<PluginInput> | undefined).map(
-      (input) => readPlugin(input) as ShadowProps<Tag>,
-    ),
-  ]
+  const declarations: ShadowProps<Tag>[] = []
+  // 缺字段的 Director getter 会建立 State，收集来源时必须先看声明，而不是读取空值后再过滤。
+  if ('shadowProps' in props) declarations.push(...toArray(props.shadowProps))
+  if ('is' in props) {
+    for (const input of toArray(props.is)) {
+      declarations.push(readPlugin(input) as ShadowProps<Tag>)
+    }
+  }
+  return declarations
 }
 
 /**
@@ -69,39 +61,30 @@ function readNestedShadowProps<Tag extends PivTag>(
  */
 export function mergePivProps<Tag extends PivTag>(
   props: PivProps<Tag>,
-): MergedPivProps<Tag> {
+): PivProps<Tag> {
   const readSources = createMemo(() => [props, ...collectShadowProps(props)])
   return createMergedProps(props, readSources)
 }
 
 /**
- * 为整合后的声明建立 id、label 来源与其他字段的 getter。
+ * 为整合后的声明建立按需读取的字段视图，不提前创建字段的派生来源。
  * 读取最新完整声明，字段合并仍沿低优先级到高优先级的原顺序。
  */
 function createMergedProps<Tag extends PivTag>(
   props: PivProps<Tag>,
   readSources: () => ShadowProps<Tag>[],
-): MergedPivProps<Tag> {
-  const id = derive([readSources], ([read]) => mergePivPropValue(read(), 'id'))
-  // 名称在原生字段实际消费时才取值，保持异步来源的等待与更新作用域。
-  const label = derive([readSources], ([read]) => {
-    for (const source of read()) {
-      const value = val(source.label)
-      if (value !== undefined) return value
-    }
-    return undefined
-  })
+): PivProps<Tag> {
   const readProperty = (key: keyof PivProps<Tag>) => {
-    if (key === 'id') return id
     if (key === 'children') return props.children
     if (key === 'as') {
       for (const source of readSources()) {
+        // 跳过未声明来源，避免仅为选择标签建立其控制 State。
+        if (!('as' in source)) continue
         const tag = source.as
         if (tag !== undefined) return tag
       }
       return undefined
     }
-    if (key === 'label') return label
     if (key === 'if') return readSources().find((source) => 'if' in source)?.if
     return mergePivPropValue(readSources(), key)
   }
@@ -132,14 +115,13 @@ function createMergedProps<Tag extends PivTag>(
             }
           : undefined,
     },
-  ) as MergedPivProps<Tag>
+  ) as PivProps<Tag>
 }
 
-/** 读取并合并一个字段；val 只解包 StateView，事件回调等普通函数会保持原值。 */
-function mergePivPropValue<Tag extends PivTag>(
-  sources: ShadowProps<Tag>[],
-  key: 'id',
-): MayArray<ID> | undefined
+/**
+ * 只从实际声明该字段的来源读取并合并值。
+ * Source 在消费作用域读取，事件回调等普通函数保持原值。
+ */
 function mergePivPropValue<
   Tag extends PivTag,
   Key extends keyof ShadowProps<Tag>,
@@ -152,6 +134,8 @@ function mergePivPropValue<Tag extends PivTag>(
   let values: unknown[] | undefined
 
   for (let index = sources.length - 1; index >= 0; index--) {
+    // 某个来源声明字段，不代表其它来源也声明；缺字段的受控 getter 不应被激活。
+    if (!(key in sources[index])) continue
     const rawValue = sources[index][key]
     if (rawValue === undefined) continue
     const value: unknown = val(rawValue)

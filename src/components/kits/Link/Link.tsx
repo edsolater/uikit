@@ -26,7 +26,7 @@ export const Link: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '导航到目标页面',
+    componentDescription: '导航到目标页面',
     propDefinition: linkPropDefinition,
   },
   (props, { name }) => {

@@ -24,7 +24,11 @@ export function ComponentIdentityMarkerExample() {
       <Text p>
         点击右下角“打开组件定位框”可看到阅读摘要的共同边界；关闭后恢复正常内容。
       </Text>
-      <ComponentIdentityMarker componentName="ReadingSummary" description="汇总阅读信息" label="概括本次阅读进度">
+      <ComponentIdentityMarker
+        componentName="ReadingSummary"
+        componentDescription="汇总阅读信息"
+        label="概括本次阅读进度"
+      >
         <Card>
           <Flow styleConfig={{ direction: 'column' }}>
             <Heading level={3}>阅读摘要</Heading>

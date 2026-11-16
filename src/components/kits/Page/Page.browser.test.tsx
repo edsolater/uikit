@@ -184,7 +184,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
   const originalNodes = [...page.querySelectorAll('*')]
   const bounds = page.getBoundingClientRect().toJSON()
   const names = [...componentBoundaries].map(
-    (boundary) => boundary.readLabel().split(' · ')[0],
+    (boundary) => boundary.componentName,
   )
   for (const name of [
     'Page',
@@ -204,10 +204,10 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
   toggleView()
   await expect
     .poll(() => document.querySelector('.StructureViewOverlay')?.textContent)
-    .toContain('Page')
+    .toContain('组织页面标题、说明、动作与内容')
   expect(
     document.querySelector('.StructureViewOverlay')?.textContent,
-  ).toContain('Flow')
+  ).toContain('组织内容方向')
   toggleView()
   await expect
     .poll(() => document.querySelector('.StructureViewOverlay:popover-open'))

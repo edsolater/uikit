@@ -49,7 +49,9 @@ afterEach(() => {
  */
 function toggleView() {
   document
-    .querySelector<HTMLButtonElement>('.ComponentIdentityMarkerStructureViewTrigger')!
+    .querySelector<HTMLButtonElement>(
+      '.ComponentIdentityMarkerStructureViewTrigger',
+    )!
     .click()
   flush()
 }
@@ -94,7 +96,12 @@ describe('Text', () => {
       .toBe(true)
     text.props!.label.set('')
     flush()
-    await expect.poll(() => getComputedStyle(element).opacity).toBe('0')
+    await expect
+      .poll(
+        () => document.querySelectorAll('.StructureViewOverlay .frame').length,
+      )
+      .toBe(0)
+    expect(getComputedStyle(element).visibility).toBe('hidden')
     dispose()
     dispose = undefined
     expect(Text.controllers.length).toBe(0)
@@ -135,7 +142,7 @@ describe('Text', () => {
     await expect
       .poll(() =>
         [...document.querySelectorAll('.StructureViewOverlay .label')].some(
-          (element) => element.textContent === 'Text',
+          (element) => element.textContent === '',
         ),
       )
       .toBe(true)
@@ -230,7 +237,7 @@ describe('Text', () => {
       .poll(
         () =>
           [...document.querySelectorAll('.StructureViewOverlay .label')].filter(
-            (element) => element.textContent === 'Text',
+            (element) => element.textContent === '',
           ).length,
       )
       .toBe(4)
@@ -240,7 +247,7 @@ describe('Text', () => {
       .poll(
         () =>
           [...document.querySelectorAll('.StructureViewOverlay .label')].filter(
-            (element) => element.textContent === 'Text',
+            (element) => element.textContent === '',
           ).length,
       )
       .toBe(4)
@@ -252,7 +259,7 @@ describe('Text', () => {
     expect(host.querySelector('p.Text')?.textContent).toBe('42')
   })
 
-  test('默认跟随外部说明真值，显式boolean优先', async () => {
+  test('无名时默认无框，实例标签动态更新且显式开关优先', async () => {
     const description = createState<string | undefined>()
     const display = createState<boolean | undefined>()
     const host = document.body.appendChild(document.createElement('main'))
@@ -270,7 +277,11 @@ describe('Text', () => {
     const text = host.querySelector<HTMLElement>('.Text')!
     expect(getComputedStyle(text).opacity).toBe('1')
     toggleView()
-    await expect.poll(() => getComputedStyle(text).opacity).toBe('0')
+    await expect
+      .poll(
+        () => document.querySelectorAll('.StructureViewOverlay .frame').length,
+      )
+      .toBe(0)
     expect(
       document.querySelectorAll('.StructureViewOverlay .label'),
     ).toHaveLength(0)
@@ -294,10 +305,14 @@ describe('Text', () => {
         () =>
           document.querySelector('.StructureViewOverlay .label')?.textContent,
       )
-      .toBe('Text')
+      .toBe('')
     display.set(undefined)
     flush()
-    await expect.poll(() => getComputedStyle(text).opacity).toBe('0')
+    await expect
+      .poll(
+        () => document.querySelectorAll('.StructureViewOverlay .frame').length,
+      )
+      .toBe(0)
     let resolveDescription!: (value: string) => void
     description.set(
       new Promise<string>((resolve) => {
@@ -328,7 +343,7 @@ test('关闭定位框显示仍等待异步用途，并在完成后绑定无障�
   dispose = render(
     () => (
       <Loading fallback={<Piv>等待用途</Piv>}>
-        <Text label={description} descriptionDisplay={false}>
+        <Text label={['实例', description]} descriptionDisplay={false}>
           异步内容
         </Text>
       </Loading>
@@ -339,6 +354,6 @@ test('关闭定位框显示仍等待异步用途，并在完成后绑定无障�
   resolveDescription('异步用途')
   await expect
     .poll(() => host.querySelector('.Text')?.getAttribute('aria-label'))
-    .toBe('异步用途')
+    .toBe('实例 异步用途')
   expect(host.textContent).toBe('异步内容')
 })

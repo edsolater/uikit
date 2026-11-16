@@ -9,7 +9,7 @@ Dode 是本目录内部的元素实现，定义并消费 as、if 与底层 DOM �
 | 内容                        | 负责主体 | 处理方式                                                                       |
 | --------------------------- | -------- | ------------------------------------------------------------------------------ |
 | as、if                      | Dode     | as 在首次实际创建时固定元素类型；if 按属性存在性启用显隐，同一元素跨显隐复用。 |
-| label                       | Piv      | 按来源优先级选择实例名称，转换为低优先级 aria-label，不传入 Dode。             |
+| label                       | Piv      | 合并实例名称列表，以空格连接为低优先级 aria-label，不传入 Dode。             |
 | is、shadowProps             | Piv      | 在创建前展开已构建 Plugin 的声明，统一组织来源并交给 Dode。                    |
 | id、class、style、htmlProps | Dode     | 将组织后的声明交给专用字段消费者，订阅 Source 并维护 DOM。                     |
 | on、domRef                  | Dode     | 拥有事件绑定生命周期，完成字段绑定后按声明身份接入 domRef。                    |
@@ -25,7 +25,10 @@ Piv 在创建前组织直接声明、纯 shadowProps 与 is 中的已构建 Plug
 Dode 从中读取 as、if 和 DOM 字段。创建前直接展开 Plugin 的补充声明，不运行业务 core，
 因此 `addProps` 提交的 as/if 与 shadowProps 一样参与结构选择。
 直接声明优先；shadowProps／is 数组后项优先，每份声明先于其嵌套 shadowProps。
-as 与 label 选择最高优先级的非 undefined 值；label 不参与数组拼接，来源变化持续更新原生名称。if 选择最高优先级存在该属性的来源，保留显式 undefined。
+as 选择最高优先级的非 undefined 值。if 选择最高优先级存在该属性的来源，保留显式 undefined。
+label 沿公共来源规则合并，接受 `MayArraySource<string | undefined>`，整体和列表项均可为 Source。非空名称以空格连接，undefined 项不产生文字；显式空字符串仍是已声明的空名称。Piv 和 Marker 共同复用名称解释入口，来源更新继续驱动原生名称与结构显示。
+
+定义职责 `componentDescription` 属于 KitOptions 或手写 ComponentIdentityMarker，不属于 PivProps，也不参与原生名称合并。结构查看优先标注非空 label，其次 componentDescription，都没有内容时默认不画自身框或标注，不用组件名补位，也不阻止有说明的后代。Marker 的显式 descriptionDisplay 优先：false 隐藏自身与后代范围，true 允许空框。Piv 始终只根据 label 设置低优先级 aria-label；清空 label 时移除该来源的原生名称，不用定义职责回填。
 
 `ShadowProps` 是唯一的补充声明契约，包含 as、if、domRef、is 及既有其他补充属性；children 仍由直接 Props 提供。
 `addProps` 直接提交 shadowProps，不拥有另一套删减后的类型；Plugin 不接收元素。
@@ -35,8 +38,8 @@ as 与 label 选择最高优先级的非 undefined 值；label 不参与数组�
 
 能力声明完整进入来源合并；声明变化时接入新 domRef 并释放被移除项。
 
-id 的稳定 Source 在合并层形成，持续跟随来源替换和多声明合并。
-这属于来源管理，不是 DOM 解析；Dode 将该 Source 直接交给 Effect 自动读取。
+id 在消费作用域读取当前合并结果，持续跟随来源替换和多声明合并；合并层不提前为 id 或 label 创建派生 Source。
+id 消费者在原有 Effect 内读取字段 getter，列表按 JavaScript 字符串规则形成 DOM id；字段退出时恢复绑定前的 id。
 class、style、htmlProps 的声明保留惰性读取，具体条件解析、有效字段选择和字段订阅由各自消费者负责。
 被覆盖的 HTML/style 字段不继续订阅无效来源。
 
@@ -65,13 +68,17 @@ if 接受可解析的 Source，包括 State。输入形式与使用意图分开�
 无 if 时 Dode 直接创建并绑定元素；存在 if 时首次显示才初始化一次，绑定归调用 Dode 的存活作用域，不归条件 DOM 输出的临时计算。
 首次创建在该作用域下不跟踪旁读，因此 domRef 初始化中的读取不成为条件输出的依赖。父组件、父条件分支或整个渲染根退出时，原生作用域统一释放资源。
 
-初始化顺序为：创建裸元素 → 绑定字段和事件 → 调用 domRef → 插入 children。
+声明形状决定字段是否参与，不根据当前值或真值判断。未声明字段不建立对应解析与绑定；已声明 Source 当前为 undefined 时，仍保留其动态消费。
+Dode 通过同一字段列表作用域接入实际声明的 id、class、style、on、htmlProps、domRef、children，包括继承声明及上层真实根声明。动态 shadowProps／is 加入或移除字段时，建立或释放对应消费者；读取各来源时也只访问该来源真实声明的字段。
+Kit 样式配置只有实例声明 styleConfig 时才投射根 style；配置定义本身不制造实例声明。Controller 首次显式写入字段会将其加入输入声明形状，普通读取不启用节点能力。
+
+初始化顺序为：创建裸元素 → id → class → style → on → htmlProps → domRef → children。
 domRef 取得已提交初始字段的真实元素；mount 后可以观察已插入的子节点。
 domRef 首次创建时调用，显隐不重复接入；声明被移除或所属存活作用域退出时执行回调返回的清理。
 `domProxy` 消费者在首次节点就绪后接入资源，按各自所属作用域清理；操作晚于清理的时序缺口见 [Task 与 result Plan](../../../../fnkit/docs/plans/261108_Task与Result执行.md)。
 
 当前 children 懒求值。
-整体可替换的 children Source 保持响应式更新。
+整体可替换的 children Source 保持响应式更新；children 字段退出时既释放计算，也撤下已经插入的子内容。
 input、textarea、img、iframe 沿现有模板不插入 children。
 
 字段和监听资源随所属存活作用域释放，if 隐藏不触发退出清理。
@@ -85,7 +92,8 @@ style/HTML 按字段 key 保留作用域，同 key 换来源由原生 Effect 清
 ## 代码落点
 
 - [Piv.tsx](Piv.tsx)：公开契约组合、声明来源与插件展开入口。
-- [Dode.tsx](Dode.tsx)：as/if 与底层 DOM 属性契约、条件执行、创建和绑定。
+- [Dode.tsx](Dode.tsx)：as/if 与底层 DOM 属性契约、条件执行、创建和按字段声明接入绑定。
+- [label.ts](label.ts)：Piv 与结构查看共用的实例名称列表解释。
 - [domMap.tsx](domMap.tsx)：受支持 tag 的裸 JSX 工厂。
 - [mergePivProps.ts](plugin/mergePivProps.ts)：创建前插件展开、结构解析与来源合并。
 - [domRef.ts](domRef.ts)：按声明身份接入 domRef 并登记清理。

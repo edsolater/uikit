@@ -13,6 +13,7 @@ import {
   type StateView,
   type State,
 } from '@/foundation'
+import { untrack } from '@/foundation/reactivity'
 import { derive } from '@/hooks'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 
@@ -91,7 +92,9 @@ export function createStatusPropsParser<
   ): StatusPropsParseResult<StatusName> {
     const candidates: readonly StatusName[] = options.candidates
     const externalStatusNames = new Set(
-      options.candidates.filter((statusName) => statusName in props),
+      untrack(() =>
+        options.candidates.filter((statusName) => statusName in props),
+      ),
     )
     // 计算来源同时保留属性读取和 Source 链，状态写入不会回写输入。
     // 候选全集逐项构造同名记录，Object.fromEntries 不保留该键域证明。

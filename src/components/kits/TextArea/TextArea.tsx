@@ -25,7 +25,7 @@ export const TextArea: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '编辑多行文字',
+    componentDescription: '编辑多行文字',
     propDefinition: textAreaPropDefinition,
   },
   (props, { name }) => {

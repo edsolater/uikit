@@ -532,7 +532,8 @@ test('默认聚焦正文内第一个可聚焦节点，卸载时恢复原有 auto
   body.querySelector('[autofocus]')!.setAttribute('autofocus', 'original')
   await userEvent.click(trigger)
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
-  expect(document.activeElement).toBe(body.querySelector('[data-first]'))
+  const first = body.querySelector('[data-first]')!
+  expect(document.activeElement).toBe(first)
   expect(body.querySelector('[data-first]')?.hasAttribute('autofocus')).toBe(
     true,
   )
@@ -542,9 +543,7 @@ test('默认聚焦正文内第一个可聚焦节点，卸载时恢复原有 auto
   expect(existing.hasAttribute('autofocus')).toBe(false)
   dispose?.()
   dispose = undefined
-  expect(body.querySelector('[data-first]')?.hasAttribute('autofocus')).toBe(
-    false,
-  )
+  expect(first.hasAttribute('autofocus')).toBe(false)
   expect(existing.getAttribute('autofocus')).toBe('original')
 })
 
@@ -688,11 +687,12 @@ test('后续监听取消打开不移动焦点，卸载时恢复原有 autofocus'
   await userEvent.click(trigger)
   expect(body.matches(':popover-open')).toBe(false)
   expect(document.activeElement).toBe(trigger)
-  expect(body.querySelector('button')!.hasAttribute('autofocus')).toBe(true)
+  const first = body.querySelector('button')!
+  expect(first.hasAttribute('autofocus')).toBe(true)
   dispose?.()
   dispose = undefined
   expect(existing.getAttribute('autofocus')).toBe('original')
-  expect(body.querySelector('button')!.hasAttribute('autofocus')).toBe(false)
+  expect(first.hasAttribute('autofocus')).toBe(false)
 })
 
 test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操作', async () => {

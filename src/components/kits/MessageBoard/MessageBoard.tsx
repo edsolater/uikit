@@ -26,7 +26,7 @@ export const MessageBoard: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '呈现操作结果反馈',
+    componentDescription: '呈现操作结果反馈',
     propDefinition: messageBoardPropDefinition,
   },
   (props, { name }) => {

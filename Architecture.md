@@ -48,13 +48,13 @@ kit 负责组件语义，Piv 在创建前展开直接声明、shadowProps 与 is
 
 ## 组件定位框
 
-kit在定义处以ComponentIdentityMarker声明静态身份与description职责说明，使用处通过PivProps.label表达实例业务名称；两者独立，不覆盖或回退。Piv将label转换为真实根元素的低优先级aria-label，Marker消费同一份label呈现实例信息。Marker用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
+kit在定义处以ComponentIdentityMarker声明静态身份与componentDescription职责说明，使用处通过PivProps.label表达实例业务名称。Marker只选一份标注：非空label优先，否则使用componentDescription；两者均空时默认不画自身框，不用组件名补位，也不阻止有说明的子组件。显示回退不改写实例label，Piv仍只将label转换为真实根元素的低优先级aria-label。label沿声明来源合并，支持整体及列表项Source，非空文字以空格连接。未声明字段不建立对应DOM消费链；动态来源加入或移除字段时，共同字段入口建立或释放其作用域。Source当前值为undefined仍是已声明字段。Controller显式写入未传入字段时才将其加入声明形状，普通读取不启用能力。Marker用Comment界定真实节点范围，在存活集合登记并在卸载时释放，不增加布局元素；Piv及内部实现不登记。用途协议与跨项目接入见[组件定位框](docs/guide/组件结构查看.md)。
 
 App手动放入ComponentIdentityMarkerStructureViewTrigger，作为ComponentIdentityMarker结构查看模式的激活器。它拥有初始关闭的本地状态；开启才挂载内部Overlay。Overlay逐帧测量真实边界及激活器范围，通过Piv为每个实际矩形创建全尺寸显示宿主：负一级伪元素承载白色半透明和背景模糊，自身名称按父到子顺序绘制，Canvas仅在上层描边。同完整矩形的名称分行，多区域组件仅在首矩形标名；所有名称受所属框宽高约束。遮罩与描边共用本帧激活器范围保留透明洞，关闭即释放显示层与帧循环，不重建原组件或清空状态。激活器与内部覆盖层各自拥有同名.style.ts；Button Example是现有Dev中的消费点，Dashboard导航与App启动方式不变。
 
-共同descriptionDisplay布尔属性由Marker处理显式值与定义默认，普通组件缺省true，Text按实例label实际内容决定默认。仅在Overlay挂载的受管消费中归一显示值，帧循环不直接读取异步Source。false元素根及原生浮层根通过专属模式属性保持opacity为0；裸文字根以透明色Highlight保留原节点，Comment范围同时排除后代定位框。Overlay负责同步与清理，不另建开关、组件树或项目私有隐藏逻辑；普通样式及其Source持续更新，不用旧opacity快照覆盖。
+共同descriptionDisplay由Marker处理，显式值优先：false隐藏自身与后代范围；true允许显示自身范围，即使没有文字也不编造标注；未指定时仅有有效标注的范围显示，无说明返回undefined而不隐藏后代。Kit不再提供标注格式或默认显示配置。仅在Overlay挂载的受管消费中读取Source，帧循环不直接读取异步Source。false元素根及原生浮层根通过专属模式属性保持opacity为0；裸文字根以透明色Highlight保留原节点，Comment范围同时排除后代定位框。Overlay负责同步与清理，不另建开关、组件树或项目私有隐藏逻辑；普通样式及其Source持续更新，不用旧opacity快照覆盖。
 
-Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p分别选择div／p，仍承载纯文字Source；Heading以必填level选择h1～h4，保留Piv的组合内容与动态来源能力。两者直接把原生节点交给Piv，不通过嵌套彼此实现。Heading自身观察最终DOM文本并同步为id，作为结构与导航定位节点，不自动变成Link；观察器随原生节点退出释放。各自的相邻.style.ts通过Style System感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即恢复最新内容。它们不复制开关State，也不缓存或改写DOM文字；Marker及统一Overlay继续负责定位框与标注。两者选择labelOnly格式，有实例名称时只标实例名称，未命名或空名称时显示各自组件名，其他组件分别呈现组件名、定义职责和实例标签。
+Text与Heading组成文字语义族：Text缺省使用span，互斥的block／p分别选择div／p，仍承载纯文字Source；Heading以必填level选择h1～h4，保留Piv的组合内容与动态来源能力。两者直接把原生节点交给Piv，不通过嵌套彼此实现。Heading自身观察最终DOM文本并同步为id，作为结构与导航定位节点，不自动变成Link；观察器随原生节点退出释放。各自的相邻.style.ts通过Style System感知既有Overlay的原生开启状态，仅隐藏文字显示，排版与Source更新保持；关闭或卸载FAB即恢复最新内容。它们不复制开关State，也不缓存或改写DOM文字；Marker及统一Overlay继续负责定位框与标注。两者沿用共同标注规则；没有组件职责与有效实例名称时自然不画自身框，无需专用选项。
 
 ## Popover 控制与接入
 
@@ -76,7 +76,7 @@ KitProps、KitComponent、KitController、KitOptions 与 ControllerRegistry 以�
 
 每个组件的 `.prop.ts` 聚合 Props、字段协议类型和值、Controller 声明及候选事实，相关定义保持紧邻。`.style.ts` 聚合 StyleConfig 类型、箭头解释函数、Token 与规则；`.tsx` 负责装配、渲染和实际业务能力。`components/tools/kit.ts` 中 KitOptions 与 kit 属于同一组件定义与创建板块。PropsOf、ControllerOf、旧 Inputs、自动输入补全及 directorOptions 已退出，不保留旧签名适配。
 
-`kit(options, render)` 固定身份、默认用途说明、完整字段表及可选样式解释。已声明的 KitComponent 为核心 props 和 Context 提供上下文，核心参数不再标注类型。name 与 Marker 共用组件身份，exposeController 接收已声明业务成员，onCleanup 绑定当前实例 owner；这些能力不依赖祖先 KitContext 或 App 根。
+`kit(options, render)` 固定身份、定义职责 `componentDescription`、完整字段表及可选样式解释。已声明的 KitComponent 为核心 props 和 Context 提供上下文，核心参数不再标注类型。name 与 Marker 共用组件身份，exposeController 接收已声明业务成员，onCleanup 绑定当前实例 owner；这些能力不依赖祖先 KitContext 或 App 根。
 
 ### 输入控制与实例生命周期
 

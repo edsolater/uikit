@@ -132,7 +132,7 @@ test('准备阶段基于原声明选择默认来源，输出投影不改变输�
   controller.group.set(undefined)
   flush()
   expect(val(props.group)).toBeUndefined()
-  expect('group' in input).toBe(false)
+  expect('group' in input).toBe(true)
   dispose()
 })
 

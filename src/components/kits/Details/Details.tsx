@@ -23,7 +23,7 @@ export const Details: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '按需展开内容',
+    componentDescription: '按需展开内容',
     propDefinition: detailsPropDefinition,
   },
   (props, { name }) => {

@@ -58,7 +58,7 @@ export const Button: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '执行动作',
+    componentDescription: '执行动作',
     propDefinition: buttonPropDefinition,
     variantGroups: buttonVariantGroups,
     styleTokens: buttonStyleTokens,

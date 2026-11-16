@@ -101,27 +101,38 @@ export function createComponentPropsDirector<
   const owner = getOwner()
   const defaultSources = options?.defaultSources
   const states = new Map<PropertyKey, State<unknown>>()
+  // 只有显式写入才扩展声明形状；普通读取与结构查看不会暗中启用节点能力。
+  const writtenKeys = createState<(string | symbol)[]>([])
   /**
    * 取得本字段共用的可写状态，首次访问时连接上游或默认来源。
    */
-  const getState = (key: PropertyKey) =>
+  const getState = (key: string | symbol) =>
     mapGet(states, key, () =>
       runWithOwner(owner, () => {
         const declared = key in rawProps
         const fallback =
           !declared && defaultSources && Object.hasOwn(defaultSources, key)
-            ? Reflect.get(defaultSources, key)?.(inputProps)
+            ? untrack(() => Reflect.get(defaultSources, key)?.(inputProps))
             : undefined
-        return createState(
+        const state: State<unknown> = createState<unknown>(
           () => val(declared ? Reflect.get(rawProps, key) : fallback),
           { lazy: true },
         )
+        const set = state.set
+        state.set = (value) => {
+          const result = set(value)
+          if (!untrack(() => val(writtenKeys)).includes(key)) {
+            writtenKeys.set((keys) => [...keys, key])
+          }
+          return result
+        }
+        return state
       }),
     )
   /**
    * 按字段协议读取当前输入；未声明读取规则的字段直接交回上游值。
    */
-  const read = (key: PropertyKey) => {
+  const read = (key: string | symbol) => {
     if (!Object.hasOwn(definition, key)) return Reflect.get(rawProps, key)
     const mode = Reflect.get(definition, key) as PropsReadMode
     if (mode === 'only-through-prop') return Reflect.get(rawProps, key)
@@ -139,9 +150,11 @@ export function createComponentPropsDirector<
     /**
      * 判断当前视图是否包含字段，包含原声明及可见默认来源。
      */
-    const has = (key: PropertyKey) =>
+    const has = (key: string | symbol) =>
       !omit.includes(key as keyof Props) &&
-      (key in rawProps || Boolean(defaults && Object.hasOwn(defaults, key)))
+      (key in rawProps ||
+        (Object.hasOwn(definition, key) && val(writtenKeys).includes(key)) ||
+        Boolean(defaults && Object.hasOwn(defaults, key)))
     return new Proxy(
       {},
       {
@@ -152,6 +165,7 @@ export function createComponentPropsDirector<
           [
             ...new Set([
               ...Reflect.ownKeys(rawProps),
+              ...val(writtenKeys),
               ...(defaults
                 ? Reflect.ownKeys(defaults).filter((key) => !(key in rawProps))
                 : []),
@@ -164,9 +178,9 @@ export function createComponentPropsDirector<
             (!(key in rawProps) && defaults
               ? Object.getOwnPropertyDescriptor(defaults, key)
               : undefined)
-          if (!descriptor) return
+          if (!descriptor && !val(writtenKeys).includes(key)) return
           return {
-            enumerable: descriptor.enumerable,
+            enumerable: descriptor?.enumerable ?? true,
             configurable: true,
             get: () => read(key),
           }

@@ -25,7 +25,7 @@ export const NavigationRegion: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '组织具名导航区域',
+    componentDescription: '组织具名导航区域',
     propDefinition: navigationRegionPropDefinition,
   },
   (props, { name }) => {

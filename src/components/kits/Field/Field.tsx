@@ -24,7 +24,7 @@ export const Field: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '关联字段标题与单个控件',
+    componentDescription: '关联字段标题与单个控件',
     propDefinition: fieldPropDefinition,
   },
   (props, { name }) => {

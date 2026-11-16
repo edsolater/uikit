@@ -162,7 +162,7 @@ describe('Heading', () => {
     expect(overridden.marginBlockEnd).toBe('9px')
   })
 
-  test('明确四种标题等级，定位框只保留Heading身份并恢复最新内容', async () => {
+  test('四种标题等级共用标注规则并恢复最新内容', async () => {
     expectTypeOf<{ children: string }>().not.toExtend<HeadingProps>()
     expectTypeOf<{ level: 5 }>().not.toExtend<HeadingProps>()
     expectTypeOf<{ level: 6 }>().not.toExtend<HeadingProps>()
@@ -220,7 +220,7 @@ describe('Heading', () => {
             (element) => element.textContent === 'Heading',
           ).length,
       )
-      .toBe(4)
+      .toBe(0)
     expect(
       headings.every(
         (element) => getComputedStyle(element).visibility === 'hidden',
@@ -263,7 +263,7 @@ describe('Heading', () => {
       .poll(
         () => document.querySelectorAll('.StructureViewOverlay .label').length,
       )
-      .toBe(4)
+      .toBe(1)
     expect(
       [...document.querySelectorAll('.StructureViewOverlay .label')].some(
         (element) => element.textContent?.startsWith('Text'),

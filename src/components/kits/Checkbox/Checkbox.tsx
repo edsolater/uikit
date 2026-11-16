@@ -26,7 +26,7 @@ export const Checkbox: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '切换二态选项',
+    componentDescription: '切换二态选项',
     propDefinition: checkboxPropDefinition,
   },
   (props, { name }) => {

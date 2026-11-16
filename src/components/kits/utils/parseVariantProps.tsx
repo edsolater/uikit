@@ -5,6 +5,7 @@
  *
  * 让输入选择规则与后续响应式读取保持在同一条 Source 链上。
  */
+import { untrack } from '@/foundation/reactivity'
 import { derive } from '@/hooks'
 import { toRecord } from '@edsolater/fnkit'
 import { val, type Source } from '@/foundation'
@@ -138,9 +139,9 @@ function parseVariantGroup(
   group: VariantPropsGroup,
 ): Source<string | undefined> {
   const propRecord = props as Record<string, unknown>
-  const hasGroupProp = group.groupName in props
-  const declaredCandidates = group.candidates.filter(
-    (candidate) => candidate in props,
+  const hasGroupProp = untrack(() => group.groupName in props)
+  const declaredCandidates = untrack(() =>
+    group.candidates.filter((candidate) => candidate in props),
   )
 
   if (hasGroupProp && declaredCandidates.length > 0) {

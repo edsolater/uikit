@@ -31,7 +31,7 @@ export function bindStyleConfig(
   definition: Partial<Record<string, StyleConfigHandler<never>>>,
   props: { styleConfig?: Source<Record<string, unknown> | undefined> },
 ): ElementDeclarations {
-  return {
+  const declaration: ElementDeclarations = {
     get style() {
       return collectTokenStyles(() => {
         const config = val(props.styleConfig)
@@ -44,4 +44,13 @@ export function bindStyleConfig(
       })
     },
   }
+  // 配置定义存在不等于实例声明配置；形状投射随上游和控制写入更新，不提前订阅配置值。
+  return new Proxy(declaration, {
+    has: (_, key) => key === 'style' && 'styleConfig' in props,
+    ownKeys: () => ('styleConfig' in props ? ['style'] : []),
+    getOwnPropertyDescriptor: (_, key) =>
+      key === 'style' && 'styleConfig' in props
+        ? { enumerable: true, configurable: true }
+        : undefined,
+  })
 }

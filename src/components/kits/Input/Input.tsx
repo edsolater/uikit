@@ -43,7 +43,7 @@ export const Input: KitComponent<{
 }> = kit(
   {
     name: componentName,
-    description: '编辑单行内容',
+    componentDescription: '编辑单行内容',
     propDefinition: inputPropDefinition,
   },
   (props, { name, exposeController }) => {
