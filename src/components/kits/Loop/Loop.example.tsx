@@ -14,9 +14,9 @@ import { createState, val } from '@/foundation'
 export function LoopExample() {
   const items = createState(['核对结构', '检查输入输出'])
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Heading level={2}>Loop · 审核队列</Heading>
-      <Flow direction="row">
+      <Flow>
         <Button
           onClick={() => {
             items.set([...val(items), `新增检查 ${val(items).length + 1}`])

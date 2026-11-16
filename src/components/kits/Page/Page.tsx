@@ -5,53 +5,42 @@
  *
  * 页面编排使用基础组件，不接管它们的内部样式。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { pagePropsDefinition } from './Page.prop'
-import { Show, val, type Source, type JSX } from '@/foundation'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { Show, val } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import { Heading } from '../Heading/Heading'
 import { Text } from '../Text/Text'
 import { Flow } from '../Flow/Flow'
-import './Page.style'
-/** Page 的声明输入；初始状态通过 Props 表达。 */
-export type PageProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<PageController>
-  title?: Source<string | undefined>
-  /** 可见副标题，保持正文语义，不用作结构查看元数据。 */
-  subtitle?: Source<string | undefined>
-  actions?: JSX.Element
-  children?: JSX.Element
-}
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  pagePropDefinition,
+  type PageProps,
+  type PageController,
+} from './Page.prop'
 
-/** Page 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type PageController = KitController<
-  PageProps,
-  typeof pagePropsDefinition
->
+import './Page.style'
 
 /**
  * 页面根负责阅读范围；标题、说明与动作可省略，没有这些内容时保留原正文顺序。
  */
-export const Page = kit(
+export const Page: KitComponent<PageProps, PageController> = kit(
   {
-    name: 'Page',
+    name: componentName,
     description: '组织页面标题、说明、动作与内容',
-    propsDefinition: pagePropsDefinition,
+    propDefinition: pagePropDefinition,
   },
-  (props: PageProps) => {
+  (props, { name }) => {
     return (
-      <Piv as="main" class="Page">
+      <Piv as="main" shadowProps={props} class={name}>
         <Show when={val(props.title) || val(props.subtitle) || props.actions}>
-          <Flow>
+          <Flow styleConfig={{ direction: 'column' }}>
             <Show when={val(props.title)}>
               <Heading level={1}>{props.title}</Heading>
             </Show>
             <Show when={val(props.subtitle)}>
               <Text p>{props.subtitle}</Text>
             </Show>
-            <Flow direction="row">{props.actions}</Flow>
+            <Flow>{props.actions}</Flow>
           </Flow>
         </Show>
         {props.children}

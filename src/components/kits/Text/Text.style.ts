@@ -1,4 +1,11 @@
-/** 定位框开启时只隐藏文字像素，文字继续排版与更新。 */
+/**
+ * Text 的文字语气、尺寸与结构查看样式。
+ *
+ * 按文字输入选择语气和相对字号，结构查看只隐藏文字像素。
+ *
+ * 使文字继续参与真实排版和内容更新，阅读状态与定位模式共用同一节点。
+ */
+import { componentName } from './Text.prop'
 import {
   rules,
   token,
@@ -9,7 +16,7 @@ import {
   colorMix,
 } from '@/style-system'
 
-rules('.Text', {
+rules(`.${componentName}`, {
   'visibility': token('inherit', {
     name: 'text-visibility',
     state: [

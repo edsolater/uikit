@@ -5,6 +5,7 @@
  *
  * 不改变裸article标签或其它容器的布局。
  */
+import { componentName } from './Article.prop'
 import { rules } from '@/style-system'
 
-rules('.Article', { 'margin-trim': 'block' })
+rules(`.${componentName}`, { 'margin-trim': 'block' })

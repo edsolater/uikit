@@ -11,8 +11,8 @@ import {
   val,
   type Source,
   type StateView,
+  type State,
 } from '@/foundation'
-import { toRecord } from '@edsolater/fnkit'
 import { derive } from '@/hooks'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 
@@ -70,7 +70,7 @@ export type StatusPropsParseResult<StatusName extends string> = {
  * ```
  */
 export function createStatusPropsParser<
-  const Candidates extends string[],
+  const Candidates extends readonly string[],
 >(options: {
   candidates: Candidates
 
@@ -89,23 +89,25 @@ export function createStatusPropsParser<
   return function parseStatusProps(
     props: StatusProps<StatusName>,
   ): StatusPropsParseResult<StatusName> {
-    const candidates: StatusName[] = options.candidates
+    const candidates: readonly StatusName[] = options.candidates
     const externalStatusNames = new Set(
       options.candidates.filter((statusName) => statusName in props),
     )
     // 计算来源同时保留属性读取和 Source 链，状态写入不会回写输入。
-    const statusStates = toRecord(
-      candidates,
-      (statusName) => statusName,
-      (statusName) => createState(() => props[statusName]),
-    )
+    // 候选全集逐项构造同名记录，Object.fromEntries 不保留该键域证明。
+    const statusStates = Object.fromEntries(
+      candidates.map((statusName) => [
+        statusName,
+        createState(() => props[statusName]),
+      ]),
+    ) as Record<StatusName, State<boolean | undefined>>
     const statusDetails: StatusDetails<StatusName> = statusStates
-
-    const statusViews = toRecord(
-      candidates,
-      (statusName) => statusName,
-      (statusName) => stateView(() => Boolean(val(statusDetails[statusName]))),
-    )
+    const statusViews = Object.fromEntries(
+      candidates.map((statusName) => [
+        statusName,
+        stateView(() => Boolean(val(statusDetails[statusName]))),
+      ]),
+    ) as Record<StatusName, StateView<boolean>>
     const statusController: StatusController<StatusName> = {
       ...statusViews,
       setStatus(status, value) {

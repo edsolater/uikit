@@ -1,59 +1,40 @@
 /**
- * 可独立理解的信息体入口。
+ * Card 是可独立理解的信息体组件。
  *
- * 为同一主题声明Card身份，复用Board材质，默认块排版并裁剪内容首尾外边距。
+ * 以独立信息体身份复用 Board 材质，默认块排版并裁剪首尾外边距。
  *
- * 默认布局由Card自身维护，内部排列由调用方组合Flow或Grid。
+ * 内容排列由调用方组合 Flow 或 Grid，承载材质保持同源。
  */
-import { kit } from '../../tools/kit'
-import type { JSX } from '@/foundation'
-import {
-  boardPropsDefinition,
-  getBoardPropsDirectorOptions,
-} from '../Board/Board.prop'
+import { kit, type KitComponent } from '../../tools/kit'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
+import { renderBoard } from '../Board/Board'
+import { boardVariantGroups } from '../Board/Board.prop'
 import {
-  renderBoard,
-  type BoardProps,
-  type BoardVariantProps,
-  type BoardSizeProps,
-  type BoardController,
-  type BoardControllerCollection,
-} from '../Board/Board'
+  componentName,
+  cardPropDefinition,
+  type CardProps,
+  type CardController,
+  type CardComponent,
+} from './Card.prop'
 import './Card.style'
-/** 独立信息体的材质声量。 */
-export type CardVariantProps = BoardVariantProps
-/** 独立信息体的内部容纳尺度。 */
-export type CardSizeProps = BoardSizeProps
-/** Card 保持完整承载契约，语义上是可独立理解的信息体。 */
-export type CardProps<Tag extends PivSupportedElementTag = 'div'> =
-  BoardProps<Tag>
-/** Card 自有集合中的实例控制入口，字段契约复用 Board。 */
-export type CardController<Tag extends PivSupportedElementTag = 'div'> =
-  BoardController<Tag>
-
-/** 独立信息体的泛型节点入口及其共同安全控制字段。 */
-interface CardComponent {
-  <Tag extends PivSupportedElementTag = 'div'>(
-    props: CardProps<Tag>,
-  ): JSX.Element
-  controllers: BoardControllerCollection
-}
 
 /**
- * 将同一主题的内容呈现为独立信息体，保留动态材质、尺寸与原生节点能力。
+ * 独立信息体沿用承载解析，保持自己的 Marker 与实例集合。
  */
-// kit 原样包装泛型核心；这里只恢复原 Card 的 Tag 与 Props 调用关联。
-export const Card = kit<
+const cardComponent: KitComponent<
   CardProps<PivSupportedElementTag>,
-  typeof boardPropsDefinition
->(
+  CardController<PivSupportedElementTag>
+> = kit(
   {
-    name: 'Card',
+    name: componentName,
     description: '组织独立信息',
-    propsDefinition: boardPropsDefinition,
-    directorOptions: getBoardPropsDirectorOptions,
+    propDefinition: cardPropDefinition,
+    variantGroups: boardVariantGroups,
   },
-  <Tag extends PivSupportedElementTag = 'div'>(props: CardProps<Tag>) =>
-    renderBoard(props, 'Board Card'),
-) as CardComponent
+  (props, { name }) => renderBoard(props, 'Board ' + name),
+)
+
+/**
+ * 保留调用方选择的原生根及其精确实例控制协议。
+ */
+export const Card: CardComponent = cardComponent as CardComponent

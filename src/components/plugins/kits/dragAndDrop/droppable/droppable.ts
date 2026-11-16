@@ -4,13 +4,13 @@
  *
  * 页面内材料按组合构建的内部身份配对，外部材料由目标的启用状态和 accepts 判断。
  */
-import { createState, onCleanup, type State } from '@/foundation'
+import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
   createInactivePlugin,
   type PluginCoreContext,
-} from '@/components/plugins/tools/createInactivePlugin'
-import { registerInternalDropTarget } from '@/components/plugins/kits/dragSession'
+} from '../../../tools/createInactivePlugin'
+import { registerInternalDropTarget } from '../../dragSession'
 import { createExternalDropListeners } from './createExternalDropListeners'
 import { createInternalDropContext, type DropContext } from './dropContext'
 
@@ -42,7 +42,6 @@ export interface DroppableController {
 export function droppablePluginCore({
   pluginOptions,
   addProps,
-  domProxy,
   id,
 }: PluginCoreContext<DroppableOptions>): DroppableController {
   const [enabled, enabledControl] = createToggle(
@@ -50,38 +49,52 @@ export function droppablePluginCore({
   )
   const hovering = createState(false)
   const acceptable = createState(false)
+  /**
+   * 清空当前目标的悬停与接收状态。
+   */
   const resetHover = () => {
     hovering.set(false)
     acceptable.set(false)
   }
+  /**
+   * 显示当前材料位于目标上方，并记录它是否可接收。
+   */
   const showHover = (accepted: boolean) => {
     hovering.set(true)
     acceptable.set(accepted)
   }
+  /**
+   * 目标启用时按业务规则判断是否接收当前材料。
+   */
   const acceptsDrop = (context: DropContext) =>
     enabled.read() && (pluginOptions.accepts?.(context) ?? true)
+  /**
+   * 向业务交付已通过接收判断的放下材料。
+   */
   const onDrop = (context: DropContext) => pluginOptions.onDrop?.(context)
-
-  // 登记内部目标并在作用域退出时注销。
-  const unregister = registerInternalDropTarget({
-    target: domProxy,
-    id,
-    enabled: enabled.read,
-    accepts(drag, event) {
-      return acceptsDrop(createInternalDropContext(drag, event, this.target))
-    },
-    hover: showHover,
-    leave: resetHover,
-    drop(drag, event) {
-      onDrop(createInternalDropContext(drag, event, this.target))
-    },
-  })
-  onCleanup(() => {
-    unregister()
-  })
 
   // 声明外部拖放监听与状态。
   addProps({
+    // 同步登记真实节点；绑定退出时注销并清空该目标的悬停状态。
+    domRef: (target) => {
+      const unregister = registerInternalDropTarget({
+        target,
+        id,
+        enabled: enabled.read,
+        accepts(drag, event) {
+          return acceptsDrop(createInternalDropContext(drag, event, target))
+        },
+        hover: showHover,
+        leave: resetHover,
+        drop(drag, event) {
+          onDrop(createInternalDropContext(drag, event, target))
+        },
+      })
+      return () => {
+        unregister()
+        resetHover()
+      }
+    },
     htmlProps: {
       'data-plugin': { mergable: 'droppable' },
       'data-drop-hovering': hovering,
@@ -101,6 +114,9 @@ export function droppablePluginCore({
     hovering,
     acceptable,
     enable: enabledControl.turnOn,
+    /**
+     * 停止接收，并立即清空当前悬停。
+     */
     disable() {
       enabledControl.turnOff()
       resetHover()

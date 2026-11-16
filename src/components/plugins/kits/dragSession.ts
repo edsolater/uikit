@@ -1,9 +1,10 @@
 /**
  * 页面内拖放的共享会话协议。
  *
- * 【职责边界】登记 Droppable、沿 composed tree 命中指针下的目标，并比较组标识。
+ * 登记真实接收目标，沿 composed tree 命中指针下的元素并比较组标识。
+ *
+ * 同步登记与注销让当前指针事务取得已经接入且仍存活的目标。
  */
-import { toPromiseResultProxy, type PromiseResultProxy } from '@edsolater/fnkit'
 
 export interface DragPoint {
   x: number
@@ -34,6 +35,9 @@ export interface InternalDropMatch {
 
 const dropTargets = new WeakMap<HTMLElement, InternalDropTarget>()
 
+/**
+ * 以原始来源、材料和组合身份创建本次页面内拖动描述。
+ */
 export function createInternalDrag(
   source: HTMLElement,
   payload: unknown,
@@ -47,26 +51,22 @@ export function createInternalDrag(
 }
 
 /**
- * 目标元素就绪后登记，返回可等待的注销操作。
- * 回调中的 this.target 为已解析的真实元素。
+ * 登记已接入的目标元素，返回本次登记的同步注销入口。
+ * 指针命中与回调始终使用同一个真实元素，注销后立即停止接收。
  */
 export function registerInternalDropTarget(
-  options: Omit<InternalDropTarget, 'target'> & {
-    target: HTMLElement | PromiseLike<HTMLElement>
-  } & ThisType<InternalDropTarget>,
-): PromiseResultProxy<() => void> {
-  return toPromiseResultProxy(
-    Promise.resolve(options.target).then((target) => {
-      const resolvedTarget = { ...options, target }
-      dropTargets.set(target, resolvedTarget)
-      return () => {
-        if (dropTargets.get(target) === resolvedTarget)
-          dropTargets.delete(target)
-      }
-    }),
-  )
+  options: InternalDropTarget,
+): () => void {
+  dropTargets.set(options.target, options)
+  return () => {
+    if (dropTargets.get(options.target) === options)
+      dropTargets.delete(options.target)
+  }
 }
 
+/**
+ * 找到指针下首个启用的接收目标，并按组合身份与接收规则判断是否可放下。
+ */
 export function findInternalDropTarget(
   drag: InternalDrag,
   event: PointerEvent,
@@ -100,6 +100,9 @@ export function findInternalDropTarget(
   return undefined
 }
 
+/**
+ * 判断命中元素是否位于拖动来源自身的 composed tree 中。
+ */
 function isWithinSource(element: Element, source: HTMLElement): boolean {
   for (
     let current: Element | null = element;
@@ -111,6 +114,9 @@ function isWithinSource(element: Element, source: HTMLElement): boolean {
   return false
 }
 
+/**
+ * 沿插槽、普通父元素与 ShadowRoot 宿主取得可见组合关系中的父元素。
+ */
 function getComposedParent(element: Element): Element | null {
   if (element.assignedSlot) return element.assignedSlot
   if (element.parentElement) return element.parentElement

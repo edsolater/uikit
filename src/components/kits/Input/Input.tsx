@@ -8,30 +8,19 @@
  * 组件选择规则见 [Input 设计规格](./Input.spec.md)。
  * 稳定语义见 [Input 基础组件 Guide](../../../../docs/guide/Input基础组件.md)。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { inputPropsDefinition } from './Input.prop'
-import { Piv, type PivProps } from '../../Piv/Piv'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { kit, type KitComponent } from '../../tools/kit'
 import {
-  createStatusPropsParser,
-  type StatusController,
-} from '../utils/parseStatusProps'
+  componentName,
+  inputPropDefinition,
+  type InputProps,
+  type InputController,
+} from './Input.prop'
+import { Piv } from '../../Piv/Piv'
+import { createStatusPropsParser } from '../utils/parseStatusProps'
 import './Input.style'
-import { useFormFieldId } from '../FormField/FormField'
-import { type Source, val } from '@/foundation'
-import {
-  createInputValidity,
-  type InputValidityProps,
-} from './createInputValidity'
-
-/** 单行编辑的原生声明与有效性输入，组件只额外限定输入类型。 */
-export interface InputProps
-  extends PivProps<'input'>, InputValidityProps, ComponentDescriptionProps {
-  ref?: RefReceiver<InputController>
-  /** 原生输入类型；省略时为单行文字。 */
-  type?: Source<'text' | 'color' | undefined>
-}
+import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
+import { val } from '@/foundation'
+import { createInputValidity } from './createInputValidity'
 
 /**
  * 将输入有效性映射为节点的无障碍状态，不改写字段值。
@@ -45,37 +34,30 @@ const parseInputStatusProps = createStatusPropsParser({
   }),
 })
 
-/** 顶层公开输入有效性状态，props 提供通用输入干预；ref 只从上游交付。 */
-export type InputController = KitController<
-  InputProps,
-  typeof inputPropsDefinition,
-  StatusController<'invalid'>
->
-
 /**
  * 编辑单行内容并呈现字段有效性，保持输入值与状态来源持续更新。
  */
-export const Input = kit<InputProps, typeof inputPropsDefinition>(
+export const Input: KitComponent<InputProps, InputController> = kit(
   {
-    name: 'Input',
+    name: componentName,
     description: '编辑单行内容',
-    propsDefinition: inputPropsDefinition,
+    propDefinition: inputPropDefinition,
   },
-  (props: InputProps, context) => {
-    const fieldId = useFormFieldId()
+  (props, { name, exposeController }) => {
+    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
     const validity = createInputValidity(props)
     const isInvalid = validity.isValid.map((isValid) => !isValid)
     const { effect: statusEffectProps, controller } = parseInputStatusProps({
       invalid: isInvalid,
     })
-    context.exposeController(controller)
+    exposeController(controller)
 
     return (
       <Piv
         as="input"
-        shadowProps={[props, ...statusEffectProps]}
-        class="Input"
-        id={val(props.id) ?? fieldId ?? undefined}
+        shadowProps={[rootProps, ...statusEffectProps]}
+        class={name}
+        id={id}
         htmlProps={{
           type: val(props.type) ?? 'text',
           autocorrect: 'off',

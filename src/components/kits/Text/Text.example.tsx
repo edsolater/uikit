@@ -16,7 +16,7 @@ export function TextExample() {
   const count = createState(1)
   const [progress, receiveProgress] = createRef<TextController>()
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Heading level={2}>Text · 阅读进度</Heading>
       <Text p>段落承载完整说明，行内文字可用于紧凑的数据反馈。</Text>
       <Text emphasis>重要结果</Text>
@@ -26,7 +26,7 @@ export function TextExample() {
       <Text p tone="warning">
         注意核对尚未确认的信息。
       </Text>
-      <Flow direction="row">
+      <Flow>
         <Text>已阅读章节</Text>
         <Text ref={receiveProgress}>{count}</Text>
       </Flow>

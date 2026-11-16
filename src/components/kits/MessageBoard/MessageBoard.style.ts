@@ -5,6 +5,7 @@
  *
  * 差异只作用当前根，不改动承载的内部布局或其他实例。
  */
+import { componentName } from './MessageBoard.prop'
 import { rules, stateCondition, token } from '@/style-system'
 import { boardBorder } from '../Board/Board.style'
 
@@ -17,7 +18,7 @@ const border = token(boardBorder, {
   ],
 })
 
-rules('.MessageBoard', {
+rules(`.${componentName}`, {
   border,
   'overflow-wrap': 'anywhere',
 })

@@ -1,90 +1,56 @@
 /**
- * 信息主体的底层承载能力。
+ * Board 是信息主体的底层承载组件。
  *
- * 提供网格承载、材质、尺寸与原生节点声明，供上层主体复用。
+ * 为上层信息主体提供承载材质与原生节点，不增加额外容器。
  *
- * 通用节点实现不解释调用方的语义身份，不增加额外DOM。
+ * 上层主体复用同一承载行为，并保留自己的语义身份。
  */
-import { Piv, type PivProps } from '../../Piv/Piv'
+import { Piv } from '../../Piv/Piv'
+import { kit, type KitComponent } from '../../tools/kit'
+
 import type { PivSupportedElementTag } from '../../Piv/domMap'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { createVariantPropsParser } from '../utils/parseVariantProps'
 import {
-  createVariantPropsParser,
-  type VariantProps,
-} from '../utils/parseVariantProps'
-import { kit, type KitController } from '../../tools/kit'
-import type { ControllerCollection } from '../../tools/controllerRegistry'
-import type { RefReceiver } from '@/hooks/createRef'
-import type { JSX } from '@/foundation'
-import {
-  boardPropsDefinition,
+  componentName,
+  boardPropDefinition,
   boardVariantGroups,
-  getBoardPropsDirectorOptions,
+  type BoardProps,
+  type BoardController,
+  type BoardComponent,
 } from './Board.prop'
 import './Board.style'
 
-/** 材质声量；动态 variant 优先于确定描述词。 */
-export type BoardVariantProps = VariantProps<'variant', 'soft' | 'solid'>
-/** 内部容纳尺度；只调整内边距、内容间隔和圆角。 */
-export type BoardSizeProps = VariantProps<'size', 'small' | 'large' | 'xlarge'>
-/** 承载节点的原生能力、材质和结构用途。 */
-export interface BoardProps<Tag extends PivSupportedElementTag = 'div'>
-  extends
-    PivProps<Tag>,
-    BoardVariantProps,
-    BoardSizeProps,
-    ComponentDescriptionProps {
-  ref?: RefReceiver<BoardController<Tag>>
-}
-
-/** 原生节点类型与对应 Props 的指令式入口。 */
-export type BoardController<Tag extends PivSupportedElementTag = 'div'> =
-  KitController<BoardProps<Tag>, typeof boardPropsDefinition>
-
-/** 异构原生节点只公开共同安全字段。 */
-export type BoardControllerCollection = ControllerCollection<{
-  props: Omit<
-    BoardController<PivSupportedElementTag>['props'],
-    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
-  >
-}>
-
-/** 保留原生节点泛型与共同安全控制字段的承载入口。 */
-interface BoardComponent {
-  <Tag extends PivSupportedElementTag = 'div'>(
-    props: BoardProps<Tag>,
-  ): JSX.Element
-  controllers: BoardControllerCollection
-}
-
 /**
- * 将承载组件的外观描述转换为对应节点声明，保留各分组的互斥规则。
+ * 将材质和尺度分类转换为根节点声明。
  */
 const parseBoardVariantProps = createVariantPropsParser(boardVariantGroups)
 
 /**
- * 为上层信息主体提供有边界的承载，不自行声明独立信息意义。
+ * 固定定义供不同原生根使用，实例状态由 kit 各自创建。
  */
-// kit 原样包装泛型核心；这里恢复 TypeScript 在包装返回值中丢失的 Tag 调用关联。
-export const Board = kit<
+const boardComponent: KitComponent<
   BoardProps<PivSupportedElementTag>,
-  typeof boardPropsDefinition
->(
+  BoardController<PivSupportedElementTag>
+> = kit(
   {
-    name: 'Board',
+    name: componentName,
     description: '承载上层信息主体',
-    propsDefinition: boardPropsDefinition,
-    directorOptions: getBoardPropsDirectorOptions,
+    propDefinition: boardPropDefinition,
+    variantGroups: boardVariantGroups,
   },
-  <Tag extends PivSupportedElementTag = 'div'>(props: BoardProps<Tag>) =>
-    renderBoard(props, 'Board'),
-) as BoardComponent
+  (props, { name }) => renderBoard(props, name),
+)
+
+/**
+ * 呈现承载节点；公开契约保持每次调用的 Tag 与 ref 对应。
+ */
+export const Board: BoardComponent = boardComponent as BoardComponent
 
 /**
  * 按调用方选择的样式类呈现承载节点，保留原生字段及动态材质、尺寸。
  */
 export function renderBoard<Tag extends PivSupportedElementTag>(
-  props: BoardProps<Tag>,
+  props: Omit<BoardProps<Tag>, 'ref'>,
   className: string,
 ) {
   const { effect: variantEffectProps } = parseBoardVariantProps(props)

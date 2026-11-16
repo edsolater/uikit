@@ -5,48 +5,36 @@
  *
  * 调用方提供选项和数据，组件保留原生选择语义。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { selectPropsDefinition } from './Select.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  selectPropDefinition,
+  type SelectProps,
+  type SelectController,
+} from './Select.prop'
 import { derive } from '@/hooks/stateUtils'
-import { For, val, type Source } from '@/foundation'
+import { For, val } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import './Select.style'
-import { useFormFieldId } from '../FormField/FormField'
-/** 当前选值与有限候选，选项标签供显示，选项值参与选择和变更通知。 */
-export type SelectProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<SelectController>
-  id?: Source<string | undefined>
-  name?: string
-  value: Source<string>
-  options: Source<{ value: string; label: string }[]>
-  disabled?: Source<boolean | undefined>
-  required?: boolean
-  onChange?: (value: string) => void
-}
-/** Select 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type SelectController = KitController<
-  SelectProps,
-  typeof selectPropsDefinition
->
+import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
 
 /**
  * 有限选项的原生单选字段，持续消费值和选项来源。
  */
-export const Select = kit(
+export const Select: KitComponent<SelectProps, SelectController> = kit(
   {
-    name: 'Select',
+    name: componentName,
     description: '从有限选项中选择',
-    propsDefinition: selectPropsDefinition,
+    propDefinition: selectPropDefinition,
   },
-  (props: SelectProps) => {
-    const fieldId = useFormFieldId()
+  (props, { name }) => {
+    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
     return (
       <Piv
         as="select"
-        class="Select"
-        id={val(props.id) ?? fieldId ?? undefined}
+        shadowProps={rootProps}
+        class={name}
+        id={id}
         htmlProps={{
           name: props.name,
           value: props.value,

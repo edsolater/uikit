@@ -5,47 +5,31 @@
  *
  * 选项标题与字段状态属于组件，业务选择规则留给调用方。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { checkboxPropsDefinition } from './Checkbox.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { stateView, val, type Source } from '@/foundation'
-import { Label, type LabelProps } from '../Label/Label'
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  checkboxPropDefinition,
+  type CheckboxProps,
+  type CheckboxController,
+} from './Checkbox.prop'
+import { Label } from '../Label/Label'
 import { Piv } from '../../Piv/Piv'
+import { createFormFieldBinding } from '../FormField/FormField'
 import './Checkbox.style'
-/** Checkbox 的声明输入；初始状态通过 Props 表达。 */
-export type CheckboxProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<CheckboxController>
-  id?: Source<string | undefined>
-  name?: string
-  checked: Source<boolean>
-  label: Source<string>
-  tooltip?: LabelProps['tooltip']
-  disabled?: Source<boolean | undefined>
-  required?: boolean
-  onChange?: (checked: boolean) => void
-}
-
-/** Checkbox 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type CheckboxController = KitController<
-  CheckboxProps,
-  typeof checkboxPropsDefinition
->
 
 /**
  * 带可点击标题的二态表单选择。
  */
-export const Checkbox = kit(
+export const Checkbox: KitComponent<CheckboxProps, CheckboxController> = kit(
   {
-    name: 'Checkbox',
+    name: componentName,
     description: '切换二态选项',
-    propsDefinition: checkboxPropsDefinition,
+    propDefinition: checkboxPropDefinition,
   },
-  (props: CheckboxProps) => {
-    const generatedId = crypto.randomUUID()
-    const id = stateView(() => val(props.id) ?? generatedId)
+  (props, { name }) => {
+    const { id, rootProps } = createFormFieldBinding(props, crypto.randomUUID())
     return (
-      <Piv class="Checkbox">
+      <Piv shadowProps={rootProps} class={name}>
         <Piv
           as="input"
           id={id}

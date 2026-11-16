@@ -5,44 +5,33 @@
  *
  * 让字段标题和其他界面都能组合相同的帮助组件。
  */
-import { val, type Source } from '@/foundation'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { Piv, type PivProps } from '../../Piv/Piv'
+import { Piv } from '../../Piv/Piv'
+import { val } from '@/foundation'
+
 import { tooltip } from '../../plugins/kits/tooltip/tooltip'
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { helpPropsDefinition } from './Help.prop'
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  helpPropDefinition,
+  type HelpProps,
+  type HelpController,
+} from './Help.prop'
 import './Help.style'
-
-/** 帮助内容与入口；声明即显示入口，内容和触发文字持续接受 Source。 */
-export type HelpProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<HelpController>
-  tooltip?: PivProps['children']
-  /** 替换默认问号的显示内容，不放入另一个交互控件。 */
-  trigger?: PivProps['children']
-  /** 帮助入口的可访问名称，缺省为“帮助说明”。 */
-  name?: Source<string | undefined>
-}
-
-/** 可在运行期更新帮助内容、触发文字及可访问名称。 */
-export type HelpController = KitController<
-  HelpProps,
-  typeof helpPropsDefinition
->
 
 /**
  * 显示可独立使用的帮助入口，浮层定位与阅读交互交给 tooltip。
  */
-export const Help = kit(
+export const Help: KitComponent<HelpProps, HelpController> = kit(
   {
-    name: 'Help',
+    name: componentName,
     description: '查看补充说明',
-    propsDefinition: helpPropsDefinition,
+    propDefinition: helpPropDefinition,
   },
-  (props: HelpProps) => (
+  (props, { name }) => (
     <Piv
+      shadowProps={props}
       as="button"
-      class="Help"
+      class={name}
       is={tooltip({
         get content() {
           return props.tooltip

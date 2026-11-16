@@ -21,11 +21,11 @@ import {
   type Source,
   type State,
 } from '@/foundation'
-import { createInactivePlugins } from '@/components/plugins/tools/createInactivePlugins'
+import { createInactivePlugins } from '../../tools/createInactivePlugins'
 import type {
   PluginCoreContext,
   PluginResult,
-} from '@/components/plugins/tools/createInactivePlugin'
+} from '../../tools/createInactivePlugin'
 import './popover.style'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -208,9 +208,14 @@ function createPopoverGroup() {
 
 /**
  * 为单个角色提供显隐 Task；等待正文 DOM 后检查取消，再执行原生操作。
+ * 角色作用域退出后，尚未恢复的任务不再操作已释放的节点声明。
  * 原生 toggle 更新状态，关闭操作另读实际结果以覆盖节点移除不派事件的情况。
  */
 function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
+  let active = true
+  onCleanup(() => {
+    active = false
+  })
   return {
     isOpen: group.isOpen,
     /**
@@ -219,7 +224,7 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
     showPopover: task(async ({ canContinue }) => {
       const body = await group.bodyTarget!
       await canContinue()
-      body.showPopover()
+      if (active) body.showPopover()
     }),
     /**
      * 请求关闭本组浮层并读取实际关闭结果。
@@ -227,6 +232,7 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
     hidePopover: task(async ({ canContinue }) => {
       const body = await group.bodyTarget!
       await canContinue()
+      if (!active) return
       if (body.matches(':popover-open')) body.hidePopover()
       group.isOpen.set(body.matches(':popover-open'))
     }),
@@ -237,7 +243,7 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
       async ({ canContinue }, options?: { force?: boolean }) => {
         const body = await group.bodyTarget!
         await canContinue()
-        body.togglePopover(options?.force)
+        if (active) body.togglePopover(options?.force)
       },
     ),
   }

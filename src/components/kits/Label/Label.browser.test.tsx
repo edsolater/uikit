@@ -5,7 +5,8 @@ import { render, createState, flush, val } from '@/foundation'
 import { createRef } from '@/hooks/createRef'
 import { Piv } from '@/components/Piv/Piv'
 import { cssRoot } from '@/style-system'
-import { Label, type LabelController } from './Label'
+import { Label } from './Label'
+import type { LabelController } from './Label.prop'
 
 let dispose: (() => void) | undefined
 let host: HTMLElement

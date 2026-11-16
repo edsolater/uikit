@@ -5,43 +5,33 @@
  *
  * 让导航机制与调用方的链接内容各自独立。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { linkPropsDefinition } from './Link.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { derive } from '@/hooks/stateUtils'
-import { type JSX, type Source } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
-import './Link.style'
-/** Link 的声明输入；初始状态通过 Props 表达。 */
-export type LinkProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<LinkController>
-  href: Source<string>
-  children?: JSX.Element
-  current?: Source<boolean | undefined>
-  newTab?: boolean
-}
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  linkPropDefinition,
+  type LinkProps,
+  type LinkController,
+} from './Link.prop'
+import { derive } from '@/hooks/stateUtils'
 
-/** Link 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type LinkController = KitController<
-  LinkProps,
-  typeof linkPropsDefinition
->
+import './Link.style'
 
 /**
  * 保留原生导航、另开页面与当前项语义的链接。
  */
-export const Link = kit(
+export const Link: KitComponent<LinkProps, LinkController> = kit(
   {
-    name: 'Link',
+    name: componentName,
     description: '导航到目标页面',
-    propsDefinition: linkPropsDefinition,
+    propDefinition: linkPropDefinition,
   },
-  (props: LinkProps) => {
+  (props, { name }) => {
     return (
       <Piv
+        shadowProps={props}
         as="a"
-        class="Link"
+        class={name}
         htmlProps={{
           'href': props.href,
           'aria-current': derive(props.current, (current) =>

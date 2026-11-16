@@ -32,6 +32,7 @@ import {
 } from './args-parser'
 import type { StateCondition, StateConditionInput } from '../state-condition'
 import { cssTokenName } from './css'
+import { writeTokenValue, type TokenStyleValue } from './scope'
 import { allocateVariableName } from '../custom-property-names'
 
 /** 样式直接内容、表达式或延迟提供的内容。 */
@@ -96,6 +97,12 @@ export interface Token<T extends TokenData = TokenData>
   _kind?: 'css-value' | 'css-variable'
   $warnIfMissTokenName: boolean
   dependencies: unknown[]
+  /**
+   * 在当前实例的同步样式解释中覆盖已具名并由规则消费的 CSS 变量 Token。
+   * undefined 清除该覆盖。
+   * 不修改共享定义，不支持在此入口写入原始材料或编译期表达式。
+   */
+  set(value: TokenStyleValue): void
   toCSSString(resolve?: JSSContentResolver): string | undefined
 }
 
@@ -171,6 +178,12 @@ function createToken<T extends TokenData>(
       const dependencies = protocol?.dependencies
       if (isFunction(dependencies)) return dependencies(self.default)
       return dependencies ?? contentDependencies(self.default)
+    },
+    /**
+     * 将标量交给当前实例的样式解释作用域，不保存到 Token 定义。
+     */
+    set(value) {
+      writeTokenValue(self, value)
     },
     /**
      * 输出变量引用、基础内容或特殊格式；子内容结果由编译器提供。

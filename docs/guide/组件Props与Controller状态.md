@@ -1,73 +1,160 @@
 # 组件 Props 与 Controller 状态
 
-Props 是组件构建和日常使用的声明入口，也保留已有 Source 的响应能力。Controller 在顶层公开组件自定义能力，`.props` 提供运行期特殊需要下的通用输入干预入口，不能用于替代 Props 初始化。
+Props 是组件的声明入口，负责初始界面与持续变化的来源。Controller 提供实例的业务操作，`.props` 提供特殊场景下的输入干预；初始化仍通过 Props 表达。
 
-## 可选的通用 Component Props Director
+## 按目的聚合组件定义
 
-只有创建时注入有效组件 ref，才在上游 Props 和原核心之间启用通用 Component Props Director。未注入组件 ref、ref 实际为 undefined、只有 domRef 时，直接执行原核心，不分配控制层字段 State，不登记可控实例。创建后再改变 ref 不会给普通分支补建控制层。
+所有公开 Kit 组件先声明 Props、字段协议与 Controller，再让实现满足声明。公开类型不从组件实现反推。
+
+| 负责位置                  | 聚合内容                                                                                 |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| `Component.prop.ts`       | 主体命名的 Props、PropDefinition 类型与值、Controller 声明，以及候选事实和紧邻的派生类型 |
+| `Component.style.ts`      | 本组件的 StyleConfig 类型、箭头解释函数、Token 与样式规则                                |
+| `Component.tsx`           | 组件装配、内容渲染，以及实际业务 Controller 的创建与交付                                 |
+| `components/tools/kit.ts` | 公共输入、字段协议、组件创建与实例装配；KitOptions 紧邻 kit，不按类型与实现拆开          |
+
+`KitProps<Config, Controller, Tag>` 聚合 Piv 节点声明、组件用途说明、样式输入与组件 ref；默认 Tag 为 div。`children` 保留为统一公共输入及控制字段；当前组件使用业务值产生内容，不意味着公共协议需要删除这个入口，也不要求组件额外创建另一套内容回落。Article、Heading 与 Text 的固定根语义仍由各自声明表达。确有字段形状差异时，先核对共同模型，再处理必要的语义覆盖，避免按每个当前消费者分割公共协议。
+
+`KitPropDefinition<OwnDefinition>` 只接收自有字段模式，并在内部覆盖同名公共模式。公开 `kitPropDefinition` 完整组合各字段拥有者的定义；私有 `kitCommonPropDefinition` 只拥有 ref 与 styleConfig。组件无自有字段时，Props 和自有模式仍保留明确的空槽。
+
+以 Flow 的现役声明为例，以下内容分别归对应文件：
+
+```tsx
+// Flow.prop.ts
+export const componentName = 'Flow'
+
+export type FlowProps = KitProps<FlowStyleConfig, FlowController> & {
+  // 自有输入
+}
+export type FlowPropDefinition = KitPropDefinition<{
+  // 自有字段模式
+}>
+export const flowPropDefinition: FlowPropDefinition = {
+  ...kitPropDefinition,
+}
+export interface FlowController extends KitController<
+  FlowProps,
+  FlowPropDefinition
+> {}
+
+// Flow.tsx
+export const Flow: KitComponent<FlowProps, FlowController> = kit(
+  {
+    name: componentName,
+    description: '组织内容方向',
+    propDefinition: flowPropDefinition,
+    styleConfig: flowStyleConfig,
+  },
+  (props, { name }) => (
+    <Piv shadowProps={props} class={name}>
+      {props.children}
+    </Piv>
+  ),
+)
+```
+
+`KitComponent<Props, Controller>` 为核心参数提供上下文，核心不再标注 props 或 Context 的类型。kit 检查完整字段表、读取后的输入、生成的 Controller 与 ref 接收协议；处理函数不参与公开契约的推导。无具体配置字段的组件使用 `KitProps<{}, Controller>`，仍保留对象配置及其 Source 输入，允许 `{}` 和 `undefined` 清空，不接受原始字符串等值。根解释集合可以省略，也可以显式声明 `{}`。
+
+每个组件的 `componentName` 统一定义在自身 `.prop.ts` 的元数据位置，组件实现与自有根样式引用同一身份。它不从包根汇总为同名出口，子部件和 Token 的独立名称保持各自含义。
+
+## 创建时决定是否启用输入控制
+
+只有创建时提供有效组件 ref，才在上游 Props 和核心之间启用 Component Props Director。未提供 ref、ref 为 undefined、只有 domRef 时，核心直接消费输入，不建立控制层字段 State，也不登记受控实例。之后添加 ref 不会补建控制层。
 
 ```mermaid
 flowchart LR
-  P[上游 Props] --> G{有效组件 ref}
-  G -->|没有| K[原组件核心]
-  G -->|有| H[通用 Component Props Director]
-  F[组件运行时字段定义] --> H
-  C[Controller.props 通用输入干预] -->|写输入 State| H
-  A[Controller 顶层组件能力] --> K
-  H -->|原 Props 协议| K
-  K --> D[原消费链与界面]
+  subgraph Application[使用方]
+    P[声明式 Props]
+    R[组件 ref 接收器]
+  end
+  subgraph Component[组件实例]
+    H[输入 Director]
+    K[组件核心]
+    C[最终 Controller]
+    D[真实根与子内容]
+    F[完整字段协议]
+    F --> H
+    H --> K
+    K --> D
+    H -->|可写输入 props| C
+    K -->|已声明业务能力| C
+  end
+  P -->|初始 ref 启用| H
+  P -->|无初始 ref| K
+  C --> R
+  R -->|后续输入干预| H
 ```
 
-层能力是通用的，现有公开界面组件已统一接入；渲染、标记与控制基础设施不递归套用 kit。支持字段必须有运行时 JS 定义，不能只依赖 TypeScript 或某实例的 Object.keys。各字段拥有者在相邻Owner.prop.ts定义自己的描述与默认入口，类型接口留在原模块，组件按Props继承关系组合，另定义自身业务规则；Director 不解释具体组件的业务规则；kit 负责组件 ref 与实例集合，Piv/Dode 继续消费 DOM 声明。
+kit 负责同一个 Controller 的组装、登记、ref 换接和透明 KitMarker；Piv/Dode 负责真实节点及原生声明的消费。样式和组件用途说明通过根声明上下文传递，在真实根处消费后停止向子内容传递，不增加容器 DOM。
 
-## 同一字段与原 Props 协议
+受控模式在实例存活期间保持不变。替换 ref 会向新接收器交付同一个 Controller，移除 ref 不注销实例，卸载才退出 `.controllers` 集合。组件 ref 与原生 domRef 各自独立。
 
-启用后，可干预 Prop 在 `Controller.props` 下按原名提供可写 State；only-through-prop字段直接读取上游，不创建State、不进入Controller。配置了默认来源的未声明字段在Director构建时建立Source与惰性State，其余可干预字段首次被Props或Controller读取时才建立并缓存。`Controller.props` 读写的是输入层同一 State，不复制字段值或用 Effect 镜像；它与顶层组件状态属于不同机制，不按同名自动关联。读取具体输入字段时只初始化该字段，不预读其它字段；工厂及State归Director创建时的组件作用域，不归首次读取的短命分支。
+## 字段协议决定读取与控制入口
 
-输出按原字段协议区分：state-source-view交出同一State，由原消费者val；state-value-view读取当前值并正常追踪；state-untracked读取当前值但取消本次外层依赖追踪，不缓存。only-through-prop直接转交上游Prop，不经过可写State。原核心继续消费 Props，不要求逐项接入新 State，也不修改 Piv 或原分类解析来补偿控制层。
+可干预字段在 `Controller.props` 下按原名提供可写 State。原生字段由 Dode 声明，来源与节点能力由 Piv 组合，用途说明由 KitMarker 提供，组件只补充自有字段及确有不同语义的覆盖。
 
-输入视图保留上游 raw 的声明存在性；输出形状由上游声明、不可变defaultSources工厂表及omit固定。默认来源工厂在构建阶段取得稳定Source，不提前读取Source的值；raw显式undefined优先，不调用默认工厂。输入从一开始即提供同一缓存State，没有先读raw后回填的阶段。指令写入只改变 State，不动态制造 Props 声明，不改上游对象。缺省字段若需初始化入口，必须由组件定义对接原消费者，不能只证明 Controller 值已经改变。
+| 读取模式            | 核心取得的内容                                       | Controller.props |
+| ------------------- | ---------------------------------------------------- | ---------------- |
+| `state-source-view` | 与 Controller 共用的 State，交给实际消费者读取       | 可写 State       |
+| `state-value-view`  | 当前值，本次读取参与响应依赖收集                     | 可写 State       |
+| `state-untracked`   | 当前值，不收集本次外层响应依赖；再次读取仍取得当时值 | 可写 State       |
+| `only-through-prop` | 上游原声明，不解包、不缓存                           | 不公开该字段     |
 
-## Button 的业务准备
+字段 State 与默认来源工厂归 Director 创建时的实例作用域。配置了默认来源的未声明字段在构建时连接来源，其余可干预字段首次读取时才建立并缓存 State；读取一个字段不会预读其他字段。
 
-Button 组合完整字段描述，只维护自身字段和分类／状态候选。DOM字段归Dode、来源字段归Piv、说明字段归KitMarker；描述与类型extends层次一致，不改变运行算法。状态解析器通过 `createState(() => props[statusName])` 建立来源关系，不在 Button 中用 Effect 同步；每个缺省group的工厂复用原VariantParser语义details，把同一候选States的结果作为初始Source。输出只省略原缺省group的候选；原已声明group保留候选，让原核心报告冲突并映射一次。Button构建时建立分组Source但不val，保持原诊断时机，来源随后实际消费。显式group包括undefined优先，运行期指令仍在同一数据流。
+输入视图保留上游声明的存在性。显式 undefined 仍是已声明输入，不调用默认工厂；指令写入不改上游对象，也不动态制造声明。默认工厂交付稳定 Source，实际值由最终消费点读取。字段 State 同时供核心与 Controller 使用，不用 Effect 复制一份值。
 
-Button.controllers 只收集启用组件 ref 的实例，普通按钮不因全局访问器自动承担控制成本。`kit(definition, core)` 统一管理 ref 接收器交付、替换清理、集合登记和唯一 KitMarker；业务核心处理原分类、状态和 JSX。Button.controllers.style 保留原 Button Token 集合。第一个参数是供通用层消费的固定配置，包括 name、默认 description、propsDefinition、默认来源和样式；第二个参数是具体组件的业务函数。代码按服务对象归属：注册和注销 Controller 属于 kit，组件自身的资源属于业务函数；onMount、onCleanup 只决定执行时机。通用层不感知默认来源内部的分类、候选或状态规则；core 可选接收普通 Context 能力对象，name 与 Marker 共用身份，onCleanup 可解构且绑定该实例 owner，不需要 KitContextRoot。组件通过 `context.exposeController` 公开自己的能力，Kit 为最终 Controller 注入 `.props`；没有自定义能力的组件只公开 `.props`，不需要声明空能力对象。
+组件核心只执行一次，输入干预不重放创建动作。原生 `as` 与 Text 的 block/p/emphasis、Heading 的 level 在创建时选择根标签；Piv 的 if 在字段存在时启用显隐，首次显示创建一次，之后保留同一元素。Loop.children 与 Field.children 是构建工厂，只通过 Props 提供，不进入 Controller.props。Loop.each 保留列表来源，由精确实例 ref 控制；Table.keys 按当前值决定显式列或默认字段列。
 
-## Text 与 Label 的字段边界
+字段身份沿用 Piv 的 ID 值域与 `String` 规范。`createFormFieldBinding` 在 FormField 领域统一生成持续读取的身份来源，并把其余公共声明交给根元素；显式身份优先于字段上下文，ID 只路由给实际控件一次。FormField 和自带 Label 的 Checkbox 在需要关联时生成缺省身份；独立原生控件没有身份输入时保持无 ID。FormField 上下文传递身份 Source，标题与控件共同跟随更新。
 
-Text 复用 Piv 的运行时字段，移除 as 并收窄为纯文字；block／p／emphasis互斥，只在创建时选择标签。tone表达文字自身语气，不接管业务状态。Text.controllers只包含已接入ref的文字实例，说明真值的动态默认与descriptionOnly仍由原Marker协议解释。
+## 业务能力与输入控制组合
 
-Label 只公开 for、children、tooltip、tooltipTrigger、组件说明与 ref，不因接入 kit 增加 Piv 字段。可在特殊回调中通过 `LabelController.props` 改变标题、目标控件与说明；原来未传 tooltip 也能在运行期添加并清空，不需要额外默认来源。提示的创建、显示和清理由原 Show 与 tooltip 插件承担。Label.controllers 与其他组件集合独立；两组件均不接管样式或手写登记。
+组件先声明最终 Controller 的业务成员，再在核心内通过 `exposeController` 提供实际对象。kit 在 render 返回后补上 `.props` 并交给 ref。没有业务成员时无需交付空对象，框架不推断或补造业务能力。
 
-## 其余组件与泛型集合
+Button 的状态能力、Input 的有效性能力继续由各自解析器拥有。`.props` 干预输入，顶层能力表达组件自己的状态和操作，两者按既有来源关系连接，不按同名自动关联。Input 的 invalid 输入与 validIf 仍经过有效性规则产生最终状态。
 
-Flow、Grid、Field、Page 等组织组件只声明原来拥有的内容与布局字段；不因接入 kit 获得 Piv 的整袋 Props。Heading、Input、Board 则按原继承关系组合字段。可省略且需要保留来源身份的字段明确允许 Source 的完成值为 undefined，这与原缺省表现一致，让未声明字段也能沿同一 State 接受指令。Grid.columns 的 ?? 默认值、Table.keys 的缺省列选择按当前值消费，不用 State 对象的真值改变原分支。
+Button、Board、Card 的互斥分类由同一份 `as const` 候选事实定义。kit 依据 `variantGroups` 准备缺省分组来源与候选省略；组件只解析一次当前分类和节点效果，不再注入 Director 准备函数。显式分组包括 undefined 时接管候选，原冲突诊断保留。
 
-Board 与 Card 的缺省 Variant 来源仍由 Board 的解析规则推导，Card 不复制字段表；两个入口分别有自己的 .controllers，共同安全字段规则由 BoardControllerCollection 定义，Card 复用。Popover 已由 `plugins/kits/Popover` 的成对能力提供；返回对象的 `controller: PopoverController` 提供两端完整的 `PopoverTriggerController`／`PopoverBodyController` 及常用显隐操作的直接引用，不再通过 Popover 组件 ref 或 `.props` 接入。实际 Button／Card 继续拥有自己的组件 Controller、Marker 和样式，Plugin 只承担浮层功能。Input 顶层公开最终 invalid 状态；`.props.invalid`、`.props.validIf` 仍通过原有效性规则产生最终状态，顶层状态操作不绕过该规则。
+组件资源通过 Context.onCleanup 绑定当前实例，即使解构后在事件中调用也保留原 owner。Context.name 与 Marker 使用同一身份，不依赖祖先 KitContext 或 App 根。
 
-泛型实例通过 ref 保留精确类型。各 `.controllers.props` 可同时包含不同 Tag、列表项或 Row，因此输入集合只提供安全的共同字段：
+## 样式配置与原生样式
 
-| 组件集合     | 留给精确实例 ref 的字段                    |
-| ------------ | ------------------------------------------ |
-| Board / Card | as、htmlProps、on、domRef、shadowProps、is |
-| Loop         | each                                       |
-| Table        | data、keys、renderParts                    |
+StyleConfig 类型由组件样式文件独立声明，解释对象以箭头函数满足 `StyleConfig<Config>`。kit 从 Props 的显式配置契约取得值域，支持整体和字段 Source，并同步调用已提供字段的解释函数。处理函数的参数不反过来定义应用 API。
 
-Loop.children 与 Field.children 是不重放的构建工厂，只通过 Props 提供，不进入 `Controller.props`。构建时已提供的 Loop.fallback 仍可写，供后续空列表分支读取。Popover 的 `defaultOpen` 属于 `body` 的 Plugin 配置，只用于默认打开，不是组件 `Controller.props` 字段；其事件回调在真实事件发生时读取当前配置。
+同一配置可以由多个真实消费作用域解释。`kit.options.styleConfig` 是根作用域使用的字段子集；单元格等内部作用域各自用完整的 `StyleConfig<ScopeConfig>` 声明自己的字段解释。公共配置形状保持一处，不要求根元素接管内部节点的全部配置。
 
-这只是公开集合类型的边界，不增加另一层运行过滤或状态。Article 固定原生 `article`，Props 与 Controller 均不提供 `as`；Card 不提供 `is` 模式。普通阅读卡片的 `<Card><Article>正文</Article></Card>` 保留两个独立实例，外层引用操作 Card 容器，内层引用操作正文节点。资料卡片作为正文组成部分时也可反向组合，两种方向都不互相接管实例职责。
+解释函数通过 `Token.set` 提交当前实例的 CSS 标量覆盖。Piv 应用和清理覆盖，共享 Token 默认值不变；省略字段沿用默认效果，清空配置撤销此前覆盖。Flow 的方向、间隔、宽度与伸展、Grid 的列结构与排列选项均从 styleConfig 进入，核心只组织内容。Grid 的配置模板与响应布局分别由 Token 表达，动态模板更新不会压过窄屏退列。
 
-## 使用与生命周期
+Table 的紧凑模式和列宽配置共同位于 `TableStyleConfig`。根作用域解释紧凑模式，表头和单元格按当前列读取同一配置中的宽度、最小宽度，在自身样式作用域中解释，不把每列 CSS 的单位转换放进组件装配。
 
-构建时必须用 Props 表达初始界面。只有回调、生命周期中的特殊需要，或 Props 表达非常迂回的复杂场景，才使用 Controller。通用输入干预使用 `button.props?.loading.set(true)`，集合入口为 `Button.controllers.props.loading.set(true)`。组件自定义能力在顶层：`val(button.loading)` 读取按钮状态，`button.setStatus?.('loading', true)` 操作未由外部声明的状态；Plugin 操作则直接使用其能力结果，例如 `popoverController.showPopover()`。状态来源通过 State 计算图跟随输入，不回写 `.props`。
+```tsx
+<Flow styleConfig={{ direction: 'column' }}>内容</Flow>
+<Grid styleConfig={{ columns: 3, responsive: false }}>内容</Grid>
+```
 
-onClick以state-value-view读取函数，不因读取而执行；替换沿用原State协议 `field.set(() => nextCallback)`。ref为only-through-prop，只能通过上游Props提供，不公开 `controller.props.ref` 或 `ref.set`，也不创建缓冲State。外部已声明字段仍可指令写入，来源重新计算与指令的关系遵循原生可写计算，不另建拒写、权限或优先级系统。
+原生 `style` 由 Piv 继承，是不推荐使用的底层逃生舱；Kit 不重复定义另一套 CSS style 类型。常规使用依靠组件默认样式与语义配置，实际节点声明沿 `shadowProps` 到达同一真实根。
 
-可干预字段有State，不等于所有创建动作运行期重放。as 首次创建固定；if 只在创建阶段决定是否启用 Show；已有条件值持续响应。domRef、插件与结构声明按原元素生命周期消费。组件ref仅按上游Prop由外层交付和清理，domRef 仍是独立真实元素入口，不触发 Component Props Director。
+## 泛型调用与实例集合
 
-样式归原组件和 Token，控制层不复制样式材料或新增样式控制机制。具体接线及验收见[Button 实例与整体控制入口](../plans/261030_Button实例与整体控制入口.md)。Piv 的独立 as/if 来源契约见[Piv SPEC](../../src/components/Piv/SPEC.md)，不属于本层改造范围。
+Board、Card、Loop、Table 的公开泛型协议在各自 .prop.ts 中先行声明，具体 ref 保留 Tag、条目或 Row/ColumnKey 的精确关联。运行装配只连接一次 TypeScript 包装后的调用形状，不增加运行转发层。
 
-## 从包根定义组件
+`.controllers` 可同时包含不同类型的实例，因此只提供安全共同字段；以下字段留给精确实例 ref：
 
-外部组件从 `@edsolater/uikit` 导入 `kit`、`pivPropsDefinition` 和 `componentDescriptionPropsDefinition`，按继承关系组合 `propsDefinition: { ...pivPropsDefinition, ...componentDescriptionPropsDefinition, ref: 'only-through-prop' }`，再补自身字段。字段仍由原 Owner.prop 拥有，不手抄通用字段，不需要深导内部文件。
+| 组件集合     | 由精确实例 ref 操作的字段                                                        |
+| ------------ | -------------------------------------------------------------------------------- |
+| Board / Card | as、htmlProps、on、domRef、shadowProps、is                                       |
+| Loop         | each                                                                             |
+| Table        | data、keys、renderParts、cellTitle、cellIntensity |
+
+这是公开集合类型的边界，不增加运行过滤或第二份状态。Card 复用 Board 的承载字段与渲染行为，但两者各有 Marker 和实例集合。Article 固定 article 根，正文与 Card 容器分别拥有自己的实例；组合方向由信息含义决定，见[组件嵌套](组件嵌套.md)。
+
+Popover 等 Plugin 通过能力结果的 controller 使用，不接入组件 `.props`。实际 Button、Card 或其他节点仍拥有组件身份与样式，Plugin 只负责其功能与 DOM 绑定生命周期。
+
+## 正常使用与特殊干预
+
+日常界面与初始状态用 Props 声明。回调或生命周期中的特殊需要可通过实例 Controller 操作，例如 `button.props?.loading.set(true)`；集合输入干预使用 `Button.controllers.props.loading.set(true)`。按钮自身状态能力使用 `button.setStatus?.('loading', true)`，不回写一份镜像输入。
+
+函数输入按字段协议读取，不因读取而调用。通过 State 替换函数时，使用 `field.set(() => nextCallback)` 保留原可写计算协议。ref 固定为 only-through-prop，不公开 `controller.props.ref`。输入来源与指令的关系遵循原生 State，不增加拒写、权限或优先级系统。
+
+公开组件只保留这一套声明方式，不提供 PropsOf、ControllerOf、自动输入补全、旧 Inputs 或 directorOptions 适配。具体机制见 [kit](../../src/components/tools/kit.ts)、[输入 Director](../../src/components/tools/componentPropsDirector.ts) 与 [Piv SPEC](../../src/components/Piv/SPEC.md)。

@@ -5,14 +5,14 @@
  *
  * 让使用者验证链接行为，不把卡片外观误当导航能力。
  */
-import { Flow, Heading, Link, Text } from '@/components'
+import { Flow, Heading, Link, Text } from '../..'
 /**
  * 展示当前页标记与另开页面的链接行为。
  */
 export function LinkExample() {
   const target = '链接目标'
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Link href={'#' + encodeURIComponent(target)} current>
         当前示例章节
       </Link>

@@ -8,7 +8,13 @@
  */
 /// <reference types="node" />
 import { execFileSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { build } from 'vite'
+import solid from '@solidjs/vite-plugin'
 import { expect, test } from 'vitest'
+import { sourceAlias } from '../../../vite.shared'
 
 test('仅具名导入声明和编译入口，字符串属性无需 Key 初始化即可打包消费', () => {
   const output = runBundledConsumer(`
@@ -152,8 +158,60 @@ test('直接打包消费现成 Key，名称和别名保留同一定义及默认�
   expect(output.match(/bundle-combined-spacing:/g)).toHaveLength(2)
 })
 
-test('发布包根与样式子路径独立消费，区分点击插件与样式', () => {
+test('发布包根与样式子路径独立消费，区分点击插件与样式', async () => {
+  // 仅从当前源码生成隔离发布包，不读取仓库已有产物或加载项目构建配置。
+  const directory = mkdtempSync(resolve('agents/run/published-entry-'))
+  const packageDirectory = resolve(directory, 'node_modules/@edsolater/uikit')
+  mkdirSync(packageDirectory, { recursive: true })
+  // 独立消费包建立自己的包作用域，避免同名仓库包的自引用解析。
+  writeFileSync(
+    resolve(directory, 'package.json'),
+    JSON.stringify({
+      name: 'uikit-published-entry-consumer',
+      private: true,
+      type: 'module',
+    }),
+  )
+  await build({
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [solid()],
+    resolve: { alias: sourceAlias, conditions: ['browser'] },
+    build: {
+      outDir: packageDirectory,
+      emptyOutDir: false,
+      target: 'esnext',
+      minify: false,
+      sourcemap: false,
+      reportCompressedSize: false,
+      lib: {
+        entry: {
+          'index': resolve('src/index.ts'),
+          'style-system': resolve('src/style-system/index.ts'),
+        },
+        formats: ['es'],
+      },
+      rollupOptions: {
+        external: ['solid-js', '@solidjs/web', '@edsolater/fnkit'],
+        output: {
+          entryFileNames: '[name].js',
+          chunkFileNames: 'shared/[name]-[hash].js',
+        },
+      },
+    },
+  })
+  writeFileSync(
+    resolve(packageDirectory, 'package.json'),
+    JSON.stringify({
+      name: '@edsolater/uikit',
+      type: 'module',
+      exports: { '.': './index.js', './style-system': './style-system.js' },
+    }),
+  )
   const probe = `
+    if (import.meta.resolve('@edsolater/uikit') !== ${JSON.stringify(pathToFileURL(resolve(packageDirectory, 'index.js')).href)} ||
+        import.meta.resolve('@edsolater/uikit/style-system') !== ${JSON.stringify(pathToFileURL(resolve(packageDirectory, 'style-system.js')).href)})
+      throw new Error('发布入口必须解析到本次隔离构建的包。')
     const { JSDOM } = await import('jsdom')
     const { window } = new JSDOM('<!doctype html><style id="css-root"></style>')
     Object.assign(globalThis, { window, document: window.document })
@@ -184,8 +242,12 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
       distinctClickable: typeof uikit.clickable === 'function' && typeof styles.clickable === 'function' && uikit.clickable !== styles.clickable,
     }))
   `
-  const output = execFileSync('bun', ['--conditions=browser', '-e', probe], {
+  const consumerPath = resolve(directory, 'consumer.mjs')
+  writeFileSync(consumerPath, probe)
+  const output = execFileSync('bun', ['--conditions=browser', consumerPath], {
     encoding: 'utf8',
+    cwd: directory,
+    timeout: 15_000,
   })
   expect(JSON.parse(output)).toEqual({
     mounted: true,
@@ -199,4 +261,4 @@ test('发布包根与样式子路径独立消费，区分点击插件与样式',
     removed: true,
     distinctClickable: true,
   })
-})
+}, 20_000)

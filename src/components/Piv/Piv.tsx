@@ -10,7 +10,7 @@ import { createComponent } from '@/foundation/render'
 import { Dode, type DodeDOMProps } from './Dode'
 import type { PivSupportedElementTag, PivTag } from './domMap'
 import { mergePivProps, type ShadowProps } from './plugin/mergePivProps'
-import type { PluginInput } from '@/components/plugins/tools/createInactivePlugin'
+import type { PluginInput } from '../plugins/tools/createInactivePlugin'
 
 export interface PivProps<
   Tag extends PivTag = 'div',

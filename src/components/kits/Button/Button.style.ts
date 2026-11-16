@@ -2,8 +2,10 @@
  * 按钮的完整样式定义。
  *
  * Token 在按钮地址定义基础与状态，rules 只消费属性和效果。
- * 外观、语气与交互分别匹配，不在后续规则中重新赋值 Token。
+ *
+ * 将外观、语气与交互保持为独立状态，避免后续规则重复改写基础定义。
  */
+import { componentName } from './Button.prop'
 import {
   rules,
   createNewTokenGenerator,
@@ -33,7 +35,9 @@ import {
   baseShadowSmall,
 } from '@/style-system'
 
-const buttonAddress = ['@layer uikit', '.Button']
+import type { StyleConfig } from '../../tools/styleConfig'
+
+const buttonAddress = ['@layer uikit', `.${componentName}`]
 const buttonToken = createNewTokenGenerator({
   prefixName: 'button',
   address: buttonAddress,
@@ -138,3 +142,17 @@ rules(buttonAddress, [
     focusColor: buttonBoundaryColor,
   }),
 ])
+
+/** 按钮应用可配置的已有间距控制点。 */
+export interface ButtonStyleConfig {
+  /** 图标与文字等子内容之间的间距。 */
+  gap?: string
+}
+
+/** 按钮的可选样式输入只解释已有间距控制点。 */
+export const buttonStyleConfig = {
+  /**
+   * 设置当前按钮内图标与文字等内容之间的距离。
+   */
+  gap: (value) => buttonGap.set(value),
+} satisfies StyleConfig<ButtonStyleConfig>

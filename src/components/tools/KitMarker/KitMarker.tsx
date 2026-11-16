@@ -16,6 +16,7 @@ import {
 
 /** 组件使用处提供用途及定位模式中的显示选择，不影响正常界面内容。 */
 export interface ComponentDescriptionProps {
+  /** 节点用途说明；kit 同时将其交给根元素的 aria-label。 */
   description?: Source<string | undefined>
   /** false时定位模式隐藏本体与自身、子组件标注，保留原布局和来源。 */
   descriptionDisplay?: boolean

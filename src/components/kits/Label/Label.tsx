@@ -5,46 +5,35 @@
  *
  * 让标题、控件和说明各自保持职责，通过字段身份协作。
  */
-import { Show, stateView, val, type Source } from '@/foundation'
-import { hasTooltipContent } from '../../plugins/kits/tooltip/tooltip'
+import { Show, stateView, val } from '@/foundation'
 import { Help } from '../Help/Help'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import type { RefReceiver } from '@/hooks/createRef'
-import { kit, type KitController } from '../../tools/kit'
-import { Piv, type PivProps } from '../../Piv/Piv'
-import { labelPropsDefinition } from './Label.prop'
+import { Piv } from '../../Piv/Piv'
+
+import { hasTooltipContent } from '../../plugins/kits/tooltip/tooltip'
+
+import { kit, type KitComponent } from '../../tools/kit'
+
+import {
+  componentName,
+  labelPropDefinition,
+  type LabelProps,
+  type LabelController,
+} from './Label.prop'
 import './Label.style'
 import { useFormFieldId } from '../FormField/FormField'
-
-/** 通过 for 关联独立输入；tooltip 为空时不创建问号。 */
-export type LabelProps = ComponentDescriptionProps & {
-  /** 特殊运行期需求下接收本实例 Controller，初始界面仍由 Props 表达。 */
-  ref?: RefReceiver<LabelController>
-  for?: Source<string | undefined>
-  children: Source<string>
-  tooltip?: PivProps['children']
-  /** 替换默认问号的显示内容，不嵌入另一个交互控件。 */
-  tooltipTrigger?: PivProps['children']
-}
-
-/** 字段关联、标题与辅助说明的指令式入口，不拥有被关联控件的状态。 */
-export type LabelController = KitController<
-  LabelProps,
-  typeof labelPropsDefinition
->
 
 /**
  * 显示标题与说明，保持原生表单关联，浮层不参与字段布局。
  */
-export const Label = kit(
-  { name: 'Label', propsDefinition: labelPropsDefinition },
-  (props: LabelProps) => {
+export const Label: KitComponent<LabelProps, LabelController> = kit(
+  { name: componentName, propDefinition: labelPropDefinition },
+  (props, { name }) => {
     const fieldId = useFormFieldId()
     return (
-      <Piv as="span" class="Label">
+      <Piv as="span" shadowProps={props} class={name}>
         <Piv
           as="label"
-          htmlProps={{ for: val(props.for) ?? fieldId ?? undefined }}
+          htmlProps={{ for: val(props.for) ?? val(fieldId) ?? undefined }}
         >
           {props.children}
         </Piv>

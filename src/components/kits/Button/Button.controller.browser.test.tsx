@@ -4,9 +4,12 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
 import { createState, render, Show, val } from '@/foundation'
-import { Button, type ButtonController } from './Button'
+import { Button } from './Button'
+import type { ButtonController } from './Button.prop'
 import { ButtonExample } from './Button.example'
 import * as buttonStyle from './Button.style'
+
+const { buttonStyleConfig, ...buttonStyleTokens } = buttonStyle
 
 let dispose: (() => void) | undefined
 
@@ -143,7 +146,7 @@ test('顶层状态操作尊重外部声明，props逃生入口仍可干预并继
 })
 
 test('组件引用控制状态，DOM 引用聚焦按钮，整体命令只包含主动接入的实例', () => {
-  expect(Button.controllers.style).toBe(buttonStyle)
+  expect(Button.controllers.style).toEqual(buttonStyleTokens)
   const host = document.body.appendChild(document.createElement('div'))
   const [button, receiveButton] = createRef<ButtonController>()
   const [buttonElement, receiveButtonElement] =
@@ -191,7 +194,7 @@ test('组件引用控制状态，DOM 引用聚焦按钮，整体命令只包含�
   expect(second.disabled).toBe(true)
 })
 
-test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例不继承命令', () => {
+test('显隐保留 DOM 引用与实例，组件销毁才释放，新实例不继承命令', () => {
   const host = document.body.appendChild(document.createElement('div'))
   const visible = createState(true)
   const mounted = createState(true)
@@ -211,10 +214,12 @@ test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例
   Button.controllers.props.loading.set(true)
   flush()
   expect(buttonElement.getAttribute?.('aria-busy')).toBe('true')
+  const firstElement = host.querySelector('button')!
 
   visible.set(false)
   flush()
-  expect(buttonElement.focus).toBeUndefined()
+  expect(buttonElement.isConnected).toBe(false)
+  expect(buttonElement.focus).toBeTypeOf('function')
   expect(host.querySelector('button')).toBeNull()
   button.props!.disabled.set(true)
   button.props!.class.set('隐藏期间的类名')
@@ -226,6 +231,7 @@ test('隐藏只释放 DOM 引用，组件销毁才退出整体控制，新实例
 
   visible.set(true)
   flush()
+  expect(host.querySelector('button')).toBe(firstElement)
   expect(buttonElement.getAttribute?.('aria-busy')).not.toBe('true')
   expect(host.querySelector('button')!.disabled).toBe(true)
   expect(

@@ -5,7 +5,7 @@
  *
  * 让使用者观察页面阅读范围及独立组件的组织关系。
  */
-import { Button, Card, Flow, Heading, Page, Text, Checkbox } from '@/components'
+import { Button, Card, Flow, Heading, Page, Text, Checkbox } from '../..'
 import { createState } from '@/foundation'
 /**
  * 组合页面标题、正文和刷新动作，显示已刷新次数。
@@ -27,7 +27,7 @@ export function PageExample() {
         </Button>
       }
     >
-      <Flow>
+      <Flow styleConfig={{ direction: 'column' }}>
         <Checkbox
           label="显示内建页标题"
           checked={showTitle}
@@ -35,7 +35,7 @@ export function PageExample() {
         />
         <Text>{count.map((value) => '已刷新 ' + value + ' 次')}</Text>
         <Card>
-          <Flow>
+          <Flow styleConfig={{ direction: 'column' }}>
             <Heading level={2}>当前目标</Heading>
             <Text>让页面结构清晰，组件职责独立。</Text>
           </Flow>

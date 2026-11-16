@@ -5,46 +5,34 @@
  *
  * 把字段编辑与上层标题、校验编排分开。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { textAreaPropsDefinition } from './TextArea.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { type Source } from '@/foundation'
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  textAreaPropDefinition,
+  type TextAreaProps,
+  type TextAreaController,
+} from './TextArea.prop'
 import { Piv } from '../../Piv/Piv'
+import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
 import './TextArea.style'
-/** 多行文本值、字段状态与输入通知，标题和辅助说明由上层组合提供。 */
-export type TextAreaProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<TextAreaController>
-  id?: Source<string | undefined>
-  name?: string
-  value: Source<string>
-  placeholder?: Source<string | undefined>
-  disabled?: Source<boolean | undefined>
-  required?: boolean
-  rows?: number
-  onInput?: (value: string) => void
-}
-/** TextArea 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type TextAreaController = KitController<
-  TextAreaProps,
-  typeof textAreaPropsDefinition
->
 
 /**
  * 带原生字段身份的多行编辑，保留受控值与表单校验。
  */
-export const TextArea = kit(
+export const TextArea: KitComponent<TextAreaProps, TextAreaController> = kit(
   {
-    name: 'TextArea',
+    name: componentName,
     description: '编辑多行文字',
-    propsDefinition: textAreaPropsDefinition,
+    propDefinition: textAreaPropDefinition,
   },
-  (props: TextAreaProps) => {
+  (props, { name }) => {
+    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
     return (
       <Piv
         as="textarea"
-        class="TextArea"
-        id={props.id}
+        shadowProps={rootProps}
+        class={name}
+        id={id}
         htmlProps={{
           name: props.name,
           value: props.value,

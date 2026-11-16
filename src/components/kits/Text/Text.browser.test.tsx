@@ -16,7 +16,7 @@ import {
   test,
 } from 'vitest'
 import { cssRoot } from '@/style-system'
-import { createState, Show } from '@/foundation'
+import { createState, Show, Loading } from '@/foundation'
 import { createRef } from '@/hooks/createRef'
 import {
   Button,
@@ -252,7 +252,7 @@ describe('Text', () => {
     expect(host.querySelector('p.Text')?.textContent).toBe('42')
   })
 
-  test('默认跟随外部说明真值，显式boolean优先且false不读取异步默认', async () => {
+  test('默认跟随外部说明真值，显式boolean优先', async () => {
     const description = createState<string | undefined>()
     const display = createState<boolean | undefined>()
     const host = document.body.appendChild(document.createElement('main'))
@@ -261,12 +261,6 @@ describe('Text', () => {
         <>
           <Text description={description} descriptionDisplay={display.read()}>
             动态说明文字
-          </Text>
-          <Text
-            description={new Promise<string>(() => {})}
-            descriptionDisplay={false}
-          >
-            无需等待的文字
           </Text>
           <KitMarkerStructureViewTrigger />
         </>
@@ -322,4 +316,29 @@ describe('Text', () => {
     await expect.poll(() => getComputedStyle(text).opacity).toBe('1')
     expect(text.textContent).toBe('动态说明文字')
   })
+})
+
+/** 正常无障碍名称消费 Source，不受定位框显示选择控制。 */
+test('关闭定位框显示仍等待异步用途，并在完成后绑定无障碍名称', async () => {
+  let resolveDescription!: (value: string) => void
+  const description = new Promise<string>((resolve) => {
+    resolveDescription = resolve
+  })
+  const host = document.body.appendChild(document.createElement('main'))
+  dispose = render(
+    () => (
+      <Loading fallback={<Piv>等待用途</Piv>}>
+        <Text description={description} descriptionDisplay={false}>
+          异步内容
+        </Text>
+      </Loading>
+    ),
+    host,
+  )
+  expect(host.textContent).toBe('等待用途')
+  resolveDescription('异步用途')
+  await expect
+    .poll(() => host.querySelector('.Text')?.getAttribute('aria-label'))
+    .toBe('异步用途')
+  expect(host.textContent).toBe('异步内容')
 })

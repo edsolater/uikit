@@ -5,12 +5,14 @@
  *
  * 来源和插件已由 Piv 在创建前组织，绑定归所属存活作用域，显隐不增加 DOM 层。
  */
-import type { ID, MayArray } from '@edsolater/fnkit'
+import { toArray, type ID, type MayArray } from '@edsolater/fnkit'
 import {
   type JSX,
   type JSXElement,
   type Source,
   createRenderEffect,
+  createComponent,
+  useContext,
   val,
 } from '@/foundation'
 import { children, insert, mapArray } from '@/foundation/render'
@@ -26,6 +28,7 @@ import {
 import { consumeHTMLProps, type HTMLPropsList } from './handleHTMLProps'
 import { consumeStyle, type StyleList } from './handleStyle'
 import { consumeId } from './id'
+import { ElementDeclarationsContext } from './elementDeclarations'
 import { toEventListenersList, type EventListeners } from './on/handleOn'
 import { consumeEventListeners } from './on/registerEventListeners'
 import { consumeDomRefs, type PivDomRef } from './domRef'
@@ -40,7 +43,11 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
   id?: Source<MayArray<ID> | undefined>
   /** 字符串、列表、条件 token 对象或整体 Source。 */
   class?: ClassNameList
-  /** 普通 style、列表或整体 Source，按 CSS 字段订阅。 */
+  /**
+   * 底层 CSS 逃生舱，接受普通 style、列表或整体 Source，按字段订阅。
+   * 不推荐作为常规组件样式入口；优先在组件 .style.ts 定义样式，通过组件的 styleConfig 表达必要差异。
+   * 仅在组件样式能力无法满足必要需求时，作为最后手段使用。
+   */
   style?: StyleList
   /** 原生 HTML 字段和 attr:/prop:；不接管专用 class/style/on/domRef/children。 */
   htmlProps?: HTMLPropsList<Tag>
@@ -90,11 +97,23 @@ function createDodeElement<Tag extends PivTag>(
   createElement: CreatePivElement<Tag>,
   props: DodeDOMProps<Tag>,
 ): JSX.Element {
-  const resolvedChildren = children(() => val(props.children))
+  const declarations = useContext(ElementDeclarationsContext)
+  // 根声明在真实元素处消费，子内容只接收自己所属组件的声明。
+  const resolvedChildren = children(() =>
+    createComponent(ElementDeclarationsContext, {
+      value: [],
+      get children() {
+        return val(props.children)
+      },
+    }),
+  )
   const element = createElement()
   consumeId(element, props.id)
   consumeClassName(element, () => props.class)
-  consumeStyle(element, () => props.style)
+  consumeStyle(element, () => [
+    ...declarations.flatMap((declaration) => toArray(val(declaration.style))),
+    ...toArray(val(props.style)),
+  ])
   // 原始声明身份决定监听作用域，其他能力变化不会重置 once 或提前执行其 cleanup。
   mapArray(
     () => toEventListenersList(props.on),
@@ -105,7 +124,12 @@ function createDodeElement<Tag extends PivTag>(
       return declaration
     },
   )
-  consumeHTMLProps(element, () => props.htmlProps)
+  consumeHTMLProps<Tag>(element, () => [
+    ...declarations.flatMap((declaration) =>
+      toArray(val(declaration.htmlProps)),
+    ),
+    ...toArray(val(props.htmlProps)),
+  ])
   // domRef 按声明身份接入；相同声明不因旁读重跑，插件声明变化时接入新项并释放旧项。
   consumeDomRefs(element, () => props.domRef)
   // 四种模板原本不消费 children，保持既有行为，包括 textarea 与 iframe。

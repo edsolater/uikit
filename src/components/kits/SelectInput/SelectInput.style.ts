@@ -1,4 +1,11 @@
-/** 搜索输入、轻量标签和候选列表各自的显示。 */
+/**
+ * SelectInput 的搜索触发区、说明标签与候选列表样式。
+ *
+ * 分别定义输入焦点反馈、标签材料和候选选中状态。
+ *
+ * 让可搜索选择拥有完整的默认显示，业务只提供查询、候选和选值。
+ */
+import { componentName } from './SelectInput.prop'
 import {
   rules,
   surfaceColorTheme,
@@ -16,7 +23,7 @@ import {
 import { valueSequence } from '@/style-system/pieces/token-factory/list'
 
 // 输入框及焦点反馈
-const selectInputAddress = ['@layer uikit', '.SelectInput']
+const selectInputAddress = ['@layer uikit', `.${componentName}`]
 const selectInputToken = createNewTokenGenerator({
   prefixName: 'select-input',
   address: selectInputAddress,

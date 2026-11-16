@@ -41,8 +41,9 @@ import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { createState } from '@/foundation'
-import { Button, type ButtonProps, type ButtonAppearance } from './Button'
-import { Piv } from '@/components/Piv/Piv'
+import { Button } from './Button'
+import type { ButtonProps, ButtonAppearance } from './Button.prop'
+import { Piv } from '../../Piv/Piv'
 import { buttonMapping } from './Button.mapping'
 
 import './Button.style'
@@ -53,7 +54,7 @@ import {
   paperColor,
 } from '@/style-system/pieces/tokens/color/palette'
 import '../../../components/kits/Input/Input.style'
-import '@/components/plugins/kits/Popover/popover.style'
+import '../../plugins/kits/Popover/popover.style'
 
 let dispose: (() => void) | undefined
 const handles: RulesHandle[] = []
@@ -1274,7 +1275,7 @@ describe('Button styles', () => {
             <span aria-hidden="true">＋</span>
             <span>图标文字</span>
           </Button>,
-          <Button size={size} htmlProps={{ style: 'max-width:160px' }}>
+          <Button size={size} style={{ 'max-width': '160px' }}>
             窄容器中较长的按钮内容换行
           </Button>,
         ]),

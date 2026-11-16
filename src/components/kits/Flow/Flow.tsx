@@ -1,62 +1,34 @@
 /**
- * Flow 组织一组内容的排列方向。
+ * Flow 是一组相关内容的顺序排列组件。
  *
- * 提供可调间隔、横向换行与交叉轴对齐。
+ * 组织子内容并接入共同的说明、引用和样式输入。
  *
- * 排列关系由组件表达，子组件继续拥有自己的外观。
+ * 排列样式由同名样式文件拥有，核心不解释样式值或子组件外观。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { flowPropsDefinition } from './Flow.prop'
-import type { ComponentDescriptionProps } from '@/components/tools/KitMarker/KitMarker'
-import { type Source, type JSX, val } from '@/foundation'
+import { kit, type KitComponent } from '../../tools/kit'
 import { Piv } from '../../Piv/Piv'
-import './Flow.style'
-/** Flow 的声明输入；初始状态通过 Props 表达。 */
-export type FlowProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<FlowController>
-  /** 子项间距，使用原生CSS gap值，默认1rem。 */
-  gap?: Source<string | undefined>
-  direction?: Source<'row' | 'column' | undefined>
-  /** 容器自身的 CSS 宽度，未指定时由父布局决定。 */
-  width?: Source<string | undefined>
-  /** 作为父布局的子项占用剩余空间。 */
-  grow?: Source<boolean | undefined>
-  label?: Source<string | undefined>
-  children?: JSX.Element
-}
-
-/** Flow 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type FlowController = KitController<
-  FlowProps,
-  typeof flowPropsDefinition
->
+import { flowStyleConfig } from './Flow.style'
+import {
+  componentName,
+  flowPropDefinition,
+  type FlowProps,
+  type FlowController,
+} from './Flow.prop'
 
 /**
- * 默认纵向排列，默认间隔 1rem；横向排列自动换行并在交叉轴居中，不接管子组件外观。
+ * 按默认横向排列组织顺序内容，自动换行并在交叉轴居中。
+ * 必要的纵向排列通过配置表达，原生声明完整交给同一 Piv 根。
  */
-export const Flow = kit(
+export const Flow: KitComponent<FlowProps, FlowController> = kit(
   {
-    name: 'Flow',
+    name: componentName,
     description: '组织内容方向',
-    propsDefinition: flowPropsDefinition,
+    propDefinition: flowPropDefinition,
+    styleConfig: flowStyleConfig,
   },
-  (props: FlowProps) => {
-    return (
-      <Piv
-        class="Flow"
-        style={{
-          '--flow-width': val(props.width) ?? 'auto',
-          '--flow-gap': val(props.gap) ?? '1rem',
-        }}
-        htmlProps={{
-          'data-direction': props.direction,
-          'data-grow': String(val(props.grow) ?? false),
-          'aria-label': props.label,
-        }}
-      >
-        {props.children}
-      </Piv>
-    )
-  },
+  (props, { name }) => (
+    <Piv shadowProps={props} class={name}>
+      {props.children}
+    </Piv>
+  ),
 )

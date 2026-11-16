@@ -1,76 +1,43 @@
 /**
- * Grid 按列结构组织内容。
+ * Grid 是按列结构组织内容的布局组件。
  *
- * 以等宽列数或明确列模板排列，可选择窄视口是否回到单列。
+ * 将内容与区域名称交给同一真实根，样式配置由同名样式文件解释。
  *
- * 统一内容空间，不接管子组件的样式。
+ * 网格负责排列，子组件保留自己的外观和交互。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { gridPropsDefinition } from './Grid.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { type Source, type JSX, val } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
-import './Grid.style'
-/** Grid 的声明输入；初始状态通过 Props 表达。 */
-export type GridProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<GridController>
-  /** 数字表示等宽列数；字符串直接表示 CSS 列模板，例如 repeat(auto-fit, minmax(12rem, 1fr))。 */
-  columns?: Source<number | string>
-  /** 作为父网格子项跨越的列数；未设置时由原生自动放置。 */
-  columnSpan?: Source<number | undefined>
-  /** 默认窄于 48rem 时收为单列；false 保持指定列结构。 */
-  responsive?: Source<boolean>
-  /** 子项间距，使用原生CSS gap值，默认1rem。 */
-  gap?: Source<string | undefined>
-  /** 原生列／行间隙装饰，不绘制子项外框；默认无装饰。 */
-  columnRule?: Source<string | undefined>
-  rowRule?: Source<string | undefined>
-  grow?: Source<boolean | undefined>
-  label?: Source<string | undefined>
-  children?: JSX.Element
-}
+import { val } from '@/foundation'
+import { kit, type KitComponent } from '../../tools/kit'
 
-/** Grid 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type GridController = KitController<
-  GridProps,
-  typeof gridPropsDefinition
->
+import {
+  componentName,
+  gridPropDefinition,
+  type GridProps,
+  type GridController,
+} from './Grid.prop'
+import { gridStyleConfig } from './Grid.style'
 
 /**
- * 按列数或列模板分栏，默认间隔 1rem；默认一列且窄屏收为单列，responsive=false 时保持列结构。
+ * 默认单列并自动适应窄屏，必要时通过 styleConfig 指定列结构。
  */
-export const Grid = kit(
+export const Grid: KitComponent<GridProps, GridController> = kit(
   {
-    name: 'Grid',
+    name: componentName,
     description: '按列结构组织内容',
-    propsDefinition: gridPropsDefinition,
+    propDefinition: gridPropDefinition,
+    styleConfig: gridStyleConfig,
   },
-  (props: GridProps) => {
-    return (
-      <Piv
-        class="Grid"
-        style={{
-          '--grid-column':
-            val(props.columnSpan) === undefined
-              ? 'auto'
-              : `span ${val(props.columnSpan)}`,
-          '--grid-gap': val(props.gap) ?? '1rem',
-          '--grid-column-rule': val(props.columnRule) ?? 'none',
-          '--grid-row-rule': val(props.rowRule) ?? 'none',
-          '--grid-columns':
-            typeof val(props.columns) === 'string'
-              ? val(props.columns)
-              : `repeat(${val(props.columns) ?? 1}, minmax(0, 1fr))`,
-        }}
-        htmlProps={{
-          'data-responsive': String(val(props.responsive) ?? true),
-          'data-grow': String(val(props.grow) ?? false),
-          'aria-label': props.label,
-        }}
-      >
-        {props.children}
-      </Piv>
-    )
-  },
+  (props, { name }) => (
+    <Piv
+      shadowProps={props}
+      class={name}
+      htmlProps={{
+        get 'aria-label'() {
+          return val(props.label)
+        },
+      }}
+    >
+      {props.children}
+    </Piv>
+  ),
 )

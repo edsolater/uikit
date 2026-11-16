@@ -5,14 +5,14 @@
  *
  * 让使用者按内容结构选择标题，而非把字号当作层级。
  */
-import { Flow, Heading, Text } from '@/components'
+import { Flow, Heading, Text } from '../..'
 
 /**
  * 呈现指南、章节和小节的标题关系。
  */
 export function HeadingExample() {
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Heading level={1}>Heading · 使用指南</Heading>
       <Text p>H1是整篇页面或文档的主题总入口。</Text>
       <Heading level={2}>标题结构</Heading>

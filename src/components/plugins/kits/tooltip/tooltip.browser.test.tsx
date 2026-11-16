@@ -283,7 +283,7 @@ test('提示按钮不接入原生点击切换，也不把焦点移入提示正�
   expect(document.activeElement).toBe(trigger)
   expect(body.querySelector('[autofocus]')).toBeNull()
   await userEvent.click(trigger)
-  expect(body.matches(':popover-open')).toBe(true)
+  await expect.poll(() => body.matches(':popover-open')).toBe(true)
 })
 
 test('定位来源持续更新，完成值为空时回到 top 与 md 默认值', async () => {

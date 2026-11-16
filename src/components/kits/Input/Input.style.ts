@@ -1,4 +1,11 @@
-/** 单行输入的材料、焦点与有效性反馈。 */
+/**
+ * Input 的单行编辑材料与反馈样式。
+ *
+ * 组合默认尺寸、主题颜色、边界以及焦点和有效性状态。
+ *
+ * 让各处单行输入共享一致的编辑反馈，字段关联仍由组件负责。
+ */
+import { componentName } from './Input.prop'
 import {
   rules,
   createNewTokenGenerator,
@@ -20,7 +27,7 @@ import {
 import { valueSequence } from '@/style-system/pieces/token-factory/list'
 import { transitionValue } from '@/style-system/pieces/token-factory/transition'
 
-const inputAddress = ['@layer uikit', '.Input']
+const inputAddress = ['@layer uikit', `.${componentName}`]
 const inputToken = createNewTokenGenerator({
   prefixName: 'input',
   address: inputAddress,
@@ -116,6 +123,6 @@ rules(inputAddress, [
     radius: inputRadius,
   }),
 ])
-rules(['@layer uikit', '.Input', '&::placeholder'], {
+rules(['@layer uikit', `.${componentName}`, '&::placeholder'], {
   color: inputPlaceholderColor,
 })

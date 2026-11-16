@@ -5,6 +5,7 @@
  *
  * 复用Board材质，不重复定义背景、padding或边界。
  */
+import { componentName } from './Card.prop'
 import { rules } from '@/style-system'
 
-rules('.Card', { 'display': 'flow-root', 'margin-trim': 'block' })
+rules(`.${componentName}`, { 'display': 'flow-root', 'margin-trim': 'block' })

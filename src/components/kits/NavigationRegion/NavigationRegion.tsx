@@ -5,40 +5,35 @@
  *
  * 具体链接与导航内容由调用方组合。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { navigationRegionPropsDefinition } from './NavigationRegion.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { type Source, type JSX } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
-import './NavigationRegion.style'
-/** NavigationRegion 的声明输入；初始状态通过 Props 表达。 */
-export type NavigationRegionProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<NavigationRegionController>
-  label: Source<string>
-  children?: JSX.Element
-}
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  navigationRegionPropDefinition,
+  type NavigationRegionProps,
+  type NavigationRegionController,
+} from './NavigationRegion.prop'
 
-/** NavigationRegion 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type NavigationRegionController = KitController<
-  NavigationRegionProps,
-  typeof navigationRegionPropsDefinition
->
+import './NavigationRegion.style'
 
 /**
  * 组织具名导航区域。
  */
-export const NavigationRegion = kit(
+export const NavigationRegion: KitComponent<
+  NavigationRegionProps,
+  NavigationRegionController
+> = kit(
   {
-    name: 'NavigationRegion',
+    name: componentName,
     description: '组织具名导航区域',
-    propsDefinition: navigationRegionPropsDefinition,
+    propDefinition: navigationRegionPropDefinition,
   },
-  (props: NavigationRegionProps) => {
+  (props, { name }) => {
     return (
       <Piv
+        shadowProps={props}
         as="nav"
-        class="NavigationRegion"
+        class={name}
         htmlProps={{ 'aria-label': props.label }}
       >
         {props.children}

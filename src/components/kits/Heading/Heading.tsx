@@ -5,29 +5,18 @@
  *
  * 让文档层级和导航位置由同一份标题内容表达。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { headingPropsDefinition } from './Heading.prop'
+import { Piv } from '../../Piv/Piv'
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  headingPropDefinition,
+  type HeadingProps,
+  type HeadingController,
+  type HeadingTag,
+} from './Heading.prop'
 import { onMount } from '@/foundation'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { Piv, type PivProps } from '../../Piv/Piv'
+
 import './Heading.style'
-
-type HeadingLevel = 1 | 2 | 3 | 4
-type HeadingTag = `h${HeadingLevel}`
-
-/** 标题层级必须显式提供；内容沿用Piv能力，id仅由最终渲染文字决定。 */
-export type HeadingProps = Omit<PivProps<HeadingTag>, 'as' | 'id'> &
-  ComponentDescriptionProps & {
-    ref?: RefReceiver<HeadingController>
-    level: HeadingLevel
-  }
-
-/** Heading 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type HeadingController = KitController<
-  HeadingProps,
-  typeof headingPropsDefinition
->
 
 /**
  * Heading是H1至H4的结构与导航定位节点，不是自动Link。
@@ -45,18 +34,18 @@ export type HeadingController = KitController<
  * 内容允许组合或动态更新，最终渲染文字同步为id，不接受另一份手写Heading ID。
  * 定位框只隐藏文字，保留内容、定位身份、排版与更新；链接行为由调用方的Link负责。
  */
-export const Heading = kit(
+export const Heading: KitComponent<HeadingProps, HeadingController> = kit(
   {
-    name: 'Heading',
-    propsDefinition: headingPropsDefinition,
+    name: componentName,
+    propDefinition: headingPropDefinition,
     marker: () => ({ descriptionOnly: true }),
   },
-  (props: HeadingProps) => {
+  (props, { name }) => {
     return (
       <Piv<HeadingTag>
         as={`h${props.level}`}
         shadowProps={props}
-        class="Heading"
+        class={name}
         domRef={(element) => {
           /**
            * 从真实文字取得定位身份，不预设children的组成或来源类型。

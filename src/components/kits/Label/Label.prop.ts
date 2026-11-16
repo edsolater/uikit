@@ -1,20 +1,55 @@
 /**
- * Label 的运行时字段定义。
+ * Label 的输入、字段协议与实例控制声明。
  *
- * 描述字段关联、标题与辅助说明的来源，以及继承的组件说明协议。
+ * 聚合字段关联、可见标题与辅助说明。
  *
- * 让可选 Controller 复用原 Label 逻辑，不引入 Piv 的额外公开字段。
+ * 渲染行为由同名组件实现，样式仍归所属样式文件。
  */
-import { componentDescriptionPropsDefinition } from '@/components/tools/KitMarker/KitMarker.prop'
-import type { PropsDefinition } from '@/components/tools/componentPropsDirector'
-import type { LabelProps } from './Label'
+import type { Source } from '@/foundation'
+import type { PivProps } from '../../Piv/Piv'
+import {
+  kitPropDefinition,
+  type KitProps,
+  type KitPropDefinition,
+  type KitController,
+} from '../../tools/kit'
 
-/** 内容保持 Source，由原 label 与提示逻辑消费；ref 只从上游交付。 */
-export const labelPropsDefinition = {
-  ...componentDescriptionPropsDefinition,
+/** 组件统一身份，供创建声明和样式关联引用。 */
+export const componentName = 'Label'
+
+/** Label 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
+export type LabelProps = Omit<
+  KitProps<{}, LabelController, 'span'>,
+  'children'
+> & {
+  for?: Source<string | undefined>
+  children: Source<string>
+  tooltip?: PivProps['children']
+  /** 替换默认问号的显示内容，不嵌入另一个交互控件。 */
+  tooltipTrigger?: PivProps['children']
+}
+
+/** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
+const labelOwnPropDefinition = {
   for: 'state-source-view',
   children: 'state-source-view',
   tooltip: 'state-source-view',
   tooltipTrigger: 'state-source-view',
-  ref: 'only-through-prop',
-} satisfies PropsDefinition<LabelProps>
+} as const
+
+/** 自有读取模式与公共协议共同组成完整字段契约。 */
+export type LabelPropDefinition = KitPropDefinition<
+  typeof labelOwnPropDefinition
+>
+
+/** 与类型契约对应的完整运行时字段定义。 */
+export const labelPropDefinition: LabelPropDefinition = {
+  ...kitPropDefinition,
+  ...labelOwnPropDefinition,
+}
+
+/** 控制字段关联、标题来源与辅助说明。 */
+export interface LabelController extends KitController<
+  LabelProps,
+  LabelPropDefinition
+> {}

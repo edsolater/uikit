@@ -13,9 +13,9 @@ import { createState } from '@/foundation'
 export function GridExample() {
   const columns = createState<1 | 2 | 3>(2)
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Text>窄屏自动回到单列，内容顺序保持不变。</Text>
-      <Flow direction="row">
+      <Flow>
         <Button
           onClick={() => {
             columns.set(1)
@@ -38,7 +38,7 @@ export function GridExample() {
           三列
         </Button>
       </Flow>
-      <Grid columns={columns}>
+      <Grid styleConfig={{ columns: columns }}>
         <Card>
           <Heading level={3}>待处理</Heading>
           <Text>核对需求与输入。</Text>
@@ -53,14 +53,17 @@ export function GridExample() {
         </Card>
       </Grid>
       <Text>固定三列不随窄屏退列；自动填充列按可用空间排列。</Text>
-      <Grid columns={3} responsive={false} label="固定三列">
+      <Grid styleConfig={{ columns: 3, responsive: false }} label="固定三列">
         <Text>第一列</Text>
         <Text>第二列</Text>
         <Text>第三列</Text>
       </Grid>
       <Grid
-        columns="repeat(auto-fit, minmax(8rem, 1fr))"
-        responsive={false}
+        styleConfig={{
+          columns: 'repeat(auto-fit, minmax(8rem, 1fr))',
+          responsive: false,
+        }}
+
         label="自动填充"
       >
         <Text>自动填充一</Text>

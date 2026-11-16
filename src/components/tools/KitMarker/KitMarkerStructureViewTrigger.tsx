@@ -6,7 +6,7 @@
  * 当前以内容之外的浮动按钮呈现，并保持清晰，随时能够关闭查看。
  */
 import { createState, val, Show } from '@/foundation'
-import { Button } from '@/components/kits/Button/Button'
+import { Button } from '../../kits/Button/Button'
 import { StructureViewControl } from './KitMarker'
 import { StructureViewOverlay } from './StructureViewOverlay'
 import './KitMarkerStructureViewTrigger.style'

@@ -7,11 +7,9 @@
 import { createToggle } from '@/hooks'
 import type { State } from '@/foundation'
 import type { PromiseResultProxy } from '@edsolater/fnkit'
-import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
-import {
-  hoverable,
-  type HoverableController,
-} from '@/components/plugins/kits/hoverable/hoverable'
+import { createInactivePlugin } from '../../tools/createInactivePlugin'
+import { hoverable } from '../hoverable/hoverable'
+import type { HoverableController } from '../hoverable/hoverable'
 
 /** 点击能力的配置。 */
 export interface ClickableOptions {

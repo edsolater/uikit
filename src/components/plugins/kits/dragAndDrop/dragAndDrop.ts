@@ -1,7 +1,7 @@
 /** 拖放组合式 Kit。 */
-import { createInactivePlugins } from '@/components/plugins/tools/createInactivePlugins'
-import { draggablePluginCore } from '@/components/plugins/kits/dragAndDrop/draggable/draggable'
-import { droppablePluginCore } from '@/components/plugins/kits/dragAndDrop/droppable/droppable'
+import { createInactivePlugins } from '../../tools/createInactivePlugins'
+import { draggablePluginCore } from './draggable/draggable'
+import { droppablePluginCore } from './droppable/droppable'
 
 /** 组织拖动与接收角色；每次组合调用在内部创建共享身份。 */
 export const dragAndDrop = createInactivePlugins({

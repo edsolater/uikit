@@ -1,18 +1,27 @@
-/** Card 的本地 Example：验证独立信息单元的默认形态、声量和尺寸。 */
+/**
+ * Card 的本地 Example：验证独立信息单元的默认形态、声量和尺寸。
+ *
+ * 组合独立正文和承载外观，按阅读顺序组织标题与说明。
+ *
+ * 示例保留各组件自己的语义和样式边界。
+ */
 import { Card } from './Card'
 import { Article } from '../Article/Article'
 import { Flow } from '../Flow/Flow'
-import { clickable } from '@/components/plugins/kits/clickable/clickable'
+import { clickable } from '../../plugins/kits/clickable/clickable'
 import './Card.example.style'
 
+/**
+ * 呈现正文与信息卡片，供比较各自的语义和默认外观。
+ */
 export function CardExample() {
   const cardClickable = clickable()
   return (
     <Card class="example-card">
       <Article>
-        <Flow>
+        <Flow styleConfig={{ direction: 'column' }}>
           <div class="example-card-head">
-            <span>Component</span>
+            <span>组件</span>
             <h2>Card</h2>
           </div>
           <p>
@@ -22,38 +31,38 @@ export function CardExample() {
 
           <div class="card-example-grid">
             <Card class="card-example-item" small is={cardClickable}>
-              <Flow>
-                <strong>Small</strong>
+              <Flow styleConfig={{ direction: 'column' }}>
+                <strong>紧凑</strong>
                 <span>紧凑信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item">
-              <Flow>
-                <strong>Default</strong>
+              <Flow styleConfig={{ direction: 'column' }}>
+                <strong>默认</strong>
                 <span>普通信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item" large>
-              <Flow>
-                <strong>Large</strong>
+              <Flow styleConfig={{ direction: 'column' }}>
+                <strong>宽松</strong>
                 <span>宽松信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item" xlarge>
-              <Flow>
-                <strong>XLarge</strong>
+              <Flow styleConfig={{ direction: 'column' }}>
+                <strong>大尺寸</strong>
                 <span>大尺寸信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item" soft>
-              <Flow>
-                <strong>Soft</strong>
+              <Flow styleConfig={{ direction: 'column' }}>
+                <strong>柔和</strong>
                 <span>低声量辅助卡片</span>
               </Flow>
             </Card>
             <Card class="card-example-item" solid>
-              <Flow>
-                <strong>Solid</strong>
+              <Flow styleConfig={{ direction: 'column' }}>
+                <strong>实体</strong>
                 <span>稳定对比的实体卡片</span>
               </Flow>
             </Card>

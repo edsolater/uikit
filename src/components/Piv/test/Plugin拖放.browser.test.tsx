@@ -162,7 +162,7 @@ test('两种能力同元素共存，drop 关闭注销并可重新接收外部文
   expect(host.firstElementChild).toBe(element)
 })
 
-test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
+test('if 显隐复用元素与已安装能力，作用域销毁才释放拖动', () => {
   const visible = createState(true)
   const host = document.body.appendChild(document.createElement('div'))
   dispose = render(() => {
@@ -170,6 +170,11 @@ test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
     return <Piv if={visible} is={capability} />
   }, host)
   const oldElement = host.firstElementChild as HTMLElement
+  Object.assign(oldElement, {
+    setPointerCapture() {},
+    releasePointerCapture() {},
+    hasPointerCapture: () => true,
+  })
   const pointer = () =>
     new PointerEvent('pointerdown', {
       bubbles: true,
@@ -180,12 +185,12 @@ test('if 隐藏释放能力，重建后旧元素不会响应指针', () => {
   visible.set(false)
   flush()
   expect(host.childElementCount).toBe(0)
-  oldElement.dispatchEvent(pointer())
+  expect(oldElement.isConnected).toBe(false)
   expect(oldElement.hasAttribute('data-interacting')).toBe(false)
   visible.set(true)
   flush()
   const current = host.firstElementChild as HTMLElement
-  expect(current).not.toBe(oldElement)
+  expect(current).toBe(oldElement)
   Object.assign(current, {
     setPointerCapture() {},
     releasePointerCapture() {},

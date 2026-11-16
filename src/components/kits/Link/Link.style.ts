@@ -5,6 +5,7 @@
  *
  * 导航反馈无需额外卡片皮肤。
  */
+import { componentName } from './Link.prop'
 import {
   rules,
   stateCondition,
@@ -20,7 +21,7 @@ const decoration = token('none', {
     [stateCondition('&[aria-current="page"]'), 'underline'],
   ],
 })
-rules('.Link', {
+rules(`.${componentName}`, {
   'color': token(() => brandColorTheme, {
     name: 'link-content-color',
     state: [

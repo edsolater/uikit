@@ -2,14 +2,15 @@
  * Button 的本地 Example。
  * 它只服务本地 HTML 验证，不参与组件库正式导出。
  */
-import { Button, type ButtonController } from './Button'
+import { Button } from './Button'
+import type { ButtonController } from './Button.prop'
 import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
 import { Card } from '../Card/Card'
 import { Article } from '../Article/Article'
-import { KitMarkerStructureViewTrigger } from '@/components/tools/KitMarker/KitMarkerStructureViewTrigger'
-import { Text } from '@/components/kits/Text/Text'
-import { Heading } from '@/components/kits/Heading/Heading'
+import { KitMarkerStructureViewTrigger } from '../../tools/KitMarker/KitMarkerStructureViewTrigger'
+import { Text } from '../Text/Text'
+import { Heading } from '../Heading/Heading'
 
 export function ButtonExample() {
   const [button, receiveButton] = createRef<ButtonController>()

@@ -6,9 +6,12 @@
  * 保证应用使用公开输入即可替换自己的表格结构。
  */
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { createState, flush, render, val } from '@/foundation'
+import { createState, flush, render, val, type Val } from '@/foundation'
 import { cssRoot } from '@/style-system'
+import { cssTokenName } from '@/style-system/token/css'
 import { Table } from './Table'
+import type { TableController, TableProps } from './Table.prop'
+import { tableColumnWidth, tableColumnMinWidth } from './Table.style'
 import { TableExample } from './Table.example'
 import '@/css/all-base.css'
 
@@ -27,6 +30,53 @@ afterEach(() => {
   style.remove()
 })
 
+test('替换或清空渲染器更新原表头和单元格，不重建行列', () => {
+  type Row = { name: string }
+  const row: Row = { name: '甲' }
+  let controller!: TableController<Row>
+  dispose = render(
+    () => (
+      <Table
+        data={[row]}
+        renderParts={{
+          tableHead: { name: () => '原表头' },
+          tableCell: { name: (value) => `原内容：${value}` },
+        }}
+        ref={(current) => {
+          controller = current
+        }}
+      />
+    ),
+    host,
+  )
+  const heading = host.querySelector('th')!
+  const bodyRow = host.querySelector('tbody tr')!
+  const cell = bodyRow.querySelector('td')!
+  expect(heading.textContent).toBe('原表头')
+  expect(cell.textContent).toBe('原内容：甲')
+
+  controller.props.renderParts.set({
+    tableHead: { name: (key) => `新表头：${key}` },
+    tableCell: {
+      name: (value, key, original, index) =>
+        `${key}:${value}:${original === row}:${index}`,
+    },
+  })
+  flush()
+  expect(host.querySelector('th')).toBe(heading)
+  expect(host.querySelector('tbody tr')).toBe(bodyRow)
+  expect(host.querySelector('td')).toBe(cell)
+  expect(heading.textContent).toBe('新表头：name')
+  expect(cell.textContent).toBe('name:甲:true:0')
+
+  controller.props.renderParts.set(undefined)
+  flush()
+  expect(host.querySelector('th')).toBe(heading)
+  expect(host.querySelector('td')).toBe(cell)
+  expect(heading.textContent).toBe('name')
+  expect(cell.textContent).toBe('甲')
+})
+
 test('空数据保留合成表头，原行与行号持续更新，提示和比例样式由表格承担', () => {
   type Row = { name: string; detail: { owner: string }; ratio: number | null }
   const first: Row = { name: '甲', detail: { owner: '小林' }, ratio: null }
@@ -43,8 +93,8 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
       <Table
         data={rows}
         keys={keys}
-        compact={compact}
-        columnMinWidths={{ summary: 240 }}
+        styleConfig={{ compact: compact, columnMinWidths: { summary: 240 } }}
+
         cellTitle={{ summary: (row, index) => `${row.detail.owner}:${index}` }}
         cellIntensity={{ ratio: (row) => row.ratio }}
         renderParts={{
@@ -208,7 +258,7 @@ test('默认列来自当前首行，示例实际呈现普通与合成列内容',
     () => (
       <Table
         data={[{ nested: '外表' }]}
-        columnMinWidths={{ nested: 240 }}
+        styleConfig={{ columnMinWidths: { nested: 240 } }}
         renderParts={{
           tableCell: { nested: () => <Table data={[{ value: '内表' }]} /> },
         }}
@@ -222,4 +272,86 @@ test('默认列来自当前首行，示例实际呈现普通与合成列内容',
   expect(host.querySelectorAll('table')).toHaveLength(2)
   expect(host.textContent).toContain('1. 接口整理 · 小林')
   expect(host.textContent).toContain('50%')
+})
+
+test('统一配置按列绑定动态宽度，清空恢复根默认且保持原表头与单元格', () => {
+  type Row = { name: string; ratio: number }
+  const nameWidth = createState<string | undefined>('180px')
+  const ratioWidth = createState('90px')
+  const minWidth = createState<number | undefined>(80)
+  const compact = createState(true)
+  const config = createState<Val<TableProps<Row>['styleConfig']>>({
+    compact,
+    columnWidths: { name: nameWidth, ratio: ratioWidth },
+    columnMinWidths: { name: minWidth, ratio: 40 },
+  })
+  let controller!: TableController<Row>
+  dispose = render(
+    () => (
+      <>
+        <Table
+          data={[{ name: '甲', ratio: 0.5 }]}
+          styleConfig={config}
+          ref={(current) => {
+            controller = current
+          }}
+        />
+        <Table data={[{ name: '默认', ratio: 0 }]} />
+      </>
+    ),
+    host,
+  )
+  const roots = host.querySelectorAll<HTMLElement>('.Table')
+  const heads = roots[0]!.querySelectorAll<HTMLTableCellElement>('th')
+  const cells = roots[0]!.querySelectorAll<HTMLTableCellElement>('td')
+  const defaultCell = roots[1]!.querySelector('td')!
+  const widthName = cssTokenName(tableColumnWidth)
+  const minWidthName = cssTokenName(tableColumnMinWidth)
+  const widthDefault = tableColumnWidth.default
+  const minWidthDefault = tableColumnMinWidth.default
+
+  expect(getComputedStyle(heads[0]!).getPropertyValue(widthName)).toBe('180px')
+  expect(getComputedStyle(cells[0]!).getPropertyValue(widthName)).toBe('180px')
+  expect(getComputedStyle(cells[1]!).getPropertyValue(widthName)).toBe('90px')
+  expect(getComputedStyle(cells[0]!).minWidth).toBe('80px')
+  expect(getComputedStyle(cells[1]!).minWidth).toBe('40px')
+  expect(getComputedStyle(cells[0]!).whiteSpace).toBe('nowrap')
+  expect(getComputedStyle(defaultCell).minWidth).toBe('0px')
+  expect(defaultCell.style.length).toBe(0)
+
+  nameWidth.set('220px')
+  minWidth.set(110)
+  compact.set(false)
+  flush()
+  expect(roots[0]!.querySelector('th')).toBe(heads[0])
+  expect(roots[0]!.querySelector('td')).toBe(cells[0])
+  expect(getComputedStyle(heads[0]!).getPropertyValue(widthName)).toBe('220px')
+  expect(getComputedStyle(cells[0]!).getPropertyValue(widthName)).toBe('220px')
+  expect(getComputedStyle(cells[1]!).getPropertyValue(widthName)).toBe('90px')
+  expect(getComputedStyle(cells[0]!).minWidth).toBe('110px')
+  expect(getComputedStyle(cells[0]!).whiteSpace).toBe('normal')
+
+  config.set({ columnWidths: { ratio: '130px' } })
+  flush()
+  expect(cells[0]!.style.getPropertyValue(widthName)).toBe('')
+  expect(cells[0]!.style.getPropertyValue(minWidthName)).toBe('')
+  expect(getComputedStyle(cells[0]!).getPropertyValue(widthName)).toBe('auto')
+  expect(getComputedStyle(cells[1]!).getPropertyValue(widthName)).toBe('130px')
+
+  controller.props.styleConfig.set({
+    columnWidths: { name: '75px' },
+    columnMinWidths: { name: 55 },
+  })
+  flush()
+  expect(getComputedStyle(cells[0]!).getPropertyValue(widthName)).toBe('75px')
+  expect(getComputedStyle(cells[0]!).minWidth).toBe('55px')
+  controller.props.styleConfig.set(undefined)
+  flush()
+  expect(cells[0]!.style.length).toBe(0)
+  expect(cells[1]!.style.length).toBe(0)
+  expect(getComputedStyle(cells[0]!).minWidth).toBe('0px')
+  expect(getComputedStyle(cells[1]!).getPropertyValue(widthName)).toBe('auto')
+  expect(roots[0]!.querySelector('td')).toBe(cells[0])
+  expect(tableColumnWidth.default).toBe(widthDefault)
+  expect(tableColumnMinWidth.default).toBe(minWidthDefault)
 })

@@ -6,6 +6,7 @@
  * 让输入选择规则与后续响应式读取保持在同一条 Source 链上。
  */
 import { derive } from '@/hooks'
+import { toRecord } from '@edsolater/fnkit'
 import { val, type Source } from '@/foundation'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 import { mapVariantProps } from './variantPropsMapping'
@@ -27,7 +28,7 @@ export interface VariantPropsGroup<
   Candidate extends string = string,
 > {
   groupName: GroupName
-  candidates: Candidate[]
+  candidates: readonly Candidate[]
 
   /**
    * 根据解析结果补充当前 Variant 的 Piv props，只在解析组件 props 时执行一次。
@@ -38,16 +39,18 @@ export interface VariantPropsGroup<
   ) => ShadowProps<any> | void
 }
 
-export type VariantDetails<Groups extends VariantPropsGroup[]> = {
+export type VariantDetails<Groups extends readonly VariantPropsGroup[]> = {
   [Group in Groups[number] as Group['groupName']]: Source<
     Group['candidates'][number] | undefined
   >
 }
 
 /** 分类解析结果；选中值保留原始语义，效果属性用于交给 Piv 渲染。 */
-export type VariantPropsParseResult<Groups extends VariantPropsGroup[]> = {
-  readonly effect: ShadowProps<any>[]
-  readonly details: VariantDetails<Groups>
+export type VariantPropsParseResult<
+  Groups extends readonly VariantPropsGroup[],
+> = {
+  effect: ShadowProps<any>[]
+  details: VariantDetails<Groups>
 }
 
 /**
@@ -76,7 +79,7 @@ export type VariantPropsParseResult<Groups extends VariantPropsGroup[]> = {
  * ```
  */
 export function createVariantPropsParser<
-  const Groups extends VariantPropsGroup[],
+  Groups extends readonly VariantPropsGroup[],
 >(
   groups: Groups,
   mapping?: Record<string, Record<string, string | undefined>>,
@@ -115,6 +118,21 @@ export function createVariantPropsParser<
   }
 }
 
+/**
+ * 根据共同候选声明建立缺省分组来源；每份来源在实例控制作用域中连接原候选。
+ * 不执行附加效果，仍由核心解析器完成节点映射和效果应用。
+ */
+export function createVariantPropSources(groups: readonly VariantPropsGroup[]) {
+  return toRecord(
+    groups,
+    (group) => group.groupName,
+    (group) => (input: object) => parseVariantGroup(input, group),
+  )
+}
+
+/**
+ * 读取一组声明的选中来源，显式分组接管候选，冲突沿用候选顺序并发出说明。
+ */
 function parseVariantGroup(
   props: object,
   group: VariantPropsGroup,
@@ -150,6 +168,9 @@ function parseVariantGroup(
   })
 }
 
-function formatCandidates(candidates: string[]): string {
+/**
+ * 将候选名称格式化为冲突说明中的可读列表。
+ */
+function formatCandidates(candidates: readonly string[]): string {
   return candidates.map((candidate) => `“${candidate}”`).join('、')
 }

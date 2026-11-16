@@ -1,169 +1,86 @@
 /**
- * Table 将对象记录按字段列或合成列展示为语义表格。
+ * Table 是对象记录的语义表格组件。
  *
- * 统一负责表格结构、横向滚动、密度和单元格表达，保留原始行供渲染器读取。
+ * 将对象记录呈现为语义表格，排序、筛选与分页由调用方组织。
  *
- * 调用方提供内容与比例，不接管表格 DOM；排序、筛选和分页由外部负责。
+ * 内容部件替换保留原始记录，不改变表格的原生结构。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { ControllerCollection } from '../../tools/controllerRegistry'
-import type { RefReceiver } from '@/hooks/createRef'
-import { tablePropsDefinition } from './Table.prop'
-import { For, stateView, val, type Source, type JSX } from '@/foundation'
-import { toJSX, type JSXable } from '../../tools/toJSX'
+import { For, stateView, val, type Source } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import './Table.style'
+import { kit, type KitComponent } from '../../tools/kit'
 
+import { toJSX, type JSXable } from '../../tools/toJSX'
+import { bindStyleConfig } from '../../tools/styleConfig'
+
+import {
+  tablePropDefinition,
+  componentName,
+  type TableProps,
+  type TableController,
+  type TableComponent,
+} from './Table.prop'
+import { tableStyleConfig, tableCellStyleConfig } from './Table.style'
+
+/** 运行实现读取同构记录，具体字段类型由公开泛型入口保持。 */
 type TableDataRow = Record<PropertyKey, unknown>
 
-/** 字段列保留字段值类型；合成列没有对应字段，值为 undefined。 */
-type TableCellValue<Row, ColumnKey> = ColumnKey extends keyof Row
-  ? Row[ColumnKey]
-  : undefined
-
 /**
- * Table 的输入数据与渲染部件配置。
+ * 按列维护原生表格结构，内容渲染器取得原始行和值。
  */
-export type TableProps<
-  Row = object,
-  ColumnKey extends PropertyKey = keyof Row,
-> = ComponentDescriptionProps & {
-  ref?: RefReceiver<TableController<Row, ColumnKey>>
-  /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */
-  data: Source<Row[]>
-
-  /** 显示列及顺序，允许合成列；未提供时使用第一行对象的全部字段。空数据仍保留显式列。 */
-  keys?: Source<ColumnKey[]>
-
-  /** 紧凑显示，所有表格内容保持单行。 */
-  compact?: Source<boolean | undefined>
-  /** 各列的最小宽度，单位为 px。 */
-  columnMinWidths?: Partial<Record<ColumnKey, number>>
-  /** 各列的原生CSS首选宽度；默认auto，内容最小宽度仍由表格布局负责。 */
-  columnWidths?: Partial<Record<ColumnKey, string>>
-  /** 各列的原生单元格提示，读取原始行和零基行号。 */
-  cellTitle?: Partial<
-    Record<ColumnKey, (row: Row, index: number) => string | undefined>
-  >
-  /** 各列的 0～1 着色强度；null 使用最低强度，不承担业务比例计算。 */
-  cellIntensity?: Partial<
-    Record<ColumnKey, (row: Row, index: number) => number | null>
-  >
-
-  /** 纯内容渲染器集合，不改变 Table 对语义表格结构的控制权。 */
-  renderParts?: {
-    /** 将当前单元格值和它所属的对象 key 渲染为单元格内容。 */
-    tableCell?: {
-      [Key in ColumnKey]?: (
-        value: TableCellValue<Row, Key>,
-        columnKey: Key,
-        row: Row,
-        index: number,
-      ) => JSXable
-    }
-
-    /** 将当前对象 key 渲染为表头内容。 */
-    tableHead?: {
-      [Key in ColumnKey]?: (columnKey: Key) => JSXable
-    }
-  }
-}
-
-/** 精确 Row 的数据、列与渲染部件指令入口。 */
-export type TableController<
-  Row = object,
-  ColumnKey extends PropertyKey = keyof Row,
-> = KitController<TableProps<Row, ColumnKey>, typeof tablePropsDefinition>
-
-/** 保留行与列的渲染泛型，集合仅公开与具体行类型无关的字段。 */
-interface TableComponent {
-  <Row, ColumnKey extends PropertyKey = keyof Row>(
-    props: TableProps<Row, ColumnKey>,
-  ): JSX.Element
-  controllers: ControllerCollection<{
-    props: Omit<
-      TableController<TableDataRow, PropertyKey>['props'],
-      | 'data'
-      | 'keys'
-      | 'renderParts'
-      | 'columnMinWidths'
-      | 'columnWidths'
-      | 'cellTitle'
-      | 'cellIntensity'
-    >
-  }>
-}
-
-/**
- * Table 是 UIKit 里“对象队列 -> 语义化表格结构”的基础组件节点。
- * 它接收同构对象数组，把对象 key 当作列来源，把每个对象当作一行。
- * `keys` 指定字段列或合成列；`renderParts` 只改写内容，不接管 table 结构。
- * `data` 和 `keys` 可以是普通值，也可以是继续传递的动态值，Table 会在最终渲染位置消费当前值。
- *
- * @example
- * <Table
- *   data={[
- *     { name: '蓝色', preview: 'oklch(60% 0.15 250)' },
- *     { name: '暖灰', preview: 'oklch(80% 0.02 60)' },
- *   ]}
- *   keys={['name', 'preview']}
- *   renderParts={{
- *     tableHead: {
- *       name: () => '名称',
- *       preview: () => '预览',
- *     },
- *     tableCell: {
- *       preview: (value) => <Piv style={{ background: String(value) }} />,
- *     },
- *   }}
- * />
- */
-// kit 原样包装泛型核心；这里恢复Row 与列及渲染器的调用关联。
-export const Table = kit<
+const tableComponent: KitComponent<
   TableProps<TableDataRow, PropertyKey>,
-  typeof tablePropsDefinition
->(
+  TableController<TableDataRow, PropertyKey>
+> = kit(
   {
-    name: 'Table',
+    name: componentName,
     description: '按列展示记录',
-    propsDefinition: tablePropsDefinition,
+    propDefinition: tablePropDefinition,
+    styleConfig: tableStyleConfig,
   },
-  <Row, ColumnKey extends PropertyKey = keyof Row>(
-    props: TableProps<Row, ColumnKey>,
-  ) => {
+  (props, { name }) => {
     // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
     const columnKeys = stateView(props.data).map((data) =>
-      props.keys
-        ? val(props.keys)
-        : (pickTableColumnKeys(data) as unknown as ColumnKey[]),
+      props.keys ? val(props.keys) : pickTableColumnKeys(data),
     )
 
+    /**
+     * 将当前列的配置来源与业务强度交给单元格样式解释，保留来源的持续读取。
+     */
+    const bindCellStyle = (
+      columnKey: PropertyKey,
+      intensity?: Source<number | null | undefined>,
+    ) =>
+      bindStyleConfig(tableCellStyleConfig, {
+        get styleConfig() {
+          const config = val(props.styleConfig)
+          return {
+            width: val(config?.columnWidths)?.[columnKey],
+            minWidth: val(config?.columnMinWidths)?.[columnKey],
+            intensity,
+          }
+        },
+      })
+
     return (
-      <Piv class="Table">
+      <Piv shadowProps={props} class={name}>
         <Piv as="table">
           <Piv as="thead">
             <Piv as="tr">
               <For each={val(columnKeys)}>
-                {(columnKey) => (
-                  <Piv
-                    as="th"
-                    htmlProps={{ 'data-compact': props.compact }}
-                    style={{
-                      '--table-column-width':
-                        props.columnWidths?.[columnKey] ?? 'auto',
-                      '--table-column-min-width':
-                        props.columnMinWidths?.[columnKey] === undefined
-                          ? '0px'
-                          : `${props.columnMinWidths[columnKey]}px`,
-                    }}
-                  >
-                    {toJSX(
-                      props.renderParts?.tableHead?.[columnKey]?.(columnKey) ??
-                        columnKey,
-                    )}
-                  </Piv>
-                )}
+                {(columnKey) => {
+                  // 列结构保持稳定，渲染器替换在内容消费时读取。
+                  const headContent = stateView(() => {
+                    const renderHead = props.renderParts?.tableHead?.[
+                      columnKey
+                    ] as ((key: PropertyKey) => JSXable) | undefined
+                    return toJSX(renderHead?.(columnKey) ?? columnKey)
+                  })
+                  return (
+                    <Piv as="th" shadowProps={bindCellStyle(columnKey)}>
+                      {headContent}
+                    </Piv>
+                  )
+                }}
               </For>
             </Piv>
           </Piv>
@@ -173,43 +90,43 @@ export const Table = kit<
                 <Piv as="tr">
                   <For each={val(columnKeys)}>
                     {(columnKey) => {
-                      const intensity = stateView(
-                        () =>
-                          props.cellIntensity?.[columnKey]?.(row, index()) ?? 0,
+                      // 同一行列的内容持续读取当前渲染器，保留 key 与值的分发关联。
+                      const cellContent = stateView(() => {
+                        const renderCell = props.renderParts?.tableCell?.[
+                          columnKey
+                        ] as
+                          | ((
+                              value: unknown,
+                              key: PropertyKey,
+                              row: TableDataRow,
+                              index: number,
+                            ) => JSXable)
+                          | undefined
+                        return toJSX(
+                          renderCell?.(
+                            row[columnKey],
+                            columnKey,
+                            row,
+                            index(),
+                          ) ?? (row[columnKey] as JSXable),
+                        )
+                      })
+                      const intensity = stateView(() =>
+                        props.cellIntensity?.[columnKey]?.(row, index()),
                       )
                       return (
                         <Piv
                           as="td"
+                          shadowProps={bindCellStyle(columnKey, intensity)}
                           htmlProps={{
                             'attr:title': () =>
                               props.cellTitle?.[columnKey]?.(row, index()),
-                            'data-intensity':
-                              !!props.cellIntensity?.[columnKey],
-                            'data-compact': props.compact,
-                          }}
-                          style={{
-                            '--table-column-width':
-                              props.columnWidths?.[columnKey] ?? 'auto',
-                            '--table-column-min-width':
-                              props.columnMinWidths?.[columnKey] === undefined
-                                ? '0px'
-                                : `${props.columnMinWidths[columnKey]}px`,
-                            '--table-cell-intensity': intensity,
+                            get 'data-intensity'() {
+                              return !!props.cellIntensity?.[columnKey]
+                            },
                           }}
                         >
-                          {toJSX(
-                            props.renderParts?.tableCell?.[columnKey]?.(
-                              row[
-                                columnKey as unknown as keyof Row
-                              ] as TableCellValue<Row, typeof columnKey>,
-                              columnKey,
-                              row,
-                              index(),
-                            ) ??
-                              (row[
-                                columnKey as unknown as keyof Row
-                              ] as JSXable),
-                          )}
+                          {cellContent}
                         </Piv>
                       )
                     }}
@@ -222,7 +139,12 @@ export const Table = kit<
       </Piv>
     )
   },
-) as TableComponent
+)
+
+/**
+ * 公开记录表格，保留行、列、内容渲染器及 ref 的关联。
+ */
+export const Table: TableComponent = tableComponent as TableComponent
 
 /**
  * 从第一行对象读取列 key。

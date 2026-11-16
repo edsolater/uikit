@@ -36,6 +36,8 @@ type HTMLPropsRecord<Tag extends PivTag = 'div'> = {
   [key: `attr:${string}`]: HTMLPropAtom<HTMLPropPrimitive> | undefined
   [key: `prop:${string}`]: HTMLPropAtom<HTMLPropPrimitive> | undefined
   [key: string]: HTMLPropAtom<unknown> | undefined
+} & {
+  [Key in ReservedHTMLPropKey]?: never
 }
 
 /** 一份完整 HTML props 声明；外层 Source 可以整体替换记录或记录列表。 */

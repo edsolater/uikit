@@ -68,15 +68,31 @@ tooltip 插件继续负责简短辅助信息的悬停／焦点／Escape、延迟
 
 ## kit 组件控制与样式
 
-组件 ref 未接入时直接执行原 Button 核心；接入时才走通用 Component Props Director，关系见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。`components/tools/componentPropsDirector.ts` 按运行时定义为缺省来源在构建时建立字段State，其余字段首次读取时缓存State，工厂与State统一归组件作用域；按state-source-view/state-value-view/state-untracked三种视图输出；only-through-prop字段直接读取上游，不创建State或Controller字段，ref采用此模式。字段描述与类型同归属：Dode提供DOM字段、Piv组合自身来源描述、KitMarker提供说明描述；Button.prop.ts按继承层次spread组成完整字段表，只定义自身字段及分组默认来源；状态解析器通过 `createState(() => props[statusName])` 在创建时连接来源，不用 Effect 复制状态。`components/tools/kit.ts` 用 `kit(definition, core)` 统一定义入口，name 是 Marker 与核心 Context 的共同身份，description 提供默认说明，propsDefinition 复用完整字段定义。kit 管理 ref 门控、原 Director、登记、换接及唯一透明 Marker；Button 核心只保留分类、状态和 Piv JSX，Button.controllers 提供当前受控实例集合。所有组件 Controller 的 `.props` 统一提供输入干预；Context 的 `exposeController` 接入组件自己的顶层能力，没有自定义能力时无需公开空对象。Context 的 name 与可解构 onCleanup 属于实例能力，清理绑定原 owner；它不参与既有 KitContext 祖先数据，也不要求 App 根。
+### 声明与组件创建
 
-Text、Label 与 Help 通过 kit 创建，分别公开自身 Controller 和 .controllers。Text.prop.ts 复用 Piv 与说明定义，移除 as，block/p 保留创建时选择；Text 的 marker getter 保留说明真值控制和 descriptionOnly。Label.prop.ts 只定义关联目标、标题、提示内容与说明字段，不继承 Piv 的额外能力。Label 核心拥有字段标题与 Help 组合，Help 拥有问号及其样式，提示插件继续管理浮层生命周期。各组件的样式归同名 .style.ts，不提供额外 Token 集合。
+公开 Kit 组件先声明 Props、字段协议与 Controller，再以 `KitComponent<Props, Controller>` 约束实现。`KitProps<Config, Controller, Tag>` 聚合 Piv、用途说明、样式输入与组件 ref；固定语义根按职责收窄或移除字段。`KitPropDefinition<OwnDefinition>` 只接收自有模式，内部覆盖同名公共模式；公开 `kitPropDefinition` 完整组合 Dode/Piv、KitMarker 与 Kit 自有规则，私有 `kitCommonPropDefinition` 只拥有 ref/styleConfig。
 
-公开的 kits 组件已统一通过 kit 创建；Piv、Dode、KitMarker、StructureViewOverlay 及定位开关属于渲染或控制基础设施，不递归接入。定位开关继续使用 StructureViewControl 跳过自身标注。组件的 .prop.ts 描述原 Props，按继承关系复用拥有者字段；Card 直接复用 Board 的字段表与承载 renderer，两者分别拥有 kit 身份与实例集合。InputValidity 的字段描述与原有效性能力同归属，Input 样式由自身 Style System 定义承接。
+每个组件的 `.prop.ts` 聚合 Props、字段协议类型和值、Controller 声明及候选事实，相关定义保持紧邻。`.style.ts` 聚合 StyleConfig 类型、箭头解释函数、Token 与规则；`.tsx` 负责装配、渲染和实际业务能力。`components/tools/kit.ts` 中 KitOptions 与 kit 属于同一组件定义与创建板块。PropsOf、ControllerOf、旧 Inputs、自动输入补全及 directorOptions 已退出，不保留旧签名适配。
 
-Board、Card、Loop、Table 保留泛型调用及精确实例 ref；Article 固定原生 article，保留自身精确实例 ref。TypeScript 包装丢失的调用关联只在组件定义处作一次类型连接，不增加运行包装。异构实例的 `.controllers.props` 集合只公开共同安全字段：Board/Card 集合不暴露 Tag 相关节点与插件输入，Loop 集合不暴露 each，Table 集合不暴露 data/keys/renderParts；这些字段通过精确实例 ref 操作；Loop.children 与 Field.children 仅由 Props 提供构建工厂，不属于 Controller。Article 属于[语义组件](docs/guide/语义组件.md)，仅提供独立正文身份与首尾块外边距裁剪，不提供容器皮肤、as 或 Carrier 透传。核心直接使用固定 as 的 Piv，字段表移除继承的 as。普通阅读卡片用 `<Card><Article>正文</Article></Card>` 表达视觉容器承载独立正文；正文内的资料卡片也可反向组合，含义判断见[组件嵌套](docs/guide/组件嵌套.md)。两个节点各自拥有 Marker、样式和实例引用；Card 不提供 is 内容模式。Popover 从返回对象的 `controller` 取得 `PopoverController`，其 trigger／body 分别提供 `PopoverTriggerController`／`PopoverBodyController`，不属于 kit 组件的 `.props` 输入干预协议。Input 顶层公开最终 invalid 状态，输入干预继续经过原有效性规则。
+`kit(options, render)` 固定身份、默认用途说明、完整字段表及可选样式解释。已声明的 KitComponent 为核心 props 和 Context 提供上下文，核心参数不再标注类型。name 与 Marker 共用组件身份，exposeController 接收已声明业务成员，onCleanup 绑定当前实例 owner；这些能力不依赖祖先 KitContext 或 App 根。
 
-夹层方案状态见[Button 实例与整体控制入口](docs/plans/261030_Button实例与整体控制入口.md)。统一 ShadowProps 与创建前 Plugin 展开已由 [is 声明解析与 Plugin 调用协议统一](docs/plans/261105_is声明解析与Plugin调用协议统一.md) 落实，Piv 的结构声明与字段声明使用同一套补充声明契约。
+### 输入控制与实例生命周期
+
+创建时没有组件 ref，核心直接消费输入；只有初始 ref 才启用 Component Props Director 并进入 `.controllers`。Director 按完整字段协议交付 Source、跟踪当前值、不跟踪当前值或原样透传四种视图。可干预字段共用一份 State，工厂与 State 归实例作用域，不用 Effect 复制值。替换 ref 交付同一个 Controller，移除 ref 不改变受控模式，卸载才退出集合。完整契约见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。
+
+业务核心提供自身能力后，kit 组合通用 `.props`、登记并交付 Controller；没有业务成员时无需公开空对象。Button 状态解析器直接连接输入来源，Input 有效性能力沿原规则产生最终 invalid 状态。Button、Board、Card 通过 variantGroups 复用候选声明，由 kit 统一连接缺省分组与候选省略。
+
+Board、Card、Loop、Table 保留泛型调用与精确实例 ref；异构 `.controllers.props` 只提供共同安全字段，原生 Tag 相关输入、列表 each、表格行列和单元格配置留给精确 ref。Loop.children 与 Field.children 是只由 Props 提供的构建工厂。Card 复用 Board 的字段与承载渲染行为，两者各有 Marker 和实例集合；Article 固定 article 语义根，与 Card 组合时保留各自实例，见[组件嵌套](docs/guide/组件嵌套.md)。
+
+### 根声明、样式与组件身份
+
+kit 的透明 KitMarker 建立身份与用途边界，`Piv/elementDeclarations.ts` 承接同根组合的实例样式与原生属性声明。组件把公共节点输入沿 shadowProps 交给真实根；Piv/Dode 消费后在子内容边界终止传递，不额外增加容器 DOM。Piv、Dode、KitMarker、StructureViewOverlay 与定位开关属于基础设施，不递归接入 kit。
+
+StyleConfig 独立声明配置值域，解释函数仅接受该契约校验。kit 同步调用解释函数，Token.set 收集当前实例的 CSS 标量覆盖，Piv 应用与清理；共享 Token 默认值保持不变。无配置时直接采用默认效果，无配置字段的组件不创建空解释对象。Flow 的方向与排列差异、Grid 的列结构均归 `.style.ts`，原生 style 由 Piv 保留为不推荐的底层逃生舱。
+
+Text 的纯文字及标签选择、Heading 的标题层级与定位 ID、Label 的字段关联和 Help 组合由各自组件维护。组件样式归同名 `.style.ts`，父组件不接管子组件外观。Popover 等 Plugin 通过能力结果的 controller 使用，实际 Button/Card 继续拥有组件 Controller、Marker 与样式。
+
+拖放在真实 DOM 绑定时创建同步 Pointer 会话和接收目标登记，指针默认行为、捕获及材料交付保持在原事件事务内；节点绑定退出时取消或注销。Top Layer 同样通过 domRef 接入节点，挂载后提升并随绑定退出恢复，不通过异步操作代理延后真实事件。
 
 FNKit 的 [createPathCollector](../fnkit/src/structure-path-collector.ts) 单独负责无限路径收集及读取、调用委托，不保存业务节点数据。[createVirtualBatchAccessor](../fnkit/src/collection-virtual-batch-accessor.ts) 直接接收 Iterable 集合，消费路径并通过 getByPath 读取成员，负责数组接口、所属对象的 this 及固定调用结果。UIKit 从 `@edsolater/fnkit` 公开入口导入，注册器直接传入当前 Controller 的 Set；不维护临时副本或 getter 适配。
 

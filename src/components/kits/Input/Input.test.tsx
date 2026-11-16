@@ -4,7 +4,8 @@ import { flush } from 'solid-js'
 import { render } from '@solidjs/web'
 import { afterEach, describe, expect, test } from 'vitest'
 import { createState, val } from '@/foundation'
-import { Input, type InputController } from './Input'
+import { Input } from './Input'
+import type { InputController } from './Input.prop'
 
 let dispose: (() => void) | undefined
 

@@ -5,34 +5,26 @@
  *
  * 将比值语义与数字格式分别交给负责的组件。
  */
-import { Show, stateView, val, type Source } from '@/foundation'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
+import { Show, stateView, val } from '@/foundation'
 import { Numeric } from '../Numeric/Numeric'
 import { Text } from '../Text/Text'
 import { Piv } from '../../Piv/Piv'
-import { percentPropsDefinition } from './Percent.prop'
 
-/** 比例的分子、分母及数字有效位数；组件负责将比值换算为百分数。 */
-export type PercentProps = ComponentDescriptionProps & {
-  numerator?: Source<number | null | undefined>
-  denominator?: Source<number | null | undefined>
-  significantDigits?: Source<number | undefined>
-  ref?: RefReceiver<PercentController>
-}
-/** 比例及数字格式输入的控制入口。 */
-export type PercentController = KitController<
-  PercentProps,
-  typeof percentPropsDefinition
->
+import { kit, type KitComponent } from '../../tools/kit'
+
+import {
+  componentName,
+  percentPropDefinition,
+  type PercentProps,
+  type PercentController,
+} from './Percent.prop'
 
 /**
  * 将分子与分母的比值呈现为百分数；缺值、非有限数或零分母整项显示斜杠。
  */
-export const Percent = kit(
-  { name: 'Percent', propsDefinition: percentPropsDefinition },
-  (props: PercentProps) => {
+export const Percent: KitComponent<PercentProps, PercentController> = kit(
+  { name: componentName, propDefinition: percentPropDefinition },
+  (props, { name }) => {
     const percentage = stateView(() => {
       const numerator = val(props.numerator),
         denominator = val(props.denominator)
@@ -47,7 +39,7 @@ export const Percent = kit(
       return (numerator / denominator) * 100
     })
     return (
-      <Piv as="span">
+      <Piv as="span" shadowProps={props} class={name}>
         <Show when={val(percentage) !== undefined} fallback={<Text>/</Text>}>
           <Numeric
             value={percentage}

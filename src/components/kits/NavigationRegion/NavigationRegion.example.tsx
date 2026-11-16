@@ -5,7 +5,7 @@
  *
  * 让使用者区分区域地标和链接导航各自的职责。
  */
-import { Flow, Heading, NavigationRegion, Link, Text } from '@/components'
+import { Flow, Heading, NavigationRegion, Link, Text } from '../..'
 /**
  * 用章节链接定位同页内容，呈现具名导航区域。
  */
@@ -13,7 +13,7 @@ export function NavigationRegionExample() {
   const purpose = '用途',
     boundary = '边界'
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <NavigationRegion label="示例章节">
         <Link href={'#' + encodeURIComponent(purpose)}>{purpose}</Link>
         <Link href={'#' + encodeURIComponent(boundary)}>{boundary}</Link>

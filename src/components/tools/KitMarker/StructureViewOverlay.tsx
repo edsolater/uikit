@@ -14,7 +14,7 @@ import {
   For,
 } from '@/foundation'
 import { useBrowserAnimationFrame } from '@/hooks/useBrowserAnimationFrame'
-import { Piv } from '@/components/Piv/Piv'
+import { Piv } from '../../Piv/Piv'
 import { componentBoundaries, type ComponentBoundary } from './KitMarker'
 import './StructureViewOverlay.style'
 

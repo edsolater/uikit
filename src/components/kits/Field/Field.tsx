@@ -5,40 +5,33 @@
  *
  * 字段关联与编排留在组件，输入值仍由调用方拥有。
  */
-import { kit, type KitController } from '../../tools/kit'
-import type { RefReceiver } from '@/hooks/createRef'
-import { fieldPropsDefinition } from './Field.prop'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { type Source, type JSX } from '@/foundation'
 import { Flow } from '../Flow/Flow'
-import { Label, type LabelProps } from '../Label/Label'
-/** Field 的声明输入；初始状态通过 Props 表达。 */
-export type FieldProps = ComponentDescriptionProps & {
-  ref?: RefReceiver<FieldController>
-  label: Source<string>
-  tooltip?: LabelProps['tooltip']
-  children: (id: string) => JSX.Element
-}
-
-/** Field 自有 Props 的指令式入口；ref 只从上游交付。 */
-export type FieldController = KitController<
-  FieldProps,
-  typeof fieldPropsDefinition
->
+import { Label } from '../Label/Label'
+import { kit, type KitComponent } from '../../tools/kit'
+import {
+  componentName,
+  fieldPropDefinition,
+  type FieldProps,
+  type FieldController,
+} from './Field.prop'
 
 /**
  * 关联字段标题与单个控件。
  */
-export const Field = kit(
+export const Field: KitComponent<FieldProps, FieldController> = kit(
   {
-    name: 'Field',
+    name: componentName,
     description: '关联字段标题与单个控件',
-    propsDefinition: fieldPropsDefinition,
+    propDefinition: fieldPropDefinition,
   },
-  (props: FieldProps) => {
+  (props, { name }) => {
     const id = crypto.randomUUID()
     return (
-      <Flow>
+      <Flow
+        shadowProps={props}
+        class={name}
+        styleConfig={{ direction: 'column' }}
+      >
         <Label for={id} tooltip={props.tooltip}>
           {props.label}
         </Label>

@@ -14,7 +14,6 @@ import {
   isNumber,
   isUndefined,
   isFunction,
-  result,
 } from '@edsolater/fnkit'
 import {
   conditionAddressKey,
@@ -107,7 +106,8 @@ function visitContent(
       }
       if (isFunction(input) && !isJSSContent(input)) {
         if (!record.notified) {
-          record.content = result<unknown>(input)
+          // 只求值当前一层；返回的生产函数继续走同一访问链，保留已有循环检测。
+          record.content = input()
           record.notified = true
         }
         return visit(record.content, depth + 1)

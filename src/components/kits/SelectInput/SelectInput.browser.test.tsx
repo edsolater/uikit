@@ -1,8 +1,8 @@
 /** 可搜索选择使用真实输入与键盘交互。 */
-import { expect, test } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from '@solidjs/web'
-import { createState, val } from '@/foundation'
+import { createState, flush, val } from '@/foundation'
 import { FormField } from '../FormField/FormField'
 import { Label } from '../Label/Label'
 import { SelectInput } from './SelectInput'
@@ -70,6 +70,67 @@ test('点击展开、键盘选择和取消草稿，并限制标签数量', async
     await userEvent.unhover(input)
     value.set('外部更新')
     await expect.poll(() => input.value).toBe('外部更新')
+  } finally {
+    dispose()
+    host.remove()
+    style.remove()
+  }
+})
+
+test('候选缩短后活动项仍指向现有选项，Enter选择同一项，空列表不声明活动项', async () => {
+  const host = document.body.appendChild(document.createElement('main'))
+  const style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  const options = createState([
+    { value: 'one', label: '一' },
+    { value: 'two', label: '二' },
+    { value: 'three', label: '三' },
+  ])
+  const selected = vi.fn()
+  const dispose = render(
+    () => (
+      <SelectInput
+        value=""
+        options={options}
+        onQuery={() => {}}
+        onSelect={selected}
+      />
+    ),
+    host,
+  )
+  try {
+    const input = host.querySelector<HTMLInputElement>('input')!
+    await userEvent.click(input)
+    await expect
+      .poll(() =>
+        host.querySelector('[role=listbox]')!.matches(':popover-open'),
+      )
+      .toBe(true)
+    expect(document.getElementById(input.getAttribute('aria-controls')!)).toBe(
+      host.querySelector('[role=listbox]'),
+    )
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}')
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      host.querySelectorAll('[role=option]')[2]!.id,
+    )
+    expect(
+      document.getElementById(input.getAttribute('aria-activedescendant')!),
+    ).toBe(host.querySelectorAll('[role=option]')[2])
+    const remaining = { value: 'only', label: '仅剩' }
+    options.set([remaining])
+    flush()
+    const current = host.querySelector('[role=option]')!
+    expect(input.getAttribute('aria-activedescendant')).toBe(current.id)
+    expect(
+      document.getElementById(input.getAttribute('aria-activedescendant')!),
+    ).toBe(current)
+    expect(current.getAttribute('aria-selected')).toBe('true')
+    await userEvent.keyboard('{Enter}')
+    expect(selected).toHaveBeenCalledExactlyOnceWith(remaining)
+    options.set([])
+    flush()
+    expect(input.hasAttribute('aria-activedescendant')).toBe(false)
   } finally {
     dispose()
     host.remove()

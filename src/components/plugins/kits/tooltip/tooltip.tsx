@@ -14,14 +14,15 @@ import {
   withDefault,
   val,
 } from '@/foundation'
-import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
-import { createPivStructure } from '@/components/Piv/plugin/helpers'
-import { Piv, type PivProps } from '../../../Piv/Piv'
+import { createInactivePlugin } from '../../tools/createInactivePlugin'
+import { createPivStructure } from '../../../Piv/plugin/helpers'
+import { Piv } from '../../../Piv/Piv'
+import type { PivProps } from '../../../Piv/Piv'
 import {
   createPopoverPlugins,
   type PopoverBodyOptions,
   type PopoverController,
-} from '@/components/plugins/kits/Popover/popover'
+} from '../Popover/popover'
 import './tooltip.style'
 
 /** 字符串或组件模板及其Source；内容含义由调用方决定。 */

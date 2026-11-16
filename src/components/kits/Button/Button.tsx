@@ -8,111 +8,24 @@
  * 组件选择规则见 [Button 设计规格](./Button.spec.md)。
  * 稳定语义见 [Button 基础组件 Guide](../../../../docs/guide/Button基础组件.md)。
  */
-import type { Source } from '@/foundation'
-import type { RefReceiver } from '@/hooks/createRef'
-import type { ComponentDescriptionProps } from '../../tools/KitMarker/KitMarker'
-import { kit, type KitController } from '../../tools/kit'
+import { kit, type KitComponent } from '../../tools/kit'
+import { val } from '@/foundation'
 import { clickable } from '../../plugins/kits/clickable/clickable'
-import { Piv, type PivProps } from '../../Piv/Piv'
-import type { EventListenerInput } from '../../Piv/on/handleOn'
+import { Piv } from '../../Piv/Piv'
+import { createVariantPropsParser } from '../utils/parseVariantProps'
+import { createStatusPropsParser } from '../utils/parseStatusProps'
 import {
-  createVariantPropsParser,
-  type VariantProps,
-} from '../utils/parseVariantProps'
-import {
-  createStatusPropsParser,
-  type StatusProps,
-  type StatusController,
-} from '../utils/parseStatusProps'
-import {
-  buttonPropsDefinition,
+  componentName,
+  buttonPropDefinition,
   buttonStatusCandidates,
   buttonVariantGroups,
-  getButtonPropsDirectorOptions,
+  type ButtonProps,
+  type ButtonController,
 } from './Button.prop'
 import { buttonMapping } from './Button.mapping'
 import * as buttonStyle from './Button.style'
 
-/**
- * 按钮的外观 Variant Props。
- *
- * - filled、outlined、plain：填充、轮廓、无边界形式，由 Button 样式消费。
- * - undefined：未指定外观。
- *
- * 外观确定时优先声明 filled、outlined 或 plain；动态选择使用 appearance。
- * appearance 一旦声明便接管整个外观分组，undefined 不回落到确定描述词。
- */
-export type ButtonAppearance = 'filled' | 'outlined' | 'plain'
-
-/**
- * 强调程度独立于外观和语气：soft 降低整体存在感，strong 提高，省略保持普通程度。
- * soft/strong 是确定描述词，emphasis 用于动态选择。
- */
-export type ButtonEmphasis = 'soft' | 'strong'
-
-/**
- * 按钮的动作语气 Variant Props。
- *
- * - danger：破坏性动作。
- * - undefined：普通语气。
- *
- * 破坏性动作声明 danger；动态选择使用 tone。
- * tone 一旦声明便接管整个动作语气分组，即使当前值是 undefined 也不会回落到确定描述词。
- */
-export type ButtonTone = 'danger'
-
-/**
- * 按钮的物理尺寸 Variant Props。
- *
- * - small：紧凑，适用于工具栏或空间受限的场景。
- * - large：需要更宽松尺度或更大命中面积。
- * - xlarge：需要更大的命中面积。
- * - undefined：默认尺度，适用于大多数场景。
- *
- * 尺寸确定时优先声明 small、large 或 xlarge；只有尺寸会在多个 Variant 之间变化时才使用 size。
- * size 一旦声明便接管整个尺寸分组，即使当前值是 undefined 也不会回落到确定描述词。
- */
-export type ButtonSize = 'small' | 'large' | 'xlarge'
-
-/**
- * 按钮可以同时处于 loading 和 disabled 状态。
- * 输入通过 Props 声明；运行期可通过 Controller.props 干预输入，或使用顶层组件状态操作。
- */
-export type ButtonStatus = 'loading' | 'disabled'
-
-/** 顶层公开按钮状态能力，props 提供通用输入干预；原生元素通过独立的 domRef 取得。 */
-export type ButtonController = KitController<
-  ButtonProps,
-  typeof buttonPropsDefinition,
-  StatusController<ButtonStatus>
->
-
-/** 动作内容、外观分类和状态输入，原生节点声明沿用 Piv 契约。 */
-export interface ButtonProps
-  extends
-    PivProps<'button'>,
-    ComponentDescriptionProps,
-    VariantProps<'appearance', ButtonAppearance>,
-    VariantProps<'emphasis', ButtonEmphasis>,
-    VariantProps<'tone', ButtonTone>,
-    VariantProps<'size', ButtonSize>,
-    StatusProps<ButtonStatus> {
-  /** 接收此实例的 Controller，可返回组件销毁时的清理动作。 */
-  ref?: RefReceiver<ButtonController>
-  /**
-   * 动作名。
-   *
-   * name 描述“这个按钮动作是什么”，用于可访问性、调试和纯图形按钮的动作识别。
-   * 这个字段站在界面动作语义上，不兼容原生表单 name 语义。
-   * 它不替代 children，也不表示可见文案；普通文本按钮应优先把可见内容写进 children。
-   * 当 children 只有图标或其他非文本内容时，用 name 提供 aria-label。
-   * 原生 button 的 name attribute 通过 htmlProps.name 传入，不使用这个字段。
-   */
-  name?: Source<string | undefined>
-
-  /** 用户执行这个按钮动作时触发。Button 在内部把它翻译成 Piv 的 click 事件声明。 */
-  onClick?: EventListenerInput<'click'>
-}
+const { buttonStyleConfig, ...buttonStyleTokens } = buttonStyle
 
 /**
  * 将按钮的外观分类转换为节点声明，保留同组描述的互斥关系。
@@ -126,7 +39,7 @@ const parseVariantProps = createVariantPropsParser(
  * 将按钮状态映射为禁用和忙碌属性，并保留可操作的状态协议。
  */
 const parseStatusProps = createStatusPropsParser({
-  candidates: [...buttonStatusCandidates],
+  candidates: buttonStatusCandidates,
   effect: ({ loading, disabled }) => ({
     htmlProps: {
       disabled,
@@ -139,27 +52,34 @@ const parseStatusProps = createStatusPropsParser({
  * 呈现可执行动作，按外观和状态输入更新按钮。
  * 用户执行动作时交付 onClick，原生节点声明沿用 Piv 契约。
  */
-export const Button = kit(
+export const Button: KitComponent<
+  ButtonProps,
+  ButtonController,
+  typeof buttonStyleTokens
+> = kit(
   {
-    name: 'Button',
+    name: componentName,
     description: '执行动作',
-    propsDefinition: buttonPropsDefinition,
-    directorOptions: getButtonPropsDirectorOptions,
-    styleTokens: buttonStyle,
+    propDefinition: buttonPropDefinition,
+    variantGroups: buttonVariantGroups,
+    styleTokens: buttonStyleTokens,
+    styleConfig: buttonStyleConfig,
   },
-  (props: ButtonProps, context) => {
+  (props, { name, exposeController }) => {
     const { effect: variantEffectProps } = parseVariantProps(props)
     const { effect: statusEffectProps, controller } = parseStatusProps(props)
-    context.exposeController(controller)
+    exposeController(controller)
 
     return (
       <Piv
         as="button"
         shadowProps={[props, ...variantEffectProps, ...statusEffectProps]}
-        class="Button"
-        is={[clickable({ componentName: context.name })]}
+        class={name}
+        is={[clickable({ componentName: name })]}
         htmlProps={{
-          'aria-label': props.name,
+          get 'aria-label'() {
+            return val(props.name)
+          },
         }}
         on={{ click: props.onClick }}
       >

@@ -17,6 +17,12 @@ spacing 没有名称、状态、地址、注册，也没有被 modify，消费�
 
 Token 对外都是可坍缩的内容，不要求调用者先区分直接值与 CSS variable 身份。最后的输出路径由内部 _kind 决定，_kind 可对外读取，调用方按约定不修改。
 
+## 实例配置中的 set
+
+组件的 styleConfig 字段用同步解释函数声明输入，例如 `gap: (value: string) => spacing.set(value)`。应用配置值域由独立类型声明，解释函数以 satisfies StyleConfig<Config> 校验；kit 包装 Source 输入并在当前实例作用域调用；Token.set 只写本次实例的 CSS 字符串、数字或 undefined，不改共享 default/state，也不是作用域外的全局修改入口。目标 Token 必须具名并在样式规则中消费。
+
+字段省略或值为 undefined 时不调用解释函数。每次重新收集本次写入，未再写入的目标由 Piv 撤销覆盖并恢复默认，整份配置、字段来源与卸载均沿用原消费链；异步函数不属于这个同步解释协议。
+
 ## 继承定义与引用内容
 
 ```ts

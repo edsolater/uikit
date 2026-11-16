@@ -1,7 +1,14 @@
-/** 标题与问号在行内排布；原生浮层独立定位，不占用字段高度。 */
+/**
+ * Label 的字段标题与帮助入口样式。
+ *
+ * 维持标题和问号的行内对齐、间隔及文字层次，并响应结构查看。
+ *
+ * 让可见标题在字段组合中紧凑呈现，提示浮层独立定位。
+ */
+import { componentName } from './Label.prop'
 import { rules } from '@/style-system'
 
-rules('.Label', {
+rules(`.${componentName}`, {
   'display': 'inline-flex',
   'align-items': 'center',
   'gap': '4px',
@@ -11,7 +18,10 @@ rules('.Label', {
   'color': '#64748b',
   'min-width': 0,
 })
-rules(['.Label', '> label'], { cursor: 'pointer' })
-rules('body:has(.StructureViewOverlay:popover-open) .Label > label', {
-  visibility: 'hidden',
-})
+rules([`.${componentName}`, '> label'], { cursor: 'pointer' })
+rules(
+  `body:has(.StructureViewOverlay:popover-open) .${componentName} > label`,
+  {
+    visibility: 'hidden',
+  },
+)

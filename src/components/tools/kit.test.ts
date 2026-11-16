@@ -1,106 +1,298 @@
-/** 验证公开定义的类型关联及集合样式身份。 */
+/**
+ * Kit 公共与自有协议验证。
+ *
+ * 验证完整字段事实、覆盖模式和声明优先的业务能力约束。
+ *
+ * 不依赖组件实现反推公开输入或控制器。
+ */
 import { expect, expectTypeOf, test } from 'vitest'
-import type { Source, State } from '@/foundation'
-import type { RefReceiver } from '@/hooks/createRef'
-import type { ComponentDescriptionProps } from './KitMarker/KitMarker'
-import { Button, type ButtonController } from '../kits/Button/Button'
+import { createState, type State } from '@/foundation'
+import {
+  kit,
+  kitPropDefinition,
+  type KitPropDefinition,
+  type KitProps,
+  type KitController,
+  type KitComponent,
+  type KitControllerProps,
+} from '@/index'
+import {
+  type FlowProps,
+  type FlowController,
+  type FlowPropDefinition,
+  flowPropDefinition,
+} from '../kits/Flow/Flow.prop'
+import { Flow } from '../kits/Flow/Flow'
+import { Button } from '../kits/Button/Button'
+import type { ButtonProps, ButtonController } from '../kits/Button/Button.prop'
+import { buttonPropDefinition } from '../kits/Button/Button.prop'
+import { flowStyleConfig, type FlowStyleConfig } from '../kits/Flow/Flow.style'
 import * as buttonStyle from '../kits/Button/Button.style'
 import {
-  pivPropsDefinition,
-  componentDescriptionPropsDefinition,
-  type PivProps,
-} from '@/index'
-import { kit } from './kit'
-import type { KitController } from './kit'
+  helpPropDefinition,
+  type HelpProps,
+  type HelpController,
+} from '../kits/Help/Help.prop'
+import {
+  numericPropDefinition,
+  type NumericProps,
+  type NumericController,
+} from '../kits/Numeric/Numeric.prop'
+import {
+  percentPropDefinition,
+  type PercentProps,
+  type PercentController,
+} from '../kits/Percent/Percent.prop'
+import {
+  selectPropDefinition,
+  type SelectProps,
+  type SelectController,
+} from '../kits/Select/Select.prop'
+import {
+  selectInputPropDefinition,
+  type SelectInputProps,
+  type SelectInputController,
+} from '../kits/SelectInput/SelectInput.prop'
+import {
+  tablePropDefinition,
+  type TableProps,
+  type TableController,
+} from '../kits/Table/Table.prop'
+import {
+  inputPropDefinition,
+  type InputProps,
+  type InputController,
+} from '../kits/Input/Input.prop'
+import {
+  inputRangePropDefinition,
+  type InputRangeProps,
+  type InputRangeController,
+} from '../kits/InputRange/InputRange.prop'
+import {
+  textAreaPropDefinition,
+  type TextAreaProps,
+  type TextAreaController,
+} from '../kits/TextArea/TextArea.prop'
 
-const propsDefinition = {
-  description: 'state-source-view',
-  descriptionDisplay: 'state-value-view',
-  value: 'state-source-view',
-  ref: 'only-through-prop',
-} as const
-interface FixtureProps extends ComponentDescriptionProps {
-  value?: Source<string | undefined>
-  ref?: RefReceiver<KitController<FixtureProps, typeof propsDefinition>>
+const { buttonStyleConfig, ...buttonTokens } = buttonStyle
+
+/**
+ * 空样式契约保留统一对象入口；undefined 表示清空，原始值不作为配置。
+ */
+function verifyEmptyStyleContract() {
+  const objectConfig: InputProps = { styleConfig: { gap: '2rem' } }
+  // @ts-expect-error 空配置也不能作为底层 CSS 字符串入口。
+  const cssText: InputRangeProps = { styleConfig: 'color: red' }
+  const empty: InputProps = { styleConfig: {} }
+  const absent: InputProps = { styleConfig: undefined }
+  interface NamedConfig {
+    gap?: string
+  }
+  const named: NamedConfig = { gap: '2rem' }
+  const namedInput: InputProps = { styleConfig: named }
+  const sourceInput: InputProps = { styleConfig: createState(named) }
+  void [objectConfig, cssText, empty, absent, namedInput, sourceInput]
 }
-const Fixture = kit(
-  { name: 'Fixture', propsDefinition },
-  (_props: FixtureProps) => null,
-)
+void verifyEmptyStyleContract
 
-test('集合保留数组与成员方法协议，Button 样式命名空间保留精确原对象', () => {
-  expect(Button.controllers.style).toBe(buttonStyle)
-  expect(Object.hasOwn(Fixture.controllers, 'style')).toBe(false)
-  expectTypeOf(Button.controllers.style).toEqualTypeOf<typeof buttonStyle>()
-  expectTypeOf(Button.controllers[0]).toEqualTypeOf<ButtonController>()
-  expectTypeOf(
-    Button.controllers.map((controller) => controller),
-  ).toEqualTypeOf<ButtonController[]>()
-  expectTypeOf(
-    Button.controllers.props.loading.set(true).map((value) => value),
-  ).toEqualTypeOf<State<boolean | undefined>[]>()
+test('各组件保留统一children输入与控制字段，不按当前业务呈现裁剪协议', () => {
+  expectTypeOf<HelpProps>().toHaveProperty('children')
+  expectTypeOf<HelpController['props']>().toHaveProperty('children')
+  expectTypeOf<NumericProps>().toHaveProperty('children')
+  expectTypeOf<NumericController['props']>().toHaveProperty('children')
+  expectTypeOf<PercentProps>().toHaveProperty('children')
+  expectTypeOf<PercentController['props']>().toHaveProperty('children')
+  expectTypeOf<SelectProps>().toHaveProperty('children')
+  expectTypeOf<SelectController['props']>().toHaveProperty('children')
+  expectTypeOf<SelectInputProps>().toHaveProperty('children')
+  expectTypeOf<SelectInputController['props']>().toHaveProperty('children')
+  expectTypeOf<TableProps>().toHaveProperty('children')
+  expectTypeOf<TableController['props']>().toHaveProperty('children')
+  expectTypeOf<InputProps>().toHaveProperty('children')
+  expectTypeOf<InputController['props']>().toHaveProperty('children')
+  expectTypeOf<InputRangeProps>().toHaveProperty('children')
+  expectTypeOf<InputRangeController['props']>().toHaveProperty('children')
+  expectTypeOf<TextAreaProps>().toHaveProperty('children')
+  expectTypeOf<TextAreaController['props']>().toHaveProperty('children')
+  for (const definition of [
+    helpPropDefinition,
+    numericPropDefinition,
+    percentPropDefinition,
+    selectPropDefinition,
+    selectInputPropDefinition,
+    tablePropDefinition,
+    inputPropDefinition,
+    inputRangePropDefinition,
+    textAreaPropDefinition,
+  ]) {
+    expect(Object.hasOwn(definition, 'children')).toBe(true)
+  }
 })
 
-/** 这些反例保护定义与原 Props、ref 和字段模式的关联，不能只靠运行期断言。 */
-function verifyRejectedDefinitions() {
-  // @ts-expect-error 无样式定义不公开根 style 命名空间。
-  Fixture.controllers.style
-  // @ts-expect-error ref 只通过 Props，不能在 Controller 中写入。
-  Button.controllers[0].props.ref.set(() => {})
-  kit(
-    // @ts-expect-error 错误 ref 接收器不能作为定义的 Props。
-    { name: 'WrongRef', propsDefinition },
-    (_props: Omit<FixtureProps, 'ref'> & { ref?: RefReceiver<number> }) => null,
+test('完整公共定义复用各拥有者事实，Flow空自有槽不改变读取模式', () => {
+  expect(flowPropDefinition).toEqual(kitPropDefinition)
+  expect(kitPropDefinition.children).toBe('state-source-view')
+  expect(kitPropDefinition.as).toBe('state-untracked')
+  expect(kitPropDefinition.ref).toBe('only-through-prop')
+  expect(kitPropDefinition.description).toBe('state-source-view')
+  expect(kitPropDefinition.styleConfig).toBe('state-value-view')
+})
+
+test('Button只补业务模式，候选声明和值域共享同一份事实', () => {
+  expect(buttonPropDefinition.as).toBe(kitPropDefinition.as)
+  expect(buttonPropDefinition.onClick).toBe('state-value-view')
+  expect(buttonPropDefinition.appearance).toBe('state-source-view')
+  expect(Button.controllers.style).toEqual(buttonTokens)
+  expect(Object.hasOwn(Button.controllers.style, 'buttonStyleConfig')).toBe(
+    false,
   )
-  kit(
-    // @ts-expect-error 把 Source 视图交给只接受普通字符串的核心不兼容。
-    { name: 'WrongMode', propsDefinition },
-    (_props: Omit<FixtureProps, 'value'> & { value?: string }) => null,
-  )
-  kit(
-    // @ts-expect-error ref 不允许进入 Controller。
-    {
-      name: 'WritableRef',
-      propsDefinition: { ...propsDefinition, ref: 'state-value-view' },
-    },
-    (_props: FixtureProps) => null,
-  )
-  interface CustomFixtureProps extends Omit<FixtureProps, 'ref'> {
-    ref?: RefReceiver<
-      KitController<
-        CustomFixtureProps,
-        typeof propsDefinition,
-        { missing: string }
-      >
-    >
+  expect(Button.controllers.style.buttonGap).toBe(buttonStyle.buttonGap)
+})
+
+/**
+ * 自有模式真正替换公共模式，系统引用仍不能进入可写状态。
+ */
+function verifyDefinitionContract() {
+  type Override = KitPropDefinition<{ children: 'only-through-prop' }>
+  type Props = KitProps<{}, Controller> & {}
+  interface Controller extends KitController<Props, Override> {}
+  expectTypeOf<Override['children']>().toEqualTypeOf<'only-through-prop'>()
+  expectTypeOf<
+    Extract<keyof Controller['props'], 'children' | 'ref'>
+  >().toEqualTypeOf<never>()
+  expectTypeOf<FlowPropDefinition['as']>().toEqualTypeOf<'state-untracked'>()
+  expectTypeOf<FlowController['props']['as']>().toEqualTypeOf<
+    State<'div' | undefined>
+  >()
+  expectTypeOf<
+    keyof KitControllerProps<FlowController>
+  >().toEqualTypeOf<'ref'>()
+  // @ts-expect-error 系统 ref 不能覆盖为可写模式。
+  type WritableRef = KitPropDefinition<{ ref: 'state-value-view' }>
+  // @ts-expect-error 必须提供完整公共字段事实。
+  const incomplete: FlowPropDefinition = { ref: 'only-through-prop' }
+  const button: ButtonProps = {
+    as: 'button',
+    domRef: (_element: HTMLButtonElement) => {},
   }
-  kit<CustomFixtureProps, typeof propsDefinition>(
-    { name: 'ExtraRefField', propsDefinition },
-    (_props, context) => {
-      // @ts-expect-error 组件声明的顶层能力必须在公开对象中完整提供。
-      context.exposeController({})
+  // @ts-expect-error 按钮标签契约不退化为默认 div。
+  const wrongButton: ButtonProps = { as: 'div' }
+  const RenderMissingActions: KitComponent<
+    ButtonProps,
+    ButtonController,
+    typeof buttonTokens
+  > = kit(
+    {
+      name: 'MissingActions',
+      propDefinition: buttonPropDefinition,
+      styleConfig: buttonStyleConfig,
+      styleTokens: buttonTokens,
+    },
+    (_props, { exposeController }) => {
+      // @ts-expect-error 交付的业务能力必须满足已声明的按钮 Controller。
+      exposeController({})
       return null
     },
   )
-}
-void verifyRejectedDefinitions
-
-/** 包根调用方可从原拥有者组合完整协议，不需要深导或复制字段表。 */
-function verifyPublicDefinition() {
-  const propsDefinition = {
-    ...pivPropsDefinition,
-    ...componentDescriptionPropsDefinition,
-    ref: 'only-through-prop',
-  } as const
-  interface PublicProps extends PivProps, ComponentDescriptionProps {
-    ref?: RefReceiver<KitController<PublicProps, typeof propsDefinition>>
+  const invalid: FlowProps = {
+    // @ts-expect-error 公开方向来自显式配置契约。
+    styleConfig: { direction: 'diagonal' },
   }
-  return kit(
-    {
-      name: 'PublicFixture',
-      propsDefinition,
-    },
-    (_props: PublicProps) => null,
-  )
+  void incomplete
+  void button
+  void wrongButton
+  void RenderMissingActions
+  void invalid
 }
-void verifyPublicDefinition
+void verifyDefinitionContract
+
+/**
+ * 已声明的公开组件契约为两个未注解的渲染参数提供类型，完整模式必须兑现控制字段。
+ */
+function verifyContextualRender() {
+  const RenderDeclared: KitComponent<FlowProps, FlowController> = kit(
+    {
+      name: 'Declared',
+      propDefinition: flowPropDefinition,
+      styleConfig: flowStyleConfig,
+    },
+    (props, { name }) => {
+      expectTypeOf(props).toEqualTypeOf<Omit<FlowProps, 'ref'>>()
+      expectTypeOf(name).toEqualTypeOf<string>()
+      // @ts-expect-error 核心不能取得交付系统独占的 ref。
+      props.ref
+      // @ts-expect-error 未声明的字段不能从上下文输入出现。
+      props.missing
+      return null
+    },
+  )
+  const wrongMode = {
+    ...flowPropDefinition,
+    children: 'only-through-prop',
+  } as const
+  const RenderWrongMode: KitComponent<FlowProps, FlowController> = kit(
+    // @ts-expect-error 实际生成的控制器必须保留公开承诺的 children 控制字段。
+    {
+      name: 'WrongMode',
+      propDefinition: wrongMode,
+      styleConfig: flowStyleConfig,
+    },
+    () => null,
+  )
+  interface ExtraController {
+    props: FlowController['props'] & { missing: State<number> }
+  }
+  const RenderExtra: KitComponent<FlowProps, ExtraController> = kit(
+    // @ts-expect-error 字段协议不能生成声明中虚构的状态。
+    {
+      name: 'Extra',
+      propDefinition: flowPropDefinition,
+      styleConfig: flowStyleConfig,
+    },
+    () => null,
+  )
+  interface NarrowController {
+    props: Omit<FlowController['props'], 'description'> & {
+      description: State<'fixed'>
+    }
+  }
+  const RenderNarrow: KitComponent<FlowProps, NarrowController> = kit(
+    // @ts-expect-error 实际来源值域不能冒充公开声明的更窄 State。
+    {
+      name: 'Narrow',
+      propDefinition: flowPropDefinition,
+      styleConfig: flowStyleConfig,
+    },
+    () => null,
+  )
+  interface WrongRefController extends FlowController {
+    missing(): void
+  }
+  type WrongRefProps = KitProps<FlowStyleConfig, WrongRefController> & {}
+  const RenderWrongRef: KitComponent<WrongRefProps, FlowController> = kit(
+    // @ts-expect-error 交付的实际 Controller 必须满足公开 ref 接收方声明的全部能力。
+    {
+      name: 'WrongRef',
+      propDefinition: flowPropDefinition,
+      styleConfig: flowStyleConfig,
+    },
+    () => null,
+  )
+  type NumericRefProps = Omit<FlowProps, 'ref'> & { ref?: number }
+  const RenderNumericRef: KitComponent<NumericRefProps, FlowController> = kit(
+    // @ts-expect-error ref 必须是 Controller 接收器，不能声明为数值。
+    {
+      name: 'NumericRef',
+      propDefinition: flowPropDefinition,
+      styleConfig: flowStyleConfig,
+    },
+    () => null,
+  )
+  void RenderNumericRef
+  void RenderWrongRef
+  void RenderDeclared
+  void RenderWrongMode
+  void RenderExtra
+  void RenderNarrow
+}
+void verifyContextualRender

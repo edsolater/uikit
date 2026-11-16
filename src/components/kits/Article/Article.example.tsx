@@ -1,9 +1,18 @@
-/** Article 的本地 Example：正文语义由 Article 提供，视觉形式由 Card 提供。 */
+/**
+ * Article 的本地 Example：正文语义由 Article 提供，视觉形式由 Card 提供。
+ *
+ * 组合独立正文和承载外观，按阅读顺序组织标题与说明。
+ *
+ * 示例保留各组件自己的语义和样式边界。
+ */
 import { Card } from '../Card/Card'
 import { Article } from './Article'
 import { Flow } from '../Flow/Flow'
 import './Article.example.style'
 
+/**
+ * 呈现正文与信息卡片，供比较各自的语义和默认外观。
+ */
 export function ArticleExample() {
   return (
     <>
@@ -16,7 +25,7 @@ export function ArticleExample() {
       </Article>
       <Card class="example-card">
         <Article>
-          <Flow>
+          <Flow styleConfig={{ direction: 'column' }}>
             <div class="example-card-head">
               <span>语义组件</span>
               <h2>Article</h2>

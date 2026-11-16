@@ -4,13 +4,13 @@
  *
  * 页面内匹配使用组合构建的内部身份；独立调用时内部身份为 undefined。
  */
-import { createState, onCleanup, type State } from '@/foundation'
+import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
   createInactivePlugin,
   type PluginCoreContext,
-} from '@/components/plugins/tools/createInactivePlugin'
-import { createPointerDrag } from './createPointerDrag'
+} from '../../../tools/createInactivePlugin'
+import { createPointerDrag, type PointerDrag } from './createPointerDrag'
 import './draggable.style'
 
 export interface DraggableOptions {
@@ -39,7 +39,6 @@ export interface DraggableController {
 export function draggablePluginCore({
   pluginOptions,
   addProps,
-  domProxy,
   id,
 }: PluginCoreContext<DraggableOptions>): DraggableController {
   // 准备启用开关与拖动状态，供交互判断和外部 Controller 共用。
@@ -50,25 +49,27 @@ export function draggablePluginCore({
   // 状态记录:正在拖动
   const dragging = createState(false)
 
-  // 创建拖动操作
-  const pointerDrag = createPointerDrag({
-    target: domProxy,
-    id,
-    payload: pluginOptions.payload,
-    activationDistance: Math.max(0, pluginOptions.activationDistance ?? 0),
-    activationJump: pluginOptions.activationJump ?? true,
-    enabled: enabled.read,
-    onDraggingChange: (value) => dragging.set(value),
-  })
-
-  // 退出时请求取消拖动，释放交互资源（如监听器）。
-  onCleanup(() => {
-    // low-todo：如需对象永久退出，再评估 dispose；当前保留 cancel。
-    pointerDrag.cancel()
-  })
+  let pointerDrag: PointerDrag | undefined
 
   // 触发交给 浏览器DOM，但关闭浏览器原生拖放。
   addProps({
+    // DOM 绑定拥有会话；卸载或换节点时先取消该节点仍在进行的交互。
+    domRef: (target) => {
+      const session = createPointerDrag({
+        target,
+        id,
+        payload: pluginOptions.payload,
+        activationDistance: Math.max(0, pluginOptions.activationDistance ?? 0),
+        activationJump: pluginOptions.activationJump ?? true,
+        enabled: enabled.read,
+        onDraggingChange: (value) => dragging.set(value),
+      })
+      pointerDrag = session
+      return () => {
+        session.cancel()
+        pointerDrag = undefined
+      }
+    },
     htmlProps: { 'draggable': false, 'data-plugin': { mergable: 'draggable' } },
     on: {
       dragstart: {
@@ -78,7 +79,7 @@ export function draggablePluginCore({
       pointerdown: {
         passive: false,
         callback: ({ event }) => {
-          pointerDrag.start(event)
+          pointerDrag!.start(event)
         },
       },
     },
@@ -89,9 +90,12 @@ export function draggablePluginCore({
     enabled,
     dragging,
     enable: enabledControl.turnOn,
+    /**
+     * 禁止后续拖动，并同步取消当前事务。
+     */
     disable() {
       enabledControl.turnOff()
-      pointerDrag.cancel()
+      pointerDrag?.cancel()
     },
   }
 }

@@ -25,26 +25,84 @@ export {
   kitMarkerStructureViewMaskBlur,
   kitMarkerStructureViewLabelColor,
 } from './tools/KitMarker/StructureViewOverlay.style'
-export * from './kits/Loop/Loop'
-export * from './kits/Flow/Flow'
-export * from './kits/Page/Page'
-export * from './kits/TextArea/TextArea'
-export * from './kits/Select/Select'
-export * from './kits/Checkbox/Checkbox'
-export * from './kits/Details/Details'
-export * from './kits/MessageBoard/MessageBoard'
-export * from './kits/Link/Link'
+export { Loop } from './kits/Loop/Loop'
+export type { LoopProps, LoopController } from './kits/Loop/Loop.prop'
+export { Flow } from './kits/Flow/Flow'
+export {
+  flowPropDefinition,
+  type FlowProps,
+  type FlowController,
+  type FlowPropDefinition,
+} from './kits/Flow/Flow.prop'
+export type { FlowStyleConfig } from './kits/Flow/Flow.style'
+export { Page } from './kits/Page/Page'
+export type { PageProps, PageController } from './kits/Page/Page.prop'
+export { TextArea } from './kits/TextArea/TextArea'
+export type {
+  TextAreaProps,
+  TextAreaController,
+} from './kits/TextArea/TextArea.prop'
+export { Select } from './kits/Select/Select'
+export type { SelectProps, SelectController } from './kits/Select/Select.prop'
+export { Checkbox } from './kits/Checkbox/Checkbox'
+export type {
+  CheckboxProps,
+  CheckboxController,
+} from './kits/Checkbox/Checkbox.prop'
+export { Details } from './kits/Details/Details'
+export type {
+  DetailsProps,
+  DetailsController,
+} from './kits/Details/Details.prop'
+export { MessageBoard } from './kits/MessageBoard/MessageBoard'
+export type {
+  MessageBoardProps,
+  MessageBoardController,
+} from './kits/MessageBoard/MessageBoard.prop'
+export { Link } from './kits/Link/Link'
+export type { LinkProps, LinkController } from './kits/Link/Link.prop'
 export * from './kits/Button/Button.mapping'
 export * from './kits/Button/Button.style'
-export * from './kits/Button/Button'
-export * from './kits/Input/Input'
-export * from './kits/InputRange/InputRange'
-export * from './kits/Text/Text'
-export * from './kits/Numeric/Numeric'
-export * from './kits/Percent/Percent'
-export * from './kits/Label/Label'
-export * from './kits/Help/Help'
-export * from './kits/Heading/Heading'
+export { Button } from './kits/Button/Button'
+export {
+  buttonPropDefinition,
+  type ButtonPropDefinition,
+  type ButtonAppearance,
+  type ButtonEmphasis,
+  type ButtonTone,
+  type ButtonSize,
+  type ButtonStatus,
+  type ButtonProps,
+  type ButtonController,
+} from './kits/Button/Button.prop'
+export { Input } from './kits/Input/Input'
+export type { InputProps, InputController } from './kits/Input/Input.prop'
+export { InputRange } from './kits/InputRange/InputRange'
+export type {
+  InputRangeProps,
+  InputRangeController,
+} from './kits/InputRange/InputRange.prop'
+export { Text } from './kits/Text/Text'
+export type { TextProps, TextController } from './kits/Text/Text.prop'
+export { Numeric } from './kits/Numeric/Numeric'
+export type {
+  NumericProps,
+  NumericController,
+} from './kits/Numeric/Numeric.prop'
+export { Percent } from './kits/Percent/Percent'
+export type {
+  PercentProps,
+  PercentController,
+} from './kits/Percent/Percent.prop'
+export { Label } from './kits/Label/Label'
+export type { LabelProps, LabelController } from './kits/Label/Label.prop'
+export { Help } from './kits/Help/Help'
+export type { HelpProps, HelpController } from './kits/Help/Help.prop'
+export { Heading } from './kits/Heading/Heading'
+export type {
+  HeadingProps,
+  HeadingController,
+} from './kits/Heading/Heading.prop'
 export {
   createPopoverPlugins,
   type AnchorPosition,
@@ -58,24 +116,38 @@ export {
   type PopoverTriggerController,
   type PopoverBodyController,
 } from './plugins/kits/Popover/popover'
-export * from './kits/Card/Card'
-export {
-  Board,
-  type BoardProps,
-  type BoardVariantProps,
-  type BoardSizeProps,
-  type BoardController,
-  type BoardControllerCollection,
-} from './kits/Board/Board'
+export { Card } from './kits/Card/Card'
+export type {
+  CardVariantProps,
+  CardSizeProps,
+  CardProps,
+  CardController,
+} from './kits/Card/Card.prop'
+export { Board } from './kits/Board/Board'
+export type {
+  BoardProps,
+  BoardVariantProps,
+  BoardSizeProps,
+  BoardController,
+  BoardControllerCollection,
+} from './kits/Board/Board.prop'
 export { boardBorder } from './kits/Board/Board.style'
-export {
-  Article,
-  type ArticleProps,
-  type ArticleController,
-} from './kits/Article/Article'
-export * from './kits/Table/Table'
+export { Article } from './kits/Article/Article'
+export type {
+  ArticleProps,
+  ArticleController,
+} from './kits/Article/Article.prop'
+export { Table } from './kits/Table/Table'
+export type { TableProps, TableController } from './kits/Table/Table.prop'
+export type { TableStyleConfig } from './kits/Table/Table.style'
 export * from './kits/kitContext'
-export * from './kits/utils/parseVariantProps'
+export {
+  createVariantPropsParser,
+  type VariantProps,
+  type VariantPropsGroup,
+  type VariantDetails,
+  type VariantPropsParseResult,
+} from './kits/utils/parseVariantProps'
 export * from './kits/utils/parseStatusProps'
 export * from './plugins/kits/dragAndDrop/dragAndDrop'
 export * from './plugins/tools/createInactivePlugin'
@@ -96,13 +168,41 @@ export * from './tools/defaultProps'
 export * from './tools/toJSX'
 export * from './tools/type'
 
-export * from './kits/Grid/Grid'
-export * from './kits/Field/Field'
-export * from './kits/FormField/FormField'
-export * from './kits/SelectInput/SelectInput'
-export * from './kits/NavigationRegion/NavigationRegion'
+export { Grid } from './kits/Grid/Grid'
+export type { GridProps, GridController } from './kits/Grid/Grid.prop'
+export type { GridStyleConfig } from './kits/Grid/Grid.style'
+export { Field } from './kits/Field/Field'
+export type { FieldProps, FieldController } from './kits/Field/Field.prop'
+export { useFormFieldId, FormField } from './kits/FormField/FormField'
+export type {
+  FormFieldProps,
+  FormFieldController,
+} from './kits/FormField/FormField.prop'
+export { SelectInput } from './kits/SelectInput/SelectInput'
+export type {
+  SelectInputOption,
+  SelectInputTag,
+  SelectInputProps,
+  SelectInputController,
+} from './kits/SelectInput/SelectInput.prop'
+export { NavigationRegion } from './kits/NavigationRegion/NavigationRegion'
+export type {
+  NavigationRegionProps,
+  NavigationRegionController,
+} from './kits/NavigationRegion/NavigationRegion.prop'
 
-export * from './tools/kit'
+export {
+  kit,
+  kitPropDefinition,
+  type KitPropDefinition,
+  type KitComponentContext,
+  type KitProps,
+  type KitControllerProps,
+  type KitStyleConfigProps,
+  type KitController,
+  type KitOptions,
+  type KitComponent,
+} from './tools/kit'
 export type {
   PropsReadMode,
   PropsDefinition,
@@ -114,3 +214,5 @@ export type {
 export { pivPropsDefinition } from './Piv/Piv.prop'
 export { componentDescriptionPropsDefinition } from './tools/KitMarker/KitMarker.prop'
 import './plugins/is.style'
+
+export type { StyleConfig, StyleConfigHandler } from './tools/styleConfig'

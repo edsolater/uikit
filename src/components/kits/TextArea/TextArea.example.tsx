@@ -5,7 +5,7 @@
  *
  * 让使用者验证控件值的持续更新和独立字段组织。
  */
-import { Field, Flow, Text, TextArea } from '@/components'
+import { Field, Flow, Text, TextArea } from '../..'
 import { createState } from '@/foundation'
 /**
  * 编辑多行内容并显示当前字数。
@@ -13,7 +13,7 @@ import { createState } from '@/foundation'
 export function TextAreaExample() {
   const text = createState('')
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Field label="检查依据">
         {(id) => (
           <TextArea

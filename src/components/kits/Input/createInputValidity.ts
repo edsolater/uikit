@@ -1,36 +1,22 @@
 /**
- * 这个文件定义 Input 的有效性判断能力。
- * 它负责把 invalid 和 validIf 合并成最终 isValid 状态。
- * 它不负责 Input DOM、样式或值同步策略。
+ * Input 的响应式有效性计算。
+ *
+ * 将外部无效标记与校验条件合并成持续更新的 isValid 来源。
+ *
+ * 字段值、DOM 与提示呈现由各自组件负责。
  */
 import { isObject } from '@edsolater/fnkit'
-import {
-  stateView,
-  val,
-  type MayArraySource,
-  type Source,
-  type StateView,
-} from '@/foundation'
-import type { StatusProps } from '../utils/parseStatusProps'
+import { stateView, val } from '@/foundation'
+import type {
+  InputValidationInput,
+  InputValidityProps,
+  InputValidity,
+} from './createInputValidity.prop'
 
-export type ValidationRule = {
-  /** 验证条件；返回 true 时通过。 */
-  should: Source<boolean>
-}
-
-export type ValidationInput = Source<boolean | ValidationRule | undefined>
-
-export type ValidIf = MayArraySource<boolean | ValidationRule>
-
-export type InputValidityProps = StatusProps<'invalid'> & {
-  /** 所有条件都通过时输入框才视为有效。 */
-  validIf?: ValidIf
-}
-
-export type InputValidity = {
-  isValid: StateView<boolean>
-}
-
+/**
+ * 根据输入条件持续计算最终有效性：所有 validIf 通过且外部 invalid 不为 true 时有效。
+ * 结果只读，不回写调用方的条件或字段值。
+ */
 export function createInputValidity(props: InputValidityProps): InputValidity {
   const allRulesPassed = stateView(props.validIf).map((validIf) => {
     const validationInputs =
@@ -49,7 +35,10 @@ export function createInputValidity(props: InputValidityProps): InputValidity {
   }
 }
 
-function isValidationPassed(input: ValidationInput): boolean {
+/**
+ * 读取单项布尔条件或规则的 should 来源，返回当前是否通过。
+ */
+function isValidationPassed(input: InputValidationInput): boolean {
   const validationInput = val(input)
   if (isObject(validationInput)) {
     return val(validationInput.should) === true

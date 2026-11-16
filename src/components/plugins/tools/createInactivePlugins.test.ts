@@ -61,10 +61,11 @@ test('全部角色可缺省时允许无参数调用；必填角色配置仍必�
       required({ draggable: { payload: '材料', id: {} } })
       // @ts-expect-error 每个角色已是结果，不能再次调用。
       required({ draggable: { payload: '材料' } }).plugins.draggable()
-      // @ts-expect-error Controller 方法拼错。
       required({
         draggable: { payload: '材料' },
-      }).controller.draggable.unrelated()
+      }).controller.draggable
+        // @ts-expect-error Controller 方法拼错。
+        .unrelated()
       createInactivePlugins({
         // @ts-expect-error pluginOptions 必须是对象，不能声明为 string。
         bad: ({

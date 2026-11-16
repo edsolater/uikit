@@ -12,7 +12,7 @@ import {
   Heading,
   KitMarkerStructureViewTrigger,
   Text,
-} from '@/components'
+} from '../..'
 import { createState, val } from '@/foundation'
 
 /**
@@ -21,7 +21,7 @@ import { createState, val } from '@/foundation'
 export function KitMarkerStructureViewTriggerExample() {
   const count = createState(0)
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Heading level={2}>
         ComponentMarkerStructureViewTrigger · 组件结构查看
       </Heading>

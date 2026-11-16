@@ -14,8 +14,8 @@ import {
   toPromiseResultProxy,
   type PromiseResultProxy,
 } from '@edsolater/fnkit'
-import type { ShadowProps } from '@/components/Piv/plugin/mergePivProps'
-import type { PivTag } from '@/components/Piv/domMap'
+import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
+import type { PivTag } from '../../Piv/domMap'
 
 /** 识别 Plugin 声明，不参与节点状态存储。 */
 export const pluginMarker = Symbol('nodePlugin')

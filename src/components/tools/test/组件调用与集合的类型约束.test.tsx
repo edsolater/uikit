@@ -7,8 +7,8 @@
  */
 import { expectTypeOf, test } from 'vitest'
 import type { State } from '@/foundation'
-import { createPopoverPlugins } from '@/components/plugins/kits/Popover/popover'
-import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
+import { createPopoverPlugins } from '../../plugins/kits/Popover/popover'
+import { createInactivePlugin } from '../../plugins/tools/createInactivePlugin'
 import {
   Article,
   Board,
@@ -37,6 +37,13 @@ function verifyGenericCalls() {
   })()
   Piv({ is: capability })
   Piv({ is: [capability, capability] })
+  // @ts-expect-error id 使用专用入口，不能被 htmlProps 静默忽略。
+  Piv({ htmlProps: { id: '错误入口' } })
+  // @ts-expect-error style 使用专用入口，不能混入普通原生字段。
+  Piv({ htmlProps: { style: { color: 'red' } } })
+  // @ts-expect-error 事件通过 on 声明，htmlProps 不接受原生处理器。
+  Piv({ htmlProps: { onclick: () => {} } })
+  Piv({ htmlProps: { 'data-custom': '自定义字段', 'attr:id': '显式逃生入口' } })
   // @ts-expect-error 未调用的定义不能作为 Plugin。
   Piv({ is: createInactivePlugin })
   // @ts-expect-error 原 trait 入口已经退出。
@@ -123,9 +130,9 @@ function verifyGenericCalls() {
   )
   // @ts-expect-error 列选择必须来自 Row 的 key。
   Table<{ amount: number }>({ data: [{ amount: 1 }], keys: ['missing'] })
-  // @ts-expect-error 单元格渲染器必须接收该列的 number。
   Table<{ amount: number }>({
     data: [{ amount: 1 }],
+    // @ts-expect-error 单元格渲染器必须接收该列的 number。
     renderParts: { tableCell: { amount: (value: string) => value } },
   })
 

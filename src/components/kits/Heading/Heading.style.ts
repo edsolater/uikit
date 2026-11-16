@@ -1,4 +1,11 @@
-/** 标题按文档层级留出上下空间，定位框只隐藏文字而保留排版。 */
+/**
+ * Heading 的标题层级与结构查看样式。
+ *
+ * 按标题层级调整上下间距，定位框开启时隐藏文字像素并保留排版。
+ *
+ * 让标题保持文档阅读节奏，结构查看沿用同一内容和布局。
+ */
+import { componentName } from './Heading.prop'
 import { rules, token, stateCondition } from '@/style-system'
 
 const headingBlockMargin = token('2.4em 1.2em', {
@@ -10,7 +17,7 @@ const headingBlockMargin = token('2.4em 1.2em', {
   ],
 })
 
-rules('.Heading', {
+rules(`.${componentName}`, {
   'margin-block': headingBlockMargin,
   'visibility': token('inherit', {
     name: 'heading-visibility',

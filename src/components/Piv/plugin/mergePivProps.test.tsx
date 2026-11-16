@@ -2,7 +2,7 @@
 import { createRoot, flush } from 'solid-js'
 import { render } from '@solidjs/web'
 import { describe, expect, test } from 'vitest'
-import { createState } from '@/foundation'
+import { createState, Errored } from '@/foundation'
 import { Piv } from '../Piv'
 import { mergePivProps } from './mergePivProps'
 import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
@@ -242,18 +242,35 @@ describe('配置插件消费', () => {
         },
       })()
       const plainCallback = () => undefined
-      const mount = (is: Parameters<typeof Piv>[0]['is']) =>
-        render(() => <Piv is={is} />, document.createElement('div'))
+      /**
+       * 在错误边界内挂载声明，使非法 Plugin 的拒绝不终止整个响应式调度器。
+       */
+      const mount = (is: Parameters<typeof Piv>[0]['is']) => {
+        let error: unknown
+        const release = render(
+          () => (
+            <Errored fallback={(caught) => {
+              error = caught()
+              return null
+            }}>
+              <Piv is={is} />
+            </Errored>
+          ),
+          document.createElement('div'),
+        )
+        return { error, release }
+      }
 
-      expect(() => mount(plainCallback as never)).toThrow('需要 Plugin')
-      expect(() => mount({ plugin: plainCallback } as never)).toThrow(
-        '需要 Plugin',
-      )
-      expect(() => mount({} as never)).toThrow('需要 Plugin')
+      for (const invalid of [plainCallback, { plugin: plainCallback }, {}]) {
+        const rejected = mount(invalid as never)
+        expect(rejected.error).toBeInstanceOf(TypeError)
+        expect((rejected.error as Error).message).toContain('需要 Plugin')
+        rejected.release()
+      }
 
-      mount(capability)()
-      mount(capability.plugin)()
-      mount([capability, capability.plugin])()
+      mount(capability).release()
+      mount(capability.plugin).release()
+      mount([capability, capability.plugin]).release()
       dispose()
     })
   })

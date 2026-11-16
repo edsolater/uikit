@@ -1,16 +1,18 @@
 /**
  * Top Layer：保持原有几何，把一个原始 DOM 提升到浏览器 Top Layer。
  *
- * 【职责边界】拥有一次提升的 Anchor、基础位置、尺寸、提升视觉和完整恢复；
- * 不解释调用方为何提升，也不拥有提升后的业务位移。
+ * 拥有一次提升的锚点、基础位置、尺寸与完整恢复。
+ *
+ * 调用方可在同一元素上安排后续交互位移，提升能力只维护原始几何。
  */
-import { createState, onCleanup, onMount, type State } from '@/foundation'
-import { createInactivePlugin } from '@/components/plugins/tools/createInactivePlugin'
+import { createState, onMount, type State } from '@/foundation'
+import { createInactivePlugin } from '../../tools/createInactivePlugin'
 import { createTopLayerAnchor } from './topLayerAnchor'
 import './topLayer.style'
 
 const topLayerClass = 'top-layer'
 
+/** 原始元素的提升控制，active 与进入、退出操作保持同一份事务状态。 */
 export interface TopLayerController {
   /** 当前元素是否已经进入 Top Layer。 */
   active: State<boolean>
@@ -56,11 +58,17 @@ export function createTopLayerController(
 
   return {
     active,
+    /**
+     * 开始当前元素的提升，已经提升时沿用现有事务。
+     */
     enter() {
       if (session) return
       session = startTopLayerSession(element)
       active.set(true)
     },
+    /**
+     * 退出当前提升并恢复原始几何和节点声明。
+     */
     leave() {
       session?.leave()
       session = undefined
@@ -69,7 +77,9 @@ export function createTopLayerController(
   }
 }
 
-/** 开始一次不可重入的提升事务；公开调用统一经过 TopLayerController。 */
+/**
+ * 为原始元素开始一次提升事务；失败时恢复已接管的声明和锚点。
+ */
 function startTopLayerSession(element: HTMLElement): TopLayerSession {
   if (element.hasAttribute('popover')) {
     throw new Error('Top Layer 元素不能同时承担 Popover')
@@ -101,6 +111,9 @@ function startTopLayerSession(element: HTMLElement): TopLayerSession {
   let active = true
 
   return {
+    /**
+     * 结束这次提升，恢复声明并移除锚点，后续重复退出不再写入元素。
+     */
     leave() {
       if (!active) return
       active = false
@@ -113,6 +126,9 @@ function startTopLayerSession(element: HTMLElement): TopLayerSession {
   }
 }
 
+/**
+ * 以原始视口起点和锚点尺寸固定提升元素的 border-box。
+ */
 function applyTopLayerGeometry(
   style: CSSStyleDeclaration,
   originalRect: DOMRect,
@@ -132,13 +148,18 @@ function applyTopLayerGeometry(
   style.setProperty('block-size', `anchor-size(${anchorName} self-block)`)
 }
 
-/** 升层后重新测量一次，只修正浏览器改变绘制层造成的初始视口偏移。 */
+/**
+ * 修正浏览器升层造成的初始视口偏移，使绘制位置与提升前相同。
+ */
 function alignRenderedBox(element: HTMLElement, originalRect: DOMRect): void {
   const renderedRect = element.getBoundingClientRect()
   element.style.left = `${originalRect.left * 2 - renderedRect.left}px`
   element.style.top = `${originalRect.top * 2 - renderedRect.top}px`
 }
 
+/**
+ * 保存提升需要接管的 inline 几何声明及其优先级，供退出时完整恢复。
+ */
 function captureInlineDeclarations(
   style: CSSStyleDeclaration,
 ): InlineDeclaration[] {
@@ -149,6 +170,9 @@ function captureInlineDeclarations(
   }))
 }
 
+/**
+ * 恢复提升前的 inline 几何，原本缺省的属性重新移除。
+ */
 function restoreInlineDeclarations(
   style: CSSStyleDeclaration,
   declarations: InlineDeclaration[],
@@ -159,33 +183,43 @@ function restoreInlineDeclarations(
   }
 }
 
-/** 插件状态在构建时创建；元素接入后才建立可提升会话。 */
+/** 插件构建时提供状态与控制入口，元素接入后建立提升事务。 */
 export const topLayer = createInactivePlugin({
   name: 'topLayer',
-  pluginCore({ addProps, domProxy }): TopLayerController {
+  /**
+   * 连接原始节点、提升时机与绑定清理，返回在接入前后都稳定的控制入口。
+   */
+  pluginCore({ addProps }): TopLayerController {
     const active = createState(false)
     let session: TopLayerController | undefined
     const controller: TopLayerController = {
       active,
+      /**
+       * 提升当前已接入的节点，尚无节点时不创建事务。
+       */
       enter() {
         session?.enter()
       },
+      /**
+       * 退出当前节点的提升，未接入或已经退出时不改变元素。
+       */
       leave() {
         session?.leave()
       },
     }
-    onMount(() => {
-      // TODO：节点迟于清理时可能错位；交由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 管理等待与取消。
-      domProxy.then((el) => {
-        session = createTopLayerController(el, active)
-        session.enter()
-      })
+    addProps({
+      // 节点接入时创建控制，挂载后提升；资源与该节点的引用绑定共同退出。
+      domRef: (element) => {
+        const current = createTopLayerController(element, active)
+        session = current
+        onMount(() => current.enter())
+        return () => {
+          current.leave()
+          session = undefined
+        }
+      },
+      htmlProps: { 'data-plugin': { mergable: 'top-layer' } },
     })
-    onCleanup(() => {
-      session?.leave()
-      session = undefined
-    })
-    addProps({ htmlProps: { 'data-plugin': { mergable: 'top-layer' } } })
     return controller
   },
 })

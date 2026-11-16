@@ -14,7 +14,7 @@ import {
   Button,
   tooltip,
   type LabelController,
-} from '@/components'
+} from '../..'
 import { createRef } from '@/hooks/createRef'
 
 /**
@@ -24,7 +24,7 @@ export function LabelExample() {
   const id = crypto.randomUUID()
   const [label, receiveLabel] = createRef<LabelController>()
   return (
-    <Flow>
+    <Flow styleConfig={{ direction: 'column' }}>
       <Heading level={2}>Label · 项目名称</Heading>
       <Text p>点击字段标题聚焦输入；悬停或聚焦问号查看帮助。</Text>
       <Label
@@ -39,7 +39,7 @@ export function LabelExample() {
         for={id}
         tooltipTrigger="i"
         tooltip={
-          <Flow>
+          <Flow styleConfig={{ direction: 'column' }}>
             <Text p>在团队列表中展示的名称。</Text>
             <Text p>可随时修改，不改变项目身份。</Text>
           </Flow>

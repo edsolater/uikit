@@ -5,6 +5,7 @@
  *
  * 语义身份不复制视觉实现，上层主体可消费公开边界材料形成自身反馈。
  */
+import { componentName } from './Board.prop'
 import {
   rules,
   token,
@@ -80,7 +81,7 @@ const radius = token(multiply(baseRadius, 3), {
   name: 'board-radius',
   state: { small: multiply(baseRadius, 2) },
 })
-rules('.Board', {
+rules(`.${componentName}`, {
   'display': 'grid',
   'margin-trim': 'none',
   gap,
