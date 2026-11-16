@@ -149,6 +149,10 @@ Example Dashboard 只负责发现、导航和展示各主体旁边的 Example，
 - `src/index.ts` 和各目录 `index.ts` 只表达公开契约，不承载 demo、测试或新的业务实现。
 - `src/types` 只承载无法就近归属到单一主体的全局补丁。
 
+# Markdown 解析与呈现
+
+Markdown 自行解析常用 Markdown 语法，块结构与行内语法分别由 `Markdown.parser.ts`、`Markdown.inline-parser.ts` 负责，通过内部内容树交给 `Markdown.renderer.tsx`；公开 `renderers` 接收已渲染的 `content`。默认节点由 Piv 创建，一级至四级标题复用 Heading，链接复用 Link；现有 Table 的对象记录协议不参与 Markdown 表格。支持标题、段落、代码、引用、嵌套列表、任务列表、表格、强调、删除线及链接图片，支持范围不等同完整 GFM。原生 HTML 显示为文本，未知标记及未闭合的行内语法保留文字；未闭合围栏按代码读取到文档结尾。实体只解码数字实体及 amp、lt、gt、quot、apos、nbsp 六种常用名称，代码保持原样。块缩进以空格识别，代码内的制表符原样保留。地址只保留阅读所需的相对路径与协议。
+
 # 文档边界
 
 - 本文件记录当前可由代码验证的系统关系。

@@ -133,6 +133,15 @@ export type {
 } from './kits/Board/Board.prop'
 export { boardBorder } from './kits/Board/Board.style'
 export { Article } from './kits/Article/Article'
+export { Markdown } from './kits/Markdown/Markdown'
+export type {
+  MarkdownProps,
+  MarkdownController,
+  MarkdownRenderers,
+  MarkdownRendererInputs,
+  MarkdownContent,
+} from './kits/Markdown/Markdown.prop'
+export { markdownBlockSpace } from './kits/Markdown/Markdown.style'
 export type {
   ArticleProps,
   ArticleController,
