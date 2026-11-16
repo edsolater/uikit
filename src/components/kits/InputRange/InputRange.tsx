@@ -19,23 +19,25 @@ import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
 /**
  * 使用原生 min、max、step 和 value 调整连续数值。
  */
-export const InputRange: KitComponent<InputRangeProps, InputRangeController> =
-  kit(
-    {
-      name: componentName,
-      description: '调整范围内的数值',
-      propDefinition: inputRangePropDefinition,
-    },
-    (props, { name }) => {
-      const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
-      return (
-        <Piv
-          as="input"
-          shadowProps={rootProps}
-          id={id}
-          class={name}
-          htmlProps={{ type: 'range' }}
-        />
-      )
-    },
-  )
+export const InputRange: KitComponent<{
+  props: InputRangeProps
+  controller: InputRangeController
+}> = kit(
+  {
+    name: componentName,
+    description: '调整范围内的数值',
+    propDefinition: inputRangePropDefinition,
+  },
+  (props, { name }) => {
+    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
+    return (
+      <Piv
+        as="input"
+        shadowProps={rootProps}
+        id={id}
+        class={name}
+        htmlProps={{ type: 'range' }}
+      />
+    )
+  },
+)

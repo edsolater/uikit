@@ -19,7 +19,10 @@ export const componentName = 'Text'
 
 /** Text 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
 export type TextProps = Omit<
-  KitProps<{}, TextController, 'span' | 'div' | 'p' | 'strong'>,
+  KitProps<{
+    controller: TextController
+    domTag: 'span' | 'div' | 'p' | 'strong'
+  }>,
   'as' | 'children'
 > & {
   children?: Source<string | number | undefined>
@@ -58,7 +61,7 @@ export const textPropDefinition: TextPropDefinition = {
 }
 
 /** 控制文字与原生输入，语义标签仅在创建时选择。 */
-export interface TextController extends KitController<
-  TextProps,
-  TextPropDefinition
-> {}
+export interface TextController extends KitController<{
+  props: TextProps
+  propDefinition: TextPropDefinition
+}> {}

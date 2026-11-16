@@ -18,7 +18,10 @@ import {
 export const componentName = 'Details'
 
 /** Details 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type DetailsProps = KitProps<{}, DetailsController, 'details'> & {
+export type DetailsProps = KitProps<{
+  controller: DetailsController
+  domTag: 'details'
+}> & {
   summary: PivProps['children']
   open?: Source<boolean | undefined>
   children?: JSX.Element
@@ -46,7 +49,7 @@ export const detailsPropDefinition: DetailsPropDefinition = {
 }
 
 /** 控制摘要和展开输入，并保留原生节点能力。 */
-export interface DetailsController extends KitController<
-  DetailsProps,
-  DetailsPropDefinition
-> {}
+export interface DetailsController extends KitController<{
+  props: DetailsProps
+  propDefinition: DetailsPropDefinition
+}> {}

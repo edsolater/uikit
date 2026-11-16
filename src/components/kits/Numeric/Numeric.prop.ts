@@ -18,7 +18,10 @@ import {
 export const componentName = 'Numeric'
 
 /** Numeric 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type NumericProps = KitProps<{}, NumericController, 'span'> & {
+export type NumericProps = KitProps<{
+  controller: NumericController
+  domTag: 'span'
+}> & {
   value?: Source<number | null | undefined>
   significantDigits?: Source<number | undefined>
 }
@@ -41,7 +44,7 @@ export const numericPropDefinition: NumericPropDefinition = {
 }
 
 /** 控制原值与有效位数，更新沿原格式化链显示。 */
-export interface NumericController extends KitController<
-  NumericProps,
-  NumericPropDefinition
-> {}
+export interface NumericController extends KitController<{
+  props: NumericProps
+  propDefinition: NumericPropDefinition
+}> {}

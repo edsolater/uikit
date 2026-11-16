@@ -19,10 +19,10 @@ import './NavigationRegion.style'
 /**
  * 组织具名导航区域。
  */
-export const NavigationRegion: KitComponent<
-  NavigationRegionProps,
-  NavigationRegionController
-> = kit(
+export const NavigationRegion: KitComponent<{
+  props: NavigationRegionProps
+  controller: NavigationRegionController
+}> = kit(
   {
     name: componentName,
     description: '组织具名导航区域',

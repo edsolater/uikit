@@ -20,7 +20,10 @@ import './Link.style'
 /**
  * 保留原生导航、另开页面与当前项语义的链接。
  */
-export const Link: KitComponent<LinkProps, LinkController> = kit(
+export const Link: KitComponent<{
+  props: LinkProps
+  controller: LinkController
+}> = kit(
   {
     name: componentName,
     description: '导航到目标页面',

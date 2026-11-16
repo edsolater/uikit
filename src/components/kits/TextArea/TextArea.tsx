@@ -19,7 +19,10 @@ import './TextArea.style'
 /**
  * 带原生字段身份的多行编辑，保留受控值与表单校验。
  */
-export const TextArea: KitComponent<TextAreaProps, TextAreaController> = kit(
+export const TextArea: KitComponent<{
+  props: TextAreaProps
+  controller: TextAreaController
+}> = kit(
   {
     name: componentName,
     description: '编辑多行文字',

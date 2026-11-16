@@ -18,11 +18,10 @@ import {
 export const componentName = 'NavigationRegion'
 
 /** NavigationRegion 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type NavigationRegionProps = KitProps<
-  {},
-  NavigationRegionController,
-  'nav'
-> & {
+export type NavigationRegionProps = KitProps<{
+  controller: NavigationRegionController
+  domTag: 'nav'
+}> & {
   label: Source<string>
   children?: JSX.Element
 }
@@ -45,7 +44,7 @@ export const navigationRegionPropDefinition: NavigationRegionPropDefinition = {
 }
 
 /** 控制导航区域名称、内容与原生节点输入。 */
-export interface NavigationRegionController extends KitController<
-  NavigationRegionProps,
-  NavigationRegionPropDefinition
-> {}
+export interface NavigationRegionController extends KitController<{
+  props: NavigationRegionProps
+  propDefinition: NavigationRegionPropDefinition
+}> {}

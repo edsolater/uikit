@@ -16,7 +16,10 @@ import {
 export const componentName = 'InputRange'
 
 /** InputRange 的公共声明与自有业务输入。 */
-export type InputRangeProps = KitProps<{}, InputRangeController, 'input'> & {
+export type InputRangeProps = KitProps<{
+  controller: InputRangeController
+  domTag: 'input'
+}> & {
   // 自有输入。
 }
 
@@ -29,7 +32,7 @@ export const inputRangePropDefinition: InputRangePropDefinition = {
 }
 
 /** InputRange 的输入干预入口。 */
-export interface InputRangeController extends KitController<
-  InputRangeProps,
-  InputRangePropDefinition
-> {}
+export interface InputRangeController extends KitController<{
+  props: InputRangeProps
+  propDefinition: InputRangePropDefinition
+}> {}

@@ -52,11 +52,11 @@ const parseStatusProps = createStatusPropsParser({
  * 呈现可执行动作，按外观和状态输入更新按钮。
  * 用户执行动作时交付 onClick，原生节点声明沿用 Piv 契约。
  */
-export const Button: KitComponent<
-  ButtonProps,
-  ButtonController,
-  typeof buttonStyleTokens
-> = kit(
+export const Button: KitComponent<{
+  props: ButtonProps
+  controller: ButtonController
+  styleTokens: typeof buttonStyleTokens
+}> = kit(
   {
     name: componentName,
     description: '执行动作',

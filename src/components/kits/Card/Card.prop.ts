@@ -8,7 +8,7 @@
 import { type KitProps, type KitController } from '../../tools/kit'
 import type { JSX } from '@/foundation'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
-import type { ControllerCollection } from '../../tools/controllerRegistry'
+import type { ControllerRegistry } from '../../tools/controllerRegistry'
 import {
   boardPropDefinition,
   type BoardPropDefinition,
@@ -25,11 +25,10 @@ export type CardVariantProps = BoardVariantProps
 export type CardSizeProps = BoardSizeProps
 
 /** 独立信息体的原生根、材质及尺度。 */
-export type CardProps<Tag extends PivSupportedElementTag = 'div'> = KitProps<
-  {},
-  CardController<Tag>,
-  Tag
-> &
+export type CardProps<Tag extends PivSupportedElementTag = 'div'> = KitProps<{
+  controller: CardController<Tag>
+  domTag: Tag
+}> &
   CardVariantProps &
   CardSizeProps & {
     // 自有输入
@@ -43,17 +42,22 @@ export const cardPropDefinition: CardPropDefinition = { ...boardPropDefinition }
 /** 保留 Card 原生根类型的实例输入控制。 */
 export interface CardController<
   Tag extends PivSupportedElementTag = 'div',
-> extends KitController<CardProps<Tag>, CardPropDefinition> {}
+> extends KitController<{
+  props: CardProps<Tag>
+  propDefinition: CardPropDefinition
+}> {}
 
 /** 异构 Card 集合只公开共同安全的原生输入。 */
 export interface CardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(
     props: CardProps<Tag>,
   ): JSX.Element
-  controllers: ControllerCollection<{
-    props: Omit<
-      CardController<PivSupportedElementTag>['props'],
-      'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
-    >
+  controllers: ControllerRegistry<{
+    controller: {
+      props: Omit<
+        CardController<PivSupportedElementTag>['props'],
+        'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
+      >
+    }
   }>
 }

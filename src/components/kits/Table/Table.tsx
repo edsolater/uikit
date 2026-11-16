@@ -27,10 +27,10 @@ type TableDataRow = Record<PropertyKey, unknown>
 /**
  * 按列维护原生表格结构，内容渲染器取得原始行和值。
  */
-const tableComponent: KitComponent<
-  TableProps<TableDataRow, PropertyKey>,
-  TableController<TableDataRow, PropertyKey>
-> = kit(
+const tableComponent: KitComponent<{
+  props: TableProps<TableDataRow, PropertyKey>
+  controller: TableController<TableDataRow, PropertyKey>
+}> = kit(
   {
     name: componentName,
     description: '按列展示记录',

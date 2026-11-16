@@ -70,7 +70,9 @@ tooltip 插件继续负责简短辅助信息的悬停／焦点／Escape、延迟
 
 ### 声明与组件创建
 
-公开 Kit 组件先声明 Props、字段协议与 Controller，再以 `KitComponent<Props, Controller>` 约束实现。`KitProps<Config, Controller, Tag>` 聚合 Piv、用途说明、样式输入与组件 ref；固定语义根按职责收窄或移除字段。`KitPropDefinition<OwnDefinition>` 只接收自有模式，内部覆盖同名公共模式；公开 `kitPropDefinition` 完整组合 Dode/Piv、KitMarker 与 Kit 自有规则，私有 `kitCommonPropDefinition` 只拥有 ref/styleConfig。
+公开 Kit 组件先声明 Props、字段协议与 Controller，再以 `KitComponent<{ props: Props; controller: Controller }>` 约束实现。`KitProps<{ styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv、用途说明、样式输入与组件 ref；固定语义根按职责收窄或移除字段。`KitPropDefinition<OwnDefinition>` 只接收自有模式，内部覆盖同名公共模式；公开 `kitPropDefinition` 完整组合 Dode/Piv、KitMarker 与 Kit 自有规则，私有 `kitCommonPropDefinition` 只拥有 ref/styleConfig。
+
+KitProps、KitComponent、KitController、KitOptions 与 ControllerRegistry 以具名配置表达所整合的信息，各字段职责在使用处直接可见。KitProps 的三个字段及整份配置可省略；样式配置默认为无具体字段，controller 默认为通用输入控制形状，domTag 默认为 div。业务 Table 的 Row/ColumnKey、元素变换工具及插件配置仍沿自身契约表达，见[信息整合类泛型的设计准则](docs/guide/信息整合类泛型的设计准则.md)。
 
 每个组件的 `.prop.ts` 聚合 Props、字段协议类型和值、Controller 声明及候选事实，相关定义保持紧邻。`.style.ts` 聚合 StyleConfig 类型、箭头解释函数、Token 与规则；`.tsx` 负责装配、渲染和实际业务能力。`components/tools/kit.ts` 中 KitOptions 与 kit 属于同一组件定义与创建板块。PropsOf、ControllerOf、旧 Inputs、自动输入补全及 directorOptions 已退出，不保留旧签名适配。
 

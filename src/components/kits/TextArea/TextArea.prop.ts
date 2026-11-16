@@ -17,7 +17,10 @@ import type { Source } from '@/foundation'
 export const componentName = 'TextArea'
 
 /** TextArea 的公共声明与自有业务输入。 */
-export type TextAreaProps = KitProps<{}, TextAreaController, 'textarea'> & {
+export type TextAreaProps = KitProps<{
+  controller: TextAreaController
+  domTag: 'textarea'
+}> & {
   name?: string
   value: Source<string>
   placeholder?: Source<string | undefined>
@@ -50,7 +53,7 @@ export const textAreaPropDefinition: TextAreaPropDefinition = {
 }
 
 /** TextArea 的输入干预入口。 */
-export interface TextAreaController extends KitController<
-  TextAreaProps,
-  TextAreaPropDefinition
-> {}
+export interface TextAreaController extends KitController<{
+  props: TextAreaProps
+  propDefinition: TextAreaPropDefinition
+}> {}

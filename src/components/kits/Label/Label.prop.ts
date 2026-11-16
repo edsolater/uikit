@@ -19,7 +19,7 @@ export const componentName = 'Label'
 
 /** Label 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
 export type LabelProps = Omit<
-  KitProps<{}, LabelController, 'span'>,
+  KitProps<{ controller: LabelController; domTag: 'span' }>,
   'children'
 > & {
   for?: Source<string | undefined>
@@ -49,7 +49,7 @@ export const labelPropDefinition: LabelPropDefinition = {
 }
 
 /** 控制字段关联、标题来源与辅助说明。 */
-export interface LabelController extends KitController<
-  LabelProps,
-  LabelPropDefinition
-> {}
+export interface LabelController extends KitController<{
+  props: LabelProps
+  propDefinition: LabelPropDefinition
+}> {}

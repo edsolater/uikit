@@ -18,7 +18,10 @@ import {
 export const componentName = 'Page'
 
 /** Page 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type PageProps = KitProps<{}, PageController, 'main'> & {
+export type PageProps = KitProps<{
+  controller: PageController
+  domTag: 'main'
+}> & {
   title?: Source<string | undefined>
   /** 可见副标题，保持正文语义，不用作结构查看元数据。 */
   subtitle?: Source<string | undefined>
@@ -44,7 +47,7 @@ export const pagePropDefinition: PagePropDefinition = {
 }
 
 /** 控制页面标题、副标题、动作与正文输入。 */
-export interface PageController extends KitController<
-  PageProps,
-  PagePropDefinition
-> {}
+export interface PageController extends KitController<{
+  props: PageProps
+  propDefinition: PagePropDefinition
+}> {}

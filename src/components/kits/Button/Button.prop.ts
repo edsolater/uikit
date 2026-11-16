@@ -91,11 +91,11 @@ export const buttonStatusCandidates = ['loading', 'disabled'] as const
 export type ButtonStatus = (typeof buttonStatusCandidates)[number]
 
 /** 动作内容、外观分类和状态输入，原生节点声明沿用 Piv 契约。 */
-export type ButtonProps = KitProps<
-  ButtonStyleConfig,
-  ButtonController,
-  'button'
-> &
+export type ButtonProps = KitProps<{
+  styleConfig: ButtonStyleConfig
+  controller: ButtonController
+  domTag: 'button'
+}> &
   VariantProps<'appearance', ButtonAppearance> &
   VariantProps<'emphasis', ButtonEmphasis> &
   VariantProps<'tone', ButtonTone> &
@@ -151,5 +151,5 @@ export const buttonPropDefinition: ButtonPropDefinition = {
 /** 顶层状态能力与按字段协议构造的输入控制共同组成按钮协议。 */
 export interface ButtonController
   extends
-    KitController<ButtonProps, ButtonPropDefinition>,
+    KitController<{ props: ButtonProps; propDefinition: ButtonPropDefinition }>,
     StatusController<ButtonStatus> {}

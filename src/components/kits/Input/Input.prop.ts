@@ -22,7 +22,10 @@ import type { StatusController } from '../utils/parseStatusProps'
 export const componentName = 'Input'
 
 /** Input 的公共声明与自有业务输入。 */
-export type InputProps = KitProps<{}, InputController, 'input'> &
+export type InputProps = KitProps<{
+  controller: InputController
+  domTag: 'input'
+}> &
   InputValidityProps & {
     /** 原生输入类型；省略时为单行文字。 */
     type?: Source<'text' | 'color' | undefined>
@@ -48,5 +51,5 @@ export const inputPropDefinition: InputPropDefinition = {
 /** Input 的输入干预与业务状态入口。 */
 export interface InputController
   extends
-    KitController<InputProps, InputPropDefinition>,
+    KitController<{ props: InputProps; propDefinition: InputPropDefinition }>,
     StatusController<'invalid'> {}

@@ -15,6 +15,9 @@ import {
   type KitController,
   type KitComponent,
   type KitControllerProps,
+  type KitOptions,
+  type KitOptionsConfig,
+  type ControllerRegistry,
 } from '@/index'
 import {
   type FlowProps,
@@ -75,6 +78,86 @@ import {
 } from '../kits/TextArea/TextArea.prop'
 
 const { buttonStyleConfig, ...buttonTokens } = buttonStyle
+
+/**
+ * 具名角色独立选用，缺省保持公共契约；可选属性仍保留其声明的值域。
+ */
+function verifyNamedAggregateContracts() {
+  expectTypeOf<KitProps>().toEqualTypeOf<KitProps<{}>>()
+  expectTypeOf<KitProps['ref']>().toEqualTypeOf<
+    KitControllerProps<{ props: object }>['ref']
+  >()
+  expectTypeOf<
+    KitProps<{
+      domTag?: undefined
+      controller?: undefined
+      styleConfig?: undefined
+    }>
+  >().toEqualTypeOf<KitProps>()
+  interface NamedRoles {
+    domTag?: 'button'
+    controller?: FlowController
+    styleConfig?: FlowStyleConfig
+  }
+  const named: KitProps<NamedRoles> = {
+    as: 'button',
+    styleConfig: { direction: 'row' },
+  }
+  expectTypeOf<KitProps<NamedRoles>['ref']>().toEqualTypeOf<FlowProps['ref']>()
+  type ButtonInput = KitProps<{ domTag?: 'button' }>
+  const button: ButtonInput = { as: 'button' }
+  // @ts-expect-error 命名的可选标签声明仍限制原生标签。
+  const wrongTag: ButtonInput = { as: 'div' }
+  type NamedStyle = KitProps<{ styleConfig?: FlowStyleConfig }>
+  const styled: NamedStyle = { styleConfig: { direction: 'row' } }
+  // @ts-expect-error 样式角色独立选择后仍校验字段值域。
+  const wrongStyle: NamedStyle = { styleConfig: { direction: 'diagonal' } }
+  type NamedController = KitProps<{ controller?: FlowController }>
+  expectTypeOf<NamedController['ref']>().toEqualTypeOf<FlowProps['ref']>()
+  interface NamedOptions extends KitOptionsConfig<FlowProps> {
+    propDefinition: FlowPropDefinition
+    styleTokens?: typeof buttonTokens
+  }
+  const options: KitOptions<NamedOptions> = {
+    name: 'Flow',
+    propDefinition: flowPropDefinition,
+    styleTokens: buttonTokens,
+  }
+  expectTypeOf<
+    ControllerRegistry<{
+      controller: FlowController
+      styleTokens?: typeof buttonTokens
+    }>
+  >().toEqualTypeOf<
+    | ControllerRegistry<{ controller: FlowController }>
+    | ControllerRegistry<{
+        controller: FlowController
+        styleTokens: typeof buttonTokens
+      }>
+  >()
+  expectTypeOf<
+    ControllerRegistry<{ controller: FlowController }>
+  >().not.toHaveProperty('style')
+  expectTypeOf<
+    ControllerRegistry<{ controller: FlowController; styleTokens: undefined }>
+  >().not.toHaveProperty('style')
+  // 这里只声明集合角色，不额外收窄原有调用输入与集合成员的值域。
+  type PrimitiveComponent = KitComponent<{ props: string; controller: number }>
+  expectTypeOf<Parameters<PrimitiveComponent>[0]>().toEqualTypeOf<string>()
+  type PrimitiveRegistry = ControllerRegistry<{ controller: number }>
+  // @ts-expect-error 组件契约必须声明控制器角色。
+  type MissingComponentController = KitComponent<{ props: FlowProps }>
+  // @ts-expect-error 创建契约必须声明字段协议。
+  type MissingOptionsDefinition = KitOptions<{ props: FlowProps }>
+  // @ts-expect-error 控制协议必须声明字段协议。
+  type MissingControllerDefinition = KitController<{ props: FlowProps }>
+  // @ts-expect-error 集合契约必须声明实例成员。
+  type MissingRegistryController = ControllerRegistry<{}>
+  // @ts-expect-error 已改为具名配置，不保留旧位置参数。
+  type PositionalProps = KitProps<{}, FlowController>
+  void [named, button, wrongTag, styled, wrongStyle, options]
+}
+void verifyNamedAggregateContracts
 
 /**
  * 空样式契约保留统一对象入口；undefined 表示清空，原始值不作为配置。
@@ -154,8 +237,11 @@ test('Button只补业务模式，候选声明和值域共享同一份事实', ()
  */
 function verifyDefinitionContract() {
   type Override = KitPropDefinition<{ children: 'only-through-prop' }>
-  type Props = KitProps<{}, Controller> & {}
-  interface Controller extends KitController<Props, Override> {}
+  type Props = KitProps<{ styleConfig: {}; controller: Controller }> & {}
+  interface Controller extends KitController<{
+    props: Props
+    propDefinition: Override
+  }> {}
   expectTypeOf<Override['children']>().toEqualTypeOf<'only-through-prop'>()
   expectTypeOf<
     Extract<keyof Controller['props'], 'children' | 'ref'>
@@ -177,11 +263,11 @@ function verifyDefinitionContract() {
   }
   // @ts-expect-error 按钮标签契约不退化为默认 div。
   const wrongButton: ButtonProps = { as: 'div' }
-  const RenderMissingActions: KitComponent<
-    ButtonProps,
-    ButtonController,
-    typeof buttonTokens
-  > = kit(
+  const RenderMissingActions: KitComponent<{
+    props: ButtonProps
+    controller: ButtonController
+    styleTokens: typeof buttonTokens
+  }> = kit(
     {
       name: 'MissingActions',
       propDefinition: buttonPropDefinition,
@@ -210,7 +296,10 @@ void verifyDefinitionContract
  * 已声明的公开组件契约为两个未注解的渲染参数提供类型，完整模式必须兑现控制字段。
  */
 function verifyContextualRender() {
-  const RenderDeclared: KitComponent<FlowProps, FlowController> = kit(
+  const RenderDeclared: KitComponent<{
+    props: FlowProps
+    controller: FlowController
+  }> = kit(
     {
       name: 'Declared',
       propDefinition: flowPropDefinition,
@@ -230,7 +319,10 @@ function verifyContextualRender() {
     ...flowPropDefinition,
     children: 'only-through-prop',
   } as const
-  const RenderWrongMode: KitComponent<FlowProps, FlowController> = kit(
+  const RenderWrongMode: KitComponent<{
+    props: FlowProps
+    controller: FlowController
+  }> = kit(
     // @ts-expect-error 实际生成的控制器必须保留公开承诺的 children 控制字段。
     {
       name: 'WrongMode',
@@ -242,7 +334,10 @@ function verifyContextualRender() {
   interface ExtraController {
     props: FlowController['props'] & { missing: State<number> }
   }
-  const RenderExtra: KitComponent<FlowProps, ExtraController> = kit(
+  const RenderExtra: KitComponent<{
+    props: FlowProps
+    controller: ExtraController
+  }> = kit(
     // @ts-expect-error 字段协议不能生成声明中虚构的状态。
     {
       name: 'Extra',
@@ -256,7 +351,10 @@ function verifyContextualRender() {
       description: State<'fixed'>
     }
   }
-  const RenderNarrow: KitComponent<FlowProps, NarrowController> = kit(
+  const RenderNarrow: KitComponent<{
+    props: FlowProps
+    controller: NarrowController
+  }> = kit(
     // @ts-expect-error 实际来源值域不能冒充公开声明的更窄 State。
     {
       name: 'Narrow',
@@ -268,8 +366,14 @@ function verifyContextualRender() {
   interface WrongRefController extends FlowController {
     missing(): void
   }
-  type WrongRefProps = KitProps<FlowStyleConfig, WrongRefController> & {}
-  const RenderWrongRef: KitComponent<WrongRefProps, FlowController> = kit(
+  type WrongRefProps = KitProps<{
+    styleConfig: FlowStyleConfig
+    controller: WrongRefController
+  }> & {}
+  const RenderWrongRef: KitComponent<{
+    props: WrongRefProps
+    controller: FlowController
+  }> = kit(
     // @ts-expect-error 交付的实际 Controller 必须满足公开 ref 接收方声明的全部能力。
     {
       name: 'WrongRef',
@@ -279,7 +383,10 @@ function verifyContextualRender() {
     () => null,
   )
   type NumericRefProps = Omit<FlowProps, 'ref'> & { ref?: number }
-  const RenderNumericRef: KitComponent<NumericRefProps, FlowController> = kit(
+  const RenderNumericRef: KitComponent<{
+    props: NumericRefProps
+    controller: FlowController
+  }> = kit(
     // @ts-expect-error ref 必须是 Controller 接收器，不能声明为数值。
     {
       name: 'NumericRef',

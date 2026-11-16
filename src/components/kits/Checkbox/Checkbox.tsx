@@ -20,7 +20,10 @@ import './Checkbox.style'
 /**
  * 带可点击标题的二态表单选择。
  */
-export const Checkbox: KitComponent<CheckboxProps, CheckboxController> = kit(
+export const Checkbox: KitComponent<{
+  props: CheckboxProps
+  controller: CheckboxController
+}> = kit(
   {
     name: componentName,
     description: '切换二态选项',

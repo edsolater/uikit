@@ -25,10 +25,10 @@ import './SelectInput.style'
  * 点击输入框展开候选；方向键和 Enter 选择，Escape 恢复 value。
  * 未编辑时显示 value 和最多三个标签；关闭候选时调用 onClose。
  */
-export const SelectInput: KitComponent<
-  SelectInputProps,
-  SelectInputController
-> = kit(
+export const SelectInput: KitComponent<{
+  props: SelectInputProps
+  controller: SelectInputController
+}> = kit(
   {
     name: componentName,
     description: '搜索并选择一项',

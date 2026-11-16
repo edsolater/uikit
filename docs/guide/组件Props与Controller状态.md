@@ -13,7 +13,9 @@ Props 是组件的声明入口，负责初始界面与持续变化的来源。Co
 | `Component.tsx`           | 组件装配、内容渲染，以及实际业务 Controller 的创建与交付                                 |
 | `components/tools/kit.ts` | 公共输入、字段协议、组件创建与实例装配；KitOptions 紧邻 kit，不按类型与实现拆开          |
 
-`KitProps<Config, Controller, Tag>` 聚合 Piv 节点声明、组件用途说明、样式输入与组件 ref；默认 Tag 为 div。`children` 保留为统一公共输入及控制字段；当前组件使用业务值产生内容，不意味着公共协议需要删除这个入口，也不要求组件额外创建另一套内容回落。Article、Heading 与 Text 的固定根语义仍由各自声明表达。确有字段形状差异时，先核对共同模型，再处理必要的语义覆盖，避免按每个当前消费者分割公共协议。
+`KitProps<{ styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv 节点声明、组件用途说明、样式输入与组件 ref；domTag 缺省为 div。`children` 保留为统一公共输入及控制字段；当前组件使用业务值产生内容，不意味着公共协议需要删除这个入口，也不要求组件额外创建另一套内容回落。Article、Heading 与 Text 的固定根语义仍由各自声明表达。确有字段形状差异时，先核对共同模型，再处理必要的语义覆盖，避免按每个当前消费者分割公共协议。
+
+Kit 的信息整合类型统一接收具名配置对象。`KitProps` 的 styleConfig、controller、domTag 及整个配置对象均可省略；缺省分别为无具体字段的样式配置、通用输入控制形状和 div。组件需要精确 ref 时仍显式填写自己的 controller。其他聚合类型沿各自契约声明 props、propDefinition、controller 或 styleTokens，详见[信息整合类泛型的设计准则](信息整合类泛型的设计准则.md)。
 
 `KitPropDefinition<OwnDefinition>` 只接收自有字段模式，并在内部覆盖同名公共模式。公开 `kitPropDefinition` 完整组合各字段拥有者的定义；私有 `kitCommonPropDefinition` 只拥有 ref 与 styleConfig。组件无自有字段时，Props 和自有模式仍保留明确的空槽。
 
@@ -23,7 +25,10 @@ Props 是组件的声明入口，负责初始界面与持续变化的来源。Co
 // Flow.prop.ts
 export const componentName = 'Flow'
 
-export type FlowProps = KitProps<FlowStyleConfig, FlowController> & {
+export type FlowProps = KitProps<{
+  styleConfig: FlowStyleConfig
+  controller: FlowController
+}> & {
   // 自有输入
 }
 export type FlowPropDefinition = KitPropDefinition<{
@@ -32,13 +37,16 @@ export type FlowPropDefinition = KitPropDefinition<{
 export const flowPropDefinition: FlowPropDefinition = {
   ...kitPropDefinition,
 }
-export interface FlowController extends KitController<
-  FlowProps,
-  FlowPropDefinition
-> {}
+export interface FlowController extends KitController<{
+  props: FlowProps
+  propDefinition: FlowPropDefinition
+}> {}
 
 // Flow.tsx
-export const Flow: KitComponent<FlowProps, FlowController> = kit(
+export const Flow: KitComponent<{
+  props: FlowProps
+  controller: FlowController
+}> = kit(
   {
     name: componentName,
     description: '组织内容方向',
@@ -53,7 +61,7 @@ export const Flow: KitComponent<FlowProps, FlowController> = kit(
 )
 ```
 
-`KitComponent<Props, Controller>` 为核心参数提供上下文，核心不再标注 props 或 Context 的类型。kit 检查完整字段表、读取后的输入、生成的 Controller 与 ref 接收协议；处理函数不参与公开契约的推导。无具体配置字段的组件使用 `KitProps<{}, Controller>`，仍保留对象配置及其 Source 输入，允许 `{}` 和 `undefined` 清空，不接受原始字符串等值。根解释集合可以省略，也可以显式声明 `{}`。
+`KitComponent<{ props: Props; controller: Controller }>` 为核心参数提供上下文，核心不再标注 props 或 Context 的类型。kit 检查完整字段表、读取后的输入、生成的 Controller 与 ref 接收协议；处理函数不参与公开契约的推导。无具体配置字段的组件使用 `KitProps<{ controller: Controller }>`，仍保留对象配置及其 Source 输入，允许 `{}` 和 `undefined` 清空，不接受原始字符串等值。根解释集合可以省略，也可以显式声明 `{}`。
 
 每个组件的 `componentName` 统一定义在自身 `.prop.ts` 的元数据位置，组件实现与自有根样式引用同一身份。它不从包根汇总为同名出口，子部件和 Token 的独立名称保持各自含义。
 
@@ -141,10 +149,10 @@ Board、Card、Loop、Table 的公开泛型协议在各自 .prop.ts 中先行声
 
 `.controllers` 可同时包含不同类型的实例，因此只提供安全共同字段；以下字段留给精确实例 ref：
 
-| 组件集合     | 由精确实例 ref 操作的字段                                                        |
-| ------------ | -------------------------------------------------------------------------------- |
-| Board / Card | as、htmlProps、on、domRef、shadowProps、is                                       |
-| Loop         | each                                                                             |
+| 组件集合     | 由精确实例 ref 操作的字段                         |
+| ------------ | ------------------------------------------------- |
+| Board / Card | as、htmlProps、on、domRef、shadowProps、is        |
+| Loop         | each                                              |
 | Table        | data、keys、renderParts、cellTitle、cellIntensity |
 
 这是公开集合类型的边界，不增加运行过滤或第二份状态。Card 复用 Board 的承载字段与渲染行为，但两者各有 Marker 和实例集合。Article 固定 article 根，正文与 Card 容器分别拥有自己的实例；组合方向由信息含义决定，见[组件嵌套](组件嵌套.md)。

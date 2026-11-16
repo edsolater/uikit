@@ -21,7 +21,10 @@ import './Text.style'
  * 显示纯文字，缺省使用span，block使用div，p使用段落，emphasis使用strong。
  * 定位框开启只改变可见性，关闭后显示来源的最新文字。
  */
-export const Text: KitComponent<TextProps, TextController> = kit(
+export const Text: KitComponent<{
+  props: TextProps
+  controller: TextController
+}> = kit(
   {
     name: componentName,
     propDefinition: textPropDefinition,

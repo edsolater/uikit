@@ -17,7 +17,10 @@ import {
 /**
  * 保留原生键盘与展开语义的按需阅读区域。
  */
-export const Details: KitComponent<DetailsProps, DetailsController> = kit(
+export const Details: KitComponent<{
+  props: DetailsProps
+  controller: DetailsController
+}> = kit(
   {
     name: componentName,
     description: '按需展开内容',

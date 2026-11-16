@@ -18,7 +18,10 @@ import {
 /**
  * 关联字段标题与单个控件。
  */
-export const Field: KitComponent<FieldProps, FieldController> = kit(
+export const Field: KitComponent<{
+  props: FieldProps
+  controller: FieldController
+}> = kit(
   {
     name: componentName,
     description: '关联字段标题与单个控件',

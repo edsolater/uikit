@@ -25,7 +25,10 @@ import { useFormFieldId } from '../FormField/FormField'
 /**
  * 显示标题与说明，保持原生表单关联，浮层不参与字段布局。
  */
-export const Label: KitComponent<LabelProps, LabelController> = kit(
+export const Label: KitComponent<{
+  props: LabelProps
+  controller: LabelController
+}> = kit(
   { name: componentName, propDefinition: labelPropDefinition },
   (props, { name }) => {
     const fieldId = useFormFieldId()

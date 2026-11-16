@@ -44,7 +44,7 @@ import {
 } from './componentPropsDirector'
 import {
   createControllerRegistry,
-  type ControllerCollection,
+  type ControllerRegistry,
 } from './controllerRegistry'
 import { pivPropsDefinition, type PivPropDefinition } from '../Piv/Piv.prop'
 
@@ -68,18 +68,43 @@ export type KitStyleConfigProps<Config> = {
       >
 }
 
-/**
- * 组件的公共输入：原生节点声明、用途说明、样式配置与实例引用。
- * Config 与 Controller 由组件先行声明；Tag 默认 div，可按实际根元素收窄。
- */
-export type KitProps<
-  Config,
-  Controller extends { props: object },
-  Tag extends PivTag = 'div',
-> = PivProps<Tag> &
+/** 公共输入的角色选择；所有字段可省略，不从组件实现反推。 */
+export interface KitPropsConfig {
+  styleConfig?: object
+  controller?: { props: object }
+  domTag?: PivTag
+}
+
+/** 公共输入的集中默认值；未指定控制器时仅承诺通用输入协议。 */
+type KitPropsDefaults = {
+  styleConfig: {}
+  controller: { props: object }
+  domTag: 'div'
+}
+
+/** 组件公共输入；可按名称独立选择样式契约、控制器和原生标签。 */
+export type KitProps<Config extends KitPropsConfig = {}> = PivProps<
+  'domTag' extends keyof Config
+    ? NonNullable<Config['domTag']> extends never
+      ? KitPropsDefaults['domTag']
+      : NonNullable<Config['domTag']>
+    : KitPropsDefaults['domTag']
+> &
   ComponentDescriptionProps &
-  KitStyleConfigProps<Config> &
-  KitControllerProps<Controller>
+  KitStyleConfigProps<
+    'styleConfig' extends keyof Config
+      ? NonNullable<Config['styleConfig']> extends never
+        ? KitPropsDefaults['styleConfig']
+        : NonNullable<Config['styleConfig']>
+      : KitPropsDefaults['styleConfig']
+  > &
+  KitControllerProps<
+    'controller' extends keyof Config
+      ? NonNullable<Config['controller']> extends never
+        ? KitPropsDefaults['controller']
+        : NonNullable<Config['controller']>
+      : KitPropsDefaults['controller']
+  >
 
 /** Kit 自己拥有的读取规则；不包含 Piv 或用途说明字段。 */
 const kitCommonPropDefinition = {
@@ -114,16 +139,29 @@ export const kitPropDefinition: KitPropDefinition<{}> = {
 // =============================================================================
 
 /**
- * 实例的完整控制协议，由业务能力与可写输入组成。
- * Props 规定字段值域，PropDefinition 决定哪些输入进入 props；
- * only-through-prop 字段不进入 props，业务能力不能替换这份输入控制。
+ * 控制协议的具名输入：props 规定值域，propDefinition 规定字段读取方式。
+ * controllerMembers 可补充业务能力，省略时不增加业务成员。
  */
+export interface KitControllerConfig<Props extends object = object> {
+  props: Props
+  propDefinition: PropsDefinition<Props>
+  controllerMembers?: object
+}
+
+/** 实例由业务能力与可写输入组成；only-through-prop 不进入 props，业务能力不能替换输入控制。 */
 export type KitController<
-  Props extends object,
-  PropDefinition extends PropsDefinition<Props>,
-  ControllerMembers extends object = object,
-> = Omit<ControllerMembers, 'props'> & {
-  props: PropsController<Props, PropDefinition>
+  Config extends KitControllerConfig & {
+    propDefinition: PropsDefinition<Config['props']>
+  },
+> = Omit<
+  'controllerMembers' extends keyof Config
+    ? NonNullable<Config['controllerMembers']> extends never
+      ? object
+      : NonNullable<Config['controllerMembers']>
+    : object,
+  'props'
+> & {
+  props: PropsController<Config['props'], Config['propDefinition']>
 }
 
 /** 核心渲染期间取得的实例上下文；ControllerMembers 只包含已声明的业务能力。 */
@@ -144,11 +182,18 @@ export interface KitComponentContext<
   exposeController(controller: ControllerMembers & object): void
 }
 
+/** 组件公开调用的输入、实例控制器与可选样式 Token 集合。 */
+export interface KitComponentConfig {
+  props: unknown
+  controller: unknown
+  styleTokens?: unknown
+}
+
 /** 组件预先声明的调用与控制契约；kit 据此为 render 提供上下文并校验实现。 */
-export type KitComponent<Props, Controller, StyleTokens = undefined> = {
-  (props: Props): JSX.Element
+export type KitComponent<Config extends KitComponentConfig> = {
+  (props: Config['props']): JSX.Element
   /** 当前存活的受控实例集合；提供 StyleTokens 时，同一入口还保留样式 Token 集合。 */
-  controllers: ControllerCollection<Controller, StyleTokens>
+  controllers: ControllerRegistry<Config>
 }
 
 // =============================================================================
@@ -156,32 +201,41 @@ export type KitComponent<Props, Controller, StyleTokens = undefined> = {
 // =============================================================================
 
 /** 组件创建时固定的定义事实，与每个实例传入的 Props 分开。 */
+export interface KitOptionsConfig<Props extends object = object> {
+  props: Props
+  propDefinition: PropsDefinition<Props>
+  styleTokens?: unknown
+}
+
+/** 定义输入读取与根样式解释，样式 Token 集合缺省为 undefined。 */
 export type KitOptions<
-  Props extends object,
-  PropDefinition extends PropsDefinition<Props>,
-  StyleTokens = undefined,
+  Config extends KitOptionsConfig & {
+    propDefinition: PropsDefinition<Config['props']>
+  },
 > = {
   /** 覆盖全部 Props 的读取协议，包括公共字段；ref 固定为 only-through-prop。 */
-  propDefinition: PropDefinition
+  propDefinition: Config['propDefinition']
   /** 所有实例共用的组件身份，同时交给 Marker 与核心上下文。 */
   name: string
   /** 实例没有提供说明时，由 Marker 使用的默认用途说明。 */
   description?: ComponentDescriptionProps['description']
   /** 按实例输入决定说明呈现方式；在实例创建时求值。 */
   marker?: (
-    props: Props,
+    props: Config['props'],
   ) => Pick<KitMarkerProps, 'defaultDescriptionDisplay' | 'descriptionOnly'>
   /** 互斥分组及候选字段；启用输入控制时，为未声明的分组建立默认来源。 */
   variantGroups?: readonly Pick<
     VariantPropsGroup<
-      Extract<keyof Props, string>,
-      Extract<keyof Props, string>
+      Extract<keyof Config['props'], string>,
+      Extract<keyof Config['props'], string>
     >,
     'groupName' | 'candidates'
   >[]
   /** 原样登记到 controllers.style 的 Token 集合，不是某个实例的样式配置值。 */
-  styleTokens?: StyleTokens
-} & StyleRequirement<Props>
+  styleTokens?: 'styleTokens' extends keyof Config
+    ? Config['styleTokens']
+    : undefined
+} & StyleRequirement<Config['props']>
 
 /**
  * 将组件定义和核心渲染函数组合为组件入口，入口同时提供当前受控实例集合。
@@ -196,7 +250,7 @@ export type KitOptions<
  * 样式配置和用途说明作为根声明交给内部真实元素，kit 与 Marker 不增加容器 DOM。
  *
  * @example
- * type FlowProps = KitProps<FlowStyleConfig, FlowController> & {
+ * type FlowProps = KitProps<{ styleConfig: FlowStyleConfig; controller: FlowController }> & {
  *   // 自有输入
  * }
  * type FlowPropDefinition = KitPropDefinition<{
@@ -205,8 +259,8 @@ export type KitOptions<
  * const flowPropDefinition: FlowPropDefinition = {
  *   ...kitPropDefinition,
  * }
- * interface FlowController extends KitController<FlowProps, FlowPropDefinition> {}
- * const Flow: KitComponent<FlowProps, FlowController> = kit(
+ * interface FlowController extends KitController<{ props: FlowProps; propDefinition: FlowPropDefinition }> {}
+ * const Flow: KitComponent<{ props: FlowProps; controller: FlowController }> = kit(
  *   { name: 'Flow', propDefinition: flowPropDefinition, styleConfig: flowStyleConfig },
  *   (props, { name }) => <Piv shadowProps={props} class={name}>{props.children}</Piv>,
  * )
@@ -217,13 +271,27 @@ export function kit<
   PropDefinition extends PropsDefinition<Props> & { ref: 'only-through-prop' },
   StyleTokens extends Record<string, Token> | undefined = undefined,
 >(
-  options: KitOptions<Omit<Props, 'ref'>, PropDefinition, StyleTokens> &
-    NoInfer<ValidKitOptions<Props, Controller, PropDefinition>>,
+  options: KitOptions<{
+    props: Omit<Props, 'ref'>
+    propDefinition: PropDefinition
+    styleTokens: StyleTokens
+  }> &
+    NoInfer<
+      ValidKitOptions<{
+        props: Props
+        controller: Controller
+        propDefinition: PropDefinition
+      }>
+    >,
   render: (
     props: Omit<Props, 'ref'>,
     context: KitComponentContext<Omit<Controller, 'props'>>,
   ) => JSX.Element,
-): KitComponent<Props, Controller, StyleTokens> {
+): KitComponent<{
+  props: Props
+  controller: Controller
+  styleTokens: StyleTokens
+}> {
   // 同一定义的实例共用默认来源规则和注册入口；具体字段状态仍由实例各自持有。
   const propDefinition = options.propDefinition
   const variantSources = options.variantGroups
@@ -384,31 +452,37 @@ type StyleRequirement<Props> = 'styleConfig' extends keyof Props
 
 /** 四项约束共同验证定义与公开契约一致；只接受已有声明，不参与推断或运行。 */
 type ValidKitOptions<
-  Props extends object,
-  Controller,
-  PropDefinition extends PropsDefinition<Props>,
+  Config extends {
+    props: object
+    controller: unknown
+    propDefinition: PropsDefinition<Config['props']>
+  },
 > =
   // 字段表不能带入 Props 以外的字段。
-  (Exclude<keyof PropDefinition, keyof Props> extends never ? unknown : never) &
+  (Exclude<keyof Config['propDefinition'], keyof Config['props']> extends never
+    ? unknown
+    : never) &
     // 各读取模式产生的输入仍须满足核心的 Props 契约。
-    (DirectedProps<Omit<Props, 'ref'>, PropDefinition> extends Omit<
-      Props,
-      'ref'
-    >
+    (DirectedProps<
+      Omit<Config['props'], 'ref'>,
+      Config['propDefinition']
+    > extends Omit<Config['props'], 'ref'>
       ? unknown
       : never) &
     // 实际生成的控制字段与业务能力必须满足公开 Controller。
-    (KitController<
-      Props,
-      PropDefinition,
-      Omit<Controller, 'props'>
-    > extends Controller
+    (KitController<{
+      props: Config['props']
+      propDefinition: Config['propDefinition']
+      controllerMembers: Omit<Config['controller'], 'props'>
+    }> extends Config['controller']
       ? unknown
       : never) &
     // 比较 ref 接收的负载，避免函数参数的双变规则放过不匹配的 Controller。
-    ('ref' extends keyof Props
-      ? NonNullable<Props['ref']> extends RefReceiver<infer ExpectedController>
-        ? Controller extends ExpectedController
+    ('ref' extends keyof Config['props']
+      ? NonNullable<Config['props']['ref']> extends RefReceiver<
+          infer ExpectedController
+        >
+        ? Config['controller'] extends ExpectedController
           ? unknown
           : never
         : never

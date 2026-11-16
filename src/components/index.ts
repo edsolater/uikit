@@ -129,7 +129,7 @@ export type {
   BoardVariantProps,
   BoardSizeProps,
   BoardController,
-  BoardControllerCollection,
+  BoardControllerRegistry,
 } from './kits/Board/Board.prop'
 export { boardBorder } from './kits/Board/Board.style'
 export { Article } from './kits/Article/Article'
@@ -197,12 +197,20 @@ export {
   type KitPropDefinition,
   type KitComponentContext,
   type KitProps,
+  type KitPropsConfig,
   type KitControllerProps,
   type KitStyleConfigProps,
   type KitController,
+  type KitControllerConfig,
   type KitOptions,
+  type KitOptionsConfig,
   type KitComponent,
+  type KitComponentConfig,
 } from './tools/kit'
+export type {
+  ControllerRegistry,
+  ControllerRegistryConfig,
+} from './tools/controllerRegistry'
 export type {
   PropsReadMode,
   PropsDefinition,

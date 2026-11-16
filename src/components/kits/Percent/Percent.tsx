@@ -22,7 +22,10 @@ import {
 /**
  * 将分子与分母的比值呈现为百分数；缺值、非有限数或零分母整项显示斜杠。
  */
-export const Percent: KitComponent<PercentProps, PercentController> = kit(
+export const Percent: KitComponent<{
+  props: PercentProps
+  controller: PercentController
+}> = kit(
   { name: componentName, propDefinition: percentPropDefinition },
   (props, { name }) => {
     const percentage = stateView(() => {

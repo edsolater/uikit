@@ -5,12 +5,23 @@ import {
 } from '@edsolater/fnkit'
 import type { Token } from '@/style-system'
 
-/** 根 style 专用于原 Token 命名空间；数组与其它成员访问保留原协议。 */
-export type ControllerCollection<Controller, Style = undefined> = Omit<
-  VirtualBatchAccessor<Controller>,
-  'style'
-> &
-  (Style extends undefined ? {} : { style: Style })
+/** 实例集合的成员协议与可选样式 Token 集合。 */
+export interface ControllerRegistryConfig {
+  controller: unknown
+  styleTokens?: unknown
+}
+
+/** Token 声明按原条件分配；undefined 分支不声明 style 命名空间。 */
+type ControllerRegistryStyle<StyleTokens> = StyleTokens extends undefined
+  ? {}
+  : { style: StyleTokens }
+
+/** 根 style 专用于原 Token 命名空间；未声明 styleTokens 时不增加该入口。 */
+export type ControllerRegistry<Config extends ControllerRegistryConfig> =
+  Omit<VirtualBatchAccessor<Config['controller']>, 'style'> &
+    ControllerRegistryStyle<
+      'styleTokens' extends keyof Config ? Config['styleTokens'] : undefined
+    >
 
 /** 公开使用访问器的 style 前，由组件登记原样式 Token 集合。 */
 export function createControllerRegistry<
@@ -32,7 +43,10 @@ export function createControllerRegistry<
     },
   }
   return [
-    accessor as ControllerCollection<Controller, Style>,
+    accessor as ControllerRegistry<{
+      controller: Controller
+      styleTokens: Style
+    }>,
     registry,
   ] as const
 }

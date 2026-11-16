@@ -20,10 +20,10 @@ import './MessageBoard.style'
 /**
  * 面向操作结果的可访问反馈，不承担普通内容卡片职责。
  */
-export const MessageBoard: KitComponent<
-  MessageBoardProps,
-  MessageBoardController
-> = kit(
+export const MessageBoard: KitComponent<{
+  props: MessageBoardProps
+  controller: MessageBoardController
+}> = kit(
   {
     name: componentName,
     description: '呈现操作结果反馈',

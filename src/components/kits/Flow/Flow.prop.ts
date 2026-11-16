@@ -17,7 +17,10 @@ import type { FlowStyleConfig } from './Flow.style'
 export const componentName = 'Flow'
 
 /** Flow 的公共输入与自有字段分别声明，空槽保留组件扩展位置。 */
-export type FlowProps = KitProps<FlowStyleConfig, FlowController> & {
+export type FlowProps = KitProps<{
+  styleConfig: FlowStyleConfig
+  controller: FlowController
+}> & {
   // 自有输入
 }
 
@@ -32,7 +35,7 @@ export const flowPropDefinition: FlowPropDefinition = {
 }
 
 /** 按已声明输入和原生字段模式提供控制，不接管子组件外观。 */
-export interface FlowController extends KitController<
-  FlowProps,
-  FlowPropDefinition
-> {}
+export interface FlowController extends KitController<{
+  props: FlowProps
+  propDefinition: FlowPropDefinition
+}> {}

@@ -21,7 +21,10 @@ import './Help.style'
 /**
  * 显示可独立使用的帮助入口，浮层定位与阅读交互交给 tooltip。
  */
-export const Help: KitComponent<HelpProps, HelpController> = kit(
+export const Help: KitComponent<{
+  props: HelpProps
+  controller: HelpController
+}> = kit(
   {
     name: componentName,
     description: '查看补充说明',

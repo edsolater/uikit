@@ -18,7 +18,10 @@ import {
 export const componentName = 'Link'
 
 /** Link 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type LinkProps = KitProps<{}, LinkController, 'a'> & {
+export type LinkProps = KitProps<{
+  controller: LinkController
+  domTag: 'a'
+}> & {
   href: Source<string>
   children?: JSX.Element
   current?: Source<boolean | undefined>
@@ -43,7 +46,7 @@ export const linkPropDefinition: LinkPropDefinition = {
 }
 
 /** 控制导航目标、当前项及原生链接输入。 */
-export interface LinkController extends KitController<
-  LinkProps,
-  LinkPropDefinition
-> {}
+export interface LinkController extends KitController<{
+  props: LinkProps
+  propDefinition: LinkPropDefinition
+}> {}

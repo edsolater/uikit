@@ -34,7 +34,10 @@ import './Heading.style'
  * 内容允许组合或动态更新，最终渲染文字同步为id，不接受另一份手写Heading ID。
  * 定位框只隐藏文字，保留内容、定位身份、排版与更新；链接行为由调用方的Link负责。
  */
-export const Heading: KitComponent<HeadingProps, HeadingController> = kit(
+export const Heading: KitComponent<{
+  props: HeadingProps
+  controller: HeadingController
+}> = kit(
   {
     name: componentName,
     propDefinition: headingPropDefinition,

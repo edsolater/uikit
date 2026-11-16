@@ -18,7 +18,10 @@ import {
 export const componentName = 'Percent'
 
 /** Percent 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type PercentProps = KitProps<{}, PercentController, 'span'> & {
+export type PercentProps = KitProps<{
+  controller: PercentController
+  domTag: 'span'
+}> & {
   numerator?: Source<number | null | undefined>
   denominator?: Source<number | null | undefined>
   significantDigits?: Source<number | undefined>
@@ -43,7 +46,7 @@ export const percentPropDefinition: PercentPropDefinition = {
 }
 
 /** 控制分子、分母与有效位数，更新后重新显示比值。 */
-export interface PercentController extends KitController<
-  PercentProps,
-  PercentPropDefinition
-> {}
+export interface PercentController extends KitController<{
+  props: PercentProps
+  propDefinition: PercentPropDefinition
+}> {}

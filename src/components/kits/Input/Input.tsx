@@ -37,7 +37,10 @@ const parseInputStatusProps = createStatusPropsParser({
 /**
  * 编辑单行内容并呈现字段有效性，保持输入值与状态来源持续更新。
  */
-export const Input: KitComponent<InputProps, InputController> = kit(
+export const Input: KitComponent<{
+  props: InputProps
+  controller: InputController
+}> = kit(
   {
     name: componentName,
     description: '编辑单行内容',

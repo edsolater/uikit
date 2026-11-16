@@ -18,7 +18,10 @@ import {
 export const componentName = 'Help'
 
 /** Help 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type HelpProps = KitProps<{}, HelpController, 'button'> & {
+export type HelpProps = KitProps<{
+  controller: HelpController
+  domTag: 'button'
+}> & {
   tooltip?: PivProps['children']
   /** 替换默认问号的显示内容，不放入另一个交互控件。 */
   trigger?: PivProps['children']
@@ -43,7 +46,7 @@ export const helpPropDefinition: HelpPropDefinition = {
 }
 
 /** 控制帮助内容、触发文字与可访问名称。 */
-export interface HelpController extends KitController<
-  HelpProps,
-  HelpPropDefinition
-> {}
+export interface HelpController extends KitController<{
+  props: HelpProps
+  propDefinition: HelpPropDefinition
+}> {}

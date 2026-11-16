@@ -31,7 +31,10 @@ import {
   type PluginResult,
 } from '../plugins/tools/createInactivePlugin'
 
-type FixtureProps = KitProps<{ gap?: string }, FixtureController> & {
+type FixtureProps = KitProps<{
+  styleConfig: { gap?: string }
+  controller: FixtureController
+}> & {
   value?: Source<string | undefined>
 }
 type FixtureDefinition = KitPropDefinition<{ value: 'state-source-view' }>
@@ -39,10 +42,10 @@ const fixtureDefinition: FixtureDefinition = {
   ...kitPropDefinition,
   value: 'state-source-view',
 }
-interface FixtureController extends KitController<
-  FixtureProps,
-  FixtureDefinition
-> {}
+interface FixtureController extends KitController<{
+  props: FixtureProps
+  propDefinition: FixtureDefinition
+}> {}
 let dispose: (() => void) | undefined
 
 afterEach(() => {
@@ -52,12 +55,15 @@ afterEach(() => {
 })
 
 test('空配置保留对象及Source入口，空解释对象可显式提供并可清空配置', () => {
-  type Props = KitProps<{}, Controller> & {}
-  interface Controller extends KitController<Props, KitPropDefinition<{}>> {}
+  type Props = KitProps<{ styleConfig: {}; controller: Controller }> & {}
+  interface Controller extends KitController<{
+    props: Props
+    propDefinition: KitPropDefinition<{}>
+  }> {}
   /**
    * 以空根解释集合接入公共配置，当前不增加具体样式字段。
    */
-  const Empty: KitComponent<Props, Controller> = kit(
+  const Empty: KitComponent<{ props: Props; controller: Controller }> = kit(
     { name: 'EmptyConfig', propDefinition: kitPropDefinition, styleConfig: {} },
     (props) => <Piv shadowProps={props}>{props.children}</Piv>,
   )
@@ -212,7 +218,10 @@ test('创建时ref门控控制，换接保留实例，迟到ref不补建，卸�
   /**
    * 转交原生声明并显示业务来源，登记本实例清理。
    */
-  const RenderFixture: KitComponent<FixtureProps, FixtureController> = kit(
+  const RenderFixture: KitComponent<{
+    props: FixtureProps
+    controller: FixtureController
+  }> = kit(
     {
       name: 'Fixture',
       propDefinition: fixtureDefinition,
@@ -273,9 +282,15 @@ test('创建时ref门控控制，换接保留实例，迟到ref不补建，卸�
 
 test('独立配置解释不要求Token，null继续交付，undefined清空不调用，核心不重建', () => {
   type MessageConfig = { message?: string | null }
-  type Props = KitProps<MessageConfig, Controller> & {}
+  type Props = KitProps<{
+    styleConfig: MessageConfig
+    controller: Controller
+  }> & {}
   type Definition = KitPropDefinition<{}>
-  interface Controller extends KitController<Props, Definition> {}
+  interface Controller extends KitController<{
+    props: Props
+    propDefinition: Definition
+  }> {}
   const values: (string | null)[] = []
   const message = createState<string | null>('初值')
   const config = {
@@ -288,7 +303,10 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
   /**
    * 保持固定节点，记录配置解释收到的当前输入。
    */
-  const RenderInterpreter: KitComponent<Props, Controller> = kit(
+  const RenderInterpreter: KitComponent<{
+    props: Props
+    controller: Controller
+  }> = kit(
     {
       name: 'Interpreter',
       propDefinition: kitPropDefinition,

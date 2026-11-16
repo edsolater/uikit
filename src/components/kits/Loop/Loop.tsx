@@ -21,10 +21,10 @@ import {
 /**
  * 创建列表实例，内容工厂在条目作用域消费原始条目。
  */
-const loopComponent: KitComponent<
-  LoopProps<unknown>,
-  LoopController<unknown>
-> = kit(
+const loopComponent: KitComponent<{
+  props: LoopProps<unknown>
+  controller: LoopController<unknown>
+}> = kit(
   {
     name: componentName,
     description: '排列重复内容',

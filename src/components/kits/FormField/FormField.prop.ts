@@ -16,7 +16,7 @@ import {
 export const componentName = 'FormField'
 
 /** FormField 的公共声明与自有业务输入。 */
-export type FormFieldProps = KitProps<{}, FormFieldController, 'div'> & {
+export type FormFieldProps = KitProps<{ controller: FormFieldController }> & {
   // 自有输入。
 }
 
@@ -29,7 +29,7 @@ export const formFieldPropDefinition: FormFieldPropDefinition = {
 }
 
 /** FormField 的输入干预入口。 */
-export interface FormFieldController extends KitController<
-  FormFieldProps,
-  FormFieldPropDefinition
-> {}
+export interface FormFieldController extends KitController<{
+  props: FormFieldProps
+  propDefinition: FormFieldPropDefinition
+}> {}

@@ -20,7 +20,10 @@ import {
 /**
  * 固定显示指定有效位数（默认3）；缺值与非有限数显示斜杠，输入变化持续更新。
  */
-export const Numeric: KitComponent<NumericProps, NumericController> = kit(
+export const Numeric: KitComponent<{
+  props: NumericProps
+  controller: NumericController
+}> = kit(
   { name: componentName, propDefinition: numericPropDefinition },
   (props, { name }) => {
     const text = stateView(() => {

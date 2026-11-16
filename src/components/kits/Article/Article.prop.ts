@@ -18,7 +18,7 @@ export const componentName = 'Article'
 
 /** Article 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
 export type ArticleProps = Omit<
-  KitProps<{}, ArticleController, 'article'>,
+  KitProps<{ controller: ArticleController; domTag: 'article' }>,
   'as'
 > & {
   // 自有输入
@@ -36,7 +36,7 @@ export const articlePropDefinition: ArticlePropDefinition = {
 }
 
 /** 正文实例的原生输入控制。 */
-export interface ArticleController extends KitController<
-  ArticleProps,
-  ArticlePropDefinition
-> {}
+export interface ArticleController extends KitController<{
+  props: ArticleProps
+  propDefinition: ArticlePropDefinition
+}> {}

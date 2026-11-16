@@ -24,7 +24,7 @@ export type HeadingTag = `h${HeadingLevel}`
 
 /** Heading 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
 export type HeadingProps = Omit<
-  KitProps<{}, HeadingController, HeadingTag>,
+  KitProps<{ controller: HeadingController; domTag: HeadingTag }>,
   'as' | 'id'
 > & {
   level: HeadingLevel
@@ -51,7 +51,7 @@ export const headingPropDefinition: HeadingPropDefinition = {
 }
 
 /** 控制标题内容与原生输入；层级只在创建时选择标签。 */
-export interface HeadingController extends KitController<
-  HeadingProps,
-  HeadingPropDefinition
-> {}
+export interface HeadingController extends KitController<{
+  props: HeadingProps
+  propDefinition: HeadingPropDefinition
+}> {}

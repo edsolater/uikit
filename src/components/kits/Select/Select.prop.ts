@@ -17,7 +17,10 @@ import type { Source } from '@/foundation'
 export const componentName = 'Select'
 
 /** Select 的公共声明与自有业务输入。 */
-export type SelectProps = KitProps<{}, SelectController, 'select'> & {
+export type SelectProps = KitProps<{
+  controller: SelectController
+  domTag: 'select'
+}> & {
   name?: string
   value: Source<string>
   options: Source<{ value: string; label: string }[]>
@@ -48,7 +51,7 @@ export const selectPropDefinition: SelectPropDefinition = {
 }
 
 /** Select 的输入干预入口。 */
-export interface SelectController extends KitController<
-  SelectProps,
-  SelectPropDefinition
-> {}
+export interface SelectController extends KitController<{
+  props: SelectProps
+  propDefinition: SelectPropDefinition
+}> {}

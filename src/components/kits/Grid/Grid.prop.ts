@@ -18,7 +18,10 @@ import type { GridStyleConfig } from './Grid.style'
 export const componentName = 'Grid'
 
 /** 网格的公共输入与区域名称。 */
-export type GridProps = KitProps<GridStyleConfig, GridController> & {
+export type GridProps = KitProps<{
+  styleConfig: GridStyleConfig
+  controller: GridController
+}> & {
   label?: Source<string | undefined>
 }
 
@@ -34,7 +37,7 @@ export const gridPropDefinition: GridPropDefinition = {
 }
 
 /** 网格实例的输入控制，样式差异通过 props.styleConfig 干预。 */
-export interface GridController extends KitController<
-  GridProps,
-  GridPropDefinition
-> {}
+export interface GridController extends KitController<{
+  props: GridProps
+  propDefinition: GridPropDefinition
+}> {}

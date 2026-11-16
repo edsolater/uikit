@@ -30,7 +30,9 @@ export type SelectInputTag = {
 }
 
 /** SelectInput 的公共声明与自有业务输入。 */
-export type SelectInputProps = KitProps<{}, SelectInputController, 'div'> & {
+export type SelectInputProps = KitProps<{
+  controller: SelectInputController
+}> & {
   value: Source<string>
   options: Source<SelectInputOption[]>
   /** 已选值的附加说明，最多显示前三项。 */
@@ -64,7 +66,7 @@ export const selectInputPropDefinition: SelectInputPropDefinition = {
 }
 
 /** SelectInput 的输入干预入口。 */
-export interface SelectInputController extends KitController<
-  SelectInputProps,
-  SelectInputPropDefinition
-> {}
+export interface SelectInputController extends KitController<{
+  props: SelectInputProps
+  propDefinition: SelectInputPropDefinition
+}> {}

@@ -19,7 +19,10 @@ import {
  * 按默认横向排列组织顺序内容，自动换行并在交叉轴居中。
  * 必要的纵向排列通过配置表达，原生声明完整交给同一 Piv 根。
  */
-export const Flow: KitComponent<FlowProps, FlowController> = kit(
+export const Flow: KitComponent<{
+  props: FlowProps
+  controller: FlowController
+}> = kit(
   {
     name: componentName,
     description: '组织内容方向',

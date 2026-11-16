@@ -21,7 +21,10 @@ import './Article.style'
  *
  * 常规承载写成 <Card><Article>正文</Article></Card>；正文中的内容卡片也可放在 Article 内。
  */
-export const Article: KitComponent<ArticleProps, ArticleController> = kit(
+export const Article: KitComponent<{
+  props: ArticleProps
+  controller: ArticleController
+}> = kit(
   {
     name: componentName,
     description: '承载独立正文',

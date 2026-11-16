@@ -13,7 +13,7 @@ import {
 } from '../../tools/kit'
 import type { Source, JSX } from '@/foundation'
 import type { JSXable } from '../../tools/toJSX'
-import type { ControllerCollection } from '../../tools/controllerRegistry'
+import type { ControllerRegistry } from '../../tools/controllerRegistry'
 import type { TableStyleConfig } from './Table.style'
 
 /** 组件统一身份，供创建声明和样式关联引用。 */
@@ -31,7 +31,10 @@ export type TableCellValue<Row, ColumnKey> = ColumnKey extends keyof Row
 export type TableProps<
   Row = object,
   ColumnKey extends PropertyKey = keyof Row,
-> = KitProps<TableStyleConfig<ColumnKey>, TableController<Row, ColumnKey>> & {
+> = KitProps<{
+  styleConfig: TableStyleConfig<ColumnKey>
+  controller: TableController<Row, ColumnKey>
+}> & {
   /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */
   data: Source<Row[]>
 
@@ -90,17 +93,22 @@ export const tablePropDefinition: TablePropDefinition = {
 export interface TableController<
   Row = object,
   ColumnKey extends PropertyKey = keyof Row,
-> extends KitController<TableProps<Row, ColumnKey>, TablePropDefinition> {}
+> extends KitController<{
+  props: TableProps<Row, ColumnKey>
+  propDefinition: TablePropDefinition
+}> {}
 
 /** 行列相关字段由精确 ref 控制；集合只提供与具体记录类型无关的字段。 */
 export interface TableComponent {
   <Row, ColumnKey extends PropertyKey = keyof Row>(
     props: TableProps<Row, ColumnKey>,
   ): JSX.Element
-  controllers: ControllerCollection<{
-    props: Omit<
-      TableController<Record<PropertyKey, unknown>, PropertyKey>['props'],
-      'data' | 'keys' | 'renderParts' | 'cellTitle' | 'cellIntensity'
-    >
+  controllers: ControllerRegistry<{
+    controller: {
+      props: Omit<
+        TableController<Record<PropertyKey, unknown>, PropertyKey>['props'],
+        'data' | 'keys' | 'renderParts' | 'cellTitle' | 'cellIntensity'
+      >
+    }
   }>
 }

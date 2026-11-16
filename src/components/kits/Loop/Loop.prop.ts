@@ -12,14 +12,14 @@ import {
   type KitController,
 } from '../../tools/kit'
 import type { Accessor, JSX } from '@/foundation'
-import type { ControllerCollection } from '../../tools/controllerRegistry'
+import type { ControllerRegistry } from '../../tools/controllerRegistry'
 
 /** 组件统一身份，供创建声明和样式关联引用。 */
 export const componentName = 'Loop'
 
 /** 列表来源与条目内容；内容工厂只由上游提供。 */
 export type LoopProps<Item> = Omit<
-  KitProps<{}, LoopController<Item>>,
+  KitProps<{ controller: LoopController<Item> }>,
   'children'
 > & {
   each: Accessor<Item[]>
@@ -44,15 +44,17 @@ export const loopPropDefinition: LoopPropDefinition = {
 }
 
 /** 指定条目类型的列表输入控制。 */
-export interface LoopController<Item> extends KitController<
-  LoopProps<Item>,
-  LoopPropDefinition
-> {}
+export interface LoopController<Item> extends KitController<{
+  props: LoopProps<Item>
+  propDefinition: LoopPropDefinition
+}> {}
 
 /** 列表入口保留条目关联；异构集合不公开各自的 each。 */
 export interface LoopComponent {
   <Item>(props: LoopProps<Item>): JSX.Element
-  controllers: ControllerCollection<{
-    props: Omit<LoopController<unknown>['props'], 'each'>
+  controllers: ControllerRegistry<{
+    controller: {
+      props: Omit<LoopController<unknown>['props'], 'each'>
+    }
   }>
 }

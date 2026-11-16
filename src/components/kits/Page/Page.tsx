@@ -23,7 +23,10 @@ import './Page.style'
 /**
  * 页面根负责阅读范围；标题、说明与动作可省略，没有这些内容时保留原正文顺序。
  */
-export const Page: KitComponent<PageProps, PageController> = kit(
+export const Page: KitComponent<{
+  props: PageProps
+  controller: PageController
+}> = kit(
   {
     name: componentName,
     description: '组织页面标题、说明、动作与内容',

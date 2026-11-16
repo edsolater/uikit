@@ -21,10 +21,10 @@ import './Card.style'
 /**
  * 独立信息体沿用承载解析，保持自己的 Marker 与实例集合。
  */
-const cardComponent: KitComponent<
-  CardProps<PivSupportedElementTag>,
-  CardController<PivSupportedElementTag>
-> = kit(
+const cardComponent: KitComponent<{
+  props: CardProps<PivSupportedElementTag>
+  controller: CardController<PivSupportedElementTag>
+}> = kit(
   {
     name: componentName,
     description: '组织独立信息',

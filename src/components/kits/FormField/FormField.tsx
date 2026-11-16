@@ -53,7 +53,10 @@ export function createFormFieldBinding<Props extends Pick<PivProps, 'id'>>(
  * 组合一个 Label 和一个控件，让两者共享字段 ID。
  * 需要自定义身份时，在 FormField 提供 id。
  */
-export const FormField: KitComponent<FormFieldProps, FormFieldController> = kit(
+export const FormField: KitComponent<{
+  props: FormFieldProps
+  controller: FormFieldController
+}> = kit(
   {
     name: componentName,
     description: '组合字段标题与控件',

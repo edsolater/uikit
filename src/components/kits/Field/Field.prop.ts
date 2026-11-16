@@ -20,7 +20,7 @@ export const componentName = 'Field'
 
 /** Field 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
 export type FieldProps = Omit<
-  KitProps<{}, FieldController, 'div'>,
+  KitProps<{ controller: FieldController }>,
   'children'
 > & {
   label: Source<string>
@@ -47,7 +47,7 @@ export const fieldPropDefinition: FieldPropDefinition = {
 }
 
 /** 控制标题和说明输入；内容工厂只从上游交付。 */
-export interface FieldController extends KitController<
-  FieldProps,
-  FieldPropDefinition
-> {}
+export interface FieldController extends KitController<{
+  props: FieldProps
+  propDefinition: FieldPropDefinition
+}> {}

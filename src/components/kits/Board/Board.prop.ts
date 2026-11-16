@@ -13,7 +13,7 @@ import {
 } from '../../tools/kit'
 import type { JSX } from '@/foundation'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
-import type { ControllerCollection } from '../../tools/controllerRegistry'
+import type { ControllerRegistry } from '../../tools/controllerRegistry'
 import type { VariantProps } from '../utils/parseVariantProps'
 
 /** 组件统一身份，供创建声明和样式关联引用。 */
@@ -37,11 +37,10 @@ export type BoardSizeProps = VariantProps<
 >
 
 /** 原生根、材质和容纳尺度，引用保留同一 Tag 的控制协议。 */
-export type BoardProps<Tag extends PivSupportedElementTag = 'div'> = KitProps<
-  {},
-  BoardController<Tag>,
-  Tag
-> &
+export type BoardProps<Tag extends PivSupportedElementTag = 'div'> = KitProps<{
+  controller: BoardController<Tag>
+  domTag: Tag
+}> &
   BoardVariantProps &
   BoardSizeProps & {
     // 自有输入
@@ -72,14 +71,19 @@ export const boardPropDefinition: BoardPropDefinition = {
 /** 指定原生根的承载实例控制。 */
 export interface BoardController<
   Tag extends PivSupportedElementTag = 'div',
-> extends KitController<BoardProps<Tag>, BoardPropDefinition> {}
+> extends KitController<{
+  props: BoardProps<Tag>
+  propDefinition: BoardPropDefinition
+}> {}
 
 /** 异构节点集合只公开各 Tag 共同安全的输入。 */
-export type BoardControllerCollection = ControllerCollection<{
-  props: Omit<
-    BoardController<PivSupportedElementTag>['props'],
-    'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
-  >
+export type BoardControllerRegistry = ControllerRegistry<{
+  controller: {
+    props: Omit<
+      BoardController<PivSupportedElementTag>['props'],
+      'as' | 'htmlProps' | 'on' | 'domRef' | 'shadowProps' | 'is'
+    >
+  }
 }>
 
 /** 调用端保留 Tag 与 ref 的关联，集合不假定具体 Tag。 */
@@ -87,5 +91,5 @@ export interface BoardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(
     props: BoardProps<Tag>,
   ): JSX.Element
-  controllers: BoardControllerCollection
+  controllers: BoardControllerRegistry
 }

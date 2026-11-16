@@ -21,7 +21,10 @@ import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
 /**
  * 有限选项的原生单选字段，持续消费值和选项来源。
  */
-export const Select: KitComponent<SelectProps, SelectController> = kit(
+export const Select: KitComponent<{
+  props: SelectProps
+  controller: SelectController
+}> = kit(
   {
     name: componentName,
     description: '从有限选项中选择',

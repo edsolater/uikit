@@ -20,7 +20,10 @@ import { gridStyleConfig } from './Grid.style'
 /**
  * 默认单列并自动适应窄屏，必要时通过 styleConfig 指定列结构。
  */
-export const Grid: KitComponent<GridProps, GridController> = kit(
+export const Grid: KitComponent<{
+  props: GridProps
+  controller: GridController
+}> = kit(
   {
     name: componentName,
     description: '按列结构组织内容',

@@ -18,7 +18,9 @@ import {
 export const componentName = 'MessageBoard'
 
 /** MessageBoard 的公共输入与自有信息；引用接收器由 Kit 统一提供。 */
-export type MessageBoardProps = KitProps<{}, MessageBoardController, 'div'> & {
+export type MessageBoardProps = KitProps<{
+  controller: MessageBoardController
+}> & {
   tone?: Source<'info' | 'success' | 'warning' | 'error' | undefined>
   children?: JSX.Element
 }
@@ -41,7 +43,7 @@ export const messageBoardPropDefinition: MessageBoardPropDefinition = {
 }
 
 /** 控制反馈语气、内容及承载节点输入。 */
-export interface MessageBoardController extends KitController<
-  MessageBoardProps,
-  MessageBoardPropDefinition
-> {}
+export interface MessageBoardController extends KitController<{
+  props: MessageBoardProps
+  propDefinition: MessageBoardPropDefinition
+}> {}

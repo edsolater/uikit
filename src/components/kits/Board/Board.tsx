@@ -28,10 +28,10 @@ const parseBoardVariantProps = createVariantPropsParser(boardVariantGroups)
 /**
  * 固定定义供不同原生根使用，实例状态由 kit 各自创建。
  */
-const boardComponent: KitComponent<
-  BoardProps<PivSupportedElementTag>,
-  BoardController<PivSupportedElementTag>
-> = kit(
+const boardComponent: KitComponent<{
+  props: BoardProps<PivSupportedElementTag>
+  controller: BoardController<PivSupportedElementTag>
+}> = kit(
   {
     name: componentName,
     description: '承载上层信息主体',
