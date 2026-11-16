@@ -5,7 +5,7 @@
  *
  * 让调用方直接看到同一份原文怎样使用不同呈现配置。
  */
-import { Button, Flow, Heading, Markdown, Text } from '../..'
+import { Button, Flow, Heading, Markdown, Text } from '../../..'
 import { createState } from '@/foundation'
 
 const initialMarkdown = `## 认识 **Markdown**
@@ -32,11 +32,11 @@ const message = '你好，Markdown'
 /**
  * 通过编辑来源与局部标题覆盖，展示原文和配置的独立作用。
  */
-export function MarkdownExample() {
+export function BasicUsageExample() {
   const content = createState(initialMarkdown)
   return (
     <Flow styleConfig={{ direction: 'column' }}>
-      <Heading level={1}>Markdown 阅读与定制</Heading>
+      <Heading level={2}>基础用法：直接提供原文</Heading>
       <Text>
         第一份使用默认呈现，第二份只替换二级标题；其余类型保留默认行为。
       </Text>

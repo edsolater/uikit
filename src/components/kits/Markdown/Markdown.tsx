@@ -14,8 +14,8 @@ import {
   type MarkdownProps,
   type MarkdownController,
 } from './Markdown.prop'
-import { renderMarkdown } from './Markdown.renderer'
-import { parseMarkdown } from './Markdown.parser'
+import { renderMarkdown } from './renderer'
+import { parseMarkdown } from './parser'
 import './Markdown.style'
 
 /**

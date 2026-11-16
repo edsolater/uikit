@@ -9,8 +9,8 @@ import type {
   MarkdownListItem,
   MarkdownNode,
   MarkdownReferences,
-} from './Markdown.syntax-tree'
-import { parseMarkdownInline, readMarkdownDestination } from './Markdown.inline-parser'
+} from './syntax-tree'
+import { parseMarkdownInline, readMarkdownDestination } from './inline-parser'
 
 /** 一行列表标记决定项目的缩进归属，而非只凭项目符号分组。 */
 interface ListMarker {

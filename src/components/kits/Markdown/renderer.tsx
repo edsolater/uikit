@@ -5,7 +5,7 @@
  *
  * 解析器类型留在内部，默认呈现复用 UIKit 中契约适配的能力。
  */
-import type { MarkdownNode } from './Markdown.syntax-tree'
+import type { MarkdownNode } from './syntax-tree'
 import type { JSX } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import { Heading } from '../Heading/Heading'

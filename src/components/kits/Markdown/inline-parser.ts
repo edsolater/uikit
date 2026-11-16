@@ -5,7 +5,7 @@
  *
  * 未闭合的语法保留文字，代码内容不参与实体或强调解释。
  */
-import type { MarkdownNode, MarkdownReferences } from './Markdown.syntax-tree'
+import type { MarkdownNode, MarkdownReferences } from './syntax-tree'
 
 /** 当前支持的常用命名实体；未知名称保留原文。 */
 const namedEntities = new Map([

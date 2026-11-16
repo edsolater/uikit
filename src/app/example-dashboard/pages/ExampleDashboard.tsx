@@ -34,7 +34,7 @@ import { ButtonExample } from '@/components/kits/Button/Button.example'
 import { Card, Flow } from '@/components'
 import { CardExample } from '@/components/kits/Card/Card.example'
 import { ArticleExample } from '@/components/kits/Article/Article.example'
-import { MarkdownExample } from '@/components/kits/Markdown/Markdown.example'
+import { MarkdownExamples } from '@/components/kits/Markdown/examples/showcase'
 import { InputExample } from '@/components/kits/Input/Input.example'
 import { PopoverExample } from '@/components/plugins/kits/Popover/popover.example'
 import { PivStructureExample } from '@/components/Piv/PivStructure.example'
@@ -81,7 +81,7 @@ export const exampleEntries: ExampleEntry[] = [
     category: exampleCategories.component,
     summary: '渲染 Markdown 原文，按语法类型定制内容呈现。',
     thumbnail: new URL('../thumbnails/markdown.webp', import.meta.url).href,
-    content: MarkdownExample,
+    content: MarkdownExamples,
   },
   {
     id: 'async-state',

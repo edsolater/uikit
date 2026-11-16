@@ -237,6 +237,39 @@ describe('ExampleDashboard', () => {
     ).toEqual(['Article'])
   })
 
+  test('Markdown 详情按场景展示代码原文与本地文件，切换原文不改变文件内容', () => {
+    window.history.replaceState(null, '', '/examples/markdown')
+    const host = document.body.appendChild(document.createElement('div'))
+    dispose = render(() => <ExampleDashboard />, host)
+
+    const headings = [...host.querySelectorAll('h2')].map(
+      (node) => node.textContent,
+    )
+    expect(headings).toContain('基础用法：直接提供原文')
+    expect(headings).toContain('渲染 Markdown 文件')
+    const documents = host.querySelectorAll('.Markdown')
+    expect(documents).toHaveLength(3)
+    expect(documents[0].querySelector('h2')?.textContent).toBe('认识 Markdown')
+    expect(documents[1].querySelector('h3')?.textContent).toBe(
+      '自定义标题：认识 Markdown',
+    )
+    expect(documents[2].querySelector('h3')?.textContent).toBe(
+      '文件中的阅读指南',
+    )
+    expect(documents[2].querySelectorAll('tbody tr')).toHaveLength(2)
+
+    const switchButton = [
+      ...host.querySelectorAll<HTMLButtonElement>('button'),
+    ].find((button) => button.textContent === '切换原文')!
+    switchButton.click()
+    flush()
+    expect(documents[0].textContent).toContain('原文已经更新')
+    expect(documents[1].textContent).toContain('自定义标题：原文已经更新')
+    expect(documents[2].querySelector('h3')?.textContent).toBe(
+      '文件中的阅读指南',
+    )
+  })
+
   test('Article 示例由外层 Card 承载，皮肤与正文语义各归自身', () => {
     window.history.replaceState(null, '', '/examples/article')
     const host = document.body.appendChild(document.createElement('div'))
