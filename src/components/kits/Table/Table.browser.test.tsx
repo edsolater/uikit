@@ -93,7 +93,8 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
       <Table
         data={rows}
         keys={keys}
-        styleConfig={{ compact: compact, columnMinWidths: { summary: 240 } }}
+        $columnMinWidths={{ summary: 240 }}
+        styleConfig={{ compact: compact }}
 
         cellTitle={{ summary: (row, index) => `${row.detail.owner}:${index}` }}
         cellIntensity={{ ratio: (row) => row.ratio }}

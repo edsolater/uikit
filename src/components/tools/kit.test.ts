@@ -26,6 +26,7 @@ import {
   flowPropDefinition,
 } from '../kits/Flow/Flow.prop'
 import { Flow } from '../kits/Flow/Flow'
+import { Table } from '../kits/Table/Table'
 import { Button } from '../kits/Button/Button'
 import type { ButtonProps, ButtonController } from '../kits/Button/Button.prop'
 import { buttonPropDefinition } from '../kits/Button/Button.prop'
@@ -177,6 +178,38 @@ function verifyEmptyStyleContract() {
   void [objectConfig, cssText, empty, absent, namedInput, sourceInput]
 }
 void verifyEmptyStyleContract
+
+/**
+ * 样式别名只扩充公开调用输入，不改变业务 Props、字段协议或 Controller。
+ */
+function verifyStyleConfigInputProps() {
+  type FlowInput = Parameters<typeof Flow>[0]
+  const direct: FlowInput = {
+    $direction: createState<'row' | 'column'>('column'),
+    $gap: '2rem',
+    $grow: false,
+    styleConfig: { direction: 'row' },
+  }
+  // @ts-expect-error 方向别名沿用配置值域。
+  const wrongDirection: FlowInput = { $direction: 'diagonal' }
+  // @ts-expect-error 未声明的配置字段不会成为任意样式输入。
+  const wrongField: FlowInput = { $unknown: 'value' }
+  // @ts-expect-error 无配置字段的组件不接收任意美元属性。
+  const empty: Parameters<typeof Button>[0] = { $direction: 'column' }
+  expectTypeOf<FlowProps>().not.toHaveProperty('$direction')
+  expectTypeOf<FlowController['props']>().not.toHaveProperty('$direction')
+  Table<{ name: string }>({
+    data: [{ name: '甲' }],
+    $columnMinWidths: { name: 120 },
+  })
+  Table<{ name: string }>({
+    data: [{ name: '甲' }],
+    // @ts-expect-error 泛型表格别名保留列键关系。
+    $columnMinWidths: { missing: 120 },
+  })
+  void [direct, wrongDirection, wrongField, empty]
+}
+void verifyStyleConfigInputProps
 
 test('各组件保留统一children输入与控制字段，不按当前业务呈现裁剪协议', () => {
   expectTypeOf<HelpProps>().toHaveProperty('children')

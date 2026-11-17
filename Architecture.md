@@ -90,7 +90,13 @@ Board、Card、Loop、Table 保留泛型调用与精确实例 ref；异构 `.con
 
 kit 的透明 ComponentIdentityMarker 建立身份与用途边界，`Piv/elementDeclarations.ts` 承接同根组合的实例样式与原生属性声明。组件把公共节点输入沿 shadowProps 交给真实根；Piv/Dode 消费后在子内容边界终止传递，不额外增加容器 DOM。Piv、Dode、ComponentIdentityMarker、StructureViewOverlay 与定位开关属于基础设施，不递归接入 kit。
 
-StyleConfig 独立声明配置值域，解释函数仅接受该契约校验。kit 同步调用解释函数，Token.set 收集当前实例的 CSS 标量覆盖，Piv 应用与清理；共享 Token 默认值保持不变。无配置时直接采用默认效果，无配置字段的组件不创建空解释对象。Flow 的方向与排列差异、Grid 的列结构均归 `.style.ts`，原生 style 由 Piv 保留为不推荐的底层逃生舱。
+StyleConfig 独立声明配置值域，解释函数仅接受该契约校验。KitComponent 的公开调用类型从该契约生成 `$direction` 等前缀属性；Table 的泛型入口复用相同类型规则，组件内部 Props、字段协议与 Controller 不新增别名字段。
+
+kit 在输入控制前调用独立的 `components/tools/parseStyleConfigProps.ts`，以惰性视图将美元前缀属性去掉一个 `$` 并聚合到 styleConfig；显式 styleConfig 的同名字段优先，包括值为 undefined 的字段。只有前缀输入时也形成配置声明，普通属性保持原身份，前缀字段不继续传给业务核心。
+
+整体与字段 Source 在消费时读取，Controller 仍通过单一 styleConfig State 干预最终配置，写入清空不会再补回入口别名。
+
+kit 同步调用原有解释函数，Token.set 收集当前实例的 CSS 标量覆盖，Piv 应用与清理；共享 Token 默认值保持不变。无配置时直接采用默认效果，无配置字段的组件不创建空解释对象。Flow 的方向与排列差异、Grid 的列结构均归 `.style.ts`，原生 style 由 Piv 保留为不推荐的底层逃生舱。
 
 Text 的纯文字及标签选择、Heading 的标题层级与定位 ID、Label 的字段关联和 Help 组合由各自组件维护。组件样式归同名 `.style.ts`，父组件不接管子组件外观。Popover 等 Plugin 通过能力结果的 controller 使用，实际 Button/Card 继续拥有组件 Controller、Marker 与样式。
 

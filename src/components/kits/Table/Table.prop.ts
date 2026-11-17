@@ -15,6 +15,7 @@ import type { Source, JSX } from '@/foundation'
 import type { JSXable } from '../../tools/toJSX'
 import type { ControllerRegistry } from '../../tools/controllerRegistry'
 import type { TableStyleConfig } from './Table.style'
+import type { StyleConfigInputProps } from '../../tools/parseStyleConfigProps'
 
 /** 组件统一身份，供创建声明和样式关联引用。 */
 export const componentName = 'Table'
@@ -101,7 +102,7 @@ export interface TableController<
 /** 行列相关字段由精确 ref 控制；集合只提供与具体记录类型无关的字段。 */
 export interface TableComponent {
   <Row, ColumnKey extends PropertyKey = keyof Row>(
-    props: TableProps<Row, ColumnKey>,
+    props: StyleConfigInputProps<TableProps<Row, ColumnKey>>,
   ): JSX.Element
   controllers: ControllerRegistry<{
     controller: {

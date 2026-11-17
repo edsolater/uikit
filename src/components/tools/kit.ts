@@ -25,6 +25,10 @@ import {
 } from '../kits/utils/parseVariantProps'
 import { bindStyleConfig, type StyleConfig } from './styleConfig'
 import {
+  parseStyleConfigProps,
+  type StyleConfigInputProps,
+} from './parseStyleConfigProps'
+import {
   componentIdentityMarkerDisplayPropsDefinition,
   type ComponentIdentityMarkerDisplayPropDefinition,
 } from './ComponentIdentityMarker/ComponentIdentityMarker.prop'
@@ -188,7 +192,7 @@ export interface KitComponentConfig {
 
 /** 组件预先声明的调用与控制契约；kit 据此为 render 提供上下文并校验实现。 */
 export type KitComponent<Config extends KitComponentConfig> = {
-  (props: Config['props']): JSX.Element
+  (props: StyleConfigInputProps<Config['props']>): JSX.Element
   /** 当前存活的受控实例集合；提供 StyleTokens 时，同一入口还保留样式 Token 集合。 */
   controllers: ControllerRegistry<Config>
 }
@@ -304,6 +308,7 @@ export function kit<
    * 初始 ref 决定是否接入可写输入及实例集合，此决定在实例存活期间保持不变。
    */
   const Component = (sourceProps: Props & KitControllerProps<Controller>) => {
+    const inputProps = parseStyleConfigProps(sourceProps)
     // 准备同根组合与本实例能力，资源仍绑定当前组件作用域。
     const inheritedDeclarations = useContext(ElementDeclarationsContext)
     const owner = getOwner()
@@ -323,11 +328,11 @@ export function kit<
     }
     // sourceProps 保留上游来源，供 ref 换接；renderProps 只在受控模式切换为 Director 视图。
     // 不跟踪初始 ref，避免之后增删接收器重建输入状态或改变受控模式。
-    let renderProps: Omit<Props, 'ref'> = sourceProps
+    let renderProps: Omit<Props, 'ref'> = inputProps
     const controlled = untrack(() => sourceProps.ref)
     const propDirector = controlled
       ? createComponentPropsDirector<Props, PropDefinition>(
-          sourceProps,
+          inputProps,
           propDefinition,
           {
             defaultSources: variantSources,

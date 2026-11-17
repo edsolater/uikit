@@ -10,6 +10,8 @@ import { createState, flush, render, val, type Source } from '@/foundation'
 import type { RefReceiver } from '@/hooks/createRef'
 import { Piv } from '../Piv/Piv'
 import { flowGap } from '../kits/Flow/Flow.style'
+import type { FlowStyleConfig } from '../kits/Flow/Flow.style'
+import { cssRoot } from '@/style-system'
 import {
   kit,
   kitPropDefinition,
@@ -92,6 +94,127 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
   flush()
   expect(val(controller.props.styleConfig)).toBeUndefined()
   expect(host.firstElementChild).toBe(element)
+})
+
+test('美元样式与对象配置共用真实Flow效果，显式配置优先且受控清空不重建根', () => {
+  const style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  try {
+    const host = document.body.appendChild(document.createElement('main'))
+    const direction = createState<'row' | 'column'>('column')
+    const gap = createState('12px')
+    const explicit = createState<FlowStyleConfig | undefined>()
+    let controller!: FlowController
+    const boundaries = componentBoundaries.size
+    dispose = render(
+      () => (
+        <>
+          <Flow $direction={direction} $gap={gap} styleConfig={explicit}>
+            <Flow>子内容</Flow>
+          </Flow>
+          <Flow
+            $direction={direction}
+            $gap={gap}
+            styleConfig={explicit}
+            ref={(next) => {
+              controller = next
+            }}
+          />
+          <Flow styleConfig={{ direction: 'column', gap: '12px' }} />
+        </>
+      ),
+      host,
+    )
+    const roots = [...host.children] as HTMLElement[]
+    /**
+     * 取得方向解释实际产生的排列效果，包含方向以外的配套规则。
+     */
+    const read = (element: HTMLElement) => {
+      const computed = getComputedStyle(element)
+      return [
+        computed.flexDirection,
+        computed.flexWrap,
+        computed.alignItems,
+        computed.gap,
+      ]
+    }
+    expect(read(roots[0]!)).toEqual(read(roots[2]!))
+    expect(read(roots[1]!)).toEqual(['column', 'nowrap', 'normal', '12px'])
+    expect(
+      getComputedStyle(roots[0]!.firstElementChild!).flexDirection,
+    ).toBe('row')
+    expect(
+      roots[0]!.getAttributeNames().some((key) => key.startsWith('$')),
+    ).toBe(false)
+    expect(Object.hasOwn(controller.props, '$direction')).toBe(false)
+    expect(componentBoundaries.size).toBe(boundaries + 4)
+
+    gap.set('20px')
+    explicit.set({ direction: 'row' })
+    flush()
+    expect(read(roots[0]!)).toEqual(['row', 'wrap', 'center', '20px'])
+    expect(read(roots[1]!)).toEqual(read(roots[0]!))
+    explicit.set({ direction: undefined })
+    flush()
+    expect(read(roots[0]!)[0]).toBe('row')
+    explicit.set(undefined)
+    flush()
+    expect(read(roots[0]!)[0]).toBe('column')
+    direction.set('row')
+    flush()
+    expect(read(roots[0]!)[0]).toBe('row')
+    direction.set('column')
+    controller.props.styleConfig.set({ gap: '28px' })
+    flush()
+    expect(read(roots[1]!)).toEqual(['row', 'wrap', 'center', '28px'])
+    controller.props.styleConfig.set(undefined)
+    flush()
+    expect(read(roots[1]!)).toEqual(['row', 'wrap', 'center', '16px'])
+    expect([...host.children]).toEqual(roots)
+    dispose()
+    dispose = undefined
+    expect(componentBoundaries.size).toBe(boundaries)
+  } finally {
+    style.remove()
+  }
+})
+
+test('美元配置沿同根声明顺序合并，真实根自己的配置优先且后代不继承', () => {
+  const style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  try {
+    /**
+     * 为同一真实根提供上层间距声明，保留实际 Flow 自己的配置所有权。
+     */
+    const Parent: KitComponent<{
+      props: FixtureProps
+      controller: FixtureController
+    }> = kit(
+      {
+        name: 'Parent',
+        propDefinition: fixtureDefinition,
+        styleConfig: { gap: (value: string) => flowGap.set(value) },
+      },
+      (props) => <Flow $gap="8px">{props.children}</Flow>,
+    )
+    const host = document.body.appendChild(document.createElement('main'))
+    dispose = render(
+      () => (
+        <Parent $gap="30px">
+          <Flow>后代</Flow>
+        </Parent>
+      ),
+      host,
+    )
+    const root = host.firstElementChild!
+    expect(host.children).toHaveLength(1)
+    expect(getComputedStyle(root).gap).toBe('8px')
+    expect(getComputedStyle(root.firstElementChild!).gap).toBe('16px')
+  } finally {
+    style.remove()
+  }
 })
 
 test('实例标签在受控与非受控模式中一致更新，清空后不回退定义职责', () => {
@@ -321,7 +444,7 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
   dispose = render(
     () => (
       <RenderInterpreter
-        styleConfig={{ message }}
+        $message={message}
         ref={(next) => {
           controller = next
         }}
