@@ -128,6 +128,17 @@ Button、Board、Card 的互斥分类由同一份 `as const` 候选事实定义�
 
 ## 样式配置与原生样式
 
+`$` 标识样式配置，例如布局方向、间距和宽度。判断是否使用 `$`，看属性表达的职责，不能只看它最终是否影响外观，也不要求它与某个 CSS 属性一一对应。
+
+组件语义和分类保持普通名称。Button 的 `tone`、`emphasis`、`appearance`、`size` 及 `danger`、`strong`、`outlined`、`large` 等确定描述词，表达动作性质、信息重量或组件的呈现分类；这些含义通过样式呈现，但不因此变成 `$` 样式配置。已有确定描述词本身就是简写，不再为它们新增一组 `$` 别名。完整字段与简写的关系见 [Button 的 Variant 输入轮廓](Button基础组件.md#variant-输入轮廓)。
+
+```tsx
+<Button danger strong outlined>删除</Button>
+<Flow $col $gap="1rem">内容</Flow>
+```
+
+shortcut 表示更直接的写法，不决定是否加 `$`：组件语义的简写仍属于组件语义，样式配置的简写仍属于样式配置。
+
 编写组件调用时，优先使用组件已声明的 shortcut，能直观表达意图就用最短写法。例如纵排直接写 `$col`，不必写 `$direction="column"`，更不必包进 `$styleConfig`。没有合适的 shortcut 时，再使用 `$gap`、`$columns` 等直接样式属性；只有直接属性无法满足整组动态配置或统一覆盖需求时，才使用 `$styleConfig` 逃生舱。
 
 ```tsx
