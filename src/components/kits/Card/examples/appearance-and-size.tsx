@@ -19,7 +19,7 @@ export function AppearanceAndSizeExample() {
   return (
     <Card class="example-card">
       <Article>
-        <Flow $direction="column">
+        <Flow $col>
           <div class="example-card-head">
             <span>组件</span>
             <h2>Card</h2>
@@ -31,37 +31,37 @@ export function AppearanceAndSizeExample() {
 
           <div class="card-example-grid">
             <Card class="card-example-item" small is={cardClickable}>
-              <Flow $direction="column">
+              <Flow $col>
                 <strong>紧凑</strong>
                 <span>紧凑信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item">
-              <Flow $direction="column">
+              <Flow $col>
                 <strong>默认</strong>
                 <span>普通信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item" large>
-              <Flow $direction="column">
+              <Flow $col>
                 <strong>宽松</strong>
                 <span>宽松信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item" xlarge>
-              <Flow $direction="column">
+              <Flow $col>
                 <strong>大尺寸</strong>
                 <span>大尺寸信息单元</span>
               </Flow>
             </Card>
             <Card class="card-example-item" soft>
-              <Flow $direction="column">
+              <Flow $col>
                 <strong>柔和</strong>
                 <span>低声量辅助卡片</span>
               </Flow>
             </Card>
             <Card class="card-example-item" solid>
-              <Flow $direction="column">
+              <Flow $col>
                 <strong>实体</strong>
                 <span>稳定对比的实体卡片</span>
               </Flow>

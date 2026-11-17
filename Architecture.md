@@ -98,6 +98,10 @@ kit 在输入控制前调用独立的 `components/tools/parseStyleConfigProps.ts
 
 没有直接样式字段需要聚合时，Parser 直接返回原 props；需要聚合时才建立惰性视图并消费直接字段，普通属性保持原身份。
 
+新聚合配置以非枚举元信息保留每个有效字段的来源与同来源输入顺序，不改写原配置。绑定层在原 Token 收集作用域中委托独立解释工具，实际效果函数仍只接收最终字段值。
+
+`components/tools/styleConfigShortcuts.ts` 的 `interpretStyleConfig` 直接解释平铺定义：函数是实际效果，布尔快捷使用一层目标对象。Flow 在自身样式文件写 `$row: { $direction: 'row' }`、`$col: { $direction: 'column' }`，`$direction` 保留原函数效果。工具为每个目标先选唯一值，再按原函数定义顺序调用一次，不生成第二份 handler 表。显式配置来源高于直接输入；同来源实际字段优先，快捷之间按输入出现顺序后者优先。显式实际字段 undefined 清空该组，Controller 写入的普通对象按当前对象自身顺序作为一层来源消费。
+
 整体与字段 Source 在消费时读取，Controller 通过单一 `props.$styleConfig` State 干预最终配置，写入清空不会再补回入口别名。
 
 kit 同步调用原有解释函数，Token.set 收集当前实例的 CSS 标量覆盖，Piv 应用与清理；共享 Token 默认值保持不变。无配置时直接采用默认效果，无配置字段的组件不创建空解释对象。Flow 的方向与排列差异、Grid 的列结构均归 `.style.ts`，原生 style 由 Piv 保留为不推荐的底层逃生舱。

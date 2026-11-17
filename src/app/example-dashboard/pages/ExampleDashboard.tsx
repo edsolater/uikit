@@ -482,7 +482,7 @@ function ExampleMissing(props: {
   return (
     <section class="example-missing">
       <Card class="example-card">
-        <Flow $direction="column">
+        <Flow $col>
           <div class="example-card-head">
             <span>Not Found</span>
             <h1>没有这个 Example</h1>

@@ -12,7 +12,7 @@ import { Flow, Heading, Table, Text } from '../../..'
  */
 export function RecordTableExample() {
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Heading level={2}>Table · 项目进度</Heading>
       <Text p>每行是一项记录，列顺序由 keys 明确指定。</Text>
       <Table

@@ -6,6 +6,10 @@
  * 让组件核心与输入控制只消费一份配置，不承担调用语法转换。
  */
 import { val, type Val } from '@/foundation'
+import {
+  styleConfigOrigins,
+  type StyleConfigFieldOrigin,
+} from './styleConfigShortcuts'
 
 /** 调用端从原配置值域取得美元前缀属性，规范化 Props 与 Controller 不增加别名字段。 */
 export type StyleConfigInputProps<Props> = '$styleConfig' extends keyof Props
@@ -41,12 +45,19 @@ export function parseStyleConfigProps<Props extends object>(props: Props): Props
     if (key !== '$styleConfig') return value
     const keys = styleKeys()
     if (keys.length === 0) return value
-    return {
+    const explicit = val(value)
+    const config = {
       ...Object.fromEntries(
         keys.map((name) => [name, Reflect.get(props, name)]),
       ),
-      ...val(value),
+      ...explicit,
     }
+    const origins = new Map<string, StyleConfigFieldOrigin>()
+    keys.forEach((field, order) => origins.set(field, { source: 0, order }))
+    Object.keys(explicit ?? {}).forEach((field, order) =>
+      origins.set(field, { source: 1, order }),
+    )
+    return Object.defineProperty(config, styleConfigOrigins, { value: origins })
   }
   return new Proxy({} as Props, {
     get: (_, key) => read(key),

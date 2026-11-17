@@ -13,7 +13,7 @@ import { createState } from '@/foundation'
 export function ColumnLayoutExample() {
   const columns = createState<1 | 2 | 3>(2)
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Text>窄屏自动回到单列，内容顺序保持不变。</Text>
       <Flow>
         <Button

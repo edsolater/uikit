@@ -39,6 +39,20 @@ test('显式字段覆盖前缀字段，保留来源及普通函数身份', () =>
   expect(Reflect.get(props, '$direction')).toBeUndefined()
   expect(Reflect.ownKeys(props)).toEqual(['$styleConfig', 'onClick', symbol])
   expect(source.$direction).toBe('column')
+  expect(Object.keys(props.$styleConfig)).toEqual([
+    '$direction',
+    '$gap',
+    '$grow',
+    '$count',
+    '$message',
+    '$nullable',
+  ])
+  const metadata = Object.getOwnPropertySymbols(props.$styleConfig)
+  expect(metadata).toHaveLength(1)
+  expect(
+    Object.getOwnPropertyDescriptor(props.$styleConfig, metadata[0]!),
+  ).toMatchObject({ enumerable: false, writable: false })
+  expect(Object.getOwnPropertySymbols(source.$styleConfig)).toHaveLength(0)
 })
 
 test('已有前缀声明持续反映字段形状，整体来源按消费时读取', () => {

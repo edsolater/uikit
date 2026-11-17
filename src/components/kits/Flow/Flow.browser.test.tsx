@@ -22,6 +22,7 @@ import { Flow } from './Flow'
 import type { FlowController, FlowProps } from './Flow.prop'
 import { MessageBoard } from '../MessageBoard/MessageBoard'
 import { Link } from '../Link/Link'
+import { componentBoundaries } from '../../tools/ComponentIdentityMarker/ComponentIdentityMarker'
 
 let dispose: (() => void) | undefined
 let host: HTMLElement
@@ -30,6 +31,104 @@ afterEach(() => {
   dispose?.()
   host?.remove()
   style?.remove()
+})
+
+test('显式方向快捷保持来源优先级和实际输入顺序，横排不残留纵排配套规则', () => {
+  style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  host = document.body.appendChild(document.createElement('main'))
+  dispose = render(
+    () => (
+      <>
+        <Flow $direction="column" $row />
+        <Flow $direction="row" $styleConfig={{ $col: true }} />
+        <Flow $col $row />
+        <Flow $row $col />
+        <Flow $col $row $styleConfig={{ $row: true, $col: true }} />
+        <Flow $row $col $styleConfig={{ $col: true, $row: true }} />
+        <Flow $col $styleConfig={{ $col: false }} />
+        <Flow $direction="column" $styleConfig={{ $row: false }} />
+        <Flow $col $styleConfig={{ $direction: undefined }} />
+        <Flow $styleConfig={{ $col: true, $row: true }} />
+      </>
+    ),
+    host,
+  )
+  const expected = [
+    'column',
+    'column',
+    'row',
+    'column',
+    'column',
+    'row',
+    'row',
+    'column',
+    'row',
+    'row',
+  ]
+  for (const [index, element] of [...host.children].entries()) {
+    const computed = getComputedStyle(element)
+    const column = expected[index] === 'column'
+    expect([
+      computed.flexDirection,
+      computed.flexWrap,
+      computed.alignItems,
+    ]).toEqual(
+      column ? ['column', 'nowrap', 'normal'] : ['row', 'wrap', 'center'],
+    )
+  }
+})
+
+test('快捷Source和显式顺序持续更新，Controller替换或清空保持节点及实例边界', async () => {
+  style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  host = document.body.appendChild(document.createElement('main'))
+  const column = createState<boolean | undefined>(true)
+  const explicit = createState<Val<FlowProps['$styleConfig']>>()
+  const boundaries = componentBoundaries.size
+  let controller!: FlowController
+  dispose = render(
+    () => (
+      <Flow
+        $col={column}
+        $styleConfig={explicit}
+        ref={(value) => {
+          controller = value
+        }}
+      >
+        <Flow>后代内容</Flow>
+      </Flow>
+    ),
+    host,
+  )
+  const root = host.firstElementChild!
+  const child = root.firstElementChild!
+  expect(getComputedStyle(root).flexDirection).toBe('column')
+  expect(getComputedStyle(child).flexDirection).toBe('row')
+  expect(componentBoundaries.size).toBe(boundaries + 2)
+  column.set(false)
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('row')
+  column.set(true)
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('column')
+  explicit.set({ $row: true })
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('row')
+  explicit.set({ $row: true, $col: true })
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('column')
+  explicit.set({ $col: true, $row: true })
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('row')
+  controller.props.$styleConfig.set({ $col: true })
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('column')
+  controller.props.$styleConfig.set(undefined)
+  await expect.poll(() => getComputedStyle(root).flexDirection).toBe('row')
+  expect(getComputedStyle(root).flexWrap).toBe('wrap')
+  expect(getComputedStyle(root).alignItems).toBe('center')
+  expect(host.firstElementChild).toBe(root)
+  expect(root.firstElementChild).toBe(child)
+  dispose()
+  dispose = undefined
+  expect(componentBoundaries.size).toBe(boundaries)
 })
 
 test('导航地标、当前链接和反馈语义持续反映来源，列数确实控制布局', async () => {

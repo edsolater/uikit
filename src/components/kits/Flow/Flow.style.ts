@@ -17,6 +17,10 @@ export interface FlowStyleConfig {
   $width?: string
   /** 默认横排换行并居中，必要时明确选择纵排。 */
   $direction?: 'row' | 'column'
+  /** 启用横排快捷方式；同层具体方向优先。 */
+  $row?: boolean
+  /** 启用纵排快捷方式；同层多个快捷按输入出现顺序后者优先。 */
+  $col?: boolean
   /** 在父级弹性布局中占用剩余空间。 */
   $grow?: boolean
 }
@@ -32,7 +36,7 @@ export const flowStyleConfig = {
    */
   $width: (value) => flowWidth.set(value),
   /**
-   * 纵排时统一安排方向、换行与交叉轴；横排沿用 Token 默认。
+   * 纵排统一安排方向、换行与交叉轴；横排沿用 Token 默认。
    */
   $direction: (value) => {
     if (value === 'column') {
@@ -41,6 +45,8 @@ export const flowStyleConfig = {
       alignment.set('normal')
     }
   },
+  $row: { $direction: 'row' },
+  $col: { $direction: 'column' },
   /**
    * 需要时占用父级剩余空间，否则沿用自然尺寸。
    */

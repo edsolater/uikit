@@ -14,7 +14,7 @@ import { MarkdownFileExample } from './markdown-file'
  */
 export function MarkdownExamples() {
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Heading level={1}>Markdown 阅读与定制</Heading>
       <BasicUsageExample />
       <MarkdownFileExample />

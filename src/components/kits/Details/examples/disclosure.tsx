@@ -12,7 +12,7 @@ import { Details, Flow, Text } from '../../..'
 export function DisclosureExample() {
   return (
     <Details summary={<Text emphasis>展开检查说明</Text>}>
-      <Flow $direction="column">
+      <Flow $col>
         <Text>先检查输入是否完整。</Text>
         <Text>再核对输出与验证依据。</Text>
         <Text>摘要可以通过鼠标或键盘展开。</Text>

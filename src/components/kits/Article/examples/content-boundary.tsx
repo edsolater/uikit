@@ -25,7 +25,7 @@ export function ContentBoundaryExample() {
       </Article>
       <Card class="example-card">
         <Article>
-          <Flow $direction="column">
+          <Flow $col>
             <div class="example-card-head">
               <span>语义组件</span>
               <h2>Article</h2>

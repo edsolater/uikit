@@ -128,18 +128,34 @@ Button、Board、Card 的互斥分类由同一份 `as const` 候选事实定义�
 
 ## 样式配置与原生样式
 
-StyleConfig 类型由组件样式文件独立声明，解释对象以箭头函数满足 `StyleConfig<Config>`。kit 从 Props 的显式配置契约取得值域，支持整体和字段 Source，并同步调用已提供字段的解释函数。处理函数的参数不反过来定义应用 API。
+编写组件调用时，优先使用组件已声明的 shortcut，能直观表达意图就用最短写法。例如纵排直接写 `$col`，不必写 `$direction="column"`，更不必包进 `$styleConfig`。没有合适的 shortcut 时，再使用 `$gap`、`$columns` 等直接样式属性；只有直接属性无法满足整组动态配置或统一覆盖需求时，才使用 `$styleConfig` 逃生舱。
+
+```tsx
+<Flow $col>纵排内容</Flow>
+<Flow $col $gap="2rem">带间距的纵排内容</Flow>
+<Grid $columns={3} $responsive={false}>内容</Grid>
+```
+
+StyleConfig 类型由组件样式文件独立声明，平铺定义以 `satisfies StyleConfig<Config>` 校验：实际字段使用函数效果，布尔快捷可使用对象映射。kit 从 Props 的显式配置契约取得值域，支持整体和字段 Source；处理函数的参数不反过来定义应用 API。
 
 同一配置可以由多个真实消费作用域解释。kit 定义中的 `$styleConfig` 是根作用域使用的字段子集；单元格等内部作用域各自用完整的 `StyleConfig<ScopeConfig>` 声明自己的字段解释。公共配置形状保持一处，不要求根元素接管内部节点的全部配置。
 
-解释函数通过 `Token.set` 提交当前实例的 CSS 标量覆盖。Piv 应用和清理覆盖，共享 Token 默认值不变；省略字段沿用默认效果，清空配置撤销此前覆盖。Flow 优先使用 `$direction`、`$gap`、`$width` 和 `$grow` 直接属性，整组来源或覆盖需要时使用 `$styleConfig`，对象字段保持相同美元前缀；显式整组配置的同名字段优先。Grid 优先通过直接美元属性表达列结构与排列选项，配置模板与响应布局分别由 Token 表达，动态模板更新不会压过窄屏退列。
+解释函数通过 `Token.set` 提交当前实例的 CSS 标量覆盖。Piv 应用和清理覆盖，共享 Token 默认值不变；省略字段沿用默认效果，清空配置撤销此前覆盖。`$styleConfig` 对象字段与直接属性同名，保留 `$` 前缀。Grid 的配置模板与响应布局分别由 Token 表达，动态模板更新不会压过窄屏退列。
 
 Table 的紧凑模式和列宽配置共同位于 `TableStyleConfig`。根作用域解释紧凑模式，表头和单元格按当前列读取同一配置中的宽度、最小宽度，在自身样式作用域中解释，不把每列 CSS 的单位转换放进组件装配。
 
+Flow 默认横排，通常不必写 `$row`；需要明确覆盖方向时再使用。`$row`、`$col` 是布尔快捷，false 或 undefined 不启用快捷。推荐顺序与冲突优先级是两件事：日常调用优先写 shortcut；多个写法同时存在时，显式 `$styleConfig` 来源高于直接 `$direction`，直接 `$direction` 高于直接快捷。同来源内主字段优先，同来源多个快捷按输入出现顺序后者胜出。下面仅说明冲突结果：
+
 ```tsx
-<Flow $direction="column">内容</Flow>
-<Grid $columns={3} $responsive={false}>内容</Grid>
+<Flow $col $direction="row">横排内容</Flow>
+<Flow $direction="row" $styleConfig={{ $col: true }}>纵排内容</Flow>
 ```
+
+快捷直接写在同一份定义中：`$row: { $direction: 'row' }`、`$col: { $direction: 'column' }`，`$direction` 仍是原来的函数效果。对象只能指向字符串值字段，值沿目标字段的原契约校验；不能形成快捷链或从枚举自动生成。
+
+独立 Utils 直接解释该定义与当前配置，先为每个目标选唯一有效值，再按定义中的函数顺序应用一次。组件不用调用工厂、展开另一张解释表或重复判断优先级，普通函数仍只接收本次选中的值。
+
+聚合结果保留非枚举的来源和输入顺序信息，字段和值保持原样。工具从当前有效值中选出唯一胜者，只应用一次效果；显式主字段 undefined 清空该组且不调用效果，直接主字段 undefined 可回落快捷。Controller 替换为普通配置对象时按该对象自身的一层输入解释，不回读原 props。
 
 原生 `style` 由 Piv 继承，是不推荐使用的底层逃生舱；Kit 不重复定义另一套 CSS style 类型。常规使用依靠组件默认样式与语义配置，实际节点声明沿 `shadowProps` 到达同一真实根。
 

@@ -8,18 +8,33 @@
 import { val, type Source } from '@/foundation'
 import { collectTokenStyles } from '@/style-system/token/scope'
 import type { ElementDeclarations } from '../Piv/elementDeclarations'
+import {
+  interpretStyleConfig,
+  type StyleConfigDefinition,
+} from './styleConfigShortcuts'
 
-/** 字段解释函数只接收该字段已提供的配置值。 */
+/** 实际样式字段的效果，只接收本次选中的字段值。 */
 export type StyleConfigHandler<Value> = (value: Value) => void
 
-/** 显式应用配置契约的完整解释实现，不从实现推导应用值域。 */
+/** 函数定义实际效果，布尔快捷可用对象映射到字符串字段；值域始终由独立契约校验。 */
 export type StyleConfig<Config> = {
-  [Key in keyof Config]-?: StyleConfigHandler<Exclude<Config[Key], undefined>>
+  [Key in keyof Config]-?:
+    | StyleConfigHandler<Exclude<Config[Key], undefined>>
+    | (Exclude<Config[Key], undefined> extends boolean
+        ? {
+            [Target in keyof Config as Exclude<
+              Config[Target],
+              undefined
+            > extends string
+              ? Target
+              : never]?: Exclude<Config[Target], undefined>
+          }
+        : never)
 }
 
 /**
- * 将当前配置交给本绑定声明的解释函数，并把覆盖交给对应 Piv 节点。
- * 未提供的字段不调用解释函数；每次重新收集，清空即撤销此前覆盖。
+ * 将当前配置交给统一解释工具，并把最终实例覆盖交给对应 Piv 节点。
+ * 每次重新收集，清空即撤销此前覆盖；快捷映射也只应用最终目标效果一次。
  * 一个公共配置可由根与内部节点分别绑定各自字段，其他作用域的字段不在此处解释。
  *
  * @example
@@ -28,22 +43,16 @@ export type StyleConfig<Config> = {
  * bindStyleConfig(styleConfig, { $styleConfig: { $gap: '2rem' } })
  */
 export function bindStyleConfig(
-  definition: Partial<Record<string, StyleConfigHandler<never>>>,
+  definition: StyleConfigDefinition,
   props: {
     $styleConfig?: Source<Record<string, unknown> | undefined>
   },
 ): ElementDeclarations {
   const declaration: ElementDeclarations = {
     get style() {
-      return collectTokenStyles(() => {
-        const config = val(props.$styleConfig)
-        for (const [field, interpret] of Object.entries(definition)) {
-          if (interpret === undefined) continue
-          const value = val(config?.[field])
-          // 字段值域已由独立契约约束，动态分发只调用同字段解释实现。
-          if (value !== undefined) interpret(value as never)
-        }
-      })
+      return collectTokenStyles(() =>
+        interpretStyleConfig(definition, val(props.$styleConfig)),
+      )
     },
   }
   // 配置定义存在不等于实例声明配置；形状投射随上游和控制写入更新，不提前订阅配置值。

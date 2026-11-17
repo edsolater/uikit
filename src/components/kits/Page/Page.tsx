@@ -36,7 +36,7 @@ export const Page: KitComponent<{
     return (
       <Piv as="main" shadowProps={props} class={name}>
         <Show when={val(props.title) || val(props.subtitle) || props.actions}>
-          <Flow $direction="column">
+          <Flow $col>
             <Show when={val(props.title)}>
               <Heading level={1}>{props.title}</Heading>
             </Show>

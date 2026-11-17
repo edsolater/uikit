@@ -12,7 +12,7 @@ import { Flow, Heading, Link, Text } from '../../..'
 export function NavigationTargetsExample() {
   const target = '链接目标'
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Link href={'#' + encodeURIComponent(target)} current>
         当前示例章节
       </Link>

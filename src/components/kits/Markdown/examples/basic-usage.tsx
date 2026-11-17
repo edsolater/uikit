@@ -35,7 +35,7 @@ const message = '你好，Markdown'
 export function BasicUsageExample() {
   const content = createState(initialMarkdown)
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Heading level={2}>基础用法：直接提供原文</Heading>
       <Text>
         第一份使用默认呈现，第二份只替换二级标题；其余类型保留默认行为。

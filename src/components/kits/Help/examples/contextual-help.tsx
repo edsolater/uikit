@@ -12,14 +12,14 @@ import { Flow, Heading, Help, Text } from '../../..'
  */
 export function ContextualHelpExample() {
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Heading level={2}>Help · 补充说明</Heading>
       <Flow>
         <Text>悬停或聚焦问号查看帮助</Text>
         <Help
           label="统计口径说明"
           tooltip={
-            <Flow $direction="column">
+            <Flow $col>
               <Text p>成立率＝成立点数 ÷ 有效点数。</Text>
               <Text p>只统计双方都有数据的时间范围。</Text>
             </Flow>

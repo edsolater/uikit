@@ -13,7 +13,7 @@ import { createState } from '@/foundation'
 export function MultilineEditingExample() {
   const text = createState('')
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Field label="检查依据">
         {(id) => (
           <TextArea

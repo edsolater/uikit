@@ -189,10 +189,16 @@ function verifyStyleConfigInputProps() {
     $direction: createState<'row' | 'column'>('column'),
     $gap: '2rem',
     $grow: false,
+    $col: createState(true),
     $styleConfig: { $direction: 'row' },
   }
   // @ts-expect-error 方向别名沿用配置值域。
   const wrongDirection: FlowInput = { $direction: 'diagonal' }
+  // @ts-expect-error 快捷字段只接收布尔值，不接收方向字符串。
+  const wrongShortcut: FlowInput = { $col: 'column' }
+  // @ts-expect-error 纵排快捷只使用 $col，不保留旧拼法。
+  const oldShortcut: FlowInput = { $column: true }
+  void oldShortcut
   // @ts-expect-error 未声明的配置字段不会成为任意样式输入。
   const wrongField: FlowInput = { $unknown: 'value' }
   // @ts-expect-error Button 未声明方向样式字段。
@@ -242,6 +248,7 @@ function verifyStyleConfigInputProps() {
   void [
     direct,
     wrongDirection,
+    wrongShortcut,
     wrongField,
     empty,
     button,

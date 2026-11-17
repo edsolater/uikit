@@ -24,7 +24,7 @@ export function FieldLabelExample() {
   const id = crypto.randomUUID()
   const [label, receiveLabel] = createRef<LabelController>()
   return (
-    <Flow $direction="column">
+    <Flow $col>
       <Heading level={2}>Label · 项目名称</Heading>
       <Text p>点击字段标题聚焦输入；悬停或聚焦问号查看帮助。</Text>
       <Label
@@ -39,7 +39,7 @@ export function FieldLabelExample() {
         for={id}
         tooltipTrigger="i"
         tooltip={
-          <Flow $direction="column">
+          <Flow $col>
             <Text p>在团队列表中展示的名称。</Text>
             <Text p>可随时修改，不改变项目身份。</Text>
           </Flow>
