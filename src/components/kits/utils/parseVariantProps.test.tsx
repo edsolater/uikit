@@ -4,6 +4,36 @@ import { createState, val, type Source } from '@/foundation'
 import { createVariantPropsParser } from './parseVariantProps'
 
 describe('createVariantPropsParser', () => {
+  test('建立字段派生时只读取业务 getter 一次，并跟随 Source 替换', () => {
+    let reads = 0
+    const { selected, second, details, dispose } = createRoot((dispose) => {
+      const first = createState<'filled' | 'plain'>('filled')
+      const second = createState<'filled' | 'plain'>('plain')
+      const selected = createState({ source: first })
+      const props = {
+        get appearance() {
+          reads++
+          return val(selected).source
+        },
+      }
+      const parser = createVariantPropsParser([
+        { groupName: 'appearance', candidates: ['filled', 'plain'] },
+      ])
+      const { details } = parser(props)
+      // 当前 Solid 的计算 Source 在建立时运行，字段的首次认领来自真正的选值计算。
+      expect(reads).toBe(1)
+      return { selected, second, details, dispose }
+    })
+    try {
+      expect(val(details.appearance)).toBe('filled')
+      selected.set({ source: second })
+      flush()
+      expect(val(details.appearance)).toBe('plain')
+    } finally {
+      dispose()
+    }
+  })
+
   test('已声明的不定字段 getter 持续更新，effect 持有稳定的结果 Source', () => {
     const { appearance, effect, details, variantEffectProps, dispose } =
       createRoot((dispose) => {

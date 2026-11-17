@@ -19,13 +19,15 @@ export type StyleConfigInputProps<Props> = '$styleConfig' extends keyof Props
 /**
  * 将美元前缀属性归入组件声明的配置入口，普通属性保持原值与身份。
  * 显式配置中的同名字段优先，包括 undefined；字段 Source 继续由原消费链读取。
- * 没有直接样式字段需要聚合时返回原对象，配置容器自身不参与字段聚合。
+ * 通过读取视图跟随快捷字段的增删，配置容器自身不参与字段聚合。
  *
  * @example
  * const props = parseStyleConfigProps({ $gap: '1rem', $styleConfig: { $gap: '2rem' } })
  * props.$styleConfig // { $gap: '2rem' }
  */
-export function parseStyleConfigProps<Props extends object>(props: Props): Props {
+export function parseStyleConfigProps<Props extends object>(
+  props: Props,
+): Props {
   /**
    * 判断属性是否属于仅在调用入口使用的样式别名。
    */
@@ -35,7 +37,6 @@ export function parseStyleConfigProps<Props extends object>(props: Props): Props
    * 取得当前待聚合的属性名，保留动态展开输入的字段形状。
    */
   const styleKeys = () => Reflect.ownKeys(props).filter(isStyleKey)
-  if (styleKeys().length === 0) return props
   /**
    * 在实际读取时取得配置，保留整体配置替换及字段来源的更新。
    */

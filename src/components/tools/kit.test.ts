@@ -28,6 +28,9 @@ import {
 import { Flow } from '../kits/Flow/Flow'
 import { Table } from '../kits/Table/Table'
 import { Grid } from '../kits/Grid/Grid'
+import { Loop } from '../kits/Loop/Loop'
+import { Board } from '../kits/Board/Board'
+import { createInactivePlugin } from '../plugins/tools/createInactivePlugin'
 import { Button } from '../kits/Button/Button'
 import type { ButtonProps, ButtonController } from '../kits/Button/Button.prop'
 import { buttonPropDefinition } from '../kits/Button/Button.prop'
@@ -492,3 +495,50 @@ function verifyContextualRender() {
   void RenderNarrow
 }
 void verifyContextualRender
+
+/** 验证公开补充入口能提供必填业务字段，原直接调用与泛型关联仍受约束。 */
+function verifyProvidedInputs() {
+  Table({
+    shadowProps: {
+      data: [{ amount: 3 }],
+      renderParts: {
+        tableCell: {
+          amount: (value) => {
+            expectTypeOf(value).toEqualTypeOf<number>()
+            return value
+          },
+        },
+      },
+    },
+  })
+  const capability = createInactivePlugin<
+    {},
+    {},
+    TableProps<{ amount: number }>
+  >({
+    name: '记录来源',
+    pluginCore({ addProps }) {
+      addProps({ data: [{ amount: 5 }] })
+      return {}
+    },
+  })()
+  Table<{ amount: number }>({ is: capability })
+  Loop({
+    shadowProps: { each: () => [1, 2] },
+    children(item) {
+      expectTypeOf(item).toEqualTypeOf<number>()
+      return item
+    },
+  })
+  // @ts-expect-error 没有任何补充来源时，data仍是必填输入。
+  Table({})
+  // @ts-expect-error undefined容器不能承诺提供必填字段。
+  Table({ shadowProps: undefined })
+  // @ts-expect-error 来源不能改变data的记录值域。
+  Table<{ amount: number }>({ shadowProps: { data: [{ amount: '错误' }] } })
+  // @ts-expect-error children构建工厂仍须直接提供，不能因补充入口而省略。
+  Loop<number>({ shadowProps: { each: () => [1] } })
+  // @ts-expect-error 已选择button的根不能由补充输入改成a。
+  Board<'button'>({ shadowProps: { as: 'a' } })
+}
+void verifyProvidedInputs

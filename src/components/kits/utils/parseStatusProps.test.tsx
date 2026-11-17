@@ -4,6 +4,23 @@ import { createState, val } from '@/foundation'
 import { createStatusPropsParser } from './parseStatusProps'
 
 describe('createStatusPropsParser', () => {
+  test('状态计算自然取得字段，创建阶段不额外读取并丢弃 getter', () => {
+    let reads = 0
+    createRoot((dispose) => {
+      const parser = createStatusPropsParser({ candidates: ['loading'] })
+      const { details } = parser({
+        get loading() {
+          reads++
+          return true
+        },
+      })
+      expect(reads).toBe(1)
+      expect(val(details.loading)).toBe(true)
+      expect(reads).toBe(1)
+      dispose()
+    })
+  })
+
   test('带前缀的候选保留原名，外部 getter 持续更新且不被内部操作接管', () => {
     const { isLoading, details, statusController, attribute, dispose } =
       createRoot((dispose) => {

@@ -17,7 +17,7 @@ import {
 import { Piv } from '../../Piv/Piv'
 import { createPopoverPlugins } from '../../plugins/kits/Popover/popover'
 import { tooltip } from '../../plugins/kits/tooltip/tooltip'
-import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
+import { createFormFieldId, useFormFieldId } from '../FormField/FormField'
 import './SelectInput.style'
 
 /**
@@ -35,7 +35,7 @@ export const SelectInput: KitComponent<{
     propDefinition: selectInputPropDefinition,
   },
   (props, { name }) => {
-    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
+    const id = createFormFieldId(props, useFormFieldId())
     const optionsId = crypto.randomUUID()
     const searchText = createState(''),
       isEditing = createState(false),
@@ -83,7 +83,7 @@ export const SelectInput: KitComponent<{
       <>
         <Piv
           class={name}
-          shadowProps={rootProps}
+          shadowProps={props}
           is={popoverPlugins.trigger}
           on={{
             click: () => {

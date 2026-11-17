@@ -6,6 +6,7 @@
  * 内容部件替换保留原始记录，不改变表格的原生结构。
  */
 import { For, stateView, val, type Source } from '@/foundation'
+import { derive } from '@/hooks'
 import { Piv } from '../../Piv/Piv'
 import { kit, type KitComponent } from '../../tools/kit'
 
@@ -39,9 +40,10 @@ const tableComponent: KitComponent<{
   },
   (props, { name }) => {
     // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-    const columnKeys = stateView(props.data).map((data) =>
-      props.keys ? val(props.keys) : pickTableColumnKeys(data),
-    )
+    const columnKeys = derive(props, (source) => {
+      const keys = source.keys
+      return keys ? val(keys) : pickTableColumnKeys(val(source.data))
+    })
 
     /**
      * 将当前列的配置来源与业务强度交给单元格样式解释，保留来源的持续读取。

@@ -5,7 +5,11 @@
  *
  * 字段定义紧邻输入声明，组件实现按这份契约创建内容。
  */
-import { type KitProps, type KitController } from '../../tools/kit'
+import {
+  type KitProps,
+  type KitController,
+  type KitInputProps,
+} from '../../tools/kit'
 import type { JSX } from '@/foundation'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
 import type { ControllerRegistry } from '../../tools/controllerRegistry'
@@ -50,7 +54,7 @@ export interface CardController<
 /** 异构 Card 集合只公开共同安全的原生输入。 */
 export interface CardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(
-    props: CardProps<Tag>,
+    props: KitInputProps<CardProps<Tag>>,
   ): JSX.Element
   controllers: ControllerRegistry<{
     controller: {

@@ -5,13 +5,7 @@
  *
  * 将原生关联身份集中在组合处，控件仍各自拥有输入状态。
  */
-import {
-  createContext,
-  useContext,
-  stateView,
-  val,
-  type Source,
-} from '@/foundation'
+import { createContext, useContext, val, type Source } from '@/foundation'
 import type { PivProps } from '../../Piv/Piv'
 import { kit, type KitComponent } from '../../tools/kit'
 import {
@@ -21,7 +15,7 @@ import {
   type FormFieldController,
 } from './FormField.prop'
 import { Flow } from '../Flow/Flow'
-import { omit } from '@edsolater/fnkit'
+import { derive } from '@/hooks'
 
 const FormFieldIdContext = createContext<Source<string | undefined> | null>(
   null,
@@ -36,17 +30,16 @@ export function useFormFieldId() {
 /**
  * 将字段身份绑定到唯一控件入口，其余公共声明交给组件根。
  * 显式 id 优先于 fallback，并沿用 Piv 的 String(ID或ID列表)语义；未提供身份时保持空值。
- * 返回的 id 持续消费来源，rootProps 保留动态读取并排除已经单独路由的 id。
+ * 当前层持续消费 id，尚未消费的公共声明直接沿组件 Props 交接。
  */
-export function createFormFieldBinding<Props extends Pick<PivProps, 'id'>>(
+export function createFormFieldId<Props extends Pick<PivProps, 'id'>>(
   props: Props,
   fallback?: PivProps['id'] | null,
 ) {
-  const id = stateView(() => {
-    const value = val(props.id) ?? val(fallback)
+  return derive(props, (source) => {
+    const value = 'id' in source ? val(source.id) : val(fallback)
     return value == null ? undefined : String(value)
   })
-  return { id, rootProps: omit(props, 'id') }
 }
 
 /**
@@ -63,14 +56,10 @@ export const FormField: KitComponent<{
     propDefinition: formFieldPropDefinition,
   },
   (props, { name }) => {
-    const { id, rootProps } = createFormFieldBinding(props, crypto.randomUUID())
+    const id = createFormFieldId(props, crypto.randomUUID())
     return (
       <FormFieldIdContext value={id}>
-        <Flow
-          shadowProps={rootProps}
-          class={name}
-          $col
-        >
+        <Flow shadowProps={props} class={name} $col>
           {props.children}
         </Flow>
       </FormFieldIdContext>

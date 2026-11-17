@@ -6,7 +6,8 @@
  * 字段值、DOM 与提示呈现由各自组件负责。
  */
 import { isObject } from '@edsolater/fnkit'
-import { stateView, val } from '@/foundation'
+import { val } from '@/foundation'
+import { derive } from '@/hooks'
 import type {
   InputValidationInput,
   InputValidityProps,
@@ -18,16 +19,16 @@ import type {
  * 结果只读，不回写调用方的条件或字段值。
  */
 export function createInputValidity(props: InputValidityProps): InputValidity {
-  const allRulesPassed = stateView(props.validIf).map((validIf) => {
+  const allRulesPassed = derive(props, (source) => {
+    const validIf = val(source.validIf)
     const validationInputs =
       validIf === undefined ? [] : Array.isArray(validIf) ? validIf : [validIf]
     return validationInputs.every(isValidationPassed)
   })
 
-  const isValid = allRulesPassed.map((areAllRulesPassed) => {
+  const isValid = derive(allRulesPassed, (areAllRulesPassed) => {
     if (!areAllRulesPassed) return false
-    if (props.invalid !== undefined) return val(props.invalid) !== true
-    return true
+    return val(props.invalid) !== true
   })
 
   return {

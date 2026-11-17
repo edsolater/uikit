@@ -16,7 +16,7 @@ import { derive } from '@/hooks/stateUtils'
 import { For, val } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import './Select.style'
-import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
+import { createFormFieldId, useFormFieldId } from '../FormField/FormField'
 
 /**
  * 有限选项的原生单选字段，持续消费值和选项来源。
@@ -31,11 +31,11 @@ export const Select: KitComponent<{
     propDefinition: selectPropDefinition,
   },
   (props, { name }) => {
-    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
+    const id = createFormFieldId(props, useFormFieldId())
     return (
       <Piv
         as="select"
-        shadowProps={rootProps}
+        shadowProps={props}
         class={name}
         id={id}
         htmlProps={{

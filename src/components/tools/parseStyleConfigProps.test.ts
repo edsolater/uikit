@@ -56,7 +56,10 @@ test('显式字段覆盖前缀字段，保留来源及普通函数身份', () =>
 })
 
 test('已有前缀声明持续反映字段形状，整体来源按消费时读取', () => {
-  const source: Record<string, unknown> = { title: '内容', $direction: undefined }
+  const source: Record<string, unknown> = {
+    title: '内容',
+    $direction: undefined,
+  }
   const props = parseStyleConfigProps(source)
   expect('$styleConfig' in props).toBe(true)
   expect(Object.hasOwn(props, '$styleConfig')).toBe(true)
@@ -82,11 +85,13 @@ test('已有前缀声明持续反映字段形状，整体来源按消费时读�
   expect(Object.keys(props)).toEqual(['title'])
 })
 
-test('没有直接样式字段需要聚合时严格返回原对象', () => {
+test('没有快捷字段时保留原字段值与配置来源身份', () => {
   const ordinary = { title: '内容', onClick: () => {} }
   const configOnly = { $styleConfig: { $gap: '2rem' } }
-  expect(parseStyleConfigProps(ordinary)).toBe(ordinary)
-  expect(parseStyleConfigProps(configOnly)).toBe(configOnly)
+  expect(parseStyleConfigProps(ordinary).onClick).toBe(ordinary.onClick)
+  expect(parseStyleConfigProps(configOnly).$styleConfig).toBe(
+    configOnly.$styleConfig,
+  )
 })
 
 test('美元配置入口聚合同名字段并排除自身容器', () => {

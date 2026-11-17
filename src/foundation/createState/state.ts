@@ -6,9 +6,10 @@
  */
 import { hasProperty, isTrue } from '@edsolater/fnkit'
 import { createMemo } from 'solid-js'
-import { isStateView, stateViewBrand, type StateView } from './state-view'
+import { stateViewBrand, type StateView } from './state-view'
 import { isPromiseLike } from './promise-like'
-import type { Val } from './read'
+import { val, type Val } from './read'
+import { stateSourceAccessor, type StateSourceAccess } from './state-source'
 import {
   createAsyncSignal,
   type AsyncSignalOptions,
@@ -57,13 +58,14 @@ export function createState(
   initialValue?: any,
   options?: AsyncSignalOptions<any>,
 ): State<any> {
-  const [solidjsAccessor, solidjsSetSignal] = createAsyncSignal(
+  const [solidjsAccessor, solidjsSetSignal, sourceAccessor] = createAsyncSignal(
     initialValue,
     options,
   )
 
-  const thisState: State = {
+  const thisState: State & StateSourceAccess = {
     read: solidjsAccessor,
+    [stateSourceAccessor]: sourceAccessor,
     [stateViewBrand]: true,
     [stateBrand]: true,
     set(newValue) {
@@ -83,14 +85,15 @@ export function createState(
  */
 export function mapStateView<T, U>(
   view: StateView<T>,
-  mapper: (value: T) => U | StateView<U>,
-): StateView<Awaited<U>> {
-  const read = createMemo<U>(() => {
-    const mapped = mapper(view.read())
-    const result = isStateView(mapped) ? mapped.read() : mapped
-    // 直接交给计算节点等待；标准 Promise 吸收 thenable 的嵌套结果。
+  mapper: (value: T) => U,
+): StateView<Val<U>> {
+  // 生产层缓存映射结果和 Promise 身份，等待重试不重新调用 mapper 创建 Promise。
+  const mapped = createMemo<U>(() => {
+    const result = mapper(view.read())
     return isPromiseLike(result) ? Promise.resolve(result) : result
   })
+  // 结果层递归读取 Source，并按完成值去重；同值来源切换不重复通知下游。
+  const read = createMemo(() => val(mapped()))
   const mappedView: StateView<any> = {
     read,
     [stateViewBrand]: true,

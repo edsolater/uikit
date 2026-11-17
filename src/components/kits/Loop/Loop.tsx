@@ -47,15 +47,9 @@ const loopComponent: KitComponent<{
       },
     )
 
-    const mapped = mapArray(
-      () => val(innerState),
-      props.children,
-      props.fallback === undefined
-        ? undefined
-        : {
-            fallback: () => props.fallback,
-          },
-    )
+    const mapped = mapArray(() => val(innerState), props.children, {
+      fallback: () => props.fallback,
+    })
 
     return (
       <Piv shadowProps={props} class={name} domRef={setDomRef}>

@@ -14,8 +14,9 @@ import {
 } from './Checkbox.prop'
 import { Label } from '../Label/Label'
 import { Piv } from '../../Piv/Piv'
-import { createFormFieldBinding } from '../FormField/FormField'
+import { createFormFieldId } from '../FormField/FormField'
 import './Checkbox.style'
+import { derive } from '@/hooks'
 
 /**
  * 带可点击标题的二态表单选择。
@@ -30,9 +31,10 @@ export const Checkbox: KitComponent<{
     propDefinition: checkboxPropDefinition,
   },
   (props, { name }) => {
-    const { id, rootProps } = createFormFieldBinding(props, crypto.randomUUID())
+    const id = createFormFieldId(props, crypto.randomUUID())
+    const label = derive(props, (source) => source.label)
     return (
-      <Piv shadowProps={rootProps} class={name}>
+      <Piv shadowProps={props} class={name}>
         <Piv
           as="input"
           id={id}
@@ -50,7 +52,7 @@ export const Checkbox: KitComponent<{
           }}
         />
         <Label for={id} tooltip={props.tooltip}>
-          {props.label}
+          {label}
         </Label>
       </Piv>
     )

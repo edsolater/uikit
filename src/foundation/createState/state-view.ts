@@ -3,11 +3,12 @@
  *
  * 本文件定义可读取、可映射的状态视图，以及 StateView 对外暴露的统一转换能力。
  */
-import { isFunction, isObject } from '@edsolater/fnkit'
-import { createMemo, runWithOwner } from 'solid-js'
+import { hasProperty, isFunction, isObject, isTrue } from '@edsolater/fnkit'
+import { createMemo, runWithOwner, untrack } from 'solid-js'
 import { isPromiseLike, toStateViewFromPromiseLike } from './promise-like'
 import type { Source } from './source'
 import { mapStateView } from './state'
+import type { Val } from './read'
 
 export const stateViewBrand = Symbol('StateView')
 
@@ -22,7 +23,7 @@ export interface StateView<T = any> {
   [stateViewBrand]: true
 
   /** 创建一个新的派生 StateView。 */
-  map<U>(toNew: (value: T) => U | StateView<U>): StateView<Awaited<U>>
+  map<U>(toNew: (value: T) => U): StateView<Val<U>>
 }
 
 /**
@@ -35,14 +36,14 @@ const stateViewCache = new WeakMap<PromiseLike<unknown>, StateView<unknown>>()
 
 export type StateViewOptions<V, U> = {
   /** 转换完成后继续映射 StateView 的当前值。 */
-  map: (value: V) => U | StateView<U>
+  map: (value: V) => U
 }
 
 /**
  * 判断未知值是否为 StateView。
  */
 export function isStateView(value: unknown): value is StateView {
-  return isObject(value) && (value as any)[stateViewBrand] === true
+  return isObject(value) && hasProperty(value, stateViewBrand, isTrue)
 }
 
 /**
@@ -58,25 +59,25 @@ export function stateView<V>(sourceOrValue: StateView<V>): StateView<V>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   options: StateViewOptions<Awaited<R>, U>,
-): StateView<Awaited<U>>
+): StateView<Val<U>>
 export function stateView<R>(
   sourceOrValue: PromiseLike<R>,
 ): StateView<Awaited<R>>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
-  map: (value: Awaited<R>) => U | StateView<U>,
-): StateView<Awaited<U>>
+  map: (value: Awaited<R>) => U,
+): StateView<Val<U>>
 export function stateView<V>(
   sourceOrValue: Source<V> | (() => V),
 ): StateView<Awaited<V>>
 export function stateView<V, U>(
   sourceOrValue: Source<V> | (() => V),
   options: StateViewOptions<Awaited<V>, U>,
-): StateView<Awaited<U>>
+): StateView<Val<U>>
 export function stateView<V, U>(
   sourceOrValue: Source<V> | (() => V),
-  map: (value: Awaited<V>) => U | StateView<U>,
-): StateView<Awaited<U>>
+  map: (value: Awaited<V>) => U,
+): StateView<Val<U>>
 export function stateView(
   sourceOrValue: any,
   optionsOrMap?: any,
@@ -86,7 +87,8 @@ export function stateView(
     : optionsOrMap
 
   let view: StateView
-  if (isPromiseLike(sourceOrValue)) {
+  // 来源身份只在转换时判定；元数据探测不订阅 Props 等读取视图的声明形状。
+  if (untrack(() => isPromiseLike(sourceOrValue))) {
     const cachedStateView = stateViewCache.get(sourceOrValue)
     if (cachedStateView) {
       view = cachedStateView
@@ -95,7 +97,7 @@ export function stateView(
       view = runWithOwner(null, () => toStateViewFromPromiseLike(sourceOrValue))
       stateViewCache.set(sourceOrValue, view)
     }
-  } else if (isStateView(sourceOrValue)) {
+  } else if (untrack(() => isStateView(sourceOrValue))) {
     view = sourceOrValue
   } else {
     const read = isFunction(sourceOrValue)

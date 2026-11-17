@@ -65,6 +65,26 @@ export const Flow: KitComponent<{
 
 每个组件的 `componentName` 统一定义在自身 `.prop.ts` 的元数据位置，组件实现与自有根样式引用同一身份。它不从包根汇总为同名出口，子部件和 Token 的独立名称保持各自含义。
 
+## 公共声明与逐层消费
+
+- Kit 统一处理 `shadowProps` 和 `is`，组件核心直接使用处理后的 Props。业务组件通过公共调用契约获得这两个入口，不在自身 Props 重复声明，也不从 context 取解析工具。
+- `shadowProps` 补充当前组件字段；`is` 接入已构建 Plugin 的声明，不重跑 core。公共工具位于 `src/components/tools/propsDeclaration`，Piv 也使用它们，节点字段语义仍由 Piv/Dode 负责。
+- 当前层读取字段即认领。自动下传只交接尚未消费的声明；需要下层继续使用已消费值时，当前组件显式提供该值或转换结果。同层重复读取保留动态来源，独立实例不共享消费状态。
+- Plugin 条目的认领与注入字段的消费分开：上层已经接入的条目不在下层再次展开，其尚未消费的字段仍可继续交接。
+- 显式 `undefined` 是已声明的值，高优先级声明覆盖低优先级；具体配置同名字段优于快捷方式，包括 `undefined`。
+- 原始数据可以共享。下层遵守正常消费和交接协议，不直接枚举、展开原对象来恢复已消费声明；框架内部探测和接线不算业务消费。
+- 普通组件与泛型入口统一使用 `KitInputProps` 扩充调用契约：没有补充来源时保留原必填字段；显式提供非空类型的 shadowProps 或 is 容器时，可由该来源提供业务字段。children、ref 维持原直接调用契约，补充字段的值域与泛型关联不放宽；来源是否实际提供所需字段由调用方负责。
+
+```mermaid
+flowchart LR
+    Input[直接 Props、shadowProps、is] --> Kit[Kit 公共声明处理]
+    Kit --> Core[组件核心读取并认领]
+    Core --> Remaining[尚未消费的声明]
+    Core --> Explicit[显式重新提供的值或效果]
+    Remaining --> Next[下层 Kit 或 Piv]
+    Explicit --> Next
+```
+
 ## 创建时决定是否启用输入控制
 
 只有创建时提供有效组件 ref，才在上游 Props 和核心之间启用 Component Props Director。未提供 ref、ref 为 undefined、只有 domRef 时，核心直接消费输入，不建立控制层字段 State，也不登记受控实例。之后添加 ref 不会补建控制层。
@@ -103,18 +123,22 @@ kit 负责同一个 Controller 的组装、登记、ref 换接和透明 Componen
 
 | 读取模式            | 核心取得的内容                                       | Controller.props |
 | ------------------- | ---------------------------------------------------- | ---------------- |
-| `state-source-view` | 与 Controller 共用的 State，交给实际消费者读取       | 可写 State       |
+| `state-source-view` | 只读 StateView，交给实际消费者读取                  | 可写 State       |
 | `state-value-view`  | 当前值，本次读取参与响应依赖收集                     | 可写 State       |
 | `state-untracked`   | 当前值，不收集本次外层响应依赖；再次读取仍取得当时值 | 可写 State       |
 | `only-through-prop` | 上游原声明，不解包、不缓存                           | 不公开该字段     |
 
-字段 State 与默认来源工厂归 Director 创建时的实例作用域。配置了默认来源的未声明字段在构建时连接来源，其余可干预字段首次读取时才建立并缓存 State；读取一个字段不会预读其他字段。
+字段状态、只读来源视图与默认来源工厂归 Director 创建时的实例作用域，按实际读取需要建立并缓存。只取得节点累加字段的核心来源视图时，不预建其直接贡献的可写 State；Controller 仍按需取得可写 State。缺省工厂在第一次实际需要缺省来源时构建一次，其交付的 Source 持续读取。读取一个字段不会预读其他字段。
 
-输入视图保留上游声明的存在性。显式 undefined 仍是已声明输入，不调用默认工厂；指令写入不改上游对象，也不动态制造声明。默认工厂交付稳定 Source，实际值由最终消费点读取。字段 State 同时供核心与 Controller 使用，不用 Effect 复制一份值。
+输入视图保留当前声明的存在性。显式 undefined 仍是已声明输入，不调用默认工厂；指令写入不改上游对象，首次写入未提供的字段才扩展本层输出形状。普通字段的 State 同时供核心与 Controller 使用，不用 Effect 复制一份值。
+
+class、style、id、htmlProps、on、domRef、label 等节点累加字段按来源层处理：Controller 只干预本层直接声明，核心与 Marker 取得该直接贡献和补充来源经原规则合并的结果。未干预时保留原始 Source 形态；直接 undefined 和 Controller 显式清空会截断补充来源，原 Source 的当前 undefined 仍沿节点字段契约处理。默认来源和本层干预不是本层外部输入声明；它们被上层显式交付后，会成为下一层的输入。
+
+公共接线只需把已建立的 `declaration` 交给 Director。`director.props` 已包含完整合并结果，并遵守上表的读取模式；`director.controller` 提供可写状态，累加字段的状态只持直接贡献。Marker 等设施通过 `director.peek(key)` 借读可控字段的完成值，only-through 字段仍返回原声明。这不会建立当前字段的新认领或预热核心的稳定 Source；已有认领沿原读取者身份继续解释来源。Kit 无需提供原始 State 回调或在 Director 返回后再补一层读取视图。
 
 组件核心只执行一次，输入干预不重放创建动作。原生 `as` 与 Text 的 block/p/emphasis、Heading 的 level 在创建时选择根标签；Piv 的 if 在字段存在时启用显隐，首次显示创建一次，之后保留同一元素。Loop.children 与 Field.children 是构建工厂，只通过 Props 提供，不进入 Controller.props。Loop.each 保留列表来源，由精确实例 ref 控制；Table.keys 按当前值决定显式列或默认字段列。
 
-字段身份沿用 Piv 的 ID 值域与 `String` 规范。`createFormFieldBinding` 在 FormField 领域统一生成持续读取的身份来源，并把其余公共声明交给根元素；显式身份优先于字段上下文，ID 只路由给实际控件一次。FormField 和自带 Label 的 Checkbox 在需要关联时生成缺省身份；独立原生控件没有身份输入时保持无 ID。FormField 上下文传递身份 Source，标题与控件共同跟随更新。
+字段身份沿用 Piv 的 ID 值域与 `String` 规范。`createFormFieldId` 在 FormField 领域生成持续读取的身份 Source，消费后的 Props 直接交接其余声明；实际控件显式取得这份 ID，不再创建过滤转发视图。显式身份包括 undefined 时优先于字段上下文，ID 只路由给实际控件一次。FormField 和自带 Label 的 Checkbox 在需要关联时生成缺省身份；独立原生控件没有身份输入时保持无 ID。FormField 上下文传递身份 Source，标题与控件共同跟随更新。
 
 ## 业务能力与输入控制组合
 

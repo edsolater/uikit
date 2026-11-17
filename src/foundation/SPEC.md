@@ -12,19 +12,21 @@
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
+State 的内部 `state-source.ts` 只向拥有该状态的设施提供原生来源 accessor，不进入包根或公开 State 接口。Director 用它读取可控的直接贡献，区分原始 undefined 与 Source 的当前 undefined；Kit 不直接读取此出口。没有另存来源值或建立镜像状态。来源计算保留原 Source 实体，同时沿原值依赖撤销临时写入，完成值仍由结果层统一读取。
+
 `createRoot` 从渲染入口公开，沿用原生根作用域契约；脱离组件生命周期管理资源时，调用方负责调用其 dispose。`flush` 留在响应式动作入口，测试或宿主需要观察已提交结果时可显式调用，不以此替代业务动作的正常调度。`createComponent` 同样从渲染入口公开，保留组件求值与作用域行为；不建立另一套组件或状态协议。
 
 生产源码中，直接引用 `solid-js` 与 `@solidjs/web` 的实现限定为本目录的 `createState/state.ts`、`createState/state-view.ts`、`createState/promise-like.ts`、`createState/createAsyncSignal.ts`、`createEffect.ts`、`context.ts`、`reactivity.ts`、`render.ts`、`types.ts`。`src/types/htmlPopover.d.ts` 的第三方模块类型扩展、测试及构建配置按各自职责保留 Solid 引用。
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 
-当前接入 Solid 2。State 只有来源 Signal 与结果 Memo 两层：普通值和 Promise 由原生 Signal 保存，函数由原生可写计算跟随依赖；结果 Memo 统一展开 PromiseLike，交给 Solid 等待与传播错误。输入中的 Promise 展开为对外的 `Awaited<T>`，读取与结果层选项使用完成类型。StateView 的 `map` 直接将映射交给 Solid 计算，输出 `Awaited<U>`，后继映射接收完成值；返回 StateView 时跟随其当前来源。写入、派生及 DOM 更新遵循 Solid 的提交时机。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
+当前接入 Solid 2。State 只有来源 Signal 与结果 Memo 两层：普通值和 Promise 由原生 Signal 保存，函数由原生可写计算跟随依赖；结果 Memo 统一展开 PromiseLike，交给 Solid 等待与传播错误。输入中的 Promise 展开为对外的 `Awaited<T>`，读取与结果层选项使用完成类型。StateView 的 `map` 先缓存 mapper 产生的结果与 Promise 身份，再由结果计算通过既有 `val` 读取完整 Source，并按完成值去重；输出类型为完整 mapper 返回值 `U` 对应的 `Val<U>`。后继映射接收最终值，Promise 完成 StateView 后也持续跟随内部来源；普通函数仍保持数据。写入、派生及 DOM 更新遵循 Solid 的提交时机。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
 
-stateView 的普通值转换直接构造只读视图，不建立可写 State；函数来源使用一个原生 Memo 缓存计算与处理异步，函数结果中的函数保持数据。已有 StateView 原样返回，Promise 转换继续按身份复用；可选 map 在统一取得视图后应用。
+stateView 在转换入口只快照判定 PromiseLike 与已有 StateView 身份，不将协议探测变成 Props 等读取视图的声明形状依赖；实际计算和映射仍跟踪值依赖。普通值转换直接构造只读视图，不建立可写 State；函数来源使用一个原生 Memo 缓存计算与处理异步，函数结果中的函数保持数据。已有 StateView 原样返回，Promise 转换继续按身份复用；可选 map 在统一取得视图后应用。
 
 `createEffect` 优先直接接收单个 Source，多个独立来源使用 tuple，无法自然表达时才使用 compute 函数。计算阶段读取依赖并产出数据，动作阶段的额外读取不增加依赖，动作返回的清理由 Solid 在下次动作前及卸载时执行。内部 DOM 监听同样采用原生两阶段；Piv 的 style 与 HTML 字段由原生 mapArray 按 key 保留作用域，换源时由同一监听清理后提交，字段退出时释放。
 
-内部 `createRenderEffect` 使用相同三入口与优先级，共用一处来源归一化；默认首次动作同步完成，原有第三个原生选项参数继续透传。Piv 合并层复用 derive 输出稳定的 id Source，持续合并插件与直接声明；消费层直接传入该 Source，由 Effect 自动读取，不使用 getter/val 桥接。
+内部 `createRenderEffect` 使用相同三入口与优先级，共用一处来源归一化；默认首次动作同步完成，原有第三个原生选项参数继续透传。Piv 节点策略从当前声明图选择原始参与者，再求值累加；Kit 受控来源按字段缓存稳定惰性 Source。真实节点消费者在自己的持续计算中读取结果，不另复制一份值。
 
 `onMount` 对接原生 `onSettled`，动作中的读取不建立依赖，返回的清理由 Solid 管理。响应式计算应在构建阶段登记，不在挂载动作内创建，也不保存和恢复构建阶段的 owner。三种入口登记的清理统一作为动作执行：原生运行时仍拥有清理的时机、顺序和次数，Foundation 只在执行回调时使用原生无 owner 上下文，避免清理旁读订阅触发销毁的计算，并允许公布资源已释放的状态。普通计算中的 State 写入限制不变；DOM ref 在构建阶段同步登记仍使用局部许可，保留 ref 先于 children/mount 的顺序。
 

@@ -10,6 +10,7 @@ import {
   type KitProps,
   type KitPropDefinition,
   type KitController,
+  type KitInputProps,
 } from '../../tools/kit'
 import type { JSX } from '@/foundation'
 import type { PivSupportedElementTag } from '../../Piv/domMap'
@@ -89,7 +90,7 @@ export type BoardControllerRegistry = ControllerRegistry<{
 /** 调用端保留 Tag 与 ref 的关联，集合不假定具体 Tag。 */
 export interface BoardComponent {
   <Tag extends PivSupportedElementTag = 'div'>(
-    props: BoardProps<Tag>,
+    props: KitInputProps<BoardProps<Tag>>,
   ): JSX.Element
   controllers: BoardControllerRegistry
 }

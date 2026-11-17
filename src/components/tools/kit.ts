@@ -48,6 +48,11 @@ import {
   type ControllerRegistry,
 } from './controllerRegistry'
 import { pivPropsDefinition, type PivPropDefinition } from '../Piv/Piv.prop'
+import {
+  createPropsDeclaration,
+  type PropsDeclarationInput,
+} from './propsDeclaration/shadowProps'
+import { pivPropAccumulation } from '../Piv/plugin/mergePivProps'
 
 // =============================================================================
 // 公共输入与字段协议
@@ -190,9 +195,48 @@ export interface KitComponentConfig {
   $styleTokens?: unknown
 }
 
+/** 已归入当前组件字段的直接调用输入，公共容器由调用入口另行提供。 */
+type KitDirectInput<Props extends object> = Omit<
+  StyleConfigInputProps<Props>,
+  'shadowProps' | 'is'
+>
+
+/** 调用方明确提供补充来源时，业务字段可由来源提供；children/ref仍沿直接输入契约。 */
+type KitProvidedInput<Props extends object> = Partial<
+  Omit<KitDirectInput<Props>, 'children' | 'ref'>
+> &
+  Pick<
+    KitDirectInput<Props>,
+    Extract<keyof KitDirectInput<Props>, 'children' | 'ref'>
+  > &
+  (
+    | {
+        shadowProps: NonNullable<
+          PropsDeclarationInput<
+            StyleConfigInputProps<Props> & object
+          >['shadowProps']
+        >
+      }
+    | {
+        is: NonNullable<
+          PropsDeclarationInput<StyleConfigInputProps<Props> & object>['is']
+        >
+      }
+  )
+
+/** 直接调用保留必填字段；显式补充入口按当前组件值域交付业务声明。 */
+export type KitInputProps<Props extends object> = (
+  KitDirectInput<Props> | KitProvidedInput<Props>
+) &
+  PropsDeclarationInput<StyleConfigInputProps<Props> & object>
+
 /** 组件预先声明的调用与控制契约；kit 据此为 render 提供上下文并校验实现。 */
 export type KitComponent<Config extends KitComponentConfig> = {
-  (props: StyleConfigInputProps<Config['props']>): JSX.Element
+  (
+    props: Config['props'] extends object
+      ? KitInputProps<Config['props']>
+      : StyleConfigInputProps<Config['props']>,
+  ): JSX.Element
   /** 当前存活的受控实例集合；提供 StyleTokens 时，同一入口还保留样式 Token 集合。 */
   controllers: ControllerRegistry<Config>
 }
@@ -305,8 +349,13 @@ export function kit<
    * 接收上游输入，创建带身份说明与根声明的实例内容。
    * 初始 ref 决定是否接入可写输入及实例集合，此决定在实例存活期间保持不变。
    */
-  const Component = (sourceProps: Props & KitControllerProps<Controller>) => {
-    const inputProps = parseStyleConfigProps(sourceProps)
+  const Component = (sourceInput: object) => {
+    // 入口接受公共补充声明；归一后以定义处的 Props 契约进入核心。
+    const sourceProps = sourceInput as Props & KitControllerProps<Controller>
+    const declaration = createPropsDeclaration(sourceProps, {
+      accumulate: pivPropAccumulation,
+    })
+    const inputProps = parseStyleConfigProps(declaration.peek)
     // 准备同根组合与本实例能力，资源仍绑定当前组件作用域。
     const inheritedDeclarations = useContext(ElementDeclarationsContext)
     const owner = getOwner()
@@ -326,7 +375,6 @@ export function kit<
     }
     // sourceProps 保留上游来源，供 ref 换接；renderProps 只在受控模式切换为 Director 视图。
     // 不跟踪初始 ref，避免之后增删接收器重建输入状态或改变受控模式。
-    let renderProps: Omit<Props, 'ref'> = inputProps
     const controlled = untrack(() => sourceProps.ref)
     const propDirector = controlled
       ? createComponentPropsDirector<Props, PropDefinition>(
@@ -334,25 +382,32 @@ export function kit<
           propDefinition,
           {
             defaultSources: variantSources,
-            // 缺省分组通过候选输入计算；候选不再透传给核心，以免与受控分组竞争。
-            omit: options.variantGroups?.flatMap((group) =>
-              group.groupName in sourceProps ? [] : group.candidates,
-            ),
+            declaration,
+            // 当前显式分组优先；来源增删后，候选投射跟随当前声明变化。
+            omit: (key) =>
+              options.variantGroups?.some(
+                (group) =>
+                  group.candidates.some((candidate) => candidate === key) &&
+                  !(group.groupName in inputProps),
+              ) ?? false,
           } as PropsDirectorOptions<Props, PropDefinition>,
         )
       : undefined
-    if (propDirector) {
-      // 入口已验证 DirectedProps 可赋给 Props；泛型函数体不能保留条件类型证明。
-      renderProps = propDirector.props as Omit<Props, 'ref'>
-    }
+    // 入口静态约束保证 Director 输出符合组件 Props；泛型函数体不保留该条件类型证明。
+    const internalProps = (propDirector?.props ?? inputProps) as Omit<
+      Props,
+      'ref'
+    >
+    const renderProps = declaration.consume(internalProps)
     // Marker 只建立组件身份和说明边界；children 延迟创建，使核心处于此身份的作用域内。
     return createComponent(ComponentIdentityMarker, {
       componentName: options.name,
       get label() {
-        return renderProps.label
+        // Marker只借读最终值，不预热核心的惰性合并Source或改变其认领时序。
+        return propDirector ? propDirector.peek('label') : inputProps.label
       },
       get descriptionDisplay() {
-        return renderProps.descriptionDisplay
+        return internalProps.descriptionDisplay
       },
       componentDescription: options.componentDescription,
       get children() {
@@ -366,7 +421,9 @@ export function kit<
      */
     function renderRoot() {
       const declarations = [...inheritedDeclarations]
-      if (options.$styleConfig)
+      if (options.$styleConfig) {
+        // 样式配置由本层解释并显式交给根声明，不再自动交给下层 Kit 重复解释。
+        declaration.claim('$styleConfig')
         declarations.push(
           bindStyleConfig(
             options.$styleConfig,
@@ -375,6 +432,7 @@ export function kit<
             },
           ),
         )
+      }
       return createComponent(ElementDeclarationsContext, {
         value: declarations,
         get children() {

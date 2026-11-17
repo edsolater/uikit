@@ -64,11 +64,11 @@ export interface AsyncSignalOptions<T> {
 export function createAsyncSignal<T>(
   initialSource: StateSource<T>,
   options?: AsyncSignalOptions<Val<T>>,
-): [SourceAccessor<Val<T>>, AsyncSignalSetter<Val<T>>]
+): [SourceAccessor<Val<T>>, AsyncSignalSetter<Val<T>>, SourceAccessor<unknown>]
 export function createAsyncSignal(
   initialSource: StateSource<any>,
   options?: AsyncSignalOptions<any>,
-): [SourceAccessor<any>, AsyncSignalSetter<any>] {
+): [SourceAccessor<any>, AsyncSignalSetter<any>, SourceAccessor<unknown>] {
   const { ownedWrite, ...resultOptions } = options ?? {}
 
   // 来源层保留原生可写计算与依赖关系，相等比较统一由结果层负责。
@@ -84,7 +84,9 @@ export function createAsyncSignal(
           const source = isFunction(initialSource)
             ? initialSource()
             : initialSource
-          return isStateView(source) ? val(source) : source
+          // 来源变化仍撤销本地干预；保留实体，使声明层能区分Source空值和显式undefined。
+          if (isStateView(source)) val(source)
+          return source
         }, sourceOptions)
       : createSignal(initialSource, sourceOptions)
 
@@ -105,5 +107,5 @@ export function createAsyncSignal(
     })
   }
 
-  return [accessor, setter]
+  return [accessor, setter, readSource]
 }

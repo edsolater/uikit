@@ -14,7 +14,7 @@ import {
 } from './InputRange.prop'
 import { Piv } from '../../Piv/Piv'
 import './InputRange.style'
-import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
+import { createFormFieldId, useFormFieldId } from '../FormField/FormField'
 
 /**
  * 使用原生 min、max、step 和 value 调整连续数值。
@@ -29,11 +29,11 @@ export const InputRange: KitComponent<{
     propDefinition: inputRangePropDefinition,
   },
   (props, { name }) => {
-    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
+    const id = createFormFieldId(props, useFormFieldId())
     return (
       <Piv
         as="input"
-        shadowProps={rootProps}
+        shadowProps={props}
         id={id}
         class={name}
         htmlProps={{ type: 'range' }}

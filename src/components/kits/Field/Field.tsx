@@ -8,6 +8,7 @@
 import { Flow } from '../Flow/Flow'
 import { Label } from '../Label/Label'
 import { kit, type KitComponent } from '../../tools/kit'
+import { derive } from '@/hooks'
 import {
   componentName,
   fieldPropDefinition,
@@ -29,14 +30,11 @@ export const Field: KitComponent<{
   },
   (props, { name }) => {
     const id = crypto.randomUUID()
+    const label = derive(props, (source) => source.label)
     return (
-      <Flow
-        shadowProps={props}
-        class={name}
-        $col
-      >
+      <Flow shadowProps={props} class={name} $col>
         <Label for={id} tooltip={props.tooltip}>
-          {props.label}
+          {label}
         </Label>
         {props.children(id)}
       </Flow>

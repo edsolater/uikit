@@ -18,8 +18,9 @@ import {
 import { Piv } from '../../Piv/Piv'
 import { createStatusPropsParser } from '../utils/parseStatusProps'
 import './Input.style'
-import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
+import { createFormFieldId, useFormFieldId } from '../FormField/FormField'
 import { val } from '@/foundation'
+import { derive } from '@/hooks'
 import { createInputValidity } from './validity'
 
 /**
@@ -47,9 +48,9 @@ export const Input: KitComponent<{
     propDefinition: inputPropDefinition,
   },
   (props, { name, exposeController }) => {
-    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
+    const id = createFormFieldId(props, useFormFieldId())
     const validity = createInputValidity(props)
-    const isInvalid = validity.isValid.map((isValid) => !isValid)
+    const isInvalid = derive(validity.isValid, (isValid) => !isValid)
     const { effect: statusEffectProps, controller } = parseInputStatusProps({
       invalid: isInvalid,
     })
@@ -58,7 +59,7 @@ export const Input: KitComponent<{
     return (
       <Piv
         as="input"
-        shadowProps={[rootProps, ...statusEffectProps]}
+        shadowProps={[props, ...statusEffectProps]}
         class={name}
         id={id}
         htmlProps={{

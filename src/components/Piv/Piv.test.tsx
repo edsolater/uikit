@@ -48,7 +48,6 @@ describe('Piv 生命周期', () => {
             shadowProps={[
               { as: 'span' },
               {
-                as: undefined,
                 shadowProps: {
                   get as() {
                     return val(tag)

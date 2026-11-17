@@ -5,7 +5,8 @@
  *
  * 让标题、控件和说明各自保持职责，通过字段身份协作。
  */
-import { Show, stateView, val } from '@/foundation'
+import { Show, val } from '@/foundation'
+import { derive } from '@/hooks'
 import { Help } from '../Help/Help'
 import { Piv } from '../../Piv/Piv'
 
@@ -44,7 +45,7 @@ export const Label: KitComponent<{
           <Help
             tooltip={props.tooltip}
             trigger={props.tooltipTrigger}
-            label={stateView(() => val(props.children) + '说明')}
+            label={derive(props, (source) => val(source.children) + '说明')}
           />
         </Show>
       </Piv>

@@ -37,7 +37,7 @@ describe('配置插件消费', () => {
       flush()
       expect(merged.class).toBe(value)
       expect(trailing.class).toEqual(['low', undefined])
-      expect(literal.class).toBe('low')
+      expect(literal.class).toBeUndefined()
     } finally {
       dispose()
     }
@@ -77,7 +77,7 @@ describe('配置插件消费', () => {
         'middle',
         'high',
       ])
-      expect(reads).toEqual(['low', 'middle', 'high'])
+      expect(reads).toEqual(['high', 'middle', 'low'])
       dispose()
     })
   })
@@ -249,10 +249,12 @@ describe('配置插件消费', () => {
         let error: unknown
         const release = render(
           () => (
-            <Errored fallback={(caught) => {
-              error = caught()
-              return null
-            }}>
+            <Errored
+              fallback={(caught) => {
+                error = caught()
+                return null
+              }}
+            >
               <Piv is={is} />
             </Errored>
           ),

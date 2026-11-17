@@ -10,6 +10,7 @@ import {
   type KitProps,
   type KitPropDefinition,
   type KitController,
+  type KitInputProps,
 } from '../../tools/kit'
 import type { Accessor, JSX } from '@/foundation'
 import type { ControllerRegistry } from '../../tools/controllerRegistry'
@@ -51,7 +52,7 @@ export interface LoopController<Item> extends KitController<{
 
 /** 列表入口保留条目关联；异构集合不公开各自的 each。 */
 export interface LoopComponent {
-  <Item>(props: LoopProps<Item>): JSX.Element
+  <Item>(props: KitInputProps<LoopProps<Item>>): JSX.Element
   controllers: ControllerRegistry<{
     controller: {
       props: Omit<LoopController<unknown>['props'], 'each'>

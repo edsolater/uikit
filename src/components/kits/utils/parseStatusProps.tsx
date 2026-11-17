@@ -7,15 +7,14 @@
  */
 import {
   createState,
-  stateView,
   val,
   type Source,
   type StateView,
   type State,
 } from '@/foundation'
-import { untrack } from '@/foundation/reactivity'
 import { derive } from '@/hooks'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
+import { hasPropDeclaration } from '../../tools/propsDeclaration/shadowProps'
 
 /** Status Props 中的每一个字段都是可以独立存在、也可以同时成立的状态来源。 */
 export type StatusProps<StatusName extends string> = {
@@ -31,7 +30,7 @@ export type StatusController<StatusName extends string> = Record<
   StatusName,
   StateView<boolean>
 > & {
-  /** 外部没有声明该状态时，从组件内部改变它；外部已声明时调用保持无效且不报错。 */
+  /** 当前未声明该状态时，从组件内部改变它；外部当前已声明时调用保持无效且不报错。 */
   setStatus(status: StatusName, value: boolean | undefined): void
 
   /** 响应式判断一个状态当前是否成立。 */
@@ -48,8 +47,8 @@ export type StatusPropsParseResult<StatusName extends string> = {
 /**
  * 创建组件专用的 Status Props 解析器。
  *
- * Status 天然允许多个候选同时成立。外部一旦声明某个状态字段，该字段便始终跟随外部 Source；
- * 只有外部没有声明的状态才能由返回的 controller 从组件内部改变。
+ * Status 天然允许多个候选同时成立。当前由外部声明的字段跟随外部 Source；
+ * 只有当前未由外部声明的状态才能由返回的 controller 从组件内部改变。
  * 每个状态在创建 State 时连接属性来源，持续跟随 getter 和 Source，不使用 Effect 复制值。
  *
  * @param options 状态候选及可选的附加效果属性生成函数。
@@ -91,11 +90,6 @@ export function createStatusPropsParser<
     props: StatusProps<StatusName>,
   ): StatusPropsParseResult<StatusName> {
     const candidates: readonly StatusName[] = options.candidates
-    const externalStatusNames = new Set(
-      untrack(() =>
-        options.candidates.filter((statusName) => statusName in props),
-      ),
-    )
     // 计算来源同时保留属性读取和 Source 链，状态写入不会回写输入。
     // 候选全集逐项构造同名记录，Object.fromEntries 不保留该键域证明。
     const statusStates = Object.fromEntries(
@@ -108,13 +102,13 @@ export function createStatusPropsParser<
     const statusViews = Object.fromEntries(
       candidates.map((statusName) => [
         statusName,
-        stateView(() => Boolean(val(statusDetails[statusName]))),
+        statusStates[statusName].map(Boolean),
       ]),
     ) as Record<StatusName, StateView<boolean>>
     const statusController: StatusController<StatusName> = {
       ...statusViews,
       setStatus(status, value) {
-        if (externalStatusNames.has(status)) return
+        if (hasPropDeclaration(props, status)) return
         statusStates[status].set(value)
       },
       hasStatus(status) {
@@ -122,9 +116,9 @@ export function createStatusPropsParser<
       },
     }
 
-    const statusAttribute = derive(statusDetails, () => {
+    const statusAttribute = derive(statusDetails, (states) => {
       const activeStatuses = options.candidates.filter(
-        (statusName) => val(statusDetails[statusName]) === true,
+        (statusName) => val(states[statusName]) === true,
       )
       return activeStatuses.length > 0 ? activeStatuses.join(' ') : undefined
     })

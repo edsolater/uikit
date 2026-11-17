@@ -10,7 +10,7 @@ Dode 是本目录内部的元素实现，定义并消费 as、if 与底层 DOM �
 | --------------------------- | -------- | ------------------------------------------------------------------------------ |
 | as、if                      | Dode     | as 在首次实际创建时固定元素类型；if 按属性存在性启用显隐，同一元素跨显隐复用。 |
 | label                       | Piv      | 合并实例名称列表，以空格连接为低优先级 aria-label，不传入 Dode。             |
-| is、shadowProps             | Piv      | 在创建前展开已构建 Plugin 的声明，统一组织来源并交给 Dode。                    |
+| is、shadowProps             | 公共声明工具 | Kit 与 Piv 共用来源组织和逐层消费；Piv 使用结果交给 Dode。                 |
 | id、class、style、htmlProps | Dode     | 将组织后的声明交给专用字段消费者，订阅 Source 并维护 DOM。                     |
 | on、domRef                  | Dode     | 拥有事件绑定生命周期，完成字段绑定后按声明身份接入 domRef。                    |
 | children                    | Dode     | 懒读取子内容 Source，规范化后插入已初始化的元素。                              |
@@ -21,17 +21,19 @@ Dode 不解释 label、shadowProps 来源容器或 plugin；label 只在 PivProp
 
 ## 声明与来源
 
-Piv 在创建前组织直接声明、纯 shadowProps 与 is 中的已构建 Plugin，形成单一合并 Props 读取视图，
+Piv 使用 `components/tools/propsDeclaration` 组织直接声明、shadowProps 与 is 中的已构建 Plugin，形成合并 Props 读取视图，
 Dode 从中读取 as、if 和 DOM 字段。创建前直接展开 Plugin 的补充声明，不运行业务 core，
 因此 `addProps` 提交的 as/if 与 shadowProps 一样参与结构选择。
 直接声明优先；shadowProps／is 数组后项优先，每份声明先于其嵌套 shadowProps。
-as 选择最高优先级的非 undefined 值。if 选择最高优先级存在该属性的来源，保留显式 undefined。
+as、if 选择最高优先级存在该属性的来源，保留显式 undefined；as 未取得标签时仍由元素创建入口缺省为 div，不回退到低优先级标签声明。
 label 沿公共来源规则合并，接受 `MayArraySource<string | undefined>`，整体和列表项均可为 Source。非空名称以空格连接，undefined 项不产生文字；显式空字符串仍是已声明的空名称。Piv 和 Marker 共同复用名称解释入口，来源更新继续驱动原生名称与结构显示。
 
 定义职责 `componentDescription` 属于 KitOptions 或手写 ComponentIdentityMarker，不属于 PivProps，也不参与原生名称合并。结构查看优先标注非空 label，其次 componentDescription，都没有内容时默认不画自身框或标注，不用组件名补位，也不阻止有说明的后代。Marker 的显式 descriptionDisplay 优先：false 隐藏自身与后代范围，true 允许空框。Piv 始终只根据 label 设置低优先级 aria-label；清空 label 时移除该来源的原生名称，不用定义职责回填。
 
-`ShadowProps` 是唯一的补充声明契约，包含 as、if、domRef、is 及既有其他补充属性；children 仍由直接 Props 提供。
-`addProps` 直接提交 shadowProps，不拥有另一套删减后的类型；Plugin 不接收元素。
+`ShadowProps` 表达 Piv 的补充声明，包含 as、if、domRef、is 及既有其他补充属性；children 仍由直接 Props 提供。公共声明入口以当前组件 Props 为参数，不再限于 Piv。
+`addProps` 提交目标组件的补充声明；Plugin 不接收元素。上层 Kit 已接入的 Plugin 不由 Piv 重复展开，其尚未消费的字段继续交接。
+
+消费权属于声明的本次传递链。本层读取后，子层正常解析不再认领该字段；本层重复读取仍可用，显式重新提供值形成新的声明。底层原始对象可共享，不要求原对象的任意读取或枚举操作模拟删除。节点累加字段只求值实际参与合并的来源，显式 undefined 截断较低优先级声明。
 
 真实元素可用后，Dode 绑定最终 DOM 字段声明；直接声明保持高优先级位置。
 各字段继续使用原有合并规则，不统一改成覆盖或拼接。

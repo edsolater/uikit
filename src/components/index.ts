@@ -10,6 +10,15 @@ import '@/style-system/pieces/document.style'
 
 export * from './Piv/on/event-declarations'
 export * from './Piv/plugin/mergePivProps'
+export {
+  createPropsDeclaration,
+  hasPropDeclaration,
+  type PropsDeclaration,
+  type PropsDeclarationInput,
+  type PropsDeclarationOptions,
+  type PropAccumulation,
+} from './tools/propsDeclaration/shadowProps'
+export { collectPluginDeclarations } from './tools/propsDeclaration/plugins'
 export * from './Piv/plugin/structure'
 export * from './Piv/Piv'
 export * from './Piv/type'
@@ -215,6 +224,7 @@ export {
   type KitOptionsConfig,
   type KitComponent,
   type KitComponentConfig,
+  type KitInputProps,
 } from './tools/kit'
 export type {
   ControllerRegistry,

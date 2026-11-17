@@ -13,7 +13,7 @@ import {
   type TextAreaController,
 } from './TextArea.prop'
 import { Piv } from '../../Piv/Piv'
-import { createFormFieldBinding, useFormFieldId } from '../FormField/FormField'
+import { createFormFieldId, useFormFieldId } from '../FormField/FormField'
 import './TextArea.style'
 
 /**
@@ -29,11 +29,11 @@ export const TextArea: KitComponent<{
     propDefinition: textAreaPropDefinition,
   },
   (props, { name }) => {
-    const { id, rootProps } = createFormFieldBinding(props, useFormFieldId())
+    const id = createFormFieldId(props, useFormFieldId())
     return (
       <Piv
         as="textarea"
-        shadowProps={rootProps}
+        shadowProps={props}
         class={name}
         id={id}
         htmlProps={{

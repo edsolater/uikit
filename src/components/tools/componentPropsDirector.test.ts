@@ -1,29 +1,160 @@
 /** 验证同源指令写入、输入声明形状与分阶段输出，不涉及具体组件。 */
-import { createRoot, flush } from 'solid-js'
+import { createMemo, createRoot, flush } from 'solid-js'
 import { expect, expectTypeOf, test, vi } from 'vitest'
 import { createState, onCleanup, val, type Source } from '@/foundation'
 import { createComponentPropsDirector } from './componentPropsDirector'
+import { createPropsDeclaration } from './propsDeclaration/shadowProps'
+import { pivPropAccumulation } from '../Piv/plugin/mergePivProps'
+
+test.each([
+  'state-source-view',
+  'state-value-view',
+  'state-untracked',
+] as const)(
+  'Director直接交付完整累加字段，%s保留干预、清空和上游恢复',
+  (mode) => {
+    const { upstream, director, props, dispose } = createRoot((dispose) => {
+      type Props = {
+        class?: Source<string | string[] | undefined>
+        shadowProps?: { class: string }
+      }
+      const upstream = createState<string | undefined>('直接')
+      const declaration = createPropsDeclaration<Props>(
+        { class: upstream, shadowProps: { class: '补充' } },
+        { accumulate: pivPropAccumulation },
+      )
+      const director = createComponentPropsDirector(
+        declaration.peek,
+        { class: mode, shadowProps: 'only-through-prop' },
+        { declaration },
+      )
+      const props = declaration.consume(director.props)
+      return { upstream, director, props, dispose }
+    })
+    expect(val(props.class)).toEqual(['补充', '直接'])
+    director.controller.class.set('干预')
+    flush()
+    expect(val(props.class)).toEqual(['补充', '干预'])
+    director.controller.class.set(undefined)
+    flush()
+    expect(val(props.class)).toBeUndefined()
+    upstream.set('恢复')
+    flush()
+    expect(val(props.class)).toEqual(['补充', '恢复'])
+    expect(director.peek('class')).toEqual(['补充', '恢复'])
+    dispose()
+  },
+)
+
+test.each(['state-value-view', 'state-untracked'] as const)(
+  '累加字段的%s遵守外层依赖收集协议',
+  (mode) => {
+    const { upstream, props, observed, dispose } = createRoot((dispose) => {
+      const upstream = createState('初始')
+      const declaration = createPropsDeclaration(
+        { class: upstream },
+        { accumulate: pivPropAccumulation },
+      )
+      const director = createComponentPropsDirector(
+        declaration.peek,
+        { class: mode },
+        { declaration },
+      )
+      const props = declaration.consume(director.props)
+      const observed = createMemo(() => props.class)
+      return { upstream, props, observed, dispose }
+    })
+    expect(observed()).toBe('初始')
+    upstream.set('更新')
+    flush()
+    expect(observed()).toBe(mode === 'state-untracked' ? '初始' : '更新')
+    expect(props.class).toBe('更新')
+    dispose()
+  },
+)
+
+test('取得Source视图不提前读取输入，Controller首次指令仍在初始化后执行', () => {
+  const read = vi.fn(() => 2)
+  const { props, controller, dispose } = createRoot((dispose) => ({
+    ...createComponentPropsDirector(
+      {
+        get count() {
+          return read()
+        },
+      },
+      { count: 'state-source-view' },
+    ),
+    dispose,
+  }))
+  const source = props.count
+  expect(read).not.toHaveBeenCalled()
+  controller.count.set((value) => value + 1)
+  flush()
+  expect(val(source)).toBe(3)
+  expect(read).toHaveBeenCalledOnce()
+  dispose()
+})
+
+test('缺省与当前声明持续切换，undefined阻止缺省且工厂仅构建一次', () => {
+  const current = createState<{ count?: Source<number | undefined> }>({})
+  const fallback = createState<number | undefined>(3)
+  const factory = vi.fn(() => fallback)
+  const { props, dispose } = createRoot((dispose) => ({
+    ...createComponentPropsDirector(
+      new Proxy(
+        {},
+        {
+          has: (_, key) => key in val(current),
+          get: (_, key) => Reflect.get(val(current), key),
+        },
+      ) as { count?: Source<number | undefined> },
+      { count: 'state-source-view' },
+      { defaultSources: { count: factory } },
+    ),
+    dispose,
+  }))
+  expect(val(props.count)).toBe(3)
+  current.set({ count: 9 })
+  flush()
+  expect(val(props.count)).toBe(9)
+  current.set({ count: undefined })
+  flush()
+  expect(val(props.count)).toBeUndefined()
+  current.set({})
+  flush()
+  expect(val(props.count)).toBe(3)
+  fallback.set(5)
+  flush()
+  expect(val(props.count)).toBe(5)
+  expect(factory).toHaveBeenCalledOnce()
+  dispose()
+})
 
 test('仅通过Prop的接收器原样读取，不进入Controller类型或运行时字段', () => {
   const first = vi.fn()
   const next = vi.fn()
   const receiver = createState(() => first)
-  const { props, controller, dispose } = createRoot((dispose) => ({
+  const { props, controller, peek, dispose } = createRoot((dispose) => ({
     ...createComponentPropsDirector(
       {
         get ref() {
           return val(receiver)
         },
+        payload: receiver,
         count: 0,
       },
       {
         ref: 'only-through-prop',
+        payload: 'only-through-prop',
         count: 'state-value-view',
       },
     ),
     dispose,
   }))
   expectTypeOf(controller).not.toHaveProperty('ref')
+  expectTypeOf(peek('payload')).toEqualTypeOf<typeof receiver>()
+  expect(peek('payload')).toBe(receiver)
+  expect(peek('ref')).toBe(first)
   expect(props.ref).toBe(first)
   expect('ref' in props).toBe(true)
   expect('ref' in controller).toBe(false)
@@ -90,7 +221,7 @@ test('指令修改计算来源后仍跟随原生依赖更新，回调保存函�
   dispose()
 })
 
-test('准备阶段基于原声明选择默认来源，输出投影不改变输入视图', () => {
+test('首次消费缺省来源时构建工厂，输出投影不改变输入视图', () => {
   const raw: {
     group?: Source<string | undefined>
     candidate?: Source<boolean | undefined>
@@ -114,10 +245,12 @@ test('准备阶段基于原声明选择默认来源，输出投影不改变输�
               )
             },
           },
-          omit: ['candidate'],
+          omit: (key) => key === 'candidate',
         },
       )
       const source = props.group
+      expect(input).toBeUndefined()
+      expect(val(source)).toBeUndefined()
       return { props, controller, input, source, dispose }
     },
   )

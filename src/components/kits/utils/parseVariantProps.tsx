@@ -127,7 +127,7 @@ export function createVariantPropSources(groups: readonly VariantPropsGroup[]) {
   return toRecord(
     groups,
     (group) => group.groupName,
-    (group) => (input: object) => parseVariantGroup(input, group),
+    (group) => (input: object) => parseVariantGroup(input, group, true),
   )
 }
 
@@ -137,13 +137,15 @@ export function createVariantPropSources(groups: readonly VariantPropsGroup[]) {
 function parseVariantGroup(
   props: object,
   group: VariantPropsGroup,
+  candidatesOnly = false,
 ): Source<string | undefined> {
   const propRecord = props as Record<string, unknown>
-  const hasGroupProp = untrack(() => group.groupName in props)
+  // 构建时只报告当前声明冲突；真正的选值分支在下面的持续派生中决定。
+  const hasGroupProp =
+    !candidatesOnly && untrack(() => group.groupName in props)
   const declaredCandidates = untrack(() =>
     group.candidates.filter((candidate) => candidate in props),
   )
-
   if (hasGroupProp && declaredCandidates.length > 0) {
     console.warn(
       `[UIKit/VariantProps] “${group.groupName}”分组输入冲突：同时声明了不定字段“${group.groupName}”和确定描述词` +
@@ -156,15 +158,12 @@ function parseVariantGroup(
     )
   }
 
-  if (hasGroupProp)
-    return derive(propRecord, () =>
-      val(propRecord[group.groupName] as Source<string | undefined>),
-    )
-
-  return derive(propRecord, () => {
+  return derive(propRecord, (source) => {
+    if (!candidatesOnly && group.groupName in source)
+      return source[group.groupName] as Source<string | undefined>
     return group.candidates.find(
       (candidate) =>
-        val(propRecord[candidate] as Source<boolean | undefined>) === true,
+        val(source[candidate] as Source<boolean | undefined>) === true,
     )
   })
 }

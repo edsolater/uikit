@@ -7,7 +7,7 @@
  */
 import { Piv } from '../../Piv/Piv'
 import { val } from '@/foundation'
-import { omitProps } from '@/foundation/render'
+import { derive } from '@/hooks'
 
 import { tooltip } from '../../plugins/kits/tooltip/tooltip'
 import { kit, type KitComponent } from '../../tools/kit'
@@ -31,20 +31,23 @@ export const Help: KitComponent<{
     componentDescription: '查看补充说明',
     propDefinition: helpPropDefinition,
   },
-  (props, { name }) => (
-    <Piv
-      shadowProps={omitProps(() => props, 'label')}
-      as="button"
-      class={name}
-      is={tooltip({
-        get content() {
-          return props.tooltip
-        },
-      })}
-      label={val(props.label) ?? '帮助说明'}
-      htmlProps={{ type: 'button' }}
-    >
-      {val(props.trigger) ?? '?'}
-    </Piv>
-  ),
+  (props, { name }) => {
+    const label = derive(props, (source) => val(source.label) ?? '帮助说明')
+    return (
+      <Piv
+        shadowProps={props}
+        as="button"
+        class={name}
+        is={tooltip({
+          get content() {
+            return props.tooltip
+          },
+        })}
+        label={label}
+        htmlProps={{ type: 'button' }}
+      >
+        {val(props.trigger) ?? '?'}
+      </Piv>
+    )
+  },
 )

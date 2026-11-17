@@ -16,6 +16,7 @@ import {
 } from '@edsolater/fnkit'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 import type { PivTag } from '../../Piv/domMap'
+import type { PropsDeclarationInput } from '../../tools/propsDeclaration/shadowProps'
 
 /** 识别 Plugin 声明，不参与节点状态存储。 */
 export const pluginMarker = Symbol('nodePlugin')
@@ -26,20 +27,26 @@ export const pluginMarker = Symbol('nodePlugin')
  * 声明在节点创建前参与结构字段（as、if）解析，在节点创建后进入字段合并与绑定；
  * 调用者直接提供的 Props 优先。children 仍由直接 Props 提供。
  */
-export type PluginAddProps = (props: ShadowProps<PivTag>) => void
+export type PluginAddProps<Props extends object = ShadowProps<PivTag>> = (
+  props: Partial<Props> & PropsDeclarationInput<Props>,
+) => void
 
 /** 带标识的补充声明；不接收元素，也不执行节点接入。 */
-export type Plugin = ShadowProps<PivTag> & {
-  readonly [pluginMarker]: string
-}
+export type Plugin<Props extends object = object> = Partial<Props> &
+  PropsDeclarationInput<Props> & {
+    readonly [pluginMarker]: string
+  }
 
 /** core 在配置时使用的上下文。 */
-export type PluginCoreContext<Options extends object> = {
+export type PluginCoreContext<
+  Options extends object,
+  Props extends object = ShadowProps<PivTag>,
+> = {
   /** 本次能力构建的配置；声明消费时保留其动态读取契约。 */
   pluginOptions: Options
 
   /** 收集统一 ShadowProps；包含 as、if、domRef 和 is。 */
-  addProps: PluginAddProps
+  addProps: PluginAddProps<Props>
 
   /** 同步构建时读取以准备首次节点获取；重复读取返回同一代理。 */
   readonly domProxy: PromiseResultProxy<HTMLElement>
@@ -49,9 +56,11 @@ export type PluginCoreContext<Options extends object> = {
 }
 
 /** 配置时准备状态与完整 Controller，并提交声明。 */
-export type PluginCore<Options extends object, Members extends object> = (
-  context: PluginCoreContext<Options>,
-) => Members
+export type PluginCore<
+  Options extends object,
+  Members extends object,
+  Props extends object = ShadowProps<PivTag>,
+> = (context: PluginCoreContext<Options, Props>) => Members
 
 /** is 只关心 plugin；能力结果中的附加字段不参加节点属性合并。 */
 export type PluginInput =
@@ -62,8 +71,11 @@ export type PluginInput =
     }
 
 /** 单元能力每次构建的完整结果。 */
-export type PluginResult<Members extends object> = {
-  readonly plugin: Plugin
+export type PluginResult<
+  Members extends object,
+  Props extends object = object,
+> = {
+  readonly plugin: Plugin<Props>
   readonly controller: Members
 }
 
@@ -71,9 +83,10 @@ export type PluginResult<Members extends object> = {
 export type InactivePlugin<
   Options extends object = object,
   Members extends object = object,
+  Props extends object = object,
 > = {} extends Options
-  ? (pluginOptions?: Options) => PluginResult<Members>
-  : (pluginOptions: Options) => PluginResult<Members>
+  ? (pluginOptions?: Options) => PluginResult<Members, Props>
+  : (pluginOptions: Options) => PluginResult<Members, Props>
 
 /** 根据既有 pluginMarker 识别 Plugin 对象。 */
 export function isPlugin(input: unknown): input is Plugin {
@@ -102,15 +115,16 @@ export function readPlugin(input: PluginInput): Plugin {
 export function createInactivePlugin<
   Options extends object,
   Members extends object,
+  Props extends object = ShadowProps<PivTag>,
 >(buildTimeDefinitions: {
   name: string
-  pluginCore: PluginCore<Options, Members>
-}): InactivePlugin<Options, Members> {
+  pluginCore: PluginCore<Options, Members, Props>
+}): InactivePlugin<Options, Members, Props> {
   const { name, pluginCore } = buildTimeDefinitions
   return ((pluginOptions: Options = {} as Options) => {
-    const shadowProps: ShadowProps<PivTag>[] = []
-    const plugin: Plugin = { [pluginMarker]: name, shadowProps }
-    const addProps: PluginAddProps = (props) => shadowProps.push(props)
+    const shadowProps: object[] = []
+    const plugin = { [pluginMarker]: name, shadowProps } as Plugin<Props>
+    const addProps: PluginAddProps<Props> = (props) => shadowProps.push(props)
     let cachedDomProxy: PromiseResultProxy<HTMLElement> | undefined
     const controller = pluginCore({
       pluginOptions,
@@ -119,7 +133,7 @@ export function createInactivePlugin<
         if (!cachedDomProxy) {
           const first = Promise.withResolvers<HTMLElement>()
           // 固定首次 DOM；if 显隐复用该元素，不追踪宿主替换。
-          addProps({ domRef: (el) => first.resolve(el) })
+          shadowProps.push({ domRef: (el: HTMLElement) => first.resolve(el) })
           cachedDomProxy = toPromiseResultProxy(first.promise)
         }
         return cachedDomProxy
@@ -127,5 +141,5 @@ export function createInactivePlugin<
     })
 
     return { plugin, controller }
-  }) as InactivePlugin<Options, Members>
+  }) as InactivePlugin<Options, Members, Props>
 }

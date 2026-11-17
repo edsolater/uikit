@@ -69,6 +69,7 @@ export const Button: KitComponent<{
     const { effect: statusEffectProps, controller } = parseStatusProps(props)
     exposeController(controller)
 
+    // 业务字段由本层解析器认领；props 只自动交接剩余声明，效果与事件在这里显式提供。
     return (
       <Piv
         as="button"

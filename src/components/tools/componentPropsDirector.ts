@@ -1,24 +1,35 @@
 /**
  * 受控组件实例的输入视图与干预入口。
  *
- * 按完整字段协议连接上游和缺省来源，为核心提供读取视图并公开共用的可写状态。
+ * 按完整字段协议连接上游和缺省来源，为核心提供读取视图，为 Controller 提供可写状态。
  *
  * 让输入干预沿用组件原有消费方式，状态归属实例且不重放创建动作。
  */
-import { createState, val, type State, type Val } from '@/foundation'
+import {
+  createState,
+  val,
+  type State,
+  type StateView,
+  type Val,
+} from '@/foundation'
 import { getOwner, runWithOwner, untrack } from '@/foundation/reactivity'
-import { mapGet } from '@edsolater/fnkit'
+import { cacheFn, mapGet } from '@edsolater/fnkit'
+import { readStateSource } from '@/foundation/createState/state-source'
+import type {
+  PropsDeclaration,
+  PropSource,
+} from './propsDeclaration/shadowProps'
 
 /**
  * 启用 Props 控制时，规定字段的控制入口与核心读取方式。
  *
- * 三种 state 模式都建立可写 State，并通过 Controller.props 公开；
- * 区别在于组件核心取得 State 本身，还是以何种跟踪方式读取当前值。
+ * 三种 state 模式都允许 Controller.props 按需取得可写 State；
+ * 核心按协议取得来源视图或当前值；提供声明解析器时，节点累加仍遵守其字段策略。
  * only-through-prop 原样转交上游声明，不建立 State 或控制入口。
  */
 export type PropsReadMode =
   /**
-   * 核心取得与 Controller 共用的 State，作为 Source 交给实际消费者。
+   * 核心取得稳定的只读来源视图，作为 Source 交给实际消费者。
    * 消费者负责读取当前值，并在自己的消费作用域建立响应依赖。
    */
   | 'state-source-view'
@@ -60,7 +71,7 @@ export type DirectedProps<Props, Definition extends PropsDefinition<Props>> = {
   [Key in keyof Props]: Definition[Key] extends 'only-through-prop'
     ? Props[Key]
     : Definition[Key] extends 'state-source-view'
-      ? State<Val<Props[Key]>>
+      ? StateView<Val<Props[Key]>>
       : Val<Props[Key]>
 }
 /** 为未声明的可控字段提供初始来源，读取时可依赖同一输入视图。 */
@@ -77,12 +88,18 @@ export type DefaultPropSources<
 
 /** 定义端提供缺省来源与输出字段选择，沿用同一字段协议。 */
 export type PropsDirectorOptions<
-  Props,
+  Props extends object,
   Definition extends PropsDefinition<Props>,
 > = {
-  /** 创建时为未声明字段建立默认来源；Source 的值仍按需读取，普通返回值不是持续计算。 */
+  /** 首次需要缺省来源时构建一次；后续持续读取该 Source，普通返回值不是持续计算。 */
   defaultSources?: DefaultPropSources<Props, Definition>
-  omit?: readonly (keyof Props)[]
+  /** 接管已有声明的输入控制；累加字段仅改直接贡献，核心读取完整合并结果。 */
+  declaration?: Pick<
+    PropsDeclaration<Props>,
+    'input' | 'accumulates' | 'read' | 'createAccumulatedSource'
+  >
+  /** 按当前查询字段决定输出可见性，保持动态来源选择且不展开无关字段。 */
+  omit?: (key: keyof Props) => boolean
 }
 
 /**
@@ -100,35 +117,70 @@ export function createComponentPropsDirector<
 ) {
   const owner = getOwner()
   const defaultSources = options?.defaultSources
-  const states = new Map<PropertyKey, State<unknown>>()
+  const declaration = options?.declaration
+  const fields = new Map<
+    PropertyKey,
+    { state?: State<unknown>; view?: StateView<unknown> }
+  >()
   // 只有显式写入才扩展声明形状；普通读取与结构查看不会暗中启用节点能力。
   const writtenKeys = createState<(string | symbol)[]>([])
   /**
-   * 取得本字段共用的可写状态，首次访问时连接上游或默认来源。
+   * 共用字段记录不预建可写状态；纯只读累加来源无需支付直接State的成本。
    */
-  const getState = (key: string | symbol) =>
-    mapGet(states, key, () =>
-      runWithOwner(owner, () => {
-        const declared = key in rawProps
-        const fallback =
-          !declared && defaultSources && Object.hasOwn(defaultSources, key)
-            ? untrack(() => Reflect.get(defaultSources, key)?.(inputProps))
-            : undefined
-        const state: State<unknown> = createState<unknown>(
-          () => val(declared ? Reflect.get(rawProps, key) : fallback),
-          { lazy: true },
-        )
-        const set = state.set
-        state.set = (value) => {
-          const result = set(value)
-          if (!untrack(() => val(writtenKeys)).includes(key)) {
-            writtenKeys.set((keys) => [...keys, key])
-          }
-          return result
-        }
-        return state
-      }),
-    )
+  const getField = (key: string | symbol) => mapGet(fields, key, () => ({}))
+  /**
+   * 直接输入真正需要读写时才建立 State，归属原实例作用域。
+   */
+  const getState = (key: string | symbol) => {
+    const field = getField(key)
+    return (field.state ??= runWithOwner(owner, () => {
+      const source = declaration?.accumulates(key)
+        ? declaration.input
+        : rawProps
+      // 缺省工厂只在真正缺省时构建一次，保留它交付的 Source，不缓存其值。
+      const fallback = cacheFn(() =>
+        runWithOwner(owner, () =>
+          defaultSources && Object.hasOwn(defaultSources, key)
+            ? Reflect.get(defaultSources, key)?.(inputProps)
+            : undefined,
+        ),
+      )
+      const state: State<unknown> = createState<unknown>(
+        () => (key in source ? Reflect.get(source, key) : fallback()),
+        { lazy: true },
+      )
+      const set = state.set
+      state.set = (value) => {
+        const result = set(value)
+        writtenKeys.set((keys) => (keys.includes(key) ? keys : [...keys, key]))
+        return result
+      }
+      return state
+    }))
+  }
+  // 同一直接贡献同时服务核心与内部借读；不经过 Controller 的初始化读取。
+  const direct: PropSource = {
+    has: (key) => val(writtenKeys).includes(key as string | symbol),
+    read: (key) => readStateSource(getState(key as string | symbol)),
+  }
+  /**
+   * 借读可控字段的完成值，only-through 字段保留原声明；不建立当前字段的新认领或预建核心来源。
+   */
+  function peek<Key extends keyof Props>(
+    key: Key,
+  ): Definition[Key] extends 'only-through-prop' ? Props[Key] : Val<Props[Key]>
+  function peek(key: PropertyKey): unknown
+  function peek(key: PropertyKey): unknown {
+    if (
+      !Object.hasOwn(definition, key) ||
+      Reflect.get(definition, key) === 'only-through-prop'
+    ) {
+      return Reflect.get(rawProps, key)
+    }
+    return declaration?.accumulates(key)
+      ? declaration.read(key, direct)
+      : val(getState(key as string | symbol))
+  }
   /**
    * 按字段协议读取当前输入；未声明读取规则的字段直接交回上游值。
    */
@@ -136,22 +188,28 @@ export function createComponentPropsDirector<
     if (!Object.hasOwn(definition, key)) return Reflect.get(rawProps, key)
     const mode = Reflect.get(definition, key) as PropsReadMode
     if (mode === 'only-through-prop') return Reflect.get(rawProps, key)
-    if (mode === 'state-source-view') return getState(key)
-    if (mode === 'state-untracked') return untrack(() => val(getState(key)))
-    return val(getState(key))
+    if (mode === 'state-source-view') {
+      const field = getField(key)
+      return (field.view ??= runWithOwner(owner, () =>
+        declaration?.accumulates(key)
+          ? declaration.createAccumulatedSource(key, direct)
+          : getState(key),
+      ))
+    }
+    return mode === 'state-untracked' ? untrack(() => peek(key)) : peek(key)
   }
   /**
    * 创建保留动态读取的核心视图，反映默认字段并排除本视图不消费的字段。
    */
   const view = (
     defaults?: DefaultPropSources<Props, Definition>,
-    omit: readonly (keyof Props)[] = [],
+    projection?: PropsDirectorOptions<Props, Definition>,
   ) => {
     /**
      * 判断当前视图是否包含字段，包含原声明及可见默认来源。
      */
     const has = (key: string | symbol) =>
-      !omit.includes(key as keyof Props) &&
+      !projection?.omit?.(key as keyof Props) &&
       (key in rawProps ||
         (Object.hasOwn(definition, key) && val(writtenKeys).includes(key)) ||
         Boolean(defaults && Object.hasOwn(defaults, key)))
@@ -159,7 +217,7 @@ export function createComponentPropsDirector<
       {},
       {
         get: (_, key) =>
-          omit.includes(key as keyof Props) ? undefined : read(key),
+          projection?.omit?.(key as keyof Props) ? undefined : read(key),
         has: (_, key) => has(key),
         ownKeys: () =>
           [
@@ -172,7 +230,7 @@ export function createComponentPropsDirector<
             ]),
           ].filter(has),
         getOwnPropertyDescriptor: (_, key) => {
-          if (omit.includes(key as keyof Props)) return
+          if (projection?.omit?.(key as keyof Props)) return
           const descriptor =
             Object.getOwnPropertyDescriptor(rawProps, key) ??
             (!(key in rawProps) && defaults
@@ -192,13 +250,6 @@ export function createComponentPropsDirector<
   const controller = {} as PropsController<Props, Definition>
   for (const key of Reflect.ownKeys(definition)) {
     if (Reflect.get(definition, key) === 'only-through-prop') continue
-    // 默认来源属于 Props 的构建；只建立 Source，不读取其值或感知来源内部的业务规则。
-    if (
-      !(key in rawProps) &&
-      defaultSources &&
-      Object.hasOwn(defaultSources, key)
-    )
-      getState(key)
     Object.defineProperty(controller, key, {
       enumerable: true,
       get() {
@@ -209,5 +260,9 @@ export function createComponentPropsDirector<
       },
     })
   }
-  return { props: view(defaultSources, options?.omit), controller }
+  return {
+    props: view(defaultSources, options),
+    controller,
+    peek,
+  }
 }
