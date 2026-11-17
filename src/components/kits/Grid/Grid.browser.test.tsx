@@ -20,7 +20,7 @@ test('窄屏默认退列，固定布局持续读取模板，恢复响应布局�
   const responsive = createState<boolean | undefined>()
   const dispose = render(
     () => (
-      <Grid styleConfig={{ columns, responsive }}>
+      <Grid $columns={columns} $responsive={responsive}>
         <span>甲</span>
         <span>乙</span>
         <span>丙</span>

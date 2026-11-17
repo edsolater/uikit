@@ -3,11 +3,13 @@ import { flush } from 'solid-js'
 import { afterEach, expect, test, vi } from 'vitest'
 import { createRef } from '@/hooks/createRef'
 import { createDomRef } from '@/hooks/createDomRef'
-import { createState, render, Show, val } from '@/foundation'
+import { createState, render, Show, val, type Val } from '@/foundation'
 import { Button } from './Button'
-import type { ButtonController } from './Button.prop'
+import type { ButtonController, ButtonProps } from './Button.prop'
 import { AppearanceAndStateExample } from './examples/appearance-and-state'
 import * as buttonStyle from './Button.style'
+import { cssRoot } from '@/style-system'
+import { componentBoundaries } from '../../tools/ComponentIdentityMarker/ComponentIdentityMarker'
 
 const { buttonStyleConfig, ...buttonStyleTokens } = buttonStyle
 
@@ -17,6 +19,77 @@ afterEach(() => {
   dispose?.()
   dispose = undefined
   document.body.replaceChildren()
+})
+
+test('美元样式同名聚合，显式配置优先并由同一Controller持续控制真实间距', () => {
+  const style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  try {
+    const host = document.body.appendChild(document.createElement('main'))
+    const gap = createState('12px')
+    const overrideGap = createState('24px')
+    const explicit = createState<Val<ButtonProps['$styleConfig']>>({
+      $gap: overrideGap,
+    })
+    let controller!: ButtonController
+    const boundaries = componentBoundaries.size
+    dispose = render(
+      () => (
+        <>
+          <Button $gap={gap}>直接属性</Button>
+          <Button $styleConfig={{ $gap: gap }}>整组来源</Button>
+          <Button
+            $gap={gap}
+            $styleConfig={explicit}
+            ref={(next) => {
+              controller = next
+            }}
+          >
+            显式覆盖
+          </Button>
+          <Button>默认间距</Button>
+        </>
+      ),
+      host,
+    )
+    const buttons = [...host.querySelectorAll('button')]
+    const defaultGap = getComputedStyle(buttons[3]!).gap
+    expect(getComputedStyle(buttons[0]!).gap).toBe('12px')
+    expect(getComputedStyle(buttons[1]!).gap).toBe('12px')
+    expect(getComputedStyle(buttons[2]!).gap).toBe('24px')
+    expect(val(controller.props.$styleConfig)).toEqual({ $gap: overrideGap })
+    expect(Object.hasOwn(controller.props, 'styleConfig')).toBe(false)
+    expect(componentBoundaries.size).toBe(boundaries + 4)
+    expect(
+      buttons[2]!.getAttributeNames().some((key) => key.startsWith('$')),
+    ).toBe(false)
+    gap.set('16px')
+    overrideGap.set('28px')
+    flush()
+    expect(getComputedStyle(buttons[0]!).gap).toBe('16px')
+    expect(getComputedStyle(buttons[1]!).gap).toBe('16px')
+    expect(getComputedStyle(buttons[2]!).gap).toBe('28px')
+    explicit.set({ $gap: undefined })
+    flush()
+    expect(getComputedStyle(buttons[2]!).gap).toBe(defaultGap)
+    explicit.set(undefined)
+    flush()
+    expect(getComputedStyle(buttons[2]!).gap).toBe('16px')
+    controller.props.$styleConfig.set({ $gap: '32px' })
+    flush()
+    expect(getComputedStyle(buttons[2]!).gap).toBe('32px')
+    controller.props.$styleConfig.set(undefined)
+    flush()
+    expect(getComputedStyle(buttons[2]!).gap).toBe(defaultGap)
+    expect([...host.querySelectorAll('button')]).toEqual(buttons)
+    expect(buttonStyle.buttonGap.default).not.toBe('32px')
+    dispose()
+    dispose = undefined
+    expect(componentBoundaries.size).toBe(boundaries)
+  } finally {
+    style.remove()
+  }
 })
 
 test('本地示例可分别使用输入干预和组件能力控制同一按钮', () => {

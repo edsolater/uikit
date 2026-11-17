@@ -27,6 +27,7 @@ import {
 } from '../kits/Flow/Flow.prop'
 import { Flow } from '../kits/Flow/Flow'
 import { Table } from '../kits/Table/Table'
+import { Grid } from '../kits/Grid/Grid'
 import { Button } from '../kits/Button/Button'
 import type { ButtonProps, ButtonController } from '../kits/Button/Button.prop'
 import { buttonPropDefinition } from '../kits/Button/Button.prop'
@@ -92,55 +93,55 @@ function verifyNamedAggregateContracts() {
     KitProps<{
       domTag?: undefined
       controller?: undefined
-      styleConfig?: undefined
+      $styleConfig?: undefined
     }>
   >().toEqualTypeOf<KitProps>()
   interface NamedRoles {
     domTag?: 'button'
     controller?: FlowController
-    styleConfig?: FlowStyleConfig
+    $styleConfig?: FlowStyleConfig
   }
   const named: KitProps<NamedRoles> = {
     as: 'button',
-    styleConfig: { direction: 'row' },
+    $styleConfig: { $direction: 'row' },
   }
   expectTypeOf<KitProps<NamedRoles>['ref']>().toEqualTypeOf<FlowProps['ref']>()
   type ButtonInput = KitProps<{ domTag?: 'button' }>
   const button: ButtonInput = { as: 'button' }
   // @ts-expect-error 命名的可选标签声明仍限制原生标签。
   const wrongTag: ButtonInput = { as: 'div' }
-  type NamedStyle = KitProps<{ styleConfig?: FlowStyleConfig }>
-  const styled: NamedStyle = { styleConfig: { direction: 'row' } }
+  type NamedStyle = KitProps<{ $styleConfig?: FlowStyleConfig }>
+  const styled: NamedStyle = { $styleConfig: { $direction: 'row' } }
   // @ts-expect-error 样式角色独立选择后仍校验字段值域。
-  const wrongStyle: NamedStyle = { styleConfig: { direction: 'diagonal' } }
+  const wrongStyle: NamedStyle = { $styleConfig: { $direction: 'diagonal' } }
   type NamedController = KitProps<{ controller?: FlowController }>
   expectTypeOf<NamedController['ref']>().toEqualTypeOf<FlowProps['ref']>()
   interface NamedOptions extends KitOptionsConfig<FlowProps> {
     propDefinition: FlowPropDefinition
-    styleTokens?: typeof buttonTokens
+    $styleTokens?: typeof buttonTokens
   }
   const options: KitOptions<NamedOptions> = {
     name: 'Flow',
     propDefinition: flowPropDefinition,
-    styleTokens: buttonTokens,
+    $styleTokens: buttonTokens,
   }
   expectTypeOf<
     ControllerRegistry<{
       controller: FlowController
-      styleTokens?: typeof buttonTokens
+      $styleTokens?: typeof buttonTokens
     }>
   >().toEqualTypeOf<
     | ControllerRegistry<{ controller: FlowController }>
     | ControllerRegistry<{
         controller: FlowController
-        styleTokens: typeof buttonTokens
+        $styleTokens: typeof buttonTokens
       }>
   >()
   expectTypeOf<
     ControllerRegistry<{ controller: FlowController }>
   >().not.toHaveProperty('style')
   expectTypeOf<
-    ControllerRegistry<{ controller: FlowController; styleTokens: undefined }>
+    ControllerRegistry<{ controller: FlowController; $styleTokens: undefined }>
   >().not.toHaveProperty('style')
   // 这里只声明集合角色，不额外收窄原有调用输入与集合成员的值域。
   type PrimitiveComponent = KitComponent<{ props: string; controller: number }>
@@ -164,17 +165,17 @@ void verifyNamedAggregateContracts
  * 空样式契约保留统一对象入口；undefined 表示清空，原始值不作为配置。
  */
 function verifyEmptyStyleContract() {
-  const objectConfig: InputProps = { styleConfig: { gap: '2rem' } }
+  const objectConfig: InputProps = { $styleConfig: { $gap: '2rem' } }
   // @ts-expect-error 空配置也不能作为底层 CSS 字符串入口。
-  const cssText: InputRangeProps = { styleConfig: 'color: red' }
-  const empty: InputProps = { styleConfig: {} }
-  const absent: InputProps = { styleConfig: undefined }
+  const cssText: InputRangeProps = { $styleConfig: 'color: red' }
+  const empty: InputProps = { $styleConfig: {} }
+  const absent: InputProps = { $styleConfig: undefined }
   interface NamedConfig {
-    gap?: string
+    $gap?: string
   }
-  const named: NamedConfig = { gap: '2rem' }
-  const namedInput: InputProps = { styleConfig: named }
-  const sourceInput: InputProps = { styleConfig: createState(named) }
+  const named: NamedConfig = { $gap: '2rem' }
+  const namedInput: InputProps = { $styleConfig: named }
+  const sourceInput: InputProps = { $styleConfig: createState(named) }
   void [objectConfig, cssText, empty, absent, namedInput, sourceInput]
 }
 void verifyEmptyStyleContract
@@ -188,16 +189,42 @@ function verifyStyleConfigInputProps() {
     $direction: createState<'row' | 'column'>('column'),
     $gap: '2rem',
     $grow: false,
-    styleConfig: { direction: 'row' },
+    $styleConfig: { $direction: 'row' },
   }
   // @ts-expect-error 方向别名沿用配置值域。
   const wrongDirection: FlowInput = { $direction: 'diagonal' }
   // @ts-expect-error 未声明的配置字段不会成为任意样式输入。
   const wrongField: FlowInput = { $unknown: 'value' }
-  // @ts-expect-error 无配置字段的组件不接收任意美元属性。
+  // @ts-expect-error Button 未声明方向样式字段。
   const empty: Parameters<typeof Button>[0] = { $direction: 'column' }
   expectTypeOf<FlowProps>().not.toHaveProperty('$direction')
   expectTypeOf<FlowController['props']>().not.toHaveProperty('$direction')
+  expectTypeOf<FlowController['props']>().toHaveProperty('$styleConfig')
+  expectTypeOf<FlowController['props']>().not.toHaveProperty('styleConfig')
+  // @ts-expect-error Flow 整组配置入口也使用美元前缀。
+  const oldFlow: FlowInput = { styleConfig: { direction: 'column' } }
+  // @ts-expect-error Flow 配置中的字段与直接属性同名。
+  const oldFlowDirection: FlowInput = { $styleConfig: { direction: 'column' } }
+  // @ts-expect-error Flow 已有美元字段不能再次添加美元符号。
+  const doubledFlow: FlowInput = { $$direction: 'column' }
+  type ButtonInput = Parameters<typeof Button>[0]
+  const button: ButtonInput = { $gap: '1rem', $styleConfig: { $gap: '2rem' } }
+  // @ts-expect-error Button 的整体配置入口也使用美元前缀。
+  const oldButton: ButtonInput = { styleConfig: { gap: '1rem' } }
+  // @ts-expect-error 整组配置的字段与直接属性同名。
+  const oldGap: ButtonInput = { $styleConfig: { gap: '1rem' } }
+  // @ts-expect-error 已有美元字段不能再添加第二个美元符号。
+  const doubledGap: ButtonInput = { $$gap: '1rem' }
+  // @ts-expect-error 样式字段仍保持字符串值域。
+  const numericGap: ButtonInput = { $gap: 12 }
+  type GridInput = Parameters<typeof Grid>[0]
+  const grid: GridInput = { $columns: 3, $responsive: false }
+  // @ts-expect-error Grid 不再接收普通配置容器。
+  const oldGrid: GridInput = { styleConfig: { columns: 3 } }
+  // @ts-expect-error Grid 配置对象的字段也使用美元前缀。
+  const oldGridColumns: GridInput = { $styleConfig: { columns: 3 } }
+  expectTypeOf<ButtonController['props']>().toHaveProperty('$styleConfig')
+  expectTypeOf<ButtonController['props']>().not.toHaveProperty('styleConfig')
   Table<{ name: string }>({
     data: [{ name: '甲' }],
     $columnMinWidths: { name: 120 },
@@ -207,7 +234,28 @@ function verifyStyleConfigInputProps() {
     // @ts-expect-error 泛型表格别名保留列键关系。
     $columnMinWidths: { missing: 120 },
   })
-  void [direct, wrongDirection, wrongField, empty]
+  Table<{ name: string }>({
+    data: [{ name: '甲' }],
+    // @ts-expect-error 泛型 Table 不再接收普通配置容器。
+    styleConfig: { columnMinWidths: { name: 120 } },
+  })
+  void [
+    direct,
+    wrongDirection,
+    wrongField,
+    empty,
+    button,
+    oldButton,
+    oldGap,
+    doubledGap,
+    numericGap,
+    oldFlow,
+    oldFlowDirection,
+    doubledFlow,
+    grid,
+    oldGrid,
+    oldGridColumns,
+  ]
 }
 void verifyStyleConfigInputProps
 
@@ -252,7 +300,7 @@ test('完整公共定义复用各拥有者事实，Flow空自有槽不改变读�
   expect(kitPropDefinition.ref).toBe('only-through-prop')
   expect(kitPropDefinition.label).toBe('state-source-view')
   expect(Object.hasOwn(kitPropDefinition, 'description')).toBe(false)
-  expect(kitPropDefinition.styleConfig).toBe('state-value-view')
+  expect(kitPropDefinition.$styleConfig).toBe('state-value-view')
 })
 
 test('Button只补业务模式，候选声明和值域共享同一份事实', () => {
@@ -271,7 +319,7 @@ test('Button只补业务模式，候选声明和值域共享同一份事实', ()
  */
 function verifyDefinitionContract() {
   type Override = KitPropDefinition<{ children: 'only-through-prop' }>
-  type Props = KitProps<{ styleConfig: {}; controller: Controller }> & {}
+  type Props = KitProps<{ $styleConfig: {}; controller: Controller }> & {}
   interface Controller extends KitController<{
     props: Props
     propDefinition: Override
@@ -300,13 +348,13 @@ function verifyDefinitionContract() {
   const RenderMissingActions: KitComponent<{
     props: ButtonProps
     controller: ButtonController
-    styleTokens: typeof buttonTokens
+    $styleTokens: typeof buttonTokens
   }> = kit(
     {
       name: 'MissingActions',
       propDefinition: buttonPropDefinition,
-      styleConfig: buttonStyleConfig,
-      styleTokens: buttonTokens,
+      $styleConfig: buttonStyleConfig,
+      $styleTokens: buttonTokens,
     },
     (_props, { exposeController }) => {
       // @ts-expect-error 交付的业务能力必须满足已声明的按钮 Controller。
@@ -316,7 +364,7 @@ function verifyDefinitionContract() {
   )
   const invalid: FlowProps = {
     // @ts-expect-error 公开方向来自显式配置契约。
-    styleConfig: { direction: 'diagonal' },
+    $styleConfig: { $direction: 'diagonal' },
   }
   void incomplete
   void button
@@ -337,7 +385,7 @@ function verifyContextualRender() {
     {
       name: 'Declared',
       propDefinition: flowPropDefinition,
-      styleConfig: flowStyleConfig,
+      $styleConfig: flowStyleConfig,
     },
     (props, { name }) => {
       expectTypeOf(props).toEqualTypeOf<Omit<FlowProps, 'ref'>>()
@@ -361,7 +409,7 @@ function verifyContextualRender() {
     {
       name: 'WrongMode',
       propDefinition: wrongMode,
-      styleConfig: flowStyleConfig,
+      $styleConfig: flowStyleConfig,
     },
     () => null,
   )
@@ -376,7 +424,7 @@ function verifyContextualRender() {
     {
       name: 'Extra',
       propDefinition: flowPropDefinition,
-      styleConfig: flowStyleConfig,
+      $styleConfig: flowStyleConfig,
     },
     () => null,
   )
@@ -393,7 +441,7 @@ function verifyContextualRender() {
     {
       name: 'Narrow',
       propDefinition: flowPropDefinition,
-      styleConfig: flowStyleConfig,
+      $styleConfig: flowStyleConfig,
     },
     () => null,
   )
@@ -401,7 +449,7 @@ function verifyContextualRender() {
     missing(): void
   }
   type WrongRefProps = KitProps<{
-    styleConfig: FlowStyleConfig
+    $styleConfig: FlowStyleConfig
     controller: WrongRefController
   }> & {}
   const RenderWrongRef: KitComponent<{
@@ -412,7 +460,7 @@ function verifyContextualRender() {
     {
       name: 'WrongRef',
       propDefinition: flowPropDefinition,
-      styleConfig: flowStyleConfig,
+      $styleConfig: flowStyleConfig,
     },
     () => null,
   )
@@ -425,7 +473,7 @@ function verifyContextualRender() {
     {
       name: 'NumericRef',
       propDefinition: flowPropDefinition,
-      styleConfig: flowStyleConfig,
+      $styleConfig: flowStyleConfig,
     },
     () => null,
   )

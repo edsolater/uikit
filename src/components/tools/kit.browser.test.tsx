@@ -34,7 +34,7 @@ import {
 } from '../plugins/tools/createInactivePlugin'
 
 type FixtureProps = KitProps<{
-  styleConfig: { gap?: string }
+  $styleConfig: { $gap?: string }
   controller: FixtureController
 }> & {
   value?: Source<string | undefined>
@@ -57,7 +57,7 @@ afterEach(() => {
 })
 
 test('空配置保留对象及Source入口，空解释对象可显式提供并可清空配置', () => {
-  type Props = KitProps<{ styleConfig: {}; controller: Controller }> & {}
+  type Props = KitProps<{ $styleConfig: {}; controller: Controller }> & {}
   interface Controller extends KitController<{
     props: Props
     propDefinition: KitPropDefinition<{}>
@@ -66,7 +66,7 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
    * 以空根解释集合接入公共配置，当前不增加具体样式字段。
    */
   const Empty: KitComponent<{ props: Props; controller: Controller }> = kit(
-    { name: 'EmptyConfig', propDefinition: kitPropDefinition, styleConfig: {} },
+    { name: 'EmptyConfig', propDefinition: kitPropDefinition, $styleConfig: {} },
     (props) => <Piv shadowProps={props}>{props.children}</Piv>,
   )
   const host = document.body.appendChild(document.createElement('main'))
@@ -75,7 +75,7 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
   dispose = render(
     () => (
       <Empty
-        styleConfig={config}
+        $styleConfig={config}
         ref={(current) => {
           controller = current
         }}
@@ -86,13 +86,13 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
     host,
   )
   const element = host.firstElementChild
-  expect(val(controller.props.styleConfig)).toEqual({})
-  config.set({ futureOption: '值' })
+  expect(val(controller.props.$styleConfig)).toEqual({})
+  config.set({ $futureOption: '值' })
   flush()
-  expect(val(controller.props.styleConfig)).toEqual({ futureOption: '值' })
-  controller.props.styleConfig.set(undefined)
+  expect(val(controller.props.$styleConfig)).toEqual({ $futureOption: '值' })
+  controller.props.$styleConfig.set(undefined)
   flush()
-  expect(val(controller.props.styleConfig)).toBeUndefined()
+  expect(val(controller.props.$styleConfig)).toBeUndefined()
   expect(host.firstElementChild).toBe(element)
 })
 
@@ -110,18 +110,18 @@ test('美元样式与对象配置共用真实Flow效果，显式配置优先且�
     dispose = render(
       () => (
         <>
-          <Flow $direction={direction} $gap={gap} styleConfig={explicit}>
+          <Flow $direction={direction} $gap={gap} $styleConfig={explicit}>
             <Flow>子内容</Flow>
           </Flow>
           <Flow
             $direction={direction}
             $gap={gap}
-            styleConfig={explicit}
+            $styleConfig={explicit}
             ref={(next) => {
               controller = next
             }}
           />
-          <Flow styleConfig={{ direction: 'column', gap: '12px' }} />
+          <Flow $styleConfig={{ $direction: 'column', $gap: '12px' }} />
         </>
       ),
       host,
@@ -151,11 +151,11 @@ test('美元样式与对象配置共用真实Flow效果，显式配置优先且�
     expect(componentBoundaries.size).toBe(boundaries + 4)
 
     gap.set('20px')
-    explicit.set({ direction: 'row' })
+    explicit.set({ $direction: 'row' })
     flush()
     expect(read(roots[0]!)).toEqual(['row', 'wrap', 'center', '20px'])
     expect(read(roots[1]!)).toEqual(read(roots[0]!))
-    explicit.set({ direction: undefined })
+    explicit.set({ $direction: undefined })
     flush()
     expect(read(roots[0]!)[0]).toBe('row')
     explicit.set(undefined)
@@ -165,10 +165,10 @@ test('美元样式与对象配置共用真实Flow效果，显式配置优先且�
     flush()
     expect(read(roots[0]!)[0]).toBe('row')
     direction.set('column')
-    controller.props.styleConfig.set({ gap: '28px' })
+    controller.props.$styleConfig.set({ $gap: '28px' })
     flush()
     expect(read(roots[1]!)).toEqual(['row', 'wrap', 'center', '28px'])
-    controller.props.styleConfig.set(undefined)
+    controller.props.$styleConfig.set(undefined)
     flush()
     expect(read(roots[1]!)).toEqual(['row', 'wrap', 'center', '16px'])
     expect([...host.children]).toEqual(roots)
@@ -195,7 +195,7 @@ test('美元配置沿同根声明顺序合并，真实根自己的配置优先�
       {
         name: 'Parent',
         propDefinition: fixtureDefinition,
-        styleConfig: { gap: (value: string) => flowGap.set(value) },
+        $styleConfig: { $gap: (value: string) => flowGap.set(value) },
       },
       (props) => <Flow $gap="8px">{props.children}</Flow>,
     )
@@ -348,7 +348,7 @@ test('创建时ref门控控制，换接保留实例，迟到ref不补建，卸�
     {
       name: 'Fixture',
       propDefinition: fixtureDefinition,
-      styleConfig: { gap: (value: string) => flowGap.set(value) },
+      $styleConfig: { $gap: (value: string) => flowGap.set(value) },
     },
     (props, context) => {
       creations++
@@ -404,9 +404,9 @@ test('创建时ref门控控制，换接保留实例，迟到ref不补建，卸�
 })
 
 test('独立配置解释不要求Token，null继续交付，undefined清空不调用，核心不重建', () => {
-  type MessageConfig = { message?: string | null }
+  type MessageConfig = { $message?: string | null }
   type Props = KitProps<{
-    styleConfig: MessageConfig
+    $styleConfig: MessageConfig
     controller: Controller
   }> & {}
   type Definition = KitPropDefinition<{}>
@@ -417,7 +417,7 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
   const values: (string | null)[] = []
   const message = createState<string | null>('初值')
   const config = {
-    message: (value) => {
+    $message: (value) => {
       values.push(value)
     },
   } satisfies StyleConfig<MessageConfig>
@@ -433,7 +433,7 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
     {
       name: 'Interpreter',
       propDefinition: kitPropDefinition,
-      styleConfig: config,
+      $styleConfig: config,
     },
     (props) => {
       creations++
@@ -456,11 +456,11 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
   message.set(null)
   flush()
   expect(values.at(-1)).toBe(null)
-  controller.props.styleConfig.set({ message: '替换' })
+  controller.props.$styleConfig.set({ $message: '替换' })
   flush()
   expect(values.at(-1)).toBe('替换')
   const count = values.length
-  controller.props.styleConfig.set(undefined)
+  controller.props.$styleConfig.set(undefined)
   flush()
   expect(values).toHaveLength(count)
   expect((host.firstElementChild as HTMLElement).style.length).toBe(0)

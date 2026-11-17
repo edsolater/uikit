@@ -33,7 +33,7 @@ export type TableProps<
   Row = object,
   ColumnKey extends PropertyKey = keyof Row,
 > = KitProps<{
-  styleConfig: TableStyleConfig<ColumnKey>
+  $styleConfig: TableStyleConfig<ColumnKey>
   controller: TableController<Row, ColumnKey>
 }> & {
   /** 同构对象队列；第一行对象的 key 决定默认列顺序，允许接收动态派生值。 */

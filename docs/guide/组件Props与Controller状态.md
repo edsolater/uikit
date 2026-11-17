@@ -13,11 +13,13 @@ Props 是组件的声明入口，负责初始界面与持续变化的来源。Co
 | `Component.tsx`           | 组件装配、内容渲染，以及实际业务 Controller 的创建与交付                                 |
 | `components/tools/kit.ts` | 公共输入、字段协议、组件创建与实例装配；KitOptions 紧邻 kit，不按类型与实现拆开          |
 
-`KitProps<{ styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv 节点声明、组件用途说明、样式输入与组件 ref；domTag 缺省为 div。`children` 保留为统一公共输入及控制字段；当前组件使用业务值产生内容，不意味着公共协议需要删除这个入口，也不要求组件额外创建另一套内容回落。Article、Heading 与 Text 的固定根语义仍由各自声明表达。确有字段形状差异时，先核对共同模型，再处理必要的语义覆盖，避免按每个当前消费者分割公共协议。
+`KitProps<{ $styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv 节点声明、组件用途说明、样式输入与组件 ref；domTag 缺省为 div。`children` 保留为统一公共输入及控制字段；当前组件使用业务值产生内容，不意味着公共协议需要删除这个入口，也不要求组件额外创建另一套内容回落。Article、Heading 与 Text 的固定根语义仍由各自声明表达。确有字段形状差异时，先核对共同模型，再处理必要的语义覆盖，避免按每个当前消费者分割公共协议。
 
-Kit 的信息整合类型统一接收具名配置对象。`KitProps` 的 styleConfig、controller、domTag 及整个配置对象均可省略；缺省分别为无具体字段的样式配置、通用输入控制形状和 div。组件需要精确 ref 时仍显式填写自己的 controller。其他聚合类型沿各自契约声明 props、propDefinition、controller 或 styleTokens，详见[信息整合类泛型的设计准则](信息整合类泛型的设计准则.md)。
+Kit 的信息整合类型统一接收具名配置对象。`KitProps` 的 $styleConfig、controller、domTag 及整个配置对象均可省略；缺省分别为无具体字段的样式配置、通用输入控制形状和 div。组件需要精确 ref 时仍显式填写自己的 controller。其他聚合类型沿各自契约声明 props、propDefinition、controller 或 styleTokens，详见[信息整合类泛型的设计准则](信息整合类泛型的设计准则.md)。
 
-`KitPropDefinition<OwnDefinition>` 只接收自有字段模式，并在内部覆盖同名公共模式。公开 `kitPropDefinition` 完整组合各字段拥有者的定义；私有 `kitCommonPropDefinition` 只拥有 ref 与 styleConfig。组件无自有字段时，Props 和自有模式仍保留明确的空槽。
+所有 Kit 组件统一使用 `$styleConfig` 选择样式契约，公共字段表提供同一个读取入口。
+
+`KitPropDefinition<OwnDefinition>` 只接收自有字段模式，并在内部覆盖同名公共模式。公开 `kitPropDefinition` 完整组合各字段拥有者的定义；私有 `kitCommonPropDefinition` 只拥有 ref 与 $styleConfig。组件无自有字段时，Props 和自有模式仍保留明确的空槽。
 
 以 Flow 的现役声明为例，以下内容分别归对应文件：
 
@@ -26,14 +28,12 @@ Kit 的信息整合类型统一接收具名配置对象。`KitProps` 的 styleCo
 export const componentName = 'Flow'
 
 export type FlowProps = KitProps<{
-  styleConfig: FlowStyleConfig
+  $styleConfig: FlowStyleConfig
   controller: FlowController
 }> & {
   // 自有输入
 }
-export type FlowPropDefinition = KitPropDefinition<{
-  // 自有字段模式
-}>
+export type FlowPropDefinition = KitPropDefinition<{}>
 export const flowPropDefinition: FlowPropDefinition = {
   ...kitPropDefinition,
 }
@@ -51,7 +51,7 @@ export const Flow: KitComponent<{
     name: componentName,
     componentDescription: '组织内容方向',
     propDefinition: flowPropDefinition,
-    styleConfig: flowStyleConfig,
+    $styleConfig: flowStyleConfig,
   },
   (props, { name }) => (
     <Piv shadowProps={props} class={name}>
@@ -130,15 +130,15 @@ Button、Board、Card 的互斥分类由同一份 `as const` 候选事实定义�
 
 StyleConfig 类型由组件样式文件独立声明，解释对象以箭头函数满足 `StyleConfig<Config>`。kit 从 Props 的显式配置契约取得值域，支持整体和字段 Source，并同步调用已提供字段的解释函数。处理函数的参数不反过来定义应用 API。
 
-同一配置可以由多个真实消费作用域解释。`kit.options.styleConfig` 是根作用域使用的字段子集；单元格等内部作用域各自用完整的 `StyleConfig<ScopeConfig>` 声明自己的字段解释。公共配置形状保持一处，不要求根元素接管内部节点的全部配置。
+同一配置可以由多个真实消费作用域解释。kit 定义中的 `$styleConfig` 是根作用域使用的字段子集；单元格等内部作用域各自用完整的 `StyleConfig<ScopeConfig>` 声明自己的字段解释。公共配置形状保持一处，不要求根元素接管内部节点的全部配置。
 
-解释函数通过 `Token.set` 提交当前实例的 CSS 标量覆盖。Piv 应用和清理覆盖，共享 Token 默认值不变；省略字段沿用默认效果，清空配置撤销此前覆盖。Flow 的方向、间隔、宽度与伸展、Grid 的列结构与排列选项均从 styleConfig 进入，核心只组织内容。Grid 的配置模板与响应布局分别由 Token 表达，动态模板更新不会压过窄屏退列。
+解释函数通过 `Token.set` 提交当前实例的 CSS 标量覆盖。Piv 应用和清理覆盖，共享 Token 默认值不变；省略字段沿用默认效果，清空配置撤销此前覆盖。Flow 优先使用 `$direction`、`$gap`、`$width` 和 `$grow` 直接属性，整组来源或覆盖需要时使用 `$styleConfig`，对象字段保持相同美元前缀；显式整组配置的同名字段优先。Grid 优先通过直接美元属性表达列结构与排列选项，配置模板与响应布局分别由 Token 表达，动态模板更新不会压过窄屏退列。
 
 Table 的紧凑模式和列宽配置共同位于 `TableStyleConfig`。根作用域解释紧凑模式，表头和单元格按当前列读取同一配置中的宽度、最小宽度，在自身样式作用域中解释，不把每列 CSS 的单位转换放进组件装配。
 
 ```tsx
-<Flow styleConfig={{ direction: 'column' }}>内容</Flow>
-<Grid styleConfig={{ columns: 3, responsive: false }}>内容</Grid>
+<Flow $direction="column">内容</Flow>
+<Grid $columns={3} $responsive={false}>内容</Grid>
 ```
 
 原生 `style` 由 Piv 继承，是不推荐使用的底层逃生舱；Kit 不重复定义另一套 CSS style 类型。常规使用依靠组件默认样式与语义配置，实际节点声明沿 `shadowProps` 到达同一真实根。

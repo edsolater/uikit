@@ -54,15 +54,15 @@ const parseStatusProps = createStatusPropsParser({
 export const Button: KitComponent<{
   props: ButtonProps
   controller: ButtonController
-  styleTokens: typeof buttonStyleTokens
+  $styleTokens: typeof buttonStyleTokens
 }> = kit(
   {
     name: componentName,
     componentDescription: '执行动作',
     propDefinition: buttonPropDefinition,
     variantGroups: buttonVariantGroups,
-    styleTokens: buttonStyleTokens,
-    styleConfig: buttonStyleConfig,
+    $styleTokens: buttonStyleTokens,
+    $styleConfig: buttonStyleConfig,
   },
   (props, { name, exposeController }) => {
     const { effect: variantEffectProps } = parseVariantProps(props)

@@ -91,7 +91,7 @@ export type ButtonStatus = (typeof buttonStatusCandidates)[number]
 
 /** 动作内容、外观分类和状态输入，原生节点声明沿用 Piv 契约。 */
 export type ButtonProps = KitProps<{
-  styleConfig: ButtonStyleConfig
+  $styleConfig: ButtonStyleConfig
   controller: ButtonController
   domTag: 'button'
 }> &

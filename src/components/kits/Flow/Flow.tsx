@@ -27,7 +27,7 @@ export const Flow: KitComponent<{
     name: componentName,
     componentDescription: '组织内容方向',
     propDefinition: flowPropDefinition,
-    styleConfig: flowStyleConfig,
+    $styleConfig: flowStyleConfig,
   },
   (props, { name }) => (
     <Piv shadowProps={props} class={name}>

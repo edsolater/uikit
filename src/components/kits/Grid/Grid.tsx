@@ -17,7 +17,7 @@ import {
 import { gridStyleConfig } from './Grid.style'
 
 /**
- * 默认单列并自动适应窄屏，必要时通过 styleConfig 指定列结构。
+ * 默认单列并自动适应窄屏，优先通过美元属性指定列结构。
  */
 export const Grid: KitComponent<{
   props: GridProps
@@ -27,7 +27,7 @@ export const Grid: KitComponent<{
     name: componentName,
     componentDescription: '按列结构组织内容',
     propDefinition: gridPropDefinition,
-    styleConfig: gridStyleConfig,
+    $styleConfig: gridStyleConfig,
   },
   (props, { name }) => (
     <Piv shadowProps={props} class={name}>

@@ -43,7 +43,7 @@ test('导航地标、当前链接和反馈语义持续反映来源，列数确�
   dispose = render(
     () => (
       <NavigationRegion label="应用切换">
-        <Grid styleConfig={{ columns: columns }}>
+        <Grid $columns={columns}>
           <Link href="/target" current={current} newTab>
             目标
           </Link>
@@ -84,8 +84,8 @@ test('顺序流与独立分栏可组合，窄屏收为单列且嵌套方向不�
   const direction = createState<'row' | 'column'>('column')
   dispose = render(
     () => (
-      <Grid styleConfig={{ columns: columns }}>
-        <Flow styleConfig={{ direction: direction }}>
+      <Grid $columns={columns}>
+        <Flow $direction={direction}>
           <Flow>内层内容</Flow>
           <Flow>第二项</Flow>
         </Flow>
@@ -171,10 +171,10 @@ test('固定列、内容列和自动填充持续消费来源，内层布局不�
       <Flow>
         <Flow
           label={label}
-          styleConfig={{ direction: 'column', width: width, grow: grow }}
+          $direction="column" $width={width} $grow={grow}
         >
           <Grid
-            styleConfig={{ columns: columns, responsive: false }}
+            $columns={columns} $responsive={false}
             label="内容列"
           >
             <Grid>
@@ -255,15 +255,15 @@ test('样式配置可整体替换，字段来源持续更新且不会泄漏到�
   cssRoot.mount()
   host = document.body.appendChild(document.createElement('main'))
   const gap = createState('12px')
-  const input = createState<Val<FlowProps['styleConfig']>>({
-    gap,
-    direction: 'column',
+  const input = createState<Val<FlowProps['$styleConfig']>>({
+    $gap: gap,
+    $direction: 'column',
   })
   let controller: FlowController
   dispose = render(
     () => (
       <Flow
-        styleConfig={input}
+        $styleConfig={input}
         ref={(value) => {
           controller = value
         }}
@@ -280,13 +280,13 @@ test('样式配置可整体替换，字段来源持续更新且不会泄漏到�
   expect(getComputedStyle(inner!).gap).toBe('16px')
   gap.set('20px')
   await expect.poll(() => getComputedStyle(outer!).gap).toBe('20px')
-  input.set({ gap: '24px', direction: 'row' })
+  input.set({ $gap: '24px', $direction: 'row' })
   await expect.poll(() => getComputedStyle(outer!).gap).toBe('24px')
   await expect.poll(() => getComputedStyle(outer!).flexDirection).toBe('row')
-  controller!.props.styleConfig.set({ gap: '32px', direction: 'column' })
+  controller!.props.$styleConfig.set({ $gap: '32px', $direction: 'column' })
   await expect.poll(() => getComputedStyle(outer!).gap).toBe('32px')
   await expect.poll(() => getComputedStyle(outer!).flexDirection).toBe('column')
-  controller!.props.styleConfig.set(undefined)
+  controller!.props.$styleConfig.set(undefined)
   await expect.poll(() => getComputedStyle(outer!).gap).toBe('16px')
   await expect.poll(() => getComputedStyle(outer!).flexDirection).toBe('row')
   expect(getComputedStyle(outer!).flexWrap).toBe('wrap')
@@ -351,7 +351,7 @@ test('按钮间距配置支持来源与控制器替换，清空不修改共享�
     () => (
       <>
         <Button
-          styleConfig={{ gap }}
+          $gap={gap}
           ref={(value) => {
             controller = value
           }}
@@ -368,10 +368,10 @@ test('按钮间距配置支持来源与控制器替换，清空不修改共享�
   expect(getComputedStyle(first!).gap).toBe('12px')
   gap.set('20px')
   await expect.poll(() => getComputedStyle(first!).gap).toBe('20px')
-  controller.props.styleConfig.set({ gap: '32px' })
+  controller.props.$styleConfig.set({ $gap: '32px' })
   await expect.poll(() => getComputedStyle(first!).gap).toBe('32px')
   expect(getComputedStyle(second!).gap).toBe(defaultGap)
-  controller.props.styleConfig.set(undefined)
+  controller.props.$styleConfig.set(undefined)
   await expect.poll(() => getComputedStyle(first!).gap).toBe(defaultGap)
   expect(first!.style.getPropertyValue(cssTokenName(buttonGap))).toBe('')
   expect(buttonGap.default).toBe(original)

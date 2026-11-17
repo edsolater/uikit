@@ -46,7 +46,7 @@ export type DodeDOMProps<Tag extends PivTag = 'div'> = {
   class?: ClassNameList
   /**
    * 底层 CSS 逃生舱，接受普通 style、列表或整体 Source，按字段订阅。
-   * 不推荐作为常规组件样式入口；优先在组件 .style.ts 定义样式，通过组件的 styleConfig 表达必要差异。
+   * 不推荐作为常规组件样式入口；优先在组件 .style.ts 定义样式，通过美元属性表达必要差异。
    * 仅在组件样式能力无法满足必要需求时，作为最后手段使用。
    */
   style?: StyleList

@@ -1260,7 +1260,7 @@ test('控制入口只在显式写入后声明字段，空Source和晚加入结�
 test('样式配置定义不制造实例style声明，动态配置形状接入与退出实际消费', () => {
   const host = document.createElement('main')
   const [readProps, setProps] = createSignal<{
-    styleConfig?: { gap?: string }
+    $styleConfig?: { $gap?: string }
   }>({})
   const props = new Proxy(
     {},
@@ -1280,12 +1280,12 @@ test('样式配置定义不制造实例style声明，动态配置形状接入与
   )
   try {
     expect(style).not.toHaveBeenCalled()
-    setProps({ styleConfig: undefined })
+    setProps({ $styleConfig: undefined })
     flush()
     expect(style).toHaveBeenCalledTimes(1)
     setProps({})
     flush()
-    setProps({ styleConfig: {} })
+    setProps({ $styleConfig: {} })
     flush()
     expect(style).toHaveBeenCalledTimes(2)
   } finally {

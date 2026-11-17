@@ -18,7 +18,7 @@ export const componentName = 'Flow'
 
 /** Flow 的公共输入与自有字段分别声明，空槽保留组件扩展位置。 */
 export type FlowProps = KitProps<{
-  styleConfig: FlowStyleConfig
+  $styleConfig: FlowStyleConfig
   controller: FlowController
 }> & {
   // 自有输入

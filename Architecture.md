@@ -70,7 +70,7 @@ tooltip 插件继续负责简短辅助信息的悬停／焦点／Escape、延迟
 
 ### 声明与组件创建
 
-公开 Kit 组件先声明 Props、字段协议与 Controller，再以 `KitComponent<{ props: Props; controller: Controller }>` 约束实现。`KitProps<{ styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv、结构查看显示选择、样式输入与组件 ref；固定语义根按职责收窄或移除字段。`KitPropDefinition<OwnDefinition>` 只接收自有模式，内部覆盖同名公共模式；公开 `kitPropDefinition` 完整组合 Dode/Piv、ComponentIdentityMarker 与 Kit 自有规则，私有 `kitCommonPropDefinition` 只拥有 ref/styleConfig。
+公开 Kit 组件先声明 Props、字段协议与 Controller，再以 `KitComponent<{ props: Props; controller: Controller }>` 约束实现。`KitProps<{ $styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv、结构查看显示选择、样式输入与组件 ref；固定语义根按职责收窄或移除字段。`KitPropDefinition<OwnDefinition>` 只接收自有模式，内部覆盖同名公共模式；公开 `kitPropDefinition` 完整组合 Dode/Piv、ComponentIdentityMarker 与 Kit 自有规则，私有 `kitCommonPropDefinition` 只拥有 ref/$styleConfig。
 
 KitProps、KitComponent、KitController、KitOptions 与 ControllerRegistry 以具名配置表达所整合的信息，各字段职责在使用处直接可见。KitProps 的三个字段及整份配置可省略；样式配置默认为无具体字段，controller 默认为通用输入控制形状，domTag 默认为 div。业务 Table 的 Row/ColumnKey、元素变换工具及插件配置仍沿自身契约表达，见[信息整合类泛型的设计准则](docs/guide/信息整合类泛型的设计准则.md)。
 
@@ -90,11 +90,15 @@ Board、Card、Loop、Table 保留泛型调用与精确实例 ref；异构 `.con
 
 kit 的透明 ComponentIdentityMarker 建立身份与用途边界，`Piv/elementDeclarations.ts` 承接同根组合的实例样式与原生属性声明。组件把公共节点输入沿 shadowProps 交给真实根；Piv/Dode 消费后在子内容边界终止传递，不额外增加容器 DOM。Piv、Dode、ComponentIdentityMarker、StructureViewOverlay 与定位开关属于基础设施，不递归接入 kit。
 
-StyleConfig 独立声明配置值域，解释函数仅接受该契约校验。KitComponent 的公开调用类型从该契约生成 `$direction` 等前缀属性；Table 的泛型入口复用相同类型规则，组件内部 Props、字段协议与 Controller 不新增别名字段。
+StyleConfig 独立声明配置值域，解释函数仅接受该契约校验。KitComponent 的公开调用类型复用该契约中的 `$direction` 等同名样式属性；Table 的泛型入口复用相同类型规则，组件内部 Props、字段协议与 Controller 不新增别名字段。
 
-kit 在输入控制前调用独立的 `components/tools/parseStyleConfigProps.ts`，以惰性视图将美元前缀属性去掉一个 `$` 并聚合到 styleConfig；显式 styleConfig 的同名字段优先，包括值为 undefined 的字段。只有前缀输入时也形成配置声明，普通属性保持原身份，前缀字段不继续传给业务核心。
+kit 在输入控制前调用独立的 `components/tools/parseStyleConfigProps.ts`，所有组件统一使用 `$styleConfig`，Parser 按同名美元字段聚合，不再去掉前缀；显式 `$styleConfig` 的同名字段优先，包括值为 undefined 的字段。
 
-整体与字段 Source 在消费时读取，Controller 仍通过单一 styleConfig State 干预最终配置，写入清空不会再补回入口别名。
+配置与解释字段统一使用美元前缀，通常直接写组件属性。Button 使用 `$gap`，Flow 使用 `$direction`、`$gap`、`$width`、`$grow`，Grid 使用 `$columns` 等布局字段，Table 使用 `$compact`、`$columnWidths`、`$columnMinWidths`。整组来源或显式覆盖时使用 `$styleConfig`，其中字段与直接属性同名。Parser 排除容器自身；Kit 与绑定层固定使用唯一入口，不保留字段名参数或双协议分支。
+
+没有直接样式字段需要聚合时，Parser 直接返回原 props；需要聚合时才建立惰性视图并消费直接字段，普通属性保持原身份。
+
+整体与字段 Source 在消费时读取，Controller 通过单一 `props.$styleConfig` State 干预最终配置，写入清空不会再补回入口别名。
 
 kit 同步调用原有解释函数，Token.set 收集当前实例的 CSS 标量覆盖，Piv 应用与清理；共享 Token 默认值保持不变。无配置时直接采用默认效果，无配置字段的组件不创建空解释对象。Flow 的方向与排列差异、Grid 的列结构均归 `.style.ts`，原生 style 由 Piv 保留为不推荐的底层逃生舱。
 

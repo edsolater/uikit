@@ -27,7 +27,7 @@ export function PageCompositionExample() {
         </Button>
       }
     >
-      <Flow styleConfig={{ direction: 'column' }}>
+      <Flow $direction="column">
         <Checkbox
           label="显示内建页标题"
           checked={showTitle}
@@ -35,7 +35,7 @@ export function PageCompositionExample() {
         />
         <Text>{count.map((value) => '已刷新 ' + value + ' 次')}</Text>
         <Card>
-          <Flow styleConfig={{ direction: 'column' }}>
+          <Flow $direction="column">
             <Heading level={2}>当前目标</Heading>
             <Text>让页面结构清晰，组件职责独立。</Text>
           </Flow>

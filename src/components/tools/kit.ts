@@ -62,7 +62,7 @@ export interface KitControllerProps<Controller> {
 /** 将组件独立声明的样式配置包装为输入；整个配置与各字段均可使用 Source。 */
 export type KitStyleConfigProps<Config> = {
   /** 省略的字段沿用组件默认样式；底层 CSS 输入仍由 Piv.style 承担。 */
-  styleConfig?: keyof Config extends never
+  $styleConfig?: keyof Config extends never
     ? Source<object | undefined>
     : Source<
         { [Key in keyof Config]?: Source<Config[Key] | undefined> } | undefined
@@ -71,14 +71,14 @@ export type KitStyleConfigProps<Config> = {
 
 /** 公共输入的角色选择；所有字段可省略，不从组件实现反推。 */
 export interface KitPropsConfig {
-  styleConfig?: object
+  $styleConfig?: object
   controller?: { props: object }
   domTag?: PivTag
 }
 
 /** 公共输入的集中默认值；未指定控制器时仅承诺通用输入协议。 */
 type KitPropsDefaults = {
-  styleConfig: {}
+  $styleConfig: {}
   controller: { props: object }
   domTag: 'div'
 }
@@ -93,11 +93,11 @@ export type KitProps<Config extends KitPropsConfig = {}> = PivProps<
 > &
   ComponentIdentityMarkerDisplayProps &
   KitStyleConfigProps<
-    'styleConfig' extends keyof Config
-      ? NonNullable<Config['styleConfig']> extends never
-        ? KitPropsDefaults['styleConfig']
-        : NonNullable<Config['styleConfig']>
-      : KitPropsDefaults['styleConfig']
+    '$styleConfig' extends keyof Config
+      ? NonNullable<Config['$styleConfig']> extends never
+        ? KitPropsDefaults['$styleConfig']
+        : NonNullable<Config['$styleConfig']>
+      : KitPropsDefaults['$styleConfig']
   > &
   KitControllerProps<
     'controller' extends keyof Config
@@ -110,7 +110,7 @@ export type KitProps<Config extends KitPropsConfig = {}> = PivProps<
 /** Kit 自己拥有的读取规则；不包含 Piv 或结构查看显示字段。 */
 const kitCommonPropDefinition = {
   ref: 'only-through-prop',
-  styleConfig: 'state-value-view',
+  $styleConfig: 'state-value-view',
 } as const
 
 /** 公共字段协议的基础形状，与下方运行时公共定义对应。 */
@@ -187,7 +187,7 @@ export interface KitComponentContext<
 export interface KitComponentConfig {
   props: unknown
   controller: unknown
-  styleTokens?: unknown
+  $styleTokens?: unknown
 }
 
 /** 组件预先声明的调用与控制契约；kit 据此为 render 提供上下文并校验实现。 */
@@ -205,7 +205,7 @@ export type KitComponent<Config extends KitComponentConfig> = {
 export interface KitOptionsConfig<Props extends object = object> {
   props: Props
   propDefinition: PropsDefinition<Props>
-  styleTokens?: unknown
+  $styleTokens?: unknown
 }
 
 /** 定义输入读取与根样式解释，样式 Token 集合缺省为 undefined。 */
@@ -232,8 +232,8 @@ export type KitOptions<
     'groupName' | 'candidates'
   >[]
   /** 原样登记到 controllers.style 的 Token 集合，不是某个实例的样式配置值。 */
-  styleTokens?: 'styleTokens' extends keyof Config
-    ? Config['styleTokens']
+  $styleTokens?: '$styleTokens' extends keyof Config
+    ? Config['$styleTokens']
     : undefined
 } & StyleRequirement<Config['props']>
 
@@ -250,18 +250,16 @@ export type KitOptions<
  * 样式配置作为根声明交给内部真实元素；实例名称由 Piv 负责节点语义，kit 与 Marker 不增加容器 DOM。
  *
  * @example
- * type FlowProps = KitProps<{ styleConfig: FlowStyleConfig; controller: FlowController }> & {
+ * type FlowProps = KitProps<{ $styleConfig: FlowStyleConfig; controller: FlowController }> & {
  *   // 自有输入
  * }
- * type FlowPropDefinition = KitPropDefinition<{
- *   // 自有字段模式
- * }>
+ * type FlowPropDefinition = KitPropDefinition<{}>
  * const flowPropDefinition: FlowPropDefinition = {
  *   ...kitPropDefinition,
  * }
  * interface FlowController extends KitController<{ props: FlowProps; propDefinition: FlowPropDefinition }> {}
  * const Flow: KitComponent<{ props: FlowProps; controller: FlowController }> = kit(
- *   { name: 'Flow', propDefinition: flowPropDefinition, styleConfig: flowStyleConfig },
+ *   { name: 'Flow', propDefinition: flowPropDefinition, $styleConfig: flowStyleConfig },
  *   (props, { name }) => <Piv shadowProps={props} class={name}>{props.children}</Piv>,
  * )
  */
@@ -274,7 +272,7 @@ export function kit<
   options: KitOptions<{
     props: Omit<Props, 'ref'>
     propDefinition: PropDefinition
-    styleTokens: StyleTokens
+    $styleTokens: StyleTokens
   }> &
     NoInfer<
       ValidKitOptions<{
@@ -290,7 +288,7 @@ export function kit<
 ): KitComponent<{
   props: Props
   controller: Controller
-  styleTokens: StyleTokens
+  $styleTokens: StyleTokens
 }> {
   // 同一定义的实例共用默认来源规则和注册入口；具体字段状态仍由实例各自持有。
   const propDefinition = options.propDefinition
@@ -301,7 +299,7 @@ export function kit<
     Controller,
     StyleTokens
   >()
-  if (options.styleTokens) registry.addStyleTokens(options.styleTokens)
+  if (options.$styleTokens) registry.addStyleTokens(options.$styleTokens)
 
   /**
    * 接收上游输入，创建带身份说明与根声明的实例内容。
@@ -368,12 +366,12 @@ export function kit<
      */
     function renderRoot() {
       const declarations = [...inheritedDeclarations]
-      if (options.styleConfig)
+      if (options.$styleConfig)
         declarations.push(
           bindStyleConfig(
-            options.styleConfig,
+            options.$styleConfig,
             renderProps as {
-              styleConfig?: Source<Record<string, unknown> | undefined>
+              $styleConfig?: Source<Record<string, unknown> | undefined>
             },
           ),
         )
@@ -417,23 +415,23 @@ export function kit<
 // 定义的静态校验细节
 // =============================================================================
 
-/** 从已声明的 styleConfig 输入还原配置值域，解开整体及字段 Source，不从处理函数反推。 */
-type StyleContract<Props> = Props extends { styleConfig?: infer Config }
-  ? [NonNullable<Val<Config>>] extends [never]
-    ? {}
-    : {
-        [Key in keyof NonNullable<Val<Config>>]: Val<
-          NonNullable<Val<Config>>[Key]
-        >
-      }
-  : never
+/** 从已声明的样式配置输入还原值域，解开整体及字段 Source，不从处理函数反推。 */
+type StyleContract<Config> = [NonNullable<Val<Config>>] extends [never]
+  ? {}
+  : {
+      [Key in keyof NonNullable<Val<Config>>]: Val<
+        NonNullable<Val<Config>>[Key]
+      >
+    }
 
 /** 根元素只解释本作用域使用的配置子集；配置形状仍来自公开输入，处理函数不反向定义它。 */
-type StyleRequirement<Props> = 'styleConfig' extends keyof Props
+type StyleRequirement<Props> = '$styleConfig' extends keyof Props
   ? {
-      styleConfig?: NoInfer<Partial<StyleConfig<StyleContract<Props>>> & object>
+      $styleConfig?: NoInfer<
+        Partial<StyleConfig<StyleContract<Props['$styleConfig']>>> & object
+      >
     }
-  : { styleConfig?: never }
+  : { $styleConfig?: never }
 
 /** 四项约束共同验证定义与公开契约一致；只接受已有声明，不参与推断或运行。 */
 type ValidKitOptions<

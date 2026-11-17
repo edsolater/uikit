@@ -11,7 +11,7 @@ import { createState } from '@/foundation'
  * 按默认横排显示同组动作，操作按钮可切换为纵向排列或恢复默认。
  */
 export function DirectionSwitchingExample() {
-  const direction = createState<FlowStyleConfig['direction']>()
+  const direction = createState<FlowStyleConfig['$direction']>()
   return (
     <Flow>
       <Text>默认排列相关操作，按钮保留自己的外观。</Text>
@@ -27,9 +27,9 @@ export function DirectionSwitchingExample() {
         <Button outlined>提交审核</Button>
         <Button plain>取消</Button>
       </Flow>
-      <Flow $direction="column" styleConfig={{ direction: 'row' }}>
+      <Flow $direction="column" $styleConfig={{ $direction: 'row' }}>
         <Text>前缀属性声明纵排。</Text>
-        <Text>显式 styleConfig 优先，最终仍按横排显示。</Text>
+        <Text>显式 $styleConfig 优先，最终仍按横排显示。</Text>
       </Flow>
     </Flow>
   )

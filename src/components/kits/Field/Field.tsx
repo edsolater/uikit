@@ -33,7 +33,7 @@ export const Field: KitComponent<{
       <Flow
         shadowProps={props}
         class={name}
-        styleConfig={{ direction: 'column' }}
+        $direction="column"
       >
         <Label for={id} tooltip={props.tooltip}>
           {props.label}

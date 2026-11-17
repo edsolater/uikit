@@ -69,7 +69,7 @@ export const FormField: KitComponent<{
         <Flow
           shadowProps={rootProps}
           class={name}
-          styleConfig={{ direction: 'column' }}
+          $direction="column"
         >
           {props.children}
         </Flow>

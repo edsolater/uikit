@@ -28,6 +28,12 @@
 - 输入值使用 Input；切换持续状态使用对应表单控件。
 - `children` 承载可见动作内容；纯图形内容通过 `label` 提供动作名。
 
+## 样式输入
+
+样式参数优先直接写在按钮上，例如 `<Button $gap="1rem">保存</Button>`。`$styleConfig` 是整组来源或覆盖需要时的逃生舱，字段与直接属性同名，例如 `<Button $styleConfig={{ $gap: '2rem' }}>保存</Button>`。
+
+两者同时存在时，显式 `$styleConfig` 的同名字段优先，包括值为 `undefined` 的字段。Controller 通过 `props.$styleConfig` 干预同一份配置；普通 `styleConfig` 和配置内普通 `gap` 不属于 Button 当前输入。
+
 ## Variant 输入轮廓
 
 Button 有四个 Variant 分组：

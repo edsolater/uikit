@@ -12,13 +12,13 @@ import { componentName } from './Flow.prop'
 /** Flow 的应用配置契约；省略字段沿用各 Token 自有默认。 */
 export interface FlowStyleConfig {
   /** 子项间距，接受 CSS gap 值。 */
-  gap?: string
+  $gap?: string
   /** 容器自身宽度，省略时由父布局与内容决定。 */
-  width?: string
+  $width?: string
   /** 默认横排换行并居中，必要时明确选择纵排。 */
-  direction?: 'row' | 'column'
+  $direction?: 'row' | 'column'
   /** 在父级弹性布局中占用剩余空间。 */
-  grow?: boolean
+  $grow?: boolean
 }
 
 /** 实例只提交差异，默认横排和自然宽度仍由各 Token 唯一拥有。 */
@@ -26,15 +26,15 @@ export const flowStyleConfig = {
   /**
    * 设置当前实例子项之间的间距。
    */
-  gap: (value) => flowGap.set(value),
+  $gap: (value) => flowGap.set(value),
   /**
    * 设置当前实例自身宽度。
    */
-  width: (value) => flowWidth.set(value),
+  $width: (value) => flowWidth.set(value),
   /**
    * 纵排时统一安排方向、换行与交叉轴；横排沿用 Token 默认。
    */
-  direction: (value) => {
+  $direction: (value) => {
     if (value === 'column') {
       direction.set('column')
       wrap.set('nowrap')
@@ -44,7 +44,7 @@ export const flowStyleConfig = {
   /**
    * 需要时占用父级剩余空间，否则沿用自然尺寸。
    */
-  grow: (value) => {
+  $grow: (value) => {
     if (value) flex.set('1')
   },
 } satisfies StyleConfig<FlowStyleConfig>

@@ -146,7 +146,7 @@ rules(buttonAddress, [
 /** 按钮应用可配置的已有间距控制点。 */
 export interface ButtonStyleConfig {
   /** 图标与文字等子内容之间的间距。 */
-  gap?: string
+  $gap?: string
 }
 
 /** 按钮的可选样式输入只解释已有间距控制点。 */
@@ -154,5 +154,5 @@ export const buttonStyleConfig = {
   /**
    * 设置当前按钮内图标与文字等内容之间的距离。
    */
-  gap: (value) => buttonGap.set(value),
+  $gap: (value) => buttonGap.set(value),
 } satisfies StyleConfig<ButtonStyleConfig>

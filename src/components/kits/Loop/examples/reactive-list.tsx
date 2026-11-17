@@ -14,7 +14,7 @@ import { createState, val } from '@/foundation'
 export function ReactiveListExample() {
   const items = createState(['核对结构', '检查输入输出'])
   return (
-    <Flow styleConfig={{ direction: 'column' }}>
+    <Flow $direction="column">
       <Heading level={2}>Loop · 审核队列</Heading>
       <Flow>
         <Button

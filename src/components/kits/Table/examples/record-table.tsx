@@ -12,7 +12,7 @@ import { Flow, Heading, Table, Text } from '../../..'
  */
 export function RecordTableExample() {
   return (
-    <Flow styleConfig={{ direction: 'column' }}>
+    <Flow $direction="column">
       <Heading level={2}>Table · 项目进度</Heading>
       <Text p>每行是一项记录，列顺序由 keys 明确指定。</Text>
       <Table
@@ -32,7 +32,7 @@ export function RecordTableExample() {
       />
       <Text p>合成列可读取整行；紧凑表格保留提示、列宽和比例着色。</Text>
       <Table
-        styleConfig={{ compact: true, columnMinWidths: { summary: 240 } }}
+        $compact={true} $columnMinWidths={{ summary: 240 }}
         data={[
           { name: '接口整理', detail: { owner: '小林' }, completion: 1 },
           { name: '示例校验', detail: { owner: '小陈' }, completion: 0.5 },

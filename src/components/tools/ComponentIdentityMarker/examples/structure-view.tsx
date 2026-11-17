@@ -21,7 +21,7 @@ import { createState, val } from '@/foundation'
 export function StructureViewExample() {
   const count = createState(0)
   return (
-    <Flow styleConfig={{ direction: 'column' }}>
+    <Flow $direction="column">
       <Heading level={2}>
         ComponentIdentityMarkerStructureViewTrigger · 组件结构查看
       </Heading>

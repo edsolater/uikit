@@ -13,7 +13,7 @@ import readingGuide from './reading-guide.md?raw'
  */
 export function MarkdownFileExample() {
   return (
-    <Flow styleConfig={{ direction: 'column' }}>
+    <Flow $direction="column">
       <Heading level={2}>渲染 Markdown 文件</Heading>
       <Text>
         相邻的 reading-guide.md 通过 ?raw 导入，作为 children 交给 Markdown。

@@ -94,7 +94,7 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
         data={rows}
         keys={keys}
         $columnMinWidths={{ summary: 240 }}
-        styleConfig={{ compact: compact }}
+        $compact={compact}
 
         cellTitle={{ summary: (row, index) => `${row.detail.owner}:${index}` }}
         cellIntensity={{ ratio: (row) => row.ratio }}
@@ -259,7 +259,7 @@ test('默认列来自当前首行，示例实际呈现普通与合成列内容',
     () => (
       <Table
         data={[{ nested: '外表' }]}
-        styleConfig={{ columnMinWidths: { nested: 240 } }}
+        $columnMinWidths={{ nested: 240 }}
         renderParts={{
           tableCell: { nested: () => <Table data={[{ value: '内表' }]} /> },
         }}
@@ -281,10 +281,10 @@ test('统一配置按列绑定动态宽度，清空恢复根默认且保持原�
   const ratioWidth = createState('90px')
   const minWidth = createState<number | undefined>(80)
   const compact = createState(true)
-  const config = createState<Val<TableProps<Row>['styleConfig']>>({
-    compact,
-    columnWidths: { name: nameWidth, ratio: ratioWidth },
-    columnMinWidths: { name: minWidth, ratio: 40 },
+  const config = createState<Val<TableProps<Row>['$styleConfig']>>({
+    $compact: compact,
+    $columnWidths: { name: nameWidth, ratio: ratioWidth },
+    $columnMinWidths: { name: minWidth, ratio: 40 },
   })
   let controller!: TableController<Row>
   dispose = render(
@@ -292,7 +292,7 @@ test('统一配置按列绑定动态宽度，清空恢复根默认且保持原�
       <>
         <Table
           data={[{ name: '甲', ratio: 0.5 }]}
-          styleConfig={config}
+          $styleConfig={config}
           ref={(current) => {
             controller = current
           }}
@@ -332,21 +332,21 @@ test('统一配置按列绑定动态宽度，清空恢复根默认且保持原�
   expect(getComputedStyle(cells[0]!).minWidth).toBe('110px')
   expect(getComputedStyle(cells[0]!).whiteSpace).toBe('normal')
 
-  config.set({ columnWidths: { ratio: '130px' } })
+  config.set({ $columnWidths: { ratio: '130px' } })
   flush()
   expect(cells[0]!.style.getPropertyValue(widthName)).toBe('')
   expect(cells[0]!.style.getPropertyValue(minWidthName)).toBe('')
   expect(getComputedStyle(cells[0]!).getPropertyValue(widthName)).toBe('auto')
   expect(getComputedStyle(cells[1]!).getPropertyValue(widthName)).toBe('130px')
 
-  controller.props.styleConfig.set({
-    columnWidths: { name: '75px' },
-    columnMinWidths: { name: 55 },
+  controller.props.$styleConfig.set({
+    $columnWidths: { name: '75px' },
+    $columnMinWidths: { name: 55 },
   })
   flush()
   expect(getComputedStyle(cells[0]!).getPropertyValue(widthName)).toBe('75px')
   expect(getComputedStyle(cells[0]!).minWidth).toBe('55px')
-  controller.props.styleConfig.set(undefined)
+  controller.props.$styleConfig.set(undefined)
   flush()
   expect(cells[0]!.style.length).toBe(0)
   expect(cells[1]!.style.length).toBe(0)

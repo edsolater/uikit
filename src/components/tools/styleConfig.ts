@@ -23,18 +23,20 @@ export type StyleConfig<Config> = {
  * 一个公共配置可由根与内部节点分别绑定各自字段，其他作用域的字段不在此处解释。
  *
  * @example
- * type GapConfig = { gap?: string }
- * const styleConfig = { gap: (value) => gapToken.set(value) } satisfies StyleConfig<GapConfig>
- * bindStyleConfig(styleConfig, { styleConfig: { gap: '2rem' } })
+ * type GapConfig = { $gap?: string }
+ * const styleConfig = { $gap: (value) => gapToken.set(value) } satisfies StyleConfig<GapConfig>
+ * bindStyleConfig(styleConfig, { $styleConfig: { $gap: '2rem' } })
  */
 export function bindStyleConfig(
   definition: Partial<Record<string, StyleConfigHandler<never>>>,
-  props: { styleConfig?: Source<Record<string, unknown> | undefined> },
+  props: {
+    $styleConfig?: Source<Record<string, unknown> | undefined>
+  },
 ): ElementDeclarations {
   const declaration: ElementDeclarations = {
     get style() {
       return collectTokenStyles(() => {
-        const config = val(props.styleConfig)
+        const config = val(props.$styleConfig)
         for (const [field, interpret] of Object.entries(definition)) {
           if (interpret === undefined) continue
           const value = val(config?.[field])
@@ -46,10 +48,10 @@ export function bindStyleConfig(
   }
   // 配置定义存在不等于实例声明配置；形状投射随上游和控制写入更新，不提前订阅配置值。
   return new Proxy(declaration, {
-    has: (_, key) => key === 'style' && 'styleConfig' in props,
-    ownKeys: () => ('styleConfig' in props ? ['style'] : []),
+    has: (_, key) => key === 'style' && '$styleConfig' in props,
+    ownKeys: () => ('$styleConfig' in props ? ['style'] : []),
     getOwnPropertyDescriptor: (_, key) =>
-      key === 'style' && 'styleConfig' in props
+      key === 'style' && '$styleConfig' in props
         ? { enumerable: true, configurable: true }
         : undefined,
   })

@@ -13,7 +13,7 @@ export function SectionNavigationExample() {
   const purpose = '用途',
     boundary = '边界'
   return (
-    <Flow styleConfig={{ direction: 'column' }}>
+    <Flow $direction="column">
       <NavigationRegion label="示例章节">
         <Link href={'#' + encodeURIComponent(purpose)}>{purpose}</Link>
         <Link href={'#' + encodeURIComponent(boundary)}>{boundary}</Link>

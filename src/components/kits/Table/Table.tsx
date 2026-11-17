@@ -35,7 +35,7 @@ const tableComponent: KitComponent<{
     name: componentName,
     componentDescription: '按列展示记录',
     propDefinition: tablePropDefinition,
-    styleConfig: tableStyleConfig,
+    $styleConfig: tableStyleConfig,
   },
   (props, { name }) => {
     // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
@@ -51,12 +51,12 @@ const tableComponent: KitComponent<{
       intensity?: Source<number | null | undefined>,
     ) =>
       bindStyleConfig(tableCellStyleConfig, {
-        get styleConfig() {
-          const config = val(props.styleConfig)
+        get $styleConfig() {
+          const config = val(props.$styleConfig)
           return {
-            width: val(config?.columnWidths)?.[columnKey],
-            minWidth: val(config?.columnMinWidths)?.[columnKey],
-            intensity,
+            $width: val(config?.$columnWidths)?.[columnKey],
+            $minWidth: val(config?.$columnMinWidths)?.[columnKey],
+            $intensity: intensity,
           }
         },
       })
