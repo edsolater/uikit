@@ -7,7 +7,7 @@
  */
 import { Piv } from '../../Piv/Piv'
 import { kit, type KitComponent } from '../../tools/kit'
-import { mapArray, createEffect, createState, val } from '@/foundation'
+import { mapArray, createEffect, createState } from '@/foundation'
 import { createDomRef } from '@/hooks'
 
 import {
@@ -47,7 +47,7 @@ const loopComponent: KitComponent<{
       },
     )
 
-    const mapped = mapArray(() => val(innerState), props.children, {
+    const mapped = mapArray(innerState, props.children, {
       fallback: () => props.fallback,
     })
 

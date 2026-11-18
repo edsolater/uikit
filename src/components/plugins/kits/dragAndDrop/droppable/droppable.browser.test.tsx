@@ -432,7 +432,7 @@ test('相同角色分别构建后，两个宿主的成员和启停状态独立',
   expect(first.enabled).toBeDefined()
   expect(first.enabled).not.toBe(second.enabled)
   first.disable()
-  await expect.poll(() => val(first.enabled)).toBe(false)
+  await expect.poll(first.enabled).toBe(false)
   expect(val(second.enabled)).toBe(true)
 })
 

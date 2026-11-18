@@ -78,7 +78,7 @@ export function droppablePluginCore({
       const unregister = registerInternalDropTarget({
         target,
         id,
-        enabled: () => val(enabled),
+        enabled,
         accepts(drag, event) {
           return acceptsDrop(createInternalDropContext(drag, event, target))
         },
@@ -100,7 +100,7 @@ export function droppablePluginCore({
     },
     on: createExternalDropListeners({
       dropEffect: options.dropEffect,
-      enabled: () => val(enabled),
+      enabled,
       accepts: acceptsDrop,
       onDrop,
       showHover,

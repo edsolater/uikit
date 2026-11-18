@@ -63,20 +63,20 @@ describe('clickable', () => {
 
     first.dispatchEvent(new PointerEvent('pointerenter'))
     first.dispatchEvent(new PointerEvent('pointerdown'))
-    await expect.poll(() => val(firstController.hovered)).toBe(true)
+    await expect.poll(firstController.hovered).toBe(true)
     expect(val(firstController.pressed)).toBe(true)
     expect(val(secondController.hovered)).toBe(false)
     expect(val(secondController.pressed)).toBe(false)
     expect(second.hasAttribute('data-pressed')).toBe(false)
 
     first.dispatchEvent(new PointerEvent('pointerup'))
-    await expect.poll(() => val(firstController.pressed)).toBe(false)
+    await expect.poll(firstController.pressed).toBe(false)
 
     await firstController.focus()
     expect(document.activeElement).toBe(first)
-    await expect.poll(() => val(firstController.focused)).toBe(true)
+    await expect.poll(firstController.focused).toBe(true)
     await firstController.blur()
-    await expect.poll(() => val(firstController.focused)).toBe(false)
+    await expect.poll(firstController.focused).toBe(false)
 
     const onClick = vi.fn()
     first.addEventListener('click', onClick)
@@ -144,7 +144,7 @@ test('能力结果直接使用，控制独立节点，卸载后清理声明事�
   const firstElement = host.querySelector<HTMLElement>('[data-testid="first"]')!
   expect(firstElement.tabIndex).toBe(7)
   firstElement.dispatchEvent(new PointerEvent('pointerenter'))
-  await expect.poll(() => val(first.hovered)).toBe(true)
+  await expect.poll(first.hovered).toBe(true)
   expect(val(second.hovered)).toBe(false)
   firstElement.dispatchEvent(
     new KeyboardEvent('keyup', { key: 'Enter', bubbles: true }),

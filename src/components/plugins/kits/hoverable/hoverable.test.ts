@@ -21,9 +21,9 @@ describe('hoverable controller', () => {
 
     expect(val(controller.hovered)).toBe(false)
     controller.hover()
-    await expect.poll(() => val(controller.hovered)).toBe(true)
+    await expect.poll(controller.hovered).toBe(true)
     controller.unhover()
-    await expect.poll(() => val(controller.hovered)).toBe(false)
+    await expect.poll(controller.hovered).toBe(false)
   })
 
   test('options 生效且两次构建的状态互不关联', async () => {
@@ -38,7 +38,7 @@ describe('hoverable controller', () => {
     expect(val(secondController.hovered)).toBe(false)
 
     firstController.unhover()
-    await expect.poll(() => val(firstController.hovered)).toBe(false)
+    await expect.poll(firstController.hovered).toBe(false)
     expect(val(secondController.hovered)).toBe(false)
   })
 })

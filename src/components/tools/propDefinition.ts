@@ -300,7 +300,7 @@ export function createPropsController<
       get() {
         const state = getState(key)
         // 原生惰性计算先取得初值，再接受首次指令；不求值其它字段。
-        untrack(() => val(state))
+        untrack(state)
         return state
       },
     })

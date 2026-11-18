@@ -65,7 +65,7 @@ test('非Label宿主保留id与自有描述，模板动态更新且实例互不�
   const trigger = host.querySelector<HTMLElement>('#own-id')!
   expect(trigger.getAttribute('aria-describedby')).toBe('existing-description')
   await userEvent.hover(trigger)
-  await expect.poll(() => val(first.isOpen)).toBe(true)
+  await expect.poll(first.isOpen).toBe(true)
   expect(val(second.isOpen)).toBe(false)
   const surface = host.querySelector<HTMLElement>(':popover-open')!
   expect(getComputedStyle(surface).margin).toBe('4px')
@@ -94,11 +94,11 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
     )
   }, host)
   await userEvent.hover(host.querySelector('button')!)
-  await expect.poll(() => val(controller.isOpen)).toBe(true)
+  await expect.poll(controller.isOpen).toBe(true)
   const originalBody = host.querySelector<HTMLElement>('[role="tooltip"]')!
   content.set(undefined)
   await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
-  await expect.poll(() => val(controller.isOpen)).toBe(false)
+  await expect.poll(controller.isOpen).toBe(false)
   content.set('再次出现')
   await expect
     .poll(() => host.querySelector('[role="tooltip"]')?.textContent)

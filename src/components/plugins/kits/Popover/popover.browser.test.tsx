@@ -64,7 +64,7 @@ test('触发与正文使用实际节点，正文自定义 id 仍可关联', asyn
   expect(body.getBoundingClientRect().bottom).toBeLessThanOrEqual(
     trigger.getBoundingClientRect().top,
   )
-  await expect.poll(() => val(capability.controller.trigger.isOpen)).toBe(true)
+  await expect.poll(capability.controller.trigger.isOpen).toBe(true)
   await expect.poll(() => trigger.getAttribute('aria-expanded')).toBe('true')
   expect(val(capability.controller.body.isOpen)).toBe(true)
   capability.controller.body.hidePopover()
@@ -382,12 +382,12 @@ test('默认打开与原生 toggle 事件共享打开状态', async () => {
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
-  await expect.poll(() => val(capability.controller.body.isOpen)).toBe(true)
+  await expect.poll(capability.controller.body.isOpen).toBe(true)
   expect(val(capability.controller.trigger.isOpen)).toBe(true)
   expect(onToggle).toHaveBeenCalledWith(true, expect.any(Event))
   capability.controller.trigger.togglePopover({ force: false })
   await expect.poll(() => body.matches(':popover-open')).toBe(false)
-  await expect.poll(() => val(capability.controller.body.isOpen)).toBe(false)
+  await expect.poll(capability.controller.body.isOpen).toBe(false)
 })
 
 test('默认打开只读取首次完成值，后续状态改变不再打开', async () => {
