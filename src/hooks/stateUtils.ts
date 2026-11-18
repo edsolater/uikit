@@ -20,7 +20,7 @@ export function mapSource<T, U>(
   source: Source<T>,
   mapper: (value: Awaited<T>) => U,
 ): StateView<Val<U>> {
-  return stateView(source).map(mapper)
+  return stateView(source)._map(mapper)
 }
 
 /**

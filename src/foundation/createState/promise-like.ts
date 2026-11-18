@@ -16,9 +16,9 @@ export function toStateViewFromPromiseLike<V>(
   // 固定来源保留完成与失败，避免失去订阅后复读又开始等待；不公开写入端。
   const [read] = createSignal(() => Promise.resolve(promiseLike))
   const view: StateView<Awaited<V>> = {
-    read,
+    _read: read,
     [stateViewBrand]: true,
-    map(toNew) {
+    _map(toNew) {
       return mapStateView(view, toNew)
     },
   }

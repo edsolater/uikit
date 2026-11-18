@@ -27,14 +27,14 @@ test('引用可接收State对象并操作原对象，释放接收器后清除能
   })
   try {
     flush()
-    expect(scope.reference.read!()).toBe(2)
+    expect(scope.reference._read!()).toBe(2)
     scope.reference.set!(3)
     flush()
     expect(val(scope.source)).toBe(3)
-    expect(scope.reference.read!()).toBe(3)
+    expect(scope.reference._read!()).toBe(3)
     scope.release!()
     flush()
-    expect(scope.reference.read).toBeUndefined()
+    expect(scope.reference._read).toBeUndefined()
     expect(val(scope.source)).toBe(3)
   } finally {
     scope.dispose()

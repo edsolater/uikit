@@ -70,7 +70,7 @@ export function createState(
   )
 
   const thisState: State & StateSourceAccess = Object.assign(solidjsAccessor, {
-    read: solidjsAccessor,
+    _read: solidjsAccessor,
     [stateSourceAccessor]: sourceAccessor,
     [callableObjectSymbol]: true,
     [stateViewBrand]: true,
@@ -79,7 +79,7 @@ export function createState(
       solidjsSetSignal(newValue)
       return thisState
     },
-    map(toNew) {
+    _map(toNew) {
       return mapStateView(thisState, toNew)
     },
   } satisfies Pick<State, keyof State> & StateSourceAccess)
@@ -96,15 +96,15 @@ export function mapStateView<T, U>(
 ): StateView<Val<U>> {
   // 生产层缓存映射结果和 Promise 身份，等待重试不重新调用 mapper 创建 Promise。
   const mapped = createMemo<U>(() => {
-    const result = mapper(view.read())
+    const result = mapper(view._read())
     return isPromiseLike(result) ? Promise.resolve(result) : result
   })
   // 结果层递归读取 Source，并按完成值去重；同值来源切换不重复通知下游。
   const read = createMemo(() => val(mapped()))
   const mappedView: StateView<any> = {
-    read,
+    _read: read,
     [stateViewBrand]: true,
-    map(toNew) {
+    _map(toNew) {
       return mapStateView(mappedView, toNew)
     },
   }

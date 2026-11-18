@@ -18,7 +18,7 @@ export interface StateView<T = any> {
    * 读取状态视图的当前值。
    * @deprecated 状态系统内部接口。业务代码请使用 {@link val} 读取当前值。
    */
-  read(): T
+  _read(): T
 
   /** 确定对象是 StateView，供 isStateView() 使用。 */
   [stateViewBrand]: true
@@ -27,7 +27,7 @@ export interface StateView<T = any> {
    * 创建一个新的派生 StateView。
    * @deprecated 状态系统内部接口。业务代码请使用 {@link derive} 派生状态。
    */
-  map<U>(toNew: (value: T) => U): StateView<Val<U>>
+  _map<U>(toNew: (value: T) => U): StateView<Val<U>>
 }
 
 /**
@@ -115,12 +115,12 @@ export function stateView(
         })
       : () => sourceOrValue
     view = {
-      read,
+      _read: read,
       [stateViewBrand]: true,
-      map(toNew) {
+      _map(toNew) {
         return mapStateView(view, toNew)
       },
     }
   }
-  return options?.map ? view.map(options.map) : view
+  return options?.map ? view._map(options.map) : view
 }

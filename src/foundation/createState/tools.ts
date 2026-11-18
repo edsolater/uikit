@@ -17,7 +17,7 @@ export function toStateString(
 ): StateView<'true' | 'false'>
 export function toStateString<T>(state: StateView<T>): StateView<string>
 export function toStateString<T>(state: StateView<T>): StateView<string> {
-  return state.map(String)
+  return state._map(String)
 }
 
 /**

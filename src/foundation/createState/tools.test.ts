@@ -34,12 +34,12 @@ test('来源为空时回默认值，更新后继续跟随且不吞 false、0 或
 test('等待 Promise 完成后才对最终值应用默认，包括完成为 StateView 的来源', async () => {
   const deferred = Promise.withResolvers<undefined | StateView<undefined>>()
   const view = withDefault(deferred.promise, '完成默认')
-  expect(view.read).toThrow(NotReadyError)
+  expect(() => val(view)).toThrow(NotReadyError)
   deferred.resolve(stateView(undefined))
-  await resolve(view.read)
+  await resolve(() => val(view))
   expect(val(view)).toBe('完成默认')
   const plain = withDefault(Promise.resolve(undefined), '默认')
-  await resolve(plain.read)
+  await resolve(() => val(plain))
   expect(val(plain)).toBe('默认')
 })
 

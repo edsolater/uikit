@@ -64,7 +64,7 @@ export function val<S, const DefaultValue>(
   defaultValue: DefaultValue,
 ): Exclude<Val<S>, null | undefined> | Val<ResultValue<DefaultValue>>
 export function val(source: any, defaultValue?: any) {
-  const value = isStateViewable(source) ? val(stateView(source).read()) : source
+  const value = isStateViewable(source) ? val(stateView(source)._read()) : source
   return !isExist(value) && arguments.length > 1
     ? val(result(defaultValue))
     : value

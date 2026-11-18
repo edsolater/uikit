@@ -20,7 +20,7 @@ State 的内部 `state-source.ts` 只向拥有该状态的设施提供原生来�
 
 JSX 编译器仍会在构建产物中生成 `@solidjs/web` 引用；编译器与运行时版本由构建接入管理，源码导入收口不会消除这些生成依赖。
 
-当前接入 Solid 2。State 只有来源 Signal 与结果 Memo 两层：普通值和 Promise 由原生 Signal 保存，函数由原生可写计算跟随依赖；结果 Memo 统一展开 PromiseLike，交给 Solid 等待与传播错误。输入中的 Promise 展开为对外的 `Awaited<T>`，读取与结果层选项使用完成类型。StateView 的 `map` 先缓存 mapper 产生的结果与 Promise 身份，再由结果计算通过既有 `val` 读取完整 Source，并按完成值去重；输出类型为完整 mapper 返回值 `U` 对应的 `Val<U>`。后继映射接收最终值，Promise 完成 StateView 后也持续跟随内部来源；普通函数仍保持数据。写入、派生及 DOM 更新遵循 Solid 的提交时机。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
+当前接入 Solid 2。State 只有来源 Signal 与结果 Memo 两层：普通值和 Promise 由原生 Signal 保存，函数由原生可写计算跟随依赖；结果 Memo 统一展开 PromiseLike，交给 Solid 等待与传播错误。输入中的 Promise 展开为对外的 `Awaited<T>`，读取与结果层选项使用完成类型。StateView 的内部方法 `_map` 先缓存 mapper 产生的结果与 Promise 身份，再由结果计算通过既有 `val` 读取完整 Source，并按完成值去重；输出类型为完整 mapper 返回值 `U` 对应的 `Val<U>`。后继映射接收最终值，Promise 完成 StateView 后也持续跟随内部来源；普通函数仍保持数据。写入、派生及 DOM 更新遵循 Solid 的提交时机。组件验收范围为 Button，其余组件与工具的已知差异记录在 [Solid 2 迁移计划](../../docs/plans/2026-10-20-Solid2迁移.md)。
 
 stateView 在转换入口只快照判定 PromiseLike 与已有 StateView 身份，不将协议探测变成 Props 等读取视图的声明形状依赖；实际计算和映射仍跟踪值依赖。普通值转换直接构造只读视图，不建立可写 State；函数来源使用一个原生 Memo 缓存计算与处理异步，函数结果中的函数保持数据。已有 StateView 原样返回，Promise 转换继续按身份复用；可选 map 在统一取得视图后应用。
 

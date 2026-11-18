@@ -33,7 +33,7 @@ import { snapshot } from '@/hooks/snapshots'
 | `state.set(previous => next)` | `count.set(n => n + 1)`              | 基于已有当前值更新；已有 Promise 由基础层接续，回调接收完成值                                     |
 | `val(source)`                 | `val(count)`                         | 读取当前值，递归解除 StateView、PromiseLike 包装；等待和失败由 Solid 传播，真正完成的空值仍是空值 |
 | `val(source, fallback)`       | `val(count, 0)`                      | 最终结果为 `null` 或 `undefined` 时使用 fallback；fallback 可以是函数                             |
-| `state.read()`                | `count.read()`                       | 读取完成结果；不继续解除结果内的 StateView，业务请使用 `val()`                                  |
+| `state._read()`                | `count._read()`                       | 读取完成结果；不继续解除结果内的 StateView，业务请使用 `val()`                                  |
 
 ## 创建关联状态或独立状态
 
@@ -83,13 +83,13 @@ handler.set(() => anotherOnClick)
 
 | API                          | 用法                                    | 当前行为                                                             |
 | ---------------------------- | --------------------------------------- | -------------------------------------------------------------------- |
-| `state.map(mapper)`          | `count.map(n => n * 2)`                 | 内部接口，业务派生请使用 `derive`                           |
-| `.map()` 返回 StateView      | `selected.map(id => states[id])`        | 跟随所返回视图的当前值                                               |
+| `state._map(mapper)`          | `count._map(n => n * 2)`                 | 内部接口，业务派生请使用 `derive`                           |
+| 派生返回 StateView      | `derive(selected, id => states[id])`        | 跟随所返回视图的当前值                                               |
 | `stateView(value)`           | `stateView(10)`                         | 普通值直接转换成只读 StateView；函数输入由原生计算跟踪依赖并等待异步 |
 | `stateView(view)`            | `stateView(count)`                      | 返回原有视图                                                         |
 | `stateView(source, mapper)`  | `stateView(count, n => n * 2)`          | 转换来源后派生                                                       |
 | `stateView(source, { map })` | `stateView(count, { map: n => n * 2 })` | 上一行的 options 写法                                                |
-| `mapSource(source, mapper)`  | `mapSource(count, n => n * 2)`          | 执行 `stateView(source).map(mapper)`                                 |
+| `mapSource(source, mapper)`  | `mapSource(count, n => n * 2)`          | 执行 `stateView(source)._map(mapper)`                                 |
 | `derive(source, mapper)`     | `derive(count, n => n * 2)`             | 当前调用 mapSource，行为相同                                         |
 | `derive(source)`             | `derive(count)`                         | 原样返回 source，不建立新计算                                        |
 | `snapshot(tree)`             | `snapshot({ count, values: [count] })`  | 递归读取对象、数组中的 StateView，返回当前快照；不等待 Promise       |
@@ -123,7 +123,7 @@ const total = derive(
 
 | 用法                                                    | 行为                                                               |
 | ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `createState(request)`                                  | 返回 `State<number>`，`.read()` 和 `val()` 读取完成值              |
+| `createState(request)`                                  | 返回 `State<number>`，`val()` 读取完成值              |
 | `createState(outsideState)`、`createState(outsideView)` | 返回内容值的可写 State，持续跟随上游，无需先调用 val               |
 | `createState(() => outsideState)`                       | 计算可直接返回来源，由基础层读取内容并建立依赖                     |
 | `createState(() => loadItem(val(selectedId)))`          | 原生计算跟随依赖，等待本次请求；旧请求不会覆盖新的来源             |
@@ -175,7 +175,7 @@ Effect 使用优先级：单来源 → 多来源数组 → 计算函数。不要
 | `isStateView(value)`           | 包根／Foundation                                             | 判断 StateView，State 也属于 StateView        |
 | `isStateViewable(value)`       | 包根／Foundation                                             | 判断 StateView 或 PromiseLike，不包含普通值   |
 | `stateBrand`、`stateViewBrand` | 包根／Foundation                                             | 身份标记，业务通常不需要操作                  |
-| `createMemo`                   | `@/foundation/reactivity`：`createMemo(() => computation())` | 内部导出，未由包根公开；`.map()` 已在内部使用 |
+| `createMemo`                   | `@/foundation/reactivity`：`createMemo(() => computation())` | 内部导出，未由包根公开；`_map()` 在内部使用 |
 | `createRenderEffect`           | Foundation 内部入口，参数形式与 createEffect 相同            | DOM 提交使用，未由包根公开                    |
 | `createStateWithPrev()`        | 包根／Hooks                                                  | 已导出但尚未实现，调用会抛错                  |
 

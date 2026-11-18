@@ -37,29 +37,29 @@ test('StateView 从原生 pending 进入 PromiseLike 完成值', async () => {
   const deferred = createDeferred<number>()
   const stateView = toStateViewFromPromiseLike(deferred.promise)
 
-  expect(stateView.read).toThrow(NotReadyError)
+  expect(stateView._read).toThrow(NotReadyError)
 
   deferred.resolve(8)
-  await resolve(stateView.read)
+  await resolve(stateView._read)
 
-  expect(stateView.read()).toBe(8)
+  expect(stateView._read()).toBe(8)
 })
 
 test('默认 PromiseLike 失败由原生计算传播，不伪装为 undefined', async () => {
   const deferred = createDeferred<number>()
   const view = toStateViewFromPromiseLike(deferred.promise)
   const error = new Error('读取失败')
-  const settled = resolve(view.read)
+  const settled = resolve(view._read)
   deferred.reject(error)
   await expect(settled).rejects.toBe(error)
-  expect(view.read).toThrow('读取失败')
+  expect(view._read).toThrow('读取失败')
 })
 
 test('完成的 undefined 保持完成值', async () => {
   const request = Promise.withResolvers<undefined>()
   const view = toStateViewFromPromiseLike(request.promise)
-  expect(view.read).toThrow(NotReadyError)
+  expect(view._read).toThrow(NotReadyError)
   request.resolve(undefined)
-  await expect(resolve(view.read)).resolves.toBeUndefined()
-  expect(view.read()).toBeUndefined()
+  await expect(resolve(view._read)).resolves.toBeUndefined()
+  expect(view._read()).toBeUndefined()
 })

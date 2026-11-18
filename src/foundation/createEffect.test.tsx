@@ -162,7 +162,7 @@ test('Render Effect 的初次动作同步完成，数组值保持为单个 Sourc
     createRenderEffect(ids, value => {
       current = value
     })
-    expect(current).toBe(ids.read())
+    expect(current).toBe(val(ids))
     return dispose
   })
   ids.set(['after'])

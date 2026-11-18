@@ -55,7 +55,7 @@ function readSnapshot<T>(input: T): Snapshot<T>
 function readSnapshot<T>(input: T | undefined): Snapshot<T> | undefined
 function readSnapshot<T>(input: T | undefined): Snapshot<T> | undefined {
   if (isStateView(input)) {
-    return readSnapshot(input.read()) as Snapshot<T>
+    return readSnapshot(input._read()) as Snapshot<T>
   }
 
   if (Array.isArray(input)) {
