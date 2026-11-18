@@ -16,7 +16,7 @@ import {
   test,
 } from 'vitest'
 import { cssRoot } from '@/style-system'
-import { createState, Show, Loading } from '@/foundation'
+import { createState, Show, Loading, val } from '@/foundation'
 import { createRef } from '@/hooks/createRef'
 import {
   Button,
@@ -121,7 +121,7 @@ describe('Text', () => {
             {content}
           </Piv>
           <Button>按钮原文字</Button>
-          <Show when={showFab.read()}>
+          <Show when={val(showFab)}>
             <ComponentIdentityMarkerStructureViewTrigger />
           </Show>
         </>
@@ -266,7 +266,7 @@ describe('Text', () => {
     dispose = render(
       () => (
         <>
-          <Text label={description} descriptionDisplay={display.read()}>
+          <Text label={description} descriptionDisplay={val(display)}>
             动态说明文字
           </Text>
           <ComponentIdentityMarkerStructureViewTrigger />

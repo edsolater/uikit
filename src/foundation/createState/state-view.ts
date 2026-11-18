@@ -8,21 +8,25 @@ import { createMemo, runWithOwner, untrack } from 'solid-js'
 import { isPromiseLike, toStateViewFromPromiseLike } from './promise-like'
 import type { Source } from './source'
 import { mapStateView } from './state'
-import type { Val } from './read'
+import type { val, Val } from './read'
+import type { derive } from '../../hooks/stateUtils'
 
 export const stateViewBrand = Symbol('StateView')
 
 export interface StateView<T = any> {
   /**
-   * 唯一的读取自身当前值的入口
-   * 写业务时，不直接使用这个方法，因为会产生主语错误，尽量使用 val() 读取。
+   * 读取状态视图的当前值。
+   * @deprecated 状态系统内部接口。业务代码请使用 {@link val} 读取当前值。
    */
   read(): T
 
   /** 确定对象是 StateView，供 isStateView() 使用。 */
   [stateViewBrand]: true
 
-  /** 创建一个新的派生 StateView。 */
+  /**
+   * 创建一个新的派生 StateView。
+   * @deprecated 状态系统内部接口。业务代码请使用 {@link derive} 派生状态。
+   */
   map<U>(toNew: (value: T) => U): StateView<Val<U>>
 }
 

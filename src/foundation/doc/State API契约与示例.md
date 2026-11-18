@@ -31,7 +31,7 @@ import { snapshot } from '@/hooks/snapshots'
 | `state.set(previous => next)` | `count.set(n => n + 1)`              | 基于已有当前值更新；已有 Promise 由基础层接续，回调接收完成值                                     |
 | `val(source)`                 | `val(count)`                         | 读取当前值，递归解除 StateView、PromiseLike 包装；等待和失败由 Solid 传播，真正完成的空值仍是空值 |
 | `val(source, fallback)`       | `val(count, 0)`                      | 最终结果为 `null` 或 `undefined` 时使用 fallback；fallback 可以是函数                             |
-| `state.read()`                | `count.read()`                       | 读取完成结果；不继续解除结果内的 StateView，业务通常使用 `val()`                                  |
+| `state.read()`                | `count.read()`                       | 读取完成结果；不继续解除结果内的 StateView，业务请使用 `val()`                                  |
 
 ## 创建关联状态或独立状态
 
@@ -81,7 +81,7 @@ handler.set(() => anotherOnClick)
 
 | API                          | 用法                                    | 当前行为                                                             |
 | ---------------------------- | --------------------------------------- | -------------------------------------------------------------------- |
-| `state.map(mapper)`          | `count.map(n => n * 2)`                 | 返回 StateView，内部用 Solid memo 缓存结果                           |
+| `state.map(mapper)`          | `count.map(n => n * 2)`                 | 内部接口，业务派生请使用 `derive`                           |
 | `.map()` 返回 StateView      | `selected.map(id => states[id])`        | 跟随所返回视图的当前值                                               |
 | `stateView(value)`           | `stateView(10)`                         | 普通值直接转换成只读 StateView；函数输入由原生计算跟踪依赖并等待异步 |
 | `stateView(view)`            | `stateView(count)`                      | 返回原有视图                                                         |
@@ -94,11 +94,11 @@ handler.set(() => anotherOnClick)
 
 函数来源的结果类型使用 `Awaited<T>`；需要把函数本身作为数据时，写成 `stateView(() => handler)`，返回的 handler 不会再次执行。
 
-已有 State 时，直接使用 `.map()`：
+从已有 State 持续派生新值时，使用 `derive`：
 
 ```ts
 const count = createState(1)
-const doubled = count.map(n => n * 2)
+const doubled = derive(count, n => n * 2)
 createEffect(doubled, value => console.log(value))
 ```
 
@@ -128,18 +128,18 @@ const total = derive(
 | `state.set(request)`                                    | 替换来源，由结果计算等待；后续相对更新由基础层接续                 |
 | `stateView(request)`、`val(request)`                    | 默认 pending/失败进入 Solid 机制，不附加 undefined 或吞错          |
 | `val(request, 0)`                                       | 等待和失败交给 UI 边界，只有完成后的 null/undefined 使用 0         |
-| `selected.map(id => loadItem(id))`                      | mapper 的 Promise 由 Solid 等待，输出完成值，后继 map 也接收完成值 |
+| `derive(selected, id => loadItem(id))`                      | mapper 的 Promise 由 Solid 等待，输出完成值，后续派生也接收完成值 |
 
 `createState<T>` 接受完整来源，包括普通值、PromiseLike、State、StateView 以及返回这些来源的计算函数，结果使用递归展开后的 `Val<T>`；`equals`、`loadingValue` 和相对更新的 previous 均针对内容值类型。Promise 完成后得到的 StateView 也会继续跟随其变化。直接传入 StateView 或计算来源时，下游可独立写入而不回写上游，后续上游变化继续驱动下游；无需在业务层用 Effect 搬运值。
 
 相对更新要求来源已有当前值：已有 Promise 由基础层接续，previous 接收完成值；计算来源尚无初值时不预存更新命令。依赖初值的 UI 在 Loading 内读取，完成后提供更新交互，无需业务 await；Loading 不替任意命令排队。lazy 计算在首次读取后建立当前值。`options` 支持 name、equals、lazy、loadingValue、unobserved、ownedWrite；ownedWrite 仅在明确需要计算域写入时显式使用，默认不启用。如果要把 StateView 对象本身作为数据保存，应显式放入普通对象字段，例如 `createState({ reference: outsideState })`。
 
-val 的默认函数仅在最终完成空值时执行，返回稳定 Promise 时仍由 Solid 等待。stateView 的选项只提供 map；等待和失败展示由 Loading、Errored 负责。同一个 Promise 的转换视图按身份缓存，首消费者释放不会终止后续消费者。不要在响应式读取中每次创建新 Promise 再交给 val，包括默认函数每次返回新 Promise；需要异步计算时用 createState 的计算来源或 map 建立计算节点。
+val 的默认函数仅在最终完成空值时执行，返回稳定 Promise 时仍由 Solid 等待。stateView 的选项只提供 map；等待和失败展示由 Loading、Errored 负责。同一个 Promise 的转换视图按身份缓存，首消费者释放不会终止后续消费者。不要在响应式读取中每次创建新 Promise 再交给 val，包括默认函数每次返回新 Promise；需要异步计算时用 createState 的计算来源或 derive 建立计算节点。
 
 ```tsx
 const selectedId = createState('A')
-const item = selectedId.map(id => loadItem(id))
-const title = item.map(item => item.title)
+const item = derive(selectedId, id => loadItem(id))
+const title = derive(item, s => s.title)
 
 <Errored fallback={error => <p>失败：{String(error())}</p>}>
   <Loading fallback={<p>读取中</p>}>

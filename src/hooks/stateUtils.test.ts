@@ -39,7 +39,7 @@ test('mapper 创建的新 Promise 只随上游变化生产一次，普通函数�
   const handler = vi.fn(() => '业务函数')
   const source = createState(2)
   const { mapped, functionValue, dispose } = createRoot(dispose => ({
-    mapped: source.map(value => {
+    mapped: derive(source, value => {
       calls++
       return Promise.resolve(value * 2)
     }),
@@ -49,11 +49,11 @@ test('mapper 创建的新 Promise 只随上游变化生产一次，普通函数�
   expectTypeOf(mapped).toEqualTypeOf<StateView<number>>()
   expectTypeOf(functionValue).toEqualTypeOf<StateView<typeof handler>>()
   try {
-    expect(await resolve(mapped.read)).toBe(4)
+    expect(await resolve(() => val(mapped))).toBe(4)
     expect(calls).toBe(1)
     source.set(3)
     flush()
-    expect(await resolve(mapped.read)).toBe(6)
+    expect(await resolve(() => val(mapped))).toBe(6)
     expect(calls).toBe(2)
     expect(val(functionValue)).toBe(handler)
     expect(handler).not.toHaveBeenCalled()
@@ -62,7 +62,7 @@ test('mapper 创建的新 Promise 只随上游变化生产一次，普通函数�
   }
 })
 
-test('Promise 完成 State 后后继 map 接收标量，并持续跟随内部 State', async () => {
+test('Promise 完成 State 后后继派生接收标量，并持续跟随内部 State', async () => {
   let calls = 0
   const values: string[] = []
   const inner = createState('初值')
@@ -71,17 +71,17 @@ test('Promise 完成 State 后后继 map 接收标量，并持续跟随内部 St
       calls++
       return props.value
     })
-    const next = mapped.map(value => {
+    const next = derive(mapped, value => {
       expectTypeOf(value).toEqualTypeOf<string>()
       return `${value}。`
     })
-    createEffect(next.read, value => {
+    createEffect(() => val(next), value => {
       values.push(value)
     })
     return { mapped, next, dispose }
   })
   try {
-    expect(await resolve(scope.next.read)).toBe('初值。')
+    expect(await resolve(() => val(scope.next))).toBe('初值。')
     flush()
     expect(values).toEqual(['初值。'])
     inner.set('新值')
@@ -101,12 +101,12 @@ test('映射切换到同值 State 时不重跑后继 mapper 或重复通知', ()
   const first = createState('相同值')
   const second = createState('相同值')
   const scope = createRoot(dispose => {
-    const mapped = selected.map(enabled => (enabled ? first : second))
-    const next = mapped.map(value => {
+    const mapped = derive(selected, enabled => (enabled ? first : second))
+    const next = derive(mapped, value => {
       nextCalls++
       return `${value}。`
     })
-    createEffect(next.read, value => {
+    createEffect(() => val(next), value => {
       values.push(value)
     })
     return { next, dispose }
@@ -138,7 +138,7 @@ test('等待中的派生作用域释放后，异步完成不再提交动作', as
       return request.promise
     })
     expectTypeOf(mapped).toEqualTypeOf<StateView<number>>()
-    createEffect(mapped.read, observed)
+    createEffect(() => val(mapped), observed)
     return dispose
   })
   dispose()

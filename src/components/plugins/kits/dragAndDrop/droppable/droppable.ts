@@ -4,7 +4,7 @@
  *
  * 页面内材料按组合构建的内部身份配对，外部材料由目标的启用状态和 accepts 判断。
  */
-import { createState, type State } from '@/foundation'
+import { createState, val, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
   createInactivePlugin,
@@ -65,7 +65,7 @@ export function droppablePluginCore({
    * 目标启用时按业务规则判断是否接收当前材料。
    */
   const acceptsDrop = (context: DropContext) =>
-    enabled.read() && (options.accepts?.(context) ?? true)
+    val(enabled) && (options.accepts?.(context) ?? true)
   /**
    * 向业务交付已通过接收判断的放下材料。
    */
@@ -78,7 +78,7 @@ export function droppablePluginCore({
       const unregister = registerInternalDropTarget({
         target,
         id,
-        enabled: enabled.read,
+        enabled: () => val(enabled),
         accepts(drag, event) {
           return acceptsDrop(createInternalDropContext(drag, event, target))
         },
@@ -100,7 +100,7 @@ export function droppablePluginCore({
     },
     on: createExternalDropListeners({
       dropEffect: options.dropEffect,
-      enabled: enabled.read,
+      enabled: () => val(enabled),
       accepts: acceptsDrop,
       onDrop,
       showHover,

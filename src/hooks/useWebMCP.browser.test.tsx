@@ -7,7 +7,7 @@
  */
 import { flush } from 'solid-js'
 import { afterEach, expect, test } from 'vitest'
-import { createContext, createState, render, useContext } from '@/foundation'
+import { createContext, createState, render, useContext, val } from '@/foundation'
 import { useWebMCP, type WebMCPTool } from './useWebMCP'
 
 let dispose: (() => void) | undefined
@@ -52,12 +52,12 @@ test('工具读取组件上下文与最新状态，并随组件卸载注销', as
         properties: { increment: { type: 'number' } },
       },
       execute: ({ increment }, { signal }) => {
-        const previousCount = count.read()
+        const previousCount = val(count)
         count.set(previousCount + increment)
         return { label, previousCount, signal }
       },
     })
-    return <span>{count.read()}</span>
+    return <span>{val(count)}</span>
   }
 
   const host = document.body.appendChild(document.createElement('main'))

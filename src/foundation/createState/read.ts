@@ -27,7 +27,7 @@ export type Val<S> =
  * 函数默认值仅在选中时求值，其结果仍按同一读取协议处理。
  *
  * Promise 来源应保持稳定；不要在每次响应式读取时现场创建新 Promise。
- * 需要持续异步计算时，使用 createState 的计算来源或 map。
+ * 需要持续异步计算时，使用 createState 的计算来源或 derive。
  *
  * @example 组件中使用
  * const visible = createState(true)

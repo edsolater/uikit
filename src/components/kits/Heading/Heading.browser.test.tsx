@@ -16,7 +16,7 @@ import {
   test,
 } from 'vitest'
 import { cssRoot } from '@/style-system'
-import { createState, For, Show } from '@/foundation'
+import { createState, For, Show, val } from '@/foundation'
 import {
   Heading,
   ComponentIdentityMarkerStructureViewTrigger,
@@ -54,7 +54,7 @@ describe('Heading', () => {
     const host = document.body.appendChild(document.createElement('main'))
     dispose = render(
       () => (
-        <Show when={visible.read()}>
+        <Show when={val(visible)}>
           <Heading
             level={2}
             ref={value => {
@@ -72,9 +72,9 @@ describe('Heading', () => {
               }
             }}
           >
-            <Show when={hasContent.read()}>
+            <Show when={val(hasContent)}>
               <strong>组合 </strong>
-              <span>{content.read()}</span>
+              <span>{val(content)}</span>
             </Show>
           </Heading>
         </Show>
@@ -181,7 +181,7 @@ describe('Heading', () => {
               <Heading
                 level={level}
                 label={level === 2 ? description : undefined}
-                descriptionDisplay={display.read()}
+                descriptionDisplay={val(display)}
               >
                 {content}
               </Heading>

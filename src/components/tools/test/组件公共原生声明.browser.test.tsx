@@ -6,7 +6,7 @@
  * 防止公开 KitProps 后只完成类型迁移而漏掉实际节点接线。
  */
 import { expect, test } from 'vitest'
-import { createState, flush, render } from '@/foundation'
+import { createState, flush, render, val } from '@/foundation'
 import {
   Checkbox,
   FormField,
@@ -196,7 +196,7 @@ test('FormField普通children接受公共控制更新，根与字段身份不重
     flush()
     expect(host.querySelector('.FormField')).toBe(root)
     expect(root.textContent).toBe('新内容')
-    expect(field.props.id.read()).toBe('stable-field')
+    expect(val(field.props.id)).toBe('stable-field')
   } finally {
     dispose()
     host.remove()

@@ -9,7 +9,7 @@ import { render } from '@solidjs/web'
 import { flush } from 'solid-js'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { cssRoot } from '@/style-system'
-import { createState, Loading, Show } from '@/foundation'
+import { createState, Loading, Show, val } from '@/foundation'
 import {
   Article,
   Button,
@@ -84,7 +84,7 @@ describe('组件结构查看', () => {
         <>
           <ComponentIdentityMarker
             componentName="透明父"
-            descriptionDisplay={display.read()}
+            descriptionDisplay={val(display)}
           >
             <Piv style={{ opacity }}>
               <Button descriptionDisplay>子动作</Button>
@@ -96,7 +96,7 @@ describe('组件结构查看', () => {
               componentDescription="承载裸文字"
               descriptionDisplay
             >
-              {content.read()}
+              {val(content)}
             </ComponentIdentityMarker>
             <Piv as="table">
               <Piv as="tbody">
@@ -184,7 +184,7 @@ describe('组件结构查看', () => {
       () => (
         <>
           <Button label={description}>确认</Button>
-          <Show when={showFab.read()}>
+          <Show when={val(showFab)}>
             <ComponentIdentityMarkerStructureViewTrigger />
           </Show>
         </>
@@ -322,7 +322,7 @@ describe('组件结构查看', () => {
         <>
           <ComponentIdentityMarker componentName="多根" label="文本和兄弟节点">
             文本根<span>元素根</span>
-            <Show when={visible.read()}>
+            <Show when={val(visible)}>
               <Button>动态动作</Button>
             </Show>
           </ComponentIdentityMarker>
@@ -665,7 +665,7 @@ test('无说明的父范围不遮挡命名子组件，列表实例名优先于�
           componentName="NamedRegion"
           componentDescription="展示结果"
           label={label}
-          descriptionDisplay={display.read()}
+          descriptionDisplay={val(display)}
         >
           <Piv class="named-region" label={label}>
             结果内容
