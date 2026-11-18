@@ -163,7 +163,7 @@ export {
   createVariantPropsParser,
   type VariantProps,
   type VariantPropsGroup,
-  type VariantDetails,
+  type SelectedVariants,
   type VariantPropsParseResult,
 } from './kits/utils/parseVariantProps'
 export * from './kits/utils/parseStatusProps'
@@ -231,13 +231,11 @@ export type {
   ControllerRegistryConfig,
 } from './tools/controllerRegistry'
 export type {
-  PropsReadMode,
+  PropDefinition,
   PropsDefinition,
-  DirectedProps,
-  PropsController,
-  DefaultPropSources,
-  PropsDirectorOptions,
-} from './tools/componentPropsDirector'
+  ControlledProps,
+  WritablePropStates,
+} from './tools/propDefinition'
 export { pivPropsDefinition } from './Piv/Piv.prop'
 export { componentIdentityMarkerDisplayPropsDefinition } from './tools/ComponentIdentityMarker/ComponentIdentityMarker.prop'
 import './plugins/is.style'

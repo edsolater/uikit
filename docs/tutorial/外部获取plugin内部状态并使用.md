@@ -1,6 +1,6 @@
 # 怎样使用 Plugin 的控制入口
 
-每次在组件内调用 inactivePlugin，都会同步得到一份完整能力结果：`plugin` 交给 `is`，`controller` 直接使用。控制入口不需要额外的 `usePlugin`、组件 ref 注入或 Controller Receiver。
+每次在组件内调用插件创建函数，都会同步得到一份完整能力结果：`plugin` 交给 `is`，`controller` 直接使用。控制入口不需要额外的 `usePlugin`、组件 ref 注入或 Controller Receiver。
 
 ```tsx
 function Example() {
@@ -53,7 +53,7 @@ Controller 的方法和状态在构建返回时已经存在，不使用 `Partial
 
 节点退出、`if` 重建或目标更换，不会重新运行同一次能力构建的 core；当前缓存首次 DOM 的代理也不会因此自动指向新对象。因此不能把“Controller 稳定”写成“节点随意更换后全部命令仍然正确”。
 
-多个节点需要独立状态时分别调用 inactivePlugin；联合能力的角色从组合结果中分别取得 Controller：
+多个节点需要独立状态时分别调用插件创建函数；联合能力的角色从组合结果中分别取得 Controller：
 
 ```ts
 const {

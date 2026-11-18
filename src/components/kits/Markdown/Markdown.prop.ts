@@ -88,8 +88,8 @@ export type MarkdownProps = Omit<
 
 const { as: _as, ...markdownCommonPropDefinition } = kitPropDefinition
 const markdownOwnPropDefinition = {
-  children: 'state-source-view',
-  renderers: 'state-source-view',
+  children: 'source',
+  renderers: 'source',
 } as const
 
 /** 原文与渲染器整体保留来源，解析与呈现处才读取当前值。 */

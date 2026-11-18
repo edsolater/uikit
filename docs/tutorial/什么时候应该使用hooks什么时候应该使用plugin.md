@@ -27,21 +27,17 @@ interface HighlightOptions {
   color: string
 }
 
-// 模块级定义：返回 inactivePlugin 函数，不运行 pluginCore。
+// 模块级定义：返回插件创建函数，不运行 pluginCore。
 const highlight = createInactivePlugin({
   name: 'highlight',
-  pluginCore({
-    pluginOptions,
-    addProps,
-    domProxy,
-  }: PluginCoreContext<HighlightOptions>) {
-    addProps({ style: { color: pluginOptions.color } })
+  pluginCore({ pluginOptions: options, addProps, domProxy }: PluginCoreContext<HighlightOptions>) {
+    addProps({ style: { color: options.color } })
     return { focus: () => domProxy.focus() }
   },
 })
 
 function Example() {
-  // 组件内调用：立即运行一次 core，得到完整能力结果。
+  // 组件内调用：立即运行一次 pluginCore，得到完整能力结果。
   const capability = highlight({ color: 'red' })
   return <Card is={capability}>需要高亮的信息</Card>
 }
@@ -51,10 +47,10 @@ function Example() {
 
 ```text
 createInactivePlugin({ name, pluginCore })
-  → inactivePlugin 函数
-  → 组件内 inactivePlugin(pluginOptions)，执行一次 core
+  → 插件创建函数
+  → 组件内调用 highlight(options)，执行一次 pluginCore
   → 同步得到 { plugin, controller }
-  → is 展开 plugin 中已构建的声明，不重跑 core
+  → is 展开 plugin 中已构建的声明，不重跑 pluginCore
 ```
 
 定义可以放在模块顶层；配置调用必须在组件作用域中完成，JSX 内联调用也可以。`addProps` 直接提交统一的 ShadowProps；样式、事件和子能力优先用声明表达。需要 DOM 操作时使用缓存的 `domProxy`，不必在每个能力中另存元素引用。
@@ -67,12 +63,12 @@ createInactivePlugin({ name, pluginCore })
 <Card is={capability}>信息</Card>
 <Card is={capability.plugin}>信息</Card>
 
-// highlight 是 inactivePlugin 函数，必须先调用。
+// highlight 是 插件创建函数，必须先调用。
 <Card is={highlight({ color: 'red' })}>信息</Card>
 // is={highlight} 不是有效 Plugin 输入。
 ```
 
-以上展示等效输入形式，不表示同一份能力需要安装到多处。需要各节点拥有独立状态和控制入口时，分别调用 inactivePlugin。
+以上展示等效输入形式，不表示同一份能力需要安装到多处。需要各节点拥有独立状态和控制入口时，分别调用插件创建函数。
 
 同一个节点需要多个能力时，使用数组：
 
@@ -82,7 +78,7 @@ createInactivePlugin({ name, pluginCore })
 
 ## 多个节点需要配合时，定义组合能力
 
-单元描述各节点自己的能力；[createInactivePlugins](../../src/components/plugins/tools/createInactivePlugins.ts) 将多个单元 core 组织成一次联合构建，内部仍逐项复用 `createInactivePlugin`。
+单元描述各节点自己的能力；[createInactivePlugins](../../src/components/plugins/tools/createInactivePlugins.ts) 将多个单元 pluginCore 组织成一次联合构建，内部仍逐项复用 `createInactivePlugin`。
 
 ```tsx
 const dragAndDrop = createInactivePlugins({
@@ -113,7 +109,7 @@ function Transfer() {
 
 ## 能力可以继续组合能力
 
-父 core 可以构建子能力，将子能力的声明交回同一条 `is` 解析链，并直接使用它的 Controller：
+父 pluginCore 可以构建子能力，将子能力的声明交回同一条 `is` 解析链，并直接使用它的 Controller：
 
 ```ts
 const child = hoverable({})

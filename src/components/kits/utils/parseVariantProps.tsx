@@ -1,9 +1,9 @@
 /**
- * 组件 Variant Props 解析器。
+ * 把互斥的组件分类接成选中来源和节点属性。
  *
- * 负责互斥分组的选中值和属性映射，不负责选中值对应的业务动作。
+ * 统一解释分组字段、候选描述词及其 DOM 映射。
  *
- * 让输入选择规则与后续响应式读取保持在同一条 Source 链上。
+ * 组件可复用选择规则，同时保留持续响应的分类来源。
  */
 import { untrack } from '@/foundation/reactivity'
 import { derive } from '@/hooks'
@@ -24,6 +24,7 @@ export type VariantProps<GroupName extends string, Candidate extends string> = {
   [Name in GroupName]?: Source<Candidate | undefined>
 }
 
+/** 一组互斥候选、其分组字段，以及可选的节点属性映射。 */
 export interface VariantPropsGroup<
   GroupName extends string = string,
   Candidate extends string = string,
@@ -32,15 +33,17 @@ export interface VariantPropsGroup<
   candidates: readonly Candidate[]
 
   /**
-   * 根据解析结果补充当前 Variant 的 Piv props，只在解析组件 props 时执行一次。
-   * 后续变化由传入的 Source 自身继续驱动，不会再次执行 effect。
+   * 让分组按选中值补充节点声明。
+   * 接收本次解析中该组稳定的选中 Source，返回一份 ShadowProps 或不返回。
+   * 每次解析对该组调用一次；它不是 Solid Effect，后续变化由同一 Source 传递。
    */
   effect?: (
     selectedVariant: Source<Candidate | undefined>,
   ) => ShadowProps<any> | void
 }
 
-export type VariantDetails<Groups extends readonly VariantPropsGroup[]> = {
+/** 按分组名保留本次解析的选中 Source，不受 DOM 映射改变。 */
+export type SelectedVariants<Groups extends readonly VariantPropsGroup[]> = {
   [Group in Groups[number] as Group['groupName']]: Source<
     Group['candidates'][number] | undefined
   >
@@ -50,34 +53,23 @@ export type VariantDetails<Groups extends readonly VariantPropsGroup[]> = {
 export type VariantPropsParseResult<
   Groups extends readonly VariantPropsGroup[],
 > = {
-  effect: ShadowProps<any>[]
-  details: VariantDetails<Groups>
+  /** 各组 effect 返回的声明在前，自动 data-* 在后，统一交给 Piv。 */
+  effectResult: ShadowProps<any>[]
+  selectedVariants: SelectedVariants<Groups>
 }
 
 /**
- * 为组件声明的互斥 Variant 分组创建解析器。
- *
- * 确定描述词优先用于阅读；不定字段一旦声明便接管整个分组，即使当前值是 undefined 也不会回落。
- * 每个分组最多产生一个 Variant；多个确定描述词同时声明时只警告，不中断组件运行。
- *
- * @param groups 分类分组、各组选项，以及可选的附加效果属性生成函数。
- * @param mapping 按分组转换 data-* 属性值；不改变 details 中的原始选中值。
- * @returns 解析函数，接收组件 Props 并返回 { effect, details }：
- * - effect 是可展开到 Piv shadowProps 的属性列表；先放各组 effect 返回的属性，
- *   再放自动生成的 data-* 属性，同名字段由后者覆盖，不额外嵌套 shadowProps。
- * - details 按分组名提供响应式选中值 Source，未选中时读取为 undefined。
- * 每次解析只执行一次各组 effect；后续变化由返回属性中的 Source 驱动。
+ * 按互斥分组创建解析器，交付选中来源和用于节点的 effectResult。
+ * 显式分组字段接管整组，包括 undefined；否则按候选顺序选第一个成立项，冲突仅警告。
+ * mapping 只转换自动 data-* 的值，各组 effect 仍接收原始选中 Source。
  *
  * @example
- * ```tsx
- * const parseVariantProps = createVariantPropsParser([
- *   { groupName: 'appearance', candidates: ['filled', 'outlined'] },
- * ])
- * const { effect: effectProps, details } = parseVariantProps({ outlined: true })
- * val(details.appearance) // 'outlined'
- * // effectProps 中的 htmlProps['data-appearance'] 是当前值为 'outlined' 的 Source。
- * const element = <Piv shadowProps={effectProps} />
- * ```
+ * const parseVariant = createVariantPropsParser([{
+ *   groupName: 'appearance', candidates: ['filled', 'outlined'],
+ *   effect: (selected) => ({ htmlProps: { 'data-selected': selected } }),
+ * }])
+ * const { effectResult, selectedVariants } = parseVariant({ outlined: true })
+ * const element = <Piv shadowProps={effectResult} />
  */
 export function createVariantPropsParser<
   Groups extends readonly VariantPropsGroup[],
@@ -85,19 +77,23 @@ export function createVariantPropsParser<
   groups: Groups,
   mapping?: Record<string, Record<string, string | undefined>>,
 ): (props: object) => VariantPropsParseResult<Groups> {
+  /**
+   * 为这次组件调用确定各组选中来源，收集 effect 产物和自动节点属性。
+   */
   return function parseVariantProps(
     props: object,
   ): VariantPropsParseResult<Groups> {
-    const detailsRecord: Record<string, Source<string | undefined>> = {}
+    const selectedVariants: Record<string, Source<string | undefined>> = {}
     const variantHTMLProps: Record<
       `data-${string}`,
       Source<string | undefined>
     > = {}
-    const effectProps: ShadowProps<any>[] = []
+    const effectResult: ShadowProps<any>[] = []
 
+    // 逐组保留原始选中来源，仅对自动 DOM 属性应用映射。
     for (const group of groups) {
       const selectedVariant = parseVariantGroup(props, group)
-      detailsRecord[group.groupName] = selectedVariant
+      selectedVariants[group.groupName] = selectedVariant
       const groupMapping =
         mapping && Object.hasOwn(mapping, group.groupName)
           ? mapping[group.groupName]
@@ -106,33 +102,46 @@ export function createVariantPropsParser<
         ? mapVariantProps(selectedVariant, groupMapping)
         : selectedVariant
 
-      // effect 只建立一次附加声明；返回 props 内的 Source 会由 Piv 持续消费。
-      const groupEffectProps = group.effect?.(selectedVariant)
-      if (groupEffectProps) effectProps.push(groupEffectProps)
+      // 用原始选中来源构建本组附加属性。
+      const groupEffectResult = group.effect?.(selectedVariant)
+      if (groupEffectResult) effectResult.push(groupEffectResult)
     }
 
-    effectProps.push({ htmlProps: variantHTMLProps })
+    // 自动属性最后加入，避免附加声明覆盖实际分类的 data-*。
+    effectResult.push({ htmlProps: variantHTMLProps })
     return {
-      effect: effectProps,
-      details: detailsRecord as VariantDetails<Groups>,
+      effectResult,
+      selectedVariants: selectedVariants as SelectedVariants<Groups>,
     }
   }
 }
 
 /**
- * 根据共同候选声明建立缺省分组来源；每份来源在实例控制作用域中连接原候选。
+ * 把候选输入接成可控分组：缺省时解释候选，并在输出中省略已被分组接管的候选字段。
  * 不执行附加效果，仍由核心解析器完成节点映射和效果应用。
  */
-export function createVariantPropSources(groups: readonly VariantPropsGroup[]) {
-  return toRecord(
-    groups,
-    (group) => group.groupName,
-    (group) => (input: object) => parseVariantGroup(input, group, true),
-  )
+export function createVariantInputRules(
+  groups: readonly VariantPropsGroup[],
+  inputProps: object,
+) {
+  return {
+    defaultSources: toRecord(
+      groups,
+      (group) => group.groupName,
+      (group) => (input: object) => parseVariantGroup(input, group, true),
+    ),
+    omit: (key: PropertyKey) =>
+      groups.some(
+        (group) =>
+          group.candidates.some((candidate) => candidate === key) &&
+          !(group.groupName in inputProps),
+      ),
+  }
 }
 
 /**
- * 读取一组声明的选中来源，显式分组接管候选，冲突沿用候选顺序并发出说明。
+ * 持续选择一组 Variant；显式分组接管候选，缺省分组模式只检查候选。
+ * 构建时报告当前冲突，之后的声明变化仍参与选择。
  */
 function parseVariantGroup(
   props: object,

@@ -72,11 +72,11 @@ export type TableProps<
 
 /** 组件自有输入的读取方式。 */
 const tableOwnPropDefinition = {
-  data: 'state-source-view',
-  keys: 'state-value-view',
-  renderParts: 'state-value-view',
-  cellTitle: 'state-value-view',
-  cellIntensity: 'state-value-view',
+  data: 'source',
+  keys: 'tracked-value',
+  renderParts: 'tracked-value',
+  cellTitle: 'tracked-value',
+  cellIntensity: 'tracked-value',
 } as const
 
 /** 完整字段协议，公共输入由 Kit 提供。 */

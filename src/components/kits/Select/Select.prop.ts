@@ -31,12 +31,12 @@ export type SelectProps = KitProps<{
 
 /** 自有字段按实际消费者选择来源视图或当前值视图。 */
 const selectOwnPropDefinition = {
-  name: 'state-value-view',
-  value: 'state-source-view',
-  options: 'state-source-view',
-  disabled: 'state-source-view',
-  required: 'state-value-view',
-  onChange: 'state-value-view',
+  name: 'tracked-value',
+  value: 'source',
+  options: 'source',
+  disabled: 'source',
+  required: 'tracked-value',
+  onChange: 'tracked-value',
 } as const
 
 /** 自有读取方式与完整公共协议共同组成字段声明。 */

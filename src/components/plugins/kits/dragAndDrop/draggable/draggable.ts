@@ -37,14 +37,12 @@ export interface DraggableController {
  * 配置拖动能力；首次取得节点后建立 Pointer 事务，构建作用域退出时取消并释放。
  */
 export function draggablePluginCore({
-  pluginOptions,
+  pluginOptions: options,
   addProps,
   id,
 }: PluginCoreContext<DraggableOptions>): DraggableController {
   // 准备启用开关与拖动状态，供交互判断和外部 Controller 共用。
-  const [enabled, enabledControl] = createToggle(
-    !(pluginOptions.disabled ?? false),
-  )
+  const [enabled, enabledControl] = createToggle(!(options.disabled ?? false))
 
   // 状态记录:正在拖动
   const dragging = createState(false)
@@ -58,9 +56,9 @@ export function draggablePluginCore({
       const session = createPointerDrag({
         target,
         id,
-        payload: pluginOptions.payload,
-        activationDistance: Math.max(0, pluginOptions.activationDistance ?? 0),
-        activationJump: pluginOptions.activationJump ?? true,
+        payload: options.payload,
+        activationDistance: Math.max(0, options.activationDistance ?? 0),
+        activationJump: options.activationJump ?? true,
         enabled: enabled.read,
         onDraggingChange: (value) => dragging.set(value),
       })

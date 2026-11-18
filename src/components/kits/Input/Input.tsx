@@ -24,7 +24,7 @@ import { derive } from '@/hooks'
 import { createInputValidity } from './validity'
 
 /**
- * 将输入有效性映射为节点的无障碍状态，不改写字段值。
+ * 把 invalid Source 接到 aria-invalid，不改写用户输入值。
  */
 const parseInputStatusProps = createStatusPropsParser({
   candidates: ['invalid'],
@@ -48,18 +48,21 @@ export const Input: KitComponent<{
     propDefinition: inputPropDefinition,
   },
   (props, { name, exposeController }) => {
+    // 取得表单关联标识，并把校验结果接为 invalid 来源。
     const id = createFormFieldId(props, useFormFieldId())
     const validity = createInputValidity(props)
     const isInvalid = derive(validity.isValid, (isValid) => !isValid)
-    const { effect: statusEffectProps, controller } = parseInputStatusProps({
-      invalid: isInvalid,
-    })
+    const { effectResult: statusEffectResultProps, controller } =
+      parseInputStatusProps({
+        invalid: isInvalid,
+      })
     exposeController(controller)
 
+    // 剩余声明与状态产物交给输入节点，原生编辑选项在这里确定。
     return (
       <Piv
         as="input"
-        shadowProps={[props, ...statusEffectProps]}
+        shadowProps={[props, ...statusEffectResultProps]}
         class={name}
         id={id}
         htmlProps={{

@@ -6,17 +6,17 @@
  * 上层 Kit 复用这份协议，不另行定义原生节点的控制方式。
  */
 import type { DodeDOMProps } from './Dode'
-import type { PropsDefinition } from '../tools/componentPropsDirector'
+import type { PropsDefinition } from '../tools/propDefinition'
 
 /** DOM 字段的运行时读取描述，与本层拥有的 Props 契约保持同一归属。 */
 export const dodeDOMPropsDefinition = {
-  as: 'state-untracked',
-  if: 'state-value-view',
-  id: 'state-source-view',
-  class: 'state-source-view',
-  style: 'state-source-view',
-  htmlProps: 'state-source-view',
-  on: 'state-value-view',
-  domRef: 'state-value-view',
-  children: 'state-source-view',
+  as: 'untracked-value',
+  if: 'tracked-value',
+  id: 'source',
+  class: 'source',
+  style: 'source',
+  htmlProps: 'source',
+  on: 'tracked-value',
+  domRef: 'tracked-value',
+  children: 'source',
 } satisfies PropsDefinition<DodeDOMProps>

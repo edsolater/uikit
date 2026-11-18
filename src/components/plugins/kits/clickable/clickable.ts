@@ -38,21 +38,18 @@ export interface ClickableController extends HoverableController {
  * 元素方法可等待；节点尚未接入时等待首次接入，后续节点更换暂不支持。
  * TODO：公开操作的返回值改为 Promise<boolean>。
  */
-export const clickable = createInactivePlugin<
-  ClickableOptions,
-  ClickableController
->({
+export const clickable = createInactivePlugin<ClickableOptions, ClickableController>({
   name: 'clickable',
-  pluginCore({ pluginOptions, addProps, domProxy }): ClickableController {
+  pluginCore({ pluginOptions: options, addProps, domProxy }): ClickableController {
     const hover = hoverable({
-      componentName: pluginOptions.componentName,
-      initialHovered: pluginOptions.initialHovered,
+      componentName: options.componentName,
+      initialHovered: options.initialHovered,
     })
     const [focused, focusControl] = createToggle(
-      pluginOptions.initialFocused ?? false,
+      options.initialFocused ?? false,
     )
     const [pressed, pressControl] = createToggle(
-      pluginOptions.initialPressed ?? false,
+      options.initialPressed ?? false,
     )
     const members: ClickableController = {
       ...hover.controller,
@@ -75,17 +72,17 @@ export const clickable = createInactivePlugin<
     addProps({ is: hover })
     addProps({
       htmlProps: {
-        'tabIndex': pluginOptions.tabIndex ?? 0,
+        'tabIndex': options.tabIndex ?? 0,
         'data-plugin': {
-          mergable: pluginOptions.componentName
-            ? `${pluginOptions.componentName}:clickable`
+          mergable: options.componentName
+            ? `${options.componentName}:clickable`
             : 'clickable',
         },
         'data-focused': focused,
         'data-pressed': pressed,
       },
       on: {
-        click: ({ event }) => pluginOptions.onClick?.(event),
+        click: ({ event }) => options.onClick?.(event),
         focusin: focusControl.turnOn,
         focusout: focusControl.turnOff,
         pointerdown: members.press,

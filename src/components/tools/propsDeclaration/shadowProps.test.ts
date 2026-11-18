@@ -4,25 +4,28 @@ import { createRoot, flush } from 'solid-js'
 import { createState, val } from '@/foundation'
 import { createPropsDeclaration, hasPropDeclaration } from './shadowProps'
 import { createInactivePlugin } from '../../plugins/tools/createInactivePlugin'
-import { createComponentPropsDirector } from '../componentPropsDirector'
+import { createPropsController } from '../propDefinition'
 import { pivPropAccumulation } from '../../Piv/plugin/mergePivProps'
 
 describe('逐层声明消费', () => {
   test('输入声明查询区分本层Controller写入，上层交付后仍是下层输入', () => {
     const { props, directed, dispose } = createRoot((dispose) => {
       const declaration = createPropsDeclaration<{ disabled?: boolean }>({})
-      const directed = createComponentPropsDirector(declaration.peek, {
-        disabled: 'state-source-view',
+      const directed = createPropsController(declaration.resolvedProps, {
+        disabled: 'source',
       })
-      const props = declaration.consume(directed.props)
+      declaration.connectSupplementalProps(directed.props)
+      const props = declaration.markUsedOnRead(directed.props)
       return { props, directed, dispose }
     })
-    directed.controller.disabled.set(true)
+    directed.states.disabled.set(true)
     flush()
     expect('disabled' in props).toBe(true)
     expect(hasPropDeclaration(props, 'disabled')).toBe(false)
     createRoot((dispose) => {
-      const child = createPropsDeclaration({ shadowProps: props }).consume()
+      const child = createPropsDeclaration({
+        shadowProps: props,
+      }).markUsedOnRead()
       expect(hasPropDeclaration(child, 'disabled')).toBe(true)
       expect(hasPropDeclaration({ disabled: undefined }, 'disabled')).toBe(true)
       dispose()
@@ -42,7 +45,7 @@ describe('逐层声明消费', () => {
       const props = createPropsDeclaration<Props>({
         shadowProps: { disabled: false },
         is: capability,
-      }).consume()
+      }).markUsedOnRead()
       expectTypeOf(props.disabled).toEqualTypeOf<boolean | undefined>()
       expect(props.disabled).toBe(true)
       dispose()
@@ -52,16 +55,18 @@ describe('逐层声明消费', () => {
       const parent = createPropsDeclaration({
         value: undefined,
         shadowProps: { value: '补充值' },
-      }).consume()
+      }).markUsedOnRead()
       expect(parent.value).toBeUndefined()
       expect(parent.value).toBeUndefined()
-      const child = createPropsDeclaration({ shadowProps: parent }).consume()
+      const child = createPropsDeclaration({
+        shadowProps: parent,
+      }).markUsedOnRead()
       expect('value' in child).toBe(false)
       expect(Reflect.get(child, 'value')).toBeUndefined()
       const explicit = createPropsDeclaration({
         value: parent.value,
         shadowProps: parent,
-      }).consume()
+      }).markUsedOnRead()
       expect('value' in explicit).toBe(true)
       expect(explicit.value).toBeUndefined()
       dispose()
@@ -71,8 +76,10 @@ describe('逐层声明消费', () => {
     createRoot((dispose) => {
       let reads = 0
       const source = () => ++reads
-      const parent = createPropsDeclaration({ value: source }).consume()
-      const child = createPropsDeclaration({ shadowProps: parent }).consume()
+      const parent = createPropsDeclaration({ value: source }).markUsedOnRead()
+      const child = createPropsDeclaration({
+        shadowProps: parent,
+      }).markUsedOnRead()
       expect(Reflect.get(child, 'value')).toBe(source)
       expect(reads).toBe(0)
       expect(parent.value).toBeUndefined()
@@ -94,8 +101,10 @@ describe('逐层声明消费', () => {
           unusedReads++
           return '未用'
         },
-      }).consume()
-      const child = createPropsDeclaration({ shadowProps: parent }).consume()
+      }).markUsedOnRead()
+      const child = createPropsDeclaration({
+        shadowProps: parent,
+      }).markUsedOnRead()
       return { declaration, child, dispose }
     })
     expect('value' in child).toBe(true)
@@ -114,8 +123,8 @@ describe('逐层声明消费', () => {
   test('相同原始数据在独立实例中各自认领，不修改原始对象', () =>
     createRoot((dispose) => {
       const input = { value: '共享' }
-      const first = createPropsDeclaration(input).consume()
-      const second = createPropsDeclaration(input).consume()
+      const first = createPropsDeclaration(input).markUsedOnRead()
+      const second = createPropsDeclaration(input).markUsedOnRead()
       expect(first.value).toBe('共享')
       expect(second.value).toBe('共享')
       expect(input.value).toBe('共享')
@@ -124,26 +133,28 @@ describe('逐层声明消费', () => {
 
   test('显式覆盖不夺走未参与读取的上游声明', () =>
     createRoot((dispose) => {
-      const parent = createPropsDeclaration({ disabled: true }).consume()
+      const parent = createPropsDeclaration({ disabled: true }).markUsedOnRead()
       const child = createPropsDeclaration({
         disabled: false,
         shadowProps: parent,
-      }).consume()
+      }).markUsedOnRead()
       expect(child.disabled).toBe(false)
       expect(parent.disabled).toBe(true)
       const grandchild = createPropsDeclaration({
         shadowProps: child,
-      }).consume()
+      }).markUsedOnRead()
       expect('disabled' in grandchild).toBe(false)
       dispose()
     }))
 
   test('三层内部探测不认领上游字段', () =>
     createRoot((dispose) => {
-      const first = createPropsDeclaration({ value: true }).consume()
-      const middle = createPropsDeclaration({ shadowProps: first }).consume()
+      const first = createPropsDeclaration({ value: true }).markUsedOnRead()
+      const middle = createPropsDeclaration({
+        shadowProps: first,
+      }).markUsedOnRead()
       const last = createPropsDeclaration({ shadowProps: middle })
-      expect(Reflect.get(last.peek, 'value')).toBe(true)
+      expect(Reflect.get(last.resolvedProps, 'value')).toBe(true)
       expect(first.value).toBe(true)
       expect(Reflect.get(middle, 'value')).toBeUndefined()
       dispose()
@@ -151,12 +162,16 @@ describe('逐层声明消费', () => {
 
   test('三层从高优先级上游认领，不误取尚未参与的低优先级上游', () =>
     createRoot((dispose) => {
-      const high = createPropsDeclaration({ value: '高优先级' }).consume()
-      const low = createPropsDeclaration({ value: '低优先级' }).consume()
+      const high = createPropsDeclaration({
+        value: '高优先级',
+      }).markUsedOnRead()
+      const low = createPropsDeclaration({ value: '低优先级' }).markUsedOnRead()
       const middle = createPropsDeclaration({
         shadowProps: [low, high],
-      }).consume()
-      const last = createPropsDeclaration({ shadowProps: middle }).consume()
+      }).markUsedOnRead()
+      const last = createPropsDeclaration({
+        shadowProps: middle,
+      }).markUsedOnRead()
       expect(Reflect.get(last, 'value')).toBe('高优先级')
       expect(Reflect.get(last, 'value')).toBe('高优先级')
       expect(high.value).toBeUndefined()
@@ -166,17 +181,23 @@ describe('逐层声明消费', () => {
 
   test('三层受控惰性 State 在取得时认领来源，延迟求值仍能使用自己的声明', () =>
     createRoot((dispose) => {
-      const first = createPropsDeclaration({ value: '来源' }).consume()
+      const first = createPropsDeclaration({ value: '来源' }).markUsedOnRead()
       const middleDeclaration = createPropsDeclaration<{
         value?: string
         shadowProps: typeof first
       }>({ shadowProps: first })
-      const director = createComponentPropsDirector(middleDeclaration.peek, {
-        value: 'state-source-view',
-        shadowProps: 'only-through-prop',
-      })
-      const middle = middleDeclaration.consume(director.props)
-      const last = createPropsDeclaration({ shadowProps: middle }).consume()
+      const controlled = createPropsController(
+        middleDeclaration.resolvedProps,
+        {
+          value: 'source',
+          shadowProps: 'only-through-prop',
+        },
+      )
+      middleDeclaration.connectSupplementalProps(controlled.props)
+      const middle = middleDeclaration.markUsedOnRead(controlled.props)
+      const last = createPropsDeclaration({
+        shadowProps: middle,
+      }).markUsedOnRead()
       const source = Reflect.get(last, 'value')
       expect(first.value).toBeUndefined()
       expect(Reflect.get(middle, 'value')).toBeUndefined()
@@ -197,13 +218,13 @@ describe('逐层声明消费', () => {
         {
           accumulate: pivPropAccumulation,
         },
-      ).consume()
+      ).markUsedOnRead()
       const child = createPropsDeclaration(
         { class: undefined, shadowProps: parent },
         {
           accumulate: pivPropAccumulation,
         },
-      ).consume()
+      ).markUsedOnRead()
       expect(child.class).toBeUndefined()
       expect(reads).toBe(0)
       expect(parent.class).toBe('上游')
@@ -230,12 +251,44 @@ describe('逐层声明消费', () => {
       })()
       const parent = createPropsDeclaration({
         is: [capability, other],
-      }).consume()
-      const child = createPropsDeclaration({ shadowProps: parent }).consume()
+      }).markUsedOnRead()
+      const child = createPropsDeclaration({
+        shadowProps: parent,
+      }).markUsedOnRead()
       expect(Reflect.get(child, 'class')).toBe('能力声明')
       expect(Reflect.get(child, 'id')).toBe('剩余')
       expect('is' in child).toBe(false)
       expect(builds).toBe(1)
       dispose()
     }))
+})
+
+test('消费包装不更换补充来源，显式连接才接入处理后的动态容器', () => {
+  createRoot((dispose) => {
+    for (const connect of [false, true]) {
+      const declaration = createPropsDeclaration({ shadowProps: { value: 1 } })
+      let containerReads = 0
+      let valueReads = 0
+      const processedProps = {
+        get shadowProps() {
+          containerReads++
+          return {
+            get value() {
+              valueReads++
+              return 2
+            },
+          }
+        },
+        get value() {
+          return (declaration.resolvedProps as { value?: number }).value
+        },
+      }
+      if (connect) declaration.connectSupplementalProps(processedProps)
+      const props = declaration.markUsedOnRead(processedProps)
+      expect(containerReads).toBe(connect ? 1 : 0)
+      expect(valueReads).toBe(0)
+      expect(props.value).toBe(connect ? 2 : 1)
+    }
+    dispose()
+  })
 })

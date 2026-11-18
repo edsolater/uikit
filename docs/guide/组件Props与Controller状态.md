@@ -8,7 +8,7 @@ Props 是组件的声明入口，负责初始界面与持续变化的来源。Co
 
 | 负责位置                  | 聚合内容                                                                                 |
 | ------------------------- | ---------------------------------------------------------------------------------------- |
-| `Component.prop.ts`       | 主体命名的 Props、PropDefinition 类型与值、Controller 声明，以及候选事实和紧邻的派生类型 |
+| `Component.prop.ts`       | 主体命名的 Props、PropsDefinition 类型与值、Controller 声明，以及候选事实和紧邻的派生类型 |
 | `Component.style.ts`      | 本组件的 StyleConfig 类型、箭头解释函数、Token 与样式规则                                |
 | `Component.tsx`           | 组件装配、内容渲染，以及实际业务 Controller 的创建与交付                                 |
 | `components/tools/kit.ts` | 公共输入、字段协议、组件创建与实例装配；KitOptions 紧邻 kit，不按类型与实现拆开          |
@@ -87,7 +87,7 @@ flowchart LR
 
 ## 创建时决定是否启用输入控制
 
-只有创建时提供有效组件 ref，才在上游 Props 和核心之间启用 Component Props Director。未提供 ref、ref 为 undefined、只有 domRef 时，核心直接消费输入，不建立控制层字段 State，也不登记受控实例。之后添加 ref 不会补建控制层。
+只有创建时提供有效组件 ref，才在上游 Props 和核心之间启用输入控制。未提供 ref、ref 为 undefined、只有 domRef 时，核心直接消费输入，不建立控制层字段 State，也不登记受控实例。之后添加 ref 不会补建控制层。
 
 ```mermaid
 flowchart LR
@@ -96,7 +96,7 @@ flowchart LR
     R[组件 ref 接收器]
   end
   subgraph Component[组件实例]
-    H[输入 Director]
+    H[输入控制]
     K[组件核心]
     C[最终 Controller]
     D[真实根与子内容]
@@ -121,20 +121,26 @@ kit 负责同一个 Controller 的组装、登记、ref 换接和透明 Componen
 
 可干预字段在 `Controller.props` 下按原名提供可写 State。原生字段由 Dode 声明，来源与节点能力由 Piv 组合，用途说明由 ComponentIdentityMarker 提供，组件只补充自有字段及确有不同语义的覆盖。
 
-| 读取模式            | 核心取得的内容                                       | Controller.props |
+| 字段定义            | 核心取得的内容                                       | Controller.props |
 | ------------------- | ---------------------------------------------------- | ---------------- |
-| `state-source-view` | 只读 StateView，交给实际消费者读取                  | 可写 State       |
-| `state-value-view`  | 当前值，本次读取参与响应依赖收集                     | 可写 State       |
-| `state-untracked`   | 当前值，不收集本次外层响应依赖；再次读取仍取得当时值 | 可写 State       |
+| `source` | 只读 StateView，交给实际消费者读取                   | 可写 State       |
+| `tracked-value`  | 当前值，本次读取参与响应依赖收集                     | 可写 State       |
+| `untracked-value`   | 当前值，不收集本次外层响应依赖；再次读取仍取得当时值 | 可写 State       |
 | `only-through-prop` | 上游原声明，不解包、不缓存                           | 不公开该字段     |
 
-字段状态、只读来源视图与默认来源工厂归 Director 创建时的实例作用域，按实际读取需要建立并缓存。只取得节点累加字段的核心来源视图时，不预建其直接贡献的可写 State；Controller 仍按需取得可写 State。缺省工厂在第一次实际需要缺省来源时构建一次，其交付的 Source 持续读取。读取一个字段不会预读其他字段。
+字段状态、只读来源视图与默认来源工厂归输入控制创建时的实例作用域，按实际读取需要建立并缓存。只取得节点累加字段的核心来源视图时，不预建其直接贡献的可写 State；Controller 仍按需取得可写 State。缺省工厂在第一次实际需要缺省来源时构建一次，其交付的 Source 持续读取。读取一个字段不会预读其他字段。
 
 输入视图保留当前声明的存在性。显式 undefined 仍是已声明输入，不调用默认工厂；指令写入不改上游对象，首次写入未提供的字段才扩展本层输出形状。普通字段的 State 同时供核心与 Controller 使用，不用 Effect 复制一份值。
 
+累加字段跨层转交时，保留字段的读取方式和显式 undefined 截断低优先级声明的结果。即使受控字段以稳定 Source 提供，下层也沿用原声明的截断结果。Source 当前读到 undefined 时，低优先级声明仍可参与合并。
+
 class、style、id、htmlProps、on、domRef、label 等节点累加字段按来源层处理：Controller 只干预本层直接声明，核心与 Marker 取得该直接贡献和补充来源经原规则合并的结果。未干预时保留原始 Source 形态；直接 undefined 和 Controller 显式清空会截断补充来源，原 Source 的当前 undefined 仍沿节点字段契约处理。默认来源和本层干预不是本层外部输入声明；它们被上层显式交付后，会成为下一层的输入。
 
-公共接线只需把已建立的 `declaration` 交给 Director。`director.props` 已包含完整合并结果，并遵守上表的读取模式；`director.controller` 提供可写状态，累加字段的状态只持直接贡献。Marker 等设施通过 `director.peek(key)` 借读可控字段的完成值，only-through 字段仍返回原声明。这不会建立当前字段的新认领或预热核心的稳定 Source；已有认领沿原读取者身份继续解释来源。Kit 无需提供原始 State 回调或在 Director 返回后再补一层读取视图。
+Kit 的输入入口是 `prepareComponentProps(rawProps, options)`：返回的 `props` 交给组件核心，`controllerProps` 在初始受控时提供可写状态，`markerProps` 的惰性字段供 Marker 读取结构信息。补充输入展开、样式归一、Variant 缺省分组与候选省略、按读记录字段使用权，统一由该入口负责。核心渲染不再拼装声明解析器和控制视图。
+
+`markerProps` 只提供 Marker 所需的 `label` 和 `descriptionDisplay`，通过 getter 借读当前显示内容；不会建立当前字段的新认领或预热核心的稳定 Source。已有认领沿原读取者身份继续解释来源。内部 `createPropsController` 返回核心读取视图 `props`、可写字段状态表 `states` 和字段读取 `readProp`；状态表类型为 `WritablePropStates`，only-through-prop 字段不在表中，且字段读取仍保留其原声明。数据阶段分别用 `rawProps`（调用者提供）、`normalizedProps`（合并且完成样式归一）、`directProps`（只保留本层直接贡献）表达。底层声明工具的 `resolvedProps` 表达合并结果，`markUsedOnRead()` 为读取结果记录本次传递中的字段使用权，不修改原对象；同层可以重读，下层不能自动再取得已使用字段，显式重给则是新声明。
+
+处理后的 Props 可能允许 Controller 改写 `shadowProps` 或 `is`。此时先 `connectSupplementalProps(finalProps)` 接入动态补充容器，再 `markUsedOnRead(finalProps)` 建立核心消费视图；后者不再隐式切换来源。连接会读取并跟踪补充容器，但不求值其中的业务字段。直接 Piv 没有二次接线，仍只调用 `markUsedOnRead()`。
 
 组件核心只执行一次，输入干预不重放创建动作。原生 `as` 与 Text 的 block/p/emphasis、Heading 的 level 在创建时选择根标签；Piv 的 if 在字段存在时启用显隐，首次显示创建一次，之后保留同一元素。Loop.children 与 Field.children 是构建工厂，只通过 Props 提供，不进入 Controller.props。Loop.each 保留列表来源，由精确实例 ref 控制；Table.keys 按当前值决定显式列或默认字段列。
 
@@ -146,7 +152,9 @@ class、style、id、htmlProps、on、domRef、label 等节点累加字段按来
 
 Button 的状态能力、Input 的有效性能力继续由各自解析器拥有。`.props` 干预输入，顶层能力表达组件自己的状态和操作，两者按既有来源关系连接，不按同名自动关联。Input 的 invalid 输入与 validIf 仍经过有效性规则产生最终状态。
 
-Button、Board、Card 的互斥分类由同一份 `as const` 候选事实定义。kit 依据 `variantGroups` 准备缺省分组来源与候选省略；组件只解析一次当前分类和节点效果，不再注入 Director 准备函数。显式分组包括 undefined 时接管候选，原冲突诊断保留。
+Variant 与 Status 解析器用 `effectResult` 返回生成的属性列表，调用方可解构为 `variantEffectResultProps` / `statusEffectResultProps`，再交给 Piv 的 `shadowProps` 输入。产物名称与输入协议分开。解析副作用为 `effect(parsed) => ShadowProps | void`：Variant 每组传入该组稳定的选中 Source，Status 传入完整状态 Sources；每次解析只执行一次对应 effect，返回一份附加声明或不返回。各组产物保持组顺序，自动生成的 data-* 声明最后加入。
+
+Button、Board、Card 的互斥分类由同一份 `as const` 候选事实定义。kit 依据 `variantGroups` 准备缺省分组来源与候选省略；组件只解析一次当前分类和节点效果，不再注入输入控制准备函数。显式分组包括 undefined 时接管候选，原冲突诊断保留。
 
 组件资源通过 Context.onCleanup 绑定当前实例，即使解构后在事件中调用也保留原 owner。Context.name 与 Marker 使用同一身份，不依赖祖先 KitContext 或 App 根。
 
@@ -216,4 +224,4 @@ Popover 等 Plugin 通过能力结果的 controller 使用，不接入组件 `.p
 
 函数输入按字段协议读取，不因读取而调用。通过 State 替换函数时，使用 `field.set(() => nextCallback)` 保留原可写计算协议。ref 固定为 only-through-prop，不公开 `controller.props.ref`。输入来源与指令的关系遵循原生 State，不增加拒写、权限或优先级系统。
 
-公开组件只保留这一套声明方式，不提供 PropsOf、ControllerOf、自动输入补全、旧 Inputs 或 directorOptions 适配。具体机制见 [kit](../../src/components/tools/kit.ts)、[输入 Director](../../src/components/tools/componentPropsDirector.ts) 与 [Piv SPEC](../../src/components/Piv/SPEC.md)。
+公开组件只保留这一套声明方式，不提供 PropsOf、ControllerOf、自动输入补全、旧 Inputs 或 directorOptions 适配。具体机制见 [kit](../../src/components/tools/kit.ts)、[输入控制](../../src/components/tools/propDefinition.ts) 与 [Piv SPEC](../../src/components/Piv/SPEC.md)。

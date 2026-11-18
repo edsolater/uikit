@@ -18,7 +18,7 @@ import * as refBinding from './domRef'
 import * as eventBinding from './on/event-declarations'
 import type { PivProps } from './Piv'
 import { bindStyleConfig } from '../tools/styleConfig'
-import { createComponentPropsDirector } from '../tools/componentPropsDirector'
+import { createPropsController } from '../tools/propDefinition'
 import { pivPropsDefinition } from './Piv.prop'
 import {
   createContext,
@@ -1221,15 +1221,15 @@ test('未声明能力不建立消费链，动态声明逐项接入并在退出�
 test('控制入口只在显式写入后声明字段，空Source和晚加入结构来源保持响应', () => {
   const host = document.createElement('main')
   let controller!: ReturnType<
-    typeof createComponentPropsDirector<PivProps, typeof pivPropsDefinition>
-  >['controller']
+    typeof createPropsController<PivProps, typeof pivPropsDefinition>
+  >['states']
   const html = vi.spyOn(htmlBinding, 'consumeHTMLProps')
   const dispose = render(() => {
-    const directed = createComponentPropsDirector<
-      PivProps,
-      typeof pivPropsDefinition
-    >({}, pivPropsDefinition)
-    controller = directed.controller
+    const directed = createPropsController<PivProps, typeof pivPropsDefinition>(
+      {},
+      pivPropsDefinition,
+    )
+    controller = directed.states
     // 结构查看的只读访问不等于声明。
     val(directed.props.label)
     return Piv(directed.props)

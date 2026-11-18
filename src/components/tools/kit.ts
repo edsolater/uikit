@@ -19,15 +19,9 @@ import type { RefReceiver } from '@/hooks/createRef'
 import type { PivProps } from '../Piv/Piv'
 import type { PivTag } from '../Piv/domMap'
 import type { Token } from '@/style-system'
-import {
-  createVariantPropSources,
-  type VariantPropsGroup,
-} from '../kits/utils/parseVariantProps'
+import type { VariantPropsGroup } from '../kits/utils/parseVariantProps'
 import { bindStyleConfig, type StyleConfig } from './styleConfig'
-import {
-  parseStyleConfigProps,
-  type StyleConfigInputProps,
-} from './parseStyleConfigProps'
+import type { StyleConfigInputProps } from './parseStyleConfigProps'
 import {
   componentIdentityMarkerDisplayPropsDefinition,
   type ComponentIdentityMarkerDisplayPropDefinition,
@@ -36,23 +30,18 @@ import { ElementDeclarationsContext } from '../Piv/elementDeclarations'
 import { ComponentIdentityMarker } from './ComponentIdentityMarker/ComponentIdentityMarker'
 import type { ComponentIdentityMarkerDisplayProps } from './ComponentIdentityMarker/ComponentIdentityMarker'
 import {
-  createComponentPropsDirector,
-  type DirectedProps,
-  type PropsController,
+  type ControlledProps,
+  type WritablePropStates,
   type PropsDefinition,
-  type PropsReadMode,
-  type PropsDirectorOptions,
-} from './componentPropsDirector'
+  type PropDefinition,
+} from './propDefinition'
 import {
   createControllerRegistry,
   type ControllerRegistry,
 } from './controllerRegistry'
 import { pivPropsDefinition, type PivPropDefinition } from '../Piv/Piv.prop'
-import {
-  createPropsDeclaration,
-  type PropsDeclarationInput,
-} from './propsDeclaration/shadowProps'
-import { pivPropAccumulation } from '../Piv/plugin/mergePivProps'
+import type { PropsDeclarationInput } from './propsDeclaration/shadowProps'
+import { prepareComponentProps } from './prepareComponentProps'
 
 // =============================================================================
 // 公共输入与字段协议
@@ -115,7 +104,7 @@ export type KitProps<Config extends KitPropsConfig = {}> = PivProps<
 /** Kit 自己拥有的读取规则；不包含 Piv 或结构查看显示字段。 */
 const kitCommonPropDefinition = {
   ref: 'only-through-prop',
-  $styleConfig: 'state-value-view',
+  $styleConfig: 'tracked-value',
 } as const
 
 /** 公共字段协议的基础形状，与下方运行时公共定义对应。 */
@@ -124,11 +113,11 @@ type KitBasePropDefinition = PivPropDefinition &
   typeof kitCommonPropDefinition
 
 /**
- * 将组件自有字段的读取模式并入公共协议，同名字段由自有模式覆盖。
- * 泛型只接收自有模式，空对象表示没有自有字段；ref 始终只能由上游提供。
+ * 将组件自有的字段定义并入公共定义，同名字段以组件定义为准。
+ * 泛型只接收组件自有定义，空对象表示没有自有字段。ref 始终只能由上游提供。
  */
 export type KitPropDefinition<
-  OwnDefinition extends Record<keyof OwnDefinition, PropsReadMode> & {
+  OwnDefinition extends Record<keyof OwnDefinition, PropDefinition> & {
     ref?: 'only-through-prop'
   },
 > = Omit<KitBasePropDefinition, keyof OwnDefinition> & OwnDefinition
@@ -167,7 +156,7 @@ export type KitController<
     : object,
   'props'
 > & {
-  props: PropsController<Config['props'], Config['propDefinition']>
+  props: WritablePropStates<Config['props'], Config['propDefinition']>
 }
 
 /** 核心渲染期间取得的实例上下文；ControllerMembers 只包含已声明的业务能力。 */
@@ -310,19 +299,19 @@ export type KitOptions<
 export function kit<
   Props extends ComponentIdentityMarkerDisplayProps & Pick<PivProps, 'label'>,
   Controller extends { props: object },
-  PropDefinition extends PropsDefinition<Props> & { ref: 'only-through-prop' },
+  Definition extends PropsDefinition<Props> & { ref: 'only-through-prop' },
   StyleTokens extends Record<string, Token> | undefined = undefined,
 >(
   options: KitOptions<{
     props: Omit<Props, 'ref'>
-    propDefinition: PropDefinition
+    propDefinition: Definition
     $styleTokens: StyleTokens
   }> &
     NoInfer<
       ValidKitOptions<{
         props: Props
         controller: Controller
-        propDefinition: PropDefinition
+        propDefinition: Definition
       }>
     >,
   render: (
@@ -334,11 +323,7 @@ export function kit<
   controller: Controller
   $styleTokens: StyleTokens
 }> {
-  // 同一定义的实例共用默认来源规则和注册入口；具体字段状态仍由实例各自持有。
-  const propDefinition = options.propDefinition
-  const variantSources = options.variantGroups
-    ? createVariantPropSources(options.variantGroups)
-    : undefined
+  // 同一定义的实例共用注册入口；输入状态由实例各自持有。
   const [controllers, registry] = createControllerRegistry<
     Controller,
     StyleTokens
@@ -351,11 +336,15 @@ export function kit<
    */
   const Component = (sourceInput: object) => {
     // 入口接受公共补充声明；归一后以定义处的 Props 契约进入核心。
-    const sourceProps = sourceInput as Props & KitControllerProps<Controller>
-    const declaration = createPropsDeclaration(sourceProps, {
-      accumulate: pivPropAccumulation,
+    const rawProps = sourceInput as Props & KitControllerProps<Controller>
+    const {
+      props: renderProps,
+      controllerProps,
+      markerProps,
+    } = prepareComponentProps<Props, Definition>(rawProps, {
+      ...options,
+      enableController: Boolean(untrack(() => rawProps.ref)),
     })
-    const inputProps = parseStyleConfigProps(declaration.peek)
     // 准备同根组合与本实例能力，资源仍绑定当前组件作用域。
     const inheritedDeclarations = useContext(ElementDeclarationsContext)
     const owner = getOwner()
@@ -373,41 +362,15 @@ export function kit<
         exposedMembers = controller
       },
     }
-    // sourceProps 保留上游来源，供 ref 换接；renderProps 只在受控模式切换为 Director 视图。
-    // 不跟踪初始 ref，避免之后增删接收器重建输入状态或改变受控模式。
-    const controlled = untrack(() => sourceProps.ref)
-    const propDirector = controlled
-      ? createComponentPropsDirector<Props, PropDefinition>(
-          inputProps,
-          propDefinition,
-          {
-            defaultSources: variantSources,
-            declaration,
-            // 当前显式分组优先；来源增删后，候选投射跟随当前声明变化。
-            omit: (key) =>
-              options.variantGroups?.some(
-                (group) =>
-                  group.candidates.some((candidate) => candidate === key) &&
-                  !(group.groupName in inputProps),
-              ) ?? false,
-          } as PropsDirectorOptions<Props, PropDefinition>,
-        )
-      : undefined
-    // 入口静态约束保证 Director 输出符合组件 Props；泛型函数体不保留该条件类型证明。
-    const internalProps = (propDirector?.props ?? inputProps) as Omit<
-      Props,
-      'ref'
-    >
-    const renderProps = declaration.consume(internalProps)
     // Marker 只建立组件身份和说明边界；children 延迟创建，使核心处于此身份的作用域内。
     return createComponent(ComponentIdentityMarker, {
       componentName: options.name,
       get label() {
         // Marker只借读最终值，不预热核心的惰性合并Source或改变其认领时序。
-        return propDirector ? propDirector.peek('label') : inputProps.label
+        return markerProps.label
       },
       get descriptionDisplay() {
-        return internalProps.descriptionDisplay
+        return markerProps.descriptionDisplay
       },
       componentDescription: options.componentDescription,
       get children() {
@@ -423,7 +386,6 @@ export function kit<
       const declarations = [...inheritedDeclarations]
       if (options.$styleConfig) {
         // 样式配置由本层解释并显式交给根声明，不再自动交给下层 Kit 重复解释。
-        declaration.claim('$styleConfig')
         declarations.push(
           bindStyleConfig(
             options.$styleConfig,
@@ -446,20 +408,21 @@ export function kit<
      * 只有受控实例进入集合；后续 ref 换接复用同一个对象，卸载时取消登记。
      */
     function renderCore() {
-      const content = render(renderProps, context)
-      if (propDirector) {
+      // 定义端静态约束保证读取结果符合组件 Props；泛型函数体不保留这份条件类型证明。
+      const content = render(renderProps as Omit<Props, 'ref'>, context)
+      if (controllerProps) {
         const controller = Object.defineProperty(
           exposedMembers ?? {},
           'props',
           {
-            value: propDirector.controller,
+            value: controllerProps,
             enumerable: true,
           },
         ) as Controller
         onCleanup(registry.register(controller))
         // 只跟踪接收器的替换，不重跑核心或重建 Controller。
         createRenderEffect(
-          () => sourceProps.ref as RefReceiver<Controller> | undefined,
+          () => rawProps.ref as RefReceiver<Controller> | undefined,
           (receive) => receive?.(controller),
         )
       }
@@ -503,8 +466,8 @@ type ValidKitOptions<
   (Exclude<keyof Config['propDefinition'], keyof Config['props']> extends never
     ? unknown
     : never) &
-    // 各读取模式产生的输入仍须满足核心的 Props 契约。
-    (DirectedProps<
+    // 按字段定义交付给组件的值仍须满足其 Props 契约。
+    (ControlledProps<
       Omit<Config['props'], 'ref'>,
       Config['propDefinition']
     > extends Omit<Config['props'], 'ref'>

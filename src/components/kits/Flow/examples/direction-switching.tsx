@@ -31,6 +31,12 @@ export function DirectionSwitchingExample() {
         <Text>快捷属性声明纵排。</Text>
         <Text>显式 $styleConfig 优先，最终仍按横排显示。</Text>
       </Flow>
+      <Flow $col $height="8rem" $overflowY="auto" label="固定高度的内容流">
+        <Text p>固定高度，较长内容在本区域滚动阅读。</Text>
+        {Array.from({ length: 8 }, (_, index) => (
+          <Text p>{`第 ${index + 1} 段内容`}</Text>
+        ))}
+      </Flow>
     </Flow>
   )
 }

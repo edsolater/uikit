@@ -106,22 +106,22 @@ export type ButtonProps = KitProps<{
 
 /** Source 交原消费者读取；普通值跟踪读取；原创建字段取消跟踪但不缓存。 */
 const buttonOwnPropDefinition = {
-  appearance: 'state-source-view',
-  filled: 'state-source-view',
-  outlined: 'state-source-view',
-  plain: 'state-source-view',
-  emphasis: 'state-source-view',
-  soft: 'state-source-view',
-  strong: 'state-source-view',
-  tone: 'state-source-view',
-  danger: 'state-source-view',
-  size: 'state-source-view',
-  small: 'state-source-view',
-  large: 'state-source-view',
-  xlarge: 'state-source-view',
-  loading: 'state-source-view',
-  disabled: 'state-source-view',
-  onClick: 'state-value-view',
+  appearance: 'source',
+  filled: 'source',
+  outlined: 'source',
+  plain: 'source',
+  emphasis: 'source',
+  soft: 'source',
+  strong: 'source',
+  tone: 'source',
+  danger: 'source',
+  size: 'source',
+  small: 'source',
+  large: 'source',
+  xlarge: 'source',
+  loading: 'source',
+  disabled: 'source',
+  onClick: 'tracked-value',
 } as const
 
 /** 自有事实只定义一次，完整模式由通用协议与自有模式组合。 */

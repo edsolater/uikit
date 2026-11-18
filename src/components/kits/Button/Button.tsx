@@ -35,7 +35,7 @@ const parseVariantProps = createVariantPropsParser(
 )
 
 /**
- * 将按钮状态映射为禁用和忙碌属性，并保留可操作的状态协议。
+ * 把状态 Source 接到 disabled 和 aria-busy，使节点随状态更新。
  */
 const parseStatusProps = createStatusPropsParser({
   candidates: buttonStatusCandidates,
@@ -65,15 +65,21 @@ export const Button: KitComponent<{
     $styleConfig: buttonStyleConfig,
   },
   (props, { name, exposeController }) => {
-    const { effect: variantEffectProps } = parseVariantProps(props)
-    const { effect: statusEffectProps, controller } = parseStatusProps(props)
+    // 解析分类与状态，向外提供状态操作。
+    const { effectResult: variantEffectResultProps } = parseVariantProps(props)
+    const { effectResult: statusEffectResultProps, controller } =
+      parseStatusProps(props)
     exposeController(controller)
 
-    // 业务字段由本层解析器认领；props 只自动交接剩余声明，效果与事件在这里显式提供。
+    // 剩余声明自动下传，解析产物显式补到同一个按钮节点。
     return (
       <Piv
         as="button"
-        shadowProps={[props, ...variantEffectProps, ...statusEffectProps]}
+        shadowProps={[
+          props,
+          ...variantEffectResultProps,
+          ...statusEffectResultProps,
+        ]}
         class={name}
         is={[clickable({ componentName: name })]}
         on={{ click: props.onClick }}

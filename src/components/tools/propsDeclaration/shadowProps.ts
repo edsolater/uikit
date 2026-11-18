@@ -59,11 +59,14 @@ export interface PropsDeclarationOptions {
 /** 本层供基础设施探测、核心消费和显式交接使用的同一份声明入口。 */
 export interface PropsDeclaration<Props extends object> {
   /** 控制设施使用本层直接声明，不以合并结果替代直接贡献。 */
-  readonly input: Props
-  readonly peek: Props
+  readonly directProps: Props
+  /** 已合并的输入，供设施解释；读取不会开始当前层的字段认领。 */
+  readonly resolvedProps: Props
   accumulates(key: PropertyKey): boolean
-  consume(): Props
-  consume<View extends object>(view: View): View
+  /** 核心读取前连接处理后的 shadowProps/is 容器；不读取其它字段，也不建立消费视图。 */
+  connectSupplementalProps(props: object): void
+  markUsedOnRead(): Props
+  markUsedOnRead<View extends object>(view: View): View
   claim(key: PropertyKey): boolean
   /** 输入设施复用当前来源图读取字段，可用本地直接声明替换首层贡献，不改变原输入归属。 */
   read<Key extends keyof Props>(key: Key, direct?: PropSource): Props[Key]
@@ -110,25 +113,26 @@ const isProtocolKey = (key: PropertyKey) =>
 
 /**
  * 建立本层的声明读取与消费入口。
- * peek 仅供 Kit 内部探测和建立 Source；业务核心使用 consume 返回的 Props。
+ * resolvedProps 供内部解释输入；markUsedOnRead 为组件返回按读取记录字段使用权的 Props。
  *
  * @example
  * const parent = createPropsDeclaration({ disabled: true })
- * const props = parent.consume()
+ * const props = parent.markUsedOnRead()
  * props.disabled // 本层认领，但不改原对象。
- * const child = createPropsDeclaration<{ disabled?: boolean }>({ shadowProps: props }).consume()
+ * const child = createPropsDeclaration<{ disabled?: boolean }>({ shadowProps: props }).markUsedOnRead()
  * child.disabled // undefined；显式传 disabled: props.disabled 可以重新交付。
+ * props.disabled // 同一读取者仍能重复读取。
  */
 export function createPropsDeclaration<Props extends object>(
-  input: Props,
+  directProps: Props,
   options?: PropsDeclarationOptions,
 ): PropsDeclaration<Props>
 export function createPropsDeclaration<Props extends object>(
-  input: Props & PropsDeclarationInput<Props>,
+  directProps: Props & PropsDeclarationInput<Props>,
   options?: PropsDeclarationOptions,
 ): PropsDeclaration<Props>
 export function createPropsDeclaration<Props extends object>(
-  input: Props,
+  directProps: Props,
   options: PropsDeclarationOptions = {},
 ): PropsDeclaration<Props> {
   const claims = new Map<PropertyKey, object>()
@@ -141,7 +145,7 @@ export function createPropsDeclaration<Props extends object>(
   let reader = owner
   let consuming = false
   let output: object | undefined
-  let peek: Props | undefined
+  let resolvedProps: Props | undefined
   const accumulation = options.accumulate
   /**
    * 判断字段是否使用拥有者提供的累加规则。
@@ -181,9 +185,9 @@ export function createPropsDeclaration<Props extends object>(
   /**
    * 来源和读取适配器由同一 memo 持有；节点身份未变时不重建适配器。
    */
-  const createSources = (containers: object = input) =>
+  const createSources = (containers: object = directProps) =>
     createMemo<DeclarationSource[]>((previous) => {
-      const declarations = collectSources(input, containers)
+      const declarations = collectSources(directProps, containers)
       if (
         previous &&
         previous.length === declarations.length &&
@@ -222,16 +226,16 @@ export function createPropsDeclaration<Props extends object>(
   /**
    * 探测实际来源的字段声明，不认领也不读取字段值。
    */
-  const hasRaw = (key: PropertyKey) =>
+  const hasDeclaredProp = (key: PropertyKey) =>
     key === 'children' || isProtocolKey(key)
-      ? key in input
+      ? key in directProps
       : sources().some((source) => source.has(key))
   /**
    * 按字段规则取得来源值；是否连带认领上游由当前读取状态决定。
    */
-  const readRaw = (key: PropertyKey, direct?: PropSource) => {
+  const readMergedProp = (key: PropertyKey, direct?: PropSource) => {
     if (key === 'children' || isProtocolKey(key))
-      return Reflect.get(input, key)
+      return Reflect.get(directProps, key)
     const views = sources()
     if (accumulates(key)) {
       const selection = accumulation!.collect(key, views, direct)
@@ -260,13 +264,13 @@ export function createPropsDeclaration<Props extends object>(
     /**
      * 当前输入来源决定外部归属，本层输出包装不改变这份声明事实。
      */
-    hasInput: (key) => withReader(owner, () => hasRaw(key)),
+    hasInput: (key) => withReader(owner, () => hasDeclaredProp(key)),
     /**
      * 正常交接只向未失去消费权的读取者报告字段存在。
      */
     has: (key, next) =>
       available(key, next) &&
-      withReader(next, () => (output ? key in output : hasRaw(key))),
+      withReader(next, () => (output ? key in output : hasDeclaredProp(key))),
     /**
      * 首个读取者认领字段；同一读取者重复访问不再遍历认领链。
      */
@@ -276,7 +280,7 @@ export function createPropsDeclaration<Props extends object>(
       // 认领只快照当前声明是否可用，不将占有关系变成字段值的响应依赖。
       if (!untrack(() => scope.has(key, next))) return false
       claims.set(key, next)
-      // Director 可能只交付惰性 State；先认领所选来源，不能等以后 val 时才决定消费权。
+      // 输入控制 可能只交付惰性 State；先认领所选来源，不能等以后 val 时才决定消费权。
       if (!accumulates(key)) {
         const upstream = withReader(next, () =>
           untrack(() => sources().find(({ has }) => has(key))?.upstream),
@@ -292,7 +296,7 @@ export function createPropsDeclaration<Props extends object>(
       available(key, next)
         ? withReader(
             next,
-            () => (output ? Reflect.get(output, key) : readRaw(key)),
+            () => (output ? Reflect.get(output, key) : readMergedProp(key)),
             consume,
           )
         : undefined,
@@ -319,15 +323,19 @@ export function createPropsDeclaration<Props extends object>(
     keys: () => (output ? Reflect.ownKeys(output) : keys()),
   }
   /**
+   * 接入处理后的补充声明容器，使 Controller 对 shadowProps/is 的修改参与原来源图。
+   * 只在核心创建前连接；memo 跟踪补充容器的变化，不读取或认领业务字段。
+   */
+  function connectSupplementalProps(props: object): void {
+    if (!Object.is(props, resolvedProps)) sources = createSources(props)
+  }
+  /**
    * 为核心包装按读认领的输出；不改变 shadowProps/is 的来源。
    */
-  function consume(): Props
-  function consume<View extends object>(view: View): View
-  function consume(view?: object): object {
+  function markUsedOnRead(): Props
+  function markUsedOnRead<View extends object>(view: View): View
+  function markUsedOnRead(view?: object): object {
     output = view
-    if (view && !Object.is(view, peek)) {
-      sources = createSources(view)
-    }
     const result = new Proxy(
       {},
       {
@@ -355,7 +363,7 @@ export function createPropsDeclaration<Props extends object>(
   function read(key: PropertyKey, direct?: PropSource): unknown {
     return withReader(
       fieldReader(key),
-      () => readRaw(key, direct),
+      () => readMergedProp(key, direct),
       claims.has(key),
     )
   }
@@ -384,28 +392,29 @@ export function createPropsDeclaration<Props extends object>(
     return source
   }
   return {
-    input,
+    directProps,
     accumulates,
+    connectSupplementalProps,
     createAccumulatedSource,
     /**
      * Kit 需要归一或控制输入时才建立非消费视图，直接 Piv 不分配这层 Proxy。
      */
-    get peek() {
-      return (peek ??= new Proxy({} as Props, {
-        get: (_, key) => readRaw(key),
-        has: (_, key) => hasRaw(key),
+    get resolvedProps() {
+      return (resolvedProps ??= new Proxy({} as Props, {
+        get: (_, key) => readMergedProp(key),
+        has: (_, key) => hasDeclaredProp(key),
         ownKeys: () => keys() as (string | symbol)[],
         getOwnPropertyDescriptor: (_, key) =>
-          hasRaw(key)
+          hasDeclaredProp(key)
             ? {
                 enumerable: true,
                 configurable: true,
-                get: () => readRaw(key),
+                get: () => readMergedProp(key),
               }
             : undefined,
       }))
     },
-    consume,
+    markUsedOnRead,
     read,
     claim: (key: PropertyKey) => scope.claim(key, owner),
   }
@@ -415,17 +424,17 @@ export function createPropsDeclaration<Props extends object>(
  * 保留原优先级顺序，已经处理的上层视图作为完整交接单元，不重复展开其 is。
  */
 function collectSources(
-  input: object,
-  containers: object = input,
+  directProps: object,
+  containers: object = directProps,
 ): object[] {
   const result: object[] = []
-  const queue: object[] = [input]
+  const queue: object[] = [directProps]
   while (queue.length) {
     const source = queue.pop()!
     result.push(source)
     if (scopes.has(source)) continue
     const props = (
-      source === input ? containers : source
+      source === directProps ? containers : source
     ) as PropsDeclarationInput
     if ('shadowProps' in props) {
       const shadow = props.shadowProps

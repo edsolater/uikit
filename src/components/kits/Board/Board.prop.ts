@@ -49,13 +49,13 @@ export type BoardProps<Tag extends PivSupportedElementTag = 'div'> = KitProps<{
 
 /** 组件自有输入的读取方式。 */
 const boardOwnPropDefinition = {
-  variant: 'state-source-view',
-  soft: 'state-source-view',
-  solid: 'state-source-view',
-  size: 'state-source-view',
-  small: 'state-source-view',
-  large: 'state-source-view',
-  xlarge: 'state-source-view',
+  variant: 'source',
+  soft: 'source',
+  solid: 'source',
+  size: 'source',
+  small: 'source',
+  large: 'source',
+  xlarge: 'source',
 } as const
 
 /** 完整字段协议，公共输入由 Kit 提供。 */

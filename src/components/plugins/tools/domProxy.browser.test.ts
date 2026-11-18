@@ -4,10 +4,7 @@ import { expect, test, vi } from 'vitest'
 import { createComponent } from '@/foundation/render'
 import { Piv } from '@/components/Piv/Piv'
 import { isPromiseResultProxy } from '@edsolater/fnkit'
-import {
-  createInactivePlugin,
-  type PluginCoreContext,
-} from './createInactivePlugin'
+import { createInactivePlugin, type PluginCoreContext } from './createInactivePlugin'
 import { createInactivePlugins } from './createInactivePlugins'
 
 test('同步读取时准备一次代理，节点接入后执行此前的命令', async () => {

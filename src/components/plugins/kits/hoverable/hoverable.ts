@@ -22,10 +22,7 @@ export interface HoverableController {
   resetHover(): void
 }
 
-export const hoverable = createInactivePlugin<
-  HoverableOptions,
-  HoverableController
->({
+export const hoverable = createInactivePlugin<HoverableOptions, HoverableController>({
   name: 'hoverable',
   pluginCore({ pluginOptions: options, addProps }): HoverableController {
     const [hovered, hoveredControl] = createToggle(

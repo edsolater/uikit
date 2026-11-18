@@ -12,7 +12,7 @@ Style System 的样式名称、语义主体与 CSS 实现位置见 [Style System
 
 - `src/components/Piv`：基础 DOM 原子。对外 Piv 管理元素身份、显示、声明来源及公共拖放能力；内部 Dode 定义和处理 id、class、style、HTML props、事件、domRef 与 children。两者共用一个真实元素，不承载具体 kit 的业务语义；职责与生命周期见 [SPEC.md](src/components/Piv/SPEC.md)。
 - `src/components/kits`：可供组合的界面构件，包括基础承载与完整用途组件。Popover 与 Tooltip 的浮层能力归 plugins，旧 `kits/Popover` 的 Surface／显隐生产设施已退出；物理残留清理状态见[本轮实施详情](agents/运行方案/261106_Popover与Tooltip能力重构_实施详情.md#旧设施退出与清理受阻)。组件在各自目录内维护主体、样式、测试与 Example；语义层级区分组织承载能力、独立信息体与常用信息聚合模式，具体契约见 [组件职责与样式归属](docs/guide/组件职责与样式归属.md#零级零点五级一级与二级组件)。Card 与 Board 共享承载实现，以不同名称表达独立信息体和底层承载角色；MessageBoard 使用 Board，公共库不提供 Form。
-- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。`plugins/tools` 负责 Plugin 定义入口；每次在组件内调用 inactivePlugin 只构建一次，返回 `{ plugin, controller }`，单元的 `plugin` 在创建前提交已准备声明，`controller` 直接使用；组合工具统一返回角色能力结果集合 `plugins` 与对应的 `controller` 集合，各端能力通过 `plugins.role` 交给节点。拖放组合能力、draggable、droppable 及其示例归 `plugins/kits/dragAndDrop`；成对浮层能力 `createPopoverPlugins` 归 `plugins/kits/Popover`，只处理显隐、关联、状态和功能定位。
+- `src/components/plugins`：可挂接到 `Piv` 的交互和结构能力。`plugins/tools` 负责 Plugin 定义入口；每次在组件内调用插件创建函数 只构建一次，返回 `{ plugin, controller }`，单元的 `plugin` 在创建前提交已准备声明，`controller` 直接使用；组合工具统一返回角色能力结果集合 `plugins` 与对应的 `controller` 集合，各端能力通过 `plugins.role` 交给节点。拖放组合能力、draggable、droppable 及其示例归 `plugins/kits/dragAndDrop`；成对浮层能力 `createPopoverPlugins` 归 `plugins/kits/Popover`，只处理显隐、关联、状态和功能定位。
 - `src/components/tools`：服务构件定义、控制与检查的工具，包括 `kit` 创建入口、Props 干预、Controller 登记与 `ComponentIdentityMarker`。`tools/propsDeclaration` 由 Kit 和 Piv 共用，组织 shadowProps、is 与逐层消费；各构件直接交接消费视图，字段身份与业务值由当前层显式路由。`tools/ComponentIdentityMarker` 为 Kit 构件及使用方组合提供透明边界、用途说明和手动结构查看，不改变原主体或自动挂载开关。
 - `src/foundation`：基础状态、Effect、Context 契约及 Solid 运行时接入。允许直接引用 Solid 的实现边界见 [Foundation SPEC](src/foundation/SPEC.md)。
 - `src/hooks`：使用 Foundation 的派生组合与浏览器协作能力。领域入口和内部阅读路线见 [hooks SPEC](src/hooks/SPEC.md)。
@@ -76,7 +76,7 @@ KitProps、KitComponent、KitController、KitOptions 与 ControllerRegistry 以�
 
 KitInputProps 统一普通与泛型组件的调用输入。没有补充来源时保留必填字段，显式 shadowProps/is 可提供业务必填字段，children/ref 保持原直接契约。节点累加字段的 Controller State 只持本层直接贡献，最终只读来源沿同一声明图与补充贡献合并；普通业务字段继续从完整解析输入建立可写状态。字段身份由 createFormFieldId 消费后显式交给实际控件，其余 Props 直接交接，不另建过滤转发视图。
 
-Piv 将字段匹配、原始参与者选择和完成值累加作为一份 `pivPropAccumulation` 策略交给声明工具。Director 接收已有 `declaration`，直接提供完整的 `props`、`controller` 与设施借读入口 `peek`，由自身统一处理直接贡献和字段读取模式。Kit 不再传入 State 构建回调、读取内部来源 accessor 或补包最终 Props Proxy；惰性累加来源由声明工具构建并由 Director 的字段记录缓存。
+Piv 将字段匹配、原始参与者选择和完成值累加作为一份 `pivPropAccumulation` 策略交给声明工具。Kit 通过 `prepareComponentProps(rawProps, options)` 一次取得核心 `props`、可选 `controllerProps` 和结构查看字段 `markerProps`。`prepareComponentProps.ts` 负责补充输入展开、样式归一、初始受控选择与按读记录字段使用权；Variant 缺省分组和候选省略由一份规则共同生成。实例准备先显式连接处理后的动态补充容器，再取得核心消费视图，按读包装不再负责切换来源。内部 `propDefinition.ts` 统一处理直接贡献与字段读取模式，惰性累加来源由声明工具构建并由字段记录缓存。
 
 每个组件的 `.prop.ts` 聚合 Props、字段协议类型和值、Controller 声明及候选事实，相关定义保持紧邻。`.style.ts` 聚合 StyleConfig 类型、箭头解释函数、Token 与规则；`.tsx` 负责装配、渲染和实际业务能力。`components/tools/kit.ts` 中 KitOptions 与 kit 属于同一组件定义与创建板块。PropsOf、ControllerOf、旧 Inputs、自动输入补全及 directorOptions 已退出，不保留旧签名适配。
 
@@ -84,7 +84,7 @@ Piv 将字段匹配、原始参与者选择和完成值累加作为一份 `pivPr
 
 ### 输入控制与实例生命周期
 
-创建时没有组件 ref，核心直接消费输入；只有初始 ref 才启用 Component Props Director 并进入 `.controllers`。Director 按完整字段协议交付 Source、跟踪当前值、不跟踪当前值或原样透传四种视图。可干预字段共用一份 State，工厂与 State 归实例作用域，不用 Effect 复制值。替换 ref 交付同一个 Controller，移除 ref 不改变受控模式，卸载才退出集合。完整契约见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。
+创建时没有组件 ref，核心直接消费输入；只有初始 ref 才启用输入控制 并进入 `.controllers`。输入控制按完整字段协议交付 Source、跟踪当前值、不跟踪当前值或原样透传四种视图。可干预字段共用一份 State，工厂与 State 归实例作用域，不用 Effect 复制值。替换 ref 交付同一个 Controller，移除 ref 不改变受控模式，卸载才退出集合。完整契约见[组件 Props 与 Controller 状态](docs/guide/组件Props与Controller状态.md)。
 
 业务核心提供自身能力后，kit 组合通用 `.props`、登记并交付 Controller；没有业务成员时无需公开空对象。Button 状态解析器直接连接输入来源，Input 有效性能力沿原规则产生最终 invalid 状态。Button、Board、Card 通过 variantGroups 复用候选声明，由 kit 统一连接缺省分组与候选省略。
 

@@ -30,7 +30,7 @@ export type FieldProps = Omit<
 
 /** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
 const fieldOwnPropDefinition = {
-  tooltip: 'state-value-view',
+  tooltip: 'tracked-value',
   children: 'only-through-prop',
 } as const
 

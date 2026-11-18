@@ -5,7 +5,7 @@
  *
  * 统一公开渲染、根作用域与 props 能力；内部计算和 owner 接入另归 reactivity。
  */
-import { createMemo, type Merge } from 'solid-js'
+import { createMemo, omit as nativeOmit, type Merge } from 'solid-js'
 import { isFunction } from '@edsolater/fnkit'
 export {
   For,
@@ -18,6 +18,14 @@ export {
   createRoot,
 } from 'solid-js'
 export { render, insert } from '@solidjs/web'
+
+/** 使用 Solid 的惰性过滤视图，支持 Props 对象及其 getter。 */
+export const omitProps = nativeOmit as typeof nativeOmit & {
+  <Props extends object, Key extends keyof Props>(
+    props: () => Props,
+    ...keys: Key[]
+  ): Omit<Props, Key>
+}
 
 /** 高优先级 undefined 继续回退默认值，保持现有 props 合并契约。 */
 export function mergeProps<T extends unknown[]>(...sources: T): Merge<T> {

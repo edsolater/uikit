@@ -33,6 +33,20 @@ afterEach(() => {
   style?.remove()
 })
 
+test('固定高度内容流保留区域尺寸并允许滚动阅读全部内容', () => {
+  style = document.head.appendChild(document.createElement('style'))
+  style.id = 'css-root'
+  cssRoot.mount()
+  host = document.body.appendChild(document.createElement('main'))
+  dispose = render(() => <DirectionSwitchingExample />, host)
+  const region = host.querySelector<HTMLElement>('[aria-label="固定高度的内容流"]')!
+  expect(region.getBoundingClientRect().height).toBe(128)
+  expect(getComputedStyle(region).overflowY).toBe('auto')
+  expect(region.scrollHeight).toBeGreaterThan(region.clientHeight)
+  region.scrollTop = region.scrollHeight
+  expect(region.scrollTop).toBeGreaterThan(0)
+})
+
 test('显式方向快捷保持来源优先级和实际输入顺序，横排不残留纵排配套规则', () => {
   style = document.head.appendChild(document.createElement('style'))
   style.id = 'css-root'

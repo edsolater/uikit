@@ -5,7 +5,7 @@
  *
  * 将校验契约与读取方式集中声明，计算实现只消费这些事实。
  */
-import type { PropsDefinition } from '../../tools/componentPropsDirector'
+import type { PropsDefinition } from '../../tools/propDefinition'
 import type { MayArraySource, Source, StateView } from '@/foundation'
 import type { StatusProps } from '../utils/parseStatusProps'
 
@@ -37,6 +37,6 @@ export type InputValidity = {
 
 /** 有效性判断持续消费 invalid 与 validIf 的来源。 */
 export const inputValidityPropDefinition = {
-  invalid: 'state-source-view',
-  validIf: 'state-source-view',
+  invalid: 'source',
+  validIf: 'source',
 } satisfies PropsDefinition<InputValidityProps>

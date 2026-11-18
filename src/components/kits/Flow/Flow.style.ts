@@ -15,6 +15,10 @@ export interface FlowStyleConfig {
   $gap?: string
   /** 容器自身宽度，省略时由父布局与内容决定。 */
   $width?: string
+  /** 容器自身高度；固定阅读区域时可配合纵向滚动。 */
+  $height?: string
+  /** 超出自身高度的内容如何呈现，auto 保留完整内容并按需滚动。 */
+  $overflowY?: 'visible' | 'auto' | 'scroll' | 'hidden' | 'clip'
   /** 默认横排换行并居中，必要时明确选择纵排。 */
   $direction?: 'row' | 'column'
   /** 启用横排快捷方式；同层具体方向优先。 */
@@ -35,6 +39,14 @@ export const flowStyleConfig = {
    * 设置当前实例自身宽度。
    */
   $width: (value) => flowWidth.set(value),
+  /**
+   * 设置当前实例自身高度。
+   */
+  $height: (value) => flowHeight.set(value),
+  /**
+   * 设置当前实例纵向溢出的呈现方式。
+   */
+  $overflowY: (value) => flowOverflowY.set(value),
   /**
    * 纵排统一安排方向、换行与交叉轴；横排沿用 Token 默认。
    */
@@ -63,6 +75,10 @@ const flex = token('initial', { name: 'flow-flex' })
 export const flowGap = token('1rem', { name: 'flow-gap' })
 /** 容器的默认自然宽度，实例配置清空后恢复此值。 */
 export const flowWidth = token('auto', { name: 'flow-width' })
+/** 容器默认随内容自然增高。 */
+export const flowHeight = token('auto', { name: 'flow-height' })
+/** 默认完整呈现超出容器的内容，实例可选择内部滚动。 */
+export const flowOverflowY = token('visible', { name: 'flow-overflow-y' })
 
 rules(`.${componentName}`, {
   'display': 'flex',
@@ -72,5 +88,7 @@ rules(`.${componentName}`, {
   'gap': flowGap,
   'min-width': '0',
   'width': flowWidth,
+  'height': flowHeight,
+  'overflow-y': flowOverflowY,
   flex,
 })

@@ -12,30 +12,30 @@ import {
   readPlugin,
 } from './createInactivePlugin'
 
-test('定义不运行 core；每次配置构建运行一次 core 并返回完整结果', () => {
+test('定义不运行 pluginCore；每次配置构建运行一次 pluginCore 并返回完整结果', () => {
   createRoot((dispose) => {
-    const core = vi.fn(
+    const pluginCore = vi.fn(
       ({ pluginOptions }: { pluginOptions: { value: number } }) => ({
         value: pluginOptions.value,
       }),
     )
-    const inactive = createInactivePlugin({ name: 'sample', pluginCore: core })
-    expect(core).not.toHaveBeenCalled()
+    const createPlugin = createInactivePlugin({ name: 'sample', pluginCore })
+    expect(pluginCore).not.toHaveBeenCalled()
 
-    const first = inactive({ value: 3 })
-    expect(core).toHaveBeenCalledOnce()
+    const first = createPlugin({ value: 3 })
+    expect(pluginCore).toHaveBeenCalledOnce()
     expect(first.controller.value).toBe(3)
     expect(isPlugin(first.plugin)).toBe(true)
     expect(first.plugin[pluginMarker]).toBe('sample')
 
     const host = document.createElement('div')
     const unmount = render(() => createComponent(Piv, { is: first }), host)
-    expect(core).toHaveBeenCalledOnce()
+    expect(pluginCore).toHaveBeenCalledOnce()
     expect(host.firstElementChild).not.toBeNull()
     unmount()
 
-    const second = inactive({ value: 4 })
-    expect(core).toHaveBeenCalledTimes(2)
+    const second = createPlugin({ value: 4 })
+    expect(pluginCore).toHaveBeenCalledTimes(2)
     expect(second.controller.value).toBe(4)
     expect(second.plugin).not.toBe(first.plugin)
     dispose()
@@ -48,7 +48,7 @@ test('addProps 提交的 domRef 在节点接入前不调用', () => {
     const callback = (el: HTMLElement) => {
       received.push(el)
     }
-    const inactive = createInactivePlugin({
+    const createPlugin = createInactivePlugin({
       name: 'dom',
       pluginCore({ addProps }) {
         addProps({ domRef: callback })
@@ -56,7 +56,7 @@ test('addProps 提交的 domRef 在节点接入前不调用', () => {
         return { ready: true }
       },
     })
-    const { plugin, controller } = inactive()
+    const { plugin, controller } = createPlugin()
     expect(controller.ready).toBe(true)
 
     expect(received).toEqual([])

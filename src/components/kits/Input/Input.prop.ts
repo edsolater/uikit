@@ -34,7 +34,7 @@ export type InputProps = KitProps<{
 /** 自有字段按实际消费者选择来源视图或当前值视图。 */
 const inputOwnPropDefinition = {
   ...inputValidityPropDefinition,
-  type: 'state-value-view',
+  type: 'tracked-value',
 } as const
 
 /** 自有读取方式与完整公共协议共同组成字段声明。 */

@@ -50,6 +50,7 @@ function toggleView() {
 
 test('无附加标题的页面保留正文，字段颜色输入、勾选帮助和折叠通知可用', async () => {
   const value = createState('#123456'),
+    fieldLabel = createState('颜色'),
     checked = createState(false),
     message = createState('第一条')
   let detail: HTMLDetailsElement | undefined,
@@ -59,7 +60,7 @@ test('无附加标题的页面保留正文，字段颜色输入、勾选帮助�
       <Page>
         <Heading level={1}>原有标题</Heading>
         <Text p>{message}</Text>
-        <Field label="颜色" tooltip="颜色说明">
+        <Field label={fieldLabel} tooltip="颜色说明">
           {(id) => (
             <Input
               id={id}
@@ -81,6 +82,7 @@ test('无附加标题的页面保留正文，字段颜色输入、勾选帮助�
         />
         <Details
           summary={<Text emphasis>摘要模板</Text>}
+          open={false}
           domRef={(element) => {
             detail = element as HTMLDetailsElement
           }}
@@ -98,6 +100,9 @@ test('无附加标题的页面保留正文，字段颜色输入、勾选帮助�
   const input = host.querySelector<HTMLInputElement>('input[type="color"]')!
   expect(input.type).toBe('color')
   expect(host.querySelector<HTMLLabelElement>('label')!.htmlFor).toBe(input.id)
+  expect(host.querySelector('label')!.textContent).toBe('颜色')
+  fieldLabel.set('更新颜色')
+  await expect.poll(() => host.querySelector('label')!.textContent).toBe('更新颜色')
   input.value = '#445566'
   input.dispatchEvent(new Event('input', { bubbles: true }))
   await expect.poll(() => input.value).toBe('#445566')

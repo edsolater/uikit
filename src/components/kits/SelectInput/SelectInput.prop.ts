@@ -45,10 +45,10 @@ export type SelectInputProps = KitProps<{
 
 /** 自有字段按实际消费者选择来源视图或当前值视图。 */
 const selectInputOwnPropDefinition = {
-  value: 'state-source-view',
-  options: 'state-source-view',
-  tags: 'state-source-view',
-  message: 'state-source-view',
+  value: 'source',
+  options: 'source',
+  tags: 'source',
+  message: 'source',
   onQuery: 'only-through-prop',
   onSelect: 'only-through-prop',
   onClose: 'only-through-prop',

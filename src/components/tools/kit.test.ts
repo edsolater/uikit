@@ -305,18 +305,18 @@ test('各组件保留统一children输入与控制字段，不按当前业务呈
 
 test('完整公共定义复用各拥有者事实，Flow空自有槽不改变读取模式', () => {
   expect(flowPropDefinition).toEqual(kitPropDefinition)
-  expect(kitPropDefinition.children).toBe('state-source-view')
-  expect(kitPropDefinition.as).toBe('state-untracked')
+  expect(kitPropDefinition.children).toBe('source')
+  expect(kitPropDefinition.as).toBe('untracked-value')
   expect(kitPropDefinition.ref).toBe('only-through-prop')
-  expect(kitPropDefinition.label).toBe('state-source-view')
+  expect(kitPropDefinition.label).toBe('source')
   expect(Object.hasOwn(kitPropDefinition, 'description')).toBe(false)
-  expect(kitPropDefinition.$styleConfig).toBe('state-value-view')
+  expect(kitPropDefinition.$styleConfig).toBe('tracked-value')
 })
 
 test('Button只补业务模式，候选声明和值域共享同一份事实', () => {
   expect(buttonPropDefinition.as).toBe(kitPropDefinition.as)
-  expect(buttonPropDefinition.onClick).toBe('state-value-view')
-  expect(buttonPropDefinition.appearance).toBe('state-source-view')
+  expect(buttonPropDefinition.onClick).toBe('tracked-value')
+  expect(buttonPropDefinition.appearance).toBe('source')
   expect(Button.controllers.style).toEqual(buttonTokens)
   expect(Object.hasOwn(Button.controllers.style, 'buttonStyleConfig')).toBe(
     false,
@@ -338,7 +338,7 @@ function verifyDefinitionContract() {
   expectTypeOf<
     Extract<keyof Controller['props'], 'children' | 'ref'>
   >().toEqualTypeOf<never>()
-  expectTypeOf<FlowPropDefinition['as']>().toEqualTypeOf<'state-untracked'>()
+  expectTypeOf<FlowPropDefinition['as']>().toEqualTypeOf<'untracked-value'>()
   expectTypeOf<FlowController['props']['as']>().toEqualTypeOf<
     State<'div' | undefined>
   >()
@@ -346,7 +346,7 @@ function verifyDefinitionContract() {
     keyof KitControllerProps<FlowController>
   >().toEqualTypeOf<'ref'>()
   // @ts-expect-error 系统 ref 不能覆盖为可写模式。
-  type WritableRef = KitPropDefinition<{ ref: 'state-value-view' }>
+  type WritableRef = KitPropDefinition<{ ref: 'tracked-value' }>
   // @ts-expect-error 必须提供完整公共字段事实。
   const incomplete: FlowPropDefinition = { ref: 'only-through-prop' }
   const button: ButtonProps = {
@@ -511,11 +511,7 @@ function verifyProvidedInputs() {
       },
     },
   })
-  const capability = createInactivePlugin<
-    {},
-    {},
-    TableProps<{ amount: number }>
-  >({
+  const capability = createInactivePlugin<{}, {}, TableProps<{ amount: number }>>({
     name: '记录来源',
     pluginCore({ addProps }) {
       addProps({ data: [{ amount: 5 }] })

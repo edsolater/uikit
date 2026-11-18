@@ -2,7 +2,7 @@
 
 ## 实例与整体控制
 
-只有创建时提供有效组件 `ref` 接收器，才启用通用 Component Props Director、创建字段 State 并登记到 Button.controllers；无 ref、ref 实际为 undefined、只有 domRef 时直接执行原 Button 核心。`ref` 接收 ButtonController，`domRef` 独立接收真实 button，不触发控制层。
+只有创建时提供有效组件 `ref` 接收器，才启用通用 输入控制、创建字段 State 并登记到 Button.controllers；无 ref、ref 实际为 undefined、只有 domRef 时直接执行原 Button 核心。`ref` 接收 ButtonController，`domRef` 独立接收真实 button，不触发控制层。
 
 Controller 的 `props` 是 Kit 提供的通用输入干预入口；顶层的 `loading`、`disabled`、`setStatus` 和 `hasStatus` 是 Button 公开的组件能力。二者是不同机制，Kit 不根据同名字段建立联系。状态解析器在创建 State 时连接输入来源，组件状态操作不回写 `props`，Button 不通过 Effect 复制状态。
 

@@ -45,12 +45,15 @@ test('消费视图可直接 derive 字段，不产生身份探测警告或认领
   const size = createState<ButtonSize | undefined>('small')
   let remaining!: { size?: Source<ButtonSize | undefined>; unused?: string }
   function Probe() {
-    const props = createPropsDeclaration({ size, unused: '保留字段' }).consume()
+    const props = createPropsDeclaration({
+      size,
+      unused: '保留字段',
+    }).markUsedOnRead()
     const selected = derive(props, (source) => source.size)
     remaining = createPropsDeclaration<{
       size?: Source<ButtonSize | undefined>
       unused?: string
-    }>({ shadowProps: props }).consume()
+    }>({ shadowProps: props }).markUsedOnRead()
     const content = derive(remaining, (source) => source.unused)
     return <Button size={selected}>{content}</Button>
   }
@@ -75,14 +78,14 @@ type DeriveFixtureProps = KitProps<{
 }> & {
   size?: Source<ButtonSize | undefined>
 }
-type DeriveFixtureDefinition = KitPropDefinition<{ size: 'state-source-view' }>
+type DeriveFixtureDefinition = KitPropDefinition<{ size: 'source' }>
 interface DeriveFixtureController extends KitController<{
   props: DeriveFixtureProps
   propDefinition: DeriveFixtureDefinition
 }> {}
 const deriveFixtureDefinition: DeriveFixtureDefinition = {
   ...kitPropDefinition,
-  size: 'state-source-view',
+  size: 'source',
 }
 
 for (const controlled of [false, true]) {

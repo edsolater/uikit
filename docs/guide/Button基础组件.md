@@ -69,7 +69,7 @@ import { buttonMapping } from '@edsolater/uikit'
 Object.assign(buttonMapping.appearance, { undefined: 'filled' })
 ```
 
-映射能力位于独立的 [variantPropsMapping.ts](../../src/components/kits/utils/variantPropsMapping.ts)，由 `createVariantPropsParser` 的第二参数接入整份组件表，按分组名读取子表，再以 `String(原始值)` 查询属性，其他 Kit 也可使用。映射只决定 DOM 输出，`details` 与 `effect` 保留原始选择；未命中映射时原样输出。`buttonMapping` 是普通对象字面量，使用 `as const` 保留字面量类型；它没有运行时冻结，也不主动触发响应式更新。
+映射能力位于独立的 [variantPropsMapping.ts](../../src/components/kits/utils/variantPropsMapping.ts)，由 `createVariantPropsParser` 的第二参数接入整份组件表，按分组名读取子表，再以 `String(原始值)` 查询属性，其他 Kit 也可使用。映射只决定 DOM 输出，`selectedVariants` 与 `createShadowProps` 接收的 Source 保留原始选择；未命中映射时原样输出。`buttonMapping` 是普通对象字面量，使用 `as const` 保留字面量类型；它没有运行时冻结，也不主动触发响应式更新。
 
 Variant 描述组件的分类选择；每个分组单选，不同分组可以组合，例如 `<Button danger strong filled>`。tone 表达动作性质，emphasis 表达存在感，appearance 表达外观，三者不互相推导。
 

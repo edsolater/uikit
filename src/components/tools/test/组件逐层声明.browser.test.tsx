@@ -345,7 +345,7 @@ test('本地先清空再取得Source不会认领被截断的上游', () => {
     },
     { lazy: true },
   )
-  const upstream = createPropsDeclaration({ class: value }).consume()
+  const upstream = createPropsDeclaration({ class: value }).markUsedOnRead()
   const host = document.body.appendChild(document.createElement('main'))
   let controller!: CaptureController
   dispose = render(
@@ -362,7 +362,9 @@ test('本地先清空再取得Source不会认领被截断的上游', () => {
   controller.props.class.set(undefined)
   flush()
   expect(val(controller.capture())).toBeUndefined()
-  const remaining = createPropsDeclaration({ shadowProps: upstream }).consume()
+  const remaining = createPropsDeclaration({
+    shadowProps: upstream,
+  }).markUsedOnRead()
   expect('class' in remaining).toBe(true)
   expect(reads).toBe(0)
 })
@@ -453,7 +455,7 @@ test('取得累加Source即占有上游声明，尚未求值时其他分支不�
     },
     { lazy: true },
   )
-  const upstream = createPropsDeclaration({ class: value }).consume()
+  const upstream = createPropsDeclaration({ class: value }).markUsedOnRead()
   let initialReads = -1
   let availableAgain = true
   const Fixture: KitComponent<{
@@ -466,7 +468,7 @@ test('取得累加Source即占有上游声明，尚未求值时其他分支不�
       initialReads = reads
       const remaining = createPropsDeclaration({
         shadowProps: upstream,
-      }).consume()
+      }).markUsedOnRead()
       availableAgain = untrack(() => 'class' in remaining)
       return <Piv class={source} />
     },
@@ -482,7 +484,9 @@ test('取得累加Source即占有上游声明，尚未求值时其他分支不�
 
 test('下层Marker借读上层名称后，业务取得Source仍认领最初来源', () => {
   const host = document.body.appendChild(document.createElement('main'))
-  const upstream = createPropsDeclaration({ label: '上游名称' }).consume()
+  const upstream = createPropsDeclaration({
+    label: '上游名称',
+  }).markUsedOnRead()
   let availableAgain = true
   const Child: KitComponent<{
     props: ArticleProps
@@ -493,7 +497,7 @@ test('下层Marker借读上层名称后，业务取得Source仍认领最初来�
       const label = props.label
       const remaining = createPropsDeclaration({
         shadowProps: upstream,
-      }).consume()
+      }).markUsedOnRead()
       availableAgain = untrack(() => 'label' in remaining)
       return <Piv label={label} />
     },

@@ -33,12 +33,12 @@ export type CheckboxProps = Omit<
 
 /** 自有字段按实际消费者选择来源视图或当前值视图。 */
 const checkboxOwnPropDefinition = {
-  name: 'state-value-view',
-  checked: 'state-source-view',
-  tooltip: 'state-value-view',
-  disabled: 'state-source-view',
-  required: 'state-value-view',
-  onChange: 'state-value-view',
+  name: 'tracked-value',
+  checked: 'source',
+  tooltip: 'tracked-value',
+  disabled: 'source',
+  required: 'tracked-value',
+  onChange: 'tracked-value',
 } as const
 
 /** 自有读取方式与完整公共协议共同组成字段声明。 */

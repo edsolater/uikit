@@ -28,10 +28,7 @@ import { Button } from '../kits/Button/Button'
 import type { ButtonController } from '../kits/Button/Button.prop'
 import { Grid } from '../kits/Grid/Grid'
 import type { GridController } from '../kits/Grid/Grid.prop'
-import {
-  createInactivePlugin,
-  type PluginResult,
-} from '../plugins/tools/createInactivePlugin'
+import { createInactivePlugin, type PluginResult } from '../plugins/tools/createInactivePlugin'
 
 type FixtureProps = KitProps<{
   $styleConfig: { $gap?: string }
@@ -39,10 +36,10 @@ type FixtureProps = KitProps<{
 }> & {
   value?: Source<string | undefined>
 }
-type FixtureDefinition = KitPropDefinition<{ value: 'state-source-view' }>
+type FixtureDefinition = KitPropDefinition<{ value: 'source' }>
 const fixtureDefinition: FixtureDefinition = {
   ...kitPropDefinition,
-  value: 'state-source-view',
+  value: 'source',
 }
 interface FixtureController extends KitController<{
   props: FixtureProps
@@ -141,9 +138,9 @@ test('美元样式与对象配置共用真实Flow效果，显式配置优先且�
     }
     expect(read(roots[0]!)).toEqual(read(roots[2]!))
     expect(read(roots[1]!)).toEqual(['column', 'nowrap', 'normal', '12px'])
-    expect(
-      getComputedStyle(roots[0]!.firstElementChild!).flexDirection,
-    ).toBe('row')
+    expect(getComputedStyle(roots[0]!.firstElementChild!).flexDirection).toBe(
+      'row',
+    )
     expect(
       roots[0]!.getAttributeNames().some((key) => key.startsWith('$')),
     ).toBe(false)

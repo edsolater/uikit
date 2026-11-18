@@ -5,6 +5,7 @@
  *
  * 调用方决定正文的信息意义及其布局。
  */
+import { val } from '@/foundation'
 import { Piv } from '../../Piv/Piv'
 import { kit, type KitComponent } from '../../tools/kit'
 import {
@@ -32,7 +33,7 @@ export const Details: KitComponent<{
         shadowProps={props}
         class={name}
         as="details"
-        htmlProps={{ open: props.open }}
+        htmlProps={{ open: val(props.open) ?? true }}
         on={{
           toggle: ({ element }) => {
             props.onToggle?.((element as HTMLDetailsElement).open)

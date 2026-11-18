@@ -1,10 +1,10 @@
 /**
- * inactivePlugin 的单元构造。
+ * Plugin 的定义与实例创建。
  *
- * 以名称和业务 core 创建可配置工厂；每次配置调用只运行一次 core，收集声明并
+ * 以名称和业务 pluginCore 创建可配置工厂；每次配置调用只运行一次 pluginCore，收集声明并
  * 返回完整 Controller 与保存声明的 Plugin。
  *
- * 定义可以放模块顶层；配置调用会立即执行 core 并创建状态，因此必须在组件内完成，
+ * 定义可以放模块顶层；配置调用会立即执行 pluginCore 并创建状态，因此必须在组件内完成，
  * 组件内的 JSX 内联调用合法。
  */
 import {
@@ -37,7 +37,7 @@ export type Plugin<Props extends object = object> = Partial<Props> &
     readonly [pluginMarker]: string
   }
 
-/** core 在配置时使用的上下文。 */
+/** pluginCore 在配置时使用的上下文。 */
 export type PluginCoreContext<
   Options extends object,
   Props extends object = ShadowProps<PivTag>,
@@ -79,7 +79,7 @@ export type PluginResult<
   readonly controller: Members
 }
 
-/** 节点能力配置工厂；配置调用就是一次构建。 */
+/** 接收配置并创建 Plugin 与 Controller 的函数；每次调用构建一个独立实例。 */
 export type InactivePlugin<
   Options extends object = object,
   Members extends object = object,
@@ -107,10 +107,21 @@ export function readPlugin(input: PluginInput): Plugin {
 }
 
 /**
- * 用稳定名称和业务 core 定义能力。
+ * 用稳定名称和业务 pluginCore 定义能力。
  *
- * 定义阶段不运行 core；每次调用 inactivePlugin 构建一次结果，运行一次 core，
+ * 定义阶段不运行 pluginCore；每次调用返回的创建函数构建一次结果，运行一次 pluginCore，
  * 返回完整 Controller 和保存本次声明的 Plugin。
+ *
+ * @example
+ * const highlight = createInactivePlugin({
+ *   name: 'highlight',
+ *   pluginCore({ pluginOptions, addProps }: PluginCoreContext<{ color: string }>) {
+ *     addProps({ style: { color: pluginOptions.color } })
+ *     return {}
+ *   },
+ * })
+ * // 在组件内创建实例；节点挂载不会再次执行 pluginCore。
+ * const { plugin, controller } = highlight({ color: 'red' })
  */
 export function createInactivePlugin<
   Options extends object,

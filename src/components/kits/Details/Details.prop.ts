@@ -23,6 +23,7 @@ export type DetailsProps = KitProps<{
   domTag: 'details'
 }> & {
   summary: PivProps['children']
+  /** 省略时初始展开，传入 false 时初始收起。 */
   open?: Source<boolean | undefined>
   children?: JSX.Element
   onToggle?: (open: boolean) => void
@@ -30,11 +31,11 @@ export type DetailsProps = KitProps<{
 
 /** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
 const detailsOwnPropDefinition = {
-  summary: 'state-value-view',
-  open: 'state-source-view',
-  children: 'state-value-view',
+  summary: 'tracked-value',
+  open: 'source',
+  children: 'tracked-value',
   domRef: 'only-through-prop',
-  onToggle: 'state-value-view',
+  onToggle: 'tracked-value',
 } as const
 
 /** 自有读取模式与公共协议共同组成完整字段契约。 */

@@ -53,11 +53,12 @@ export function renderBoard<Tag extends PivSupportedElementTag>(
   props: Omit<BoardProps<Tag>, 'ref'>,
   className: string,
 ) {
-  const { effect: variantEffectProps } = parseBoardVariantProps(props)
+  const { effectResult: variantEffectResultProps } =
+    parseBoardVariantProps(props)
   return (
     <Piv
       as={props.as}
-      shadowProps={[props, ...variantEffectProps]}
+      shadowProps={[props, ...variantEffectResultProps]}
       class={className}
     >
       {props.children}

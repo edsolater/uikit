@@ -81,5 +81,5 @@ export function mergePivProps<Tag extends PivTag>(
 ): PivProps<Tag> {
   return createPropsDeclaration(props, {
     accumulate: pivPropAccumulation,
-  }).consume()
+  }).markUsedOnRead()
 }

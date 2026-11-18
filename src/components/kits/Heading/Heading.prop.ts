@@ -35,7 +35,7 @@ const { as: _as, id: _id, ...headingCommonPropDefinition } = kitPropDefinition
 
 /** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
 const headingOwnPropDefinition = {
-  level: 'state-untracked',
+  level: 'untracked-value',
 } as const
 
 /** 自有读取模式与公共协议共同组成完整字段契约。 */

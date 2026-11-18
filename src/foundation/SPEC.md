@@ -12,7 +12,7 @@
 
 Foundation 不依赖 Hooks 或组件。`derive`、`mapSource`、快照与领域派生组合继续由 Hooks 提供。
 
-State 的内部 `state-source.ts` 只向拥有该状态的设施提供原生来源 accessor，不进入包根或公开 State 接口。Director 用它读取可控的直接贡献，区分原始 undefined 与 Source 的当前 undefined；Kit 不直接读取此出口。没有另存来源值或建立镜像状态。来源计算保留原 Source 实体，同时沿原值依赖撤销临时写入，完成值仍由结果层统一读取。
+State 的内部 `state-source.ts` 只向拥有该状态的设施提供原生来源 accessor，不进入包根或公开 State 接口。内部输入控制 `propDefinition.ts` 用它读取可控的直接贡献，区分原始 undefined 与 Source 的当前 undefined；Kit 不直接读取此出口。没有另存来源值或建立镜像状态。来源计算保留原 Source 实体，同时沿原值依赖撤销临时写入，完成值仍由结果层统一读取。
 
 `createRoot` 从渲染入口公开，沿用原生根作用域契约；脱离组件生命周期管理资源时，调用方负责调用其 dispose。`flush` 留在响应式动作入口，测试或宿主需要观察已提交结果时可显式调用，不以此替代业务动作的正常调度。`createComponent` 同样从渲染入口公开，保留组件求值与作用域行为；不建立另一套组件或状态协议。
 

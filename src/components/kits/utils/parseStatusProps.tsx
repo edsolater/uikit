@@ -1,9 +1,9 @@
 /**
- * 组件 Status Props 解析器。
+ * 把可同时成立的组件状态接成节点属性和状态控制器。
  *
- * 负责外部状态归属、内部状态操作和状态属性派生，不负责状态对应的业务动作。
+ * 保留外部状态的归属，提供响应式状态来源及附加属性。
  *
- * 让多个可同时成立的状态保持为统一的 Source。
+ * 组件可统一表达加载、禁用等状态，不必各自管理来源与节点映射。
  */
 import {
   createState,
@@ -12,6 +12,7 @@ import {
   type StateView,
   type State,
 } from '@/foundation'
+import { untrack } from '@/foundation/reactivity'
 import { derive } from '@/hooks'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 import { hasPropDeclaration } from '../../tools/propsDeclaration/shadowProps'
@@ -21,7 +22,8 @@ export type StatusProps<StatusName extends string> = {
   [Name in StatusName]?: Source<boolean | undefined>
 }
 
-export type StatusDetails<StatusName extends string> = {
+/** 本次解析中各候选的稳定 Source；持续反映当前状态，不是值快照。 */
+export type StatusSources<StatusName extends string> = {
   [Name in StatusName]: Source<boolean | undefined>
 }
 
@@ -30,7 +32,7 @@ export type StatusController<StatusName extends string> = Record<
   StatusName,
   StateView<boolean>
 > & {
-  /** 当前未声明该状态时，从组件内部改变它；外部当前已声明时调用保持无效且不报错。 */
+  /** 仅修改既非创建时由外部声明、也未被当前外部声明占用的状态。 */
   setStatus(status: StatusName, value: boolean | undefined): void
 
   /** 响应式判断一个状态当前是否成立。 */
@@ -39,35 +41,24 @@ export type StatusController<StatusName extends string> = Record<
 
 /** 状态解析结果；效果属性交给 Piv，状态来源与控制器供组件按需使用。 */
 export type StatusPropsParseResult<StatusName extends string> = {
-  readonly effect: ShadowProps<any>[]
-  readonly details: StatusDetails<StatusName>
+  /** effect 返回的附加声明与自动生成的 data-status，按该顺序交给 Piv。 */
+  readonly effectResult: ShadowProps<any>[]
+  readonly statusSources: StatusSources<StatusName>
   readonly controller: StatusController<StatusName>
 }
 
 /**
- * 创建组件专用的 Status Props 解析器。
- *
- * Status 天然允许多个候选同时成立。当前由外部声明的字段跟随外部 Source；
- * 只有当前未由外部声明的状态才能由返回的 controller 从组件内部改变。
- * 每个状态在创建 State 时连接属性来源，持续跟随 getter 和 Source，不使用 Effect 复制值。
- *
- * @param options 状态候选及可选的附加效果属性生成函数。
- * @returns 解析函数，接收状态 Props 并返回 { effect, details, controller }：
- * - effect 是可展开到 Piv shadowProps 的属性列表；先放 effect 返回的属性，
- *   再放自动生成的 data-status 属性，同名字段由后者覆盖，不额外嵌套 shadowProps。
- * - details 按候选原名提供响应式状态 Source；多个状态可以同时成立。
- * - controller 提供状态读取与内部状态操作，不能接管已由外部声明的状态。
- * 每次解析只执行一次 effect；后续变化由返回属性中的 Source 驱动。
+ * 按候选状态创建解析器，交付节点属性、持续响应的状态来源和内部控制入口。
+ * 创建时已声明的状态（包括 undefined），撤去后仍不允许 setStatus 接管；后来新增的声明仅在存在时阻止内部写入。
+ * 可选 effect 将状态映射为附加节点属性；自动 data-status 与其结果一起进入 effectResult。
  *
  * @example
- * ```tsx
- * const parseStatusProps = createStatusPropsParser({ candidates: ['loading'] })
- * const { effect: effectProps, details, controller: statusController } = parseStatusProps({})
- * statusController.setStatus('loading', true)
- * val(details.loading) // true
- * // effectProps 中的 data-status 属性来源随状态变化，当前值为 'loading'。
- * const element = <Piv shadowProps={effectProps} />
- * ```
+ * const parseStatus = createStatusPropsParser({
+ *   candidates: ['loading'],
+ *   effect: ({ loading }) => ({ htmlProps: { 'aria-busy': loading } }),
+ * })
+ * const { effectResult, controller } = parseStatus({})
+ * const element = <Piv shadowProps={effectResult} />
  */
 export function createStatusPropsParser<
   const Candidates extends readonly string[],
@@ -75,22 +66,32 @@ export function createStatusPropsParser<
   candidates: Candidates
 
   /**
-   * 根据完整 Status Source Record 补充 Piv props，只在解析组件 props 时执行一次。
-   * 后续变化由这些 Source 自身继续驱动，不会再次执行 effect。
+   * 让组件为解析出的状态补充节点声明。
+   * 接收本次解析的完整状态 Sources，返回一份 ShadowProps 或不返回。
+   * 每次解析调用一次；它不是 Solid Effect，后续状态变化由同一批 Source 传递。
    */
   effect?: (
-    status: StatusDetails<Candidates[number]>,
+    status: StatusSources<Candidates[number]>,
   ) => ShadowProps<any> | void
 }): (
   props: StatusProps<Candidates[number]>,
 ) => StatusPropsParseResult<Candidates[number]> {
   type StatusName = Candidates[number]
 
+  /**
+   * 为这次组件调用建立状态来源与控制器，并收集交给节点的属性。
+   */
   return function parseStatusProps(
     props: StatusProps<StatusName>,
   ): StatusPropsParseResult<StatusName> {
+    // 固定初始外部归属，避免撤去声明后内部意外接管。
     const candidates: readonly StatusName[] = options.candidates
-    // 计算来源同时保留属性读取和 Source 链，状态写入不会回写输入。
+    const initiallyExternal = new Set(
+      untrack(() =>
+        candidates.filter((name) => hasPropDeclaration(props, name)),
+      ),
+    )
+    // 建立持续读取的状态来源和只读视图；内部写入不回写上游。
     // 候选全集逐项构造同名记录，Object.fromEntries 不保留该键域证明。
     const statusStates = Object.fromEntries(
       candidates.map((statusName) => [
@@ -98,41 +99,50 @@ export function createStatusPropsParser<
         createState(() => props[statusName]),
       ]),
     ) as Record<StatusName, State<boolean | undefined>>
-    const statusDetails: StatusDetails<StatusName> = statusStates
+    const statusSources: StatusSources<StatusName> = statusStates
     const statusViews = Object.fromEntries(
       candidates.map((statusName) => [
         statusName,
         statusStates[statusName].map(Boolean),
       ]),
     ) as Record<StatusName, StateView<boolean>>
+    // 操作入口还要检查当前声明，尊重创建后新增的外部状态。
     const statusController: StatusController<StatusName> = {
       ...statusViews,
+      /**
+       * 仅在初始和当前都无外部声明时，修改本实例的状态。
+       */
       setStatus(status, value) {
-        if (hasPropDeclaration(props, status)) return
+        if (initiallyExternal.has(status) || hasPropDeclaration(props, status))
+          return
         statusStates[status].set(value)
       },
+      /**
+       * 提供该状态是否成立的响应式只读视图。
+       */
       hasStatus(status) {
         return statusViews[status]
       },
     }
 
-    const statusAttribute = derive(statusDetails, (states) => {
+    // 按候选顺序生成当前成立的 data-status。
+    const statusAttribute = derive(statusSources, (states) => {
       const activeStatuses = options.candidates.filter(
         (statusName) => val(states[statusName]) === true,
       )
       return activeStatuses.length > 0 ? activeStatuses.join(' ') : undefined
     })
 
-    const effectProps: ShadowProps<any>[] = []
+    const effectResult: ShadowProps<any>[] = []
 
-    // effect 只建立一次附加声明；返回 props 内的 Source 会由 Piv 持续消费。
-    const statusEffectProps = options.effect?.(statusDetails)
-    if (statusEffectProps) effectProps.push(statusEffectProps)
-    effectProps.push({ htmlProps: { 'data-status': statusAttribute } })
+    // 收集附加属性；自动状态属性后置，保证 data-status 由解析结果决定。
+    const statusEffectResult = options.effect?.(statusSources)
+    if (statusEffectResult) effectResult.push(statusEffectResult)
+    effectResult.push({ htmlProps: { 'data-status': statusAttribute } })
 
     return {
-      effect: effectProps,
-      details: statusDetails,
+      effectResult,
+      statusSources,
       controller: statusController,
     }
   }

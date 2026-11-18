@@ -40,13 +40,11 @@ export interface DroppableController {
  * 配置接收能力；内部目标在元素就绪后登记，构建作用域退出时释放。
  */
 export function droppablePluginCore({
-  pluginOptions,
+  pluginOptions: options,
   addProps,
   id,
 }: PluginCoreContext<DroppableOptions>): DroppableController {
-  const [enabled, enabledControl] = createToggle(
-    !(pluginOptions.disabled ?? false),
-  )
+  const [enabled, enabledControl] = createToggle(!(options.disabled ?? false))
   const hovering = createState(false)
   const acceptable = createState(false)
   /**
@@ -67,11 +65,11 @@ export function droppablePluginCore({
    * 目标启用时按业务规则判断是否接收当前材料。
    */
   const acceptsDrop = (context: DropContext) =>
-    enabled.read() && (pluginOptions.accepts?.(context) ?? true)
+    enabled.read() && (options.accepts?.(context) ?? true)
   /**
    * 向业务交付已通过接收判断的放下材料。
    */
-  const onDrop = (context: DropContext) => pluginOptions.onDrop?.(context)
+  const onDrop = (context: DropContext) => options.onDrop?.(context)
 
   // 声明外部拖放监听与状态。
   addProps({
@@ -101,7 +99,7 @@ export function droppablePluginCore({
       'data-drop-acceptable': acceptable,
     },
     on: createExternalDropListeners({
-      dropEffect: pluginOptions.dropEffect,
+      dropEffect: options.dropEffect,
       enabled: enabled.read,
       accepts: acceptsDrop,
       onDrop,

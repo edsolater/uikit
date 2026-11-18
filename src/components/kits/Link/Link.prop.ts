@@ -30,10 +30,10 @@ export type LinkProps = KitProps<{
 
 /** 自有输入的读取方式；公共字段沿用 Kit 协议。 */
 const linkOwnPropDefinition = {
-  href: 'state-source-view',
-  children: 'state-value-view',
-  current: 'state-source-view',
-  newTab: 'state-value-view',
+  href: 'source',
+  children: 'tracked-value',
+  current: 'source',
+  newTab: 'tracked-value',
 } as const
 
 /** 自有读取模式与公共协议共同组成完整字段契约。 */

@@ -32,13 +32,13 @@ export type TextAreaProps = KitProps<{
 
 /** 自有字段按实际消费者选择来源视图或当前值视图。 */
 const textAreaOwnPropDefinition = {
-  name: 'state-value-view',
-  value: 'state-source-view',
-  placeholder: 'state-source-view',
-  disabled: 'state-source-view',
-  required: 'state-value-view',
-  rows: 'state-value-view',
-  onInput: 'state-value-view',
+  name: 'tracked-value',
+  value: 'source',
+  placeholder: 'source',
+  disabled: 'source',
+  required: 'tracked-value',
+  rows: 'tracked-value',
+  onInput: 'tracked-value',
 } as const
 
 /** 自有读取方式与完整公共协议共同组成字段声明。 */

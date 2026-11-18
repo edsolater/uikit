@@ -22,10 +22,7 @@ import {
   type State,
 } from '@/foundation'
 import { createInactivePlugins } from '../../tools/createInactivePlugins'
-import type {
-  PluginCoreContext,
-  PluginResult,
-} from '../../tools/createInactivePlugin'
+import type { PluginCoreContext, PluginResult } from '../../tools/createInactivePlugin'
 import './popover.style'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -254,19 +251,19 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
  * 内容及按钮身份由使用方提供。
  */
 function popoverTriggerCore({
-  pluginOptions,
+  pluginOptions: options,
   addProps,
   domProxy,
   id,
 }: PluginCoreContext<PopoverTriggerOptions>): PopoverTriggerController {
   const group = getOrInsert(popoverGroups, id!, createPopoverGroup)
   group.triggerTarget = domProxy
-  group.nativeTrigger = pluginOptions.triggerAction !== false
+  group.nativeTrigger = options.triggerAction !== false
   addProps({ style: { 'anchor-name': group.anchor } })
   if (group.nativeTrigger)
     addProps({
       htmlProps: {
-        'popovertargetaction': pluginOptions.triggerAction ?? 'toggle',
+        'popovertargetaction': options.triggerAction ?? 'toggle',
         'aria-expanded': toStateString(group.isOpen),
         'aria-haspopup': 'dialog',
       },
@@ -279,7 +276,7 @@ function popoverTriggerCore({
  * 原生目标通过实际节点建立，不要求使用方传递共享 id。
  */
 function popoverBodyCore({
-  pluginOptions,
+  pluginOptions: options,
   addProps,
   domProxy,
   id,
@@ -288,7 +285,7 @@ function popoverBodyCore({
   group.bodyTarget = domProxy
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
-  const position = withDefault(pluginOptions.$anchorPosition, 'top')
+  const position = withDefault(options.$anchorPosition, 'top')
   // TODO：慢节点或作用域退出后关联可能晚执行，由 [Task](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md) 接管就绪与取消。
   if (group.nativeTrigger)
     Promise.all([group.triggerTarget!, domProxy]).then(([trigger, body]) => {
@@ -301,10 +298,10 @@ function popoverBodyCore({
       'position-area': position,
     },
     htmlProps: {
-      'popover': pluginOptions.popover ?? 'auto',
+      'popover': options.popover ?? 'auto',
       'data-plugin': { mergable: 'popover-body' },
       'data-placement': position,
-      'data-anchor-gap': pluginOptions.$anchorGap,
+      'data-anchor-gap': options.$anchorGap,
     },
     on: {
       beforetoggle: {
@@ -312,15 +309,15 @@ function popoverBodyCore({
         callback: ({ event, element }) => {
           const toggle = event as PopoverToggleEvent
           const open = toggle.newState === 'open'
-          pluginOptions.onBeforeToggle?.(open, toggle)
-          if (open) pluginOptions.onBeforeOpen?.(toggle)
-          else pluginOptions.onBeforeClose?.(toggle)
+          options.onBeforeToggle?.(open, toggle)
+          if (open) options.onBeforeOpen?.(toggle)
+          else options.onBeforeClose?.(toggle)
           if (open && !toggle.defaultPrevented) {
             restoreAutoFocus?.()
             restoreAutoFocus =
-              pluginOptions.autoFocus === false
+              options.autoFocus === false
                 ? undefined
-                : preparePopoverAutoFocus(element, pluginOptions.autoFocus)
+                : preparePopoverAutoFocus(element, options.autoFocus)
           }
         },
       },
@@ -328,9 +325,9 @@ function popoverBodyCore({
         const open = element.matches(':popover-open')
         group.isOpen.set(open)
         const toggle = event as PopoverToggleEvent
-        pluginOptions.onToggle?.(open, toggle)
-        if (open) pluginOptions.onOpen?.(toggle)
-        else pluginOptions.onClose?.(toggle)
+        options.onToggle?.(open, toggle)
+        if (open) options.onOpen?.(toggle)
+        else options.onClose?.(toggle)
       },
     },
   })
@@ -338,7 +335,7 @@ function popoverBodyCore({
   // 首个完成的来源值只决定一次初始状态，不响应后续变化。
   let initialized = false
   createEffect(
-    () => val(pluginOptions.defaultOpen),
+    () => val(options.defaultOpen),
     (open) => {
       if (initialized) return
       initialized = true
@@ -432,21 +429,20 @@ function findFirstFocusableElement(body: HTMLElement): HTMLElement | undefined {
  * <><Button is={popoverTrigger}>打开</Button><Card is={popoverBody}>说明</Card></>
  * await popoverController.hidePopover().result // 与 bodyController.hidePopover 是同一个 Task
  */
-export const createPopoverPlugins: (
-  pluginOptions?: PopoverOptions,
-) => PopoverResult = createInactivePlugins(
-  { trigger: popoverTriggerCore, body: popoverBodyCore },
-  {
-    /**
-     * 为本组提供共享打开状态和常用显隐方法的直接引用。
-     */
-    controller({ trigger, body }) {
-      return {
-        isOpen: trigger.isOpen,
-        showPopover: trigger.showPopover,
-        hidePopover: body.hidePopover,
-        togglePopover: trigger.togglePopover,
-      }
+export const createPopoverPlugins: (options?: PopoverOptions) => PopoverResult =
+  createInactivePlugins(
+    { trigger: popoverTriggerCore, body: popoverBodyCore },
+    {
+      /**
+       * 为本组提供共享打开状态和常用显隐方法的直接引用。
+       */
+      controller({ trigger, body }) {
+        return {
+          isOpen: trigger.isOpen,
+          showPopover: trigger.showPopover,
+          hidePopover: body.hidePopover,
+          togglePopover: trigger.togglePopover,
+        }
+      },
     },
-  },
-)
+  )

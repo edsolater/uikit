@@ -70,11 +70,7 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
  */
 export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
   name: 'tooltip',
-  pluginCore({
-    pluginOptions: options,
-    addProps,
-    domProxy,
-  }): TooltipController {
+  pluginCore({ pluginOptions: options, addProps, domProxy }): TooltipController {
     const tooltipId = `uikit-tooltip-${tooltipIdGenerator.genID()}`
     const { plugins, controller } = createPopoverPlugins({
       trigger: { triggerAction: false },

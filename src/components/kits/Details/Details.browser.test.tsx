@@ -12,11 +12,22 @@ import { Details } from './Details'
 
 test('摘要保留原生键盘展开行为', async () => {
   const host = document.body.appendChild(document.createElement('div'))
-  const dispose = render(() => <Details summary="详情">实际内容</Details>, host)
+  const dispose = render(
+    () => (
+      <>
+        <Details summary="默认展开">内容可见</Details>
+        <Details summary="详情" open={false}>实际内容</Details>
+      </>
+    ),
+    host,
+  )
   try {
-    host.querySelector('summary')!.focus()
+    const [defaultDetails, closedDetails] = host.querySelectorAll('details')
+    expect(defaultDetails!.open).toBe(true)
+    expect(closedDetails!.open).toBe(false)
+    closedDetails!.querySelector('summary')!.focus()
     await userEvent.keyboard('{Enter}')
-    await expect.poll(() => host.querySelector('details')!.open).toBe(true)
+    await expect.poll(() => closedDetails!.open).toBe(true)
   } finally {
     dispose()
     host.remove()

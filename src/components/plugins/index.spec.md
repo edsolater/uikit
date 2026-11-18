@@ -1,6 +1,6 @@
 # Plugins
 
-Plugin 为 Piv 节点声明交互或结构能力。`tools` 提供定义入口：`createInactivePlugin` 定义单个节点算法，`createInactivePlugins` 按名称组合多个算法。定义可以放模块顶层；每次在组件内调用 `inactivePlugin(pluginOptions)` 会运行一次 core，返回 `{ plugin, controller }`，其中 `plugin` 交给 `is`；组合调用返回 `{ plugins, controller }`，`plugins` 是角色结果集合，`plugins.role` 交给节点，`controller.role` 引用对应角色的完整 Controller，集合本身不交给 `is`。拖放相关能力及示例归 `kits/dragAndDrop`。
+Plugin 为 Piv 节点声明交互或结构能力。`tools` 提供定义入口：`createInactivePlugin` 定义单个节点算法，`createInactivePlugins` 按名称组合多个算法。定义可以放模块顶层；每次在组件内调用返回的创建函数（例如 `clickable(options)`） 会运行一次 pluginCore，返回 `{ plugin, controller }`，其中 `plugin` 交给 `is`；组合调用返回 `{ plugins, controller }`，`plugins` 是角色结果集合，`plugins.role` 交给节点，`controller.role` 引用对应角色的完整 Controller，集合本身不交给 `is`。拖放相关能力及示例归 `kits/dragAndDrop`。
 
 ```tsx
 function Example() {
