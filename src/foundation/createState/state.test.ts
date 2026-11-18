@@ -2,7 +2,9 @@
 import { createRoot, flush, resolve, until } from 'solid-js'
 import { expect, expectTypeOf, test } from 'vitest'
 import { createEffect } from '../createEffect'
-import { createState, type State } from './state'
+import { createState, isState, type State } from './state'
+import { isStateView, stateView } from './state-view'
+import { readStateSource } from './state-source'
 import type { Source } from './source'
 
 test('直接接收上游State，读取值且独立写入，后续上游变化继续传入', () => {
@@ -12,7 +14,11 @@ test('直接接收上游State，读取值且独立写入，后续上游变化继
   })
   try {
     expectTypeOf(scope.inside).toEqualTypeOf<State<boolean>>()
-    expect(scope.inside.read()).toBe(false)
+    expect(isState(scope.inside)).toBe(true)
+    expect(isStateView(scope.inside)).toBe(true)
+    expect(stateView(scope.inside)).toBe(scope.inside)
+    expect(readStateSource(scope.inside)).toBe(scope.outside)
+    expect(scope.inside()).toBe(false)
     scope.inside.set(true)
     flush()
     expect(scope.inside.read()).toBe(true)
@@ -70,12 +76,13 @@ test('计算来源可直接返回State，选择变化后跟随新来源并停止
     const chooseFirst = createState(true)
     const first = createState(1)
     const second = createState(2)
-    const selected = createState(() => (chooseFirst.read() ? first : second))
+    const selected = createState(() => (chooseFirst() ? first : second))
     return { chooseFirst, first, second, selected, dispose }
   })
   try {
     expectTypeOf(scope.selected).toEqualTypeOf<State<number>>()
-    expect(scope.selected.read()).toBe(1)
+    expectTypeOf(scope.selected()).toEqualTypeOf<number>()
+    expect(scope.selected()).toBe(1)
     scope.first.set(3)
     flush()
     expect(scope.selected.read()).toBe(3)
@@ -87,7 +94,7 @@ test('计算来源可直接返回State，选择变化后跟随新来源并停止
     expect(scope.selected.read()).toBe(2)
     scope.second.set(4)
     flush()
-    expect(scope.selected.read()).toBe(4)
+    expect(scope.selected()).toBe(4)
   } finally {
     scope.dispose()
   }

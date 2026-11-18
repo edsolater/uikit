@@ -4,7 +4,7 @@
  *
  * 页面内匹配使用组合构建的内部身份；独立调用时内部身份为 undefined。
  */
-import { createState, val, type State } from '@/foundation'
+import { createState, type State } from '@/foundation'
 import { createToggle } from '@/hooks'
 import {
   createInactivePlugin,
@@ -59,7 +59,7 @@ export function draggablePluginCore({
         payload: options.payload,
         activationDistance: Math.max(0, options.activationDistance ?? 0),
         activationJump: options.activationJump ?? true,
-        enabled: () => val(enabled),
+        enabled,
         onDraggingChange: value => dragging.set(value),
       })
       pointerDrag = session

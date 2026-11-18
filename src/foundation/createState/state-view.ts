@@ -3,7 +3,7 @@
  *
  * 本文件定义可读取、可映射的状态视图，以及 StateView 对外暴露的统一转换能力。
  */
-import { hasProperty, isFunction, isObject, isTrue } from '@edsolater/fnkit'
+import { hasProperty, isFunction, isTrue } from '@edsolater/fnkit'
 import { createMemo, runWithOwner, untrack } from 'solid-js'
 import { isPromiseLike, toStateViewFromPromiseLike } from './promise-like'
 import type { Source } from './source'
@@ -47,7 +47,7 @@ export type StateViewOptions<V, U> = {
  * 判断未知值是否为 StateView。
  */
 export function isStateView(value: unknown): value is StateView {
-  return isObject(value) && hasProperty(value, stateViewBrand, isTrue)
+  return hasProperty(value, stateViewBrand, isTrue)
 }
 
 /**
@@ -60,6 +60,10 @@ export function isStateView(value: unknown): value is StateView {
  * 第二个参数统一表示转换 options；直接传入函数是 `{ map: fn }` 的简写。
  */
 export function stateView<V>(sourceOrValue: StateView<V>): StateView<V>
+export function stateView<V, U>(
+  sourceOrValue: StateView<V>,
+  optionsOrMap: StateViewOptions<V, U> | ((value: V) => U),
+): StateView<Val<U>>
 export function stateView<R, U>(
   sourceOrValue: PromiseLike<R>,
   options: StateViewOptions<Awaited<R>, U>,

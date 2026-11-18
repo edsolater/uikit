@@ -22,6 +22,8 @@ import { snapshot } from '@/hooks/snapshots'
 
 以下示例使用 `const count = createState(1)`。
 
+可写的 `State<T>` 本身就是 `() => T`。参数需要 accessor 时可以直接传 `count`，接收方调用它时读取最新值。若要在 Solid 原生 signal 中保存 State 实例，用 `createSignal(() => count)` 初始化，用 `setSource(() => nextState)` 替换实例。
+
 | API                           | 用法                                 | 当前行为                                                                                          |
 | ----------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | `createState(value)`          | `createState(1)`                     | 创建 `State<number>`                                                                              |

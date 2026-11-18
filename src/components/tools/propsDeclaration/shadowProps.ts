@@ -4,7 +4,7 @@
  * 原始数据共享；只有自动交接携带消费状态。先读取者取得声明，同层重复读取仍可用。
  * 下层遵守本接口，不通过展开原始对象恢复已经消费的字段。
  */
-import type { MayArray } from '@edsolater/fnkit'
+import { isObjectLike, type MayArray } from '@edsolater/fnkit'
 import { createState, type StateView } from '@/foundation'
 import { createMemo, untrack } from '@/foundation/reactivity'
 import { collectPluginDeclarations } from './plugins'
@@ -306,10 +306,9 @@ export function createPropsDeclaration<Props extends object>(
     readContribution(key, next, consume) {
       ;(readStopsLower ??= new Map()).delete(key)
       const value = scope.read(key, next, consume)
-      const sourceStop =
-        typeof value === 'object' && value !== null
-          ? sourceStopsLower?.get(value)
-          : undefined
+      const sourceStop = isObjectLike(value)
+        ? sourceStopsLower?.get(value)
+        : undefined
       return {
         value,
         stopsLower: sourceStop

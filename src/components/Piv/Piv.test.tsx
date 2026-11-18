@@ -558,7 +558,7 @@ describe('Piv Source 属性', () => {
     const pluginId = createState('plugin')
     const previous = createState('direct')
     const next = createState('direct')
-    const [readSource, setSource] = createSignal(previous)
+    const [readSource, setSource] = createSignal(() => previous)
     const { merged, dispose } = createRoot(dispose => ({
       merged: mergePivProps({
         get id() {
@@ -570,7 +570,7 @@ describe('Piv Source 属性', () => {
       dispose,
     }))
     expect(val(merged.id)).toEqual(['shadow', 'plugin', 'direct'])
-    setSource(next)
+    setSource(() => next)
     flush()
     previous.set('旧来源退出')
     shadow.set('shadow-next')
@@ -589,11 +589,11 @@ describe('Piv Source 属性', () => {
     const host = document.createElement('div')
     const previous = createState<string | string[] | undefined>('same')
     const next = createState<string | string[] | undefined>('same')
-    const [readSource, setSource] = createSignal(previous)
+    const [readSource, setSource] = createSignal(() => previous)
     const dispose = render(() => <Piv id={readSource()} />, host)
     const element = host.firstElementChild as HTMLElement
     expect(element.id).toBe('same')
-    setSource(next)
+    setSource(() => next)
     flush()
     previous.set('旧来源退出')
     flush()

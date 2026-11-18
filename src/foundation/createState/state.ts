@@ -4,7 +4,7 @@
  * 本文件定义可写 State，并负责创建与识别 State。
  * State 建立在 StateView 之上，但不负责 Source 的统一转换。
  */
-import { hasProperty, isTrue } from '@edsolater/fnkit'
+import { callableObjectSymbol, hasProperty, isTrue } from '@edsolater/fnkit'
 import { createMemo } from 'solid-js'
 import { stateViewBrand, type StateView } from './state-view'
 import { isPromiseLike } from './promise-like'
@@ -20,10 +20,16 @@ import {
 export const stateBrand = Symbol('State')
 
 export interface State<T = any> extends StateView<T> {
-  /** 确定物种是个state，isState 使用 */
+  /** 读取当前值，并在响应式作用域中跟踪更新。 */
+  (): T
+
+  /** 传递给接受计算函数的入口时，保留 State 的来源身份。 */
+  [callableObjectSymbol]: true
+
+  /** 标记可写状态，供 isState 识别。 */
   [stateBrand]: true
 
-  /* 虽然返回自身，但实际上只是改变这个state的值，这个state因为它是对象还是这个state */
+  /** 写入新来源或根据当前值更新，返回同一个 State。 */
   set(newValue: StateUpdate<T>): State<T>
 }
 
@@ -63,9 +69,10 @@ export function createState(
     options,
   )
 
-  const thisState: State & StateSourceAccess = {
+  const thisState: State & StateSourceAccess = Object.assign(solidjsAccessor, {
     read: solidjsAccessor,
     [stateSourceAccessor]: sourceAccessor,
+    [callableObjectSymbol]: true,
     [stateViewBrand]: true,
     [stateBrand]: true,
     set(newValue) {
@@ -75,7 +82,7 @@ export function createState(
     map(toNew) {
       return mapStateView(thisState, toNew)
     },
-  }
+  } satisfies Pick<State, keyof State> & StateSourceAccess)
   return thisState
 }
 

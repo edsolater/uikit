@@ -4,6 +4,21 @@ import { expect, test } from 'vitest'
 import { createState, type State, val } from '@/foundation'
 import { createRef } from './createRef'
 
+test('引用保留控制器上的 State 字段身份', () => {
+  const scope = createRoot(dispose => {
+    const count = createState(2)
+    const [reference, receive] = createRef<{ count: State<number> }>()
+    receive({ count })
+    return { count, reference, dispose }
+  })
+  try {
+    flush()
+    expect(scope.reference.count).toBe(scope.count)
+  } finally {
+    scope.dispose()
+  }
+})
+
 test('引用可接收State对象并操作原对象，释放接收器后清除能力', () => {
   const scope = createRoot(dispose => {
     const source = createState(2)
