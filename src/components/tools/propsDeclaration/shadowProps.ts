@@ -23,6 +23,20 @@ export interface PropsDeclarationInput<Props extends object = object> {
 export interface PropSource {
   has(key: PropertyKey): boolean
   read(key: PropertyKey): unknown
+  /** 已处理的上层同时交付输出与原声明是否终止低优先级来源，不能从完成值反推。 */
+  readContribution?(key: PropertyKey): PropContribution
+}
+
+/** 一份来源的现有输出，以及独立于完成值的声明截断事实。 */
+export interface PropContribution {
+  value: unknown
+  stopsLower: boolean
+}
+
+/** 本次字段选择保留终止位置；values 内仍是未求值的原 Source 或上层输出。 */
+export interface PropSelection {
+  values: readonly unknown[]
+  stopsLower: boolean
 }
 
 /** 字段拥有者提供完整累加规则；选择原始参与者与读取完成值分开，保留 Source 惰性。 */
@@ -32,7 +46,7 @@ export interface PropAccumulation {
     key: PropertyKey,
     sources: readonly PropSource[],
     direct?: PropSource,
-  ): readonly unknown[]
+  ): PropSelection
   merge(sources: readonly unknown[]): unknown
 }
 
@@ -66,6 +80,11 @@ interface DeclarationScope {
   has(key: PropertyKey, reader: object): boolean
   claim(key: PropertyKey, reader: object): boolean
   read(key: PropertyKey, reader: object, consume: boolean): unknown
+  readContribution(
+    key: PropertyKey,
+    reader: object,
+    consume: boolean,
+  ): PropContribution
   keys(): PropertyKey[]
 }
 
@@ -113,6 +132,10 @@ export function createPropsDeclaration<Props extends object>(
   options: PropsDeclarationOptions = {},
 ): PropsDeclaration<Props> {
   const claims = new Map<PropertyKey, object>()
+  // 普通读取记录本字段这一次合并的终止事实；不保存第二份字段值。
+  let readStopsLower: Map<PropertyKey, boolean> | undefined
+  // 稳定 Source 沿用已有参与者 memo，延迟读取时也能取得最新截断事实。
+  let sourceStopsLower: WeakMap<object, () => boolean> | undefined
   // 账本同时充当本层身份，避免再为身份分配一个对象。
   const owner: object = claims
   let reader = owner
@@ -182,6 +205,11 @@ export function createPropsDeclaration<Props extends object>(
                 if (consuming) upstream.claim(key, next)
                 return upstream.read(key, next, consuming)
               },
+              readContribution: (key) => {
+                const next = fieldReader(key)
+                if (consuming) upstream.claim(key, next)
+                return upstream.readContribution(key, next, consuming)
+              },
             }
           : {
               source,
@@ -202,10 +230,15 @@ export function createPropsDeclaration<Props extends object>(
    * 按字段规则取得来源值；是否连带认领上游由当前读取状态决定。
    */
   const readRaw = (key: PropertyKey, direct?: PropSource) => {
-    if (key === 'children' || isProtocolKey(key)) return Reflect.get(input, key)
+    if (key === 'children' || isProtocolKey(key))
+      return Reflect.get(input, key)
     const views = sources()
-    if (accumulates(key))
-      return accumulation!.merge(accumulation!.collect(key, views, direct))
+    if (accumulates(key)) {
+      const selection = accumulation!.collect(key, views, direct)
+      const value = accumulation!.merge(selection.values)
+      readStopsLower?.set(key, selection.stopsLower)
+      return value
+    }
     if (direct?.has(key)) return direct.read(key)
     return views.find((source) => source.has(key))?.read(key)
   }
@@ -264,19 +297,35 @@ export function createPropsDeclaration<Props extends object>(
           )
         : undefined,
     /**
+     * 保留最终视图的读取模式和转换，只把原声明的截断事实一起交给下层。
+     */
+    readContribution(key, next, consume) {
+      ;(readStopsLower ??= new Map()).delete(key)
+      const value = scope.read(key, next, consume)
+      const sourceStop =
+        typeof value === 'object' && value !== null
+          ? sourceStopsLower?.get(value)
+          : undefined
+      return {
+        value,
+        stopsLower: sourceStop
+          ? sourceStop()
+          : (readStopsLower.get(key) ?? value === undefined),
+      }
+    },
+    /**
      * 交接归一后的声明形状，包含内部建立的配置字段。
      */
     keys: () => (output ? Reflect.ownKeys(output) : keys()),
   }
   /**
-   * 内部包装完成后给核心接入字段认领；内部包装本身不参与业务消费。
+   * 为核心包装按读认领的输出；不改变 shadowProps/is 的来源。
    */
   function consume(): Props
   function consume<View extends object>(view: View): View
   function consume(view?: object): object {
     output = view
     if (view && !Object.is(view, peek)) {
-      // 包装只在核心创建前接入一次；容器从最终输入视图读取，Director 写入沿同一来源链生效。
       sources = createSources(view)
     }
     const result = new Proxy(
@@ -324,9 +373,15 @@ export function createPropsDeclaration<Props extends object>(
         claims.has(key),
       ),
     )
-    return createState(() => accumulation!.merge(participating()), {
-      lazy: true,
-    })
+    const source = createState(
+      () => accumulation!.merge(participating().values),
+      {
+        lazy: true,
+      },
+    )
+    sourceStopsLower ??= new WeakMap()
+    sourceStopsLower.set(source, () => participating().stopsLower)
+    return source
   }
   return {
     input,
@@ -342,7 +397,11 @@ export function createPropsDeclaration<Props extends object>(
         ownKeys: () => keys() as (string | symbol)[],
         getOwnPropertyDescriptor: (_, key) =>
           hasRaw(key)
-            ? { enumerable: true, configurable: true, get: () => readRaw(key) }
+            ? {
+                enumerable: true,
+                configurable: true,
+                get: () => readRaw(key),
+              }
             : undefined,
       }))
     },
@@ -355,7 +414,10 @@ export function createPropsDeclaration<Props extends object>(
 /**
  * 保留原优先级顺序，已经处理的上层视图作为完整交接单元，不重复展开其 is。
  */
-function collectSources(input: object, containers: object = input): object[] {
+function collectSources(
+  input: object,
+  containers: object = input,
+): object[] {
   const result: object[] = []
   const queue: object[] = [input]
   while (queue.length) {

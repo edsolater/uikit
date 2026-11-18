@@ -11,6 +11,7 @@ import {
   createPropsDeclaration,
   type PropSource,
   type PropAccumulation,
+  type PropSelection,
 } from '../../tools/propsDeclaration/shadowProps'
 
 /** Piv 可接受的补充声明，children 仍由直接输入提供。 */
@@ -35,18 +36,22 @@ function readPivPropSources(
   key: PropertyKey,
   sources: readonly PropSource[],
   direct?: PropSource,
-): unknown[] {
+): PropSelection {
   const participating: unknown[] = []
   for (let index = 0; index < sources.length; index++) {
     // 本地指令只替换直接声明；未写入时保留原始 Source 与 undefined 截断。
     const source = index === 0 && direct?.has(key) ? direct : sources[index]
     if (!source.has(key)) continue
-    const raw = source.read(key)
-    // 显式 undefined 清除低优先级声明；Source 的当前结果仍由节点字段契约解释。
-    if (raw === undefined) break
-    participating.push(raw)
+    const contribution = source.readContribution?.(key)
+    const raw = contribution ? contribution.value : source.read(key)
+    const stopsLower = contribution
+      ? contribution.stopsLower
+      : raw === undefined
+    // 已处理来源的 undefined 可能只是完成值；截断事实由该层的原声明决定。
+    if (raw !== undefined) participating.push(raw)
+    if (stopsLower) return { values: participating, stopsLower: true }
   }
-  return participating
+  return { values: participating, stopsLower: false }
 }
 
 /** 已选中来源的完成值按节点规则累加，不重新读取字段getter。 */

@@ -4,7 +4,7 @@ import { expect, expectTypeOf, test, vi } from 'vitest'
 import { createState, onCleanup, val, type Source } from '@/foundation'
 import { createComponentPropsDirector } from './componentPropsDirector'
 import { createPropsDeclaration } from './propsDeclaration/shadowProps'
-import { pivPropAccumulation } from '../Piv/plugin/mergePivProps'
+import { mergePivProps, pivPropAccumulation } from '../Piv/plugin/mergePivProps'
 
 test.each([
   'state-source-view',
@@ -358,3 +358,162 @@ test('首次从短命作用域读取的字段仍由Director原作用域释放', 
   dispose()
   expect(cleanup).toHaveBeenCalledOnce()
 })
+
+test.each([undefined, 'state-source-view', 'state-value-view', 'state-untracked'] as const)(
+  '跨层累加保留 literal undefined 截断与之前的正值，模式=%s',
+  (mode) =>
+    createRoot((dispose) => {
+      for (const directValue of [undefined, '保留']) {
+        const declaration = createPropsDeclaration(
+          { class: directValue, shadowProps: { class: undefined } },
+          { accumulate: pivPropAccumulation },
+        )
+        const controlled = mode
+          ? createComponentPropsDirector(
+              declaration.peek,
+              { class: mode, shadowProps: 'only-through-prop' },
+              { declaration },
+            )
+          : undefined
+        const upper = declaration.consume(
+          controlled?.props ?? declaration.peek,
+        )
+        let lowerReads = 0
+        const lower = mergePivProps({
+          shadowProps: [
+            {
+              get class() {
+                lowerReads++
+                return '不应恢复'
+              },
+            },
+            upper,
+          ],
+        })
+        expect(val(lower.class)).toBe(directValue)
+        expect(lowerReads).toBe(0)
+      }
+      dispose()
+    }),
+)
+
+test.each([undefined, 'state-source-view', 'state-value-view', 'state-untracked'] as const)(
+  '上层 Source 当前为 undefined 不截断低优先级来源，模式=%s',
+  (mode) =>
+    createRoot((dispose) => {
+      const declaration = createPropsDeclaration(
+        { class: createState<string | undefined>(undefined) },
+        { accumulate: pivPropAccumulation },
+      )
+      const controlled = mode
+        ? createComponentPropsDirector(
+            declaration.peek,
+            { class: mode },
+            { declaration },
+          )
+        : undefined
+      const upper = declaration.consume(
+        controlled?.props ?? declaration.peek,
+      )
+      const lower = mergePivProps({
+        shadowProps: [{ class: '仍然可用' }, upper],
+      })
+      expect([val(lower.class)].flat()).toContain('仍然可用')
+      dispose()
+    }),
+)
+
+test('跨层截断跟随 Controller 修改及上游恢复，Marker 借读不抢占字段', () => {
+  const { upstream, controlled, upper, lower, dispose } = createRoot(
+    (dispose) => {
+      const upstream = createState<string | undefined>('直接')
+      const declaration = createPropsDeclaration(
+        {
+          class: upstream,
+          shadowProps: { class: '内部' as string | undefined },
+        },
+        { accumulate: pivPropAccumulation },
+      )
+      const controlled = createComponentPropsDirector(
+        declaration.peek,
+        { class: 'state-source-view', shadowProps: 'state-value-view' },
+        { declaration },
+      )
+      const upper = declaration.consume(controlled.props)
+      expect(controlled.peek('class')).toEqual(['内部', '直接'])
+      const lower = mergePivProps({ shadowProps: [{ class: '外部' }, upper] })
+      return { upstream, controlled, upper, lower, dispose }
+    },
+  )
+  expect(val(lower.class)).toEqual(['外部', '内部', '直接'])
+  controlled.controller.shadowProps.set({ class: undefined })
+  flush()
+  expect(val(lower.class)).toBe('直接')
+  controlled.controller.class.set(undefined)
+  flush()
+  expect(val(lower.class)).toBeUndefined()
+  upstream.set('恢复')
+  flush()
+  expect(val(lower.class)).toBe('恢复')
+  expect(upper.class).toBeUndefined()
+  dispose()
+})
+
+test('已处理视图保留字段转换和嵌套读取，不把 label 的屏障混给 class', () =>
+  createRoot((dispose) => {
+    const declaration = createPropsDeclaration(
+      { class: '原值', label: undefined },
+      { accumulate: pivPropAccumulation },
+    )
+    const view = {
+      get class() {
+        const value = declaration.peek.class
+        declaration.peek.label
+        return `${value}-转换`
+      },
+      get label() {
+        return declaration.peek.label
+      },
+    }
+    const upper = declaration.consume(view)
+    const lower = mergePivProps({
+      shadowProps: [{ class: '保留', label: '屏蔽' }, upper],
+    })
+    expect(val(lower.class)).toEqual(['保留', '原值-转换'])
+    expect(val(lower.label)).toBeUndefined()
+    dispose()
+  }))
+
+test('取得跨层稳定 Source 不求值上游 Source', () =>
+  createRoot((dispose) => {
+    const read = vi.fn(() => undefined)
+    const upstream = createState(read, { lazy: true })
+    const parent = createPropsDeclaration(
+      { class: upstream },
+      { accumulate: pivPropAccumulation },
+    )
+    const parentControl = createComponentPropsDirector(
+      parent.peek,
+      { class: 'state-source-view' },
+      { declaration: parent },
+    )
+    const upper = parent.consume(parentControl.props)
+    const child = createPropsDeclaration<{
+      class?: Source<string | string[] | undefined>
+      shadowProps: object[]
+    }>(
+      { shadowProps: [{ class: '低' }, upper] },
+      { accumulate: pivPropAccumulation },
+    )
+    const childControl = createComponentPropsDirector(
+      child.peek,
+      { shadowProps: 'only-through-prop', class: 'state-source-view' },
+      { declaration: child },
+    )
+    const lower = child.consume(childControl.props)
+    const captured = Reflect.get(lower, 'class')
+    expect(read).not.toHaveBeenCalled()
+    expect(val(captured)).toEqual(['低', undefined])
+    expect(read).toHaveBeenCalledTimes(1)
+    dispose()
+  }))
