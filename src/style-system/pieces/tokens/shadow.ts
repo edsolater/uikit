@@ -13,7 +13,7 @@ export const shadowColor = token('rgb(0 0 0 / 4%)', {
   state: [
     [
       whenDarkTheme,
-      (base) => oklch(base, { alpha: (current) => multiply(current, 38 / 4) }),
+      base => oklch(base, { alpha: current => multiply(current, 38 / 4) }),
     ],
   ],
 })
@@ -23,7 +23,7 @@ export const backdropColor = token('rgb(0 0 0 / 62%)', {
   state: [
     [
       whenDarkTheme,
-      (base) => oklch(base, { alpha: (current) => multiply(current, 72 / 62) }),
+      base => oklch(base, { alpha: current => multiply(current, 72 / 62) }),
     ],
   ],
 })
@@ -53,7 +53,7 @@ export const baseShadowSmall = token(
           y: shadowDistance,
           blur: multiply(shadowDistance, 2),
           color: oklch(shadowColor, {
-            alpha: (current) => multiply(current, 46 / 38),
+            alpha: current => multiply(current, 46 / 38),
           }),
         }),
       ],
@@ -68,7 +68,7 @@ export const baseShadow = token(
       y: shadowDistance,
       blur: multiply(shadowDistance, 2),
       color: oklch(shadowColor, {
-        alpha: (current) => multiply(current, 3 / 4),
+        alpha: current => multiply(current, 3 / 4),
       }),
     }),
     shadowValue({
@@ -90,7 +90,7 @@ export const baseShadow = token(
             y: shadowDistance,
             blur: multiply(shadowDistance, 2),
             color: oklch(shadowColor, {
-              alpha: (current) => multiply(current, 46 / 38),
+              alpha: current => multiply(current, 46 / 38),
             }),
           }),
           shadowValue({
@@ -113,7 +113,7 @@ export const baseShadowLarge = token(
       y: multiply(shadowDistance, 2),
       blur: multiply(shadowDistance, 4),
       color: oklch(shadowColor, {
-        alpha: (current) => multiply(current, 3.5 / 4),
+        alpha: current => multiply(current, 3.5 / 4),
       }),
     }),
     shadowValue({
@@ -135,7 +135,7 @@ export const baseShadowLarge = token(
             y: multiply(shadowDistance, 2),
             blur: multiply(shadowDistance, 4),
             color: oklch(shadowColor, {
-              alpha: (current) => multiply(current, 50 / 38),
+              alpha: current => multiply(current, 50 / 38),
             }),
           }),
           shadowValue({
@@ -178,7 +178,7 @@ export const baseShadowLarger = token(
             y: multiply(shadowDistance, 4),
             blur: multiply(shadowDistance, 8),
             color: oklch(shadowColor, {
-              alpha: (current) => multiply(current, 54 / 38),
+              alpha: current => multiply(current, 54 / 38),
             }),
           }),
           shadowValue({
@@ -221,7 +221,7 @@ export const baseShadowLargest = token(
             y: multiply(shadowDistance, 12),
             blur: multiply(shadowDistance, 24),
             color: oklch(shadowColor, {
-              alpha: (current) => multiply(current, 60 / 38),
+              alpha: current => multiply(current, 60 / 38),
             }),
           }),
           shadowValue({

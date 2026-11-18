@@ -7,9 +7,9 @@ export const textSize = token('16px', {
   name: 'text-size',
   address: ':root',
   state: [
-    [whenSmall, (base) => multiply(base, 7 / 8)],
-    [whenLarge, (base) => multiply(base, 5 / 4)],
-    [whenXlarge, (base) => multiply(base, 3 / 2)],
+    [whenSmall, base => multiply(base, 7 / 8)],
+    [whenLarge, base => multiply(base, 5 / 4)],
+    [whenXlarge, base => multiply(base, 3 / 2)],
   ],
 })
 

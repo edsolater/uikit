@@ -88,7 +88,7 @@ export function createMatcher<Value>(
   }
 
   const match = (targetValueOrPredicate: Value | MatcherPredicate<Value>) => {
-    return derive(source, (value) => {
+    return derive(source, value => {
       if (isPredicate(targetValueOrPredicate)) {
         return val(targetValueOrPredicate(value))
       }
@@ -100,7 +100,7 @@ export function createMatcher<Value>(
   const notMatch = (
     targetValueOrPredicate: Value | MatcherPredicate<Value>,
   ) => {
-    return derive(match(targetValueOrPredicate), (matched) => !matched)
+    return derive(match(targetValueOrPredicate), matched => !matched)
   }
 
   return {

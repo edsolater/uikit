@@ -34,23 +34,23 @@ export const flowStyleConfig = {
   /**
    * 设置当前实例子项之间的间距。
    */
-  $gap: (value) => flowGap.set(value),
+  $gap: value => flowGap.set(value),
   /**
    * 设置当前实例自身宽度。
    */
-  $width: (value) => flowWidth.set(value),
+  $width: value => flowWidth.set(value),
   /**
    * 设置当前实例自身高度。
    */
-  $height: (value) => flowHeight.set(value),
+  $height: value => flowHeight.set(value),
   /**
    * 设置当前实例纵向溢出的呈现方式。
    */
-  $overflowY: (value) => flowOverflowY.set(value),
+  $overflowY: value => flowOverflowY.set(value),
   /**
    * 纵排统一安排方向、换行与交叉轴；横排沿用 Token 默认。
    */
-  $direction: (value) => {
+  $direction: value => {
     if (value === 'column') {
       direction.set('column')
       wrap.set('nowrap')
@@ -62,7 +62,7 @@ export const flowStyleConfig = {
   /**
    * 需要时占用父级剩余空间，否则沿用自然尺寸。
    */
-  $grow: (value) => {
+  $grow: value => {
     if (value) flex.set('1')
   },
 } satisfies StyleConfig<FlowStyleConfig>

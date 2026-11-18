@@ -32,7 +32,7 @@ test('各字段自动关联，点击标题聚焦自己的控件', async () => {
   try {
     const labels = [...host.querySelectorAll('label')],
       controls = [...host.querySelectorAll('input,select')]
-    expect(new Set(controls.map((control) => control.id)).size).toBe(3)
+    expect(new Set(controls.map(control => control.id)).size).toBe(3)
     for (let i = 0; i < labels.length; i++) {
       expect(labels[i]!.htmlFor).toBe(controls[i]!.id)
       await userEvent.click(labels[i]!)

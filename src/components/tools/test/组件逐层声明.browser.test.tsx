@@ -158,7 +158,7 @@ test('全部字段控件的补充原生声明与身份只路由到实际控件',
   ).toBe(true)
   expect(
     [...host.querySelectorAll('label')].some(
-      (label) => label.textContent === '二态标题',
+      label => label.textContent === '二态标题',
     ),
   ).toBe(true)
 })
@@ -172,7 +172,7 @@ test('身份的显式undefined阻止上下文缺省，动态删除恢复，Contr
       <FormField id="上下文身份">
         <Input
           shadowProps={val(input)}
-          ref={(next) => {
+          ref={next => {
             controller = next
           }}
         />
@@ -200,7 +200,7 @@ test('多层泛型承载接收自己的补充分类，表格补充渲染器保�
         <Table
           shadowProps={{
             data: [{ amount: 3 }],
-            renderParts: { tableCell: { amount: (value) => `金额${value}` } },
+            renderParts: { tableCell: { amount: value => `金额${value}` } },
           }}
         />
       </>
@@ -243,7 +243,7 @@ test('累加字段的原始undefined、Source当前undefined和Controller清空�
         <Article
           class={controlledDirect}
           shadowProps={{ class: shadow }}
-          ref={(next) => {
+          ref={next => {
             controller = next
           }}
         >
@@ -302,7 +302,7 @@ test('核心取得的受控累加Source保持身份与动态值，包含直接�
     controller: ArticleController
   }> = kit(
     { name: 'CapturedSource', propDefinition: articlePropDefinition },
-    (props) => {
+    props => {
       const source = props.class
       expect(Object.is(props.class, source)).toBe(true)
       initialComputations = computations
@@ -315,7 +315,7 @@ test('核心取得的受控累加Source保持身份与动态值，包含直接�
         <Fixture
           class="直接类"
           shadowProps={supplied}
-          ref={(next) => {
+          ref={next => {
             controller = next
           }}
         />
@@ -352,7 +352,7 @@ test('本地先清空再取得Source不会认领被截断的上游', () => {
     () => (
       <CaptureFixture
         shadowProps={upstream}
-        ref={(next) => {
+        ref={next => {
           controller = next
         }}
       />
@@ -386,7 +386,7 @@ test('Controller写入惰性Source后只取得核心Source不求值，后续仍�
     dispose = render(
       () => (
         <CaptureFixture
-          ref={(next) => {
+          ref={next => {
             controller = next
           }}
         />
@@ -424,7 +424,7 @@ test('Controller写入Promise后只取得核心Source不订阅，实际消费才
     dispose = render(
       () => (
         <CaptureFixture
-          ref={(next) => {
+          ref={next => {
             controller = next
           }}
         />
@@ -463,7 +463,7 @@ test('取得累加Source即占有上游声明，尚未求值时其他分支不�
     controller: ArticleController
   }> = kit(
     { name: 'ClaimedSource', propDefinition: articlePropDefinition },
-    (props) => {
+    props => {
       const source = props.class
       initialReads = reads
       const remaining = createPropsDeclaration({
@@ -493,7 +493,7 @@ test('下层Marker借读上层名称后，业务取得Source仍认领最初来�
     controller: ArticleController
   }> = kit(
     { name: 'BorrowedChild', propDefinition: articlePropDefinition },
-    (props) => {
+    props => {
       const label = props.label
       const remaining = createPropsDeclaration({
         shadowProps: upstream,
@@ -507,7 +507,7 @@ test('下层Marker借读上层名称后，业务取得Source仍认领最初来�
     controller: ArticleController
   }> = kit(
     { name: 'BorrowedParent', propDefinition: articlePropDefinition },
-    (props) => <Child shadowProps={props} ref={() => {}} />,
+    props => <Child shadowProps={props} ref={() => {}} />,
   )
   dispose = render(() => <Parent shadowProps={upstream} ref={() => {}} />, host)
   expect(host.firstElementChild?.getAttribute('aria-label')).toBe('上游名称')

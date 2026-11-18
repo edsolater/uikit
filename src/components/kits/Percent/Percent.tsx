@@ -29,7 +29,7 @@ export const Percent: KitComponent<{
 }> = kit(
   { name: componentName, propDefinition: percentPropDefinition },
   (props, { name }) => {
-    const percentage = derive(props, (s) => {
+    const percentage = derive(props, s => {
       const numerator = val(s.numerator),
         denominator = val(s.denominator)
       if (

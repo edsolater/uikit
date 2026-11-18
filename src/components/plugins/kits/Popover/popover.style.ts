@@ -17,11 +17,8 @@ import {
 export const popoverAnchorGap = token(multiply(baseSpace, 1 / 2), {
   name: 'popover-anchor-gap',
   state: [
-    [
-      stateCondition('&[data-anchor-gap="sm"]'),
-      (base) => multiply(base, 1 / 2),
-    ],
-    [stateCondition('&[data-anchor-gap="lg"]'), (base) => multiply(base, 2)],
+    [stateCondition('&[data-anchor-gap="sm"]'), base => multiply(base, 1 / 2)],
+    [stateCondition('&[data-anchor-gap="lg"]'), base => multiply(base, 2)],
   ],
 })
 

@@ -17,7 +17,7 @@ export function consumeId(
   })
   createRenderEffect(
     () => val(readId()),
-    (id) => {
+    id => {
       if (id === undefined) {
         element.removeAttribute('id')
       } else {

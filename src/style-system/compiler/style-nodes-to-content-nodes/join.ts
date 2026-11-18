@@ -72,8 +72,8 @@ function captureInputs(
   }
   const priority = Math.max(
     ...[...inputs.values()]
-      .filter((input) => input.effective)
-      .map((input) => input.priority),
+      .filter(input => input.effective)
+      .map(input => input.priority),
   )
   const selected = new Map(
     [...inputs].filter(
@@ -81,7 +81,7 @@ function captureInputs(
     ),
   )
   const joiners = new Set(
-    [...selected.values()].flatMap((input) => (input.join ? [input.join] : [])),
+    [...selected.values()].flatMap(input => (input.join ? [input.join] : [])),
   )
   const first = [...inputs.keys()][0]
   assert(
@@ -255,7 +255,7 @@ export class Join {
       anchor,
       'after',
       undefined,
-      (node) => {
+      node => {
         node.aggregate = true
       },
     )

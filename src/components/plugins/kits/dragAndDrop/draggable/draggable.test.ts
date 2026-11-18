@@ -5,11 +5,11 @@ import { val } from '@/foundation'
 import { draggable } from './draggable'
 
 const disposers: (() => void)[] = []
-afterEach(() => disposers.splice(0).forEach((dispose) => dispose()))
+afterEach(() => disposers.splice(0).forEach(dispose => dispose()))
 
 /** 能力构建需要组件作用域；Controller 在构建返回时即可使用。 */
 function build<T>(factory: () => T): T {
-  return createRoot((dispose) => {
+  return createRoot(dispose => {
     disposers.push(dispose)
     return factory()
   })

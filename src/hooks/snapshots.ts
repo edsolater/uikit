@@ -59,7 +59,7 @@ function readSnapshot<T>(input: T | undefined): Snapshot<T> | undefined {
   }
 
   if (Array.isArray(input)) {
-    return input.map((item) => readSnapshot(item)) as Snapshot<T>
+    return input.map(item => readSnapshot(item)) as Snapshot<T>
   }
 
   if (isObjectLiteral(input)) {

@@ -39,7 +39,9 @@ test('固定高度内容流保留区域尺寸并允许滚动阅读全部内容',
   cssRoot.mount()
   host = document.body.appendChild(document.createElement('main'))
   dispose = render(() => <DirectionSwitchingExample />, host)
-  const region = host.querySelector<HTMLElement>('[aria-label="固定高度的内容流"]')!
+  const region = host.querySelector<HTMLElement>(
+    '[aria-label="固定高度的内容流"]',
+  )!
   expect(region.getBoundingClientRect().height).toBe(128)
   expect(getComputedStyle(region).overflowY).toBe('auto')
   expect(region.scrollHeight).toBeGreaterThan(region.clientHeight)
@@ -108,7 +110,7 @@ test('快捷Source和显式顺序持续更新，Controller替换或清空保持�
       <Flow
         $col={column}
         $styleConfig={explicit}
-        ref={(value) => {
+        ref={value => {
           controller = value
         }}
       >
@@ -282,14 +284,8 @@ test('固定列、内容列和自动填充持续消费来源，内层布局不�
   dispose = render(
     () => (
       <Flow>
-        <Flow
-          label={label}
-          $direction="column" $width={width} $grow={grow}
-        >
-          <Grid
-            $columns={columns} $responsive={false}
-            label="内容列"
-          >
+        <Flow label={label} $direction="column" $width={width} $grow={grow}>
+          <Grid $columns={columns} $responsive={false} label="内容列">
             <Grid>
               <Flow>嵌套一列</Flow>
             </Grid>
@@ -377,7 +373,7 @@ test('样式配置可整体替换，字段来源持续更新且不会泄漏到�
     () => (
       <Flow
         $styleConfig={input}
-        ref={(value) => {
+        ref={value => {
           controller = value
         }}
       >
@@ -465,7 +461,7 @@ test('按钮间距配置支持来源与控制器替换，清空不修改共享�
       <>
         <Button
           $gap={gap}
-          ref={(value) => {
+          ref={value => {
             controller = value
           }}
         >
@@ -516,10 +512,10 @@ test('声明式 Flow 转交 Piv 字段与能力，来源和控制器沿原消费
           htmlProps: { 'data-shadow': '补充' },
         }}
         is={clickable({ tabIndex: 4 })}
-        domRef={(value) => {
+        domRef={value => {
           element = value
         }}
-        ref={(value) => {
+        ref={value => {
           controller = value
         }}
       >

@@ -138,7 +138,7 @@ describe('OKLCH 材料混合', () => {
     const responsive: ColorMaterial = {
       ...material(30, 0.6, 0.1),
       environmentSensitivities: {
-        chroma: (base) => base.hue / 360,
+        chroma: base => base.hue / 360,
         lightness: (_base, environment) => environment.tint?.lightness ?? 0,
       },
     }

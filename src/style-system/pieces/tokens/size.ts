@@ -7,8 +7,8 @@ export const controlSize = token('48px', {
   name: 'control-size',
   address: ':root',
   state: [
-    [whenSmall, (base) => multiply(base, 2 / 3)],
-    [whenLarge, (base) => multiply(base, 4 / 3)],
-    [whenXlarge, (base) => multiply(base, 5 / 3)],
+    [whenSmall, base => multiply(base, 2 / 3)],
+    [whenLarge, base => multiply(base, 4 / 3)],
+    [whenXlarge, base => multiply(base, 5 / 3)],
   ],
 })

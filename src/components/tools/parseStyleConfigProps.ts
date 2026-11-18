@@ -48,9 +48,7 @@ export function parseStyleConfigProps<Props extends object>(
     if (keys.length === 0) return value
     const explicit = val(value)
     const config = {
-      ...Object.fromEntries(
-        keys.map((name) => [name, Reflect.get(props, name)]),
-      ),
+      ...Object.fromEntries(keys.map(name => [name, Reflect.get(props, name)])),
       ...explicit,
     }
     const origins = new Map<string, StyleConfigFieldOrigin>()
@@ -66,7 +64,7 @@ export function parseStyleConfigProps<Props extends object>(
       !isStyleKey(key) &&
       (key in props || (key === '$styleConfig' && styleKeys().length > 0)),
     ownKeys: () => {
-      const keys = Reflect.ownKeys(props).filter((key) => !isStyleKey(key))
+      const keys = Reflect.ownKeys(props).filter(key => !isStyleKey(key))
       if (!keys.includes('$styleConfig') && styleKeys().length > 0)
         keys.push('$styleConfig')
       return keys

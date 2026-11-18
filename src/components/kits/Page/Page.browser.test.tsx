@@ -43,7 +43,9 @@ afterEach(() => {
 
 function toggleView() {
   host
-    .querySelector<HTMLButtonElement>('.ComponentIdentityMarkerStructureViewTrigger')!
+    .querySelector<HTMLButtonElement>(
+      '.ComponentIdentityMarkerStructureViewTrigger',
+    )!
     .click()
   flush()
 }
@@ -61,7 +63,7 @@ test('无附加标题的页面保留正文，字段颜色输入、勾选帮助�
         <Heading level={1}>原有标题</Heading>
         <Text p>{message}</Text>
         <Field label={fieldLabel} tooltip="颜色说明">
-          {(id) => (
+          {id => (
             <Input
               id={id}
               type="color"
@@ -83,10 +85,10 @@ test('无附加标题的页面保留正文，字段颜色输入、勾选帮助�
         <Details
           summary={<Text emphasis>摘要模板</Text>}
           open={false}
-          domRef={(element) => {
+          domRef={element => {
             detail = element as HTMLDetailsElement
           }}
-          onToggle={(open) => {
+          onToggle={open => {
             toggled = open
           }}
         >
@@ -102,7 +104,9 @@ test('无附加标题的页面保留正文，字段颜色输入、勾选帮助�
   expect(host.querySelector<HTMLLabelElement>('label')!.htmlFor).toBe(input.id)
   expect(host.querySelector('label')!.textContent).toBe('颜色')
   fieldLabel.set('更新颜色')
-  await expect.poll(() => host.querySelector('label')!.textContent).toBe('更新颜色')
+  await expect
+    .poll(() => host.querySelector('label')!.textContent)
+    .toBe('更新颜色')
   input.value = '#445566'
   input.dispatchEvent(new Event('input', { bubbles: true }))
   await expect.poll(() => input.value).toBe('#445566')
@@ -142,10 +146,10 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
         >
           <Flow>
             <Field label="多行">
-              {(id) => <TextArea id={id} value="内容" />}
+              {id => <TextArea id={id} value="内容" />}
             </Field>
             <Field label="单选">
-              {(id) => (
+              {id => (
                 <Select
                   id={id}
                   value="a"
@@ -188,9 +192,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
   await expect.poll(() => page.querySelector('[role="tooltip"]')).not.toBeNull()
   const originalNodes = [...page.querySelectorAll('*')]
   const bounds = page.getBoundingClientRect().toJSON()
-  const names = [...componentBoundaries].map(
-    (boundary) => boundary.componentName,
-  )
+  const names = [...componentBoundaries].map(boundary => boundary.componentName)
   for (const name of [
     'Page',
     'Flow',
@@ -224,7 +226,7 @@ test('零级不重复登记，一二级均有边界，查看关闭后保持节�
 test('页面异步标题说明及动作内容保留原有来源契约', async () => {
   let resolve!: (value: string) => void
   const title = createState(
-    new Promise<string>((done) => {
+    new Promise<string>(done => {
       resolve = done
     }),
   )

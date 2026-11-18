@@ -273,7 +273,7 @@ export class NodeCompilation {
         !this.visiting.includes(node)
       ) {
         const index = this.visiting.findIndex(
-          (item) => this.session.compareOrder(item, node) > 0,
+          item => this.session.compareOrder(item, node) > 0,
         )
         this.visiting.splice(index < 0 ? this.visiting.length : index, 0, node)
       }
@@ -321,7 +321,7 @@ export class NodeCompilation {
    * 将已完成且被选择的当前位置交付输出，不泄漏角色访问账本。
    */
   outputs(select: (node: JSSStyleNode) => boolean): JSSContentNode[] {
-    return this.session.nodes.flatMap((node) => {
+    return this.session.nodes.flatMap(node => {
       const state = this.session.compilations.get(node)
       if (
         !select(node) ||
@@ -443,11 +443,11 @@ export class NodeCompilation {
    */
   private isReady(): boolean {
     const pending = [...this.pending]
-    const deferred = pending.find((node) => node.deferredReason !== undefined)
+    const deferred = pending.find(node => node.deferredReason !== undefined)
     if (
       deferred &&
       !pending.some(
-        (node) =>
+        node =>
           !this.session.compilations.has(node) ||
           node.deferredReason === undefined,
       )

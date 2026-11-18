@@ -51,15 +51,12 @@ export const Select: KitComponent<{
         }}
       >
         <For each={val(props.options)}>
-          {(option) => (
+          {option => (
             <Piv
               as="option"
               htmlProps={{
                 value: option.value,
-                selected: derive(
-                  props.value,
-                  (value) => value === option.value,
-                ),
+                selected: derive(props.value, value => value === option.value),
               }}
             >
               {option.label}

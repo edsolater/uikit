@@ -19,13 +19,13 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
     differsFromOne,
     matchesCondition,
     dispose,
-  } = createRoot((dispose) => {
+  } = createRoot(dispose => {
     const source = createState(1)
     const enabled = createState(true)
     const matcher = createMatcher(source)
     const equalsOne = matcher.match(1)
     const differsFromOne = matcher.notMatch(1)
-    const matchesCondition = matcher.match((value) => value > 0 && val(enabled))
+    const matchesCondition = matcher.match(value => value > 0 && val(enabled))
 
     return {
       source,
@@ -61,7 +61,7 @@ test('匹配与反向匹配通过 StateView 跟随值和响应式条件变化', 
 })
 
 test('标识循环的首尾匹配通过 StateView 跟随同一个标识状态', () => {
-  const { ident, operator, first, last, dispose } = createRoot((dispose) => {
+  const { ident, operator, first, last, dispose } = createRoot(dispose => {
     const [ident, operator] = createIdent<'first' | 'last'>('first', {
       idents: ['first', 'last'],
     })

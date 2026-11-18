@@ -72,12 +72,12 @@ test('普通函数组合新内容时显式复用格式与资源，独立消费�
     onFirstScan: () => [[['.DurationDependency'], 'display', 'block']],
   })
   const original = token<number>(200, {
-    toCSSString: (milliseconds) => `${milliseconds}ms`,
+    toCSSString: milliseconds => `${milliseconds}ms`,
     dependencies: [dependency],
     onFirstScan: () => [[['.DurationActivation'], 'visibility', 'visible']],
   })
   const changed = token(400, {
-    toCSSString: (milliseconds) => `${milliseconds}ms`,
+    toCSSString: milliseconds => `${milliseconds}ms`,
     dependencies: [dependency],
     onFirstScan: original.onFirstScan,
   })
@@ -194,5 +194,5 @@ test('空数组与 null 不输出，空字符串作为现存内容输出，循�
 const arraySequenceToCSSString = (items, resolve) =>
   items
     .map(resolve)
-    .filter((item) => item !== undefined)
+    .filter(item => item !== undefined)
     .join(' ')

@@ -17,7 +17,7 @@ export function DirectionSwitchingExample() {
       <Text>默认排列相关操作，按钮保留自己的外观。</Text>
       <Button
         onClick={() => {
-          column.set((value) => !value)
+          column.set(value => !value)
         }}
       >
         切换排列方向

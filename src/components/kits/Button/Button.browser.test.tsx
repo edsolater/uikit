@@ -79,7 +79,7 @@ function appearance(button: HTMLElement) {
       'box-shadow',
       'opacity',
       'transform',
-    ].map((key) => [key, style.getPropertyValue(key)]),
+    ].map(key => [key, style.getPropertyValue(key)]),
   )
 }
 
@@ -87,7 +87,7 @@ function appearance(button: HTMLElement) {
  * 只归一视觉数值的三位有效数字，单位、列表结构与关键字仍精确比较。
  */
 function roundCSSNumbers(content: string) {
-  return content.replace(/[-+]?(?:\d*\.?\d+)(?:e[-+]?\d+)?/gi, (amount) =>
+  return content.replace(/[-+]?(?:\d*\.?\d+)(?:e[-+]?\d+)?/gi, amount =>
     Number(amount).toPrecision(3),
   )
 }
@@ -156,7 +156,7 @@ afterEach(() => {
   document.body.replaceChildren()
   document.head
     .querySelectorAll(buttonStyleSelector)
-    .forEach((element) => element.remove())
+    .forEach(element => element.remove())
   document.documentElement.removeAttribute('data-theme')
   document.documentElement.style.removeProperty('--base-brand')
 })
@@ -202,7 +202,7 @@ describe('Button styles', () => {
 
   test.each([false, true])(
     'filled 按下时移除阴影，普通语气保留明度反馈，危险材料遵循层叠，退出恢复：strong=%s',
-    async (strong) => {
+    async strong => {
       document.documentElement.dataset.theme = 'light'
       mountButtonStyles()
       const host = document.body.appendChild(document.createElement('div'))
@@ -293,7 +293,7 @@ describe('Button styles', () => {
 
   test.each(['filled', 'outlined', 'plain'] as const)(
     '真实%s按钮的强调作用于文字和纯图形，保留外观、尺寸与禁用行为',
-    async (selectedAppearance) => {
+    async selectedAppearance => {
       mountButtonStyles()
       const host = document.body.appendChild(document.createElement('div'))
       const emphasis = createState<'soft' | 'strong' | undefined>()
@@ -334,11 +334,11 @@ describe('Button styles', () => {
       )
       for (const button of buttons) button.style.transition = 'none'
       const normal = buttons.map(appearance)
-      const bounds = buttons.map((button) =>
+      const bounds = buttons.map(button =>
         [
           button.getBoundingClientRect().width,
           button.getBoundingClientRect().height,
-        ].map((amount) => amount.toPrecision(3)),
+        ].map(amount => amount.toPrecision(3)),
       )
       emphasis.set('strong')
       flush()
@@ -350,7 +350,7 @@ describe('Button styles', () => {
           [
             button.getBoundingClientRect().width,
             button.getBoundingClientRect().height,
-          ].map((amount) => amount.toPrecision(3)),
+          ].map(amount => amount.toPrecision(3)),
         ).toEqual(bounds[index])
         expect(button.dataset.appearance).toBe(selectedAppearance)
         expect(button.dataset.tone).toBe('danger')
@@ -375,7 +375,7 @@ describe('Button styles', () => {
           [
             button.getBoundingClientRect().width,
             button.getBoundingClientRect().height,
-          ].map((amount) => amount.toPrecision(3)),
+          ].map(amount => amount.toPrecision(3)),
         ).toEqual(bounds[index])
       })
       for (const selected of ['soft', undefined, 'strong'] as const) {
@@ -643,7 +643,7 @@ describe('Button styles', () => {
       path,
       modify(buttonSurfaceColor, {
         type: 'expression',
-        detail: (current) => oklch(current, { chroma: 0.2 }),
+        detail: current => oklch(current, { chroma: 0.2 }),
       }),
     )
     handles.push(adjusted)
@@ -661,7 +661,7 @@ describe('Button styles', () => {
 
   test.each([undefined, 'plain', 'filled'] as const)(
     'dangerous：局部基色重声明保留两个作用域隔离及状态退出：%s',
-    async (selectedAppearance) => {
+    async selectedAppearance => {
       const palettes = [
         {
           tone: 'rgb(56, 120, 180)',
@@ -769,7 +769,7 @@ describe('Button styles', () => {
 
   test.each([undefined, 'plain', 'filled'] as const)(
     'dangerous：手动覆盖最终角色后禁用仍降低整体声量并恢复：%s',
-    async (selectedAppearance) => {
+    async selectedAppearance => {
       const surface = 'rgb(12, 34, 56)'
       const content = 'rgb(78, 90, 123)'
       handles.push(
@@ -848,7 +848,7 @@ describe('Button styles', () => {
 
   test.each(['light', 'dark'])(
     '%s：声量、语气与状态独立组合，反馈与退出保持层次',
-    async (theme) => {
+    async theme => {
       document.documentElement.dataset.theme = theme
       mountButtonStyles()
       const host = document.body.appendChild(document.createElement('div'))
@@ -860,8 +860,8 @@ describe('Button styles', () => {
       const tones: ('danger' | undefined)[] = [undefined, 'danger']
       dispose = render(
         () =>
-          appearances.flatMap((selectedAppearance) =>
-            tones.map((tone) => (
+          appearances.flatMap(selectedAppearance =>
+            tones.map(tone => (
               <Button appearance={selectedAppearance} tone={tone}>
                 组合
               </Button>
@@ -958,7 +958,7 @@ describe('Button styles', () => {
 
   test.each(['light', 'dark'])(
     '%s：所有 appearance、tone、size 与 loading 的禁用组合保持各 feature 的覆盖',
-    (theme) => {
+    theme => {
       document.documentElement.dataset.theme = theme
       const style = document.createElement('style')
       style.id = 'css-root'
@@ -977,11 +977,11 @@ describe('Button styles', () => {
         'large',
         'xlarge',
       ]
-      const cases = appearances.flatMap((selectedAppearance) =>
-        tones.flatMap((tone) =>
-          sizes.flatMap((size) =>
-            [false, true].flatMap((loading) =>
-              ['native', 'status', 'both'].map((mode) => ({
+      const cases = appearances.flatMap(selectedAppearance =>
+        tones.flatMap(tone =>
+          sizes.flatMap(size =>
+            [false, true].flatMap(loading =>
+              ['native', 'status', 'both'].map(mode => ({
                 selectedAppearance,
                 tone,
                 size,
@@ -1057,8 +1057,8 @@ describe('Button styles', () => {
     for (const theme of ['light', 'dark']) {
       document.documentElement.dataset.theme = theme
       const before = [input, popover, ...probes].map(appearance)
-      const shadows = probes.map((probe) => getComputedStyle(probe).boxShadow)
-      expect(shadows.every((shadow) => shadow !== 'none')).toBe(true)
+      const shadows = probes.map(probe => getComputedStyle(probe).boxShadow)
+      expect(shadows.every(shadow => shadow !== 'none')).toBe(true)
       expect(shadows[0]).not.toBe(shadows[1])
       if (theme === 'light') lightShadows.push(...shadows)
       else expect(shadows).not.toEqual(lightShadows)
@@ -1213,7 +1213,7 @@ describe('Button styles', () => {
     const host = document.body.appendChild(document.createElement('div'))
     const sizes: ButtonProps['size'][] = ['small', undefined, 'large', 'xlarge']
     dispose = render(
-      () => sizes.map((size) => <Button size={size}>相对基准</Button>),
+      () => sizes.map(size => <Button size={size}>相对基准</Button>),
       host,
     )
     const buttons = [...host.querySelectorAll('button')]
@@ -1226,12 +1226,12 @@ describe('Button styles', () => {
       'opacity',
     ]
     const read = () =>
-      buttons.map((button) =>
-        fields.map((field) =>
+      buttons.map(button =>
+        fields.map(field =>
           parseFloat(getComputedStyle(button).getPropertyValue(field)),
         ),
       )
-    buttons.forEach((button) => {
+    buttons.forEach(button => {
       button.style.transition = 'none'
     })
     const before = read()
@@ -1269,7 +1269,7 @@ describe('Button styles', () => {
     host.style.cssText = 'display:flex; flex-direction:column; gap:16px'
     dispose = render(
       () =>
-        sizes.flatMap((size) => [
+        sizes.flatMap(size => [
           <Button size={size}>普通文字</Button>,
           <Button size={size}>
             <span aria-hidden="true">＋</span>
@@ -1315,7 +1315,7 @@ describe('Button styles', () => {
     expect(
       getComputedStyle(button)
         .transitionDuration.split(',')
-        .every((duration) => duration.trim() === '0.12s'),
+        .every(duration => duration.trim() === '0.12s'),
     ).toBe(true)
     const override = document.body.appendChild(document.createElement('style'))
     override.textContent =
@@ -1529,7 +1529,7 @@ describe('Button styles', () => {
     )
     expect(getComputedStyle(input).paddingLeft).toBe('4px')
     expect(getComputedStyle(input).paddingTop).toBe('8px')
-    host.querySelectorAll<HTMLElement>('button').forEach((button) => {
+    host.querySelectorAll<HTMLElement>('button').forEach(button => {
       button.style.transition = 'none'
     })
     const defaultButton = getButton('default')

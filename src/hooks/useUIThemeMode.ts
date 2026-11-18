@@ -58,7 +58,7 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
     id: themeSwitchingStyleId,
     tagName: 'style',
     target: 'head',
-    setup: (styleElement) => {
+    setup: styleElement => {
       styleElement.textContent = themeSwitchingStyleText
     },
   })
@@ -73,7 +73,7 @@ export function useUIThemeMode(initialMode: UIThemeMode = 'light') {
     return themeSwitchingStyleRegisterer.unregister
   })
 
-  createEffect(themeMode, (mode) => {
+  createEffect(themeMode, mode => {
     if (typeof window === 'undefined' || root === undefined) {
       return
     }

@@ -36,7 +36,7 @@ test('颜色展示读取 Style System 材料并随主题切换更新', async () 
     expect(lightPreview).toContain('conic-gradient')
     const dark = [
       ...host.querySelectorAll<HTMLInputElement>('input[type="radio"]'),
-    ].find((input) => input.parentElement?.textContent?.includes('深色'))!
+    ].find(input => input.parentElement?.textContent?.includes('深色'))!
     dark.click()
     flush()
     await expect.poll(() => document.documentElement.dataset.theme).toBe('dark')

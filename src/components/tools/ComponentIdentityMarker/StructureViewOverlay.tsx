@@ -56,7 +56,7 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
   const updateFrame = () => {
     const currentFrames = readBoundaryFrames()
     const hiddenFrames = currentFrames.filter(
-      (frame) => displayValues.get(frame.boundary) === false,
+      frame => displayValues.get(frame.boundary) === false,
     )
     const nextHiddenElements = new Set<Element>()
     hiddenText.clear()
@@ -123,19 +123,19 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
     <Piv
       class="StructureViewOverlay"
       htmlProps={{ 'popover': 'manual', 'aria-hidden': 'true' }}
-      domRef={(element) => {
+      domRef={element => {
         surface = element
       }}
     >
       <Piv
         as="canvas"
-        domRef={(element) => {
+        domRef={element => {
           canvas = element
         }}
       />
-      <For each={val(measurement).frames.map((frame) => frame.boundary)}>
-        {(boundary) => {
-          createRenderEffect(boundary.readDescriptionDisplay, (display) => {
+      <For each={val(measurement).frames.map(frame => frame.boundary)}>
+        {boundary => {
+          createRenderEffect(boundary.readDescriptionDisplay, display => {
             displayValues.set(boundary, display)
           })
           onCleanup(() => displayValues.delete(boundary))
@@ -147,7 +147,7 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
           readDisplayedFrames(val(measurement).frames, displayValues),
         )}
       >
-        {(group) => (
+        {group => (
           <Piv
             class="frame"
             style={{
@@ -163,7 +163,7 @@ export function StructureViewOverlay(props: { control: HTMLButtonElement }) {
           >
             <Piv class="labels">
               <For each={group.labels}>
-                {(boundary) => (
+                {boundary => (
                   <Piv as="span" class="label">
                     {boundary.readLabel()}
                   </Piv>
@@ -186,18 +186,18 @@ function readDisplayedFrames(
   displayValues: Map<ComponentBoundary, boolean | undefined>,
 ): BoundaryFrame[] {
   const hiddenRanges = frames
-    .filter((frame) => displayValues.get(frame.boundary) === false)
-    .map((frame) => {
+    .filter(frame => displayValues.get(frame.boundary) === false)
+    .map(frame => {
       const range = document.createRange()
       range.setStartBefore(frame.boundary.start)
       range.setEndAfter(frame.boundary.end)
       return range
     })
   return frames.filter(
-    (frame) =>
+    frame =>
       displayValues.get(frame.boundary) === true &&
       !hiddenRanges.some(
-        (range) => range.comparePoint(frame.boundary.start, 0) === 0,
+        range => range.comparePoint(frame.boundary.start, 0) === 0,
       ),
   )
 }
@@ -263,7 +263,7 @@ function readBoundaryFrames(): BoundaryFrame[] {
     )
       continue
     const rectangles = readBoundaryRectangles(boundary).filter(
-      (rectangle) =>
+      rectangle =>
         rectangle.width > 0 &&
         rectangle.height > 0 &&
         rectangle.bottom > 0 &&

@@ -53,7 +53,7 @@ export class TokenCompilation {
       consumeDeclaration(context, this.controller, target)
     }
     return createJSSContent(
-      (resolve) => token.toCSSString(resolve),
+      resolve => token.toCSSString(resolve),
       variable ? [] : token.dependencies,
     )
   }
@@ -93,7 +93,7 @@ export class TokenCompilation {
       token.registration !== undefined ||
       this.controller
         .nodes()
-        .some((node) => isToken(node.key) && node.key === token)
+        .some(node => isToken(node.key) && node.key === token)
     )
   }
 }

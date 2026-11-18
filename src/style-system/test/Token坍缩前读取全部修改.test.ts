@@ -9,14 +9,14 @@ import { condition } from '../condition'
 
 test.each([false, true])(
   '引用位于 modify 之前=%s，所有消费共用匿名目标的变量身份',
-  (referenceFirst) => {
+  referenceFirst => {
     const size = token('4px')
     const reference: Rules[number] = [['.Target'], 'width', size]
     const change: Rules[number] = [
       ['.Target'],
       ...modify(size, {
         type: 'expression',
-        detail: (current) => add(current, '3px'),
+        detail: current => add(current, '3px'),
       }),
     ]
     const css = compileRules(
@@ -37,7 +37,7 @@ test('多层首次扫描后才产生修改，不能提前输出直接值', () =>
         ['.Late'],
         ...modify(size, {
           type: 'expression',
-          detail: (current) => add(current, '3px'),
+          detail: current => add(current, '3px'),
         }),
       ],
     ],
@@ -71,7 +71,7 @@ test('编译回调插入的晚到修改也参与坍缩，去掉修改后下一�
         },
         modify(size, {
           type: 'expression',
-          detail: (current) => add(current, '3px'),
+          detail: current => add(current, '3px'),
         }),
         { owner: context.node },
       )

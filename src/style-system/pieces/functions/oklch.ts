@@ -177,7 +177,7 @@ export function oklch(
       ? (changes as string | TokenOptions<RelativeColorInput>)
       : undefined
     const result = token(input, {
-      dependencies: (current) => [
+      dependencies: current => [
         Array.isArray(current) ? current[0] : current.base,
         readChannels(current),
       ],
@@ -205,12 +205,12 @@ export function oklch(
     }
   }
   return token(source as OKLCHChannels, {
-    dependencies: (current) => Object.values(current),
+    dependencies: current => Object.values(current),
     toCSSString: ({ lightness, chroma, hue, alpha }, resolve) => {
       const channels = [lightness, chroma, hue].map(resolve)
       const opacity = resolve(alpha)
       if (
-        channels.some((channel) => channel === undefined) ||
+        channels.some(channel => channel === undefined) ||
         (alpha !== undefined && opacity === undefined)
       )
         return undefined
@@ -241,9 +241,9 @@ function prepareChannels(changes: OKLCHChanges): Expression {
         ? change(createJSSContent(() => symbol))
         : change,
   )
-  return createJSSContent((resolve) => {
+  return createJSSContent(resolve => {
     const values = inputs.map(resolve)
-    return values.some((channel) => channel === undefined)
+    return values.some(channel => channel === undefined)
       ? undefined
       : `${values[0]} ${values[1]} ${values[2]} / ${values[3]}`
   }, inputs)

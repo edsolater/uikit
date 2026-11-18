@@ -70,7 +70,7 @@ export interface RuleHandle extends RulesHandle {
  */
 function assertValidConditionPath(path: Condition[]): void {
   assert(
-    path.every((item) => item && isString(item.header)),
+    path.every(item => item && isString(item.header)),
     'Rule 的 Condition Path 必须由有效 Condition 组成。',
   )
 }
@@ -163,7 +163,7 @@ export function rules(
     }
   }
   visit(declarations)
-  const handles = entries.map((entry) => registerRule(entry))
+  const handles = entries.map(entry => registerRule(entry))
   return {
     /**
      * 删除本批登记。

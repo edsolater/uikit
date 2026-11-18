@@ -30,7 +30,7 @@ export const gridStyleConfig = {
   /**
    * 将列数转换为等宽模板，完整模板直接交给布局消费。
    */
-  $columns: (value) =>
+  $columns: value =>
     gridColumns.set(
       typeof value === 'number'
         ? 'repeat(' + value + ', minmax(0, 1fr))'
@@ -39,29 +39,29 @@ export const gridStyleConfig = {
   /**
    * 为当前网格设置它在父网格中占用的列跨度。
    */
-  $columnSpan: (value) => gridColumnSpan.set('span ' + value),
+  $columnSpan: value => gridColumnSpan.set('span ' + value),
   /**
    * 固定布局继续引用实例列模板，避免复制当前列数形成第二份来源。
    */
-  $responsive: (value) => {
+  $responsive: value => {
     if (!value) columns.set(gridColumns.toCSSString())
   },
   /**
    * 设置当前网格子项之间的间距。
    */
-  $gap: (value) => gridGap.set(value),
+  $gap: value => gridGap.set(value),
   /**
    * 设置列间装饰。
    */
-  $columnRule: (value) => gridColumnRule.set(value),
+  $columnRule: value => gridColumnRule.set(value),
   /**
    * 设置行间装饰。
    */
-  $rowRule: (value) => gridRowRule.set(value),
+  $rowRule: value => gridRowRule.set(value),
   /**
    * 按需占用父级弹性布局的剩余空间。
    */
-  $grow: (value) => {
+  $grow: value => {
     if (value) flex.set('1')
   },
 } satisfies StyleConfig<GridStyleConfig>

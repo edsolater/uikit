@@ -92,7 +92,7 @@ export const createJSSContent = (
   dependencies: unknown[] = [],
 ): Expression => ({
   dependencies,
-  toCSSString: (resolve) => toCSSString(resolve ?? (() => undefined)),
+  toCSSString: resolve => toCSSString(resolve ?? (() => undefined)),
 })
 
 /**
@@ -154,9 +154,7 @@ export function contentDependencies(
   assert(!active.has(content), '内容数组存在循环引用。')
   active.add(content)
   try {
-    return content.flatMap((item) =>
-      contentDependencies(item, active, depth + 1),
-    )
+    return content.flatMap(item => contentDependencies(item, active, depth + 1))
   } finally {
     active.delete(content)
   }
@@ -182,10 +180,10 @@ export function contentDataToCSSString(
   active.add(content)
   try {
     const parts = content
-      .map((item) =>
+      .map(item =>
         contentDataToCSSString(item, resolve, ', ', active, depth + 1),
       )
-      .filter((item) => item !== undefined)
+      .filter(item => item !== undefined)
     return parts.length ? parts.join(separator) : undefined
   } finally {
     active.delete(content)

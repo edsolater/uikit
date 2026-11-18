@@ -299,7 +299,7 @@ function findEmphasisEnd(
  */
 function markdownInlineText(nodes: MarkdownNode[]): string {
   return nodes
-    .map((node) =>
+    .map(node =>
       'children' in node
         ? markdownInlineText(node.children)
         : 'content' in node

@@ -66,7 +66,7 @@ export function cssCustomProperty(token: Token): CSSCustomProperty {
       token,
       key: {
         toCSSString: () => cssTokenName(token),
-        join: (values) => values.at(-1),
+        join: values => values.at(-1),
       },
       get content() {
         return tokenBaseContent(token)

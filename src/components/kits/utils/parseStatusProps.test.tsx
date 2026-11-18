@@ -6,7 +6,7 @@ import { createStatusPropsParser } from './parseStatusProps'
 describe('createStatusPropsParser', () => {
   test('创建时的外部状态即使显式为空并在之后撤去，也不交给内部控制', () => {
     const props: { loading?: boolean } = { loading: undefined }
-    createRoot((dispose) => {
+    createRoot(dispose => {
       try {
         const parseProps = createStatusPropsParser({ candidates: ['loading'] })
         const { controller } = parseProps(props)
@@ -22,7 +22,7 @@ describe('createStatusPropsParser', () => {
 
   test('状态计算自然取得字段，创建阶段不额外读取并丢弃 getter', () => {
     let reads = 0
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const parser = createStatusPropsParser({ candidates: ['loading'] })
       const { statusSources } = parser({
         get loading() {
@@ -39,7 +39,7 @@ describe('createStatusPropsParser', () => {
 
   test('带前缀的候选保留原名，外部 getter 持续更新且不被内部操作接管', () => {
     const { isLoading, statusSources, statusController, attribute, dispose } =
-      createRoot((dispose) => {
+      createRoot(dispose => {
         const isLoading = createState(true)
         const parser = createStatusPropsParser({ candidates: ['isLoading'] })
         const {
@@ -86,7 +86,7 @@ describe('createStatusPropsParser', () => {
       statusController,
       statusEffectResultProps,
       dispose,
-    } = createRoot((dispose) => {
+    } = createRoot(dispose => {
       const loading = createState(false)
       const effect = vi.fn(({ disabled }) => ({
         htmlProps: { disabled, 'data-status': '被自动结果覆盖' },
@@ -123,7 +123,7 @@ describe('createStatusPropsParser', () => {
         },
       })
       expect(
-        statusEffectResultProps.every((props) => !('shadowProps' in props)),
+        statusEffectResultProps.every(props => !('shadowProps' in props)),
       ).toBe(true)
       expect(statusEffectResultProps[0].htmlProps!['data-status']).toBe(
         '被自动结果覆盖',

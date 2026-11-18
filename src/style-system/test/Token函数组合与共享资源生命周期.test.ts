@@ -7,7 +7,7 @@ import type { Rules } from '../rule'
 
 test.each([false, true])(
   '普通函数返回的多个 Token 共享来源资源，全部撤销=%s',
-  (removeAll) => {
+  removeAll => {
     const source = token(2, {
       name: 'function-resource-source',
       registration: { syntax: '<number>', inherits: false, initialValue: 1 },
@@ -26,9 +26,7 @@ test.each([false, true])(
           compileWaveIndex: 2,
           onCompile(_context, ast) {
             for (const target of removeAll ? [first, second] : [first]) {
-              const node = ast
-                .search({})
-                .find((node) => node.content === target)
+              const node = ast.search({}).find(node => node.content === target)
               if (node) ast.remove(node)
             }
           },

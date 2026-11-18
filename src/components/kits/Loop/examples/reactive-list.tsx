@@ -33,7 +33,7 @@ export function ReactiveListExample() {
         </Button>
       </Flow>
       <Loop each={() => val(items)} fallback={<Text>暂无检查项</Text>}>
-        {(item) => <Text p>{item}</Text>}
+        {item => <Text p>{item}</Text>}
       </Loop>
     </Flow>
   )

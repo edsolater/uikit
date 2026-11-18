@@ -73,7 +73,7 @@ const shellAccent = colorMix([accentColorTheme, 0.2], 'transparent')
 const shellBrand = colorMix([brandColorTheme, 0.14], 'transparent')
 const shellCanvas = colorMix([canvasColorTheme, 0.9], [accentColorTheme, 0.1])
 const shellBackground = createJSSContent(
-  (resolve) =>
+  resolve =>
     `radial-gradient(circle at 14% -6%, ${resolve(shellAccent)}, transparent 38%), radial-gradient(circle at 88% 8%, ${resolve(shellBrand)}, transparent 34%), linear-gradient(180deg, ${resolve(shellCanvas)}, ${resolve(canvasColorTheme)})`,
   [shellAccent, shellBrand, shellCanvas, canvasColorTheme],
 )

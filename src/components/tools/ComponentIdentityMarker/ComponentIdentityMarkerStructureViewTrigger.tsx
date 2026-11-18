@@ -18,7 +18,7 @@ import './ComponentIdentityMarkerStructureViewTrigger.style'
 export function ComponentIdentityMarkerStructureViewTrigger() {
   let control!: HTMLButtonElement
   const enabled = createState(false)
-  const pressed = derive(enabled, (current) =>
+  const pressed = derive(enabled, current =>
     current ? ('true' as const) : ('false' as const),
   )
   return (
@@ -27,12 +27,12 @@ export function ComponentIdentityMarkerStructureViewTrigger() {
         class="ComponentIdentityMarkerStructureViewTrigger"
         filled
         label="切换组件定位框"
-        domRef={(element) => {
+        domRef={element => {
           control = element
         }}
         htmlProps={{ 'aria-pressed': pressed }}
         onClick={() => {
-          enabled.set((current) => !current)
+          enabled.set(current => !current)
         }}
       >
         {val(enabled) ? '关闭组件定位框' : '打开组件定位框'}

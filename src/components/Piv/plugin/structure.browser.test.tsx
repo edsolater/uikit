@@ -31,7 +31,7 @@ test('能力通过异步目标读取节点，按顺序插入并在释放时清�
   try {
     expect(host.querySelector('[data-position]')).toBeNull()
     await expect
-      .poll(() => [...host.children].map((child) => child.textContent))
+      .poll(() => [...host.children].map(child => child.textContent))
       .toEqual(['主体', 'BUTTON', '后乙'])
   } finally {
     dispose()
@@ -74,7 +74,7 @@ test('结构插入按调用顺序挂载，内容持续响应并在作用域释�
   const element = host.appendChild(document.createElement('div'))
   element.textContent = '主体'
   const text = createState('初始')
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     {
       const { insertBefore, insertAfter, prependChild, appendChild } =
         createPivStructure(element)
@@ -92,7 +92,7 @@ test('结构插入按调用顺序挂载，内容持续响应并在作用域释�
     expect(element.textContent).toBe('主体')
     await expect
       .poll(() =>
-        [...host.children].map((child) => child.getAttribute('data-position')),
+        [...host.children].map(child => child.getAttribute('data-position')),
       )
       .toEqual(['before', null, 'after-first', 'after-second'])
     expect(element.textContent).toBe('前子主体后子')
@@ -112,7 +112,7 @@ test('结构 wrapper 只在挂载时包住原元素，附属内容与清理属�
   const host = document.createElement('div')
   const element = host.appendChild(document.createElement('div'))
   const label = createState('容器')
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     {
       const { wrapOutside } = createPivStructure(element)
       wrapOutside(<section data-wrapper title={val(label)} />)
@@ -137,7 +137,7 @@ test('结构内容支持条件、多个节点和空内容切换，卸载释放�
   const element = host.appendChild(document.createElement('div'))
   const visible = createState(false)
   const text = createState('初始')
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     {
       const { insertBefore } = createPivStructure(element)
       insertBefore(
@@ -169,7 +169,7 @@ test('结构内容支持条件、多个节点和空内容切换，卸载释放�
 test('先包裹再插入兄弟时，后续操作使用包裹后的父节点', async () => {
   const host = document.createElement('div')
   const element = host.appendChild(document.createElement('div'))
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     {
       const { wrapOutside, insertAfter } = createPivStructure(element)
       wrapOutside(<section />)
@@ -198,7 +198,7 @@ test('Fragment 包裹内容使用其中的真实元素承接主体并随作用�
   const element = host.appendChild(document.createElement('div'))
   const fragment = document.createDocumentFragment()
   fragment.append('前文', document.createElement('section'), '后文')
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     {
       const { wrapOutside } = createPivStructure(element)
       wrapOutside(fragment)

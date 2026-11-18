@@ -136,12 +136,10 @@ describe('Markdown', () => {
     const checks = host.querySelectorAll<HTMLInputElement>(
       'input[type="checkbox"]',
     )
-    expect([...checks].map((input) => [input.checked, input.disabled])).toEqual(
-      [
-        [true, true],
-        [false, true],
-      ],
-    )
+    expect([...checks].map(input => [input.checked, input.disabled])).toEqual([
+      [true, true],
+      [false, true],
+    ])
     expect(host.querySelector('table > thead > tr > th')?.textContent).toBe(
       '名称',
     )
@@ -202,7 +200,7 @@ describe('Markdown', () => {
     dispose = render(
       () => (
         <Markdown
-          ref={(value) => {
+          ref={value => {
             controller = value
             receives++
           }}

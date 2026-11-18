@@ -57,9 +57,9 @@ export function Piv<Tag extends PivSupportedElementTag = 'div'>(
       return [labelProps, ...toArray(val(target.htmlProps))]
     },
     has: (_, key) => hasProperty(key),
-    ownKeys: (target) => [
+    ownKeys: target => [
       ...new Set(
-        Reflect.ownKeys(target).map((key) =>
+        Reflect.ownKeys(target).map(key =>
           key === 'label' ? 'htmlProps' : key,
         ),
       ),

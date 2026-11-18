@@ -98,8 +98,8 @@ handler.set(() => anotherOnClick)
 
 ```ts
 const count = createState(1)
-const doubled = count.map((n) => n * 2)
-createEffect(doubled, (value) => console.log(value))
+const doubled = count.map(n => n * 2)
+createEffect(doubled, value => console.log(value))
 ```
 
 派生视图属于创建时的响应式作用域。派生结果相等时，不重复通知消费者动作。

@@ -503,7 +503,7 @@ function verifyProvidedInputs() {
       data: [{ amount: 3 }],
       renderParts: {
         tableCell: {
-          amount: (value) => {
+          amount: value => {
             expectTypeOf(value).toEqualTypeOf<number>()
             return value
           },
@@ -511,7 +511,11 @@ function verifyProvidedInputs() {
       },
     },
   })
-  const capability = createInactivePlugin<{}, {}, TableProps<{ amount: number }>>({
+  const capability = createInactivePlugin<
+    {},
+    {},
+    TableProps<{ amount: number }>
+  >({
     name: '记录来源',
     pluginCore({ addProps }) {
       addProps({ data: [{ amount: 5 }] })

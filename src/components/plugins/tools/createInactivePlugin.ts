@@ -135,7 +135,7 @@ export function createInactivePlugin<
   return ((pluginOptions: Options = {} as Options) => {
     const shadowProps: object[] = []
     const plugin = { [pluginMarker]: name, shadowProps } as Plugin<Props>
-    const addProps: PluginAddProps<Props> = (props) => shadowProps.push(props)
+    const addProps: PluginAddProps<Props> = props => shadowProps.push(props)
     let cachedDomProxy: PromiseResultProxy<HTMLElement> | undefined
     const controller = pluginCore({
       pluginOptions,

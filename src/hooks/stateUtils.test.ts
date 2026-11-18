@@ -11,7 +11,7 @@ import {
 import { derive } from './stateUtils'
 
 test('字段映射直接返回 Source，类型和运行值都展开为完成值', () => {
-  const { selected, second, derived, dispose } = createRoot((dispose) => {
+  const { selected, second, derived, dispose } = createRoot(dispose => {
     const first = createState<string | undefined>('第一份')
     const second = createState<string | undefined>('第二份')
     const selected = createState({ source: first })
@@ -20,7 +20,7 @@ test('字段映射直接返回 Source，类型和运行值都展开为完成值'
         return val(selected).source
       },
     }
-    const derived = derive(props, (s) => s.size)
+    const derived = derive(props, s => s.size)
     expectTypeOf(derived).toEqualTypeOf<StateView<string | undefined>>()
     return { selected, second, derived, dispose }
   })
@@ -38,12 +38,12 @@ test('mapper 创建的新 Promise 只随上游变化生产一次，普通函数�
   let calls = 0
   const handler = vi.fn(() => '业务函数')
   const source = createState(2)
-  const { mapped, functionValue, dispose } = createRoot((dispose) => ({
-    mapped: source.map((value) => {
+  const { mapped, functionValue, dispose } = createRoot(dispose => ({
+    mapped: source.map(value => {
       calls++
       return Promise.resolve(value * 2)
     }),
-    functionValue: derive({ handler }, (props) => props.handler),
+    functionValue: derive({ handler }, props => props.handler),
     dispose,
   }))
   expectTypeOf(mapped).toEqualTypeOf<StateView<number>>()
@@ -66,16 +66,16 @@ test('Promise 完成 State 后后继 map 接收标量，并持续跟随内部 St
   let calls = 0
   const values: string[] = []
   const inner = createState('初值')
-  const scope = createRoot((dispose) => {
-    const mapped = derive({ value: Promise.resolve(inner) }, (props) => {
+  const scope = createRoot(dispose => {
+    const mapped = derive({ value: Promise.resolve(inner) }, props => {
       calls++
       return props.value
     })
-    const next = mapped.map((value) => {
+    const next = mapped.map(value => {
       expectTypeOf(value).toEqualTypeOf<string>()
       return `${value}。`
     })
-    createEffect(next.read, (value) => {
+    createEffect(next.read, value => {
       values.push(value)
     })
     return { mapped, next, dispose }
@@ -100,13 +100,13 @@ test('映射切换到同值 State 时不重跑后继 mapper 或重复通知', ()
   const selected = createState(true)
   const first = createState('相同值')
   const second = createState('相同值')
-  const scope = createRoot((dispose) => {
-    const mapped = selected.map((enabled) => (enabled ? first : second))
-    const next = mapped.map((value) => {
+  const scope = createRoot(dispose => {
+    const mapped = selected.map(enabled => (enabled ? first : second))
+    const next = mapped.map(value => {
       nextCalls++
       return `${value}。`
     })
-    createEffect(next.read, (value) => {
+    createEffect(next.read, value => {
       values.push(value)
     })
     return { next, dispose }
@@ -132,7 +132,7 @@ test('等待中的派生作用域释放后，异步完成不再提交动作', as
   const inner = createState(3)
   const observed = vi.fn()
   let calls = 0
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     const mapped = derive({}, () => {
       calls++
       return request.promise

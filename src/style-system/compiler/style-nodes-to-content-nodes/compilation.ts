@@ -32,7 +32,7 @@ export function styleNodesToContentNodes(
     resources,
     tokens,
   )
-  const join = new Join(session, (node) => nodes.compiledContents(node))
+  const join = new Join(session, node => nodes.compiledContents(node))
   for (let wave = 0; ; wave++) {
     assert(wave <= 10_000, 'AST 编译波超过上限 10000，Content 仍未完成。')
     nodes.visit(wave)
@@ -41,6 +41,6 @@ export function styleNodesToContentNodes(
     if (tokens.settle()) continue
     if (session.updateSettlement()) continue
     if (join.update()) continue
-    return nodes.outputs((node) => join.isOutput(node))
+    return nodes.outputs(node => join.isOutput(node))
   }
 }

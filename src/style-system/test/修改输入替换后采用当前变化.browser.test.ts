@@ -29,11 +29,11 @@ test('替换修改材料后默认与固定状态更新，旧配方资源退出',
   let amount: TokenInput = oldAmount
   const original = modify(size, {
     type: 'expression',
-    detail: (current) => add(current, amount),
+    detail: current => add(current, amount),
   })
   const changed = modify(size, {
     type: 'expression',
-    detail: (current) => add(current, '5px'),
+    detail: current => add(current, '5px'),
   })
   const currentInput = changed[1]
   const other = token('7px', {
@@ -47,10 +47,10 @@ test('替换修改材料后默认与固定状态更新，旧配方资源退出',
     [
       [],
       undefined,
-      whenSettled((controller) => {
+      whenSettled(controller => {
         const node = controller
           .search({ key: size })
-          .find((node) => node.content === original[1])!
+          .find(node => node.content === original[1])!
         amount = '5px'
         node.content = currentInput
         node.compileRevision++
@@ -60,10 +60,10 @@ test('替换修改材料后默认与固定状态更新，旧配方资源退出',
     [
       [],
       undefined,
-      whenSettled((controller) => {
+      whenSettled(controller => {
         const node = controller
           .search({ key: size })
-          .find((node) => node.content === currentInput)
+          .find(node => node.content === currentInput)
         if (!node || !controller.usesContent(node, currentInput)) return false
         node.compileRevision++
         return true
@@ -82,24 +82,24 @@ test('替换修改材料后默认与固定状态更新，旧配方资源退出',
 
 test.each([false, true])(
   '替换后保持共享候选与后续非交换步骤，随后撤销=%s',
-  (remove) => {
+  remove => {
     const size = token('10px', {
       name: `replace-shared-${remove}`,
       address: '.SharedReplacement',
     })
     const original = modify(
       size,
-      { type: 'expression', detail: (current) => add(current, '3px') },
+      { type: 'expression', detail: current => add(current, '3px') },
       { id: 'gain' },
     )
     const changed = modify(
       size,
-      { type: 'expression', detail: (current) => add(current, '5px') },
+      { type: 'expression', detail: current => add(current, '5px') },
       { id: 'gain' },
     )
     const competing = modify(
       size,
-      { type: 'expression', detail: (current) => add(current, '7px') },
+      { type: 'expression', detail: current => add(current, '7px') },
       { id: 'gain' },
     )
     const rules: Rules = [
@@ -109,17 +109,17 @@ test.each([false, true])(
         ['.SharedReplacement'],
         ...modify(size, {
           type: 'expression',
-          detail: (current) => multiply(current, 2),
+          detail: current => multiply(current, 2),
         }),
       ],
       [['.SharedReplacement'], 'width', size],
       [
         [],
         undefined,
-        whenSettled((controller) => {
+        whenSettled(controller => {
           const node = controller
             .search({ key: size })
-            .find((node) => node.content === original[1])!
+            .find(node => node.content === original[1])!
           node.content = changed[1]
           node.compileRevision++
           return true
@@ -130,10 +130,10 @@ test.each([false, true])(
       rules.push([
         [],
         undefined,
-        whenSettled((controller) => {
+        whenSettled(controller => {
           const node = controller
             .search({ key: size })
-            .find((node) => node.content === changed[1])!
+            .find(node => node.content === changed[1])!
           if (!node || !controller.usesContent(node, changed[1])) return false
           controller.remove(node)
           return true
@@ -159,7 +159,7 @@ test('前插步骤只重连源序，不把闭包变化作为新的输入', () =>
   let amount = '3px'
   const original = modify(size, {
     type: 'expression',
-    detail: (current) => add(current, amount),
+    detail: current => add(current, amount),
   })
   const css = compileRules([
     [['.InsertedModification'], ...original],
@@ -167,16 +167,16 @@ test('前插步骤只重连源序，不把闭包变化作为新的输入', () =>
     [
       [],
       undefined,
-      whenSettled((controller) => {
+      whenSettled(controller => {
         const node = controller
           .search({ key: size })
-          .find((node) => node.content === original[1])!
+          .find(node => node.content === original[1])!
         amount = '5px'
         controller.insert(
           { before: node, conditionPath: node.conditionPath },
           modify(size, {
             type: 'expression',
-            detail: (current) => multiply(current, 2),
+            detail: current => multiply(current, 2),
           }),
           { owner: node },
         )

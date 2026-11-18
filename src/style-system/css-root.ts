@@ -66,9 +66,7 @@ class Root {
         : document.querySelector<HTMLStyleElement>('style#css-root')
     assert(!!style?.sheet, '缺少样式挂载节点：<style id="css-root"></style>')
     const mounted = this.hosts.get(style) ?? {
-      prefix: Array.from(style.sheet.cssRules, (rule) => rule.cssText).join(
-        '\n',
-      ),
+      prefix: Array.from(style.sheet.cssRules, rule => rule.cssText).join('\n'),
       css: '',
     }
     const css = this.compile()

@@ -90,7 +90,7 @@ describe('Text', () => {
     await expect
       .poll(() =>
         [...document.querySelectorAll('.StructureViewOverlay .label')].some(
-          (label) => label.textContent === '运行期用途',
+          label => label.textContent === '运行期用途',
         ),
       )
       .toBe(true)
@@ -142,7 +142,7 @@ describe('Text', () => {
     await expect
       .poll(() =>
         [...document.querySelectorAll('.StructureViewOverlay .label')].some(
-          (element) => element.textContent === '',
+          element => element.textContent === '',
         ),
       )
       .toBe(true)
@@ -201,7 +201,7 @@ describe('Text', () => {
       ),
       host,
     )
-    expect([...host.children].map((element) => element.tagName)).toEqual([
+    expect([...host.children].map(element => element.tagName)).toEqual([
       'SPAN',
       'SPAN',
       'SPAN',
@@ -213,13 +213,13 @@ describe('Text', () => {
     await expect
       .poll(() =>
         [...document.querySelectorAll('.StructureViewOverlay .label')].map(
-          (element) => element.textContent,
+          element => element.textContent,
         ),
       )
       .toContain('当前说明')
     expect(
       [...document.querySelectorAll('.StructureViewOverlay .label')].some(
-        (element) => element.textContent === 'Text · 当前说明',
+        element => element.textContent === 'Text · 当前说明',
       ),
     ).toBe(false)
     description.set('更新后的说明')
@@ -227,7 +227,7 @@ describe('Text', () => {
     await expect
       .poll(() =>
         [...document.querySelectorAll('.StructureViewOverlay .label')].map(
-          (element) => element.textContent,
+          element => element.textContent,
         ),
       )
       .toContain('更新后的说明')
@@ -237,7 +237,7 @@ describe('Text', () => {
       .poll(
         () =>
           [...document.querySelectorAll('.StructureViewOverlay .label')].filter(
-            (element) => element.textContent === '',
+            element => element.textContent === '',
           ).length,
       )
       .toBe(4)
@@ -247,13 +247,13 @@ describe('Text', () => {
       .poll(
         () =>
           [...document.querySelectorAll('.StructureViewOverlay .label')].filter(
-            (element) => element.textContent === '',
+            element => element.textContent === '',
           ).length,
       )
       .toBe(4)
     expect(
       [...host.querySelectorAll('.Text')].every(
-        (element) => getComputedStyle(element).visibility === 'hidden',
+        element => getComputedStyle(element).visibility === 'hidden',
       ),
     ).toBe(true)
     expect(host.querySelector('p.Text')?.textContent).toBe('42')
@@ -315,7 +315,7 @@ describe('Text', () => {
       .toBe(0)
     let resolveDescription!: (value: string) => void
     description.set(
-      new Promise<string>((resolve) => {
+      new Promise<string>(resolve => {
         resolveDescription = resolve
       }),
     )
@@ -336,7 +336,7 @@ describe('Text', () => {
 /** 正常无障碍名称消费 Source，不受定位框显示选择控制。 */
 test('关闭定位框显示仍等待异步用途，并在完成后绑定无障碍名称', async () => {
   let resolveDescription!: (value: string) => void
-  const description = new Promise<string>((resolve) => {
+  const description = new Promise<string>(resolve => {
     resolveDescription = resolve
   })
   const host = document.body.appendChild(document.createElement('main'))

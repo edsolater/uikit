@@ -21,7 +21,7 @@ import { colorMix } from '../pieces/functions/color-mix'
 
 const handles: RulesHandle[] = []
 afterEach(() => {
-  handles.splice(0).forEach((handle) => handle.remove())
+  handles.splice(0).forEach(handle => handle.remove())
   document.body.replaceChildren()
 })
 function mount() {
@@ -46,10 +46,10 @@ test('完整规则一次设置四通道，再按顺序应用另一完整规则',
   const second = modification({
     type: 'color',
     detail: {
-      lightness: (currentExpression) => add(currentExpression, 0.1),
-      chroma: (currentExpression) => add(currentExpression, 0.05),
-      hue: (currentExpression) => add(currentExpression, 30),
-      alpha: (currentExpression) => add(currentExpression, -0.2),
+      lightness: currentExpression => add(currentExpression, 0.1),
+      chroma: currentExpression => add(currentExpression, 0.05),
+      hue: currentExpression => add(currentExpression, 30),
+      alpha: currentExpression => add(currentExpression, -0.2),
     },
   })
   handles.push(
@@ -72,17 +72,17 @@ test('单一规则变量复用于两个颜色，hover与active同时应用并在
     name: 'hover-change',
     type: 'color',
     detail: {
-      lightness: (currentExpression) => add(currentExpression, 0.05),
-      chroma: (currentExpression) => multiply(currentExpression, 1.1),
+      lightness: currentExpression => add(currentExpression, 0.05),
+      chroma: currentExpression => multiply(currentExpression, 1.1),
     },
   })
   const activeChange = modification({
     name: 'active-change',
     type: 'color',
     detail: {
-      lightness: (currentExpression) => add(currentExpression, -0.1),
-      chroma: (currentExpression) => multiply(currentExpression, 0.8),
-      hue: (currentExpression) => add(currentExpression, 10),
+      lightness: currentExpression => add(currentExpression, -0.1),
+      chroma: currentExpression => multiply(currentExpression, 0.8),
+      hue: currentExpression => add(currentExpression, 10),
       alpha: 0.7,
     },
   })
@@ -184,7 +184,7 @@ test('主题源更新和混色实时生效，规则无需重新编译', () => {
         modification({
           type: 'color',
           detail: {
-            alpha: (currentExpression) => add(currentExpression, -0.1),
+            alpha: currentExpression => add(currentExpression, -0.1),
           },
         }),
       ),
@@ -245,15 +245,15 @@ test('独立变化按非交换顺序修改并得到规定颜色，子元素局�
     name: 'dual-hover-rule',
     type: 'color',
     detail: {
-      lightness: (currentExpression) => add(currentExpression, 0.1),
-      chroma: (currentExpression) => multiply(currentExpression, 2),
+      lightness: currentExpression => add(currentExpression, 0.1),
+      chroma: currentExpression => multiply(currentExpression, 2),
     },
   })
   const active = modification({
     type: 'color',
     detail: {
       hue: 150,
-      alpha: (currentExpression) => add(currentExpression, -0.2),
+      alpha: currentExpression => add(currentExpression, -0.2),
     },
   })
   const direct = token('oklch(0.5 0.2 150 / 0.6)')

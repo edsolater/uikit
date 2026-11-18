@@ -28,7 +28,7 @@ test('特殊类名只匹配真实类名并支持伪元素', () => {
     expect(getComputedStyle(other).color).not.toBe('rgb(1, 2, 3)')
     expect(getComputedStyle(exact, '::before').color).toBe('rgb(4, 5, 6)')
   } finally {
-    handles.forEach((handle) => handle.remove())
+    handles.forEach(handle => handle.remove())
     exact.remove()
     other.remove()
     style.remove()

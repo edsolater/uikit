@@ -354,11 +354,11 @@ export function kit<
       /**
        * 将清理动作登记到本实例的创建作用域。
        */
-      onCleanup: (cleanup) => runWithOwner(owner, () => onCleanup(cleanup)),
+      onCleanup: cleanup => runWithOwner(owner, () => onCleanup(cleanup)),
       /**
        * 接收核心提供的业务能力，供本次 render 完成后组合 Controller。
        */
-      exposeController: (controller) => {
+      exposeController: controller => {
         exposedMembers = controller
       },
     }
@@ -423,7 +423,7 @@ export function kit<
         // 只跟踪接收器的替换，不重跑核心或重建 Controller。
         createRenderEffect(
           () => rawProps.ref as RefReceiver<Controller> | undefined,
-          (receive) => receive?.(controller),
+          receive => receive?.(controller),
         )
       }
       return content

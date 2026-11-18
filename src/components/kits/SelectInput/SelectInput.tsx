@@ -96,7 +96,7 @@ export const SelectInput: KitComponent<{
             as="input"
             class="SelectInput-input"
             id={id}
-            domRef={(element) => {
+            domRef={element => {
               inputElement = element as HTMLInputElement
             }}
             htmlProps={{
@@ -155,7 +155,7 @@ export const SelectInput: KitComponent<{
           />
           <Show when={!val(isEditing)}>
             <For each={(val(props.tags) ?? []).slice(0, 3)}>
-              {(tag) => (
+              {tag => (
                 <Piv
                   as="span"
                   class="SelectInput-tag"
@@ -174,7 +174,7 @@ export const SelectInput: KitComponent<{
           htmlProps={{ role: 'listbox' }}
         >
           <Show when={val(props.message)}>
-            {(message) => <Piv class="SelectInput-message">{message()}</Piv>}
+            {message => <Piv class="SelectInput-message">{message()}</Piv>}
           </Show>
           <For each={val(props.options)}>
             {(option, index) => (

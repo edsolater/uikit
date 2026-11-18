@@ -44,7 +44,7 @@ const delta = token('1px', { name: 'scope-delta', address: ':root' })
 rules('.Parent', [
   modify(size, {
     type: 'expression',
-    detail: (current) => add(current, delta),
+    detail: current => add(current, delta),
   }),
   [key('width'), size],
 ])

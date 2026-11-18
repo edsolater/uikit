@@ -29,7 +29,7 @@ test('文档主题、对话框动效与滚动条样式由系统挂载并响应�
     )
     dialog.showModal()
     await Promise.all(
-      dialog.getAnimations().map((animation) => animation.finished),
+      dialog.getAnimations().map(animation => animation.finished),
     )
     expect(getComputedStyle(dialog).opacity).toBe('1')
     expect(getComputedStyle(dialog).transform).toBe('none')

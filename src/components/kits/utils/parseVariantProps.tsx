@@ -127,13 +127,13 @@ export function createVariantInputRules(
   return {
     defaultSources: toRecord(
       groups,
-      (group) => group.groupName,
-      (group) => (input: object) => parseVariantGroup(input, group, true),
+      group => group.groupName,
+      group => (input: object) => parseVariantGroup(input, group, true),
     ),
     omit: (key: PropertyKey) =>
       groups.some(
-        (group) =>
-          group.candidates.some((candidate) => candidate === key) &&
+        group =>
+          group.candidates.some(candidate => candidate === key) &&
           !(group.groupName in inputProps),
       ),
   }
@@ -153,7 +153,7 @@ function parseVariantGroup(
   const hasGroupProp =
     !candidatesOnly && untrack(() => group.groupName in props)
   const declaredCandidates = untrack(() =>
-    group.candidates.filter((candidate) => candidate in props),
+    group.candidates.filter(candidate => candidate in props),
   )
   if (hasGroupProp && declaredCandidates.length > 0) {
     console.warn(
@@ -167,12 +167,11 @@ function parseVariantGroup(
     )
   }
 
-  return derive(propRecord, (s) => {
+  return derive(propRecord, s => {
     if (!candidatesOnly && group.groupName in s)
       return s[group.groupName] as Source<string | undefined>
     return group.candidates.find(
-      (candidate) =>
-        val(s[candidate] as Source<boolean | undefined>) === true,
+      candidate => val(s[candidate] as Source<boolean | undefined>) === true,
     )
   })
 }
@@ -181,5 +180,5 @@ function parseVariantGroup(
  * 将候选名称格式化为冲突说明中的可读列表。
  */
 function formatCandidates(candidates: readonly string[]): string {
-  return candidates.map((candidate) => `“${candidate}”`).join('、')
+  return candidates.map(candidate => `“${candidate}”`).join('、')
 }

@@ -19,7 +19,7 @@ test('函数默认来源持续跟随响应式变化，也可以暂时为空', ()
   const defaults = createState<{ label: string } | undefined>({
     label: '初始默认值',
   })
-  const { props, dispose } = createRoot((dispose) => ({
+  const { props, dispose } = createRoot(dispose => ({
     props: addDefaultProps({ label: undefined }, () => val(defaults)),
     dispose,
   }))

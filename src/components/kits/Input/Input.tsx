@@ -51,7 +51,7 @@ export const Input: KitComponent<{
     // 取得表单关联标识，并把校验结果接为 invalid 来源。
     const id = createFormFieldId(props, useFormFieldId())
     const validity = createInputValidity(props)
-    const isInvalid = derive(validity.isValid, (isValid) => !isValid)
+    const isInvalid = derive(validity.isValid, isValid => !isValid)
     const { effectResult: statusEffectResultProps, controller } =
       parseInputStatusProps({
         invalid: isInvalid,

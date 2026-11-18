@@ -52,7 +52,7 @@ export function draggablePluginCore({
   // 触发交给 浏览器DOM，但关闭浏览器原生拖放。
   addProps({
     // DOM 绑定拥有会话；卸载或换节点时先取消该节点仍在进行的交互。
-    domRef: (target) => {
+    domRef: target => {
       const session = createPointerDrag({
         target,
         id,
@@ -60,7 +60,7 @@ export function draggablePluginCore({
         activationDistance: Math.max(0, options.activationDistance ?? 0),
         activationJump: options.activationJump ?? true,
         enabled: enabled.read,
-        onDraggingChange: (value) => dragging.set(value),
+        onDraggingChange: value => dragging.set(value),
       })
       pointerDrag = session
       return () => {

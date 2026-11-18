@@ -26,7 +26,7 @@ const soft = stateCondition('&[data-variant="soft"]')
 const solid = stateCondition('&[data-variant="solid"]')
 const boardLineColor = color({
   base: boundaryColorTheme,
-  alpha: (alpha) => multiply(alpha, 0.5),
+  alpha: alpha => multiply(alpha, 0.5),
 })
 const background = token(colorMix([surfaceColorTheme, 0.78], 'transparent'), {
   name: 'board-background',

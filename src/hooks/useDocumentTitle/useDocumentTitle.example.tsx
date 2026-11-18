@@ -11,7 +11,7 @@ export function UseDocumentTitleExample() {
   const titles = ['UIKit Examples', 'Button Preview', 'Hook Preview']
   const titleIndex = createState(0)
   const currentTitle = useDocumentTitle(
-    derive(titleIndex, (index) => titles[index]),
+    derive(titleIndex, index => titles[index]),
   )
 
   return (
@@ -27,7 +27,7 @@ export function UseDocumentTitleExample() {
           <Button
             plain
             onClick={() => {
-              titleIndex.set((index) => (index + 1) % titles.length)
+              titleIndex.set(index => (index + 1) % titles.length)
             }}
           >
             Switch title

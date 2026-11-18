@@ -35,11 +35,11 @@ const size = token('4px', { address: '.Meter' })
 rules('.Meter', [
   modify(size, {
     type: 'expression',
-    detail: (current) => add(current, '3px'),
+    detail: current => add(current, '3px'),
   }),
   modify(size, {
     type: 'expression',
-    detail: (current) => multiply(current, 2),
+    detail: current => multiply(current, 2),
   }),
   [key('width'), size],
 ])

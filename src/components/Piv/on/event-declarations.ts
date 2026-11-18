@@ -110,11 +110,11 @@ export function toListenerDiscriptorPairs(
   eventListeners: EventListeners,
 ): EventListenerDiscriptorPair[] {
   const eventListenerList = toEventListenersList(eventListeners)
-  const eventListenerPairs = eventListenerList.flatMap((eventListener) => {
+  const eventListenerPairs = eventListenerList.flatMap(eventListener => {
     if (!eventListener) return []
     if (Array.isArray(eventListener)) {
       const [event, discriptorsOrCallbacks] = eventListener
-      return toArray(discriptorsOrCallbacks).map((v) => [
+      return toArray(discriptorsOrCallbacks).map(v => [
         event,
         toBaseListenerDiscriptor(v),
       ]) // 咦？这里怎么没报错？

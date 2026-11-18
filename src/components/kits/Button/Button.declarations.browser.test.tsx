@@ -49,12 +49,12 @@ test('消费视图可直接 derive 字段，不产生身份探测警告或认领
       size,
       unused: '保留字段',
     }).markUsedOnRead()
-    const selected = derive(props, (s) => s.size)
+    const selected = derive(props, s => s.size)
     remaining = createPropsDeclaration<{
       size?: Source<ButtonSize | undefined>
       unused?: string
     }>({ shadowProps: props }).markUsedOnRead()
-    const content = derive(remaining, (s) => s.unused)
+    const content = derive(remaining, s => s.unused)
     return <Button size={selected}>{content}</Button>
   }
   try {
@@ -101,11 +101,8 @@ for (const controlled of [false, true]) {
       controller: DeriveFixtureController
     }> = kit(
       { name: 'DeriveFieldFixture', propDefinition: deriveFixtureDefinition },
-      (props) => (
-        <Button
-          shadowProps={props}
-          size={derive(props, (s) => s.size)}
-        >
+      props => (
+        <Button shadowProps={props} size={derive(props, s => s.size)}>
           字段派生
         </Button>
       ),
@@ -114,7 +111,7 @@ for (const controlled of [false, true]) {
     try {
       dispose = render(
         () => (
-          <Errored fallback={(error) => <p>{String(error())}</p>}>
+          <Errored fallback={error => <p>{String(error())}</p>}>
             <Loading fallback={<p>等待尺寸</p>}>
               <Fixture size="small" ref={receive} />
               <Fixture size={current} ref={receive} />
@@ -129,7 +126,7 @@ for (const controlled of [false, true]) {
       request.resolve('large')
       await expect.poll(() => host.querySelectorAll('button').length).toBe(5)
       const buttons = [...host.querySelectorAll('button')]
-      expect(buttons.map((button) => button.dataset.size)).toEqual([
+      expect(buttons.map(button => button.dataset.size)).toEqual([
         'small',
         'small',
         'small',
@@ -138,7 +135,7 @@ for (const controlled of [false, true]) {
       ])
       current.set('large')
       flush()
-      expect(buttons.map((button) => button.dataset.size)).toEqual([
+      expect(buttons.map(button => button.dataset.size)).toEqual([
         'small',
         'large',
         'large',
@@ -232,7 +229,7 @@ test('父 Kit 认领的业务字段不自动进入 Button，显式再交付可�
     controller: ButtonController
   }> = kit(
     { name: 'ConsumptionParent', propDefinition: buttonPropDefinition },
-    (props) => {
+    props => {
       const disabled = untrack(() => props.disabled)
       return (
         <>
@@ -317,7 +314,7 @@ test('本层已解释的样式配置不再自动交给下层 Kit，根声明仍�
     controller: ButtonController
   }> = kit(
     { name: 'StyleChild', propDefinition: buttonPropDefinition },
-    (props) => {
+    props => {
       childHasConfig = untrack(() => '$styleConfig' in props)
       return <Button shadowProps={props}>根节点</Button>
     },
@@ -331,7 +328,7 @@ test('本层已解释的样式配置不再自动交给下层 Kit，根声明仍�
       propDefinition: buttonPropDefinition,
       $styleConfig: { $gap: applied },
     },
-    (props) => <Child shadowProps={props} />,
+    props => <Child shadowProps={props} />,
   )
   dispose = render(() => <Parent $gap={gap} />, host)
   expect(childHasConfig).toBe(false)
@@ -369,7 +366,7 @@ test('受控 Button 从空声明追加 size 应切换到新的显式分组', () 
     () => (
       <Button
         shadowProps={val(input)}
-        ref={(next) => {
+        ref={next => {
           controller = next
         }}
       >
@@ -399,7 +396,7 @@ for (const readBefore of [false, true]) {
       () => (
         <Button
           label="动态宿主"
-          ref={(next) => {
+          ref={next => {
             controller = next
           }}
         >
@@ -459,7 +456,7 @@ test('状态的外部声明权限跟随新增与移除，显式undefined仍由�
     () => (
       <Button
         shadowProps={val(input)}
-        ref={(next) => {
+        ref={next => {
           controller = next
         }}
       >

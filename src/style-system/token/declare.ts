@@ -82,11 +82,11 @@ const findHomeDeclaration = (
   return (
     controller.findDeclaration(
       query,
-      (node) => eligible(node) && node.productTag !== automaticCSSDeclaration,
+      node => eligible(node) && node.productTag !== automaticCSSDeclaration,
     ) ??
     controller.findDeclaration(
       query,
-      (node) => eligible(node) && node.productTag === automaticCSSDeclaration,
+      node => eligible(node) && node.productTag === automaticCSSDeclaration,
     )
   )
 }
@@ -109,18 +109,18 @@ export function cssHomePath(
 export const joinCSSPropertyValues = (values: ContentView[]): TokenInput =>
   token(values, {
     toCSSString: (items, resolve) =>
-      items.map(resolve).findLast((output) => output !== undefined),
+      items.map(resolve).findLast(output => output !== undefined),
   })
 
 /**
  * 识别持有真实 CSS 目标的声明，普通内容的同名字段不构成声明协议。
  */
 export const isCSSDeclaration = (input: unknown): input is CSSDeclaration =>
-  hasProperty(input, 'kind', (kind) => kind === 'css-declaration') &&
+  hasProperty(input, 'kind', kind => kind === 'css-declaration') &&
   hasProperty(
     input,
     'variable',
-    (variable) =>
+    variable =>
       hasProperty(variable, 'token', isToken) &&
       cssCustomProperty(variable.token) === variable,
   )

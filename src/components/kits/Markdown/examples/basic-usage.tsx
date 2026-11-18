@@ -42,7 +42,7 @@ export function BasicUsageExample() {
       </Text>
       <Button
         onClick={() => {
-          content.set((value) =>
+          content.set(value =>
             value === initialMarkdown
               ? '## 原文已经更新\n\n新的 **内容** 会进入相同的渲染配置。'
               : initialMarkdown,

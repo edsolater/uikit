@@ -31,7 +31,7 @@ export interface AnimationParts {
  */
 export function animationValue(parts: AnimationParts): Token {
   return token(parts, {
-    dependencies: (current) => Object.values(current),
+    dependencies: current => Object.values(current),
     toCSSString: (current, resolve) =>
       [
         resolve(current.name),
@@ -43,7 +43,7 @@ export function animationValue(parts: AnimationParts): Token {
         resolve(current.fillMode),
         resolve(current.playState),
       ]
-        .filter((part) => part !== undefined)
+        .filter(part => part !== undefined)
         .join(' '),
   })
 }

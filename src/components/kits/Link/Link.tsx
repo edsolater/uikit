@@ -37,7 +37,7 @@ export const Link: KitComponent<{
         class={name}
         htmlProps={{
           'href': props.href,
-          'aria-current': derive(props.current, (current) =>
+          'aria-current': derive(props.current, current =>
             current ? 'page' : undefined,
           ),
           'target': props.newTab ? '_blank' : undefined,

@@ -1,15 +1,22 @@
 /** 验证同源指令写入、输入声明形状与分阶段输出，不涉及具体组件。 */
 import { createMemo } from '@/foundation/reactivity'
 import { expect, expectTypeOf, test, vi } from 'vitest'
-import { createRoot, createState, flush, onCleanup, val, type Source } from '@/foundation'
+import {
+  createRoot,
+  createState,
+  flush,
+  onCleanup,
+  val,
+  type Source,
+} from '@/foundation'
 import { createPropsController } from './propDefinition'
 import { createPropsDeclaration } from './propsDeclaration/shadowProps'
 import { mergePivProps, pivPropAccumulation } from '../Piv/plugin/mergePivProps'
 
 test.each(['source', 'tracked-value', 'untracked-value'] as const)(
   '输入控制直接交付完整累加字段，%s保留干预、清空和上游恢复',
-  (mode) => {
-    const { upstream, controlled, props, dispose } = createRoot((dispose) => {
+  mode => {
+    const { upstream, controlled, props, dispose } = createRoot(dispose => {
       type Props = {
         class?: Source<string | string[] | undefined>
         shadowProps?: { class: string }
@@ -45,8 +52,8 @@ test.each(['source', 'tracked-value', 'untracked-value'] as const)(
 
 test.each(['tracked-value', 'untracked-value'] as const)(
   '累加字段的%s遵守外层依赖收集协议',
-  (mode) => {
-    const { upstream, props, observed, dispose } = createRoot((dispose) => {
+  mode => {
+    const { upstream, props, observed, dispose } = createRoot(dispose => {
       const upstream = createState('初始')
       const declaration = createPropsDeclaration(
         { class: upstream },
@@ -73,7 +80,7 @@ test.each(['tracked-value', 'untracked-value'] as const)(
 
 test('取得Source视图不提前读取输入，Controller首次指令仍在初始化后执行', () => {
   const read = vi.fn(() => 2)
-  const { props, states, dispose } = createRoot((dispose) => ({
+  const { props, states, dispose } = createRoot(dispose => ({
     ...createPropsController(
       {
         get count() {
@@ -86,7 +93,7 @@ test('取得Source视图不提前读取输入，Controller首次指令仍在初�
   }))
   const source = props.count
   expect(read).not.toHaveBeenCalled()
-  states.count.set((value) => value + 1)
+  states.count.set(value => value + 1)
   flush()
   expect(val(source)).toBe(3)
   expect(read).toHaveBeenCalledOnce()
@@ -97,7 +104,7 @@ test('缺省与当前声明持续切换，undefined阻止缺省且工厂仅构�
   const current = createState<{ count?: Source<number | undefined> }>({})
   const fallback = createState<number | undefined>(3)
   const factory = vi.fn(() => fallback)
-  const { props, dispose } = createRoot((dispose) => ({
+  const { props, dispose } = createRoot(dispose => ({
     ...createPropsController(
       new Proxy(
         {},
@@ -132,7 +139,7 @@ test('仅通过Prop的接收器原样读取，不进入Controller类型或运行
   const first = vi.fn()
   const next = vi.fn()
   const receiver = createState(() => first)
-  const { props, states, readProp, dispose } = createRoot((dispose) => ({
+  const { props, states, readProp, dispose } = createRoot(dispose => ({
     ...createPropsController(
       {
         get ref() {
@@ -175,7 +182,7 @@ test('缺省字段首次指令可写，输入声明和未读字段保持惰性',
       throw new Error('不应读取')
     },
   }
-  const { props, states, dispose } = createRoot((dispose) => ({
+  const { props, states, dispose } = createRoot(dispose => ({
     ...createPropsController(raw, {
       active: 'source',
       hidden: 'tracked-value',
@@ -195,7 +202,7 @@ test('指令修改计算来源后仍跟随原生依赖更新，回调保存函�
   const source = createState(1)
   const first = () => 1
   const second = () => 2
-  const { props, states, dispose } = createRoot((dispose) => ({
+  const { props, states, dispose } = createRoot(dispose => ({
     ...createPropsController(
       { count: source, callback: first },
       {
@@ -224,7 +231,7 @@ test('首次消费缺省来源时构建工厂，输出投影不改变输入视�
     group?: Source<string | undefined>
     candidate?: Source<boolean | undefined>
   } = {}
-  const { props, states, input, source, dispose } = createRoot((dispose) => {
+  const { props, states, input, source, dispose } = createRoot(dispose => {
     let input!: {
       group?: Source<string | undefined>
       candidate?: Source<boolean | undefined>
@@ -242,7 +249,7 @@ test('首次消费缺省来源时构建工厂，输出投影不改变输入视�
             )
           },
         },
-        omit: (key) => key === 'candidate',
+        omit: key => key === 'candidate',
       },
     )
     const source = props.group
@@ -271,7 +278,7 @@ test('显式undefined不被默认来源覆盖，额外属性与冻结输入可�
     extra: '原样',
   })
   const fallback = vi.fn(() => '默认')
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     const { props } = createPropsController(
       raw,
       { label: 'untracked-value', extra: 'tracked-value' },
@@ -300,7 +307,7 @@ test('显式undefined不被默认来源覆盖，额外属性与冻结输入可�
 test('默认工厂捕获另一缺省字段的同一Source，首次写入及后续变化不断流', () => {
   type Props = { label?: Source<string>; count?: Source<number> }
   const countSource = vi.fn(() => 1)
-  const { props, states, dispose } = createRoot((dispose) => ({
+  const { props, states, dispose } = createRoot(dispose => ({
     ...createPropsController(
       {} as Props,
       { label: 'source', count: 'source' },
@@ -327,7 +334,7 @@ test('默认工厂捕获另一缺省字段的同一Source，首次写入及后�
 
 test('首次从短命作用域读取的字段仍由输入控制原作用域释放', () => {
   const cleanup = vi.fn()
-  const { props, states, dispose } = createRoot((dispose) => ({
+  const { props, states, dispose } = createRoot(dispose => ({
     ...createPropsController(
       {} as { label?: Source<string> },
       { label: 'source' },
@@ -342,7 +349,7 @@ test('首次从短命作用域读取的字段仍由输入控制原作用域释�
     ),
     dispose,
   }))
-  const disposeReader = createRoot((dispose) => {
+  const disposeReader = createRoot(dispose => {
     props.label
     return dispose
   })
@@ -357,8 +364,8 @@ test('首次从短命作用域读取的字段仍由输入控制原作用域释�
 
 test.each([undefined, 'source', 'tracked-value', 'untracked-value'] as const)(
   '跨层累加保留 literal undefined 截断与之前的正值，模式=%s',
-  (mode) =>
-    createRoot((dispose) => {
+  mode =>
+    createRoot(dispose => {
       for (const directValue of [undefined, '保留']) {
         const declaration = createPropsDeclaration(
           { class: directValue, shadowProps: { class: undefined } },
@@ -396,8 +403,8 @@ test.each([undefined, 'source', 'tracked-value', 'untracked-value'] as const)(
 
 test.each([undefined, 'source', 'tracked-value', 'untracked-value'] as const)(
   '上层 Source 当前为 undefined 不截断低优先级来源，模式=%s',
-  (mode) =>
-    createRoot((dispose) => {
+  mode =>
+    createRoot(dispose => {
       const declaration = createPropsDeclaration(
         { class: createState<string | undefined>(undefined) },
         { accumulate: pivPropAccumulation },
@@ -422,7 +429,7 @@ test.each([undefined, 'source', 'tracked-value', 'untracked-value'] as const)(
 
 test('跨层截断跟随 Controller 修改及上游恢复，Marker 借读不抢占字段', () => {
   const { upstream, controlled, upper, lower, dispose } = createRoot(
-    (dispose) => {
+    dispose => {
       const upstream = createState<string | undefined>('直接')
       const declaration = createPropsDeclaration(
         {
@@ -458,7 +465,7 @@ test('跨层截断跟随 Controller 修改及上游恢复，Marker 借读不抢�
 })
 
 test('已处理视图保留字段转换和嵌套读取，不把 label 的屏障混给 class', () =>
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const declaration = createPropsDeclaration(
       { class: '原值', label: undefined },
       { accumulate: pivPropAccumulation },
@@ -483,7 +490,7 @@ test('已处理视图保留字段转换和嵌套读取，不把 label 的屏障�
   }))
 
 test('取得跨层稳定 Source 不求值上游 Source', () =>
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const read = vi.fn(() => undefined)
     const upstream = createState(read, { lazy: true })
     const parent = createPropsDeclaration(

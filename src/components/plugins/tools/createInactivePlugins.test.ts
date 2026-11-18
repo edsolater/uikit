@@ -5,7 +5,7 @@ import { createInactivePlugins } from './createInactivePlugins'
 import type { PluginCoreContext } from './createInactivePlugin'
 
 test('组合返回可调用函数；同次调用共享内部身份，不同调用互相隔离', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const group = createInactivePlugins({
       first: ({
         pluginOptions,
@@ -37,7 +37,7 @@ test('组合返回可调用函数；同次调用共享内部身份，不同调�
 })
 
 test('全部角色可缺省时允许无参数调用；必填角色配置仍必填', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const optional = createInactivePlugins({
       first: ({}: PluginCoreContext<Record<string, never>>) => ({}),
       second: ({}: PluginCoreContext<{ flag?: boolean }>) => ({}),
@@ -79,7 +79,7 @@ test('全部角色可缺省时允许无参数调用；必填角色配置仍必�
 })
 
 test('组合快捷入口取得完整角色类型并保留原方法引用', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     let calls = 0
     const group = createInactivePlugins(
       {

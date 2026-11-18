@@ -68,7 +68,7 @@ function App() {
 function Card(props: { children?: any }) {
   const title = createState<string | undefined>(undefined)
   const payloads: CardPayloads = {
-    setTitle: (text) => {
+    setTitle: text => {
       title.set(text)
     },
   }
@@ -84,7 +84,7 @@ function Card(props: { children?: any }) {
 
 function Title(props: { text: StateView<string> }) {
   const card = useKitContext<CardPayloads>({ target: 'Card' })
-  createEffect(props.text, (text) => {
+  createEffect(props.text, text => {
     card?.setTitle(text.trim())
     return () => {
       card?.setTitle(undefined)

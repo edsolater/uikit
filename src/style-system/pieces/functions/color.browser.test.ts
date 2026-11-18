@@ -14,7 +14,7 @@ test('独立边界颜色与声明内颜色分别支持回调和设值，并响�
   const boundary = color(
     {
       base: source,
-      alpha: (current) => multiply(current, factor),
+      alpha: current => multiply(current, factor),
     },
     { name: 'browser-boundary-color', state: { hover: 'green' } },
   )

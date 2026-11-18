@@ -10,7 +10,7 @@ import { createInactivePlugin } from '@/components/plugins/tools/createInactiveP
 describe('配置插件消费', () => {
   test('合并保留单来源身份与前导、后续 undefined 的不同位置', () => {
     const { missing, value, merged, trailing, literal, dispose } = createRoot(
-      (dispose) => {
+      dispose => {
         const missing = createState<string | undefined>(undefined)
         const value = [['nested']]
         const merged = mergePivProps({
@@ -44,7 +44,7 @@ describe('配置插件消费', () => {
   })
 
   test('多来源只展开顶层数组，稀疏洞消失但显式 undefined 和来源读取顺序保留', () => {
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const sparse = new Array<string | undefined>(4)
       sparse[1] = 'low'
       sparse[3] = undefined
@@ -167,7 +167,7 @@ describe('配置插件消费', () => {
         pluginCore({ addProps }) {
           addProps({ as: 'button', if: visible })
           addProps({
-            domRef: (el) => {
+            domRef: el => {
               attached.push(el)
               return () => released.push(el)
             },
@@ -233,7 +233,7 @@ describe('配置插件消费', () => {
   })
 
   test('普通回调与缺少有效 plugin 的对象被拒绝，能力结果与 plugin 均可使用', () => {
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const capability = createInactivePlugin({
         name: 'valid',
         pluginCore({ addProps }) {
@@ -250,7 +250,7 @@ describe('配置插件消费', () => {
         const release = render(
           () => (
             <Errored
-              fallback={(caught) => {
+              fallback={caught => {
                 error = caught()
                 return null
               }}
@@ -297,7 +297,7 @@ describe('配置插件消费', () => {
         </>
       )
     }, host)
-    expect([...host.children].map((element) => element.localName)).toEqual([
+    expect([...host.children].map(element => element.localName)).toEqual([
       'a',
       'a',
     ])

@@ -15,7 +15,7 @@ export interface FontParts {
  */
 export function fontValue(parts: FontParts): Token<FontParts> {
   return token<FontParts>(parts, {
-    dependencies: (parts) => [
+    dependencies: parts => [
       parts.style,
       parts.weight,
       parts.size,
@@ -35,7 +35,7 @@ export function fontValue(parts: FontParts): Token<FontParts> {
         leading === undefined ? size : `${size}/${leading}`,
         family,
       ]
-        .filter((part) => part !== undefined)
+        .filter(part => part !== undefined)
         .join(' ')
     },
   })

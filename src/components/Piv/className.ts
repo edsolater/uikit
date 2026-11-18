@@ -40,10 +40,10 @@ export function consumeClassName(
 
   mapArray(
     () => toArray(val(readClassNameList())).filter(isTruthy),
-    (atom) => {
+    atom => {
       createRenderEffect(
         () => resolveClassTokens(val(atom)),
-        (tokens) => {
+        tokens => {
           addClassTokens(element, tokenCounts, tokens)
           return () => removeClassTokens(element, tokenCounts, tokens)
         },
@@ -67,7 +67,7 @@ function resolveClassTokens(classAtom: ClassNameAtom | undefined): string[] {
     )
   }
 
-  return toArray(classAtom).flatMap((item) => splitClassTokens(String(item)))
+  return toArray(classAtom).flatMap(item => splitClassTokens(String(item)))
 }
 
 /**

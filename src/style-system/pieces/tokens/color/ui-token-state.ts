@@ -26,12 +26,11 @@ export function interactiveColorStates({
     (lightnessDelta: number, chromaDelta: number) =>
     (currentBase: TokenInput) =>
       oklch(currentBase, {
-        lightness: (current) =>
-          add(current, lightnessDelta * lightnessResponse),
+        lightness: current => add(current, lightnessDelta * lightnessResponse),
         chroma:
           chromaResponse === 0
             ? undefined
-            : (current) => add(current, chromaDelta * chromaResponse),
+            : current => add(current, chromaDelta * chromaResponse),
       })
   return {
     hover: state(-0.04, 0.01),

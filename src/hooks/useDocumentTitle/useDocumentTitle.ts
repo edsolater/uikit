@@ -47,7 +47,7 @@ export function useDocumentTitle(
     onCleanup(() => observer.disconnect())
   }
 
-  createEffect(nextTitle, (title) => {
+  createEffect(nextTitle, title => {
     if (
       typeof document === 'undefined' ||
       !isString(title) ||

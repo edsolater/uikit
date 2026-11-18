@@ -19,12 +19,12 @@ test('颜色对象、用途阴影和动效的引用均由自身依赖提供', ()
     ]),
   )
   const declared = new Set(
-    [...css.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1]),
+    [...css.matchAll(/(--[\w-]+)\s*:/g)].map(match => match[1]),
   )
   const referenced = new Set(
-    [...css.matchAll(/var\((--[\w-]+)/g)].map((match) => match[1]),
+    [...css.matchAll(/var\((--[\w-]+)/g)].map(match => match[1]),
   )
-  expect([...referenced].filter((name) => !declared.has(name))).toEqual([])
+  expect([...referenced].filter(name => !declared.has(name))).toEqual([])
   expect(css).toContain('data-theme')
   expect(css).toContain('prefers-reduced-motion: reduce')
   expect(css).not.toMatch(/var\(--shadow-\d/)

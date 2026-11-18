@@ -88,10 +88,10 @@ export function consumeEventListeners(
   eventListeners: EventListeners,
 ) {
   const discriptorPairs = toListenerDiscriptorPairs(eventListeners)
-  const cleanups = discriptorPairs.map((discriptor) =>
+  const cleanups = discriptorPairs.map(discriptor =>
     registerAEventListener(element, discriptor),
   )
-  return () => cleanups.forEach((cleanup) => cleanup())
+  return () => cleanups.forEach(cleanup => cleanup())
 }
 
 /**
@@ -175,7 +175,7 @@ function registerAEventListener<K extends EventKey>(
     const localCleanup = discriptor.callback({
       event: event as GlobalEventHandlersEventMap[K],
       element,
-      cancel: (stopOptions) => {
+      cancel: stopOptions => {
         avoidCurrentLocalCleanup = shouldAvoidCleanup(
           stopOptions?.avoidCleanup,
           'local',

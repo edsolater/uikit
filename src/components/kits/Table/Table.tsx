@@ -40,7 +40,7 @@ const tableComponent: KitComponent<{
   },
   (props, { name }) => {
     // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-    const columnKeys = derive(props, (s) => {
+    const columnKeys = derive(props, s => {
       const keys = s.keys
       return keys ? val(keys) : pickTableColumnKeys(val(s.data))
     })
@@ -69,12 +69,11 @@ const tableComponent: KitComponent<{
           <Piv as="thead">
             <Piv as="tr">
               <For each={val(columnKeys)}>
-                {(columnKey) => {
+                {columnKey => {
                   // 列结构保持稳定，渲染器替换在内容消费时读取。
-                  const headContent = derive(props, (s) => {
-                    const renderHead = s.renderParts?.tableHead?.[
-                      columnKey
-                    ] as ((key: PropertyKey) => JSXable) | undefined
+                  const headContent = derive(props, s => {
+                    const renderHead = s.renderParts?.tableHead?.[columnKey] as
+                      ((key: PropertyKey) => JSXable) | undefined
                     return toJSX(renderHead?.(columnKey) ?? columnKey)
                   })
                   return (
@@ -91,7 +90,7 @@ const tableComponent: KitComponent<{
               {(row, index) => (
                 <Piv as="tr">
                   <For each={val(columnKeys)}>
-                    {(columnKey) => {
+                    {columnKey => {
                       // 同一行列的内容持续读取当前渲染器，保留 key 与值的分发关联。
                       const cellContent = stateView(() => {
                         const renderCell = props.renderParts?.tableCell?.[

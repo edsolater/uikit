@@ -16,18 +16,18 @@ export function MultilineEditingExample() {
   return (
     <Flow $col>
       <Field label="检查依据">
-        {(id) => (
+        {id => (
           <TextArea
             id={id}
             value={text}
             placeholder="说明检查了什么，以及得到的结果。"
-            onInput={(value) => {
+            onInput={value => {
               text.set(value)
             }}
           />
         )}
       </Field>
-      <Text>{derive(text, (value) => '已输入 ' + value.length + ' 个字符')}</Text>
+      <Text>{derive(text, value => '已输入 ' + value.length + ' 个字符')}</Text>
     </Flow>
   )
 }

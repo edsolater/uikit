@@ -38,8 +38,8 @@ describe('具体定义消费与CSS同名层叠', () => {
   })
 
   test.each(
-    [false, true].flatMap((reverseRegistration) =>
-      [false, true].map((reverseWriting) => ({
+    [false, true].flatMap(reverseRegistration =>
+      [false, true].map(reverseWriting => ({
         reverseRegistration,
         reverseWriting,
       })),
@@ -52,7 +52,7 @@ describe('具体定义消费与CSS同名层叠', () => {
       const second = token('blue', { name: 'name-tied' })
       const red = first ?? token('red', { name })
       const candidates = reverseWriting ? [second, red] : [red, second]
-      const rules: Rules = candidates.map((item) => [
+      const rules: Rules = candidates.map(item => [
         ['.Scope'],
         ...declare(item),
       ])
@@ -79,7 +79,7 @@ describe('具体定义消费与CSS同名层叠', () => {
  */
 function declarationsAt(css: string, path: string[]): string[] {
   const lines: string[] = []
-  parse(css).walkDecls((declaration) => {
+  parse(css).walkDecls(declaration => {
     const headers: string[] = []
     for (
       let parent: AnyNode | undefined = declaration.parent;
@@ -132,7 +132,7 @@ describe('实际引用与消费退出', () => {
     const source = token(10, {
       name: 'declaration-revision',
       address: '.Revision',
-      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
+      state: [[stateCondition('&[data-phase]'), base => multiply(base, 2)]],
     })
     const initial = declare(source, 7)
     const css = compileRules([
@@ -141,10 +141,10 @@ describe('实际引用与消费退出', () => {
       [
         [],
         undefined,
-        whenSettled((controller) => {
+        whenSettled(controller => {
           const node = controller
             .search({ key: source })
-            .find((node) => node.content === initial[1])!
+            .find(node => node.content === initial[1])!
           node.content = declare(source, 8)[1]
           node.compileRevision++
           return true
@@ -158,7 +158,7 @@ describe('实际引用与消费退出', () => {
 
   test.each([false, true])(
     '消费内容换成另一Token后清理旧需求，仍共享旧来源=%s',
-    (shared) => {
+    shared => {
       const first = token(5, {
         name: 'replaced-consumer-first',
         address: '.Replacement',
@@ -179,7 +179,7 @@ describe('实际引用与消费退出', () => {
         [
           [],
           undefined,
-          whenSettled((controller) => {
+          whenSettled(controller => {
             const node = controller.search({ key: 'width' })[0]
             node.content = second
             node.compileRevision++
@@ -198,7 +198,7 @@ describe('实际引用与消费退出', () => {
 
   test.each(['改名', '移出根据地'])(
     '原声明%s后，缺失的根据地恢复创建内容并保留新位置的值',
-    (change) => {
+    change => {
       const size = token(5, {
         name: 'home-moved-before',
         address: '.MovedHome',
@@ -210,10 +210,10 @@ describe('实际引用与消费退出', () => {
         [
           [],
           undefined,
-          whenSettled((controller) => {
+          whenSettled(controller => {
             const node = controller
               .search({ key: '--home-moved-before' })
-              .find((node) => node.content === 9)!
+              .find(node => node.content === 9)!
             if (change === '改名') node.key = '--home-moved-after'
             else
               node.conditionPath = {
@@ -264,7 +264,7 @@ describe('实际引用与消费退出', () => {
 
   test.each([false, true])(
     '消费者撤销后共享需求=%s，下一会话不保留观察者',
-    (shared) => {
+    shared => {
       const source = token('red', { name: 'dependency-lifetime-source' })
       const line = token(source, { name: 'dependency-lifetime-line' })
       const rules: Rules = [

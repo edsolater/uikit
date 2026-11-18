@@ -7,8 +7,8 @@ export const baseRadius = token('4px', {
   name: 'base-radius',
   address: ':root',
   state: [
-    [whenSmall, (base) => multiply(base, 1 / 2)],
-    [whenLarge, (base) => multiply(base, 2)],
-    [whenXlarge, (base) => multiply(base, 3)],
+    [whenSmall, base => multiply(base, 1 / 2)],
+    [whenLarge, base => multiply(base, 2)],
+    [whenXlarge, base => multiply(base, 3)],
   ],
 })

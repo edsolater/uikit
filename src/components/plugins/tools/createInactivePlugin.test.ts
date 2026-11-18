@@ -13,7 +13,7 @@ import {
 } from './createInactivePlugin'
 
 test('定义不运行 pluginCore；每次配置构建运行一次 pluginCore 并返回完整结果', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const pluginCore = vi.fn(
       ({ pluginOptions }: { pluginOptions: { value: number } }) => ({
         value: pluginOptions.value,
@@ -43,7 +43,7 @@ test('定义不运行 pluginCore；每次配置构建运行一次 pluginCore 并
 })
 
 test('addProps 提交的 domRef 在节点接入前不调用', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const received: HTMLElement[] = []
     const callback = (el: HTMLElement) => {
       received.push(el)

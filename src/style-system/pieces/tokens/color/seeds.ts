@@ -14,19 +14,19 @@ export const brandColorTheme = token(brandColor, {
   state: [
     [
       whenDarkTheme,
-      (base) =>
+      base =>
         oklch(base, {
-          lightness: (current) => add(current, 0.12),
-          chroma: (current) => add(current, -0.02),
+          lightness: current => add(current, 0.12),
+          chroma: current => add(current, -0.02),
         }),
     ],
   ],
 })
 export const accentColorTheme = token(
   oklch(brandColorTheme, {
-    hue: (current) => add(current, -18),
-    lightness: (current) => add(current, 0.04),
-    chroma: (current) => add(current, 0.01),
+    hue: current => add(current, -18),
+    lightness: current => add(current, 0.04),
+    chroma: current => add(current, 0.01),
   }),
   {
     name: 'accent-color-theme',
@@ -34,7 +34,7 @@ export const accentColorTheme = token(
     state: [
       [
         whenDarkTheme,
-        (base) => oklch(base, { chroma: (current) => add(current, -0.01) }),
+        base => oklch(base, { chroma: current => add(current, -0.01) }),
       ],
     ],
   },
@@ -56,7 +56,7 @@ function createFeedbackTheme(
     {
       name,
       address: ':root',
-      state: [[whenDarkTheme, (base) => oklch(base, darkChanges)]],
+      state: [[whenDarkTheme, base => oklch(base, darkChanges)]],
     },
   )
 }
@@ -65,29 +65,29 @@ export const goodColorTheme = createFeedbackTheme(
   goodColor,
   'good-color-theme',
   {
-    lightness: (current) => add(current, 0.1),
-    chroma: (current) => add(current, -0.02),
+    lightness: current => add(current, 0.1),
+    chroma: current => add(current, -0.02),
   },
 )
 export const badColorTheme = createFeedbackTheme(badColor, 'bad-color-theme', {
-  lightness: (current) => add(current, 0.17),
-  chroma: (current) => add(current, -0.01),
-  hue: (current) => add(current, -2.07),
+  lightness: current => add(current, 0.17),
+  chroma: current => add(current, -0.01),
+  hue: current => add(current, -2.07),
 })
 export const warnColorTheme = createFeedbackTheme(
   warnColor,
   'warn-color-theme',
   {
-    lightness: (current) => add(current, 0.06),
-    chroma: (current) => add(current, -0.02),
+    lightness: current => add(current, 0.06),
+    chroma: current => add(current, -0.02),
   },
 )
 export const infoColorTheme = createFeedbackTheme(
   infoColor,
   'info-color-theme',
   {
-    lightness: (current) => add(current, 0.1),
-    chroma: (current) => add(current, -0.02),
+    lightness: current => add(current, 0.1),
+    chroma: current => add(current, -0.02),
   },
 )
 
@@ -99,10 +99,10 @@ export const canvasColorTheme = token(
     state: [
       [
         whenDarkTheme,
-        (base) =>
+        base =>
           oklch(base, {
-            lightness: (current) => add(current, -0.815),
-            chroma: (current) => add(current, 0.004),
+            lightness: current => add(current, -0.815),
+            chroma: current => add(current, 0.004),
           }),
       ],
     ],
@@ -114,10 +114,10 @@ export const surfaceColorTheme = token(paperColor, {
   state: [
     [
       whenDarkTheme,
-      (base) =>
+      base =>
         oklch(base, {
-          lightness: (current) => add(current, -0.81),
-          chroma: (current) => add(current, 0.009),
+          lightness: current => add(current, -0.81),
+          chroma: current => add(current, 0.009),
         }),
     ],
   ],
@@ -130,10 +130,10 @@ export const contentColorTheme = token(
     state: [
       [
         whenDarkTheme,
-        (base) =>
+        base =>
           oklch(base, {
-            lightness: (current) => add(current, 0.61),
-            chroma: (current) => add(current, 0.001),
+            lightness: current => add(current, 0.61),
+            chroma: current => add(current, 0.001),
           }),
       ],
     ],
@@ -147,11 +147,11 @@ export const boundaryColorTheme = token(
     state: [
       [
         whenDarkTheme,
-        (base) =>
+        base =>
           oklch(base, {
-            lightness: (current) => add(current, -0.11),
-            chroma: (current) => add(current, 0.008),
-            alpha: (current) => multiply(current, 1 / 0.18),
+            lightness: current => add(current, -0.11),
+            chroma: current => add(current, 0.008),
+            alpha: current => multiply(current, 1 / 0.18),
           }),
       ],
     ],

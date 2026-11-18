@@ -32,7 +32,7 @@ export const Checkbox: KitComponent<{
   },
   (props, { name }) => {
     const id = createFormFieldId(props, crypto.randomUUID())
-    const label = derive(props, (s) => s.label)
+    const label = derive(props, s => s.label)
     return (
       <Piv shadowProps={props} class={name}>
         <Piv

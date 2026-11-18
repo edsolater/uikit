@@ -32,7 +32,7 @@ export const Help: KitComponent<{
     propDefinition: helpPropDefinition,
   },
   (props, { name }) => {
-    const label = derive(props, (s) => val(s.label) ?? '帮助说明')
+    const label = derive(props, s => val(s.label) ?? '帮助说明')
     return (
       <Piv
         shadowProps={props}

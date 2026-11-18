@@ -39,7 +39,7 @@ export function contentToCSSString(
       'CSS 生产函数尚未编译，请通过 dependencies 声明依赖。',
     )
     if (!hasJSSContentOutput(input)) return undefined
-    const output = input.toCSSString((child) =>
+    const output = input.toCSSString(child =>
       contentToCSSString(child, compiledContents, reading),
     )
     assert(
@@ -64,8 +64,8 @@ export function contentNodesToCSSString(
     const content = contentToCSSString(node.content, node.compiledContents)
     if (content === undefined) continue
     const nextHeaders = node.conditionPath
-      .map((condition) => condition.header)
-      .filter((header) => header !== undefined)
+      .map(condition => condition.header)
+      .filter(header => header !== undefined)
     assert(
       nextHeaders.every(isString),
       'CSS Condition 的 header 必须是字符串。',

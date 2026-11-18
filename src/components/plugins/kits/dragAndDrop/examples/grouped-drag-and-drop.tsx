@@ -18,7 +18,7 @@ export function GroupedDragAndDropExample() {
     draggable: { payload: 'A payload' },
     droppable: {
       onDrop: ({ payload }) =>
-        results.set((current) => ({
+        results.set(current => ({
           ...current,
           A: `A 接收到 ${String(payload)}`,
         })),
@@ -28,7 +28,7 @@ export function GroupedDragAndDropExample() {
     draggable: { payload: 'B payload' },
     droppable: {
       onDrop: ({ payload }) =>
-        results.set((current) => ({
+        results.set(current => ({
           ...current,
           B: `B 接收到 ${String(payload)}`,
         })),

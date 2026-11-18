@@ -11,7 +11,7 @@ token('2px')
 token('2px', 'spacing')
 token(2, {
   name: 'strength',
-  state: { hover: (base) => multiply(base, 2), active: 4 },
+  state: { hover: base => multiply(base, 2), active: 4 },
 })
 ```
 

@@ -1,0 +1,6 @@
+semi: false
+singleQuote: true
+quoteProps: consistent
+
+# 在 IDE 里，颜色标出参数的角色，箭头标出边界，`source =>` 已经足够清楚。
+arrowParens: avoid

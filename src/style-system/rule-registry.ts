@@ -20,7 +20,7 @@ export function registerRule(entry: Rule): RuleHandle {
     /**
      * 更新本次登记；删除后报错。
      */
-    replace: (value) => {
+    replace: value => {
       assert(registeredRules.includes(entry), '当前句柄已删除。')
       entry[2] = value
     },

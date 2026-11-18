@@ -23,9 +23,9 @@ const amount = (name: string, address: TokenAddress = parent) =>
   token(1, { name, address })
 const amountModification = (change: { operator: string; amount: number }) => ({
   type: 'expression' as const,
-  detail: (currentExpression) =>
+  detail: currentExpression =>
     createJSSContent(
-      (resolve) =>
+      resolve =>
         `calc(${resolve(currentExpression)} ${change.operator} ${change.amount})`,
       [currentExpression],
     ),
@@ -226,9 +226,9 @@ test('函数声明与修改仍消费Token自己的按需资源', () => {
   })
   const nModification = (delta: number) => ({
     type: 'expression' as const,
-    detail: (currentExpression) =>
+    detail: currentExpression =>
       createJSSContent(
-        (resolve) => `calc(${resolve(currentExpression)} + ${delta})`,
+        resolve => `calc(${resolve(currentExpression)} + ${delta})`,
         [currentExpression],
       ),
   })
@@ -436,7 +436,7 @@ test('显式后代声明隔离祖先规则，并从自己的基础继续修改',
 
 test.each(['<number>', '*'])(
   '不继承注册保持子元素初值，当地修改从初值继续，语法=%s',
-  (syntax) => {
+  syntax => {
     const n = token(1, {
       name: `non-inheriting-${syntax === '*' ? 'any' : 'number'}`,
       address: '.Parent',
@@ -477,11 +477,11 @@ test('共享步骤保持选择器优先级，当地规则覆盖继承，空输�
   const n = token(2, { name: 'shared-selection-contract', address: parent })
   const nModification = (change: number | undefined) => ({
     type: 'expression' as const,
-    detail: (currentExpression) =>
+    detail: currentExpression =>
       change === undefined
         ? createJSSContent(() => undefined)
         : createJSSContent(
-            (resolve) =>
+            resolve =>
               `calc(${resolve(currentExpression)} ${change === 3 ? '*' : '+'} ${change})`,
             [currentExpression],
           ),
@@ -520,13 +520,13 @@ test('共享步骤保持选择器优先级，当地规则覆盖继承，空输�
 
 test.each(['late-declare', 'removed-declare'])(
   '普通颜色消费者在局部声明变化后重新确定归属，操作=%s',
-  async (operation) => {
+  async operation => {
     const { modification } = await import('../modification')
     const { add } = await import('../pieces/functions/calc')
     const change = modification({
       name: 'consumer-rule',
       type: 'color',
-      detail: { lightness: (currentExpression) => add(currentExpression, 0.1) },
+      detail: { lightness: currentExpression => add(currentExpression, 0.1) },
     })
     const surface = token('oklch(0.2 0.1 120)', {
       name: 'consumer-surface',
@@ -557,9 +557,7 @@ test.each(['late-declare', 'removed-declare'])(
             )
           else
             controller.remove(
-              controller
-                .nodes()
-                .find((node) => node.content === declaration[1])!,
+              controller.nodes().find(node => node.content === declaration[1])!,
             )
           controller.setContent(context, 1)
         },
@@ -588,11 +586,10 @@ test('不继承且无注册初值时不补普通引用回退，也不把默认�
   })
   const nModification = (change: { fixed?: number; amount?: number }) => ({
     type: 'expression' as const,
-    detail: (currentExpression) =>
+    detail: currentExpression =>
       change.fixed === undefined
         ? createJSSContent(
-            (resolve) =>
-              `calc(${resolve(currentExpression)} + ${change.amount})`,
+            resolve => `calc(${resolve(currentExpression)} + ${change.amount})`,
             [currentExpression],
           )
         : createJSSContent(() => String(change.fixed)),

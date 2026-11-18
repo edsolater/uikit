@@ -16,7 +16,7 @@ export interface ShadowShape {
  */
 export function shadowValue(shape: ShadowShape): Token<ShadowShape> {
   return token<ShadowShape>(shape, {
-    dependencies: (shape) => [
+    dependencies: shape => [
       shape.x,
       shape.y,
       shape.blur,
@@ -38,7 +38,7 @@ export function shadowValue(shape: ShadowShape): Token<ShadowShape> {
         spread,
         color,
       ]
-        .filter((part) => part !== undefined)
+        .filter(part => part !== undefined)
         .join(' ')
     },
   })

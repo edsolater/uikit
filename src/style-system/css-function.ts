@@ -31,10 +31,10 @@ export function cssFunction(signature: string, body: Rules): CSSFunction {
   const subject: CSSFunction = Object.assign(
     (...args: TokenInput[]) =>
       token(args, {
-        dependencies: (current) => [subject, ...current],
+        dependencies: current => [subject, ...current],
         toCSSString: (current, resolve) => {
           const parts = current.map(resolve)
-          return parts.some((part) => part === undefined)
+          return parts.some(part => part === undefined)
             ? undefined
             : `${name}(${parts.join(', ')})`
         },

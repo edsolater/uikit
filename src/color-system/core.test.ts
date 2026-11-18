@@ -160,7 +160,7 @@ describe('材料环境感知', () => {
   it('彩度感知读取自身色相，处理后的 base 会改变响应', () => {
     const responsive: ColorMaterial = {
       ...material,
-      environmentSensitivities: { chroma: (base) => base.hue / 360 },
+      environmentSensitivities: { chroma: base => base.hue / 360 },
     }
     const environment = { tint: { chroma: 0.2, hue: 250 } }
     expect(applyEnvironment(responsive, environment).base.chroma).toBeCloseTo(
@@ -177,7 +177,7 @@ describe('材料环境感知', () => {
       ...material,
       environmentSensitivities: {
         lightness: (_base, environment) => environment.tint?.lightness ?? 0,
-        chroma: (base) => base.lightness,
+        chroma: base => base.lightness,
       },
     }
     const environment = { tint: { lightness: 0.8, chroma: 0.04 } }

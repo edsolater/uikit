@@ -58,7 +58,7 @@ export default defineConfig({
       // 当前库只把显式声明的外部依赖排除出 bundle，其余 src 内部模块都保留在产物里。
       /** 只把已经声明的第三方依赖排除出库产物。 */
       external(importPath: string) {
-        return externalDependencies.some((externalDependence) =>
+        return externalDependencies.some(externalDependence =>
           isDependency(externalDependence, importPath),
         )
       },

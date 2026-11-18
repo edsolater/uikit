@@ -42,9 +42,9 @@ test('替换或清空渲染器更新原表头和单元格，不重建行列', ()
         data={[row]}
         renderParts={{
           tableHead: { name: originalHeading },
-          tableCell: { name: (value) => `原内容：${value}` },
+          tableCell: { name: value => `原内容：${value}` },
         }}
-        ref={(current) => {
+        ref={current => {
           controller = current
         }}
       />
@@ -101,7 +101,7 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
         $compact={compact}
 
         cellTitle={{ summary: (row, index) => `${row.detail.owner}:${index}` }}
-        cellIntensity={{ ratio: (row) => row.ratio }}
+        cellIntensity={{ ratio: row => row.ratio }}
         renderParts={{
           tableHead: {
             summary: () => '摘要',
@@ -113,7 +113,7 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
               <span>{`${key}:${String(value)}:${index}:${row.detail.owner}`}</span>
             ),
             name: (value, key) => `${key}:${value.toUpperCase()}`,
-            ratio: (value) => (value === null ? '无比例' : `${value * 100}%`),
+            ratio: value => (value === null ? '无比例' : `${value * 100}%`),
           },
         }}
       />
@@ -121,7 +121,7 @@ test('空数据保留合成表头，原行与行号持续更新，提示和比�
     host,
   )
   expect(
-    [...host.querySelectorAll('th')].map((cell) => cell.textContent),
+    [...host.querySelectorAll('th')].map(cell => cell.textContent),
   ).toEqual(['摘要', '比例', '名称'])
   expect(host.querySelectorAll('tbody tr')).toHaveLength(0)
   rows.set([first, second])
@@ -197,7 +197,7 @@ test('可选单元格提示未提供或清空时没有原生title，提示随原
         }}
         renderParts={{
           tableCell: {
-            p95: (value) => `${value * 100}%`,
+            p95: value => `${value * 100}%`,
             summary: (_value, _key, row) => row.name,
           },
         }}
@@ -206,9 +206,7 @@ test('可选单元格提示未提供或清空时没有原生title，提示随原
     host,
   )
   expect(
-    [...host.querySelectorAll('td')].every(
-      (cell) => !cell.hasAttribute('title'),
-    ),
+    [...host.querySelectorAll('td')].every(cell => !cell.hasAttribute('title')),
   ).toBe(true)
   hint.set('说明')
   flush()
@@ -227,9 +225,7 @@ test('可选单元格提示未提供或清空时没有原生title，提示随原
   hint.set(undefined)
   flush()
   expect(
-    [...host.querySelectorAll('td')].every(
-      (cell) => !cell.hasAttribute('title'),
-    ),
+    [...host.querySelectorAll('td')].every(cell => !cell.hasAttribute('title')),
   ).toBe(true)
 })
 
@@ -249,7 +245,7 @@ test('默认列来自当前首行，示例实际呈现普通与合成列内容',
     host,
   )
   expect(
-    [...host.querySelectorAll('td')].map((cell) => cell.textContent),
+    [...host.querySelectorAll('td')].map(cell => cell.textContent),
   ).toEqual(['共同:0', '新增:1'])
   dispose()
   const rows = createState([{ first: '初始' }])
@@ -297,7 +293,7 @@ test('统一配置按列绑定动态宽度，清空恢复根默认且保持原�
         <Table
           data={[{ name: '甲', ratio: 0.5 }]}
           $styleConfig={config}
-          ref={(current) => {
+          ref={current => {
             controller = current
           }}
         />

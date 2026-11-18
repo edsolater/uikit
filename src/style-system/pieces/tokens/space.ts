@@ -8,9 +8,9 @@ export const baseSpace = token('8px', {
   name: 'base-space',
   address: ':root',
   state: [
-    [whenSmall, (base) => multiply(base, 1 / 2)],
-    [whenLarge, (base) => multiply(base, 4 / 3)],
-    [whenXlarge, (base) => multiply(base, 2)],
+    [whenSmall, base => multiply(base, 1 / 2)],
+    [whenLarge, base => multiply(base, 4 / 3)],
+    [whenXlarge, base => multiply(base, 2)],
   ],
 })
 

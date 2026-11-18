@@ -94,16 +94,16 @@ export function mix(
     maximum = Math.max(maximum, weight)
   }
   if (maximum === 0) throw new RangeError('至少一种颜色的权重须大于零')
-  const scaled = rawWeights.map((weight) => weight / maximum)
+  const scaled = rawWeights.map(weight => weight / maximum)
   const total = scaled.reduce((sum, weight) => sum + weight, 0)
   const sources = colors
     .map((material, index) => ({ material, weight: scaled[index] / total }))
-    .filter((source) => source.weight > 0)
+    .filter(source => source.weight > 0)
   const first = sources[0].material
   const purpose = options.purpose ?? first.purpose
   if (
     !options.purpose &&
-    sources.some((source) => source.material.purpose !== purpose)
+    sources.some(source => source.material.purpose !== purpose)
   ) {
     throw new TypeError('混合不同用途的材料时须指定 purpose')
   }
@@ -133,13 +133,13 @@ export function mix(
   for (const channel of ['lightness', 'chroma', 'hue'] as const) {
     if (
       !sources.some(
-        (source) =>
+        source =>
           source.material.environmentSensitivities?.[channel] !== undefined,
       )
     )
       continue
     if (
-      sources.some((source) =>
+      sources.some(source =>
         isFunction(source.material.environmentSensitivities?.[channel]),
       )
     ) {
@@ -170,7 +170,7 @@ export function mix(
     }
   }
   const environmentTargets: ColorMaterial['environmentTargets'] = sources.some(
-    (source) => source.material.environmentTargets?.lightness !== undefined,
+    source => source.material.environmentTargets?.lightness !== undefined,
   )
     ? {
         lightness: (base, environment) => {

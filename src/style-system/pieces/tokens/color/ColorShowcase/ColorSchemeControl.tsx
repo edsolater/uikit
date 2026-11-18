@@ -18,7 +18,7 @@ export function ThemeModeControl() {
     <fieldset>
       <legend>模式切换</legend>
       <For each={themeModeOptions}>
-        {(item) => (
+        {item => (
           <label>
             <input
               type="radio"

@@ -57,7 +57,7 @@ describe('颜色强调', () => {
   it('动态感知不提前冻结，正级减弱感知、负级增强感知', () => {
     const material: ColorMaterial = {
       ...color,
-      environmentSensitivities: { chroma: (base) => base.hue / 360 },
+      environmentSensitivities: { chroma: base => base.hue / 360 },
     }
     const near = emphasis(material, environment, 1)
     const far = emphasis(material, environment, -1)

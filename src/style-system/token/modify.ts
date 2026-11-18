@@ -90,7 +90,7 @@ export function compileCSSModification(
     )
   }
   const step =
-    instance.steps.find((step) => id !== undefined && step.id === id) ??
+    instance.steps.find(step => id !== undefined && step.id === id) ??
     createStep(context, controller, instance, id)
   const output = apply(step.currentExpression)
   const role = `${step.role}/candidate/${++step.count}`
@@ -227,9 +227,9 @@ const selectionText = (
 ): string =>
   [
     step.identityName,
-    ...[...step.members.values()].map((member) => member.gate()),
+    ...[...step.members.values()].map(member => member.gate()),
   ]
-    .map((name) => `--${name}: ${name === selected ? 'initial' : ''};`)
+    .map(name => `--${name}: ${name === selected ? 'initial' : ''};`)
     .join('\n') + (step.presenceName ? `\n--${step.presenceName}: ;` : '')
 
 /**
@@ -241,7 +241,7 @@ const candidateSelection = (
   output: TokenInput,
 ): Expression =>
   createJSSContent(
-    (resolve) =>
+    resolve =>
       resolve(output) === undefined ? undefined : selectionText(step, gate()),
     [output],
   )
@@ -340,7 +340,7 @@ function publishResult(
         owner: instance.definition.node,
         identity: `result/${address}`,
         productTag: instance,
-        initialize: (node) => {
+        initialize: node => {
           cssProductRoles.set(node, 'result')
         },
       },
@@ -386,7 +386,7 @@ function publishStep(
   }))
     controller.remove(old)
   const expression = createJSSContent(
-    (resolve) => {
+    resolve => {
       const branches = [
         `var(--${step.identityName}, ${resolve(step.currentExpression)})`,
       ]
@@ -400,7 +400,7 @@ function publishStep(
     },
     [
       step.currentExpression,
-      ...[...step.members.values()].map((member) => member.output),
+      ...[...step.members.values()].map(member => member.output),
     ],
   )
   const anchor = result.alias ?? [...result.members][0]
@@ -411,7 +411,7 @@ function publishStep(
       owner: result.alias ?? step.instance.definition.node,
       identity: `${step.name}/result`,
       productTag: step.instance,
-      initialize: (node) => {
+      initialize: node => {
         cssProductRoles.set(node, 'result')
       },
     },
@@ -428,7 +428,7 @@ function refreshSteps(
   if (!controller.nodes().includes(instance.definition.node)) return
   const nodes = controller.search({ key: instance.definition.variable!.key })
   for (const step of instance.steps)
-    step.anchor = nodes.find((node) => step.members.has(node)) ?? step.anchor
+    step.anchor = nodes.find(node => step.members.has(node)) ?? step.anchor
   instance.steps.sort(
     (left, right) => nodes.indexOf(left.anchor) - nodes.indexOf(right.anchor),
   )

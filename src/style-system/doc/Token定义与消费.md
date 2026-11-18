@@ -41,7 +41,7 @@ sharedSpacing 继承直接传入的 spacing 的地址、状态和生命周期等
 
 ```ts
 const feedback = {
-  hover: (base) => multiply(base, 2),
+  hover: base => multiply(base, 2),
   active: 4,
 }
 const buttonStrength = token(2, {

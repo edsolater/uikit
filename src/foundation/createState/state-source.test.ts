@@ -8,7 +8,7 @@ import { readStateSource } from './state-source'
 test('内部来源保留惰性State、函数数据、Promise和显式undefined', async () => {
   let reads = 0
   let calls = 0
-  const { state, lazy, dispose } = createRoot((dispose) => ({
+  const { state, lazy, dispose } = createRoot(dispose => ({
     state: createState<unknown>(undefined, { lazy: true }),
     lazy: createState(
       () => {
@@ -50,7 +50,7 @@ test('内部来源保留惰性State、函数数据、Promise和显式undefined',
 })
 
 test('原来源更新撤销临时写入后，内部仍取得原Source实体而非其当前undefined', () => {
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const original = createState<string | undefined>('初值')
     return { original, state: createState(() => original), dispose }
   })

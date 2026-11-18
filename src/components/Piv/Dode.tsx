@@ -30,7 +30,10 @@ import { consumeHTMLProps, type HTMLPropsList } from './html-props'
 import { consumeStyle, type StyleList } from './style-binding'
 import { consumeId } from './id'
 import { ElementDeclarationsContext } from './elementDeclarations'
-import { toEventListenersList, type EventListeners } from './on/event-declarations'
+import {
+  toEventListenersList,
+  type EventListeners,
+} from './on/event-declarations'
 import { consumeEventListeners } from './on/event-listeners'
 import { consumeDomRefs, type PivDomRef } from './domRef'
 
@@ -119,15 +122,15 @@ function createDodeElement<Tag extends PivTag>(
   // 空输入仍会创建消费者的 memo／列表作用域；在共同入口按声明筛选，才能真正省去整条绑定链。
   mapArray(
     () =>
-      domFields.filter((field) => {
+      domFields.filter(field => {
         if (field === 'children' && !consumesChildren) return false
         return (
           field in props ||
           ((field === 'style' || field === 'htmlProps') &&
-            declarations.some((declaration) => field in declaration))
+            declarations.some(declaration => field in declaration))
         )
       }),
-    (field) => {
+    field => {
       switch (field) {
         case 'id':
           consumeId(element, () => props.id)
@@ -137,7 +140,7 @@ function createDodeElement<Tag extends PivTag>(
           break
         case 'style':
           consumeStyle(element, () =>
-            rootSources.flatMap((source) =>
+            rootSources.flatMap(source =>
               'style' in source ? toArray(val(source.style)) : [],
             ),
           )
@@ -146,8 +149,8 @@ function createDodeElement<Tag extends PivTag>(
           // 原始声明身份拥有监听作用域，其他字段变化不重置 once 或提前清理监听。
           mapArray(
             () => toEventListenersList(props.on),
-            (declaration) => {
-              createRenderEffect(declaration, (eventDeclaration) =>
+            declaration => {
+              createRenderEffect(declaration, eventDeclaration =>
                 consumeEventListeners(element, eventDeclaration),
               )
               return declaration
@@ -156,7 +159,7 @@ function createDodeElement<Tag extends PivTag>(
           break
         case 'htmlProps':
           consumeHTMLProps<Tag>(element, () =>
-            rootSources.flatMap((source) =>
+            rootSources.flatMap(source =>
               'htmlProps' in source ? toArray(val(source.htmlProps)) : [],
             ),
           )

@@ -17,7 +17,7 @@ const amount = variable(1, {
   modification: {
     apply: (current, change) =>
       createJSSContent(
-        (resolve) => `calc(${resolve(current)} + ${resolve(change)})`,
+        resolve => `calc(${resolve(current)} + ${resolve(change)})`,
         [current, change],
       ),
   },

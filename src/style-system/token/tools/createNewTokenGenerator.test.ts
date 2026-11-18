@@ -64,7 +64,7 @@ test('保留泛型、特殊格式与 default 覆盖，调用配置不接受名�
   const text = createToken('4px')
   const structured = createToken(
     { amount: 7 },
-    { toCSSString: (data) => `${data.amount}px` },
+    { toCSSString: data => `${data.amount}px` },
   )
   const copied = createToken(text, { default: 9 })
   expectTypeOf(number.default).toEqualTypeOf<number>()

@@ -215,7 +215,7 @@ test('二元条目隐式声明 Token，并保留内容引用的同一目标身�
 
 test.each(['css-declaration', 'css-modification'])(
   '普通表达式的同名 kind=%s 字段不改变 Token 基础内容',
-  (kind) => {
+  kind => {
     const name = `entry-expression-${kind}`
     const size = token('2px', { name, address: '.EntryExpression' })
     const expression = Object.assign(
@@ -321,7 +321,7 @@ test('二元组保留 Key 的组合协议和 Token 的资源身份，不使用 J
   const baseline = compileCSS()
   const total = Object.assign(
     key('entry-total', {
-      join: (values) =>
+      join: values =>
         values.reduce((sum, value) => sum + Number(value.content), 0),
     }),
     {
@@ -365,7 +365,7 @@ test('任意层路径组合与声明组合生成相同嵌套 CSS，Condition 保
   ] as const satisfies ConditionInput
   const resolved = resolveConditionPath(path)!
   expect(resolved[0]).toBe(root)
-  expect(resolved.map((item) => item.header)).toEqual([
+  expect(resolved.map(item => item.header)).toEqual([
     '.NestedInput',
     '&:hover',
     '.label',
@@ -700,9 +700,9 @@ test('编译 root 的规则容器改写不污染登记账本或直接输入', ()
   const trigger = keep(
     rule('.SnapshotTrigger', undefined, {
       onFirstScan: ({ root }) => {
-        root.find((entry) =>
+        root.find(entry =>
           entry[0]?.some(
-            (item) =>
+            item =>
               typeof item !== 'string' && item.header === '.SnapshotTarget',
           ),
         )![2] = 'blue'

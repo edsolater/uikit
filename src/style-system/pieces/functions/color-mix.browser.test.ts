@@ -14,7 +14,7 @@ test('半透明基色能区分通道设值和相对变化，并持续响应局�
     {
       color: {
         base: source,
-        alpha: (current) => multiply(current, alpha),
+        alpha: current => multiply(current, alpha),
       },
       weight,
     },

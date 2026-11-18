@@ -5,7 +5,7 @@ import { val } from '@/foundation'
 import { topLayer } from './topLayer'
 
 test('元素接入前 Controller 已完整，依赖 DOM 的方法为 no-op', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const { controller } = topLayer()
     expect(controller.enter).toBeDefined()
     expect(controller.leave).toBeDefined()

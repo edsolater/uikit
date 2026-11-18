@@ -77,7 +77,7 @@ test('列表重排时显隐节点跟随数据项，隐藏后重排再显示仍�
   dispose = render(
     () => (
       <For each={val(items)}>
-        {(item) => (
+        {item => (
           <Piv if={visible} htmlProps={{ 'data-name': item.name }}>
             {item.name}
           </Piv>
@@ -143,7 +143,7 @@ test('条件显隐保留同一节点、响应更新和资源，卸载时清理�
           if={visible}
           is={instance}
           htmlProps={{ 'data-state': val(text) }}
-          domRef={(element) => {
+          domRef={element => {
             attached(element)
             return detached
           }}

@@ -80,16 +80,16 @@ test('两个自写条件保留输入顺序，状态内容保留来源引用', ()
   })
   const css = compileRules([[[condition('.RawReference')], 'color', target]])
   const subject = parse(css).nodes.find(
-    (node) => node.type === 'rule' && node.selector === '.RawReference',
+    node => node.type === 'rule' && node.selector === '.RawReference',
   ) as Rule
   for (const selector of [first, second]) {
     const state = subject.nodes.find(
-      (node) => node.type === 'rule' && node.selector === selector,
+      node => node.type === 'rule' && node.selector === selector,
     ) as Rule
     expect(
       state.nodes
-        .filter((node) => node.type === 'decl' && node.prop === '--raw-target')
-        .map((node) => (node.type === 'decl' ? node.value : undefined)),
+        .filter(node => node.type === 'decl' && node.prop === '--raw-target')
+        .map(node => (node.type === 'decl' ? node.value : undefined)),
     ).toEqual(['var(--raw-source)'])
   }
   expect(css).toContain('--raw-source: blue;')

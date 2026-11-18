@@ -9,7 +9,7 @@ import { pivPropAccumulation } from '../../Piv/plugin/mergePivProps'
 
 describe('逐层声明消费', () => {
   test('输入声明查询区分本层Controller写入，上层交付后仍是下层输入', () => {
-    const { props, directed, dispose } = createRoot((dispose) => {
+    const { props, directed, dispose } = createRoot(dispose => {
       const declaration = createPropsDeclaration<{ disabled?: boolean }>({})
       const directed = createPropsController(declaration.resolvedProps, {
         disabled: 'source',
@@ -22,7 +22,7 @@ describe('逐层声明消费', () => {
     flush()
     expect('disabled' in props).toBe(true)
     expect(hasPropDeclaration(props, 'disabled')).toBe(false)
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const child = createPropsDeclaration({
         shadowProps: props,
       }).markUsedOnRead()
@@ -33,7 +33,7 @@ describe('逐层声明消费', () => {
     dispose()
   })
   test('独立工具的显式 Props 泛型自动获得 shadowProps 与 is 入口', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       type Props = { disabled?: boolean }
       const capability = createInactivePlugin<{}, {}, Props>({
         name: '类型化业务能力',
@@ -51,7 +51,7 @@ describe('逐层声明消费', () => {
       dispose()
     }))
   test('本层重复读取保留，低优先级同名不复活，显式再交付形成新声明', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const parent = createPropsDeclaration({
         value: undefined,
         shadowProps: { value: '补充值' },
@@ -73,7 +73,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('子层先认领时父层不能再认领，同层重复取得同一 Source 且不提前求值', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       let reads = 0
       const source = () => ++reads
       const parent = createPropsDeclaration({ value: source }).markUsedOnRead()
@@ -91,7 +91,7 @@ describe('逐层声明消费', () => {
 
   test('动态补充来源增删保留声明形状，不提前读取未消费 getter', () => {
     let unusedReads = 0
-    const { declaration, child, dispose } = createRoot((dispose) => {
+    const { declaration, child, dispose } = createRoot(dispose => {
       const declaration = createState<object>({ value: '初值' })
       const parent = createPropsDeclaration({
         get shadowProps() {
@@ -121,7 +121,7 @@ describe('逐层声明消费', () => {
   })
 
   test('相同原始数据在独立实例中各自认领，不修改原始对象', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const input = { value: '共享' }
       const first = createPropsDeclaration(input).markUsedOnRead()
       const second = createPropsDeclaration(input).markUsedOnRead()
@@ -132,7 +132,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('显式覆盖不夺走未参与读取的上游声明', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const parent = createPropsDeclaration({ disabled: true }).markUsedOnRead()
       const child = createPropsDeclaration({
         disabled: false,
@@ -148,7 +148,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('三层内部探测不认领上游字段', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const first = createPropsDeclaration({ value: true }).markUsedOnRead()
       const middle = createPropsDeclaration({
         shadowProps: first,
@@ -161,7 +161,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('三层从高优先级上游认领，不误取尚未参与的低优先级上游', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const high = createPropsDeclaration({
         value: '高优先级',
       }).markUsedOnRead()
@@ -180,7 +180,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('三层受控惰性 State 在取得时认领来源，延迟求值仍能使用自己的声明', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       const first = createPropsDeclaration({ value: '来源' }).markUsedOnRead()
       const middleDeclaration = createPropsDeclaration<{
         value?: string
@@ -206,7 +206,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('累加字段被显式 undefined 截断时不读取或认领低优先级来源', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       let reads = 0
       const parent = createPropsDeclaration(
         {
@@ -232,7 +232,7 @@ describe('逐层声明消费', () => {
     }))
 
   test('当前层逐项接入全部Plugin，字段交接不再次展开上层Plugin', () =>
-    createRoot((dispose) => {
+    createRoot(dispose => {
       let builds = 0
       const capability = createInactivePlugin({
         name: '声明测试',
@@ -264,7 +264,7 @@ describe('逐层声明消费', () => {
 })
 
 test('消费包装不更换补充来源，显式连接才接入处理后的动态容器', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     for (const connect of [false, true]) {
       const declaration = createPropsDeclaration({ shadowProps: { value: 1 } })
       let containerReads = 0

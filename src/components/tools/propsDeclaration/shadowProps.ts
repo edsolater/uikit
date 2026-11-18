@@ -186,7 +186,7 @@ export function createPropsDeclaration<Props extends object>(
    * 来源和读取适配器由同一 memo 持有；节点身份未变时不重建适配器。
    */
   const createSources = (containers: object = directProps) =>
-    createMemo<DeclarationSource[]>((previous) => {
+    createMemo<DeclarationSource[]>(previous => {
       const declarations = collectSources(directProps, containers)
       if (
         previous &&
@@ -194,22 +194,22 @@ export function createPropsDeclaration<Props extends object>(
         previous.every((entry, index) => entry.source === declarations[index])
       )
         return previous
-      return declarations.map((source) => {
+      return declarations.map(source => {
         const upstream = scopes.get(source)
         return upstream
           ? {
               source,
               upstream,
-              has: (key) =>
+              has: key =>
                 !isProtocolKey(key) &&
                 key !== 'children' &&
                 upstream.has(key, fieldReader(key)),
-              read: (key) => {
+              read: key => {
                 const next = fieldReader(key)
                 if (consuming) upstream.claim(key, next)
                 return upstream.read(key, next, consuming)
               },
-              readContribution: (key) => {
+              readContribution: key => {
                 const next = fieldReader(key)
                 if (consuming) upstream.claim(key, next)
                 return upstream.readContribution(key, next, consuming)
@@ -217,8 +217,8 @@ export function createPropsDeclaration<Props extends object>(
             }
           : {
               source,
-              has: (key) => key in source,
-              read: (key) => Reflect.get(source, key),
+              has: key => key in source,
+              read: key => Reflect.get(source, key),
             }
       })
     })
@@ -229,7 +229,7 @@ export function createPropsDeclaration<Props extends object>(
   const hasDeclaredProp = (key: PropertyKey) =>
     key === 'children' || isProtocolKey(key)
       ? key in directProps
-      : sources().some((source) => source.has(key))
+      : sources().some(source => source.has(key))
   /**
    * 按字段规则取得来源值；是否连带认领上游由当前读取状态决定。
    */
@@ -244,7 +244,7 @@ export function createPropsDeclaration<Props extends object>(
       return value
     }
     if (direct?.has(key)) return direct.read(key)
-    return views.find((source) => source.has(key))?.read(key)
+    return views.find(source => source.has(key))?.read(key)
   }
   /**
    * 为 Kit 的样式归一等内部接线提供声明形状，不读取字段值。
@@ -255,7 +255,7 @@ export function createPropsDeclaration<Props extends object>(
         return upstream
           ? upstream
               .keys()
-              .filter((key) => !isProtocolKey(key) && key !== 'children')
+              .filter(key => !isProtocolKey(key) && key !== 'children')
           : Reflect.ownKeys(source)
       }),
     ),
@@ -264,7 +264,7 @@ export function createPropsDeclaration<Props extends object>(
     /**
      * 当前输入来源决定外部归属，本层输出包装不改变这份声明事实。
      */
-    hasInput: (key) => withReader(owner, () => hasDeclaredProp(key)),
+    hasInput: key => withReader(owner, () => hasDeclaredProp(key)),
     /**
      * 正常交接只向未失去消费权的读取者报告字段存在。
      */

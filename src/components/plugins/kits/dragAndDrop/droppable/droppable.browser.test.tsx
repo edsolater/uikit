@@ -138,7 +138,7 @@ describe('droppable', () => {
           />
           <Piv
             is={droppable({
-              onDrop: (context) => {
+              onDrop: context => {
                 receivedPayload = context.payload
               },
             })}
@@ -148,7 +148,7 @@ describe('droppable', () => {
             is={droppable({
               accepts: ({ kind, files }) =>
                 kind === 'external' && files.length > 0,
-              onDrop: (context) => {
+              onDrop: context => {
                 receivedFiles = context.files
                 receivedItems = context.items
               },
@@ -202,8 +202,8 @@ describe('droppable', () => {
       }),
     )
     flush()
-    expect(receivedFiles.map((file) => file.name)).toEqual(['hello.txt'])
-    expect(receivedItems.map((item) => item.kind)).toEqual(['file'])
+    expect(receivedFiles.map(file => file.name)).toEqual(['hello.txt'])
+    expect(receivedItems.map(item => item.kind)).toEqual(['file'])
   })
 
   test('同次组合跨容器协作，不同组合与独立能力在同容器内拒绝且来源移动不改变分组', () => {
@@ -342,7 +342,7 @@ describe('droppable', () => {
           <Piv
             is={droppable({
               accepts: ({ kind }) => kind === 'internal',
-              onDrop: (context) => {
+              onDrop: context => {
                 if (context.kind !== 'internal') return
                 const { source } = context
                 cleanedBeforeDrop =

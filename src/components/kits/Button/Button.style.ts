@@ -52,7 +52,7 @@ export const buttonSurfaceColor = buttonToken(
     {
       color: {
         base: buttonColorSource,
-        alpha: (current) => multiply(current, 0.14),
+        alpha: current => multiply(current, 0.14),
       },
       weight: 0.18,
     },
@@ -73,7 +73,7 @@ export const buttonContentColor = buttonToken(contentColor, {
 export const buttonBoundaryColor = buttonToken(
   color({
     base: buttonColorSource,
-    alpha: (current) => multiply(current, 0.44),
+    alpha: current => multiply(current, 0.44),
   }),
 )
 export const buttonBorderColor = buttonToken('transparent', {
@@ -90,8 +90,8 @@ export const buttonMinHeight = buttonToken(controlSize)
 export const buttonGap = buttonToken(baseSpace)
 export const buttonPaddingBlock = buttonToken(baseSpace, {
   state: {
-    small: (base) => multiply(base, 1 / 2),
-    xlarge: (base) => multiply(base, 3 / 2),
+    small: base => multiply(base, 1 / 2),
+    xlarge: base => multiply(base, 3 / 2),
   },
 })
 export const buttonPaddingInline = buttonToken(multiply(baseSpace, 3))
@@ -109,7 +109,7 @@ export const buttonOpacitySource = buttonToken(multiply(baseOpacity, 0.9), {
   state: { soft: multiply(baseOpacity, 0.7), strong: baseOpacity },
 })
 export const buttonOpacity = buttonToken(buttonOpacitySource, {
-  state: { disabled: (base) => multiply(base, 0.48 / 0.9) },
+  state: { disabled: base => multiply(base, 0.48 / 0.9) },
 })
 
 rules(buttonAddress, [
@@ -154,5 +154,5 @@ export const buttonStyleConfig = {
   /**
    * 设置当前按钮内图标与文字等内容之间的距离。
    */
-  $gap: (value) => buttonGap.set(value),
+  $gap: value => buttonGap.set(value),
 } satisfies StyleConfig<ButtonStyleConfig>

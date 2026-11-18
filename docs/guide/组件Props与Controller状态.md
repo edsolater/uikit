@@ -6,12 +6,12 @@ Props 是组件的声明入口，负责初始界面与持续变化的来源。Co
 
 所有公开 Kit 组件先声明 Props、字段协议与 Controller，再让实现满足声明。公开类型不从组件实现反推。
 
-| 负责位置                  | 聚合内容                                                                                 |
-| ------------------------- | ---------------------------------------------------------------------------------------- |
+| 负责位置                  | 聚合内容                                                                                  |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
 | `Component.prop.ts`       | 主体命名的 Props、PropsDefinition 类型与值、Controller 声明，以及候选事实和紧邻的派生类型 |
-| `Component.style.ts`      | 本组件的 StyleConfig 类型、箭头解释函数、Token 与样式规则                                |
-| `Component.tsx`           | 组件装配、内容渲染，以及实际业务 Controller 的创建与交付                                 |
-| `components/tools/kit.ts` | 公共输入、字段协议、组件创建与实例装配；KitOptions 紧邻 kit，不按类型与实现拆开          |
+| `Component.style.ts`      | 本组件的 StyleConfig 类型、箭头解释函数、Token 与样式规则                                 |
+| `Component.tsx`           | 组件装配、内容渲染，以及实际业务 Controller 的创建与交付                                  |
+| `components/tools/kit.ts` | 公共输入、字段协议、组件创建与实例装配；KitOptions 紧邻 kit，不按类型与实现拆开           |
 
 `KitProps<{ $styleConfig: Config; controller: Controller; domTag: Tag }>` 聚合 Piv 节点声明、组件用途说明、样式输入与组件 ref；domTag 缺省为 div。`children` 保留为统一公共输入及控制字段；当前组件使用业务值产生内容，不意味着公共协议需要删除这个入口，也不要求组件额外创建另一套内容回落。Article、Heading 与 Text 的固定根语义仍由各自声明表达。确有字段形状差异时，先核对共同模型，再处理必要的语义覆盖，避免按每个当前消费者分割公共协议。
 
@@ -123,8 +123,8 @@ kit 负责同一个 Controller 的组装、登记、ref 换接和透明 Componen
 
 | 字段定义            | 核心取得的内容                                       | Controller.props |
 | ------------------- | ---------------------------------------------------- | ---------------- |
-| `source` | 只读 StateView，交给实际消费者读取                   | 可写 State       |
-| `tracked-value`  | 当前值，本次读取参与响应依赖收集                     | 可写 State       |
+| `source`            | 只读 StateView，交给实际消费者读取                   | 可写 State       |
+| `tracked-value`     | 当前值，本次读取参与响应依赖收集                     | 可写 State       |
 | `untracked-value`   | 当前值，不收集本次外层响应依赖；再次读取仍取得当时值 | 可写 State       |
 | `only-through-prop` | 上游原声明，不解包、不缓存                           | 不公开该字段     |
 

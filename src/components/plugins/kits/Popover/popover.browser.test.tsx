@@ -327,7 +327,7 @@ test('翻向条件作用于正文后代和伪元素，不作用于容器自身',
       .toBe('rgb(0, 0, 200)')
     expect(getComputedStyle(body).color).toBe('rgb(10, 20, 30)')
   } finally {
-    handles.forEach((handle) => handle.remove())
+    handles.forEach(handle => handle.remove())
   }
 })
 
@@ -409,7 +409,7 @@ test('默认打开只读取首次完成值，后续状态改变不再打开', as
   await expect.poll(() => trigger.popoverTargetElement).toBe(body)
   expect(body.matches(':popover-open')).toBe(false)
   initial.set(true)
-  await new Promise((done) => setTimeout(done, 30))
+  await new Promise(done => setTimeout(done, 30))
   expect(body.matches(':popover-open')).toBe(false)
 })
 
@@ -538,7 +538,7 @@ test('默认聚焦正文内第一个可聚焦节点，卸载时恢复原有 auto
     true,
   )
   const existing = [...body.querySelectorAll('button')].find(
-    (node) => node.textContent === '原有自动聚焦',
+    node => node.textContent === '原有自动聚焦',
   )!
   expect(existing.hasAttribute('autofocus')).toBe(false)
   dispose?.()
@@ -571,7 +571,7 @@ test('createDomRef 指定正文中的焦点目标，关闭由浏览器恢复焦�
   await userEvent.click(trigger)
   await expect.poll(() => document.activeElement?.textContent).toBe('指定目标')
   const existing = [...body.querySelectorAll('button')].find(
-    (node) => node.textContent === '第一项',
+    node => node.textContent === '第一项',
   )!
   expect(existing.hasAttribute('autofocus')).toBe(false)
   capability.controller.body.hidePopover()
@@ -681,7 +681,7 @@ test('后续监听取消打开不移动焦点，卸载时恢复原有 autofocus'
   await expect.poll(() => trigger.popoverTargetElement).toBe(body)
   const existing = body.querySelector<HTMLElement>('[autofocus]')!
   existing.setAttribute('autofocus', 'original')
-  body.addEventListener('beforetoggle', (event) => event.preventDefault(), {
+  body.addEventListener('beforetoggle', event => event.preventDefault(), {
     once: true,
   })
   await userEvent.click(trigger)
@@ -712,7 +712,7 @@ test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操
   const canceled = controller.showPopover.lazyExec()
   expect(typeof canceled.cancel).toBe('function')
   canceled.cancel()
-  const rejected = canceled.result.catch((error) => error)
+  const rejected = canceled.result.catch(error => error)
   expect((await rejected).name).toBe('AbortError')
   expect(body.matches(':popover-open')).toBe(false)
   expect(await controller.showPopover().result).toBeUndefined()

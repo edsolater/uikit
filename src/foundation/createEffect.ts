@@ -42,7 +42,7 @@ export function createEffect<Source>(
   action: EffectAction<Val<Source>>,
 ): void
 export function createEffect(source: unknown, action: EffectAction<any>): void {
-  solidCreateEffect(normalizeEffectSource(source), (value) =>
+  solidCreateEffect(normalizeEffectSource(source), value =>
     cleanupAction(action(value)),
   )
 }
@@ -70,7 +70,7 @@ export function createRenderEffect(
 ): void {
   solidCreateRenderEffect(
     normalizeEffectSource(source),
-    (value) => cleanupAction(action(value)),
+    value => cleanupAction(action(value)),
     options,
   )
 }
@@ -82,7 +82,7 @@ function normalizeEffectSource(source: unknown): () => unknown {
         return isPromiseLike(result) ? Promise.resolve(result) : result
       }
     : isArray(source)
-      ? () => source.map((item) => val(item))
+      ? () => source.map(item => val(item))
       : () => val(source)
 }
 

@@ -350,8 +350,10 @@ export const exampleEntries: ExampleEntry[] = [
     title: 'ComponentIdentityMarker',
     category: exampleCategories.component,
     summary: '透明组件边界与用途说明。',
-    thumbnail: new URL('../thumbnails/component-identity-marker.webp', import.meta.url)
-      .href,
+    thumbnail: new URL(
+      '../thumbnails/component-identity-marker.webp',
+      import.meta.url,
+    ).href,
     content: BoundaryRegistrationExample,
   },
   {
@@ -402,7 +404,7 @@ export default function ExampleDashboard() {
         const id = readExampleId(val(pathname))
         if (!id) return <ExampleHome onNavigate={navigate} />
 
-        const example = exampleEntries.find((entry) => entry.id === id)
+        const example = exampleEntries.find(entry => entry.id === id)
         return example ? (
           <ExampleDetail entry={example} onNavigate={navigate} />
         ) : (
@@ -423,7 +425,7 @@ function ExampleHome(props: { onNavigate: (event: MouseEvent) => void }) {
 
       <nav class="example-list" aria-label="Examples">
         <For each={exampleEntries}>
-          {(entry) => (
+          {entry => (
             <a
               class="example-link"
               data-thumbnail

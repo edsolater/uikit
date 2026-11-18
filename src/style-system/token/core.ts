@@ -168,7 +168,7 @@ function createToken<T extends TokenData>(
   const name =
     entityName === undefined
       ? undefined
-      : [prefixName, entityName].filter((part) => part !== undefined).join('-')
+      : [prefixName, entityName].filter(part => part !== undefined).join('-')
   const self: Token<T> = {
     ...parseTokenArgs<T>(input, protocol),
     name,
@@ -225,7 +225,7 @@ function createToken<T extends TokenData>(
    */
   function outputBase(resolve: JSSContentResolver): string | undefined {
     return protocol?.toCSSString
-      ? protocol.toCSSString(self.default, (child) =>
+      ? protocol.toCSSString(self.default, child =>
           contentDataToCSSString(child, resolve),
         )
       : contentDataToCSSString(self.default, resolve)

@@ -47,7 +47,7 @@ export function declare(
     const content = contents.length ? contents[0] : target.content
     if (
       (isCSSDeclaration(content) && content.variable === target) ||
-      (hasProperty(content, 'kind', (kind) => kind === 'css-modification') &&
+      (hasProperty(content, 'kind', kind => kind === 'css-modification') &&
         cssPreparation(content))
     )
       return [key, content]

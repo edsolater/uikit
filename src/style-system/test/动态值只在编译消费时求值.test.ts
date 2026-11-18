@@ -33,7 +33,7 @@ test.each([
   '表达式',
   '自定义resolve',
   'join',
-])('%s 中的普通生产函数在编译时输出结果', (entry) => {
+])('%s 中的普通生产函数在编译时输出结果', entry => {
   const produce = vi.fn((_unused?: unknown) => '3px')
   produce.toString = () => {
     throw new Error('禁止函数字符串化')
@@ -56,7 +56,7 @@ test.each([
     } satisfies JSSContent,
     表达式: multiply(produce, 2),
     自定义resolve: token(produce, {
-      dependencies: (content) => [content],
+      dependencies: content => [content],
       toCSSString: (content, resolve) => resolve(content),
     }),
     join: 'ignored',
@@ -88,7 +88,7 @@ test.each([
 test('默认生产函数与状态 base 回调返回的生产内容保留资源和当地基础', () => {
   const source = token(() => token(() => '4px'), {
     name: 'producer-default-state',
-    state: [[stateCondition('&:hover'), (base) => multiply(base, () => 2)]],
+    state: [[stateCondition('&:hover'), base => multiply(base, () => 2)]],
     onFirstScan: () => [[['.ProducerResource'], 'color', () => 'red']],
     registration: {
       syntax: '<length>',
@@ -120,7 +120,7 @@ test.each([
   'Condition头',
   'inherits',
   'syntax',
-])('%s 返回或持有函数时拒绝，不执行也不字符串化', (entry) => {
+])('%s 返回或持有函数时拒绝，不执行也不字符串化', entry => {
   const invalid = vi.fn(() => {
     throw new Error('不应执行非法字段')
   })
@@ -157,7 +157,7 @@ test.each([
 
 test.each(['media', 'functionDefinition', 'animationName'])(
   '%s 的固定文本参数拒绝函数，插值前报错',
-  (entry) => {
+  entry => {
     const invalid = vi.fn(() => {
       throw new Error('不应执行静态名称')
     })
@@ -189,7 +189,7 @@ test('状态回调收到默认生产函数求得的基础值，而不是函数�
     state: [
       [
         stateCondition('&:hover'),
-        (base) => `${Number.parseFloat(String(base)) * 2}px`,
+        base => `${Number.parseFloat(String(base)) * 2}px`,
       ],
     ],
   })
@@ -203,10 +203,7 @@ test('根据地的生产基础与状态不覆盖另一区域的显式局部值',
     name: 'expanded-unused-default',
     address: ':where(:root)',
     state: [
-      [
-        stateCondition('&:hover'),
-        (base) => `${parseFloat(String(base)) * 2}px`,
-      ],
+      [stateCondition('&:hover'), base => `${parseFloat(String(base)) * 2}px`],
     ],
   })
   const css = compileRules([
@@ -233,7 +230,7 @@ test('根据地的生产基础只求值一次，多个消费者共享结果', ()
       state: [
         [
           stateCondition('&:hover'),
-          (base) => `${parseFloat(String(base)) * 2}px`,
+          base => `${parseFloat(String(base)) * 2}px`,
         ],
       ],
     },
@@ -250,7 +247,7 @@ test('根据地的生产基础只求值一次，多个消费者共享结果', ()
 
 test.each(['函数', 'onCompile'])(
   '展开成常量的%s内容仍在实际使用地址发布命名声明',
-  (entry) => {
+  entry => {
     const content =
       entry === '函数'
         ? () => '4px'
@@ -282,7 +279,7 @@ test('编译波前访问过依赖后，onCompile 更新的依赖仍在完成阶�
     onCompile() {
       input.dependencies = [produce]
     },
-    toCSSString: (resolve) => resolve?.(produce),
+    toCSSString: resolve => resolve?.(produce),
   }
   expect(compileRules([[['.ChangedDependencies'], 'color', input]])).toContain(
     'color: red;',

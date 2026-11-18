@@ -48,7 +48,7 @@ variable(source, {
   name: 'surface-color',
   states: {
     hover: hoverColor,
-    active: (source) => colorMix([source, 0.48], neutralColor(2)),
+    active: source => colorMix([source, 0.48], neutralColor(2)),
   },
 })
 ```
@@ -79,7 +79,7 @@ State Condition 描述主体自身状态，例如 hover、active、disabled、fo
 variableFrom(surfaceColor, {
   name: 'button-surface-color',
   states: {
-    active: (source) => colorMix([source, 0.48], neutralColor(2)),
+    active: source => colorMix([source, 0.48], neutralColor(2)),
   },
 })
 ```

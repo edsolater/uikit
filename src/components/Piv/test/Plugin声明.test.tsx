@@ -82,7 +82,7 @@ test('同一能力结果可交给多个节点，各节点接入自己的元素�
       name: 'sharedResult',
       pluginCore({ addProps }) {
         addProps({
-          domRef: (el) => {
+          domRef: el => {
             attached.push(el)
             onCleanup(() => innerCleaned.push(el))
             return () => detached.push(el)
@@ -116,7 +116,7 @@ test('两次构建的 Controller 状态独立，节点接入各自元素', () =>
       pluginCore({ addProps }) {
         const [hovered, control] = createToggle(false)
         addProps({
-          domRef: (el) => {
+          domRef: el => {
             attached.push(el)
           },
         })
@@ -195,16 +195,16 @@ test('动态 is 按声明接入和释放，重复引用各执行一次，旁读�
   expect(events).toHaveLength(2)
   enabled.set(false)
   flush()
-  expect(events.filter((event) => event === '清理')).toHaveLength(2)
-  expect(events.filter((event) => event === '内部清理')).toHaveLength(2)
+  expect(events.filter(event => event === '清理')).toHaveLength(2)
+  expect(events.filter(event => event === '内部清理')).toHaveLength(2)
   enabled.set(true)
   flush()
-  expect(events.filter((event) => event === '接入1')).toHaveLength(2)
+  expect(events.filter(event => event === '接入1')).toHaveLength(2)
   expect(builds).toBe(1)
   dispose()
   dispose = undefined
-  expect(events.filter((event) => event === '清理')).toHaveLength(4)
-  expect(events.filter((event) => event === '内部清理')).toHaveLength(4)
+  expect(events.filter(event => event === '清理')).toHaveLength(4)
+  expect(events.filter(event => event === '内部清理')).toHaveLength(4)
 })
 
 test('直接 is 与 Plugin 提交的嵌套 is 随来源变化', () => {
@@ -237,7 +237,7 @@ test('直接 is 与 Plugin 提交的嵌套 is 随来源变化', () => {
     )
   }, host)
   const titles = () =>
-    [...host.children].map((element) => element.getAttribute('title'))
+    [...host.children].map(element => element.getAttribute('title'))
   expect(titles()).toEqual(['已接入', '已接入'])
   enabled.set(false)
   flush()

@@ -65,7 +65,7 @@ test('预置属性排除废弃和无支持证据项，保留用户自定义声�
     expect(styleSystem, variable).not.toHaveProperty(variable)
     expect(resolveJSSKey(name), name).toBe(name)
   }
-  expect(Object.keys(keyRegistry).some((name) => name.startsWith('-'))).toBe(
+  expect(Object.keys(keyRegistry).some(name => name.startsWith('-'))).toBe(
     false,
   )
   expect(typeof resolveJSSKey('font-stretch')).toBe('object')
@@ -106,7 +106,7 @@ test('对象身份与合法名称直通保留，未知和混合别名拒绝', ()
 
 test('纯创建不登记，直接目标和显式登记后的字符串共用组合规则', () => {
   const total = key('registry-custom-total', {
-    join: (items) => items.reduce((sum, item) => sum + Number(item.content), 0),
+    join: items => items.reduce((sum, item) => sum + Number(item.content), 0),
   })
   expect(resolveJSSKey(total.name)).toBe(total.name)
   expect(() => resolveJSSKey('registryCustomTotal')).toThrow('未知 JSSKey 名称')
@@ -137,7 +137,7 @@ test('纯创建不登记，直接目标和显式登记后的字符串共用组�
 })
 
 test('同名登记保留首个对象与组合协议，内建别名不能被不同原名占用', () => {
-  const first = key('registry-first-total', { join: (items) => items.length })
+  const first = key('registry-first-total', { join: items => items.length })
   registerGlobalJSSKeyInStorage(first)
   registerGlobalJSSKeyInStorage(key(first.name, { join: () => 999 }))
   expect(resolveJSSKey(first.name)).toBe(first)

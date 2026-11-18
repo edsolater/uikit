@@ -48,21 +48,21 @@ test('两个组件独立组合，并在退出状态时恢复基础值', () => {
       [button, hover],
       modify(n, {
         type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 3),
+        detail: currentExpression => add(currentExpression, 3),
       }),
     ),
     row(
       [button, focus],
       modify(n, {
         type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 5),
+        detail: currentExpression => add(currentExpression, 5),
       }),
     ),
     row(
       [panel, focus],
       modify(n, {
         type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 10),
+        detail: currentExpression => add(currentExpression, 10),
       }),
     ),
     [[button], 'z-index', n],
@@ -85,7 +85,7 @@ test('两个组件独立组合，并在退出状态时恢复基础值', () => {
 
 test.each([true, false])(
   '状态基础 10 再修改 3 得到 13，普通引用提前=%s',
-  (early) => {
+  early => {
     const n = token(1, {
       name: 'state-count',
       address: '.ModifyButton',
@@ -96,7 +96,7 @@ test.each([true, false])(
         [button, hover],
         modify(n, {
           type: 'expression' as const,
-          detail: (currentExpression) => add(currentExpression, 3),
+          detail: currentExpression => add(currentExpression, 3),
         }),
       ),
     ]
@@ -116,14 +116,14 @@ test('有序非交换修改支持尺寸；共享 ID 由层叠选中一步', () =
       [button, hover],
       modify(size, {
         type: 'expression',
-        detail: (current) => add(current, '2px'),
+        detail: current => add(current, '2px'),
       }),
     ),
     row(
       [button, focus],
       modify(size, {
         type: 'expression',
-        detail: (current) => multiply(current, 3),
+        detail: current => multiply(current, 3),
       }),
     ),
     [[button], 'width', size],
@@ -135,7 +135,7 @@ test('有序非交换修改支持尺寸；共享 ID 由层叠选中一步', () =
 
 test.each([true, false])(
   '数值注册沿用inherits=%s，多步非交换修改生效且退出恢复基础',
-  (inherits) => {
+  inherits => {
     const n = token(2, {
       name: `registered-number-${inherits}`,
       address: '.ModifyButton',
@@ -144,13 +144,13 @@ test.each([true, false])(
     const { element } = mount([
       row(
         [button, hover],
-        modify(n, { type: 'expression', detail: (current) => add(current, 2) }),
+        modify(n, { type: 'expression', detail: current => add(current, 2) }),
       ),
       row(
         [button, focus],
         modify(n, {
           type: 'expression',
-          detail: (current) => multiply(current, 3),
+          detail: current => multiply(current, 3),
         }),
       ),
       [[button], 'z-index', n],
@@ -181,7 +181,7 @@ test('尺寸与颜色注册都保留多步加工及退出效果', () => {
         [button, hover],
         modify(size, {
           type: 'expression' as const,
-          detail: (currentExpression) => add(currentExpression, '1px'),
+          detail: currentExpression => add(currentExpression, '1px'),
         }),
       ),
     ),
@@ -190,9 +190,9 @@ test('尺寸与颜色注册都保留多步加工及退出效果', () => {
         [button, hover],
         modify(color, {
           type: 'expression' as const,
-          detail: (currentExpression) =>
+          detail: currentExpression =>
             createJSSContent(
-              (resolve) =>
+              resolve =>
                 `color-mix(in srgb, ${resolve(currentExpression)} 99%, white)`,
               [currentExpression],
             ),
@@ -221,7 +221,7 @@ test('共享 ID 让后写条件覆盖同一步，退出后恢复仍匹配的赋�
         n,
         {
           type: 'expression' as const,
-          detail: (currentExpression) => add(currentExpression, 3),
+          detail: currentExpression => add(currentExpression, 3),
         },
         { id: 'interaction' },
       ),
@@ -232,7 +232,7 @@ test('共享 ID 让后写条件覆盖同一步，退出后恢复仍匹配的赋�
         n,
         {
           type: 'expression' as const,
-          detail: (currentExpression) => add(currentExpression, 5),
+          detail: currentExpression => add(currentExpression, 5),
         },
         { id: 'interaction' },
       ),
@@ -253,7 +253,7 @@ test('普通手写赋值仍按原顺序覆盖公开变量，不因默认节点�
       [button],
       modify(n, {
         type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 3),
+        detail: currentExpression => add(currentExpression, 3),
       }),
     ),
     [[button], n, 20],
@@ -268,7 +268,7 @@ test('先主动换值再修改时，在新绑定的基础上继续加工', () =>
     [[button], n, 20],
     row(
       [button],
-      modify(n, { type: 'expression', detail: (current) => add(current, 3) }),
+      modify(n, { type: 'expression', detail: current => add(current, 3) }),
     ),
     [[button], 'z-index', n],
   ])
@@ -288,14 +288,14 @@ test('declare 可给两个局部定义不同基础内容', () => {
       [button],
       modify(n, {
         type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 3),
+        detail: currentExpression => add(currentExpression, 3),
       }),
     ),
     row(
       [panel],
       modify(other, {
         type: 'expression' as const,
-        detail: (currentExpression) => add(currentExpression, 4),
+        detail: currentExpression => add(currentExpression, 4),
       }),
     ),
     [[button], 'z-index', n],
@@ -315,7 +315,7 @@ test('晚编译的前置修改按源位置连接，编号和编译时机不决�
     ) {
       controller.insert(
         { before: context.node, conditionPath: context.conditionPath },
-        modify(n, { type: 'expression', detail: (current) => add(current, 2) }),
+        modify(n, { type: 'expression', detail: current => add(current, 2) }),
         { owner: context.node },
       )
     },
@@ -326,7 +326,7 @@ test('晚编译的前置修改按源位置连接，编号和编译时机不决�
       [button],
       modify(n, {
         type: 'expression',
-        detail: (current) => multiply(current, 3),
+        detail: current => multiply(current, 3),
       }),
     ),
     [[button], 'z-index', n],
@@ -336,23 +336,23 @@ test('晚编译的前置修改按源位置连接，编号和编译时机不决�
 
 test.each([false, true])(
   '撤销中间修改或共享首声明后，剩余非交换步骤局部重连，共享=%s',
-  (shared) => {
+  shared => {
     const n = token(1, {
       name: `removed-step-${shared}`,
       address: '.ModifyButton',
     })
     const first = modify(
       n,
-      { type: 'expression', detail: (current) => add(current, 2) },
+      { type: 'expression', detail: current => add(current, 2) },
       shared ? { id: 'shared' } : undefined,
     )
     const middle = modify(n, {
       type: 'expression',
-      detail: (current) => multiply(current, 3),
+      detail: current => multiply(current, 3),
     })
     const last = modify(
       n,
-      { type: 'expression', detail: (current) => add(current, 4) },
+      { type: 'expression', detail: current => add(current, 4) },
       shared ? { id: 'shared' } : undefined,
     )
     const removed = shared ? first : middle
@@ -366,7 +366,7 @@ test.each([false, true])(
               controller.remove(
                 controller
                   .search({})
-                  .find((node) => node.content === removed[1])!,
+                  .find(node => node.content === removed[1])!,
               )
             },
           },
@@ -393,7 +393,7 @@ test.each([
   '&[data-on], & .child',
   '& [data-symbol="&"]',
   '& .\\31 child',
-])('子元素修改前序后重新应用父位置后续规则，目标=%s', async (selector) => {
+])('子元素修改前序后重新应用父位置后续规则，目标=%s', async selector => {
   const amount = token(1, {
     name: 'descendant-ordered',
     address: '.ModifyButton',
@@ -404,14 +404,14 @@ test.each([
       [button, childPath],
       modify(amount, {
         type: 'expression',
-        detail: (current) => add(current, 3),
+        detail: current => add(current, 3),
       }),
     ),
     row(
       [button, focus],
       modify(amount, {
         type: 'expression',
-        detail: (current) => multiply(current, 2),
+        detail: current => multiply(current, 2),
       }),
     ),
     [[button], 'z-index', amount],
@@ -434,11 +434,11 @@ test.each([
 test('无额外Token配置的数值规则按顺序应用，CSS条件退出恢复基础值', () => {
   const first = {
     type: 'expression' as const,
-    detail: (currentExpression) => add(currentExpression, 2),
+    detail: currentExpression => add(currentExpression, 2),
   }
   const second = {
     type: 'expression' as const,
-    detail: (currentExpression) => multiply(currentExpression, 3),
+    detail: currentExpression => multiply(currentExpression, 3),
   }
   const amount = token(2, { name: 'dual-amount', address: '.ModifyButton' })
   const { element } = mount([

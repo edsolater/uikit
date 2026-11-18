@@ -11,7 +11,7 @@ const colorNumberFormatter = new Intl.NumberFormat('en-US', {
 })
 
 function formatColorText(color: string) {
-  return color.replace(/-?\d*\.?\d+(?:e[+-]?\d+)?/gi, (value) => {
+  return color.replace(/-?\d*\.?\d+(?:e[+-]?\d+)?/gi, value => {
     const formatted = colorNumberFormatter.format(Number(value))
     return formatted === '-0' ? '0' : formatted
   })
@@ -19,7 +19,7 @@ function formatColorText(color: string) {
 
 function readColorRows() {
   const rootStyle = getComputedStyle(document.documentElement)
-  return colorShowcaseMaterials.map((material) => ({
+  return colorShowcaseMaterials.map(material => ({
     name: cssTokenName(material),
     value: formatColorText(
       rootStyle.getPropertyValue(cssTokenName(material)).trim() || '未定义',
@@ -47,7 +47,7 @@ export function ColorShowcaseTable() {
       keys={['name', 'value', 'preview']}
       renderParts={{
         tableCell: {
-          preview: (value) => (
+          preview: value => (
             <Piv
               class="ColorShowcasePreview"
               htmlProps={{ 'data-color-material': String(value) }}

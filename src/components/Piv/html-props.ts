@@ -55,7 +55,7 @@ export function consumeHTMLProps<Tag extends PivTag>(
 ) {
   const activeProps = createMemo(() => {
     const htmlPropsList = toArray(val(readHTMLPropsList()))
-      .map((htmlProps) => val(htmlProps))
+      .map(htmlProps => val(htmlProps))
       .filter(isTruthy)
     return htmlPropsList
   })
@@ -64,10 +64,8 @@ export function consumeHTMLProps<Tag extends PivTag>(
   mapArray(
     () => {
       const sources = activeProps()
-      return [
-        ...new Set(sources.flatMap((props) => Object.keys(props))),
-      ].filter(
-        (key) =>
+      return [...new Set(sources.flatMap(props => Object.keys(props)))].filter(
+        key =>
           !isReservedHTMLPropKey(key) &&
           sources.some(
             (_, index) =>
@@ -75,10 +73,10 @@ export function consumeHTMLProps<Tag extends PivTag>(
           ),
       )
     },
-    (key) => {
+    key => {
       consumeHTMLProp(element, key, () =>
         activeProps().map(
-          (props) => () => props[key] as HTMLPropAtom | undefined,
+          props => () => props[key] as HTMLPropAtom | undefined,
         ),
       )
       return key

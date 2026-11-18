@@ -27,7 +27,7 @@ export const Numeric: KitComponent<{
 }> = kit(
   { name: componentName, propDefinition: numericPropDefinition },
   (props, { name }) => {
-    const text = derive(props, (s) => {
+    const text = derive(props, s => {
       const value = val(s.value),
         digits = val(s.significantDigits) ?? 3
       return value == null || !Number.isFinite(value)

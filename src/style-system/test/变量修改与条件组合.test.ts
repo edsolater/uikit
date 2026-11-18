@@ -26,7 +26,7 @@ test('使用端直接消费变化描述，表达式变化不要求数值求值�
   const amount = token(3, 'plain-rule')
   const change: ExpressionModification = {
     type: 'expression',
-    detail: (current) => add(current, 2),
+    detail: current => add(current, 2),
   }
   expect(
     compileRules([
@@ -55,7 +55,7 @@ test('根据地自动提供修改基础，非法应用规则仍给出诊断', ()
         [button],
         modify(amount, {
           type: 'expression' as const,
-          detail: (currentExpression) => add(currentExpression, 3),
+          detail: currentExpression => add(currentExpression, 3),
         }),
       ),
     ]),
@@ -87,7 +87,7 @@ test('递归修改表达式由普通内容编译诊断', () => {
         [button],
         modify(amount, {
           type: 'expression' as const,
-          detail: (currentExpression) => recursive,
+          detail: currentExpression => recursive,
         }),
       ),
     ]),
@@ -102,7 +102,7 @@ test('删除修改消费者清理独占依赖，共享消费者仍保留资源',
     const amount = token(1, { name: 'removed-change' })
     const operation = modify(amount, {
       type: 'expression' as const,
-      detail: (currentExpression) => add(currentExpression, resource),
+      detail: currentExpression => add(currentExpression, resource),
     })
     const css = compileRules([
       row([button], declare(amount)),
@@ -117,7 +117,7 @@ test('删除修改消费者清理独占依赖，共享消费者仍保留资源',
             controller.remove(
               controller
                 .search({})
-                .find((node) => node.content === operation[1])!,
+                .find(node => node.content === operation[1])!,
             )
             controller.setContent(context, 1)
           },
@@ -137,7 +137,7 @@ test('声明或修改激活Token自身资源，撤销所有消费者后清理', 
   const declaration = declare(amount),
     operation = modify(amount, {
       type: 'expression' as const,
-      detail: (currentExpression) => add(currentExpression, 2),
+      detail: currentExpression => add(currentExpression, 2),
     })
   const css = compileRules([
     row([button], declaration),
@@ -149,14 +149,12 @@ test('声明或修改激活Token自身资源，撤销所有消费者后清理', 
         compileWaveIndex: 2,
         onCompile(context, controller) {
           controller.remove(
-            controller
-              .search({})
-              .find((node) => node.content === operation[1])!,
+            controller.search({}).find(node => node.content === operation[1])!,
           )
           controller.remove(
             controller
               .search({})
-              .find((node) => node.content === declaration[1])!,
+              .find(node => node.content === declaration[1])!,
           )
           controller.setContent(context, 1)
         },

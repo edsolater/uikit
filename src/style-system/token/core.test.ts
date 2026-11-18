@@ -105,7 +105,7 @@ test('内容生产函数延迟到消费位置执行', () => {
 test('原始对象数据由显式格式器解释，替换当前基础后输出新数据', () => {
   const source = { duration: 200, label: '基础数据' }
   const duration = token(source, {
-    toCSSString: (data) => `${data.duration}ms`,
+    toCSSString: data => `${data.duration}ms`,
   })
   expect(duration.default).toBe(source)
   expect(
@@ -118,7 +118,7 @@ test('原始对象数据由显式格式器解释，替换当前基础后输出�
 })
 
 test('特殊格式器读取已经编译的子内容，数值单位和输入替换保留', () => {
-  const milliseconds = token(200, { toCSSString: (value) => `${value}ms` })
+  const milliseconds = token(200, { toCSSString: value => `${value}ms` })
   expect(
     compileRules([[['.Duration'], 'transition-duration', milliseconds]]),
   ).toContain('transition-duration: 200ms;')
@@ -128,7 +128,7 @@ test('特殊格式器读取已经编译的子内容，数值单位和输入替�
   ).toContain('transition-duration: 400ms;')
   const child = token('2px')
   const sequence = token([child, '3px'], {
-    dependencies: (items) => items,
+    dependencies: items => items,
     toCSSString: (items, resolve) => items.map(resolve).join(' '),
   })
   expect(compileRules([[['.Sequence'], 'padding', sequence]])).toContain(
@@ -139,7 +139,7 @@ test('特殊格式器读取已经编译的子内容，数值单位和输入替�
 test('命名 Token 的声明也采用特殊格式器，消费保持同一变量引用', () => {
   const duration = token(200, {
     name: 'formatted-duration',
-    toCSSString: (value) => `${value}ms`,
+    toCSSString: value => `${value}ms`,
   })
   const css = compileRules([[['.Formatted'], 'transition-duration', duration]])
   expect(css).toContain('--formatted-duration: 200ms;')
@@ -247,7 +247,7 @@ test('追加的特殊输出方法由普通 Token 创建入口处理', () => {
   const copy = token(token(2), {
     name: 'from-explicit-output',
     default: { part },
-    dependencies: (data) => [data.part],
+    dependencies: data => [data.part],
     toCSSString: (data, resolve) => resolve(data.part),
   })
   const css = compileRules([[['.ExplicitOutput'], 'width', copy]])

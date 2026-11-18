@@ -34,8 +34,8 @@ test('点击展开、键盘选择和取消草稿，并限制标签数量', async
             { value: 'b', label: '乙' },
             { value: 'c', label: '丙' },
           ]}
-          onQuery={(query) => queries.push(query)}
-          onSelect={(option) => value.set(option.label)}
+          onQuery={query => queries.push(query)}
+          onSelect={option => value.set(option.label)}
         />
       </FormField>
     ),

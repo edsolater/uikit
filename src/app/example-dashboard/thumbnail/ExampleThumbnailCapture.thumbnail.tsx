@@ -24,7 +24,7 @@ afterAll(() => {
 })
 
 const waitForLayout = () =>
-  new Promise((resolve) =>
+  new Promise(resolve =>
     requestAnimationFrame(() => requestAnimationFrame(resolve)),
   )
 
@@ -52,7 +52,7 @@ async function captureThumbnail(
   await Promise.all(
     document
       .getAnimations()
-      .map((animation) => animation.finished.catch(() => {})),
+      .map(animation => animation.finished.catch(() => {})),
   )
   await page.screenshot({
     ...(name === 'component-identity-marker' ||

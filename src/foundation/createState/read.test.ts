@@ -69,7 +69,7 @@ test('默认值先按 result 递归求值，代理仍按 Source 读取', async (
   expectTypeOf(() => val(undefined, callableProxy)).returns.toEqualTypeOf<
     typeof handler
   >()
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => val(undefined, callableProxy)),
     dispose,
   }))
@@ -82,7 +82,7 @@ test('val 在 UIKit 读取边界递归解除内部包装', () => {
   const value = createState(1)
   const nestedSource = createState(value)
   const observedValues: number[] = []
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => {
       const currentValue = val(nestedSource)
       observedValues.push(currentValue)
@@ -115,7 +115,7 @@ test('val 在 PromiseLike 完成前保留原生 pending', () => {
 test('PromiseLike 完成后更新 StateView 并重新运行响应式消费', async () => {
   const deferred = createDeferred<number>()
   const observedValues: (number | undefined)[] = []
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => {
       const value = val(deferred.promise)
       observedValues.push(value)
@@ -138,7 +138,7 @@ test('PromiseLike 完成后更新 StateView 并重新运行响应式消费', asy
 test('val 的默认值不截获 PromiseLike 等待，完成后响应式更新', async () => {
   const deferred = createDeferred<number>()
   const observedValues: number[] = []
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => {
       const value = val(deferred.promise, 0)
       observedValues.push(value)
@@ -173,12 +173,12 @@ test('val 的默认值不截获 PromiseLike 失败', async () => {
 test('val 继续读取 PromiseLike 完成后取得的 Source', async () => {
   const deferred = createDeferred<Source<number>>()
   const promiseResultProxy = toPromiseResultProxy(
-    deferred.promise.then((value) => ({ value })),
+    deferred.promise.then(value => ({ value })),
   ).value
   const sourceFromProxy: Source<number | undefined> = promiseResultProxy
   const source = createState(2)
   const observedValues: number[] = []
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => {
       const value = val(promiseResultProxy, 0)
       observedValues.push(value)
@@ -211,7 +211,7 @@ test('PromiseResultProxy 作为 PromiseLike Source 自动转换为 StateView', a
   const deferred = createDeferred<{ value: number }>()
   const promiseResultProxy = toPromiseResultProxy(deferred.promise)
   const observedValues: ({ value: number } | undefined)[] = []
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => {
       const value = val(promiseResultProxy)
       observedValues.push(value)
@@ -236,13 +236,13 @@ test('显式默认值反复消费完成 Promise，不重新退回等待值', asy
   const request = Promise.withResolvers<number>()
   const trigger = createState(0)
   const observed: number[][] = []
-  const stop = createRoot((dispose) => {
+  const stop = createRoot(dispose => {
     createEffect(
       () => {
         val(trigger)
         return [val(request.promise, 0), val(request.promise, -1)]
       },
-      (values) => {
+      values => {
         observed.push([...values])
       },
     )
@@ -270,14 +270,14 @@ test('默认函数只为空值执行，来源非空后停止订阅默认来源',
   const fallback = createState(0)
   const observed: number[] = []
   let calls = 0
-  const stop = createRoot((dispose) => {
+  const stop = createRoot(dispose => {
     createEffect(
       () =>
         val(source, () => {
           calls++
           return val(fallback)
         }),
-      (value) => {
+      value => {
         observed.push(value)
       },
     )
@@ -305,7 +305,7 @@ test('完成空值选中的异步默认来源仍由原生计算等待', async ()
   const request = Promise.withResolvers<null>()
   const fallback = Promise.withResolvers<number>()
   let calls = 0
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() =>
       val(request.promise, () => {
         calls++

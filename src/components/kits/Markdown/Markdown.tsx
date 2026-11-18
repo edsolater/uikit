@@ -38,7 +38,7 @@ export const Markdown: KitComponent<{
     propDefinition: markdownPropDefinition,
   },
   (props, { name }) => {
-    const content = derive(props, (s) => parseMarkdown(val(s.children)))
+    const content = derive(props, s => parseMarkdown(val(s.children)))
     return (
       <Piv shadowProps={props} class={name}>
         {renderMarkdown(val(content), val(props.renderers))}

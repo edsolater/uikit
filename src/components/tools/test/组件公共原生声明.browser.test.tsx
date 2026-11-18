@@ -181,7 +181,7 @@ test('FormField普通children接受公共控制更新，根与字段身份不重
     () => (
       <FormField
         id="stable-field"
-        ref={(current) => {
+        ref={current => {
           field = current
         }}
       >

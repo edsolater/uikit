@@ -63,7 +63,7 @@ export function modify(
         context,
         controller,
         cssCustomProperty(target),
-        (current) =>
+        current =>
           (
             strategy.apply as (
               current: Expression,

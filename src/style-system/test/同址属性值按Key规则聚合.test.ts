@@ -16,7 +16,7 @@ import { rule, rules, type Rules } from '../rule'
 import type { JSSCompileContext } from '../content'
 import type { ASTController } from '../compiler/contracts'
 
-test.each([20, 40])('同组 %s 项聚合保留全部贡献的输入顺序', (count) => {
+test.each([20, 40])('同组 %s 项聚合保留全部贡献的输入顺序', count => {
   const target = key(`--ordered-contributions-${count}`)
   const input: Rules = Array.from({ length: count }, (_, index) => [
     [condition('.OrderedContributions')],
@@ -107,7 +107,7 @@ test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也�
           if (generation === 2)
             ast
               .search({ key: target })
-              .find((node) => node.content === 'a')!.content = 'x'
+              .find(node => node.content === 'a')!.content = 'x'
           ast.setContent(
             context,
             token(items, { toCSSString: arraySequenceToCSSString }),
@@ -128,7 +128,7 @@ test('输入失效时逆序撤销全部历史，隐藏结果的独占资源也�
 
 test.each(['move', 'replacement'])(
   '聚合输入发生 %s 时重新组合实际顺序与解析值，旧对象不重放',
-  (change) => {
+  change => {
     let renders = 0
     let firstValue = 2
     let joins = 0
@@ -145,10 +145,10 @@ test.each(['move', 'replacement'])(
           onCompile(context: JSSCompileContext, ast: ASTController) {
             if (initial) {
               const nodes = ast.search({ key: target })
-              const source = nodes.find((node) => node.content === first)!
+              const source = nodes.find(node => node.content === first)!
               if (change === 'move')
                 ast.move(
-                  nodes.find((node) => node.content === 3)!,
+                  nodes.find(node => node.content === 3)!,
                   { before: source },
                 )
               else {
@@ -203,7 +203,7 @@ test('阴影层与已有完整列表按声明顺序保留重复项，结果落�
 })
 
 test('聚合按属性名与最终目标状态地址隔离，同名对象可共享同一规则', () => {
-  const join = (items) =>
+  const join = items =>
     items.reduce((sum, item) => sum + Number(item.content), 0)
   const first = key('--aggregate-sum', { join })
   const second = key('--aggregate-sum', { join })
@@ -264,7 +264,7 @@ test('聚合规则同时取得原对象身份与各项独立的解析读取结�
   const observed: unknown[] = []
   const spacing = key('--aggregate-spacing', {
     join(items) {
-      observed.push(...items.map((item) => item.content))
+      observed.push(...items.map(item => item.content))
       return token(items, { toCSSString: arraySequenceToCSSString })
     },
   })
@@ -300,7 +300,7 @@ test('同一对象的两个位置视图保持独立，生命周期结果共享',
     [[condition('.SharedContent')], spacing, shared],
     [[condition('.SharedContent')], spacing, shared],
   ])
-  expect(observed.map((item) => item.content)).toEqual([shared, shared])
+  expect(observed.map(item => item.content)).toEqual([shared, shared])
   expect(observed[0]).not.toBe(observed[1])
   expect(compiles).toBe(1)
   expect(activations).toBe(1)
@@ -387,7 +387,7 @@ test('嵌套同一对象的数组结果在两个声明位置复用', () => {
     [[condition('.NestedShared')], target, nested],
     [[condition('.NestedShared')], target, nested],
   ])
-  expect(observed.map((item) => item.content)).toEqual([nested, nested])
+  expect(observed.map(item => item.content)).toEqual([nested, nested])
   expect(compiles).toBe(1)
   expect(activations).toBe(1)
   expect(css).toContain('--nested-shared: 1, false, 1, false;')
@@ -458,7 +458,7 @@ test('聚合产物返回待解析内容，新增同址贡献后重新收集全�
   let additions = 0
   const stacking = key('--aggregate-reentry', {
     join(items) {
-      const originals = items.map((item) => item.content)
+      const originals = items.map(item => item.content)
       return {
         onCompile(context: JSSCompileContext, controller: ASTController) {
           if (additions++ === 0)
@@ -552,7 +552,7 @@ test('聚合产物改写或撤销旧来源后重新计算，不留下旧结果',
 })
 
 test('同名声明中唯一显式规则接管默认 Key', () => {
-  const join = (items) => items.length
+  const join = items => items.length
   const enabled = key('--mixed-aggregate', { join })
   const plain = key('--mixed-aggregate')
   expect(
@@ -582,7 +582,7 @@ test('显式组合规则在结果解析中修改后重新计算', () => {
       onCompile(context, controller) {
         if (!switched) {
           switched = true
-          target.join = (items) => token(items)
+          target.join = items => token(items)
         }
         controller.setContent(context, 'old')
       },
@@ -598,9 +598,9 @@ test('显式组合规则在结果解析中修改后重新计算', () => {
 })
 
 test('同名声明提供不同聚合规则时拒绝猜测优先级', () => {
-  const first = key('--different-aggregate', { join: (items) => items.length })
+  const first = key('--different-aggregate', { join: items => items.length })
   const second = key('--different-aggregate', {
-    join: (items) => items.length * 2,
+    join: items => items.length * 2,
   })
   expect(() =>
     compileRules([
@@ -638,7 +638,7 @@ test('组合产物把来源改成同名默认 Key 后撤销旧结果并按默认
 })
 
 test('一个聚合结果被其他解析对象移除后，存活来源重新生成结果', () => {
-  const second = key('--second-aggregate', { join: (items) => items.length })
+  const second = key('--second-aggregate', { join: items => items.length })
   let removed = false
   const first = key('--first-aggregate', {
     join: () => ({
@@ -646,7 +646,7 @@ test('一个聚合结果被其他解析对象移除后，存活来源重新生�
         if (!removed) {
           const result = controller
             .search({ key: second })
-            .find((node) => node.content === 2)
+            .find(node => node.content === 2)
           if (result) {
             controller.remove(result)
             removed = true
@@ -677,7 +677,7 @@ test('聚合后的来源跨过其他属性移动，结果仍紧跟最后来源',
           if (!moved) {
             const source = controller
               .search({ key: moving })
-              .find((node) => node.content === 2)
+              .find(node => node.content === 2)
             const color = controller.search({ key: 'color' })[0]
             if (!source || !color) throw new Error('没有找到待移动的声明。')
             controller.move(source, { before: color })
@@ -770,7 +770,7 @@ test('公开 rules 声明序列重复普通 Key 自动聚合', () => {
 
 test.each(['content', 'replacement', 'join'])(
   '连接回调直接改写输入 %s 后，按真实生成快照重新连接',
-  (change) => {
+  change => {
     let source: JSSCompileContext['node']
     let calls = 0
     const first = {
@@ -792,7 +792,7 @@ test.each(['content', 'replacement', 'join'])(
             source.compileRevision++
           }
           if (change === 'join')
-            target.join = (next) => {
+            target.join = next => {
               calls++
               return token(next, { toCSSString: arraySequenceToCSSString })
             }
@@ -819,5 +819,5 @@ test.each(['content', 'replacement', 'join'])(
 const arraySequenceToCSSString = (items, resolve) =>
   items
     .map(resolve)
-    .filter((item) => item !== undefined)
+    .filter(item => item !== undefined)
     .join(' ')

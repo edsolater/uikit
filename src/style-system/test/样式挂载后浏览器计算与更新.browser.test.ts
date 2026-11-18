@@ -75,7 +75,7 @@ test('简写与长属性覆盖生效，变量注册与局部定义沿同一次�
   expect(computed.paddingLeft).toBe('20px')
   expect(style.sheet!.cssRules[0].cssText).toContain('.existing')
   expect(
-    Array.from(style.sheet!.cssRules).filter((entry) =>
+    Array.from(style.sheet!.cssRules).filter(entry =>
       entry.cssText.startsWith('@property --space-example'),
     ),
   ).toHaveLength(1)
@@ -214,7 +214,7 @@ test('动画复合值激活帧定义，并继续编译帧内变量', () => {
   expect(getComputedStyle(element).animationName).toBe('motion-appearance')
   expect(getComputedStyle(element).opacity).toBe('0.7')
   expect(
-    Array.from(style.sheet!.cssRules).some((entry) =>
+    Array.from(style.sheet!.cssRules).some(entry =>
       entry.cssText.startsWith('@keyframes motion-appearance'),
     ),
   ).toBe(true)
@@ -298,7 +298,7 @@ test('局部 StateCondition 实际叠加、读取来源当前值并退出恢复'
   root.mount()
   expect(style.textContent).not.toBe(before)
   expect(
-    Array.from(style.sheet!.cssRules).some((entry) =>
+    Array.from(style.sheet!.cssRules).some(entry =>
       entry.cssText.includes('--browser-raw-color'),
     ),
   ).toBe(true)

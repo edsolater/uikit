@@ -22,7 +22,7 @@ test('同一对象在两地读取当地材料与状态，反向重编译不锁�
   const onCompile = vi.fn()
   const size = token(multiply(input, 2), {
     name: 'local-home-size',
-    state: [[phase, (base) => multiply(base, 2)]],
+    state: [[phase, base => multiply(base, 2)]],
     onFirstScan,
     onCompile,
   })
@@ -90,13 +90,13 @@ test('显式根与组件地址不跟随消费者移动，普通长度仍直接�
 test('撤销一处消费与局部修改后，另一处的基础和状态仍独立生效', () => {
   const size = token('10px', {
     name: 'withdraw-local-home',
-    state: [[phase, (base) => multiply(base, 2)]],
+    state: [[phase, base => multiply(base, 2)]],
   })
   const aRules = rules('.WithdrawA', [
     { 'padding-left': size },
     modify(size, {
       type: 'expression',
-      detail: (current) => add(current, '3px'),
+      detail: current => add(current, '3px'),
     }),
   ])
   const bRules = rules('.WithdrawB', { 'padding-left': size })

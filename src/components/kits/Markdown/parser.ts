@@ -193,7 +193,7 @@ function parseBlocks(
       align &&
       splitTableRow(line).length === align.length
     ) {
-      const header = splitTableRow(line).map((cell) =>
+      const header = splitTableRow(line).map(cell =>
         parseMarkdownInline(cell, references),
       )
       const rows: MarkdownNode[][][] = []
@@ -314,9 +314,9 @@ function readTableAlignment(
 ): Array<'left' | 'center' | 'right' | null> | undefined {
   if (!line) return undefined
   const cells = splitTableRow(line)
-  if (!cells.length || !cells.every((cell) => /^:?-{3,}:?$/.test(cell)))
+  if (!cells.length || !cells.every(cell => /^:?-{3,}:?$/.test(cell)))
     return undefined
-  return cells.map((cell) =>
+  return cells.map(cell =>
     cell.startsWith(':') && cell.endsWith(':')
       ? 'center'
       : cell.endsWith(':')

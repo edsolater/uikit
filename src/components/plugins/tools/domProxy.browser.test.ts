@@ -4,7 +4,10 @@ import { expect, test, vi } from 'vitest'
 import { createComponent } from '@/foundation/render'
 import { Piv } from '@/components/Piv/Piv'
 import { isPromiseResultProxy } from '@edsolater/fnkit'
-import { createInactivePlugin, type PluginCoreContext } from './createInactivePlugin'
+import {
+  createInactivePlugin,
+  type PluginCoreContext,
+} from './createInactivePlugin'
 import { createInactivePlugins } from './createInactivePlugins'
 
 test('同步读取时准备一次代理，节点接入后执行此前的命令', async () => {
@@ -13,7 +16,7 @@ test('同步读取时准备一次代理，节点接入后执行此前的命令',
   let unmount = () => {}
   let release = () => {}
   try {
-    const capability = createRoot((dispose) => {
+    const capability = createRoot(dispose => {
       release = dispose
       return createInactivePlugin({
         name: 'domProxy',
@@ -44,7 +47,7 @@ test('同步读取时准备一次代理，节点接入后执行此前的命令',
 })
 
 test('组合角色未读取 domProxy 时不准备；读取后保持角色间独立', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const group = createInactivePlugins({
       unused: (_context: PluginCoreContext<Record<string, never>>) => ({}),
       first: (context: PluginCoreContext<Record<string, never>>) => ({

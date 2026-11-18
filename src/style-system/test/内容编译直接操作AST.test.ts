@@ -19,7 +19,7 @@ it('当前操作立即改写，产物中的按需规则继续独立编译', () =
             ? token('1', {
                 onFirstScan: () => [[[path], 'height', operation(2)]],
               })
-            : createJSSContent((resolve) => `calc(${resolve(2)} * 3px)`, [2])
+            : createJSSContent(resolve => `calc(${resolve(2)} * 3px)`, [2])
         controller.insert(
           { before: context.node, conditionPath: context.conditionPath },
           [amount === 1 ? 'opacity' : 'height', content],
@@ -148,7 +148,7 @@ it('天然材料同名资源替换后旧对象所有消费者撤销，再消费�
 
 it.each([false, true])(
   '同波删除消费者不会产生孤儿资源，共享消费者=%s',
-  (shared) => {
+  shared => {
     const path = condition('.pending-owner')
     const dependency = token('1px', {
       onFirstScan: () => [[[condition('.pending-resource')], 'color', 'red']],
@@ -186,7 +186,7 @@ it('已暂缓节点收到显式重访后，继续编译而不误报无进展', (
       ready = true
       const waiting = controller
         .search({ key: 'width' })
-        .find((node) => node.content === first)!
+        .find(node => node.content === first)!
       waiting.content = {
         onCompile(next, ast) {
           ast.setContent(next, '1px')
@@ -296,7 +296,7 @@ it('展开入口脱离输出后仍保留来源链，撤销祖先时产物一并�
 
 it.each(['output', 'session'])(
   '当前位置退出后不再出现在查询结果中：%s',
-  (from) => {
+  from => {
     const path = condition('.missing-position')
     const content: JSSContent = {
       onCompile(context, controller) {

@@ -73,20 +73,17 @@ test('对象和数组始终是原始数据，default 和 state 字段不作为�
     expect(parsed.state).toBeUndefined()
   }
   const formatted = token(data, {
-    toCSSString: (value) => `${value.duration}ms`,
+    toCSSString: value => `${value.duration}ms`,
   })
   expect(formatted.default).toBe(data)
   expect(formatted.toCSSString()).toBe('200ms')
 })
 
-test.each(['2px', 0, false, null, undefined])(
-  '无状态值 %s 原样保留',
-  (value) => {
-    const parsed = parseTokenArgs(value)
-    expect(parsed.default).toBe(value)
-    expect(parsed.state).toBeUndefined()
-  },
-)
+test.each(['2px', 0, false, null, undefined])('无状态值 %s 原样保留', value => {
+  const parsed = parseTokenArgs(value)
+  expect(parsed.default).toBe(value)
+  expect(parsed.state).toBeUndefined()
+})
 
 test('所有状态组合入口拒绝未登记快捷名和直接 CSS 字符串', () => {
   for (const name of [
@@ -134,7 +131,7 @@ if (false) {
   token(['2px', '4px'])
   token<{ duration: number }>(
     { duration: 200 },
-    { toCSSString: (value) => `${value.duration}ms` },
+    { toCSSString: value => `${value.duration}ms` },
   )
   // @ts-expect-error 内容生产器不产生未经表达的普通对象。
   token(() => ({ size: '2px' }))

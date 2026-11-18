@@ -35,7 +35,7 @@ token(value)
 // 状态与名称写在配置中。
 token(value, {
   state: {
-    hover: (base) => multiply(base, 2),
+    hover: base => multiply(base, 2),
     active: 4,
   },
   name: 'name',
@@ -64,7 +64,7 @@ const sequence = token(['2px', '4px'])
 const metadata = token(
   { duration: 200 },
   {
-    toCSSString: (data) => `${data.duration}ms`,
+    toCSSString: data => `${data.duration}ms`,
   },
 )
 ```
@@ -145,7 +145,7 @@ const foreground = token('black', {
   address: '.Panel',
   state: [
     [whenSpecial, 'blue'],
-    ['hover', (base) => oklch(base, { alpha: 0.8 })],
+    ['hover', base => oklch(base, { alpha: 0.8 })],
   ],
 })
 rules('.Panel', [$color, foreground])
@@ -183,7 +183,7 @@ State 放在第二参数的 state 中，可以直接定义，也可以独立复�
 ```ts
 const whenCompact = stateCondition('&[data-density="compact"]')
 const emphasisState: TokenStateInput = [
-  [whenHover, (base) => multiply(base, 2)],
+  [whenHover, base => multiply(base, 2)],
   [whenCompact, 4],
 ]
 
@@ -223,7 +223,7 @@ Token 描述自身的样式聚合，不认识使用它的组件。公共阴影�
 
 ```ts
 // 示意一个根据输入产生 Token 的普通函数，不新增工厂类型。
-const doubled = (base) => token(multiply(base, 2))
+const doubled = base => token(multiply(base, 2))
 
 const amount = doubled(4)
 ```
@@ -269,7 +269,7 @@ JS 变量名供源码阅读；Token 的语义 name 或生成器前缀为 CSS 调
 已有 Token 直接传给 token，继承其定义并合并追加配置。来源已经可用时，无须再包装成返回它的函数。
 
 ```ts
-const source = token(2, { state: { hover: (base) => multiply(base, 2) } })
+const source = token(2, { state: { hover: base => multiply(base, 2) } })
 const target = token(source, { state: { active: 4 } })
 ```
 

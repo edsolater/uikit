@@ -35,7 +35,7 @@ export function consumeStyle(
 ) {
   const styleRecord = createMemo(() => {
     const styles = toArray(val(readStyleList()))
-      .map((style) => val(style))
+      .map(style => val(style))
       .filter(isTruthy)
     return mergeStyleRecords(styles)
   })
@@ -43,10 +43,10 @@ export function consumeStyle(
   // 字段按 key 复用所属作用域，换源时由同一 effect 先清理再提交，首次写入仍在 domRef 前完成。
   mapArray(
     () => Object.keys(styleRecord()),
-    (key) => {
+    key => {
       createRenderEffect(
         () => val(styleRecord()[key]),
-        (styleValue) => {
+        styleValue => {
           setStyleProperty(element, key, styleValue)
           return () => element.style.removeProperty(key)
         },
@@ -60,9 +60,9 @@ export function consumeStyle(
  * 所有 style 来源先归一成对象字段，再按字段合并，后声明字段覆盖前声明字段。
  */
 function mergeStyleRecords(styles: StyleAtom[]): ParsedStyleRecord {
-  const styleRecords = styles.map((style) => parseStyleRecord(style))
+  const styleRecords = styles.map(style => parseStyleRecord(style))
   const styleKeys = new Set(
-    styleRecords.flatMap((styleRecord) => Object.keys(styleRecord)),
+    styleRecords.flatMap(styleRecord => Object.keys(styleRecord)),
   )
   const styleRecord: ParsedStyleRecord = {}
 

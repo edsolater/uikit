@@ -69,19 +69,17 @@ export type EnvironmentInput = ColorEnvironment | WeightedEnvironment
 function combineEnvironment(
   inputs: readonly EnvironmentInput[],
 ): ColorEnvironment {
-  const contributions = inputs.map((input) =>
+  const contributions = inputs.map(input =>
     'environment' in input ? input : { environment: input, weight: 1 },
   )
   if (
-    contributions.some(
-      (item) => !Number.isFinite(item.weight) || item.weight < 0,
-    )
+    contributions.some(item => !Number.isFinite(item.weight) || item.weight < 0)
   ) {
     throw new RangeError('环境权重必须是非负有限数值')
   }
   if (
     contributions.length > 0 &&
-    !contributions.some((item) => item.weight > 0)
+    !contributions.some(item => item.weight > 0)
   ) {
     throw new RangeError('本次环境至少需要一项正权重')
   }
@@ -89,7 +87,7 @@ function combineEnvironment(
   for (const group of ['tint', 'influence'] as const) {
     for (const channel of ['lightness', 'chroma', 'hue'] as const) {
       const provided = contributions.filter(
-        (item) =>
+        item =>
           item.environment[group]?.[channel] !== undefined && item.weight > 0,
       )
       if (provided.length === 0) continue
@@ -97,11 +95,11 @@ function combineEnvironment(
         (maximum, item) => Math.max(maximum, item.weight),
         0,
       )
-      const weights = provided.map((item) => item.weight / maximum)
+      const weights = provided.map(item => item.weight / maximum)
       const total = weights.reduce((sum, weight) => sum + weight, 0)
       if (group === 'tint' && channel === 'hue') {
         result.tint!.hue = mix({
-          colors: provided.map<ColorMaterial>((item) => ({
+          colors: provided.map<ColorMaterial>(item => ({
             base: {
               lightness: 0.5,
               chroma: 0.1,

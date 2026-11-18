@@ -42,7 +42,7 @@ test('Card 承载独立 Article，引用与输入各归自身节点', () => {
     () => (
       <Card
         size={size}
-        ref={(controller) => {
+        ref={controller => {
           card = controller
         }}
       >
@@ -121,7 +121,7 @@ test('构建工厂只通过 Props 提供，普通状态更新不重放，已有 
       <>
         <Field
           label="原标题"
-          ref={(controller) => {
+          ref={controller => {
             field = controller
           }}
         >
@@ -130,7 +130,7 @@ test('构建工厂只通过 Props 提供，普通状态更新不重放，已有 
         <Loop
           each={() => val(items)}
           fallback="原占位"
-          ref={(controller) => {
+          ref={controller => {
             loop = controller
           }}
         >

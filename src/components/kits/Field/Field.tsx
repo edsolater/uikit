@@ -30,7 +30,7 @@ export const Field: KitComponent<{
   },
   (props, { name }) => {
     const id = crypto.randomUUID()
-    const label = derive(props, (s) => s.label)
+    const label = derive(props, s => s.label)
     return (
       <Flow shadowProps={props} class={name} $col>
         <Label for={id} tooltip={props.tooltip}>

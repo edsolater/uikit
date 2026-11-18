@@ -37,7 +37,7 @@ token(value, name)
 token(value)
 token(value, {
   name: 'name',
-  state: { hover: (base) => multiply(base, 2), active: 4 },
+  state: { hover: base => multiply(base, 2), active: 4 },
 })
 ```
 
@@ -104,7 +104,7 @@ JS 变量名服务源码阅读；Token 的语义 name 或生成器前缀同时�
 复用定义、选择用途及产生变化结果都用普通函数返回 Token。函数可读取来源的 default、state 等信息，组合后创建新 Token；不维护加工来源、历史或待重放的操作。
 
 ```ts
-const doubled = (base) => token(multiply(base, 2))
+const doubled = base => token(multiply(base, 2))
 const amount = doubled(4)
 ```
 
@@ -116,7 +116,7 @@ rules(
   [
     modify(amount, {
       type: 'expression',
-      detail: (current) => multiply(current, 2),
+      detail: current => multiply(current, 2),
     }),
   ],
 )
@@ -142,7 +142,7 @@ rules(
 ```ts
 const boundaryColor = color({
   base: buttonColorSource,
-  alpha: (current) => multiply(current, 0.44),
+  alpha: current => multiply(current, 0.44),
 })
 
 rules('.Panel', [

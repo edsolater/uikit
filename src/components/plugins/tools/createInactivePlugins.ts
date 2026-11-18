@@ -109,7 +109,7 @@ export function createInactivePlugins<
     })
     const controller = map(
       plugins,
-      (role) => role.controller,
+      role => role.controller,
     ) as ControllersOf<Definitions>
     return {
       plugins,

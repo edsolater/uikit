@@ -29,7 +29,7 @@ export function InternalAndFileDropExample() {
     onDrop: ({ files }) => {
       fileResult.set(
         files.length > 0
-          ? files.map((file) => file.name).join('、')
+          ? files.map(file => file.name).join('、')
           : '浏览器没有公开文件名',
       )
     },

@@ -58,9 +58,11 @@ export type WritablePropStates<
   Props,
   Definition extends PropsDefinition<Props>,
 > = {
-  [Key in keyof Props as Definition[Key] extends 'only-through-prop'
-    ? never
-    : Key]-?: State<Val<Props[Key]>>
+  [
+    Key in keyof Props as Definition[Key] extends 'only-through-prop'
+      ? never
+      : Key
+  ]-?: State<Val<Props[Key]>>
 }
 
 /** 核心实际取得的输入视图，字段按各自协议保留来源或读取当前值。 */
@@ -80,9 +82,11 @@ export type DefaultPropSources<
   Props,
   Definition extends PropsDefinition<Props>,
 > = {
-  [Key in keyof Props as Definition[Key] extends 'only-through-prop'
-    ? never
-    : Key]?: (input: ControlledProps<Props, Definition>) => Props[Key]
+  [
+    Key in keyof Props as Definition[Key] extends 'only-through-prop'
+      ? never
+      : Key
+  ]?: (input: ControlledProps<Props, Definition>) => Props[Key]
 }
 
 /** 定义端提供缺省来源与输出字段选择，沿用同一字段协议。 */
@@ -176,9 +180,9 @@ export function createPropsController<
       /**
        * 接受字段修改，并让原本缺失的字段进入当前视图。
        */
-      state.set = (value) => {
+      state.set = value => {
         const result = set(value)
-        writtenKeys.set((keys) => (keys.includes(key) ? keys : [...keys, key]))
+        writtenKeys.set(keys => (keys.includes(key) ? keys : [...keys, key]))
         return result
       }
       return state
@@ -189,11 +193,11 @@ export function createPropsController<
     /**
      * 只报告已经显式写入的字段。
      */
-    has: (key) => val(writtenKeys).includes(key as string | symbol),
+    has: key => val(writtenKeys).includes(key as string | symbol),
     /**
      * 取得原始来源，供合并区分 literal undefined 与 Source 的当前空值。
      */
-    read: (key) => readStateSource(getState(key as string | symbol)),
+    read: key => readStateSource(getState(key as string | symbol)),
   }
   /**
    * 读取可控字段的完成值，only-through-prop 字段保留原声明。
@@ -263,7 +267,7 @@ export function createPropsController<
               ...val(writtenKeys),
               ...(defaults
                 ? Reflect.ownKeys(defaults).filter(
-                    (key) => !(key in normalizedProps),
+                    key => !(key in normalizedProps),
                   )
                 : []),
             ]),

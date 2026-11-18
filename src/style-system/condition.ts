@@ -48,8 +48,8 @@ export function outputConditionPath(
  */
 export function conditionAddressKey(path: ConditionPath): string {
   return JSON.stringify([
-    path.targetConditionPath.map((item) => item.header),
-    path.stateConditionPath.map((state) => state.header),
+    path.targetConditionPath.map(item => item.header),
+    path.stateConditionPath.map(state => state.header),
   ])
 }
 
@@ -93,7 +93,7 @@ export function appendStateCondition(
     targetConditionPath: [...path.targetConditionPath],
     stateConditionPath: [
       ...new Map(
-        [...path.stateConditionPath, state].map((item) => [item.header, item]),
+        [...path.stateConditionPath, state].map(item => [item.header, item]),
       ).values(),
     ],
   }

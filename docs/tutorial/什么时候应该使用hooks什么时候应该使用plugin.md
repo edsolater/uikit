@@ -30,7 +30,11 @@ interface HighlightOptions {
 // 模块级定义：返回插件创建函数，不运行 pluginCore。
 const highlight = createInactivePlugin({
   name: 'highlight',
-  pluginCore({ pluginOptions: options, addProps, domProxy }: PluginCoreContext<HighlightOptions>) {
+  pluginCore({
+    pluginOptions: options,
+    addProps,
+    domProxy,
+  }: PluginCoreContext<HighlightOptions>) {
     addProps({ style: { color: options.color } })
     return { focus: () => domProxy.focus() }
   },
@@ -91,7 +95,7 @@ function Transfer() {
     plugins: { draggable, droppable },
   } = dragAndDrop({
     draggable: { payload: '一份材料' },
-    droppable: { onDrop: (context) => 接收材料(context) },
+    droppable: { onDrop: context => 接收材料(context) },
   })
 
   return (

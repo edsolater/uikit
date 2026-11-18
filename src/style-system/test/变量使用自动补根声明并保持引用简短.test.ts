@@ -27,12 +27,12 @@ test('root已有同CSS名声明时保留既有基础，不要求同Token对象',
 
 test.each(['before', 'after'] as const)(
   '晚到显式根声明插在自动保障的 %s，状态仍以显式 9px 为基础',
-  (position) => {
+  position => {
     const size = token('2px', {
       address: ':where(:root)',
       name: `late-root-${position}`,
       state: [
-        [stateCondition('&[data-late-state]'), (base) => multiply(base, 2)],
+        [stateCondition('&[data-late-state]'), base => multiply(base, 2)],
       ],
     })
     const trigger = token(1, {
@@ -115,7 +115,7 @@ test('多层引用各自声明一条关系，使用处不展开依赖链', () =>
 
 test.each([false, true])(
   '无关位置的显式声明不抑制消费默认；声明在引用前=%s',
-  (before) => {
+  before => {
     const color = token('white', {
       name: `root-explicit-color-${before}`,
       address: ':where(:root)',
@@ -211,7 +211,7 @@ test('最后显式声明撤销后消费保留根默认', () => {
           controller.remove(
             controller
               .search({ key: color })
-              .find((node) => node.content === definition[1])!,
+              .find(node => node.content === definition[1])!,
           )
           controller.remove(context.node)
         },
@@ -224,7 +224,7 @@ test('最后显式声明撤销后消费保留根默认', () => {
 
 test.each([false, true])(
   '消费者撤销后清理自动根声明，其他消费者仍存在=%s',
-  (shared) => {
+  shared => {
     const paper = token('white', {
       name: 'root-shared-paper',
       address: ':where(:root)',

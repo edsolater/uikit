@@ -202,8 +202,8 @@ function createInactivePlugin({ name, pluginCore }) {
   return function inactivePlugin(pluginOptions) {
     const shadowProps = []
     const plugin = { [pluginMarker]: name, shadowProps }
-    const addProps = (props) => shadowProps.push(props)
-    const withDom = (callback) => addProps({ domRef: callback })
+    const addProps = props => shadowProps.push(props)
+    const withDom = callback => addProps({ domRef: callback })
     const controller = pluginCore({ pluginOptions, addProps, withDom })
 
     return { plugin, controller }
@@ -317,7 +317,7 @@ function createInactivePlugins(buildTimeDefinitions, options) {
       })
       return inactivePlugin(pluginOptions[name])
     })
-    const controller = map(plugins, (role) => role.controller)
+    const controller = map(plugins, role => role.controller)
     return {
       plugins,
       controller: { ...controller, ...options?.controller?.(controller) },

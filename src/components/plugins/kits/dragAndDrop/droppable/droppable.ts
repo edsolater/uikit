@@ -74,7 +74,7 @@ export function droppablePluginCore({
   // 声明外部拖放监听与状态。
   addProps({
     // 同步登记真实节点；绑定退出时注销并清空该目标的悬停状态。
-    domRef: (target) => {
+    domRef: target => {
       const unregister = registerInternalDropTarget({
         target,
         id,

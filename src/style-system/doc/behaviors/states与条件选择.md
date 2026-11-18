@@ -9,7 +9,7 @@ const size = token('4px', {
   name: 'feedback-size',
   address: '.Button',
   state: [
-    [whenHover, (base) => add(base, '2px')],
+    [whenHover, base => add(base, '2px')],
     [whenActive, '12px'],
     [whenDisabled, '0px'],
   ],

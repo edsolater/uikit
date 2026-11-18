@@ -30,7 +30,7 @@ function registeredKey(name: string): JSSKeyDefinition | undefined {
   if (!/^[a-z][a-zA-Z0-9]*$/.test(name)) return undefined
   const cssName = name.replace(
     /[A-Z]/g,
-    (character) => '-' + character.toLowerCase(),
+    character => '-' + character.toLowerCase(),
   )
   return Object.hasOwn(keyRegistry, cssName) ? keyRegistry[cssName] : undefined
 }

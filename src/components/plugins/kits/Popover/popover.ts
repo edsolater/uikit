@@ -22,7 +22,10 @@ import {
   type State,
 } from '@/foundation'
 import { createInactivePlugins } from '../../tools/createInactivePlugins'
-import type { PluginCoreContext, PluginResult } from '../../tools/createInactivePlugin'
+import type {
+  PluginCoreContext,
+  PluginResult,
+} from '../../tools/createInactivePlugin'
 import './popover.style'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -336,7 +339,7 @@ function popoverBodyCore({
   let initialized = false
   createEffect(
     () => val(options.defaultOpen),
-    (open) => {
+    open => {
       if (initialized) return
       initialized = true
       if (open) controller.showPopover()
@@ -359,7 +362,7 @@ function preparePopoverAutoFocus(
   const marked = [
     ...(body.hasAttribute('autofocus') ? [body] : []),
     ...body.querySelectorAll<HTMLElement>('[autofocus]'),
-  ].map((node) => ({ node, value: node.getAttribute('autofocus')! }))
+  ].map(node => ({ node, value: node.getAttribute('autofocus')! }))
   marked.forEach(({ node }) => node.removeAttribute('autofocus'))
   target.setAttribute('autofocus', '')
   return () => {
@@ -378,8 +381,8 @@ function resolveFocusTarget(
 ): HTMLElement {
   if (typeof requested.isSameNode !== 'function')
     throw new TypeError('autoFocus 需要已接入的 DOM 引用')
-  const target = [body, ...body.querySelectorAll<HTMLElement>('*')].find(
-    (node) => requested.isSameNode!(node),
+  const target = [body, ...body.querySelectorAll<HTMLElement>('*')].find(node =>
+    requested.isSameNode!(node),
   )
   if (!target) throw new TypeError('autoFocus 目标必须位于 Popover 正文中')
   return target
@@ -392,7 +395,7 @@ function findFirstFocusableElement(body: HTMLElement): HTMLElement | undefined {
   const candidates = body.querySelectorAll<HTMLElement>(
     'button, input:not([type="hidden"]), select, textarea, a[href], area[href], summary, iframe, audio[controls], video[controls], [contenteditable]:not([contenteditable="false"]), [tabindex]',
   )
-  return [...candidates].find((candidate) => {
+  return [...candidates].find(candidate => {
     if (
       candidate.matches(':disabled') ||
       candidate.closest('[hidden], [inert]')

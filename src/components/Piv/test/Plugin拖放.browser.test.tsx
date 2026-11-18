@@ -54,7 +54,7 @@ test('配置 disabled 沿原插件契约创建，普通 domRef 读取已提交�
     return (
       <Piv
         is={capability}
-        domRef={(element) => {
+        domRef={element => {
           initialDraggable = element.draggable
         }}
       />

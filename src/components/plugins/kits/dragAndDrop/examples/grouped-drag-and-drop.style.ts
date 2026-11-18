@@ -86,7 +86,7 @@ const transition = token([multiply(motionDuration, 2 / 3), motionEasing], {
   name: 'drag-example-transition',
   toCSSString: ([duration, easing], resolve) =>
     ['border-color', 'background-color', 'opacity', 'transform']
-      .map((property) => `${property} ${resolve(duration)} ${resolve(easing)}`)
+      .map(property => `${property} ${resolve(duration)} ${resolve(easing)}`)
       .join(', '),
 })
 

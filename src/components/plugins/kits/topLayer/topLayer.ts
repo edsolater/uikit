@@ -163,7 +163,7 @@ function alignRenderedBox(element: HTMLElement, originalRect: DOMRect): void {
 function captureInlineDeclarations(
   style: CSSStyleDeclaration,
 ): InlineDeclaration[] {
-  return topLayerGeometryProperties.map((property) => ({
+  return topLayerGeometryProperties.map(property => ({
     property,
     value: style.getPropertyValue(property),
     priority: style.getPropertyPriority(property),
@@ -209,7 +209,7 @@ export const topLayer = createInactivePlugin({
     }
     addProps({
       // 节点接入时创建控制，挂载后提升；资源与该节点的引用绑定共同退出。
-      domRef: (element) => {
+      domRef: element => {
         const current = createTopLayerController(element, active)
         session = current
         onMount(() => current.enter())

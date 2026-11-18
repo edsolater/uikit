@@ -42,7 +42,7 @@ test('美元样式同名聚合，显式配置优先并由同一Controller持续�
           <Button
             $gap={gap}
             $styleConfig={explicit}
-            ref={(next) => {
+            ref={next => {
               controller = next
             }}
           >
@@ -62,7 +62,7 @@ test('美元样式同名聚合，显式配置优先并由同一Controller持续�
     expect(Object.hasOwn(controller.props, 'styleConfig')).toBe(false)
     expect(componentBoundaries.size).toBe(boundaries + 4)
     expect(
-      buttons[2]!.getAttributeNames().some((key) => key.startsWith('$')),
+      buttons[2]!.getAttributeNames().some(key => key.startsWith('$')),
     ).toBe(false)
     gap.set('16px')
     overrideGap.set('28px')
@@ -97,7 +97,7 @@ test('本地示例可分别使用输入干预和组件能力控制同一按钮',
   dispose = render(() => <AppearanceAndStateExample />, host)
   const findButton = (text: string) =>
     [...host.querySelectorAll('button')].find(
-      (button) => button.textContent?.trim() === text,
+      button => button.textContent?.trim() === text,
     )!
   const target = findButton('被控制的按钮')
 
@@ -118,7 +118,7 @@ test('组件自定义状态操作位于顶层，改变状态和界面而不回�
   dispose = render(
     () => (
       <Button
-        ref={(controller) => {
+        ref={controller => {
           button = controller
         }}
       >
@@ -153,7 +153,7 @@ test('通用输入干预可修改状态和普通内容，组件能力仍按自�
     () => (
       <Button
         loading={false}
-        ref={(controller) => {
+        ref={controller => {
           button = controller
         }}
       >
@@ -187,7 +187,7 @@ test('顶层状态操作尊重外部声明，props逃生入口仍可干预并继
     () => (
       <Button
         loading={loading}
-        ref={(controller) => {
+        ref={controller => {
           button = controller
         }}
       >
@@ -253,11 +253,11 @@ test('组件引用控制状态，DOM 引用聚焦按钮，整体命令只包含�
   expect(Array.from(results)).toHaveLength(1)
   expect(first.disabled).toBe(true)
   expect(second.disabled).toBe(false)
-  expect(Button.controllers.props.loading.map((status) => val(status))).toEqual(
-    [true],
-  )
+  expect(Button.controllers.props.loading.map(status => val(status))).toEqual([
+    true,
+  ])
   expect(
-    Button.controllers.props.disabled.map((status) => val(status)).join(','),
+    Button.controllers.props.disabled.map(status => val(status)).join(','),
   ).toBe('true')
   externallyDisabled.set(true)
   flush()
@@ -298,9 +298,9 @@ test('显隐保留 DOM 引用与实例，组件销毁才释放，新实例不继
   button.props!.class.set('隐藏期间的类名')
   Button.controllers.props.loading.set(false)
   flush()
-  expect(Button.controllers.props.loading.map((status) => val(status))).toEqual(
-    [false],
-  )
+  expect(Button.controllers.props.loading.map(status => val(status))).toEqual([
+    false,
+  ])
 
   visible.set(true)
   flush()

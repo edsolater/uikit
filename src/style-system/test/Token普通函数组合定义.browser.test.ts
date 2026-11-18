@@ -14,7 +14,7 @@ test('换基础与逐项加工是不同函数行为，来源保持原结果', ()
     name: 'ordinary-source',
     address: '.Home',
     state: [
-      [stateCondition('&[data-hover]'), (base) => add(base, '3px')],
+      [stateCondition('&[data-hover]'), base => add(base, '3px')],
       [stateCondition('&[data-active]'), '12px'],
     ],
   })

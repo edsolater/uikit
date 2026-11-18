@@ -13,11 +13,11 @@ afterEach(() => document.body.replaceChildren())
 
 test.each([false, true])(
   'rules 的 Token 条目与显式 declare 保留根据地、空基础和撤销，隐式=%s',
-  (implicit) => {
+  implicit => {
     const size = token('4px', {
       name: 'entry-home-size',
       address: '.EntryHome',
-      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
+      state: [[stateCondition('&[data-phase]'), base => multiply(base, 2)]],
     })
     const empty = token('9px', {
       name: 'entry-home-empty',
@@ -69,13 +69,13 @@ test('rules 混合已有 declare 与 modify 时保留状态基础和修改效果
   const size = token('4px', {
     name: 'entry-explicit-modified',
     address: '.EntryModified',
-    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
+    state: [[stateCondition('&[data-phase]'), base => multiply(base, 2)]],
   })
   const batch = rules('.EntryModified', [
     declare(size, '6px'),
     modify(size, {
       type: 'expression',
-      detail: (current) => add(current, '3px'),
+      detail: current => add(current, '3px'),
     }),
     ['width', size],
   ])
@@ -122,11 +122,11 @@ test('根变量的状态只属于根，局部显式10px不会随自己的状态�
 
 test.each([':root', ':where(:root)'])(
   '显式根别名%s保留已有基础和状态，undefined不补回默认',
-  (root) => {
+  root => {
     const size = token('4px', {
       name: 'home-root-alias-state',
       address: ':where(:root)',
-      state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
+      state: [[stateCondition('&[data-phase]'), base => multiply(base, 2)]],
     })
     const empty = token('9px', {
       name: 'home-root-alias-empty',
@@ -158,7 +158,7 @@ test('函数显式复用组件根据地，外部赋值只改变当地值', () =>
   const source = token('4px', {
     name: 'home-copy-source',
     address: '.CopyHome',
-    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
+    state: [[stateCondition('&[data-phase]'), base => multiply(base, 2)]],
   })
   const copied = token('5px', {
     name: 'home-copy-result',
@@ -168,7 +168,7 @@ test('函数显式复用组件根据地，外部赋值只改变当地值', () =>
   const wide = token(multiply(copied.default, 3), {
     name: 'home-copy-wide',
     address: copied.address,
-    state: [[stateCondition('&[data-phase]'), (base) => multiply(base, 2)]],
+    state: [[stateCondition('&[data-phase]'), base => multiply(base, 2)]],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
@@ -242,9 +242,7 @@ test('根声明的CSS优先关系同时决定当前值、状态基础与显式�
   const size = token('4px', {
     name: 'home-root-priority',
     address: ':where(:root)',
-    state: [
-      [stateCondition('&[data-root-phase]'), (base) => multiply(base, 2)],
-    ],
+    state: [[stateCondition('&[data-root-phase]'), base => multiply(base, 2)]],
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([
@@ -256,7 +254,7 @@ test('根声明的CSS优先关系同时决定当前值、状态基础与显式�
         ['.RootModified'],
         ...modify(size, {
           type: 'expression',
-          detail: (current) => add(current, '3px'),
+          detail: current => add(current, '3px'),
         }),
       ],
     ])
@@ -279,7 +277,7 @@ test('状态随组件根据地声明，悬停只改变对应实例', async () =>
   const size = token('10px', {
     name: 'home-state-size',
     address: '.HomeButton',
-    state: { hover: (current) => multiply(current, 2) },
+    state: { hover: current => multiply(current, 2) },
   })
   document.body.appendChild(document.createElement('style')).textContent =
     compileRules([[['.Consumer'], 'width', size]])
@@ -310,7 +308,7 @@ test('显式修改无需手工基础声明，固定状态的实际结果也被�
         ['.Modified'],
         ...modify(size, {
           type: 'expression',
-          detail: (current) => add(current, '3px'),
+          detail: current => add(current, '3px'),
         }),
       ],
     ])

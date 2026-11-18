@@ -76,13 +76,13 @@ test('映射视图复用当前结果，切换分支后跟随新来源，并随�
   const first = createState(2)
   const second = createState(5)
   let mappingCount = 0
-  const { view, dispose } = createRoot((dispose) => {
+  const { view, dispose } = createRoot(dispose => {
     const view = source
-      .map((enabled) => {
+      .map(enabled => {
         mappingCount += 1
         return enabled ? first : second
       })
-      .map((value) => value * 2)
+      .map(value => value * 2)
     return { view, dispose }
   })
 
@@ -118,10 +118,10 @@ test('映射视图复用当前结果，切换分支后跟随新来源，并随�
 test('stateView 在 PromiseLike 转换后应用 options.map', async () => {
   const deferred = createDeferred<number>()
   const view = stateView(deferred.promise, {
-    map: (value) => `value:${value}`,
+    map: value => `value:${value}`,
   })
   const observedValues: string[] = []
-  const { read, dispose } = createRoot((dispose) => ({
+  const { read, dispose } = createRoot(dispose => ({
     read: createMemo(() => {
       const value = val(view)
       observedValues.push(value)
@@ -144,11 +144,11 @@ test('stateView 在 PromiseLike 转换后应用 options.map', async () => {
 })
 
 test('转换入口的映射选项与函数简写均输出异步完成类型', async () => {
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     option: stateView(createState(2), {
-      map: (value) => Promise.resolve(value + 1),
+      map: value => Promise.resolve(value + 1),
     }),
-    shorthand: stateView(createState(2), (value) => Promise.resolve(value * 2)),
+    shorthand: stateView(createState(2), value => Promise.resolve(value * 2)),
     dispose,
   }))
   try {
@@ -168,7 +168,7 @@ test('转换入口的映射选项与函数简写均输出异步完成类型', as
 test('共享 Promise 视图跨 owner 复用，首消费者卸载不终止其他消费者', async () => {
   const request = Promise.withResolvers<number>()
   let first: StateView<number> | undefined
-  const stopFirst = createRoot((dispose) => {
+  const stopFirst = createRoot(dispose => {
     first = stateView(request.promise)
     createEffect(first.read, () => {})
     return dispose
@@ -176,9 +176,9 @@ test('共享 Promise 视图跨 owner 复用，首消费者卸载不终止其他�
   flush()
   stopFirst()
   const values: number[] = []
-  const second = createRoot((dispose) => {
+  const second = createRoot(dispose => {
     const view = stateView(request.promise)
-    createEffect(view.read, (value) => {
+    createEffect(view.read, value => {
       values.push(value)
     })
     return { view, dispose }
@@ -190,7 +190,7 @@ test('共享 Promise 视图跨 owner 复用，首消费者卸载不终止其他�
     second.dispose()
     for (let index = 0; index < 3; index++)
       expect(stateView(request.promise).read()).toBe(7)
-    const third = createRoot((dispose) => ({
+    const third = createRoot(dispose => ({
       view: stateView(request.promise),
       dispose,
     }))
@@ -223,14 +223,14 @@ test('普通值转换只提供读取与映射，保留原值身份', () => {
   expect(view.read()).toBe(value)
   expect(isState(view)).toBe(false)
   expect('set' in view).toBe(false)
-  expect(view.map((value) => value.count * 2).read()).toBe(4)
+  expect(view.map(value => value.count * 2).read()).toBe(4)
 })
 
 test('函数来源缓存计算并跟随依赖，函数结果保持数据，作用域释放停止计算', () => {
   const source = createState(1)
   const handler = () => 7
   let computations = 0
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     view: stateView(() => {
       computations++
       return val(source) * 2
@@ -265,7 +265,7 @@ test('函数来源展开 Promise 与嵌套 thenable，映射接收完成类型�
       deliver(request.promise)
     },
   }
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     view: stateView(() => thenable),
     mapped: stateView(() => request.promise, {
       map(value) {
@@ -275,7 +275,7 @@ test('函数来源展开 Promise 与嵌套 thenable，映射接收完成类型�
     }),
     shorthand: stateView(
       () => request.promise,
-      (value) => value + 1,
+      value => value + 1,
     ),
     dispose,
   }))
@@ -295,7 +295,7 @@ test('函数来源展开 Promise 与嵌套 thenable，映射接收完成类型�
     scope.dispose()
   }
   const error = new Error('计算来源失败')
-  const failure = createRoot((dispose) => ({
+  const failure = createRoot(dispose => ({
     view: stateView(() => Promise.reject<number>(error)),
     dispose,
   }))

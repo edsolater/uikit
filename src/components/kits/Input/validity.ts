@@ -19,14 +19,14 @@ import type {
  * 结果只读，不回写调用方的条件或字段值。
  */
 export function createInputValidity(props: InputValidityProps): InputValidity {
-  const allRulesPassed = derive(props, (s) => {
+  const allRulesPassed = derive(props, s => {
     const validIf = val(s.validIf)
     const validationInputs =
       validIf === undefined ? [] : Array.isArray(validIf) ? validIf : [validIf]
     return validationInputs.every(isValidationPassed)
   })
 
-  const isValid = derive(allRulesPassed, (areAllRulesPassed) => {
+  const isValid = derive(allRulesPassed, areAllRulesPassed => {
     if (!areAllRulesPassed) return false
     return val(props.invalid) !== true
   })

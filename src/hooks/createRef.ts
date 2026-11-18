@@ -40,7 +40,7 @@ export function createRef<T extends object>(): [
   })
   return [
     proxy,
-    (value) => {
+    value => {
       reference.set({ controller: value })
       return () => {
         reference.set(undefined)

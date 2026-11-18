@@ -16,12 +16,12 @@ export function PageCompositionExample() {
   const showTitle = createState(true)
   return (
     <Page
-      title={derive(showTitle, (show) => (show ? '项目概览' : undefined))}
+      title={derive(showTitle, show => (show ? '项目概览' : undefined))}
       subtitle="查看当前工作的目标与进展。"
       actions={
         <Button
           onClick={() => {
-            count.set((value) => value + 1)
+            count.set(value => value + 1)
           }}
         >
           刷新示例
@@ -34,7 +34,7 @@ export function PageCompositionExample() {
           checked={showTitle}
           onChange={showTitle.set}
         />
-        <Text>{derive(count, (value) => '已刷新 ' + value + ' 次')}</Text>
+        <Text>{derive(count, value => '已刷新 ' + value + ' 次')}</Text>
         <Card>
           <Flow $col>
             <Heading level={2}>当前目标</Heading>

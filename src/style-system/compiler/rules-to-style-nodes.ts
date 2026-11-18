@@ -43,13 +43,13 @@ export function rulesToStyleNodes(sourceRules: Rules): JSSStyleNode[] {
           ...(resolveConditionPath(relativePath) ?? []),
         ]
         assert(
-          targetConditionPath.every((item) => isString(item.header)),
+          targetConditionPath.every(item => isString(item.header)),
           'CSS Condition 的 header 必须是字符串。',
         )
         const key = ruleKey ?? inheritedKey
         if (isArray(ruleContent)) {
           assert(
-            ruleContent.every((entry) => isArray(entry) && entry.length === 3),
+            ruleContent.every(entry => isArray(entry) && entry.length === 3),
             '嵌套 Rules 必须由路径、Key、内容三项组成。',
           )
           appendStyleNodes(ruleContent as Rules, targetConditionPath, key)

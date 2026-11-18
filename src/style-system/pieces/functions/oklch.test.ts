@@ -6,7 +6,7 @@ import { condition } from '../../condition'
 import { compileRules } from '../../css-root'
 import { add } from './calc'
 
-test.each([undefined, 1, 0, 0.8])('普通颜色正确输出透明度 %s', (alpha) => {
+test.each([undefined, 1, 0, 0.8])('普通颜色正确输出透明度 %s', alpha => {
   const css = compileRules([
     [
       [condition('.Swatch')],
@@ -63,7 +63,7 @@ test('通道回调在编译消费时取得当前表达式，并保留内容对�
     { toCSSString: () => '0.08' },
   )
   const expression = oklch('red', {
-    lightness: (current) => add(current, delta),
+    lightness: current => add(current, delta),
     chroma,
   })
   delta = -0.04
@@ -103,7 +103,7 @@ test('直接构造通道时不提前读取闭包，实际消费使用当时的�
   }
   const channels = oklchChannels(changes)
   delta = 0.2
-  changes.lightness = (current) => add(current, delta * 2)
+  changes.lightness = current => add(current, delta * 2)
   const css = compileRules([[['.LazyChannels'], '--channels', channels]])
   expect(css).toContain('--channels: calc(l + 0.4) c h / alpha;')
 })

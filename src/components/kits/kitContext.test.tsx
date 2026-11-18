@@ -80,7 +80,7 @@ test('独立 App 根不共享节点，缺少提供者按原生契约报错', () 
     }
     expect(roots).toHaveLength(2)
     expect(roots[0]).not.toBe(roots[1])
-    createRoot((dispose) => {
+    createRoot(dispose => {
       try {
         expect(() => useKitContext()).toThrow()
       } finally {
@@ -88,6 +88,6 @@ test('独立 App 根不共享节点，缺少提供者按原生契约报错', () 
       }
     })
   } finally {
-    disposers.forEach((dispose) => dispose())
+    disposers.forEach(dispose => dispose())
   }
 })

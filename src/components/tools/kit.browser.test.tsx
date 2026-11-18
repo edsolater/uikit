@@ -28,7 +28,10 @@ import { Button } from '../kits/Button/Button'
 import type { ButtonController } from '../kits/Button/Button.prop'
 import { Grid } from '../kits/Grid/Grid'
 import type { GridController } from '../kits/Grid/Grid.prop'
-import { createInactivePlugin, type PluginResult } from '../plugins/tools/createInactivePlugin'
+import {
+  createInactivePlugin,
+  type PluginResult,
+} from '../plugins/tools/createInactivePlugin'
 
 type FixtureProps = KitProps<{
   $styleConfig: { $gap?: string }
@@ -63,8 +66,12 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
    * 以空根解释集合接入公共配置，当前不增加具体样式字段。
    */
   const Empty: KitComponent<{ props: Props; controller: Controller }> = kit(
-    { name: 'EmptyConfig', propDefinition: kitPropDefinition, $styleConfig: {} },
-    (props) => <Piv shadowProps={props}>{props.children}</Piv>,
+    {
+      name: 'EmptyConfig',
+      propDefinition: kitPropDefinition,
+      $styleConfig: {},
+    },
+    props => <Piv shadowProps={props}>{props.children}</Piv>,
   )
   const host = document.body.appendChild(document.createElement('main'))
   const config = createState<object | undefined>({})
@@ -73,7 +80,7 @@ test('空配置保留对象及Source入口，空解释对象可显式提供并�
     () => (
       <Empty
         $styleConfig={config}
-        ref={(current) => {
+        ref={current => {
           controller = current
         }}
       >
@@ -114,7 +121,7 @@ test('美元样式与对象配置共用真实Flow效果，显式配置优先且�
             $direction={direction}
             $gap={gap}
             $styleConfig={explicit}
-            ref={(next) => {
+            ref={next => {
               controller = next
             }}
           />
@@ -141,9 +148,9 @@ test('美元样式与对象配置共用真实Flow效果，显式配置优先且�
     expect(getComputedStyle(roots[0]!.firstElementChild!).flexDirection).toBe(
       'row',
     )
-    expect(
-      roots[0]!.getAttributeNames().some((key) => key.startsWith('$')),
-    ).toBe(false)
+    expect(roots[0]!.getAttributeNames().some(key => key.startsWith('$'))).toBe(
+      false,
+    )
     expect(Object.hasOwn(controller.props, '$direction')).toBe(false)
     expect(componentBoundaries.size).toBe(boundaries + 4)
 
@@ -194,7 +201,7 @@ test('美元配置沿同根声明顺序合并，真实根自己的配置优先�
         propDefinition: fixtureDefinition,
         $styleConfig: { $gap: (value: string) => flowGap.set(value) },
       },
-      (props) => <Flow $gap="8px">{props.children}</Flow>,
+      props => <Flow $gap="8px">{props.children}</Flow>,
     )
     const host = document.body.appendChild(document.createElement('main'))
     dispose = render(
@@ -224,7 +231,7 @@ test('实例标签在受控与非受控模式中一致更新，清空后不回�
         <Button label="保存当前内容">保存</Button>
         <Button
           label="保存当前内容"
-          ref={(current) => {
+          ref={current => {
             button = current
           }}
         >
@@ -233,7 +240,7 @@ test('实例标签在受控与非受控模式中一致更新，清空后不回�
         <Grid label="主要内容区域" />
         <Grid
           label="主要内容区域"
-          ref={(current) => {
+          ref={current => {
             grid = current
           }}
         />
@@ -283,7 +290,7 @@ test('受控实例持续消费补充声明、能力和DOM引用换接，根元�
       <Flow
         shadowProps={{ htmlProps: { title: '原说明' } }}
         domRef={firstRef}
-        ref={(current) => {
+        ref={current => {
           controller = current
         }}
       >
@@ -327,7 +334,7 @@ test('创建时ref门控控制，换接保留实例，迟到ref不补建，卸�
   const resourceCleanup = vi.fn()
   let controller!: FixtureController
   let replacement!: FixtureController
-  const receiver = createState<RefReceiver<FixtureController>>(() => (next) => {
+  const receiver = createState<RefReceiver<FixtureController>>(() => next => {
     controller = next
     return cleanup
   })
@@ -382,7 +389,7 @@ test('创建时ref门控控制，换接保留实例，迟到ref不补建，卸�
   controller.props.value.set('指令更新')
   flush()
   expect(host.firstElementChild!.textContent).toBe('指令更新')
-  receiver.set(() => (next) => {
+  receiver.set(() => next => {
     replacement = next
   })
   late.set(() => () => {
@@ -414,7 +421,7 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
   const values: (string | null)[] = []
   const message = createState<string | null>('初值')
   const config = {
-    $message: (value) => {
+    $message: value => {
       values.push(value)
     },
   } satisfies StyleConfig<MessageConfig>
@@ -432,7 +439,7 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
       propDefinition: kitPropDefinition,
       $styleConfig: config,
     },
-    (props) => {
+    props => {
       creations++
       return <Piv shadowProps={props}>配置内容</Piv>
     },
@@ -442,7 +449,7 @@ test('独立配置解释不要求Token，null继续交付，undefined清空不�
     () => (
       <RenderInterpreter
         $message={message}
-        ref={(next) => {
+        ref={next => {
           controller = next
         }}
       />

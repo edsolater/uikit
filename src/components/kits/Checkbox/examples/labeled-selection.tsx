@@ -19,12 +19,12 @@ export function LabeledSelectionExample() {
         label="已核对原始资料"
         tooltip="核对完成后勾选；标题与方框属于同一个选项。"
         checked={checked}
-        onChange={(value) => {
+        onChange={value => {
           checked.set(value)
         }}
       />
       <Text>
-        {derive(checked, (value) => (value ? '核对已确认' : '等待确认核对结果'))}
+        {derive(checked, value => (value ? '核对已确认' : '等待确认核对结果'))}
       </Text>
     </Flow>
   )

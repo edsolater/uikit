@@ -22,12 +22,14 @@ export type StyleConfig<Config> = {
     | StyleConfigHandler<Exclude<Config[Key], undefined>>
     | (Exclude<Config[Key], undefined> extends boolean
         ? {
-            [Target in keyof Config as Exclude<
-              Config[Target],
-              undefined
-            > extends string
-              ? Target
-              : never]?: Exclude<Config[Target], undefined>
+            [
+              Target in keyof Config as Exclude<
+                Config[Target],
+                undefined
+              > extends string
+                ? Target
+                : never
+            ]?: Exclude<Config[Target], undefined>
           }
         : never)
 }

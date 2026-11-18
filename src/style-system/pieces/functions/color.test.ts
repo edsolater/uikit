@@ -99,7 +99,7 @@ test('颜色描述独立使用，消费时读取最新来源及替换后的通�
     'border-color: oklch(from blue l c h / 0.14);',
   )
   const source = token('green', 'independent-source')
-  result.default = { base: source, alpha: (current) => multiply(current, 0.4) }
+  result.default = { base: source, alpha: current => multiply(current, 0.4) }
   const css = compileRules([[['.Next'], 'border-color', result]])
   expect(css).toContain('--independent-source: green;')
   expect(css).toContain(

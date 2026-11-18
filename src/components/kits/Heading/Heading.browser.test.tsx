@@ -57,14 +57,14 @@ describe('Heading', () => {
         <Show when={visible.read()}>
           <Heading
             level={2}
-            ref={(value) => {
+            ref={value => {
               controller = value
               controllerReceives++
               return () => {
                 controllerCleanups++
               }
             }}
-            domRef={(value) => {
+            domRef={value => {
               element = value
               domReceives++
               return () => {
@@ -103,7 +103,7 @@ describe('Heading', () => {
     expect(domCleanups).toBe(1)
     expect(controllerCleanups).toBe(1)
     element.textContent = '退出后的文字'
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise(resolve => setTimeout(resolve, 0))
     expect(element.id).toBe('')
   })
 
@@ -114,7 +114,7 @@ describe('Heading', () => {
       () => (
         <>
           <For each={levels}>
-            {(level) => (
+            {level => (
               <section>
                 <p>标题前内容</p>
                 <Heading level={level}>分级标题</Heading>
@@ -177,7 +177,7 @@ describe('Heading', () => {
       () => (
         <>
           <For each={levels}>
-            {(level) => (
+            {level => (
               <Heading
                 level={level}
                 label={level === 2 ? description : undefined}
@@ -193,7 +193,7 @@ describe('Heading', () => {
       host,
     )
     const headings = [...host.querySelectorAll<HTMLElement>('.Heading')]
-    expect(headings.map((element) => element.tagName)).toEqual([
+    expect(headings.map(element => element.tagName)).toEqual([
       'H1',
       'H2',
       'H3',
@@ -202,10 +202,10 @@ describe('Heading', () => {
     expect(host.querySelector('.Text')).toBeNull()
     expect(
       headings.every(
-        (element) => getComputedStyle(element).visibility === 'visible',
+        element => getComputedStyle(element).visibility === 'visible',
       ),
     ).toBe(true)
-    const before = headings.map((element) =>
+    const before = headings.map(element =>
       element.getBoundingClientRect().toJSON(),
     )
     const control = host.querySelector<HTMLButtonElement>(
@@ -217,17 +217,17 @@ describe('Heading', () => {
       .poll(
         () =>
           [...document.querySelectorAll('.StructureViewOverlay .label')].filter(
-            (element) => element.textContent === 'Heading',
+            element => element.textContent === 'Heading',
           ).length,
       )
       .toBe(0)
     expect(
       headings.every(
-        (element) => getComputedStyle(element).visibility === 'hidden',
+        element => getComputedStyle(element).visibility === 'hidden',
       ),
     ).toBe(true)
     expect(
-      headings.map((element) => element.getBoundingClientRect().toJSON()),
+      headings.map(element => element.getBoundingClientRect().toJSON()),
     ).toEqual(before)
     description.set('页面标题')
     content.set('更新后的标题')
@@ -235,21 +235,21 @@ describe('Heading', () => {
     await expect
       .poll(() =>
         [...document.querySelectorAll('.StructureViewOverlay .label')].map(
-          (element) => element.textContent,
+          element => element.textContent,
         ),
       )
       .toContain('页面标题')
     expect(
-      headings.every((element) => element.textContent === '更新后的标题'),
+      headings.every(element => element.textContent === '更新后的标题'),
     ).toBe(true)
     await expect
-      .poll(() => headings.every((element) => element.id === '更新后的标题'))
+      .poll(() => headings.every(element => element.id === '更新后的标题'))
       .toBe(true)
     display.set(false)
     flush()
     await expect
       .poll(() =>
-        headings.every((element) => getComputedStyle(element).opacity === '0'),
+        headings.every(element => getComputedStyle(element).opacity === '0'),
       )
       .toBe(true)
     await expect
@@ -266,10 +266,10 @@ describe('Heading', () => {
       .toBe(1)
     expect(
       [...document.querySelectorAll('.StructureViewOverlay .label')].some(
-        (element) => element.textContent?.startsWith('Text'),
+        element => element.textContent?.startsWith('Text'),
       ),
     ).toBe(false)
-    const updated = headings.map((element) =>
+    const updated = headings.map(element =>
       element.getBoundingClientRect().toJSON(),
     )
     control.click()
@@ -277,14 +277,14 @@ describe('Heading', () => {
     expect([...host.querySelectorAll('.Heading')]).toEqual(headings)
     expect(
       headings.every(
-        (element) => getComputedStyle(element).visibility === 'visible',
+        element => getComputedStyle(element).visibility === 'visible',
       ),
     ).toBe(true)
     expect(
-      headings.map((element) => element.getBoundingClientRect().toJSON()),
+      headings.map(element => element.getBoundingClientRect().toJSON()),
     ).toEqual(updated)
     expect(
-      headings.every((element) => element.textContent === '更新后的标题'),
+      headings.every(element => element.textContent === '更新后的标题'),
     ).toBe(true)
   })
 })

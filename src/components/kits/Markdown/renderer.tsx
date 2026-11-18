@@ -137,7 +137,7 @@ export function renderMarkdown(
    * 呈现同一容器的内容，紧凑列表省略直接子段落的外壳。
    */
   function renderNodes(items: MarkdownNode[], tight = false): JSX.Element {
-    return items.map((node) => {
+    return items.map(node => {
       switch (node.type) {
         case 'heading':
           return render(`h${node.level}`, {
@@ -182,7 +182,7 @@ export function renderMarkdown(
           return render('list', {
             ordered: node.ordered,
             start: node.start,
-            content: node.items.map((item) =>
+            content: node.items.map(item =>
               render('listItem', {
                 content: renderNodes(item.children, !node.loose),
                 task: item.task,
@@ -210,7 +210,7 @@ export function renderMarkdown(
               <>
                 <Piv as="thead">{row(node.header, true)}</Piv>
                 <Piv as="tbody">
-                  {node.rows.map((cells) => row(cells, false))}
+                  {node.rows.map(cells => row(cells, false))}
                 </Piv>
               </>
             ),

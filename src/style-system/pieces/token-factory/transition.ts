@@ -15,7 +15,7 @@ export type Transition = [
  */
 export function transitionValue(...items: Transition[]): Token<Transition[]> {
   return token<Transition[]>(items, {
-    dependencies: (items) =>
+    dependencies: items =>
       items.flatMap(([, duration, easing, delay]) => [duration, easing, delay]),
     toCSSString: (items, resolve) =>
       items
@@ -26,7 +26,7 @@ export function transitionValue(...items: Transition[]): Token<Transition[]> {
             resolve(easing),
             resolve(delay),
           ]
-            .filter((part) => part !== undefined)
+            .filter(part => part !== undefined)
             .join(' '),
         )
         .join(', '),

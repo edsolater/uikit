@@ -12,9 +12,7 @@ export function AsyncStateExample() {
       <button onClick={() => request.reject(new Error('请求失败'))}>
         拒绝请求
       </button>
-      <Errored
-        fallback={(error) => <p role="alert">失败：{String(error())}</p>}
-      >
+      <Errored fallback={error => <p role="alert">失败：{String(error())}</p>}>
         <Loading fallback={<p role="status">等待请求</p>}>
           <p data-result>结果：{val(message)}</p>
         </Loading>

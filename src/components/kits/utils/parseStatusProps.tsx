@@ -87,21 +87,19 @@ export function createStatusPropsParser<
     // 固定初始外部归属，避免撤去声明后内部意外接管。
     const candidates: readonly StatusName[] = options.candidates
     const initiallyExternal = new Set(
-      untrack(() =>
-        candidates.filter((name) => hasPropDeclaration(props, name)),
-      ),
+      untrack(() => candidates.filter(name => hasPropDeclaration(props, name))),
     )
     // 建立持续读取的状态来源和只读视图；内部写入不回写上游。
     // 候选全集逐项构造同名记录，Object.fromEntries 不保留该键域证明。
     const statusStates = Object.fromEntries(
-      candidates.map((statusName) => [
+      candidates.map(statusName => [
         statusName,
         createState(() => props[statusName]),
       ]),
     ) as Record<StatusName, State<boolean | undefined>>
     const statusSources: StatusSources<StatusName> = statusStates
     const statusViews = Object.fromEntries(
-      candidates.map((statusName) => [
+      candidates.map(statusName => [
         statusName,
         derive(statusStates[statusName], Boolean),
       ]),
@@ -126,9 +124,9 @@ export function createStatusPropsParser<
     }
 
     // 按候选顺序生成当前成立的 data-status。
-    const statusAttribute = derive(statusSources, (states) => {
+    const statusAttribute = derive(statusSources, states => {
       const activeStatuses = options.candidates.filter(
-        (statusName) => val(states[statusName]) === true,
+        statusName => val(states[statusName]) === true,
       )
       return activeStatuses.length > 0 ? activeStatuses.join(' ') : undefined
     })

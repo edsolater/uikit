@@ -20,11 +20,11 @@ const independentStates = Array.from({ length: 10 }, (_, index) =>
 
 test.each([2, 5, 10])(
   '两个变量各有 %i 个状态时，定义数量随状态数增长而不产生交集',
-  (count) => {
+  count => {
     const states = new Map(
       independentStates
         .slice(0, count)
-        .map((condition) => [condition, '2px'] as const),
+        .map(condition => [condition, '2px'] as const),
     )
     const first = token('1px', {
       name: 'independent-first-size',
@@ -47,7 +47,7 @@ test.each([2, 5, 10])(
 
 test.each([false, true])(
   '状态内引用与普通消费交换顺序后，依赖仍有常态和自身状态：%s',
-  (ordinaryFirst) => {
+  ordinaryFirst => {
     const inner = token('10px', {
       name: 'audit-inner-size',
       state: { hover: '20px' },

@@ -80,7 +80,7 @@ test('Key 替换路径后，Content 激活仍复制节点访问开始时取得�
   const content: JSSContent = {
     onFirstScan(context) {
       observed = context.conditionPath.targetConditionPath.map(
-        (item) => item.header,
+        item => item.header,
       )
       return []
     },
@@ -270,13 +270,13 @@ test('角色输入保持快照，嵌套编译沿用快照，Controller 跨角色
   expect(keyContext.key).toBe(target)
   expect(keyContext.content).toBe(source)
   expect(
-    keyContext.conditionPath.targetConditionPath.map((item) => item.header),
+    keyContext.conditionPath.targetConditionPath.map(item => item.header),
   ).toEqual(['.snapshot'])
   expect(contentContext.role).toBe('declaration-content')
   expect(contentContext.key).toBe('height')
   expect(contentContext.content).toBe(source)
   expect(
-    contentContext.conditionPath.targetConditionPath.map((item) => item.header),
+    contentContext.conditionPath.targetConditionPath.map(item => item.header),
   ).toEqual(['.snapshot', '.live'])
   expect(contentContext.node.key).toBe('width')
   expect(contentContext.node.content).toBe('2px')
@@ -323,7 +323,7 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
         context,
         token(
           createJSSContent(
-            (resolve) => {
+            resolve => {
               const input = resolve(nested)
               return input === undefined ? undefined : `calc(${input} * 2)`
             },
@@ -379,12 +379,12 @@ test('正式 Rule 按编译波访问嵌套 Content，读取复合地址并把插
   expect(events).toEqual(['nested', 'middle', 'delayed'])
   expect(
     observedCompileContext?.conditionPath.targetConditionPath.map(
-      (item) => item.header,
+      item => item.header,
     ),
   ).toEqual(['.WaveContent', '&:where([data-wave-hover])'])
   expect(
     observedCompileContext?.conditionPath.stateConditionPath.map(
-      (item) => item.header,
+      item => item.header,
     ),
   ).toEqual([])
   expect(observedController?.search({ key: key('color') })[0]?.content).toBe(
@@ -645,54 +645,51 @@ test('普通节点编译完整保留全部声明及其顺序', () => {
   )
 })
 
-test.each([20, 40])(
-  '按需资源完整输出，共享资源只激活及编译一次：%s',
-  (count) => {
-    let repeatedActivations = 0
-    let resourceVisits = 0
-    const source: Rules = []
-    for (let index = 0; index < count; index++) {
-      const resources: Rules = [
-        [[condition('.AssociatedResources')], `--resource-${index}`, index],
-      ]
-      source.push([[], `--consumer-${index}`, { onFirstScan: () => resources }])
-    }
-    const repeated = {
-      onFirstScan() {
-        repeatedActivations++
-        return [
-          [
-            [condition('.RepeatedResource')],
-            'color',
-            {
-              onCompile(context, controller) {
-                resourceVisits++
-                controller.setContent(context, 'blue')
-              },
+test.each([20, 40])('按需资源完整输出，共享资源只激活及编译一次：%s', count => {
+  let repeatedActivations = 0
+  let resourceVisits = 0
+  const source: Rules = []
+  for (let index = 0; index < count; index++) {
+    const resources: Rules = [
+      [[condition('.AssociatedResources')], `--resource-${index}`, index],
+    ]
+    source.push([[], `--consumer-${index}`, { onFirstScan: () => resources }])
+  }
+  const repeated = {
+    onFirstScan() {
+      repeatedActivations++
+      return [
+        [
+          [condition('.RepeatedResource')],
+          'color',
+          {
+            onCompile(context, controller) {
+              resourceVisits++
+              controller.setContent(context, 'blue')
             },
-          ],
-        ] as Rules
+          },
+        ],
+      ] as Rules
+    },
+  }
+  source.push([[], 'width', repeated])
+  source.push([
+    [],
+    'height',
+    {
+      compileWaveIndex: 2,
+      onCompile(context, controller) {
+        controller.setContent(context, repeated)
       },
-    }
-    source.push([[], 'width', repeated])
-    source.push([
-      [],
-      'height',
-      {
-        compileWaveIndex: 2,
-        onCompile(context, controller) {
-          controller.setContent(context, repeated)
-        },
-      },
-    ])
-    const css = compileRules(source)
-    for (let index = 0; index < count; index++)
-      expect(css).toContain(`--resource-${index}: ${index};`)
-    expect(css).toContain('.RepeatedResource {\ncolor: blue;')
-    expect(repeatedActivations).toBe(1)
-    expect(resourceVisits).toBe(1)
-  },
-)
+    },
+  ])
+  const css = compileRules(source)
+  for (let index = 0; index < count; index++)
+    expect(css).toContain(`--resource-${index}: ${index};`)
+  expect(css).toContain('.RepeatedResource {\ncolor: blue;')
+  expect(repeatedActivations).toBe(1)
+  expect(resourceVisits).toBe(1)
+})
 
 test('同一 Rule 身份的多个激活记录均关联最后产物，不将不同 Rule 当成获胜记录', () => {
   let visits = 0
@@ -805,7 +802,7 @@ test('再次消费激活内容时使用当前 Rules，并退出已经替换的 R
 
 test.each(['append', 'delete', 'replace'])(
   '未再次消费的记录改写 Rules，生成时按当前身份关联：%s',
-  (change) => {
+  change => {
     let originalVisits = 0
     let replacementVisits = 0
     const original: Rules[0] = [
@@ -871,7 +868,7 @@ test.each(['append', 'delete', 'replace'])(
 
 test.each([false, true])(
   '同址按需资源最后替换，多个消费者撤销仍保留共享=%s',
-  (keepShared) => {
+  keepShared => {
     let cleanups = 0
     const old: JSSContent = {
       onFirstScan: () => [[[condition('.SharedResource')], 'color', 'red']],
@@ -937,7 +934,7 @@ test('自定义 Key 只凭通用 onCompile 与输出能力插入节点', () => {
 
 test.each([false, true])(
   'onFirstScan 内容生成按需 Rules，带空 dependencies=%s 时本声明不输出',
-  (hasDependencies) => {
+  hasDependencies => {
     let activations = 0
     let observedContext: JSSContentContext | undefined
     const lifecycleOnly = {
@@ -959,12 +956,12 @@ test.each([false, true])(
     expect(activations).toBe(1)
     expect(
       observedContext?.conditionPath.targetConditionPath.map(
-        (item) => item.header,
+        item => item.header,
       ),
     ).toEqual(['.LifecycleOnly', '&:where([data-wave-hover])'])
     expect(
       observedContext?.conditionPath.stateConditionPath.map(
-        (item) => item.header,
+        item => item.header,
       ),
     ).toEqual([])
     expect(css).toContain('.LifecycleDependency')
@@ -1043,7 +1040,7 @@ test('延后的动态依赖完成后输出 CSS，成功编译通知不重复', (
     get dependencies() {
       return [child]
     },
-    toCSSString: (resolve) => resolve?.(child),
+    toCSSString: resolve => resolve?.(child),
   }
   const css = compileRules([[[], 'width', content]])
 

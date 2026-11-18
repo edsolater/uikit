@@ -21,7 +21,7 @@ export function OptionSelectionExample() {
   return (
     <Flow>
       <Field label="工作阶段">
-        {(id) => (
+        {id => (
           <Select
             id={id}
             value={value}
@@ -30,13 +30,13 @@ export function OptionSelectionExample() {
               { value: 'running', label: '进行中' },
               { value: 'done', label: '已完成' },
             ]}
-            onChange={(next) => {
+            onChange={next => {
               value.set(next)
             }}
           />
         )}
       </Field>
-      <Text>{derive(value, (current) => '当前阶段：' + labels[current])}</Text>
+      <Text>{derive(value, current => '当前阶段：' + labels[current])}</Text>
     </Flow>
   )
 }

@@ -41,9 +41,12 @@ rules('.StructureViewOverlay > .frame', {
   isolation: 'isolate',
 })
 
-export const componentIdentityMarkerStructureViewMaskColor = token('rgb(255 255 255 / 90%)', {
-  name: 'component-marker-structure-view-mask-color',
-})
+export const componentIdentityMarkerStructureViewMaskColor = token(
+  'rgb(255 255 255 / 90%)',
+  {
+    name: 'component-marker-structure-view-mask-color',
+  },
+)
 export const componentIdentityMarkerStructureViewMaskBlur = token('4px', {
   name: 'component-marker-structure-view-mask-blur',
 })

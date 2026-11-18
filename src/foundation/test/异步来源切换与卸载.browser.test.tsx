@@ -30,7 +30,7 @@ test('异步来源替换丢弃迟到结果，卸载释放动作和 DOM', async (
     onCleanup(() => {
       cleaned++
     })
-    createEffect(source, (value) => {
+    createEffect(source, value => {
       values.push(value)
     })
     return (
@@ -89,7 +89,7 @@ for (const empty of [null, undefined]) {
     await expect
       .poll(() =>
         [...host!.querySelectorAll('[data-result]')].map(
-          (node) => node.textContent,
+          node => node.textContent,
         ),
       )
       .toEqual(['7', '7'])

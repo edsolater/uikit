@@ -7,7 +7,7 @@ describe('createVariantPropsParser', () => {
   test('建立字段派生时只读取业务 getter 一次，并跟随 Source 替换', () => {
     let reads = 0
     const { selected, second, selectedVariants, dispose } = createRoot(
-      (dispose) => {
+      dispose => {
         const first = createState<'filled' | 'plain'>('filled')
         const second = createState<'filled' | 'plain'>('plain')
         const selected = createState({ source: first })
@@ -43,7 +43,7 @@ describe('createVariantPropsParser', () => {
       selectedVariants,
       variantEffectResultProps,
       dispose,
-    } = createRoot((dispose) => {
+    } = createRoot(dispose => {
       const appearance = createState<'filled' | 'plain' | undefined>('filled')
       const effect = vi.fn(() => undefined)
       const parser = createVariantPropsParser([
@@ -106,7 +106,7 @@ describe('createVariantPropsParser', () => {
 
   test('映射只转换 DOM Source，effect 保留稳定的原始选择 Source', () => {
     const { appearance, mapping, effect, selectedVariants, mapped, dispose } =
-      createRoot((dispose) => {
+      createRoot(dispose => {
         const appearance = createState<
           'filled' | 'outlined' | 'plain' | undefined
         >()
@@ -172,7 +172,7 @@ describe('createVariantPropsParser', () => {
       selectedVariants,
       variantEffectResultProps,
       dispose,
-    } = createRoot((dispose) => {
+    } = createRoot(dispose => {
       const large = createState(false)
       let receivedVariant: Source<string | undefined> | undefined
       const effect = vi.fn((selectedVariant: Source<string | undefined>) => {
@@ -220,7 +220,7 @@ describe('createVariantPropsParser', () => {
         selectedVariants.size,
       )
       expect(
-        variantEffectResultProps.every((props) => !('shadowProps' in props)),
+        variantEffectResultProps.every(props => !('shadowProps' in props)),
       ).toBe(true)
       expect(val(selectedVariants.size)).toBeUndefined()
 

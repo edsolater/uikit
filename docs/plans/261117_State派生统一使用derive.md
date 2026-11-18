@@ -23,7 +23,7 @@ const disabled = derive(statusStates.disabled, Boolean)
 const size = stateView(() => val(props.size))
 
 // 目标：Props getter 或来源可以替换时，从持有字段的对象持续读取。
-const size = derive(props, (s) => s.size)
+const size = derive(props, s => s.size)
 ```
 
 - 最后一个例子不能机械改成 `derive(props.size)`：它提前取得字段来源，且单参数 derive 只返回该来源，无法表达持续读取 getter 或替换来源。

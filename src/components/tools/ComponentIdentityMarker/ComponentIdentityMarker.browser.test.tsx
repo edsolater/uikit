@@ -66,7 +66,7 @@ function toggleView() {
  */
 function readLabels() {
   return [...document.querySelectorAll('.StructureViewOverlay .label')].map(
-    (element) => element.textContent,
+    element => element.textContent,
   )
 }
 
@@ -135,7 +135,7 @@ describe('组件结构查看', () => {
     expect(root.getBoundingClientRect().toJSON()).toEqual(originalBounds)
     expect(
       [...host.childNodes].filter(
-        (node) =>
+        node =>
           !(node instanceof Element && node.matches('.StructureViewOverlay')),
       ),
     ).toEqual(originalNodes)
@@ -144,15 +144,13 @@ describe('组件结构查看', () => {
     )
     expect(host.querySelector('select > option')?.textContent).toBe('原选项')
     const highlight = CSS.highlights.get('uikit-structure-view-hidden')!
-    expect([...highlight].some((range) => range.toString() === 'TRUE')).toBe(
-      true,
-    )
+    expect([...highlight].some(range => range.toString() === 'TRUE')).toBe(true)
     expect(
       getComputedStyle(host, '::highlight(uikit-structure-view-hidden)').color,
     ).toBe('rgba(0, 0, 0, 0)')
     expect(popover.matches(':popover-open')).toBe(false)
     ;[...root.querySelectorAll<HTMLButtonElement>('button')]
-      .find((button) => button.textContent === '原生浮层')!
+      .find(button => button.textContent === '原生浮层')!
       .click()
     await expect.poll(() => popover.matches(':popover-open')).toBe(true)
     await expect.poll(() => getComputedStyle(popover).opacity).toBe('0')
@@ -160,7 +158,7 @@ describe('组件结构查看', () => {
     content.set('FALSE')
     flush()
     await expect
-      .poll(() => [...highlight].some((range) => range.toString() === 'FALSE'))
+      .poll(() => [...highlight].some(range => range.toString() === 'FALSE'))
       .toBe(true)
     expect(root.style.opacity).toBe('0.35')
     display.set(true)
@@ -250,7 +248,7 @@ describe('组件结构查看', () => {
               <Table data={[{ 名称: '记录' }]} />
               <Button is={popoverTrigger}>补充</Button>
               <Card is={popoverBody}>浮层正文</Card>
-              <Loop each={() => ['一项']}>{(item) => <p>{item}</p>}</Loop>
+              <Loop each={() => ['一项']}>{item => <p>{item}</p>}</Loop>
             </Article>
           </Card>
           <ComponentIdentityMarkerStructureViewTrigger />
@@ -290,7 +288,7 @@ describe('组件结构查看', () => {
       )
     expect(
       readLabels().some(
-        (label) =>
+        label =>
           label?.startsWith('Piv') ||
           label?.startsWith('ComponentIdentityMarker'),
       ),
@@ -411,7 +409,7 @@ describe('组件结构查看', () => {
   test('异步用途说明由渲染边界接续，完成后仍跟随真实位置', async () => {
     const description = createState<string | undefined>()
     let resolveDescription!: (value: string) => void
-    const pendingDescription = new Promise<string>((resolve) => {
+    const pendingDescription = new Promise<string>(resolve => {
       resolveDescription = resolve
     })
     const host = createHost()
@@ -639,12 +637,12 @@ describe('组件结构查看', () => {
     }
     expect(
       [...shared.querySelectorAll('.label')].every(
-        (label) => getComputedStyle(label).display === 'block',
+        label => getComputedStyle(label).display === 'block',
       ),
     ).toBe(true)
     toggleView()
     expect(document.querySelector('.StructureViewOverlay')).toBeNull()
-    expect(original.every((element) => element.isConnected)).toBe(true)
+    expect(original.every(element => element.isConnected)).toBe(true)
   })
 })
 

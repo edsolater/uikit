@@ -31,7 +31,7 @@ type DirectMixColor = TokenInput | [color: TokenInput, weight: TokenInput]
  */
 export function colorMix(...colors: MixColorInput[]): Token<MixColorInput[]> {
   const result = token<MixColorInput[]>(colors, {
-    dependencies: (inputs) =>
+    dependencies: inputs =>
       isDirectMix(inputs) ? contentDependencies(inputs) : [produceItems],
     toCSSString: (inputs, resolve) => {
       const items = isDirectMix(inputs)
@@ -44,13 +44,13 @@ export function colorMix(...colors: MixColorInput[]): Token<MixColorInput[]> {
 
   /** 消费当前颜色与权重，仅组织参数列表，不再构造另一份混色 Token。 */
   function produceItems() {
-    const items = result.default.map<DirectMixColor>((input) => {
+    const items = result.default.map<DirectMixColor>(input => {
       if (!isWeightedMixColor(input)) return input
       const value = color(input.color)
       return input.weight === undefined ? value : [value, input.weight]
     })
     return createJSSContent(
-      (resolve) => formatMixItems(items, resolve),
+      resolve => formatMixItems(items, resolve),
       contentDependencies(items),
     )
   }
@@ -71,7 +71,7 @@ function formatMixItems(
   colors: DirectMixColor[],
   resolve: JSSContentResolver,
 ): string | undefined {
-  const parts = colors.map((input) => {
+  const parts = colors.map(input => {
     if (!Array.isArray(input)) return resolve(input)
     const color = resolve(input[0])
     const weight = resolve(input[1])
@@ -81,5 +81,5 @@ function formatMixItems(
       : `calc(${weight} * 100%)`
     return `${color} ${percentage}`
   })
-  return parts.some((part) => part === undefined) ? undefined : parts.join(', ')
+  return parts.some(part => part === undefined) ? undefined : parts.join(', ')
 }

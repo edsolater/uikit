@@ -46,7 +46,7 @@ export const tableStyleConfig = {
   /**
    * 紧凑模式缩小单元格空间并保持正文单行，关闭时沿用 Token 默认。
    */
-  $compact: (value) => {
+  $compact: value => {
     if (value) {
       tableCellPadding.set('10px 8px')
       tableCellWhiteSpace.set('nowrap')
@@ -60,15 +60,15 @@ export const tableCellStyleConfig = {
   /**
    * 覆盖当前单元格的首选宽度。
    */
-  $width: (value) => tableColumnWidth.set(value),
+  $width: value => tableColumnWidth.set(value),
   /**
    * 把当前列的最小宽度转换为 CSS 长度。
    */
-  $minWidth: (value) => tableColumnMinWidth.set(`${value}px`),
+  $minWidth: value => tableColumnMinWidth.set(`${value}px`),
   /**
    * 将业务比例交给当前单元格的着色表达式。
    */
-  $intensity: (value) => tableCellIntensity.set(value ?? 0),
+  $intensity: value => tableCellIntensity.set(value ?? 0),
 } satisfies StyleConfig<TableCellStyleConfig>
 
 const tableAddress = `.${componentName}`
@@ -102,7 +102,7 @@ export const tableCellIntensity = token(0, {
 })
 
 const intensityColor = createJSSContent(
-  (resolve) =>
+  resolve =>
     `rgb(from ${resolve(brandColor)} r g b / calc(0.04 + ${resolve(tableCellIntensity)} * 0.23))`,
   [brandColor, tableCellIntensity],
 )

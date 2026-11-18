@@ -76,11 +76,9 @@ export class ResourceCompilation {
       record = { rules: value.onFirstScan?.(context) ?? [], nodes: [] }
       this.activatedContents.set(value, record)
     }
-    const surviving = record.nodes.filter((node) =>
-      this.session.hasOutput(node),
-    )
+    const surviving = record.nodes.filter(node => this.session.hasOutput(node))
     if (surviving.length) {
-      surviving.forEach((node) => this.session.own(owner, node))
+      surviving.forEach(node => this.session.own(owner, node))
       return
     }
     for (const rule of record.rules) {
@@ -106,19 +104,15 @@ export class ResourceCompilation {
       this.consumers.set(owner, (roles = new Map()))
       this.session.onRemove(owner, () => this.consumers.delete(owner))
     }
-    const previous = new Set(
-      [...roles.values()].flatMap((values) => [...values]),
-    )
+    const previous = new Set([...roles.values()].flatMap(values => [...values]))
     const current = complete
       ? contents
       : new Set([...(roles.get(role) ?? []), ...contents])
     roles.set(role, current)
-    const retained = new Set(
-      [...roles.values()].flatMap((values) => [...values]),
-    )
+    const retained = new Set([...roles.values()].flatMap(values => [...values]))
     const retainedNodes = new Set(
       [...retained].flatMap(
-        (value) => this.activatedContents.get(value)?.nodes ?? [],
+        value => this.activatedContents.get(value)?.nodes ?? [],
       ),
     )
     for (const value of previous) {
@@ -130,7 +124,7 @@ export class ResourceCompilation {
     // 本波尚未发布的资源也必须撤回失效来源，避免发布后再留下孤儿产物。
     const retainedRules = new Set(
       [...retained].flatMap(
-        (value) => this.activatedContents.get(value)?.rules ?? [],
+        value => this.activatedContents.get(value)?.rules ?? [],
       ),
     )
     for (const [rule, pending] of this.pendingRules) {
@@ -151,7 +145,7 @@ export class ResourceCompilation {
       }
     >()
     for (const [rule, contribution] of this.pendingRules) {
-      const owners = [...contribution.owners].filter((owner) =>
+      const owners = [...contribution.owners].filter(owner =>
         this.session.isAlive(owner),
       )
       if (!owners.length) continue
@@ -208,7 +202,7 @@ export class ResourceCompilation {
   publish(): void {
     const dependencyStyleNodes = this.createDependencyNodes()
     const replacedResources = new Set(
-      dependencyStyleNodes.flatMap((node) =>
+      dependencyStyleNodes.flatMap(node =>
         node.resourceAddress === undefined ? [] : [node.resourceAddress],
       ),
     )

@@ -82,7 +82,7 @@ test('焦点提示保留 CSS 特异性，鼠标 focus 不等于 focusVisible', a
 
 test.each([false, true])(
   '首次状态内引用与普通消费的顺序不改变浏览器结果：%s',
-  (ordinaryFirst) => {
+  ordinaryFirst => {
     const inner = token('10px', {
       name: 'audit-inner-size',
       address: '.Audit',
@@ -176,7 +176,7 @@ test('状态内容组合各来源当前 CSS 状态值', () => {
       [
         chainHover,
         createJSSContent(
-          (resolve) =>
+          resolve =>
             `calc(${resolve(first)} + ${resolve(second)} + ${resolve(missing)})`,
           [first, second, missing],
         ),

@@ -130,7 +130,7 @@ test('悬停浮层在上方且不改变输入排版，可以移入说明继续�
   )
   expect(input.getBoundingClientRect().toJSON()).toEqual(before)
   await userEvent.hover(surface)
-  await new Promise((resolve) => setTimeout(resolve, 200))
+  await new Promise(resolve => setTimeout(resolve, 200))
   expect(surface.matches(':popover-open')).toBe(true)
   await userEvent.hover(input)
   await expect.poll(() => surface.matches(':popover-open')).toBe(false)

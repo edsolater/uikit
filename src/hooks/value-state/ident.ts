@@ -263,11 +263,11 @@ export function createIdent(
   }
 
   const matchFirst = () => {
-    return derive(ident, (value) => value === idents[0])
+    return derive(ident, value => value === idents[0])
   }
 
   const matchLast = () => {
-    return derive(ident, (value) => value === idents[idents.length - 1])
+    return derive(ident, value => value === idents[idents.length - 1])
   }
 
   return [

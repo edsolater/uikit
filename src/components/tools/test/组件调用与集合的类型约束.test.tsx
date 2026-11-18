@@ -57,10 +57,10 @@ function verifyGenericCalls() {
   const board = (
     <Board<'button'>
       as="button"
-      ref={(controller) => {
+      ref={controller => {
         expectTypeOf(controller).toEqualTypeOf<BoardController<'button'>>()
       }}
-      domRef={(element) => {
+      domRef={element => {
         expectTypeOf(element).toEqualTypeOf<HTMLButtonElement>()
       }}
     />
@@ -68,7 +68,7 @@ function verifyGenericCalls() {
   const card = (
     <Card<'section'>
       as="section"
-      ref={(controller) => {
+      ref={controller => {
         expectTypeOf(controller).toEqualTypeOf<CardController<'section'>>()
       }}
     />
@@ -81,7 +81,7 @@ function verifyGenericCalls() {
   const loop = (
     <Loop
       each={() => [{ name: '项' }]}
-      ref={(controller) => {
+      ref={controller => {
         expectTypeOf(controller.props.each).toEqualTypeOf<
           State<() => { name: string }[]>
         >()
@@ -97,16 +97,16 @@ function verifyGenericCalls() {
     </Loop>
   )
   // @ts-expect-error 列表项必须符合明确指定的 number。
-  Loop<number>({ each: () => ['错误'], children: (item) => item })
+  Loop<number>({ each: () => ['错误'], children: item => item })
   const field = (
     <Field
       label="字段"
-      ref={(controller) => {
+      ref={controller => {
         // @ts-expect-error Field 内容工厂同样不是可写状态。
         controller.props.children.set(() => (_id: string) => null)
       }}
     >
-      {(id) => <Piv as="input" id={id} />}
+      {id => <Piv as="input" id={id} />}
     </Field>
   )
 
@@ -115,13 +115,13 @@ function verifyGenericCalls() {
       data={[{ amount: 1, title: '项' }]}
       renderParts={{
         tableCell: {
-          amount: (value) => {
+          amount: value => {
             expectTypeOf(value).toEqualTypeOf<number>()
             return value
           },
         },
       }}
-      ref={(controller) => {
+      ref={controller => {
         expectTypeOf(controller.props.data).toEqualTypeOf<
           State<{ amount: number; title: string }[]>
         >()
@@ -138,7 +138,7 @@ function verifyGenericCalls() {
 
   const article = (
     <Article
-      ref={(controller) => {
+      ref={controller => {
         expectTypeOf(controller).toEqualTypeOf<ArticleController>()
         // @ts-expect-error Article 不提供根节点选择或承载组件状态。
         controller.props.as.set('section')

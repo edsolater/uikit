@@ -92,11 +92,11 @@ export function createPivStructure<Tag extends PivTag>(
   }
 
   return {
-    insertBefore: (content) => insertContent('before', content),
-    insertAfter: (content) => insertContent('after', content),
-    prependChild: (content) => insertContent('prepend', content),
-    appendChild: (content) => insertContent('append', content),
-    wrapOutside: (content) => insertContent('wrap', content),
+    insertBefore: content => insertContent('before', content),
+    insertAfter: content => insertContent('after', content),
+    prependChild: content => insertContent('prepend', content),
+    appendChild: content => insertContent('append', content),
+    wrapOutside: content => insertContent('wrap', content),
   }
 }
 /**

@@ -70,7 +70,7 @@ test('Article和Card裁剪自身边界，不改裸标签和Board网格', () => {
     host,
   )
   try {
-    expect([...host.children].map((element) => element.tagName)).toEqual([
+    expect([...host.children].map(element => element.tagName)).toEqual([
       'ARTICLE',
       'DIV',
       'DIV',
@@ -188,7 +188,7 @@ test('两种方言保持单节点同材质，反馈语气更新不污染旁边�
     const [board, card, message] = [...host.children] as HTMLElement[]
     const names = [...componentBoundaries]
       .slice(before)
-      .map((boundary) => boundary.componentName)
+      .map(boundary => boundary.componentName)
     expect(names).toEqual(['Board', 'Card', 'MessageBoard', 'Board'])
     for (const property of [
       'background-color',

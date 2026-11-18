@@ -15,7 +15,7 @@ export function mapVariantProps<Candidate extends string>(
   source: Source<Candidate | undefined>,
   mapping: Record<string, string | undefined>,
 ) {
-  return derive(source, (value) =>
+  return derive(source, value =>
     Object.hasOwn(mapping, String(value)) ? mapping[String(value)] : value,
   )
 }

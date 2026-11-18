@@ -24,7 +24,7 @@ describe('Input', () => {
       () => (
         <Input
           invalid={invalid}
-          ref={(current) => {
+          ref={current => {
             controller = current
           }}
         />

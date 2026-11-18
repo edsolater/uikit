@@ -36,7 +36,7 @@ for (const { name, register } of [
     const active = createState(true)
     const events: string[] = []
     let passes = 0
-    const scope = createRoot((dispose) => {
+    const scope = createRoot(dispose => {
       const rows = mapArray(
         () => {
           passes++
@@ -84,8 +84,8 @@ for (const { name, create } of [
     const source = createState(1)
     const incidental = createState('旁读')
     const events: string[] = []
-    const dispose = createRoot((dispose) => {
-      create(source, (value) => {
+    const dispose = createRoot(dispose => {
+      create(source, value => {
         expectTypeOf(value).toEqualTypeOf<number>()
         val(incidental)
         events.push(`执行${value}`)
@@ -111,8 +111,8 @@ for (const { name, create } of [
     const count = createState(1)
     const label = createState('按钮')
     const values: [number, string][] = []
-    const dispose = createRoot((dispose) => {
-      create([count, label], (pair) => {
+    const dispose = createRoot(dispose => {
+      create([count, label], pair => {
         expectTypeOf(pair).toEqualTypeOf<[number, string]>()
         values.push(pair)
       })
@@ -133,10 +133,10 @@ for (const { name, create } of [
     const count = createState(1)
     const incidental = createState(0)
     const values: number[] = []
-    const dispose = createRoot((dispose) => {
+    const dispose = createRoot(dispose => {
       create(
         () => val(count) * 2,
-        (value) => {
+        value => {
           expectTypeOf(value).toEqualTypeOf<number>()
           val(incidental)
           values.push(value)
@@ -158,8 +158,8 @@ for (const { name, create } of [
 test('Render Effect 的初次动作同步完成，数组值保持为单个 Source 的值', () => {
   const ids = createState(['first', 'second'])
   let current: string[] | undefined
-  const dispose = createRoot((dispose) => {
-    createRenderEffect(ids, (value) => {
+  const dispose = createRoot(dispose => {
+    createRenderEffect(ids, value => {
       current = value
     })
     expect(current).toBe(ids.read())
@@ -174,10 +174,10 @@ test('Render Effect 的初次动作同步完成，数组值保持为单个 Sourc
 test('Render Effect 保留原生第三参数的初次排队控制', () => {
   const source = createState(1)
   const values: number[] = []
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     createRenderEffect(
       source,
-      (value) => {
+      value => {
         values.push(value)
       },
       { schedule: true },
@@ -243,15 +243,15 @@ test('挂载动作不收集旁读依赖，返回的清理在卸载时执行一�
 test('Effect 的计算、单来源与 tuple 一致接收异步完成类型', async () => {
   const request = Promise.withResolvers<number>()
   const observations: number[][] = [[], [], []]
-  const stop = createRoot((dispose) => {
+  const stop = createRoot(dispose => {
     createEffect<Promise<number>>(
       () => request.promise,
-      (value) => {
+      value => {
         expectTypeOf(value).toEqualTypeOf<number>()
         observations[0].push(value)
       },
     )
-    createEffect(request.promise, (value) => {
+    createEffect(request.promise, value => {
       expectTypeOf(value).toEqualTypeOf<number>()
       observations[1].push(value)
     })
@@ -278,10 +278,10 @@ test('Effect 计算归一裸 thenable 交付的内层 Promise', async () => {
     },
   }
   const values: unknown[] = []
-  const stop = createRoot((dispose) => {
+  const stop = createRoot(dispose => {
     createEffect(
       () => thenable,
-      (value) => {
+      value => {
         values.push(value)
       },
     )

@@ -48,7 +48,7 @@ export const Heading: KitComponent<{
         as={`h${props.level}`}
         shadowProps={props}
         class={name}
-        domRef={(element) => {
+        domRef={element => {
           /**
            * 从真实文字取得定位身份，不预设children的组成或来源类型。
            */

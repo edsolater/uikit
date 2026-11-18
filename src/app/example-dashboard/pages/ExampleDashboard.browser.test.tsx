@@ -42,7 +42,7 @@ describe('ExampleDashboard', () => {
       6,
     )
     expect(
-      new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor))
+      new Set(ribbons.map(ribbon => getComputedStyle(ribbon).backgroundColor))
         .size,
     ).toBeGreaterThan(1)
     const initialBackground = getComputedStyle(shell).backgroundImage
@@ -91,7 +91,7 @@ describe('ExampleDashboard', () => {
       await image.decode()
       expect(image.naturalWidth).toBeGreaterThan(0)
     }
-    expect(new Set(images.map((image) => image.src)).size).toBe(
+    expect(new Set(images.map(image => image.src)).size).toBe(
       exampleEntries.length,
     )
     const asyncEntry = document.querySelector<HTMLAnchorElement>(
@@ -112,7 +112,7 @@ describe('ExampleDashboard', () => {
     expect(getComputedStyle(thumbnail).maskImage).toContain('linear-gradient')
     expect(getComputedStyle(copy).backgroundImage).toBe('none')
     expect(
-      new Set(ribbons.map((ribbon) => getComputedStyle(ribbon).backgroundColor))
+      new Set(ribbons.map(ribbon => getComputedStyle(ribbon).backgroundColor))
         .size,
     ).toBe(6)
 
@@ -206,7 +206,7 @@ describe('ExampleDashboard', () => {
         await Promise.all(
           document
             .getAnimations()
-            .map((animation) => animation.finished.catch(() => {})),
+            .map(animation => animation.finished.catch(() => {})),
         )
       }
     }
@@ -227,13 +227,13 @@ describe('ExampleDashboard', () => {
         ?.textContent,
     ).toContain('语义组件')
     const semanticLinks = [...host.querySelectorAll('.example-link')].filter(
-      (link) =>
+      link =>
         link
           .querySelector('.example-link-ribbon')
           ?.textContent?.startsWith('语义组件'),
     )
     expect(
-      semanticLinks.map((link) => link.querySelector('h2')?.textContent),
+      semanticLinks.map(link => link.querySelector('h2')?.textContent),
     ).toEqual(['Article'])
   })
 
@@ -243,7 +243,7 @@ describe('ExampleDashboard', () => {
     dispose = render(() => <ExampleDashboard />, host)
 
     const headings = [...host.querySelectorAll('h2')].map(
-      (node) => node.textContent,
+      node => node.textContent,
     )
     expect(headings).toContain('基础用法：直接提供原文')
     expect(headings).toContain('渲染 Markdown 文件')
@@ -260,7 +260,7 @@ describe('ExampleDashboard', () => {
 
     const switchButton = [
       ...host.querySelectorAll<HTMLButtonElement>('button'),
-    ].find((button) => button.textContent === '切换原文')!
+    ].find(button => button.textContent === '切换原文')!
     switchButton.click()
     flush()
     expect(documents[0].textContent).toContain('原文已经更新')

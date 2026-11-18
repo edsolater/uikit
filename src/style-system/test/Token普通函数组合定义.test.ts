@@ -7,7 +7,7 @@ import { multiply, add } from '../pieces/functions/calc'
 
 test('普通函数换基础并显式复用 State，规则用新基础而固定状态保持原值', () => {
   const state = [
-    [stateCondition('&[data-hover]'), (base) => add(base, '3px')],
+    [stateCondition('&[data-hover]'), base => add(base, '3px')],
     [stateCondition('&[data-active]'), '12px'],
   ] as const
   const source = token('10px', {
@@ -35,7 +35,7 @@ test('普通函数换基础并显式复用 State，规则用新基础而固定�
 
 test('逐项加工最终结果保存组合后的定义，后续换 default 不重放旧加工', () => {
   const source = token('10px', {
-    state: { hover: (base) => add(base, '3px'), active: '12px' },
+    state: { hover: base => add(base, '3px'), active: '12px' },
   })
   const half = (input: Token<TokenInput>) =>
     token<TokenInput>(multiply(input.default, 0.5), {
@@ -92,7 +92,7 @@ test('实际对象引用不激活另一个同名定义，CSS 引用字符串不�
 
 test('独立 State 被多个基础值复用，状态不复制来源定义', () => {
   const state = [
-    [stateCondition('&[data-large]'), (base) => multiply(base, 2)],
+    [stateCondition('&[data-large]'), base => multiply(base, 2)],
   ] as const
   const first = token('3px', { name: 'state-first', state })
   const second = token('7px', { name: 'state-second', state })

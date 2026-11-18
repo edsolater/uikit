@@ -16,8 +16,8 @@ afterEach(() => {
 })
 
 test.each(
-  ['before', 'after'].flatMap((position) =>
-    ['9px', undefined].map((value) => ({ position, value })),
+  ['before', 'after'].flatMap(position =>
+    ['9px', undefined].map(value => ({ position, value })),
   ),
 )(
   '晚到根声明位置=$position、值=$value，默认保障不与显式基础竞争',
@@ -26,7 +26,7 @@ test.each(
       name: 'late-browser-size',
       address: ':where(:root)',
       state: [
-        [stateCondition('&[data-late-phase]'), (base) => multiply(base, 2)],
+        [stateCondition('&[data-late-phase]'), base => multiply(base, 2)],
       ],
     })
     const trigger = token(1, {
@@ -70,7 +70,7 @@ test.each(
 
 test.each([false, true])(
   '多个晚到显式声明仍按实际书写顺序取最后值，反序=%s',
-  (reverse) => {
+  reverse => {
     const size = token('2px', {
       name: 'late-explicit-order',
       address: ':where(:root)',
@@ -111,7 +111,7 @@ test.each([
   'size-modify-1-step-1-identity',
   'size-modify-1-step-1-candidate-1',
   'size-modify-1-step-1-present',
-])('合法公开名称 %s 不与修改产物串值，重复编译输出稳定', (name) => {
+])('合法公开名称 %s 不与修改产物串值，重复编译输出稳定', name => {
   const size = token('2px', {
     name: 'size',
     registration: { syntax: '<length>', inherits: false, initialValue: '2px' },
@@ -124,7 +124,7 @@ test.each([
       ['.Collision'],
       ...modify(size, {
         type: 'expression',
-        detail: (current) => add(current, '1px'),
+        detail: current => add(current, '1px'),
       }),
     ],
   ]
@@ -163,7 +163,7 @@ test('直接表达式与 default 简写都在当地读取覆盖后的 9px，得�
 
 test.each(['name', 'state', 'address', 'registration', 'modify'] as const)(
   '%s 需求使匿名或具名 Token 正确声明并消费',
-  (kind) => {
+  kind => {
     const size = token(
       '4px',
       kind === 'name'
@@ -188,7 +188,7 @@ test.each(['name', 'state', 'address', 'registration', 'modify'] as const)(
         ['.Target'],
         ...modify(size, {
           type: 'expression',
-          detail: (current) => add(current, '3px'),
+          detail: current => add(current, '3px'),
         }),
       ])
     const style = document.body.appendChild(document.createElement('style'))
@@ -223,7 +223,7 @@ test('晚到编译回调插入的条件修改得到 7px，条件外仍为 4px', 
         },
         modify(size, {
           type: 'expression',
-          detail: (current) => add(current, '3px'),
+          detail: current => add(current, '3px'),
         }),
         { owner: context.node },
       )

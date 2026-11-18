@@ -8,7 +8,7 @@ import { stateView, type StateView } from './state-view'
 import { withDefault } from './tools'
 
 test('来源为空时回默认值，更新后继续跟随且不吞 false、0 或空字符串', () => {
-  const { source, view, dispose } = createRoot((dispose) => {
+  const { source, view, dispose } = createRoot(dispose => {
     const source = createState<string | number | boolean | null | undefined>(
       undefined,
     )
@@ -44,7 +44,7 @@ test('等待 Promise 完成后才对最终值应用默认，包括完成为 Stat
 })
 
 test('从完整 Source 读取内容类型，默认字面量保持窄类型', () => {
-  createRoot((dispose) => {
+  createRoot(dispose => {
     const source = createState<'sm' | 'md' | 'lg' | undefined>(undefined)
     const options: { gap?: Source<'sm' | 'md' | 'lg' | undefined> } = {
       gap: source,

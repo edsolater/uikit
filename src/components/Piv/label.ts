@@ -13,9 +13,9 @@ import type { PivProps } from './Piv'
  */
 export function resolvePivLabel(source: PivProps['label']): string | undefined {
   const value = val(source)
-  const values = (isArray(value) ? value : [value]).map((item) => val(item))
-  const labels = values.filter((item) => item !== undefined)
+  const values = (isArray(value) ? value : [value]).map(item => val(item))
+  const labels = values.filter(item => item !== undefined)
   return labels.length
-    ? labels.filter((item) => item !== '').join(' ')
+    ? labels.filter(item => item !== '').join(' ')
     : undefined
 }

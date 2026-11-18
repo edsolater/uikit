@@ -36,7 +36,7 @@ const change = modification({
   type: 'color',
   detail: {
     lightness: 0.3,
-    chroma: (x) => add(x, 0.3),
+    chroma: x => add(x, 0.3),
   },
 })
 

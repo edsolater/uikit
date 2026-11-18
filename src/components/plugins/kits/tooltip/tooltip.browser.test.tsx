@@ -109,7 +109,7 @@ test('内容清空移除浮层并关闭状态，卸载释放附属结构和延�
   await userEvent.hover(host)
   dispose?.()
   dispose = undefined
-  await new Promise((resolve) => setTimeout(resolve, 180))
+  await new Promise(resolve => setTimeout(resolve, 180))
   expect(host.querySelector('[role="tooltip"]')).toBeNull()
 })
 
@@ -149,7 +149,7 @@ test('零内容在边缘翻面，程序关闭保留焦点且新显示取消旧�
   await userEvent.hover(trigger)
   await userEvent.unhover(trigger)
   controller.showPopover()
-  await new Promise((resolve) => setTimeout(resolve, 180))
+  await new Promise(resolve => setTimeout(resolve, 180))
   expect(surface.matches(':popover-open')).toBe(true)
 })
 
@@ -173,7 +173,7 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
     )
   }, host)
   const trigger = [...host.querySelectorAll<HTMLButtonElement>('button')].find(
-    (button) => button.textContent === '打开补充内容',
+    button => button.textContent === '打开补充内容',
   )!
   const original = host.querySelector<HTMLElement>(
     '[data-plugin~=popover-body]',
@@ -187,7 +187,7 @@ test('提示局部材料不改变按钮Popover，原触发与关闭仍可操作'
   expect(original.textContent).toBe('标题原浮层正文')
   await userEvent.hover(
     [...host.querySelectorAll<HTMLElement>('button')].find(
-      (button) => button.textContent === '提示目标',
+      button => button.textContent === '提示目标',
     )!,
   )
   const hint = host.querySelector<HTMLElement>('[role="tooltip"]')!
@@ -334,7 +334,7 @@ test('提示的显示关闭保留 Task 等待与取消，空内容不显示', as
   const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
   const canceled = controller.showPopover.lazyExec()
   canceled.cancel()
-  const rejected = canceled.result.catch((error) => error)
+  const rejected = canceled.result.catch(error => error)
   expect((await rejected).name).toBe('AbortError')
   expect(body.matches(':popover-open')).toBe(false)
   await controller.showPopover().result

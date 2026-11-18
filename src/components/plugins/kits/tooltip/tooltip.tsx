@@ -70,7 +70,11 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
  */
 export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
   name: 'tooltip',
-  pluginCore({ pluginOptions: options, addProps, domProxy }): TooltipController {
+  pluginCore({
+    pluginOptions: options,
+    addProps,
+    domProxy,
+  }): TooltipController {
     const tooltipId = `uikit-tooltip-${tooltipIdGenerator.genID()}`
     const { plugins, controller } = createPopoverPlugins({
       trigger: { triggerAction: false },
@@ -125,7 +129,7 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     // 内容清空时读取原生关闭结果；移出 document 本身不一定派发 toggle。
     createEffect(
       () => hasTooltipContent(options.content),
-      (present) => {
+      present => {
         if (!present) dismiss()
       },
     )

@@ -8,7 +8,7 @@ export const baseOpacity = token(1, {
   name: 'base-opacity',
   address: ':root',
   state: [
-    [whenDisabled, (base) => multiply(base, 0.48)],
-    [whenSoft, (base) => multiply(base, 0.72)],
+    [whenDisabled, base => multiply(base, 0.48)],
+    [whenSoft, base => multiply(base, 0.72)],
   ],
 })

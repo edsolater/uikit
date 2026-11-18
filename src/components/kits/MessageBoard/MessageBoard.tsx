@@ -37,7 +37,7 @@ export const MessageBoard: KitComponent<{
         class={name}
         htmlProps={{
           'data-tone': props.tone,
-          'role': derive(props.tone, (tone) =>
+          'role': derive(props.tone, tone =>
             tone === 'error' ? 'alert' : 'status',
           ),
         }}

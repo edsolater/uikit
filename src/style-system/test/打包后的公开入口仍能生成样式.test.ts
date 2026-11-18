@@ -118,8 +118,8 @@ test('打包后的公共入口直接使用 Key 与 Token 声明', () => {
     'color: var(--bundle-surface);',
     'opacity: var(--bundle-opacity);',
     '--bundle-surface: blue;',
-  ].map((declaration) => output.indexOf(declaration))
-  expect(declarationOrder.every((index) => index >= 0)).toBe(true)
+  ].map(declaration => output.indexOf(declaration))
+  expect(declarationOrder.every(index => index >= 0)).toBe(true)
   expect(declarationOrder).toEqual(
     [...declarationOrder].sort((left, right) => left - right),
   )

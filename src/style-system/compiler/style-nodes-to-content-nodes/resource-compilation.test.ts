@@ -6,7 +6,7 @@ import type { Rules } from '../../rule'
 
 test.each([false, true])(
   '消费内容更换后旧资源仅在最后一个消费者退出时撤销，共享=%s',
-  (shared) => {
+  shared => {
     const old: JSSContent = {
       toCSSString: () => '1px',
       onFirstScan: () => [[['.OldResource'], 'opacity', 0.5]],

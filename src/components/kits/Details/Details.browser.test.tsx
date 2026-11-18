@@ -16,7 +16,9 @@ test('摘要保留原生键盘展开行为', async () => {
     () => (
       <>
         <Details summary="默认展开">内容可见</Details>
-        <Details summary="详情" open={false}>实际内容</Details>
+        <Details summary="详情" open={false}>
+          实际内容
+        </Details>
       </>
     ),
     host,

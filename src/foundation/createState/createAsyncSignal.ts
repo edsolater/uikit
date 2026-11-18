@@ -93,12 +93,12 @@ export function createAsyncSignal(
   // 结果层统一读取完整来源；Promise 完成后的 StateView 也参与同一依赖图。
   const accessor = createMemo(() => val(readSource()), resultOptions)
 
-  const setter: AsyncSignalSetter<any> = (update) => {
-    setSource((previous) => {
+  const setter: AsyncSignalSetter<any> = update => {
+    setSource(previous => {
       if (!isFunction(update)) return update
       // 只接续已经存在的异步值，不保存尚无初始结果时的更新命令。
       return isPromiseLike(previous)
-        ? Promise.resolve(previous).then((value) =>
+        ? Promise.resolve(previous).then(value =>
             isStateView(value)
               ? resolve(() => val(value)).then(update)
               : update(value),

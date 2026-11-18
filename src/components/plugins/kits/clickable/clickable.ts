@@ -38,9 +38,16 @@ export interface ClickableController extends HoverableController {
  * 元素方法可等待；节点尚未接入时等待首次接入，后续节点更换暂不支持。
  * TODO：公开操作的返回值改为 Promise<boolean>。
  */
-export const clickable = createInactivePlugin<ClickableOptions, ClickableController>({
+export const clickable = createInactivePlugin<
+  ClickableOptions,
+  ClickableController
+>({
   name: 'clickable',
-  pluginCore({ pluginOptions: options, addProps, domProxy }): ClickableController {
+  pluginCore({
+    pluginOptions: options,
+    addProps,
+    domProxy,
+  }): ClickableController {
     const hover = hoverable({
       componentName: options.componentName,
       initialHovered: options.initialHovered,

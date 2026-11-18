@@ -38,7 +38,7 @@ test('配方可以独立声明与引用，未指定通道保留来源且 alpha=0
 
 test.each([false, true])(
   '双来源共享配方的扫描资源，最后消费者撤销=%s',
-  (removeAll) => {
+  removeAll => {
     const recipe = Object.assign(
       modification({
         name: 'shared-recipe',
@@ -70,7 +70,7 @@ test.each([false, true])(
               : [firstChange]) {
               const node = ast
                 .search({})
-                .find((node) => node.content === change[1])
+                .find(node => node.content === change[1])
               if (node) ast.remove(node)
             }
           },
@@ -84,7 +84,7 @@ test.each([false, true])(
 
 test('配方通道回调延迟到消费，采用当前闭包且未指定 alpha 保留表达式', () => {
   let delta = 0.1
-  const chroma = vi.fn((current) => add(current, delta))
+  const chroma = vi.fn(current => add(current, delta))
   const recipe = modification({
     name: 'lazy-recipe',
     type: 'color',

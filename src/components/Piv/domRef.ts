@@ -15,10 +15,10 @@ export function consumeDomRefs<Tag extends PivTag>(
 ) {
   mapArray(
     () => toArray(readRefList()).filter(isFunction),
-    (ref) => {
+    ref => {
       createRenderEffect(
         () => ref,
-        (receiver) => receiver(element),
+        receiver => receiver(element),
       )
       return ref
     },

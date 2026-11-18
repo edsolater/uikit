@@ -53,7 +53,7 @@ export function createASTController(session: ASTSession): ASTController {
       !path.stateConditionPath.length &&
       path.targetConditionPath.length === 1 &&
       [':root', ':where(:root)'].includes(path.targetConditionPath[0].header)
-    return (node) =>
+    return node =>
       (name === undefined ||
         (node.key !== undefined && propertyName(node.key) === name)) &&
       (address === undefined ||
@@ -109,8 +109,8 @@ export function createASTController(session: ASTSession): ASTController {
         state?.content.visitedContents.has(input),
       )
     },
-    search: (query) => session.nodes.filter(matching(query)),
-    has: (query) => session.nodes.some(matching(query)),
+    search: query => session.nodes.filter(matching(query)),
+    has: query => session.nodes.some(matching(query)),
     findDeclaration(query, accept) {
       const matches = matching(query)
       let selected: JSSStyleNode | undefined
@@ -134,7 +134,7 @@ export function createASTController(session: ASTSession): ASTController {
       return selected
     },
     nodes: () => session.nodes.slice(),
-    observeNodes: (observe) => session.observeNodes(observe),
+    observeNodes: observe => session.observeNodes(observe),
     compareOrder: (left, right) => session.compareOrder(left, right),
     insert(position, [key, content], provenance) {
       const direction = position.after ? 'after' : 'before'
@@ -152,7 +152,7 @@ export function createASTController(session: ASTSession): ASTController {
         anchor,
         direction,
         provenance.productTag,
-        (node) => {
+        node => {
           node.resourceAddress = provenance.resourceAddress
           provenance.initialize?.(node)
         },
@@ -172,7 +172,7 @@ export function createASTController(session: ASTSession): ASTController {
     defer: (node, message) => {
       node.deferredReason = new Error(message)
     },
-    addSettlementCheck: (check) => session.settlementChecks.add(check),
+    addSettlementCheck: check => session.settlementChecks.add(check),
   }
 }
 
@@ -245,7 +245,7 @@ export class ASTSession {
         enumerable: true,
         configurable: true,
         get: () => input,
-        set: (value) => {
+        set: value => {
           if (input === value) return
           input = value
           delete node.deferredReason

@@ -166,7 +166,7 @@ function measureSize(
   source: HTMLElement,
   declarations: Record<string, string>,
 ): LogicalSize {
-  const previousDeclarations = Object.keys(declarations).map((property) => ({
+  const previousDeclarations = Object.keys(declarations).map(property => ({
     property,
     value: source.style.getPropertyValue(property),
     priority: source.style.getPropertyPriority(property),

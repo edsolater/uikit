@@ -28,8 +28,8 @@ rules(`.${componentName}`, {
       [
         'hover',
         oklch(brandColorTheme, {
-          lightness: (current) => add(current, -0.04),
-          chroma: (current) => add(current, 0.01),
+          lightness: current => add(current, -0.04),
+          chroma: current => add(current, 0.01),
         }),
       ],
     ],

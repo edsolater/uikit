@@ -123,7 +123,7 @@ describe('Piv 生命周期', () => {
         <>
           <Piv
             as="canvas"
-            domRef={(element) => {
+            domRef={element => {
               canvas = element
             }}
             htmlProps={{ width: 320, height: 180 }}
@@ -268,7 +268,7 @@ describe('Piv 生命周期', () => {
         pluginCore({ addProps }) {
           builds += 1
           addProps({
-            domRef: (el) => {
+            domRef: el => {
               val(incidental)
               observations.push(
                 `element:${el.childElementCount}:${useContext(Context)}`,
@@ -286,7 +286,7 @@ describe('Piv 生命周期', () => {
           <Piv
             if={visible}
             is={plugin}
-            domRef={(element) => {
+            domRef={element => {
               val(incidental)
               observations.push(`domRef:${element.childElementCount}`)
             }}
@@ -310,7 +310,7 @@ describe('Piv 生命周期', () => {
 
   test.each(['input', 'textarea', 'img', 'iframe'] as const)(
     '%s 保留不插入 children 的模板契约',
-    (tag) => {
+    tag => {
       const host = document.createElement('div')
       const dispose = render(
         () => (
@@ -335,7 +335,7 @@ describe('Piv 生命周期', () => {
           as="input"
           style={{ color: 'red' }}
           htmlProps={{ value: 'ready', disabled: true }}
-          domRef={(element) => {
+          domRef={element => {
             observed = [element.style.color, element.value, element.disabled]
           }}
         />
@@ -415,7 +415,7 @@ describe('Piv 生命周期', () => {
               clicks += 1
             },
           }}
-          domRef={(element) => {
+          domRef={element => {
             element.setAttribute('data-ref', 'ready')
           }}
         />
@@ -559,7 +559,7 @@ describe('Piv Source 属性', () => {
     const previous = createState('direct')
     const next = createState('direct')
     const [readSource, setSource] = createSignal(previous)
-    const { merged, dispose } = createRoot((dispose) => ({
+    const { merged, dispose } = createRoot(dispose => ({
       merged: mergePivProps({
         get id() {
           return readSource()
@@ -850,7 +850,7 @@ describe('Piv htmlProps 属性', () => {
           htmlProps={{
             'data-value': [
               { mergable: 'second' },
-              (previous) => `${previous} third`,
+              previous => `${previous} third`,
             ],
           }}
         />
@@ -945,7 +945,7 @@ describe('Piv htmlProps 属性', () => {
       host,
     )
     expect(
-      [...host.children].map((element) => element.getAttribute('data-value')),
+      [...host.children].map(element => element.getAttribute('data-value')),
     ).toEqual([null, null])
     value.set(['high'])
     flush()
@@ -1086,7 +1086,7 @@ function testPlugin(
       for (const declaration of options.declarations ?? [])
         addProps(declaration)
       if (options.onElement)
-        addProps({ domRef: (el) => options.onElement?.({ element: el }) })
+        addProps({ domRef: el => options.onElement?.({ element: el }) })
       return {}
     },
   })()

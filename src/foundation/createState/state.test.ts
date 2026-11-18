@@ -6,7 +6,7 @@ import { createState, type State } from './state'
 import type { Source } from './source'
 
 test('直接接收上游State，读取值且独立写入，后续上游变化继续传入', () => {
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const outside = createState(false)
     return { outside, inside: createState(outside), dispose }
   })
@@ -31,10 +31,10 @@ test('StateView及Source泛型直接作为来源，选项与相对更新使用�
   function build<T>(source: Source<T>) {
     return createState(source)
   }
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const outside = createState(2)
     const inside = createState<number>(
-      outside.map((value) => value * 2),
+      outside.map(value => value * 2),
       {
         equals(previous, next) {
           expectTypeOf(previous).toEqualTypeOf<number>()
@@ -49,7 +49,7 @@ test('StateView及Source泛型直接作为来源，选项与相对更新使用�
     expectTypeOf(scope.inside).toEqualTypeOf<State<number>>()
     expectTypeOf(scope.forwarded).toEqualTypeOf<State<number>>()
     expect(scope.inside.read()).toBe(4)
-    scope.inside.set((previous) => {
+    scope.inside.set(previous => {
       expectTypeOf(previous).toEqualTypeOf<number>()
       return previous + 1
     })
@@ -66,7 +66,7 @@ test('StateView及Source泛型直接作为来源，选项与相对更新使用�
 })
 
 test('计算来源可直接返回State，选择变化后跟随新来源并停止响应旧来源', () => {
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const chooseFirst = createState(true)
     const first = createState(1)
     const second = createState(2)
@@ -95,7 +95,7 @@ test('计算来源可直接返回State，选择变化后跟随新来源并停止
 
 test('Promise完成后得到State来源，直接读取值并持续跟随其更新', async () => {
   const deferred = Promise.withResolvers<State<number>>()
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const outside = createState(3)
     return { outside, inside: createState(deferred.promise), dispose }
   })
@@ -106,7 +106,7 @@ test('Promise完成后得到State来源，直接读取值并持续跟随其更�
     scope.outside.set(7)
     flush()
     expect(scope.inside.read()).toBe(7)
-    scope.inside.set((previous) => previous + 1)
+    scope.inside.set(previous => previous + 1)
     await until(() => scope.inside.read() === 8)
     expect(scope.outside.read()).toBe(7)
   } finally {
@@ -116,12 +116,12 @@ test('Promise完成后得到State来源，直接读取值并持续跟随其更�
 
 test('异步来源尚未完成时，相对更新等待State中的内容值', async () => {
   const deferred = Promise.withResolvers<State<number>>()
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     inside: createState(deferred.promise),
     dispose,
   }))
   try {
-    scope.inside.set((previous) => {
+    scope.inside.set(previous => {
       expectTypeOf(previous).toEqualTypeOf<number>()
       expect(previous).toBe(4)
       return previous + 1
@@ -135,12 +135,12 @@ test('异步来源尚未完成时，相对更新等待State中的内容值', asy
 
 test('Promise中的State仍在等待时，相对更新等待最终内容值', async () => {
   const deferred = Promise.withResolvers<number>()
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const outside = createState(deferred.promise)
     return { inside: createState(Promise.resolve(outside)), dispose }
   })
   try {
-    scope.inside.set((previous) => previous + 1)
+    scope.inside.set(previous => previous + 1)
     await Promise.resolve()
     await Promise.resolve()
     deferred.resolve(5)
@@ -151,7 +151,7 @@ test('Promise中的State仍在等待时，相对更新等待最终内容值', as
 })
 
 test('后续赋值也接受State来源，直接读取内容并跟随该来源更新', () => {
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     outside: createState(2),
     inside: createState(0),
     dispose,
@@ -163,7 +163,7 @@ test('后续赋值也接受State来源，直接读取内容并跟随该来源更
     scope.outside.set(4)
     flush()
     expect(scope.inside.read()).toBe(4)
-    scope.inside.set((previous) => previous + 1)
+    scope.inside.set(previous => previous + 1)
     flush()
     expect(scope.inside.read()).toBe(5)
     expect(scope.outside.read()).toBe(4)
@@ -187,7 +187,7 @@ test('无依赖初始化只执行一次，函数值保持身份，写入随 Soli
   expect(value.read()).toBe(next)
   expect(initialized).toBe(1)
   const number = createState(1)
-  number.set((previous) => previous + 1)
+  number.set(previous => previous + 1)
   flush()
   expect(number.read()).toBe(2)
 })
@@ -195,17 +195,17 @@ test('无依赖初始化只执行一次，函数值保持身份，写入随 Soli
 test('State 以完成类型声明，初始与后续异步输入不要求业务解包', async () => {
   const initial = Promise.withResolvers<number>()
   const next = Promise.withResolvers<number>()
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     state: createState(initial.promise),
     dispose,
   }))
   try {
     expectTypeOf(scope.state).toEqualTypeOf<State<number>>()
-    scope.state.set((value) => value + 1)
+    scope.state.set(value => value + 1)
     initial.resolve(2)
     expect(await resolve(() => scope.state.read())).toBe(3)
     expect(scope.state.set(next.promise)).toBe(scope.state)
-    scope.state.set((value) => Promise.resolve(value * 2))
+    scope.state.set(value => Promise.resolve(value * 2))
     const settled = until(() => scope.state.read() === 10)
     next.resolve(5)
     await settled
@@ -219,7 +219,7 @@ test('显式 Promise 泛型的读取、更新及选项均使用完成类型', as
   const deferred = Promise.withResolvers<number>()
   const received: number[] = []
   const comparisons: number[][] = []
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     state: createState<Promise<number>>(deferred.promise, {
       loadingValue: 0,
       equals(previous, next) {
@@ -234,7 +234,7 @@ test('显式 Promise 泛型的读取、更新及选项均使用完成类型', as
   try {
     expectTypeOf(scope.state).toEqualTypeOf<State<number>>()
     expect(scope.state.read()).toBe(0)
-    scope.state.set((previous) => {
+    scope.state.set(previous => {
       expectTypeOf(previous).toEqualTypeOf<number>()
       received.push(previous)
       return previous + 1
@@ -243,7 +243,7 @@ test('显式 Promise 泛型的读取、更新及选项均使用完成类型', as
     await until(() => scope.state.read() === 6)
     expect(scope.state.read()).toBe(6)
     expect(received).toEqual([5])
-    expect(comparisons.flat().every((value) => typeof value === 'number')).toBe(
+    expect(comparisons.flat().every(value => typeof value === 'number')).toBe(
       true,
     )
     scope.state.set(8)
@@ -257,10 +257,8 @@ test('显式 Promise 泛型的读取、更新及选项均使用完成类型', as
 test('PromiseLike 与嵌套 Promise 泛型读取原生展开后的结果', async () => {
   const promise = Promise.resolve(7)
   const thenable: PromiseLike<number> = { then: promise.then.bind(promise) }
-  const nested = new Promise<PromiseLike<number>>((resolve) =>
-    resolve(thenable),
-  )
-  const scope = createRoot((dispose) => ({
+  const nested = new Promise<PromiseLike<number>>(resolve => resolve(thenable))
+  const scope = createRoot(dispose => ({
     thenable: createState<PromiseLike<number>>(thenable),
     nested: createState<Promise<PromiseLike<number>>>(nested),
     computed: createState<Promise<number>>(() => Promise.resolve(9)),
@@ -287,9 +285,9 @@ test('PromiseLike 与嵌套 Promise 泛型读取原生展开后的结果', async
 test('相同派生值不重复触发消费者动作，作用域退出后停止通知', () => {
   const source = createState(1)
   const actions: number[] = []
-  const dispose = createRoot((dispose) => {
-    const parity = source.map((value) => value % 2)
-    createEffect(parity, (value) => {
+  const dispose = createRoot(dispose => {
+    const parity = source.map(value => value % 2)
+    createEffect(parity, value => {
       actions.push(value)
     })
     return dispose
@@ -312,7 +310,7 @@ test('泛型转发与混合来源统一声明完成类型', async () => {
   function build<T>(source: T) {
     return createState(source)
   }
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     generic: build(Promise.resolve(3)),
     mixed: createState<number | Promise<number>>(Promise.resolve(4)),
     dispose,
@@ -336,7 +334,7 @@ test('thenable 直接交付的嵌套 Promise 在读取与连续更新前完成�
       return Promise.resolve(onfulfilled(inner.promise))
     },
   }
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     state: createState(thenable),
     dispose,
   }))
@@ -346,7 +344,7 @@ test('thenable 直接交付的嵌套 Promise 在读取与连续更新前完成�
     await resolve(scope.state.read)
     expect(scope.state.read()).toBe(5)
     scope.state.set(Promise.resolve(thenable))
-    scope.state.set((previous) => {
+    scope.state.set(previous => {
       expectTypeOf(previous).toEqualTypeOf<number>()
       expect(previous).toBe(5)
       return previous + 1
@@ -360,10 +358,10 @@ test('thenable 直接交付的嵌套 Promise 在读取与连续更新前完成�
 
 test('异步映射直接读取完成值，后续映射只接收完成结果', async () => {
   const deferred = Promise.withResolvers<number>()
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const source = createState(1)
     const mapped = source.map(() => deferred.promise)
-    return { mapped, chained: mapped.map((value) => value * 2), dispose }
+    return { mapped, chained: mapped.map(value => value * 2), dispose }
   })
   try {
     expectTypeOf(scope.mapped.read).returns.toEqualTypeOf<number>()
@@ -380,11 +378,11 @@ test('异步映射直接读取完成值，后续映射只接收完成结果', as
 test('映射函数值保持身份，返回 StateView 随换源退订旧来源', () => {
   const fn = () => 7
   let runs = 0
-  const scope = createRoot((dispose) => {
+  const scope = createRoot(dispose => {
     const chooseFirst = createState(true)
     const first = createState(1)
     const second = createState(2)
-    const selected = chooseFirst.map((enabled) => {
+    const selected = chooseFirst.map(enabled => {
       runs += 1
       return enabled ? first : second
     })
@@ -412,7 +410,7 @@ test('映射函数值保持身份，返回 StateView 随换源退订旧来源', 
     flush()
     expect(scope.selected.read()).toBe(3)
     const map = scope.selected.map
-    expect(map((value) => value * 2).read()).toBe(6)
+    expect(map(value => value * 2).read()).toBe(6)
   } finally {
     scope.dispose()
   }
@@ -426,7 +424,7 @@ test('映射 thenable 的嵌套 Promise 直接读取为完成值', async () => {
       return Promise.resolve(onfulfilled(inner.promise))
     },
   }
-  const scope = createRoot((dispose) => ({
+  const scope = createRoot(dispose => ({
     view: createState(0).map(() => thenable),
     dispose,
   }))
@@ -442,14 +440,14 @@ test('映射 thenable 的嵌套 Promise 直接读取为完成值', async () => {
 
 test.each(['完成', '拒绝'])(
   '异步映射忽略过期%s，当前错误由读取传播',
-  async (outcome) => {
+  async outcome => {
     const stale = Promise.withResolvers<number>()
     const current = Promise.withResolvers<number>()
     const failure = Promise.withResolvers<number>()
     const error = new Error('当前映射失败')
-    const scope = createRoot((dispose) => {
+    const scope = createRoot(dispose => {
       const source = createState(0)
-      const view = source.map((index) =>
+      const view = source.map(index =>
         index === 0
           ? stale.promise
           : index === 1
@@ -486,12 +484,12 @@ test('异步映射的作用域释放后停止跟随来源与迟到结果', async
   const source = createState(0)
   const actions: number[] = []
   let runs = 0
-  const dispose = createRoot((dispose) => {
+  const dispose = createRoot(dispose => {
     const view = source.map(() => {
       runs += 1
       return deferred.promise
     })
-    createEffect(view, (value) => {
+    createEffect(view, value => {
       actions.push(value)
     })
     return dispose
