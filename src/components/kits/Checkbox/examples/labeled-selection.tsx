@@ -7,6 +7,7 @@
  */
 import { Checkbox, Flow, Text } from '@/components'
 import { createState } from '@/foundation'
+import { derive } from '@/hooks'
 /**
  * 切换确认选项并显示确认状态。
  */
@@ -23,7 +24,7 @@ export function LabeledSelectionExample() {
         }}
       />
       <Text>
-        {checked.map((value) => (value ? '核对已确认' : '等待确认核对结果'))}
+        {derive(checked, (value) => (value ? '核对已确认' : '等待确认核对结果'))}
       </Text>
     </Flow>
   )

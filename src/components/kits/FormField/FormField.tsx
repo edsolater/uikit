@@ -36,8 +36,8 @@ export function createFormFieldId<Props extends Pick<PivProps, 'id'>>(
   props: Props,
   fallback?: PivProps['id'] | null,
 ) {
-  return derive(props, (source) => {
-    const value = 'id' in source ? val(source.id) : val(fallback)
+  return derive(props, (s) => {
+    const value = 'id' in s ? val(s.id) : val(fallback)
     return value == null ? undefined : String(value)
   })
 }

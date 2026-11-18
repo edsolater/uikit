@@ -5,7 +5,7 @@
  *
  * 让原生属性表达与组件的业务选值保持分离。
  */
-import { mapSource } from '@/hooks'
+import { derive } from '@/hooks'
 import type { Source } from '@/foundation'
 
 /**
@@ -15,7 +15,7 @@ export function mapVariantProps<Candidate extends string>(
   source: Source<Candidate | undefined>,
   mapping: Record<string, string | undefined>,
 ) {
-  return mapSource(source, (value) =>
+  return derive(source, (value) =>
     Object.hasOwn(mapping, String(value)) ? mapping[String(value)] : value,
   )
 }

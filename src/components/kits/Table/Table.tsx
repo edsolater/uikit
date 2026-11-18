@@ -40,9 +40,9 @@ const tableComponent: KitComponent<{
   },
   (props, { name }) => {
     // keys 是表格结构的来源；renderParts 只改变内容，不改变结构层级。
-    const columnKeys = derive(props, (source) => {
-      const keys = source.keys
-      return keys ? val(keys) : pickTableColumnKeys(val(source.data))
+    const columnKeys = derive(props, (s) => {
+      const keys = s.keys
+      return keys ? val(keys) : pickTableColumnKeys(val(s.data))
     })
 
     /**
@@ -71,8 +71,8 @@ const tableComponent: KitComponent<{
               <For each={val(columnKeys)}>
                 {(columnKey) => {
                   // 列结构保持稳定，渲染器替换在内容消费时读取。
-                  const headContent = stateView(() => {
-                    const renderHead = props.renderParts?.tableHead?.[
+                  const headContent = derive(props, (s) => {
+                    const renderHead = s.renderParts?.tableHead?.[
                       columnKey
                     ] as ((key: PropertyKey) => JSXable) | undefined
                     return toJSX(renderHead?.(columnKey) ?? columnKey)

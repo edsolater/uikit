@@ -49,12 +49,12 @@ test('消费视图可直接 derive 字段，不产生身份探测警告或认领
       size,
       unused: '保留字段',
     }).markUsedOnRead()
-    const selected = derive(props, (source) => source.size)
+    const selected = derive(props, (s) => s.size)
     remaining = createPropsDeclaration<{
       size?: Source<ButtonSize | undefined>
       unused?: string
     }>({ shadowProps: props }).markUsedOnRead()
-    const content = derive(remaining, (source) => source.unused)
+    const content = derive(remaining, (s) => s.unused)
     return <Button size={selected}>{content}</Button>
   }
   try {
@@ -104,7 +104,7 @@ for (const controlled of [false, true]) {
       (props) => (
         <Button
           shadowProps={props}
-          size={derive(props, (source) => source.size)}
+          size={derive(props, (s) => s.size)}
         >
           字段派生
         </Button>

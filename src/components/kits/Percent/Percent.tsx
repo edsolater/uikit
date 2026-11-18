@@ -5,7 +5,8 @@
  *
  * 将比值语义与数字格式分别交给负责的组件。
  */
-import { Show, stateView, val } from '@/foundation'
+import { Show, val } from '@/foundation'
+import { derive } from '@/hooks'
 import { Numeric } from '../Numeric/Numeric'
 import { Text } from '../Text/Text'
 import { Piv } from '../../Piv/Piv'
@@ -28,9 +29,9 @@ export const Percent: KitComponent<{
 }> = kit(
   { name: componentName, propDefinition: percentPropDefinition },
   (props, { name }) => {
-    const percentage = stateView(() => {
-      const numerator = val(props.numerator),
-        denominator = val(props.denominator)
+    const percentage = derive(props, (s) => {
+      const numerator = val(s.numerator),
+        denominator = val(s.denominator)
       if (
         numerator == null ||
         denominator == null ||

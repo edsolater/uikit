@@ -5,7 +5,8 @@
  *
  * 解析与显示保持分工，组件不强制独立正文或卡片语义。
  */
-import { stateView, val } from '@/foundation'
+import { val } from '@/foundation'
+import { derive } from '@/hooks'
 import { Piv } from '../../Piv/Piv'
 import { kit, type KitComponent } from '../../tools/kit'
 import {
@@ -37,7 +38,7 @@ export const Markdown: KitComponent<{
     propDefinition: markdownPropDefinition,
   },
   (props, { name }) => {
-    const content = stateView(() => parseMarkdown(val(props.children)))
+    const content = derive(props, (s) => parseMarkdown(val(s.children)))
     return (
       <Piv shadowProps={props} class={name}>
         {renderMarkdown(val(content), val(props.renderers))}

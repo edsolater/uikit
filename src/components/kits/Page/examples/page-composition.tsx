@@ -7,6 +7,7 @@
  */
 import { Button, Card, Flow, Heading, Page, Text, Checkbox } from '../../..'
 import { createState } from '@/foundation'
+import { derive } from '@/hooks'
 /**
  * 组合页面标题、正文和刷新动作，显示已刷新次数。
  */
@@ -15,7 +16,7 @@ export function PageCompositionExample() {
   const showTitle = createState(true)
   return (
     <Page
-      title={showTitle.map((show) => (show ? '项目概览' : undefined))}
+      title={derive(showTitle, (show) => (show ? '项目概览' : undefined))}
       subtitle="查看当前工作的目标与进展。"
       actions={
         <Button
@@ -33,7 +34,7 @@ export function PageCompositionExample() {
           checked={showTitle}
           onChange={showTitle.set}
         />
-        <Text>{count.map((value) => '已刷新 ' + value + ' 次')}</Text>
+        <Text>{derive(count, (value) => '已刷新 ' + value + ' 次')}</Text>
         <Card>
           <Flow $col>
             <Heading level={2}>当前目标</Heading>

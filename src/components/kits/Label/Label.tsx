@@ -45,7 +45,7 @@ export const Label: KitComponent<{
           <Help
             tooltip={props.tooltip}
             trigger={props.tooltipTrigger}
-            label={derive(props, (source) => val(source.children) + '说明')}
+            label={derive(props, (s) => val(s.children) + '说明')}
           />
         </Show>
       </Piv>

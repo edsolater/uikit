@@ -6,7 +6,8 @@
  * 让数值表达保持一致，同时保留上游数据。
  */
 import { Text } from '../Text/Text'
-import { stateView, val } from '@/foundation'
+import { val } from '@/foundation'
+import { derive } from '@/hooks'
 import { kit, type KitComponent } from '../../tools/kit'
 
 import { tabularNum } from '../../plugins/kits/tabular-num/tabular-num'
@@ -26,9 +27,9 @@ export const Numeric: KitComponent<{
 }> = kit(
   { name: componentName, propDefinition: numericPropDefinition },
   (props, { name }) => {
-    const text = stateView(() => {
-      const value = val(props.value),
-        digits = val(props.significantDigits) ?? 3
+    const text = derive(props, (s) => {
+      const value = val(s.value),
+        digits = val(s.significantDigits) ?? 3
       return value == null || !Number.isFinite(value)
         ? '/'
         : new Intl.NumberFormat('zh-CN', {

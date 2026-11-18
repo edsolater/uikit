@@ -20,7 +20,7 @@ test('字段映射直接返回 Source，类型和运行值都展开为完成值'
         return val(selected).source
       },
     }
-    const derived = derive(props, (source) => source.size)
+    const derived = derive(props, (s) => s.size)
     expectTypeOf(derived).toEqualTypeOf<StateView<string | undefined>>()
     return { selected, second, derived, dispose }
   })

@@ -5,7 +5,7 @@
  *
  * 保证应用使用公开输入即可替换自己的表格结构。
  */
-import { afterEach, beforeEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { createState, flush, render, val, type Val } from '@/foundation'
 import { cssRoot } from '@/style-system'
 import { cssTokenName } from '@/style-system/token/css'
@@ -33,13 +33,15 @@ afterEach(() => {
 test('替换或清空渲染器更新原表头和单元格，不重建行列', () => {
   type Row = { name: string }
   const row: Row = { name: '甲' }
+  const originalHeading = vi.fn(() => '原表头')
+  const nextHeading = vi.fn((key: string) => `新表头：${key}`)
   let controller!: TableController<Row>
   dispose = render(
     () => (
       <Table
         data={[row]}
         renderParts={{
-          tableHead: { name: () => '原表头' },
+          tableHead: { name: originalHeading },
           tableCell: { name: (value) => `原内容：${value}` },
         }}
         ref={(current) => {
@@ -56,7 +58,7 @@ test('替换或清空渲染器更新原表头和单元格，不重建行列', ()
   expect(cell.textContent).toBe('原内容：甲')
 
   controller.props.renderParts.set({
-    tableHead: { name: (key) => `新表头：${key}` },
+    tableHead: { name: nextHeading },
     tableCell: {
       name: (value, key, original, index) =>
         `${key}:${value}:${original === row}:${index}`,
@@ -75,6 +77,8 @@ test('替换或清空渲染器更新原表头和单元格，不重建行列', ()
   expect(host.querySelector('td')).toBe(cell)
   expect(heading.textContent).toBe('name')
   expect(cell.textContent).toBe('甲')
+  expect(originalHeading).toHaveBeenCalledTimes(1)
+  expect(nextHeading).toHaveBeenCalledTimes(1)
 })
 
 test('空数据保留合成表头，原行与行号持续更新，提示和比例样式由表格承担', () => {

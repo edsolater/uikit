@@ -7,6 +7,7 @@
  */
 import { Field, Flow, Select, Text } from '@/components'
 import { createState } from '@/foundation'
+import { derive } from '@/hooks'
 /**
  * 选择工作阶段并显示当前结果。
  */
@@ -35,7 +36,7 @@ export function OptionSelectionExample() {
           />
         )}
       </Field>
-      <Text>{value.map((current) => '当前阶段：' + labels[current])}</Text>
+      <Text>{derive(value, (current) => '当前阶段：' + labels[current])}</Text>
     </Flow>
   )
 }

@@ -14,6 +14,7 @@ import {
   Text,
 } from '../../..'
 import { createState, val } from '@/foundation'
+import { derive } from '@/hooks'
 
 /**
  * 显示可操作的计数卡片；查看模式关闭后继续保留当前计数。
@@ -28,7 +29,7 @@ export function StructureViewExample() {
       <Text p>点击右下角开关检查组件边界，再关闭查看以继续操作。</Text>
       <Card label="记录本次操作次数">
         <Flow>
-          <Text>{count.map((value) => `已操作 ${value} 次`)}</Text>
+          <Text>{derive(count, (value) => `已操作 ${value} 次`)}</Text>
           <Button
             onClick={() => {
               count.set(val(count) + 1)

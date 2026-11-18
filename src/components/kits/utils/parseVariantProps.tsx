@@ -167,12 +167,12 @@ function parseVariantGroup(
     )
   }
 
-  return derive(propRecord, (source) => {
-    if (!candidatesOnly && group.groupName in source)
-      return source[group.groupName] as Source<string | undefined>
+  return derive(propRecord, (s) => {
+    if (!candidatesOnly && group.groupName in s)
+      return s[group.groupName] as Source<string | undefined>
     return group.candidates.find(
       (candidate) =>
-        val(source[candidate] as Source<boolean | undefined>) === true,
+        val(s[candidate] as Source<boolean | undefined>) === true,
     )
   })
 }

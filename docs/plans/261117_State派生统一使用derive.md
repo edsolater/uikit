@@ -1,4 +1,4 @@
-- 本 Plan 负责 UIKit 调用侧的派生表达：阅读代码时，看到 `derive` 就能识别“从已有来源持续得到另一个结果”。当前只交付计划，后续盘点和修改尚未执行。
+- 本 Plan 负责 UIKit 调用侧的派生表达：阅读代码时，看到 `derive` 就能识别“从已有来源持续得到另一个结果”。实际改动和验证见[实施详情](../../agents/运行方案/261117_State派生统一使用derive_实施详情.md)。
 - 本 Plan 持有下方唯一[规划全局图](#规划全局图)，负责“调用意图分类”到“调用表达与语义验收”的连续区段；接收现有 Source、StateView 和 derive 能力，向组件、hooks、样式等消费者交付一致的派生表达。
 - [Props 声明公共解析与逐层消费](261117_Props声明公共解析与逐层消费.md)负责 shadowProps／Plugin、消费权与 Kit 接入。本 Plan 使用其现有输入协议，不接走其他组件的能力迁移，也不代替其性能验收。
 
@@ -23,7 +23,7 @@ const disabled = derive(statusStates.disabled, Boolean)
 const size = stateView(() => val(props.size))
 
 // 目标：Props getter 或来源可以替换时，从持有字段的对象持续读取。
-const size = derive(props, (source) => source.size)
+const size = derive(props, (s) => s.size)
 ```
 
 - 最后一个例子不能机械改成 `derive(props.size)`：它提前取得字段来源，且单参数 derive 只返回该来源，无法表达持续读取 getter 或替换来源。
@@ -37,7 +37,7 @@ const size = derive(props, (source) => source.size)
 ```mermaid
 flowchart LR
     S[现有 Source 与 StateView 契约] --> I
-    subgraph P[本 Plan：调用表达统一，待实施]
+    subgraph P[本 Plan：调用表达统一]
         I[调用意图分类] --> D{是否持续派生结果}
         D -->|是| R[现有双参数 derive]
         D -->|否| K[保留转换、最终读取或集合操作]
@@ -50,7 +50,7 @@ flowchart LR
 ```
 
 - Source 表达输入，derive 表达调用侧派生，Foundation 继续拥有转换、等待、递归完成值和去重；消费者取得原有结果及生命周期。
-- 图中“待实施”不写入现役 Architecture 充当已成立事实。原 Props 提取计划沿自己的链路继续验收，本图只引用已经具备的输入能力。
+- 图中覆盖的调用方和验证结果见[实施详情](../../agents/运行方案/261117_State派生统一使用derive_实施详情.md)。原 Props 提取计划沿自己的链路验收。
 
 # 范围与保留行为
 
@@ -103,7 +103,7 @@ docs/plans/261117_State派生统一使用derive.md【新增，文件】：拥有
 # 验证、结果与停止条件
 
 - 结果是语义保持且阅读时能直接识别的派生调用、对应的现役说明，以及实际处理清单。实施开始时再创建 `agents/运行方案/261117_State派生统一使用derive_实施详情.md`，记录调用方、保留理由、验证和偏差；本轮不预填实施详情。
-- 典型验收结果：状态值为 true 时，`derive(statusStates.disabled, Boolean)` 得到 true；上游改变后结果随之更新，订阅者无需认识 State.map。Props getter 返回新 Source 后，`derive(props, source => source.size)` 继续跟随新来源。
+- 典型验收结果：状态值为 true 时，`derive(statusStates.disabled, Boolean)` 得到 true；上游改变后结果随之更新，订阅者无需认识 State.map。Props getter 返回新 Source 后，`derive(props, (s) => s.size)` 继续跟随新来源。
 - 沿现有邻近测试验证普通值、State、动态 getter 和换源、显式 undefined；Promise 完成后返回 State 的连续更新、fresh Promise 不重复生产、普通函数不执行、同值换源去重和等待中释放 owner 必须保留。
 - 涉及消费 Props 的改写须验证：只认领实际负责字段、同层重复读取稳定、未消费字段仍可交接、受控惰性 State 不被提前求值。原 Props 计划的交接行为不能因表达统一退化。
 - 测试覆盖实际失败方式，优先复用既有行为回归；不按每处语法替换增设镜像测试。使用受影响单元和真实浏览器验证，再完成全仓 typecheck、build 及必要跨领域回归。
@@ -114,7 +114,7 @@ docs/plans/261117_State派生统一使用derive.md【新增，文件】：拥有
 
 # 状态、未决与规则分工
 
-- 当前是新 Plan 审阅稿，只有本文件写作获授权；后续全范围盘点、代码和文档改写均未实施。
+- 初稿阶段仅获授权编写计划。2026-11-18 已按用户确认的复查范围实施并完成验证，结果见[实施详情](../../agents/运行方案/261117_State派生统一使用derive_实施详情.md)。
 - 未决事实是实际候选清单及复杂多来源调用的逐项归类，不阻碍本计划方向审阅；若某类无法用现有两种形式保持原行为，阻断该类施工，不自行新增形式。
 - 先前派生修正已提供现有 Source／Val 能力，本 Plan 不重述其完成结论，也不承担原提取计划剩余性能裁决。两篇计划按各自目的验收。
 - 依据[仓库入口](../../AGENTS.md)、[AI Rules 入口](../../../ai-rules/AGENTS.md)、[理解意图](../../../ai-rules/rules/Agent-理解意图.md)、[AI Rules 执行](../../../ai-rules/rules/Agent-AI-Rules执行.md)、[第一性原理](../../../ai-rules/rules/Code-第一性原理.md)和[让文本更易读](../../../ai-rules/rules/Document-让文本更易读.md)，核对派生意图、真实责任和表达必要性。

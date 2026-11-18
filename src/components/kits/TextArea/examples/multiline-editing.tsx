@@ -7,6 +7,7 @@
  */
 import { Field, Flow, Text, TextArea } from '../../..'
 import { createState } from '@/foundation'
+import { derive } from '@/hooks'
 /**
  * 编辑多行内容并显示当前字数。
  */
@@ -26,7 +27,7 @@ export function MultilineEditingExample() {
           />
         )}
       </Field>
-      <Text>{text.map((value) => '已输入 ' + value.length + ' 个字符')}</Text>
+      <Text>{derive(text, (value) => '已输入 ' + value.length + ' 个字符')}</Text>
     </Flow>
   )
 }

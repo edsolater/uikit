@@ -6,6 +6,7 @@
  * 当前以内容之外的浮动按钮呈现，并保持清晰，随时能够关闭查看。
  */
 import { createState, val, Show } from '@/foundation'
+import { derive } from '@/hooks'
 import { Button } from '../../kits/Button/Button'
 import { StructureViewControl } from './ComponentIdentityMarker'
 import { StructureViewOverlay } from './StructureViewOverlay'
@@ -17,7 +18,7 @@ import './ComponentIdentityMarkerStructureViewTrigger.style'
 export function ComponentIdentityMarkerStructureViewTrigger() {
   let control!: HTMLButtonElement
   const enabled = createState(false)
-  const pressed = enabled.map((current) =>
+  const pressed = derive(enabled, (current) =>
     current ? ('true' as const) : ('false' as const),
   )
   return (

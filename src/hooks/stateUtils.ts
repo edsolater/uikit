@@ -27,7 +27,7 @@ export function mapSource<T, U>(
  * 从来源取得持续派生结果；省略 mapper 时保留原来源。
  *
  * @example
- * const size = derive(props, (source) => source.size)
+ * const size = derive(props, (s) => s.size)
  */
 
 export function derive<T>(source: Source<T>): Source<T>

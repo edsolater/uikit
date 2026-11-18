@@ -103,7 +103,7 @@ export function createStatusPropsParser<
     const statusViews = Object.fromEntries(
       candidates.map((statusName) => [
         statusName,
-        statusStates[statusName].map(Boolean),
+        derive(statusStates[statusName], Boolean),
       ]),
     ) as Record<StatusName, StateView<boolean>>
     // 操作入口还要检查当前声明，尊重创建后新增的外部状态。
