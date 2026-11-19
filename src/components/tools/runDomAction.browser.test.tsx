@@ -7,7 +7,7 @@ import { runDomAction } from './runDomAction'
 test('本次缺少元素时跳过操作，下次执行重新获取元素', async () => {
   let target: HTMLButtonElement | undefined
   const action = vi.fn((element: HTMLButtonElement) => !element.disabled)
-  const run = runDomAction(() => target, action)
+  const run = runDomAction({ dom: () => target, action })
 
   const missing = run()
   await expect(missing.result).resolves.toBeUndefined()
@@ -25,9 +25,12 @@ test('直接传入 domProxy 时等待真实元素，再把本次参数交给操�
     name: 'action',
     pluginCore({ domProxy }) {
       return {
-        mark: runDomAction(domProxy, (element, value: string) => {
-          element.dataset.mark = value
-          return true
+        mark: runDomAction({
+          dom: domProxy,
+          action(element, value: string) {
+            element.dataset.mark = value
+            return true
+          },
         }),
       }
     },

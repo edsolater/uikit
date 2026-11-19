@@ -148,7 +148,7 @@ await popoverController.hidePopover().result
 
 `popover.style.ts` 只控制浮层的 position、inset、margin、anchor 关联、四向位置、fallback 和锚点可见性；不接管 padding、尺寸排版、材料或普通 overflow 裁剪。
 
-Controller 完整和拿到 `domProxy` 都不表示正文已经挂载。当前显隐 Task 等到元素并检查取消后尝试原生操作，再据实报告。需要等待挂载的具体操作可自行决定其就绪条件，统一机制留待后续讨论。
+正文引用可能先于挂载就绪。`showPopover()` 通过正文代理的 `isReady()` 等到同一节点接入文档，再调用原生打开。等待期间取消任务会以原取消原因拒绝；所属作用域先退出时，动作正常结束并报告 `false`。实际打开前正文已移出文档时也报告 `false`。`hidePopover()` 和 `togglePopover()` 取得正文后直接尝试原生操作。
 
 - [Task 与 TaskResult](../../../../../../fnkit/src/task.ts)：提供本次执行的结果、取消和动作报告。
 - [Popover 正文挂载与 Task 就绪](../../../../../docs/todo/261119_Popover正文挂载与Task就绪.md)：记录取得元素与实际挂载的时序差。
@@ -174,4 +174,4 @@ Controller 完整和拿到 `domProxy` 都不表示正文已经挂载。当前显
 
 Tooltip 内部一次构建 `createPopoverPlugins`，使用 `triggerAction:false`、`popover:'hint'` 和 `autoFocus:false`；通过同一 Piv body 复用原生定位、显隐及打开状态，自身拥有阅读事件、aria 描述与提示材料，不再使用 Surface 或旧 VisibilityController。内容清空会关闭、清计时并移除正文，再次有内容时复用同一节点；数字 0 有效。Tooltip Controller 仍只提供 `isOpen`、`showPopover()`、`hidePopover()`，不扩大调用方接口。
 
-Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<void>`，沿用同一次内部 Popover 操作的显隐结果。没有提示内容时，显示请求正常结束，`isSuccess` 为 `false`。外层取消目前不传递给已经启动的内部执行。hover、focus、150ms 离开关闭等阅读行为由 Tooltip 负责。
+Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<void>`，沿用同一次内部 Popover 操作的显隐结果。显式取消会传给这次内部执行。没有提示内容时，显示请求正常结束，`isSuccess` 为 `false`。清空内容、主动关闭或离开阅读区域达到 150ms 关闭延时，都会撤销尚在等待的显示请求，并让它正常结束、报告 `false`。

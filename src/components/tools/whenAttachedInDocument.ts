@@ -1,4 +1,4 @@
-import type { AbortSignal } from '@edsolater/fnkit'
+import { isArray, type AbortSignal } from '@edsolater/fnkit'
 
 /**
  * 等元素接入文档后返回同一元素。
@@ -12,16 +12,17 @@ import type { AbortSignal } from '@edsolater/fnkit'
  */
 export async function whenAttachedInDocument<T extends Element>(
   dom: T | PromiseLike<T>,
-  signal?: AbortSignal,
+  signal?: AbortSignal | AbortSignal[],
   observeRoot?: Document | ShadowRoot,
 ): Promise<T> {
-  signal?.throwIfAborted()
+  const signals = isArray(signal) ? signal : signal ? [signal] : []
+  for (const item of signals) item.throwIfAborted()
   const { promise, resolve, reject } = Promise.withResolvers<T>()
   let observer: MutationObserver | undefined
-  const subscription = signal?.onAbort(() => reject(signal.reason))
+  const subscriptions = signals.map(item => item.onAbort(() => reject(item.reason)))
   try {
     Promise.resolve(dom).then(element => {
-      if (signal?.aborted) return
+      if (signals.some(item => item.aborted)) return
       if (element.isConnected) return resolve(element)
       observer = new MutationObserver(() => {
         if (element.isConnected) resolve(element)
@@ -39,6 +40,6 @@ export async function whenAttachedInDocument<T extends Element>(
     return await promise
   } finally {
     observer?.disconnect()
-    subscription?.unsubscribe()
+    for (const subscription of subscriptions) subscription.unsubscribe()
   }
 }

@@ -8,7 +8,6 @@ import {
   getOrInsert,
   IdGenerator,
   type Task,
-  type PromiseResultProxy,
 } from '@edsolater/fnkit'
 import {
   createEffect,
@@ -21,6 +20,7 @@ import {
   type State,
 } from '@/foundation'
 import { createInactivePlugins } from '../../tools/createInactivePlugins'
+import type { DomProxy } from '../../tools/domProxy'
 import { runDomAction } from '@/components/tools/runDomAction'
 import type {
   PluginCoreContext,
@@ -233,8 +233,8 @@ function createPopoverGroup() {
     anchor: `--${name}`,
     isOpen: isOpen,
     nativeTrigger: true,
-    triggerTarget: undefined as PromiseResultProxy<HTMLElement> | undefined,
-    bodyTarget: undefined as PromiseResultProxy<HTMLElement> | undefined,
+    triggerTarget: undefined as DomProxy<HTMLElement> | undefined,
+    bodyTarget: undefined as DomProxy<HTMLElement> | undefined,
   }
 }
 
@@ -254,39 +254,40 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
     /**
      * 请求显示本组浮层。
      */
-    showPopover: runDomAction(
-      () => group.bodyTarget,
-      body => {
+    showPopover: runDomAction({
+      dom: () => group.bodyTarget,
+      waitForAttachment: true,
+      action(body) {
         if (!active) return false
         body.showPopover()
         return body.matches(':popover-open')
       },
-    ),
+    }),
     /**
      * 请求关闭本组浮层并读取实际关闭结果。
      */
-    hidePopover: runDomAction(
-      () => group.bodyTarget,
-      body => {
+    hidePopover: runDomAction({
+      dom: () => group.bodyTarget,
+      action(body) {
         if (!active) return false
         if (body.matches(':popover-open')) body.hidePopover()
         const open = body.matches(':popover-open')
         group.isOpen.set(open)
         return !open
       },
-    ),
+    }),
     /**
      * 切换或指定打开状态。
      */
-    togglePopover: runDomAction(
-      () => group.bodyTarget,
-      (body, options?: { force?: boolean }) => {
+    togglePopover: runDomAction({
+      dom: () => group.bodyTarget,
+      action(body, options?: { force?: boolean }) {
         if (!active) return false
         const expectedOpen = options?.force ?? !body.matches(':popover-open')
         body.togglePopover(options?.force)
         return body.matches(':popover-open') === expectedOpen
       },
-    ),
+    }),
   }
 }
 

@@ -9,8 +9,8 @@ import { isDisposed, runWithOwner, type getOwner } from '@/foundation/reactivity
 import { whenAttachedInDocument } from '../../tools/whenAttachedInDocument'
 
 export type DomProxy<T extends HTMLElement> = PromiseResultProxy<T> & {
-  /** 等待元素接入文档；插件所属作用域先退出时返回 false。 */
-  isReady(observeRoot?: Document | ShadowRoot): Promise<boolean>
+  /** 等待元素接入文档；插件作用域退出时返回 false，调用方取消时以原原因拒绝。 */
+  isReady(observeRoot?: Document | ShadowRoot, signal?: AbortSignal): Promise<boolean>
 }
 
 /** 为首次 DOM 引用提供就绪查询，保留原代理的属性、方法与 Promise 协议。 */
@@ -26,9 +26,11 @@ export function createDomProxy<T extends HTMLElement>(
     else runWithOwner(owner, () => onCleanup(() => lifetime.abort()))
   }
   const proxy = toPromiseResultProxy(first)
-  async function isReady(observeRoot?: Document | ShadowRoot) {
+  async function isReady(observeRoot?: Document | ShadowRoot, caller?: AbortSignal) {
     try {
-      await whenAttachedInDocument(first, signal, observeRoot)
+      const signals = signal && caller ? [signal, caller] : signal ?? caller
+      await whenAttachedInDocument(first, signals, observeRoot)
+      caller?.throwIfAborted()
       return !signal?.aborted
     } catch (error) {
       if (signal?.aborted && error === signal.reason) return false

@@ -1,5 +1,5 @@
 /** 真实宿主复用、Source更新、实例隔离与附属结构退出。 */
-import { afterEach, beforeEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { createState, render, val, type JSXElement } from '@/foundation'
 import { cssRoot } from '@/style-system'
@@ -317,6 +317,51 @@ test('定位来源持续更新，完成值为空时回到 top 与 md 默认值',
   await expect.poll(() => getComputedStyle(body).positionArea).toBe('top')
   await expect.poll(() => getComputedStyle(body).margin).toBe('4px')
 })
+
+for (const stop of ['清空内容', '取消请求'] as const) {
+  test(`正文等待挂载期间${stop}，重新挂载后只有新请求会打开提示`, async () => {
+    host.remove()
+    const content = createState('原提示')
+    let controller!: TooltipController
+    dispose = render(() => {
+      const capability = tooltip({ content })
+      controller = capability.controller
+      return (
+        <Piv as="button" is={capability}>
+          宿主
+        </Piv>
+      )
+    }, host)
+    await expect
+      .poll(() => host.querySelector('[role="tooltip"]'))
+      .not.toBeNull()
+    const body = host.querySelector<HTMLElement>('[role="tooltip"]')!
+    const shown = vi.spyOn(body, 'showPopover')
+    const checked = vi.spyOn(body, 'isConnected', 'get')
+    const request = controller.showPopover()
+    const success = Promise.resolve(request.isSuccess)
+    await expect.poll(() => checked.mock.calls.length).toBeGreaterThan(0)
+    expect(request.closed).toBe(false)
+    if (stop === '清空内容') {
+      const repeated = controller.showPopover()
+      content.set('')
+      await expect(request.result).resolves.toBeUndefined()
+      expect(await repeated.isSuccess).toBe(false)
+      expect(host.querySelector('[role="tooltip"]')).toBeNull()
+      content.set('恢复提示')
+      await expect.poll(() => host.querySelector('[role="tooltip"]')).toBe(body)
+    } else {
+      const reason = new DOMException('取消提示', 'AbortError')
+      request.cancel(reason)
+      await expect(request.result).rejects.toBe(reason)
+    }
+    expect(await success).toBe(false)
+    document.body.append(host)
+    expect(await controller.showPopover().isSuccess).toBe(true)
+    expect(shown).toHaveBeenCalledTimes(1)
+    expect(body.matches(':popover-open')).toBe(true)
+  })
+}
 
 test('提示的显示关闭保留 Task 等待与取消，空内容不显示', async () => {
   const content = createState<JSXElement>('说明')

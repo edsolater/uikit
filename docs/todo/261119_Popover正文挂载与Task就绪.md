@@ -2,22 +2,24 @@
 
 成文日期：2026-11-19。
 
-状态：UIKit 的显隐 Task 已使用 FNKit 的动作报告。给需要等待挂载的操作提供就绪机制，仍是独立待办。
+状态：已完成。Popover 的打开请求等待正文挂载，Tooltip 复用这条打开流程。
 
 ## 取得节点后，操作可能还没就绪
 
-Popover 的显隐 Task 等待 `domProxy` 交付正文元素，然后检查取消并调用原生显隐方法。`domProxy` 交付的是已取得的元素引用，此时元素可能还没接入 `document`。例如触发端先收到焦点事件，正文由同一轮渲染稍后接入。请求已经取得目标，浏览器执行打开所需的条件却尚未满足。
+`domProxy` 交付正文元素时，元素可能还没接入文档。例如触发端先收到焦点事件，正文由同一轮渲染稍后接入。程序打开需要等到正文实际挂载。
 
-[当前显隐 Task](../../src/components/plugins/kits/Popover/popover.ts#L237) · [UIKit 的挂载边界](../../src/components/plugins/kits/Popover/SPEC.md#功能定位与当前边界)
+[Popover 打开入口](../../src/components/plugins/kits/Popover/popover.ts#L257) · [UIKit 的挂载边界](../../src/components/plugins/kits/Popover/SPEC.md#功能定位与当前边界)
 
-## 现在由动作报告表达结果
+## 挂载等待的接入方式
 
-正文引用到手后，具体 Task 可以直接尝试显隐，也可以按用途等待就绪。UIKit 当前尝试原生操作，再用 `reportSuccess` 报告目标是否达成。FNKit 将该报告用于计算 `TaskResult.isSuccess`。原生操作抛出的错误仍由 Task 的执行结果传递。
+Popover 的打开 Task 使用 `runDomAction({ dom, waitForAttachment: true, action })`。工具调用正文代理的 `isReady()`，挂载后再执行 `action`。关闭和切换在取得正文后直接尝试原生操作。显隐是否达成通过 `TaskResult.isSuccess` 获取，原生操作抛出的错误通过 `result` 传递。
 
-## 后续待办
+[runDomAction 实现](../../src/components/tools/runDomAction.ts)
 
-若具体操作需要等待正文接入，UIKit 提供就绪条件及有效宿主，FNKit 提供可复用的等待与取消语义。先验证已有的 `TaskResult.cancel()` 和 `canContinue()` 能承担哪些职责，再决定要补什么契约。
+## 等待期间的取消与退出
 
-有等待策略的操作应覆盖这个场景：先发起打开，再取得尚未挂载的正文，最后将正文接入文档。若等待期间已取消或退出所属作用域，旧请求不会在正文接入后执行。选择直接尝试的操作继续报告自己的实际结果。
+打开请求在取得正文前、取得正文但尚未挂载时，都可用 `TaskResult.cancel()` 取消。取消原因会传给调用方；正文所属作用域先退出则正常结束并报告 `false`。
+
+Tooltip 清空内容、主动关闭或执行延迟关闭时会撤销尚在等待的显示请求，避免正文稍后接入时被旧请求打开。
 
 [FNKit Task 与 Result 执行计划](../../../fnkit/docs/plans/261108_Task与Result执行.md)

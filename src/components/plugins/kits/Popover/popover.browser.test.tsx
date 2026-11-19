@@ -5,6 +5,7 @@
  */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import type { TaskResult } from '@edsolater/fnkit'
 import { createState, render, val } from '@/foundation'
 import { Button } from '@/components/kits/Button/Button'
 import { Card } from '@/components/kits/Card/Card'
@@ -968,6 +969,58 @@ test('后续监听取消打开不移动焦点，卸载时恢复原有 autofocus'
   expect(existing.getAttribute('autofocus')).toBe('original')
   expect(first.hasAttribute('autofocus')).toBe(false)
 })
+
+for (const step of ['挂载', '取消', '退出作用域'] as const) {
+  test(`正文引用先于挂载交付，${step}后打开请求得到对应结果`, async () => {
+    const host = document.createElement('main')
+    let request!: TaskResult<void>
+    dispose = render(() => {
+      const { controller, plugins } = createPopoverPlugins()
+      request = controller.showPopover()
+      return (
+        <>
+          <Button is={plugins.trigger}>打开</Button>
+          <Card is={plugins.body}>正文</Card>
+        </>
+      )
+    }, host)
+    const body = host.querySelector<HTMLElement>('[popover]')!
+    expect(body.isConnected).toBe(false)
+    const show = vi.spyOn(body, 'showPopover')
+    const checked = vi.spyOn(body, 'isConnected', 'get')
+    const success = Promise.resolve(request.isSuccess)
+    await expect.poll(() => checked.mock.calls.length).toBeGreaterThan(0)
+    expect(request.closed).toBe(false)
+    expect(show).not.toHaveBeenCalled()
+
+    if (step === '挂载') {
+      document.body.append(host)
+      expect(await success).toBe(true)
+      expect(show).toHaveBeenCalledTimes(1)
+      expect(body.matches(':popover-open')).toBe(true)
+      return
+    }
+    if (step === '取消') {
+      const reason = new DOMException('取消打开', 'AbortError')
+      request.cancel(reason)
+      await expect(request.result).rejects.toBe(reason)
+    } else {
+      dispose!()
+      dispose = undefined
+      await expect(request.result).resolves.toBeUndefined()
+    }
+    expect(await success).toBe(false)
+    checked.mockClear()
+    // 文档发生变化后，已结束的请求应停止检查仍未连接的节点。
+    document.body.append(document.createElement('span'))
+    await Promise.resolve()
+    expect(checked).not.toHaveBeenCalled()
+    document.body.append(body)
+    await new Promise(requestAnimationFrame)
+    expect(show).not.toHaveBeenCalled()
+    expect(body.matches(':popover-open')).toBe(false)
+  })
+}
 
 test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操作', async () => {
   const host = document.body.appendChild(document.createElement('main'))
