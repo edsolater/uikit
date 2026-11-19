@@ -133,6 +133,8 @@ export type {
   CardController,
 } from './kits/Card/Card.prop'
 export { Board } from './kits/Board/Board'
+export { Stat } from './kits/Stat/Stat'
+export type { StatProps, StatController } from './kits/Stat/Stat.prop'
 export type {
   BoardProps,
   BoardVariantProps,
