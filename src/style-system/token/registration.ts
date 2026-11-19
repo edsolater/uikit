@@ -5,7 +5,7 @@
  *
  * 让注册与普通 AST 资源共用撤销机制。
  */
-import { isBoolean, isString, assert, mapGet } from '@edsolater/fnkit'
+import { isBoolean, isString, assert, getOrInsert } from '@edsolater/fnkit'
 import { propertyName } from '../key'
 import type { JSSCompileContext } from '../content'
 import type { ASTController, JSSStyleNode } from '../compiler/contracts'
@@ -37,7 +37,7 @@ export function activateCSSRegistration(
   if (!registrations)
     registrationSessions.set(context.session, (registrations = new Map()))
   const active = registrations.has(variable)
-  const consumers = mapGet(
+  const consumers = getOrInsert(
     registrations,
     variable,
     () => new Map<JSSStyleNode, Set<unknown>>(),

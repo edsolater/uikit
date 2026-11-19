@@ -5,7 +5,7 @@
  *
  * 操作材料不持有 AST 生命周期，修改链在编译会话中按声明归属连接。
  */
-import { mapGet } from '@edsolater/fnkit'
+import { getOrInsert } from '@edsolater/fnkit'
 import { conditionAddressKey, type ConditionPath } from '../condition'
 import {
   createJSSContent,
@@ -310,7 +310,7 @@ function publishResult(
 ): void {
   const address = conditionAddressKey(member.conditionPath)
   const existing = instance.results.has(address)
-  const result = mapGet(instance.results, address, () => ({
+  const result = getOrInsert(instance.results, address, () => ({
     path: member.conditionPath,
     members: new Set<JSSStyleNode>(),
   }))

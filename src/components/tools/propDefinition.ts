@@ -13,7 +13,7 @@ import {
   type Val,
 } from '@/foundation'
 import { getOwner, runWithOwner, untrack } from '@/foundation/reactivity'
-import { cacheFn, mapGet } from '@edsolater/fnkit'
+import { cacheFn, getOrInsert } from '@edsolater/fnkit'
 import { readStateSource } from '@/foundation/createState/state-source'
 import type {
   PropsDeclaration,
@@ -151,7 +151,7 @@ export function createPropsController<
   /**
    * 取得该字段的共享记录，不因此读取上游或创建可写 State。
    */
-  const getField = (key: string | symbol) => mapGet(fields, key, () => ({}))
+  const getField = (key: string | symbol) => getOrInsert(fields, key, () => ({}))
   /**
    * 取得本实例该字段的 State，首次需要时连接上游或缺省来源。
    * 累加字段只控制直接声明，补充来源仍由声明工具合并。

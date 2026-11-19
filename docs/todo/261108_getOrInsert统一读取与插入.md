@@ -1,6 +1,6 @@
 成文日期：2026-11-08。
 
-状态：2026-11-11 已在 FNKit 按集合类型实现，并用于 UIKit 的 Popover；跨项目 `mapGet` 调用迁移仍待安排。
+状态：FNKit 已实现 `getOrInsert`。UIKit 的 Popover 已在使用，Token 注册、Token 修改和 Props 字段控制中的 `mapGet` 也已迁移。其他项目的调用仍待安排。
 
 # 读取与插入
 
