@@ -119,6 +119,7 @@ export {
   type PopoverBodyOptions,
   type AnchorGap,
   type PopoverOptions,
+  type PopoverAnimation,
   type PopoverToggleEvent,
   type PopoverEventContext,
   type PopoverToggleContext,

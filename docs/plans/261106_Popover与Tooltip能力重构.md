@@ -191,7 +191,27 @@ createPopoverPlugins({
 - 上一段已经开始且反向切换实际成立时，先结束旧过程并通知 Cancel，再交付新过程的 Start。旧过程不再派发 End。Before 拒绝或浏览器没有产生显隐变化时，不开始新过程，也不取消仍有效的原过程。期间没有进入 Start 的待启动过渡，若被替换或取消，不派发 Cancel。整个协议无 from，过程对象只表达自身方向和终结结果。
 - 宿主进入活动过渡时发 Start。显隐已生效但没有实际过渡时，以同一 transaction 依序发 Start 和 End，包含零时长和样式禁用过渡的场景。作用域释放时停止观测，已开始且未终结的过程以 Cancel 收尾。
 
-原生事件负责候选与实际显隐。仅有过程回调时，在 Before 与确认原生状态改变后各取得一次宿主自己的 CSS transition 实例，按身份找到本次新增的过渡。这样不纳入仍在运行的无关旧动画、后代或伪元素。用活动开始事件以及实例时序识别 Start，不把 delay 当作活动阶段。用所选实例的完成信号汇总全部属性；原生取消或被新过程取代时，已开始的过程归 Cancel。原生状态判断、CSS 事件先后和快速反向须用 Chromium 真实场景确认。依据 [CSS Transitions 事件](https://www.w3.org/TR/css-transitions-2/#transition-events) 与 [Web Animations 完成信号](https://drafts.csswg.org/web-animations-1/#the-current-finished-promise)。
+#### 默认开关动画
+
+用户要求 Popover 的零配置用法自带完整的开关过程，外部只可通过 `$animation` 调整 `$duration` 与 `$easing`。Popover 内部定义淡入、淡出和原生关闭后的留层。调用者省略配置即可使用默认动画，也可只覆盖一项。
+
+```ts
+createPopoverPlugins()
+createPopoverPlugins({
+  body: {
+    $animation: { $duration: 200 },
+    onOpenStart({ transaction }) {
+      transaction.onCancel(() => 清理打开资源())
+    },
+  },
+})
+```
+
+默认时长为 160 毫秒，缓动为 `ease`，开关使用同一组设置。实际时长为零时，在原生显隐确认后依次发 Start 和 End，无需创建动画或留层。系统要求减少动态效果时同样按即时显隐处理。关键帧留在内部，淡入、淡出以宿主本来的不透明度为可见端点。
+
+Popover 样式让原生显隐在同一次样式变化中启动透明度与 `display`、`overlay` 离散过渡。淡入起点由 `@starting-style` 给出，淡出期间浏览器保留正文和顶层位置，结束后自动释放。如此避免原生关闭后的异步 `toggle` 再另起一个视觉时钟。私有 CSS 属性承载两项配置，系统减少动态效果与零时长直接由同一套样式决定。业务布局、背景和材料仍由宿主样式承担。[原生浮层进出过渡](https://developer.chrome.com/docs/modern-web-guidance/guides/ui-behaviors/animate-to-from-top-layer)
+
+实际显隐确认后，先终结上一段，再取得本段内置 CSS 过渡的原生完成信号。打开观察透明度，关闭观察透明度及本次留层；无实际过渡直接结束。只在配置过程回调时观察，检查的是 Popover 自己声明的固定属性，旧的属性清单与前后快照均退出。浏览器负责在视觉上反向，事务只处理一次 End 或 Cancel。Before 阻止显隐时保持原过程。回调保持单 context 和 void，订阅保持 transaction 身份，终态逐一交付并报告回调异常。[Web Animations 完成信号](https://drafts.csswg.org/web-animations-1/#the-current-finished-promise)
 
 Chromium 实测同一任务内的打开、关闭可合并成一条原生 `toggle`。过程由确认后的宿主状态和实际过渡驱动，不能用 `toggle` 的数量推算。下一次 Before 到达时可用宿主当下状态确认上一请求，避免把已开始的过程归到后一请求。
 
@@ -202,7 +222,8 @@ Chromium 实测同一任务内的打开、关闭可合并成一条原生 `toggle
 ```text
 src/components/plugins/kits/Popover/
   popover.ts【更新】公开 context 契约、原生状态接线和过程接入
-  popover-transition.ts【新增】宿主过渡识别、单次对象及终结通知
+  popover-transition.ts【新增】定义默认视觉过程并维护该次事务及终态
+  popover.style.ts【更新】在原生关闭后保留本次淡出所需的显示与顶层位置
   SPEC.md【更新】当前可用事件及其含义
   popover.browser.test.tsx【更新】用真实宿主 CSS 验证过程
 src/components/kits/SelectInput/SelectInput.tsx【更新】消费原生关闭状态
@@ -211,6 +232,8 @@ src/components/kits/SelectInput/SelectInput.tsx【更新】消费原生关闭状
 1. 接入正文事件与过程对象，验证真实宿主的多属性、延迟及反向，不给所有 Popover 配置默认动画。
 2. 将状态回调统一成单参数 context。现有 `onOpen`／`onClose` 的原生状态通知由 `onToggle` 的方向分支接管，旧名退出；SelectInput 仍在原生关闭时结束编辑并调用自身的公开 `onClose`。
 3. 验证正常双向 Start/End、订阅所获对象身份、结束只派发一次、反向及再次反向的 Cancel、Before 拒绝、无过渡、delay、子元素与多属性、卸载终止。原生 toggle、焦点、SelectInput 与 Tooltip 走既有回归。类型检查、单元测试、真实浏览器套件和构建通过后交付，写入 [实施详情](../../agents/运行方案/261106_Popover与Tooltip能力重构_实施详情.md)。
+
+本轮验收零配置真实淡入、关闭后仍可见并保有顶层位置、单项时长及缓动覆盖分别保留另一项默认值、零时长即时完成、反向、中断、Before 拒绝、独立动画、终态异常及卸载。旧方向配置、keyframes 和 delay 退出公开协议，现役 SPEC 与包出口统一写法。Task 就绪 TODO 保留独立。
 
 分工按 [任务分工](../../../ai-rules/rules/Agent-任务分工.md) 执行。独立约束检查者复核 Plan 后，实施者实现公开契约和原生接线，测试执行者从实际过渡验证，主 Agent 对照原始裁决独立验收。
 

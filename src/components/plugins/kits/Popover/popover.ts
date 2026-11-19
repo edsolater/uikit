@@ -28,7 +28,7 @@ import type {
 } from '../../tools/createInactivePlugin'
 import './popover.style'
 import {
-  createPopoverTransitionObserver,
+  createPopoverTransitions,
   type PopoverTransitionListener,
 } from './popover-transition'
 export type {
@@ -52,6 +52,12 @@ export interface PopoverToggleContext extends PopoverEventContext {
   open: boolean
 }
 
+/** Popover 共用的开关动效设置；时长单位为毫秒。 */
+export interface PopoverAnimation {
+  $duration?: number
+  $easing?: string
+}
+
 export interface PopoverTriggerOptions {
   /** 原生按钮动作，默认 toggle；false 仅建立锚点，不接入按钮触发与展开语义。 */
   triggerAction?: 'toggle' | 'show' | 'hide' | false
@@ -67,6 +73,9 @@ export interface PopoverBodyOptions {
   defaultOpen?: Source<boolean | undefined>
   /** 打开时优先聚焦的 DOM 引用；省略时使用正文首个可聚焦节点，false 不注入自动聚焦。Controller 和组件目标尚未支持。 */
   autoFocus?: Partial<HTMLElement> | false
+
+  /** 默认用 160 毫秒和 ease 淡入、淡出；时长为零时即时显隐。 */
+  $animation?: PopoverAnimation
 
   /** 浮层打开前 */
   onBeforeOpen?: (context: PopoverEventContext) => void
@@ -309,7 +318,7 @@ function popoverBodyCore({
 }: PluginCoreContext<PopoverBodyOptions>): PopoverBodyController {
   const group = getOrInsert(popoverGroups, id!, createPopoverGroup)
   group.bodyTarget = domProxy
-  const transition = createPopoverTransitionObserver(options)
+  const transition = createPopoverTransitions(options)
   onCleanup(() => transition.dispose())
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
@@ -320,8 +329,11 @@ function popoverBodyCore({
       const button = trigger as HTMLButtonElement
       button.popoverTargetElement = body
     })
+  const duration = options.$animation?.$duration
   addProps({
     style: {
+      '--uikit-popover-duration': duration === undefined ? undefined : `${duration}ms`,
+      '--uikit-popover-easing': options.$animation?.$easing,
       'position-anchor': group.anchor,
       'position-area': position,
     },
@@ -338,11 +350,11 @@ function popoverBodyCore({
           const toggle = event as PopoverToggleEvent
           const open = toggle.newState === 'open'
           // 同一任务的 toggle 可能合并，此刻可由真实显隐确认上一请求。
-          transition.confirm(element)
+          transition.confirmToggle(element)
           options.onBeforeToggle?.({ open, event: toggle })
           if (open) options.onBeforeOpen?.({ event: toggle })
           else options.onBeforeClose?.({ event: toggle })
-          if (!toggle.defaultPrevented) transition.prepare(element, open)
+          if (!toggle.defaultPrevented) transition.requestToggle(open)
           if (open && !toggle.defaultPrevented) {
             restoreAutoFocus?.()
             restoreAutoFocus =
@@ -356,7 +368,7 @@ function popoverBodyCore({
         const open = element.matches(':popover-open')
         group.isOpen.set(open)
         const toggle = event as PopoverToggleEvent
-        transition.confirm(element)
+        transition.confirmToggle(element)
         options.onToggle?.({ open, event: toggle })
       },
     },

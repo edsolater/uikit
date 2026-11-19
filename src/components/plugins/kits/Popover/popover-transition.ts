@@ -1,5 +1,4 @@
-/** 观测 Popover 正文自身的 CSS 过渡，按一次打开或关闭交付过程通知。 */
-import { EventEmitter } from '@edsolater/fnkit'
+/** 确认原生显隐后，跟随 Popover 默认淡入或退层的实际完成信号。 */
 import type { PopoverBodyOptions } from './popover'
 
 export interface PopoverTransition {
@@ -18,159 +17,127 @@ export type PopoverTransitionListener = (
   context: PopoverTransitionContext,
 ) => void
 
-/** getAnimations 默认仅返回元素自身的动画；按实例排除普通动画及切换前已有的过渡。 */
-function hostTransitions(element: HTMLElement) {
-  return element
+/** 打开跟随淡入，关闭优先等到浏览器释放顶层；没有过渡时即时完成。 */
+function findPopoverTransition(element: HTMLElement, open: boolean) {
+  const transitions = element
     .getAnimations()
     .filter(
       (animation): animation is CSSTransition =>
         animation instanceof CSSTransition,
     )
+  return (
+    (!open
+      ? transitions.find(
+          animation => animation.transitionProperty === 'overlay',
+        )
+      : undefined) ??
+    transitions.find(animation => animation.transitionProperty === 'opacity')
+  )
 }
 
-/** 观察一次实际提交的切换；Start 后只允许完成或取消一次。 */
-function observeTransition(
+/** 当前段独立持有完成与取消订阅，反向淡入淡出由浏览器接续。 */
+function createTransition(
   element: HTMLElement,
   open: boolean,
-  transitions: CSSTransition[],
   options: PopoverBodyOptions,
   release: () => void,
 ) {
-  const listeners = new EventEmitter<{
-    end: [PopoverTransitionContext]
-    cancel: [PopoverTransitionContext]
-  }>()
-  let started = false
   let settled = false
+  const listeners: Record<'end' | 'cancel', PopoverTransitionListener[]> = {
+    end: [],
+    cancel: [],
+  }
   const context: PopoverTransitionContext = {
     transaction: {
       direction: open ? 'open' : 'close',
       onEnd(listener) {
-        if (!settled) listeners.on('end', listener)
+        if (!settled) listeners.end.push(listener)
       },
       onCancel(listener) {
-        if (!settled) listeners.on('cancel', listener)
+        if (!settled) listeners.cancel.push(listener)
       },
     },
   }
 
-  function start() {
-    if (started || settled) return
-    started = true
-    if (open) options.onOpenStart?.(context)
-    else options.onCloseStart?.(context)
-  }
-
-  function finish(reason: 'end' | 'cancel') {
-    if (settled) return
-    settled = true
-    element.removeEventListener('transitionstart', onTransitionStart)
-    release()
-    if (!started) return
+  function notify(listener?: PopoverTransitionListener) {
     try {
-      if (reason === 'cancel') options.onCancel?.(context)
-      else if (open) options.onOpenEnd?.(context)
-      else options.onCloseEnd?.(context)
-      listeners.emit(reason, [context])
-    } finally {
-      listeners.removeAllListeners()
+      listener?.(context)
+    } catch (error) {
+      globalThis.reportError(error)
     }
   }
 
-  function hasStarted(animation: CSSTransition) {
-    const timing = animation.effect?.getComputedTiming()
-    return (
-      timing &&
-      typeof timing.localTime === 'number' &&
-      timing.localTime >= Number(timing.delay)
+  function finish(reason: 'cancel' | 'end') {
+    if (settled) return
+    settled = true
+    release()
+    const subscribers = listeners[reason]
+    listeners.end = []
+    listeners.cancel = []
+    notify(
+      reason === 'cancel'
+        ? options.onCancel
+        : open
+          ? options.onOpenEnd
+          : options.onCloseEnd,
     )
-  }
-
-  function onTransitionStart(event: TransitionEvent) {
-    if (
-      event.target === element &&
-      !event.pseudoElement &&
-      transitions.some(
-        animation =>
-          animation.transitionProperty === event.propertyName &&
-          hasStarted(animation),
-      )
-    )
-      start()
+    for (const listener of subscribers) notify(listener)
   }
 
   function complete() {
-    if (element.matches(':popover-open') !== open) return finish('cancel')
-    start()
     finish(element.matches(':popover-open') === open ? 'end' : 'cancel')
   }
 
   return {
     cancel: () => finish('cancel'),
-    observe() {
-      if (transitions.length === 0) {
-        complete()
-        return
-      }
-      element.addEventListener('transitionstart', onTransitionStart)
-      Promise.all(transitions.map(animation => animation.finished)).then(
-        complete,
-        () => finish('cancel'),
-      )
-      // 原生 toggle 可能晚于活动开始；正延迟尚未走完时等待 transitionstart。
-      if (transitions.some(hasStarted)) start()
+    start() {
+      const transition = findPopoverTransition(element, open)
+      transition?.finished.then(complete, () => finish('cancel'))
+      notify(open ? options.onOpenStart : options.onCloseStart)
+      if (!transition) complete()
     },
   }
 }
 
-/** 在 Before 记录原过渡，在实际 toggle 确认显隐后接管本次新增的过渡。 */
-export function createPopoverTransitionObserver(options: PopoverBodyOptions) {
-  let before: { open: boolean; previous: Set<CSSTransition> } | undefined
-  let current: ReturnType<typeof observeTransition> | undefined
+/** 下一次 Before 和原生 toggle 都可以证实上次请求已实际切换。 */
+export function createPopoverTransitions(options: PopoverBodyOptions) {
+  let pendingOpen: boolean | undefined
+  let current: ReturnType<typeof createTransition> | undefined
   let disposed = false
   return {
-    prepare(element: HTMLElement, open: boolean) {
+    requestToggle(open: boolean) {
       if (
-        !disposed &&
-        (options.onOpenStart ||
-          options.onCloseStart ||
-          options.onOpenEnd ||
-          options.onCloseEnd ||
-          options.onCancel)
+        current ||
+        options.onOpenStart ||
+        options.onOpenEnd ||
+        options.onCloseStart ||
+        options.onCloseEnd ||
+        options.onCancel
       ) {
-        before = { open, previous: new Set(hostTransitions(element)) }
+        pendingOpen = open
       }
     },
-    confirm(element: HTMLElement) {
-      const request = before
-      before = undefined
-      if (!request || element.matches(':popover-open') !== request.open) return
-      const transitions = hostTransitions(element).filter(
-        animation => !request.previous.has(animation),
-      )
+    confirmToggle(element: HTMLElement) {
+      const open = pendingOpen
+      pendingOpen = undefined
+      if (open === undefined || element.matches(':popover-open') !== open)
+        return
       current?.cancel()
       if (
         disposed ||
-        before ||
-        element.matches(':popover-open') !== request.open
+        pendingOpen !== undefined ||
+        element.matches(':popover-open') !== open
       )
         return
-      current = observeTransition(
-        element,
-        request.open,
-        transitions,
-        options,
-        () => {
-          current = undefined
-        },
-      )
-      current.observe()
+      current = createTransition(element, open, options, () => {
+        current = undefined
+      })
+      current.start()
     },
     dispose() {
       disposed = true
-      before = undefined
+      pendingOpen = undefined
       current?.cancel()
-      current = undefined
     },
   }
 }

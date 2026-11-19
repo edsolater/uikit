@@ -91,7 +91,15 @@ onOpenStart({ transaction }) {
 
 结束时调用对应的 End，或者在过程被打断时调用 Cancel；该次订阅随即释放。已结束的 transaction 登记新回调时不会回放。打开途中改为关闭时，打开 transaction 取消，关闭过程取得新的 transaction。Before 阶段拒绝请求时，正在运行的过程继续。
 
-过渡由宿主样式提供。Popover 观察本次显隐引发的宿主 CSS 过渡，等待相关属性完成后才发 End。正延迟结束、过渡开始运行时发 Start。没有实际过渡时，显隐确认后依次发 Start 与 End。节点接入结束时，尚在运行的过程以 Cancel 收尾。只配置原生状态回调时，Popover 不启动过程观测。`onProgress` 留作低优先级后续事项。
+Popover 默认淡入和淡出，无需配置。默认时长为 160 毫秒，缓动为 `ease`。需要调整时，在 `body.$animation` 中选填 `$duration` 或 `$easing`，其余沿用默认。
+
+```ts
+createPopoverPlugins({ body: { $animation: { $duration: 200 } } })
+```
+
+同一配置用于打开和关闭。`$duration: 0` 或启用系统减少动态效果时，确认显隐后依次发 Start 和 End。默认关闭会在淡出期间继续显示正文，由浏览器在过渡结束后释放顶层位置。宿主仍负责背景与布局。
+
+同一个终态会送达配置回调和本次已登记的订阅。某个回调抛出的错误会报告给浏览器，其余订阅继续收到通知。`onProgress` 留作低优先级后续事项。
 
 `onPopoverFlip` 指定位方向翻面，不是打开／关闭事件。本轮仅保留预留声明，不触发通知；当前参数类型是占位，真正的方向事件类型后续确定。CSS 的原生翻向照常工作，不用 `PopoverToggleEvent` 伪造定位通知。
 

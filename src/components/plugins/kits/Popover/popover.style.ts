@@ -1,7 +1,7 @@
 /**
- * Popover 的原生定位规则。
+ * Popover 的原生定位与开关动效。
  *
- * 只控制浮层锚定和翻向，节点材料与内容布局由使用方承担。
+ * 锚定正文位置，并使淡出与释放顶层同步。节点材料与内容布局由使用方承担。
  */
 import {
   baseSpace,
@@ -23,6 +23,12 @@ export const popoverAnchorGap = token(multiply(baseSpace, 1 / 2), {
 })
 
 rules('[data-plugin~="popover-body"]', {
+  '--uikit-popover-duration': '160ms',
+  '--uikit-popover-easing': 'ease',
+  'transition-property': 'opacity, display, overlay',
+  'transition-duration': 'var(--uikit-popover-duration)',
+  'transition-timing-function': 'var(--uikit-popover-easing)',
+  'transition-behavior': 'allow-discrete',
   'position': 'fixed',
   'inset': 'auto',
   'margin': popoverAnchorGap,
@@ -36,4 +42,17 @@ rules('[data-plugin~="popover-body"]', {
   }),
   'position-visibility': 'anchors-visible',
 })
-rules('[data-plugin~="popover-body"]:not(:popover-open)', { display: 'none' })
+// 关闭结束必须隐藏正文，打开时沿用宿主的显示与不透明度。
+rules('[data-plugin~="popover-body"]:not(:popover-open)', {
+  display: 'none !important',
+  opacity: '0 !important',
+})
+rules(['@starting-style', '[data-plugin~="popover-body"]:popover-open'], {
+  opacity: '0 !important',
+})
+rules(
+  ['@media (prefers-reduced-motion: reduce)', '[data-plugin~="popover-body"]'],
+  {
+    'transition-duration': '0s',
+  },
+)
