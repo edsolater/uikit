@@ -46,6 +46,84 @@ test('同步读取时准备一次代理，节点接入后执行此前的命令',
   }
 })
 
+const exposeDom = createInactivePlugin({
+  name: 'readiness',
+  pluginCore: ({ domProxy }) => ({ dom: domProxy }),
+})
+
+test('插件作用域退出后才首次读取代理，就绪查询返回 false', async () => {
+  const deferred = createInactivePlugin({
+    name: 'deferred',
+    pluginCore: context => ({ getDom: () => context.domProxy }),
+  })
+  const { controller, release } = createRoot(release => ({
+    controller: deferred().controller,
+    release,
+  }))
+  release()
+  expect(await controller.getDom().isReady()).toBe(false)
+})
+
+test('代理先交付未连接的原节点，isReady 等到节点进入指定影子根', async () => {
+  const host = document.body.appendChild(document.createElement('div'))
+  const shadow = host.attachShadow({ mode: 'closed' })
+  const staging = document.createElement('div')
+  const { capability, release } = createRoot(release => ({
+    capability: exposeDom(),
+    release,
+  }))
+  const dom = capability.controller.dom
+  const ready = dom.isReady(shadow)
+  let settled = false
+  void ready.then(() => {
+    settled = true
+  })
+  const unmount = render(
+    () => createComponent(Piv, { is: capability }),
+    staging,
+  )
+  try {
+    const element = await dom
+    expect(element).toBe(staging.firstElementChild)
+    expect(element.isConnected).toBe(false)
+    expect(isPromiseResultProxy(dom)).toBe(true)
+    await new Promise(requestAnimationFrame)
+    expect(settled).toBe(false)
+    shadow.append(staging)
+    expect(await ready).toBe(true)
+    expect(await dom).toBe(element)
+    expect('isReady' in element).toBe(false)
+  } finally {
+    unmount()
+    release()
+    host.remove()
+  }
+})
+
+for (const delivered of [false, true]) {
+  test(`节点${delivered ? '已交付未连接' : '尚未交付'}时退出作用域，待就绪请求返回 false`, async () => {
+    const host = document.createElement('div')
+    const { capability, release } = createRoot(release => ({
+      capability: exposeDom(),
+      release,
+    }))
+    const dom = capability.controller.dom
+    const ready = dom.isReady()
+    const unmount = delivered
+      ? render(() => createComponent(Piv, { is: capability }), host)
+      : undefined
+    try {
+      if (delivered) expect(await dom).toBe(host.firstElementChild)
+      await new Promise(requestAnimationFrame)
+      release()
+      expect(await ready).toBe(false)
+    } finally {
+      unmount?.()
+      host.remove()
+    }
+  })
+}
+
 test('组合角色未读取 domProxy 时不准备；读取后保持角色间独立', () => {
   createRoot(dispose => {
     const group = createInactivePlugins({

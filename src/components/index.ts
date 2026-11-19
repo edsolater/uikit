@@ -246,6 +246,7 @@ export type {
   WritablePropStates,
 } from './tools/propDefinition'
 export { pivPropsDefinition } from './Piv/Piv.prop'
+export { whenAttachedInDocument } from './tools/whenAttachedInDocument'
 export { componentIdentityMarkerDisplayPropsDefinition } from './tools/ComponentIdentityMarker/ComponentIdentityMarker.prop'
 import './plugins/is.style'
 

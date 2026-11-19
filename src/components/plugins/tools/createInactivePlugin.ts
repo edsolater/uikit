@@ -11,9 +11,9 @@ import {
   hasProperty,
   isObject,
   isString,
-  toPromiseResultProxy,
-  type PromiseResultProxy,
 } from '@edsolater/fnkit'
+import { getOwner } from '@/foundation/reactivity'
+import { createDomProxy, type DomProxy } from './domProxy'
 import type { ShadowProps } from '../../Piv/plugin/mergePivProps'
 import type { PivTag } from '../../Piv/domMap'
 import type { PropsDeclarationInput } from '../../tools/propsDeclaration/shadowProps'
@@ -49,7 +49,7 @@ export type PluginCoreContext<
   addProps: PluginAddProps<Props>
 
   /** 同步构建时读取以准备首次节点获取；重复读取返回同一代理。 */
-  readonly domProxy: PromiseResultProxy<HTMLElement>
+  readonly domProxy: DomProxy<HTMLElement>
 
   /** 组合构建内部共享身份，不是公开配置。 */
   id?: object
@@ -136,7 +136,8 @@ export function createInactivePlugin<
     const shadowProps: object[] = []
     const plugin = { [pluginMarker]: name, shadowProps } as Plugin<Props>
     const addProps: PluginAddProps<Props> = props => shadowProps.push(props)
-    let cachedDomProxy: PromiseResultProxy<HTMLElement> | undefined
+    const owner = getOwner()
+    let cachedDomProxy: DomProxy<HTMLElement> | undefined
     const controller = pluginCore({
       pluginOptions,
       addProps,
@@ -145,7 +146,7 @@ export function createInactivePlugin<
           const first = Promise.withResolvers<HTMLElement>()
           // 固定首次 DOM；if 显隐复用该元素，不追踪宿主替换。
           shadowProps.push({ domRef: (el: HTMLElement) => first.resolve(el) })
-          cachedDomProxy = toPromiseResultProxy(first.promise)
+          cachedDomProxy = createDomProxy(first.promise, owner)
         }
         return cachedDomProxy
       },
