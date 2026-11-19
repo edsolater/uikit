@@ -11,7 +11,12 @@ import { Card } from '@/components/kits/Card/Card'
 import { cssRoot, rules, whenPopoverFlip } from '@/style-system'
 import { createDomRef } from '@/hooks/createDomRef'
 import { createPopoverPlugins } from './popover'
-import type { AnchorGap, AnchorPosition } from './popover'
+import type {
+  AnchorGap,
+  AnchorPosition,
+  PopoverBodyOptions,
+  PopoverTransition,
+} from './popover'
 
 let dispose: (() => void) | undefined
 beforeEach(() => {
@@ -80,7 +85,7 @@ test('触发与正文使用实际节点，正文自定义 id 仍可关联', asyn
 
 test('不同组合不串联，取消打开保持关闭', async () => {
   const host = document.body.appendChild(document.createElement('main'))
-  const cancel = vi.fn((open: boolean, event: Event) => {
+  const cancel = vi.fn(({ open, event }: { open: boolean; event: Event }) => {
     if (open) event.preventDefault()
   })
   let first!: ReturnType<typeof createPopoverPlugins>
@@ -384,7 +389,10 @@ test('默认打开与原生 toggle 事件共享打开状态', async () => {
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
   await expect.poll(capability.controller.body.isOpen).toBe(true)
   expect(val(capability.controller.trigger.isOpen)).toBe(true)
-  expect(onToggle).toHaveBeenCalledWith(true, expect.any(Event))
+  expect(onToggle).toHaveBeenCalledWith({
+    open: true,
+    event: expect.any(Event),
+  })
   capability.controller.trigger.togglePopover({ force: false })
   await expect.poll(() => body.matches(':popover-open')).toBe(false)
   await expect.poll(capability.controller.body.isOpen).toBe(false)
@@ -433,73 +441,269 @@ test('默认打开等待异步来源的首次值', async () => {
   await expect.poll(() => body.matches(':popover-open')).toBe(true)
 })
 
-test('通用事件先于打开关闭事件，取消打开不触发 onOpen', async () => {
+test('Before 可以拒绝打开，无过渡的每次实际切换只开始并完成一次', async () => {
+  const before: string[] = []
+  const toggle: boolean[] = []
+  const process: string[] = []
+  let reject = true
+  const body = renderTransitionBody({
+    onBeforeToggle({ open }) {
+      before.push(`通用:${open}`)
+    },
+    onBeforeOpen({ event }) {
+      before.push('打开')
+      if (reject) event.preventDefault()
+    },
+    onBeforeClose() {
+      before.push('关闭')
+    },
+    onToggle({ open }) {
+      toggle.push(open)
+    },
+    onOpenStart({ transaction }) {
+      process.push('打开开始')
+      transaction.onEnd(context =>
+        expect(context.transaction).toBe(transaction),
+      )
+    },
+    onOpenEnd() {
+      process.push('打开完成')
+    },
+    onCloseStart() {
+      process.push('关闭开始')
+    },
+    onCloseEnd() {
+      process.push('关闭完成')
+    },
+    onCancel() {
+      process.push('取消')
+    },
+  })
+  body.showPopover()
+  await new Promise(requestAnimationFrame)
+  expect(body.matches(':popover-open')).toBe(false)
+  expect(process).toEqual([])
+  expect(toggle).toEqual([])
+  reject = false
+  body.showPopover()
+  body.hidePopover()
+  await expect
+    .poll(() => process)
+    .toEqual(['打开开始', '打开完成', '关闭开始', '关闭完成'])
+  expect(before).toEqual([
+    '通用:true',
+    '打开',
+    '通用:true',
+    '打开',
+    '通用:false',
+    '关闭',
+  ])
+  await expect.poll(() => toggle).toEqual([false])
+})
+
+test('打开状态回调同步关闭正文时，两次实际切换都交付完整过程', async () => {
+  const phases: string[] = []
+  const body = renderTransitionBody({
+    onToggle({ open }) {
+      if (open) body.hidePopover()
+    },
+    onOpenStart() {
+      phases.push('打开开始')
+    },
+    onOpenEnd() {
+      phases.push('打开完成')
+    },
+    onCloseStart() {
+      phases.push('关闭开始')
+    },
+    onCloseEnd() {
+      phases.push('关闭完成')
+    },
+  })
+  body.showPopover()
+  await expect
+    .poll(() => phases)
+    .toEqual(['打开开始', '打开完成', '关闭开始', '关闭完成'])
+  expect(body.matches(':popover-open')).toBe(false)
+})
+
+/** 用实际正文和原生显隐切换观测宿主属性；样式只属于本用例的夹具。 */
+function renderTransitionBody(options: PopoverBodyOptions, css = '') {
   const host = document.body.appendChild(document.createElement('main'))
-  const calls: string[] = []
-  let cancel = true
-  let capability!: ReturnType<typeof createPopoverPlugins>
+  host.appendChild(document.createElement('style')).textContent = css
   dispose = render(() => {
-    capability = createPopoverPlugins({
-      body: {
-        onBeforeToggle(open) {
-          calls.push(`before:${open}`)
-        },
-        onBeforeOpen(event) {
-          calls.push('beforeOpen')
-          if (cancel) event.preventDefault()
-        },
-        onBeforeClose() {
-          calls.push('beforeClose')
-        },
-        onToggle(open) {
-          calls.push(`toggle:${open}`)
-        },
-        onOpen() {
-          calls.push('open')
-        },
-        onClose() {
-          calls.push('close')
-        },
-      },
+    const { plugins } = createPopoverPlugins({
+      body: { popover: 'manual', ...options },
     })
     return (
       <>
-        <Button is={capability.plugins.trigger}>目标</Button>
-        <Card is={capability.plugins.body}>正文</Card>
+        <Button is={plugins.trigger}>触发</Button>
+        <Card class="TransitionSubject" is={plugins.body}>
+          <span>内容</span>
+        </Card>
       </>
     )
   }, host)
   const body = host.querySelector<HTMLElement>('[popover]')!
-  capability.controller.body.showPopover()
-  await expect.poll(() => calls).toEqual(['before:true', 'beforeOpen'])
+  body.getBoundingClientRect()
+  return body
+}
+
+function hostTransitions(body: HTMLElement) {
+  return body
+    .getAnimations()
+    .filter(
+      (animation): animation is CSSTransition =>
+        animation instanceof CSSTransition,
+    )
+}
+
+test('宿主延迟结束才开始，两项宿主属性全部完成即结束，无需等待后代', async () => {
+  const calls: string[] = []
+  let opening!: PopoverTransition
+  const lateEnd = vi.fn()
+  const body = renderTransitionBody(
+    {
+      onOpenStart({ transaction }) {
+        calls.push('开始')
+        opening = transaction
+        transaction.onEnd(context => {
+          expect(context.transaction).toBe(transaction)
+          calls.push('订阅完成')
+        })
+      },
+      onOpenEnd({ transaction }) {
+        expect(transaction).toBe(opening)
+        calls.push('完成')
+      },
+    },
+    `
+    .TransitionSubject[popover] { display: block; opacity: 0; translate: 0 4px; transition: opacity 30s 20s, translate 30s 20s; }
+    .TransitionSubject:popover-open { opacity: 1; translate: 0 0; }
+    .TransitionSubject span { opacity: 0; transition: opacity 100s; }
+    .TransitionSubject:popover-open span { opacity: 1; }
+  `,
+  )
+  body.showPopover()
+  await expect.poll(() => hostTransitions(body).length).toBe(2)
+  await new Promise(requestAnimationFrame)
+  expect(calls).toEqual([])
+  const [first, second] = hostTransitions(body)
+  first.currentTime = second.currentTime = 25_000
+  await expect.poll(() => calls).toEqual(['开始'])
+  first.finish()
+  await new Promise(requestAnimationFrame)
+  expect(calls).toEqual(['开始'])
+  second.finish()
+  await expect
+    .poll(() => calls.slice().sort())
+    .toEqual(['开始', '完成', '订阅完成'].sort())
+  expect(body.querySelector('span')!.getAnimations()).toHaveLength(1)
+  opening.onEnd(lateEnd)
+  expect(lateEnd).not.toHaveBeenCalled()
+})
+
+test('连续反向建立独立过程，拒绝反向保留原段，卸载取消活动段', async () => {
+  const sequence: string[] = []
+  const starters: PopoverTransition[] = []
+  const ends = vi.fn()
+  const canceled: typeof starters = []
+  const localCanceled: typeof starters = []
+  let reject = false
+  const start: NonNullable<PopoverBodyOptions['onOpenStart']> = ({
+    transaction,
+  }) => {
+    starters.push(transaction)
+    sequence.push(`开始:${transaction.direction}`)
+    transaction.onEnd(ends)
+    transaction.onCancel(context => {
+      localCanceled.push(context.transaction)
+    })
+  }
+  const body = renderTransitionBody(
+    {
+      onBeforeOpen({ event }) {
+        if (reject) event.preventDefault()
+      },
+      onOpenStart: start,
+      onCloseStart: start,
+      onCancel({ transaction }) {
+        canceled.push(transaction)
+        sequence.push(`取消:${transaction.direction}`)
+      },
+    },
+    `
+    .TransitionSubject[popover] { display: block; opacity: 0; transition: opacity 120s linear; }
+    .TransitionSubject:popover-open { opacity: 1; }
+  `,
+  )
+  body.showPopover()
+  await expect.poll(() => starters.length).toBe(1)
+  const moveHalfway = () => {
+    const [transition] = hostTransitions(body)
+    transition.currentTime =
+      Number(transition.effect!.getComputedTiming().endTime) / 2
+    getComputedStyle(body).opacity
+  }
+  moveHalfway()
+  body.hidePopover()
+  await expect.poll(() => starters.length).toBe(2)
+  reject = true
+  body.showPopover()
+  await new Promise(requestAnimationFrame)
   expect(body.matches(':popover-open')).toBe(false)
-  cancel = false
-  capability.controller.body.showPopover()
-  await expect
-    .poll(() => calls)
-    .toEqual([
-      'before:true',
-      'beforeOpen',
-      'before:true',
-      'beforeOpen',
-      'toggle:true',
-      'open',
-    ])
-  capability.controller.body.hidePopover()
-  await expect
-    .poll(() => calls)
-    .toEqual([
-      'before:true',
-      'beforeOpen',
-      'before:true',
-      'beforeOpen',
-      'toggle:true',
-      'open',
-      'before:false',
-      'beforeClose',
-      'toggle:false',
-      'close',
-    ])
+  expect(canceled).toEqual([starters[0]])
+  reject = false
+  moveHalfway()
+  body.showPopover()
+  await expect.poll(() => starters.length).toBe(3)
+  dispose!()
+  dispose = undefined
+  expect(sequence).toEqual([
+    '开始:open',
+    '取消:open',
+    '开始:close',
+    '取消:close',
+    '开始:open',
+    '取消:open',
+  ])
+  expect(new Set(starters).size).toBe(3)
+  for (const [index, transaction] of starters.entries()) {
+    expect(canceled[index]).toBe(transaction)
+    expect(localCanceled[index]).toBe(transaction)
+  }
+  expect(ends).not.toHaveBeenCalled()
+})
+
+test('打开过程被反向取消时同步卸载，关闭过程不会在卸载后启动', async () => {
+  const phases: string[] = []
+  const body = renderTransitionBody(
+    {
+      onOpenStart() {
+        phases.push('打开')
+      },
+      onCloseStart() {
+        phases.push('关闭')
+      },
+      onCancel() {
+        phases.push('取消')
+        dispose!()
+        dispose = undefined
+      },
+    },
+    `
+    .TransitionSubject[popover] { display: block; opacity: 0; transition: opacity 60s; }
+    .TransitionSubject:popover-open { opacity: 1; }
+  `,
+  )
+  body.showPopover()
+  await expect.poll(() => phases).toEqual(['打开'])
+  hostTransitions(body)[0].currentTime = 30_000
+  getComputedStyle(body).opacity
+  body.hidePopover()
+  await expect.poll(() => body.isConnected).toBe(false)
+  await new Promise(requestAnimationFrame)
+  expect(phases).toEqual(['打开', '取消'])
 })
 
 test('默认聚焦正文内第一个可聚焦节点，卸载时恢复原有 autofocus', async () => {

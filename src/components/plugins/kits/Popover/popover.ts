@@ -27,12 +27,29 @@ import type {
   PluginResult,
 } from '../../tools/createInactivePlugin'
 import './popover.style'
+import {
+  createPopoverTransitionObserver,
+  type PopoverTransitionListener,
+} from './popover-transition'
+export type {
+  PopoverTransition,
+  PopoverTransitionContext,
+  PopoverTransitionListener,
+} from './popover-transition'
 
 export type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
 export type AnchorGap = 'sm' | 'md' | 'lg'
 export type PopoverToggleEvent = Event & {
   oldState: 'open' | 'closed'
   newState: 'open' | 'closed'
+}
+
+export interface PopoverEventContext {
+  event: PopoverToggleEvent
+}
+
+export interface PopoverToggleContext extends PopoverEventContext {
+  open: boolean
 }
 
 export interface PopoverTriggerOptions {
@@ -51,18 +68,24 @@ export interface PopoverBodyOptions {
   /** 打开时优先聚焦的 DOM 引用；省略时使用正文首个可聚焦节点，false 不注入自动聚焦。Controller 和组件目标尚未支持。 */
   autoFocus?: Partial<HTMLElement> | false
 
-  /** 浮层打开(后) */
-  onOpen?: (event: PopoverToggleEvent) => void
   /** 浮层打开前 */
-  onBeforeOpen?: (event: PopoverToggleEvent) => void
-  /** 浮层关闭(后) */
-  onClose?: (event: PopoverToggleEvent) => void
+  onBeforeOpen?: (context: PopoverEventContext) => void
   /** 浮层关闭前 */
-  onBeforeClose?: (event: PopoverToggleEvent) => void
+  onBeforeClose?: (context: PopoverEventContext) => void
   /** 浮层切换(后) */
-  onToggle?: (open: boolean, event: PopoverToggleEvent) => void
+  onToggle?: (context: PopoverToggleContext) => void
   /** 浮层切换前 */
-  onBeforeToggle?: (open: boolean, event: PopoverToggleEvent) => void
+  onBeforeToggle?: (context: PopoverToggleContext) => void
+  /** 正文打开过渡进入活动阶段。 */
+  onOpenStart?: PopoverTransitionListener
+  /** 正文打开过渡全部完成。 */
+  onOpenEnd?: PopoverTransitionListener
+  /** 正文关闭过渡进入活动阶段。 */
+  onCloseStart?: PopoverTransitionListener
+  /** 正文关闭过渡全部完成。 */
+  onCloseEnd?: PopoverTransitionListener
+  /** 已经开始的打开或关闭过渡被取消。 */
+  onCancel?: PopoverTransitionListener
   // TODO：onProgress 尚未实现；需按需读取真实过渡进度，参数与进度汇总方式仍待确定。
   /**
    * TODO：定位翻面回调尚未实现，当前不会触发；参数类型暂为占位。
@@ -286,6 +309,8 @@ function popoverBodyCore({
 }: PluginCoreContext<PopoverBodyOptions>): PopoverBodyController {
   const group = getOrInsert(popoverGroups, id!, createPopoverGroup)
   group.bodyTarget = domProxy
+  const transition = createPopoverTransitionObserver(options)
+  onCleanup(() => transition.dispose())
   let restoreAutoFocus: (() => void) | undefined
   onCleanup(() => restoreAutoFocus?.())
   const position = withDefault(options.$anchorPosition, 'top')
@@ -312,9 +337,12 @@ function popoverBodyCore({
         callback: ({ event, element }) => {
           const toggle = event as PopoverToggleEvent
           const open = toggle.newState === 'open'
-          options.onBeforeToggle?.(open, toggle)
-          if (open) options.onBeforeOpen?.(toggle)
-          else options.onBeforeClose?.(toggle)
+          // 同一任务的 toggle 可能合并，此刻可由真实显隐确认上一请求。
+          transition.confirm(element)
+          options.onBeforeToggle?.({ open, event: toggle })
+          if (open) options.onBeforeOpen?.({ event: toggle })
+          else options.onBeforeClose?.({ event: toggle })
+          if (!toggle.defaultPrevented) transition.prepare(element, open)
           if (open && !toggle.defaultPrevented) {
             restoreAutoFocus?.()
             restoreAutoFocus =
@@ -328,9 +356,8 @@ function popoverBodyCore({
         const open = element.matches(':popover-open')
         group.isOpen.set(open)
         const toggle = event as PopoverToggleEvent
-        options.onToggle?.(open, toggle)
-        if (open) options.onOpen?.(toggle)
-        else options.onClose?.(toggle)
+        transition.confirm(element)
+        options.onToggle?.({ open, event: toggle })
       },
     },
   })

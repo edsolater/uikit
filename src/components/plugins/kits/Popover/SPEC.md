@@ -68,18 +68,30 @@ function Example() {
 
 # 原生事件与回调
 
-回调配置在 `body`。`PopoverToggleEvent` 是实际原生事件，提供 `oldState`、`newState` 和 `preventDefault()`，状态值为 `'open'`／`'closed'`。
+回调配置在 `body`，各自接收一个 context 对象并返回 `void`。其中 `event` 是实际原生事件，提供 `oldState`、`newState` 和 `preventDefault()`，状态值为 `'open'`／`'closed'`。
 
-此处记录当前已实现的原生状态回调；Start／End／Progress／Cancel 生命周期仍是[现役 Plan 中的后续目标](../../../../../docs/plans/261106_Popover与Tooltip能力重构.md#后续生命周期已定名称尚未实现)，当前 `onOpen`／`onClose` 不表示 CSS 过渡完成。
+| 原生阶段 | 回调顺序 |
+| --- | --- |
+| `beforetoggle`，即将打开 | `onBeforeToggle({ open: true, event })` → `onBeforeOpen({ event })` |
+| `beforetoggle`，即将关闭 | `onBeforeToggle({ open: false, event })` → `onBeforeClose({ event })` |
+| `toggle`，实际状态改变 | 先按 `:popover-open` 写入同组状态，再调用 `onToggle({ open, event })` |
 
-| 原生阶段                 | 回调顺序                                                                          |
-| ------------------------ | --------------------------------------------------------------------------------- |
-| `beforetoggle`，即将打开 | `onBeforeToggle(true, event)` → `onBeforeOpen(event)`                             |
-| `beforetoggle`，即将关闭 | `onBeforeToggle(false, event)` → `onBeforeClose(event)`                           |
-| `toggle`，实际打开       | 先按 `:popover-open` 写入同组状态，再 `onToggle(true, event)` → `onOpen(event)`   |
-| `toggle`，实际关闭       | 先按 `:popover-open` 写入同组状态，再 `onToggle(false, event)` → `onClose(event)` |
+同一阶段转交同一个原生事件。可在 Before 回调中同步调用 `event.preventDefault()`。是否可以拒绝由原生事件的 `cancelable` 决定，例如原生关闭通常无法在这里阻止。
 
-同一阶段转交同一个原生事件，事件发生时读取当前回调。打开前可以在前置回调中调用 `event.preventDefault()`；取消后不能报告已经打开，也不会因此触发打开后的回调。能否取消由原生事件的 `cancelable` 决定，不能承诺用它阻止原生关闭。
+## 开关过程
+
+`onOpenStart`、`onOpenEnd`、`onCloseStart`、`onCloseEnd` 和 `onCancel` 收到 `{ transaction }`。每个 transaction 代表一次打开或关闭，`direction` 为 `'open'` 或 `'close'`。Start 到达时可以登记这一次的结束与取消通知。
+
+```ts
+onOpenStart({ transaction }) {
+  transaction.onEnd(({ transaction }) => 确认打开完成(transaction))
+  transaction.onCancel(({ transaction }) => 清理打开资源(transaction))
+}
+```
+
+结束时调用对应的 End，或者在过程被打断时调用 Cancel；该次订阅随即释放。已结束的 transaction 登记新回调时不会回放。打开途中改为关闭时，打开 transaction 取消，关闭过程取得新的 transaction。Before 阶段拒绝请求时，正在运行的过程继续。
+
+过渡由宿主样式提供。Popover 观察本次显隐引发的宿主 CSS 过渡，等待相关属性完成后才发 End。正延迟结束、过渡开始运行时发 Start。没有实际过渡时，显隐确认后依次发 Start 与 End。节点接入结束时，尚在运行的过程以 Cancel 收尾。只配置原生状态回调时，Popover 不启动过程观测。`onProgress` 留作低优先级后续事项。
 
 `onPopoverFlip` 指定位方向翻面，不是打开／关闭事件。本轮仅保留预留声明，不触发通知；当前参数类型是占位，真正的方向事件类型后续确定。CSS 的原生翻向照常工作，不用 `PopoverToggleEvent` 伪造定位通知。
 

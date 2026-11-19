@@ -55,9 +55,11 @@ export const SelectInput: KitComponent<{
           $anchorPosition: 'bottom',
           $anchorGap: 'sm',
           autoFocus: false,
-          onClose: () => {
-            isEditing.set(false)
-            props.onClose?.()
+          onToggle: ({ open }) => {
+            if (!open) {
+              isEditing.set(false)
+              props.onClose?.()
+            }
           },
         },
       })

@@ -4,14 +4,14 @@
 
 本文是 Popover／Tooltip 能力改造的唯一现役 Plan。基础协议由 [is 声明解析与 Plugin 调用协议统一](261105_is声明解析与Plugin调用协议统一.md) 接管；现有 `domProxy` 与单元／组合构建工具已经可用，本文不重新设计这些工具。
 
-**阶段 A 的 UIKit Popover 能力已完成；用户本轮已授权实施阶段 B 的 Tooltip 能力迁移。** 用户随后进一步明确：Popover 只承担功能；样式只服务浮层定位、锚点关联和显隐，不承担内容布局或绘制。这条新边界覆盖此前把背景、箭头和材质归给 Plugin 的方案，不是将这些工作另列为 Plugin 未完成项。
+**UIKit 的阶段 A Popover 基础能力和阶段 B Tooltip 迁移已交付。** Popover 的样式职责是浮层定位、锚点关联和显隐，内容布局及绘制由宿主负责。
 
-打开／关闭过程生命周期目前只记录方案，尚未实施。当前原生状态回调与后文尚未实现的 Start／End／Progress／Cancel 目标分别说明；本轮只迁移 Tooltip 所需的现有能力，不顺带实施这些生命周期。原有三篇 TODO 全部保留，不以生命周期小节替代 Task 机制。
+**2026-11-19 [Popover 开关过程](#popover-开关过程)已实现并通过 UIKit 验证。** 本阶段在 Plan 修订和独立复核后施工，从原生状态通知扩展到 Popover 自身的 Start、End、Cancel 和单次过程订阅。实际差异和验证见[实施详情](../../agents/运行方案/261106_Popover与Tooltip能力重构_实施详情.md)。此前 Tooltip 迁移、外部验收及其他 TODO 按各自范围处理。
 
 | 阶段            | 当前状态与交付                                                                                   |
 | --------------- | ------------------------------------------------------------------------------------------------ |
 | A：Popover      | 已完成双端能力、原生显隐与定位及 UIKit 消费迁移；B 仅为 Tooltip 补充必要的原生触发／聚焦关闭选项 |
-| B：Tooltip      | 本轮获准；复用 A 的能力迁移提示交互，接管并删除旧 Surface／Controller／样式及旧目录全部消费      |
+| B：Tooltip      | UIKit 迁移已交付；复用 A 的能力接管旧 Surface／Controller／样式的生产消费                       |
 | 真实 RuleDetail | 保留最终验收，当前没有外部项目修改授权，不随 UIKit 施工自动启动                                  |
 
 本文引用前置 Plan 唯一维护的[全局运行图](261105_is声明解析与Plugin调用协议统一.md#全局运行图与本-plan-定位)：接收 I 的基础协议交付及 J 的用户明确许可，负责 L 至 N 的双端能力、原生浮层功能及 UIKit／RuleDetail 验证。其样式责任按本次用户裁决收敛为功能定位，不再把整体外观绘制当作本环节交付。前置负责 A 至 I；本 Plan 不反向重做其 API，也不另建总图。
@@ -30,7 +30,7 @@
 - [Task 与 TaskResult](../../../fnkit/docs/plans/261108_Task与Result执行.md)：慢 DOM、浮层尚未就绪及等待后晚执行的问题仍按已知缺口记录，不在本 Plan 实现任务队列、abort 或失效控制。
 - [操作成功 boolean](../../../fnkit/docs/plans/261108_PromiseResultProxy完整Promise与惰性计算.md)：完整 Promise 兼容与惰性计算已完成；业务操作的 `Promise<boolean>` 属于尚未实施的第二阶段，不伪造成功值。
 
-阶段 A 已有成对 Popover 能力；阶段 B 接管当前仍沿旧 Surface 的 Tooltip 组装链。新生命周期是后续目标，不能据已有原生状态事件宣布它已实现；旧共享设施也不能在 Tooltip 接管前强删。
+阶段 A 的成对 Popover 能力及阶段 B 的 Tooltip 组装链是本轮开关过程的实施基线。
 
 ## 调用、效果与职责
 
@@ -74,7 +74,7 @@ function PopoverExample() {
 
 Popover 是成对能力，不是负责生成 Button、标题或正文的内容组件。Button／Card／Piv 等实际节点保持界面层次；Card 或调用者的 `.style.ts` 负责内容布局和外观。Plugin 只让这个实际 body 成为可定位、可显隐的原生浮层，不生成背板或新的外观组件。`createInactivePlugins` 统一汇集角色结果与 Controller，`createPopoverPlugins` 直接由工具定义 trigger／body core，并在第二参数的 controller 回调中声明本领域快捷引用，一次调用内部配对两端；用户不传共享 id。返回对象的 `plugins` 保留两端原始能力结果，`controller` 只引用角色 Controller 和常用操作，不新建状态或生命周期。
 
-以下代码块记录本阶段的 API；`triggerAction: false` 与 `autoFocus: false` 是 B 为 Tooltip 在 Popover 责任层补充的最小选项，其余沿阶段 A 的现有协议。现有 `onOpen`／`onClose` 是原生 toggle 后的状态通知，不是 CSS 过程开始或结束；目标生命周期在下一小节单独定义。`Source`、`State` 和 `PivProps` 使用现有 UIKit 类型，不另造同义类型。
+以下代码块记录 A/B 阶段实施时的 API 快照；`triggerAction: false` 与 `autoFocus: false` 是 B 为 Tooltip 在 Popover 责任层补充的最小选项，其余沿阶段 A 的现有协议。现有 `onOpen`／`onClose` 是原生 toggle 后的状态通知，不是 CSS 过程开始或结束；目标生命周期在下一小节单独定义。`Source`、`State` 和 `PivProps` 使用现有 UIKit 类型，不另造同义类型。
 
 ```ts
 type AnchorPosition = 'top' | 'right' | 'bottom' | 'left'
@@ -168,113 +168,51 @@ Tooltip 保留现有真实用途：hover／键盘焦点显示、Escape 退出、
 
 Tooltip 内部 body 使用原生 hint 模式及 `role="tooltip"`，宿主保持描述关系；不能套用普通 Popover 的点击切换或 dialog 宣告而造成双触发。它复用同一配对、显隐与 body 定位职责，自身仍负责阅读触发和 aria 描述。宿主已有 id／aria 及调用者的声明优先级保持，不强行覆盖。
 
-#### 后续生命周期：已定名称，尚未实现
+#### Popover 开关过程
 
-用户已认可打开的 Before／Start／End 三阶段、关闭的对称阶段，以及 Progress、Cancel。当前 `PopoverBodyOptions` 已有 `onBeforeOpen`、`onBeforeClose`、`onToggle`；Start／End／Progress／Cancel 仍是尚未实现的目标字段。下表区分它们要表达的阶段：
-
-| 目标回调                        | 表达什么                                                                   |
-| ------------------------------- | -------------------------------------------------------------------------- |
-| `onBeforeOpen`／`onBeforeClose` | 对应过程开始前的通知；能否拒绝仍遵守实际原生事件的取消能力                 |
-| `onOpenStart`／`onCloseStart`   | 对应过程已经开始，不等于在等待或刚收到请求                                 |
-| `onOpenEnd`／`onCloseEnd`       | 对应过程完成，不把原生开关状态变化直接当作视觉过程完成                     |
-| `onProgress`                    | 已开始过程中的进度通知；参数与通知节奏尚未确定                             |
-| `onCancel`                      | 已开始的过程被中断；Before 阶段拒绝、尚未开始，不算 Cancel                 |
-| `onToggle`                      | 保留不分打开／关闭方向的原生状态变化快捷回调，不承担逐帧进度或动画完成语义 |
-
-现有 `onBeforeToggle` 保留。目标调用关系用伪代码表达为：
-
-```text
-正常打开：BeforeOpen → OpenStart → 运行过程 → OpenEnd
-开始后中断：BeforeOpen → OpenStart → 运行过程 → Cancel
-开始前拒绝：BeforeOpen 拒绝 → 不进入 Start，不派发 End／Cancel
-关闭过程对称。
-```
-
-目标配置的简短伪代码如下，Start／End 的具体参数仍待确定，不能当作当前已支持的接口：
+本轮在全局图 L 至 N 的 Popover 正文事件接线处接收原生显隐请求和宿主实际过渡，向 UIKit 消费者交付状态通知与该次过程的通知。业务样式决定是否以及怎样过渡，Popover 负责观测实际宿主。现有 Controller 操作继续返回 FNKit TaskResult，生命周期回调只接收一个 context 对象并返回 void，继承 [On 系列约定](../../../ai-rules/rules/Code-回调写法.md)。
 
 ```ts
 createPopoverPlugins({
   body: {
-    /** 打开过程已开始，不是刚收到请求。 */
-    onOpenStart() {
-      记录打开开始()
+    onOpenStart({ transaction }) {
+      transaction.onEnd(({ transaction }) => 确认打开完成(transaction))
+      transaction.onCancel(({ transaction }) => 清理打开资源(transaction))
     },
-    /** 打开过程已完成，不是原生状态刚变为 open。 */
-    onOpenEnd() {
-      记录打开完成()
-    },
-    /** 一处处理打开与关闭的原生状态变化，不表示动画进度。 */
-    onToggle(open) {
-      更新状态提示(open)
+    onToggle({ open }) {
+      同步开关提示(open)
     },
   },
 })
 ```
 
-`onCancel` 是已开始过程被中断后的通知，不等同于 [TaskResult.abort](../../../fnkit/docs/plans/261108_Task与Result执行.md) 取消异步任务的操作；本节不因此实现 Task 机制。
+- 原生 Before 通知保留分方向与通用入口。方向通知收 `{ event }`，通用通知 `onBeforeToggle` 和 `onToggle` 收 `{ open, event }`。Before 延续浏览器原生的同步取消能力，实际状态和 `isOpen` 仍由原生显隐事实决定。
+- 过程通知使用 `onOpenStart`、`onOpenEnd`、`onCloseStart`、`onCloseEnd` 和 `onCancel`，都收 `{ transaction }`。每段有独立的 `PopoverTransition`，提供本段 `direction: 'open' | 'close'` 及 `onEnd(listener)`、`onCancel(listener)`，订阅回调也收单一 context。订阅在存活期登记，终结时释放；终结后的新登记不回放。过程普通完成或取消只通知一次。各通知和订阅回调返回 void，Popover 不等待业务。
+- 上一段已经开始且反向切换实际成立时，先结束旧过程并通知 Cancel，再交付新过程的 Start。旧过程不再派发 End。Before 拒绝或浏览器没有产生显隐变化时，不开始新过程，也不取消仍有效的原过程。期间没有进入 Start 的待启动过渡，若被替换或取消，不派发 Cancel。整个协议无 from，过程对象只表达自身方向和终结结果。
+- 宿主进入活动过渡时发 Start。显隐已生效但没有实际过渡时，以同一 transaction 依序发 Start 和 End，包含零时长和样式禁用过渡的场景。作用域释放时停止观测，已开始且未终结的过程以 Cancel 收尾。
 
-这不是浏览器事件的逐项映射，也不承诺 Progress 的次数。当前 `onOpen`／`onClose` 将退出旧命名，由新生命周期及保留的 `onToggle` 接管；不能简单改名为 Start，就把原生状态通知伪装成 CSS 已开始。具体映射需随下面的未决项明确后再施工，不保留一组同义旧别名。
+原生事件负责候选与实际显隐。仅有过程回调时，在 Before 与确认原生状态改变后各取得一次宿主自己的 CSS transition 实例，按身份找到本次新增的过渡。这样不纳入仍在运行的无关旧动画、后代或伪元素。用活动开始事件以及实例时序识别 Start，不把 delay 当作活动阶段。用所选实例的完成信号汇总全部属性；原生取消或被新过程取代时，已开始的过程归 Cancel。原生状态判断、CSS 事件先后和快速反向须用 Chromium 真实场景确认。依据 [CSS Transitions 事件](https://www.w3.org/TR/css-transitions-2/#transition-events) 与 [Web Animations 完成信号](https://drafts.csswg.org/web-animations-1/#the-current-finished-promise)。
 
-#### CSS 底层事实与实现边界
+Chromium 实测同一任务内的打开、关闭可合并成一条原生 `toggle`。过程由确认后的宿主状态和实际过渡驱动，不能用 `toggle` 的数量推算。下一次 Before 到达时可用宿主当下状态确认上一请求，避免把已开始的过程归到后一请求。
 
-原生显隐状态与宿主提供的 CSS 过渡是两条事实线：
+**低优先级 TODO。** `onProgress` 需要持续采样，参数和节奏后续讨论。本轮不建立逐帧观测。定位翻面通知、DOM 就绪 Task、外部 RuleDetail 验收继续独立处理。
 
-```text
-原生状态线：beforetoggle → 实际开关状态变化 → toggle 通知
-CSS 过渡线：transitionrun → 等待 delay → transitionstart → transitionend
-                                               ↘ transitioncancel
-```
-
-两条线不是一一对应的固定总顺序。`toggle` 不是 `transitionend`；CSS 可以没有过渡，也可以同时运行多个属性。依据 [CSS Transitions 事件规范](https://www.w3.org/TR/css-transitions-2/#transition-events)：
-
-| 底层事件           | 对接时必须区分的事实                                                        |
-| ------------------ | --------------------------------------------------------------------------- |
-| `transitionrun`    | 过渡已产生，可能还在 delay；不能当作活动过渡已经开始                        |
-| `transitionstart`  | 进入活动阶段；与 run 区分，elapsedTime 不计正 delay                         |
-| `transitionend`    | 一个属性的该次过渡正常结束，不天然代表整个 Popover 已完成                   |
-| `transitioncancel` | 过渡中断而不正常结束；也可能发生在 delay，不能不加语义区分地上报目标 Cancel |
-
-过渡按属性产生事件，子节点事件也会冒泡，需要区分宿主、属性和伪元素。未生成过渡时，例如零时长且无延迟，不会自动补出 Start／End。浏览器没有 `beforeEnd` 或 `transitionprogress` 事件，不能把它们写成现成设施。
-
-top layer 的进退过渡涉及 `@starting-style`、离散 `display` 过渡和 `overlay` 的退出保留；这些原生机制见 [Chrome top-layer 过渡说明](https://developer.chrome.com/docs/modern-web-guidance/guides/ui-behaviors/animate-to-from-top-layer)。宿主或业务样式决定是否配置及怎样绘制过渡，Popover Plugin 只感知其过程，不因此新增 opacity、transform、材质或内容布局规则。
-
-若后续选择 CSS animation，则区分 `animationstart`／`animationend`／`animationcancel` 及迭代事件，不能与 TransitionEvent 混称；其事件携带 animationName，参见 [CSS Animations 事件](https://www.w3.org/TR/css-animations-1/#animation-events)。当前没有选择它替代 transition，也不增加双实现兼容层。
-
-#### 按回调需要观测过程
-
-过程观测按实际配置的回调启用，不增加 `progressEnabled` 之类的独立开关，也不预设统一动画引擎。原生 toggle、`isOpen` 与 aria 同步仍由必要监听负责，不受以下额外观测条件影响。
-
-Start／End 使用 `onOpenStart`、`onOpenEnd`、`onCloseStart`、`onCloseEnd`，不另设 Popping 同义名称；Before、Progress、Cancel 和 Toggle 保留各自职责。
-
-| 配置情况                   | 需要的额外工作                                     |
-| -------------------------- | -------------------------------------------------- |
-| 没有过程回调               | 不启动额外过程观测                                 |
-| 只有 Start／End 等阶段回调 | 只接入所需阶段通知，不依赖进度采样                 |
-| 配置 `onProgress`          | 过程运行期间按需采样并通知；采样方式与节奏仍待确定 |
+##### 接管位置与实施顺序
 
 ```text
-过程开始 → 若配置 onProgress，开始进度采样
-过程结束或中断 → 停止该过程的观测和采样
-所属作用域退出 → 释放尚在运行的观测和采样
+src/components/plugins/kits/Popover/
+  popover.ts【更新】公开 context 契约、原生状态接线和过程接入
+  popover-transition.ts【新增】宿主过渡识别、单次对象及终结通知
+  SPEC.md【更新】当前可用事件及其含义
+  popover.browser.test.tsx【更新】用真实宿主 CSS 验证过程
+src/components/kits/SelectInput/SelectInput.tsx【更新】消费原生关闭状态
 ```
 
-同一底层过程信息供多个已配置回调使用时共享，不为每个回调重复观测。没有 `onProgress` 时不逐帧运行、不启动 rAF，也不持续读取 Web Animations 状态；这不妨碍独立使用 Start／End。具体采样机制、多属性如何汇总完成以及事件参数仍按下方未决处理。
+1. 接入正文事件与过程对象，验证真实宿主的多属性、延迟及反向，不给所有 Popover 配置默认动画。
+2. 将状态回调统一成单参数 context。现有 `onOpen`／`onClose` 的原生状态通知由 `onToggle` 的方向分支接管，旧名退出；SelectInput 仍在原生关闭时结束编辑并调用自身的公开 `onClose`。
+3. 验证正常双向 Start/End、订阅所获对象身份、结束只派发一次、反向及再次反向的 Cancel、Before 拒绝、无过渡、delay、子元素与多属性、卸载终止。原生 toggle、焦点、SelectInput 与 Tooltip 走既有回归。类型检查、单元测试、真实浏览器套件和构建通过后交付，写入 [实施详情](../../agents/运行方案/261106_Popover与Tooltip能力重构_实施详情.md)。
 
-#### 未决、落点与验收
-
-以下只保留会决定协议的未决，不先补造执行机制：
-
-- Start 的过程起点怎样与真实 CSS 事件对接；多个属性的结束如何汇总为一次 End。
-- 没有有效过渡、零时长或减少动态效果时，怎样表达过程完成。
-- 开始后反向切换与中断如何归属前后两个过程；进度范围、通知节奏及各回调具体参数类型。
-
-`onProgress` 没有现成 transition 事件可直接透传；配置该回调时可以按需采样，具体方式尚待确定。这些未决没有裁决前，不能宣称新生命周期已可完整施工。
-
-后续落点限定在 `popover.ts` 的 `PopoverBodyOptions`／`popoverBodyCore` 事件协议、相邻 SPEC 和 `popover.browser.test.tsx`：确定映射后补真实阶段说明与最小调用例子，迁移当前 `onOpen`／`onClose` 消费并退出旧名字；SPEC 继续区分已实现接口与目标接口。注释须写清 Begin、完成、中断和拒绝，不用“打开后”掩盖状态通知与过程完成的差别。
-
-验收覆盖正常打开／关闭、Before 拒绝不产生 Cancel、开始后中断、delay、子事件与多属性、无过渡及反向切换，并核对 `onToggle` 仍只报告原生状态变化。这里只记录后续验证目的，不在本次文档修订中修改测试或实现 Task。
-
-另验收：未配置 `onProgress` 时不进行进度采样，Start／End 可以独立工作；配置 `onProgress` 时仅在过程运行中采样，结束、中断或作用域退出后停止。
+分工按 [任务分工](../../../ai-rules/rules/Agent-任务分工.md) 执行。独立约束检查者复核 Plan 后，实施者实现公开契约和原生接线，测试执行者从实际过渡验证，主 Agent 对照原始裁决独立验收。
 
 ### 2. 功能样式与实际宿主的责任
 
@@ -426,7 +364,9 @@ Task 的慢 DOM／晚执行缺口仍是已接受的未实现项；这不能免�
 
 原始问题的最终验收仍包括 bcoin StrategyView 的 RuleDetail。外部接口和实际源码状态在获得对应项目授权后核实，不能把历史旧接口记录直接当成当前事实，也不能只构建 UIKit 就称真实页通过。届时完成适配与关联构建，在真实页打开 Tooltip，滚动、切换指标／天数，检查实际宿主内容与定位没有独立背板脱节；不把业务外观重新归给 Plugin。当前明确保留“RuleDetail 验收未完成”，不删除该验收、不靠 UIKit 旧别名绕过，也不自行修改外部项目。
 
-## 实施顺序、未决与完成判定
+## A/B 阶段的历史实施顺序与外部验收
+
+本节保存 A/B 阶段的施工范围，当前 Popover 过程施工以 [Popover 开关过程](#popover-开关过程) 为准。
 
 1. 依据本轮 Tooltip 授权核对阶段 B 清单与既有基础 API；保护已有 Git 修改，不自动暂存或回退。约束检查者先交付适用约束，执行者必须遵从 [Plan 撰写](../how-to-write-plan.md) 与 [Plan 落地](../how-to-apply-plan.md) 的实际要求，不能只记录已读。
 2. 阶段 A 已交付 `createPopoverPlugins`、双端能力与实际宿主迁移；本轮只补阶段 B 必需的两个 false 选项，确认普通点击／键盘、原生状态、取消打开、焦点与 defaultOpen 不回归。
