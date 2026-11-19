@@ -21,7 +21,7 @@ import {
 } from '@/foundation'
 import { createInactivePlugins } from '../../tools/createInactivePlugins'
 import type { DomProxy } from '../../tools/domProxy'
-import { runDomAction } from '@/components/tools/runDomAction'
+import { domTask } from '@/components/tools/domTask'
 import type {
   PluginCoreContext,
   PluginResult,
@@ -254,10 +254,10 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
     /**
      * 请求显示本组浮层。
      */
-    showPopover: runDomAction({
-      dom: () => group.bodyTarget,
+    showPopover: domTask({
+      getDom: () => group.bodyTarget,
       waitForAttachment: true,
-      action(body) {
+      getAction: body => () => {
         if (!active) return false
         body.showPopover()
         return body.matches(':popover-open')
@@ -266,9 +266,9 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
     /**
      * 请求关闭本组浮层并读取实际关闭结果。
      */
-    hidePopover: runDomAction({
-      dom: () => group.bodyTarget,
-      action(body) {
+    hidePopover: domTask({
+      getDom: () => group.bodyTarget,
+      getAction: body => () => {
         if (!active) return false
         if (body.matches(':popover-open')) body.hidePopover()
         const open = body.matches(':popover-open')
@@ -279,9 +279,9 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
     /**
      * 切换或指定打开状态。
      */
-    togglePopover: runDomAction({
-      dom: () => group.bodyTarget,
-      action(body, options?: { force?: boolean }) {
+    togglePopover: domTask({
+      getDom: () => group.bodyTarget,
+      getAction: body => (options?: { force?: boolean }) => {
         if (!active) return false
         const expectedOpen = options?.force ?? !body.matches(':popover-open')
         body.togglePopover(options?.force)

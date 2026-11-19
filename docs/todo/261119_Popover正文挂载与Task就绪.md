@@ -12,9 +12,9 @@
 
 ## 挂载等待的接入方式
 
-Popover 的打开 Task 使用 `runDomAction({ dom, waitForAttachment: true, action })`。工具调用正文代理的 `isReady()`，挂载后再执行 `action`。关闭和切换在取得正文后直接尝试原生操作。显隐是否达成通过 `TaskResult.isSuccess` 获取，原生操作抛出的错误通过 `result` 传递。
+Popover 的打开 Task 使用 `domTask({ getDom, waitForAttachment: true, getAction })`。每次执行由 `getDom()` 取得正文代理，等 `isReady()` 确认挂载后，由 `getAction(body)` 生成本次动作。关闭和切换在取得正文后直接尝试原生操作。显隐是否达成通过 `TaskResult.isSuccess` 获取，原生操作抛出的错误通过 `result` 传递。
 
-[runDomAction 实现](../../src/components/tools/runDomAction.ts)
+[domTask 实现](../../src/components/tools/domTask.ts)
 
 ## 等待期间的取消与退出
 
