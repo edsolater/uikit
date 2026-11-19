@@ -5,7 +5,13 @@
  *
  * 使Label问号及其他宿主共用同一提示能力。
  */
-import { IdGenerator, task, type Task } from '@edsolater/fnkit'
+import {
+  IdGenerator,
+  task,
+  type Task,
+  type TaskContext,
+  type TaskResult,
+} from '@edsolater/fnkit'
 import {
   createComponent,
   createEffect,
@@ -62,6 +68,15 @@ export function hasTooltipContent(source: TooltipOptions['content']) {
   )
 }
 
+/** 转交同一次显隐的结果和动作报告，保留底层异常。 */
+async function forwardPopoverAction(
+  execution: TaskResult<void>,
+  reportSuccess: TaskContext['reportSuccess'],
+) {
+  await execution.result
+  reportSuccess(await execution.isSuccess)
+}
+
 /**
  * 沿Piv实例挂载附属浮层，保留宿主原有id与声明优先级。
  *
@@ -95,11 +110,11 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     /**
      * 当前仍有提示内容时显示，同时取消旧关闭动作。
      */
-    const open = task(() => {
+    const open = task(({ reportSuccess }) => {
       cancelClose()
       // TODO：DOM 已取得不代表已插入 document；慢节点挂载时序仍待处理。
-      if (hasTooltipContent(options.content))
-        return controller.showPopover().result
+      if (!hasTooltipContent(options.content)) return reportSuccess(false)
+      return forwardPopoverAction(controller.showPopover(), reportSuccess)
     })
     /**
      * 离开阅读区域后延迟关闭，保留跨越浮层间距的机会。
@@ -121,9 +136,9 @@ export const tooltip = createInactivePlugin<TooltipOptions, TooltipController>({
     /**
      * 关闭并保留焦点，取消尚未执行的离开动作。
      */
-    const dismiss = task(() => {
+    const dismiss = task(({ reportSuccess }) => {
       cancelClose()
-      return controller.hidePopover().result
+      return forwardPopoverAction(controller.hidePopover(), reportSuccess)
     })
     onCleanup(cancelClose)
     // 内容清空时读取原生关闭结果；移出 document 本身不一定派发 toggle。

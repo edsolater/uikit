@@ -336,13 +336,24 @@ test('提示的显示关闭保留 Task 等待与取消，空内容不显示', as
   canceled.cancel()
   const rejected = canceled.result.catch(error => error)
   expect((await rejected).name).toBe('AbortError')
+  expect(await canceled.isSuccess).toBe(false)
   expect(body.matches(':popover-open')).toBe(false)
-  await controller.showPopover().result
+
+  body.addEventListener('beforetoggle', event => event.preventDefault(), {
+    once: true,
+  })
+  const blocked = controller.showPopover()
+  expect(await blocked.result).toBeUndefined()
+  expect(await blocked.isSuccess).toBe(false)
+  expect(body.matches(':popover-open')).toBe(false)
+  expect(await controller.showPopover().isSuccess).toBe(true)
   expect(body.matches(':popover-open')).toBe(true)
-  await controller.hidePopover().result
+  expect(await controller.hidePopover().isSuccess).toBe(true)
   expect(body.matches(':popover-open')).toBe(false)
   content.set('')
   await expect.poll(() => host.querySelector('[role="tooltip"]')).toBeNull()
-  await controller.showPopover().result
+  const skipped = controller.showPopover()
+  expect(await skipped.result).toBeUndefined()
+  expect(await skipped.isSuccess).toBe(false)
   expect(body.matches(':popover-open')).toBe(false)
 })

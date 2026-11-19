@@ -988,13 +988,35 @@ test('显隐指令同步返回 TaskResult，支持等待和取消未执行的操
   canceled.cancel()
   const rejected = canceled.result.catch(error => error)
   expect((await rejected).name).toBe('AbortError')
+  expect(await canceled.isSuccess).toBe(false)
   expect(body.matches(':popover-open')).toBe(false)
-  expect(await controller.showPopover().result).toBeUndefined()
+
+  const shown = controller.showPopover()
+  expect(await shown.result).toBeUndefined()
+  expect(await shown.isSuccess).toBe(true)
   expect(body.matches(':popover-open')).toBe(true)
-  await controller.togglePopover({ force: false }).result
+  expect(await controller.showPopover().isSuccess).toBe(true)
+  expect(await controller.togglePopover({ force: false }).isSuccess).toBe(true)
   expect(body.matches(':popover-open')).toBe(false)
-  await controller.togglePopover().result
+  expect(await controller.togglePopover().isSuccess).toBe(true)
   expect(body.matches(':popover-open')).toBe(true)
-  await controller.hidePopover().result
+  expect(await controller.hidePopover().isSuccess).toBe(true)
   expect(body.matches(':popover-open')).toBe(false)
+  expect(await controller.hidePopover().isSuccess).toBe(true)
+
+  body.addEventListener('beforetoggle', event => event.preventDefault(), {
+    once: true,
+  })
+  const blocked = controller.togglePopover({ force: true })
+  expect(await blocked.result).toBeUndefined()
+  expect(await blocked.isSuccess).toBe(false)
+  expect(body.matches(':popover-open')).toBe(false)
+
+  const nativeError = new DOMException('原生调用失败', 'InvalidStateError')
+  vi.spyOn(body, 'showPopover').mockImplementationOnce(() => {
+    throw nativeError
+  })
+  const failed = controller.showPopover()
+  await expect(failed.result).rejects.toBe(nativeError)
+  expect(await failed.isSuccess).toBe(false)
 })

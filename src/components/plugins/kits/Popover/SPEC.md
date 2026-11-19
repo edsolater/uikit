@@ -128,11 +128,12 @@ controller.togglePopover({ force: false })
 | `hidePopover()`           | 请求原生关闭；Plugin 不再额外恢复触发端焦点                                           |
 | `togglePopover(options?)` | `force` 省略时切换，true 请求打开，false 请求关闭；焦点遵守上述打开配置和原生关闭行为 |
 
-每个指令入口声明为 `Task`，每次调用同步返回独立的 `TaskResult<void>`。可以忽略结果，也可以等待 `execution.result`，直到正文 DOM 取得、取消检查和原生操作完成；这不表示原生 `toggle` 事件已送达或 CSS 过渡已结束。原生状态仍以 `isOpen` 和实际事件为准，不新增成功 boolean。
+每个指令都同步返回独立的 `TaskResult<void>`。`execution.isSuccess` 表示本次显隐是否成功，已经在目标状态时也为 `true`。未取得正文元素、取得正文后发现作用域已退出，或打开被 Before 拒绝时，`isSuccess` 为 `false`，`execution.result` 仍正常兑现。原生操作抛错或任务取消时，`isSuccess` 为 `false`，`result` 仍按原规则拒绝。等待这些结果不要求原生 `toggle` 已送达或 CSS 过渡已结束。
 
 ```ts
-await popoverController.showPopover().result
-await popoverController.togglePopover({ force: false }).result
+const opening = popoverController.showPopover()
+const opened = await opening.isSuccess
+await opening.result
 
 const execution = popoverController.showPopover.lazyExec()
 execution.cancel() // 取消尚未执行的原生操作。
@@ -147,11 +148,11 @@ await popoverController.hidePopover().result
 
 `popover.style.ts` 只控制浮层的 position、inset、margin、anchor 关联、四向位置、fallback 和锚点可见性；不接管 padding、尺寸排版、材料或普通 overflow 裁剪。
 
-Controller 完整不代表元素已经插入文档。显隐 Task 会等待 `domProxy`，并在原生操作前检查本次取消；当前 `domProxy` 仍缓存首次 DOM。取得 DOM 不代表已连接 document，未插入文档、作用域退出后仍未取消的命令，以及 if 重建均保留既有时序缺口。Task 不额外轮询挂载，不自动管理组件作用域，也不新增成功判定。
+Controller 完整和拿到 `domProxy` 都不表示正文已经挂载。当前显隐 Task 等到元素并检查取消后尝试原生操作，再据实报告。需要等待挂载的具体操作可自行决定其就绪条件，统一机制留待后续讨论。
 
-- [Task 与 TaskResult 异步操作](../../../../../../fnkit/docs/plans/261108_Task与Result执行.md)：提供本次执行的结果与取消；文档挂载时序仍待后续处理。
+- [Task 与 TaskResult](../../../../../../fnkit/src/task.ts)：提供本次执行的结果、取消和动作报告。
+- [Popover 正文挂载与 Task 就绪](../../../../../docs/todo/261119_Popover正文挂载与Task就绪.md)：记录取得元素与实际挂载的时序差。
 - [if 显隐复用 DOM](../../../../../docs/todo/261107_if显隐复用DOM.md)：当前不能假定条件重建已经复用原节点。
-- [PromiseResultProxy 统一 Plan](../../../../../../fnkit/docs/plans/261108_PromiseResultProxy完整Promise与惰性计算.md)：完整 Promise 兼容与惰性计算已完成；操作成功 boolean 属于尚未实施的第二阶段。
 
 # Tooltip 的复用
 
@@ -173,4 +174,4 @@ Controller 完整不代表元素已经插入文档。显隐 Task 会等待 `domP
 
 Tooltip 内部一次构建 `createPopoverPlugins`，使用 `triggerAction:false`、`popover:'hint'` 和 `autoFocus:false`；通过同一 Piv body 复用原生定位、显隐及打开状态，自身拥有阅读事件、aria 描述与提示材料，不再使用 Surface 或旧 VisibilityController。内容清空会关闭、清计时并移除正文，再次有内容时复用同一节点；数字 0 有效。Tooltip Controller 仍只提供 `isOpen`、`showPopover()`、`hidePopover()`，不扩大调用方接口。
 
-Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<void>`；有内容时转发内部 Popover 的业务结果；外层取消不接管内部执行。空内容的显示请求仍返回 TaskResult，完成后没有显示副作用。hover、focus、150ms 离开关闭等阅读行为不变，内部进入／离开和计时辅助函数仍只负责各自交互。
+Tooltip 的 `showPopover`、`hidePopover` 同样声明为 `Task<void>`，沿用同一次内部 Popover 操作的显隐结果。没有提示内容时，显示请求正常结束，`isSuccess` 为 `false`。外层取消目前不传递给已经启动的内部执行。hover、focus、150ms 离开关闭等阅读行为由 Tooltip 负责。

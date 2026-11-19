@@ -7,7 +7,6 @@
 import {
   getOrInsert,
   IdGenerator,
-  task,
   type Task,
   type PromiseResultProxy,
 } from '@edsolater/fnkit'
@@ -22,6 +21,7 @@ import {
   type State,
 } from '@/foundation'
 import { createInactivePlugins } from '../../tools/createInactivePlugins'
+import { runDomAction } from '@/components/tools/runDomAction'
 import type {
   PluginCoreContext,
   PluginResult,
@@ -248,34 +248,43 @@ function createPopoverActions(group: ReturnType<typeof createPopoverGroup>) {
   onCleanup(() => {
     active = false
   })
+
   return {
     isOpen: group.isOpen,
     /**
      * 请求显示本组浮层。
      */
-    showPopover: task(async ({ canContinue }) => {
-      const body = await group.bodyTarget!
-      await canContinue()
-      if (active) body.showPopover()
-    }),
+    showPopover: runDomAction(
+      () => group.bodyTarget,
+      body => {
+        if (!active) return false
+        body.showPopover()
+        return body.matches(':popover-open')
+      },
+    ),
     /**
      * 请求关闭本组浮层并读取实际关闭结果。
      */
-    hidePopover: task(async ({ canContinue }) => {
-      const body = await group.bodyTarget!
-      await canContinue()
-      if (!active) return
-      if (body.matches(':popover-open')) body.hidePopover()
-      group.isOpen.set(body.matches(':popover-open'))
-    }),
+    hidePopover: runDomAction(
+      () => group.bodyTarget,
+      body => {
+        if (!active) return false
+        if (body.matches(':popover-open')) body.hidePopover()
+        const open = body.matches(':popover-open')
+        group.isOpen.set(open)
+        return !open
+      },
+    ),
     /**
      * 切换或指定打开状态。
      */
-    togglePopover: task(
-      async ({ canContinue }, options?: { force?: boolean }) => {
-        const body = await group.bodyTarget!
-        await canContinue()
-        if (active) body.togglePopover(options?.force)
+    togglePopover: runDomAction(
+      () => group.bodyTarget,
+      (body, options?: { force?: boolean }) => {
+        if (!active) return false
+        const expectedOpen = options?.force ?? !body.matches(':popover-open')
+        body.togglePopover(options?.force)
+        return body.matches(':popover-open') === expectedOpen
       },
     ),
   }
